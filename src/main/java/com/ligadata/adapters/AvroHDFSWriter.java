@@ -1,18 +1,14 @@
 package com.ligadata.adapters;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 
 import org.apache.avro.Schema;
+import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericData.Record;
-import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
-import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
-import org.apache.avro.io.Decoder;
-import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.mapred.FsInput;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -22,20 +18,31 @@ import org.apache.hadoop.fs.Path;
 public class AvroHDFSWriter {
 	
 	private Schema schema;
-	FSDataOutputStream out;
-	DataFileWriter<Record> dataFileWriter;
+	private String basePath;
+	private String codec;
+	private FSDataOutputStream out;
+	private DataFileWriter<Record> dataFileWriter;
 
-	public AvroHDFSWriter(String schemaFile, String destinationFile) throws Exception {
-		this.schema = new Schema.Parser().parse(new File(schemaFile));
-		URI uri = URI.create(destinationFile);
-		System.out.println("Opening dataset writer." + uri);
+	public AvroHDFSWriter(Schema schema, String path, String codec) throws Exception {
+		this.schema = schema;
+		this.basePath = path;
+		this.codec = codec;
+	}
+	
+	public Schema getSchema() {
+		return schema;
+	}
+	
+	public void open(String fileName) throws IOException {
+		URI uri = URI.create(basePath + "/" + fileName);
+		System.out.println("Opening avro writer for " + uri);
 		
 		Configuration conf = new Configuration();
 		FileSystem fs = FileSystem.get(uri, conf);
 
 		DatumWriter<Record> datumWriter = new GenericDatumWriter<Record>(schema);
 		dataFileWriter = new DataFileWriter<Record>(datumWriter);
-
+		dataFileWriter.setCodec(CodecFactory.fromString(codec));
 		Path path = new Path(uri);
 		if (fs.exists(path)) {
 			System.out.println("Loading existing dataset at " + uri);
@@ -48,17 +55,7 @@ public class AvroHDFSWriter {
 		}
 	}
 	
-	public Record json2Record(String jsonStr) throws IOException {
-			DatumReader<Record> reader = new GenericDatumReader<Record>(schema);
-			Decoder decoder = DecoderFactory.get().jsonDecoder(schema, jsonStr);
-			return reader.read(null, decoder);
-	}
-			
-	public Schema getSchema() {
-		return schema;
-	}
-	
-	public void append(Record rec) throws IOException {
+	public void write(Record rec) throws IOException {
 		dataFileWriter.append(rec);
 	}
 
@@ -68,5 +65,4 @@ public class AvroHDFSWriter {
 		if (out != null)
 			out.close();
 	}
-
 }

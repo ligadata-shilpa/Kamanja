@@ -1,29 +1,23 @@
 package com.ligadata.adapters;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.ArrayList;
 import java.util.Observable;
 import java.util.Observer;
-import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import kafka.consumer.ConsumerConfig;
-import kafka.consumer.KafkaStream;
-import kafka.javaapi.consumer.ConsumerConnector;
 import sun.misc.Signal;
 
-public class KafkaAdapter extends Thread implements Observer {
-	private final AdapterConfiguration configuration;
-	private final ConsumerConnector consumer;
+@SuppressWarnings("restriction")
+public class KafkaAdapter implements Observer {
+	private AdapterConfiguration configuration;
+	private ArrayList<KafkaConsumer> consumers;
 	private ExecutorService executor;
 
-	public KafkaAdapter(AdapterConfiguration config) throws Exception {
+	public KafkaAdapter(AdapterConfiguration config) {
 		this.configuration = config;
-		consumer = kafka.consumer.Consumer.createJavaConsumerConnector(createConsumerConfig());
 	}
 
 	@Override
@@ -39,11 +33,12 @@ public class KafkaAdapter extends Thread implements Observer {
 	}
 
 	public void shutdown() {
-        if (consumer != null) consumer.shutdown();
+		for(KafkaConsumer c: consumers)
+			c.shutdown();
+		
         if (executor != null) executor.shutdown();
-
         try {
-            if (!executor.awaitTermination(20000, TimeUnit.MILLISECONDS)) {
+            if (!executor.awaitTermination(30000, TimeUnit.MILLISECONDS)) {
                 System.out.println("Timed out waiting for consumer threads to shut down, exiting uncleanly");
             }
         } catch (InterruptedException e) {
@@ -54,36 +49,16 @@ public class KafkaAdapter extends Thread implements Observer {
 	}
 
 	public void run() {
-
-		
-    	String topic = configuration.getProperty("kafka.topic");
-        int numThreads = Integer.parseInt(configuration.getProperty("kafka.consumer.threads", "2"));
-    	
-        Map<String, Integer> topicCountMap = new HashMap<String, Integer>();
-        topicCountMap.put(topic, new Integer(numThreads));
-        
-        Map<String, List<KafkaStream<byte[], byte[]>>> consumerMap = consumer.createMessageStreams(topicCountMap);
-        List<KafkaStream<byte[], byte[]>> streams = consumerMap.get(topic);
- 
+        int numThreads = Integer.parseInt(configuration.getProperty(AdapterConfiguration.COUNSUMER_THREADS, "2"));
         executor = Executors.newFixedThreadPool(numThreads);
- 
-        int threadNumber = 0;
-        for (final KafkaStream<byte[], byte[]> stream : streams) {
-            executor.submit(new ModelResultProcessor(stream, configuration, threadNumber));
-            threadNumber++;
+        consumers = new ArrayList<KafkaConsumer>();
+        for (int threadNumber = 0; threadNumber < numThreads; threadNumber++) {
+        	KafkaConsumer c = new KafkaConsumer(configuration, threadNumber);
+            executor.submit(c);
+        	consumers.add(c);
         }
 	}
 
-	private ConsumerConfig createConsumerConfig() {
-		Properties props = new Properties();
-		props.put("zookeeper.connect", configuration.getProperty("zookeeper.connect"));
-		props.put("group.id", configuration.getProperty("kafka.group.id"));
-		props.put("zookeeper.session.timeout.ms", configuration.getProperty("zookeeper.session.timeout.ms", "400"));
-		props.put("zookeeper.sync.time.ms", configuration.getProperty("zookeeper.sync.time.ms", "200"));
-		props.put("auto.commit.interval.ms", configuration.getProperty("auto.commit.interval.ms", "1000"));
-
-		return new ConsumerConfig(props);
-	}
 
 	public static class AdapterSignalHandler extends Observable implements sun.misc.SignalHandler {
 
@@ -108,7 +83,7 @@ public class KafkaAdapter extends Thread implements Observer {
 				config = new AdapterConfiguration(args[0]);
 			else {
 				System.out.println("Incorrect number of arguments. ");
-				System.out.println("Usage: KafkaAdapter configfilename");
+				System.out.println("Usage: KafkaAdapter [configfilename]");
 				System.exit(1);
 			}
 		} catch (IOException e) {
@@ -126,7 +101,7 @@ public class KafkaAdapter extends Thread implements Observer {
 			sh.handleSignal("INT");
 			sh.handleSignal("ABRT");
 
-			adapter.start();
+			adapter.run();
 		} catch (Exception e) {
 			System.out.println("Error starting the adapater.\n");
 			e.printStackTrace();

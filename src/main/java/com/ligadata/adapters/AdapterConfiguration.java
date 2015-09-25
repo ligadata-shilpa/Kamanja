@@ -6,6 +6,19 @@ import java.io.IOException;
 import java.util.Properties;
 
 public class AdapterConfiguration {
+	public static final String SCHEMA_FILE = "schema.file";
+	public static final String HDFS_URI = "hdfs.uri";
+	public static final String FILE_PREFIX = "file.prefix";
+	public static final String SYNC_MESSAGE_COUNT = "sync.messages.count";
+	public static final String SYNC_INTERVAL_SECONDS = "sync.interval.seconds";
+	public static final String KAFKA_TOPIC = "kafka.topic";
+	public static final String COUNSUMER_THREADS = "consumer.threads";
+	public static final String KAFKA_GROUP_ID = "kafka.group.id";
+	public static final String ZOOKEEPER_CONNECT = "zookeeper.connect";
+	public static final String ZOOKEEPER_SESSION_TIMEOUT = "zookeeper.session.timeout.ms";
+	public static final String ZOOKEEPER_SYNC_TIME = "zookeeper.sync.time.ms";
+	public static final String FILE_COMPRESSION = "file.compression";
+	
 	private Properties properties;
 
 	public AdapterConfiguration() throws IOException {
