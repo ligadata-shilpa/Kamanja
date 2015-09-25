@@ -24,11 +24,11 @@ public class PartitionedAvroBuffer {
 		return name;
 	}
 	
-	public PartitionStrategy getPartitioner() {
+	public PartitionStrategy getPartitionStrategy() {
 		return partitioner;
 	}
 
-	public void setPartitioner(PartitionStrategy partitioner) {
+	public void setPartitionStrategy(PartitionStrategy partitioner) {
 		this.partitioner = partitioner;
 	}
 

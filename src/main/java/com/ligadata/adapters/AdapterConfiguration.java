@@ -18,6 +18,7 @@ public class AdapterConfiguration {
 	public static final String ZOOKEEPER_SESSION_TIMEOUT = "zookeeper.session.timeout.ms";
 	public static final String ZOOKEEPER_SYNC_TIME = "zookeeper.sync.time.ms";
 	public static final String FILE_COMPRESSION = "file.compression";
+	public static final String PARTITION_STRATEGY = "file.partition.strategy";
 	
 	private Properties properties;
 

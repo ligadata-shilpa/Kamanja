@@ -80,9 +80,12 @@ public class KafkaConsumer implements Runnable {
 
 			Map<String, List<KafkaStream<byte[], byte[]>>> consumerMap = consumer.createMessageStreams(topicCountMap);
 			KafkaStream<byte[], byte[]> kafkaStream = consumerMap.get(topic).get(0);
+			
+			PartitionStrategy strategy = new PartitionStrategy(configuration.getProperty(AdapterConfiguration.PARTITION_STRATEGY));
 
 			PartitionedAvroBuffer buffer = new PartitionedAvroBuffer(
 					configuration.getProperty(AdapterConfiguration.FILE_PREFIX, "Log") + threadNumber);
+			buffer.setPartitionStrategy(strategy);
 
 			String schemaFile = configuration.getProperty(AdapterConfiguration.SCHEMA_FILE, "InstrumentationLog.avsc");
 			this.schema = new Schema.Parser().parse(new File(schemaFile));
