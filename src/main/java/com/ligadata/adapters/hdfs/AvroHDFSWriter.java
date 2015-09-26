@@ -1,4 +1,4 @@
-package com.ligadata.adapters;
+package com.ligadata.adapters.hdfs;
 
 import java.io.IOException;
 import java.net.URI;

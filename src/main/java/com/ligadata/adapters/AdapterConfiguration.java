@@ -19,6 +19,7 @@ public class AdapterConfiguration {
 	public static final String ZOOKEEPER_SYNC_TIME = "zookeeper.sync.time.ms";
 	public static final String FILE_COMPRESSION = "file.compression";
 	public static final String PARTITION_STRATEGY = "file.partition.strategy";
+	public static final String MESSAGE_PROCESSOR = "adapter.message.processor";
 	
 	private Properties properties;
 

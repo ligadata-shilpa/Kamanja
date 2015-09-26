@@ -1,4 +1,4 @@
-package com.ligadata.adapters;
+package com.ligadata.adapters.hdfs;
 
 import java.text.DateFormat;
 import java.text.ParseException;

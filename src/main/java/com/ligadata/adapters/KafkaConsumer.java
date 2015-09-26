@@ -1,18 +1,9 @@
 package com.ligadata.adapters;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-
-import org.apache.avro.Schema;
-import org.apache.avro.generic.GenericDatumReader;
-import org.apache.avro.generic.GenericData.Record;
-import org.apache.avro.io.DatumReader;
-import org.apache.avro.io.Decoder;
-import org.apache.avro.io.DecoderFactory;
 
 import kafka.consumer.ConsumerConfig;
 import kafka.consumer.ConsumerIterator;
@@ -24,25 +15,22 @@ import kafka.message.MessageAndMetadata;
 public class KafkaConsumer implements Runnable {
 	private volatile boolean stop = false;
 	
-	private int threadNumber;
+	private long threadId;
 	private AdapterConfiguration configuration;
-	private Schema schema;
 	private ConsumerConnector consumer;
+	private BufferedMessageProcessor processor;
 
-	public KafkaConsumer(AdapterConfiguration config, int threadNumber) {
-		this.threadNumber = threadNumber;
+	public KafkaConsumer(AdapterConfiguration config) throws Exception {
+		this.threadId = Thread.currentThread().getId();
 		this.configuration = config;
+		String classname = config.getProperty(AdapterConfiguration.MESSAGE_PROCESSOR);
+		System.out.println("Thread " + threadId + ": " + " using " + classname + " for processing messages.");
+		this.processor = (BufferedMessageProcessor) Class.forName(classname).newInstance();
 	}
 	
 	public void shutdown() {
 		stop = true;
 		consumer.shutdown();
-	}
-
-	private Record json2Record(String jsonStr) throws IOException {
-		DatumReader<Record> reader = new GenericDatumReader<Record>(schema);
-		Decoder decoder = DecoderFactory.get().jsonDecoder(schema, jsonStr);
-		return reader.read(null, decoder);
 	}
 
 	private ConsumerConfig createConsumerConfig() {
@@ -67,63 +55,43 @@ public class KafkaConsumer implements Runnable {
 	}
 
 	public void run() {
-		System.out.println("Thread " + threadNumber + ": " + " started processing.");
+		System.out.println("Thread " + threadId + ": " + " started processing.");
 
-		long messageCount = 0;
-		AvroHDFSWriter hdfsWriter = null;
+		long totalMessageCount = 0;
 		try {
 			consumer = kafka.consumer.Consumer.createJavaConsumerConnector(createConsumerConfig());
 			String topic = configuration.getProperty(AdapterConfiguration.KAFKA_TOPIC);
 
-			System.out.println("Thread " + threadNumber + ": " + " connecting to kafka topic " + topic);
+			System.out.println("Thread " + threadId + ": " + " connecting to kafka topic " + topic);
 			Map<String, Integer> topicCountMap = new HashMap<String, Integer>();
 			topicCountMap.put(topic, new Integer(1));
 
 			Map<String, List<KafkaStream<byte[], byte[]>>> consumerMap = consumer.createMessageStreams(topicCountMap);
 			KafkaStream<byte[], byte[]> kafkaStream = consumerMap.get(topic).get(0);
-			
-			PartitionStrategy strategy = new PartitionStrategy(configuration.getProperty(AdapterConfiguration.PARTITION_STRATEGY));
 
-			PartitionedAvroBuffer buffer = new PartitionedAvroBuffer(
-					configuration.getProperty(AdapterConfiguration.FILE_PREFIX, "Log") + threadNumber);
-			buffer.setPartitionStrategy(strategy);
-
-			String schemaFile = configuration.getProperty(AdapterConfiguration.SCHEMA_FILE, "InstrumentationLog.avsc");
-			this.schema = new Schema.Parser().parse(new File(schemaFile));
-
-			hdfsWriter = new AvroHDFSWriter(schema, 
-					configuration.getProperty(AdapterConfiguration.HDFS_URI),
-					configuration.getProperty(AdapterConfiguration.FILE_COMPRESSION));
-			
 			long syncMessageCount = Long
 					.parseLong(configuration.getProperty(AdapterConfiguration.SYNC_MESSAGE_COUNT, "10000"));
 			long syncInterval = Long
 					.parseLong(configuration.getProperty(AdapterConfiguration.SYNC_INTERVAL_SECONDS, "120")) * 1000;
 
 			ConsumerIterator<byte[], byte[]> it = kafkaStream.iterator();
+			long messageCount = 0;
 			long nextSyncTime = System.currentTimeMillis() + syncInterval;
 			while (!stop) {
 				if (hasNext(it)) {
 					MessageAndMetadata<byte[], byte[]> t = it.next();
 					String message = new String(t.message());
-					System.out.println("Thread: " + threadNumber + ": partition Id :" + t.partition()  + " Message: " + message);
-					Record record = null;
-					try {
-						record = json2Record(message);
-					} catch (Exception e) {
-						System.out.println("Error parsing message: " + e.getMessage());
-						e.printStackTrace();
-					}
-					if (record != null)
-						buffer.addRecord(record);
-
+					System.out.println("Thread: " + threadId + ": partition Id :" + t.partition()  + " Message: " + message);
+					processor.addMessage(message);
 					messageCount++;
 				}
 				
-				if (buffer.getSize() >= syncMessageCount || System.currentTimeMillis() >= nextSyncTime) {
-					buffer.write(hdfsWriter);
-					buffer.clear();
+				if (messageCount >= syncMessageCount || System.currentTimeMillis() >= nextSyncTime) {
+					processor.processAll();
+					processor.clearAll();
 					consumer.commitOffsets();
+					totalMessageCount += messageCount;
+					messageCount = 0;
 					nextSyncTime = System.currentTimeMillis() + syncInterval;
 				}
 			}
@@ -131,11 +99,11 @@ public class KafkaConsumer implements Runnable {
 			consumer.shutdown();
 
 		} catch (Exception e) {
-			System.out.println("Error in thread : " + threadNumber);
+			System.out.println("Error in thread : " + threadId);
 			e.printStackTrace();
 			e.getCause().printStackTrace();
 		}
 
-		System.out.println("Shutting down Thread " + threadNumber + " after processing " + messageCount + " messages.");
+		System.out.println("Shutting down Thread " + threadId + " after processing " + totalMessageCount + " messages.");
 	}
 }

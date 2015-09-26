@@ -52,11 +52,18 @@ public class KafkaAdapter implements Observer {
         int numThreads = Integer.parseInt(configuration.getProperty(AdapterConfiguration.COUNSUMER_THREADS, "2"));
         executor = Executors.newFixedThreadPool(numThreads);
         consumers = new ArrayList<KafkaConsumer>();
-        for (int threadNumber = 0; threadNumber < numThreads; threadNumber++) {
-        	KafkaConsumer c = new KafkaConsumer(configuration, threadNumber);
-            executor.submit(c);
-        	consumers.add(c);
-        }
+		try {
+			for (int threadNumber = 0; threadNumber < numThreads; threadNumber++) {
+				KafkaConsumer c = new KafkaConsumer(configuration);
+				executor.submit(c);
+				consumers.add(c);
+			}
+		} catch (Exception e) {
+			System.out.println("Error: " + e.getMessage());
+			e.printStackTrace();
+			shutdown();
+			System.exit(1);
+		}
 	}
 
 
