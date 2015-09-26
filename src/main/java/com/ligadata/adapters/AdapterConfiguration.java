@@ -20,6 +20,11 @@ public class AdapterConfiguration {
 	public static final String FILE_COMPRESSION = "file.compression";
 	public static final String PARTITION_STRATEGY = "file.partition.strategy";
 	public static final String MESSAGE_PROCESSOR = "adapter.message.processor";
+	public static final String JDBC_DRIVER = "jdbc.driver";
+	public static final String JDBC_URL = "jdbc.url";
+	public static final String JDBC_USER = "jdbc.user";
+	public static final String JDBC_PASSWORD = "jdbc.password";
+	public static final String JDBC_INSERT_STATEMENT = "jdbc.insert.statement";
 	
 	private Properties properties;
 

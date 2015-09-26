@@ -8,4 +8,6 @@ public interface BufferedMessageProcessor {
 	public void processAll() throws Exception;
 
 	public void clearAll();
+
+	void close();
 }

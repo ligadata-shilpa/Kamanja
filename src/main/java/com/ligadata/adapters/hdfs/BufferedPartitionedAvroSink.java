@@ -95,4 +95,8 @@ public class BufferedPartitionedAvroSink implements BufferedMessageProcessor {
 	public void clearAll() {
 		buffer.clear();			
 	}
+
+	@Override
+	public void close() {
+	}
 }
