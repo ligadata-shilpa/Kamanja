@@ -38,6 +38,7 @@ public class AvroHDFSWriter {
 		System.out.println("Opening avro writer for " + uri);
 		
 		Configuration conf = new Configuration();
+		conf.set("dfs.client.block.write.replace-datanode-on-failure.policy", "NEVER");
 		FileSystem fs = FileSystem.get(uri, conf);
 
 		DatumWriter<Record> datumWriter = new GenericDatumWriter<Record>(schema);

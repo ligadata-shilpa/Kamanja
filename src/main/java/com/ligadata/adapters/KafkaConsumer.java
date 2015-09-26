@@ -19,6 +19,7 @@ import kafka.consumer.ConsumerIterator;
 import kafka.consumer.ConsumerTimeoutException;
 import kafka.consumer.KafkaStream;
 import kafka.javaapi.consumer.ConsumerConnector;
+import kafka.message.MessageAndMetadata;
 
 public class KafkaConsumer implements Runnable {
 	private volatile boolean stop = false;
@@ -103,8 +104,9 @@ public class KafkaConsumer implements Runnable {
 			long nextSyncTime = System.currentTimeMillis() + syncInterval;
 			while (!stop) {
 				if (hasNext(it)) {
-					String message = new String(it.next().message());
-					System.out.println("Thread " + threadNumber + ": " + message);
+					MessageAndMetadata<byte[], byte[]> t = it.next();
+					String message = new String(t.message());
+					System.out.println("Thread: " + threadNumber + ": partition Id :" + t.partition()  + " Message: " + message);
 					Record record = null;
 					try {
 						record = json2Record(message);
@@ -115,13 +117,14 @@ public class KafkaConsumer implements Runnable {
 					if (record != null)
 						buffer.addRecord(record);
 
-					if (buffer.getSize() >= syncMessageCount || System.currentTimeMillis() >= nextSyncTime) {
-						buffer.write(hdfsWriter);
-						buffer.clear();
-						consumer.commitOffsets();
-						nextSyncTime = System.currentTimeMillis() + syncInterval;
-					}
 					messageCount++;
+				}
+				
+				if (buffer.getSize() >= syncMessageCount || System.currentTimeMillis() >= nextSyncTime) {
+					buffer.write(hdfsWriter);
+					buffer.clear();
+					consumer.commitOffsets();
+					nextSyncTime = System.currentTimeMillis() + syncInterval;
 				}
 			}
 
