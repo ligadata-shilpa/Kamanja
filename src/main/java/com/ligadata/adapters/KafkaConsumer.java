@@ -14,11 +14,11 @@ import kafka.message.MessageAndMetadata;
 
 public class KafkaConsumer implements Runnable {
 	private volatile boolean stop = false;
-	
-	private long threadId;
-	private AdapterConfiguration configuration;
+
+	private final long threadId;
+	private final AdapterConfiguration configuration;
 	private ConsumerConnector consumer;
-	private BufferedMessageProcessor processor;
+	private final BufferedMessageProcessor processor;
 
 	public KafkaConsumer(AdapterConfiguration config) throws Exception {
 		this.threadId = Thread.currentThread().getId();
@@ -26,12 +26,10 @@ public class KafkaConsumer implements Runnable {
 		String classname = config.getProperty(AdapterConfiguration.MESSAGE_PROCESSOR);
 		System.out.println("Thread " + threadId + ": " + " using " + classname + " for processing messages.");
 		this.processor = (BufferedMessageProcessor) Class.forName(classname).newInstance();
-		this.processor.init(configuration);
 	}
-	
+
 	public void shutdown() {
 		stop = true;
-		processor.close();
 		consumer.shutdown();
 	}
 
@@ -56,7 +54,8 @@ public class KafkaConsumer implements Runnable {
 		}
 	}
 
-	public void run() {
+	@Override
+  public void run() {
 		System.out.println("Thread " + threadId + ": " + " started processing.");
 
 		long totalMessageCount = 0;
@@ -79,6 +78,7 @@ public class KafkaConsumer implements Runnable {
 			ConsumerIterator<byte[], byte[]> it = kafkaStream.iterator();
 			long messageCount = 0;
 			long nextSyncTime = System.currentTimeMillis() + syncInterval;
+			processor.init(configuration);
 			while (!stop) {
 				if (hasNext(it)) {
 					MessageAndMetadata<byte[], byte[]> t = it.next();
@@ -87,7 +87,7 @@ public class KafkaConsumer implements Runnable {
 					processor.addMessage(message);
 					messageCount++;
 				}
-				
+
 				if (messageCount >= syncMessageCount || System.currentTimeMillis() >= nextSyncTime) {
 					processor.processAll();
 					processor.clearAll();

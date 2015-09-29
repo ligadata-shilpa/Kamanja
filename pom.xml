@@ -36,6 +36,20 @@
 			</exclusions>
 		</dependency>
 
+		<!-- JSON -->
+		<dependency>
+			<groupId>com.googlecode.json-simple</groupId>
+			<artifactId>json-simple</artifactId>
+			<version>1.1</version>
+		</dependency>
+
+		<!-- JDBC ADD IT MANULLY // mvn -e install:install-file "-Dfile=sqljdbc41.jar" "-Dpackaging=jar" "-DgroupId=com.microsoft.sqlserver" "-DartifactId=sqljdbc4" "-Dversion=4.0" -->
+		<dependency>
+			<groupId>com.microsoft.sqlserver</groupId>
+			<artifactId>sqljdbc4</artifactId>
+			<version>4.0</version>
+		</dependency>
+
 		<!-- JUNIT TESTING -->
 		<dependency>
 			<groupId>junit</groupId>
@@ -55,7 +69,7 @@
 			<artifactId>avro-mapred</artifactId>
 			<version>1.7.7</version>
 		</dependency>
-		
+
 		<!-- Hadoop -->
 		<dependency>
 			<groupId>org.apache.hadoop</groupId>

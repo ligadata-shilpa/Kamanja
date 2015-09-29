@@ -22,10 +22,14 @@ public class AdapterConfiguration {
 	public static final String MESSAGE_PROCESSOR = "adapter.message.processor";
 	public static final String JDBC_DRIVER = "jdbc.driver";
 	public static final String JDBC_URL = "jdbc.url";
+	public static final String JDBC_PORT = "jdbc.port";
+	public static final String JDBC_DATABASE = "jdbc.database";
+	public static final String JDBC_SCHEMA = "jdbc.schema";
+	public static final String JDBC_TABLE = "jdbc.table";
 	public static final String JDBC_USER = "jdbc.user";
 	public static final String JDBC_PASSWORD = "jdbc.password";
 	public static final String JDBC_INSERT_STATEMENT = "jdbc.insert.statement";
-	
+
 	private Properties properties;
 
 	public AdapterConfiguration() throws IOException {
@@ -33,24 +37,24 @@ public class AdapterConfiguration {
 	}
 
 	public AdapterConfiguration(String configFileName) throws IOException {
-		File configFile = new File(configFileName);		 
+		File configFile = new File(configFileName);
 	    FileReader reader = null;
-	    
+
 		try {
 		    reader = new FileReader(configFile);
 		    properties = new Properties();
 		    properties.load(reader);
-		 
+
 		} finally {
 			if(reader != null)
 				try { reader.close(); } catch (Exception e){}
-		}	
+		}
 	}
 
 	public Properties getProperties() {
 		return properties;
-	}	
-	
+	}
+
 	public String getProperty(String name) {
 		return properties.getProperty(name);
 	}
