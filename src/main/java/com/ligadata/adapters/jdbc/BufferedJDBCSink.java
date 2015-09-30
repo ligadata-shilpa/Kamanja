@@ -82,16 +82,19 @@ public class BufferedJDBCSink implements BufferedMessageProcessor {
 
         String[] typeandparam = param.split(",");
         type = typeandparam[0];
-        String[] jsontree = typeandparam[1].split(".");
+        String[] jsontree = typeandparam[1].split("\\.");
         if (jsontree.length == 0) {
           value = jo.get(typeandparam[1]).toString();
         } else {
           int count = 0;
           for (String jskey : jsontree) {
             count++;
-            subobject = ((JSONObject) jo.get(jskey));
             if (jsontree.length == count) {
-              value = subobject.get(jskey).toString();
+              if (subobject.get(jskey) != null) {
+                value = subobject.get(jskey).toString();
+              }
+            } else {
+              subobject = ((JSONObject) jo.get(jskey));
             }
           }
         }
@@ -99,7 +102,7 @@ public class BufferedJDBCSink implements BufferedMessageProcessor {
         if (type.equals("1")) {
           statement.setString(counter, value);
         } else if (type.equals("2")) {
-          statement.setInt(counter, Integer.parseInt(value));
+          statement.setInt(counter, value == null ? 0 :Integer.parseInt(value));
         }
       }
       counter = 0;
