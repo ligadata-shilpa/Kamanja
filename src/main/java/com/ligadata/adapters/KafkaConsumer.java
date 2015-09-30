@@ -80,7 +80,7 @@ public class KafkaConsumer implements Runnable {
 			ConsumerIterator<byte[], byte[]> it = kafkaStream.iterator();
 			long messageCount = 0;
 			long nextSyncTime = System.currentTimeMillis() + syncInterval;
-			processor.init(configuration);
+			//processor.init(configuration);
 			while (!stop) {
 				if (hasNext(it)) {
 					MessageAndMetadata<byte[], byte[]> t = it.next();
