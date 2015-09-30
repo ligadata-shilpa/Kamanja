@@ -26,10 +26,12 @@ public class KafkaConsumer implements Runnable {
 		String classname = config.getProperty(AdapterConfiguration.MESSAGE_PROCESSOR);
 		System.out.println("Thread " + threadId + ": " + " using " + classname + " for processing messages.");
 		this.processor = (BufferedMessageProcessor) Class.forName(classname).newInstance();
+		this.processor.init(configuration);
 	}
 
 	public void shutdown() {
 		stop = true;
+		processor.close();
 		consumer.shutdown();
 	}
 
