@@ -24,8 +24,7 @@ public class AdapterConfiguration {
 	public static final String JDBC_URL = "jdbc.url";
 	public static final String JDBC_PORT = "jdbc.port";
 	public static final String JDBC_DATABASE = "jdbc.database";
-	public static final String JDBC_SCHEMA = "jdbc.schema";
-	public static final String JDBC_TABLE = "jdbc.table";
+	public static final String JDBC_PARAM = "jdbc.param.";
 	public static final String JDBC_USER = "jdbc.user";
 	public static final String JDBC_PASSWORD = "jdbc.password";
 	public static final String JDBC_INSERT_STATEMENT = "jdbc.insert.statement";
