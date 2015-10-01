@@ -72,19 +72,26 @@ public class BufferedJDBCSink implements BufferedMessageProcessor {
   @Override
   public void processAll() throws Exception {
     int counter = 0;
-    String value = null;
+    String value = "";
     JSONObject subobject = new JSONObject();
     String type = null;
 
     for (JSONObject jo : array) {
       for (String param : paramArray) {
         counter++;
+        value = "";
 
         String[] typeandparam = param.split(",");
         type = typeandparam[0];
         String[] jsontree = typeandparam[1].split("\\.");
-        if (jsontree.length == 0) {
-          value = jo.get(typeandparam[1]).toString();
+        if (jsontree.length == 1) {
+          if (jo.get(typeandparam[1]) != null) {
+            value = jo.get(typeandparam[1]).toString();
+          } else {
+            if (type.equals("2")) {
+              value = "0";
+            }
+          }
         } else {
           int count = 0;
           for (String jskey : jsontree) {
@@ -98,11 +105,12 @@ public class BufferedJDBCSink implements BufferedMessageProcessor {
             }
           }
         }
-
+        System.out.println(">>>key>>>" + typeandparam[1] + ">>>>>>>>>>>>>>>> " + value);
         if (type.equals("1")) {
           statement.setString(counter, value);
         } else if (type.equals("2")) {
-          statement.setInt(counter, value == null ? 0 :Integer.parseInt(value));
+          statement
+              .setInt(counter, value == null || "".equals(value) ? 0 : Integer.parseInt(value));
         }
       }
       counter = 0;
