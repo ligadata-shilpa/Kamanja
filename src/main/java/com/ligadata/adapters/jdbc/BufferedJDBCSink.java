@@ -59,7 +59,6 @@ public class BufferedJDBCSink implements BufferedMessageProcessor {
 		}
 
 		statement = connection.prepareStatement(config.getProperty(AdapterConfiguration.JDBC_INSERT_STATEMENT));
-
 	}
 
 	@Override
@@ -100,6 +99,22 @@ public class BufferedJDBCSink implements BufferedMessageProcessor {
 					else
 						statement.setInt(paramIndex, Integer.parseInt(value));
 				} else if (param.type.equals("3")) {
+					// Double
+					if(value == null || "".equals(value))
+						statement.setNull(paramIndex, java.sql.Types.DOUBLE);
+					else
+						statement.setDouble(paramIndex, Double.parseDouble(value));
+				} else if (param.type.equals("4")) {
+					// Date
+					java.sql.Date dt = null;
+					if(value == null || "".equals(value))
+						statement.setNull(paramIndex, java.sql.Types.DATE);
+					else {
+						java.util.Date date = inputFormat.parse(value);
+						dt = new java.sql.Date(date.getTime());
+						statement.setDate(paramIndex, dt);
+					}
+				} else if (param.type.equals("5")) {
 					// timestamp
 					Timestamp ts = null;
 					if(value == null || "".equals(value))
