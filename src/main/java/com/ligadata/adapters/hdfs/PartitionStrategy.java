@@ -24,11 +24,12 @@ public class PartitionStrategy {
 	}
 	
 	private ArrayList<PartitionKey> keys = null;
+	private SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd");
 	
 	public PartitionStrategy() {
 	}
 	
-	public PartitionStrategy(String format) {
+	public PartitionStrategy(String format, String inputDateFormat) {
 		if(format == null || "".equals(format))
 			return;
 		
@@ -44,11 +45,12 @@ public class PartitionStrategy {
 			
 			keys.add(key);
 		}
+		
+		inputFormat = new SimpleDateFormat(inputDateFormat);
 	}
 
 	public String getPartition(Record rec) {
 		String partition = "";
-		SimpleDateFormat input = new SimpleDateFormat("yyyy-MM-dd");
 		if(keys != null) {
 			for (PartitionKey key : keys) {
 				String value = "";
@@ -56,7 +58,7 @@ public class PartitionStrategy {
 					value = rec.get(key.attribute).toString();
 				else {
 					try {
-						Date dateValue = input.parse(rec.get(key.attribute).toString());
+						Date dateValue = inputFormat.parse(rec.get(key.attribute).toString());
 						value = key.format.format(dateValue);
 					} catch (ParseException e) {
 					}

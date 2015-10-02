@@ -20,6 +20,7 @@ public class AvroHDFSWriter {
 	private Schema schema;
 	private String basePath;
 	private String codec;
+	private URI uri;
 	private FSDataOutputStream out;
 	private DataFileWriter<Record> dataFileWriter;
 
@@ -34,8 +35,8 @@ public class AvroHDFSWriter {
 	}
 	
 	public void open(String fileName) throws IOException {
-		URI uri = URI.create(basePath + "/" + fileName);
-		System.out.println("Opening avro writer for " + uri);
+		uri = URI.create(basePath + "/" + fileName);
+		System.out.println("Thread " + Thread.currentThread().getId() + ": Opening avro writer for " + uri);
 		
 		Configuration conf = new Configuration();
 		conf.set("dfs.client.block.write.replace-datanode-on-failure.policy", "NEVER");
@@ -43,14 +44,18 @@ public class AvroHDFSWriter {
 
 		DatumWriter<Record> datumWriter = new GenericDatumWriter<Record>(schema);
 		dataFileWriter = new DataFileWriter<Record>(datumWriter);
-		dataFileWriter.setCodec(CodecFactory.fromString(codec));
+		if(codec == null || "".equals(codec))
+			dataFileWriter.setCodec(CodecFactory.fromString("null"));
+		else
+			dataFileWriter.setCodec(CodecFactory.fromString(codec));
+		
 		Path path = new Path(uri);
 		if (fs.exists(path)) {
-			System.out.println("Loading existing dataset at " + uri);
+			System.out.println("Thread " + Thread.currentThread().getId() + ": Loading existing file " + uri);
 			out = fs.append(path);
 			dataFileWriter.appendTo(new FsInput(path, conf), out);
 		} else {
-			System.out.println("Creating new dataset at " + uri);
+			System.out.println("Thread " + Thread.currentThread().getId() + ": Creating new file " + uri);
 			out = fs.create(path);
 			dataFileWriter.create(schema, out);
 		}
@@ -61,9 +66,14 @@ public class AvroHDFSWriter {
 	}
 
 	public void close() throws IOException {
+		System.out.println("Thread " + Thread.currentThread().getId() + ": Closing file at " + uri);
 		if (dataFileWriter != null)
 			dataFileWriter.close();
 		if (out != null)
 			out.close();
+		
+		dataFileWriter = null;
+		out = null;
+		uri = null;
 	}
 }

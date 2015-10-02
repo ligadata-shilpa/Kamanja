@@ -47,10 +47,11 @@ public class BufferedPartitionedAvroSink implements BufferedMessageProcessor {
 	public void init(AdapterConfiguration configuration) throws Exception {
 		this.name = configuration.getProperty(AdapterConfiguration.FILE_PREFIX, "Log") + Thread.currentThread().getId();
 		this.buffer = new HashMap<String, ArrayList<Record>>();
-		this.partitioner = new PartitionStrategy(configuration.getProperty(AdapterConfiguration.PARTITION_STRATEGY));
+		this.partitioner = new PartitionStrategy(configuration.getProperty(AdapterConfiguration.PARTITION_STRATEGY),
+				configuration.getProperty(AdapterConfiguration.INPUT_DATE_FORMAT, "yyyy-MM-dd"));
 		
 		String schemaFile = configuration.getProperty(AdapterConfiguration.SCHEMA_FILE, "InstrumentationLog.avsc");
-		System.out.println("Using avro schema from file: " + schemaFile);
+		System.out.println("Thread " + Thread.currentThread().getId() + ": Using avro schema from file: " + schemaFile);
 		this.schema = new Schema.Parser().parse(new File(schemaFile));
 
 		this.hdfsWriter = new AvroHDFSWriter(schema, 
@@ -65,7 +66,7 @@ public class BufferedPartitionedAvroSink implements BufferedMessageProcessor {
 		try {
 			record = json2Record(message);
 		} catch (Exception e) {
-			System.out.println("Error parsing message: " + e.getMessage());
+			System.out.println("Thread " + Thread.currentThread().getId() + ": Error parsing message: " + e.getMessage());
 			e.printStackTrace();
 		}
 		if (record != null)
@@ -76,7 +77,7 @@ public class BufferedPartitionedAvroSink implements BufferedMessageProcessor {
 	public void processAll() throws Exception {
 		for (String key : buffer.keySet()) {
 			try {
-				System.out.println("Writing partition [" + key + "]");
+				System.out.println("Thread " + Thread.currentThread().getId() + ": Writing partition [" + key + "]");
 				String filename = name + ".avro";
 				if(key != null && !key.equalsIgnoreCase(""))
 					filename = key + "/" + filename;

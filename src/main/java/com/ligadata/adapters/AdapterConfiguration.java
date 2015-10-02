@@ -19,6 +19,7 @@ public class AdapterConfiguration {
 	public static final String ZOOKEEPER_SYNC_TIME = "zookeeper.sync.time.ms";
 	public static final String FILE_COMPRESSION = "file.compression";
 	public static final String PARTITION_STRATEGY = "file.partition.strategy";
+	public static final String INPUT_DATE_FORMAT = "input.date.format";
 	public static final String MESSAGE_PROCESSOR = "adapter.message.processor";
 	public static final String JDBC_DRIVER = "jdbc.driver";
 	public static final String JDBC_URL = "jdbc.url";

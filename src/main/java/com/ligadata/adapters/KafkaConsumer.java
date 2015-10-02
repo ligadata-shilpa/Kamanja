@@ -15,24 +15,22 @@ import kafka.message.MessageAndMetadata;
 public class KafkaConsumer implements Runnable {
 	private volatile boolean stop = false;
 
-	private final long threadId;
 	private final AdapterConfiguration configuration;
 	private ConsumerConnector consumer;
 	private final BufferedMessageProcessor processor;
 
 	public KafkaConsumer(AdapterConfiguration config) throws Exception {
-		this.threadId = Thread.currentThread().getId();
 		this.configuration = config;
-		String classname = config.getProperty(AdapterConfiguration.MESSAGE_PROCESSOR);
-		System.out.println("Thread " + threadId + ": " + " using " + classname + " for processing messages.");
-		this.processor = (BufferedMessageProcessor) Class.forName(classname).newInstance();
-		this.processor.init(configuration);
+		String classname = configuration.getProperty(AdapterConfiguration.MESSAGE_PROCESSOR);
+		processor = (BufferedMessageProcessor) Class.forName(classname).newInstance();
 	}
 
 	public void shutdown() {
 		stop = true;
-		processor.close();
-		consumer.shutdown();
+		if(processor != null)
+			processor.close();
+		if(consumer != null)
+			consumer.shutdown();
 	}
 
 	private ConsumerConfig createConsumerConfig() {
@@ -57,11 +55,16 @@ public class KafkaConsumer implements Runnable {
 	}
 
 	@Override
-  public void run() {
+	public void run() {
+		long threadId = Thread.currentThread().getId();
 		System.out.println("Thread " + threadId + ": " + " started processing.");
 
 		long totalMessageCount = 0;
 		try {
+
+			System.out.println("Thread " + threadId + ": " + " using " + processor.getClass().getName() + " for processing messages.");
+			processor.init(configuration);
+
 			consumer = kafka.consumer.Consumer.createJavaConsumerConnector(createConsumerConfig());
 			String topic = configuration.getProperty(AdapterConfiguration.KAFKA_TOPIC);
 
@@ -80,7 +83,6 @@ public class KafkaConsumer implements Runnable {
 			ConsumerIterator<byte[], byte[]> it = kafkaStream.iterator();
 			long messageCount = 0;
 			long nextSyncTime = System.currentTimeMillis() + syncInterval;
-			//processor.init(configuration);
 			while (!stop) {
 				if (hasNext(it)) {
 					MessageAndMetadata<byte[], byte[]> t = it.next();
