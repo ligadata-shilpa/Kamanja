@@ -1,0 +1,222 @@
+package com.ligadata.adapters.jdbc;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ParameterMetaData;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+
+import com.ligadata.adapters.AdapterConfiguration;
+import com.ligadata.adapters.BufferedMessageProcessor;
+
+public class UpsertJDBCSink implements BufferedMessageProcessor {
+
+	private Connection connection;
+	private SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+	private PreparedStatement insertStatement;
+	private List<ParameterMapping> insertParams;
+	private PreparedStatement updateStatement;
+	private List<ParameterMapping> updateParams;
+
+	private class ParameterMapping {
+		String typeName;
+		int type;
+		String[] path;
+
+		private ParameterMapping(String name, int type, String[] path) {
+			this.typeName = name;
+			this.type = type;
+			this.path = path;
+		}
+	}
+
+	public UpsertJDBCSink() {
+	}
+
+	private PreparedStatement buildStatementAndParameters(String sqlStr, List<ParameterMapping> paramArray) throws SQLException {
+		// replace parameters specified as {$..} with ?
+	    String sql = sqlStr.replaceAll("\\{\\$[^\\}]+\\}", "?");
+		PreparedStatement statement = connection.prepareStatement(sql);
+		ParameterMetaData metadata = statement.getParameterMetaData();
+		
+		// extract parameters between {$..}
+	    Matcher matcher = Pattern.compile("\\{\\$([^\\}]+)").matcher(sqlStr);
+	    int pos = -1;
+	    int param = 1;
+	    while (matcher.find(pos+1)){
+	        pos = matcher.start();
+	        String path = matcher.group(1);
+			paramArray.add(new ParameterMapping(metadata.getParameterTypeName(param), 
+					metadata.getParameterType(param),
+					path.split("\\.")));
+			param++;
+	    }
+		
+	    return statement;
+	}
+	
+	private void bindParameters(PreparedStatement statement, List<ParameterMapping> paramArray, JSONObject jsonObject) {
+		int paramIndex = 1;
+		String key = null;
+		String value = null;
+		try {
+		for (ParameterMapping param : paramArray) {
+			key = Arrays.toString(param.path);
+
+			// traverse JSON tree to get the value
+			JSONObject subobject = jsonObject;
+			for (int i = 0; i < param.path.length - 1; i++) {
+				if (subobject != null)
+					subobject = ((JSONObject) subobject.get(param.path[i]));
+			}
+			value = null;
+			if(subobject != null && subobject.get(param.path[param.path.length-1]) != null)
+				value = subobject.get(param.path[param.path.length-1]).toString();
+
+			key = param.path.toString();
+			
+			if (param.type == java.sql.Types.VARCHAR || param.type == java.sql.Types.LONGVARCHAR) { 
+				//String
+				statement.setString(paramIndex, value);
+			} else if (param.type == java.sql.Types.BIGINT || 
+					param.type == java.sql.Types.INTEGER ||
+					param.type == java.sql.Types.SMALLINT) {
+				//Integer
+				if(value == null || "".equals(value))
+					statement.setNull(paramIndex, java.sql.Types.INTEGER);
+				else
+					statement.setInt(paramIndex, Integer.parseInt(value));
+			} else if (param.type == java.sql.Types.DOUBLE || param.type == java.sql.Types.FLOAT ||
+					param.type == java.sql.Types.REAL || param.type == java.sql.Types.DECIMAL || 
+					param.type == java.sql.Types.NUMERIC) {
+				// Double
+				if(value == null || "".equals(value))
+					statement.setNull(paramIndex, java.sql.Types.DOUBLE);
+				else
+					statement.setDouble(paramIndex, Double.parseDouble(value));
+			} else if (param.type == java.sql.Types.DATE) {
+				// Date
+				java.sql.Date dt = null;
+				if(value == null || "".equals(value))
+					statement.setNull(paramIndex, java.sql.Types.DATE);
+				else {
+					java.util.Date date = inputFormat.parse(value);
+					dt = new java.sql.Date(date.getTime());
+					statement.setDate(paramIndex, dt);
+				}
+			} else if (param.type == java.sql.Types.TIMESTAMP) {
+				// timestamp
+				Timestamp ts = null;
+				if(value == null || "".equals(value))
+					statement.setNull(paramIndex, java.sql.Types.TIMESTAMP);
+				else {
+					java.util.Date date = inputFormat.parse(value);
+					ts = new Timestamp(date.getTime());
+					statement.setTimestamp(paramIndex, ts);
+				}
+			} else {
+				throw new Exception("Unsupported sql data type " + param.typeName + " [" + param.type + "]");
+			}
+			paramIndex++;
+		}
+		} catch (Exception e) {
+			System.out.println("Error binding parameters - ignoring message : " + e.getMessage());
+			System.out.println("Error for Parameter index : [" + paramIndex + "] Key : [" + key + "] value : [" + value + "]");
+			e.printStackTrace();
+		}
+	}
+	
+	@Override
+	public void init(AdapterConfiguration config) throws Exception {
+		Class.forName(config.getProperty(AdapterConfiguration.JDBC_DRIVER));
+		connection = DriverManager.getConnection(config.getProperty(AdapterConfiguration.JDBC_URL),
+				config.getProperty(AdapterConfiguration.JDBC_USER),
+				config.getProperty(AdapterConfiguration.JDBC_PASSWORD));
+
+		connection.setAutoCommit(false);
+
+		insertParams = new ArrayList<ParameterMapping>();
+		updateParams = new ArrayList<ParameterMapping>();
+		inputFormat = new SimpleDateFormat(config.getProperty(AdapterConfiguration.INPUT_DATE_FORMAT, "yyyy-MM-dd"));
+		String insertStr = config.getProperty(AdapterConfiguration.JDBC_INSERT_STATEMENT);
+		if(insertStr == null)
+			throw new Exception("Insert statemnt not specified in the properties file.");
+		
+		String updateStr = config.getProperty(AdapterConfiguration.JDBC_UPDATE_STATEMENT);
+		if(updateStr == null)
+			throw new Exception("Update statemnt not specified in the properties file.");
+		
+		insertStatement = buildStatementAndParameters(insertStr, insertParams);
+		updateStatement = buildStatementAndParameters(updateStr, updateParams);   
+	}
+
+	@Override
+	public void addMessage(String message) {
+		try {
+			JSONParser jsonParser = new JSONParser();
+			JSONObject jsonObject = (JSONObject) jsonParser.parse(message);
+
+			bindParameters(updateStatement, updateParams, jsonObject);
+			updateStatement.execute();
+			if(updateStatement.getUpdateCount() == 0) {
+				bindParameters(insertStatement, insertParams, jsonObject);
+				insertStatement.execute();
+			}
+				
+			System.out.println("Thread " + Thread.currentThread().getId() + ": Saving messages to database");
+			connection.commit();
+			
+		} catch (Exception e) {
+			System.out.println("Error processing message - ignoring message : " + e.getMessage());
+			e.printStackTrace();
+		}
+
+	}
+
+	@Override
+	public void processAll() throws Exception {
+	}
+
+	@Override
+	public void clearAll() {
+	}
+
+	@Override
+	public void close() {
+		try {
+			if (connection != null)
+				connection.close();
+		} catch (SQLException e) {
+		}
+	}
+	
+	public static void main(String[] args) {
+		String rec1 = "{\"appId\": \"unknownappid\", \"DQScore\": \"20.0\",\"datetime\": \"2015-09-25T10:39:45.0000132Z\", \"DailyAggs\": \"20.0\"}";
+		String rec2 = "{\"appId\": \"123\", \"DQScore\": \"20.0\",\"datetime\": \"2015-09-25T10:39:45.0000132Z\", \"DailyAggs\": \"20.0\"}";
+		String rec3 = "{\"appId\": \"unknownappid\", \"DQScore\": \"20.0\",\"datetime\": \"2015-09-25T10:39:45.0000132Z\", \"DailyAggs\": \"40.0\"}";
+		String rec4 = "{\"appId\": \"123\", \"DQScore\": \"20.0\",\"datetime\": \"2015-09-25T10:39:45.0000132Z\", \"DailyAggs\": \"30.0\"}";
+		AdapterConfiguration config;
+		try {
+			config = new AdapterConfiguration("dqjdbc.properties");
+			UpsertJDBCSink processor = new UpsertJDBCSink();
+			processor.init(config);
+			processor.addMessage(rec1);
+			processor.addMessage(rec2);
+			processor.addMessage(rec3);
+			processor.addMessage(rec4);
+			processor.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+}

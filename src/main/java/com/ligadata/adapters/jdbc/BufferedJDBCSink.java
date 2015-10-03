@@ -21,7 +21,7 @@ public class BufferedJDBCSink implements BufferedMessageProcessor {
 	private Connection connection;
 	private PreparedStatement statement;
 	private List<ParameterMapping> paramArray;
-	private SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss:SSS");
+	private SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
 
 	private class ParameterMapping {
 		String type;
@@ -47,6 +47,7 @@ public class BufferedJDBCSink implements BufferedMessageProcessor {
 		connection.setAutoCommit(false);
 		int countparameters = StringUtils.countMatches(config.getProperty(AdapterConfiguration.JDBC_INSERT_STATEMENT), "?");
 		paramArray = new ArrayList<ParameterMapping>();
+		inputFormat = new SimpleDateFormat(config.getProperty(AdapterConfiguration.INPUT_DATE_FORMAT, "yyyy-MM-dd"));
 
 		for (int i = 1; i <= countparameters; i++) {
 			String param = config.getProperty(AdapterConfiguration.JDBC_PARAM + i);
