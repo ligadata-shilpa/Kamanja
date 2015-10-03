@@ -76,8 +76,6 @@ public abstract class AbstractJDBCSink implements BufferedMessageProcessor {
 			value = null;
 			if(subobject != null && subobject.get(param.path[param.path.length-1]) != null)
 				value = subobject.get(param.path[param.path.length-1]).toString();
-
-			key = param.path.toString();
 			
 			if (param.type == java.sql.Types.VARCHAR || param.type == java.sql.Types.LONGVARCHAR) { 
 				//String
@@ -87,9 +85,9 @@ public abstract class AbstractJDBCSink implements BufferedMessageProcessor {
 					param.type == java.sql.Types.SMALLINT) {
 				//Integer
 				if(value == null || "".equals(value))
-					statement.setNull(paramIndex, java.sql.Types.INTEGER);
+					statement.setNull(paramIndex, java.sql.Types.BIGINT);
 				else
-					statement.setInt(paramIndex, Integer.parseInt(value));
+					statement.setLong(paramIndex, Long.parseLong(value));
 			} else if (param.type == java.sql.Types.DOUBLE || param.type == java.sql.Types.FLOAT ||
 					param.type == java.sql.Types.REAL || param.type == java.sql.Types.DECIMAL || 
 					param.type == java.sql.Types.NUMERIC) {
@@ -108,7 +106,7 @@ public abstract class AbstractJDBCSink implements BufferedMessageProcessor {
 					dt = new java.sql.Date(date.getTime());
 					statement.setDate(paramIndex, dt);
 				}
-			} else if (param.type == java.sql.Types.TIMESTAMP || param.type == -2) {
+			} else if (param.type == java.sql.Types.TIMESTAMP) {
 				// timestamp
 				Timestamp ts = null;
 				if(value == null || "".equals(value))
