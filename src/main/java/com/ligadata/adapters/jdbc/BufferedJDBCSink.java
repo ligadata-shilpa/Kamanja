@@ -1,154 +1,62 @@
 package com.ligadata.adapters.jdbc;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 import com.ligadata.adapters.AdapterConfiguration;
-import com.ligadata.adapters.BufferedMessageProcessor;
 
-public class BufferedJDBCSink implements BufferedMessageProcessor {
+public class BufferedJDBCSink extends AbstractJDBCSink {
 
-	private Connection connection;
-	private PreparedStatement statement;
-	private List<ParameterMapping> paramArray;
-	private SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
-
-	private class ParameterMapping {
-		String type;
-		String[] path;
-
-		private ParameterMapping(String type, String[] path) {
-			this.type = type;
-			this.path = path;
-		}
-	}
+	private PreparedStatement insertStatement;
+	private List<ParameterMapping> insertParams;
 
 	public BufferedJDBCSink() {
-		// array = new ArrayList<JSONObject>();
 	}
 
 	@Override
 	public void init(AdapterConfiguration config) throws Exception {
-		Class.forName(config.getProperty(AdapterConfiguration.JDBC_DRIVER));
-		connection = DriverManager.getConnection(config.getProperty(AdapterConfiguration.JDBC_URL),
-				config.getProperty(AdapterConfiguration.JDBC_USER),
-				config.getProperty(AdapterConfiguration.JDBC_PASSWORD));
+		super.init(config);
 
-		connection.setAutoCommit(false);
-		int countparameters = StringUtils.countMatches(config.getProperty(AdapterConfiguration.JDBC_INSERT_STATEMENT), "?");
-		paramArray = new ArrayList<ParameterMapping>();
-		inputFormat = new SimpleDateFormat(config.getProperty(AdapterConfiguration.INPUT_DATE_FORMAT, "yyyy-MM-dd"));
-
-		for (int i = 1; i <= countparameters; i++) {
-			String param = config.getProperty(AdapterConfiguration.JDBC_PARAM + i);
-			if (param == null || "".equals(param))
-				throw new Exception("Missing configuration for insert statement parameter " + i);
-
-			String[] typeandparam = param.split(",");
-			String[] jsontree = typeandparam[1].split("\\.");
-			paramArray.add(new ParameterMapping(typeandparam[0], jsontree));
-		}
-
-		statement = connection.prepareStatement(config.getProperty(AdapterConfiguration.JDBC_INSERT_STATEMENT));
+		insertParams = new ArrayList<ParameterMapping>();
+		String insertStr = config.getProperty(AdapterConfiguration.JDBC_INSERT_STATEMENT);
+		if(insertStr == null)
+			throw new Exception("Insert statement not specified in the properties file.");
+		
+		insertStatement = buildStatementAndParameters(insertStr, insertParams);		
 	}
 
 	@Override
 	public void addMessage(String message) {
-		int paramIndex = 0;
-		String key = null;
-		String value = null;
+				
 		try {
-
 			JSONParser jsonParser = new JSONParser();
 			JSONObject jsonObject = (JSONObject) jsonParser.parse(message);
 
-			// array.add(jsonObject);
-
-			paramIndex = 1;
-			for (ParameterMapping param : paramArray) {
-				key = param.path.toString();
-
-				// traverse JSON tree to get the value
-				JSONObject subobject = jsonObject;
-				for (int i = 0; i < param.path.length - 1; i++) {
-					if (subobject != null)
-						subobject = ((JSONObject) subobject.get(param.path[i]));
-				}
-				value = null;
-				if(subobject != null && subobject.get(param.path[param.path.length-1]) != null)
-					value = subobject.get(param.path[param.path.length-1]).toString();
-
-				key = param.path.toString();
-				
-				if (param.type.equals("1")) { 
-					//String
-					statement.setString(paramIndex, value);
-				} else if (param.type.equals("2")) {
-					//Integer
-					if(value == null || "".equals(value))
-						statement.setNull(paramIndex, java.sql.Types.INTEGER);
-					else
-						statement.setInt(paramIndex, Integer.parseInt(value));
-				} else if (param.type.equals("3")) {
-					// Double
-					if(value == null || "".equals(value))
-						statement.setNull(paramIndex, java.sql.Types.DOUBLE);
-					else
-						statement.setDouble(paramIndex, Double.parseDouble(value));
-				} else if (param.type.equals("4")) {
-					// Date
-					java.sql.Date dt = null;
-					if(value == null || "".equals(value))
-						statement.setNull(paramIndex, java.sql.Types.DATE);
-					else {
-						java.util.Date date = inputFormat.parse(value);
-						dt = new java.sql.Date(date.getTime());
-						statement.setDate(paramIndex, dt);
-					}
-				} else if (param.type.equals("5")) {
-					// timestamp
-					Timestamp ts = null;
-					if(value == null || "".equals(value))
-						statement.setNull(paramIndex, java.sql.Types.TIMESTAMP);
-					else {
-						java.util.Date date = inputFormat.parse(value);
-						ts = new Timestamp(date.getTime());
-						statement.setTimestamp(paramIndex, ts);
-					}
-				}
-				paramIndex++;
-			}
-			statement.addBatch();
+			bindParameters(insertStatement, insertParams, jsonObject);
+			insertStatement.addBatch();
 		} catch (Exception e) {
 			System.out.println("Error processing message - ignoring message : " + e.getMessage());
-			System.out.println("Error for Parameter index : [" + paramIndex + "] Key : [" + key + "] value : [" + value + "]");
 			e.printStackTrace();
 		}
-
 	}
 
 	@Override
 	public void processAll() throws Exception {
 		System.out.println("Thread " + Thread.currentThread().getId() + ": Saving messages to database");
-		statement.executeBatch();
+		insertStatement.executeBatch();
 		connection.commit();
 	}
 
 	@Override
 	public void clearAll() {
 		try {
-			if (statement != null)
-				statement.clearBatch();
+			if (insertStatement != null)
+				insertStatement.clearBatch();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -160,6 +68,27 @@ public class BufferedJDBCSink implements BufferedMessageProcessor {
 			if (connection != null)
 				connection.close();
 		} catch (SQLException e) {
+		}
+	}
+
+	public static void main(String[] args) {
+		String rec1 = "{\"Id\": \"b0118f6e-59d1-4f5d-a198-f81c635a98f6\", \"applicationId\": \"\", \"createdAt\": \"2015-10-02 20:55:10\", \"timestamp\": \"2015-09-25T10:39:48.0000866Z\", \"timezone\": \"-04:00\", \"correlationId\": \"\", \"correlationParentId\": \"\", \"dqscore\": 100.0, \"details\": {\"sumNP\":\"3\",\"confidentialdatalabels\":\"firstname,lastname,ssntin\",\"type\":\"userActivityEvent\",\"personNumber\":\"NL\",\"ait\":\"972919\",\"sumPI\":\"1\",\"proprietarydatavalues\":\"standardid=abcdefg\",\"result\":\"0\",\"resourcehost\":\"lsdie1p8e.sdi.corp.bankofamerica.com\",\"resourceprotocol\":\"http\",\"clientip\":\"171.139.51.146\",\"action\":\"read\",\"systemuser\":\"nbeqwos\",\"timePartitionData\":\"0\",\"ApplicationName\":\"NL\",\"resource\":\"/CustomerWebApp/GetCustomerServlet.do\",\"processname\":\"http-bio-8080-exec-4\",\"resourceport\":\"8080\",\"resourcetype\":\"webapp\",\"proprietarydatalabels\":\"standardid\",\"transactionId\":\"0\",\"confidentialrecordcount\":\"1\",\"application\":\"Client360\",\"processid\":\"23\",\"user\":\"nbktest\",\"device\":\"lsdie1p8e.sdi.corp.bankofamerica.com\"}}";
+		String rec2 = "{\"Id\": \"b0218f6e-59d1-4f5d-a198-f81c635a98f6\", \"applicationId\": \"\", \"createdAt\": \"2015-10-02 20:55:10\", \"timestamp\": \"2015-09-25T10:39:48.0000866Z\", \"timezone\": \"-04:00\", \"correlationId\": \"\", \"correlationParentId\": \"\", \"dqscore\": 100.0, \"details\": {\"sumNP\":\"3\",\"confidentialdatalabels\":\"firstname,lastname,ssntin\",\"type\":\"userActivityEvent\",\"personNumber\":\"NL\",\"ait\":\"972919\",\"sumPI\":\"1\",\"proprietarydatavalues\":\"standardid=abcdefg\",\"result\":\"0\",\"resourcehost\":\"lsdie1p8e.sdi.corp.bankofamerica.com\",\"resourceprotocol\":\"http\",\"clientip\":\"171.139.51.146\",\"action\":\"read\",\"systemuser\":\"nbeqwos\",\"timePartitionData\":\"0\",\"ApplicationName\":\"NL\",\"resource\":\"/CustomerWebApp/GetCustomerServlet.do\",\"processname\":\"http-bio-8080-exec-4\",\"resourceport\":\"8080\",\"resourcetype\":\"webapp\",\"proprietarydatalabels\":\"standardid\",\"transactionId\":\"0\",\"confidentialrecordcount\":\"1\",\"application\":\"Client360\",\"processid\":\"23\",\"user\":\"nbktest\",\"device\":\"lsdie1p8e.sdi.corp.bankofamerica.com\"}}";
+		String rec3 = "{\"Id\": \"b0318f6e-59d1-4f5d-a198-f81c635a98f6\", \"applicationId\": \"\", \"createdAt\": \"2015-10-02 20:55:10\", \"timestamp\": \"2015-09-25T10:39:48.0000866Z\", \"timezone\": \"-04:00\", \"correlationId\": \"\", \"correlationParentId\": \"\", \"dqscore\": 100.0, \"details\": {\"sumNP\":\"3\",\"confidentialdatalabels\":\"firstname,lastname,ssntin\",\"type\":\"userActivityEvent\",\"personNumber\":\"NL\",\"ait\":\"972919\",\"sumPI\":\"1\",\"proprietarydatavalues\":\"standardid=abcdefg\",\"result\":\"0\",\"resourcehost\":\"lsdie1p8e.sdi.corp.bankofamerica.com\",\"resourceprotocol\":\"http\",\"clientip\":\"171.139.51.146\",\"action\":\"read\",\"systemuser\":\"nbeqwos\",\"timePartitionData\":\"0\",\"ApplicationName\":\"NL\",\"resource\":\"/CustomerWebApp/GetCustomerServlet.do\",\"processname\":\"http-bio-8080-exec-4\",\"resourceport\":\"8080\",\"resourcetype\":\"webapp\",\"proprietarydatalabels\":\"standardid\",\"transactionId\":\"0\",\"confidentialrecordcount\":\"1\",\"application\":\"Client360\",\"processid\":\"23\",\"user\":\"nbktest\",\"device\":\"lsdie1p8e.sdi.corp.bankofamerica.com\"}}";
+		String rec4 = "{\"Id\": \"b0418f6e-59d1-4f5d-a198-f81c635a98f6\", \"applicationId\": \"\", \"createdAt\": \"2015-10-02 20:55:10\", \"timestamp\": \"2015-09-25T10:39:48.0000866Z\", \"timezone\": \"-04:00\", \"correlationId\": \"\", \"correlationParentId\": \"\", \"dqscore\": 100.0, \"details\": {\"sumNP\":\"3\",\"confidentialdatalabels\":\"firstname,lastname,ssntin\",\"type\":\"userActivityEvent\",\"personNumber\":\"NL\",\"ait\":\"972919\",\"sumPI\":\"1\",\"proprietarydatavalues\":\"standardid=abcdefg\",\"result\":\"0\",\"resourcehost\":\"lsdie1p8e.sdi.corp.bankofamerica.com\",\"resourceprotocol\":\"http\",\"clientip\":\"171.139.51.146\",\"action\":\"read\",\"systemuser\":\"nbeqwos\",\"timePartitionData\":\"0\",\"ApplicationName\":\"NL\",\"resource\":\"/CustomerWebApp/GetCustomerServlet.do\",\"processname\":\"http-bio-8080-exec-4\",\"resourceport\":\"8080\",\"resourcetype\":\"webapp\",\"proprietarydatalabels\":\"standardid\",\"transactionId\":\"0\",\"confidentialrecordcount\":\"1\",\"application\":\"Client360\",\"processid\":\"23\",\"user\":\"nbktest\",\"device\":\"lsdie1p8e.sdi.corp.bankofamerica.com\"}}";
+		AdapterConfiguration config;
+		try {
+			config = new AdapterConfiguration("copsjdbc.properties");
+			BufferedJDBCSink processor = new BufferedJDBCSink();
+			processor.init(config);
+			processor.addMessage(rec1);
+			processor.addMessage(rec2);
+			processor.addMessage(rec3);
+			processor.addMessage(rec4);
+			processor.processAll();
+			processor.close();
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 
