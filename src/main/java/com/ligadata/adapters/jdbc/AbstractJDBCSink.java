@@ -59,12 +59,12 @@ public abstract class AbstractJDBCSink implements BufferedMessageProcessor {
 		return statement;
 	}
 
-	// This function will change the jsonObject. The caller needs to clone if they need to reuse jsonObject
 	protected void bindParameters(PreparedStatement statement, List<ParameterMapping> paramArray, JSONObject jsonObject) {
 		int paramIndex = 1;
 		String key = null;
 		String value = null;
 		int remainingParamIndex = -1;
+		JSONObject subobject = (JSONObject) jsonObject.clone();
 		try {
 			for (ParameterMapping param : paramArray) {
 				key = Arrays.toString(param.path);
@@ -77,7 +77,6 @@ public abstract class AbstractJDBCSink implements BufferedMessageProcessor {
 				}
 
 				// traverse JSON tree to get the value
-				JSONObject subobject = (JSONObject) jsonObject.clone();
 				for (int i = 0; i < param.path.length - 1; i++) {
 					if (subobject != null)
 						subobject = ((JSONObject) subobject.get(param.path[i]));
@@ -132,7 +131,7 @@ public abstract class AbstractJDBCSink implements BufferedMessageProcessor {
 			
 			// set letfover attributes to _Remaining_Attributes_ parameter
 			if(remainingParamIndex > 0) {
-				statement.setString(remainingParamIndex, jsonObject.toJSONString());
+				statement.setString(remainingParamIndex, subobject.toJSONString());
 			}
 
 		} catch (Exception e) {

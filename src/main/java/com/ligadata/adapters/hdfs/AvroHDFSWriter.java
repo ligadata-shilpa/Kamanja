@@ -14,6 +14,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.security.SecurityUtil;
 
 public class AvroHDFSWriter {
 	
@@ -23,23 +24,45 @@ public class AvroHDFSWriter {
 	private URI uri;
 	private FSDataOutputStream out;
 	private DataFileWriter<Record> dataFileWriter;
+	private String userNameKey;
+	private String keytabFileKey;
 
 	public AvroHDFSWriter(Schema schema, String path, String codec) throws Exception {
 		this.schema = schema;
 		this.basePath = path;
 		this.codec = codec;
+		this.userNameKey = null;
+		this.keytabFileKey = null;
 	}
 	
 	public Schema getSchema() {
 		return schema;
 	}
 	
+	public String getUserNameKey() {
+		return userNameKey;
+	}
+
+	public void setUserNameKey(String userNameKey) {
+		this.userNameKey = userNameKey;
+	}
+
+	public String getKeytabFileKey() {
+		return keytabFileKey;
+	}
+
+	public void setKeytabFileKey(String keytabFileKey) {
+		this.keytabFileKey = keytabFileKey;
+	}
+
 	public void open(String fileName) throws IOException {
 		uri = URI.create(basePath + "/" + fileName);
 		System.out.println("Thread " + Thread.currentThread().getId() + ": Opening avro writer for " + uri);
 		
 		Configuration conf = new Configuration();
 		conf.set("dfs.client.block.write.replace-datanode-on-failure.policy", "NEVER");
+		if(keytabFileKey != null && !"".equals(keytabFileKey) && userNameKey != null && !"".equals(userNameKey))
+			SecurityUtil.login(conf, keytabFileKey, userNameKey);
 		FileSystem fs = FileSystem.get(uri, conf);
 
 		DatumWriter<Record> datumWriter = new GenericDatumWriter<Record>(schema);

@@ -57,6 +57,8 @@ public class BufferedPartitionedAvroSink implements BufferedMessageProcessor {
 		this.hdfsWriter = new AvroHDFSWriter(schema, 
 				configuration.getProperty(AdapterConfiguration.HDFS_URI),
 				configuration.getProperty(AdapterConfiguration.FILE_COMPRESSION));
+		this.hdfsWriter.setKeytabFileKey(configuration.getProperty(AdapterConfiguration.HDFS_KEYTABFILE_KEY));
+		this.hdfsWriter.setUserNameKey(configuration.getProperty(AdapterConfiguration.HDFS_USERNAME_KEY));
 
 	}
 
