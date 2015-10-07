@@ -64,7 +64,7 @@ public abstract class AbstractJDBCSink implements BufferedMessageProcessor {
 		String key = null;
 		String value = null;
 		int remainingParamIndex = -1;
-		JSONObject subobject = (JSONObject) jsonObject.clone();
+		JSONObject jo = (JSONObject) jsonObject.clone();
 		try {
 			for (ParameterMapping param : paramArray) {
 				key = Arrays.toString(param.path);
@@ -77,6 +77,7 @@ public abstract class AbstractJDBCSink implements BufferedMessageProcessor {
 				}
 
 				// traverse JSON tree to get the value
+				JSONObject subobject = jo;
 				for (int i = 0; i < param.path.length - 1; i++) {
 					if (subobject != null)
 						subobject = ((JSONObject) subobject.get(param.path[i]));
@@ -131,7 +132,7 @@ public abstract class AbstractJDBCSink implements BufferedMessageProcessor {
 			
 			// set letfover attributes to _Remaining_Attributes_ parameter
 			if(remainingParamIndex > 0) {
-				statement.setString(remainingParamIndex, subobject.toJSONString());
+				statement.setString(remainingParamIndex, jo.toJSONString());
 			}
 
 		} catch (Exception e) {
