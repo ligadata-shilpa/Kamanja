@@ -92,7 +92,8 @@ public class KafkaConsumer implements Runnable {
 					messageCount++;
 				}
 
-				if (messageCount >= syncMessageCount || System.currentTimeMillis() >= nextSyncTime) {
+				if (messageCount > 0 && (messageCount >= syncMessageCount || System.currentTimeMillis() >= nextSyncTime)) {
+					System.out.println("Thread: " + threadId + ": Saving " + messageCount + " messages.");
 					processor.processAll();
 					processor.clearAll();
 					consumer.commitOffsets();

@@ -43,15 +43,16 @@ public class UpsertJDBCSink extends AbstractJDBCSink {
 			JSONParser jsonParser = new JSONParser();
 			JSONObject jsonObject = (JSONObject) jsonParser.parse(message);
 
-			bindParameters(updateStatement, updateParams, jsonObject);
-			updateStatement.execute();
-			if(updateStatement.getUpdateCount() == 0) {
-				bindParameters(insertStatement, insertParams, jsonObject);
-				insertStatement.execute();
+			if(bindParameters(updateStatement, updateParams, jsonObject)) {
+				updateStatement.execute();
+				if(updateStatement.getUpdateCount() == 0) {
+					if(bindParameters(insertStatement, insertParams, jsonObject))
+						insertStatement.execute();
+				}
+					
+				System.out.println("Thread " + Thread.currentThread().getId() + ": Saving message to database");
+				connection.commit();
 			}
-				
-			System.out.println("Thread " + Thread.currentThread().getId() + ": Saving messages to database");
-			connection.commit();
 			
 		} catch (Exception e) {
 			System.out.println("Error processing message - ignoring message : " + e.getMessage());

@@ -59,11 +59,12 @@ public abstract class AbstractJDBCSink implements BufferedMessageProcessor {
 		return statement;
 	}
 
-	protected void bindParameters(PreparedStatement statement, List<ParameterMapping> paramArray, JSONObject jsonObject) {
+	protected boolean bindParameters(PreparedStatement statement, List<ParameterMapping> paramArray, JSONObject jsonObject) {
 		int paramIndex = 1;
 		String key = null;
 		String value = null;
 		int remainingParamIndex = -1;
+		boolean success = true;
 		JSONObject jo = (JSONObject) jsonObject.clone();
 		try {
 			for (ParameterMapping param : paramArray) {
@@ -140,7 +141,11 @@ public abstract class AbstractJDBCSink implements BufferedMessageProcessor {
 			System.out.println(
 					"Error for Parameter index : [" + paramIndex + "] Key : [" + key + "] value : [" + value + "]");
 			e.printStackTrace();
+			try { statement.clearParameters(); } catch (SQLException e1) {}
+			success = false;
 		}
+		
+		return success;
 	}
 
 	@Override

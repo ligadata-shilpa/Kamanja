@@ -36,8 +36,8 @@ public class BufferedJDBCSink extends AbstractJDBCSink {
       JSONParser jsonParser = new JSONParser();
       JSONObject jsonObject = (JSONObject) jsonParser.parse(message);
 
-      bindParameters(insertStatement, insertParams, jsonObject);
-      insertStatement.addBatch();
+      if(bindParameters(insertStatement, insertParams, jsonObject))
+    	  insertStatement.addBatch();
     } catch (Exception e) {
       System.out.println("Error processing message - ignoring message : " + e.getMessage());
       e.printStackTrace();
