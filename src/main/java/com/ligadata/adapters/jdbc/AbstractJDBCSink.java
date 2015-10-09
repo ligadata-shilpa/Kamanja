@@ -66,6 +66,8 @@ public abstract class AbstractJDBCSink implements BufferedMessageProcessor {
 		int remainingParamIndex = -1;
 		boolean success = true;
 		JSONObject jo = (JSONObject) jsonObject.clone();
+		jo.remove("dedup");
+		
 		try {
 			for (ParameterMapping param : paramArray) {
 				key = Arrays.toString(param.path);

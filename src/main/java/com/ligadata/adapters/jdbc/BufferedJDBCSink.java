@@ -36,6 +36,9 @@ public class BufferedJDBCSink extends AbstractJDBCSink {
       JSONParser jsonParser = new JSONParser();
       JSONObject jsonObject = (JSONObject) jsonParser.parse(message);
 
+      if(jsonObject.get("dedup") != null && "1".equals(jsonObject.get("dedup").toString()))
+    	  return;
+      
       if(bindParameters(insertStatement, insertParams, jsonObject))
     	  insertStatement.addBatch();
     } catch (Exception e) {

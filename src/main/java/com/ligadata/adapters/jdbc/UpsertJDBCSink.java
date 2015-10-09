@@ -43,7 +43,10 @@ public class UpsertJDBCSink extends AbstractJDBCSink {
 			JSONParser jsonParser = new JSONParser();
 			JSONObject jsonObject = (JSONObject) jsonParser.parse(message);
 
-			if(bindParameters(updateStatement, updateParams, jsonObject)) {
+			if (jsonObject.get("dedup") != null && "1".equals(jsonObject.get("dedup").toString()))
+				return;
+
+			if (bindParameters(updateStatement, updateParams, jsonObject)) {
 				updateStatement.execute();
 				if(updateStatement.getUpdateCount() == 0) {
 					if(bindParameters(insertStatement, insertParams, jsonObject))

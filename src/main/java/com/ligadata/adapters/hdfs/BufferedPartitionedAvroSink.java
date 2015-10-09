@@ -12,6 +12,8 @@ import org.apache.avro.generic.GenericData.Record;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 
 import com.ligadata.adapters.AdapterConfiguration;
 import com.ligadata.adapters.BufferedMessageProcessor;
@@ -66,6 +68,12 @@ public class BufferedPartitionedAvroSink implements BufferedMessageProcessor {
 	public void addMessage(String message) {
 		Record record = null;
 		try {
+			JSONParser jsonParser = new JSONParser();
+			JSONObject jsonObject = (JSONObject) jsonParser.parse(message);
+
+			if (jsonObject.get("dedup") != null && "1".equals(jsonObject.get("dedup").toString()))
+				return;
+
 			record = json2Record(message);
 		} catch (Exception e) {
 			System.out.println("Thread " + Thread.currentThread().getId() + ": Error parsing message: " + e.getMessage());
