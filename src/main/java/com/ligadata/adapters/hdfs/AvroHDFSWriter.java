@@ -14,7 +14,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.security.SecurityUtil;
+import org.apache.hadoop.security.UserGroupInformation;
 
 public class AvroHDFSWriter {
 	
@@ -24,35 +24,45 @@ public class AvroHDFSWriter {
 	private URI uri;
 	private FSDataOutputStream out;
 	private DataFileWriter<Record> dataFileWriter;
-	private String userNameKey;
-	private String keytabFileKey;
+	private String kerberosPrincipal;
+	private String keytabFile;
+	private String resourceFile;
 
 	public AvroHDFSWriter(Schema schema, String path, String codec) throws Exception {
 		this.schema = schema;
 		this.basePath = path;
 		this.codec = codec;
-		this.userNameKey = null;
-		this.keytabFileKey = null;
+		this.kerberosPrincipal = null;
+		this.keytabFile = null;
+		this.resourceFile = null;
 	}
 	
 	public Schema getSchema() {
 		return schema;
 	}
 	
-	public String getUserNameKey() {
-		return userNameKey;
+	public String getKerberosPrincipal() {
+		return kerberosPrincipal;
 	}
 
-	public void setUserNameKey(String userNameKey) {
-		this.userNameKey = userNameKey;
+	public void setKerberosPrincipal(String kerberosPrincipal) {
+		this.kerberosPrincipal = kerberosPrincipal;
 	}
 
-	public String getKeytabFileKey() {
-		return keytabFileKey;
+	public String getKeytabFile() {
+		return keytabFile;
 	}
 
-	public void setKeytabFileKey(String keytabFileKey) {
-		this.keytabFileKey = keytabFileKey;
+	public void setKeytabFile(String keytabFile) {
+		this.keytabFile = keytabFile;
+	}
+
+	public String getResourceFile() {
+		return resourceFile;
+	}
+
+	public void setResourceFile(String resourceFile) {
+		this.resourceFile = resourceFile;
 	}
 
 	public void open(String fileName) throws IOException {
@@ -61,8 +71,14 @@ public class AvroHDFSWriter {
 		
 		Configuration conf = new Configuration();
 		conf.set("dfs.client.block.write.replace-datanode-on-failure.policy", "NEVER");
-		if(keytabFileKey != null && !"".equals(keytabFileKey) && userNameKey != null && !"".equals(userNameKey))
-			SecurityUtil.login(conf, keytabFileKey, userNameKey);
+		if(resourceFile != null && "".equals(resourceFile))
+			conf.addResource(resourceFile);
+		
+		if(keytabFile != null && !"".equals(keytabFile) && kerberosPrincipal != null && !"".equals(kerberosPrincipal)) {
+			conf.set("hadoop.security.authentication", "kerberos");
+			UserGroupInformation.setConfiguration(conf);
+			UserGroupInformation.loginUserFromKeytab(kerberosPrincipal, keytabFile);
+		}
 		FileSystem fs = FileSystem.get(uri, conf);
 
 		DatumWriter<Record> datumWriter = new GenericDatumWriter<Record>(schema);

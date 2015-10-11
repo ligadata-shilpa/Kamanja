@@ -8,8 +8,9 @@ import java.util.Properties;
 public class AdapterConfiguration {
 	public static final String SCHEMA_FILE = "schema.file";
 	public static final String HDFS_URI = "hdfs.uri";
-	public static final String HDFS_KEYTABFILE_KEY = "hdfs.keytabfile.key";
-	public static final String HDFS_USERNAME_KEY = "hdfs.username.key";
+	public static final String HDFS_KERBEROS_KEYTABFILE = "hdfs.kerberos.keytabfile";
+	public static final String HDFS_KERBEROS_PRINCIPAL = "hdfs.kerberos.principal";
+	public static final String HDFS_RESOURCE_FILE = "hdfs.resource.file";
 	public static final String FILE_PREFIX = "file.prefix";
 	public static final String SYNC_MESSAGE_COUNT = "sync.messages.count";
 	public static final String SYNC_INTERVAL_SECONDS = "sync.interval.seconds";
