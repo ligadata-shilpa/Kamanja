@@ -70,9 +70,11 @@ public class AvroHDFSWriter {
 		System.out.println("Thread " + Thread.currentThread().getId() + ": Opening avro writer for " + uri);
 		
 		Configuration conf = new Configuration();
-		conf.set("dfs.client.block.write.replace-datanode-on-failure.policy", "NEVER");
-		if(resourceFile != null && "".equals(resourceFile))
-			conf.addResource(resourceFile);
+		//conf.set("dfs.client.block.write.replace-datanode-on-failure.policy", "NEVER");
+		if(resourceFile != null && !"".equals(resourceFile)) {
+			System.out.println("Thread " + Thread.currentThread().getId() + ": Adding additional HDFS client configuration from file " + resourceFile);
+			conf.addResource(new Path(resourceFile));
+		}
 		
 		if(keytabFile != null && !"".equals(keytabFile) && kerberosPrincipal != null && !"".equals(kerberosPrincipal)) {
 			conf.set("hadoop.security.authentication", "kerberos");
