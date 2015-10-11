@@ -40,9 +40,11 @@ public class KafkaConsumer implements Runnable {
 				configuration.getProperty(AdapterConfiguration.ZOOKEEPER_SESSION_TIMEOUT, "400"));
 		props.put("zookeeper.sync.time.ms", configuration.getProperty(AdapterConfiguration.ZOOKEEPER_SYNC_TIME, "200"));
 		props.put("group.id", configuration.getProperty(AdapterConfiguration.KAFKA_GROUP_ID));
+		props.put("offsets.storage", configuration.getProperty(AdapterConfiguration.KAFKA_OFFSETS_STORAGE, "zookeeper"));
+		props.put("dual.commit.enabled", "false");
 		props.put("auto.commit.enable", "false");
 		props.put("consumer.timeout.ms", "1000");
-
+		
 		return new ConsumerConfig(props);
 	}
 
@@ -106,9 +108,8 @@ public class KafkaConsumer implements Runnable {
 			consumer.shutdown();
 
 		} catch (Exception e) {
-			System.out.println("Error in thread : " + threadId);
+			System.out.println("Error in thread : " + threadId + " : " + e);
 			e.printStackTrace();
-			e.getCause().printStackTrace();
 		}
 
 		System.out.println("Shutting down Thread " + threadId + " after processing " + totalMessageCount + " messages.");

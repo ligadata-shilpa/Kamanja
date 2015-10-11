@@ -17,6 +17,7 @@ public class AdapterConfiguration {
 	public static final String KAFKA_TOPIC = "kafka.topic";
 	public static final String COUNSUMER_THREADS = "consumer.threads";
 	public static final String KAFKA_GROUP_ID = "kafka.group.id";
+	public static final String KAFKA_OFFSETS_STORAGE = "kafka.offsets.storage";
 	public static final String ZOOKEEPER_CONNECT = "zookeeper.connect";
 	public static final String ZOOKEEPER_SESSION_TIMEOUT = "zookeeper.session.timeout.ms";
 	public static final String ZOOKEEPER_SYNC_TIME = "zookeeper.sync.time.ms";
