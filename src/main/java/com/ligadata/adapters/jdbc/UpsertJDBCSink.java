@@ -2,14 +2,17 @@ package com.ligadata.adapters.jdbc;
 
 import java.sql.PreparedStatement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import org.apache.log4j.Logger;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 import com.ligadata.adapters.AdapterConfiguration;
 
 public class UpsertJDBCSink extends AbstractJDBCSink {
+	static Logger logger = Logger.getLogger(UpsertJDBCSink.class);
 
 	private PreparedStatement insertStatement;
 	private List<ParameterMapping> insertParams;
@@ -33,18 +36,35 @@ public class UpsertJDBCSink extends AbstractJDBCSink {
 		if(updateStr == null)
 			throw new Exception("Update statement not specified in the properties file.");
 		
+		logger.info("Insert statement: " + insertStr);
 		insertStatement = buildStatementAndParameters(insertStr, insertParams);
+		if(logger.isInfoEnabled()) {
+			logger.info(insertParams.size() + " parameters found.");
+			int i = 1;
+			for (ParameterMapping param : insertParams)
+				logger.info("Parameter " + (i++) + ": path=" + Arrays.toString(param.path) + " type=" + param.type + " typeName=" + param.typeName);
+		}
+
+		logger.info("Update statement: " + updateStr);
 		updateStatement = buildStatementAndParameters(updateStr, updateParams);   
+		if(logger.isInfoEnabled()) {
+			logger.info(updateParams.size() + " parameters found.");
+			int i = 1;
+			for (ParameterMapping param : insertParams)
+				logger.info("Parameter " + (i++) + ": path=" + Arrays.toString(param.path) + " type=" + param.type + " typeName=" + param.typeName);
+		}
 	}
 
 	@Override
-	public void addMessage(String message) {
+	public boolean addMessage(String message) {
 		try {
 			JSONParser jsonParser = new JSONParser();
 			JSONObject jsonObject = (JSONObject) jsonParser.parse(message);
 
-			if (jsonObject.get("dedup") != null && "1".equals(jsonObject.get("dedup").toString()))
-				return;
+			if (jsonObject.get("dedup") != null && "1".equals(jsonObject.get("dedup").toString())) {
+				logger.debug("ignoring duplicate message.");
+				return false;
+			}
 
 			if (bindParameters(updateStatement, updateParams, jsonObject)) {
 				updateStatement.execute();
@@ -53,37 +73,19 @@ public class UpsertJDBCSink extends AbstractJDBCSink {
 						insertStatement.execute();
 				}
 					
-				System.out.println("Thread " + Thread.currentThread().getId() + ": Saving message to database");
+				logger.debug("Saving message to database");
 				connection.commit();
 			}
 			
 		} catch (Exception e) {
-			System.out.println("Error processing message - ignoring message : " + e.getMessage());
-			e.printStackTrace();
+			logger.error("Error processing message - ignoring message : " + e.getMessage(), e);
+			return false;
 		}
+		
+		return true;
 	}
 
 	@Override
 	public void processAll() throws Exception {
-	}
-
-	public static void main(String[] args) {
-		String rec1 = "{\"appId\": \"unknownappid\", \"DQScore\": \"20.0\",\"datetime\": \"2015-09-25T10:39:45.0000132Z\", \"DailyAggs\": \"20.0\"}";
-		String rec2 = "{\"appId\": \"123\", \"DQScore\": \"20.0\",\"datetime\": \"2015-09-25T10:39:45.0000132Z\", \"DailyAggs\": \"20.0\"}";
-		String rec3 = "{\"appId\": \"unknownappid\", \"DQScore\": \"20.0\",\"datetime\": \"2015-09-25T10:39:45.0000132Z\", \"DailyAggs\": \"40.0\"}";
-		String rec4 = "{\"appId\": \"123\", \"DQScore\": \"20.0\",\"datetime\": \"2015-09-25T10:39:45.0000132Z\", \"DailyAggs\": \"30.0\"}";
-		AdapterConfiguration config;
-		try {
-			config = new AdapterConfiguration("dqjdbc.properties");
-			UpsertJDBCSink processor = new UpsertJDBCSink();
-			processor.init(config);
-			processor.addMessage(rec1);
-			processor.addMessage(rec2);
-			processor.addMessage(rec3);
-			processor.addMessage(rec4);
-			processor.close();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 	}
 }

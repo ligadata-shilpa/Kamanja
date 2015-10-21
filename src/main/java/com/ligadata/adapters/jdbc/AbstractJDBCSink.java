@@ -12,12 +12,14 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.log4j.Logger;
 import org.json.simple.JSONObject;
 
 import com.ligadata.adapters.AdapterConfiguration;
 import com.ligadata.adapters.BufferedMessageProcessor;
 
 public abstract class AbstractJDBCSink implements BufferedMessageProcessor {
+	static Logger logger = Logger.getLogger(AbstractJDBCSink.class); 
 
 	protected Connection connection;
 	protected SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
@@ -41,6 +43,7 @@ public abstract class AbstractJDBCSink implements BufferedMessageProcessor {
 			throws SQLException {
 		// replace parameters specified as {$..} with ?
 		String sql = sqlStr.replaceAll("\\{\\$[^\\}]+\\}", "?");
+		logger.debug("SQL: " + sql);
 		PreparedStatement statement = connection.prepareStatement(sql);
 		ParameterMetaData metadata = statement.getParameterMetaData();
 
@@ -88,6 +91,8 @@ public abstract class AbstractJDBCSink implements BufferedMessageProcessor {
 				value = null;
 				if (subobject != null && subobject.get(param.path[param.path.length - 1]) != null)
 					value = subobject.remove(param.path[param.path.length - 1]).toString();
+				
+				logger.debug("key=[" + key + "] value=[" + value + "] type=[" + param.type + "] typeName=[" + param.typeName + "]");
 
 				if (param.type == java.sql.Types.VARCHAR || param.type == java.sql.Types.LONGVARCHAR) {
 					// String
@@ -139,10 +144,9 @@ public abstract class AbstractJDBCSink implements BufferedMessageProcessor {
 			}
 
 		} catch (Exception e) {
-			System.out.println("Error binding parameters - ignoring message : " + e.getMessage());
-			System.out.println(
-					"Error for Parameter index : [" + paramIndex + "] Key : [" + key + "] value : [" + value + "]");
-			e.printStackTrace();
+			logger.error("Error binding parameters - ignoring message : " + e.getMessage());
+			logger.error("Error for Parameter index : [" + paramIndex + "] Key : [" + key + "] value : [" + value + "]");
+			logger.error("Error ", e);
 			try { statement.clearParameters(); } catch (SQLException e1) {}
 			success = false;
 		}
@@ -163,7 +167,7 @@ public abstract class AbstractJDBCSink implements BufferedMessageProcessor {
 	}
 
 	@Override
-	public abstract void addMessage(String message);
+	public abstract boolean addMessage(String message);
 
 	@Override
 	public abstract void processAll() throws Exception;

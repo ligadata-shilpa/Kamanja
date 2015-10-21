@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.log4j.Logger;
+
 import kafka.consumer.ConsumerConfig;
 import kafka.consumer.ConsumerIterator;
 import kafka.consumer.ConsumerTimeoutException;
@@ -13,6 +15,7 @@ import kafka.javaapi.consumer.ConsumerConnector;
 import kafka.message.MessageAndMetadata;
 
 public class KafkaConsumer implements Runnable {
+	static Logger logger = Logger.getLogger(KafkaConsumer.class);
 	private volatile boolean stop = false;
 
 	private final AdapterConfiguration configuration;
@@ -22,6 +25,7 @@ public class KafkaConsumer implements Runnable {
 	public KafkaConsumer(AdapterConfiguration config) throws Exception {
 		this.configuration = config;
 		String classname = configuration.getProperty(AdapterConfiguration.MESSAGE_PROCESSOR);
+		logger.info("Loading class " + classname + " for processing messages.");
 		processor = (BufferedMessageProcessor) Class.forName(classname).newInstance();
 	}
 
@@ -58,19 +62,19 @@ public class KafkaConsumer implements Runnable {
 
 	@Override
 	public void run() {
-		long threadId = Thread.currentThread().getId();
-		System.out.println("Thread " + threadId + ": " + " started processing.");
+		logger.info("Kafka consumer started processing.");
 
 		long totalMessageCount = 0;
+		long errorMessageCount = 0;
 		try {
 
-			System.out.println("Thread " + threadId + ": " + " using " + processor.getClass().getName() + " for processing messages.");
+			logger.info("Using " + processor.getClass().getName() + " for processing messages.");
 			processor.init(configuration);
 
 			consumer = kafka.consumer.Consumer.createJavaConsumerConnector(createConsumerConfig());
 			String topic = configuration.getProperty(AdapterConfiguration.KAFKA_TOPIC);
 
-			System.out.println("Thread " + threadId + ": " + " connecting to kafka topic " + topic);
+			logger.info("Connecting to kafka topic " + topic);
 			Map<String, Integer> topicCountMap = new HashMap<String, Integer>();
 			topicCountMap.put(topic, new Integer(1));
 
@@ -89,13 +93,15 @@ public class KafkaConsumer implements Runnable {
 				if (hasNext(it)) {
 					MessageAndMetadata<byte[], byte[]> t = it.next();
 					String message = new String(t.message());
-					System.out.println("Thread: " + threadId + ": partition Id :" + t.partition()  + " Message: " + message);
-					processor.addMessage(message);
-					messageCount++;
+					logger.debug("Message from partition Id :" + t.partition()  + " Message: " + message);
+					if(processor.addMessage(message))
+						messageCount++;
+					else
+						errorMessageCount++;
 				}
 
 				if (messageCount > 0 && (messageCount >= syncMessageCount || System.currentTimeMillis() >= nextSyncTime)) {
-					System.out.println("Thread: " + threadId + ": Saving " + messageCount + " messages.");
+					logger.info("Saving " + messageCount + " messages.");
 					processor.processAll();
 					processor.clearAll();
 					consumer.commitOffsets();
@@ -108,10 +114,9 @@ public class KafkaConsumer implements Runnable {
 			consumer.shutdown();
 
 		} catch (Exception e) {
-			System.out.println("Error in thread : " + threadId + " : " + e);
-			e.printStackTrace();
+			logger.error("Error : " + e.getMessage(), e);
 		}
 
-		System.out.println("Shutting down Thread " + threadId + " after processing " + totalMessageCount + " messages.");
+		logger.info("Shutting down after processing " + totalMessageCount + " messages with " + errorMessageCount + " error messages.");
 	}
 }

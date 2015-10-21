@@ -3,9 +3,14 @@ package com.ligadata.adapters;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Enumeration;
 import java.util.Properties;
 
+import org.apache.log4j.Logger;
+
 public class AdapterConfiguration {
+	static Logger logger = Logger.getLogger(AdapterConfiguration.class); 
+	
 	public static final String SCHEMA_FILE = "schema.file";
 	public static final String HDFS_URI = "hdfs.uri";
 	public static final String HDFS_KERBEROS_KEYTABFILE = "hdfs.kerberos.keytabfile";
@@ -39,6 +44,7 @@ public class AdapterConfiguration {
 	}
 
 	public AdapterConfiguration(String configFileName) throws IOException {
+		logger.debug("Loading configuration from " + configFileName);
 		File configFile = new File(configFileName);
 	    FileReader reader = null;
 
@@ -46,6 +52,16 @@ public class AdapterConfiguration {
 		    reader = new FileReader(configFile);
 		    properties = new Properties();
 		    properties.load(reader);
+		    
+		    if(logger.isInfoEnabled()) {
+		    	logger.info("Adapter configuration loaded :");
+		    	Enumeration<?> e = properties.propertyNames();
+				while (e.hasMoreElements()) {
+					String key = (String) e.nextElement();
+					String value = properties.getProperty(key);
+					logger.info(key + " = " + value);
+				}
+		    }
 
 		} finally {
 			if(reader != null)

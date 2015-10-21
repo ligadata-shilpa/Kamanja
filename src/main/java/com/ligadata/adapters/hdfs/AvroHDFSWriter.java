@@ -15,8 +15,10 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.log4j.Logger;
 
 public class AvroHDFSWriter {
+	static Logger logger = Logger.getLogger(AvroHDFSWriter.class);
 	
 	private Schema schema;
 	private String basePath;
@@ -66,37 +68,45 @@ public class AvroHDFSWriter {
 	}
 
 	public void open(String fileName) throws IOException {
+		
 		uri = URI.create(basePath + "/" + fileName);
-		System.out.println("Thread " + Thread.currentThread().getId() + ": Opening avro writer for " + uri);
+		logger.info("Opening avro writer for " + uri);
 		
 		Configuration conf = new Configuration();
 		//conf.set("dfs.client.block.write.replace-datanode-on-failure.policy", "NEVER");
 		if(resourceFile != null && !"".equals(resourceFile)) {
-			System.out.println("Thread " + Thread.currentThread().getId() + ": Adding additional HDFS client configuration from file " + resourceFile);
+			logger.debug("Adding additional HDFS client configuration from file " + resourceFile);
 			conf.addResource(new Path(resourceFile));
 		}
 		
 		if(keytabFile != null && !"".equals(keytabFile) && kerberosPrincipal != null && !"".equals(kerberosPrincipal)) {
+			logger.debug("Kerberos security enabled.");
 			conf.set("hadoop.security.authentication", "kerberos");
 			UserGroupInformation.setConfiguration(conf);
+
+			logger.debug("Using Kerberos principal: " + kerberosPrincipal);
+			logger.debug("Using Kerberos keytab file: " + keytabFile);
 			UserGroupInformation.loginUserFromKeytab(kerberosPrincipal, keytabFile);
 		}
 		FileSystem fs = FileSystem.get(uri, conf);
 
 		DatumWriter<Record> datumWriter = new GenericDatumWriter<Record>(schema);
 		dataFileWriter = new DataFileWriter<Record>(datumWriter);
-		if(codec == null || "".equals(codec))
+		if(codec == null || "".equals(codec)) {
+			logger.info("Not using compression for avro file.");
 			dataFileWriter.setCodec(CodecFactory.fromString("null"));
-		else
+		} else {
+			logger.info("Using " + codec + " compression for avro file.");
 			dataFileWriter.setCodec(CodecFactory.fromString(codec));
+		}
 		
 		Path path = new Path(uri);
 		if (fs.exists(path)) {
-			System.out.println("Thread " + Thread.currentThread().getId() + ": Loading existing file " + uri);
+			logger.info("Loading existing file " + uri);
 			out = fs.append(path);
 			dataFileWriter.appendTo(new FsInput(path, conf), out);
 		} else {
-			System.out.println("Thread " + Thread.currentThread().getId() + ": Creating new file " + uri);
+			logger.info("Creating new file " + uri);
 			out = fs.create(path);
 			dataFileWriter.create(schema, out);
 		}
@@ -107,7 +117,7 @@ public class AvroHDFSWriter {
 	}
 
 	public void close() throws IOException {
-		System.out.println("Thread " + Thread.currentThread().getId() + ": Closing file at " + uri);
+		logger.info("Closing file at " + uri);
 		if (dataFileWriter != null)
 			dataFileWriter.close();
 		if (out != null)

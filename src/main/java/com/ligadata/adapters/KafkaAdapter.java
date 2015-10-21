@@ -8,10 +8,14 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.log4j.Logger;
+
 import sun.misc.Signal;
 
 @SuppressWarnings("restriction")
 public class KafkaAdapter implements Observer {
+	static Logger logger = Logger.getLogger(KafkaAdapter.class);
+	
 	private AdapterConfiguration configuration;
 	private ArrayList<KafkaConsumer> consumers;
 	private ExecutorService executor;
@@ -23,10 +27,10 @@ public class KafkaAdapter implements Observer {
 	@Override
 	public void update(Observable o, Object arg) {
 		String sig = arg.toString();
-		System.out.println("Received signal: " + sig);
+		logger.info("Received signal: " + sig);
 		if (sig.compareToIgnoreCase("SIGTERM") == 0 || sig.compareToIgnoreCase("SIGINT") == 0
 				|| sig.compareToIgnoreCase("SIGABRT") == 0) {
-			System.out.println("Got " + sig + " signal. Shutting down the process");
+			logger.info("Got " + sig + " signal. Shutting down the process");
 			shutdown();
 			System.exit(0);
 		}
@@ -39,13 +43,13 @@ public class KafkaAdapter implements Observer {
         if (executor != null) executor.shutdown();
         try {
             if (!executor.awaitTermination(30000, TimeUnit.MILLISECONDS)) {
-                System.out.println("Timed out waiting for consumer threads to shut down, exiting uncleanly");
+            	logger.info("Timed out waiting for consumer threads to shut down, exiting uncleanly");
             }
         } catch (InterruptedException e) {
-            System.out.println("Interrupted during shutdown, exiting uncleanly");
+        	logger.info("Interrupted during shutdown, exiting uncleanly");
         }
 
-		System.out.println("Shutdown complete.");
+		logger.info("Shutdown complete.");
 	}
 
 	public void run() {
@@ -59,8 +63,7 @@ public class KafkaAdapter implements Observer {
 				consumers.add(c);
 			}
 		} catch (Exception e) {
-			System.out.println("Error: " + e.getMessage());
-			e.printStackTrace();
+			logger.error("Error: " + e.getMessage(), e);
 			shutdown();
 			System.exit(1);
 		}
@@ -89,13 +92,12 @@ public class KafkaAdapter implements Observer {
 			else if (args.length == 1)
 				config = new AdapterConfiguration(args[0]);
 			else {
-				System.out.println("Incorrect number of arguments. ");
-				System.out.println("Usage: KafkaAdapter [configfilename]");
+				logger.error("Incorrect number of arguments. ");
+				logger.error("Usage: KafkaAdapter [configfilename]");
 				System.exit(1);
 			}
 		} catch (IOException e) {
-			System.out.println("Error loading configuration properties.");
-			e.printStackTrace();
+			logger.error("Error loading configuration properties.", e);
 			System.exit(1);
 		}
 
@@ -110,15 +112,14 @@ public class KafkaAdapter implements Observer {
 
 			adapter.run();
 		} catch (Exception e) {
-			System.out.println("Error starting the adapater.\n");
-			e.printStackTrace();
+			logger.error("Error starting the adapater.\n", e);
 			System.exit(1);
 		}
 
 		try {
 			Thread.sleep(365L * 86400L * 1000L);
 		} catch (InterruptedException ie) {
-			System.out.println("Main thread is interrupted.\n");
+			logger.info("Main thread is interrupted.\n");
 		}
 		adapter.shutdown();
 	}
