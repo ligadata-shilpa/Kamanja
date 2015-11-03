@@ -5,6 +5,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.Enumeration;
 import java.util.Properties;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 
@@ -23,6 +24,8 @@ public class AdapterConfiguration {
 	public static final String COUNSUMER_THREADS = "consumer.threads";
 	public static final String KAFKA_GROUP_ID = "kafka.group.id";
 	public static final String KAFKA_OFFSETS_STORAGE = "kafka.offsets.storage";
+	public static final String KAFKA_AUTO_OFFSET_RESET = "kafka.auto.offset.reset";
+	public static final String KAFKA_PROPERTY_PREFIX = "kafka.";
 	public static final String ZOOKEEPER_CONNECT = "zookeeper.connect";
 	public static final String ZOOKEEPER_SESSION_TIMEOUT = "zookeeper.session.timeout.ms";
 	public static final String ZOOKEEPER_SYNC_TIME = "zookeeper.sync.time.ms";
@@ -80,4 +83,5 @@ public class AdapterConfiguration {
 	public String getProperty(String name, String defaultValue) {
 		return properties.getProperty(name, defaultValue);
 	}
+
 }

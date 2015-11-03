@@ -25,8 +25,13 @@ public class KafkaConsumer implements Runnable {
 	public KafkaConsumer(AdapterConfiguration config) throws Exception {
 		this.configuration = config;
 		String classname = configuration.getProperty(AdapterConfiguration.MESSAGE_PROCESSOR);
-		logger.info("Loading class " + classname + " for processing messages.");
-		processor = (BufferedMessageProcessor) Class.forName(classname).newInstance();
+		if(classname == null || "".equals(classname) || "null".equalsIgnoreCase(classname)) {
+			logger.info("Message prcessor not specified for processing messages.");
+			processor = new NullProcessor();
+		} else {
+			logger.info("Loading class " + classname + " for processing messages.");
+			processor = (BufferedMessageProcessor) Class.forName(classname).newInstance();
+		}
 	}
 
 	public void shutdown() {
@@ -43,12 +48,23 @@ public class KafkaConsumer implements Runnable {
 		props.put("zookeeper.session.timeout.ms",
 				configuration.getProperty(AdapterConfiguration.ZOOKEEPER_SESSION_TIMEOUT, "400"));
 		props.put("zookeeper.sync.time.ms", configuration.getProperty(AdapterConfiguration.ZOOKEEPER_SYNC_TIME, "200"));
+		
 		props.put("group.id", configuration.getProperty(AdapterConfiguration.KAFKA_GROUP_ID));
-		props.put("offsets.storage", configuration.getProperty(AdapterConfiguration.KAFKA_OFFSETS_STORAGE, "zookeeper"));
-		props.put("dual.commit.enabled", "false");
-		props.put("auto.commit.enable", "false");
+		//props.put("auto.offset.reset", configuration.getProperty(AdapterConfiguration.KAFKA_AUTO_OFFSET_RESET, "largest"));
+		//props.put("offsets.storage", configuration.getProperty(AdapterConfiguration.KAFKA_OFFSETS_STORAGE, "zookeeper"));
 		props.put("consumer.timeout.ms", "1000");
 		
+		// Add any additional properties specified for Kafka
+		for(String key: configuration.getProperties().stringPropertyNames()) {
+			if(key.startsWith(AdapterConfiguration.KAFKA_PROPERTY_PREFIX)) {
+				logger.debug("Adding kafka configuration: " + key + "=" + configuration.getProperty(key));
+				props.put(key.substring(AdapterConfiguration.KAFKA_PROPERTY_PREFIX.length()), configuration.getProperty(key));
+			}
+		}
+		
+		props.put("dual.commit.enabled", "false");
+		props.put("auto.commit.enable", "false");
+
 		return new ConsumerConfig(props);
 	}
 
