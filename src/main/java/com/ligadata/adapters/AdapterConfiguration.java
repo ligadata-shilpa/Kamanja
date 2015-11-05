@@ -39,6 +39,8 @@ public class AdapterConfiguration {
 	public static final String JDBC_PASSWORD = "jdbc.password";
 	public static final String JDBC_INSERT_STATEMENT = "jdbc.insert.statement";
 	public static final String JDBC_UPDATE_STATEMENT = "jdbc.update.statement";
+	public static final String METADATA_CONFIG_FILE = "metadata.config.file";
+	public static final String METADATA_CONTAINER_NAME = "metadata.container.name";
 
 	private Properties properties;
 
