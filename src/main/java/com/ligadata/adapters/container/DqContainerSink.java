@@ -47,7 +47,7 @@ public class DqContainerSink extends AbstractJDBCSink {
 	public boolean addMessage(String message) {
 		String[] fields = message.split(",");
 		if(fields.length < 4) {
-			logger.error("Incorrect message. Expecting atleast 5 fields. Message: " + message);
+			logger.error("Incorrect message. Expecting atleast 4 fields. Message: " + message);
 			return false;
 		}
 		
