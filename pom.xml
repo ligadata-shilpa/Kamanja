@@ -50,12 +50,13 @@
 			<version>4.2</version>
 		</dependency>
 
-		<!-- JDBC ADD IT MANULLY // mvn -e install:install-file -e install:install-file "-Dfile=SaveContainerDataComponent-1.0.jar" "-Dpackaging=jar" "-DgroupId=com.ligadata.tools.SaveContainerDataComponent" "-DartifactId=SaveContainerDataComponent" "-Dversion=1.0" -->
+<!-- JDBC ADD IT MANULLY // mvn -e install:install-file -e install:install-file "-Dfile=SaveContainerDataComponent-1.0.jar" "-Dpackaging=jar" "-DgroupId=com.ligadata.tools.SaveContainerDataComponent" "-DartifactId=SaveContainerDataComponent" "-Dversion=1.0" -->
 		<dependency>
 			<groupId>com.ligadata.tools.SaveContainerDataComponent</groupId>
 			<artifactId>SaveContainerDataComponent</artifactId>
 			<version>1.0</version>
-		</dependency>
+</dependency>
+
 
 		<!-- JUNIT TESTING -->
 		<dependency>

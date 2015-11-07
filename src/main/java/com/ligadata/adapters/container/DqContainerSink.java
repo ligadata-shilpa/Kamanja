@@ -52,7 +52,7 @@ public class DqContainerSink extends AbstractJDBCSink {
 		}
 		
 		try {
-			String key = fields[0] + fields[2];
+			String key = fields[0] + ":" + fields[2];
 			double dqScore = Double.parseDouble(fields[3]);
 			DqAggregation agg = buffer.get(key);
 			if (agg == null) {
@@ -61,8 +61,7 @@ public class DqContainerSink extends AbstractJDBCSink {
 			}
 			
 			agg.count++;
-			agg.dqSum += dqScore;
-			
+			agg.dqSum += dqScore;			
 		} catch (Exception e) {
 			logger.error("Error: " + e.getMessage(), e);
 			return false;
@@ -73,7 +72,7 @@ public class DqContainerSink extends AbstractJDBCSink {
 
 	@Override
 	public void processAll() throws Exception {
-		try { statement.clearParameters(); } catch (SQLException e1) {}
+		try { statement.clearBatch(); } catch (SQLException e1) {}
 
 		for (String key : buffer.keySet()) {
 			DqAggregation agg = buffer.get(key);
@@ -85,8 +84,10 @@ public class DqContainerSink extends AbstractJDBCSink {
 				java.sql.Date dt = new java.sql.Date(date.getTime());
 				statement.setDate(3, dt);
 				statement.setLong(4, agg.count);
-				statement.setDouble(5, agg.dqSum/agg.count);
+				double dqAvg = agg.dqSum/agg.count;
+				statement.setDouble(5, dqAvg);
 				
+				logger.debug("Save DQ record: " + agg.ait + "," + agg.aitName + "," + agg.date + "," + agg.count + "," + dqAvg);
 				statement.addBatch();
 			} catch (Exception e) {
 				logger.error("Error: " + e.getMessage(), e);
@@ -94,7 +95,7 @@ public class DqContainerSink extends AbstractJDBCSink {
 			}
 		}
 		
-		statement.execute();
+		statement.executeBatch();
 		connection.commit();
 	}
 

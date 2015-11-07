@@ -38,7 +38,7 @@ public class DedupContainerSink implements BufferedMessageProcessor { //extends 
 		if(configFile == null)
 			throw new Exception("Metadata config file not specified.");
 		
-		String containerName = config.getProperty(AdapterConfiguration.METADATA_CONTAINER_NAME);
+		containerName = config.getProperty(AdapterConfiguration.METADATA_CONTAINER_NAME);
 		if(containerName == null)
 			throw new Exception("Container name not specified.");
 
@@ -74,6 +74,7 @@ public class DedupContainerSink implements BufferedMessageProcessor { //extends 
 	@Override
 	public void processAll() throws Exception {
 		ArrayList<MessageContainerBase> data = new ArrayList<MessageContainerBase>();
+		//logger.info("Container name is " + containerName);
 		for (String key : buffer.keySet()) {
 			DedupPartition dedup = buffer.get(key);
 			MessageContainerBase container = writer.GetMessageContainerBase(containerName);
