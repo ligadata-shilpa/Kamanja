@@ -2,6 +2,7 @@ package com.ligadata.adapters.container;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 
 import org.apache.log4j.Logger;
 
@@ -36,9 +37,8 @@ public class FileStatusSink extends AbstractJDBCSink {
 		try {
 			if("File_Total_Result".equalsIgnoreCase(fields[0])) {			
 				statement.setString(1, fields[2]);
-				java.util.Date date = inputFormat.parse(fields[1]);
-				java.sql.Date dt = new java.sql.Date(date.getTime());
-				statement.setDate(2, dt);
+				java.util.Date dt = inputFormat.parse(fields[1]);
+				statement.setTimestamp(2, new Timestamp(dt.getTime()));
 				statement.setLong(3, Long.parseLong(fields[3]));
 				statement.addBatch();
 			}
