@@ -21,6 +21,7 @@ public class KafkaConsumer implements Runnable {
 	private final AdapterConfiguration configuration;
 	private ConsumerConnector consumer;
 	private final BufferedMessageProcessor processor;
+	private HashMap<Integer, Long> partitionOffsets = new HashMap<Integer, Long>();
 
 	public KafkaConsumer(AdapterConfiguration config) throws Exception {
 		this.configuration = config;
@@ -108,12 +109,18 @@ public class KafkaConsumer implements Runnable {
 			while (!stop) {
 				if (hasNext(it)) {
 					MessageAndMetadata<byte[], byte[]> t = it.next();
-					String message = new String(t.message());
-					logger.debug("Message from partition Id :" + t.partition()  + " Message: " + message);
-					if(processor.addMessage(message))
-						messageCount++;
-					else
-						errorMessageCount++;
+					Long lastOffset = partitionOffsets.get(t.partition());
+					if (lastOffset == null || t.offset() > lastOffset) {
+						String message = new String(t.message());
+						logger.debug(
+								"Message from partition Id :" + t.partition() + " Message: " + message);
+						if (processor.addMessage(message))
+							messageCount++;
+						else
+							errorMessageCount++;
+						
+						partitionOffsets.put(t.partition(), t.offset());
+					}
 				}
 
 				if (messageCount > 0 && (messageCount >= syncMessageCount || System.currentTimeMillis() >= nextSyncTime)) {
