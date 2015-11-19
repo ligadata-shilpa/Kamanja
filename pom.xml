@@ -55,8 +55,13 @@
 			<groupId>com.ligadata.tools.SaveContainerDataComponent</groupId>
 			<artifactId>SaveContainerDataComponent</artifactId>
 			<version>1.0</version>
-</dependency>
+		</dependency>
 
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-dbcp2</artifactId>
+			<version>2.1.1</version>
+		</dependency>
 
 		<!-- JUNIT TESTING -->
 		<dependency>

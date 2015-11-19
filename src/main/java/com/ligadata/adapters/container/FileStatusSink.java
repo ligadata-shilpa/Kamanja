@@ -1,8 +1,11 @@
 package com.ligadata.adapters.container;
 
+import java.sql.BatchUpdateException;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 
 import org.apache.log4j.Logger;
 
@@ -11,19 +14,33 @@ import com.ligadata.adapters.jdbc.AbstractJDBCSink;
 
 public class FileStatusSink extends AbstractJDBCSink {
 	static Logger logger = Logger.getLogger(FileStatusSink.class);
-
-	private PreparedStatement statement;
 	
+	private String sqlStr;
+	private ArrayList<String[]> buffer = new ArrayList<String[]>();
+
 	@Override
 	public void init(AdapterConfiguration config) throws Exception {
 		super.init(config);
 
-		String sqlStr = config.getProperty(AdapterConfiguration.JDBC_INSERT_STATEMENT);
+		sqlStr = config.getProperty(AdapterConfiguration.JDBC_INSERT_STATEMENT);
 		if(sqlStr == null)
 			throw new Exception("Sql statement not specified in the properties file.");
-		
 		logger.info("Sql statement: " + sqlStr);
-		statement = connection.prepareCall(sqlStr);
+		
+		// Make sure database properties and sql statement are correct
+		Connection connection = null;
+		PreparedStatement statement = null;
+		try {
+			connection = dataSource.getConnection();
+			statement = connection.prepareStatement(sqlStr);
+		} finally {
+			try {
+				if(statement != null)
+					statement.close();
+				if (connection != null)
+					connection.close();
+			} catch(Exception e) {}	
+		}
 	}
 
 	@Override
@@ -33,43 +50,47 @@ public class FileStatusSink extends AbstractJDBCSink {
 			logger.error("Incorrect message. Expecting atleast 4 fields. Message: " + message);
 			return false;
 		}
-		
-		try {
-			if("File_Total_Result".equalsIgnoreCase(fields[0])) {			
-				statement.setString(1, fields[2]);
-				java.util.Date dt = inputFormat.parse(fields[1]);
-				statement.setTimestamp(2, new Timestamp(dt.getTime()));
-				statement.setLong(3, Long.parseLong(fields[3]));
-				statement.addBatch();
-			}
-		} catch (Exception e) {
-			logger.error("Error: " + e.getMessage(), e);
-			try { statement.clearParameters(); } catch (SQLException e1) {}
-			return false;
-		}
+
+		if("File_Total_Result".equalsIgnoreCase(fields[0]))
+			buffer.add(fields);
 		
 		return true;
 	}
 
 	@Override
 	public void processAll() throws Exception {		
-	    try {
+		Connection connection = dataSource.getConnection();
+		PreparedStatement statement = connection.prepareStatement(sqlStr);
+
+	    for(String[] fields : buffer) {
+			try {
+				statement.setString(1, fields[2]);
+				java.util.Date dt = inputFormat.parse(fields[1]);
+				statement.setTimestamp(2, new Timestamp(dt.getTime()));
+				statement.setLong(3, Long.parseLong(fields[3]));
+				statement.addBatch();
+			} catch (Exception e) {
+				logger.error("Error: " + e.getMessage(), e);
+				try { statement.clearParameters(); } catch (SQLException e1) {}
+			}
+	    }
+	    
+		try {
 	        logger.info("Saving messages to database");
 	        statement.executeBatch();
 	        connection.commit();
-	      } catch (Exception e) {
-	        logger.error("Error processing message - ignoring message : " + e.getMessage(), e);
-	        connection.commit();
-	      }		
+		} catch (BatchUpdateException e) {
+		} finally {
+			try { 
+				connection.commit();
+				statement.close();
+				connection.close();
+			} catch (SQLException e) {}
+		}
 	}
 
 	@Override
 	public void clearAll() {
-	    try {
-	        if (statement != null)
-	        	statement.clearBatch();
-	      } catch (SQLException e) {
-	          logger.error("Error processing message - ignoring message : " + e.getMessage(), e);
-	      }
+		buffer.clear();
 	}
 }

@@ -1,5 +1,7 @@
 package com.ligadata.adapters.container;
 
+import java.sql.BatchUpdateException;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -29,18 +31,31 @@ public class DqContainerSink extends AbstractJDBCSink {
 	}
 	
 	private HashMap<String, DqAggregation> buffer = new HashMap<String, DqAggregation>();
-	private PreparedStatement statement;
+	private String sqlStr;
 	
 	@Override
 	public void init(AdapterConfiguration config) throws Exception {
 		super.init(config);
 
-		String sqlStr = config.getProperty(AdapterConfiguration.JDBC_INSERT_STATEMENT);
+		sqlStr = config.getProperty(AdapterConfiguration.JDBC_INSERT_STATEMENT);
 		if(sqlStr == null)
 			throw new Exception("Sql statement not specified in the properties file.");
-		
 		logger.info("Sql statement: " + sqlStr);
-		statement = connection.prepareCall(sqlStr);
+		
+		// Make sure database properties and sql statement are correct
+		Connection connection = null;
+		PreparedStatement statement = null;
+		try {
+			connection = dataSource.getConnection();
+			statement = connection.prepareStatement(sqlStr);
+		} finally {
+			try {
+				if(statement != null)
+					statement.close();
+				if (connection != null)
+					connection.close();
+			} catch(Exception e) {}	
+		}
 	}
 
 	@Override
@@ -72,7 +87,8 @@ public class DqContainerSink extends AbstractJDBCSink {
 
 	@Override
 	public void processAll() throws Exception {
-		try { statement.clearBatch(); } catch (SQLException e1) {}
+		Connection connection = dataSource.getConnection();
+		PreparedStatement statement = connection.prepareStatement(sqlStr);
 
 		for (String key : buffer.keySet()) {
 			DqAggregation agg = buffer.get(key);
@@ -95,8 +111,16 @@ public class DqContainerSink extends AbstractJDBCSink {
 			}
 		}
 		
-		statement.executeBatch();
-		connection.commit();
+		try {
+			statement.executeBatch();
+		} catch (BatchUpdateException e) {
+		} finally {
+			try { 
+				connection.commit();
+				statement.close();
+				connection.close();
+			} catch (SQLException e) {}
+		}
 	}
 
 	@Override

@@ -1,6 +1,8 @@
 package com.ligadata.adapters.jdbc;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -14,44 +16,48 @@ import com.ligadata.adapters.AdapterConfiguration;
 public class UpsertJDBCSink extends AbstractJDBCSink {
 	static Logger logger = Logger.getLogger(UpsertJDBCSink.class);
 
-	private PreparedStatement insertStatement;
+	private String insertSql;
 	private List<ParameterMapping> insertParams;
-	private PreparedStatement updateStatement;
+	private String updateSql;
 	private List<ParameterMapping> updateParams;
+	private ArrayList<JSONObject> buffer;
 
 	public UpsertJDBCSink() {
 	}
-	
+
 	@Override
 	public void init(AdapterConfiguration config) throws Exception {
 		super.init(config);
 
+		buffer = new ArrayList<JSONObject>();
 		insertParams = new ArrayList<ParameterMapping>();
 		updateParams = new ArrayList<ParameterMapping>();
 		String insertStr = config.getProperty(AdapterConfiguration.JDBC_INSERT_STATEMENT);
-		if(insertStr == null)
+		if (insertStr == null)
 			throw new Exception("Insert statement not specified in the properties file.");
-		
+
 		String updateStr = config.getProperty(AdapterConfiguration.JDBC_UPDATE_STATEMENT);
-		if(updateStr == null)
+		if (updateStr == null)
 			throw new Exception("Update statement not specified in the properties file.");
-		
+
 		logger.info("Insert statement: " + insertStr);
-		insertStatement = buildStatementAndParameters(insertStr, insertParams);
-		if(logger.isInfoEnabled()) {
+		insertSql = buildStatementAndParameters(insertStr, insertParams);
+		if (logger.isInfoEnabled()) {
 			logger.info(insertParams.size() + " parameters found.");
 			int i = 1;
 			for (ParameterMapping param : insertParams)
-				logger.info("Parameter " + (i++) + ": path=" + Arrays.toString(param.path) + " type=" + param.type + " typeName=" + param.typeName);
+				logger.info("Parameter " + (i++) + ": path=" + Arrays.toString(param.path) + " type=" + param.type
+						+ " typeName=" + param.typeName);
 		}
 
 		logger.info("Update statement: " + updateStr);
-		updateStatement = buildStatementAndParameters(updateStr, updateParams);   
-		if(logger.isInfoEnabled()) {
+		updateSql = buildStatementAndParameters(updateStr, updateParams);
+		if (logger.isInfoEnabled()) {
 			logger.info(updateParams.size() + " parameters found.");
 			int i = 1;
 			for (ParameterMapping param : insertParams)
-				logger.info("Parameter " + (i++) + ": path=" + Arrays.toString(param.path) + " type=" + param.type + " typeName=" + param.typeName);
+				logger.info("Parameter " + (i++) + ": path=" + Arrays.toString(param.path) + " type=" + param.type
+						+ " typeName=" + param.typeName);
 		}
 	}
 
@@ -66,26 +72,44 @@ public class UpsertJDBCSink extends AbstractJDBCSink {
 				return false;
 			}
 
-			if (bindParameters(updateStatement, updateParams, jsonObject)) {
-				updateStatement.execute();
-				if(updateStatement.getUpdateCount() == 0) {
-					if(bindParameters(insertStatement, insertParams, jsonObject))
-						insertStatement.execute();
-				}
-					
-				logger.debug("Saving message to database");
-				connection.commit();
-			}
-			
+			buffer.add(jsonObject);
 		} catch (Exception e) {
 			logger.error("Error processing message - ignoring message : " + e.getMessage(), e);
 			return false;
 		}
-		
+
 		return true;
 	}
 
 	@Override
 	public void processAll() throws Exception {
+		Connection connection = dataSource.getConnection();
+		PreparedStatement updateStatement = connection.prepareStatement(updateSql);
+		PreparedStatement insertStatement = connection.prepareStatement(insertSql);
+
+		try {
+			for (JSONObject jsonObject : buffer) {
+				if (bindParameters(updateStatement, updateParams, jsonObject)) {
+					updateStatement.execute();
+					if (updateStatement.getUpdateCount() == 0) {
+						if (bindParameters(insertStatement, insertParams, jsonObject))
+							insertStatement.execute();
+					}
+
+					logger.debug("Saving message to database");
+					connection.commit();
+				}
+			}
+		} catch (SQLException e) {
+		} finally {
+			try {
+				connection.commit();
+				updateStatement.close();
+				insertStatement.close();
+				connection.close();
+			} catch (SQLException e) {
+			}
+		}
+
 	}
 }

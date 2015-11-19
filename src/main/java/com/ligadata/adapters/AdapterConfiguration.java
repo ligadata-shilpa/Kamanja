@@ -5,8 +5,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.Enumeration;
 import java.util.Properties;
-import java.util.Set;
-
 import org.apache.log4j.Logger;
 
 public class AdapterConfiguration {
@@ -41,6 +39,12 @@ public class AdapterConfiguration {
 	public static final String JDBC_UPDATE_STATEMENT = "jdbc.update.statement";
 	public static final String METADATA_CONFIG_FILE = "metadata.config.file";
 	public static final String METADATA_CONTAINER_NAME = "metadata.container.name";
+
+	public static final String DBCP_MAX_TOTAL = "dbcp.maxtotal";
+	public static final String DBCP_MAX_IDLE = "dbcp.maxidle";
+	public static final String DBCP_MAX_WAIT_MILLIS = "dbcp.maxwaitmillis";
+	public static final String DBCP_TEST_ON_BORROW = "dbcp.testonborrow";
+	public static final String DBCP_VALIDATION_QUERY = "dbcp.validationquery";
 
 	private Properties properties;
 

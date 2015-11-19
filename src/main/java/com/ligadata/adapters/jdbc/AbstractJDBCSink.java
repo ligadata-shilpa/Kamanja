@@ -1,7 +1,6 @@
 package com.ligadata.adapters.jdbc;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.ParameterMetaData;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -12,6 +11,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.log4j.Logger;
 import org.json.simple.JSONObject;
 
@@ -19,9 +19,9 @@ import com.ligadata.adapters.AdapterConfiguration;
 import com.ligadata.adapters.BufferedMessageProcessor;
 
 public abstract class AbstractJDBCSink implements BufferedMessageProcessor {
-	static Logger logger = Logger.getLogger(AbstractJDBCSink.class); 
+	static Logger logger = Logger.getLogger(AbstractJDBCSink.class);
 
-	protected Connection connection;
+	protected BasicDataSource dataSource;
 	protected SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
 
 	protected class ParameterMapping {
@@ -39,30 +39,46 @@ public abstract class AbstractJDBCSink implements BufferedMessageProcessor {
 	public AbstractJDBCSink() {
 	}
 
-	protected PreparedStatement buildStatementAndParameters(String sqlStr, List<ParameterMapping> paramArray)
-			throws SQLException {
+	protected String buildStatementAndParameters(String sqlStr, List<ParameterMapping> paramArray) throws SQLException {
 		// replace parameters specified as {$..} with ?
 		String sql = sqlStr.replaceAll("\\{\\$[^\\}]+\\}", "?");
 		logger.debug("SQL: " + sql);
-		PreparedStatement statement = connection.prepareStatement(sql);
-		ParameterMetaData metadata = statement.getParameterMetaData();
 
-		// extract parameters between {$..}
-		Matcher matcher = Pattern.compile("\\{\\$([^\\}]+)").matcher(sqlStr);
-		int pos = -1;
-		int param = 1;
-		while (matcher.find(pos + 1)) {
-			pos = matcher.start();
-			String path = matcher.group(1);
-			paramArray.add(new ParameterMapping(metadata.getParameterTypeName(param), metadata.getParameterType(param),
-					path.split("\\.")));
-			param++;
+		Connection connection = null;
+		PreparedStatement statement = null;
+		ParameterMetaData metadata = null;
+		try {
+			connection = dataSource.getConnection();
+			statement = connection.prepareStatement(sql);
+			metadata = statement.getParameterMetaData();
+
+			// extract parameters between {$..}
+			Matcher matcher = Pattern.compile("\\{\\$([^\\}]+)").matcher(sqlStr);
+			int pos = -1;
+			int param = 1;
+			while (matcher.find(pos + 1)) {
+				pos = matcher.start();
+				String path = matcher.group(1);
+				paramArray.add(new ParameterMapping(metadata.getParameterTypeName(param),
+						metadata.getParameterType(param), path.split("\\.")));
+				param++;
+			}
+		} finally {
+			try {
+				if (statement != null)
+					statement.close();
+				if (connection != null)
+					connection.close();
+			} catch (SQLException e) {
+			}
+
 		}
 
-		return statement;
+		return sql;
 	}
 
-	protected boolean bindParameters(PreparedStatement statement, List<ParameterMapping> paramArray, JSONObject jsonObject) {
+	protected boolean bindParameters(PreparedStatement statement, List<ParameterMapping> paramArray,
+			JSONObject jsonObject) {
 		int paramIndex = 1;
 		String key = null;
 		String value = null;
@@ -70,12 +86,13 @@ public abstract class AbstractJDBCSink implements BufferedMessageProcessor {
 		boolean success = true;
 		JSONObject jo = (JSONObject) jsonObject.clone();
 		jo.remove("dedup");
-		
+
 		try {
 			for (ParameterMapping param : paramArray) {
 				key = Arrays.toString(param.path);
 
-				// Defer processing of special parameter _Remaining_Attributes_ to end
+				// Defer processing of special parameter _Remaining_Attributes_
+				// to end
 				if (param.path[0].equalsIgnoreCase("_Remaining_Attributes_")) {
 					remainingParamIndex = paramIndex;
 					paramIndex++;
@@ -91,8 +108,9 @@ public abstract class AbstractJDBCSink implements BufferedMessageProcessor {
 				value = null;
 				if (subobject != null && subobject.get(param.path[param.path.length - 1]) != null)
 					value = subobject.remove(param.path[param.path.length - 1]).toString();
-				
-				logger.debug("key=[" + key + "] value=[" + value + "] type=[" + param.type + "] typeName=[" + param.typeName + "]");
+
+				logger.debug("key=[" + key + "] value=[" + value + "] type=[" + param.type + "] typeName=["
+						+ param.typeName + "]");
 
 				if (param.type == java.sql.Types.VARCHAR || param.type == java.sql.Types.LONGVARCHAR) {
 					// String
@@ -137,30 +155,41 @@ public abstract class AbstractJDBCSink implements BufferedMessageProcessor {
 				}
 				paramIndex++;
 			}
-			
+
 			// set letfover attributes to _Remaining_Attributes_ parameter
-			if(remainingParamIndex > 0) {
+			if (remainingParamIndex > 0) {
 				statement.setString(remainingParamIndex, jo.toJSONString());
 			}
 
 		} catch (Exception e) {
 			logger.error("Error binding parameters - ignoring message : " + e.getMessage());
-			logger.error("Error for Parameter index : [" + paramIndex + "] Key : [" + key + "] value : [" + value + "]");
+			logger.error(
+					"Error for Parameter index : [" + paramIndex + "] Key : [" + key + "] value : [" + value + "]");
 			logger.error("Error ", e);
-			try { statement.clearParameters(); } catch (SQLException e1) {}
+			try {
+				statement.clearParameters();
+			} catch (SQLException e1) {
+			}
 			success = false;
 		}
-		
+
 		return success;
 	}
 
 	@Override
 	public void init(AdapterConfiguration config) throws Exception {
-		Class.forName(config.getProperty(AdapterConfiguration.JDBC_DRIVER));
-		connection = DriverManager.getConnection(config.getProperty(AdapterConfiguration.JDBC_URL),
-				config.getProperty(AdapterConfiguration.JDBC_USER),
-				config.getProperty(AdapterConfiguration.JDBC_PASSWORD));
-		connection.setAutoCommit(false);
+		dataSource = new BasicDataSource();
+		dataSource.setDriverClassName(config.getProperty(AdapterConfiguration.JDBC_DRIVER));
+		dataSource.setUrl(config.getProperty(AdapterConfiguration.JDBC_URL));
+		dataSource.setUsername(config.getProperty(AdapterConfiguration.JDBC_USER));
+		dataSource.setPassword(config.getProperty(AdapterConfiguration.JDBC_PASSWORD));
+		dataSource.setDefaultAutoCommit(false);
+		
+		dataSource.setMaxTotal(Integer.parseInt(config.getProperty(AdapterConfiguration.DBCP_MAX_TOTAL, "2")));
+		dataSource.setMaxIdle(Integer.parseInt(config.getProperty(AdapterConfiguration.DBCP_MAX_IDLE, "2")));
+		dataSource.setMaxWaitMillis(Long.parseLong(config.getProperty(AdapterConfiguration.DBCP_MAX_WAIT_MILLIS, "10000")));
+		dataSource.setTestOnBorrow(Boolean.parseBoolean(config.getProperty(AdapterConfiguration.DBCP_TEST_ON_BORROW, "true")));
+		dataSource.setValidationQuery(config.getProperty(AdapterConfiguration.DBCP_VALIDATION_QUERY, "SELECT 1"));
 
 		inputFormat = new SimpleDateFormat(
 				config.getProperty(AdapterConfiguration.INPUT_DATE_FORMAT, "yyyy-MM-dd'T'HH:mm:ss.SSS"));
@@ -179,8 +208,8 @@ public abstract class AbstractJDBCSink implements BufferedMessageProcessor {
 	@Override
 	public void close() {
 		try {
-			if (connection != null)
-				connection.close();
+			if (dataSource != null)
+				dataSource.close();
 		} catch (SQLException e) {
 		}
 	}

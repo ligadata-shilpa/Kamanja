@@ -17,6 +17,7 @@ import kafka.message.MessageAndMetadata;
 public class KafkaConsumer implements Runnable {
 	static Logger logger = Logger.getLogger(KafkaConsumer.class);
 	private volatile boolean stop = false;
+	private Thread thisThread = null;
 
 	private final AdapterConfiguration configuration;
 	private ConsumerConnector consumer;
@@ -41,6 +42,8 @@ public class KafkaConsumer implements Runnable {
 			processor.close();
 		if(consumer != null)
 			consumer.shutdown();
+		if(thisThread != null)
+			thisThread.interrupt();
 	}
 
 	private ConsumerConfig createConsumerConfig() {
@@ -77,9 +80,64 @@ public class KafkaConsumer implements Runnable {
 		}
 	}
 
+	private KafkaStream<byte[], byte[]> getKafkaStream() {
+		consumer = kafka.consumer.Consumer.createJavaConsumerConnector(createConsumerConfig());
+		String topic = configuration.getProperty(AdapterConfiguration.KAFKA_TOPIC);
+
+		logger.info("Connecting to kafka topic " + topic);
+		Map<String, Integer> topicCountMap = new HashMap<String, Integer>();
+		topicCountMap.put(topic, new Integer(1));
+
+		Map<String, List<KafkaStream<byte[], byte[]>>> consumerMap = consumer.createMessageStreams(topicCountMap);
+		return consumerMap.get(topic).get(0);
+	}
+	
+	private KafkaStream<byte[], byte[]> getKafkaStreamWithRetry() {
+		long retry = 0;
+		long retryInterval = 5000;
+		while (!stop) {
+			try {
+				KafkaStream<byte[], byte[]> stream = getKafkaStream();
+				if(retry > 0)
+					logger.info("Successfully connected after " + retry + " retries.");
+				return stream;
+			} catch (Exception e) {
+				retry++;
+				if(retry <= 12) {
+					logger.error("Error after " + retry + " retries : " + e.getMessage(), e);
+					try { Thread.sleep(retryInterval*retry); } catch (InterruptedException e1) {}
+				} else
+					try { Thread.sleep(60000); } catch (InterruptedException e1) {}
+			}
+		}
+		
+		return null;
+	}
+
+	private void processWithRetry() {
+		long retry = 0;
+		long retryInterval = 5000;
+		while (!stop) {
+			try {
+				processor.processAll();
+				if(retry > 0)
+					logger.info("Successfully processed messages after " + retry + " retries.");
+				return;
+			} catch (Exception e) {
+				retry++;
+				if(retry <= 12) {
+					logger.error("Error after " + retry + " retries : " + e.getMessage(), e);
+					try { Thread.sleep(retryInterval*retry); } catch (InterruptedException e1) {}
+				} else
+					try { Thread.sleep(60000); } catch (InterruptedException e1) {}
+			}
+		}
+	}
+	
 	@Override
 	public void run() {
 		logger.info("Kafka consumer started processing.");
+		thisThread = Thread.currentThread();
 
 		long totalMessageCount = 0;
 		long errorMessageCount = 0;
@@ -88,58 +146,55 @@ public class KafkaConsumer implements Runnable {
 			logger.info("Using " + processor.getClass().getName() + " for processing messages.");
 			processor.init(configuration);
 
-			consumer = kafka.consumer.Consumer.createJavaConsumerConnector(createConsumerConfig());
-			String topic = configuration.getProperty(AdapterConfiguration.KAFKA_TOPIC);
+		} catch (Exception e) {
+			logger.error("Error initializing processor: " + e.getMessage(), e);
+			throw new RuntimeException(e);
+		}
 
-			logger.info("Connecting to kafka topic " + topic);
-			Map<String, Integer> topicCountMap = new HashMap<String, Integer>();
-			topicCountMap.put(topic, new Integer(1));
+		KafkaStream<byte[], byte[]> kafkaStream = getKafkaStreamWithRetry();
 
-			Map<String, List<KafkaStream<byte[], byte[]>>> consumerMap = consumer.createMessageStreams(topicCountMap);
-			KafkaStream<byte[], byte[]> kafkaStream = consumerMap.get(topic).get(0);
+		long syncMessageCount = Long.parseLong(configuration.getProperty(AdapterConfiguration.SYNC_MESSAGE_COUNT, "10000"));
+		long syncInterval = Long.parseLong(configuration.getProperty(AdapterConfiguration.SYNC_INTERVAL_SECONDS, "120")) * 1000;
 
-			long syncMessageCount = Long
-					.parseLong(configuration.getProperty(AdapterConfiguration.SYNC_MESSAGE_COUNT, "10000"));
-			long syncInterval = Long
-					.parseLong(configuration.getProperty(AdapterConfiguration.SYNC_INTERVAL_SECONDS, "120")) * 1000;
-
-			ConsumerIterator<byte[], byte[]> it = kafkaStream.iterator();
-			long messageCount = 0;
-			long nextSyncTime = System.currentTimeMillis() + syncInterval;
-			while (!stop) {
+		ConsumerIterator<byte[], byte[]> it = kafkaStream.iterator();
+		long messageCount = 0;
+		long nextSyncTime = System.currentTimeMillis() + syncInterval;
+		while (!stop) {
+			try {
 				if (hasNext(it)) {
 					MessageAndMetadata<byte[], byte[]> t = it.next();
 					Long lastOffset = partitionOffsets.get(t.partition());
 					if (lastOffset == null || t.offset() > lastOffset) {
 						String message = new String(t.message());
-						logger.debug(
-								"Message from partition Id :" + t.partition() + " Message: " + message);
+						logger.debug("Message from partition Id :" + t.partition() + " Message: " + message);
 						if (processor.addMessage(message))
 							messageCount++;
 						else
 							errorMessageCount++;
-						
+
 						partitionOffsets.put(t.partition(), t.offset());
 					}
 				}
-
-				if (messageCount > 0 && (messageCount >= syncMessageCount || System.currentTimeMillis() >= nextSyncTime)) {
-					logger.info("Saving " + messageCount + " messages.");
-					processor.processAll();
-					processor.clearAll();
-					consumer.commitOffsets();
-					totalMessageCount += messageCount;
-					messageCount = 0;
-					nextSyncTime = System.currentTimeMillis() + syncInterval;
-				}
+			} catch (Exception e) {
+				logger.error("Error reading from kafka: " + e.getMessage(), e);
+				KafkaStream<byte[], byte[]> stream = getKafkaStreamWithRetry();
+				it = stream.iterator();
 			}
 
-			consumer.shutdown();
-
-		} catch (Exception e) {
-			logger.error("Error : " + e.getMessage(), e);
+			if (messageCount > 0 && (messageCount >= syncMessageCount || System.currentTimeMillis() >= nextSyncTime)) {
+				logger.info("Saving " + messageCount + " messages.");
+				processWithRetry();
+				processor.clearAll();
+				consumer.commitOffsets();
+				totalMessageCount += messageCount;
+				messageCount = 0;
+				nextSyncTime = System.currentTimeMillis() + syncInterval;
+			}
 		}
 
-		logger.info("Shutting down after processing " + totalMessageCount + " messages with " + errorMessageCount + " error messages.");
+		consumer.shutdown();
+
+		logger.info("Shutting down after processing " + totalMessageCount + " messages with " + errorMessageCount
+				+ " error messages.");
 	}
 }
