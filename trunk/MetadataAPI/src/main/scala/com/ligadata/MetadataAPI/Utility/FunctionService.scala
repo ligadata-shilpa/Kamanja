@@ -18,6 +18,7 @@ package com.ligadata.MetadataAPI.Utility
 
 import java.io.File
 
+import com.ligadata.Exceptions.{StackTrace, AlreadyExistsException}
 import com.ligadata.MetadataAPI.MetadataAPIImpl
 
 import scala.io.Source
@@ -212,10 +213,38 @@ object FunctionService {
     }
     response
   }
-  //NOT REQUIRED
-  def loadFunctionsFromAFile: String ={
-    var response="NOT REQUIRED. Please use the ADD TYPE option."
-    response
+
+    /** loadFunctionsFromAFile is used to load UDF function lib fcn type information to the Metadata store for use
+      * in the pmml models.
+      * @param input path of the file containing the json function definitions
+      * @param userid optional user id needed for authentication and logging
+      * @return api results as a strin
+      */
+  def loadFunctionsFromAFile(input : String, userid : Option[String] = None): String ={
+
+      val response : String = try {
+            val functionStr = Source.fromFile(input).mkString
+            //MdMgr.GetMdMgr.truncate("FunctionDef")
+            val apiResult = MetadataAPIImpl.AddFunctions(functionStr, "JSON", userid)
+            // val apiResultStr = MetadataAPIImpl.getApiResult(apiResult)
+
+            val resultMsg : String = s"Result as Json String => \n$apiResult"
+            println(resultMsg)
+            resultMsg
+      } catch {
+        case e: AlreadyExistsException => {
+            val errorMsg : String = "Function(s) already in the metadata...."
+            logger.error(errorMsg)
+            errorMsg
+        }
+        case e: Exception => {
+            val stackTrace = StackTrace.ThrowableTraceString(e)
+            val errorMsg : String = s"Exception $e encountered ... \nstackTrace =\nstackTrace"
+            logger.debug(errorMsg)
+            errorMsg
+        }
+      }
+      response
   }
   def dumpAllFunctionsAsJson: String ={
     var response=""

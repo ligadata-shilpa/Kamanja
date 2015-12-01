@@ -897,7 +897,7 @@ object NodePrinterHelpers extends com.ligadata.pmml.compiler.LogTrait {
 		 *  The usage of UdfSearchPath is deprecated... use NamespaceSearchPath to specify your udf pkg names*/
 		val pkgNames : Array[String] = ctx.udfSearchPath
 		val pkgsOnly : Array[String] = if (pkgNames != null && pkgNames.size > 0) {
-			if (pkgNames.contains(".")) {
+			if (pkgNames.filter(pkg => pkg.contains(".")).size > 0) {
 				val pkgs : Array[String] = pkgNames.map(pkg => {
 					val pkgNmNodes : Array[String] = pkg.split('.').dropRight(1)
 					val buf : StringBuilder = new StringBuilder

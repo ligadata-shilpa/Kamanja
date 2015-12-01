@@ -87,7 +87,10 @@ object StartMetadataAPI {
             if (argsUntilParm < 0)
               depName = arg
             else
-              action += arg
+                if (arg != "debug") /** ignore the debug tag */ {
+                    /** concatenate the args together to form the action string... "add model pmml" becomes "addmodelpmmml" */
+                    action += arg
+                }
           }
         }
       })
@@ -285,7 +288,7 @@ object StartMetadataAPI {
           }
 
         case Action.UPDATEFUNCTION => response = FunctionService.updateFunction(input)
-        case Action.LOADFUNCTIONSFROMAFILE => response = FunctionService.loadFunctionsFromAFile
+        case Action.LOADFUNCTIONSFROMAFILE => response = FunctionService.loadFunctionsFromAFile(input)
         case Action.DUMPALLFUNCTIONSASJSON => response = FunctionService.dumpAllFunctionsAsJson
         //config
         case Action.UPLOADCLUSTERCONFIG => response = ConfigService.uploadClusterConfig(input)
