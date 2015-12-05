@@ -166,9 +166,6 @@ class CompilerProxy {
         if (modDef.ver == 0) {
           modDef.ver = 1
         }
-        if (modDef.modelType == null) {
-          modDef.modelType = "RuleSet"
-        }
 
         modDef.objectDefinition = pmmlStr
         modDef.objectFormat = fXML
@@ -465,7 +462,22 @@ class CompilerProxy {
     }
 
   /**
-   * compileModelFromSource - Generate a jarfile from a sourceCode.
+   * compileModelFromSource - Generate a jarfile from a sourceCode.  This method used by the java and scala custom models
+   *
+   * @param repackagedCode
+   * @param sourceLang
+   * @param pname
+   * @param classPath
+   * @param modelNamespace
+   * @param modelName
+   * @param modelVersion
+   * @param msgDefClassFilePath
+   * @param elements
+   * @param originalSource
+   * @param deps
+   * @param typeDeps
+   * @param notTypeDeps
+   * @return ModelDef
    *
    */
   // The last parameter of generateModelDef represents whether we are recompiling a model due to a change
@@ -505,13 +517,33 @@ class CompilerProxy {
       // figure out the Physical Model Name
       var (dummy1, dummy2, dummy3, pName) = getModelMetadataFromJar(jarFileName, elements, depJars)
 
-      // Create the ModelDef object
-      val modDef: ModelDef = MdMgr.GetMdMgr.MakeModelDef(modelNamespace, modelName, "", "RuleSet",
-        getInputVarsFromElements(elements),
-        List[(String, String, String)](),
-        MdMgr.ConvertVersionToLong(MdMgr.FormatVersion(modelVersion)), "",
-        deps.toArray[String],
-        recompile,false)
+      /* Create the ModelDef object
+
+        def MakeModelDef(nameSpace: String
+                   , name: String
+                   , physicalName: String
+                   , mdlType: String
+                   , inputVars: List[(String, String, String, String, Boolean, String)]
+                   , outputVars: List[(String, String, String)]
+                   , ver: Long
+                   , jarNm: String
+                   , depJars: Array[String]
+                   , recompile: Boolean
+                   , supportsInstanceSerialization: Boolean): ModelDef = {
+
+       */
+      val modelType : String = if (sourceLang.equalsIgnoreCase("scala")) "Scala" else "Java"
+      val modDef: ModelDef = MdMgr.GetMdMgr.MakeModelDef(modelNamespace
+                                                        , modelName
+                                                        , pName
+                                                        , "RuleSet"
+                                                        , getInputVarsFromElements(elements)
+                                                        , List[(String, String, String)]()
+                                                        , MdMgr.ConvertVersionToLong(MdMgr.FormatVersion(modelVersion))
+                                                        , jarFileName
+                                                        , deps.toArray[String]
+                                                        , recompile
+                                                        , false)
 
       // Need to set some values by hand here.
       modDef.jarName = jarFileName

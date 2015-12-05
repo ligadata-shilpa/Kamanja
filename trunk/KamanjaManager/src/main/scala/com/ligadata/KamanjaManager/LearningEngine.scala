@@ -38,7 +38,7 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
   var cntr: Long = 0
   var mdlsChangedCntr: Long = -1
   var outputGen = new OutputMsgGenerator()
-  var models = Array[(String, MdlInfo, Boolean, ModelBase, Boolean)]() // ModelName, ModelInfo, IsModelInstanceReusable, Global ModelBase if the model is IsModelInstanceReusable == true. The last boolean is to check whether we tested message type or not (thi is to check Reusable flag)  
+  var models = Array[(String, com.ligadata.KamanjaBase.ModelInfo, Boolean, ModelBase, Boolean)]() // ModelName, ModelInfo, IsModelInstanceReusable, Global ModelBase if the model is IsModelInstanceReusable == true. The last boolean is to check whether we tested message type or not (thi is to check Reusable flag)  
   var validateMsgsForMdls = scala.collection.mutable.Set[String]() // Message Names for creating models instances   
 
   private def RunAllModels(transId: Long, inputData: Array[Byte], finalTopMsgOrContainer: MessageContainerBase, txnCtxt: TransactionContext, uk: String, uv: String, xformedMsgCntr: Int, totalXformedMsgs: Int): Array[SavedMdlResult] = {
@@ -47,7 +47,10 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
     LOG.debug("Processing uniqueKey:%s, uniqueVal:%s".format(uk, uv))
 
     if (finalTopMsgOrContainer != null) {
-      val mdlCtxt = new ModelContext(txnCtxt, finalTopMsgOrContainer, inputData, uk)
+      val mdlCtxt = new ModelContext(txnCtxt
+                                    , finalTopMsgOrContainer
+                                    , inputData
+                                    , uk)
       ThreadLocalStorage.modelContextInfo.set(mdlCtxt)
       try {
         val mdlChngCntr = KamanjaMetadata.GetModelsChangedCounter
@@ -55,20 +58,20 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
         if (mdlChngCntr != mdlsChangedCntr) {
           LOG.info("Refreshing models for Partition:%s (hashCode:%d) from %d to %d".format(uk, partHashCd, mdlsChangedCntr, mdlChngCntr))
           val (tmpMdls, tMdlsChangedCntr) = KamanjaMetadata.getAllModels
-          val tModels = if (tmpMdls != null) tmpMdls else Array[(String, MdlInfo)]()
+          val tModels = if (tmpMdls != null) tmpMdls else Array[(String, com.ligadata.KamanjaBase.ModelInfo)]()
 
-          val map = scala.collection.mutable.Map[String, (MdlInfo, Boolean, ModelBase, Boolean)]()
+          val map = scala.collection.mutable.Map[String, (com.ligadata.KamanjaBase.ModelInfo, Boolean, ModelBase, Boolean)]()
           models.foreach(q => {
             map(q._1) = ((q._2, q._3, q._4, q._5))
           })
 
-          var newModels = ArrayBuffer[(String, MdlInfo, Boolean, ModelBase, Boolean)]()
+          var newModels = ArrayBuffer[(String, com.ligadata.KamanjaBase.ModelInfo, Boolean, ModelBase, Boolean)]()
           var newMdlsSet = scala.collection.mutable.Set[String]()
 
           tModels.foreach(tup => {
             val md = tup._2
             val mInfo = map.getOrElse(tup._1, null)
-            var newInfo: (String, MdlInfo, Boolean, ModelBase, Boolean) = null
+            var newInfo: (String, com.ligadata.KamanjaBase.ModelInfo, Boolean, ModelBase, Boolean) = null
             if (mInfo != null) {
               // Make sure previous model version is same as the current model version
               if (md.mdl == mInfo._1.mdl && md.mdl.Version().equals(mInfo._1.mdl.Version())) {
@@ -78,8 +81,8 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
                 if (mInfo._2 && mInfo._3 != null) {
                   mInfo._3.shutdown()
                 }
-                if (md.mdl.IsValidMessage(finalTopMsgOrContainer)) {
-                  val tInst = md.mdl.CreateNewModel(mdlCtxt)
+                if (md.mdl.IsValidMessage(finalTopMsgOrContainer, md.modelName, md.modelVersion)) {
+                  val tInst = md.mdl.CreateNewModel(mdlCtxt, md.modelName, md.modelVersion)
                   val isReusable = tInst.isModelInstanceReusable()
                   var newInst: ModelBase = null
                   if (isReusable) {
@@ -92,9 +95,9 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
                 }
               }
             } else {
-              if (md.mdl.IsValidMessage(finalTopMsgOrContainer)) {
+              if (md.mdl.IsValidMessage(finalTopMsgOrContainer, md.modelName, md.modelVersion)) {
                 var newInst: ModelBase = null
-                val tInst = md.mdl.CreateNewModel(mdlCtxt)
+                val tInst = md.mdl.CreateNewModel(mdlCtxt, md.modelName, md.modelVersion)
                 val isReusable = tInst.isModelInstanceReusable()
                 if (isReusable) {
                   newInst = tInst
@@ -126,15 +129,17 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
         } else if (validateMsgsForMdls.contains(msgFullName) == false) { // found new Msg
           for (i <- 0 until models.size) {
             val mInfo = models(i)
-            if (mInfo._5 == false && mInfo._2.mdl.IsValidMessage(finalTopMsgOrContainer)) {
+            val modelInfo : ModelInfo = mInfo._2
+            if (mInfo._5 == false && mInfo._2.mdl.IsValidMessage(finalTopMsgOrContainer,modelInfo.modelName, modelInfo.modelVersion)) {
               var newInst: ModelBase = null
-              val tInst = mInfo._2.mdl.CreateNewModel(mdlCtxt)
+              val tInst = mInfo._2.mdl.CreateNewModel(mdlCtxt, modelInfo.modelName, modelInfo.modelVersion)
               val isReusable = tInst.isModelInstanceReusable()
               if (isReusable) {
                 newInst = tInst
                 newInst.init(partHashCd)
               }
-              models(i) = ((mInfo._1, mInfo._2, isReusable, newInst, true))
+              val msgTypeWasChecked : Boolean = true
+              models(i) = (mInfo._1, mInfo._2, isReusable, newInst, msgTypeWasChecked)
             }
           }
           validateMsgsForMdls += msgFullName
@@ -146,14 +151,14 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
         models.foreach(q => {
           val md = q._2
           try {
-            if (md.mdl.IsValidMessage(finalTopMsgOrContainer)) {
+            if (md.mdl.IsValidMessage(finalTopMsgOrContainer, md.modelName, md.modelVersion)) {
               LOG.debug("Processing uniqueKey:%s, uniqueVal:%s, model:%s".format(uk, uv, md.mdl.ModelName))
               // Checking whether this message has any fields/concepts to execute in this model
               val curMd = if (q._3) {
                 q._4.modelContext = mdlCtxt
                 q._4
               } else {
-                val tInst = md.mdl.CreateNewModel(mdlCtxt)
+                val tInst = md.mdl.CreateNewModel(mdlCtxt, md.modelName, md.modelVersion)
                 tInst.init(partHashCd)
                 tInst
               }
@@ -168,6 +173,7 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
                 LOG.error("Failed to create model " + md.mdl.ModelName())
               }
             } else {
+                /** message was not interesting to md... */
             }
           } catch {
             case e: Exception => {

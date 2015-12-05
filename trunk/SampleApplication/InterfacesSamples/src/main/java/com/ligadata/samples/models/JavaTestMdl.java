@@ -43,15 +43,15 @@ public class JavaTestMdl extends ModelBase {
 	}
 
 	public JavaTestMdl(ModelContext mdlContext) {
-		super(mdlContext, objSignleton);
+		super(mdlContext, objSignleton, objSignleton.ModelName(), objSignleton.Version(), false, 0);
 	}
 
 	public static class JavaTestMdlObj implements ModelBaseObj {
-		public boolean IsValidMessage(MessageContainerBase msg) {
+		public boolean IsValidMessage(MessageContainerBase msg, String modelName, String modelVersion) {
 			return (msg instanceof CustAlertHistory);
 		}
 
-		public ModelBase CreateNewModel(ModelContext mdlContext) {
+		public ModelBase CreateNewModel(ModelContext mdlContext, String modelName, String modelVersion) {
 			return new JavaTestMdl(mdlContext);
 		}
 

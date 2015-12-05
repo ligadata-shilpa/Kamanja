@@ -70,8 +70,8 @@ import java.io.{ DataInputStream, DataOutputStream }
 //
 
 object LowBalanceAlert extends ModelBaseObj {
-  override def IsValidMessage(msg: MessageContainerBase): Boolean = return msg.isInstanceOf[CustTransaction]
-  override def CreateNewModel(mdlCtxt: ModelContext): ModelBase = return new LowBalanceAlert(mdlCtxt)
+  override def IsValidMessage(msg: MessageContainerBase, modelName : String, modelVersion : String): Boolean = return msg.isInstanceOf[CustTransaction]
+  override def CreateNewModel(mdlCtxt: ModelContext, modelName : String, modelVersion : String): ModelBase = return new LowBalanceAlert(mdlCtxt)
   override def ModelName(): String = "LowBalanceAlert" // Model Name
   override def Version(): String = "0.0.1" // Model Version
   override def CreateResultObject(): ModelResultBase = new LowBalanceAlertResult()
@@ -160,7 +160,8 @@ class LowBalanceAlertResult extends ModelResultBase {
   }
 }
 
-class LowBalanceAlert(mdlCtxt: ModelContext) extends ModelBase(mdlCtxt, LowBalanceAlert) {
+class LowBalanceAlert(mdlCtxt: ModelContext)
+    extends ModelBase(mdlCtxt, LowBalanceAlert, LowBalanceAlert.ModelName(), LowBalanceAlert.Version(), false, 0) {
   override def execute(emitAllResults: Boolean): ModelResultBase = {
     // First check the preferences and decide whether to continue or not
     val gPref = GlobalPreferences.getRecentOrNew(Array("Type1"))
@@ -209,8 +210,8 @@ class LowBalanceAlert(mdlCtxt: ModelContext) extends ModelBase(mdlCtxt, LowBalan
 //
 
 object LowBalanceAlert2 extends ModelBaseObj {
-  override def IsValidMessage(msg: MessageContainerBase): Boolean = return msg.isInstanceOf[CustTransaction]
-  override def CreateNewModel(mdlCtxt: ModelContext): ModelBase = return new LowBalanceAlert2(mdlCtxt)
+  override def IsValidMessage(msg: MessageContainerBase, modelName : String, modelVersion : String): Boolean = return msg.isInstanceOf[CustTransaction]
+  override def CreateNewModel(mdlCtxt: ModelContext, modelName : String, modelVersion : String): ModelBase = return new LowBalanceAlert2(mdlCtxt)
   override def ModelName(): String = "LowBalanceAlert2" // Model Name
   override def Version(): String = "0.0.1" // Model Version
   override def CreateResultObject(): ModelResultBase = new LowBalanceAlertResult2()
@@ -299,7 +300,7 @@ class LowBalanceAlertResult2 extends ModelResultBase {
   }
 }
 
-class LowBalanceAlert2(mdlCtxt: ModelContext) extends ModelBase(mdlCtxt, LowBalanceAlert2) {
+class LowBalanceAlert2(mdlCtxt: ModelContext) extends ModelBase(mdlCtxt, LowBalanceAlert2, LowBalanceAlert2.ModelName(), LowBalanceAlert2.Version(), false, 0) {
   override def execute(emitAllResults: Boolean): ModelResultBase = {
     // First check the preferences and decide whether to continue or not
     val gPref = GlobalPreferences.getRecentOrNew(Array("Type1"))

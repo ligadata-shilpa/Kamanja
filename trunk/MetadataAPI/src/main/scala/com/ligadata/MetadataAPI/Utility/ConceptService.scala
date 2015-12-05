@@ -19,7 +19,7 @@ package com.ligadata.MetadataAPI.Utility
 import java.io.File
 
 import com.ligadata.MetadataAPI.MetadataAPIImpl
-import com.ligadata.kamanja.metadata.AttributeDef
+import com.ligadata.kamanja.metadata.{BaseAttributeDef, MdMgr, AttributeDef}
 
 import scala.io.Source
 import org.apache.log4j._
@@ -77,17 +77,21 @@ object ConceptService {
     }
     response
   }
-  def removeConcept(param: String = ""): String ={
+  def removeConcept(param: String, userid : Option[String]): String ={
     var response = ""
     try {
-      if (param.length > 0) {
+      if (param != null && param.size > 0) {
         try {
-            return MetadataAPIImpl.RemoveConcept(param.asInstanceOf[AttributeDef])
+            return MetadataAPIImpl.RemoveConcept(param, userid)
         } catch {
           case e: Exception => e.printStackTrace()
         }
       }
-      val conceptKeys = MetadataAPIImpl.GetAllConcepts("JSON", userid).toArray
+      //val conceptKeys : String = MetadataAPIImpl.GetAllConcepts("JSON", userid) <<< this returns a JSON string
+      val onlyActive: Boolean = false
+      val latestVersion: Boolean = false
+      val optConceptKeys : Option[scala.collection.immutable.Set[BaseAttributeDef]] = MdMgr.GetMdMgr.Attributes(onlyActive, latestVersion)
+      val conceptKeys : Array[BaseAttributeDef] = optConceptKeys.getOrElse(scala.collection.immutable.Set[BaseAttributeDef]()).toArray
 
       if (conceptKeys.length == 0) {
         val errorMsg = "Sorry, No concepts available, in the Metadata, to delete!"
@@ -98,7 +102,7 @@ object ConceptService {
         var srno = 0
         for (conceptKey <- conceptKeys) {
           srno += 1
-          println("[" + srno + "] " + conceptKey)
+          println(s"[$srno] (${conceptKey.FullNameWithVer} : ${conceptKey.typeString} IsActive=${conceptKey.IsActive} IsDeleted=${conceptKey.IsDeleted}})")
         }
         println("Enter your choice: ")
         val choice: Int = readInt()
@@ -109,8 +113,8 @@ object ConceptService {
         }
 
         val conceptKey = conceptKeys(choice - 1)
-
-        response=MetadataAPIImpl.RemoveConcept(conceptKey.asInstanceOf[AttributeDef])
+        val conceptName : String = conceptKey.FullName
+        response=MetadataAPIImpl.RemoveConcept(conceptName, userid)
 
       }
     } catch {
