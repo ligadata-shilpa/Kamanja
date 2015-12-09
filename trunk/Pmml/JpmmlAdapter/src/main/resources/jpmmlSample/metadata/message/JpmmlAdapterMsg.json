@@ -1,9 +1,9 @@
 {
   "Message": {
     "NameSpace": "System",
-    "Name": "IrisMsg",
-    "Version": "00.01.01",
-    "Description": "Iris data message",
+    "Name": "JpmmlAdapterMsg",
+    "Version": "00.01.00",
+    "Description": "JpmmlAdapter faux data message (needed to build the adapter)",
     "Fixed": "true",
     "Persist": "true",
     "Elements": [
