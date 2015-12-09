@@ -1,0 +1,116 @@
+{
+    "fields": {
+        "field": [
+            {
+                "name": "eventSource",
+                "type": "hybrid",
+                "length": "3"
+            },
+            {
+                "name": "type",
+                "type": "hybrid",
+                "length": "3"
+            },
+            {
+                "name": "id",
+                "type": "integer",
+                "length": "5"
+            },
+            {
+                "name": "dateTime",
+                "type": "date",
+                "length": "1"
+            },
+            {
+                "name": "timezone",
+                "type": "integer",
+                "length": "3"
+            },
+            {
+                "name": "systemUser",
+                "type": "hybrid",
+                "length": "6"
+            },
+            {
+                "name": "device",
+                "type": "hybrid",
+                "length": "5"
+            },
+            {
+                "name": "processId",
+                "type": "integer",
+                "length": "5"
+            },
+            {
+                "name": "resource",
+                "type": "string",
+                "length": "10"
+            },
+            {
+                "name": "resource",
+                "type": "string",
+                "length": "7"
+            },
+            {
+                "name": "resourceHost",
+                "type": "string",
+                "length": "7"
+            },
+            {
+                "name": "resourcePort",
+                "type": "integer",
+                "length": "3"
+            },
+            {
+                "name": "resourceProtocol",
+                "type": "string",
+                "length": "6"
+            },
+            {
+                "name": "user",
+                "type": "string",
+                "length": "7"
+            },
+            {
+                "name": "action",
+                "type": "string",
+                "length": "5"
+            },
+            {
+                "name": "result",
+                "type": "integer",
+                "length": "3"
+            },
+            {
+                "name": "confidentialRecordCount",
+                "type": "integer",
+                "length": "3"
+            },
+            {
+                "name": "proprietaryDataLabels",
+                "type": "string",
+                "length": "20"
+            },
+            {
+                "name": "proprietaryDatalengths",
+                "type": "string",
+                "length": "20"
+            },
+            {
+                "name": "proprietaryRecordCount",
+                "type": "integer",
+                "length": "2"
+            },
+            {
+                "name": "ait",
+                "type": "integer",
+                "length": "3"
+            },
+            {
+                "name": "application",
+                "type": "hybrid",
+                "length": "6"
+            }
+        ]
+    }
+}
