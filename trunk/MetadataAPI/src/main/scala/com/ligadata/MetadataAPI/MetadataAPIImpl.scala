@@ -1637,7 +1637,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
               val jarName = dirPath + "/" + jar
               PutArrayOfBytesToJar(ba, jarName)
             } else {
-              logger.info("The jar " + curJar + " was already downloaded... ")
+              logger.debug("The jar " + curJar + " was already downloaded... ")
             }
           } catch {
             case e: Exception => {
@@ -1872,10 +1872,10 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
     } catch {
       case e: AlreadyExistsException => {
-        logger.error("Failed to Cache the object(" + obj.FullName + "." + MdMgr.Pad0s2Version(obj.Version) + "): " + e.getMessage())
+        logger.error("Already Exists! Failed to Cache the object(" + obj.FullName + "." + MdMgr.Pad0s2Version(obj.Version) + "): " + e.getMessage())
       }
       case e: Exception => {
-        logger.error("Failed to Cache the object(" + obj.FullName + "." + MdMgr.Pad0s2Version(obj.Version) + "): " + e.getMessage())
+        logger.error("Exception! Failed to Cache the object(" + obj.FullName + "." + MdMgr.Pad0s2Version(obj.Version) + "): " + e.getMessage())
       }
     }
   }

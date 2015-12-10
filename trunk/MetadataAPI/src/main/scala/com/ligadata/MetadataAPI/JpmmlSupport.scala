@@ -188,7 +188,7 @@ class JpmmlSupport(mgr : MdMgr
                                                         , supportsInstanceSerialization)
 
                     /** dump the model def to the log for time being */
-                    logger.info(modelDefToString(model))
+                    logger.debug(modelDefToString(model))
                     model
                 } else {
                     logger.error(s"The supplied message def is not available in the metadata... msgName=$msgNamespace.$msgName.$msgVersion ... a model definition will not be created for model name=$modelNamespace.$modelName.$version")
@@ -277,15 +277,6 @@ class JpmmlSupport(mgr : MdMgr
         }
 
         var jsonStr : String  = JsonSerializer.SerializeObjectToJson(modelDef)
-        jsonStr = JsonSerializer.replaceLast(jsonStr, "}\n}", "").trim
-        jsonStr = jsonStr + ",\n\"InputVariableTypes\": "
-        var memberDefJson = JsonSerializer.SerializeObjectListToJson(modelDef.inputVars)
-        jsonStr += memberDefJson
-
-        jsonStr = jsonStr + ",\n\"OutputVariableTypes\": "
-        memberDefJson = JsonSerializer.SerializeObjectListToJson(modelDef.outputVars)
-        memberDefJson = memberDefJson + "}\n}"
-        jsonStr += memberDefJson
         jsonStr
     }
 

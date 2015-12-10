@@ -423,8 +423,8 @@ object ModelService {
         }
         case e : Exception => {
             val stackTrace = StackTrace.ThrowableTraceString(e)
-            val msg : String = s"updateModelJPmml... exception e = ${e.toString}"
-            logger.error(s"$msg\nstack = \n$stackTrace")
+            val msg : String = if (pmmlPath == null) "updateModelJpmml pmml path was not supplied" else s"updateModelJPmml... exception e = ${e.toString}"
+            logger.error(s"$msg...stack = \n$stackTrace")
             msg
         }
       }
