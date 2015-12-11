@@ -1587,7 +1587,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       case e: Exception => {
         val stackTrace = StackTrace.ThrowableTraceString(e)
         logger.debug("\nStackTrace:" + stackTrace)
-        throw new InternalErrorException("Failed to get dependant jars for the given object (" + obj.FullName + "." + MdMgr.Pad0s2Version(obj.Version) + "): " + e.getMessage())
+        throw new InternalErrorException("Failed to get dependent jars for the given object (" + obj.FullName + "." + MdMgr.Pad0s2Version(obj.Version) + "): " + e.getMessage())
       }
     }
   }
@@ -1605,8 +1605,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
         return
       }
       var allJars = GetDependantJars(obj)
-      logger.debug("Found " + allJars.length + " dependant jars. Jars:" + allJars.mkString(","))
-      logger.info("Found " + allJars.length + " dependant jars. It make take several minutes first time to download all of these jars:" + allJars.mkString(","))
+      logger.debug("Found " + allJars.length + " dependent jars. Jars:" + allJars.mkString(","))
+      logger.info("Found " + allJars.length + " dependent jars. It make take several minutes first time to download all of these jars:" + allJars.mkString(","))
       if (allJars.length > 0) {
         val tmpJarPaths = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("JAR_PATHS")
         val jarPaths = if (tmpJarPaths != null) tmpJarPaths.split(",").toSet else scala.collection.immutable.Set[String]()
@@ -4392,7 +4392,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
                   break
                 }
               })
-              //Output vars don't determine dependant models at this time, comment out the following code
+              //Output vars don't determine dependent models at this time, comment out the following code
               // which is causing the Issue 355...
               /*
               mod.outputVars.foreach(ovar => {
@@ -4407,7 +4407,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
             }
           })
       }
-      logger.debug("Found " + depModels.length + " dependant models ")
+      logger.debug("Found " + depModels.length + " dependent models ")
       depModels
     } catch {
       case e: Exception => {

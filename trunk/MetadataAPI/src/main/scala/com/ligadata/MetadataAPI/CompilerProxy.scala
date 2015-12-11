@@ -481,7 +481,7 @@ class CompilerProxy {
    *
    */
   // The last parameter of generateModelDef represents whether we are recompiling a model due to a change
-  // on a dependant message(or container) or compiling for the first time. 
+  // on a dependent message(or container) or compiling for the first time.
   // MdMgr.MakeModelDef requires this information and function behaves differently depending on whether 
   // we are compiling first time or recompiling an existing model.
   private def generateModelDef(repackagedCode: String, sourceLang: String, pname: String, classPath: String, modelNamespace: String, modelName: String,

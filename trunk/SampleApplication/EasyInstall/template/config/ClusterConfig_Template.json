@@ -84,7 +84,6 @@
           "voldemort-0.96.jar",
           "commons-codec-1.9.jar",
           "commons-collections-3.2.1.jar",
-          "commons-dbcp-1.2.2.jar",
           "compress-lzf-0.9.1.jar",
           "google-collections-1.0.jar",
           "je-4.0.92.jar",

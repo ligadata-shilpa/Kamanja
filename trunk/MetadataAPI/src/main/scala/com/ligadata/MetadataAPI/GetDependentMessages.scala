@@ -150,7 +150,7 @@ object GetDependentMessages {
 	depObjects = depObjects :+ p._1
       })
     }
-    logger.debug("Found " + depObjects.length + " dependant objects ")
+    logger.debug("Found " + depObjects.length + " dependent objects ")
     depObjects
   }
 }
