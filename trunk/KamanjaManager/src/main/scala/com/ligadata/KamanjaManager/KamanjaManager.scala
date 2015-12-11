@@ -466,8 +466,26 @@ class KamanjaManager extends Observer {
           val (tmpMdls, tMdlsChangedCntr) = KamanjaMetadata.getAllModels
           val tModels = if (tmpMdls != null) tmpMdls else Array[(String, MdlInfo)]()
 
-          tModels.foreach(tup => {
-            tup._2.mdl.init(txnCtxt)
+          val initMdlsStatus = tModels.par.map(tup => {
+            var retThrowable: Throwable = null
+            try {
+              tup._2.mdl.init(txnCtxt)
+            } catch {
+              case e: Exception => retThrowable = e
+              case e: Throwable => retThrowable = e
+            }
+            (tup, retThrowable)
+          })
+
+          // Loop thru each model and check the init status
+          initMdlsStatus.foreach(mdlStatus => {
+            if (mdlStatus._2 != null) { // hash Exception
+              val e = mdlStatus._2
+              val stackTrace = StackTrace.ThrowableTraceString(e)
+              LOG.error("Model %s factory init failed with Reason:%s Message:%s. This model is not participating in execution\nStackTrace:%s".format(mdlStatus._1._1, e.getCause, e.getMessage, stackTrace))
+            } else {
+              mdlStatus._1._2.mdlFactoryInitialized = true
+            }
           })
         } catch {
           case e: Exception => throw e

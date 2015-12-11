@@ -39,6 +39,7 @@ import scala.actors.threadpool.{ ExecutorService, Executors }
 import com.ligadata.KamanjaBase.ThreadLocalStorage
 
 class MdlInfo(val mdl: ModelInstanceFactory, val jarPath: String, val dependencyJarNames: Array[String]) {
+  var mdlFactoryInitialized = false
 }
 
 class TransformMsgFldsMap(var keyflds: Array[Int], var outputFlds: Array[Int]) {

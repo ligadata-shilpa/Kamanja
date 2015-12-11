@@ -38,7 +38,7 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
   var cntr: Long = 0
   var mdlsChangedCntr: Long = -1
   var outputGen = new OutputMsgGenerator()
-  var models = Array[(String, MdlInfo, Boolean, ModelInstance, Boolean)]() // ModelName, ModelInfo, IsModelInstanceReusable, Global ModelInstance if the model is IsModelInstanceReusable == true. The last boolean is to check whether we tested message type or not (thi is to check Reusable flag)  
+  var models = Array[(String, MdlInfo, Boolean, ModelInstance, Boolean)]() // ModelName, ModelInfo, IsModelInstanceReusable, Global ModelInstance if the model is IsModelInstanceReusable == true. The last boolean is to check whether we tested message type or not (this is to check Reusable flag)  
   var validateMsgsForMdls = scala.collection.mutable.Set[String]() // Message Names for creating models instances   
 
   private def RunAllModels(transId: Long, inputData: Array[Byte], finalTopMsgOrContainer: MessageContainerBase, txnCtxt: TransactionContext, uk: String, uv: String, xformedMsgCntr: Int, totalXformedMsgs: Int): Array[SavedMdlResult] = {
@@ -65,49 +65,51 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
           var newMdlsSet = scala.collection.mutable.Set[String]()
 
           tModels.foreach(tup => {
-            LOG.debug("Model:" + tup._1)
-            val md = tup._2
-            val mInfo = map.getOrElse(tup._1, null)
-            var newInfo: (String, MdlInfo, Boolean, ModelInstance, Boolean) = null
-            if (mInfo != null) {
-              // Make sure previous model version is same as the current model version
-              if (md.mdl == mInfo._1.mdl && md.mdl.getVersion().equals(mInfo._1.mdl.getVersion())) {
-                newInfo = ((tup._1, mInfo._1, mInfo._2, mInfo._3, mInfo._4)) // Taking  previous record only if the same instance of the object exists
-              } else {
-                // Shutdown previous entry, if exists
-                if (mInfo._2 && mInfo._3 != null) {
-                  mInfo._3.shutdown()
-                }
-                if (md.mdl.isValidMessage(finalTopMsgOrContainer)) {
-                  val tInst = md.mdl.createModelInstance()
-                  val isReusable = md.mdl.isModelInstanceReusable()
-                  var newInst: ModelInstance = null
-                  if (isReusable) {
-                    newInst = tInst
-                    newInst.init(uk)
+            if (tup._2.mdlFactoryInitialized) {
+              LOG.debug("Model:" + tup._1)
+              val md = tup._2
+              val mInfo = map.getOrElse(tup._1, null)
+              var newInfo: (String, MdlInfo, Boolean, ModelInstance, Boolean) = null
+              if (mInfo != null) {
+                // Make sure previous model version is same as the current model version
+                if (md.mdl == mInfo._1.mdl && md.mdl.getVersion().equals(mInfo._1.mdl.getVersion())) {
+                  newInfo = ((tup._1, mInfo._1, mInfo._2, mInfo._3, mInfo._4)) // Taking  previous record only if the same instance of the object exists
+                } else {
+                  // Shutdown previous entry, if exists
+                  if (mInfo._2 && mInfo._3 != null) {
+                    mInfo._3.shutdown()
                   }
-                  newInfo = ((tup._1, md, isReusable, newInst, true))
+                  if (md.mdl.isValidMessage(finalTopMsgOrContainer)) {
+                    if (md.mdl.isModelInstanceReusable()) {
+                      val newInst = md.mdl.createModelInstance()
+                      newInst.init(uk)
+                      newInfo = ((tup._1, md, true, newInst, true))
+                    } else {
+                      newInfo = ((tup._1, md, false, null, true))
+                    }
+                  } else {
+                    newInfo = ((tup._1, md, false, null, false))
+                  }
+                }
+              } else {
+                if (md.mdl.isValidMessage(finalTopMsgOrContainer)) {
+                  if (md.mdl.isModelInstanceReusable()) {
+                    val newInst = md.mdl.createModelInstance()
+                    newInst.init(uk)
+                    newInfo = ((tup._1, md, true, newInst, true))
+                  } else {
+                    newInfo = ((tup._1, md, false, null, true))
+                  }
                 } else {
                   newInfo = ((tup._1, md, false, null, false))
                 }
               }
-            } else {
-              if (md.mdl.isValidMessage(finalTopMsgOrContainer)) {
-                var newInst: ModelInstance = null
-                val tInst = md.mdl.createModelInstance()
-                val isReusable = md.mdl.isModelInstanceReusable()
-                if (isReusable) {
-                  newInst = tInst
-                  newInst.init(uk)
-                }
-                newInfo = ((tup._1, md, isReusable, newInst, true))
-              } else {
-                newInfo = ((tup._1, md, false, null, false))
+              if (newInfo != null) {
+                newMdlsSet += tup._1
+                newModels += newInfo
               }
-            }
-            if (newInfo != null) {
-              newMdlsSet += tup._1
-              newModels += newInfo
+            } else {
+              LOG.error("Model %s factory init not done or failed. Ignoring creating model instances.")
             }
           })
 
@@ -127,14 +129,13 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
           for (i <- 0 until models.size) {
             val mInfo = models(i)
             if (mInfo._5 == false && mInfo._2.mdl.isValidMessage(finalTopMsgOrContainer)) {
-              var newInst: ModelInstance = null
-              val tInst = mInfo._2.mdl.createModelInstance()
-              val isReusable = mInfo._2.mdl.isModelInstanceReusable()
-              if (isReusable) {
-                newInst = tInst
+              if (mInfo._2.mdl.isModelInstanceReusable()) {
+                val newInst = mInfo._2.mdl.createModelInstance()
                 newInst.init(uk)
+                models(i) = ((mInfo._1, mInfo._2, true, newInst, true))
+              } else {
+                models(i) = ((mInfo._1, mInfo._2, false, null, true))
               }
-              models(i) = ((mInfo._1, mInfo._2, isReusable, newInst, true))
             }
           }
           validateMsgsForMdls += msgFullName
