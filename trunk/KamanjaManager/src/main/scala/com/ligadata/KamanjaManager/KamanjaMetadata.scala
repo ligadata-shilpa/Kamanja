@@ -289,10 +289,24 @@ class KamanjaMetadata {
         try {
           val factory: ModelInstanceFactory = factoryOfMdlInstFactory.getModelInstanceFactory(mdl, KamanjaMetadata.gNodeContext, KamanjaConfiguration.metadataLoader, KamanjaConfiguration.jarPaths)
           if (factory != null) {
-            if (txnCtxt != null) // We are expecting txnCtxt is null only for first time initialization
-              factory.init(txnCtxt)
+            val mdlInfo = new MdlInfo(factory, mdl.jarName, mdl.dependencyJarNames)
             val mdlName = (mdl.NameSpace.trim + "." + mdl.Name.trim).toLowerCase
-            modelObjsMap(mdlName) = new MdlInfo(factory, mdl.jarName, mdl.dependencyJarNames)
+            modelObjsMap(mdlName) = mdlInfo
+            if (txnCtxt != null) { // We are expecting txnCtxt is null only for first time initialization
+              try {
+                factory.init(txnCtxt)
+                mdlInfo.mdlFactoryInitialized = true
+              } catch {
+                case e: Exception => {
+                  val stackTrace = StackTrace.ThrowableTraceString(e)
+                  LOG.error("Model %s factory init failed with Reason:%s Message:%s. This model is not participating in execution\nStackTrace:%s".format(mdlName, e.getCause, e.getMessage, stackTrace))
+                }
+                case e: Throwable => {
+                  val stackTrace = StackTrace.ThrowableTraceString(e)
+                  LOG.error("Model %s factory init failed with Reason:%s Message:%s. This model is not participating in execution\nStackTrace:%s".format(mdlName, e.getCause, e.getMessage, stackTrace))
+                }
+              }
+            }
           } else {
             LOG.debug("Failed to get ModelInstanceFactory for " + mdl.FullName)
           }
@@ -807,7 +821,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
       LOG.error("Metadata Manager should not be NULL while updaing metadta in Kamanja manager.")
       return
     }
-    
+
     if (zkTransaction.transactionId.getOrElse("0").toLong <= MetadataAPIImpl.getCurrentTranLevel) return
 
     updMetadataExecutor.execute(new MetadataUpdate(zkTransaction))
