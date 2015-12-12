@@ -87,7 +87,7 @@ echo $bin
 echo "clean, package and assemble $srcPath ..."
 
 cd $srcPath
-sbt clean package KamanjaManager/assembly MetadataAPI/assembly KVInit/assembly MethodExtractor/assembly SimpleKafkaProducer/assembly NodeInfoExtract/assembly ExtractData/assembly MetadataAPIService/assembly JdbcDataCollector/assembly FileDataConsumer/assembly SaveContainerDataComponent/assembly
+sbt clean package KamanjaManager/assembly MetadataAPI/assembly KVInit/assembly MethodExtractor/assembly SimpleKafkaProducer/assembly NodeInfoExtract/assembly ExtractData/assembly MetadataAPIService/assembly JdbcDataCollector/assembly FileDataConsumer/assembly SaveContainerDataComponent/assembly CleanUtil/assembly
 
 # recreate eclipse projects
 #echo "refresh the eclipse projects ..."
@@ -108,6 +108,7 @@ cp Utils/NodeInfoExtract/target/scala-2.10/NodeInfoExtract* $bin
 cp Utils/JdbcDataCollector/target/scala-2.10/JdbcDataCollector* $bin
 cp MetadataAPIService/target/scala-2.10/MetadataAPIService* $bin
 cp FileDataConsumer/target/scala-2.10/FileDataConsumer* $bin
+cp Utils/CleanUtil/target/scala-2.10/CleanUtil* $bin
 
 # *******************************
 # Copy jars required (more than required if the fat jars are used)
@@ -116,10 +117,12 @@ cp FileDataConsumer/target/scala-2.10/FileDataConsumer* $bin
 # Base Types and Functions, InputOutput adapters, and original versions of things
 echo "copy all Kamanja jars and the jars upon which they depend to the $systemlib"
 
+cp $srcPath/FactoriesOfModelInstanceFactory/JarFactoryOfModelInstanceFactory/target/scala-2.10/jarfactoryofmodelinstancefactory_2.10-1.0.jar $systemlib
+cp $ivyPath/cache/org.apache.logging.log4j/log4j-core/jars/log4j-core-2.4.1.jar $systemlib
+cp $ivyPath/cache/org.apache.logging.log4j/log4j-api/jars/log4j-api-2.4.1.jar $systemlib
+cp $srcPath/Storage/SqlServer/src/test/resources/sqljdbc4-2.0.jar $systemlib
 cp $ivyPath/cache/org.codehaus.jackson/jackson-xc/jars/jackson-xc-1.8.3.jar $systemlib
 cp $ivyPath/cache/org.xerial.snappy/snappy-java/bundles/snappy-java-1.0.4.1.jar $systemlib
-cp $srcPath/lib_managed/jars/org.apache.commons/commons-collections4/commons-collections4-4.0.jar $systemlib
-cp $ivyPath/cache/org.codehaus.jackson/jackson-core-asl/jars/jackson-core-asl-1.8.8.jar $systemlib
 cp $ivyPath/cache/javax.xml.bind/jaxb-api/jars/jaxb-api-2.2.2.jar $systemlib
 cp $ivyPath/cache/com.sun.jersey/jersey-core/bundles/jersey-core-1.9.jar $systemlib
 cp $ivyPath/cache/com.google.guava/guava/bundles/guava-16.0.1.jar $systemlib
@@ -131,18 +134,15 @@ cp $ivyPath/cache/org.mortbay.jetty/jetty-util/jars/jetty-util-6.1.26.jar $syste
 cp $srcPath/lib_managed/jars/org.scala-lang/scala-compiler/scala-compiler-2.10.0.jar $systemlib
 cp $srcPath/Utils/SaveContainerDataComponent/target/scala-2.10/savecontainerdatacomponent_2.10-1.0.jar $systemlib
 cp $ivyPath/cache/org.apache.commons/commons-collections4/jars/commons-collections4-4.0.jar $systemlib
-cp $srcPath/InputOutputAdapters/KafkaSimpleInputOutputAdapters/target/scala-2.10/kafkasimpleinputoutputadapters_2.10-1.0.jar $systemlib
-cp $srcPath/lib_managed/jars/org.apache.commons/commons-lang3/commons-lang3-3.1.jar $systemlib
-cp $srcPath/lib_managed/jars/javax.xml.bind/jaxb-api/jaxb-api-2.2.2.jar $systemlib
-cp $srcPath/lib_managed/jars/joda-time/joda-time/joda-time-2.8.2.jar $systemlib
-cp $srcPath/Utils/KVInit/target/scala-2.10/kvinit_2.10-1.0.jar $systemlib
-cp $srcPath/lib_managed/jars/org.codehaus.jackson/jackson-core-asl/jackson-core-asl-1.8.8.jar $systemlib
-cp $ivyPath/cache/org.apache.hbase/hbase-protocol/jars/hbase-protocol-0.98.4-hadoop2.jar $systemlib
+
+cp $srcPath/MessageDef/target/scala-2.10/messagedef_2.10-1.0.jar $systemlib
+cp $ivyPath/cache/org.apache.hbase/hbase-protocol/jars/hbase-protocol-1.0.2.jar $systemlib
+cp $srcPath/Pmml/PmmlRuntime/target/scala-2.10/pmmlruntime_2.10-1.0.jar $systemlib
+cp $srcPath/SampleApplication/InterfacesSamples/target/scala-2.10/interfacessamples_2.10-1.0.jar $systemlib
+cp $srcPath/InputOutputAdapters/IbmMqSimpleInputOutputAdapters/lib/gcm-server.jar $systemlib
 cp $ivyPath/cache/org.parboiled/parboiled-core/bundles/parboiled-core-1.1.6.jar $systemlib
-cp $srcPath/lib_managed/jars/org.apache.hbase/hbase-protocol/hbase-protocol-0.98.4-hadoop2.jar $systemlib
 cp $ivyPath/cache/commons-net/commons-net/jars/commons-net-3.1.jar $systemlib
-cp $srcPath/lib_managed/jars/org.scala-lang/scala-library/scala-library-2.10.4.jar $systemlib
-cp $ivyPath/cache/org.apache.hadoop/hadoop-auth/jars/hadoop-auth-2.4.1.jar $systemlib
+cp $ivyPath/cache/org.apache.hadoop/hadoop-auth/jars/hadoop-auth-2.7.1.jar $systemlib
 cp $ivyPath/cache/com.101tec/zkclient/jars/zkclient-0.3.jar $systemlib
 cp $srcPath/Utils/NodeInfoExtract/target/scala-2.10/nodeinfoextract_2.10-1.0.jar $systemlib
 cp $ivyPath/cache/com.typesafe.akka/akka-actor_2.10/jars/akka-actor_2.10-2.3.2.jar $systemlib
@@ -152,22 +152,19 @@ cp $ivyPath/cache/org.apache.camel/camel-core/bundles/camel-core-2.9.2.jar $syst
 cp $srcPath/lib_managed/bundles/com.sun.jersey/jersey-json/jersey-json-1.9.jar $systemlib
 cp $ivyPath/cache/com.pyruby/java-stub-server/jars/java-stub-server-0.12-sources.jar $systemlib
 cp $ivyPath/cache/com.esotericsoftware.reflectasm/reflectasm/jars/reflectasm-1.07-shaded.jar $systemlib
-cp $ivyPath/cache/tomcat/jasper-runtime/jars/jasper-runtime-5.5.23.jar $systemlib
 cp $ivyPath/cache/org.scalatest/scalatest_2.10/bundles/scalatest_2.10-2.2.0.jar $systemlib
 cp $ivyPath/cache/io.spray/spray-can/bundles/spray-can-1.3.1.jar $systemlib
 cp $ivyPath/cache/commons-httpclient/commons-httpclient/jars/commons-httpclient-3.1.jar $systemlib
 cp $srcPath/InputOutputAdapters/IbmMqSimpleInputOutputAdapters/lib/com.ibm.msg.client.commonservices.j2se.jar $systemlib
 cp $ivyPath/cache/com.esotericsoftware.kryo/kryo/bundles/kryo-2.21.jar $systemlib
+
+cp $srcPath/InputOutputAdapters/KafkaSimpleInputOutputAdapters/target/scala-2.10/kafkasimpleinputoutputadapters_2.10-1.0.jar $systemlib
+cp $srcPath/InputOutputAdapters/FileSimpleInputOutputAdapters/target/scala-2.10/filesimpleinputoutputadapters_2.10-1.0.jar $systemlib
 cp $ivyPath/cache/com.ning/compress-lzf/bundles/compress-lzf-0.9.1.jar $systemlib
-cp $srcPath/InputOutputAdapters/IbmMqSimpleInputOutputAdapters/lib/com.ibm.mq.jmqi.remote.jar $systemlib
-cp $ivyPath/cache/org.slf4j/slf4j-log4j12/jars/slf4j-log4j12-1.6.1.jar $systemlib
-cp $srcPath/Utils/Serialize/target/scala-2.10/serialize_2.10-1.0.jar $systemlib
-cp $srcPath/InputOutputAdapters/IbmMqSimpleInputOutputAdapters/lib/com.ibm.mq.jmqi.system.jar $systemlib
+cp $srcPath/InputOutputAdapters/IbmMqSimpleInputOutputAdapters/lib/com.ibm.msg.client.jms.jar $systemlib
+# cp $ivyPath/cache/org.slf4j/slf4j-log4j12/jars/slf4j-log4j12-1.6.1.jar $systemlib
 cp $ivyPath/cache/com.twitter/chill-java/jars/chill-java-0.3.6.jar $systemlib
-cp $srcPath/Metadata/target/scala-2.10/metadata_2.10-1.0.jar $systemlib
-cp $srcPath/lib_managed/jars/org.apache.hadoop/hadoop-auth/hadoop-auth-2.4.1.jar $systemlib
-cp $ivyPath/cache/org.apache.hadoop/hadoop-common/jars/hadoop-common-2.4.1.jar $systemlib
-cp $srcPath/Utils/ZooKeeper/CuratorLeaderLatch/target/scala-2.10/zookeeperleaderlatch_2.10-1.0.jar $systemlib
+cp $ivyPath/cache/org.apache.hadoop/hadoop-common/jars/hadoop-common-2.7.1.jar $systemlib
 cp $ivyPath/cache/com.chuusai/shapeless_2.10/jars/shapeless_2.10-1.2.4.jar $systemlib
 cp $srcPath/lib_managed/jars/org.json4s/json4s-native_2.10/json4s-native_2.10-3.2.9.jar $systemlib
 cp $srcPath/InputOutputAdapters/IbmMqSimpleInputOutputAdapters/lib/com.ibm.msg.client.jms.jar $systemlib
@@ -196,14 +193,7 @@ cp $ivyPath/cache/com.fasterxml.jackson.core/jackson-annotations/bundles/jackson
 cp $ivyPath/cache/org.apache.commons/commons-dbcp2/jars/commons-dbcp2-2.1.jar $systemlib
 cp $ivyPath/cache/junit/junit/jars/junit-3.8.1.jar $systemlib
 cp $ivyPath/cache/com.typesafe/config/bundles/config-1.2.0.jar $systemlib
-cp $srcPath/lib_managed/jars/org.json4s/json4s-jackson_2.10/json4s-jackson_2.10-3.2.9.jar $systemlib
-cp $srcPath/Storage/HashMap/target/scala-2.10/hashmap_2.10-0.1.0.jar $systemlib
-cp $srcPath/lib_managed/bundles/com.fasterxml.jackson.core/jackson-databind/jackson-databind-2.3.1.jar $systemlib
-cp $ivyPath/cache/com.google.guava/guava/bundles/guava-18.0.jar $systemlib
-cp $ivyPath/cache/commons-dbcp/commons-dbcp/jars/commons-dbcp-1.4.jar $systemlib
-cp $srcPath/lib_managed/jars/com.esotericsoftware.reflectasm/reflectasm/reflectasm-1.07-shaded.jar $systemlib
-cp $srcPath/EnvContexts/SimpleEnvContextImpl/target/scala-2.10/simpleenvcontextimpl_2.10-1.0.jar $systemlib
-cp $srcPath/lib_managed/jars/org.slf4j/slf4j-log4j12/slf4j-log4j12-1.7.5.jar $systemlib
+cp $srcPath/InputOutputAdapters/IbmMqSimpleInputOutputAdapters/lib/dhbcore.jar $systemlib
 cp $ivyPath/cache/org.mortbay.jetty/jetty-embedded/jars/jetty-embedded-6.1.26-sources.jar $systemlib
 cp $srcPath/InputOutputAdapters/IbmMqSimpleInputOutputAdapters/lib/jms-1.1.jar $systemlib
 cp $ivyPath/cache/org.apache.httpcomponents/httpclient/jars/httpclient-4.2.5.jar $systemlib
@@ -253,9 +243,6 @@ cp $ivyPath/cache/commons-beanutils/commons-beanutils/jars/commons-beanutils-1.7
 cp $ivyPath/cache/org.apache.avro/avro/jars/avro-1.7.4.jar $systemlib
 cp $srcPath/lib_managed/jars/org.apache.hadoop/hadoop-annotations/hadoop-annotations-2.4.1.jar $systemlib
 cp $ivyPath/cache/ch.qos.logback/logback-core/jars/logback-core-1.0.13.jar $systemlib
-cp $srcPath/lib_managed/jars/com.twitter/chill-java/chill-java-0.3.6.jar $systemlib
-cp $srcPath/lib_managed/jars/org.apache.zookeeper/zookeeper/zookeeper-3.4.6.jar $systemlib
-cp $ivyPath/cache/commons-el/commons-el/jars/commons-el-1.0.jar $systemlib
 cp $ivyPath/cache/commons-configuration/commons-configuration/jars/commons-configuration-1.7.jar $systemlib
 cp $srcPath/lib_managed/jars/commons-net/commons-net/commons-net-3.1.jar $systemlib
 cp $ivyPath/cache/commons-beanutils/commons-beanutils-core/jars/commons-beanutils-core-1.8.0.jar $systemlib
@@ -271,9 +258,6 @@ cp $ivyPath/cache/org.scalamacros/quasiquotes_2.10.4/jars/quasiquotes_2.10.4-2.0
 cp $srcPath/InputOutputAdapters/IbmMqSimpleInputOutputAdapters/lib/com.ibm.mq.jmqi.jar $systemlib
 cp $srcPath/InputOutputAdapters/IbmMqSimpleInputOutputAdapters/lib/dhbcore.jar $systemlib
 cp $ivyPath/cache/com.google.code.findbugs/jsr305/jars/jsr305-1.3.9.jar $systemlib
-cp $ivyPath/cache/org.slf4j/slf4j-api/jars/slf4j-api-1.7.5.jar $systemlib
-cp $ivyPath/cache/org.cloudera.htrace/htrace-core/jars/htrace-core-2.04.jar $systemlib
-cp $srcPath/KamanjaManager/target/scala-2.10/kamanjamanager_2.10-1.0.jar $systemlib
 cp $ivyPath/cache/io.spray/spray-util/bundles/spray-util-1.3.1.jar $systemlib
 cp $srcPath/Pmml/JpmmlAdapter/target/scala-2.10/jpmmladapter_2.10-1.0.jar $systemlib
 cp $srcPath/Storage/Cassandra/target/scala-2.10/cassandra_2.10-0.1.0.jar $systemlib
@@ -298,10 +282,11 @@ cp $ivyPath/cache/org.scala-lang/scala-library/jars/scala-library-2.10.4.jar $sy
 cp $ivyPath/cache/org.apache.zookeeper/zookeeper/jars/zookeeper-3.4.6.jar $systemlib
 cp $srcPath/lib_managed/bundles/org.mapdb/mapdb/mapdb-1.0.6.jar $systemlib
 cp $ivyPath/cache/org.objenesis/objenesis/jars/objenesis-1.2.jar $systemlib
-cp $ivyPath/cache/org.apache.hadoop/hadoop-annotations/jars/hadoop-annotations-2.4.1.jar $systemlib
-cp $srcPath/lib_managed/jars/com.thoughtworks.paranamer/paranamer/paranamer-2.6.jar $systemlib
-cp $srcPath/KvBase/target/scala-2.10/kvbase_2.10-0.1.0.jar $systemlib
-cp $srcPath/InputOutputAdapters/IbmMqSimpleInputOutputAdapters/lib/gcm-server.jar $systemlib
+cp $ivyPath/cache/org.apache.hadoop/hadoop-annotations/jars/hadoop-annotations-2.7.1.jar $systemlib
+cp $srcPath/SampleApplication/CustomUdfLib/target/scala-2.10/customudflib_2.10-1.0.jar $systemlib
+cp $srcPath/InputOutputAdapters/IbmMqSimpleInputOutputAdapters/lib/com.ibm.msg.client.wmq.jar $systemlib
+cp $srcPath/InputOutputAdapters/IbmMqSimpleInputOutputAdapters/lib/json-simple-1.1.1.jar $systemlib
+cp $srcPath/Utils/Serialize/target/scala-2.10/serialize_2.10-1.0.jar $systemlib
 cp $ivyPath/cache/junit/junit/jars/junit-4.11.jar $systemlib
 cp $srcPath/SampleApplication/CustomUdfLib/target/scala-2.10/customudflib_2.10-1.0.jar $systemlib
 cp $srcPath/InputOutputAdapters/IbmMqSimpleInputOutputAdapters/lib/com.ibm.msg.client.provider.jar $systemlib
@@ -319,12 +304,9 @@ cp $srcPath/lib_managed/bundles/com.google.protobuf/protobuf-java/protobuf-java-
 cp $srcPath/lib_managed/jars/org.apache.commons/commons-pool2/commons-pool2-2.3.jar $systemlib
 cp $srcPath/lib_managed/jars/commons-collections/commons-collections/commons-collections-3.2.1.jar $systemlib
 cp $ivyPath/cache/commons-configuration/commons-configuration/jars/commons-configuration-1.6.jar $systemlib
-cp $ivyPath/cache/log4j/log4j/bundles/log4j-1.2.17.jar $systemlib
-cp $srcPath/lib_managed/jars/tomcat/jasper-runtime/jasper-runtime-5.5.23.jar $systemlib
-cp $srcPath/lib_managed/jars/javax.servlet/servlet-api/servlet-api-2.5.jar $systemlib
-cp $srcPath/InputOutputAdapters/IbmMqSimpleInputOutputAdapters/lib/com.ibm.msg.client.commonservices.jar $systemlib
-cp $srcPath/lib_managed/jars/commons-digester/commons-digester/commons-digester-1.8.1.jar $systemlib
-cp $srcPath/lib_managed/jars/xmlenc/xmlenc/xmlenc-0.52.jar $systemlib
+# cp $ivyPath/cache/log4j/log4j/bundles/log4j-1.2.17.jar $systemlib
+cp $srcPath/InputOutputAdapters/IbmMqSimpleInputOutputAdapters/lib/com.ibm.mqjms.jar $systemlib
+cp $srcPath/Utils/JsonDataGen/target/scala-2.10/jsondatagen_2.10-0.1.0.jar $systemlib
 cp $ivyPath/cache/org.apache.curator/curator-recipes/bundles/curator-recipes-2.6.0.jar $systemlib
 cp $ivyPath/cache/org.ow2.asm/asm/jars/asm-4.0.jar $systemlib
 cp $ivyPath/cache/com.google.protobuf/protobuf-java/bundles/protobuf-java-2.6.0.jar $systemlib
@@ -334,9 +316,7 @@ cp $srcPath/lib_managed/jars/org.objenesis/objenesis/objenesis-1.2.jar $systemli
 cp $ivyPath/cache/net.debasishg/redisclient_2.10/jars/redisclient_2.10-2.13.jar $systemlib
 cp $ivyPath/cache/com.typesafe.akka/akka-testkit_2.10/jars/akka-testkit_2.10-2.3.0.jar $systemlib
 cp $ivyPath/cache/org.apache.zookeeper/zookeeper/jars/zookeeper-3.3.4.jar $systemlib
-cp $ivyPath/cache/org.slf4j/slf4j-log4j12/jars/slf4j-log4j12-1.7.5.jar $systemlib
-cp $srcPath/lib_managed/jars/commons-logging/commons-logging/commons-logging-1.2.jar $systemlib
-cp $srcPath/lib_managed/jars/org.scala-lang/scala-reflect/scala-reflect-2.10.4.jar $systemlib
+# cp $ivyPath/cache/org.slf4j/slf4j-log4j12/jars/slf4j-log4j12-1.7.5.jar $systemlib
 cp $ivyPath/cache/org.mortbay.jetty/servlet-api/jars/servlet-api-2.5.20110712.jar $systemlib
 cp $srcPath/BaseFunctions/target/scala-2.10/basefunctions_2.10-0.1.0.jar $systemlib
 cp $ivyPath/cache/org.mortbay.jetty/jetty/jars/jetty-6.1.26.jar $systemlib
@@ -423,12 +403,10 @@ cp $ivyPath/cache/commons-pool/commons-pool/jars/commons-pool-1.6.jar $systemlib
 cp $srcPath/Pmml/PmmlRuntime/target/scala-2.10/pmmlruntime_2.10-1.0.jar $systemlib
 cp $srcPath/Utils/JdbcDataCollector/target/scala-2.10/jdbcdatacollector_2.10-1.0.jar $systemlib
 cp $ivyPath/cache/org.codehaus.jettison/jettison/bundles/jettison-1.1.jar $systemlib
-cp $srcPath/lib_managed/jars/org.scalamacros/quasiquotes_2.10.4/quasiquotes_2.10.4-2.0.0-M6.jar $systemlib
-cp $ivyPath/cache/org.codehaus.jackson/jackson-mapper-asl/jars/jackson-mapper-asl-1.8.8.jar $systemlib
-cp $srcPath/lib_managed/jars/org.ow2.asm/asm-tree/asm-tree-4.0.jar $systemlib
-cp $ivyPath/cache/org.apache.hbase/hbase-common/jars/hbase-common-0.98.4-hadoop2.jar $systemlib
-cp $srcPath/lib_managed/jars/commons-io/commons-io/commons-io-2.4.jar $systemlib
-cp $ivyPath/cache/org.apache.commons/commons-lang3/jars/commons-lang3-3.1.jar $systemlib
+cp $srcPath/Metadata/target/scala-2.10/metadata_2.10-1.0.jar $systemlib
+cp $srcPath/InputOutputAdapters/IbmMqSimpleInputOutputAdapters/target/scala-2.10/ibmmqsimpleinputoutputadapters_2.10-1.0.jar $systemlib
+cp $srcPath/Utils/NodeInfoExtract/target/scala-2.10/nodeinfoextract_2.10-1.0.jar $systemlib
+cp $ivyPath/cache/org.apache.hbase/hbase-common/jars/hbase-common-1.0.2.jar $systemlib
 cp $ivyPath/cache/com.datastax.cassandra/cassandra-driver-core/bundles/cassandra-driver-core-2.1.2.jar $systemlib
 cp $ivyPath/cache/org.apache.shiro/shiro-core/bundles/shiro-core-1.2.3.jar $systemlib
 cp $ivyPath/cache/commons-beanutils/commons-beanutils/jars/commons-beanutils-1.8.3.jar $systemlib
@@ -437,11 +415,11 @@ cp $srcPath/lib_managed/jars/commons-codec/commons-codec/commons-codec-1.10.jar 
 cp $srcPath/lib_managed/jars/org.apache.hbase/hbase-client/hbase-client-0.98.4-hadoop2.jar $systemlib
 cp $srcPath/lib_managed/jars/com.sun.xml.bind/jaxb-impl/jaxb-impl-2.2.3-1.jar $systemlib
 cp $ivyPath/cache/org.mortbay.jetty/jetty-sslengine/jars/jetty-sslengine-6.1.26.jar $systemlib
-cp $srcPath/Storage/TreeMap/target/scala-2.10/treemap_2.10-0.1.0.jar $systemlib
-cp $srcPath/MetadataAPIServiceClient/target/scala-2.10/metadataapiserviceclient_2.10-0.1.jar $systemlib
-cp $srcPath/lib_managed/bundles/com.fasterxml.jackson.core/jackson-core/jackson-core-2.3.1.jar $systemlib
-cp $ivyPath/cache/org.apache.hbase/hbase-client/jars/hbase-client-0.98.4-hadoop2.jar $systemlib
-cp $ivyPath/cache/org.apache.commons/commons-pool2/jars/commons-pool2-2.3.jar $systemlib
+cp $srcPath/InputOutputAdapters/IbmMqSimpleInputOutputAdapters/lib/com.ibm.mq.jmqi.remote.jar $systemlib
+cp $srcPath/Utils/ExtractData/target/scala-2.10/extractdata_2.10-1.0.jar $systemlib
+cp $ivyPath/cache/org.apache.hbase/hbase-client/jars/hbase-client-1.0.2.jar $systemlib
+cp $srcPath/KamanjaBase/target/scala-2.10/kamanjabase_2.10-1.0.jar $systemlib
+cp $srcPath/KvBase/target/scala-2.10/kvbase_2.10-0.1.0.jar $systemlib
 cp $ivyPath/cache/com.sleepycat/je/jars/je-4.0.92.jar $systemlib
 cp $srcPath/lib_managed/jars/commons-httpclient/commons-httpclient/commons-httpclient-3.1.jar $systemlib
 cp $srcPath/lib_managed/jars/asm/asm/asm-3.1.jar $systemlib
@@ -454,15 +432,11 @@ cp $ivyPath/cache/org.scala-lang/scala-actors/jars/scala-actors-2.10.4.jar $syst
 cp $srcPath/lib_managed/bundles/org.xerial.snappy/snappy-java/snappy-java-1.0.4.1.jar $systemlib
 cp $srcPath/OutputMsgDef/target/scala-2.10/outputmsgdef_2.10-1.0.jar $systemlib
 cp $ivyPath/cache/org.apache.kafka/kafka_2.10/jars/kafka_2.10-0.8.1.1.jar $systemlib
-cp $srcPath/lib_managed/jars/jline/jline/jline-0.9.94.jar $systemlib
-cp $srcPath/lib_managed/jars/org.tukaani/xz/xz-1.0.jar $systemlib
-cp $ivyPath/cache/joda-time/joda-time/jars/joda-time-2.9.1.jar $systemlib
-cp $ivyPath/cache/org.apache.cassandra/cassandra-thrift/jars/cassandra-thrift-2.0.3.jar $systemlib
-cp $srcPath/lib_managed/jars/org.cloudera.htrace/htrace-core/htrace-core-2.04.jar $systemlib
-cp $ivyPath/cache/commons-codec/commons-codec/jars/commons-codec-1.10.jar $systemlib
-cp $srcPath/lib_managed/jars/tomcat/jasper-compiler/jasper-compiler-5.5.23.jar $systemlib
-cp $ivyPath/cache/com.typesafe.akka/akka-slf4j_2.10/jars/akka-slf4j_2.10-2.3.2.jar $systemlib
-cp $srcPath/KamanjaBase/target/scala-2.10/kamanjabase_2.10-1.0.jar $systemlib
+
+cp $srcPath/Pmml/PmmlUdfs/target/scala-2.10/pmmludfs_2.10-1.0.jar $systemlib
+cp $srcPath/InputOutputAdapters/IbmMqSimpleInputOutputAdapters/lib/com.ibm.mq.jmqi.jar $systemlib
+cp $srcPath/InputOutputAdapters/IbmMqSimpleInputOutputAdapters/lib/com.ibm.mq.jmqi.local.jar $systemlib
+cp $ivyPath/cache/joda-time/joda-time/jars/joda-time-2.8.2.jar $systemlib
 cp $ivyPath/cache/jline/jline/jars/jline-0.9.94.jar $systemlib
 cp $srcPath/lib_managed/jars/commons-cli/commons-cli/commons-cli-1.2.jar $systemlib
 cp $srcPath/lib_managed/bundles/com.fasterxml.jackson.core/jackson-annotations/jackson-annotations-2.3.0.jar $systemlib
@@ -478,9 +452,6 @@ cp $ivyPath/cache/com.codahale.metrics/metrics-core/bundles/metrics-core-3.0.2.j
 cp $ivyPath/cache/commons-codec/commons-codec/jars/commons-codec-1.4.jar $systemlib
 cp $ivyPath/cache/org.json4s/json4s-ast_2.10/jars/json4s-ast_2.10-3.2.9.jar $systemlib
 cp $ivyPath/cache/io.spray/spray-testkit/jars/spray-testkit-1.3.1.jar $systemlib
-
-
-
 
 # an extra copy to make sure ?
 cp $srcPath/InputOutputAdapters/IbmMqSimpleInputOutputAdapters/lib/*.jar $systemlib
@@ -517,8 +488,6 @@ cp -rf * $installPath/documentation
 # *******************************
 # copy models, messages, containers, config, scripts, types  messages data prep
 # *******************************
-
-cp $srcPath/KamanjaManager/src/main/resources/log4j.properties $installPath/config
 
 #HelloWorld
 cd $srcPath/SampleApplication/HelloWorld/data

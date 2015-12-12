@@ -19,13 +19,14 @@ package com.ligadata.KamanjaBase
 
 import scala.collection.immutable.Map
 import com.ligadata.Utils.Utils
-import com.ligadata.kamanja.metadata.MdMgr
+import com.ligadata.kamanja.metadata.{ MdMgr, ModelDef }
 import org.json4s._
 import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
 import java.io.{ DataInputStream, DataOutputStream }
 import com.ligadata.KvBase.{ TimeRange }
 import com.ligadata.KvBase.{ Key, Value, TimeRange /* , KvBaseDefalts, KeyWithBucketIdAndPrimaryKey, KeyWithBucketIdAndPrimaryKeyCompHelper */ }
+import com.ligadata.Utils.{ KamanjaLoaderInfo }
 
 object MinVarType extends Enumeration {
   type MinVarType = Value
@@ -289,6 +290,7 @@ trait EnvContext {
   // Final Commit for the given transaction
   // outputResults has AdapterName, PartitionKey & Message
   def commitData(transId: Long, key: String, value: String, outputResults: List[(String, String, String)], forceCommit: Boolean): Unit
+  def rollbackData(transId: Long): Unit
 
   // Save State Entries on local node & on Leader
   // def PersistLocalNodeStateEntries: Unit
@@ -320,171 +322,115 @@ trait EnvContext {
 
   // Just get the cached container key and see what are the containers we need to cache
   def CacheContainers(clusterId: String): Unit
+
+  def EnableEachTransactionCommit: Boolean
 }
 
-/**
- * The ModelBase describes the base behavior of all model instances, regardless of their kind.
- * @param modelContext The model context supplied to the associated factory is stored as part of the instance state.
- * @param factory the factory that created the ModelBase derivative.
- * @param modelName the namespace.name of the model that the engine wishes to know if it can process this message
- * @param modelVersion the canonical version of the model (string form) that the engine wishes to know if it can
- * @param partitionHash the hash value of the partition that this model instance will serve
- * @param isInstanceReusable when true, the engine will cache this instance and choose the cached instance for this partition hash use
- */
-abstract class ModelBase(var modelContext: ModelContext
-                         , val factory: ModelBaseObj
-                         , modelName : String
-                         , modelVersion : String
-                         , isInstanceReusable : Boolean
-                         , var partitionHash : Int = 0) {
-    /**
-     * Answer the model's namespace.name.
-     */
-    final def ModelName() : String = if (modelName != null) modelName else factory.ModelName()
-    /**
-     * Answer the model version.
-     */
-    final def Version() : String = if (modelVersion != null) modelVersion else factory.Version()
-    /**
-     * Answer the EnvContext that provides access to the persistent storage for models that wish to fetch/store values there
-     * during its execution.
-     */
-    final def EnvContext() = if (modelContext != null && modelContext.txnContext != null) modelContext.txnContext.gCtx else null
-    /**
-     * Answer the model's owner or tenant. This is useful for cluster accounting in multi-tenant situations..
-      */
-    final def TenantId() = if (modelContext != null && modelContext.txnContext != null) modelContext.txnContext.tenantId else null
-    /**
-     * Answer the transaction id for the current model execution.
-      */
-    final def TransId() = if (modelContext != null && modelContext.txnContext != null) modelContext.txnContext.transId else null // transId
+// ModelInstance will be created from ModelInstanceFactory by demand.
+//	If ModelInstanceFactory:isModelInstanceReusable returns true, engine requests one ModelInstance per partition.
+//	If ModelInstanceFactory:isModelInstanceReusable returns false, engine requests one ModelInstance per input message related to this model (message is validated with ModelInstanceFactory.isValidMessage).
+abstract class ModelInstance(val factory: ModelInstanceFactory) {
+  // Getting NodeContext from ModelInstanceFactory
+  final def getNodeContext() = factory.getNodeContext()
 
-    /** Reset the partition hash with the supplied value.  This allows the instance to be used in other partitions if needed.
-      *
-      * @param hash the hash of the partition that this model instance is to subsequently serve
-      */
-    def init(hash: Int): Unit = { partitionHash = hash }  // Instance initialization. Once per instance
+  // Getting EnvContext from ModelInstanceFactory
+  final def getEnvContext() = factory.getEnvContext()
 
-    /** Called once after execute, the model instance may choose to implement cleanup/save behavior here before the conclusion
-      * of the execution cycle.
-      *
-      * FIXME: This method and the other methods in this class should all **start with capital letters** or **start with lower case letters**
-      */
-    def shutdown(): Unit = {}  // Shutting down the instance
+  // Getting ModelName from ModelInstanceFactory
+  final def getModelName() = factory.getModelName()
 
-    /**
-     * The engine will call the model instance's execute method to process the message it received at CreateNewModel time by its factory.
-     * @param outputDefault when true, a model result will always be produced with default values.  If false (ordinary case), output is
-     *                      emitted only when the model deems this message worthy of report.  If desired the model may return a 'null'
-     *                      for the execute's return value and the engine will not proceed with output processing
-     * @return a ModelResultBase derivative or null if there is nothing to report.
-     */
-    def execute(outputDefault: Boolean): ModelResultBase // if outputDefault is true we will output the default value if nothing matches, otherwise null
+  // Getting Model Version from ModelInstanceFactory
+  final def getVersion() = factory.getVersion()
 
-    def isModelInstanceReusable(): Boolean = false // Can we reuse the instances created for this model?
+  // Getting ModelInstanceFactory, which is passed in constructor
+  final def getModelInstanceFactory() = factory
+
+  // This calls when the instance got created. And only calls once per instance.
+  //	Intput:
+  //		instanceMetadata: Metadata related to this instance (partition information)
+  def init(instanceMetadata: String): Unit = {} // Local Instance level initialization
+
+  // This calls when the instance is shutting down. There is no guarantee
+  def shutdown(): Unit = {} // Shutting down this factory. 
+
+  // This calls for each input message related to this model (message is validated with ModelInstanceFactory.isValidMessage)
+  //	Intput:
+  //		txnCtxt: Transaction context related to this execution
+  //		outputDefault: If this is true, engine is expecting output always.
+  //	Output:
+  //		Derived class of ModelResultBase is the return results expected. null if no results.
+  def execute(txnCtxt: TransactionContext, outputDefault: Boolean): ModelResultBase
 }
 
-/**
- * ModelBaseObj describes the contract for Model factories.
- */
-trait ModelBaseObj {
-    /**
-     * Determine if the supplied message can be consumed by the model mentioned in the argument list.  The engine will
-     * call this method when a new messages has arrived and been prepared.  It is passed to each of the active models
-     * in the working set.  Each model has the opportunity to indicate its interest in the message.
-     *
-     * NOTE: For many model factories that implement this interface, there is only one model to be concerned with and the
-     * namespace.name.version can be ignored. Some factories, however, are responsible for servicing many models, so
-     * the Kamanja engine's intentions are made known explicitly as to which active model it is currently concerned.
-     *
-     * @param msg  the message instance that is currently being processed
-     * @param modelName the namespace.name of the model that the engine wishes to know if it can process this message
-     * @param modelVersion the canonical version of the model (string form) that the engine wishes to know if it can
-     *                     process this message
-     * @return true if this model can process the message.
-     */
-  def IsValidMessage(msg: MessageContainerBase, modelName : String, modelVersion : String): Boolean
-    /**
-     * If the message can be processed, the engine will call this method to get an instance of the model.  Depending upon the model
-     * characteristics, it will either obtain one from its instance cache (models that are reusable behave this way), or worse case,
-     * instantiate a new model to process the message
-     * @param mdlCtxt key information needed by the model to create and intialize itself.
-     * @param modelName the namespace.name of the model that the engine wishes to know if it can process this message
-     * @param modelVersion the canonical version of the model (string form) that the engine wishes to know if it can
-     * @return an instance of the Model that can process the message found in the ModelContext
-     */
-  def CreateNewModel(mdlCtxt: ModelContext, modelName : String, modelVersion : String): ModelBase
-    /**
-     * Answer the name of the model.
-     * @return the model name
-     */
-  def ModelName(): String
-    /**
-     * Answer the version of the model.
-     * @return the model version
-     */
-  def Version(): String
+// ModelInstanceFactory will be created from FactoryOfModelInstanceFactory when metadata got resolved (while engine is starting and when metadata adding while running the engine).
+abstract class ModelInstanceFactory(val modelDef: ModelDef, val nodeContext: NodeContext) {
+  // Getting NodeContext, which is passed in constructor
+  final def getNodeContext() = nodeContext
 
-    /**
-     * Create a result object to contain any results the model wishes to report
-     * @return a ModelResultBase derivative appropriate for the model
-     */
-  def CreateResultObject(): ModelResultBase // ResultClass associated the model. Mainly used for Returning results as well as Deserialization
+  // Getting EnvContext from nodeContext, if available
+  final def getEnvContext() = if (nodeContext != null) nodeContext.getEnvCtxt else null
+
+  // Getting ModelDef, which is passed in constructor
+  final def getModelDef() = modelDef
+
+  // This calls when the instance got created. And only calls once per instance.
+  // Common initialization for all Model Instances. This gets called once per node during the metadata load or corresponding model def change.
+  //	Intput:
+  //		txnCtxt: Transaction context to do get operations on this transactionid. But this transaction will be rolledback once the initialization is done.
+  def init(txnContext: TransactionContext): Unit = {}
+
+  // This calls when the factory is shutting down. There is no guarantee.
+  def shutdown(): Unit = {} // Shutting down this factory. 
+
+  // Getting ModelName.
+  def getModelName(): String // Model Name
+
+  // Getting Model Version
+  def getVersion(): String // Model Version
+
+  // Checking whether the message is valid to execute this model instance or not.
+  def isValidMessage(msg: MessageContainerBase): Boolean
+
+  // Creating new model instance related to this ModelInstanceFactory.
+  def createModelInstance(): ModelInstance
+
+  // Creating ModelResultBase associated this model/modelfactory.
+  def createResultObject(): ModelResultBase
+
+  // Is the ModelInstance created by this ModelInstanceFactory is reusable?
+  def isModelInstanceReusable(): Boolean = false
 }
 
-/**
- * ModelInfo objects are created at cluster startup and cache information required to manage the creation of models and their
- * execution in the Kamanja engine.
- * @param mdl the factory object that will be asked to decide if the current message can be consumed by an instance of a model
- *            that it can create.
- * @param modelName the namespace.name of the model that the engine wishes to know if it can process this message
- * @param modelVersion the version of the model that the engine wishes to know if it can process this message
- * @param jarPath the location(s) of all jars required to execute models that can be produced by this factory object
- * @param dependencyJarNames the names of the dependency jars that are in fact needed
- * @param tenantId the name of the model owner used for multi-tenancy accounting and security
- */
-class ModelInfo(val mdl: ModelBaseObj
-                , val modelName : String
-                , val modelVersion : String
-                , val jarPath: String
-                , val dependencyJarNames: Array[String]
-                , val tenantId: String) {
+trait FactoryOfModelInstanceFactory {
+  def getModelInstanceFactory(modelDef: ModelDef, nodeContext: NodeContext, loaderInfo: KamanjaLoaderInfo, jarPaths: collection.immutable.Set[String]): ModelInstanceFactory
+  // Input:
+  //  modelDefStr is Model Definition String
+  //  inpMsgName is Input Message Name
+  //  outMsgName is output Message Name
+  // Output: ModelDef
+  def prepareModel(nodeContext: NodeContext, modelDefStr: String, inpMsgName: String, outMsgName: String, loaderInfo: KamanjaLoaderInfo, jarPaths: collection.immutable.Set[String]): ModelDef
 }
 
-/**
- * A ModelContext is presented to each model instance when a new message is to be processed by that model instance.
- * The current transaction, access to the persistent store, the model owner, and the message to be processed are available.
- *
- * @param txnContext the TransactionContext describing the transaction id, global context (persistent store interface) and
- *                   tenant id (used for multi tenancy clusters and the accounting required for that).
- * @param msg the instance of the incoming message to be consumed by the model instance.
- * @param msgData raw data version of message???????
- * @param partitionKey : the partition key that has this data
- */
-class ModelContext(val txnContext: TransactionContext
-                   , val msg: MessageContainerBase
-                   , val msgData: Array[Byte]
-                   , val partitionKey: String)  {
-
-  def InputMessageData: Array[Byte] = msgData
-  def Message: MessageContainerBase = msg
-  def TransactionContext: TransactionContext = txnContext
-  def PartitionKey: String = partitionKey
-  def getPropertyValue(clusterId: String, key: String): String = txnContext.getPropertyValue(clusterId, key)
-
-}
-
-/**
- * The transaction context contains miscellaneous information needed by the engine and models running on it.
- * @param transId the transaction id for the current message execution
- * @param gCtx the EnvContext, the gateway to persistent storage that can contain values required by the model
- *             as well as a storage place for values the model wishes to save.
- * @param tenantId an identifier to aid in multi-tenant clusters.
- */
-class TransactionContext(val transId: Long, val gCtx: EnvContext, val tenantId: String) {
+class TransactionContext(val transId: Long, val nodeCtxt: NodeContext, val msgData: Array[Byte], val partitionKey: String) {
+  private var msg: MessageContainerBase = _
+  def getInputMessageData(): Array[Byte] = msgData
+  def getPartitionKey(): String = partitionKey
+  def getMessage(): MessageContainerBase = msg
+  def setMessage(m: MessageContainerBase): Unit = { msg = m }
+  def getTransactionId() = transId
+  def getNodeCtxt() = nodeCtxt
   private var valuesMap = new java.util.HashMap[String, Any]()
-  def getPropertyValue(clusterId: String, key: String): String = { gCtx.getPropertyValue(clusterId, key) }
-  def setContextValue(key: String, value: Any): Unit = { valuesMap.put(key, value) }
-  def getContextValue(key: String): Any = { valuesMap.get(key) }
+  def getPropertyValue(clusterId: String, key: String): String = { if (nodeCtxt != null) nodeCtxt.getPropertyValue(clusterId, key) else "" }
+  def putValue(key: String, value: Any): Unit = { valuesMap.put(key, value) }
+  def getValue(key: String): Any = { valuesMap.get(key) }
+}
+
+// Node level context
+class NodeContext(val gCtx: EnvContext) {
+  def getEnvCtxt() = gCtx
+  private var valuesMap = new java.util.HashMap[String, Any]()
+  def getPropertyValue(clusterId: String, key: String): String = { if (gCtx != null) gCtx.getPropertyValue(clusterId, key) else "" }
+  def putValue(key: String, value: Any): Unit = { valuesMap.put(key, value) }
+  def getValue(key: String): Any = { valuesMap.get(key) }
 }
 

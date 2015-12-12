@@ -18,20 +18,24 @@ package com.ligadata.MetadataAPI.Utility
 
 import java.io.{FileNotFoundException, File}
 
+import scala.io.Source
+
+import org.apache.logging.log4j._
+
 import com.ligadata.Exceptions.StackTrace
+import com.ligadata.MetadataAPI.{MetadataAPIImpl,ApiResult,ErrorCodeConstants}
 import com.ligadata.MetadataAPI.MetadataAPI.ModelType
 import com.ligadata.MetadataAPI.MetadataAPI.ModelType.ModelType
 import com.ligadata.MetadataAPI.MetadataAPIImpl
-import scala.io.Source
-import org.apache.log4j._
 
 /**
  * Created by dhaval on 8/7/15.
  */
 
 object ModelService {
+    private val userid: Option[String] = Some("metadataapi")
     val loggerName = this.getClass.getName
-    lazy val logger = Logger.getLogger(loggerName)
+    lazy val logger = LogManager.getLogger(loggerName)
 
     /************************************************************************************************
       * Add Models
@@ -85,11 +89,11 @@ object ModelService {
             if(model.exists()){
                 modelDef = Source.fromFile(model).mkString
                 modelDefs=modelDefs:+modelDef
-            }else{
+            } else {
                 response="File does not exist"
             }
         }
-        if(modelDefs.nonEmpty) {
+        if (modelDefs.nonEmpty) {
             for (modelDef <- modelDefs){
                 println("Adding the next model in the queue.")
                 if (dep.length > 0) {

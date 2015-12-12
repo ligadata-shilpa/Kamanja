@@ -67,6 +67,32 @@ object MetadataAPI {
 
 }
 
+/**
+ * A class that defines the result any of the API function - The ResultData reuturns a Complex Array of Values.
+ * @param statusCode
+ * @param functionName
+ * @param resultData
+ * @param description
+ */
+class ApiResultComplex (var statusCode:Int, var functionName: String, var resultData: String, var description: String){
+  /**
+   * Override toString to return ApiResult as a String
+   */
+  override def toString: String = {
+
+    val resultArray = parse(resultData).values.asInstanceOf[List[Map[String,Any]]]
+
+    var json = ("APIResults" -> ("Status Code" -> statusCode) ~
+                                ("Function Name" -> functionName) ~
+                                ("Result Data"  -> resultArray.map {nodeInfo => JsonSerializer.SerializeMapToJsonString(nodeInfo)}) ~
+                                ("Result Description" -> description))
+
+    pretty(render(json))
+  }
+}
+
+
+
 trait MetadataAPI {
   import ModelType._
   /** MetadataAPI defines the CRUD (create, read, update, delete) operations on metadata objects supported

@@ -32,7 +32,7 @@ import java.util.Date
 import java.io._
 
 import sys.process._
-import org.apache.log4j._
+import org.apache.logging.log4j._
 import org.json4s._
 import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
@@ -55,8 +55,7 @@ class MetadataAPISpec extends FunSpec with LocalTestFixtures with BeforeAndAfter
   val userid : Option[String] = Some("test")
 
   private val loggerName = this.getClass.getName
-  private val logger = Logger.getLogger(loggerName)
-  logger.setLevel(Level.INFO)
+  private val logger = LogManager.getLogger(loggerName)
 
   private def TruncateDbStore = {
       val db = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("DATABASE")
@@ -143,11 +142,7 @@ class MetadataAPISpec extends FunSpec with LocalTestFixtures with BeforeAndAfter
 
       MetadataAPIImpl.TruncateAuditStore
       MetadataAPIImpl.isInitilized = true
-
-
       logger.info(MetadataAPIImpl.GetMetadataAPIConfig)
-      MetadataAPIImpl.SetLoggerLevel(Level.INFO)
-
    }
     catch {
       case e: EmbeddedZookeeperException => {

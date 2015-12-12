@@ -133,10 +133,14 @@ elif [ "$INPUT" = "push data" ]; then
 #echo "User selected: $INPUTFILE"
 #$INPUTFILE
 else
+<<<<<<< HEAD
     if [ -n "$attachDebugger" ]; then
         ipport="8998"
         java -Xdebug -Xrunjdwp:transport=dt_socket,address="$ipport",server=y -jar $KAMANJA_HOME/bin/MetadataAPI-1.0 $INPUT
     else
         java -jar $KAMANJA_HOME/bin/MetadataAPI-1.0 $INPUT
     fi
+=======
+java -Dlog4j.configurationFile=file:$KAMANJA_HOME/config/log4j2.xml -jar $KAMANJA_HOME/bin/MetadataAPI-1.0 $INPUT
+>>>>>>> dev
 fi
