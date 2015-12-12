@@ -864,6 +864,8 @@ object KamanjaMetadata extends MdBaseResolveInfo {
         return
       }
 
+      if (zkTransaction.transactionId.getOrElse("0").toLong <= MetadataAPIImpl.getCurrentTranLevel) return
+
       MetadataAPIImpl.UpdateMdMgr(zkTransaction)
 
       if (updMetadataExecutor.isShutdown)
