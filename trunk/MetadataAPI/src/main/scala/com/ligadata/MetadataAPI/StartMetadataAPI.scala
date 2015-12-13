@@ -425,7 +425,7 @@ object StartMetadataAPI {
                        val oldVer: String = if (argMap.contains("oldversion")) argMap("oldversion") else MdMgr.LatestVersion
                        if (oldVer != MdMgr.LatestVersion) {
                            val warningMsg : String = "Specific version replacement is not currently supported.  Only the latest version of a model may be updated........"
-                           logger.warning(warningMsg)
+                           logger.warn(warningMsg)
                            warningMsg
                        } else {
 

@@ -54,7 +54,7 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
         if (mdlChngCntr != mdlsChangedCntr) {
           LOG.info("Refreshing models for Partition:%s from %d to %d".format(uk, mdlsChangedCntr, mdlChngCntr))
           val (tmpMdls, tMdlsChangedCntr) = KamanjaMetadata.getAllModels
-          val tModels = if (tmpMdls != null) tmpMdls else Array[(String, com.ligadata.KamanjaBase.ModelInfo)]()
+          val tModels = if (tmpMdls != null) tmpMdls else Array[(String, MdlInfo)]()
 
           val map = scala.collection.mutable.Map[String, (MdlInfo, Boolean, ModelInstance, Boolean)]()
           models.foreach(q => {

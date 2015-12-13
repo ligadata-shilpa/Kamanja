@@ -869,23 +869,43 @@ class CompilerProxy {
       }
       if (isModel) {
         try {
-          val mdlDef = MdMgr.GetMdMgr.MakeModelDef("", "", clsName, "jar", List[(String, String, String, String, Boolean, String)](), List[(String, String, String)]()) // Java/Scala/Jar/PMML models are marked as JAR here.
-          val mdlFactory = PrepareModelFactory(loaderInfo, jarPaths0, mdlDef)
-  
-          if (mdlFactory != null) {
-            var fullName = mdlFactory.getModelName.split('.')
-            return (fullName.dropRight(1).mkString("."), fullName(fullName.length - 1), mdlFactory.getVersion, clsName)
-          }
 
-          logger.error("COMPILER_PROXY: Unable to resolve a class Object from " + jarName0)
-          throw new MsgCompilationFailedException(clsName)
+            /**
+              * Manufacture a proxy of the model def.  There are some subtleties here.  For the java and scala native
+              * models, the fully qualified class path (i.e., the variable clsName in use here), is really the
+              * model namespace.name where the class name is the model name and the package prefix is the namespace.
+              *
+              * The thinking here is that if this mechanism changes, it will not be hard coded here in the proxy. It will
+              * exist in but one place, namely in the getModelInstanceFactory method found in the FactoryOfModelInstanceFactory.
+              * For this reason, the trouble of manufacturing a ModelDef is taken so it can turn around and just pull
+              * out the pkg prefix and class name from the 'clsName' variable.
+              */
+
+              val mdlDef = MdMgr.GetMdMgr.MakeModelDef("", ""
+                  , clsName
+                  , "jar"
+                  , List[(String, String, String, String, Boolean, String)]()
+                  , List[(String, String, String)]()
+                  , 0L
+                  , ""
+                  , Array[String]()
+                  , false, false)
+              val mdlFactory = PrepareModelFactory(loaderInfo, jarPaths0, mdlDef)
+  
+              if (mdlFactory != null) {
+                var fullName = mdlFactory.getModelName.split('.')
+                return (fullName.dropRight(1).mkString("."), fullName(fullName.length - 1), mdlFactory.getVersion, clsName)
+              }
+
+              logger.error("COMPILER_PROXY: Unable to resolve a class Object from " + jarName0)
+              throw new MsgCompilationFailedException(clsName)
         } catch {
-          case e: Exception => {
-            // Trying Regular Object instantiation
-            val stackTrace = StackTrace.ThrowableTraceString(e)
-            logger.error("COMPILER_PROXY: Exception encountered trying to determin metadata from Class:%s, Reason:%s Message:%s.\nStackTrace:%s".format(clsName, e.getCause, e.getMessage, stackTrace))
-            throw new MsgCompilationFailedException(clsName)
-          }
+              case e: Exception => {
+                // Trying Regular Object instantiation
+                val stackTrace = StackTrace.ThrowableTraceString(e)
+                logger.error("COMPILER_PROXY: Exception encountered trying to determin metadata from Class:%s, Reason:%s Message:%s.\nStackTrace:%s".format(clsName, e.getCause, e.getMessage, stackTrace))
+                throw new MsgCompilationFailedException(clsName)
+              }
         }
   
 /*      

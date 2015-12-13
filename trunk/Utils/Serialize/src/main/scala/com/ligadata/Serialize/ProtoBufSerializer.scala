@@ -16,14 +16,10 @@
 
 package com.ligadata.Serialize
 
-import java.util.Properties
-import java.io._
-import scala.Enumeration
-import scala.io.Source._
-import org.apache.logging.log4j._
-
+import scala.collection.immutable.List
 import scala.collection.JavaConversions._
-import org.apache.log4j._
+
+import org.apache.logging.log4j._
 
 import com.ligadata.kamanja.metadata._
 import com.ligadata.Serialize.MetadataObjects.MetadataType._
@@ -32,19 +28,10 @@ import com.ligadata.Exceptions.StackTrace
 
 class ProtoBufSerializer extends Serializer{
 
-  val loggerName = this.getClass.getName
-  lazy val logger = LogManager.getLogger(loggerName)
-  private[this] var classLoader: java.lang.ClassLoader = null
+    val loggerName = this.getClass.getName
+    lazy val logger = LogManager.getLogger(loggerName)
+    private[this] var classLoader: java.lang.ClassLoader = null
 
-  def buildProtoBaseElem(o: BaseElemDef) : ProtoBaseElem = {
-    logger.debug("Build ProtoBaseElem from " + o.getClass().getName())
-    val pbe = ProtoBaseElem.newBuilder()
-      .setNameSpace(o.NameSpace)
-      .setName(o.Name)
-      .setVer(o.Version)
-    if( o.PhysicalName != null ){
-      pbe.setPhysicalName(o.PhysicalName)
-    }
 
     def buildProtoBaseElem(o: BaseElemDef) : ProtoBaseElem = {
         logger.debug("Build ProtoBaseElem from " + o.getClass.getName)

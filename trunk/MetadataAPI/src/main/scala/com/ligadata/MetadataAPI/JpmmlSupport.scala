@@ -105,96 +105,102 @@ class JpmmlSupport(mgr : MdMgr
                  * evaluator is created now to obtain the output dependencies for the model.
                  *
                  */
-                val shimModelNamespaceName : String = JpmmlAdapter.ModelName()
-                val shimVersion : String = JpmmlAdapter.Version()
+
                 val onlyActive : Boolean = true
-                val modelVersion : Long = MdMgr.ConvertVersionToLong(shimVersion)
-                val optShimModel : Option[ModelDef] = mgr.Model(shimModelNamespaceName, modelVersion, onlyActive)
+                val latestVersion : Long = -1L
+                val optShimModel : Option[ModelDef] = mgr.Model("com.ligadata.jpmml.JpmmlAdapter", latestVersion, onlyActive)
                 val shimModel : ModelDef = optShimModel.orNull
-
-                val jarName : String = if (shimModel != null) shimModel.jarName else null
-                val jarDeps : scala.Array[String] = if (shimModel != null) shimModel.dependencyJarNames else null
-                val phyName : String = if (shimModel != null) shimModel.typeString else null
-
-                /** make sure new msg is there. */
-                val msgver : Long = MdMgr.ConvertVersionToLong(msgVersion)
-                val optInputMsg : Option[MessageDef] = mgr.Message(msgNamespace, msgName, msgver, onlyActive)
-                val inputMsg : MessageDef = optInputMsg.orNull
-                val activeFieldNames : JList[FieldName] = modelEvaluator.getActiveFields
-                val outputFieldNames : JList[FieldName] = modelEvaluator.getOutputFields
-                val targetFieldNames : JList[FieldName] = modelEvaluator.getTargetFields; /** target|predicted usage types */
-
-                /** NOTE: activeFields are not used at this point... for jpmml models, only the message will be
-                  * available as an input variable
-                  */
-                val activeFields : scala.Array[DataField] = {
-                    activeFieldNames.asScala.map(nm => modelEvaluator.getDataField(nm))
-                }.toArray
-                val modelD : ModelDef = if (inputMsg != null) {
-                    val inVars: List[(String, String, String, String, Boolean, String)] =
-                        List[(String,String,String,String,Boolean,String)](("msg"
-                                                                      , inputMsg.typeString
-                                                                      , inputMsg.NameSpace
-                                                                      , inputMsg.Name
-                                                                      , false
-                                                                      , null))
-
-                    /** fields found in the output section */
-                    val outputFields: scala.Array[OutputField] = {
-                        outputFieldNames.asScala.map(nm => modelEvaluator.getOutputField(nm))
-                    }.toArray
-                    val outputFieldVars: List[(String, String, String)] = outputFields.map(fld => {
-                        val fldName: String = fld.getName.getValue
-                        val dataType: String = fld.getDataType.value
-                        (fldName, MdMgr.SysNS, dataType)
-                    }).toList
-                    /** get the concrete data fields for either 'target' or 'predicted' ... type info found there. */
-                    val targetDataFields: scala.Array[DataField] = {
-                        targetFieldNames.asScala.map(nm => {
-                            modelEvaluator.getDataField(nm)
-                        })
-                    }.toArray
-                    val targVars: List[(String, String, String)] = targetDataFields.map(fld => {
-                        val fldName: String = fld.getName.getValue
-                        val dataType: String = fld.getDataType.value
-                        (fldName, MdMgr.SysNS, dataType)
-                    }).toList
-
-                    /**
-                     * Model output fields will consist of the target variables (either target or predicted fields from mining
-                     * schema) and the fields found in the output section (if any)
-                     */
-                    val outVars: List[(String, String, String)] = (targVars ++ outputFieldVars).distinct
-
-                    val isReusable: Boolean = true
-                    val supportsInstanceSerialization: Boolean = false // FIXME: not yet
-
-                    val withDots : Boolean = false
-                    val msgVersionFormatted : String = MdMgr.ConvertLongVersionToString(msgver, withDots)
-                    val model: ModelDef = mgr.MakeModelDef(modelNamespace
-                                                        , modelName
-                                                        , phyName
-                                                        , ModelRepresentation.JPMML
-                                                        , isReusable
-                                                        , s"$msgNamespace.$msgName.$msgVersionFormatted"
-                                                        , pmmlText
-                                                        , DetermineMiningModelType(modelEvaluator)
-                                                        , inVars
-                                                        , outVars
-                                                        , MdMgr.ConvertVersionToLong(version)
-                                                        , jarName
-                                                        , jarDeps
-                                                        , recompile
-                                                        , supportsInstanceSerialization)
-
-                    /** dump the model def to the log for time being */
-                    logger.debug(modelDefToString(model))
-                    model
-                } else {
-                    logger.error(s"The supplied message def is not available in the metadata... msgName=$msgNamespace.$msgName.$msgVersion ... a model definition will not be created for model name=$modelNamespace.$modelName.$version")
+                val modelDefinition : ModelDef = if (shimModel == null) {
+                    logger.error("While building model metadata for $modelNamespace.$modelName, it was discovered that there is no model parent class.")
                     null
+                } else {
+                    val jarName: String = if (shimModel != null) shimModel.jarName else null
+                    val jarDeps: scala.Array[String] = if (shimModel != null) shimModel.dependencyJarNames else null
+                    val phyName: String = if (shimModel != null) shimModel.typeString else null
+
+                    /** make sure new msg is there. */
+                    val msgver: Long = MdMgr.ConvertVersionToLong(msgVersion)
+                    val optInputMsg: Option[MessageDef] = mgr.Message(msgNamespace, msgName, msgver, onlyActive)
+                    val inputMsg: MessageDef = optInputMsg.orNull
+                    val activeFieldNames: JList[FieldName] = modelEvaluator.getActiveFields
+                    val outputFieldNames: JList[FieldName] = modelEvaluator.getOutputFields
+                    val targetFieldNames: JList[FieldName] = modelEvaluator.getTargetFields;
+
+                    /** target|predicted usage types */
+
+                    /** NOTE: activeFields are not used at this point... for jpmml models, only the message will be
+                      * available as an input variable
+                      */
+                    val activeFields: scala.Array[DataField] = {
+                        activeFieldNames.asScala.map(nm => modelEvaluator.getDataField(nm))
+                    }.toArray
+                    val modelD: ModelDef = if (inputMsg != null) {
+                        val inVars: List[(String, String, String, String, Boolean, String)] =
+                            List[(String, String, String, String, Boolean, String)](("msg"
+                                , inputMsg.typeString
+                                , inputMsg.NameSpace
+                                , inputMsg.Name
+                                , false
+                                , null))
+
+                        /** fields found in the output section */
+                        val outputFields: scala.Array[OutputField] = {
+                            outputFieldNames.asScala.map(nm => modelEvaluator.getOutputField(nm))
+                        }.toArray
+                        val outputFieldVars: List[(String, String, String)] = outputFields.map(fld => {
+                            val fldName: String = fld.getName.getValue
+                            val dataType: String = fld.getDataType.value
+                            (fldName, MdMgr.SysNS, dataType)
+                        }).toList
+                        /** get the concrete data fields for either 'target' or 'predicted' ... type info found there. */
+                        val targetDataFields: scala.Array[DataField] = {
+                            targetFieldNames.asScala.map(nm => {
+                                modelEvaluator.getDataField(nm)
+                            })
+                        }.toArray
+                        val targVars: List[(String, String, String)] = targetDataFields.map(fld => {
+                            val fldName: String = fld.getName.getValue
+                            val dataType: String = fld.getDataType.value
+                            (fldName, MdMgr.SysNS, dataType)
+                        }).toList
+
+                        /**
+                          * Model output fields will consist of the target variables (either target or predicted fields from mining
+                          * schema) and the fields found in the output section (if any)
+                          */
+                        val outVars: List[(String, String, String)] = (targVars ++ outputFieldVars).distinct
+
+                        val isReusable: Boolean = true
+                        val supportsInstanceSerialization: Boolean = false // FIXME: not yet
+
+                        val withDots: Boolean = false
+                        val msgVersionFormatted: String = MdMgr.ConvertLongVersionToString(msgver, withDots)
+                        val model: ModelDef = mgr.MakeModelDef(modelNamespace
+                            , modelName
+                            , phyName
+                            , ModelRepresentation.JPMML
+                            , isReusable
+                            , s"$msgNamespace.$msgName.$msgVersionFormatted"
+                            , pmmlText
+                            , DetermineMiningModelType(modelEvaluator)
+                            , inVars
+                            , outVars
+                            , MdMgr.ConvertVersionToLong(version)
+                            , jarName
+                            , jarDeps
+                            , recompile
+                            , supportsInstanceSerialization)
+
+                        /** dump the model def to the log for time being */
+                        logger.debug(modelDefToString(model))
+                        model
+                    } else {
+                        logger.error(s"The supplied message def is not available in the metadata... msgName=$msgNamespace.$msgName.$msgVersion ... a model definition will not be created for model name=$modelNamespace.$modelName.$version")
+                        null
+                    }
+                    modelD
                 }
-                modelD
+                modelDefinition
             } else {
                 logger.error(s"The JPMML evaluator could not be created for model $modelNamespace.$modelName.$version ... a model definition will not be created for model name=$modelNamespace.$modelName.$version")
                 null

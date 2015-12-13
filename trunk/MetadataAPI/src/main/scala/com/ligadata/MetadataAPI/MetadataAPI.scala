@@ -17,6 +17,7 @@
 package com.ligadata.MetadataAPI
 
 import com.ligadata.MetadataAPI.MetadataAPI.ModelType
+import com.ligadata.Serialize._
 import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
 

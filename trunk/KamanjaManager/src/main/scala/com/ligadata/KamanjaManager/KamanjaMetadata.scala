@@ -60,7 +60,7 @@ class KamanjaMetadata {
   // Metadata manager
   val messageObjects = new HashMap[String, MsgContainerObjAndTransformInfo]
   val containerObjects = new HashMap[String, MsgContainerObjAndTransformInfo]
-  val modelObjsMap = new HashMap[String, com.ligadata.KamanjaBase.ModelInfo]
+  val modelObjsMap = new HashMap[String, MdlInfo]
 
   def LoadMdMgrElems(tmpMsgDefs: Option[scala.collection.immutable.Set[MessageDef]], tmpContainerDefs: Option[scala.collection.immutable.Set[ContainerDef]],
     tmpModelDefs: Option[scala.collection.immutable.Set[ModelDef]]): Unit = {
@@ -582,7 +582,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
   }
 
   private def UpdateKamanjaMdObjects(msgObjects: HashMap[String, MsgContainerObjAndTransformInfo], contObjects: HashMap[String, MsgContainerObjAndTransformInfo],
-    mdlObjects: HashMap[String, com.ligadata.KamanjaBase.ModelInfo], removedModels: ArrayBuffer[(String, String, Long)], removedMessages: ArrayBuffer[(String, String, Long)],
+    mdlObjects: HashMap[String, MdlInfo], removedModels: ArrayBuffer[(String, String, Long)], removedMessages: ArrayBuffer[(String, String, Long)],
     removedContainers: ArrayBuffer[(String, String, Long)]): Unit = {
 
     var exp: Exception = null
@@ -604,7 +604,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
   }
 
   private def localUpdateKamanjaMdObjects(msgObjects: HashMap[String, MsgContainerObjAndTransformInfo], contObjects: HashMap[String, MsgContainerObjAndTransformInfo],
-    mdlObjects: HashMap[String, com.ligadata.KamanjaBase.ModelInfo], removedModels: ArrayBuffer[(String, String, Long)], removedMessages: ArrayBuffer[(String, String, Long)],
+    mdlObjects: HashMap[String, MdlInfo], removedModels: ArrayBuffer[(String, String, Long)], removedMessages: ArrayBuffer[(String, String, Long)],
     removedContainers: ArrayBuffer[(String, String, Long)]): Unit = {
     //BUGBUG:: Assuming there is no issues if we remove the objects first and then add the new objects. We are not adding the object in the same order as it added in the transaction. 
 
@@ -716,7 +716,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
       val ExecOrderStr = if (tmpExecOrderStr != null) tmpExecOrderStr.trim.toLowerCase.split(",").map(s => s.trim).filter(s => s.size > 0) else Array[String]()
 
       if (ExecOrderStr.size > 0 && modelObjs != null) {
-        var mdlsOrder = ArrayBuffer[(String, com.ligadata.KamanjaBase.ModelInfo)]()
+        var mdlsOrder = ArrayBuffer[(String, MdlInfo)]()
         ExecOrderStr.foreach(mdlNm => {
           val m = modelObjs.getOrElse(mdlNm, null)
           if (m != null)
@@ -733,7 +733,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
         LOG.warn("Models Order changed from %s to %s".format(modelObjs.map(kv => kv._1).mkString(","), mdlsOrder.map(kv => kv._1).mkString(",")))
         modelExecOrderedObjects = mdlsOrder.toArray
       } else {
-        modelExecOrderedObjects = if (modelObjs != null) modelObjs.toArray else Array[(String, com.ligadata.KamanjaBase.ModelInfo)]()
+        modelExecOrderedObjects = if (modelObjs != null) modelObjs.toArray else Array[(String, MdlInfo)]()
       }
 
       mdlsChanged = true
@@ -1112,9 +1112,9 @@ object KamanjaMetadata extends MdBaseResolveInfo {
     v
   }
 
-  def getModel(mdlName: String): com.ligadata.KamanjaBase.ModelInfo = {
+  def getModel(mdlName: String): MdlInfo = {
     var exp: Exception = null
-    var v: com.ligadata.KamanjaBase.ModelInfo = null
+    var v: MdlInfo = null
 
     reent_lock.readLock().lock();
     try {
@@ -1196,9 +1196,9 @@ object KamanjaMetadata extends MdBaseResolveInfo {
     v
   }
 
-  def getAllModels: (Array[(String, com.ligadata.KamanjaBase.ModelInfo)], Long) = {
+  def getAllModels: (Array[(String, MdlInfo)], Long) = {
     var exp: Exception = null
-    var v: Array[(String, com.ligadata.KamanjaBase.ModelInfo)] = null
+    var v: Array[(String, MdlInfo)] = null
 
     reent_lock.readLock().lock();
     try {
@@ -1246,7 +1246,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
     return null
   }
 
-  private def localgetModel(mdlName: String): com.ligadata.KamanjaBase.ModelInfo = {
+  private def localgetModel(mdlName: String): MdlInfo = {
     if (modelObjs == null) return null
     modelObjs.getOrElse(mdlName.toLowerCase, null)
   }
@@ -1274,7 +1274,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
     }).toMap
   }
 
-  private def localgetAllModels: Array[(String, com.ligadata.KamanjaBase.ModelInfo)] = {
+  private def localgetAllModels: Array[(String, MdlInfo)] = {
     modelExecOrderedObjects
   }
 

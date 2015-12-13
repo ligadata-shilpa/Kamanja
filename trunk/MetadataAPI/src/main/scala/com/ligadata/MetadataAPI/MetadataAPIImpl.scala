@@ -174,15 +174,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
    *  @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
    *               method. If Security and/or Audit are configured, this value must be a value other than None.
    */
-<<<<<<< HEAD
-    def getHealthCheck(nodeId: String, userid: Option[String]): String = {
-        val nodeIdentifer : String = if (nodeId == null) "" else nodeId
-        val ids = parse(nodeIdentifer).values.asInstanceOf[List[String]]
-        var apiResult = new ApiResult(ErrorCodeConstants.Success, "GetHeartbeat", MonitorAPIImpl.getHeartbeatInfo(ids), ErrorCodeConstants.GetHeartbeat_Success)
-        apiResult.toString
-    }
-=======
-  def getHealthCheck(nodeId: String = ""): String = {
+  def getHealthCheck(nodeId: String = "", userid: Option[String] = None): String = {
     try {
       val ids = parse(nodeId).values.asInstanceOf[List[String]]
       var apiResult = new ApiResultComplex(ErrorCodeConstants.Success, "GetHeartbeat", MonitorAPIImpl.getHeartbeatInfo(ids), ErrorCodeConstants.GetHeartbeat_Success)
@@ -204,7 +196,6 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     }
 
   }
->>>>>>> dev
 
   /**
    * clockNewActivity - update Metadata health info, showing its still alive.
@@ -651,17 +642,6 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     metadataAPIConfig
   }
 
-<<<<<<< HEAD
-    /**
-     * SetLoggerLevel
-     * @param level <description please>
-     */
-  def SetLoggerLevel(level: Level) {
-    logger.setLevel(level);
-  }
-
-=======
->>>>>>> dev
   private var mainDS: DataStore = _
 
   def GetMainDS: DataStore = mainDS
