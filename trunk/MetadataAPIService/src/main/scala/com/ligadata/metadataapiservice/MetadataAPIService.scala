@@ -48,6 +48,7 @@ trait MetadataAPIService extends HttpService {
   val LEADER_TOKN = "leader"
   val APIName = "MetadataAPIService"
   val GET_HEALTH = "heartbeat"
+  val SHUTDOWN = "shutdown"
 
   val loggerName = this.getClass.getName
   val logger = LogManager.getLogger(loggerName)
@@ -62,8 +63,8 @@ trait MetadataAPIService extends HttpService {
           var user: Option[String] = None
 
           // Make sure that the Audit knows the difference between No User specified and an None (request originates within the engine)
-          if (userId == None) user = Some("metadataapi")
-          logger.debug("userid => " + user.get + ",password => xxxxx" + ",role => " + role+",modelname => "+modelname)
+          if (userId == None) user = Some("metadataapi") else user = userId
+          logger.debug("userid => " + user.get + ",password => xxxxx" + ",role => " + role.get + ",modelname => "+modelname.get)
           get {
               path("api" / Rest) { str => {
                 val toknRoute = str.split("/")
@@ -78,6 +79,9 @@ trait MetadataAPIService extends HttpService {
                   else if (toknRoute(0).equalsIgnoreCase(LEADER_TOKN)) {
                     requestContext => processGetLeaderRequest(null, requestContext, user, password, role)
                   }
+                  else if (toknRoute(0).equalsIgnoreCase(SHUTDOWN)) {
+                      requestContext => processShutdownRequest(null, requestContext, user, password, role)
+		  }
                   else {
                     requestContext => processGetObjectRequest(toknRoute(0), "", requestContext, user, password, role)
                   }
@@ -378,6 +382,14 @@ trait MetadataAPIService extends HttpService {
   private def processHBRequest(nodeIds: String, rContext: RequestContext, userid: Option[String], password: Option[String], role: Option[String]): Unit = {
       val heartBeatSerivce = actorRefFactory.actorOf(Props(new GetHeartbeatService(rContext, userid, password, role)))
       heartBeatSerivce ! GetHeartbeatService.Process(nodeIds)       
+  }
+
+  /**
+   * 
+   */
+  private def processShutdownRequest(nodeIds: String, rContext: RequestContext, userid: Option[String], password: Option[String], role: Option[String]): Unit = {
+      val shutdownSerivce = actorRefFactory.actorOf(Props(new ShutdownService(rContext, userid, password, role)))
+      shutdownSerivce ! ShutdownService.Process(nodeIds)       
   }
   
   /**
