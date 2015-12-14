@@ -70,20 +70,26 @@ if [ "${array[0] }" = "edit" ]; then
   exit 0
 fi
 
+grep -i "jvm" MetadataAPIConfig.properties >> /dev/null
+ISJVM=$?
+if [ $ISJVM = 0 ]; then
+  JVMOPTIONS=`grep -i "jvm" MetadataAPIConfig.properties | cut -d"=" -f2`
+  echo JVM options are $JVMOPTIONS
+fi
+
+
 if [ "$INPUT" = "start webservice" ]; then
 echo "Starting web service . . . ."
-
-java -jar $KAMANJA_HOME/bin/MetadataAPIService-1.0
+java $JVMOPTIONS -jar $KAMANJA_HOME/bin/MetadataAPIService-1.0
 elif [ "$INPUT" = "start -v" ]; then
-   $KAMANJA_HOME/bin/StartEngine.sh
+   $KAMANJA_HOME/bin/StartEngine.sh $JVMOPTIONS
 
 elif [ "$INPUT" = "start" ]; then
   if [ -f /tmp/kamanjastart.log ]; then
     rm /tmp/kamanjastart.log
     touch /tmp/kamanjastart.log
   fi
-
- nohup $KAMANJA_HOME/bin/StartEngine.sh >> $HOME/kamanjastart.log &
+ nohup $KAMANJA_HOME/bin/StartEngine.sh $JVMOPTIONS >> $HOME/kamanjastart.log &
  echo "Kamanja engine started in background. Please check the engine log at /tmp/kamanjastart.log"
 elif [ "$INPUT" = "stop" ]; then
     ID=`ps -ef | grep -i java | grep -i KamanjaManager-1.0 | tr -s " " | cut -d" " -f3`
@@ -127,5 +133,5 @@ elif [ "$INPUT" = "push data" ]; then
 #echo "User selected: $INPUTFILE"
 #$INPUTFILE
 else
-java -Dlog4j.configurationFile=file:$KAMANJA_HOME/config/log4j2.xml -jar $KAMANJA_HOME/bin/MetadataAPI-1.0 $INPUT
+java $JVMOPTIONS -Dlog4j.configurationFile=file:$KAMANJA_HOME/config/log4j2.xml -jar $KAMANJA_HOME/bin/MetadataAPI-1.0 $INPUT
 fi
