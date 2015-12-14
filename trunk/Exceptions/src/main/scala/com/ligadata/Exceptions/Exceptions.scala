@@ -63,5 +63,13 @@ case class ConnectionFailedException(e: String) extends Exception(e)
 case class SerializerManagerException(message: String) extends Exception(message)
 case class ProtoBufSerializationException(e: String) extends Throwable(e)
 
+case class KVMessageFormatingException(e: String) extends Exception(e)
 
+case class CleanUtilException(message: String, cause: Throwable) extends Exception(message, cause)
 
+case class FatalAdapterException(msg: String, cause: Throwable ) extends Exception(msg)
+
+case class StorageConnectionException(msg: String, cause: Throwable ) extends Exception(msg)
+case class StorageFetchException(msg: String, cause: Throwable ) extends Exception(msg)
+case class StorageDMLException(msg: String, cause: Throwable ) extends Exception(msg)
+case class StorageDDLException(msg: String, cause: Throwable ) extends Exception(msg)
