@@ -4,7 +4,7 @@
 ipport="8998"
 
 if [ "$1" != "debug" ]; then
-	java -Dlog4j.configurationFile=file:{InstallDirectory}/config/log4j2.xml -jar {InstallDirectory}/bin/KamanjaManager-1.0 --config {InstallDirectory}/config/Engine1Config_Cassandra.properties
+	java -Dlog4j.configurationFile=file:{InstallDirectory}/config/log4j2.xml -cp {InstallDirectory}/lib/system/Kamanja_2.10-1.3.0.jar com.ligadata.KamanjaManager.OleService --config {InstallDirectory}/config/Engine1Config_Cassandra.properties
 else
-	java -Xdebug -Xrunjdwp:transport=dt_socket,address="$ipport",server=y -Dlog4j.configurationFile=file:{InstallDirectory}/config/log4j2.xml -jar {InstallDirectory}/bin/KamanjaManager-1.0 --config {InstallDirectory}/config/Engine1Config_Cassandra.properties
+	java -Xdebug -Xrunjdwp:transport=dt_socket,address="$ipport",server=y -Dlog4j.configurationFile=file:{InstallDirectory}/config/log4j2.xml -cp {InstallDirectory}/lib/system/Kamanja_2.10-1.3.0.jar com.ligadata.KamanjaManager.OleService --config {InstallDirectory}/config/Engine1Config_Cassandra.properties
 fi

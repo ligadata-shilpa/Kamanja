@@ -6,8 +6,8 @@
 ipport="8998"
 
 if [ "$1" != "debug" ]; then
-	java -jar {InstallDirectory}/bin/MetadataAPI-1.0 --config {InstallDirectory}/config/ClusterCfgMetadataAPIConfig.properties
+	java -cp {InstallDirectory}/lib/system/Kamanja_2.10-1.3.0.jar com.ligadata.MetadataAPI.MetadataAPIImpl --config {InstallDirectory}/config/ClusterCfgMetadataAPIConfig.properties
 else
-	java -Xdebug -Xrunjdwp:transport=dt_socket,address="$ipport",server=y -jar {InstallDirectory}/bin/MetadataAPI-1.0 --config {InstallDirectory}/config/ClusterCfgMetadataAPIConfig.properties
+	java -Xdebug -Xrunjdwp:transport=dt_socket,address="$ipport",server=y -cp {InstallDirectory}/lib/system/Kamanja_2.10-1.3.0.jar com.ligadata.MetadataAPI.MetadataAPIImpl --config {InstallDirectory}/config/ClusterCfgMetadataAPIConfig.properties
 fi
 
