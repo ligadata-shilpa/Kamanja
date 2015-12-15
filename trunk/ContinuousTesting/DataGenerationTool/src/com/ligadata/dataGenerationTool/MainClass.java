@@ -30,7 +30,7 @@ public class MainClass {
 		FileNameConfig fileNameConfig = new FileNameConfig();
 
 		// read configuration file
-		logger.info("Reading config file from " + args[0]);
+		logger.info("Reading config file from " + args[0]); 
 		String configFileLocation = args[0]; // path to
 												// DataGenerationConfig.json
 												// file
@@ -54,7 +54,7 @@ public class MainClass {
 			if (configObj.isDropInFiles()) {
 				// write hit to file
 				file.writeFile(hit, destiniationDirectory,
-						configObj.getFileSplitPer(), fileNameConfig);
+						configObj, fileNameConfig);
 			} else if (configObj.isPushToKafka()) {
 				// code to push to kafka
 			}

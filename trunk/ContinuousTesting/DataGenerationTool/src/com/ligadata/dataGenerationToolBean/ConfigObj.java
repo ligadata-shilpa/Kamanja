@@ -3,30 +3,41 @@ package com.ligadata.dataGenerationToolBean;
 public class ConfigObj {
 
 	double dataGenerationRate;
-	String startDate;
-	String endDate;
 	double durationInHours;
 	boolean dropInFiles;
 	boolean pushToKafka;
-	String FileSplitPer;
+	String startDate;
+	String endDate;
+	String fileSplitPer;
 	String delimiter;
-	String TemplatePath;
-	String DestiniationPath;
+	String templatePath;
+	String destiniationPath;
+	String compressFormat;
+
+
+
+	public String getCompressFormat() {
+		return compressFormat;
+	}
+
+	public void setCompressFormat(String compressFormat) {
+		this.compressFormat = compressFormat;
+	}
 
 	public String getDestiniationPath() {
-		return DestiniationPath;
+		return destiniationPath;
 	}
 
 	public void setDestiniationPath(String destiniationPath) {
-		DestiniationPath = destiniationPath;
+		this.destiniationPath = destiniationPath;
 	}
 
 	public String getTemplatePath() {
-		return TemplatePath;
+		return templatePath;
 	}
 
 	public void setTemplatePath(String templatePath) {
-		this.TemplatePath = templatePath;
+		this.templatePath = templatePath;
 	}
 
 	public String getDelimiter() {
@@ -82,11 +93,11 @@ public class ConfigObj {
 	}
 
 	public String getFileSplitPer() {
-		return FileSplitPer;
+		return fileSplitPer;
 	}
 
 	public void setFileSplitPer(String FileSplitPer) {
-		this.FileSplitPer = FileSplitPer;
+		this.fileSplitPer = FileSplitPer;
 	}
 
 	public void setDataGenerationRate(double dataGenerationRate) {

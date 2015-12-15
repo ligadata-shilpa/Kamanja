@@ -79,6 +79,7 @@ public class JsonUtility {
 		configObj.setDelimiter(configJson.getString("Delimiter"));
 		configObj.setTemplatePath(configJson.getString("TemplatePath"));
 		configObj.setDestiniationPath(configJson.getString("DestiniationPath"));
+		configObj.setCompressFormat(configJson.getString("CompressFormat"));
 		logger.info("Value of DataGenerationRate: "
 				+ configJson.getDouble("DataGenerationRate"));
 		logger.info("Value of StartDate: " + configJson.getString("StartDate"));

@@ -1,6 +1,9 @@
 package com.ligadata.dataGenerationTool;
 
+import java.text.SimpleDateFormat;
+
 import org.apache.log4j.Logger;
+
 import com.ligadata.dataGenerationToolBean.ConfigObj;
 import com.ligadata.dataGenerationToolBean.FileNameConfig;
 
@@ -32,16 +35,17 @@ public class TimeUtility {
 
 	}
 
-	public boolean CreateNewFile(String fileSplitPer,
+	public boolean CreateNewFile(ConfigObj configObj,
 			FileNameConfig fileNameConfig, double currentTime) {
 
+		String fileSplitPer = configObj.getFileSplitPer();
 		int timeAmountForFileSplit = Integer.valueOf(fileSplitPer.substring(0,
 				fileSplitPer.length() - 1));
 		double multiplyFactor;
 		double endTime;
-
 		String temp = fileSplitPer.toLowerCase().substring(
 				fileSplitPer.length() - 1);
+
 		switch (temp.trim().toCharArray()[0]) { // fileSplitPer.substring(fileSplitPer.length()
 												// - 1)
 		case 'd':
@@ -66,8 +70,7 @@ public class TimeUtility {
 			fileNameConfig.setNextFileTime(endTime);
 		}
 
-		if (currentTime >= fileNameConfig.getNextFileTime()) { // Double.compare(currentTime,FilesUtility.nextFileTime
-																// ) < 0
+		if (currentTime >= fileNameConfig.getNextFileTime()) {
 			fileNameConfig.setOldFileTime(fileNameConfig.getNextFileTime());
 			fileNameConfig.setNextFileTime(endTime);
 			return true;
