@@ -31,14 +31,16 @@ public class MainClass {
 
 		// read configuration file
 		logger.info("Reading config file from " + args[0]);
-		String configFileLocation = args[0]; // path to  DataGenerationConfig.json file
+		String configFileLocation = args[0]; // path to
+												// DataGenerationConfig.json
+												// file
 		JSONObject configJson = json.ReadJsonFile(configFileLocation);
 		ConfigObj configObj = json.CreateConfigObj(configJson);
 
 		// initialize variables
 		String templateFileLocation = configObj.getTemplatePath();
 		String destiniationDirectory = configObj.getDestiniationPath();
-//		System.out.println(destiniationDirectory);
+		// System.out.println(destiniationDirectory);
 
 		// read message file
 		JSONObject templateJson = json.ReadJsonFile(templateFileLocation);
