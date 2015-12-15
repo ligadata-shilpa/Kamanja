@@ -25,7 +25,6 @@ import javax.xml.transform.sax.SAXSource
 import com.ligadata.KamanjaBase._
 import com.ligadata.kamanja.metadata._
 
-import org.apache.log4j.Logger
 import org.apache.logging.log4j.LogManager
 
 import org.dmg.pmml.{PMML, FieldName}

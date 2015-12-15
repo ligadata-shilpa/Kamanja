@@ -61,6 +61,7 @@ class KamanjaMetadata {
   val messageObjects = new HashMap[String, MsgContainerObjAndTransformInfo]
   val containerObjects = new HashMap[String, MsgContainerObjAndTransformInfo]
   val modelObjsMap = new HashMap[String, MdlInfo]
+  val modelRepFactoryOfFactoryMap : HashMap[String, FactoryOfModelInstanceFactory] =  HashMap[String, FactoryOfModelInstanceFactory]()
 
   def LoadMdMgrElems(tmpMsgDefs: Option[scala.collection.immutable.Set[MessageDef]], tmpContainerDefs: Option[scala.collection.immutable.Set[ContainerDef]],
     tmpModelDefs: Option[scala.collection.immutable.Set[ModelDef]]): Unit = {
@@ -272,38 +273,52 @@ class KamanjaMetadata {
   }
 
 
-  private def GetFactoryOfMdlInstanceFactory(fqName: String): FactoryOfModelInstanceFactory = {
-    val factObjs = KamanjaMetadata.AllFactoryOfMdlInstFactoriesObjects
-    factObjs.getOrElse(fqName.toLowerCase(), null)
-  }
+    private def GetFactoryOfMdlInstanceFactory(fqName: String): FactoryOfModelInstanceFactory = {
+        val factObjs = KamanjaMetadata.AllFactoryOfMdlInstFactoriesObjects
+        factObjs.getOrElse(fqName.toLowerCase(), null)
+    }
+
+    private def GetFactoryOfMdlInstanceFactory(modelRepSupported: ModelRepresentation.ModelRepresentation): FactoryOfModelInstanceFactory = {
+        val facObjs = KamanjaMetadata.AllModelRepFacFacObjects
+        facObjs(modelRepSupported.toString)
+    }
 
   def PrepareModelFactory(mdl: ModelDef, loadJars: Boolean, txnCtxt: TransactionContext): Unit = {
-    if (mdl != null) {
-      if (loadJars)
-        KamanjaMetadata.LoadJarIfNeeded(mdl)
-      // else Assuming we are already loaded all the required jars
-      val factoryOfMdlInstFactoryFqName = "com.ligadata.FactoryOfModelInstanceFactory.JarFactoryOfModelInstanceFactory" //BUGBUG:: We need to get the name from Model Def.
-      val factoryOfMdlInstFactory: FactoryOfModelInstanceFactory = GetFactoryOfMdlInstanceFactory(factoryOfMdlInstFactoryFqName)
-      if (factoryOfMdlInstFactory == null) {
-        LOG.error("FactoryOfModelInstanceFactory %s not found in metadata. Unable to create ModelInstanceFactory for %s".format(factoryOfMdlInstFactoryFqName, mdl.FullName))
-      } else {
-        try {
-          val factory: ModelInstanceFactory = factoryOfMdlInstFactory.getModelInstanceFactory(mdl, KamanjaMetadata.gNodeContext, KamanjaConfiguration.metadataLoader, KamanjaConfiguration.jarPaths)
-          if (factory != null) {
-            if (txnCtxt != null) // We are expecting txnCtxt is null only for first time initialization
-              factory.init(txnCtxt)
-            val mdlName = (mdl.NameSpace.trim + "." + mdl.Name.trim).toLowerCase
-            modelObjsMap(mdlName) = new MdlInfo(factory, mdl.jarName, mdl.dependencyJarNames)
-          } else {
-            LOG.debug("Failed to get ModelInstanceFactory for " + mdl.FullName)
-          }
-        } catch {
-          case e: Exception => {
-            val stackTrace = StackTrace.ThrowableTraceString(e)
-            LOG.debug("Failed to get/initialize ModelInstanceFactory for %s. Reason:%s, Cause:%s\nStackTrace:%s".format(mdl.FullName, e.getMessage, e.getCause, stackTrace))
-          }
+    if (mdl != null && mdl.modelRepresentation != ModelRepresentation.UNKNOWN) {
+        if (loadJars) {
+            KamanjaMetadata.LoadJarIfNeeded(mdl)
         }
-      }
+
+        //BUGBUG:: We need to get the name from Model Def
+        val factoryOfMdlInstFactoryFqName = "com.ligadata.FactoryOfModelInstanceFactory.JarFactoryOfModelInstanceFactory"
+        /** old way was by facfacname ...
+          *    val factoryOfMdlInstFactory: FactoryOfModelInstanceFactory = GetFactoryOfMdlInstanceFactory(factoryOfMdlInstFactoryFqName)
+          * new way...
+          *    use the appropriate factory of factory object according to the model def's representation type. */
+        val factoryOfMdlInstFactory: FactoryOfModelInstanceFactory = GetFactoryOfMdlInstanceFactory(mdl.modelRepresentation)
+        if (factoryOfMdlInstFactory == null) {
+            LOG.error("FactoryOfModelInstanceFactory %s not found in metadata. Unable to create ModelInstanceFactory for %s".format(factoryOfMdlInstFactoryFqName, mdl.FullName))
+        } else {
+            try {
+                val factory: ModelInstanceFactory = factoryOfMdlInstFactory.getModelInstanceFactory(mdl, KamanjaMetadata.gNodeContext, KamanjaConfiguration.metadataLoader, KamanjaConfiguration.jarPaths)
+                if (factory != null) {
+                    if (txnCtxt != null) // We are expecting txnCtxt is null only for first time initialization
+                        factory.init(txnCtxt)
+                    val mdlName = (mdl.NameSpace.trim + "." + mdl.Name.trim).toLowerCase
+                    modelObjsMap(mdlName) = new MdlInfo(factory, mdl.jarName, mdl.dependencyJarNames)
+                } else {
+                    LOG.debug("Failed to get ModelInstanceFactory for " + mdl.FullName)
+                }
+            } catch {
+                case e: Exception => {
+                    val stackTrace = StackTrace.ThrowableTraceString(e)
+                    LOG.debug("Failed to get/initialize ModelInstanceFactory for %s. Reason:%s, Cause:%s\nStackTrace:%s".format(mdl.FullName, e.getMessage, e.getCause, stackTrace))
+                }
+            }
+        }
+    } else {
+        val msg : String = if (mdl != null) "Model definition supplie with unknown model representation..." else "Supplied model definition is null..."
+        LOG.error(msg)
     }
   }
 
@@ -396,6 +411,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
   private[this] var modelObjs = new HashMap[String, MdlInfo]
   private[this] var modelExecOrderedObjects = Array[(String, MdlInfo)]()
   private[this] var factoryOfMdlInstFactoriesObjects = scala.collection.immutable.Map[String, FactoryOfModelInstanceFactory]()
+  private[this] var modelRepFactoryOfFactoryObjects = scala.collection.immutable.Map[String, FactoryOfModelInstanceFactory]()
   private[this] var zkListener: ZooKeeperListener = _
   private[this] var mdlsChangedCntr: Long = 0
   private[this] var initializedFactOfMdlInstFactObjs = false
@@ -403,6 +419,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
   private[this] val updMetadataExecutor = Executors.newFixedThreadPool(1)
 
   def AllFactoryOfMdlInstFactoriesObjects = factoryOfMdlInstFactoriesObjects.toMap
+  def AllModelRepFacFacObjects = modelRepFactoryOfFactoryObjects.toMap
 
   def GetAllJarsFromElem(elem: BaseElem): Set[String] = {
     var allJars: Array[String] = null
@@ -528,9 +545,16 @@ object KamanjaMetadata extends MdBaseResolveInfo {
     return null
   }
 
+    /**
+      * Collect the Factory of factory objects by both modelRepresentation type and by fqClassname.
+      */
   def ResolveAllFactoryOfMdlInstFactoriesObjects(): Unit = {
-    val fDefsOptions = mdMgr.FactoryOfMdlInstFactories(true, true)
+    val onlyActive: Boolean = true
+    val latestVersion: Boolean = true
+    val fDefsOptions : Option[scala.collection.immutable.Set[FactoryOfModelInstanceFactoryDef]] = mdMgr.FactoryOfMdlInstFactories(onlyActive, latestVersion)
     val tmpFactoryOfMdlInstFactObjects = scala.collection.mutable.Map[String, FactoryOfModelInstanceFactory]()
+    val tmpModelRepFacFacs = scala.collection.mutable.Map[String, FactoryOfModelInstanceFactory]()
+
 
     if (fDefsOptions != None) {
       val fDefs = fDefsOptions.get
@@ -555,6 +579,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
 
         if (fDefObj != null) {
           tmpFactoryOfMdlInstFactObjects(f.FullName.toLowerCase()) = fDefObj
+          tmpModelRepFacFacs(f.ModelRepSupported.toString) = fDefObj
         } else {
           LOG.error("Failed to resolve FactoryOfModelInstanceFactory object:%s, Classname:%s".format(f.FullName, orgClsName))
         }
@@ -568,6 +593,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
     reent_lock.writeLock().lock();
     try {
       factoryOfMdlInstFactoriesObjects = tmpFactoryOfMdlInstFactObjects.toMap
+      modelRepFactoryOfFactoryObjects = tmpModelRepFacFacs.toMap
     } catch {
       case e: Exception => {
         val stackTrace = StackTrace.ThrowableTraceString(e)

@@ -2179,16 +2179,16 @@ class MdMgr {
 
   // Add Functions
   //
-  def MakeFactoryOfModelInstanceFactory(nameSpace: String, name: String, physicalName: String, ver: Long, jarNm: String, depJars: Array[String]): FactoryOfModelInstanceFactoryDef = {
-    val f = new FactoryOfModelInstanceFactoryDef
+  def MakeFactoryOfModelInstanceFactory(nameSpace: String, name: String, modelRepSupported: ModelRepresentation.ModelRepresentation, physicalName: String, ver: Long, jarNm: String, depJars: Array[String]): FactoryOfModelInstanceFactoryDef = {
+    val f = new FactoryOfModelInstanceFactoryDef(modelRepSupported)
     SetBaseElem(f, nameSpace, name, ver, jarNm, depJars)
     f.PhysicalName(physicalName)
     f
   }
 
   @throws(classOf[AlreadyExistsException])
-  def AddFactoryOfModelInstanceFactory(nameSpace: String, name: String, physicalName: String, ver: Long = 1, jarNm: String = null, depJars: Array[String] = null): Unit = {
-    AddFactoryOfModelInstanceFactory(MakeFactoryOfModelInstanceFactory(nameSpace, name, physicalName, ver, jarNm, depJars))
+  def AddFactoryOfModelInstanceFactory(nameSpace: String, name: String, modelRepSupported: ModelRepresentation.ModelRepresentation, physicalName: String, ver: Long = 1, jarNm: String = null, depJars: Array[String] = null): Unit = {
+    AddFactoryOfModelInstanceFactory(MakeFactoryOfModelInstanceFactory(nameSpace, name, modelRepSupported, physicalName, ver, jarNm, depJars))
   }
 
   @throws(classOf[AlreadyExistsException])

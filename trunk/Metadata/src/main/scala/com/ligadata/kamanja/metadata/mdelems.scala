@@ -623,8 +623,8 @@ class ArgDef {
   def typeString: String = aType.typeString
 }
 
-class FactoryOfModelInstanceFactoryDef extends BaseElemDef {
-  
+class FactoryOfModelInstanceFactoryDef(val modelRepSupported : ModelRepresentation.ModelRepresentation) extends BaseElemDef {
+    def ModelRepSupported : ModelRepresentation.ModelRepresentation = modelRepSupported
 }
 
 class FunctionDef extends BaseElemDef {
