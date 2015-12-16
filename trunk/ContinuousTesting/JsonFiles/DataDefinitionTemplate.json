@@ -17,8 +17,8 @@
                 "length": "5"
             },
             {
-                "name": "dateTime",
-                "type": "date",
+                "name": "datetime",
+                "type": "timeStamp",
                 "length": "1"
             },
             {
@@ -45,11 +45,6 @@
                 "name": "resource",
                 "type": "string",
                 "length": "10"
-            },
-            {
-                "name": "resource",
-                "type": "string",
-                "length": "7"
             },
             {
                 "name": "resourceHost",
@@ -88,11 +83,6 @@
             },
             {
                 "name": "proprietaryDataLabels",
-                "type": "string",
-                "length": "20"
-            },
-            {
-                "name": "proprietaryDatalengths",
                 "type": "string",
                 "length": "20"
             },

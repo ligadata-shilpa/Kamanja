@@ -5,10 +5,12 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.HashMap;
+
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import com.ligadata.dataGenerationToolBean.ConfigObj;
+
+import com.ligadata.dataGenerationTool.bean.ConfigObj;
 
 public class JsonUtility {
 	final Logger logger = Logger.getLogger(JsonUtility.class);

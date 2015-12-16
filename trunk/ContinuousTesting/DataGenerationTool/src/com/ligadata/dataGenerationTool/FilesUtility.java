@@ -8,8 +8,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
-import com.ligadata.dataGenerationToolBean.ConfigObj;
-import com.ligadata.dataGenerationToolBean.FileNameConfig;
+
+import com.ligadata.dataGenerationTool.bean.ConfigObj;
+import com.ligadata.dataGenerationTool.bean.FileNameConfig;
 
 import org.apache.log4j.Logger;
 

@@ -1,11 +1,9 @@
 package com.ligadata.dataGenerationTool;
 
-import java.text.SimpleDateFormat;
-
 import org.apache.log4j.Logger;
 
-import com.ligadata.dataGenerationToolBean.ConfigObj;
-import com.ligadata.dataGenerationToolBean.FileNameConfig;
+import com.ligadata.dataGenerationTool.bean.ConfigObj;
+import com.ligadata.dataGenerationTool.bean.FileNameConfig;
 
 public class TimeUtility {
 	final Logger logger = Logger.getLogger(TimeUtility.class);

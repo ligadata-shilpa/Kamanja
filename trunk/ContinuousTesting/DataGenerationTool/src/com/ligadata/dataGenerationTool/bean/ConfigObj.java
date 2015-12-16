@@ -1,4 +1,4 @@
-package com.ligadata.dataGenerationToolBean;
+package com.ligadata.dataGenerationTool.bean;
 
 public class ConfigObj {
 

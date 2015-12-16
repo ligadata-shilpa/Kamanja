@@ -4,8 +4,8 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.util.HashMap;
 
-import com.ligadata.dataGenerationToolBean.ConfigObj;
-import com.ligadata.dataGenerationToolBean.FileNameConfig;
+import com.ligadata.dataGenerationTool.bean.ConfigObj;
+import com.ligadata.dataGenerationTool.bean.FileNameConfig;
 
 import org.apache.log4j.Logger;
 import org.json.JSONObject;
@@ -30,10 +30,11 @@ public class MainClass {
 		FileNameConfig fileNameConfig = new FileNameConfig();
 
 		// read configuration file
-		logger.info("Reading config file from " + args[0]); 
-		String configFileLocation = args[0]; // path to
-												// DataGenerationConfig.json
-												// file
+		// logger.info("Reading config file from " + args[0]);
+		String configFileLocation = args[0]; // path
+																																				// to
+		// DataGenerationConfig.json
+		// file
 		JSONObject configJson = json.ReadJsonFile(configFileLocation);
 		ConfigObj configObj = json.CreateConfigObj(configJson);
 
@@ -47,14 +48,14 @@ public class MainClass {
 		// DurationInHours
 		double loopEndTime = time.RunDurationTime(configObj);
 		HashMap<String, String> fields = new HashMap<String, String>();
+
 		while (System.currentTimeMillis() < loopEndTime) {
 			fields = json.ReadMessageFields(templateJson, configObj);
 			String hit = record.GenerateHit(fields, configObj.getDelimiter());
-
 			if (configObj.isDropInFiles()) {
 				// write hit to file
-				file.writeFile(hit, destiniationDirectory,
-						configObj, fileNameConfig);
+				file.writeFile(hit, destiniationDirectory, configObj,
+						fileNameConfig);
 			} else if (configObj.isPushToKafka()) {
 				// code to push to kafka
 			}
