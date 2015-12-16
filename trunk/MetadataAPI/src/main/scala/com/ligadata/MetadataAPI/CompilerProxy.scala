@@ -514,7 +514,7 @@ class CompilerProxy {
       val depJars = getJarsFromClassPath(classPath)
       
       // figure out the Physical Model Name
-      var (dummy1, dummy2, dummy3, pName) = getModelMetadataFromJar(jarFileName, elements, depJars)
+      var (dummy1, dummy2, dummy3, pName) = getModelMetadataFromJar(jarFileName, elements, depJars, sourceLang)
 
       /* Create the ModelDef object
 
@@ -535,7 +535,7 @@ class CompilerProxy {
       val modDef: ModelDef = MdMgr.GetMdMgr.MakeModelDef(modelNamespace
                                                         , modelName
                                                         , pName
-                                                        , "RuleSet"
+                                                        , modelType
                                                         , getInputVarsFromElements(elements)
                                                         , List[(String, String, String)]()
                                                         , MdMgr.ConvertVersionToLong(MdMgr.FormatVersion(modelVersion))
@@ -679,7 +679,7 @@ class CompilerProxy {
     
     val depJars = getJarsFromClassPath(classPath)
 
-    (getModelMetadataFromJar(jarFileName, elements, depJars), finalSourceCode, packageName)
+    (getModelMetadataFromJar(jarFileName, elements, depJars, sourceLang), finalSourceCode, packageName)
 
   }
 
@@ -819,7 +819,7 @@ class CompilerProxy {
       }
   }
 
-  private def getModelMetadataFromJar(jarFileName: String, elements: Set[BaseElemDef], depJars: List[String]): (String, String, String, String) = {
+  private def getModelMetadataFromJar(jarFileName: String, elements: Set[BaseElemDef], depJars: List[String], sourceLang : String): (String, String, String, String) = {
 
     // Resolve ModelNames and Models versions - note, the jar file generated is still in the workDirectory.
     val loaderInfo = new KamanjaLoaderInfo()
@@ -883,10 +883,10 @@ class CompilerProxy {
 
               val mdlDef = MdMgr.GetMdMgr.MakeModelDef("", ""
                   , clsName
-                  , "jar"
+                  , sourceLang
                   , List[(String, String, String, String, Boolean, String)]()
                   , List[(String, String, String)]()
-                  , 0L
+                  , 1000000L
                   , ""
                   , Array[String]()
                   , false, false)

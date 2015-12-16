@@ -259,7 +259,6 @@ cp $ivyPath/cache/commons-codec/commons-codec/jars/commons-codec-1.2.jar $system
 cp $ivyPath/cache/commons-codec/commons-codec/jars/commons-codec-1.9.jar $systemlib
 cp $srcPath/lib_managed/jars/org.codehaus.jackson/jackson-mapper-asl/jackson-mapper-asl-1.9.13.jar $systemlib
 cp $ivyPath/cache/org.json4s/json4s-core_2.10/jars/json4s-core_2.10-3.2.9.jar $systemlib
-cp $srcPath/Pmml/JpmmlAdapter/target/scala-2.10/jpmmladapter_2.10-1.0.jar $systemlib
 cp $srcPath/lib_managed/jars/org.apache.commons/commons-pool2/commons-pool2-2.3.jar $systemlib
 cp $ivyPath/cache/org.joda/joda-convert/jars/joda-convert-1.7.jar $systemlib
 cp $ivyPath/cache/org.json4s/json4s-native_2.10/jars/json4s-native_2.10-3.2.9.jar $systemlib
@@ -507,13 +506,12 @@ cp $ivyPath/cache/org.apache.httpcomponents/httpcore/jars/httpcore-4.1.2.jar $sy
 cp $srcPath/lib_managed/jars/org.apache.cassandra/cassandra-thrift/cassandra-thrift-2.0.3.jar $systemlib
 cp $srcPath/Utils/ZooKeeper/CuratorListener/target/scala-2.10/zookeeperlistener_2.10-1.0.jar $systemlib
 cp $ivyPath/cache/io.spray/spray-json_2.10/jars/spray-json_2.10-1.2.5.jar $systemlib
+cp $srcPath/FactoriesOfModelInstanceFactory/JpmmlFactoryOfModelInstanceFactory/target/scala-2.10/jpmmlfactoryofmodelinstancefactory_2.10-1.0.jar $systemlib
 cp $ivyPath/cache/com.codahale.metrics/metrics-core/bundles/metrics-core-3.0.2.jar $systemlib
 cp $ivyPath/cache/commons-codec/commons-codec/jars/commons-codec-1.4.jar $systemlib
 cp $ivyPath/cache/org.json4s/json4s-ast_2.10/jars/json4s-ast_2.10-3.2.9.jar $systemlib
 cp $ivyPath/cache/com.101tec/zkclient/jars/zkclient-0.6.jar $systemlib
 cp $ivyPath/cache/io.spray/spray-testkit/jars/spray-testkit-1.3.1.jar $systemlib
-
-
 
 # -------------------- end of generated cp commands --------------------
 

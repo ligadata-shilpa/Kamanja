@@ -115,32 +115,28 @@ cat $KAMANJA_HOME/input/HelpMenu.txt
     echo ""
 elif [ "$INPUT" = "push data" ]; then
     $KAMANJA_HOME/bin/PushSampleDataToKafka.sh $INPUT
-#elif [ "$INPUT" = "kvinit" ]; then
-#count=0
-#FILEDIR=$KAMANJA_HOME/input/SampleApplications/bin
-#for entry in "$FILEDIR"/*
-#do
-#echo $entry | grep -i InitKvStores >> /dev/null
-#if [ $? = 0 ]; then
-#count=$((count+1))
-#  echo "$count: $entry"
-#  LISTOFFILES[count-1]=$entry
-#fi
-#done
-#read -p "Please select from the above options: " useroption
-#OPTION=useroption-1
-#INPUTFILE=${LISTOFFILES[OPTION]}
-#echo "User selected: $INPUTFILE"
-#$INPUTFILE
+  #elif [ "$INPUT" = "kvinit" ]; then
+  #count=0
+  #FILEDIR=$KAMANJA_HOME/input/SampleApplications/bin
+  #for entry in "$FILEDIR"/*
+  #do
+  #echo $entry | grep -i InitKvStores >> /dev/null
+  #if [ $? = 0 ]; then
+  #count=$((count+1))
+  #  echo "$count: $entry"
+  #  LISTOFFILES[count-1]=$entry
+  #fi
+  #done
+  #read -p "Please select from the above options: " useroption
+  #OPTION=useroption-1
+  #INPUTFILE=${LISTOFFILES[OPTION]}
+  #echo "User selected: $INPUTFILE"
+  #$INPUTFILE
 else
-<<<<<<< HEAD
     if [ -n "$attachDebugger" ]; then
         ipport="8998"
-        java -Xdebug -Xrunjdwp:transport=dt_socket,address="$ipport",server=y -jar $KAMANJA_HOME/bin/MetadataAPI-1.0 $INPUT
+        java -Xdebug -Xrunjdwp:transport=dt_socket,address="$ipport",server=y -Dlog4j.configurationFile=file:$KAMANJA_HOME/config/log4j2.xml -jar $KAMANJA_HOME/bin/MetadataAPI-1.0 $INPUT
     else
-        java -jar $KAMANJA_HOME/bin/MetadataAPI-1.0 $INPUT
+        java -Dlog4j.configurationFile=file:$KAMANJA_HOME/config/log4j2.xml -jar $KAMANJA_HOME/bin/MetadataAPI-1.0 $INPUT
     fi
-=======
-java -Dlog4j.configurationFile=file:$KAMANJA_HOME/config/log4j2.xml -jar $KAMANJA_HOME/bin/MetadataAPI-1.0 $INPUT
->>>>>>> dev
 fi

@@ -718,6 +718,10 @@ object MiningModelType extends Enumeration {
         case "supportvectormachinemodel" => SUPPORTVECTORMACHINEMODEL
         case "textmodel" => TEXTMODEL
         case "timeseriesmodel" => TIMESERIESMODEL
+        case "scala" => SCALA
+        case "java" => JAVA
+        case "binary" => BINARY
+        case "python" => PYTHON
         case _ => UNKNOWN
     }
     typ

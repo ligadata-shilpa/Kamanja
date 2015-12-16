@@ -17,6 +17,7 @@
 package com.ligadata.MetadataAPI
 
 
+import com.ligadata.KamanjaBase.FactoryOfModelInstanceFactory
 import com.ligadata.kamanja.metadata.MiningModelType._
 
 import com.ligadata.Serialize._
@@ -96,27 +97,32 @@ class JpmmlSupport(mgr : MdMgr
             val modelEvaluator = modelEvaluatorFactory.newModelManager(pmml)
 
             val modelDe : ModelDef = if (modelEvaluator != null) {
-                /**
+                /*
                  * Construct a ModelDef instance of com.ligadata.jpmml.JpmmlAdapter and the JPMML evaluator that will
                  * be used to interpret messages for the modelNamespace.modelName.version supplied here.  The supplied
                  * pmml is parsed to an org.dmg.pmml tree
                  *
-                 * The adapter is needed to get the appropriate jars and jar dependencies for the adapter.  The
-                 * evaluator is created now to obtain the output dependencies for the model.
+                 * The FactoryOfModelInstanceFactoryDef instance contains the necessary jar and dependency info.
                  *
+                 * An instance of the model is created with the appropriate evaluator is needed to
+                 *  a) obtain the output dependencies for the model, and
+                 *  b) generally vet this model to verify it is ingestable by the JpmmlEvaluator selected.
                  */
+                val onlyActive: Boolean = true
+                val latestVersion: Boolean = true
+                val facFacDefs : scala.collection.immutable.Set[FactoryOfModelInstanceFactoryDef] = mgr.ActiveFactoryOfMdlInstFactories
+                val optJpmmlFacFac : Option[FactoryOfModelInstanceFactoryDef] = facFacDefs.filter(facfac => {
+                    facfac.ModelRepSupported == ModelRepresentation.JPMML
+                }).headOption
+                val jpmmlFacFac : FactoryOfModelInstanceFactoryDef = optJpmmlFacFac.orNull
 
-                val onlyActive : Boolean = true
-                val latestVersion : Long = -1L
-                val optShimModel : Option[ModelDef] = mgr.Model("com.ligadata.jpmml.JpmmlAdapter", latestVersion, onlyActive)
-                val shimModel : ModelDef = optShimModel.orNull
-                val modelDefinition : ModelDef = if (shimModel == null) {
-                    logger.error("While building model metadata for $modelNamespace.$modelName, it was discovered that there is no model parent class.")
+                val modelDefinition : ModelDef = if (jpmmlFacFac == null) {
+                    logger.error(s"While building model metadata for $modelNamespace.$modelName, it was discovered that there is no factory for this model representation (${ModelRepresentation.JPMML}")
                     null
                 } else {
-                    val jarName: String = if (shimModel != null) shimModel.jarName else null
-                    val jarDeps: scala.Array[String] = if (shimModel != null) shimModel.dependencyJarNames else null
-                    val phyName: String = if (shimModel != null) shimModel.typeString else null
+                    val jarName: String = jpmmlFacFac.jarName
+                    val jarDeps: scala.Array[String] = jpmmlFacFac.dependencyJarNames
+                    val phyName: String = jpmmlFacFac.physicalName
 
                     /** make sure new msg is there. */
                     val msgver: Long = MdMgr.ConvertVersionToLong(msgVersion)
@@ -176,20 +182,20 @@ class JpmmlSupport(mgr : MdMgr
                         val withDots: Boolean = false
                         val msgVersionFormatted: String = MdMgr.ConvertLongVersionToString(msgver, withDots)
                         val model: ModelDef = mgr.MakeModelDef(modelNamespace
-                            , modelName
-                            , phyName
-                            , ModelRepresentation.JPMML
-                            , isReusable
-                            , s"$msgNamespace.$msgName.$msgVersionFormatted"
-                            , pmmlText
-                            , DetermineMiningModelType(modelEvaluator)
-                            , inVars
-                            , outVars
-                            , MdMgr.ConvertVersionToLong(version)
-                            , jarName
-                            , jarDeps
-                            , recompile
-                            , supportsInstanceSerialization)
+                                                            , modelName
+                                                            , phyName
+                                                            , ModelRepresentation.JPMML
+                                                            , isReusable
+                                                            , s"$msgNamespace.$msgName.$msgVersionFormatted"
+                                                            , pmmlText
+                                                            , DetermineMiningModelType(modelEvaluator)
+                                                            , inVars
+                                                            , outVars
+                                                            , MdMgr.ConvertVersionToLong(version)
+                                                            , jarName
+                                                            , jarDeps
+                                                            , recompile
+                                                            , supportsInstanceSerialization)
 
                         /** dump the model def to the log for time being */
                         logger.debug(modelDefToString(model))
