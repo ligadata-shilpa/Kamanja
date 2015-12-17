@@ -32,7 +32,7 @@ import com.ibm.msg.client.jms.JmsFactoryFactory
 import com.ibm.msg.client.wmq.WMQConstants
 import com.ibm.msg.client.wmq.common.CommonConstants
 import com.ibm.msg.client.jms.JmsConstants
-import com.ligadata.Exceptions.StackTrace
+import com.ligadata.Exceptions.{InvalidArgumentException, FatalAdapterException, StackTrace}
 import com.ligadata.KamanjaBase.DataDelimiters
 
 object IbmMqConsumer extends InputAdapterObj {
@@ -51,10 +51,10 @@ class IbmMqConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: Input
   }
 
   private def processJMSException(jmsex: JMSException) {
-    LOG.error(jmsex)
+    LOG.error("MQ input adapter " + qc.Name + ": JMSException summary",jmsex)
     var innerException: Throwable = jmsex.getLinkedException
     if (innerException != null) {
-      LOG.error("Inner exception(s):")
+      LOG.error("MQ input adapter " + qc.Name + ":Inner exception(s):")
     }
     while (innerException != null) {
       LOG.error(innerException)
@@ -77,46 +77,64 @@ class IbmMqConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: Input
   var executor: ExecutorService = _
   val input = this
 
+  private val max_retries = 3
+  private val max_sleep_time = 60000
+  private var retry_counter = 0
+  private val initSleepTimer = 2000
+  private var currSleepTime = initSleepTimer
+  private var isShutdown = false
+
+
   override def Shutdown: Unit = lock.synchronized {
+    isShutdown = true
     StopProcessing
   }
 
   override def StopProcessing: Unit = lock.synchronized {
-    LOG.debug("===============> Called StopProcessing")
+    LOG.debug("MQ input adapter " + qc.Name + ":===============> Called StopProcessing")
+    retry_counter = 0
+
     //BUGBUG:: Make sure we finish processing the current running messages.
-    if (consumer != null) {
+    while (consumer != null) {
       try {
         consumer.close()
+        consumer = null
+        retry_counter = 0
       } catch {
         case jmsex: Exception => {
-          LOG.error("Producer could not be closed.")
-          printFailure(jmsex)
+          LOG.error("MQ input adapter " + qc.Name + ": Consumer could not be closed.")
+          checkForRetry(jmsex)
         }
       }
     }
 
     // Do we need to close destination ??
-
-    if (session != null) {
+    while (session != null) {
       try {
         session.close()
+        session = null
+        retry_counter = 0
       } catch {
         case jmsex: Exception => {
-          LOG.error("Session could not be closed.")
-          printFailure(jmsex)
+          LOG.error("MQ input adapter " + qc.Name + ": Session could not be closed.")
+          checkForRetry(jmsex)
         }
       }
     }
-    if (connection != null) {
+
+    while (connection != null) {
       try {
         connection.close()
+        connection = null
+        retry_counter = 0
       } catch {
         case jmsex: Exception => {
-          LOG.error("Connection could not be closed.")
-          printFailure(jmsex)
+          LOG.error("MQ input adapter " + qc.Name + ": Connection could not be closed.")
+          checkForRetry(jmsex)
         }
       }
     }
+    retry_counter = 0
 
     if (executor != null) {
       executor.shutdownNow()
@@ -125,16 +143,16 @@ class IbmMqConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: Input
       }
     }
 
-    connection = null
-    session = null
     destination = null
-    consumer = null
     executor = null
   }
 
   // Each value in partitionInfo is (PartitionUniqueRecordKey, PartitionUniqueRecordValue, Long, PartitionUniqueRecordValue) key, processed value, Start transactionid, Ignore Output Till given Value (Which is written into Output Adapter) 
   override def StartProcessing(partitionInfo: Array[StartProcPartInfo], ignoreFirstMsg: Boolean): Unit = lock.synchronized {
-    LOG.debug("===============> Called StartProcessing")
+    var receivedMessage: Message = null
+    isShutdown = false
+
+    LOG.debug("MQ input adapter " + qc.Name + ": ===============> Called StartProcessing")
     if (partitionInfo == null || partitionInfo.size == 0)
       return
 
@@ -143,6 +161,7 @@ class IbmMqConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: Input
     try {
       val ff = JmsFactoryFactory.getInstance(JmsConstants.WMQ_PROVIDER)
       val cf = ff.createConnectionFactory()
+
       cf.setStringProperty(CommonConstants.WMQ_HOST_NAME, qc.host_name)
       cf.setIntProperty(CommonConstants.WMQ_PORT, qc.port)
       cf.setStringProperty(CommonConstants.WMQ_CHANNEL, qc.channel)
@@ -150,24 +169,72 @@ class IbmMqConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: Input
       cf.setStringProperty(CommonConstants.WMQ_QUEUE_MANAGER, qc.queue_manager)
       if (qc.ssl_cipher_suite.size > 0)
         cf.setStringProperty(CommonConstants.WMQ_SSL_CIPHER_SUITE, qc.ssl_cipher_suite)
-      // cf.setStringProperty(WMQConstants.WMQ_APPLICATIONNAME, qc.application_name)
-      connection = cf.createConnection()
-      session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
-      if (qc.queue_name != null && qc.queue_name.size > 0)
-        destination = session.createQueue(qc.queue_name)
-      else if (qc.topic_name != null && qc.topic_name.size > 0)
-        destination = session.createTopic(qc.topic_name)
-      else {
-        // Throw error
+
+      retry_counter = 0
+      // If we cant create a connection, return immediately.. invalid parameters
+      while (connection == null) {
+        try {
+          connection = cf.createConnection()
+          retry_counter = 0
+        } catch {
+          case jmsex: Exception => {
+            LOG.error("MQ input adapter " + qc.Name + ": Connection could not be created")
+            checkForRetry(jmsex)
+          }
+        }
       }
-      consumer = session.createConsumer(destination)
-      connection.start()
+
+      while (session == null) {
+        try {
+          session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
+          retry_counter = 0
+        } catch {
+          case jmsex: Exception => {
+            LOG.error("MQ input adapter " + qc.Name + ": Session could not be created")
+            checkForRetry(jmsex)
+          }
+        }
+      }
+
+      if (qc.queue_name != null && qc.queue_name.size > 0)
+        destination = createQueue(qc.queue_name)
+      else if (qc.topic_name != null && qc.topic_name.size > 0)
+        destination = createTopic(qc.queue_name)
+      else {
+        throw new FatalAdapterException("MQ input adapter " + qc.Name + ": Both Queue and Topic names are missing ", new InvalidArgumentException("Missing queue anme and topic name"))
+      }
+
+      while (consumer == null) {
+        try {
+           consumer = session.createConsumer(destination)
+          retry_counter = 0
+        } catch {
+          case jmsex: JMSException => {
+            LOG.error("MQ input adapter " + qc.Name + ": Unable to create JMX Consumer ")
+            checkForRetry(jmsex)
+          }
+        }
+      }
+
+      var isStarted = false
+      while (!isStarted) {
+        try {
+          connection.start()
+          isStarted = true
+          retry_counter = 0
+        } catch {
+          case jmsex: JMSException => {
+            LOG.error("MQ input adapter " + qc.Name + ": Unable to start JMX Connection ")
+            checkForRetry(jmsex)
+          }
+        }
+      }
     } catch {
+      case fae: FatalAdapterException => throw fae
       case jmsex: Exception =>
-        val stackTrace = StackTrace.ThrowableTraceString(jmsex)
-        LOG.debug("\nstackTrace:" + stackTrace)
+        LOG.error("MQ input adapter " + qc.Name + ": Exception establishing a connection to the adapter.")
         printFailure(jmsex)
-        return
+        throw new FatalAdapterException("Fata Adapter Exception", jmsex)
     }
 
     val delimiters = new DataDelimiters()
@@ -188,9 +255,9 @@ class IbmMqConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: Input
       kvs(quad._1.Name) = quad
     })
 
-    LOG.debug("KV Map =>")
+    LOG.debug("MQ input adapter " + qc.Name + ": KV Map =>")
     kvs.foreach(kv => {
-      LOG.debug("Key:%s => Val:%s".format(kv._2._1.Serialize, kv._2._2.Serialize))
+      LOG.debug("MQ input adapter " + qc.Name + ": Key:%s => Val:%s".format(kv._2._1.Serialize, kv._2._2.Serialize))
     })
 
     try {
@@ -211,12 +278,27 @@ class IbmMqConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: Input
 
             try {
               breakable {
-                while (true /* cntr < 100 */ ) {
-                  // LOG.debug("Partition:%d Message:%s".format(message.partition, new String(message.message)))
+                while (!isShutdown ) {
                   var executeCurMsg = true
 
                   try {
-                    val receivedMessage = consumer.receive() // Can we wait for N milli secs??
+                    receivedMessage = null
+                    // Keep retrying to get the message.  Eventually this should be redesigned, that the engine should
+                    // be able to be notified of this issue...  ALSO:  Do we need to rebuild all the MQ sturctures?
+                    while (receivedMessage == null && !isShutdown) {
+                      try {
+                        receivedMessage = consumer.receive()
+                        currSleepTime = initSleepTimer
+                      } catch {
+                        case jmsex: JMSException => {
+                          LOG.error("MQ input adapter " + qc.Name + ":Exception receiving message from MQ Consumer.")
+                          printFailure(jmsex)
+                          var blah = getSleepTime
+                           Thread.sleep(blah)
+                        }
+                      }
+                    }
+
                     val readTmNs = System.nanoTime
                     val readTmMs = System.currentTimeMillis
 
@@ -254,11 +336,11 @@ class IbmMqConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: Input
                           cntrAdapter.addCntr(key, 1) // for now adding each row
 
                         } else {
-                          LOG.error("Found unhandled message :" + receivedMessage.getClass().getName())
+                          LOG.error("MQ input adapter " + qc.Name + ": Found unhandled message :" + receivedMessage.getClass().getName())
                         }
                       } catch {
                         case e: Exception => {
-                          LOG.error("Failed with Message:" + e.getMessage)
+                          LOG.error("MQ input adapter " + qc.Name + ": Failed with Message:" + e.getMessage)
                           printFailure(e)
                         }
                       }
@@ -266,28 +348,29 @@ class IbmMqConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: Input
                     }
                   } catch {
                     case e: Exception => {
-                      LOG.error("Failed with Message:" + e.getMessage)
+                      LOG.error("MQ input adapter " + qc.Name + ": Failed with Message:" + e.getMessage)
                       printFailure(e)
                     }
                   }
                   if (executor.isShutdown) {
+                    LOG.info("MQ input adapter " + qc.Name + ": Adapter is stopping processing incoming messages.  Shutdown detected")
                     break
                   }
                 }
               }
             } catch {
               case e: Exception => {
-                LOG.error("Failed with Reason:%s Message:%s".format(e.getCause, e.getMessage))
+                LOG.error("MQ input adapter " + qc.Name + ": Failed with Reason:%s Message:%s".format(e.getCause, e.getMessage))
                 printFailure(e)
               }
             }
-            LOG.debug("===========================> Exiting Thread")
+            LOG.debug("MQ input adapter " + qc.Name + ": ===========================> Exiting Thread")
           }
         });
       }
     } catch {
       case e: Exception => {
-        LOG.error("Failed to setup Streams. Reason:%s Message:%s".format(e.getCause, e.getMessage))
+        LOG.error("MQ input adapter " + qc.Name + ": Failed to setup Streams. Reason:%s Message:%s".format(e.getCause, e.getMessage))
         printFailure(e)
       }
     }
@@ -312,13 +395,13 @@ class IbmMqConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: Input
   override def DeserializeKey(k: String): PartitionUniqueRecordKey = {
     val key = new IbmMqPartitionUniqueRecordKey
     try {
-      LOG.debug("Deserializing Key:" + k)
+      LOG.debug("MQ input adapter " + qc.Name + ": Deserializing Key:" + k)
       key.Deserialize(k)
     } catch {
       case e: Exception => {
-        LOG.error("Failed to deserialize Key:%s. Reason:%s Message:%s".format(k, e.getCause, e.getMessage))
+        LOG.error("MQ input adapter " + qc.Name + ": Failed to deserialize Key:%s. Reason:%s Message:%s".format(k, e.getCause, e.getMessage))
         printFailure(e)
-        throw e
+        throw new FatalAdapterException("Invalid Key " + k, e)
       }
     }
     key
@@ -328,17 +411,65 @@ class IbmMqConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: Input
     val vl = new IbmMqPartitionUniqueRecordValue
     if (v != null) {
       try {
-        LOG.debug("Deserializing Value:" + v)
+        LOG.debug("MQ input adapter " + qc.Name + ": Deserializing Value:" + v)
         vl.Deserialize(v)
       } catch {
         case e: Exception => {
-          LOG.error("Failed to deserialize Value:%s. Reason:%s Message:%s".format(v, e.getCause, e.getMessage))
+          LOG.error("MQ input adapter " + qc.Name + ": Failed to deserialize Value:%s. Reason:%s Message:%s".format(v, e.getCause, e.getMessage))
           printFailure(e)
-          throw e
+          throw FatalAdapterException("Invalid Value " + v, e)
         }
       }
     }
     vl
+  }
+
+  private def createQueue(tName: String): Destination = {
+    var tDest: Destination = null
+    while (tDest == null) {
+      try {
+        tDest = session.createQueue(tName)
+        retry_counter = 0
+      } catch {
+        case jmsex: JMSException => {
+          LOG.error("MQ input adapter " + qc.Name + ": Destination could not be created. ")
+          checkForRetry(jmsex)
+        }
+      }
+    }
+    tDest
+  }
+
+  private def createTopic(tName: String): Destination = {
+    var tDest: Destination = null
+    while (tDest == null) {
+      try {
+        tDest = session.createTopic(tName)
+        retry_counter = 0
+      } catch {
+        case jmsex: JMSException => {
+          LOG.error("MQ input adapter " + qc.Name + ": Destination could not be created ")
+          checkForRetry(jmsex)
+        }
+      }
+    }
+    tDest
+  }
+
+  private def checkForRetry (jmsex: Exception): Unit = {
+    retry_counter += 1
+    LOG.error("MQ input adapter " + qc.Name + ": Retrying "+retry_counter + "/"+max_retries)
+    printFailure(jmsex)
+    if (retry_counter >= max_retries) {
+      throw new FatalAdapterException("MQ input adapter " + qc.Name + ": Fatal exception",jmsex)
+    }
+    Thread.sleep(initSleepTimer)
+  }
+
+  private def getSleepTime: Int = {
+    val tts = scala.math.min(currSleepTime, max_sleep_time)
+    currSleepTime = tts * 2
+    tts
   }
 
   // Not yet implemented
