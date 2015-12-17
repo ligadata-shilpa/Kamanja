@@ -37,6 +37,8 @@ mergeStrategy in assembly <<= (mergeStrategy in assembly) { (old) =>
     case x if x contains "com/fasterxml/jackson/core" => MergeStrategy.first
     case x if x contains "com\\fasterxml\\jackson\\core" => MergeStrategy.first
     case x if x contains "commons-logging" => MergeStrategy.first
+    case x if x contains "org/slf4j/impl" => MergeStrategy.first
+    case x if x contains "org\\slf4j\\impl" => MergeStrategy.first
     case "log4j.properties" => MergeStrategy.first
     case "unwanted.txt"     => MergeStrategy.discard
     case x => old(x)
@@ -52,6 +54,6 @@ name := "Kamanja"
 
 version := "1.3.0"
 
-scalaVersion := "2.10"
+scalaVersion := "2.10.4"
 
 resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
