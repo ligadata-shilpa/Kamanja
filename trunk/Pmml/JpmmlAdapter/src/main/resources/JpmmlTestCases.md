@@ -22,17 +22,30 @@ cd $KAMANJA_HOME
 ##**Unit Test 1  <<<<<<<<<<<<<<<<<<**
 ##**<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<**
 
-##**Add the message for this decision_tree_iris.pmml model**
+##**Add the message (v 1.01) for this decision_tree_iris.pmml model**
 $KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add message $KAMANJA_SRCDIR/Pmml/JpmmlAdapter/src/main/resources/metadata/message/IrisMsg1.json
+
+##**Get all messages**
+$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties getallmessages
+$KAMANJA_HOME/bin/kamanja debug $KAMANJA_HOME/config/MetadataAPIConfig.properties getallmessages
 
 ##**Add the decision_tree_iris.pmml model (version 000000.000001.000001)**
 $KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties 'addModel type (jpmml) name(com.botanical.jpmml.IrisDecisionTree) modelversion(000000.000001.000001) message(System.IrisMsg) messageversion(00.01.01) pmml(/home/rich/github/dev/Sprint8FeaturesWithJpmml/kamanja/trunk/Pmml/JpmmlAdapter/src/main/resources/metadata/model/KNIME/single_iris_dectree.xml)'
+$KAMANJA_HOME/bin/kamanja debug $KAMANJA_HOME/config/MetadataAPIConfig.properties 'addModel type (jpmml) name(com.botanical.jpmml.IrisDecisionTree) modelversion(000000.000001.000001) message(System.IrisMsg) messageversion(00.01.01) pmml(/home/rich/github/dev/Sprint8FeaturesWithJpmml/kamanja/trunk/Pmml/JpmmlAdapter/src/main/resources/metadata/model/KNIME/single_iris_dectree.xml)'
 
-##**Add a new version of the message (v 1.02) for this decision_tree_iris.pmml model**
+##**Get all models**
+$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties getallmodels
+
+##**Add a new version of the message (v 1.02) for this decision_tree_iris.pmml model (this says it succeeds but really it fails ... multiple messages of same name but different versions are not supported... is this documented?)**
 $KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add message $KAMANJA_SRCDIR/Pmml/JpmmlAdapter/src/main/resources/metadata/message/IrisMsg2.json
+$KAMANJA_HOME/bin/kamanja debug $KAMANJA_HOME/config/MetadataAPIConfig.properties add message $KAMANJA_SRCDIR/Pmml/JpmmlAdapter/src/main/resources/metadata/message/IrisMsg2.json
+
+##**Update messsage v1.01 with version v1.02... this works**
+$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties update message $KAMANJA_SRCDIR/Pmml/JpmmlAdapter/src/main/resources/metadata/message/IrisMsg2.json
+$KAMANJA_HOME/bin/kamanja debug $KAMANJA_HOME/config/MetadataAPIConfig.properties update message $KAMANJA_SRCDIR/Pmml/JpmmlAdapter/src/main/resources/metadata/message/IrisMsg2.json
 
 ##**Update the version model (version 000000.000001.000001 to 000000.000001.000002)**
-$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties 'updateModel type(jpmml) name(com.botanical.jpmml.IrisDecisionTree) newVersion(000000.000001.000002) pmml(/home/rich/github/dev/Sprint8FeaturesWithJpmml/kamanja/trunk/Pmml/JpmmlAdapter/src/main/resources/metadata/model/KNIME/single_iris_dectree.xml)'
+$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties 'updateModel type(jpmml) name(com.botanical.jpmml.IrisDecisionTree) newVersion(0.1.2) pmml(/home/rich/github/dev/Sprint8FeaturesWithJpmml/kamanja/trunk/Pmml/JpmmlAdapter/src/main/resources/metadata/model/KNIME/single_iris_dectree.xml)'
 
 ##**Get all models**
 $KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties getallmodels
@@ -41,26 +54,9 @@ $KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties geta
 $KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties remove model com.botanical.jpmml.IrisDecisionTree.000000000001000002
 $KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties remove model com.botanical.jpmml.irisdecisiontree.000000000001000001
 
+
 ##**<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<**
 ##**Unit Test 2  <<<<<<<<<<<<<<<<<<**
-##**<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<**
-##**Add the decision_tree_iris.pmml model (version 000000.000001.000001)**
-
-$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties 'addModel type (jpmml) name(com.botanical.jpmml.IrisDecisionTree) modelversion(000000.000001.000001) message(System.IrisMsg) messageversion(00.01.01) pmml(/home/rich/github/dev/Sprint8FeaturesWithJpmml/kamanja/trunk/Pmml/JpmmlAdapter/src/main/resources/metadata/model/KNIME/single_iris_dectree.xml)'
-
-##**Force "recompile" of Jpmml models by updating message $KAMANJA_SRCDIR/Pmml/JpmmlAdapter/src/main/resources/metadata/message/IrisMsg1.json with Iris2.msg and then IrisMsg3.json**
-$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties update message $KAMANJA_SRCDIR/Pmml/JpmmlAdapter/src/main/resources/metadata/message/IrisMsg3.json
-
-##**Remove the model** 
-$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties remove model com.botanical.jpmml.IrisDecisionTree.000000000001000001
-
-##**Get all messages**
-$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties getallmessages
-##**Get all models**
-$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties getallmodels
-
-##**<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<**
-##**Unit Test 3  <<<<<<<<<<<<<<<<<<**
 ##**<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<**
 ##**Add model bad argument tests**
 
@@ -83,7 +79,7 @@ $KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties 'add
 
 
 ##**<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<**
-##**Unit Test 4  <<<<<<<<<<<<<<<<<<**
+##**Unit Test 3  <<<<<<<<<<<<<<<<<<**
 ##**<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<**
 ##**Update model bad argument tests**
 
@@ -111,13 +107,6 @@ $KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties uplo
 
 ##**Add the jpmml message (IrisMsg1.json has version = 00.01.01)**
 $KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add message $KAMANJA_SRCDIR/Pmml/JpmmlAdapter/src/main/resources/metadata/message/IrisMsg1.json
-
-##**Add the faux message JpmmlAdapterMsg.json in order to build the JpmmlAdapter (JpmmlAdapter accepts any message, but to build it, we identify just one)**
-$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add message $KAMANJA_SRCDIR/Pmml/JpmmlAdapter/src/main/resources/metadata/message/JpmmlAdapterMsg.json
-
-##**Install the JpmmlAdapter**
-$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties upload compile config $KAMANJA_SRCDIR/Pmml/JpmmlAdapter/src/main/resources/metadata/config/JpmmlAdapterCompileConfig.json
-$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add model scala $KAMANJA_SRCDIR/Pmml/JpmmlAdapter/src/main/scala/com/ligadata/jpmml/JpmmlAdapter.scala DEPENDSON JpmmlAdapter
 
 ##**Install the JPMML Models that consume the Iris dataset... there are four of them... three generated by the Rattle extension to R and one by KNIME**
 $KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties 'addModel type (jpmml) name(com.botanical.jpmml.IrisDecisionTree) modelversion(000000.000001.000001) message(System.IrisMsg) messageversion(00.01.01) pmml(/home/rich/github/dev/Sprint8FeaturesWithJpmml/kamanja/trunk/Pmml/JpmmlAdapter/src/main/resources/metadata/model/KNIME/single_iris_dectree.xml)'

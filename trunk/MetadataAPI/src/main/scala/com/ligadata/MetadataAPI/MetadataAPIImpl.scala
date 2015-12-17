@@ -2656,20 +2656,9 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      *          var result = MetadataAPIImpl.getApiResult(apiResult)
      *          println("Result as Json String => \n" + result._2)
      *          }}}
- */
-  def AddMessage(messageText: String, format: String, userid: Option[String] = None): String = {
-    AddContainerOrMessage(messageText, format, userid)
-  }
-
-    /**
-     * AddMessage
-     * @param messageText
-     * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
-     *               method. If Security and/or Audit are configured, this value must be a value other than None.
-     * @return
      */
-  def AddMessage(messageText: String, userid: Option[String]): String = {
-    AddMessage(messageText, "JSON", userid)
+  override def AddMessage(messageText: String, format: String, userid: Option[String] = None): String = {
+    AddContainerOrMessage(messageText, format, userid)
   }
 
     /**
@@ -3846,7 +3835,11 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
                     custModDef
                 }
             } else {
-                val reasonable : Boolean = (mod.FullName == msgDef.FullName)
+                /** the msgConsumed is namespace.name.version  ... drop the version so as to compare the "FullName" */
+                val buffer : StringBuilder = new StringBuilder
+                val modMsgNameParts : Array[String] = if (mod.msgConsumed != null) mod.msgConsumed.split('.') else Array[String]()
+                val modMsgFullName : String = modMsgNameParts.dropRight(1).addString(buffer,".").toString.toLowerCase
+                val reasonable : Boolean = (modMsgFullName == msgDef.FullName)
                 if (reasonable) {
                     val msgName: String = msgDef.Name
                     val msgNamespace: String = msgDef.NameSpace
@@ -3875,9 +3868,9 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
             val latestVersion = if (modDef == null) None else GetLatestModel(modDef)
             val isValid: Boolean = (modDef != null)
             if (isValid) {
-                RemoveModel(latestVersion.get.nameSpace, latestVersion.get.name, latestVersion.get.ver, None)
+                val rmResult : String = RemoveModel(latestVersion.get.nameSpace, latestVersion.get.name, latestVersion.get.ver, None)
                 UploadJarsToDB(modDef)
-                val result = AddModel(modDef,userid)
+                val addResult : String = AddModel(modDef,userid)
                 var objectsUpdated = new Array[BaseElemDef](0)
                 var operations = new Array[String](0)
                 objectsUpdated = objectsUpdated :+ latestVersion.get
@@ -3885,19 +3878,19 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
                 objectsUpdated = objectsUpdated :+ modDef
                 operations = operations :+ "Add"
                 NotifyEngine(objectsUpdated, operations)
-                result
+                s"\nRecompileModel results for ${mod.NameSpace}.${mod.Name}.${mod.Version}\n$rmResult$addResult"
             } else {
-                val reasonForFailure: String = ErrorCodeConstants.Add_Model_Failed
-                val modDefName: String = if (modDef != null) modDef.FullName else "(compilation failed)"
-                val modDefVer: String = if (modDef != null) MdMgr.Pad0s2Version(modDef.Version) else MdMgr.UnknownVersion
-                var apiResult = new ApiResult(ErrorCodeConstants.Failure, "RecompileModel", null, reasonForFailure + ":" + modDefName + "." + modDefVer)
+                val reasonForFailure: String = ErrorCodeConstants.Model_ReCompilation_Failed
+                val modDefName: String = if (mod != null) mod.FullName else "(compilation failed)"
+                val modDefVer: String = if (mod != null) MdMgr.Pad0s2Version(mod.Version) else MdMgr.UnknownVersion
+                var apiResult = new ApiResult(ErrorCodeConstants.Failure, "\nRecompileModel", null, reasonForFailure + ":" + modDefName + "." + modDefVer)
                 apiResult.toString()
             }
         } catch {
             case e: ModelCompilationFailedException => {
                 val stackTrace = StackTrace.ThrowableTraceString(e)
                 logger.debug("\nStackTrace:" + stackTrace)
-                var apiResult = new ApiResult(ErrorCodeConstants.Failure, "RecompileModel", null, "Error in producing scala file or Jar file.." + ErrorCodeConstants.Add_Model_Failed)
+                var apiResult = new ApiResult(ErrorCodeConstants.Failure, "\nRecompileModel", null, "Error in producing scala file or Jar file.." + ErrorCodeConstants.Add_Model_Failed)
                 apiResult.toString()
             }
             case e: AlreadyExistsException => {
@@ -4084,26 +4077,28 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
                      * FIXME: else is "offline" as it were.
                      *
                      */
-                    if( versionUpdated != null ){
+                    val rmModelResult : String = if( versionUpdated != null ){
                         RemoveModel(versionUpdated.NameSpace, versionUpdated.Name, versionUpdated.Version, None)
+                    } else {
+                        ""
                     }
                     logger.info("Begin uploading dependent Jars, please wait...")
                     UploadJarsToDB(modDef)
                     logger.info("uploading dependent Jars complete")
 
-                    val apiResult = AddModel(modDef, optUserid)
+                    val addResult = AddModel(modDef, optUserid)
                     logger.debug("Model is added..")
                     var objectsAdded = new Array[BaseElemDef](0)
                     objectsAdded = objectsAdded :+ modDef
                     val operations = for (op <- objectsAdded) yield "Add"
                     logger.debug("Notify engine via zookeeper")
                     NotifyEngine(objectsAdded, operations)
-                    apiResult
+                    s"UpdateModel version $version of $modelNmSpace.$modelNm results:\n$rmModelResult\n$addResult"
                 } else {
                     val reasonForFailure: String = if (modDef != null) {
-                        ErrorCodeConstants.Add_Model_Failed_Higher_Version_Required
+                        ErrorCodeConstants.Update_Model_Failed_Invalid_Version
                     } else {
-                        ErrorCodeConstants.Add_Model_Failed
+                        ErrorCodeConstants.Update_Model_Failed
                     }
                     val modDefName: String = if (modDef != null) modDef.FullName else "(pmml compile failed)"
                     val modDefVer: String = if (modDef != null) MdMgr.Pad0s2Version(modDef.Version) else MdMgr.UnknownVersion
@@ -4120,7 +4115,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
                     val apiResult = new ApiResult(ErrorCodeConstants.Failure
                         , s"UpdateModel(type = JPMML)"
                         , null
-                        , s"Error : ${e.toString} + ${ErrorCodeConstants.Add_Model_Failed}")
+                        , s"Error : ${e.toString} + ${ErrorCodeConstants.Update_Model_Failed}")
                     apiResult.toString()
                 }
                 case e: AlreadyExistsException => {
@@ -4129,7 +4124,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
                     val apiResult = new ApiResult(ErrorCodeConstants.Failure
                         , s"UpdateModel(type = JPMML)"
                         , null
-                        , s"Error : ${e.toString} + ${ErrorCodeConstants.Add_Model_Failed}")
+                        , s"Error : ${e.toString} + ${ErrorCodeConstants.Update_Model_Failed}")
                     apiResult.toString()
                 }
                 case e: Exception => {
@@ -4138,7 +4133,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
                     val apiResult = new ApiResult(ErrorCodeConstants.Failure
                         , s"UpdateModel(type = JPMML)"
                         , null
-                        , s"Error : ${e.toString} + ${ErrorCodeConstants.Add_Model_Failed}")
+                        , s"Error : ${e.toString} + ${ErrorCodeConstants.Update_Model_Failed}")
                     apiResult.toString()
                 }
             }
