@@ -98,7 +98,7 @@ public class BufferedPartitionedAvroSink implements BufferedMessageProcessor {
 	public void processAll() throws Exception {
 		for (String key : buffer.keySet()) {
 			try {
-				logger.info("Writing partition [" + key + "]");
+				logger.debug("Writing partition [" + key + "]");
 				String filename = name + ".avro";
 				if(key != null && !key.equalsIgnoreCase(""))
 					filename = key + "/" + filename;

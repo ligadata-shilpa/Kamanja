@@ -76,7 +76,6 @@ public class BufferedJDBCSink extends AbstractJDBCSink {
 					statement.addBatch();
 			}
 
-			logger.info("Saving messages to database");
 			statement.executeBatch();
 		} catch (BatchUpdateException e) {
 			logger.error("Error saving messages : " + e.getMessage(), e);

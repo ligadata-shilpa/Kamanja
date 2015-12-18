@@ -76,7 +76,6 @@ public class FileStatusSink extends AbstractJDBCSink {
 	    }
 	    
 		try {
-	        logger.info("Saving messages to database");
 	        statement.executeBatch();
 	        connection.commit();
 		} catch (BatchUpdateException e) {

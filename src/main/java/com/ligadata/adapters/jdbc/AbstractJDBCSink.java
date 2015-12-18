@@ -29,7 +29,7 @@ public abstract class AbstractJDBCSink implements BufferedMessageProcessor {
 		int type;
 		String[] path;
 
-		private ParameterMapping(String name, int type, String[] path) {
+		protected ParameterMapping(String name, int type, String[] path) {
 			this.typeName = name;
 			this.type = type;
 			this.path = path;

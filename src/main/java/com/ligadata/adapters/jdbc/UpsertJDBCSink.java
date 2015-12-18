@@ -96,7 +96,6 @@ public class UpsertJDBCSink extends AbstractJDBCSink {
 							insertStatement.execute();
 					}
 
-					logger.debug("Saving message to database");
 					connection.commit();
 				}
 			}

@@ -159,6 +159,7 @@ public class KafkaConsumer implements Runnable {
 		ConsumerIterator<byte[], byte[]> it = kafkaStream.iterator();
 		long messageCount = 0;
 		long nextSyncTime = System.currentTimeMillis() + syncInterval;
+		long start = System.currentTimeMillis();
 		while (!stop) {
 			try {
 				if (hasNext(it)) {
@@ -182,13 +183,18 @@ public class KafkaConsumer implements Runnable {
 			}
 
 			if (messageCount > 0 && (messageCount >= syncMessageCount || System.currentTimeMillis() >= nextSyncTime)) {
-				logger.info("Saving " + messageCount + " messages.");
+				long endRead = System.currentTimeMillis();
+				logger.info("Saving " + messageCount + " messages. Read time " + (endRead - start) + " msecs.");
 				processWithRetry();
 				processor.clearAll();
+				long endWrite = System.currentTimeMillis();
 				consumer.commitOffsets();
 				totalMessageCount += messageCount;
+				logger.info("Saved " + messageCount + " messages. Write time " + (endWrite - endRead) + " msecs.");
+
 				messageCount = 0;
 				nextSyncTime = System.currentTimeMillis() + syncInterval;
+				start = System.currentTimeMillis();
 			}
 		}
 

@@ -46,6 +46,15 @@ public class AdapterConfiguration {
 	public static final String DBCP_TEST_ON_BORROW = "dbcp.testonborrow";
 	public static final String DBCP_VALIDATION_QUERY = "dbcp.validationquery";
 
+	public static final String FILE_FIELD_SEPERATOR = "file.field.seperator";
+	public static final String FILE_FIELD_ORDER = "file.field.order";
+	public static final String FILE_RECORD_SEPERATOR = "file.record.seperator";
+	public static final String WORKING_DIRECTORY = "working.directory";
+	public static final String SQLSERVER_SHARE = "sqlserver.share";
+	public static final String INSERT_TABLE_NAME = "insert.table.name";
+	public static final String INSERT_FORMAT_FILE = "insert.format.file";
+
+
 	private Properties properties;
 
 	public AdapterConfiguration() throws IOException {
