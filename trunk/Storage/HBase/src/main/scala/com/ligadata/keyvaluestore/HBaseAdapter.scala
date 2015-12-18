@@ -67,19 +67,6 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
   private var containerList: scala.collection.mutable.Set[String] = scala.collection.mutable.Set[String]()
   private var msg:String = ""
 
-
-  /*
-  private def setLogLevel(level: Level) = {
-    val ctx = LogManager.getContext(false);
-    val config = ctx.getConfiguration();
-    val loggerConfig = config.getLoggerConfig(LogManager.ROOT_LOGGER_NAME); 
-    loggerConfig.setLevel(level);
-    ctx.updateLoggers();
-  }
-  */
-
-  //setLogLevel(Level.DEBUG)
-
   private def CreateConnectionException(msg: String, ie: Exception): StorageConnectionException = {
     logger.error(msg)
     val ex = new StorageConnectionException("Failed to connect to Database", ie)

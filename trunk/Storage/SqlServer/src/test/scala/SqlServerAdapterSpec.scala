@@ -27,7 +27,7 @@ import java.text.{SimpleDateFormat}
 import java.io._
 
 import sys.process._
-import org.apache.log4j._
+import org.apache.logging.log4j._
 
 import com.ligadata.keyvaluestore._
 import com.ligadata.KvBase._
@@ -42,6 +42,7 @@ import com.ligadata.Exceptions._
 
 case class Customer(name:String, address: String, homePhone: String)
 
+@Ignore
 class SqlServerAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterAll with GivenWhenThen {
   var res : String = null;
   var statusCode: Int = -1;
@@ -49,8 +50,8 @@ class SqlServerAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAft
   var serializer:Serializer = null
 
   private val loggerName = this.getClass.getName
-  private val logger = Logger.getLogger(loggerName)
-  logger.setLevel(Level.INFO)
+  private val logger = LogManager.getLogger(loggerName)
+
   val dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
   val dateFormat1 = new SimpleDateFormat("yyyy/MM/dd")
   // set the timezone to UTC for all time values
