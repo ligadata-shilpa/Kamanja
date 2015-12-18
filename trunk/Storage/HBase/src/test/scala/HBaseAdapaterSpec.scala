@@ -42,7 +42,6 @@ import com.ligadata.Exceptions._
 
 case class Customer(name:String, address: String, homePhone: String)
 
-@Ignore
 class HBaseAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterAll with GivenWhenThen {
   var res : String = null;
   var statusCode: Int = -1;
@@ -165,12 +164,33 @@ class HBaseAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterAl
     it ("Validate api operations") {
       val containerName = "sys.customer1"
 
+      hbaseAdapter = adapter.asInstanceOf[HBaseAdapter]
+
+      And("Test create namespace")
+      noException should be thrownBy {
+	hbaseAdapter.CreateNameSpace("unit_tests3")
+      }
+
+      And("Test drop namespace")
+      noException should be thrownBy {
+	hbaseAdapter.DropNameSpace("unit_tests3")
+      }
+
       And("Test drop container")
       noException should be thrownBy {
 	var containers = new Array[String](0)
 	containers = containers :+ containerName
 	adapter.DropContainer(containers)
       }
+
+      And("Make sure a Get doesn't fail even when the container doesn't exist")
+      noException should be thrownBy {
+	adapter.get(containerName,readCallBack _)
+      }
+
+      And("Check the row count after doing a Get, an empty container must have been created")
+      cnt = hbaseAdapter.getRowCount(containerName)
+      assert(cnt == 0)
 
       And("Test create container")
       noException should be thrownBy {

@@ -45,7 +45,7 @@ import org.apache.hadoop.hbase.filter.CompareFilter.CompareOp
 // hadoop security model
 import org.apache.hadoop.security.UserGroupInformation
 
-import org.apache.log4j._
+import org.apache.logging.log4j._
 import java.nio.ByteBuffer
 import org.json4s._
 import org.json4s.JsonDSL._
@@ -62,10 +62,23 @@ import scala.collection.JavaConversions._
 class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: String) extends DataStore {
   val adapterConfig = if (datastoreConfig != null) datastoreConfig.trim else ""
   val loggerName = this.getClass.getName
-  val logger = Logger.getLogger(loggerName)
+  val logger = LogManager.getLogger(loggerName)
   private[this] val lock = new Object
   private var containerList: scala.collection.mutable.Set[String] = scala.collection.mutable.Set[String]()
   private var msg:String = ""
+
+
+  /*
+  private def setLogLevel(level: Level) = {
+    val ctx = LogManager.getContext(false);
+    val config = ctx.getConfiguration();
+    val loggerConfig = config.getLoggerConfig(LogManager.ROOT_LOGGER_NAME); 
+    loggerConfig.setLevel(level);
+    ctx.updateLoggers();
+  }
+  */
+
+  //setLogLevel(Level.DEBUG)
 
   private def CreateConnectionException(msg: String, ie: Exception): StorageConnectionException = {
     logger.error(msg)
@@ -287,8 +300,10 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
   }
 
   def DropNameSpace(namespace: String): Unit = lock.synchronized {
+    logger.info("Drop namespace " + namespace)
     relogin
     try{
+      logger.info("Check whether namespace exists " + namespace)
       val nsd = admin.getNamespaceDescriptor(namespace)
     } catch{
       case e: Exception => {
@@ -297,6 +312,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       }
     }
     try{
+      logger.info("delete namespace: " + namespace)
       admin.deleteNamespace(namespace)
     } catch{
       case e: Exception => {
@@ -504,6 +520,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     try{
       relogin
       var tableName = toFullTableName(containerName)
+      CheckTableExists(containerName)
       tableHBase = connection.getTable(tableName);
 
       var scan = new Scan();
@@ -580,6 +597,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     var tableHBase:HTableInterface = null
     try{
       relogin
+      CheckTableExists(containerName)
       tableHBase = connection.getTable(tableName);
       var scan = new Scan();
       var rs = tableHBase.getScanner(scan);
@@ -620,6 +638,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     var tableHBase:HTableInterface = null
     try{
       relogin
+      CheckTableExists(containerName)
       tableHBase = connection.getTable(tableName);
       var scan = new Scan();
       scan.setFilter(new FirstKeyOnlyFilter());
@@ -646,6 +665,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     var tableHBase:HTableInterface = null
     try{
       relogin
+      CheckTableExists(containerName)
       tableHBase = connection.getTable(tableName);
 
       val filters = new java.util.ArrayList[Filter]()
@@ -681,6 +701,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     var tableHBase:HTableInterface = null
     try{
       relogin
+      CheckTableExists(containerName)
       tableHBase = connection.getTable(tableName);
 
       val filters = new java.util.ArrayList[Filter]()
@@ -1052,7 +1073,6 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     var fullTableName = toFullTableName(containerName)
     try {
       relogin
-      CheckTableExists(containerName)
       dropTable(fullTableName)
     } catch {
       case e: Exception => {
@@ -1073,7 +1093,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
 class HBaseAdapterTx(val parent: DataStore) extends Transaction {
 
   val loggerName = this.getClass.getName
-  val logger = Logger.getLogger(loggerName)
+  val logger = LogManager.getLogger(loggerName)
 
   override def put(containerName: String, key: Key, value: Value): Unit = {
     parent.put(containerName, key, value)
