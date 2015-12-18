@@ -266,7 +266,7 @@ object StartMetadataAPI {
                   TypeService.removeType(param)
 
           }
-          case Action.LOADTYPESFROMAFILE => response = TypeService.loadTypesFromAFile
+          case Action.LOADTYPESFROMAFILE => response = TypeService.loadTypesFromAFile(input)
           case Action.DUMPALLTYPESBYOBJTYPEASJSON => response = TypeService.dumpAllTypesByObjTypeAsJson
 
           //function management
