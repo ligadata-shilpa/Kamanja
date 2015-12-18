@@ -47,7 +47,8 @@ trait InputAdapterObj {
   def CreateInputAdapter(inputConfig: AdapterConfiguration, callerCtxt: InputAdapterCallerContext, execCtxtObj: ExecContextObj, cntrAdapter: CountersAdapter): InputAdapter
 }
 
-class StartProcPartInfo {
+class
+StartProcPartInfo {
   var _key: PartitionUniqueRecordKey = null
   var _val: PartitionUniqueRecordValue = null
   var _validateInfoVal: PartitionUniqueRecordValue = null
