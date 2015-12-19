@@ -1,6 +1,7 @@
 #/bin/bash
 
-# Accept the files on the command line and send them to the kafka producer.  All files assumed to be compressed CSV
+# Accept the files on the command line and send them to the kafka producer.  All files assumed to be CSV.  The first argument specifies if the
+# following files are compressed format (value = 1) or not.  The remaining arguments should all be compressed (or not) based on that flag.
 
 if [[ $# -gt 1 ]]; then
 	useCompressed="$1"

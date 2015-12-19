@@ -1,6 +1,6 @@
 {
   "Message": {
-    "NameSpace": "System",
+    "NameSpace": "system",
     "Name": "IrisMsg",
     "Version": "00.01.02",
     "Description": "Iris data message",
@@ -10,37 +10,37 @@
       {
         "Field": {
           "Name": "serialnumber",
-          "Type": "System.Double"
+          "Type": "system.Double"
         }
       },
       {
         "Field": {
           "Name": "sepal_length",
-          "Type": "System.Double"
+          "Type": "system.Double"
         }
       },
       {
         "Field": {
           "Name": "sepal_width",
-          "Type": "System.Double"
+          "Type": "system.Double"
         }
       },
       {
         "Field": {
           "Name": "petal_length",
-          "Type": "System.Double"
+          "Type": "system.Double"
         }
       },
       {
         "Field": {
           "Name": "petal_width",
-          "Type": "System.Double"
+          "Type": "system.Double"
         }
       },
       {
         "Field": {
           "Name": "irisClass",
-          "Type": "System.String"
+          "Type": "system.String"
         }
       }
     ],

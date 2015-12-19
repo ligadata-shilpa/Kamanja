@@ -114,6 +114,14 @@ $KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties 'add
 $KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties 'addModel type (jpmml) name(com.botanical.jpmml.IrisRandomForest) modelversion(000000.000001.000001) message(System.IrisMsg) messageversion(00.01.01) pmml(/home/rich/github/dev/Sprint8FeaturesWithJpmml/kamanja/trunk/Pmml/JpmmlAdapter/src/main/resources/metadata/model/Rattle/random_forest_iris_pmml.xml)'
 $KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties 'addModel type (jpmml) name(com.botanical.jpmml.DecisionTreeIris) modelversion(000000.000001.000001) message(System.IrisMsg) messageversion(00.01.01) pmml(/home/rich/github/dev/Sprint8FeaturesWithJpmml/kamanja/trunk/Pmml/JpmmlAdapter/src/main/resources/metadata/model/Rattle/decision_tree_iris.pmml)'
 
+##**Get all models**
+$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties getallmodels
+$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties getallmessages
+
+
+##**Establish queues**
+$KAMANJA_HOME/bin/CreateQueues.sh
+
 ##**Stop the kafka and the zookeeper as needed**
 $KAFKA_HOME/bin/kafka-server-stop.sh
 rich@pepper:~/tarballs/zookeeper/zookeeper-3.4.6$ bin/zkServer.sh stop
@@ -138,7 +146,7 @@ export KAMANJA_HOME=/tmp/drdigital
 export KAMANJA_SRCDIR=/home/rich/github/dev/Sprint8FeaturesWithJpmml/kamanja/trunk
 cd $KAMANJA_HOME
 bin/StartEngine.sh
-##**StartEngine.sh debug**
+##**bin/StartEngine.sh debug**
 
 ##**push data console**
 export KAMANJA_HOME=/tmp/drdigital
