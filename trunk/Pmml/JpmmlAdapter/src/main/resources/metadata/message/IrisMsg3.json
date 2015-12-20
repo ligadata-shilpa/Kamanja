@@ -1,7 +1,7 @@
 {
   "Message": {
     "NameSpace": "system",
-    "Name": "IrisMsg",
+    "Name": "irismsg",
     "Version": "00.01.03",
     "Description": "Iris data message",
     "Fixed": "true",
@@ -39,7 +39,7 @@
       },
       {
         "Field": {
-          "Name": "irisClass",
+          "Name": "irisclass",
           "Type": "system.String"
         }
       }

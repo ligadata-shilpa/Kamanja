@@ -97,6 +97,18 @@ $KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties 'upd
 ##**SETUP FOR ENGINE TESTING**
 ##**<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<**
 
+##**Stop the kafka and the zookeeper as needed**
+$KAFKA_HOME/bin/kafka-server-stop.sh
+rich@pepper:~/tarballs/zookeeper/zookeeper-3.4.6$ bin/zkServer.sh stop
+##**Clean up the old fashioned way**
+rich@pepper:~/tarballs/kafka/2.10/kafka_2.10-0.8.1.1$ rm -Rf /tmp/zookeeper /tmp/kafka-logs
+##**Start up the zookeeper and the kafka**
+rich@pepper:~/tarballs/zookeeper/zookeeper-3.4.6$ bin/zkServer.sh start 
+rich@pepper:~/tarballs/kafka/2.10/kafka_2.10-0.8.1.1$ bin/kafka-server-start.sh config/server.properties
+
+##**Establish queues**
+$KAMANJA_HOME/bin/CreateQueues.sh --partitions 1
+
 ##**Env setup**
 export KAMANJA_HOME=/tmp/drdigital
 export KAMANJA_SRCDIR=/home/rich/github/dev/Sprint8FeaturesWithJpmml/kamanja/trunk
@@ -117,19 +129,6 @@ $KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties 'add
 ##**Get all models**
 $KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties getallmodels
 $KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties getallmessages
-
-
-##**Establish queues**
-$KAMANJA_HOME/bin/CreateQueues.sh
-
-##**Stop the kafka and the zookeeper as needed**
-$KAFKA_HOME/bin/kafka-server-stop.sh
-rich@pepper:~/tarballs/zookeeper/zookeeper-3.4.6$ bin/zkServer.sh stop
-##**Clean up the old fashioned way**
-rich@pepper:~/tarballs/kafka/2.10/kafka_2.10-0.8.1.1$ rm -Rf /tmp/zookeeper /tmp/kafka-logs
-##**Start up the zookeeper and the kafka**
-rich@pepper:~/tarballs/zookeeper/zookeeper-3.4.6$ bin/zkServer.sh start 
-rich@pepper:~/tarballs/kafka/2.10/kafka_2.10-0.8.1.1$ bin/kafka-server-start.sh config/server.properties
 
 ##**<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<**
 ##**ENGINE TESTING**
