@@ -60,7 +60,7 @@ class HBaseAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterAl
   private val kvManagerLoader = new KamanjaLoaderInfo
   private var hbaseAdapter:HBaseAdapter = null
   serializer = SerializerManager.GetSerializer("kryo")
-  val dataStoreInfo = """{"StoreType": "hbase","SchemaName": "unit_tests","Location":"localhost"}"""
+  val dataStoreInfo = """{"StoreType": "hbase","SchemaName": "unit_tests","Location":"localhost","autoCreateTables":"YES"}"""
 
   private val maxConnectionAttempts = 10;
   var cnt:Long = 0

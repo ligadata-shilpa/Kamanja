@@ -90,6 +90,7 @@ class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
   private var containerList: scala.collection.mutable.Set[String] = scala.collection.mutable.Set[String]()
   private var preparedStatementsMap: scala.collection.mutable.Map[String,PreparedStatement] = new scala.collection.mutable.HashMap()
   private var msg:String = ""
+  var autoCreateTables = "YES"
 
   private def CreateConnectionException(msg: String, ie: Exception): StorageConnectionException = {
     logger.error(msg)
@@ -175,6 +176,7 @@ class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
   val consistencylevelWrite = ConsistencyLevel.valueOf(getOptionalField("ConsistencyLevelWrite", parsed_json, adapterSpecificConfig_json, "ANY").toString.trim)
   val consistencylevelDelete = ConsistencyLevel.valueOf(getOptionalField("ConsistencyLevelDelete", parsed_json, adapterSpecificConfig_json, "ONE").toString.trim)
 
+  // misc options
   var batchPuts = "NO"
   if (parsed_json.contains("batchPuts")) {
     batchPuts = parsed_json.get("batchPuts").get.toString.trim
@@ -184,6 +186,12 @@ class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
   if (parsed_json.contains("tableNameLength")) {
     tableNameLength = parsed_json.get("tableNameLength").get.toString.trim.toInt
   }
+
+  if (parsed_json.contains("autoCreateTables")) {
+    autoCreateTables = parsed_json.get("autoCreateTables").get.toString.trim
+  }
+
+
 
   val clusterBuilder = Cluster.builder()
   var cluster: Cluster = _
@@ -223,7 +231,6 @@ class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
     poolingOptions.setMaxConnectionsPerHost(HostDistance.REMOTE,  maxConPerHostRemote)
 
     cluster = clusterBuilder.withPoolingOptions(poolingOptions).build()
-    //cluster = clusterBuilder.build()
 
     if (cluster.getMetadata().getKeyspace(keyspace) == null) {
       logger.warn("The keyspace " + keyspace + " doesn't exist yet, we will create a new keyspace and continue")
@@ -253,12 +260,18 @@ class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
     }
   }
 
-  private def CheckTableExists(containerName: String): Unit = {
-    if (containerList.contains(containerName)) {
-      return
-    } else {
-      CreateContainer(containerName)
-      containerList.add(containerName)
+  private def CheckTableExists(containerName: String,apiType:String = "dml"): Unit = {
+    try{
+      if (containerList.contains(containerName)) {
+	return
+      } else {
+	CreateContainer(containerName,apiType)
+	containerList.add(containerName)
+      }
+    } catch {
+      case e: Exception => {
+        throw new Exception("Failed to create table  " + toTableName(containerName) + ":" + e.getMessage())
+      }
     }
   }
 
@@ -278,12 +291,29 @@ class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
     }
   }
 
-  private def CreateContainer(containerName: String): Unit = lock.synchronized {
+  private def CreateContainer(containerName: String,apiType:String): Unit = lock.synchronized {
     var tableName = toTableName(containerName)
     var fullTableName = toFullTableName(containerName)
     try {
-      var query = "create table if not exists " + fullTableName + "(bucketkey varchar,timepartition bigint,transactionid bigint, rowid int, serializertype varchar, serializedinfo blob, primary key(bucketkey,timepartition,transactionid,rowid));"
-      session.execute(query);
+      var ks = cluster.getMetadata().getKeyspace(keyspace)
+      var t = ks.getTable(fullTableName)
+      if( t != null ){
+        logger.debug("The table " + tableName + " already exists ")
+      }
+      else{
+	if( autoCreateTables.equalsIgnoreCase("NO") ){
+	  apiType match {
+	    case "dml" => {
+              throw new Exception("The option autoCreateTables is set to NO, So Can't create non-existent table automatically to support the requested DML operation")
+	    }
+	    case _ => {
+	      logger.info("proceed with creating table..")
+	    }
+	  }
+	}
+	var query = "create table if not exists " + fullTableName + "(bucketkey varchar,timepartition bigint,transactionid bigint, rowid int, serializertype varchar, serializedinfo blob, primary key(bucketkey,timepartition,transactionid,rowid));"
+	session.execute(query);
+      }
     } catch {
       case e: Exception => {
         throw CreateDDLException("Failed to create table " + tableName + ":" + e.getMessage(), e)
@@ -295,7 +325,7 @@ class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
     logger.info("create the container tables")
     containerNames.foreach(cont => {
       logger.info("create the container " + cont)
-      CreateContainer(cont)
+      CreateContainer(cont,"ddl")
     })
   }
 

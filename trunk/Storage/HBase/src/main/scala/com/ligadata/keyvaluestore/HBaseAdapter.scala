@@ -210,7 +210,13 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     }
   }
 
-  logger.info("HBase info => Hosts:" + hostnames + ", Namespace:" + namespace)
+  var autoCreateTables = "YES"
+  if (parsed_json.contains("autoCreateTables")) {
+    autoCreateTables = parsed_json.get("autoCreateTables").get.toString.trim
+  }
+
+
+  logger.info("HBase info => Hosts:" + hostnames + ", Namespace:" + namespace + ",autoCreateTables:" + autoCreateTables)
 
   var connection: HConnection = _
   try {
@@ -235,10 +241,20 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     }
   }
 
-  private def createTable(tableName: String): Unit = {
+  private def createTable(tableName: String,apiType: String): Unit = {
     try{
       relogin
       if (!admin.tableExists(tableName)) {
+	if( autoCreateTables.equalsIgnoreCase("NO") ){
+	  apiType match {
+	    case "dml" => {
+              throw new Exception("The option autoCreateTables is set to NO, So Can't create non-existent table automatically to support the requested DML operation")
+	    }
+	    case _ => {
+	      logger.info("proceed with creating table..")
+	    }
+	  }
+	}
 	val tableDesc = new HTableDescriptor(TableName.valueOf(tableName));
 	val colDesc1 = new HColumnDescriptor("key".getBytes())
 	val colDesc2 = new HColumnDescriptor("serializerType".getBytes())
@@ -271,12 +287,12 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     }
   }
 
-  private def CheckTableExists(containerName: String): Unit = {
+  private def CheckTableExists(containerName: String,apiType: String = "dml"): Unit = {
     try{
       if (containerList.contains(containerName)) {
 	return
       } else {
-	CreateContainer(containerName)
+	CreateContainer(containerName,apiType)
 	containerList.add(containerName)
       }
     } catch {
@@ -321,11 +337,11 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     toTableName(containerName)
   }
 
-  private def CreateContainer(containerName: String): Unit = lock.synchronized {
+  private def CreateContainer(containerName: String,apiType:String): Unit = lock.synchronized {
     var tableName = toTableName(containerName)
     var fullTableName = toFullTableName(containerName)
     try {
-      createTable(fullTableName)
+      createTable(fullTableName,apiType)
     } catch {
       case e: Exception => {
 	throw e
@@ -337,7 +353,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     logger.info("create the container tables")
     containerNames.foreach(cont => {
       logger.info("create the container " + cont)
-      CreateContainer(cont)
+      CreateContainer(cont,"ddl")
     })
   }
 

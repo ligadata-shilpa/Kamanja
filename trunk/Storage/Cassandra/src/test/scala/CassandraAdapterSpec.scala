@@ -62,7 +62,7 @@ class CassandraAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAft
   private val kvManagerLoader = new KamanjaLoaderInfo
   private var cassandraAdapter:CassandraAdapter = null
   serializer = SerializerManager.GetSerializer("kryo")
-  val dataStoreInfo = """{"StoreType": "cassandra","SchemaName": "unit_tests","Location":"localhost"}"""
+  val dataStoreInfo = """{"StoreType": "cassandra","SchemaName": "unit_tests","Location":"localhost","autoCreateTables":"YES"}"""
 
   private val maxConnectionAttempts = 10;
   var cnt:Long = 0
@@ -172,6 +172,11 @@ class CassandraAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAft
 	var containers = new Array[String](0)
 	containers = containers :+ containerName
 	adapter.DropContainer(containers)
+      }
+
+      And("Test auto create of a table")
+      noException should be thrownBy {
+	adapter.get(containerName,readCallBack _)
       }
 
       And("Test create container")
