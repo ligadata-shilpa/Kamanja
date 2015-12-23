@@ -762,7 +762,7 @@ class MdMgr {
     val model = modelDefs.getOrElse(key, null)
     if (model == null) {
       logger.debug("The model " + key + " doesn't exist ")
-      throw new ObjectNolongerExistsException(s"The model $key may have been removed already")
+      throw ObjectNolongerExistsException(s"The model $key may have been removed already", null)
     } else {
       var versionMatch: ModelDef = null
       modelDefs(key).foreach(m =>
@@ -794,7 +794,7 @@ class MdMgr {
     val message = msgDefs.getOrElse(key, null)
     if (message == null) {
       logger.debug("The message " + key + " doesn't exist ")
-      throw new ObjectNolongerExistsException(s"The message $key may have been removed already")
+      throw ObjectNolongerExistsException(s"The message $key may have been removed already", null)
     } else {
       var versionMatch: MessageDef = null
       msgDefs(key).foreach(m =>
@@ -826,7 +826,7 @@ class MdMgr {
     val container = containerDefs.getOrElse(key, null)
     if (container == null) {
       logger.debug("The container " + key + " doesn't exist ")
-      throw new ObjectNolongerExistsException(s"The container $key may have been removed already")
+      throw ObjectNolongerExistsException(s"The container $key may have been removed already", null)
     } else {
       var versionMatch: ContainerDef = null
       containerDefs(key).foreach(m =>
@@ -858,7 +858,7 @@ class MdMgr {
     val function = funcDefs.getOrElse(key, null)
     if (function == null) {
       logger.debug("The function " + key + " doesn't exist ")
-      throw new ObjectNolongerExistsException(s"The function $key may have been removed already")
+      throw ObjectNolongerExistsException(s"The function $key may have been removed already", null)
     } else {
       var versionMatch: FunctionDef = null
       funcDefs(key).foreach(m =>
@@ -891,7 +891,7 @@ class MdMgr {
     val attribute = attrbDefs.getOrElse(key, null)
     if (attribute == null) {
       logger.debug("The attribute " + key + " doesn't exist ")
-      throw new ObjectNolongerExistsException(s"The attribute $key may have been removed already")
+      throw ObjectNolongerExistsException(s"The attribute $key may have been removed already", null)
     } else {
       var versionMatch: BaseAttributeDef = null
       attrbDefs(key).foreach(m =>
@@ -923,7 +923,7 @@ class MdMgr {
     val typ = typeDefs.getOrElse(key, null)
     if (typ == null) {
       logger.debug("The type " + key + " doesn't exist ")
-      throw new ObjectNolongerExistsException(s"The type $key may have been removed already")
+      throw  ObjectNolongerExistsException(s"The type $key may have been removed already", null)
     } else {
       var versionMatch: BaseTypeDef = null
       typeDefs(key).foreach(m =>
@@ -1022,7 +1022,7 @@ class MdMgr {
   @throws(classOf[AlreadyExistsException])
   def MakeScalar(nameSpace: String, name: String, tp: Type, physicalName: String, ver: Long = 1, jarNm: String = null, depJars: Array[String] = null, implementationName: String = "SomeImplementation"): ScalarTypeDef = {
     if (Type(nameSpace, name, -1, false) != None) {
-      throw new AlreadyExistsException(s"Scalar $nameSpace.$name already exists.")
+      throw AlreadyExistsException(s"Scalar $nameSpace.$name already exists.", null)
     }
     if (implementationName == null) {
       throw new IllegalArgumentException(s"Expecting ImplementationName for type $nameSpace.$name with physicalName $physicalName")
@@ -1048,7 +1048,7 @@ class MdMgr {
   @throws(classOf[AlreadyExistsException])
   def MakeTypeDef(nameSpace: String, name: String, typeType: BaseTypeDef, physicalName: String, ver: Long, jarNm: String, depJars: Array[String]): BaseTypeDef = {
     if (Type(nameSpace, name, -1) != None) {
-      throw new AlreadyExistsException(s"TypeDef $nameSpace.$name already exists.")
+      throw AlreadyExistsException(s"TypeDef $nameSpace.$name already exists.")
     }
     SetBaseElem(typeType, nameSpace, name, ver, jarNm, depJars)
     typeType.PhysicalName(physicalName)
@@ -1076,18 +1076,18 @@ class MdMgr {
       if (recompile) {
         //Only make a message if the version is greater then the last known version already in the system.
         if (typ.get.ver > ver) {
-          throw new AlreadyExistsException(s"Higher active version of Array $nameSpace.$name already exists.")
+          throw AlreadyExistsException(s"Higher active version of Array $nameSpace.$name already exists.", null)
         }
       } else {
         //Only make a message if the version is greater or equal then the last known version already in the system.
         if (typ.get.ver >= ver) {
-          throw new AlreadyExistsException(s"Higher active version of Array $nameSpace.$name already exists.")
+          throw AlreadyExistsException(s"Higher active version of Array $nameSpace.$name already exists.", null)
         }
       }
     }
 
     //if (Type(nameSpace, name, -1, false) != None) {
-    //   throw new AlreadyExistsException(s"Array $nameSpace.$name already exists.")
+    //   throw AlreadyExistsException(s"Array $nameSpace.$name already exists.")
     //  }
     val elemDef = GetElem(Type(tpNameSp, tpName, -1, false), s"The array's item type $tpNameSp.$tpName does not exist")
     if (elemDef == null) { throw new NoSuchElementException(s"The array's item type $tpNameSp.$tpName does not exist") }
@@ -1122,18 +1122,18 @@ class MdMgr {
       if (recompile) {
         //Only make a message if the version is greater then the last known version already in the system.
         if (typ.get.ver > ver) {
-          throw new AlreadyExistsException(s"Higher active version of ArrayBuffer $nameSpace.$name already exists.")
+          throw AlreadyExistsException(s"Higher active version of ArrayBuffer $nameSpace.$name already exists.", null)
         }
       } else {
         //Only make a message if the version is greater or equal then the last known version already in the system.
         if (typ.get.ver >= ver) {
-          throw new AlreadyExistsException(s"Higher active version of ArrayBuffer $nameSpace.$name already exists.")
+          throw AlreadyExistsException(s"Higher active version of ArrayBuffer $nameSpace.$name already exists.", null)
         }
       }
     }
 
     /*if (Type(nameSpace, name, -1, false) != None) {
-      throw new AlreadyExistsException(s"ArrayBuffer $nameSpace.$name already exists.")
+      throw AlreadyExistsException(s"ArrayBuffer $nameSpace.$name already exists.")
     }
     * 
     */
@@ -1166,10 +1166,10 @@ class MdMgr {
     val typ = Type(nameSpace, name, -1, false)
     if (typ != None) {
       if (typ.get.ver >= ver)
-        throw new AlreadyExistsException(s"List $nameSpace.$name already exists.")
+        throw AlreadyExistsException(s"List $nameSpace.$name already exists.", null)
     }
     /*if (Type(nameSpace, name, -1, false) != None) {
-      throw new AlreadyExistsException(s"List $nameSpace.$name already exists.")
+      throw AlreadyExistsException(s"List $nameSpace.$name already exists.")
     }
     * 
     */
@@ -1200,10 +1200,10 @@ class MdMgr {
     val typ = Type(nameSpace, name, -1, false)
     if (typ != None) {
       if (typ.get.ver >= ver)
-        throw new AlreadyExistsException(s"List $nameSpace.$name already exists.")
+        throw AlreadyExistsException(s"List $nameSpace.$name already exists.", null)
     }
     /* if (Type(nameSpace, name, -1, false) != None) {
-      throw new AlreadyExistsException(s"List $nameSpace.$name already exists.")
+      throw AlreadyExistsException(s"List $nameSpace.$name already exists.")
     }
     * 
     */
@@ -1238,18 +1238,18 @@ class MdMgr {
       if (recompile) {
         //Only make a message if the version is greater then the last known version already in the system.
         if (typ.get.ver > ver) {
-          throw new AlreadyExistsException(s"Higher active version of Set $nameSpace.$name already exists.")
+          throw AlreadyExistsException(s"Higher active version of Set $nameSpace.$name already exists.", null)
         }
       } else {
         //Only make a message if the version is greater or equal then the last known version already in the system.
         if (typ.get.ver >= ver) {
-          throw new AlreadyExistsException(s"Higher active version of Set $nameSpace.$name already exists.")
+          throw AlreadyExistsException(s"Higher active version of Set $nameSpace.$name already exists.", null)
         }
       }
     }
 
     /* if (Type(nameSpace, name, -1, false) != None) {
-      throw new AlreadyExistsException(s"Set $nameSpace.$name already exists.")
+      throw AlreadyExistsException(s"Set $nameSpace.$name already exists.")
     }
     * 
     */
@@ -1282,11 +1282,11 @@ class MdMgr {
     val typ = Type(nameSpace, name, -1, false)
     if (typ != None) {
       if (typ.get.ver >= ver)
-        throw new AlreadyExistsException(s"Set $nameSpace.$name already exists.")
+        throw AlreadyExistsException(s"Set $nameSpace.$name already exists.", null)
     }
 
     /* if (Type(nameSpace, name, -1, false) != None) {
-      throw new AlreadyExistsException(s"Set $nameSpace.$name already exists.")
+      throw AlreadyExistsException(s"Set $nameSpace.$name already exists.")
     }
     * 
     */
@@ -1322,18 +1322,18 @@ class MdMgr {
       if (recompile) {
         //Only make a message if the version is greater then the last known version already in the system.
         if (typ.get.ver > ver) {
-          throw new AlreadyExistsException(s"Higher active version of TreeSet $nameSpace.$name already exists.")
+          throw AlreadyExistsException(s"Higher active version of TreeSet $nameSpace.$name already exists.", null)
         }
       } else {
         //Only make a message if the version is greater or equal then the last known version already in the system.
         if (typ.get.ver >= ver) {
-          throw new AlreadyExistsException(s"Higher active version of TreeSet $nameSpace.$name already exists.")
+          throw AlreadyExistsException(s"Higher active version of TreeSet $nameSpace.$name already exists.", null)
         }
       }
     }
 
     /* if (Type(nameSpace, name, -1, false) != None) {
-      throw new AlreadyExistsException(s"TreeSet $nameSpace.$name already exists.")
+      throw AlreadyExistsException(s"TreeSet $nameSpace.$name already exists.")
     }
     * 
     */
@@ -1367,18 +1367,18 @@ class MdMgr {
       if (recompile) {
         //Only make a message if the version is greater then the last known version already in the system.
         if (typ.get.ver > ver) {
-          throw new AlreadyExistsException(s"Higher active version of Type $nameSpace.$name already exists... unable to add SortedSet with this name.")
+          throw AlreadyExistsException(s"Higher active version of Type $nameSpace.$name already exists... unable to add SortedSet with this name.", null)
         }
       } else {
         //Only make a message if the version is greater or equal then the last known version already in the system.
         if (typ.get.ver >= ver) {
-          throw new AlreadyExistsException(s"Higher active version of Type $nameSpace.$name already exists... unable to add SortedSet with this name.")
+          throw AlreadyExistsException(s"Higher active version of Type $nameSpace.$name already exists... unable to add SortedSet with this name.", null)
         }
       }
     }
 
     /*if (Type(nameSpace, name, -1, false) != None) {
-      throw new AlreadyExistsException(s"Type $nameSpace.$name already exists... unable to add SortedSet with this name.")
+      throw AlreadyExistsException(s"Type $nameSpace.$name already exists... unable to add SortedSet with this name.")
     }
     * 
     */
@@ -1413,18 +1413,18 @@ class MdMgr {
       if (recompile) {
         //Only make a message if the version is greater then the last known version already in the system.
         if (typ.get.ver > ver) {
-          throw new AlreadyExistsException(s"Higher active version of Map $nameSpace.$name already exists in the system")
+          throw AlreadyExistsException(s"Higher active version of Map $nameSpace.$name already exists in the system", null)
         }
       } else {
         //Only make a message if the version is greater or equal then the last known version already in the system.
         if (typ.get.ver >= ver) {
-          throw new AlreadyExistsException(s"Higher active version of Map $nameSpace.$name already exists in the system")
+          throw AlreadyExistsException(s"Higher active version of Map $nameSpace.$name already exists in the system", null)
         }
       }
     }
 
     /*if (Type(nameSpace, name, -1, false) != None) {
-      throw new AlreadyExistsException(s"Map $nameSpace.$name already exists.")
+      throw AlreadyExistsException(s"Map $nameSpace.$name already exists.")
     }
     * 
     */
@@ -1468,18 +1468,18 @@ class MdMgr {
       if (recompile) {
         //Only make a message if the version is greater then the last known version already in the system.
         if (typ.get.ver > ver) {
-          throw new AlreadyExistsException(s"Higher active version of Map $nameSpace.$name already exists in the system")
+          throw AlreadyExistsException(s"Higher active version of Map $nameSpace.$name already exists in the system", null)
         }
       } else {
         //Only make a message if the version is greater or equal then the last known version already in the system.
         if (typ.get.ver >= ver) {
-          throw new AlreadyExistsException(s"Higher active version of Map $nameSpace.$name already exists in the system")
+          throw AlreadyExistsException(s"Higher active version of Map $nameSpace.$name already exists in the system", null)
         }
       }
     }
 
     /* if (Type(nameSpace, name, -1, false) != None) {
-      throw new AlreadyExistsException(s"Map $nameSpace.$name already exists.")
+      throw AlreadyExistsException(s"Map $nameSpace.$name already exists.")
     }*/
     val (keyNmSp, keyTypeNm) = key
     val (valNmSp, valTypeNm) = value
@@ -1517,10 +1517,10 @@ class MdMgr {
     val typ = Type(nameSpace, name, -1, false)
     if (typ != None) {
       if (typ.get.ver >= ver)
-        throw new AlreadyExistsException(s"HashMap $nameSpace.$name already exists.")
+        throw AlreadyExistsException(s"HashMap $nameSpace.$name already exists.", null)
     }
     /*if (Type(nameSpace, name, -1, false) != None) {
-      throw new AlreadyExistsException(s"HashMap $nameSpace.$name already exists.")
+      throw AlreadyExistsException(s"HashMap $nameSpace.$name already exists.")
     }
     * 
     */
@@ -1563,10 +1563,10 @@ class MdMgr {
     val typ = Type(nameSpace, name, -1, false)
     if (typ != None) {
       if (typ.get.ver >= ver)
-        throw new AlreadyExistsException(s"Tuple $nameSpace.$name already exists.")
+        throw AlreadyExistsException(s"Tuple $nameSpace.$name already exists.", null)
     }
     /*if (Type(nameSpace, name, -1, false) != None) {
-      throw new AlreadyExistsException(s"Typle $nameSpace.$name already exists.")
+      throw AlreadyExistsException(s"Typle $nameSpace.$name already exists.")
     }
     * 
     */
@@ -1627,7 +1627,7 @@ class MdMgr {
   def MakeFunc(nameSpace: String, name: String, physicalName: String, retTypeNsName: (String, String), args: List[(String, String, String)], fmfeatures: Set[FcnMacroAttr.Feature], ver: Long = 1, jarNm: String = null, depJars: Array[String] = null): FunctionDef = {
 
     if (Function(nameSpace, name, args.map(a => (a._2, a._3)), -1, false) != None) {
-      throw new AlreadyExistsException(s"Function $nameSpace.$name already exists.")
+      throw AlreadyExistsException(s"Function $nameSpace.$name already exists.", null)
     }
     val fn: FunctionDef = new FunctionDef
     if (fmfeatures != null && fmfeatures.size > 0) {
@@ -1774,12 +1774,12 @@ class MdMgr {
       if (recompile) {
         //Only make a message if the version is greater then the last known version already in the system.
         if (latestActiveMessage.get.Version > ver) {
-          throw new AlreadyExistsException(s"Higher active version of Message $nameSpace.$name already exists in the system")
+          throw AlreadyExistsException(s"Higher active version of Message $nameSpace.$name already exists in the system", null)
         }
       } else {
         //Only make a message if the version is greater or equal then the last known version already in the system.
         if (latestActiveMessage.get.Version >= ver) {
-          throw new AlreadyExistsException(s"Higher active version of Message $nameSpace.$name already exists in the system")
+          throw AlreadyExistsException(s"Higher active version of Message $nameSpace.$name already exists in the system", null)
         }
       }
     }
@@ -1823,12 +1823,12 @@ class MdMgr {
       if (recompile) {
         //Only make a message if the version is greater then the last known version already in the system.
         if (latestActiveContainer.get.Version > ver) {
-          throw new AlreadyExistsException(s"Higher active version of Container $nameSpace.$name already exists in the system")
+          throw AlreadyExistsException(s"Higher active version of Container $nameSpace.$name already exists in the system", null)
         }
       } else {
         //Only make a message if the version is greater then the last known version already in the system.
         if (latestActiveContainer.get.Version >= ver) {
-          throw new AlreadyExistsException(s"Higher active version of Container $nameSpace.$name already exists in the system")
+          throw AlreadyExistsException(s"Higher active version of Container $nameSpace.$name already exists in the system", null)
         }
       }
     }
@@ -1873,12 +1873,12 @@ class MdMgr {
     if (latestActiveMessage != None) {
       if (recompile) {
         if (latestActiveMessage.get.Version > ver) {
-          throw new AlreadyExistsException(s"Higher active version of Message $nameSpace.$name already exists in the system")
+          throw AlreadyExistsException(s"Higher active version of Message $nameSpace.$name already exists in the system", null)
         }
       } else {
         //Only make a message if the version is greater or equal then the last known version already in the system.
         if (latestActiveMessage.get.Version >= ver) {
-          throw new AlreadyExistsException(s"Higher active version of Message $nameSpace.$name already exists in the system")
+          throw AlreadyExistsException(s"Higher active version of Message $nameSpace.$name already exists in the system", null)
         }
       }
     }
@@ -1922,12 +1922,12 @@ class MdMgr {
       if (recompile) {
         //Only make a message if the version is greater then the last known version already in the system.
         if (latestActiveContainer.get.Version > ver) {
-          throw new AlreadyExistsException(s"Higher active version of Container $nameSpace.$name already exists in the system")
+          throw AlreadyExistsException(s"Higher active version of Container $nameSpace.$name already exists in the system", null)
         }
       } else {
         //Only make a message if the version is greater then the last known version already in the system.
         if (latestActiveContainer.get.Version >= ver) {
-          throw new AlreadyExistsException(s"Higher active version of Container $nameSpace.$name already exists in the system")
+          throw AlreadyExistsException(s"Higher active version of Container $nameSpace.$name already exists in the system", null)
         }
       }
     }
@@ -1971,12 +1971,12 @@ class MdMgr {
     if (latestActiveMessage != None) {
       if (recompile) {
         if (latestActiveMessage.get.Version > ver) {
-          throw new AlreadyExistsException(s"Higher active version of Message $nameSpace.$name already exists in the system")
+          throw AlreadyExistsException(s"Higher active version of Message $nameSpace.$name already exists in the system", null)
         }
       } else {
         //Only make a message if the version is greater or equal then the last known version already in the system.
         if (latestActiveMessage.get.Version >= ver) {
-          throw new AlreadyExistsException(s"Higher active version of Message $nameSpace.$name already exists in the system")
+          throw AlreadyExistsException(s"Higher active version of Message $nameSpace.$name already exists in the system", null)
         }
       }
     }
@@ -2124,7 +2124,7 @@ class MdMgr {
             }
         }
         if (modelExists) {
-            throw new AlreadyExistsException(s"Model $nameSpace.$name version should be higher than existing Models.")
+            throw new AlreadyExistsException(s"Model $nameSpace.$name version should be higher than existing Models.", null)
         }
 
         /** Create the BaseAttributeDef instances for the supplied input and output variable lists */
@@ -2211,7 +2211,7 @@ class MdMgr {
   @throws(classOf[AlreadyExistsException])
   def AddScalar(st: ScalarTypeDef): Unit = {
     if (Type(st.FullName, -1, false) != None) {
-      throw new AlreadyExistsException(s"Scalar ${st.FullName} already exists.")
+      throw AlreadyExistsException(s"Scalar ${st.FullName} already exists.", null)
     }
     typeDefs.addBinding(st.FullName, st)
   }
@@ -2237,7 +2237,7 @@ class MdMgr {
   @throws(classOf[AlreadyExistsException])
   def AddArray(at: ArrayTypeDef): Unit = {
     if (Type(at.FullName, -1, false) != None) {
-      throw new AlreadyExistsException(s"Array ${at.FullName} already exists.")
+      throw AlreadyExistsException(s"Array ${at.FullName} already exists.", null)
     }
     typeDefs.addBinding(at.FullName, at)
   }
@@ -2263,7 +2263,7 @@ class MdMgr {
   @throws(classOf[AlreadyExistsException])
   def AddArrayBuffer(abt: ArrayBufTypeDef): Unit = {
     if (Type(abt.FullName, -1, false) != None) {
-      throw new AlreadyExistsException(s"ArrayBuffer ${abt.FullName} already exists.")
+      throw AlreadyExistsException(s"ArrayBuffer ${abt.FullName} already exists.", null)
     }
     typeDefs.addBinding(abt.FullName, abt)
   }
@@ -2288,7 +2288,7 @@ class MdMgr {
   @throws(classOf[AlreadyExistsException])
   def AddList(lst: ListTypeDef): Unit = {
     if (Type(lst.FullName, -1, false) != None) {
-      throw new AlreadyExistsException(s"List ${lst.FullName} already exists.")
+      throw AlreadyExistsException(s"List ${lst.FullName} already exists.", null)
     }
     typeDefs.addBinding(lst.FullName, lst)
   }
@@ -2313,7 +2313,7 @@ class MdMgr {
   @throws(classOf[AlreadyExistsException])
   def AddQueue(queue: QueueTypeDef): Unit = {
     if (Type(queue.FullName, -1, false) != None) {
-      throw new AlreadyExistsException(s"A type with queue's name ${queue.FullName} already exists.")
+      throw AlreadyExistsException(s"A type with queue's name ${queue.FullName} already exists.", null)
     }
     typeDefs.addBinding(queue.FullName, queue)
   }
@@ -2338,7 +2338,7 @@ class MdMgr {
   @throws(classOf[AlreadyExistsException])
   def AddSet(set: SetTypeDef): Unit = {
     if (Type(set.FullName, -1, false) != None) {
-      throw new AlreadyExistsException(s"Set ${set.FullName} already exists.")
+      throw AlreadyExistsException(s"Set ${set.FullName} already exists.", null)
     }
     typeDefs.addBinding(set.FullName, set)
   }
@@ -2363,7 +2363,7 @@ class MdMgr {
   @throws(classOf[AlreadyExistsException])
   def AddImmutableSet(set: ImmutableSetTypeDef): Unit = {
     if (Type(set.FullName, -1, false) != None) {
-      throw new AlreadyExistsException(s"Set ${set.FullName} already exists.")
+      throw AlreadyExistsException(s"Set ${set.FullName} already exists.", null)
     }
     typeDefs.addBinding(set.FullName, set)
   }
@@ -2388,7 +2388,7 @@ class MdMgr {
   @throws(classOf[AlreadyExistsException])
   def AddTreeSet(tree: TreeSetTypeDef): Unit = {
     if (Type(tree.FullName, -1, false) != None) {
-      throw new AlreadyExistsException(s"TreeSet ${tree.FullName} already exists.")
+      throw AlreadyExistsException(s"TreeSet ${tree.FullName} already exists.", null)
     }
     typeDefs.addBinding(tree.FullName, tree)
   }
@@ -2413,7 +2413,7 @@ class MdMgr {
   @throws(classOf[AlreadyExistsException])
   def AddSortedSet(set: SortedSetTypeDef): Unit = {
     if (Type(set.FullName, -1, false) != None) {
-      throw new AlreadyExistsException(s"SortedSet ${set.FullName} cannot be created... a type by that name already exists.")
+      throw AlreadyExistsException(s"SortedSet ${set.FullName} cannot be created... a type by that name already exists.", null)
     }
     typeDefs.addBinding(set.FullName, set)
   }
@@ -2438,7 +2438,7 @@ class MdMgr {
   @throws(classOf[AlreadyExistsException])
   def AddMap(map: MapTypeDef): Unit = {
     if (Type(map.FullName, -1, false) != None) {
-      throw new AlreadyExistsException(s"Map ${map.FullName} already exists.")
+      throw AlreadyExistsException(s"Map ${map.FullName} already exists.", null)
     }
     typeDefs.addBinding(map.FullName, map)
   }
@@ -2463,7 +2463,7 @@ class MdMgr {
   @throws(classOf[AlreadyExistsException])
   def AddImmutableMap(map: ImmutableMapTypeDef): Unit = {
     if (Type(map.FullName, -1, false) != None) {
-      throw new AlreadyExistsException(s"Map ${map.FullName} already exists.")
+      throw AlreadyExistsException(s"Map ${map.FullName} already exists.", null)
     }
     typeDefs.addBinding(map.FullName, map)
   }
@@ -2488,7 +2488,7 @@ class MdMgr {
   @throws(classOf[AlreadyExistsException])
   def AddHashMap(hmap: HashMapTypeDef): Unit = {
     if (Type(hmap.FullName, -1, false) != None) {
-      throw new AlreadyExistsException(s"HashMap ${hmap.FullName} already exists.")
+      throw AlreadyExistsException(s"HashMap ${hmap.FullName} already exists.", null)
     }
     typeDefs.addBinding(hmap.FullName, hmap)
   }
@@ -2514,7 +2514,7 @@ class MdMgr {
   @throws(classOf[AlreadyExistsException])
   def AddTupleType(tt: TupleTypeDef): Unit = {
     if (Type(tt.FullName, -1, false) != None) {
-      throw new AlreadyExistsException(s"Typle ${tt.FullName} already exists.")
+      throw AlreadyExistsException(s"Typle ${tt.FullName} already exists.", null)
     }
     typeDefs.addBinding(tt.FullName, tt)
   }
@@ -2554,14 +2554,14 @@ class MdMgr {
     val args = fn.args.map(a => a.aType.FullName).toList
     if (Function(fn.FullName, args, -1, false) != None) {
       val argsStr = args.mkString(",")
-      throw new AlreadyExistsException(s"Function ${fn.FullName} with arguments \'${argsStr}\' already exists.")
+      throw AlreadyExistsException(s"Function ${fn.FullName} with arguments \'${argsStr}\' already exists.", null)
     }
     val fcnSig: String = fn.typeString
     if (FunctionByTypeSig(fcnSig) != null) {
-      throw new AlreadyExistsException(s"Function ${fn.FullName} with signature \'${fcnSig}\' already exists.")
+      throw AlreadyExistsException(s"Function ${fn.FullName} with signature \'${fcnSig}\' already exists.", null)
     }
     if (MacroByTypeSig(fcnSig) != null) {
-      throw new AlreadyExistsException(s"Macro ${fn.FullName} with signature \'${fcnSig}\' will be hidden should this function be cataloged.")
+      throw AlreadyExistsException(s"Macro ${fn.FullName} with signature \'${fcnSig}\' will be hidden should this function be cataloged.", null)
     }
 
     funcDefs.addBinding(fn.FullName, fn)
@@ -2622,14 +2622,14 @@ class MdMgr {
       val args = fn.args.map(a => a.aType.FullName).toList
       if (Function(fn.FullName, args, -1, false) != None) {
         val argsStr = args.mkString(",")
-        throw new AlreadyExistsException(s"Function ${fn.FullName} with arguments \'${argsStr}\' already exists.")
+        throw AlreadyExistsException(s"Function ${fn.FullName} with arguments \'${argsStr}\' already exists.", null)
       }
       val fcnSig: String = fn.typeString
       if (FunctionByTypeSig(fcnSig) != null) {
-        throw new AlreadyExistsException(s"Function ${fn.FullName} with signature \'${fcnSig}\' already exists.")
+        throw AlreadyExistsException(s"Function ${fn.FullName} with signature \'${fcnSig}\' already exists.", null)
       }
       if (MacroByTypeSig(fcnSig) != null) {
-        throw new AlreadyExistsException(s"Macro ${fn.FullName} with signature \'${fcnSig}\' will be hidden should this function be cataloged.")
+        throw AlreadyExistsException(s"Macro ${fn.FullName} with signature \'${fcnSig}\' will be hidden should this function be cataloged.", null)
       }
 
     })
@@ -2694,10 +2694,10 @@ class MdMgr {
   def AddMacro(mac: MacroDef): Unit = {
     val macroSignature: String = mac.typeString
     if (MacroByTypeSig(macroSignature) != null) {
-      throw new AlreadyExistsException(s"Macro ${mac.FullName} with signature \'${macroSignature}\' already exists.")
+      throw AlreadyExistsException(s"Macro ${mac.FullName} with signature \'${macroSignature}\' already exists.", null)
     }
     if (FunctionByTypeSig(macroSignature) != null) {
-      throw new AlreadyExistsException(s"Warning! Macro ${mac.FullName} with signature \'${macroSignature}\' is hidden by a function with the same signature.")
+      throw AlreadyExistsException(s"Warning! Macro ${mac.FullName} with signature \'${macroSignature}\' is hidden by a function with the same signature.", null)
     }
 
     macroDefSets.addBinding(mac.FullName, mac)
@@ -2766,10 +2766,10 @@ class MdMgr {
   @throws(classOf[NoSuchElementException])
   def AddMsg(msg: MessageDef): Unit = {
     if (Type(msg.FullName, -1, false) != None) {
-      throw new AlreadyExistsException(s"Message type ${msg.FullName} already exists.")
+      throw AlreadyExistsException(s"Message type ${msg.FullName} already exists.", null)
     }
     if (Message(msg.FullName, -1, false) != None) {
-      throw new AlreadyExistsException(s"Message ${msg.FullName} already exists.")
+      throw AlreadyExistsException(s"Message ${msg.FullName} already exists.", null)
     }
     if (msg.containerType == null) {
       throw new NoSuchElementException(s"The containerType of the Message ${msg.FullName} can not be null.")
@@ -2827,10 +2827,10 @@ class MdMgr {
   @throws(classOf[NoSuchElementException])
   def AddContainer(container: ContainerDef): Unit = {
     if (Type(container.FullName, -1, false) != None) {
-      throw new AlreadyExistsException(s"Container type ${container.FullName} already exists.")
+      throw AlreadyExistsException(s"Container type ${container.FullName} already exists.", null)
     }
     if (Container(container.FullName, -1, false) != None) {
-      throw new AlreadyExistsException(s"Container ${container.FullName} already exists.")
+      throw AlreadyExistsException(s"Container ${container.FullName} already exists.", null)
     }
     if (container.containerType == null) {
       throw new NoSuchElementException(s"The containerType of container ${container.FullName} can not be null.")
@@ -2844,7 +2844,7 @@ class MdMgr {
   @throws(classOf[NoSuchElementException])
   def AddContainerType(containerType: ContainerTypeDef): Unit = {
     if (Type(containerType.FullName, -1, false) != None) {
-      throw new AlreadyExistsException(s"Container type ${containerType.FullName} already exists.")
+      throw AlreadyExistsException(s"Container type ${containerType.FullName} already exists.", null)
     }
     typeDefs.addBinding(containerType.FullName, containerType)
   }
@@ -2891,11 +2891,11 @@ class MdMgr {
     }
 
     if (modelExists) {
-      throw new AlreadyExistsException(s"Model ${mdl.FullName}  should be higher than existing models.")
+      throw AlreadyExistsException(s"Model ${mdl.FullName}  should be higher than existing models.", null)
     }
 
     // if (Model(mdl.FullName, -1, false) != None) {
-    //    throw new AlreadyExistsException(s"Model ${mdl.FullName} already exists.")
+    //    throw AlreadyExistsException(s"Model ${mdl.FullName} already exists.")
     // }
     modelDefs.addBinding(mdl.FullName, mdl)
   }
@@ -2937,7 +2937,7 @@ class MdMgr {
 
   def AddNode(ni: NodeInfo): Unit = {
     if (ni.clusterId == null) {
-      throw new InvalidArgumentException("Failed to Add the node, ClusterId Can not be null")
+      throw InvalidArgumentException("Failed to Add the node, ClusterId Can not be null", null)
     }
     nodes(ni.nodeId.toLowerCase) = ni
   }
@@ -3126,7 +3126,7 @@ class MdMgr {
     def AddOutputMsg(outputMsg: OutputMsgDef): Unit = {
 
       if (OutputMessage(outputMsg.FullName, -1, false) != None) {
-        throw new AlreadyExistsException(s"Output Message ${outputMsg.FullName} already exists.")
+        throw AlreadyExistsException(s"Output Message ${outputMsg.FullName} already exists.", null)
       }
       outputMsgDefs.addBinding(outputMsg.FullName, outputMsg)
     }
@@ -3172,7 +3172,7 @@ class MdMgr {
       if (latestActiveMessage != None) {
         //Only make a message if the version is greater then the last known version already in the system.
         if (latestActiveMessage.get.Version >= ver) {
-          throw new AlreadyExistsException(s"Higher active version of Output Message $nameSpace.$name already exists in the system")
+          throw AlreadyExistsException(s"Higher active version of Output Message $nameSpace.$name already exists in the system", null)
         }
       }
       val physicalName: String = nameSpace+"_"+name+"_"+ver+"_"+System.currentTimeMillis
@@ -3199,7 +3199,7 @@ class MdMgr {
       val outputMsg = outputMsgDefs.getOrElse(key, null)
       if (outputMsg == null) {
         logger.trace("The output message " + key + " doesn't exist ")
-        throw new ObjectNolongerExistsException(s"The output message $key may have been removed already")
+        throw ObjectNolongerExistsException(s"The output message $key may have been removed already", null)
       } else {
         var versionMatch: OutputMsgDef = null
         outputMsgDefs(key).foreach(o =>

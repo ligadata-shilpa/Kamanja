@@ -98,6 +98,7 @@ $KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add 
 $KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add message $KAMANJA_SRCDIR/Pmml/PmmlUdfs/src/test/resources/pmmludfTests/metadata/message/twitter_msg.json
 
 $KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties getallmessages
+$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties getallcontainers
 
 ##**<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<**
 ##**Types and Udfs**
@@ -115,7 +116,6 @@ $KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add 
 $KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add model pmml $KAMANJA_SRCDIR/Pmml/PmmlUdfs/src/test/resources/pmmludfTests/metadata/model/missingValueRepl.xml
 
 $KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add model pmml $KAMANJA_HOME/input/SampleApplications/metadata/model/COPDRiskAssessmentv2_Medical.xml
-$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add model pmml $KAMANJA_HOME/input/SampleApplications/metadata/model/AsthmaV1.xml
 
 ##**<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<**
 ##**<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<**
@@ -137,8 +137,8 @@ $KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add 
 ##**init kv store for medical**
 $KAMANJA_HOME/input/SampleApplications/bin/InitKvStores_Medical.sh
 
-##**create queues**
-$KAMANJA_HOME/bin/CreateQueues.sh
+##**Establish queues**
+$KAMANJA_HOME/bin/CreateQueues.sh --partitions 1
 
 ##**watch output console**
 export KAMANJA_HOME=/tmp/drdigital
