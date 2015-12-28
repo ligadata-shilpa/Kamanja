@@ -168,11 +168,11 @@ object MetadataAPIImpl extends MetadataAPI {
       case cce: java.lang.ClassCastException => {
         val stackTrace = StackTrace.ThrowableTraceString(cce)
         logger.warn("Failure processing GET_HEALTH_CHECK - cannot parse the list of desired nodes. \n" + stackTrace)
-        var apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetHealthCheck", "No data available", ErrorCodeConstants.GetHeartbeat_Failed + " Error:Parsing Error")
+        val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetHealthCheck", "No data available", ErrorCodeConstants.GetHeartbeat_Failed + " Error:Parsing Error")
         return apiResult.toString
       }
       case e: Exception => {
-        var apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetHealthCheck", "No data available", ErrorCodeConstants.GetHeartbeat_Failed + " Error: Unknown - see Kamanja Logs")
+        val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetHealthCheck", "No data available", ErrorCodeConstants.GetHeartbeat_Failed + " Error: Unknown - see Kamanja Logs")
         val stackTrace = StackTrace.ThrowableTraceString(e)
         logger.error("Failure processing GET_HEALTH_CHECK - unknown  \n" + stackTrace)
         return apiResult.toString
