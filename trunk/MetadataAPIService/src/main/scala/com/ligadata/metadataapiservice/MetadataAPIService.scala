@@ -60,11 +60,10 @@ trait MetadataAPIService extends HttpService {
         optionalHeaderValueByName("role") {role =>
           optionalHeaderValueByName("modelname")
         { modelname =>
-          var user: Option[String] = None
-
-          // Make sure that the Audit knows the difference between No User specified and an None (request originates within the engine)
-          if (userId == None) user = Some("metadataapi") else user = userId
-          logger.debug("userid => " + user.get + ",password => xxxxx" + ",role => " + role.get + ",modelname => "+modelname.get)
+            var user: Option[String] = userId
+            // Make sure that the Audit knows the difference between No User specified and an None (request originates within the engine)
+            if (userId == None) user = Some("metadataapi")
+            logger.debug("userid => " + user.get + ",password => xxxxx" + ",role => " + (if (role == None) "" else role.get) +",modelname => "+ (if (modelname == None) "" else modelname.get))
           get {
               path("api" / Rest) { str => {
                 val toknRoute = str.split("/")
