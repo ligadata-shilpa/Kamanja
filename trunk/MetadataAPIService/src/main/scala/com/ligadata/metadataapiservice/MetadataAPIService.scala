@@ -64,7 +64,7 @@ trait MetadataAPIService extends HttpService {
 
           // Make sure that the Audit knows the difference between No User specified and an None (request originates within the engine)
           if (userId == None) user = Some("metadataapi") else user = userId
-          logger.debug("userid => " + user.get + ",password => xxxxx" + ",role => " + role.get + ",modelname => "+modelname.get)
+          logger.debug("userid => " + user.get + ",password => xxxxx" + ",role => " + role + ",modelname => "+modelname)
           get {
               path("api" / Rest) { str => {
                 val toknRoute = str.split("/")
