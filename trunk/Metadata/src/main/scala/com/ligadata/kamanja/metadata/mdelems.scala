@@ -814,3 +814,6 @@ object ModelCompilationConstants {
   val SOURCECODE: String = "source"
   val PHYSICALNAME: String = "pName"
 }
+
+// These case classes define the monitoring structures that will appear in the zookeepr.
+// Add new ones here.

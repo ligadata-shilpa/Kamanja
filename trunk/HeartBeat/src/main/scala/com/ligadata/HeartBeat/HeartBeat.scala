@@ -100,11 +100,13 @@ class HeartBeatUtil {
     LOG.debug("Called HeartBeat SetComponentData")
     _setDataLockObj.synchronized {
       val key = (sType.toLowerCase, sName.toLowerCase)
-      val oldComp = _components.getOrElse(key, null)
-      val compNewData = if (oldComp == null) new ComponentInfo else oldComp
+      var compNewData = _components.getOrElse(key, null)
+      if (compNewData == null) {
+        compNewData = new ComponentInfo
+        compNewData.uniqueId = _cntr
+        _cntr = _cntr + 1
+      }
 
-      compNewData.uniqueId = _cntr
-      _cntr = _cntr + 1
       compNewData.lastSeen = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
       if (compNewData.startTime == null)
         compNewData.startTime = compNewData.lastSeen
@@ -124,6 +126,10 @@ class HeartBeatUtil {
       if (_mainInfo.startTime == null)
         _mainInfo.startTime = _mainInfo.lastSeen
     }
+  }
+
+  def SetMetric(): Unit = {
+    
   }
 
   def Shutdown: Unit = {

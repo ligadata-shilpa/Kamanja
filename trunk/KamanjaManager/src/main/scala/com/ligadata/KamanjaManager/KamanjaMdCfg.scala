@@ -17,6 +17,7 @@
 
 package com.ligadata.KamanjaManager
 
+import com.ligadata.HeartBeat.HeartBeatUtil
 import org.apache.logging.log4j.{ Logger, LogManager }
 import com.ligadata.kamanja.metadata._
 import com.ligadata.kamanja.metadata.MdMgr._
@@ -351,7 +352,7 @@ object KamanjaMdCfg {
     null
   }
 
-  def LoadAdapters(inputAdapters: ArrayBuffer[InputAdapter], outputAdapters: ArrayBuffer[OutputAdapter], statusAdapters: ArrayBuffer[OutputAdapter], validateInputAdapters: ArrayBuffer[InputAdapter]): Boolean = {
+  def LoadAdapters(inputAdapters: ArrayBuffer[InputAdapter], outputAdapters: ArrayBuffer[OutputAdapter], statusAdapters: ArrayBuffer[OutputAdapter], validateInputAdapters: ArrayBuffer[InputAdapter], heartbeat: HeartBeatUtil = null): Boolean = {
     LOG.info("Loading Adapters started @ " + Utils.GetCurDtTmStr)
     val s0 = System.nanoTime
 
@@ -380,32 +381,67 @@ object KamanjaMdCfg {
     // Get status adapter
     LOG.debug("Getting Status Adapter")
 
-    if (LoadOutputAdapsForCfg(statusAdaps, statusAdapters, false) == false)
+    if (!LoadOutputAdapsForCfg(statusAdaps, statusAdapters, false))
       return false
+
+    initializeAdapterMonitoring(statusAdaps, heartbeat)
 
     // Get output adapter
     LOG.debug("Getting Output Adapters")
 
-    if (LoadOutputAdapsForCfg(outputAdaps, outputAdapters, true) == false)
+    if (!LoadOutputAdapsForCfg(outputAdaps, outputAdapters, true))
       return false
+
+    initializeAdapterMonitoring(outputAdaps, heartbeat)
 
     // Get input adapter
     LOG.debug("Getting Input Adapters")
 
-    if (LoadInputAdapsForCfg(inputAdaps, inputAdapters, outputAdapters.toArray, KamanjaMetadata.gNodeContext) == false)
+    if (!LoadInputAdapsForCfg(inputAdaps, inputAdapters, outputAdapters.toArray, KamanjaMetadata.gNodeContext))
       return false
+
+    initializeAdapterMonitoring(inputAdaps, heartbeat)
 
     // Get input adapter
     LOG.debug("Getting Validate Input Adapters")
 
-    if (LoadValidateInputAdapsFromCfg(validateAdaps, validateInputAdapters, outputAdapters.toArray, KamanjaMetadata.gNodeContext) == false)
+    if (!LoadValidateInputAdapsFromCfg(validateAdaps, validateInputAdapters, outputAdapters.toArray, KamanjaMetadata.gNodeContext))
       return false
+
+    initializeAdapterMonitoring(validateAdaps, heartbeat)
 
     val totaltm = "TimeConsumed:%.02fms".format((System.nanoTime - s0) / 1000000.0);
     LOG.info("Loading Adapters done @ " + Utils.GetCurDtTmStr + totaltm)
 
     true
   }
+
+  // Create the entry in the Status secion of the Monitor data for this Engine.
+  private def initializeAdapterMonitoring(adapters: scala.collection.mutable.Map[String, AdapterInfo], heartbeat: HeartBeatUtil): Unit = {
+
+    try {
+
+      // See if we need to register anything, either heartbeat may not be up for some reason, or no adapters were passed in
+      if (heartbeat == null) {
+        LOG.info("Heartbeat is not started, ignoring request to register the following adapters:")
+        adapters.foreach(a => {
+          LOG.info("  " + a._2.Name)
+        })
+        return
+      }
+      if (adapters.isEmpty) return
+
+      // OK, register these guys.
+      adapters.foreach(a => {
+        LOG.info("Registering adapter " + a._2.Name)
+        heartbeat.SetComponentData(a._2.TypeString, a._2.Name)
+      })
+
+    } catch {
+      case e: Exception => e.printStackTrace()
+    }
+  }
+
 
   private def CreateOutputAdapterFromConfig(statusAdapterCfg: AdapterConfiguration): OutputAdapter = {
     if (statusAdapterCfg == null) return null
