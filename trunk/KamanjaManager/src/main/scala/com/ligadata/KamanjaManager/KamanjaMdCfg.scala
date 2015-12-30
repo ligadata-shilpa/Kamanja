@@ -231,12 +231,14 @@ object KamanjaMdCfg {
     true
   }
 
-  def LoadEnvCtxt: EnvContext = {
+  def LoadEnvCtxt(heartBeat: HeartBeatUtil = null): EnvContext = {
     val cluster = mdMgr.ClusterCfgs.getOrElse(KamanjaConfiguration.clusterId, null)
     if (cluster == null) {
       LOG.error("Cluster not found for Node %d  & ClusterId : %s".format(KamanjaConfiguration.nodeId, KamanjaConfiguration.clusterId))
       return null
     }
+
+    println("====> " + heartBeat)
 
     val envCtxt1 = cluster.cfgMap.getOrElse("EnvironmentContextInfo", null)
     val envCtxtStr = if (envCtxt1 == null) cluster.cfgMap.getOrElse("EnvironmentContext", null) else envCtxt1
@@ -311,6 +313,10 @@ object KamanjaMdCfg {
           val containerInfos = allMsgsContainers.map(c => { ContainerNameAndDatastoreInfo(c, null) })
           envCtxt.RegisterMessageOrContainers(containerInfos) // Messages & Containers
 
+          // Record EnvContext in the Heartbeat
+          envCtxt.RegisterHeartbeat(heartBeat)
+
+
           LOG.info("Created EnvironmentContext for Class:" + className)
           return envCtxt
         } else {
@@ -342,6 +348,7 @@ object KamanjaMdCfg {
           LOG.error("Failed to instantiate Environment Context object for Class:" + className + ". Reason:" + e.getCause + ". Message:" + e.getMessage + "\nCause:\n" + causeStackTrace)
         }
         case e: Throwable => {
+          e.printStackTrace()
           val causeStackTrace = StackTrace.ThrowableTraceString(e)
           LOG.error("Failed to instantiate Environment Context object for Class:" + className + ". Reason:" + e.getCause + ". Message:" + e.getMessage + "\nCause:\n" + causeStackTrace)
         }
@@ -355,7 +362,7 @@ object KamanjaMdCfg {
   def LoadAdapters(inputAdapters: ArrayBuffer[InputAdapter], outputAdapters: ArrayBuffer[OutputAdapter], statusAdapters: ArrayBuffer[OutputAdapter], validateInputAdapters: ArrayBuffer[InputAdapter], heartbeat: HeartBeatUtil = null): Boolean = {
     LOG.info("Loading Adapters started @ " + Utils.GetCurDtTmStr)
     val s0 = System.nanoTime
-
+    println("*** LOAD ADAPTERS ***")
     val allAdapters = mdMgr.Adapters
 
     val inputAdaps = scala.collection.mutable.Map[String, AdapterInfo]()
@@ -423,16 +430,21 @@ object KamanjaMdCfg {
 
       // See if we need to register anything, either heartbeat may not be up for some reason, or no adapters were passed in
       if (heartbeat == null) {
+        println(" NO HEARTBEAT - BAD ")
         LOG.info("Heartbeat is not started, ignoring request to register the following adapters:")
         adapters.foreach(a => {
           LOG.info("  " + a._2.Name)
         })
         return
       }
-      if (adapters.isEmpty) return
+      if (adapters.isEmpty) {
+        println("NO ADAPTERS - BAD")
+        return
+      }
 
       // OK, register these guys.
       adapters.foreach(a => {
+        println("Registering adapter " + a._2.Name + " " + a._2.TypeString)
         LOG.info("Registering adapter " + a._2.Name)
         heartbeat.SetComponentData(a._2.TypeString, a._2.Name)
       })

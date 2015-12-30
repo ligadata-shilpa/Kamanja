@@ -434,11 +434,18 @@ class KamanjaManager extends Observer {
         zkHeartBeatNodePath = zkNodeBasePath + "/monitor/engine/" + KamanjaConfiguration.nodeId.toString
       }
 
+      if (retval && zkHeartBeatNodePath.size > 0) {
+        heartBeat = new HeartBeatUtil
+        heartBeat.Init(KamanjaConfiguration.nodeId.toString, KamanjaConfiguration.zkConnectString, zkHeartBeatNodePath, KamanjaConfiguration.zkSessionTimeoutMs, KamanjaConfiguration.zkConnectionTimeoutMs, 5000) // for every 5 secs
+        heartBeat.SetMainData(KamanjaConfiguration.nodeId.toString)
+      }
+
       LOG.debug("Validating required jars")
       KamanjaMdCfg.ValidateAllRequiredJars
 
       LOG.debug("Load Environment Context")
-      KamanjaMetadata.envCtxt = KamanjaMdCfg.LoadEnvCtxt
+      println("==>Registering EnvCntx")
+      KamanjaMetadata.envCtxt = KamanjaMdCfg.LoadEnvCtxt(heartBeat)
       if (KamanjaMetadata.envCtxt == null)
         return false
 
@@ -446,7 +453,7 @@ class KamanjaManager extends Observer {
 
       LOG.debug("Loading Adapters")
       // Loading Adapters (Do this after loading metadata manager & models & Dimensions (if we are loading them into memory))
-      retval = KamanjaMdCfg.LoadAdapters(inputAdapters, outputAdapters, statusAdapters, validateInputAdapters)
+      retval = KamanjaMdCfg.LoadAdapters(inputAdapters, outputAdapters, statusAdapters, validateInputAdapters, heartBeat)
 
       if (retval) {
         LOG.debug("Initialize Metadata Manager")
@@ -480,12 +487,6 @@ class KamanjaManager extends Observer {
         }
 
         KamanjaLeader.Init(KamanjaConfiguration.nodeId.toString, KamanjaConfiguration.zkConnectString, engineLeaderZkNodePath, engineDistributionZkNodePath, adaptersStatusPath, inputAdapters, outputAdapters, statusAdapters, validateInputAdapters, KamanjaMetadata.envCtxt, KamanjaConfiguration.zkSessionTimeoutMs, KamanjaConfiguration.zkConnectionTimeoutMs, dataChangeZkNodePath)
-      }
-
-      if (retval && zkHeartBeatNodePath.size > 0) {
-        heartBeat = new HeartBeatUtil
-        heartBeat.Init(KamanjaConfiguration.nodeId.toString, KamanjaConfiguration.zkConnectString, zkHeartBeatNodePath, KamanjaConfiguration.zkSessionTimeoutMs, KamanjaConfiguration.zkConnectionTimeoutMs, 5000) // for every 5 secs
-        heartBeat.SetMainData(KamanjaConfiguration.nodeId.toString)
       }
 
       /*

@@ -33,11 +33,11 @@ lazy val ZooKeeperListener = project.in(file("Utils/ZooKeeper/CuratorListener"))
 
 lazy val Exceptions = project.in(file("Exceptions"))
 
-lazy val KamanjaBase = project.in(file("KamanjaBase")) dependsOn(Metadata, Exceptions, KamanjaUtils, KvBase, DataDelimiters)
+lazy val KamanjaBase = project.in(file("KamanjaBase")) dependsOn(Metadata, Exceptions, KamanjaUtils, HeartBeat, KvBase, DataDelimiters)
 
 lazy val DataDelimiters = project.in(file("DataDelimiters"))
 
-lazy val KamanjaManager = project.in(file("KamanjaManager")) dependsOn(Metadata, KamanjaBase, MetadataBootstrap, MetadataAPI, Serialize, ZooKeeperListener, ZooKeeperLeaderLatch, Exceptions, HeartBeat, InputOutputAdapterBase, KamanjaUtils, TransactionService, DataDelimiters)
+lazy val KamanjaManager = project.in(file("KamanjaManager")) dependsOn(Metadata, KamanjaBase, MetadataBootstrap, MetadataAPI, Serialize, ZooKeeperListener, ZooKeeperLeaderLatch, Exceptions, InputOutputAdapterBase, KamanjaUtils, TransactionService, DataDelimiters)
 
 lazy val InputOutputAdapterBase = project.in(file("InputOutputAdapters/InputOutputAdapterBase")) dependsOn(Exceptions, DataDelimiters)
 
@@ -47,7 +47,7 @@ lazy val KafkaSimpleInputOutputAdapters = project.in(file("InputOutputAdapters/K
 
 lazy val FileSimpleInputOutputAdapters = project.in(file("InputOutputAdapters/FileSimpleInputOutputAdapters")) dependsOn(InputOutputAdapterBase, Exceptions, DataDelimiters)
 
-lazy val SimpleEnvContextImpl = project.in(file("EnvContexts/SimpleEnvContextImpl")) dependsOn(KamanjaBase, StorageManager, Serialize, Exceptions)
+lazy val SimpleEnvContextImpl = project.in(file("EnvContexts/SimpleEnvContextImpl")) dependsOn(KamanjaBase, StorageManager, Serialize, HeartBeat, Exceptions)
 
 lazy val StorageBase = project.in(file("Storage/StorageBase")) dependsOn(Exceptions, KamanjaUtils, KvBase)
 

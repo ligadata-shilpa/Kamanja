@@ -16,6 +16,7 @@
 
 package com.ligadata.SimpleEnvContextImpl
 
+import scala.actors.threadpool.{Executors, ExecutorService}
 import scala.collection.immutable.Map
 import scala.collection.mutable._
 import scala.util.control.Breaks._
@@ -35,7 +36,8 @@ import org.json4s.jackson.JsonMethods._
 import com.ligadata.Exceptions._
 import com.ligadata.keyvaluestore.KeyValueManager
 import java.io.{ ByteArrayInputStream, DataInputStream, DataOutputStream, ByteArrayOutputStream }
-import java.util.{ TreeMap, Date };
+import java.util.{ TreeMap, Date }
+import com.ligadata.HeartBeat._
 // import collection._
 // import JavaConverters._
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -53,6 +55,12 @@ case class AdapterUniqueValueDes(T: Long, V: String, Out: Option[List[List[Strin
  *  The SimpleEnvContextImpl supports kv stores that are based upon MapDb hash tables.
  */
 object SimpleEnvContextImpl extends EnvContext with LogTrait {
+
+  val CLASSNAME = "com.ligadata.SimpleEnvContextImpl.SimpleEnvContextImpl$"
+  private var heartBeat: HeartBeatUtil = null
+  private var hbExecutor: ExecutorService =  Executors.newFixedThreadPool(1)
+  private var isShutdown = false
+
   private def ResolveEnableEachTransactionCommit: Unit = {
     if (_mgr != null) {
       var foundIt = false
@@ -69,9 +77,36 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
               }
             }
           }
+
         }
       })
     }
+  }
+
+  override def RegisterHeartbeat(hb: HeartBeatUtil): Unit = {
+    println("REGISTER HB!!!!")
+    heartBeat = hb
+    // Record EnvContext in the Heartbeat
+    if (heartBeat != null) {
+      logger.info("Register the EnvContext component with the heartbeat info")
+      heartBeat.SetComponentData(CLASSNAME, "EnvCntx")
+    } else {
+      logger.info("Cannot register EnvContext with heartbeat info")
+    }
+
+    println("Starting HB for EnvCntx")
+    // Start the heartbeat.
+    hbExecutor.execute(new Runnable() {
+      override def run(): Unit = {
+        while(!isShutdown) {
+          Thread.sleep(5000)
+          heartBeat.SetComponentData(CLASSNAME, "EnvCntx")
+          println("EnvCntx HB - tick")
+        }
+      }
+    })
+    println("HB for EnvCntx succeeded")
+
   }
 
   override def setMdMgr(inMgr: MdMgr): Unit = {
@@ -1195,6 +1230,9 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 
   //BUGBUG:: May be we need to lock before we do anything here
   override def Shutdown: Unit = {
+
+    isShutdown = true
+
     if (_modelsRsltBuckets != null) {
       for (i <- 0 until _parallelBuciets) {
         _modelsRsltBktlocks(i).writeLock().lock()
@@ -1234,6 +1272,11 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     _statusinfoDataStore = null
 
     // _messagesOrContainers.clear
+
+    hbExecutor.shutdownNow
+    while (!hbExecutor.isTerminated) {
+      Thread.sleep(100) // sleep 100ms and then check
+    }
   }
 
   /*

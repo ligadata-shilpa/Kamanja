@@ -27,6 +27,7 @@ import java.io.{ DataInputStream, DataOutputStream }
 import com.ligadata.KvBase.{ TimeRange }
 import com.ligadata.KvBase.{ Key, Value, TimeRange /* , KvBaseDefalts, KeyWithBucketIdAndPrimaryKey, KeyWithBucketIdAndPrimaryKeyCompHelper */ }
 import com.ligadata.Utils.{ KamanjaLoaderInfo }
+import com.ligadata.HeartBeat._
 
 object MinVarType extends Enumeration {
   type MinVarType = Value
@@ -249,6 +250,9 @@ trait EnvContext {
 
   // Registerd Messages/Containers
   def RegisterMessageOrContainers(containersInfo: Array[ContainerNameAndDatastoreInfo]): Unit
+
+  // Register Hearbeat
+  def RegisterHeartbeat (heartBeat: HeartBeatUtil)
 
   // RDD Ops
   def getRecent(transId: Long, containerName: String, partKey: List[String], tmRange: TimeRange, f: MessageContainerBase => Boolean): Option[MessageContainerBase]
