@@ -17,6 +17,14 @@
 package com.ligadata.InputOutputAdapterInfo
 
 import com.ligadata.KamanjaBase.DataDelimiters
+import com.ligadata.HeartBeat._
+
+object AdapterConfiguration {
+  val TYPE_INPUT = "Input"
+  val TYPE_VALIDATE = "Validate"
+  val TYPE_OUTPUT = "Output"
+  val TYPE_STATUS = "Status"
+}
 
 class AdapterConfiguration {
   var Name: String = _ // Name of the Adapter, KafkaQueue Name/MQ Name/File Adapter Logical Name/etc
@@ -71,6 +79,7 @@ trait InputAdapter {
   def DeserializeValue(v: String): PartitionUniqueRecordValue
   def getAllPartitionBeginValues: Array[(PartitionUniqueRecordKey, PartitionUniqueRecordValue)]
   def getAllPartitionEndValues: Array[(PartitionUniqueRecordKey, PartitionUniqueRecordValue)]
+  def RegisterHeartbeat(hb: HeartBeatUtil): Unit
 }
 
 // Output Adapter Object to create Adapter
@@ -94,6 +103,7 @@ trait OutputAdapter {
   
   def Shutdown: Unit
   def Category = "Output"
+  def RegisterHeartbeat(hb: HeartBeatUtil): Unit
 }
 
 trait ExecContext {

@@ -25,11 +25,14 @@ import org.apache.logging.log4j.{ Logger, LogManager }
 import com.ligadata.InputOutputAdapterInfo.{ AdapterConfiguration, OutputAdapter, OutputAdapterObj, CountersAdapter }
 import com.ligadata.AdaptersConfiguration.{ KafkaConstants, KafkaQueueAdapterConfiguration }
 import com.ligadata.Exceptions.{ FatalAdapterException, StackTrace }
+import scala.actors.threadpool.Executors
 import scala.collection.mutable.ArrayBuffer
 import kafka.utils.VerifiableProperties
+import com.ligadata.HeartBeat._
 
 object KafkaProducer extends OutputAdapterObj {
   def CreateOutputAdapter(inputConfig: AdapterConfiguration, cntrAdapter: CountersAdapter): OutputAdapter = new KafkaProducer(inputConfig, cntrAdapter)
+  val HB_PERIOD = 5000
 }
 
 /**
@@ -76,6 +79,11 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
   val requestRequiredAcks: Integer = 1
   val MAX_RETRY = 3
   val ackTimeout = 10000
+  var heartBeat: HeartBeatUtil = null
+
+  private val heartBeatThread =  Executors.newFixedThreadPool(1)
+  private var isHeartBeating = false
+  private var isShutdown = false
 
   val codec = if (compress) DefaultCompressionCodec.codec else NoCompressionCodec.codec
 
@@ -114,14 +122,42 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
     producers(i) = new Producer[Array[Byte], Array[Byte]](new ProducerConfig(props))
   }
 
+  override def RegisterHeartbeat(hb: HeartBeatUtil): Unit = {
+    println("REGISTER Output Adapter!!!! " + qc.Name)
+    heartBeat = hb
+    // Record EnvContext in the Heartbeat
+    if (heartBeat != null) {
+      LOG.info("Register the EnvContext component with the heartbeat info")
+      heartBeat.SetComponentData(AdapterConfiguration.TYPE_OUTPUT, qc.Name)
+    } else {
+      LOG.info("Cannot register EnvContext with heartbeat info")
+    }
+
+    runHeartBeat
+    isHeartBeating = true
+  }
+
   // To send an array of messages. messages.size should be same as partKeys.size
   override def send(messages: Array[Array[Byte]], partKeys: Array[Array[Byte]]): Unit = {
+
+    // Sanity checks
+    if (isShutdown) {
+      val szMsg = qc.Name + " KAFKA PRODUCER: Producer is not available for processing"
+      LOG.error(szMsg)
+      throw new Exception(szMsg)
+    }
+
     if (messages.size != partKeys.size) {
-      val szMsg = "KAFKA PRODUCER: Message and Partition Keys should has same number of elements. Message has %d and Partition Keys has %d".format(messages.size, partKeys.size)
+      val szMsg = qc.Name + " KAFKA PRODUCER: Message and Partition Keys should has same number of elements. Message has %d and Partition Keys has %d".format(messages.size, partKeys.size)
       LOG.error(szMsg)
       throw new Exception(szMsg)
     }
     if (messages.size == 0) return
+
+    // This should never be true, until we redesign adapters, in which case they can stop and start output adapters as well.
+    if (!isHeartBeating) runHeartBeat
+
+    // Sanitiy passed, now process the messages.
     try {
       val keyMessages = new ArrayBuffer[KeyedMessage[Array[Byte], Array[Byte]]](messages.size)
       for (i <- 0 until messages.size) {
@@ -178,12 +214,37 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
   }
 
   override def Shutdown(): Unit = {
+    // Shutdown HB
+    LOG.info(qc.Name + " Shutdown detected")
+    isShutdown = true
+    heartBeatThread.shutdownNow
+    while (heartBeatThread.isTerminated == false) {
+      Thread.sleep(100)
+    }
+    isHeartBeating = false
+
     for (i <- 0 until producersCnt) {
       if (producers(i) != null)
         producers(i).close
       producers(i) = null
 
     }
+  }
+
+  private def runHeartBeat: Unit = {
+    heartBeatThread.execute(new Runnable() {
+      override def run(): Unit = {
+        try {
+          while (!isShutdown) {
+            heartBeat.SetComponentData(AdapterConfiguration.TYPE_OUTPUT, qc.Name)
+            Thread.sleep(KafkaProducer.HB_PERIOD)
+          }
+        } catch {
+          case e: Exception => LOG.warn(qc.Name + " Heartbeat Interrupt detected")
+        }
+        LOG.info(qc.Name + " Heartbeat is shutting down")
+      }
+    })
   }
 }
 

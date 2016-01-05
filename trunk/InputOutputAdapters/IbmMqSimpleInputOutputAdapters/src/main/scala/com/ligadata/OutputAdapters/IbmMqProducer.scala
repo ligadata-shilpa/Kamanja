@@ -27,6 +27,7 @@ import com.ibm.msg.client.wmq.WMQConstants
 import com.ibm.msg.client.wmq.common.CommonConstants
 import com.ibm.msg.client.jms.JmsConstants
 import com.ligadata.Exceptions.StackTrace
+import com.ligadata.HeartBeat._
 
 object IbmMqProducer extends OutputAdapterObj {
   def CreateOutputAdapter(inputConfig: AdapterConfiguration, cntrAdapter: CountersAdapter): OutputAdapter = new IbmMqProducer(inputConfig, cntrAdapter)
@@ -94,6 +95,10 @@ class IbmMqProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
       val stackTrace = StackTrace.ThrowableTraceString(jmsex)
       LOG.debug("StackTrace:" + stackTrace)
     }
+  }
+
+  override def RegisterHeartbeat(hb: HeartBeatUtil): Unit = {
+
   }
 
   // To send an array of messages. messages.size should be same as partKeys.size

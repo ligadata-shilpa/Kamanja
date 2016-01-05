@@ -23,6 +23,7 @@ import java.nio.file.{ Paths, Files }
 import com.ligadata.InputOutputAdapterInfo.{ AdapterConfiguration, OutputAdapter, OutputAdapterObj, CountersAdapter }
 import com.ligadata.AdaptersConfiguration.FileAdapterConfiguration
 import com.ligadata.Exceptions.{FatalAdapterException, StackTrace}
+import com.ligadata.HeartBeat._
 
 
 
@@ -136,6 +137,10 @@ class FileProducer(val inputConfig: AdapterConfiguration, cntrAdapter: CountersA
   override def Shutdown(): Unit = _lock.synchronized {
     if (os != null)
       os.close
+  }
+
+  override def RegisterHeartbeat(hb: HeartBeatUtil): Unit = {
+
   }
 }
 

@@ -26,6 +26,7 @@ import com.ligadata.AdaptersConfiguration.{ FileAdapterConfiguration, FilePartit
 import scala.util.control.Breaks._
 import com.ligadata.Exceptions.StackTrace
 import com.ligadata.KamanjaBase.DataDelimiters
+import com.ligadata.HeartBeat._
 
 object FileConsumer extends InputAdapterObj {
   def CreateInputAdapter(inputConfig: AdapterConfiguration, callerCtxt: InputAdapterCallerContext, execCtxtObj: ExecContextObj, cntrAdapter: CountersAdapter): InputAdapter = new FileConsumer(inputConfig, callerCtxt, execCtxtObj, cntrAdapter)
@@ -53,6 +54,10 @@ class FileConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: InputA
   class Stats {
     var totalLines: Long = 0;
     var totalSent: Long = 0
+  }
+
+  override def RegisterHeartbeat(hb: HeartBeatUtil): Unit = {
+
   }
 
   private def ProcessFile(sFileName: String, format: String, msg: String, st: Stats, ignorelines: Int, AddTS2MsgFlag: Boolean, isGz: Boolean): Unit = {

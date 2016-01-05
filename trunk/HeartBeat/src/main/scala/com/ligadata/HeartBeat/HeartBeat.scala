@@ -45,6 +45,10 @@ class HeartBeatUtil {
     var lastSeen: String = null
   }
 
+  class ComponentMetricInfo {
+    var metrics: collection.mutable.Map[String,Any] = null
+  }
+
   private[this] val _setDataLockObj = new Object()
   private[this] var _exec: ExecutorService = null
   private[this] var _zkcForSetData: CuratorFramework = null
