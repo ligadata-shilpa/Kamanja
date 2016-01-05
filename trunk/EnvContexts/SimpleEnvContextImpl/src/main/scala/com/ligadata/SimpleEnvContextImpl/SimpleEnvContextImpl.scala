@@ -84,7 +84,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   }
 
   override def RegisterHeartbeat(hb: HeartBeatUtil): Unit = {
-    println("REGISTER HB!!!!")
+
     heartBeat = hb
     // Record EnvContext in the Heartbeat
     if (heartBeat != null) {
@@ -94,19 +94,20 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
       logger.info("Cannot register EnvContext with heartbeat info")
     }
 
-    println("Starting HB for EnvCntx")
     // Start the heartbeat.
     hbExecutor.execute(new Runnable() {
       override def run(): Unit = {
         while(!isShutdown) {
-          Thread.sleep(5000)
+          try {
+            Thread.sleep(5000)
+          } catch {
+            case e: Exception => logger.warn("SimpleEnvContext heartbeat interrupted.")
+          }
+
           heartBeat.SetComponentData(CLASSNAME, "EnvCntx")
-          println("EnvCntx HB - tick")
         }
       }
     })
-    println("HB for EnvCntx succeeded")
-
   }
 
   override def setMdMgr(inMgr: MdMgr): Unit = {
