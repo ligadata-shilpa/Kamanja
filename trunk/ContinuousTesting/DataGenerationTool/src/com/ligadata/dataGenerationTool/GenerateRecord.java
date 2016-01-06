@@ -1,14 +1,10 @@
 package com.ligadata.dataGenerationTool;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-
-import com.ligadata.dataGenerationTool.fields.CopsFields;
-import com.ligadata.dataGenerationTool.fields.CopsFields.EventSource;
 
 public class GenerateRecord {
 
