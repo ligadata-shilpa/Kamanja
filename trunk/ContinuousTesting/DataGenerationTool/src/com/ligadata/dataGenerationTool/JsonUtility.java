@@ -11,8 +11,10 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import com.ligadata.dataGenerationTool.bean.ConfigObj;
+import com.ligadata.dataGenerationTool.fields.CopsFields;
 
 public class JsonUtility {
+
 	final Logger logger = Logger.getLogger(JsonUtility.class);
 
 	public JSONObject ReadJsonFile(String messageFileString) {
@@ -46,18 +48,41 @@ public class JsonUtility {
 
 	public HashMap<String, String> ReadMessageFields(JSONObject req,
 			ConfigObj configObj) {
+
+		CopsFields copsFields = new CopsFields();
+		String[] enumKeys = { "eventsource", "action", "resourceprotocol",
+				"authenticationmethod", "resourcetype",
+				"confidentialdatalabels", "userrole" };
+		boolean lineAlreadyWritten;
+		String value = "";
+
 		RandomGenerator random = new RandomGenerator();
 		JSONObject locs = req.getJSONObject("fields");
 		JSONArray recs = locs.getJSONArray("field");
 		HashMap<String, String> fields = new HashMap<String, String>();
 		try {
 			for (int i = 0; i < recs.length(); ++i) {
+				lineAlreadyWritten = false;
 				JSONObject rec = recs.getJSONObject(i);
 				String fieldName = rec.getString("name");
 				String fieldType = rec.getString("type");
 				int fieldLength = rec.getInt("length");
-				String value = random.CheckType(fieldType, fieldLength,
-						configObj);
+
+				for (String str : enumKeys) {
+					if (fieldName.equalsIgnoreCase(str)) {
+						value = copsFields.EnumLookup(str).toString();
+						lineAlreadyWritten = true;
+						// break;
+					}
+				}
+
+				if (lineAlreadyWritten == false) {
+					value = random.CheckType(fieldType, fieldLength, configObj);
+				}
+
+				if (fieldType.equalsIgnoreCase("timestamp")) {
+					value = value.substring(0, value.length() - 3) + "z";
+				}
 				fields.put(fieldName, value);
 			} // end for loop
 		} catch (ParseException e) {

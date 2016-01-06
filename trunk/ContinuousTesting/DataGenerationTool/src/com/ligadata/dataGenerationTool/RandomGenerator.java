@@ -25,6 +25,9 @@ public class RandomGenerator {
 		case "char":
 			randomValue = RandomString(1);
 			break;
+//		 case "sequence":
+//		 randomValue = GetNextSequenceID();
+//		 break;
 		case "double":
 			int precision = 2;
 			String randomNumric = RandomNumeric(length - precision);
@@ -51,6 +54,12 @@ public class RandomGenerator {
 		}
 		return randomValue;
 	}
+
+//	private String GetNextSequenceID() {
+//		// TODO Auto-generated method stub
+//		double temp = sequenceID
+//		return null;
+//	}
 
 	public String RandomHybrid(int length) {
 

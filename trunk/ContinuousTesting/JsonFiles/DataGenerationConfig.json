@@ -2,7 +2,7 @@
   "DataGenerationRate": "1000",
   "StartDate": "2015-11-01T13:00:44.000931EET",
   "EndDate": "2015-11-30T13:00:44.000931EET",
-  "DurationInHours": "2",
+  "DurationInHours": "0.085",
   "DropInFiles": "true",
   "PushToKafka": "false",
   "FileSplitPer": "10s",
