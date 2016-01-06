@@ -30,8 +30,8 @@ public class MainClass {
 		FileNameConfig fileNameConfig = new FileNameConfig();
 
 		// read configuration file
-		logger.info("Reading config file from " + args[0]);
-		String configFileLocation = args[0];
+		// logger.info("Reading config file from " + args[0]);
+		String configFileLocation = args[0]; // "C:/Users/haitham-pc/Documents/GitHub/Kamanja/trunk/ContinuousTesting/JsonFiles/DataGenerationConfig.json";
 
 		// DataGenerationConfig.json
 		// file

@@ -9,5 +9,6 @@
   "Delimiter": "\u0001",
   "CompressFormat": "gzip",
   "TemplatePath" : "C:/Users/haitham-pc/Documents/GitHub/Kamanja/trunk/ContinuousTesting/JsonFiles/DataDefinitionTemplate.json",
-  "DestiniationPath" : "C:/Users/haitham-pc/Desktop/GenereatedData/"
+  "DestiniationPath" : "C:/Users/haitham-pc/Desktop/GenereatedData/",
+  "SequenceId" : "0"
 }

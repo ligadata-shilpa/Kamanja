@@ -3,12 +3,12 @@
         "field": [
             {
                 "name": "eventSource",
-                "type": "hybrid",
+                "type": "string",
                 "length": "3"
             },
             {
                 "name": "type",
-                "type": "hybrid",
+                "type": "string",
                 "length": "3"
             },
             {
@@ -18,7 +18,7 @@
             },
             {
                 "name": "datetime",
-                "type": "timeStamp",
+                "type": "timestamp",
                 "length": "1"
             },
             {
@@ -28,12 +28,12 @@
             },
             {
                 "name": "systemUser",
-                "type": "hybrid",
+                "type": "string",
                 "length": "6"
             },
             {
                 "name": "device",
-                "type": "hybrid",
+                "type": "string",
                 "length": "5"
             },
             {
@@ -98,7 +98,7 @@
             },
             {
                 "name": "application",
-                "type": "hybrid",
+                "type": "string",
                 "length": "6"
             }
         ]

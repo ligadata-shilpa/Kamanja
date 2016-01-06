@@ -4,6 +4,7 @@ public class ConfigObj {
 
 	double dataGenerationRate;
 	double durationInHours;
+	long sequenceID;
 	boolean dropInFiles;
 	boolean pushToKafka;
 	String startDate;
@@ -14,7 +15,13 @@ public class ConfigObj {
 	String destiniationPath;
 	String compressFormat;
 
+	public long getSequenceID() {
+		return sequenceID;
+	}
 
+	public void setSequenceID(long sequenceID) {
+		this.sequenceID = sequenceID;
+	}
 
 	public String getCompressFormat() {
 		return compressFormat;

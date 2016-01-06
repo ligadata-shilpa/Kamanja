@@ -16,7 +16,7 @@ public class RandomGenerator {
 			throws ParseException {
 		String randomValue = null;
 		switch (FieldType.toLowerCase().trim()) {
-		case "hybrid":
+		case "hybrid": // this is not used anymore.
 			randomValue = RandomHybrid(length);
 			break;
 		case "string":
@@ -38,8 +38,9 @@ public class RandomGenerator {
 			randomValue = RandomNumeric(length);
 			break;
 		case "timestamp":
-			randomValue = RandomDateBetweenTwoDate(configObj.getStartDate(),
+			String temp = RandomDateBetweenTwoDate(configObj.getStartDate(),
 					configObj.getEndDate(), "yyyy-MM-dd'T'HH:mm:ss.SSSSSSz");
+			randomValue = temp.substring(0, temp.length() - 3) + "z";
 			break;
 		case "date":
 			randomValue = RandomDateBetweenTwoDate(configObj.getStartDate(),

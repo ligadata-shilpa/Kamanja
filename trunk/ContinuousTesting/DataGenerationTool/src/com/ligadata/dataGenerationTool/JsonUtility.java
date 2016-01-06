@@ -80,9 +80,16 @@ public class JsonUtility {
 					value = random.CheckType(fieldType, fieldLength, configObj);
 				}
 
-				if (fieldType.equalsIgnoreCase("timestamp")) {
-					value = value.substring(0, value.length() - 3) + "z";
+				if (fieldName.equalsIgnoreCase("user")) {
+					long temp = configObj.getSequenceID();
+					configObj.setSequenceID(temp + 1);
+					value = value + temp;
+
 				}
+
+				// if (fieldType.equalsIgnoreCase("timestamp")) {
+				// value = value.substring(0, value.length() - 3) + "z";
+				// }
 				fields.put(fieldName, value);
 			} // end for loop
 		} catch (ParseException e) {
@@ -107,6 +114,7 @@ public class JsonUtility {
 		configObj.setTemplatePath(configJson.getString("TemplatePath"));
 		configObj.setDestiniationPath(configJson.getString("DestiniationPath"));
 		configObj.setCompressFormat(configJson.getString("CompressFormat"));
+		configObj.setSequenceID(configJson.getLong("SequenceId"));
 		logger.info("Value of DataGenerationRate: "
 				+ configJson.getDouble("DataGenerationRate"));
 		logger.info("Value of StartDate: " + configJson.getString("StartDate"));
@@ -123,6 +131,8 @@ public class JsonUtility {
 				+ configJson.getString("TemplatePath"));
 		logger.info("Value of LogFilePath: "
 				+ configJson.getString("DestiniationPath"));
+		logger.info("Value of SequenceID: "
+				+ configJson.getString("SequenceId"));
 		logger.info("Parsing JSON object to config object successful.");
 		return configObj;
 	}
