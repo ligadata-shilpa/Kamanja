@@ -1,5 +1,7 @@
 Readme.txt
 
+Setup Lombok from https://projectlombok.org for your Eclipse/Scala IDE
+
 Packages
 1. com.ligadata.adapters.pipeline - Contains the main classes for building and running Pipelines. 
 a. IPipeline is the main interface. 

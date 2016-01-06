@@ -5,7 +5,7 @@
 	<artifactId>KamanjaAdapters</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<build>
-		<sourceDirectory>src</sourceDirectory>
+		<sourceDirectory>src/main/java</sourceDirectory>
 		<plugins>
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -108,6 +108,11 @@
 			<artifactId>commons-cli</artifactId>
 			<version>${commons-cli-version}</version>
 		</dependency>
+		<dependency>
+			<groupId>org.scala-lang</groupId>
+			<artifactId>scala-library</artifactId>
+			<version>${scala-library-version}</version>
+		</dependency>
 	</dependencies>
 	<properties>
 		<mariadb-java-client-version>1.3.2</mariadb-java-client-version>
@@ -123,5 +128,6 @@
 		<easybatch-version>4.0.0</easybatch-version>
 		<json-simple-version>1.1.1</json-simple-version>
 		<commons-cli-version>1.3.1</commons-cli-version>
+		<scala-library-version>2.11.7</scala-library-version>
 	</properties>
 </project>

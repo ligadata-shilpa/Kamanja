@@ -2,7 +2,6 @@ package com.ligadata.adapters.test;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.sql.Connection;
@@ -14,11 +13,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Properties;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -48,6 +45,8 @@ public class PopulateDBData {
 				.required(true)
 				.longOpt("props")
 				.desc("Location of DB Properties File")
+				.argName("Props File Location")
+				.hasArg(true)
 				.build();
 		oGroup.addOption(opt);
 		options.addOptionGroup(oGroup);
@@ -57,9 +56,7 @@ public class PopulateDBData {
 			CommandLine cmdLine = cmdParser.parse( options, args);
 			
 			if(cmdLine != null && cmdLine.hasOption("p")) {
-				//Check why fileLoc is coming in as NULL 
-				//TODO
-				String fileLoc = cmdLine.getOptionValue("p","testDBProperties.json");
+				String fileLoc = cmdLine.getOptionValue("p");
 				
 				File f = new File(fileLoc);
 				if(!f.exists()){
@@ -196,18 +193,20 @@ public class PopulateDBData {
 										
 									}
 								}
-								
-								
 							}
 						}, 0, interval, unit);
 					}
 				}
+			}else{
+				log.error("Invalid Options....");
+				HelpFormatter formatter = new HelpFormatter();
+				formatter.printHelp( "java -jar com.ligadata.adapters.test.PopulateDBData", options );
 			}
 		} catch (ParseException | IOException | org.json.simple.parser.ParseException e1) {
 			// TODO Auto-generated catch block
 			log.error("Invalid Options...."+e1.getMessage());
 			HelpFormatter formatter = new HelpFormatter();
-			formatter.printHelp( "PopulateDBData", options );
+			formatter.printHelp( "java -jar com.ligadata.adapters.test.PopulateDBData", options );
 		}
 	}
 }
