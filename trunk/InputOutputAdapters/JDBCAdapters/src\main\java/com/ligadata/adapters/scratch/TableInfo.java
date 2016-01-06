@@ -1,4 +1,4 @@
-package com.ligadata.adapters.pojo;
+package com.ligadata.adapters.scratch;
 
 import java.sql.Statement;
 import java.sql.Connection;
@@ -16,7 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @ToString(includeFieldNames=true)
 @Slf4j
-public class TablePartitionInfo {
+public class TableInfo {
 	@Getter @Setter
 	private String tableName;
 	@Getter @Setter
@@ -37,24 +37,31 @@ public class TablePartitionInfo {
 	private static final int defaultPartitions = 4;
 	private long pcs;
 	
+	@Getter @Setter
+	private String trackColumn;
+	
 	
 	public void fixPartInfo(){
 		Connection con = null;
 		Statement stmt = null;
 		ResultSet rs = null;
-		try{
-			con = ds.getConnection();
-			stmt = con.createStatement();
-			if(whereClause != null && whereClause.length()>0)
-				rs = stmt.executeQuery("Select max("+partitionColumnName +") as max_value, min("+partitionColumnName+") as min_value from "+ tableName+" "+whereClause);
-			else
-				rs = stmt.executeQuery("Select max("+partitionColumnName +") as max_value, min("+partitionColumnName+") as min_value from "+ tableName);
-			if( rs != null && rs.next()){
-				min = rs.getInt("min_value");
-				max = rs.getInt("max_value");
-			}
-			if(partMap == null){
-				partMap = new HashMap<Integer, String>();
+		
+		if(partMap == null)
+			partMap = new HashMap<Integer, String>();
+		
+		if(partitionColumnName!=null && partitionColumnName.length()>0){
+			try{
+				con = ds.getConnection();
+				stmt = con.createStatement();
+				if(whereClause != null && whereClause.length()>0)
+					rs = stmt.executeQuery("Select max("+partitionColumnName +") as max_value, min("+partitionColumnName+") as min_value from "+ tableName+" "+whereClause);
+				else
+					rs = stmt.executeQuery("Select max("+partitionColumnName +") as max_value, min("+partitionColumnName+") as min_value from "+ tableName);
+				if( rs != null && rs.next()){
+					min = rs.getInt("min_value");
+					max = rs.getInt("max_value");
+				}
+				
 				int parts = (partitions > 0 ) ? partitions : defaultPartitions;
 				pcs = Math.round((max-min)/parts);
 				for(int j=1; j<=parts; j++){
@@ -65,23 +72,26 @@ public class TablePartitionInfo {
 					else
 						partMap.put((j), "( "+partitionColumnName+" >= "+(min+((j-1)*pcs))+" and "+partitionColumnName+" <= "+max+" )");
 				}
-			}
-			rs.close();
-			rs = null;
-			stmt.close();
-			stmt = null;
-			con.close();
-			con = null;
-		}catch(SQLException exc){
-			log.error("TablePartitionInfo : Error "+exc.getMessage());
-		}finally{
-			try{
-				if(rs != null) rs.close();
-				if(stmt != null) stmt.close();
-				if(con != null) con.close();
+				
+				rs.close();
+				rs = null;
+				stmt.close();
+				stmt = null;
+				con.close();
+				con = null;
 			}catch(SQLException exc){
 				log.error("TablePartitionInfo : Error "+exc.getMessage());
+			}finally{
+				try{
+					if(rs != null) rs.close();
+					if(stmt != null) stmt.close();
+					if(con != null) con.close();
+				}catch(SQLException exc){
+					log.error("TablePartitionInfo : Error "+exc.getMessage());
+				}
 			}
+		}else{
+			partMap.put(1, "");
 		}
 	}
 }

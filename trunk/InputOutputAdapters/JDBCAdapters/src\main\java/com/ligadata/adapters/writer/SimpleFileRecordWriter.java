@@ -25,6 +25,8 @@ public class SimpleFileRecordWriter implements CustomRecordWriter{
 	private String fileName;
 	@Getter @Setter
 	private boolean zipOutput;
+	@Getter @Setter
+	private boolean append;
 	
 	public void open() throws IOException{
 		File f = null;
@@ -36,10 +38,16 @@ public class SimpleFileRecordWriter implements CustomRecordWriter{
 		if(!f.exists())
 			f.createNewFile();
 		
+		FileOutputStream fos = null;
+		if(append)
+			fos = new FileOutputStream(f, append);
+		else 
+			fos = new FileOutputStream(f);
+		
 		if(zipOutput)
-			writer = new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(f)),"UTF-8");
+			writer = new OutputStreamWriter(new GZIPOutputStream(fos),"UTF-8");
 		else
-			writer = new OutputStreamWriter(new FileOutputStream(f),"UTF-8");
+			writer = new OutputStreamWriter(fos,"UTF-8");
 	}
 	
 	public void close() throws IOException{

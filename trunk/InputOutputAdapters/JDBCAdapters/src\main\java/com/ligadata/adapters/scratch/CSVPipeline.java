@@ -1,34 +1,36 @@
-package com.ligadata.adapters.pipeline;
+package com.ligadata.adapters.scratch;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import javax.sql.DataSource;
 
+import com.google.common.eventbus.AsyncEventBus;
 import com.google.common.eventbus.EventBus;
-import com.ligadata.adapters.pojo.TablePartitionInfo;
 import com.ligadata.adapters.processor.DelimitedRecordProcessor;
 import com.ligadata.adapters.record.TableReader;
 import com.ligadata.adapters.utility.DBValidator;
-import com.ligadata.adapters.utility.JDBCReaderThread;
 import com.ligadata.adapters.utility.SimpleEventListener;
-import com.ligadata.adapters.writer.KafkaRecordWriter;
+import com.ligadata.adapters.writer.SimpleFileRecordWriter;
 
 import lombok.extern.slf4j.Slf4j;
 
+/*
+ * Pipeline for JDBC to File Using CSV Processor
+ */
 @Slf4j
-public class ManualPipeline {
-
-	
+public class CSVPipeline {
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-		
 		String dbUser = "kuser";
 		String dbPwd = "centuser";
 		String dbName = "kamanja";
 		String dbDriver = "org.mariadb.jdbc.Driver";
-		//String dbURL = "jdbc:mariadb://192.168.1.7:3306";
-		String dbURL = "jdbc:mariadb://10.0.1.105:3306";
+		String dbURL = "jdbc:mariadb://192.168.1.8:3306";
+		//String dbURL = "jdbc:mariadb://10.0.1.105:3306";
+		
 		String tableName = "testTable";
 		String columns = " emp_id, first_name, last_name, application_name, access_time, added_date";
 		String whereClause =" where added_date < current_date() ";
@@ -36,12 +38,16 @@ public class ManualPipeline {
 		int numPartitions=0;
 		String partCols = "emp_id";
 		
+		String trackColumn="added_date";
+		boolean runContinuously = true;
+		
+		
+		long startTime = System.currentTimeMillis();
 		
 		if(DBValidator.validateConnectivity(dbUser, dbPwd, dbDriver, dbURL+"/"+dbName)){
 			System.out.println("DB connection successful");
 			DataSource ds = DBValidator.getDataSource(dbUser, dbPwd, dbDriver, dbURL+"/"+dbName);
-			TablePartitionInfo partInfo = new TablePartitionInfo();
-			
+			TableInfo partInfo = new TableInfo();
 			partInfo.setDs(ds);
 			
 			if(DBValidator.validateTable(ds, tableName, columns, whereClause)){
@@ -52,8 +58,11 @@ public class ManualPipeline {
 				
 				if(DBValidator.validateTablePartitionCol(ds, tableName, partCols)){
 					System.out.println("Validated table partition column....");
-					partInfo.setPartitionColumnName(partCols);
-					partInfo.setPartitions(numPartitions);
+					//partInfo.setPartitionColumnName(partCols);
+					//partInfo.setPartitions(numPartitions);
+					partInfo.fixPartInfo();
+					System.out.println(partInfo.toString());
+				}else{
 					partInfo.fixPartInfo();
 					System.out.println(partInfo.toString());
 				}
@@ -61,23 +70,11 @@ public class ManualPipeline {
 			
 			int partCount = partInfo.getPartMap().size();
 			
-			/*
-			ExecutorService service = null;
-			if(partCount > 0 )
-				service = Executors.newFixedThreadPool(1);
-			else
-				service = Executors.newFixedThreadPool(partCount);
+			ExecutorService service = Executors.newFixedThreadPool(4);
 			AsyncEventBus eb = new AsyncEventBus("JDBC Ingester", service);
-			*/
 			
-			EventBus eb = new EventBus("JDBC Ingester");
-			
-			//SimpleFileRecordWriter writer = new SimpleFileRecordWriter(null,"test.txt",true);
+			SimpleFileRecordWriter writer = new SimpleFileRecordWriter(null,"test.txt",true,false);
 			//SimpleFileRecordWriter writer = new SimpleFileRecordWriter(null,"test.txt",false);
-			
-			//JSONRecordWriter writer = new JSONRecordWriter("test.json",null,true);
-			
-			KafkaRecordWriter writer = new KafkaRecordWriter();
 			
 			try {
 				writer.open();
@@ -92,18 +89,22 @@ public class ManualPipeline {
 			ArrayList<Thread> threads = new ArrayList<>();
 			for(int j=0;j<partCount; j++){
 				TableReader reader = new TableReader(ds,tableName,columns);
-				if(whereClause != null && whereClause.length() > 0)
-					reader.setWhereClause(whereClause+" and "+partInfo.getPartMap().get(j+1)+" ");
-				else
-					reader.setWhereClause(" where "+partInfo.getPartMap().get(j+1)+" ");
+				if(whereClause != null && whereClause.length() > 0){
+					if(partInfo.getPartMap().get(j+1)!=null && partInfo.getPartMap().get(j+1).length()>0)
+						reader.setWhereClause(whereClause+" and "+partInfo.getPartMap().get(j+1)+" ");
+					else
+						reader.setWhereClause(whereClause);
+				}else{
+					if(partInfo.getPartMap().get(j+1)!=null && partInfo.getPartMap().get(j+1).length()>0)
+						reader.setWhereClause(" where "+partInfo.getPartMap().get(j+1)+" ");
+					else
+						reader.setWhereClause(whereClause);
+				}
 				reader.setFetchSize(10);
 				reader.setQueryTimeout(60);
 				
 				DelimitedRecordProcessor dRecProcessor = new DelimitedRecordProcessor(":",";",System.getProperty("line.separator"),true);
 				Thread thread = new Thread(new JDBCReaderThread(reader,eb, "Thread "+j,dRecProcessor));
-				
-				//JSONRecordProcessor jsonProcessor = new JSONRecordProcessor();
-				//Thread thread = new Thread(new JDBCReaderThread(reader, eb, "Thread "+j,jsonProcessor));
 				
 				threads.add(thread);
 			}
@@ -117,6 +118,19 @@ public class ManualPipeline {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
+			}
+			
+			service.shutdown();
+			try{
+				if (!service.awaitTermination(120, TimeUnit.SECONDS)) {
+					service.shutdownNow();
+					if (!service.awaitTermination(120, TimeUnit.SECONDS)){
+						log.equals("Service did not shutdown clean");
+					}
+				}
+			}catch(InterruptedException exc){
+				service.shutdownNow();
+				 Thread.currentThread().interrupt();
 			}
 			
 			try {
@@ -137,20 +151,8 @@ public class ManualPipeline {
 				}
 			}
 			
-			/*
-			service.shutdown();
-			try{
-				if (!service.awaitTermination(120, TimeUnit.SECONDS)) {
-					service.shutdownNow();
-					if (!service.awaitTermination(120, TimeUnit.SECONDS)){
-						log.equals("Service did not shutdown clean");
-					}
-				}
-			}catch(InterruptedException exc){
-				service.shutdownNow();
-				 Thread.currentThread().interrupt();
-			}
-			*/
+			long endTime = System.currentTimeMillis();
+			System.out.println("Total execution time is - "+(endTime - startTime)+" ms...");
 		}
 	}
 }

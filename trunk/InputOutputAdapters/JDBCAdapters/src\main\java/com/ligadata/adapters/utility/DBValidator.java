@@ -63,6 +63,7 @@ public class DBValidator {
 		ds.setUsername(user);
 		ds.setPassword(pwd);
 		
+		
 		ds.setTestWhileIdle(false);
 		ds.setTestOnBorrow(true);
 		ds.setValidationQuery("Select 1");

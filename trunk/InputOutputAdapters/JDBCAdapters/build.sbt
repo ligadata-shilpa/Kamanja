@@ -32,5 +32,8 @@ libraryDependencies ++= Seq(
    "com.google.code.gson" % "gson" % "2.5",
    "org.easybatch" % "easybatch-core" % "4.0.0",
    "org.easybatch" % "easybatch-jdbc" % "4.0.0",
-   "org.mockito" % "mockito-core" % "1.9.5" % "test"  // Test-only dependency
+   "com.googlecode.json-simple" % "json-simple" % "1.1.1",
+   "commons-cli" % "commons-cli" % "1.3.1",
+   // Test-only dependencies
+   "org.mockito" % "mockito-core" % "1.9.5" % "test"  
 )

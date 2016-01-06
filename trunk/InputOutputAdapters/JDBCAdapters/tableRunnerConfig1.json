@@ -1,0 +1,29 @@
+{
+	"input":{
+		"type":"JDBC",
+		"dbUser":"kuser",
+		"dbPwd":"centuser",
+		"dbURL":"jdbc:mariadb://192.168.1.7:3306",
+		"dbDriver":"org.mariadb.jdbc.Driver",
+		"dbName":"kamanja",
+		
+		"tableName":"testTable",
+		"columns":"emp_id, first_name, last_name, application_name, access_time, added_date",
+		"whereClause":" where emp_id=28" ,
+		"temporalColumn":"added_date"
+	},
+	"processor":{
+		"type":"Delimited",
+		"keyValueDelimiter":":",
+		"columnDelimiter":",",
+		"rowDelimiter":";"
+	},
+	"output":{
+		"type":"File",
+		"name":"test.txt",
+		"compress":"true",
+		"append":"true"
+	}
+	"runInterval":10,
+	"runUnits":"seconds"
+}

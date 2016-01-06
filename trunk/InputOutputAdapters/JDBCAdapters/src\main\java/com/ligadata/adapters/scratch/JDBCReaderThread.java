@@ -1,6 +1,7 @@
-package com.ligadata.adapters.utility;
+package com.ligadata.adapters.scratch;
 
 import org.easybatch.core.processor.RecordProcessingException;
+import org.easybatch.core.reader.RecordReader;
 import org.easybatch.core.reader.RecordReaderClosingException;
 import org.easybatch.core.reader.RecordReaderOpeningException;
 import org.easybatch.core.reader.RecordReadingException;
@@ -9,7 +10,6 @@ import org.easybatch.core.record.StringRecord;
 import com.google.common.eventbus.EventBus;
 import com.ligadata.adapters.processor.StringMapProcessor;
 import com.ligadata.adapters.record.JDBCMapRecord;
-import com.ligadata.adapters.record.TableReader;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -20,7 +20,7 @@ import lombok.Setter;
 @NoArgsConstructor
 public class JDBCReaderThread implements Runnable {
 	@Getter @Setter
-	private TableReader tableReader;
+	private RecordReader recordReader;
 	@Getter @Setter
 	private EventBus eventbus;
 	@Getter @Setter
@@ -32,19 +32,18 @@ public class JDBCReaderThread implements Runnable {
 	@Override
 	public void run() {
 		try {
-			tableReader.open();
+			recordReader.open();
 			int j=0;
 			long startTime = System.currentTimeMillis();
-			while(tableReader.hasNextRecord()){
-				JDBCMapRecord record = (JDBCMapRecord)tableReader.readNextRecord();
-		        //HashMap<String, Object> employee = record.getPayload();
+			while(recordReader.hasNextRecord()){
+				JDBCMapRecord record = (JDBCMapRecord)recordReader.readNextRecord();
 		        StringRecord stringRecord = mapProcessor.processRecord(record);
 		        eventbus.post(stringRecord);
 		        j++;
 			}
-			tableReader.close();
+			recordReader.close();
 			long endTime = System.currentTimeMillis();
-			System.out.println(getId()+" took "+(endTime-startTime)+" to complete processing "+j+" records...");
+			System.out.println(getId()+" took "+(endTime-startTime)+" ms to complete processing "+j+" records...");
 		}catch (RecordReaderOpeningException | RecordReadingException | RecordReaderClosingException | RecordProcessingException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

@@ -1,10 +1,10 @@
-package com.ligadata.adapters.utility;
+package com.ligadata.adapters.scratch;
 
 
 
 import javax.sql.DataSource;
 
-import com.ligadata.adapters.pojo.TablePartitionInfo;
+import com.ligadata.adapters.utility.DBValidator;
 
 public class DBInputAdapter {
 	/*
@@ -51,7 +51,7 @@ public class DBInputAdapter {
 		int numPartitions=8;
 		String partCols = "emp_id";
 		
-		TablePartitionInfo partInfo = new TablePartitionInfo();
+		TableInfo partInfo = new TableInfo();
 				
 		if(DBValidator.validateConnectivity(dbUser, dbPwd, dbDriver, dbURL+"/"+dbName)){
 			System.out.println("DB connection successful");
