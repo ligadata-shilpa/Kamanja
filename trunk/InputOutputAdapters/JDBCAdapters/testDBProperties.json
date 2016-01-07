@@ -1,7 +1,7 @@
 {
 	"dbUser":"kuser",
 	"dbPwd":"centuser",
-	"dbURL":"jdbc:mariadb://192.168.1.7:3306",
+	"dbURL":"jdbc:mariadb://192.168.1.9:3306",
 	"dbDriver":"org.mariadb.jdbc.Driver",
 	"dbName":"kamanja",
 	"tableName":"testTable",

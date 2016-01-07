@@ -1,6 +1,7 @@
 package com.ligadata.adapters.pipeline;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -48,6 +49,8 @@ public class Pipeline implements IPipeline{
 	SimpleEventListener consumer;
 	ExecutorService service;
 	
+	private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS");
+	
 	
 	@Override
 	public void create(JSONObject configs) {
@@ -68,6 +71,8 @@ public class Pipeline implements IPipeline{
 	public void run() {
 		// TODO Auto-generated method stub
 		Date currentDate = new Date();
+		
+		System.out.println("Starting execution at "+sdf.format(currentDate));
 		
 		JSONObject outputConfig = (JSONObject)config.get("output");
 		

@@ -58,14 +58,21 @@ public class QueryReader implements CustomRecordReader{
 	@Getter @Setter
 	private String temporalColumn;
 	
+	@Getter @Setter
+	private java.util.Date lastRunDate;
+	
 
 	@Override
 	public void close() throws RecordReaderClosingException {
 		try{
 			if(resultset != null)resultset.close();
+			resultset = null;
 			if(pstmt != null)pstmt.close();
+			pstmt = null;
 			if(statement != null)statement.close();
+			statement = null;
 			if(connection != null)connection.close();
+			connection = null;
 		}catch(SQLException exc){
 			log.error(exc.getMessage());
 			throw new RecordReaderClosingException("Error while closing record reader", exc);
@@ -161,6 +168,64 @@ public class QueryReader implements CustomRecordReader{
 	@Override
 	public void open(Date runDateTime) throws RecordReaderOpeningException {
 		// TODO Auto-generated method stub
+		currentRecordNumber = 0;
+		try{
+			if(connection == null)connection = ds.getConnection();
+			
+			StringBuilder qry = new StringBuilder();
+			int indexOfWhereClause = getQuery().toUpperCase().indexOf("WHERE");
+			
+			qry.append(getQuery());
+			
+			if(lastRunDate != null){
+				if(indexOfWhereClause > 0)
+					qry.append(" and "+temporalColumn+" > ? and "+temporalColumn+" <= ?");
+				else
+					qry.append(" where "+temporalColumn+" >  ? and "+temporalColumn+" <= ?");
+			}else{
+				if(indexOfWhereClause > 0)
+					qry.append(" and "+temporalColumn+" <= ?");
+				else
+					qry.append(" where "+temporalColumn+" <= ?");
+			}
+			
+			if(pstmt == null)pstmt = connection.prepareStatement(qry.toString(), ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+			
+			if(fetchSize>0)
+				pstmt.setFetchSize(fetchSize);
+			else
+				pstmt.setFetchSize(AdapterConstants.DEFAULT_FETCHSIZE);
+			if(queryTimeout>0)
+				pstmt.setQueryTimeout(queryTimeout);
+			else
+				pstmt.setQueryTimeout(AdapterConstants.DEFAULT_QUERYTIMEOUT);
+			
+			if(lastRunDate != null){
+				pstmt.setTimestamp(1, new java.sql.Timestamp(lastRunDate.getTime()));
+				pstmt.setTimestamp(2, new java.sql.Timestamp(runDateTime.getTime()));
+			}else{
+				pstmt.setTimestamp(1, new java.sql.Timestamp(runDateTime.getTime()));
+			}
+			
+			resultset = pstmt.executeQuery();
 		
+			//Pick up metadata only on the first execution
+			if(lastRunDate == null){
+				resultSetMetaData = resultset.getMetaData();
+				if(metaMap == null)
+					metaMap = new ArrayList<ColumnMetaInfo>();
+				else metaMap.clear();
+				for(int j=1;j<=resultSetMetaData.getColumnCount();j++){
+					metaMap.add(new ColumnMetaInfo(resultSetMetaData.getColumnName(j), resultSetMetaData.getColumnClassName(j), resultSetMetaData.getColumnType(j)));
+				}
+			}
+			
+			//Set the last run date to the current run date
+			lastRunDate = new java.sql.Date(runDateTime.getTime());
+			
+		}catch(SQLException exc){
+			log.error(exc.getMessage());
+			throw new RecordReaderOpeningException("Error while opening record reader", exc);
+		}
 	}
 }

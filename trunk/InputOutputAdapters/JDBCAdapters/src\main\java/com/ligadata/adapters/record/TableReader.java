@@ -129,6 +129,7 @@ public class TableReader implements CustomRecordReader{
 			if(getWhereClause()!=null && getWhereClause().length()>0)
 				query.append(getWhereClause());
 			
+			/* May be an overkill to do it here
 			if(getWhereClause()!=null && getWhereClause().length()>0)
 				if(temporalColumn!=null && temporalColumn.length()>0)
 					query.append(getWhereClause() + " and "+temporalColumn+" <= ?");
@@ -137,6 +138,7 @@ public class TableReader implements CustomRecordReader{
 			else
 				if(temporalColumn!=null && temporalColumn.length()>0)
 					query.append(" where "+temporalColumn+" <= ?");
+			*/
 			
 			if(pstmt == null)pstmt = connection.prepareStatement(query.toString(), ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 			
@@ -204,6 +206,7 @@ public class TableReader implements CustomRecordReader{
 			StringBuilder query = new StringBuilder();
 			query.append("SELECT "+getColumns());
 			query.append(" FROM "+getTableName());
+			
 			if(lastRunDate != null){
 				if(getWhereClause()!=null && getWhereClause().length()>0)
 					query.append(getWhereClause() + " and "+temporalColumn+" > ? and "+temporalColumn+" <= ?");
@@ -235,16 +238,20 @@ public class TableReader implements CustomRecordReader{
 			}
 			resultSet = pstmt.executeQuery();
 			
+			//Pick up metadata only on the first run
+			if(lastRunDate ==null){
+				resultSetMetaData = resultSet.getMetaData();
+				if(metaMap == null)
+					metaMap = new ArrayList<ColumnMetaInfo>();
+				else metaMap.clear();
+				for(int j=1;j<=resultSetMetaData.getColumnCount();j++){
+					metaMap.add(new ColumnMetaInfo(resultSetMetaData.getColumnName(j), resultSetMetaData.getColumnClassName(j), resultSetMetaData.getColumnType(j)));
+				}
+			}
+			
 			//Set the last run date to the current run date
 			lastRunDate = new java.sql.Date(runDateTime.getTime());
 			
-			resultSetMetaData = resultSet.getMetaData();
-			if(metaMap == null)
-				metaMap = new ArrayList<ColumnMetaInfo>();
-			else metaMap.clear();
-			for(int j=1;j<=resultSetMetaData.getColumnCount();j++){
-				metaMap.add(new ColumnMetaInfo(resultSetMetaData.getColumnName(j), resultSetMetaData.getColumnClassName(j), resultSetMetaData.getColumnType(j)));
-			}
 		}catch(SQLException exc){
 			log.error(exc.getMessage());
 			throw new RecordReaderOpeningException("Error while opening record reader", exc);

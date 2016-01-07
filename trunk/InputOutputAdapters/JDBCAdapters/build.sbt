@@ -34,6 +34,8 @@ libraryDependencies ++= Seq(
    "org.easybatch" % "easybatch-jdbc" % "4.0.0",
    "com.googlecode.json-simple" % "json-simple" % "1.1.1",
    "commons-cli" % "commons-cli" % "1.3.1",
+   "org.scala-lang" % "scala-library" % "2.11.7",
+   "org.apache.curator" % "curator-recipes" % "3.0.0",
    // Test-only dependencies
    "org.mockito" % "mockito-core" % "1.9.5" % "test"  
 )

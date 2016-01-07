@@ -56,7 +56,9 @@ public class PipelineBuilder {
 					//Create a QueryReader here
 					if(DBValidator.validateQuery(ds, query)){
 						QueryReader qReader = new QueryReader(ds, query);
-						
+						String temporalColumn = (String)config.get("temporalColumn");
+						qReader.setTemporalColumn(temporalColumn);
+						reader = qReader;
 					}else{
 						//Invalid Query - Handle Errors Here
 					}

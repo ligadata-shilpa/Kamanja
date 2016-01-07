@@ -3,12 +3,10 @@
 		"type":"JDBC",
 		"dbUser":"kuser",
 		"dbPwd":"centuser",
-		"dbURL":"jdbc:mariadb://192.168.1.8:3306",
+		"dbURL":"jdbc:mariadb://192.168.1.9:3306",
 		"dbDriver":"org.mariadb.jdbc.Driver",
 		"dbName":"kamanja",
-		"tableName":"testTable",
-		"columns":"emp_id, first_name, last_name, application_name, access_time, added_date",
-		"whereClause":" where emp_id=28" ,
+		"query":"select emp_id, first_name, last_name, application_name, access_time, added_date from testTable where emp_id=28"
 		"temporalColumn":"added_date"
 	},
 	"processor":{
@@ -23,6 +21,6 @@
 		"compress":"true",
 		"append":"true"
 	},
-	"runInterval":1,
-	"runUnits":"minutes"
+	"runInterval":10,
+	"runUnits":"seconds"
 }
