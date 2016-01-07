@@ -19,6 +19,7 @@ mergeStrategy in assembly <<= (mergeStrategy in assembly) { (old) =>
   {
     // case PathList("javax", "servlet", xs @ _*)         => MergeStrategy.first
     // case PathList(ps @ _*) if ps.last endsWith ".html" => MergeStrategy.first
+case PathList("META-INF", "maven","jline","jline", ps) if ps.startsWith("pom") => MergeStrategy.discard
     case PathList(ps @ _*) if ps.last endsWith ".html" => MergeStrategy.first
     case x if x endsWith "google/common/annotations/GwtCompatible.class" => MergeStrategy.first
     case x if x endsWith "google/common/annotations/GwtIncompatible.class" => MergeStrategy.first
@@ -59,13 +60,13 @@ name := "MetadataAPI"
 
 version := "1.0"
 
-scalaVersion := "2.10.4"
+scalaVersion := "2.11.7"
 
 libraryDependencies += "org.joda" % "joda-convert" % "1.6"
 
 libraryDependencies += "joda-time" % "joda-time" % "2.8.2"
 
-libraryDependencies += "org.scalatest" % "scalatest_2.10" % "2.2.0"
+libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.0"
 
 libraryDependencies += "org.apache.logging.log4j" % "log4j-api" % "2.4.1"
 
@@ -92,8 +93,8 @@ libraryDependencies += "commons-codec" % "commons-codec" % "1.10"
 libraryDependencies += "commons-io" % "commons-io" % "2.4"
 
 libraryDependencies ++= Seq(
-"com.twitter" %% "chill" % "0.3.6",
-"org.scalamacros" % "quasiquotes_2.10.4" % "2.0.0-M6",
+"com.twitter" %% "chill" % "0.5.0",
+"org.scalameta" %% "quasiquotes" % "0.0.3",
  "org.apache.shiro" % "shiro-core" % "1.2.3",
  "org.apache.shiro" % "shiro-root" % "1.2.3"
 )

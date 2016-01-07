@@ -102,7 +102,7 @@ trait MetadataAPI {
    * returns JSON string of ApiResult object.
    */
 
-  /** Add new types 
+  /** Add new types
     * @param typesText an input String of types in a format defined by the next parameter formatType
     * @param formatType format of typesText ( JSON or XML)
     * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
@@ -110,9 +110,9 @@ trait MetadataAPI {
     * @return the result as a JSON String of object ApiResult where ApiResult.statusCode
     * indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
     * ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure
-    * 
+    *
     * Example:
-    * 
+    *
     * {{{
     * val sampleScalarTypeStr = """
     * {
@@ -133,7 +133,7 @@ trait MetadataAPI {
     * var result = MetadataAPIImpl.getApiResult(apiResult)
     * println("Result as Json String => \n" + result._2)
     * }}}
-    * 
+    *
    */
   def AddType(typesText:String, formatType:String, userid: Option[String] = None): String
 
@@ -171,7 +171,6 @@ trait MetadataAPI {
     *
     */
   def UpdateType(typesText:String, formatType:String, userid: Option[String] = None): String
-
   /** Remove Type for given typeName and version
     * @param typeName name of the Type
     * @version version of the Type
@@ -206,7 +205,7 @@ trait MetadataAPI {
    */
   def UploadJar(jarPath:String, userid: Option[String] = None): String
 
-  /** Add new functions 
+  /** Add new functions
     * @param functionsText an input String of functions in a format defined by the next parameter formatType
     * @param formatType format of functionsText ( JSON or XML)
     * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
