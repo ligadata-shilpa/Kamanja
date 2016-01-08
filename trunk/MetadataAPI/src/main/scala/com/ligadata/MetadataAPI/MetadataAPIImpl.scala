@@ -132,7 +132,7 @@ object MetadataAPIImpl extends MetadataAPI {
     "SECURITY_IMPL_JAR", "AUDIT_IMPL_CLASS", "AUDIT_IMPL_JAR", "DO_AUDIT", "AUDIT_PARMS", "ADAPTER_SPECIFIC_CONFIG", "METADATA_DATASTORE")
 
   // This is used to exclude all non-engine related configs from Uplodad Config method 
-  private val excludeList: Set[String] = Set[String]("ClusterId", "StatusInfo", "Nodes", "Config", "Adapters", "DataStore", "ZooKeeperInfo", "EnvironmentContext")
+  private val excludeList: Set[String] = Set[String]("ClusterId", "Nodes", "Config", "Adapters", "DataStore", "ZooKeeperInfo", "EnvironmentContext")
 
   var isCassandra = false
   private[this] val lock = new Object
@@ -4959,8 +4959,6 @@ object MetadataAPIImpl extends MetadataAPI {
             val cfgMap = new scala.collection.mutable.HashMap[String, String]
             if (cluster.contains("DataStore"))
               cfgMap("DataStore") = getStringFromJsonNode(cluster.getOrElse("DataStore", null))
-            if (cluster.contains("StatusInfo"))
-              cfgMap("StatusInfo") = getStringFromJsonNode(cluster.getOrElse("StatusInfo", null))
             if (cluster.contains("ZooKeeperInfo"))
               cfgMap("ZooKeeperInfo") = getStringFromJsonNode(cluster.getOrElse("ZooKeeperInfo", null))
             if (cluster.contains("EnvironmentContext"))
@@ -4969,8 +4967,6 @@ object MetadataAPIImpl extends MetadataAPI {
               val config = cluster.get("Config").get.asInstanceOf[Map[String, Any]] //BUGBUG:: Do we need to check the type before converting
               if (config.contains("DataStore"))
                 cfgMap("DataStore") = getStringFromJsonNode(config.get("DataStore"))
-              if (config.contains("StatusInfo"))
-                cfgMap("StatusInfo") = getStringFromJsonNode(config.get("StatusInfo"))
               if (config.contains("ZooKeeperInfo"))
                 cfgMap("ZooKeeperInfo") = getStringFromJsonNode(config.get("ZooKeeperInfo"))
               if (config.contains("EnvironmentContext"))

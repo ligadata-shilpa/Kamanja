@@ -79,7 +79,6 @@ object KamanjaConfiguration {
   var allConfigs: Properties = _
   //  var metadataDataStoreInfo: String = _
   var dataDataStoreInfo: String = _
-  var statusDataStoreInfo: String = _
   var jarPaths: collection.immutable.Set[String] = _
   var nodeId: Int = _
   var clusterId: String = _
@@ -110,7 +109,6 @@ object KamanjaConfiguration {
     allConfigs = null
     //    metadataDataStoreInfo = null
     dataDataStoreInfo = null
-    statusDataStoreInfo = null
     jarPaths = null
     nodeId = 0
     clusterId = null

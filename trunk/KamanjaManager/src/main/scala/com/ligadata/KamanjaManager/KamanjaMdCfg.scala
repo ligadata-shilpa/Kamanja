@@ -64,12 +64,6 @@ object KamanjaMdCfg {
       return false
     }
 
-    val statusInfo = cluster.cfgMap.getOrElse("StatusInfo", null)
-    if (statusInfo == null) {
-      LOG.error("StatusInfo not found for Node %d  & ClusterId : %s".format(KamanjaConfiguration.nodeId, nd.ClusterId))
-      return false
-    }
-
     val zooKeeperInfo = cluster.cfgMap.getOrElse("ZooKeeperInfo", null)
     if (zooKeeperInfo == null) {
       LOG.error("ZooKeeperInfo not found for Node %d  & ClusterId : %s".format(KamanjaConfiguration.nodeId, nd.ClusterId))
@@ -101,55 +95,9 @@ object KamanjaMdCfg {
     }
 
     KamanjaConfiguration.dataDataStoreInfo = dataStore
-    KamanjaConfiguration.statusDataStoreInfo = statusInfo
 
     implicit val jsonFormats: Formats = DefaultFormats
     val zKInfo = parse(zooKeeperInfo).extract[JZKInfo]
-
-    /*
-    // DataStore & StatusInfo & ZooKeeperInfo
-    val dataStoreInfo = parse(dataStore).extract[JDataStore]
-    val statusStoreInfo = parse(statusInfo).extract[JDataStore]
-    KamanjaConfiguration.dataStoreType = dataStoreInfo.StoreType.replace("\"", "").trim
-    if (KamanjaConfiguration.dataStoreType.size == 0) {
-      LOG.error("Not found valid DataStoreType.")
-      return false
-    }
-
-    KamanjaConfiguration.dataSchemaName = dataStoreInfo.SchemaName.replace("\"", "").trim
-    if (KamanjaConfiguration.dataSchemaName.size == 0) {
-      LOG.error("Not found valid DataSchemaName.")
-      return false
-    }
-
-    KamanjaConfiguration.dataLocation = dataStoreInfo.Location.replace("\"", "").trim
-    if (KamanjaConfiguration.dataLocation.size == 0) {
-      LOG.error("Not found valid DataLocation.")
-      return false
-    }
-
-    KamanjaConfiguration.adapterSpecificConfig = if (dataStoreInfo.AdapterSpecificConfig == None || dataStoreInfo.AdapterSpecificConfig == null) "" else dataStoreInfo.AdapterSpecificConfig.get.trim
-
-    KamanjaConfiguration.statusInfoStoreType = statusStoreInfo.StoreType.replace("\"", "").trim
-    if (KamanjaConfiguration.statusInfoStoreType.size == 0) {
-      LOG.error("Not found valid Status Information StoreType.")
-      return false
-    }
-
-    KamanjaConfiguration.statusInfoSchemaName = statusStoreInfo.SchemaName.replace("\"", "").trim
-    if (KamanjaConfiguration.statusInfoSchemaName.size == 0) {
-      LOG.error("Not found valid Status Information SchemaName.")
-      return false
-    }
-
-    KamanjaConfiguration.statusInfoLocation = statusStoreInfo.Location.replace("\"", "").trim
-    if (KamanjaConfiguration.statusInfoLocation.size == 0) {
-      LOG.error("Not found valid Status Information Location.")
-      return false
-    }
-
-    KamanjaConfiguration.statusInfoAdapterSpecificConfig = if (statusStoreInfo.AdapterSpecificConfig == None || statusStoreInfo.AdapterSpecificConfig == null) "" else statusStoreInfo.AdapterSpecificConfig.get.trim
-*/
 
     KamanjaConfiguration.zkConnectString = zKInfo.ZooKeeperConnectString.replace("\"", "").trim
     KamanjaConfiguration.zkNodeBasePath = zKInfo.ZooKeeperNodeBasePath.replace("\"", "").trim
@@ -304,7 +252,6 @@ object KamanjaMdCfg {
 
           envCtxt.SetJarPaths(KamanjaConfiguration.jarPaths) // Jar paths for Datastores, etc
           envCtxt.SetDefaultDatastore(KamanjaConfiguration.dataDataStoreInfo) // Default Datastore
-          envCtxt.SetStatusInfoDatastore(KamanjaConfiguration.statusDataStoreInfo) // Status Info datastore
 
           val allMsgsContainers = topMessageNames ++ containerNames
           val containerInfos = allMsgsContainers.map(c => { ContainerNameAndDatastoreInfo(c, null) })

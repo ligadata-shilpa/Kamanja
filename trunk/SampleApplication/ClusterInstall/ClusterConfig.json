@@ -12,16 +12,6 @@
         "principal": "ligadata@INTRANET.LIGADATA.COM",
         "keytab": "/home/ligadata/keytab/ligadata.keytab"
       },
-      "StatusInfo": {
-        "StoreType": "hbase",
-        "SchemaName": "kamanja",
-        "Location": "localhost",
-        "authentication": "kerberos",
-        "regionserver_principal": "hbase/_HOST@INTRANET.LIGADATA.COM",
-        "master_principal": "hbase/_HOST@INTRANET.LIGADATA.COM",
-        "principal": "ligadata@INTRANET.LIGADATA.COM",
-        "keytab": "/home/ligadata/keytab/ligadata.keytab"
-      },
       "ZooKeeperInfo": {
         "ZooKeeperNodeBasePath": "/kamanja",
         "ZooKeeperConnectString": "localhost:2181",

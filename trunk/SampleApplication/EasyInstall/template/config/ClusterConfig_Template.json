@@ -3,30 +3,6 @@
     {
       "ClusterId": "ligadata1",
       "DataStore": {"StoreType": "hashmap","SchemaName": "testdata","Location": "{InstallDirectory}/storage"},
-      "StatusInfo": {
-        "ClassName": "com.ligadata.keyvaluestore.HashMapAdapter$",
-        "JarName": "hashmap_2.11-0.1.0.jar",
-        "DependencyJars": [
-          "exceptions_2.11-1.0.jar",
-          "kamanjautils_2.11-1.0.jar",
-          "storagebase_2.11-1.0.jar",
-          "log4j-core-2.4.1.jar",
-          "log4j-api-2.4.1.jar",
-          "json4s-native_2.11-3.2.9.jar",
-          "json4s-core_2.11-3.2.9.jar",
-          "json4s-ast_2.11-3.2.9.jar",
-          "paranamer-2.6.jar",
-          "scalap-2.11.0.jar",
-          "json4s-jackson_2.11-3.2.9.jar",
-          "jackson-databind-2.3.1.jar",
-          "jackson-annotations-2.3.0.jar",
-          "jackson-core-2.3.1.jar",
-          "guava-16.0.1.jar",
-          "mapdb-1.0.6.jar"
-        ],
-        "SchemaName": "statusinfo",
-        "Location": "{InstallDirectory}/storage"
-      },
       "ZooKeeperInfo": {
         "ZooKeeperNodeBasePath": "/kamanja",
         "ZooKeeperConnectString": "localhost:2181",
