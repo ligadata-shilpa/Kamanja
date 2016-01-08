@@ -61,7 +61,8 @@ object IbmMqAdapterConfiguration {
 
     val qc = new IbmMqAdapterConfiguration
     qc.Name = inputConfig.Name
-    qc.formatOrInputAdapterName = inputConfig.formatOrInputAdapterName
+    qc.formatName = inputConfig.formatName
+    qc.associatedAdapterName = inputConfig.associatedAdapterName
     qc.className = inputConfig.className
     qc.jarName = inputConfig.jarName
     qc.dependencyJars = inputConfig.dependencyJars

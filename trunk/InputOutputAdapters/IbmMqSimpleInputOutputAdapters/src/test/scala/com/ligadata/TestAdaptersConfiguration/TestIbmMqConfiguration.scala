@@ -74,7 +74,8 @@ class TestIbmMqConfiguration extends FlatSpec with MockFactory {
 
     // Assert that the2 values have been set.
     assert(testIbmMqAdapterConfiguration.Name == "SomeName")
-    assert(testIbmMqAdapterConfiguration.formatOrInputAdapterName == "SomeformatOrInputAdapterName")
+    assert(testIbmMqAdapterConfiguration.formatName == "SomeformatName")
+    assert(testIbmMqAdapterConfiguration.associatedAdapterName == "SomeassociatedAdapterName")
     assert(testIbmMqAdapterConfiguration.className == "com.example.package.class")
     assert(testIbmMqAdapterConfiguration.jarName == "org.example.somejar.jar")
     assert(testIbmMqAdapterConfiguration.dependencyJars == Set("org.example.somedependencyjar1.jar", "org.example.somedependencyjar2.jar"))
@@ -106,7 +107,8 @@ class TestIbmMqConfiguration extends FlatSpec with MockFactory {
 
     // Assert that the2 values have been set.
     assert(testIbmMqAdapterConfiguration.Name == "SomeName")
-    assert(testIbmMqAdapterConfiguration.formatOrInputAdapterName == "SomeformatOrInputAdapterName")
+    assert(testIbmMqAdapterConfiguration.formatName == "SomeformatName")
+    assert(testIbmMqAdapterConfiguration.associatedAdapterName == "SomeassociatedAdapterName")
     assert(testIbmMqAdapterConfiguration.className == "com.example.package.class")
     assert(testIbmMqAdapterConfiguration.jarName == "org.example.somejar.jar")
     assert(testIbmMqAdapterConfiguration.dependencyJars == Set("org.example.somedependencyjar1.jar", "org.example.somedependencyjar2.jar"))
@@ -138,7 +140,8 @@ class TestIbmMqConfiguration extends FlatSpec with MockFactory {
 
     // Assert that the2 values have been set.
     assert(testIbmMqAdapterConfiguration.Name == "SomeName")
-    assert(testIbmMqAdapterConfiguration.formatOrInputAdapterName == "SomeformatOrInputAdapterName")
+    assert(testIbmMqAdapterConfiguration.formatName == "SomeformatName")
+    assert(testIbmMqAdapterConfiguration.associatedAdapterName == "SomeassociatedAdapterName")
     assert(testIbmMqAdapterConfiguration.className == "com.example.package.class")
     assert(testIbmMqAdapterConfiguration.jarName == "org.example.somejar.jar")
     assert(testIbmMqAdapterConfiguration.dependencyJars == Set("org.example.somedependencyjar1.jar", "org.example.somedependencyjar2.jar"))
@@ -171,7 +174,8 @@ class TestIbmMqConfiguration extends FlatSpec with MockFactory {
 
     inputConfig.adapterSpecificCfg = adapterSpecificConfiguration
     inputConfig.Name = "SomeName"
-    inputConfig.formatOrInputAdapterName = "SomeformatOrInputAdapterName"
+    inputConfig.formatName = "SomeformatName"
+    inputConfig.associatedAdapterName = "SomeassociatedAdapterName"
     inputConfig.className = "com.example.package.class"
     inputConfig.jarName = "org.example.somejar.jar"
     inputConfig.dependencyJars = Set("org.example.somedependencyjar1.jar", "org.example.somedependencyjar2.jar")

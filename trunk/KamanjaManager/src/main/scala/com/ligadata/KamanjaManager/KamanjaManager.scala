@@ -222,6 +222,7 @@ class KamanjaManager extends Observer {
   private val outputAdapters = new ArrayBuffer[OutputAdapter]
   private val statusAdapters = new ArrayBuffer[OutputAdapter]
   private val validateInputAdapters = new ArrayBuffer[InputAdapter]
+  private val failedEventsAdapters = new ArrayBuffer[OutputAdapter]
   private var heartBeat: HeartBeatUtil = null
 
   private type OptionMap = Map[Symbol, Any]
@@ -293,16 +294,13 @@ class KamanjaManager extends Observer {
         ia.Shutdown
       } catch {
         case fae: FatalAdapterException => {
-          val causeStackTrace = StackTrace.ThrowableTraceString(fae.cause)
-          LOG.error("Validate adapter " + ia.UniqueName + "failed to shutdown, cause: \n" + causeStackTrace)
+          LOG.error("Validate adapter " + ia.UniqueName + "failed to shutdown", fae)
         }
         case e: Exception => {
-          val causeStackTrace = StackTrace.ThrowableTraceString(e)
-          LOG.error("Validate adapter " + ia.UniqueName + "failed to shutdown, cause: \n" + causeStackTrace)
+          LOG.error("Validate adapter " + ia.UniqueName + "failed to shutdown", e)
         }
         case e: Throwable => {
-          val causeStackTrace = StackTrace.ThrowableTraceString(e)
-          LOG.error("Validate adapter " + ia.UniqueName + "failed to shutdown, cause: \n" + causeStackTrace)
+          LOG.error("Validate adapter " + ia.UniqueName + "failed to shutdown", e)
         }
       }
     })
@@ -314,16 +312,13 @@ class KamanjaManager extends Observer {
         ia.Shutdown
       } catch {
         case fae: FatalAdapterException => {
-          val causeStackTrace = StackTrace.ThrowableTraceString(fae.cause)
-          LOG.error("Input adapter " + ia.UniqueName + "failed to shutdown, cause: \n" + causeStackTrace)
+          LOG.error("Input adapter " + ia.UniqueName + "failed to shutdown", fae)
         }
         case e: Exception => {
-          val causeStackTrace = StackTrace.ThrowableTraceString(e)
-          LOG.error("Input adapter " + ia.UniqueName + "failed to shutdown, cause: \n" + causeStackTrace)
+          LOG.error("Input adapter " + ia.UniqueName + "failed to shutdown", e)
         }
         case e: Throwable => {
-          val causeStackTrace = StackTrace.ThrowableTraceString(e)
-          LOG.error("Input adapter " + ia.UniqueName + "failed to shutdown, cause: \n" + causeStackTrace)
+          LOG.error("Input adapter " + ia.UniqueName + "failed to shutdown", e)
         }
       }
     })
@@ -335,16 +330,13 @@ class KamanjaManager extends Observer {
         oa.Shutdown
       } catch {
         case fae: FatalAdapterException => {
-          val causeStackTrace = StackTrace.ThrowableTraceString(fae.cause)
-          LOG.error("Output adapter failed to shutdown, cause: \n" + causeStackTrace)
+          LOG.error("Output adapter failed to shutdown", fae)
         }
         case e: Exception => {
-          val causeStackTrace = StackTrace.ThrowableTraceString(e)
-          LOG.error("Output adapter failed to shutdown, cause: \n" + causeStackTrace)
+          LOG.error("Output adapter failed to shutdown", e)
         }
         case e: Throwable => {
-          val causeStackTrace = StackTrace.ThrowableTraceString(e)
-          LOG.error("Output adapter failed to shutdown, cause: \n" + causeStackTrace)
+          LOG.error("Output adapter failed to shutdown", e)
         }
       }
     })
@@ -356,21 +348,36 @@ class KamanjaManager extends Observer {
         oa.Shutdown
       } catch {
         case fae: FatalAdapterException => {
-          val causeStackTrace = StackTrace.ThrowableTraceString(fae.cause)
-          LOG.error("Status adapter failed to shutdown, cause: \n" + causeStackTrace)
+          LOG.error("Status adapter failed to shutdown", fae)
         }
         case e: Exception => {
-          val causeStackTrace = StackTrace.ThrowableTraceString(e)
-          LOG.error("Status adapter failed to shutdown, cause: \n" + causeStackTrace)
+          LOG.error("Status adapter failed to shutdown", e)
         }
         case e: Throwable => {
-          val causeStackTrace = StackTrace.ThrowableTraceString(e)
-          LOG.error("Status adapter failed to shutdown, cause: \n" + causeStackTrace)
+          LOG.error("Status adapter failed to shutdown", e)
         }
       }
     })
 
     statusAdapters.clear
+
+    failedEventsAdapters.foreach(oa => {
+      try {
+        oa.Shutdown
+      } catch {
+        case fae: FatalAdapterException => {
+          LOG.error("FailedEvents adapter failed to shutdown, cause", fae)
+        }
+        case e: Exception => {
+          LOG.error("FailedEvents adapter failed to shutdown, cause", e)
+        }
+        case e: Throwable => {
+          LOG.error("FailedEvents adapter failed to shutdown", e)
+        }
+      }
+    })
+
+    failedEventsAdapters.clear
 
     val totaltm = "TimeConsumed:%.02fms".format((System.nanoTime - s0) / 1000000.0);
     LOG.debug("Shutdown Adapters done @ " + Utils.GetCurDtTmStr + ". " + totaltm)
@@ -446,7 +453,7 @@ class KamanjaManager extends Observer {
 
       LOG.debug("Loading Adapters")
       // Loading Adapters (Do this after loading metadata manager & models & Dimensions (if we are loading them into memory))
-      retval = KamanjaMdCfg.LoadAdapters(inputAdapters, outputAdapters, statusAdapters, validateInputAdapters)
+      retval = KamanjaMdCfg.LoadAdapters(inputAdapters, outputAdapters, statusAdapters, validateInputAdapters, failedEventsAdapters)
 
       if (retval) {
         LOG.debug("Initialize Metadata Manager")
@@ -479,7 +486,7 @@ class KamanjaManager extends Observer {
           }
         }
 
-        KamanjaLeader.Init(KamanjaConfiguration.nodeId.toString, KamanjaConfiguration.zkConnectString, engineLeaderZkNodePath, engineDistributionZkNodePath, adaptersStatusPath, inputAdapters, outputAdapters, statusAdapters, validateInputAdapters, KamanjaMetadata.envCtxt, KamanjaConfiguration.zkSessionTimeoutMs, KamanjaConfiguration.zkConnectionTimeoutMs, dataChangeZkNodePath)
+        KamanjaLeader.Init(KamanjaConfiguration.nodeId.toString, KamanjaConfiguration.zkConnectString, engineLeaderZkNodePath, engineDistributionZkNodePath, adaptersStatusPath, inputAdapters, outputAdapters, statusAdapters, validateInputAdapters, failedEventsAdapters, KamanjaMetadata.envCtxt, KamanjaConfiguration.zkSessionTimeoutMs, KamanjaConfiguration.zkConnectionTimeoutMs, dataChangeZkNodePath)
       }
 
       if (retval && zkHeartBeatNodePath.size > 0) {
@@ -603,20 +610,17 @@ class KamanjaManager extends Observer {
               }
             } catch {
               case fae: FatalAdapterException => {
-                val causeStackTrace = StackTrace.ThrowableTraceString(fae.cause)
-                LOG.error("Failed to send data to status adapter:" + adapNm + "\n.Internal Cause:" + causeStackTrace)
+                LOG.error("Failed to send data to status adapter:" + adapNm, fae)
                 if (alreadyFailed == false)
                   exceptionStatusAdaps += adapNm
               }
               case e: Exception => {
-                val stackTrace = StackTrace.ThrowableTraceString(e)
-                LOG.error("Failed to send data to status adapter:" + adapNm + "\n.Stack Trace:" + stackTrace)
+                LOG.error("Failed to send data to status adapter:" + adapNm, e)
                 if (alreadyFailed == false)
                   exceptionStatusAdaps += adapNm
               }
               case t: Throwable => {
-                val stackTrace = StackTrace.ThrowableTraceString(t)
-                LOG.error("Failed to send data to status adapter:" + adapNm + "\n.Stack Trace:" + stackTrace)
+                LOG.error("Failed to send data to status adapter:" + adapNm, t)
                 if (alreadyFailed == false)
                   exceptionStatusAdaps += adapNm
               }

@@ -20,7 +20,8 @@ import com.ligadata.KamanjaBase.DataDelimiters
 
 class AdapterConfiguration {
   var Name: String = _ // Name of the Adapter, KafkaQueue Name/MQ Name/File Adapter Logical Name/etc
-  var formatOrInputAdapterName: String = _ // CSV/JSON/XML for input adapter. For output it is just corresponding input adapter name. For Status it is default
+  var formatName: String = _ // CSV/JSON/XML for input adapter.
+  var associatedAdapterName: String = _ // FailedEvents Adapter for input adapter. Validate Adapter for output adapter.
   var associatedMsg: String = _ // Queue Associated Message
   var className: String = _ // Class where the Adapter can be loaded (Object derived from InputAdapterObj)
   var jarName: String = _ // Jar where the className can be found

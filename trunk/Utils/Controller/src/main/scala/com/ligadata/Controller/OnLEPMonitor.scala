@@ -302,7 +302,8 @@ class KamanjaMonitor {
       statusQs.foreach(qConf => {
         val thisConf: AdapterConfiguration = new AdapterConfiguration
         thisConf.Name = qConf.getOrElse("Name", "").toString
-        thisConf.formatOrInputAdapterName = qConf.getOrElse("Format", "").toString
+        thisConf.formatName = qConf.getOrElse("Format", "").toString
+        thisConf.associatedAdapterName = qConf.getOrElse("AssociatedAdapterName", "").toString
         thisConf.className = qConf.getOrElse("ClassName", "").toString
         thisConf.jarName = qConf.getOrElse("JarName", "").toString
         thisConf.dependencyJars = qConf.getOrElse("DependencyJars", "").asInstanceOf[List[String]].toSet
@@ -316,7 +317,7 @@ class KamanjaMonitor {
 
         // Ignore if any value in the adapter was not set.
         if (thisConf.Name.size > 0 &&
-          thisConf.formatOrInputAdapterName.size > 0 &&
+          // thisConf.formatName.size > 0 &&
           thisConf.className.size > 0 &&
           thisConf.jarName.size > 0 &&
           thisConf.dependencyJars.size > 0 &&
@@ -331,7 +332,8 @@ class KamanjaMonitor {
       outputQs.foreach(qConf => {
         val thisConf: AdapterConfiguration = new AdapterConfiguration
         thisConf.Name = qConf.getOrElse("Name", "").toString
-        thisConf.formatOrInputAdapterName = qConf.getOrElse("Format", "").toString
+        thisConf.formatName = qConf.getOrElse("Format", "").toString
+        thisConf.associatedAdapterName = qConf.getOrElse("AssociatedAdapterName", "").toString
         thisConf.className = qConf.getOrElse("ClassName", "").toString
         thisConf.jarName = qConf.getOrElse("JarName", "").toString
         thisConf.dependencyJars = qConf.getOrElse("DependencyJars", "").asInstanceOf[List[String]].toSet
@@ -345,7 +347,7 @@ class KamanjaMonitor {
 
         // Ignore if any value in the adapter was not set.
         if (thisConf.Name.size > 0 &&
-          thisConf.formatOrInputAdapterName.size > 0 &&
+          // thisConf.formatName.size > 0 &&
           thisConf.className.size > 0 &&
           thisConf.jarName.size > 0 &&
           thisConf.dependencyJars.size > 0 &&
