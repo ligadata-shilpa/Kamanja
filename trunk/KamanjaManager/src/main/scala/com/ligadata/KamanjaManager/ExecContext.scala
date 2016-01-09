@@ -17,7 +17,7 @@
 
 package com.ligadata.KamanjaManager
 
-import com.ligadata.KamanjaBase.{ EnvContext, DataDelimiters, TransactionContext }
+import com.ligadata.KamanjaBase.{ EnvContext, DataDelimiters, TransactionContext, InputData }
 import com.ligadata.InputOutputAdapterInfo.{ ExecContext, InputAdapter, OutputAdapter, ExecContextObj, PartitionUniqueRecordKey, PartitionUniqueRecordValue, InputAdapterCallerContext }
 import com.ligadata.KvBase.{ Key }
 
@@ -75,7 +75,13 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
 
       try {
         val transformStartTime = System.nanoTime
-        val xformedmsgs = xform.execute(data, format, associatedMsg, delimiters, uk, uv)
+        var xformedmsgs = Array[(String, MsgContainerObjAndTransformInfo, InputData)]()
+        try {
+          xformedmsgs = xform.execute(data, format, associatedMsg, delimiters, uk, uv)
+        } catch {
+          case e: Exception => {}
+          case e: Throwable => {}
+        }
         LOG.info(ManagerUtils.getComponentElapsedTimeStr("Transform", uv, readTmNanoSecs, transformStartTime))
         var xformedMsgCntr = 0
         val totalXformedMsgs = xformedmsgs.size
