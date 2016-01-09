@@ -35,6 +35,7 @@ import com.ligadata.Exceptions._
 
 class KamanjaInputAdapterCallerContext extends InputAdapterCallerContext {
   var outputAdapters: Array[OutputAdapter] = _
+  var failedEventsAdapters: Array[OutputAdapter] = _
   var gNodeContext: NodeContext = _
 }
 
@@ -347,7 +348,7 @@ object KamanjaMdCfg {
     // Get input adapter
     LOG.debug("Getting Input Adapters")
 
-    if (LoadInputAdapsForCfg(inputAdaps, inputAdapters, outputAdapters.toArray, KamanjaMetadata.gNodeContext) == false)
+    if (LoadInputAdapsForCfg(inputAdaps, inputAdapters, outputAdapters.toArray, KamanjaMetadata.gNodeContext, failedEventsAdapters.toArray) == false)
       return false
 
     // Get input adapter
@@ -555,7 +556,7 @@ object KamanjaMdCfg {
     null
   }
 
-  private def PrepInputAdapsForCfg(adaps: scala.collection.mutable.Map[String, AdapterInfo], inputAdapters: ArrayBuffer[InputAdapter], outputAdapters: Array[OutputAdapter], gNodeContext: NodeContext, execCtxtObj: ExecContextObj, hasOutputAdapterName: Boolean): Boolean = {
+  private def PrepInputAdapsForCfg(adaps: scala.collection.mutable.Map[String, AdapterInfo], inputAdapters: ArrayBuffer[InputAdapter], outputAdapters: Array[OutputAdapter], gNodeContext: NodeContext, execCtxtObj: ExecContextObj, failedEventsAdapters: Array[OutputAdapter], hasOutputAdapterName: Boolean): Boolean = {
     // ConfigurationName
     if (adaps.size == 0) {
       return true
@@ -563,6 +564,7 @@ object KamanjaMdCfg {
 
     val callerCtxt = new KamanjaInputAdapterCallerContext
     callerCtxt.outputAdapters = outputAdapters
+    callerCtxt.failedEventsAdapters = failedEventsAdapters
     callerCtxt.gNodeContext = gNodeContext
 
     adaps.foreach(ac => {
@@ -599,8 +601,8 @@ object KamanjaMdCfg {
     return true
   }
 
-  private def LoadInputAdapsForCfg(adaps: scala.collection.mutable.Map[String, AdapterInfo], inputAdapters: ArrayBuffer[InputAdapter], outputAdapters: Array[OutputAdapter], gNodeContext: NodeContext): Boolean = {
-    return PrepInputAdapsForCfg(adaps, inputAdapters, outputAdapters, gNodeContext, ExecContextObjImpl, true)
+  private def LoadInputAdapsForCfg(adaps: scala.collection.mutable.Map[String, AdapterInfo], inputAdapters: ArrayBuffer[InputAdapter], outputAdapters: Array[OutputAdapter], gNodeContext: NodeContext, failedEventsAdapters: Array[OutputAdapter]): Boolean = {
+    return PrepInputAdapsForCfg(adaps, inputAdapters, outputAdapters, gNodeContext, ExecContextObjImpl, failedEventsAdapters, true)
   }
 
   private def LoadValidateInputAdapsFromCfg(validate_adaps: scala.collection.mutable.Map[String, AdapterInfo], valInputAdapters: ArrayBuffer[InputAdapter], outputAdapters: Array[OutputAdapter], gNodeContext: NodeContext): Boolean = {
@@ -621,7 +623,7 @@ object KamanjaMdCfg {
     })
     if (validateInputAdapters.size == 0)
       return true
-    return PrepInputAdapsForCfg(validateInputAdapters, valInputAdapters, outputAdapters, gNodeContext, ValidateExecContextObjImpl, false)
+    return PrepInputAdapsForCfg(validateInputAdapters, valInputAdapters, outputAdapters, gNodeContext, ValidateExecContextObjImpl, null, false)
   }
 
 }

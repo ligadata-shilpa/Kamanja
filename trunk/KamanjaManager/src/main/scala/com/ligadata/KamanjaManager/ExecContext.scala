@@ -50,6 +50,7 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
   var previousLoader: com.ligadata.Utils.KamanjaClassLoader = null
   val allOutputAdaptersNames = if (kamanjaCallerCtxt.outputAdapters != null) kamanjaCallerCtxt.outputAdapters.map(o => o.inputConfig.Name.toLowerCase) else Array[String]()
   val allOuAdapters = if (kamanjaCallerCtxt.outputAdapters != null) kamanjaCallerCtxt.outputAdapters.map(o => (o.inputConfig.Name.toLowerCase, o)).toMap else Map[String, OutputAdapter]()
+  val failedEventsAdapters = if (kamanjaCallerCtxt.failedEventsAdapters != null) kamanjaCallerCtxt.failedEventsAdapters.map(o => (o.inputConfig.Name.toLowerCase, o)).toMap else Map[String, OutputAdapter]()
   val adapterInfoMap = ProcessedAdaptersInfo.getOneInstance(this.hashCode(), true)
   def execute(data: Array[Byte], format: String, uniqueKey: PartitionUniqueRecordKey, uniqueVal: PartitionUniqueRecordValue, readTmNanoSecs: Long, readTmMilliSecs: Long, ignoreOutput: Boolean, associatedMsg: String, delimiters: DataDelimiters): Unit = {
     try {
