@@ -46,7 +46,8 @@ object KafkaQueueAdapterConfiguration {
     val qc = new KafkaQueueAdapterConfiguration
     qc.Name = inputConfig.Name
     qc.formatName = inputConfig.formatName
-    qc.associatedAdapterName = inputConfig.associatedAdapterName
+    qc.validateAdapterName = inputConfig.validateAdapterName
+    qc.failedEventsAdapterName = inputConfig.failedEventsAdapterName
     qc.className = inputConfig.className
     qc.jarName = inputConfig.jarName
     qc.dependencyJars = inputConfig.dependencyJars

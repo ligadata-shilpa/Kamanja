@@ -914,10 +914,15 @@ object JsonSerializer {
         pretty(render(json))
       }
       case o: AdapterInfo => {
+        
+        val inputAdapterToValidate = if (o.inputAdapterToValidate != null) o.inputAdapterToValidate else ""
+        val failedEventsAdapter = if (o.failedEventsAdapter != null) o.failedEventsAdapter else ""
+
         val json = (("Name" -> o.name) ~
           ("TypeString" -> o.typeString) ~
           ("DataFormat" -> o.dataFormat) ~
-          ("InputAdapterToVerify" -> o.inputAdapterToVerify) ~
+          ("InputAdapterToVerify" -> inputAdapterToValidate) ~
+          ("FailedEventsAdapter" -> failedEventsAdapter) ~
           ("ClassName" -> o.className) ~
           ("JarName" -> o.jarName) ~
           ("DependencyJars" -> o.dependencyJars.toList) ~

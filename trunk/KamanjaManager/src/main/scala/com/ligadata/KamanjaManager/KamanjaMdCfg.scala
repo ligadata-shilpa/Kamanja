@@ -451,7 +451,7 @@ object KamanjaMdCfg {
 
       conf.Name = adap.Name.toLowerCase
       if (hasInputAdapterName)
-        conf.associatedAdapterName = adap.InputAdapterToVerify
+        conf.validateAdapterName = adap.InputAdapterToValidate
       conf.className = adap.ClassName
       conf.jarName = adap.JarName
       conf.keyAndValueDelimiter = adap.KeyAndValueDelimiter
@@ -573,7 +573,8 @@ object KamanjaMdCfg {
 
       conf.Name = adap.Name.toLowerCase
       conf.formatName = adap.DataFormat
-      conf.associatedAdapterName = adap.inputAdapterToVerify
+      if (hasOutputAdapterName)
+        conf.failedEventsAdapterName = adap.failedEventsAdapter
       conf.className = adap.ClassName
       conf.jarName = adap.JarName
       conf.dependencyJars = if (adap.DependencyJars != null) adap.DependencyJars.map(str => str.trim).filter(str => str.size > 0).toSet else null
@@ -606,7 +607,7 @@ object KamanjaMdCfg {
     val validateInputAdapters = scala.collection.mutable.Map[String, AdapterInfo]()
 
     outputAdapters.foreach(oa => {
-      val validateInputAdapName = (if (oa.inputConfig.associatedAdapterName != null) oa.inputConfig.associatedAdapterName.trim else "").toLowerCase
+      val validateInputAdapName = (if (oa.inputConfig.validateAdapterName != null) oa.inputConfig.validateAdapterName.trim else "").toLowerCase
       if (validateInputAdapName.size > 0) {
         val valAdap = validate_adaps.getOrElse(validateInputAdapName, null)
         if (valAdap != null) {

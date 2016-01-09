@@ -303,7 +303,8 @@ class KamanjaMonitor {
         val thisConf: AdapterConfiguration = new AdapterConfiguration
         thisConf.Name = qConf.getOrElse("Name", "").toString
         thisConf.formatName = qConf.getOrElse("Format", "").toString
-        thisConf.associatedAdapterName = qConf.getOrElse("AssociatedAdapterName", "").toString
+        thisConf.validateAdapterName = qConf.getOrElse("InputAdapterToVerify", "").toString
+        thisConf.failedEventsAdapterName = qConf.getOrElse("FailedEventsAdapter", "").toString
         thisConf.className = qConf.getOrElse("ClassName", "").toString
         thisConf.jarName = qConf.getOrElse("JarName", "").toString
         thisConf.dependencyJars = qConf.getOrElse("DependencyJars", "").asInstanceOf[List[String]].toSet
@@ -333,7 +334,8 @@ class KamanjaMonitor {
         val thisConf: AdapterConfiguration = new AdapterConfiguration
         thisConf.Name = qConf.getOrElse("Name", "").toString
         thisConf.formatName = qConf.getOrElse("Format", "").toString
-        thisConf.associatedAdapterName = qConf.getOrElse("AssociatedAdapterName", "").toString
+        thisConf.validateAdapterName = qConf.getOrElse("InputAdapterToVerify", "").toString
+        thisConf.failedEventsAdapterName = qConf.getOrElse("FailedEventsAdapter", "").toString
         thisConf.className = qConf.getOrElse("ClassName", "").toString
         thisConf.jarName = qConf.getOrElse("JarName", "").toString
         thisConf.dependencyJars = qConf.getOrElse("DependencyJars", "").asInstanceOf[List[String]].toSet

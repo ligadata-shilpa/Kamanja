@@ -83,7 +83,8 @@ class TestIbmMqConsumer extends FlatSpec with MockFactory {
     inputConfig.adapterSpecificCfg = adapterSpecificConfiguration
     inputConfig.Name = "SomeName"
     inputConfig.formatName = "SomeformatName"
-    inputConfig.associatedAdapterName = "SomeassociatedAdapterName"
+    inputConfig.validateAdapterName = "SomevalidateAdapterName"
+    inputConfig.failedEventsAdapterName = "SomefailedEventsAdapterName"
     inputConfig.className = "com.example.package.class"
     inputConfig.jarName = "org.example.somejar.jar"
     inputConfig.dependencyJars = Set("org.example.somedependencyjar1.jar", "org.example.somedependencyjar2.jar")

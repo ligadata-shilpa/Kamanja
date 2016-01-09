@@ -4633,11 +4633,11 @@ object MetadataAPIImpl extends MetadataAPI {
 
   def AddAdapter(name: String, typeString: String, dataFormat: String, className: String,
                  jarName: String, dependencyJars: List[String],
-                 adapterSpecificCfg: String, inputAdapterToVerify: String, keyAndValueDelimiter: String, fieldDelimiter: String, valueDelimiter: String, associatedMsg: String): String = {
+                 adapterSpecificCfg: String, inputAdapterToVerify: String, keyAndValueDelimiter: String, fieldDelimiter: String, valueDelimiter: String, associatedMsg: String, failedEventsAdapter: String): String = {
     try {
       // save in memory
       val ai = MdMgr.GetMdMgr.MakeAdapter(name, typeString, dataFormat, className, jarName,
-        dependencyJars, adapterSpecificCfg, inputAdapterToVerify, keyAndValueDelimiter, fieldDelimiter, valueDelimiter, associatedMsg)
+        dependencyJars, adapterSpecificCfg, inputAdapterToVerify, keyAndValueDelimiter, fieldDelimiter, valueDelimiter, associatedMsg, failedEventsAdapter)
       MdMgr.GetMdMgr.AddAdapter(ai)
       // save in database
       val key = "AdapterInfo." + name
@@ -4657,8 +4657,8 @@ object MetadataAPIImpl extends MetadataAPI {
 
   def UpdateAdapter(name: String, typeString: String, dataFormat: String, className: String,
                     jarName: String, dependencyJars: List[String],
-                    adapterSpecificCfg: String, inputAdapterToVerify: String, keyAndValueDelimiter: String, fieldDelimiter: String, valueDelimiter: String, associatedMsg: String): String = {
-    AddAdapter(name, typeString, dataFormat, className, jarName, dependencyJars, adapterSpecificCfg, inputAdapterToVerify, keyAndValueDelimiter, fieldDelimiter, valueDelimiter, associatedMsg)
+                    adapterSpecificCfg: String, inputAdapterToVerify: String, keyAndValueDelimiter: String, fieldDelimiter: String, valueDelimiter: String, associatedMsg: String, failedEventsAdapter: String): String = {
+    AddAdapter(name, typeString, dataFormat, className, jarName, dependencyJars, adapterSpecificCfg, inputAdapterToVerify, keyAndValueDelimiter, fieldDelimiter, valueDelimiter, associatedMsg, failedEventsAdapter)
   }
 
   def RemoveAdapter(name: String): String = {
@@ -5052,6 +5052,10 @@ object MetadataAPIImpl extends MetadataAPI {
                 if (adap.contains("InputAdapterToVerify")) {
                   inputAdapterToVerify = adap.get("InputAdapterToVerify").get.asInstanceOf[String]
                 }
+                var failedEventsAdapter: String = null
+                if (adap.contains("FailedEventsAdapter")) {
+                  failedEventsAdapter = adap.get("FailedEventsAdapter").get.asInstanceOf[String]
+                }
                 var dataFormat: String = null
                 if (adap.contains("DataFormat")) {
                   dataFormat = adap.get("DataFormat").get.asInstanceOf[String]
@@ -5076,7 +5080,7 @@ object MetadataAPIImpl extends MetadataAPI {
                   associatedMsg = adap.get("AssociatedMessage").get.asInstanceOf[String]
                 }
                 // save in memory
-                val ai = MdMgr.GetMdMgr.MakeAdapter(nm, typStr, dataFormat, clsNm, jarnm, depJars, ascfg, inputAdapterToVerify, keyAndValueDelimiter, fieldDelimiter, valueDelimiter, associatedMsg)
+                val ai = MdMgr.GetMdMgr.MakeAdapter(nm, typStr, dataFormat, clsNm, jarnm, depJars, ascfg, inputAdapterToVerify, keyAndValueDelimiter, fieldDelimiter, valueDelimiter, associatedMsg, failedEventsAdapter)
                 MdMgr.GetMdMgr.AddAdapter(ai)
                 val key = "AdapterInfo." + ai.name
                 val value = serializer.SerializeObjectToByteArray(ai)
