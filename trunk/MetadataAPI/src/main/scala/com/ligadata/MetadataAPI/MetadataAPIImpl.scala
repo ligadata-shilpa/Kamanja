@@ -609,8 +609,6 @@ object MetadataAPIImpl extends MetadataAPI {
   def SaveObject(bucketKeyStr: String, value: Array[Byte], typeName: String, serializerTyp: String) {
 
 
-    logger.debug("Ahmed =====> SaveObject <=========== Ahmed from type == " +typeName )
-
     val (containerName, store) = tableStoreMap(typeName)
     val k = Key(storageDefaultTime, Array(bucketKeyStr), storageDefaultTxnId, 0)
     val v = Value(serializerTyp, value)
@@ -720,9 +718,6 @@ object MetadataAPIImpl extends MetadataAPI {
   // 
   def SaveObjectList(objList: Array[BaseElemDef], typeName: String) {
 
-
-    logger.debug("Ahmed =====> SaveObjectList <=========== Ahmed from type == " +typeName )
-
     logger.debug("Save " + objList.length + " objects in a single transaction ")
     val tranId = GetNewTranId
     var keyList = new Array[String](objList.length)
@@ -730,13 +725,7 @@ object MetadataAPIImpl extends MetadataAPI {
     try {
       var i = 0;
       objList.foreach(obj => {
-
-        logger.debug("Ahmed =====>this before updating --->  obj.tranId %d ".format(obj.tranId) )
-
         obj.tranId = tranId
-
-        logger.debug("Ahmed =====>this after updating --->  obj.tranId %d ".format(obj.tranId) )
-
         val key = (getObjectType(obj) + "." + obj.FullNameWithVer).toLowerCase
         var value = serializer.SerializeObjectToByteArray(obj)
         keyList(i) = key
@@ -849,7 +838,6 @@ object MetadataAPIImpl extends MetadataAPI {
    def UpdateTranId (objList:Array[BaseElemDef] ): Unit ={
     var max: Long = 0
     objList.foreach(obj => {
-      logger.debug("Ahmed UpdateTranId --> %d =====> ".format(obj.tranId) )
       max = scala.math.max(max, obj.TranId)
     })
     if (currentTranLevel < max) currentTranLevel = max
@@ -867,19 +855,12 @@ object MetadataAPIImpl extends MetadataAPI {
       // yet (a bug that is being ractified now)...  We can remove this code when that is fixed.
       var max: Long = 0
       objList.foreach(obj => {
-        logger.debug("Ahmed %d =====> ".format(obj.tranId) )
         max = scala.math.max(max, obj.TranId)
       })
-
-      logger.debug("Ahmed =====>this before updating --->  max = %d  currentTransaction = %d ".format(max,currentTranLevel) )
-
-
       if (currentTranLevel < max) currentTranLevel = max
 
       if (notifyEngine != "YES") {
         logger.warn("Not Notifying the engine about this operation because The property NOTIFY_ENGINE is not set to YES")
-        logger.debug("Ahmed =====> putting  max %d to db ".format(max) )
-
         PutTranId(max)
         return
       }

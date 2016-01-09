@@ -261,9 +261,7 @@ object MetadataAPIOutputMsg {
         case Some(o) =>
           logger.debug("output message found => " + o.asInstanceOf[OutputMsgDef].FullNameWithVer)
           if (userid != None) MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.DELETEOBJECT, "Model", AuditConstants.SUCCESS, "", o.asInstanceOf[OutputMsgDef].FullNameWithVer)
-
           MetadataAPIImpl.DeleteObject(o.asInstanceOf[OutputMsgDef])
-
           var objectsUpdated = new Array[BaseElemDef](0)
           var ob = o.asInstanceOf[OutputMsgDef]
           ob.tranId = MetadataAPIImpl.GetNewTranId
