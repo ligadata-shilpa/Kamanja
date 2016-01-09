@@ -34,24 +34,48 @@ import com.ligadata.transactions._
 
 // There are no locks at this moment. Make sure we don't call this with multiple threads for same object
 class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUniqueRecordKey, val callerCtxt: InputAdapterCallerContext) extends ExecContext {
-  val LOG = LogManager.getLogger(getClass);
+  private val LOG = LogManager.getLogger(getClass);
   if (callerCtxt.isInstanceOf[KamanjaInputAdapterCallerContext] == false) {
     throw new Exception("Handling only KamanjaInputAdapterCallerContext in ValidateExecCtxtImpl")
   }
 
   NodeLevelTransService.init(KamanjaConfiguration.zkConnectString, KamanjaConfiguration.zkSessionTimeoutMs, KamanjaConfiguration.zkConnectionTimeoutMs, KamanjaConfiguration.zkNodeBasePath, KamanjaConfiguration.txnIdsRangeForNode, KamanjaConfiguration.dataDataStoreInfo, KamanjaConfiguration.jarPaths)
 
-  val kamanjaCallerCtxt = callerCtxt.asInstanceOf[KamanjaInputAdapterCallerContext]
-  val transService = new SimpleTransService
+  private val kamanjaCallerCtxt = callerCtxt.asInstanceOf[KamanjaInputAdapterCallerContext]
+  private val transService = new SimpleTransService
   transService.init(KamanjaConfiguration.txnIdsRangeForPartition)
 
-  val xform = new TransformMessageData
-  val engine = new LearningEngine(input, curPartitionKey)
-  var previousLoader: com.ligadata.Utils.KamanjaClassLoader = null
-  val allOutputAdaptersNames = if (kamanjaCallerCtxt.outputAdapters != null) kamanjaCallerCtxt.outputAdapters.map(o => o.inputConfig.Name.toLowerCase) else Array[String]()
-  val allOuAdapters = if (kamanjaCallerCtxt.outputAdapters != null) kamanjaCallerCtxt.outputAdapters.map(o => (o.inputConfig.Name.toLowerCase, o)).toMap else Map[String, OutputAdapter]()
-  val failedEventsAdapters = if (kamanjaCallerCtxt.failedEventsAdapters != null) kamanjaCallerCtxt.failedEventsAdapters.map(o => (o.inputConfig.Name.toLowerCase, o)).toMap else Map[String, OutputAdapter]()
-  val adapterInfoMap = ProcessedAdaptersInfo.getOneInstance(this.hashCode(), true)
+  private val xform = new TransformMessageData
+  private val engine = new LearningEngine(input, curPartitionKey)
+  private var previousLoader: com.ligadata.Utils.KamanjaClassLoader = null
+  private val allOutputAdaptersNames = if (kamanjaCallerCtxt.outputAdapters != null) kamanjaCallerCtxt.outputAdapters.map(o => o.inputConfig.Name.toLowerCase) else Array[String]()
+  private val allOuAdapters = if (kamanjaCallerCtxt.outputAdapters != null) kamanjaCallerCtxt.outputAdapters.map(o => (o.inputConfig.Name.toLowerCase, o)).toMap else Map[String, OutputAdapter]()
+  private val failedEventsAdapter =
+    if (input != null && input.inputConfig != null && input.inputConfig.failedEventsAdapterName != null && kamanjaCallerCtxt.failedEventsAdapters != null && kamanjaCallerCtxt.failedEventsAdapters.size > 0) {
+      val failedEventsAdapterName = input.inputConfig.failedEventsAdapterName.trim()
+      var failedAdap: OutputAdapter = null
+      if (failedEventsAdapterName.size > 0) {
+        val filtred = kamanjaCallerCtxt.failedEventsAdapters.filter(a => (a.inputConfig.Name.trim().compareToIgnoreCase(failedEventsAdapterName) == 0))
+        if (filtred.size > 0) {
+          LOG.debug("Found FailedEventsAdapter %s for InputAdapter %s".format(input.inputConfig.failedEventsAdapterName, input.inputConfig.Name))
+          failedAdap = filtred(0)
+        } else {
+          LOG.warn("Not found FailedEventsAdapter %s for InputAdapter %s. Ignoring message failed in InputAdapter %s".format(input.inputConfig.failedEventsAdapterName, input.inputConfig.Name, input.inputConfig.Name))
+        }
+      }
+      failedAdap
+    } else {
+      null
+    }
+
+  private val adapterInfoMap = ProcessedAdaptersInfo.getOneInstance(this.hashCode(), true)
+
+  private def SendFailedEvent(data: Array[Byte], format: String, associatedMsg: String, delimiters: DataDelimiters, uk: String, uv: String, transformStartTime: Long): Unit = {
+    if (failedEventsAdapter == null)
+      return
+
+  }
+
   def execute(data: Array[Byte], format: String, uniqueKey: PartitionUniqueRecordKey, uniqueVal: PartitionUniqueRecordValue, readTmNanoSecs: Long, readTmMilliSecs: Long, ignoreOutput: Boolean, associatedMsg: String, delimiters: DataDelimiters): Unit = {
     try {
       val curLoader = KamanjaConfiguration.metadataLoader.loader // Protecting from changing it between below statements
@@ -80,23 +104,28 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
         try {
           xformedmsgs = xform.execute(data, format, associatedMsg, delimiters, uk, uv)
         } catch {
-          case e: Exception => {}
-          case e: Throwable => {}
+          case e: Exception => {
+            SendFailedEvent(data, format, associatedMsg, delimiters, uk, uv, transformStartTime)
+          }
+          case e: Throwable => {
+            SendFailedEvent(data, format, associatedMsg, delimiters, uk, uv, transformStartTime)
+          }
         }
         LOG.info(ManagerUtils.getComponentElapsedTimeStr("Transform", uv, readTmNanoSecs, transformStartTime))
-        var xformedMsgCntr = 0
-        val totalXformedMsgs = xformedmsgs.size
-        xformedmsgs.foreach(xformed => {
-          xformedMsgCntr += 1
-          var output = engine.execute(transId, data, xformed._1, xformed._2, xformed._3, txnCtxt, readTmNanoSecs, readTmMilliSecs, uk, uv, xformedMsgCntr, totalXformedMsgs, ignoreOutput, allOutputAdaptersNames)
-          if (output != null) {
-            outputResults ++= output
-          }
-        })
+        if (xformedmsgs != null) {
+          var xformedMsgCntr = 0
+          val totalXformedMsgs = xformedmsgs.size
+          xformedmsgs.foreach(xformed => {
+            xformedMsgCntr += 1
+            var output = engine.execute(transId, data, xformed._1, xformed._2, xformed._3, txnCtxt, readTmNanoSecs, readTmMilliSecs, uk, uv, xformedMsgCntr, totalXformedMsgs, ignoreOutput, allOutputAdaptersNames)
+            if (output != null) {
+              outputResults ++= output
+            }
+          })
+        }
       } catch {
         case e: Exception => {
           LOG.error("Failed to execute message. Reason:%s Message:%s".format(e.getCause, e.getMessage))
-
         }
       } finally {
         // LOG.debug("UniqueKeyValue:%s => %s".format(uk, uv))
