@@ -146,3 +146,5 @@ lazy val SaveContainerDataComponent = project.in(file("Utils/SaveContainerDataCo
 lazy val UtilsForModels = project.in(file("Utils/UtilsForModels"))
 
 lazy val JarFactoryOfModelInstanceFactory = project.in(file("FactoriesOfModelInstanceFactory/JarFactoryOfModelInstanceFactory")) dependsOn (Metadata, KamanjaBase, Exceptions)
+
+

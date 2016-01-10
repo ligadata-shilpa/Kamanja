@@ -41,6 +41,9 @@ trait DataStoreOperations {
   def getKeys(containerName: String, timeRanges: Array[TimeRange], callbackFunction: (Key) => Unit): Unit // Range of dates
   def getKeys(containerName: String, timeRanges: Array[TimeRange], bucketKeys: Array[Array[String]], callbackFunction: (Key) => Unit): Unit
   def getKeys(containerName: String, bucketKeys: Array[Array[String]], callbackFunction: (Key) => Unit): Unit
+
+  def  backupContainer(containerName:String) : Unit
+  def  restoreContainer(containerName:String) : Unit
 }
 
 trait DataStore extends DataStoreOperations {

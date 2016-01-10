@@ -1257,6 +1257,60 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       DropContainer(cont)
     })
   }
+   
+  def renameTable(oldTableName:String,newTableName:String): Unit = {
+    try{
+      relogin
+      if ( admin.tableExists(newTableName)) {
+	logger.warn("A Backup table already exist, nothing to be done")
+	return;
+      }
+      if ( ! admin.tableExists(oldTableName)) {
+	logger.warn("The table being renamed doesn't exist, nothing to be done")
+	return;
+      }
+      // snapshot name can't contain ':'
+      val snapshotName = oldTableName.toLowerCase.replace(':', '_') + "_snap"
+      admin.disableTable(oldTableName);
+      admin.snapshot(snapshotName, oldTableName);
+      admin.cloneSnapshot(snapshotName, newTableName);
+      admin.deleteSnapshot(snapshotName);
+      //admin.deleteTable(oldTableName);
+    } catch {
+      case e: Exception => {
+        throw CreateDDLException("Failed to rename the table " + oldTableName + ":" + e.getMessage(), e)
+      }
+    }
+  }
+
+  override def backupContainer(containerName: String): Unit = lock.synchronized {
+    var oldTableName = toFullTableName(containerName)
+    var newTableName = toFullTableName(containerName) + ".bak"
+    logger.info("renaming " + oldTableName + " to " + newTableName);
+    try {
+      relogin
+      renameTable(oldTableName,newTableName)
+    } catch {
+      case e: Exception => {
+        throw CreateDDLException("Failed to backup the container " + containerName, e)
+      }
+    }
+  }
+
+  override def restoreContainer(containerName: String): Unit = lock.synchronized {
+    var oldTableName = toFullTableName(containerName) + ".bak"
+    var newTableName = toFullTableName(containerName)
+    logger.info("renaming " + oldTableName + " to " + newTableName);
+    try {
+      relogin
+      renameTable(oldTableName,newTableName)
+    } catch {
+      case e: Exception => {
+        throw CreateDDLException("Failed to restore the container " + containerName, e)
+      }
+    }
+  }
+
 }
 
 class HBaseAdapterTx(val parent: DataStore) extends Transaction {
@@ -1318,6 +1372,14 @@ class HBaseAdapterTx(val parent: DataStore) extends Transaction {
 
   def getKeys(containerName: String, bucketKeys: Array[Array[String]], callbackFunction: (Key) => Unit): Unit = {
     parent.getKeys(containerName, bucketKeys, callbackFunction)
+  }
+
+  def backupContainer(containerName:String): Unit = {
+    parent.backupContainer(containerName:String)
+  }
+
+  def restoreContainer(containerName:String): Unit = {
+    parent.restoreContainer(containerName:String)
   }
 }
 

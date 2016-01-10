@@ -543,7 +543,17 @@ class HBaseAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterAl
       noException should be thrownBy {
 	adapter.getKeys(containerName,timeRanges,keyStringList,readKeyCallBack _)
       }
-      
+
+      And("Test backup container")
+      noException should be thrownBy {
+	adapter.backupContainer(containerName)
+      }
+
+      And("Test restore container")
+      noException should be thrownBy {
+	adapter.restoreContainer(containerName)
+      }
+
       And("Test drop container again, cleanup")
       noException should be thrownBy {
 	var containers = new Array[String](0)

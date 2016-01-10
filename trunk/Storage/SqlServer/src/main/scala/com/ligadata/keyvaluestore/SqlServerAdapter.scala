@@ -1323,6 +1323,15 @@ class SqlServerAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
       CreateContainer(cont,"ddl")
     })
   }
+
+  def backupContainer(containerName:String): Unit = {
+    logger.info("Not Implemeted yet")
+  }
+
+  def restoreContainer(containerName:String): Unit = {
+    logger.info("Not Implemeted yet")
+  }
+
 }
 
 class SqlServerAdapterTx(val parent: DataStore) extends Transaction {
@@ -1384,6 +1393,14 @@ class SqlServerAdapterTx(val parent: DataStore) extends Transaction {
 
   def getKeys(containerName: String, bucketKeys: Array[Array[String]], callbackFunction: (Key) => Unit): Unit = {
     parent.getKeys(containerName, bucketKeys, callbackFunction)
+  }
+
+  def backupContainer(containerName:String): Unit = {
+    parent.backupContainer(containerName:String)
+  }
+
+  def restoreContainer(containerName:String): Unit = {
+    parent.restoreContainer(containerName:String)
   }
 
 }
