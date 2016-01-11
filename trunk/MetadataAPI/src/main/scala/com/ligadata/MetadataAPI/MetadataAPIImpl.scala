@@ -837,9 +837,9 @@ object MetadataAPIImpl extends MetadataAPI {
 
    def UpdateTranId (objList:Array[BaseElemDef] ): Unit ={
     var max: Long = 0
-     objList.map(obj =>
+     objList.foreach(obj =>{
        max = scala.math.max(max, obj.TranId)
-     )
+     })
     if (currentTranLevel < max) currentTranLevel = max
     PutTranId(max)
   }
