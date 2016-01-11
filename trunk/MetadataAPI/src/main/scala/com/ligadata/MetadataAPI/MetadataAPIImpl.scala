@@ -837,9 +837,9 @@ object MetadataAPIImpl extends MetadataAPI {
 
    def UpdateTranId (objList:Array[BaseElemDef] ): Unit ={
     var max: Long = 0
-    objList.foreach(obj => {
-      max = scala.math.max(max, obj.TranId)
-    })
+     objList.map(obj =>
+       max = scala.math.max(max, obj.TranId)
+     )
     if (currentTranLevel < max) currentTranLevel = max
     PutTranId(max)
   }
@@ -2412,7 +2412,7 @@ object MetadataAPIImpl extends MetadataAPI {
             objectsToBeRemoved = objectsToBeRemoved :+ typeDef.get
           }
           objectsToBeRemoved.foreach(typ => {
-            typ.tranId = newTranId
+            //typ.tranId = newTranId
             RemoveType(typ.nameSpace, typ.name, typ.ver, None)
           })
           // ContainerDef itself
@@ -2464,7 +2464,7 @@ object MetadataAPIImpl extends MetadataAPI {
           }
 
           objectsToBeRemoved.foreach(typ => {
-            typ.tranId = newTranId
+            //typ.tranId = newTranId
             RemoveType(typ.nameSpace, typ.name, typ.ver, None)
           })
 

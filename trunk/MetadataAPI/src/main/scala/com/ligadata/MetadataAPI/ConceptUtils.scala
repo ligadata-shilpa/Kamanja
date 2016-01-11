@@ -95,9 +95,7 @@ object ConceptUtils {
     val dispkey = attributeDef.FullName + "." + MdMgr.Pad0s2Version(attributeDef.Version)
     try {
       MetadataAPIImpl.SaveObject(attributeDef, MdMgr.GetMdMgr)
-      var concepts = new Array[BaseElemDef](0)
-      concepts =concepts :+attributeDef
-      MetadataAPIImpl.UpdateTranId(concepts)
+      MetadataAPIImpl.UpdateTranId(Array(attributeDef))
       var apiResult = new ApiResult(ErrorCodeConstants.Success, "AddConcept", null, ErrorCodeConstants.Add_Concept_Successful + ":" + dispkey)
       apiResult.toString()
     } catch {
@@ -171,9 +169,7 @@ object ConceptUtils {
           MetadataAPIImpl.DeleteObject(concept)
 
           concept.tranId = MetadataAPIImpl.GetNewTranId
-          var concepts = new Array[BaseElemDef](0)
-          concepts =concepts :+concept
-          MetadataAPIImpl.UpdateTranId(concepts)
+          MetadataAPIImpl.UpdateTranId(Array(concept))
 
           var apiResult = new ApiResult(ErrorCodeConstants.Success, "RemoveConcept", null, ErrorCodeConstants.Remove_Concept_Successful + ":" + dispkey) //JsonSerializer.SerializeObjectListToJson(concept))
           apiResult.toString()
@@ -219,14 +215,14 @@ object ConceptUtils {
       } else {
         var conceptList = JsonSerializer.parseConceptList(conceptsText, format)
 
-        var concepts = new Array[BaseElemDef](0)
+        var concepts = new ArrayBuffer[BaseElemDef]
         conceptList.foreach(concept => {
           //logger.debug("Save concept object " + JsonSerializer.SerializeObjectToJson(concept))
           MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.INSERTOBJECT, conceptsText, AuditConstants.SUCCESS, "", concept.FullNameWithVer)
           MetadataAPIImpl.SaveObject(concept, MdMgr.GetMdMgr)
-          concepts =concepts :+concept
+          concepts +=concept
         })
-        MetadataAPIImpl.UpdateTranId(concepts)
+        MetadataAPIImpl.UpdateTranId(concepts.toArray)
 
         var apiResult = new ApiResult(ErrorCodeConstants.Success, "AddConcepts", null, ErrorCodeConstants.Add_Concept_Successful + ":" + conceptsText)
         apiResult.toString()

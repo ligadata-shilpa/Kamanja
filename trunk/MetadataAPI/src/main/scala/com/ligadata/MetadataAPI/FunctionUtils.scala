@@ -269,11 +269,7 @@ object FunctionUtils {
             aggFailures = aggFailures + func.FullNameWithVer
           }
         })
-        var functionsDef = new Array[BaseElemDef](0)
-        funcList.foreach(fun =>{
-          functionsDef =functionsDef :+ fun
-        })
-        MetadataAPIImpl.UpdateTranId(functionsDef)
+
         if (missingJars.size > 0) {
           var apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddFunctions", null, "Error : Not found required jars " + missingJars.mkString(",") + "\n" + ErrorCodeConstants.Add_Function_Failed + ":" + functionsText)
           return apiResult.toString()
