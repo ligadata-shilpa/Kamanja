@@ -130,7 +130,7 @@ class JpmmlSupport(mgr : MdMgr
                     val inputMsg: MessageDef = optInputMsg.orNull
                     val activeFieldNames: JList[FieldName] = modelEvaluator.getActiveFields
                     val outputFieldNames: JList[FieldName] = modelEvaluator.getOutputFields
-                    val targetFieldNames: JList[FieldName] = modelEvaluator.getTargetFields;
+                    val targetFieldNames: JList[FieldName] = modelEvaluator.getTargetFields
 
                     /** target|predicted usage types */
 
@@ -155,7 +155,7 @@ class JpmmlSupport(mgr : MdMgr
                         }.toArray
                         val outputFieldVars: List[(String, String, String)] = outputFields.map(fld => {
                             val fldName: String = fld.getName.getValue
-                            val dataType: String = fld.getDataType.value
+                            val dataType: String = if (fld.getDataType != null) fld.getDataType.value else "String"
                             (fldName, MdMgr.SysNS, dataType)
                         }).toList
                         /** get the concrete data fields for either 'target' or 'predicted' ... type info found there. */
@@ -166,7 +166,7 @@ class JpmmlSupport(mgr : MdMgr
                         }.toArray
                         val targVars: List[(String, String, String)] = targetDataFields.map(fld => {
                             val fldName: String = fld.getName.getValue
-                            val dataType: String = fld.getDataType.value
+                            val dataType: String =  if (fld.getDataType != null) fld.getDataType.value else "String"
                             (fldName, MdMgr.SysNS, dataType)
                         }).toList
 
