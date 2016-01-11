@@ -90,24 +90,27 @@ object StartMetadataAPI {
             depName = arg
             expectDep = false
           }
-            else if(arg.equalsIgnoreCase(MODELNAME)){
-            expectModelName=true
-          }else if(arg.equalsIgnoreCase(MODELVERSION)){
-            expectModelVer=true
-          }else if(arg.equalsIgnoreCase("MESSAGENAME")){
-            expectMessageName=true
-          }else if ((action.equalsIgnoreCase("addmodeljpmml") || action.equalsIgnoreCase("updatemodeljpmml")) && location.size > 0) {
-            if (expectModelName) {
-              extraCmdArgs("MODELNAME") = arg
+           else if ((action.equalsIgnoreCase(Action.ADDMODELPMML.toString) || action.equalsIgnoreCase(Action.UPDATEMODELPMML.toString)) && location.size > 0) {
+
+            if(arg.equalsIgnoreCase(MODELNAME)){
+              expectModelName=true
+            }else if(arg.equalsIgnoreCase(MODELVERSION)){
+              expectModelVer=true
+            }else if(arg.equalsIgnoreCase(MESSAGENAME)){
+              expectMessageName=true
+            }
+            else if (expectModelName) {
+              extraCmdArgs(MODELNAME) = arg
               expectModelName = false
             }
             else if (expectModelVer) {
-              extraCmdArgs("MODELVERSION") = arg
+              extraCmdArgs(MODELVERSION) = arg
               expectModelVer = false
             }
             else if (expectMessageName) {
-              extraCmdArgs("MESSAGENAME") = arg
+              extraCmdArgs(MESSAGENAME) = arg
               expectMessageName = false
+
            }
           }
           else {
@@ -118,8 +121,9 @@ object StartMetadataAPI {
               argsUntilParm = argsUntilParm - 1
             }
 
-            if (argsUntilParm < 0)
+            if (argsUntilParm < 0) {
               depName = arg
+            }
             else if (arg != "debug")
             /** ignore the debug tag */ {
               /** concatenate the args together to form the action string... "add model pmml" becomes "addmodelpmmml" */
@@ -200,10 +204,10 @@ object StartMetadataAPI {
 
         //model management
         case Action.ADDMODELKPMML => response = ModelService.addModelPmml(input, userId)
-        case Action.ADDMODELJPMML => {
-          val modelName: Option[String] = extraCmdArgs.get("MODELNAME")
-          val modelVer = extraCmdArgs.getOrElse("MODELVERSION", null)
-          val msgName : Option[String]= extraCmdArgs.get("MESSAGENAME")
+        case Action.ADDMODELPMML => {
+          val modelName: Option[String] = extraCmdArgs.get(MODELNAME)
+          val modelVer = extraCmdArgs.getOrElse(MODELVERSION, null)
+          val msgName : Option[String]= extraCmdArgs.get(MESSAGENAME)
           val validatedModelVersion = if (modelVer != null) MdMgr.FormatVersion(modelVer) else null
           val optModelVer =  Option(validatedModelVersion)
           val optMsgVer = Option(null)
@@ -254,9 +258,9 @@ object StartMetadataAPI {
         }
         case Action.UPDATEMODELKPMML => response = ModelService.updateModelpmml(input, userId)
 
-        case Action.UPDATEMODELJPMML => {
-          val modelName = extraCmdArgs.getOrElse("MODELNAME", "")
-          val modelVer = extraCmdArgs.getOrElse("MODELVERSION", null)
+        case Action.UPDATEMODELPMML => {
+          val modelName = extraCmdArgs.getOrElse(MODELNAME, "")
+          val modelVer = extraCmdArgs.getOrElse(MODELVERSION, null)
           var validatedNewVersion: String = if (modelVer != null) MdMgr.FormatVersion(modelVer) else null
           ModelService.updateModelJPmml(input, userId, modelName, validatedNewVersion )
           }
