@@ -17,13 +17,12 @@
 package com.ligadata.InputOutputAdapterInfo
 
 import com.ligadata.KamanjaBase.DataDelimiters
+import com.ligadata.KamanjaBase.Monitorable
 import com.ligadata.HeartBeat._
 
 object AdapterConfiguration {
-  val TYPE_INPUT = "Input"
-  val TYPE_VALIDATE = "Validate"
-  val TYPE_OUTPUT = "Output"
-  val TYPE_STATUS = "Status"
+  val TYPE_INPUT = "Input_Adapter"
+  val TYPE_OUTPUT = "Output_Adapter"
 }
 
 class AdapterConfiguration {
@@ -62,7 +61,7 @@ class StartProcPartInfo {
 }
 
 // Input Adapter
-trait InputAdapter {
+trait InputAdapter extends Monitorable {
   val inputConfig: AdapterConfiguration // Configuration
   val callerCtxt: InputAdapterCallerContext
 
@@ -79,7 +78,6 @@ trait InputAdapter {
   def DeserializeValue(v: String): PartitionUniqueRecordValue
   def getAllPartitionBeginValues: Array[(PartitionUniqueRecordKey, PartitionUniqueRecordValue)]
   def getAllPartitionEndValues: Array[(PartitionUniqueRecordKey, PartitionUniqueRecordValue)]
-  def RegisterHeartbeat(hb: HeartBeatUtil): Unit
 }
 
 // Output Adapter Object to create Adapter
@@ -88,7 +86,7 @@ trait OutputAdapterObj {
 }
 
 // Output Adapter
-trait OutputAdapter {
+trait OutputAdapter extends Monitorable {
   val inputConfig: AdapterConfiguration // Configuration
 
   def send(message: String, partKey: String): Unit = send(Array(message.getBytes("UTF8")), Array(partKey.getBytes("UTF8")))
@@ -103,7 +101,6 @@ trait OutputAdapter {
   
   def Shutdown: Unit
   def Category = "Output"
-  def RegisterHeartbeat(hb: HeartBeatUtil): Unit
 }
 
 trait ExecContext {

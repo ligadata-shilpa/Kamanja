@@ -25,6 +25,8 @@ import org.apache.logging.log4j.{ Logger, LogManager }
 import com.ligadata.InputOutputAdapterInfo.{ AdapterConfiguration, OutputAdapter, OutputAdapterObj, CountersAdapter }
 import com.ligadata.AdaptersConfiguration.{ KafkaConstants, KafkaQueueAdapterConfiguration }
 import com.ligadata.Exceptions.{ FatalAdapterException, StackTrace }
+import com.ligadata.KamanjaBase.{Monitorable, MonitorComponentInfo}
+import org.json4s.jackson.Serialization
 import scala.actors.threadpool.Executors
 import scala.collection.mutable.ArrayBuffer
 import kafka.utils.VerifiableProperties
@@ -33,6 +35,11 @@ import com.ligadata.HeartBeat._
 object KafkaProducer extends OutputAdapterObj {
   def CreateOutputAdapter(inputConfig: AdapterConfiguration, cntrAdapter: CountersAdapter): OutputAdapter = new KafkaProducer(inputConfig, cntrAdapter)
   val HB_PERIOD = 5000
+
+  // Statistics Keys
+  val ADAPTER_DESCRIPTION = "Kafka 8.1.1 Client"
+  val SEND_MESSAGE_COUNT_KEY = "Messages Sent"
+  val SEND_CALL_COUNT_KEY = "Send Call Count"
 }
 
 /**
@@ -40,6 +47,8 @@ object KafkaProducer extends OutputAdapterObj {
  * @param props
  */
 class CustPartitioner(props: VerifiableProperties) extends Partitioner {
+
+
   private val random = new java.util.Random
   def partition(key: Any, numPartitions: Int): Int = {
     if (key != null) {
@@ -65,6 +74,10 @@ class CustPartitioner(props: VerifiableProperties) extends Partitioner {
 class KafkaProducer(val inputConfig: AdapterConfiguration, cntrAdapter: CountersAdapter) extends OutputAdapter {
   private[this] val LOG = LogManager.getLogger(getClass);
 
+  private var metrics: collection.mutable.Map[String,Any] = collection.mutable.Map[String,Any]()
+  private var startTime: String = "unknown"
+  private var lastSeen: String = "unkown"
+
   //BUGBUG:: Not Checking whether inputConfig is really QueueAdapterConfiguration or not. 
   private[this] val qc = KafkaQueueAdapterConfiguration.GetAdapterConfig(inputConfig)
 
@@ -79,7 +92,6 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
   val requestRequiredAcks: Integer = 1
   val MAX_RETRY = 3
   val ackTimeout = 10000
-  var heartBeat: HeartBeatUtil = null
 
   private val heartBeatThread =  Executors.newFixedThreadPool(1)
   private var isHeartBeating = false
@@ -116,25 +128,25 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
   var reqCntr: Int = 0
 
   val producers = new Array[Producer[Array[Byte], Array[Byte]]](producersCnt)
-
   for (i <- 0 until producersCnt) {
     LOG.info("Creating Producer:" + (i + 1))
     producers(i) = new Producer[Array[Byte], Array[Byte]](new ProducerConfig(props))
   }
 
-  override def RegisterHeartbeat(hb: HeartBeatUtil): Unit = {
-    println("REGISTER Output Adapter!!!! " + qc.Name)
-    heartBeat = hb
-    // Record EnvContext in the Heartbeat
-    if (heartBeat != null) {
-      LOG.info("Register the EnvContext component with the heartbeat info")
-      heartBeat.SetComponentData(AdapterConfiguration.TYPE_OUTPUT, qc.Name)
-    } else {
-      LOG.info("Cannot register EnvContext with heartbeat info")
-    }
 
-    runHeartBeat
-    isHeartBeating = true
+  println("Kafka Producer is being started")
+  LOG.info(qc.Name + " Initializing Statistics")
+  startTime = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
+  metrics (KafkaProducer.SEND_CALL_COUNT_KEY) = 0
+  metrics (KafkaProducer.SEND_MESSAGE_COUNT_KEY) = 0
+
+  runHeartBeat
+  isHeartBeating = true
+
+
+  override def getComponentStatusAndMetrics: MonitorComponentInfo = {
+    implicit val formats = org.json4s.DefaultFormats
+    return new MonitorComponentInfo( AdapterConfiguration.TYPE_OUTPUT, qc.Name, KafkaProducer.ADAPTER_DESCRIPTION, startTime, lastSeen,  Serialization.write(metrics).toString)
   }
 
   // To send an array of messages. messages.size should be same as partKeys.size
@@ -205,6 +217,8 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
 
     try {
       producers(cntr % producersCnt).send(keyMessages: _*) // Thinking this op is atomic for (can write multiple partitions into one queue, but don't know whether it is atomic per partition in the queue).
+      updateMetricValue(KafkaProducer.SEND_MESSAGE_COUNT_KEY,keyMessages.size)
+      updateMetricValue(KafkaProducer.SEND_CALL_COUNT_KEY,1)
     } catch {
       case ftsme: FailedToSendMessageException => return (KafkaConstants.KAFKA_SEND_DEAD_PRODUCER, Some(ftsme))
       case qfe: QueueFullException             => return (KafkaConstants.KAFKA_SEND_Q_FULL, None)
@@ -231,16 +245,29 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
     }
   }
 
+
+  // Accumulate the metrics.. simple for now
+  private def updateMetricValue(key: String, value: Long): Unit = {
+    val cur = metrics.getOrElse(key,"0").toString
+    val longCur = cur.toLong
+    metrics(key) = longCur + value
+  }
+
   private def runHeartBeat: Unit = {
+    println("STARTING HEARTBEAT")
     heartBeatThread.execute(new Runnable() {
       override def run(): Unit = {
         try {
+          var cnt = 0
           while (!isShutdown) {
-            heartBeat.SetComponentData(AdapterConfiguration.TYPE_OUTPUT, qc.Name)
+            cnt += 1
+            lastSeen = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
             Thread.sleep(KafkaProducer.HB_PERIOD)
           }
         } catch {
-          case e: Exception => LOG.warn(qc.Name + " Heartbeat Interrupt detected")
+          case e: Exception => {
+            LOG.warn(qc.Name + " Heartbeat Interrupt detected")
+          }
         }
         LOG.info(qc.Name + " Heartbeat is shutting down")
       }

@@ -28,6 +28,7 @@ import com.ibm.msg.client.wmq.common.CommonConstants
 import com.ibm.msg.client.jms.JmsConstants
 import com.ligadata.Exceptions.StackTrace
 import com.ligadata.HeartBeat._
+import com.ligadata.KamanjaBase.{Monitorable, MonitorComponentInfo}
 
 object IbmMqProducer extends OutputAdapterObj {
   def CreateOutputAdapter(inputConfig: AdapterConfiguration, cntrAdapter: CountersAdapter): OutputAdapter = new IbmMqProducer(inputConfig, cntrAdapter)
@@ -97,8 +98,8 @@ class IbmMqProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
     }
   }
 
-  override def RegisterHeartbeat(hb: HeartBeatUtil): Unit = {
-
+  override  def getComponentStatusAndMetrics: MonitorComponentInfo = {
+    return null
   }
 
   // To send an array of messages. messages.size should be same as partKeys.size

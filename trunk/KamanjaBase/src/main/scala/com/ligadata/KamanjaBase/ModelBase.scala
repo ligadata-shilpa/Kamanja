@@ -233,7 +233,7 @@ class MappedModelResults extends ModelResultBase {
 
 case class ContainerNameAndDatastoreInfo(containerName: String, dataDataStoreInfo: String)
 
-trait EnvContext {
+trait EnvContext extends Monitorable {
   // Metadata Ops
   var _mgr: MdMgr = _
   def setMdMgr(mgr: MdMgr): Unit
@@ -250,9 +250,6 @@ trait EnvContext {
 
   // Registerd Messages/Containers
   def RegisterMessageOrContainers(containersInfo: Array[ContainerNameAndDatastoreInfo]): Unit
-
-  // Register Hearbeat
-  def RegisterHeartbeat (heartBeat: HeartBeatUtil)
 
   // RDD Ops
   def getRecent(transId: Long, containerName: String, partKey: List[String], tmRange: TimeRange, f: MessageContainerBase => Boolean): Option[MessageContainerBase]

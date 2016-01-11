@@ -35,6 +35,7 @@ import com.ibm.msg.client.jms.JmsConstants
 import com.ligadata.Exceptions.StackTrace
 import com.ligadata.KamanjaBase.DataDelimiters
 import com.ligadata.HeartBeat._
+import com.ligadata.KamanjaBase.{Monitorable, MonitorComponentInfo}
 
 object IbmMqConsumer extends InputAdapterObj {
   def CreateInputAdapter(inputConfig: AdapterConfiguration, callerCtxt: InputAdapterCallerContext, execCtxtObj: ExecContextObj, cntrAdapter: CountersAdapter): InputAdapter = new IbmMqConsumer(inputConfig, callerCtxt, execCtxtObj, cntrAdapter)
@@ -82,8 +83,8 @@ class IbmMqConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: Input
     StopProcessing
   }
 
-  override def RegisterHeartbeat(hb: HeartBeatUtil): Unit = {
-
+  override  def getComponentStatusAndMetrics: MonitorComponentInfo = {
+    return null
   }
 
   override def StopProcessing: Unit = lock.synchronized {

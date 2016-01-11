@@ -21,6 +21,7 @@ import com.ligadata.AdaptersConfiguration.{ KafkaPartitionUniqueRecordKey, Kafka
 import com.ligadata.InputOutputAdapterInfo._
 import kafka.api._
 import kafka.common.TopicAndPartition
+import org.json4s.jackson.Serialization
 import scala.actors.threadpool.{ TimeUnit, ExecutorService, Executors }
 import scala.tools.nsc.interpreter.TypeStrings
 import scala.util.control.Breaks._
@@ -31,6 +32,7 @@ import scala.collection.mutable.Map
 import com.ligadata.Exceptions.{FatalAdapterException, StackTrace}
 import com.ligadata.KamanjaBase.DataDelimiters
 import com.ligadata.HeartBeat._
+import com.ligadata.KamanjaBase.{Monitorable, MonitorComponentInfo}
 
 object KafkaSimpleConsumer extends InputAdapterObj {
   val METADATA_REQUEST_CORR_ID = 2
@@ -46,6 +48,11 @@ object KafkaSimpleConsumer extends InputAdapterObj {
   val INIT_TIMEOUT = 250
   val HB_PERIOD = 5000
 
+  // Statistics Keys
+  val ADAPTER_DESCRIPTION = "Kafka 8.1.1 Client"
+  val PARTITION_COUNT_KEYS = "Partition Counts"
+  val PARTITION_DEPTH_KEYS = "Partition Depths"
+
   def CreateInputAdapter(inputConfig: AdapterConfiguration, callerCtxt: InputAdapterCallerContext, execCtxtObj: ExecContextObj, cntrAdapter: CountersAdapter): InputAdapter = new KafkaSimpleConsumer(inputConfig, callerCtxt, execCtxtObj, cntrAdapter)
 }
 
@@ -55,8 +62,16 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
   private val LOG = LogManager.getLogger(getClass)
   private var isQuiesced = false
   private var startTime: Long = 0
-  private var heartBeat: HeartBeatUtil = null
   private var isShutdown = false
+
+  private var metrics: collection.mutable.Map[String,Any] = collection.mutable.Map[String,Any]()
+  private var partitonCounts: collection.mutable.Map[String,Long] = collection.mutable.Map[String,Long]()
+  private var partitonDepths: collection.mutable.Map[String,Long] = collection.mutable.Map[String,Long]()
+  private var msgInQ: Long = 0
+  private var startHeartBeat: String = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
+  private var lastSeen: String = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
+  metrics(KafkaSimpleConsumer.PARTITION_COUNT_KEYS) = partitonCounts
+  metrics(KafkaSimpleConsumer.PARTITION_DEPTH_KEYS) = partitonDepths
 
   private val qc = KafkaQueueAdapterConfiguration.GetAdapterConfig(inputConfig)
 
@@ -104,16 +119,9 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
     timeoutTimer = KafkaSimpleConsumer.INIT_TIMEOUT
   }
 
-  override def RegisterHeartbeat(hb: HeartBeatUtil): Unit = {
-   // println("REGISTER Input Adapter!!!! " + qc.Name)
-    heartBeat = hb
-    // Record EnvContext in the Heartbeat
-    if (heartBeat != null) {
-      LOG.info("Register the EnvContext component with the heartbeat info")
-      heartBeat.SetComponentData(AdapterConfiguration.TYPE_INPUT, qc.Name)
-    } else {
-      LOG.info("Cannot register EnvContext with heartbeat info")
-    }
+  override def getComponentStatusAndMetrics: MonitorComponentInfo = {
+    implicit val formats = org.json4s.DefaultFormats
+    return new MonitorComponentInfo( AdapterConfiguration.TYPE_INPUT, qc.Name, KafkaSimpleConsumer.ADAPTER_DESCRIPTION, startHeartBeat, lastSeen,  Serialization.write(metrics).toString)
   }
 
   /**
@@ -127,8 +135,7 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
   def StartProcessing(partitionIds: Array[StartProcPartInfo], ignoreFirstMsg: Boolean): Unit = lock.synchronized {
 
     var lastHb: Long = 0
-
-    //println(qc.Name + " Start Processing called, looking at " + qc.topic)
+    startHeartBeat = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
 
     LOG.info("START_PROCESSING CALLED")
     // Check to see if this already started
@@ -192,6 +199,10 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
         override def run() {
           val partitionId = kvsElement._1
           val partition = kvsElement._2
+
+          // Initialize the monitoring status
+          partitonCounts(partitionId.toString) = 0
+          partitonDepths(partitionId.toString) = 0
 
           // if the offset is -1, then the server wants to start from the begining, else, it means that the server
           // knows what its doing and we start from that offset.
@@ -307,6 +318,8 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
                   execThread = execCtxtObj.CreateExecContext(input, uniqueKey, callerCtxt)
                 }
 
+                incrementCountForPartition(partitionId)
+
                 uniqueVal.Offset = msgBuffer.offset
                 val dontSendOutputToOutputAdap = uniqueVal.Offset <= uniqueRecordValue
                 execThread.execute(message, qc.formatOrInputAdapterName, uniqueKey, uniqueVal, readTmNs, readTmMs, dontSendOutputToOutputAdap, qc.associatedMsg, delimiters)
@@ -330,7 +343,21 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
                 LOG.debug("KAFKA-ADAPTER: Broker: " + leadBroker + " is marked alive,")
                // println(qc.Name+" ALIVE!!! --> " + (thisHb - lastHb))
                 lastHb = thisHb
-                heartBeat.SetComponentData(AdapterConfiguration.TYPE_INPUT, qc.Name)
+                lastSeen = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
+
+                // Check the depth of this partition - returns Array[(PartitionUniqueRecordKey, PartitionUniqueRecordValue)]
+                val depths = getAllPartitionEndValues
+                depths.foreach(t => {
+                  try {
+                    val partId = t._1.asInstanceOf[KafkaPartitionUniqueRecordKey]
+                    val partVal = t._2.asInstanceOf[KafkaPartitionUniqueRecordValue]
+                    if (partId.PartitionId == partitionId) {
+                      partitonDepths(partitionId.toString) = partVal.Offset
+                    }
+                  } catch {
+                    case e: Exception => LOG.warn("KAFKA-ADAPTER: Broker: " + leadBroker + " error trying to determine queue depths.",e)
+                  }
+                })
               }
 
             } catch {
@@ -687,15 +714,7 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
    *  stopHeartbeat - signal this adapter to shut down the monitor thread
    */
   def stopHearbeat(): Unit = lock.synchronized {
-  //  try {
-  //    hbRunning = false
-   //   hbExecutor.shutdownNow()
-    //} catch {
-    //  case e: java.lang.InterruptedException => {
-    //    val stackTrace = StackTrace.ThrowableTraceString(e)
-    //    LOG.debug("Heartbeat terminated" + "\nStackTrace:" + stackTrace)
-    //  }
-   // }
+
   }
 
 
@@ -722,11 +741,7 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
    * terminateHBTasks - Just what it says
    */
   private def terminateHBTasks(): Unit = {
-  //  if (hbExecutor == null) return
-  //  hbExecutor.shutdownNow
-  //  while (hbExecutor.isTerminated == false) {
-  //    Thread.sleep(100) // sleep 100ms and then check
-  //  }
+
   }
 
   /**
@@ -756,6 +771,16 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
   private def quiesce: Unit = {
     isQuiesced = true
   }
+
+  private def incrementCountForPartition(pid: Int): Unit = {
+    var cVal: Long = partitonCounts.getOrElse(pid.toString, 0)
+    if (pid == null) {
+      partitonCounts(pid.toString) = 1
+      return
+    }
+    partitonCounts(pid.toString) = cVal + 1
+  }
+
 
 }
 

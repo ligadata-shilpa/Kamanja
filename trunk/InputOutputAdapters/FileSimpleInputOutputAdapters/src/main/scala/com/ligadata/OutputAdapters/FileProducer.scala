@@ -24,6 +24,7 @@ import com.ligadata.InputOutputAdapterInfo.{ AdapterConfiguration, OutputAdapter
 import com.ligadata.AdaptersConfiguration.FileAdapterConfiguration
 import com.ligadata.Exceptions.{FatalAdapterException, StackTrace}
 import com.ligadata.HeartBeat._
+import com.ligadata.KamanjaBase.{Monitorable, MonitorComponentInfo}
 
 
 
@@ -81,6 +82,9 @@ class FileProducer(val inputConfig: AdapterConfiguration, cntrAdapter: CountersA
     numOfRetries = 0
   }
 
+  override  def getComponentStatusAndMetrics: MonitorComponentInfo = {
+    return null
+  }
 
   // Locking before we write into file
   // To send an array of messages. messages.size should be same as partKeys.size
@@ -139,8 +143,5 @@ class FileProducer(val inputConfig: AdapterConfiguration, cntrAdapter: CountersA
       os.close
   }
 
-  override def RegisterHeartbeat(hb: HeartBeatUtil): Unit = {
-
-  }
 }
 

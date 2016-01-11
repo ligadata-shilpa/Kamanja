@@ -16,6 +16,8 @@
 
 package com.ligadata.SimpleEnvContextImpl
 
+import org.json4s.jackson.Serialization
+
 import scala.actors.threadpool.{Executors, ExecutorService}
 import scala.collection.immutable.Map
 import scala.collection.mutable._
@@ -37,9 +39,6 @@ import com.ligadata.Exceptions._
 import com.ligadata.keyvaluestore.KeyValueManager
 import java.io.{ ByteArrayInputStream, DataInputStream, DataOutputStream, ByteArrayOutputStream }
 import java.util.{ TreeMap, Date }
-import com.ligadata.HeartBeat._
-// import collection._
-// import JavaConverters._
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 trait LogTrait {
@@ -57,9 +56,32 @@ case class AdapterUniqueValueDes(T: Long, V: String, Out: Option[List[List[Strin
 object SimpleEnvContextImpl extends EnvContext with LogTrait {
 
   val CLASSNAME = "com.ligadata.SimpleEnvContextImpl.SimpleEnvContextImpl$"
-  private var heartBeat: HeartBeatUtil = null
   private var hbExecutor: ExecutorService =  Executors.newFixedThreadPool(1)
   private var isShutdown = false
+  private var metrics: collection.mutable.Map[String,Any] = collection.mutable.Map[String,Any]()
+  private var startTime: String = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
+  private var lastSeen: String = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
+  private val STORAGE_READ_COUNT = "READS"
+  private val STORAGE_WRITE_COUNT = "WRITES"
+
+  // Start the heartbeat.
+  hbExecutor.execute(new Runnable() {
+    override def run(): Unit = {
+      while(!isShutdown) {
+        try {
+          lastSeen = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
+          Thread.sleep(5000)
+        } catch {
+          case e: Exception => logger.warn("SimpleEnvContext heartbeat interrupted.")
+        }
+      }
+    }
+  })
+
+  override def getComponentStatusAndMetrics: MonitorComponentInfo ={
+    implicit val formats = org.json4s.DefaultFormats
+    return new MonitorComponentInfo("STORAGE_ADAPTER", "SimpleEnvContext", "v1.3", startTime, lastSeen,  Serialization.write(metrics).toString)
+  }
 
   private def ResolveEnableEachTransactionCommit: Unit = {
     if (_mgr != null) {
@@ -83,32 +105,6 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     }
   }
 
-  override def RegisterHeartbeat(hb: HeartBeatUtil): Unit = {
-
-    heartBeat = hb
-    // Record EnvContext in the Heartbeat
-    if (heartBeat != null) {
-      logger.info("Register the EnvContext component with the heartbeat info")
-      heartBeat.SetComponentData(CLASSNAME, "EnvCntx")
-    } else {
-      logger.info("Cannot register EnvContext with heartbeat info")
-    }
-
-    // Start the heartbeat.
-    hbExecutor.execute(new Runnable() {
-      override def run(): Unit = {
-        while(!isShutdown) {
-          try {
-            Thread.sleep(5000)
-          } catch {
-            case e: Exception => logger.warn("SimpleEnvContext heartbeat interrupted.")
-          }
-
-          heartBeat.SetComponentData(CLASSNAME, "EnvCntx")
-        }
-      }
-    })
-  }
 
   override def setMdMgr(inMgr: MdMgr): Unit = {
     _mgr = inMgr

@@ -3,6 +3,8 @@ package com.ligadata.KamanjaManager
 
 import com.ligadata.KamanjaBase._
 import com.ligadata.InputOutputAdapterInfo.{ ExecContext, InputAdapter, OutputAdapter, ExecContextObj, PartitionUniqueRecordKey, PartitionUniqueRecordValue }
+import com.ligadata.ZooKeeper.CreateClient
+import org.json4s.jackson.JsonMethods._
 
 import scala.reflect.runtime.{ universe => ru }
 import scala.util.control.Breaks._
@@ -18,7 +20,6 @@ import java.net.{ Socket, ServerSocket }
 import java.util.concurrent.{ Executors, ScheduledExecutorService, TimeUnit }
 import com.ligadata.Utils.{ Utils, KamanjaClassLoader, KamanjaLoaderInfo }
 import org.apache.logging.log4j.{ Logger, LogManager }
-import com.ligadata.HeartBeat.HeartBeatUtil
 import com.ligadata.Exceptions.{ FatalAdapterException, StackTrace }
 
 class KamanjaServer(var mgr: KamanjaManager, port: Int) extends Runnable {
@@ -222,7 +223,10 @@ class KamanjaManager extends Observer {
   private val outputAdapters = new ArrayBuffer[OutputAdapter]
   private val statusAdapters = new ArrayBuffer[OutputAdapter]
   private val validateInputAdapters = new ArrayBuffer[InputAdapter]
-  private var heartBeat: HeartBeatUtil = null
+
+  private var thisEngineInfo: MainInfo = null
+  private var adapterMetricInfo: scala.collection.mutable.MutableList[MonitorComponentInfo] = null
+  private var monitorCounter: Long = 0
 
   private type OptionMap = Map[Symbol, Any]
 
@@ -232,15 +236,16 @@ class KamanjaManager extends Observer {
     LOG.warn("    Help")
     LOG.warn("    --config <configfilename>")
   }
+  private val majorVersion = 1
+  private val minorVersion = 3
+  private val microVersion = 0
+  private val build = 0
 
   private def Shutdown(exitCode: Int): Int = {
     /*
     if (KamanjaMetadata.envCtxt != null)
       KamanjaMetadata.envCtxt.PersistRemainingStateEntriesOnLeader
 */
-    if (heartBeat != null)
-      heartBeat.Shutdown
-    heartBeat = null
     KamanjaLeader.Shutdown
     KamanjaMetadata.Shutdown
     ShutdownAdapters
@@ -434,27 +439,20 @@ class KamanjaManager extends Observer {
         zkHeartBeatNodePath = zkNodeBasePath + "/monitor/engine/" + KamanjaConfiguration.nodeId.toString
       }
 
-      if (retval && zkHeartBeatNodePath.size > 0) {
-        heartBeat = new HeartBeatUtil
-        heartBeat.Init(KamanjaConfiguration.nodeId.toString, KamanjaConfiguration.zkConnectString, zkHeartBeatNodePath, KamanjaConfiguration.zkSessionTimeoutMs, KamanjaConfiguration.zkConnectionTimeoutMs, 5000) // for every 5 secs
-        heartBeat.SetMainData(KamanjaConfiguration.nodeId.toString)
-      }
-
       LOG.debug("Validating required jars")
       KamanjaMdCfg.ValidateAllRequiredJars
-
       LOG.debug("Load Environment Context")
-      println("==>Registering EnvCntx")
-      KamanjaMetadata.envCtxt = KamanjaMdCfg.LoadEnvCtxt(heartBeat)
+
+      KamanjaMetadata.envCtxt = KamanjaMdCfg.LoadEnvCtxt()
       if (KamanjaMetadata.envCtxt == null)
         return false
+
 
       KamanjaMetadata.gNodeContext = new NodeContext(KamanjaMetadata.envCtxt)
 
       LOG.debug("Loading Adapters")
       // Loading Adapters (Do this after loading metadata manager & models & Dimensions (if we are loading them into memory))
-      retval = KamanjaMdCfg.LoadAdapters(inputAdapters, outputAdapters, statusAdapters, validateInputAdapters, heartBeat)
-
+      retval = KamanjaMdCfg.LoadAdapters(inputAdapters, outputAdapters, statusAdapters, validateInputAdapters)
       if (retval) {
         LOG.debug("Initialize Metadata Manager")
         KamanjaMetadata.InitMdMgr(KamanjaConfiguration.zkConnectString, metadataUpdatesZkNodePath, KamanjaConfiguration.zkSessionTimeoutMs, KamanjaConfiguration.zkConnectionTimeoutMs)
@@ -580,7 +578,6 @@ class KamanjaManager extends Observer {
     if (initialize == false) {
       return Shutdown(1)
     }
-
     val exceptionStatusAdaps = scala.collection.mutable.Set[String]()
     var curCntr = 0
     val maxFailureCnt = 30
@@ -671,7 +668,7 @@ class KamanjaManager extends Observer {
     var nextAdapterValuesCommit = System.currentTimeMillis + KamanjaConfiguration.adapterInfoCommitTime
 
     LOG.warn("KamanjaManager is running now. Waiting for user to terminate with SIGTERM, SIGINT or SIGABRT signals")
-    while (KamanjaConfiguration.shutdown == false) { // Infinite wait for now 
+    while (KamanjaConfiguration.shutdown == false) { // Infinite wait for now
       if (KamanjaMetadata.envCtxt != null && nextAdapterValuesCommit < System.currentTimeMillis) {
         if (ProcessedAdaptersInfo.CommitAdapterValues)
           nextAdapterValuesCommit = System.currentTimeMillis + KamanjaConfiguration.adapterInfoCommitTime
@@ -730,14 +727,65 @@ class KamanjaManager extends Observer {
           LOG.debug("\nStackTrace:" + stackTrace)
         }
       }
-      if (heartBeat != null && (cntr % 2 == 1)) {
-        heartBeat.SetMainData(nodeNameToSetZk)
+
+      // See if we have to extenrnalize stats, every 5000ms..
+      if (cntr % 10 == 1) {
+        externalizeMetrics
       }
     }
 
     scheduledThreadPool.shutdownNow()
     sh = null
     return Shutdown(0)
+  }
+
+  private def externalizeMetrics: Unit = {
+
+    val zkNodeBasePath = KamanjaConfiguration.zkNodeBasePath.stripSuffix("/").trim
+    val zkHeartBeatNodePath = zkNodeBasePath + "/monitor/engine/" + KamanjaConfiguration.nodeId.toString
+
+    if (thisEngineInfo == null) {
+      thisEngineInfo = new MainInfo
+      thisEngineInfo.startTime = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
+      thisEngineInfo.name = KamanjaConfiguration.nodeId.toString
+      thisEngineInfo.uniqueId = monitorCounter
+      CreateClient.CreateNodeIfNotExists(KamanjaConfiguration.zkConnectString, zkHeartBeatNodePath) // Creating the path if missing
+    }
+    thisEngineInfo.lastSeen = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
+
+    // run through all adapters.
+    if (adapterMetricInfo == null) {
+      adapterMetricInfo = scala.collection.mutable.MutableList[MonitorComponentInfo]()
+    }
+    adapterMetricInfo.clear
+
+
+    inputAdapters.foreach(ad => { adapterMetricInfo += ad.getComponentStatusAndMetrics })
+    outputAdapters.foreach(ad => { adapterMetricInfo += ad.getComponentStatusAndMetrics })
+    statusAdapters.foreach(ad => { adapterMetricInfo += ad.getComponentStatusAndMetrics })
+    validateInputAdapters.foreach(ad => { adapterMetricInfo += ad.getComponentStatusAndMetrics })
+    adapterMetricInfo += KamanjaMetadata.envCtxt.getComponentStatusAndMetrics
+
+    // Combine all the junk into a single JSON String
+    import org.json4s.JsonDSL._
+    val allMetrics =
+        ("Name" -> thisEngineInfo.name) ~
+        ("Version" -> (majorVersion.toString + "." + minorVersion.toString + "." + microVersion + "." + build)) ~
+        ("UniqueId" -> thisEngineInfo.uniqueId) ~
+        ("LastSeen" -> thisEngineInfo.lastSeen) ~
+        ("StartTime" -> thisEngineInfo.startTime) ~
+        ("Components" -> adapterMetricInfo.map(mci =>
+            ("Type" -> mci.typ) ~
+            ("Name" -> mci.name) ~
+            ("Description" -> mci.description) ~
+            ("LastSeen" -> mci.lastSeen) ~
+            ("StartTime" -> mci.startTime) ~
+            ("Metrics" -> mci.metricsJsonString)))
+
+    // get the envContext.
+    KamanjaLeader.SetNewDataToZkc(zkHeartBeatNodePath, compact(render(allMetrics)).getBytes)
+    monitorCounter += 1
+
   }
 
   class SignalHandler extends Observable with sun.misc.SignalHandler {
@@ -749,6 +797,23 @@ class KamanjaManager extends Observer {
       notifyObservers(signal)
     }
   }
+}
+
+class MainInfo {
+  var name: String = null
+  var uniqueId: Long = 0
+  var lastSeen: String = null
+  var startTime: String = null
+}
+
+class ComponentInfo {
+  var typ: String = null
+  var name: String = null
+  var desc: String = null
+  var uniqueId: Long = 0
+  var lastSeen: String = null
+  var startTime: String = null
+  var metrics: collection.mutable.Map[String, Any] = null
 }
 
 object OleService {
