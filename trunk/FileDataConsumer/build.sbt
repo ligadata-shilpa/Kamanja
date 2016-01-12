@@ -43,10 +43,13 @@ case PathList("META-INF", "maven","jline","jline", ps) if ps.startsWith("pom") =
     case x if x contains "commons-logging" => MergeStrategy.first
   case "log4j.properties" => MergeStrategy.first
   case "unwanted.txt"     => MergeStrategy.discard
-          case x =>
+  case x if x endsWith ".html" => MergeStrategy.first
+  case x if x endsWith ".xml" => MergeStrategy.first
+  case x if x endsWith ".class" => MergeStrategy.first
+  case x if x endsWith ".xsd" => MergeStrategy.first
+  case x =>
   	        val oldStrategy = (assemblyMergeStrategy in assembly).value
   	        oldStrategy(x)
-
 }
 
 excludedJars in assembly <<= (fullClasspath in assembly) map { cp =>
@@ -66,3 +69,9 @@ libraryDependencies ++= {
     "org.scala-lang" % "scala-actors" % scalaVersion.value
   )
 }
+
+libraryDependencies += "org.apache.hadoop" % "hadoop-client" % "2.7.1"
+
+libraryDependencies += "org.apache.hadoop" % "hadoop-hdfs" % "2.7.1"
+
+libraryDependencies += "org.apache.commons" % "commons-vfs2" % "2.0"
