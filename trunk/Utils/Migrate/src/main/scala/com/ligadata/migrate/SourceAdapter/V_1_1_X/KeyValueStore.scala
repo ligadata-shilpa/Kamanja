@@ -93,7 +93,7 @@ Ex: Sample2
 */
 
 // Storage Adapter Object to create storage adapter
-trait StorageAdapterObj11 {
+trait StorageAdapterObj_V_1_1_X {
   def CreateStorageAdapter(kvManagerLoader: KamanjaLoaderInfo, datastoreConfig: String, tableName: String): DataStore_V_1_1_X
 }
 

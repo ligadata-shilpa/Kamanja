@@ -112,10 +112,10 @@ object Migrate {
 
   private var tableStoreMap: Map[String, DataStore_V_1_1_X] = Map()
 
-  private def GetDataStoreHandle11(jarPaths: collection.immutable.Set[String], dataStoreInfo: String, tableName: String): DataStore_V_1_1_X = {
+  private def GetDataStoreHandle_V_1_1_X(jarPaths: collection.immutable.Set[String], dataStoreInfo: String, tableName: String): DataStore_V_1_1_X = {
     try {
       logger.info("Getting DB Connection for dataStoreInfo:%s, tableName:%s".format(dataStoreInfo, tableName))
-      return KeyValueManager11.Get(jarPaths, dataStoreInfo, tableName)
+      return KeyValueManager_V_1_1_X.Get(jarPaths, dataStoreInfo, tableName)
     } catch {
       case e: Exception => {
         throw new CreateStoreFailedException(e.getMessage(), e)
@@ -123,14 +123,14 @@ object Migrate {
     }
   }
 
-  def OpenDbStore11(jarPaths: collection.immutable.Set[String], dataStoreInfo: String) {
+  def OpenDbStore_V_1_1_X(jarPaths: collection.immutable.Set[String], dataStoreInfo: String) {
     try {
       logger.info("Opening datastore")
-      metadataStore = GetDataStoreHandle11(jarPaths, dataStoreInfo, "metadata_objects.bak")
-      configStore = GetDataStoreHandle11(jarPaths, dataStoreInfo, "config_objects.bak")
-      jarStore = GetDataStoreHandle11(jarPaths, dataStoreInfo, "jar_store.bak")
-      transStore = GetDataStoreHandle11(jarPaths, dataStoreInfo, "transaction_id.bak")
-      modelConfigStore = GetDataStoreHandle11(jarPaths, dataStoreInfo, "model_config_objects.bak")
+      metadataStore = GetDataStoreHandle_V_1_1_X(jarPaths, dataStoreInfo, "metadata_objects.bak")
+      configStore = GetDataStoreHandle_V_1_1_X(jarPaths, dataStoreInfo, "config_objects.bak")
+      jarStore = GetDataStoreHandle_V_1_1_X(jarPaths, dataStoreInfo, "jar_store.bak")
+      transStore = GetDataStoreHandle_V_1_1_X(jarPaths, dataStoreInfo, "transaction_id.bak")
+      modelConfigStore = GetDataStoreHandle_V_1_1_X(jarPaths, dataStoreInfo, "model_config_objects.bak")
 
       modelStore = metadataStore
       messageStore = metadataStore
@@ -304,7 +304,7 @@ object Migrate {
     }
   }
 
-  private def LoadAllModelConfigsIntoChache11(mdMgr: MdMgr): Unit = {
+  private def LoadAllModelConfigsIntoChache_V_1_1_X(mdMgr: MdMgr): Unit = {
     try {
       var keys = scala.collection.mutable.Set[Key_V_1_1_X]()
       modelConfigStore.getAllKeys({ (key: Key_V_1_1_X) => keys.add(key) })
@@ -327,10 +327,10 @@ object Migrate {
     }
   }
 
-  def LoadAllObjectsIntoCache11(mdMgr: MdMgr) {
+  def LoadAllObjectsIntoCache_V_1_1_X(mdMgr: MdMgr) {
     try {
       // Load All the Model Configs here... 
-      // LoadAllModelConfigsIntoChache11(mdMgr)
+      // LoadAllModelConfigsIntoChache_V_1_1_X(mdMgr)
 
       // Load all metadata objects
       var keys = scala.collection.mutable.Set[Key_V_1_1_X]()
@@ -385,7 +385,7 @@ object Migrate {
   def MigrateAlldata(ds: DataStore_V_1_1_X) {
     try {
       // Load All the Model Configs here... 
-      // LoadAllModelConfigsIntoChache11(mdMgr)
+      // LoadAllModelConfigsIntoChache_V_1_1_X(mdMgr)
 
       // Load all metadata objects
       var keys = scala.collection.mutable.Set[Key_V_1_1_X]()
@@ -524,7 +524,7 @@ object Migrate {
 
       logger.info("Start Reading 1.1.x objects")
       logger.info("Create 1.1.3 adapters...")
-      OpenDbStore11(jarPaths, metaDataStoreInfo)
+      OpenDbStore_V_1_1_X(jarPaths, metaDataStoreInfo)
 
       logger.info("Create 1.3 adapters")
       MetadataAPIImpl.OpenDbStore(jarPaths, metaDataStoreInfo)
@@ -542,7 +542,7 @@ object Migrate {
       logger.info("Load Cluster config ..")
       MetadataAPIImpl.UploadConfig(cfgStr, None, "ClusterConfig")
       MigrateAllMetadata(metadataStore)
-      allDataStore = GetDataStoreHandle11(jarPaths, dataStoreInfo, "AllData.bak")
+      allDataStore = GetDataStoreHandle_V_1_1_X(jarPaths, dataStoreInfo, "AllData.bak")
       MigrateAlldata(allDataStore)
     } catch {
       case e: Exception => {

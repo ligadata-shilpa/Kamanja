@@ -26,7 +26,7 @@ import org.apache.log4j._
 import com.ligadata.Utils.Utils._
 import com.ligadata.Utils.{ KamanjaClassLoader, KamanjaLoaderInfo }
 
-object KeyValueManager11 {
+object KeyValueManager_V_1_1_X {
   private val loggerName = this.getClass.getName
   private val logger = Logger.getLogger(loggerName)
   private val kvManagerLoader = new KamanjaLoaderInfo
@@ -62,7 +62,7 @@ object KeyValueManager11 {
 
       // Other KV stored
       //case "cassandra" => return KeyValueCassandra.CreateStorageAdapter(kvManagerLoader, datastoreConfig, tableName)
-      case "hbase" => return KeyValueHBase11.CreateStorageAdapter(kvManagerLoader, datastoreConfig, tableName)
+      case "hbase" => return KeyValueHBase_V_1_1_X.CreateStorageAdapter(kvManagerLoader, datastoreConfig, tableName)
       // Simple file base implementations
       //case "treemap" => return KeyValueTreeMap.CreateStorageAdapter(kvManagerLoader, datastoreConfig, tableName)
       //case "hashmap" => return KeyValueHashMap.CreateStorageAdapter(kvManagerLoader, datastoreConfig, tableName)
@@ -115,7 +115,7 @@ object KeyValueManager11 {
           var curClz = clz
 
           while (clz != null && isDs == false) {
-            isDs = isDerivedFrom(curClz, "com.ligadata.Migrate.StorageAdapterObj11")
+            isDs = isDerivedFrom(curClz, "com.ligadata.Migrate.StorageAdapterObj_V_1_1_X")
             if (isDs == false)
               curClz = curClz.getSuperclass()
           }
@@ -126,8 +126,8 @@ object KeyValueManager11 {
               val obj = kvManagerLoader.mirror.reflectModule(module)
 
               val objinst = obj.instance
-              if (objinst.isInstanceOf[StorageAdapterObj11]) {
-                val storageAdapterObj = objinst.asInstanceOf[StorageAdapterObj11]
+              if (objinst.isInstanceOf[StorageAdapterObj_V_1_1_X]) {
+                val storageAdapterObj = objinst.asInstanceOf[StorageAdapterObj_V_1_1_X]
                 return storageAdapterObj.CreateStorageAdapter(kvManagerLoader, datastoreConfig, tableName)
               } else {
                 logger.error("Failed to instantiate Storage Adapter with configuration:" + adapterConfig)

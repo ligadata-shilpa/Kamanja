@@ -70,7 +70,7 @@ datastoreConfig should have the following:
  *
  */
 
-class KeyValueHBaseTx11(val parent: DataStore_V_1_1_X) extends Transaction_V_1_1_X {
+class KeyValueHBaseTx_V_1_1_X(val parent: DataStore_V_1_1_X) extends Transaction_V_1_1_X {
   override def add(source: IStorage): Unit = { parent.add(source) }
   override def put(source: IStorage): Unit = { parent.put(source) }
   override def get(key: Key_V_1_1_X, target: IStorage): Unit = { parent.get(key, target) }
@@ -82,7 +82,7 @@ class KeyValueHBaseTx11(val parent: DataStore_V_1_1_X) extends Transaction_V_1_1
   override def delBatch(keyArray: Array[Key_V_1_1_X]): Unit = { parent.delBatch(keyArray) }
 }
 
-class KeyValueHBase11(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: String, val tableName: String) extends DataStore_V_1_1_X {
+class KeyValueHBase_V_1_1_X(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: String, val tableName: String) extends DataStore_V_1_1_X {
   val adapterConfig = if (datastoreConfig != null) datastoreConfig.trim else ""
   val loggerName = this.getClass.getName
   val logger = Logger.getLogger(loggerName)
@@ -417,7 +417,7 @@ class KeyValueHBase11(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfi
 
   override def del(source: IStorage): Unit = { del(source.Key_V_1_1_X) }
 
-  override def beginTx(): Transaction_V_1_1_X = { new KeyValueHBaseTx11(this) }
+  override def beginTx(): Transaction_V_1_1_X = { new KeyValueHBaseTx_V_1_1_X(this) }
 
   override def endTx(tx: Transaction_V_1_1_X): Unit = {}
 
@@ -494,6 +494,6 @@ class KeyValueHBase11(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfi
 }
 
 // To create HBase Datastore instance
-object KeyValueHBase11 extends StorageAdapterObj11 {
-  override def CreateStorageAdapter(kvManagerLoader: KamanjaLoaderInfo, datastoreConfig: String, tableName: String): DataStore_V_1_1_X = new KeyValueHBase11(kvManagerLoader, datastoreConfig, tableName)
+object KeyValueHBase_V_1_1_X extends StorageAdapterObj_V_1_1_X {
+  override def CreateStorageAdapter(kvManagerLoader: KamanjaLoaderInfo, datastoreConfig: String, tableName: String): DataStore_V_1_1_X = new KeyValueHBase_V_1_1_X(kvManagerLoader, datastoreConfig, tableName)
 }
