@@ -78,6 +78,8 @@ import org.json4s.jackson.Serialization
 import scala.collection.mutable.ArrayBuffer
 import scala.io._
 
+import com.ligadata.Migrate.SourceAdapter.V_1_1_X._
+
 object Migrate {
 
   lazy val sysNS = "System"
@@ -116,7 +118,7 @@ object Migrate {
       return KeyValueManager11.Get(jarPaths, dataStoreInfo, tableName)
     } catch {
       case e: Exception => {
-        throw new CreateStoreFailedException(e.getMessage(),e)
+        throw new CreateStoreFailedException(e.getMessage(), e)
       }
     }
   }
@@ -153,10 +155,10 @@ object Migrate {
         "transaction_id" -> transStore)
     } catch {
       case e: CreateStoreFailedException => {
-        throw new CreateStoreFailedException(e.getMessage(),e)
+        throw new CreateStoreFailedException(e.getMessage(), e)
       }
       case e: Exception => {
-        throw new CreateStoreFailedException(e.getMessage(),e)
+        throw new CreateStoreFailedException(e.getMessage(), e)
       }
     }
   }
@@ -181,10 +183,10 @@ object Migrate {
 
         def Value11 = value
         def Construct(k: Key11, v: Value11) =
-        {
-          key = k;
-          value = v;
-        }
+          {
+            key = k;
+            value = v;
+          }
       }
 
       var k = key
@@ -193,10 +195,10 @@ object Migrate {
       o
     } catch {
       case e: KeyNotFoundException => {
-        throw new ObjectNotFoundException(e.getMessage(),e)
+        throw new ObjectNotFoundException(e.getMessage(), e)
       }
       case e: Exception => {
-        throw new ObjectNotFoundException(e.getMessage(),e)
+        throw new ObjectNotFoundException(e.getMessage(), e)
       }
     }
   }
@@ -217,29 +219,27 @@ object Migrate {
       val dispkey = obj.FullName + "." + MdMgr.Pad0s2Version(obj.Version)
       obj match {
         case o: ModelDef => {
-	  logger.info("The model " + o.FullNameWithVer + " needs to be manually migrated because underlying interfaces have changed")
+          logger.info("The model " + o.FullNameWithVer + " needs to be manually migrated because underlying interfaces have changed")
           logger.debug("Adding the model to the cache: name of the object =>  " + dispkey)
         }
         case o: MessageDef => {
-	  val msgDefStr = o.objectDefinition
-	  if( msgDefStr != null ){
+          val msgDefStr = o.objectDefinition
+          if (msgDefStr != null) {
             logger.info("Adding the message: name of the object =>  " + dispkey)
-	    MetadataAPIImpl.AddMessage(msgDefStr,"JSON",None)
-	  }
-	  else{
-	    logger.debug("Bootstrap object. Ignore it")
-	  }
+            MetadataAPIImpl.AddMessage(msgDefStr, "JSON", None)
+          } else {
+            logger.debug("Bootstrap object. Ignore it")
+          }
         }
         case o: ContainerDef => {
           logger.debug("Adding the container : name of the object =>  " + dispkey)
-	  val msgDefStr = o.objectDefinition
-	  if( msgDefStr != null ){
+          val msgDefStr = o.objectDefinition
+          if (msgDefStr != null) {
             logger.info("Adding the message: name of the object =>  " + dispkey)
-	    MetadataAPIImpl.AddContainer(msgDefStr,"JSON",None)
-	  }
-	  else{
-	    logger.debug("Bootstrap object. Ignore it")
-	  }
+            MetadataAPIImpl.AddContainer(msgDefStr, "JSON", None)
+          } else {
+            logger.debug("Bootstrap object. Ignore it")
+          }
         }
         case o: FunctionDef => {
           val funcKey = o.typeString.toLowerCase
@@ -304,20 +304,19 @@ object Migrate {
     }
   }
 
-
   private def LoadAllModelConfigsIntoChache11(mdMgr: MdMgr): Unit = {
-    try{
+    try {
       var keys = scala.collection.mutable.Set[Key11]()
       modelConfigStore.getAllKeys({ (key: Key11) => keys.add(key) })
       val keyArray = keys.toArray
       if (keyArray.length == 0) {
-	logger.debug("No model config objects available in the Database")
-	return
+        logger.debug("No model config objects available in the Database")
+        return
       }
       keyArray.foreach(key => {
-	val obj = GetObject(key, modelConfigStore)
-	val conf = serializer.DeserializeObjectFromByteArray(obj.Value11.toArray[Byte]).asInstanceOf[Map[String, List[String]]]
-	mdMgr.AddModelConfig(KeyAsStr(key), conf)
+        val obj = GetObject(key, modelConfigStore)
+        val conf = serializer.DeserializeObjectFromByteArray(obj.Value11.toArray[Byte]).asInstanceOf[Map[String, List[String]]]
+        mdMgr.AddModelConfig(KeyAsStr(key), conf)
       })
     } catch {
       case e: Exception => {
@@ -346,11 +345,11 @@ object Migrate {
         val mObj = serializer.DeserializeObjectFromByteArray(obj.Value11.toArray[Byte]).asInstanceOf[BaseElemDef]
         if (mObj != null) {
           ProcessObject(mObj)
-        } 
+        }
       })
     } catch {
       case e: Exception => {
-	val stackTrace = StackTrace.ThrowableTraceString(e)
+        val stackTrace = StackTrace.ThrowableTraceString(e)
         logger.info("\nStackTrace:" + stackTrace)
         throw new Exception("Failed to load metadata objects into cache:" + e.getMessage())
       }
@@ -372,17 +371,16 @@ object Migrate {
         val mObj = serializer.DeserializeObjectFromByteArray(obj.Value11.toArray[Byte]).asInstanceOf[BaseElemDef]
         if (mObj != null) {
           ProcessObject(mObj)
-        } 
+        }
       })
     } catch {
       case e: Exception => {
-	val stackTrace = StackTrace.ThrowableTraceString(e)
+        val stackTrace = StackTrace.ThrowableTraceString(e)
         logger.info("\nStackTrace:" + stackTrace)
         throw new Exception("Failed to load metadata objects into cache:" + e.getMessage())
       }
     }
   }
-
 
   def MigrateAlldata(ds: DataStore11) {
     try {
@@ -402,11 +400,11 @@ object Migrate {
         val mObj = serializer.DeserializeObjectFromByteArray(obj.Value11.toArray[Byte]).asInstanceOf[BaseElemDef]
         if (mObj != null) {
           ProcessObject(mObj)
-        } 
+        }
       })
     } catch {
       case e: Exception => {
-	val stackTrace = StackTrace.ThrowableTraceString(e)
+        val stackTrace = StackTrace.ThrowableTraceString(e)
         logger.info("\nStackTrace:" + stackTrace)
         throw new Exception("Failed to load metadata objects into cache:" + e.getMessage())
       }
@@ -414,44 +412,43 @@ object Migrate {
   }
 
   private def BackupMetadata(adapter: DataStore): Unit = {
-    try{
+    try {
       adapter.backupContainer("metadata_objects")
       adapter.backupContainer("jar_store")
       adapter.backupContainer("config_objects")
       adapter.backupContainer("model_config_objects")
       adapter.backupContainer("transaction_id")
       // if we reach this point, we have successfully backed up the container
-      
+
     } catch {
       case e: Exception => {
         throw new Exception("Failed to backup metadata  " + e.getMessage())
       }
     }
-  }    
+  }
 
   private def Backupdata(adapter: DataStore): Unit = {
-    try{
+    try {
       adapter.backupContainer("AllData")
       // if we reach this point, we have successfully backed up the data
-      
+
     } catch {
       case e: Exception => {
         throw new Exception("Failed to backup metadata  " + e.getMessage())
       }
     }
-  }    
-
+  }
 
   private def DropMetadata(adapter: DataStore): Unit = {
-    try{
-      var containers = Array("metadata_objects","config_objects","model_config_objects","jar_store","transaction_id")
+    try {
+      var containers = Array("metadata_objects", "config_objects", "model_config_objects", "jar_store", "transaction_id")
       adapter.DropContainer(containers)
     } catch {
       case e: Exception => {
         throw new Exception("Failed to Drop metadata  " + e.getMessage())
       }
     }
-  }  
+  }
 
   private def getStringFromJsonNode(v: Any): String = {
     if (v == null) return ""
@@ -468,24 +465,24 @@ object Migrate {
   }
 
   def GetDataStoreVar(cfgStr: String): String = {
-    var dsStr:String = null
+    var dsStr: String = null
     try {
       // extract config objects
       val map = JsonSerializer.parseEngineConfig(cfgStr)
       // process clusterInfo object if it exists
-      if (map.contains("Clusters") ) {
-	val clustersList = map.get("Clusters").get.asInstanceOf[List[_]]
-	logger.debug("Found " + clustersList.length + " cluster objects ")
-	clustersList.foreach(clustny => {
+      if (map.contains("Clusters")) {
+        val clustersList = map.get("Clusters").get.asInstanceOf[List[_]]
+        logger.debug("Found " + clustersList.length + " cluster objects ")
+        clustersList.foreach(clustny => {
           val cluster = clustny.asInstanceOf[Map[String, Any]]
           val ClusterId = cluster.getOrElse("ClusterId", "").toString.trim.toLowerCase
           logger.debug("Processing the cluster => " + ClusterId)
           // gather config name-value pairs
-          if (cluster.contains("DataStore")){
+          if (cluster.contains("DataStore")) {
             dsStr = getStringFromJsonNode(cluster.getOrElse("DataStore", null))
-	    break;
-	  }
-	})
+            break;
+          }
+        })
       }
       dsStr
     } catch {
@@ -496,59 +493,58 @@ object Migrate {
     }
   }
 
-  private def StartMigrate(clusterCfgFile:String,apiCfgFile:String,fromRelease:String): Unit = {
-    try{
+  private def StartMigrate(clusterCfgFile: String, apiCfgFile: String, fromRelease: String): Unit = {
+    try {
       logger.info("Migration started...")
       // read the properties file supplied
       MdMgr.GetMdMgr.truncate
       val mdLoader = new MetadataLoad(MdMgr.mdMgr, "", "", "", "")
       mdLoader.initialize
       MetadataAPIImpl.readMetadataAPIConfigFromPropertiesFile(apiCfgFile)
-      
+
       val tmpJarPaths = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("JAR_PATHS")
       val jarPaths = if (tmpJarPaths != null) tmpJarPaths.split(",").toSet else scala.collection.immutable.Set[String]()
       val metaDataStoreInfo = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("METADATA_DATASTORE");
-      val adapter = HBaseAdapter.CreateStorageAdapter(kvManagerLoader,metaDataStoreInfo)
+      val adapter = HBaseAdapter.CreateStorageAdapter(kvManagerLoader, metaDataStoreInfo)
       val cfgStr = Source.fromFile(clusterCfgFile).mkString
       val dataStoreInfo = GetDataStoreVar(cfgStr)
-      val dataAdapter = HBaseAdapter.CreateStorageAdapter(kvManagerLoader,dataStoreInfo)
-      try{
-	BackupMetadata(adapter)
-	Backupdata(dataAdapter)
-	// if we reach this point, we have successfully backed up the metadata and data
-	
+      val dataAdapter = HBaseAdapter.CreateStorageAdapter(kvManagerLoader, dataStoreInfo)
+      try {
+        BackupMetadata(adapter)
+        Backupdata(dataAdapter)
+        // if we reach this point, we have successfully backed up the metadata and data
+
       } catch {
-	case e: Exception => {
+        case e: Exception => {
           throw new Exception("Failed to backup metadata  " + e.getMessage())
-	}
+        }
       }
       logger.info("Backup finished...")
       logger.info("Update Migration Status...")
 
       logger.info("Start Reading 1.1.x objects")
       logger.info("Create 1.1.3 adapters...")
-      OpenDbStore11(jarPaths,metaDataStoreInfo)
+      OpenDbStore11(jarPaths, metaDataStoreInfo)
 
       logger.info("Create 1.3 adapters")
-      MetadataAPIImpl.OpenDbStore(jarPaths,metaDataStoreInfo)
+      MetadataAPIImpl.OpenDbStore(jarPaths, metaDataStoreInfo)
 
       // Drop metadata objects in preparation for adding them again
-      try{
-	DropMetadata(adapter)
+      try {
+        DropMetadata(adapter)
       } catch {
-	case e: Exception => {
+        case e: Exception => {
           throw new Exception("Failed to truncate metadata objects " + e.getMessage())
-	}
+        }
       }
       // Start Migration of objects into new database
       logger.info("Migrate all objects...")
       logger.info("Load Cluster config ..")
-      MetadataAPIImpl.UploadConfig(cfgStr,None,"ClusterConfig")
+      MetadataAPIImpl.UploadConfig(cfgStr, None, "ClusterConfig")
       MigrateAllMetadata(metadataStore)
       allDataStore = GetDataStoreHandle11(jarPaths, dataStoreInfo, "AllData.bak")
       MigrateAlldata(allDataStore)
-    }
-    catch{
+    } catch {
       case e: Exception => {
         throw new Exception("Migration has Failed " + e.getMessage())
       }
@@ -571,7 +567,6 @@ object Migrate {
     }
   }
 
-
   private def usage: Unit = {
     logger.error("Missing or incorrect arguments Usage: migrate --clusterconfig <your-current-release-config-dir>/clusterconfig.json --apiconfig <your-current-release-config-dir>/MetadataAPIConfig.properties --fromversion 1.x.x")
   }
@@ -582,41 +577,41 @@ object Migrate {
       var apiCfgFile: String = null
       var fromRelease: String = null
       if (args.length == 0) {
-	usage
-	return
+        usage
+        return
       } else {
         val options = nextOption(Map(), args.toList)
 
-	logger.info("keys => " + options.keys)
-	logger.info("values => " + options.values)
+        logger.info("keys => " + options.keys)
+        logger.info("values => " + options.values)
 
         var param = options.getOrElse('clusterconfig, null)
         if (param == null) {
-	  usage
-	  return
+          usage
+          return
         }
-	clusterCfgFile = param.asInstanceOf[String]
-	logger.info("clusterCfgFile => " + clusterCfgFile)
+        clusterCfgFile = param.asInstanceOf[String]
+        logger.info("clusterCfgFile => " + clusterCfgFile)
         param = options.getOrElse('apiconfig, null)
         if (param == null) {
-	  usage
-	  return
+          usage
+          return
         }
-	apiCfgFile = param.asInstanceOf[String]
-	logger.info("apCfgFile => " + apiCfgFile)
+        apiCfgFile = param.asInstanceOf[String]
+        logger.info("apCfgFile => " + apiCfgFile)
         param = options.getOrElse('fromversion, null)
         if (param == null) {
-	  usage
-	  return
+          usage
+          return
         }
-	fromRelease = param.asInstanceOf[String]
-	logger.info("fromRelease => " + fromRelease)
+        fromRelease = param.asInstanceOf[String]
+        logger.info("fromRelease => " + fromRelease)
       }
-      StartMigrate(clusterCfgFile,apiCfgFile,fromRelease)
+      StartMigrate(clusterCfgFile, apiCfgFile, fromRelease)
     } catch {
       case e: Throwable => {
         val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.error("StackTrace:"+stackTrace)
+        logger.error("StackTrace:" + stackTrace)
       }
     } finally {
       MetadataAPIImpl.shutdown
