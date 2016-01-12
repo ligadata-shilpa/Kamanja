@@ -72,11 +72,11 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
 
   private val adapterInfoMap = ProcessedAdaptersInfo.getOneInstance(this.hashCode(), true)
 
-  private def SendFailedEvent(data: Array[Byte], format: String, associatedMsg: String, uk: String, uv: String, transformStartTime: Long, e: Throwable): Unit = {
+  private def SendFailedEvent(data: Array[Byte], format: String, associatedMsg: String, uk: String, uv: String, e: Throwable): Unit = {
     if (failedEventsAdapter == null)
       return
 
-    val failedTm = failedEventDtFormat.format(new java.util.Date(transformStartTime))
+    val failedTm = failedEventDtFormat.format(new java.util.Date(System.currentTimeMillis))
 
     val evntData = new String(data)
 
@@ -136,10 +136,10 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
           xformedmsgs = xform.execute(data, format, associatedMsg, delimiters, uk, uv)
         } catch {
           case e: Exception => {
-            SendFailedEvent(data, format, associatedMsg, uk, uv, transformStartTime, e)
+            SendFailedEvent(data, format, associatedMsg, uk, uv, e)
           }
           case e: Throwable => {
-            SendFailedEvent(data, format, associatedMsg, uk, uv, transformStartTime, e)
+            SendFailedEvent(data, format, associatedMsg, uk, uv, e)
           }
         }
         LOG.info(ManagerUtils.getComponentElapsedTimeStr("Transform", uv, readTmNanoSecs, transformStartTime))
@@ -155,7 +155,7 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
               }
             } catch {
               case e: MessagePopulationException => {
-                SendFailedEvent(data, format, xformed._1, uk, uv, transformStartTime, e)
+                SendFailedEvent(data, format, xformed._1, uk, uv, e)
               }
               case e: Exception => {
                 LOG.error("Failed to execute models after creating message", e)
