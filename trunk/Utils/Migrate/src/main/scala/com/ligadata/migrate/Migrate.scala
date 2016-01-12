@@ -79,6 +79,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.io._
 
 import com.ligadata.Migrate.SourceAdapter.V_1_1_X._
+import com.ligadata.Utils.{ Utils, KamanjaClassLoader, KamanjaLoaderInfo }
 
 object Migrate {
 
@@ -88,7 +89,11 @@ object Migrate {
   lazy val logger = LogManager.getLogger(loggerName)
   lazy val serializerType = "kryo"
   lazy val serializer = SerializerManager.GetSerializer(serializerType)
+  private[this] var _kryoDataSer_V_1_1_X: com.ligadata.Serialize.Serializer = null
   private val kvManagerLoader = new KamanjaLoaderInfo
+  private val kamanjaLoader_V_1_1_X = new KamanjaLoaderInfo
+
+  private var jarPaths = collection.immutable.Set[String]()
 
   private type OptionMap = Map[Symbol, Any]
 
@@ -105,6 +110,7 @@ object Migrate {
   private var configStore: DataStore_V_1_1_X = _
   private var outputmsgStore: DataStore_V_1_1_X = _
   private var modelConfigStore: DataStore_V_1_1_X = _
+  private val V_1_1_X_messagesAndContainers = scala.collection.mutable.Map[String, MessageContainerObjBase_V_1_1_X]()
 
   private var allDataStore: DataStore_V_1_1_X = _
 
@@ -211,87 +217,91 @@ object Migrate {
     GetObject(k, store)
   }
 
-  def ProcessObject(o: Object) {
-    // If the object's Delete flag is set, this is a noop.
-    val obj = o.asInstanceOf[BaseElemDef]
+  def ProcessObject(obj: BaseElemDef, collectOrgMsgAndCntainer: Boolean) {
     try {
-      val key = obj.FullNameWithVer.toLowerCase
-      val dispkey = obj.FullName + "." + MdMgr.Pad0s2Version(obj.Version)
-      obj match {
-        case o: ModelDef => {
-          logger.info("The model " + o.FullNameWithVer + " needs to be manually migrated because underlying interfaces have changed")
-          logger.debug("Adding the model to the cache: name of the object =>  " + dispkey)
-        }
-        case o: MessageDef => {
-          val msgDefStr = o.objectDefinition
-          if (msgDefStr != null) {
-            logger.info("Adding the message: name of the object =>  " + dispkey)
-            MetadataAPIImpl.AddMessage(msgDefStr, "JSON", None)
-          } else {
-            logger.debug("Bootstrap object. Ignore it")
+      // First collecting 1.1 message/container
+      if (collectOrgMsgAndCntainer && obj.IsActive && obj.IsDeleted == false && (obj.isInstanceOf[ContainerDef] || obj.isInstanceOf[MessageDef]))
+        Load_V_1_1_X_MessageOrContianer(obj, jarPaths, kamanjaLoader_V_1_1_X)
+
+      if (/* obj.IsActive && */ obj.IsDeleted == false) {
+        val key = obj.FullNameWithVer.toLowerCase
+        val dispkey = obj.FullName + "." + MdMgr.Pad0s2Version(obj.Version)
+        obj match {
+          case o: ModelDef => {
+            logger.info("The model " + o.FullNameWithVer + " needs to be manually migrated because underlying interfaces have changed")
+            logger.debug("Adding the model to the cache: name of the object =>  " + dispkey)
           }
-        }
-        case o: ContainerDef => {
-          logger.debug("Adding the container : name of the object =>  " + dispkey)
-          val msgDefStr = o.objectDefinition
-          if (msgDefStr != null) {
-            logger.info("Adding the message: name of the object =>  " + dispkey)
-            MetadataAPIImpl.AddContainer(msgDefStr, "JSON", None)
-          } else {
-            logger.debug("Bootstrap object. Ignore it")
+          case o: MessageDef => {
+            val msgDefStr = o.objectDefinition
+            if (msgDefStr != null) {
+              logger.info("Adding the message: name of the object =>  " + dispkey)
+              MetadataAPIImpl.AddMessage(msgDefStr, "JSON", None)
+            } else {
+              logger.debug("Bootstrap object. Ignore it")
+            }
           }
-        }
-        case o: FunctionDef => {
-          val funcKey = o.typeString.toLowerCase
-          logger.debug("Adding the function to the cache: name of the object =>  " + funcKey)
-        }
-        case o: AttributeDef => {
-          logger.debug("Adding the attribute to the cache: name of the object =>  " + dispkey)
-        }
-        case o: ScalarTypeDef => {
-          logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
-        }
-        case o: ArrayTypeDef => {
-          logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
-        }
-        case o: ArrayBufTypeDef => {
-          logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
-        }
-        case o: ListTypeDef => {
-          logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
-        }
-        case o: QueueTypeDef => {
-          logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
-        }
-        case o: SetTypeDef => {
-          logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
-        }
-        case o: TreeSetTypeDef => {
-          logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
-        }
-        case o: SortedSetTypeDef => {
-          logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
-        }
-        case o: MapTypeDef => {
-          logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
-        }
-        case o: ImmutableMapTypeDef => {
-          logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
-        }
-        case o: HashMapTypeDef => {
-          logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
-        }
-        case o: TupleTypeDef => {
-          logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
-        }
-        case o: ContainerTypeDef => {
-          logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
-        }
-        case o: OutputMsgDef => {
-          logger.trace("Adding the Output Msg to the cache: name of the object =>  " + key)
-        }
-        case _ => {
-          logger.error("ProcessObject is not implemented for objects of type " + obj.getClass.getName)
+          case o: ContainerDef => {
+            logger.debug("Adding the container : name of the object =>  " + dispkey)
+            val msgDefStr = o.objectDefinition
+            if (msgDefStr != null) {
+              logger.info("Adding the message: name of the object =>  " + dispkey)
+              MetadataAPIImpl.AddContainer(msgDefStr, "JSON", None)
+            } else {
+              logger.debug("Bootstrap object. Ignore it")
+            }
+          }
+          case o: FunctionDef => {
+            val funcKey = o.typeString.toLowerCase
+            logger.debug("Adding the function to the cache: name of the object =>  " + funcKey)
+          }
+          case o: AttributeDef => {
+            logger.debug("Adding the attribute to the cache: name of the object =>  " + dispkey)
+          }
+          case o: ScalarTypeDef => {
+            logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
+          }
+          case o: ArrayTypeDef => {
+            logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
+          }
+          case o: ArrayBufTypeDef => {
+            logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
+          }
+          case o: ListTypeDef => {
+            logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
+          }
+          case o: QueueTypeDef => {
+            logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
+          }
+          case o: SetTypeDef => {
+            logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
+          }
+          case o: TreeSetTypeDef => {
+            logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
+          }
+          case o: SortedSetTypeDef => {
+            logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
+          }
+          case o: MapTypeDef => {
+            logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
+          }
+          case o: ImmutableMapTypeDef => {
+            logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
+          }
+          case o: HashMapTypeDef => {
+            logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
+          }
+          case o: TupleTypeDef => {
+            logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
+          }
+          case o: ContainerTypeDef => {
+            logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
+          }
+          case o: OutputMsgDef => {
+            logger.trace("Adding the Output Msg to the cache: name of the object =>  " + key)
+          }
+          case _ => {
+            logger.error("ProcessObject is not implemented for objects of type " + obj.getClass.getName)
+          }
         }
       }
     } catch {
@@ -327,6 +337,7 @@ object Migrate {
     }
   }
 
+  /*
   def LoadAllObjectsIntoCache_V_1_1_X(mdMgr: MdMgr) {
     try {
       // Load All the Model Configs here... 
@@ -355,6 +366,7 @@ object Migrate {
       }
     }
   }
+*/
 
   def MigrateAllMetadata(ds: DataStore_V_1_1_X) {
     try {
@@ -370,7 +382,7 @@ object Migrate {
         val obj = GetObject(key, ds)
         val mObj = serializer.DeserializeObjectFromByteArray(obj.Value_V_1_1_X.toArray[Byte]).asInstanceOf[BaseElemDef]
         if (mObj != null) {
-          ProcessObject(mObj)
+          ProcessObject(mObj, true)
         }
       })
     } catch {
@@ -382,12 +394,220 @@ object Migrate {
     }
   }
 
-  def MigrateAlldata(ds: DataStore_V_1_1_X) {
-    try {
-      // Load All the Model Configs here... 
-      // LoadAllModelConfigsIntoChache_V_1_1_X(mdMgr)
+  private[this] var _serInfoBufBytes_V_1_1_X = 32
 
-      // Load all metadata objects
+  private def getSerializeInfo_V_1_1_X(tupleBytes: Value_V_1_1_X): String = {
+    if (tupleBytes.size < _serInfoBufBytes_V_1_1_X) return ""
+    val serInfoBytes = new Array[Byte](_serInfoBufBytes_V_1_1_X)
+    tupleBytes.copyToArray(serInfoBytes, 0, _serInfoBufBytes_V_1_1_X)
+    return (new String(serInfoBytes)).trim
+  }
+
+  private def getValueInfo_V_1_1_X(tupleBytes: Value_V_1_1_X): Array[Byte] = {
+    if (tupleBytes.size < _serInfoBufBytes_V_1_1_X) return null
+    val valInfoBytes = new Array[Byte](tupleBytes.size - _serInfoBufBytes_V_1_1_X)
+    Array.copy(tupleBytes.toArray, _serInfoBufBytes_V_1_1_X, valInfoBytes, 0, tupleBytes.size - _serInfoBufBytes_V_1_1_X)
+    valInfoBytes
+  }
+
+  private def LoadJarIfNeeded(elem: BaseElem, loadedJars: TreeSet[String], loader: KamanjaClassLoader, jarPaths: collection.immutable.Set[String]): Boolean = {
+    if (jarPaths == null) return false
+
+    var retVal: Boolean = true
+    var allJars: Array[String] = null
+
+    val jarname = if (elem.JarName == null) "" else elem.JarName.trim
+
+    if (elem.DependencyJarNames != null && elem.DependencyJarNames.size > 0 && jarname.size > 0) {
+      allJars = elem.DependencyJarNames :+ jarname
+    } else if (elem.DependencyJarNames != null && elem.DependencyJarNames.size > 0) {
+      allJars = elem.DependencyJarNames
+    } else if (jarname.size > 0) {
+      allJars = Array(jarname)
+    } else {
+      return retVal
+    }
+
+    val jars = allJars.map(j => Utils.GetValidJarFile(jarPaths, j))
+
+    // Loading all jars
+    for (j <- jars) {
+      logger.debug("Processing Jar " + j.trim)
+      val fl = new File(j.trim)
+      if (fl.exists) {
+        try {
+          if (loadedJars(fl.getPath())) {
+            logger.debug("Jar " + j.trim + " already loaded to class path.")
+          } else {
+            loader.addURL(fl.toURI().toURL())
+            logger.debug("Jar " + j.trim + " added to class path.")
+            loadedJars += fl.getPath()
+          }
+        } catch {
+          case e: Exception => {
+            logger.error("Jar " + j.trim + " failed added to class path. Message: " + e.getMessage)
+            return false
+          }
+        }
+      } else {
+        logger.error("Jar " + j.trim + " not found")
+        return false
+      }
+    }
+
+    true
+  }
+
+  private def Load_V_1_1_X_MessageOrContianer(obj: BaseElemDef, jarPaths: collection.immutable.Set[String], kamanjaLoader_V_1_1_X: KamanjaLoaderInfo): Unit = {
+
+    var messageObj: BaseMsgObj_V_1_1_X = null
+    var containerObj: BaseContainerObj_V_1_1_X = null
+
+    var isOk = true
+
+    val objFullName = obj.FullName.toLowerCase
+
+    var isMsg = false
+    var isContainer = false
+
+    if (isOk) {
+      isOk = LoadJarIfNeeded(obj, kamanjaLoader_V_1_1_X.loadedJars, kamanjaLoader_V_1_1_X.loader, jarPaths)
+    }
+
+    if (isOk) {
+      var clsName = obj.PhysicalName.trim
+      if (clsName.size > 0 && clsName.charAt(clsName.size - 1) != '$') // if no $ at the end we are taking $
+        clsName = clsName + "$"
+
+      if (isMsg == false) {
+        // Checking for Message
+        try {
+          // Convert class name into a class
+          var curClz = Class.forName(clsName, true, kamanjaLoader_V_1_1_X.loader)
+
+          while (curClz != null && isContainer == false) {
+            isContainer = Utils.isDerivedFrom(curClz, "com.ligadata.KamanjaBase.BaseContainerObj")
+            if (isContainer == false)
+              curClz = curClz.getSuperclass()
+          }
+        } catch {
+          case e: Exception => {
+            logger.error("Failed to load message class %s with Reason:%s Message:%s".format(clsName, e.getCause, e.getMessage))
+          }
+        }
+      }
+
+      if (isContainer == false) {
+        // Checking for container
+        try {
+          // If required we need to enable this test
+          // Convert class name into a class
+          var curClz = Class.forName(clsName, true, kamanjaLoader_V_1_1_X.loader)
+
+          while (curClz != null && isMsg == false) {
+            isMsg = Utils.isDerivedFrom(curClz, "com.ligadata.KamanjaBase.BaseMsgObj")
+            if (isMsg == false)
+              curClz = curClz.getSuperclass()
+          }
+        } catch {
+          case e: Exception => {
+            logger.error("Failed to load container class %s with Reason:%s Message:%s".format(clsName, e.getCause, e.getMessage))
+          }
+        }
+      }
+
+      if (isMsg || isContainer) {
+        try {
+          val module = kamanjaLoader_V_1_1_X.mirror.staticModule(clsName)
+          val obj = kamanjaLoader_V_1_1_X.mirror.reflectModule(module)
+          val objinst = obj.instance
+          if (objinst.isInstanceOf[BaseMsgObj_V_1_1_X]) {
+            messageObj = objinst.asInstanceOf[BaseMsgObj_V_1_1_X]
+            logger.debug("Created Message Object")
+            V_1_1_X_messagesAndContainers(objFullName) = messageObj
+          } else if (objinst.isInstanceOf[BaseContainerObj_V_1_1_X]) {
+            containerObj = objinst.asInstanceOf[BaseContainerObj_V_1_1_X]
+            logger.debug("Created Container Object")
+            V_1_1_X_messagesAndContainers(objFullName) = containerObj
+          } else {
+            logger.error("Failed to instantiate message or conatiner object :" + clsName)
+            isOk = false
+          }
+        } catch {
+          case e: Exception => {
+            logger.error("Failed to instantiate message or conatiner object:" + clsName + ". Reason:" + e.getCause + ". Message:" + e.getMessage())
+            isOk = false
+          }
+        }
+      } else {
+        logger.error("Failed to instantiate message or conatiner object :" + clsName)
+        isOk = false
+      }
+    }
+  }
+
+  object MdResolve_V_1_1_X extends MdBaseResolveInfo_V_1_1_X {
+    override def getMessgeOrContainerInstance(MsgContainerType: String): MessageContainerBase_V_1_1_X = {
+      val v = V_1_1_X_messagesAndContainers.getOrElse(MsgContainerType.toLowerCase(), null)
+      if (v != null && v.isInstanceOf[BaseMsgObj_V_1_1_X]) {
+        return v.asInstanceOf[BaseMsgObj_V_1_1_X].CreateNewMessage
+      } else if (v != null && v.isInstanceOf[BaseContainerObj_V_1_1_X]) {
+        return v.asInstanceOf[BaseContainerObj_V_1_1_X].CreateNewContainer
+      }
+      return null
+    }
+  }
+
+  private def migrateFrom_V_1_1_X(tupleBytes: Value_V_1_1_X): Unit = {
+    // Get first _serInfoBufBytes bytes
+    if (tupleBytes.size < _serInfoBufBytes_V_1_1_X) {
+      val errMsg = s"Invalid input. This has only ${tupleBytes.size} bytes data. But we are expecting serializer buffer bytes as of size ${_serInfoBufBytes_V_1_1_X}"
+      logger.error(errMsg)
+      throw new Exception(errMsg)
+    }
+
+    val serInfo = getSerializeInfo_V_1_1_X(tupleBytes)
+    var kd: KamanjaData_V_1_1_X = null
+
+    serInfo.toLowerCase match {
+      case "kryo" => {
+        val valInfo = getValueInfo_V_1_1_X(tupleBytes)
+        if (_kryoDataSer_V_1_1_X == null) {
+          _kryoDataSer_V_1_1_X = SerializerManager.GetSerializer("kryo")
+          if (_kryoDataSer_V_1_1_X != null && kamanjaLoader_V_1_1_X != null && kamanjaLoader_V_1_1_X.loader != null) {
+            _kryoDataSer_V_1_1_X.SetClassLoader(kamanjaLoader_V_1_1_X.loader)
+          }
+        }
+        if (_kryoDataSer_V_1_1_X != null) {
+          kd = _kryoDataSer_V_1_1_X.DeserializeObjectFromByteArray(valInfo).asInstanceOf[KamanjaData_V_1_1_X]
+        }
+      }
+      case "manual" => {
+        val valInfo = getValueInfo_V_1_1_X(tupleBytes)
+        val datarec = new KamanjaData_V_1_1_X
+        datarec.DeserializeData(valInfo, MdResolve_V_1_1_X, kamanjaLoader_V_1_1_X.loader)
+        kd = datarec
+      }
+      case _ => {
+        throw new Exception("Found un-handled Serializer Info: " + serInfo)
+      }
+    }
+
+    if (kd != null) {
+      val typName = kd.GetTypeName
+      val bucketKey = kd.GetKey
+      val data = kd.GetAllData
+    }
+  }
+
+  def Migrate_V_1_1_X_Alldata(ds: DataStore_V_1_1_X) {
+    val buildOne = (tupleBytes: Value_V_1_1_X) => {
+      migrateFrom_V_1_1_X(tupleBytes)
+    }
+
+    // First Load all messages & containers into Class Loader
+
+    try {
       var keys = scala.collection.mutable.Set[Key_V_1_1_X]()
       ds.getAllKeys({ (key: Key_V_1_1_X) => keys.add(key) })
       val keyArray = keys.toArray
@@ -397,10 +617,6 @@ object Migrate {
       }
       keyArray.foreach(key => {
         val obj = GetObject(key, ds)
-        val mObj = serializer.DeserializeObjectFromByteArray(obj.Value_V_1_1_X.toArray[Byte]).asInstanceOf[BaseElemDef]
-        if (mObj != null) {
-          ProcessObject(mObj)
-        }
       })
     } catch {
       case e: Exception => {
@@ -503,7 +719,7 @@ object Migrate {
       MetadataAPIImpl.readMetadataAPIConfigFromPropertiesFile(apiCfgFile)
 
       val tmpJarPaths = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("JAR_PATHS")
-      val jarPaths = if (tmpJarPaths != null) tmpJarPaths.split(",").toSet else scala.collection.immutable.Set[String]()
+      jarPaths = if (tmpJarPaths != null) tmpJarPaths.split(",").toSet else scala.collection.immutable.Set[String]()
       val metaDataStoreInfo = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("METADATA_DATASTORE");
       val adapter = HBaseAdapter.CreateStorageAdapter(kvManagerLoader, metaDataStoreInfo)
       val cfgStr = Source.fromFile(clusterCfgFile).mkString
@@ -543,7 +759,7 @@ object Migrate {
       MetadataAPIImpl.UploadConfig(cfgStr, None, "ClusterConfig")
       MigrateAllMetadata(metadataStore)
       allDataStore = GetDataStoreHandle_V_1_1_X(jarPaths, dataStoreInfo, "AllData.bak")
-      MigrateAlldata(allDataStore)
+      Migrate_V_1_1_X_Alldata(allDataStore)
     } catch {
       case e: Exception => {
         throw new Exception("Migration has Failed " + e.getMessage())
