@@ -117,14 +117,15 @@ cp Utils/CleanUtil/target/scala-2.11/CleanUtil* $bin
 echo "copy all Kamanja jars and the jars upon which they depend to the $systemlib"
 
 # -------------------- generated cp commands --------------------
-cp $ivyPath/cache/org.apache.directory.api/api-util/bundles/api-util-1.0.0-M20.jar $systemlib
+
+cp $srcPath/lib_managed/bundles/org.apache.directory.api/api-util/api-util-1.0.0-M20.jar $systemlib
 cp $ivyPath/cache/org.codehaus.jackson/jackson-xc/jars/jackson-xc-1.8.3.jar $systemlib
 cp $ivyPath/cache/org.apache.kafka/kafka-clients/jars/kafka-clients-0.8.2.2.jar $systemlib
 cp $ivyPath/cache/org.xerial.snappy/snappy-java/bundles/snappy-java-1.0.4.1.jar $systemlib
 cp $ivyPath/cache/javax.xml.bind/jaxb-api/jars/jaxb-api-2.2.2.jar $systemlib
 cp $ivyPath/cache/log4j/log4j/bundles/log4j-1.2.16.jar $systemlib
 cp $ivyPath/cache/com.sun.jersey/jersey-core/bundles/jersey-core-1.9.jar $systemlib
-cp $ivyPath/cache/org.codehaus.jettison/jettison/bundles/jettison-1.1.jar $systemlib
+cp $srcPath/lib_managed/bundles/org.codehaus.jettison/jettison/jettison-1.1.jar $systemlib
 cp $ivyPath/cache/com.google.guava/guava/bundles/guava-16.0.1.jar $systemlib
 cp $ivyPath/cache/org.apache.commons/commons-math3/jars/commons-math3-3.5.jar $systemlib
 cp $ivyPath/cache/org.jruby.jcodings/jcodings/jars/jcodings-1.0.8.jar $systemlib

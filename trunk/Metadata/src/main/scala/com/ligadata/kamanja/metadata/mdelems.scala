@@ -28,7 +28,7 @@ import scala.collection.mutable.{Map, Set}
 // define some enumerations 
 object ObjFormatType extends Enumeration {
   type FormatType = Value
-  val fCSV, fJSON, fXML, fSERIALIZED, fJAVA, fSCALA, fJPMML, fUNKNOWN = Value
+  val fCSV, fJSON, fXML, fSERIALIZED, fJAVA, fSCALA, fPMML, fUNKNOWN = Value
 
     def asString(typ : FormatType) : String = {
         val str = typ.toString match {
@@ -38,7 +38,7 @@ object ObjFormatType extends Enumeration {
             case "fSERIALIZED" => "SERIALIZED"
             case "fJAVA" => "JAVA"
             case "fSCALA" => "SCALA"
-            case "fJPMML" => "XML"
+            case "fPMML" => "XML"
             case _ => "Unknown"
         }
         str
@@ -51,7 +51,7 @@ object ObjFormatType extends Enumeration {
             case "SERIALIZED" => fSERIALIZED
             case "JAVA" => fJAVA
             case "SCALA" => fSCALA
-            case "JPMML" => fXML
+            case "PMML" => fXML
             case _ => fUNKNOWN
         }
         typ
@@ -730,12 +730,12 @@ object MiningModelType extends Enumeration {
 
 object ModelRepresentation extends Enumeration {
     type ModelRepresentation = Value
-    val JAR, JPMML, PYTHON, UNKNOWN = Value
+    val JAR, PMML, PYTHON, UNKNOWN = Value
 
   def modelRep(mdlRep: String): ModelRepresentation = {
       val rep: ModelRepresentation = mdlRep.toUpperCase match {
           case "JAR" => JAR
-          case "JPMML" => JPMML
+          case "PMML" => PMML
           case "PYTHON" => PYTHON
           case _ => UNKNOWN
       }

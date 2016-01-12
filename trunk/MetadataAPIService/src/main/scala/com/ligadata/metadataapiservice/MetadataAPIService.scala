@@ -114,7 +114,7 @@ trait MetadataAPIService extends HttpService {
                     if (toknRoute.size == 1) { requestContext => processPutRequest(toknRoute(0), reqBody, requestContext, user, password, role,modelname) }
                       else if(toknRoute.size == 2 && toknRoute(0) == "model"){
                       ModelType.withName(toknRoute(1).toString) match {
-                        case ModelType.PMML => {
+                        case ModelType.KPMML => {
                           val objectType = toknRoute(0) + toknRoute(1)
                           entity(as[String]) { reqBody => { requestContext => processPutRequest(objectType, reqBody, requestContext, user, password, role,modelname) } }
 
@@ -128,7 +128,7 @@ trait MetadataAPIService extends HttpService {
                           val objectType = toknRoute(0) + toknRoute(1)
                           entity(as[String]) { reqBody => { requestContext => processPutRequest(objectType, reqBody, requestContext, user, password, role,modelname) } }
                         }
-                        case ModelType.JPMML =>
+                        case ModelType.PMML =>
                           throw new RuntimeException("Not yet implemented")
                       }
                     }
@@ -151,7 +151,7 @@ trait MetadataAPIService extends HttpService {
                       entity(as[String]) { reqBody => { requestContext => processPostRequest(toknRoute(0), reqBody, requestContext, user, password, role,modelname) } }
                   } else if (toknRoute.size == 2 && toknRoute(0) == "model") {
                     ModelType.withName(toknRoute(1).toString) match {
-                      case ModelType.PMML => {
+                      case ModelType.KPMML => {
                         val objectType = toknRoute(0) + toknRoute(1)
                         entity(as[String]) { reqBody => { requestContext => processPostRequest(objectType, reqBody, requestContext, user, password, role,modelname) } }
 
@@ -165,7 +165,7 @@ trait MetadataAPIService extends HttpService {
                         val objectType = toknRoute(0) + toknRoute(1)
                         entity(as[String]) { reqBody => { requestContext => processPostRequest(objectType, reqBody, requestContext, user, password, role,modelname) } }
                       }
-                      case ModelType.JPMML =>
+                      case ModelType.PMML =>
                         throw new RuntimeException("Not implemented yet")
                     }
                   }

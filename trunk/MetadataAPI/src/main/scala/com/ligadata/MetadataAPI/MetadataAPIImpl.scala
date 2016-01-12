@@ -3529,25 +3529,25 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       *
       *   - SCALA - a Scala source string
       *   - JAVA - a Java source string
-      *   - PMML - a Kamanja Pmml source string
-      *   - JPMML - a JPMML source string
+      *   - PMML - a PMML source string
+      *   - KPMML - a Kamanja Pmml source string
       *   - BINARY - the path to a jar containing the model
       *
       * The remaining arguments, while noted as optional, are required for some model types.  In particular,
-      * the ''modelName'', ''version'', and ''msgConsumed'' must be specified for the JPMML model type.  The ''userid'' is
+      * the ''modelName'', ''version'', and ''msgConsumed'' must be specified for the PMML model type.  The ''userid'' is
       * required for systems that have been configured with a SecurityAdapter or AuditAdapter.
       * @see [[http://kamanja.org/security/ security wiki]] for more information. The audit adapter, if configured,
       *       will also be invoked to take note of this user's action.
       * @see [[http://kamanja.org/auditing/ auditing wiki]] for more information about auditing.
       * NOTE: The BINARY model is not supported at this time.  The model submitted for this type will via a jar file.
       *
-      * @param modelType the type of the model submission (any {SCALA,JAVA,PMML,JPMML,BINARY}
+      * @param modelType the type of the model submission (any {SCALA,JAVA,PMML,KPMML,BINARY}
       * @param input the text element to be added dependent upon the modelType specified.
       * @param optUserid the identity to be used by the security adapter to ascertain if this user has access permissions for this
       *               method.
-      * @param optModelName the namespace.name of the JPMML model to be added to the Kamanja metadata
-      * @param optVersion the model version to be used to describe this JPMML model
-      * @param optMsgConsumed the namespace.name of the message to be consumed by a JPMML model
+      * @param optModelName the namespace.name of the PMML model to be added to the Kamanja metadata
+      * @param optVersion the model version to be used to describe this PMML model
+      * @param optMsgConsumed the namespace.name of the message to be consumed by a PMML model
       * @param optMsgVersion the version of the message to be consumed. By default Some(-1)
       * @return the result as a JSON String of object ApiResult where ApiResult.statusCode
       * indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
@@ -3561,8 +3561,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
                            , optMsgConsumed: Option[String] = None
                            , optMsgVersion: Option[String] = Some("-1") ): String  = {
         val modelResult : String = modelType match {
-            case ModelType.PMML => {
-                AddModel(input, optUserid)
+            case ModelType.KPMML => {
+                AddKPMMLModel(input, optUserid)
             }
             case ModelType.JAVA | ModelType.SCALA => {
                 val result : String = optModelName.fold(throw new RuntimeException("Model name should be provided for Java/Scala models"))(name => {
@@ -3570,13 +3570,13 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
                 })
                 result
             }
-            case ModelType.JPMML => {
+            case ModelType.PMML => {
                 val modelName: String = optModelName.orNull
                 val version: String = optVersion.orNull
                 val msgConsumed: String = optMsgConsumed.orNull
                 val msgVer : String = optMsgVersion.getOrElse("-1")
                 val result: String = if (modelName != null && version != null && msgConsumed != null) {
-                    val res : String = AddJPMMLModel(modelName
+                    val res : String = AddPMMLModel(modelName
                                                     , version
                                                     , msgConsumed
                                                     , msgVer
@@ -3590,7 +3590,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
                     val apiResult = new ApiResult(ErrorCodeConstants.Failure
                                                 , "AddModel"
                                                 , null
-                                                , s"One or more JPMML arguments have not been specified... modelName = $modelName, version = $version, input = $inputRep error = ${ErrorCodeConstants.Add_Model_Failed}")
+                                                , s"One or more PMML arguments have not been specified... modelName = $modelName, version = $version, input = $inputRep error = ${ErrorCodeConstants.Add_Model_Failed}")
                     apiResult.toString
                 }
                 result
@@ -3609,7 +3609,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
 
     /**
-     * Add a JPMML model to the metadata.
+     * Add a PMML model to the metadata.
      *
      * JPMML models are evaluated, not compiled. To create the model definition, an instance of the evaluator
      * is obtained from the jpmml-evaluator component and the ModelDef is constructed and added to the store.
@@ -3621,13 +3621,13 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      *                    fields used in the pmml model and the fields in the message must match.  If
      *                    the message does not supply all input fields in the model, there should be a default
      *                    specified for those not filled in that mining variable.
-     * @param msgVersion the version of the message that this JPMML model will consume
+     * @param msgVersion the version of the message that this PMML model will consume
      * @param pmmlText the actual PMML (xml) that is submitted by the client.
      * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
      *               method. If Security and/or Audit are configured, this value must be a value other than None.
      * @return json string result
      */
-  private def AddJPMMLModel(  modelName : String
+  private def AddPMMLModel(  modelName : String
                             , version : String
                             , msgConsumed : String
                             , msgVersion : String
@@ -3724,7 +3724,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      *               method. If Security and/or Audit are configured, this value must be a value other than None.
      * @return json string result
      */
-  private def AddModel(pmmlText: String, userid: Option[String]): String = {
+  private def AddKPMMLModel(pmmlText: String, userid: Option[String]): String = {
     try {
       var compProxy = new CompilerProxy
       //compProxy.setLoggerLevel(Level.TRACE)
@@ -3783,7 +3783,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @param userid the user id that has invoked this command
      * @param optMsgDef the MessageDef constructed, assuming it was a message def. If a container def has been rebuilt,
      *               this field will have a value of None.  This is only meaningful at this point when the model to
-     *               be rebuilt is a JPMML model.
+     *               be rebuilt is a PMML model.
      * @return the result string reflecting what happened with this operation.
      */
     def RecompileModel(mod: ModelDef, userid : Option[String], optMsgDef : Option[MessageDef]): String = {
@@ -3796,7 +3796,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
               * a warning and rejection of the message update made. Perhaps adding a "force" flag to get the message
               * to compile despite this obstacle is warranted.
               */
-            val isJpmml : Boolean = mod.modelRepresentation == ModelRepresentation.JPMML
+            val isJpmml : Boolean = mod.modelRepresentation == ModelRepresentation.PMML
             val msgDef : MessageDef = optMsgDef.orNull
             val modDef: ModelDef = if (! isJpmml) {
 
@@ -3844,7 +3844,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
                     val model : ModelDef = jpmmlSupport.CreateModel(recompile)
                     model
                 } else {
-                    /** this means that the dependencies are incorrect.. message is not the JPMML message of interest */
+                    /** this means that the dependencies are incorrect.. message is not the PMML message of interest */
                     logger.error(s"The message names for model ${mod.FullName} and the message just built (${msgDef.FullName}) don't match up. It suggests model dependencies and/or the model type are messed up.")
                     null
                 }
@@ -3902,22 +3902,22 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @see AddModel for semantics.
      *
      * Note that the message and message version (as seen in AddModel) are not used.  Should a message change that is being
-     * used by one of the JPMML models, it will be automatically be updated immediately when the message compilation and
+     * used by one of the PMML models, it will be automatically be updated immediately when the message compilation and
      * metadata update has completed for it.
      *
      * Currently only the most recent model cataloged with the name noted in the source file can be "updated".  It is not
      * possible to have a number of models with the same name differing only by version and be able to update one of them
      * explicitly.  This is a feature that is to be implemented.
      *
-     * If both the model and the message are changing, consider using AddModel to create a new JPMML model and then remove the older
+     * If both the model and the message are changing, consider using AddModel to create a new PMML model and then remove the older
      * version if appropriate.
      *
-     * @param modelType the type of the model submission (any {SCALA,JAVA,PMML,JPMML,BINARY}
+     * @param modelType the type of the model submission (any {SCALA,JAVA,PMML,KPMML,BINARY}
      * @param input the text element to be added dependent upon the modelType specified.
      * @param optUserid the identity to be used by the security adapter to ascertain if this user has access permissions for this
      *               method.
-     * @param optModelName the namespace.name of the JPMML model to be added to the Kamanja metadata
-     * @param optVersion the model version to be used to describe this JPMML model
+     * @param optModelName the namespace.name of the PMML model to be added to the Kamanja metadata
+     * @param optVersion the model version to be used to describe this PMML model
      * @param optVersionBeingUpdated not used .. reserved for future release where explicit modelnamespace.modelname.modelversion
      *                               can be updated (not just the latest version)
      * @return  result string indicating success or failure of operation
@@ -3941,16 +3941,16 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
          */
 
         val modelResult: String = modelType match {
-            case ModelType.PMML => {
-                val result: String = UpdatePmmlModel(modelType, input, optUserid, optModelName, optVersion)
+            case ModelType.KPMML => {
+                val result: String = UpdateKPMMLModel(modelType, input, optUserid, optModelName, optVersion)
                 result
             }
             case ModelType.JAVA | ModelType.SCALA => {
                 val result: String = UpdateCustomModel(modelType, input, optUserid, optModelName, optVersion)
                 result
             }
-            case ModelType.JPMML => {
-                val result : String = UpdateJpmmlModel(modelType, input, optUserid, optModelName, optVersion, optVersionBeingUpdated)
+            case ModelType.PMML => {
+                val result : String = UpdatePMMLModel(modelType, input, optUserid, optModelName, optVersion, optVersionBeingUpdated)
                 result
             }
             case ModelType.BINARY =>
@@ -3965,21 +3965,21 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     }
 
     /**
-     * Update a JPMML model with the supplied inputs.  The input is presumed to be a new version of a JPMML model that
+     * Update a PMML model with the supplied inputs.  The input is presumed to be a new version of a PMML model that
      * is currently cataloged.  The user id should be supplied for any installation that is using the security or audit
      * plugins. The model namespace.name and its new version are supplied.  The message ingested by the current version
      * is used by the for the update.
      *
-     * @param modelType the type of the model... JPMML in this case
+     * @param modelType the type of the model... PMML in this case
      * @param input the new source to ingest for the model being updated/replaced
      * @param optUserid the identity to be used by the security adapter to ascertain if this user has access permissions for this
      *               method. If Security and/or Audit are configured, this value must be a value other than None.
-     * @param optModelName the name of the model to be ingested (only relevant for JPMML ingestion)
-     * @param optModelVersion the version number of the model to be updated (only relevant for JPMML ingestion)
+     * @param optModelName the name of the model to be ingested (only relevant for PMML ingestion)
+     * @param optModelVersion the version number of the model to be updated (only relevant for PMML ingestion)
      * @param optVersionBeingUpdated not used... reserved
      * @return result string indicating success or failure of operation
      */
-    private def UpdateJpmmlModel(modelType: ModelType.ModelType
+    private def UpdatePMMLModel(modelType: ModelType.ModelType
                                   , input: String
                                   , optUserid: Option[String] = None
                                   , optModelName: Option[String] = None
@@ -4098,7 +4098,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
                     val stackTrace = StackTrace.ThrowableTraceString(e)
                     logger.debug("\nStackTrace:" + stackTrace)
                     val apiResult = new ApiResult(ErrorCodeConstants.Failure
-                        , s"UpdateModel(type = JPMML)"
+                        , s"UpdateModel(type = PMML)"
                         , null
                         , s"Error : ${e.toString} + ${ErrorCodeConstants.Update_Model_Failed}")
                     apiResult.toString()
@@ -4107,7 +4107,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
                     val stackTrace = StackTrace.ThrowableTraceString(e)
                     logger.debug("\nStackTrace:" + stackTrace)
                     val apiResult = new ApiResult(ErrorCodeConstants.Failure
-                        , s"UpdateModel(type = JPMML)"
+                        , s"UpdateModel(type = PMML)"
                         , null
                         , s"Error : ${e.toString} + ${ErrorCodeConstants.Update_Model_Failed}")
                     apiResult.toString()
@@ -4116,7 +4116,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
                     val stackTrace = StackTrace.ThrowableTraceString(e)
                     logger.debug("\nStackTrace:" + stackTrace)
                     val apiResult = new ApiResult(ErrorCodeConstants.Failure
-                        , s"UpdateModel(type = JPMML)"
+                        , s"UpdateModel(type = PMML)"
                         , null
                         , s"Error : ${e.toString} + ${ErrorCodeConstants.Update_Model_Failed}")
                     apiResult.toString()
@@ -4124,9 +4124,9 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
             }
         } else {
             val apiResult = new ApiResult(ErrorCodeConstants.Failure
-                , s"UpdateModel(type = JPMML)"
+                , s"UpdateModel(type = PMML)"
                 , null
-                , s"The model name and new version was not supplied for this JPMML model : name=$modelName version=$version\nOptionally one should consider supplying the exact version of the model being updated, especially important when you are maintaining multiple versions with the same model name and tweaking versions of same for your 'a/b/c...' score comparisons.")
+                , s"The model name and new version was not supplied for this PMML model : name=$modelName version=$version\nOptionally one should consider supplying the exact version of the model being updated, especially important when you are maintaining multiple versions with the same model name and tweaking versions of same for your 'a/b/c...' score comparisons.")
             apiResult.toString()
 
         }
@@ -4140,9 +4140,9 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @param input the source of the model to ingest
      * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
      *               method. If Security and/or Audit are configured, this value must be a value other than None.
-     * @param modelName the name of the model to be ingested (JPMML)
+     * @param modelName the name of the model to be ingested (PMML)
      *                  or the model's config for java and scala
-     * @param version the version number of the model to be updated (only relevant for JPMML ingestion)
+     * @param version the version number of the model to be updated (only relevant for PMML ingestion)
      * @return result string indicating success or failure of operation
      */
     private def UpdateCustomModel(modelType: ModelType.ModelType
@@ -4223,7 +4223,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * UpdateModel - Update a Kamanja Pmml model
      *
      * Current semantics are that the source supplied in pmmlText is compiled and a new model is reproduced. The Kamanja
-     * PMML version is specified in the PMML source itself in the header's Version attribute. The version of the updated
+     * PMML version is specified in the KPMML source itself in the header's Version attribute. The version of the updated
      * model must be > the most recent cataloged one that is being updated. With this strategy ONLY the most recent
      * version can be updated.
      *
@@ -4231,11 +4231,11 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @param pmmlText the text element to be added dependent upon the modelType specified.
      * @param optUserid the identity to be used by the security adapter to ascertain if this user has access permissions for this
      *               method.
-     * @param optModelName the model's namespace.name (ignored in this implementation of the UpdatePmmlModel... only used in JPMML updates)
-     * @param optVersion the model's version (ignored in this implementation of the UpdatePmmlModel... only used in JPMML updates)
+     * @param optModelName the model's namespace.name (ignored in this implementation of the UpdatePmmlModel... only used in PMML updates)
+     * @param optVersion the model's version (ignored in this implementation of the UpdatePmmlModel... only used in PMML updates)
      * @return  result string indicating success or failure of operation
      */
-    private def UpdatePmmlModel(modelType: ModelType.ModelType
+    private def UpdateKPMMLModel(modelType: ModelType.ModelType
                              , pmmlText: String
                              , optUserid: Option[String] = None
                              , optModelName: Option[String] = None

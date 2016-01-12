@@ -187,3 +187,46 @@ export useCompressed=0
 $KAMANJA_SRCDIR/Pmml/JpmmlAdapter/src/main/resources/bin/JpmmlPushKafka.sh $useCompressed $KAMANJA_SRCDIR/Pmml/JpmmlAdapter/src/main/resources/data/iris.csv
 export useCompressed=1
 $KAMANJA_SRCDIR/Pmml/JpmmlAdapter/src/main/resources/bin/JpmmlPushKafka.sh $useCompressed $KAMANJA_SRCDIR/Pmml/JpmmlAdapter/src/main/resources/data/iris.csv.gz
+
+
+##**<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<**
+##**New Ingestion**
+##**<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<**
+
+
+$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add model pmml $KAMANJA_SRCDIR/Pmml/JpmmlAdapter/src/main/resources/metadata/model/KNIME/single_iris_dectree.xml MODELNAME com.botanical.jpmml.IrisDecisionTree MODELVERSION 000000.000001.000001 MESSAGENAME System.IrisMsg 
+$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add model pmml $KAMANJA_SRCDIR/Pmml/JpmmlAdapter/src/main/resources/metadata/model/Rattle/k_means_iris_pmml.pmml MODELNAME com.botanical.jpmml.IrisKMeans MODELVERSION 000000.000001.000001 MESSAGENAME System.IrisMsg 
+$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add model pmml $KAMANJA_SRCDIR/Pmml/JpmmlAdapter/src/main/resources/metadata/model/Rattle/random_forest_iris_pmml.pmml MODELNAME com.botanical.jpmml.IrisRandomForest MODELVERSION 000000.000001.000001 MESSAGENAME System.IrisMsg 
+$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add model pmml $KAMANJA_SRCDIR/Pmml/JpmmlAdapter/src/main/resources/metadata/model/Rattle/decision_tree_iris.pmml MODELNAME com.botanical.jpmml.DecisionTreeIrisRattle MODELVERSION 000000.000001.000001 MESSAGENAME System.IrisMsg 
+
+
+$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add model pmml $KAMANJA_SRCDIR/Pmml/JpmmlAdapter/src/main/resources/metadata/model/KNIME/DecisionTreeEnsembleIris.pmml MODELNAME com.botanical.jpmml.DecisionTreeEnsembleIris MODELVERSION 000000.000001.000001 MESSAGENAME System.IrisMsg 
+$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add model pmml $KAMANJA_SRCDIR/Pmml/JpmmlAdapter/src/main/resources/metadata/model/KNIME/DecisionTreeIris.pmml MODELNAME com.botanical.jpmml.DecisionTreeIrisKnime MODELVERSION 000000.000001.000001 MESSAGENAME System.IrisMsg 
+$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add model pmml $KAMANJA_SRCDIR/Pmml/JpmmlAdapter/src/main/resources/metadata/model/KNIME/GeneralRegressionIris.pmml MODELNAME com.botanical.jpmml.GeneralRegressionIris MODELVERSION 000000.000001.000001 MESSAGENAME System.IrisMsg 
+
+$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add model pmml $KAMANJA_SRCDIR/Pmml/JpmmlAdapter/src/main/resources/metadata/model/KNIME/KMeansEnsembleIris.pmml MODELNAME com.botanical.jpmml.KMeansEnsembleIris MODELVERSION 000000.000001.000001 MESSAGENAME System.IrisMsg 
+$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add model pmml $KAMANJA_SRCDIR/Pmml/JpmmlAdapter/src/main/resources/metadata/model/KNIME/KMeansIris.pmml MODELNAME com.botanical.jpmml.KMeansIris MODELVERSION 000000.000001.000001 MESSAGENAME System.IrisMsg 
+$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add model pmml $KAMANJA_SRCDIR/Pmml/JpmmlAdapter/src/main/resources/metadata/model/KNIME/NeuralNetworkIris.pmml MODELNAME com.botanical.jpmml.NeuralNetworkIris MODELVERSION 000000.000001.000001 MESSAGENAME System.IrisMsg 
+
+$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add model pmml $KAMANJA_SRCDIR/Pmml/JpmmlAdapter/src/main/resources/metadata/model/KNIME/SupportVectorMachineIris.pmml MODELNAME com.botanical.jpmml.SupportVectorMachineIris MODELVERSION 000000.000001.000001 MESSAGENAME System.IrisMsg 
+$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add model pmml $KAMANJA_SRCDIR/Pmml/JpmmlAdapter/src/main/resources/metadata/model/RapidMiner/DecisionTreeIris.pmml MODELNAME com.botanical.jpmml.DecisionTreeIrisRapidMiner MODELVERSION 000000.000001.000001 MESSAGENAME System.IrisMsg 
+$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add model pmml $KAMANJA_SRCDIR/Pmml/JpmmlAdapter/src/main/resources/metadata/model/RapidMiner/KMeansIris.pmml MODELNAME com.botanical.jpmml.KMeansIrisRapidMiner MODELVERSION 000000.000001.000001 MESSAGENAME System.IrisMsg 
+
+$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add model pmml $KAMANJA_SRCDIR/Pmml/JpmmlAdapter/src/main/resources/metadata/model/RapidMiner/NeuralNetworkIris.pmml MODELNAME com.botanical.jpmml.NeuralNetworkIrisRapidMiner MODELVERSION 000000.000001.000001 MESSAGENAME System.IrisMsg 
+$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add model pmml $KAMANJA_SRCDIR/Pmml/JpmmlAdapter/src/main/resources/metadata/model/RapidMiner/RuleSetIris.pmml MODELNAME com.botanical.jpmml.RuleSetIris MODELVERSION 000000.000001.000001 MESSAGENAME System.IrisMsg 
+$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add model pmml $KAMANJA_SRCDIR/Pmml/JpmmlAdapter/src/main/resources/metadata/model/Rattle/DecisionTreeIris.pmml MODELNAME com.botanical.jpmml.DecisionTreeIrisRattle MODELVERSION 000000.000001.000001 MESSAGENAME System.IrisMsg 
+
+
+$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add model pmml $KAMANJA_SRCDIR/Pmml/JpmmlAdapter/src/main/resources/metadata/model/Rattle/HierarchicalClusteringIris.pmml MODELNAME com.botanical.jpmml.HierarchicalClusteringIris MODELVERSION 000000.000001.000001 MESSAGENAME System.IrisMsg 
+$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add model pmml $KAMANJA_SRCDIR/Pmml/JpmmlAdapter/src/main/resources/metadata/model/Rattle/KMeansIris.pmml MODELNAME com.botanical.jpmml.KMeansIrisRattle MODELVERSION 000000.000001.000001 MESSAGENAME System.IrisMsg 
+$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add model pmml $KAMANJA_SRCDIR/Pmml/JpmmlAdapter/src/main/resources/metadata/model/Rattle/KernlabSVMIris.pmml MODELNAME com.botanical.jpmml.KernlabSVMIris MODELVERSION 000000.000001.000001 MESSAGENAME System.IrisMsg 
+
+
+$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add model pmml $KAMANJA_SRCDIR/Pmml/JpmmlAdapter/src/main/resources/metadata/model/Rattle/LibSVMIris.pmml MODELNAME com.botanical.jpmml.LibSVMIris MODELVERSION 000000.000001.000001 MESSAGENAME System.IrisMsg 
+$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add model pmml $KAMANJA_SRCDIR/Pmml/JpmmlAdapter/src/main/resources/metadata/model/Rattle/LogisticRegressionIris.pmml MODELNAME com.botanical.jpmml.LogisticRegressionIris MODELVERSION 000000.000001.000001 MESSAGENAME System.IrisMsg 
+$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add model pmml $KAMANJA_SRCDIR/Pmml/JpmmlAdapter/src/main/resources/metadata/model/Rattle/NaiveBayesIris.pmml MODELNAME com.botanical.jpmml.NaiveBayesIris MODELVERSION 000000.000001.000001 MESSAGENAME System.IrisMsg 
+
+$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add model pmml $KAMANJA_SRCDIR/Pmml/JpmmlAdapter/src/main/resources/metadata/model/Rattle/NeuralNetworkIris.pmml MODELNAME com.botanical.jpmml.NeuralNetworkIris MODELVERSION 000000.000001.000001 MESSAGENAME System.IrisMsg 
+$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add model pmml $KAMANJA_SRCDIR/Pmml/JpmmlAdapter/src/main/resources/metadata/model/Rattle/RandomForestIris.pmml MODELNAME com.botanical.jpmml.RandomForestIris MODELVERSION 000000.000001.000001 MESSAGENAME System.IrisMsg 
+$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add model pmml $KAMANJA_SRCDIR/Pmml/JpmmlAdapter/src/main/resources/metadata/model/Rattle/RandomForestXformIris.pmml MODELNAME com.botanical.jpmml.RandomForestXformIris MODELVERSION 000000.000001.000001 MESSAGENAME System.IrisMsg 
+$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add model pmml $KAMANJA_SRCDIR/Pmml/JpmmlAdapter/src/main/resources/metadata/model/Sas/LogisticRegressionIris.pmml MODELNAME com.botanical.jpmml.LogisticRegressionIrisSAS MODELVERSION 000000.000001.000001 MESSAGENAME System.IrisMsg 

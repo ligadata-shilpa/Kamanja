@@ -166,7 +166,7 @@ object StartMetadataAPI {
           }
 
           //model management
-          case Action.ADDMODELPMML => response = ModelService.addModelPmml(input, userId)
+          case Action.ADDMODELKPMML => response = ModelService.addModelKPmml(input, userId)
 
           case Action.ADDMODELSCALA => {
               if (param.length == 0)
@@ -203,7 +203,7 @@ object StartMetadataAPI {
               else
                   ModelService.deactivateModel(param, userId)
           }
-          case Action.UPDATEMODELPMML => response = ModelService.updateModelpmml(input, userId)
+          case Action.UPDATEMODELPMML => response = ModelService.updateModelKPmml(input, userId)
           //case Action.UPDATEMODELSCALA => response = ModelService.updateModelscala(input)
           //case Action.UPDATEMODELJAVA => response = ModelService.updateModeljava(input)
 
@@ -400,7 +400,7 @@ object StartMetadataAPI {
                        val optModelVer : Option[String] =  Option(validatedModelVersion)
                        val optMsgVer : Option[String] = Option(validatedMsgVersion)
 
-                       ModelService.addModelJPmml(ModelType.JPMML
+                       ModelService.addModelPmml(ModelType.PMML
                                                 , pmmlPath
                                                 , Some("metadataapi")
                                                 , modelName
@@ -458,7 +458,7 @@ object StartMetadataAPI {
 
                            /** modelnamespace.modelname expected for modelName value */
                            val modelName : String = optModelName.orNull
-                           ModelService.updateModelJPmml(pmmlPath
+                           ModelService.updateModelPmml(pmmlPath
                                                        , Some("metadataapi")
                                                        , modelName
                                                        , validatedNewVersion)

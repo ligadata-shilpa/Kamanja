@@ -43,7 +43,7 @@ import org.xml.sax.helpers.XMLReaderFactory
 
 
 /**
- * JpmmlSupport - Add, rebuild, and remove of JPMML based models from the Kamanja metadata store.
+ * JpmmlSupport - Add, rebuild, and remove of PMML based models from the Kamanja metadata store.
  *
  * It builds an instance of the shim model with a JPMML evaluator appropriate for the supplied InputStream
  * containing the pmml model text.
@@ -112,12 +112,12 @@ class JpmmlSupport(mgr : MdMgr
                 val latestVersion: Boolean = true
                 val facFacDefs : scala.collection.immutable.Set[FactoryOfModelInstanceFactoryDef] = mgr.ActiveFactoryOfMdlInstFactories
                 val optJpmmlFacFac : Option[FactoryOfModelInstanceFactoryDef] = facFacDefs.filter(facfac => {
-                    facfac.ModelRepSupported == ModelRepresentation.JPMML
+                    facfac.ModelRepSupported == ModelRepresentation.PMML
                 }).headOption
                 val jpmmlFacFac : FactoryOfModelInstanceFactoryDef = optJpmmlFacFac.orNull
 
                 val modelDefinition : ModelDef = if (jpmmlFacFac == null) {
-                    logger.error(s"While building model metadata for $modelNamespace.$modelName, it was discovered that there is no factory for this model representation (${ModelRepresentation.JPMML}")
+                    logger.error(s"While building model metadata for $modelNamespace.$modelName, it was discovered that there is no factory for this model representation (${ModelRepresentation.PMML}")
                     null
                 } else {
                     val jarName: String = jpmmlFacFac.jarName
@@ -184,7 +184,7 @@ class JpmmlSupport(mgr : MdMgr
                         val model: ModelDef = mgr.MakeModelDef(modelNamespace
                                                             , modelName
                                                             , phyName
-                                                            , ModelRepresentation.JPMML
+                                                            , ModelRepresentation.PMML
                                                             , isReusable
                                                             , s"$msgNamespace.$msgName.$msgVersionFormatted"
                                                             , pmmlText

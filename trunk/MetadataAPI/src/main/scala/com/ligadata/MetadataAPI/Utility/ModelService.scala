@@ -228,17 +228,17 @@ object ModelService {
     }
 
     /**
-     * addModelJPmml ingests a JPMML model. JPmml model ingestion requires the pmml source file, the model name to be associated
+     * addModelPmml ingests a PMML model. Pmml model ingestion requires the pmml source file, the model name to be associated
      * with this model, the model's version, and the message consumed by the supplied model.  If the userId is specified and
      * a SecurityAdapter is installed in the MetadataAPI (recommended for production uses), the command will only be
      * attempted if the SecurityAdapter instance deems the user worthy. Similarly if the AuditAdapter is supplied,
      * the userid will be logged there (recommended for production use).
      *
-     * NOTE: Jpmml models are distinct from the Kamanja Pmml model. At runtime, they use a JPMML evaluator to interpret
-     * the runtime representation of the JPMML model. Kamanja models are compiled to Scala and then to Jars and executed
+     * NOTE: Jpmml models are distinct from the Kamanja Pmml model. At runtime, they use a PMML evaluator to interpret
+     * the runtime representation of the PMML model. Kamanja models are compiled to Scala and then to Jars and executed
      * like the custom byte code models based upon Java or Scala.
      *
-     * @param modelType the type of model this is (JPMML in this case)
+     * @param modelType the type of model this is (PMML in this case)
      * @param input the pmml source file too ingest
      * @param optUserid the user id attempting to execute this command
      * @param optModelName the full namespace qualified model name
@@ -247,7 +247,7 @@ object ModelService {
      * @param optMsgVersion the version of the message ... by default it is Some(-1) to get the most recent message of this name.
      * @return result string from engine describing success or failure
      */
-    def addModelJPmml(modelType: ModelType.ModelType
+    def addModelPmml(modelType: ModelType.ModelType
                     , input: String
                     , optUserid: Option[String] = Some("metadataapi")
                     , optModelName: Option[String] = None
@@ -263,7 +263,7 @@ object ModelService {
             val model = new File(input.toString)
             val resp : String = if(model.exists()){
                 val modelDef= Source.fromFile(model).mkString
-                MetadataAPIImpl.AddModel(ModelType.JPMML, modelDef, optUserid, optModelName, optVersion, optMsgConsumed, optMsgVersion)
+                MetadataAPIImpl.AddModel(ModelType.PMML, modelDef, optUserid, optModelName, optVersion, optMsgConsumed, optMsgVersion)
             }else{
                 val userId : String = optUserid.getOrElse("no user id supplied")
                 val modelName : String = optModelName.getOrElse("no model name supplied")
@@ -286,7 +286,7 @@ object ModelService {
      * @param userid the optional userId. If security and auditing in place this parameter is required.
      * @return the result of the operation
      */
-    def addModelPmml(input: String
+    def addModelKPmml(input: String
                      , userid: Option[String] = Some("metadataapi")
                         ): String = {
         var modelDef=""
@@ -313,7 +313,7 @@ object ModelService {
                             case option => {
                                 var  modelDefs=getUserInputFromMainMenu(models)
                                 for (modelDef <- modelDefs)
-                                    response += MetadataAPIImpl.AddModel(ModelType.PMML, modelDef.toString, userid, None)
+                                    response += MetadataAPIImpl.AddModel(ModelType.KPMML, modelDef.toString, userid, None)
                             }
                         }
                     }
@@ -343,7 +343,7 @@ object ModelService {
      * @return the result of the operation
      */
      
-    def updateModelpmml(input: String
+    def updateModelKPmml(input: String
                       , userid: Option[String] = Some("metadataapi")
                       ): String = {
         var modelDef=""
@@ -405,7 +405,7 @@ object ModelService {
       * @param newVersion
       * @return result string
       */
-  def updateModelJPmml(pmmlPath : String
+  def updateModelPmml(pmmlPath : String
                       ,userid : Option[String]
                       ,modelNamespaceName : String
                       ,newVersion : String) : String = {
@@ -414,7 +414,7 @@ object ModelService {
           val jpmmlPath : File = new File(pmmlPath.toString)
               val pmmlText : String = Source.fromFile(jpmmlPath).mkString
 
-              MetadataAPIImpl.UpdateModel(ModelType.JPMML
+              MetadataAPIImpl.UpdateModel(ModelType.PMML
                               , pmmlText
                               , userid
                               , Some(modelNamespaceName)

@@ -48,8 +48,8 @@ object MetadataAPI {
       type ModelType = Value
       val JAVA = Value("java")
       val SCALA = Value("scala")
+      val KPMML = Value("kpmml")
       val PMML = Value("pmml")
-      val JPMML = Value("jpmml")
       val BINARY = Value("binary")
       val UNKNOWN = Value("unknown")
 
@@ -58,7 +58,7 @@ object MetadataAPI {
               case "java" => JAVA
               case "scala" => SCALA
               case "pmml" => PMML
-              case "jpmml" => JPMML
+              case "kpmml" => KPMML
               case "binary" => BINARY
               case _ => UNKNOWN
           }
@@ -473,25 +473,25 @@ trait MetadataAPI {
     *
     *   - SCALA - a Scala source string
     *   - JAVA - a Java source string
-    *   - PMML - a Kamanja Pmml source string
-    *   - JPMML - a JPMML source string
+    *   - PMML - a PMML source string
+    *   - KPMML - a Kamanja Pmml source string
     *   - BINARY - the path to a jar containing the model
     *
     * The remaining arguments, while noted as optional, are required for some model types.  In particular,
-    * the ''modelName'', ''version'', and ''msgConsumed'' must be specified for the JPMML model type.  The ''userid'' is
+    * the ''modelName'', ''version'', and ''msgConsumed'' must be specified for the PMML model type.  The ''userid'' is
     * required for systems that have been configured with a SecurityAdapter or AuditAdapter.
     * @see [[http://kamanja.org/security/ security wiki]] for more information. The audit adapter, if configured,
     *       will also be invoked to take note of this user's action.
     * @see [[http://kamanja.org/auditing/ auditing wiki]] for more information about auditing.
-    * NOTE: The BINARY model is not supported at this time.  The model submitted for this type will via a jar file.
+    * NOTE: The BINARY model is not supported at this time.  The model submitted for this type will be via a jar file.
     *
-    * @param modelType the type of the model submission (any {SCALA,JAVA,PMML,JPMML,BINARY}
+    * @param modelType the type of the model submission (any {SCALA,JAVA,PMML,KPMML,BINARY}
     * @param input the text element to be added dependent upon the modelType specified.
     * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
     *               method. If Security and/or Audit are configured, this value must be a value other than None.
     * @param modelName the namespace.name of the JPMML model to be added to the Kamanja metadata
-    * @param version the model version to be used to describe this JPMML model
-    * @param msgConsumed the namespace.name of the message to be consumed by a JPMML model
+    * @param version the model version to be used to describe this PMML model
+    * @param msgConsumed the namespace.name of the message to be consumed by a PMML model
     * @return the result as a JSON String of object ApiResult where ApiResult.statusCode
     * indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
     * ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure
@@ -511,23 +511,23 @@ trait MetadataAPI {
     *
     *   - SCALA - a Scala source string
     *   - JAVA - a Java source string
-    *   - PMML - a Kamanja Pmml source string
-    *   - JPMML - a JPMML source string
+    *   - PMML - a PMML source string
+    *   - KPMML - a Kamanja Pmml source string
     *   - BINARY - the path to a jar containing the model
     *
     * The remaining arguments, while noted as optional, are required for some model types.  In particular,
-    * the ''modelName'' and ''version'' must be specified for the JPMML model type.  The ''userid'' is
+    * the ''modelName'' and ''version'' must be specified for the PMML model type.  The ''userid'' is
     * required for systems that have been configured with a SecurityAdapter or AuditAdapter.
     * @see [[http://kamanja.org/security/ security wiki]] for more information. The audit adapter, if configured,
     *       will also be invoked to take note of this user's action.
     * @see [[http://kamanja.org/auditing/ auditing wiki]] for more information about auditing.
     *
-    * @param modelType the type of the model submission (any {SCALA,JAVA,PMML,JPMML,BINARY}
+    * @param modelType the type of the model submission (any {SCALA,JAVA,PMML,KPMML,BINARY}
     * @param input the text element to be added dependent upon the modelType specified.
     * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
     *               method. If Security and/or Audit are configured, this value must be a value other than None
-    * @param modelName appropriate for JPMML, the namespace.name of the JPMML model to be added to the Kamanja metadata
-    * @param version appropriate for JPMML, the model version to be assigned. This version ''must'' be greater than the
+    * @param modelName appropriate for PMML, the namespace.name of the JPMML model to be added to the Kamanja metadata
+    * @param version appropriate for PMML, the model version to be assigned. This version ''must'' be greater than the
     *                version in use and unique for models with the modelName
     * @param optVersionBeingUpdated not used .. reserved for future release where explicit modelnamespace.modelname.modelversion
     *                               can be updated (not just the latest version)

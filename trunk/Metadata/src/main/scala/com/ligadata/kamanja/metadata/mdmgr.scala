@@ -2167,9 +2167,9 @@ class MdMgr {
           * The instances so created will be cached for subsequent calls on the thread with which the instance
           * is associated.
           */
-        if (mdl.modelRepresentation == ModelRepresentation.JPMML) {
+        if (mdl.modelRepresentation == ModelRepresentation.PMML) {
             mdl.ObjectDefinition(jpmmlStr)
-            mdl.ObjectFormat(ObjFormatType.fJPMML)
+            mdl.ObjectFormat(ObjFormatType.fPMML)
         }
         mdl.PhysicalName(physicalName)
         SetBaseElem(mdl, nameSpace, name, ver, jarNm, dJars)
