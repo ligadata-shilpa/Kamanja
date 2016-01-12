@@ -23,7 +23,6 @@ import kafka.api._
 import kafka.common.TopicAndPartition
 import org.json4s.jackson.Serialization
 import scala.actors.threadpool.{ TimeUnit, ExecutorService, Executors }
-import scala.tools.nsc.interpreter.TypeStrings
 import scala.util.control.Breaks._
 import kafka.consumer.{ SimpleConsumer }
 import java.net.{ InetAddress }
@@ -31,8 +30,7 @@ import org.apache.logging.log4j.{ Logger, LogManager }
 import scala.collection.mutable.Map
 import com.ligadata.Exceptions.{FatalAdapterException, StackTrace}
 import com.ligadata.KamanjaBase.DataDelimiters
-import com.ligadata.HeartBeat._
-import com.ligadata.KamanjaBase.{Monitorable, MonitorComponentInfo}
+import com.ligadata.HeartBeat.{Monitorable, MonitorComponentInfo}
 
 object KafkaSimpleConsumer extends InputAdapterObj {
   val METADATA_REQUEST_CORR_ID = 2

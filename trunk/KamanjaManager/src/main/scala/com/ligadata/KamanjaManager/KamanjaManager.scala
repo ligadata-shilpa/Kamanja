@@ -223,7 +223,7 @@ class KamanjaManager extends Observer {
   private val validateInputAdapters = new ArrayBuffer[InputAdapter]
 
   private var thisEngineInfo: MainInfo = null
-  private var adapterMetricInfo: scala.collection.mutable.MutableList[MonitorComponentInfo] = null
+  private var adapterMetricInfo: scala.collection.mutable.MutableList[com.ligadata.HeartBeat.MonitorComponentInfo] = null
   private var monitorCounter: Long = 0
   private val failedEventsAdapters = new ArrayBuffer[OutputAdapter]
 
@@ -760,7 +760,7 @@ class KamanjaManager extends Observer {
 
     // run through all adapters.
     if (adapterMetricInfo == null) {
-      adapterMetricInfo = scala.collection.mutable.MutableList[MonitorComponentInfo]()
+      adapterMetricInfo = scala.collection.mutable.MutableList[com.ligadata.HeartBeat.MonitorComponentInfo]()
     }
     adapterMetricInfo.clear
 

@@ -17,7 +17,6 @@
 package com.ligadata.InputOutputAdapterInfo
 
 import com.ligadata.KamanjaBase.DataDelimiters
-import com.ligadata.KamanjaBase.Monitorable
 import com.ligadata.HeartBeat._
 
 object AdapterConfiguration {

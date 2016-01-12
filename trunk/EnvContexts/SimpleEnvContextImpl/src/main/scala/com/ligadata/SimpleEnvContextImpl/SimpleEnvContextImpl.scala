@@ -82,9 +82,9 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     }
   })
 
-  override def getComponentStatusAndMetrics: MonitorComponentInfo ={
+  override def getComponentStatusAndMetrics: com.ligadata.HeartBeat.MonitorComponentInfo ={
     implicit val formats = org.json4s.DefaultFormats
-    return new MonitorComponentInfo("STORAGE_ADAPTER", "SimpleEnvContext", "v1.3", startTime, lastSeen,  Serialization.write(metrics).toString)
+    return new com.ligadata.HeartBeat.MonitorComponentInfo("STORAGE_ADAPTER", "SimpleEnvContext", "v1.3", startTime, lastSeen,  Serialization.write(metrics).toString)
   }
 
   private def ResolveEnableEachTransactionCommit: Unit = {

@@ -34,8 +34,7 @@ import com.ibm.msg.client.wmq.common.CommonConstants
 import com.ibm.msg.client.jms.JmsConstants
 import com.ligadata.Exceptions.StackTrace
 import com.ligadata.KamanjaBase.DataDelimiters
-import com.ligadata.HeartBeat._
-import com.ligadata.KamanjaBase.{Monitorable, MonitorComponentInfo}
+import com.ligadata.HeartBeat.{Monitorable, MonitorComponentInfo}
 
 object IbmMqConsumer extends InputAdapterObj {
   def CreateInputAdapter(inputConfig: AdapterConfiguration, callerCtxt: InputAdapterCallerContext, execCtxtObj: ExecContextObj, cntrAdapter: CountersAdapter): InputAdapter = new IbmMqConsumer(inputConfig, callerCtxt, execCtxtObj, cntrAdapter)

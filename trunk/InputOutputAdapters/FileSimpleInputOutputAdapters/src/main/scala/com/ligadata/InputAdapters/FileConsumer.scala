@@ -26,8 +26,7 @@ import com.ligadata.AdaptersConfiguration.{ FileAdapterConfiguration, FilePartit
 import scala.util.control.Breaks._
 import com.ligadata.Exceptions.StackTrace
 import com.ligadata.KamanjaBase.DataDelimiters
-import com.ligadata.HeartBeat._
-import com.ligadata.KamanjaBase.{Monitorable, MonitorComponentInfo}
+import com.ligadata.HeartBeat.{Monitorable, MonitorComponentInfo}
 
 object FileConsumer extends InputAdapterObj {
   def CreateInputAdapter(inputConfig: AdapterConfiguration, callerCtxt: InputAdapterCallerContext, execCtxtObj: ExecContextObj, cntrAdapter: CountersAdapter): InputAdapter = new FileConsumer(inputConfig, callerCtxt, execCtxtObj, cntrAdapter)

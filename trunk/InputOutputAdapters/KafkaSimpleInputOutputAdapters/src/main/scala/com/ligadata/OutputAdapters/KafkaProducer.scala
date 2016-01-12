@@ -23,7 +23,7 @@ import org.apache.logging.log4j.{ Logger, LogManager }
 import com.ligadata.InputOutputAdapterInfo.{ AdapterConfiguration, OutputAdapter, OutputAdapterObj, CountersAdapter }
 import com.ligadata.AdaptersConfiguration.{ KafkaConstants, KafkaQueueAdapterConfiguration }
 import com.ligadata.Exceptions.{ FatalAdapterException, StackTrace }
-import com.ligadata.KamanjaBase.{Monitorable, MonitorComponentInfo}
+import com.ligadata.HeartBeat.{Monitorable, MonitorComponentInfo}
 import org.json4s.jackson.Serialization
 import scala.collection.mutable.ArrayBuffer
 import org.apache.kafka.clients.producer.{ Callback, RecordMetadata, ProducerRecord }

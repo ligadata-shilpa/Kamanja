@@ -23,8 +23,7 @@ import java.nio.file.{ Paths, Files }
 import com.ligadata.InputOutputAdapterInfo.{ AdapterConfiguration, OutputAdapter, OutputAdapterObj, CountersAdapter }
 import com.ligadata.AdaptersConfiguration.FileAdapterConfiguration
 import com.ligadata.Exceptions.{FatalAdapterException, StackTrace}
-import com.ligadata.HeartBeat._
-import com.ligadata.KamanjaBase.{Monitorable, MonitorComponentInfo}
+import com.ligadata.HeartBeat.{Monitorable, MonitorComponentInfo}
 
 
 
