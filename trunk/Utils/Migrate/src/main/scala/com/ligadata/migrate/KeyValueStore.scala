@@ -18,7 +18,7 @@
  * Takes any object and stores it with the key
  *
  */
-package com.ligadata.Migrate
+package com.ligadata.Migrate.SourceAdapter.1_1_X
 
 import scala.collection.mutable.ArrayBuffer
 import com.ligadata.Utils.{ KamanjaLoaderInfo }
