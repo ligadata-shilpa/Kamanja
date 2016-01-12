@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.ligadata.Migrate.SourceAdapter.1_1_X
+package com.ligadata.Migrate.SourceAdapter.V_1_1_X
 
 import org.apache.hadoop.hbase._
 import org.apache.hadoop.hbase.HBaseConfiguration
