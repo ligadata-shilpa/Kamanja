@@ -26,7 +26,7 @@ import org.json4s._
 import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
 import scala.collection.mutable.ArrayBuffer
-import com.ligadata.Exceptions.{ FatalAdapterException, StackTrace }
+import com.ligadata.Exceptions.{ FatalAdapterException, MessagePopulationException, StackTrace }
 
 import com.ligadata.transactions._
 
@@ -72,7 +72,7 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
 
   private val adapterInfoMap = ProcessedAdaptersInfo.getOneInstance(this.hashCode(), true)
 
-  private def SendFailedEvent(data: Array[Byte], format: String, associatedMsg: String, delimiters: DataDelimiters, uk: String, uv: String, transformStartTime: Long, e: Throwable): Unit = {
+  private def SendFailedEvent(data: Array[Byte], format: String, associatedMsg: String, uk: String, uv: String, transformStartTime: Long, e: Throwable): Unit = {
     if (failedEventsAdapter == null)
       return
 
@@ -93,7 +93,7 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
     val json = compact(render(out))
 
     try {
-      failedEventsAdapter.send(json, null)
+      failedEventsAdapter.send(json, "")
     } catch {
       case fae: FatalAdapterException => {
         LOG.error("Failed to send data to failedevent adapter:" + failedEventsAdapter.inputConfig.Name, fae)
@@ -136,10 +136,10 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
           xformedmsgs = xform.execute(data, format, associatedMsg, delimiters, uk, uv)
         } catch {
           case e: Exception => {
-            SendFailedEvent(data, format, associatedMsg, delimiters, uk, uv, transformStartTime, e)
+            SendFailedEvent(data, format, associatedMsg, uk, uv, transformStartTime, e)
           }
           case e: Throwable => {
-            SendFailedEvent(data, format, associatedMsg, delimiters, uk, uv, transformStartTime, e)
+            SendFailedEvent(data, format, associatedMsg, uk, uv, transformStartTime, e)
           }
         }
         LOG.info(ManagerUtils.getComponentElapsedTimeStr("Transform", uv, readTmNanoSecs, transformStartTime))
@@ -148,9 +148,21 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
           val totalXformedMsgs = xformedmsgs.size
           xformedmsgs.foreach(xformed => {
             xformedMsgCntr += 1
-            var output = engine.execute(transId, data, xformed._1, xformed._2, xformed._3, txnCtxt, readTmNanoSecs, readTmMilliSecs, uk, uv, xformedMsgCntr, totalXformedMsgs, ignoreOutput, allOutputAdaptersNames)
-            if (output != null) {
-              outputResults ++= output
+            try {
+              var output = engine.execute(transId, data, xformed._1, xformed._2, xformed._3, txnCtxt, readTmNanoSecs, readTmMilliSecs, uk, uv, xformedMsgCntr, totalXformedMsgs, ignoreOutput, allOutputAdaptersNames)
+              if (output != null) {
+                outputResults ++= output
+              }
+            } catch {
+              case e: MessagePopulationException => {
+                SendFailedEvent(data, format, xformed._1, uk, uv, transformStartTime, e)
+              }
+              case e: Exception => {
+                LOG.error("Failed to execute models after creating message", e)
+              }
+              case e: Throwable => {
+                LOG.error("Failed to execute models after creating message", e)
+              }
             }
           })
         }
