@@ -33,7 +33,7 @@ object KeyValueManager11 {
   // We will add more implementations here 
   // so we can test  the system characteristics
   //
-  def Get(jarPaths: collection.immutable.Set[String], datastoreConfig: String, tableName: String): DataStore11 = {
+  def Get(jarPaths: collection.immutable.Set[String], datastoreConfig: String, tableName: String): DataStore_V_1_1_X = {
     val adapterConfig = if (datastoreConfig != null) datastoreConfig.trim else ""
 
     if (adapterConfig.size == 0) {

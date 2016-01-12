@@ -70,19 +70,19 @@ datastoreConfig should have the following:
  *
  */
 
-class KeyValueHBaseTx11(val parent: DataStore11) extends Transaction11 {
+class KeyValueHBaseTx11(val parent: DataStore_V_1_1_X) extends Transaction_V_1_1_X {
   override def add(source: IStorage): Unit = { parent.add(source) }
   override def put(source: IStorage): Unit = { parent.put(source) }
-  override def get(key: Key11, target: IStorage): Unit = { parent.get(key, target) }
-  override def get(key: Key11, handler: (Value11) => Unit): Unit = { parent.get(key, handler) }
-  override def del(key: Key11): Unit = { parent.del(key) }
+  override def get(key: Key_V_1_1_X, target: IStorage): Unit = { parent.get(key, target) }
+  override def get(key: Key_V_1_1_X, handler: (Value_V_1_1_X) => Unit): Unit = { parent.get(key, handler) }
+  override def del(key: Key_V_1_1_X): Unit = { parent.del(key) }
   override def del(source: IStorage): Unit = { parent.del(source) }
-  override def getAllKeys(handler: (Key11) => Unit): Unit = { parent.getAllKeys(handler) }
+  override def getAllKeys(handler: (Key_V_1_1_X) => Unit): Unit = { parent.getAllKeys(handler) }
   override def putBatch(sourceArray: Array[IStorage]): Unit = { parent.putBatch(sourceArray) }
-  override def delBatch(keyArray: Array[Key11]): Unit = { parent.delBatch(keyArray) }
+  override def delBatch(keyArray: Array[Key_V_1_1_X]): Unit = { parent.delBatch(keyArray) }
 }
 
-class KeyValueHBase11(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: String, val tableName: String) extends DataStore11 {
+class KeyValueHBase11(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: String, val tableName: String) extends DataStore_V_1_1_X {
   val adapterConfig = if (datastoreConfig != null) datastoreConfig.trim else ""
   val loggerName = this.getClass.getName
   val logger = Logger.getLogger(loggerName)
@@ -311,18 +311,18 @@ class KeyValueHBase11(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfi
 
   override def add(source: IStorage): Unit = {
     relogin
-    var p = new Put(source.Key11.toArray[Byte])
+    var p = new Put(source.Key_V_1_1_X.toArray[Byte])
 
-    p.addColumn(valBytes, baseBytes, source.Value11.toArray[Byte])
+    p.addColumn(valBytes, baseBytes, source.Value_V_1_1_X.toArray[Byte])
 
     mutator.mutate(p)
   }
 
   override def put(source: IStorage): Unit = {
     relogin
-    var p = new Put(source.Key11.toArray[Byte])
+    var p = new Put(source.Key_V_1_1_X.toArray[Byte])
 
-    p.addColumn(valBytes, baseBytes, source.Value11.toArray[Byte])
+    p.addColumn(valBytes, baseBytes, source.Value_V_1_1_X.toArray[Byte])
 
     mutator.mutate(p)
   }
@@ -331,15 +331,15 @@ class KeyValueHBase11(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfi
     relogin
 
     val puts = sourceArray.map(source => {
-      var p = new Put(source.Key11.toArray[Byte])
-      p.addColumn(valBytes, baseBytes, source.Value11.toArray[Byte])
+      var p = new Put(source.Key_V_1_1_X.toArray[Byte])
+      p.addColumn(valBytes, baseBytes, source.Value_V_1_1_X.toArray[Byte])
       p
     }).toList
 
     mutator.mutate(puts)
   }
 
-  override def delBatch(keyArray: Array[Key11]): Unit = {
+  override def delBatch(keyArray: Array[Key_V_1_1_X]): Unit = {
     relogin
 
     val dels = keyArray.map(k => {
@@ -350,7 +350,7 @@ class KeyValueHBase11(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfi
     mutator.mutate(dels)
   }
 
-  override def get(key: Key11, handler: (Value11) => Unit): Unit = {
+  override def get(key: Key_V_1_1_X, handler: (Value_V_1_1_X) => Unit): Unit = {
     relogin
     try {
       var p = new Get(key.toArray[Byte])
@@ -362,7 +362,7 @@ class KeyValueHBase11(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfi
         val result = tableHBase.get(p)
         val v = result.getValue(valBytes, baseBytes)
 
-        val value = new Value11
+        val value = new Value_V_1_1_X
         value ++= v
 
         handler(value)
@@ -379,7 +379,7 @@ class KeyValueHBase11(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfi
     }
   }
 
-  override def get(key: Key11, target: IStorage): Unit = {
+  override def get(key: Key_V_1_1_X, target: IStorage): Unit = {
     relogin
     try {
       var p = new Get(key.toArray[Byte])
@@ -392,7 +392,7 @@ class KeyValueHBase11(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfi
 
         val v = result.getValue(valBytes, baseBytes)
 
-        val value = new Value11
+        val value = new Value_V_1_1_X
         value ++= v
 
         target.Construct(key, value)
@@ -409,19 +409,19 @@ class KeyValueHBase11(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfi
     }
   }
 
-  override def del(key: Key11): Unit = {
+  override def del(key: Key_V_1_1_X): Unit = {
     relogin
     val p = new Delete(key.toArray[Byte])
     mutator.mutate(p)
   }
 
-  override def del(source: IStorage): Unit = { del(source.Key11) }
+  override def del(source: IStorage): Unit = { del(source.Key_V_1_1_X) }
 
-  override def beginTx(): Transaction11 = { new KeyValueHBaseTx11(this) }
+  override def beginTx(): Transaction_V_1_1_X = { new KeyValueHBaseTx11(this) }
 
-  override def endTx(tx: Transaction11): Unit = {}
+  override def endTx(tx: Transaction_V_1_1_X): Unit = {}
 
-  override def commitTx(tx: Transaction11): Unit = {
+  override def commitTx(tx: Transaction_V_1_1_X): Unit = {
     relogin
     if (mutator != null)
       mutator.flush()
@@ -453,11 +453,11 @@ class KeyValueHBase11(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfi
 
 		a.close()
 */
-    getAllKeys({ (key: Key11) => del(key) })
+    getAllKeys({ (key: Key_V_1_1_X) => del(key) })
 
   }
 
-  override def getAllKeys(handler: (Key11) => Unit): Unit = {
+  override def getAllKeys(handler: (Key_V_1_1_X) => Unit): Unit = {
     relogin
     var p = new Scan()
 
@@ -472,7 +472,7 @@ class KeyValueHBase11(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfi
           val row = iter.next()
           if (row != null) {
             val v = row.getRow()
-            val key = new Key11
+            val key = new Key_V_1_1_X
             key ++= v
 
             handler(key)
@@ -495,5 +495,5 @@ class KeyValueHBase11(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfi
 
 // To create HBase Datastore instance
 object KeyValueHBase11 extends StorageAdapterObj11 {
-  override def CreateStorageAdapter(kvManagerLoader: KamanjaLoaderInfo, datastoreConfig: String, tableName: String): DataStore11 = new KeyValueHBase11(kvManagerLoader, datastoreConfig, tableName)
+  override def CreateStorageAdapter(kvManagerLoader: KamanjaLoaderInfo, datastoreConfig: String, tableName: String): DataStore_V_1_1_X = new KeyValueHBase11(kvManagerLoader, datastoreConfig, tableName)
 }

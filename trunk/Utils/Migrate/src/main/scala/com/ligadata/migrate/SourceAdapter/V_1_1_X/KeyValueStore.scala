@@ -25,38 +25,38 @@ import com.ligadata.Utils.{ KamanjaLoaderInfo }
 
 class ByteArray extends ArrayBuffer[Byte]
 
-class Key11 extends ByteArray
-class Value11 extends ByteArray
+class Key_V_1_1_X extends ByteArray
+class Value_V_1_1_X extends ByteArray
 
 trait IStorage {
-  def Key11: Key11
-  def Value11: Value11
-  def Construct(Key11: Key11, Value11: Value11): Unit
+  def Key_V_1_1_X: Key_V_1_1_X
+  def Value_V_1_1_X: Value_V_1_1_X
+  def Construct(Key_V_1_1_X: Key_V_1_1_X, Value_V_1_1_X: Value_V_1_1_X): Unit
 }
 
-trait DataStoreOperations11 {
+trait DataStoreOperations_V_1_1_X {
   def add(source: IStorage): Unit
   def put(source: IStorage): Unit
-  def get(key: Key11, target: IStorage): Unit
-  def get(key: Key11, handler: (Value11) => Unit): Unit
-  def del(key: Key11): Unit
+  def get(key: Key_V_1_1_X, target: IStorage): Unit
+  def get(key: Key_V_1_1_X, handler: (Value_V_1_1_X) => Unit): Unit
+  def del(key: Key_V_1_1_X): Unit
   def del(source: IStorage): Unit
-  def getAllKeys(handler: (Key11) => Unit): Unit
+  def getAllKeys(handler: (Key_V_1_1_X) => Unit): Unit
   def putBatch(sourceArray: Array[IStorage]): Unit
-  def delBatch(keyArray: Array[Key11]): Unit
+  def delBatch(keyArray: Array[Key_V_1_1_X]): Unit
 }
 
-trait DataStore11 extends DataStoreOperations11 {
-  def beginTx(): Transaction11
-  def endTx(tx: Transaction11): Unit
-  def commitTx(tx: Transaction11): Unit
+trait DataStore_V_1_1_X extends DataStoreOperations_V_1_1_X {
+  def beginTx(): Transaction_V_1_1_X
+  def endTx(tx: Transaction_V_1_1_X): Unit
+  def commitTx(tx: Transaction_V_1_1_X): Unit
 
   def Shutdown(): Unit
   def TruncateStore(): Unit
 }
 
-trait Transaction11 extends DataStoreOperations11 {
-  val parent: DataStore11 // Parent Data Store
+trait Transaction_V_1_1_X extends DataStoreOperations_V_1_1_X {
+  val parent: DataStore_V_1_1_X // Parent Data Store
 }
 
 /*
@@ -94,6 +94,6 @@ Ex: Sample2
 
 // Storage Adapter Object to create storage adapter
 trait StorageAdapterObj11 {
-  def CreateStorageAdapter(kvManagerLoader: KamanjaLoaderInfo, datastoreConfig: String, tableName: String): DataStore11
+  def CreateStorageAdapter(kvManagerLoader: KamanjaLoaderInfo, datastoreConfig: String, tableName: String): DataStore_V_1_1_X
 }
 

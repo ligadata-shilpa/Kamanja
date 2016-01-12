@@ -92,27 +92,27 @@ object Migrate {
 
   private type OptionMap = Map[Symbol, Any]
 
-  private var metadataStore: DataStore11 = _
-  private var transStore: DataStore11 = _
-  private var modelStore: DataStore11 = _
-  private var messageStore: DataStore11 = _
-  private var containerStore: DataStore11 = _
-  private var functionStore: DataStore11 = _
-  private var conceptStore: DataStore11 = _
-  private var typeStore: DataStore11 = _
-  private var otherStore: DataStore11 = _
-  private var jarStore: DataStore11 = _
-  private var configStore: DataStore11 = _
-  private var outputmsgStore: DataStore11 = _
-  private var modelConfigStore: DataStore11 = _
+  private var metadataStore: DataStore_V_1_1_X = _
+  private var transStore: DataStore_V_1_1_X = _
+  private var modelStore: DataStore_V_1_1_X = _
+  private var messageStore: DataStore_V_1_1_X = _
+  private var containerStore: DataStore_V_1_1_X = _
+  private var functionStore: DataStore_V_1_1_X = _
+  private var conceptStore: DataStore_V_1_1_X = _
+  private var typeStore: DataStore_V_1_1_X = _
+  private var otherStore: DataStore_V_1_1_X = _
+  private var jarStore: DataStore_V_1_1_X = _
+  private var configStore: DataStore_V_1_1_X = _
+  private var outputmsgStore: DataStore_V_1_1_X = _
+  private var modelConfigStore: DataStore_V_1_1_X = _
 
-  private var allDataStore: DataStore11 = _
+  private var allDataStore: DataStore_V_1_1_X = _
 
   def oStore = otherStore
 
-  private var tableStoreMap: Map[String, DataStore11] = Map()
+  private var tableStoreMap: Map[String, DataStore_V_1_1_X] = Map()
 
-  private def GetDataStoreHandle11(jarPaths: collection.immutable.Set[String], dataStoreInfo: String, tableName: String): DataStore11 = {
+  private def GetDataStoreHandle11(jarPaths: collection.immutable.Set[String], dataStoreInfo: String, tableName: String): DataStore_V_1_1_X = {
     try {
       logger.info("Getting DB Connection for dataStoreInfo:%s, tableName:%s".format(dataStoreInfo, tableName))
       return KeyValueManager11.Get(jarPaths, dataStoreInfo, tableName)
@@ -163,26 +163,26 @@ object Migrate {
     }
   }
 
-  def KeyAsStr(k: Key11): String = {
+  def KeyAsStr(k: Key_V_1_1_X): String = {
     val k1 = k.toArray[Byte]
     new String(k1)
   }
 
-  def ValueAsStr(v: Value11): String = {
+  def ValueAsStr(v: Value_V_1_1_X): String = {
     val v1 = v.toArray[Byte]
     new String(v1)
   }
 
-  def GetObject(key: Key11, store: DataStore11): IStorage = {
+  def GetObject(key: Key_V_1_1_X, store: DataStore_V_1_1_X): IStorage = {
     try {
       object o extends IStorage {
-        var key = new Key11;
-        var value = new Value11
+        var key = new Key_V_1_1_X;
+        var value = new Value_V_1_1_X
 
-        def Key11 = key
+        def Key_V_1_1_X = key
 
-        def Value11 = value
-        def Construct(k: Key11, v: Value11) =
+        def Value_V_1_1_X = value
+        def Construct(k: Key_V_1_1_X, v: Value_V_1_1_X) =
           {
             key = k;
             value = v;
@@ -203,8 +203,8 @@ object Migrate {
     }
   }
 
-  def GetObject(key: String, store: DataStore11): IStorage = {
-    var k = new Key11
+  def GetObject(key: String, store: DataStore_V_1_1_X): IStorage = {
+    var k = new Key_V_1_1_X
     for (c <- key) {
       k += c.toByte
     }
@@ -306,8 +306,8 @@ object Migrate {
 
   private def LoadAllModelConfigsIntoChache11(mdMgr: MdMgr): Unit = {
     try {
-      var keys = scala.collection.mutable.Set[Key11]()
-      modelConfigStore.getAllKeys({ (key: Key11) => keys.add(key) })
+      var keys = scala.collection.mutable.Set[Key_V_1_1_X]()
+      modelConfigStore.getAllKeys({ (key: Key_V_1_1_X) => keys.add(key) })
       val keyArray = keys.toArray
       if (keyArray.length == 0) {
         logger.debug("No model config objects available in the Database")
@@ -315,7 +315,7 @@ object Migrate {
       }
       keyArray.foreach(key => {
         val obj = GetObject(key, modelConfigStore)
-        val conf = serializer.DeserializeObjectFromByteArray(obj.Value11.toArray[Byte]).asInstanceOf[Map[String, List[String]]]
+        val conf = serializer.DeserializeObjectFromByteArray(obj.Value_V_1_1_X.toArray[Byte]).asInstanceOf[Map[String, List[String]]]
         mdMgr.AddModelConfig(KeyAsStr(key), conf)
       })
     } catch {
@@ -333,8 +333,8 @@ object Migrate {
       // LoadAllModelConfigsIntoChache11(mdMgr)
 
       // Load all metadata objects
-      var keys = scala.collection.mutable.Set[Key11]()
-      metadataStore.getAllKeys({ (key: Key11) => keys.add(key) })
+      var keys = scala.collection.mutable.Set[Key_V_1_1_X]()
+      metadataStore.getAllKeys({ (key: Key_V_1_1_X) => keys.add(key) })
       val keyArray = keys.toArray
       if (keyArray.length == 0) {
         logger.debug("No objects available in the Database")
@@ -342,7 +342,7 @@ object Migrate {
       }
       keyArray.foreach(key => {
         val obj = GetObject(key, metadataStore)
-        val mObj = serializer.DeserializeObjectFromByteArray(obj.Value11.toArray[Byte]).asInstanceOf[BaseElemDef]
+        val mObj = serializer.DeserializeObjectFromByteArray(obj.Value_V_1_1_X.toArray[Byte]).asInstanceOf[BaseElemDef]
         if (mObj != null) {
           ProcessObject(mObj)
         }
@@ -356,11 +356,11 @@ object Migrate {
     }
   }
 
-  def MigrateAllMetadata(ds: DataStore11) {
+  def MigrateAllMetadata(ds: DataStore_V_1_1_X) {
     try {
       // Load all metadata objects
-      var keys = scala.collection.mutable.Set[Key11]()
-      ds.getAllKeys({ (key: Key11) => keys.add(key) })
+      var keys = scala.collection.mutable.Set[Key_V_1_1_X]()
+      ds.getAllKeys({ (key: Key_V_1_1_X) => keys.add(key) })
       val keyArray = keys.toArray
       if (keyArray.length == 0) {
         logger.debug("No objects available in the Database")
@@ -368,7 +368,7 @@ object Migrate {
       }
       keyArray.foreach(key => {
         val obj = GetObject(key, ds)
-        val mObj = serializer.DeserializeObjectFromByteArray(obj.Value11.toArray[Byte]).asInstanceOf[BaseElemDef]
+        val mObj = serializer.DeserializeObjectFromByteArray(obj.Value_V_1_1_X.toArray[Byte]).asInstanceOf[BaseElemDef]
         if (mObj != null) {
           ProcessObject(mObj)
         }
@@ -382,14 +382,14 @@ object Migrate {
     }
   }
 
-  def MigrateAlldata(ds: DataStore11) {
+  def MigrateAlldata(ds: DataStore_V_1_1_X) {
     try {
       // Load All the Model Configs here... 
       // LoadAllModelConfigsIntoChache11(mdMgr)
 
       // Load all metadata objects
-      var keys = scala.collection.mutable.Set[Key11]()
-      ds.getAllKeys({ (key: Key11) => keys.add(key) })
+      var keys = scala.collection.mutable.Set[Key_V_1_1_X]()
+      ds.getAllKeys({ (key: Key_V_1_1_X) => keys.add(key) })
       val keyArray = keys.toArray
       if (keyArray.length == 0) {
         logger.debug("No objects available in the Database")
@@ -397,7 +397,7 @@ object Migrate {
       }
       keyArray.foreach(key => {
         val obj = GetObject(key, ds)
-        val mObj = serializer.DeserializeObjectFromByteArray(obj.Value11.toArray[Byte]).asInstanceOf[BaseElemDef]
+        val mObj = serializer.DeserializeObjectFromByteArray(obj.Value_V_1_1_X.toArray[Byte]).asInstanceOf[BaseElemDef]
         if (mObj != null) {
           ProcessObject(mObj)
         }
