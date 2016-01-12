@@ -35,6 +35,7 @@ import com.ligadata.Exceptions._
 
 class KamanjaInputAdapterCallerContext extends InputAdapterCallerContext {
   var outputAdapters: Array[OutputAdapter] = _
+  var failedEventsAdapters: Array[OutputAdapter] = _
   var gNodeContext: NodeContext = _
 }
 
@@ -61,12 +62,6 @@ object KamanjaMdCfg {
     val dataStore = cluster.cfgMap.getOrElse("DataStore", null)
     if (dataStore == null) {
       LOG.error("DataStore not found for Node %d  & ClusterId : %s".format(KamanjaConfiguration.nodeId, nd.ClusterId))
-      return false
-    }
-
-    val statusInfo = cluster.cfgMap.getOrElse("StatusInfo", null)
-    if (statusInfo == null) {
-      LOG.error("StatusInfo not found for Node %d  & ClusterId : %s".format(KamanjaConfiguration.nodeId, nd.ClusterId))
       return false
     }
 
@@ -101,55 +96,9 @@ object KamanjaMdCfg {
     }
 
     KamanjaConfiguration.dataDataStoreInfo = dataStore
-    KamanjaConfiguration.statusDataStoreInfo = statusInfo
 
     implicit val jsonFormats: Formats = DefaultFormats
     val zKInfo = parse(zooKeeperInfo).extract[JZKInfo]
-
-    /*
-    // DataStore & StatusInfo & ZooKeeperInfo
-    val dataStoreInfo = parse(dataStore).extract[JDataStore]
-    val statusStoreInfo = parse(statusInfo).extract[JDataStore]
-    KamanjaConfiguration.dataStoreType = dataStoreInfo.StoreType.replace("\"", "").trim
-    if (KamanjaConfiguration.dataStoreType.size == 0) {
-      LOG.error("Not found valid DataStoreType.")
-      return false
-    }
-
-    KamanjaConfiguration.dataSchemaName = dataStoreInfo.SchemaName.replace("\"", "").trim
-    if (KamanjaConfiguration.dataSchemaName.size == 0) {
-      LOG.error("Not found valid DataSchemaName.")
-      return false
-    }
-
-    KamanjaConfiguration.dataLocation = dataStoreInfo.Location.replace("\"", "").trim
-    if (KamanjaConfiguration.dataLocation.size == 0) {
-      LOG.error("Not found valid DataLocation.")
-      return false
-    }
-
-    KamanjaConfiguration.adapterSpecificConfig = if (dataStoreInfo.AdapterSpecificConfig == None || dataStoreInfo.AdapterSpecificConfig == null) "" else dataStoreInfo.AdapterSpecificConfig.get.trim
-
-    KamanjaConfiguration.statusInfoStoreType = statusStoreInfo.StoreType.replace("\"", "").trim
-    if (KamanjaConfiguration.statusInfoStoreType.size == 0) {
-      LOG.error("Not found valid Status Information StoreType.")
-      return false
-    }
-
-    KamanjaConfiguration.statusInfoSchemaName = statusStoreInfo.SchemaName.replace("\"", "").trim
-    if (KamanjaConfiguration.statusInfoSchemaName.size == 0) {
-      LOG.error("Not found valid Status Information SchemaName.")
-      return false
-    }
-
-    KamanjaConfiguration.statusInfoLocation = statusStoreInfo.Location.replace("\"", "").trim
-    if (KamanjaConfiguration.statusInfoLocation.size == 0) {
-      LOG.error("Not found valid Status Information Location.")
-      return false
-    }
-
-    KamanjaConfiguration.statusInfoAdapterSpecificConfig = if (statusStoreInfo.AdapterSpecificConfig == None || statusStoreInfo.AdapterSpecificConfig == null) "" else statusStoreInfo.AdapterSpecificConfig.get.trim
-*/
 
     KamanjaConfiguration.zkConnectString = zKInfo.ZooKeeperConnectString.replace("\"", "").trim
     KamanjaConfiguration.zkNodeBasePath = zKInfo.ZooKeeperNodeBasePath.replace("\"", "").trim
@@ -304,7 +253,6 @@ object KamanjaMdCfg {
 
           envCtxt.SetJarPaths(KamanjaConfiguration.jarPaths) // Jar paths for Datastores, etc
           envCtxt.SetDefaultDatastore(KamanjaConfiguration.dataDataStoreInfo) // Default Datastore
-          envCtxt.SetStatusInfoDatastore(KamanjaConfiguration.statusDataStoreInfo) // Status Info datastore
 
           val allMsgsContainers = topMessageNames ++ containerNames
           val containerInfos = allMsgsContainers.map(c => { ContainerNameAndDatastoreInfo(c, null) })
@@ -356,7 +304,7 @@ object KamanjaMdCfg {
     null
   }
 
-  def LoadAdapters(inputAdapters: ArrayBuffer[InputAdapter], outputAdapters: ArrayBuffer[OutputAdapter], statusAdapters: ArrayBuffer[OutputAdapter], validateInputAdapters: ArrayBuffer[InputAdapter]): Boolean = {
+  def LoadAdapters(inputAdapters: ArrayBuffer[InputAdapter], outputAdapters: ArrayBuffer[OutputAdapter], statusAdapters: ArrayBuffer[OutputAdapter], validateInputAdapters: ArrayBuffer[InputAdapter], failedEventsAdapters: ArrayBuffer[OutputAdapter]): Boolean = {
     LOG.info("Loading Adapters started @ " + Utils.GetCurDtTmStr)
     val s0 = System.nanoTime
     println("*** LOAD ADAPTERS ***")
@@ -366,6 +314,7 @@ object KamanjaMdCfg {
     val validateAdaps = scala.collection.mutable.Map[String, AdapterInfo]()
     val outputAdaps = scala.collection.mutable.Map[String, AdapterInfo]()
     val statusAdaps = scala.collection.mutable.Map[String, AdapterInfo]()
+    val failedEventsAdaps = scala.collection.mutable.Map[String, AdapterInfo]()
 
     allAdapters.foreach(a => {
       if (a._2.TypeString.compareToIgnoreCase("Input") == 0) {
@@ -376,6 +325,8 @@ object KamanjaMdCfg {
         outputAdaps(a._1.toLowerCase) = a._2
       } else if (a._2.TypeString.compareToIgnoreCase("Status") == 0) {
         statusAdaps(a._1.toLowerCase) = a._2
+      } else if (a._2.TypeString.compareToIgnoreCase("FailedEvents") == 0) {
+        failedEventsAdaps(a._1.toLowerCase) = a._2
       } else {
         LOG.error("Found unhandled adapter type %s for adapter %s".format(a._2.TypeString, a._2.Name))
         return false
@@ -394,10 +345,15 @@ object KamanjaMdCfg {
     if (!LoadOutputAdapsForCfg(outputAdaps, outputAdapters, true))
       return false
 
+    // Get output adapter
+    LOG.debug("Getting FailedEvents Adapters")
+    if (LoadOutputAdapsForCfg(failedEventsAdaps, failedEventsAdapters, true) == false)
+      return false
+
     // Get input adapter
     LOG.debug("Getting Input Adapters")
 
-    if (!LoadInputAdapsForCfg(inputAdaps, inputAdapters, outputAdapters.toArray, KamanjaMetadata.gNodeContext))
+    if (LoadInputAdapsForCfg(inputAdaps, inputAdapters, outputAdapters.toArray, KamanjaMetadata.gNodeContext, failedEventsAdapters.toArray) == false)
       return false
 
     // Get input adapter
@@ -501,7 +457,7 @@ object KamanjaMdCfg {
 
       conf.Name = adap.Name.toLowerCase
       if (hasInputAdapterName)
-        conf.formatOrInputAdapterName = adap.InputAdapterToVerify
+        conf.validateAdapterName = adap.InputAdapterToValidate
       conf.className = adap.ClassName
       conf.jarName = adap.JarName
       conf.keyAndValueDelimiter = adap.KeyAndValueDelimiter
@@ -605,7 +561,7 @@ object KamanjaMdCfg {
     null
   }
 
-  private def PrepInputAdapsForCfg(adaps: scala.collection.mutable.Map[String, AdapterInfo], inputAdapters: ArrayBuffer[InputAdapter], outputAdapters: Array[OutputAdapter], gNodeContext: NodeContext, execCtxtObj: ExecContextObj): Boolean = {
+  private def PrepInputAdapsForCfg(adaps: scala.collection.mutable.Map[String, AdapterInfo], inputAdapters: ArrayBuffer[InputAdapter], outputAdapters: Array[OutputAdapter], gNodeContext: NodeContext, execCtxtObj: ExecContextObj, failedEventsAdapters: Array[OutputAdapter], hasOutputAdapterName: Boolean): Boolean = {
     // ConfigurationName
     if (adaps.size == 0) {
       return true
@@ -613,6 +569,7 @@ object KamanjaMdCfg {
 
     val callerCtxt = new KamanjaInputAdapterCallerContext
     callerCtxt.outputAdapters = outputAdapters
+    callerCtxt.failedEventsAdapters = failedEventsAdapters
     callerCtxt.gNodeContext = gNodeContext
 
     adaps.foreach(ac => {
@@ -622,7 +579,9 @@ object KamanjaMdCfg {
       val adap = ac._2
 
       conf.Name = adap.Name.toLowerCase
-      conf.formatOrInputAdapterName = adap.DataFormat
+      conf.formatName = adap.DataFormat
+      if (hasOutputAdapterName)
+        conf.failedEventsAdapterName = adap.failedEventsAdapter
       conf.className = adap.ClassName
       conf.jarName = adap.JarName
       conf.dependencyJars = if (adap.DependencyJars != null) adap.DependencyJars.map(str => str.trim).filter(str => str.size > 0).toSet else null
@@ -647,15 +606,15 @@ object KamanjaMdCfg {
     return true
   }
 
-  private def LoadInputAdapsForCfg(adaps: scala.collection.mutable.Map[String, AdapterInfo], inputAdapters: ArrayBuffer[InputAdapter], outputAdapters: Array[OutputAdapter], gNodeContext: NodeContext): Boolean = {
-    return PrepInputAdapsForCfg(adaps, inputAdapters, outputAdapters, gNodeContext, ExecContextObjImpl)
+  private def LoadInputAdapsForCfg(adaps: scala.collection.mutable.Map[String, AdapterInfo], inputAdapters: ArrayBuffer[InputAdapter], outputAdapters: Array[OutputAdapter], gNodeContext: NodeContext, failedEventsAdapters: Array[OutputAdapter]): Boolean = {
+    return PrepInputAdapsForCfg(adaps, inputAdapters, outputAdapters, gNodeContext, ExecContextObjImpl, failedEventsAdapters, true)
   }
 
   private def LoadValidateInputAdapsFromCfg(validate_adaps: scala.collection.mutable.Map[String, AdapterInfo], valInputAdapters: ArrayBuffer[InputAdapter], outputAdapters: Array[OutputAdapter], gNodeContext: NodeContext): Boolean = {
     val validateInputAdapters = scala.collection.mutable.Map[String, AdapterInfo]()
 
     outputAdapters.foreach(oa => {
-      val validateInputAdapName = (if (oa.inputConfig.formatOrInputAdapterName != null) oa.inputConfig.formatOrInputAdapterName.trim else "").toLowerCase
+      val validateInputAdapName = (if (oa.inputConfig.validateAdapterName != null) oa.inputConfig.validateAdapterName.trim else "").toLowerCase
       if (validateInputAdapName.size > 0) {
         val valAdap = validate_adaps.getOrElse(validateInputAdapName, null)
         if (valAdap != null) {
@@ -670,8 +629,7 @@ object KamanjaMdCfg {
     if (validateInputAdapters.size == 0)
       return true
 
-
-    return PrepInputAdapsForCfg(validateInputAdapters, valInputAdapters, outputAdapters, gNodeContext, ValidateExecContextObjImpl)
+    return PrepInputAdapsForCfg(validateInputAdapters, valInputAdapters, outputAdapters, gNodeContext, ValidateExecContextObjImpl, null, false)
   }
 
 }

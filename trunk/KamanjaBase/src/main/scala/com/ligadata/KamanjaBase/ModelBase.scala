@@ -246,7 +246,6 @@ trait EnvContext extends Monitorable {
 
   // Datastores
   def SetDefaultDatastore(dataDataStoreInfo: String): Unit
-  def SetStatusInfoDatastore(statusDataStoreInfo: String): Unit
 
   // Registerd Messages/Containers
   def RegisterMessageOrContainers(containersInfo: Array[ContainerNameAndDatastoreInfo]): Unit
@@ -270,10 +269,7 @@ trait EnvContext extends Monitorable {
   // Adapters Keys & values
   def setAdapterUniqueKeyValue(transId: Long, key: String, value: String, outputResults: List[(String, String, String)]): Unit
   def getAdapterUniqueKeyValue(transId: Long, key: String): (Long, String, List[(String, String, String)])
-  /*
-  def getAllIntermediateStatusInfo: Array[(String, (String, Int, Int))] // Get all Status information from intermediate table. No Transaction required here.
-  def getIntermediateStatusInfo(keys: Array[String]): Array[(String, (String, Int, Int))] // Get Status information from intermediate table for given keys. No Transaction required here.
-*/
+
   def setAdapterUniqKeyAndValues(keyAndValues: List[(String, String)]): Unit
   def getAllAdapterUniqKvDataInfo(keys: Array[String]): Array[(String, (Long, String, List[(String, String, String)]))] // Get Status information from Final table. No Transaction required here.
 

@@ -582,7 +582,6 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   private[this] var _kryoSer: com.ligadata.Serialize.Serializer = null
   private[this] var _classLoader: java.lang.ClassLoader = null
   private[this] var _defaultDataStore: DataStore = null
-  private[this] var _statusinfoDataStore: DataStore = null
   private[this] var _mdres: MdBaseResolveInfo = null
   private[this] var _enableEachTransactionCommit = true
   private[this] var _jarPaths: collection.immutable.Set[String] = null // Jar paths where we can resolve all jars (including dependency jars).
@@ -1267,11 +1266,6 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     if (_defaultDataStore != null)
       _defaultDataStore.Shutdown
     _defaultDataStore = null
-
-    if (_statusinfoDataStore != null)
-      _statusinfoDataStore.Shutdown
-    _statusinfoDataStore = null
-
     // _messagesOrContainers.clear
 
     hbExecutor.shutdownNow
@@ -1303,14 +1297,6 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
       logger.debug("DefaultDatastore Information:%s".format(dataDataStoreInfo))
     if (_defaultDataStore == null) { // Doing it only once
       _defaultDataStore = GetDataStoreHandle(_jarPaths, dataDataStoreInfo)
-    }
-  }
-
-  override def SetStatusInfoDatastore(statusDataStoreInfo: String): Unit = {
-    if (statusDataStoreInfo != null)
-      logger.debug("DefaultDatastore Information:%s".format(statusDataStoreInfo))
-    if (_statusinfoDataStore == null) { // Doing it only once
-      _statusinfoDataStore = GetDataStoreHandle(_jarPaths, statusDataStoreInfo)
     }
   }
 

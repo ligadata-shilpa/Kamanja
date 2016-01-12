@@ -6,13 +6,13 @@ name := "CleanUtil"
 
 version := "1.0"
 
-scalaVersion := "2.10.4"
+scalaVersion := "2.11.7"
 
 shellPrompt := { state =>  "sbt (%s)> ".format(Project.extract(state).currentProject.id) }
 
 libraryDependencies ++= Seq (
   "com.101tec" % "zkclient" % "0.6",
-  "org.apache.kafka" % "kafka_2.10" % "0.8.2.2",
+  "org.apache.kafka" %% "kafka" % "0.8.2.2",
   "org.apache.logging.log4j" % "log4j-core" % "2.4.1",
   "org.json4s" %% "json4s-native" % "{latestVersion}",
   "org.json4s" %% "json4s-jackson" % "{latestVersion}",
@@ -37,6 +37,7 @@ mergeStrategy in assembly <<= (mergeStrategy in assembly) { (old) =>
 {
   // case PathList("javax", "servlet", xs @ _*)         => MergeStrategy.first
   // case PathList(ps @ _*) if ps.last endsWith ".html" => MergeStrategy.first
+case PathList("META-INF", "maven","jline","jline", ps) if ps.startsWith("pom") => MergeStrategy.discard
   case PathList(ps @ _*) if ps.last endsWith ".html" => MergeStrategy.first
   case x if x endsWith "google/common/annotations/GwtCompatible.class" => MergeStrategy.first
   case x if x endsWith "google/common/annotations/GwtIncompatible.class" => MergeStrategy.first

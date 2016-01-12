@@ -322,7 +322,7 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
 
                 uniqueVal.Offset = msgBuffer.offset
                 val dontSendOutputToOutputAdap = uniqueVal.Offset <= uniqueRecordValue
-                execThread.execute(message, qc.formatOrInputAdapterName, uniqueKey, uniqueVal, readTmNs, readTmMs, dontSendOutputToOutputAdap, qc.associatedMsg, delimiters)
+                execThread.execute(message, qc.formatName, uniqueKey, uniqueVal, readTmNs, readTmMs, dontSendOutputToOutputAdap, qc.associatedMsg, delimiters)
 
                 val key = Category + "/" + qc.Name + "/evtCnt"
                 cntrAdapter.addCntr(key, 1) // for now adding each row
