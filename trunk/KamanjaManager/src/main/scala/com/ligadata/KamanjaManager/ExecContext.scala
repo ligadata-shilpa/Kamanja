@@ -68,12 +68,43 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
       null
     }
 
+  private val failedEventDtFormat = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
+
   private val adapterInfoMap = ProcessedAdaptersInfo.getOneInstance(this.hashCode(), true)
 
-  private def SendFailedEvent(data: Array[Byte], format: String, associatedMsg: String, delimiters: DataDelimiters, uk: String, uv: String, transformStartTime: Long): Unit = {
+  private def SendFailedEvent(data: Array[Byte], format: String, associatedMsg: String, delimiters: DataDelimiters, uk: String, uv: String, transformStartTime: Long, e: Throwable): Unit = {
     if (failedEventsAdapter == null)
       return
 
+    val failedTm = failedEventDtFormat.format(new java.util.Date(transformStartTime))
+
+    val evntData = new String(data)
+
+    val failMsg = if (e != null) e.getMessage else ""
+    val stackTrace = if (e != null) StackTrace.ThrowableTraceString(e) else ""
+
+    val out = ("MessageType" -> associatedMsg) ~
+      ("Deserializer" -> format) ~
+      ("SourceAdapter" -> input.inputConfig.Name) ~
+      ("FailedAt" -> failedTm) ~
+      ("EventData" -> evntData) ~
+      ("Partition" -> ("Key" -> uk) ~ ("Value" -> uv)) ~
+      ("Failure" -> ("Message" -> failMsg) ~ ("StackTrace" -> stackTrace))
+    val json = compact(render(out))
+
+    try {
+      failedEventsAdapter.send(json, null)
+    } catch {
+      case fae: FatalAdapterException => {
+        LOG.error("Failed to send data to failedevent adapter:" + failedEventsAdapter.inputConfig.Name, fae)
+      }
+      case e: Exception => {
+        LOG.error("Failed to send data to failedevent adapter:" + failedEventsAdapter.inputConfig.Name, e)
+      }
+      case t: Throwable => {
+        LOG.error("Failed to send data to failedevent adapter:" + failedEventsAdapter.inputConfig.Name, t)
+      }
+    }
   }
 
   def execute(data: Array[Byte], format: String, uniqueKey: PartitionUniqueRecordKey, uniqueVal: PartitionUniqueRecordValue, readTmNanoSecs: Long, readTmMilliSecs: Long, ignoreOutput: Boolean, associatedMsg: String, delimiters: DataDelimiters): Unit = {
@@ -105,10 +136,10 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
           xformedmsgs = xform.execute(data, format, associatedMsg, delimiters, uk, uv)
         } catch {
           case e: Exception => {
-            SendFailedEvent(data, format, associatedMsg, delimiters, uk, uv, transformStartTime)
+            SendFailedEvent(data, format, associatedMsg, delimiters, uk, uv, transformStartTime, e)
           }
           case e: Throwable => {
-            SendFailedEvent(data, format, associatedMsg, delimiters, uk, uv, transformStartTime)
+            SendFailedEvent(data, format, associatedMsg, delimiters, uk, uv, transformStartTime, e)
           }
         }
         LOG.info(ManagerUtils.getComponentElapsedTimeStr("Transform", uv, readTmNanoSecs, transformStartTime))
@@ -137,8 +168,7 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
             LOG.debug("Done Waiting in Step 1 (before committing data) for Message:" + dispMsg)
           } catch {
             case e: Exception => {
-              val stackTrace = StackTrace.ThrowableTraceString(e)
-              LOG.debug("StackTrace:" + stackTrace)
+              LOG.debug("Failed to wait", e)
             }
           }
         }
@@ -163,8 +193,7 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
             LOG.debug("Done Waiting in Step 2 (before writing to output adapter) for Message:" + dispMsg)
           } catch {
             case e: Exception => {
-              val stackTrace = StackTrace.ThrowableTraceString(e)
-              LOG.debug("StackTrace:" + stackTrace)
+              LOG.debug("Failed to wait", e)
             }
           }
         }
@@ -186,18 +215,15 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
                 oadap.send(output._2.map(out => out._3.getBytes("UTF8")).toArray, output._2.map(out => out._2.getBytes("UTF8")).toArray)
               } catch {
                 case fae: FatalAdapterException => {
-                  val causeStackTrace = StackTrace.ThrowableTraceString(fae.cause)
-                  LOG.error("Failed to send data to output adapter:" + oadap.inputConfig.Name + "\n.Internal Cause:" + causeStackTrace)
+                  LOG.error("Failed to send data to output adapter:" + oadap.inputConfig.Name, fae)
                   failedOutputs += output
                 }
                 case e: Exception => {
-                  val stackTrace = StackTrace.ThrowableTraceString(e)
-                  LOG.error("Failed to send data to output adapter:" + oadap.inputConfig.Name + "\n.Stack Trace:" + stackTrace)
+                  LOG.error("Failed to send data to output adapter:" + oadap.inputConfig.Name, e)
                   failedOutputs += output
                 }
                 case t: Throwable => {
-                  val stackTrace = StackTrace.ThrowableTraceString(t)
-                  LOG.error("Failed to send data to output adapter:" + oadap.inputConfig.Name + "\n.Stack Trace:" + stackTrace)
+                  LOG.error("Failed to send data to output adapter:" + oadap.inputConfig.Name, t)
                   failedOutputs += output
                 }
               }
@@ -231,8 +257,7 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
             LOG.debug("Done Waiting in Step 3 (before removing sent data) for Message:" + dispMsg)
           } catch {
             case e: Exception => {
-              val stackTrace = StackTrace.ThrowableTraceString(e)
-              LOG.debug("StackTrace:" + stackTrace)
+              LOG.debug("Failed to Wait.", e)
             }
           }
         }
@@ -256,8 +281,7 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        LOG.error("Failed to serialize uniqueKey/uniqueVal. Reason:%s Message:%s. StackTrace:%s".format(e.getCause, e.getMessage, stackTrace))
+        LOG.error("Failed to serialize uniqueKey/uniqueVal.", e)
       }
     }
   }
@@ -402,8 +426,7 @@ class ValidateExecCtxtImpl(val input: InputAdapter, val curPartitionKey: Partiti
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        LOG.error("Failed to serialize uniqueKey/uniqueVal. Reason:%s Message:%s. StackTrace:%s".format(e.getCause, e.getMessage, stackTrace))
+        LOG.error("Failed to serialize uniqueKey/uniqueVal", e)
       }
     }
   }
