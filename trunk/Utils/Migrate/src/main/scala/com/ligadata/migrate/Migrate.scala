@@ -717,7 +717,7 @@ object Migrate {
         val clusters = clustersList.length
         logger.debug("Found " + clusters + " cluster objects ")
         clustersList.foreach(clustny => {
-          if (dsStr != null) {
+          if (dsStr == null) {
             val cluster = clustny.asInstanceOf[Map[String, Any]]
             val ClusterId = cluster.getOrElse("ClusterId", "").toString.trim.toLowerCase
             logger.debug("Processing the cluster => " + ClusterId)
