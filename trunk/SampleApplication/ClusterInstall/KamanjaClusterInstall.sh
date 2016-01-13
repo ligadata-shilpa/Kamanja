@@ -393,7 +393,7 @@ while read LINE; do
 	ssh -o StrictHostKeyChecking=no -T $machine  <<-EOF
 	        cd $workDir
 		if [ ! -L $targetPath ]; then
-			mv 	$targetPath "$targetPath"_pre			
+			mv 	$targetPath "$targetPath"_pre_"$DATE"			
 		else
 			unlink $targetPath
 		fi
