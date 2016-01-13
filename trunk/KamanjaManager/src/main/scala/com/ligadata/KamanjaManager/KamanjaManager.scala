@@ -75,6 +75,10 @@ class ConnHandler(var socket: Socket, var mgr: KamanjaManager) extends Runnable 
   }
 }
 
+object KamanjaManangerMonitorContext {
+  val monitorCount = new java.util.concurrent.atomic.AtomicLong()
+}
+
 object KamanjaConfiguration {
   var configFile: String = _
   var allConfigs: Properties = _
@@ -224,7 +228,6 @@ class KamanjaManager extends Observer {
 
   private var thisEngineInfo: MainInfo = null
   private var adapterMetricInfo: scala.collection.mutable.MutableList[com.ligadata.HeartBeat.MonitorComponentInfo] = null
-  private var monitorCounter: Long = 0
   private val failedEventsAdapters = new ArrayBuffer[OutputAdapter]
 
 
@@ -753,10 +756,11 @@ class KamanjaManager extends Observer {
       thisEngineInfo = new MainInfo
       thisEngineInfo.startTime = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
       thisEngineInfo.name = KamanjaConfiguration.nodeId.toString
-      thisEngineInfo.uniqueId = monitorCounter
+      thisEngineInfo.uniqueId = KamanjaManangerMonitorContext.monitorCount.incrementAndGet
       CreateClient.CreateNodeIfNotExists(KamanjaConfiguration.zkConnectString, zkHeartBeatNodePath) // Creating the path if missing
     }
     thisEngineInfo.lastSeen = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
+    thisEngineInfo.uniqueId = KamanjaManangerMonitorContext.monitorCount.incrementAndGet
 
     // run through all adapters.
     if (adapterMetricInfo == null) {
@@ -789,8 +793,6 @@ class KamanjaManager extends Observer {
 
     // get the envContext.
     KamanjaLeader.SetNewDataToZkc(zkHeartBeatNodePath, compact(render(allMetrics)).getBytes)
-    monitorCounter += 1
-
   }
 
   class SignalHandler extends Observable with sun.misc.SignalHandler {
