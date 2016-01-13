@@ -149,4 +149,4 @@ lazy val JarFactoryOfModelInstanceFactory = project.in(file("FactoriesOfModelIns
 
 lazy val JpmmlFactoryOfModelInstanceFactory = project.in(file("FactoriesOfModelInstanceFactory/JpmmlFactoryOfModelInstanceFactory")) dependsOn (Metadata, KamanjaBase, Exceptions)
 
-lazy val Migrate = project.in(file("Utils/Migrate")) dependsOn (Metadata, KamanjaBase, MetadataBootstrap, MetadataAPI, StorageManager, Exceptions, TransactionService)
+lazy val Migrate = project.in(file("Utils/Migrate")) dependsOn (Metadata, KamanjaBase, MetadataBootstrap, MetadataAPI, StorageManager, Exceptions, TransactionService, SaveContainerDataComponent)
