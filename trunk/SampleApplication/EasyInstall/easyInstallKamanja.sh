@@ -87,7 +87,7 @@ echo $bin
 echo "clean, package and assemble $srcPath ..."
 
 cd $srcPath
-sbt clean package KamanjaManager/assembly MetadataAPI/assembly KVInit/assembly MethodExtractor/assembly SimpleKafkaProducer/assembly NodeInfoExtract/assembly ExtractData/assembly MetadataAPIService/assembly JdbcDataCollector/assembly FileDataConsumer/assembly SaveContainerDataComponent/assembly CleanUtil/assembly
+sbt clean package KamanjaManager/assembly MetadataAPI/assembly KVInit/assembly MethodExtractor/assembly SimpleKafkaProducer/assembly NodeInfoExtract/assembly ExtractData/assembly MetadataAPIService/assembly JdbcDataCollector/assembly FileDataConsumer/assembly SaveContainerDataComponent/assembly CleanUtil/assembly Migrate/assembly
 
 # recreate eclipse projects
 #echo "refresh the eclipse projects ..."
@@ -108,6 +108,7 @@ cp Utils/JdbcDataCollector/target/scala-2.11/JdbcDataCollector* $bin
 cp MetadataAPIService/target/scala-2.11/MetadataAPIService* $bin
 cp FileDataConsumer/target/scala-2.11/FileDataConsumer* $bin
 cp Utils/CleanUtil/target/scala-2.11/CleanUtil* $bin
+cp Utils/Migrate/target/scala-2.11/Migrate-1.0 $bin
 
 # *******************************
 # Copy jars required (more than required if the fat jars are used)

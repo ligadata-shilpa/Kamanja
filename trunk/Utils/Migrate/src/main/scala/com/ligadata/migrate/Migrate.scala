@@ -66,7 +66,6 @@ import org.apache.zookeeper.CreateMode
 import com.ligadata.keyvaluestore._
 import com.ligadata.Serialize._
 import com.ligadata.Utils._
-import scala.util.control.Breaks._
 import com.ligadata.AuditAdapterInfo._
 import com.ligadata.SecurityAdapterInfo.SecurityAdapter
 import com.ligadata.keyvaluestore.KeyValueManager
@@ -82,7 +81,6 @@ import com.ligadata.Migrate.SourceAdapter.V_1_1_X._
 import com.ligadata.Utils.{ Utils, KamanjaClassLoader, KamanjaLoaderInfo }
 import com.ligadata.tools.SaveContainerDataComponent
 import com.ligadata.KamanjaBase.MessageContainerBase
-
 
 object Migrate {
 
@@ -599,7 +597,7 @@ object Migrate {
       val typName = kd.GetTypeName
       val bucketKey = kd.GetKey
       val data = kd.GetAllData
-      
+
       // Copy from Old to New structure.
 
       return data.size
@@ -716,15 +714,16 @@ object Migrate {
       // process clusterInfo object if it exists
       if (map.contains("Clusters")) {
         val clustersList = map.get("Clusters").get.asInstanceOf[List[_]]
-        logger.debug("Found " + clustersList.length + " cluster objects ")
+        val clusters = clustersList.length
+        logger.debug("Found " + clusters + " cluster objects ")
         clustersList.foreach(clustny => {
-          val cluster = clustny.asInstanceOf[Map[String, Any]]
-          val ClusterId = cluster.getOrElse("ClusterId", "").toString.trim.toLowerCase
-          logger.debug("Processing the cluster => " + ClusterId)
-          // gather config name-value pairs
-          if (cluster.contains("DataStore")) {
-            dsStr = getStringFromJsonNode(cluster.getOrElse("DataStore", null))
-            break;
+          if (dsStr == null) {
+            val cluster = clustny.asInstanceOf[Map[String, Any]]
+            val ClusterId = cluster.getOrElse("ClusterId", "").toString.trim.toLowerCase
+            logger.debug("Processing the cluster => " + ClusterId)
+            // gather config name-value pairs
+            if (ClusterId.size > 0 && cluster.contains("DataStore"))
+              dsStr = getStringFromJsonNode(cluster.getOrElse("DataStore", null))
           }
         })
       }
