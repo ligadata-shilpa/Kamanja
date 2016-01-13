@@ -1324,12 +1324,60 @@ class SqlServerAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
     })
   }
 
-  def backupContainer(containerName:String): Unit = {
-    logger.info("Not Implemeted yet")
+  def renameTable(oldTableName:String, newTableName: String): Unit = lock.synchronized {
+    var con: Connection = null
+    var stmt: Statement = null
+    var rs: ResultSet = null
+    logger.info("renaming " + oldTableName + " to " + newTableName);
+    var query = ""
+    try {
+      con = getConnection
+      // check if the container already backed up
+      val dbm = con.getMetaData();
+      rs = dbm.getTables(null, SchemaName, newTableName, null);
+      if (rs.next()) {
+        logger.debug("The table " + newTableName + " exists, may have beem renamed already ")
+      } else {
+	rs = dbm.getTables(null, SchemaName, oldTableName, null);
+	if (!rs.next()) {
+          logger.debug("The table " + oldTableName + " doesn't exist, nothing to rename ")
+	} else {
+          query = "sp_rename '" + oldTableName + "' , '" + newTableName + "'"
+          stmt = con.createStatement()
+          stmt.executeUpdate(query);
+	}
+      }
+    } catch {
+      case e: Exception => {
+        throw CreateDDLException("Failed to rename the table " + oldTableName + ":" + "query => " + query + ":" + e.getMessage(), e)
+      }
+    } finally {
+      if (rs != null) {
+        rs.close
+      }
+      if (stmt != null) {
+        stmt.close
+      }
+      if (con != null) {
+        con.close
+      }
+    }
+  }
+
+  def backupContainer(containerName:String): Unit = lock.synchronized {
+    var tableName = toTableName(containerName)
+    var fullTableName = toFullTableName(containerName)
+    var oldTableName = fullTableName
+    var newTableName = tableName + ".bak"
+    renameTable(oldTableName,newTableName)
   }
 
   def restoreContainer(containerName:String): Unit = {
-    logger.info("Not Implemeted yet")
+    var tableName = toTableName(containerName)
+    var fullTableName = toFullTableName(containerName)
+    var oldTableName = fullTableName + ".bak"
+    var newTableName = tableName
+    renameTable(oldTableName,newTableName)
   }
 
 }

@@ -434,6 +434,30 @@ class SqlServerAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAft
       noException should be thrownBy {
 	adapter.getKeys(containerName,timeRanges,keyStringList,readKeyCallBack _)
       }
+
+      And("Test backup container")
+      noException should be thrownBy {
+	adapter.backupContainer(containerName)
+      }
+
+      And("Test create container after renaming it")
+      noException should be thrownBy {
+	var containers = new Array[String](0)
+	containers = containers :+ containerName
+	adapter.CreateContainer(containers)
+      }
+
+      And("Test drop empty container, before restore from backup ")
+      noException should be thrownBy {
+	var containers = new Array[String](0)
+	containers = containers :+ containerName
+	adapter.DropContainer(containers)
+      }
+
+      And("Test restore container")
+      noException should be thrownBy {
+	adapter.restoreContainer(containerName)
+      }
       
       And("Test drop container again, cleanup")
       noException should be thrownBy {
