@@ -22,7 +22,7 @@ libraryDependencies += "com.novocode" % "junit-interface" % "0.11-RC1" % "test"
 
 libraryDependencies += "commons-lang" % "commons-lang" % "2.4"
 
-libraryDependencies += "jdom" % "jdom" % "1.1"
+libraryDependencies += "org.jdom" % "jdom" % "1.1"
 
 libraryDependencies += "com.google.protobuf" % "protobuf-java" % "2.3.0"
 
