@@ -123,6 +123,7 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
 
   private var isShutdown = false
   private var isHeartBeating = false
+  private var isInError = false
 
   private var retryExecutor: ExecutorService = Executors.newFixedThreadPool(1)
   private var heartBeatThread: ExecutorService = Executors.newFixedThreadPool(1)
@@ -418,8 +419,10 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
     while (sendStatus != KafkaConstants.KAFKA_SEND_SUCCESS && isShutdown == false) {
       try {
         sendStatus = doSend(keyMessages, removeFromFailedMap)
+        isInError = false
       } catch {
         case e: Exception => {
+          isInError = true
           LOG.error(qc.Name + " KAFKA PRODUCER: Error sending to kafka, Retrying after %dms. Retry count:%d".format(waitTm, retryCount), e)
           try {
             Thread.sleep(waitTm)
@@ -520,11 +523,9 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
     heartBeatThread.execute(new Runnable() {
       override def run(): Unit = {
         try {
-          var cnt = 0
           isHeartBeating = true
           while (!isShutdown) {
-            cnt += 1
-            lastSeen = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
+            if (!isInError) lastSeen = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
             Thread.sleep(KafkaProducer.HB_PERIOD)
           }
           isHeartBeating = false
