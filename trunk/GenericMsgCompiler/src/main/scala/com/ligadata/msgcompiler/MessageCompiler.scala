@@ -13,7 +13,7 @@ import scala.collection.mutable.ArrayBuffer;
 import org.json4s.jackson.JsonMethods._;
 import org.json4s.DefaultFormats;
 import org.json4s.Formats;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.{ Logger, LogManager }
 
 import com.ligadata.kamanja.metadata._;
 import com.ligadata.Exceptions._;
@@ -27,11 +27,12 @@ class MessageGenObj(var verScalaClassStr: String, var verJavaClassStr: String, v
 
 object MessageCompiler {
 
-  val logger = this.getClass.getName
-  lazy val log = Logger.getLogger(logger)
+   val logger = this.getClass.getName
+  lazy val log = LogManager.getLogger(logger)
   var msgGen: MessageGenerator = new MessageGenerator
   var handleMsgFieldTypes: MessageFieldTypesHandler = new MessageFieldTypesHandler
   var createMsg: CreateMessage = new CreateMessage
+  var generatedRdd = new GenerateRdd
 
   /*
    * parse the message definition json,  add messages to metadata and create the Fixed and Mapped Mesages
@@ -40,7 +41,10 @@ object MessageCompiler {
 
     var messageParser = new MessageParser
     var messages: Messages = null
-    var generatedMsg: String = ""
+    var generatedNonVersionedMsg: String = ""
+    var generatedVersionedMsg: String = ""
+    var generatedNonVersionedJavaRdd: String = ""
+    var generatedVersionedJavaRdd: String = ""
     var containerDef: ContainerDef = null
 
     try {
@@ -51,7 +55,13 @@ object MessageCompiler {
         log.info("=============Started================" + messages.messages.size)
         messages.messages.foreach(msg => {
           handleMsgFieldTypes.handleFieldTypes(msg, mdMgr)
-          generatedMsg = msgGen.generateMessage(msg)
+          generatedNonVersionedMsg = msgGen.generateMessage(msg)
+          val (versionedRddClass, nonVersionedRddClass) = generatedRdd.generateRdd(msg)
+          
+          log.info("***********************versionedRddClass*******************")
+          
+          log.info(versionedRddClass)
+          log.info("*******************versionedRddClass***************")
           containerDef = createMsg.createMessage(msg, mdMgr, recompile)
           log.info("===================" + msg.MsgLvel)
           log.info("===================" + msg.Name)
@@ -71,7 +81,7 @@ object MessageCompiler {
           log.info(" JarName =============== " + containerDef.JarName)
           log.info("PhysicalName =============== " + containerDef.PhysicalName)
           log.info("TranId =============== " + containerDef.TranId)
-         
+
         })
 
         //simple check to get metadata types for the fields in message
@@ -104,7 +114,8 @@ object MessageCompiler {
         throw e
       }
     }
-    return (generatedMsg, containerDef)
+    return (generatedNonVersionedMsg, containerDef)
   }
 
+ 
 }

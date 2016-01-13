@@ -1,13 +1,13 @@
 package com.ligadata.msgcompiler
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.{ Logger, LogManager }
 import com.ligadata.kamanja.metadata._;
 import com.ligadata.Exceptions._;
 
 class CreateMessage {
 
   val logger = this.getClass.getName
-  lazy val log = Logger.getLogger(logger)
+  lazy val log = LogManager.getLogger(logger)
 
   /*
    * create the message to add message in metadata (call MakeFixedMsg )
@@ -17,7 +17,6 @@ class CreateMessage {
     createFixedMsgDef(msg, mdMgr, recompile)
   }
 
- 
   /*
    * create the message
    */
@@ -31,10 +30,10 @@ class CreateMessage {
           throw new Exception("Please provide parition keys in the MessageDefinition since the Message will be Persisted based on Partition Keys")
         }
       }
-      
-      log.info("msg.ArgsList   "+msg.ArgsList.toList)
-      log.info("msg.jarset    "+ msg.Jarset.toList)
-     
+
+      log.info("msg.ArgsList   " + msg.ArgsList.toList)
+      log.info("msg.jarset    " + msg.Jarset.toList)
+
       if (msg.PartitionKey != null)
         msgDef = mdMgr.MakeFixedMsg(msg.NameSpace, msg.Name, msg.PhysicalName, msg.ArgsList, version, null, msg.Jarset.toArray, null, null, msg.PartitionKey.toArray, recompile, msg.Persist)
       else

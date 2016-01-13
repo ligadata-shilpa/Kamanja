@@ -1,12 +1,12 @@
 package com.ligadata.msgcompiler
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.{ Logger, LogManager }
 import com.ligadata.kamanja.metadata._;
 import com.ligadata.Exceptions._;
 
 class MessageFieldTypesHandler {
   val logger = this.getClass.getName
-  lazy val log = Logger.getLogger(logger)
+  lazy val log = LogManager.getLogger(logger)
   val tInt: String = "tInt"
   val tChar: String = "tChar"
   val tString: String = "tString"
@@ -23,7 +23,7 @@ class MessageFieldTypesHandler {
     var argsList: List[(String, String, String, String, Boolean, String)] = List[(String, String, String, String, Boolean, String)]()
     var jarset: Set[String] = Set[String]();
     message.Elements.foreach(field => {
-       log.info("fields name " + field.Name)
+      log.info("fields name " + field.Name)
       log.info("fields type " + field.Ttype)
       val typ = MdMgr.GetMdMgr.Type(field.Ttype, -1, true) // message.Version.toLong
 

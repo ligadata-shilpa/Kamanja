@@ -39,6 +39,18 @@ class MessageConstants {
   val partitionKeyVar: String = "%s var partitionKeysData: scala.collection.mutable.ArrayBuffer[String] = scala.collection.mutable.ArrayBuffer[String]();%s"
   val primaryKeyVar: String = "%s var primaryKeysData: scala.collection.mutable.ArrayBuffer[String] = scala.collection.mutable.ArrayBuffer[String]();%s"
 
+  val rddFactoryClass: String = "public final class %sFactory { %s";
+  val rddObj: String = "public static JavaRDDObject<%s> rddObject = %s$.MODULE$.toJavaRDDObject(); %s";
+  val rddBaseContainerObj = "public static BaseContainerObj baseObj = (BaseContainerObj) %s$.MODULE$; %s";
+  val rddBaseMsgObj = "public static BaseMsgObj baseObj = (BaseMsgObj) %s$.MODULE$; %s";
+
+  def rddObjImportStmts() = {
+    """
+    import com.ligadata.KamanjaBase.JavaRDDObject;
+	import com.ligadata.KamanjaBase.BaseMsgObj;
+	import com.ligadata.KamanjaBase.BaseContainerObj;
+    """
+  }
 
   def importStatements() = {
     """

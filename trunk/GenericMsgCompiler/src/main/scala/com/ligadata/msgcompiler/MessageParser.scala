@@ -11,7 +11,7 @@ import scala.collection.mutable.ArrayBuffer;
 import org.json4s.jackson.JsonMethods._;
 import org.json4s.DefaultFormats;
 import org.json4s.Formats;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.{ Logger, LogManager }
 import com.ligadata.kamanja.metadata._;
 import com.ligadata.Exceptions._;
 import com.ligadata.Exceptions.StackTrace;
@@ -25,9 +25,9 @@ import com.ligadata.kamanja.metadata.ArrayBufTypeDef;
 
 class MessageParser {
 
-  val logger = this.getClass.getName
-  lazy val log = Logger.getLogger(logger)
-  var ParentMsgNameSpace: String = ""
+   val logger = this.getClass.getName
+  lazy val log = LogManager.getLogger(logger)
+ var ParentMsgNameSpace: String = ""
 
   /**
    * process the json map and return the message object
@@ -167,7 +167,7 @@ class MessageParser {
 
         log.info("Name========================" + Name)
 
-        msgVersion = extractVersion(message)
+        msgVersion = MsgUtils.extractVersion(message)
 
         for (key: String <- message.keys) {
 
@@ -637,9 +637,5 @@ class MessageParser {
     tlist.toArray
   }
 
-  // Make sure the version is in the format of nn.nn.nn
-  private def extractVersion(message: scala.collection.mutable.Map[String, Any]): String = {
-    MdMgr.FormatVersion(message.getOrElse("version", "0").toString)
-  }
-
+  
 }

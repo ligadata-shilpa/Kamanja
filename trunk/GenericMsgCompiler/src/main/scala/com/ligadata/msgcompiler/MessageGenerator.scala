@@ -2,7 +2,7 @@ package com.ligadata.msgcompiler
 
 import com.ligadata.Exceptions._;
 import com.ligadata.Exceptions.StackTrace;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.{ Logger, LogManager }
 
 class MessageGenerator {
 
@@ -10,7 +10,7 @@ class MessageGenerator {
   var msgObjectGenerator = new MessageObjectGenerator
   var msgConstants = new MessageConstants
   val logger = this.getClass.getName
-  lazy val log = Logger.getLogger(logger)
+  lazy val log = LogManager.getLogger(logger)
 
   /*
    * add import stamts -- still need to add

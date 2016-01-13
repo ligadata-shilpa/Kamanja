@@ -2,12 +2,12 @@ package com.ligadata.msgcompiler
 
 import com.ligadata.Exceptions._;
 import com.ligadata.Exceptions.StackTrace;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.{ Logger, LogManager }
 
 class MessageBuilderGenerator {
 
   val logger = this.getClass.getName
-  lazy val log = Logger.getLogger(logger)
+  lazy val log = LogManager.getLogger(logger)
   val newline: String = "\n"
   val pad1: String = "\t"
   val pad2: String = "\t\t"

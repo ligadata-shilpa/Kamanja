@@ -2,12 +2,12 @@ package com.ligadata.msgcompiler
 
 import com.ligadata.Exceptions._;
 import com.ligadata.Exceptions.StackTrace;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.{ Logger, LogManager }
 
 class MessageObjectGenerator {
 
   val logger = this.getClass.getName
-  lazy val log = Logger.getLogger(logger)
+  lazy val log = LogManager.getLogger(logger)
   var msgConstants = new MessageConstants
 
   //object CustAlertHistory extends RDDObject[CustAlertHistory] with BaseContainerObj {
@@ -160,7 +160,7 @@ class MessageObjectGenerator {
       message.PartitionKey.foreach(key => {
         paritionKeys.append("\"" + key + "\", ")
       })
-      partitionInfo = msgConstants.partitionKeys.format(msgConstants.pad1, "("+paritionKeys.toString.substring(0, paritionKeys.toString.length() - 2)+")", msgConstants.newline)
+      partitionInfo = msgConstants.partitionKeys.format(msgConstants.pad1, "(" + paritionKeys.toString.substring(0, paritionKeys.toString.length() - 2) + ")", msgConstants.newline)
 
     } else partitionInfo = msgConstants.partitionKeys.format(msgConstants.pad1, "[String]()", msgConstants.newline)
 
@@ -179,7 +179,7 @@ class MessageObjectGenerator {
       message.PrimaryKeys.foreach(key => {
         primaryKeys.append("\"" + key + "\", ")
       })
-      primaryInfo = msgConstants.primaryKeys.format(msgConstants.pad1, "("+primaryKeys.toString.substring(0, primaryKeys.toString.length() - 2)+")", msgConstants.newline)
+      primaryInfo = msgConstants.primaryKeys.format(msgConstants.pad1, "(" + primaryKeys.toString.substring(0, primaryKeys.toString.length() - 2) + ")", msgConstants.newline)
 
     } else primaryInfo = msgConstants.primaryKeys.format(msgConstants.pad1, "[String]()", msgConstants.newline)
 
