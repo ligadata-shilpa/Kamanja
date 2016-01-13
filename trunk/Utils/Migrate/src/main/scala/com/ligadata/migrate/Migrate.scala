@@ -339,7 +339,12 @@ object Migrate {
 
       // Loading the base file where we have all the base classes like classes from KamanjaBase, metadata, MetadataAPI, etc
       LoadFqJarsIfNeeded(Array(baseFileToLoadFromPrevVer), kamanjaLoader_V_1_1_X.loadedJars, kamanjaLoader_V_1_1_X.loader)
-      _kryoDataSer_V_1_1_X.SetClassLoader(kamanjaLoader_V_1_1_X.loader)
+      if (_kryoDataSer_V_1_1_X == null) {
+        _kryoDataSer_V_1_1_X = SerializerManager.GetSerializer("kryo")
+        if (_kryoDataSer_V_1_1_X != null && kamanjaLoader_V_1_1_X != null && kamanjaLoader_V_1_1_X.loader != null) {
+          _kryoDataSer_V_1_1_X.SetClassLoader(kamanjaLoader_V_1_1_X.loader)
+        }
+      }
 
       var baseElemCls = Class.forName("com.ligadata.kamanja.metadata.BaseElemDef", true, kamanjaLoader_V_1_1_X.loader)
 
