@@ -16,6 +16,8 @@
 
 package com.ligadata.InputAdapters
 
+import org.json4s.jackson.Serialization
+
 import scala.actors.threadpool.{ Executors, ExecutorService }
 import java.util.Properties
 import scala.collection.mutable.ArrayBuffer
@@ -37,10 +39,17 @@ import com.ligadata.KamanjaBase.DataDelimiters
 import com.ligadata.HeartBeat.{Monitorable, MonitorComponentInfo}
 
 object IbmMqConsumer extends InputAdapterObj {
+  val ADAPTER_DESCRIPTION = "IBM MQ Consumer"
   def CreateInputAdapter(inputConfig: AdapterConfiguration, callerCtxt: InputAdapterCallerContext, execCtxtObj: ExecContextObj, cntrAdapter: CountersAdapter): InputAdapter = new IbmMqConsumer(inputConfig, callerCtxt, execCtxtObj, cntrAdapter)
 }
 
 class IbmMqConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: InputAdapterCallerContext, val execCtxtObj: ExecContextObj, cntrAdapter: CountersAdapter) extends InputAdapter {
+
+  private var startTime = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
+  private var lastSeen = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
+  private var metrics: scala.collection.mutable.Map[String,Any] = scala.collection.mutable.Map[String,Any]()
+
+
   private def printFailure(ex: Exception) {
     if (ex != null) {
       if (ex.isInstanceOf[JMSException]) {
@@ -83,7 +92,8 @@ class IbmMqConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: Input
   }
 
   override  def getComponentStatusAndMetrics: MonitorComponentInfo = {
-    return null
+    implicit val formats = org.json4s.DefaultFormats
+    return new MonitorComponentInfo(AdapterConfiguration.TYPE_INPUT, qc.Name, IbmMqConsumer.ADAPTER_DESCRIPTION, startTime, lastSeen,  Serialization.write(metrics).toString)
   }
 
   override def StopProcessing: Unit = lock.synchronized {
