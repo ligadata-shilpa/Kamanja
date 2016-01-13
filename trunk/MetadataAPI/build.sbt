@@ -88,6 +88,8 @@ libraryDependencies += "org.jpmml" % "pmml-model" % "1.2.5"
 
 libraryDependencies += "org.jpmml" % "pmml-schema" % "1.2.5"
 
+dependencyOverrides += "com.google.guava" % "guava" % "16.0.1" 
+
 libraryDependencies += "commons-codec" % "commons-codec" % "1.10"
 
 libraryDependencies += "commons-io" % "commons-io" % "2.4"
