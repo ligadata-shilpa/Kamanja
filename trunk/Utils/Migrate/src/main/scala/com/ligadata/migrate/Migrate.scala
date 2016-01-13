@@ -80,6 +80,9 @@ import scala.io._
 
 import com.ligadata.Migrate.SourceAdapter.V_1_1_X._
 import com.ligadata.Utils.{ Utils, KamanjaClassLoader, KamanjaLoaderInfo }
+import com.ligadata.tools.SaveContainerDataComponent
+import com.ligadata.KamanjaBase.MessageContainerBase
+
 
 object Migrate {
 
@@ -188,11 +191,10 @@ object Migrate {
         def Key_V_1_1_X = key
 
         def Value_V_1_1_X = value
-        def Construct(k: Key_V_1_1_X, v: Value_V_1_1_X) =
-          {
-            key = k;
-            value = v;
-          }
+        def Construct(k: Key_V_1_1_X, v: Value_V_1_1_X) = {
+          key = k;
+          value = v;
+        }
       }
 
       var k = key
@@ -223,7 +225,7 @@ object Migrate {
       if (collectOrgMsgAndCntainer && obj.IsActive && obj.IsDeleted == false && (obj.isInstanceOf[ContainerDef] || obj.isInstanceOf[MessageDef]))
         Load_V_1_1_X_MessageOrContianer(obj, jarPaths, kamanjaLoader_V_1_1_X)
 
-      if (/* obj.IsActive && */ obj.IsDeleted == false) {
+      if ( /* obj.IsActive && */ obj.IsDeleted == false) {
         val key = obj.FullNameWithVer.toLowerCase
         val dispkey = obj.FullName + "." + MdMgr.Pad0s2Version(obj.Version)
         obj match {
@@ -558,7 +560,7 @@ object Migrate {
     }
   }
 
-  private def migrateFrom_V_1_1_X(tupleBytes: Value_V_1_1_X): Unit = {
+  private def migrateFrom_V_1_1_X(tupleBytes: Value_V_1_1_X, storeObjsMap: collection.mutable.Map[String, ArrayBuffer[MessageContainerBase]]): Int = {
     // Get first _serInfoBufBytes bytes
     if (tupleBytes.size < _serInfoBufBytes_V_1_1_X) {
       val errMsg = s"Invalid input. This has only ${tupleBytes.size} bytes data. But we are expecting serializer buffer bytes as of size ${_serInfoBufBytes_V_1_1_X}"
@@ -597,15 +599,18 @@ object Migrate {
       val typName = kd.GetTypeName
       val bucketKey = kd.GetKey
       val data = kd.GetAllData
+      
+      // Copy from Old to New structure.
+
+      return data.size
     }
+
+    return 0
   }
 
-  def Migrate_V_1_1_X_Alldata(ds: DataStore_V_1_1_X) {
-    val buildOne = (tupleBytes: Value_V_1_1_X) => {
-      migrateFrom_V_1_1_X(tupleBytes)
-    }
-
-    // First Load all messages & containers into Class Loader
+  def Migrate_V_1_1_X_Alldata(ds: DataStore_V_1_1_X, mdCfgFile: String) {
+    val kThreasholdToSave = 10000
+    var saveComp: SaveContainerDataComponent = null
 
     try {
       var keys = scala.collection.mutable.Set[Key_V_1_1_X]()
@@ -615,15 +620,38 @@ object Migrate {
         logger.debug("No objects available in the Database")
         return
       }
+
+      val storeObjsMap = collection.mutable.Map[String, ArrayBuffer[MessageContainerBase]]()
+      var allDataRecsCnt = 0
+
       keyArray.foreach(key => {
         val obj = GetObject(key, ds)
+        val recsMigrated = migrateFrom_V_1_1_X(obj.Value_V_1_1_X, storeObjsMap)
+        allDataRecsCnt += recsMigrated
+        if (allDataRecsCnt > kThreasholdToSave) {
+
+          if (saveComp == null) {
+            saveComp = new SaveContainerDataComponent
+            saveComp.Init(mdCfgFile)
+          }
+          saveComp.SaveMessageContainerBase(storeObjsMap.map(kv => (kv._1, kv._2.toArray)).toArray, false, true)
+          allDataRecsCnt = 0
+          storeObjsMap.clear()
+        }
       })
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.info("\nStackTrace:" + stackTrace)
-        throw new Exception("Failed to load metadata objects into cache:" + e.getMessage())
+        logger.error("Failed to Migrate Data", e)
+        throw e
       }
+      case e: Throwable => {
+        logger.error("Failed to Migrate Data", e)
+        throw e
+      }
+    } finally {
+      if (saveComp != null)
+        saveComp.Shutdown
+      saveComp = null
     }
   }
 
@@ -759,7 +787,7 @@ object Migrate {
       MetadataAPIImpl.UploadConfig(cfgStr, None, "ClusterConfig")
       MigrateAllMetadata(metadataStore)
       allDataStore = GetDataStoreHandle_V_1_1_X(jarPaths, dataStoreInfo, "AllData.bak")
-      Migrate_V_1_1_X_Alldata(allDataStore)
+      Migrate_V_1_1_X_Alldata(allDataStore, apiCfgFile)
     } catch {
       case e: Exception => {
         throw new Exception("Migration has Failed " + e.getMessage())
