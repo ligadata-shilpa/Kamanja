@@ -16,8 +16,9 @@
 
 package com.ligadata.MetadataAPI.Utility
 
-import java.io.File
+import java.io.{FileNotFoundException, File}
 
+import com.ligadata.Exceptions.{StackTrace, AlreadyExistsException}
 import com.ligadata.MetadataAPI.MetadataAPIImpl
 
 import scala.io.Source
@@ -178,11 +179,38 @@ object TypeService {
     }
     response
   }
-  //NOT REQUIRED
-  def loadTypesFromAFile: String ={
 
-    val response="NOT REQUIRED. Please use the ADD TYPE option."
-    response
+    /**
+      * loadTypesFromAFile is used to load type information to the Metadata store for use principally by
+      * the kamanja pmml models.
+      *
+      * @param input path of the file containing the json function definitions
+      * @param userid optional user id needed for authentication and logging
+      * @return api results as a string
+      */
+  def loadTypesFromAFile(input : String, userid : Option[String] = None): String ={
+      val response : String = try {
+          val jsonTypeStr : String = Source.fromFile(input).mkString
+          val apiResult = MetadataAPIImpl.AddTypes(jsonTypeStr, "JSON", userid)
+
+          val resultMsg : String = s"Result as Json String => \n$apiResult"
+          println(resultMsg)
+          resultMsg
+      } catch {
+          case fnf : FileNotFoundException => {
+              val filePath : String = if (input != null && input.nonEmpty) input else "bad file path ... blank or null"
+              val errorMsg : String = "file supplied to loadTypesFromAFile ($filePath) does not exist...."
+              logger.error(errorMsg)
+              errorMsg
+          }
+          case e: Exception => {
+              val stackTrace = StackTrace.ThrowableTraceString(e)
+              val errorMsg : String = s"Exception $e encountered ... \nstackTrace =\n$stackTrace"
+              logger.debug(errorMsg)
+              errorMsg
+          }
+      }
+      response
   }
 
   def dumpAllTypesByObjTypeAsJson: String ={
