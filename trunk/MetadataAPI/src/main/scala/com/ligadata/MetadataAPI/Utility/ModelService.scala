@@ -27,6 +27,7 @@ import com.ligadata.MetadataAPI.{MetadataAPIImpl,ApiResult,ErrorCodeConstants}
 import com.ligadata.MetadataAPI.MetadataAPI.ModelType
 import com.ligadata.MetadataAPI.MetadataAPI.ModelType.ModelType
 import com.ligadata.MetadataAPI.MetadataAPIImpl
+import scala.io.StdIn
 
 /**
  * Created by dhaval on 8/7/15.
@@ -111,7 +112,7 @@ object ModelService {
                             println("[" + srNo + "]" + configkey)
                         }
                         print("\nEnter your choice: \n")
-                        var userOption = Console.readInt()
+                        var userOption = StdIn.readInt()
 
                         userOption match {
                             case x if ((1 to srNo).contains(userOption)) => {
@@ -205,7 +206,7 @@ object ModelService {
                             println("[" + srNo + "]" + configkey)
                         }
                         print("\nEnter your choice: \n")
-                        var userOption = Console.readInt()
+                        var userOption = StdIn.readInt()
 
                         userOption match {
                             case x if ((1 to srNo).contains(userOption)) => {
@@ -346,52 +347,55 @@ object ModelService {
     def updateModelKPmml(input: String
                       , userid: Option[String] = Some("metadataapi")
                       ): String = {
-        var modelDef=""
-        var response: String = ""
-        var modelFileDir: String = ""
-        if (input == "") {
-          //get the messages location from the config file. If error get the location from github
-          modelFileDir = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("MODEL_FILES_DIR")
-          if (modelFileDir == null) {
-            response = "MODEL_FILES_DIR property missing in the metadata API configuration"
-          } else {
-            //verify the directory where messages can be present
-            IsValidDir(modelFileDir) match {
-              case true => {
-                //get all files with json extension
-                val models: Array[File] = new java.io.File(modelFileDir).listFiles.filter(_.getName.endsWith(".xml"))
-                models.length match {
-                  case 0 => {
-                    val errorMsg = "Models not found at " + modelFileDir
-                    println(errorMsg)
-                    response = errorMsg
-                  }
-                  case option => {
-                    var  modelDefs=getUserInputFromMainMenu(models)
-                    for (modelDef <- modelDefs)
-                      response = MetadataAPIImpl.UpdateModel(ModelType.PMML, modelDef.toString, userid)
-                  }
+      var modelDef = ""
+      var response: String = ""
+      var modelFileDir: String = ""
+      if (input == "") {
+        //get the messages location from the config file. If error get the location from github
+        modelFileDir = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("MODEL_FILES_DIR")
+        if (modelFileDir == null) {
+          response = "MODEL_FILES_DIR property missing in the metadata API configuration"
+        } else {
+          //verify the directory where messages can be present
+          IsValidDir(modelFileDir) match {
+            case true => {
+              //get all files with json extension
+              val models: Array[File] = new java.io.File(modelFileDir).listFiles.filter(_.getName.endsWith(".xml"))
+              models.length match {
+                case 0 => {
+                  val errorMsg = "Models not found at " + modelFileDir
+                  println(errorMsg)
+                  response = errorMsg
+                }
+                case option => {
+                  var modelDefs = getUserInputFromMainMenu(models)
+                  for (modelDef <- modelDefs)
+                    response = MetadataAPIImpl.UpdateModel(ModelType.PMML, modelDef.toString, userid)
                 }
               }
-              case false => {
-                //println("Message directory is invalid.")
-                response = "Model directory is invalid."
-              }
+
+            }
+            case false => {
+              //println("Message directory is invalid.")
+              response = "Model directory is invalid."
             }
           }
-        } else {
-          //   println("Path provided. Added msg")
-          //process message
-          var model = new File(input.toString)
-          if(model.exists()){
-            modelDef= Source.fromFile(model).mkString
-            response = MetadataAPIImpl.UpdateModel(ModelType.PMML, modelDef, userid)
-          } else {
-            response="File does not exist"
-          }
-          //println("Response: " + response)
         }
-        response
+      } else {
+        //   println("Path provided. Added msg")
+        //process message
+        var model = new File(input.toString)
+        if (model.exists()) {
+          modelDef = Source.fromFile(model).mkString
+          response = MetadataAPIImpl.UpdateModel(ModelType.PMML, modelDef, userid)
+        } else {
+          response = "File does not exist"
+        }
+        //println("Response: " + response)
+      }
+
+
+    response
   }
 
     /**
@@ -506,9 +510,10 @@ object ModelService {
                 for (configkey <- configKeys) {
                   srNo += 1
                   println("[" + srNo + "]" + configkey)
+
                 }
                 print("\nEnter your choice: \n")
-                var userOption = Console.readInt()
+                var userOption = StdIn.readInt()
 
                 userOption match {
                   case x if ((1 to srNo).contains(userOption)) => {
@@ -529,6 +534,7 @@ object ModelService {
         }
 
         response
+
   }
 
     /**
@@ -603,7 +609,7 @@ object ModelService {
                     println("[" + srNo + "]" + configkey)
                   }
                   print("\nEnter your choice: \n")
-                  var userOption = Console.readInt()
+                  var userOption = StdIn.readInt()
 
                   userOption match {
                     case x if ((1 to srNo).contains(userOption)) => {
@@ -620,6 +626,7 @@ object ModelService {
                   response+= MetadataAPIImpl.UpdateModel(ModelType.SCALA, modelDef, userid, Some(modelConfig))
                 }
                 response+= MetadataAPIImpl.UpdateModel(ModelType.JAVA, modelDef, userid, Some(modelConfig))
+
               }
             }
           }
@@ -658,7 +665,7 @@ object ModelService {
               println("["+srno+"] "+modelKey)
             }
             println("Enter your choice: ")
-            val choice: Int = readInt()
+            val choice: Int = StdIn.readInt()
             if (choice < 1 || choice > modelKeys.length) {
               val errormsg="Invalid choice " + choice + ". Start with the main menu."
               response=errormsg
@@ -671,7 +678,7 @@ object ModelService {
 
         } catch {
           case e: Exception => {
-            response=e.getStackTraceString
+            response=e.getStackTrace.toString
           }
         }
         response
@@ -710,47 +717,62 @@ object ModelService {
         try {
           //  logger.setLevel(Level.TRACE); //check again
           if (modelId.length > 0) {
-             val(ns, name, ver) = com.ligadata.kamanja.metadata.Utils.parseNameToken(modelId)
-             try {
-               val apiResult = MetadataAPIImpl.RemoveModel(s"$ns.$name", ver, userid)
-               return apiResult
-             } catch {
-               case e: Exception => e.printStackTrace()
-             }
+            val (ns, name, ver) = com.ligadata.kamanja.metadata.Utils.parseNameToken(modelId)
+            try {
+              val apiResult = MetadataAPIImpl.RemoveModel(s"$ns.$name", ver, userid)
+              return apiResult
+            } catch {
+              case e: Exception => e.printStackTrace()
+            }
           }
 
           val modelKeys = MetadataAPIImpl.GetAllModelsFromCache(true, None)
 
           if (modelKeys.length == 0) {
-            val errorMsg="Sorry, No models available, in the Metadata, to delete!"
-            response=errorMsg
-          }
-          else{
+            val errorMsg = "Sorry, No models available, in the Metadata, to delete!"
+            response = errorMsg
+          } else {
             println("\nPick the model to be deleted from the following list: ")
             var srno = 0
-            for(modelKey <- modelKeys){
-              srno+=1
-              println("["+srno+"] "+modelKey)
+            for (modelKey <- modelKeys) {
+              srno += 1
+              println("[" + srno + "] " + modelKey)
             }
             println("Enter your choice: ")
-            val choice: Int = readInt()
+            val choice: Int = StdIn.readInt()
 
-            if (choice < 1 || choice > modelKeys.length) {
-              val errormsg="Invalid choice " + choice + ". Start with the main menu."
-              response=errormsg
+
+            if (modelKeys.length == 0) {
+              val errorMsg = "Sorry, No models available, in the Metadata, to delete!"
+              response = errorMsg
+            }
+            else {
+              println("\nPick the model to be deleted from the following list: ")
+              var srno = 0
+              for (modelKey <- modelKeys) {
+                srno += 1
+                println("[" + srno + "] " + modelKey)
+              }
+              println("Enter your choice: ")
+              val choice: Int = StdIn.readInt()
+
+              if (choice < 1 || choice > modelKeys.length) {
+                val errormsg = "Invalid choice " + choice + ". Start with the main menu."
+                response = errormsg
+              }
+
+              val modelKey = modelKeys(choice - 1)
+              val (ns, name, ver) = com.ligadata.kamanja.metadata.Utils.parseNameToken(modelKey)
+              val apiResult = MetadataAPIImpl.RemoveModel(s"$ns.$name", ver, userid)
+              response = apiResult
             }
 
-            val modelKey = modelKeys(choice - 1)
-            val(ns, name, ver) = com.ligadata.kamanja.metadata.Utils.parseNameToken(modelKey)
-            val apiResult = MetadataAPIImpl.RemoveModel(s"$ns.$name", ver, userid)
-            response=apiResult
           }
-
         } catch {
-          case e: Exception => {
-            //e.printStackTrace
-            response=e.getStackTrace.toString
-          }
+            case e: Exception => {
+              //e.printStackTrace
+              response = e.getStackTrace.toString
+            }
         }
         response
   }
@@ -787,7 +809,7 @@ object ModelService {
               println("["+srno+"] "+modelKey)
             }
             println("Enter your choice: ")
-            val choice: Int = readInt()
+            val choice: Int = StdIn.readInt()
 
             if (choice < 1 || choice > modelKeys.length) {
               val errormsg="Invalid choice " + choice + ". Start with the main menu."
@@ -844,7 +866,8 @@ object ModelService {
               println("["+srno+"] "+modelKey)
             }
             println("Enter your choice: ")
-            val choice: Int = readInt()
+            val choice: Int = StdIn.readInt()
+
 
             if (choice < 1 || choice > modelKeys.length) {
               val errormsg="Invalid choice " + choice + ". Start with the main menu."
@@ -897,7 +920,7 @@ object ModelService {
           println("[" + srNo + "]" + model)
         }
         print("\nEnter your choice(If more than 1 choice, please use commas to seperate them): \n")
-        var userOptions = Console.readLine().split(",")
+        var userOptions = StdIn.readLine().split(",")
         println("User selected the option(s) " + userOptions.length)
         //check if user input valid. If not exit
         for (userOption <- userOptions) {
@@ -916,6 +939,7 @@ object ModelService {
               //val response: String = MetadataAPIImpl.AddModel(modelDef, userid).toString
               listOfModelDef = listOfModelDef:+modelDef
             }
+
           }
         }
         listOfModelDef

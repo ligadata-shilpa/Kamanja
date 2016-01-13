@@ -64,7 +64,7 @@ libraryDependencies ++= {
   val akkaVersion = "2.3.9"
   val scalaVersion= "2.11.7"
   Seq(
-    "org.apache.kafka" % "kafka_2.10" % "0.8.2.2",
+    "org.apache.kafka" %% "kafka" % "0.8.2.2",
     "org.scala-lang" % "scala-actors" % scalaVersion
   )
 }
