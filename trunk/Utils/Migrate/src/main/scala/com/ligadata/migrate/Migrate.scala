@@ -95,6 +95,7 @@ object Migrate {
   private val kamanjaLoader_V_1_1_X = new KamanjaLoaderInfo
 
   private var jarPaths = collection.immutable.Set[String]()
+  private var fromVersionJarPaths = collection.immutable.Set[String]()
 
   private type OptionMap = Map[Symbol, Any]
 
@@ -221,7 +222,7 @@ object Migrate {
     try {
       // First collecting 1.1 message/container
       if (collectOrgMsgAndCntainer && obj.IsActive && obj.IsDeleted == false && (obj.isInstanceOf[ContainerDef] || obj.isInstanceOf[MessageDef]))
-        Load_V_1_1_X_MessageOrContianer(obj, jarPaths, kamanjaLoader_V_1_1_X)
+        Load_V_1_1_X_MessageOrContianer(obj, fromVersionJarPaths, kamanjaLoader_V_1_1_X)
 
       if ( /* obj.IsActive && */ obj.IsDeleted == false) {
         val key = obj.FullNameWithVer.toLowerCase
@@ -766,8 +767,8 @@ object Migrate {
       logger.info("Update Migration Status...")
 
       logger.info("Start Reading 1.1.x objects")
-      logger.info("Create 1.1.3 adapters...")
-      OpenDbStore_V_1_1_X(jarPaths, metaDataStoreInfo)
+      logger.info("Create 1.1.x adapters...")
+      OpenDbStore_V_1_1_X(fromVersionJarPaths, metaDataStoreInfo)
 
       logger.info("Create 1.3 adapters")
       MetadataAPIImpl.OpenDbStore(jarPaths, metaDataStoreInfo)
@@ -785,7 +786,7 @@ object Migrate {
       logger.info("Load Cluster config ..")
       MetadataAPIImpl.UploadConfig(cfgStr, None, "ClusterConfig")
       MigrateAllMetadata(metadataStore)
-      allDataStore = GetDataStoreHandle_V_1_1_X(jarPaths, dataStoreInfo, "AllData.bak")
+      allDataStore = GetDataStoreHandle_V_1_1_X(fromVersionJarPaths, dataStoreInfo, "AllData.bak")
       Migrate_V_1_1_X_Alldata(allDataStore, apiCfgFile)
     } catch {
       case e: Exception => {
@@ -803,6 +804,8 @@ object Migrate {
         nextOption(map ++ Map('apiconfig -> value), tail)
       case "--fromversion" :: value :: tail =>
         nextOption(map ++ Map('fromversion -> value), tail)
+      case "--fromversionjarpaths" :: value :: tail =>
+        nextOption(map ++ Map('fromversionjarpaths -> value), tail)
       case option :: tail => {
         logger.error("Unknown option " + option)
         sys.exit(1)
@@ -811,7 +814,7 @@ object Migrate {
   }
 
   private def usage: Unit = {
-    logger.error("Missing or incorrect arguments Usage: migrate --clusterconfig <your-current-release-config-dir>/clusterconfig.json --apiconfig <your-current-release-config-dir>/MetadataAPIConfig.properties --fromversion 1.x.x")
+    logger.error("Missing or incorrect arguments Usage: migrate --clusterconfig <your-current-release-config-dir>/clusterconfig.json --apiconfig <your-current-release-config-dir>/MetadataAPIConfig.properties --fromversion 1.x --fromversionjarpaths \"<your-previous-release-install-dir>/lib/system,<your-previous-release-install-dir>/lib/application\" ")
   }
 
   def main(args: Array[String]) {
@@ -833,22 +836,31 @@ object Migrate {
           usage
           return
         }
-        clusterCfgFile = param.asInstanceOf[String]
+        clusterCfgFile = param.asInstanceOf[String].trim
         logger.info("clusterCfgFile => " + clusterCfgFile)
         param = options.getOrElse('apiconfig, null)
         if (param == null) {
           usage
           return
         }
-        apiCfgFile = param.asInstanceOf[String]
+        apiCfgFile = param.asInstanceOf[String].trim
         logger.info("apCfgFile => " + apiCfgFile)
         param = options.getOrElse('fromversion, null)
         if (param == null) {
           usage
           return
         }
-        fromRelease = param.asInstanceOf[String]
+        fromRelease = param.asInstanceOf[String].trim
         logger.info("fromRelease => " + fromRelease)
+        
+        param = options.getOrElse('fromversionjarpaths, null)
+        if (param == null) {
+          usage
+          return
+        }
+        fromVersionJarPaths = param.asInstanceOf[String].replace("\"", "").trim.split(",").toSet
+
+        logger.info("fromversionjarpaths => " + fromVersionJarPaths.mkString(","))
       }
       StartMigrate(clusterCfgFile, apiCfgFile, fromRelease)
     } catch {
