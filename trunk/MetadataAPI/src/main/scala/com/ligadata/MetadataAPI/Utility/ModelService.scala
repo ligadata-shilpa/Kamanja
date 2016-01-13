@@ -113,7 +113,7 @@ object ModelService {
                             println("[" + srNo + "]" + configkey)
   }
                         print("\nEnter your choice: \n")
-                        var userOption = Console.readInt()
+                        var userOption = StdIn.readInt()
 
                         userOption match {
                             case x if ((1 to srNo).contains(userOption)) => {
@@ -337,8 +337,6 @@ object ModelService {
     }
         response
               }
-              print("\nEnter your choice: \n")
-              var userOption = StdIn.readInt()
 
     /**
      * Update a Kamanja Pmml model in the metadata with new pmml
@@ -396,24 +394,6 @@ object ModelService {
           //println("Response: " + response)
       }
         response
-      }
-      else{
-        println("\nPick the model to be displayed from the following list: ")
-        var srno = 0
-        for(modelKey <- modelKeys){
-          srno+=1
-          println("["+srno+"] "+modelKey)
-        }
-        println("Enter your choice: ")
-        val choice: Int = StdIn.readInt()
-        if (choice < 1 || choice > modelKeys.length) {
-          val errormsg="Invalid choice " + choice + ". Start with the main menu."
-          response=errormsg
-        }
-        val modelKey = modelKeys(choice - 1)
-        val(ns, name, ver) = com.ligadata.kamanja.metadata.Utils.parseNameToken(modelKey)
-        val apiResult = MetadataAPIImpl.GetModelDefFromCache(ns, name,"JSON",ver, userid)
-        response=apiResult
       }
 
     /**
@@ -680,7 +660,7 @@ object ModelService {
               println("["+srno+"] "+modelKey)
             }
             println("Enter your choice: ")
-            val choice: Int = readInt()
+            val choice: Int = StdIn.readInt()
             if (choice < 1 || choice > modelKeys.length) {
               val errormsg="Invalid choice " + choice + ". Start with the main menu."
               response=errormsg
