@@ -95,7 +95,9 @@ object Migrate {
   lazy val serializer = SerializerManager.GetSerializer(serializerType)
   private[this] var _kryoDataSer_V_1_1_X: com.ligadata.Serialize.Serializer = null
   private val kvManagerLoader = new KamanjaLoaderInfo
-  private val kamanjaLoader_V_1_1_X = new KamanjaLoaderInfo
+  // private val kamanjaLoader_V_1_1_X = new KamanjaLoaderInfo
+  private val prevVersionLoader = new KamanjaClassLoader(null, null, null, false)
+  private val prevVersionLoadedJars = new scala.collection.mutable.TreeSet[String]
 
   private var jarPaths = collection.immutable.Set[String]()
   private var fromVersionJarPaths = collection.immutable.Set[String]()
@@ -227,7 +229,7 @@ object Migrate {
     try {
       // First collecting 1.1 message/container
       if (collectOrgMsgAndCntainer && obj.IsActive && obj.IsDeleted == false && (obj.isInstanceOf[ContainerDef] || obj.isInstanceOf[MessageDef]))
-        Load_V_1_1_X_MessageOrContianer(obj, fromVersionJarPaths, kamanjaLoader_V_1_1_X)
+        Load_V_1_1_X_MessageOrContianer(obj, fromVersionJarPaths, prevVersionLoader, prevVersionLoadedJars)
 
       if ( /* obj.IsActive && */ obj.IsDeleted == false) {
         val key = obj.FullNameWithVer.toLowerCase
@@ -338,15 +340,21 @@ object Migrate {
       })
 
       // Loading the base file where we have all the base classes like classes from KamanjaBase, metadata, MetadataAPI, etc
-      LoadFqJarsIfNeeded(Array(baseFileToLoadFromPrevVer), kamanjaLoader_V_1_1_X.loadedJars, kamanjaLoader_V_1_1_X.loader)
+      LoadFqJarsIfNeeded(Array(baseFileToLoadFromPrevVer), prevVersionLoadedJars, prevVersionLoader)
       if (_kryoDataSer_V_1_1_X == null) {
         _kryoDataSer_V_1_1_X = SerializerManager.GetSerializer("kryo")
-        if (_kryoDataSer_V_1_1_X != null && kamanjaLoader_V_1_1_X != null && kamanjaLoader_V_1_1_X.loader != null) {
-          _kryoDataSer_V_1_1_X.SetClassLoader(kamanjaLoader_V_1_1_X.loader)
+        if (_kryoDataSer_V_1_1_X != null && prevVersionLoader != null) {
+          _kryoDataSer_V_1_1_X.SetClassLoader(prevVersionLoader)
         }
       }
 
-      var baseElemCls = Class.forName("com.ligadata.kamanja.metadata.BaseElemDef", true, kamanjaLoader_V_1_1_X.loader)
+      var baseElem = Class.forName("com.ligadata.kamanja.metadata.BaseElem", true, prevVersionLoader)
+
+      println("baseElem is " + (if (baseElem != null) "not null" else "null"))
+
+      var baseElemCls = Class.forName("com.ligadata.kamanja.metadata.BaseElemDef", true, prevVersionLoader)
+
+      println("baseElemCls is " + (if (baseElemCls != null) "not null" else "null"))
 
       // Types (including Msgs & containers)
       val types = ArrayBuffer[String]()
@@ -360,11 +368,16 @@ object Migrate {
 
       val objsJsons = allObjs.map(o => {
         val mObj = serializer.DeserializeObjectFromByteArray(o.toArray[Byte])
-        val gsonBaseStr = gson.toJson(mObj, baseElemCls)
-        val gsonStr = gson.toJson(mObj)
+        try {
+          val gsonBaseStr = if (baseElemCls != null) gson.toJson(mObj, baseElemCls) else ""
+          val gsonStr = gson.toJson(mObj)
+          println("BaseString:" + gsonBaseStr)
+          println("FullString:" + gsonBaseStr)
+        } catch {
+          case e: Exception => {
 
-        println("BaseString:" + gsonBaseStr)
-        println("FullString:" + gsonBaseStr)
+          }
+        }
       })
 
       /*
@@ -463,7 +476,7 @@ object Migrate {
     return LoadFqJarsIfNeeded(jars, loadedJars, loader)
   }
 
-  private def Load_V_1_1_X_MessageOrContianer(obj: BaseElemDef, jarPaths: collection.immutable.Set[String], kamanjaLoader_V_1_1_X: KamanjaLoaderInfo): Unit = {
+  private def Load_V_1_1_X_MessageOrContianer(obj: BaseElemDef, jarPaths: collection.immutable.Set[String], loader: KamanjaClassLoader, loadedJars: scala.collection.mutable.TreeSet[String]): Unit = {
     return
 
     var messageObj: BaseMsgObj_V_1_1_X = null
@@ -477,7 +490,7 @@ object Migrate {
     var isContainer = false
 
     if (isOk) {
-      isOk = LoadJarIfNeeded(obj, kamanjaLoader_V_1_1_X.loadedJars, kamanjaLoader_V_1_1_X.loader, jarPaths)
+      isOk = LoadJarIfNeeded(obj, loadedJars, loader, jarPaths)
     }
 
     if (isOk) {
@@ -489,7 +502,7 @@ object Migrate {
         // Checking for Message
         try {
           // Convert class name into a class
-          var curClz = Class.forName(clsName, true, kamanjaLoader_V_1_1_X.loader)
+          var curClz = Class.forName(clsName, true, loader)
 
           while (curClz != null && isContainer == false) {
             isContainer = Utils.isDerivedFrom(curClz, "com.ligadata.KamanjaBase.BaseContainerObj")
@@ -508,7 +521,7 @@ object Migrate {
         try {
           // If required we need to enable this test
           // Convert class name into a class
-          var curClz = Class.forName(clsName, true, kamanjaLoader_V_1_1_X.loader)
+          var curClz = Class.forName(clsName, true, loader)
 
           while (curClz != null && isMsg == false) {
             isMsg = Utils.isDerivedFrom(curClz, "com.ligadata.KamanjaBase.BaseMsgObj")
@@ -524,8 +537,9 @@ object Migrate {
 
       if (isMsg || isContainer) {
         try {
-          val module = kamanjaLoader_V_1_1_X.mirror.staticModule(clsName)
-          val obj = kamanjaLoader_V_1_1_X.mirror.reflectModule(module)
+          val mirror = ru.runtimeMirror(prevVersionLoader)
+          val module = mirror.staticModule(clsName)
+          val obj = mirror.reflectModule(module)
           val objinst = obj.instance
           if (objinst.isInstanceOf[BaseMsgObj_V_1_1_X]) {
             messageObj = objinst.asInstanceOf[BaseMsgObj_V_1_1_X]
@@ -580,8 +594,8 @@ object Migrate {
         val valInfo = getValueInfo_V_1_1_X(tupleBytes)
         if (_kryoDataSer_V_1_1_X == null) {
           _kryoDataSer_V_1_1_X = SerializerManager.GetSerializer("kryo")
-          if (_kryoDataSer_V_1_1_X != null && kamanjaLoader_V_1_1_X != null && kamanjaLoader_V_1_1_X.loader != null) {
-            _kryoDataSer_V_1_1_X.SetClassLoader(kamanjaLoader_V_1_1_X.loader)
+          if (_kryoDataSer_V_1_1_X != null && prevVersionLoader != null) {
+            _kryoDataSer_V_1_1_X.SetClassLoader(prevVersionLoader)
           }
         }
         if (_kryoDataSer_V_1_1_X != null) {
@@ -591,7 +605,7 @@ object Migrate {
       case "manual" => {
         val valInfo = getValueInfo_V_1_1_X(tupleBytes)
         val datarec = new KamanjaData_V_1_1_X
-        datarec.DeserializeData(valInfo, MdResolve_V_1_1_X, kamanjaLoader_V_1_1_X.loader)
+        datarec.DeserializeData(valInfo, MdResolve_V_1_1_X, prevVersionLoader)
         kd = datarec
       }
       case _ => {
