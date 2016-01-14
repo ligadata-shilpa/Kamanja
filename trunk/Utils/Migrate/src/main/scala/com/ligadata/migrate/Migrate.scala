@@ -82,6 +82,9 @@ import com.ligadata.Utils.{ Utils, KamanjaClassLoader, KamanjaLoaderInfo }
 import com.ligadata.tools.SaveContainerDataComponent
 import com.ligadata.KamanjaBase.MessageContainerBase
 
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
+
 object Migrate {
 
   lazy val sysNS = "System"
@@ -92,9 +95,14 @@ object Migrate {
   lazy val serializer = SerializerManager.GetSerializer(serializerType)
   private[this] var _kryoDataSer_V_1_1_X: com.ligadata.Serialize.Serializer = null
   private val kvManagerLoader = new KamanjaLoaderInfo
-  private val kamanjaLoader_V_1_1_X = new KamanjaLoaderInfo
+  // private val kamanjaLoader_V_1_1_X = new KamanjaLoaderInfo
+  private val prevVersionLoader = new KamanjaClassLoader(null, null, null, false)
+  private val prevVersionLoadedJars = new scala.collection.mutable.TreeSet[String]
 
   private var jarPaths = collection.immutable.Set[String]()
+  private var fromVersionJarPaths = collection.immutable.Set[String]()
+  private var fromVersionInstallationPath = ""
+  private var baseFileToLoadFromPrevVer = ""
 
   private type OptionMap = Map[Symbol, Any]
 
@@ -221,7 +229,7 @@ object Migrate {
     try {
       // First collecting 1.1 message/container
       if (collectOrgMsgAndCntainer && obj.IsActive && obj.IsDeleted == false && (obj.isInstanceOf[ContainerDef] || obj.isInstanceOf[MessageDef]))
-        Load_V_1_1_X_MessageOrContianer(obj, jarPaths, kamanjaLoader_V_1_1_X)
+        Load_V_1_1_X_MessageOrContianer(obj, fromVersionJarPaths, prevVersionLoader, prevVersionLoadedJars)
 
       if ( /* obj.IsActive && */ obj.IsDeleted == false) {
         val key = obj.FullNameWithVer.toLowerCase
@@ -314,61 +322,7 @@ object Migrate {
     }
   }
 
-  private def LoadAllModelConfigsIntoChache_V_1_1_X(mdMgr: MdMgr): Unit = {
-    try {
-      var keys = scala.collection.mutable.Set[Key_V_1_1_X]()
-      modelConfigStore.getAllKeys({ (key: Key_V_1_1_X) => keys.add(key) })
-      val keyArray = keys.toArray
-      if (keyArray.length == 0) {
-        logger.debug("No model config objects available in the Database")
-        return
-      }
-      keyArray.foreach(key => {
-        val obj = GetObject(key, modelConfigStore)
-        val conf = serializer.DeserializeObjectFromByteArray(obj.Value_V_1_1_X.toArray[Byte]).asInstanceOf[Map[String, List[String]]]
-        mdMgr.AddModelConfig(KeyAsStr(key), conf)
-      })
-    } catch {
-      case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.info("\nStackTrace:" + stackTrace)
-        throw new Exception("Failed to load model configs into cache  " + e.getMessage())
-      }
-    }
-  }
-
-  /*
-  def LoadAllObjectsIntoCache_V_1_1_X(mdMgr: MdMgr) {
-    try {
-      // Load All the Model Configs here... 
-      // LoadAllModelConfigsIntoChache_V_1_1_X(mdMgr)
-
-      // Load all metadata objects
-      var keys = scala.collection.mutable.Set[Key_V_1_1_X]()
-      metadataStore.getAllKeys({ (key: Key_V_1_1_X) => keys.add(key) })
-      val keyArray = keys.toArray
-      if (keyArray.length == 0) {
-        logger.debug("No objects available in the Database")
-        return
-      }
-      keyArray.foreach(key => {
-        val obj = GetObject(key, metadataStore)
-        val mObj = serializer.DeserializeObjectFromByteArray(obj.Value_V_1_1_X.toArray[Byte]).asInstanceOf[BaseElemDef]
-        if (mObj != null) {
-          ProcessObject(mObj)
-        }
-      })
-    } catch {
-      case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.info("\nStackTrace:" + stackTrace)
-        throw new Exception("Failed to load metadata objects into cache:" + e.getMessage())
-      }
-    }
-  }
-*/
-
-  def MigrateAllMetadata(ds: DataStore_V_1_1_X) {
+  def MigrateAllMetadata(ds: DataStore_V_1_1_X): Unit = {
     try {
       // Load all metadata objects
       var keys = scala.collection.mutable.Set[Key_V_1_1_X]()
@@ -378,6 +332,55 @@ object Migrate {
         logger.debug("No objects available in the Database")
         return
       }
+
+      val allObjs = ArrayBuffer[Value_V_1_1_X]()
+      keyArray.foreach(key => {
+        val obj = GetObject(key, ds)
+        allObjs += obj.Value_V_1_1_X
+      })
+
+      // Loading the base file where we have all the base classes like classes from KamanjaBase, metadata, MetadataAPI, etc
+      LoadFqJarsIfNeeded(Array(baseFileToLoadFromPrevVer), prevVersionLoadedJars, prevVersionLoader)
+      if (_kryoDataSer_V_1_1_X == null) {
+        _kryoDataSer_V_1_1_X = SerializerManager.GetSerializer("kryo")
+        if (_kryoDataSer_V_1_1_X != null && prevVersionLoader != null) {
+          _kryoDataSer_V_1_1_X.SetClassLoader(prevVersionLoader)
+        }
+      }
+
+      var baseElem = Class.forName("com.ligadata.kamanja.metadata.BaseElem", true, prevVersionLoader)
+
+      println("baseElem is " + (if (baseElem != null) "not null" else "null"))
+
+      var baseElemCls = Class.forName("com.ligadata.kamanja.metadata.BaseElemDef", true, prevVersionLoader)
+
+      println("baseElemCls is " + (if (baseElemCls != null) "not null" else "null"))
+
+      // Types (including Msgs & containers)
+      val types = ArrayBuffer[String]()
+      // Containers
+      // Messages
+      // Functions
+      // Model Configurations
+      // Models
+
+      val gson = new Gson();
+
+      val objsJsons = allObjs.map(o => {
+        val mObj = serializer.DeserializeObjectFromByteArray(o.toArray[Byte])
+        try {
+          val gsonBaseStr = if (baseElemCls != null) gson.toJson(mObj, baseElemCls) else ""
+          val gsonStr = gson.toJson(mObj)
+          println("BaseString:" + gsonBaseStr)
+          println("FullString:" + gsonBaseStr)
+        } catch {
+          case e: Exception => {
+
+          }
+        }
+      })
+
+      /*
       keyArray.foreach(key => {
         val obj = GetObject(key, ds)
         val mObj = serializer.DeserializeObjectFromByteArray(obj.Value_V_1_1_X.toArray[Byte]).asInstanceOf[BaseElemDef]
@@ -385,6 +388,17 @@ object Migrate {
           ProcessObject(mObj, true)
         }
       })
+*/
+
+      // Types (other than Msgs & containers)
+      // Containers
+      // Messages
+      // Functions
+      // Model Configurations
+      // Models
+
+      // Types (other than Msgs & containers)
+
     } catch {
       case e: Exception => {
         val stackTrace = StackTrace.ThrowableTraceString(e)
@@ -410,26 +424,7 @@ object Migrate {
     valInfoBytes
   }
 
-  private def LoadJarIfNeeded(elem: BaseElem, loadedJars: TreeSet[String], loader: KamanjaClassLoader, jarPaths: collection.immutable.Set[String]): Boolean = {
-    if (jarPaths == null) return false
-
-    var retVal: Boolean = true
-    var allJars: Array[String] = null
-
-    val jarname = if (elem.JarName == null) "" else elem.JarName.trim
-
-    if (elem.DependencyJarNames != null && elem.DependencyJarNames.size > 0 && jarname.size > 0) {
-      allJars = elem.DependencyJarNames :+ jarname
-    } else if (elem.DependencyJarNames != null && elem.DependencyJarNames.size > 0) {
-      allJars = elem.DependencyJarNames
-    } else if (jarname.size > 0) {
-      allJars = Array(jarname)
-    } else {
-      return retVal
-    }
-
-    val jars = allJars.map(j => Utils.GetValidJarFile(jarPaths, j))
-
+  private def LoadFqJarsIfNeeded(jars: Array[String], loadedJars: TreeSet[String], loader: KamanjaClassLoader): Boolean = {
     // Loading all jars
     for (j <- jars) {
       logger.debug("Processing Jar " + j.trim)
@@ -458,7 +453,31 @@ object Migrate {
     true
   }
 
-  private def Load_V_1_1_X_MessageOrContianer(obj: BaseElemDef, jarPaths: collection.immutable.Set[String], kamanjaLoader_V_1_1_X: KamanjaLoaderInfo): Unit = {
+  private def LoadJarIfNeeded(elem: BaseElem, loadedJars: TreeSet[String], loader: KamanjaClassLoader, jarPaths: collection.immutable.Set[String]): Boolean = {
+    if (jarPaths == null) return false
+
+    var retVal: Boolean = true
+    var allJars: Array[String] = null
+
+    val jarname = if (elem.JarName == null) "" else elem.JarName.trim
+
+    if (elem.DependencyJarNames != null && elem.DependencyJarNames.size > 0 && jarname.size > 0) {
+      allJars = elem.DependencyJarNames :+ jarname
+    } else if (elem.DependencyJarNames != null && elem.DependencyJarNames.size > 0) {
+      allJars = elem.DependencyJarNames
+    } else if (jarname.size > 0) {
+      allJars = Array(jarname)
+    } else {
+      return retVal
+    }
+
+    val jars = allJars.map(j => Utils.GetValidJarFile(jarPaths, j))
+
+    return LoadFqJarsIfNeeded(jars, loadedJars, loader)
+  }
+
+  private def Load_V_1_1_X_MessageOrContianer(obj: BaseElemDef, jarPaths: collection.immutable.Set[String], loader: KamanjaClassLoader, loadedJars: scala.collection.mutable.TreeSet[String]): Unit = {
+    return
 
     var messageObj: BaseMsgObj_V_1_1_X = null
     var containerObj: BaseContainerObj_V_1_1_X = null
@@ -471,7 +490,7 @@ object Migrate {
     var isContainer = false
 
     if (isOk) {
-      isOk = LoadJarIfNeeded(obj, kamanjaLoader_V_1_1_X.loadedJars, kamanjaLoader_V_1_1_X.loader, jarPaths)
+      isOk = LoadJarIfNeeded(obj, loadedJars, loader, jarPaths)
     }
 
     if (isOk) {
@@ -483,7 +502,7 @@ object Migrate {
         // Checking for Message
         try {
           // Convert class name into a class
-          var curClz = Class.forName(clsName, true, kamanjaLoader_V_1_1_X.loader)
+          var curClz = Class.forName(clsName, true, loader)
 
           while (curClz != null && isContainer == false) {
             isContainer = Utils.isDerivedFrom(curClz, "com.ligadata.KamanjaBase.BaseContainerObj")
@@ -502,7 +521,7 @@ object Migrate {
         try {
           // If required we need to enable this test
           // Convert class name into a class
-          var curClz = Class.forName(clsName, true, kamanjaLoader_V_1_1_X.loader)
+          var curClz = Class.forName(clsName, true, loader)
 
           while (curClz != null && isMsg == false) {
             isMsg = Utils.isDerivedFrom(curClz, "com.ligadata.KamanjaBase.BaseMsgObj")
@@ -518,8 +537,9 @@ object Migrate {
 
       if (isMsg || isContainer) {
         try {
-          val module = kamanjaLoader_V_1_1_X.mirror.staticModule(clsName)
-          val obj = kamanjaLoader_V_1_1_X.mirror.reflectModule(module)
+          val mirror = ru.runtimeMirror(prevVersionLoader)
+          val module = mirror.staticModule(clsName)
+          val obj = mirror.reflectModule(module)
           val objinst = obj.instance
           if (objinst.isInstanceOf[BaseMsgObj_V_1_1_X]) {
             messageObj = objinst.asInstanceOf[BaseMsgObj_V_1_1_X]
@@ -574,8 +594,8 @@ object Migrate {
         val valInfo = getValueInfo_V_1_1_X(tupleBytes)
         if (_kryoDataSer_V_1_1_X == null) {
           _kryoDataSer_V_1_1_X = SerializerManager.GetSerializer("kryo")
-          if (_kryoDataSer_V_1_1_X != null && kamanjaLoader_V_1_1_X != null && kamanjaLoader_V_1_1_X.loader != null) {
-            _kryoDataSer_V_1_1_X.SetClassLoader(kamanjaLoader_V_1_1_X.loader)
+          if (_kryoDataSer_V_1_1_X != null && prevVersionLoader != null) {
+            _kryoDataSer_V_1_1_X.SetClassLoader(prevVersionLoader)
           }
         }
         if (_kryoDataSer_V_1_1_X != null) {
@@ -585,7 +605,7 @@ object Migrate {
       case "manual" => {
         val valInfo = getValueInfo_V_1_1_X(tupleBytes)
         val datarec = new KamanjaData_V_1_1_X
-        datarec.DeserializeData(valInfo, MdResolve_V_1_1_X, kamanjaLoader_V_1_1_X.loader)
+        datarec.DeserializeData(valInfo, MdResolve_V_1_1_X, prevVersionLoader)
         kd = datarec
       }
       case _ => {
@@ -766,8 +786,8 @@ object Migrate {
       logger.info("Update Migration Status...")
 
       logger.info("Start Reading 1.1.x objects")
-      logger.info("Create 1.1.3 adapters...")
-      OpenDbStore_V_1_1_X(jarPaths, metaDataStoreInfo)
+      logger.info("Create 1.1.x adapters...")
+      OpenDbStore_V_1_1_X(fromVersionJarPaths, metaDataStoreInfo)
 
       logger.info("Create 1.3 adapters")
       MetadataAPIImpl.OpenDbStore(jarPaths, metaDataStoreInfo)
@@ -785,7 +805,7 @@ object Migrate {
       logger.info("Load Cluster config ..")
       MetadataAPIImpl.UploadConfig(cfgStr, None, "ClusterConfig")
       MigrateAllMetadata(metadataStore)
-      allDataStore = GetDataStoreHandle_V_1_1_X(jarPaths, dataStoreInfo, "AllData.bak")
+      allDataStore = GetDataStoreHandle_V_1_1_X(fromVersionJarPaths, dataStoreInfo, "AllData.bak")
       Migrate_V_1_1_X_Alldata(allDataStore, apiCfgFile)
     } catch {
       case e: Exception => {
@@ -803,6 +823,8 @@ object Migrate {
         nextOption(map ++ Map('apiconfig -> value), tail)
       case "--fromversion" :: value :: tail =>
         nextOption(map ++ Map('fromversion -> value), tail)
+      case "--fromversioninstallationpath" :: value :: tail =>
+        nextOption(map ++ Map('fromversioninstallationpath -> value), tail)
       case option :: tail => {
         logger.error("Unknown option " + option)
         sys.exit(1)
@@ -811,7 +833,27 @@ object Migrate {
   }
 
   private def usage: Unit = {
-    logger.error("Missing or incorrect arguments Usage: migrate --clusterconfig <your-current-release-config-dir>/clusterconfig.json --apiconfig <your-current-release-config-dir>/MetadataAPIConfig.properties --fromversion 1.x.x")
+    logger.error("Missing or incorrect arguments Usage: migrate --clusterconfig <your-current-release-config-dir>/clusterconfig.json --apiconfig <your-current-release-config-dir>/MetadataAPIConfig.properties --fromversion 1.x --fromversioninstallationpath <your-previous-release-install-dir> ")
+  }
+
+  private def isValidPath(path: String, checkForDir: Boolean = false, checkForFile: Boolean = false, str: String = "path"): Boolean = {
+    val fl = new File(path)
+    if (fl.exists() == false) {
+      logger.error("Given %s:%s does not exists".format(str, path))
+      return false
+    }
+
+    if (checkForDir && fl.isDirectory() == false) {
+      logger.error("Given %s:%s is not directory".format(str, path))
+      return false
+    }
+
+    if (checkForFile && fl.isFile() == false) {
+      logger.error("Given %s:%s is not file".format(str, path))
+      return false
+    }
+
+    return true
   }
 
   def main(args: Array[String]) {
@@ -833,22 +875,78 @@ object Migrate {
           usage
           return
         }
-        clusterCfgFile = param.asInstanceOf[String]
+        clusterCfgFile = param.asInstanceOf[String].trim
         logger.info("clusterCfgFile => " + clusterCfgFile)
         param = options.getOrElse('apiconfig, null)
         if (param == null) {
           usage
           return
         }
-        apiCfgFile = param.asInstanceOf[String]
+        apiCfgFile = param.asInstanceOf[String].trim
         logger.info("apCfgFile => " + apiCfgFile)
         param = options.getOrElse('fromversion, null)
         if (param == null) {
           usage
           return
         }
-        fromRelease = param.asInstanceOf[String]
+        fromRelease = param.asInstanceOf[String].trim
         logger.info("fromRelease => " + fromRelease)
+
+        param = options.getOrElse('fromversioninstallationpath, null)
+        if (param == null) {
+          usage
+          return
+        }
+
+        val dirPath = param.asInstanceOf[String].trim
+
+        if (isValidPath(dirPath, true, false, "fromversioninstallationpath") == false) {
+          usage
+          return
+        }
+
+        if (isValidPath(dirPath + "/bin", true, false, "bin folder in fromversioninstallationpath") == false) {
+          usage
+          return
+        }
+
+        if (isValidPath(dirPath + "/lib/system", true, false, "/lib/system folder in fromversioninstallationpath") == false) {
+          usage
+          return
+        }
+
+        if (isValidPath(dirPath + "/lib/application", true, false, "/lib/application folder in fromversioninstallationpath") == false) {
+          usage
+          return
+        }
+
+        val installPath = new File(dirPath)
+
+        fromVersionInstallationPath = installPath.getAbsolutePath
+
+        val sysPath = new File(dirPath + "/lib/system")
+        val appPath = new File(dirPath + "/lib/application")
+
+        fromVersionJarPaths = collection.immutable.Set[String](sysPath.getAbsolutePath, appPath.getAbsolutePath)
+
+        logger.info("fromVersionInstallationPath:%s, fromVersionJarPaths:%s".format(fromVersionInstallationPath, fromVersionJarPaths.mkString(",")))
+
+        val dir = new File(fromVersionInstallationPath + "/bin");
+
+        val mdapiFls = dir.listFiles.filter(_.isFile).filter(_.getName.startsWith("MetadataAPI-")).toList
+
+        if (mdapiFls.size == 0) {
+          val kmFls = dir.listFiles.filter(_.isFile).filter(_.getName.startsWith("KamanjaManager-")).toList
+          if (kmFls.size == 0) {
+            logger.error("Not found %s/bin/MetadataAPI-* and %s/bin/KamanjaManager-*".format(fromVersionInstallationPath, fromVersionInstallationPath))
+            usage
+            return
+          } else {
+            baseFileToLoadFromPrevVer = kmFls(0).getAbsolutePath
+          }
+        } else {
+          baseFileToLoadFromPrevVer = mdapiFls(0).getAbsolutePath
+        }
       }
       StartMigrate(clusterCfgFile, apiCfgFile, fromRelease)
     } catch {
