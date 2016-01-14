@@ -9,33 +9,22 @@ version := "1.0-SNAPSHOT"
 // project description
 description := "JDBC Adapters for creating data pipelines"
 
-// Enables publishing to maven repo
-publishMavenStyle := true
+scalaVersion := "2.11.7"
 
-// Do not append Scala versions to the generated artifacts
-crossPaths := false
+EclipseKeys.withSource := true
 
-// This forbids including Scala related libraries into the dependency
-autoScalaLibrary := false
+EclipseKeys.relativizeLibs := false
 
-// library dependencies. (orginization name) % (project name) % (version)
-libraryDependencies ++= Seq(
-   "org.mariadb.jdbc" % "mariadb-java-client" % "1.3.2",
-   "org.apache.commons" % "commons-lang3" % "3.4",
-   "org.apache.commons" % "commons-dbcp2" % "2.1.1",
-   "ch.qos.logback" % "logback-classic" % "1.1.3",
-   "org.apache.kafka" % "kafka-clients" % "0.8.2.2",
-   "org.apache.zookeeper" % "zookeeper" % "3.4.6",
-   "org.projectlombok" % "lombok" % "1.16.6",
-   "com.google.guava" % "guava" % "19.0",
-   "joda-time" % "joda-time" % "2.9.1",
-   "com.google.code.gson" % "gson" % "2.5",
-   "org.easybatch" % "easybatch-core" % "4.0.0",
-   "org.easybatch" % "easybatch-jdbc" % "4.0.0",
-   "com.googlecode.json-simple" % "json-simple" % "1.1.1",
-   "commons-cli" % "commons-cli" % "1.3.1",
-   "org.scala-lang" % "scala-library" % "2.11.7",
-   "org.apache.curator" % "curator-recipes" % "3.0.0",
-   // Test-only dependencies
-   "org.mockito" % "mockito-core" % "1.9.5" % "test"  
-)
+resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
+
+libraryDependencies += "org.json4s" %% "json4s-jackson" % "3.2.9" 
+
+libraryDependencies += "org.json4s" %% "json4s-native" % "3.2.9"
+
+libraryDependencies += "org.apache.logging.log4j" % "log4j-api" % "2.4.1"
+
+libraryDependencies += "org.apache.logging.log4j" % "log4j-core" % "2.4.1"
+
+libraryDependencies += "commons-codec" % "commons-codec" % "1.10"
+       
+libraryDependencies += "org.scala-lang" % "scala-actors" % "2.11.7"
