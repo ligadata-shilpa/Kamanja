@@ -545,27 +545,59 @@ class HBaseAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterAl
 	adapter.getKeys(containerName,timeRanges,keyStringList,readKeyCallBack _)
       }
 
-      And("Test backup container")
+      var exists = adapter.isContainerExists(containerName)
+      assert(exists == true)
+
+      var srcContainerName = containerName
+      var destContainerName = containerName
+
+      And("Test copy container with src and dest are same ")
+      var ex3 = the [com.ligadata.Exceptions.StorageDDLException] thrownBy {
+	adapter.copyContainer(srcContainerName,destContainerName,false)
+      }
+      logger.info("Exception => " + ex3.cause)
+
+      srcContainerName = containerName
+      destContainerName = containerName + "_bak"
+
+      And("Test copy container")
       noException should be thrownBy {
-	adapter.backupContainer(containerName)
+	adapter.copyContainer(srcContainerName,destContainerName,true)
       }
 
-      And("Test restore container")
-      noException should be thrownBy {
-	adapter.restoreContainer(containerName)
+      exists = adapter.isContainerExists(destContainerName)
+      assert(exists == true)
+
+      And("Test copy container without force")
+      ex3 = the [com.ligadata.Exceptions.StorageDDLException] thrownBy {
+	adapter.copyContainer(srcContainerName,destContainerName,false)
       }
+      logger.info("Exception => " + ex3.cause)
+
+      And("Test copy container with force")
+      noException should be thrownBy {
+	adapter.copyContainer(srcContainerName,destContainerName,true)
+      }
+
 
       And("Test drop container again, cleanup")
       noException should be thrownBy {
 	var containers = new Array[String](0)
-	containers = containers :+ containerName
-	containers = containers :+ containerName + "bak"
+	containers = containers :+ srcContainerName
+	containers = containers :+ destContainerName
 	adapter.DropContainer(containers)
       }
 
+      exists = adapter.isContainerExists(srcContainerName)
+      assert(exists == false)
+
+      exists = adapter.isContainerExists(destContainerName)
+      assert(exists == false)
+
+
       And("Test drop keyspace")
       noException should be thrownBy {
-	//hbaseAdapter.DropNameSpace("unit_tests")
+	hbaseAdapter.DropNameSpace("unit_tests")
       }
 
       And("Shutdown hbase session")

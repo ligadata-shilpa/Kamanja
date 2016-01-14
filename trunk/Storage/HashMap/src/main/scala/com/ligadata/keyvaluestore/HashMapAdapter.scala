@@ -808,6 +808,14 @@ class HashMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
     logger.info("Not Implemeted yet")
   }
 
+  override def isContainerExists(containerName: String): Boolean = {
+    throw CreateDDLException("Not Implemented yet :",new Exception("Failed to check container existence " + containerName))
+  }
+
+  override def copyContainer(srcContainerName: String, destContainerName: String, forceCopy: Boolean): Unit = {
+    throw CreateDDLException("Not Implemented yet :",new Exception("Failed to copy container " + srcContainerName))
+  }
+
 }
 
 class HashMapAdapterTx(val parent: DataStore) extends Transaction {
@@ -878,6 +886,15 @@ class HashMapAdapterTx(val parent: DataStore) extends Transaction {
   def restoreContainer(containerName:String): Unit = {
     parent.restoreContainer(containerName:String)
   }
+
+  override def isContainerExists(containerName: String): Boolean = {
+    parent.isContainerExists(containerName)
+  }
+
+  override def copyContainer(srcContainerName: String, destContainerName: String, forceCopy: Boolean): Unit = {
+    parent.copyContainer(srcContainerName,destContainerName,forceCopy)
+  }
+
 }
 
 // To create HashMap Datastore instance

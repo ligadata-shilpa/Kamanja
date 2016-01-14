@@ -758,6 +758,15 @@ class TreeMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
   def restoreContainer(containerName:String): Unit = {
     logger.info("Not Implemeted yet")
   }
+  override def isContainerExists(containerName: String): Boolean = {
+    logger.info("Not Implemented yet")
+    false
+  }
+
+  override def copyContainer(srcContainerName: String, destContainerName: String, forceCopy: Boolean): Unit = {
+    logger.info("Not Implemented yet")
+  }
+
 }
 
 class TreeMapAdapterTx(val parent: DataStore) extends Transaction {
@@ -826,6 +835,14 @@ class TreeMapAdapterTx(val parent: DataStore) extends Transaction {
 
   def restoreContainer(containerName:String): Unit = {
     parent.restoreContainer(containerName:String)
+  }
+
+  override def isContainerExists(containerName: String): Boolean = {
+    parent.isContainerExists(containerName)
+  }
+
+  override def copyContainer(srcContainerName: String, destContainerName: String, forceCopy: Boolean): Unit = {
+    parent.copyContainer(srcContainerName,destContainerName,forceCopy)
   }
 
 }

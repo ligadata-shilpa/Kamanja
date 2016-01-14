@@ -1382,6 +1382,14 @@ class SqlServerAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
     renameTable(oldTableName,newTableName)
   }
 
+  override def isContainerExists(containerName: String): Boolean = {
+    throw CreateDDLException("Not Implemented yet :",new Exception("Failed to check container existence " + containerName))
+  }
+
+  override def copyContainer(srcContainerName: String, destContainerName: String, forceCopy: Boolean): Unit = {
+    throw CreateDDLException("Not Implemented yet :",new Exception("Failed to copy container " + srcContainerName))
+  }
+
 }
 
 class SqlServerAdapterTx(val parent: DataStore) extends Transaction {
@@ -1451,6 +1459,14 @@ class SqlServerAdapterTx(val parent: DataStore) extends Transaction {
 
   def restoreContainer(containerName:String): Unit = {
     parent.restoreContainer(containerName:String)
+  }
+
+  override def isContainerExists(containerName: String): Boolean = {
+    parent.isContainerExists(containerName)
+  }
+
+  override def copyContainer(srcContainerName: String, destContainerName: String, forceCopy: Boolean): Unit = {
+    parent.copyContainer(srcContainerName,destContainerName,forceCopy)
   }
 
 }

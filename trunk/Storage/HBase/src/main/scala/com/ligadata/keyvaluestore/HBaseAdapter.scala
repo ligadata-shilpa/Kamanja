@@ -1257,31 +1257,60 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       DropContainer(cont)
     })
   }
+
    
-  def renameTable(oldTableName:String,newTableName:String): Unit = {
+  def renameTable(srcTableName:String,destTableName:String,forceCopy:Boolean = false): Unit = {
     try{
       relogin
-      if ( admin.tableExists(newTableName)) {
-	logger.warn("A Backup table already exist, nothing to be done")
-	return;
-      }
-      if ( ! admin.tableExists(oldTableName)) {
+      if ( ! admin.tableExists(srcTableName)) {
 	logger.warn("The table being renamed doesn't exist, nothing to be done")
-	return;
+        throw CreateDDLException("Failed to rename the table " + srcTableName + ":", new Exception("Source Table doesn't exist"))
+      }
+      if ( admin.tableExists(destTableName)) {
+	if( forceCopy ){
+	  dropTable(destTableName);
+	}
+	else{
+	  logger.warn("A Destination table already exist, nothing to be done")
+          throw CreateDDLException("Failed to rename the table " + srcTableName + ":", new Exception("Destination Table already exist"))
+	}
       }
       // snapshot name can't contain ':'
-      val snapshotName = oldTableName.toLowerCase.replace(':', '_') + "_snap"
-      admin.disableTable(oldTableName);
-      admin.snapshot(snapshotName, oldTableName);
-      admin.cloneSnapshot(snapshotName, newTableName);
+      val snapshotName = srcTableName.toLowerCase.replace(':', '_') + "_snap"
+      admin.disableTable(srcTableName);
+      admin.snapshot(snapshotName, srcTableName);
+      admin.cloneSnapshot(snapshotName, destTableName);
       admin.deleteSnapshot(snapshotName);
-      //admin.deleteTable(oldTableName);
+      admin.enableTable(srcTableName);
     } catch {
       case e: Exception => {
-        throw CreateDDLException("Failed to rename the table " + oldTableName + ":" + e.getMessage(), e)
+        throw CreateDDLException("Failed to rename the table " + srcTableName + ":" + e.getMessage(), e)
       }
     }
   }
+
+  override def isContainerExists(containerName: String): Boolean = {
+    var tableName = toFullTableName(containerName)
+    admin.tableExists(tableName)
+  }
+
+  override def copyContainer(srcContainerName: String, destContainerName: String, forceCopy: Boolean): Unit = lock.synchronized {
+    if( srcContainerName.equalsIgnoreCase(destContainerName) ){
+      throw CreateDDLException("Failed to copy the container " + srcContainerName, new Exception("Source Container Name can't be same as destination container name"))
+    }
+    var oldTableName = toFullTableName(srcContainerName)
+    var newTableName = toFullTableName(destContainerName)
+    logger.info("renaming " + oldTableName + " to " + newTableName);
+    try {
+      relogin
+      renameTable(oldTableName,newTableName,forceCopy)
+    } catch {
+      case e: Exception => {
+        throw CreateDDLException("Failed to copy the container " + srcContainerName, e)
+      }
+    }
+  }
+
 
   override def backupContainer(containerName: String): Unit = lock.synchronized {
     var oldTableName = toFullTableName(containerName)
@@ -1381,6 +1410,15 @@ class HBaseAdapterTx(val parent: DataStore) extends Transaction {
   def restoreContainer(containerName:String): Unit = {
     parent.restoreContainer(containerName:String)
   }
+
+  override def isContainerExists(containerName: String): Boolean = {
+    parent.isContainerExists(containerName)
+  }
+
+  override def copyContainer(srcContainerName: String, destContainerName: String, forceCopy: Boolean): Unit = {
+    parent.copyContainer(srcContainerName,destContainerName,forceCopy)
+  }
+
 }
 
 // To create HBase Datastore instance

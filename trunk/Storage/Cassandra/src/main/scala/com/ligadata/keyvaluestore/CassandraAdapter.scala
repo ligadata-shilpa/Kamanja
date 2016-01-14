@@ -1055,7 +1055,7 @@ class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
   }
     
   def backupContainer(containerName:String): Unit = lock.synchronized {
-    throw CreateDMLException("Not Implemented yet :",new Exception("Failed to backup the container " + containerName))
+    throw CreateDDLException("Not Implemented yet :",new Exception("Failed to backup the container " + containerName))
 
     // create an export file
     //var fullTableName = toFullTableName(containerName)
@@ -1065,13 +1065,22 @@ class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
   }
 
   def restoreContainer(containerName:String): Unit = lock.synchronized {
-    throw CreateDMLException("Not Implemented yet :",new Exception("Failed to restore the container " + containerName))
+    throw CreateDDLException("Not Implemented yet :",new Exception("Failed to restore the container " + containerName))
     // create an export file
     //var fullTableName = toFullTableName(containerName)
     //var newTableName = fullTableName
     //var oldTableName = newTableName + "_b"
     //CreateBackupTable(oldTableName,newTableName)
   }
+
+  override def isContainerExists(containerName: String): Boolean = {
+    throw CreateDDLException("Not Implemented yet :",new Exception("Failed to check container existence " + containerName))
+  }
+
+  override def copyContainer(srcContainerName: String, destContainerName: String, forceCopy: Boolean): Unit = {
+    throw CreateDDLException("Not Implemented yet :",new Exception("Failed to copy container " + srcContainerName))
+  }
+
 }
 
 class CassandraAdapterTx(val parent: DataStore) extends Transaction {
@@ -1141,6 +1150,14 @@ class CassandraAdapterTx(val parent: DataStore) extends Transaction {
 
   def restoreContainer(containerName:String): Unit = {
     parent.restoreContainer(containerName:String)
+  }
+
+  override def isContainerExists(containerName: String): Boolean = {
+    parent.isContainerExists(containerName)
+  }
+
+  override def copyContainer(srcContainerName: String, destContainerName: String, forceCopy: Boolean): Unit = {
+    parent.copyContainer(srcContainerName,destContainerName,forceCopy)
   }
 
 }
