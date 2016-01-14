@@ -464,7 +464,7 @@ class SqlServerAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
       con = getConnection
       // put is sematically an upsert. An upsert is being implemented using a transact-sql update 
       // statement in sqlserver
-      sql = "if ( not exists(select * from " + tableName + 
+      sql = "if ( not exists(select 1 from " + tableName + 
 	    " where timePartition = ? and bucketKey = ?  and transactionId = ?  and rowId = ? ) ) " + 
 	    " begin " +
 	    " insert into " + tableName + "(timePartition,bucketKey,transactionId,rowId,serializerType,serializedInfo)" +
@@ -551,7 +551,7 @@ class SqlServerAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
 	  var tableName = toFullTableName(containerName)
 	  var keyValuePairs = li._2
 	  logger.info("Input row count for the table " + tableName + " => " + keyValuePairs.length)
-	  sql = "if ( not exists(select * from " + tableName + 
+	  sql = "if ( not exists(select 1 from " + tableName + 
 	  " where timePartition = ? and bucketKey = ?  and transactionId = ?  and rowId = ? ) ) " + 
 	  " begin " +
 	  " insert into " + tableName + "(timePartition,bucketKey,transactionId,rowId,serializerType,serializedInfo)" +
@@ -1336,12 +1336,14 @@ class SqlServerAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
       val dbm = con.getMetaData();
       rs = dbm.getTables(null, SchemaName, newTableName, null);
       if (rs.next()) {
-        logger.debug("The table " + newTableName + " exists, may have beem renamed already ")
-      } else {
+        logger.info("The table " + newTableName + " exists, may have beem renamed already ")
+      } 
+      else {
 	rs = dbm.getTables(null, SchemaName, oldTableName, null);
 	if (!rs.next()) {
-          logger.debug("The table " + oldTableName + " doesn't exist, nothing to rename ")
-	} else {
+          logger.info("The table " + oldTableName + " doesn't exist, nothing to rename ")
+	} 
+	else {
           query = "sp_rename '" + oldTableName + "' , '" + newTableName + "'"
           stmt = con.createStatement()
           stmt.executeUpdate(query);
@@ -1372,7 +1374,7 @@ class SqlServerAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
     renameTable(oldTableName,newTableName)
   }
 
-  def restoreContainer(containerName:String): Unit = {
+  def restoreContainer(containerName:String): Unit = lock.synchronized {
     var tableName = toTableName(containerName)
     var fullTableName = toFullTableName(containerName)
     var oldTableName = fullTableName + ".bak"
