@@ -36,7 +36,7 @@ import com.ligadata.kamanja.metadata.MdMgr._
 import com.ligadata.kamanja.metadataload.MetadataLoad
 
 // import com.ligadata.keyvaluestore._
-import com.ligadata.HeartBeat.HeartBeatUtil
+import com.ligadata.HeartBeat.{MonitoringContext, HeartBeatUtil}
 import com.ligadata.StorageBase.{ DataStore, Transaction }
 import com.ligadata.KvBase.{ Key, Value, TimeRange }
 
@@ -179,14 +179,6 @@ object MetadataAPIImpl extends MetadataAPI {
       }
     }
 
-  }
-
-  /**
-   * clockNewActivity - update Metadata health info, showing its still alive.
-   */
-  def clockNewActivity: Unit = {
-    if (heartBeat != null)
-      heartBeat.SetMainData(metadataAPIConfig.getProperty("NODE_ID").toString)
   }
 
   /**
@@ -559,6 +551,7 @@ object MetadataAPIImpl extends MetadataAPI {
     val znodePath = GetMetadataAPIConfig.getProperty("ZNODE_PATH") + "/metadataupdate"
     logger.debug("Connect To ZooKeeper using " + zkcConnectString)
     try {
+      CreateClient.CreateNodeIfNotExists(zkcConnectString, zkHeartBeatNodePath)
       CreateClient.CreateNodeIfNotExists(zkcConnectString, znodePath)
       zkc = CreateClient.createSimple(zkcConnectString)
     } catch {
@@ -5802,13 +5795,9 @@ object MetadataAPIImpl extends MetadataAPI {
 
   private def InitHearbeat: Unit = {
     zkHeartBeatNodePath = metadataAPIConfig.getProperty("ZNODE_PATH") + "/monitor/metadata/" + metadataAPIConfig.getProperty("NODE_ID").toString
-    if (zkHeartBeatNodePath.size > 0) {
-      heartBeat = new HeartBeatUtil
-      heartBeat.Init("Metadata", metadataAPIConfig.getProperty("ZOOKEEPER_CONNECT_STRING"), zkHeartBeatNodePath, 3000, 3000, 5000) // for every 5 secs
-      heartBeat.SetMainData(metadataAPIConfig.getProperty("NODE_ID").toString)
-      MonitorAPIImpl.startMetadataHeartbeat
-    }
-
+    InitZooKeeper
+    MonitorAPIImpl.initMonitorValues(metadataAPIConfig.getProperty("NODE_ID").toString)
+    MonitorAPIImpl.startMetadataHeartbeat
   }
 
   /**
@@ -5844,6 +5833,7 @@ object MetadataAPIImpl extends MetadataAPI {
       }
     }
   }
+
 
   /**
    * shutdownZkListener - should be called by application using MetadataAPIImpl directly to disable synching of Metadata cache.

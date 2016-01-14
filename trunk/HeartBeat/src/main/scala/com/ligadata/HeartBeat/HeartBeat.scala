@@ -24,6 +24,10 @@ import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
 import scala.actors.threadpool.{ Executors, ExecutorService }
 
+object MonitoringContext {
+  val monitorCount = new java.util.concurrent.atomic.AtomicLong()
+}
+
 class HeartBeatUtil {
   private[this] val LOG = LogManager.getLogger(getClass);
   class MainInfo {

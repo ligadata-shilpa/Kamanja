@@ -1,6 +1,7 @@
 
 package com.ligadata.KamanjaManager
 
+import com.ligadata.HeartBeat.MonitoringContext
 import com.ligadata.KamanjaBase._
 import com.ligadata.InputOutputAdapterInfo.{ ExecContext, InputAdapter, OutputAdapter, ExecContextObj, PartitionUniqueRecordKey, PartitionUniqueRecordValue }
 import com.ligadata.ZooKeeper.CreateClient
@@ -756,11 +757,11 @@ class KamanjaManager extends Observer {
       thisEngineInfo = new MainInfo
       thisEngineInfo.startTime = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
       thisEngineInfo.name = KamanjaConfiguration.nodeId.toString
-      thisEngineInfo.uniqueId = KamanjaManangerMonitorContext.monitorCount.incrementAndGet
+      thisEngineInfo.uniqueId = MonitoringContext.monitorCount.incrementAndGet
       CreateClient.CreateNodeIfNotExists(KamanjaConfiguration.zkConnectString, zkHeartBeatNodePath) // Creating the path if missing
     }
     thisEngineInfo.lastSeen = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
-    thisEngineInfo.uniqueId = KamanjaManangerMonitorContext.monitorCount.incrementAndGet
+    thisEngineInfo.uniqueId = MonitoringContext.monitorCount.incrementAndGet
 
     // run through all adapters.
     if (adapterMetricInfo == null) {
