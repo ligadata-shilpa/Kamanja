@@ -329,7 +329,7 @@ object ModelService {
             var model = new File(input.toString)
             if(model.exists()){
                 modelDef= Source.fromFile(model).mkString
-                response = MetadataAPIImpl.AddModel(ModelType.PMML, modelDef.toString, userid, None)
+                response = MetadataAPIImpl.AddModel(ModelType.KPMML, modelDef.toString, userid, None)
             }else{
                 response="Model definition file does not exist"
             }

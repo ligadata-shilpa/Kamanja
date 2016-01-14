@@ -8,6 +8,12 @@ export KAMANJA_HOME=/tmp/drdigital
 export KAMANJA_SRCDIR=/home/rich/github/dev/Sprint8FeaturesWithJpmml/kamanja/trunk
 cd $KAMANJA_HOME
 
+##**Env setup**
+export KAMANJA_HOME=/tmp/drdigital
+export KAMANJA_SRCDIR=/home/rich/github/dev/jpmml/kamanja/trunk
+cd $KAMANJA_HOME
+
+
 ##**<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<**
 ##**Instructions for namespace tests.**
 ##**1. Add the rel10 messages for the medical app.**
@@ -34,14 +40,13 @@ $KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add 
 $KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add message $KAMANJA_SRCDIR/Pmml/PmmlUdfs/src/test/resources/nmspcMsgContainerTest/metadata/message/hl7.json
 $KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add message $KAMANJA_SRCDIR/Pmml/PmmlUdfs/src/test/resources/nmspcMsgContainerTest/metadata/message/inpatientclaim.json
 $KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add message $KAMANJA_SRCDIR/Pmml/PmmlUdfs/src/test/resources/nmspcMsgContainerTest/metadata/message/outpatientclaim.json
-$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add message $KAMANJA_SRCDIR/Pmml/PmmlUdfs/src/test/resources/nmspcMsgContainerTest/metadata/message/outpatientclaim.json
 
 ##**<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<**
 ##**(rel10) Kamanja Pmml model<<<<<<<<<<<<<<<<<<**
 ##**<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<**
 
 ##**Add copdv3**
-$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add model pmml $KAMANJA_SRCDIR/Pmml/PmmlUdfs/src/test/resources/nmspcMsgContainerTest/metadata/model/COPDv3.xml
+$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add model kpmml $KAMANJA_SRCDIR/Pmml/PmmlUdfs/src/test/resources/nmspcMsgContainerTest/metadata/model/COPDv3.xml
 
 ##**<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<**
 ##**(rel10) Kamanja Pmml Udfs<<<<<<<<<<<<<<<<<<<**
@@ -59,7 +64,7 @@ $KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties load
 $KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add message $KAMANJA_SRCDIR/Pmml/PmmlUdfs/src/test/resources/nmspcMsgContainerTest/metadata/message/beneficiaryV1.json
 
 ##**Add the COPDv4.xml**
-$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add model pmml $KAMANJA_SRCDIR/Pmml/PmmlUdfs/src/test/resources/nmspcMsgContainerTest/metadata/model/COPDv4.xml
+$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add model kpmml $KAMANJA_SRCDIR/Pmml/PmmlUdfs/src/test/resources/nmspcMsgContainerTest/metadata/model/COPDv4.xml
 
 ##**<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<**
 ##**<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<**
@@ -85,7 +90,6 @@ $KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add 
 $KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add message $KAMANJA_HOME/input/SampleApplications/metadata/message/hl7_Medical.json
 $KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add message $KAMANJA_HOME/input/SampleApplications/metadata/message/inpatientclaim_Medical.json
 $KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add message $KAMANJA_HOME/input/SampleApplications/metadata/message/outpatientclaim_Medical.json
-$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties upload compile config $KAMANJA_HOME/config/Java_ModelConfig_Medical.json
 
 ##**<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<**
 ##**system messages and containers <<<<<<<<<<<<<<<<<<**
@@ -111,11 +115,11 @@ $KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties load
 ##**Kamanja Pmml Models - dateFcnTests.xml  macroTests.xml  missingValueRepl.xml**
 ##**<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<**
 
-$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add model pmml $KAMANJA_SRCDIR/Pmml/PmmlUdfs/src/test/resources/pmmludfTests/metadata/model/dateFcnTests.xml
-$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add model pmml $KAMANJA_SRCDIR/Pmml/PmmlUdfs/src/test/resources/pmmludfTests/metadata/model/macroTests.xml
-$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add model pmml $KAMANJA_SRCDIR/Pmml/PmmlUdfs/src/test/resources/pmmludfTests/metadata/model/missingValueRepl.xml
+$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add model kpmml $KAMANJA_SRCDIR/Pmml/PmmlUdfs/src/test/resources/pmmludfTests/metadata/model/dateFcnTests.xml
+$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add model kpmml $KAMANJA_SRCDIR/Pmml/PmmlUdfs/src/test/resources/pmmludfTests/metadata/model/macroTests.xml
+$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add model kpmml $KAMANJA_SRCDIR/Pmml/PmmlUdfs/src/test/resources/pmmludfTests/metadata/model/missingValueRepl.xml
 
-$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add model pmml $KAMANJA_HOME/input/SampleApplications/metadata/model/COPDRiskAssessmentv2_Medical.xml
+$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add model kpmml $KAMANJA_HOME/input/SampleApplications/metadata/model/COPDRiskAssessmentv2_Medical.xml
 
 ##**<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<**
 ##**<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<**
