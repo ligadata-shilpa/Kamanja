@@ -34,6 +34,7 @@ class MessageGenerator {
       messageGenerator = messageGenerator.append(msgConstants.newline + generatePrimaryKeys(message) + msgConstants.newline)
       messageGenerator = messageGenerator.append(messageContructor(message))
       //messageGenerator = messageGenerator.append(msgClassConstructorGen(message))
+       messageGenerator = messageGenerator.append(msgConstants.newline + generateSchema(message))      
       messageGenerator = messageGenerator.append(msgConstants.newline + generatedMsgVariables(message))
       messageGenerator = messageGenerator.append(getFuncGeneration(message.Elements))
       messageGenerator = messageGenerator.append(setFuncGeneration(message.Elements))
@@ -406,5 +407,12 @@ class MessageGenerator {
     
     """
 
+  }
+  
+  private def generateSchema(message: Message) : String = {
+    
+    return "val schema: String = "+message.Schema+";"
+    
+    
   }
 }

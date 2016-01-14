@@ -37,6 +37,8 @@ class MessageParser {
     var messages: Messages = null
     var msgList: List[Message] = List[Message]()
     var jtype: String = null
+    
+    val schema: String = json.replaceAllLiterally(" ", "").replaceAllLiterally("\"", "\\\"")
 
     val mapOriginal = parse(json).values.asInstanceOf[scala.collection.immutable.Map[String, Any]]
 
@@ -50,7 +52,7 @@ class MessageParser {
     try {
       jtype = geJsonType(map)
       log.info("map : " + map)
-      messages = processJsonMap(jtype, map, mdMgr, recompile)
+      messages = processJsonMap(jtype, map, mdMgr, recompile, schema)
     } catch {
       case e: Exception => {
         val stackTrace = StackTrace.ThrowableTraceString(e)
@@ -83,7 +85,7 @@ class MessageParser {
   /**
    * Parse the json and create the Message Object
    */
-  private def processJsonMap(key: String, map: scala.collection.mutable.Map[String, Any], mdMgr: MdMgr, recompile: Boolean = false): Messages = {
+  private def processJsonMap(key: String, map: scala.collection.mutable.Map[String, Any], mdMgr: MdMgr, recompile: Boolean = false, schema: String): Messages = {
     var msgs: Messages = null
     type messageMap = scala.collection.immutable.Map[String, Any]
     var msgLevel: Int = 0
@@ -95,7 +97,7 @@ class MessageParser {
           val messageMap: scala.collection.mutable.Map[String, Any] = scala.collection.mutable.Map[String, Any]()
           message.foreach(kv => { messageMap(kv._1.toLowerCase()) = kv._2 })
 
-          msgs = getMsgorCntrObj(messageMap, key, mdMgr, recompile, msgLevel)
+          msgs = getMsgorCntrObj(messageMap, key, mdMgr, recompile, msgLevel, schema)
         }
       } else throw new Exception("Incorrect json")
     } catch {
@@ -112,7 +114,7 @@ class MessageParser {
   /**
    * Generate the Message object from message definition Map
    */
-  private def getMsgorCntrObj(message: scala.collection.mutable.Map[String, Any], mtype: String, mdMgr: MdMgr, recompile: Boolean = false, msgLevel: Int): Messages = {
+  private def getMsgorCntrObj(message: scala.collection.mutable.Map[String, Any], mtype: String, mdMgr: MdMgr, recompile: Boolean = false, msgLevel: Int, schema: String): Messages = {
     var ele: List[Element] = null
     var elements: List[Element] = null
     var messages: List[Message] = null
@@ -275,7 +277,7 @@ class MessageParser {
     val pkg = NameSpace
     val physicalName: String = pkg + ".V" + MdMgr.ConvertVersionToLong(msgVersion).toString + "." + Name
 
-    val msg: Message = new Message(mtype, NameSpace, Name, physicalName, msgVersion, "Description", Fixed, persistMsg, elements, tdataexists, tdata, null, pkg.trim(), null, null, null, partitionKeysList, primaryKeysList, cur_time, msgLevel, null)
+    val msg: Message = new Message(mtype, NameSpace, Name, physicalName, msgVersion, "Description", Fixed, persistMsg, elements, tdataexists, tdata, null, pkg.trim(), null, null, null, partitionKeysList, primaryKeysList, cur_time, msgLevel, null, schema )
     var msglist: List[Message] = List[Message]()
     if (messages != null && messages.size > 0)
       messages.foreach(m => {
@@ -583,7 +585,7 @@ class MessageParser {
     val primaryKeysList = null
     val physicalName: String = NameSpace + ".V" + MdMgr.ConvertVersionToLong(msgVersion).toString + "." + Name
     val cur_time = System.currentTimeMillis
-    val msg = new Message(mtype, NameSpace, Name, physicalName, msgVersion, "Description", Fixed, persistMsg, lbuffer.toList, tdataexists, tdata, null, pkg.trim(), null, null, null, partitionKeysList, primaryKeysList, cur_time, msgLevel, null)
+    val msg = new Message(mtype, NameSpace, Name, physicalName, msgVersion, "Description", Fixed, persistMsg, lbuffer.toList, tdataexists, tdata, null, pkg.trim(), null, null, null, partitionKeysList, primaryKeysList, cur_time, msgLevel, null, null)
 
     log.info("child message level " + msg.MsgLvel)
     log.info("child message name " + msg.Name)
