@@ -519,7 +519,6 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
   }
 
   private def runHeartBeat: Unit = {
-    println("STARTING HEARTBEAT")
     heartBeatThread.execute(new Runnable() {
       override def run(): Unit = {
         try {

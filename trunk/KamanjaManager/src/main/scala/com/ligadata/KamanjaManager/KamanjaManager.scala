@@ -773,6 +773,7 @@ class KamanjaManager extends Observer {
     inputAdapters.foreach(ad => { adapterMetricInfo += ad.getComponentStatusAndMetrics })
     outputAdapters.foreach(ad => { adapterMetricInfo += ad.getComponentStatusAndMetrics })
     statusAdapters.foreach(ad => { adapterMetricInfo += ad.getComponentStatusAndMetrics })
+    failedEventsAdapters.foreach(ad => { adapterMetricInfo += ad.getComponentStatusAndMetrics })
     validateInputAdapters.foreach(ad => { adapterMetricInfo += ad.getComponentStatusAndMetrics })
     adapterMetricInfo += KamanjaMetadata.envCtxt.getComponentStatusAndMetrics
 

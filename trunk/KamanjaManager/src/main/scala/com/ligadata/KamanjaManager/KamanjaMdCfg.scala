@@ -154,6 +154,7 @@ object KamanjaMdCfg {
       if ((a._2.TypeString.compareToIgnoreCase("Input") == 0) ||
         (a._2.TypeString.compareToIgnoreCase("Validate") == 0) ||
         (a._2.TypeString.compareToIgnoreCase("Output") == 0) ||
+        (a._2.TypeString.compareToIgnoreCase("FailedEvents") == 0) ||
         (a._2.TypeString.compareToIgnoreCase("Status") == 0)) {
         val jar = a._2.JarName
         val depJars = if (a._2.DependencyJars != null) a._2.DependencyJars.map(str => str.trim).filter(str => str.size > 0).toSet else null
