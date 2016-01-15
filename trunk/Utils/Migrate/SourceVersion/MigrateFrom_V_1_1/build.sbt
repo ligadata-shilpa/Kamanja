@@ -70,7 +70,7 @@ libraryDependencies += "com.google.code.gson" % "gson" % "2.3.1"
 
 libraryDependencies ++= Seq(
 "com.twitter" %% "chill" % "0.5.0",
-"org.scalamacros" %% "quasiquotes" % "2.0.0-M6"
+"org.scalamacros" % "quasiquotes_2.10.4" % "2.0.0-M6"
 )
 
 libraryDependencies += "org.json4s" %% "json4s-native" % "3.2.9" 
