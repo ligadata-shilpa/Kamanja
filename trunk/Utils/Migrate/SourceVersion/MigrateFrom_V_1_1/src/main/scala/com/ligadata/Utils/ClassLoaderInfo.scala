@@ -17,7 +17,6 @@
 package com.ligadata.Utils
 
 import scala.collection.mutable.TreeSet
-import scala.reflect.runtime.{ universe => ru }
 import java.net.{ URL, URLClassLoader }
 import org.apache.logging.log4j.{ Logger, LogManager }
 import scala.collection.mutable.ArrayBuffer
@@ -122,6 +121,6 @@ class KamanjaLoaderInfoFrom(val parent: KamanjaLoaderInfoFrom = null, val usePar
   val loadedJars: TreeSet[String] = if (useParentloadedJars && parent != null) parent.loadedJars else new TreeSet[String]
 
   // Get a mirror for reflection
-  val mirror: reflect.runtime.universe.Mirror = ru.runtimeMirror(loader)
+  // val mirror: reflect.runtime.universe.Mirror = ru.runtimeMirror(loader)
 }
 
