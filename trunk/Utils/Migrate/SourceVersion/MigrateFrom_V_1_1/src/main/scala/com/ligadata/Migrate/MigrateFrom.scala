@@ -681,7 +681,7 @@ object MigrateFrom_V_1_1 extends MigratableFrom {
   }
 
   object MdResolve extends MdBaseResolveInfo {
-    private val _messagesAndContainers = scala.collection.mutable.Map[String, MessageContainerObjBase]()
+    val _messagesAndContainers = scala.collection.mutable.Map[String, MessageContainerObjBase]()
     val _gson = new Gson();
     val _kamanjaLoader = new KamanjaLoaderInfo
     val _kryoDataSer = SerializerManager.GetSerializer("kryo")
@@ -815,6 +815,7 @@ object MigrateFrom_V_1_1 extends MigratableFrom {
       } else if (v != null && v.isInstanceOf[BaseContainerObj]) {
         return v.asInstanceOf[BaseContainerObj].CreateNewContainer
       }
+      logger.error("getMessgeOrContainerInstance not found:%s. All List:%s".format(msgContainerType, _messagesAndContainers.map(kv => kv._1).mkString(",")))
       _dataFoundButNoMetadata += nm
       return null
     }
@@ -931,6 +932,12 @@ object MigrateFrom_V_1_1 extends MigratableFrom {
 
     val dataStore = GetDataStoreHandle(fromVersionJarPaths, _dataStoreInfo, "AllData" + backupTblSufix)
 
+    if (MdResolve._kryoDataSer != null) {
+      MdResolve._kryoDataSer.SetClassLoader(MdResolve._kamanjaLoader.loader)
+    }
+    
+    logger.error("==================================>All List:%s".format(MdResolve._messagesAndContainers.map(kv => kv._1).mkString(",")))
+    
     try {
       // Load all metadata objects
       var keys = scala.collection.mutable.Set[Key]()
