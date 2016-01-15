@@ -586,6 +586,31 @@ object MigrateFrom_V_1_1 extends MigratableFrom {
 
     logger.info("fromVersionInstallationPath:%s, fromVersionJarPaths:%s".format(fromVersionInstallationPath, fromVersionJarPaths.mkString(",")))
 
+    val dir = new File(fromVersionInstallationPath + "/bin");
+
+    val mdapiFls = dir.listFiles.filter(_.isFile).filter(_.getName.startsWith("MetadataAPI-")).toList
+
+    var baseFileToLoadFromPrevVer = ""
+    if (mdapiFls.size == 0) {
+      val kmFls = dir.listFiles.filter(_.isFile).filter(_.getName.startsWith("KamanjaManager-")).toList
+      if (kmFls.size == 0) {
+        val szMsg = "Not found %s/bin/MetadataAPI-* and %s/bin/KamanjaManager-*".format(fromVersionInstallationPath, fromVersionInstallationPath)
+        logger.error(szMsg)
+        throw new Exception(szMsg)
+      } else {
+        baseFileToLoadFromPrevVer = kmFls(0).getAbsolutePath
+      }
+    } else {
+      baseFileToLoadFromPrevVer = mdapiFls(0).getAbsolutePath
+    }
+    // Loading the base file where we have all the base classes like classes from KamanjaBase, metadata, MetadataAPI, etc
+    if (baseFileToLoadFromPrevVer != null && baseFileToLoadFromPrevVer.size > 0)
+      LoadFqJarsIfNeeded(Array(baseFileToLoadFromPrevVer), MdResolve._kamanjaLoader.loadedJars, MdResolve._kamanjaLoader.loader)
+
+    if (MdResolve._kryoDataSer != null) {
+      MdResolve._kryoDataSer.SetClassLoader(MdResolve._kamanjaLoader.loader)
+    }
+
     val metadataStore = GetDataStoreHandle(fromVersionJarPaths, _metadataStoreInfo, "metadata_objects" + backupTblSufix)
 
     try {
@@ -605,10 +630,8 @@ object MigrateFrom_V_1_1 extends MigratableFrom {
         allObjs += obj.Value
       })
 
-      val kryoDataSer = SerializerManager.GetSerializer("kryo")
-
       allObjs.foreach(o => {
-        val mObj = kryoDataSer.DeserializeObjectFromByteArray(o.toArray[Byte]).asInstanceOf[BaseElem]
+        val mObj = MdResolve._kryoDataSer.DeserializeObjectFromByteArray(o.toArray[Byte]).asInstanceOf[BaseElem]
         try {
           val (typ, jsonStr) = serializeObjectToJson(mObj)
           if (callbackFunction != null) {
@@ -680,12 +703,10 @@ object MigrateFrom_V_1_1 extends MigratableFrom {
     isIt
   }
 
-  val _kamanjaLoader1 = new KamanjaLoaderInfo
-
   object MdResolve extends MdBaseResolveInfo {
     val _messagesAndContainers = scala.collection.mutable.Map[String, MessageContainerObjBase]()
     val _gson = new Gson();
-    val _kamanjaLoader = _kamanjaLoader1
+    val _kamanjaLoader = new KamanjaLoaderInfo
     val _kryoDataSer = SerializerManager.GetSerializer("kryo")
     if (_kryoDataSer != null) {
       _kryoDataSer.SetClassLoader(_kamanjaLoader.loader)
@@ -934,11 +955,10 @@ object MigrateFrom_V_1_1 extends MigratableFrom {
     } else {
       baseFileToLoadFromPrevVer = mdapiFls(0).getAbsolutePath
     }
-    /*
     // Loading the base file where we have all the base classes like classes from KamanjaBase, metadata, MetadataAPI, etc
     if (baseFileToLoadFromPrevVer != null && baseFileToLoadFromPrevVer.size > 0)
       LoadFqJarsIfNeeded(Array(baseFileToLoadFromPrevVer), MdResolve._kamanjaLoader.loadedJars, MdResolve._kamanjaLoader.loader)
-*/
+
     AddActiveMessageOrContianer(metadataElemsJson, fromVersionJarPaths)
 
     val dataStore = GetDataStoreHandle(fromVersionJarPaths, _dataStoreInfo, "AllData" + backupTblSufix)
