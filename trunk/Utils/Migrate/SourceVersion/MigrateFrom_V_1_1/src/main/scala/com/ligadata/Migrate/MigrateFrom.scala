@@ -126,7 +126,7 @@ object MigrateFrom_V_1_1 extends MigratableFrom {
     GetObject(k, store)
   }
 
-  private def LoadFqJarsIfNeeded(jars: Array[String], loadedJars: scala.collection.mutable.TreeSet[String], loader: KamanjaClassLoader): Boolean = {
+  private def LoadFqJarsIfNeeded(jars: Array[String], loadedJars: scala.collection.mutable.TreeSet[String], loader: KamanjaClassLoaderFrom): Boolean = {
     // Loading all jars
     for (j <- jars) {
       logger.debug("Processing Jar " + j.trim)
@@ -166,7 +166,7 @@ object MigrateFrom_V_1_1 extends MigratableFrom {
     return jarName // Returning base jarName if not found in jar paths
   }
 
-  private def LoadJarIfNeeded(jsonObjMap: Map[String, Any], loadedJars: scala.collection.mutable.TreeSet[String], loader: KamanjaClassLoader, jarPaths: collection.immutable.Set[String]): Boolean = {
+  private def LoadJarIfNeeded(jsonObjMap: Map[String, Any], loadedJars: scala.collection.mutable.TreeSet[String], loader: KamanjaClassLoaderFrom, jarPaths: collection.immutable.Set[String]): Boolean = {
     if (jarPaths == null) return false
 
     var retVal: Boolean = true
@@ -201,7 +201,7 @@ object MigrateFrom_V_1_1 extends MigratableFrom {
     return true
   }
 
-  private def LoadJarIfNeeded(objJson: String, loadedJars: scala.collection.mutable.TreeSet[String], loader: KamanjaClassLoader, jarPaths: collection.immutable.Set[String]): Boolean = {
+  private def LoadJarIfNeeded(objJson: String, loadedJars: scala.collection.mutable.TreeSet[String], loader: KamanjaClassLoaderFrom, jarPaths: collection.immutable.Set[String]): Boolean = {
     if (jarPaths == null) return false
 
     var retVal: Boolean = true
@@ -706,7 +706,7 @@ object MigrateFrom_V_1_1 extends MigratableFrom {
   object MdResolve extends MdBaseResolveInfo {
     val _messagesAndContainers = scala.collection.mutable.Map[String, MessageContainerObjBase]()
     val _gson = new Gson();
-    val _kamanjaLoader = new KamanjaLoaderInfo
+    val _kamanjaLoader = new KamanjaLoaderInfoFrom
     val _kryoDataSer = SerializerManager.GetSerializer("kryo")
     if (_kryoDataSer != null) {
       _kryoDataSer.SetClassLoader(_kamanjaLoader.loader)
