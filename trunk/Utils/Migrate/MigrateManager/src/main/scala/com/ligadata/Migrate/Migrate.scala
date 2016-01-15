@@ -512,6 +512,7 @@ object Migrate {
 
       val orderMetadata = ArrayBuffer[(String, String)]()
       // Populate orderMetadata from allMetadata in the order we need to import/compile/recompile
+      orderMetadata ++= allMetadata
 
       migrateTo.uploadConfiguration
 
