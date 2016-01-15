@@ -343,6 +343,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     toTableName(containerName)
   }
 
+  // accessor used for testing
   def getTableName(containerName: String): String = {
     // we need to check for other restrictions as well
     // such as length of the table, special characters etc
@@ -1296,6 +1297,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
   }
 
   override def isContainerExists(containerName: String): Boolean = {
+    relogin
     var tableName = toFullTableName(containerName)
     admin.tableExists(tableName)
   }
@@ -1349,6 +1351,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
   def getAllTables: Array[String] = {
     var tables = new Array[String](0)
     try{
+      relogin
       // Get all the list of tables using HBaseAdmin object
       val tableDescriptors = admin.listTables();
       tableDescriptors.foreach( t => {
@@ -1382,8 +1385,6 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
   def isTableExists(tableName:String) : Boolean = {
     admin.tableExists(tableName)
   }
-
-
 }
 
 class HBaseAdapterTx(val parent: DataStore) extends Transaction {

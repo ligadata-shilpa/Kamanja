@@ -454,6 +454,11 @@ class SqlServerAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
     SchemaName + "." + toTableName(containerName)
   }
 
+  // accessor used for testing
+  def getTableName(containerName: String): String = {
+    toTableName(containerName)
+  }
+
   override def put(containerName: String, key: Key, value: Value): Unit = {
     var con: Connection = null
     var pstmt: PreparedStatement = null
@@ -1204,12 +1209,11 @@ class SqlServerAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
     })
   }
 
-  private def DropContainer(containerName: String): Unit = lock.synchronized {
+  private def dropTable(tableName: String): Unit = lock.synchronized {
     var con: Connection = null
     var stmt: Statement = null
     var rs: ResultSet = null
-    var tableName = toTableName(containerName)
-    var fullTableName = toFullTableName(containerName)
+    var fullTableName = SchemaName + "." + tableName
     var query = ""
     try {
       con = getConnection
@@ -1217,7 +1221,7 @@ class SqlServerAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
       val dbm = con.getMetaData();
       rs = dbm.getTables(null, SchemaName, tableName, null);
       if (!rs.next()) {
-        logger.debug("The table " + fullTableName + " may have beem dropped already ")
+        logger.info("The table " + tableName + " doesn't exist in the schema " + SchemaName + "  may have beem dropped already ")
       } else {
         query = "drop table " + fullTableName
         stmt = con.createStatement()
@@ -1238,6 +1242,12 @@ class SqlServerAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
         con.close
       }
     }
+  }
+
+
+  private def DropContainer(containerName: String): Unit = lock.synchronized {
+    var tableName = toTableName(containerName)
+    dropTable(tableName)
   }
 
   override def DropContainer(containerNames: Array[String]): Unit = {
@@ -1324,34 +1334,65 @@ class SqlServerAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
     })
   }
 
-  def renameTable(oldTableName:String, newTableName: String): Unit = lock.synchronized {
+  override def isTableExists(tableName: String): Boolean = {
+    // check whether corresponding table exists
     var con: Connection = null
-    var stmt: Statement = null
     var rs: ResultSet = null
-    logger.info("renaming " + oldTableName + " to " + newTableName);
-    var query = ""
+    logger.info("Checking the existence of the table " + tableName)
     try {
       con = getConnection
-      // check if the container already backed up
       val dbm = con.getMetaData();
-      rs = dbm.getTables(null, SchemaName, newTableName, null);
+      rs = dbm.getTables(null, SchemaName, tableName, null);
       if (rs.next()) {
-        logger.info("The table " + newTableName + " exists, may have beem renamed already ")
-      } 
-      else {
-	rs = dbm.getTables(null, SchemaName, oldTableName, null);
-	if (!rs.next()) {
-          logger.info("The table " + oldTableName + " doesn't exist, nothing to rename ")
-	} 
-	else {
-          query = "sp_rename '" + oldTableName + "' , '" + newTableName + "'"
-          stmt = con.createStatement()
-          stmt.executeUpdate(query);
-	}
+	return true
+      }
+      else{
+	return false
       }
     } catch {
       case e: Exception => {
-        throw CreateDDLException("Failed to rename the table " + oldTableName + ":" + "query => " + query + ":" + e.getMessage(), e)
+        throw CreateDMLException("Unable to verify table existence of table " + tableName +  ":" + e.getMessage(), e)
+      }
+    } finally {
+      if (rs != null) {
+        rs.close
+      }
+      if (con != null) {
+        con.close
+      }
+    }
+  }
+
+  def renameTable(srcTableName:String, destTableName: String, forceCopy: Boolean = false): Unit = lock.synchronized {
+    var con: Connection = null
+    var stmt: Statement = null
+    var rs: ResultSet = null
+    logger.info("renaming " + srcTableName + " to " + destTableName);
+    var query = ""
+    try {
+      // check whether source table exists
+      var exists = isTableExists(srcTableName)
+      if (! exists ){
+        throw CreateDDLException("Failed to rename the table " + srcTableName + ":", new Exception("Source Table doesn't exist"))
+      } 
+      // check if the destination table already exists
+      exists = isTableExists(destTableName)
+      if ( exists ) {
+        logger.info("The table " + destTableName + " exists.. ")
+	if( forceCopy ){
+	  dropTable(destTableName)
+	}
+	else{
+          throw CreateDDLException("Failed to rename the table " + srcTableName + ":", new Exception("Destination Table already exist"))
+	}
+      }
+      con = getConnection
+      query = "sp_rename '" + SchemaName + "." + srcTableName + "' , '" +  destTableName + "'"
+      stmt = con.createStatement()
+      stmt.executeUpdate(query);
+    } catch {
+      case e: Exception => {
+        throw CreateDDLException("Failed to rename the table " + srcTableName + ":" + "query => " + query + ":" + e.getMessage(), e)
       }
     } finally {
       if (rs != null) {
@@ -1368,43 +1409,84 @@ class SqlServerAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
 
   def backupContainer(containerName:String): Unit = lock.synchronized {
     var tableName = toTableName(containerName)
-    var fullTableName = toFullTableName(containerName)
-    var oldTableName = fullTableName
-    var newTableName = tableName + ".bak"
+    var oldTableName = tableName
+    var newTableName = tableName + "_bak"
     renameTable(oldTableName,newTableName)
   }
 
   def restoreContainer(containerName:String): Unit = lock.synchronized {
     var tableName = toTableName(containerName)
-    var fullTableName = toFullTableName(containerName)
-    var oldTableName = fullTableName + ".bak"
+    var oldTableName = tableName + "_bak"
     var newTableName = tableName
     renameTable(oldTableName,newTableName)
   }
 
   override def isContainerExists(containerName: String): Boolean = {
-    throw CreateDDLException("Not Implemented yet :",new Exception("Failed to check container existence " + containerName))
+    // check whether corresponding table exists
+    var tableName = toTableName(containerName)
+    isTableExists(tableName)
   }
 
-  override def copyContainer(srcContainerName: String, destContainerName: String, forceCopy: Boolean): Unit = {
-    throw CreateDDLException("Not Implemented yet :",new Exception("Failed to copy container " + srcContainerName))
+  override def copyContainer(srcContainerName: String, destContainerName: String, forceCopy: Boolean): Unit = lock.synchronized {
+    if( srcContainerName.equalsIgnoreCase(destContainerName) ){
+      throw CreateDDLException("Failed to copy the container " + srcContainerName, new Exception("Source Container Name can't be same as destination container name"))
+    }
+    var srcTableName = toTableName(srcContainerName)
+    var destTableName = toTableName(destContainerName)
+    try {
+      renameTable(srcTableName,destTableName,forceCopy)
+    } catch {
+      case e: Exception => {
+        throw CreateDDLException("Failed to copy the container " + srcContainerName, e)
+      }
+    }
   }
+
   override def getAllTables: Array[String] = {
-    logger.info("Not Implemeted yet")
-    new Array[String](0)
+    var tbls = new Array[String](0)
+    // check whether corresponding table exists
+    var con: Connection = null
+    var rs: ResultSet = null
+    try {
+      con = getConnection
+      val dbm = con.getMetaData();
+      rs = dbm.getTables(null, SchemaName, null, null);
+      while (rs.next()) {
+	var t = rs.getString(3)
+	tbls = tbls :+ t
+      }
+      tbls
+    } catch {
+      case e: Exception => {
+        throw CreateDMLException("Unable to fetch the list of tables in the schema  " + SchemaName +  ":" + e.getMessage(), e)
+      }
+    } finally {
+      if (rs != null) {
+        rs.close
+      }
+      if (con != null) {
+        con.close
+      }
+    }
   }
+
+
   override def dropTables(tbls: Array[String]): Unit = {
-    logger.info("Not Implemeted yet")
+    try{
+      tbls.foreach( t => {
+	dropTable(t)
+      })
+    } catch {
+      case e: Exception => {
+        throw CreateDDLException("Failed to drop table list  ",e)
+      }
+    }
   }
     
   override def copyTable(srcTableName:String, destTableName:String, forceCopy: Boolean) : Unit = {
-    logger.info("Not Implemeted yet")
+    renameTable(srcTableName,destTableName,forceCopy)
   }
 
-  override def isTableExists(tableName:String) : Boolean = {
-    logger.info("Not Implemeted yet")
-    false
-  }    
 }
 
 class SqlServerAdapterTx(val parent: DataStore) extends Transaction {
