@@ -130,7 +130,7 @@ object MigrateTo_V_1_3 extends MigratableTo {
     val cfgStr = Source.fromFile(clusterConfigFile).mkString
     val (dataStoreInfo, statusStoreInfo) = GetDataStoreStatusStoreInfo(cfgStr)
 
-    if (_metaDataStoreInfo == null || _metaDataStoreInfo.size == 0) {
+    if (metaDataStoreInfo == null || metaDataStoreInfo.size == 0) {
       throw new Exception("Not found valid MetadataStore info in " + apiConfigFile)
     }
 
