@@ -343,6 +343,12 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     toTableName(containerName)
   }
 
+  def getTableName(containerName: String): String = {
+    // we need to check for other restrictions as well
+    // such as length of the table, special characters etc
+    toTableName(containerName)
+  }
+
   private def CreateContainer(containerName: String, apiType: String): Unit = lock.synchronized {
     var tableName = toTableName(containerName)
     var fullTableName = toFullTableName(containerName)
@@ -1340,6 +1346,44 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     }
   }
 
+  def getAllTables: Array[String] = {
+    var tables = new Array[String](0)
+    try{
+      // Get all the list of tables using HBaseAdmin object
+      val tableDescriptors = admin.listTables();
+      tableDescriptors.foreach( t => {
+	tables = tables :+ t.getNameAsString()
+      })
+    } catch {
+      case e: Exception => {
+        throw CreateDMLException("Failed to fetch the table list  ",e)
+      }
+    }
+    tables
+  }
+
+
+  def dropTables(tbls: Array[String]): Unit = {
+    try{
+      tbls.foreach( t => {
+	dropTable(t)
+      })
+    } catch {
+      case e: Exception => {
+        throw CreateDDLException("Failed to drop table list  ",e)
+      }
+    }
+  }
+    
+  def copyTable(srcTableName:String, destTableName:String, forceCopy: Boolean) : Unit = {
+    renameTable(srcTableName,destTableName,forceCopy)
+  }
+
+  def isTableExists(tableName:String) : Boolean = {
+    admin.tableExists(tableName)
+  }
+
+
 }
 
 class HBaseAdapterTx(val parent: DataStore) extends Transaction {
@@ -1419,6 +1463,20 @@ class HBaseAdapterTx(val parent: DataStore) extends Transaction {
     parent.copyContainer(srcContainerName,destContainerName,forceCopy)
   }
 
+  override def getAllTables: Array[String] = {
+    parent.getAllTables
+  }
+  override def dropTables(tbls: Array[String]): Unit = {
+    parent.dropTables(tbls)
+  }
+    
+  override def copyTable(srcTableName:String, destTableName:String, forceCopy: Boolean) : Unit = {
+    parent.copyTable(srcTableName,destTableName,forceCopy)
+  }
+
+  override def isTableExists(tableName:String) : Boolean = {
+    parent.isTableExists(tableName)
+  }    
 }
 
 // To create HBase Datastore instance

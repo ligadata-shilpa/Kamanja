@@ -47,6 +47,11 @@ trait DataStoreOperations {
   
   def backupContainer(containerName:String) : Unit
   def restoreContainer(containerName:String) : Unit
+
+  def getAllTables: Array[String]  //namespace or schemaName is assumed to be attached to adapter object
+  def dropTables(tbls: Array[String])
+  def copyTable(srcTableName:String, destTableName:String, forceCopy: Boolean) : Unit
+  def isTableExists(tableName:String) : Boolean
 }
 
 trait DataStore extends DataStoreOperations {

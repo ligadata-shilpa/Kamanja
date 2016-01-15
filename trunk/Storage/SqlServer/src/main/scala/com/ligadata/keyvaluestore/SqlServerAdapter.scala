@@ -1389,7 +1389,22 @@ class SqlServerAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
   override def copyContainer(srcContainerName: String, destContainerName: String, forceCopy: Boolean): Unit = {
     throw CreateDDLException("Not Implemented yet :",new Exception("Failed to copy container " + srcContainerName))
   }
+  override def getAllTables: Array[String] = {
+    logger.info("Not Implemeted yet")
+    new Array[String](0)
+  }
+  override def dropTables(tbls: Array[String]): Unit = {
+    logger.info("Not Implemeted yet")
+  }
+    
+  override def copyTable(srcTableName:String, destTableName:String, forceCopy: Boolean) : Unit = {
+    logger.info("Not Implemeted yet")
+  }
 
+  override def isTableExists(tableName:String) : Boolean = {
+    logger.info("Not Implemeted yet")
+    false
+  }    
 }
 
 class SqlServerAdapterTx(val parent: DataStore) extends Transaction {
@@ -1468,6 +1483,21 @@ class SqlServerAdapterTx(val parent: DataStore) extends Transaction {
   override def copyContainer(srcContainerName: String, destContainerName: String, forceCopy: Boolean): Unit = {
     parent.copyContainer(srcContainerName,destContainerName,forceCopy)
   }
+
+  override def getAllTables: Array[String] = {
+    parent.getAllTables
+  }
+  override def dropTables(tbls: Array[String]): Unit = {
+    parent.dropTables(tbls)
+  }
+    
+  override def copyTable(srcTableName:String, destTableName:String, forceCopy: Boolean) : Unit = {
+    parent.copyTable(srcTableName,destTableName,forceCopy)
+  }
+
+  override def isTableExists(tableName:String) : Boolean = {
+    parent.isTableExists(tableName)
+  }    
 
 }
 

@@ -579,6 +579,37 @@ class HBaseAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterAl
 	adapter.copyContainer(srcContainerName,destContainerName,true)
       }
 
+      And("Test the existence of the source table")
+      var srcTableName = hbaseAdapter.getTableName(srcContainerName)
+      exists = adapter.isTableExists(srcTableName)
+      assert(exists == true)
+
+      And("Test the existence of the destination table")
+      var destTableName = hbaseAdapter.getTableName(destContainerName)
+      exists = adapter.isTableExists(destTableName)
+      assert(exists == true)
+
+      And("Copy source table to destination table using force option")
+      adapter.copyTable(srcTableName,destTableName,true)
+
+      And("get all tables")
+      var tbls = new Array[String](0)
+      noException should be thrownBy {
+	tbls = adapter.getAllTables
+      }
+      
+      And("drop all tables")
+      noException should be thrownBy {
+	adapter.dropTables(tbls)
+      }
+
+      And("Test the existence of the source table after dropTables")
+      exists = adapter.isTableExists(srcTableName)
+      assert(exists == false)
+
+      And("Test the existence of the destination table after dropTables")
+      exists = adapter.isTableExists(destTableName)
+      assert(exists == false)
 
       And("Test drop container again, cleanup")
       noException should be thrownBy {
@@ -588,12 +619,14 @@ class HBaseAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterAl
 	adapter.DropContainer(containers)
       }
 
+      And("Test the existence of the source container after DropContainer")
       exists = adapter.isContainerExists(srcContainerName)
       assert(exists == false)
 
+      And("Test the existence of the destination container after DropContainer")
       exists = adapter.isContainerExists(destContainerName)
       assert(exists == false)
-
+      
 
       And("Test drop keyspace")
       noException should be thrownBy {

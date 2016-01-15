@@ -1081,6 +1081,22 @@ class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
     throw CreateDDLException("Not Implemented yet :",new Exception("Failed to copy container " + srcContainerName))
   }
 
+  override def getAllTables: Array[String] = {
+    logger.info("Not Implemeted yet")
+    new Array[String](0)
+  }
+  override def dropTables(tbls: Array[String]): Unit = {
+    logger.info("Not Implemeted yet")
+  }
+    
+  override def copyTable(srcTableName:String, destTableName:String, forceCopy: Boolean) : Unit = {
+    logger.info("Not Implemeted yet")
+  }
+
+  override def isTableExists(tableName:String) : Boolean = {
+    logger.info("Not Implemeted yet")
+    false
+  }    
 }
 
 class CassandraAdapterTx(val parent: DataStore) extends Transaction {
@@ -1160,6 +1176,20 @@ class CassandraAdapterTx(val parent: DataStore) extends Transaction {
     parent.copyContainer(srcContainerName,destContainerName,forceCopy)
   }
 
+  override def getAllTables: Array[String] = {
+    parent.getAllTables
+  }
+  override def dropTables(tbls: Array[String]): Unit = {
+    parent.dropTables(tbls)
+  }
+    
+  override def copyTable(srcTableName:String, destTableName:String, forceCopy: Boolean) : Unit = {
+    parent.copyTable(srcTableName,destTableName,forceCopy)
+  }
+
+  override def isTableExists(tableName:String) : Boolean = {
+    parent.isTableExists(tableName)
+  }    
 }
 
 // To create Cassandra Datastore instance
