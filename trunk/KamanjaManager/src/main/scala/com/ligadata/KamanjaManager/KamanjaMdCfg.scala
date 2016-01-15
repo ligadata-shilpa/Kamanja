@@ -307,7 +307,6 @@ object KamanjaMdCfg {
   def LoadAdapters(inputAdapters: ArrayBuffer[InputAdapter], outputAdapters: ArrayBuffer[OutputAdapter], statusAdapters: ArrayBuffer[OutputAdapter], validateInputAdapters: ArrayBuffer[InputAdapter], failedEventsAdapters: ArrayBuffer[OutputAdapter]): Boolean = {
     LOG.info("Loading Adapters started @ " + Utils.GetCurDtTmStr)
     val s0 = System.nanoTime
-    println("*** LOAD ADAPTERS ***")
     val allAdapters = mdMgr.Adapters
 
     val inputAdaps = scala.collection.mutable.Map[String, AdapterInfo]()

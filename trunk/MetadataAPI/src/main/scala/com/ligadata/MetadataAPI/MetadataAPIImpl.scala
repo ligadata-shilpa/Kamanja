@@ -291,7 +291,7 @@ object MetadataAPIImpl extends MetadataAPI {
         classLoader.loadedJars += fl.getPath()
       } catch {
         case e: Exception => {
-          logger.error("Failed to add " + implJarName + " due to internal exception " + e.printStackTrace)
+          logger.error("Failed to add " + implJarName + " due to internal exception ", e)
           return
         }
       }
@@ -549,6 +549,7 @@ object MetadataAPIImpl extends MetadataAPI {
 
     val zkcConnectString = GetMetadataAPIConfig.getProperty("ZOOKEEPER_CONNECT_STRING")
     val znodePath = GetMetadataAPIConfig.getProperty("ZNODE_PATH") + "/metadataupdate"
+    zkHeartBeatNodePath = metadataAPIConfig.getProperty("ZNODE_PATH") + "/monitor/metadata/" + metadataAPIConfig.getProperty("NODE_ID").toString
     logger.debug("Connect To ZooKeeper using " + zkcConnectString)
     try {
       CreateClient.CreateNodeIfNotExists(zkcConnectString, zkHeartBeatNodePath)
@@ -5794,7 +5795,6 @@ object MetadataAPIImpl extends MetadataAPI {
   }
 
   private def InitHearbeat: Unit = {
-    zkHeartBeatNodePath = metadataAPIConfig.getProperty("ZNODE_PATH") + "/monitor/metadata/" + metadataAPIConfig.getProperty("NODE_ID").toString
     InitZooKeeper
     MonitorAPIImpl.initMonitorValues(metadataAPIConfig.getProperty("NODE_ID").toString)
     MonitorAPIImpl.startMetadataHeartbeat
