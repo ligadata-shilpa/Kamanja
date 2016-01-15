@@ -9,8 +9,6 @@ version := "1.0-SNAPSHOT"
 // project description
 description := "JDBC Adapters for creating data pipelines"
 
-scalaVersion := "2.11.7"
-
 EclipseKeys.withSource := true
 
 EclipseKeys.relativizeLibs := false
@@ -28,3 +26,5 @@ libraryDependencies += "org.apache.logging.log4j" % "log4j-core" % "2.4.1"
 libraryDependencies += "commons-codec" % "commons-codec" % "1.10"
        
 libraryDependencies += "org.scala-lang" % "scala-actors" % "2.11.7"
+
+libraryDependencies += "org.apache.commons" % "commons-dbcp2" % "2.1.1"

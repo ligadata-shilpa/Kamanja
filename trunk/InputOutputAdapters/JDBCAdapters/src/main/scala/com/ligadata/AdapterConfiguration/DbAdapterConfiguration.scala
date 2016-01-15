@@ -5,6 +5,13 @@ import org.json4s._
 import org.json4s.JsonDSL._
 import org.json4s.native.JsonMethods._
 import java.util.Date
+import org.apache.logging.log4j.LogManager
+import java.sql.Connection
+import java.sql.DriverManager
+import java.sql.SQLException
+import java.sql.Statement
+import java.sql.DatabaseMetaData
+import java.sql.ResultSet
 
 class DbAdapterConfiguration extends AdapterConfiguration {
     var dbDriver : String = _ //Name of the driver class
@@ -30,6 +37,8 @@ class DbAdapterConfiguration extends AdapterConfiguration {
 }
 
 object DbAdapterConfiguration {
+  private[this] val LOG = LogManager.getLogger(getClass);
+  
   def getAdapterConfig(inputConfig: AdapterConfiguration):DbAdapterConfiguration = {
     if (inputConfig.adapterSpecificCfg == null || inputConfig.adapterSpecificCfg.size == 0) {
       val err = "Not found Db Adapter Config:" + inputConfig.Name
@@ -89,6 +98,71 @@ object DbAdapterConfiguration {
       }*/
     })
     
+    //Validate DB Connectivity Parameters
+    if(dbAdpt.dbDriver !=null && !dbAdpt.dbDriver.isEmpty()){
+      try{
+        Class.forName(dbAdpt.dbDriver)
+        
+        var connection:Connection = null
+        
+        //Set 10 sec timeout for DriverManager to fetch connection
+        DriverManager.setLoginTimeout(10)
+        
+        if(dbAdpt.dbName != null && !dbAdpt.dbName.isEmpty())
+          connection = DriverManager.getConnection(dbAdpt.dbURL+"/"+dbAdpt.dbName, dbAdpt.dbUser, dbAdpt.dbPwd)
+        else
+          connection = DriverManager.getConnection(dbAdpt.dbURL, dbAdpt.dbUser, dbAdpt.dbPwd)
+        
+        var statement:Statement = connection.createStatement()
+        
+        //Validate Table Details
+        var dbmd: DatabaseMetaData = connection.getMetaData
+        var rs:ResultSet = null;
+        
+        //Validate Table details
+        if(dbAdpt.table != null && !dbAdpt.table.isEmpty()){
+          rs = dbmd.getTables(null, null, dbAdpt.table, Array("TABLE"))
+          if(rs != null && rs.next()){
+          }else
+            LOG.error("Error while fetching table details..")
+        
+        //Validate the Query
+        }else if(dbAdpt.query != null && !dbAdpt.query.isEmpty()){
+          statement.execute(dbAdpt.query.concat(" LIMIT 1"))
+          rs = statement.getResultSet
+          if(rs != null && rs.next()){
+          }else
+            LOG.error("Error while fetching query results..")
+        
+        //Neither Query nor Table Specified, log error
+        }else{
+          LOG.error("Neither query nor table name specified")
+        } 
+        
+        //Close the resultset
+        if(rs != null){
+          rs.close()
+          rs = null
+        }
+        
+        //Close the Statement
+        if(statement != null){
+          statement.close()
+          statement = null
+        }
+        //Finally Close the connection  
+        if(connection != null){
+          connection.close
+          connection = null
+        }
+          
+      }catch{
+        case exc:ClassNotFoundException =>  LOG.error("Unable to find the JDBC Driver in the classpath..".concat(exc.getMessage))
+        case exc:SQLException => LOG.error("Error while validating DB Adapter parameters..".concat(exc.getMessage))
+      }
+    }else{
+      LOG.error("JDBC Driver Classname not specified or empty.")
+    }
     dbAdpt
   }
 }

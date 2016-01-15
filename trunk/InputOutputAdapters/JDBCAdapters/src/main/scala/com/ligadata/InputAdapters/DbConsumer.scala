@@ -10,14 +10,10 @@ import java.sql.ResultSetMetaData
 import java.sql.SQLException
 import java.sql.Statement
 import java.util.Date
-
 import scala.actors.threadpool.{ Executors, ExecutorService }
 import scala.util.control.Breaks.{break, breakable}
-
 import org.apache.logging.log4j.LogManager
-
-import com.ligadata.AdaptersConfiguration.{DbAdapterConfiguration, DbPartitionUniqueRecordKey,DbPartitionUniqueRecordValue} 
-
+import com.ligadata.AdaptersConfiguration.{DbAdapterConfiguration, DbPartitionUniqueRecordKey,DbPartitionUniqueRecordValue}
 import com.ligadata.InputOutputAdapterInfo.AdapterConfiguration
 import com.ligadata.InputOutputAdapterInfo.CountersAdapter
 import com.ligadata.InputOutputAdapterInfo.ExecContextObj
@@ -28,6 +24,8 @@ import com.ligadata.InputOutputAdapterInfo.PartitionUniqueRecordKey
 import com.ligadata.InputOutputAdapterInfo.PartitionUniqueRecordValue
 import com.ligadata.InputOutputAdapterInfo.StartProcPartInfo
 import com.ligadata.KamanjaBase.DataDelimiters
+import javax.sql.DataSource
+import org.apache.commons.dbcp2.BasicDataSource
 
 
 object DbConsumer extends InputAdapterObj {
@@ -47,12 +45,8 @@ class DbConsumer (val inputConfig: AdapterConfiguration, val callerCtxt: InputAd
   uniqueKey.Columns = dcConf.columns
   uniqueKey.Query = dcConf.query
   
-  
-  var connection:Connection = _
-  var statement:Statement = _
-  var preparedStatement: PreparedStatement = _
-  var resultset:ResultSet = _
-  var resultSetMetaData: ResultSetMetaData = _
+  //DataSource for the connection Pool
+  private[this] var dataSource: BasicDataSource = _
   
   var executor: ExecutorService = _
   val input = this
@@ -67,55 +61,20 @@ class DbConsumer (val inputConfig: AdapterConfiguration, val callerCtxt: InputAd
     LOG.debug("Initiating Stop Processing...")
     
     //Shutdown the executor
-    if (executor == null) return
-    executor.shutdownNow
-    while (executor.isTerminated == false) {
-      Thread.sleep(100) // sleep 100ms and then check
-    }
-    executor = null
+    if (executor != null){
+      executor.shutdownNow
+      while (executor.isTerminated == false) {
+        Thread.sleep(100) // sleep 100ms and then check
+      }
+      executor = null
+    }else return
     
-    //Close the DB Related objects
-    try{
-      if(resultset != null){
-        resultset.close
-        resultset = null
-      }
-      if(statement != null){
-        statement.close
-        statement = null
-      }
-      if(preparedStatement != null){
-        preparedStatement.close
-        preparedStatement = null
-      }
-      if(connection != null){
-        connection.close
-        connection = null
-      }
-    }catch{
-      case exc:SQLException => LOG.error("Error while closing resources ".concat(exc.getMessage))
-    }finally{
-      try{
-         if(resultset != null){
-            resultset.close
-            resultset = null
-          }
-          if(statement != null){
-            statement.close
-            statement = null
-          }
-          if(preparedStatement != null){
-            preparedStatement.close
-            preparedStatement = null
-          }
-          if(connection != null){
-            connection.close
-            connection = null
-          }
-      }catch{
-        case exc:SQLException =>  LOG.error("Error while closing resources ".concat(exc.getMessage))
-      }
-    }
+    
+    if(dataSource != null){
+      dataSource.close
+      dataSource = null
+    }else return
+    
   }
   
   override def StartProcessing(partitionInfo: Array[StartProcPartInfo], ignoreFirstMsg: Boolean): Unit = lock.synchronized {
@@ -130,10 +89,30 @@ class DbConsumer (val inputConfig: AdapterConfiguration, val callerCtxt: InputAd
     var threads: Int = 1
     
     //TODO Need to see if we can run a thread pool with timeInterval and timeUnits 
-    
     executor = Executors.newFixedThreadPool(threads)
     
-    //TODO - Create a DBCP based Connection Pool Here
+    //Create a DBCP based Connection Pool Here
+    dataSource = new BasicDataSource
+		
+		dataSource.setDriverClassName(dcConf.dbDriver)
+		if(dcConf.dbName!=null && !dcConf.dbName.isEmpty())
+		  dataSource.setUrl(dcConf.dbURL+"/"+dcConf.dbName)
+		else
+		  dataSource.setUrl(dcConf.dbURL)
+		dataSource.setUsername(dcConf.dbUser);
+		dataSource.setPassword(dcConf.dbPwd);
+		
+		
+		dataSource.setTestWhileIdle(false);
+		dataSource.setTestOnBorrow(true);
+		dataSource.setValidationQuery("Select 1");
+		dataSource.setTestOnReturn(false);
+		
+		dataSource.setMaxTotal(100);
+		dataSource.setMaxIdle(5);
+		dataSource.setMinIdle(0);
+		dataSource.setInitialSize(5);
+		dataSource.setMaxWaitMillis(5000);
     
     val uniqueValue = new DbPartitionUniqueRecordValue
     
@@ -141,32 +120,34 @@ class DbConsumer (val inputConfig: AdapterConfiguration, val callerCtxt: InputAd
     val runIntervalKey:String = Category concat "/" concat  dcConf.Name concat dcConf.dbName
     val lastRun:Long = cntrAdapter.getCntr(runIntervalKey);
     
-    
-    
     try{
-      Class.forName(dcConf.dbDriver);
-      var finalDBUrl:String = dcConf.dbURL.concat("/"+dcConf.dbName)
-      connection = DriverManager.getConnection(finalDBUrl,dcConf.dbUser,dcConf.dbPwd)
-      statement = connection.createStatement();
-      
-      //TODO Dynamic insertion of where clause to include the 
-      if(dcConf.query != null && !dcConf.query.isEmpty()){
-         statement.execute(dcConf.query)
-      }else{
-        if(dcConf.where != null && !dcConf.where.isEmpty()){
-          statement.execute("Select ".concat(dcConf.columns)
-               .concat(" from ").concat(dcConf.table)
-               .concat(" ").concat(dcConf.where))
-        }else{
-          statement.execute("Select ".concat(dcConf.columns)
-               .concat(" from ").concat(dcConf.table))
-        }  
-      }
-      resultset = statement.getResultSet
-      resultSetMetaData = resultset.getMetaData
-          
       executor.execute(new Runnable() {
         override def run() {
+          
+          var connection:Connection = null
+          var statement:Statement = null
+          var preparedStatement: PreparedStatement = null
+          var resultset:ResultSet = null
+          var resultSetMetaData: ResultSetMetaData = null
+          
+          connection = dataSource.getConnection
+          statement = connection.createStatement
+          
+          //TODO Dynamic insertion of where clause to include the 
+          if(dcConf.query != null && !dcConf.query.isEmpty()){
+             statement.execute(dcConf.query)
+          }else{
+            if(dcConf.where != null && !dcConf.where.isEmpty()){
+              statement.execute("Select ".concat(dcConf.columns)
+                   .concat(" from ").concat(dcConf.table)
+                   .concat(" ").concat(dcConf.where))
+            }else{
+              statement.execute("Select ".concat(dcConf.columns)
+                   .concat(" from ").concat(dcConf.table))
+            }  
+          }
+          resultset = statement.getResultSet
+          resultSetMetaData = resultset.getMetaData
           
           var cntr: Long = 0
           
@@ -201,6 +182,7 @@ class DbConsumer (val inputConfig: AdapterConfiguration, val callerCtxt: InputAd
                  break
                }
             }
+            
             //Capture the last run time here and push into a counter
             val currentTime:Long = new Date().getTime;
             if(lastRun == 0)
@@ -208,10 +190,52 @@ class DbConsumer (val inputConfig: AdapterConfiguration, val callerCtxt: InputAd
             else 
               cntrAdapter.addCntr(runIntervalKey, (currentTime - lastRun))
           }
+          //breakable ends here
+          
+          try{
+            if(resultset != null){
+               resultset.close
+              resultset = null
+            }
+            if(statement != null){
+              statement.close
+              statement = null
+            }
+            if(preparedStatement != null){
+              preparedStatement.close
+              preparedStatement = null
+            }
+            if(connection != null){
+              connection.close
+              connection = null
+            }
+          }catch{
+            case exc:SQLException =>  LOG.error("Error while closing resources ".concat(exc.getMessage))
+          }finally{
+            try{
+               if(resultset != null){
+                  resultset.close
+                  resultset = null
+                }
+                if(statement != null){
+                  statement.close
+                  statement = null
+                }
+                if(preparedStatement != null){
+                  preparedStatement.close
+                  preparedStatement = null
+                }
+                if(connection != null){
+                  connection.close
+                  connection = null
+                }
+            }catch{
+              case exc:SQLException =>  LOG.error("Error while closing resources ".concat(exc.getMessage))
+            }
+          }
+          
         }
       })
-      
-        
     } catch {
       case e: Exception => {
         LOG.error("Failed to setup Streams. Reason:%s Message:%s".format(e.getCause, e.getMessage))
@@ -273,6 +297,5 @@ class DbConsumer (val inputConfig: AdapterConfiguration, val callerCtxt: InputAd
   override def getAllPartitionEndValues: Array[(PartitionUniqueRecordKey, PartitionUniqueRecordValue)] = {
     return Array[(PartitionUniqueRecordKey, PartitionUniqueRecordValue)]()
   }
-  
   
 }
