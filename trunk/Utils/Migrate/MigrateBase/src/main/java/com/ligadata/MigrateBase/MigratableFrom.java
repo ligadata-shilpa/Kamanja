@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.ligadata.MigrateBase
+package com.ligadata.MigrateBase;
 
 public interface MigratableFrom {
   public abstract void init(String srouceInstallPath, String metadataStoreInfo, String dataStoreInfo, String statusStoreInfo);
@@ -24,7 +24,7 @@ public interface MigratableFrom {
   public abstract String[] getAllStatusTableNames();
   public abstract String[] getAllMetadataDataStatusTableNames();
   public abstract void getAllMetadataObjs(String backupTblSufix, MetadataObjectCallBack callbackFunction);
-  public abstract void getAllDataObjs String backupTblSufix, DataObjectCallBack callbackFunction);
+  public abstract void getAllDataObjs(String backupTblSufix, DataObjectCallBack callbackFunction);
   public abstract void shutdown();
 }
 

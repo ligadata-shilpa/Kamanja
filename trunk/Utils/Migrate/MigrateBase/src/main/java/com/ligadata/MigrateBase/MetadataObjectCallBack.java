@@ -17,6 +17,6 @@
 package com.ligadata.MigrateBase;
 
 public interface MetadataObjectCallBack {
-  public boolean call(objData: MetadataFormat) throws Exception;
+  public boolean call(MetadataFormat objData) throws Exception;
 }
 

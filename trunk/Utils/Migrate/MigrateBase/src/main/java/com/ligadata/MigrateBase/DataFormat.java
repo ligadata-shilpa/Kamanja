@@ -19,9 +19,9 @@ package com.ligadata.MigrateBase;
 public class DataFormat {
   public String containerName;
   public long timePartition;
-  public long String[] bucketKey;
+  public String[] bucketKey;
   public long transactionid;
-  public long rowid;
+  public int rowid;
   public String serializername;
   public String data; // In JSON format generated from GSON
 }

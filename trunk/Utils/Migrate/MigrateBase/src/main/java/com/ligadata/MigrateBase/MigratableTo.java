@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package com.ligadata.MigrateBase
+package com.ligadata.MigrateBase;
 
-public interface com.ligadata.MigrateBase.MigratableTo {
+public interface MigratableTo {
   public abstract void init(String apiConfigFile, String clusterConfigFile);
   public abstract boolean isInitialized();
   public abstract String getMetadataStoreInfo();
