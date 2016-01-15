@@ -476,7 +476,7 @@ object Migrate {
 
       val configuration = GetConfigurationFromCfgFile(cfgfile)
 
-      val srcKamanjaLoader = new KamanjaLoaderInfo
+      val srcKamanjaLoader = new KamanjaLoaderInfo(null, false, false, true)
 
       if (configuration.migratingFrom.jars != null && configuration.migratingFrom.jars.size > 0)
         LoadFqJarsIfNeeded(configuration.migratingFrom.jars.toArray, srcKamanjaLoader.loadedJars, srcKamanjaLoader.loader)

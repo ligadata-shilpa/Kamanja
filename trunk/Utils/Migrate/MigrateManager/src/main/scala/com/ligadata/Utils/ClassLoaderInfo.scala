@@ -29,7 +29,7 @@ import scala.collection.mutable.ArrayBuffer
  *     with parent last it gets the most recent loaded class.
  */
 class KamanjaClassLoader(val systemClassLoader: URLClassLoader, val parent: KamanjaClassLoader, val currentClassClassLoader: ClassLoader, val parentLast: Boolean)
-  extends URLClassLoader(if (systemClassLoader != null) systemClassLoader.getURLs() else Array[URL](), if (parentLast == false && parent != null) parent else currentClassClassLoader) {
+    extends URLClassLoader(if (systemClassLoader != null) systemClassLoader.getURLs() else Array[URL](), if (parentLast == false && parent != null) parent else currentClassClassLoader) {
   private val LOG = LogManager.getLogger(getClass)
 
   override def addURL(url: URL) {
@@ -111,12 +111,16 @@ class KamanjaClassLoader(val systemClassLoader: URLClassLoader, val parent: Kama
 /*
  * KamanjaLoaderInfo is just wrapper for ClassLoader to maintain already loaded jars.
  */
-class KamanjaLoaderInfo(val parent: KamanjaLoaderInfo = null, val useParentloadedJars: Boolean = false, val parentLast: Boolean = false) {
+class KamanjaLoaderInfo(val parent: KamanjaLoaderInfo = null, val useParentloadedJars: Boolean = false, val parentLast: Boolean = false, noCurrentClassLoaderInfo: Boolean = false) {
   // Parent class loader
   val parentKamanLoader: KamanjaClassLoader = if (parent != null) parent.loader else null
 
   // Class Loader
-  val loader = new KamanjaClassLoader(ClassLoader.getSystemClassLoader().asInstanceOf[URLClassLoader], parentKamanLoader, getClass().getClassLoader(), parentLast)
+  val loader = if (noCurrentClassLoaderInfo) {
+    new KamanjaClassLoader(null, parentKamanLoader, null, parentLast)
+  } else {
+    new KamanjaClassLoader(ClassLoader.getSystemClassLoader().asInstanceOf[URLClassLoader], parentKamanLoader, getClass().getClassLoader(), parentLast)
+  }
 
   // Loaded jars
   val loadedJars: TreeSet[String] = if (useParentloadedJars && parent != null) parent.loadedJars else new TreeSet[String]
