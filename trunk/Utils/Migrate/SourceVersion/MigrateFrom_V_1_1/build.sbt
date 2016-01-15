@@ -57,7 +57,7 @@ name := "MigrateFrom_V_1_1"
 
 version := "1.0"
 
-scalaVersion := "2.11.7"
+scalaVersion := "2.10.4"
 
 resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
 
@@ -68,8 +68,7 @@ libraryDependencies += "org.apache.logging.log4j" % "log4j-core" % "2.4.1"
 libraryDependencies += "com.google.code.gson" % "gson" % "2.3.1"
 
 libraryDependencies ++= Seq(
-"com.twitter" %% "chill" % "0.5.0",
-"org.scalameta" %% "quasiquotes" % "0.0.3"
+"com.twitter" %% "chill" % "0.5.0"
 )
 
 libraryDependencies += "org.json4s" %% "json4s-native" % "3.2.9" 

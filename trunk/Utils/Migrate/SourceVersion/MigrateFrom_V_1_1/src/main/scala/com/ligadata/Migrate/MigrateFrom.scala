@@ -680,10 +680,12 @@ object MigrateFrom_V_1_1 extends MigratableFrom {
     isIt
   }
 
+  val _kamanjaLoader1 = new KamanjaLoaderInfo
+
   object MdResolve extends MdBaseResolveInfo {
     val _messagesAndContainers = scala.collection.mutable.Map[String, MessageContainerObjBase]()
     val _gson = new Gson();
-    val _kamanjaLoader = new KamanjaLoaderInfo
+    val _kamanjaLoader = _kamanjaLoader1
     val _kryoDataSer = SerializerManager.GetSerializer("kryo")
     if (_kryoDataSer != null) {
       _kryoDataSer.SetClassLoader(_kamanjaLoader.loader)
@@ -753,12 +755,21 @@ object MigrateFrom_V_1_1 extends MigratableFrom {
             }
           }
 
+          logger.debug("isMsg:%s, isContainer:%s".format(isMsg, isContainer))
+
           if (isMsg || isContainer) {
             try {
               val mirror = _kamanjaLoader.mirror
               val module = mirror.staticModule(clsName)
               val obj = mirror.reflectModule(module)
               val objinst = obj.instance
+              
+              if (isMsg) {
+                // objinst
+              } else {
+                
+              }
+              
               if (objinst.isInstanceOf[BaseMsgObj]) {
                 val messageObj = objinst.asInstanceOf[BaseMsgObj]
                 logger.debug("Created Message Object")
@@ -923,11 +934,11 @@ object MigrateFrom_V_1_1 extends MigratableFrom {
     } else {
       baseFileToLoadFromPrevVer = mdapiFls(0).getAbsolutePath
     }
-
+    /*
     // Loading the base file where we have all the base classes like classes from KamanjaBase, metadata, MetadataAPI, etc
     if (baseFileToLoadFromPrevVer != null && baseFileToLoadFromPrevVer.size > 0)
       LoadFqJarsIfNeeded(Array(baseFileToLoadFromPrevVer), MdResolve._kamanjaLoader.loadedJars, MdResolve._kamanjaLoader.loader)
-
+*/
     AddActiveMessageOrContianer(metadataElemsJson, fromVersionJarPaths)
 
     val dataStore = GetDataStoreHandle(fromVersionJarPaths, _dataStoreInfo, "AllData" + backupTblSufix)
@@ -935,9 +946,9 @@ object MigrateFrom_V_1_1 extends MigratableFrom {
     if (MdResolve._kryoDataSer != null) {
       MdResolve._kryoDataSer.SetClassLoader(MdResolve._kamanjaLoader.loader)
     }
-    
+
     logger.error("==================================>All List:%s".format(MdResolve._messagesAndContainers.map(kv => kv._1).mkString(",")))
-    
+
     try {
       // Load all metadata objects
       var keys = scala.collection.mutable.Set[Key]()
