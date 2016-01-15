@@ -28,7 +28,7 @@ import org.apache.log4j._
 import org.json4s._
 import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
-import com.ligadata.Utils.{ KamanjaLoaderInfo }
+import com.ligadata.Utils.{ KamanjaLoaderInfoFrom }
 
 /*
 datastoreConfig should have the following:
@@ -76,7 +76,7 @@ class KeyValueCassandraTx(val parent: DataStore) extends Transaction {
   override def delBatch(keyArray: Array[Key]): Unit = { parent.delBatch(keyArray) }
 }
 
-class KeyValueCassandra(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: String, val tableName: String) extends DataStore {
+class KeyValueCassandra(val kvManagerLoader: KamanjaLoaderInfoFrom, val datastoreConfig: String, val tableName: String) extends DataStore {
   val adapterConfig = if (datastoreConfig != null) datastoreConfig.trim else ""
   val loggerName = this.getClass.getName
   val logger = Logger.getLogger(loggerName)
@@ -324,6 +324,6 @@ class KeyValueCassandra(val kvManagerLoader: KamanjaLoaderInfo, val datastoreCon
 
 // To create Cassandra Datastore instance
 object KeyValueCassandra extends StorageAdapterObj {
-  override def CreateStorageAdapter(kvManagerLoader: KamanjaLoaderInfo, datastoreConfig: String, tableName: String): DataStore = new KeyValueCassandra(kvManagerLoader, datastoreConfig, tableName)
+  override def CreateStorageAdapter(kvManagerLoader: KamanjaLoaderInfoFrom, datastoreConfig: String, tableName: String): DataStore = new KeyValueCassandra(kvManagerLoader, datastoreConfig, tableName)
 }
 

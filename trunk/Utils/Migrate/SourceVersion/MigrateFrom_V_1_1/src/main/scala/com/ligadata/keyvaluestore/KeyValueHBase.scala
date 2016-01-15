@@ -40,7 +40,7 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.json4s._
 import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
-import com.ligadata.Utils.{ KamanjaLoaderInfo }
+import com.ligadata.Utils.{ KamanjaLoaderInfoFrom }
 
 import scala.collection.JavaConversions._
 
@@ -82,7 +82,7 @@ class KeyValueHBaseTx(val parent: DataStore) extends Transaction {
   override def delBatch(keyArray: Array[Key]): Unit = { parent.delBatch(keyArray) }
 }
 
-class KeyValueHBase(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: String, val tableName: String) extends DataStore {
+class KeyValueHBase(val kvManagerLoader: KamanjaLoaderInfoFrom, val datastoreConfig: String, val tableName: String) extends DataStore {
   val adapterConfig = if (datastoreConfig != null) datastoreConfig.trim else ""
   val loggerName = this.getClass.getName
   val logger = Logger.getLogger(loggerName)
@@ -492,6 +492,6 @@ class KeyValueHBase(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig:
 
 // To create HBase Datastore instance
 object KeyValueHBase extends StorageAdapterObj {
-  override def CreateStorageAdapter(kvManagerLoader: KamanjaLoaderInfo, datastoreConfig: String, tableName: String): DataStore = new KeyValueHBase(kvManagerLoader, datastoreConfig, tableName)
+  override def CreateStorageAdapter(kvManagerLoader: KamanjaLoaderInfoFrom, datastoreConfig: String, tableName: String): DataStore = new KeyValueHBase(kvManagerLoader, datastoreConfig, tableName)
 }
 

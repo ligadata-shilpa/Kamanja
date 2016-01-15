@@ -21,7 +21,7 @@
 package com.ligadata.StorageBase
 
 import scala.collection.mutable.ArrayBuffer
-import com.ligadata.Utils.{ KamanjaLoaderInfo }
+import com.ligadata.Utils.{ KamanjaLoaderInfoFrom }
 
 class ByteArray extends ArrayBuffer[Byte]
 
@@ -95,6 +95,6 @@ Ex: Sample2
 
 // Storage Adapter Object to create storage adapter
 trait StorageAdapterObj {
-  def CreateStorageAdapter(kvManagerLoader: KamanjaLoaderInfo, datastoreConfig: String, tableName: String): DataStore
+  def CreateStorageAdapter(kvManagerLoader: KamanjaLoaderInfoFrom, datastoreConfig: String, tableName: String): DataStore
 }
 
