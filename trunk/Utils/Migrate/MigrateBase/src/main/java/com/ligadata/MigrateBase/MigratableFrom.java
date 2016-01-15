@@ -24,7 +24,7 @@ public interface MigratableFrom {
   public abstract String[] getAllStatusTableNames();
   public abstract String[] getAllMetadataDataStatusTableNames();
   public abstract void getAllMetadataObjs(String backupTblSufix, MetadataObjectCallBack callbackFunction);
-  public abstract void getAllDataObjs(String backupTblSufix, DataObjectCallBack callbackFunction);
+  public abstract void getAllDataObjs(String backupTblSufix, MetadataFormat[] orderMetadata, DataObjectCallBack callbackFunction);
   public abstract void shutdown();
 }
 

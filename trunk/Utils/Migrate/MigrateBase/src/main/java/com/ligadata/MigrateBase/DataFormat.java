@@ -17,12 +17,23 @@
 package com.ligadata.MigrateBase;
 
 public class DataFormat {
-  public String containerName;
-  public long timePartition;
-  public String[] bucketKey;
-  public long transactionid;
-  public int rowid;
-  public String serializername;
-  public String data; // In JSON format generated from GSON
-}
+	public String containerName = null;
+	public long timePartition = 0;
+	public String[] bucketKey = null;
+	public long transactionid = 0;
+	public int rowid = 0;
+	public String serializername = null;
+	public String data = null; // In JSON format generated from GSON
 
+	public DataFormat(String tcontainerName, long ttimePartition,
+			String[] tbucketKey, long ttransactionid, int trowid,
+			String tserializername, String tdata) {
+		containerName = tcontainerName;
+		timePartition = ttimePartition;
+		bucketKey = tbucketKey;
+		transactionid = ttransactionid;
+		rowid = trowid;
+		serializername = tserializername;
+		data = tdata;
+	}
+}

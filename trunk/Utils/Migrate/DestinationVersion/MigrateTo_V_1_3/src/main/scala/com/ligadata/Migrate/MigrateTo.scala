@@ -16,7 +16,7 @@
 
 package com.ligadata.Migrate
 
-import com.ligadata.MigrateBase.MigratableTo
+import com.ligadata.MigrateBase._
 import org.apache.logging.log4j._
 import java.io.File
 
@@ -138,6 +138,8 @@ object MigrateTo_V_1_3 extends MigratableTo {
       throw new Exception("Not found valid DataStore info in " + clusterConfigFile)
     }
 
+    // Open the database here
+
     _apiConfigFile = apiConfigFile
     _clusterConfigFile = clusterConfigFile
 
@@ -168,20 +170,13 @@ object MigrateTo_V_1_3 extends MigratableTo {
     _statusStoreInfo
   }
 
-  // the return configuration information is in the order of Metadata Store Info, Data Store Info & Status Store Info
-  override def getMetadataStoreDataStoreStatusStoreInfo: (String, String, String) = {
-    if (_bInit == false)
-      throw new Exception("Not yet Initialized")
-    (_metaDataStoreInfo, _dataStoreInfo, _statusStoreInfo)
-  }
-
   override def isTableExists(tblName: String): Boolean = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
     false
   }
 
-  override def backupTables(tblsToBackedUp: Array[(String, String)], force: Boolean): Unit = {
+  override def backupTables(tblsToBackedUp: Array[BackupTableInfo], force: Boolean): Unit = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
   }
@@ -200,13 +195,13 @@ object MigrateTo_V_1_3 extends MigratableTo {
   }
 
   // Tuple has metadata element type & metadata element data in JSON format.
-  override def addMetadata(metadataElemsJson: Array[(String, String)]): Unit = {
+  override def addMetadata(metadataElemsJson: Array[MetadataFormat]): Unit = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
   }
 
   // Array of tuples has container name, timepartition value, bucketkey, transactionid, rowid, serializername & data in Gson (JSON) format
-  override def populateAndSaveData(data: Array[(String, Long, Array[String], Long, Int, String, String)]): Unit = {
+  override def populateAndSaveData(data: Array[DataFormat]): Unit = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
   }

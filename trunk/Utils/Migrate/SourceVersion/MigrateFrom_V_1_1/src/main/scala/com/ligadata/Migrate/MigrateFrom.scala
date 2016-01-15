@@ -19,7 +19,7 @@ package com.ligadata.Migrate
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.ligadata.Utils._
-import com.ligadata.MigrateBase.MigratableFrom
+import com.ligadata.MigrateBase._
 import java.io.File
 import org.apache.logging.log4j._
 import scala.collection.mutable.ArrayBuffer
@@ -571,7 +571,7 @@ object MigrateFrom_V_1_1 extends MigratableFrom {
   }
 
   // Callback function calls with metadata Object Type & metadata information in JSON string
-  override def getAllMetadataObjs(backupTblSufix: String, callbackFunction: (String, String) => Boolean): Unit = {
+  override def getAllMetadataObjs(backupTblSufix: String, callbackFunction: MetadataObjectCallBack): Unit = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
 
@@ -612,7 +612,7 @@ object MigrateFrom_V_1_1 extends MigratableFrom {
         try {
           val (typ, jsonStr) = serializeObjectToJson(mObj)
           if (callbackFunction != null) {
-            val retVal = callbackFunction(typ, jsonStr)
+            val retVal = callbackFunction.call(new MetadataFormat(typ, jsonStr))
             if (retVal == false) {
               return
             }
@@ -763,13 +763,13 @@ object MigrateFrom_V_1_1 extends MigratableFrom {
               val module = mirror.staticModule(clsName)
               val obj = mirror.reflectModule(module)
               val objinst = obj.instance
-              
+
               if (isMsg) {
                 // objinst
               } else {
-                
+
               }
-              
+
               if (objinst.isInstanceOf[BaseMsgObj]) {
                 val messageObj = objinst.asInstanceOf[BaseMsgObj]
                 logger.debug("Created Message Object")
@@ -832,7 +832,7 @@ object MigrateFrom_V_1_1 extends MigratableFrom {
     }
   }
 
-  private def ExtractDataFromTypleData(tupleBytes: Value): Array[(String, Long, Array[String], Long, Int, String, String)] = {
+  private def ExtractDataFromTypleData(tupleBytes: Value): Array[DataFormat] = {
     // Get first _serInfoBufBytes bytes
     if (tupleBytes.size < _serInfoBufBytes) {
       val errMsg = s"Invalid input. This has only ${tupleBytes.size} bytes data. But we are expecting serializer buffer bytes as of size ${_serInfoBufBytes}"
@@ -865,25 +865,25 @@ object MigrateFrom_V_1_1 extends MigratableFrom {
       val data = kd.GetAllData
 
       // container name, timepartition value, bucketkey, transactionid, rowid, serializername & data in Gson (JSON) format.
-      data.map(d => ((typName, 0, bucketKey, d.TransactionId(), 0, serInfo, MdResolve._gson.toJson(d))))
+      data.map(d => new DataFormat(typName, 0, bucketKey, d.TransactionId(), 0, serInfo, MdResolve._gson.toJson(d)))
     }
 
-    return Array[(String, Long, Array[String], Long, Int, String, String)]()
+    return Array[DataFormat]()
   }
 
-  private def AddActiveMessageOrContianer(metadataElemsJson: Array[(String, String)], jarPaths: collection.immutable.Set[String]): Unit = {
+  private def AddActiveMessageOrContianer(metadataElemsJson: Array[MetadataFormat], jarPaths: collection.immutable.Set[String]): Unit = {
     try {
       implicit val jsonFormats = DefaultFormats
       metadataElemsJson.foreach(mdElem => {
-        if (mdElem._1.compareToIgnoreCase("MessageDef") == 0 || mdElem._1.compareToIgnoreCase("MappedMsgTypeDef") == 0 ||
-          mdElem._1.compareToIgnoreCase("StructTypeDef") == 0 || mdElem._1.compareToIgnoreCase("ContainerDef") == 0) {
-          val json = parse(mdElem._2)
+        if (mdElem.objType.compareToIgnoreCase("MessageDef") == 0 || mdElem.objType.compareToIgnoreCase("MappedMsgTypeDef") == 0 ||
+          mdElem.objType.compareToIgnoreCase("StructTypeDef") == 0 || mdElem.objType.compareToIgnoreCase("ContainerDef") == 0) {
+          val json = parse(mdElem.objDataInJson)
           val jsonObjMap = json.values.asInstanceOf[Map[String, Any]]
           val isActiveStr = jsonObjMap.getOrElse("IsActive", "").toString.trim()
           if (isActiveStr.size > 0) {
             val isActive = jsonObjMap.getOrElse("IsActive", "").toString.trim().toBoolean
             if (isActive)
-              MdResolve.AddMessageOrContianer(mdElem._1, jsonObjMap, jarPaths)
+              MdResolve.AddMessageOrContianer(mdElem.objType, jsonObjMap, jarPaths)
           } else {
             val objNameSpace = jsonObjMap.getOrElse("NameSpace", "").toString.trim()
             val objName = jsonObjMap.getOrElse("Name", "").toString.trim()
@@ -902,7 +902,7 @@ object MigrateFrom_V_1_1 extends MigratableFrom {
 
   // metadataElemsJson are used for dependency load
   // Callback function calls with container name, timepartition value, bucketkey, transactionid, rowid, serializername & data in Gson (JSON) format.
-  override def getAllDataObjs(backupTblSufix: String, metadataElemsJson: Array[(String, String)], callbackFunction: (Array[(String, Long, Array[String], Long, Int, String, String)]) => Boolean): Unit = {
+  override def getAllDataObjs(backupTblSufix: String, metadataElemsJson: Array[MetadataFormat], callbackFunction: DataObjectCallBack): Unit = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
 
@@ -963,8 +963,8 @@ object MigrateFrom_V_1_1 extends MigratableFrom {
       keyArray.foreach(key => {
         val obj = GetObject(key, dataStore)
         val retData = ExtractDataFromTypleData(obj.Value)
-        if (retData.size > 0) {
-          callbackFunction(retData)
+        if (retData.size > 0 && callbackFunction != null) {
+          callbackFunction.call(retData)
         }
       })
     } catch {

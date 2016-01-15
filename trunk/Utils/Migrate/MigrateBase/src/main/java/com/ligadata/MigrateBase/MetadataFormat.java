@@ -17,7 +17,11 @@
 package com.ligadata.MigrateBase;
 
 public class MetadataFormat {
-  public String objType;
-  public String objDataInJson;
-}
+	public String objType = null;
+	public String objDataInJson = null;
 
+	public MetadataFormat(String tobjType, String tobjDataInJson) {
+		objType = tobjType;
+		objDataInJson = tobjDataInJson;
+	}
+}

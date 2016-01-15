@@ -17,7 +17,11 @@
 package com.ligadata.MigrateBase;
 
 public class BackupTableInfo {
-  public String srcTable;
-  public String dstTable;
-}
+	public String srcTable = null;
+	public String dstTable = null;
 
+	public BackupTableInfo(String tsrcTable, String tdstTable) {
+		srcTable = tsrcTable;
+		dstTable = tdstTable;
+	}
+}

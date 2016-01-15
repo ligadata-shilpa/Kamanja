@@ -19,7 +19,7 @@ package com.ligadata.Migrate
 import org.apache.logging.log4j._
 import java.io.File
 import com.ligadata.Utils._
-import com.ligadata.MigrateBase.{ MigratableFrom, MigratableTo }
+import com.ligadata.MigrateBase._
 import scala.util.control.Breaks._
 import scala.collection.mutable.ArrayBuffer
 import org.json4s._
@@ -57,7 +57,7 @@ object Migrate {
   lazy val loggerName = this.getClass.getName
   lazy val logger = LogManager.getLogger(loggerName)
 
-  val allMetadata = ArrayBuffer[(String, String)]()
+  val allMetadata = ArrayBuffer[MetadataFormat]()
 
   private def nextOption(map: OptionMap, list: List[String]): OptionMap = {
     list match {
@@ -261,11 +261,36 @@ object Migrate {
     return null
   }
 
+  class DataCallback(migrateTo: MigratableTo, collectedData: ArrayBuffer[DataFormat], kSaveThreshold: Int) extends DataObjectCallBack {
+    var cntr: Long = 0
+    override def call(objData: Array[DataFormat]): Boolean = {
+      objData.foreach(d => {
+        println("cntr:%d\n\tContainer:%s\n\tTimePartitionValue:%d\n\tBucketKey:%s\n\tTxnId:%d\n\tRowId:%d\n\tSerializer:%s\n\tJsonData:%s".format(cntr, d.containerName, d.timePartition, d.bucketKey, d.transactionid, d.rowid, d.serializername, d.data))
+        cntr += 1
+      })
+      collectedData ++= objData
+      if (collectedData.size >= kSaveThreshold) {
+        migrateTo.populateAndSaveData(collectedData.toArray)
+        collectedData.clear()
+      }
+      true
+    }
+  }
+
+  class MdCallback extends MetadataObjectCallBack {
+    override def call(objData: MetadataFormat): Boolean = {
+      allMetadata += objData
+      true
+    }
+  }
+
+  /*
   private def CollectAllMetadata(typ: String, jsonStr: String): Boolean = {
     logger.info("Got Metadata => Key:%s, JsonString:%s".format(typ, jsonStr))
     allMetadata += ((typ, jsonStr))
     return true
   }
+*/
 
   private def GetConfigurationFromCfgFile(cfgfile: String): Configuration = {
     val cfgStr = Source.fromFile(cfgfile).mkString
@@ -479,7 +504,9 @@ object Migrate {
       logger.debug("apiConfigFile:%s, clusterConfigFile:%s".format(configuration.apiConfigFile, configuration.clusterConfigFile))
       migrateTo.init(configuration.apiConfigFile, configuration.clusterConfigFile)
 
-      val (metadataStoreInfo, dataStoreInfo, statusStoreInfo) = migrateTo.getMetadataStoreDataStoreStatusStoreInfo
+      val metadataStoreInfo = migrateTo.getMetadataStoreInfo
+      val dataStoreInfo = migrateTo.getDataStoreInfo
+      val statusStoreInfo = migrateTo.getStatusStoreInfo
 
       logger.debug("metadataStoreInfo:%s, dataStoreInfo:%s, statusStoreInfo:%s".format(metadataStoreInfo, dataStoreInfo, statusStoreInfo))
       migrateFrom.init(configuration.migratingFrom.versionInstallPath, metadataStoreInfo, dataStoreInfo, statusStoreInfo)
@@ -487,15 +514,15 @@ object Migrate {
       val allTbls = migrateFrom.getAllMetadataDataStatusTableNames
       // Backup all tables, if they are already not backed up
       var allTblsBackedUp = true
-      var tblsToBackUp = ArrayBuffer[(String, String)]()
+      var tblsToBackUp = ArrayBuffer[BackupTableInfo]()
       var tblsToDrop = ArrayBuffer[String]()
 
       allTbls.foreach(tbl => {
-        val dst = tbl + backupTblSufix
-        tblsToBackUp += ((tbl, dst))
+        val bkup = new BackupTableInfo(tbl, tbl + backupTblSufix)
+        tblsToBackUp += bkup
         tblsToDrop += tbl
         if (migrateTo.isTableExists(tbl)) {
-          if (migrateTo.isTableExists(dst) == false) {
+          if (migrateTo.isTableExists(bkup.dstTable) == false) {
             allTblsBackedUp = false
           }
         }
@@ -508,9 +535,9 @@ object Migrate {
       // Drop all tables after backup
       migrateTo.dropTables(tblsToDrop.toArray)
 
-      migrateFrom.getAllMetadataObjs(backupTblSufix, CollectAllMetadata)
+      migrateFrom.getAllMetadataObjs(backupTblSufix, new MdCallback)
 
-      val orderMetadata = ArrayBuffer[(String, String)]()
+      val orderMetadata = ArrayBuffer[MetadataFormat]()
       // Populate orderMetadata from allMetadata in the order we need to import/compile/recompile
       orderMetadata ++= allMetadata
 
@@ -520,25 +547,18 @@ object Migrate {
 
       val kSaveThreshold = 10000
 
-      val collectedData = ArrayBuffer[(String, Long, Array[String], Long, Int, String, String)]()
-      
-      var cntr = 0
+      val collectedData = ArrayBuffer[DataFormat]()
 
-      val buildOne = (data: Array[(String, Long, Array[String], Long, Int, String, String)]) => {
-        data.foreach(d => {
-          println("cntr:%d\n\tContainer:%s\n\tTimePartitionValue:%d\n\tBucketKey:%s\n\tTxnId:%d\n\tRowId:%d\n\tSerializer:%s\n\tJsonData:%s".format(cntr, d._1, d._2, d._3.mkString(","), d._4, d._5, d._6, d._7))
-          cntr += 1
-        })
-        collectedData ++= data
-        if (collectedData.size >= kSaveThreshold) {
-          migrateTo.populateAndSaveData(collectedData.toArray)
-          collectedData.clear()
-        }
-        true
+      val dataCallback = new DataCallback(migrateTo, collectedData, kSaveThreshold)
+
+      migrateFrom.getAllDataObjs(backupTblSufix, orderMetadata.toArray, dataCallback)
+
+      if (collectedData.size > 0) {
+        migrateTo.populateAndSaveData(collectedData.toArray)
+        collectedData.clear()
       }
 
-      migrateFrom.getAllDataObjs(backupTblSufix, orderMetadata.toArray, buildOne)
-
+      logger.info()
     } catch {
       case e: Throwable => {
         logger.error("Failed to Migrate", e)
