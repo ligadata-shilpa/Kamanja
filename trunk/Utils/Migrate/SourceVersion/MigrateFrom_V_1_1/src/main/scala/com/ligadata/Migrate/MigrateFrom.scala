@@ -706,7 +706,7 @@ object MigrateFrom_V_1_1 extends MigratableFrom {
   object MdResolve extends MdBaseResolveInfo {
     val _messagesAndContainers = scala.collection.mutable.Map[String, MessageContainerObjBase]()
     val _gson = new Gson();
-    val _kamanjaLoader = new KamanjaLoaderInfoFrom
+    val _kamanjaLoader = new KamanjaLoaderInfoFrom(null, false, true)
     val _kryoDataSer = SerializerManager.GetSerializer("kryo")
     if (_kryoDataSer != null) {
       _kryoDataSer.SetClassLoader(_kamanjaLoader.loader)
