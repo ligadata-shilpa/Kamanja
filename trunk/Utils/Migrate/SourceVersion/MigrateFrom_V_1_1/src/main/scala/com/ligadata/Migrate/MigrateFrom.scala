@@ -929,7 +929,7 @@ object MigrateFrom_V_1_1 extends MigratableFrom {
 
     AddActiveMessageOrContianer(metadataElemsJson, fromVersionJarPaths)
 
-    val dataStore = GetDataStoreHandle(fromVersionJarPaths, _dataStoreInfo, "AllData.bak" + backupTblSufix)
+    val dataStore = GetDataStoreHandle(fromVersionJarPaths, _dataStoreInfo, "AllData" + backupTblSufix)
 
     try {
       // Load all metadata objects

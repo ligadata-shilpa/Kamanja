@@ -476,10 +476,12 @@ object Migrate {
         return
       }
 
+      logger.debug("apiConfigFile:%s, clusterConfigFile:%s".format(configuration.apiConfigFile, configuration.clusterConfigFile))
       migrateTo.init(configuration.apiConfigFile, configuration.clusterConfigFile)
 
       val (metadataStoreInfo, dataStoreInfo, statusStoreInfo) = migrateTo.getMetadataStoreDataStoreStatusStoreInfo
 
+      logger.debug("metadataStoreInfo:%s, dataStoreInfo:%s, statusStoreInfo:%s".format(metadataStoreInfo, dataStoreInfo, statusStoreInfo))
       migrateFrom.init(configuration.migratingFrom.versionInstallPath, metadataStoreInfo, dataStoreInfo, statusStoreInfo)
 
       val allTbls = migrateFrom.getAllMetadataDataStatusTableNames
