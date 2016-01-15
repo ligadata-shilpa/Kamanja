@@ -1,0 +1,16 @@
+{
+  "ClusterConfig": "{NewPackageInstallPath}/config/ClusterConfig.json",
+  "ApiConfig": "{NewPackageInstallPath}/config/MetadataAPIConfig.properties",
+  "MigratingFrom": {
+    "Version": "1.1",
+    "VersionInstallPath": "{NewPackageInstallPath}",
+    "ImplemtedClass": "com.ligadata.Migrate.MigrateFromV_1_1_X$",
+    "Jars": ["{NewPackageInstallPath}/Migrate/MigrateFrom_V_1_1_X-1.0"]
+  },
+  "MigratingTo": {
+    "Version": "1.3",
+    "ImplemtedClass": "com.ligadata.Migrate.MigrateToV_1_3_X$",
+    "Jars": []
+  }
+}
+
