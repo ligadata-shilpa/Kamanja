@@ -26,7 +26,8 @@ class PosixFileHandler extends FileHandler{
 
   private var fileObject = new File(fileFullPath)
   private var bufferedReader: BufferedReader = null
-  private var in: InputStreamReader = null
+  //private var in: InputStreamReader = null
+  private var in: InputStream = null
 
   lazy val loggerName = this.getClass.getName
   lazy val logger = LogManager.getLogger(loggerName)
@@ -69,10 +70,11 @@ class PosixFileHandler extends FileHandler{
 
   @throws(classOf[IOException])
   def openForRead(): Unit = {
+
     if (isCompressed(fileFullPath)) {
-      in = new InputStreamReader(new GZIPInputStream(new FileInputStream(fileFullPath)))
+      in = new GZIPInputStream(new FileInputStream(fileFullPath))
     } else {
-      in = new InputStreamReader(new FileInputStream(fileFullPath))
+      in = new FileInputStream(fileFullPath)
     }
     //bufferedReader = new BufferedReader(in)
   }
@@ -80,12 +82,10 @@ class PosixFileHandler extends FileHandler{
   @throws(classOf[IOException])
   def read(buf : Array[Byte], length : Int) : Int = {
 
-    if (bufferedReader == null)
+    if (in == null)
       return -1
 
-    val maxlen = 1000//-------------------------------------
-    val cbuffer = new Array[Char](buf.length)
-    in.read(cbuffer, 0, length)
+    in.read(buf, 0, length)
   }
 
   @throws(classOf[IOException])
