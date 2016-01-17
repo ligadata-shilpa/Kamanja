@@ -165,7 +165,7 @@ class HdfsChangesMonitor (val hdfsConnectionConfig : HdfsConnectionConfig, val w
     files
   }
 
-  def monitorHdfsDirChanges(targetFolder : String, changeTypesToMonitor : Array[FileChangeType]){
+  def monitorDirChanges(targetFolder : String, changeTypesToMonitor : Array[FileChangeType]){
 
     if(hdfsConnectionConfig == null || hdfsConnectionConfig.nameNodeURL == null || hdfsConnectionConfig.nameNodeURL.trim().length() == 0)
       throw new Exception("Invalid HDFS config params")
