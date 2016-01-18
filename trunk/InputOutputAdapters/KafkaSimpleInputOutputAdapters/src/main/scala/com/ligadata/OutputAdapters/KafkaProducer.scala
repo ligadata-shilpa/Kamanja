@@ -524,7 +524,9 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
         try {
           isHeartBeating = true
           while (!isShutdown) {
-            if (!isInError) lastSeen = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
+            if (!isInError) {
+              lastSeen = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
+            }
             Thread.sleep(KafkaProducer.HB_PERIOD)
           }
           isHeartBeating = false

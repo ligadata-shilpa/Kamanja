@@ -47,7 +47,7 @@ object KafkaSimpleConsumer extends InputAdapterObj {
   val HB_PERIOD = 5000
 
   // Statistics Keys
-  val ADAPTER_DESCRIPTION = "Kafka 8.1.1 Client"
+  val ADAPTER_DESCRIPTION = "Kafka 8.2.2 Client"
   val PARTITION_COUNT_KEYS = "Partition Counts"
   val PARTITION_DEPTH_KEYS = "Partition Depths"
 
@@ -334,8 +334,11 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
                 Thread.sleep(qc.noDataSleepTimeInMs)
               }
               messagesProcessed = 0
-             // println(qc.Name + " Start Processing about to write a hb " + qc.topic + " / " + kvs.size)
-              // Ready for a new query... mark the last loop iteration as the most recent activity.
+
+              // If it has been more then 5 seconds since the last message, externalize the statistics.
+              // This loop waits at least qc.noDataSleepTimeInMs seconds between checking kafka for new
+              // input data, so this may not be exactly 5 second interval.  The adapter architecture is due
+              // for an overhaul, so this weill probably change.
               val thisHb = System.currentTimeMillis
               if ((thisHb - lastHb) > KafkaSimpleConsumer.HB_PERIOD) {
                 LOG.debug("KAFKA-ADAPTER: Broker: " + leadBroker + " is marked alive,")
@@ -350,7 +353,8 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
                     val partId = t._1.asInstanceOf[KafkaPartitionUniqueRecordKey]
                     val partVal = t._2.asInstanceOf[KafkaPartitionUniqueRecordValue]
                     if (partId.PartitionId == partitionId) {
-                      partitonDepths(partitionId.toString) = partVal.Offset
+                      // Keep the highest value we've seen. This is a weird metric until we implement multiple destinations
+                      partitonDepths(partitionId.toString) = scala.math.max(partVal.Offset - readOffset, partitonDepths(partitionId.toString))
                     }
                   } catch {
                     case e: Exception => LOG.warn("KAFKA-ADAPTER: Broker: " + leadBroker + " error trying to determine queue depths.",e)
