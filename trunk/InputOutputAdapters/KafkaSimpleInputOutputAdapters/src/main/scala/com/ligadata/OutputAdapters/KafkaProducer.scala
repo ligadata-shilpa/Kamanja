@@ -43,6 +43,8 @@ object KafkaProducer extends OutputAdapterObj {
   val ADAPTER_DESCRIPTION = "Kafka 8.1.1 Client"
   val SEND_MESSAGE_COUNT_KEY = "Messages Sent"
   val SEND_CALL_COUNT_KEY = "Send Call Count"
+  val LAST_FAILURE_TIME = "Last_Failure"
+  val LAST_RECOVERY_TIME = "Last_Recovery"
 }
 
 // http://kafka.apache.org/documentation.html
@@ -78,8 +80,8 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
   val metadata_fetch_timeout_ms = qc.otherconfigs.getOrElse("metadata.fetch.timeout.ms", default_metadata_fetch_timeout_ms).toString.trim()
 
   private var metrics: collection.mutable.Map[String,Any] = collection.mutable.Map[String,Any]()
-  private var startTime: String = "unknown"
-  private var lastSeen: String = "unkown"
+  private var startTime: String = "n/a"
+  private var lastSeen: String = "n/a"
 
   // Set up some properties for the Kafka Producer
   val props = new Properties()
@@ -132,6 +134,8 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
   startTime = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
   metrics (KafkaProducer.SEND_CALL_COUNT_KEY) = 0
   metrics (KafkaProducer.SEND_MESSAGE_COUNT_KEY) = 0
+  metrics (KafkaProducer.LAST_FAILURE_TIME) = "n/a"
+  metrics (KafkaProducer.LAST_RECOVERY_TIME) = "n/a"
 
   retryExecutor.execute(new RetryFailedMessages())
 
@@ -419,9 +423,14 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
     while (sendStatus != KafkaConstants.KAFKA_SEND_SUCCESS && isShutdown == false) {
       try {
         sendStatus = doSend(keyMessages, removeFromFailedMap)
+        if (isInError) {
+          updateMetricValue(KafkaProducer.LAST_RECOVERY_TIME, new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis)))
+        }
         isInError = false
       } catch {
         case e: Exception => {
+          if (!isInError)
+            updateMetricValue(KafkaProducer.LAST_FAILURE_TIME, new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis)))
           isInError = true
           LOG.error(qc.Name + " KAFKA PRODUCER: Error sending to kafka, Retrying after %dms. Retry count:%d".format(waitTm, retryCount), e)
           try {
@@ -480,8 +489,17 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
     } catch {
       case ftsme: FailedToSendMessageException => { if (sentMsgsCntr > 0) keyMessages.remove(0, sentMsgsCntr); addBackFailedToSendRec(lastAccessRec); throw new FatalAdapterException("Kafka sending to Dead producer", ftsme) }
       case qfe: QueueFullException             => { if (sentMsgsCntr > 0) keyMessages.remove(0, sentMsgsCntr); addBackFailedToSendRec(lastAccessRec); throw new FatalAdapterException("Kafka queue full", qfe) }
-      case e: Exception                        => { if (sentMsgsCntr > 0) keyMessages.remove(0, sentMsgsCntr); addBackFailedToSendRec(lastAccessRec); throw new FatalAdapterException("Unknown exception", e) }
-      case e: Throwable                        => { if (sentMsgsCntr > 0) keyMessages.remove(0, sentMsgsCntr); addBackFailedToSendRec(lastAccessRec); throw new FatalAdapterException("Unknown exception", e) }
+      case e: Exception                        => {
+        if (sentMsgsCntr > 0) keyMessages.remove(0, sentMsgsCntr)
+        addBackFailedToSendRec(lastAccessRec)
+        LOG.warn(qc.Name + " unknown exception encountered ", e)
+        throw new FatalAdapterException("Unknown exception", e)
+      }
+      case e: Throwable                        => {
+        if (sentMsgsCntr > 0) keyMessages.remove(0, sentMsgsCntr)
+        addBackFailedToSendRec(lastAccessRec)
+        LOG.warn(qc.Name + " unknown exception encountered ", e)
+        throw new FatalAdapterException("Unknown exception", e) }
     }
     return KafkaConstants.KAFKA_SEND_SUCCESS
   }
@@ -512,10 +530,16 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
 
 
   // Accumulate the metrics.. simple for now
-  private def updateMetricValue(key: String, value: Long): Unit = {
-    val cur = metrics.getOrElse(key,"0").toString
-    val longCur = cur.toLong
-    metrics(key) = longCur + value
+  private def updateMetricValue(key: String, value: Any): Unit = {
+    if (key.equalsIgnoreCase(KafkaProducer.LAST_FAILURE_TIME) ||
+        key.equalsIgnoreCase(KafkaProducer.LAST_RECOVERY_TIME)) {
+      metrics(key) = value.toString
+    } else {
+      // This is an aggregated Long value
+      val cur = metrics.getOrElse(key,"0").toString
+      val longCur = cur.toLong
+      metrics(key) = longCur + value.toString.toLong
+    }
   }
 
   private def runHeartBeat: Unit = {

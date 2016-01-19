@@ -32,6 +32,8 @@ import com.ligadata.Exceptions.{FatalAdapterException, StackTrace}
 import com.ligadata.KamanjaBase.DataDelimiters
 import com.ligadata.HeartBeat.{Monitorable, MonitorComponentInfo}
 
+case class ExceptionInfo (Last_Failure: String, Last_Recovery: String)
+
 object KafkaSimpleConsumer extends InputAdapterObj {
   val METADATA_REQUEST_CORR_ID = 2
   val QUEUE_FETCH_REQUEST_TYPE = 1
@@ -50,6 +52,7 @@ object KafkaSimpleConsumer extends InputAdapterObj {
   val ADAPTER_DESCRIPTION = "Kafka 8.2.2 Client"
   val PARTITION_COUNT_KEYS = "Partition Counts"
   val PARTITION_DEPTH_KEYS = "Partition Depths"
+  val EXCEPTION_SUMMARY = "Exception Summary"
 
   def CreateInputAdapter(inputConfig: AdapterConfiguration, callerCtxt: InputAdapterCallerContext, execCtxtObj: ExecContextObj, cntrAdapter: CountersAdapter): InputAdapter = new KafkaSimpleConsumer(inputConfig, callerCtxt, execCtxtObj, cntrAdapter)
 }
@@ -65,10 +68,12 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
   private var metrics: collection.mutable.Map[String,Any] = collection.mutable.Map[String,Any]()
   private var partitonCounts: collection.mutable.Map[String,Long] = collection.mutable.Map[String,Long]()
   private var partitonDepths: collection.mutable.Map[String,Long] = collection.mutable.Map[String,Long]()
+  private var partitionExceptions: collection.mutable.Map[String,ExceptionInfo] = collection.mutable.Map[String,ExceptionInfo]()
   private var msgInQ: Long = 0
   private var startHeartBeat: String = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
   private var lastSeen: String = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
   metrics(KafkaSimpleConsumer.PARTITION_COUNT_KEYS) = partitonCounts
+  metrics(KafkaSimpleConsumer.EXCEPTION_SUMMARY) = partitionExceptions
   metrics(KafkaSimpleConsumer.PARTITION_DEPTH_KEYS) = partitonDepths
 
   private val qc = KafkaQueueAdapterConfiguration.GetAdapterConfig(inputConfig)
@@ -189,7 +194,6 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
     isQuiesced = false
     LOG.debug("KAFKA-ADAPTER: Starting " + kvs.size + " threads to process partitions")
 
-    //println(qc.Name + " Start Processing about to look at kvs, looking at " + qc.topic + " / " + kvs.size)
     // Schedule a task to perform a read from a give partition.
     kvs.foreach(kvsElement => {
 
@@ -201,6 +205,7 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
           // Initialize the monitoring status
           partitonCounts(partitionId.toString) = 0
           partitonDepths(partitionId.toString) = 0
+          partitionExceptions(partitionId.toString) = new ExceptionInfo("n/a","n/a")
 
           // if the offset is -1, then the server wants to start from the begining, else, it means that the server
           // knows what its doing and we start from that offset.
@@ -255,12 +260,12 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
 
           resetTimeoutTimer
 
-         // println(qc.Name + " Start Processing dealing with the PartID " + qc.topic + " / " + partitionId)
           // Keep processing until you fail enough times.
           while (!isQuiesced) {
             val fetchReq = new FetchRequestBuilder().clientId(clientName).addFetch(qc.topic, partitionId, readOffset, KafkaSimpleConsumer.FETCHSIZE).build()
             var fetchResp: FetchResponse = null
             var isFetchError = false
+            var isErrorRecorded = false
 
             // Call the broker and get a response.
             while ((fetchResp == null || isFetchError) && !isQuiesced) {
@@ -268,6 +273,10 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
                 fetchResp = consumer.fetch(fetchReq)
                 isFetchError = false
                 if (fetchResp.hasError) {
+                  if(!isErrorRecorded) {
+                    partitionExceptions(partitionId.toString) = new ExceptionInfo(new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis)),"n/a")
+                    isErrorRecorded = true
+                  }
                   isFetchError = true
                   LOG.warn("KAFKA ADAPTER: Error fetching topic " + qc.topic + ", partition " + partitionId + ", retrying due to an error " + fetchResp.errorCode(qc.topic, partitionId))
                   Thread.sleep(getTimeoutTimer)
@@ -275,12 +284,24 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
                   resetTimeoutTimer
                 }
               } catch {
+                case e: InterruptedException => {
+                  LOG.error(qc.Name + " KAFKA ADAPTER: Read retry interrupted")
+                  Shutdown()
+                  return
+                }
                 case e: Exception => {
                   LOG.error("KAFKA ADAPTER: Failure fetching topic "+qc.topic+", partition " + partitionId + ", retrying", e)
                   Thread.sleep(getTimeoutTimer)
                 }
               }
             }
+
+            // Record in metrics if we encountered a problem but it was resolved
+            if (isErrorRecorded) {
+              var new_exeption_info = new ExceptionInfo(partitionExceptions(partitionId.toString).Last_Failure, new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis)) )
+              partitionExceptions(partitionId.toString) = new_exeption_info
+            }
+
 
             // If we are here under shutdown conditions.. cleanup and bail
             if (isQuiesced) {
@@ -342,7 +363,6 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
               val thisHb = System.currentTimeMillis
               if ((thisHb - lastHb) > KafkaSimpleConsumer.HB_PERIOD) {
                 LOG.debug("KAFKA-ADAPTER: Broker: " + leadBroker + " is marked alive,")
-               // println(qc.Name+" ALIVE!!! --> " + (thisHb - lastHb))
                 lastHb = thisHb
                 lastSeen = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
 
@@ -774,12 +794,12 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
     isQuiesced = true
   }
 
+  private def setMetricValue(key: String, value: Any): Unit = {
+    metrics(key) = value.toString
+  }
+
   private def incrementCountForPartition(pid: Int): Unit = {
     var cVal: Long = partitonCounts.getOrElse(pid.toString, 0)
-    if (pid == null) {
-      partitonCounts(pid.toString) = 1
-      return
-    }
     partitonCounts(pid.toString) = cVal + 1
   }
 
