@@ -148,26 +148,21 @@ cp $ivyPath/cache/org.scala-lang/scala-reflect/jars/scala-reflect-2.11.0.jar $sy
 cp $ivyPath/cache/org.javassist/javassist/bundles/javassist-3.18.1-GA.jar $systemlib
 cp $srcPath/lib_managed/jars/org.apache.logging.log4j/log4j-api/log4j-api-2.4.1.jar $systemlib
 cp $ivyPath/cache/com.typesafe/config/bundles/config-1.2.1.jar $systemlib
-cp $srcPath/InputOutputAdapters/IbmMqSimpleInputOutputAdapters/lib/com.ibm.msg.client.wmq.v6.jar $systemlib
 cp $srcPath/lib_managed/bundles/org.apache.curator/curator-framework/curator-framework-2.7.1.jar $systemlib
 cp $ivyPath/cache/org.json4s/json4s-jackson_2.11/jars/json4s-jackson_2.11-3.2.9.jar $systemlib
 cp $ivyPath/cache/commons-net/commons-net/jars/commons-net-3.1.jar $systemlib
 cp $ivyPath/cache/org.apache.hadoop/hadoop-annotations/jars/hadoop-annotations-2.7.1.jar $systemlib
 cp $ivyPath/cache/com.101tec/zkclient/jars/zkclient-0.3.jar $systemlib
-cp $srcPath/InputOutputAdapters/IbmMqSimpleInputOutputAdapters/lib/com.ibm.msg.client.provider.jar $systemlib
 cp $ivyPath/cache/org.apache.commons/commons-math3/jars/commons-math3-3.6.jar $systemlib
 cp $ivyPath/cache/org.slf4j/slf4j-api/jars/slf4j-api-1.7.6.jar $systemlib
-cp $srcPath/InputOutputAdapters/IbmMqSimpleInputOutputAdapters/lib/com.ibm.msg.client.wmq.factories.jar $systemlib
 cp $ivyPath/cache/org.apache.camel/camel-core/bundles/camel-core-2.9.2.jar $systemlib
 cp $ivyPath/cache/com.google.code.findbugs/jsr305/jars/jsr305-3.0.0.jar $systemlib
 cp $srcPath/lib_managed/jars/commons-cli/commons-cli/commons-cli-1.2.jar $systemlib
-cp $srcPath/InputOutputAdapters/IbmMqSimpleInputOutputAdapters/lib/com.ibm.mq.jmqi.system.jar $systemlib
 cp $srcPath/lib_managed/jars/com.jamesmurty.utils/java-xmlbuilder/java-xmlbuilder-0.4.jar $systemlib
 cp $srcPath/lib_managed/bundles/com.fasterxml.jackson.core/jackson-annotations/jackson-annotations-2.3.0.jar $systemlib
 cp $ivyPath/cache/com.pyruby/java-stub-server/jars/java-stub-server-0.12-sources.jar $systemlib
 cp $ivyPath/cache/com.esotericsoftware.reflectasm/reflectasm/jars/reflectasm-1.07-shaded.jar $systemlib
 cp $ivyPath/cache/io.spray/spray-client_2.11/bundles/spray-client_2.11-1.3.3.jar $systemlib
-cp $srcPath/InputOutputAdapters/IbmMqSimpleInputOutputAdapters/lib/com.ibm.msg.client.jms.jar $systemlib
 cp $srcPath/lib_managed/jars/javax.servlet/servlet-api/servlet-api-2.5.jar $systemlib
 cp $srcPath/Utils/Audit/target/scala-2.11/auditadapters_2.11-1.0.jar $systemlib
 cp $ivyPath/cache/org.scala-lang.modules/scala-xml_2.11/bundles/scala-xml_2.11-1.0.1.jar $systemlib
@@ -200,7 +195,6 @@ cp $ivyPath/cache/org.apache.hbase/hbase-protocol/jars/hbase-protocol-1.0.2.jar 
 cp $ivyPath/cache/org.scala-lang/scala-reflect/jars/scala-reflect-2.11.2.jar $systemlib
 cp $ivyPath/cache/org.scala-lang.modules/scala-parser-combinators_2.11/bundles/scala-parser-combinators_2.11-1.0.2.jar $systemlib
 cp $srcPath/lib_managed/jars/javax.xml.bind/jaxb-api/jaxb-api-2.2.2.jar $systemlib
-cp $srcPath/InputOutputAdapters/IbmMqSimpleInputOutputAdapters/lib/com.ibm.msg.client.commonservices.j2se.jar $systemlib
 cp $ivyPath/cache/org.jdom/jdom/jars/jdom-1.1.jar $systemlib
 cp $srcPath/KvBase/target/scala-2.11/kvbase_2.11-0.1.0.jar $systemlib
 cp $ivyPath/cache/com.googlecode.json-simple/json-simple/jars/json-simple-1.1.jar $systemlib
@@ -229,15 +223,12 @@ cp $ivyPath/cache/com.fasterxml.jackson.core/jackson-annotations/bundles/jackson
 cp $ivyPath/cache/org.apache.commons/commons-dbcp2/jars/commons-dbcp2-2.1.jar $systemlib
 cp $srcPath/lib_managed/jars/com.twitter/chill_2.11/chill_2.11-0.5.0.jar $systemlib
 cp $ivyPath/cache/org.json4s/json4s-native_2.11/jars/json4s-native_2.11-3.2.9.jar $systemlib
-cp $srcPath/InputOutputAdapters/IbmMqSimpleInputOutputAdapters/lib/com.ibm.msg.client.wmq.common.jar $systemlib
 cp $ivyPath/cache/junit/junit/jars/junit-3.8.1.jar $systemlib
 cp $srcPath/lib_managed/jars/org.mortbay.jetty/jetty-util/jetty-util-6.1.26.jar $systemlib
 cp $ivyPath/cache/com.typesafe/config/bundles/config-1.2.0.jar $systemlib
-cp $srcPath/InputOutputAdapters/IbmMqSimpleInputOutputAdapters/lib/com.ibm.mqjms.jar $systemlib
 cp $srcPath/lib_managed/jars/org.apache.hadoop/hadoop-common/hadoop-common-2.7.1.jar $systemlib
 cp $srcPath/lib_managed/jars/commons-digester/commons-digester/commons-digester-1.8.1.jar $systemlib
 cp $ivyPath/cache/commons-dbcp/commons-dbcp/jars/commons-dbcp-1.4.jar $systemlib
-cp $srcPath/InputOutputAdapters/IbmMqSimpleInputOutputAdapters/lib/com.ibm.msg.client.commonservices.jar $systemlib
 cp $srcPath/lib_managed/bundles/com.google.guava/guava/guava-16.0.1.jar $systemlib
 cp $srcPath/lib_managed/jars/org.scala-lang/scala-actors/scala-actors-2.11.7.jar $systemlib
 cp $srcPath/lib_managed/jars/org.apache.logging.log4j/log4j-core/log4j-core-2.4.1.jar $systemlib
@@ -267,7 +258,6 @@ cp $ivyPath/cache/io.spray/spray-json_2.11/bundles/spray-json_2.11-1.3.2.jar $sy
 cp $ivyPath/cache/commons-codec/commons-codec/jars/commons-codec-1.9.jar $systemlib
 cp $srcPath/lib_managed/jars/org.apache.avro/avro/avro-1.7.4.jar $systemlib
 cp $ivyPath/cache/org.joda/joda-convert/jars/joda-convert-1.7.jar $systemlib
-cp $srcPath/InputOutputAdapters/IbmMqSimpleInputOutputAdapters/lib/json-simple-1.1.1.jar $systemlib
 cp $srcPath/lib_managed/bundles/com.codahale.metrics/metrics-core/metrics-core-3.0.2.jar $systemlib
 cp $ivyPath/cache/com.esotericsoftware.minlog/minlog/jars/minlog-1.2.jar $systemlib
 cp $ivyPath/cache/org.mortbay.jetty/servlet-api/jars/servlet-api-2.5.20110712-sources.jar $systemlib
@@ -296,7 +286,6 @@ cp $srcPath/lib_managed/jars/jline/jline/jline-0.9.94.jar $systemlib
 cp $ivyPath/cache/commons-beanutils/commons-beanutils/jars/commons-beanutils-1.7.0.jar $systemlib
 cp $ivyPath/cache/org.apache.avro/avro/jars/avro-1.7.4.jar $systemlib
 cp $ivyPath/cache/ch.qos.logback/logback-core/jars/logback-core-1.0.13.jar $systemlib
-cp $srcPath/InputOutputAdapters/IbmMqSimpleInputOutputAdapters/lib/com.ibm.msg.client.jms.internal.jar $systemlib
 cp $srcPath/KamanjaBase/target/scala-2.11/kamanjabase_2.11-1.0.jar $systemlib
 cp $ivyPath/cache/com.typesafe.akka/akka-testkit_2.11/jars/akka-testkit_2.11-2.3.9.jar $systemlib
 cp $ivyPath/cache/commons-configuration/commons-configuration/jars/commons-configuration-1.7.jar $systemlib
@@ -310,16 +299,13 @@ cp $ivyPath/cache/io.spray/spray-routing_2.11/bundles/spray-routing_2.11-1.3.3.j
 cp $ivyPath/cache/org.apache.kafka/kafka_2.11/jars/kafka_2.11-0.8.2.2.jar $systemlib
 cp $ivyPath/cache/com.chuusai/shapeless_2.11/jars/shapeless_2.11-1.2.4.jar $systemlib
 cp $ivyPath/cache/org.apache.directory.api/api-asn1-api/bundles/api-asn1-api-1.0.0-M20.jar $systemlib
-cp $srcPath/InputOutputAdapters/IbmMqSimpleInputOutputAdapters/lib/com.ibm.mq.jmqi.jar $systemlib
 cp $ivyPath/cache/com.google.code.findbugs/jsr305/jars/jsr305-1.3.9.jar $systemlib
 cp $ivyPath/cache/org.slf4j/slf4j-api/jars/slf4j-api-1.7.5.jar $systemlib
 cp $srcPath/lib_managed/jars/commons-logging/commons-logging/commons-logging-1.2.jar $systemlib
 cp $srcPath/lib_managed/jars/org.ow2.asm/asm/asm-4.0.jar $systemlib
 cp $ivyPath/cache/org.apache.thrift/libthrift/jars/libthrift-0.9.2.jar $systemlib
 cp $ivyPath/cache/com.google.guava/guava/bundles/guava-19.0.jar $systemlib
-cp $srcPath/InputOutputAdapters/IbmMqSimpleInputOutputAdapters/lib/com.ibm.mq.jmqi.local.jar $systemlib
 cp $srcPath/KamanjaUtils/target/scala-2.11/kamanjautils_2.11-1.0.jar $systemlib
-cp $srcPath/InputOutputAdapters/IbmMqSimpleInputOutputAdapters/lib/com.ibm.msg.client.ref.jar $systemlib
 cp $srcPath/lib_managed/jars/com.esotericsoftware.reflectasm/reflectasm/reflectasm-1.07-shaded.jar $systemlib
 cp $srcPath/Utils/ZooKeeper/CuratorListener/target/scala-2.11/zookeeperlistener_2.11-1.0.jar $systemlib
 cp $srcPath/InputOutputAdapters/InputOutputAdapterBase/target/scala-2.11/inputoutputadapterbase_2.11-1.0.jar $systemlib
@@ -327,14 +313,12 @@ cp $ivyPath/cache/org.scala-lang/scala-reflect/jars/scala-reflect-2.11.7.jar $sy
 cp $ivyPath/cache/org.jpmml/pmml-agent/jars/pmml-agent-1.2.9.jar $systemlib
 cp $ivyPath/cache/org.json4s/json4s-core_2.11/jars/json4s-core_2.11-3.2.9.jar $systemlib
 cp $srcPath/lib_managed/jars/commons-configuration/commons-configuration/commons-configuration-1.7.jar $systemlib
-cp $srcPath/InputOutputAdapters/IbmMqSimpleInputOutputAdapters/lib/com.ibm.msg.client.wmq.jar $systemlib
 cp $ivyPath/cache/org.codehaus.jackson/jackson-mapper-asl/jars/jackson-mapper-asl-1.9.13.jar $systemlib
 cp $ivyPath/cache/org.hamcrest/hamcrest-core/jars/hamcrest-core-1.3.jar $systemlib
 cp $ivyPath/cache/org.joda/joda-convert/jars/joda-convert-1.6.jar $systemlib
 cp $ivyPath/cache/org.scala-lang/scala-library/jars/scala-library-2.11.7.jar $systemlib
 cp $ivyPath/cache/commons-collections/commons-collections/jars/commons-collections-3.2.1.jar $systemlib
 cp $ivyPath/cache/org.scalameta/tokenizers_2.11/jars/tokenizers_2.11-0.0.3.jar $systemlib
-cp $srcPath/InputOutputAdapters/IbmMqSimpleInputOutputAdapters/lib/gcm-server.jar $systemlib
 cp $srcPath/lib_managed/jars/org.slf4j/slf4j-api/slf4j-api-1.7.10.jar $systemlib
 cp $ivyPath/cache/org.apache.zookeeper/zookeeper/jars/zookeeper-3.4.6.jar $systemlib
 cp $ivyPath/cache/org.scalameta/foundation_2.11/jars/foundation_2.11-0.0.3.jar $systemlib
@@ -348,7 +332,6 @@ cp $srcPath/lib_managed/bundles/com.esotericsoftware.kryo/kryo/kryo-2.21.jar $sy
 cp $srcPath/lib_managed/jars/org.scala-lang/scala-compiler/scala-compiler-2.11.7.jar $systemlib
 cp $ivyPath/cache/org.scala-lang.modules/scala-xml_2.11/bundles/scala-xml_2.11-1.0.4.jar $systemlib
 cp $srcPath/Utils/JsonDataGen/target/scala-2.11/jsondatagen_2.11-0.1.0.jar $systemlib
-cp $srcPath/InputOutputAdapters/IbmMqSimpleInputOutputAdapters/lib/com.ibm.msg.client.matchspace.jar $systemlib
 cp $ivyPath/cache/org.apache.httpcomponents/httpclient/jars/httpclient-4.1.2.jar $systemlib
 cp $srcPath/lib_managed/jars/org.jruby.jcodings/jcodings/jcodings-1.0.8.jar $systemlib
 cp $ivyPath/cache/ch.qos.logback/logback-classic/jars/logback-classic-1.0.12.jar $systemlib
@@ -416,9 +399,7 @@ cp $ivyPath/cache/commons-cli/commons-cli/jars/commons-cli-1.2.jar $systemlib
 cp $srcPath/lib_managed/jars/javax.servlet.jsp/jsp-api/jsp-api-2.1.jar $systemlib
 cp $ivyPath/cache/com.yammer.metrics/metrics-core/jars/metrics-core-2.2.0.jar $systemlib
 cp $srcPath/FileDataConsumer/target/scala-2.11/filedataconsumer_2.11-0.1.0.jar $systemlib
-cp $srcPath/InputOutputAdapters/IbmMqSimpleInputOutputAdapters/target/scala-2.11/ibmmqsimpleinputoutputadapters_2.11-1.0.jar $systemlib
 cp $ivyPath/cache/org.mapdb/mapdb/bundles/mapdb-1.0.6.jar $systemlib
-cp $srcPath/InputOutputAdapters/IbmMqSimpleInputOutputAdapters/lib/jms-1.1.jar $systemlib
 cp $srcPath/lib_managed/bundles/com.sun.jersey/jersey-core/jersey-core-1.9.jar $systemlib
 cp $srcPath/Pmml/MethodExtractor/target/scala-2.11/methodextractor_2.11-1.0.jar $systemlib
 cp $srcPath/lib_managed/jars/net.java.dev.jets3t/jets3t/jets3t-0.9.0.jar $systemlib
@@ -452,7 +433,6 @@ cp $srcPath/lib_managed/jars/org.scalameta/tokenquasiquotes_2.11/tokenquasiquote
 cp $ivyPath/cache/com.google.guava/guava/bundles/guava-14.0.1.jar $systemlib
 cp $ivyPath/cache/com.sun.jersey/jersey-server/bundles/jersey-server-1.9.jar $systemlib
 cp $srcPath/lib_managed/jars/org.apache.httpcomponents/httpclient/httpclient-4.2.5.jar $systemlib
-cp $srcPath/InputOutputAdapters/IbmMqSimpleInputOutputAdapters/lib/com.ibm.mq.jmqi.remote.jar $systemlib
 cp $ivyPath/cache/com.twitter/chill_2.11/jars/chill_2.11-0.5.0.jar $systemlib
 cp $srcPath/lib_managed/bundles/org.mapdb/mapdb/mapdb-1.0.6.jar $systemlib
 cp $srcPath/Pmml/PmmlRuntime/target/scala-2.11/pmmlruntime_2.11-1.0.jar $systemlib
@@ -501,7 +481,6 @@ cp $ivyPath/cache/org.scalameta/trees_2.11/jars/trees_2.11-0.0.3.jar $systemlib
 cp $ivyPath/cache/org.scala-lang.modules/scala-xml_2.11/bundles/scala-xml_2.11-1.0.2.jar $systemlib
 cp $srcPath/Storage/HBase/target/scala-2.11/hbase_2.11-0.1.0.jar $systemlib
 cp $ivyPath/cache/joda-time/joda-time/jars/joda-time-2.9.1.jar $systemlib
-cp $srcPath/InputOutputAdapters/IbmMqSimpleInputOutputAdapters/lib/dhbcore.jar $systemlib
 cp $ivyPath/cache/org.apache.cassandra/cassandra-thrift/jars/cassandra-thrift-2.0.3.jar $systemlib
 cp $srcPath/BaseTypes/target/scala-2.11/basetypes_2.11-0.1.0.jar $systemlib
 cp $srcPath/lib_managed/jars/com.google.code.findbugs/jsr305/jsr305-3.0.0.jar $systemlib
@@ -554,9 +533,6 @@ cp $srcPath/Storage/TreeMap/target/scala-2.11/*.jar $systemlib
 cp $srcPath/InputOutputAdapters/InputOutputAdapterBase/target/scala-2.11/*.jar $systemlib
 cp $srcPath/KamanjaUtils/target/scala-2.11/kamanjautils_2.11-1.0.jar $systemlib
 cp $srcPath/SecurityAdapters/SecurityAdapterBase/target/scala-2.11/*.jar $systemlib
-
-# an extra copy to make sure ?
-cp $srcPath/InputOutputAdapters/IbmMqSimpleInputOutputAdapters/lib/*.jar $systemlib
 
 cp $srcPath/Utils/SaveContainerDataComponent/target/scala-2.11/SaveContainerDataComponent* $systemlib
 cp $srcPath/Utils/UtilsForModels/target/scala-2.11/utilsformodels*.jar $systemlib
