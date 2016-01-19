@@ -133,6 +133,11 @@ class PosixFileHandler extends FileHandler{
   }
 
   @throws(classOf[IOException])
+  def length : Long = fileObject.length
+
+  def lastModified : Long = fileObject.lastModified
+
+  @throws(classOf[IOException])
   def close(): Unit = {
     if(in != null)
       in.close()
@@ -181,12 +186,6 @@ class PosixChangesMonitor(val REFRESH_RATE : Int, modifiedFileCallback:(FileHand
     }
   }
 
-  //better to move this check into file processor code
-  private def isValidFile(fileName: String): Boolean = {
-    if (!fileName.endsWith("_COMPLETE"))
-      return true
-    return false
-  }
 
   //TODO : for now just keep it similar to Dan's code: check only direct child files
   //hdfs and sftp monitors are checking for subfolders actually
@@ -195,7 +194,6 @@ class PosixChangesMonitor(val REFRESH_RATE : Int, modifiedFileCallback:(FileHand
     if (d.exists && d.isDirectory) {
       val files = d.listFiles.filter(_.isFile).sortWith(_.lastModified < _.lastModified).toList
       files.foreach(file => {
-        if (isValidFile(file.toString)) {//file.toString.endsWith(readyToProcessKey) : better to move this check into file processor code
         val tokenName = file.toString.split("/")
           if (!checkIfFileHandled(tokenName(tokenName.size - 1))) {
             logger.info("SMART FILE CONSUMER (global)  Processing " + file.toString)
@@ -205,7 +203,6 @@ class PosixChangesMonitor(val REFRESH_RATE : Int, modifiedFileCallback:(FileHand
             //call the callback for new files
             modifiedFileCallback(fileHandler, changeType)
           }
-        }
       })
     }
   }

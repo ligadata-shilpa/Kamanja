@@ -119,7 +119,7 @@ class HdfsFileHandler extends FileHandler{
     logger.info(s"Deleting file ($fullPath)")
      try {
        hdFileSystem = FileSystem.get(hdfsConfig)
-       hdFileSystem.delete(new Path(fullPath))
+       hdFileSystem.delete(new Path(fullPath), true)
         logger.info("Successfully deleted")
         return true
      } 
@@ -144,6 +144,41 @@ class HdfsFileHandler extends FileHandler{
       hdFileSystem.close()
   }
 
+  @throws(classOf[IOException])
+  def length : Long = {
+    try {
+      hdFileSystem = FileSystem.get(hdfsConfig)
+      hdFileSystem.getFileStatus(new Path(fullPath)).getLen
+    }
+    catch {
+      case ex : Exception => {
+        logger.error(ex.getMessage)
+        return 0
+      }
+
+    } finally {
+      if(hdFileSystem!=null)
+        hdFileSystem.close()
+    }
+  }
+
+  @throws(classOf[IOException])
+  def lastModified : Long = {
+    try {
+      hdFileSystem = FileSystem.get(hdfsConfig)
+      hdFileSystem.getFileStatus(new Path(fullPath)).getModificationTime
+    }
+    catch {
+      case ex : Exception => {
+        logger.error(ex.getMessage)
+        return -1
+      }
+
+    } finally {
+      if(hdFileSystem!=null)
+        hdFileSystem.close()
+    }
+  }
 }
 
 /**

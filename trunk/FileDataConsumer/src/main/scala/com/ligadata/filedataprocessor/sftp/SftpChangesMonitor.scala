@@ -204,6 +204,18 @@ class SftpFileHandler extends FileHandler{
     if(manager != null)
       manager.close()
   }
+
+  @throws(classOf[IOException])
+  def length : Long = {
+    val remoteFile = manager.resolveFile(createConnectionString(sftpConnectionConfig, fullPath), createDefaultOptions())
+    remoteFile.getContent.getSize
+  }
+
+  @throws(classOf[IOException])
+  def lastModified : Long = {
+    val remoteFile = manager.resolveFile(createConnectionString(sftpConnectionConfig, fullPath), createDefaultOptions())
+    remoteFile.getContent.getLastModifiedTime
+  }
 }
 
 class SftpChangesMonitor (val sftpConnectionConfig : SftpConnectionConfig, val waitingTimeMS : Int,
