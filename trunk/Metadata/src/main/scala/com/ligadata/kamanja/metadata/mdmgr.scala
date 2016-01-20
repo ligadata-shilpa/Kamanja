@@ -262,6 +262,7 @@ class MdMgr {
             var newElems = new scala.collection.mutable.ArrayBuffer[T]()
             var newBaseElemsIdxs = scala.collection.mutable.Map[String, Int]()
             es.foreach(e => {
+              /** FIXME: This code cannot pull just the inactive models ... it needs revision */
               if (!e.IsDeleted &&
                 (onlyActive == false || (onlyActive && e.IsActive))) {
                 val fnm = if (e.isInstanceOf[FunctionDef]) e.asInstanceOf[FunctionDef].typeString else e.FullName
