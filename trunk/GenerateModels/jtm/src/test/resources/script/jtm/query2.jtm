@@ -1,5 +1,5 @@
 {
-  "eplquery": "select svg(score) from com.ligadata.kamanja.samples.messages.win:time(1 min) where score != -1 and score < 100",
+  "eplquery": "select avg(score), count(score) from com.ligadata.kamanja.samples.messages.win:time(1 min) where score != -1 and score < 100",
 
   "inputs": [
     { "type":"com.ligadata.kamanja.samples.messages", "win.time": "1min"}

@@ -17,6 +17,6 @@ Run the compiler manual.
 
 sbt (jtm)> run --help
 [info] Running com.ligadata.jtm.Transpiler --help
-[info]   -j, --jevent  <arg>   Sources to compile (default = )
+[info]   -j, --jtm  <arg>   Sources to compile (default = )
 [info]       --help            Show help message
 [success] Total time: 3 s, completed Jan 18, 2016 10:42:03 PM
