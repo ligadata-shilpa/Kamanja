@@ -36,7 +36,7 @@ import com.ligadata.kamanja.metadata.MdMgr._
 import com.ligadata.kamanja.metadataload.MetadataLoad
 
 // import com.ligadata.keyvaluestore._
-import com.ligadata.HeartBeat.HeartBeatUtil
+import com.ligadata.HeartBeat.{MonitoringContext, HeartBeatUtil}
 import com.ligadata.StorageBase.{ DataStore, Transaction }
 import com.ligadata.KvBase.{ Key, Value, TimeRange }
 
@@ -132,7 +132,7 @@ object MetadataAPIImpl extends MetadataAPI {
     "SECURITY_IMPL_JAR", "AUDIT_IMPL_CLASS", "AUDIT_IMPL_JAR", "DO_AUDIT", "AUDIT_PARMS", "ADAPTER_SPECIFIC_CONFIG", "METADATA_DATASTORE")
 
   // This is used to exclude all non-engine related configs from Uplodad Config method 
-  private val excludeList: Set[String] = Set[String]("ClusterId", "StatusInfo", "Nodes", "Config", "Adapters", "DataStore", "ZooKeeperInfo", "EnvironmentContext")
+  private val excludeList: Set[String] = Set[String]("ClusterId", "Nodes", "Config", "Adapters", "DataStore", "ZooKeeperInfo", "EnvironmentContext")
 
   var isCassandra = false
   private[this] val lock = new Object
@@ -168,25 +168,17 @@ object MetadataAPIImpl extends MetadataAPI {
       case cce: java.lang.ClassCastException => {
         val stackTrace = StackTrace.ThrowableTraceString(cce)
         logger.warn("Failure processing GET_HEALTH_CHECK - cannot parse the list of desired nodes. \n" + stackTrace)
-        var apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetHealthCheck", "No data available", ErrorCodeConstants.GetHeartbeat_Failed + " Error:Parsing Error")
+        val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetHealthCheck", "No data available", ErrorCodeConstants.GetHeartbeat_Failed + " Error:Parsing Error")
         return apiResult.toString
       }
       case e: Exception => {
-        var apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetHealthCheck", "No data available", ErrorCodeConstants.GetHeartbeat_Failed + " Error: Unknown - see Kamanja Logs")
+        val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetHealthCheck", "No data available", ErrorCodeConstants.GetHeartbeat_Failed + " Error: Unknown - see Kamanja Logs")
         val stackTrace = StackTrace.ThrowableTraceString(e)
         logger.error("Failure processing GET_HEALTH_CHECK - unknown  \n" + stackTrace)
         return apiResult.toString
       }
     }
 
-  }
-
-  /**
-   * clockNewActivity - update Metadata health info, showing its still alive.
-   */
-  def clockNewActivity: Unit = {
-    if (heartBeat != null)
-      heartBeat.SetMainData(metadataAPIConfig.getProperty("NODE_ID").toString)
   }
 
   /**
@@ -299,7 +291,7 @@ object MetadataAPIImpl extends MetadataAPI {
         classLoader.loadedJars += fl.getPath()
       } catch {
         case e: Exception => {
-          logger.error("Failed to add " + implJarName + " due to internal exception " + e.printStackTrace)
+          logger.error("Failed to add " + implJarName + " due to internal exception ", e)
           return
         }
       }
@@ -557,8 +549,10 @@ object MetadataAPIImpl extends MetadataAPI {
 
     val zkcConnectString = GetMetadataAPIConfig.getProperty("ZOOKEEPER_CONNECT_STRING")
     val znodePath = GetMetadataAPIConfig.getProperty("ZNODE_PATH") + "/metadataupdate"
+    zkHeartBeatNodePath = metadataAPIConfig.getProperty("ZNODE_PATH") + "/monitor/metadata/" + metadataAPIConfig.getProperty("NODE_ID").toString
     logger.debug("Connect To ZooKeeper using " + zkcConnectString)
     try {
+      CreateClient.CreateNodeIfNotExists(zkcConnectString, zkHeartBeatNodePath)
       CreateClient.CreateNodeIfNotExists(zkcConnectString, znodePath)
       zkc = CreateClient.createSimple(zkcConnectString)
     } catch {
@@ -4656,11 +4650,11 @@ object MetadataAPIImpl extends MetadataAPI {
 
   def AddAdapter(name: String, typeString: String, dataFormat: String, className: String,
                  jarName: String, dependencyJars: List[String],
-                 adapterSpecificCfg: String, inputAdapterToVerify: String, keyAndValueDelimiter: String, fieldDelimiter: String, valueDelimiter: String, associatedMsg: String): String = {
+                 adapterSpecificCfg: String, inputAdapterToVerify: String, keyAndValueDelimiter: String, fieldDelimiter: String, valueDelimiter: String, associatedMsg: String, failedEventsAdapter: String): String = {
     try {
       // save in memory
       val ai = MdMgr.GetMdMgr.MakeAdapter(name, typeString, dataFormat, className, jarName,
-        dependencyJars, adapterSpecificCfg, inputAdapterToVerify, keyAndValueDelimiter, fieldDelimiter, valueDelimiter, associatedMsg)
+        dependencyJars, adapterSpecificCfg, inputAdapterToVerify, keyAndValueDelimiter, fieldDelimiter, valueDelimiter, associatedMsg, failedEventsAdapter)
       MdMgr.GetMdMgr.AddAdapter(ai)
       // save in database
       val key = "AdapterInfo." + name
@@ -4680,8 +4674,8 @@ object MetadataAPIImpl extends MetadataAPI {
 
   def UpdateAdapter(name: String, typeString: String, dataFormat: String, className: String,
                     jarName: String, dependencyJars: List[String],
-                    adapterSpecificCfg: String, inputAdapterToVerify: String, keyAndValueDelimiter: String, fieldDelimiter: String, valueDelimiter: String, associatedMsg: String): String = {
-    AddAdapter(name, typeString, dataFormat, className, jarName, dependencyJars, adapterSpecificCfg, inputAdapterToVerify, keyAndValueDelimiter, fieldDelimiter, valueDelimiter, associatedMsg)
+                    adapterSpecificCfg: String, inputAdapterToVerify: String, keyAndValueDelimiter: String, fieldDelimiter: String, valueDelimiter: String, associatedMsg: String, failedEventsAdapter: String): String = {
+    AddAdapter(name, typeString, dataFormat, className, jarName, dependencyJars, adapterSpecificCfg, inputAdapterToVerify, keyAndValueDelimiter, fieldDelimiter, valueDelimiter, associatedMsg, failedEventsAdapter)
   }
 
   def RemoveAdapter(name: String): String = {
@@ -4982,8 +4976,6 @@ object MetadataAPIImpl extends MetadataAPI {
             val cfgMap = new scala.collection.mutable.HashMap[String, String]
             if (cluster.contains("DataStore"))
               cfgMap("DataStore") = getStringFromJsonNode(cluster.getOrElse("DataStore", null))
-            if (cluster.contains("StatusInfo"))
-              cfgMap("StatusInfo") = getStringFromJsonNode(cluster.getOrElse("StatusInfo", null))
             if (cluster.contains("ZooKeeperInfo"))
               cfgMap("ZooKeeperInfo") = getStringFromJsonNode(cluster.getOrElse("ZooKeeperInfo", null))
             if (cluster.contains("EnvironmentContext"))
@@ -4992,8 +4984,6 @@ object MetadataAPIImpl extends MetadataAPI {
               val config = cluster.get("Config").get.asInstanceOf[Map[String, Any]] //BUGBUG:: Do we need to check the type before converting
               if (config.contains("DataStore"))
                 cfgMap("DataStore") = getStringFromJsonNode(config.get("DataStore"))
-              if (config.contains("StatusInfo"))
-                cfgMap("StatusInfo") = getStringFromJsonNode(config.get("StatusInfo"))
               if (config.contains("ZooKeeperInfo"))
                 cfgMap("ZooKeeperInfo") = getStringFromJsonNode(config.get("ZooKeeperInfo"))
               if (config.contains("EnvironmentContext"))
@@ -5079,6 +5069,10 @@ object MetadataAPIImpl extends MetadataAPI {
                 if (adap.contains("InputAdapterToVerify")) {
                   inputAdapterToVerify = adap.get("InputAdapterToVerify").get.asInstanceOf[String]
                 }
+                var failedEventsAdapter: String = null
+                if (adap.contains("FailedEventsAdapter")) {
+                  failedEventsAdapter = adap.get("FailedEventsAdapter").get.asInstanceOf[String]
+                }
                 var dataFormat: String = null
                 if (adap.contains("DataFormat")) {
                   dataFormat = adap.get("DataFormat").get.asInstanceOf[String]
@@ -5103,7 +5097,7 @@ object MetadataAPIImpl extends MetadataAPI {
                   associatedMsg = adap.get("AssociatedMessage").get.asInstanceOf[String]
                 }
                 // save in memory
-                val ai = MdMgr.GetMdMgr.MakeAdapter(nm, typStr, dataFormat, clsNm, jarnm, depJars, ascfg, inputAdapterToVerify, keyAndValueDelimiter, fieldDelimiter, valueDelimiter, associatedMsg)
+                val ai = MdMgr.GetMdMgr.MakeAdapter(nm, typStr, dataFormat, clsNm, jarnm, depJars, ascfg, inputAdapterToVerify, keyAndValueDelimiter, fieldDelimiter, valueDelimiter, associatedMsg, failedEventsAdapter)
                 MdMgr.GetMdMgr.AddAdapter(ai)
                 val key = "AdapterInfo." + ai.name
                 val value = serializer.SerializeObjectToByteArray(ai)
@@ -5824,14 +5818,9 @@ object MetadataAPIImpl extends MetadataAPI {
   }
 
   private def InitHearbeat: Unit = {
-    zkHeartBeatNodePath = metadataAPIConfig.getProperty("ZNODE_PATH") + "/monitor/metadata/" + metadataAPIConfig.getProperty("NODE_ID").toString
-    if (zkHeartBeatNodePath.size > 0) {
-      heartBeat = new HeartBeatUtil
-      heartBeat.Init("Metadata", metadataAPIConfig.getProperty("ZOOKEEPER_CONNECT_STRING"), zkHeartBeatNodePath, 3000, 3000, 5000) // for every 5 secs
-      heartBeat.SetMainData(metadataAPIConfig.getProperty("NODE_ID").toString)
-      MonitorAPIImpl.startMetadataHeartbeat
-    }
-
+    InitZooKeeper
+    MonitorAPIImpl.initMonitorValues(metadataAPIConfig.getProperty("NODE_ID").toString)
+    MonitorAPIImpl.startMetadataHeartbeat
   }
 
   /**
@@ -5867,6 +5856,7 @@ object MetadataAPIImpl extends MetadataAPI {
       }
     }
   }
+
 
   /**
    * shutdownZkListener - should be called by application using MetadataAPIImpl directly to disable synching of Metadata cache.

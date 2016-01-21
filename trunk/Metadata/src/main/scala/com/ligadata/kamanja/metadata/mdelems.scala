@@ -764,7 +764,8 @@ class AdapterInfo {
   var typeString: String = _
   var dataFormat: String = _ // valid only for Input or Validate types. Output and Status does not have this
   var className: String = _
-  var inputAdapterToVerify: String = _ // Valid only for Output Adapter.
+  var inputAdapterToValidate: String = _ // Valid only for Output Adapter.
+  var failedEventsAdapter: String = _ // Valid only for Input Adapter.
   var delimiterString1: String = _ // Delimiter String for CSV
   var associatedMsg: String = _ // Queue Associated Message
   var jarName: String = _
@@ -781,7 +782,8 @@ class AdapterInfo {
   def JarName: String = jarName
   def DependencyJars: Array[String] = dependencyJars
   def AdapterSpecificCfg: String = adapterSpecificCfg
-  def InputAdapterToVerify: String = inputAdapterToVerify
+  def InputAdapterToValidate: String = inputAdapterToValidate
+  def FailedEventsAdapter: String = failedEventsAdapter
   def DelimiterString1: String = if (fieldDelimiter != null) fieldDelimiter else delimiterString1
   def AssociatedMessage: String = associatedMsg
   def KeyAndValueDelimiter: String = keyAndValueDelimiter
@@ -814,3 +816,6 @@ object ModelCompilationConstants {
   val SOURCECODE: String = "source"
   val PHYSICALNAME: String = "pName"
 }
+
+// These case classes define the monitoring structures that will appear in the zookeepr.
+// Add new ones here.
