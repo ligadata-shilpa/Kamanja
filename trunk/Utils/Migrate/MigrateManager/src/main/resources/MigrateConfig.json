@@ -1,16 +1,18 @@
 {
-  "ClusterConfigFile": "{NewPackageInstallPath}/config/ClusterConfig.json",
-  "ApiConfigFile": "{NewPackageInstallPath}/config/MetadataAPIConfig.properties",
-  "MigratingFrom": {
-    "Version": "1.1",
-    "VersionInstallPath": "{OldPackageInstallPath}",
-    "ImplemtedClass": "com.ligadata.Migrate.MigrateFrom_V_1_1$",
-    "Jars": ["{NewPackageInstallPath}/Migrate/MigrateFrom_V_1_1-1.0"]
+  "clusterConfigFile": "{NewPackageInstallPath}/config/ClusterConfig.json",
+  "apiConfigFile": "{NewPackageInstallPath}/config/MetadataAPIConfig.properties",
+  "uncompiledModelsOutputDir": "{UncompiledModelsOutputDir}",
+  "migratingFrom": {
+    "version": "1.1",
+    "versionInstallPath": "{OldPackageInstallPath}",
+    "implemtedClass": "com.ligadata.Migrate.MigrateFrom_V_1_1$",
+    "jars": ["{NewPackageInstallPath}/Migrate/MigrateFrom_V_1_1-1.0"]
   },
-  "MigratingTo": {
-    "Version": "1.3",
-    "ImplemtedClass": "com.ligadata.Migrate.MigrateTo_V_1_3$",
-    "Jars": ["{NewPackageInstallPath}/Migrate/MigrateTo_V_1_3-1.0"]
+  "migratingTo": {
+    "version": "1.3",
+    "versionInstallPath": "{NewPackageInstallPath}",
+    "implemtedClass": "com.ligadata.Migrate.MigrateTo_V_1_3$",
+    "jars": ["{NewPackageInstallPath}/Migrate/MigrateTo_V_1_3-1.0"]
   }
 }
 

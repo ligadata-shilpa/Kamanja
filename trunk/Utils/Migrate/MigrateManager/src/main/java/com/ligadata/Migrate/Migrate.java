@@ -27,6 +27,9 @@ import java.lang.reflect.Constructor;
 // import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
+import com.google.gson.Gson;
+// import com.google.gson.GsonBuilder;
+import java.io.FileReader;
 
 /**
  *
@@ -42,6 +45,11 @@ public class Migrate {
 	Logger logger = LogManager.getLogger(loggerName);
 
 	class VersionConfig {
+		String version = null;
+		String versionInstallPath = null;
+		String implemtedClass = null;
+		String[] jars = null;
+
 		VersionConfig(String tversion, String tversionInstallPath,
 				String timplemtedClass, String[] tjars) {
 			version = tversion;
@@ -50,15 +58,15 @@ public class Migrate {
 			jars = tjars;
 		}
 
-		String version = null;
-		String versionInstallPath = null;
-		String implemtedClass = null;
-		String[] jars = null;
+		VersionConfig() {
+
+		}
 	}
 
 	class Configuration {
 		String clusterConfigFile = null;
 		String apiConfigFile = null;
+		String uncompiledModelsOutputDir = null;
 		VersionConfig migratingFrom = null;
 		VersionConfig migratingTo = null;
 
@@ -68,6 +76,10 @@ public class Migrate {
 			apiConfigFile = tapiConfigFile;
 			migratingFrom = tmigratingFrom;
 			migratingTo = tmigratingTo;
+		}
+
+		Configuration() {
+
 		}
 	}
 
@@ -116,23 +128,46 @@ public class Migrate {
 	}
 
 	Configuration GetConfigurationFromCfgFile(String cfgfile) {
-		VersionConfig fromCfg = new VersionConfig("1.1", "/data/Kamanja_1.1.3",
-				"com.ligadata.Migrate.MigrateFrom_V_1_1", new String[] {
-						"/tmp/Migrate/Migrate/migratebase-1.0.jar",
-						"/tmp/Migrate/Migrate/migratefrom_v_1_1_2.10-1.0.jar",
-						"/data/Kamanja_1.1.3/bin/KamanjaManager-1.0" });
-		VersionConfig toCfg = new VersionConfig(
-				"1.3",
-				"/data/Kamanja",
-				"com.ligadata.Migrate.MigrateTo_V_1_3",
-				new String[] { "/tmp/Migrate/Migrate/migratebase-1.0.jar",
-						"/tmp/Migrate/Migrate/migrateto_v_1_3_2.11-1.0.jar",
-						"/data/Kamanja/lib/system/SaveContainerDataComponent-1.0" });
-		Configuration cfg = new Configuration(
-				"/tmp/Migrate/config/ClusterConfig.json",
-				"/tmp/Migrate/config/MetadataAPIConfig.properties", fromCfg,
-				toCfg);
-		return cfg;
+		FileReader reader = null;
+		try {
+			reader = new FileReader(cfgfile);
+			try {
+				Gson gson = new Gson();
+				Configuration cfg = gson.fromJson(reader, Configuration.class);
+				return cfg;
+			} catch (Exception e) {
+			} catch (Throwable e) {
+			} finally {
+
+			}
+			return null;
+		} catch (Exception e) {
+		} catch (Throwable e) {
+		} finally {
+			try {
+				if (reader != null)
+					reader.close();
+			} catch (Exception e) {
+			}
+		}
+		return null;
+
+		/*
+		 * VersionConfig fromCfg = new VersionConfig("1.1",
+		 * "/data/Kamanja_1.1.3", "com.ligadata.Migrate.MigrateFrom_V_1_1", new
+		 * String[] { "/tmp/Migrate/Migrate/migratebase-1.0.jar",
+		 * "/tmp/Migrate/Migrate/migratefrom_v_1_1_2.10-1.0.jar",
+		 * "/data/Kamanja_1.1.3/bin/KamanjaManager-1.0" }); VersionConfig toCfg
+		 * = new VersionConfig( "1.3", "/data/Kamanja",
+		 * "com.ligadata.Migrate.MigrateTo_V_1_3", new String[] {
+		 * "/tmp/Migrate/Migrate/migratebase-1.0.jar",
+		 * "/tmp/Migrate/Migrate/migrateto_v_1_3_2.11-1.0.jar",
+		 * "/data/Kamanja/lib/system/SaveContainerDataComponent-1.0" });
+		 * Configuration cfg = new Configuration(
+		 * "/tmp/Migrate/config/ClusterConfig.json",
+		 * "/tmp/Migrate/config/MetadataAPIConfig.properties", fromCfg, toCfg);
+		 * return cfg;
+		 */
 
 		/*
 		 * 
