@@ -49,9 +49,9 @@ excludedJars in assembly <<= (fullClasspath in assembly) map { cp =>
   cp filter { jar => excludes(jar.data.getName) }
 }
 
-unmanagedBase <<= baseDirectory { base => base / "custom_lib" }
+// unmanagedBase <<= baseDirectory { base => base / "lib" }
 
-unmanagedJars in Compile <<= baseDirectory map { base => (base ** "*.jar").classpath }
+// unmanagedJars in Compile <<= baseDirectory map { base => (base ** "*.jar").classpath }
 
 name := "MigrateTo_V_1_3"
 
@@ -70,3 +70,5 @@ libraryDependencies += "org.json4s" %% "json4s-native" % "3.2.9"
 libraryDependencies += "org.json4s" %% "json4s-jackson" % "3.2.9" 
 
 libraryDependencies += "com.google.code.gson" % "gson" % "2.3.1"
+
+EclipseKeys.relativizeLibs := false

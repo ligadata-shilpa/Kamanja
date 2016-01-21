@@ -29,16 +29,25 @@ import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
 import org.json4s.jackson.Serialization
 import scala.io.Source
+// import com.ligadata.tools.SaveContainerDataComponent
+// import com.ligadata.KvBase.{ Key, Value, TimeRange, KvBaseDefalts, KeyWithBucketIdAndPrimaryKey, KeyWithBucketIdAndPrimaryKeyCompHelper, LoadKeyWithBucketId }
+import com.ligadata.StorageBase.{ DataStore, Transaction, DataStoreOperations }
+import com.ligadata.keyvaluestore.KeyValueManager
+import scala.collection.mutable.ArrayBuffer
 
-object MigrateTo_V_1_3 extends MigratableTo {
+class MigrateTo_V_1_3 extends MigratableTo {
   lazy val loggerName = this.getClass.getName
   lazy val logger = LogManager.getLogger(loggerName)
 
+  private var _destInstallPath: String = _
   private var _apiConfigFile: String = _
   private var _clusterConfigFile: String = _
   private var _metaDataStoreInfo: String = _
   private var _dataStoreInfo: String = _
   private var _statusStoreInfo: String = _
+  private var _metaDataStoreDb: DataStore = _
+  private var _dataStoreDb: DataStore = _
+  private var _statusStoreDb: DataStore = _
   private var _bInit = false
 
   private def isValidPath(path: String, checkForDir: Boolean = false, checkForFile: Boolean = false, str: String = "path"): Unit = {
@@ -88,14 +97,14 @@ object MigrateTo_V_1_3 extends MigratableTo {
         val clusters = clustersList.length
         logger.debug("Found " + clusters + " cluster objects ")
         clustersList.foreach(clustny => {
-          if (dsStr == null) {
+          if (dsStr == null || dsStr.size == 0) {
             val cluster = clustny.asInstanceOf[Map[String, Any]]
             val ClusterId = cluster.getOrElse("ClusterId", "").toString.trim.toLowerCase
             logger.debug("Processing the cluster => " + ClusterId)
             if (ClusterId.size > 0 && cluster.contains("DataStore"))
               dsStr = getStringFromJsonNode(cluster.getOrElse("DataStore", null))
           }
-          if (ssStr == null) {
+          if (ssStr == null || ssStr.size == 0) {
             val cluster = clustny.asInstanceOf[Map[String, Any]]
             val ClusterId = cluster.getOrElse("ClusterId", "").toString.trim.toLowerCase
             logger.debug("Processing the cluster => " + ClusterId)
@@ -104,6 +113,7 @@ object MigrateTo_V_1_3 extends MigratableTo {
           }
         })
       }
+      logger.debug("Found Datastore String:%s and Statusstore String:%s".format(dsStr, ssStr));
       (dsStr, ssStr)
     } catch {
       case e: Exception => {
@@ -115,9 +125,24 @@ object MigrateTo_V_1_3 extends MigratableTo {
     }
   }
 
-  override def init(apiConfigFile: String, clusterConfigFile: String): Unit = {
+  private def GetDataStoreHandle(jarPaths: collection.immutable.Set[String], dataStoreInfo: String): DataStore = {
+    try {
+      logger.debug("Getting DB Connection for dataStoreInfo:%s".format(dataStoreInfo))
+      return KeyValueManager.Get(jarPaths, dataStoreInfo)
+    } catch {
+      case e: Exception => throw e
+      case e: Throwable => throw e
+    }
+  }
+
+  override def init(destInstallPath: String, apiConfigFile: String, clusterConfigFile: String): Unit = {
     isValidPath(apiConfigFile, false, true, "apiConfigFile")
     isValidPath(clusterConfigFile, false, true, "clusterConfigFile")
+
+    isValidPath(destInstallPath, true, false, "destInstallPath")
+    isValidPath(destInstallPath + "/bin", true, false, "bin folder in destInstallPath")
+    isValidPath(destInstallPath + "/lib/system", true, false, "/lib/system folder in destInstallPath")
+    isValidPath(destInstallPath + "/lib/application", true, false, "/lib/application folder in destInstallPath")
 
     MdMgr.GetMdMgr.truncate
     val mdLoader = new MetadataLoad(MdMgr.mdMgr, "", "", "", "")
@@ -138,14 +163,26 @@ object MigrateTo_V_1_3 extends MigratableTo {
       throw new Exception("Not found valid DataStore info in " + clusterConfigFile)
     }
 
-    // Open the database here
+    val sysPath = new File(destInstallPath + "/lib/system")
+    val appPath = new File(destInstallPath + "/lib/application")
 
+    val toVersionJarPaths = collection.immutable.Set[String](sysPath.getAbsolutePath, appPath.getAbsolutePath) ++ jarPaths
+
+    _destInstallPath = destInstallPath
     _apiConfigFile = apiConfigFile
     _clusterConfigFile = clusterConfigFile
 
     _metaDataStoreInfo = metaDataStoreInfo
     _dataStoreInfo = dataStoreInfo
     _statusStoreInfo = if (statusStoreInfo == null) "" else statusStoreInfo
+
+    // Open the database here
+    _metaDataStoreDb = GetDataStoreHandle(toVersionJarPaths, metaDataStoreInfo)
+    _dataStoreDb = GetDataStoreHandle(toVersionJarPaths, dataStoreInfo)
+
+    if (_statusStoreInfo.size > 0) {
+      _statusStoreDb = GetDataStoreHandle(toVersionJarPaths, _statusStoreInfo)
+    }
 
     _bInit = true
   }
@@ -170,20 +207,80 @@ object MigrateTo_V_1_3 extends MigratableTo {
     _statusStoreInfo
   }
 
-  override def isTableExists(tblName: String): Boolean = {
+  override def isMetadataTableExists(tblName: String): Boolean = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
+    _metaDataStoreDb.isTableExists(tblName)
+  }
+
+  override def isDataTableExists(tblName: String): Boolean = {
+    if (_bInit == false)
+      throw new Exception("Not yet Initialized")
+    _dataStoreDb.isTableExists(tblName)
+  }
+
+  override def isStatusTableExists(tblName: String): Boolean = {
+    if (_bInit == false)
+      throw new Exception("Not yet Initialized")
+    if (_statusStoreDb != null)
+      return _statusStoreDb.isTableExists(tblName)
     false
   }
 
-  override def backupTables(tblsToBackedUp: Array[BackupTableInfo], force: Boolean): Unit = {
+  override def backupMetadataTables(tblsToBackedUp: Array[BackupTableInfo], force: Boolean): Unit = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
+    logger.debug("Backup metadata tables:" + tblsToBackedUp.map(t => "(" + t.srcTable + " => " + t.dstTable + ")").mkString(","))
+    tblsToBackedUp.foreach(backupTblInfo => {
+      _metaDataStoreDb.copyTable(backupTblInfo.srcTable, backupTblInfo.dstTable, force)
+    })
   }
 
-  override def dropTables(tblsToBackedUp: Array[String]): Unit = {
+  override def backupDataTables(tblsToBackedUp: Array[BackupTableInfo], force: Boolean): Unit = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
+    logger.debug("Backup data tables:" + tblsToBackedUp.map(t => "(" + t.srcTable + " => " + t.dstTable + ")").mkString(","))
+    tblsToBackedUp.foreach(backupTblInfo => {
+      _dataStoreDb.copyTable(backupTblInfo.srcTable, backupTblInfo.dstTable, force)
+    })
+  }
+
+  override def backupStatusTables(tblsToBackedUp: Array[BackupTableInfo], force: Boolean): Unit = {
+    if (_bInit == false)
+      throw new Exception("Not yet Initialized")
+    logger.debug("Backup status tables:" + tblsToBackedUp.map(t => "(" + t.srcTable + " => " + t.dstTable + ")").mkString(","))
+    if (_statusStoreDb == null && tblsToBackedUp.size > 0)
+      throw new Exception("Does not have Status store information")
+    tblsToBackedUp.foreach(backupTblInfo => {
+      _statusStoreDb.copyTable(backupTblInfo.srcTable, backupTblInfo.dstTable, force)
+    })
+  }
+
+  override def dropMetadataTables(tblsToDrop: Array[String]): Unit = {
+    if (_bInit == false)
+      throw new Exception("Not yet Initialized")
+    logger.debug("Dropping metadata tables:" + tblsToDrop.mkString(","))
+    if (tblsToDrop.size > 0)
+      _metaDataStoreDb.dropTables(tblsToDrop)
+  }
+
+  override def dropDataTables(tblsToDrop: Array[String]): Unit = {
+    if (_bInit == false)
+      throw new Exception("Not yet Initialized")
+    logger.debug("Dropping data tables:" + tblsToDrop.mkString(","))
+    if (tblsToDrop.size > 0)
+      _dataStoreDb.dropTables(tblsToDrop)
+  }
+
+  override def dropStatusTables(tblsToDrop: Array[String]): Unit = {
+    if (_bInit == false)
+      throw new Exception("Not yet Initialized")
+    logger.debug("Dropping status tables:" + tblsToDrop.mkString(","))
+    if (tblsToDrop.size > 0) {
+      if (_statusStoreDb == null)
+        throw new Exception("Does not have Status store information")
+      _statusStoreDb.dropTables(tblsToDrop)
+    }
   }
 
   // Uploads clusterConfigFile file
@@ -191,13 +288,223 @@ object MigrateTo_V_1_3 extends MigratableTo {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
     val cfgStr = Source.fromFile(_clusterConfigFile).mkString
+    logger.debug("Uploading configuration")
     MetadataAPIImpl.UploadConfig(cfgStr, None, "ClusterConfig")
   }
 
-  // Tuple has metadata element type & metadata element data in JSON format.
-  override def addMetadata(metadataElemsJson: Array[MetadataFormat]): Unit = {
+  private def ProcessObject(mdObjs: ArrayBuffer[(String, Map[String, Any])]): Unit = {
+    try {
+      mdObjs.foreach(mdObj =>
+        {
+          val objType = mdObj._1
+
+          val namespace = mdObj._2.getOrElse("NameSpace", "").toString.trim()
+          val name = mdObj._2.getOrElse("Name", "").toString.trim()
+          val dispkey = (namespace + "." + name).toLowerCase
+
+          objType match {
+            case "ModelDef" => {
+              logger.info("The model " + dispkey + " needs to be manually migrated because underlying interfaces have changed")
+              logger.debug("Adding the model to the cache: name of the object =>  " + dispkey)
+            }
+            case "MessageDef" => {
+              val msgDefStr = mdObj._2.getOrElse("ObjectDefinition", "").toString
+              if (msgDefStr != null) {
+                logger.info("Adding the message: name of the object =>  " + dispkey)
+                MetadataAPIImpl.AddMessage(msgDefStr, "JSON", None)
+              } else {
+                logger.debug("Bootstrap object. Ignore it")
+              }
+            }
+            case "ContainerDef" => {
+              logger.debug("Adding the container : name of the object =>  " + dispkey)
+              val msgDefStr = mdObj._2.getOrElse("ObjectDefinition", "").toString
+              if (msgDefStr != null) {
+                logger.info("Adding the message: name of the object =>  " + dispkey)
+                MetadataAPIImpl.AddContainer(msgDefStr, "JSON", None)
+              } else {
+                logger.debug("Bootstrap object. Ignore it")
+              }
+            }
+            case "FunctionDef" => {
+              logger.debug("Adding the function to the cache: name of the object =>  " + dispkey)
+            }
+            case "AttributeDef" => {
+              logger.debug("Adding the attribute to the cache: name of the object =>  " + dispkey)
+            }
+            case "ScalarTypeDef" => {
+              logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
+            }
+            case "ArrayTypeDef" => {
+              logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
+            }
+            case "ArrayBufTypeDef" => {
+              logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
+            }
+            case "ListTypeDef" => {
+              logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
+            }
+            case "QueueTypeDef" => {
+              logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
+            }
+            case "SetTypeDef" => {
+              logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
+            }
+            case "TreeSetTypeDef" => {
+              logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
+            }
+            case "SortedSetTypeDef" => {
+              logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
+            }
+            case "MapTypeDef" => {
+              logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
+            }
+            case "ImmutableMapTypeDef" => {
+              logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
+            }
+            case "HashMapTypeDef" => {
+              logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
+            }
+            case "TupleTypeDef" => {
+              logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
+            }
+            case "ContainerTypeDef" => {
+              logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
+            }
+            case "OutputMsgDef" => {
+              logger.trace("Adding the Output Msg to the cache: name of the object =>  " + dispkey)
+            }
+            case _ => {
+              logger.error("ProcessObject is not implemented for objects of type " + objType)
+            }
+          }
+        })
+    } catch {
+      case e: Exception => throw e
+      case e: Throwable => throw e
+    }
+  }
+
+  override def addMetadata(allMetadataElemsJson: Array[MetadataFormat]): Unit = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
+
+    // Order metadata to add in the given order.
+    // First get all the message & containers And also the excluded types we automatically add when we add messages & containers
+    val allTemp = ArrayBuffer[(String, Map[String, Any])]()
+    val types = ArrayBuffer[(String, Map[String, Any])]()
+    val messages = ArrayBuffer[(String, Map[String, Any])]()
+    val containers = ArrayBuffer[(String, Map[String, Any])]()
+    val functions = ArrayBuffer[(String, Map[String, Any])]()
+    val mdlConfig = ArrayBuffer[(String, Map[String, Any])]()
+    val models = ArrayBuffer[(String, Map[String, Any])]()
+    val jarDef = ArrayBuffer[(String, Map[String, Any])]()
+    val outputMsgDef = ArrayBuffer[(String, Map[String, Any])]()
+    val configDef = ArrayBuffer[(String, Map[String, Any])]()
+    val typesToIgnore = scala.collection.mutable.Set[String]()
+
+    allMetadataElemsJson.foreach(mdf => {
+      val json = parse(mdf.objDataInJson)
+      val jsonObjMap = json.values.asInstanceOf[Map[String, Any]]
+
+      val isActiveStr = jsonObjMap.getOrElse("IsActive", "").toString.trim()
+      if (isActiveStr.size > 0) {
+        val isActive = jsonObjMap.getOrElse("IsActive", "").toString.trim().toBoolean
+        if (isActive) {
+          if (mdf.objType == "MessageDef") {
+
+            val namespace = jsonObjMap.getOrElse("NameSpace", "").toString.trim()
+            val name = jsonObjMap.getOrElse("Name", "").toString.trim()
+
+            typesToIgnore += (namespace + ".arrayof" + name).toLowerCase
+            typesToIgnore += (namespace + ".arraybufferof" + name).toLowerCase
+            typesToIgnore += (namespace + ".sortedsetof" + name).toLowerCase
+            typesToIgnore += (namespace + ".immutablemapofintarrayof" + name).toLowerCase
+            typesToIgnore += (namespace + ".immutablemapofstringarrayof" + name).toLowerCase
+            typesToIgnore += (namespace + ".arrayofarrayof" + name).toLowerCase
+            typesToIgnore += (namespace + ".mapofstringarrayof" + name).toLowerCase
+            typesToIgnore += (namespace + ".mapofintarrayof" + name).toLowerCase
+            typesToIgnore += (namespace + ".setof" + name).toLowerCase
+            typesToIgnore += (namespace + ".treesetof" + name).toLowerCase
+
+            messages += ((mdf.objType, jsonObjMap))
+          } else if (mdf.objType == "ContainerDef") {
+
+            val namespace = jsonObjMap.getOrElse("NameSpace", "").toString.trim()
+            val name = jsonObjMap.getOrElse("Name", "").toString.trim()
+
+            typesToIgnore += (namespace + ".arrayof" + name).toLowerCase
+            typesToIgnore += (namespace + ".arraybufferof" + name).toLowerCase
+            typesToIgnore += (namespace + ".sortedsetof" + name).toLowerCase
+            typesToIgnore += (namespace + ".immutablemapofintarrayof" + name).toLowerCase
+            typesToIgnore += (namespace + ".immutablemapofstringarrayof" + name).toLowerCase
+            typesToIgnore += (namespace + ".arrayofarrayof" + name).toLowerCase
+            typesToIgnore += (namespace + ".mapofstringarrayof" + name).toLowerCase
+            typesToIgnore += (namespace + ".mapofintarrayof" + name).toLowerCase
+            typesToIgnore += (namespace + ".setof" + name).toLowerCase
+            typesToIgnore += (namespace + ".treesetof" + name).toLowerCase
+
+            containers += ((mdf.objType, jsonObjMap))
+          } else {
+            allTemp += ((mdf.objType, jsonObjMap))
+          }
+        }
+      }
+    })
+
+    allTemp.foreach(jsonObjMap => {
+      val objType = jsonObjMap._1
+      if (objType == "ModelDef") {
+        models += jsonObjMap
+      } else if (objType == "ArrayTypeDef" ||
+        objType == "ArrayBufTypeDef" ||
+        objType == "SortedSetTypeDef" ||
+        objType == "ImmutableMapTypeDef" ||
+        objType == "MapTypeDef" ||
+        objType == "HashMapTypeDef" ||
+        objType == "SetTypeDef" ||
+        objType == "ImmutableSetTypeDef" ||
+        objType == "TreeSetTypeDef" ||
+        objType == "JarDef" ||
+        objType == "OutputMsgDef" ||
+        objType == "ConfigDef") {
+        val namespace = jsonObjMap._2.getOrElse("NameSpace", "").toString.trim()
+        val name = jsonObjMap._2.getOrElse("Name", "").toString.trim()
+
+        val typ = (namespace + "." + name).toLowerCase
+        if (typesToIgnore.contains(typ) == false)
+          types += jsonObjMap
+      } else if (objType == "FunctionDef") {
+        functions += jsonObjMap
+      } else if (objType == "JarDef") {
+        jarDef += jsonObjMap
+      } else if (objType == "OutputMsgDef") {
+        outputMsgDef += jsonObjMap
+      } else if (objType == "ConfigDef") {
+        configDef += jsonObjMap
+      } else {
+        logger.error("ObjectType:%s is not handled".format(objType))
+      }
+    })
+
+    // We need to add the metadata in the following order
+    // Jars
+    // Types
+    // Containers
+    // Messages
+    // Functions
+    // Model configuration
+    // Models
+    // OutputMessageDef
+
+    ProcessObject(jarDef)
+    ProcessObject(types)
+    ProcessObject(containers)
+    ProcessObject(messages)
+    ProcessObject(functions)
+    ProcessObject(configDef)
+    ProcessObject(models)
+    ProcessObject(outputMsgDef)
   }
 
   // Array of tuples has container name, timepartition value, bucketkey, transactionid, rowid, serializername & data in Gson (JSON) format
@@ -207,6 +514,14 @@ object MigrateTo_V_1_3 extends MigratableTo {
   }
 
   override def shutdown: Unit = {
-
+    if (_metaDataStoreDb != null)
+      _metaDataStoreDb.Shutdown()
+    if (_dataStoreDb != null)
+      _dataStoreDb.Shutdown()
+    if (_statusStoreDb != null)
+      _statusStoreDb.Shutdown()
+    _metaDataStoreDb = null
+    _dataStoreDb = null
+    _statusStoreDb = null
   }
 }

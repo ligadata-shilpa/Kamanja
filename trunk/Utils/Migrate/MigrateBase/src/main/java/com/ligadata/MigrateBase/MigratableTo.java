@@ -17,16 +17,22 @@
 package com.ligadata.MigrateBase;
 
 public interface MigratableTo {
-  public abstract void init(String apiConfigFile, String clusterConfigFile);
+  public abstract void init(String destInstallPath, String apiConfigFile, String clusterConfigFile);
   public abstract boolean isInitialized();
   public abstract String getMetadataStoreInfo();
   public abstract String getDataStoreInfo();
   public abstract String getStatusStoreInfo();
-  public abstract boolean isTableExists(String tblName);
-  public abstract void backupTables(BackupTableInfo[] tblsToBackedUp, boolean force);
-  public abstract void dropTables(String[] tblsToDrop);
+  public abstract boolean isMetadataTableExists(String tblName);
+  public abstract boolean isDataTableExists(String tblName);
+  public abstract boolean isStatusTableExists(String tblName);
+  public abstract void backupMetadataTables(BackupTableInfo[] tblsToBackedUp, boolean force);
+  public abstract void backupDataTables(BackupTableInfo[] tblsToBackedUp, boolean force);
+  public abstract void backupStatusTables(BackupTableInfo[] tblsToBackedUp, boolean force);
+  public abstract void dropMetadataTables(String[] tblsToDrop);
+  public abstract void dropDataTables(String[] tblsToDrop);
+  public abstract void dropStatusTables(String[] tblsToDrop);
   public abstract void uploadConfiguration();
-  public abstract void addMetadata(MetadataFormat[] metadataElemsJson);
+  public abstract void addMetadata(MetadataFormat[] allMetadataElemsJson);
   public abstract void populateAndSaveData(DataFormat[] data);
   public abstract void shutdown();
 }

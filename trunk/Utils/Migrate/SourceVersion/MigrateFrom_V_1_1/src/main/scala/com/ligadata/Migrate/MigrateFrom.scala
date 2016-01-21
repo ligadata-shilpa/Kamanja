@@ -16,11 +16,9 @@
 
 package com.ligadata.Migrate
 
-import com.google.gson.Gson
-import com.google.gson.GsonBuilder
 import com.ligadata.Utils._
 import com.ligadata.MigrateBase._
-import java.io.File
+import java.io.{ DataOutputStream, ByteArrayOutputStream, File }
 import org.apache.logging.log4j._
 import scala.collection.mutable.ArrayBuffer
 import com.ligadata.StorageBase.{ Key, Value, IStorage, DataStoreOperations, DataStore, Transaction, StorageAdapterObj }
@@ -34,15 +32,14 @@ import org.json4s.jackson.Serialization
 import com.ligadata.KamanjaData._
 import com.ligadata.KamanjaBase._
 import scala.util.control.Breaks._
-import com.google.gson.Gson
-import com.google.gson.GsonBuilder
 import scala.reflect.runtime.{ universe => ru }
+// import scala.collection.JavaConversions._
 
-object MigrateFrom_V_1_1 extends MigratableFrom {
+class MigrateFrom_V_1_1 extends MigratableFrom {
+
   object MdResolve extends MdBaseResolveInfo {
     val _messagesAndContainers = scala.collection.mutable.Map[String, MessageContainerObjBase]()
-    val _gson = new Gson();
-    val _kamanjaLoader = new KamanjaLoaderInfoFrom(null, false, true)
+    val _kamanjaLoader = new KamanjaLoaderInfo
     val _kryoDataSer = SerializerManager.GetSerializer("kryo")
     if (_kryoDataSer != null) {
       _kryoDataSer.SetClassLoader(_kamanjaLoader.loader)
@@ -196,6 +193,8 @@ object MigrateFrom_V_1_1 extends MigratableFrom {
   private var _metadataStoreInfo: String = _
   private var _dataStoreInfo: String = _
   private var _statusStoreInfo: String = _
+  private var _metadataStore: DataStore = _
+  private var _dataStore: DataStore = _
   private var _bInit = false
 
   private def isValidPath(path: String, checkForDir: Boolean = false, checkForFile: Boolean = false, str: String = "path"): Unit = {
@@ -277,7 +276,7 @@ object MigrateFrom_V_1_1 extends MigratableFrom {
     GetObject(k, store)
   }
 
-  private def LoadFqJarsIfNeeded(jars: Array[String], loadedJars: scala.collection.mutable.TreeSet[String], loader: KamanjaClassLoaderFrom): Boolean = {
+  private def LoadFqJarsIfNeeded(jars: Array[String], loadedJars: scala.collection.mutable.TreeSet[String], loader: KamanjaClassLoader): Boolean = {
     // Loading all jars
     for (j <- jars) {
       logger.debug("Processing Jar " + j.trim)
@@ -317,7 +316,7 @@ object MigrateFrom_V_1_1 extends MigratableFrom {
     return jarName // Returning base jarName if not found in jar paths
   }
 
-  private def LoadJarIfNeeded(jsonObjMap: Map[String, Any], loadedJars: scala.collection.mutable.TreeSet[String], loader: KamanjaClassLoaderFrom, jarPaths: collection.immutable.Set[String]): Boolean = {
+  private def LoadJarIfNeeded(jsonObjMap: Map[String, Any], loadedJars: scala.collection.mutable.TreeSet[String], loader: KamanjaClassLoader, jarPaths: collection.immutable.Set[String]): Boolean = {
     if (jarPaths == null) return false
 
     var retVal: Boolean = true
@@ -352,7 +351,7 @@ object MigrateFrom_V_1_1 extends MigratableFrom {
     return true
   }
 
-  private def LoadJarIfNeeded(objJson: String, loadedJars: scala.collection.mutable.TreeSet[String], loader: KamanjaClassLoaderFrom, jarPaths: collection.immutable.Set[String]): Boolean = {
+  private def LoadJarIfNeeded(objJson: String, loadedJars: scala.collection.mutable.TreeSet[String], loader: KamanjaClassLoader, jarPaths: collection.immutable.Set[String]): Boolean = {
     if (jarPaths == null) return false
 
     var retVal: Boolean = true
@@ -729,7 +728,7 @@ object MigrateFrom_V_1_1 extends MigratableFrom {
     isIt
   }
 
-  private def ExtractDataFromTypleData(tupleBytes: Value): Array[DataFormat] = {
+  private def ExtractDataFromTypleData(key: Key, tupleBytes: Value, bos: ByteArrayOutputStream, dos: DataOutputStream): Array[DataFormat] = {
     // Get first _serInfoBufBytes bytes
     if (tupleBytes.size < _serInfoBufBytes) {
       val errMsg = s"Invalid input. This has only ${tupleBytes.size} bytes data. But we are expecting serializer buffer bytes as of size ${_serInfoBufBytes}"
@@ -743,13 +742,19 @@ object MigrateFrom_V_1_1 extends MigratableFrom {
     serInfo match {
       case "kryo" => {
         val valInfo = getValueInfo(tupleBytes)
-        kd = MdResolve._kryoDataSer.DeserializeObjectFromByteArray(valInfo).asInstanceOf[KamanjaData]
+        val desInfo = MdResolve._kryoDataSer.DeserializeObjectFromByteArray(valInfo)
+        if (desInfo.isInstanceOf[KamanjaData]) {
+          kd = MdResolve._kryoDataSer.DeserializeObjectFromByteArray(valInfo).asInstanceOf[KamanjaData]
+        }
       }
       case "manual" => {
         val valInfo = getValueInfo(tupleBytes)
         val datarec = new KamanjaData
         datarec.DeserializeData(valInfo, MdResolve, MdResolve._kamanjaLoader.loader)
         kd = datarec
+      }
+      case "csv" => {
+        // Not doing anything
       }
       case _ => {
         throw new Exception("Found un-handled Serializer Info: " + serInfo)
@@ -761,8 +766,17 @@ object MigrateFrom_V_1_1 extends MigratableFrom {
       val bucketKey = kd.GetKey
       val data = kd.GetAllData
 
-      // container name, timepartition value, bucketkey, transactionid, rowid, serializername & data in Gson (JSON) format.
-      data.map(d => new DataFormat(typName, 0, bucketKey, d.TransactionId(), 0, serInfo, MdResolve._gson.toJson(d)))
+      println("=======================> type:%s, key:%s, data records count:%d".format(typName, bucketKey, data.size))
+
+      // container name, timepartition value, bucketkey, transactionid, rowid, serializername & data in Serialized ByteArray.
+      return data.map(d => {
+        bos.reset()
+        d.Serialize(dos)
+        val arr = bos.toByteArray()
+
+        println("=======================> type:%s, key:%s, data record TxnId:%d, ByteArraySize:%d".format(typName, bucketKey, d.TransactionId(), arr.length))
+        new DataFormat(typName, 0, bucketKey, d.TransactionId(), 0, serInfo, arr)
+      })
     }
 
     return Array[DataFormat]()
@@ -852,12 +866,14 @@ object MigrateFrom_V_1_1 extends MigratableFrom {
 
     logger.info("fromVersionInstallationPath:%s, fromVersionJarPaths:%s".format(fromVersionInstallationPath, fromVersionJarPaths.mkString(",")))
 
+    /*
     val scalaFls = sysPath.listFiles.filter(_.isFile).filter(_.getName.startsWith("scala-")).filter(_.getName.contains("2.10")).map(_.getAbsolutePath)
+    // val scalaFls = sysPath.listFiles.filter(_.isFile).map(_.getAbsolutePath)
 
     // Loading the base file where we have all the base classes like classes from KamanjaBase, metadata, MetadataAPI, etc
     if (scalaFls.size > 0)
       LoadFqJarsIfNeeded(scalaFls, MdResolve._kamanjaLoader.loadedJars, MdResolve._kamanjaLoader.loader)
-
+*/
     val dir = new File(fromVersionInstallationPath + "/bin");
 
     val mdapiFls = dir.listFiles.filter(_.isFile).filter(_.getName.startsWith("MetadataAPI-")).toList
@@ -875,20 +891,29 @@ object MigrateFrom_V_1_1 extends MigratableFrom {
     } else {
       baseFileToLoadFromPrevVer = mdapiFls(0).getAbsolutePath
     }
+
+    /*
     // Loading the base file where we have all the base classes like classes from KamanjaBase, metadata, MetadataAPI, etc
     if (baseFileToLoadFromPrevVer != null && baseFileToLoadFromPrevVer.size > 0)
       LoadFqJarsIfNeeded(Array(baseFileToLoadFromPrevVer), MdResolve._kamanjaLoader.loadedJars, MdResolve._kamanjaLoader.loader)
-
+*/
     if (MdResolve._kryoDataSer != null) {
       MdResolve._kryoDataSer.SetClassLoader(MdResolve._kamanjaLoader.loader)
     }
 
-    val metadataStore = GetDataStoreHandle(fromVersionJarPaths, _metadataStoreInfo, "metadata_objects" + backupTblSufix)
+    _metadataStore = GetDataStoreHandle(fromVersionJarPaths, _metadataStoreInfo, "metadata_objects" + backupTblSufix)
+
+    val kryoDataSer = SerializerManager.GetSerializer("kryo")
+    if (kryoDataSer != null) {
+      kryoDataSer.SetClassLoader(MdResolve._kamanjaLoader.loader)
+    }
+
+    println("=============================> All Loaded files:" + MdResolve._kamanjaLoader.loadedJars.mkString(","))
 
     try {
       // Load all metadata objects
       var keys = scala.collection.mutable.Set[Key]()
-      metadataStore.getAllKeys({ (key: Key) => keys.add(key) })
+      _metadataStore.getAllKeys({ (key: Key) => keys.add(key) })
       val keyArray = keys.toArray
       if (keyArray.length == 0) {
         val szMsg = "No objects available in the Database"
@@ -898,12 +923,12 @@ object MigrateFrom_V_1_1 extends MigratableFrom {
 
       val allObjs = ArrayBuffer[Value]()
       keyArray.foreach(key => {
-        val obj = GetObject(key, metadataStore)
+        val obj = GetObject(key, _metadataStore)
         allObjs += obj.Value
       })
 
       allObjs.foreach(o => {
-        val mObj = MdResolve._kryoDataSer.DeserializeObjectFromByteArray(o.toArray[Byte]).asInstanceOf[BaseElem]
+        val mObj = kryoDataSer.DeserializeObjectFromByteArray(o.toArray[Byte]).asInstanceOf[BaseElem]
         try {
           val (typ, jsonStr) = serializeObjectToJson(mObj)
           if (callbackFunction != null) {
@@ -922,9 +947,6 @@ object MigrateFrom_V_1_1 extends MigratableFrom {
       case e: Exception => {
         throw new Exception("Failed to load metadata objects", e)
       }
-    } finally {
-      if (metadataStore != null)
-        metadataStore.Shutdown()
     }
   }
 
@@ -968,7 +990,7 @@ object MigrateFrom_V_1_1 extends MigratableFrom {
 
     AddActiveMessageOrContianer(metadataElemsJson, fromVersionJarPaths)
 
-    val dataStore = GetDataStoreHandle(fromVersionJarPaths, _dataStoreInfo, "AllData" + backupTblSufix)
+    _dataStore = GetDataStoreHandle(fromVersionJarPaths, _dataStoreInfo, "AllData" + backupTblSufix)
 
     if (MdResolve._kryoDataSer != null) {
       MdResolve._kryoDataSer.SetClassLoader(MdResolve._kamanjaLoader.loader)
@@ -976,10 +998,13 @@ object MigrateFrom_V_1_1 extends MigratableFrom {
 
     logger.error("==================================>All List:%s".format(MdResolve._messagesAndContainers.map(kv => kv._1).mkString(",")))
 
+    val bos = new ByteArrayOutputStream(1024 * 1024)
+    val dos = new DataOutputStream(bos)
+
     try {
       // Load all metadata objects
       var keys = scala.collection.mutable.Set[Key]()
-      dataStore.getAllKeys({ (key: Key) => keys.add(key) })
+      _dataStore.getAllKeys({ (key: Key) => keys.add(key) })
       val keyArray = keys.toArray
       if (keyArray.length == 0) {
         val szMsg = "No objects available in the Database"
@@ -988,8 +1013,8 @@ object MigrateFrom_V_1_1 extends MigratableFrom {
       }
 
       keyArray.foreach(key => {
-        val obj = GetObject(key, dataStore)
-        val retData = ExtractDataFromTypleData(obj.Value)
+        val obj = GetObject(key, _dataStore)
+        val retData = ExtractDataFromTypleData(key, obj.Value, bos, dos)
         if (retData.size > 0 && callbackFunction != null) {
           callbackFunction.call(retData)
         }
@@ -999,12 +1024,17 @@ object MigrateFrom_V_1_1 extends MigratableFrom {
         throw new Exception("Failed to get data", e)
       }
     } finally {
-      if (dataStore != null)
-        dataStore.Shutdown()
+      dos.close()
+      bos.close()
     }
   }
 
   override def shutdown: Unit = {
-
+    if (_metadataStore != null)
+      _metadataStore.Shutdown()
+    if (_dataStore != null)
+      _dataStore.Shutdown()
+    _metadataStore = null
+    _dataStore = null
   }
 }

@@ -23,11 +23,11 @@ public class DataFormat {
 	public long transactionid = 0;
 	public int rowid = 0;
 	public String serializername = null;
-	public String data = null; // In JSON format generated from GSON
+	public byte[] data = null;
 
 	public DataFormat(String tcontainerName, long ttimePartition,
 			String[] tbucketKey, long ttransactionid, int trowid,
-			String tserializername, String tdata) {
+			String tserializername, byte[] tdata) {
 		containerName = tcontainerName;
 		timePartition = ttimePartition;
 		bucketKey = tbucketKey;
