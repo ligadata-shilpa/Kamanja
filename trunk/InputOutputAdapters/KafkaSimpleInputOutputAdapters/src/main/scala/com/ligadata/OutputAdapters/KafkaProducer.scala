@@ -40,7 +40,7 @@ object KafkaProducer extends OutputAdapterObj {
   val HB_PERIOD = 5000
 
   // Statistics Keys
-  val ADAPTER_DESCRIPTION = "Kafka 8.1.1 Client"
+  val ADAPTER_DESCRIPTION = "Kafka 8.2.2 Client"
   val SEND_MESSAGE_COUNT_KEY = "Messages Sent"
   val SEND_CALL_COUNT_KEY = "Send Call Count"
   val LAST_FAILURE_TIME = "Last_Failure"
@@ -125,7 +125,6 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
 
   private var isShutdown = false
   private var isHeartBeating = false
-  private var isInError = false
 
   private var retryExecutor: ExecutorService = Executors.newFixedThreadPool(1)
   private var heartBeatThread: ExecutorService = Executors.newFixedThreadPool(1)
@@ -419,19 +418,13 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
     var sendStatus = KafkaConstants.KAFKA_NOT_SEND
     var retryCount = 0
     var waitTm = 15000
+
     // We keep on retry until we succeed on this thread
     while (sendStatus != KafkaConstants.KAFKA_SEND_SUCCESS && isShutdown == false) {
       try {
         sendStatus = doSend(keyMessages, removeFromFailedMap)
-        if (isInError) {
-          updateMetricValue(KafkaProducer.LAST_RECOVERY_TIME, new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis)))
-        }
-        isInError = false
       } catch {
         case e: Exception => {
-          if (!isInError)
-            updateMetricValue(KafkaProducer.LAST_FAILURE_TIME, new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis)))
-          isInError = true
           LOG.error(qc.Name + " KAFKA PRODUCER: Error sending to kafka, Retrying after %dms. Retry count:%d".format(waitTm, retryCount), e)
           try {
             Thread.sleep(waitTm)
@@ -475,8 +468,10 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
             if (exception != null) {
               LOG.warn(qc.Name + " Failed to send message into " + localMsgAndCntr.msg.topic, exception)
               addToFailedMap(localMsgAndCntr)
+              updateMetricValue(KafkaProducer.LAST_FAILURE_TIME, new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis)))
             } else {
               // Succeed
+              updateMetricValue(KafkaProducer.LAST_RECOVERY_TIME, new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis)))
               removeMsgFromMap(localMsgAndCntr)
             }
           }
@@ -485,6 +480,7 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
         sentMsgsCntr += 1
         cntrAdapter.addCntr(key, 1)
       })
+
       keyMessages.clear()
     } catch {
       case ftsme: FailedToSendMessageException => { if (sentMsgsCntr > 0) keyMessages.remove(0, sentMsgsCntr); addBackFailedToSendRec(lastAccessRec); throw new FatalAdapterException("Kafka sending to Dead producer", ftsme) }

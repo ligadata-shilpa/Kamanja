@@ -290,6 +290,10 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
                   return
                 }
                 case e: Exception => {
+                  if(!isErrorRecorded) {
+                    partitionExceptions(partitionId.toString) = new ExceptionInfo(new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis)),"n/a")
+                    isErrorRecorded = true
+                  }
                   LOG.error("KAFKA ADAPTER: Failure fetching topic "+qc.topic+", partition " + partitionId + ", retrying", e)
                   Thread.sleep(getTimeoutTimer)
                 }
