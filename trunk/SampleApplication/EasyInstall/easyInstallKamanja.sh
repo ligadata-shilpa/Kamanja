@@ -87,7 +87,7 @@ echo $bin
 echo "clean, package and assemble $srcPath ..."
 
 cd $srcPath
-sbt clean package KamanjaManager/assembly MetadataAPI/assembly KVInit/assembly MethodExtractor/assembly SimpleKafkaProducer/assembly NodeInfoExtract/assembly ExtractData/assembly MetadataAPIService/assembly JdbcDataCollector/assembly FileDataConsumer/assembly SaveContainerDataComponent/assembly CleanUtil/assembly
+sbt clean package KamanjaManager/assembly MetadataAPI/assembly KVInit/assembly MethodExtractor/assembly SimpleKafkaProducer/assembly NodeInfoExtract/assembly ExtractData/assembly MetadataAPIService/assembly JdbcDataCollector/assembly FileDataConsumer/assembly SaveContainerDataComponent/assembly CleanUtil/assembly MigrateManager/assembly
 
 # recreate eclipse projects
 #echo "refresh the eclipse projects ..."
