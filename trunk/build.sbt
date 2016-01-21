@@ -155,4 +155,4 @@ lazy val MigrateFrom_V_1_1 = project.in(file("Utils/Migrate/SourceVersion/Migrat
 
 lazy val MigrateManager = project.in(file("Utils/Migrate/MigrateManager")) dependsOn (MigrateBase)
 
-lazy val MigrateTo_V_1_3 = project.in(file("Utils/Migrate/DestinationVersion/MigrateTo_V_1_3")) dependsOn (KamanjaManager)
+lazy val MigrateTo_V_1_3 = project.in(file("Utils/Migrate/DestinationVersion/MigrateTo_V_1_3")) dependsOn (MigrateBase, KamanjaManager)
