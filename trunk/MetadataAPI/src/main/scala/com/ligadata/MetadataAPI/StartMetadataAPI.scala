@@ -480,7 +480,7 @@ object StartMetadataAPI {
                    // updateModel type(jpmml) name(com.anotherCo.jpmml.DahliaRandomForest) newVersion(000000.000001.000002) pmml(/anotherpath/prettierDahliaRandomForest.xml)  <<< default to the updating the latest model version there.
 
                    val modelTypeToBeUpdated: String = if (argMap.contains("type")) argMap("type").toLowerCase else null
-                   if (modelTypeToBeUpdated != null && modelTypeToBeUpdated == "jpmml") {
+                   if (modelTypeToBeUpdated != null && modelTypeToBeUpdated == "pmml") {
 
                        val optModelName: Option[String] = if (argMap.contains("name")) Some(argMap("name")) else None
                        val newVer: String = if (argMap.contains("newversion")) argMap("newversion") else null

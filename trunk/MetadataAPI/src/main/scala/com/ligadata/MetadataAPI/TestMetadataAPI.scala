@@ -1311,7 +1311,7 @@ println("Getting Messages")
       }
 
       var pmmlFilePath = ""
-      println("Pick a Model Definition file(pmml) from the below choice")
+      println("Pick a Model Definition file(kpmml) from the below choice")
 
       var seq = 0
       pmmlFiles.foreach(key => { seq += 1; println("[" + seq + "] " + key) })
@@ -1334,7 +1334,7 @@ println("Getting Messages")
       println(pmmlStr)
       // Save the model
       //    MetadataAPIImpl.SetLoggerLevel(Level.TRACE)
-      println("Results as json string => \n" + MetadataAPIImpl.UpdateModel(ModelType.PMML, pmmlStr, userid))
+      println("Results as json string => \n" + MetadataAPIImpl.UpdateModel(ModelType.KPMML, pmmlStr, userid))
     } catch {
       case e: Exception => {
         val stackTrace = StackTrace.ThrowableTraceString(e)
@@ -1581,7 +1581,7 @@ println("Getting Messages")
       }
 
       var pmmlFilePath = ""
-      println("Pick a Model Definition file(pmml) from below choices")
+      println("Pick a Model Definition file(kpmml) from below choices")
 
       var seq = 0
       pmmlFiles.foreach(key => { seq += 1; println("[" + seq + "] " + key) })
@@ -1604,7 +1604,7 @@ println("Getting Messages")
       // Save the model
       // MetadataAPIImpl.SetLoggerLevel(Level.TRACE)
 
-      println("Results as json string => \n" + MetadataAPIImpl.AddModel(ModelType.PMML, pmmlStr, userid, None))
+      println("Results as json string => \n" + MetadataAPIImpl.AddModel(ModelType.KPMML, pmmlStr, userid, None))
     } catch {
       case e: AlreadyExistsException => {
         logger.error("Model Already in the metadata....")
