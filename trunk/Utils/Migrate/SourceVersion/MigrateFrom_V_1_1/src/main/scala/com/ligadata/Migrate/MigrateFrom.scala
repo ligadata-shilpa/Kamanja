@@ -388,6 +388,7 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
             ("OrigDef" -> o.OrigDef) ~
             ("ObjectDefinition" -> o.ObjectDefinition) ~
             ("ObjectFormat" -> ObjFormatType.asString(o.ObjectFormat)) ~
+            ("ModelType" -> o.modelType) ~
             ("NameSpace" -> o.nameSpace) ~
             ("Name" -> o.name) ~
             ("Version" -> o.ver) ~

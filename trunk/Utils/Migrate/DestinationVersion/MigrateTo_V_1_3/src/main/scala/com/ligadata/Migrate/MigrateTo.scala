@@ -306,22 +306,23 @@ class MigrateTo_V_1_3 extends MigratableTo {
 
           objType match {
             case "ModelDef" => {
-              logger.info("The model " + dispkey + " needs to be manually migrated because underlying interfaces have changed")
-              logger.debug("Adding the model to the cache: name of the object =>  " + dispkey)
+              val mdlType = mdObj._2.getOrElse("ModelType", "").toString
+              val objFormat = mdObj._2.getOrElse("ObjectFormat", "").toString
+              logger.info("The model " + dispkey + " needs to be manually migrated because underlying interfaces have changed." + "ModelType:" + mdlType + "ObjectFormat:" + objFormat)
             }
             case "MessageDef" => {
               val msgDefStr = mdObj._2.getOrElse("ObjectDefinition", "").toString
-              if (msgDefStr != null) {
-                logger.info("Adding the message: name of the object =>  " + dispkey)
+              if (msgDefStr != null && msgDefStr.size > 0) {
+                logger.info("Adding the message:" + dispkey)
                 MetadataAPIImpl.AddMessage(msgDefStr, "JSON", None)
               } else {
                 logger.debug("Bootstrap object. Ignore it")
               }
             }
             case "ContainerDef" => {
-              logger.debug("Adding the container : name of the object =>  " + dispkey)
+              logger.debug("Adding the container:" + dispkey)
               val msgDefStr = mdObj._2.getOrElse("ObjectDefinition", "").toString
-              if (msgDefStr != null) {
+              if (msgDefStr != null && msgDefStr.size > 0) {
                 logger.info("Adding the message: name of the object =>  " + dispkey)
                 MetadataAPIImpl.AddContainer(msgDefStr, "JSON", None)
               } else {
@@ -329,52 +330,52 @@ class MigrateTo_V_1_3 extends MigratableTo {
               }
             }
             case "FunctionDef" => {
-              logger.debug("Adding the function to the cache: name of the object =>  " + dispkey)
+              logger.debug("Adding the function: name of the object =>  " + dispkey)
             }
             case "AttributeDef" => {
-              logger.debug("Adding the attribute to the cache: name of the object =>  " + dispkey)
+              logger.debug("Adding the attribute: name of the object =>  " + dispkey)
             }
             case "ScalarTypeDef" => {
-              logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
+              logger.debug("Adding the Type: name of the object =>  " + dispkey)
             }
             case "ArrayTypeDef" => {
-              logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
+              logger.debug("Adding the Type: name of the object =>  " + dispkey)
             }
             case "ArrayBufTypeDef" => {
-              logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
+              logger.debug("Adding the Type: name of the object =>  " + dispkey)
             }
             case "ListTypeDef" => {
-              logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
+              logger.debug("Adding the Type: name of the object =>  " + dispkey)
             }
             case "QueueTypeDef" => {
-              logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
+              logger.debug("Adding the Type: name of the object =>  " + dispkey)
             }
             case "SetTypeDef" => {
-              logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
+              logger.debug("Adding the Type: name of the object =>  " + dispkey)
             }
             case "TreeSetTypeDef" => {
-              logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
+              logger.debug("Adding the Type: name of the object =>  " + dispkey)
             }
             case "SortedSetTypeDef" => {
-              logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
+              logger.debug("Adding the Type: name of the object =>  " + dispkey)
             }
             case "MapTypeDef" => {
-              logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
+              logger.debug("Adding the Type: name of the object =>  " + dispkey)
             }
             case "ImmutableMapTypeDef" => {
-              logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
+              logger.debug("Adding the Type: name of the object =>  " + dispkey)
             }
             case "HashMapTypeDef" => {
-              logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
+              logger.debug("Adding the Type: name of the object =>  " + dispkey)
             }
             case "TupleTypeDef" => {
-              logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
+              logger.debug("Adding the Type: name of the object =>  " + dispkey)
             }
             case "ContainerTypeDef" => {
-              logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
+              logger.debug("Adding the Type: name of the object =>  " + dispkey)
             }
             case "OutputMsgDef" => {
-              logger.trace("Adding the Output Msg to the cache: name of the object =>  " + dispkey)
+              logger.trace("Adding the Output Msg: name of the object =>  " + dispkey)
             }
             case _ => {
               logger.error("ProcessObject is not implemented for objects of type " + objType)
