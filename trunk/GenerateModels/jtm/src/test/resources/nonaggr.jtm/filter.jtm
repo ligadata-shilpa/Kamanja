@@ -1,10 +1,10 @@
 {
   "eplquery": "select * from com.ligadata.kamanja.samples.messages where score != -1 and score < 100",
 
-  "package": "com.ligadata.jtm.test.filter",
+  "packagename": "com.ligadata.jtm.test.filter",
   "version": "0.0.1",
   "inputs": [
-    { "type": "com.ligadata.kamanja.samples.messages" }
+    { "typename": "com.ligadata.kamanja.samples.messages" }
   ],
 
   "filters": [
@@ -12,6 +12,6 @@
   ],
 
   "outputs": [
-    { "type":"com.ligadata.kamanja.samples.messages" }
+    { "typename":"com.ligadata.kamanja.samples.messages" }
   ]
 }

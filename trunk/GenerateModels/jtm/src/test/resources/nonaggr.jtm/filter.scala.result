@@ -25,13 +25,13 @@ import com.ligadata.kamanja.samples.messages.{msg1 ⇒ output1}
 
 class Factory(modelDef: ModelDef, nodeContext: NodeContext) extends ModelInstanceFactory(modelDef, nodeContext) {
   // if more than 1 input we have to find the correct instance
-  override def isValidMessage(msg: MessageContainerBase): Boolean = return msg.isInstanceOf[msg1]
+  override def isValidMessage(msg: MessageContainerBase): Boolean = return msg.isInstanceOf[import1]
   override def createModelInstance(): ModelInstance = return new Model(this)
 
   // Provided in json
   override def getModelName: String = "com.ligadata.jtm.test.filter"
   override def getVersion: String = "0.0.1"
-  
+
   override def createResultObject(): ModelResultBase = new MappedModelResults()
 }
 

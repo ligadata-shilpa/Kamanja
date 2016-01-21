@@ -16,14 +16,14 @@
 package com.ligadata.jtm
 
 import org.apache.logging.log4j.{ Logger, LogManager }
-
 import org.rogach.scallop._
+
+import com.ligadata.jtm.nodes._
 
 object jtmGlobalLogger {
   val loggerName = this.getClass.getName()
   val logger = LogManager.getLogger(loggerName)
 }
-
 
 trait LogTrait {
   val logger = jtmGlobalLogger.logger
@@ -70,5 +70,27 @@ object Compiler extends App with LogTrait {
  *
  */
 class Compiler extends LogTrait {
+
+  val supressTimestamps = true // Supress timestamps
+
+  // Load Json
+  val root = new Root
+
+  // Push substituions
+  var subtitutions = new Substitution
+  subtitutions.Add("model.name", "filter")
+  subtitutions.Add("model.version", root.version)
+
+  // Constructs the input and output types
+
+  // Read the output type information
+
+  // Construct input
+
+  // Construct filter
+
+  // Construct output
+
+  // Write to output file
 
 }
