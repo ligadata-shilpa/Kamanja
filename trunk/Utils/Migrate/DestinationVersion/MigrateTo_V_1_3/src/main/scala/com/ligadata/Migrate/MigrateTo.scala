@@ -149,6 +149,8 @@ class MigrateTo_V_1_3 extends MigratableTo {
     isValidPath(destInstallPath + "/lib/system", true, false, "/lib/system folder in destInstallPath")
     isValidPath(destInstallPath + "/lib/application", true, false, "/lib/application folder in destInstallPath")
 
+    isValidPath(unhandledMetadataDumpDir, true, false, "unhandledMetadataDumpDir")
+    
     MdMgr.GetMdMgr.truncate
     val mdLoader = new MetadataLoad(MdMgr.mdMgr, "", "", "", "")
     mdLoader.initialize

@@ -767,7 +767,7 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
       val bucketKey = kd.GetKey
       val data = kd.GetAllData
 
-      println("=======================> type:%s, key:%s, data records count:%d".format(typName, bucketKey, data.size))
+      logger.debug("type:%s, key:%s, data records count:%d".format(typName, bucketKey, data.size))
 
       // container name, timepartition value, bucketkey, transactionid, rowid, serializername & data in Serialized ByteArray.
       return data.map(d => {
@@ -775,7 +775,7 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
         d.Serialize(dos)
         val arr = bos.toByteArray()
 
-        println("=======================> type:%s, key:%s, data record TxnId:%d, ByteArraySize:%d".format(typName, bucketKey, d.TransactionId(), arr.length))
+        // logger.debug("type:%s, key:%s, data record TxnId:%d, ByteArraySize:%d".format(typName, bucketKey, d.TransactionId(), arr.length))
         new DataFormat(typName, 0, bucketKey, d.TransactionId(), 0, serInfo, arr)
       })
     }
@@ -909,7 +909,7 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
       kryoDataSer.SetClassLoader(MdResolve._kamanjaLoader.loader)
     }
 
-    println("=============================> All Loaded files:" + MdResolve._kamanjaLoader.loadedJars.mkString(","))
+    logger.debug("All Loaded URLs:" + MdResolve._kamanjaLoader.loadedJars.mkString(","))
 
     try {
       // Load all metadata objects
@@ -997,7 +997,7 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
       MdResolve._kryoDataSer.SetClassLoader(MdResolve._kamanjaLoader.loader)
     }
 
-    logger.error("==================================>All List:%s".format(MdResolve._messagesAndContainers.map(kv => kv._1).mkString(",")))
+    logger.debug("All Messages and Containers:%s".format(MdResolve._messagesAndContainers.map(kv => kv._1).mkString(",")))
 
     val bos = new ByteArrayOutputStream(1024 * 1024)
     val dos = new DataOutputStream(bos)
