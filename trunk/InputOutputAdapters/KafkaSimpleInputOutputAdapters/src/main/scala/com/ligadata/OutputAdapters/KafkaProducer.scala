@@ -125,6 +125,7 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
 
   private var isShutdown = false
   private var isHeartBeating = false
+  private var isInError = false
 
   private var retryExecutor: ExecutorService = Executors.newFixedThreadPool(1)
   private var heartBeatThread: ExecutorService = Executors.newFixedThreadPool(1)
@@ -468,11 +469,14 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
             if (exception != null) {
               LOG.warn(qc.Name + " Failed to send message into " + localMsgAndCntr.msg.topic, exception)
               addToFailedMap(localMsgAndCntr)
-              updateMetricValue(KafkaProducer.LAST_FAILURE_TIME, new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis)))
+              if (!isInError) updateMetricValue(KafkaProducer.LAST_FAILURE_TIME, new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis)))
+              isInError = true
             } else {
-              // Succeed
-              updateMetricValue(KafkaProducer.LAST_RECOVERY_TIME, new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis)))
+              // Succeed - also click the heartbeat here... just to be more accurate.
+              if (isInError) updateMetricValue(KafkaProducer.LAST_RECOVERY_TIME, new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis)))
+              lastSeen = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
               removeMsgFromMap(localMsgAndCntr)
+              isInError = false
             }
           }
         })
