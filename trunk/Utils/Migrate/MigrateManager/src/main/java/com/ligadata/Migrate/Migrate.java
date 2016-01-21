@@ -359,15 +359,12 @@ public class Migrate {
 			int srcJarsCnt = configuration.migratingFrom.jars.size();
 			URL[] srcLoaderUrls = new URL[srcJarsCnt];
 
-			Iterator<String> srcJarsIt = configuration.migratingFrom.jars
-					.iterator();
 			int idx = 0;
-			while (srcJarsIt.hasNext()) {
-				String jar = srcJarsIt.next();
+			for (String jar : configuration.migratingFrom.jars) {
 				logger.debug("Migration From URL => " + jar);
 				srcLoaderUrls[idx++] = new File(jar).toURI().toURL();
 			}
-
+			
 			srcKamanjaLoader = new URLClassLoader(srcLoaderUrls);
 
 			Class<?> srcClass = srcKamanjaLoader
@@ -388,11 +385,8 @@ public class Migrate {
 			int dstJarsCnt = configuration.migratingTo.jars.size();
 			URL[] dstLoaderUrls = new URL[dstJarsCnt];
 
-			Iterator<String> dstJarsIt = configuration.migratingTo.jars
-					.iterator();
 			idx = 0;
-			while (dstJarsIt.hasNext()) {
-				String jar = dstJarsIt.next();
+			for (String jar : configuration.migratingTo.jars) {
 				logger.debug("Migration To URL => " + jar);
 				dstLoaderUrls[idx++] = new File(jar).toURI().toURL();
 			}
