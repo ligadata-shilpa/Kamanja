@@ -48,10 +48,10 @@ public class Migrate {
 		String version = null;
 		String versionInstallPath = null;
 		String implemtedClass = null;
-		String[] jars = null;
+		List<String> jars = null;
 
 		VersionConfig(String tversion, String tversionInstallPath,
-				String timplemtedClass, String[] tjars) {
+				String timplemtedClass, List<String> tjars) {
 			version = tversion;
 			versionInstallPath = tversionInstallPath;
 			implemtedClass = timplemtedClass;
@@ -134,7 +134,8 @@ public class Migrate {
 			try {
 				Gson gson = new Gson();
 				Configuration cfg = gson.fromJson(reader, Configuration.class);
-				logger.debug("Populated migrate configuration:" + gson.toJson(cfg));
+				logger.debug("Populated migrate configuration:"
+						+ gson.toJson(cfg));
 				return cfg;
 			} catch (Exception e) {
 			} catch (Throwable e) {
@@ -347,20 +348,24 @@ public class Migrate {
 			}
 
 			Configuration configuration = GetConfigurationFromCfgFile(cfgfile);
-			
+
 			if (configuration == null) {
-				logger.error("Failed to get configuration from given file:" + cfgfile);
+				logger.error("Failed to get configuration from given file:"
+						+ cfgfile);
 				usage();
 				System.exit(1);
 			}
 
-			URL[] srcLoaderUrls = new URL[configuration.migratingFrom.jars.length];
+			int srcJarsCnt = configuration.migratingFrom.jars.size();
+			URL[] srcLoaderUrls = new URL[srcJarsCnt];
 
-			for (int idx = 0; idx < configuration.migratingFrom.jars.length; idx++) {
-				logger.debug("Migration From URL => "
-						+ configuration.migratingFrom.jars[idx]);
-				srcLoaderUrls[idx] = new File(
-						configuration.migratingFrom.jars[idx]).toURI().toURL();
+			Iterator<String> srcJarsIt = configuration.migratingFrom.jars
+					.iterator();
+			int idx = 0;
+			while (srcJarsIt.hasNext()) {
+				String jar = srcJarsIt.next();
+				logger.debug("Migration From URL => " + jar);
+				srcLoaderUrls[idx++] = new File(jar).toURI().toURL();
 			}
 
 			srcKamanjaLoader = new URLClassLoader(srcLoaderUrls);
@@ -380,13 +385,16 @@ public class Migrate {
 								configuration.migratingFrom.versionInstallPath));
 			}
 
-			URL[] dstLoaderUrls = new URL[configuration.migratingTo.jars.length];
+			int dstJarsCnt = configuration.migratingTo.jars.size();
+			URL[] dstLoaderUrls = new URL[dstJarsCnt];
 
-			for (int idx = 0; idx < configuration.migratingTo.jars.length; idx++) {
-				logger.debug("Migration To URL => "
-						+ configuration.migratingTo.jars[idx]);
-				dstLoaderUrls[idx] = new File(
-						configuration.migratingTo.jars[idx]).toURI().toURL();
+			Iterator<String> dstJarsIt = configuration.migratingTo.jars
+					.iterator();
+			idx = 0;
+			while (dstJarsIt.hasNext()) {
+				String jar = dstJarsIt.next();
+				logger.debug("Migration To URL => " + jar);
+				dstLoaderUrls[idx++] = new File(jar).toURI().toURL();
 			}
 
 			dstKamanjaLoader = new URLClassLoader(dstLoaderUrls);
