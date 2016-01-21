@@ -477,6 +477,7 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
               lastSeen = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
               removeMsgFromMap(localMsgAndCntr)
               isInError = false
+
             }
           }
         })
@@ -512,14 +513,14 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
     isShutdown = true
 
     heartBeatThread.shutdownNow
-    while (heartBeatThread.isTerminated == false) {
+    while (!heartBeatThread.isTerminated) {
       Thread.sleep(100)
     }
 
     // First shutdown retry executor
     if (retryExecutor != null) {
       retryExecutor.shutdownNow
-      while (retryExecutor.isTerminated == false) {
+      while (!retryExecutor.isTerminated) {
         Thread.sleep(100)
       }
     }

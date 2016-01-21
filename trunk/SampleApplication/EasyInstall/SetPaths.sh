@@ -88,7 +88,7 @@ else
 		sed "s/{KafkaInstallDir}/$KafkaRootDir_repl/g" $install_dir/template/script/WatchOutputQueue_Template.sh > $install_dir/bin/WatchOutputQueue.sh
 		sed "s/{KafkaInstallDir}/$KafkaRootDir_repl/g" $install_dir/template/script/WatchStatusQueue_Template.sh > $install_dir/bin/WatchStatusQueue.sh
 		sed "s/{KafkaInstallDir}/$KafkaRootDir_repl/g" $install_dir/template/script/WatchInputQueue_Template.sh > $install_dir/bin/WatchInputQueue.sh
-		sed "s/{KafkaInstallDir}/$KafkaRootDir_repl/g" $install_dir/template/script/WatchFailedEventQueue_Template > $install_dir/bin/WatchFailedEventQueue.sh
+		sed "s/{KafkaInstallDir}/$KafkaRootDir_repl/g" $install_dir/template/script/WatchFailedEventQueue_Template.sh > $install_dir/bin/WatchFailedEventQueue.sh
 		sed "s/{InstallDirectory}/$install_dir_repl/g;s/{KafkaInstallDir}/$KafkaRootDir_repl/g" $install_dir/template/script/PushSampleDataToKafka_Template.sh > $install_dir/bin/PushSampleDataToKafka.sh
 	fi
 fi
