@@ -671,6 +671,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
   }
 
   def SaveObject(bucketKeyStr: String, value: Array[Byte], typeName: String, serializerTyp: String) {
+
+
     val (containerName, store) = tableStoreMap(typeName)
     val k = Key(storageDefaultTime, Array(bucketKeyStr), storageDefaultTxnId, 0)
     val v = Value(serializerTyp, value)
@@ -807,6 +809,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @param typeName
      */
   def SaveObjectList(objList: Array[BaseElemDef], typeName: String) {
+
     logger.debug("Save " + objList.length + " objects in a single transaction ")
     val tranId = GetNewTranId
     var keyList = new Array[String](objList.length)
@@ -949,6 +952,19 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     }
   }
 
+
+   def UpdateTranId (objList:Array[BaseElemDef] ): Unit ={
+    var max: Long = 0
+     objList.foreach(obj =>{
+       max = scala.math.max(max, obj.TranId)
+     })
+    if (currentTranLevel < max) currentTranLevel = max
+    PutTranId(max)
+  }
+
+
+
+
     /**
      * NotifyEngine
      * @param objList <description please>
@@ -968,7 +984,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
       if (notifyEngine != "YES") {
         logger.warn("Not Notifying the engine about this operation because The property NOTIFY_ENGINE is not set to YES")
-        PutTranId(objList(0).tranId)
+        PutTranId(max)
         return
       }
 
@@ -985,7 +1001,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       val znodePath = GetMetadataAPIConfig.getProperty("ZNODE_PATH") + "/metadataupdate"
       logger.debug("Set the data on the zookeeper node " + znodePath)
       zkc.setData().forPath(znodePath, data)
-      PutTranId(objList(0).tranId)
+
+      PutTranId(max)
     } catch {
       case e: Exception => {
         val stackTrace = StackTrace.ThrowableTraceString(e)
@@ -1471,6 +1488,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
         var value = GetJarAsArrayOfBytes(jarName)
         logger.debug("Update the jarfile (size => " + value.length + ") of the object: " + jarName)
         SaveObject(key, value, "jar_store", "")
+
         var apiResult = new ApiResult(ErrorCodeConstants.Success, "UploadJarToDB", null, ErrorCodeConstants.Upload_Jar_Successful + ":" + jarName)
         apiResult.toString()
 
@@ -2238,6 +2256,11 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       } else {
         val jarName = iFile.getName()
         val jarObject = MdMgr.GetMdMgr.MakeJarDef(MetadataAPIImpl.sysNS, jarName, "100")
+
+
+        logger.debug(" UploadJar  ==>>    ===>> " + jarPath )
+        jarObject.tranId = GetNewTranId
+
         var objectsAdded = new Array[BaseElemDef](0)
         objectsAdded = objectsAdded :+ jarObject
         UploadJarToDB(jarPath)
@@ -2941,7 +2964,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
             objectsToBeRemoved = objectsToBeRemoved :+ typeDef.get
           }
           objectsToBeRemoved.foreach(typ => {
-            typ.tranId = newTranId
+            //typ.tranId = newTranId
             RemoveType(typ.nameSpace, typ.name, typ.ver, None)
           })
           // ContainerDef itself
@@ -3002,7 +3025,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
           }
 
           objectsToBeRemoved.foreach(typ => {
-            typ.tranId = newTranId
+            //typ.tranId = newTranId
             RemoveType(typ.nameSpace, typ.name, typ.ver, None)
           })
 
