@@ -48,6 +48,7 @@ class MigrateTo_V_1_3 extends MigratableTo {
   private var _metaDataStoreDb: DataStore = _
   private var _dataStoreDb: DataStore = _
   private var _statusStoreDb: DataStore = _
+  private var _jarPaths: collection.immutable.Set[String] = collection.immutable.Set[String]()
   private var _bInit = false
 
   private def isValidPath(path: String, checkForDir: Boolean = false, checkForFile: Boolean = false, str: String = "path"): Unit = {
@@ -175,6 +176,7 @@ class MigrateTo_V_1_3 extends MigratableTo {
     _metaDataStoreInfo = metaDataStoreInfo
     _dataStoreInfo = dataStoreInfo
     _statusStoreInfo = if (statusStoreInfo == null) "" else statusStoreInfo
+    _jarPaths = toVersionJarPaths
 
     // Open the database here
     _metaDataStoreDb = GetDataStoreHandle(toVersionJarPaths, metaDataStoreInfo)
@@ -486,6 +488,9 @@ class MigrateTo_V_1_3 extends MigratableTo {
         logger.error("ObjectType:%s is not handled".format(objType))
       }
     })
+    
+    // Open OpenDbStore
+    MetadataAPIImpl.OpenDbStore(_jarPaths, _metaDataStoreInfo)
 
     // We need to add the metadata in the following order
     // Jars
@@ -523,5 +528,6 @@ class MigrateTo_V_1_3 extends MigratableTo {
     _metaDataStoreDb = null
     _dataStoreDb = null
     _statusStoreDb = null
+    MetadataAPIImpl.shutdown
   }
 }
