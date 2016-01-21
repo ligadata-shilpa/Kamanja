@@ -66,7 +66,7 @@ public class Migrate {
 	class Configuration {
 		String clusterConfigFile = null;
 		String apiConfigFile = null;
-		String uncompiledModelsOutputDir = null;
+		String unhandledMetadataDumpDir = null;
 		VersionConfig migratingFrom = null;
 		VersionConfig migratingTo = null;
 
@@ -355,6 +355,23 @@ public class Migrate {
 				usage();
 				System.exit(1);
 			}
+			
+			// Version check
+			
+			String srcVer = configuration.migratingFrom.version.trim();
+			String dstVer = configuration.migratingTo.version.trim();
+			
+			if (srcVer.equalsIgnoreCase("1.1") == false && srcVer.equalsIgnoreCase("1.2") == false) {
+				logger.error("We support source versions only 1.1 or 1.2. We don't support " + srcVer);
+				usage();
+				System.exit(1);
+			}
+
+			if (dstVer.equalsIgnoreCase("1.3") == false) {
+				logger.error("We support destination version only 1.3. We don't support " + srcVer);
+				usage();
+				System.exit(1);
+			}
 
 			int srcJarsCnt = configuration.migratingFrom.jars.size();
 			URL[] srcLoaderUrls = new URL[srcJarsCnt];
@@ -364,7 +381,7 @@ public class Migrate {
 				logger.debug("Migration From URL => " + jar);
 				srcLoaderUrls[idx++] = new File(jar).toURI().toURL();
 			}
-			
+
 			srcKamanjaLoader = new URLClassLoader(srcLoaderUrls);
 
 			Class<?> srcClass = srcKamanjaLoader
@@ -413,7 +430,9 @@ public class Migrate {
 					configuration.clusterConfigFile));
 			migrateTo.init(configuration.migratingTo.versionInstallPath,
 					configuration.apiConfigFile,
-					configuration.clusterConfigFile);
+					configuration.clusterConfigFile,
+					srcVer,
+					configuration.unhandledMetadataDumpDir);
 
 			String metadataStoreInfo = migrateTo.getMetadataStoreInfo();
 			String dataStoreInfo = migrateTo.getDataStoreInfo();

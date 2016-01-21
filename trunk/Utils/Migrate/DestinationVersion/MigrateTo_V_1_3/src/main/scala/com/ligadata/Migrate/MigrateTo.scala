@@ -18,11 +18,12 @@ package com.ligadata.Migrate
 
 import com.ligadata.MigrateBase._
 import org.apache.logging.log4j._
-import java.io.File
+import java.io.{ File, PrintWriter }
 
 import com.ligadata.kamanja.metadata.MdMgr
 import com.ligadata.kamanja.metadataload.MetadataLoad
 import com.ligadata.MetadataAPI.MetadataAPIImpl
+import com.ligadata.MetadataAPI.MetadataAPI
 import com.ligadata.Serialize.JsonSerializer
 import org.json4s._
 import org.json4s.JsonDSL._
@@ -34,11 +35,14 @@ import scala.io.Source
 import com.ligadata.StorageBase.{ DataStore, Transaction, DataStoreOperations }
 import com.ligadata.keyvaluestore.KeyValueManager
 import scala.collection.mutable.ArrayBuffer
+import com.ligadata.kamanja.metadata.ModelCompilationConstants
 
 class MigrateTo_V_1_3 extends MigratableTo {
   lazy val loggerName = this.getClass.getName
   lazy val logger = LogManager.getLogger(loggerName)
 
+  private var _unhandledMetadataDumpDir: String = _
+  private var _sourceVersion: String = _
   private var _destInstallPath: String = _
   private var _apiConfigFile: String = _
   private var _clusterConfigFile: String = _
@@ -136,7 +140,7 @@ class MigrateTo_V_1_3 extends MigratableTo {
     }
   }
 
-  override def init(destInstallPath: String, apiConfigFile: String, clusterConfigFile: String): Unit = {
+  override def init(destInstallPath: String, apiConfigFile: String, clusterConfigFile: String, sourceVersion: String, unhandledMetadataDumpDir: String): Unit = {
     isValidPath(apiConfigFile, false, true, "apiConfigFile")
     isValidPath(clusterConfigFile, false, true, "clusterConfigFile")
 
@@ -177,6 +181,8 @@ class MigrateTo_V_1_3 extends MigratableTo {
     _dataStoreInfo = dataStoreInfo
     _statusStoreInfo = if (statusStoreInfo == null) "" else statusStoreInfo
     _jarPaths = toVersionJarPaths
+    _sourceVersion = sourceVersion
+    _unhandledMetadataDumpDir = unhandledMetadataDumpDir
 
     // Open the database here
     _metaDataStoreDb = GetDataStoreHandle(toVersionJarPaths, metaDataStoreInfo)
@@ -294,6 +300,16 @@ class MigrateTo_V_1_3 extends MigratableTo {
     MetadataAPIImpl.UploadConfig(cfgStr, None, "ClusterConfig")
   }
 
+  private def WriteStringToFile(flName: String, str: String): Unit = {
+    val out = new PrintWriter(flName, "UTF-8")
+    try {
+      out.print(str)
+    } catch {
+      case e: Exception => throw e;
+      case e: Throwable => throw e;
+    } finally { out.close }
+  }
+
   private def ProcessObject(mdObjs: ArrayBuffer[(String, Map[String, Any])]): Unit = {
     try {
       mdObjs.foreach(mdObj =>
@@ -308,7 +324,47 @@ class MigrateTo_V_1_3 extends MigratableTo {
             case "ModelDef" => {
               val mdlType = mdObj._2.getOrElse("ModelType", "").toString
               val objFormat = mdObj._2.getOrElse("ObjectFormat", "").toString
-              logger.info("The model " + dispkey + " needs to be manually migrated because underlying interfaces have changed." + "ModelType:" + mdlType + "ObjectFormat:" + objFormat)
+              val mdlDefStr = mdObj._2.getOrElse("ObjectDefinition", "").toString
+              val ver = mdObj._2.getOrElse("Version", "0.0.1").toString
+
+              logger.info("Adding model:" + dispkey + ", ModelType:" + mdlType + ", ObjectFormat:" + objFormat)
+
+              if (_sourceVersion.equalsIgnoreCase("1.1")) {
+                if ((objFormat.equalsIgnoreCase("JAVA")) || (objFormat.equalsIgnoreCase("scala"))) {
+                  val mdlInfo = parse(mdlDefStr).values.asInstanceOf[Map[String, Any]]
+                  val defStr = mdlInfo.getOrElse(ModelCompilationConstants.SOURCECODE, "").asInstanceOf[String]
+                  // val phyName = mdlInfo.getOrElse(ModelCompilationConstants.PHYSICALNAME, "").asInstanceOf[String]
+                  val deps = mdlInfo.getOrElse(ModelCompilationConstants.DEPENDENCIES, List[String]()).asInstanceOf[List[String]]
+                  val typs = mdlInfo.getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, List[String]()).asInstanceOf[List[String]]
+
+                  var defFl = _unhandledMetadataDumpDir + "/mdldef_" + dispkey + "." + ver + "." + objFormat
+                  var jsonFl = _unhandledMetadataDumpDir + "/mdlinfo_" + dispkey + "." + ver + "." + objFormat
+
+                  val dumpMdlInfoStr = ("ModelInfo" -> ("Dependencies" -> deps) ~ ("MessageAndContainers" -> typs) ~ ("ModelType" -> mdlType) ~ ("ObjectFormat" -> objFormat) ~ ("ModelDefinition" -> defStr))
+
+                  WriteStringToFile(defFl, defStr)
+                  WriteStringToFile(jsonFl, compact(render(dumpMdlInfoStr)))
+
+                  logger.error("%s type models can not be migrated automatically. Model definition is dumped into %s, more model information dumped to %s.".format(objFormat, defFl, jsonFl))
+                } else if (objFormat.equalsIgnoreCase("XML")) {
+                  MetadataAPIImpl.AddModel(MetadataAPI.ModelType.fromString("kpmml"), mdlDefStr, None, Some(dispkey), Some(ver))
+                }
+              } else if (_sourceVersion.equalsIgnoreCase("1.2")) {
+                if ((objFormat.equalsIgnoreCase("JAVA")) || (objFormat.equalsIgnoreCase("scala"))) {
+                  val mdlInfo = parse(mdlDefStr).values.asInstanceOf[Map[String, Any]]
+                  val defStr = mdlInfo.getOrElse(ModelCompilationConstants.SOURCECODE, "").asInstanceOf[String]
+                  // val phyName = mdlInfo.getOrElse(ModelCompilationConstants.PHYSICALNAME, "").asInstanceOf[String]
+                  val deps = mdlInfo.getOrElse(ModelCompilationConstants.DEPENDENCIES, List[String]()).asInstanceOf[List[String]]
+                  val typs = mdlInfo.getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, List[String]()).asInstanceOf[List[String]]
+
+                  val mdlConfig = ("MigrationModelConfig_from_1_1_to_1_3" -> ("Dependencies" -> deps) ~ ("MessageAndContainers" -> typs))
+                  MetadataAPIImpl.UploadModelsConfig(compact(render(mdlConfig)), None, "configuration")
+                  MetadataAPIImpl.AddModel(MetadataAPI.ModelType.fromString(objFormat), mdlDefStr, None, Some("MigrationModelConfig_from_1_1_to_1_3"), Some(ver))
+                } else if (objFormat.equalsIgnoreCase("XML")) {
+                  MetadataAPIImpl.AddModel(MetadataAPI.ModelType.fromString("kpmml"), mdlDefStr, None, Some(dispkey), Some(ver))
+                }
+              } else {
+              }
             }
             case "MessageDef" => {
               val msgDefStr = mdObj._2.getOrElse("ObjectDefinition", "").toString
@@ -489,7 +545,7 @@ class MigrateTo_V_1_3 extends MigratableTo {
         logger.error("ObjectType:%s is not handled".format(objType))
       }
     })
-    
+
     // Open OpenDbStore
     MetadataAPIImpl.OpenDbStore(_jarPaths, _metaDataStoreInfo)
 

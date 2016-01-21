@@ -17,7 +17,7 @@
 package com.ligadata.MigrateBase;
 
 public interface MigratableTo {
-  public abstract void init(String destInstallPath, String apiConfigFile, String clusterConfigFile);
+  public abstract void init(String destInstallPath, String apiConfigFile, String clusterConfigFile, String sourceVersion, String unhandledMetadataDumpDir); // Source version is like 1.1 or 1.2, etc
   public abstract boolean isInitialized();
   public abstract String getMetadataStoreInfo();
   public abstract String getDataStoreInfo();

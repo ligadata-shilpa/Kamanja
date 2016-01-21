@@ -1,7 +1,7 @@
 {
   "clusterConfigFile": "{NewPackageInstallPath}/config/ClusterConfig.json",
   "apiConfigFile": "{NewPackageInstallPath}/config/MetadataAPIConfig.properties",
-  "uncompiledModelsOutputDir": "{UncompiledModelsOutputDir}",
+  "unhandledMetadataDumpDir": "{UnhandledMetadataDumpDir}",
   "migratingFrom": {
     "version": "1.1",
     "versionInstallPath": "{OldPackageInstallPath}",
