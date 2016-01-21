@@ -134,6 +134,7 @@ public class Migrate {
 			try {
 				Gson gson = new Gson();
 				Configuration cfg = gson.fromJson(reader, Configuration.class);
+				logger.debug("Populated migrate configuration:" + gson.toJson(cfg));
 				return cfg;
 			} catch (Exception e) {
 			} catch (Throwable e) {
@@ -346,6 +347,12 @@ public class Migrate {
 			}
 
 			Configuration configuration = GetConfigurationFromCfgFile(cfgfile);
+			
+			if (configuration == null) {
+				logger.error("Failed to get configuration from given file:" + cfgfile);
+				usage();
+				System.exit(1);
+			}
 
 			URL[] srcLoaderUrls = new URL[configuration.migratingFrom.jars.length];
 
