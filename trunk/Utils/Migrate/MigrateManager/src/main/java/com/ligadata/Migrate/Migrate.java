@@ -396,6 +396,21 @@ public class Migrate {
 				System.exit(1);
 			}
 
+			// From Srouce version 1.1 to Destination version 1.3 we do both
+			// Metadata Upgrade & Data Upgrade
+			// From Source Version 1.2 to Destination version 1.3, we only do
+			// Metadata Upgrade.
+			boolean canUpgradeMetadata = ((srcVer.equalsIgnoreCase("1.1") || srcVer
+					.equalsIgnoreCase("1.2")) && dstVer.equalsIgnoreCase("1.3"));
+			boolean canUpgradeData = (srcVer.equalsIgnoreCase("1.1") && dstVer
+					.equalsIgnoreCase("1.3"));
+
+			if (canUpgradeData && canUpgradeMetadata == false) {
+				logger.error("We don't support upgrading only data without metadata at this moment");
+				usage();
+				System.exit(1);
+			}
+
 			int srcJarsCnt = configuration.migratingFrom.jars.size();
 			URL[] srcLoaderUrls = new URL[srcJarsCnt];
 
@@ -466,10 +481,16 @@ public class Migrate {
 			migrateFrom.init(configuration.migratingFrom.versionInstallPath,
 					metadataStoreInfo, dataStoreInfo, statusStoreInfo);
 
-			TableName[] allMetadataTbls = migrateFrom
-					.getAllMetadataTableNames();
-			TableName[] allDataTbls = migrateFrom.getAllDataTableNames();
-			TableName[] allStatusTbls = migrateFrom.getAllStatusTableNames();
+			TableName[] allMetadataTbls = new TableName[0];
+			TableName[] allDataTbls = new TableName[0];
+			TableName[] allStatusTbls = new TableName[0];
+
+			if (canUpgradeMetadata)
+				allMetadataTbls = migrateFrom.getAllMetadataTableNames();
+			if (canUpgradeData) {
+				allDataTbls = migrateFrom.getAllDataTableNames();
+				allStatusTbls = migrateFrom.getAllStatusTableNames();
+			}
 
 			List<BackupTableInfo> metadataBackupTbls = new ArrayList<BackupTableInfo>();
 			List<BackupTableInfo> dataBackupTbls = new ArrayList<BackupTableInfo>();
@@ -522,51 +543,62 @@ public class Migrate {
 
 			// Backup all the tables, if any one of them is missing
 			if (allTblsBackedUp == false) {
-				migrateTo.backupMetadataTables(
-						metadataBackupTbls
-								.toArray(new BackupTableInfo[metadataBackupTbls
-										.size()]), true);
-				migrateTo.backupDataTables(dataBackupTbls
-						.toArray(new BackupTableInfo[dataBackupTbls.size()]),
-						true);
-				migrateTo.backupStatusTables(statusBackupTbls
-						.toArray(new BackupTableInfo[statusBackupTbls.size()]),
-						true);
+				if (metadataBackupTbls.size() > 0)
+					migrateTo.backupMetadataTables(metadataBackupTbls
+							.toArray(new BackupTableInfo[metadataBackupTbls
+									.size()]), true);
+				if (dataBackupTbls.size() > 0)
+					migrateTo.backupDataTables(
+							dataBackupTbls
+									.toArray(new BackupTableInfo[dataBackupTbls
+											.size()]), true);
+				if (statusBackupTbls.size() > 0)
+					migrateTo.backupStatusTables(statusBackupTbls
+							.toArray(new BackupTableInfo[statusBackupTbls
+									.size()]), true);
 			}
 
 			// Drop all tables after backup
-			migrateTo.dropMetadataTables(metadataDelTbls
-					.toArray(new TableName[metadataDelTbls.size()]));
-			migrateTo.dropDataTables(dataDelTbls
-					.toArray(new TableName[dataDelTbls.size()]));
-			migrateTo.dropStatusTables(statusDelTbls
-					.toArray(new TableName[statusDelTbls.size()]));
+			if (metadataDelTbls.size() > 0)
+				migrateTo.dropMetadataTables(metadataDelTbls
+						.toArray(new TableName[metadataDelTbls.size()]));
+			if (dataDelTbls.size() > 0)
+				migrateTo.dropDataTables(dataDelTbls
+						.toArray(new TableName[dataDelTbls.size()]));
+			if (statusDelTbls.size() > 0)
+				migrateTo.dropStatusTables(statusDelTbls
+						.toArray(new TableName[statusDelTbls.size()]));
 
-			migrateFrom.getAllMetadataObjs(backupTblSufix, new MdCallback());
+			if (canUpgradeMetadata)
+				migrateFrom
+						.getAllMetadataObjs(backupTblSufix, new MdCallback());
 
 			MetadataFormat[] metadataArr = allMetadata
 					.toArray(new MetadataFormat[allMetadata.size()]);
 
-			migrateTo.dropMessageContainerTablesFromMetadata(metadataArr);
+			if (canUpgradeData)
+				migrateTo.dropMessageContainerTablesFromMetadata(metadataArr);
 
 			migrateTo.uploadConfiguration();
 
-			migrateTo.addMetadata(metadataArr);
+			if (canUpgradeData) {
+				migrateTo.addMetadata(metadataArr);
 
-			int kSaveThreshold = 10000;
+				int kSaveThreshold = 10000;
 
-			List<DataFormat> collectedData = new ArrayList<DataFormat>();
+				List<DataFormat> collectedData = new ArrayList<DataFormat>();
 
-			DataCallback dataCallback = new DataCallback(migrateTo,
-					collectedData, kSaveThreshold, srcVer, dstVer);
+				DataCallback dataCallback = new DataCallback(migrateTo,
+						collectedData, kSaveThreshold, srcVer, dstVer);
 
-			migrateFrom.getAllDataObjs(backupTblSufix, metadataArr,
-					dataCallback);
+				migrateFrom.getAllDataObjs(backupTblSufix, metadataArr,
+						dataCallback);
 
-			if (collectedData.size() > 0) {
-				migrateTo.populateAndSaveData(collectedData
-						.toArray(new DataFormat[collectedData.size()]));
-				collectedData.clear();
+				if (collectedData.size() > 0) {
+					migrateTo.populateAndSaveData(collectedData
+							.toArray(new DataFormat[collectedData.size()]));
+					collectedData.clear();
+				}
 			}
 
 			logger.info("Migration is done");
