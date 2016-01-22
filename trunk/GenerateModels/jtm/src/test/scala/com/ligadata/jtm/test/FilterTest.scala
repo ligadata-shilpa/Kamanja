@@ -15,11 +15,36 @@
  */
 package com.ligadata.jtm.test
 
+import java.io.File
+
+import com.ligadata.jtm._
+import org.apache.commons.io.FileUtils
+
+import org.scalatest.{BeforeAndAfter, FunSuite}
 /**
   *
   */
-class FilterTest {
+class FilterTest  extends FunSuite with BeforeAndAfter {
 
-  // nonaggr.jtm/filter.jtm -> filter.scala
-  //
+  test("nonaggr.jtm/filter.jtm") {
+
+    // nonaggr.jtm/filter.jtm -> filter.scala
+    //
+    val fileInput = getClass.getResource("/nonaggr.jtm/filter.jtm").getPath
+    val fileOutput = getClass.getResource("/nonaggr.jtm/filter.scala.result").getPath
+    val fileExpected = getClass.getResource("/nonaggr.jtm/filter.scala.expected").getPath
+
+    val compiler = CompilerBuilder.create().
+      setSuppressTimestamps().
+      setInputFile(fileInput).
+      setOutputFile(fileOutput).
+      build()
+
+    val outputFile = compiler.Execute()
+
+    val expected = "test result" // FileUtils.readFileToString(new File(fileExpected), null)
+    val actual = FileUtils.readFileToString(new File(outputFile), null)
+
+    assert(actual == expected)
+  }
 }

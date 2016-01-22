@@ -17,6 +17,8 @@ package com.ligadata.jtm
 
 import org.apache.logging.log4j.{ Logger, LogManager }
 import org.rogach.scallop._
+import org.apache.commons.io.FileUtils
+import java.io.File
 
 import com.ligadata.jtm.nodes._
 
@@ -66,31 +68,57 @@ object Compiler extends App with LogTrait {
   }
 }
 
+object CompilerBuilder {
+  def create() = { new CompilerBuilder }
+}
+
+class CompilerBuilder {
+
+  def setSuppressTimestamps(switch: Boolean = true) = { suppressTimestamps = switch; this}
+  def setInputFile(filename: String) = { inputFile = filename; this }
+  def setOutputFile(filename: String) = { outputFile = filename; this }
+
+  var inputFile : String = null
+  var outputFile : String = null
+  var suppressTimestamps : Boolean = false
+
+  def build() : Compiler = {
+    new Compiler(this)
+  }
+}
+
 /* Translates a jtm (json) file(s) into scala classes
  *
  */
-class Compiler extends LogTrait {
+class Compiler(params: CompilerBuilder) extends LogTrait {
 
-  val supressTimestamps = true // Supress timestamps
+  val suppressTimestamps: Boolean = params.suppressTimestamps // Suppress timestamps
+  val inputFile: String = params.inputFile // Input file to compile
+  val outputFile: String = params.outputFile // Output file to write
 
-  // Load Json
-  val root = new Root
+  def Execute(): String = {
 
-  // Push substituions
-  var subtitutions = new Substitution
-  subtitutions.Add("model.name", "filter")
-  subtitutions.Add("model.version", root.version)
+    // Load Json
+    val root = Root.fromJson(inputFile)
 
-  // Constructs the input and output types
+    // Push substituions
+    var subtitutions = new Substitution
+    subtitutions.Add("model.name", "filter")
+    subtitutions.Add("model.version", root.version)
 
-  // Read the output type information
+    // Constructs the input and output types
 
-  // Construct input
+    // Read the output type information
 
-  // Construct filter
+    // Construct input
 
-  // Construct output
+    // Construct filter
 
-  // Write to output file
+    // Construct output
 
+    // Write to output file
+    FileUtils.writeStringToFile(new File(outputFile), "test result")
+
+    outputFile
+  }
 }
