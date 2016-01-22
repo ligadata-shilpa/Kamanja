@@ -150,7 +150,7 @@ class MigrateTo_V_1_3 extends MigratableTo {
     isValidPath(destInstallPath + "/lib/application", true, false, "/lib/application folder in destInstallPath")
 
     isValidPath(unhandledMetadataDumpDir, true, false, "unhandledMetadataDumpDir")
-    
+
     MdMgr.GetMdMgr.truncate
     val mdLoader = new MetadataLoad(MdMgr.mdMgr, "", "", "", "")
     mdLoader.initialize
@@ -339,10 +339,18 @@ class MigrateTo_V_1_3 extends MigratableTo {
                   val deps = mdlInfo.getOrElse(ModelCompilationConstants.DEPENDENCIES, List[String]()).asInstanceOf[List[String]]
                   val typs = mdlInfo.getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, List[String]()).asInstanceOf[List[String]]
 
-                  var defFl = _unhandledMetadataDumpDir + "/mdldef_" + dispkey + "." + ver + "." + objFormat
-                  var jsonFl = _unhandledMetadataDumpDir + "/mdlinfo_" + dispkey + "." + ver + "." + objFormat
+                  var defFl = _unhandledMetadataDumpDir + "/mdldef_" + dispkey + "." + ver + "." + objFormat.toLowerCase()
+                  var jsonFl = _unhandledMetadataDumpDir + "/mdlinfo_" + dispkey + "." + ver + "." + objFormat.toLowerCase()
 
-                  val dumpMdlInfoStr = ("ModelInfo" -> ("Dependencies" -> deps) ~ ("MessageAndContainers" -> typs) ~ ("ModelType" -> mdlType) ~ ("ObjectFormat" -> objFormat) ~ ("ModelDefinition" -> defStr))
+                  val dumpMdlInfoStr = ("ModelInfo" ->
+                    ("Dependencies" -> deps) ~
+                    ("MessageAndContainers" -> typs) ~
+                    ("ModelType" -> mdlType) ~
+                    ("ObjectFormat" -> objFormat) ~
+                    ("ModelDefinition" -> defStr) ~
+                    ("NameSpace" -> namespace) ~
+                    ("Name" -> name) ~
+                    ("Version" -> ver))
 
                   WriteStringToFile(defFl, defStr)
                   WriteStringToFile(jsonFl, compact(render(dumpMdlInfoStr)))
@@ -359,7 +367,9 @@ class MigrateTo_V_1_3 extends MigratableTo {
                   val deps = mdlInfo.getOrElse(ModelCompilationConstants.DEPENDENCIES, List[String]()).asInstanceOf[List[String]]
                   val typs = mdlInfo.getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, List[String]()).asInstanceOf[List[String]]
 
-                  val mdlConfig = ("MigrationModelConfig_from_1_1_to_1_3" -> ("Dependencies" -> deps) ~ ("MessageAndContainers" -> typs))
+                  val mdlConfig = ("MigrationModelConfig_from_1_1_to_1_3" ->
+                    ("Dependencies" -> deps) ~
+                    ("MessageAndContainers" -> typs))
                   MetadataAPIImpl.UploadModelsConfig(compact(render(mdlConfig)), None, "configuration")
                   MetadataAPIImpl.AddModel(MetadataAPI.ModelType.fromString(objFormat), mdlDefStr, None, Some("MigrationModelConfig_from_1_1_to_1_3"), Some(ver))
                 } else if (objFormat.equalsIgnoreCase("XML")) {
