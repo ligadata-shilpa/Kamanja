@@ -544,10 +544,12 @@ public class Migrate {
 
 			migrateFrom.getAllMetadataObjs(backupTblSufix, new MdCallback());
 
-			migrateTo.uploadConfiguration();
-
 			MetadataFormat[] metadataArr = allMetadata
 					.toArray(new MetadataFormat[allMetadata.size()]);
+
+			migrateTo.dropMessageContainerTablesFromMetadata(metadataArr);
+
+			migrateTo.uploadConfiguration();
 
 			migrateTo.addMetadata(metadataArr);
 

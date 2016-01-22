@@ -300,6 +300,33 @@ class MigrateTo_V_1_3 extends MigratableTo {
     }
   }
 
+  override def dropMessageContainerTablesFromMetadata(allMetadataElemsJson: Array[MetadataFormat]): Unit = {
+    if (_bInit == false)
+      throw new Exception("Not yet Initialized")
+
+    val messagesAndContainers = scala.collection.mutable.Set[String]()
+
+    allMetadataElemsJson.foreach(mdf => {
+      val json = parse(mdf.objDataInJson)
+      val jsonObjMap = json.values.asInstanceOf[Map[String, Any]]
+
+      val isActiveStr = jsonObjMap.getOrElse("IsActive", "").toString.trim()
+      if (isActiveStr.size > 0) {
+        val isActive = jsonObjMap.getOrElse("IsActive", "").toString.trim().toBoolean
+        if (isActive) {
+          if ((mdf.objType == "MessageDef") || (mdf.objType == "ContainerDef")) {
+            val namespace = jsonObjMap.getOrElse("NameSpace", "").toString.trim()
+            val name = jsonObjMap.getOrElse("Name", "").toString.trim()
+            messagesAndContainers += (namespace + "." + name).toLowerCase()
+          }
+        }
+      }
+    })
+
+    if (messagesAndContainers.size > 0)
+      _dataStoreDb.DropContainer(messagesAndContainers.toArray)
+  }
+
   // Uploads clusterConfigFile file
   override def uploadConfiguration: Unit = {
     if (_bInit == false)

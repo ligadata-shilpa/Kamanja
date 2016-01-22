@@ -31,6 +31,7 @@ public interface MigratableTo {
   public abstract void dropMetadataTables(TableName[] tblsToDrop);
   public abstract void dropDataTables(TableName[] tblsToDrop);
   public abstract void dropStatusTables(TableName[] tblsToDrop);
+  public abstract void dropMessageContainerTablesFromMetadata(MetadataFormat[] allMetadataElemsJson);
   public abstract void uploadConfiguration();
   public abstract void addMetadata(MetadataFormat[] allMetadataElemsJson);
   public abstract void populateAndSaveData(DataFormat[] data);
