@@ -778,9 +778,9 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
         d.Serialize(dos)
         val arr = bos.toByteArray()
 
+        rowIdCntr += 1
         // logger.debug("type:%s, key:%s, data record TxnId:%d, ByteArraySize:%d".format(typName, bucketKey, d.TransactionId(), arr.length))
         new DataFormat(typName, 0, bucketKey, d.TransactionId(), rowIdCntr, serInfo, arr)
-        rowIdCntr += 1
       })
     }
 
