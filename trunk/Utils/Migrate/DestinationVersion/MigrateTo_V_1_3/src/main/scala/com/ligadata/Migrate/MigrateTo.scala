@@ -37,6 +37,7 @@ import com.ligadata.StorageBase.{ DataStore, Transaction, DataStoreOperations }
 import com.ligadata.keyvaluestore.KeyValueManager
 import scala.collection.mutable.ArrayBuffer
 import com.ligadata.kamanja.metadata.ModelCompilationConstants
+import com.ligadata.Exceptions.{FatalAdapterException, StorageDMLException, StorageDDLException}
 
 class MigrateTo_V_1_3 extends MigratableTo {
   lazy val loggerName = this.getClass.getName
