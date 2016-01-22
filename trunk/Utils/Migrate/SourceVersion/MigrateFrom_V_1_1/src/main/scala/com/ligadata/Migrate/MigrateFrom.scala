@@ -775,6 +775,9 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
       // container name, timepartition value, bucketkey, transactionid, rowid, serializername & data in Serialized ByteArray.
       return data.map(d => {
         bos.reset()
+        dos.writeUTF(d.FullName)
+        dos.writeUTF(d.Version)
+        dos.writeUTF(d.getClass.getName)
         d.Serialize(dos)
         val arr = bos.toByteArray()
 
