@@ -579,10 +579,8 @@ public class Migrate {
 			if (canUpgradeData)
 				migrateTo.dropMessageContainerTablesFromMetadata(metadataArr);
 
-			migrateTo.uploadConfiguration();
-
 			if (canUpgradeData) {
-				migrateTo.addMetadata(metadataArr);
+				migrateTo.addMetadata(metadataArr, true);
 
 				int kSaveThreshold = 10000;
 
