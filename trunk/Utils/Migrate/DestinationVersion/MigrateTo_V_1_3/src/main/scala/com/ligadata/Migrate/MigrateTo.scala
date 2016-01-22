@@ -329,15 +329,6 @@ class MigrateTo_V_1_3 extends MigratableTo {
     }
   }
 
-  // Uploads clusterConfigFile file
-  override def uploadConfiguration: Unit = {
-    if (_bInit == false)
-      throw new Exception("Not yet Initialized")
-    val cfgStr = Source.fromFile(_clusterConfigFile).mkString
-    logger.debug("Uploading configuration")
-    MetadataAPIImpl.UploadConfig(cfgStr, None, "ClusterConfig")
-  }
-
   private def WriteStringToFile(flName: String, str: String): Unit = {
     val out = new PrintWriter(flName, "UTF-8")
     try {
@@ -498,8 +489,8 @@ class MigrateTo_V_1_3 extends MigratableTo {
       case e: Throwable => throw e
     }
   }
-
-  override def addMetadata(allMetadataElemsJson: Array[MetadataFormat]): Unit = {
+  
+  override def addMetadata(allMetadataElemsJson: Array[MetadataFormat], uploadClusterConfig Boolean): Unit = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
 
@@ -603,6 +594,10 @@ class MigrateTo_V_1_3 extends MigratableTo {
 
     // Open OpenDbStore
     MetadataAPIImpl.OpenDbStore(_jarPaths, _metaDataStoreInfo)
+
+    val cfgStr = Source.fromFile(_clusterConfigFile).mkString
+    logger.debug("Uploading configuration")
+    MetadataAPIImpl.UploadConfig(cfgStr, None, "ClusterConfig")
 
     // We need to add the metadata in the following order
     // Jars
