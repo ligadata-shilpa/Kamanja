@@ -37,7 +37,7 @@ import com.ligadata.StorageBase.{ DataStore, Transaction, DataStoreOperations }
 import com.ligadata.keyvaluestore.KeyValueManager
 import scala.collection.mutable.ArrayBuffer
 import com.ligadata.kamanja.metadata.ModelCompilationConstants
-import com.ligadata.Exceptions.{FatalAdapterException, StorageDMLException, StorageDDLException}
+import com.ligadata.Exceptions.{ FatalAdapterException, StorageDMLException, StorageDDLException }
 
 class MigrateTo_V_1_3 extends MigratableTo {
   lazy val loggerName = this.getClass.getName
@@ -219,23 +219,23 @@ class MigrateTo_V_1_3 extends MigratableTo {
     _statusStoreInfo
   }
 
-  override def isMetadataTableExists(tblName: String): Boolean = {
+  override def isMetadataTableExists(tblInfo: TableName): Boolean = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
-    _metaDataStoreDb.isTableExists(tblName)
+    _metaDataStoreDb.isTableExists(tblInfo.namespace, tblInfo.name)
   }
 
-  override def isDataTableExists(tblName: String): Boolean = {
+  override def isDataTableExists(tblInfo: TableName): Boolean = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
-    _dataStoreDb.isTableExists(tblName)
+    _dataStoreDb.isTableExists(tblInfo.namespace, tblInfo.name)
   }
 
-  override def isStatusTableExists(tblName: String): Boolean = {
+  override def isStatusTableExists(tblInfo: TableName): Boolean = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
     if (_statusStoreDb != null)
-      return _statusStoreDb.isTableExists(tblName)
+      return _statusStoreDb.isTableExists(tblInfo.namespace, tblInfo.name)
     false
   }
 
@@ -244,7 +244,7 @@ class MigrateTo_V_1_3 extends MigratableTo {
       throw new Exception("Not yet Initialized")
     logger.debug("Backup metadata tables:" + tblsToBackedUp.map(t => "(" + t.srcTable + " => " + t.dstTable + ")").mkString(","))
     tblsToBackedUp.foreach(backupTblInfo => {
-      _metaDataStoreDb.copyTable(backupTblInfo.srcTable, backupTblInfo.dstTable, force)
+      _metaDataStoreDb.copyTable(backupTblInfo.namespace, backupTblInfo.srcTable, backupTblInfo.dstTable, force)
     })
   }
 
@@ -253,7 +253,7 @@ class MigrateTo_V_1_3 extends MigratableTo {
       throw new Exception("Not yet Initialized")
     logger.debug("Backup data tables:" + tblsToBackedUp.map(t => "(" + t.srcTable + " => " + t.dstTable + ")").mkString(","))
     tblsToBackedUp.foreach(backupTblInfo => {
-      _dataStoreDb.copyTable(backupTblInfo.srcTable, backupTblInfo.dstTable, force)
+      _dataStoreDb.copyTable(backupTblInfo.namespace, backupTblInfo.srcTable, backupTblInfo.dstTable, force)
     })
   }
 
@@ -264,34 +264,39 @@ class MigrateTo_V_1_3 extends MigratableTo {
     if (_statusStoreDb == null && tblsToBackedUp.size > 0)
       throw new Exception("Does not have Status store information")
     tblsToBackedUp.foreach(backupTblInfo => {
-      _statusStoreDb.copyTable(backupTblInfo.srcTable, backupTblInfo.dstTable, force)
+      _statusStoreDb.copyTable(backupTblInfo.namespace, backupTblInfo.srcTable, backupTblInfo.dstTable, force)
     })
   }
 
-  override def dropMetadataTables(tblsToDrop: Array[String]): Unit = {
+  override def dropMetadataTables(tblsToDrop: Array[TableName]): Unit = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
-    logger.debug("Dropping metadata tables:" + tblsToDrop.mkString(","))
-    if (tblsToDrop.size > 0)
-      _metaDataStoreDb.dropTables(tblsToDrop)
+    if (tblsToDrop.size > 0) {
+      val tblsTuples = tblsToDrop.map(t => (t.namespace, t.name))
+      logger.debug("Dropping metadata tables:" + tblsTuples.mkString(","))
+      _metaDataStoreDb.dropTables(tblsTuples)
+    }
   }
 
-  override def dropDataTables(tblsToDrop: Array[String]): Unit = {
+  override def dropDataTables(tblsToDrop: Array[TableName]): Unit = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
-    logger.debug("Dropping data tables:" + tblsToDrop.mkString(","))
-    if (tblsToDrop.size > 0)
-      _dataStoreDb.dropTables(tblsToDrop)
+    if (tblsToDrop.size > 0) {
+      val tblsTuples = tblsToDrop.map(t => (t.namespace, t.name))
+      logger.debug("Dropping data tables:" + tblsTuples.mkString(","))
+      _dataStoreDb.dropTables(tblsTuples)
+    }
   }
 
-  override def dropStatusTables(tblsToDrop: Array[String]): Unit = {
+  override def dropStatusTables(tblsToDrop: Array[TableName]): Unit = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
-    logger.debug("Dropping status tables:" + tblsToDrop.mkString(","))
     if (tblsToDrop.size > 0) {
       if (_statusStoreDb == null)
         throw new Exception("Does not have Status store information")
-      _statusStoreDb.dropTables(tblsToDrop)
+      val tblsTuples = tblsToDrop.map(t => (t.namespace, t.name))
+      logger.debug("Dropping status tables:" + tblsTuples.mkString(","))
+      _statusStoreDb.dropTables(tblsTuples)
     }
   }
 
@@ -405,7 +410,7 @@ class MigrateTo_V_1_3 extends MigratableTo {
               //FIXME:: Yet to handle
               logger.error("Not yet handled migrating FunctionDef " + objType)
             }
-/*
+            /*
             case "AttributeDef" => {
               logger.debug("Adding the attribute: name of the object =>  " + dispkey)
             }
@@ -634,8 +639,8 @@ class MigrateTo_V_1_3 extends MigratableTo {
         }
       }
     }
-  }  
-  
+  }
+
   // Array of tuples has container name, timepartition value, bucketkey, transactionid, rowid, serializername & data in Gson (JSON) format
   override def populateAndSaveData(data: Array[DataFormat]): Unit = {
     if (_bInit == false)

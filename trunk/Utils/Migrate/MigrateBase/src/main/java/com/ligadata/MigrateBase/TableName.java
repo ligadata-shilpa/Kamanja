@@ -16,14 +16,12 @@
 
 package com.ligadata.MigrateBase;
 
-public class BackupTableInfo {
+public class TableName {
 	public String namespace = null;
-	public String srcTable = null;
-	public String dstTable = null;
+	public String name = null;
 
-	public BackupTableInfo(String tnamespace, String tsrcTable, String tdstTable) {
+	public TableName(String tnamespace, String tname) {
 		namespace = tnamespace;
-		srcTable = tsrcTable;
-		dstTable = tdstTable;
+		name = tname;
 	}
 }

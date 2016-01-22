@@ -466,52 +466,52 @@ public class Migrate {
 			migrateFrom.init(configuration.migratingFrom.versionInstallPath,
 					metadataStoreInfo, dataStoreInfo, statusStoreInfo);
 
-			String[] allMetadataTbls = migrateFrom.getAllMetadataTableNames();
-			String[] allDataTbls = migrateFrom.getAllDataTableNames();
-			String[] allStatusTbls = migrateFrom.getAllStatusTableNames();
+			TableName[] allMetadataTbls = migrateFrom.getAllMetadataTableNames();
+			TableName[] allDataTbls = migrateFrom.getAllDataTableNames();
+			TableName[] allStatusTbls = migrateFrom.getAllStatusTableNames();
 
 			List<BackupTableInfo> metadataBackupTbls = new ArrayList<BackupTableInfo>();
 			List<BackupTableInfo> dataBackupTbls = new ArrayList<BackupTableInfo>();
 			List<BackupTableInfo> statusBackupTbls = new ArrayList<BackupTableInfo>();
 
-			List<String> metadataDelTbls = new ArrayList<String>();
-			List<String> dataDelTbls = new ArrayList<String>();
-			List<String> statusDelTbls = new ArrayList<String>();
+			List<TableName> metadataDelTbls = new ArrayList<TableName>();
+			List<TableName> dataDelTbls = new ArrayList<TableName>();
+			List<TableName> statusDelTbls = new ArrayList<TableName>();
 
 			boolean allTblsBackedUp = true;
 
-			for (String tbl : allMetadataTbls) {
-				BackupTableInfo bkup = new BackupTableInfo(tbl, tbl
+			for (TableName tblInfo : allMetadataTbls) {
+				BackupTableInfo bkup = new BackupTableInfo(tblInfo.namespace, tblInfo.name, tblInfo.name
 						+ backupTblSufix);
 				metadataBackupTbls.add(bkup);
-				metadataDelTbls.add(tbl);
+				metadataDelTbls.add(tblInfo);
 
-				if (migrateTo.isMetadataTableExists(tbl)
-						&& migrateTo.isMetadataTableExists(bkup.dstTable) == false) {
+				if (migrateTo.isMetadataTableExists(tblInfo)
+						&& migrateTo.isMetadataTableExists(new TableName(tblInfo.namespace, bkup.dstTable)) == false) {
 					allTblsBackedUp = false;
 				}
 			}
 
-			for (String tbl : allDataTbls) {
-				BackupTableInfo bkup = new BackupTableInfo(tbl, tbl
+			for (TableName tblInfo : allDataTbls) {
+				BackupTableInfo bkup = new BackupTableInfo(tblInfo.namespace, tblInfo.name, tblInfo.name
 						+ backupTblSufix);
 				dataBackupTbls.add(bkup);
-				dataDelTbls.add(tbl);
+				dataDelTbls.add(tblInfo);
 
-				if (migrateTo.isDataTableExists(tbl)
-						&& migrateTo.isDataTableExists(bkup.dstTable) == false) {
+				if (migrateTo.isDataTableExists(tblInfo)
+						&& migrateTo.isDataTableExists(new TableName(tblInfo.namespace, bkup.dstTable)) == false) {
 					allTblsBackedUp = false;
 				}
 			}
 
-			for (String tbl : allStatusTbls) {
-				BackupTableInfo bkup = new BackupTableInfo(tbl, tbl
+			for (TableName tblInfo : allStatusTbls) {
+				BackupTableInfo bkup = new BackupTableInfo(tblInfo.namespace, tblInfo.name, tblInfo.name
 						+ backupTblSufix);
 				statusBackupTbls.add(bkup);
-				statusDelTbls.add(tbl);
+				statusDelTbls.add(tblInfo);
 
-				if (migrateTo.isStatusTableExists(tbl)
-						&& migrateTo.isStatusTableExists(bkup.dstTable) == false) {
+				if (migrateTo.isStatusTableExists(tblInfo)
+						&& migrateTo.isStatusTableExists(new TableName(tblInfo.namespace, bkup.dstTable)) == false) {
 					allTblsBackedUp = false;
 				}
 			}

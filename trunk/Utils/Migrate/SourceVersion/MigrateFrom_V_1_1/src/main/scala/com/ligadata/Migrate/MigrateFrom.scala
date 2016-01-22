@@ -831,28 +831,71 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
 
   override def isInitialized: Boolean = _bInit
 
-  override def getAllMetadataTableNames: Array[String] = {
+  override def getAllMetadataTableNames: Array[TableName] = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
-    Array("config_objects", "jar_store", "metadata_objects", "model_config_objects", "transaction_id")
+
+    var parsed_json: Map[String, Any] = null
+    try {
+      val json = parse(_metadataStoreInfo)
+      if (json == null || json.values == null) {
+        val msg = "Failed to parse JSON configuration string:" + _metadataStoreInfo
+        throw new Exception(msg)
+      }
+      parsed_json = json.values.asInstanceOf[Map[String, Any]]
+    } catch {
+      case e: Exception => {
+        throw new Exception("Failed to parse JSON configuration string:" + _metadataStoreInfo, e)
+      }
+    }
+
+    val namespace = if (parsed_json.contains("SchemaName")) parsed_json.getOrElse("SchemaName", "default").toString.trim else parsed_json.getOrElse("SchemaName", "default").toString.trim
+    Array(new TableName(namespace, "config_objects"), new TableName(namespace, "jar_store"), new TableName(namespace, "metadata_objects"), 
+        new TableName(namespace, "model_config_objects"), new TableName(namespace, "transaction_id"))
   }
 
-  override def getAllDataTableNames: Array[String] = {
+  override def getAllDataTableNames: Array[TableName] = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
-    Array("AllData", "ClusterCounts")
+
+    var parsed_json: Map[String, Any] = null
+    try {
+      val json = parse(_dataStoreInfo)
+      if (json == null || json.values == null) {
+        val msg = "Failed to parse JSON configuration string:" + _dataStoreInfo
+        throw new Exception(msg)
+      }
+      parsed_json = json.values.asInstanceOf[Map[String, Any]]
+    } catch {
+      case e: Exception => {
+        throw new Exception("Failed to parse JSON configuration string:" + _dataStoreInfo, e)
+      }
+    }
+
+    val namespace = if (parsed_json.contains("SchemaName")) parsed_json.getOrElse("SchemaName", "default").toString.trim else parsed_json.getOrElse("SchemaName", "default").toString.trim
+    Array(new TableName(namespace, "AllData"), new TableName(namespace, "ClusterCounts"))
   }
 
-  override def getAllStatusTableNames: Array[String] = {
+  override def getAllStatusTableNames: Array[TableName] = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
-    Array("CommmittingTransactions", "checkPointAdapInfo")
-  }
 
-  override def getAllMetadataDataStatusTableNames: Array[String] = {
-    if (_bInit == false)
-      throw new Exception("Not yet Initialized")
-    Array("config_objects", "jar_store", "metadata_objects", "model_config_objects", "transaction_id", "AllData", "ClusterCounts", "CommmittingTransactions", "checkPointAdapInfo")
+    var parsed_json: Map[String, Any] = null
+    try {
+      val json = parse(_statusStoreInfo)
+      if (json == null || json.values == null) {
+        val msg = "Failed to parse JSON configuration string:" + _statusStoreInfo
+        throw new Exception(msg)
+      }
+      parsed_json = json.values.asInstanceOf[Map[String, Any]]
+    } catch {
+      case e: Exception => {
+        throw new Exception("Failed to parse JSON configuration string:" + _statusStoreInfo, e)
+      }
+    }
+
+    val namespace = if (parsed_json.contains("SchemaName")) parsed_json.getOrElse("SchemaName", "default").toString.trim else parsed_json.getOrElse("SchemaName", "default").toString.trim
+    Array(new TableName(namespace, "CommmittingTransactions"), new TableName(namespace, "checkPointAdapInfo"))
   }
 
   // Callback function calls with metadata Object Type & metadata information in JSON string

@@ -331,7 +331,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     }
   }
 
-  private def toTableName(containerName: String): String = {
+  def toTableName(containerName: String): String = {
     // we need to check for other restrictions as well
     // such as length of the table, special characters etc
     namespace + ':' + containerName.toLowerCase.replace('.', '_').replace('-', '_').replace(' ', '_')
@@ -1265,22 +1265,20 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     })
   }
 
-   
-  def renameTable(srcTableName:String,destTableName:String,forceCopy:Boolean = false): Unit = {
-    try{
+  def renameTable(srcTableName: String, destTableName: String, forceCopy: Boolean = false): Unit = {
+    try {
       relogin
-      if ( ! admin.tableExists(srcTableName)) {
-	logger.warn("The table being renamed doesn't exist, nothing to be done")
+      if (!admin.tableExists(srcTableName)) {
+        logger.warn("The table being renamed doesn't exist, nothing to be done")
         throw CreateDDLException("Failed to rename the table " + srcTableName + ":", new Exception("Source Table doesn't exist"))
       }
-      if ( admin.tableExists(destTableName)) {
-	if( forceCopy ){
-	  dropTable(destTableName);
-	}
-	else{
-	  logger.warn("A Destination table already exist, nothing to be done")
+      if (admin.tableExists(destTableName)) {
+        if (forceCopy) {
+          dropTable(destTableName);
+        } else {
+          logger.warn("A Destination table already exist, nothing to be done")
           throw CreateDDLException("Failed to rename the table " + srcTableName + ":", new Exception("Destination Table already exist"))
-	}
+        }
       }
       // snapshot name can't contain ':'
       val snapshotName = srcTableName.toLowerCase.replace(':', '_') + "_snap"
@@ -1303,7 +1301,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
   }
 
   override def copyContainer(srcContainerName: String, destContainerName: String, forceCopy: Boolean): Unit = lock.synchronized {
-    if( srcContainerName.equalsIgnoreCase(destContainerName) ){
+    if (srcContainerName.equalsIgnoreCase(destContainerName)) {
       throw CreateDDLException("Failed to copy the container " + srcContainerName, new Exception("Source Container Name can't be same as destination container name"))
     }
     var oldTableName = toFullTableName(srcContainerName)
@@ -1311,7 +1309,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     logger.info("renaming " + oldTableName + " to " + newTableName);
     try {
       relogin
-      renameTable(oldTableName,newTableName,forceCopy)
+      renameTable(oldTableName, newTableName, forceCopy)
     } catch {
       case e: Exception => {
         throw CreateDDLException("Failed to copy the container " + srcContainerName, e)
@@ -1319,14 +1317,13 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     }
   }
 
-
   override def backupContainer(containerName: String): Unit = lock.synchronized {
     var oldTableName = toFullTableName(containerName)
     var newTableName = toFullTableName(containerName) + ".bak"
     logger.info("renaming " + oldTableName + " to " + newTableName);
     try {
       relogin
-      renameTable(oldTableName,newTableName)
+      renameTable(oldTableName, newTableName)
     } catch {
       case e: Exception => {
         throw CreateDDLException("Failed to backup the container " + containerName, e)
@@ -1340,7 +1337,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     logger.info("renaming " + oldTableName + " to " + newTableName);
     try {
       relogin
-      renameTable(oldTableName,newTableName)
+      renameTable(oldTableName, newTableName)
     } catch {
       case e: Exception => {
         throw CreateDDLException("Failed to restore the container " + containerName, e)
@@ -1350,40 +1347,51 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
 
   def getAllTables: Array[String] = {
     var tables = new Array[String](0)
-    try{
+    try {
       relogin
       // Get all the list of tables using HBaseAdmin object
       val tableDescriptors = admin.listTables();
-      tableDescriptors.foreach( t => {
-	tables = tables :+ t.getNameAsString()
+      tableDescriptors.foreach(t => {
+        tables = tables :+ t.getNameAsString()
       })
     } catch {
       case e: Exception => {
-        throw CreateDMLException("Failed to fetch the table list  ",e)
+        throw CreateDMLException("Failed to fetch the table list  ", e)
       }
     }
     tables
   }
 
-
-  def dropTables(tbls: Array[String]): Unit = {
-    try{
-      tbls.foreach( t => {
-	dropTable(t)
+  override def dropTables(tbls: Array[String]): Unit = {
+    try {
+      tbls.foreach(t => {
+        dropTable(t)
       })
     } catch {
       case e: Exception => {
-        throw CreateDDLException("Failed to drop table list  ",e)
+        throw CreateDDLException("Failed to drop table list  ", e)
       }
     }
   }
-    
-  def copyTable(srcTableName:String, destTableName:String, forceCopy: Boolean) : Unit = {
-    renameTable(srcTableName,destTableName,forceCopy)
+
+  override def dropTables(tbls: Array[(String, String)]): Unit = {
+    dropTables(tbls.map(t => t._1 + ':' + t._2))
   }
 
-  def isTableExists(tableName:String) : Boolean = {
+  override def copyTable(srcTableName: String, destTableName: String, forceCopy: Boolean): Unit = {
+    renameTable(srcTableName, destTableName, forceCopy)
+  }
+
+  override def copyTable(namespace: String, srcTableName: String, destTableName: String, forceCopy: Boolean): Unit = {
+    copyTable(namespace + ':' + srcTableName, namespace + ':' + destTableName, forceCopy)
+  }
+
+  override def isTableExists(tableName: String): Boolean = {
     admin.tableExists(tableName)
+  }
+
+  override def isTableExists(tableNamespace: String, tableName: String): Boolean = {
+    isTableExists(tableNamespace + ':' + tableName)
   }
 }
 
@@ -1448,12 +1456,12 @@ class HBaseAdapterTx(val parent: DataStore) extends Transaction {
     parent.getKeys(containerName, bucketKeys, callbackFunction)
   }
 
-  def backupContainer(containerName:String): Unit = {
-    parent.backupContainer(containerName:String)
+  def backupContainer(containerName: String): Unit = {
+    parent.backupContainer(containerName: String)
   }
 
-  def restoreContainer(containerName:String): Unit = {
-    parent.restoreContainer(containerName:String)
+  def restoreContainer(containerName: String): Unit = {
+    parent.restoreContainer(containerName: String)
   }
 
   override def isContainerExists(containerName: String): Boolean = {
@@ -1461,23 +1469,39 @@ class HBaseAdapterTx(val parent: DataStore) extends Transaction {
   }
 
   override def copyContainer(srcContainerName: String, destContainerName: String, forceCopy: Boolean): Unit = {
-    parent.copyContainer(srcContainerName,destContainerName,forceCopy)
+    parent.copyContainer(srcContainerName, destContainerName, forceCopy)
   }
 
   override def getAllTables: Array[String] = {
     parent.getAllTables
   }
+
+  // Here tables are full qualified names
   override def dropTables(tbls: Array[String]): Unit = {
     parent.dropTables(tbls)
   }
-    
-  override def copyTable(srcTableName:String, destTableName:String, forceCopy: Boolean) : Unit = {
-    parent.copyTable(srcTableName,destTableName,forceCopy)
+
+  override def dropTables(tbls: Array[(String, String)]): Unit = {
+    parent.dropTables(tbls)
   }
 
-  override def isTableExists(tableName:String) : Boolean = {
+  // Here tables are full qualified names
+  override def copyTable(srcTableName: String, destTableName: String, forceCopy: Boolean): Unit = {
+    parent.copyTable(srcTableName, destTableName, forceCopy)
+  }
+
+  override def copyTable(namespace: String, srcTableName: String, destTableName: String, forceCopy: Boolean): Unit = {
+    parent.copyTable(namespace, srcTableName, destTableName, forceCopy)
+  }
+
+  // Here table is full qualified name
+  override def isTableExists(tableName: String): Boolean = {
     parent.isTableExists(tableName)
-  }    
+  }
+
+  override def isTableExists(tableNamespace: String, tableName: String): Boolean = {
+    parent.isTableExists(tableNamespace, tableName)
+  }
 }
 
 // To create HBase Datastore instance
