@@ -377,6 +377,7 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
   }
 
   private def serializeObjectToJson(mdObj: BaseElem): (String, String) = {
+    val ver = ConvertLongVersionToString(mdObj.Version)
     try {
       mdObj match {
         // Assuming that zookeeper transaction will be different based on type of object
@@ -391,7 +392,7 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
             ("ModelType" -> o.modelType) ~
             ("NameSpace" -> o.nameSpace) ~
             ("Name" -> o.name) ~
-            ("Version" -> ConvertLongVersionToString(o.ver)) ~
+            ("Version" -> ver) ~
             ("PhysicalName" -> o.physicalName) ~
             ("JarName" -> getEmptyIfNull(o.jarName)) ~
             ("DependantJars" -> o.CheckAndGetDependencyJarNames.toList))
@@ -407,7 +408,7 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
             ("ObjectFormat" -> ObjFormatType.asString(o.ObjectFormat)) ~
             ("NameSpace" -> o.nameSpace) ~
             ("Name" -> o.name) ~
-            ("Version" -> ConvertLongVersionToString(o.ver)) ~
+            ("Version" -> ver) ~
             ("PhysicalName" -> o.physicalName) ~
             ("JarName" -> getEmptyIfNull(o.jarName)) ~
             ("DependantJars" -> o.CheckAndGetDependencyJarNames.toList))
@@ -423,7 +424,7 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
             ("ObjectFormat" -> ObjFormatType.asString(o.ObjectFormat)) ~
             ("NameSpace" -> o.nameSpace) ~
             ("Name" -> o.name) ~
-            ("Version" -> ConvertLongVersionToString(o.ver)) ~
+            ("Version" -> ver) ~
             ("PhysicalName" -> o.physicalName) ~
             ("JarName" -> getEmptyIfNull(o.jarName)) ~
             ("DependantJars" -> o.CheckAndGetDependencyJarNames.toList))
@@ -439,7 +440,7 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
             ("ObjectFormat" -> ObjFormatType.asString(o.ObjectFormat)) ~
             ("NameSpace" -> o.nameSpace) ~
             ("Name" -> o.name) ~
-            ("Version" -> ConvertLongVersionToString(o.ver)) ~
+            ("Version" -> ver) ~
             ("PhysicalName" -> o.physicalName) ~
             ("JarName" -> getEmptyIfNull(o.jarName)) ~
             ("DependantJars" -> o.CheckAndGetDependencyJarNames.toList))
@@ -455,7 +456,7 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
             ("ObjectFormat" -> ObjFormatType.asString(o.ObjectFormat)) ~
             ("NameSpace" -> o.nameSpace) ~
             ("Name" -> o.name) ~
-            ("Version" -> ConvertLongVersionToString(o.ver)) ~
+            ("Version" -> ver) ~
             ("PhysicalName" -> o.physicalName) ~
             ("JarName" -> getEmptyIfNull(o.jarName)) ~
             ("DependantJars" -> o.CheckAndGetDependencyJarNames.toList))
@@ -471,7 +472,7 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
             ("ObjectFormat" -> ObjFormatType.asString(o.ObjectFormat)) ~
             ("NameSpace" -> o.nameSpace) ~
             ("Name" -> o.name) ~
-            ("Version" -> ConvertLongVersionToString(o.ver)) ~
+            ("Version" -> ver) ~
             ("PhysicalName" -> o.physicalName) ~
             ("JarName" -> getEmptyIfNull(o.jarName)) ~
             ("DependantJars" -> o.CheckAndGetDependencyJarNames.toList))
@@ -487,7 +488,7 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
             ("ObjectFormat" -> ObjFormatType.asString(o.ObjectFormat)) ~
             ("NameSpace" -> o.nameSpace) ~
             ("Name" -> o.name) ~
-            ("Version" -> ConvertLongVersionToString(o.ver)) ~
+            ("Version" -> ver) ~
             ("PhysicalName" -> o.physicalName) ~
             ("JarName" -> getEmptyIfNull(o.jarName)) ~
             ("DependantJars" -> o.CheckAndGetDependencyJarNames.toList))
@@ -503,7 +504,7 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
             ("ObjectFormat" -> ObjFormatType.asString(o.ObjectFormat)) ~
             ("NameSpace" -> o.nameSpace) ~
             ("Name" -> o.name) ~
-            ("Version" -> ConvertLongVersionToString(o.ver)) ~
+            ("Version" -> ver) ~
             ("PhysicalName" -> o.physicalName) ~
             ("JarName" -> getEmptyIfNull(o.jarName)) ~
             ("DependantJars" -> o.CheckAndGetDependencyJarNames.toList))
@@ -519,7 +520,7 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
             ("ObjectFormat" -> ObjFormatType.asString(o.ObjectFormat)) ~
             ("NameSpace" -> o.nameSpace) ~
             ("Name" -> o.name) ~
-            ("Version" -> ConvertLongVersionToString(o.ver)) ~
+            ("Version" -> ver) ~
             ("PhysicalName" -> o.physicalName) ~
             ("JarName" -> getEmptyIfNull(o.jarName)) ~
             ("DependantJars" -> o.CheckAndGetDependencyJarNames.toList))
@@ -535,7 +536,7 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
             ("ObjectFormat" -> ObjFormatType.asString(o.ObjectFormat)) ~
             ("NameSpace" -> o.nameSpace) ~
             ("Name" -> o.name) ~
-            ("Version" -> ConvertLongVersionToString(o.ver)) ~
+            ("Version" -> ver) ~
             ("PhysicalName" -> o.physicalName) ~
             ("JarName" -> getEmptyIfNull(o.jarName)) ~
             ("DependantJars" -> o.CheckAndGetDependencyJarNames.toList))
@@ -551,7 +552,7 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
             ("ObjectFormat" -> ObjFormatType.asString(o.ObjectFormat)) ~
             ("NameSpace" -> o.nameSpace) ~
             ("Name" -> o.name) ~
-            ("Version" -> ConvertLongVersionToString(o.ver)) ~
+            ("Version" -> ver) ~
             ("PhysicalName" -> o.physicalName) ~
             ("JarName" -> getEmptyIfNull(o.jarName)) ~
             ("DependantJars" -> o.CheckAndGetDependencyJarNames.toList))
@@ -567,7 +568,7 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
             ("ObjectFormat" -> ObjFormatType.asString(o.ObjectFormat)) ~
             ("NameSpace" -> o.nameSpace) ~
             ("Name" -> o.name) ~
-            ("Version" -> ConvertLongVersionToString(o.ver)) ~
+            ("Version" -> ver) ~
             ("PhysicalName" -> o.physicalName) ~
             ("JarName" -> getEmptyIfNull(o.jarName)) ~
             ("DependantJars" -> o.CheckAndGetDependencyJarNames.toList))
@@ -583,7 +584,7 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
             ("ObjectFormat" -> ObjFormatType.asString(o.ObjectFormat)) ~
             ("NameSpace" -> o.nameSpace) ~
             ("Name" -> o.name) ~
-            ("Version" -> ConvertLongVersionToString(o.ver)) ~
+            ("Version" -> ver) ~
             ("PhysicalName" -> o.physicalName) ~
             ("JarName" -> getEmptyIfNull(o.jarName)) ~
             ("DependantJars" -> o.CheckAndGetDependencyJarNames.toList))
@@ -599,7 +600,7 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
             ("ObjectFormat" -> ObjFormatType.asString(o.ObjectFormat)) ~
             ("NameSpace" -> o.nameSpace) ~
             ("Name" -> o.name) ~
-            ("Version" -> ConvertLongVersionToString(o.ver)) ~
+            ("Version" -> ver) ~
             ("PhysicalName" -> o.physicalName) ~
             ("JarName" -> getEmptyIfNull(o.jarName)) ~
             ("DependantJars" -> o.CheckAndGetDependencyJarNames.toList))
@@ -615,7 +616,7 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
             ("ObjectFormat" -> ObjFormatType.asString(o.ObjectFormat)) ~
             ("NameSpace" -> o.nameSpace) ~
             ("Name" -> o.name) ~
-            ("Version" -> ConvertLongVersionToString(o.ver)) ~
+            ("Version" -> ver) ~
             ("PhysicalName" -> o.physicalName) ~
             ("JarName" -> getEmptyIfNull(o.jarName)) ~
             ("DependantJars" -> o.CheckAndGetDependencyJarNames.toList))
@@ -631,7 +632,7 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
             ("ObjectFormat" -> ObjFormatType.asString(o.ObjectFormat)) ~
             ("NameSpace" -> o.nameSpace) ~
             ("Name" -> o.name) ~
-            ("Version" -> ConvertLongVersionToString(o.ver)) ~
+            ("Version" -> ver) ~
             ("PhysicalName" -> o.physicalName) ~
             ("JarName" -> getEmptyIfNull(o.jarName)) ~
             ("DependantJars" -> o.CheckAndGetDependencyJarNames.toList))
@@ -647,7 +648,7 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
             ("ObjectFormat" -> ObjFormatType.asString(o.ObjectFormat)) ~
             ("NameSpace" -> o.nameSpace) ~
             ("Name" -> o.name) ~
-            ("Version" -> ConvertLongVersionToString(o.ver)) ~
+            ("Version" -> ver) ~
             ("PhysicalName" -> o.physicalName) ~
             ("JarName" -> getEmptyIfNull(o.jarName)) ~
             ("DependantJars" -> o.CheckAndGetDependencyJarNames.toList))
