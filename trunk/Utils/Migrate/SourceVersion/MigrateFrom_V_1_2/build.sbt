@@ -1,4 +1,4 @@
-name := "MigrateFrom_V_1_1"
+name := "MigrateFrom_V_1_2"
 
 version := "1.0"
 

@@ -21,7 +21,8 @@ import com.ligadata.MigrateBase._
 import java.io.{ DataOutputStream, ByteArrayOutputStream, File }
 import org.apache.logging.log4j._
 import scala.collection.mutable.ArrayBuffer
-import com.ligadata.StorageBase.{ Key, Value, IStorage, DataStoreOperations, DataStore, Transaction, StorageAdapterObj }
+import com.ligadata.KvBase.{ Key, Value /*, TimeRange, KvBaseDefalts, KeyWithBucketIdAndPrimaryKey, KeyWithBucketIdAndPrimaryKeyCompHelper, LoadKeyWithBucketId */ }
+import com.ligadata.StorageBase._
 import com.ligadata.keyvaluestore._
 import com.ligadata.Serialize._
 import com.ligadata.kamanja.metadata._
@@ -29,162 +30,13 @@ import org.json4s._
 import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
 import org.json4s.jackson.Serialization
-import com.ligadata.KamanjaData._
 import com.ligadata.KamanjaBase._
 import scala.util.control.Breaks._
 import scala.reflect.runtime.{ universe => ru }
+import com.ligadata.Exceptions._
 // import scala.collection.JavaConversions._
 
-class MigrateFrom_V_1_1 extends MigratableFrom {
-
-  object MdResolve extends MdBaseResolveInfo {
-    val _messagesAndContainers = scala.collection.mutable.Map[String, MessageContainerObjBase]()
-    val _kamanjaLoader = new KamanjaLoaderInfo
-    val _kryoDataSer = SerializerManager.GetSerializer("kryo")
-    if (_kryoDataSer != null) {
-      _kryoDataSer.SetClassLoader(_kamanjaLoader.loader)
-    }
-
-    private val _dataFoundButNoMetadata = scala.collection.mutable.Set[String]()
-
-    def DataFoundButNoMetadata = _dataFoundButNoMetadata.toArray
-
-    def AddMessageOrContianer(objType: String, jsonObjMap: Map[String, Any], jarPaths: collection.immutable.Set[String]): Unit = {
-      var isOk = true
-
-      try {
-        val objNameSpace = jsonObjMap.getOrElse("NameSpace", "").toString.trim()
-        val objName = jsonObjMap.getOrElse("Name", "").toString.trim()
-        val objVer = jsonObjMap.getOrElse("Version", "").toString.trim()
-
-        val objFullName = (objNameSpace + "." + objName).toLowerCase
-        val physicalName = jsonObjMap.getOrElse("PhysicalName", "").toString.trim()
-
-        var isMsg = false
-        var isContainer = false
-
-        if (isOk) {
-          isOk = LoadJarIfNeeded(jsonObjMap, _kamanjaLoader.loadedJars, _kamanjaLoader.loader, jarPaths)
-        }
-
-        if (isOk) {
-          var clsName = physicalName
-          if (clsName.size > 0 && clsName.charAt(clsName.size - 1) != '$') // if no $ at the end we are taking $
-            clsName = clsName + "$"
-
-          if (isMsg == false) {
-            // Checking for Message
-            try {
-              // Convert class name into a class
-              var curClz = Class.forName(clsName, true, _kamanjaLoader.loader)
-
-              while (curClz != null && isContainer == false) {
-                isContainer = isDerivedFrom(curClz, "com.ligadata.KamanjaBase.BaseContainerObj")
-                if (isContainer == false)
-                  curClz = curClz.getSuperclass()
-              }
-            } catch {
-              case e: Exception => {
-                logger.error("Failed to load message class %s with Reason:%s Message:%s".format(clsName, e.getCause, e.getMessage))
-              }
-            }
-          }
-
-          if (isContainer == false) {
-            // Checking for container
-            try {
-              // If required we need to enable this test
-              // Convert class name into a class
-              var curClz = Class.forName(clsName, true, _kamanjaLoader.loader)
-
-              while (curClz != null && isMsg == false) {
-                isMsg = isDerivedFrom(curClz, "com.ligadata.KamanjaBase.BaseMsgObj")
-                if (isMsg == false)
-                  curClz = curClz.getSuperclass()
-              }
-            } catch {
-              case e: Exception => {
-                logger.error("Failed to load container class %s with Reason:%s Message:%s".format(clsName, e.getCause, e.getMessage))
-              }
-            }
-          }
-
-          logger.debug("isMsg:%s, isContainer:%s".format(isMsg, isContainer))
-
-          if (isMsg || isContainer) {
-            try {
-              val mirror = ru.runtimeMirror(_kamanjaLoader.loader)
-              val module = mirror.staticModule(clsName)
-              val obj = mirror.reflectModule(module)
-              val objinst = obj.instance
-
-              if (isMsg) {
-                // objinst
-              } else {
-
-              }
-
-              if (objinst.isInstanceOf[BaseMsgObj]) {
-                val messageObj = objinst.asInstanceOf[BaseMsgObj]
-                logger.debug("Created Message Object")
-                _messagesAndContainers(objFullName) = messageObj
-              } else if (objinst.isInstanceOf[BaseContainerObj]) {
-                val containerObj = objinst.asInstanceOf[BaseContainerObj]
-                logger.debug("Created Container Object")
-                _messagesAndContainers(objFullName) = containerObj
-              } else {
-                logger.error("Failed to instantiate message or conatiner object :" + clsName)
-                isOk = false
-              }
-            } catch {
-              case e: Exception => {
-                logger.error("Failed to instantiate message or conatiner object:" + clsName + ". Reason:" + e.getCause + ". Message:" + e.getMessage())
-                isOk = false
-              }
-            }
-          } else {
-            logger.error("Failed to instantiate message or conatiner object :" + clsName)
-            isOk = false
-          }
-        }
-        if (isOk == false) {
-          logger.error("Failed to add message or conatiner object. NameSpace:%s, Name:%s, Version:%s".format(objNameSpace, objName, objVer))
-        }
-      } catch {
-        case e: Exception => {
-          logger.error("Failed to Add Message/Contianer", e)
-          throw e
-        }
-      }
-    }
-
-    def AddMessageOrContianer(objType: String, objJson: String, jarPaths: collection.immutable.Set[String]): Unit = {
-      try {
-        implicit val jsonFormats = DefaultFormats
-        val json = parse(objJson)
-        val jsonObjMap = json.values.asInstanceOf[Map[String, Any]]
-        AddMessageOrContianer(objType, jsonObjMap, jarPaths)
-      } catch {
-        case e: Exception => {
-          logger.error("Failed to Add Message/Contianer", e)
-          throw e
-        }
-      }
-    }
-
-    override def getMessgeOrContainerInstance(msgContainerType: String): MessageContainerBase = {
-      val nm = msgContainerType.toLowerCase()
-      val v = _messagesAndContainers.getOrElse(nm, null)
-      if (v != null && v.isInstanceOf[BaseMsgObj]) {
-        return v.asInstanceOf[BaseMsgObj].CreateNewMessage
-      } else if (v != null && v.isInstanceOf[BaseContainerObj]) {
-        return v.asInstanceOf[BaseContainerObj].CreateNewContainer
-      }
-      logger.error("getMessgeOrContainerInstance not found:%s. All List:%s".format(msgContainerType, _messagesAndContainers.map(kv => kv._1).mkString(",")))
-      _dataFoundButNoMetadata += nm
-      return null
-    }
-  }
+class MigrateFrom_V_1_2 extends MigratableFrom {
 
   lazy val loggerName = this.getClass.getName
   lazy val logger = LogManager.getLogger(loggerName)
@@ -194,7 +46,6 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
   private var _dataStoreInfo: String = _
   private var _statusStoreInfo: String = _
   private var _metadataStore: DataStore = _
-  private var _dataStore: DataStore = _
   private var _bInit = false
 
   private def isValidPath(path: String, checkForDir: Boolean = false, checkForFile: Boolean = false, str: String = "path"): Unit = {
@@ -218,62 +69,14 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
     }
   }
 
-  private def GetDataStoreHandle(jarPaths: collection.immutable.Set[String], dataStoreInfo: String, tableName: String): DataStore = {
+  private def GetDataStoreHandle(jarPaths: collection.immutable.Set[String], dataStoreInfo: String): DataStore = {
     try {
-      logger.info("Getting DB Connection for dataStoreInfo:%s, tableName:%s".format(dataStoreInfo, tableName))
-      return KeyValueManager.Get(jarPaths, dataStoreInfo, tableName)
+      logger.debug("Getting DB Connection for dataStoreInfo:%s".format(dataStoreInfo))
+      return KeyValueManager.Get(jarPaths, dataStoreInfo)
     } catch {
-      case e: Exception => {
-        throw e
-      }
+      case e: Exception => throw e
+      case e: Throwable => throw e
     }
-  }
-
-  private def KeyAsStr(k: Key): String = {
-    val k1 = k.toArray[Byte]
-    new String(k1)
-  }
-
-  private def ValueAsStr(v: Value): String = {
-    val v1 = v.toArray[Byte]
-    new String(v1)
-  }
-
-  private def GetObject(key: Key, store: DataStore): IStorage = {
-    try {
-      object o extends IStorage {
-        var key = new Key;
-        var value = new Value
-
-        def Key = key
-
-        def Value = value
-        def Construct(k: Key, v: Value) = {
-          key = k;
-          value = v;
-        }
-      }
-
-      var k = key
-      logger.info("Get the object from store, key => " + KeyAsStr(k))
-      store.get(k, o)
-      o
-    } catch {
-      case e: Exception => {
-        throw e
-      }
-      case e: Throwable => {
-        throw e
-      }
-    }
-  }
-
-  private def GetObject(key: String, store: DataStore): IStorage = {
-    var k = new Key
-    for (c <- key) {
-      k += c.toByte
-    }
-    GetObject(k, store)
   }
 
   private def LoadFqJarsIfNeeded(jars: Array[String], loadedJars: scala.collection.mutable.TreeSet[String], loader: KamanjaClassLoader): Boolean = {
@@ -683,22 +486,6 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
     }
   }
 
-  private[this] var _serInfoBufBytes = 32
-
-  private def getSerializeInfo(tupleBytes: Value): String = {
-    if (tupleBytes.size < _serInfoBufBytes) return ""
-    val serInfoBytes = new Array[Byte](_serInfoBufBytes)
-    tupleBytes.copyToArray(serInfoBytes, 0, _serInfoBufBytes)
-    return (new String(serInfoBytes)).trim
-  }
-
-  private def getValueInfo(tupleBytes: Value): Array[Byte] = {
-    if (tupleBytes.size < _serInfoBufBytes) return null
-    val valInfoBytes = new Array[Byte](tupleBytes.size - _serInfoBufBytes)
-    Array.copy(tupleBytes.toArray, _serInfoBufBytes, valInfoBytes, 0, tupleBytes.size - _serInfoBufBytes)
-    valInfoBytes
-  }
-
   private def isDerivedFrom(clz: Class[_], clsName: String): Boolean = {
     var isIt: Boolean = false
 
@@ -728,92 +515,6 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
     }
 
     isIt
-  }
-
-  private def ExtractDataFromTypleData(key: Key, tupleBytes: Value, bos: ByteArrayOutputStream, dos: DataOutputStream): Array[DataFormat] = {
-    // Get first _serInfoBufBytes bytes
-    if (tupleBytes.size < _serInfoBufBytes) {
-      val errMsg = s"Invalid input. This has only ${tupleBytes.size} bytes data. But we are expecting serializer buffer bytes as of size ${_serInfoBufBytes}"
-      logger.error(errMsg)
-      throw new Exception(errMsg)
-    }
-
-    val serInfo = getSerializeInfo(tupleBytes).toLowerCase()
-    var kd: KamanjaData = null
-
-    serInfo match {
-      case "kryo" => {
-        val valInfo = getValueInfo(tupleBytes)
-        val desInfo = MdResolve._kryoDataSer.DeserializeObjectFromByteArray(valInfo)
-        if (desInfo.isInstanceOf[KamanjaData]) {
-          kd = MdResolve._kryoDataSer.DeserializeObjectFromByteArray(valInfo).asInstanceOf[KamanjaData]
-        }
-      }
-      case "manual" => {
-        val valInfo = getValueInfo(tupleBytes)
-        val datarec = new KamanjaData
-        datarec.DeserializeData(valInfo, MdResolve, MdResolve._kamanjaLoader.loader)
-        kd = datarec
-      }
-      case "csv" => {
-        // Not doing anything
-      }
-      case _ => {
-        throw new Exception("Found un-handled Serializer Info: " + serInfo)
-      }
-    }
-
-    if (kd != null) {
-      val typName = kd.GetTypeName
-      val bucketKey = kd.GetKey
-      val data = kd.GetAllData
-
-      logger.debug("type:%s, key:%s, data records count:%d".format(typName, bucketKey, data.size))
-
-      var rowIdCntr = 0
-
-      // container name, timepartition value, bucketkey, transactionid, rowid, serializername & data in Serialized ByteArray.
-      return data.map(d => {
-        bos.reset()
-        d.Serialize(dos)
-        val arr = bos.toByteArray()
-
-        rowIdCntr += 1
-        // logger.debug("type:%s, key:%s, data record TxnId:%d, ByteArraySize:%d".format(typName, bucketKey, d.TransactionId(), arr.length))
-        new DataFormat(typName, 0, bucketKey, d.TransactionId(), rowIdCntr, serInfo, arr)
-      })
-    }
-
-    return Array[DataFormat]()
-  }
-
-  private def AddActiveMessageOrContianer(metadataElemsJson: Array[MetadataFormat], jarPaths: collection.immutable.Set[String]): Unit = {
-    try {
-      implicit val jsonFormats = DefaultFormats
-      metadataElemsJson.foreach(mdElem => {
-        if (mdElem.objType.compareToIgnoreCase("MessageDef") == 0 || mdElem.objType.compareToIgnoreCase("MappedMsgTypeDef") == 0 ||
-          mdElem.objType.compareToIgnoreCase("StructTypeDef") == 0 || mdElem.objType.compareToIgnoreCase("ContainerDef") == 0) {
-          val json = parse(mdElem.objDataInJson)
-          val jsonObjMap = json.values.asInstanceOf[Map[String, Any]]
-          val isActiveStr = jsonObjMap.getOrElse("IsActive", "").toString.trim()
-          if (isActiveStr.size > 0) {
-            val isActive = jsonObjMap.getOrElse("IsActive", "").toString.trim().toBoolean
-            if (isActive)
-              MdResolve.AddMessageOrContianer(mdElem.objType, jsonObjMap, jarPaths)
-          } else {
-            val objNameSpace = jsonObjMap.getOrElse("NameSpace", "").toString.trim()
-            val objName = jsonObjMap.getOrElse("Name", "").toString.trim()
-            val objVer = jsonObjMap.getOrElse("Version", "").toString.trim()
-            logger.warn("message or conatiner of this version is not active. So, ignoring to migrate data for this. NameSpace:%s, Name:%s, Version:%s".format(objNameSpace, objName, objVer))
-          }
-        }
-      })
-    } catch {
-      case e: Exception => {
-        logger.error("Failed to Add Message/Contianer", e)
-        throw e
-      }
-    }
   }
 
   override def init(srouceInstallPath: String, metadataStoreInfo: String, dataStoreInfo: String, statusStoreInfo: String): Unit = {
@@ -850,71 +551,85 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
     }
 
     val namespace = if (parsed_json.contains("SchemaName")) parsed_json.getOrElse("SchemaName", "default").toString.trim else parsed_json.getOrElse("SchemaName", "default").toString.trim
-    Array(new TableName(namespace, "config_objects"), new TableName(namespace, "jar_store"), new TableName(namespace, "metadata_objects"), 
-        new TableName(namespace, "model_config_objects"), new TableName(namespace, "transaction_id"))
+    Array(new TableName(namespace, "config_objects"), new TableName(namespace, "jar_store"), new TableName(namespace, "metadata_objects"),
+      new TableName(namespace, "model_config_objects"), new TableName(namespace, "transaction_id"))
   }
 
   override def getAllDataTableNames: Array[TableName] = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
-
-    var parsed_json: Map[String, Any] = null
-    try {
-      val json = parse(_dataStoreInfo)
-      if (json == null || json.values == null) {
-        val msg = "Failed to parse JSON configuration string:" + _dataStoreInfo
-        throw new Exception(msg)
-      }
-      parsed_json = json.values.asInstanceOf[Map[String, Any]]
-    } catch {
-      case e: Exception => {
-        throw new Exception("Failed to parse JSON configuration string:" + _dataStoreInfo, e)
-      }
-    }
-
-    val namespace = if (parsed_json.contains("SchemaName")) parsed_json.getOrElse("SchemaName", "default").toString.trim else parsed_json.getOrElse("SchemaName", "default").toString.trim
-    Array(new TableName(namespace, "AllData"), new TableName(namespace, "ClusterCounts"))
+    Array[TableName]()
   }
 
   override def getAllStatusTableNames: Array[TableName] = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
-
-    var parsed_json: Map[String, Any] = null
-    try {
-      val json = parse(_statusStoreInfo)
-      if (json == null || json.values == null) {
-        val msg = "Failed to parse JSON configuration string:" + _statusStoreInfo
-        throw new Exception(msg)
-      }
-      parsed_json = json.values.asInstanceOf[Map[String, Any]]
-    } catch {
-      case e: Exception => {
-        throw new Exception("Failed to parse JSON configuration string:" + _statusStoreInfo, e)
-      }
-    }
-
-    val namespace = if (parsed_json.contains("SchemaName")) parsed_json.getOrElse("SchemaName", "default").toString.trim else parsed_json.getOrElse("SchemaName", "default").toString.trim
-    Array(new TableName(namespace, "CommmittingTransactions"), new TableName(namespace, "checkPointAdapInfo"))
+    Array[TableName]()
   }
-  
-/*
-  private def LoadAllModelConfigsIntoChache: Unit = {
-    var keys = scala.collection.mutable.Set[Key]()
-    modelConfigStore.getAllKeys({ (key: Key) => keys.add(key) })
-    val keyArray = keys.toArray
-    if (keyArray.length == 0) {
-      logger.debug("No model config objects available in the Database")
-      return
+
+  // BUGBUG:: We can make all gets as simple template for exceptions handling and call that.
+  private def callGetData(dataStore: DataStoreOperations, containerName: String, callbackFunction: (Key, Value) => Unit): Unit = {
+    var failedWaitTime = 15000 // Wait time starts at 15 secs
+    val maxFailedWaitTime = 60000 // Max Wait time 60 secs
+    var doneGet = false
+
+    while (!doneGet) {
+      try {
+        dataStore.get(containerName, callbackFunction)
+        doneGet = true
+      } catch {
+        case e @ (_: ObjectNotFoundException | _: KeyNotFoundException) => {
+          logger.debug("Failed to get data from container:%s".format(containerName), e)
+          doneGet = true
+        }
+        case e: FatalAdapterException => {
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
+        }
+        case e: StorageDMLException => {
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
+        }
+        case e: StorageDDLException => {
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
+        }
+        case e: Exception => {
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
+        }
+        case e: Throwable => {
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
+        }
+      }
+
+      if (!doneGet) {
+        try {
+          logger.error("Failed to get data from datastore. Waiting for another %d milli seconds and going to start them again.".format(failedWaitTime))
+          Thread.sleep(failedWaitTime)
+        } catch {
+          case e: Exception => {}
+        }
+        // Adjust time for next time
+        if (failedWaitTime < maxFailedWaitTime) {
+          failedWaitTime = failedWaitTime * 2
+          if (failedWaitTime > maxFailedWaitTime)
+            failedWaitTime = maxFailedWaitTime
+        }
+      }
     }
-    keyArray.foreach(key => {
-      val obj = GetObject(key, modelConfigStore)
-      val conf = serializer.DeserializeObjectFromByteArray(obj.Value.toArray[Byte]).asInstanceOf[Map[String, List[String]]]
-      MdMgr.GetMdMgr.AddModelConfig(KeyAsStr(key), conf)
+  }
+
+  /*
+  private def LoadAllModelConfigsIntoChache: Unit = {
+    var processed: Long = 0L
+    val storeInfo = tableStoreMap("model_config_objects")
+    storeInfo._2.get(storeInfo._1, { (k: Key, v: Value) =>
+      {
+        processed += 1
+        val conf = serializer.DeserializeObjectFromByteArray(v.serializedInfo).asInstanceOf[Map[String, List[String]]]
+        MdMgr.GetMdMgr.AddModelConfig(k.bucketKey.mkString("."), conf)
+      }
     })
   }
-*/  
-  
+*/
+
   // Callback function calls with metadata Object Type & metadata information in JSON string
   override def getAllMetadataObjs(backupTblSufix: String, callbackFunction: MetadataObjectCallBack): Unit = {
     if (_bInit == false)
@@ -931,31 +646,18 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
 
     logger.info("fromVersionInstallationPath:%s, fromVersionJarPaths:%s".format(fromVersionInstallationPath, fromVersionJarPaths.mkString(",")))
 
-    if (MdResolve._kryoDataSer != null) {
-      MdResolve._kryoDataSer.SetClassLoader(MdResolve._kamanjaLoader.loader)
+    val kamanjaLoader = new KamanjaLoaderInfo
+    val kryoDataSer = SerializerManager.GetSerializer("kryo")
+    if (kryoDataSer != null) {
+      kryoDataSer.SetClassLoader(kamanjaLoader.loader)
     }
-
-    _metadataStore = GetDataStoreHandle(fromVersionJarPaths, _metadataStoreInfo, "metadata_objects" + backupTblSufix)
+    
+    _metadataStore = GetDataStoreHandle(fromVersionJarPaths, _metadataStoreInfo)
 
     try {
       // Load all metadata objects
-      var keys = scala.collection.mutable.Set[Key]()
-      _metadataStore.getAllKeys({ (key: Key) => keys.add(key) })
-      val keyArray = keys.toArray
-      if (keyArray.length == 0) {
-        val szMsg = "No objects available in the Database"
-        logger.error(szMsg)
-        throw new Exception(szMsg)
-      }
-
-      val allObjs = ArrayBuffer[Value]()
-      keyArray.foreach(key => {
-        val obj = GetObject(key, _metadataStore)
-        allObjs += obj.Value
-      })
-
-      allObjs.foreach(o => {
-        val mObj = MdResolve._kryoDataSer.DeserializeObjectFromByteArray(o.toArray[Byte]).asInstanceOf[BaseElem]
+      val buildMdlOne = (k: Key, v: Value) => {
+        val mObj = kryoDataSer.DeserializeObjectFromByteArray(v.serializedInfo).asInstanceOf[BaseElemDef]
         try {
           val (typ, jsonStr) = serializeObjectToJson(mObj)
           if (callbackFunction != null) {
@@ -969,7 +671,9 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
 
           }
         }
-      })
+      }
+
+      callGetData(_metadataStore, "metadata_objects" + backupTblSufix, buildMdlOne)
     } catch {
       case e: Exception => {
         throw new Exception("Failed to load metadata objects", e)
@@ -982,86 +686,12 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
   override def getAllDataObjs(backupTblSufix: String, metadataElemsJson: Array[MetadataFormat], callbackFunction: DataObjectCallBack): Unit = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
-
-    val installPath = new File(_srouceInstallPath)
-
-    var fromVersionInstallationPath = installPath.getAbsolutePath
-
-    val sysPath = new File(_srouceInstallPath + "/lib/system")
-    val appPath = new File(_srouceInstallPath + "/lib/application")
-
-    val fromVersionJarPaths = collection.immutable.Set[String](sysPath.getAbsolutePath, appPath.getAbsolutePath)
-
-    logger.info("fromVersionInstallationPath:%s, fromVersionJarPaths:%s".format(fromVersionInstallationPath, fromVersionJarPaths.mkString(",")))
-
-    val dir = new File(fromVersionInstallationPath + "/bin");
-
-    val mdapiFls = dir.listFiles.filter(_.isFile).filter(_.getName.startsWith("MetadataAPI-")).toList
-
-    var baseFileToLoadFromPrevVer = ""
-    if (mdapiFls.size == 0) {
-      val kmFls = dir.listFiles.filter(_.isFile).filter(_.getName.startsWith("KamanjaManager-")).toList
-      if (kmFls.size == 0) {
-        val szMsg = "Not found %s/bin/MetadataAPI-* and %s/bin/KamanjaManager-*".format(fromVersionInstallationPath, fromVersionInstallationPath)
-        logger.error(szMsg)
-        throw new Exception(szMsg)
-      } else {
-        baseFileToLoadFromPrevVer = kmFls(0).getAbsolutePath
-      }
-    } else {
-      baseFileToLoadFromPrevVer = mdapiFls(0).getAbsolutePath
-    }
-    // Loading the base file where we have all the base classes like classes from KamanjaBase, metadata, MetadataAPI, etc
-    if (baseFileToLoadFromPrevVer != null && baseFileToLoadFromPrevVer.size > 0)
-      LoadFqJarsIfNeeded(Array(baseFileToLoadFromPrevVer), MdResolve._kamanjaLoader.loadedJars, MdResolve._kamanjaLoader.loader)
-
-    AddActiveMessageOrContianer(metadataElemsJson, fromVersionJarPaths)
-
-    _dataStore = GetDataStoreHandle(fromVersionJarPaths, _dataStoreInfo, "AllData" + backupTblSufix)
-
-    if (MdResolve._kryoDataSer != null) {
-      MdResolve._kryoDataSer.SetClassLoader(MdResolve._kamanjaLoader.loader)
-    }
-
-    logger.debug("All Messages and Containers:%s".format(MdResolve._messagesAndContainers.map(kv => kv._1).mkString(",")))
-
-    val bos = new ByteArrayOutputStream(1024 * 1024)
-    val dos = new DataOutputStream(bos)
-
-    try {
-      // Load all metadata objects
-      var keys = scala.collection.mutable.Set[Key]()
-      _dataStore.getAllKeys({ (key: Key) => keys.add(key) })
-      val keyArray = keys.toArray
-      if (keyArray.length == 0) {
-        val szMsg = "No objects available in the Database"
-        logger.error(szMsg)
-        throw new Exception(szMsg)
-      }
-
-      keyArray.foreach(key => {
-        val obj = GetObject(key, _dataStore)
-        val retData = ExtractDataFromTypleData(key, obj.Value, bos, dos)
-        if (retData.size > 0 && callbackFunction != null) {
-          callbackFunction.call(retData)
-        }
-      })
-    } catch {
-      case e: Exception => {
-        throw new Exception("Failed to get data", e)
-      }
-    } finally {
-      dos.close()
-      bos.close()
-    }
+    throw new Exception("Not yet implemented")
   }
 
   override def shutdown: Unit = {
     if (_metadataStore != null)
       _metadataStore.Shutdown()
-    if (_dataStore != null)
-      _dataStore.Shutdown()
     _metadataStore = null
-    _dataStore = null
   }
 }
