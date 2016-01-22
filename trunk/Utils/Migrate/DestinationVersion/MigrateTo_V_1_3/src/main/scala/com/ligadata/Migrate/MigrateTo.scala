@@ -490,7 +490,7 @@ class MigrateTo_V_1_3 extends MigratableTo {
     }
   }
   
-  override def addMetadata(allMetadataElemsJson: Array[MetadataFormat], uploadClusterConfig Boolean): Unit = {
+  override def addMetadata(allMetadataElemsJson: Array[MetadataFormat], uploadClusterConfig: Boolean): Unit = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
 
