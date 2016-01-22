@@ -31,7 +31,8 @@ import org.json4s.jackson.JsonMethods._
 import org.json4s.jackson.Serialization
 import scala.io.Source
 // import com.ligadata.tools.SaveContainerDataComponent
-// import com.ligadata.KvBase.{ Key, Value, TimeRange, KvBaseDefalts, KeyWithBucketIdAndPrimaryKey, KeyWithBucketIdAndPrimaryKeyCompHelper, LoadKeyWithBucketId }
+import com.ligadata.KvBase.{ Key, Value }
+// import com.ligadata.KvBase.{ TimeRange, KvBaseDefalts, KeyWithBucketIdAndPrimaryKey, KeyWithBucketIdAndPrimaryKeyCompHelper, LoadKeyWithBucketId }
 import com.ligadata.StorageBase.{ DataStore, Transaction, DataStoreOperations }
 import com.ligadata.keyvaluestore.KeyValueManager
 import scala.collection.mutable.ArrayBuffer
@@ -376,6 +377,7 @@ class MigrateTo_V_1_3 extends MigratableTo {
                   MetadataAPIImpl.AddModel(MetadataAPI.ModelType.fromString("kpmml"), mdlDefStr, None, Some(dispkey), Some(ver))
                 }
               } else {
+                logger.error("Not supported any other source migration version other than 1.1 and 1.2")
               }
             }
             case "MessageDef" => {
@@ -399,7 +401,10 @@ class MigrateTo_V_1_3 extends MigratableTo {
             }
             case "FunctionDef" => {
               logger.debug("Adding the function: name of the object =>  " + dispkey)
+              //FIXME:: Yet to handle
+              logger.error("Not yet handled migrating FunctionDef " + objType)
             }
+/*
             case "AttributeDef" => {
               logger.debug("Adding the attribute: name of the object =>  " + dispkey)
             }
@@ -442,8 +447,11 @@ class MigrateTo_V_1_3 extends MigratableTo {
             case "ContainerTypeDef" => {
               logger.debug("Adding the Type: name of the object =>  " + dispkey)
             }
+*/
             case "OutputMsgDef" => {
-              logger.trace("Adding the Output Msg: name of the object =>  " + dispkey)
+              logger.debug("Adding the Output Msg: name of the object =>  " + dispkey)
+              //FIXME:: Yet to handle
+              logger.error("Not yet handled migrating OutputMsgDef " + objType)
             }
             case _ => {
               logger.error("ProcessObject is not implemented for objects of type " + objType)
@@ -581,10 +589,60 @@ class MigrateTo_V_1_3 extends MigratableTo {
     ProcessObject(outputMsgDef)
   }
 
+  private def callSaveData(dataStore: DataStoreOperations, data_list: Array[(String, Array[(Key, Value)])]): Unit = {
+    var failedWaitTime = 15000 // Wait time starts at 15 secs
+    val maxFailedWaitTime = 60000 // Max Wait time 60 secs
+    var doneSave = false
+
+    while (!doneSave) {
+      try {
+        dataStore.put(data_list)
+        doneSave = true
+      } catch {
+        case e: FatalAdapterException => {
+          logger.error("Failed to save data into datastore", e)
+        }
+        case e: StorageDMLException => {
+          logger.error("Failed to save data into datastore", e)
+        }
+        case e: StorageDDLException => {
+          logger.error("Failed to save data into datastore", e)
+        }
+        case e: Exception => {
+          logger.error("Failed to save data into datastore", e)
+        }
+        case e: Throwable => {
+          logger.error("Failed to save data into datastore", e)
+        }
+      }
+
+      if (!doneSave) {
+        try {
+          logger.error("Failed to save data into datastore. Waiting for another %d milli seconds and going to start them again.".format(failedWaitTime))
+          Thread.sleep(failedWaitTime)
+        } catch {
+          case e: Exception => {
+
+          }
+        }
+        // Adjust time for next time
+        if (failedWaitTime < maxFailedWaitTime) {
+          failedWaitTime = failedWaitTime * 2
+          if (failedWaitTime > maxFailedWaitTime)
+            failedWaitTime = maxFailedWaitTime
+        }
+      }
+    }
+  }  
+  
   // Array of tuples has container name, timepartition value, bucketkey, transactionid, rowid, serializername & data in Gson (JSON) format
   override def populateAndSaveData(data: Array[DataFormat]): Unit = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
+    val containersData = data.groupBy(_.containerName.toLowerCase)
+    val data_list = containersData.map(kv => (kv._1, kv._2.map(d => (Key(d.timePartition, d.bucketKey, d.transactionid, d.rowid), Value(d.serializername, d.data))).toArray)).toArray
+
+    callSaveData(_dataStoreDb, data_list);
   }
 
   override def shutdown: Unit = {

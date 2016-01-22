@@ -377,7 +377,7 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
   }
 
   private def serializeObjectToJson(mdObj: BaseElem): (String, String) = {
-    val ver = ConvertLongVersionToString(mdObj.Version)
+    val ver = MdMgr.ConvertLongVersionToString(mdObj.Version)
     try {
       mdObj match {
         // Assuming that zookeeper transaction will be different based on type of object
@@ -770,6 +770,8 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
 
       logger.debug("type:%s, key:%s, data records count:%d".format(typName, bucketKey, data.size))
 
+      var rowIdCntr = 0
+
       // container name, timepartition value, bucketkey, transactionid, rowid, serializername & data in Serialized ByteArray.
       return data.map(d => {
         bos.reset()
@@ -777,7 +779,8 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
         val arr = bos.toByteArray()
 
         // logger.debug("type:%s, key:%s, data record TxnId:%d, ByteArraySize:%d".format(typName, bucketKey, d.TransactionId(), arr.length))
-        new DataFormat(typName, 0, bucketKey, d.TransactionId(), 0, serInfo, arr)
+        new DataFormat(typName, 0, bucketKey, d.TransactionId(), rowIdCntr, serInfo, arr)
+        rowIdCntr += 1
       })
     }
 

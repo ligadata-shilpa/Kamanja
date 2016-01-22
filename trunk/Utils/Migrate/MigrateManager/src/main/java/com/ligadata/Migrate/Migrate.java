@@ -90,22 +90,42 @@ public class Migrate {
 		MigratableTo migrateTo = null;
 		List<DataFormat> collectedData = null;
 		int kSaveThreshold = 0;
+		String srcVer = "0";
+		String dstVer = "0";
+		byte[] appendData = new byte[0];
 
 		DataCallback(MigratableTo tmigrateTo, List<DataFormat> tcollectedData,
-				int tkSaveThreshold) {
+				int tkSaveThreshold, String tsrcVer, String tdstVer) {
 			migrateTo = tmigrateTo;
 			collectedData = tcollectedData;
 			kSaveThreshold = tkSaveThreshold;
+			srcVer = tsrcVer;
+			dstVer = tdstVer;
 
+			if (srcVer.equalsIgnoreCase("1.1")
+					&& dstVer.equalsIgnoreCase("1.3")) {
+				appendData = new byte[8]; // timepartition bytes at the end.
+				for (int i = 0; i < 8; i++)
+					appendData[0] = 0;
+			}
 		}
 
 		public boolean call(DataFormat[] objData) throws Exception {
 			for (DataFormat d : objData) {
+				int readLen = d.data.length;
+				if (appendData.length > 0) {
+					byte[] result = new byte[d.data.length + appendData.length];
+					System.arraycopy(d.data, 0, result, 0, d.data.length);
+					System.arraycopy(appendData, 0, result, d.data.length,
+							appendData.length);
+					d.data = result;
+				}
+				int writeLen = d.data.length;
 				logger.debug(String
-						.format("cntr:%d, Container:%s, TimePartitionValue:%d, BucketKey:%s, TxnId:%d, RowId:%d, SerializerName:%s, DataSize:%d",
+						.format("cntr:%d, Container:%s, TimePartitionValue:%d, BucketKey:%s, TxnId:%d, RowId:%d, SerializerName:%s, DataSize:(Read:%d, Write:%d)",
 								cntr, d.containerName, d.timePartition,
 								Arrays.toString(d.bucketKey), d.transactionid,
-								d.rowid, d.serializername, d.data.length));
+								d.rowid, d.serializername, readLen, writeLen));
 				collectedData.add(d);
 				cntr += 1;
 			}
@@ -355,20 +375,23 @@ public class Migrate {
 				usage();
 				System.exit(1);
 			}
-			
+
 			// Version check
-			
+
 			String srcVer = configuration.migratingFrom.version.trim();
 			String dstVer = configuration.migratingTo.version.trim();
-			
-			if (srcVer.equalsIgnoreCase("1.1") == false && srcVer.equalsIgnoreCase("1.2") == false) {
-				logger.error("We support source versions only 1.1 or 1.2. We don't support " + srcVer);
+
+			if (srcVer.equalsIgnoreCase("1.1") == false
+					&& srcVer.equalsIgnoreCase("1.2") == false) {
+				logger.error("We support source versions only 1.1 or 1.2. We don't support "
+						+ srcVer);
 				usage();
 				System.exit(1);
 			}
 
 			if (dstVer.equalsIgnoreCase("1.3") == false) {
-				logger.error("We support destination version only 1.3. We don't support " + srcVer);
+				logger.error("We support destination version only 1.3. We don't support "
+						+ srcVer);
 				usage();
 				System.exit(1);
 			}
@@ -430,8 +453,7 @@ public class Migrate {
 					configuration.clusterConfigFile));
 			migrateTo.init(configuration.migratingTo.versionInstallPath,
 					configuration.apiConfigFile,
-					configuration.clusterConfigFile,
-					srcVer,
+					configuration.clusterConfigFile, srcVer,
 					configuration.unhandledMetadataDumpDir);
 
 			String metadataStoreInfo = migrateTo.getMetadataStoreInfo();
@@ -530,7 +552,7 @@ public class Migrate {
 			List<DataFormat> collectedData = new ArrayList<DataFormat>();
 
 			DataCallback dataCallback = new DataCallback(migrateTo,
-					collectedData, kSaveThreshold);
+					collectedData, kSaveThreshold, srcVer, dstVer);
 
 			migrateFrom.getAllDataObjs(backupTblSufix, metadataArr,
 					dataCallback);
