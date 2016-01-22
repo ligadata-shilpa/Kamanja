@@ -4,7 +4,7 @@
   "packagename": "com.ligadata.jtm.test.filter",
   "version": "0.0.1",
   "inputs": [
-    { "typename": "com.ligadata.kamanja.samples.messages" }
+    { "typename": "com.ligadata.kamanja.samples.messages.msg1" }
   ],
 
   "filters": [
@@ -12,6 +12,6 @@
   ],
 
   "outputs": [
-    { "typename":"com.ligadata.kamanja.samples.messages" }
+    { "typename":"com.ligadata.kamanja.samples.messages.msg1" }
   ]
 }

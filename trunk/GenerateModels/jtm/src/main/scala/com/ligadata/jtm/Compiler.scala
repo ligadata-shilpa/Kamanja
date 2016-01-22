@@ -87,10 +87,17 @@ class CompilerBuilder {
   }
 }
 
+
+
 /* Translates a jtm (json) file(s) into scala classes
  *
  */
 class Compiler(params: CompilerBuilder) extends LogTrait {
+
+  def splitPackageClass(name: String): (String, String) = {
+    val elements = name.split('.')
+    (elements.dropRight(1).mkString("."), elements.last)
+  }
 
   val suppressTimestamps: Boolean = params.suppressTimestamps // Suppress timestamps
   val inputFile: String = params.inputFile // Input file to compile
@@ -101,12 +108,36 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     // Load Json
     val root = Root.fromJson(inputFile)
 
+    val sb = new StringBuilder
+    sb.append(Parts.header)
+
     // Push substituions
     var subtitutions = new Substitution
     subtitutions.Add("model.name", "filter")
     subtitutions.Add("model.version", root.version)
 
+    val imports = subtitutions.Run(Parts.imports)
+    sb.append(imports)
+    sb.append("\n")
+    
+    val factory = subtitutions.Run(Parts.factory)
+    sb.append(factory)
+    sb.append("\n")
+
     // Constructs the input and output types
+    val inputs = root.inputs.zipWithIndex.map( p => {
+      val (packagename, classname) = splitPackageClass(p._1.typename)
+        "import %s.{%s ⇒ input%d}".format(packagename, classname, p._2)
+    }).mkString("\n")
+    sb.append(inputs)
+    sb.append("\n")
+
+    val outputs = root.outputs.zipWithIndex.map( p => {
+      val (packagename, classname) = splitPackageClass(p._1.typename)
+      "import %s.{%s ⇒ output%d}".format(packagename, classname, p._2)
+    }).mkString("\n")
+    sb.append(outputs)
+    sb.append("\n")
 
     // Read the output type information
 
@@ -117,7 +148,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     // Construct output
 
     // Write to output file
-    FileUtils.writeStringToFile(new File(outputFile), "test result")
+    FileUtils.writeStringToFile(new File(outputFile), sb.result)
 
     outputFile
   }
