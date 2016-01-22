@@ -24,4 +24,7 @@ public class TableName {
 		namespace = tnamespace;
 		name = tname;
 	}
+
+	public TableName() {
+	}
 }

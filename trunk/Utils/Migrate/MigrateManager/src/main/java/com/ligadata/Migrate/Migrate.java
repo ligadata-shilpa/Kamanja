@@ -466,7 +466,8 @@ public class Migrate {
 			migrateFrom.init(configuration.migratingFrom.versionInstallPath,
 					metadataStoreInfo, dataStoreInfo, statusStoreInfo);
 
-			TableName[] allMetadataTbls = migrateFrom.getAllMetadataTableNames();
+			TableName[] allMetadataTbls = migrateFrom
+					.getAllMetadataTableNames();
 			TableName[] allDataTbls = migrateFrom.getAllDataTableNames();
 			TableName[] allStatusTbls = migrateFrom.getAllStatusTableNames();
 
@@ -481,37 +482,40 @@ public class Migrate {
 			boolean allTblsBackedUp = true;
 
 			for (TableName tblInfo : allMetadataTbls) {
-				BackupTableInfo bkup = new BackupTableInfo(tblInfo.namespace, tblInfo.name, tblInfo.name
-						+ backupTblSufix);
+				BackupTableInfo bkup = new BackupTableInfo(tblInfo.namespace,
+						tblInfo.name, tblInfo.name + backupTblSufix);
 				metadataBackupTbls.add(bkup);
 				metadataDelTbls.add(tblInfo);
 
 				if (migrateTo.isMetadataTableExists(tblInfo)
-						&& migrateTo.isMetadataTableExists(new TableName(tblInfo.namespace, bkup.dstTable)) == false) {
+						&& migrateTo.isMetadataTableExists(new TableName(
+								tblInfo.namespace, bkup.dstTable)) == false) {
 					allTblsBackedUp = false;
 				}
 			}
 
 			for (TableName tblInfo : allDataTbls) {
-				BackupTableInfo bkup = new BackupTableInfo(tblInfo.namespace, tblInfo.name, tblInfo.name
-						+ backupTblSufix);
+				BackupTableInfo bkup = new BackupTableInfo(tblInfo.namespace,
+						tblInfo.name, tblInfo.name + backupTblSufix);
 				dataBackupTbls.add(bkup);
 				dataDelTbls.add(tblInfo);
 
 				if (migrateTo.isDataTableExists(tblInfo)
-						&& migrateTo.isDataTableExists(new TableName(tblInfo.namespace, bkup.dstTable)) == false) {
+						&& migrateTo.isDataTableExists(new TableName(
+								tblInfo.namespace, bkup.dstTable)) == false) {
 					allTblsBackedUp = false;
 				}
 			}
 
 			for (TableName tblInfo : allStatusTbls) {
-				BackupTableInfo bkup = new BackupTableInfo(tblInfo.namespace, tblInfo.name, tblInfo.name
-						+ backupTblSufix);
+				BackupTableInfo bkup = new BackupTableInfo(tblInfo.namespace,
+						tblInfo.name, tblInfo.name + backupTblSufix);
 				statusBackupTbls.add(bkup);
 				statusDelTbls.add(tblInfo);
 
 				if (migrateTo.isStatusTableExists(tblInfo)
-						&& migrateTo.isStatusTableExists(new TableName(tblInfo.namespace, bkup.dstTable)) == false) {
+						&& migrateTo.isStatusTableExists(new TableName(
+								tblInfo.namespace, bkup.dstTable)) == false) {
 					allTblsBackedUp = false;
 				}
 			}
@@ -532,11 +536,11 @@ public class Migrate {
 
 			// Drop all tables after backup
 			migrateTo.dropMetadataTables(metadataDelTbls
-					.toArray(new String[metadataDelTbls.size()]));
-			migrateTo.dropDataTables(dataDelTbls.toArray(new String[dataDelTbls
-					.size()]));
+					.toArray(new TableName[metadataDelTbls.size()]));
+			migrateTo.dropDataTables(dataDelTbls
+					.toArray(new TableName[dataDelTbls.size()]));
 			migrateTo.dropStatusTables(statusDelTbls
-					.toArray(new String[statusDelTbls.size()]));
+					.toArray(new TableName[statusDelTbls.size()]));
 
 			migrateFrom.getAllMetadataObjs(backupTblSufix, new MdCallback());
 
