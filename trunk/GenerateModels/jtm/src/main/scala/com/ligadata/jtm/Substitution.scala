@@ -22,7 +22,11 @@ class Substitution {
   }
 
   def Replace(value: String): String = {
-    val r = subts.foldLeft(value)((s:String, x:(String,String)) => ( "#\\{" + x._1 + "\\}" ).r.replaceAllIn( s, x._2 ))
+    val r = subts.foldLeft(value)((s: String, x:(String,String)) => ({
+      val regextmp = "\\{" + x._1 + "\\}"
+      val regex = (regextmp).r
+      regex.replaceAllIn( s, x._2)
+    }))
     r
   }
 

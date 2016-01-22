@@ -1,6 +1,5 @@
 package com.ligadata.jtm.nodes
 
-import com.ligadata.jtm.nodes._
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonSerializer
@@ -9,6 +8,11 @@ import com.google.gson.JsonElement
 import java.lang.reflect.Type
 import com.google.gson._
 import scala.collection.JavaConversions._
+import com.google.gson.reflect.TypeToken
+import com.google.gson.stream.JsonReader
+import org.apache.commons.io.FileUtils
+import java.io.StringReader
+import java.io.File
 
 object Root {
 
@@ -18,7 +22,7 @@ object Root {
 
     def deserialize(json : JsonElement, typeOfT : Type , context : JsonDeserializationContext) : scala.collection.Map[String, String] = {
 
-      var collectMap = scala.collection.mutable.HashMap.empty[String, String];
+      var collectMap = scala.collection.mutable.HashMap.empty[String, String]
       val entrySet = json.getAsJsonObject().entrySet()
       entrySet.map ( entry =>  collectMap += ( entry.getKey() -> entry.getValue.getAsString() ) )
 
@@ -34,32 +38,31 @@ object Root {
   }
 
   def fromJsonString(config : String) : Root = {
-    val typeMap = new TypeToken[scala.collection.Map[String, String]](){}.getType();
-    val gson = new GsonBuilder().registerTypeAdapter(typeMap, new MapType1).create();
+    val typeMap = new TypeToken[scala.collection.Map[String, String]](){}.getType()
+    val gson = new GsonBuilder().registerTypeAdapter(typeMap, new MapType1).create()
     val reader = new JsonReader(new StringReader(config))
-    reader.setLenient(true);
+    reader.setLenient(true)
     gson.fromJson(reader, classOf[Root])
   }
 
   def fromJson(file : String) : Root = {
-    val config = RuntimeHelper.ReadFile(file)
+    val config = FileUtils.readFileToString(new File(file), null)
     fromJsonString(config)
   }
 
-  def toJson(file: String, c: Configuration) = {
-    val typeMap = new TypeToken[scala.collection.Map[String, String]](){}.getType();
-    val gson = new GsonBuilder().registerTypeAdapter(typeMap, new MapType1).setPrettyPrinting().create();
-    val dataJson = gson.toJson(c);
+  def toJson(file: String, c: Root) = {
+    val typeMap = new TypeToken[scala.collection.Map[String, String]](){}.getType()
+    val gson = new GsonBuilder().registerTypeAdapter(typeMap, new MapType1).setPrettyPrinting().create()
+    val dataJson = gson.toJson(c)
     scala.tools.nsc.io.File(file).writeAll(dataJson)
   }
 
   def toJson(c: Root) : String = {
-    val typeMap = new TypeToken[scala.collection.Map[String, String]](){}.getType();
-    val gson = new GsonBuilder().registerTypeAdapter(typeMap, new MapType1).setPrettyPrinting().create();
-    gson.toJson(c);
+    val typeMap = new TypeToken[scala.collection.Map[String, String]](){}.getType()
+    val gson = new GsonBuilder().registerTypeAdapter(typeMap, new MapType1).setPrettyPrinting().create()
+    gson.toJson(c)
   }
 }
-
 
 /**
   * Created by joerg on 1/20/16.

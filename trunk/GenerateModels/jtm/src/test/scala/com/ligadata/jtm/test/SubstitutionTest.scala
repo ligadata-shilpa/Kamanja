@@ -15,11 +15,27 @@
  */
 package com.ligadata.jtm.test
 
-/**
-  *
-  */
-class filter {
+import org.scalatest.{BeforeAndAfter, FunSuite}
+import com.ligadata.jtm.Substitution
 
-  // nonaggr.jtm/filter.jtm -> filter.scala
-  //
+/**
+  * Created by joerg on 1/21/16.
+  */
+class SubstitutionTest extends FunSuite with BeforeAndAfter {
+
+  test("test01") {
+    var s = new Substitution
+    s.Add("xx", "zz")
+    val result = s.Run("{xx}")
+    assert(result == "zz")
+  }
+
+  test("test02") {
+    var s = new Substitution
+    s.Add("xx", "zzxx{yy}")
+    s.Add("yy", "zz")
+
+    val result = s.Run("yy{xx}zz")
+    assert(result == "yyzzxxzzzz")
+  }
 }

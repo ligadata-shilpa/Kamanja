@@ -21,3 +21,5 @@ libraryDependencies += "com.novocode" % "junit-interface" % "0.9" % "test->defau
 libraryDependencies += "junit" % "junit" % "4.11" % "test->default"
 
 libraryDependencies += "com.google.code.gson" % "gson" % "2.5"
+
+libraryDependencies += "org.apache.commons" % "commons-io" % "1.3.2"
