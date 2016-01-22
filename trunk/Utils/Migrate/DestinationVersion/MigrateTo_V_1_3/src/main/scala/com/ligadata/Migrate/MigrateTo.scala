@@ -323,8 +323,10 @@ class MigrateTo_V_1_3 extends MigratableTo {
       }
     })
 
-    if (messagesAndContainers.size > 0)
+    if (messagesAndContainers.size > 0) {
+      logger.debug("Dropping containers:" + messagesAndContainers.mkString(","))
       _dataStoreDb.DropContainer(messagesAndContainers.toArray)
+    }
   }
 
   // Uploads clusterConfigFile file
