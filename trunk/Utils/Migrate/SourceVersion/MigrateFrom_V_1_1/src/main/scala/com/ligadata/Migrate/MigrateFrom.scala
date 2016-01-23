@@ -776,13 +776,47 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
         val parsed_key = parse(new String(key.toArray)).extract[KamanjaDataKey]
         val typName = parsed_key.T
         if (typName.equalsIgnoreCase("AdapterUniqKvData")) {
-          val bucketKey = parsed_key.K
+          var bucketKey = parsed_key.K
           logger.debug("type:%s, key:%s".format(typName, bucketKey))
 
           implicit val jsonFormats: Formats = DefaultFormats
           val uniqVal = parse(new String(valInfo)).extract[AdapterUniqueValueDes]
 
           val json = ("T" -> uniqVal.T) ~ ("V" -> uniqVal.V)
+
+          // Hack from 1.1 to next version key change (lower case to case sensitive) -- Begin
+          val kafkaAdapterCheck = """{"version":1,"type":"kafka","name":""""
+
+          if (bucketKey.size == 1 && bucketKey(0).startsWith(kafkaAdapterCheck)) {
+            try {
+              val kafkaPartition = parse(bucketKey(0)).values.asInstanceOf[Map[String, Any]]
+
+              val nm = kafkaPartition.getOrElse("name", null)
+              val topicNm = kafkaPartition.getOrElse("topicname", null)
+              val partId = kafkaPartition.getOrElse("partitionid", null)
+
+              if (nm != null && topicNm != null && partId != null) {
+                val nm1 = nm.toString()
+                val topicNm1 = topicNm.toString()
+                val partId1 = partId.toString().toInt
+
+                val json1 =
+                  ("Version" -> 1) ~
+                    ("Type" -> "Kafka") ~
+                    ("Name" -> nm1) ~
+                    ("TopicName" -> topicNm1) ~
+                    ("PartitionId" -> partId1)
+                bucketKey = List[String](compact(render(json1)))
+              } else {
+                logger.warn("For Kafka Adapter, we did not find name or topicname or partitionid from map to migrate to new version. This may lead to reprocessing all data from kafka queue.")
+              }
+            } catch {
+              case e: Exception => {
+                logger.warn("For Kafka Adapter, we got some exception while migrating to new version. This may lead to reprocessing all data from kafka queue.", e)
+              }
+            }
+          }
+          // Hack from 1.1 to next version key change (lower case to case sensitive) -- End
 
           return Array(new DataFormat(typName, 0, bucketKey.toArray, 0, 0, "json", compact(render(json)).getBytes("UTF8")))
         } else {
