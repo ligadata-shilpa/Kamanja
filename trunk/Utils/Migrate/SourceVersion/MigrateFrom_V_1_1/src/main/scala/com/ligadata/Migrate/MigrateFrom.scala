@@ -195,8 +195,10 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
   private var _dataStoreInfo: String = _
   private var _statusStoreInfo: String = _
   private var _modelConfigStore: DataStore = _
+  private var _txnIdStore: DataStore = _
   private var _metadataStore: DataStore = _
   private var _dataStore: DataStore = _
+  private var _counterStore: DataStore = _
   private var _bInit = false
 
   private def isValidPath(path: String, checkForDir: Boolean = false, checkForFile: Boolean = false, str: String = "path"): Unit = {
@@ -734,7 +736,28 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
     isIt
   }
 
-  private def ExtractDataFromTypleData(key: Key, tupleBytes: Value, bos: ByteArrayOutputStream, dos: DataOutputStream): Array[DataFormat] = {
+  private def ExtractCountersData(key: Key, tupleBytes: Value): Array[DataFormat] = {
+    // Get first _serInfoBufBytes bytes
+    if (tupleBytes.size < _serInfoBufBytes) {
+      val errMsg = s"Invalid input. This has only ${tupleBytes.size} bytes data. But we are expecting serializer buffer bytes as of size ${_serInfoBufBytes}"
+      logger.error(errMsg)
+      throw new Exception(errMsg)
+    }
+
+    implicit val jsonFormats: Formats = DefaultFormats
+    val parsed_key = parse(new String(key.toArray)).extract[KamanjaDataKey]
+    if (parsed_key.T.equalsIgnoreCase("txns") && parsed_key.K.size == 1 && parsed_key.K(0).equalsIgnoreCase("transactions")) {
+      val serInfo = getSerializeInfo(tupleBytes).toLowerCase()
+      val valInfo = getValueInfo(tupleBytes)
+      return Array(new DataFormat("GlobalCounters", 0, Array[String]("TransactionId"), 0, 0, "", valInfo))
+    } else {
+      logger.error("Not Migrated Table:%s and Key:%s".format(parsed_key.T, parsed_key.K.mkString(",")))
+    }
+
+    return Array[DataFormat]()
+  }
+
+  private def ExtractDataFromTupleData(key: Key, tupleBytes: Value, bos: ByteArrayOutputStream, dos: DataOutputStream): Array[DataFormat] = {
     // Get first _serInfoBufBytes bytes
     if (tupleBytes.size < _serInfoBufBytes) {
       val errMsg = s"Invalid input. This has only ${tupleBytes.size} bytes data. But we are expecting serializer buffer bytes as of size ${_serInfoBufBytes}"
@@ -999,23 +1022,24 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
 
     _modelConfigStore = GetDataStoreHandle(fromVersionJarPaths, _metadataStoreInfo, "model_config_objects" + backupTblSufix)
     _metadataStore = GetDataStoreHandle(fromVersionJarPaths, _metadataStoreInfo, "metadata_objects" + backupTblSufix)
+    _txnIdStore = GetDataStoreHandle(fromVersionJarPaths, _metadataStoreInfo, "transaction_id" + backupTblSufix)
 
     try {
       // Load all metadata objects
       var keys = scala.collection.mutable.Set[Key]()
       var mdlCfgKeys = scala.collection.mutable.Set[Key]()
+      var txnIds = scala.collection.mutable.Set[Key]()
       _metadataStore.getAllKeys({ (key: Key) => keys.add(key) })
       _modelConfigStore.getAllKeys({ (key: Key) => mdlCfgKeys.add(key) })
-      val keyArray = keys.toArray
-      val mdlCfgKeysArray = mdlCfgKeys.toArray
-      if (keyArray.length == 0 && mdlCfgKeysArray.length == 0) {
-        val szMsg = "No objects available in model_config_objects & metadata_objects"
+      _txnIdStore.getAllKeys({ (key: Key) => txnIds.add(key) })
+      if (keys.size == 0 && mdlCfgKeys.size == 0 && txnIds.size == 0) {
+        val szMsg = "No objects available in model_config_objects, transaction_id & metadata_objects"
         logger.warn(szMsg)
         return
       }
 
       val allObjs = ArrayBuffer[Value]()
-      keyArray.foreach(key => {
+      keys.foreach(key => {
         val obj = GetObject(key, _metadataStore)
         allObjs += obj.Value
       })
@@ -1036,7 +1060,7 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
         }
       })
 
-      mdlCfgKeysArray.foreach(key => {
+      mdlCfgKeys.foreach(key => {
         try {
           val obj = GetObject(key, _modelConfigStore)
           val conf = MdResolve._kryoDataSer.DeserializeObjectFromByteArray(obj.Value.toArray[Byte]).asInstanceOf[Map[String, Any]]
@@ -1071,6 +1095,41 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
           case e: Throwable => throw e
         }
       })
+      
+      /*
+      txnIds.foreach(key => {
+        try {
+          val obj = GetObject(key, _txnIdStore)
+          val conf = MdResolve._kryoDataSer.DeserializeObjectFromByteArray(obj.Value.toArray[Byte]).asInstanceOf[Map[String, Any]]
+          val (nameSpace, name) = SplitFullName(KeyAsStr(key))
+
+          val json = (("ObjectType" -> "TransactionInformation") ~
+            ("IsActive" -> "true") ~
+            ("IsDeleted" -> "false") ~
+            ("TransId" -> "0") ~
+            ("OrigDef" -> "") ~
+            ("ObjectDefinition" -> str) ~
+            ("ObjectFormat" -> "") ~
+            ("NameSpace" -> "") ~
+            ("Name" -> "transaction_id") ~
+            ("Version" -> "0") ~
+            ("PhysicalName" -> "") ~
+            ("JarName" -> "") ~
+            ("DependantJars" -> List[String]()))
+
+          val mdlCfg = compact(render(json))
+          if (callbackFunction != null) {
+            val retVal = callbackFunction.call(new MetadataFormat("ConfigDef", mdlCfg))
+            if (retVal == false) {
+              return
+            }
+          }
+        } catch {
+          case e: Exception => throw e
+          case e: Throwable => throw e
+        }
+      })
+      */
 
     } catch {
       case e: Exception => {
@@ -1120,6 +1179,7 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
     AddActiveMessageOrContianer(metadataElemsJson, fromVersionJarPaths)
 
     _dataStore = GetDataStoreHandle(fromVersionJarPaths, _dataStoreInfo, "AllData" + backupTblSufix)
+    _counterStore = GetDataStoreHandle(fromVersionJarPaths, _dataStoreInfo, "ClusterCounts" + backupTblSufix)
 
     if (MdResolve._kryoDataSer != null) {
       MdResolve._kryoDataSer.SetClassLoader(MdResolve._kamanjaLoader.loader)
@@ -1134,16 +1194,26 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
       // Load all metadata objects
       var keys = scala.collection.mutable.Set[Key]()
       _dataStore.getAllKeys({ (key: Key) => keys.add(key) })
-      val keyArray = keys.toArray
-      if (keyArray.length == 0) {
-        val szMsg = "No objects available in the Database"
-        logger.error(szMsg)
-        throw new Exception(szMsg)
+      var countersKeys = scala.collection.mutable.Set[Key]()
+      _counterStore.getAllKeys({ (key: Key) => countersKeys.add(key) })
+
+      if (keys.size == 0 && countersKeys.size == 0) {
+        val szMsg = "No objects available in AllData & ClusterCounts"
+        logger.warn(szMsg)
+        return
       }
 
-      keyArray.foreach(key => {
+      keys.foreach(key => {
         val obj = GetObject(key, _dataStore)
-        val retData = ExtractDataFromTypleData(key, obj.Value, bos, dos)
+        val retData = ExtractDataFromTupleData(key, obj.Value, bos, dos)
+        if (retData.size > 0 && callbackFunction != null) {
+          callbackFunction.call(retData)
+        }
+      })
+
+      countersKeys.foreach(key => {
+        val obj = GetObject(key, _counterStore)
+        val retData = ExtractCountersData(key, obj.Value)
         if (retData.size > 0 && callbackFunction != null) {
           callbackFunction.call(retData)
         }
@@ -1165,8 +1235,11 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
       _metadataStore.Shutdown()
     if (_dataStore != null)
       _dataStore.Shutdown()
+    if (_counterStore != null)
+      _counterStore.Shutdown()
     _modelConfigStore = null
     _metadataStore = null
     _dataStore = null
+    _counterStore = null
   }
 }
