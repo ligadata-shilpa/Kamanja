@@ -19,7 +19,7 @@ import com.ligadata.kamanja.metadata._;
 import com.ligadata.Exceptions._;
 
 class Messages(var messages: List[Message])
-class Message(var MsgType: String, var NameSpace: String, var Name: String, var PhysicalName: String, var Version: String, var Description: String, var Fixed: String, var Persist: Boolean, var Elements: List[Element], var TDataExists: Boolean, var TrfrmData: TransformData, var Jarset: Set[String], var Pkg: String, var Ctype: String, var CCollectiontype: String, var Containers: List[String], var PartitionKey: List[String], var PrimaryKeys: List[String], var ClsNbr: Long, var MsgLvel: Int, var ArgsList: List[(String, String, String, String, Boolean, String)], var Schema : String)
+class Message(var MsgType: String, var NameSpace: String, var Name: String, var PhysicalName: String, var Version: String, var Description: String, var Fixed: String, var Persist: Boolean, var Elements: List[Element], var TDataExists: Boolean, var TrfrmData: TransformData, var Jarset: Set[String], var Pkg: String, var Ctype: String, var CCollectiontype: String, var Containers: List[String], var PartitionKey: List[String], var PrimaryKeys: List[String], var ClsNbr: Long, var MsgLvel: Int, var ArgsList: List[(String, String, String, String, Boolean, String)], var Schema: String)
 class TransformData(var input: Array[String], var output: Array[String], var keys: Array[String])
 class Field(var NameSpace: String, var Name: String, var Ttype: String, var CollectionType: String, var Fieldtype: String, var FieldtypeVer: String)
 class Element(var NameSpace: String, var Name: String, var Ttype: String, var CollectionType: String, var ElemType: String, var FieldtypeVer: String, var FieldOrdinal: Int, var FldMetaataType: BaseTypeDef, var FieldTypePhysicalName: String)
@@ -27,7 +27,7 @@ class MessageGenObj(var verScalaClassStr: String, var verJavaClassStr: String, v
 
 object MessageCompiler {
 
-   val logger = this.getClass.getName
+  val logger = this.getClass.getName
   lazy val log = LogManager.getLogger(logger)
   var msgGen: MessageGenerator = new MessageGenerator
   var handleMsgFieldTypes: MessageFieldTypesHandler = new MessageFieldTypesHandler
@@ -57,12 +57,14 @@ object MessageCompiler {
           handleMsgFieldTypes.handleFieldTypes(msg, mdMgr)
           generatedNonVersionedMsg = msgGen.generateMessage(msg)
           val (versionedRddClass, nonVersionedRddClass) = generatedRdd.generateRdd(msg)
+          containerDef = createMsg.createMessage(msg, mdMgr, recompile)
+
+          /*
+           log.info("***********************versionedRddClass*******************")
           
-          log.info("***********************versionedRddClass*******************")
           
           log.info(versionedRddClass)
           log.info("*******************versionedRddClass***************")
-          containerDef = createMsg.createMessage(msg, mdMgr, recompile)
           log.info("===================" + msg.MsgLvel)
           log.info("===================" + msg.Name)
           log.info("===================" + msg.NameSpace)
@@ -81,7 +83,7 @@ object MessageCompiler {
           log.info(" JarName =============== " + containerDef.JarName)
           log.info("PhysicalName =============== " + containerDef.PhysicalName)
           log.info("TranId =============== " + containerDef.TranId)
-
+*/
         })
 
         //simple check to get metadata types for the fields in message
@@ -117,5 +119,4 @@ object MessageCompiler {
     return (generatedNonVersionedMsg, containerDef)
   }
 
- 
 }

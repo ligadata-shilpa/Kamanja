@@ -24,25 +24,46 @@ class MessageGenerator {
 
     var messageGenerator = new StringBuilder(8 * 1024)
     try {
-      messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.packageStr.format(message.Pkg, msgConstants.newline));
-      messageGenerator = messageGenerator.append(msgConstants.importStatements + msgConstants.newline);
-      messageGenerator = messageGenerator.append(msgObjectGenerator.generateMessageObject(message) + msgConstants.newline)
-      messageGenerator = messageGenerator.append(classGen(message) + msgConstants.newline)
-      messageGenerator = messageGenerator.append(getMessgeBasicDetails(message))
-      messageGenerator = messageGenerator.append(methodsFromBaseMsg(message))
-      messageGenerator = messageGenerator.append(msgConstants.newline + generateParitionKeys(message) + msgConstants.newline)
-      messageGenerator = messageGenerator.append(msgConstants.newline + generatePrimaryKeys(message) + msgConstants.newline)
-      messageGenerator = messageGenerator.append(messageContructor(message))
-      //messageGenerator = messageGenerator.append(msgClassConstructorGen(message))
-       messageGenerator = messageGenerator.append(msgConstants.newline + generateSchema(message))      
-      messageGenerator = messageGenerator.append(msgConstants.newline + generatedMsgVariables(message))
-      messageGenerator = messageGenerator.append(getFuncGeneration(message.Elements))
-      messageGenerator = messageGenerator.append(setFuncGeneration(message.Elements))
-      messageGenerator = messageGenerator.append(getFuncByOffset(message.Elements))
-      messageGenerator = messageGenerator.append(setFuncByOffset(message.Elements))
-      messageGenerator = messageGenerator.append(builderMethod)
-      messageGenerator = messageGenerator.append(builderGenerator.generatorBuilder(message))
-      messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.closeBrace)
+      if (message.Fixed.equalsIgnoreCase("true")) {
+
+        messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.packageStr.format(message.Pkg, msgConstants.newline));
+        messageGenerator = messageGenerator.append(msgConstants.importStatements + msgConstants.newline);
+        messageGenerator = messageGenerator.append(msgObjectGenerator.generateMessageObject(message) + msgConstants.newline)
+        messageGenerator = messageGenerator.append(classGen(message) + msgConstants.newline)
+        messageGenerator = messageGenerator.append(getMessgeBasicDetails(message))
+        messageGenerator = messageGenerator.append(methodsFromBaseMsg(message))
+        messageGenerator = messageGenerator.append(msgConstants.newline + generateParitionKeys(message) + msgConstants.newline)
+        messageGenerator = messageGenerator.append(msgConstants.newline + generatePrimaryKeys(message) + msgConstants.newline)
+        messageGenerator = messageGenerator.append(messageContructor(message))
+        //messageGenerator = messageGenerator.append(msgClassConstructorGen(message))
+        messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + generateSchema(message))
+        messageGenerator = messageGenerator.append(msgConstants.newline + generatedMsgVariables(message))
+        messageGenerator = messageGenerator.append(getFuncGeneration(message.Elements))
+        messageGenerator = messageGenerator.append(setFuncGeneration(message.Elements))
+        messageGenerator = messageGenerator.append(getFuncByOffset(message.Elements))
+        messageGenerator = messageGenerator.append(setFuncByOffset(message.Elements))
+        messageGenerator = messageGenerator.append(builderMethod)
+        messageGenerator = messageGenerator.append(builderGenerator.generatorBuilder(message))
+        messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.closeBrace)
+
+      } else if (message.Fixed.equalsIgnoreCase("false")) {
+        messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.packageStr.format(message.Pkg, msgConstants.newline));
+        messageGenerator = messageGenerator.append(msgConstants.importStatements + msgConstants.newline);
+        messageGenerator = messageGenerator.append(msgObjectGenerator.generateMessageObject(message) + msgConstants.newline)
+        messageGenerator = messageGenerator.append(classGen(message) + msgConstants.newline)
+        messageGenerator = messageGenerator.append(getMessgeBasicDetails(message))
+        messageGenerator = messageGenerator.append(methodsFromBaseMsg(message))
+        messageGenerator = messageGenerator.append(messageContructor(message))
+        messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + generateSchema(message))
+        messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + msgConstants.fieldsForMappedVar)
+        messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + msgConstants.getByNameFuncForMapped)
+        messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + msgConstants.getOrElseFuncForMapped)
+        messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + msgConstants.setByNameFuncForMappedMsgs)
+        messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.closeBrace)
+
+      }
+
+      log.info("messageGenerator    " + messageGenerator.toString())
 
     } catch {
       case e: Exception => {
@@ -189,7 +210,7 @@ class MessageGenerator {
   private def getFuncByOffset(fields: List[Element]): String = {
     var getFuncByOffset: String = ""
     getFuncByOffset = """
-      def get(field$ : Int) : Any = {
+      def getByPosition(field$ : Int) : Any = {
       	field$ match {
   """ + getByOffset(fields) + """
       	 case _ => throw new Exception("Bad index");
@@ -224,7 +245,7 @@ class MessageGenerator {
   private def setFuncByOffset(fields: List[Element]): String = {
     var getFuncByOffset: String = ""
     getFuncByOffset = """
-      def set(field$ : Int, value :Any): Unit = {
+      def setByPosition(field$ : Int, value :Any): Unit = {
       	field$ match {
   """ + setByOffset(fields) + """
       	 case _ => throw new Exception("Bad index");
@@ -408,11 +429,47 @@ class MessageGenerator {
     """
 
   }
-  
-  private def generateSchema(message: Message) : String = {
-    
-    return "val schema: String = "+message.Schema+";"
-    
-    
+
+  /*
+   * Generate the schema String of the input message/container
+   */
+  private def generateSchema(message: Message): String = {
+
+    return "val schema: String = \" " + message.Schema + " \" ;"
+
   }
+
+  /* 
+ * SetByName for the mapped messages
+ */
+  private def setByNameFuncForMappedMsgs(): String = {
+
+    return ""
+  }
+
+  /*
+   * SetByName for the Fixed Messages
+   */
+  private def setByNameFuncForFixedMsgs(): String = {
+
+    return ""
+  }
+
+  /*
+   * GetByName for mapped Messages
+   */
+  private def getByNameFuncForMapped(): String = {
+
+    return ""
+  }
+
+  /*
+   * GetByName merthod for Fixed Messages
+   */
+  private def getByNameFuncForFixed: String = {
+
+    return ""
+
+  }
+
 }

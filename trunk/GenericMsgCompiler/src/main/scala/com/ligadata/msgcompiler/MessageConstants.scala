@@ -43,6 +43,7 @@ class MessageConstants {
   val rddObj: String = "public static JavaRDDObject<%s> rddObject = %s$.MODULE$.toJavaRDDObject(); %s";
   val rddBaseContainerObj = "public static BaseContainerObj baseObj = (BaseContainerObj) %s$.MODULE$; %s";
   val rddBaseMsgObj = "public static BaseMsgObj baseObj = (BaseMsgObj) %s$.MODULE$; %s";
+  val fieldsForMappedVar = "var fields: scala.collection.mutable.Map[String, (Int, Any)] = new scala.collection.mutable.HashMap[String, (Int, Any)];"
 
   def rddObjImportStmts() = {
     """
@@ -57,14 +58,12 @@ class MessageConstants {
 import org.json4s.jackson.JsonMethods._
 import org.json4s.DefaultFormats
 import org.json4s.Formats
-import scala.xml.XML
-import scala.xml.Elem
 import com.ligadata.KamanjaBase.{ InputData, DelimitedData, JsonData, XmlData, KvData }
 import com.ligadata.BaseTypes._
 import com.ligadata.KamanjaBase.SerializeDeserialize
 import java.io.{ DataInputStream, DataOutputStream, ByteArrayOutputStream }
-import com.ligadata.Exceptions.StackTrace
-import org.apache.log4j.Logger
+import com.ligadata.Exceptions.StackTrace;
+import org.apache.logging.log4j.{ Logger, LogManager }
 import java.util.Date
 import com.ligadata.KamanjaBase.{ BaseMsg, BaseMsgObj, TransformMessage, BaseContainer, BaseContainerObj, MdBaseResolveInfo, MessageContainerBase, RDDObject, RDD, JavaRDDObject }
     
@@ -72,11 +71,44 @@ import com.ligadata.KamanjaBase.{ BaseMsg, BaseMsgObj, TransformMessage, BaseCon
   }
 
   def msgObjectBuildStmts = {
-    """
+  """
   def build = new T
   def build(from: T) = new T(from)
 
     """
+  }
+
+  def getByNameFuncForMapped = {
+ """
+  override def get(key: String): Any = {
+    fields.get(key) match {
+      case Some(f) => {
+        return f._2;
+      }
+      case None => {
+        return null;
+      }
+    }
+  }
+"""
+  }
+
+  def getOrElseFuncForMapped = {
+ """
+  override def getOrElse(key: String, default: Any): Any = {
+    fields.getOrElse(key, (-1, default))._2;
+  }  
+     
+ """
+  }
+
+  def setByNameFuncForMappedMsgs() = {
+"""
+  override def set(key: String, value: Any): Unit = {
+    if (key == null) throw new Exception(" key should not be null in set method")
+    fields.put(key, (-1, value))
+  }
+"""
   }
 
 }

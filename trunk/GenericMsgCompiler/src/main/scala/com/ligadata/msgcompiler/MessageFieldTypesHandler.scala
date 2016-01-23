@@ -23,8 +23,8 @@ class MessageFieldTypesHandler {
     var argsList: List[(String, String, String, String, Boolean, String)] = List[(String, String, String, String, Boolean, String)]()
     var jarset: Set[String] = Set[String]();
     message.Elements.foreach(field => {
-      log.info("fields name " + field.Name)
-      log.info("fields type " + field.Ttype)
+      //   log.info("fields name " + field.Name)
+      //  log.info("fields type " + field.Ttype)
       val typ = MdMgr.GetMdMgr.Type(field.Ttype, -1, true) // message.Version.toLong
 
       if (typ.getOrElse("None").equals("None"))
@@ -33,9 +33,11 @@ class MessageFieldTypesHandler {
       // to do - check null pointer if typ is not avaialble.....
       field.FldMetaataType = typ.get
 
-      log.info("******************TYPES FROM METADATA START******************************")
+      /*   log.info("******************TYPES FROM METADATA START******************************")
       log.info("type " + typ.get.tType.toString())
       log.info("******************TYPES FROM METADATA START******************************")
+     
+      */
     })
 
     message.Elements.foreach(field => {
@@ -49,7 +51,9 @@ class MessageFieldTypesHandler {
 
       field.FieldTypePhysicalName = types(0)
 
-      log.info("****************** TYPES FROM METADATA START  --- In Message******************************")
+      /*
+       log.info("****************** TYPES FROM METADATA START  --- In Message******************************")
+       
       log.info("=========mesage fld type " + field.Ttype)
       log.info("=========mesage fld metadata type " + field.FldMetaataType.tType.toString())
       log.info("=========mesage fld metadata tTypeType " + field.FldMetaataType.tTypeType.toString())
@@ -58,6 +62,8 @@ class MessageFieldTypesHandler {
       log.info("=========mesage fld 2 :  " + types(1))
       log.info("=========mesage fld  " + field.FieldTypePhysicalName)
       log.info("******************TYPES FROM METADATA End --- In Message ******************************")
+      * */
+
     })
 
     // set the field args list and jarset in message object to retrieve while adding mesage to metadata
@@ -92,7 +98,7 @@ class MessageFieldTypesHandler {
     if (fieldBaseType.isInstanceOf[ArrayTypeDef])
       arrayType = fieldBaseType.asInstanceOf[ArrayTypeDef]
 
-    log.info("fieldTypeType " + fieldTypeType)
+    // log.info("fieldTypeType " + fieldTypeType)
 
     fieldTypeType match {
       case "tScalar" => {
