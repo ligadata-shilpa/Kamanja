@@ -425,11 +425,20 @@ class MigrateTo_V_1_3 extends MigratableTo {
                 logger.debug("Bootstrap object. Ignore it")
               }
             }
+            case "ConfigDef" => {
+              val mdlCfg = mdObj._2.getOrElse("ObjectDefinition", "").toString
+              if (mdlCfg != null && mdlCfg.size > 0) {
+                logger.debug("Adding model config:" + dispkey)
+                MetadataAPIImpl.UploadModelsConfig(mdlCfg, Some[String](namespace), null) // Considering namespace as userid
+              }
+            }
+            /*
             case "FunctionDef" => {
-              logger.debug("Adding the function: name of the object =>  " + dispkey)
+              logger.debug("Adding function:" + dispkey)
               //FIXME:: Yet to handle
               logger.error("Not yet handled migrating FunctionDef " + objType)
             }
+*/
             /*
             case "AttributeDef" => {
               logger.debug("Adding the attribute: name of the object =>  " + dispkey)
@@ -489,7 +498,7 @@ class MigrateTo_V_1_3 extends MigratableTo {
       case e: Throwable => throw e
     }
   }
-  
+
   override def addMetadata(allMetadataElemsJson: Array[MetadataFormat], uploadClusterConfig: Boolean): Unit = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")

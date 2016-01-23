@@ -113,13 +113,21 @@ public class Migrate {
 		public boolean call(DataFormat[] objData) throws Exception {
 			for (DataFormat d : objData) {
 				int readLen = d.data.length;
-				if (appendData.length > 0) {
-					byte[] result = new byte[d.data.length + appendData.length];
-					System.arraycopy(d.data, 0, result, 0, d.data.length);
-					System.arraycopy(appendData, 0, result, d.data.length,
-							appendData.length);
-					d.data = result;
+
+				if ((d.containerName.equalsIgnoreCase("AdapterUniqKvData"))
+						|| (d.containerName.equalsIgnoreCase("ModelResults"))) {
+					// Don't change any data
+				} else {
+					if (appendData.length > 0) {
+						byte[] result = new byte[d.data.length
+								+ appendData.length];
+						System.arraycopy(d.data, 0, result, 0, d.data.length);
+						System.arraycopy(appendData, 0, result, d.data.length,
+								appendData.length);
+						d.data = result;
+					}
 				}
+
 				int writeLen = d.data.length;
 				logger.debug(String
 						.format("cntr:%d, Container:%s, TimePartitionValue:%d, BucketKey:%s, TxnId:%d, RowId:%d, SerializerName:%s, DataSize:(Read:%d, Write:%d)",
@@ -582,7 +590,7 @@ public class Migrate {
 			if (canUpgradeData) {
 				migrateTo.addMetadata(metadataArr, true);
 
-				int kSaveThreshold = 10000;
+				int kSaveThreshold = 1000;
 
 				List<DataFormat> collectedData = new ArrayList<DataFormat>();
 

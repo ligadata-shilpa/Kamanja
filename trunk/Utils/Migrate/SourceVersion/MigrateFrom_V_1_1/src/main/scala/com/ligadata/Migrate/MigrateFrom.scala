@@ -36,6 +36,7 @@ import scala.reflect.runtime.{ universe => ru }
 // import scala.collection.JavaConversions._
 
 class MigrateFrom_V_1_1 extends MigratableFrom {
+  case class AdapterUniqueValueDes(T: Long, V: String, Qs: Option[List[String]], Res: Option[List[String]]) // TransactionId, Value, Queues & Result Strings. Queues and Result Strings should be same size.  
 
   object MdResolve extends MdBaseResolveInfo {
     val _messagesAndContainers = scala.collection.mutable.Map[String, MessageContainerObjBase]()
@@ -193,6 +194,7 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
   private var _metadataStoreInfo: String = _
   private var _dataStoreInfo: String = _
   private var _statusStoreInfo: String = _
+  private var _modelConfigStore: DataStore = _
   private var _metadataStore: DataStore = _
   private var _dataStore: DataStore = _
   private var _bInit = false
@@ -654,6 +656,7 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
             ("DependantJars" -> o.CheckAndGetDependencyJarNames.toList))
           ("OutputMsgDef", compact(render(json)))
         }
+        /*
         case o: ConfigDef => {
           val json = (("ObjectType" -> "ConfigDef") ~
             ("IsActive" -> o.IsActive.toString) ~
@@ -671,6 +674,7 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
             ("ConfigContnent" -> o.contents))
           ("ConfigDef", compact(render(json)))
         }
+*/
         case _ => {
           throw new Exception("serializeObjectToJson doesn't support the objects of type objectType of " + mdObj.getClass().getName() + " yet.")
         }
@@ -747,6 +751,17 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
         val desInfo = MdResolve._kryoDataSer.DeserializeObjectFromByteArray(valInfo)
         if (desInfo.isInstanceOf[KamanjaData]) {
           kd = MdResolve._kryoDataSer.DeserializeObjectFromByteArray(valInfo).asInstanceOf[KamanjaData]
+        } else {
+          implicit val jsonFormats: Formats = DefaultFormats
+          val parsed_key = parse(new String(key.toArray)).extract[KamanjaDataKey]
+          val typName = parsed_key.T
+          if (typName.equalsIgnoreCase("ModelResults")) {
+            val bucketKey = parsed_key.K
+            logger.debug("type:%s, key:%s".format(typName, bucketKey))
+            return Array(new DataFormat(typName, 0, bucketKey.toArray, 0, 0, serInfo, valInfo))
+          } else {
+            throw new Exception("Found un-handled data in KRYO format. This is not Kamanja Data or ModelResults")
+          }
         }
       }
       case "manual" => {
@@ -756,6 +771,23 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
         kd = datarec
       }
       case "csv" => {
+        val valInfo = getValueInfo(tupleBytes)
+        implicit val jsonFormats: Formats = DefaultFormats
+        val parsed_key = parse(new String(key.toArray)).extract[KamanjaDataKey]
+        val typName = parsed_key.T
+        if (typName.equalsIgnoreCase("AdapterUniqKvData")) {
+          val bucketKey = parsed_key.K
+          logger.debug("type:%s, key:%s".format(typName, bucketKey))
+
+          implicit val jsonFormats: Formats = DefaultFormats
+          val uniqVal = parse(new String(valInfo)).extract[AdapterUniqueValueDes]
+
+          val json = ("T" -> uniqVal.T) ~ ("V" -> uniqVal.V)
+
+          return Array(new DataFormat(typName, 0, bucketKey.toArray, 0, 0, "json", compact(render(json)).getBytes("UTF8")))
+        } else {
+          throw new Exception("Found un-handled data in CSV format. This is not AdapterUniqKvData")
+        }
         // Not doing anything
       }
       case _ => {
@@ -853,8 +885,8 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
     }
 
     val namespace = if (parsed_json.contains("SchemaName")) parsed_json.getOrElse("SchemaName", "default").toString.trim else parsed_json.getOrElse("SchemaName", "default").toString.trim
-    Array(new TableName(namespace, "config_objects"), new TableName(namespace, "jar_store"), new TableName(namespace, "metadata_objects"), 
-        new TableName(namespace, "model_config_objects"), new TableName(namespace, "transaction_id"))
+    Array(new TableName(namespace, "config_objects"), new TableName(namespace, "jar_store"), new TableName(namespace, "metadata_objects"),
+      new TableName(namespace, "model_config_objects"), new TableName(namespace, "transaction_id"))
   }
 
   override def getAllDataTableNames: Array[TableName] = {
@@ -900,24 +932,17 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
     val namespace = if (parsed_json.contains("SchemaName")) parsed_json.getOrElse("SchemaName", "default").toString.trim else parsed_json.getOrElse("SchemaName", "default").toString.trim
     Array(new TableName(namespace, "CommmittingTransactions"), new TableName(namespace, "checkPointAdapInfo"))
   }
-  
-/*
-  private def LoadAllModelConfigsIntoChache: Unit = {
-    var keys = scala.collection.mutable.Set[Key]()
-    modelConfigStore.getAllKeys({ (key: Key) => keys.add(key) })
-    val keyArray = keys.toArray
-    if (keyArray.length == 0) {
-      logger.debug("No model config objects available in the Database")
-      return
-    }
-    keyArray.foreach(key => {
-      val obj = GetObject(key, modelConfigStore)
-      val conf = serializer.DeserializeObjectFromByteArray(obj.Value.toArray[Byte]).asInstanceOf[Map[String, List[String]]]
-      MdMgr.GetMdMgr.AddModelConfig(KeyAsStr(key), conf)
-    })
+
+  private def SplitFullName(mdName: String): (String, String) = {
+    val buffer: StringBuilder = new StringBuilder
+    val nameNodes: Array[String] = mdName.split('.')
+    val name: String = nameNodes.last
+    if (nameNodes.size > 1)
+      nameNodes.take(nameNodes.size - 1).addString(buffer, ".")
+    val namespace: String = buffer.toString
+    (namespace, name)
   }
-*/  
-  
+
   // Callback function calls with metadata Object Type & metadata information in JSON string
   override def getAllMetadataObjs(backupTblSufix: String, callbackFunction: MetadataObjectCallBack): Unit = {
     if (_bInit == false)
@@ -938,17 +963,21 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
       MdResolve._kryoDataSer.SetClassLoader(MdResolve._kamanjaLoader.loader)
     }
 
+    _modelConfigStore = GetDataStoreHandle(fromVersionJarPaths, _metadataStoreInfo, "model_config_objects" + backupTblSufix)
     _metadataStore = GetDataStoreHandle(fromVersionJarPaths, _metadataStoreInfo, "metadata_objects" + backupTblSufix)
 
     try {
       // Load all metadata objects
       var keys = scala.collection.mutable.Set[Key]()
+      var mdlCfgKeys = scala.collection.mutable.Set[Key]()
       _metadataStore.getAllKeys({ (key: Key) => keys.add(key) })
+      _modelConfigStore.getAllKeys({ (key: Key) => mdlCfgKeys.add(key) })
       val keyArray = keys.toArray
-      if (keyArray.length == 0) {
-        val szMsg = "No objects available in the Database"
-        logger.error(szMsg)
-        throw new Exception(szMsg)
+      val mdlCfgKeysArray = mdlCfgKeys.toArray
+      if (keyArray.length == 0 && mdlCfgKeysArray.length == 0) {
+        val szMsg = "No objects available in model_config_objects & metadata_objects"
+        logger.warn(szMsg)
+        return
       }
 
       val allObjs = ArrayBuffer[Value]()
@@ -968,11 +997,47 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
             }
           }
         } catch {
-          case e: Exception => {
-
-          }
+          case e: Exception => throw e
+          case e: Throwable => throw e
         }
       })
+
+      mdlCfgKeysArray.foreach(key => {
+        try {
+          val obj = GetObject(key, _modelConfigStore)
+          val conf = MdResolve._kryoDataSer.DeserializeObjectFromByteArray(obj.Value.toArray[Byte]).asInstanceOf[Map[String, Any]]
+          val (nameSpace, name) = SplitFullName(KeyAsStr(key))
+
+          implicit val jsonFormats: Formats = DefaultFormats
+          val str = "{\"" + name + "\" :" + Serialization.write(conf) + "}"
+
+          val json = (("ObjectType" -> "ConfigDef") ~
+            ("IsActive" -> "true") ~
+            ("IsDeleted" -> "false") ~
+            ("TransId" -> "0") ~
+            ("OrigDef" -> "") ~
+            ("ObjectDefinition" -> str) ~
+            ("ObjectFormat" -> "JSON") ~
+            ("NameSpace" -> nameSpace) ~
+            ("Name" -> name) ~
+            ("Version" -> "0") ~
+            ("PhysicalName" -> "") ~
+            ("JarName" -> "") ~
+            ("DependantJars" -> List[String]()))
+
+          val mdlCfg = compact(render(json))
+          if (callbackFunction != null) {
+            val retVal = callbackFunction.call(new MetadataFormat("ConfigDef", mdlCfg))
+            if (retVal == false) {
+              return
+            }
+          }
+        } catch {
+          case e: Exception => throw e
+          case e: Throwable => throw e
+        }
+      })
+
     } catch {
       case e: Exception => {
         throw new Exception("Failed to load metadata objects", e)
@@ -1060,10 +1125,13 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
   }
 
   override def shutdown: Unit = {
+    if (_modelConfigStore != null)
+      _modelConfigStore.Shutdown()
     if (_metadataStore != null)
       _metadataStore.Shutdown()
     if (_dataStore != null)
       _dataStore.Shutdown()
+    _modelConfigStore = null
     _metadataStore = null
     _dataStore = null
   }
