@@ -195,7 +195,6 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
   private var _dataStoreInfo: String = _
   private var _statusStoreInfo: String = _
   private var _modelConfigStore: DataStore = _
-  private var _txnIdStore: DataStore = _
   private var _metadataStore: DataStore = _
   private var _dataStore: DataStore = _
   private var _counterStore: DataStore = _
@@ -1022,17 +1021,14 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
 
     _modelConfigStore = GetDataStoreHandle(fromVersionJarPaths, _metadataStoreInfo, "model_config_objects" + backupTblSufix)
     _metadataStore = GetDataStoreHandle(fromVersionJarPaths, _metadataStoreInfo, "metadata_objects" + backupTblSufix)
-    _txnIdStore = GetDataStoreHandle(fromVersionJarPaths, _metadataStoreInfo, "transaction_id" + backupTblSufix)
 
     try {
       // Load all metadata objects
       var keys = scala.collection.mutable.Set[Key]()
       var mdlCfgKeys = scala.collection.mutable.Set[Key]()
-      var txnIds = scala.collection.mutable.Set[Key]()
       _metadataStore.getAllKeys({ (key: Key) => keys.add(key) })
       _modelConfigStore.getAllKeys({ (key: Key) => mdlCfgKeys.add(key) })
-      _txnIdStore.getAllKeys({ (key: Key) => txnIds.add(key) })
-      if (keys.size == 0 && mdlCfgKeys.size == 0 && txnIds.size == 0) {
+      if (keys.size == 0 && mdlCfgKeys.size == 0) {
         val szMsg = "No objects available in model_config_objects, transaction_id & metadata_objects"
         logger.warn(szMsg)
         return
@@ -1095,42 +1091,6 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
           case e: Throwable => throw e
         }
       })
-      
-      /*
-      txnIds.foreach(key => {
-        try {
-          val obj = GetObject(key, _txnIdStore)
-          val conf = MdResolve._kryoDataSer.DeserializeObjectFromByteArray(obj.Value.toArray[Byte]).asInstanceOf[Map[String, Any]]
-          val (nameSpace, name) = SplitFullName(KeyAsStr(key))
-
-          val json = (("ObjectType" -> "TransactionInformation") ~
-            ("IsActive" -> "true") ~
-            ("IsDeleted" -> "false") ~
-            ("TransId" -> "0") ~
-            ("OrigDef" -> "") ~
-            ("ObjectDefinition" -> str) ~
-            ("ObjectFormat" -> "") ~
-            ("NameSpace" -> "") ~
-            ("Name" -> "transaction_id") ~
-            ("Version" -> "0") ~
-            ("PhysicalName" -> "") ~
-            ("JarName" -> "") ~
-            ("DependantJars" -> List[String]()))
-
-          val mdlCfg = compact(render(json))
-          if (callbackFunction != null) {
-            val retVal = callbackFunction.call(new MetadataFormat("ConfigDef", mdlCfg))
-            if (retVal == false) {
-              return
-            }
-          }
-        } catch {
-          case e: Exception => throw e
-          case e: Throwable => throw e
-        }
-      })
-      */
-
     } catch {
       case e: Exception => {
         throw new Exception("Failed to load metadata objects", e)
