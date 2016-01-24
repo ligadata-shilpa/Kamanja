@@ -2,6 +2,7 @@
   "clusterConfigFile": "{NewPackageInstallPath}/config/ClusterConfig.json",
   "apiConfigFile": "{NewPackageInstallPath}/config/MetadataAPIConfig.properties",
   "unhandledMetadataDumpDir": "{UnhandledMetadataDumpDir}",
+  "dataSaveThreshold": 1000,
   "migratingFrom": {
     "version": "1.1",
     "versionInstallPath": "{OldPackageInstallPath}",

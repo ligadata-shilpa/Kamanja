@@ -31,15 +31,6 @@ import com.google.gson.Gson;
 // import com.google.gson.GsonBuilder;
 import java.io.FileReader;
 
-/**
- *
- * { "ClusterConfigFile": "", "ApiConfigFile": "", "MigratingFrom": { "Version":
- * "", "VersionInstallPath": "", "ImplemtedClass": "", "Jars": [] },
- * "MigratingTo": { "Version": "", "VersionInstallPath": "", "ImplemtedClass":
- * "", "Jars": [] } }
- *
- */
-
 public class Migrate {
 	String loggerName = this.getClass().getName();
 	Logger logger = LogManager.getLogger(loggerName);
@@ -64,6 +55,7 @@ public class Migrate {
 	}
 
 	class Configuration {
+		int dataSaveThreshold = 1000;
 		String clusterConfigFile = null;
 		String apiConfigFile = null;
 		String unhandledMetadataDumpDir = null;
@@ -591,6 +583,9 @@ public class Migrate {
 				migrateTo.addMetadata(metadataArr, true);
 
 				int kSaveThreshold = 1000;
+
+				if (configuration.dataSaveThreshold > 0)
+					kSaveThreshold = configuration.dataSaveThreshold;
 
 				List<DataFormat> collectedData = new ArrayList<DataFormat>();
 
