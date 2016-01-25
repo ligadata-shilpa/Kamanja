@@ -76,7 +76,7 @@ object LocationWatcher {
 
       try {
         for (i <- 1 to numberOfProcessors) {
-          var processor = new FileProcessor(path,i)
+          var processor = new ExtendedFileProcessor(path,i)
           processor.init(properties)
           val watch_thread = new Thread(processor)
           watch_thread.start
