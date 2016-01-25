@@ -432,13 +432,28 @@ class MigrateTo_V_1_3 extends MigratableTo {
                 MetadataAPIImpl.UploadModelsConfig(mdlCfg, Some[String](namespace), null) // Considering namespace as userid
               }
             }
-            /*
             case "FunctionDef" => {
-              logger.debug("Adding function:" + dispkey)
-              //FIXME:: Yet to handle
-              logger.error("Not yet handled migrating FunctionDef " + objType)
+              val fnCfg = mdObj._2.getOrElse("ObjectDefinition", "").toString
+              if (fnCfg != null && fnCfg.size > 0) {
+                logger.debug("Adding model config:" + dispkey)
+                MetadataAPIImpl.AddFunctions(fnCfg, "JSON", None)
+              }
             }
-*/
+            /*
+            case "JarDef" => {
+              logger.debug("Jar")
+              logger.debug("Adding Jar:" + dispkey)
+              //FIXME:: Yet to handle
+              logger.error("Not yet handled migrating JarDef " + objType)
+            }
+            */
+            /*
+            case "OutputMsgDef" => {
+              logger.debug("Adding the Output Msg: name of the object =>  " + dispkey)
+              //FIXME:: Yet to handle
+              logger.error("Not yet handled migrating OutputMsgDef " + objType)
+            }
+            */
             /*
             case "AttributeDef" => {
               logger.debug("Adding the attribute: name of the object =>  " + dispkey)
@@ -483,11 +498,6 @@ class MigrateTo_V_1_3 extends MigratableTo {
               logger.debug("Adding the Type: name of the object =>  " + dispkey)
             }
 */
-            case "OutputMsgDef" => {
-              logger.debug("Adding the Output Msg: name of the object =>  " + dispkey)
-              //FIXME:: Yet to handle
-              logger.error("Not yet handled migrating OutputMsgDef " + objType)
-            }
             case _ => {
               logger.error("ProcessObject is not implemented for objects of type " + objType)
             }
@@ -499,9 +509,11 @@ class MigrateTo_V_1_3 extends MigratableTo {
     }
   }
 
-  override def addMetadata(allMetadataElemsJson: Array[MetadataFormat], uploadClusterConfig: Boolean): Unit = {
+  override def addMetadata(allMetadataElemsJson: Array[MetadataFormat], uploadClusterConfig: Boolean, excludeMetadata: Array[String]): Unit = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
+
+    val excludedMetadataTypes = if (excludeMetadata != null && excludeMetadata.length > 0) excludeMetadata.map(t => t.toLowerCase.trim).toSet else Set[String]()
 
     // Order metadata to add in the given order.
     // First get all the message & containers And also the excluded types we automatically add when we add messages & containers
@@ -541,7 +553,9 @@ class MigrateTo_V_1_3 extends MigratableTo {
             typesToIgnore += (namespace + ".setof" + name).toLowerCase
             typesToIgnore += (namespace + ".treesetof" + name).toLowerCase
 
-            messages += ((mdf.objType, jsonObjMap))
+            if (excludedMetadataTypes.contains(mdf.objType.toLowerCase()) == false) {
+              messages += ((mdf.objType, jsonObjMap))
+            }
           } else if (mdf.objType == "ContainerDef") {
 
             val namespace = jsonObjMap.getOrElse("NameSpace", "").toString.trim()
@@ -558,9 +572,13 @@ class MigrateTo_V_1_3 extends MigratableTo {
             typesToIgnore += (namespace + ".setof" + name).toLowerCase
             typesToIgnore += (namespace + ".treesetof" + name).toLowerCase
 
-            containers += ((mdf.objType, jsonObjMap))
+            if (excludedMetadataTypes.contains(mdf.objType.toLowerCase()) == false) {
+              containers += ((mdf.objType, jsonObjMap))
+            }
           } else {
-            allTemp += ((mdf.objType, jsonObjMap))
+            if (excludedMetadataTypes.contains(mdf.objType.toLowerCase()) == false) {
+              allTemp += ((mdf.objType, jsonObjMap))
+            }
           }
         }
       }
@@ -578,10 +596,7 @@ class MigrateTo_V_1_3 extends MigratableTo {
         objType == "HashMapTypeDef" ||
         objType == "SetTypeDef" ||
         objType == "ImmutableSetTypeDef" ||
-        objType == "TreeSetTypeDef" ||
-        objType == "JarDef" ||
-        objType == "OutputMsgDef" ||
-        objType == "ConfigDef") {
+        objType == "TreeSetTypeDef") {
         val namespace = jsonObjMap._2.getOrElse("NameSpace", "").toString.trim()
         val name = jsonObjMap._2.getOrElse("Name", "").toString.trim()
 

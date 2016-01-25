@@ -417,6 +417,7 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
             ("DependantJars" -> o.CheckAndGetDependencyJarNames.toList))
           ("MessageDef", compact(render(json)))
         }
+        /*
         case o: MappedMsgTypeDef => {
           val json = (("ObjectType" -> "MappedMsgTypeDef") ~
             ("IsActive" -> o.IsActive.toString) ~
@@ -449,6 +450,7 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
             ("DependantJars" -> o.CheckAndGetDependencyJarNames.toList))
           ("StructTypeDef", compact(render(json)))
         }
+        */
         case o: ContainerDef => {
           val json = (("ObjectType" -> "ContainerDef") ~
             ("IsActive" -> o.IsActive.toString) ~
@@ -459,19 +461,36 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
             ("ObjectFormat" -> ObjFormatType.asString(o.ObjectFormat)) ~
             ("NameSpace" -> o.nameSpace) ~
             ("Name" -> o.name) ~
-            ("Version" -> ver) ~
             ("PhysicalName" -> o.physicalName) ~
             ("JarName" -> getEmptyIfNull(o.jarName)) ~
             ("DependantJars" -> o.CheckAndGetDependencyJarNames.toList))
           ("ContainerDef", compact(render(json)))
         }
         case o: FunctionDef => {
+          val args = if (o.args == null || o.args.size == 0) List[(String, String, String)]() else o.args.map(arg => (arg.name, arg.aType.NameSpace, arg.aType.Name)).toList
+          val features = if (o.features == null || o.features.size == 0) List[String]() else o.features.map(f => f.toString()).toList
+
+          val fnDefJson =
+            ("Functions" ->
+              List(("NameSpace" -> o.nameSpace) ~
+                ("Name" -> o.name) ~
+                ("PhysicalName" -> o.physicalName) ~
+                ("ReturnTypeNameSpace" -> o.retType.nameSpace) ~
+                ("ReturnTypeName" -> o.retType.name) ~
+                ("Arguments" -> args.map(arg => ("ArgName" -> arg._1) ~ ("ArgTypeNameSpace" -> arg._2) ~ ("ArgTypeName" -> arg._3))) ~
+                ("Features" -> features) ~
+                ("Version" -> ver) ~
+                ("JarName" -> getEmptyIfNull(o.jarName)) ~
+                ("DependantJars" -> o.CheckAndGetDependencyJarNames.toList)))
+
+          val fnDefStr = compact(render(fnDefJson))
+
           val json = (("ObjectType" -> "FunctionDef") ~
             ("IsActive" -> o.IsActive.toString) ~
             ("IsDeleted" -> o.IsDeleted.toString) ~
             ("TransId" -> o.TranId.toString) ~
             ("OrigDef" -> o.OrigDef) ~
-            ("ObjectDefinition" -> o.ObjectDefinition) ~
+            ("ObjectDefinition" -> fnDefStr) ~
             ("ObjectFormat" -> ObjFormatType.asString(o.ObjectFormat)) ~
             ("NameSpace" -> o.nameSpace) ~
             ("Name" -> o.name) ~
@@ -657,25 +676,6 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
             ("DependantJars" -> o.CheckAndGetDependencyJarNames.toList))
           ("OutputMsgDef", compact(render(json)))
         }
-        /*
-        case o: ConfigDef => {
-          val json = (("ObjectType" -> "ConfigDef") ~
-            ("IsActive" -> o.IsActive.toString) ~
-            ("IsDeleted" -> o.IsDeleted.toString) ~
-            ("TransId" -> o.TranId.toString) ~
-            ("OrigDef" -> o.OrigDef) ~
-            ("ObjectDefinition" -> o.ObjectDefinition) ~
-            ("ObjectFormat" -> ObjFormatType.asString(o.ObjectFormat)) ~
-            ("NameSpace" -> o.NameSpace) ~
-            ("Name" -> o.name) ~
-            ("Version" -> "0") ~
-            ("PhysicalName" -> "") ~
-            ("JarName" -> getEmptyIfNull(o.jarName)) ~
-            ("DependantJars" -> List[String]()) ~
-            ("ConfigContnent" -> o.contents))
-          ("ConfigDef", compact(render(json)))
-        }
-*/
         case _ => {
           throw new Exception("serializeObjectToJson doesn't support the objects of type objectType of " + mdObj.getClass().getName() + " yet.")
         }
@@ -1000,9 +1000,11 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
   }
 
   // Callback function calls with metadata Object Type & metadata information in JSON string
-  override def getAllMetadataObjs(backupTblSufix: String, callbackFunction: MetadataObjectCallBack): Unit = {
+  override def getAllMetadataObjs(backupTblSufix: String, callbackFunction: MetadataObjectCallBack, excludeMetadata: Array[String]): Unit = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
+
+    val excludedMetadataTypes = if (excludeMetadata != null && excludeMetadata.length > 0) excludeMetadata.map(t => t.toLowerCase.trim).toSet else Set[String]()
 
     val installPath = new File(_srouceInstallPath)
 
@@ -1044,53 +1046,63 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
         val mObj = MdResolve._kryoDataSer.DeserializeObjectFromByteArray(o.toArray[Byte]).asInstanceOf[BaseElem]
         try {
           val (typ, jsonStr) = serializeObjectToJson(mObj)
-          if (callbackFunction != null) {
-            val retVal = callbackFunction.call(new MetadataFormat(typ, jsonStr))
-            if (retVal == false) {
-              return
+
+          if (excludedMetadataTypes.contains(typ.toLowerCase()) == false) {
+            if (callbackFunction != null) {
+              val retVal = callbackFunction.call(new MetadataFormat(typ, jsonStr))
+              if (retVal == false) {
+                return
+              }
             }
+          } else {
+            // This type is excluded
           }
+
         } catch {
           case e: Exception => throw e
           case e: Throwable => throw e
         }
       })
 
-      mdlCfgKeys.foreach(key => {
-        try {
-          val obj = GetObject(key, _modelConfigStore)
-          val conf = MdResolve._kryoDataSer.DeserializeObjectFromByteArray(obj.Value.toArray[Byte]).asInstanceOf[Map[String, Any]]
-          val (nameSpace, name) = SplitFullName(KeyAsStr(key))
+      if (excludedMetadataTypes.contains("ConfigDef".toLowerCase()) == false) {
+        mdlCfgKeys.foreach(key => {
+          try {
+            val obj = GetObject(key, _modelConfigStore)
+            val conf = MdResolve._kryoDataSer.DeserializeObjectFromByteArray(obj.Value.toArray[Byte]).asInstanceOf[Map[String, Any]]
+            val (nameSpace, name) = SplitFullName(KeyAsStr(key))
 
-          implicit val jsonFormats: Formats = DefaultFormats
-          val str = "{\"" + name + "\" :" + Serialization.write(conf) + "}"
+            implicit val jsonFormats: Formats = DefaultFormats
+            val str = "{\"" + name + "\" :" + Serialization.write(conf) + "}"
 
-          val json = (("ObjectType" -> "ConfigDef") ~
-            ("IsActive" -> "true") ~
-            ("IsDeleted" -> "false") ~
-            ("TransId" -> "0") ~
-            ("OrigDef" -> "") ~
-            ("ObjectDefinition" -> str) ~
-            ("ObjectFormat" -> "JSON") ~
-            ("NameSpace" -> nameSpace) ~
-            ("Name" -> name) ~
-            ("Version" -> "0") ~
-            ("PhysicalName" -> "") ~
-            ("JarName" -> "") ~
-            ("DependantJars" -> List[String]()))
+            val json = (("ObjectType" -> "ConfigDef") ~
+              ("IsActive" -> "true") ~
+              ("IsDeleted" -> "false") ~
+              ("TransId" -> "0") ~
+              ("OrigDef" -> "") ~
+              ("ObjectDefinition" -> str) ~
+              ("ObjectFormat" -> "JSON") ~
+              ("NameSpace" -> nameSpace) ~
+              ("Name" -> name) ~
+              ("Version" -> "0") ~
+              ("PhysicalName" -> "") ~
+              ("JarName" -> "") ~
+              ("DependantJars" -> List[String]()))
 
-          val mdlCfg = compact(render(json))
-          if (callbackFunction != null) {
-            val retVal = callbackFunction.call(new MetadataFormat("ConfigDef", mdlCfg))
-            if (retVal == false) {
-              return
+            val mdlCfg = compact(render(json))
+            if (callbackFunction != null) {
+              val retVal = callbackFunction.call(new MetadataFormat("ConfigDef", mdlCfg))
+              if (retVal == false) {
+                return
+              }
             }
+          } catch {
+            case e: Exception => throw e
+            case e: Throwable => throw e
           }
-        } catch {
-          case e: Exception => throw e
-          case e: Throwable => throw e
-        }
-      })
+        })
+      } else {
+        // This type is excluded
+      }
     } catch {
       case e: Exception => {
         throw new Exception("Failed to load metadata objects", e)

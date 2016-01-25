@@ -41,16 +41,13 @@ public class Migrate {
 		String implemtedClass = null;
 		List<String> jars = null;
 
-		VersionConfig(String tversion, String tversionInstallPath,
-				String timplemtedClass, List<String> tjars) {
-			version = tversion;
-			versionInstallPath = tversionInstallPath;
-			implemtedClass = timplemtedClass;
-			jars = tjars;
-		}
-
+		/*
+		 * VersionConfig(String tversion, String tversionInstallPath, String
+		 * timplemtedClass, List<String> tjars) { version = tversion;
+		 * versionInstallPath = tversionInstallPath; implemtedClass =
+		 * timplemtedClass; jars = tjars; }
+		 */
 		VersionConfig() {
-
 		}
 	}
 
@@ -61,17 +58,17 @@ public class Migrate {
 		String unhandledMetadataDumpDir = null;
 		VersionConfig migratingFrom = null;
 		VersionConfig migratingTo = null;
+		List<String> excludeMetadata = null;
+		boolean excludeData = false;
 
-		Configuration(String tclusterConfigFile, String tapiConfigFile,
-				VersionConfig tmigratingFrom, VersionConfig tmigratingTo) {
-			clusterConfigFile = tclusterConfigFile;
-			apiConfigFile = tapiConfigFile;
-			migratingFrom = tmigratingFrom;
-			migratingTo = tmigratingTo;
-		}
-
+		/*
+		 * Configuration(String tclusterConfigFile, String tapiConfigFile,
+		 * VersionConfig tmigratingFrom, VersionConfig tmigratingTo) {
+		 * clusterConfigFile = tclusterConfigFile; apiConfigFile =
+		 * tapiConfigFile; migratingFrom = tmigratingFrom; migratingTo =
+		 * tmigratingTo; }
+		 */
 		Configuration() {
-
 		}
 	}
 
@@ -173,139 +170,6 @@ public class Migrate {
 			}
 		}
 		return null;
-
-		/*
-		 * VersionConfig fromCfg = new VersionConfig("1.1",
-		 * "/data/Kamanja_1.1.3", "com.ligadata.Migrate.MigrateFrom_V_1_1", new
-		 * String[] { "/tmp/Migrate/Migrate/migratebase-1.0.jar",
-		 * "/tmp/Migrate/Migrate/migratefrom_v_1_1_2.10-1.0.jar",
-		 * "/data/Kamanja_1.1.3/bin/KamanjaManager-1.0" }); VersionConfig toCfg
-		 * = new VersionConfig( "1.3", "/data/Kamanja",
-		 * "com.ligadata.Migrate.MigrateTo_V_1_3", new String[] {
-		 * "/tmp/Migrate/Migrate/migratebase-1.0.jar",
-		 * "/tmp/Migrate/Migrate/migrateto_v_1_3_2.11-1.0.jar",
-		 * "/data/Kamanja/lib/system/SaveContainerDataComponent-1.0" });
-		 * Configuration cfg = new Configuration(
-		 * "/tmp/Migrate/config/ClusterConfig.json",
-		 * "/tmp/Migrate/config/MetadataAPIConfig.properties", fromCfg, toCfg);
-		 * return cfg;
-		 */
-
-		/*
-		 * 
-		 * val cfgStr = Source.fromFile(cfgfile).mkString
-		 * 
-		 * var configMap: Map[String, Any] = null
-		 * 
-		 * try { implicit val jsonFormats = DefaultFormats val json =
-		 * parse(cfgStr) logger.debug("Valid json: " + cfgStr)
-		 * 
-		 * configMap = json.values.asInstanceOf[Map[String, Any]] } catch { case
-		 * e: Exception => { logger.error(
-		 * "Failed to parse JSON from input config file:%s.\nInvalid JSON:%s"
-		 * .format(cfgfile, cfgStr), e) throw e } }
-		 * 
-		 * val errSb = new StringBuilder
-		 * 
-		 * val clusterCfgFile = configMap.getOrElse("ClusterConfigFile",
-		 * "").toString.trim if (clusterCfgFile.size == 0) {
-		 * errSb.append("Not found valid ClusterConfigFile key in Configfile:%s\n"
-		 * .format(cfgfile)) } else { val tmpfl = new File(clusterCfgFile) if
-		 * (tmpfl.exists == false || tmpfl.isFile == false) {
-		 * errSb.append("Not found valid ClusterConfigFile key in Configfile:%s\n"
-		 * .format(cfgfile)) } }
-		 * 
-		 * val apiCfgFile = configMap.getOrElse("ApiConfigFile",
-		 * "").toString.trim if (apiCfgFile.size == 0) {
-		 * errSb.append("Not found valid ApiConfigFile key in Configfile:%s\n"
-		 * .format(cfgfile)) } else { val tmpfl = new File(clusterCfgFile) if
-		 * (tmpfl.exists == false || tmpfl.isFile == false) {
-		 * errSb.append("Not found valid ApiConfigFile key in Configfile:%s\n"
-		 * .format(cfgfile)) } }
-		 * 
-		 * var migrateFromConfig: MigrateFromConfig = null val migrateFrom =
-		 * configMap.getOrElse("MigratingFrom", null) if (migrateFrom == null) {
-		 * errSb
-		 * .append("Not found valid MigratingFrom key in Configfile:%s\n".format
-		 * (cfgfile)) } else { var fromMap: Map[String, Any] = null try {
-		 * fromMap = migrateFrom.asInstanceOf[Map[String, Any]] } catch { case
-		 * e: Exception => {
-		 * errSb.append("Not found valid MigratingFrom key in Configfile:%s\n"
-		 * .format (cfgfile)) } case e: Throwable => {
-		 * errSb.append("Not found valid MigratingFrom key in Configfile:%s\n"
-		 * .format(cfgfile)) } }
-		 * 
-		 * if (fromMap != null) { val version = fromMap.getOrElse("Version",
-		 * "").toString.trim if (version.size == 0) { errSb.append(
-		 * "Not found valid Version of MigratingFrom key in Configfile:%s\n"
-		 * .format(cfgfile)) }
-		 * 
-		 * val versionInstallPath = fromMap.getOrElse("VersionInstallPath",
-		 * "").toString.trim if (versionInstallPath.size == 0) { errSb.append(
-		 * "Not found valid VersionInstallPath of MigratingFrom key in Configfile:%s\n"
-		 * .format(cfgfile)) } else { val tmpfl = new File(versionInstallPath)
-		 * if (tmpfl.exists == false || tmpfl.isDirectory == false) {
-		 * errSb.append(
-		 * "Not found valid VersionInstallPath of MigratingFrom key in Configfile:%s\n"
-		 * .format(cfgfile)) } }
-		 * 
-		 * val implemtedClass = fromMap.getOrElse("ImplemtedClass",
-		 * "").toString.trim if (implemtedClass.size == 0) { errSb.append(
-		 * "Not found valid ImplemtedClass of MigratingFrom key in Configfile:%s\n"
-		 * .format(cfgfile)) }
-		 * 
-		 * var jars: List[String] = null val tjars = fromMap.getOrElse("Jars",
-		 * null) if (tjars == null) { errSb.append(
-		 * "Not found valid Jars of MigratingFrom key in Configfile:%s\n"
-		 * .format(cfgfile)) } else { try { jars =
-		 * tjars.asInstanceOf[List[String]] } catch { case e: Exception => {
-		 * errSb
-		 * .append("Not found valid Jars of MigratingFrom key in Configfile:%s\n"
-		 * .format(cfgfile)) } case e: Throwable => { errSb.append(
-		 * "Not found valid Jars of MigratingFrom key in Configfile:%s\n"
-		 * .format(cfgfile)) } } } migrateFromConfig =
-		 * MigrateFromConfig(version, versionInstallPath, implemtedClass, jars)
-		 * } }
-		 * 
-		 * var migrateToConfig: MigrateToConfig = null val migrateTo =
-		 * configMap.getOrElse("MigratingTo", null) if (migrateTo == null) {
-		 * errSb.append
-		 * ("Not found valid MigratingTo key in Configfile:%s\n".format
-		 * (cfgfile)) } else { var toMap: Map[String, Any] = null try { toMap =
-		 * migrateTo.asInstanceOf[Map[String, Any]] } catch { case e: Exception
-		 * => { errSb
-		 * .append("Not found valid MigratingTo key in Configfile:%s\n".format(
-		 * cfgfile )) } case e: Throwable => {
-		 * errSb.append("Not found valid MigratingTo key in Configfile:%s\n"
-		 * .format(cfgfile)) } }
-		 * 
-		 * if (toMap != null) { val version = toMap.getOrElse("Version",
-		 * "").toString.trim if (version.size == 0) { errSb.append(
-		 * "Not found valid Version of MigratingTo key in Configfile:%s\n"
-		 * .format(cfgfile)) }
-		 * 
-		 * val implemtedClass = toMap.getOrElse("ImplemtedClass",
-		 * "").toString.trim if (implemtedClass.size == 0) { errSb.append(
-		 * "Not found valid ImplemtedClass of MigratingTo key in Configfile:%s\n"
-		 * .format(cfgfile)) }
-		 * 
-		 * var jars: List[String] = null val tjars = toMap.getOrElse("Jars",
-		 * null) if (tjars == null) {
-		 * errSb.append("Not found valid Jars of MigratingTo key in Configfile:%s\n"
-		 * .format(cfgfile)) } else { try { jars =
-		 * tjars.asInstanceOf[List[String]] } catch { case e: Exception => {
-		 * errSb
-		 * .append("Not found valid Jars of MigratingTo key in Configfile:%s\n"
-		 * .format(cfgfile)) } case e: Throwable => {
-		 * errSb.append("Not found valid Jars of MigratingTo key in Configfile:%s\n"
-		 * .format(cfgfile)) } } } migrateToConfig = MigrateToConfig(version,
-		 * implemtedClass, jars) } }
-		 * 
-		 * if (errSb.size > 0) { logger.error(errSb.toString) sys.exit(1) }
-		 * 
-		 * Configuration(clusterCfgFile, apiCfgFile, migrateFromConfig,
-		 * migrateToConfig)
-		 */
 	}
 
 	void usage() {
@@ -410,6 +274,9 @@ public class Migrate {
 				usage();
 				System.exit(1);
 			}
+
+			// Modify canUpgradeData depending on exclude flag
+			canUpgradeData = (canUpgradeData && configuration.excludeData == false);
 
 			int srcJarsCnt = configuration.migratingFrom.jars.size();
 			URL[] srcLoaderUrls = new URL[srcJarsCnt];
@@ -569,9 +436,18 @@ public class Migrate {
 				migrateTo.dropStatusTables(statusDelTbls
 						.toArray(new TableName[statusDelTbls.size()]));
 
-			if (canUpgradeMetadata)
-				migrateFrom
-						.getAllMetadataObjs(backupTblSufix, new MdCallback());
+			String[] excludeMetadata = new String[0];
+			if (configuration.excludeMetadata != null
+					&& configuration.excludeMetadata.size() > 0) {
+				excludeMetadata = configuration.excludeMetadata
+						.toArray((new String[configuration.excludeMetadata
+								.size()]));
+			}
+
+			if (canUpgradeMetadata) {
+				migrateFrom.getAllMetadataObjs(backupTblSufix,
+						new MdCallback(), excludeMetadata);
+			}
 
 			MetadataFormat[] metadataArr = allMetadata
 					.toArray(new MetadataFormat[allMetadata.size()]);
@@ -579,9 +455,10 @@ public class Migrate {
 			if (canUpgradeData)
 				migrateTo.dropMessageContainerTablesFromMetadata(metadataArr);
 
-			if (canUpgradeData) {
-				migrateTo.addMetadata(metadataArr, true);
+			if (canUpgradeMetadata)
+				migrateTo.addMetadata(metadataArr, true, excludeMetadata);
 
+			if (canUpgradeData) {
 				int kSaveThreshold = 1000;
 
 				if (configuration.dataSaveThreshold > 0)

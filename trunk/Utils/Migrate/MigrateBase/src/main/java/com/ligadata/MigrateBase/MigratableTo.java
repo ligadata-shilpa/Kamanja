@@ -32,7 +32,7 @@ public interface MigratableTo {
   public abstract void dropDataTables(TableName[] tblsToDrop);
   public abstract void dropStatusTables(TableName[] tblsToDrop);
   public abstract void dropMessageContainerTablesFromMetadata(MetadataFormat[] allMetadataElemsJson);
-  public abstract void addMetadata(MetadataFormat[] allMetadataElemsJson, boolean uploadClusterConfig);
+  public abstract void addMetadata(MetadataFormat[] allMetadataElemsJson, boolean uploadClusterConfig, String[] excludeMetadata);
   public abstract void populateAndSaveData(DataFormat[] data);
   public abstract void shutdown();
 }
