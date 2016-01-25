@@ -24,7 +24,7 @@ class PosixFileHandler extends FileHandler{
   private var fileFullPath = ""
   def fullPath = fileFullPath
 
-  private var fileObject = new File(fileFullPath)
+  def fileObject = new File(fileFullPath)
   private var bufferedReader: BufferedReader = null
   //private var in: InputStreamReader = null
   private var in: InputStream = null
@@ -95,6 +95,7 @@ class PosixFileHandler extends FileHandler{
       return false
     }
     try {
+      logger.info(s"PosixFileHandler - Moving file ${fileObject.toString} to ${newFilePath}")
       val destFileObj = new File(newFilePath)
 
       if (fileObject.exists()) {
@@ -166,6 +167,7 @@ class PosixChangesMonitor(val REFRESH_RATE : Int, modifiedFileCallback:(FileHand
       breakable {
         while (true) {
           try {
+            logger.info(s"Watching directory $targetFolder")
             val dir = new File(targetFolder)
             checkExistingFiles(dir)
             errorWaitTime = 1000
@@ -201,9 +203,13 @@ class PosixChangesMonitor(val REFRESH_RATE : Int, modifiedFileCallback:(FileHand
             val changeType = New
             val fileHandler = new PosixFileHandler(file.toString)
             //call the callback for new files
+            logger.info(s"A new file found ${fileHandler.fullPath}")
             modifiedFileCallback(fileHandler, changeType)
           }
       })
+    }
+    else{
+      logger.warn(d.toString + " is not a directory or does not exist")
     }
   }
 
