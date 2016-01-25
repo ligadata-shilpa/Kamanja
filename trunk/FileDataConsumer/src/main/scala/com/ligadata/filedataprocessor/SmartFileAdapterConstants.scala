@@ -34,4 +34,10 @@ object SmartFileAdapterConstants {
   val CORRUPTED_FILE = "Corrupted_File_Detected,"
   val FILE_BUFFERING_TIMEOUT = "fileBufferingTimeout"
 
+  val FILE_SYSTEM = "fileSystem"
+  val AUTH_USER="authUser"
+  val AUTH_PASS="authPass"
+
+  val HOST = "host"
+
 }
