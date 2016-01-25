@@ -59,6 +59,9 @@ class MessageGenerator {
         messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + msgConstants.getByNameFuncForMapped)
         messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + msgConstants.getOrElseFuncForMapped)
         messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + msgConstants.setByNameFuncForMappedMsgs)
+        messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + setFuncGenerationforMapped(message.Elements))
+        messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + getFuncGenerationForMapped(message.Elements))
+        messageGenerator = messageGenerator.append(builderGenerator.generatorBuilder(message))
         messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.closeBrace)
 
       }
@@ -155,7 +158,7 @@ class MessageGenerator {
   }
 
   /*
-   * Get Method generation function
+   * Get Method generation function for Fixed Messages
    */
   private def getFuncGeneration(fields: List[Element]): String = {
     var getMethod = new StringBuilder(8 * 1024)
@@ -180,7 +183,7 @@ class MessageGenerator {
   }
 
   /*
-   * Set Method Generation Function
+   * Set Method Generation Function for Fixed Messages
    */
   private def setFuncGeneration(fields: List[Element]): String = {
     var setMethod = new StringBuilder(8 * 1024)
@@ -470,6 +473,54 @@ class MessageGenerator {
 
     return ""
 
+  }
+
+  /*
+   * Set Method Generation Function for Mapped Messages
+   */
+  private def setFuncGenerationforMapped(fields: List[Element]): String = {
+    var setMethod = new StringBuilder(8 * 1024)
+    var setmethodStr: String = ""
+    try {
+      fields.foreach(field => {
+        setmethodStr = """   def set""" + field.Name.capitalize + """(value: """ + field.FieldTypePhysicalName + """): Unit = {
+        	fields("""" + field.Name + """") = value;
+        }
+        """
+        setMethod = setMethod.append(setmethodStr.toString())
+      })
+    } catch {
+      case e: Exception => {
+        val stackTrace = StackTrace.ThrowableTraceString(e)
+        log.debug("StackTrace:" + stackTrace)
+        throw e
+      }
+    }
+    return setMethod.toString
+  }
+
+  /*
+   * Get Method generation function
+   */
+  private def getFuncGenerationForMapped(fields: List[Element]): String = {
+    var getMethod = new StringBuilder(8 * 1024)
+    var getmethodStr: String = ""
+    try {
+      fields.foreach(field => {
+        getmethodStr = """    def get""" + field.Name.capitalize + """: """ + field.FieldTypePhysicalName + """= {
+        	return fields(""" + field.Name + """");
+        }          
+        """
+        getMethod = getMethod.append(getmethodStr.toString())
+      })
+    } catch {
+      case e: Exception => {
+        val stackTrace = StackTrace.ThrowableTraceString(e)
+        log.debug("StackTrace:" + stackTrace)
+        throw e
+      }
+    }
+    return getMethod.toString
   }
 
 }
