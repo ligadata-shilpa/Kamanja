@@ -44,6 +44,7 @@ object ModelService {
 
     /**
       * Add the supplied model to the metadata.
+      *
       * @param input the path of the model to be ingested
       * @param dep model configuration indicator
       * @param userid the optional userId. If security and auditing in place this parameter is required.
@@ -137,6 +138,7 @@ object ModelService {
 
     /**
       * Add the supplied model to the metadata.
+      *
       * @param input The input path of the model to be ingested
       * @param dep model configuration
       * @param userid the optional userId. If security and auditing in place this parameter is required.
@@ -283,6 +285,7 @@ object ModelService {
 
     /**
      * Add a new Kamanja Pmml model to the metadata.
+     *
      * @param input the path of the pmml to be added as a new model
      * @param userid the optional userId. If security and auditing in place this parameter is required.
      * @return the result of the operation
@@ -339,6 +342,7 @@ object ModelService {
 
     /**
      * Update a Kamanja Pmml model in the metadata with new pmml
+     *
      * @param input the path of the pmml model to be used for the update
      * @param userid the optional userId. If security and auditing in place this parameter is required.
      * @return the result of the operation
@@ -441,6 +445,7 @@ object ModelService {
 
     /**
      * Update a model in the metadata with the supplied Java model
+     *
      * @param input the path of the model to be used in the model update
      * @param dep the model compile config indication
      * @param userid the optional userId. If security and auditing in place this parameter is required.
@@ -539,6 +544,7 @@ object ModelService {
 
     /**
      * Update a model in the metadata with the supplied Scala model
+     *
      * @param input the path of the model to be updated
      * @param dep the compile config indication
      * @param userid the optional userId. If security and auditing in place this parameter is required.
@@ -635,6 +641,7 @@ object ModelService {
 
     /**
      * Get the supplied model key from the metadata.
+     *
      * @param param the namespace.name.version of the model definition to be fetched
      * @param userid the optional userId. If security and auditing in place this parameter is required.
      * @return the result of the operation - a JSON string representation of the ModelDef
@@ -706,6 +713,7 @@ object ModelService {
 
     /**
      * Remove the model with the supplied namespace.name.ver from the metadata.
+     *
      * @param modelId the namespace.name.version of the model to remove. If an empty string present list to choose from
      * @param userid the optional userId. If security and auditing in place this parameter is required.
      * @return the result of the operation
@@ -713,65 +721,48 @@ object ModelService {
     def removeModel(modelId: String = ""
                   , userid: Option[String] = Some("metadataapi")
                   ): String ={
-        var response=""
-        try {
+        val response : String = try {
           //  logger.setLevel(Level.TRACE); //check again
           if (modelId.length > 0) {
             val (ns, name, ver) = com.ligadata.kamanja.metadata.Utils.parseNameToken(modelId)
-            try {
-              val apiResult = MetadataAPIImpl.RemoveModel(s"$ns.$name", ver, userid)
-              return apiResult
+            val result : String = try {
+              MetadataAPIImpl.RemoveModel(s"$ns.$name", ver, userid)
             } catch {
-              case e: Exception => e.printStackTrace()
+              case e: Exception => {
+                  val stackTrace = StackTrace.ThrowableTraceString(e)
+                  stackTrace
+              }
             }
-          }
-
-          val modelKeys = MetadataAPIImpl.GetAllModelsFromCache(true, None)
-
-          if (modelKeys.length == 0) {
-            val errorMsg = "Sorry, No models available, in the Metadata, to delete!"
-            response = errorMsg
+            result
           } else {
-            println("\nPick the model to be deleted from the following list: ")
-            var srno = 0
-            for (modelKey <- modelKeys) {
-              srno += 1
-              println("[" + srno + "] " + modelKey)
-            }
-            println("Enter your choice: ")
-            val choice: Int = StdIn.readInt()
 
+              val modelKeys = MetadataAPIImpl.GetAllModelsFromCache(true, None)
 
-            if (modelKeys.length == 0) {
-              val errorMsg = "Sorry, No models available, in the Metadata, to delete!"
-              response = errorMsg
-            }
-            else {
-              println("\nPick the model to be deleted from the following list: ")
-              var srno = 0
-              for (modelKey <- modelKeys) {
-                srno += 1
-                println("[" + srno + "] " + modelKey)
+              if (modelKeys.length == 0) {
+                "Sorry, No models available, in the Metadata, to delete!"
+              } else {
+                  println("\nPick the model to be deleted from the following list: ")
+                  var srno = 0
+                  for (modelKey <- modelKeys) {
+                      srno += 1
+                      println("[" + srno + "] " + modelKey)
+                  }
+                  println("Enter your choice: ")
+                  val choice: Int = StdIn.readInt()
+
+                  if (choice < 1 || choice > modelKeys.length) {
+                      "Invalid choice " + choice + ". Start with the main menu."
+                  } else {
+                      val modelKey = modelKeys(choice - 1)
+                      val (ns, name, ver) = com.ligadata.kamanja.metadata.Utils.parseNameToken(modelKey)
+                      MetadataAPIImpl.RemoveModel(s"$ns.$name", ver, userid)
+                  }
               }
-              println("Enter your choice: ")
-              val choice: Int = StdIn.readInt()
-
-              if (choice < 1 || choice > modelKeys.length) {
-                val errormsg = "Invalid choice " + choice + ". Start with the main menu."
-                response = errormsg
-              }
-
-              val modelKey = modelKeys(choice - 1)
-              val (ns, name, ver) = com.ligadata.kamanja.metadata.Utils.parseNameToken(modelKey)
-              val apiResult = MetadataAPIImpl.RemoveModel(s"$ns.$name", ver, userid)
-              response = apiResult
-            }
-
           }
         } catch {
             case e: Exception => {
-              //e.printStackTrace
-              response = e.getStackTrace.toString
+                val stackTrace = StackTrace.ThrowableTraceString(e)
+                stackTrace
             }
         }
         response
@@ -779,6 +770,7 @@ object ModelService {
 
     /**
      * Activate the model supplied
+     *
      * @param modelId the namespace.name.version of the model to activate. If an empty string present list to choose from
      * @param userid the optional userId. If security and auditing in place this parameter is required.
      * @return the result of the operation
@@ -834,6 +826,7 @@ object ModelService {
 
     /**
      * Deactivate the supplied model if given.  If not given present a menu of the active models from which to choose.
+     *
      * @param modelId the namespace.name.version of the model to deactivate. If an empty string present list to choose from
      * @param userid the optional userId. If security and auditing in place this parameter is required. the optional userId. If security and auditing in place this parameter is required.
      * @return the result of the operation
@@ -891,6 +884,7 @@ object ModelService {
 
     /**
      * Is the supplied directory path valid?
+     *
      * @param dirName directory path
      * @return true if it is
      */
