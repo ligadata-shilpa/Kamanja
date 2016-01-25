@@ -631,7 +631,7 @@ class MigrateFrom_V_1_2 extends MigratableFrom {
 */
 
   // Callback function calls with metadata Object Type & metadata information in JSON string
-  override def getAllMetadataObjs(backupTblSufix: String, callbackFunction: MetadataObjectCallBack): Unit = {
+  override def getAllMetadataObjs(backupTblSufix: String, callbackFunction: MetadataObjectCallBack, excludeMetadata: Array[String]): Unit = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
 
