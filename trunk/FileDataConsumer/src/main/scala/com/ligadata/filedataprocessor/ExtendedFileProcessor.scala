@@ -6,6 +6,8 @@ import com.ligadata.Exceptions.{ MissingPropertyException, StackTrace }
 import com.ligadata.MetadataAPI.MetadataAPIImpl
 import com.ligadata.ZooKeeper.CreateClient
 import com.ligadata.filedataprocessor.FileChangeType._
+import com.ligadata.filedataprocessor.FsType.FsType
+import com.ligadata.filedataprocessor.sftp.{SftpChangesMonitor, SftpConnectionConfig}
 import com.ligadata.kamanja.metadata.MessageDef
 import org.apache.curator.framework.CuratorFramework
 import org.apache.logging.log4j.{ Logger, LogManager }
@@ -53,6 +55,12 @@ object ExtendedFileProcessor {
   var dirToWatch: String = _
   var targetMoveDir: String = _
   var readyToProcessKey: String = _
+
+  var fsType : FsType = null
+  private var authUser : String = ""
+  private var authPass : String = ""
+  private var host : String = ""
+
 
   var globalFileMonitorService: ExecutorService = Executors.newFixedThreadPool(3)
   val DEBUG_MAIN_CONSUMER_THREAD_ACTION = 1000
@@ -186,6 +194,15 @@ object ExtendedFileProcessor {
     dirToWatch = props.getOrElse(SmartFileAdapterConstants.DIRECTORY_TO_WATCH, null)
     targetMoveDir = props.getOrElse(SmartFileAdapterConstants.DIRECTORY_TO_MOVE_TO, null)
     readyToProcessKey = props.getOrElse(SmartFileAdapterConstants.READY_MESSAGE_MASK, ".gzip")
+
+    val fs = props.getOrElse(SmartFileAdapterConstants.FILE_SYSTEM, null)
+    fsType = FileHandler.getFsType(fs)
+    println(s"fs=$fs")
+    println(s"fsType=${fsType.toString}")
+
+    authUser = props.getOrElse(SmartFileAdapterConstants.AUTH_USER, null)
+    authPass = props.getOrElse(SmartFileAdapterConstants.AUTH_PASS, null)
+    host = props.getOrElse(SmartFileAdapterConstants.HOST, null)
   }
 
   def markFileProcessing (fileName: String, offset: Int, createDate: Long): Unit = {
@@ -454,14 +471,19 @@ object ExtendedFileProcessor {
       }*/
 
       import FsType._
-      import FileChangeType._
-      val fstype = FileHandler.getFsType(dirToWatch)
-      fstype match{
+      //import FileChangeType._
+
+      fsType match{
         case POSIX =>
           val dirMonitor = new PosixChangesMonitor(REFRESH_RATE, processFile)
           dirMonitor.monitorDirChanges(dirToWatch, Array(AlreadyExisting, New))
 
-          //TODO : handle other fs types : need to get config for hdfs/sftp
+        case SFTP=>
+          val sftpConfig = new SftpConnectionConfig(host, authUser, authPass)
+          val dirMonitor = new SftpChangesMonitor(sftpConfig, REFRESH_RATE, processFile)
+          dirMonitor.monitorDirChanges(dirToWatch, Array(AlreadyExisting, New))
+
+          //TODO : handle other fs types : need to get config for hdfs
         case _ => throw new Exception("Unsopported file sytesm")
       }
 
@@ -687,6 +709,13 @@ class ExtendedFileProcessor(val path: Path, val partitionId: Int) extends Runnab
   private var throttleTime: Int = 0
   private var isRecoveryOps = true
 
+  //new configurable properties
+  private var authUser : String = ""
+  private var authPass : String = ""
+  private var host : String = ""
+
+  private var fsType : FsType = null
+
   /**
     * Called by the Directory Listener to initialize
     * @param props
@@ -704,6 +733,14 @@ class ExtendedFileProcessor(val path: Path, val partitionId: Int) extends Runnab
     var msgName = props.getOrElse(SmartFileAdapterConstants.MESSAGE_NAME, null)
     var kafkaBroker = props.getOrElse(SmartFileAdapterConstants.KAFKA_BROKER, null)
     kafkaTopic = props.getOrElse(SmartFileAdapterConstants.KAFKA_TOPIC, null)
+
+    authUser = props.getOrElse(SmartFileAdapterConstants.AUTH_USER, null)
+    authPass = props.getOrElse(SmartFileAdapterConstants.AUTH_PASS, null)
+    host = props.getOrElse(SmartFileAdapterConstants.HOST, null)
+
+    val fs = props.getOrElse(SmartFileAdapterConstants.FILE_SYSTEM, null)
+    fsType = FileHandler.getFsType(fs)
+
     // Bail out if dirToWatch, Topic are not set
     if (kafkaTopic == null) {
       logger.error("SMART_FILE_CONSUMER ("+partitionId+") Kafka Topic to populate must be specified")
@@ -733,6 +770,25 @@ class ExtendedFileProcessor(val path: Path, val partitionId: Int) extends Runnab
       logger.error("SMART_FILE_CONSUMER ("+partitionId+") Directory to watch must be specified")
       shutdown
       throw new MissingPropertyException("Missing Paramter: " + SmartFileAdapterConstants.KAFKA_BROKER, null)
+    }
+
+    import FsType._
+    if(fsType == SFTP){
+      if (host == null) {
+        logger.error("SMART_FILE_CONSUMER SFTP host must be specified")
+        shutdown
+        throw new MissingPropertyException("Missing Paramter: " + SmartFileAdapterConstants.HOST, null)
+      }
+      if (authUser == null) {
+        logger.error("SMART_FILE_CONSUMER SFTP user must be specified")
+        shutdown
+        throw new MissingPropertyException("Missing Paramter: " + SmartFileAdapterConstants.AUTH_USER, null)
+      }
+      if (authPass == null) {
+        logger.error("SMART_FILE_CONSUMER SFTP pass must be specified")
+        shutdown
+        throw new MissingPropertyException("Missing Paramter: " + SmartFileAdapterConstants.AUTH_PASS, null)
+      }
     }
 
     ExtendedFileProcessor.setProperties(props, path)
@@ -936,7 +992,8 @@ class ExtendedFileProcessor(val path: Path, val partitionId: Int) extends Runnab
     */
   private def readBytesChunksFromFile(file: EnqueuedFileHandler): Unit = {
 
-    val buffer = new Array[Char](maxlen)
+    val byteBuffer = new Array[Byte](maxlen)
+
     var readlen = 0
     var len: Int = 0
     var totalLen = 0
@@ -945,6 +1002,7 @@ class ExtendedFileProcessor(val path: Path, val partitionId: Int) extends Runnab
     val fileName = file.fileHandler.fullPath
     val offset = file.offset
     val partMap = file.partMap
+    val fileHandler = file.fileHandler
 
     // Start the worker bees... should only be started the first time..
     if (workerBees == null) {
@@ -960,16 +1018,17 @@ class ExtendedFileProcessor(val path: Path, val partitionId: Int) extends Runnab
 
     // Grab the InputStream from the file and start processing it.  Enqueue the chunks onto the BufferQ for the
     // worker bees to pick them up.
-    //var bis: InputStream = new ByteArrayInputStream(Files.readAllBytes(Paths.get(fileName)))
-    var bis: BufferedReader = null
+
+    //var bis: BufferedReader = null
     try {
       val tokenName = fileName.split("/")
-      val fullFileName = dirToWatch + "/" + tokenName(tokenName.size - 1)
+      /*val fullFileName = dirToWatch + "/" + tokenName(tokenName.size - 1)
       if (isCompressed(fullFileName)) {
         bis = new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(fullFileName))))
       } else {
         bis = new BufferedReader(new InputStreamReader(new FileInputStream(fullFileName)))
-      }
+      }*/
+      fileHandler.openForRead()
     } catch {
       case fio: IOException => {
         logger.error("SMART_FILE_CONSUMER (" + partitionId + ") Exception accessing the file for processing the file ",fio)
@@ -1005,23 +1064,26 @@ class ExtendedFileProcessor(val path: Path, val partitionId: Int) extends Runnab
       BufferCounters.inMemoryBuffersCntr.incrementAndGet() // Incrementing when we enQBuffer and Decrementing when we deQMsg
       var isLastChunk = false
       try {
-        readlen = bis.read(buffer, 0, maxlen - 1)
+        readlen = fileHandler.read(byteBuffer, maxlen - 1)
         // if (readlen < (maxlen - 1)) isLastChunk = true
       } catch {
         case ze: ZipException => {
           logger.error("Failed to read file, file currupted " + fileName, ze)
+          val buffer = FileProcessorUtils.toCharArray(byteBuffer)
           val BufferToChunk = new BufferToChunk(readlen, buffer.slice(0, readlen), chunkNumber, fileName, ExtendedFileProcessor.CORRUPT_FILE, isLastChunk, partMap)
           enQBuffer(BufferToChunk)
           return
         }
         case ioe: IOException => {
           logger.error("Failed to read file " + fileName, ioe)
+          val buffer = FileProcessorUtils.toCharArray(byteBuffer)
           val BufferToChunk = new BufferToChunk(readlen, buffer.slice(0, readlen), chunkNumber, fileName, ExtendedFileProcessor.BROKEN_FILE, isLastChunk, partMap)
           enQBuffer(BufferToChunk)
           return
         }
         case e: Exception => {
           logger.error("Failed to read file, file currupted " + fileName, e)
+          val buffer = FileProcessorUtils.toCharArray(byteBuffer)
           val BufferToChunk = new BufferToChunk(readlen, buffer.slice(0, readlen), chunkNumber, fileName, ExtendedFileProcessor.CORRUPT_FILE, isLastChunk, partMap)
           enQBuffer(BufferToChunk)
           return
@@ -1030,6 +1092,7 @@ class ExtendedFileProcessor(val path: Path, val partitionId: Int) extends Runnab
       if (readlen > 0) {
         totalLen += readlen
         len += readlen
+        val buffer = FileProcessorUtils.toCharArray(byteBuffer)
         val BufferToChunk = new BufferToChunk(readlen, buffer.slice(0, readlen), chunkNumber, fileName, offset, isLastChunk, partMap)
         enQBuffer(BufferToChunk)
         chunkNumber += 1
@@ -1066,8 +1129,8 @@ class ExtendedFileProcessor(val path: Path, val partitionId: Int) extends Runnab
     // Done with this file... mark is as closed
     try {
       // markFileAsFinished(fileName)
-      if (bis != null) bis.close
-      bis = null
+      if (fileHandler != null) fileHandler.close
+      //bis = null
     } catch {
       case ioe: IOException => {
         logger.warn("SMART FILE CONSUMER: partition " + partitionId + " Unable to detect file as being processed " + fileName)

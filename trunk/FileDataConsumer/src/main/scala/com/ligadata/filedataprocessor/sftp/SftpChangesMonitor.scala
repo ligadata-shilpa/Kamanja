@@ -183,7 +183,6 @@ class SftpFileHandler extends FileHandler{
      } 
      catch {
        case ex : Exception => {
-        ex.printStackTrace()
         logger.error(ex.getMessage)
         return false 
        }
@@ -207,14 +206,42 @@ class SftpFileHandler extends FileHandler{
 
   @throws(classOf[IOException])
   def length : Long = {
-    val remoteFile = manager.resolveFile(createConnectionString(sftpConnectionConfig, fullPath), createDefaultOptions())
-    remoteFile.getContent.getSize
+    try {
+      manager = new StandardFileSystemManager()
+      manager.init()
+      val remoteFile = manager.resolveFile(createConnectionString(sftpConnectionConfig, fullPath), createDefaultOptions())
+      remoteFile.getContent.getSize
+    }
+    catch {
+      case ex : Exception => {
+        logger.error(ex.getMessage)
+        return 0
+      }
+
+    } finally {
+      if(manager!=null)
+        manager.close()
+    }
   }
 
   @throws(classOf[IOException])
   def lastModified : Long = {
-    val remoteFile = manager.resolveFile(createConnectionString(sftpConnectionConfig, fullPath), createDefaultOptions())
-    remoteFile.getContent.getLastModifiedTime
+    try {
+      manager = new StandardFileSystemManager()
+      manager.init()
+      val remoteFile = manager.resolveFile(createConnectionString(sftpConnectionConfig, fullPath), createDefaultOptions())
+      remoteFile.getContent.getLastModifiedTime
+    }
+    catch {
+      case ex : Exception => {
+        logger.error(ex.getMessage)
+        return -1
+      }
+
+    } finally {
+      if(manager!=null)
+        manager.close()
+    }
   }
 }
 

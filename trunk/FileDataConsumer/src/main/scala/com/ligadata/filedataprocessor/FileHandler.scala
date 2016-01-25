@@ -17,7 +17,7 @@ object FsType extends Enumeration {
 import FsType._
 
 object FileHandler{
-  def getFsType(path : String) : FsType = {
+  /*def getFsType(path : String) : FsType = {
     if(path.toLowerCase.startsWith("sftp"))
       SFTP
     else if(path.toLowerCase.startsWith("hdfs"))
@@ -26,6 +26,18 @@ object FileHandler{
       POSIX
     else
       POSIX // in case path does not start with any protocol. ignoring other types like http
+  }*/
+  def getFsType(fs : String) : FsType = {
+    if(fs == null)
+      POSIX
+    if(fs.toLowerCase == "sftp")
+      SFTP
+    else if(fs.toLowerCase == "hdfs")
+      HDFS
+    else if(fs.toLowerCase == "file")
+      POSIX
+    else
+      POSIX // default
   }
 }
 
