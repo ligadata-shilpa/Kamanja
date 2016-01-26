@@ -70,6 +70,10 @@ object Root {
 class Root {
   val packagename: String = null
   val version: String = "0.0.1"
+
+  val imports: Array[Import] = Array.empty[Import]
+  val transformations: Array[Transformation] = Array.empty[Transformation]
+
   val inputs: Array[Input] = Array.empty[Input]
   val filters: Array[Filter] = Array.empty[Filter]
   val outputs: Array[Output] = Array.empty[Output]

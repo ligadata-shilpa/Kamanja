@@ -94,8 +94,6 @@ class CompilerBuilder {
   }
 }
 
-
-
 /* Translates a jtm (json) file(s) into scala classes
  *
  */

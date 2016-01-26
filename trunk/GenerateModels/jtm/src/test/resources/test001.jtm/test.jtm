@@ -4,7 +4,7 @@
   "imports": [ "com.ligadata.Utils._" ],
   "transformation": [
     {
-      "input": "com.ligadata.kamanja.samples.messages.msg1",
+      "input": { "typename": "com.ligadata.kamanja.samples.messages.msg1" },
 
       "variables": [ { "name": "out3", "type": "System.Int" } ],
 
