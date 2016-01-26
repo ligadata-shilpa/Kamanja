@@ -1,3 +1,4 @@
+
 /*
  * Copyright 2016 ligaDATA
  *
@@ -19,38 +20,39 @@ import com.ligadata.KamanjaBase._
 import com.ligadata.KvBase.TimeRange
 import com.ligadata.kamanja.metadata.ModelDef;
 
-// Normalize the name
-import com.ligadata.kamanja.samples.messages.{msg1 ⇒ input1}
-import com.ligadata.kamanja.samples.messages.{msg1 ⇒ output1}
+import com.ligadata.kamanja.samples.messages.{msg1 ⇒ input0}
+import com.ligadata.kamanja.samples.messages.{msg1 ⇒ output0}
 
 class Factory(modelDef: ModelDef, nodeContext: NodeContext) extends ModelInstanceFactory(modelDef, nodeContext) {
   // if more than 1 input we have to find the correct instance
-  override def isValidMessage(msg: MessageContainerBase): Boolean = return msg.isInstanceOf[import1]
+  override def isValidMessage(msg: MessageContainerBase): Boolean = return msg.isInstanceOf[input0]
   override def createModelInstance(): ModelInstance = return new Model(this)
 
   // Provided in json
-  override def getModelName: String = "com.ligadata.jtm.test.filter"
+  override def getModelName: String = "filter"
   override def getVersion: String = "0.0.1"
 
   override def createResultObject(): ModelResultBase = new MappedModelResults()
 }
 
+
 class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
 
    override def execute(txnCtxt: TransactionContext, outputDefault: Boolean): ModelResultBase = {
 
-     // Get input, if more than 1 input we have to find the correct instance
-     var input1 : msg1 =  txnCtxt.getMessage().asInstanceOf[input1]
+    var input0: input0 = txnCtxt.getMessage().asInstanceOf[input0]
 
-     // Filter condition, shortcut evaluation
-     if(!(score != -1 && score < 100))
+
+    {
+      using input0
+      if(!(score != -1 && score < 100))
         return null;
+    }
+    var result: Array[Result] = Array[Result](new Result("id", input0.id), new Result("name", input0.name), new Result("score", input0.score), new Result("transactionid", input0.transactionid))
+    factory.createResultObject().asInstanceOf[MappedModelResults].withResults(result)
 
-     /// Produce output
-     var result: Array[Result] =
-        Array[Result](new Result("Id", output1.id), new Result("Name", output1.Name), new Result("Score", output1.score))
 
-     // Return output
-     return factory.createResultObject().asInstanceOf[MappedModelResults].withResults(result)
    }
+
+
 }

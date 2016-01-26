@@ -15,7 +15,11 @@
  */
 package com.ligadata.jtm
 
+import com.ligadata.kamanja.metadata.{StructTypeDef, MdMgr}
+import com.ligadata.kamanja.metadataload.MetadataLoad
+import com.ligadata.messagedef.MessageDefImpl
 import org.apache.logging.log4j.{ Logger, LogManager }
+import org.json4s.jackson.JsonMethods._
 import org.rogach.scallop._
 import org.apache.commons.io.FileUtils
 import java.io.File
@@ -77,9 +81,12 @@ class CompilerBuilder {
   def setSuppressTimestamps(switch: Boolean = true) = { suppressTimestamps = switch; this}
   def setInputFile(filename: String) = { inputFile = filename; this }
   def setOutputFile(filename: String) = { outputFile = filename; this }
+  def setMetadataLocation(filename: String) = { metadataLocation = filename; this }
 
   var inputFile : String = null
   var outputFile : String = null
+  var metadataLocation : String = null
+
   var suppressTimestamps : Boolean = false
 
   def build() : Compiler = {
@@ -99,6 +106,34 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     (elements.dropRight(1).mkString("."), elements.last)
   }
 
+  def loadMetadata() = {
+
+    val typesPath : String = ""
+    val fcnPath : String = ""
+    val attrPath : String = ""
+    val msgCtnPath : String = ""
+    val mgr : MdMgr = MdMgr.GetMdMgr
+
+    val mdLoader = new MetadataLoad (mgr, typesPath, fcnPath, attrPath, msgCtnPath)
+    mdLoader.initialize
+
+    val jsonFile = params.metadataLocation +  "/messages/message_type.json"
+    val json = FileUtils.readFileToString(new File(jsonFile), null)
+    val map = parse(json).values.asInstanceOf[Map[String, Any]]
+
+    val msg = new MessageDefImpl()
+    val ((classStrVer, classStrVerJava), msgDef, (classStrNoVer, classStrNoVerJava)) = msg.processMsgDef(json, "JSON", mgr, false)
+    val msg1 = msgDef.asInstanceOf[com.ligadata.kamanja.metadata.MessageDef]
+    mgr.AddMsg(msg1)
+    mgr
+  }
+
+  // Load metadata
+  val md = loadMetadata
+
+  //md.dump
+  //val m = md.Message("com.ligadata.kamanja.samples.messages.msg1", 0, true)
+  //logger.trace("Found: {}", m.toString())
   val suppressTimestamps: Boolean = params.suppressTimestamps // Suppress timestamps
   val inputFile: String = params.inputFile // Input file to compile
   val outputFile: String = params.outputFile // Output file to write
@@ -110,6 +145,8 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
     val sb = new StringBuilder
     sb.append(Parts.header)
+    sb.append("\n")
+    sb.append("package com.ligadata.jtm.test.filter\n")
 
     // Push substituions
     var subtitutions = new Substitution
@@ -118,11 +155,15 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
     val imports = subtitutions.Run(Parts.imports)
     sb.append(imports)
-    sb.append("\n")
-    
-    val factory = subtitutions.Run(Parts.factory)
-    sb.append(factory)
-    sb.append("\n")
+    sb.append("\n\n")
+
+    // Check Inputs
+    //
+    //<TBD>
+
+    // Check outputs
+    //
+    //<TBD>
 
     // Constructs the input and output types
     val inputs = root.inputs.zipWithIndex.map( p => {
@@ -139,15 +180,50 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     sb.append(outputs)
     sb.append("\n")
 
-    // Read the output type information
+    val factory = subtitutions.Run(Parts.factory)
+    sb.append(factory)
+    sb.append("\n\n")
 
-    // Construct input
+    // Read the output type information
+    val output = md.Message(root.inputs(0).typename, 0, true)
+
+    // Read input type information
+    val input = md.Message(root.outputs(0).typename, 0, true)
+
+    // Simplified, we only have a single message
+    val msgeval = "    var input0: input0 = txnCtxt.getMessage().asInstanceOf[input0]\n\n"
 
     // Construct filter
+    val filters = root.filters.map( e => {
+      val f = """
+                |    {
+                |      using input0
+                |      if(!(%s))
+                |        return null;
+                |    }""".stripMargin.format(e.expression)
+      f
+    }).mkString("\n") + "\n"
+
+    // Construct result
+    // Simplified, we con't construct output1 yet
+    //
+    val members = output.get.containerType.asInstanceOf[StructTypeDef].memberDefs
 
     // Construct output
+    val outputElements = members.map( e => {
+      "new Result(\"%s\", input0.%s)".format(e.Name, e.Name)
+    }).mkString(", ")
+    val outputResult = "    var result: Array[Result] = Array[Result](%s)\n    factory.createResultObject().asInstanceOf[MappedModelResults].withResults(result)\n".format(outputElements)
+
+    subtitutions.Add("model.code", msgeval + filters + outputResult)
+    subtitutions.Add("model.methods", "")
+
+    val model = subtitutions.Run(Parts.model)
+    sb.append(model)
+    sb.append("\n")
 
     // Write to output file
+    logger.trace("Output to file {}", outputFile)
     FileUtils.writeStringToFile(new File(outputFile), sb.result)
 
     outputFile

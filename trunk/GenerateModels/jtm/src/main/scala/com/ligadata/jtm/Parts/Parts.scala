@@ -7,7 +7,7 @@ object Parts {
 
   val header =
     """
-      | /*
+      |/*
       | * Copyright 2016 ligaDATA
       | *
       | * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,21 +21,19 @@ object Parts {
       | * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
       | * See the License for the specific language governing permissions and
       | * limitations under the License.
-      | */
-    """.stripMargin
+      | */""".stripMargin
 
   val imports =
     """
       |import com.ligadata.KamanjaBase._
       |import com.ligadata.KvBase.TimeRange
-      |import com.ligadata.kamanja.metadata.ModelDef;
-    """.stripMargin
+      |import com.ligadata.kamanja.metadata.ModelDef;""".stripMargin
 
   val factory =
     """
       |class Factory(modelDef: ModelDef, nodeContext: NodeContext) extends ModelInstanceFactory(modelDef, nodeContext) {
       |  // if more than 1 input we have to find the correct instance
-      |  override def isValidMessage(msg: MessageContainerBase): Boolean = return msg.isInstanceOf[import1]
+      |  override def isValidMessage(msg: MessageContainerBase): Boolean = return msg.isInstanceOf[input0]
       |  override def createModelInstance(): ModelInstance = return new Model(this)
       |
       |  // Provided in json
@@ -43,8 +41,7 @@ object Parts {
       |  override def getVersion: String = "{model.version}"
       |
       |  override def createResultObject(): ModelResultBase = new MappedModelResults()
-      |}
-    """.stripMargin
+      |}""".stripMargin
 
   val model =
     """
@@ -55,10 +52,8 @@ object Parts {
       |{model.code}
       |
       |   }
-      |
       |{model.methods}
       |
-      |}
-    """.stripMargin
+      |}""".stripMargin
 
 }
