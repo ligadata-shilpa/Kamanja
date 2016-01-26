@@ -24,12 +24,12 @@ import java.nio.file.StandardCopyOption.REPLACE_EXISTING
 import java.nio.file.Files.copy
 import java.nio.file.Paths.get
 
-/*case class BufferLeftoversArea(workerNumber: Int, leftovers: Array[Char], relatedChunk: Int)
-case class BufferToChunk(len: Int, payload: Array[Char], chunkNumber: Int, relatedFileName: String, firstValidOffset: Int, isEof: Boolean, partMap: scala.collection.mutable.Map[Int,Int])
-case class KafkaMessage(msg: Array[Char], offsetInFile: Int, isLast: Boolean, isLastDummy: Boolean, relatedFileName: String, partMap: scala.collection.mutable.Map[Int,Int])
+case class BufferLeftoversArea(workerNumber: Int, leftovers: Array[Char], relatedChunk: Int)
+case class BufferToChunk(len: Int, payload: Array[Char], chunkNumber: Int, relatedFileHandler: FileHandler, firstValidOffset: Int, isEof: Boolean, partMap: scala.collection.mutable.Map[Int,Int])
+case class KafkaMessage(msg: Array[Char], offsetInFile: Int, isLast: Boolean, isLastDummy: Boolean, relatedFileHandler: FileHandler, partMap: scala.collection.mutable.Map[Int,Int])
 case class EnqueuedFile(name: String, offset: Int, createDate: Long,  partMap: scala.collection.mutable.Map[Int,Int])
 case class FileStatus(status: Int, offset: Long, createDate: Long)
-case class OffsetValue (lastGoodOffset: Int, partitionOffsets: Map[Int,Int])*/
+case class OffsetValue (lastGoodOffset: Int, partitionOffsets: Map[Int,Int])
 case class EnqueuedFileHandler(fileHandler: FileHandler, offset: Int, createDate: Long,  partMap: scala.collection.mutable.Map[Int,Int])
 
 /**
@@ -659,9 +659,9 @@ object ExtendedFileProcessor {
 /**
   * Counter of buffers used by the FileProcessors... there is a limit on how much memory File Consumer can use up.
   */
-/*object BufferCounters {
+object BufferCounters {
   val inMemoryBuffersCntr = new java.util.concurrent.atomic.AtomicLong()
-}*/
+}
 
 /**
   *
@@ -873,7 +873,7 @@ class ExtendedFileProcessor(val path: Path, val partitionId: Int) extends Runnab
     var msgNum: Int = 0
     var myLeftovers: BufferLeftoversArea = null
     var buffer: BufferToChunk = null;
-    var fileNameToProcess: String = ""
+    var fileHandlerToProcess: FileHandler = null
     var isEofBuffer = false
 
     // basically, keep running until shutdown.
@@ -887,9 +887,9 @@ class ExtendedFileProcessor(val path: Path, val partitionId: Int) extends Runnab
       // If the buffer is there to process, do it
       if (buffer != null) {
         // If the new file being processed, reset offsets to messages in this file to 0.
-        if (!fileNameToProcess.equalsIgnoreCase(buffer.relatedFileName)) {
+        if (fileHandlerToProcess == null || !fileHandlerToProcess.fullPath.equalsIgnoreCase(buffer.relatedFileHandler.fullPath)) {
           msgNum = 0
-          fileNameToProcess = buffer.relatedFileName
+          fileHandlerToProcess = buffer.relatedFileHandler
           isEofBuffer = false
         }
 
@@ -904,10 +904,10 @@ class ExtendedFileProcessor(val path: Path, val partitionId: Int) extends Runnab
           // Broken File is recoverable, CORRUPTED FILE ISNT!!!!!
           if (buffer.firstValidOffset == ExtendedFileProcessor.BROKEN_FILE) {
             logger.error("SMART FILE CONSUMER (" + partitionId + "): Detected a broken file")
-            messages.add(new KafkaMessage(Array[Char](), ExtendedFileProcessor.BROKEN_FILE, true, true, buffer.relatedFileName, buffer.partMap))
+            messages.add(new KafkaMessage(Array[Char](), ExtendedFileProcessor.BROKEN_FILE, true, true, buffer.relatedFileHandler, buffer.partMap))
           } else {
             logger.error("SMART FILE CONSUMER (" + partitionId + "): Detected a broken file")
-            messages.add(new KafkaMessage(Array[Char](), ExtendedFileProcessor.CORRUPT_FILE, true, true, buffer.relatedFileName, buffer.partMap))
+            messages.add(new KafkaMessage(Array[Char](), ExtendedFileProcessor.CORRUPT_FILE, true, true, buffer.relatedFileHandler, buffer.partMap))
           }
         } else {
           // Look for messages.
@@ -920,7 +920,7 @@ class ExtendedFileProcessor(val path: Path, val partitionId: Int) extends Runnab
 
                 // Ok, we could be in recovery, so we have to ignore some messages, but these ignoraable messages must still
                 // appear in the leftover areas
-                messages.add(new KafkaMessage(newMsg, buffer.firstValidOffset, false, false, buffer.relatedFileName,  buffer.partMap))
+                messages.add(new KafkaMessage(newMsg, buffer.firstValidOffset, false, false, buffer.relatedFileHandler,  buffer.partMap))
 
                 prevIndx = indx + 1
               }
@@ -947,13 +947,13 @@ class ExtendedFileProcessor(val path: Path, val partitionId: Int) extends Runnab
             var firstMsgWithLefovers: KafkaMessage = null
             if (isEofBuffer) {
               if (leftOvers.size > 0) {
-                firstMsgWithLefovers = new KafkaMessage(leftOvers, buffer.firstValidOffset, false, false, buffer.relatedFileName, buffer.partMap)
+                firstMsgWithLefovers = new KafkaMessage(leftOvers, buffer.firstValidOffset, false, false, buffer.relatedFileHandler, buffer.partMap)
                 messages.add(firstMsgWithLefovers)
                 enQMsg(messages.toArray, beeNumber)
               }
             } else {
               if (messages.size > 0) {
-                firstMsgWithLefovers = new KafkaMessage(leftOvers ++ msgArray(0).msg, msgArray(0).offsetInFile, false, false, buffer.relatedFileName, msgArray(0).partMap)
+                firstMsgWithLefovers = new KafkaMessage(leftOvers ++ msgArray(0).msg, msgArray(0).offsetInFile, false, false, buffer.relatedFileHandler, msgArray(0).partMap)
                 msgArray(0) = firstMsgWithLefovers
                 enQMsg(msgArray, beeNumber)
               }
@@ -1070,22 +1070,22 @@ class ExtendedFileProcessor(val path: Path, val partitionId: Int) extends Runnab
         case ze: ZipException => {
           logger.error("Failed to read file, file currupted " + fileName, ze)
           val buffer = FileProcessorUtils.toCharArray(byteBuffer)
-          val BufferToChunk = new BufferToChunk(readlen, buffer.slice(0, readlen), chunkNumber, fileName, ExtendedFileProcessor.CORRUPT_FILE, isLastChunk, partMap)
-          enQBuffer(BufferToChunk)
+          val GenericBufferToChunk = new BufferToChunk(readlen, buffer.slice(0, readlen), chunkNumber, fileHandler, ExtendedFileProcessor.CORRUPT_FILE, isLastChunk, partMap)
+          enQBuffer(GenericBufferToChunk)
           return
         }
         case ioe: IOException => {
           logger.error("Failed to read file " + fileName, ioe)
           val buffer = FileProcessorUtils.toCharArray(byteBuffer)
-          val BufferToChunk = new BufferToChunk(readlen, buffer.slice(0, readlen), chunkNumber, fileName, ExtendedFileProcessor.BROKEN_FILE, isLastChunk, partMap)
-          enQBuffer(BufferToChunk)
+          val GenericBufferToChunk = new BufferToChunk(readlen, buffer.slice(0, readlen), chunkNumber, fileHandler, ExtendedFileProcessor.BROKEN_FILE, isLastChunk, partMap)
+          enQBuffer(GenericBufferToChunk)
           return
         }
         case e: Exception => {
           logger.error("Failed to read file, file currupted " + fileName, e)
           val buffer = FileProcessorUtils.toCharArray(byteBuffer)
-          val BufferToChunk = new BufferToChunk(readlen, buffer.slice(0, readlen), chunkNumber, fileName, ExtendedFileProcessor.CORRUPT_FILE, isLastChunk, partMap)
-          enQBuffer(BufferToChunk)
+          val GenericBufferToChunk = new BufferToChunk(readlen, buffer.slice(0, readlen), chunkNumber, fileHandler, ExtendedFileProcessor.CORRUPT_FILE, isLastChunk, partMap)
+          enQBuffer(GenericBufferToChunk)
           return
         }
       }
@@ -1093,12 +1093,12 @@ class ExtendedFileProcessor(val path: Path, val partitionId: Int) extends Runnab
         totalLen += readlen
         len += readlen
         val buffer = FileProcessorUtils.toCharArray(byteBuffer)
-        val BufferToChunk = new BufferToChunk(readlen, buffer.slice(0, readlen), chunkNumber, fileName, offset, isLastChunk, partMap)
-        enQBuffer(BufferToChunk)
+        val GenericBufferToChunk = new BufferToChunk(readlen, buffer.slice(0, readlen), chunkNumber, fileHandler, offset, isLastChunk, partMap)
+        enQBuffer(GenericBufferToChunk)
         chunkNumber += 1
       } else {
-        val BufferToChunk = new BufferToChunk(readlen, Array[Char](message_separator), chunkNumber, fileName, offset, true, partMap)
-        enQBuffer(BufferToChunk)
+        val GenericBufferToChunk = new BufferToChunk(readlen, Array[Char](message_separator), chunkNumber, fileHandler, offset, true, partMap)
+        enQBuffer(GenericBufferToChunk)
         chunkNumber += 1
       }
 
@@ -1118,7 +1118,7 @@ class ExtendedFileProcessor(val path: Path, val partitionId: Int) extends Runnab
           logger.warn("SMART FILE CONSUMER: partition " + partitionId + ": NON-EMPTY final leftovers, this really should not happend... check the file ")
         } else {
           val messages: scala.collection.mutable.LinkedHashSet[KafkaMessage] = scala.collection.mutable.LinkedHashSet[KafkaMessage]()
-          messages.add(new KafkaMessage(null, 0, true, true, fileName, scala.collection.mutable.Map[Int,Int]()))
+          messages.add(new KafkaMessage(null, 0, true, true, fileHandler, scala.collection.mutable.Map[Int,Int]()))
           enQMsg(messages.toArray, 1000)
         }
         foundRelatedLeftovers = true
