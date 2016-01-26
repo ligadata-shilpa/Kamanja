@@ -209,7 +209,7 @@ public class Migrate {
 				return;
 			}
 
-			String backupTblSufix = ".bak";
+			String backupTblSufix = "_migrate_bak";
 
 			String cfgfile = "";
 			if (args[0].equalsIgnoreCase("--config")) {

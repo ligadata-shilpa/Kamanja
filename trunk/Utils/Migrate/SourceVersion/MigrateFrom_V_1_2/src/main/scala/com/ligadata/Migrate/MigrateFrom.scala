@@ -677,7 +677,10 @@ class MigrateFrom_V_1_2 extends MigratableFrom {
 
       callGetData(_metadataStore, "metadata_objects" + backupTblSufix, buildMdlOne)
 
+      logger.debug("Collected all metadata objects from " + "metadata_objects" + backupTblSufix)
+
       if (excludedMetadataTypes.contains("ConfigDef".toLowerCase()) == false) {
+        logger.debug("Collecting all model configuration objects from " + "model_config_objects" + backupTblSufix)
         val buildMdlCfglOne = (k: Key, v: Value) => {
           val conf = kryoDataSer.DeserializeObjectFromByteArray(v.serializedInfo).asInstanceOf[Map[String, Any]]
 
