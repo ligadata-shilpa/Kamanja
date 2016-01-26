@@ -1,0 +1,21 @@
+{
+  "transformation": [{
+    "input": "com.ligadata.kamanja.samples.messages.msg1",
+    "output": [{ "message": "com.ligadata.kamanja.samples.messages.msg1", mapping: [ (in1, out1), (in2, out2), (in3, out4) ],
+    "filter": { "????" : "score != -1 && score < 100" },
+    "compute": [{out3, "iplookup(in1).zipcode"]},
+    {message: outMsg2, mapping: [{in1, out2}]}]},
+
+
+
+
+{ input: InpMsg2,
+  output: [
+  {
+    message: outMsg2,
+    mapping: []
+  }
+}
+}]
+}
+}
