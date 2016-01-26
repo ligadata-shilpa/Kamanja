@@ -1,0 +1,55 @@
+{
+  "Message": {
+    "NameSpace": "System",
+    "Name": "JpmmlAdapterMsg",
+    "Version": "00.01.00",
+    "Description": "JpmmlAdapter faux data message (needed to build the adapter)",
+    "Fixed": "true",
+    "Persist": "true",
+    "Elements": [
+      {
+        "Field": {
+          "Name": "serialnumber",
+          "Type": "System.Double"
+        }
+      },
+      {
+        "Field": {
+          "Name": "sepal_length",
+          "Type": "System.Double"
+        }
+      },
+      {
+        "Field": {
+          "Name": "sepal_width",
+          "Type": "System.Double"
+        }
+      },
+      {
+        "Field": {
+          "Name": "petal_length",
+          "Type": "System.Double"
+        }
+      },
+      {
+        "Field": {
+          "Name": "petal_width",
+          "Type": "System.Double"
+        }
+      },
+      {
+        "Field": {
+          "Name": "irisClass",
+          "Type": "System.String"
+        }
+      }
+    ],
+    "PartitionKey": [
+      "serialnumber"
+    ],
+    "PrimaryKey": [
+      "serialnumber"
+    ]
+  }
+}
+

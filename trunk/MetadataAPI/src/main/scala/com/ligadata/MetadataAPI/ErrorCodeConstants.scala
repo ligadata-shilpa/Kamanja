@@ -160,6 +160,7 @@ object ErrorCodeConstants {
    val Get_Model_From_DB_Failed = "Failed to fetch Model from DB";
    val Get_Model_From_DB_Successful = "Successfully fetched Model form DB";
    val Model_Compilation_Failed = "Model Compilation Failed, see compliation errors in the log"
+   val Model_ReCompilation_Failed = "Model Recompilation due to message update has failed"
    
    // Functions
    val Remove_Function_Failed_Not_Found = "Failed to delete an existing Function"

@@ -68,6 +68,7 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
             LOG.debug("Model:" + tup._1)
             val md = tup._2
             val mInfo = map.getOrElse(tup._1, null)
+
             var newInfo: (String, MdlInfo, Boolean, ModelInstance, Boolean) = null
             if (mInfo != null) {
               // Make sure previous model version is same as the current model version
@@ -134,7 +135,8 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
                 newInst = tInst
                 newInst.init(uk)
               }
-              models(i) = ((mInfo._1, mInfo._2, isReusable, newInst, true))
+              val msgTypeWasChecked : Boolean = true
+              models(i) = (mInfo._1, mInfo._2, isReusable, newInst, msgTypeWasChecked)
             }
           }
           validateMsgsForMdls += msgFullName
@@ -167,6 +169,7 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
                 LOG.error("Failed to create model " + md.mdl.getModelName())
               }
             } else {
+                /** message was not interesting to md... */
             }
           } catch {
             case e: Exception => {

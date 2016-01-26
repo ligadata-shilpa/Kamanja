@@ -19,6 +19,7 @@ package com.ligadata.MetadataAPI
 import java.io.{ ByteArrayOutputStream, _ }
 
 import com.esotericsoftware.kryo.io.{ Input, Output }
+import com.ligadata.MetadataAPI.MetadataAPI.ModelType
 import com.ligadata.Serialize._
 import com.ligadata.ZooKeeper._
 import com.ligadata.KvBase.{ Key, Value, TimeRange }
@@ -758,7 +759,7 @@ println("Getting Messages")
 
       val modKey = modKeys(choice - 1)
       val(modNameSpace, modName, modVersion) = com.ligadata.kamanja.metadata.Utils.parseNameToken(modKey)
-      val apiResult = MetadataAPIImpl.RemoveModel(modNameSpace, modName, modVersion.toLong, userid)
+      val apiResult = MetadataAPIImpl.RemoveModel(s"$modNameSpace.$modName", modVersion, userid)
 
       //   val apiResultStr = MetadataAPIImpl.getApiResult(apiResult)
       println("Result as Json String => \n" + apiResult)
@@ -873,7 +874,7 @@ println("Getting Messages")
 
       val modKey = modKeys(choice - 1)
       val(modNameSpace, modName, modVersion) = com.ligadata.kamanja.metadata.Utils.parseNameToken(modKey)
-      val apiResult = MetadataAPIImpl.RemoveModel(modNameSpace, modName, modVersion.toLong, userid)
+      val apiResult = MetadataAPIImpl.RemoveModel(s"$modNameSpace.$modName", modVersion, userid)
 
       //    val apiResultStr = MetadataAPIImpl.getApiResult(apiResult)
       println("Result as Json String => \n" + apiResult)
@@ -1310,7 +1311,7 @@ println("Getting Messages")
       }
 
       var pmmlFilePath = ""
-      println("Pick a Model Definition file(pmml) from the below choice")
+      println("Pick a Model Definition file(kpmml) from the below choice")
 
       var seq = 0
       pmmlFiles.foreach(key => { seq += 1; println("[" + seq + "] " + key) })
@@ -1333,7 +1334,7 @@ println("Getting Messages")
       println(pmmlStr)
       // Save the model
       //    MetadataAPIImpl.SetLoggerLevel(Level.TRACE)
-      println("Results as json string => \n" + MetadataAPIImpl.UpdateModel(pmmlStr, userid))
+      println("Results as json string => \n" + MetadataAPIImpl.UpdateModel(ModelType.KPMML, pmmlStr, userid))
     } catch {
       case e: Exception => {
         val stackTrace = StackTrace.ThrowableTraceString(e)
@@ -1453,12 +1454,12 @@ println("Getting Messages")
       println("CHOSE " + (choice2-1) + "  "+modelConfigName)
       
       if( op.equalsIgnoreCase("add") ){
-	println("Results as json string => \n" + 
-		MetadataAPIImpl.AddModelFromSource(sourceStr, "java", modelConfigName, userid))
+            println("Results as json string => \n" +
+                MetadataAPIImpl.AddModel(ModelType.JAVA, sourceStr, userid, Some(modelConfigName)))
       }
       else{
 	println("Results as json string => \n" + 
-		MetadataAPIImpl.UpdateModel(sourceStr, "java", modelConfigName, userid))
+		MetadataAPIImpl.UpdateModel(ModelType.JAVA, sourceStr, userid, Some(modelConfigName)))
       }
     } catch {
       case e: AlreadyExistsException => {
@@ -1543,12 +1544,12 @@ println("Getting Messages")
       println("CHOSE " + (choice2-1) + "  "+modelConfigName)
      
       if( op.equalsIgnoreCase("add") ){
-	println("Results as json string => \n" +
-	      MetadataAPIImpl.AddModelFromSource(sourceStr, "scala", modelConfigName, userid))
+	       println("Results as json string => \n" +
+	         MetadataAPIImpl.AddModel(ModelType.SCALA, sourceStr, userid, Some(modelConfigName)))
       }
-      else{
-	println("Results as json string => \n" +
-	      MetadataAPIImpl.UpdateModel(sourceStr, "scala", modelConfigName, userid))
+      else {
+	       println("Results as json string => \n" +
+	         MetadataAPIImpl.UpdateModel( ModelType.SCALA, sourceStr, userid, Some(modelConfigName)))
       }
 	
     } catch {
@@ -1580,7 +1581,7 @@ println("Getting Messages")
       }
 
       var pmmlFilePath = ""
-      println("Pick a Model Definition file(pmml) from below choices")
+      println("Pick a Model Definition file(kpmml) from below choices")
 
       var seq = 0
       pmmlFiles.foreach(key => { seq += 1; println("[" + seq + "] " + key) })
@@ -1603,7 +1604,7 @@ println("Getting Messages")
       // Save the model
       // MetadataAPIImpl.SetLoggerLevel(Level.TRACE)
 
-      println("Results as json string => \n" + MetadataAPIImpl.AddModel(pmmlStr, userid))
+      println("Results as json string => \n" + MetadataAPIImpl.AddModel(ModelType.KPMML, pmmlStr, userid, None))
     } catch {
       case e: AlreadyExistsException => {
         logger.error("Model Already in the metadata....")

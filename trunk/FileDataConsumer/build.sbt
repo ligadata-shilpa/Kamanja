@@ -64,17 +64,7 @@ libraryDependencies ++= {
   val akkaVersion = "2.3.9"
   val scalaVersion= "2.11.7"
   Seq(
-   // "io.spray" %% "spray-can" % sprayVersion,
-   // "io.spray" %% "spray-routing" % sprayVersion,
-   // "io.spray" %% "spray-testkit" % sprayVersion,
-   // "io.spray" %% "spray-client" % sprayVersion,
-   // "io.spray" %%  "spray-json" % "1.3.2",
-
     "org.apache.kafka" %% "kafka" % "0.8.2.2",
-  //  "com.typesafe.akka" %% "akka-actor" % akkaVersion,
-  //  "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
-   // "ch.qos.logback" % "logback-classic" % "1.0.12",
-  //  "org.apache.camel" % "camel-core" % "2.9.2",
     "org.scala-lang" % "scala-actors" % scalaVersion
   )
 }
