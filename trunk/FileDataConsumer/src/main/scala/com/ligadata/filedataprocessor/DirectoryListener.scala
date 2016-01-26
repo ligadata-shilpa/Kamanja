@@ -55,7 +55,7 @@ object LocationWatcher {
         numberOfProcessors = numberOfProcessorsRaw.toInt
       }
 
-      var processors: Array[FileProcessor] = new Array[FileProcessor](numberOfProcessors)
+      //var processors: Array[FileProcessor] = new Array[FileProcessor](numberOfProcessors)
       var threads: Array[Thread] = new Array[Thread](numberOfProcessors)
       var path: Path= null
       try {

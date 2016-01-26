@@ -33,7 +33,7 @@ import scala.concurrent.Promise
  * Created by danielkozin on 9/24/15.
  */
 class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable.Map[String, String]) {
-  var fileBeingProcessed: String = ""
+  var fileHandlerBeingProcessed: FileHandler = null
   var numberOfMessagesProcessedInFile: Int = 0
   var currentOffset: Int = 0
   var startFileProcessingTimeStamp: Long = 0
@@ -99,14 +99,14 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
     if (messages.size == 0) return
 
     // If we start processing a new file, then mark so in the zk.
-    if (fileBeingProcessed.compareToIgnoreCase(messages(0).relatedFileName) != 0) {
+    if (fileHandlerBeingProcessed == null || fileHandlerBeingProcessed.fullPath.compareToIgnoreCase(messages(0).relatedFileHandler.fullPath) != 0) {
       numberOfMessagesProcessedInFile = 0
       currentOffset = 0
       numberOfValidEvents = 0
       startFileProcessingTimeStamp = 0 //scala.compat.Platform.currentTime
-      fileBeingProcessed = messages(0).relatedFileName
+      fileHandlerBeingProcessed = messages(0).relatedFileHandler
       recPartitionMap = messages(0).partMap
-      val fileTokens = fileBeingProcessed.split("/")
+      val fileTokens = fileHandlerBeingProcessed.fullPath.split("/")
       ExtendedFileProcessor.addToZK(fileTokens(fileTokens.size - 1), 0)
     }
 
@@ -118,20 +118,20 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
     var isLast = false
     messages.foreach(msg => {
       if (msg.offsetInFile == ExtendedFileProcessor.BROKEN_FILE) {
-        logger.error("SMART FILE ADAPTER "+ partIdx +": aborting kafka data push for " + msg.relatedFileName + " last successful offset for this file is "+ numberOfValidEvents)
-        val tokenName = msg.relatedFileName.split("/")
+        logger.error("SMART FILE ADAPTER "+ partIdx +": aborting kafka data push for " + msg.relatedFileHandler.fullPath + " last successful offset for this file is "+ numberOfValidEvents)
+        val tokenName = msg.relatedFileHandler.fullPath.split("/")
         ExtendedFileProcessor.setFileOffset(tokenName(tokenName.size - 1), numberOfValidEvents)
-        fileBeingProcessed = ""
+        fileHandlerBeingProcessed = null
         return
       }
 
       if (msg.offsetInFile == ExtendedFileProcessor.CORRUPT_FILE) {
-        logger.error("SMART FILE ADAPTER "+ partIdx +": aborting kafka data push for " + msg.relatedFileName + " Unrecoverable file corruption detected")
-        val tokenName = msg.relatedFileName.split("/")
+        logger.error("SMART FILE ADAPTER "+ partIdx +": aborting kafka data push for " + msg.relatedFileHandler.fullPath + " Unrecoverable file corruption detected")
+        val tokenName = msg.relatedFileHandler.fullPath.split("/")
         ExtendedFileProcessor.markFileProcessingEnd(tokenName(tokenName.size - 1))
-        writeGenericMsg("Corrupt file detected", msg.relatedFileName, inConfiguration(SmartFileAdapterConstants.KAFKA_STATUS_TOPIC))
-        closeOutFile(msg.relatedFileName)
-        fileBeingProcessed = ""
+        writeGenericMsg("Corrupt file detected", msg.relatedFileHandler.fullPath, inConfiguration(SmartFileAdapterConstants.KAFKA_STATUS_TOPIC))
+        closeOutFile(msg.relatedFileHandler)
+        fileHandlerBeingProcessed = null
         return
       }
 
@@ -199,17 +199,17 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
     if (isLast)
       sendToKafka(keyMessages, "msgPush1", numberOfValidEvents)
     else
-      sendToKafka(keyMessages, "msgPush2", (numberOfValidEvents - messages.size), fileBeingProcessed)
+      sendToKafka(keyMessages, "msgPush2", (numberOfValidEvents - messages.size), fileHandlerBeingProcessed.fullPath)
 
     // Make sure you dont write extra for DummyLast
     if (!isLast) {
-      writeStatusMsg(fileBeingProcessed)
-      val fileTokens = fileBeingProcessed.split("/")
+      writeStatusMsg(fileHandlerBeingProcessed.fullPath)
+      val fileTokens = fileHandlerBeingProcessed.fullPath.split("/")
       ExtendedFileProcessor.addToZK(fileTokens(fileTokens.size - 1), numberOfValidEvents)
     } else {
       // output the status message to the KAFAKA_STATUS_TOPIC
-      writeStatusMsg(fileBeingProcessed, true)
-      closeOutFile(fileBeingProcessed)
+      writeStatusMsg(fileHandlerBeingProcessed.fullPath, true)
+      closeOutFile(fileHandlerBeingProcessed)
       numberOfMessagesProcessedInFile = 0
       currentOffset = 0
       startFileProcessingTimeStamp = 0
@@ -288,7 +288,7 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
         // We can now fail for some messages, so, we need to update the recovery area in ZK, to make sure the retry does not
         // process these messages.
         if (fileToUpdate != null) {
-          val fileTokens = fileBeingProcessed.split("/")
+          val fileTokens = fileHandlerBeingProcessed.fullPath.split("/")
           ExtendedFileProcessor.addToZK(fileTokens(fileTokens.size - 1), fullSuccessOffset, partitionsStats)
         }
       }
@@ -332,32 +332,36 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
   }
   /**
    *
-   * @param fileName
+   * @param fileHandler
    */
-  private def closeOutFile(fileName: String): Unit = {
+  private def closeOutFile(fileHandler: FileHandler): Unit = {
     try {
-      logger.info("SMART FILE CONSUMER ("+partIdx+") - cleaning up after " + fileName)
+      logger.info("SMART FILE CONSUMER ("+partIdx+") - cleaning up after " + fileHandler.fullPath)
       // Either move or rename the file.
-      val fileStruct = fileName.split("/")
+      val fileStruct = fileHandler.fullPath.split("/")
 
       if (inConfiguration.getOrElse(SmartFileAdapterConstants.DIRECTORY_TO_MOVE_TO, null) != null) {
-        logger.info("SMART FILE CONSUMER ("+partIdx+") Moving File" + fileName + " to " + inConfiguration(SmartFileAdapterConstants.DIRECTORY_TO_MOVE_TO))
-        Files.copy(Paths.get(inConfiguration(SmartFileAdapterConstants.DIRECTORY_TO_WATCH) + "/" + fileStruct(fileStruct.size - 1)), Paths.get(inConfiguration(SmartFileAdapterConstants.DIRECTORY_TO_MOVE_TO) + "/" + fileStruct(fileStruct.size - 1)), REPLACE_EXISTING)
-        Files.deleteIfExists(Paths.get(inConfiguration(SmartFileAdapterConstants.DIRECTORY_TO_WATCH) + "/" + fileStruct(fileStruct.size - 1)))
+        val newPath = inConfiguration(SmartFileAdapterConstants.DIRECTORY_TO_MOVE_TO) + "/" + fileStruct(fileStruct.size - 1)
+        logger.info("SMART FILE CONSUMER ("+partIdx+") Moving File" + fileHandler.fullPath + " to " + inConfiguration(SmartFileAdapterConstants.DIRECTORY_TO_MOVE_TO))
+        //Files.copy(Paths.get(inConfiguration(SmartFileAdapterConstants.DIRECTORY_TO_WATCH) + "/" + fileStruct(fileStruct.size - 1)), Paths.get(inConfiguration(SmartFileAdapterConstants.DIRECTORY_TO_MOVE_TO) + "/" + fileStruct(fileStruct.size - 1)), REPLACE_EXISTING)
+        //Files.deleteIfExists(Paths.get(inConfiguration(SmartFileAdapterConstants.DIRECTORY_TO_WATCH) + "/" + fileStruct(fileStruct.size - 1)))
+        fileHandler.moveTo(newPath)
       } else {
-        logger.info(" SMART FILE CONSUMER ("+partIdx+")  Renaming file " + fileName + " to " + fileName + "_COMPLETE")
-        (new File(inConfiguration(SmartFileAdapterConstants.DIRECTORY_TO_WATCH) + "/" + fileStruct(fileStruct.size - 1))).renameTo(new File(fileName + "_COMPLETE"))
+        val newPath = inConfiguration(SmartFileAdapterConstants.DIRECTORY_TO_WATCH) + "/" + fileStruct(fileStruct.size - 1) + "_COMPLETE"
+        logger.info(" SMART FILE CONSUMER ("+partIdx+")  Renaming file " + fileHandler.fullPath + " to " + newPath)
+        //(new File(inConfiguration(SmartFileAdapterConstants.DIRECTORY_TO_WATCH) + "/" + fileStruct(fileStruct.size - 1))).renameTo(new File(fileName + "_COMPLETE"))
+        fileHandler.moveTo(newPath)
       }
 
       //markFileProcessingEnd(fileName)
-      val tokenName = fileName.split("/")
+      val tokenName = fileHandler.fullPath.split("/")
       ExtendedFileProcessor.fileCacheRemove(tokenName(tokenName.size - 1))
       ExtendedFileProcessor.removeFromZK(tokenName(tokenName.size - 1))
       ExtendedFileProcessor.markFileProcessingEnd(tokenName(tokenName.size - 1))
     } catch {
       case ioe: IOException => {
         logger.error("Exception moving the file ",ioe)
-        var tokenName = fileName.split("/")
+        var tokenName = fileHandler.fullPath.split("/")
         ExtendedFileProcessor.setFileState(tokenName(tokenName.size - 1),ExtendedFileProcessor.FINISHED_FAILED_TO_COPY)
       }
     }
@@ -409,8 +413,8 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
     if (errorTopic == null) return
 
     val cdate: Date = new Date
-    val errorMsg = dateFormat.format(cdate) + "," + msg.relatedFileName + "," + (new String(msg.msg))
-    logger.warn(" SMART FILE CONSUMER ("+partIdx+"): invalid message in file " + msg.relatedFileName)
+    val errorMsg = dateFormat.format(cdate) + "," + msg.relatedFileHandler.fullPath + "," + (new String(msg.msg))
+    logger.warn(" SMART FILE CONSUMER ("+partIdx+"): invalid message in file " + msg.relatedFileHandler.fullPath)
     logger.warn(errorMsg)
 
     // Write a Error Message
