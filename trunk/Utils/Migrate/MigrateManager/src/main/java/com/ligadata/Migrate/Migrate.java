@@ -260,6 +260,38 @@ public class Migrate {
 				System.exit(1);
 			}
 
+			String curMigrationUnhandledMetadataDumpDir = "";
+			String curMigrationSummary = "";
+
+			if (isValidPath(configuration.unhandledMetadataDumpDir, true,
+					false, "unhandledMetadataDumpDir") == false) {
+				String dirExtn = new java.text.SimpleDateFormat(
+						"yyyyMMddHHmmss").format(new java.util.Date(System
+						.currentTimeMillis()));
+
+				String newDir = configuration.unhandledMetadataDumpDir
+						+ "/Migrate_" + dirExtn;
+
+				File fl = new File(newDir);
+
+				if (fl.mkdir()) {
+					curMigrationUnhandledMetadataDumpDir = fl.getAbsolutePath();
+					curMigrationSummary = configuration.unhandledMetadataDumpDir
+							+ "/MigrateSummary_" + dirExtn + ".log";
+					logger.info("Current Migration Changes are writing into "
+							+ curMigrationUnhandledMetadataDumpDir
+							+ " directory. And summary is writing into "
+							+ curMigrationSummary);
+				} else {
+					logger.error("Failed to create directory " + newDir);
+					usage();
+					System.exit(1);
+				}
+			} else {
+				usage();
+				System.exit(1);
+			}
+
 			// From Srouce version 1.1 to Destination version 1.3 we do both
 			// Metadata Upgrade & Data Upgrade
 			// From Source Version 1.2 to Destination version 1.3, we only do
@@ -336,7 +368,7 @@ public class Migrate {
 			migrateTo.init(configuration.migratingTo.versionInstallPath,
 					configuration.apiConfigFile,
 					configuration.clusterConfigFile, srcVer,
-					configuration.unhandledMetadataDumpDir);
+					curMigrationUnhandledMetadataDumpDir, curMigrationSummary);
 
 			String metadataStoreInfo = migrateTo.getMetadataStoreInfo();
 			String dataStoreInfo = migrateTo.getDataStoreInfo();
