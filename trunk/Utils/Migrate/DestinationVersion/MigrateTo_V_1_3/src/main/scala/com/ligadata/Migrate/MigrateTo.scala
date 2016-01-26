@@ -348,11 +348,21 @@ class MigrateTo_V_1_3 extends MigratableTo {
   private def isFailedStatus(retRes: String): Boolean = {
     implicit val formats = org.json4s.DefaultFormats
     val json = org.json4s.jackson.JsonMethods.parse(retRes)
-    val statusCode = (json \ "Status Code").values.toString.toInt
-/*
-    val functionName = (json \ "Function Name").values.toString
-    val resultData = (json \ "Results Data").values.toString
-    val description = (json \ "Result Description").values.toString
+    val statusCodeAny = (json \\ "Status Code").values
+    var statusCode = 0
+    if (statusCodeAny.isInstanceOf[List[_]]) {
+      val t = statusCodeAny.asInstanceOf[List[_]].map(v => v.toString.toInt)
+      statusCode = if (t.size > 0) t(0) else -1
+    } else if (statusCodeAny.isInstanceOf[Array[_]]) {
+      val t = statusCodeAny.asInstanceOf[Array[_]].map(v => v.toString.toInt)
+      statusCode = if (t.size > 0) t(0) else -1
+    } else {
+      statusCode = statusCodeAny.toString.toInt
+    }
+    /*
+    val functionName = (json \\ "Function Name").values.toString
+    val resultData = (json \\ "Results Data").values.toString
+    val description = (json \\ "Result Description").values.toString
 */
     return (statusCode != 0)
   }
