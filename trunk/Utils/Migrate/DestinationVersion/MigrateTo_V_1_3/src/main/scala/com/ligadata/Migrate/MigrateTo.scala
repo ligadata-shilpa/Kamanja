@@ -396,7 +396,7 @@ class MigrateTo_V_1_3 extends MigratableTo {
                   val typs = mdlInfo.getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, List[String]()).asInstanceOf[List[String]]
 
                   var defFl = _unhandledMetadataDumpDir + "/" + objFormat + "_mdldef_" + dispkey + "." + ver + "." + objFormat.toLowerCase()
-                  var jsonFl = _unhandledMetadataDumpDir + "/" + objFormat + "_mdlinfo_" + dispkey + "." + ver + "." + objFormat.toLowerCase()
+                  var jsonFl = _unhandledMetadataDumpDir + "/" + objFormat + "_mdlinfo_" + dispkey + "." + ver + ".json"
 
                   val dumpMdlInfoStr = ("ModelInfo" ->
                     ("Dependencies" -> deps) ~
@@ -489,7 +489,7 @@ class MigrateTo_V_1_3 extends MigratableTo {
 
                   if (failed) {
                     var defFl = _unhandledMetadataDumpDir + "/" + objFormat + "_mdldef_" + dispkey + "." + ver + "." + objFormat.toLowerCase()
-                    var jsonFl = _unhandledMetadataDumpDir + "/" + objFormat + "_mdlinfo_" + dispkey + "." + ver + "." + objFormat.toLowerCase()
+                    var jsonFl = _unhandledMetadataDumpDir + "/" + objFormat + "_mdlinfo_" + dispkey + "." + ver + ".json"
 
                     val dumpMdlInfoStr = ("ModelInfo" ->
                       ("Dependencies" -> deps) ~
