@@ -264,7 +264,7 @@ public class Migrate {
 			String curMigrationSummary = "";
 
 			if (isValidPath(configuration.unhandledMetadataDumpDir, true,
-					false, "unhandledMetadataDumpDir") == false) {
+					false, "unhandledMetadataDumpDir")) {
 				String dirExtn = new java.text.SimpleDateFormat(
 						"yyyyMMddHHmmss").format(new java.util.Date(System
 						.currentTimeMillis()));
