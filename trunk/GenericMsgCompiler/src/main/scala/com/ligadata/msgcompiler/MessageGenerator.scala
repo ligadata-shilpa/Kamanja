@@ -32,8 +32,10 @@ class MessageGenerator {
         messageGenerator = messageGenerator.append(classGen(message) + msgConstants.newline)
         messageGenerator = messageGenerator.append(getMessgeBasicDetails(message))
         messageGenerator = messageGenerator.append(methodsFromBaseMsg(message))
-        messageGenerator = messageGenerator.append(msgConstants.newline + generateParitionKeys(message) + msgConstants.newline)
-        messageGenerator = messageGenerator.append(msgConstants.newline + generatePrimaryKeys(message) + msgConstants.newline)
+        messageGenerator = messageGenerator.append(msgConstants.newline + partitionKeys(message) + msgConstants.newline)
+        messageGenerator = messageGenerator.append(msgConstants.newline + primaryKeys(message) + msgConstants.newline)
+        messageGenerator = messageGenerator.append(msgConstants.newline + generateParitionKeysData(message) + msgConstants.newline)
+        messageGenerator = messageGenerator.append(msgConstants.newline + generatePrimaryKeysData(message) + msgConstants.newline)
         messageGenerator = messageGenerator.append(messageContructor(message))
         //messageGenerator = messageGenerator.append(msgClassConstructorGen(message))
         messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + generateSchema(message))
@@ -54,6 +56,10 @@ class MessageGenerator {
         messageGenerator = messageGenerator.append(getMessgeBasicDetails(message))
         messageGenerator = messageGenerator.append(methodsFromBaseMsg(message))
         messageGenerator = messageGenerator.append(messageContructor(message))
+        messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + partitionKeys(message) + msgConstants.newline)
+        messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + primaryKeys(message) + msgConstants.newline)
+        messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + generateParitionKeysData(message) + msgConstants.newline)
+        messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + generatePrimaryKeysData(message) + msgConstants.newline)
         messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + generateSchema(message))
         messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + msgConstants.fieldsForMappedVar)
         messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + msgConstants.getByNameFuncForMapped)
@@ -366,15 +372,15 @@ class MessageGenerator {
    * parititon keys code generation
    */
 
-  private def generateParitionKeys(message: Message): String = {
+  private def generateParitionKeysData(message: Message): String = {
     var paritionKeysGen = new StringBuilder(8 * 1024)
     var returnPartitionKeyStr: String = ""
     val arryOfStr: String = "Array[String]()";
 
-    if (message.PartitionKey != null && message.PartitionKey.size > 0) {
+    if (message.PartitionKeys != null && message.PartitionKeys.size > 0) {
       paritionKeysGen.append("{" + msgConstants.newline)
       paritionKeysGen.append(msgConstants.partitionKeyVar.format(msgConstants.pad1, msgConstants.newline))
-      message.PartitionKey.foreach(key => {
+      message.PartitionKeys.foreach(key => {
         message.Elements.foreach(element => {
           if (element.Name.equalsIgnoreCase(key)) {
             paritionKeysGen.append("%s partitionKeysData += %s.toString(get%s);%s".format(msgConstants.pad1, element.FldMetaataType.implementationName, element.Name.capitalize, msgConstants.newline)) //"+ com.ligadata.BaseTypes.StringImpl+".toString(get"+element.Name.capitalize+") ")
@@ -395,7 +401,7 @@ class MessageGenerator {
   /*
    * primary keys code generation
    */
-  private def generatePrimaryKeys(message: Message): String = {
+  private def generatePrimaryKeysData(message: Message): String = {
     var primaryKeysGen = new StringBuilder(8 * 1024)
     var returnPrimaryKeyStr: String = ""
     val arryOfStr: String = "Array[String]()";
@@ -500,7 +506,7 @@ class MessageGenerator {
   }
 
   /*
-   * Get Method generation function
+   * Get Method generation function for Mapped Messages
    */
   private def getFuncGenerationForMapped(fields: List[Element]): String = {
     var getMethod = new StringBuilder(8 * 1024)
@@ -508,7 +514,7 @@ class MessageGenerator {
     try {
       fields.foreach(field => {
         getmethodStr = """    def get""" + field.Name.capitalize + """: """ + field.FieldTypePhysicalName + """= {
-        	return fields(""" + field.Name + """");
+        	return fields("""" + field.Name + """");
         }          
         """
         getMethod = getMethod.append(getmethodStr.toString())
@@ -521,6 +527,76 @@ class MessageGenerator {
       }
     }
     return getMethod.toString
+  }
+
+ 
+  private def partitionKeys(message: Message): String = {
+
+    var paritionKeysStr: String = ""
+    if (message.PartitionKeys != null || message.PartitionKeys.size > 0) {
+      paritionKeysStr = "val partitionKeys = Array(" + message.PartitionKeys.map(p => {" \"" +p.toLowerCase + "\""}).mkString(", ") + ");";
+    } else {
+      paritionKeysStr = "val partitionKeys: Array[String] = Array[String](); ";
+    }
+
+    return paritionKeysStr
+
+  }
+
+  private def primaryKeys(message: Message): String = {
+
+    var primaryKeysStr: String = ""
+    if (message.PrimaryKeys != null || message.PrimaryKeys.size > 0) {
+      primaryKeysStr = "val primaryKeys: Array[String] = Array(" + message.PrimaryKeys.map(p => {"\""+ p.toLowerCase + "\""}).mkString(", ") + ");";
+    } else {
+      primaryKeysStr = "val primaryKeys: Array[String] = Array[String](); ";
+    }
+
+    return primaryKeysStr
+
+  }
+
+  private def PartitionKeyData(message: Message): String = {
+
+    var paritionKeysData: String = ""
+    if (message.PartitionKeys == null || message.PartitionKeys.size == 0) {
+      paritionKeysData = " override def PartitionKeyData(inputdata: InputData): Array[String] = Array[String](); ";
+    } else {
+      paritionKeysData = " override def PartitionKeyData(inputdata: InputData): Array[String] = Array[String](); ";
+    }
+
+    return paritionKeysData
+
+  }
+
+  private def primaryKeyData(message: Message): String = {
+
+    var primaryKeysData: String = ""
+    if (message.PrimaryKeys == null || message.PrimaryKeys.size == 0) {
+      primaryKeysData = "override def PrimaryKeyData(inputdata: InputData): Array[String] = Array[String]()";
+    } else {
+      primaryKeysData = "override def PrimaryKeyData(inputdata: InputData): Array[String] = Array[String]() ";
+    }
+    return primaryKeysData
+
+  }
+
+  private def hasPrimaryKeysFunc() = {
+    """
+  override def hasPrimaryKey(): Boolean = {
+    if (primaryKeys == null) return false;
+    (primaryKeys.size > 0);
+  }
+  """
+  }
+
+  private def hasPartitionKeyFunc() = {
+    """
+  override def hasPartitionKey(): Boolean = {
+    if (partitionKeys == null) return false;
+    (partitionKeys.size > 0);
+  }
+  """
   }
 
 }

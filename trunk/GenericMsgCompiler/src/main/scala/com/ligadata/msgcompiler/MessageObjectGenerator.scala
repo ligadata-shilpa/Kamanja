@@ -156,8 +156,8 @@ class MessageObjectGenerator {
 
     var partitionInfo: String = ""
     var paritionKeys = new StringBuilder(8 * 1024)
-    if (message.PartitionKey != null && message.PartitionKey.size > 0) {
-      message.PartitionKey.foreach(key => {
+    if (message.PartitionKeys != null && message.PartitionKeys.size > 0) {
+      message.PartitionKeys.foreach(key => {
         paritionKeys.append("\"" + key + "\", ")
       })
       partitionInfo = msgConstants.partitionKeys.format(msgConstants.pad1, "(" + paritionKeys.toString.substring(0, paritionKeys.toString.length() - 2) + ")", msgConstants.newline)

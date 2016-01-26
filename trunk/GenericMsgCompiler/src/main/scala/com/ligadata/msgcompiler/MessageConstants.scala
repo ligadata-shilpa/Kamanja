@@ -47,7 +47,7 @@ class MessageConstants {
 
   def rddObjImportStmts() = {
     """
-    import com.ligadata.KamanjaBase.JavaRDDObject;
+  import com.ligadata.KamanjaBase.JavaRDDObject;
 	import com.ligadata.KamanjaBase.BaseMsgObj;
 	import com.ligadata.KamanjaBase.BaseContainerObj;
     """
@@ -110,5 +110,9 @@ import com.ligadata.KamanjaBase.{ BaseMsg, BaseMsgObj, TransformMessage, BaseCon
   }
 """
   }
+  
+  
+
+
 
 }

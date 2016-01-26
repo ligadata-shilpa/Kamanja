@@ -26,7 +26,7 @@ class CreateMessage {
     try {
       var version = MdMgr.ConvertVersionToLong(msg.Version)
       if (msg.Persist) {
-        if (msg.PartitionKey == null || msg.PartitionKey.size == 0) {
+        if (msg.PartitionKeys == null || msg.PartitionKeys.size == 0) {
           throw new Exception("Please provide parition keys in the MessageDefinition since the Message will be Persisted based on Partition Keys")
         }
       }
@@ -34,8 +34,8 @@ class CreateMessage {
       log.info("msg.ArgsList   " + msg.ArgsList.toList)
       log.info("msg.jarset    " + msg.Jarset.toList)
 
-      if (msg.PartitionKey != null)
-        msgDef = mdMgr.MakeFixedMsg(msg.NameSpace, msg.Name, msg.PhysicalName, msg.ArgsList, version, null, msg.Jarset.toArray, null, null, msg.PartitionKey.toArray, recompile, msg.Persist)
+      if (msg.PartitionKeys != null)
+        msgDef = mdMgr.MakeFixedMsg(msg.NameSpace, msg.Name, msg.PhysicalName, msg.ArgsList, version, null, msg.Jarset.toArray, null, null, msg.PartitionKeys.toArray, recompile, msg.Persist)
       else
         msgDef = mdMgr.MakeFixedMsg(msg.NameSpace, msg.Name, msg.PhysicalName, msg.ArgsList, version, null, msg.Jarset.toArray, null, null, null, recompile, msg.Persist)
     } catch {
