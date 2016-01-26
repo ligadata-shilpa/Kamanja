@@ -58,6 +58,7 @@ class MigrateTo_V_1_3 extends MigratableTo {
   private var _jarPaths: collection.immutable.Set[String] = collection.immutable.Set[String]()
   private var _bInit = false
   private var _flCurMigrationSummary: PrintWriter = _
+  private val defaultUserId: Option[String] = Some("metadataapi")
 
   private def isValidPath(path: String, checkForDir: Boolean = false, checkForFile: Boolean = false, str: String = "path"): Unit = {
     val fl = new File(path)
@@ -418,7 +419,7 @@ class MigrateTo_V_1_3 extends MigratableTo {
                   var defFl = _unhandledMetadataDumpDir + "/kPMML_mdldef_" + dispkey + "." + ver + "." + objFormat.toLowerCase()
                   var failed = false
                   try {
-                    val retRes = MetadataAPIImpl.AddModel(MetadataAPI.ModelType.fromString("kpmml"), mdlDefStr, None, Some(dispkey), Some(ver))
+                    val retRes = MetadataAPIImpl.AddModel(MetadataAPI.ModelType.fromString("kpmml"), mdlDefStr, defaultUserId, Some(dispkey), Some(ver))
                     failed = isFailedStatus(retRes)
                   } catch {
                     case e: Exception => {
@@ -470,11 +471,11 @@ class MigrateTo_V_1_3 extends MigratableTo {
                   var failed = false
 
                   try {
-                    val retRes = MetadataAPIImpl.UploadModelsConfig(compact(render(mdlConfig)), None, "configuration")
+                    val retRes = MetadataAPIImpl.UploadModelsConfig(compact(render(mdlConfig)), defaultUserId, "configuration")
                     failed = isFailedStatus(retRes)
 
                     if (failed == false) {
-                      val retRes1 = MetadataAPIImpl.AddModel(MetadataAPI.ModelType.fromString(objFormat), mdlDefStr, None, Some("MigrationModelConfig_from_1_1_to_1_3"), Some(ver))
+                      val retRes1 = MetadataAPIImpl.AddModel(MetadataAPI.ModelType.fromString(objFormat), mdlDefStr, defaultUserId, Some("MigrationModelConfig_from_1_1_to_1_3"), Some(ver))
                       failed = isFailedStatus(retRes1)
                     }
                   } catch {
@@ -511,7 +512,7 @@ class MigrateTo_V_1_3 extends MigratableTo {
                   var failed = false
 
                   try {
-                    val retRes = MetadataAPIImpl.AddModel(MetadataAPI.ModelType.fromString("kpmml"), mdlDefStr, None, Some(dispkey), Some(ver))
+                    val retRes = MetadataAPIImpl.AddModel(MetadataAPI.ModelType.fromString("kpmml"), mdlDefStr, defaultUserId, Some(dispkey), Some(ver))
                     failed = isFailedStatus(retRes)
                   } catch {
                     case e: Exception => {
@@ -539,7 +540,7 @@ class MigrateTo_V_1_3 extends MigratableTo {
                 var failed = false
 
                 try {
-                  val retRes = MetadataAPIImpl.AddMessage(msgDefStr, "JSON", None)
+                  val retRes = MetadataAPIImpl.AddMessage(msgDefStr, "JSON", defaultUserId)
                   failed = isFailedStatus(retRes)
                 } catch {
                   case e: Exception => {
@@ -567,7 +568,7 @@ class MigrateTo_V_1_3 extends MigratableTo {
                 var failed = false
 
                 try {
-                  val retRes = MetadataAPIImpl.AddContainer(contDefStr, "JSON", None)
+                  val retRes = MetadataAPIImpl.AddContainer(contDefStr, "JSON", defaultUserId)
                   failed = isFailedStatus(retRes)
                 } catch {
                   case e: Exception => {
@@ -619,7 +620,7 @@ class MigrateTo_V_1_3 extends MigratableTo {
                 var failed = false
 
                 try {
-                  val retRes = MetadataAPIImpl.AddFunctions(fnCfg, "JSON", None)
+                  val retRes = MetadataAPIImpl.AddFunctions(fnCfg, "JSON", defaultUserId)
                   failed = isFailedStatus(retRes)
                 } catch {
                   case e: Exception => {
@@ -821,7 +822,7 @@ class MigrateTo_V_1_3 extends MigratableTo {
 
     val cfgStr = Source.fromFile(_clusterConfigFile).mkString
     logger.debug("Uploading configuration")
-    MetadataAPIImpl.UploadConfig(cfgStr, None, "ClusterConfig")
+    MetadataAPIImpl.UploadConfig(cfgStr, defaultUserId, "ClusterConfig")
 
     // We need to add the metadata in the following order
     // Jars
