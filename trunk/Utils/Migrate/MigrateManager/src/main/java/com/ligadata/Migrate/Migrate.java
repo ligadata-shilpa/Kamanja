@@ -372,39 +372,41 @@ public class Migrate {
 			for (TableName tblInfo : allMetadataTbls) {
 				BackupTableInfo bkup = new BackupTableInfo(tblInfo.namespace,
 						tblInfo.name, tblInfo.name + backupTblSufix);
-				metadataBackupTbls.add(bkup);
-				metadataDelTbls.add(tblInfo);
 
-				if (migrateTo.isMetadataTableExists(tblInfo)
-						&& migrateTo.isMetadataTableExists(new TableName(
-								tblInfo.namespace, bkup.dstTable)) == false) {
-					allTblsBackedUp = false;
+				if (migrateTo.isMetadataTableExists(tblInfo)) {
+					if (migrateTo.isMetadataTableExists(new TableName(
+							tblInfo.namespace, bkup.dstTable)) == false) {
+						allTblsBackedUp = false;
+					}
+					metadataBackupTbls.add(bkup);
+					metadataDelTbls.add(tblInfo);
 				}
 			}
 
 			for (TableName tblInfo : allDataTbls) {
 				BackupTableInfo bkup = new BackupTableInfo(tblInfo.namespace,
 						tblInfo.name, tblInfo.name + backupTblSufix);
-				dataBackupTbls.add(bkup);
-				dataDelTbls.add(tblInfo);
-
-				if (migrateTo.isDataTableExists(tblInfo)
-						&& migrateTo.isDataTableExists(new TableName(
-								tblInfo.namespace, bkup.dstTable)) == false) {
-					allTblsBackedUp = false;
+				if (migrateTo.isDataTableExists(tblInfo)) {
+					if (migrateTo.isDataTableExists(new TableName(
+							tblInfo.namespace, bkup.dstTable)) == false) {
+						allTblsBackedUp = false;
+					}
+					dataBackupTbls.add(bkup);
+					dataDelTbls.add(tblInfo);
 				}
+
 			}
 
 			for (TableName tblInfo : allStatusTbls) {
 				BackupTableInfo bkup = new BackupTableInfo(tblInfo.namespace,
 						tblInfo.name, tblInfo.name + backupTblSufix);
-				statusBackupTbls.add(bkup);
-				statusDelTbls.add(tblInfo);
-
-				if (migrateTo.isStatusTableExists(tblInfo)
-						&& migrateTo.isStatusTableExists(new TableName(
-								tblInfo.namespace, bkup.dstTable)) == false) {
-					allTblsBackedUp = false;
+				if (migrateTo.isStatusTableExists(tblInfo)) {
+					if (migrateTo.isStatusTableExists(new TableName(
+							tblInfo.namespace, bkup.dstTable)) == false) {
+						allTblsBackedUp = false;
+					}
+					statusBackupTbls.add(bkup);
+					statusDelTbls.add(tblInfo);
 				}
 			}
 
