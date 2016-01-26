@@ -38,40 +38,31 @@ class PosixFileHandler extends FileHandler{
     fileFullPath = fullPath
   }
 
-  private def isCompressed(inputfile: String): Boolean = {
-    var is: FileInputStream = null
-    try {
-      is = new FileInputStream(inputfile)
-    } catch {
-      case fnfe: FileNotFoundException => {
-        throw fnfe
+  private def isCompressed: Boolean = {
+
+    val tempInputStream : InputStream =
+      try {
+        new FileInputStream(fileFullPath)
       }
-      case e: Exception =>
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        return false
+      catch {
+        case e: Exception =>
+          logger.error(e)
+          null
+      }
+    val compressed = if(tempInputStream == null) false else isStreamCompressed(tempInputStream)
+    if(tempInputStream != null){
+      try{
+        tempInputStream.close()
+      }
+      catch{case e => }
     }
-
-    val maxlen = 2
-    val buffer = new Array[Byte](maxlen)
-    val readlen = is.read(buffer, 0, maxlen)
-
-    is.close() // Close before we really check and return the data
-
-    if (readlen < 2)
-      return false;
-
-    val b0: Int = buffer(0)
-    val b1: Int = buffer(1)
-
-    val head = (b0 & 0xff) | ((b1 << 8) & 0xff00)
-
-    return (head == GZIPInputStream.GZIP_MAGIC);
+    compressed
   }
 
   @throws(classOf[IOException])
   def openForRead(): Unit = {
 
-    if (isCompressed(fileFullPath)) {
+    if (isCompressed) {
       in = new GZIPInputStream(new FileInputStream(fileFullPath))
     } else {
       in = new FileInputStream(fileFullPath)

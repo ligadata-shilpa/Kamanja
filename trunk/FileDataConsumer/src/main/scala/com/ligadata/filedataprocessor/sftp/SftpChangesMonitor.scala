@@ -4,10 +4,12 @@ package com.ligadata.filedataprocessor.sftp
  * Created by Yasser on 12/21/2015.
  */
 
-import java.io.File
-import java.io.FileInputStream
+import java.io._
 import java.net.URI
 import java.net.URISyntaxException
+import java.util.zip.GZIPInputStream
+import com.ligadata.Exceptions.StackTrace
+
 import scala.collection.mutable.{ArrayBuffer, Map}
 import org.apache.commons.vfs2.FileObject
 import org.apache.commons.vfs2.FileSystemOptions
@@ -16,11 +18,7 @@ import org.apache.commons.vfs2.impl.StandardFileSystemManager
 import org.apache.commons.vfs2.provider.sftp.SftpFileSystemConfigBuilder
 import com.ligadata.filedataprocessor.FileChangeType._
 import com.ligadata.filedataprocessor.FileHandler
-import java.io.IOException
 import org.apache.commons.lang.NotImplementedException
-import java.io.InputStream
-import java.io.InputStreamReader
-import java.io.BufferedReader
 import java.net.URLEncoder
 import org.apache.logging.log4j.{ Logger, LogManager }
 
@@ -104,6 +102,12 @@ class SftpFileHandler extends FileHandler{
   
   lazy val loggerName = this.getClass.getName
   lazy val logger = LogManager.getLogger(loggerName)
+
+  def opts = createDefaultOptions
+  def sftpEncodedUri =
+    if(sftpConnectionConfig == null ) ""
+    else "sftp://" + sftpConnectionConfig.userId + ":" + URLEncoder.encode(sftpConnectionConfig.password) +
+      "@" + sftpConnectionConfig.serverAddress + "/" +  fullPath
   
   def this(path : String, config : SftpConnectionConfig){
     this()
@@ -114,15 +118,15 @@ class SftpFileHandler extends FileHandler{
    @throws(classOf[IOException])
   def openForRead(): Unit = {
     logger.info(s"Opening SFTP file ($fullPath) to read")
-    val opts = createDefaultOptions
-	   
-    val sftpEncodedUri = "sftp://" + sftpConnectionConfig.userId + ":" + URLEncoder.encode(sftpConnectionConfig.password) +  
-	       "@" + sftpConnectionConfig.serverAddress + "/" +  fullPath
-	manager  = new StandardFileSystemManager()
+
+	  manager  = new StandardFileSystemManager()
     manager.init()
     
     val remoteFileObj = manager.resolveFile(sftpEncodedUri, opts)
     in = remoteFileObj.getContent().getInputStream()
+
+     if(isCompressed)
+       in = new GZIPInputStream(in)
     //bufferedReader = new BufferedReader(new InputStreamReader(in))
   }
 
@@ -242,6 +246,29 @@ class SftpFileHandler extends FileHandler{
       if(manager!=null)
         manager.close()
     }
+  }
+
+  private def isCompressed : Boolean = {
+
+    val tempInputStream : InputStream =
+      try {
+        val remoteFileObj = manager.resolveFile(sftpEncodedUri, opts)
+        remoteFileObj.getContent().getInputStream()
+      }
+      catch {
+        case e: Exception =>
+          logger.error(e)
+          null
+      }
+    val compressed = if(tempInputStream == null) false else isStreamCompressed(tempInputStream)
+    if(tempInputStream != null){
+      try{
+        tempInputStream.close()
+      }
+      catch{case e => }
+    }
+    compressed
+
   }
 }
 
