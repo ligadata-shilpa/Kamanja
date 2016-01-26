@@ -5,8 +5,8 @@ package com.ligadata.jtm.nodes
   */
 class Transformation {
 
-  val input: Input = null
+  val input: String = ""
   val variables: Array[Variable] = Array.empty[Variable]
-  val outputs: Array[Output] = Array.empty[Output]
+  val outputs: Array[OutputMessage] = Array.empty[OutputMessage]
 
 }

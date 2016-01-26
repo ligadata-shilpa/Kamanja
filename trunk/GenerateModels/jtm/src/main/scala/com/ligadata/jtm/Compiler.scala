@@ -127,7 +127,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
   }
 
   // Load metadata
-  val md = loadMetadata
+  //val md = loadMetadata
 
   //md.dump
   //val m = md.Message("com.ligadata.kamanja.samples.messages.msg1", 0, true)
@@ -140,7 +140,9 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
     // Load Json
     val root = Root.fromJson(inputFile)
-
+    val t = root.transformations(1)
+    val t1 = t.input
+/*
     val sb = new StringBuilder
     sb.append(Parts.header)
     sb.append("\n")
@@ -225,5 +227,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     FileUtils.writeStringToFile(new File(outputFile), sb.result)
 
     outputFile
+    */
+    ""
   }
 }

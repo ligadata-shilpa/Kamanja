@@ -68,13 +68,9 @@ object Root {
   * Created by joerg on 1/20/16.
   */
 class Root {
-  val packagename: String = null
+  val packagename: String = ""
   val version: String = "0.0.1"
 
-  val imports: Array[Import] = Array.empty[Import]
+  val imports: Array[String] = Array.empty[String]
   val transformations: Array[Transformation] = Array.empty[Transformation]
-
-  val inputs: Array[Input] = Array.empty[Input]
-  val filters: Array[Filter] = Array.empty[Filter]
-  val outputs: Array[Output] = Array.empty[Output]
 }

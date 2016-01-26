@@ -25,31 +25,31 @@ import org.scalatest.{BeforeAndAfter, FunSuite}
 /**
   *
   */
-class FilterTest  extends FunSuite with BeforeAndAfter {
+class Test001Test  extends FunSuite with BeforeAndAfter {
 
   val logger = LogManager.getLogger(this.getClass.getName())
 
-  test("nonaggr.jtm/filter.jtm") {
+  test("test001") {
 
     // nonaggr.jtm/filter.jtm -> filter.scala
     //
-    val fileInput = getClass.getResource("/nonaggr.jtm/filter.jtm").getPath
-    val fileOutput = getClass.getResource("/nonaggr.jtm/filter.scala.result").getPath
-    val fileExpected = getClass.getResource("/nonaggr.jtm/filter.scala.expected").getPath
-    val metadataLocation = getClass.getResource("/nonaggr.jtm").getPath
+    val fileInput = getClass.getResource("/test001.jtm/test.jtm").getPath
+    //val fileOutput = getClass.getResource("/test001.jtm/filter.scala.result").getPath
+    //val fileExpected = getClass.getResource("/test001.jtm/filter.scala.expected").getPath
+    //val metadataLocation = getClass.getResource("/test001.jtm").getPath
 
     val compiler = CompilerBuilder.create().
       setSuppressTimestamps().
       setInputFile(fileInput).
-      setOutputFile(fileOutput).
-      setMetadataLocation(metadataLocation).
+      //setOutputFile(fileOutput).
+      //setMetadataLocation(metadataLocation).
       build()
 
     val outputFile = compiler.Execute()
 
-    val expected = FileUtils.readFileToString(new File(fileExpected), null)
-    val actual = FileUtils.readFileToString(new File(outputFile), null)
-    logger.info("actual path={}", outputFile)
-    assert(actual == expected)
+    //val expected = FileUtils.readFileToString(new File(fileExpected), null)
+    //val actual = FileUtils.readFileToString(new File(outputFile), null)
+    //logger.info("actual path={}", outputFile)
+    //assert(actual == expected)
   }
 }
