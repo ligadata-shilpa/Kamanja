@@ -513,8 +513,12 @@ public class Migrate {
 				}
 			}
 
-			logger.info("Migration is done");
-			System.out.println("Migration is done");
+			logger.info("Migration is done. Failed summary is written to "
+					+ curMigrationSummary);
+			if (logger.isInfoEnabled() == false)
+				System.out
+						.println("Migration is done. Failed summary is written to "
+								+ curMigrationSummary);
 		} catch (Exception e) {
 			logger.error("Failed to Migrate", e);
 		} catch (Throwable t) {

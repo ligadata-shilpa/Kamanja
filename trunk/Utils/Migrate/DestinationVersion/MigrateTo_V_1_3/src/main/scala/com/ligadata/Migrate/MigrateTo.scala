@@ -444,23 +444,23 @@ class MigrateTo_V_1_3 extends MigratableTo {
                   val deps1 = mdlInfo.getOrElse(ModelCompilationConstants.DEPENDENCIES, List[String]()).asInstanceOf[List[String]]
                   val typs = mdlInfo.getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, List[String]()).asInstanceOf[List[String]]
 
+                  val depJarsMap = Map("scalap-2.11.0.jar" -> "scalap-2.11.0.jar", "kvbase_2.10-0.1.0.jar" -> "kvbase_2.11-0.1.0.jar", "kamanjautils_2.10-1.0.jar" -> "kamanjautils_2.11-1.0.jar",
+                    "kamanjabase_2.10-1.0.jar" -> "kamanjabase_2.11-1.0.jar", "customudflib_2.10-1.0.jar" -> "customudflib_2.11-1.0.jar", "pmmlcompiler_2.10-1.0.jar" -> "pmmlcompiler_2.11-1.0.jar",
+                    "basetypes_2.10-0.1.0.jar" -> "basetypes_2.11-0.1.0.jar", "basefunctions_2.10-0.1.0.jar" -> "basefunctions_2.11-0.1.0.jar", "json4s-core_2.10-3.2.9.jar" -> "json4s-core_2.11-3.2.9.jar",
+                    "json4s-jackson_2.10-3.2.9.jar" -> "json4s-jackson_2.11-3.2.9.jar", "pmmlruntime_2.10-1.0.jar" -> "pmmlruntime_2.11-1.0.jar", "pmmludfs_2.10-1.0.jar" -> "pmmludfs_2.11-1.0.jar",
+                    "datadelimiters_2.10-1.0.jar" -> "datadelimiters_2.11-1.0.jar", "metadata_2.10-1.0.jar" -> "metadata_2.11-1.0.jar", "exceptions_2.10-1.0.jar" -> "exceptions_2.11-1.0.jar",
+                    "json4s-ast_2.10-3.2.9.jar" -> "json4s-ast_2.11-3.2.9.jar", "json4s-native_2.10-3.2.9.jar" -> "json4s-native_2.11-3.2.9.jar", "bootstrap_2.10-1.0.jar" -> "bootstrap_2.11-1.0.jar",
+                    "messagedef_2.10-1.0.jar" -> "messagedef_2.11-1.0.jar")
+
                   val deps = deps1.map(d => {
-                    if (d.equals("kamanjabase_2.10-1.0.jar")) {
-                      "kamanjabase_2.11-1.0.jar"
-                    } else if (d.equals("kamanjautils_2.10-1.0.jar")) {
-                      "kamanjautils_2.11-1.0.jar"
-                    } else if (d.equals("kvbase_2.10-0.1.0.jar")) {
-                      "kvbase_2.11-0.1.0.jar"
-                    } else if (d.startsWith("scala-reflect-2.10")) {
+                    if (d.startsWith("scala-reflect-2.10")) {
                       "scala-reflect-2.11.7.jar"
                     } else if (d.startsWith("scala-library-2.10")) {
                       "scala-library-2.11.7.jar"
                     } else if (d.startsWith("scala-compiler-2.10")) {
                       "scala-compiler-2.11.7.jar"
-                    } else if (d.startsWith("scalap-2.11.0.jar")) {
-                      "scalap-2.11.0.jar"
                     } else {
-                      d
+                      depJarsMap.getOrElse(d, d)
                     }
                   })
 
@@ -471,7 +471,9 @@ class MigrateTo_V_1_3 extends MigratableTo {
                   var failed = false
 
                   try {
-                    val retRes = MetadataAPIImpl.UploadModelsConfig(compact(render(mdlConfig)), defaultUserId, "configuration")
+                    val mdlCfgStr = compact(render(mdlConfig))
+                    logger.debug("Temporary Model Config:" + mdlCfgStr)
+                    val retRes = MetadataAPIImpl.UploadModelsConfig(mdlCfgStr, defaultUserId, "configuration", true)
                     failed = isFailedStatus(retRes)
 
                     if (failed == false) {
@@ -907,9 +909,12 @@ class MigrateTo_V_1_3 extends MigratableTo {
       _dataStoreDb.Shutdown()
     if (_statusStoreDb != null)
       _statusStoreDb.Shutdown()
+    if (_flCurMigrationSummary != null)
+      _flCurMigrationSummary.close()
     _metaDataStoreDb = null
     _dataStoreDb = null
     _statusStoreDb = null
+    _flCurMigrationSummary = null
     MetadataAPIImpl.shutdown
   }
 }
