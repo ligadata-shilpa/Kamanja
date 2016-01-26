@@ -464,7 +464,7 @@ class MigrateTo_V_1_3 extends MigratableTo {
                     }
                   })
 
-                  val mdlConfig = ("MigrationModelConfig_from_1_1_to_1_3" ->
+                  val mdlConfig = ("migrationmodelconfig_from_1_2_to_1_3" ->
                     ("Dependencies" -> deps) ~
                     ("MessageAndContainers" -> typs))
 
