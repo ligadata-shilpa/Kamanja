@@ -153,11 +153,12 @@ object StartMetadataAPI {
         /** one more try ... going the alternate route */  // do we still need this ??
         val altResponse: String = AltRoute(args)
         if (altResponse != null) {
-          response = altResponse
-          printf(response)
+          //response = altResponse
+          println(response)
+          usage
         } else {
           /* if the AltRoute doesn't produce a valid result, we will complain with the original failure */
-          printf(response)
+          println(response)
           usage
         }
       }
@@ -387,15 +388,17 @@ object StartMetadataAPI {
 
       case e: Exception => {
         /** tentative answer of unidentified command type failure. */
-        response = s"Unexpected action! action = $action \n${e.getStackTraceString}"
+        response = s"Unexpected action! action = $action"
         /** one more try ... going the alternate route.
           *
           * ''Do we still need this ?'' Let's keep it for now.
           */
         val altResponse: String = AltRoute(originalArgs)
         if (altResponse != null) {
-          response = altResponse
-        } else {
+            //response = altResponse  ... typically a parse error that is only meaningful for AltRoute processing
+            println(response)
+            sys.exit(1)
+         } else {
           /* if the AltRoute doesn't produce a valid result, we will complain with the original failure */
           printf(response)
           sys.exit(1)
@@ -432,110 +435,117 @@ object StartMetadataAPI {
        argsSansConfig.addString(buffer," ")
        val originalCmd : String = buffer.toString
 
-       /** Feed the command string to the alternate parser. If successful, the cmdName will be valid string. */
-       val (optCmdName, argMap) : (Option[String], Map[String, String]) = AlternateCmdParser.parse(originalCmd)
-       val cmdName : String = optCmdName.orNull
-       val response : String = if (cmdName != null) {
-           /** See if it is one of the **supported** alternate commands */
-           val cmd : String = cmdName.toLowerCase
+      var response: String = ""
+      try {
+           /** Feed the command string to the alternate parser. If successful, the cmdName will be valid string. */
+           val (optCmdName, argMap): (Option[String], Map[String, String]) = AlternateCmdParser.parse(originalCmd)
+           val cmdName: String = optCmdName.orNull
+           response = if (cmdName != null) {
+               /** See if it is one of the **supported** alternate commands */
+               val cmd: String = cmdName.toLowerCase
 
-           val resp : String = cmd match {
-               case "addmodel" => {
-                   val modelTypeToBeAdded : String = if (argMap.contains("type")) argMap("type").toLowerCase else null
-                   if (modelTypeToBeAdded != null && modelTypeToBeAdded == "pmml") {
+               val resp: String = cmd match {
+                   case "addmodel" => {
+                       val modelTypeToBeAdded: String = if (argMap.contains("type")) argMap("type").toLowerCase else null
+                       if (modelTypeToBeAdded != null && modelTypeToBeAdded == "pmml") {
 
-                       val modelName : Option[String] = if (argMap.contains("name")) Some(argMap("name")) else None
-                       val modelVer : String = if (argMap.contains("modelversion")) argMap("modelversion") else null
-                       val msgName : Option[String] = if (argMap.contains("message")) Some(argMap("message")) else None
-                       /** it is permissable to not supply the messageversion... the latest version is assumed in that case */
-                       val msgVer : String = if (argMap.contains("messageversion")) argMap("messageversion") else MdMgr.LatestVersion
-                       val pmmlSrc : Option[String] = if (argMap.contains("pmml")) Some(argMap("pmml")) else None
-                       val pmmlPath : String = pmmlSrc.orNull
-
-                       var validatedModelVersion : String = null
-                       var validatedMsgVersion : String = null
-                       try {
-                           validatedModelVersion = if (modelVer != null) MdMgr.FormatVersion(modelVer) else null
-                           validatedMsgVersion = if (msgVer != null) MdMgr.FormatVersion(msgVer) else null
-                       } catch {
-                           case e : Exception => throw(new RuntimeException(s"The version parameter is invalid... either not numeric or out of range...modelversion=$modelVer, messageversion=$msgVer"))
-                       }
-                       val optModelVer : Option[String] =  Option(validatedModelVersion)
-                       val optMsgVer : Option[String] = Option(validatedMsgVersion)
-
-                       ModelService.addModelPmml(ModelType.PMML
-                                                , pmmlPath
-                                                , Some("metadataapi")
-                                                , modelName
-                                                , optModelVer
-                                                , msgName
-                                                , optMsgVer)
-
-                   } else {
-                       null
-                   }
-               }
-               case "updatemodel" => {
-                   // updateModel type(jpmml) name(com.anotherCo.jpmml.DahliaRandomForest) newVersion(000000.000001.000002) oldVersion(000000.000001.000001) pmml(/anotherpath/prettierDahliaRandomForest.xml)  <<< NOT AVAILABLE (YET) update an explicit model version... doesn't have to be latest
-                   // updateModel type(jpmml) name(com.anotherCo.jpmml.DahliaRandomForest) newVersion(000000.000001.000002) pmml(/anotherpath/prettierDahliaRandomForest.xml)  <<< default to the updating the latest model version there.
-
-                   val modelTypeToBeUpdated: String = if (argMap.contains("type")) argMap("type").toLowerCase else null
-                   if (modelTypeToBeUpdated != null && modelTypeToBeUpdated == "pmml") {
-
-                       val optModelName: Option[String] = if (argMap.contains("name")) Some(argMap("name")) else None
-                       val newVer: String = if (argMap.contains("newversion")) argMap("newversion") else null
-                       /** it is permissable to not supply the old version... we just ask for update of the latest version in that case */
-                       val oldVer: String = if (argMap.contains("oldversion")) argMap("oldversion") else MdMgr.LatestVersion
-                       if (oldVer != MdMgr.LatestVersion) {
-                           val warningMsg : String = "Specific version replacement is not currently supported.  Only the latest version of a model may be updated........"
-                           logger.warn(warningMsg)
-                           warningMsg
-                       } else {
-
+                           val modelName: Option[String] = if (argMap.contains("name")) Some(argMap("name")) else None
+                           val modelVer: String = if (argMap.contains("modelversion")) argMap("modelversion") else null
+                           val msgName: Option[String] = if (argMap.contains("message")) Some(argMap("message")) else None
+                           /** it is permissable to not supply the messageversion... the latest version is assumed in that case */
+                           val msgVer: String = if (argMap.contains("messageversion")) argMap("messageversion") else MdMgr.LatestVersion
                            val pmmlSrc: Option[String] = if (argMap.contains("pmml")) Some(argMap("pmml")) else None
                            val pmmlPath: String = pmmlSrc.orNull
 
-                           /** NOTE: Despite the presence of the oldVer, it is currently not supported.  The metadata
-                             * manager is not supporting specific version replacement with update.  Only the "latest"
-                             * version of the model can be changed.  That said, we leave this in place for now until
-                             * it has been determined if the verion will become an active part of the metadata
-                             * key that manages models (and messages, containers, and the rest)
-                             */
-
-                           /** Use FormatVersion to normalize the string representation ... padding with appropriate 0's etc. */
-                           var validatedOldVersion: String = null
-                           var validatedNewVersion: String = null
+                           var validatedModelVersion: String = null
+                           var validatedMsgVersion: String = null
                            try {
-                               validatedOldVersion = if (oldVer != null && oldVer != MdMgr.LatestVersion) MdMgr.FormatVersion(oldVer) else {
-                                   if (oldVer == MdMgr.LatestVersion) {
-                                       MdMgr.LatestVersion
-                                   } else {
-                                       null
-                                   }
-                               }
-                               validatedNewVersion = if (newVer != null) MdMgr.FormatVersion(newVer) else null
+                               validatedModelVersion = if (modelVer != null) MdMgr.FormatVersion(modelVer) else null
+                               validatedMsgVersion = if (msgVer != null) MdMgr.FormatVersion(msgVer) else null
                            } catch {
-                               case e: Exception => throw (new RuntimeException(s"One or more version parameters are invalid... oldVer=$oldVer, newVer=$newVer"))
+                               case e: Exception => throw (new RuntimeException(s"The version parameter is invalid... either not numeric or out of range...modelversion=$modelVer, messageversion=$msgVer"))
                            }
-                           val optOldVer: Option[String] = Option(validatedOldVersion)
+                           val optModelVer: Option[String] = Option(validatedModelVersion)
+                           val optMsgVer: Option[String] = Option(validatedMsgVersion)
 
-                           /** modelnamespace.modelname expected for modelName value */
-                           val modelName : String = optModelName.orNull
-                           ModelService.updateModelPmml(pmmlPath
-                                                       , Some("metadataapi")
-                                                       , modelName
-                                                       , validatedNewVersion)
-                                                       //, optOldVer)
+                           ModelService.addModelPmml(ModelType.PMML
+                               , pmmlPath
+                               , Some("metadataapi")
+                               , modelName
+                               , optModelVer
+                               , msgName
+                               , optMsgVer)
+
+                       } else {
+                           null
                        }
-                   } else {
-                       null
                    }
-               }
+                   case "updatemodel" => {
+                       // updateModel type(jpmml) name(com.anotherCo.jpmml.DahliaRandomForest) newVersion(000000.000001.000002) oldVersion(000000.000001.000001) pmml(/anotherpath/prettierDahliaRandomForest.xml)  <<< NOT AVAILABLE (YET) update an explicit model version... doesn't have to be latest
+                       // updateModel type(jpmml) name(com.anotherCo.jpmml.DahliaRandomForest) newVersion(000000.000001.000002) pmml(/anotherpath/prettierDahliaRandomForest.xml)  <<< default to the updating the latest model version there.
 
+                       val modelTypeToBeUpdated: String = if (argMap.contains("type")) argMap("type").toLowerCase else null
+                       if (modelTypeToBeUpdated != null && modelTypeToBeUpdated == "pmml") {
+
+                           val optModelName: Option[String] = if (argMap.contains("name")) Some(argMap("name")) else None
+                           val newVer: String = if (argMap.contains("newversion")) argMap("newversion") else null
+                           /** it is permissable to not supply the old version... we just ask for update of the latest version in that case */
+                           val oldVer: String = if (argMap.contains("oldversion")) argMap("oldversion") else MdMgr.LatestVersion
+                           if (oldVer != MdMgr.LatestVersion) {
+                               val warningMsg: String = "Specific version replacement is not currently supported.  Only the latest version of a model may be updated........"
+                               logger.warn(warningMsg)
+                               warningMsg
+                           } else {
+
+                               val pmmlSrc: Option[String] = if (argMap.contains("pmml")) Some(argMap("pmml")) else None
+                               val pmmlPath: String = pmmlSrc.orNull
+
+                               /** NOTE: Despite the presence of the oldVer, it is currently not supported.  The metadata
+                                 * manager is not supporting specific version replacement with update.  Only the "latest"
+                                 * version of the model can be changed.  That said, we leave this in place for now until
+                                 * it has been determined if the verion will become an active part of the metadata
+                                 * key that manages models (and messages, containers, and the rest)
+                                 */
+
+                               /** Use FormatVersion to normalize the string representation ... padding with appropriate 0's etc. */
+                               var validatedOldVersion: String = null
+                               var validatedNewVersion: String = null
+                               try {
+                                   validatedOldVersion = if (oldVer != null && oldVer != MdMgr.LatestVersion) MdMgr.FormatVersion(oldVer)
+                                   else {
+                                       if (oldVer == MdMgr.LatestVersion) {
+                                           MdMgr.LatestVersion
+                                       } else {
+                                           null
+                                       }
+                                   }
+                                   validatedNewVersion = if (newVer != null) MdMgr.FormatVersion(newVer) else null
+                               } catch {
+                                   case e: Exception => throw (new RuntimeException(s"One or more version parameters are invalid... oldVer=$oldVer, newVer=$newVer"))
+                               }
+                               val optOldVer: Option[String] = Option(validatedOldVersion)
+
+                               /** modelnamespace.modelname expected for modelName value */
+                               val modelName: String = optModelName.orNull
+                               ModelService.updateModelPmml(pmmlPath
+                                   , Some("metadataapi")
+                                   , modelName
+                                   , validatedNewVersion)
+                               //, optOldVer)
+                           }
+                       } else {
+                           null
+                       }
+                   }
+
+               }
+               resp
+           } else {
+               null
            }
-           resp
-       } else {
-           null
+       } catch {
+           case e: Exception => logger.debug(s"Exception seen ... e=${e.toString}")
+           response=""
        }
 
        response
