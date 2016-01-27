@@ -368,6 +368,30 @@ class MigrateTo_V_1_3 extends MigratableTo {
     return (statusCode != 0)
   }
 
+  private def DepJars(depJars: List[String]): List[String] = {
+    val depJarsMap = Map("scalap-2.10.0.jar" -> "scalap-2.11.0.jar", "kvbase_2.10-0.1.0.jar" -> "kvbase_2.11-0.1.0.jar", "kamanjautils_2.10-1.0.jar" -> "kamanjautils_2.11-1.0.jar",
+      "kamanjabase_2.10-1.0.jar" -> "kamanjabase_2.11-1.0.jar", "customudflib_2.10-1.0.jar" -> "customudflib_2.11-1.0.jar", "pmmlcompiler_2.10-1.0.jar" -> "pmmlcompiler_2.11-1.0.jar",
+      "basetypes_2.10-0.1.0.jar" -> "basetypes_2.11-0.1.0.jar", "basefunctions_2.10-0.1.0.jar" -> "basefunctions_2.11-0.1.0.jar", "json4s-core_2.10-3.2.9.jar" -> "json4s-core_2.11-3.2.9.jar",
+      "json4s-jackson_2.10-3.2.9.jar" -> "json4s-jackson_2.11-3.2.9.jar", "pmmlruntime_2.10-1.0.jar" -> "pmmlruntime_2.11-1.0.jar", "pmmludfs_2.10-1.0.jar" -> "pmmludfs_2.11-1.0.jar",
+      "datadelimiters_2.10-1.0.jar" -> "datadelimiters_2.11-1.0.jar", "metadata_2.10-1.0.jar" -> "metadata_2.11-1.0.jar", "exceptions_2.10-1.0.jar" -> "exceptions_2.11-1.0.jar",
+      "json4s-ast_2.10-3.2.9.jar" -> "json4s-ast_2.11-3.2.9.jar", "json4s-native_2.10-3.2.9.jar" -> "json4s-native_2.11-3.2.9.jar", "bootstrap_2.10-1.0.jar" -> "bootstrap_2.11-1.0.jar",
+      "messagedef_2.10-1.0.jar" -> "messagedef_2.11-1.0.jar")
+
+    val newDeps = depJars.map(d => {
+      if (d.startsWith("scala-reflect-2.10")) {
+        "scala-reflect-2.11.7.jar"
+      } else if (d.startsWith("scala-library-2.10")) {
+        "scala-library-2.11.7.jar"
+      } else if (d.startsWith("scala-compiler-2.10")) {
+        "scala-compiler-2.11.7.jar"
+      } else {
+        depJarsMap.getOrElse(d, d)
+      }
+    })
+
+    newDeps
+  }
+
   private def ProcessObject(mdObjs: ArrayBuffer[(String, Map[String, Any])]): Unit = {
     try {
       mdObjs.foreach(mdObj =>
@@ -392,7 +416,7 @@ class MigrateTo_V_1_3 extends MigratableTo {
                   val mdlInfo = parse(mdlDefStr).values.asInstanceOf[Map[String, Any]]
                   val defStr = mdlInfo.getOrElse(ModelCompilationConstants.SOURCECODE, "").asInstanceOf[String]
                   // val phyName = mdlInfo.getOrElse(ModelCompilationConstants.PHYSICALNAME, "").asInstanceOf[String]
-                  val deps = mdlInfo.getOrElse(ModelCompilationConstants.DEPENDENCIES, List[String]()).asInstanceOf[List[String]]
+                  val deps = DepJars(mdlInfo.getOrElse(ModelCompilationConstants.DEPENDENCIES, List[String]()).asInstanceOf[List[String]])
                   val typs = mdlInfo.getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, List[String]()).asInstanceOf[List[String]]
 
                   var defFl = _unhandledMetadataDumpDir + "/" + objFormat + "_mdldef_" + dispkey + "." + ver + "." + objFormat.toLowerCase()
@@ -441,28 +465,8 @@ class MigrateTo_V_1_3 extends MigratableTo {
                   val mdlInfo = parse(mdlDefStr).values.asInstanceOf[Map[String, Any]]
                   val defStr = mdlInfo.getOrElse(ModelCompilationConstants.SOURCECODE, "").asInstanceOf[String]
                   // val phyName = mdlInfo.getOrElse(ModelCompilationConstants.PHYSICALNAME, "").asInstanceOf[String]
-                  val deps1 = mdlInfo.getOrElse(ModelCompilationConstants.DEPENDENCIES, List[String]()).asInstanceOf[List[String]]
+                  val deps = DepJars(mdlInfo.getOrElse(ModelCompilationConstants.DEPENDENCIES, List[String]()).asInstanceOf[List[String]])
                   val typs = mdlInfo.getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, List[String]()).asInstanceOf[List[String]]
-
-                  val depJarsMap = Map("scalap-2.10.0.jar" -> "scalap-2.11.0.jar", "kvbase_2.10-0.1.0.jar" -> "kvbase_2.11-0.1.0.jar", "kamanjautils_2.10-1.0.jar" -> "kamanjautils_2.11-1.0.jar",
-                    "kamanjabase_2.10-1.0.jar" -> "kamanjabase_2.11-1.0.jar", "customudflib_2.10-1.0.jar" -> "customudflib_2.11-1.0.jar", "pmmlcompiler_2.10-1.0.jar" -> "pmmlcompiler_2.11-1.0.jar",
-                    "basetypes_2.10-0.1.0.jar" -> "basetypes_2.11-0.1.0.jar", "basefunctions_2.10-0.1.0.jar" -> "basefunctions_2.11-0.1.0.jar", "json4s-core_2.10-3.2.9.jar" -> "json4s-core_2.11-3.2.9.jar",
-                    "json4s-jackson_2.10-3.2.9.jar" -> "json4s-jackson_2.11-3.2.9.jar", "pmmlruntime_2.10-1.0.jar" -> "pmmlruntime_2.11-1.0.jar", "pmmludfs_2.10-1.0.jar" -> "pmmludfs_2.11-1.0.jar",
-                    "datadelimiters_2.10-1.0.jar" -> "datadelimiters_2.11-1.0.jar", "metadata_2.10-1.0.jar" -> "metadata_2.11-1.0.jar", "exceptions_2.10-1.0.jar" -> "exceptions_2.11-1.0.jar",
-                    "json4s-ast_2.10-3.2.9.jar" -> "json4s-ast_2.11-3.2.9.jar", "json4s-native_2.10-3.2.9.jar" -> "json4s-native_2.11-3.2.9.jar", "bootstrap_2.10-1.0.jar" -> "bootstrap_2.11-1.0.jar",
-                    "messagedef_2.10-1.0.jar" -> "messagedef_2.11-1.0.jar")
-
-                  val deps = deps1.map(d => {
-                    if (d.startsWith("scala-reflect-2.10")) {
-                      "scala-reflect-2.11.7.jar"
-                    } else if (d.startsWith("scala-library-2.10")) {
-                      "scala-library-2.11.7.jar"
-                    } else if (d.startsWith("scala-compiler-2.10")) {
-                      "scala-compiler-2.11.7.jar"
-                    } else {
-                      depJarsMap.getOrElse(d, d)
-                    }
-                  })
 
                   val mdlConfig = ("migrationmodelconfig_from_1_2_to_1_3" ->
                     ("Dependencies" -> deps) ~
@@ -597,7 +601,24 @@ class MigrateTo_V_1_3 extends MigratableTo {
                 var failed = false
 
                 try {
-                  val retRes = MetadataAPIImpl.UploadModelsConfig(mdlCfg, Some[String](namespace), null) // Considering namespace as userid
+
+                  val cfgmap = parse(mdlCfg).values.asInstanceOf[Map[String, Any]]
+                  val changedCfg = cfgmap.map(kv => {
+                    val key = kv._1
+                    val mdl = kv._2.asInstanceOf[Map[String, Any]]
+                    val deps1 = mdl.getOrElse(ModelCompilationConstants.DEPENDENCIES, null)
+                    val typs1 = mdl.getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, null)
+                    val phyNm = mdl.getOrElse(ModelCompilationConstants.PHYSICALNAME, "").toString()
+
+                    val deps = if (deps1 != null) DepJars(deps1.asInstanceOf[List[String]]) else List[String]()
+                    val typs = if (typs1 != null) typs1.asInstanceOf[List[String]] else List[String]()
+
+                    (key, Map(ModelCompilationConstants.DEPENDENCIES -> deps, ModelCompilationConstants.TYPES_DEPENDENCIES -> typs, ModelCompilationConstants.PHYSICALNAME -> phyNm))
+                  })
+
+                  implicit val jsonFormats: Formats = DefaultFormats
+                  val newMdlCfgStr = Serialization.write(changedCfg)
+                  val retRes = MetadataAPIImpl.UploadModelsConfig(newMdlCfgStr, Some[String](namespace), null) // Considering namespace as userid
                   failed = isFailedStatus(retRes)
                 } catch {
                   case e: Exception => {
