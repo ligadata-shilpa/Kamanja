@@ -6016,7 +6016,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @return the result as a JSON String of object ApiResult where ApiResult.resultData contains
      *         the MessageDef either as a JSON or XML string depending on the parameter formatType
      */
-    def GetMessageDef(nameSpace: String, objectName: String, version: String, formatType: String, userid: Option[String]): String = {
+    def GetMessageDef(nameSpace: String, objectName: String, formatType: String, version: String, userid: Option[String]): String = {
         logAuditRec(userid
             , Some(AuditConstants.READ)
             , AuditConstants.GETOBJECT
