@@ -56,6 +56,8 @@ class MessageGenerator {
         messageGenerator = messageGenerator.append(getMessgeBasicDetails(message))
         messageGenerator = messageGenerator.append(methodsFromBaseMsg(message))
         messageGenerator = messageGenerator.append(messageContructor(message))
+        messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + hasPartitionKeyFunc + msgConstants.newline)
+        messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + hasPrimaryKeysFunc + msgConstants.newline)
         messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + partitionKeys(message) + msgConstants.newline)
         messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + primaryKeys(message) + msgConstants.newline)
         messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + generateParitionKeysData(message) + msgConstants.newline)
@@ -338,14 +340,6 @@ class MessageGenerator {
   def ConvertPrevToNewVerObj(obj: Any): Unit = {}
   override def getNativeKeyValues(): scala.collection.immutable.Map[String, (String, Any)] = null
   
-  override def hasPrimaryKey(): Boolean = {
-    """ + message.Name + """.hasPrimaryKey;
-  }
-
-  override def hasPartitionKey(): Boolean = {
-    """ + message.Name + """.hasPartitionKey;
-  }
-
   override def hasTimeParitionInfo(): Boolean = {
     """ + message.Name + """.hasTimeParitionInfo;
   }
@@ -529,12 +523,11 @@ class MessageGenerator {
     return getMethod.toString
   }
 
- 
   private def partitionKeys(message: Message): String = {
 
     var paritionKeysStr: String = ""
     if (message.PartitionKeys != null || message.PartitionKeys.size > 0) {
-      paritionKeysStr = "val partitionKeys = Array(" + message.PartitionKeys.map(p => {" \"" +p.toLowerCase + "\""}).mkString(", ") + ");";
+      paritionKeysStr = "val partitionKeys = Array(" + message.PartitionKeys.map(p => { " \"" + p.toLowerCase + "\"" }).mkString(", ") + ");";
     } else {
       paritionKeysStr = "val partitionKeys: Array[String] = Array[String](); ";
     }
@@ -547,7 +540,7 @@ class MessageGenerator {
 
     var primaryKeysStr: String = ""
     if (message.PrimaryKeys != null || message.PrimaryKeys.size > 0) {
-      primaryKeysStr = "val primaryKeys: Array[String] = Array(" + message.PrimaryKeys.map(p => {"\""+ p.toLowerCase + "\""}).mkString(", ") + ");";
+      primaryKeysStr = "val primaryKeys: Array[String] = Array(" + message.PrimaryKeys.map(p => { "\"" + p.toLowerCase + "\"" }).mkString(", ") + ");";
     } else {
       primaryKeysStr = "val primaryKeys: Array[String] = Array[String](); ";
     }
