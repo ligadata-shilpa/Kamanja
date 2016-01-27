@@ -69,6 +69,7 @@ class MessageGenerator {
         messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + msgConstants.setByNameFuncForMappedMsgs)
         messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + setFuncGenerationforMapped(message.Elements))
         messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + getFuncGenerationForMapped(message.Elements))
+        messageGenerator = messageGenerator.append(builderMethod)
         messageGenerator = messageGenerator.append(builderGenerator.generatorBuilder(message))
         messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.closeBrace)
 
@@ -526,10 +527,11 @@ class MessageGenerator {
   private def partitionKeys(message: Message): String = {
 
     var paritionKeysStr: String = ""
-    if (message.PartitionKeys != null || message.PartitionKeys.size > 0) {
-      paritionKeysStr = "val partitionKeys = Array(" + message.PartitionKeys.map(p => { " \"" + p.toLowerCase + "\"" }).mkString(", ") + ");";
-    } else {
+    if (message.PartitionKeys == null || message.PartitionKeys.size == 0) {
       paritionKeysStr = "val partitionKeys: Array[String] = Array[String](); ";
+    } else {
+      paritionKeysStr = "val partitionKeys = Array(" + message.PartitionKeys.map(p => { " \"" + p.toLowerCase + "\"" }).mkString(", ") + ");";
+
     }
 
     return paritionKeysStr
@@ -539,38 +541,14 @@ class MessageGenerator {
   private def primaryKeys(message: Message): String = {
 
     var primaryKeysStr: String = ""
-    if (message.PrimaryKeys != null || message.PrimaryKeys.size > 0) {
-      primaryKeysStr = "val primaryKeys: Array[String] = Array(" + message.PrimaryKeys.map(p => { "\"" + p.toLowerCase + "\"" }).mkString(", ") + ");";
-    } else {
+    if (message.PrimaryKeys == null || message.PrimaryKeys.size == 0) {
       primaryKeysStr = "val primaryKeys: Array[String] = Array[String](); ";
+    } else {
+      primaryKeysStr = "val primaryKeys: Array[String] = Array(" + message.PrimaryKeys.map(p => { "\"" + p.toLowerCase + "\"" }).mkString(", ") + ");";
+
     }
 
     return primaryKeysStr
-
-  }
-
-  private def PartitionKeyData(message: Message): String = {
-
-    var paritionKeysData: String = ""
-    if (message.PartitionKeys == null || message.PartitionKeys.size == 0) {
-      paritionKeysData = " override def PartitionKeyData(inputdata: InputData): Array[String] = Array[String](); ";
-    } else {
-      paritionKeysData = " override def PartitionKeyData(inputdata: InputData): Array[String] = Array[String](); ";
-    }
-
-    return paritionKeysData
-
-  }
-
-  private def primaryKeyData(message: Message): String = {
-
-    var primaryKeysData: String = ""
-    if (message.PrimaryKeys == null || message.PrimaryKeys.size == 0) {
-      primaryKeysData = "override def PrimaryKeyData(inputdata: InputData): Array[String] = Array[String]()";
-    } else {
-      primaryKeysData = "override def PrimaryKeyData(inputdata: InputData): Array[String] = Array[String]() ";
-    }
-    return primaryKeysData
 
   }
 
@@ -590,6 +568,16 @@ class MessageGenerator {
     (partitionKeys.size > 0);
   }
   """
+  }
+
+  /*
+   * handling system colums in Mapped Messages
+   */
+
+  private def getSystemColumns(): String = {
+
+    return ""
+
   }
 
 }

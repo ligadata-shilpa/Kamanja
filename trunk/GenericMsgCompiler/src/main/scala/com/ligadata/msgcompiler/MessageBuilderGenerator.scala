@@ -20,7 +20,6 @@ class MessageBuilderGenerator {
       builderGenerator = builderGenerator.append(builderClassGen(message) + newline)
       if (message.Fixed.equalsIgnoreCase("true")) {
         builderGenerator = builderGenerator.append(newline + generatedBuilderVariables(message))
-
         builderGenerator = builderGenerator.append(getFuncGeneration(message.Elements))
         builderGenerator = builderGenerator.append(setFuncGeneration(message.Elements))
       } else if (message.Fixed.equalsIgnoreCase("false")) {
@@ -120,9 +119,29 @@ class MessageBuilderGenerator {
   }
 
   /*
+   * build method for  Messages
+   */
+  private def build(message: Message): String = {
+    var buildMethod: String = ""
+    val msgFullName = message.Pkg + "." + message.Name + " = { " + newline
+    val vardeclrtion: String = "%s var message = new %s %s".format(pad2, message.Name, newline)
+    val build: String = "def build() : "
+    val returnVal = "return message;"
+    if (message.Fixed.equalsIgnoreCase("true"))
+      buildMethod = build + msgFullName + vardeclrtion + buildForFixedMessage(message.Elements) + pad2 + returnVal + newline + pad1 + closeBrace
+    else if (message.Fixed.equalsIgnoreCase("false"))
+      buildMethod = build + msgFullName + vardeclrtion + buildForMappedMessage(message.Elements) + pad2 + returnVal + newline + pad1 + closeBrace
+
+    log.info("build method Start")
+    log.info(buildMethod)
+    log.info("build method end")
+    return buildMethod
+  }
+
+  /*
    * build method to build the mesage object 
    */
-  private def buildMessage(fields: List[Element]): String = {
+  private def buildForFixedMessage(fields: List[Element]): String = {
     var buildMethodSB = new StringBuilder(8 * 1024)
     val buldstr = "%s message.set%s(this.%s)%s"
     try {
@@ -141,19 +160,14 @@ class MessageBuilderGenerator {
   }
 
   /*
-   * build method
+   * build method for Mapped Messages
    */
-  private def build(message: Message): String = {
-    var buildMethod: String = ""
-    val msgFullName = message.Pkg + "." + message.Name + " = { " + newline
-    val vardeclrtion: String = "%s var message = new %s %s".format(pad2, message.Name, newline)
-    val build: String = "def build() : "
-    val returnVal = "return message;"
-    buildMethod = build + msgFullName + vardeclrtion + buildMessage(message.Elements) + pad2 + returnVal + newline + pad1 + closeBrace
-    log.info("build method Start")
-    log.info(buildMethod)
-    log.info("build method end")
-    return buildMethod
+  private def buildForMappedMessage(fields: List[Element]): String = {
+    """
+       this.fields.foreach(field => {
+          message.fields.put(field._1, (field._2._1, field._2._2 ) )
+       })    
+   """
   }
 
   /*

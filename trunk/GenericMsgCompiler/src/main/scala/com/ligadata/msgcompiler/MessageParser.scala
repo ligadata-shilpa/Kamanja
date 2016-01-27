@@ -32,7 +32,7 @@ class MessageParser {
   /**
    * process the json map and return the message object
    */
-  def processJson(json: String, mdMgr: MdMgr, recompile: Boolean = false): Messages = {
+  def processJson(json: String, mdMgr: MdMgr, recompile: Boolean = false): Message = {
     var message: Message = null
     var messages: Messages = null
     var msgList: List[Message] = List[Message]()
@@ -52,7 +52,7 @@ class MessageParser {
     try {
       jtype = geJsonType(map)
       // log.info("map : " + map)
-      messages = processJsonMap(jtype, map, mdMgr, recompile, schema)
+      message = processJsonMap(jtype, map, mdMgr, recompile, schema)
     } catch {
       case e: Exception => {
         val stackTrace = StackTrace.ThrowableTraceString(e)
@@ -60,7 +60,7 @@ class MessageParser {
         throw e
       }
     }
-    messages
+    message
   }
 
   /**
@@ -85,8 +85,9 @@ class MessageParser {
   /**
    * Parse the json and create the Message Object
    */
-  private def processJsonMap(key: String, map: scala.collection.mutable.Map[String, Any], mdMgr: MdMgr, recompile: Boolean = false, schema: String): Messages = {
+  private def processJsonMap(key: String, map: scala.collection.mutable.Map[String, Any], mdMgr: MdMgr, recompile: Boolean = false, schema: String): Message = {
     var msgs: Messages = null
+     var msg: Message = null
     type messageMap = scala.collection.immutable.Map[String, Any]
     var msgLevel: Int = 0
     try {
@@ -97,7 +98,7 @@ class MessageParser {
           val messageMap: scala.collection.mutable.Map[String, Any] = scala.collection.mutable.Map[String, Any]()
           message.foreach(kv => { messageMap(kv._1.toLowerCase()) = kv._2 })
 
-          msgs = getMsgorCntrObj(messageMap, key, mdMgr, recompile, msgLevel, schema)
+          msg = getMsgorCntrObj(messageMap, key, mdMgr, recompile, msgLevel, schema)
         }
       } else throw new Exception("Incorrect json")
     } catch {
@@ -108,13 +109,13 @@ class MessageParser {
       }
     }
 
-    msgs
+    msg
   }
 
   /**
    * Generate the Message object from message definition Map
    */
-  private def getMsgorCntrObj(message: scala.collection.mutable.Map[String, Any], mtype: String, mdMgr: MdMgr, recompile: Boolean = false, msgLevel: Int, schema: String): Messages = {
+  private def getMsgorCntrObj(message: scala.collection.mutable.Map[String, Any], mtype: String, mdMgr: MdMgr, recompile: Boolean = false, msgLevel: Int, schema: String): Message = {
     var ele: List[Element] = null
     var elements: List[Element] = null
     var messages: List[Message] = null
@@ -176,12 +177,19 @@ class MessageParser {
           if (key.equals("elements") || key.equals("fields")) {
             val (elmnts, msgs) = getElementsObj(message, key)
             elements = elmnts
-            messages = msgs
+           // messages = msgs
 
             //for child messages if the name space, version, persist and version are not defined in the message definition of child message use the values from the parent message
-
+       /*  log.info("-----------------------" +messages.size)
             if (messages != null && messages.size > 0)
               messages.foreach(m => {
+                
+                log.info("-----------------------" + m.Name)
+                log.info("-----------------------" + m.NameSpace)
+                log.info("-----------------------" + m.Version)
+                log.info("-----------------------" + m.Fixed)
+                log.info("-----------------------" + m.Persist)
+                
                 if (m.NameSpace == null || m.NameSpace.trim() == "")
                   m.NameSpace = NameSpace
 
@@ -191,15 +199,11 @@ class MessageParser {
                 if (m.Fixed == null || m.Fixed.trim() == "")
                   m.Fixed = Fixed
 
-                /* log.info("-----------------------" + m.Name)
-                log.info("-----------------------" + m.NameSpace)
-                log.info("-----------------------" + m.Version)
-                log.info("-----------------------" + m.Fixed)
-                log.info("-----------------------" + m.Persist)
-                * 
-                */
+                
 
               })
+              * */
+              
           }
 
           if (mtype.equals("message") && message.contains(tkey)) {
@@ -280,6 +284,8 @@ class MessageParser {
     val physicalName: String = pkg + ".V" + MdMgr.ConvertVersionToLong(msgVersion).toString + "." + Name
 
     val msg: Message = new Message(mtype, NameSpace, Name, physicalName, msgVersion, "Description", Fixed, persistMsg, elements, tdataexists, tdata, null, pkg.trim(), null, null, null, partitionKeysList, primaryKeysList, cur_time, msgLevel, null, schema)
+   
+    
     var msglist: List[Message] = List[Message]()
     if (messages != null && messages.size > 0)
       messages.foreach(m => {
@@ -313,7 +319,7 @@ class MessageParser {
 
     })
 
-    new Messages(msglist)
+    msg
   }
 
   /**
@@ -406,8 +412,8 @@ class MessageParser {
 
                 val (elmnt, msg) = getElementData(map, key, count, msgLevel)
                 lbuffer += elmnt
-                if (msg != null)
-                  msgLstbuffer += msg
+               // if (msg != null)
+              //    msgLstbuffer += msg
               }
 
             } else if (MsgUtils.isTrue(MsgUtils.LowerCase(Fixed))) throw new Exception("Either Fields or Container or Message do not exist in " + key + " json")
@@ -451,7 +457,7 @@ class MessageParser {
           fldMap1.foreach(kv => { mapElement(kv._1.toLowerCase()) = kv._2 })
           val (field, msg) = getElementData(mapElement, eKey, ordinal, msgLevel)
           fld = field
-          message = msg
+        //  message = msg
         }
       }
     } catch {
@@ -513,7 +519,7 @@ class MessageParser {
           fld = new Element(namespace, name, ttype, collectionType, key, fldTypeVer, ordinal, null, null)
 
         } else if (fieldtype.isInstanceOf[FieldMap]) {
-          // log.info("Child Container ========== Start ==============  ")
+          log.info("Child Container ========== Start ==============  ")
 
           val childFld = fieldtype.asInstanceOf[Map[String, Any]]
           log.info("Child Map ************ " + childFld)
@@ -525,7 +531,7 @@ class MessageParser {
           childMessage = childMsg
           // msgBuffer += message
 
-          //  log.info("^^^^^^^^^^^^^^^^^^^^ childMsgType   " + childMsgType)
+          log.info("^^^^^^^^^^^^^^^^^^^^ childMsgType   " + childMsgType)
           fld = new Element(namespace, name, childMsgType, collectionType, key, fldTypeVer, ordinal, null, null)
 
           log.info("Child Container ==========  End  ============== ")
@@ -541,8 +547,8 @@ class MessageParser {
         throw e
       }
     }
-    // if (childMessage != null)
-    //    log.info("%%%%%%%%%%%%%%%%% childMessage   " + childMessage.Name)
+    if (childMessage != null)
+       log.info("%%%%%%%%%%%%%%%%% childMessage   " + childMessage.Name)
     // log.info("^^^^^^^^^^^^^^^^^^^^ ttype   " + ttype)
 
     (fld, childMessage)

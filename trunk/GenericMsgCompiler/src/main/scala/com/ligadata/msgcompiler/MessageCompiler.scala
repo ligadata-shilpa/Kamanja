@@ -41,6 +41,7 @@ object MessageCompiler {
 
     var messageParser = new MessageParser
     var messages: Messages = null
+    var message: Message = null
     var generatedNonVersionedMsg: String = ""
     var generatedVersionedMsg: String = ""
     var generatedNonVersionedJavaRdd: String = ""
@@ -51,13 +52,11 @@ object MessageCompiler {
       if (mdMgr == null)
         throw new Exception("MdMgr is not found")
       if (msgDfType.equalsIgnoreCase("json")) {
-        messages = messageParser.processJson(jsonstr, mdMgr, recompile)
-        log.info("=============Started================" + messages.messages.size)
-        messages.messages.foreach(msg => {
-          handleMsgFieldTypes.handleFieldTypes(msg, mdMgr)
-          generatedNonVersionedMsg = msgGen.generateMessage(msg)
-          val (versionedRddClass, nonVersionedRddClass) = generatedRdd.generateRdd(msg)
-          containerDef = createMsg.createMessage(msg, mdMgr, recompile)
+        message = messageParser.processJson(jsonstr, mdMgr, recompile)
+          handleMsgFieldTypes.handleFieldTypes(message, mdMgr)
+          generatedNonVersionedMsg = msgGen.generateMessage(message)
+          val (versionedRddClass, nonVersionedRddClass) = generatedRdd.generateRdd(message)
+          containerDef = createMsg.createMessage(message, mdMgr, recompile)
 
           /*
            log.info("***********************versionedRddClass*******************")
@@ -84,7 +83,7 @@ object MessageCompiler {
           log.info("PhysicalName =============== " + containerDef.PhysicalName)
           log.info("TranId =============== " + containerDef.TranId)
 */
-        })
+        
 
         //simple check to get metadata types for the fields in message
 
