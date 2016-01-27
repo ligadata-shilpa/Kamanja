@@ -24,19 +24,14 @@
     ]
   },
   "excludeMetadata": [
-    "MappedMsgTypeDef",
-    "StructTypeDef",
-    "ArrayTypeDef",
-    "ArrayBufTypeDef",
-    "SortedSetTypeDef",
-    "ImmutableMapTypeDef",
-    "MapTypeDef",
-    "HashMapTypeDef",
-    "SetTypeDef",
-    "ImmutableSetTypeDef",
-    "TreeSetTypeDef",
+    "ModelDef",
+    "MessageDef",
+    "ContainerDef",
+    "ConfigDef",
+    "FunctionDef",
     "JarDef",
     "OutputMsgDef"
   ],
   "excludeData": false
 }
+
