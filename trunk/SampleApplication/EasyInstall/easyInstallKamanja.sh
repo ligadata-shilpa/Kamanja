@@ -145,7 +145,6 @@ cp $srcPath/lib_managed/jars/org.apache.hadoop/hadoop-auth/hadoop-auth-2.7.1.jar
 cp $srcPath/lib_managed/jars/commons-lang/commons-lang/commons-lang-2.6.jar $systemlib
 cp $srcPath/lib_managed/jars/com.google.code.gson/gson/gson-2.2.4.jar $systemlib
 cp $ivyPath/cache/org.jpmml/pmml-schema/jars/pmml-schema-1.2.9.jar $systemlib
-cp $ivyPath/cache/org.scala-lang/scala-reflect/jars/scala-reflect-2.11.0.jar $systemlib
 cp $ivyPath/cache/org.javassist/javassist/bundles/javassist-3.18.1-GA.jar $systemlib
 cp $srcPath/lib_managed/jars/org.apache.logging.log4j/log4j-api/log4j-api-2.4.1.jar $systemlib
 cp $ivyPath/cache/com.typesafe/config/bundles/config-1.2.1.jar $systemlib
@@ -155,7 +154,6 @@ cp $ivyPath/cache/commons-net/commons-net/jars/commons-net-3.1.jar $systemlib
 cp $ivyPath/cache/org.apache.hadoop/hadoop-annotations/jars/hadoop-annotations-2.7.1.jar $systemlib
 cp $ivyPath/cache/com.101tec/zkclient/jars/zkclient-0.3.jar $systemlib
 cp $ivyPath/cache/org.apache.commons/commons-math3/jars/commons-math3-3.6.jar $systemlib
-cp $ivyPath/cache/org.slf4j/slf4j-api/jars/slf4j-api-1.7.6.jar $systemlib
 cp $ivyPath/cache/org.apache.camel/camel-core/bundles/camel-core-2.9.2.jar $systemlib
 cp $ivyPath/cache/com.google.code.findbugs/jsr305/jars/jsr305-3.0.0.jar $systemlib
 cp $srcPath/lib_managed/jars/commons-cli/commons-cli/commons-cli-1.2.jar $systemlib
@@ -166,7 +164,6 @@ cp $ivyPath/cache/com.esotericsoftware.reflectasm/reflectasm/jars/reflectasm-1.0
 cp $ivyPath/cache/io.spray/spray-client_2.11/bundles/spray-client_2.11-1.3.3.jar $systemlib
 cp $srcPath/lib_managed/jars/javax.servlet/servlet-api/servlet-api-2.5.jar $systemlib
 cp $srcPath/Utils/Audit/target/scala-2.11/auditadapters_2.11-1.0.jar $systemlib
-cp $ivyPath/cache/org.scala-lang.modules/scala-xml_2.11/bundles/scala-xml_2.11-1.0.1.jar $systemlib
 cp $srcPath/lib_managed/bundles/com.sun.jersey/jersey-server/jersey-server-1.9.jar $systemlib
 cp $srcPath/lib_managed/jars/org.json4s/json4s-native_2.11/json4s-native_2.11-3.2.9.jar $systemlib
 cp $ivyPath/cache/org.apache.directory.server/apacheds-i18n/bundles/apacheds-i18n-2.0.0-M15.jar $systemlib
@@ -193,7 +190,6 @@ cp $ivyPath/cache/com.typesafe.akka/akka-actor_2.11/jars/akka-actor_2.11-2.3.9.j
 cp $ivyPath/cache/uk.co.bigbeeconsultants/bee-client_2.11/jars/bee-client_2.11-0.28.0.jar $systemlib
 cp $srcPath/lib_managed/jars/org.scalameta/foundation_2.11/foundation_2.11-0.0.3.jar $systemlib
 cp $ivyPath/cache/org.apache.hbase/hbase-protocol/jars/hbase-protocol-1.0.2.jar $systemlib
-cp $ivyPath/cache/org.scala-lang/scala-reflect/jars/scala-reflect-2.11.2.jar $systemlib
 cp $ivyPath/cache/org.scala-lang.modules/scala-parser-combinators_2.11/bundles/scala-parser-combinators_2.11-1.0.2.jar $systemlib
 cp $srcPath/lib_managed/jars/javax.xml.bind/jaxb-api/jaxb-api-2.2.2.jar $systemlib
 cp $ivyPath/cache/org.jdom/jdom/jars/jdom-1.1.jar $systemlib
@@ -207,7 +203,6 @@ cp $ivyPath/cache/io.spray/spray-util_2.11/bundles/spray-util_2.11-1.3.3.jar $sy
 cp $srcPath/lib_managed/jars/org.apache.commons/commons-collections4/commons-collections4-4.0.jar $systemlib
 cp $srcPath/lib_managed/jars/org.apache.zookeeper/zookeeper/zookeeper-3.4.6.jar $systemlib
 cp $ivyPath/cache/com.twitter/chill-java/jars/chill-java-0.5.0.jar $systemlib
-cp $ivyPath/cache/org.slf4j/slf4j-api/jars/slf4j-api-1.7.5-sources.jar $systemlib
 cp $ivyPath/cache/asm/asm/jars/asm-3.1.jar $systemlib
 cp $ivyPath/cache/org.scalameta/quasiquotes_2.11/jars/quasiquotes_2.11-0.0.3.jar $systemlib
 cp $ivyPath/cache/org.apache.curator/curator-recipes/bundles/curator-recipes-2.7.1.jar $systemlib
@@ -293,7 +288,6 @@ cp $ivyPath/cache/commons-configuration/commons-configuration/jars/commons-confi
 cp $ivyPath/cache/commons-beanutils/commons-beanutils-core/jars/commons-beanutils-core-1.8.0.jar $systemlib
 cp $srcPath/Utils/CleanUtil/target/scala-2.11/cleanutil_2.11-1.0.jar $systemlib
 cp $ivyPath/cache/com.jcraft/jsch/jars/jsch-0.1.42.jar $systemlib
-cp $ivyPath/cache/org.slf4j/slf4j-api/jars/slf4j-api-1.6.4.jar $systemlib
 cp $srcPath/lib_managed/jars/org.codehaus.jackson/jackson-core-asl/jackson-core-asl-1.9.13.jar $systemlib
 cp $ivyPath/cache/com.google.code.gson/gson/jars/gson-2.3.1.jar $systemlib
 cp $ivyPath/cache/io.spray/spray-routing_2.11/bundles/spray-routing_2.11-1.3.3.jar $systemlib
@@ -301,7 +295,6 @@ cp $ivyPath/cache/org.apache.kafka/kafka_2.11/jars/kafka_2.11-0.8.2.2.jar $syste
 cp $ivyPath/cache/com.chuusai/shapeless_2.11/jars/shapeless_2.11-1.2.4.jar $systemlib
 cp $ivyPath/cache/org.apache.directory.api/api-asn1-api/bundles/api-asn1-api-1.0.0-M20.jar $systemlib
 cp $ivyPath/cache/com.google.code.findbugs/jsr305/jars/jsr305-1.3.9.jar $systemlib
-cp $ivyPath/cache/org.slf4j/slf4j-api/jars/slf4j-api-1.7.5.jar $systemlib
 cp $srcPath/lib_managed/jars/commons-logging/commons-logging/commons-logging-1.2.jar $systemlib
 cp $srcPath/lib_managed/jars/org.ow2.asm/asm/asm-4.0.jar $systemlib
 cp $ivyPath/cache/org.apache.thrift/libthrift/jars/libthrift-0.9.2.jar $systemlib
@@ -478,7 +471,6 @@ cp $srcPath/lib_managed/jars/com.twitter/chill-java/chill-java-0.5.0.jar $system
 cp $srcPath/lib_managed/jars/org.hamcrest/hamcrest-core/hamcrest-core-1.3.jar $systemlib
 cp $srcPath/lib_managed/jars/org.jpmml/pmml-schema/pmml-schema-1.2.9.jar $systemlib
 cp $ivyPath/cache/org.scalameta/trees_2.11/jars/trees_2.11-0.0.3.jar $systemlib
-cp $ivyPath/cache/org.scala-lang.modules/scala-xml_2.11/bundles/scala-xml_2.11-1.0.2.jar $systemlib
 cp $srcPath/Storage/HBase/target/scala-2.11/hbase_2.11-0.1.0.jar $systemlib
 cp $ivyPath/cache/joda-time/joda-time/jars/joda-time-2.9.1.jar $systemlib
 cp $ivyPath/cache/org.apache.cassandra/cassandra-thrift/jars/cassandra-thrift-2.0.3.jar $systemlib
@@ -503,7 +495,6 @@ cp $srcPath/lib_managed/jars/org.scalameta/tokenizers_2.11/tokenizers_2.11-0.0.3
 cp $ivyPath/cache/xmlenc/xmlenc/jars/xmlenc-0.52.jar $systemlib
 cp $srcPath/lib_managed/jars/org.jpmml/pmml-model/pmml-model-1.2.9.jar $systemlib
 cp $ivyPath/cache/org.apache.httpcomponents/httpcore/jars/httpcore-4.1.2.jar $systemlib
-cp $ivyPath/cache/org.scala-lang.modules/scala-xml_2.11/bundles/scala-xml_2.11-1.0.3.jar $systemlib
 cp $srcPath/lib_managed/jars/commons-dbcp/commons-dbcp/commons-dbcp-1.4.jar $systemlib
 cp $srcPath/lib_managed/jars/javax.xml.stream/stax-api/stax-api-1.0-2.jar $systemlib
 cp $srcPath/lib_managed/jars/org.scalameta/trees_2.11/trees_2.11-0.0.3.jar $systemlib
