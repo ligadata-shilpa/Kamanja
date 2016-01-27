@@ -5983,7 +5983,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
        val nmspcNodes : Array[String] = nameNodes.splitAt(nameNodes.size -1)._1
        val buffer : StringBuilder = new StringBuilder
        val nameSpace : String = nmspcNodes.addString(buffer, ".").toString
-       GetMessageDef(nameSpace, objectName, "-1", formatType, userid)
+       GetMessageDef(nameSpace, objectName, formatType, "-1", userid)
   }
 
     /**
@@ -6002,7 +6002,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
         val nmspcNodes : Array[String] = nameNodes.splitAt(nameNodes.size -1)._1
         val buffer : StringBuilder = new StringBuilder
         val nameSpace : String = nmspcNodes.addString(buffer, ".").toString
-        GetMessageDef(nameSpace, objectName, version, formatType, userid)
+        GetMessageDef(nameSpace, objectName, formatType, version, userid)
     }
 
     /**
