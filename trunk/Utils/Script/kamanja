@@ -110,6 +110,8 @@ elif [ "$INPUT" = "watch input queue" ]; then
   $KAMANJA_HOME/bin/WatchInputQueue.sh
 elif [ "$INPUT" = "watch output queue" ]; then
   $KAMANJA_HOME/bin/WatchOutputQueue.sh
+elif [ "$INPUT" = "watch failed events queue" ]; then
+  $KAMANJA_HOME/bin/WatchFailedEventQueue.sh
 elif [ "$INPUT" = "help" ]; then
 cat $KAMANJA_HOME/input/HelpMenu.txt
     echo ""
