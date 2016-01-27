@@ -18,7 +18,7 @@ package com.ligadata.SimpleEnvContextImpl
 
 import org.json4s.jackson.Serialization
 
-import scala.actors.threadpool.{Executors, ExecutorService}
+import scala.actors.threadpool.{ Executors, ExecutorService }
 import scala.collection.immutable.Map
 import scala.collection.mutable._
 import scala.util.control.Breaks._
@@ -56,9 +56,9 @@ case class AdapterUniqueValueDes(T: Long, V: String, Out: Option[List[List[Strin
 object SimpleEnvContextImpl extends EnvContext with LogTrait {
 
   val CLASSNAME = "com.ligadata.SimpleEnvContextImpl.SimpleEnvContextImpl$"
-  private var hbExecutor: ExecutorService =  Executors.newFixedThreadPool(1)
+  private var hbExecutor: ExecutorService = Executors.newFixedThreadPool(1)
   private var isShutdown = false
-  private var metrics: collection.mutable.Map[String,Long] = collection.mutable.Map[String,Long]()
+  private var metrics: collection.mutable.Map[String, Long] = collection.mutable.Map[String, Long]()
   private var startTime: String = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
   private var lastSeen: String = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
   private val STORAGE_READ_COUNT = "READS"
@@ -71,7 +71,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   // Start the heartbeat.
   hbExecutor.execute(new Runnable() {
     override def run(): Unit = {
-      while(!isShutdown) {
+      while (!isShutdown) {
         try {
           lastSeen = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
           Thread.sleep(5000)
@@ -82,9 +82,9 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     }
   })
 
-  override def getComponentStatusAndMetrics: com.ligadata.HeartBeat.MonitorComponentInfo ={
+  override def getComponentStatusAndMetrics: com.ligadata.HeartBeat.MonitorComponentInfo = {
     implicit val formats = org.json4s.DefaultFormats
-    return new com.ligadata.HeartBeat.MonitorComponentInfo("STORAGE_ADAPTER", "SimpleEnvContext", "v1.3", startTime, lastSeen,  Serialization.write(metrics).toString)
+    return new com.ligadata.HeartBeat.MonitorComponentInfo("STORAGE_ADAPTER", "SimpleEnvContext", "v1.3", startTime, lastSeen, Serialization.write(metrics).toString)
   }
 
   private def ResolveEnableEachTransactionCommit: Unit = {
@@ -109,22 +109,26 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     }
   }
 
-
   override def setMdMgr(inMgr: MdMgr): Unit = {
     _mgr = inMgr
     ResolveEnableEachTransactionCommit
   }
 
   override def NewMessageOrContainer(fqclassname: String): MessageContainerBase = {
+    var curClass: Class[_] = null
     try {
-      Class.forName(fqclassname)
+      if (_classLoader != null) {
+        curClass = Class.forName(fqclassname, true, _classLoader)
+      } else {
+        curClass = Class.forName(fqclassname)
+      }
     } catch {
       case e: Exception => {
-        logger.error("Failed to load Message/Container class %s with Reason:%s Message:%s".format(fqclassname, e.getCause, e.getMessage))
+        logger.error("Failed to load Message/Container class %s".format(fqclassname), e)
         throw e // Rethrow
       }
     }
-    val msgOrContainer: MessageContainerBase = Class.forName(fqclassname).newInstance().asInstanceOf[MessageContainerBase]
+    val msgOrContainer: MessageContainerBase = curClass.newInstance().asInstanceOf[MessageContainerBase]
     msgOrContainer
   }
 
