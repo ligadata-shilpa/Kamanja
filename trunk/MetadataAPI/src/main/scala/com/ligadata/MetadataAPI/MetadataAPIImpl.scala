@@ -3830,7 +3830,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
                         saveModelParms.getOrElse(ModelCompilationConstants.PHYSICALNAME, "").asInstanceOf[String],
                         saveModelParms.getOrElse(ModelCompilationConstants.DEPENDENCIES, List[String]()).asInstanceOf[List[String]],
                         saveModelParms.getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, List[String]()).asInstanceOf[List[String]],
-                        mod.ObjectFormat.toString)
+                        ObjFormatType.asString(mod.objectFormat))
                     custModDef
                 }
             } else {
