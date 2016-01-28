@@ -108,8 +108,8 @@ public class SimpleMailBean {
 				}else{
 					to = (String)fillers.get("associateEmail");
 					cc = (String)fillers.get("supervisorEmail");
-					from = conf.getProperty(AdapterConfiguration.MAIL_FROM);
 				}
+				from = conf.getProperty(AdapterConfiguration.MAIL_FROM);
 				
 			}else{
 				log.error(Constants.ERROR_TEMPLATE_DIRECTORY_UNAVAILABLE+templateDir.toAbsolutePath().toString());
