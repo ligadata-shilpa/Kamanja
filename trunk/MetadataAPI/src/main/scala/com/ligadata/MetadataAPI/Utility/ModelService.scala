@@ -835,6 +835,7 @@ object ModelService {
                       , userid: Option[String] = Some("metadataapi")
                       ):String={
         var response=""
+        var progressReport: Int = 0
         try {
           if (modelId.length > 0) {
             val(ns, name, ver) = com.ligadata.kamanja.metadata.Utils.parseNameToken(modelId)
@@ -844,6 +845,7 @@ object ModelService {
               case e: Exception => e.printStackTrace()
             }
           }
+          progressReport = 1
           val modelKeys = MetadataAPIImpl.GetAllModelsFromCache(true, None)
 
           if (modelKeys.length == 0) {
@@ -876,7 +878,12 @@ object ModelService {
           }
         } catch {
           case e: Exception => {
-            response=e.getStackTrace.toString
+            if (progressReport == 0)
+              response = new ApiResult(ErrorCodeConstants.Failure, "DeactivateModel", null, "Error : Cannot parse ModelName, must be Namespace.Name.Version format").toString
+            else {
+              response = new ApiResult(ErrorCodeConstants.Failure, "DeactivateModel", null, "Error : An Exception occured during processing").toString
+              logger.error("Unkown exception occured during deactivate model processing ", e)
+            }
           }
         }
         response
