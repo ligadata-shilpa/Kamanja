@@ -104,6 +104,24 @@
 			<artifactId>hadoop-core</artifactId>
 			<version>1.2.1</version>
 		</dependency>
+		
+		<!-- Start For Mail Utils -->
+		<dependency>
+			<groupId>org.codemonkey.simplejavamail</groupId>
+			<artifactId>simple-java-mail</artifactId>
+			<version>2.5.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.antlr</groupId>
+			<artifactId>ST4</artifactId>
+			<version>4.0.8</version>
+		</dependency>
+		<dependency>
+			 <groupId>org.projectlombok</groupId>
+			 <artifactId>lombok</artifactId>
+			 <version>1.16.6</version>
+		 </dependency>
+		<!-- End For Mail Utils -->
 	</dependencies>
 	<build>
 		<finalName>KafkaOutputAdapters</finalName>

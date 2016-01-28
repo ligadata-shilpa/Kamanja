@@ -53,6 +53,26 @@ public class AdapterConfiguration {
 	public static final String SQLSERVER_SHARE = "sqlserver.share";
 	public static final String INSERT_TABLE_NAME = "insert.table.name";
 	public static final String INSERT_FORMAT_FILE = "insert.format.file";
+	
+	//Start String Template Mail Properties
+	public static final String TEMPLATE_DIRECTORY = "templates.directory";
+	public static final String TESTMAIL_RECEIPENTS = "testmail.recepients";
+	public static final String MAIL_FROM = "mail.from";
+	
+	public static final String MAIL_PROP_SSL               = "mail.smtp.ssl.trust";
+	public static final String MAIL_PROP_HOST              = "mail.smtp.host";
+	public static final String MAIL_PROP_PORT              = "mail.smtp.port";
+	public static final String MAIL_PROP_AUTH              = "mail.smtp.auth";
+	public static final String MAIL_PROP_TTLS              = "mail.smtp.starttls.enable";
+	public static final String MAIL_PROP_TRANSPORT         = "smtp";
+	public static final String MAIL_PROP_PWD			   ="mail.senderpassword";
+	
+	public static final String SKF_PROP_KEY               = "encrypt.key";
+	public static final String SKF_CHARSET                = "UTF8";
+	public static final String SKF_ENCRY_TYPE             = "DES";
+	
+	public static final String TEST_FLAG             = "test.flag";
+	//End String Template Mail Properties
 
 
 	private Properties properties;
