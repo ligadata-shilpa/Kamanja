@@ -262,6 +262,7 @@ public class Migrate {
 
 			String curMigrationUnhandledMetadataDumpDir = "";
 			String curMigrationSummary = "";
+			String sourceReadFailuresFilePath = "";
 
 			if (isValidPath(configuration.unhandledMetadataDumpDir, true,
 					false, "unhandledMetadataDumpDir")) {
@@ -278,10 +279,14 @@ public class Migrate {
 					curMigrationUnhandledMetadataDumpDir = fl.getAbsolutePath();
 					curMigrationSummary = configuration.unhandledMetadataDumpDir
 							+ "/MigrateSummary_" + dirExtn + ".log";
+					sourceReadFailuresFilePath = configuration.unhandledMetadataDumpDir
+							+ "/ReadFailures_" + dirExtn + ".err";
 					logger.info("Current Migration Changes are writing into "
 							+ curMigrationUnhandledMetadataDumpDir
 							+ " directory. And summary is writing into "
-							+ curMigrationSummary);
+							+ curMigrationSummary
+							+ " and source read failures are writing into "
+							+ sourceReadFailuresFilePath);
 				} else {
 					logger.error("Failed to create directory " + newDir);
 					usage();
@@ -361,6 +366,8 @@ public class Migrate {
 								configuration.migratingTo.implemtedClass));
 			}
 
+
+			
 			logger.debug(String.format(
 					"apiConfigFile:%s, clusterConfigFile:%s",
 					configuration.apiConfigFile,
@@ -378,7 +385,7 @@ public class Migrate {
 					.format("metadataStoreInfo:%s, dataStoreInfo:%s, statusStoreInfo:%s",
 							metadataStoreInfo, dataStoreInfo, statusStoreInfo));
 			migrateFrom.init(configuration.migratingFrom.versionInstallPath,
-					metadataStoreInfo, dataStoreInfo, statusStoreInfo);
+					metadataStoreInfo, dataStoreInfo, statusStoreInfo, sourceReadFailuresFilePath);
 
 			TableName[] allMetadataTbls = new TableName[0];
 			TableName[] allDataTbls = new TableName[0];
@@ -513,8 +520,13 @@ public class Migrate {
 				}
 			}
 
-			logger.info("Migration is done");
-			System.out.println("Migration is done");
+			logger.info("Migration is done. Failed summary is written to "
+					+ curMigrationSummary);
+			if (logger.isInfoEnabled() == false)
+				System.out
+						.println("Migration is done. Failed summary is written to "
+								+ curMigrationSummary + " and failed to read data written to "
+								+ sourceReadFailuresFilePath);
 		} catch (Exception e) {
 			logger.error("Failed to Migrate", e);
 		} catch (Throwable t) {
