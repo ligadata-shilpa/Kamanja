@@ -314,7 +314,7 @@ class CompilerProxy {
       var compileCommand: scala.collection.mutable.Seq[String] = null
 
       // See what is the source language the source code is in.
-      if (sourceLanguage.equals("java")) {
+      if (sourceLanguage.equalsIgnoreCase("java")) {
         srcFileName = s"$moduleName.java"
         // need to add the -d option to the JAVAC
         compileCommand = Seq("sh", "-c", s"$scalahome/bin/javac -d $jarBuildDir -cp $classpath $jarBuildDir/$srcFileName")
