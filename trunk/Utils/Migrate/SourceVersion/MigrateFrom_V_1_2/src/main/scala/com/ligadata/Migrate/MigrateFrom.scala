@@ -538,6 +538,9 @@ class MigrateFrom_V_1_2 extends MigratableFrom {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
 
+    if (_metadataStoreInfo.trim.size == 0)
+      return Array[TableName]()
+
     var parsed_json: Map[String, Any] = null
     try {
       val json = parse(_metadataStoreInfo)

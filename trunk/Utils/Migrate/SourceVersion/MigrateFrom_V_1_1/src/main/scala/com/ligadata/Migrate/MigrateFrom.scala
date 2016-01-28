@@ -925,6 +925,9 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
   override def getAllMetadataTableNames: Array[TableName] = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
+    
+    if (_metadataStoreInfo.trim.size == 0)
+      return Array[TableName]()
 
     var parsed_json: Map[String, Any] = null
     try {
@@ -949,6 +952,9 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
 
+    if (_dataStoreInfo.trim.size == 0)
+      return Array[TableName]()
+
     var parsed_json: Map[String, Any] = null
     try {
       val json = parse(_dataStoreInfo)
@@ -970,6 +976,9 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
   override def getAllStatusTableNames: Array[TableName] = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
+
+    if (_statusStoreInfo.trim.size == 0)
+      return Array[TableName]()
 
     var parsed_json: Map[String, Any] = null
     try {
