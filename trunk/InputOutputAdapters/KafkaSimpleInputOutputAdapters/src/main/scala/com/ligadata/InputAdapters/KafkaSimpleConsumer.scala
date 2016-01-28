@@ -49,7 +49,7 @@ object KafkaSimpleConsumer extends InputAdapterObj {
   val HB_PERIOD = 5000
 
   // Statistics Keys
-  val ADAPTER_DESCRIPTION = "Kafka 8.2.2 Client"
+  val ADAPTER_DESCRIPTION = "Kafka 0.8.2.2 Client"
   val PARTITION_COUNT_KEYS = "Partition Counts"
   val PARTITION_DEPTH_KEYS = "Partition Depths"
   val EXCEPTION_SUMMARY = "Exception Summary"
