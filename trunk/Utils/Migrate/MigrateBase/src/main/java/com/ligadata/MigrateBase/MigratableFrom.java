@@ -17,7 +17,7 @@
 package com.ligadata.MigrateBase;
 
 public interface MigratableFrom {
-  public abstract void init(String srouceInstallPath, String metadataStoreInfo, String dataStoreInfo, String statusStoreInfo);
+  public abstract void init(String srouceInstallPath, String metadataStoreInfo, String dataStoreInfo, String statusStoreInfo, String sourceReadFailuresFilePath);
   public abstract boolean isInitialized();
   public abstract TableName[] getAllMetadataTableNames();
   public abstract TableName[] getAllDataTableNames();

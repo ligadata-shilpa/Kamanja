@@ -18,7 +18,7 @@ package com.ligadata.Migrate
 
 import com.ligadata.Utils._
 import com.ligadata.MigrateBase._
-import java.io.{ DataOutputStream, ByteArrayOutputStream, File }
+import java.io.{ DataOutputStream, ByteArrayOutputStream, File, PrintWriter }
 import org.apache.logging.log4j._
 import scala.collection.mutable.ArrayBuffer
 import com.ligadata.KvBase.{ Key, Value /*, TimeRange, KvBaseDefalts, KeyWithBucketIdAndPrimaryKey, KeyWithBucketIdAndPrimaryKeyCompHelper, LoadKeyWithBucketId */ }
@@ -46,7 +46,20 @@ class MigrateFrom_V_1_2 extends MigratableFrom {
   private var _dataStoreInfo: String = _
   private var _statusStoreInfo: String = _
   private var _metadataStore: DataStore = _
+  private var _sourceReadFailuresFilePath: String = _
+  private var _flReadFailures: PrintWriter = _
   private var _bInit = false
+
+  private def dumpKeyValueFailures(k: Key, v: Value): Unit = {
+    val keyStr = "%d~%s~%d~%d".format(k.timePartition, k.bucketKey.mkString(","), k.transactionId, k.rowId)
+    val msgStr = ("Failed to deserialize key: %s. Written the data related to this key in file:%s".format(keyStr, _sourceReadFailuresFilePath))
+    logger.error(msgStr)
+    _flReadFailures.println("Key:\n" + keyStr)
+    _flReadFailures.println("Record:")
+    _flReadFailures.println("SerializeType:\n" + v.serializerType + "\nSerializedInfo:")
+    _flReadFailures.println(v.serializedInfo)
+    _flReadFailures.flush()
+  }
 
   private def isValidPath(path: String, checkForDir: Boolean = false, checkForFile: Boolean = false, str: String = "path"): Unit = {
     val fl = new File(path)
@@ -519,7 +532,7 @@ class MigrateFrom_V_1_2 extends MigratableFrom {
     isIt
   }
 
-  override def init(srouceInstallPath: String, metadataStoreInfo: String, dataStoreInfo: String, statusStoreInfo: String): Unit = {
+  override def init(srouceInstallPath: String, metadataStoreInfo: String, dataStoreInfo: String, statusStoreInfo: String, sourceReadFailuresFilePath: String): Unit = {
     isValidPath(srouceInstallPath, true, false, "srouceInstallPath")
     isValidPath(srouceInstallPath + "/bin", true, false, "bin folder in srouceInstallPath")
     isValidPath(srouceInstallPath + "/lib/system", true, false, "/lib/system folder in srouceInstallPath")
@@ -529,6 +542,10 @@ class MigrateFrom_V_1_2 extends MigratableFrom {
     _metadataStoreInfo = metadataStoreInfo
     _dataStoreInfo = dataStoreInfo
     _statusStoreInfo = statusStoreInfo
+    _sourceReadFailuresFilePath = sourceReadFailuresFilePath
+
+    _flReadFailures = new PrintWriter(_sourceReadFailuresFilePath, "UTF-8")
+
     _bInit = true
   }
 
@@ -660,21 +677,25 @@ class MigrateFrom_V_1_2 extends MigratableFrom {
     try {
       // Load all metadata objects
       val buildMdlOne = (k: Key, v: Value) => {
-        val mObj = kryoDataSer.DeserializeObjectFromByteArray(v.serializedInfo).asInstanceOf[BaseElemDef]
         try {
-          val (typ, jsonStr) = serializeObjectToJson(mObj)
-          if (excludedMetadataTypes.contains(typ.toLowerCase()) == false) {
-            if (callbackFunction != null) {
-              val retVal = callbackFunction.call(new MetadataFormat(typ, jsonStr))
-              if (retVal == false) {
-                return
+          val mObj = kryoDataSer.DeserializeObjectFromByteArray(v.serializedInfo).asInstanceOf[BaseElemDef]
+          try {
+            val (typ, jsonStr) = serializeObjectToJson(mObj)
+            if (excludedMetadataTypes.contains(typ.toLowerCase()) == false) {
+              if (callbackFunction != null) {
+                val retVal = callbackFunction.call(new MetadataFormat(typ, jsonStr))
+                if (retVal == false) {
+                  return
+                }
               }
             }
+          } catch {
+            case e: Exception => { dumpKeyValueFailures(k, v) }
+            case e: Throwable => { dumpKeyValueFailures(k, v) }
           }
         } catch {
-          case e: Exception => {
-
-          }
+          case e: Exception => { dumpKeyValueFailures(k, v) }
+          case e: Throwable => { dumpKeyValueFailures(k, v) }
         }
       }
 
@@ -685,33 +706,38 @@ class MigrateFrom_V_1_2 extends MigratableFrom {
       if (excludedMetadataTypes.contains("ConfigDef".toLowerCase()) == false) {
         logger.debug("Collecting all model configuration objects from " + "model_config_objects" + backupTblSufix)
         val buildMdlCfglOne = (k: Key, v: Value) => {
-          val conf = kryoDataSer.DeserializeObjectFromByteArray(v.serializedInfo).asInstanceOf[Map[String, Any]]
+          try {
+            val conf = kryoDataSer.DeserializeObjectFromByteArray(v.serializedInfo).asInstanceOf[Map[String, Any]]
 
-          val (nameSpace, name) = SplitFullName(k.bucketKey(0))
+            val (nameSpace, name) = SplitFullName(k.bucketKey(0))
 
-          implicit val jsonFormats: Formats = DefaultFormats
-          val str = "{\"" + name + "\" :" + Serialization.write(conf) + "}"
+            implicit val jsonFormats: Formats = DefaultFormats
+            val str = "{\"" + name + "\" :" + Serialization.write(conf) + "}"
 
-          val json = (("ObjectType" -> "ConfigDef") ~
-            ("IsActive" -> "true") ~
-            ("IsDeleted" -> "false") ~
-            ("TransId" -> "0") ~
-            ("OrigDef" -> "") ~
-            ("ObjectDefinition" -> str) ~
-            ("ObjectFormat" -> "JSON") ~
-            ("NameSpace" -> nameSpace) ~
-            ("Name" -> name) ~
-            ("Version" -> "0") ~
-            ("PhysicalName" -> "") ~
-            ("JarName" -> "") ~
-            ("DependantJars" -> List[String]()))
+            val json = (("ObjectType" -> "ConfigDef") ~
+              ("IsActive" -> "true") ~
+              ("IsDeleted" -> "false") ~
+              ("TransId" -> "0") ~
+              ("OrigDef" -> "") ~
+              ("ObjectDefinition" -> str) ~
+              ("ObjectFormat" -> "JSON") ~
+              ("NameSpace" -> nameSpace) ~
+              ("Name" -> name) ~
+              ("Version" -> "0") ~
+              ("PhysicalName" -> "") ~
+              ("JarName" -> "") ~
+              ("DependantJars" -> List[String]()))
 
-          val mdlCfg = compact(render(json))
-          if (callbackFunction != null) {
-            val retVal = callbackFunction.call(new MetadataFormat("ConfigDef", mdlCfg))
-            if (retVal == false) {
-              return
+            val mdlCfg = compact(render(json))
+            if (callbackFunction != null) {
+              val retVal = callbackFunction.call(new MetadataFormat("ConfigDef", mdlCfg))
+              if (retVal == false) {
+                return
+              }
             }
+          } catch {
+            case e: Exception => { dumpKeyValueFailures(k, v) }
+            case e: Throwable => { dumpKeyValueFailures(k, v) }
           }
         }
         callGetData(_metadataStore, "model_config_objects" + backupTblSufix, buildMdlCfglOne)
@@ -736,5 +762,8 @@ class MigrateFrom_V_1_2 extends MigratableFrom {
     if (_metadataStore != null)
       _metadataStore.Shutdown()
     _metadataStore = null
+    if (_flReadFailures != null)
+      _flReadFailures.close()
+    _flReadFailures = null
   }
 }

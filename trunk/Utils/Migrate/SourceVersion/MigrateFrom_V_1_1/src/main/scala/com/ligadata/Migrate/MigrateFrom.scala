@@ -18,7 +18,7 @@ package com.ligadata.Migrate
 
 import com.ligadata.Utils._
 import com.ligadata.MigrateBase._
-import java.io.{ DataOutputStream, ByteArrayOutputStream, File }
+import java.io.{ DataOutputStream, ByteArrayOutputStream, File, PrintWriter }
 import org.apache.logging.log4j._
 import scala.collection.mutable.ArrayBuffer
 import com.ligadata.StorageBase.{ Key, Value, IStorage, DataStoreOperations, DataStore, Transaction, StorageAdapterObj }
@@ -194,11 +194,14 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
   private var _metadataStoreInfo: String = _
   private var _dataStoreInfo: String = _
   private var _statusStoreInfo: String = _
+  private var _sourceReadFailuresFilePath: String = _
   private var _modelConfigStore: DataStore = _
   private var _metadataStore: DataStore = _
   private var _dataStore: DataStore = _
   private var _counterStore: DataStore = _
+  private var _flReadFailures: PrintWriter = _
   private var _bInit = false
+  private val _kRecordsSeparator = "======================================================================================================================================================="
 
   private def isValidPath(path: String, checkForDir: Boolean = false, checkForFile: Boolean = false, str: String = "path"): Unit = {
     val fl = new File(path)
@@ -756,6 +759,25 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
     return Array[DataFormat]()
   }
 
+  private def dumpValueFailures(tupleBytes: Value): Unit = {
+    val msgStr = ("Failed to deserialize Value: %s. Written the data related to this key in file:%s".format(new String(tupleBytes.toArray), _sourceReadFailuresFilePath))
+    logger.error(msgStr)
+    _flReadFailures.println("Record:")
+    _flReadFailures.println(tupleBytes.toArray)
+    _flReadFailures.println(_kRecordsSeparator)
+    _flReadFailures.flush()
+  }
+
+  private def dumpKeyValueFailures(key: Key, tupleBytes: Value): Unit = {
+    val msgStr = ("Failed to deserialize key: %s. Written the data related to this key in file:%s".format(new String(key.toArray), _sourceReadFailuresFilePath))
+    logger.error(msgStr)
+    _flReadFailures.println("Key:\n" + new String(key.toArray))
+    _flReadFailures.println("Record:")
+    _flReadFailures.println(tupleBytes.toArray)
+    _flReadFailures.println(_kRecordsSeparator)
+    _flReadFailures.flush()
+  }
+
   private def ExtractDataFromTupleData(key: Key, tupleBytes: Value, bos: ByteArrayOutputStream, dos: DataOutputStream): Array[DataFormat] = {
     // Get first _serInfoBufBytes bytes
     if (tupleBytes.size < _serInfoBufBytes) {
@@ -769,82 +791,96 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
 
     serInfo match {
       case "kryo" => {
-        val valInfo = getValueInfo(tupleBytes)
-        val desInfo = MdResolve._kryoDataSer.DeserializeObjectFromByteArray(valInfo)
-        if (desInfo.isInstanceOf[KamanjaData]) {
-          kd = MdResolve._kryoDataSer.DeserializeObjectFromByteArray(valInfo).asInstanceOf[KamanjaData]
-        } else {
-          implicit val jsonFormats: Formats = DefaultFormats
-          val parsed_key = parse(new String(key.toArray)).extract[KamanjaDataKey]
-          val typName = parsed_key.T
-          if (typName.equalsIgnoreCase("ModelResults")) {
-            val bucketKey = parsed_key.K
-            logger.debug("type:%s, key:%s".format(typName, bucketKey))
-            return Array(new DataFormat(typName, 0, bucketKey.toArray, 0, 0, serInfo, valInfo))
+        try {
+          val valInfo = getValueInfo(tupleBytes)
+          val desInfo = MdResolve._kryoDataSer.DeserializeObjectFromByteArray(valInfo)
+          if (desInfo.isInstanceOf[KamanjaData]) {
+            kd = MdResolve._kryoDataSer.DeserializeObjectFromByteArray(valInfo).asInstanceOf[KamanjaData]
           } else {
-            throw new Exception("Found un-handled data in KRYO format. This is not Kamanja Data or ModelResults")
+            implicit val jsonFormats: Formats = DefaultFormats
+            val parsed_key = parse(new String(key.toArray)).extract[KamanjaDataKey]
+            val typName = parsed_key.T
+            if (typName.equalsIgnoreCase("ModelResults")) {
+              val bucketKey = parsed_key.K
+              logger.debug("type:%s, key:%s".format(typName, bucketKey))
+              return Array(new DataFormat(typName, 0, bucketKey.toArray, 0, 0, serInfo, valInfo))
+            } else {
+              throw new Exception("Found un-handled data in KRYO format. This is not Kamanja Data or ModelResults")
+            }
           }
+        } catch {
+          case e: Exception => { dumpKeyValueFailures(key, tupleBytes) }
+          case e: Throwable => { dumpKeyValueFailures(key, tupleBytes) }
         }
       }
       case "manual" => {
-        val valInfo = getValueInfo(tupleBytes)
-        val datarec = new KamanjaData
-        datarec.DeserializeData(valInfo, MdResolve, MdResolve._kamanjaLoader.loader)
-        kd = datarec
+        try {
+          val valInfo = getValueInfo(tupleBytes)
+          val datarec = new KamanjaData
+          datarec.DeserializeData(valInfo, MdResolve, MdResolve._kamanjaLoader.loader)
+          kd = datarec
+        } catch {
+          case e: Exception => { dumpKeyValueFailures(key, tupleBytes) }
+          case e: Throwable => { dumpKeyValueFailures(key, tupleBytes) }
+        }
       }
       case "csv" => {
-        val valInfo = getValueInfo(tupleBytes)
-        implicit val jsonFormats: Formats = DefaultFormats
-        val parsed_key = parse(new String(key.toArray)).extract[KamanjaDataKey]
-        val typName = parsed_key.T
-        if (typName.equalsIgnoreCase("AdapterUniqKvData")) {
-          var bucketKey = parsed_key.K
-          logger.debug("type:%s, key:%s".format(typName, bucketKey))
-
+        try {
+          val valInfo = getValueInfo(tupleBytes)
           implicit val jsonFormats: Formats = DefaultFormats
-          val uniqVal = parse(new String(valInfo)).extract[AdapterUniqueValueDes]
+          val parsed_key = parse(new String(key.toArray)).extract[KamanjaDataKey]
+          val typName = parsed_key.T
+          if (typName.equalsIgnoreCase("AdapterUniqKvData")) {
+            var bucketKey = parsed_key.K
+            logger.debug("type:%s, key:%s".format(typName, bucketKey))
 
-          val json = ("T" -> uniqVal.T) ~ ("V" -> uniqVal.V)
+            implicit val jsonFormats: Formats = DefaultFormats
+            val uniqVal = parse(new String(valInfo)).extract[AdapterUniqueValueDes]
 
-          // Hack from 1.1 to next version key change (lower case to case sensitive) -- Begin
-          val kafkaAdapterCheck = """{"version":1,"type":"kafka","name":""""
+            val json = ("T" -> uniqVal.T) ~ ("V" -> uniqVal.V)
 
-          if (bucketKey.size == 1 && bucketKey(0).startsWith(kafkaAdapterCheck)) {
-            try {
-              val kafkaPartition = parse(bucketKey(0)).values.asInstanceOf[Map[String, Any]]
+            // Hack from 1.1 to next version key change (lower case to case sensitive) -- Begin
+            val kafkaAdapterCheck = """{"version":1,"type":"kafka","name":""""
 
-              val nm = kafkaPartition.getOrElse("name", null)
-              val topicNm = kafkaPartition.getOrElse("topicname", null)
-              val partId = kafkaPartition.getOrElse("partitionid", null)
+            if (bucketKey.size == 1 && bucketKey(0).startsWith(kafkaAdapterCheck)) {
+              try {
+                val kafkaPartition = parse(bucketKey(0)).values.asInstanceOf[Map[String, Any]]
 
-              if (nm != null && topicNm != null && partId != null) {
-                val nm1 = nm.toString()
-                val topicNm1 = topicNm.toString()
-                val partId1 = partId.toString().toInt
+                val nm = kafkaPartition.getOrElse("name", null)
+                val topicNm = kafkaPartition.getOrElse("topicname", null)
+                val partId = kafkaPartition.getOrElse("partitionid", null)
 
-                val json1 =
-                  ("Version" -> 1) ~
-                    ("Type" -> "Kafka") ~
-                    ("Name" -> nm1) ~
-                    ("TopicName" -> topicNm1) ~
-                    ("PartitionId" -> partId1)
-                bucketKey = List[String](compact(render(json1)))
-              } else {
-                logger.warn("For Kafka Adapter, we did not find name or topicname or partitionid from map to migrate to new version. This may lead to reprocessing all data from kafka queue.")
-              }
-            } catch {
-              case e: Exception => {
-                logger.warn("For Kafka Adapter, we got some exception while migrating to new version. This may lead to reprocessing all data from kafka queue.", e)
+                if (nm != null && topicNm != null && partId != null) {
+                  val nm1 = nm.toString()
+                  val topicNm1 = topicNm.toString()
+                  val partId1 = partId.toString().toInt
+
+                  val json1 =
+                    ("Version" -> 1) ~
+                      ("Type" -> "Kafka") ~
+                      ("Name" -> nm1) ~
+                      ("TopicName" -> topicNm1) ~
+                      ("PartitionId" -> partId1)
+                  bucketKey = List[String](compact(render(json1)))
+                } else {
+                  logger.warn("For Kafka Adapter, we did not find name or topicname or partitionid from map to migrate to new version. This may lead to reprocessing all data from kafka queue.")
+                }
+              } catch {
+                case e: Exception => {
+                  logger.warn("For Kafka Adapter, we got some exception while migrating to new version. This may lead to reprocessing all data from kafka queue.", e)
+                }
               }
             }
-          }
-          // Hack from 1.1 to next version key change (lower case to case sensitive) -- End
+            // Hack from 1.1 to next version key change (lower case to case sensitive) -- End
 
-          return Array(new DataFormat(typName, 0, bucketKey.toArray, 0, 0, "json", compact(render(json)).getBytes("UTF8")))
-        } else {
-          throw new Exception("Found un-handled data in CSV format. This is not AdapterUniqKvData")
+            return Array(new DataFormat(typName, 0, bucketKey.toArray, 0, 0, "json", compact(render(json)).getBytes("UTF8")))
+          } else {
+            throw new Exception("Found un-handled data in CSV format. This is not AdapterUniqKvData")
+          }
+        } catch {
+          case e: Exception => { dumpKeyValueFailures(key, tupleBytes) }
+          case e: Throwable => { dumpKeyValueFailures(key, tupleBytes) }
         }
-        // Not doing anything
       }
       case _ => {
         throw new Exception("Found un-handled Serializer Info: " + serInfo)
@@ -897,6 +933,20 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
             val objVer = jsonObjMap.getOrElse("Version", "").toString.trim()
             logger.warn("message or conatiner of this version is not active. So, ignoring to migrate data for this. NameSpace:%s, Name:%s, Version:%s".format(objNameSpace, objName, objVer))
           }
+        } else if (mdElem.objType.compareToIgnoreCase("ModelDef") == 0) {
+          val json = parse(mdElem.objDataInJson)
+          val jsonObjMap = json.values.asInstanceOf[Map[String, Any]]
+          val isActiveStr = jsonObjMap.getOrElse("IsActive", "").toString.trim()
+          if (isActiveStr.size > 0) {
+            val isActive = jsonObjMap.getOrElse("IsActive", "").toString.trim().toBoolean
+            if (isActive)
+              LoadJarIfNeeded(jsonObjMap, MdResolve._kamanjaLoader.loadedJars, MdResolve._kamanjaLoader.loader, jarPaths)
+          } else {
+            val objNameSpace = jsonObjMap.getOrElse("NameSpace", "").toString.trim()
+            val objName = jsonObjMap.getOrElse("Name", "").toString.trim()
+            val objVer = jsonObjMap.getOrElse("Version", "").toString.trim()
+            logger.warn("message or conatiner of this version is not active. So, ignoring to migrate data for this. NameSpace:%s, Name:%s, Version:%s".format(objNameSpace, objName, objVer))
+          }
         }
       })
     } catch {
@@ -907,7 +957,7 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
     }
   }
 
-  override def init(srouceInstallPath: String, metadataStoreInfo: String, dataStoreInfo: String, statusStoreInfo: String): Unit = {
+  override def init(srouceInstallPath: String, metadataStoreInfo: String, dataStoreInfo: String, statusStoreInfo: String, sourceReadFailuresFilePath: String): Unit = {
     isValidPath(srouceInstallPath, true, false, "srouceInstallPath")
     isValidPath(srouceInstallPath + "/bin", true, false, "bin folder in srouceInstallPath")
     isValidPath(srouceInstallPath + "/lib/system", true, false, "/lib/system folder in srouceInstallPath")
@@ -917,6 +967,10 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
     _metadataStoreInfo = metadataStoreInfo
     _dataStoreInfo = dataStoreInfo
     _statusStoreInfo = statusStoreInfo
+    _sourceReadFailuresFilePath = sourceReadFailuresFilePath
+
+    _flReadFailures = new PrintWriter(_sourceReadFailuresFilePath, "UTF-8")
+
     _bInit = true
   }
 
@@ -925,7 +979,7 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
   override def getAllMetadataTableNames: Array[TableName] = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
-    
+
     if (_metadataStoreInfo.trim.size == 0)
       return Array[TableName]()
 
@@ -1052,24 +1106,29 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
       })
 
       allObjs.foreach(o => {
-        val mObj = MdResolve._kryoDataSer.DeserializeObjectFromByteArray(o.toArray[Byte]).asInstanceOf[BaseElem]
         try {
-          val (typ, jsonStr) = serializeObjectToJson(mObj)
+          val mObj = MdResolve._kryoDataSer.DeserializeObjectFromByteArray(o.toArray[Byte]).asInstanceOf[BaseElem]
+          try {
+            val (typ, jsonStr) = serializeObjectToJson(mObj)
 
-          if (excludedMetadataTypes.contains(typ.toLowerCase()) == false) {
-            if (callbackFunction != null) {
-              val retVal = callbackFunction.call(new MetadataFormat(typ, jsonStr))
-              if (retVal == false) {
-                return
+            if (excludedMetadataTypes.contains(typ.toLowerCase()) == false) {
+              if (callbackFunction != null) {
+                val retVal = callbackFunction.call(new MetadataFormat(typ, jsonStr))
+                if (retVal == false) {
+                  return
+                }
               }
+            } else {
+              // This type is excluded
             }
-          } else {
-            // This type is excluded
-          }
 
+          } catch {
+            case e: Exception => { dumpValueFailures(o) }
+            case e: Throwable => { dumpValueFailures(o) }
+          }
         } catch {
-          case e: Exception => throw e
-          case e: Throwable => throw e
+          case e: Exception => { dumpValueFailures(o) }
+          case e: Throwable => { dumpValueFailures(o) }
         }
       })
 
@@ -1077,32 +1136,37 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
         mdlCfgKeys.foreach(key => {
           try {
             val obj = GetObject(key, _modelConfigStore)
-            val conf = MdResolve._kryoDataSer.DeserializeObjectFromByteArray(obj.Value.toArray[Byte]).asInstanceOf[Map[String, Any]]
-            val (nameSpace, name) = SplitFullName(KeyAsStr(key))
+            try {
+              val conf = MdResolve._kryoDataSer.DeserializeObjectFromByteArray(obj.Value.toArray[Byte]).asInstanceOf[Map[String, Any]]
+              val (nameSpace, name) = SplitFullName(KeyAsStr(key))
 
-            implicit val jsonFormats: Formats = DefaultFormats
-            val str = "{\"" + name + "\" :" + Serialization.write(conf) + "}"
+              implicit val jsonFormats: Formats = DefaultFormats
+              val str = "{\"" + name + "\" :" + Serialization.write(conf) + "}"
 
-            val json = (("ObjectType" -> "ConfigDef") ~
-              ("IsActive" -> "true") ~
-              ("IsDeleted" -> "false") ~
-              ("TransId" -> "0") ~
-              ("OrigDef" -> "") ~
-              ("ObjectDefinition" -> str) ~
-              ("ObjectFormat" -> "JSON") ~
-              ("NameSpace" -> nameSpace) ~
-              ("Name" -> name) ~
-              ("Version" -> "0") ~
-              ("PhysicalName" -> "") ~
-              ("JarName" -> "") ~
-              ("DependantJars" -> List[String]()))
+              val json = (("ObjectType" -> "ConfigDef") ~
+                ("IsActive" -> "true") ~
+                ("IsDeleted" -> "false") ~
+                ("TransId" -> "0") ~
+                ("OrigDef" -> "") ~
+                ("ObjectDefinition" -> str) ~
+                ("ObjectFormat" -> "JSON") ~
+                ("NameSpace" -> nameSpace) ~
+                ("Name" -> name) ~
+                ("Version" -> "0") ~
+                ("PhysicalName" -> "") ~
+                ("JarName" -> "") ~
+                ("DependantJars" -> List[String]()))
 
-            val mdlCfg = compact(render(json))
-            if (callbackFunction != null) {
-              val retVal = callbackFunction.call(new MetadataFormat("ConfigDef", mdlCfg))
-              if (retVal == false) {
-                return
+              val mdlCfg = compact(render(json))
+              if (callbackFunction != null) {
+                val retVal = callbackFunction.call(new MetadataFormat("ConfigDef", mdlCfg))
+                if (retVal == false) {
+                  return
+                }
               }
+            } catch {
+              case e: Exception => { dumpKeyValueFailures(obj.Key, obj.Value) }
+              case e: Throwable => { dumpKeyValueFailures(obj.Key, obj.Value) }
             }
           } catch {
             case e: Exception => throw e
@@ -1218,6 +1282,9 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
       _dataStore.Shutdown()
     if (_counterStore != null)
       _counterStore.Shutdown()
+    if (_flReadFailures != null)
+      _flReadFailures.close()
+    _flReadFailures = null
     _modelConfigStore = null
     _metadataStore = null
     _dataStore = null
