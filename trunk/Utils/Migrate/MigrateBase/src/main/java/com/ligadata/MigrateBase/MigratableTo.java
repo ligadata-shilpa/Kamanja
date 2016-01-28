@@ -36,4 +36,3 @@ public interface MigratableTo {
   public abstract void populateAndSaveData(DataFormat[] data);
   public abstract void shutdown();
 }
-

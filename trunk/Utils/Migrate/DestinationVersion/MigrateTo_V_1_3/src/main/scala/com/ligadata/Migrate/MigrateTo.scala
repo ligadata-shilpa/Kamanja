@@ -939,3 +939,4 @@ class MigrateTo_V_1_3 extends MigratableTo {
     MetadataAPIImpl.shutdown
   }
 }
+

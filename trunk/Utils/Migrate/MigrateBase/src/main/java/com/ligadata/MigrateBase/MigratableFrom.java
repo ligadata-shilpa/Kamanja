@@ -26,4 +26,3 @@ public interface MigratableFrom {
   public abstract void getAllDataObjs(String backupTblSufix, MetadataFormat[] orderMetadata, DataObjectCallBack callbackFunction);
   public abstract void shutdown();
 }
-

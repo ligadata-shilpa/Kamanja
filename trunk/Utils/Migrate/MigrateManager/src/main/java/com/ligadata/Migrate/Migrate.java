@@ -366,6 +366,8 @@ public class Migrate {
 								configuration.migratingTo.implemtedClass));
 			}
 
+
+			
 			logger.debug(String.format(
 					"apiConfigFile:%s, clusterConfigFile:%s",
 					configuration.apiConfigFile,
@@ -523,7 +525,8 @@ public class Migrate {
 			if (logger.isInfoEnabled() == false)
 				System.out
 						.println("Migration is done. Failed summary is written to "
-								+ curMigrationSummary);
+								+ curMigrationSummary + " and failed to read data written to "
+								+ sourceReadFailuresFilePath);
 		} catch (Exception e) {
 			logger.error("Failed to Migrate", e);
 		} catch (Throwable t) {
