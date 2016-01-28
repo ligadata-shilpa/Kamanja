@@ -5983,7 +5983,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
        val nmspcNodes : Array[String] = nameNodes.splitAt(nameNodes.size -1)._1
        val buffer : StringBuilder = new StringBuilder
        val nameSpace : String = nmspcNodes.addString(buffer, ".").toString
-       GetMessageDef(nameSpace, objectName, "-1", formatType, userid)
+       GetMessageDef(nameSpace, objectName, formatType, "-1", userid)
   }
 
     /**
@@ -6002,7 +6002,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
         val nmspcNodes : Array[String] = nameNodes.splitAt(nameNodes.size -1)._1
         val buffer : StringBuilder = new StringBuilder
         val nameSpace : String = nmspcNodes.addString(buffer, ".").toString
-        GetMessageDef(nameSpace, objectName, version, formatType, userid)
+        GetMessageDef(nameSpace, objectName, formatType, version, userid)
     }
 
     /**
@@ -6016,7 +6016,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @return the result as a JSON String of object ApiResult where ApiResult.resultData contains
      *         the MessageDef either as a JSON or XML string depending on the parameter formatType
      */
-    def GetMessageDef(nameSpace: String, objectName: String, version: String, formatType: String, userid: Option[String]): String = {
+    def GetMessageDef(nameSpace: String, objectName: String, formatType: String, version: String, userid: Option[String]): String = {
         logAuditRec(userid
             , Some(AuditConstants.READ)
             , AuditConstants.GETOBJECT
