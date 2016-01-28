@@ -254,7 +254,7 @@ trait MetadataAPIService extends HttpService {
       }
 
     }
-    else if (objtype.equalsIgnoreCase("modelpmml")) {
+    else if (objtype.equalsIgnoreCase("modelkpmml")) {
       val addModelService: ActorRef = actorRefFactory.actorOf(Props(new UpdateModelService(rContext, userid, password, role)))
       addModelService ! UpdateModelService.Process(body)
     }
@@ -332,7 +332,7 @@ trait MetadataAPIService extends HttpService {
       addSourceModelService ! AddSourceModelService.ProcessScala(body)
      
     }
-    else if (objtype.equalsIgnoreCase("modelpmml")) {
+    else if (objtype.equalsIgnoreCase("modelkpmml")) {
       val addModelService: ActorRef = actorRefFactory.actorOf(Props(new AddModelService(rContext, userid, password, role)))
       addModelService ! AddModelService.Process(body)
     }
