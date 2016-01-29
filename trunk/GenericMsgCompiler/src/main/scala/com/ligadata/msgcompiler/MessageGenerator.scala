@@ -3,6 +3,7 @@ package com.ligadata.msgcompiler
 import com.ligadata.Exceptions._;
 import com.ligadata.Exceptions.StackTrace;
 import org.apache.logging.log4j.{ Logger, LogManager }
+import com.ligadata.kamanja.metadata._;
 
 class MessageGenerator {
 
@@ -49,6 +50,7 @@ class MessageGenerator {
         messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.closeBrace)
 
       } else if (message.Fixed.equalsIgnoreCase("false")) {
+        var fieldIndexMap: Map[String, Int] = msgConstants.getScalarFieldindex(message.Elements)
         messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.packageStr.format(message.Pkg, msgConstants.newline));
         messageGenerator = messageGenerator.append(msgConstants.importStatements + msgConstants.newline);
         messageGenerator = messageGenerator.append(msgObjectGenerator.generateMessageObject(message) + msgConstants.newline)
@@ -64,15 +66,17 @@ class MessageGenerator {
         messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + generatePrimaryKeysData(message) + msgConstants.newline)
         messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + generateSchema(message))
         messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + msgConstants.fieldsForMappedVar)
+        messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + keysVarforMapped(message.Elements))
         messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + msgConstants.getByNameFuncForMapped)
         messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + msgConstants.getOrElseFuncForMapped)
         messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + msgConstants.setByNameFuncForMappedMsgs)
-        messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + setFuncGenerationforMapped(message.Elements))
+        messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + setFuncGenerationforMapped(message.Elements, fieldIndexMap))
         messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + getFuncGenerationForMapped(message.Elements))
         messageGenerator = messageGenerator.append(builderMethod)
         messageGenerator = messageGenerator.append(builderGenerator.generatorBuilder(message))
         messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.closeBrace)
 
+      
       }
 
       log.info("messageGenerator    " + messageGenerator.toString())
@@ -479,13 +483,13 @@ class MessageGenerator {
   /*
    * Set Method Generation Function for Mapped Messages
    */
-  private def setFuncGenerationforMapped(fields: List[Element]): String = {
+  private def setFuncGenerationforMapped(fields: List[Element], fldsMap : Map[String, Int]): String = {
     var setMethod = new StringBuilder(8 * 1024)
     var setmethodStr: String = ""
     try {
       fields.foreach(field => {
         setmethodStr = """   def set""" + field.Name.capitalize + """(value: """ + field.FieldTypePhysicalName + """): Unit = {
-        	fields("""" + field.Name + """") = value;
+        	fields("""" + field.Name + """") = (""" + fldsMap(field.FieldTypePhysicalName) + """, value);
         }
         """
         setMethod = setMethod.append(setmethodStr.toString())
@@ -509,7 +513,7 @@ class MessageGenerator {
     try {
       fields.foreach(field => {
         getmethodStr = """    def get""" + field.Name.capitalize + """: """ + field.FieldTypePhysicalName + """= {
-        	return fields("""" + field.Name + """");
+        	return fields("""" + field.Name + """")._2;
         }          
         """
         getMethod = getMethod.append(getmethodStr.toString())
@@ -580,4 +584,67 @@ class MessageGenerator {
 
   }
 
+  /*
+   * generate keys variable for mapped message
+   */
+  private def keysVarforMapped(fields: List[Element]): String = {
+    var mappedTypesABuf = new scala.collection.mutable.ArrayBuffer[String]
+    var baseTypId = -1
+    var firstTimeBaseType: Boolean = true
+    var keysStr = new StringBuilder(8 * 1024)
+    val stringType = MdMgr.GetMdMgr.Type("System.String", -1, true)
+    if (stringType.getOrElse("None").equals("None"))
+      throw new Exception("Type not found in metadata for String ")
+    mappedTypesABuf += stringType.get.implementationName
+
+    fields.foreach(field => {
+      var typstring = field.FieldTypePhysicalName
+      println("field.FieldTypePhysicalName   " + field.FieldTypePhysicalName)
+      println("field.   " + field.FldMetaataType)
+      if (mappedTypesABuf.contains(typstring)) {
+        if (mappedTypesABuf.size == 1 && firstTimeBaseType)
+          baseTypId = mappedTypesABuf.indexOf(typstring)
+      } else {
+        mappedTypesABuf += typstring
+        baseTypId = mappedTypesABuf.indexOf(typstring)
+      }
+      keysStr.append("(\"" + field.Name + "\", " + mappedTypesABuf.indexOf(typstring) + "),")
+
+    })
+    log.info(keysStr.toString().substring(0, keysStr.toString().length - 1))
+    var keys = "var keys = Map(" + keysStr.toString().substring(0, keysStr.toString().length - 1)+")";
+    return keys
+  }
+
+  
+
+ 
+  
+  /*var typstring = field.ttyp.get.implementationName
+      
+      
+     
+
+        keysStr.append("(\"" + f.Name + "\", " + mappedTypesABuf.indexOf(typstring) + "),")
+        
+       */
+
+  /*
+    def getKeysStr(keysStr: String) = {
+    if (keysStr != null && keysStr.trim() != "") {
+
+      """ 
+      var keys = Map(""" + keysStr.toString.substring(0, keysStr.toString.length - 1) + ") \n " +
+        """
+      var fields: scala.collection.mutable.Map[String, (Int, Any)] = new scala.collection.mutable.HashMap[String, (Int, Any)];
+ 	"""
+    } else {
+      """ 
+	    var keys = Map[String, Int]()
+	    var fields: scala.collection.mutable.Map[String, (Int, Any)] = new scala.collection.mutable.HashMap[String, (Int, Any)];
+	  
+	  """
+    }
+  }
+    */
 }

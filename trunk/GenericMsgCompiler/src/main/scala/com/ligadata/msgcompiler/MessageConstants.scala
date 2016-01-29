@@ -1,6 +1,10 @@
 package com.ligadata.msgcompiler
 
+import org.apache.logging.log4j.{ Logger, LogManager }
+
 class MessageConstants {
+  val logger = this.getClass.getName
+  lazy val log = LogManager.getLogger(logger)
 
   val newline: String = "\n";
   val pad1: String = "\t";
@@ -71,7 +75,7 @@ import com.ligadata.KamanjaBase.{ BaseMsg, BaseMsgObj, TransformMessage, BaseCon
   }
 
   def msgObjectBuildStmts = {
-  """
+    """
   def build = new T
   def build(from: T) = new T(from)
 
@@ -79,7 +83,7 @@ import com.ligadata.KamanjaBase.{ BaseMsg, BaseMsgObj, TransformMessage, BaseCon
   }
 
   def getByNameFuncForMapped = {
- """
+    """
   override def get(key: String): Any = {
     fields.get(key) match {
       case Some(f) => {
@@ -94,7 +98,7 @@ import com.ligadata.KamanjaBase.{ BaseMsg, BaseMsgObj, TransformMessage, BaseCon
   }
 
   def getOrElseFuncForMapped = {
- """
+    """
   override def getOrElse(key: String, default: Any): Any = {
     fields.getOrElse(key, (-1, default))._2;
   }  
@@ -103,16 +107,33 @@ import com.ligadata.KamanjaBase.{ BaseMsg, BaseMsgObj, TransformMessage, BaseCon
   }
 
   def setByNameFuncForMappedMsgs() = {
-"""
+    """
   override def set(key: String, value: Any): Unit = {
     if (key == null) throw new Exception(" key should not be null in set method")
     fields.put(key, (-1, value))
   }
 """
   }
-  
-  
 
-
+  /*
+   * Get the index for fields in mapped messages
+   */
+  def getScalarFieldindex(fields: List[Element]): Map[String, Int] = {
+    var fldsSclarIndex: Map[String, Int] = Map(("String", 0))
+    var setFields: Set[String] = Set[String]()
+    var a = 0;
+    var index: Int = 0
+    for (a <- fields) {
+      setFields = setFields + a.FieldTypePhysicalName
+    }
+    var b = 0;
+    for (b <- setFields) {
+      if (!b.equalsIgnoreCase("string"))
+        fldsSclarIndex = fldsSclarIndex + ((b, index + 1))
+    }
+    log.info("fldsSclarIndex  fields " + fldsSclarIndex.toList)
+    log.info("set fields " + setFields.toList)
+    return fldsSclarIndex
+  }
 
 }

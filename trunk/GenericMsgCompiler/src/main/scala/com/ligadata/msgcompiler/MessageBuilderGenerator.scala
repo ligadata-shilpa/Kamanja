@@ -23,9 +23,10 @@ class MessageBuilderGenerator {
         builderGenerator = builderGenerator.append(getFuncGeneration(message.Elements))
         builderGenerator = builderGenerator.append(setFuncGeneration(message.Elements))
       } else if (message.Fixed.equalsIgnoreCase("false")) {
+       var fieldIndexMap: Map[String, Int] = msgConstants.getScalarFieldindex(message.Elements)
         builderGenerator = builderGenerator.append(msgConstants.newline + msgConstants.pad1 + msgConstants.fieldsForMappedVar)
         builderGenerator = builderGenerator.append(getFuncGenerationForMapped(message.Elements))
-        builderGenerator = builderGenerator.append(setFuncGenerationForMapped(message.Elements))
+        builderGenerator = builderGenerator.append(setFuncGenerationForMapped(message.Elements, fieldIndexMap))
       }
 
       builderGenerator = builderGenerator.append(build(message))
@@ -180,7 +181,7 @@ class MessageBuilderGenerator {
       fields.foreach(field => {
         getmethodStr = """
         def get""" + field.Name.capitalize + """: """ + field.FieldTypePhysicalName + """= {
-        	return this.fields("""" + field.Name + """");  
+        	return this.fields("""" + field.Name + """")._2;  
         }          
         """
         getMethod = getMethod.append(getmethodStr.toString())
@@ -198,14 +199,14 @@ class MessageBuilderGenerator {
   /*
    * Set Method Generation Function for mapped messages
    */
-  private def setFuncGenerationForMapped(fields: List[Element]): String = {
+  private def setFuncGenerationForMapped(fields: List[Element], fldsMap: Map[String, Int]): String = {
     var setMethod = new StringBuilder(8 * 1024)
     var setmethodStr: String = ""
     try {
       fields.foreach(field => {
         setmethodStr = """
         def set""" + field.Name.capitalize + """(value: """ + field.FieldTypePhysicalName + """): Builder = {
-        	this.fields("""" + field.Name + """") = value;   
+        	this.fields("""" + field.Name + """") = (""" + fldsMap(field.FieldTypePhysicalName) + """, value);
         	return this;
         }
         """
