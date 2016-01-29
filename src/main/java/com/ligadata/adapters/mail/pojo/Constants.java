@@ -1,8 +1,6 @@
 package com.ligadata.adapters.mail.pojo;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+
 
 public class Constants {
 	//For StringTemplate Errors
@@ -13,13 +11,5 @@ public class Constants {
 	public static final String COMPILE_TIME_ERROR = "Compile Time Error:";
 	public static final String INTERNAL_ERROR = "Internal Error:";
 	public static final String RUNTIME_ERROR = "Runtime Error:";
-	
-	
-	public static final Map<String, String> ALERT_TEMPLATE_MAP = Collections.unmodifiableMap(new HashMap<String, String>() {{
-			put("EAHM","template1");
-		}}
-	);
-	
-	public static final String DEFAULT_TEMPLATE = "template1";
-	
+		
 }

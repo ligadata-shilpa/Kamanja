@@ -22,7 +22,7 @@ public class StringTemplateTester {
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		try{
-		String location = "/home/centuser/mail-templates";
+		String location = "/home/centuser/workspace/BOFAMailService/src/main/resources";
 		Path templateDir = FileSystems.getDefault().getPath(location);
 		if(Files.exists(templateDir)){
 			System.out.println("Location found.."+templateDir.toAbsolutePath().toString());
@@ -45,13 +45,13 @@ public class StringTemplateTester {
 			
 			STGroup stGroup;
 			
-			String templateName = Constants.ALERT_TEMPLATE_MAP.get((String)obj.get("alertType"));
+			String templateName = "template1";
 			if(templateName != null && !templateName.isEmpty()){
-				stGroup = new STGroupFile(templateDir.toAbsolutePath().toString()+"/"+templateName+".stg");
+				stGroup = new STGroupFile(templateDir.toAbsolutePath().toString()+"/"+templateName+".stg", '$', '$');
 				System.out.println(stGroup.show());
 			}else{
-				templateName = Constants.DEFAULT_TEMPLATE;
-				stGroup = new STGroupFile(templateDir.toAbsolutePath().toString()+"/"+templateName+".stg");
+				templateName = "template1";
+				stGroup = new STGroupFile(templateDir.toAbsolutePath().toString()+"/"+templateName+".stg", '$', '$');
 				System.out.println(stGroup.show());
 			}
 			

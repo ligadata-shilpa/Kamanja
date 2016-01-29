@@ -4,6 +4,7 @@ package com.ligadata.adapters.mail.pojo;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -58,17 +59,28 @@ public class SimpleMailBean {
 	
 	STGroup stGroup;
 	
+	private static HashMap<String, String> map;
+	
 	public void populateData(){
 		if(templateDirectory != null && !templateDirectory.isEmpty()){
 			Path templateDir = FileSystems.getDefault().getPath(templateDirectory);
 			if(Files.exists(templateDir)){
 				
-				templateName = Constants.ALERT_TEMPLATE_MAP.get((String)fillers.get("alertType"));
+				if(map ==null){
+					map = new HashMap<>();
+					String template_defs = conf.getProperty(AdapterConfiguration.TEMPLATE_MAPPING);
+					for (String mapping: template_defs.split(",")){
+						map.put(mapping.split("::")[0],mapping.split("::")[1]);
+					}
+				}
+				
+				templateName = map.get((String)fillers.get("alertType"));
+				
 				if(templateName != null && !templateName.isEmpty()){
-					stGroup = new STGroupFile(templateDir.toAbsolutePath().toString()+"/"+templateName+".stg");
+					stGroup = new STGroupFile(templateDir.toAbsolutePath().toString()+"/"+templateName+".stg", '$', '$');
 					System.out.println(stGroup.show());
 				}else{
-					templateName = Constants.DEFAULT_TEMPLATE;
+					templateName = map.get("default");
 					stGroup = new STGroupFile(templateDir.toAbsolutePath().toString()+"/"+templateName+".stg");
 					System.out.println(stGroup.show());
 				}
@@ -77,39 +89,37 @@ public class SimpleMailBean {
 				stGroup.setListener(new CustomErrorListener());
 				stGroup.registerModelAdaptor(JSONObject.class, new JSONAdapter());
 				
-				ST subject = stGroup.getInstanceOf("subject");
-				subject.add("x",fillers);
-				subjectHTML = subject.render();
-				
-				ST header = stGroup.getInstanceOf("header");
-				header.add("x",fillers);
-				headerHTML = header.render();
-				
-				ST body = stGroup.getInstanceOf("body");
-				body.add("x",fillers);
-				bodyHTML = body.render();
-				
-				ST footer = stGroup.getInstanceOf("footer");
-				footer.add("x",fillers);
-				
-				ST testFooter = stGroup.getInstanceOf("testFooter");
-				testFooter.add("x",fillers);
-				
-				//Check if it is a test Message
-				if(fillers.containsKey("testMessage"))
-					footerHTML = testFooter.render();
-				else 
-					footerHTML = footer.render();
+				for(String name:stGroup.getTemplateNames()){
+					
+					log.debug("loading template name from STG..."+name);
+					
+					ST st = stGroup.getInstanceOf(name);
+					st.add("x", fillers);
+					
+					if(name.equalsIgnoreCase("/subject"))
+						subjectHTML = st.render();
+					else if(name.equalsIgnoreCase("/header"))
+						headerHTML = st.render();
+					else if(name.equalsIgnoreCase("/body"))
+						bodyHTML = st.render();
+					else if(name.equalsIgnoreCase("/testFooter"))
+						if(conf.getProperty(AdapterConfiguration.TEST_FLAG).equalsIgnoreCase("true"))
+							footerHTML = st.render();
+					else if(name.equalsIgnoreCase("/footer"))
+						if(!conf.getProperty(AdapterConfiguration.TEST_FLAG).equalsIgnoreCase("true"))
+							footerHTML = st.render();
+				}
 				
 				//Populate the other fields from JSON
 				//Currently doing a direct filling, later it may be rule based (based on AlertType)
 				if(conf.getProperty(AdapterConfiguration.TEST_FLAG).equalsIgnoreCase("true")){
 					to = conf.getProperty(AdapterConfiguration.TESTMAIL_RECEIPENTS);
+					from = conf.getProperty(AdapterConfiguration.MAIL_FROM);
 				}else{
 					to = (String)fillers.get("associateEmail");
 					cc = (String)fillers.get("supervisorEmail");
+					from = conf.getProperty(AdapterConfiguration.MAIL_FROM);
 				}
-				from = conf.getProperty(AdapterConfiguration.MAIL_FROM);
 				
 			}else{
 				log.error(Constants.ERROR_TEMPLATE_DIRECTORY_UNAVAILABLE+templateDir.toAbsolutePath().toString());

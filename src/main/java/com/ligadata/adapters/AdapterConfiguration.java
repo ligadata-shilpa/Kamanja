@@ -5,6 +5,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.Enumeration;
 import java.util.Properties;
+
 import org.apache.log4j.Logger;
 
 public class AdapterConfiguration {
@@ -57,6 +58,7 @@ public class AdapterConfiguration {
 	//Start String Template Mail Properties
 	public static final String TEMPLATE_DIRECTORY = "templates.directory";
 	public static final String TESTMAIL_RECEIPENTS = "testmail.recepients";
+	public static final String TEMPLATE_MAPPING = "templates.mapping";
 	public static final String MAIL_FROM = "mail.from";
 	
 	public static final String MAIL_PROP_SSL               = "mail.smtp.ssl.trust";
@@ -73,8 +75,8 @@ public class AdapterConfiguration {
 	
 	public static final String TEST_FLAG             = "test.flag";
 	//End String Template Mail Properties
-
-
+	
+	
 	private Properties properties;
 
 	public AdapterConfiguration() throws IOException {
