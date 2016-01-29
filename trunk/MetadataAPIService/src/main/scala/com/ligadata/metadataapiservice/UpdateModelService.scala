@@ -32,7 +32,7 @@ object UpdateModelService {
   case class Process(pmmlStr:String)
 }
 
-class UpdateModelService(requestContext: RequestContext, userid:Option[String], password:Option[String], cert:Option[String]) extends Actor {
+class UpdateModelService(requestContext: RequestContext, userid:Option[String], password:Option[String], cert:Option[String], modelCompileInfo: Option[String]) extends Actor {
 
   import UpdateModelService._
   
@@ -57,8 +57,26 @@ class UpdateModelService(requestContext: RequestContext, userid:Option[String], 
        MetadataAPIImpl.logAuditRec(userid,Some(AuditConstants.WRITE),AuditConstants.UPDATEOBJECT,pmmlStr,AuditConstants.FAIL,"",nameVal)
       requestContext.complete(new ApiResult(ErrorCodeConstants.Failure, APIName, null, "Error:UPDATE not allowed for this user").toString )
     } else {
-      val apiResult = MetadataAPIImpl.UpdateModel(ModelType.KPMML, pmmlStr, userid)
-      requestContext.complete(apiResult)      
+
+      // Ok, if this is a KPMML model, we dont need any additional info for compilation, its all enclosed in the model.  for normal PMML,
+      // we need to know ModelName, Version, and associated Message.  modelCompileInfo will be set if this is PMML, and not set if KPMML
+      if (modelCompileInfo == None) {
+        val apiResult = MetadataAPIImpl.UpdateModel(ModelType.KPMML, pmmlStr, userid)
+        requestContext.complete(apiResult)
+      } else {
+        val cInfo = modelCompileInfo.getOrElse("")
+
+        // Error if nothing specified in the modelCompileInfo
+        if (cInfo.equalsIgnoreCase(""))
+          requestContext.complete(new ApiResult(ErrorCodeConstants.Failure, APIName, null, "Error: modelconfig is not specified, PMML model is required to have Model Compilation Information.").toString)
+
+        val compileConfigTokens = cInfo.split(",")
+        if (compileConfigTokens.size != 3)
+          requestContext.complete(new ApiResult(ErrorCodeConstants.Failure, APIName, null, "Error: Invalid compile config paramters specified for PMML, Needs ModelName, ModelVersion, MessageName.").toString)
+
+        val apiResult = MetadataAPIImpl.UpdateModel(ModelType.PMML, pmmlStr, userid, Some(compileConfigTokens(0)), Some(compileConfigTokens(1)), Some(compileConfigTokens(2)))
+        requestContext.complete(apiResult)
+      }
     }
   }
 }
