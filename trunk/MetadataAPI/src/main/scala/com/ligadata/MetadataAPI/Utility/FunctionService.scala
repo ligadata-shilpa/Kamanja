@@ -17,11 +17,16 @@
 package com.ligadata.MetadataAPI.Utility
 
 import java.io.File
+import java.io.FileNotFoundException
 
+import com.ligadata.Exceptions.{StackTrace, AlreadyExistsException}
 import com.ligadata.MetadataAPI.MetadataAPIImpl
 
 import scala.io.Source
 import org.apache.logging.log4j._
+
+import scala.io.StdIn
+
 /**
  * Created by dhaval on 8/12/15.
  */
@@ -99,7 +104,7 @@ object FunctionService {
           println("["+srno+"] "+functionKey)
         }
         println("Enter your choice: ")
-        val choice: Int = readInt()
+        val choice: Int = StdIn.readInt()
 
         if (choice < 1 || choice > functionKeys.length) {
           val errormsg="Invalid choice " + choice + ". Start with the main menu."
@@ -146,7 +151,7 @@ object FunctionService {
           println("["+srno+"] "+functionKey)
         }
         println("Enter your choice: ")
-        val choice: Int = readInt()
+        val choice: Int = StdIn.readInt()
 
         if (choice < 1 || choice > functionKeys.length) {
           val errormsg="Invalid choice " + choice + ". Start with the main menu."
@@ -212,11 +217,48 @@ object FunctionService {
     }
     response
   }
-  //NOT REQUIRED
-  def loadFunctionsFromAFile: String ={
-    var response="NOT REQUIRED. Please use the ADD TYPE option."
-    response
+
+    /** loadFunctionsFromAFile is used to load UDF function lib fcn type information to the Metadata store for use
+      * in the pmml models.
+      * @param input path of the file containing the json function definitions
+      * @param userid optional user id needed for authentication and logging
+      * @return api results as a string
+      */
+  def loadFunctionsFromAFile(input : String, userid : Option[String] = None): String ={
+
+      val response : String = try {
+            val functionStr = Source.fromFile(input).mkString
+            val apiResult = MetadataAPIImpl.AddFunctions(functionStr, "JSON", userid)
+
+            val resultMsg : String = s"Result as Json String => \n$apiResult"
+            println(resultMsg)
+            resultMsg
+      } catch {
+        case e: AlreadyExistsException => {
+            val errorMsg : String = "Function(s) already in the metadata...."
+            logger.error(errorMsg)
+            errorMsg
+        }
+        case fnf : FileNotFoundException => {
+            val filePath : String = if (input != null && input.nonEmpty) input else "bad file path ... blank or null"
+            val errorMsg : String = "file supplied to loadFunctionsFromAfile ($filePath) does not exist...."
+            logger.error(errorMsg)
+            errorMsg
+        }
+        case e: Exception => {
+            val stackTrace = StackTrace.ThrowableTraceString(e)
+            val errorMsg : String = s"Exception $e encountered ... \nstackTrace =\n$stackTrace"
+            logger.debug(errorMsg)
+            errorMsg
+        }
+      }
+      response
   }
+
+    /**
+      * Dump the FunctionDef instances as JSON strings.
+      * @return JSON strings for all function definitions
+      */
   def dumpAllFunctionsAsJson: String ={
     var response=""
     try{
@@ -252,7 +294,7 @@ object FunctionService {
       println("[" + srNo + "]" + model)
     }
     print("\nEnter your choice(If more than 1 choice, please use commas to seperate them): \n")
-    var userOptions = Console.readLine().split(",")
+    var userOptions = StdIn.readLine().split(",")
     println("User selected the option(s) " + userOptions.length)
     //check if user input valid. If not exit
     for (userOption <- userOptions) {

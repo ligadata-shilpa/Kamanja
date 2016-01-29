@@ -17,6 +17,7 @@ mergeStrategy in assembly <<= (mergeStrategy in assembly) { (old) =>
   {
     // case PathList("javax", "servlet", xs @ _*)         => MergeStrategy.first
     // case PathList(ps @ _*) if ps.last endsWith ".html" => MergeStrategy.first
+case PathList("META-INF", "maven","jline","jline", ps) if ps.startsWith("pom") => MergeStrategy.discard
     case PathList(ps @ _*) if ps.last endsWith ".html" => MergeStrategy.first
     case x if x endsWith "google/common/annotations/GwtCompatible.class" => MergeStrategy.first
     case x if x endsWith "google/common/annotations/GwtIncompatible.class" => MergeStrategy.first
@@ -50,7 +51,7 @@ mergeStrategy in assembly <<= (mergeStrategy in assembly) { (old) =>
 }
 
 excludedJars in assembly <<= (fullClasspath in assembly) map { cp => 
-  val excludes = Set("commons-beanutils-1.7.0.jar", "google-collections-1.0.jar", "commons-collections-4-4.0.jar" )
+  val excludes = Set("commons-beanutils-1.7.0.jar", "google-collections-1.0.jar", "commons-collections-4-4.0.jar", "scalatest_2.11-2.2.0.jar", "scala-reflect-2.11.0.jar", "akka-actor_2.11-2.3.2.jar", "scala-reflect-2.11.2.jar", "guava-19.0.jar", "scalatest_2.11-2.2.4.jar", "joda-time-2.9.1-javadoc.jar", "voldemort-0.96.jar", "scala-compiler-2.11.0.jar", "guava-14.0.1.jar")
   cp filter { jar => excludes(jar.data.getName) }
 }
 
@@ -58,7 +59,7 @@ name := "MetadataAPIService"
 
 version := "1.0"
 
-scalaVersion := "2.10.4"
+scalaVersion := "2.11.7"
 
 scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
 
@@ -67,14 +68,14 @@ resolvers ++= Seq(
 )
 
 libraryDependencies ++= {
-  val sprayVersion = "1.3.1"
-  val akkaVersion = "2.3.2"
+  val sprayVersion = "1.3.3"
+  val akkaVersion = "2.3.9"
   Seq(
-  "io.spray" % "spray-can" % sprayVersion,
-  "io.spray" % "spray-routing" % sprayVersion,
-  "io.spray" % "spray-testkit" % sprayVersion,
-  "io.spray" % "spray-client" % sprayVersion,
-  "io.spray" %%  "spray-json" % "1.2.5",
+  "io.spray" %% "spray-can" % sprayVersion,
+  "io.spray" %% "spray-routing" % sprayVersion,
+  "io.spray" %% "spray-testkit" % sprayVersion,
+  "io.spray" %% "spray-client" % sprayVersion,
+  "io.spray" %%  "spray-json" % "1.3.2",
   "com.typesafe.akka" %% "akka-actor" % akkaVersion,
 //  "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
   "ch.qos.logback" % "logback-classic" % "1.0.12",

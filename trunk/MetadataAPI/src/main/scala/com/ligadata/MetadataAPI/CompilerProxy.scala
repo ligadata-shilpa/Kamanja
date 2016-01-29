@@ -165,9 +165,6 @@ class CompilerProxy {
         if (modDef.ver == 0) {
           modDef.ver = 1
         }
-        if (modDef.modelType == null) {
-          modDef.modelType = "RuleSet"
-        }
 
         modDef.objectDefinition = pmmlStr
         modDef.objectFormat = fXML
@@ -317,7 +314,7 @@ class CompilerProxy {
       var compileCommand: scala.collection.mutable.Seq[String] = null
 
       // See what is the source language the source code is in.
-      if (sourceLanguage.equals("java")) {
+      if (sourceLanguage.equalsIgnoreCase("java")) {
         srcFileName = s"$moduleName.java"
         // need to add the -d option to the JAVAC
         compileCommand = Seq("sh", "-c", s"$scalahome/bin/javac -d $jarBuildDir -cp $classpath $jarBuildDir/$srcFileName")
@@ -464,11 +461,26 @@ class CompilerProxy {
     }
 
   /**
-   * compileModelFromSource - Generate a jarfile from a sourceCode.
+   * compileModelFromSource - Generate a jarfile from a sourceCode.  This method used by the java and scala custom models
+   *
+   * @param repackagedCode
+   * @param sourceLang
+   * @param pname
+   * @param classPath
+   * @param modelNamespace
+   * @param modelName
+   * @param modelVersion
+   * @param msgDefClassFilePath
+   * @param elements
+   * @param originalSource
+   * @param deps
+   * @param typeDeps
+   * @param notTypeDeps
+   * @return ModelDef
    *
    */
   // The last parameter of generateModelDef represents whether we are recompiling a model due to a change
-  // on a dependant message(or container) or compiling for the first time. 
+  // on a dependent message(or container) or compiling for the first time.
   // MdMgr.MakeModelDef requires this information and function behaves differently depending on whether 
   // we are compiling first time or recompiling an existing model.
   private def generateModelDef(repackagedCode: String, sourceLang: String, pname: String, classPath: String, modelNamespace: String, modelName: String,
@@ -502,15 +514,35 @@ class CompilerProxy {
       val depJars = getJarsFromClassPath(classPath)
       
       // figure out the Physical Model Name
-      var (dummy1, dummy2, dummy3, pName) = getModelMetadataFromJar(jarFileName, elements, depJars)
+      var (dummy1, dummy2, dummy3, pName) = getModelMetadataFromJar(jarFileName, elements, depJars, sourceLang)
 
-      // Create the ModelDef object
-      val modDef: ModelDef = MdMgr.GetMdMgr.MakeModelDef(modelNamespace, modelName, "", "RuleSet",
-        getInputVarsFromElements(elements),
-        List[(String, String, String)](),
-        MdMgr.ConvertVersionToLong(MdMgr.FormatVersion(modelVersion)), "",
-        deps.toArray[String],
-        recompile,false)
+      /* Create the ModelDef object
+
+        def MakeModelDef(nameSpace: String
+                   , name: String
+                   , physicalName: String
+                   , mdlType: String
+                   , inputVars: List[(String, String, String, String, Boolean, String)]
+                   , outputVars: List[(String, String, String)]
+                   , ver: Long
+                   , jarNm: String
+                   , depJars: Array[String]
+                   , recompile: Boolean
+                   , supportsInstanceSerialization: Boolean): ModelDef = {
+
+       */
+      val modelType : String = if (sourceLang.equalsIgnoreCase("scala")) "Scala" else "Java"
+      val modDef: ModelDef = MdMgr.GetMdMgr.MakeModelDef(modelNamespace
+                                                        , modelName
+                                                        , pName
+                                                        , modelType
+                                                        , getInputVarsFromElements(elements)
+                                                        , List[(String, String, String)]()
+                                                        , MdMgr.ConvertVersionToLong(MdMgr.FormatVersion(modelVersion))
+                                                        , jarFileName
+                                                        , deps.toArray[String]
+                                                        , recompile
+                                                        , false)
 
       // Need to set some values by hand here.
       modDef.jarName = jarFileName
@@ -647,7 +679,7 @@ class CompilerProxy {
     
     val depJars = getJarsFromClassPath(classPath)
 
-    (getModelMetadataFromJar(jarFileName, elements, depJars), finalSourceCode, packageName)
+    (getModelMetadataFromJar(jarFileName, elements, depJars, sourceLang), finalSourceCode, packageName)
 
   }
 
@@ -787,7 +819,7 @@ class CompilerProxy {
       }
   }
 
-  private def getModelMetadataFromJar(jarFileName: String, elements: Set[BaseElemDef], depJars: List[String]): (String, String, String, String) = {
+  private def getModelMetadataFromJar(jarFileName: String, elements: Set[BaseElemDef], depJars: List[String], sourceLang : String): (String, String, String, String) = {
 
     // Resolve ModelNames and Models versions - note, the jar file generated is still in the workDirectory.
     val loaderInfo = new KamanjaLoaderInfo()
@@ -837,13 +869,33 @@ class CompilerProxy {
       }
       if (isModel) {
         try {
-          val mdlDef = MdMgr.GetMdMgr.MakeModelDef("", "", clsName, "jar", List[(String, String, String, String, Boolean, String)](), List[(String, String, String)]()) // Java/Scala/Jar/PMML models are marked as JAR here.
-          val mdlFactory = PrepareModelFactory(loaderInfo, jarPaths0, mdlDef)
+
+            /**
+              * Manufacture a proxy of the model def.  There are some subtleties here.  For the java and scala native
+              * models, the fully qualified class path (i.e., the variable clsName in use here), is really the
+              * model namespace.name where the class name is the model name and the package prefix is the namespace.
+              *
+              * The thinking here is that if this mechanism changes, it will not be hard coded here in the proxy. It will
+              * exist in but one place, namely in the getModelInstanceFactory method found in the FactoryOfModelInstanceFactory.
+              * For this reason, the trouble of manufacturing a ModelDef is taken so it can turn around and just pull
+              * out the pkg prefix and class name from the 'clsName' variable.
+              */
+
+              val mdlDef = MdMgr.GetMdMgr.MakeModelDef("", ""
+                  , clsName
+                  , sourceLang
+                  , List[(String, String, String, String, Boolean, String)]()
+                  , List[(String, String, String)]()
+                  , 1000000L
+                  , ""
+                  , Array[String]()
+                  , false, false)
+              val mdlFactory = PrepareModelFactory(loaderInfo, jarPaths0, mdlDef)
   
-          if (mdlFactory != null) {
-            var fullName = mdlFactory.getModelName.split('.')
-            return (fullName.dropRight(1).mkString("."), fullName(fullName.length - 1), mdlFactory.getVersion, clsName)
-          }
+              if (mdlFactory != null) {
+                var fullName = mdlFactory.getModelName.split('.')
+                return (fullName.dropRight(1).mkString("."), fullName(fullName.length - 1), mdlFactory.getVersion, clsName)
+              }
 
           logger.error("COMPILER_PROXY: Unable to resolve a class Object from " + jarName0)
           throw MsgCompilationFailedException(clsName, null)

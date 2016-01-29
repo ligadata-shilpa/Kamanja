@@ -12,10 +12,10 @@
 #       a) Using the node config file Engine2BoxConfigV1.json 
 #       KamanjaClusterInstall.sh  --MetadataAPIConfig SampleApplication/Medical/Configs/MetadataAPIConfig.properties 
 #                               --NodeConfigPath SampleApplication/Medical/Configs/Engine2BoxConfigV1.json 
-#                               --KafkaInstallPath ~/tarballs/kafka/2.10/kafka_2.10-0.8.1.1
+#                               --KafkaInstallPath ~/tarballs/kafka/2.11/kafka_2.11-0.8.1.1
 #       b) Using the metadata found in the metadata store specified by the MetadataAPIConfig.properties
 #       KamanjaClusterInstall.sh  --MetadataAPIConfig SampleApplication/Medical/Configs/MetadataAPIConfig.properties 
-#                               --KafkaInstallPath ~/tarballs/kafka/2.10/kafka_2.10-0.8.1.1
+#                               --KafkaInstallPath ~/tarballs/kafka/2.11/kafka_2.11-0.8.1.1
 #
 #   TarballPath distribution examples (when the tarball has been built outside this script):
 #       a) Using the node config file Engine2BoxConfigV1.json 
@@ -43,7 +43,7 @@
 
 script_dir=$(dirname "$0")
 
-scalaversion="2.10"
+scalaversion="2.11"
 name1=$1
 
 Usage()
@@ -378,6 +378,8 @@ echo "...copy is done"
 
 echo
 
+DATE=`date +%Y%m%d%H%M%S`
+
 # 5) untar/decompress tarballs there and move them into place
 echo "...for each directory specified on each machine participating in the cluster, untar and decompress the software to $workDir/$installDirName... then move to corresponding target path"
 exec 12<&0 # save current stdin
@@ -386,16 +388,18 @@ while read LINE; do
     machine=$LINE
     read LINE
     targetPath=$LINE
+    targetPath_date="$targetPath"_"$DATE"
     echo "Extract the tarball $tarName and copy it to $targetPath iff $workDir/$installDirName != $targetPath"
 	ssh -o StrictHostKeyChecking=no -T $machine  <<-EOF
 	        cd $workDir
-		mkdir -p $workDir/$installDirName
-            rm -Rf $targetPath
-	        tar xzf $tarName -C $workDir/$installDirName --strip-components 1
-            if [ "$workDir/$installDirName" != "$targetPath" ]; then
-	           mkdir -p $targetPath
-	           cp -R $workDir/$installDirName/* $targetPath/
-            fi
+		if [ ! -L $targetPath ]; then
+			mv 	$targetPath "$targetPath"_pre_"$DATE"			
+		else
+			unlink $targetPath
+		fi
+		mkdir -p $targetPath_date
+ 		tar xzf $tarName -C $targetPath_date --strip-components 1
+		ln -sf  $targetPath_date $targetPath
 EOF
 done
 exec 0<&12 12<&-
@@ -466,5 +470,4 @@ echo
 # EOF
 # done
 # exec 0<&12 12<&-
-
 

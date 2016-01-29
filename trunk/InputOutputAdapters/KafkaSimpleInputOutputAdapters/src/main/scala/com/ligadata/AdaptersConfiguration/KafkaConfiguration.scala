@@ -45,7 +45,9 @@ object KafkaQueueAdapterConfiguration {
 
     val qc = new KafkaQueueAdapterConfiguration
     qc.Name = inputConfig.Name
-    qc.formatOrInputAdapterName = inputConfig.formatOrInputAdapterName
+    qc.formatName = inputConfig.formatName
+    qc.validateAdapterName = inputConfig.validateAdapterName
+    qc.failedEventsAdapterName = inputConfig.failedEventsAdapterName
     qc.className = inputConfig.className
     qc.jarName = inputConfig.jarName
     qc.dependencyJars = inputConfig.dependencyJars
@@ -62,7 +64,9 @@ object KafkaQueueAdapterConfiguration {
     val values = adapCfg.values.asInstanceOf[Map[String, String]]
 
     values.foreach(kv => {
-      if (kv._1.compareToIgnoreCase("HostList") == 0) {
+      if (kv._1.compareToIgnoreCase("bootstrap.servers") == 0) {
+        qc.hosts = kv._2.split(",").map(str => str.trim).filter(str => str.size > 0)
+      } else  if (kv._1.compareToIgnoreCase("HostList") == 0) {
         qc.hosts = kv._2.split(",").map(str => str.trim).filter(str => str.size > 0)
       } else if (kv._1.compareToIgnoreCase("TopicName") == 0) {
         qc.topic = kv._2.trim
