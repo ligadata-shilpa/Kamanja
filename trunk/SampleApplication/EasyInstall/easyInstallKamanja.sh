@@ -382,7 +382,6 @@ cp $ivyPath/cache/org.ow2.asm/asm-tree/jars/asm-tree-4.0.jar $systemlib
 cp $ivyPath/cache/commons-io/commons-io/jars/commons-io-2.4.jar $systemlib
 cp $srcPath/lib_managed/jars/org.joda/joda-convert/joda-convert-1.6.jar $systemlib
 cp $ivyPath/cache/net.sf.jopt-simple/jopt-simple/jars/jopt-simple-3.2.jar $systemlib
-cp $ivyPath/cache/joda-time/joda-time/jars/joda-time-2.9.1-javadoc.jar $systemlib
 cp $ivyPath/cache/com.github.stephenc.findbugs/findbugs-annotations/jars/findbugs-annotations-1.3.9-1.jar $systemlib
 cp $srcPath/lib_managed/jars/org.json4s/json4s-ast_2.11/json4s-ast_2.11-3.2.9.jar $systemlib
 cp $srcPath/lib_managed/jars/org.apache.thrift/libthrift/libthrift-0.9.2.jar $systemlib
