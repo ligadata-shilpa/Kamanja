@@ -69,7 +69,8 @@ object Root {
   */
 class Root {
   val packagename: String = ""
-  val version: String = "0.0.1"
+  val version: String = ""
+  val modelname : String = ""
 
   val imports: Array[String] = Array.empty[String]
   val transformations: Array[Transformation] = Array.empty[Transformation]

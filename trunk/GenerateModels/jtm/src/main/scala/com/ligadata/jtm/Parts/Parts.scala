@@ -6,8 +6,7 @@ package com.ligadata.jtm
 object Parts {
 
   val header =
-    """
-      |/*
+   """|/*
       | * Copyright 2016 ligaDATA
       | *
       | * Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,7 +32,9 @@ object Parts {
     """
       |class Factory(modelDef: ModelDef, nodeContext: NodeContext) extends ModelInstanceFactory(modelDef, nodeContext) {
       |  // if more than 1 input we have to find the correct instance
-      |  override def isValidMessage(msg: MessageContainerBase): Boolean = return msg.isInstanceOf[input0]
+      |  override def isValidMessage(msg: MessageContainerBase): Boolean = {
+      |{factory.isvalidmessage}
+      |  }
       |  override def createModelInstance(): ModelInstance = return new Model(this)
       |
       |  // Provided in json

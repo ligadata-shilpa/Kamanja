@@ -136,26 +136,50 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
   val inputFile: String = params.inputFile // Input file to compile
   val outputFile: String = params.outputFile // Output file to write
 
+  def CollectInputs(t: Array[Transformation]) : Array[String] = {
+    val s = t.map( e => {
+      e.input
+    })
+    s.toSet.toArray
+  }
+
+  def CollectOutputs(t: Array[Transformation]) : Array[String] = {
+    val s = t.foldLeft(Array.empty[String]) ( (r, e) => {
+      val s = e.outputs.foldLeft(r) ( (r, e) => {
+        r ++ Array(e.output)
+      })
+      r ++ s
+    })
+    s.toSet.toArray
+  }
+
+  //
+  //
+  def ConstructIsValidMessage(inputTypes: Array[String]) : String = {
+    inputTypes.map( e => "    msg.isInstanceOf[%s]".format(e) ).mkString("||\n") + "\n"
+  }
+
   def Execute(): String = {
 
     // Load Json
     val root = Root.fromJson(inputFile)
-    val t = root.transformations(1)
-    val t1 = t.input
-/*
+
     val sb = new StringBuilder
     sb.append(Parts.header)
     sb.append("\n")
-    sb.append("package com.ligadata.jtm.test.filter\n")
+    sb.append("package %s\n".format(root.packagename))
 
     // Push substituions
     var subtitutions = new Substitution
-    subtitutions.Add("model.name", "filter")
+    subtitutions.Add("model.name", root.modelname)
     subtitutions.Add("model.version", root.version)
 
     val imports = subtitutions.Run(Parts.imports)
     sb.append(imports)
     sb.append("\n\n")
+
+    root.imports.map( i => { sb.append("import %s\n".format(i)) })
+
 
     // Check Inputs
     //
@@ -165,25 +189,41 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     //
     //<TBD>
 
+    case class leg(val packagename: String, val classname: String, val handle: String, val id: Int)
+
     // Constructs the input and output types
-    val inputs = root.inputs.zipWithIndex.map( p => {
-      val (packagename, classname) = splitPackageClass(p._1.typename)
-        "import %s.{%s ⇒ input%d}".format(packagename, classname, p._2)
+    val inputMap = CollectInputs(root.transformations).zipWithIndex.map( e => {
+      val (packagename, classname) = splitPackageClass(e._1)
+      val handle = "mi%d".format(e._2)
+      ( e._1 -> leg(packagename, classname, handle, e._2))
+    })
+
+    val outputMap = CollectOutputs(root.transformations).zipWithIndex.map( e => {
+      val (packagename, classname) = splitPackageClass(e._1)
+      val handle = "mo%d".format(e._2)
+      ( e._1 -> leg(packagename, classname, handle, e._2))
+    })
+
+    val inputs = inputMap.map( p => {
+        val leg = p._2
+        "import %s.{%s ⇒ %s}".format(leg.packagename, leg.classname, leg.handle)
     }).mkString("\n")
     sb.append(inputs)
     sb.append("\n")
 
-    val outputs = root.outputs.zipWithIndex.map( p => {
-      val (packagename, classname) = splitPackageClass(p._1.typename)
-      "import %s.{%s ⇒ output%d}".format(packagename, classname, p._2)
+    val outputs = outputMap.map( p => {
+      val leg = p._2
+      "import %s.{%s ⇒ %s}".format(leg.packagename, leg.classname, leg.handle)
     }).mkString("\n")
     sb.append(outputs)
     sb.append("\n")
 
+    subtitutions.Add("factory.isvalidmessage", ConstructIsValidMessage(inputMap.map( p => p._2.handle )))
     val factory = subtitutions.Run(Parts.factory)
     sb.append(factory)
     sb.append("\n\n")
 
+/*
     // Read the output type information
     val output = md.Message(root.inputs(0).typename, 0, true)
 
@@ -221,13 +261,11 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     val model = subtitutions.Run(Parts.model)
     sb.append(model)
     sb.append("\n")
-
+*/
     // Write to output file
     logger.trace("Output to file {}", outputFile)
     FileUtils.writeStringToFile(new File(outputFile), sb.result)
 
     outputFile
-    */
-    ""
   }
 }

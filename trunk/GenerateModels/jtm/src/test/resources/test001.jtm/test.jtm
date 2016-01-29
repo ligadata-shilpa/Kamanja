@@ -1,6 +1,7 @@
 {
   "packagename": "com.ligadata.jtm.test.filter",
   "version": "0.0.1",
+  "modelname": "test001",
   "imports": [ "com.ligadata.Utils._",  "com.ligadata.Utils1._"  ],
   "transformations": [
     {
