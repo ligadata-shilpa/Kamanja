@@ -39,3 +39,16 @@ class Factory(modelDef: ModelDef, nodeContext: NodeContext) extends ModelInstanc
 
   override def createResultObject(): ModelResultBase = new MappedModelResults()
 }
+
+class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
+
+  override def execute(txnCtxt: TransactionContext, outputDefault: Boolean): ModelResultBase = {
+
+    if(msg.isInstanceOf[mi0]) {    }
+
+
+ }
+
+
+}
+

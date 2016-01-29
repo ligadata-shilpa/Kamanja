@@ -223,6 +223,19 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     sb.append(factory)
     sb.append("\n\n")
 
+    val inputprocessing = inputMap.map( p => {
+      val leg = p._2
+      // Get all transformations attached to the input
+      "    if(msg.isInstanceOf[%s]) {".format(leg.handle) +
+      "    }"
+    })
+
+    subtitutions.Add("model.methods", "")
+    subtitutions.Add("model.code", inputprocessing.mkString("\n") + "\n")
+    val model = subtitutions.Run(Parts.model)
+    sb.append(model)
+    sb.append("\n")
+
 /*
     // Read the output type information
     val output = md.Message(root.inputs(0).typename, 0, true)

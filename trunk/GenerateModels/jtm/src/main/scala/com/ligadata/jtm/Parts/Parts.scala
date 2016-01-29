@@ -48,11 +48,11 @@ object Parts {
     """
       |class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
       |
-      |   override def execute(txnCtxt: TransactionContext, outputDefault: Boolean): ModelResultBase = {
+      |  override def execute(txnCtxt: TransactionContext, outputDefault: Boolean): ModelResultBase = {
       |
       |{model.code}
       |
-      |   }
+      | }
       |{model.methods}
       |
       |}""".stripMargin
