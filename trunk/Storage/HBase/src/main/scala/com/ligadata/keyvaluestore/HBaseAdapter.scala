@@ -1308,6 +1308,9 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
 
       val destTableDesc = new HTableDescriptor(TableName.valueOf(destTableName));
       val srcTableDesc = tableHBase.getTableDescriptor
+      destTableDesc.setMaxFileSize(srcTableDesc.getMaxFileSize());
+      destTableDesc.setMemStoreFlushSize(srcTableDesc.getMemStoreFlushSize());
+      destTableDesc.setReadOnly(srcTableDesc.isReadOnly());
       for (desc <- srcTableDesc.getColumnFamilies) {
         logger.debug(srcTableName + " ColumnFamilyDescription info:" + desc.getNameAsString + ", " + desc.toStringCustomizedValues())
         destTableDesc.addFamily(desc)
@@ -1322,6 +1325,8 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
 
       // Scan source table
       var scan = new Scan();
+      scan.setMaxVersions();
+      scan.setBatch(1024);
       var rs = tableHBase.getScanner(scan);
 
       // Loop through each row and write it into destination table mutator
@@ -1329,8 +1334,16 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       while (it.hasNext()) {
         val r = it.next()
         var p = new Put(r.getRow)
-        for (kv <- r.rawCells())
-          p.add(kv);
+        val rc = r.rawCells()
+        if (rc != null) {
+          for (kv <- rc) {
+            if (CellUtil.isDeleteFamily(kv)) {
+            } else if (CellUtil.isDelete(kv)) {
+            } else {
+              p.add(kv);
+            }
+          }
+        }
         mutator.mutate(p)
       }
 
