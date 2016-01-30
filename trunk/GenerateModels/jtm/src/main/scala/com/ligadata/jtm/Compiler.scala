@@ -136,14 +136,14 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
   val inputFile: String = params.inputFile // Input file to compile
   val outputFile: String = params.outputFile // Output file to write
 
-  def CollectInputs(t: Array[Transformation]) : Array[String] = {
+  def CollectInputs(t: Array[Transformation]): Array[String] = {
     val s = t.map( e => {
       e.input
     })
     s.toSet.toArray
   }
 
-  def CollectOutputs(t: Array[Transformation]) : Array[String] = {
+  def CollectOutputs(t: Array[Transformation]): Array[String] = {
     val s = t.foldLeft(Array.empty[String]) ( (r, e) => {
       val s = e.outputs.foldLeft(r) ( (r, e) => {
         r ++ Array(e.output)
@@ -155,8 +155,26 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
   //
   //
-  def ConstructIsValidMessage(inputTypes: Array[String]) : String = {
+  def ConstructIsValidMessage(inputTypes: Array[String]): String = {
     inputTypes.map( e => "    msg.isInstanceOf[%s]".format(e) ).mkString("||\n") + "\n"
+  }
+
+  def ExtractColumnNames(expression: String): Set[String] = {
+    val regex = """(\$[a-zA-Z0-9_]+)""".r
+    regex.findAllMatchIn(expression).toArray.map( m => m.matched.drop(1)).toSet
+  }
+
+  def FixupColumnNames(expression: String): String = {
+    val regex = """(\$[a-zA-Z0-9_]+)""".r
+    val m = regex.pattern.matcher(expression)
+    val sb = new StringBuffer
+    var i = 0;
+    while (m.find) {
+      m.appendReplacement(sb, m.group(0).drop(1))
+      i = i + 1
+    }
+    m.appendTail(sb)
+    sb.toString
   }
 
   def Execute(): String = {
@@ -223,10 +241,121 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     sb.append(factory)
     sb.append("\n\n")
 
+    // Collect all outputs here
+    val resultVar = "var result: Array[Result] = Array.empty[Result]"
+
     val inputprocessing = inputMap.map( p => {
       val leg = p._2
+
       // Get all transformations attached to the input
+      val transformations = root.transformations.filter( t => t.input == p._1 )
+
+      val transparts = transformations.foldLeft(Array.empty[Array[String]]) ( (r, t) => {
+
+        var tr = Array("\n      {")
+
+        // Process the output per message
+
+        // variables
+        tr ++= t.variables.map( e => "        val %s: %s".format(e.name, e.typename))
+
+        tr ++= t.outputs.foldLeft(Array.empty[String]) ( (r, o) => {
+
+          var collect = Array.empty[String]
+          collect ++= Array("        val filtered: Boolean = false\n")
+
+          // Collect form metadata
+          var inputSet : Set[String] = Seq("in1", "in2", "in3").toSet
+          var outputSet : Set[String] = Seq("out1", "out2", "out3", "out4").toSet
+          var outputSet1 : Set[String] = Seq("out1", "out2", "out3", "out4").toSet
+          var mapping = o.mappings
+          var filters =  o.filters
+          var computes = o.computes
+          var cnt1 = filters.length + computes.length
+          var cnt2 = 0
+
+          // Removed if mappings are provided
+          //
+          val found = mapping.filter( f => inputSet(f._2) )
+          found.foreach( f => inputSet ++= Set(f._1))
+          found.foreach( f => outputSet --= Set(f._1))
+          mapping = mapping.filterKeys( f => !found.contains(f)  )
+
+          // Abort this loop if nothing changes or we can statify all outputs
+          while(cnt1!=cnt2 && outputSet.size > 0) {
+
+            // filters
+            filters = filters.filter(f => {
+              var list = ExtractColumnNames(f.expression)
+              val open = list.filter(f => !inputSet(f) )
+              if(open.size==0) {
+
+                // Sub names to
+                val newExpression = FixupColumnNames(f.expression)
+
+                // Remove current element
+
+                // Output the actual filter
+                //
+                collect ++= Array("if (!filtered) {\n filter = %s\n}\n".format(newExpression))
+                true
+              } else {
+                false
+              }
+            })
+
+            // computes
+            computes = computes.filter( c => {
+              var list = ExtractColumnNames(c.expression)
+              val open = list.filter(f => !inputSet(f) )
+              if(open.size==0) {
+                false
+              } else {
+                true
+              }
+            })
+
+            // Check Mapping
+            if(mapping.size>0)
+            {
+              val found = mapping.filter( f => inputSet(f._2) )
+              found.foreach( f => inputSet ++= Set(f._1))
+              found.foreach( f => outputSet --= Set(f._1))
+              mapping = mapping.filterKeys( f => !found.contains(f)  )
+            }
+
+            cnt2 = filters.length + computes.length
+          }
+
+          // Generate the output for this iteration
+/*
+          // Construct output
+          val outputElements = members.map( e => {
+            "new Result(\"%s\", input0.%s)".format(e.Name, e.Name)
+          }).mkString(", ")
+          val outputResult = "result += Array[Result](%s)\n    factory.createResultObject().asInstanceOf[MappedModelResults].withResults(result)\n".format(outputElements)
+*/
+
+          if(outputSet.size>0){
+            //throw new Exception("Not all outputs satisfied. missing=" + outputSet.mkString(", "))
+          }
+
+          if(cnt2!=0){
+            //throw new Exception("Not all elements used")
+          }
+
+
+          // outputs
+          collect
+        })
+
+        tr ++= Array("\n      }")
+
+        r ++ Array(tr)
+      })
+
       "    if(msg.isInstanceOf[%s]) {".format(leg.handle) +
+      transparts.map( e => e.mkString("\n") + "\n").mkString("\n") + "\n" +
       "    }"
     })
 
