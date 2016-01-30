@@ -104,6 +104,7 @@ public class Migrate {
 				int readLen = d.data.length;
 
 				if ((d.containerName.equalsIgnoreCase("AdapterUniqKvData"))
+						|| (d.containerName.equalsIgnoreCase("GlobalCounters"))
 						|| (d.containerName.equalsIgnoreCase("ModelResults"))) {
 					// Don't change any data
 				} else {
@@ -366,8 +367,6 @@ public class Migrate {
 								configuration.migratingTo.implemtedClass));
 			}
 
-
-			
 			logger.debug(String.format(
 					"apiConfigFile:%s, clusterConfigFile:%s",
 					configuration.apiConfigFile,
@@ -385,7 +384,8 @@ public class Migrate {
 					.format("metadataStoreInfo:%s, dataStoreInfo:%s, statusStoreInfo:%s",
 							metadataStoreInfo, dataStoreInfo, statusStoreInfo));
 			migrateFrom.init(configuration.migratingFrom.versionInstallPath,
-					metadataStoreInfo, dataStoreInfo, statusStoreInfo, sourceReadFailuresFilePath);
+					metadataStoreInfo, dataStoreInfo, statusStoreInfo,
+					sourceReadFailuresFilePath);
 
 			TableName[] allMetadataTbls = new TableName[0];
 			TableName[] allDataTbls = new TableName[0];
@@ -525,7 +525,8 @@ public class Migrate {
 			if (logger.isInfoEnabled() == false)
 				System.out
 						.println("Migration is done. Failed summary is written to "
-								+ curMigrationSummary + " and failed to read data written to "
+								+ curMigrationSummary
+								+ " and failed to read data written to "
 								+ sourceReadFailuresFilePath);
 		} catch (Exception e) {
 			logger.error("Failed to Migrate", e);

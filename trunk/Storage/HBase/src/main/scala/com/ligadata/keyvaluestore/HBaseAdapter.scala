@@ -248,6 +248,17 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     }
   }
 
+  private def createTableFromDescriptor(tableDesc: HTableDescriptor): Unit = {
+    try {
+      relogin
+      admin.createTable(tableDesc);
+    } catch {
+      case e: Exception => {
+        throw CreateDDLException("Failed to create table", e)
+      }
+    }
+  }
+
   private def createTable(tableName: String, apiType: String): Unit = {
     try {
       relogin
@@ -269,7 +280,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
         tableDesc.addFamily(colDesc1)
         tableDesc.addFamily(colDesc2)
         tableDesc.addFamily(colDesc3)
-        admin.createTable(tableDesc);
+        createTableFromDescriptor(tableDesc)
       }
     } catch {
       case e: Exception => {
@@ -1266,6 +1277,17 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
   }
 
   def renameTable(srcTableName: String, destTableName: String, forceCopy: Boolean = false): Unit = {
+    val listener = new BufferedMutator.ExceptionListener() {
+      override def onException(e: RetriesExhaustedWithDetailsException, mutator: BufferedMutator) {
+        for (i <- 0 until e.getNumExceptions)
+          logger.error("Failed to sent put: " + e.getRow(i))
+        throw CreateDMLException("Failed to rename the table " + srcTableName, e)
+      }
+    }
+
+    var tableHBase: Table = null
+    var mutator: BufferedMutator = null
+
     try {
       relogin
       if (!admin.tableExists(srcTableName)) {
@@ -1280,6 +1302,52 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
           throw CreateDDLException("Failed to rename the table " + srcTableName + ":", new Exception("Destination Table already exist"))
         }
       }
+
+      // Open Source Table
+      tableHBase = getTableFromConnection(srcTableName);
+
+      val destTableDesc = new HTableDescriptor(TableName.valueOf(destTableName));
+      val srcTableDesc = tableHBase.getTableDescriptor
+      destTableDesc.setMaxFileSize(srcTableDesc.getMaxFileSize());
+      destTableDesc.setMemStoreFlushSize(srcTableDesc.getMemStoreFlushSize());
+      destTableDesc.setReadOnly(srcTableDesc.isReadOnly());
+      for (desc <- srcTableDesc.getColumnFamilies) {
+        logger.debug(srcTableName + " ColumnFamilyDescription info:" + desc.getNameAsString + ", " + desc.toStringCustomizedValues())
+        destTableDesc.addFamily(desc)
+      }
+
+      createTableFromDescriptor(destTableDesc)
+
+      val params = new BufferedMutatorParams(TableName.valueOf(destTableName)).listener(listener);
+
+      // Create Mutator for Destination Table
+      mutator = conn.getBufferedMutator(params)
+
+      // Scan source table
+      var scan = new Scan();
+      scan.setMaxVersions();
+      scan.setBatch(1024);
+      var rs = tableHBase.getScanner(scan);
+
+      // Loop through each row and write it into destination table mutator
+      val it = rs.iterator()
+      while (it.hasNext()) {
+        val r = it.next()
+        var p = new Put(r.getRow)
+        val rc = r.rawCells()
+        if (rc != null) {
+          for (kv <- rc) {
+            if (CellUtil.isDeleteFamily(kv)) {
+            } else if (CellUtil.isDelete(kv)) {
+            } else {
+              p.add(kv);
+            }
+          }
+        }
+        mutator.mutate(p)
+      }
+
+      /*
       // snapshot name can't contain ':'
       val snapshotName = srcTableName.toLowerCase.replace(':', '_') + "_snap"
       admin.disableTable(srcTableName);
@@ -1287,9 +1355,19 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       admin.cloneSnapshot(snapshotName, destTableName);
       admin.deleteSnapshot(snapshotName);
       admin.enableTable(srcTableName);
+*/
+
     } catch {
       case e: Exception => {
         throw CreateDDLException("Failed to rename the table " + srcTableName + ":" + e.getMessage(), e)
+      }
+    } finally {
+      if (mutator != null) {
+        mutator.flush()
+        mutator.close()
+      }
+      if (tableHBase != null) {
+        tableHBase.close()
       }
     }
   }
