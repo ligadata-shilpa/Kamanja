@@ -164,13 +164,13 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     regex.findAllMatchIn(expression).toArray.map( m => m.matched.drop(1)).toSet
   }
 
-  def FixupColumnNames(expression: String): String = {
+  def FixupColumnNames(expression: String, mapNameSource : Map[String, String]): String = {
     val regex = """(\$[a-zA-Z0-9_]+)""".r
     val m = regex.pattern.matcher(expression)
     val sb = new StringBuffer
     var i = 0;
     while (m.find) {
-      m.appendReplacement(sb, m.group(0).drop(1))
+      m.appendReplacement(sb, mapNameSource.get(m.group(0).drop(1)).get)
       i = i + 1
     }
     m.appendTail(sb)
@@ -242,7 +242,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     sb.append("\n\n")
 
     // Collect all outputs here
-    val resultVar = "var result: Array[Result] = Array.empty[Result]"
+    val resultVar = "    var result: Array[Result] = Array.empty[Result]"
 
     val inputprocessing = inputMap.map( p => {
       val leg = p._2
@@ -262,12 +262,15 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
         tr ++= t.outputs.foldLeft(Array.empty[String]) ( (r, o) => {
 
           var collect = Array.empty[String]
+          collect ++= Array("        {\n")
           collect ++= Array("        val filtered: Boolean = false\n")
+          collect ++= Array("        val msg = msg.isInstanceOf[%s]\n".format(leg.handle))
 
           // Collect form metadata
-          var inputSet : Set[String] = Seq("in1", "in2", "in3").toSet
+          var mapNameSource : Map[String, String] = Map(("in1" -> "msg.in1"), ("in2" -> "msg.in2"), ("in3" -> "msg.in3"))
+
           var outputSet : Set[String] = Seq("out1", "out2", "out3", "out4").toSet
-          var outputSet1 : Set[String] = Seq("out1", "out2", "out3", "out4").toSet
+          val outputSet1 : Set[String] = Seq("out1", "out2", "out3", "out4").toSet
           var mapping = o.mappings
           var filters =  o.filters
           var computes = o.computes
@@ -275,40 +278,41 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           var cnt2 = 0
 
           // Removed if mappings are provided
-          //
-          val found = mapping.filter( f => inputSet(f._2) )
-          found.foreach( f => inputSet ++= Set(f._1))
-          found.foreach( f => outputSet --= Set(f._1))
+          val found = mapping.filter( f => mapNameSource.contains(f._2) )
+          found.foreach(f => { outputSet --= Set(f._1); mapNameSource ++= Map(f._1 -> mapNameSource.get(f._2).get) })
           mapping = mapping.filterKeys( f => !found.contains(f)  )
 
-          // Abort this loop if nothing changes or we can statify all outputs
+          // Abort this loop if nothing changes or we can satisfy all outputs
           while(cnt1!=cnt2 && outputSet.size > 0) {
 
+            cnt2 = cnt1
+
             // filters
-            filters = filters.filter(f => {
-              var list = ExtractColumnNames(f.expression)
-              val open = list.filter(f => !inputSet(f) )
+            val filters1 = filters.filter(f => {
+              val list = ExtractColumnNames(f.expression)
+              val open = list.filter(f => !mapNameSource.contains(f) )
               if(open.size==0) {
-
                 // Sub names to
-                val newExpression = FixupColumnNames(f.expression)
-
-                // Remove current element
-
+                val newExpression = FixupColumnNames(f.expression, mapNameSource)
                 // Output the actual filter
-                //
-                collect ++= Array("if (!filtered) {\n filter = %s\n}\n".format(newExpression))
-                true
-              } else {
+                collect ++= Array("        if (!filtered) {\n          filter = %s\n        }\n".format(newExpression))
                 false
+              } else {
+                true
               }
             })
 
             // computes
-            computes = computes.filter( c => {
-              var list = ExtractColumnNames(c.expression)
-              val open = list.filter(f => !inputSet(f) )
+            val computes1 = computes.filter( c => {
+              val list = ExtractColumnNames(c.expression)
+              val open = list.filter(f => !mapNameSource.contains(f) )
               if(open.size==0) {
+                // Sub names to
+                val newExpression = FixupColumnNames(c.expression, mapNameSource)
+                // Output the actual compute
+                collect ++= Array("        if (!filtered) {\n          val %s = %s\n        }\n".format(c.output, newExpression))
+                mapNameSource ++= Map(c.output -> c.output)
+                outputSet --= Set(c.output)
                 false
               } else {
                 true
@@ -318,35 +322,40 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
             // Check Mapping
             if(mapping.size>0)
             {
-              val found = mapping.filter( f => inputSet(f._2) )
-              found.foreach( f => inputSet ++= Set(f._1))
-              found.foreach( f => outputSet --= Set(f._1))
+              val found = mapping.filter( f => mapNameSource.contains(f._2) )
+              found.foreach(f => {outputSet --= Set(f._1); mapNameSource ++= Map(f._1 -> mapNameSource.get(f._2).get)})
               mapping = mapping.filterKeys( f => !found.contains(f)  )
             }
 
-            cnt2 = filters.length + computes.length
+            // Update state
+            cnt1 = filters1.length + computes1.length
+            filters = filters1
+            computes = computes1
           }
 
-          // Generate the output for this iteration
-/*
-          // Construct output
-          val outputElements = members.map( e => {
-            "new Result(\"%s\", input0.%s)".format(e.Name, e.Name)
-          }).mkString(", ")
-          val outputResult = "result += Array[Result](%s)\n    factory.createResultObject().asInstanceOf[MappedModelResults].withResults(result)\n".format(outputElements)
-*/
-
           if(outputSet.size>0){
-            //throw new Exception("Not all outputs satisfied. missing=" + outputSet.mkString(", "))
+            throw new Exception("Not all outputs satisfied. missing=" + outputSet.mkString(", "))
+            logger.trace("Not all outputs satisfied. missing={}" , outputSet.mkString(", "))
           }
 
           if(cnt2!=0){
             //throw new Exception("Not all elements used")
+            logger.trace("Not all elements used")
           }
 
+          // Generate the output for this iteration
+          // Translate outputs to the values
+          val outputElements = outputSet1.map( e => {
+            // e.name -> from input, from mapping, from variable
+            "new Result(\"%s\", %s)".format(e, mapNameSource.get(e).get)
+          }).mkString(", ")
+          val outputResult = "        if (!filtered) {\n          result ++= Array[Result](%s)\n        }\n".format(outputElements)
+
+          collect ++= Array(outputResult)
+          collect ++= Array("        }\n")
 
           // outputs
-          collect
+          r ++ collect
         })
 
         tr ++= Array("\n      }")
@@ -359,8 +368,10 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
       "    }"
     })
 
+    val returnValue = "    factory.createResultObject().asInstanceOf[MappedModelResults].withResults(result)"
+
     subtitutions.Add("model.methods", "")
-    subtitutions.Add("model.code", inputprocessing.mkString("\n") + "\n")
+    subtitutions.Add("model.code", resultVar + "\n\n" + inputprocessing.mkString("\n") + "\n\n" + returnValue + "\n")
     val model = subtitutions.Run(Parts.model)
     sb.append(model)
     sb.append("\n")
@@ -371,38 +382,6 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
     // Read input type information
     val input = md.Message(root.outputs(0).typename, 0, true)
-
-    // Simplified, we only have a single message
-    val msgeval = "    var input0: input0 = txnCtxt.getMessage().asInstanceOf[input0]\n\n"
-
-    // Construct filter
-    val filters = root.filters.map( e => {
-      val f = """
-                |    {
-                |      using input0
-                |      if(!(%s))
-                |        return null;
-                |    }""".stripMargin.format(e.expression)
-      f
-    }).mkString("\n") + "\n"
-
-    // Construct result
-    // Simplified, we con't construct output1 yet
-    //
-    val members = output.get.containerType.asInstanceOf[StructTypeDef].memberDefs
-
-    // Construct output
-    val outputElements = members.map( e => {
-      "new Result(\"%s\", input0.%s)".format(e.Name, e.Name)
-    }).mkString(", ")
-    val outputResult = "    var result: Array[Result] = Array[Result](%s)\n    factory.createResultObject().asInstanceOf[MappedModelResults].withResults(result)\n".format(outputElements)
-
-    subtitutions.Add("model.code", msgeval + filters + outputResult)
-    subtitutions.Add("model.methods", "")
-
-    val model = subtitutions.Run(Parts.model)
-    sb.append(model)
-    sb.append("\n")
 */
     // Write to output file
     logger.trace("Output to file {}", outputFile)

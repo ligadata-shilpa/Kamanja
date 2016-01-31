@@ -23,7 +23,6 @@ import com.ligadata.Utils._
 import com.ligadata.Utils1._
 import com.ligadata.kamanja.samples.messages.{msg1 ⇒ mi0}
 import com.ligadata.kamanja.test001.{msg2 ⇒ mo0}
-import com.ligadata.kamanja.test001.{msg3 ⇒ mo1}
 
 class Factory(modelDef: ModelDef, nodeContext: NodeContext) extends ModelInstanceFactory(modelDef, nodeContext) {
   // if more than 1 input we have to find the correct instance
@@ -40,15 +39,44 @@ class Factory(modelDef: ModelDef, nodeContext: NodeContext) extends ModelInstanc
   override def createResultObject(): ModelResultBase = new MappedModelResults()
 }
 
+
 class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
 
   override def execute(txnCtxt: TransactionContext, outputDefault: Boolean): ModelResultBase = {
 
-    if(msg.isInstanceOf[mi0]) {    }
+    var result: Array[Result] = Array.empty[Result]
+
+    if(msg.isInstanceOf[mi0]) {
+      {
+        {
+
+        val filtered: Boolean = false
+
+        val msg = msg.isInstanceOf[mi0]
+
+        if (!filtered) {
+          filter = msg.in2 != -1 && msg.in2 < 100
+        }
+
+        if (!filtered) {
+          val out3 = iplookup(msg.in1).zipcode
+        }
+
+        if (!filtered) {
+          result ++= Array[Result](new Result("out1", msg.in1), new Result("out2", msg.in2), new Result("out3", out3), new Result("out4", msg.in3))
+        }
+
+        }
+
+
+      }
+
+    }
+
+    factory.createResultObject().asInstanceOf[MappedModelResults].withResults(result)
 
 
  }
 
 
 }
-

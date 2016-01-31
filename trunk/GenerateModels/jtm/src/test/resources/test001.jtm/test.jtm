@@ -7,26 +7,12 @@
     {
       "input": "com.ligadata.kamanja.samples.messages.msg1",
 
-      "variables": [ { "name": "out3", "typename": "System.Int" } ],
-
       "outputs": [{
                    "output": "com.ligadata.kamanja.test001.msg2",
                    "mappings": { "out1" : "in1", "out2" : "in2", "out4" : "in3"},
                    "filters":  [ { "expression": "$in2 != -1 && $in2 < 100" }],
-                   "computes": [ { "out3": "iplookup($in1).zipcode" } ]
-                 },
-                 {
-                   "output": "com.ligadata.kamanja.test001.msg2",
-                   "mappings": { "out2" : "in1" }
+                   "computes": [ { "output": "out3", "expression": "iplookup($in1).zipcode" } ]
                  }]
-    },
-    {
-      "input": "com.ligadata.kamanja.samples.messages.msg1",
-
-      "outputs": [{
-                  "output": "com.ligadata.kamanja.test001.msg3",
-                  "mappings": { "out1" : "in1"}
-                }]
     }
   ]
 }

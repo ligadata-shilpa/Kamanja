@@ -1,6 +1,7 @@
 {
   "packagename": "com.ligadata.jtm.test.filter",
   "version": "0.0.1",
+  "modelname": "test001",
   "imports": [ "com.ligadata.Utils._",  "com.ligadata.Utils1._"  ],
   "transformations": [
     {
@@ -10,13 +11,13 @@
 
       "outputs": [{
         "output": "com.ligadata.kamanja.test001.msg2",
-        "mappings": { "out1" = "in1", "out2" = "in2", "out4" = "in3"},
-        "filters":  [ { "expression": "$score != -1 && $score < 100" }],
-        "computes": [ { "out3": "iplookup($in1).zipcode" } ]
+        "mappings": { "out1" : "in1", "out2" : "in2", "out4" : "in3"},
+        "filters":  [ { "expression": "$in2 != -1 && $in2 < 100" }],
+        "computes": [ { "output": "out3", "expression": "iplookup($in1).zipcode" } ]
       },
         {
           "output": "com.ligadata.kamanja.test001.msg2",
-          "mappings": { "out2" = "in1" }
+          "mappings": { "out2" : "in1" }
         }]
     },
     {
@@ -24,7 +25,7 @@
 
       "outputs": [{
         "output": "com.ligadata.kamanja.test001.msg3",
-        "mappings": { "out1" = "in1"}
+        "mappings": { "out1" : "in1"}
       }]
     }
   ]
