@@ -19,7 +19,7 @@ import com.ligadata.KvBase.TimeRange
 import com.ligadata.kamanja.metadata.ModelDef;
 import com.ligadata.Utils._
 import com.ligadata.Utils1._
-import com.ligadata.kamanja.samples.messages.{msg1 ⇒ mi0}
+import com.ligadata.kamanja.test001.{msg1 ⇒ mi0}
 import com.ligadata.kamanja.test001.{msg2 ⇒ mo0}
 class Factory(modelDef: ModelDef, nodeContext: NodeContext) extends ModelInstanceFactory(modelDef, nodeContext) {
   // if more than 1 input we have to find the correct instance

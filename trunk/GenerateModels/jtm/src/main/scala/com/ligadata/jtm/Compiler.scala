@@ -18,6 +18,7 @@ package com.ligadata.jtm
 import com.ligadata.kamanja.metadata.{StructTypeDef, MdMgr}
 import com.ligadata.kamanja.metadataload.MetadataLoad
 import com.ligadata.messagedef.MessageDefImpl
+import org.apache.commons.io.filefilter.TrueFileFilter
 import org.apache.logging.log4j.{ Logger, LogManager }
 import org.json4s.jackson.JsonMethods._
 import org.rogach.scallop._
@@ -115,19 +116,29 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     val mdLoader = new MetadataLoad (mgr, typesPath, fcnPath, attrPath, msgCtnPath)
     mdLoader.initialize
 
-    val jsonFile = params.metadataLocation +  "/messages/message_type.json"
-    val json = FileUtils.readFileToString(new File(jsonFile), null)
-    val map = parse(json).values.asInstanceOf[Map[String, Any]]
+    def getRecursiveListOfFiles(dir: File): Array[File] = {
+      val these = dir.listFiles.filter(_.isFile)
+      val those = dir.listFiles.filter(_.isDirectory)
+      these ++ those.flatMap(getRecursiveListOfFiles)
+    }
 
-    val msg = new MessageDefImpl()
-    val ((classStrVer, classStrVerJava), msgDef, (classStrNoVer, classStrNoVerJava)) = msg.processMsgDef(json, "JSON", mgr, false)
-    val msg1 = msgDef.asInstanceOf[com.ligadata.kamanja.metadata.MessageDef]
-    mgr.AddMsg(msg1)
+    val files = getRecursiveListOfFiles(new File(params.metadataLocation))
+
+    // Load all json files for the metadata directory
+    files.map ( jsonFile => {
+      val json = FileUtils.readFileToString(jsonFile, null)
+      val map = parse(json).values.asInstanceOf[Map[String, Any]]
+      val msg = new MessageDefImpl()
+      val ((classStrVer, classStrVerJava), msgDef, (classStrNoVer, classStrNoVerJava)) = msg.processMsgDef(json, "JSON", mgr, false)
+      val msg1 = msgDef.asInstanceOf[com.ligadata.kamanja.metadata.MessageDef]
+      mgr.AddMsg(msg1)
+    })
+
     mgr
   }
 
   // Load metadata
-  //val md = loadMetadata
+  val md = loadMetadata
 
   //md.dump
   //val m = md.Message("com.ligadata.kamanja.samples.messages.msg1", 0, true)
@@ -245,7 +256,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     sb.append("\n\n")
 
     // Collect all outputs here
-    val resultVar = "    var result: Array[Result] = Array.empty[Result]"
+    val resultVar = "var result: Array[Result] = Array.empty[Result]"
 
     val inputprocessing = inputMap.map( p => {
       val leg = p._2

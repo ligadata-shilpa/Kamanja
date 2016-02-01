@@ -5,7 +5,7 @@
   "imports": [ "com.ligadata.Utils._",  "com.ligadata.Utils1._"  ],
   "transformations": [
     {
-      "input": "com.ligadata.kamanja.samples.messages.msg1",
+      "input": "com.ligadata.kamanja.test001.msg1",
 
       "outputs": [{
                    "output": "com.ligadata.kamanja.test001.msg2",
