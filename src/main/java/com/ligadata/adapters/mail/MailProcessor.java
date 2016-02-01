@@ -63,11 +63,19 @@ public class MailProcessor {
 		log.debug("Bean Values..."+bean.toString());
 		
 		final Email email = new Email();
-		email.addRecipient(bean.getTo(), bean.getTo(), RecipientType.TO);
+		
+		if(bean.getTo() != null && !bean.getTo().isEmpty())
+			for(String to_mail: bean.getTo().split(";"))
+				email.addRecipient(to_mail, to_mail, RecipientType.TO);
+		
 		if(bean.getCc() != null && !bean.getCc().isEmpty())
-			email.addRecipient(bean.getCc(), bean.getCc(),RecipientType.CC);
+			for(String cc_mail: bean.getCc().split(";"))
+				email.addRecipient(cc_mail, cc_mail,RecipientType.CC);
+		
 		if(bean.getBcc() != null && !bean.getBcc().isEmpty())
-			email.addRecipient(bean.getBcc(), bean.getBcc(),RecipientType.BCC);
+			for(String bcc_mail: bean.getBcc().split(";"))
+				email.addRecipient(bcc_mail, bcc_mail,RecipientType.BCC);
+		
 		email.setSubject(bean.getSubjectHTML());
 		email.setTextHTML(bean.getHeaderHTML()+"<br/>"+bean.getBodyHTML()+"<br/>"+bean.getFooterHTML());
 		email.setFromAddress(bean.getFrom(), bean.getFrom());

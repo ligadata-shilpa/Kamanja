@@ -116,8 +116,20 @@ public class SimpleMailBean {
 					to = conf.getProperty(AdapterConfiguration.TESTMAIL_RECEIPENTS);
 					from = conf.getProperty(AdapterConfiguration.MAIL_FROM);
 				}else{
-					to = (String)fillers.get("associateEmail");
-					cc = (String)fillers.get("supervisorEmail");
+					
+					String toMail = conf.getProperty(AdapterConfiguration.TO_MAIL);
+					String ccMail = conf.getProperty(AdapterConfiguration.CC_MAIL);
+					String bccMail = conf.getProperty(AdapterConfiguration.BCC_MAIL);
+					
+					if(fillers.get(toMail)!=null && !fillers.get(toMail).toString().isEmpty())
+						to = (String)fillers.get(toMail);
+					if(fillers.get(ccMail)!=null && !fillers.get(ccMail).toString().isEmpty())
+						cc = (String)fillers.get(ccMail);
+					if(fillers.get(bccMail)!=null && !fillers.get(bccMail).toString().isEmpty())
+						bcc = (String)fillers.get(bccMail);
+					
+					//to = (String)fillers.get("associateEmail");
+					//cc = (String)fillers.get("supervisorEmail");
 					from = conf.getProperty(AdapterConfiguration.MAIL_FROM);
 				}
 				

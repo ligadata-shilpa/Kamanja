@@ -69,6 +69,10 @@ public class AdapterConfiguration {
 	public static final String MAIL_PROP_TRANSPORT         = "smtp";
 	public static final String MAIL_PROP_PWD			   ="mail.senderpassword";
 	
+	public static final String TO_MAIL			   ="mail.to";
+	public static final String CC_MAIL			   ="mail.cc";
+	public static final String BCC_MAIL			   ="mail.bcc";
+	
 	public static final String SKF_PROP_KEY               = "encrypt.key";
 	public static final String SKF_CHARSET                = "UTF8";
 	public static final String SKF_ENCRY_TYPE             = "DES";
