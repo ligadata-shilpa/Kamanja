@@ -132,6 +132,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
   //md.dump
   //val m = md.Message("com.ligadata.kamanja.samples.messages.msg1", 0, true)
   //logger.trace("Found: {}", m.toString())
+
   val suppressTimestamps: Boolean = params.suppressTimestamps // Suppress timestamps
   val inputFile: String = params.inputFile // Input file to compile
   val outputFile: String = params.outputFile // Output file to write
@@ -385,7 +386,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 */
     // Write to output file
     logger.trace("Output to file {}", outputFile)
-    FileUtils.writeStringToFile(new File(outputFile), sb.result)
+    FileUtils.writeStringToFile(new File(outputFile), CodeHelper.Indent(sb.result))
 
     outputFile
   }
