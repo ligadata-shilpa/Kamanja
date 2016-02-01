@@ -36,21 +36,13 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
   override def execute(txnCtxt: TransactionContext, outputDefault: Boolean): ModelResultBase = {
     var result: Array[Result] = Array.empty[Result]
     if(msg.isInstanceOf[mi0]) {
-      {
-        {
-          val filtered: Boolean = false
-          val msg = msg.isInstanceOf[mi0]
-          if (!filtered) {
-            filter = msg.in2 != -1 && msg.in2 < 100
-          }
-          if (!filtered) {
-            val out3 = iplookup(msg.in1).zipcode
-          }
-          if (!filtered) {
-            result ++= Array[Result](new Result("out1", msg.in1), new Result("out2", msg.in2), new Result("out3", out3), new Result("out4", msg.in3))
-          }
-        }
+      val msg = msg.isInstanceOf[mi0]
+      def fn0() = {
+        if (msg.in2 != -1 && msg.in2 < 100) return
+        val out3 = iplookup(msg.in1).zipcode
+        result ++= Array[Result](new Result("out1", msg.in1), new Result("out2", msg.in2), new Result("out3", out3), new Result("out4", msg.in3))
       }
+      fn0()
     }
     factory.createResultObject().asInstanceOf[MappedModelResults].withResults(result)
   }
