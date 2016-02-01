@@ -279,10 +279,13 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           collect ++= Array("\ndef fn%d() = {\n".format(fncnt))
 
           // Collect form metadata
-          var mapNameSource : Map[String, String] = Map(("in1" -> "msg.in1"), ("in2" -> "msg.in2"), ("in3" -> "msg.in3"))
+          val inputSet: Set[String] = Seq("in1", "in2", "in3", "in4").toSet
+          val outputSet: Set[String] = Seq("out1", "out2", "out3", "out4").toSet
 
-          var outputSet : Set[String] = Seq("out1", "out2", "out3", "out4").toSet
-          val outputSet1 : Set[String] = Seq("out1", "out2", "out3", "out4").toSet
+          // State variables to track the progress
+          // a little bit simpler than having val's
+          var mapNameSource: Map[String, String] = inputSet.map( e => (e,"msg.%s".format(e))).toMap
+          var outputSet1: Set[String] = outputSet
           var mapping = o.mappings
           var filters =  o.filters
           var computes = o.computes
@@ -291,11 +294,11 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
           // Removed if mappings are provided
           val found = mapping.filter( f => mapNameSource.contains(f._2) )
-          found.foreach(f => { outputSet --= Set(f._1); mapNameSource ++= Map(f._1 -> mapNameSource.get(f._2).get) })
-          mapping = mapping.filterKeys( f => !found.contains(f)  )
+          found.foreach( f => { outputSet1 --= Set(f._1); mapNameSource ++= Map(f._1 -> mapNameSource.get(f._2).get) } )
+          mapping = mapping.filterKeys( f => !found.contains(f) )
 
           // Abort this loop if nothing changes or we can satisfy all outputs
-          while(cnt1!=cnt2 && outputSet.size > 0) {
+          while(cnt1!=cnt2 && outputSet1.size > 0) {
 
             cnt2 = cnt1
 
@@ -324,7 +327,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
                 // Output the actual compute
                 collect ++= Array("val %s = %s\n".format(c.output, newExpression))
                 mapNameSource ++= Map(c.output -> c.output)
-                outputSet --= Set(c.output)
+                outputSet1 --= Set(c.output)
                 false
               } else {
                 true
@@ -335,7 +338,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
             if(mapping.size>0)
             {
               val found = mapping.filter( f => mapNameSource.contains(f._2) )
-              found.foreach(f => {outputSet --= Set(f._1); mapNameSource ++= Map(f._1 -> mapNameSource.get(f._2).get)})
+              found.foreach(f => {outputSet1 --= Set(f._1); mapNameSource ++= Map(f._1 -> mapNameSource.get(f._2).get)})
               mapping = mapping.filterKeys( f => !found.contains(f)  )
             }
 
@@ -345,9 +348,9 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
             computes = computes1
           }
 
-          if(outputSet.size>0){
-            throw new Exception("Not all outputs satisfied. missing=" + outputSet.mkString(", "))
-            logger.trace("Not all outputs satisfied. missing={}" , outputSet.mkString(", "))
+          if(outputSet1.size>0){
+            throw new Exception("Not all outputs satisfied. missing=" + outputSet1.mkString(", "))
+            logger.trace("Not all outputs satisfied. missing={}" , outputSet1.mkString(", "))
           }
 
           if(cnt2!=0){
@@ -357,7 +360,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
           // Generate the output for this iteration
           // Translate outputs to the values
-          val outputElements = outputSet1.map( e => {
+          val outputElements = outputSet.map( e => {
             // e.name -> from input, from mapping, from variable
             "new Result(\"%s\", %s)".format(e, mapNameSource.get(e).get)
           }).mkString(", ")
