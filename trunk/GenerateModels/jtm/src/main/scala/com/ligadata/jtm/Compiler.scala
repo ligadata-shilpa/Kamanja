@@ -105,7 +105,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     (elements.dropRight(1).mkString("."), elements.last)
   }
 
-  def loadMetadata() = {
+  def loadMetadata(): MdMgr= {
 
     val typesPath : String = ""
     val fcnPath : String = ""
@@ -176,7 +176,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     regex.findAllMatchIn(expression).toArray.map( m => m.matched.drop(1)).toSet
   }
 
-  def FixupColumnNames(expression: String, mapNameSource : Map[String, String]): String = {
+  def FixupColumnNames(expression: String, mapNameSource: Map[String, String]): String = {
     val regex = """(\$[a-zA-Z0-9_]+)""".r
     val m = regex.pattern.matcher(expression)
     val sb = new StringBuffer
@@ -187,6 +187,12 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     }
     m.appendTail(sb)
     sb.toString
+  }
+
+  def ColumnNames(mgr: MdMgr, classname: String): Set[String] = {
+    val classinstance = md.Message(classname, 0, true)
+    val members = classinstance.get.containerType.asInstanceOf[StructTypeDef].memberDefs
+    members.map( e => e.Name).toSet
   }
 
   def Execute(): String = {
@@ -279,13 +285,14 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           collect ++= Array("\ndef fn%d() = {\n".format(fncnt))
 
           // Collect form metadata
-          val inputSet: Set[String] = Seq("in1", "in2", "in3", "in4").toSet
-          val outputSet: Set[String] = Seq("out1", "out2", "out3", "out4").toSet
+          val inputSet: Set[String] = ColumnNames(md, t.input) // Seq("in1", "in2", "in3", "in4").toSet
+          val outputSet: Set[String] = ColumnNames(md, o.output) //Seq("out1", "out2", "out3", "out4").toSet
 
           // State variables to track the progress
           // a little bit simpler than having val's
           var mapNameSource: Map[String, String] = inputSet.map( e => (e,"msg.%s".format(e))).toMap
           var outputSet1: Set[String] = outputSet
+
           var mapping = o.mappings
           var filters =  o.filters
           var computes = o.computes
@@ -348,6 +355,12 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
             computes = computes1
           }
 
+          // Transaction id is in the input
+          // so will just push it back if needed
+          if(inputSet.contains("transactionid")) {
+            outputSet1 --= Set("transactionid")
+          }
+          
           if(outputSet1.size>0){
             throw new Exception("Not all outputs satisfied. missing=" + outputSet1.mkString(", "))
             logger.trace("Not all outputs satisfied. missing={}" , outputSet1.mkString(", "))
@@ -391,13 +404,6 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     sb.append(model)
     sb.append("\n")
 
-/*
-    // Read the output type information
-    val output = md.Message(root.inputs(0).typename, 0, true)
-
-    // Read input type information
-    val input = md.Message(root.outputs(0).typename, 0, true)
-*/
     // Write to output file
     logger.trace("Output to file {}", outputFile)
     FileUtils.writeStringToFile(new File(outputFile), CodeHelper.Indent(sb.result))

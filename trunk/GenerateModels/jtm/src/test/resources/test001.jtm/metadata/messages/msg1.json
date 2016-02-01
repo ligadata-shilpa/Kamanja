@@ -1,7 +1,7 @@
 {
   "Message" : {
-    "NameSpace" : "System",
-    "Name" : "com.ligadata.kamanja.test001.msg1",
+    "NameSpace" : "com.ligadata.kamanja.test001",
+    "Name" : "msg1",
     "Version" : "00.01.00",
     "Description" : "Test message com.ligadata.kamanja.test001.msg1",
     "Fixed" : "true",

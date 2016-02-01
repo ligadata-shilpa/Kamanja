@@ -40,7 +40,7 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
       def fn0() = {
         if (msg.in2 != -1 && msg.in2 < 100) return
         val out3 = iplookup(msg.in1).zipcode
-        result ++= Array[Result](new Result("out1", msg.in1), new Result("out2", msg.in2), new Result("out3", out3), new Result("out4", msg.in3))
+        result ++= Array[Result](new Result("out4", msg.in3), new Result("transactionid", msg.transactionid), new Result("out1", msg.in1), new Result("out3", out3), new Result("out2", msg.in2))
       }
       fn0()
     }
