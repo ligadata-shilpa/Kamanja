@@ -181,7 +181,7 @@ class MessageBuilderGenerator {
       fields.foreach(field => {
         getmethodStr = """
         def get""" + field.Name.capitalize + """: """ + field.FieldTypePhysicalName + """= {
-        	return this.fields("""" + field.Name + """")._2;  
+        	return """+ field.FieldTypeImplementationName  + """.Input(fields("""" + field.Name + """")._2.toString);
         }          
         """
         getMethod = getMethod.append(getmethodStr.toString())

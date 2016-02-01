@@ -136,4 +136,25 @@ import com.ligadata.KamanjaBase.{ BaseMsg, BaseMsgObj, TransformMessage, BaseCon
     return fldsSclarIndex
   }
 
+  /*
+   * CollectioAsString method for mapped messages
+   */
+
+  def CollectionAsArrString = {
+    """
+  def CollectionAsArrString(v: Any): Array[String] = {
+    if (v.isInstanceOf[Set[_]]) {
+      return v.asInstanceOf[Set[String]].toArray
+    }
+    if (v.isInstanceOf[List[_]]) {
+      return v.asInstanceOf[List[String]].toArray
+    }
+    if (v.isInstanceOf[Array[_]]) {
+      return v.asInstanceOf[Array[String]].toArray
+    }
+    throw new Exception("Unhandled Collection")
+  }
+  """
+  }
+
 }

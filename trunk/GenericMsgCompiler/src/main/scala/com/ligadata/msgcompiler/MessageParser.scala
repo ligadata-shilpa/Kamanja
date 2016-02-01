@@ -516,7 +516,7 @@ class MessageParser {
           if (field.contains("version") && (field.get("version").get.isInstanceOf[string])) {
             fldTypeVer = field.get("version").get.asInstanceOf[String].toLowerCase()
           }
-          fld = new Element(namespace, name, ttype, collectionType, key, fldTypeVer, ordinal, null, null)
+          fld = new Element(namespace, name, ttype, collectionType, key, fldTypeVer, ordinal, null, null, null)
 
         } else if (fieldtype.isInstanceOf[FieldMap]) {
           log.info("Child Container ========== Start ==============  ")
@@ -532,7 +532,7 @@ class MessageParser {
           // msgBuffer += message
 
           log.info("^^^^^^^^^^^^^^^^^^^^ childMsgType   " + childMsgType)
-          fld = new Element(namespace, name, childMsgType, collectionType, key, fldTypeVer, ordinal, null, null)
+          fld = new Element(namespace, name, childMsgType, collectionType, key, fldTypeVer, ordinal, null, null, null)
 
           log.info("Child Container ==========  End  ============== ")
         }

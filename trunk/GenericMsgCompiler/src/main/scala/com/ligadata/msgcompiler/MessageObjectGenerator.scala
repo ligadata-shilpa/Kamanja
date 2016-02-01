@@ -125,7 +125,8 @@ class MessageObjectGenerator {
     """ + getPartitionKeys(message) + """
       """ + getPrimaryKeys(message) + """
    
-
+  override def NeedToTransformData: Boolean = false // Filter & Rearrange input attributes if needed
+  override def TransformDataAttributes: TransformMessage = null
   override def PartitionKeyData(inputdata: InputData): Array[String] = Array[String]()
   override def PrimaryKeyData(inputdata: InputData): Array[String] = Array[String]()
   override def getTimePartitionInfo: (String, String, String) = (null, null, null) // FieldName, Format & Time Partition Types(Daily/Monthly/Yearly)

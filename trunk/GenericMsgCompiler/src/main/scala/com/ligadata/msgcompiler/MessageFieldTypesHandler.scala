@@ -50,6 +50,9 @@ class MessageFieldTypesHandler {
       jarset = jarset ++ getDependencyJarSet(field.FldMetaataType)
 
       field.FieldTypePhysicalName = types(0)
+      field.FieldTypeImplementationName = types(1)
+
+      log.info("*************==================================== " + field.FieldTypeImplementationName);
 
       /*
        log.info("****************** TYPES FROM METADATA START  --- In Message******************************")
@@ -91,29 +94,56 @@ class MessageFieldTypesHandler {
   private def getMetadataTypesForMsgFields(field: Element, mdMgr: MdMgr): Array[String] = {
 
     val fieldBaseType: BaseTypeDef = field.FldMetaataType
-    var arrayType: ArrayTypeDef = null
     var types: Array[String] = new Array[String](2);
-    val fieldType = fieldBaseType.tType.toString()
-    val fieldTypeType = fieldBaseType.tTypeType.toString()
+    val fieldType = fieldBaseType.tType.toString().toLowerCase()
+    val fieldTypeType = fieldBaseType.tTypeType.toString().toLowerCase()
+    var arrayType: ArrayTypeDef = null
     if (fieldBaseType.isInstanceOf[ArrayTypeDef])
       arrayType = fieldBaseType.asInstanceOf[ArrayTypeDef]
 
-    // log.info("fieldTypeType " + fieldTypeType)
+    log.info("fieldTypeType " + fieldTypeType)
+    log.info("fieldBaseType 1 " + fieldBaseType.tType)
+    log.info("fieldBaseType 2 " + fieldBaseType.typeString)
+    log.info("fieldBaseType 3" + fieldBaseType.tTypeType)
+
+    log.info("fieldType " + fieldType)
 
     fieldTypeType match {
-      case "tScalar" => {
+      case "tscalar" => {
         types(0) = fieldBaseType.PhysicalName
-        types(1) = ""
+        types(1) = fieldBaseType.implementationName
+        log.info("fieldBaseType.implementationName    " + fieldBaseType.implementationName)
 
       }
-      case "tArray" => {
-        types(0) = arrayType.typeString
-        types(1) = ""
-      }
-      case "tContainer" => {
-        var ctrDef: ContainerDef = mdMgr.Container(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
-        types(0) = ctrDef.PhysicalName
-        types(1) = ""
+      case "tcontainer" => {
+        fieldType match {
+          case "tarray" => {
+            var arrayType: ArrayTypeDef = null
+            arrayType = fieldBaseType.asInstanceOf[ArrayTypeDef]
+            types(0) = arrayType.typeString
+            types(1) = arrayType.elemDef.implementationName
+            log.info("!!!!!!!!!!!!!!!!!!!!!!!!" + types(1) + "........ " + types(0) + "...... " + arrayType.elemDef.PhysicalName)
+
+          }
+          case "tarraybuf" => {
+            var arraybufType: ArrayBufTypeDef = null
+            arraybufType = fieldBaseType.asInstanceOf[ArrayBufTypeDef]
+            types(0) = arraybufType.typeString
+            types(1) = arraybufType.elemDef.implementationName
+            log.info("!!!!!!!!!!!!!!!!!!!!!!!!" + types(1) + ".......... " + types(0))
+
+          }
+          case "tstruct" => {
+            var ctrDef: ContainerDef = mdMgr.Container(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
+            types(0) = ctrDef.PhysicalName
+            types(1) = ""
+          }
+          case _ => {
+            throw new Exception("This types is not handled at this time ") // BUGBUG - Need to handled other cases
+          }
+
+        }
+
       }
       case _ => {
         throw new Exception("This types is not handled at this time ") // BUGBUG - Need to handled other cases
