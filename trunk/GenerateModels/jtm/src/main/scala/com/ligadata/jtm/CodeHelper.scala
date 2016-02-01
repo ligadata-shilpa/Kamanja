@@ -18,7 +18,7 @@ object CodeHelper {
 
       if(l1.length==0) {
         if(empty==0) {
-          sb.append("\n")
+          //sb.append("\n")
         }
         empty = empty + 1
       } else {

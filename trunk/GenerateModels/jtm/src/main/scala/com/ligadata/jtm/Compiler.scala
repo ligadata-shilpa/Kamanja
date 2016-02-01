@@ -253,19 +253,19 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
       val transparts = transformations.foldLeft(Array.empty[Array[String]]) ( (r, t) => {
 
-        var tr = Array("\n      {")
+        var tr = Array("\n{")
 
         // Process the output per message
 
         // variables
-        tr ++= t.variables.map( e => "        val %s: %s".format(e.name, e.typename))
+        tr ++= t.variables.map( e => "val %s: %s".format(e.name, e.typename))
 
         tr ++= t.outputs.foldLeft(Array.empty[String]) ( (r, o) => {
 
           var collect = Array.empty[String]
-          collect ++= Array("        {\n")
-          collect ++= Array("        val filtered: Boolean = false\n")
-          collect ++= Array("        val msg = msg.isInstanceOf[%s]\n".format(leg.handle))
+          collect ++= Array("{\n")
+          collect ++= Array("val filtered: Boolean = false\n")
+          collect ++= Array("val msg = msg.isInstanceOf[%s]\n".format(leg.handle))
 
           // Collect form metadata
           var mapNameSource : Map[String, String] = Map(("in1" -> "msg.in1"), ("in2" -> "msg.in2"), ("in3" -> "msg.in3"))
@@ -296,7 +296,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
                 // Sub names to
                 val newExpression = FixupColumnNames(f.expression, mapNameSource)
                 // Output the actual filter
-                collect ++= Array("        if (!filtered) {\n          filter = %s\n        }\n".format(newExpression))
+                collect ++= Array("if (!filtered) {\nfilter = %s\n}\n".format(newExpression))
                 false
               } else {
                 true
@@ -311,7 +311,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
                 // Sub names to
                 val newExpression = FixupColumnNames(c.expression, mapNameSource)
                 // Output the actual compute
-                collect ++= Array("        if (!filtered) {\n          val %s = %s\n        }\n".format(c.output, newExpression))
+                collect ++= Array("if (!filtered) {\nval %s = %s\n}\n".format(c.output, newExpression))
                 mapNameSource ++= Map(c.output -> c.output)
                 outputSet --= Set(c.output)
                 false
@@ -350,26 +350,26 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
             // e.name -> from input, from mapping, from variable
             "new Result(\"%s\", %s)".format(e, mapNameSource.get(e).get)
           }).mkString(", ")
-          val outputResult = "        if (!filtered) {\n          result ++= Array[Result](%s)\n        }\n".format(outputElements)
+          val outputResult = "if (!filtered) {\nresult ++= Array[Result](%s)\n}\n".format(outputElements)
 
           collect ++= Array(outputResult)
-          collect ++= Array("        }\n")
+          collect ++= Array("}\n")
 
           // outputs
           r ++ collect
         })
 
-        tr ++= Array("\n      }")
+        tr ++= Array("}\n")
 
         r ++ Array(tr)
       })
 
-      "    if(msg.isInstanceOf[%s]) {".format(leg.handle) +
+      "if(msg.isInstanceOf[%s]) {".format(leg.handle) +
       transparts.map( e => e.mkString("\n") + "\n").mkString("\n") + "\n" +
-      "    }"
+      "}"
     })
 
-    val returnValue = "    factory.createResultObject().asInstanceOf[MappedModelResults].withResults(result)"
+    val returnValue = "factory.createResultObject().asInstanceOf[MappedModelResults].withResults(result)"
 
     subtitutions.Add("model.methods", "")
     subtitutions.Add("model.code", resultVar + "\n\n" + inputprocessing.mkString("\n") + "\n\n" + returnValue + "\n")
