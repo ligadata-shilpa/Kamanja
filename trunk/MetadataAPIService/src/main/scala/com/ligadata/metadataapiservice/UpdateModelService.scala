@@ -27,6 +27,8 @@ import scala.util.{ Success, Failure }
 import com.ligadata.MetadataAPI._
 import com.ligadata.kamanja.metadata._
 import com.ligadata.AuditAdapterInfo.AuditConstants
+import scala.util.control._
+import org.apache.logging.log4j._
 
 object UpdateModelService {
   case class Process(pmmlStr:String)
@@ -40,6 +42,9 @@ class UpdateModelService(requestContext: RequestContext, userid:Option[String], 
   import system.dispatcher
   val log = Logging(system, getClass)
   val APIName = "UpdateModelService"
+
+  val loggerName = this.getClass.getName
+  val logger = LogManager.getLogger(loggerName)
   
   def receive = {
     case Process(pmmlStr) =>
@@ -61,7 +66,7 @@ class UpdateModelService(requestContext: RequestContext, userid:Option[String], 
       // Ok, if this is a KPMML model, we dont need any additional info for compilation, its all enclosed in the model.  for normal PMML,
       // we need to know ModelName, Version, and associated Message.  modelCompileInfo will be set if this is PMML, and not set if KPMML
       if (modelCompileInfo == None) {
-        looger.info ("No configuration information provided, assuming Kamanja PMML implementation.")
+        log.info ("No configuration information provided, assuming Kamanja PMML implementation.")
         val apiResult = MetadataAPIImpl.UpdateModel(ModelType.KPMML, pmmlStr, userid)
         requestContext.complete(apiResult)
       } else {
@@ -72,11 +77,18 @@ class UpdateModelService(requestContext: RequestContext, userid:Option[String], 
           requestContext.complete(new ApiResult(ErrorCodeConstants.Failure, APIName, null, "Error: modelconfig is not specified, PMML model is required to have Model Compilation Information.").toString)
 
         val compileConfigTokens = cInfo.split(",")
-        if (compileConfigTokens.size < 2)
+        if (compileConfigTokens.size < 2 ||
+            compileConfigTokens.size > 3)
           requestContext.complete(new ApiResult(ErrorCodeConstants.Failure, APIName, null, "Error: Invalid compile config paramters specified for PMML, Needs  ModelName, ModelVersion, Optional[UpdateModelVersion].").toString)
 
-        val apiResult = MetadataAPIImpl.UpdateModel(ModelType.PMML, pmmlStr, userid, Some(compileConfigTokens(0)), Some(compileConfigTokens(1)), Some(compileConfigTokens(2)))
-        requestContext.complete(apiResult)
+        // if an optional parm is passed, pass it, else only pass in 2 parms
+        if (compileConfigTokens.size == 2) {
+          val apiResult = MetadataAPIImpl.UpdateModel(ModelType.PMML, pmmlStr, userid, Some(compileConfigTokens(0)), Some(compileConfigTokens(1)))
+          requestContext.complete(apiResult)
+        } else {
+          val apiResult = MetadataAPIImpl.UpdateModel(ModelType.PMML, pmmlStr, userid, Some(compileConfigTokens(0)), Some(compileConfigTokens(1)), Some(compileConfigTokens(2)) )
+          requestContext.complete(apiResult)
+        }
       }
     }
   }
