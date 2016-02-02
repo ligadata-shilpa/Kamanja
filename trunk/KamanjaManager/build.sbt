@@ -68,4 +68,3 @@ libraryDependencies += "org.ow2.asm" % "asm-tree" % "4.0"
 libraryDependencies += "org.ow2.asm" % "asm-commons" % "4.0"
 
 libraryDependencies <+= scalaVersion("org.scala-lang" % "scala-actors" % _)
-

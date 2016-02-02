@@ -1,5 +1,6 @@
 import sbt._
 import Keys._
+import sbtassembly.Plugin.AssemblyKeys._
 
 sbtPlugin := true
 
@@ -37,11 +38,7 @@ lazy val KamanjaBase = project.in(file("KamanjaBase")) dependsOn(Metadata, Excep
 
 lazy val DataDelimiters = project.in(file("DataDelimiters"))
 
-lazy val KamanjaManager = project.in(file("KamanjaManager")) dependsOn(Metadata, KamanjaBase, MetadataBootstrap, MetadataAPI, Serialize, ZooKeeperListener, ZooKeeperLeaderLatch, Exceptions, KamanjaUtils, TransactionService, DataDelimiters, InputOutputAdapterBase)
-
 lazy val InputOutputAdapterBase = project.in(file("InputOutputAdapters/InputOutputAdapterBase")) dependsOn(Exceptions, DataDelimiters, HeartBeat)
-
-// lazy val IbmMqSimpleInputOutputAdapters = project.in(file("InputOutputAdapters/IbmMqSimpleInputOutputAdapters")) dependsOn(InputOutputAdapterBase, Exceptions, DataDelimiters)
 
 lazy val KafkaSimpleInputOutputAdapters = project.in(file("InputOutputAdapters/KafkaSimpleInputOutputAdapters")) dependsOn(InputOutputAdapterBase, Exceptions, DataDelimiters)
 
@@ -56,14 +53,6 @@ lazy val Metadata = project.in(file("Metadata")) dependsOn(Exceptions)
 lazy val OutputMsgDef  = project.in(file("OutputMsgDef")) dependsOn(Metadata,KamanjaBase,BaseTypes)
 
 lazy val MessageDef = project.in(file("MessageDef")) dependsOn(Metadata, MetadataBootstrap, Exceptions)
-
-// lazy val LoadtestCommon = project.in(file("Tools/LoadtestCommon")) dependsOn(StorageManager, Exceptions)
-
-// lazy val LoadtestRunner = project.in(file("Tools/LoadtestRunner")) dependsOn(LoadtestCommon, Exceptions)
-
-// lazy val LoadtestMaster = project.in(file("Tools/LoadtestMaster")) dependsOn(LoadtestCommon, Exceptions)
-
-// lazy val Loadtest = project.in(file("Tools/Loadtest")) dependsOn(StorageManager, Exceptions)
 
 lazy val PmmlRuntime = project.in(file("Pmml/PmmlRuntime")) dependsOn(Metadata, KamanjaBase, Exceptions) 
 
@@ -158,3 +147,31 @@ lazy val MigrateManager = project.in(file("Utils/Migrate/MigrateManager")) depen
 lazy val MigrateTo_V_1_3 = project.in(file("Utils/Migrate/DestinationVersion/MigrateTo_V_1_3")) dependsOn (MigrateBase, KamanjaManager)
 
 lazy val MigrateFrom_V_1_2 = project.in(file("Utils/Migrate/SourceVersion/MigrateFrom_V_1_2")) dependsOn (MigrateBase)
+
+lazy val KamanjaManager = project.in(file("KamanjaManager")).
+  dependsOn(Metadata, KamanjaBase, MetadataBootstrap, MetadataAPI, Serialize, ZooKeeperListener, ZooKeeperLeaderLatch, Exceptions, KamanjaUtils, TransactionService, DataDelimiters, InputOutputAdapterBase).
+  enablePlugins(DockerPlugin).
+  settings(
+    docker <<= (docker dependsOn assembly),
+    imageNames in docker := Seq(
+      ImageName("ligadata/kamanja")
+    ),
+      dockerfile in docker := {
+        val artifact = (outputPath in assembly).value
+        val artifactTargetPath = s"/app/Kamanja/bin/${artifact.name}"
+        val artifactInstallDir = s"/app/Kamanja"
+        new Dockerfile {
+          from("java")
+          add(artifact, artifactTargetPath)
+          runRaw(s"mkdir -p $artifactInstallDir/lib/system")
+          runRaw(s"mkdir -p $artifactInstallDir/lib/application")
+          runRaw(s"mkdir -p $artifactInstallDir/config")
+          runRaw(s"mkdir -p $artifactInstallDir/storage")
+          runRaw(s"mkdir -p $artifactInstallDir/logs")
+          runRaw(s"mkdir -p $artifactInstallDir/output")
+          runRaw(s"echo NODEID=1 >> $artifactInstallDir/config/EngineConfig.properties")
+          runRaw("echo MetaDataStore={\"StoreType\":\"hashmap\", \"SchemaName\":\"kamanja\", \"Location\":\"" + artifactInstallDir + "/storage\"} >> " +  artifactInstallDir + "/config/EngineConfig.properties")
+          workDir(artifactInstallDir)
+          //entryPoint("java", "-jar", artifactTargetPath, "--config", s"$artifactInstallDir/config/EngineConfig.properties")
+        }
+      })
