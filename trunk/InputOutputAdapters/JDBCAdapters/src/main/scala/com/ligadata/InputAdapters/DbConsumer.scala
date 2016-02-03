@@ -2,6 +2,7 @@
 
 package com.ligadata.InputAdapters
 
+import org.json4s.jackson.Serialization
 import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.PreparedStatement
@@ -26,9 +27,20 @@ import com.ligadata.InputOutputAdapterInfo.StartProcPartInfo
 import com.ligadata.KamanjaBase.DataDelimiters
 import javax.sql.DataSource
 import org.apache.commons.dbcp2.BasicDataSource
+import java.util.HashMap
+import org.apache.commons.csv.CSVFormat
+import java.io.StringWriter
+import org.apache.commons.csv.CSVPrinter
+import java.util.ArrayList
+import org.json.simple.JSONObject
+import org.json.simple.JSONValue
+import com.thoughtworks.xstream.XStream
+import com.ligadata.adapters.xstream.CustomMapConverter
+import java.util.Arrays
 
 
 object DbConsumer extends InputAdapterObj {
+  val ADAPTER_DESCRIPTION = "JDBC Consumer"
   def CreateInputAdapter(inputConfig: AdapterConfiguration, callerCtxt: InputAdapterCallerContext, execCtxtObj: ExecContextObj, cntrAdapter: CountersAdapter): InputAdapter = new DbConsumer(inputConfig, callerCtxt, execCtxtObj, cntrAdapter)
 }
 
@@ -36,6 +48,14 @@ class DbConsumer (val inputConfig: AdapterConfiguration, val callerCtxt: InputAd
   private[this] val LOG = LogManager.getLogger(getClass);
   private[this] val dcConf = DbAdapterConfiguration.getAdapterConfig(inputConfig)
   private[this] val lock = new Object()
+  
+  private[this] val XML_HEADER:String = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+  
+  private var startTime = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
+  private var lastSeen = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
+  private var metrics: scala.collection.mutable.Map[String,Any] = scala.collection.mutable.Map[String,Any]()
+  
+  private[this] val kvs = scala.collection.mutable.Map[String, (DbPartitionUniqueRecordKey, DbPartitionUniqueRecordValue, DbPartitionUniqueRecordValue)]()
   
   private[this] var uniqueKey: DbPartitionUniqueRecordKey = new DbPartitionUniqueRecordKey
   uniqueKey.DBUrl = dcConf.dbURL
@@ -46,8 +66,7 @@ class DbConsumer (val inputConfig: AdapterConfiguration, val callerCtxt: InputAd
   uniqueKey.Query = dcConf.query
   
   //DataSource for the connection Pool
-  private[this] var dataSource: BasicDataSource = _
-  
+  private var dataSource: BasicDataSource = _
   var executor: ExecutorService = _
   val input = this
    
@@ -78,6 +97,13 @@ class DbConsumer (val inputConfig: AdapterConfiguration, val callerCtxt: InputAd
   }
   
   override def StartProcessing(partitionInfo: Array[StartProcPartInfo], ignoreFirstMsg: Boolean): Unit = lock.synchronized {
+    
+     
+    
+    LOG.debug("Initiating Start Processing...")
+    
+    LOG.debug("Configuration data - "+dcConf);
+    
     if (partitionInfo == null || partitionInfo.size == 0)
       return
     
@@ -86,6 +112,25 @@ class DbConsumer (val inputConfig: AdapterConfiguration, val callerCtxt: InputAd
     delimiters.fieldDelimiter = dcConf.fieldDelimiter
     delimiters.valueDelimiter = dcConf.valueDelimiter
     
+    // Get the data about the request and set the instancePartition list
+    
+    val partInfo = partitionInfo.map(quad => { (
+         quad._key.asInstanceOf[DbPartitionUniqueRecordKey], 
+         quad._val.asInstanceOf[DbPartitionUniqueRecordValue], 
+         quad._validateInfoVal.asInstanceOf[DbPartitionUniqueRecordValue]) })
+
+     
+    kvs.clear
+
+    partInfo.foreach(quad => {
+      kvs(quad._1.DBName) = quad
+    })
+
+    LOG.debug("KV Map =>")
+    kvs.foreach(kv => {
+      LOG.debug("Key:%s => Val:%s".format(kv._2._1.Serialize, kv._2._2.Serialize))
+    })
+    
     var threads: Int = 1
     
     //TODO Need to see if we can run a thread pool with timeInterval and timeUnits 
@@ -93,6 +138,10 @@ class DbConsumer (val inputConfig: AdapterConfiguration, val callerCtxt: InputAd
     
     //Create a DBCP based Connection Pool Here
     dataSource = new BasicDataSource
+    
+    //Force a load of the DB Driver Class
+    Class.forName(dcConf.dbDriver)
+    LOG.debug("Loaded the DB Driver..."+dcConf.dbDriver)
 		
 		dataSource.setDriverClassName(dcConf.dbDriver)
 		if(dcConf.dbName!=null && !dcConf.dbName.isEmpty())
@@ -113,6 +162,12 @@ class DbConsumer (val inputConfig: AdapterConfiguration, val callerCtxt: InputAd
 		dataSource.setMinIdle(0);
 		dataSource.setInitialSize(5);
 		dataSource.setMaxWaitMillis(5000);
+		
+		//var conn:Connection = DriverManager.getConnection(dcConf.dbURL+"/"+dcConf.dbName,dcConf.dbUser,dcConf.dbPwd)
+		//var conn:Connection = dataSource.getConnection
+		//LOG.debug("Created Connection..."+conn.toString())
+				
+		LOG.debug("Created DataSource..."+dataSource.toString())
     
     val uniqueValue = new DbPartitionUniqueRecordValue
     
@@ -124,14 +179,31 @@ class DbConsumer (val inputConfig: AdapterConfiguration, val callerCtxt: InputAd
       executor.execute(new Runnable() {
         override def run() {
           
+          //For CSV Format
+          var csvFormat = CSVFormat.DEFAULT.withSkipHeaderRecord().withIgnoreSurroundingSpaces()
+          var stringWriter = new StringWriter
+          var csvPrinter = new CSVPrinter(stringWriter,csvFormat)
+         
+          //For XML Format
+          var xStream = new XStream
+          xStream.registerConverter(new CustomMapConverter(xStream.getMapper))
+          
+          LOG.debug("Started the executor..."+Thread.currentThread().getName);
+          
           var connection:Connection = null
           var statement:Statement = null
           var preparedStatement: PreparedStatement = null
           var resultset:ResultSet = null
           var resultSetMetaData: ResultSetMetaData = null
           
-          connection = dataSource.getConnection
+          LOG.debug("Before starting....");
+          
+          //connection = dataSource.getConnection
+          connection = DriverManager.getConnection(dcConf.dbURL+"/"+dcConf.dbName,dcConf.dbUser,dcConf.dbPwd)
+          LOG.debug("Got the connection from the datasource");
+          
           statement = connection.createStatement
+          LOG.debug("Created the statement");
           
           //TODO Dynamic insertion of where clause to include the 
           if(dcConf.query != null && !dcConf.query.isEmpty()){
@@ -146,6 +218,10 @@ class DbConsumer (val inputConfig: AdapterConfiguration, val callerCtxt: InputAd
                    .concat(" from ").concat(dcConf.table))
             }  
           }
+          
+          LOG.debug("Executed Query....");
+          
+           
           resultset = statement.getResultSet
           resultSetMetaData = resultset.getMetaData
           
@@ -153,27 +229,70 @@ class DbConsumer (val inputConfig: AdapterConfiguration, val callerCtxt: InputAd
           
           breakable{
             
+            LOG.debug("Start execution at "+new Date)
+            
             while(resultset.next){
               val readTmNs = System.nanoTime
               val readTmMs = System.currentTimeMillis
               
-              val sbf:StringBuffer = new StringBuffer
               var cols:Int = 0
-              for(cols <- 1 until resultSetMetaData.getColumnCount){
-                 if(resultSetMetaData.getColumnName(cols).equalsIgnoreCase(dcConf.pkColumnName))
+              
+              var listData = new ArrayList[Object]
+              var map :Map[String,Object] = Map()
+              
+              for(cols <- 1 to resultSetMetaData.getColumnCount){
+                 if(resultSetMetaData.getColumnName(cols).equalsIgnoreCase(dcConf.partitionColumn))
                    uniqueValue.PrimaryKeyValue = resultset.getObject(cols).toString()
                  
-                 if(resultSetMetaData.getColumnName(cols).equalsIgnoreCase(dcConf.temporalColumnName))
-                   uniqueValue.AddedDate = resultset.getDate(cols)
-                  
-                 sbf.append(resultset.getObject(cols).toString())
-                 if(cols != resultSetMetaData.getColumnCount)
-                   sbf.append(dcConf.fieldDelimiter)
+                 if(resultSetMetaData.getColumnName(cols).equalsIgnoreCase(dcConf.temporalColumn))
+                   uniqueValue.AddedDate = resultset.getTimestamp(cols)
+                 
+                 if(dcConf.formatOrInputAdapterName.equalsIgnoreCase("CSV")){
+                    listData.add(resultset.getObject(cols))
+                  }else if (dcConf.formatOrInputAdapterName.equalsIgnoreCase("JSON") || dcConf.formatOrInputAdapterName.equalsIgnoreCase("XML")){
+                    map + (resultSetMetaData.getColumnName(cols) ->  resultset.getObject(cols))
+                  }else{ //Handle other formats
+                    map + (resultSetMetaData.getColumnName(cols) ->  resultset.getObject(cols))
+                  } 
               }
               
-              execThread.execute(sbf.toString().getBytes, dcConf.formatOrInputAdapterName, uniqueKey, uniqueValue, readTmNs, readTmMs, false, dcConf.associatedMsg, delimiters)
+              var sb = new StringBuilder;
+              
+              if(dcConf.formatOrInputAdapterName.equalsIgnoreCase("CSV")){
+                csvPrinter.printRecord(listData)
+                sb.append(stringWriter.getBuffer.toString())
+                LOG.debug("CSV Message - "+sb.toString())
+                listData.clear()
+                stringWriter.getBuffer.setLength(0)
+              }else if(dcConf.formatOrInputAdapterName.equalsIgnoreCase("JSON")){
+                sb.append(JSONValue.toJSONString(map))
+                LOG.debug("JSON Message - "+sb.toString())
+                map.empty
+              }else if(dcConf.formatOrInputAdapterName.equalsIgnoreCase("XML")){
+                sb.append(XML_HEADER + xStream.toXML(map))
+                LOG.debug("XML Message - "+sb.toString())
+                map.empty
+              }else{ //Handle other types
+                if (dcConf.formatOrInputAdapterName.equalsIgnoreCase("KV") || dcConf.formatOrInputAdapterName.equalsIgnoreCase("Delimited")) {
+                  //Need to see if the same logic applies for both KV and Delimited
+                  var i: Int = 0;
+                  for ((k, v) <- map) {
+                    sb.append(k)
+                    sb.append(dcConf.keyAndValueDelimiter)
+                    sb.append(v)
+                    i += 1
+                    if (i != map.size) {
+                      sb.append(dcConf.fieldDelimiter)
+                    }
+                  }
+                  LOG.debug("Delimited/KV Message - "+sb.toString())
+                }
+              }
+              
+              execThread.execute(sb.toString().getBytes, dcConf.formatOrInputAdapterName, uniqueKey, uniqueValue, readTmNs, readTmMs, false, dcConf.associatedMsg, delimiters)
                           
               cntr += 1
+              LOG.debug("Counter value "+cntr)
               val key = Category concat "/" concat dcConf.Name concat "/evtCnt"
               cntrAdapter.addCntr(key, 1) // for now adding each row
               
@@ -191,6 +310,7 @@ class DbConsumer (val inputConfig: AdapterConfiguration, val callerCtxt: InputAd
               cntrAdapter.addCntr(runIntervalKey, (currentTime - lastRun))
           }
           //breakable ends here
+          LOG.debug("Complete execution at "+new Date)
           
           try{
             if(resultset != null){
@@ -238,6 +358,7 @@ class DbConsumer (val inputConfig: AdapterConfiguration, val callerCtxt: InputAd
       })
     } catch {
       case e: Exception => {
+        printFailure(e)
         LOG.error("Failed to setup Streams. Reason:%s Message:%s".format(e.getCause, e.getMessage))
       }
     }
@@ -251,10 +372,14 @@ class DbConsumer (val inputConfig: AdapterConfiguration, val callerCtxt: InputAd
     val uniqueKey = new DbPartitionUniqueRecordKey
       uniqueKey.DBName = dcConf.dbName
       uniqueKey.DBUrl = dcConf.dbURL
-      uniqueKey.TableName = dcConf.table
-      uniqueKey.Query = dcConf.query
-      uniqueKey.Columns = dcConf.columns
-      uniqueKey.WhereClause = dcConf.where
+      if(dcConf.table != null && !dcConf.table.isEmpty())
+        uniqueKey.TableName = dcConf.table
+      if(dcConf.query != null && !dcConf.query.isEmpty())
+        uniqueKey.Query = dcConf.query
+      if(dcConf.columns != null && !dcConf.columns.isEmpty())
+        uniqueKey.Columns = dcConf.columns
+      if(dcConf.where != null && !dcConf.where.isEmpty())
+        uniqueKey.WhereClause = dcConf.where
     Array[PartitionUniqueRecordKey](uniqueKey)
   }
   
@@ -297,5 +422,31 @@ class DbConsumer (val inputConfig: AdapterConfiguration, val callerCtxt: InputAd
   override def getAllPartitionEndValues: Array[(PartitionUniqueRecordKey, PartitionUniqueRecordValue)] = {
     return Array[(PartitionUniqueRecordKey, PartitionUniqueRecordValue)]()
   }
+  
+  private def printFailure(ex: Exception) {
+    if (ex != null) {
+      if (ex.isInstanceOf[SQLException]) {
+        processSQLException(ex.asInstanceOf[SQLException])
+      } else {
+        LOG.error(ex)
+      }
+    }
+  }
+
+  private def processSQLException(sqlex: SQLException) {
+    LOG.error(sqlex)
+    var innerException: Throwable = sqlex.getNextException
+    if (innerException != null) {
+      LOG.error("Inner exception(s):")
+    }
+    while (innerException != null) {
+      LOG.error(innerException)
+      innerException = innerException.getCause
+    }
+  }
+  
+  
+    
+   
   
 }

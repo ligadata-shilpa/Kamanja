@@ -12,6 +12,8 @@ import java.sql.SQLException
 import java.sql.Statement
 import java.sql.DatabaseMetaData
 import java.sql.ResultSet
+import java.sql.Timestamp
+import java.text.SimpleDateFormat
 
 class DbAdapterConfiguration extends AdapterConfiguration {
     var dbDriver : String = _ //Name of the driver class
@@ -26,14 +28,26 @@ class DbAdapterConfiguration extends AdapterConfiguration {
     var columns : String = _ //Column Names for Order and Select 
     var where : String = _ //Where clause for table Name
     
-    var temporalColumnName : String = _ //Temporal Column for running as a Job/Continuously
-    var pkColumnName : String = _ //Primary Key column Name (for uniqueness of each message)
+    var partitionColumn : String = _ //Partition Column for splitting the extraction work into partitions
+    var numPartitions : Int = 1 //Number of partitions (will be defaulted to 1
     
     var timeInterval : Long = 0 //0 or -1 means run once, any greater value, will run continuously
     var timeUnits : String = _ //Valid units are SECONDS, MINUTES, HOURS, DAYS, MONTHS, YEARS (values from java TimeUnit)
     
-    //var MessagePrefix: String = _ // This is the first String in the message
-    //var AddTS2MsgFlag: Boolean = false // Add TS after the Prefix Msg
+    var temporalColumn :String = _ //To track the CDC (typically a added_date_time type of a column)
+    
+    override def toString(): String = {
+      var str:String = "(dbDriver " + dbDriver + "," + "dbName " + dbName +"," + "dbUser " + dbUser +"," +
+      "dbName " + dbName +"," + "dbPwd " + dbPwd +"," + "dbURL " + dbURL +"," + "query " + query +"," + 
+      "table " + table +"," + "columns " + columns +"," + "where " + where +"," + "partitionColumn " + partitionColumn +"," + 
+      "numPartitions " + numPartitions +"," + "timeInterval " + timeInterval +"," + "timeUnits " + timeUnits +"," + 
+      "temporalColumn " + temporalColumn + "," +"keyAndValueDelimiter " + keyAndValueDelimiter + "," +"fieldDelimiter " + fieldDelimiter + "," +
+      "valueDelimiter " + valueDelimiter +"," + "dependencyJars " + dependencyJars +"," + "jarName " + jarName+ ","+
+      "formatName " + formatOrInputAdapterName +
+      ")";
+      str
+    }
+         
 }
 
 object DbAdapterConfiguration {
@@ -52,7 +66,7 @@ object DbAdapterConfiguration {
     dbAdpt.className = inputConfig.className
     dbAdpt.jarName = inputConfig.jarName
     dbAdpt.dependencyJars = inputConfig.dependencyJars
-    dbAdpt.associatedMsg = if (inputConfig.associatedMsg != null) null else inputConfig.associatedMsg.trim
+    dbAdpt.associatedMsg = if (inputConfig.associatedMsg == null) null else inputConfig.associatedMsg.trim
     dbAdpt.keyAndValueDelimiter = if (inputConfig.keyAndValueDelimiter == null) null else inputConfig.keyAndValueDelimiter.trim
     dbAdpt.fieldDelimiter = if (inputConfig.fieldDelimiter == null) null else inputConfig.fieldDelimiter.trim
     dbAdpt.valueDelimiter = if (inputConfig.valueDelimiter == null) null else inputConfig.valueDelimiter.trim
@@ -83,19 +97,17 @@ object DbAdapterConfiguration {
         dbAdpt.columns = kv._2.trim
       }else if (kv._1.compareToIgnoreCase("where") == 0) {
         dbAdpt.where = kv._2.trim
-      }else if (kv._1.compareToIgnoreCase("temporalColumnName") == 0) {
-        dbAdpt.temporalColumnName = kv._2.trim
-      }else if (kv._1.compareToIgnoreCase("pkColumnName") == 0) {
-        dbAdpt.pkColumnName = kv._2.trim
+      }else if (kv._1.compareToIgnoreCase("temporalColumn") == 0) {
+        dbAdpt.temporalColumn = kv._2.trim
+      }else if (kv._1.compareToIgnoreCase("partitionColumn") == 0) {
+        dbAdpt.partitionColumn = kv._2.trim
+      }else if (kv._1.compareToIgnoreCase("numPartitions") == 0) {
+        dbAdpt.numPartitions = kv._2.trim.toInt
       }else if (kv._1.compareToIgnoreCase("timeInterval") == 0) {
         dbAdpt.timeInterval = kv._2.trim.toLong
       }else if (kv._1.compareToIgnoreCase("timeUnits") == 0) {
         dbAdpt.timeUnits = kv._2.trim
-      }/*else if (kv._1.compareToIgnoreCase("MessagePrefix") == 0) {
-        dbAdpt.MessagePrefix = kv._2.trim
-      } else if (kv._1.compareToIgnoreCase("AddTS2MsgFlag") == 0) {
-        dbAdpt.AddTS2MsgFlag = kv._2.trim.toBoolean
-      }*/
+      }
     })
     
     //Validate DB Connectivity Parameters
@@ -184,12 +196,19 @@ class DbPartitionUniqueRecordKey extends PartitionUniqueRecordKey {
         ("Version" -> Version) ~
           ("Type" -> Type) ~
           ("DBUrl" -> DBUrl) ~
-          ("DBName" -> DBName) ~
-          ("Query" -> Query) ~
-          ("TableName" -> TableName) ~
-          ("Columns" -> Columns) ~
-          ("WhereClause" -> WhereClause)
-        compact(render(json))
+          ("DBName" -> DBName)
+          
+      if(Query != null && !Query.isEmpty())
+          json ~ ("Query" -> Query)
+      
+      if(TableName != null && !TableName.isEmpty())
+          json ~  ("TableName" -> TableName)
+      if(Columns != null && !Columns.isEmpty())
+          json ~  ("Columns" -> Columns)
+      if(WhereClause != null && !WhereClause.isEmpty())
+          json ~  ("WhereClause" -> WhereClause)
+      
+      compact(render(json))
     }
     
     override def Deserialize(key: String): Unit = { // Making Key from Serialized String
@@ -198,37 +217,47 @@ class DbPartitionUniqueRecordKey extends PartitionUniqueRecordKey {
       if (keyData.Version == Version && keyData.Type.compareTo(Type) == 0) {
         DBUrl = keyData.DBUrl
         DBName = keyData.DBName
-        Query = keyData.Query.get
-        TableName = keyData.TableName.get
-        Columns = keyData.Columns.get
-        WhereClause = keyData.WhereClause.get
+        if(keyData.Query.isDefined)
+          Query = keyData.Query.get
+        if(keyData.TableName.isDefined)
+          TableName = keyData.TableName.get
+        if(keyData.Columns.isDefined)
+          Columns = keyData.Columns.get
+        if(keyData.WhereClause.isDefined)
+          WhereClause = keyData.WhereClause.get
       }
       // else { } // Not yet handling other versions
   }
 }
 
-case class DbRecData(Version: Int, PrimaryKeyValue: Option[String], AddedDate: Option[Date])
+case class DbRecData(Version: Int, PrimaryKeyValue: Option[String], AddedDate: Option[Long])
 
 class DbPartitionUniqueRecordValue extends PartitionUniqueRecordValue {
   val Version: Int = 1
-  var PrimaryKeyValue: String = _ //Primary Key Column Value for the ROW
-  var AddedDate: Date = _ //Temporal Column Value
+  var PrimaryKeyValue: String = _ //Primary Key Column Value for the ROW (assuming the partitionColumn)
+  var AddedDate: Timestamp = _ //Temporal Column Value
+  val sdf:SimpleDateFormat = new SimpleDateFormat("dd-MM-yyyy hh24:mm:ss:SSS")
   
   override def Serialize: String = { // Making String from Value
     val json =
       ("Version" -> Version) ~
-        ("PrimaryKeyValue" -> PrimaryKeyValue) ~
+        ("PrimaryKeyValue" -> PrimaryKeyValue)
+        
         //TODO Check if Date toString works in SERDE
-        ("AddedDate" -> AddedDate.getTime)
+        if(AddedDate != null && !AddedDate.toString().isEmpty())
+          json ~ ("AddedDate" -> AddedDate.getTime)
+          
     compact(render(json))
   }
+  
 
   override def Deserialize(key: String): Unit = { // Making Value from Serialized String
     implicit val jsonFormats: Formats = DefaultFormats
     val recData = parse(key).extract[DbRecData]
     if (recData.Version == Version) {
       PrimaryKeyValue = recData.PrimaryKeyValue.get
-      AddedDate = recData.AddedDate.get
+      if(recData.AddedDate.isDefined)
+        AddedDate = new Timestamp(recData.AddedDate.get)
     }
     // else { } // Not yet handling other versions
   }
