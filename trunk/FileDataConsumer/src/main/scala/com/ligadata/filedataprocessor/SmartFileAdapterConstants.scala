@@ -39,5 +39,5 @@ object SmartFileAdapterConstants {
   val AUTH_PASS="authPass"
 
   val HOST = "host"
-
+  val PORT = "port"
 }

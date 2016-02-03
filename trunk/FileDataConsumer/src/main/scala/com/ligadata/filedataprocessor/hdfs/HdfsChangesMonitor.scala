@@ -4,6 +4,8 @@ package com.ligadata.filedataprocessor.hdfs
  * Created by Yasser on 12/6/2015.
  */
 
+import java.util.zip.GZIPInputStream
+
 import org.apache.hadoop.fs.FileStatus
 import org.apache.hadoop.fs.FileSystem
 import org.apache.hadoop.fs.Path
@@ -13,7 +15,7 @@ import org.apache.hadoop.conf.Configuration
 import scala.collection.mutable.{ArrayBuffer, Map}
 import scala.actors.threadpool.{ Executors, ExecutorService }
 import com.ligadata.filedataprocessor.FileHandler
-import java.io.IOException
+import java.io.{InputStream, IOException}
 import com.ligadata.filedataprocessor.FileChangeType._
 import org.apache.commons.lang.NotImplementedException
 
@@ -39,7 +41,7 @@ class HdfsFileHandler extends FileHandler{
   private var fileFullPath = ""
   def fullPath = fileFullPath
   
-  private var in : FSDataInputStream = null
+  private var in : InputStream = null
   private var hdFileSystem : FileSystem = null
   private var hdfsConfig : Configuration = null
   private var hdfsConnectionConfig : HdfsConnectionConfig = null
@@ -53,11 +55,15 @@ class HdfsFileHandler extends FileHandler{
     fileFullPath = fullPath
     hdfsConnectionConfig = config
 
+    hdfsConfig = getHdfsConfig
+  }
+
+  def getHdfsConfig : Configuration = {
     hdfsConfig = new Configuration()
     hdfsConfig.set("fs.default.name", hdfsConnectionConfig.nameNodeURL + ":" + hdfsConnectionConfig.nameNodePort)
     hdfsConfig.set("fs.hdfs.impl", classOf[org.apache.hadoop.hdfs.DistributedFileSystem].getName)
     hdfsConfig.set("fs.file.impl", classOf[org.apache.hadoop.fs.LocalFileSystem].getName)
-    
+    hdfsConfig
   }
 
   /*def this(fullPath : String, fs : FileSystem){
@@ -69,10 +75,13 @@ class HdfsFileHandler extends FileHandler{
 
   @throws(classOf[IOException])
   def openForRead(): Unit = {
-    hdFileSystem = FileSystem.get(hdfsConfig)
-    
+    val compressed = isCompressed
+    hdFileSystem = FileSystem.get(getHdfsConfig)
     val inFile : Path = new Path(fullPath)
     in = hdFileSystem.open(inFile)
+
+    if(compressed)
+      in = new GZIPInputStream(in)
   }
 
   @throws(classOf[IOException])
@@ -179,6 +188,41 @@ class HdfsFileHandler extends FileHandler{
         hdFileSystem.close()
     }
   }
+
+  private def isCompressed : Boolean = {
+
+    val tempHdFileSystem =
+      try {
+        FileSystem.get(hdfsConfig)
+      }
+      catch {
+        case e: Exception =>
+          logger.error(e)
+          null
+      }
+
+      val tempInputStream : FSDataInputStream =
+        try {
+          val inFile : Path = new Path(fullPath)
+          tempHdFileSystem.open(inFile)
+        }
+        catch {
+          case e: Exception =>
+            logger.error(e)
+            null
+        }
+      val compressed = if(tempInputStream == null) false else isStreamCompressed(tempInputStream)
+      try {
+        if (tempInputStream != null) {
+          tempInputStream.close()
+        }
+        if(tempHdFileSystem != null)
+          tempHdFileSystem.close()
+      }
+      catch{case e => {logger.error(e)}
+      }
+      compressed
+    }
 }
 
 /**
@@ -196,8 +240,16 @@ class HdfsChangesMonitor (val hdfsConnectionConfig : HdfsConnectionConfig, val w
   private val globalFileMonitorCallbackService: ExecutorService = Executors.newFixedThreadPool(poolSize)
 
   def getFolderContents(parentfolder : String, hdFileSystem : FileSystem) : Array[FileStatus] = {
-    val files = hdFileSystem.listStatus(new Path(parentfolder))
-    files
+    try {
+      val files = hdFileSystem.listStatus(new Path(parentfolder))
+      files
+    }
+    catch{
+      case ex : Exception => {
+        logger.error(ex)
+        new Array[FileStatus](0)
+      }
+    }
   }
 
   def monitorDirChanges(targetFolder : String, changeTypesToMonitor : Array[FileChangeType]){
@@ -236,21 +288,22 @@ class HdfsChangesMonitor (val hdfsConnectionConfig : HdfsConnectionConfig, val w
           modifiedDirs.remove(0)
           val fs = FileSystem.get(hdfsConfig)
           findDirModifiedDirectChilds(aFolder , fs , filesStatusMap, modifiedDirs, modifiedFiles, firstCheck)
+          fs.close()
 
           if(modifiedFiles.nonEmpty)
             modifiedFiles.foreach(tuple =>
             {
               //get only files with specified change types
               if(changeTypesToMonitor.contains(tuple._2)){
-                /*val handler = new MofifiedFileCallbackHandler(tuple._1, tuple._2, modifiedFileCallback)
+                val handler = new MofifiedFileCallbackHandler(tuple._1, tuple._2, modifiedFileCallback)
                  // run the callback in a different thread
-                //new Thread(handler).start()
-                globalFileMonitorCallbackService.execute(handler)*/
-                modifiedFileCallback(tuple._1,tuple._2)
+                new Thread(handler).start()
+                //globalFileMonitorCallbackService.execute(handler)
+                //modifiedFileCallback(tuple._1,tuple._2)
               }
             }
             )
-          fs.close()
+
         }
 
       }

@@ -7,6 +7,7 @@ import com.ligadata.MetadataAPI.MetadataAPIImpl
 import com.ligadata.ZooKeeper.CreateClient
 import com.ligadata.filedataprocessor.FileChangeType._
 import com.ligadata.filedataprocessor.FsType.FsType
+import com.ligadata.filedataprocessor.hdfs.{HdfsChangesMonitor, HdfsConnectionConfig}
 import com.ligadata.filedataprocessor.sftp.{SftpChangesMonitor, SftpConnectionConfig}
 import com.ligadata.kamanja.metadata.MessageDef
 import org.apache.curator.framework.CuratorFramework
@@ -60,6 +61,7 @@ object ExtendedFileProcessor {
   private var authUser : String = ""
   private var authPass : String = ""
   private var host : String = ""
+  private var port = -1
 
 
   var globalFileMonitorService: ExecutorService = Executors.newFixedThreadPool(3)
@@ -67,7 +69,7 @@ object ExtendedFileProcessor {
   val NOT_RECOVERY_SITUATION = -1
   val BROKEN_FILE = -100
   val CORRUPT_FILE = -200
-  val REFRESH_RATE = 2000
+  val REFRESH_RATE = 10000
   val MAX_WAIT_TIME = 60000
   var errorWaitTime = 1000
 
@@ -203,6 +205,15 @@ object ExtendedFileProcessor {
     authUser = props.getOrElse(SmartFileAdapterConstants.AUTH_USER, null)
     authPass = props.getOrElse(SmartFileAdapterConstants.AUTH_PASS, null)
     host = props.getOrElse(SmartFileAdapterConstants.HOST, null)
+
+    val portStr = props.getOrElse(SmartFileAdapterConstants.PORT, null)
+    if(portStr != null)
+      try{
+        port = portStr.toInt
+      }
+    catch{
+      case ex : NumberFormatException =>
+    }
   }
 
   def markFileProcessing (fileName: String, offset: Int, createDate: Long): Unit = {
@@ -483,7 +494,11 @@ object ExtendedFileProcessor {
           val dirMonitor = new SftpChangesMonitor(sftpConfig, REFRESH_RATE, processFile)
           dirMonitor.monitorDirChanges(dirToWatch, Array(AlreadyExisting, New))
 
-          //TODO : handle other fs types : need to get config for hdfs
+        case HDFS=>
+          val hdfsConfig = new HdfsConnectionConfig(host, port)
+          val dirMonitor = new HdfsChangesMonitor(hdfsConfig, REFRESH_RATE, processFile)
+          dirMonitor.monitorDirChanges(dirToWatch, Array(AlreadyExisting, New))
+
         case _ => throw new Exception("Unsopported file sytesm")
       }
 
@@ -713,6 +728,7 @@ class ExtendedFileProcessor(val path: Path, val partitionId: Int) extends Runnab
   private var authUser : String = ""
   private var authPass : String = ""
   private var host : String = ""
+  private var port = -1
 
   private var fsType : FsType = null
 
@@ -740,6 +756,27 @@ class ExtendedFileProcessor(val path: Path, val partitionId: Int) extends Runnab
 
     val fs = props.getOrElse(SmartFileAdapterConstants.FILE_SYSTEM, null)
     fsType = FileHandler.getFsType(fs)
+
+    val portStr = props.getOrElse(SmartFileAdapterConstants.PORT, null)
+    if(portStr != null)
+      try{
+        port = portStr.toInt
+      }
+      catch{
+        case ex : NumberFormatException => {
+          logger.error("SMART_FILE_CONSUMER Hdfs config needs port")
+          shutdown
+          throw MissingPropertyException("Wrong Paramter: " + SmartFileAdapterConstants.PORT, null)
+        }
+      }
+    else{
+      if(fsType == FsType.HDFS){
+        logger.error("SMART_FILE_CONSUMER Hdfs config needs port")
+        shutdown
+        throw MissingPropertyException("Missing Paramter: " + SmartFileAdapterConstants.PORT, null)
+      }
+
+    }
 
     // Bail out if dirToWatch, Topic are not set
     if (kafkaTopic == null) {
