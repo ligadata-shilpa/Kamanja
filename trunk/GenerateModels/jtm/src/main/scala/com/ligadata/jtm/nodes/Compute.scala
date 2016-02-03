@@ -10,5 +10,7 @@ class Compute {
   val typename: String = ""
   @SerializedName("val")
   val expression: String = ""
+
   val comment: String = ""
+  val comments: Array[String] = Array.empty[String]
 }

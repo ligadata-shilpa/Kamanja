@@ -40,9 +40,12 @@ object Root {
 
     def deserialize(json: JsonElement, typeOfT1: Type, context: JsonDeserializationContext): scala.collection.Map[String, T] = {
       var map = scala.collection.Map.empty[String, T]
-      json.getAsJsonObject().getAsJsonObject().entrySet().map( e => {
-        val t: T = context.deserialize(e.getValue.getAsJsonObject, classTag[T].runtimeClass)
-        map ++= Map( e.getKey -> t)
+      val p = json.getAsJsonObject()
+      p.entrySet().map( e => {
+        val o = e.getValue
+        val t = classTag[T].runtimeClass
+        val v: T = context.deserialize[T](o, t)
+        map ++= Map( e.getKey -> v)
       })
       map
     }
@@ -62,11 +65,13 @@ object Root {
     val mapToString = new TypeToken[scala.collection.Map[String, String]](){}.getType()
     val mapToTransformation = new TypeToken[scala.collection.Map[String, Transformation]](){}.getType()
     val mapToOutput = new TypeToken[scala.collection.Map[String, Output]](){}.getType()
+    val mapToCompute = new TypeToken[scala.collection.Map[String, Compute]](){}.getType()
 
     new GsonBuilder().
       registerTypeAdapter(mapToString, new MapType1).
       registerTypeAdapter(mapToTransformation, new MapToType[Transformation]).
       registerTypeAdapter(mapToOutput, new MapToType[Output]).
+      registerTypeAdapter(mapToCompute, new MapToType[Compute]).
       create()
   }
 

@@ -12,14 +12,12 @@
         "zipcode": {
           "type": "Int",
           "val": "iplookup($in1).zipcode",
-          "comment": "in scala, type could be optional"
+          "comment": "(1) in scala, type could be optional"
         },
         "ipinfo": {
           "type": "IpInfo",
           "val": "iplookup($in1)"
-        },
-        "comment": "single comment for each element - this is transformation level computed vals that are common across all outputs",
-        "comments": [ "there could be multiple comments for each element", "comment2" ]
+        }
       },
       "outputs": {
         "msg2": {
