@@ -4,9 +4,8 @@ package com.ligadata.jtm.nodes
   * Created by joerg on 1/20/16.
   */
 class Transformation {
-
-  val input: String = ""
-  val variables: Array[Variable] = Array.empty[Variable]
-  val outputs: Array[OutputMessage] = Array.empty[OutputMessage]
-
+  val name: String = ""
+  val inputs: Array[String] = Array.empty[String]
+  val outputs: Array[Output] = Array.empty[Output]
+  //val computes: Computes = new Computes
 }

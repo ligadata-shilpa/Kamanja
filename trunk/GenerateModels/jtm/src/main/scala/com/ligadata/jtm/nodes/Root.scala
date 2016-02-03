@@ -20,26 +20,59 @@ object Root {
 
   class MapType1 extends JsonDeserializer[MapType] with JsonSerializer[MapType] {
 
-    def deserialize(json : JsonElement, typeOfT : Type , context : JsonDeserializationContext) : scala.collection.Map[String, String] = {
-
-      var collectMap = scala.collection.mutable.HashMap.empty[String, String]
+    def deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): MapType = {
+      var collectMap = scala.collection.Map.empty[String, String]
       val entrySet = json.getAsJsonObject().entrySet()
-      entrySet.map ( entry =>  collectMap += ( entry.getKey() -> entry.getValue.getAsString() ) )
-
+      entrySet.map( entry =>  collectMap += ( entry.getKey() -> entry.getValue.getAsString()) )
       collectMap
     }
 
-    def serialize(src : scala.collection.Map[String, String], typeOfT : Type , context : JsonSerializationContext) :  JsonObject = {
+    def serialize(src: MapType, typeOfT: Type, context: JsonSerializationContext) :  JsonObject = {
       val json = new JsonObject
-      src.foreach( p => json.addProperty(p._1, p._2)
-      )
+      src.foreach( p => json.addProperty(p._1, p._2) )
       json
     }
   }
 
+  import scala.reflect.ClassTag
+  import scala.reflect._
+  class MapToType[T:ClassTag] extends JsonDeserializer[scala.collection.Map[String, T]] with JsonSerializer[scala.collection.Map[String, T]] {
+
+    def deserialize(json: JsonElement, typeOfT1: Type, context: JsonDeserializationContext): scala.collection.Map[String, T] = {
+      var map = scala.collection.Map.empty[String, T]
+      json.getAsJsonObject().getAsJsonObject().entrySet().map( e => {
+        val t: T = context.deserialize(e.getValue.getAsJsonObject, classTag[T].runtimeClass)
+        map ++= Map( e.getKey -> t)
+      })
+      map
+    }
+
+    def serialize(src: scala.collection.Map[String, T], typeOfT: Type, context: JsonSerializationContext):  JsonObject = {
+      val json = new JsonObject
+      src.foreach( p => {
+        val jo = context.serialize(p._2).getAsJsonObject()
+        json.add(p._1, jo)
+      })
+      json
+    }
+  }
+
+  // Setup  the gson object to be used
+  def buildGson(): Gson = {
+    val mapToString = new TypeToken[scala.collection.Map[String, String]](){}.getType()
+    val mapToTransformation = new TypeToken[scala.collection.Map[String, Transformation]](){}.getType()
+    val mapToOutput = new TypeToken[scala.collection.Map[String, Output]](){}.getType()
+
+    new GsonBuilder().
+      registerTypeAdapter(mapToString, new MapType1).
+      registerTypeAdapter(mapToTransformation, new MapToType[Transformation]).
+      registerTypeAdapter(mapToOutput, new MapToType[Output]).
+      create()
+  }
+
+  val gson = buildGson()
+
   def fromJsonString(config : String) : Root = {
-    val typeMap = new TypeToken[scala.collection.Map[String, String]](){}.getType()
-    val gson = new GsonBuilder().registerTypeAdapter(typeMap, new MapType1).create()
     val reader = new JsonReader(new StringReader(config))
     reader.setLenient(true)
     gson.fromJson(reader, classOf[Root])
@@ -51,15 +84,11 @@ object Root {
   }
 
   def toJson(file: String, c: Root) = {
-    val typeMap = new TypeToken[scala.collection.Map[String, String]](){}.getType()
-    val gson = new GsonBuilder().registerTypeAdapter(typeMap, new MapType1).setPrettyPrinting().create()
     val dataJson = gson.toJson(c)
     scala.tools.nsc.io.File(file).writeAll(dataJson)
   }
 
   def toJson(c: Root) : String = {
-    val typeMap = new TypeToken[scala.collection.Map[String, String]](){}.getType()
-    val gson = new GsonBuilder().registerTypeAdapter(typeMap, new MapType1).setPrettyPrinting().create()
     gson.toJson(c)
   }
 }
@@ -68,10 +97,12 @@ object Root {
   * Created by joerg on 1/20/16.
   */
 class Root {
-  val packagename: String = ""
+  val namespace: String = ""
   val version: String = ""
-  val modelname : String = ""
-
+  val language: String = ""
+  val minVersion: String = ""
+  val dependencies: String = ""
   val imports: Array[String] = Array.empty[String]
-  val transformations: Array[Transformation] = Array.empty[Transformation]
+
+  val transformations: scala.collection.Map[String, Transformation] = scala.collection.Map.empty[String, Transformation]
 }

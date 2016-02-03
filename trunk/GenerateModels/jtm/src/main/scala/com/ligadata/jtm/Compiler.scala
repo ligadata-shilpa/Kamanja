@@ -99,7 +99,7 @@ class CompilerBuilder {
  *
  */
 class Compiler(params: CompilerBuilder) extends LogTrait {
-
+/*
   def splitPackageClass(name: String): (String, String) = {
     val elements = name.split('.')
     (elements.dropRight(1).mkString("."), elements.last)
@@ -360,7 +360,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           if(inputSet.contains("transactionid")) {
             outputSet1 --= Set("transactionid")
           }
-          
+
           if(outputSet1.size>0){
             throw new Exception("Not all outputs satisfied. missing=" + outputSet1.mkString(", "))
             logger.trace("Not all outputs satisfied. missing={}" , outputSet1.mkString(", "))
@@ -410,4 +410,5 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
     outputFile
   }
+  */
 }
