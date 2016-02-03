@@ -106,7 +106,7 @@ class Root {
   val version: String = ""
   val language: String = ""
   val minVersion: String = ""
-  val dependencies: String = ""
+  val dependencies: Array[String] = Array.empty[String]
   val imports: Array[String] = Array.empty[String]
 
   val transformations: scala.collection.Map[String, Transformation] = scala.collection.Map.empty[String, Transformation]

@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "language": "scala | java | python",
   "minVersion": "2.11",
-  "dependencies": "[list of jars/modules - this should go into command line arguments instead of this file]",
+  "dependencies": ["list of jars/modules - this should go into command line arguments instead of this file"],
   "imports": [ "com.ligadata.Utils._", "com.ligadata.Utils1._" ],
   "transformations": {
     "test1": {
