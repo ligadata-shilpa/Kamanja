@@ -48,7 +48,7 @@
       }
     },
     "test2": {
-      "inputs": [ "com.ligadata.kamanja.samples.messages.msg4" ],
+      "dependsOn": [ ["com.ligadata.kamanja.samples.messages.msg4"] ],
       "outputs": {
         "omsg5": { "mappingByName": true, "mapping": { "out1": "in1" }   }
       }

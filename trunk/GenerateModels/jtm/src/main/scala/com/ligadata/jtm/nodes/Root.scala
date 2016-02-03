@@ -15,42 +15,45 @@
  */
 package com.ligadata.jtm.nodes
 
-import com.google.gson.Gson
-import com.google.gson.GsonBuilder
-import com.google.gson.JsonSerializer
-import com.google.gson.JsonDeserializer
-import com.google.gson.JsonElement
+import java.io.{File, StringReader}
 import java.lang.reflect.Type
-import com.google.gson._
-import scala.collection.JavaConversions._
+
+import com.google.gson.{Gson, GsonBuilder, JsonDeserializer, JsonElement, JsonSerializer, _}
 import com.google.gson.reflect.TypeToken
 import com.google.gson.stream.JsonReader
 import org.apache.commons.io.FileUtils
-import java.io.StringReader
-import java.io.File
 
+import scala.collection.JavaConversions._
+import scala.reflect.{ClassTag, _}
+
+/** Object to parse the jtm "language"
+  *
+  */
 object Root {
 
-  type MapType = scala.collection.Map[String, String]
+  /** Class to parse string to string Map[String, String]
+    * like "map": { "name1" : "value1", "name2" : "value2", "name3" : "value3"},
+    */
+  class MapToString extends JsonDeserializer[scala.collection.Map[String, String]] with JsonSerializer[scala.collection.Map[String, String]] {
 
-  class MapType1 extends JsonDeserializer[MapType] with JsonSerializer[MapType] {
-
-    def deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): MapType = {
+    def deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): scala.collection.Map[String, String] = {
       var collectMap = scala.collection.Map.empty[String, String]
       val entrySet = json.getAsJsonObject().entrySet()
       entrySet.map( entry =>  collectMap += ( entry.getKey() -> entry.getValue.getAsString()) )
       collectMap
     }
 
-    def serialize(src: MapType, typeOfT: Type, context: JsonSerializationContext) :  JsonObject = {
+    def serialize(src: scala.collection.Map[String, String], typeOfT: Type, context: JsonSerializationContext) :  JsonObject = {
       val json = new JsonObject
       src.foreach( p => json.addProperty(p._1, p._2) )
       json
     }
   }
 
-  import scala.reflect.ClassTag
-  import scala.reflect._
+  /** Class to parse string to string Map[String, T] where T is is an class
+    *
+    * @tparam T type of the value of the map
+    */
   class MapToType[T:ClassTag] extends JsonDeserializer[scala.collection.Map[String, T]] with JsonSerializer[scala.collection.Map[String, T]] {
 
     def deserialize(json: JsonElement, typeOfT1: Type, context: JsonDeserializationContext): scala.collection.Map[String, T] = {
@@ -75,7 +78,10 @@ object Root {
     }
   }
 
-  // Setup  the gson object to be used
+  /** Setup the gson object to be used
+    *
+    * @return a configured Gson object
+    */
   def buildGson(): Gson = {
     val mapToString = new TypeToken[scala.collection.Map[String, String]](){}.getType()
     val mapToTransformation = new TypeToken[scala.collection.Map[String, Transformation]](){}.getType()
@@ -83,7 +89,7 @@ object Root {
     val mapToCompute = new TypeToken[scala.collection.Map[String, Compute]](){}.getType()
 
     new GsonBuilder().
-      registerTypeAdapter(mapToString, new MapType1).
+      registerTypeAdapter(mapToString, new MapToString).
       registerTypeAdapter(mapToTransformation, new MapToType[Transformation]).
       registerTypeAdapter(mapToOutput, new MapToType[Output]).
       registerTypeAdapter(mapToCompute, new MapToType[Compute]).
@@ -92,22 +98,42 @@ object Root {
 
   val gson = buildGson()
 
+  /** Create root object from json string
+    *
+    * @param config json string to parse
+    * @return root of the processing instructions
+    */
   def fromJsonString(config : String) : Root = {
     val reader = new JsonReader(new StringReader(config))
     reader.setLenient(true)
     gson.fromJson(reader, classOf[Root])
   }
 
+  /** Parse a provided file
+    *
+    * @param file file name to be read and parsed
+    * @return root of the processing instructions
+    */
   def fromJson(file : String) : Root = {
     val config = FileUtils.readFileToString(new File(file), null)
     fromJsonString(config)
   }
 
+  /** Take a Root object and output to a json file
+    *
+    * @param file to output too
+    * @param c Root node
+    */
   def toJson(file: String, c: Root) = {
     val dataJson = gson.toJson(c)
     scala.tools.nsc.io.File(file).writeAll(dataJson)
   }
 
+  /** Take a Root object and output to a json string
+    *
+    * @param c Root node
+    * @return string with the json program
+    */
   def toJson(c: Root) : String = {
     gson.toJson(c)
   }
@@ -117,13 +143,44 @@ object Root {
   * Created by joerg on 1/20/16.
   */
 class Root {
+
+  /** Code will be generated in this namespace
+    *
+    */
   val namespace: String = ""
+
+  /** Version of the json level
+    *
+    */
   val version: String = ""
+
+  /** Target language
+    * Scala | Java | Python
+    */
   val language: String = ""
+
+  /** Interpreter or compiler level to be generated
+    *
+    */
   val minVersion: String = ""
+
+  /** List of dependencies, should be empty
+    *
+    */
   val dependencies: Array[String] = Array.empty[String]
+
+  /** List of imports to be added
+    *
+    */
   val imports: Array[String] = Array.empty[String]
 
+  /** Map with "name" to transformations
+    *
+    */
   val transformations: scala.collection.Map[String, Transformation] = scala.collection.Map.empty[String, Transformation]
+
+  /** Map with aliases
+    *
+    */
   val aliases: scala.collection.Map[String, String] = scala.collection.Map.empty[String, String]
 }

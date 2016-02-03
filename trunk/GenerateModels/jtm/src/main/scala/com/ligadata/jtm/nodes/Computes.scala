@@ -20,8 +20,23 @@ package com.ligadata.jtm.nodes
   */
 class Computes {
 
+  /** Map with computations
+    *
+    */
   val computes: scala.collection.Map[String, Compute] = scala.collection.Map.empty[String, Compute]
+
+  /** Map with output targets
+    *
+    */
   val outputs: scala.collection.Map[String, Output] = scala.collection.Map.empty[String, Output]
+
+  /** Single comment, to be output to code
+    *
+    */
   val comment: String = ""
+
+  /** Multiple comments, to be output to code
+    *
+    */
   val comments: Array[String] = Array.empty[String]
 }

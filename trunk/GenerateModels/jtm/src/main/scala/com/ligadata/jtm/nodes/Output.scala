@@ -16,11 +16,27 @@
 package com.ligadata.jtm.nodes
 
 /**
-  * Created by joerg on 1/20/16.
+  *
   */
 class Output {
+
+  /** Mapping variables / expressions to output attributes
+    *
+    */
   val mapping: scala.collection.Map[String, String] = scala.collection.Map.empty[String, String]
+
+  /** Filter to be checked
+    * expression of the target language expected
+    */
   val filter: String = ""
+
+  /** Map with computations
+    *
+    */
   val computes: scala.collection.Map[String, Compute] = scala.collection.Map.empty[String, Compute]
+
+  /** If true, map by name the  outputs if not provided
+    *
+    */
   val mappingByName: Boolean = false
 }

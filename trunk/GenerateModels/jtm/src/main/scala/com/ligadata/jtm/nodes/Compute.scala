@@ -22,15 +22,31 @@ import com.google.gson.annotations.SerializedName
   */
 class Compute {
 
+  /** Typename the expression generates
+    *
+    */
   @SerializedName("type")
   val typename: String = ""
 
+  /** Expression to be computed
+    *
+    */
   @SerializedName("val")
   val expression: String = ""
 
+  /** Expression list, based on the dependency
+    * a processing is selected
+    */
   @SerializedName("vals")
   val expressions: Array[String] = Array.empty[String]
 
+  /** Single comment, to be output to code
+    *
+    */
   val comment: String = ""
+
+  /** Multiple comments, to be output to code
+    *
+    */
   val comments: Array[String] = Array.empty[String]
 }
