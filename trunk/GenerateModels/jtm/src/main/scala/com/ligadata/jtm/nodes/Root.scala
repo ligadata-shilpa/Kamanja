@@ -110,4 +110,5 @@ class Root {
   val imports: Array[String] = Array.empty[String]
 
   val transformations: scala.collection.Map[String, Transformation] = scala.collection.Map.empty[String, Transformation]
+  val aliases: scala.collection.Map[String, String] = scala.collection.Map.empty[String, String]
 }

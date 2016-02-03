@@ -1,16 +1,57 @@
 {
   "namespace": "com.ligadata.jtm.test.filter",
   "version": "0.0.1",
-  "language": "scala | java | python",
-  "minVersion": "2.11",
+  "language" : "scala | java | python",
+  "minVersion" : "2.11",
   "dependencies": "[list of jars/modules - this should go into command line arguments instead of this file]",
-  "imports": [ "com.ligadata.Utils._", "com.ligadata.Utils1._" ],
+  "imports": [ "com.ligadata.Utils._",  "com.ligadata.Utils1._"  ],
+
+  "aliases":   {
+    "m1": "com.ligadata.kamanja.samples.messages.msg1",
+    "m2": "com.ligadata.kamanja.samples.messages.msg2",
+    "omsg2": "com.ligadata.kamanja.samples.messages.omsg2",
+    "omsg3": "com.ligadata.kamanja.samples.messages.omsg3",
+    "c1": "com.ligadata.kamanja.samples.concepts.c1",
+    "c2": "com.ligadata.kamanja.samples.concepts.c1"
+  },
+
   "transformations": {
     "test1": {
-      "input": "com.ligadata.kamanja.samples.messages.msg1"
+      "dependsOn": [ ["m1", "m2", "c1"], ["m3", "m4", "c2"], ["m5", "c3", "c4"] ],
+      "computes": {
+        "zipcode":{ "type": "Int", "val": "iplookup($in1).zipcode", "comment": "in scala, type could be optional" },
+        "zipcode1":{ "type": "Int", "val": ["iplookup($m1.in1).zipcode", "iplookup($m3.in9).zipcode" ]},
+        "ipinfo": { "type": "IpInfo", "val": "iplookup($in1)",  "comment": "type could be some class available from imports" },
+      },
+
+      "comment$01": "msg2 is part of com.ligadata.jtm.test.filter",
+
+      "outputs": {
+        "omsg2": {
+          "mapping": {
+            "out1": "in1",
+            "out2": "in2",
+            "out3": "somefunc($in1, $in2)",
+            "out4": "ipinfo.zipCode",
+            "out5": "in3",
+            "out7": "tmp8"
+          },
+          "filter": "!($in2 != -1 && $in2 < 100)", // inclusive filter - process only messages matched to this expression
+          "computes": {
+            "tmp8": { "type": "String", "val":"somefunc2($in7)" }
+          }
+        },
+        "omsg3": {
+          "mappingByName": true,
+          "mapping": { "out2": "in1" }
+        }
+      }
     },
     "test2": {
-      "input": "com.ligadata.kamanja.samples.messages.msg4"
+      "inputs": [ "com.ligadata.kamanja.samples.messages.msg4" ],
+      "outputs": {
+        "omsg3": { "mappingByName": true, "mappings": { "out1": "in1" }   }
+      }
     }
   }
 }
