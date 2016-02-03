@@ -24,7 +24,7 @@
         "ipinfo": { "type": "IpInfo", "val": "iplookup($in1)",  "comment": "type could be some class available from imports" }
       },
 
-      "comment$01": "msg2 is part of com.ligadata.jtm.test.filter",
+      "comment": "msg2 is part of com.ligadata.jtm.test.filter",
 
       "outputs": {
         "omsg2": {
@@ -36,12 +36,12 @@
             "out5": "in3",
             "out7": "tmp8"
           },
-          "filter": "!($in2 != -1 && $in2 < 100)", // inclusive filter - process only messages matched to this expression
+          "filter": "!($in2 != -1 && $in2 < 100)",
           "computes": {
             "tmp8": { "type": "String", "val":"somefunc2($in7)" }
           }
         },
-        "omsg3": {
+        "omsg4": {
           "mappingByName": true,
           "mapping": { "out2": "in1" }
         }
@@ -50,7 +50,7 @@
     "test2": {
       "inputs": [ "com.ligadata.kamanja.samples.messages.msg4" ],
       "outputs": {
-        "omsg3": { "mappingByName": true, "mappings": { "out1": "in1" }   }
+        "omsg5": { "mappingByName": true, "mapping": { "out1": "in1" }   }
       }
     }
   }

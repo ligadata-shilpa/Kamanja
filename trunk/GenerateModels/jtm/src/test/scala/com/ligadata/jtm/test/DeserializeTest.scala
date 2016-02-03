@@ -21,20 +21,30 @@ import com.ligadata.jtm._
 import org.apache.commons.io.FileUtils
 import org.apache.logging.log4j.LogManager
 import com.ligadata.jtm.nodes._
-
+import org.skyscreamer.jsonassert._
 import org.scalatest.{BeforeAndAfter, FunSuite}
+
 /**
   *
   */
 class DeserializeTest  extends FunSuite with BeforeAndAfter {
+
   test("test01") {
     val fileInput = getClass.getResource("/test002.jtm/test.jtm").getPath
-    val t = Root.fromJson(fileInput)
+    val expected = FileUtils.readFileToString(new File(fileInput), null)
+    val t = Root.fromJsonString(expected)
     assert(2 == t.transformations.size)
+    val actual = Root.toJson(t)
+    JSONAssert.assertEquals(expected, actual, false)
   }
+
   test("test02") {
     val fileInput = getClass.getResource("/test003.jtm/test.jtm").getPath
-    val t = Root.fromJson(fileInput)
+    val expected = FileUtils.readFileToString(new File(fileInput), null)
+    val t = Root.fromJsonString(expected)
     assert(2 == t.transformations.size)
+    val actual = Root.toJson(t)
+    JSONAssert.assertEquals(expected, actual, false)
   }
+
 }

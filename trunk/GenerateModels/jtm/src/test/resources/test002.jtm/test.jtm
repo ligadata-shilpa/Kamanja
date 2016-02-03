@@ -26,7 +26,7 @@
             "out2": "in2",
             "out3": "somefunc($in1, $in2)",
             "out4": "ipinfo.zipCode",
-            "out4": "in3"
+            "out5": "in3"
           },
           "filter": "!($in2 != -1 && $in2 < 100)",
           "computes": {
@@ -40,7 +40,7 @@
           "mapping": {
             "out2": "in1"
           },
-          "mappingByName": "true"
+          "mappingByName": true
         }
       }
     },
@@ -48,8 +48,8 @@
       "inputs": ["com.ligadata.kamanja.samples.messages.msg4"],
       "outputs": {
         "msg3": {
-          "mappingByName": "true",
-          "mappings": {
+          "mappingByName": true,
+          "mapping": {
             "out1": "in1"
           }
         }
