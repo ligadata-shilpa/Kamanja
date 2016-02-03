@@ -3,11 +3,11 @@ import sbt._
 import sbtassembly.AssemblyPlugin.defaultShellScript
 import sbt.Keys._
 
-shellPrompt := { state =>  "sbt (%s)> ".format(Project.extract(state).currentProject.id) }
+//shellPrompt := { state =>  "sbt (%s)> ".format(Project.extract(state).currentProject.id) }
 
 
 
-assemblyOption in assembly ~= { _.copy(prependShellScript = Some(defaultShellScript)) }
+//assemblyOption in assembly ~= { _.copy(prependShellScript = Some(defaultShellScript)) }
 
 assemblyJarName in assembly := { s"${name.value}-${version.value}" }
 
