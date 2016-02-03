@@ -10,4 +10,5 @@ class Transformation {
   val outputs: scala.collection.Map[String, Output] = scala.collection.Map.empty[String, Output]
   val comment: String = ""
   val comments: Array[String] = Array.empty[String]
+  val dependsOn: Array[Array[String]] = Array.empty[Array[String]]
 }
