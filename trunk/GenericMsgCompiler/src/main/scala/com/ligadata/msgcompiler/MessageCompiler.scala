@@ -37,7 +37,7 @@ object MessageCompiler {
   /*
    * parse the message definition json,  add messages to metadata and create the Fixed and Mapped Mesages
    */
-  def processMsgDef(jsonstr: String, msgDfType: String, mdMgr: MdMgr, recompile: Boolean = false): (String, ContainerDef) = {
+  def processMsgDef(jsonstr: String, msgDfType: String, mdMgr: MdMgr, recompile: Boolean = false): ((String, String), ContainerDef, (String, String)) = {
 
     var messageParser = new MessageParser
     var messages: Messages = null
@@ -53,12 +53,29 @@ object MessageCompiler {
         throw new Exception("MdMgr is not found")
       if (msgDfType.equalsIgnoreCase("json")) {
         message = messageParser.processJson(jsonstr, mdMgr, recompile)
-          handleMsgFieldTypes.handleFieldTypes(message, mdMgr)
-          generatedNonVersionedMsg = msgGen.generateMessage(message)
-          val (versionedRddClass, nonVersionedRddClass) = generatedRdd.generateRdd(message)
-          containerDef = createMsg.createMessage(message, mdMgr, recompile)
+        handleMsgFieldTypes.handleFieldTypes(message, mdMgr)
+        val (genVersionedMsg, genNonVersionedMsg) = msgGen.generateMessage(message, mdMgr)
+        generatedNonVersionedMsg = genNonVersionedMsg
+        generatedVersionedMsg = genVersionedMsg
+        val (versionedRddClass, nonVersionedRddClass) = generatedRdd.generateRdd(message)
+        generatedNonVersionedJavaRdd = nonVersionedRddClass
+        generatedVersionedJavaRdd = versionedRddClass
+        containerDef = createMsg.createMessage(message, mdMgr, recompile)
+      } else throw new Exception("MsgDef Type JSON is only supported")
 
-          /*
+    } catch {
+      case e: Exception => {
+        val stackTrace = StackTrace.ThrowableTraceString(e)
+        log.debug("StackTrace:" + stackTrace)
+        throw e
+      }
+    }
+    return ((generatedVersionedMsg, generatedVersionedJavaRdd), containerDef, (generatedNonVersionedMsg, generatedNonVersionedJavaRdd))
+  }
+
+}
+
+ /*
            log.info("***********************versionedRddClass*******************")
           
           
@@ -83,7 +100,6 @@ object MessageCompiler {
           log.info("PhysicalName =============== " + containerDef.PhysicalName)
           log.info("TranId =============== " + containerDef.TranId)
 */
-        
 
         //simple check to get metadata types for the fields in message
 
@@ -105,17 +121,3 @@ object MessageCompiler {
           log.info("===================" + msg.Elements)
          
          */
-
-      } else throw new Exception("MsgDef Type JSON is only supported")
-
-    } catch {
-      case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        log.debug("StackTrace:" + stackTrace)
-        throw e
-      }
-    }
-    return (generatedNonVersionedMsg, containerDef)
-  }
-
-}

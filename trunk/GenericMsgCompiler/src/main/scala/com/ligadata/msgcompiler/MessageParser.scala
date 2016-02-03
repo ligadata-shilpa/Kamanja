@@ -87,7 +87,7 @@ class MessageParser {
    */
   private def processJsonMap(key: String, map: scala.collection.mutable.Map[String, Any], mdMgr: MdMgr, recompile: Boolean = false, schema: String): Message = {
     var msgs: Messages = null
-     var msg: Message = null
+    var msg: Message = null
     type messageMap = scala.collection.immutable.Map[String, Any]
     var msgLevel: Int = 0
     try {
@@ -177,10 +177,10 @@ class MessageParser {
           if (key.equals("elements") || key.equals("fields")) {
             val (elmnts, msgs) = getElementsObj(message, key)
             elements = elmnts
-           // messages = msgs
+            // messages = msgs
 
             //for child messages if the name space, version, persist and version are not defined in the message definition of child message use the values from the parent message
-       /*  log.info("-----------------------" +messages.size)
+            /*  log.info("-----------------------" +messages.size)
             if (messages != null && messages.size > 0)
               messages.foreach(m => {
                 
@@ -203,7 +203,7 @@ class MessageParser {
 
               })
               * */
-              
+
           }
 
           if (mtype.equals("message") && message.contains(tkey)) {
@@ -280,12 +280,11 @@ class MessageParser {
 
     val cur_time = System.currentTimeMillis
     //  val physicalName: String = pkg + "." + message.get("NameSpace").get.toString + "." + message.get("Name").get.toString() + "." + MdMgr.ConvertVersionToLong(msgVersion).toString + "_" + cur_time
-    val pkg = NameSpace
-    val physicalName: String = pkg + ".V" + MdMgr.ConvertVersionToLong(msgVersion).toString + "." + Name
+    val pkg = NameSpace + ".V" + MdMgr.ConvertVersionToLong(msgVersion).toString
+    val physicalName: String = pkg + "." + Name
 
     val msg: Message = new Message(mtype, NameSpace, Name, physicalName, msgVersion, "Description", Fixed, persistMsg, elements, tdataexists, tdata, null, pkg.trim(), null, null, null, partitionKeysList, primaryKeysList, cur_time, msgLevel, null, schema)
-   
-    
+
     var msglist: List[Message] = List[Message]()
     if (messages != null && messages.size > 0)
       messages.foreach(m => {
@@ -337,7 +336,7 @@ class MessageParser {
 
     try {
       if (key.equals("elements") || key.equals("fields")) {
-        log.info("Element Map " + message)
+       // log.info("Element Map " + message)
         val (elementlist, messagelist) = getElements(message, key, msgLevel)
         elist = elementlist
         msglist = messagelist
@@ -412,8 +411,8 @@ class MessageParser {
 
                 val (elmnt, msg) = getElementData(map, key, count, msgLevel)
                 lbuffer += elmnt
-               // if (msg != null)
-              //    msgLstbuffer += msg
+                // if (msg != null)
+                //    msgLstbuffer += msg
               }
 
             } else if (MsgUtils.isTrue(MsgUtils.LowerCase(Fixed))) throw new Exception("Either Fields or Container or Message do not exist in " + key + " json")
@@ -457,7 +456,7 @@ class MessageParser {
           fldMap1.foreach(kv => { mapElement(kv._1.toLowerCase()) = kv._2 })
           val (field, msg) = getElementData(mapElement, eKey, ordinal, msgLevel)
           fld = field
-        //  message = msg
+          //  message = msg
         }
       }
     } catch {
@@ -519,10 +518,10 @@ class MessageParser {
           fld = new Element(namespace, name, ttype, collectionType, key, fldTypeVer, ordinal, null, null, null)
 
         } else if (fieldtype.isInstanceOf[FieldMap]) {
-          log.info("Child Container ========== Start ==============  ")
+        //  log.info("Child Container ========== Start ==============  ")
 
           val childFld = fieldtype.asInstanceOf[Map[String, Any]]
-          log.info("Child Map ************ " + childFld)
+        //  log.info("Child Map ************ " + childFld)
 
           val field: scala.collection.mutable.Map[String, Any] = scala.collection.mutable.Map[String, Any]()
           childFld.foreach(kv => { field(kv._1.toLowerCase()) = kv._2 })
@@ -548,7 +547,7 @@ class MessageParser {
       }
     }
     if (childMessage != null)
-       log.info("%%%%%%%%%%%%%%%%% childMessage   " + childMessage.Name)
+      log.info("%%%%%%%%%%%%%%%%% childMessage   " + childMessage.Name)
     // log.info("^^^^^^^^^^^^^^^^^^^^ ttype   " + ttype)
 
     (fld, childMessage)
@@ -593,10 +592,10 @@ class MessageParser {
     val Fixed = "true"
     val tdataexists = false
     val tdata = null
-    val pkg = namespace
+    val pkg = NameSpace + ".V" + MdMgr.ConvertVersionToLong(msgVersion).toString
     val partitionKeysList = null
     val primaryKeysList = null
-    val physicalName: String = NameSpace + ".V" + MdMgr.ConvertVersionToLong(msgVersion).toString + "." + Name
+    val physicalName: String =  pkg + "." + Name
     val cur_time = System.currentTimeMillis
     val msg = new Message(mtype, NameSpace, Name, physicalName, msgVersion, "Description", Fixed, persistMsg, lbuffer.toList, tdataexists, tdata, null, pkg.trim(), null, null, null, partitionKeysList, primaryKeysList, cur_time, msgLevel, null, null)
 

@@ -21,13 +21,14 @@ class GenerateRdd {
 
   private def versionedPackagestmt(message: Message): String = {
     if (message.Pkg != null || message.Pkg.trim() != "") {
-      val pkg = message.Pkg + ".V" +  MdMgr.ConvertVersionToLong(message.Version).toString 
+      val pkg = message.Pkg 
       return msgConstants.packageStr.format(pkg, msgConstants.newline)
     } else return ""
   }
 
   private def nonVersionedPackagestmt(message: Message): String = {
-    if (message.Pkg != null || message.Pkg.trim() != "") return msgConstants.packageStr.format(message.Pkg, msgConstants.newline)
+    if (message.NameSpace != null || message.NameSpace.trim() != "") return msgConstants.packageStr.format(message.NameSpace, msgConstants.newline)
+    
     else return " "
   }
 

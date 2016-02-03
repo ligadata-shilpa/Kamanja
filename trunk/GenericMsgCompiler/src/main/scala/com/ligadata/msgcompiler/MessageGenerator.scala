@@ -9,25 +9,36 @@ class MessageGenerator {
 
   var builderGenerator = new MessageBuilderGenerator
   var msgObjectGenerator = new MessageObjectGenerator
+  var mappedMsgGen = new MappedMsgGenerator
   var msgConstants = new MessageConstants
   val logger = this.getClass.getName
   lazy val log = LogManager.getLogger(logger)
 
   /*
-   * add import stamts -- still need to add
+   * Generate the versioned and non versioned class for both mapped and Fixed messages
+ 	 * add import stamts -- still need to add
    * Generate Message Class
    * Message Class lines generation
    * Generate all the getter methods in the class generation
    * Generation all the setter methods in class generation
    * 
    */
-  def generateMessage(message: Message): String = {
+  def generateMessage(message: Message, mdMgr: MdMgr): (String, String) = {
 
+    generateMsg(message, mdMgr)
+  }
+
+  private def generateMsg(message: Message, mdMgr: MdMgr): (String, String) = {
+
+    var messageVerGenerator = new StringBuilder(8 * 1024)
+    var messageNonVerGenerator = new StringBuilder(8 * 1024)
     var messageGenerator = new StringBuilder(8 * 1024)
+
     try {
       if (message.Fixed.equalsIgnoreCase("true")) {
 
-        messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.packageStr.format(message.Pkg, msgConstants.newline));
+        messageVerGenerator = messageVerGenerator.append(msgConstants.newline + msgConstants.packageStr.format(message.Pkg, msgConstants.newline));
+        messageNonVerGenerator = messageNonVerGenerator.append(msgConstants.newline + msgConstants.packageStr.format(message.NameSpace + msgConstants.newline));
         messageGenerator = messageGenerator.append(msgConstants.importStatements + msgConstants.newline);
         messageGenerator = messageGenerator.append(msgObjectGenerator.generateMessageObject(message) + msgConstants.newline)
         messageGenerator = messageGenerator.append(classGen(message) + msgConstants.newline)
@@ -49,15 +60,21 @@ class MessageGenerator {
         messageGenerator = messageGenerator.append(builderGenerator.generatorBuilder(message))
         messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.closeBrace)
 
+        messageVerGenerator = messageVerGenerator.append(messageGenerator.toString())
+        messageNonVerGenerator = messageNonVerGenerator.append(messageGenerator.toString())
+
       } else if (message.Fixed.equalsIgnoreCase("false")) {
         var fieldIndexMap: Map[String, Int] = msgConstants.getScalarFieldindex(message.Elements)
-        messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.packageStr.format(message.Pkg, msgConstants.newline));
+
+        messageVerGenerator = messageVerGenerator.append(msgConstants.newline + msgConstants.packageStr.format(message.Pkg, msgConstants.newline));
+        messageNonVerGenerator = messageNonVerGenerator.append(msgConstants.newline + msgConstants.packageStr.format(message.NameSpace, msgConstants.newline));
         messageGenerator = messageGenerator.append(msgConstants.importStatements + msgConstants.newline);
         messageGenerator = messageGenerator.append(msgObjectGenerator.generateMessageObject(message) + msgConstants.newline)
         messageGenerator = messageGenerator.append(classGen(message) + msgConstants.newline)
         messageGenerator = messageGenerator.append(getMessgeBasicDetails(message))
         messageGenerator = messageGenerator.append(methodsFromBaseMsg(message))
         messageGenerator = messageGenerator.append(messageContructor(message))
+        messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + mappedMsgGen.primayPartitionKeysVar(message) + msgConstants.newline)
         messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + hasPartitionKeyFunc + msgConstants.newline)
         messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + hasPrimaryKeysFunc + msgConstants.newline)
         messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + partitionKeys(message) + msgConstants.newline)
@@ -70,16 +87,20 @@ class MessageGenerator {
         messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + msgConstants.getByNameFuncForMapped)
         messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + msgConstants.getOrElseFuncForMapped)
         messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + msgConstants.setByNameFuncForMappedMsgs)
-        messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + setFuncGenerationforMapped(message.Elements, fieldIndexMap))
-        messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + getFuncGenerationForMapped(message.Elements))
+        messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + mappedMsgGen.setFuncGenerationforMapped(message.Elements, fieldIndexMap, mdMgr))
+        messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + mappedMsgGen.getFuncGenerationForMapped(message.Elements, mdMgr))
         messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + msgConstants.CollectionAsArrString)
+        messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + mappedMsgGen.AddArraysInConstructor(message.Elements))
         messageGenerator = messageGenerator.append(builderMethod)
         messageGenerator = messageGenerator.append(builderGenerator.generatorBuilder(message))
         messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.closeBrace)
 
+        messageVerGenerator = messageVerGenerator.append(messageGenerator.toString())
+        messageNonVerGenerator = messageNonVerGenerator.append(messageGenerator.toString())
+
       }
 
-      log.info("messageGenerator    " + messageGenerator.toString())
+     // log.info("messageGenerator    " + messageGenerator.toString())
 
     } catch {
       case e: Exception => {
@@ -88,7 +109,7 @@ class MessageGenerator {
         throw e
       }
     }
-    return messageGenerator.toString
+    return (messageVerGenerator.toString, messageNonVerGenerator.toString())
   }
   /*
    * Message Class
@@ -158,7 +179,7 @@ class MessageGenerator {
         constructorStmts.append("%s this.%s = %s; %s ".format(msgConstants.pad2, element.Name, element.Name, msgConstants.newline))
       })
       val msgStr = msgConsStr.toString
-      log.info("constructor Generation ===================" + msgStr.substring(0, msgStr.length() - 1))
+      //log.info("constructor Generation ===================" + msgStr.substring(0, msgStr.length() - 1))
       msgClassConsGen = msgConstructor(message, msgStr, constructorStmts.toString)
     } catch {
       case e: Exception => {
@@ -477,225 +498,6 @@ class MessageGenerator {
 
   }
 
-  /*
-   * Set Method Generation Function for Mapped Messages
-   */
-  private def setFuncGenerationforMapped(fields: List[Element], fldsMap: Map[String, Int]): String = {
-    var setMethod = new StringBuilder(8 * 1024)
-
-    try {
-      fields.foreach(field => {
-        var setmethodStr: String = ""
-        val fieldBaseType: BaseTypeDef = field.FldMetaataType
-        val fieldType = fieldBaseType.tType.toString().toLowerCase()
-        val fieldTypeType = fieldBaseType.tTypeType.toString().toLowerCase()
-
-        log.info("fieldTypeType " + fieldTypeType)
-        log.info("fieldBaseType 1 " + fieldBaseType.tType)
-        log.info("fieldBaseType 2 " + fieldBaseType.typeString)
-        log.info("fieldBaseType 3" + fieldBaseType.tTypeType)
-
-        log.info("fieldType " + fieldType)
-
-        fieldTypeType match {
-
-          case "tscalar" => {
-            setmethodStr = setMethodForScalarMapped(field, fldsMap)
-            log.info("fieldBaseType.implementationName    " + fieldBaseType.implementationName)
-
-          }
-          case "tcontainer" => {
-            fieldType match {
-              case "tarray" => {
-                var arrayType: ArrayTypeDef = null
-                arrayType = fieldBaseType.asInstanceOf[ArrayTypeDef]
-                setmethodStr = setMethodForScalarMapped(field, fldsMap)
-
-              }
-              case "tarraybuf" => {
-                var arraybufType: ArrayBufTypeDef = null
-                arraybufType = fieldBaseType.asInstanceOf[ArrayBufTypeDef]
-                setmethodStr = setMethodForScalarMapped(field, fldsMap)
-
-              }
-              case "tstruct" => {
-                //   var ctrDef: ContainerDef = mdMgr.Container(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
-              }
-
-              case _ => {
-                throw new Exception("This types is not handled at this time ") // BUGBUG - Need to handled other cases
-              }
-
-            }
-
-          }
-          case _ => {
-            throw new Exception("This types is not handled at this time ") // BUGBUG - Need to handled other cases
-          }
-
-        }
-
-        setMethod = setMethod.append(setmethodStr.toString())
-        log.info("=========SET Methods ===============" + setMethod.toString());
-      })
-    } catch {
-      case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        log.debug("StackTrace:" + stackTrace)
-        throw e
-      }
-    }
-    return setMethod.toString
-  }
-
-  /**
-   * Set method for mapped messages
-   */
-  private def setMethodForScalarMapped(field: Element, fldsMap: Map[String, Int]): String = {
-
-    val fieldBaseType: BaseTypeDef = field.FldMetaataType
-    fieldBaseType.typeString
-
-    """   
-    def set""" + field.Name.capitalize + """(value: """ + field.FieldTypePhysicalName + """): Unit = {
-     	fields("""" + field.Name + """") = (""" + fldsMap(field.FieldTypePhysicalName) + """, value);
-    }
-   """
-  }
-
-  /**
-   * Get method of scalar types for mapped messages
-   */
-  private def getMethodForScalarMapped(field: Element): String = {
-
-    """    
-    def get""" + field.Name.capitalize + """: """ + field.FieldTypePhysicalName + """= {
-      return """ + field.FieldTypeImplementationName + """.Input(fields("""" + field.Name + """")._2.toString);
-    }          
-    """
-
-  }
-
-  /*
-   * Get method of Array types for Mapped messages
-   */
-
-  private def getMethodArrayMapped(field: Element): String = {
-    val fieldBaseType: BaseTypeDef = field.FldMetaataType
-    var arrayType: ArrayTypeDef = null
-    arrayType = fieldBaseType.asInstanceOf[ArrayTypeDef]
-
-    val fname = arrayType.elemDef.implementationName + ".Input"
-    """    
-     def get""" + field.Name.capitalize + """: """ + field.FieldTypePhysicalName + """ = {
-    var ret: """ + field.FieldTypePhysicalName + """ = """ + field.FieldTypePhysicalName + """()
-    if (fields.contains("""" + field.Name + """")) {
-      val arr = fields.getOrElse("""" + field.Name + """", null)._2
-      if (arr != null) {
-        val arrFld = CollectionAsArrString(arr)
-        ret = arrFld.map(v => { """ + fname + """(v.toString) }).toArray
-      }
-    }
-    return ret
-  }     
-    """
-
-  }
-  /*
-   * Get method of Array Buffer types for Mapped messages
-   */
-
-  private def getMethodArrayBufMapped(field: Element): String = {
-    val fieldBaseType: BaseTypeDef = field.FldMetaataType
-    var arrayBufType: ArrayBufTypeDef = null
-    arrayBufType = fieldBaseType.asInstanceOf[ArrayBufTypeDef]
-
-    val fname = arrayBufType.elemDef.implementationName + ".Input"
-    """    
-     def get""" + field.Name.capitalize + """: """ + field.FieldTypePhysicalName + """ = {
-    var ret: """ + field.FieldTypePhysicalName + """ =  new """ + field.FieldTypePhysicalName + """
-    if (fields.contains("""" + field.Name + """")) {
-      val arr = fields.getOrElse("""" + field.Name + """", null)._2.asInstanceOf[""" + field.FieldTypePhysicalName + """]
-      if (arr != null) {
-        val arrFld = arr.toArray
-        arrFld.map(v => { ret :+=""" + fname + """(v.toString) }).toArray
-      }
-    }
-    return ret
-  }     
-    """
-
-  }
-
-  /*
-   * Get Method generation function for Mapped Messages
-   */
-  private def getFuncGenerationForMapped(fields: List[Element]): String = {
-    var getMethod = new StringBuilder(8 * 1024)
-    var getmethodStr: String = ""
-    try {
-      fields.foreach(field => {
-
-        var getmethodStr: String = ""
-        val fieldBaseType: BaseTypeDef = field.FldMetaataType
-        val fieldType = fieldBaseType.tType.toString().toLowerCase()
-        val fieldTypeType = fieldBaseType.tTypeType.toString().toLowerCase()
-
-        log.info("fieldTypeType " + fieldTypeType)
-        log.info("fieldBaseType 1 " + fieldBaseType.tType)
-        log.info("fieldBaseType 2 " + fieldBaseType.typeString)
-        log.info("fieldBaseType 3" + fieldBaseType.tTypeType)
-
-        log.info("fieldType " + fieldType)
-
-        fieldTypeType match {
-
-          case "tscalar" => {
-            getmethodStr = getMethodForScalarMapped(field)
-            log.info("fieldBaseType.implementationName    " + fieldBaseType.implementationName)
-
-          }
-          case "tcontainer" => {
-            fieldType match {
-              case "tarray" => {
-                getmethodStr = getMethodArrayMapped(field)
-              }
-              case "tarraybuf" => {
-                var arraybufType: ArrayBufTypeDef = null
-                arraybufType = fieldBaseType.asInstanceOf[ArrayBufTypeDef]
-                getmethodStr = getMethodArrayBufMapped(field)
-
-              }
-              case "tstruct" => {
-                //   var ctrDef: ContainerDef = mdMgr.Container(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
-              }
-
-              case _ => {
-                throw new Exception("This types is not handled at this time ") // BUGBUG - Need to handled other cases
-              }
-
-            }
-
-          }
-          case _ => {
-            throw new Exception("This types is not handled at this time ") // BUGBUG - Need to handled other cases
-          }
-
-        }
-
-        getMethod = getMethod.append(getmethodStr.toString())
-        log.info("=========SET Methods ===============" + getMethod.toString());
-      })
-    } catch {
-      case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        log.debug("StackTrace:" + stackTrace)
-        throw e
-      }
-    }
-    return getMethod.toString
-  }
-
   private def partitionKeys(message: Message): String = {
 
     var paritionKeysStr: String = ""
@@ -779,7 +581,7 @@ class MessageGenerator {
       keysStr.append("(\"" + field.Name + "\", " + mappedTypesABuf.indexOf(typstring) + "),")
 
     })
-    log.info(keysStr.toString().substring(0, keysStr.toString().length - 1))
+    //log.info(keysStr.toString().substring(0, keysStr.toString().length - 1))
     var keys = "var keys = Map(" + keysStr.toString().substring(0, keysStr.toString().length - 1) + ")";
     return keys
   }

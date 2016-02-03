@@ -31,8 +31,8 @@ class CreateMessage {
         }
       }
 
-      log.info("msg.ArgsList   " + msg.ArgsList.toList)
-      log.info("msg.jarset    " + msg.Jarset.toList)
+      //log.info("msg.ArgsList   " + msg.ArgsList.toList)
+      //log.info("msg.jarset    " + msg.Jarset.toList)
 
       if (msg.PartitionKeys != null)
         msgDef = mdMgr.MakeFixedMsg(msg.NameSpace, msg.Name, msg.PhysicalName, msg.ArgsList, version, null, msg.Jarset.toArray, null, null, msg.PartitionKeys.toArray, recompile, msg.Persist)

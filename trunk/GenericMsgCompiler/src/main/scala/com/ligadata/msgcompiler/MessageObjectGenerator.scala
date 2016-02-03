@@ -31,13 +31,13 @@ class MessageObjectGenerator {
     var msgObjeGenerator = new StringBuilder(8 * 1024)
     try {
 
-      log.info("========== Message object Start==============")
+     // log.info("========== Message object Start==============")
       msgObjeGenerator = msgObjeGenerator.append(msgObject(message))
       msgObjeGenerator = msgObjeGenerator.append(msgObjVarsGeneration(message))
       msgObjeGenerator = msgObjeGenerator.append(msgConstants.msgObjectBuildStmts)
       msgObjeGenerator = msgObjeGenerator.append(keysCodeGeneration(message))
       msgObjeGenerator = msgObjeGenerator.append(msgConstants.newline + msgConstants.closeBrace)
-      log.info("========== Message object End==============")
+     // log.info("========== Message object End==============")
 
     } catch {
       case e: Exception => {
@@ -125,8 +125,8 @@ class MessageObjectGenerator {
     """ + getPartitionKeys(message) + """
       """ + getPrimaryKeys(message) + """
    
-  override def NeedToTransformData: Boolean = false // Filter & Rearrange input attributes if needed
-  override def TransformDataAttributes: TransformMessage = null
+  //override def NeedToTransformData: Boolean = false // Filter & Rearrange input attributes if needed
+  //override def TransformDataAttributes: TransformMessage = null
   override def PartitionKeyData(inputdata: InputData): Array[String] = Array[String]()
   override def PrimaryKeyData(inputdata: InputData): Array[String] = Array[String]()
   override def getTimePartitionInfo: (String, String, String) = (null, null, null) // FieldName, Format & Time Partition Types(Daily/Monthly/Yearly)

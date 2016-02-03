@@ -101,18 +101,18 @@ class MessageFieldTypesHandler {
     if (fieldBaseType.isInstanceOf[ArrayTypeDef])
       arrayType = fieldBaseType.asInstanceOf[ArrayTypeDef]
 
-    log.info("fieldTypeType " + fieldTypeType)
-    log.info("fieldBaseType 1 " + fieldBaseType.tType)
-    log.info("fieldBaseType 2 " + fieldBaseType.typeString)
-    log.info("fieldBaseType 3" + fieldBaseType.tTypeType)
+   // log.info("fieldTypeType " + fieldTypeType)
+   // log.info("fieldBaseType 1 " + fieldBaseType.tType)
+   // log.info("fieldBaseType 2 " + fieldBaseType.typeString)
+   // log.info("fieldBaseType 3" + fieldBaseType.tTypeType)
 
-    log.info("fieldType " + fieldType)
+   // log.info("fieldType " + fieldType)
 
     fieldTypeType match {
       case "tscalar" => {
         types(0) = fieldBaseType.PhysicalName
         types(1) = fieldBaseType.implementationName
-        log.info("fieldBaseType.implementationName    " + fieldBaseType.implementationName)
+      //  log.info("fieldBaseType.implementationName    " + fieldBaseType.implementationName)
 
       }
       case "tcontainer" => {
@@ -137,6 +137,7 @@ class MessageFieldTypesHandler {
             var ctrDef: ContainerDef = mdMgr.Container(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
             types(0) = ctrDef.PhysicalName
             types(1) = ""
+            log.info("#################################" +  ctrDef.PhysicalName);
           }
           case _ => {
             throw new Exception("This types is not handled at this time ") // BUGBUG - Need to handled other cases

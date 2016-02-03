@@ -13,6 +13,7 @@ class MessageConstants {
   val True: String = "true";
   val False: String = "false";
   val packageStr: String = "package %s; %s";
+  
   val messageStr: String = "message";
   val containerStr: String = "container";
   val baseMsgObj: String = "BaseMsgObj";
@@ -131,8 +132,8 @@ import com.ligadata.KamanjaBase.{ BaseMsg, BaseMsgObj, TransformMessage, BaseCon
       if (!b.equalsIgnoreCase("string"))
         fldsSclarIndex = fldsSclarIndex + ((b, index + 1))
     }
-    log.info("fldsSclarIndex  fields " + fldsSclarIndex.toList)
-    log.info("set fields " + setFields.toList)
+    //log.info("fldsSclarIndex  fields " + fldsSclarIndex.toList)
+   // log.info("set fields " + setFields.toList)
     return fldsSclarIndex
   }
 

@@ -123,7 +123,7 @@ class MessageBuilderGenerator {
    * build method for  Messages
    */
   private def build(message: Message): String = {
-    var buildMethod: String = ""
+     var buildMethod: String = ""
     val msgFullName = message.Pkg + "." + message.Name + " = { " + newline
     val vardeclrtion: String = "%s var message = new %s %s".format(pad2, message.Name, newline)
     val build: String = "def build() : "
@@ -133,9 +133,9 @@ class MessageBuilderGenerator {
     else if (message.Fixed.equalsIgnoreCase("false"))
       buildMethod = build + msgFullName + vardeclrtion + buildForMappedMessage(message.Elements) + pad2 + returnVal + newline + pad1 + closeBrace
 
-    log.info("build method Start")
-    log.info(buildMethod)
-    log.info("build method end")
+    //log.info("build method Start")
+    //log.info(buildMethod)
+    //log.info("build method end")
     return buildMethod
   }
 
