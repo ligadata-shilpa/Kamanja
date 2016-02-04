@@ -15,6 +15,7 @@
  */
 package com.ligadata.jtm
 
+import com.ligadata.jtm.eval.{Types => EvalTypes }
 import com.ligadata.kamanja.metadata.{StructTypeDef, MdMgr}
 import com.ligadata.kamanja.metadataload.MetadataLoad
 import com.ligadata.messagedef.MessageDefImpl
@@ -236,6 +237,13 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     //
     result ++= root.imports.distinct.map( i => "import %s".format(i) )
 
+    // Collect all classes
+    //
+    val messages = EvalTypes.CollectMessages(root)
+
+    messages.map( e => "%s aliases %s".format(e._1, e._2.mkString(", ")) ).foreach( m => {
+      logger.trace(m)
+    })
     // Collect all specified types
       // Types are native or aliases
 
@@ -487,12 +495,6 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     val model = subtitutions.Run(Parts.model)
     sb.append(model)
     sb.append("\n")
-
-    // Write to output file
-    logger.trace("Output to file {}", outputFile)
-    FileUtils.writeStringToFile(new File(outputFile), CodeHelper.Indent(sb.result))
-
-    outputFile
   }
   */
 }
