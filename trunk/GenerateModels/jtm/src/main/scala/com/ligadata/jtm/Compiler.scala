@@ -244,6 +244,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     messages.map( e => "%s aliases %s".format(e._1, e._2.mkString(", ")) ).foreach( m => {
       logger.trace(m)
     })
+
     // Collect all specified types
       // Types are native or aliases
 
