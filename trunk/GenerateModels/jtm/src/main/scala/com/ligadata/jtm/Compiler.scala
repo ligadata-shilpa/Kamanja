@@ -177,6 +177,28 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     sb.toString
   }
 
+  def Validate(root: Root) = {
+
+    // Check requested language
+    //
+    if(root.language.trim.toLowerCase() !="scala")
+        throw new Exception("Currenly only Scala is supported")
+
+    // Check the min version
+    //
+    if(root.language.trim.toLowerCase=="scala") {
+      // ToDo: Add version parser here
+      if(root.minVersion.toDouble < 2.11) {
+        throw new Exception("The minimum language requirement must be 2.11")
+      }
+    }
+
+    if(root.imports.toSet.size < root.imports.size) {
+      val dups = root.imports.groupBy(identity).collect { case (x,ys) if ys.size > 1 => x }
+      logger.warn("Dropped duplicate imports: {}", dups.mkString(", "))
+    }
+  }
+
   // Load metadata
   val md = loadMetadata
 
@@ -187,14 +209,32 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
   // Controls the code generation
   def Execute(): String = {
 
+    // Load Json
+    val root = Root.fromJson(inputFile)
+
+    // Validate model
+    Validate(root)
+
     var result = Array.empty[String]
 
     // Process header
     // ToDo: do we need a different license here
     result :+= Parts.header
 
+    // Namespace
     //
+    result :+= "package %s\n".format(root.namespace)
+
+    // Process the imports
     //
+    var subtitutions = new Substitution
+    subtitutions.Add("model.name", root.namespace)
+    subtitutions.Add("model.version", root.version)
+    result :+= subtitutions.Run(Parts.imports)
+
+    // Process additional imports
+    //
+    result ++= root.imports.distinct.map( i => "import %s".format(i) )
 
     // Write to output file
     val code = CodeHelper.Indent(result)
@@ -250,26 +290,9 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
   def Execute(): String = {
 
-    // Load Json
-    val root = Root.fromJson(inputFile)
-
-    val sb = new StringBuilder
-    sb.append(Parts.header)
-    sb.append("\n")
-    sb.append("package %s\n".format(root.packagename))
-
-    // Push substituions
-    var subtitutions = new Substitution
-    subtitutions.Add("model.name", root.modelname)
-    subtitutions.Add("model.version", root.version)
-
-    val imports = subtitutions.Run(Parts.imports)
-    sb.append(imports)
-    sb.append("\n\n")
-
     var fncnt = 0
 
-    root.imports.map( i => { sb.append("import %s\n".format(i)) })
+
 
 
     // Check Inputs
