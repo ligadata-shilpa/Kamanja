@@ -236,6 +236,25 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     //
     result ++= root.imports.distinct.map( i => "import %s".format(i) )
 
+    // Collect all specified types
+      // Types are native or aliases
+
+    // Check all found types against metadata
+    //
+
+    // Complex or simple dependencies
+    //
+
+    // Create metadata and factory code
+    //
+
+    // Rename types to short names
+    //
+
+    // Process inputs
+    //
+
+
     // Write to output file
     val code = CodeHelper.Indent(result)
     logger.trace("Output to file {}", outputFile)
@@ -291,17 +310,6 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
   def Execute(): String = {
 
     var fncnt = 0
-
-
-
-
-    // Check Inputs
-    //
-    //<TBD>
-
-    // Check outputs
-    //
-    //<TBD>
 
     case class leg(val packagename: String, val classname: String, val handle: String, val id: Int)
 
