@@ -631,8 +631,6 @@ object ModelService {
                   }
                   response+= MetadataAPIImpl.UpdateModel(ModelType.SCALA, modelDef, userid, Some(modelConfig))
                 }
-                response+= MetadataAPIImpl.UpdateModel(ModelType.JAVA, modelDef, userid, Some(modelConfig))
-
               }
             }
           }
