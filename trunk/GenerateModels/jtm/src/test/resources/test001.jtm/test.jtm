@@ -1,18 +1,38 @@
 {
-  "packagename": "com.ligadata.jtm.test.filter",
+  "namespace": "com.ligadata.jtm.test.filter",
   "version": "0.0.1",
-  "modelname": "test001",
-  "imports": [ "com.ligadata.Utils._",  "com.ligadata.Utils1._"  ],
-  "transformations": [
-    {
-      "input": "com.ligadata.kamanja.test001.msg1",
+  "language" : "scala",
+  "minVersion" : "2.11",
+  "imports": [ "com.ligadata.Utils._" ],
 
-      "outputs": [{
-                   "output": "com.ligadata.kamanja.test001.msg2",
-                   "mappings": { "out1" : "in1", "out2" : "in2", "out4" : "in3"},
-                   "filters":  [ { "expression": "$in2 != -1 && $in2 < 100" }],
-                   "computes": [ { "output": "out3", "expression": "iplookup($in1).zipcode" } ]
-                 }]
+  "aliases":   {
+    "m1": "com.ligadata.kamanja.test001.msg1",
+    "o1": "com.ligadata.kamanja.test001.msg2"
+  },
+
+  "transformations": {
+    "test1": {
+      "dependsOn": [ ["m1"] ],
+      "computes": {
+        "out3":{ "type": "Int", "val": "iplookup($in1).zipcode", "comment": "in scala, type could be optional" }
+      },
+
+      "outputs": {
+        "o1": {
+          "mapping": {
+            "out1": "in1",
+            "out2": "t1",
+            "out4": "in3"
+          },
+
+          "filter": "!($in2 != -1 && $in2 < 100)",
+
+          "computes": {
+            "t1": { "type": "String", "val": "\"t:\"+$in2.toString()" }
+          }
+
+        }
+      }
     }
-  ]
+  }
 }
