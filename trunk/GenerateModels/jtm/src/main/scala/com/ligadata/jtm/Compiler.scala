@@ -77,9 +77,12 @@ object CompilerBuilder {
   def create() = { new CompilerBuilder }
 }
 
+/** Class to collect all the parameter to build a compiler instance
+  *
+  */
 class CompilerBuilder {
 
-  def setSuppressTimestamps(switch: Boolean = true) = { suppressTimestamps = switch; this}
+  def setSuppressTimestamps(switch: Boolean = true) = { suppressTimestamps = switch; this }
   def setInputFile(filename: String) = { inputFile = filename; this }
   def setOutputFile(filename: String) = { outputFile = filename; this }
   def setMetadataLocation(filename: String) = { metadataLocation = filename; this }
@@ -87,7 +90,6 @@ class CompilerBuilder {
   var inputFile : String = null
   var outputFile : String = null
   var metadataLocation : String = null
-
   var suppressTimestamps : Boolean = false
 
   def build() : Compiler = {
@@ -99,12 +101,21 @@ class CompilerBuilder {
  *
  */
 class Compiler(params: CompilerBuilder) extends LogTrait {
-/*
-  def splitPackageClass(name: String): (String, String) = {
+
+  /** Split a fully qualified object name into namspace and class
+    *
+    * @param name is a fully qualified class name
+    * @return tuple with namespace and class name
+    */
+  def splitNamespaceClass(name: String): (String, String) = {
     val elements = name.split('.')
     (elements.dropRight(1).mkString("."), elements.last)
   }
 
+  /** Creates a metadata instance with defaults and json objects located on the file system
+    *
+    * @return Metadata manager
+    */
   def loadMetadata(): MdMgr= {
 
     val typesPath : String = ""
@@ -137,17 +148,63 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     mgr
   }
 
+  /** Find all logical column names that are encode in this expression $name
+    *
+    * @param expression
+    * @return
+    */
+  def ExtractColumnNames(expression: String): Set[String] = {
+    val regex = """(\$[a-zA-Z0-9_]+)""".r
+    regex.findAllMatchIn(expression).toArray.map( m => m.matched.drop(1)).toSet
+  }
+
+  /** Replace all logical column namess with the variables
+    *
+    * @param expression expression to update
+    * @param mapNameSource name to variable mapping
+    * @return string with the result
+    */
+  def FixupColumnNames(expression: String, mapNameSource: Map[String, String]): String = {
+    val regex = """(\$[a-zA-Z0-9_]+)""".r
+    val m = regex.pattern.matcher(expression)
+    val sb = new StringBuffer
+    var i = 0;
+    while (m.find) {
+      m.appendReplacement(sb, mapNameSource.get(m.group(0).drop(1)).get)
+      i = i + 1
+    }
+    m.appendTail(sb)
+    sb.toString
+  }
+
   // Load metadata
   val md = loadMetadata
-
-  //md.dump
-  //val m = md.Message("com.ligadata.kamanja.samples.messages.msg1", 0, true)
-  //logger.trace("Found: {}", m.toString())
 
   val suppressTimestamps: Boolean = params.suppressTimestamps // Suppress timestamps
   val inputFile: String = params.inputFile // Input file to compile
   val outputFile: String = params.outputFile // Output file to write
 
+  // Controls the code generation
+  def Execute(): String = {
+
+    var result = Array.empty[String]
+
+    // Process header
+    // ToDo: do we need a different license here
+    result :+= Parts.header
+
+    //
+    //
+
+    // Write to output file
+    val code = CodeHelper.Indent(result)
+    logger.trace("Output to file {}", outputFile)
+    FileUtils.writeStringToFile(new File(outputFile), code)
+
+    outputFile
+  }
+
+  /*
   def CollectInputs(t: Array[Transformation]): Array[String] = {
     val s = t.map( e => {
       e.input
@@ -171,10 +228,6 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     inputTypes.map( e => "    msg.isInstanceOf[%s]".format(e) ).mkString("||\n") + "\n"
   }
 
-  def ExtractColumnNames(expression: String): Set[String] = {
-    val regex = """(\$[a-zA-Z0-9_]+)""".r
-    regex.findAllMatchIn(expression).toArray.map( m => m.matched.drop(1)).toSet
-  }
 
   def FixupColumnNames(expression: String, mapNameSource: Map[String, String]): String = {
     val regex = """(\$[a-zA-Z0-9_]+)""".r

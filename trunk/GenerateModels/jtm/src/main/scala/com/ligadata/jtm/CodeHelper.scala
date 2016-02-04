@@ -20,10 +20,40 @@ package com.ligadata.jtm
   */
 object CodeHelper {
 
+  /** Creates proper formatted code
+    *
+    * @param lines array with string fragments, the string fragments can span multiple lines
+    * @return Single string with proper format
+    */
+  def Indent(lines: Array[String]): String = {
+
+    val l = lines.foldLeft(Array.empty[String]) ( (r, line) => {
+      r ++ line.split('\n')
+    })
+    IndentImpl(l)
+  }
+
+  /** Creates proper formatted code
+    *
+    * @param source source to reformat
+    * @return Single string with proper format
+    */
   def Indent(source : String) : String = {
+    val lines = source.split('\n')
+    IndentImpl(lines)
+  }
+
+  /** Do the formatting work
+    *
+    * Expectation is that a new scope is started with '{' as the last char and close with the
+    * first char in a line '}'
+    *
+    * @param lines array with lines
+    * @return Single string with proper format
+    */
+  def IndentImpl(lines: Array[String]): String = {
 
     val sb = new StringBuilder
-    val lines = source.split('\n')
     var open = 0
     var empty = 0
 
@@ -51,11 +81,14 @@ object CodeHelper {
         sb.append("\n")
 
         if(l1.endsWith("{")) {
-            open = open + 1
+          open = open + 1
         }
       }
     })
 
     sb.toString
   }
+
+
+
 }

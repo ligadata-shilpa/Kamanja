@@ -28,7 +28,7 @@ import org.scalatest.{BeforeAndAfter, FunSuite}
 class Test001Test  extends FunSuite with BeforeAndAfter {
 
   val logger = LogManager.getLogger(this.getClass.getName())
-/*
+
   test("test") {
 
     val fileInput = getClass.getResource("/test001.jtm/test.jtm").getPath
@@ -52,5 +52,5 @@ class Test001Test  extends FunSuite with BeforeAndAfter {
 
     assert(actual == expected)
   }
-*/
+
 }
