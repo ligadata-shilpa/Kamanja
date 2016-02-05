@@ -32,7 +32,7 @@ object Types {
     root.transformations.foreach( t => {
       // Dependency sets test
       t._2.dependsOn.foreach( d => {
-        d.map( c => {
+        d.foreach( c => {
           val resolved = givenAlias.getOrElse(c, c)
           upsert(resolved, Set(c))
         })
@@ -52,7 +52,24 @@ object Types {
     * @return
     */
   def CollectTypes(root: Root): Map[String, Set[String]] = {
-    var result = scala.collection.mutable.Map.empty[String, Set[String]]
+
+    implicit var result = scala.collection.mutable.Map.empty[String, Set[String]]
+
+    root.transformations.foreach( t => {
+      t._2.computes.foreach( c => {
+          if(c._2.typename.length>0) {
+            upsert(c._2.typename, Set(t._1 + "/" + c._1))
+          }
+      })
+
+      t._2.outputs.foreach( o => {
+        o._2.computes.foreach(c => {
+            if (c._2.typename.length>0) {
+              upsert(c._2.typename, Set(t._1 + "/" + c._1))
+            }
+          })
+      })
+    })
 
     result.toMap
   }

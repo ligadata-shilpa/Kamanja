@@ -245,6 +245,11 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
       logger.trace(m)
     })
 
+    val types = EvalTypes.CollectTypes(root)
+    types.map( e => "%s usedby %s".format(e._1, e._2.mkString(", ")) ).foreach( m => {
+      logger.trace(m)
+    })
+
     // Collect all specified types
       // Types are native or aliases
 
