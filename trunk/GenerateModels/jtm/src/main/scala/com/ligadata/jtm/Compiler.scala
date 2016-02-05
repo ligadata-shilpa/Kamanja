@@ -257,43 +257,45 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
     // Resolve dependencies
     //
-    val dependencyToTransformations = root.transformations.foldLeft(Map.empty[Set[String], Set[String]])( (r, t) => {
+    type aliasSet = Set[String]
+    type transSet = Set[String]
+    val dependencyToTransformations = root.transformations.foldLeft( (0, Map.empty[Set[String], (Long, Set[String])]))( (r1, t) => {
       val transformationName = t._1
       val transformation = t._2
 
       // Normalize the dependencies, target must be a class
       // ToDo: Do we need chains of aliases, or detect chains of aliases
-      type aliasSet = Set[String]
-      type transSet = Set[String]
 
-      t._2.dependsOn.foldLeft(r)( (r, dependencies) => {
+      t._2.dependsOn.foldLeft(r1)( (r, dependencies) => {
 
         val resolvedDependencies = dependencies.map(alias => {
           // Translate dependencies, if available
           root.aliases.getOrElse( alias, alias )
         }).toSet
 
-        val curr = r.get(resolvedDependencies)
+        val curr = r._2.get(resolvedDependencies)
         if(curr.isDefined) {
-          r ++ Map(resolvedDependencies -> (curr.get + t._1))
+          ( r._1,     r._2 ++ Map[Set[String],(Long, Set[String])](resolvedDependencies -> (curr.get._1, curr.get._2 + t._1)) )
         } else {
-          r ++ Map(resolvedDependencies -> Set(t._1))
+          ( r._1 + 1, r._2 ++ Map[Set[String],(Long, Set[String])](resolvedDependencies -> (r._1 + 1, Set(t._1))) )
         }
       })
-    })
+
+    })._2
 
     dependencyToTransformations.map( e => {
-      "Dependency [%s] => (%s)".format(e._1.mkString(", "), e._2.mkString(", "))
+      "Dependency [%s] => (%s)".format(e._1.mkString(", "), e._2._2.mkString(", "))
     }).foreach( m =>logger.trace(m) )
 
     val errors = dependencyToTransformations.map( e => {
 
-      if (e._1.size == 1) {
+      if (e._2._2.size == 1) {
 
         // Emit function calls
         //
         val name = e._1.head
-        val calls = e._2.map( f => "exeGenerated%s(msg)".format(f) ).mkString("\n") // ToDo enumerate if string can violate the name schema
+        val depId = e._2._1
+        val calls = e._2._2.map( f => "exeGenerated_%s_%d(msg)".format(f, depId) ).mkString("\n")
         result :+= """|if(msg.isInstanceOf[%s]) {
                       |val msg = msg.isInstanceOf[%s]
                       |%s
@@ -301,7 +303,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
                       |""".stripMargin('|').format(name, name, calls)
         0
       } else {
-        logger.error("Unsupported multiple dependencies. {}", "Dependency [%s] => (%s)".format(e._1.mkString(", "), e._2.mkString(", ")))
+        logger.error("Unsupported multiple dependencies. {}", "Dependency [%s] => (%s)".format(e._1.mkString(", "), e._2._2.mkString(", ")))
         1
       }
     }).sum
@@ -309,6 +311,22 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     if(errors>0) {
       throw new Exception("Unsupported multiple dependencies found")
     }
+
+    // Actual function to be called
+    //
+    dependencyToTransformations.foreach( e => {
+      val deps = e._1
+      val depId = e._2._1
+      val transformationNames = e._2._2
+
+      transformationNames.foreach( t => {
+
+        val transformation = root.transformations.get(t).get
+
+        result :+= "def exeGenerated_%s_%d(msg: %s) = {".format(t, depId, deps.head)
+        result :+= "}"
+      })
+    })
 
     // Create metadata and factory code
     //
@@ -319,15 +337,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     // Process inputs
     //
 
-/*
-    //
-    //
-    root.transformations.foreach( t => {
-      val transformationName = t._1
-      val transformation = t._2
-      // messages - all aliases
-    })
-*/
+
 
     // Write to output file
     val code = CodeHelper.Indent(result)
