@@ -46,6 +46,27 @@ object Types {
     result.toMap
   }
 
+/*
+  def InvertAliases(m: Map[String, Set[String]], Alias: Map[String, String]): Map[String, String] = {
+
+    def FindTerminal(start: String): String = {
+      var cur = start
+
+      f = m.get(cur)
+      if(f.get==start)
+        start
+      else
+        FindTerminal()
+    }
+
+    m.foldLeft(Array.empty[(String, String)]) ( (r, s) => {
+      s._2.map( e => {
+          (s._1, FindTerminal(s._1))
+      }).toArray
+    }).map( e => (e._1 -> e._2)).toMap
+  }
+*/
+
   /** Map with all types and the path to it
     *
     * @param root

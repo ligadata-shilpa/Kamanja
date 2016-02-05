@@ -33,8 +33,8 @@ class TypesTest extends FunSuite with BeforeAndAfter {
 
     val actual = Types.CollectTypes(t)
     val expected : Map[String, Set[String]] = Map(
-      "IpInfo" -> Set("test1/ipinfo"),
       "Int" -> Set("test1/zipcode", "test1/zipcode1"),
+      "IpInfo" -> Set("test1/ipinfo"),
       "String" -> Set("test1/tmp8")
     )
     assert(expected == actual)

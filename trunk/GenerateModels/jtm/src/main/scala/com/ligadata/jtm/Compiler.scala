@@ -240,24 +240,75 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     // Collect all classes
     //
     val messages = EvalTypes.CollectMessages(root)
-
     messages.map( e => "%s aliases %s".format(e._1, e._2.mkString(", ")) ).foreach( m => {
       logger.trace(m)
     })
 
+    // Collect all specified types
+      // Should check we can resolve them
     val types = EvalTypes.CollectTypes(root)
     types.map( e => "%s usedby %s".format(e._1, e._2.mkString(", ")) ).foreach( m => {
       logger.trace(m)
     })
 
-    // Collect all specified types
-      // Types are native or aliases
 
     // Check all found types against metadata
     //
 
-    // Complex or simple dependencies
+    // Resolve dependencies
     //
+    val dependencyToTransformations = root.transformations.foldLeft(Map.empty[Set[String], Set[String]])( (r, t) => {
+      val transformationName = t._1
+      val transformation = t._2
+
+      // Normalize the dependencies, target must be a class
+      // ToDo: Do we need chains of aliases, or detect chains of aliases
+      type aliasSet = Set[String]
+      type transSet = Set[String]
+
+      t._2.dependsOn.foldLeft(r)( (r, dependencies) => {
+
+        val resolvedDependencies = dependencies.map(alias => {
+          // Translate dependencies, if available
+          root.aliases.getOrElse( alias, alias )
+        }).toSet
+
+        val curr = r.get(resolvedDependencies)
+        if(curr.isDefined) {
+          r ++ Map(resolvedDependencies -> (curr.get + t._1))
+        } else {
+          r ++ Map(resolvedDependencies -> Set(t._1))
+        }
+      })
+    })
+
+    dependencyToTransformations.map( e => {
+      "Dependency [%s] => (%s)".format(e._1.mkString(", "), e._2.mkString(", "))
+    }).foreach( m =>logger.trace(m) )
+
+    val errors = dependencyToTransformations.map( e => {
+
+      if (e._1.size == 1) {
+
+        // Emit function calls
+        //
+        val name = e._1.head
+        val calls = e._2.map( f => "exeGenerated%s(msg)".format(f) ).mkString("\n") // ToDo enumerate if string can violate the name schema
+        result :+= """|if(msg.isInstanceOf[%s]) {
+                      |val msg = msg.isInstanceOf[%s]
+                      |%s
+                      |}
+                      |""".stripMargin('|').format(name, name, calls)
+        0
+      } else {
+        logger.error("Unsupported multiple dependencies. {}", "Dependency [%s] => (%s)".format(e._1.mkString(", "), e._2.mkString(", ")))
+        1
+      }
+    }).sum
+
+    if(errors>0) {
+      throw new Exception("Unsupported multiple dependencies found")
+    }
 
     // Create metadata and factory code
     //
@@ -268,6 +319,15 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     // Process inputs
     //
 
+/*
+    //
+    //
+    root.transformations.foreach( t => {
+      val transformationName = t._1
+      val transformation = t._2
+      // messages - all aliases
+    })
+*/
 
     // Write to output file
     val code = CodeHelper.Indent(result)
