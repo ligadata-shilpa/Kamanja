@@ -8,8 +8,6 @@ name := "AuditAdapters"
 
 version := "1.0"
 
-scalaVersion := "2.11.7"
-
 resolvers += "spring-milestones" at "http://repo.springsource.org/libs-milestone"
 
 libraryDependencies += "com.datastax.cassandra" % "cassandra-driver-parent" % "2.1.2"

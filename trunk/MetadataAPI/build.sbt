@@ -60,8 +60,6 @@ name := "MetadataAPI"
 
 version := "1.0"
 
-scalaVersion := "2.11.7"
-
 libraryDependencies += "org.joda" % "joda-convert" % "1.6"
 
 libraryDependencies += "joda-time" % "joda-time" % "2.8.2"
@@ -96,7 +94,6 @@ libraryDependencies += "commons-io" % "commons-io" % "2.4"
 
 libraryDependencies ++= Seq(
 "com.twitter" %% "chill" % "0.5.0",
-"org.scalameta" %% "quasiquotes" % "0.0.3",
  "org.apache.shiro" % "shiro-core" % "1.2.3",
  "org.apache.shiro" % "shiro-root" % "1.2.3"
 )

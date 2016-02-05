@@ -59,8 +59,6 @@ name := "MetadataAPIService"
 
 version := "1.0"
 
-scalaVersion := "2.11.7"
-
 scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
 
 resolvers ++= Seq(
