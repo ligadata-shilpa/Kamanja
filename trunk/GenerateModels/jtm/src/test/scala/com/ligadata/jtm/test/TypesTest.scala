@@ -48,14 +48,16 @@ class TypesTest extends FunSuite with BeforeAndAfter {
     val expected : Map[String, Set[String]] = Map(
       "c3" -> Set("c3"),
       "c4" -> Set("c4"),
-      "com.ligadata.kamanja.samples.messages.msg4" -> Set("com.ligadata.kamanja.samples.messages.msg4"),
-      "m4" -> Set("m4"), "omsg5" -> Set("omsg5"),
       "com.ligadata.kamanja.samples.concepts.c1" -> Set("c1", "c2"),
-      "omsg4" -> Set("omsg4"), "com.ligadata.kamanja.samples.messages.msg2" -> Set("m2"),
-      "m3" -> Set("m3"),
-      "com.ligadata.kamanja.samples.messages.omsg2" -> Set("omsg2"),
       "com.ligadata.kamanja.samples.messages.msg1" -> Set("m1"),
-      "m5" -> Set("m5")
+      "com.ligadata.kamanja.samples.messages.msg2" -> Set("m2"),
+      "com.ligadata.kamanja.samples.messages.msg4" -> Set("com.ligadata.kamanja.samples.messages.msg4"),
+      "com.ligadata.kamanja.samples.messages.omsg2" -> Set("omsg2"),
+      "m3" -> Set("m3"),
+      "m4" -> Set("m4"),
+      "m5" -> Set("m5"),
+      "omsg5" -> Set("omsg5"),
+      "omsg4" -> Set("omsg4")
     )
 
     assert(expected == actual)
