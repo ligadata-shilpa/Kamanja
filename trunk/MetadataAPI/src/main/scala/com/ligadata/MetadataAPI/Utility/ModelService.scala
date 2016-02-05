@@ -807,9 +807,7 @@ object ModelService {
             }
             val modelKey = modelKeys(choice - 1)
             val modelKeyTokens = modelKey.split("\\.")
-            val modelNameSpace = modelKeyTokens(0)
-            val modelName = modelKeyTokens(1)
-            val modelVersion = modelKeyTokens(2)
+            val (modelNameSpace, modelName, modelVersion) = com.ligadata.kamanja.metadata.Utils.parseNameToken(modelKey)
             val apiResult = MetadataAPIImpl.ActivateModel(modelNameSpace, modelName, modelVersion.toLong, userid).toString
             response=apiResult
           }
@@ -868,9 +866,7 @@ object ModelService {
             }
             val modelKey = modelKeys(choice - 1)
             val modelKeyTokens = modelKey.split("\\.")
-            val modelNameSpace = modelKeyTokens(0)
-            val modelName = modelKeyTokens(1)
-            val modelVersion = modelKeyTokens(2)
+            val (modelNameSpace, modelName, modelVersion) = com.ligadata.kamanja.metadata.Utils.parseNameToken(modelKey)
             val apiResult = MetadataAPIImpl.DeactivateModel(modelNameSpace, modelName, modelVersion.toLong, userid).toString
             response=apiResult
           }
