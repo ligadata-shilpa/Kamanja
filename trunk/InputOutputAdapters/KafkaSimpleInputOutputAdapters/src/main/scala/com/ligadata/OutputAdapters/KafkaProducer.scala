@@ -79,6 +79,8 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
   val timeout_ms = qc.otherconfigs.getOrElse("timeout.ms", default_timeout_ms).toString.trim()
   val metadata_fetch_timeout_ms = qc.otherconfigs.getOrElse("metadata.fetch.timeout.ms", default_metadata_fetch_timeout_ms).toString.trim()
 
+  val counterLock = new Object
+
   private var metrics: collection.mutable.Map[String,Any] = collection.mutable.Map[String,Any]()
   private var startTime: String = "n/a"
   private var lastSeen: String = "n/a"
@@ -532,14 +534,16 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
 
   // Accumulate the metrics.. simple for now
   private def updateMetricValue(key: String, value: Any): Unit = {
-    if (key.equalsIgnoreCase(KafkaProducer.LAST_FAILURE_TIME) ||
+    counterLock.synchronized {
+      if (key.equalsIgnoreCase(KafkaProducer.LAST_FAILURE_TIME) ||
         key.equalsIgnoreCase(KafkaProducer.LAST_RECOVERY_TIME)) {
-      metrics(key) = value.toString
-    } else {
-      // This is an aggregated Long value
-      val cur = metrics.getOrElse(key,"0").toString
-      val longCur = cur.toLong
-      metrics(key) = longCur + value.toString.toLong
+        metrics(key) = value.toString
+      } else {
+        // This is an aggregated Long value
+        val cur = metrics.getOrElse(key,"0").toString
+        val longCur = cur.toLong
+        metrics(key) = longCur + value.toString.toLong
+      }
     }
   }
 
