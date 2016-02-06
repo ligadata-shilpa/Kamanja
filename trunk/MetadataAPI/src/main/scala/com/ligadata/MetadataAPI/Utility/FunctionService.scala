@@ -25,7 +25,7 @@ import com.ligadata.MetadataAPI.MetadataAPIImpl
 import scala.io.Source
 import org.apache.logging.log4j._
 
-import scala.io.StdIn
+import scala.io._
 
 /**
  * Created by dhaval on 8/12/15.
@@ -104,7 +104,7 @@ object FunctionService {
           println("["+srno+"] "+functionKey)
         }
         println("Enter your choice: ")
-        val choice: Int = StdIn.readInt()
+        val choice: Int = readInt()
 
         if (choice < 1 || choice > functionKeys.length) {
           val errormsg="Invalid choice " + choice + ". Start with the main menu."
@@ -151,7 +151,7 @@ object FunctionService {
           println("["+srno+"] "+functionKey)
         }
         println("Enter your choice: ")
-        val choice: Int = StdIn.readInt()
+        val choice: Int = readInt()
 
         if (choice < 1 || choice > functionKeys.length) {
           val errormsg="Invalid choice " + choice + ". Start with the main menu."
@@ -294,7 +294,7 @@ object FunctionService {
       println("[" + srNo + "]" + model)
     }
     print("\nEnter your choice(If more than 1 choice, please use commas to seperate them): \n")
-    var userOptions = StdIn.readLine().split(",")
+    var userOptions = readLine().split(",")
     println("User selected the option(s) " + userOptions.length)
     //check if user input valid. If not exit
     for (userOption <- userOptions) {
