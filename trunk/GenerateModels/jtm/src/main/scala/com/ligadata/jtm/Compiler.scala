@@ -355,7 +355,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
         val transformation = root.transformations.get(t).get
 
-        result :+= "def exeGenerated_%s_%d(msg: %s) = {".format(t, depId, deps.head)
+        result :+= "def exeGenerated_%s_%d(msg1: %s) = {".format(t, depId, deps.head)
 
         // Collect form metadata
         val inputs: Array[Element] = ColumnNames(md, deps) // Seq("in1", "in2", "in3", "in4").toSet
@@ -517,10 +517,9 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           // outputs
           r ++ collect
         })
-        result :+= "}"
 */
+        result :+= "}"
       })
-
     })
 
     // Create metadata and factory code
