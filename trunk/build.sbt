@@ -162,16 +162,15 @@ lazy val KamanjaManager = project.in(file("KamanjaManager")).
         val artifactInstallDir = s"/app/Kamanja"
         new Dockerfile {
           from("java")
-          add(artifact, artifactTargetPath)
+          copy(artifact, artifactTargetPath)
+          copy(file("Docker-KamanjaStart.sh"), artifactInstallDir + "/bin")
           runRaw(s"mkdir -p $artifactInstallDir/lib/system")
           runRaw(s"mkdir -p $artifactInstallDir/lib/application")
           runRaw(s"mkdir -p $artifactInstallDir/config")
           runRaw(s"mkdir -p $artifactInstallDir/storage")
           runRaw(s"mkdir -p $artifactInstallDir/logs")
           runRaw(s"mkdir -p $artifactInstallDir/output")
-          runRaw(s"echo NODEID=1 >> $artifactInstallDir/config/EngineConfig.properties")
-          runRaw("echo MetaDataStore={\"StoreType\":\"hashmap\", \"SchemaName\":\"kamanja\", \"Location\":\"" + artifactInstallDir + "/storage\"} >> " +  artifactInstallDir + "/config/EngineConfig.properties")
           workDir(artifactInstallDir)
-          //entryPoint("java", "-jar", artifactTargetPath, "--config", s"$artifactInstallDir/config/EngineConfig.properties")
+          entryPoint("bash", s"$artifactInstallDir/bin/Docker-KamanjaStart.sh")
         }
       })
