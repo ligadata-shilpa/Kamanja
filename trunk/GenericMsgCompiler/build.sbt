@@ -14,3 +14,7 @@ libraryDependencies += "org.json4s" %% "json4s-native" % "3.2.9"
 
 libraryDependencies += "org.json4s" %% "json4s-jackson" % "3.2.9" 
 
+libraryDependencies ++= Seq("junit" % "junit" % "4.8.1" % "test")
+
+libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.0" % "test"
+

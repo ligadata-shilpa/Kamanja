@@ -396,4 +396,36 @@ class MappedMsgGenerator {
     return getMethod.toString
   }
 
+  /*
+   * generate keys variable for mapped message
+   */
+  def keysVarforMapped(fields: List[Element]): String = {
+    var mappedTypesABuf = new scala.collection.mutable.ArrayBuffer[String]
+    var baseTypId = -1
+    var firstTimeBaseType: Boolean = true
+    var keysStr = new StringBuilder(8 * 1024)
+    val stringType = MdMgr.GetMdMgr.Type("System.String", -1, true)
+    if (stringType.getOrElse("None").equals("None"))
+      throw new Exception("Type not found in metadata for String ")
+    mappedTypesABuf += stringType.get.implementationName
+
+    fields.foreach(field => {
+      var typstring = field.FieldTypePhysicalName
+      println("field.FieldTypePhysicalName   " + field.FieldTypePhysicalName)
+      println("field.   " + field.FldMetaataType)
+      if (mappedTypesABuf.contains(typstring)) {
+        if (mappedTypesABuf.size == 1 && firstTimeBaseType)
+          baseTypId = mappedTypesABuf.indexOf(typstring)
+      } else {
+        mappedTypesABuf += typstring
+        baseTypId = mappedTypesABuf.indexOf(typstring)
+      }
+      keysStr.append("(\"" + field.Name + "\", " + mappedTypesABuf.indexOf(typstring) + "),")
+
+    })
+    //log.info(keysStr.toString().substring(0, keysStr.toString().length - 1))
+    var keys = "var keys = Map(" + keysStr.toString().substring(0, keysStr.toString().length - 1) + ")";
+    return keys
+  }
+
 }

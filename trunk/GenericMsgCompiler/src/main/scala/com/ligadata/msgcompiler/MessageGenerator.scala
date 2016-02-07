@@ -38,16 +38,19 @@ class MessageGenerator {
       if (message.Fixed.equalsIgnoreCase("true")) {
 
         messageVerGenerator = messageVerGenerator.append(msgConstants.newline + msgConstants.packageStr.format(message.Pkg, msgConstants.newline));
-        messageNonVerGenerator = messageNonVerGenerator.append(msgConstants.newline + msgConstants.packageStr.format(message.NameSpace + msgConstants.newline));
+        messageNonVerGenerator = messageNonVerGenerator.append(msgConstants.newline + msgConstants.packageStr.format(message.NameSpace, msgConstants.newline));
         messageGenerator = messageGenerator.append(msgConstants.importStatements + msgConstants.newline);
         messageGenerator = messageGenerator.append(msgObjectGenerator.generateMessageObject(message) + msgConstants.newline)
         messageGenerator = messageGenerator.append(classGen(message) + msgConstants.newline)
         messageGenerator = messageGenerator.append(getMessgeBasicDetails(message))
         messageGenerator = messageGenerator.append(methodsFromBaseMsg(message))
+        messageGenerator = messageGenerator.append(getSetMethods)
         messageGenerator = messageGenerator.append(msgConstants.newline + partitionKeys(message) + msgConstants.newline)
         messageGenerator = messageGenerator.append(msgConstants.newline + primaryKeys(message) + msgConstants.newline)
         messageGenerator = messageGenerator.append(msgConstants.newline + generateParitionKeysData(message) + msgConstants.newline)
         messageGenerator = messageGenerator.append(msgConstants.newline + generatePrimaryKeysData(message) + msgConstants.newline)
+        messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + hasPartitionKeyFunc + msgConstants.newline)
+        messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + hasPrimaryKeysFunc + msgConstants.newline)
         messageGenerator = messageGenerator.append(messageContructor(message))
         //messageGenerator = messageGenerator.append(msgClassConstructorGen(message))
         messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + generateSchema(message))
@@ -83,7 +86,7 @@ class MessageGenerator {
         messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + generatePrimaryKeysData(message) + msgConstants.newline)
         messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + generateSchema(message))
         messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + msgConstants.fieldsForMappedVar)
-        messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + keysVarforMapped(message.Elements))
+        messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + mappedMsgGen.keysVarforMapped(message.Elements))
         messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + msgConstants.getByNameFuncForMapped)
         messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + msgConstants.getOrElseFuncForMapped)
         messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + msgConstants.setByNameFuncForMappedMsgs)
@@ -100,7 +103,7 @@ class MessageGenerator {
 
       }
 
-     // log.info("messageGenerator    " + messageGenerator.toString())
+      // log.info("messageGenerator    " + messageGenerator.toString())
 
     } catch {
       case e: Exception => {
@@ -555,35 +558,21 @@ class MessageGenerator {
   }
 
   /*
-   * generate keys variable for mapped message
+   * set method with key as arguments
    */
-  private def keysVarforMapped(fields: List[Element]): String = {
-    var mappedTypesABuf = new scala.collection.mutable.ArrayBuffer[String]
-    var baseTypId = -1
-    var firstTimeBaseType: Boolean = true
-    var keysStr = new StringBuilder(8 * 1024)
-    val stringType = MdMgr.GetMdMgr.Type("System.String", -1, true)
-    if (stringType.getOrElse("None").equals("None"))
-      throw new Exception("Type not found in metadata for String ")
-    mappedTypesABuf += stringType.get.implementationName
 
-    fields.foreach(field => {
-      var typstring = field.FieldTypePhysicalName
-      println("field.FieldTypePhysicalName   " + field.FieldTypePhysicalName)
-      println("field.   " + field.FldMetaataType)
-      if (mappedTypesABuf.contains(typstring)) {
-        if (mappedTypesABuf.size == 1 && firstTimeBaseType)
-          baseTypId = mappedTypesABuf.indexOf(typstring)
-      } else {
-        mappedTypesABuf += typstring
-        baseTypId = mappedTypesABuf.indexOf(typstring)
-      }
-      keysStr.append("(\"" + field.Name + "\", " + mappedTypesABuf.indexOf(typstring) + "),")
+  private def getSetByName(): String = {
 
-    })
-    //log.info(keysStr.toString().substring(0, keysStr.toString().length - 1))
-    var keys = "var keys = Map(" + keysStr.toString().substring(0, keysStr.toString().length - 1) + ")";
-    return keys
+    return ""
+
+  }
+
+  private def getSetMethods() = {
+    """
+  override def set(key: String, value: Any): Unit = {}
+  override def get(key: String): Any = null
+  override def getOrElse(key: String, default: Any): Any = { throw new Exception("getOrElse function is not yet implemented") }
+ """
   }
 
   /*var typstring = field.ttyp.get.implementationName
