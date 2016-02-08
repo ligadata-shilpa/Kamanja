@@ -113,6 +113,20 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     (elements.dropRight(1).mkString("."), elements.last)
   }
 
+  /** Split a name into alias and field name
+    *
+    * @param name Name
+    * @return
+    */
+  def splitAlias(name: String): (String, String) = {
+    val elements = name.split('.')
+    if(elements.size==1)
+      ("", name)
+    else
+      ( elements.head, elements.mkString(".") )
+  }
+
+
   /** Creates a metadata instance with defaults and json objects located on the file system
     *
     * @return Metadata manager
@@ -183,7 +197,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     // Check requested language
     //
     if(root.language.trim.toLowerCase() !="scala")
-        throw new Exception("Currenly only Scala is supported")
+        throw new Exception("Currently only Scala is supported")
 
     // Check the min version
     //
@@ -202,6 +216,9 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
   def ColumnNames(mgr: MdMgr, classname: String): Set[String] = {
     val classinstance = md.Message(classname, 0, true)
+    if(classinstance.isEmpty) {
+      throw new Exception("Metadata: unable to find class %s".format(classname))
+    }
     val members = classinstance.get.containerType.asInstanceOf[StructTypeDef].memberDefs
     members.map( e => e.Name).toSet
   }
@@ -220,6 +237,40 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
       val members = classMd.get.containerType.asInstanceOf[StructTypeDef].memberDefs
       (r._1 + 1, r._2 ++ members.map( e => Element("msg%d".format(r._1), classname, e.Name)))
     })._2
+  }
+
+  def ResolveNames(names: Set[String], aliases: Map[String, String] ) : Map[String, String] =  {
+
+    names.map ( n => {
+      val (alias, name) = splitAlias(n)
+      if(alias.length>0) {
+        val a = aliases.get(alias)
+        if(a.isEmpty) {
+          throw new Exception("Missing alias %s for %s".format(alias, n))
+        } else {
+         "%s.%s".format(a.get, name)
+        }
+      } else {
+        n
+      }
+    })
+
+    Map.empty[String, String]
+  }
+
+  def ResolveName(n: String, aliases: Map[String, String] ) : String =  {
+
+    val (alias, name) = splitAlias(n)
+    if(alias.length>0) {
+      val a = aliases.get(alias)
+      if(a.isEmpty) {
+        throw new Exception("Missing alias %s for %s".format(alias, n))
+      } else {
+        "%s.%s".format(a.get, name)
+      }
+    } else {
+      n
+    }
   }
 
   // Load metadata
@@ -386,8 +437,8 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           val computes1 = computes.filter(c => {
 
             val list = ExtractColumnNames(c._2.expression)
-            val rList = list // ResolveNames(list)
-            val open = rList.filter(f => !mappingSources.contains(f) )
+            val rList = ResolveNames(list, root.aliases.toMap)
+            val open = rList.filter(f => !mappingSources.contains(f._2) )
             if(open.size==0) {
               val newExpression = FixupColumnNames(c._2.expression, mappingSources)
 
@@ -409,25 +460,24 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           logger.trace("Not all elements used")
         }
 
-/*
         // Individual outputs
         //
-        tr ++= transformation.outputs.foldLeft(Array.empty[String]) ( (r, o) => {
+        transformation.outputs.foldLeft(Array.empty[String]) ( (r, o) => {
 
           var collect = Array.empty[String]
-          collect ++= Array("\ndef fn%d() = {\n".format(fncnt))
+          collect ++= Array("\ndef process_%s() = {\n".format(o._1))
 
-          val outputSet: Set[String] = ColumnNames(md, o.output) //Seq("out1", "out2", "out3", "out4").toSet
+          val outputSet: Set[String] = ColumnNames(md, ResolveName(o._1, root.aliases.toMap))
 
           // State variables to track the progress
           // a little bit simpler than having val's
-          var mapNameSource: Map[String, String] = inputSet.map( e => (e,"msg.%s".format(e))).toMap
+          var mapNameSource: Map[String, String] = mappingSources
           var outputSet1: Set[String] = outputSet
 
-          var mapping = o.mappings
-          var filters =  o.filters
-          var computes = o.computes
-          var cnt1 = filters.length + computes.length
+          var mapping = o._2.mapping
+          var filters =  Array(o._2.filter)
+          var computes = o._2.computes
+          var cnt1 = filters.length + computes.size
           var cnt2 = 0
 
           // Removed if mappings are provided
@@ -442,11 +492,11 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
             // filters
             val filters1 = filters.filter(f => {
-              val list = ExtractColumnNames(f.expression)
+              val list = ExtractColumnNames(f)
               val open = list.filter(f => !mapNameSource.contains(f) )
               if(open.size==0) {
                 // Sub names to
-                val newExpression = FixupColumnNames(f.expression, mapNameSource)
+                val newExpression = FixupColumnNames(f, mapNameSource)
                 // Output the actual filter
                 collect ++= Array("if (%s) return\n".format(newExpression))
                 false
@@ -457,15 +507,22 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
             // computes
             val computes1 = computes.filter( c => {
-              val list = ExtractColumnNames(c.expression)
+              val list = ExtractColumnNames(c._2.expression)
               val open = list.filter(f => !mapNameSource.contains(f) )
               if(open.size==0) {
                 // Sub names to
-                val newExpression = FixupColumnNames(c.expression, mapNameSource)
+                val newExpression = FixupColumnNames(c._2.expression, mapNameSource)
+
                 // Output the actual compute
-                collect ++= Array("val %s = %s\n".format(c.output, newExpression))
-                mapNameSource ++= Map(c.output -> c.output)
-                outputSet1 --= Set(c.output)
+                // To Do: multiple vals and type provided
+
+                if(c._2.typename.length>0)
+                  collect ++= Array("val %s: %s = %s\n".format(c._1, c._2.typename, newExpression))
+                else
+                  collect ++= Array("val %s = %s\n".format(c._1, newExpression))
+
+                mapNameSource ++= Map(c._1 -> c._1)
+                outputSet1 --= Set(c._1)
                 false
               } else {
                 true
@@ -481,25 +538,26 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
             }
 
             // Update state
-            cnt1 = filters1.length + computes1.length
+            cnt1 = filters1.length + computes1.size
             filters = filters1
             computes = computes1
           }
 
+          // To Do: Clarify how to resolve transactionid (and other auto columns)
           // Transaction id is in the input
           // so will just push it back if needed
-          if(inputSet.contains("transactionid")) {
+          if(outputSet1.contains("transactionid")) {
             outputSet1 --= Set("transactionid")
           }
 
           if(outputSet1.size>0){
-            throw new Exception("Not all outputs satisfied. missing=" + outputSet1.mkString(", "))
             logger.trace("Not all outputs satisfied. missing={}" , outputSet1.mkString(", "))
+            //throw new Exception("Not all outputs satisfied. missing=" + outputSet1.mkString(", "))
           }
 
           if(cnt2!=0){
-            //throw new Exception("Not all elements used")
             logger.trace("Not all elements used")
+            //throw new Exception("Not all elements used")
           }
 
           // Generate the output for this iteration
@@ -512,13 +570,17 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
           collect ++= Array(outputResult)
           collect ++= Array("}\n")
-          collect ++= Array("fn%d()\n".format(fncnt))
 
           // outputs
           r ++ collect
         })
-*/
         result :+= "}"
+
+        // Output the function calls
+        transformation.outputs.foreach( o => {
+          result :+= "process_%s()".format(o._1)
+        })
+
       })
     })
 
