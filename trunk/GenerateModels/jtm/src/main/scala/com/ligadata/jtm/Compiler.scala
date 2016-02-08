@@ -301,6 +301,8 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     Validate(root)
 
     var result = Array.empty[String]
+    var exechandler = Array.empty[String]
+    var methods = Array.empty[String]
 
     // Process header
     // ToDo: do we need a different license here
@@ -371,6 +373,20 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
       "Dependency [%s] => (%s)".format(e._1.mkString(", "), e._2._2.mkString(", "))
     }).foreach( m =>logger.trace(m) )
 
+
+    // Return tru if we accept the message, flatten the messages into a list
+    //
+    val msgs = dependencyToTransformations.foldLeft(Set.empty[String]) ( (r, d) => {
+      d._2._2.foldLeft(r) ((r, n) => {
+        r ++ Set(n)
+      })
+    })
+
+    subtitutions.Add("factory.isvalidmessage", msgs.map( m => "msg.isInstanceOf[%s]".format(m)).mkString("||") )
+    val factory = subtitutions.Run(Parts.factory)
+    result :+= factory
+
+
     val errors = dependencyToTransformations.map( e => {
 
       if (e._2._2.size == 1) {
@@ -380,7 +396,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
         val name = e._1.head
         val depId = e._2._1
         val calls = e._2._2.map( f => "exeGenerated_%s_%d(msg1)".format(f, depId) ).mkString("\n")
-        result :+= """|if(msg.isInstanceOf[%s]) {
+        exechandler :+= """|if(msg.isInstanceOf[%s]) {
                       |val msg1 = msg.isInstanceOf[%s]
                       |%s
                       |}
@@ -396,16 +412,6 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
       throw new Exception("Unsupported multiple dependencies found")
     }
 
-    /*
-    //
-    //
-    def ConstructIsValidMessage(inputTypes: Array[String]): String = {
-      inputTypes.map( e => "    msg.isInstanceOf[%s]".format(e) ).mkString("||\n") + "\n"
-    }
-    subtitutions.Add("factory.isvalidmessage", ConstructIsValidMessage(inputMap.map( p => p._2.handle )))
-    val factory = subtitutions.Run(Parts.factory)
-    */
-
     // Actual function to be called
     //
     dependencyToTransformations.foreach( e => {
@@ -417,7 +423,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
         val transformation = root.transformations.get(t).get
 
-        result :+= "def exeGenerated_%s_%d(msg1: %s) = {".format(t, depId, deps.head)
+        methods :+= "def exeGenerated_%s_%d(msg1: %s) = {".format(t, depId, deps.head)
 
         // Collect form metadata
         val inputs: Array[Element] = ColumnNames(md, deps) // Seq("in1", "in2", "in3", "in4").toSet
@@ -589,26 +595,24 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           r ++ collect
         })
 
-        result ++= inner
+        methods ++= inner
 
         // Output the function calls
         transformation.outputs.foreach( o => {
-          result :+= "process_%s()".format(o._1)
+          methods :+= "process_%s()".format(o._1)
         })
 
-        result :+= "}"
+        methods :+= "}"
 
       })
     })
 
-    // Create metadata and factory code
-    //
-
-    // Rename types to short names
-    //
-
-    // Process inputs
-    //
+    val resultVar = "var result: Array[Result] = Array.empty[Result]"
+    val returnValue = "factory.createResultObject().asInstanceOf[MappedModelResults].withResults(result)"
+    subtitutions.Add("model.methods", methods.mkString("\n"))
+    subtitutions.Add("model.code", resultVar + "\n" + exechandler.mkString("\n") + "\n" + returnValue + "\n")
+    val model = subtitutions.Run(Parts.model)
+    result :+= model
 
     // Write to output file
     val code = CodeHelper.Indent(result)
@@ -829,7 +833,6 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     })
 
     val returnValue = "factory.createResultObject().asInstanceOf[MappedModelResults].withResults(result)"
-
     subtitutions.Add("model.methods", "")
     subtitutions.Add("model.code", resultVar + "\n\n" + inputprocessing.mkString("\n") + "\n\n" + returnValue + "\n")
     val model = subtitutions.Run(Parts.model)
