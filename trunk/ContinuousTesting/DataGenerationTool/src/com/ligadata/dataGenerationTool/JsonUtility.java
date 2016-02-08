@@ -4,7 +4,9 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
@@ -49,6 +51,8 @@ public class JsonUtility {
 	public HashMap<String, String> ReadMessageFields(JSONObject req,
 			ConfigObj configObj) {
 
+		// the code in this method is edited for specific needs, the only
+		// REQUIRED section is the call for method CheckType.
 		CopsFields copsFields = new CopsFields();
 		String[] enumKeys = { "eventsource", "action", "resourceprotocol",
 				"authenticationmethod", "resourcetype",
@@ -60,6 +64,7 @@ public class JsonUtility {
 		JSONObject locs = req.getJSONObject("fields");
 		JSONArray recs = locs.getJSONArray("field");
 		HashMap<String, String> fields = new HashMap<String, String>();
+
 		try {
 			for (int i = 0; i < recs.length(); ++i) {
 				lineAlreadyWritten = false;
@@ -87,9 +92,6 @@ public class JsonUtility {
 
 				}
 
-				// if (fieldType.equalsIgnoreCase("timestamp")) {
-				// value = value.substring(0, value.length() - 3) + "z";
-				// }
 				fields.put(fieldName, value);
 			} // end for loop
 		} catch (ParseException e) {
@@ -98,6 +100,7 @@ public class JsonUtility {
 		}
 		return fields;
 	}
+
 
 	public ConfigObj CreateConfigObj(JSONObject configJson) {
 		logger.info("Parsing JSON object to config object...");
@@ -115,6 +118,7 @@ public class JsonUtility {
 		configObj.setDestiniationPath(configJson.getString("DestiniationPath"));
 		configObj.setCompressFormat(configJson.getString("CompressFormat"));
 		configObj.setSequenceID(configJson.getLong("SequenceId"));
+		configObj.setMessageType(configJson.getString("MessageType"));
 		logger.info("Value of DataGenerationRate: "
 				+ configJson.getDouble("DataGenerationRate"));
 		logger.info("Value of StartDate: " + configJson.getString("StartDate"));

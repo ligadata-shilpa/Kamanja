@@ -7,8 +7,9 @@
   "PushToKafka": "false",
   "FileSplitPer": "10s",
   "Delimiter": "\u0001",
-  "CompressFormat": "gzip",
+  "CompressFormat": "",
   "TemplatePath" : "C:/Users/haitham-pc/Documents/GitHub/Kamanja/trunk/ContinuousTesting/JsonFiles/DataDefinitionTemplate.json",
   "DestiniationPath" : "C:/Users/haitham-pc/Desktop/GenereatedData/",
-  "SequenceId" : "0"
+  "SequenceId" : "0",
+  "MessageType" : "KV"
 }

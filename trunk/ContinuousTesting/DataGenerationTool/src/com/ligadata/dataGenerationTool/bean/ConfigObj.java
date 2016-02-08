@@ -14,6 +14,15 @@ public class ConfigObj {
 	String templatePath;
 	String destiniationPath;
 	String compressFormat;
+	String MessageType;
+
+	public String getMessageType() {
+		return MessageType;
+	}
+
+	public void setMessageType(String messageType) {
+		MessageType = messageType;
+	}
 
 	public long getSequenceID() {
 		return sequenceID;
