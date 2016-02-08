@@ -516,21 +516,6 @@ class CompilerProxy {
       // figure out the Physical Model Name
       var (dummy1, dummy2, dummy3, pName) = getModelMetadataFromJar(jarFileName, elements, depJars, sourceLang)
 
-      /* Create the ModelDef object
-
-        def MakeModelDef(nameSpace: String
-                   , name: String
-                   , physicalName: String
-                   , mdlType: String
-                   , inputVars: List[(String, String, String, String, Boolean, String)]
-                   , outputVars: List[(String, String, String)]
-                   , ver: Long
-                   , jarNm: String
-                   , depJars: Array[String]
-                   , recompile: Boolean
-                   , supportsInstanceSerialization: Boolean): ModelDef = {
-
-       */
       val modelType : String = if (sourceLang.equalsIgnoreCase("scala")) "Scala" else "Java"
       val modDef: ModelDef = MdMgr.GetMdMgr.MakeModelDef(modelNamespace
                                                         , modelName
@@ -547,6 +532,7 @@ class CompilerProxy {
       // Need to set some values by hand here.
       modDef.jarName = jarFileName
       modDef.physicalName = pName
+      modDef.active = false  // by default all models start deactiveated as of 1.4
       if (sourceLang.equalsIgnoreCase("scala")) modDef.objectFormat = fSCALA else modDef.objectFormat = fJAVA
       modDef.ObjectDefinition(createSavedSourceCode(originalSource, notTypeDeps, typeDeps, pname))
       modDef

@@ -4170,6 +4170,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
             compProxy.setSessionUserId(userid)
             val modelNm : String = modelName.orNull
             val modDef : ModelDef =  compProxy.compileModelFromSource(input, modelNm, sourceLang)
+            modDef.active = false
 
             /**
              * FIXME: The current strategy is that only the most recent version can be updated.
@@ -4187,19 +4188,19 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
             if (isValid && modDef != null) {
                 logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.UPDATEOBJECT, input, AuditConstants.SUCCESS, "", modDef.FullNameWithVer)
                 val key = MdMgr.MkFullNameWithVersion(modDef.nameSpace, modDef.name, modDef.ver)
-                if( latestVersion != None ){
-                    RemoveModel(latestVersion.get.nameSpace, latestVersion.get.name, latestVersion.get.ver, None)
-                }
+               // if( latestVersion != None ){
+               //     RemoveModel(latestVersion.get.nameSpace, latestVersion.get.name, latestVersion.get.ver, None)
+               // }
                 logger.info("Begin uploading dependent Jars, please wait...")
                 UploadJarsToDB(modDef)
                 logger.info("Finished uploading dependent Jars.")
                 val apiResult = AddModel(modDef, userid)
                 var objectsUpdated = new Array[BaseElemDef](0)
                 var operations = new Array[String](0)
-                if( latestVersion != None ) {
-                    objectsUpdated = objectsUpdated :+ latestVersion.get
-                    operations = operations :+ "Remove"
-                }
+              //  if( latestVersion != None ) {
+              //      objectsUpdated = objectsUpdated :+ latestVersion.get
+              //      operations = operations :+ "Remove"
+              //  }
                 objectsUpdated = objectsUpdated :+ modDef
                 operations = operations :+ "Add"
                 NotifyEngine(objectsUpdated, operations)
@@ -4516,25 +4517,31 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     }
   }
 
-    /**
-     * GetAllModelsFromCache
-     * @param active
-     * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
-     *               method. If Security and/or Audit are configured, this value must be a value other than None.
-     * @return
-     */
-  def GetAllModelsFromCache(active: Boolean, userid: Option[String] = None): Array[String] = {
+  /**
+   * GetAllModelsFromCache
+   * @param active
+   * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+   *               method. If Security and/or Audit are configured, this value must be a value other than None.
+   * @return
+   * */
+  def GetAllModelsFromCache(active: Boolean, userid: Option[String] = None, getInactiveOnly: Boolean = false): Array[String] = {
     var modelList: Array[String] = new Array[String](0)
     if (userid != None) logAuditRec(userid, Some(AuditConstants.READ), AuditConstants.GETKEYS, AuditConstants.MODEL, AuditConstants.SUCCESS, "", AuditConstants.MODEL)
     try {
-      val modDefs = MdMgr.GetMdMgr.Models(active, true)
+
+      val modDefs = MdMgr.GetMdMgr.Models(active, false)
       modDefs match {
         case None =>
           None
           logger.debug("No Models found ")
           modelList
         case Some(ms) =>
-          val msa = ms.toArray
+          var msa: Array[ModelDef] = null
+          if (getInactiveOnly) {
+            msa = ms.filter(mDef => {!mDef.active}).toSet.toArray
+          } else {
+            msa = ms.toArray
+          }
           val modCount = msa.length
           modelList = new Array[String](modCount)
           for (i <- 0 to modCount - 1) {
@@ -4737,7 +4744,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     if (userid != None) logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.GETOBJECT, AuditConstants.MODEL, AuditConstants.SUCCESS, "", dispkey)
     try {
       var key = nameSpace + "." + name + "." + version.toLong
-      val o = MdMgr.GetMdMgr.Model(nameSpace.toLowerCase, name.toLowerCase, version.toLong, true)
+      val o = MdMgr.GetMdMgr.Model(nameSpace.toLowerCase, name.toLowerCase, version.toLong, false)
       o match {
         case None =>
           None

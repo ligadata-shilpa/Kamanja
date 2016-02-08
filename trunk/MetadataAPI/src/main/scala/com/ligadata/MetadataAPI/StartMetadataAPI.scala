@@ -89,7 +89,7 @@ object StartMetadataAPI {
             depName = arg
             expectDep = false
           }
-           else if ((action.equalsIgnoreCase(Action.ADDMODELPMML.toString) || action.equalsIgnoreCase(Action.UPDATEMODELPMML.toString)) && location.size > 0) {
+          else if ((action.equalsIgnoreCase(Action.ADDMODELPMML.toString) || action.equalsIgnoreCase(Action.UPDATEMODELPMML.toString)) && location.size > 0) {
 
             if(arg.equalsIgnoreCase(MODELNAME)){
               expectModelName=true
@@ -120,7 +120,7 @@ object StartMetadataAPI {
               argsUntilParm = argsUntilParm - 1
             }
 
-            if (argsUntilParm < 0) {
+            if (argsUntilParm < 0 && !(action.equalsIgnoreCase("getmodel") && arg.equalsIgnoreCase("active"))) {
               depName = arg
             }
             else if (arg != "debug")
@@ -282,14 +282,22 @@ object StartMetadataAPI {
             response = ModelService.updateModeljava(input, param, userId)
         }
 
-        case Action.GETALLMODELS => response = ModelService.getAllModels(userId)
+        case Action.GETALLMODELS => response = ModelService.getAllModels(userId, false)
+        case Action.GETACTIVEMODELS => response =  ModelService.getAllModels(userId, true)
+
         case Action.GETMODEL => response = {
           if (param.length == 0)
-            ModelService.getModel("", userId)
+            ModelService.getModel("", false, userId)
           else
-            ModelService.getModel(param, userId)
+            ModelService.getModel(param, false, userId)
         }
 
+        case Action.GETMODELACTIVE => response = {
+          if (param.length == 0)
+            ModelService.getModel("", true, userId)
+          else
+            ModelService.getModel(param, true, userId)
+        }
 
         //container management
         case Action.ADDCONTAINER => response = ContainerService.addContainer(input)

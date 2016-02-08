@@ -246,7 +246,7 @@ class MdMgr {
 
   /** Get Immutable Set from Mutable Set */
   private def GetImmutableSet[T <: BaseElemDef](elems: Option[scala.collection.mutable.Iterable[T]], onlyActive: Boolean, latestVersion: Boolean): Option[scala.collection.immutable.Set[T]] = {
-    if (latestVersion == false) {
+    if (!latestVersion) {
       elems match {
         case None => None
         case Some(es) => {
@@ -2875,20 +2875,6 @@ class MdMgr {
   def AddModelDef(mdl: ModelDef, allowLatestVersion: Boolean): Unit = {
 
     var modelExists: Boolean = false
-    val existingModel = Model(mdl.FullName, -1, false)
-    if (existingModel != None) {
-      val latesmodel = existingModel.get.asInstanceOf[ModelDef]
-      if (allowLatestVersion) {
-        if (mdl.Version < latesmodel.Version) {
-          modelExists = true
-        }
-      }
-      else {
-        if (mdl.Version <= latesmodel.Version) {
-          modelExists = true
-        }
-      }
-    }
 
     if (modelExists) {
       throw AlreadyExistsException(s"Model ${mdl.FullName}  should be higher than existing models.", null)

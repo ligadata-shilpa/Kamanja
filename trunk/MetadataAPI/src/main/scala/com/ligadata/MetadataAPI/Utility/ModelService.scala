@@ -644,8 +644,9 @@ object ModelService {
      * @param userid the optional userId. If security and auditing in place this parameter is required.
      * @return the result of the operation - a JSON string representation of the ModelDef
      */
-    def getModel(param: String = ""
-               , userid: Option[String] = Some("metadataapi")
+    def getModel(param: String = "",
+                 getActiveOnly: Boolean = true,
+                 userid: Option[String] = Some("metadataapi")
                ): String ={
         var response=""
         try {
@@ -657,7 +658,7 @@ object ModelService {
               case e: Exception => e.printStackTrace()
             }
           }
-          val modelKeys = MetadataAPIImpl.GetAllModelsFromCache(true, None)
+          val modelKeys = MetadataAPIImpl.GetAllModelsFromCache(getActiveOnly, None)
           if (modelKeys.length == 0) {
             val errorMsg="Sorry, No models available, in the Metadata, to display!"
             response=errorMsg
@@ -694,9 +695,9 @@ object ModelService {
      * @param userid the optional userId. If security and auditing in place this parameter is required.
      * @return
      */
-    def getAllModels(userid: Option[String] = Some("metadataapi")) : String ={
+    def getAllModels(userid: Option[String] = Some("metadataapi"), onlyActive: Boolean = true) : String ={
         var response=""
-        val modelKeys = MetadataAPIImpl.GetAllModelsFromCache(true, userid)
+        val modelKeys = MetadataAPIImpl.GetAllModelsFromCache(onlyActive, userid)
         if (modelKeys.length == 0) {
           response="Sorry, No models available in the Metadata"
         }else{
@@ -786,7 +787,7 @@ object ModelService {
               case e: Exception => e.printStackTrace()
             }
           }
-          val modelKeys = MetadataAPIImpl.GetAllModelsFromCache(false, None)
+          val modelKeys = MetadataAPIImpl.GetAllModelsFromCache(false, None, true)
           if (modelKeys.length == 0) {
             val errorMsg="Sorry, No models available, in the Metadata, to activate!"
             response=errorMsg
