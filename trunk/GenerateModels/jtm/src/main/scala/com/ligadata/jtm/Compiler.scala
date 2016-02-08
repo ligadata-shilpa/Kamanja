@@ -423,7 +423,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
         val transformation = root.transformations.get(t).get
 
-        methods :+= "def exeGenerated_%s_%d(msg1: %s) = {".format(t, depId, deps.head)
+        methods :+= "def exeGenerated_%s_%d(msg1: %s) (var result: Array[Result]) = {".format(t, depId, deps.head)
 
         // Collect form metadata
         val inputs: Array[Element] = ColumnNames(md, deps) // Seq("in1", "in2", "in3", "in4").toSet
@@ -460,7 +460,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
               val newExpression = FixupColumnNames(c._2.expression, fixedMappingSources)
 
               // Output the actual compute
-              result ++= Array("val %s = %s\n".format(c._1, newExpression))
+              methods ++= Array("val %s = %s\n".format(c._1, newExpression))
               fixedMappingSources ++= Map(c._1 -> c._1)
               false
             } else {
@@ -607,7 +607,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
       })
     })
 
-    val resultVar = "var result: Array[Result] = Array.empty[Result]"
+    val resultVar = "implicit var result: Array[Result] = Array.empty[Result]"
     val returnValue = "factory.createResultObject().asInstanceOf[MappedModelResults].withResults(result)"
     subtitutions.Add("model.methods", methods.mkString("\n"))
     subtitutions.Add("model.code", resultVar + "\n" + exechandler.mkString("\n") + "\n" + returnValue + "\n")

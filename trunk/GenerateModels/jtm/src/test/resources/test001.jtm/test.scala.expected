@@ -29,17 +29,17 @@ class Factory(modelDef: ModelDef, nodeContext: NodeContext) extends ModelInstanc
   override def getVersion: String = "0.0.1"
   override def createResultObject(): ModelResultBase = new MappedModelResults()
 }
-val out3 = iplookup(msg1.in1).zipcode
 class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
   override def execute(txnCtxt: TransactionContext, outputDefault: Boolean): ModelResultBase = {
-    var result: Array[Result] = Array.empty[Result]
+    implicit var result: Array[Result] = Array.empty[Result]
     if(msg.isInstanceOf[com.ligadata.kamanja.test001.msg1]) {
       val msg1 = msg.isInstanceOf[com.ligadata.kamanja.test001.msg1]
       exeGenerated_test1_1(msg1)
     }
     factory.createResultObject().asInstanceOf[MappedModelResults].withResults(result)
   }
-  def exeGenerated_test1_1(msg1: com.ligadata.kamanja.test001.msg1) = {
+  def exeGenerated_test1_1(msg1: com.ligadata.kamanja.test001.msg1) (var result: Array[Result]) = {
+    val out3 = iplookup(msg1.in1).zipcode
     def process_o1() = {
       if (!(msg1.in2 != -1 && msg1.in2 < 100)) return
       val t1: String = (msg1.in2).toString()
