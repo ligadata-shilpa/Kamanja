@@ -4,8 +4,11 @@ package com.ligadata.filedataprocessor
   * Created by Yasser on 2/8/2016.
   */
 
-import java.util.zip.GZIPInputStream
 import java.io.{InputStream, IOException}
+import java.util.zip.GZIPInputStream
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream
+import org.anarres.lzo.LzopInputStream
+import org.apache.logging.log4j.LogManager
 
 
 object CompressionType extends Enumeration {
@@ -20,6 +23,9 @@ object CompressionUtil {
   def BZIP2_MAGIC = 0x685A42
   def LZO_MAGIC   = 0x4f5a4c
   def GZIP_MAGIC = GZIPInputStream.GZIP_MAGIC
+
+  lazy val loggerName = this.getClass.getName
+  lazy val logger = LogManager.getLogger(loggerName)
 
   /**
     * checking the compression type by comparing magic numbers which is the head of the file
@@ -64,11 +70,6 @@ object CompressionUtil {
     UNKNOWN
   }
 
-  def testDetectCompressionTypeByExtension(filePath : String)  = {
-    val compressionType = detectCompressionTypeByExtension(filePath)
-    println(s"CompressionType for $filePath is $compressionType")
-  }
-
   def detectCompressionTypeByExtension(filePath : String) : CompressionType = {
 
     val fileNameParts = filePath.split("\\.")
@@ -87,5 +88,32 @@ object CompressionUtil {
       return LZO
 
     UNKNOWN
+  }
+
+  /**
+    * based on the compression type build a stream using the original stream.
+    * this way the returned steam object can be treated in an abstract way
+    *
+    * @param originalInStream any input stream
+    * @param compressionType GZIP, BZIP2, LZO, UNKNOWN
+    * @return input stream suitable for the file based on its compression type
+    */
+  def getProperInputStream(originalInStream : InputStream, compressionType : CompressionType) : InputStream = {
+
+    try {
+      compressionType match {
+        case GZIP => new GZIPInputStream(originalInStream)
+        case BZIP2 => new BZip2CompressorInputStream(originalInStream)
+        case LZO => new LzopInputStream(originalInStream)
+        case UNKNOWN => originalInStream //treat unknown as un-compressed
+      }
+    }
+    catch{
+      case e : Exception => {
+        logger.error(e)
+        originalInStream
+      }
+    }
+
   }
 }
