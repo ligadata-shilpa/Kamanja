@@ -60,7 +60,7 @@ public class MainClass {
 				hit = record.GenerateHitAsKV(fieldsHash,configObj.getDelimiter());
 			} else {
 				fieldsList = new ArrayList<String>(fieldsHash.values());
-				hit = record.GenerateHitCSV(fieldsList,configObj.getDelimiter());
+				hit = record.GenerateHitAsCSV(fieldsList,configObj.getDelimiter());
 			}
 
 			if (configObj.isDropInFiles()) {
