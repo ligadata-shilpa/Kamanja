@@ -273,6 +273,17 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     }
   }
 
+  def ResolveAlias(n: String, aliases: Map[String, String] ) : String =  {
+
+    val a = aliases.get(n)
+    if(a.isEmpty) {
+      throw new Exception("Missing alias %s".format(n))
+    } else {
+      a.get
+    }
+  }
+
+
   // Load metadata
   val md = loadMetadata
 
@@ -420,10 +431,10 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
         }.toMap
 
         val qualifiedInputs = inputs.map( p => {
-          (p.className + "." + p.fieldName -> "%s.%s".format(p.argName, e))
+          ((p.className + "." + p.fieldName) -> "%s.%s".format(p.argName, e))
         }).toMap
 
-        var mappingSources = uniqueInputs ++ qualifiedInputs
+        var fixedMappingSources = uniqueInputs ++ qualifiedInputs
 
         // Common computes section
         //
@@ -438,13 +449,13 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
             val list = ExtractColumnNames(c._2.expression)
             val rList = ResolveNames(list, root.aliases.toMap)
-            val open = rList.filter(f => !mappingSources.contains(f._2) )
+            val open = rList.filter(f => !fixedMappingSources.contains(f._2) )
             if(open.size==0) {
-              val newExpression = FixupColumnNames(c._2.expression, mappingSources)
+              val newExpression = FixupColumnNames(c._2.expression, fixedMappingSources)
 
               // Output the actual compute
               result ++= Array("val %s = %s\n".format(c._1, newExpression))
-              mappingSources ++= Map(c._1 -> c._1)
+              fixedMappingSources ++= Map(c._1 -> c._1)
               false
             } else {
               true
@@ -455,24 +466,31 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           computes = computes1
         }
 
-        if(cnt2!=0){
-          //throw new Exception("Not all elements used")
+        if(computes.size > 0){
+          throw new Exception("Not all elements used")
           logger.trace("Not all elements used")
         }
 
         // Individual outputs
         //
-        transformation.outputs.foldLeft(Array.empty[String]) ( (r, o) => {
+        val inner = transformation.outputs.foldLeft(Array.empty[String]) ( (r, o) => {
 
           var collect = Array.empty[String]
           collect ++= Array("\ndef process_%s() = {\n".format(o._1))
 
-          val outputSet: Set[String] = ColumnNames(md, ResolveName(o._1, root.aliases.toMap))
+          val outputSet: Set[String] = ColumnNames(md, ResolveAlias(o._1, root.aliases.toMap))
 
           // State variables to track the progress
           // a little bit simpler than having val's
-          var mapNameSource: Map[String, String] = mappingSources
+          var mappingSources: Map[String, String] = fixedMappingSources
+
           var outputSet1: Set[String] = outputSet
+          // To Do: Clarify how to resolve transactionid (and other auto columns)
+          // Transaction id is in the input
+          // so will just push it back if needed
+          if(outputSet1.contains("transactionid")) {
+            outputSet1 --= Set("transactionid")
+          }
 
           var mapping = o._2.mapping
           var filters =  Array(o._2.filter)
@@ -480,9 +498,12 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           var cnt1 = filters.length + computes.size
           var cnt2 = 0
 
+          // Remove provided computes -  outer computes
+          outputSet1 = outputSet1.filter( f => !mappingSources.contains(f))
+
           // Removed if mappings are provided
-          val found = mapping.filter( f => mapNameSource.contains(f._2) )
-          found.foreach( f => { outputSet1 --= Set(f._1); mapNameSource ++= Map(f._1 -> mapNameSource.get(f._2).get) } )
+          val found = mapping.filter( f => mappingSources.contains(f._2) )
+          found.foreach( f => { outputSet1 --= Set(f._1); mappingSources ++= Map(f._1 -> mappingSources.get(f._2).get) } )
           mapping = mapping.filterKeys( f => !found.contains(f) )
 
           // Abort this loop if nothing changes or we can satisfy all outputs
@@ -493,10 +514,10 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
             // filters
             val filters1 = filters.filter(f => {
               val list = ExtractColumnNames(f)
-              val open = list.filter(f => !mapNameSource.contains(f) )
+              val open = list.filter(f => !mappingSources.contains(f) )
               if(open.size==0) {
                 // Sub names to
-                val newExpression = FixupColumnNames(f, mapNameSource)
+                val newExpression = FixupColumnNames(f, mappingSources)
                 // Output the actual filter
                 collect ++= Array("if (%s) return\n".format(newExpression))
                 false
@@ -508,10 +529,10 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
             // computes
             val computes1 = computes.filter( c => {
               val list = ExtractColumnNames(c._2.expression)
-              val open = list.filter(f => !mapNameSource.contains(f) )
+              val open = list.filter(f => !mappingSources.contains(f) )
               if(open.size==0) {
                 // Sub names to
-                val newExpression = FixupColumnNames(c._2.expression, mapNameSource)
+                val newExpression = FixupColumnNames(c._2.expression, mappingSources)
 
                 // Output the actual compute
                 // To Do: multiple vals and type provided
@@ -521,7 +542,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
                 else
                   collect ++= Array("val %s = %s\n".format(c._1, newExpression))
 
-                mapNameSource ++= Map(c._1 -> c._1)
+                mappingSources ++= Map(c._1 -> c._1)
                 outputSet1 --= Set(c._1)
                 false
               } else {
@@ -532,8 +553,8 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
             // Check Mapping
             if(mapping.size>0)
             {
-              val found = mapping.filter( f => mapNameSource.contains(f._2) )
-              found.foreach(f => {outputSet1 --= Set(f._1); mapNameSource ++= Map(f._1 -> mapNameSource.get(f._2).get)})
+              val found = mapping.filter( f => mappingSources.contains(f._2) )
+              found.foreach(f => {outputSet1 --= Set(f._1); mappingSources ++= Map(f._1 -> mappingSources.get(f._2).get)})
               mapping = mapping.filterKeys( f => !found.contains(f)  )
             }
 
@@ -543,16 +564,9 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
             computes = computes1
           }
 
-          // To Do: Clarify how to resolve transactionid (and other auto columns)
-          // Transaction id is in the input
-          // so will just push it back if needed
-          if(outputSet1.contains("transactionid")) {
-            outputSet1 --= Set("transactionid")
-          }
-
           if(outputSet1.size>0){
             logger.trace("Not all outputs satisfied. missing={}" , outputSet1.mkString(", "))
-            //throw new Exception("Not all outputs satisfied. missing=" + outputSet1.mkString(", "))
+            throw new Exception("Not all outputs satisfied. missing=" + outputSet1.mkString(", "))
           }
 
           if(cnt2!=0){
@@ -564,7 +578,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           // Translate outputs to the values
           val outputElements = outputSet.map( e => {
             // e.name -> from input, from mapping, from variable
-            "new Result(\"%s\", %s)".format(e, mapNameSource.get(e).get)
+            "new Result(\"%s\", %s)".format(e, mappingSources.get(e).get)
           }).mkString(", ")
           val outputResult = "result ++= Array[Result](%s)".format(outputElements)
 
@@ -574,12 +588,15 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           // outputs
           r ++ collect
         })
-        result :+= "}"
+
+        result ++= inner
 
         // Output the function calls
         transformation.outputs.foreach( o => {
           result :+= "process_%s()".format(o._1)
         })
+
+        result :+= "}"
 
       })
     })
