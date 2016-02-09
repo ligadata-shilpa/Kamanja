@@ -14,7 +14,7 @@
     "test1": {
       "dependsOn": [ ["m1"] ],
       "computes": {
-        "out3":{ "type": "Int", "val": "iplookup($in1).zipcode", "comment": "in scala, type could be optional" }
+        "out3":{ "type": "Int", "val": "$in1 + 1000", "comment": "in scala, type could be optional" }
       },
 
       "outputs": {
@@ -28,9 +28,8 @@
           "filter": "!($in2 != -1 && $in2 < 100)",
 
           "computes": {
-            "t1": { "type": "String", "val": "($in2).toString()" }
+            "t1": { "type": "String", "val": "\"s:\" + ($in2).toString()" }
           }
-
         }
       }
     }

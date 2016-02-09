@@ -223,6 +223,14 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     members.map( e => e.Name).toSet
   }
 
+  def ResolveToVersionedClassname(mgr: MdMgr, classname: String): String = {
+    val classinstance = md.Message(classname, 0, true)
+    if(classinstance.isEmpty) {
+      throw new Exception("Metadata: unable to find class %s".format(classname))
+    }
+    classinstance.get.physicalName
+  }
+
   /**
     *
     * @param argName
@@ -323,6 +331,10 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     //
     result ++= root.imports.distinct.map( i => "import %s".format(i) )
 
+    // Add message so we can actual compile
+    // Check how to reconcile during add/compilation
+    //result ++= root.aliases.map(p => p._2).toSet.toArray.map( i => "import %s".format(i))
+
     // Collect all classes
     //
     val messages = EvalTypes.CollectMessages(root)
@@ -377,12 +389,12 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     // Return tru if we accept the message, flatten the messages into a list
     //
     val msgs = dependencyToTransformations.foldLeft(Set.empty[String]) ( (r, d) => {
-      d._2._2.foldLeft(r) ((r, n) => {
+      d._1.foldLeft(r) ((r, n) => {
         r ++ Set(n)
       })
     })
 
-    subtitutions.Add("factory.isvalidmessage", msgs.map( m => "msg.isInstanceOf[%s]".format(m)).mkString("||") )
+    subtitutions.Add("factory.isvalidmessage", msgs.map( m => "msg.isInstanceOf[%s]".format(ResolveToVersionedClassname(md, m))).mkString("||") )
     val factory = subtitutions.Run(Parts.factory)
     result :+= factory
 
@@ -397,10 +409,10 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
         val depId = e._2._1
         val calls = e._2._2.map( f => "exeGenerated_%s_%d(msg1)".format(f, depId) ).mkString("\n")
         exechandler :+= """|if(msg.isInstanceOf[%s]) {
-                      |val msg1 = msg.isInstanceOf[%s]
-                      |%s
-                      |}
-                      |""".stripMargin('|').format(name, name, calls)
+                           |val msg1 = msg.asInstanceOf[%s]
+                           |%s
+                           |}
+                           |""".stripMargin('|').format(ResolveToVersionedClassname(md, name), ResolveToVersionedClassname(md, name), calls)
         0
       } else {
         logger.error("Unsupported multiple dependencies. {}", "Dependency [%s] => (%s)".format(e._1.mkString(", "), e._2._2.mkString(", ")))
@@ -423,7 +435,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
         val transformation = root.transformations.get(t).get
 
-        methods :+= "def exeGenerated_%s_%d(msg1: %s) (var result: Array[Result]) = {".format(t, depId, deps.head)
+        methods :+= "def exeGenerated_%s_%d(msg1: %s) (implicit results: Array[Result]) = {".format(t, depId, ResolveToVersionedClassname(md, deps.head))
 
         // Collect form metadata
         val inputs: Array[Element] = ColumnNames(md, deps) // Seq("in1", "in2", "in3", "in4").toSet
@@ -482,7 +494,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
         val inner = transformation.outputs.foldLeft(Array.empty[String]) ( (r, o) => {
 
           var collect = Array.empty[String]
-          collect ++= Array("\ndef process_%s() = {\n".format(o._1))
+          collect ++= Array("\ndef process_%s(): Long = {\n".format(o._1))
 
           val outputSet: Set[String] = ColumnNames(md, ResolveAlias(o._1, root.aliases.toMap))
 
@@ -491,11 +503,11 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           var mappingSources: Map[String, String] = fixedMappingSources
 
           var outputSet1: Set[String] = outputSet
-          // To Do: Clarify how to resolve transactionid (and other auto columns)
+          // To Do: Clarify how to resolve transactionId (and other auto columns)
           // Transaction id is in the input
           // so will just push it back if needed
-          if(outputSet1.contains("transactionid")) {
-            outputSet1 --= Set("transactionid")
+          if(outputSet1.contains("transactionId")) {
+            outputSet1 --= Set("transactionId")
           }
 
           var mapping = o._2.mapping
@@ -525,7 +537,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
                 // Sub names to
                 val newExpression = FixupColumnNames(f, mappingSources)
                 // Output the actual filter
-                collect ++= Array("if (%s) return\n".format(newExpression))
+                collect ++= Array("if (%s) return 1\n".format(newExpression))
                 false
               } else {
                 true
@@ -586,10 +598,12 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
             // e.name -> from input, from mapping, from variable
             "new Result(\"%s\", %s)".format(e, mappingSources.get(e).get)
           }).mkString(", ")
-          val outputResult = "result ++= Array[Result](%s)".format(outputElements)
+
+          // To Do: this is not correct
+          val outputResult = "results ++ Array[Result](%s)".format(outputElements)
 
           collect ++= Array(outputResult)
-          collect ++= Array("}\n")
+          collect ++= Array("0\n}\n")
 
           // outputs
           r ++ collect
@@ -607,8 +621,8 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
       })
     })
 
-    val resultVar = "implicit var result: Array[Result] = Array.empty[Result]"
-    val returnValue = "factory.createResultObject().asInstanceOf[MappedModelResults].withResults(result)"
+    val resultVar = "implicit var results: Array[Result] = Array.empty[Result]\nval msg =  txnCtxt.getMessage()\n"
+    val returnValue = "factory.createResultObject().asInstanceOf[MappedModelResults].withResults(results)"
     subtitutions.Add("model.methods", methods.mkString("\n"))
     subtitutions.Add("model.code", resultVar + "\n" + exechandler.mkString("\n") + "\n" + returnValue + "\n")
     val model = subtitutions.Run(Parts.model)
@@ -621,223 +635,4 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
     outputFile
   }
-
-  /*
-  def CollectInputs(t: Array[Transformation]): Array[String] = {
-    val s = t.map( e => {
-      e.input
-    })
-    s.toSet.toArray
-  }
-
-  def CollectOutputs(t: Array[Transformation]): Array[String] = {
-    val s = t.foldLeft(Array.empty[String]) ( (r, e) => {
-      val s = e.outputs.foldLeft(r) ( (r, e) => {
-        r ++ Array(e.output)
-      })
-      r ++ s
-    })
-    s.toSet.toArray
-  }
-
-  def FixupColumnNames(expression: String, mapNameSource: Map[String, String]): String = {
-    val regex = """(\$[a-zA-Z0-9_]+)""".r
-    val m = regex.pattern.matcher(expression)
-    val sb = new StringBuffer
-    var i = 0;
-    while (m.find) {
-      m.appendReplacement(sb, mapNameSource.get(m.group(0).drop(1)).get)
-      i = i + 1
-    }
-    m.appendTail(sb)
-    sb.toString
-  }
-
-  def ColumnNames(mgr: MdMgr, classname: String): Set[String] = {
-    val classinstance = md.Message(classname, 0, true)
-    val members = classinstance.get.containerType.asInstanceOf[StructTypeDef].memberDefs
-    members.map( e => e.Name).toSet
-  }
-
-  def Execute(): String = {
-
-    var fncnt = 0
-
-    case class leg(val packagename: String, val classname: String, val handle: String, val id: Int)
-
-    // Constructs the input and output types
-    val inputMap = CollectInputs(root.transformations).zipWithIndex.map( e => {
-      val (packagename, classname) = splitPackageClass(e._1)
-      val handle = "mi%d".format(e._2)
-      ( e._1 -> leg(packagename, classname, handle, e._2))
-    })
-
-    val outputMap = CollectOutputs(root.transformations).zipWithIndex.map( e => {
-      val (packagename, classname) = splitPackageClass(e._1)
-      val handle = "mo%d".format(e._2)
-      ( e._1 -> leg(packagename, classname, handle, e._2))
-    })
-
-    val inputs = inputMap.map( p => {
-        val leg = p._2
-        "import %s.{%s ⇒ %s}".format(leg.packagename, leg.classname, leg.handle)
-    }).mkString("\n")
-    sb.append(inputs)
-    sb.append("\n")
-
-    val outputs = outputMap.map( p => {
-      val leg = p._2
-      "import %s.{%s ⇒ %s}".format(leg.packagename, leg.classname, leg.handle)
-    }).mkString("\n")
-    sb.append(outputs)
-    sb.append("\n")
-
-    subtitutions.Add("factory.isvalidmessage", ConstructIsValidMessage(inputMap.map( p => p._2.handle )))
-    val factory = subtitutions.Run(Parts.factory)
-    sb.append(factory)
-    sb.append("\n\n")
-
-    // Collect all outputs here
-    val resultVar = "var result: Array[Result] = Array.empty[Result]"
-
-    val inputprocessing = inputMap.map( p => {
-      val leg = p._2
-
-      // Get all transformations attached to the input
-      val transformations = root.transformations.filter( t => t.input == p._1 )
-
-      val transparts = transformations.foldLeft(Array.empty[Array[String]]) ( (r, t) => {
-
-        var tr = Array.empty[String]
-
-        // Process the output per message
-
-        // variables
-        tr ++= t.variables.map( e => "val %s: %s".format(e.name, e.typename))
-
-        tr ++= t.outputs.foldLeft(Array.empty[String]) ( (r, o) => {
-
-          var collect = Array.empty[String]
-          collect ++= Array("\ndef fn%d() = {\n".format(fncnt))
-
-          // Collect form metadata
-          val inputSet: Set[String] = ColumnNames(md, t.input) // Seq("in1", "in2", "in3", "in4").toSet
-          val outputSet: Set[String] = ColumnNames(md, o.output) //Seq("out1", "out2", "out3", "out4").toSet
-
-          // State variables to track the progress
-          // a little bit simpler than having val's
-          var mapNameSource: Map[String, String] = inputSet.map( e => (e,"msg.%s".format(e))).toMap
-          var outputSet1: Set[String] = outputSet
-
-          var mapping = o.mappings
-          var filters =  o.filters
-          var computes = o.computes
-          var cnt1 = filters.length + computes.length
-          var cnt2 = 0
-
-          // Removed if mappings are provided
-          val found = mapping.filter( f => mapNameSource.contains(f._2) )
-          found.foreach( f => { outputSet1 --= Set(f._1); mapNameSource ++= Map(f._1 -> mapNameSource.get(f._2).get) } )
-          mapping = mapping.filterKeys( f => !found.contains(f) )
-
-          // Abort this loop if nothing changes or we can satisfy all outputs
-          while(cnt1!=cnt2 && outputSet1.size > 0) {
-
-            cnt2 = cnt1
-
-            // filters
-            val filters1 = filters.filter(f => {
-              val list = ExtractColumnNames(f.expression)
-              val open = list.filter(f => !mapNameSource.contains(f) )
-              if(open.size==0) {
-                // Sub names to
-                val newExpression = FixupColumnNames(f.expression, mapNameSource)
-                // Output the actual filter
-                collect ++= Array("if (%s) return\n".format(newExpression))
-                false
-              } else {
-                true
-              }
-            })
-
-            // computes
-            val computes1 = computes.filter( c => {
-              val list = ExtractColumnNames(c.expression)
-              val open = list.filter(f => !mapNameSource.contains(f) )
-              if(open.size==0) {
-                // Sub names to
-                val newExpression = FixupColumnNames(c.expression, mapNameSource)
-                // Output the actual compute
-                collect ++= Array("val %s = %s\n".format(c.output, newExpression))
-                mapNameSource ++= Map(c.output -> c.output)
-                outputSet1 --= Set(c.output)
-                false
-              } else {
-                true
-              }
-            })
-
-            // Check Mapping
-            if(mapping.size>0)
-            {
-              val found = mapping.filter( f => mapNameSource.contains(f._2) )
-              found.foreach(f => {outputSet1 --= Set(f._1); mapNameSource ++= Map(f._1 -> mapNameSource.get(f._2).get)})
-              mapping = mapping.filterKeys( f => !found.contains(f)  )
-            }
-
-            // Update state
-            cnt1 = filters1.length + computes1.length
-            filters = filters1
-            computes = computes1
-          }
-
-          // Transaction id is in the input
-          // so will just push it back if needed
-          if(inputSet.contains("transactionid")) {
-            outputSet1 --= Set("transactionid")
-          }
-
-          if(outputSet1.size>0){
-            throw new Exception("Not all outputs satisfied. missing=" + outputSet1.mkString(", "))
-            logger.trace("Not all outputs satisfied. missing={}" , outputSet1.mkString(", "))
-          }
-
-          if(cnt2!=0){
-            //throw new Exception("Not all elements used")
-            logger.trace("Not all elements used")
-          }
-
-          // Generate the output for this iteration
-          // Translate outputs to the values
-          val outputElements = outputSet.map( e => {
-            // e.name -> from input, from mapping, from variable
-            "new Result(\"%s\", %s)".format(e, mapNameSource.get(e).get)
-          }).mkString(", ")
-          val outputResult = "result ++= Array[Result](%s)".format(outputElements)
-
-          collect ++= Array(outputResult)
-          collect ++= Array("}\n")
-          collect ++= Array("fn%d()\n".format(fncnt))
-
-          // outputs
-          r ++ collect
-        })
-
-        r ++ Array(tr)
-      })
-
-      "if(msg.isInstanceOf[%s]) {\n".format(leg.handle) +
-      "val msg = msg.isInstanceOf[%s]\n".format(leg.handle) +
-      transparts.map( e => e.mkString("\n") + "\n").mkString("\n") +
-      "\n}"
-    })
-
-    val returnValue = "factory.createResultObject().asInstanceOf[MappedModelResults].withResults(result)"
-    subtitutions.Add("model.methods", "")
-    subtitutions.Add("model.code", resultVar + "\n\n" + inputprocessing.mkString("\n") + "\n\n" + returnValue + "\n")
-    val model = subtitutions.Run(Parts.model)
-    sb.append(model)
-    sb.append("\n")
-  }
-  */
 }

@@ -15,7 +15,7 @@
       {
         "Field" : {
           "Name" : "in2",
-          "Type" : "System.String"
+          "Type" : "System.Int"
         }
       },
       {
