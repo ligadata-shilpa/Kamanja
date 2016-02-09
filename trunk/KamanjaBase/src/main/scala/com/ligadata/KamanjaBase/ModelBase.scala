@@ -453,3 +453,24 @@ class NodeContext(val gCtx: EnvContext) {
   def getValue(key: String): Any = { valuesMap.get(key) }
 }
 
+// 1.1.x compatible models for execution purpose without changing much in the execution path -- Begin
+class ModelBaseMdlInstance(factory: ModelBaseObjMdlInstanceFactory) extends ModelInstance(factory.asInstanceOf[ModelInstanceFactory]) {
+  override def execute(txnCtxt: TransactionContext, outputDefault: Boolean): ModelResultBase = {
+    val modelContext = new ModelContext(txnCtxt, txnCtxt.getMessage())
+    val mdlInst = factory.mdlBaseObj.CreateNewModel(modelContext)
+    mdlInst.execute(outputDefault)
+  }
+}
+
+class ModelBaseObjMdlInstanceFactory(modelDef: ModelDef, nodeContext: NodeContext, val mdlBaseObj: ModelBaseObj) extends ModelInstanceFactory(modelDef, nodeContext)  {
+  override def getModelName() = mdlBaseObj.ModelName() // Model Name
+
+  override def getVersion() = mdlBaseObj.Version() // Model Version
+
+  override def isValidMessage(msg: MessageContainerBase): Boolean = mdlBaseObj.IsValidMessage(msg)
+
+  override def createModelInstance() = new ModelBaseMdlInstance(this)
+
+  override def createResultObject() = mdlBaseObj.CreateResultObject()
+}
+// 1.1.x compatible models for execution purpose without changing much in the execution path -- End

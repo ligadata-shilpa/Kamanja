@@ -17,7 +17,7 @@
 package com.ligadata.FactoryOfModelInstanceFactory
 
 import com.ligadata.kamanja.metadata.{ ModelDef, BaseElem }
-import com.ligadata.KamanjaBase.{ FactoryOfModelInstanceFactory, ModelInstanceFactory, EnvContext, NodeContext }
+import com.ligadata.KamanjaBase._
 import com.ligadata.Utils.{ Utils, KamanjaClassLoader, KamanjaLoaderInfo }
 import org.apache.logging.log4j.{ Logger, LogManager }
 import com.ligadata.Exceptions.StackTrace
@@ -54,6 +54,7 @@ object JarFactoryOfModelInstanceFactory extends FactoryOfModelInstanceFactory {
   }
 
   private[this] def CheckAndPrepModelFactory(nodeContext: NodeContext, metadataLoader: KamanjaLoaderInfo, clsName: String, mdl: ModelDef): ModelInstanceFactory = {
+    var isModelBaseObj = false
     var isModel = true
     var curClass: Class[_] = null
 
@@ -66,8 +67,13 @@ object JarFactoryOfModelInstanceFactory extends FactoryOfModelInstanceFactory {
 
       while (curClz != null && isModel == false) {
         isModel = Utils.isDerivedFrom(curClz, "com.ligadata.KamanjaBase.ModelInstanceFactory")
-        if (isModel == false)
-          curClz = curClz.getSuperclass()
+        if (isModel == false) {
+          isModel = Utils.isDerivedFrom(curClz, "com.ligadata.KamanjaBase.ModelBaseObj")
+          if (isModel == false)
+            curClz = curClz.getSuperclass()
+          else
+            isModelBaseObj = true
+        }
       }
     } catch {
       case e: Exception => {
@@ -81,8 +87,28 @@ object JarFactoryOfModelInstanceFactory extends FactoryOfModelInstanceFactory {
       try {
         var objinst: Any = null
         try {
-          // Trying Regular class instantiation
-          objinst = curClass.getConstructor(classOf[ModelDef], classOf[NodeContext]).newInstance(mdl, nodeContext)
+          if (isModelBaseObj) {
+            var mdlBaseObjInst: Any = null
+            try {
+              // Trying Singleton Object
+              val module = metadataLoader.mirror.staticModule(clsName)
+              val obj = metadataLoader.mirror.reflectModule(module)
+              mdlBaseObjInst = obj.instance
+            } catch {
+              case e: Exception => {
+                // Trying Regular Object instantiation
+                mdlBaseObjInst = curClass.newInstance
+              }
+            }
+
+            if (objinst.isInstanceOf[ModelBaseObj]) {
+              val modelBaseobj = objinst.asInstanceOf[ModelBaseObj]
+              objinst = new ModelBaseObjMdlInstanceFactory(mdl, nodeContext, modelBaseobj)
+            }
+          } else {
+            // Trying Regular class instantiation
+            objinst = curClass.getConstructor(classOf[ModelDef], classOf[NodeContext]).newInstance(mdl, nodeContext)
+          }
         } catch {
           case e: Exception => {
             val stackTrace = StackTrace.ThrowableTraceString(e)
