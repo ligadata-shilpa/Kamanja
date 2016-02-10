@@ -315,6 +315,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     var result = Array.empty[String]
     var exechandler = Array.empty[String]
     var methods = Array.empty[String]
+    var messages = Array.empty[String]
 
     // Process header
     // ToDo: do we need a different license here
@@ -341,8 +342,8 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
     // Collect all classes
     //
-    val messages = EvalTypes.CollectMessages(root)
-    messages.map( e => "%s aliases %s".format(e._1, e._2.mkString(", ")) ).foreach( m => {
+    val messagesSet = EvalTypes.CollectMessages(root)
+    messagesSet.map( e => "%s aliases %s".format(e._1, e._2.mkString(", ")) ).foreach( m => {
       logger.trace(m)
     })
 
@@ -385,10 +386,17 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
     })._2
 
+    // Upshot of the dependencies
+    //
     dependencyToTransformations.map( e => {
       "Dependency [%s] => (%s)".format(e._1.mkString(", "), e._2._2.mkString(", "))
     }).foreach( m =>logger.trace(m) )
 
+    // Create a map of dependency to id
+    //
+    val incomingToMsgId = dependencyToTransformations.foldLeft(Set.empty[String]) ( (r, e) => {
+      r ++ e._1
+    }).zipWithIndex.map( e => (e._1, (e._2 + 1))).toMap
 
     // Return tru if we accept the message, flatten the messages into a list
     //
@@ -402,31 +410,27 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     val factory = subtitutions.Run(Parts.factory)
     result :+= factory
 
+    // Generate variables
+    //
+    incomingToMsgId.foreach( e => {
+      messages :+= ("val msg%d = msgs.get(\"%s\").getOrElse(null).asInstanceOf[%s]".format(e._2, e._1, ResolveToVersionedClassname(md, e._1)))
+    })
 
-    val errors = dependencyToTransformations.map( e => {
-
-      if (e._2._2.size == 1) {
-
-        // Emit function calls
-        //
-        val name = e._1.head
+    // Compute the highlevel handler that match dpendencies
+    //
+    val handler = dependencyToTransformations.map( e => {
+        val check = e._1.map( m => { "msg%d!=null".format(incomingToMsgId.get(m).get)}).mkString(" && ")
+        val names = e._1.map( m => { "msg%d".format(incomingToMsgId.get(m).get)}).mkString(", ")
         val depId = e._2._1
-        val calls = e._2._2.map( f => "exeGenerated_%s_%d(msg1)".format(f, depId) ).mkString("\n")
-        exechandler :+= """|if(msg.isInstanceOf[%s]) {
-                           |val msg1 = msg.asInstanceOf[%s]
-                           |%s
-                           |}
-                           |""".stripMargin('|').format(ResolveToVersionedClassname(md, name), ResolveToVersionedClassname(md, name), calls)
-        0
-      } else {
-        logger.error("Unsupported multiple dependencies. {}", "Dependency [%s] => (%s)".format(e._1.mkString(", "), e._2._2.mkString(", ")))
-        1
-      }
-    }).sum
-
-    if(errors>0) {
-      throw new Exception("Unsupported multiple dependencies found")
-    }
+        val calls = e._2._2.map( f => "exeGenerated_%s_%d(%s)".format(f, depId, names) ).mkString(" ++ \n")
+      """|if(%s) {
+         |%s
+         |} else {
+         |  Array.empty[Result]
+         |}
+         |""".stripMargin('|').format(check, calls)
+    })
+    exechandler :+=  handler.mkString( "++\n")
 
     // Actual function to be called
     //
@@ -439,7 +443,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
         val transformation = root.transformations.get(t).get
 
-        methods :+= "def exeGenerated_%s_%d(msg1: %s) (implicit results: Array[Result]) = {".format(t, depId, ResolveToVersionedClassname(md, deps.head))
+        methods :+= "def exeGenerated_%s_%d(msg1: %s): Array[Result] = {".format(t, depId, ResolveToVersionedClassname(md, deps.head))
 
         // Collect form metadata
         val inputs: Array[Element] = ColumnNames(md, deps) // Seq("in1", "in2", "in3", "in4").toSet
@@ -498,7 +502,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
         val inner = transformation.outputs.foldLeft(Array.empty[String]) ( (r, o) => {
 
           var collect = Array.empty[String]
-          collect ++= Array("\ndef process_%s(): Long = {\n".format(o._1))
+          collect ++= Array("\ndef process_%s(): Array[Result] = {\n".format(o._1))
 
           val outputSet: Set[String] = ColumnNames(md, ResolveAlias(o._1, root.aliases.toMap))
 
@@ -541,7 +545,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
                 // Sub names to
                 val newExpression = FixupColumnNames(f, mappingSources)
                 // Output the actual filter
-                collect ++= Array("if (%s) return 1\n".format(newExpression))
+                collect ++= Array("if (%s) return Array.empty[Result]\n".format(newExpression))
                 false
               } else {
                 true
@@ -604,10 +608,10 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           }).mkString(", ")
 
           // To Do: this is not correct
-          val outputResult = "results ++ Array[Result](%s)".format(outputElements)
+          val outputResult = "Array[Result](%s)".format(outputElements)
 
           collect ++= Array(outputResult)
-          collect ++= Array("0\n}\n")
+          collect ++= Array("}\n")
 
           // outputs
           r ++ collect
@@ -616,17 +620,18 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
         methods ++= inner
 
         // Output the function calls
-        transformation.outputs.foreach( o => {
-          methods :+= "process_%s()".format(o._1)
-        })
+        methods :+= transformation.outputs.map( o => {
+          "process_%s()".format(o._1)
+        }).mkString("++\n")
 
         methods :+= "}"
 
       })
     })
 
-    val resultVar = "implicit var results: Array[Result] = Array.empty[Result]\nval msg =  txnCtxt.getMessage()\n"
+    val resultVar = "val results: Array[Result] = \n"
     val returnValue = "factory.createResultObject().asInstanceOf[MappedModelResults].withResults(results)"
+    subtitutions.Add("model.message", messages.mkString("\n"))
     subtitutions.Add("model.methods", methods.mkString("\n"))
     subtitutions.Add("model.code", resultVar + "\n" + exechandler.mkString("\n") + "\n" + returnValue + "\n")
     val model = subtitutions.Run(Parts.model)
