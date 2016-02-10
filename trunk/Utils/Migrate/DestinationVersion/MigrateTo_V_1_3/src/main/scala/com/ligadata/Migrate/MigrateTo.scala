@@ -39,6 +39,9 @@ import scala.collection.mutable.ArrayBuffer
 import com.ligadata.kamanja.metadata.ModelCompilationConstants
 import com.ligadata.Exceptions.{ FatalAdapterException, StorageDMLException, StorageDDLException }
 
+import scala.actors.threadpool.{ Executors, ExecutorService, TimeUnit }
+import com.ligadata.Exceptions.StackTrace
+
 class MigrateTo_V_1_3 extends MigratableTo {
   lazy val loggerName = this.getClass.getName
   lazy val logger = LogManager.getLogger(loggerName)
@@ -59,6 +62,8 @@ class MigrateTo_V_1_3 extends MigratableTo {
   private var _bInit = false
   private var _flCurMigrationSummary: PrintWriter = _
   private val defaultUserId: Option[String] = Some("metadataapi")
+
+  private var executor: ExecutorService = null
 
   private def isValidPath(path: String, checkForDir: Boolean = false, checkForFile: Boolean = false, str: String = "path"): Unit = {
     val fl = new File(path)
@@ -250,18 +255,48 @@ class MigrateTo_V_1_3 extends MigratableTo {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
     logger.debug("Backup metadata tables:" + tblsToBackedUp.map(t => "(" + t.srcTable + " => " + t.dstTable + ")").mkString(","))
+    var tblCount = tblsToBackedUp.length
+    executor = Executors.newFixedThreadPool(tblCount)
     tblsToBackedUp.foreach(backupTblInfo => {
-      _metaDataStoreDb.copyTable(backupTblInfo.namespace, backupTblInfo.srcTable, backupTblInfo.dstTable, force)
+      executor.execute(new Runnable() {
+        override def run() = {
+	  _metaDataStoreDb.copyTable(backupTblInfo.namespace, backupTblInfo.srcTable, backupTblInfo.dstTable, force)
+        }
+      })
     })
+    executor.shutdown();
+    try {
+      executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
+    } catch {
+      case e: Exception => {
+	val stackTrace = StackTrace.ThrowableTraceString(e)
+	logger.debug("StackTrace:"+stackTrace)
+      }
+    }
   }
-
+  
   override def backupDataTables(tblsToBackedUp: Array[BackupTableInfo], force: Boolean): Unit = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
     logger.debug("Backup data tables:" + tblsToBackedUp.map(t => "(" + t.srcTable + " => " + t.dstTable + ")").mkString(","))
+    var tblCount = tblsToBackedUp.length
+    executor = Executors.newFixedThreadPool(tblCount)
     tblsToBackedUp.foreach(backupTblInfo => {
-      _dataStoreDb.copyTable(backupTblInfo.namespace, backupTblInfo.srcTable, backupTblInfo.dstTable, force)
+      executor.execute(new Runnable() {
+        override def run() = {
+	  _dataStoreDb.copyTable(backupTblInfo.namespace, backupTblInfo.srcTable, backupTblInfo.dstTable, force)
+        }
+      })
     })
+    executor.shutdown();
+    try {
+      executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
+    } catch {
+      case e: Exception => {
+	val stackTrace = StackTrace.ThrowableTraceString(e)
+	logger.debug("StackTrace:"+stackTrace)
+      }
+    }
   }
 
   override def backupStatusTables(tblsToBackedUp: Array[BackupTableInfo], force: Boolean): Unit = {
@@ -391,6 +426,70 @@ class MigrateTo_V_1_3 extends MigratableTo {
 
     newDeps
   }
+
+
+  private def ProcessMessageOrContainer(objType:String, mdObj: Map[String,Any]): Unit = {
+    val namespace = mdObj.getOrElse("NameSpace", "").toString.trim()
+    val name = mdObj.getOrElse("Name", "").toString.trim()
+    val dispkey = (namespace + "." + name).toLowerCase
+    val ver = mdObj.getOrElse("Version", "0.0.1").toString
+    val objFormat = mdObj.getOrElse("ObjectFormat", "").toString
+    objType match {
+      case "MessageDef" => {
+        val msgDefStr = mdObj.getOrElse("ObjectDefinition", "").toString
+        if (msgDefStr != null && msgDefStr.size > 0) {
+          logger.info("Adding the message:" + dispkey)
+          var defFl = _unhandledMetadataDumpDir + "/message_" + dispkey + "." + ver + "." + objFormat.toLowerCase()
+          var failed = false
+          try {
+            val retRes = MetadataAPIImpl.AddMessage(msgDefStr, "JSON", defaultUserId)
+            failed = isFailedStatus(retRes)
+          } catch {
+            case e: Exception => {
+              logger.error("Failed to add message:" + dispkey, e)
+              failed = true
+            }
+          }
+          if (failed) {
+            WriteStringToFile(defFl, msgDefStr)
+            val msgStr = ("Message failed to migrate. Message %s definition is dumped into %s.".format(dispkey, defFl))
+            logger.error(msgStr)
+            _flCurMigrationSummary.println(msgStr)
+            _flCurMigrationSummary.flush()
+          }
+        } else {
+          logger.debug("Bootstrap object. Ignore it")
+        }
+      }
+      case "ContainerDef" => {
+        logger.debug("Adding the container:" + dispkey)
+        val contDefStr = mdObj.getOrElse("ObjectDefinition", "").toString
+        if (contDefStr != null && contDefStr.size > 0) {
+          logger.info("Adding the message: name of the object =>  " + dispkey)
+          var defFl = _unhandledMetadataDumpDir + "/container_" + dispkey + "." + ver + "." + objFormat.toLowerCase()
+          var failed = false
+          try {
+            val retRes = MetadataAPIImpl.AddContainer(contDefStr, "JSON", defaultUserId)
+            failed = isFailedStatus(retRes)
+          } catch {
+            case e: Exception => {
+              logger.error("Failed to add container:" + dispkey, e)
+              failed = true
+            }
+          }
+          if (failed) {
+            WriteStringToFile(defFl, contDefStr)
+            val msgStr = ("Container failed to migrate. Container %s definition is dumped into %s.".format(dispkey, defFl))
+            logger.error(msgStr)
+            _flCurMigrationSummary.println(msgStr)
+            _flCurMigrationSummary.flush()
+          }
+        } else {
+          logger.debug("Bootstrap object. Ignore it")
+        }
+      }
+    }
+  }    
 
   private def ProcessObject(mdObjs: ArrayBuffer[(String, Map[String, Any])]): Unit = {
     try {
@@ -859,8 +958,45 @@ class MigrateTo_V_1_3 extends MigratableTo {
 
     ProcessObject(jarDef)
     ProcessObject(types)
-    ProcessObject(containers)
-    ProcessObject(messages)
+
+    val contCount = containers.length
+    executor = Executors.newFixedThreadPool(contCount)
+    containers.foreach(container => {
+      executor.execute(new Runnable() {
+        override def run() = {
+	  ProcessMessageOrContainer("ContainerDef",container._2)
+        }
+      })
+    })
+    executor.shutdown();
+    try {
+      executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
+    } catch {
+      case e: Exception => {
+	val stackTrace = StackTrace.ThrowableTraceString(e)
+	logger.debug("StackTrace:"+stackTrace)
+      }
+    }
+    // ProcessObject(containers)
+    val msgCount = messages.length
+    executor = Executors.newFixedThreadPool(msgCount)
+    messages.foreach(message => {
+      executor.execute(new Runnable() {
+        override def run() = {
+	  ProcessMessageOrContainer("MessageDef",message._2)
+        }
+      })
+    })
+    executor.shutdown();
+    try {
+      executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
+    } catch {
+      case e: Exception => {
+	val stackTrace = StackTrace.ThrowableTraceString(e)
+	logger.debug("StackTrace:"+stackTrace)
+      }
+    }
+    //ProcessObject(messages)
     ProcessObject(functions)
     ProcessObject(configDef)
     ProcessObject(models)
