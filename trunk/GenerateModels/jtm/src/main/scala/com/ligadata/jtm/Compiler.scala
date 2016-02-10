@@ -448,11 +448,14 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
       transformationNames.foreach( t => {
 
         val transformation = root.transformations.get(t).get
+        val names = deps.map( m => { "msg%d: %s".format(incomingToMsgId.get(m).get, ResolveToVersionedClassname(md, m))}).mkString(", ")
 
-        methods :+= "def exeGenerated_%s_%d(msg1: %s): Array[Result] = {".format(t, depId, ResolveToVersionedClassname(md, deps.head))
+        methods :+= "def exeGenerated_%s_%d(%s): Array[Result] = {".format(t, depId, names)
 
         // Collect form metadata
-        val inputs: Array[Element] = ColumnNames(md, deps) // Seq("in1", "in2", "in3", "in4").toSet
+        val inputs: Array[Element] = ColumnNames(md, deps).map( e => {
+          Element("msg%d".format(incomingToMsgId.get(e.className).get), e.className, e.fieldName)
+        })
 
         // Resolve inputs, either we have unique or qualified names
         //
