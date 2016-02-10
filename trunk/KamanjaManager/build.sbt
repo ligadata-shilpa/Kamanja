@@ -10,11 +10,13 @@ assemblyOption in assembly ~= { _.copy(prependShellScript = Some(defaultShellScr
 
 jarName in assembly := { s"${name.value}-${version.value}" }
 
+//crossScalaVersions := Seq("2.10.4", "2.11.7")
+
 mergeStrategy in assembly <<= (mergeStrategy in assembly) { (old) =>
   {
     // case PathList("javax", "servlet", xs @ _*)         => MergeStrategy.first
     // case PathList(ps @ _*) if ps.last endsWith ".html" => MergeStrategy.first
-case PathList("META-INF", "maven","jline","jline", ps) if ps.startsWith("pom") => MergeStrategy.discard
+    case PathList("META-INF", "maven","jline","jline", ps) if ps.startsWith("pom") => MergeStrategy.discard
     case PathList(ps @ _*) if ps.last endsWith ".html" => MergeStrategy.first
     case x if x endsWith "google/common/annotations/GwtCompatible.class" => MergeStrategy.first
     case x if x endsWith "google/common/annotations/GwtIncompatible.class" => MergeStrategy.first
@@ -38,11 +40,18 @@ case PathList("META-INF", "maven","jline","jline", ps) if ps.startsWith("pom") =
     case x if x contains "com/fasterxml/jackson/core" => MergeStrategy.first
     case x if x contains "com\\fasterxml\\jackson\\core" => MergeStrategy.first
     case x if x contains "commons-logging" => MergeStrategy.first
+//second try
+   case x if x contains "com/ligadata/KamanjaManager/ActionOnAdaptersMap.class" =>
+    CrossVersion.partialVersion(scalaVersion.value) match {
+	case Some((2, scalaMajor)) if scalaMajor >= 11 => MergeStrategy.first
+	case Some((2, scalaMinor)) if scalaMinor < 11 => MergeStrategy.last
+    }
     case "log4j.properties" => MergeStrategy.first
     case "unwanted.txt"     => MergeStrategy.discard
     case x => old(x)
   }
 }
+// { s"${scalaVersion}" }
 
 excludedJars in assembly <<= (fullClasspath in assembly) map { cp => 
   val excludes = Set("commons-beanutils-1.7.0.jar", "google-collections-1.0.jar", "commons-collections4-4.0.jar" )
@@ -66,4 +75,5 @@ libraryDependencies += "org.ow2.asm" % "asm-tree" % "4.0"
 libraryDependencies += "org.ow2.asm" % "asm-commons" % "4.0"
 
 libraryDependencies <+= scalaVersion("org.scala-lang" % "scala-actors" % _)
+libraryDependencies += "org.scala-lang" % "scala-actors" % scalaVersion.value
 
