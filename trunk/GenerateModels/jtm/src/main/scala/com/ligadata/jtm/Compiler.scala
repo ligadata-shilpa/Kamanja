@@ -139,8 +139,14 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     val msgCtnPath : String = ""
     val mgr : MdMgr = MdMgr.GetMdMgr
 
-    val mdLoader = new MetadataLoad (mgr, typesPath, fcnPath, attrPath, msgCtnPath)
-    mdLoader.initialize
+    // If the compiler is called again this will throw
+    // To Do: move the metadata and improve handling
+    try {
+      val mdLoader = new MetadataLoad(mgr, typesPath, fcnPath, attrPath, msgCtnPath)
+      mdLoader.initialize
+    } catch {
+      case _ : Throwable => ;
+    }
 
     def getRecursiveListOfFiles(dir: File): Array[File] = {
       val these = dir.listFiles.filter(_.isFile)
