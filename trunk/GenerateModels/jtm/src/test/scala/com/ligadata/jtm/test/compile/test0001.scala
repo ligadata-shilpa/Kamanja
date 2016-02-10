@@ -44,7 +44,7 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
     def process_o1(): Long = {
       if (!(msg1.in2 != -1 && msg1.in2 < 100)) return 1
       val t1: String = "s:" + (msg1.in2).toString()
-      results ++ Array[Result](new Result("out1", msg1.in1), new Result("out4", msg1.in3), new Result("transactionId", msg1.transactionId), new Result("out2", t1), new Result("out3", out3))
+      results ++ Array[Result](new Result("transactionId", msg1.transactionId), new Result("out1", msg1.in1), new Result("out4", msg1.in3), new Result("out2", t1), new Result("out3", out3))
       0
     }
     process_o1()

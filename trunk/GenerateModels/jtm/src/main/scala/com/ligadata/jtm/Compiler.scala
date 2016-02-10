@@ -214,13 +214,17 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     }
   }
 
+  // Casing of system columns is inconsistsent
+  // provide a atch up map
+  val columnNamePatchUp = Map("transactionid" -> "transactionId")
+
   def ColumnNames(mgr: MdMgr, classname: String): Set[String] = {
     val classinstance = md.Message(classname, 0, true)
     if(classinstance.isEmpty) {
       throw new Exception("Metadata: unable to find class %s".format(classname))
     }
     val members = classinstance.get.containerType.asInstanceOf[StructTypeDef].memberDefs
-    members.map( e => e.Name).toSet
+    members.map( e => columnNamePatchUp.get(e.Name).getOrElse(e.Name)).toSet
   }
 
   def ResolveToVersionedClassname(mgr: MdMgr, classname: String): String = {
@@ -228,7 +232,8 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     if(classinstance.isEmpty) {
       throw new Exception("Metadata: unable to find class %s".format(classname))
     }
-    classinstance.get.physicalName
+    // We convert to lower case
+    classinstance.get.physicalName.toLowerCase
   }
 
   /**
@@ -238,12 +243,11 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     * @param fieldName
     */
   case class Element(argName: String, className: String, fieldName: String)
-
   def ColumnNames(mgr: MdMgr, classList: Set[String]): Array[Element] = {
     classList.foldLeft(1, Array.empty[Element])( (r, classname) => {
       val classMd = md.Message(classname, 0, true)
       val members = classMd.get.containerType.asInstanceOf[StructTypeDef].memberDefs
-      (r._1 + 1, r._2 ++ members.map( e => Element("msg%d".format(r._1), classname, e.Name)))
+      (r._1 + 1, r._2 ++ members.map( e => Element("msg%d".format( r._1), classname, columnNamePatchUp.get(e.Name).getOrElse(e.Name))))
     })._2
   }
 
