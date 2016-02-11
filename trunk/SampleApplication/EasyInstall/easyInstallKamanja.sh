@@ -113,9 +113,9 @@ mkdir -p $installPath/Kamanja-$ver211/input/SampleApplications/template
 # Build fat-jars for version-2.10
 # *******************************
 
-bin=$installPath$ver210/bin
-systemlib=$installPath$ver210/lib/system
-applib=$installPath$ver210/lib/application
+bin=$installPath/Kamanja-$ver210/bin
+systemlib=$installPath/Kamanja-$ver210/lib/system
+applib=$installPath/Kamanja-$ver210/lib/application
 
 echo $installPath
 echo $srcPath
