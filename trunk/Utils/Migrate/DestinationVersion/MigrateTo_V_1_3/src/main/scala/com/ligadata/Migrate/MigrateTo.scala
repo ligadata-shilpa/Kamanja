@@ -447,68 +447,6 @@ class MigrateTo_V_1_3 extends MigratableTo {
   }
 
 
-  private def ProcessMessageOrContainer(objType:String, mdObj: Map[String,Any]): Unit = {
-    val namespace = mdObj.getOrElse("NameSpace", "").toString.trim()
-    val name = mdObj.getOrElse("Name", "").toString.trim()
-    val dispkey = (namespace + "." + name).toLowerCase
-    val ver = mdObj.getOrElse("Version", "0.0.1").toString
-    val objFormat = mdObj.getOrElse("ObjectFormat", "").toString
-    objType match {
-      case "MessageDef" => {
-        val msgDefStr = mdObj.getOrElse("ObjectDefinition", "").toString
-        if (msgDefStr != null && msgDefStr.size > 0) {
-          logger.info("Adding the message:" + dispkey)
-          var defFl = _unhandledMetadataDumpDir + "/message_" + dispkey + "." + ver + "." + objFormat.toLowerCase()
-          var failed = false
-          try {
-            val retRes = MetadataAPIImpl.AddMessage(msgDefStr, "JSON", defaultUserId)
-            failed = isFailedStatus(retRes)
-          } catch {
-            case e: Exception => {
-              logger.error("Failed to add message:" + dispkey, e)
-              failed = true
-            }
-          }
-          if (failed) {
-            WriteStringToFile(defFl, msgDefStr)
-            val msgStr = ("Message failed to migrate. Message %s definition is dumped into %s.".format(dispkey, defFl))
-            logger.error(msgStr)
-            _flCurMigrationSummary.println(msgStr)
-            _flCurMigrationSummary.flush()
-          }
-        } else {
-          logger.debug("Bootstrap object. Ignore it")
-        }
-      }
-      case "ContainerDef" => {
-        logger.debug("Adding the container:" + dispkey)
-        val contDefStr = mdObj.getOrElse("ObjectDefinition", "").toString
-        if (contDefStr != null && contDefStr.size > 0) {
-          logger.info("Adding the message: name of the object =>  " + dispkey)
-          var defFl = _unhandledMetadataDumpDir + "/container_" + dispkey + "." + ver + "." + objFormat.toLowerCase()
-          var failed = false
-          try {
-            val retRes = MetadataAPIImpl.AddContainer(contDefStr, "JSON", defaultUserId)
-            failed = isFailedStatus(retRes)
-          } catch {
-            case e: Exception => {
-              logger.error("Failed to add container:" + dispkey, e)
-              failed = true
-            }
-          }
-          if (failed) {
-            WriteStringToFile(defFl, contDefStr)
-            val msgStr = ("Container failed to migrate. Container %s definition is dumped into %s.".format(dispkey, defFl))
-            logger.error(msgStr)
-            _flCurMigrationSummary.println(msgStr)
-            _flCurMigrationSummary.flush()
-          }
-        } else {
-          logger.debug("Bootstrap object. Ignore it")
-        }
-      }
-    }
-  }    
 
   private def ProcessObject(mdObjs: ArrayBuffer[(String, Map[String, Any])]): Unit = {
     try {
@@ -978,31 +916,15 @@ class MigrateTo_V_1_3 extends MigratableTo {
     ProcessObject(jarDef)
     ProcessObject(types)
 
+    // ProcessObject(containers)
     val contCount = containers.length
     executor = Executors.newFixedThreadPool(contCount)
-    containers.foreach(container => {
+    containers.foreach(obj => {
       executor.execute(new Runnable() {
         override def run() = {
-	  ProcessMessageOrContainer("ContainerDef",container._2)
-        }
-      })
-    })
-    executor.shutdown();
-    try {
-      executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
-    } catch {
-      case e: Exception => {
-	val stackTrace = StackTrace.ThrowableTraceString(e)
-	logger.debug("StackTrace:"+stackTrace)
-      }
-    }
-    // ProcessObject(containers)
-    val msgCount = messages.length
-    executor = Executors.newFixedThreadPool(msgCount)
-    messages.foreach(message => {
-      executor.execute(new Runnable() {
-        override def run() = {
-	  ProcessMessageOrContainer("MessageDef",message._2)
+	  val mab = ArrayBuffer[(String, Map[String, Any])]()
+          mab += ((obj._1, obj._2))
+	  ProcessObject(mab)
         }
       })
     })
@@ -1016,9 +938,50 @@ class MigrateTo_V_1_3 extends MigratableTo {
       }
     }
     //ProcessObject(messages)
+    val msgCount = messages.length
+    executor = Executors.newFixedThreadPool(msgCount)
+    messages.foreach(obj => {
+      executor.execute(new Runnable() {
+        override def run() = {
+	  val mab = ArrayBuffer[(String, Map[String, Any])]()
+          mab += ((obj._1, obj._2))
+	  ProcessObject(mab)
+        }
+      })
+    })
+    executor.shutdown();
+    try {
+      executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
+    } catch {
+      case e: Exception => {
+	val stackTrace = StackTrace.ThrowableTraceString(e)
+	logger.debug("StackTrace:"+stackTrace)
+      }
+    }
+
     ProcessObject(functions)
     ProcessObject(configDef)
-    ProcessObject(models)
+    //ProcessObject(models)
+    val modelCount = models.length
+    executor = Executors.newFixedThreadPool(modelCount)
+    models.foreach(obj => {
+      executor.execute(new Runnable() {
+        override def run() = {
+	  val mab = ArrayBuffer[(String, Map[String, Any])]()
+          mab += ((obj._1, obj._2))
+	  ProcessObject(mab)
+        }
+      })
+    })
+    executor.shutdown();
+    try {
+      executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
+    } catch {
+      case e: Exception => {
+	val stackTrace = StackTrace.ThrowableTraceString(e)
+	logger.debug("StackTrace:"+stackTrace)
+      }
+    }
     ProcessObject(outputMsgDef)
   }
 
