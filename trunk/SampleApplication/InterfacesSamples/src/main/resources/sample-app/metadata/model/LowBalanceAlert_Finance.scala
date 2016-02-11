@@ -17,7 +17,6 @@
 package com.ligadata.models.samples.models
 
 import com.ligadata.KamanjaBase._
-import com.ligadata.KvBase.TimeRange
 import RddUtils._
 import RddDate._
 import org.json4s._
