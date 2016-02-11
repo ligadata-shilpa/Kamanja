@@ -84,7 +84,7 @@ public class test0001 extends ModelInstance {
                 Integer out3 = msg1.in1 + 1000;
                 if (!(msg1.in2 != -1 && msg1.in2 < 100)) return null;
                 String t1 = "s:" + (msg1.in2).toString();
-                return null; //{ new Result("transactionId", msg1.transactionId), new Result("out1", msg1.in1), new Result("out4", msg1.in3), new Result("out2", t1), new Result("out3", out3)};
+                return new Result[] { new Result("transactionId", msg1.transactionId), new Result("out1", msg1.in1), new Result("out4", msg1.in3), new Result("out2", t1), new Result("out3", out3)};
             }
         };
 
