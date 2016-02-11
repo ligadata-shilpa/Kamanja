@@ -6,8 +6,8 @@ installPath=$1
 srcPath=$2
 ivyPath=$3
 KafkaRootDir=$4
-ver1=2.10
-ver2=2.11
+ver210=2.10
+ver211=2.11
 
 if [ ! -d "$installPath" ]; then
         echo "Not valid install path supplied.  It should be a directory that can be written to and whose current content is of no value (will be overwritten) "
@@ -45,33 +45,33 @@ rm -Rf $installPath
 # *******************************
 # Make the directories as needed for version-2.10
 # *******************************
-mkdir -p $installPath$ver1/bin
-mkdir -p $installPath$ver1/lib
-mkdir -p $installPath$ver1/lib/system
-mkdir -p $installPath$ver1/lib/application
-mkdir -p $installPath$ver1/storage
-mkdir -p $installPath$ver1/logs
-mkdir -p $installPath$ver1/config
-mkdir -p $installPath$ver1/documentation
-mkdir -p $installPath$ver1/output
-mkdir -p $installPath$ver1/workingdir
-mkdir -p $installPath$ver1/template
-mkdir -p $installPath$ver1/template/config
-mkdir -p $installPath$ver1/template/script
-mkdir -p $installPath$ver1/input
+mkdir -p $installPath/Kamanja-$ver210/bin
+#mkdir -p $installPath/Kamanja-$ver210/lib
+mkdir -p $installPath/Kamanja-$ver210/lib/system
+mkdir -p $installPath/Kamanja-$ver210/lib/application
+mkdir -p $installPath/Kamanja-$ver210/storage
+mkdir -p $installPath/Kamanja-$ver210/logs
+mkdir -p $installPath/Kamanja-$ver210/config
+mkdir -p $installPath/Kamanja-$ver210/documentation
+mkdir -p $installPath/Kamanja-$ver210/output
+mkdir -p $installPath/Kamanja-$ver210/workingdir
+#mkdir -p $installPath/Kamanja-$ver210/template
+mkdir -p $installPath/Kamanja-$ver210/template/config
+mkdir -p $installPath/Kamanja-$ver210/template/script
+#mkdir -p $installPath/Kamanja-$ver210/input/
 #new one
-mkdir -p $installPath$ver1/input/SampleApplications
-mkdir -p $installPath$ver1/input/SampleApplications/bin
-mkdir -p $installPath$ver1/input/SampleApplications/data
-mkdir -p $installPath$ver1/input/SampleApplications/metadata
-mkdir -p $installPath$ver1/input/SampleApplications/metadata/config
-mkdir -p $installPath$ver1/input/SampleApplications/metadata/container
-mkdir -p $installPath$ver1/input/SampleApplications/metadata/function
-mkdir -p $installPath$ver1/input/SampleApplications/metadata/message
-mkdir -p $installPath$ver1/input/SampleApplications/metadata/model
-mkdir -p $installPath$ver1/input/SampleApplications/metadata/script
-mkdir -p $installPath$ver1/input/SampleApplications/metadata/type
-mkdir -p $installPath$ver1/input/SampleApplications/template
+#mkdir -p $installPath/Kamanja-$ver210/input/SampleApplications
+mkdir -p $installPath/Kamanja-$ver210/input/SampleApplications/bin
+mkdir -p $installPath/Kamanja-$ver210/input/SampleApplications/data
+#mkdir -p $installPath/Kamanja-$ver210/input/SampleApplications/metadata
+mkdir -p $installPath/Kamanja-$ver210/input/SampleApplications/metadata/config
+mkdir -p $installPath/Kamanja-$ver210/input/SampleApplications/metadata/container
+mkdir -p $installPath/Kamanja-$ver210/input/SampleApplications/metadata/function
+mkdir -p $installPath/Kamanja-$ver210/input/SampleApplications/metadata/message
+mkdir -p $installPath/Kamanja-$ver210/input/SampleApplications/metadata/model
+mkdir -p $installPath/Kamanja-$ver210/input/SampleApplications/metadata/script
+mkdir -p $installPath/Kamanja-$ver210/input/SampleApplications/metadata/type
+mkdir -p $installPath/Kamanja-$ver210/input/SampleApplications/template
 #new one
 
 
@@ -79,33 +79,33 @@ mkdir -p $installPath$ver1/input/SampleApplications/template
 # *******************************
 # Make the directories as needed for version-2.11
 # *******************************
-mkdir -p $installPath$ver2/bin
-mkdir -p $installPath$ver2/lib
-mkdir -p $installPath$ver2/lib/system
-mkdir -p $installPath$ver2/lib/application
-mkdir -p $installPath$ver2/storage
-mkdir -p $installPath$ver2/logs
-mkdir -p $installPath$ver2/config
-mkdir -p $installPath$ver2/documentation
-mkdir -p $installPath$ver2/output
-mkdir -p $installPath$ver2/workingdir
-mkdir -p $installPath$ver2/template
-mkdir -p $installPath$ver2/template/config
-mkdir -p $installPath$ver2/template/script
-mkdir -p $installPath$ver2/input
+mkdir -p $installPath/Kamanja-$ver211/bin
+#mkdir -p $installPath/Kamanja-$ver211/lib
+mkdir -p $installPath/Kamanja-$ver211/lib/system
+mkdir -p $installPath/Kamanja-$ver211/lib/application
+mkdir -p $installPath/Kamanja-$ver211/storage
+mkdir -p $installPath/Kamanja-$ver211/logs
+mkdir -p $installPath/Kamanja-$ver211/config
+mkdir -p $installPath/Kamanja-$ver211/documentation
+mkdir -p $installPath/Kamanja-$ver211/output
+mkdir -p $installPath/Kamanja-$ver211/workingdir
+#mkdir -p $installPath/Kamanja-$ver211/template
+mkdir -p $installPath/Kamanja-$ver211/template/config
+mkdir -p $installPath/Kamanja-$ver211/template/script
+#mkdir -p $installPath/Kamanja-$ver211/input
 #new one
-mkdir -p $installPath$ver2/input/SampleApplications
-mkdir -p $installPath$ver2/input/SampleApplications/bin
-mkdir -p $installPath$ver2/input/SampleApplications/data
-mkdir -p $installPath$ver2/input/SampleApplications/metadata
-mkdir -p $installPath$ver2/input/SampleApplications/metadata/config
-mkdir -p $installPath$ver2/input/SampleApplications/metadata/container
-mkdir -p $installPath$ver2/input/SampleApplications/metadata/function
-mkdir -p $installPath$ver2/input/SampleApplications/metadata/message
-mkdir -p $installPath$ver2/input/SampleApplications/metadata/model
-mkdir -p $installPath$ver2/input/SampleApplications/metadata/script
-mkdir -p $installPath$ver2/input/SampleApplications/metadata/type
-mkdir -p $installPath$ver2/input/SampleApplications/template
+#mkdir -p $installPath/Kamanja-$ver211/input/SampleApplications
+mkdir -p $installPath/Kamanja-$ver211/input/SampleApplications/bin
+mkdir -p $installPath/Kamanja-$ver211/input/SampleApplications/data
+#mkdir -p $installPath/Kamanja-$ver211/input/SampleApplications/metadata
+mkdir -p $installPath/Kamanja-$ver211/input/SampleApplications/metadata/config
+mkdir -p $installPath/Kamanja-$ver211/input/SampleApplications/metadata/container
+mkdir -p $installPath/Kamanja-$ver211/input/SampleApplications/metadata/function
+mkdir -p $installPath/Kamanja-$ver211/input/SampleApplications/metadata/message
+mkdir -p $installPath/Kamanja-$ver211/input/SampleApplications/metadata/model
+mkdir -p $installPath/Kamanja-$ver211/input/SampleApplications/metadata/script
+mkdir -p $installPath/Kamanja-$ver211/input/SampleApplications/metadata/type
+mkdir -p $installPath/Kamanja-$ver211/input/SampleApplications/template
 #new one
 
 
@@ -113,9 +113,9 @@ mkdir -p $installPath$ver2/input/SampleApplications/template
 # Build fat-jars for version-2.10
 # *******************************
 
-bin=$installPath$ver1/bin
-systemlib=$installPath$ver1/lib/system
-applib=$installPath$ver1/lib/application
+bin=$installPath$ver210/bin
+systemlib=$installPath$ver210/lib/system
+applib=$installPath$ver210/lib/application
 
 echo $installPath
 echo $srcPath
@@ -124,10 +124,10 @@ echo $bin
 echo "clean, package and assemble $srcPath ..."
 
 cd $srcPath
-sbt clean '++ 2.10.4 package' '++ 2.10.4 KamanjaManager/assembly' '++ 2.10.4 MetadataAPI/assembly' '++ 2.10.4 KVInit/assembly' '++ 2.10.4 MethodExtractor/assembly' '++ 2.10.4 SimpleKafkaProducer/assembly' '++ 2.10.4 NodeInfoExtract/assembly' '++ 2.10.4 ExtractData/assembly' '++ 2.10.4 MetadataAPIService/assembly' '++ 2.10.4 JdbcDataCollector/assembly' '++ 2.10.4 FileDataConsumer/assembly' '++ 2.10.4 SaveContainerDataComponent/assembly' '++ 2.10.4 CleanUtil/assembly' '++ 2.10.4 MigrateManager/assembly'
 
-# Once we get all 2.10 libraries and copy them to corresponding directories, we can run 2.11 again and copy them to corresponding directories
-# sbt clean '++ 2.11.7 package' '++ 2.11.7 KamanjaManager/assembly' '++ 2.11.7 MetadataAPI/assembly' '++ 2.11.7 KVInit/assembly' '++ 2.11.7 MethodExtractor/assembly' '++ 2.11.7 SimpleKafkaProducer/assembly' '++ 2.11.7 NodeInfoExtract/assembly' '++ 2.11.7 ExtractData/assembly' '++ 2.11.7 MetadataAPIService/assembly' '++ 2.11.7 JdbcDataCollector/assembly' '++ 2.11.7 FileDataConsumer/assembly' '++ 2.11.7 SaveContainerDataComponent/assembly' '++ 2.11.7 CleanUtil/assembly' '++ 2.11.7 MigrateManager/assembly'
+sbt clean '++ 2.10.4 package' '++ 2.10.4 KamanjaManager/assembly' '++ 2.10.4 MetadataAPI/assembly' '++ 2.10.4 KVInit/assembly' '++ 2.10.4 MethodExtractor/assembly' '++ 2.10.4 SimpleKafkaProducer/assembly'
+sbt '++ 2.10.4 NodeInfoExtract/assembly' '++ 2.10.4 ExtractData/assembly' '++ 2.10.4 MetadataAPIService/assembly' '++ 2.10.4 JdbcDataCollector/assembly'
+sbt '++ 2.10.4 FileDataConsumer/assembly' '++ 2.10.4 SaveContainerDataComponent/assembly' '++ 2.10.4 CleanUtil/assembly' '++ 2.10.4 MigrateManager/assembly'
 
 # recreate eclipse projects
 #echo "refresh the eclipse projects ..."
@@ -149,49 +149,7 @@ cp MetadataAPIService/target/scala-2.10/MetadataAPIService* $bin
 cp FileDataConsumer/target/scala-2.10/FileDataConsumer* $bin
 cp Utils/CleanUtil/target/scala-2.10/CleanUtil* $bin
 # only for 2.11 ?
-#cp Utils/Migrate/MigrateManager/target/MigrateManager* $bin
-
-
-
-# *******************************
-# Build fat-jars for version-2.11
-# *******************************
-
-bin=$installPath$ver2/bin
-systemlib=$installPath$ver2/lib/system
-applib=$installPath$ver2/lib/application
-
-echo $installPath
-echo $srcPath
-echo $bin
-
-#needed ?
-echo "clean, package and assemble $srcPath ..."
-# needed?
-cd $srcPath
-sbt clean package KamanjaManager/assembly MetadataAPI/assembly KVInit/assembly MethodExtractor/assembly SimpleKafkaProducer/assembly NodeInfoExtract/assembly ExtractData/assembly MetadataAPIService/assembly JdbcDataCollector/assembly FileDataConsumer/assembly SaveContainerDataComponent/assembly CleanUtil/assembly MigrateManager/assembly
-
-# recreate eclipse projects
-#echo "refresh the eclipse projects ..."
-#cd $srcPath
-#sbt eclipse
-
-# Move them into place
-echo "copy the fat jars to $installPath ..."
-
-cd $srcPath
-cp Utils/KVInit/target/scala-2.10/KVInit* $bin
-cp MetadataAPI/target/scala-2.10/MetadataAPI* $bin
-cp KamanjaManager/target/scala-2.10/KamanjaManager* $bin
-cp Pmml/MethodExtractor/target/scala-2.10/MethodExtractor* $bin
-cp Utils/SimpleKafkaProducer/target/scala-2.10/SimpleKafkaProducer* $bin
-cp Utils/ExtractData/target/scala-2.10/ExtractData* $bin
-cp Utils/JdbcDataCollector/target/scala-2.10/JdbcDataCollector* $bin
-cp MetadataAPIService/target/scala-2.10/MetadataAPIService* $bin
-cp FileDataConsumer/target/scala-2.10/FileDataConsumer* $bin
-cp Utils/CleanUtil/target/scala-2.10/CleanUtil* $bin
 cp Utils/Migrate/MigrateManager/target/MigrateManager* $bin
-
 
 
 # *******************************
@@ -258,7 +216,7 @@ cp $srcPath/TransactionService/target/scala-2.10/transactionservice*.jar $system
 cp $ivyPath/cache/io.netty/netty-all/jars/netty-all-4.0.23.Final.jar $systemlib
 cp $ivyPath/cache/com.esotericsoftware.kryo/kryo/bundles/kryo-2.21.jar $systemlib
 # might be only for 2.11 
-cp $srcPath/lib_managed/jars/org.scalameta/tokens_2.11/tokens_2.11-0.0.3.jar $systemlib
+#cp $srcPath/lib_managed/jars/org.scalameta/tokens_2.11/tokens_2.11-0.0.3.jar $systemlib
 cp $ivyPath/cache/com.ning/compress-lzf/bundles/compress-lzf-0.9.1.jar $systemlib
 cp $ivyPath/cache/org.scala-lang/scala-actors/jars/scala-actors-2.10.4.jar $systemlib
 cp $srcPath/lib_managed/bundles/org.apache.directory.server/apacheds-i18n/apacheds-i18n-2.0.0-M15.jar $systemlib
@@ -274,10 +232,10 @@ cp $ivyPath/cache/com.typesafe.akka/akka-actor_2.10/jars/akka-actor_2.10-2.3.2.j
 cp $ivyPath/cache/com.typesafe.akka/akka-actor_2.10/jars/akka-actor_2.10-2.3.9.jar $systemlib
 cp $ivyPath/cache/uk.co.bigbeeconsultants/bee-client_2.10/jars/bee-client_2.10-0.28.0.jar $systemlib
 # might be only for 2.11 
-cp $srcPath/lib_managed/jars/org.scalameta/foundation_2.11/foundation_2.11-0.0.3.jar $systemlib
+#cp $srcPath/lib_managed/jars/org.scalameta/foundation_2.11/foundation_2.11-0.0.3.jar $systemlib
 cp $ivyPath/cache/org.apache.hbase/hbase-protocol/jars/hbase-protocol-1.0.2.jar $systemlib
 # might be only for 2.11
-cp $ivyPath/cache/org.scala-lang.modules/scala-parser-combinators_2.11/bundles/scala-parser-combinators_2.11-1.0.2.jar $systemlib
+#cp $ivyPath/cache/org.scala-lang.modules/scala-parser-combinators_2.11/bundles/scala-parser-combinators_2.11-1.0.2.jar $systemlib
 cp $srcPath/lib_managed/jars/javax.xml.bind/jaxb-api/jaxb-api-2.2.2.jar $systemlib
 cp $ivyPath/cache/org.jdom/jdom/jars/jdom-1.1.jar $systemlib
 cp $srcPath/KvBase/target/scala-2.10/kvbase*.jar $systemlib
@@ -292,15 +250,15 @@ cp $srcPath/lib_managed/jars/org.apache.zookeeper/zookeeper/zookeeper-3.4.6.jar 
 cp $ivyPath/cache/com.twitter/chill-java/jars/chill-java-0.5.0.jar $systemlib
 cp $ivyPath/cache/asm/asm/jars/asm-3.1.jar $systemlib
 # might be only for 2.11
-cp $ivyPath/cache/org.scalameta/quasiquotes_2.11/jars/quasiquotes_2.11-0.0.3.jar $systemlib
+#cp $ivyPath/cache/org.scalameta/quasiquotes_2.11/jars/quasiquotes_2.11-0.0.3.jar $systemlib
 cp $ivyPath/cache/org.apache.curator/curator-recipes/bundles/curator-recipes-2.7.1.jar $systemlib
 cp $srcPath/MetadataAPI/target/scala-2.10/metadataapi*.jar $systemlib
 cp $ivyPath/cache/org.apache.commons/commons-math/jars/commons-math-2.2.jar $systemlib
 cp $ivyPath/cache/com.sun.xml.bind/jaxb-impl/jars/jaxb-impl-2.2.3-1.jar $systemlib
 # might be missing in version 2.10
-cp $srcPath/lib_managed/jars/org.scalameta/dialects_2.11/dialects_2.11-0.0.3.jar $systemlib
+#cp $srcPath/lib_managed/jars/org.scalameta/dialects_2.11/dialects_2.11-0.0.3.jar $systemlib
 # might be missing in version 2.10
-cp $srcPath/lib_managed/jars/org.scalameta/parsers_2.11/parsers_2.11-0.0.3.jar $systemlib
+#cp $srcPath/lib_managed/jars/org.scalameta/parsers_2.11/parsers_2.11-0.0.3.jar $systemlib
 cp $srcPath/lib_managed/bundles/io.netty/netty/netty-3.9.0.Final.jar $systemlib
 cp $srcPath/lib_managed/jars/org.apache.commons/commons-math3/commons-math3-3.6.jar $systemlib
 cp $srcPath/lib_managed/jars/com.github.stephenc.findbugs/findbugs-annotations/findbugs-annotations-1.3.9-1.jar $systemlib
@@ -328,7 +286,7 @@ cp $ivyPath/cache/net.jpountz.lz4/lz4/jars/lz4-1.2.0.jar $systemlib
 cp $srcPath/lib_managed/jars/org.scala-lang/scala-reflect/scala-reflect-2.10.4.jar $systemlib
 cp $srcPath/lib_managed/jars/org.apache.commons/commons-dbcp2/commons-dbcp2-2.1.jar $systemlib
 # might be only for 2.11
-cp $ivyPath/cache/org.scala-lang.modules/scala-parser-combinators_2.11/bundles/scala-parser-combinators_2.11-1.0.4.jar $systemlib
+#cp $ivyPath/cache/org.scala-lang.modules/scala-parser-combinators_2.11/bundles/scala-parser-combinators_2.11-1.0.4.jar $systemlib
 cp $srcPath/lib_managed/jars/org.jpmml/pmml-agent/pmml-agent-1.2.9.jar $systemlib
 cp $ivyPath/cache/commons-logging/commons-logging/jars/commons-logging-1.1.1.jar $systemlib
 cp $ivyPath/cache/net.java.dev.jets3t/jets3t/jars/jets3t-0.9.0.jar $systemlib
@@ -351,20 +309,20 @@ cp $ivyPath/cache/org.mortbay.jetty/servlet-api/jars/servlet-api-2.5.20110712-so
 cp $ivyPath/cache/com.google.collections/google-collections/jars/google-collections-1.0.jar $systemlib
 cp $ivyPath/cache/ch.qos.logback/logback-core/jars/logback-core-1.0.12.jar $systemlib
 # Might be only for 2.11
-cp $ivyPath/cache/org.scala-lang.modules/scala-parser-combinators_2.11/bundles/scala-parser-combinators_2.11-1.0.1.jar $systemlib
+#cp $ivyPath/cache/org.scala-lang.modules/scala-parser-combinators_2.11/bundles/scala-parser-combinators_2.11-1.0.1.jar $systemlib
 cp $ivyPath/cache/io.netty/netty/bundles/netty-3.7.0.Final.jar $systemlib
 # Might be only for 2.11
-cp $ivyPath/cache/org.scalameta/parsers_2.11/jars/parsers_2.11-0.0.3.jar $systemlib
+#cp $ivyPath/cache/org.scalameta/parsers_2.11/jars/parsers_2.11-0.0.3.jar $systemlib
 cp $ivyPath/cache/com.jamesmurty.utils/java-xmlbuilder/jars/java-xmlbuilder-0.4.jar $systemlib
 cp $srcPath/lib_managed/bundles/com.fasterxml.jackson.core/jackson-core/jackson-core-2.3.1.jar $systemlib
 cp $srcPath/lib_managed/bundles/com.datastax.cassandra/cassandra-driver-core/cassandra-driver-core-2.1.2.jar $systemlib
 cp $srcPath/MetadataAPIService/target/scala-2.10/metadataapiservice*.jar $systemlib
 # Might be only for 2.11
-cp $srcPath/lib_managed/jars/org.scalameta/exceptions_2.11/exceptions_2.11-0.0.3.jar $systemlib
+#cp $srcPath/lib_managed/jars/org.scalameta/exceptions_2.11/exceptions_2.11-0.0.3.jar $systemlib
 cp $srcPath/Utils/ZooKeeper/CuratorClient/target/scala-2.10/zookeeperclient*.jar $systemlib
 cp $srcPath/Metadata/target/scala-2.10/metadata*.jar $systemlib
 # Might be only for 2.11
-cp $ivyPath/cache/org.scalameta/exceptions_2.11/jars/exceptions_2.11-0.0.3.jar $systemlib
+#cp $ivyPath/cache/org.scalameta/exceptions_2.11/jars/exceptions_2.11-0.0.3.jar $systemlib
 cp $ivyPath/cache/commons-pool/commons-pool/jars/commons-pool-1.5.4.jar $systemlib
 cp $ivyPath/cache/org.parboiled/parboiled-scala_2.10/jars/parboiled-scala_2.10-1.1.7.jar $systemlib
 cp $ivyPath/cache/org.parboiled/parboiled-core/jars/parboiled-core-1.1.7.jar $systemlib
@@ -408,11 +366,11 @@ cp $ivyPath/cache/org.joda/joda-convert/jars/joda-convert-1.6.jar $systemlib
 cp $ivyPath/cache/org.scala-lang/scala-library/jars/scala-library-2.10.4.jar $systemlib
 cp $ivyPath/cache/commons-collections/commons-collections/jars/commons-collections-3.2.1.jar $systemlib
 # Might be only for 2.11
-cp $ivyPath/cache/org.scalameta/tokenizers_2.11/jars/tokenizers_2.11-0.0.3.jar $systemlib
+#cp $ivyPath/cache/org.scalameta/tokenizers_2.11/jars/tokenizers_2.11-0.0.3.jar $systemlib
 cp $srcPath/lib_managed/jars/org.slf4j/slf4j-api/slf4j-api-1.7.10.jar $systemlib
 cp $ivyPath/cache/org.apache.zookeeper/zookeeper/jars/zookeeper-3.4.6.jar $systemlib
 # Might be only for 2.11
-cp $ivyPath/cache/org.scalameta/foundation_2.11/jars/foundation_2.11-0.0.3.jar $systemlib
+#cp $ivyPath/cache/org.scalameta/foundation_2.11/jars/foundation_2.11-0.0.3.jar $systemlib
 cp $srcPath/lib_managed/bundles/org.apache.curator/curator-recipes/curator-recipes-2.7.1.jar $systemlib
 cp $ivyPath/cache/org.objenesis/objenesis/jars/objenesis-1.2.jar $systemlib
 cp $srcPath/lib_managed/bundles/org.scalatest/scalatest_2.10/scalatest*.jar $systemlib
@@ -422,7 +380,7 @@ cp $srcPath/lib_managed/bundles/org.apache.directory.server/apacheds-kerberos-co
 cp $srcPath/lib_managed/bundles/com.esotericsoftware.kryo/kryo/kryo-2.21.jar $systemlib
 cp $srcPath/lib_managed/jars/org.scala-lang/scala-compiler/scala-compiler-2.10.4.jar $systemlib
 # Might be only for 2.11
-cp $ivyPath/cache/org.scala-lang.modules/scala-xml_2.11/bundles/scala-xml_2.11-1.0.4.jar $systemlib
+#cp $ivyPath/cache/org.scala-lang.modules/scala-xml_2.11/bundles/scala-xml_2.11-1.0.4.jar $systemlib
 cp $srcPath/Utils/JsonDataGen/target/scala-2.10/jsondatagen*.jar $systemlib
 cp $ivyPath/cache/org.apache.httpcomponents/httpclient/jars/httpclient-4.1.2.jar $systemlib
 cp $srcPath/lib_managed/jars/org.jruby.jcodings/jcodings/jcodings-1.0.8.jar $systemlib
@@ -431,7 +389,7 @@ cp $srcPath/FactoriesOfModelInstanceFactory/JpmmlFactoryOfModelInstanceFactory/t
 cp $ivyPath/cache/org.apache.directory.server/apacheds-kerberos-codec/bundles/apacheds-kerberos-codec-2.0.0-M15.jar $systemlib
 cp $ivyPath/cache/io.netty/netty/bundles/netty-3.9.0.Final.jar $systemlib
 # Might be only for 2.11
-cp $ivyPath/cache/org.scalameta/tokens_2.11/jars/tokens_2.11-0.0.3.jar $systemlib
+#cp $ivyPath/cache/org.scalameta/tokens_2.11/jars/tokens_2.11-0.0.3.jar $systemlib
 cp $ivyPath/cache/org.slf4j/slf4j-log4j12/jars/slf4j-log4j12-1.7.10.jar $systemlib
 cp $srcPath/OutputMsgDef/target/scala-2.10/outputmsgdef*.jar $systemlib
 cp $ivyPath/cache/org.jpmml/pmml-model/jars/pmml-model-1.2.9.jar $systemlib
@@ -444,7 +402,7 @@ cp $srcPath/lib_managed/jars/org.jpmml/pmml-evaluator/pmml-evaluator-1.2.9.jar $
 cp $srcPath/lib_managed/jars/com.jcraft/jsch/jsch-0.1.42.jar $systemlib
 cp $ivyPath/cache/org.apache.curator/curator-recipes/bundles/curator-recipes-2.6.0.jar $systemlib
 # Might be only for 2.11
-cp $srcPath/lib_managed/bundles/org.scala-lang.modules/scala-parser-combinators_2.11/scala-parser-combinators_2.11-1.0.4.jar $systemlib
+#cp $srcPath/lib_managed/bundles/org.scala-lang.modules/scala-parser-combinators_2.11/scala-parser-combinators_2.11-1.0.4.jar $systemlib
 cp $ivyPath/cache/org.ow2.asm/asm/jars/asm-4.0.jar $systemlib
 cp $ivyPath/cache/org.apache.hbase/hbase-annotations/jars/hbase-annotations-1.0.2.jar $systemlib
 cp $ivyPath/cache/com.google.protobuf/protobuf-java/bundles/protobuf-java-2.6.0.jar $systemlib
@@ -465,7 +423,7 @@ cp $srcPath/HeartBeat/target/scala-2.10/heartbeat*.jar $systemlib
 cp $srcPath/lib_managed/jars/org.apache.hbase/hbase-protocol/hbase-protocol-1.0.2.jar $systemlib
 cp $srcPath/lib_managed/jars/commons-beanutils/commons-beanutils/commons-beanutils-1.8.3.jar $systemlib
 # Might be only for 2.11
-cp $ivyPath/cache/org.scalameta/dialects_2.11/jars/dialects_2.11-0.0.3.jar $systemlib
+#cp $ivyPath/cache/org.scalameta/dialects_2.11/jars/dialects_2.11-0.0.3.jar $systemlib
 cp $srcPath/lib_managed/jars/com.esotericsoftware.minlog/minlog/minlog-1.2.jar $systemlib
 cp $ivyPath/cache/antlr/antlr/jars/antlr-2.7.7.jar $systemlib
 cp $srcPath/MetadataAPIServiceClient/target/scala-2.10/metadataapiserviceclient*.jar $systemlib
@@ -499,7 +457,7 @@ cp $srcPath/lib_managed/jars/net.java.dev.jets3t/jets3t/jets3t-0.9.0.jar $system
 cp $srcPath/lib_managed/bundles/com.google.protobuf/protobuf-java/protobuf-java-2.6.0.jar $systemlib
 cp $ivyPath/cache/net.java.dev.jna/jna/jars/jna-3.2.7.jar $systemlib
 # Might be only for 2.11
-cp $ivyPath/cache/org.scalameta/prettyprinters_2.11/jars/prettyprinters_2.11-0.0.3.jar $systemlib
+#cp $ivyPath/cache/org.scalameta/prettyprinters_2.11/jars/prettyprinters_2.11-0.0.3.jar $systemlib
 cp $srcPath/Utils/JdbcDataCollector/target/scala-2.10/jdbcdatacollector*.jar $systemlib
 cp $srcPath/lib_managed/bundles/org.apache.shiro/shiro-core/shiro-core-1.2.3.jar $systemlib
 cp $ivyPath/cache/joda-time/joda-time/jars/joda-time-2.8.2.jar $systemlib
@@ -511,7 +469,7 @@ cp $ivyPath/cache/com.fasterxml.jackson.core/jackson-core/bundles/jackson-core-2
 cp $srcPath/lib_managed/jars/commons-pool/commons-pool/commons-pool-1.5.4.jar $systemlib
 cp $ivyPath/cache/org.json4s/json4s-ast_2.10/jars/json4s-ast_2.10-3.2.9.jar $systemlib
 # Might be only for 2.11
-cp $srcPath/lib_managed/jars/org.scalameta/prettyprinters_2.11/prettyprinters_2.11-0.0.3.jar $systemlib
+#cp $srcPath/lib_managed/jars/org.scalameta/prettyprinters_2.11/prettyprinters_2.11-0.0.3.jar $systemlib
 cp $ivyPath/cache/commons-lang/commons-lang/jars/commons-lang-2.6.jar $systemlib
 cp $ivyPath/cache/commons-digester/commons-digester/jars/commons-digester-1.8.1.jar $systemlib
 cp $ivyPath/cache/org.slf4j/slf4j-api/jars/slf4j-api-1.7.10.jar $systemlib
@@ -520,7 +478,7 @@ cp $ivyPath/cache/org.apache.hbase/hbase-common/jars/hbase-common-1.0.2.jar $sys
 cp $ivyPath/cache/io.spray/spray-testkit_2.10/jars/spray-testkit_2.10-1.3.3.jar $systemlib
 cp $ivyPath/cache/net.debasishg/redisclient_2.10/jars/redisclient_2.10-2.13.jar $systemlib
 # Might be only for 2.11
-cp $ivyPath/cache/org.scalameta/tokenquasiquotes_2.11/jars/tokenquasiquotes_2.11-0.0.3.jar $systemlib
+#cp $ivyPath/cache/org.scalameta/tokenquasiquotes_2.11/jars/tokenquasiquotes_2.11-0.0.3.jar $systemlib
 cp $srcPath/lib_managed/jars/com.thoughtworks.paranamer/paranamer/paranamer-2.6.jar $systemlib
 # one line added
 cp $ivyPath/cache/org.scala-lang/scala-compiler/jars/scala-compiler-2.10.0.jar $systemlib
@@ -528,7 +486,7 @@ cp $ivyPath/cache/org.scala-lang/scala-compiler/jars/scala-compiler-2.10.4.jar $
 cp $ivyPath/cache/org.scala-lang/scala-compiler/jars/scala-compiler-2.10.5.jar $systemlib
 cp $srcPath/Utils/ZooKeeper/CuratorLeaderLatch/target/scala-2.10/zookeeperleaderlatch*.jar $systemlib
 # Might be only for 2.11
-cp $srcPath/lib_managed/jars/org.scalameta/tokenquasiquotes_2.11/tokenquasiquotes*.jar $systemlib
+#cp $srcPath/lib_managed/jars/org.scalameta/tokenquasiquotes_2.11/tokenquasiquotes*.jar $systemlib
 cp $ivyPath/cache/com.google.guava/guava/bundles/guava-14.0.1.jar $systemlib
 cp $ivyPath/cache/com.sun.jersey/jersey-server/bundles/jersey-server-1.9.jar $systemlib
 cp $srcPath/lib_managed/jars/org.apache.httpcomponents/httpclient/httpclient-4.2.5.jar $systemlib
@@ -554,8 +512,8 @@ cp $ivyPath/cache/com.datastax.cassandra/cassandra-driver-core/bundles/cassandra
 cp $ivyPath/cache/org.apache.shiro/shiro-core/bundles/shiro-core-1.2.3.jar $systemlib
 cp $ivyPath/cache/commons-beanutils/commons-beanutils/jars/commons-beanutils-1.8.3.jar $systemlib
 cp $srcPath/lib_managed/jars/commons-collections/commons-collections/commons-collections-3.2.1.jar $systemlib
-# missing ?
-cp $srcPath/lib_managed/bundles/org.scala-lang.modules/scala-xml_2.11/scala-xml_2.11-1.0.4.jar $systemlib
+# Might be only for 2.11
+#cp $srcPath/lib_managed/bundles/org.scala-lang.modules/scala-xml_2.11/scala-xml_2.11-1.0.4.jar $systemlib
 cp $srcPath/lib_managed/jars/org.apache.commons/commons-pool2/commons-pool2-2.3.jar $systemlib
 cp $srcPath/lib_managed/jars/org.tukaani/xz/xz-1.0.jar $systemlib
 cp $ivyPath/cache/org.mortbay.jetty/jetty-sslengine/jars/jetty-sslengine-6.1.26.jar $systemlib
@@ -567,7 +525,7 @@ cp $srcPath/lib_managed/jars/org.slf4j/slf4j-log4j12/slf4j-log4j12-1.7.10.jar $s
 cp $srcPath/lib_managed/jars/commons-io/commons-io/commons-io-2.4.jar $systemlib
 cp $srcPath/SampleApplication/CustomUdfLib/target/scala-2.10/customudflib*.jar $systemlib
 # Might be only for 2.11
-cp $srcPath/lib_managed/jars/org.scalameta/quasiquotes_2.11/quasiquotes*.jar $systemlib
+#cp $srcPath/lib_managed/jars/org.scalameta/quasiquotes_2.11/quasiquotes*.jar $systemlib
 cp $srcPath/lib_managed/jars/commons-codec/commons-codec/commons-codec-1.10.jar $systemlib
 cp $ivyPath/cache/com.thoughtworks.paranamer/paranamer/jars/paranamer-2.6.jar $systemlib
 cp $ivyPath/cache/javax.servlet/servlet-api/jars/servlet-api-2.5.jar $systemlib
@@ -579,7 +537,7 @@ cp $srcPath/lib_managed/jars/com.twitter/chill-java/chill-java-0.5.0.jar $system
 cp $srcPath/lib_managed/jars/org.hamcrest/hamcrest-core/hamcrest-core-1.3.jar $systemlib
 cp $srcPath/lib_managed/jars/org.jpmml/pmml-schema/pmml-schema-1.2.9.jar $systemlib
 # Might be only for 2.11
-cp $ivyPath/cache/org.scalameta/trees_2.11/jars/trees_2.11-0.0.3.jar $systemlib
+#cp $ivyPath/cache/org.scalameta/trees_2.11/jars/trees_2.11-0.0.3.jar $systemlib
 cp $srcPath/Storage/HBase/target/scala-2.10/hbase*.jar $systemlib
 cp $ivyPath/cache/joda-time/joda-time/jars/joda-time-2.9.1.jar $systemlib
 cp $ivyPath/cache/org.apache.cassandra/cassandra-thrift/jars/cassandra-thrift-2.0.3.jar $systemlib
@@ -601,14 +559,14 @@ cp $ivyPath/cache/org.apache.commons/commons-math3/jars/commons-math3-3.1.1.jar 
 cp $srcPath/Storage/Cassandra/target/scala-2.10/cassandra*.jar $systemlib
 cp $srcPath/Utils/Security/SimpleApacheShiroAdapter/target/scala-2.10/simpleapacheshiroadapter*.jar $systemlib
 # Might be only for 2.11
-cp $srcPath/lib_managed/jars/org.scalameta/tokenizers_2.11/tokenizers_2.11-0.0.3.jar $systemlib
+#cp $srcPath/lib_managed/jars/org.scalameta/tokenizers_2.11/tokenizers_2.11-0.0.3.jar $systemlib
 cp $ivyPath/cache/xmlenc/xmlenc/jars/xmlenc-0.52.jar $systemlib
 cp $srcPath/lib_managed/jars/org.jpmml/pmml-model/pmml-model-1.2.9.jar $systemlib
 cp $ivyPath/cache/org.apache.httpcomponents/httpcore/jars/httpcore-4.1.2.jar $systemlib
 cp $srcPath/lib_managed/jars/commons-dbcp/commons-dbcp/commons-dbcp-1.4.jar $systemlib
 cp $srcPath/lib_managed/jars/javax.xml.stream/stax-api/stax-api-1.0-2.jar $systemlib
 # Might be only for 2.11
-cp $srcPath/lib_managed/jars/org.scalameta/trees_2.11/trees_2.11-0.0.3.jar $systemlib
+#cp $srcPath/lib_managed/jars/org.scalameta/trees_2.11/trees_2.11-0.0.3.jar $systemlib
 cp $srcPath/lib_managed/jars/org.jruby.joni/joni/joni-2.1.2.jar $systemlib
 cp $ivyPath/cache/com.codahale.metrics/metrics-core/bundles/metrics-core-3.0.2.jar $systemlib
 cp $ivyPath/cache/io.spray/spray-httpx_2.10/bundles/spray-httpx_2.10-1.3.3.jar $systemlib
@@ -618,6 +576,170 @@ cp $ivyPath/cache/com.101tec/zkclient/jars/zkclient-0.6.jar $systemlib
 # -------------------- end of generated cp commands --------------------
 
 
+###### For Version-2.10 ######
+
+cp $ivyPath/cache/io.spray/spray-json_2.10/bundles/spray-json_2.10-1.3.2.jar $systemlib
+cp $ivyPath/cache/com.codahale.metrics/metrics-core/bundles/metrics-core-3.0.2.jar $systemlib
+cp $ivyPath/cache/org.json4s/json4s-ast_2.10/jars/json4s-ast_2.10-3.2.9.jar $systemlib
+cp $ivyPath/cache/io.spray/spray-testkit_2.10/jars/spray-testkit_2.10-1.3.3.jar $systemlib
+
+cp $srcPath/Utils/Migrate/MigrateBase/target/migratebase-1.0.jar $systemlib
+cp $srcPath/Utils/Migrate/SourceVersion/MigrateFrom_V_1_1/target/scala-2.10/migratefrom_v_1_1_2.10-1.0.jar $systemlib
+cp $srcPath/Utils/Migrate/SourceVersion/MigrateFrom_V_1_2/target/scala-2.10/migratefrom_v_1_2_2.10-1.0.jar $systemlib
+# this should be changed?
+cp $srcPath/Utils/Migrate/DestinationVersion/MigrateTo_V_1_3/target/scala-2.11/migrateto_v_1_3_2.11-1.0.jar $systemlib
+
+cp $srcPath/Storage/Cassandra/target/scala-2.10/*.jar $systemlib
+cp $srcPath/Storage/HashMap/target/scala-2.10/*.jar $systemlib
+cp $srcPath/Storage/HBase/target/scala-2.10/*.jar $systemlib
+#cp $srcPath/Storage/Redis/target/scala-2.11/*.jar $systemlib
+cp $srcPath/Storage/StorageBase/target/scala-2.10/storagebase_2.10-1.0.jar $systemlib
+cp $srcPath/Storage/StorageManager/target/scala-2.10/*.jar $systemlib
+cp $srcPath/Storage/TreeMap/target/scala-2.10/*.jar $systemlib
+#cp $srcPath/Storage/Voldemort/target/scala-2.10/*.jar $systemlib
+cp $srcPath/InputOutputAdapters/InputOutputAdapterBase/target/scala-2.10/*.jar $systemlib
+cp $srcPath/KamanjaUtils/target/scala-2.10/kamanjautils_2.10-1.0.jar $systemlib
+cp $srcPath/SecurityAdapters/SecurityAdapterBase/target/scala-2.10/*.jar $systemlib
+
+cp $srcPath/Utils/SaveContainerDataComponent/target/scala-2.10/SaveContainerDataComponent* $systemlib
+cp $srcPath/Utils/UtilsForModels/target/scala-2.10/utilsformodels*.jar $systemlib
+
+
+# sample configs
+#echo "copy sample configs..."
+cp $srcPath/Utils/KVInit/src/main/resources/*cfg $systemlib
+
+# Generate keystore file
+#echo "generating keystore..."
+#keytool -genkey -keyalg RSA -alias selfsigned -keystore $installPath/config/keystore.jks -storepass password -validity 360 -keysize 2048
+
+#copy kamanja to bin directory
+cp $srcPath/Utils/Script/kamanja $bin
+#cp $srcPath/Utils/Script/MedicalApp.sh $bin
+cp $srcPath/MetadataAPI/target/scala-2.11/classes/HelpMenu.txt $installPath/input
+# *******************************
+# COPD messages data prep
+# *******************************
+
+# Prepare test messages and copy them into place
+
+echo "Prepare test messages and copy them into place..."
+# *******************************
+# Copy documentation files
+# *******************************
+cd $srcPath/Documentation
+cp -rf * $installPath/documentation
+
+# *******************************
+# Copy ClusterInstall
+# *******************************
+mkdir -p $installPath/ClusterInstall
+cp -rf $srcPath/SampleApplication/ClusterInstall/* $installPath/ClusterInstall/
+cp $srcPath/Utils/NodeInfoExtract/target/scala-2.11/NodeInfoExtract* $installPath/ClusterInstall/
+
+# *******************************
+# copy models, messages, containers, config, scripts, types  messages data prep
+# *******************************
+
+#HelloWorld
+cd $srcPath/SampleApplication/HelloWorld/data
+cp * $installPath/input/SampleApplications/data
+
+cd $srcPath/SampleApplication/HelloWorld/message
+cp * $installPath/input/SampleApplications/metadata/message
+
+cd $srcPath/SampleApplication/HelloWorld/model
+cp * $installPath/input/SampleApplications/metadata/model
+
+cd $srcPath/SampleApplication/HelloWorld/template
+cp -rf * $installPath/input/SampleApplications/template
+
+
+cd $srcPath/SampleApplication/HelloWorld/config
+cp -rf * $installPath/config
+#HelloWorld
+
+#Medical
+cd $srcPath/SampleApplication/Medical/SampleData
+cp *.csv $installPath/input/SampleApplications/data
+cp *.csv.gz $installPath/input/SampleApplications/data
+
+cd $srcPath/SampleApplication/Medical/MessagesAndContainers/Fixed/Containers
+cp * $installPath/input/SampleApplications/metadata/container
+
+cd $srcPath/SampleApplication/Medical/Functions
+cp * $installPath/input/SampleApplications/metadata/function
+
+cd $srcPath/SampleApplication/Medical/MessagesAndContainers/Fixed/Messages
+cp * $installPath/input/SampleApplications/metadata/message
+
+cd $srcPath/SampleApplication/Medical/Models
+cp *.* $installPath/input/SampleApplications/metadata/model
+
+cd $srcPath/SampleApplication/Medical/Types
+cp * $installPath/input/SampleApplications/metadata/type
+
+cd $srcPath/SampleApplication/Medical/template
+cp -rf * $installPath/input/SampleApplications/template
+
+cd $srcPath/SampleApplication/Medical/Configs
+cp -rf * $installPath/config
+#Medical
+
+#Telecom
+cd $srcPath/SampleApplication/Telecom/data
+cp * $installPath/input/SampleApplications/data
+
+cd $srcPath/SampleApplication/Telecom/metadata/container
+cp * $installPath/input/SampleApplications/metadata/container
+
+cd $srcPath/SampleApplication/Telecom/metadata/message
+cp * $installPath/input/SampleApplications/metadata/message
+
+cd $srcPath/SampleApplication/Telecom/metadata/model
+cp *.* $installPath/input/SampleApplications/metadata/model
+
+cd $srcPath/SampleApplication/Telecom/metadata/template
+cp -rf * $installPath/input/SampleApplications/template
+
+cd $srcPath/SampleApplication/Telecom/metadata/config
+cp -rf * $installPath/config
+#Telecom
+
+#Finance
+cd $srcPath/SampleApplication/InterfacesSamples/src/main/resources/sample-app/data
+cp * $installPath/input/SampleApplications/data
+
+cd $srcPath/SampleApplication/InterfacesSamples/src/main/resources/sample-app/metadata/container
+cp * $installPath/input/SampleApplications/metadata/container
+
+cd $srcPath/SampleApplication/InterfacesSamples/src/main/resources/sample-app/metadata/message
+cp * $installPath/input/SampleApplications/metadata/message
+
+cd $srcPath/SampleApplication/InterfacesSamples/src/main/resources/sample-app/metadata/model
+cp *.* $installPath/input/SampleApplications/metadata/model
+
+cd $srcPath/SampleApplication/InterfacesSamples/src/main/resources/sample-app/metadata/type
+cp * $installPath/input/SampleApplications/metadata/type
+
+cd $srcPath/SampleApplication/InterfacesSamples/src/main/resources/sample-app/metadata/template
+cp -rf * $installPath/input/SampleApplications/template
+
+cd $srcPath/SampleApplication/InterfacesSamples/src/main/resources/sample-app/metadata/config
+cp -rf * $installPath/config
+#Finance
+
+cd $srcPath/SampleApplication/EasyInstall/template
+cp -rf * $installPath/template
+
+cd $srcPath/SampleApplication/EasyInstall
+cp SetPaths.sh $installPath/bin/
+
+bash $installPath/bin/SetPaths.sh $KafkaRootDir
+
+chmod 0700 $installPath/input/SampleApplications/bin/*sh
+
+################################################################################# Version-2.10 Finished #########################################################################################
 
 
 
@@ -627,16 +749,21 @@ cp $ivyPath/cache/com.101tec/zkclient/jars/zkclient-0.6.jar $systemlib
 
 echo "clean, package and assemble $srcPath ..."
 
-bin=$installPath$ver2/bin
-systemlib=$installPath$ver2/lib/system
-applib=$installPath$ver2/lib/application
+bin=$installPath$ver211/bin
+systemlib=$installPath$ver211/lib/system
+applib=$installPath$ver211/lib/application
 
 echo $installPath
 echo $srcPath
 echo $bin
 
+# Once we get all 2.10 libraries and copy them to corresponding directories, we can run 2.11 again and copy them to corresponding directories
+# sbt clean '++ 2.11.7 package' '++ 2.11.7 KamanjaManager/assembly' '++ 2.11.7 MetadataAPI/assembly' '++ 2.11.7 KVInit/assembly' '++ 2.11.7 MethodExtractor/assembly' '++ 2.11.7 SimpleKafkaProducer/assembly' '++ 2.11.7 NodeInfoExtract/assembly' '++ 2.11.7 ExtractData/assembly' '++ 2.11.7 MetadataAPIService/assembly' '++ 2.11.7 JdbcDataCollector/assembly' '++ 2.11.7 FileDataConsumer/assembly' '++ 2.11.7 SaveContainerDataComponent/assembly' '++ 2.11.7 CleanUtil/assembly' '++ 2.11.7 MigrateManager/assembly'
+
 cd $srcPath
-sbt clean package KamanjaManager/assembly MetadataAPI/assembly KVInit/assembly MethodExtractor/assembly SimpleKafkaProducer/assembly NodeInfoExtract/assembly ExtractData/assembly MetadataAPIService/assembly JdbcDataCollector/assembly FileDataConsumer/assembly SaveContainerDataComponent/assembly CleanUtil/assembly MigrateManager/assembly
+sbt clean '++ 2.11.7 package' '++ 2.11.7 KamanjaManager/assembly' '++ 2.11.7 MetadataAPI/assembly' '++ 2.11.7 KVInit/assembly' '++ 2.11.7 MethodExtractor/assembly' '++ 2.11.7 SimpleKafkaProducer/assembly' 
+sbt '++ 2.11.7 NodeInfoExtract/assembly' '++ 2.11.7 ExtractData/assembly' '++ 2.11.7 MetadataAPIService/assembly' '++ 2.11.7 JdbcDataCollector/assembly' '++ 2.11.7 FileDataConsumer/assembly' 
+sbt '++ 2.11.7 SaveContainerDataComponent/assembly' '++ 2.11.7 CleanUtil/assembly' '++ 2.11.7 MigrateManager/assembly'
 
 # recreate eclipse projects
 #echo "refresh the eclipse projects ..."
@@ -1055,35 +1182,6 @@ cp $ivyPath/cache/com.101tec/zkclient/jars/zkclient-0.6.jar $systemlib
 # -------------------- end of generated cp commands --------------------
 
 
-###### For Version-2.10 ######
-
-cp $ivyPath/cache/io.spray/spray-json_2.10/bundles/spray-json_2.10-1.3.2.jar $systemlib
-cp $ivyPath/cache/com.codahale.metrics/metrics-core/bundles/metrics-core-3.0.2.jar $systemlib
-cp $ivyPath/cache/org.json4s/json4s-ast_2.10/jars/json4s-ast_2.10-3.2.9.jar $systemlib
-cp $ivyPath/cache/io.spray/spray-testkit_2.10/jars/spray-testkit_2.10-1.3.3.jar $systemlib
-
-cp $srcPath/Utils/Migrate/MigrateBase/target/migratebase-1.0.jar $systemlib
-cp $srcPath/Utils/Migrate/SourceVersion/MigrateFrom_V_1_1/target/scala-2.10/migratefrom_v_1_1_2.10-1.0.jar $systemlib
-cp $srcPath/Utils/Migrate/SourceVersion/MigrateFrom_V_1_2/target/scala-2.10/migratefrom_v_1_2_2.10-1.0.jar $systemlib
-# this should be changed?
-cp $srcPath/Utils/Migrate/DestinationVersion/MigrateTo_V_1_3/target/scala-2.11/migrateto_v_1_3_2.11-1.0.jar $systemlib
-
-cp $srcPath/Storage/Cassandra/target/scala-2.10/*.jar $systemlib
-cp $srcPath/Storage/HashMap/target/scala-2.10/*.jar $systemlib
-cp $srcPath/Storage/HBase/target/scala-2.10/*.jar $systemlib
-#cp $srcPath/Storage/Redis/target/scala-2.11/*.jar $systemlib
-cp $srcPath/Storage/StorageBase/target/scala-2.10/storagebase_2.10-1.0.jar $systemlib
-cp $srcPath/Storage/StorageManager/target/scala-2.10/*.jar $systemlib
-cp $srcPath/Storage/TreeMap/target/scala-2.10/*.jar $systemlib
-#cp $srcPath/Storage/Voldemort/target/scala-2.10/*.jar $systemlib
-cp $srcPath/InputOutputAdapters/InputOutputAdapterBase/target/scala-2.10/*.jar $systemlib
-cp $srcPath/KamanjaUtils/target/scala-2.10/kamanjautils_2.10-1.0.jar $systemlib
-cp $srcPath/SecurityAdapters/SecurityAdapterBase/target/scala-2.10/*.jar $systemlib
-
-cp $srcPath/Utils/SaveContainerDataComponent/target/scala-2.10/SaveContainerDataComponent* $systemlib
-cp $srcPath/Utils/UtilsForModels/target/scala-2.10/utilsformodels*.jar $systemlib
-
-
 ###### For Version-2.11 ######
 
 cp $ivyPath/cache/io.spray/spray-json_2.11/bundles/spray-json_2.11-1.3.2.jar $systemlib
@@ -1110,6 +1208,9 @@ cp $srcPath/SecurityAdapters/SecurityAdapterBase/target/scala-2.11/*.jar $system
 
 cp $srcPath/Utils/SaveContainerDataComponent/target/scala-2.11/SaveContainerDataComponent* $systemlib
 cp $srcPath/Utils/UtilsForModels/target/scala-2.11/utilsformodels*.jar $systemlib
+
+
+
 
 # sample configs
 #echo "copy sample configs..."
