@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+/*
 public class test0001 extends ModelInstance {
 
     public test0001(ModelInstanceFactory factory) {
@@ -34,7 +35,7 @@ public class test0001 extends ModelInstance {
         }
 
         public boolean isValidMessage(MessageContainerBase msg) {
-            return (msg instanceof com.ligadata.kamanja.test001.msg1);
+            return (msg instanceof com.ligadata.kamanja.test001.v1000000.msg1);
         }
 
         public ModelInstance createModelInstance() {
@@ -103,3 +104,4 @@ public class test0001 extends ModelInstance {
         return new MappedModelResults().withResults(result);
     }
 }
+*/
