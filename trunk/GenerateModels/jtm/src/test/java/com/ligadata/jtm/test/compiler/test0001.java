@@ -13,7 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package com.ligadata.jtm.test.compiler1.compiler;
+package com.ligadata.jtm.test.compiler;
 
 import com.ligadata.KamanjaBase.*;
 import com.ligadata.kamanja.metadata.ModelDef;
