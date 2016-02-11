@@ -1,4 +1,4 @@
-import AssemblyKeys._ // put this at the top of the file
+import sbtassembly.AssemblyPlugin.defaultShellScript
 import sbt._
 import Keys._
 
@@ -25,14 +25,13 @@ libraryDependencies ++= Seq (
 
 fork := true
 
-assemblySettings
+
 
 test in assembly := {}
 
-jarName in assembly := { s"${name.value}-${version.value}" }
+assemblyJarName in assembly := { s"${name.value}-${version.value}" }
 
-mergeStrategy in assembly <<= (mergeStrategy in assembly) { (old) =>
-{
+assemblyMergeStrategy in assembly := {
   // case PathList("javax", "servlet", xs @ _*)         => MergeStrategy.first
   // case PathList(ps @ _*) if ps.last endsWith ".html" => MergeStrategy.first
 case PathList("META-INF", "maven","jline","jline", ps) if ps.startsWith("pom") => MergeStrategy.discard
@@ -61,8 +60,10 @@ case PathList("META-INF", "maven","jline","jline", ps) if ps.startsWith("pom") =
   case x if x contains "commons-logging" => MergeStrategy.first
   case "log4j.properties" => MergeStrategy.first
   case "unwanted.txt"     => MergeStrategy.discard
-  case x => old(x)
-}
+          case x =>
+  	        val oldStrategy = (assemblyMergeStrategy in assembly).value
+  	        oldStrategy(x)
+
 }
 
 excludedJars in assembly <<= (fullClasspath in assembly) map { cp =>

@@ -124,7 +124,10 @@ echo $bin
 echo "clean, package and assemble $srcPath ..."
 
 cd $srcPath
-sbt clean package KamanjaManager/assembly MetadataAPI/assembly KVInit/assembly MethodExtractor/assembly SimpleKafkaProducer/assembly NodeInfoExtract/assembly ExtractData/assembly MetadataAPIService/assembly JdbcDataCollector/assembly FileDataConsumer/assembly SaveContainerDataComponent/assembly CleanUtil/assembly MigrateManager/assembly
+sbt clean '++ 2.10.4 package' '++ 2.10.4 KamanjaManager/assembly' '++ 2.10.4 MetadataAPI/assembly' '++ 2.10.4 KVInit/assembly' '++ 2.10.4 MethodExtractor/assembly' '++ 2.10.4 SimpleKafkaProducer/assembly' '++ 2.10.4 NodeInfoExtract/assembly' '++ 2.10.4 ExtractData/assembly' '++ 2.10.4 MetadataAPIService/assembly' '++ 2.10.4 JdbcDataCollector/assembly' '++ 2.10.4 FileDataConsumer/assembly' '++ 2.10.4 SaveContainerDataComponent/assembly' '++ 2.10.4 CleanUtil/assembly' '++ 2.10.4 MigrateManager/assembly'
+
+# Once we get all 2.10 libraries and copy them to corresponding directories, we can run 2.11 again and copy them to corresponding directories
+# sbt clean '++ 2.11.7 package' '++ 2.11.7 KamanjaManager/assembly' '++ 2.11.7 MetadataAPI/assembly' '++ 2.11.7 KVInit/assembly' '++ 2.11.7 MethodExtractor/assembly' '++ 2.11.7 SimpleKafkaProducer/assembly' '++ 2.11.7 NodeInfoExtract/assembly' '++ 2.11.7 ExtractData/assembly' '++ 2.11.7 MetadataAPIService/assembly' '++ 2.11.7 JdbcDataCollector/assembly' '++ 2.11.7 FileDataConsumer/assembly' '++ 2.11.7 SaveContainerDataComponent/assembly' '++ 2.11.7 CleanUtil/assembly' '++ 2.11.7 MigrateManager/assembly'
 
 # recreate eclipse projects
 #echo "refresh the eclipse projects ..."

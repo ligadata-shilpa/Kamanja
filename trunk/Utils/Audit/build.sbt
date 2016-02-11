@@ -1,4 +1,4 @@
-import AssemblyKeys._ // put this at the top of the file
+import sbtassembly.AssemblyPlugin.defaultShellScript
 import sbt._
 import Keys._
 

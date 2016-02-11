@@ -1,19 +1,18 @@
-import AssemblyKeys._ // put this at the top of the file
+import sbtassembly.AssemblyPlugin.defaultShellScript
 import sbt._
 import Keys._
 
 shellPrompt := { state =>  "sbt (%s)> ".format(Project.extract(state).currentProject.id) }
 
-assemblySettings
+
 
 assemblyOption in assembly ~= { _.copy(prependShellScript = Some(defaultShellScript)) }
 
-jarName in assembly := { s"${name.value}-${version.value}" }
+assemblyJarName in assembly := { s"${name.value}-${version.value}" }
 
 //crossScalaVersions := Seq("2.10.4", "2.11.7")
 
-mergeStrategy in assembly <<= (mergeStrategy in assembly) { (old) =>
-  {
+assemblyMergeStrategy in assembly := {
     // case PathList("javax", "servlet", xs @ _*)         => MergeStrategy.first
     // case PathList(ps @ _*) if ps.last endsWith ".html" => MergeStrategy.first
     case PathList("META-INF", "maven","jline","jline", ps) if ps.startsWith("pom") => MergeStrategy.discard
@@ -48,8 +47,10 @@ mergeStrategy in assembly <<= (mergeStrategy in assembly) { (old) =>
     }
     case "log4j.properties" => MergeStrategy.first
     case "unwanted.txt"     => MergeStrategy.discard
-    case x => old(x)
-  }
+            case x =>
+		        val oldStrategy = (assemblyMergeStrategy in assembly).value
+		        oldStrategy(x)
+
 }
 // { s"${scalaVersion}" }
 
