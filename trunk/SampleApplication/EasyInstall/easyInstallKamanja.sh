@@ -123,7 +123,7 @@ echo $bin
 
 echo "clean, package and assemble $srcPath ..."
 
-cd $srcPath
+cd $srcPath/
 
 sbt clean '++ 2.10.4 package' '++ 2.10.4 KamanjaManager/assembly' '++ 2.10.4 MetadataAPI/assembly' '++ 2.10.4 KVInit/assembly' '++ 2.10.4 MethodExtractor/assembly' '++ 2.10.4 SimpleKafkaProducer/assembly'
 sbt '++ 2.10.4 NodeInfoExtract/assembly' '++ 2.10.4 ExtractData/assembly' '++ 2.10.4 MetadataAPIService/assembly' '++ 2.10.4 JdbcDataCollector/assembly'
@@ -587,7 +587,7 @@ cp $srcPath/Utils/Migrate/MigrateBase/target/migratebase-1.0.jar $systemlib
 cp $srcPath/Utils/Migrate/SourceVersion/MigrateFrom_V_1_1/target/scala-2.10/migratefrom_v_1_1_2.10-1.0.jar $systemlib
 cp $srcPath/Utils/Migrate/SourceVersion/MigrateFrom_V_1_2/target/scala-2.10/migratefrom_v_1_2_2.10-1.0.jar $systemlib
 # this should be changed?
-cp $srcPath/Utils/Migrate/DestinationVersion/MigrateTo_V_1_3/target/scala-2.11/migrateto_v_1_3_2.11-1.0.jar $systemlib
+cp $srcPath/Utils/Migrate/DestinationVersion/MigrateTo_V_1_3/target/scala-2.10/migrateto_v_1_3_2.10-1.0.jar $systemlib
 
 cp $srcPath/Storage/Cassandra/target/scala-2.10/*.jar $systemlib
 cp $srcPath/Storage/HashMap/target/scala-2.10/*.jar $systemlib
@@ -616,7 +616,7 @@ cp $srcPath/Utils/KVInit/src/main/resources/*cfg $systemlib
 #copy kamanja to bin directory
 cp $srcPath/Utils/Script/kamanja $bin
 #cp $srcPath/Utils/Script/MedicalApp.sh $bin
-cp $srcPath/MetadataAPI/target/scala-2.11/classes/HelpMenu.txt $installPath/input
+cp $srcPath/MetadataAPI/target/scala-2.10/classes/HelpMenu.txt $installPath/input
 # *******************************
 # COPD messages data prep
 # *******************************
@@ -628,14 +628,14 @@ echo "Prepare test messages and copy them into place..."
 # Copy documentation files
 # *******************************
 cd $srcPath/Documentation
-cp -rf * $installPath/documentation
+cp -rf * $installPath/Kamanja-$ver210/documentation
 
 # *******************************
 # Copy ClusterInstall
 # *******************************
 mkdir -p $installPath/ClusterInstall
 cp -rf $srcPath/SampleApplication/ClusterInstall/* $installPath/ClusterInstall/
-cp $srcPath/Utils/NodeInfoExtract/target/scala-2.11/NodeInfoExtract* $installPath/ClusterInstall/
+cp $srcPath/Utils/NodeInfoExtract/target/scala-2.10/NodeInfoExtract* $installPath/ClusterInstall/
 
 # *******************************
 # copy models, messages, containers, config, scripts, types  messages data prep
@@ -643,16 +643,16 @@ cp $srcPath/Utils/NodeInfoExtract/target/scala-2.11/NodeInfoExtract* $installPat
 
 #HelloWorld
 cd $srcPath/SampleApplication/HelloWorld/data
-cp * $installPath/input/SampleApplications/data
+cp * $installPath/Kamanja-$ver210/input/SampleApplications/data
 
 cd $srcPath/SampleApplication/HelloWorld/message
-cp * $installPath/input/SampleApplications/metadata/message
+cp * $installPath/Kamanja-$ver210/input/SampleApplications/metadata/message
 
 cd $srcPath/SampleApplication/HelloWorld/model
-cp * $installPath/input/SampleApplications/metadata/model
+cp * $installPath/Kamanja-$ver210/input/SampleApplications/metadata/model
 
 cd $srcPath/SampleApplication/HelloWorld/template
-cp -rf * $installPath/input/SampleApplications/template
+cp -rf * $installPath/Kamanja-$ver210/input/SampleApplications/template
 
 
 cd $srcPath/SampleApplication/HelloWorld/config
@@ -661,83 +661,83 @@ cp -rf * $installPath/config
 
 #Medical
 cd $srcPath/SampleApplication/Medical/SampleData
-cp *.csv $installPath/input/SampleApplications/data
-cp *.csv.gz $installPath/input/SampleApplications/data
+cp *.csv $installPath/Kamanja-$ver210/input/SampleApplications/data
+cp *.csv.gz $installPath/Kamanja-$ver210/input/SampleApplications/data
 
 cd $srcPath/SampleApplication/Medical/MessagesAndContainers/Fixed/Containers
-cp * $installPath/input/SampleApplications/metadata/container
+cp * $installPath/Kamanja-$ver210/input/SampleApplications/metadata/container
 
 cd $srcPath/SampleApplication/Medical/Functions
-cp * $installPath/input/SampleApplications/metadata/function
+cp * $installPath/Kamanja-$ver210/input/SampleApplications/metadata/function
 
 cd $srcPath/SampleApplication/Medical/MessagesAndContainers/Fixed/Messages
-cp * $installPath/input/SampleApplications/metadata/message
+cp * $installPath/Kamanja-$ver210/input/SampleApplications/metadata/message
 
 cd $srcPath/SampleApplication/Medical/Models
-cp *.* $installPath/input/SampleApplications/metadata/model
+cp *.* $installPath/Kamanja-$ver210/input/SampleApplications/metadata/model
 
 cd $srcPath/SampleApplication/Medical/Types
-cp * $installPath/input/SampleApplications/metadata/type
+cp * $installPath/Kamanja-$ver210/input/SampleApplications/metadata/type
 
 cd $srcPath/SampleApplication/Medical/template
-cp -rf * $installPath/input/SampleApplications/template
+cp -rf * $installPath/Kamanja-$ver210/input/SampleApplications/template
 
 cd $srcPath/SampleApplication/Medical/Configs
-cp -rf * $installPath/config
+cp -rf * $installPath/Kamanja-$ver210/config
 #Medical
 
 #Telecom
 cd $srcPath/SampleApplication/Telecom/data
-cp * $installPath/input/SampleApplications/data
+cp * $installPath/Kamanja-$ver210/input/SampleApplications/data
 
 cd $srcPath/SampleApplication/Telecom/metadata/container
-cp * $installPath/input/SampleApplications/metadata/container
+cp * $installPath/Kamanja-$ver210/input/SampleApplications/metadata/container
 
 cd $srcPath/SampleApplication/Telecom/metadata/message
-cp * $installPath/input/SampleApplications/metadata/message
+cp * $installPath/Kamanja-$ver210/input/SampleApplications/metadata/message
 
 cd $srcPath/SampleApplication/Telecom/metadata/model
-cp *.* $installPath/input/SampleApplications/metadata/model
+cp *.* $installPath/Kamanja-$ver210/input/SampleApplications/metadata/model
 
 cd $srcPath/SampleApplication/Telecom/metadata/template
-cp -rf * $installPath/input/SampleApplications/template
+cp -rf * $installPath/Kamanja-$ver210/input/SampleApplications/template
 
 cd $srcPath/SampleApplication/Telecom/metadata/config
-cp -rf * $installPath/config
+cp -rf * $installPath/Kamanja-$ver210/config
 #Telecom
 
 #Finance
 cd $srcPath/SampleApplication/InterfacesSamples/src/main/resources/sample-app/data
-cp * $installPath/input/SampleApplications/data
+cp * $installPath/Kamanja-$ver210/input/SampleApplications/data
 
 cd $srcPath/SampleApplication/InterfacesSamples/src/main/resources/sample-app/metadata/container
-cp * $installPath/input/SampleApplications/metadata/container
+cp * $installPath/Kamanja-$ver210/input/SampleApplications/metadata/container
 
 cd $srcPath/SampleApplication/InterfacesSamples/src/main/resources/sample-app/metadata/message
-cp * $installPath/input/SampleApplications/metadata/message
+cp * $installPath/Kamanja-$ver210/input/SampleApplications/metadata/message
 
 cd $srcPath/SampleApplication/InterfacesSamples/src/main/resources/sample-app/metadata/model
-cp *.* $installPath/input/SampleApplications/metadata/model
+cp *.* $installPath/Kamanja-$ver210/input/SampleApplications/metadata/model
 
 cd $srcPath/SampleApplication/InterfacesSamples/src/main/resources/sample-app/metadata/type
-cp * $installPath/input/SampleApplications/metadata/type
+cp * $installPath/Kamanja-$ver210/input/SampleApplications/metadata/type
 
 cd $srcPath/SampleApplication/InterfacesSamples/src/main/resources/sample-app/metadata/template
-cp -rf * $installPath/input/SampleApplications/template
+cp -rf * $installPath/Kamanja-$ver210/input/SampleApplications/template
 
 cd $srcPath/SampleApplication/InterfacesSamples/src/main/resources/sample-app/metadata/config
-cp -rf * $installPath/config
+cp -rf * $installPath/Kamanja-$ver210/config
 #Finance
 
 cd $srcPath/SampleApplication/EasyInstall/template
-cp -rf * $installPath/template
+cp -rf * $installPath/Kamanja-$ver210/template
 
 cd $srcPath/SampleApplication/EasyInstall
-cp SetPaths.sh $installPath/bin/
+cp SetPaths.sh $installPath/Kamanja-$ver210/bin/
 
-bash $installPath/bin/SetPaths.sh $KafkaRootDir
+bash $installPath/Kamanja-$ver210/bin/SetPaths.sh $KafkaRootDir
 
-chmod 0700 $installPath/input/SampleApplications/bin/*sh
+chmod 0700 $installPath/Kamanja-$ver210/input/SampleApplications/bin/*sh
 
 ################################################################################# Version-2.10 Finished #########################################################################################
 
@@ -1235,7 +1235,7 @@ echo "Prepare test messages and copy them into place..."
 # Copy documentation files
 # *******************************
 cd $srcPath/Documentation
-cp -rf * $installPath/documentation
+cp -rf * $installPath/Kamanja-$ver211/documentation
 
 # *******************************
 # Copy ClusterInstall
@@ -1250,100 +1250,100 @@ cp $srcPath/Utils/NodeInfoExtract/target/scala-2.11/NodeInfoExtract* $installPat
 
 #HelloWorld
 cd $srcPath/SampleApplication/HelloWorld/data
-cp * $installPath/input/SampleApplications/data
+cp * $installPath/Kamanja-$ver211/input/SampleApplications/data
 
 cd $srcPath/SampleApplication/HelloWorld/message
-cp * $installPath/input/SampleApplications/metadata/message
+cp * $installPath/Kamanja-$ver211/input/SampleApplications/metadata/message
 
 cd $srcPath/SampleApplication/HelloWorld/model
-cp * $installPath/input/SampleApplications/metadata/model
+cp * $installPath/Kamanja-$ver211/input/SampleApplications/metadata/model
 
 cd $srcPath/SampleApplication/HelloWorld/template
-cp -rf * $installPath/input/SampleApplications/template
+cp -rf * $installPath/Kamanja-$ver211/input/SampleApplications/template
 
 
 cd $srcPath/SampleApplication/HelloWorld/config
-cp -rf * $installPath/config
+cp -rf * $installPath/Kamanja-$ver211/config
 #HelloWorld
 
 #Medical
 cd $srcPath/SampleApplication/Medical/SampleData
-cp *.csv $installPath/input/SampleApplications/data
-cp *.csv.gz $installPath/input/SampleApplications/data
+cp *.csv $installPath/Kamanja-$ver211/input/SampleApplications/data
+cp *.csv.gz $installPath/Kamanja-$ver211/input/SampleApplications/data
 
 cd $srcPath/SampleApplication/Medical/MessagesAndContainers/Fixed/Containers
-cp * $installPath/input/SampleApplications/metadata/container
+cp * $installPath/Kamanja-$ver211/input/SampleApplications/metadata/container
 
 cd $srcPath/SampleApplication/Medical/Functions
-cp * $installPath/input/SampleApplications/metadata/function
+cp * $installPath/Kamanja-$ver211input/SampleApplications/metadata/function
 
 cd $srcPath/SampleApplication/Medical/MessagesAndContainers/Fixed/Messages
-cp * $installPath/input/SampleApplications/metadata/message
+cp * $installPath/Kamanja-$ver211/input/SampleApplications/metadata/message
 
 cd $srcPath/SampleApplication/Medical/Models
-cp *.* $installPath/input/SampleApplications/metadata/model
+cp *.* $installPath/Kamanja-$ver211/input/SampleApplications/metadata/model
 
 cd $srcPath/SampleApplication/Medical/Types
-cp * $installPath/input/SampleApplications/metadata/type
+cp * $installPath/Kamanja-$ver211/input/SampleApplications/metadata/type
 
 cd $srcPath/SampleApplication/Medical/template
-cp -rf * $installPath/input/SampleApplications/template
+cp -rf * $installPath/Kamanja-$ver211/input/SampleApplications/template
 
 cd $srcPath/SampleApplication/Medical/Configs
-cp -rf * $installPath/config
+cp -rf * $installPath/Kamanja-$ver211/config
 #Medical
 
 #Telecom
 cd $srcPath/SampleApplication/Telecom/data
-cp * $installPath/input/SampleApplications/data
+cp * $installPath/Kamanja-$ver211/input/SampleApplications/data
 
 cd $srcPath/SampleApplication/Telecom/metadata/container
-cp * $installPath/input/SampleApplications/metadata/container
+cp * $installPath/Kamanja-$ver211/input/SampleApplications/metadata/container
 
 cd $srcPath/SampleApplication/Telecom/metadata/message
-cp * $installPath/input/SampleApplications/metadata/message
+cp * $installPath/Kamanja-$ver211/input/SampleApplications/metadata/message
 
 cd $srcPath/SampleApplication/Telecom/metadata/model
-cp *.* $installPath/input/SampleApplications/metadata/model
+cp *.* $installPath/Kamanja-$ver211/input/SampleApplications/metadata/model
 
 cd $srcPath/SampleApplication/Telecom/metadata/template
-cp -rf * $installPath/input/SampleApplications/template
+cp -rf * $installPath/Kamanja-$ver211/input/SampleApplications/template
 
 cd $srcPath/SampleApplication/Telecom/metadata/config
-cp -rf * $installPath/config
+cp -rf * $installPath/Kamanja-$ver211/config
 #Telecom
 
 #Finance
 cd $srcPath/SampleApplication/InterfacesSamples/src/main/resources/sample-app/data
-cp * $installPath/input/SampleApplications/data
+cp * $installPath/Kamanja-$ver211/input/SampleApplications/data
 
 cd $srcPath/SampleApplication/InterfacesSamples/src/main/resources/sample-app/metadata/container
-cp * $installPath/input/SampleApplications/metadata/container
+cp * $installPath/Kamanja-$ver211/input/SampleApplications/metadata/container
 
 cd $srcPath/SampleApplication/InterfacesSamples/src/main/resources/sample-app/metadata/message
-cp * $installPath/input/SampleApplications/metadata/message
+cp * $installPath/Kamanja-$ver211/input/SampleApplications/metadata/message
 
 cd $srcPath/SampleApplication/InterfacesSamples/src/main/resources/sample-app/metadata/model
-cp *.* $installPath/input/SampleApplications/metadata/model
+cp *.* $installPath/Kamanja-$ver211/input/SampleApplications/metadata/model
 
 cd $srcPath/SampleApplication/InterfacesSamples/src/main/resources/sample-app/metadata/type
-cp * $installPath/input/SampleApplications/metadata/type
+cp * $installPath/Kamanja-$ver211/input/SampleApplications/metadata/type
 
 cd $srcPath/SampleApplication/InterfacesSamples/src/main/resources/sample-app/metadata/template
-cp -rf * $installPath/input/SampleApplications/template
+cp -rf * $installPath/Kamanja-$ver211/input/SampleApplications/template
 
 cd $srcPath/SampleApplication/InterfacesSamples/src/main/resources/sample-app/metadata/config
-cp -rf * $installPath/config
+cp -rf * $installPath/Kamanja-$ver211/config
 #Finance
 
 cd $srcPath/SampleApplication/EasyInstall/template
 cp -rf * $installPath/template
 
 cd $srcPath/SampleApplication/EasyInstall
-cp SetPaths.sh $installPath/bin/
+cp SetPaths.sh $installPath/Kamanja-$ver211/bin/
 
-bash $installPath/bin/SetPaths.sh $KafkaRootDir
+bash $installPath/Kamanja-$ver211/bin/SetPaths.sh $KafkaRootDir
 
-chmod 0700 $installPath/input/SampleApplications/bin/*sh
+chmod 0700 $installPath/Kamanja-$ver211/input/SampleApplications/bin/*sh
 
 echo "Kamanja install complete..."
