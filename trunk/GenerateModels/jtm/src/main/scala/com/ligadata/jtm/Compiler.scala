@@ -19,7 +19,6 @@ import com.ligadata.jtm.eval.{Types => EvalTypes }
 import com.ligadata.kamanja.metadata.{StructTypeDef, MdMgr}
 import com.ligadata.kamanja.metadataload.MetadataLoad
 import com.ligadata.messagedef.MessageDefImpl
-import org.apache.commons.io.filefilter.TrueFileFilter
 import org.apache.logging.log4j.{ Logger, LogManager }
 import org.json4s.jackson.JsonMethods._
 import org.rogach.scallop._
@@ -27,6 +26,18 @@ import org.apache.commons.io.FileUtils
 import java.io.File
 
 import com.ligadata.jtm.nodes._
+
+// Laundry list
+/*
+1) Support and emit comments
+2) Vals in compute based on input message
+3) Support java
+4) Plug into kamanja metadata tool
+
+a) End-End-Test
+b) Generate code validation for unit test => compile
+c) Model run and validation for unit test => compile, run
+*/
 
 object jtmGlobalLogger {
   val loggerName = this.getClass.getName()
@@ -301,7 +312,6 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     }
   }
 
-
   // Load metadata
   val md = loadMetadata
 
@@ -359,7 +369,6 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     types.map( e => "%s usedby %s".format(e._1, e._2.mkString(", ")) ).foreach( m => {
       logger.trace(m)
     })
-
 
     // Check all found types against metadata
     //
