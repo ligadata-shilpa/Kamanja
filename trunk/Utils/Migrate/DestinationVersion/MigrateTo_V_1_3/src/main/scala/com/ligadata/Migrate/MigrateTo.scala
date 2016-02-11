@@ -314,9 +314,28 @@ class MigrateTo_V_1_3 extends MigratableTo {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
     if (tblsToDrop.size > 0) {
-      val tblsTuples = tblsToDrop.map(t => (t.namespace, t.name))
-      logger.debug("Dropping metadata tables:" + tblsTuples.mkString(","))
-      _metaDataStoreDb.dropTables(tblsTuples)
+      logger.debug("Dropping metadata tables:" + tblsToDrop.mkString(","))
+      var tblCount = tblsToDrop.size
+      executor = Executors.newFixedThreadPool(tblCount)
+      tblsToDrop.foreach(dropTblInfo => {
+	executor.execute(new Runnable() {
+          override def run() = {
+	    var tbls = new Array[String](0)
+	    tbls = tbls :+ dropTblInfo.namespace + ":" + dropTblInfo.name
+	    _metaDataStoreDb.dropTables(tbls)
+          }
+	})
+      })
+      executor.shutdown();
+      try {
+	executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
+      } catch {
+	case e: Exception => {
+	  val stackTrace = StackTrace.ThrowableTraceString(e)
+	  logger.debug("StackTrace:"+stackTrace)
+	}
+      }
+      // _metaDataStoreDb.dropTables(tblsTuples)
     }
   }
 
