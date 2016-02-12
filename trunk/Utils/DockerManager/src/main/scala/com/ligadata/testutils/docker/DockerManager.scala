@@ -65,7 +65,7 @@ class DockerManager extends DockerLogger {
 
     val portBindings: Map[Port, Seq[PortBinding]] = portsToBind.map(port => (Tcp(port), Seq(PortBinding("0.0.0.0", port)))).toMap
 
-    val container = Await.result(client.create(ContainerConfig(image, containerName = cName), timeout seconds)
+    val container = Await.result(client.create(ContainerConfig(image, containerName = cName), timeout seconds))
     val id = container.id
 
     try {
