@@ -166,7 +166,7 @@ object SerializeDeserialize {
     } catch {
       case e: Exception => {
         //LOG.error("Failed to get classname :" + clsName, e)
-        logger.debug("Failed to get classname :" + clsName", e)
+        logger.debug("Failed to Serialize", e)
         dos.close
         bos.close
         throw e
@@ -184,7 +184,7 @@ object SerializeDeserialize {
     } catch {
       case e: Exception => {
         //LOG.error("Failed to get classname :" + clsName, e)
-        logger.debug("Failed to get classname :" + clsName, e)
+        logger.debug("Failed to Serialize", e)
         throw e
       }
     }
@@ -223,7 +223,7 @@ object SerializeDeserialize {
     } catch {
       case e: Exception => {
         // LOG.error("Failed to get classname :" + clsName, e)
-        logger.debug("Failed to get classname :" + clsName, e)
+        logger.debug("Failed to Deserialize", e)
         dis.close
         throw e
       }
