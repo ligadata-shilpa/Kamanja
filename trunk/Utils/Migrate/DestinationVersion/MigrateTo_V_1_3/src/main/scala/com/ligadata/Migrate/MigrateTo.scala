@@ -64,6 +64,7 @@ class MigrateTo_V_1_3 extends MigratableTo {
   private val defaultUserId: Option[String] = Some("metadataapi")
 
   private var executor: ExecutorService = null
+  private var _parallelDegree = 0
 
   private def isValidPath(path: String, checkForDir: Boolean = false, checkForFile: Boolean = false, str: String = "path"): Unit = {
     val fl = new File(path)
@@ -150,7 +151,7 @@ class MigrateTo_V_1_3 extends MigratableTo {
     }
   }
 
-  override def init(destInstallPath: String, apiConfigFile: String, clusterConfigFile: String, sourceVersion: String, unhandledMetadataDumpDir: String, curMigrationSummaryFlPath: String): Unit = {
+  override def init(destInstallPath: String, apiConfigFile: String, clusterConfigFile: String, sourceVersion: String, unhandledMetadataDumpDir: String, curMigrationSummaryFlPath: String,parallelDegree: Int,mergeContainerAndMessages: Boolean,fromScalaVersion: String, toScalaVersion:String): Unit = {
     isValidPath(apiConfigFile, false, true, "apiConfigFile")
     isValidPath(clusterConfigFile, false, true, "clusterConfigFile")
 
@@ -209,6 +210,7 @@ class MigrateTo_V_1_3 extends MigratableTo {
     }
 
     _bInit = true
+    _parallelDegree = parallelDegree
   }
 
   override def isInitialized: Boolean = _bInit
@@ -251,50 +253,108 @@ class MigrateTo_V_1_3 extends MigratableTo {
     false
   }
 
-  override def backupMetadataTables(tblsToBackedUp: Array[BackupTableInfo], force: Boolean): Unit = {
-    if (_bInit == false)
-      throw new Exception("Not yet Initialized")
+
+  private def backupMetadataTableBatch(tblsToBackedUp: Array[BackupTableInfo], force: Boolean): Unit = {
     logger.debug("Backup metadata tables:" + tblsToBackedUp.map(t => "(" + t.srcTable + " => " + t.dstTable + ")").mkString(","))
-    var tblCount = tblsToBackedUp.length
-    executor = Executors.newFixedThreadPool(tblCount)
-    tblsToBackedUp.foreach(backupTblInfo => {
-      executor.execute(new Runnable() {
-        override def run() = {
-	  _metaDataStoreDb.copyTable(backupTblInfo.namespace, backupTblInfo.srcTable, backupTblInfo.dstTable, force)
-        }
+    try{
+      var tblCount = tblsToBackedUp.length
+      executor = Executors.newFixedThreadPool(tblCount)
+      tblsToBackedUp.foreach(backupTblInfo => {
+	executor.execute(new Runnable() {
+          override def run() = {
+	    _metaDataStoreDb.copyTable(backupTblInfo.namespace, backupTblInfo.srcTable, backupTblInfo.dstTable, force)
+          }
+	})
       })
-    })
-    executor.shutdown();
-    try {
-      executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
+      executor.shutdown();
+      try {
+	executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
+      } catch {
+	case e: Exception => {
+	  val stackTrace = StackTrace.ThrowableTraceString(e)
+	  throw new Exception("Failed to backup metadata tables : " + stackTrace)
+	}
+      }
     } catch {
       case e: Exception => {
 	val stackTrace = StackTrace.ThrowableTraceString(e)
-	logger.debug("StackTrace:"+stackTrace)
+	throw new Exception("Failed to backup metadata tables : " + stackTrace)
       }
     }
   }
   
+
+  override def backupMetadataTables(tblsToBackedUp: Array[BackupTableInfo], force: Boolean): Unit = {
+    if (_bInit == false)
+      throw new Exception("Not yet Initialized")
+    logger.debug("Backup metadata tables:" + tblsToBackedUp.map(t => "(" + t.srcTable + " => " + t.dstTable + ")").mkString(","))
+    try{
+      var tblCount = tblsToBackedUp.length
+      if ( _parallelDegree > 0 ){
+	backupMetadataTableBatch(tblsToBackedUp,force)
+      }
+      else{
+	tblsToBackedUp.foreach(backupTblInfo => {
+	  _metaDataStoreDb.copyTable(backupTblInfo.namespace, backupTblInfo.srcTable, backupTblInfo.dstTable, force)
+	})
+      }
+    } catch {
+      case e: Exception => {
+	val stackTrace = StackTrace.ThrowableTraceString(e)
+	throw new Exception("Failed to backup metadata tables : " + stackTrace)
+      }
+    }
+  }
+  
+  
+  private def backupDataTableBatch(tblsToBackedUp: Array[BackupTableInfo], force: Boolean): Unit = {
+    logger.debug("Backup metadata tables:" + tblsToBackedUp.map(t => "(" + t.srcTable + " => " + t.dstTable + ")").mkString(","))
+    var tblCount = tblsToBackedUp.length
+    try{
+      executor = Executors.newFixedThreadPool(tblCount)
+      tblsToBackedUp.foreach(backupTblInfo => {
+	executor.execute(new Runnable() {
+          override def run() = {
+	    _dataStoreDb.copyTable(backupTblInfo.namespace, backupTblInfo.srcTable, backupTblInfo.dstTable, force)
+          }
+	})
+      })
+      executor.shutdown();
+      try {
+	executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
+      } catch {
+	case e: Exception => {
+	  val stackTrace = StackTrace.ThrowableTraceString(e)
+	  throw new Exception("Failed to backup data tables : " + stackTrace)
+	}
+      }
+    } catch {
+      case e: Exception => {
+	val stackTrace = StackTrace.ThrowableTraceString(e)
+	throw new Exception("Failed to backup metadata tables : " + stackTrace)
+      }
+    }
+  }
+
   override def backupDataTables(tblsToBackedUp: Array[BackupTableInfo], force: Boolean): Unit = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
     logger.debug("Backup data tables:" + tblsToBackedUp.map(t => "(" + t.srcTable + " => " + t.dstTable + ")").mkString(","))
-    var tblCount = tblsToBackedUp.length
-    executor = Executors.newFixedThreadPool(tblCount)
-    tblsToBackedUp.foreach(backupTblInfo => {
-      executor.execute(new Runnable() {
-        override def run() = {
+    try{
+      var tblCount = tblsToBackedUp.length
+      if( _parallelDegree > 0 ){
+	// split the tables into batches depending on the parallel degree
+	backupDataTableBatch(tblsToBackedUp,force)
+      }
+      else{
+	tblsToBackedUp.foreach(backupTblInfo => {
 	  _dataStoreDb.copyTable(backupTblInfo.namespace, backupTblInfo.srcTable, backupTblInfo.dstTable, force)
-        }
-      })
-    })
-    executor.shutdown();
-    try {
-      executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
+	})
+      }
     } catch {
       case e: Exception => {
 	val stackTrace = StackTrace.ThrowableTraceString(e)
-	logger.debug("StackTrace:"+stackTrace)
+	throw new Exception("Failed to backup data tables : " + stackTrace)
       }
     }
   }

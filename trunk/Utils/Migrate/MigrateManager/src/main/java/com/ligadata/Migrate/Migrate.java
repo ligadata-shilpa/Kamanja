@@ -60,6 +60,10 @@ public class Migrate {
 		VersionConfig migratingTo = null;
 		List<String> excludeMetadata = null;
 		boolean excludeData = false;
+		int parallelDegree = 0;
+	        boolean mergeContainersAndMessages = true;
+	        String fromScalaVersion = null;
+	        String toScalaVersion = null;
 
 		/*
 		 * Configuration(String tclusterConfigFile, String tapiConfigFile,
@@ -372,9 +376,15 @@ public class Migrate {
 					configuration.apiConfigFile,
 					configuration.clusterConfigFile));
 			migrateTo.init(configuration.migratingTo.versionInstallPath,
-					configuration.apiConfigFile,
-					configuration.clusterConfigFile, srcVer,
-					curMigrationUnhandledMetadataDumpDir, curMigrationSummary);
+				       configuration.apiConfigFile,
+				       configuration.clusterConfigFile, 
+				       srcVer,
+				       curMigrationUnhandledMetadataDumpDir, 
+				       curMigrationSummary,
+				       configuration.parallelDegree,
+				       configuration.mergeContainersAndMessages,
+				       configuration.fromScalaVersion,
+				       configuration.toScalaVersion);
 
 			String metadataStoreInfo = migrateTo.getMetadataStoreInfo();
 			String dataStoreInfo = migrateTo.getDataStoreInfo();
