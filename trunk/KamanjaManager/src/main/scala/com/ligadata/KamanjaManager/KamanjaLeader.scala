@@ -586,7 +586,7 @@ object KamanjaLeader {
             failedInpAdapters += ia
           }
           case t: Throwable => {
-            LOG.error("Failed to start processing input adapter:" + name, e)
+            LOG.error("Failed to start processing input adapter:" + name, t)
             failedInpAdapters += ia
           }
         }
@@ -951,7 +951,7 @@ object KamanjaLeader {
                         logger.error("Failed to reload keys for container:" + contName, e)
                       }
                       case t: Throwable => {
-                        logger.error("Failed to reload keys for container:" + contName, e)
+                        logger.error("Failed to reload keys for container:" + contName, t)
                       }
                     }
                   }

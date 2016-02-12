@@ -174,6 +174,8 @@ class APIService extends LigadataSSLConfiguration with Runnable{
 }
  
 object APIService {
+  val loggerName = this.getClass.getName
+  lazy val logger = LogManager.getLogger(loggerName)
 
   def main(args: Array[String]): Unit = {
     val mgr = new APIService
