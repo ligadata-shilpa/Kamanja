@@ -151,8 +151,8 @@ object CleanUtil {
       }
     }
     catch {
-      case e: MissingArgumentException => logger.error("", e)
-      case e: CleanUtilException => logger.error("", e)
+      case e: MissingArgumentException => logger.error(e)
+      case e: CleanUtilException => logger.error(e)
       case e: Exception => logger.error("Unexpected Exception caught", e)
     }
     finally {

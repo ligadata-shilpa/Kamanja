@@ -129,7 +129,7 @@ object ContainerService {
       try {
         return MetadataAPIImpl.GetContainerDefFromCache(ns, name,"JSON", ver, userid)
       } catch {
-        case e: Exception => e.printStackTrace()
+        case e: Exception => logger.error(e)
       }
     }
     val containerKeys = MetadataAPIImpl.GetAllContainersFromCache(true, None)
@@ -176,6 +176,7 @@ object ContainerService {
       }
     } catch {
       case e: Exception => {
+        logger.warn(e)
         response = e.getStackTrace.toString
         response= (new ApiResult(ErrorCodeConstants.Failure, "ContainerService",null, response)).toString
       }
@@ -192,7 +193,7 @@ object ContainerService {
          try {
            return MetadataAPIImpl.RemoveContainer(ns, name, ver.toInt, userid)
          } catch {
-           case e: Exception => e.printStackTrace()
+           case e: Exception => logger.error(e)
          }
       }
        
@@ -221,6 +222,7 @@ object ContainerService {
         response=("\n Entry not in desired format. Please enter only one choice correctly")
       }
       case e: Exception => {
+        logger.warn(e)
         response=(e.toString)
       }
     }

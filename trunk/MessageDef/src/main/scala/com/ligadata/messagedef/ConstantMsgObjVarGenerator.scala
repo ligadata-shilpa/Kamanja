@@ -19,7 +19,6 @@ package com.ligadata.messagedef
 import com.ligadata.kamanja.metadata.MdMgr
 import scala.collection.mutable.ArrayBuffer
 import org.apache.logging.log4j.{ Logger, LogManager }
-import com.ligadata.Exceptions.StackTrace
 
 class ConstantMsgObjVarGenerator {
 
@@ -241,8 +240,7 @@ class ConstantMsgObjVarGenerator {
 
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        LOG.debug("StackTrace:" + stackTrace)
+        LOG.debug(e)
         throw e
       }
     }
@@ -508,7 +506,6 @@ import com.ligadata.KamanjaBase.{InputData, DelimitedData, JsonData, XmlData, Kv
 import com.ligadata.BaseTypes._
 import com.ligadata.KamanjaBase.SerializeDeserialize
 import java.io.{ DataInputStream, DataOutputStream , ByteArrayOutputStream}
-import com.ligadata.Exceptions.StackTrace
 import org.apache.logging.log4j.{ Logger, LogManager }
 import java.util.Date
 """
@@ -667,8 +664,7 @@ class XmlData(var dataInput: String) extends InputData(){ }
     		  return getWithReflection(key)
     	} catch {
     		  case e: Exception => {
-          val stackTrace = StackTrace.ThrowableTraceString(e)
-          LOG.debug("StackTrace:"+stackTrace)
+          LOG.debug(e)
     		  // Call By Name
              return getByName(key)
     		  }
@@ -684,8 +680,7 @@ class XmlData(var dataInput: String) extends InputData(){ }
 		      return null;
 		    } catch {
 		      case e: Exception => {
-		        val stackTrace = StackTrace.ThrowableTraceString(e)
-            LOG.debug("StackTrace:"+stackTrace)
+            LOG.debug(e)
 		        throw e
 		      }
 		    }

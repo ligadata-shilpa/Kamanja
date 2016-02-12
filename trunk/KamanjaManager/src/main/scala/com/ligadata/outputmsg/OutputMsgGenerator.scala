@@ -21,7 +21,6 @@ import com.ligadata.KamanjaBase.{ BaseMsg, MessageContainerBase }
 import com.ligadata.kamanja.metadata.MdMgr
 import com.ligadata.kamanja.metadata._
 import org.apache.logging.log4j.{ Logger, LogManager }
-import com.ligadata.Exceptions.StackTrace
 
 import scala.collection.mutable.{ ArrayBuffer }
 import org.json4s.jackson.Serialization
@@ -54,8 +53,7 @@ class OutputMsgGenerator {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        log.error("Got Exception while preparing Output messages.\nStackTrace:" + stackTrace)
+        log.error("Got Exception while preparing Output messages.", e)
         throw e
       }
     }
@@ -100,8 +98,7 @@ class OutputMsgGenerator {
       })
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        log.error("\nStackTrace:" + stackTrace)
+        log.error(e)
         throw e
       }
     }
@@ -182,8 +179,7 @@ class OutputMsgGenerator {
       (outputMsgDefExists, finalOutputMsgs.toArray, mymap)
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        log.error("\nStackTrace:" + stackTrace)
+        log.error(e)
         throw e
       }
     }
@@ -301,8 +297,7 @@ class OutputMsgGenerator {
 
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        log.error("\nStackTrace:" + stackTrace)
+        log.error(e)
         throw e
       }
     }

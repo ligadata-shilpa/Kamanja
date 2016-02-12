@@ -108,8 +108,8 @@ class AuditHashMapAdapter extends AuditAdapter {
         db.commit() //persist changes into disk
     }catch {
       case e: Exception => 
-        e.printStackTrace()
-        throw new Exception(e.getMessage())
+        logger.error(e)
+        throw e
     }
   }
   
@@ -150,7 +150,7 @@ class AuditHashMapAdapter extends AuditAdapter {
       auditRecords
     } catch {
       case e:Exception => {
-        throw new Exception("Failed to fetch audit records: " + e.getMessage())
+        throw new Exception("Failed to fetch audit records", e)
       }
     }
   }
@@ -167,10 +167,10 @@ class AuditHashMapAdapter extends AuditAdapter {
 	map.close();
       }catch{
 	case e:NullPointerException =>{
-	  logger.error("Unexpected Null pointer exception when closing hashmap, seems like internal bug related to mapdb ")
+	  logger.error("Unexpected Null pointer exception when closing hashmap, seems like internal bug related to mapdb ", e)
 	}
 	case e:Exception =>{
-	  logger.error("Unexpected error when closing hashmap " + e.getMessage())
+	  logger.error("Unexpected error when closing hashmap ", e)
 	}
       }
     }
@@ -185,9 +185,8 @@ class AuditHashMapAdapter extends AuditAdapter {
       db.compact()
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:"+stackTrace)
-        throw new Exception("Failed to truncate Audit Store: " + e.getMessage())
+        logger.debug(e)
+        throw new Exception("Failed to truncate Audit Store", e)
       }
     }
   }
@@ -201,7 +200,7 @@ class AuditHashMapAdapter extends AuditAdapter {
        })
     } catch {
       case e:Exception => {
-        throw new Exception("Failed to read Audit Configuration: " + e.getMessage())
+        throw new Exception("Failed to read Audit Configuration", e)
       }     
     }
   }

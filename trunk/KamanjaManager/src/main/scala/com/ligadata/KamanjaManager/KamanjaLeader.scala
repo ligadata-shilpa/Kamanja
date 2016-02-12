@@ -37,7 +37,7 @@ import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
 import org.apache.curator.utils.ZKPaths
 import scala.actors.threadpool.{ Executors, ExecutorService }
-import com.ligadata.Exceptions.{ FatalAdapterException, StackTrace }
+import com.ligadata.Exceptions.{ FatalAdapterException }
 import scala.collection.JavaConversions._
 import com.ligadata.KvBase.{ Key }
 
@@ -248,7 +248,7 @@ object KamanjaLeader {
             }
           } catch {
             case e: Exception => {
-              LOG.error("UpdatePartitionsNodeData => Failed eventType: %s, eventPath: %s, eventPathData: %s, Reason:%s, Message:%s".format(eventType, eventPath, evntPthData, e.getCause, e.getMessage))
+              LOG.error("UpdatePartitionsNodeData => Failed eventType: %s, eventPath: %s, eventPathData: %s".format(eventType, eventPath, evntPthData), e)
             }
           }
         }
@@ -261,7 +261,7 @@ object KamanjaLeader {
       }
     } catch {
       case e: Exception => {
-        LOG.error("Exception while UpdatePartitionsNodeData, reason %s, message %s".format(e.getCause, e.getMessage))
+        LOG.error("Exception while UpdatePartitionsNodeData", e)
       }
     }
   }
@@ -384,16 +384,13 @@ object KamanjaLeader {
         via.StopProcessing
       } catch {
         case fae: FatalAdapterException => {
-          val causeStackTrace = StackTrace.ThrowableTraceString(fae.cause)
-          LOG.error("Validate adapter " + via.UniqueName + "failed to stop processing, cause: \n" + causeStackTrace)
+          LOG.error("Validate adapter " + via.UniqueName + "failed to stop processing", fae)
         }
         case e: Exception => {
-          val causeStackTrace = StackTrace.ThrowableTraceString(e)
-          LOG.error("Validate adapter " + via.UniqueName + "failed to stop processing, cause: \n" + causeStackTrace)
+          LOG.error("Validate adapter " + via.UniqueName + "failed to stop processing", e)
         }
         case e: Throwable => {
-          val causeStackTrace = StackTrace.ThrowableTraceString(e)
-          LOG.error("Validate adapter " + via.UniqueName + "failed to stop processing, cause: \n" + causeStackTrace)
+          LOG.error("Validate adapter " + via.UniqueName + "failed to stop processing", e)
         }
       }
     })
@@ -471,8 +468,7 @@ object KamanjaLeader {
       SetNewDataToZkc(engineDistributionZkNodePath, sendJson.getBytes("UTF8"))
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        LOG.debug("StackTrace:" + stackTrace)
+        LOG.debug(e)
       }
     }
   }
@@ -582,18 +578,15 @@ object KamanjaLeader {
           }
         } catch {
           case fae: FatalAdapterException => {
-            val causeStackTrace = StackTrace.ThrowableTraceString(fae.cause)
-            LOG.error("Failed to start processing input adapter:" + name + "\n.Internal Cause:" + causeStackTrace)
+            LOG.error("Failed to start processing input adapter:" + name, fae)
             failedInpAdapters += ia
           }
           case e: Exception => {
-            val stackTrace = StackTrace.ThrowableTraceString(e)
-            LOG.error("Failed to start processing input adapter:" + name + "\n.Stack Trace:" + stackTrace)
+            LOG.error("Failed to start processing input adapter:" + name, e)
             failedInpAdapters += ia
           }
           case t: Throwable => {
-            val stackTrace = StackTrace.ThrowableTraceString(t)
-            LOG.error("Failed to start processing input adapter:" + name + "\n.Stack Trace:" + stackTrace)
+            LOG.error("Failed to start processing input adapter:" + name, e)
             failedInpAdapters += ia
           }
         }
@@ -606,9 +599,7 @@ object KamanjaLeader {
           LOG.error("Failed to start processing %d input adapters while distributing. Waiting for another %d milli seconds and going to start them again.".format(remainingInpAdapters.size, failedWaitTime))
           Thread.sleep(failedWaitTime)
         } catch {
-          case e: Exception => {
-
-          }
+          case e: Exception => { LOG.warn(e) }
         }
         // Adjust time for next time
         if (failedWaitTime < maxFailedWaitTime) {
@@ -696,18 +687,15 @@ object KamanjaLeader {
                   ia.StopProcessing
                 } catch {
                   case fae: FatalAdapterException => {
-                    val causeStackTrace = StackTrace.ThrowableTraceString(fae.cause)
-                    LOG.error("Input adapter " + ia.UniqueName + "failed to stop processing, cause: \n" + causeStackTrace)
+                    LOG.error("Input adapter " + ia.UniqueName + "failed to stop processing", fae)
                     failedInputAdaps += ia
                   }
                   case e: Exception => {
-                    val causeStackTrace = StackTrace.ThrowableTraceString(e)
-                    LOG.error("Input adapter " + ia.UniqueName + "failed to stop processing, cause: \n" + causeStackTrace)
+                    LOG.error("Input adapter " + ia.UniqueName + "failed to stop processing", e)
                     failedInputAdaps += ia
                   }
                   case e: Throwable => {
-                    val causeStackTrace = StackTrace.ThrowableTraceString(e)
-                    LOG.error("Input adapter " + ia.UniqueName + "failed to stop processing, cause: \n" + causeStackTrace)
+                    LOG.error("Input adapter " + ia.UniqueName + "failed to stop processing", e)
                     failedInputAdaps += ia
                   }
                 }
@@ -719,9 +707,7 @@ object KamanjaLeader {
                   LOG.error("Failed to stop %d input adapters. Waiting for another %d milli seconds and going to start them again.".format(remInputAdaps.size, failedWaitTime))
                   Thread.sleep(failedWaitTime)
                 } catch {
-                  case e: Exception => {
-
-                  }
+                  case e: Exception => { LOG.warn(e) }
                 }
                 // Adjust time for next time
                 if (failedWaitTime < maxFailedWaitTime) {
@@ -740,8 +726,7 @@ object KamanjaLeader {
             } catch {
               case e: Exception => {
                 // Not doing anything
-                val stackTrace = StackTrace.ThrowableTraceString(e)
-                LOG.debug("\nStackTrace:" + stackTrace)
+                LOG.debug(e)
               }
             }
 
@@ -760,7 +745,7 @@ object KamanjaLeader {
             }
           } catch {
             case e: Exception => {
-              LOG.error("Failed to get Input Adapters partitions. Reason:%s Message:%s".format(e.getCause, e.getMessage))
+              LOG.error("Failed to get Input Adapters partitions.", e)
             }
           }
         }
@@ -789,7 +774,7 @@ object KamanjaLeader {
 
           } catch {
             case e: Exception => {
-              LOG.error("distribute action failed with reason %s, message %s".format(e.getCause, e.getMessage))
+              LOG.error("distribute action failed", e)
               distributed = false
             }
           }
@@ -805,7 +790,7 @@ object KamanjaLeader {
               sentDistributed = true
             } catch {
               case e: Exception => {
-                LOG.error("distribute action failed with reason %s, message %s".format(e.getCause, e.getMessage))
+                LOG.error("distribute action failed", e)
               }
             }
           }
@@ -825,7 +810,7 @@ object KamanjaLeader {
       // 
     } catch {
       case e: Exception => {
-        LOG.error("Found invalid JSON: %s".format(receivedJsonStr))
+        LOG.error("Found invalid JSON: %s".format(receivedJsonStr), e)
       }
     }
 
@@ -863,13 +848,13 @@ object KamanjaLeader {
           try {
             changedVals = changedMsgsContainers.asInstanceOf[List[String]].toArray
           } catch {
-            case e: Exception => {}
+            case e: Exception => { LOG.warn(e) }
           }
         } else if (changedMsgsContainers.isInstanceOf[Array[_]]) {
           try {
             changedVals = changedMsgsContainers.asInstanceOf[Array[String]]
           } catch {
-            case e: Exception => {}
+            case e: Exception => { LOG.warn(e) }
           }
         }
 
@@ -894,25 +879,25 @@ object KamanjaLeader {
                   try {
                     keys = tmpKeys.asInstanceOf[List[Any]]
                   } catch {
-                    case e: Exception => {}
+                    case e: Exception => { LOG.warn(e) }
                   }
                 } else if (tmpKeys.isInstanceOf[Array[_]]) {
                   try {
                     keys = tmpKeys.asInstanceOf[Array[Any]].toList
                   } catch {
-                    case e: Exception => {}
+                    case e: Exception => { LOG.warn(e) }
                   }
                 } else if (tmpKeys.isInstanceOf[Map[_, _]]) {
                   try {
                     keys = tmpKeys.asInstanceOf[Map[String, Any]].toList
                   } catch {
-                    case e: Exception => {}
+                    case e: Exception => { LOG.warn(e) }
                   }
                 } else if (tmpKeys.isInstanceOf[scala.collection.mutable.Map[_, _]]) {
                   try {
                     keys = tmpKeys.asInstanceOf[scala.collection.mutable.Map[String, Any]].toList
                   } catch {
-                    case e: Exception => {}
+                    case e: Exception => { LOG.warn(e) }
                   }
                 }
 
@@ -924,25 +909,25 @@ object KamanjaLeader {
                       try {
                         oneKey = k.asInstanceOf[List[(String, Any)]].toMap
                       } catch {
-                        case e: Exception => {}
+                        case e: Exception => { LOG.warn(e) }
                       }
                     } else if (k.isInstanceOf[Array[_]]) {
                       try {
                         oneKey = k.asInstanceOf[Array[(String, Any)]].toMap
                       } catch {
-                        case e: Exception => {}
+                        case e: Exception => { LOG.warn(e) }
                       }
                     } else if (k.isInstanceOf[Map[_, _]]) {
                       try {
                         oneKey = k.asInstanceOf[Map[String, Any]]
                       } catch {
-                        case e: Exception => {}
+                        case e: Exception => { LOG.warn(e) }
                       }
                     } else if (k.isInstanceOf[scala.collection.mutable.Map[_, _]]) {
                       try {
                         oneKey = k.asInstanceOf[scala.collection.mutable.Map[String, Any]].toMap
                       } catch {
-                        case e: Exception => {}
+                        case e: Exception => { LOG.warn(e) }
                       }
                     }
 
@@ -963,10 +948,10 @@ object KamanjaLeader {
                       envCtxt.ReloadKeys(txnid, contName, loadableKeys.toList)
                     } catch {
                       case e: Exception => {
-                        logger.error("Failed to reload keys for container:" + contName)
+                        logger.error("Failed to reload keys for container:" + contName, e)
                       }
                       case t: Throwable => {
-                        logger.error("Failed to reload keys for container:" + contName)
+                        logger.error("Failed to reload keys for container:" + contName, e)
                       }
                     }
                   }
@@ -980,7 +965,7 @@ object KamanjaLeader {
       // 
     } catch {
       case e: Exception => {
-        LOG.error("Found invalid JSON: %s".format(receivedJsonStr))
+        LOG.error("Found invalid JSON: %s".format(receivedJsonStr), e)
       }
     }
 
@@ -1053,24 +1038,21 @@ object KamanjaLeader {
           } catch {
             case fae: FatalAdapterException => {
               // Adapter could not get partition information and can't reconver.
-              val causeStackTrace = StackTrace.ThrowableTraceString(fae.cause)
-              LOG.error("Failed to get partitions from input adapter " + ia.UniqueName + ". We are not going to change work load for now. Cause: \n" + causeStackTrace)
+              LOG.error("Failed to get partitions from input adapter " + ia.UniqueName + ". We are not going to change work load for now", fae)
             }
             case e: Exception => {
               // Adapter could not get partition information and can't reconver.
-              val causeStackTrace = StackTrace.ThrowableTraceString(e)
-              LOG.error("Failed to get partitions from input adapter " + ia.UniqueName + ". We are not going to change work load for now. Cause: \n" + causeStackTrace)
+              LOG.error("Failed to get partitions from input adapter " + ia.UniqueName + ". We are not going to change work load for now", e)
             }
             case e: Throwable => {
               // Adapter could not get partition information and can't reconver.
-              val causeStackTrace = StackTrace.ThrowableTraceString(e)
-              LOG.error("Failed to get partitions from input adapter " + ia.UniqueName + ". We are not going to change work load for now. Cause: \n" + causeStackTrace)
+              LOG.error("Failed to get partitions from input adapter " + ia.UniqueName + ". We are not going to change work load for now", e)
             }
           }
         }
       } catch {
         case e: Exception => {
-          LOG.error("Failed to get Input Adapters partitions. Reason:%s Message:%s".format(e.getCause, e.getMessage))
+          LOG.error("Failed to get Input Adapters partitions.", e)
         }
       }
     }
@@ -1091,20 +1073,17 @@ object KamanjaLeader {
             case e: FatalAdapterException => {
               lastAdapterException = e // Adapter could not partition information and can't recover.
               // If validate adapter is not able to connect, just ignoring it for now
-              val causeStackTrace = StackTrace.ThrowableTraceString(e.cause)
-              LOG.error("Failed to get partition values for Validate Adapter " + ia.UniqueName + ". Message:" + e.getMessage + ", Reason:" + e.getCause + ". Internal Cause: \n" + causeStackTrace)
+              LOG.error("Failed to get partition values for Validate Adapter " + ia.UniqueName, e)
             }
             case e: Exception => {
               lastAdapterException = e // Adapter could not partition information and can't recover.
               // If validate adapter is not able to connect, just ignoring it for now
-              val causeStackTrace = StackTrace.ThrowableTraceString(e)
-              LOG.error("Failed to get partition values for Validate Adapter " + ia.UniqueName + ". Message:" + e.getMessage + ", Reason:" + e.getCause + ". Internal Cause: \n" + causeStackTrace)
+              LOG.error("Failed to get partition values for Validate Adapter " + ia.UniqueName, e)
             }
             case e: Throwable => {
               lastAdapterException = e // Adapter could not partition information and can't recover.
               // If validate adapter is not able to connect, just ignoring it for now
-              val causeStackTrace = StackTrace.ThrowableTraceString(e)
-              LOG.error("Failed to get partition values for Validate Adapter " + ia.UniqueName + ". Message:" + e.getMessage + ", Reason:" + e.getCause + ". Internal Cause: \n" + causeStackTrace)
+              LOG.error("Failed to get partition values for Validate Adapter " + ia.UniqueName, e)
             }
           }
         })
@@ -1112,7 +1091,7 @@ object KamanjaLeader {
         if (lastAdapterException != null) throw lastAdapterException
       } catch {
         case e: Exception => {
-          LOG.error("Failed to get Validate Input Adapters partitions. Reason:%s Message:%s".format(e.getCause, e.getMessage))
+          LOG.error("Failed to get Validate Input Adapters partitions.", e)
         }
       }
     }
@@ -1155,8 +1134,7 @@ object KamanjaLeader {
         } catch {
           case e: Exception => {
             // Not doing anything
-            val stackTrace = StackTrace.ThrowableTraceString(e)
-            LOG.debug("StackTrace:" + stackTrace)
+            LOG.debug(e)
           }
         }
 
@@ -1175,8 +1153,7 @@ object KamanjaLeader {
                 Thread.sleep(1000) // Waiting for 1000 milli secs
               } catch {
                 case e: Exception => {
-                  val stackTrace = StackTrace.ThrowableTraceString(e)
-                  LOG.debug("\nStackTrace:" + stackTrace)
+                  LOG.debug(e)
                 }
               }
 
@@ -1288,7 +1265,7 @@ object KamanjaLeader {
         */
       } catch {
         case e: Exception => {
-          LOG.error("Failed to initialize ZooKeeper Connection. Reason:%s Message:%s".format(e.getCause, e.getMessage))
+          LOG.error("Failed to initialize ZooKeeper Connection.", e)
           throw e
         }
       }

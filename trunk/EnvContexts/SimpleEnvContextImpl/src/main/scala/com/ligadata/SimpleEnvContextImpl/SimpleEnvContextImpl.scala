@@ -76,7 +76,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
           lastSeen = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
           Thread.sleep(5000)
         } catch {
-          case e: Exception => logger.warn("SimpleEnvContext heartbeat interrupted.")
+          case e: Exception => logger.warn("SimpleEnvContext heartbeat interrupted.", e)
         }
       }
     }
@@ -99,8 +99,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
               _enableEachTransactionCommit = tmp1.trim().toBoolean
               foundIt = true
             } catch {
-              case e: Exception => {
-              }
+              case e: Exception => { logger.warn(e) }
             }
           }
 
@@ -695,8 +694,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
       _allDataDataStore.get(makeKey(partKeyStr), buildOne)
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("Data not found for key:" + partKeyStr + "\nStackTrace:" + stackTrace)
+        logger.debug("Data not found for key:" + partKeyStr, e)
       }
     }
     if (objs(0) != null) {
@@ -808,8 +806,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
       callGetData(_defaultDataStore, "AdapterUniqKvData", Array(TimeRange(KvBaseDefalts.defaultTime, KvBaseDefalts.defaultTime)), Array(Array(key)), buildAdapOne)
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("Data not found for key:" + key + "\nStackTrace:" + stackTrace)
+        logger.debug("Data not found for key:" + key, e)
       }
     }
     if (results.size > 0) {
@@ -859,8 +856,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
       callGetData(_defaultDataStore, "ModelResults", Array(TimeRange(KvBaseDefalts.defaultTime, KvBaseDefalts.defaultTime)), Array(key.toArray), buildMdlOne)
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("Data not found for key:" + key.mkString(",") + "\nStackTrace:" + stackTrace)
+        logger.debug("Data not found for key:" + key.mkString(","), e)
       }
     }
     if (objs(0) != null) {
@@ -1061,12 +1057,10 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
                 }
               } catch {
                 case e: ObjectNotFoundException => {
-                  val stackTrace = StackTrace.ThrowableTraceString(e)
-                  logger.debug("Table %s Key %s Not found for timerange: (%d,%d). Message:%s, Cause:%s \nStackTrace:%s".format(containerName, loadKey.bucketKey.mkString(","), loadKey.tmRange.beginTime, loadKey.tmRange.endTime, e.getMessage(), e.getCause(), stackTrace))
+                  logger.debug("Table %s Key %s Not found for timerange: (%d,%d)".format(containerName, loadKey.bucketKey.mkString(","), loadKey.tmRange.beginTime, loadKey.tmRange.endTime), e)
                 }
                 case e: Exception => {
-                  val stackTrace = StackTrace.ThrowableTraceString(e)
-                  logger.error("Table %s Key %s Not found for timerange: (%d,%d). Message:%s, Cause:%s \nStackTrace:%s".format(containerName, loadKey.bucketKey.mkString(","), loadKey.tmRange.beginTime, loadKey.tmRange.endTime, e.getMessage(), e.getCause(), stackTrace))
+                  logger.error("Table %s Key %s Not found for timerange: (%d,%d)".format(containerName, loadKey.bucketKey.mkString(","), loadKey.tmRange.beginTime, loadKey.tmRange.endTime), e)
                 }
               }
             }
@@ -1118,12 +1112,10 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
                 }
               } catch {
                 case e: ObjectNotFoundException => {
-                  val stackTrace = StackTrace.ThrowableTraceString(e)
-                  logger.debug("Table %s Key %s Not found for timerange: (%d,%d). Message:%s, Cause:%s \nStackTrace:%s".format(containerName, loadKey.bucketKey.mkString(","), loadKey.tmRange.beginTime, loadKey.tmRange.endTime, e.getMessage(), e.getCause(), stackTrace))
+                  logger.debug("Table %s Key %s Not found for timerange: (%d,%d)".format(containerName, loadKey.bucketKey.mkString(","), loadKey.tmRange.beginTime, loadKey.tmRange.endTime), e)
                 }
                 case e: Exception => {
-                  val stackTrace = StackTrace.ThrowableTraceString(e)
-                  logger.error("Table %s Key %s Not found for timerange: (%d,%d). Message:%s, Cause:%s \nStackTrace:%s".format(containerName, loadKey.bucketKey.mkString(","), loadKey.tmRange.beginTime, loadKey.tmRange.endTime, e.getMessage(), e.getCause(), stackTrace))
+                  logger.error("Table %s Key %s Not found for timerange: (%d,%d)".format(containerName, loadKey.bucketKey.mkString(","), loadKey.tmRange.beginTime, loadKey.tmRange.endTime), e)
                 }
               }
             }
@@ -1175,12 +1167,10 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
                 }
               } catch {
                 case e: ObjectNotFoundException => {
-                  val stackTrace = StackTrace.ThrowableTraceString(e)
-                  logger.debug("Table %s Key %s Not found for timerange: (%d,%d). Message:%s, Cause:%s \nStackTrace:%s".format(containerName, loadKey.bucketKey.mkString(","), loadKey.tmRange.beginTime, loadKey.tmRange.endTime, e.getMessage(), e.getCause(), stackTrace))
+                  logger.debug("Table %s Key %s Not found for timerange: (%d,%d)".format(containerName, loadKey.bucketKey.mkString(","), loadKey.tmRange.beginTime, loadKey.tmRange.endTime), e)
                 }
                 case e: Exception => {
-                  val stackTrace = StackTrace.ThrowableTraceString(e)
-                  logger.error("Table %s Key %s Not found for timerange: (%d,%d). Message:%s, Cause:%s \nStackTrace:%s".format(containerName, loadKey.bucketKey.mkString(","), loadKey.tmRange.beginTime, loadKey.tmRange.endTime, e.getMessage(), e.getCause(), stackTrace))
+                  logger.error("Table %s Key %s Not found for timerange: (%d,%d)".format(containerName, loadKey.bucketKey.mkString(","), loadKey.tmRange.beginTime, loadKey.tmRange.endTime), e)
                 }
               }
             }
@@ -1244,6 +1234,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
           _modelsRsltBuckets(i).clear()
         } catch {
           case e: Exception => {
+            logger.warn(e)
             // throw e
           }
         } finally {
@@ -1259,6 +1250,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
           _adapterUniqKeyValBuckets(i).clear()
         } catch {
           case e: Exception => {
+            logger.warn(e)
             // throw e
           }
         } finally {
@@ -1685,8 +1677,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 
     } catch {
       case e: Exception => {
-        val causeStackTrace = StackTrace.ThrowableTraceString(e)
-        logger.error("Failed to save data, cause: \n" + causeStackTrace)
+        logger.error("Failed to save data", e)
         throw e
       }
     }
@@ -1732,7 +1723,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
         try {
           _modelsRsltBuckets(i).clear()
         } catch {
-          case e: Exception => {
+          case e: Exception => { logger.warn(e)
             // throw e
           }
         } finally {
@@ -1747,7 +1738,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
         try {
           _adapterUniqKeyValBuckets(i).clear()
         } catch {
-          case e: Exception => {
+          case e: Exception => { logger.warn(e)
             // throw e
           }
         } finally {
@@ -1980,12 +1971,10 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
         get(_defaultDataStore, containerName, tmRng, prtKeys, buildOne)
       } catch {
         case e: Exception => {
-          val stackTrace = StackTrace.ThrowableTraceString(e)
-          logger.debug("\nStackTrace:" + stackTrace)
+          logger.debug("Failed", e)
         }
         case t: Throwable => {
-          val stackTrace = StackTrace.ThrowableTraceString(t)
-          logger.debug("\nStackTrace:" + stackTrace)
+          logger.debug("Failed", e)
         }
       }
 
@@ -2067,24 +2056,19 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
         doneSave = true
       } catch {
         case e: FatalAdapterException => {
-          val causeStackTrace = StackTrace.ThrowableTraceString(e.cause)
-          logger.error("Failed to save data into datastore, cause: \n" + causeStackTrace)
+          logger.error("Failed to save data into datastore", e)
         }
         case e: StorageDMLException => {
-          val causeStackTrace = StackTrace.ThrowableTraceString(e.cause)
-          logger.error("Failed to save data into datastore, cause: \n" + causeStackTrace)
+          logger.error("Failed to save data into datastore", e)
         }
         case e: StorageDDLException => {
-          val causeStackTrace = StackTrace.ThrowableTraceString(e.cause)
-          logger.error("Failed to save data into datastore, cause: \n" + causeStackTrace)
+          logger.error("Failed to save data into datastore", e)
         }
         case e: Exception => {
-          val causeStackTrace = StackTrace.ThrowableTraceString(e)
-          logger.error("Failed to save data into datastore, cause: \n" + causeStackTrace)
+          logger.error("Failed to save data into datastore", e)
         }
         case e: Throwable => {
-          val causeStackTrace = StackTrace.ThrowableTraceString(e)
-          logger.error("Failed to save data into datastore, cause: \n" + causeStackTrace)
+          logger.error("Failed to save data into datastore", e)
         }
       }
 
@@ -2093,7 +2077,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
           logger.error("Failed to save data into datastore. Waiting for another %d milli seconds and going to start them again.".format(failedWaitTime))
           Thread.sleep(failedWaitTime)
         } catch {
-          case e: Exception => {
+          case e: Exception => { logger.warn(e)
 
           }
         }
@@ -2120,28 +2104,23 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
         doneGet = true
       } catch {
         case e @ (_: ObjectNotFoundException | _: KeyNotFoundException) => {
-          logger.debug("Failed to get data from container:%s".format(containerName))
+          logger.debug("Failed to get data from container:%s".format(containerName), e)
           doneGet = true
         }
         case e: FatalAdapterException => {
-          val stackTrace = StackTrace.ThrowableTraceString(e.cause)
-          logger.error("Failed to get data from container:%s.\nStackTrace:%s".format(containerName, stackTrace))
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
         }
         case e: StorageDMLException => {
-          val stackTrace = StackTrace.ThrowableTraceString(e.cause)
-          logger.error("Failed to get data from container:%s.\nStackTrace:%s".format(containerName, stackTrace))
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
         }
         case e: StorageDDLException => {
-          val stackTrace = StackTrace.ThrowableTraceString(e.cause)
-          logger.error("Failed to get data from container:%s.\nStackTrace:%s".format(containerName, stackTrace))
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
         }
         case e: Exception => {
-          val stackTrace = StackTrace.ThrowableTraceString(e)
-          logger.error("Failed to get data from container:%s.\nStackTrace:%s".format(containerName, stackTrace))
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
         }
         case e: Throwable => {
-          val stackTrace = StackTrace.ThrowableTraceString(e)
-          logger.error("Failed to get data from container:%s.\nStackTrace:%s".format(containerName, stackTrace))
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
         }
       }
 
@@ -2150,7 +2129,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
           logger.error("Failed to get data from datastore. Waiting for another %d milli seconds and going to start them again.".format(failedWaitTime))
           Thread.sleep(failedWaitTime)
         } catch {
-          case e: Exception => {}
+          case e: Exception => { logger.warn(e) }
         }
         // Adjust time for next time
         if (failedWaitTime < maxFailedWaitTime) {
@@ -2174,28 +2153,23 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
         doneGet = true
       } catch {
         case e @ (_: ObjectNotFoundException | _: KeyNotFoundException) => {
-          logger.debug("Failed to get data from container:%s".format(containerName))
+          logger.debug("Failed to get data from container:%s".format(containerName), e)
           doneGet = true
         }
         case e: FatalAdapterException => {
-          val stackTrace = StackTrace.ThrowableTraceString(e.cause)
-          logger.error("Failed to get data from container:%s.\nStackTrace:%s".format(containerName, stackTrace))
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
         }
         case e: StorageDMLException => {
-          val stackTrace = StackTrace.ThrowableTraceString(e.cause)
-          logger.error("Failed to get data from container:%s.\nStackTrace:%s".format(containerName, stackTrace))
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
         }
         case e: StorageDDLException => {
-          val stackTrace = StackTrace.ThrowableTraceString(e.cause)
-          logger.error("Failed to get data from container:%s.\nStackTrace:%s".format(containerName, stackTrace))
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
         }
         case e: Exception => {
-          val stackTrace = StackTrace.ThrowableTraceString(e)
-          logger.error("Failed to get data from container:%s.\nStackTrace:%s".format(containerName, stackTrace))
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
         }
         case e: Throwable => {
-          val stackTrace = StackTrace.ThrowableTraceString(e)
-          logger.error("Failed to get data from container:%s.\nStackTrace:%s".format(containerName, stackTrace))
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
         }
       }
 
@@ -2204,7 +2178,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
           logger.error("Failed to get data from datastore. Waiting for another %d milli seconds and going to start them again.".format(failedWaitTime))
           Thread.sleep(failedWaitTime)
         } catch {
-          case e: Exception => {}
+          case e: Exception => { logger.warn(e) }
         }
         // Adjust time for next time
         if (failedWaitTime < maxFailedWaitTime) {
@@ -2228,28 +2202,23 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
         doneGet = true
       } catch {
         case e @ (_: ObjectNotFoundException | _: KeyNotFoundException) => {
-          logger.debug("Failed to get data from container:%s".format(containerName))
+          logger.debug("Failed to get data from container:%s".format(containerName), e)
           doneGet = true
         }
         case e: FatalAdapterException => {
-          val stackTrace = StackTrace.ThrowableTraceString(e.cause)
-          logger.error("Failed to get data from container:%s.\nStackTrace:%s".format(containerName, stackTrace))
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
         }
         case e: StorageDMLException => {
-          val stackTrace = StackTrace.ThrowableTraceString(e.cause)
-          logger.error("Failed to get data from container:%s.\nStackTrace:%s".format(containerName, stackTrace))
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
         }
         case e: StorageDDLException => {
-          val stackTrace = StackTrace.ThrowableTraceString(e.cause)
-          logger.error("Failed to get data from container:%s.\nStackTrace:%s".format(containerName, stackTrace))
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
         }
         case e: Exception => {
-          val stackTrace = StackTrace.ThrowableTraceString(e)
-          logger.error("Failed to get data from container:%s.\nStackTrace:%s".format(containerName, stackTrace))
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
         }
         case e: Throwable => {
-          val stackTrace = StackTrace.ThrowableTraceString(e)
-          logger.error("Failed to get data from container:%s.\nStackTrace:%s".format(containerName, stackTrace))
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
         }
       }
 
@@ -2258,7 +2227,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
           logger.error("Failed to get data from datastore. Waiting for another %d milli seconds and going to start them again.".format(failedWaitTime))
           Thread.sleep(failedWaitTime)
         } catch {
-          case e: Exception => {}
+          case e: Exception => { logger.warn(e) }
         }
         // Adjust time for next time
         if (failedWaitTime < maxFailedWaitTime) {
@@ -2282,28 +2251,23 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
         doneGet = true
       } catch {
         case e @ (_: ObjectNotFoundException | _: KeyNotFoundException) => {
-          logger.debug("Failed to get data from container:%s".format(containerName))
+          logger.debug("Failed to get data from container:%s".format(containerName), e)
           doneGet = true
         }
         case e: FatalAdapterException => {
-          val stackTrace = StackTrace.ThrowableTraceString(e.cause)
-          logger.error("Failed to get data from container:%s.\nStackTrace:%s".format(containerName, stackTrace))
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
         }
         case e: StorageDMLException => {
-          val stackTrace = StackTrace.ThrowableTraceString(e.cause)
-          logger.error("Failed to get data from container:%s.\nStackTrace:%s".format(containerName, stackTrace))
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
         }
         case e: StorageDDLException => {
-          val stackTrace = StackTrace.ThrowableTraceString(e.cause)
-          logger.error("Failed to get data from container:%s.\nStackTrace:%s".format(containerName, stackTrace))
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
         }
         case e: Exception => {
-          val stackTrace = StackTrace.ThrowableTraceString(e)
-          logger.error("Failed to get data from container:%s.\nStackTrace:%s".format(containerName, stackTrace))
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
         }
         case e: Throwable => {
-          val stackTrace = StackTrace.ThrowableTraceString(e)
-          logger.error("Failed to get data from container:%s.\nStackTrace:%s".format(containerName, stackTrace))
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
         }
       }
 
@@ -2312,7 +2276,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
           logger.error("Failed to get data from datastore. Waiting for another %d milli seconds and going to start them again.".format(failedWaitTime))
           Thread.sleep(failedWaitTime)
         } catch {
-          case e: Exception => {}
+          case e: Exception => { logger.warn(e) }
         }
         // Adjust time for next time
         if (failedWaitTime < maxFailedWaitTime) {
@@ -2336,28 +2300,23 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
         doneGet = true
       } catch {
         case e @ (_: ObjectNotFoundException | _: KeyNotFoundException) => {
-          logger.debug("Failed to get data from container:%s".format(containerName))
+          logger.debug("Failed to get data from container:%s".format(containerName), e)
           doneGet = true
         }
         case e: FatalAdapterException => {
-          val stackTrace = StackTrace.ThrowableTraceString(e.cause)
-          logger.error("Failed to get data from container:%s.\nStackTrace:%s".format(containerName, stackTrace))
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
         }
         case e: StorageDMLException => {
-          val stackTrace = StackTrace.ThrowableTraceString(e.cause)
-          logger.error("Failed to get data from container:%s.\nStackTrace:%s".format(containerName, stackTrace))
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
         }
         case e: StorageDDLException => {
-          val stackTrace = StackTrace.ThrowableTraceString(e.cause)
-          logger.error("Failed to get data from container:%s.\nStackTrace:%s".format(containerName, stackTrace))
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
         }
         case e: Exception => {
-          val stackTrace = StackTrace.ThrowableTraceString(e)
-          logger.error("Failed to get data from container:%s.\nStackTrace:%s".format(containerName, stackTrace))
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
         }
         case e: Throwable => {
-          val stackTrace = StackTrace.ThrowableTraceString(e)
-          logger.error("Failed to get data from container:%s.\nStackTrace:%s".format(containerName, stackTrace))
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
         }
       }
 
@@ -2366,7 +2325,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
           logger.error("Failed to get data from datastore. Waiting for another %d milli seconds and going to start them again.".format(failedWaitTime))
           Thread.sleep(failedWaitTime)
         } catch {
-          case e: Exception => {}
+          case e: Exception => { logger.warn(e) }
         }
         // Adjust time for next time
         if (failedWaitTime < maxFailedWaitTime) {

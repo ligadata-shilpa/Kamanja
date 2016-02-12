@@ -32,9 +32,6 @@ import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
 
 import org.apache.logging.log4j._
-import com.ligadata.Exceptions.StackTrace
-
-
 
 object MetadataAPIServiceLeader {
   private[this] val LOG = LogManager.getLogger(getClass);
@@ -59,8 +56,7 @@ object MetadataAPIServiceLeader {
       LOG.debug("NodeId:%s, IsLeader:%s, Leader:%s, AllParticipents:{%s}".format(cs.nodeId, isLeaderStr, cs.leader, cs.participants.mkString(",")))
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        LOG.debug("EventChangeCallback => Found exception. reason %s, message %s".format(e.getCause, e.getMessage)+"\nStackTrace:"+stackTrace)
+        LOG.debug("EventChangeCallback => Found exception.", e)
       }
     }
   }
@@ -87,7 +83,7 @@ object MetadataAPIServiceLeader {
         zkLeaderLatch.SelectLeader
       } catch {
         case e: Exception => {
-          LOG.error("Failed to initialize ZooKeeper Connection." + e.getMessage)
+          LOG.error("Failed to initialize ZooKeeper Connection.", e)
           throw e
         }
       }

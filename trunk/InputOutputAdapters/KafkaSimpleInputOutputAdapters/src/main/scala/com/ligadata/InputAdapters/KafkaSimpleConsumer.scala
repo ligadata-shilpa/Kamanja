@@ -28,7 +28,7 @@ import kafka.consumer.{ SimpleConsumer }
 import java.net.{ InetAddress }
 import org.apache.logging.log4j.{ Logger, LogManager }
 import scala.collection.mutable.Map
-import com.ligadata.Exceptions.{FatalAdapterException, StackTrace}
+import com.ligadata.Exceptions.{FatalAdapterException}
 import com.ligadata.KamanjaBase.DataDelimiters
 import com.ligadata.HeartBeat.{Monitorable, MonitorComponentInfo}
 
@@ -314,7 +314,7 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
                 }
               } catch {
                 case e: InterruptedException => {
-                  LOG.error(qc.Name + " KAFKA ADAPTER: Read retry interrupted")
+                  LOG.error(qc.Name + " KAFKA ADAPTER: Read retry interrupted", e)
                   Shutdown()
                   return
                 }
@@ -405,8 +405,7 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
             } catch {
               case e: java.lang.InterruptedException =>
                 {
-                  val stackTrace = StackTrace.ThrowableTraceString(e)
-                  LOG.debug("KAFKA ADAPTER: Forcing down the Consumer Reader thread" + "\nStackTrace:" + stackTrace)
+                  LOG.debug("KAFKA ADAPTER: Forcing down the Consumer Reader thread", e)
                 }
             }
           }
@@ -472,7 +471,7 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
       } catch {
         case fae: FatalAdapterException => throw fae
         case npe: NullPointerException => {
-          if (isQuiesced) LOG.warn("Kafka Simple Consumer is shutting down during kafka call for partition information - ignoring the call")
+          if (isQuiesced) LOG.warn("Kafka Simple Consumer is shutting down during kafka call for partition information - ignoring the call", npe)
         }
         case e: Exception => throw FatalAdapterException("failed to SEND MetadataRequest to Kafka Server ", e)
       } finally {
@@ -523,7 +522,7 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
       key.Deserialize(k)
     } catch {
       case e: Exception => {
-        LOG.error("Failed to deserialize Key:%s. Reason:%s Message:%s".format(k, e.getCause, e.getMessage))
+        LOG.error("Failed to deserialize Key:%s.".format(k), e)
         throw e
       }
     }
@@ -538,7 +537,7 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
         vl.Deserialize(v)
       } catch {
         case e: Exception => {
-          LOG.error("Failed to deserialize Value:%s. Reason:%s Message:%s".format(v, e.getCause, e.getMessage))
+          LOG.error("Failed to deserialize Value:%s.".format(v), e)
           throw e
         }
       }
@@ -605,7 +604,7 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
           } catch {
             case fae: FatalAdapterException => throw fae
             case npe: NullPointerException => {
-              if (isQuiesced) LOG.warn("Kafka Simple Consumer is shutting down during kafka call looking for leader - ignoring the call")
+              if (isQuiesced) LOG.warn("Kafka Simple Consumer is shutting down during kafka call looking for leader - ignoring the call", npe)
             }
             case e: Exception => throw FatalAdapterException("failed to SEND MetadataRequest to Kafka Server ", e)
           } finally {
@@ -616,8 +615,7 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
 
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        LOG.debug("KAFKA ADAPTER - Fatal Error for FindLeader for partition " + inPartition + "\nStackTrace:" + stackTrace)
+        LOG.debug("KAFKA ADAPTER - Fatal Error for FindLeader for partition " + inPartition, e)
       }
     }
     return leaderMetadata;
@@ -692,10 +690,10 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
     } catch {
       case fae: FatalAdapterException => throw fae
       case npe: NullPointerException => {
-        if (isQuiesced) LOG.warn("Kafka Simple Consumer is shutting down during kafka call looking for offsets - ignoring the call")
+        if (isQuiesced) LOG.warn("Kafka Simple Consumer is shutting down during kafka call looking for offsets - ignoring the call", npe)
       }
       case e: java.lang.Exception => {
-        LOG.error("KAFKA ADAPTER: Exception during offset inquiry request for partiotion {" + partitionId + "}")
+        LOG.error("KAFKA ADAPTER: Exception during offset inquiry request for partiotion {" + partitionId + "}", e)
       }
     } finally {
       if (llConsumer != null) { llConsumer.close }
@@ -737,8 +735,7 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
       } catch {
         case fae: FatalAdapterException => throw fae
         case e: InterruptedException => {
-          val stackTrace = StackTrace.ThrowableTraceString(e)
-          LOG.error("Adapter terminated during findNewLeader" + "\nStackTrace:" + stackTrace)
+          LOG.error("Adapter terminated during findNewLeader", e)
         }
       }
     }

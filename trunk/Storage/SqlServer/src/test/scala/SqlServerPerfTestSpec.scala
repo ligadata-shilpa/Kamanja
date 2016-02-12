@@ -68,13 +68,12 @@ class SqlServerPerfTestSpec extends FunSpec with BeforeAndAfter with BeforeAndAf
         return adapter
       } catch {
         case e: StorageConnectionException => {
-          logger.error("%s: Message:%s".format(e.getMessage, e.cause.getMessage))
-          logger.error("will retry after one minute ...")
+          logger.error("will retry after one minute ...", e)
           connectionAttempts = connectionAttempts + 1
           Thread.sleep(60 * 1000L)
         }
         case e: Exception => {
-          logger.error("Failed to connect: Message:%s".format(e.getMessage))
+          logger.error("Failed to connect", e)
           logger.error("retrying ...")
         }
       }
@@ -91,10 +90,10 @@ class SqlServerPerfTestSpec extends FunSpec with BeforeAndAfter with BeforeAndAf
       adapter = CreateAdapter
     } catch {
       case e: StorageConnectionException => {
-        logger.error("%s: Message:%s".format(e.getMessage, e.cause.getMessage))
+        logger.error(e)
       }
       case e: Exception => {
-        logger.error("Failed to connect: Message:%s".format(e.getMessage))
+        logger.error("Failed to connect", e)
       }
     }
   }
@@ -198,8 +197,7 @@ class SqlServerPerfTestSpec extends FunSpec with BeforeAndAfter with BeforeAndAf
 	  }
 	  catch{
 	    case e: Exception => {
-	      val stackTrace = StackTrace.ThrowableTraceString(e)
-	      logger.info("StackTrace:"+stackTrace)
+	      logger.info(e)
 	      successful = false
 	    }
 	  }

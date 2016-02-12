@@ -2,7 +2,7 @@ package com.ligadata.filedataprocessor
 
 import java.util.zip.{ZipException, GZIPInputStream}
 
-import com.ligadata.Exceptions.{ MissingPropertyException, StackTrace }
+import com.ligadata.Exceptions.{ MissingPropertyException }
 import com.ligadata.MetadataAPI.MetadataAPIImpl
 import com.ligadata.ZooKeeper.CreateClient
 import com.ligadata.kamanja.metadata.MessageDef
@@ -106,7 +106,7 @@ object FileProcessor {
     } catch {
       case e: Exception => {
         logger.error("SMART FILE CONSUMRE (global): unable to connect to zookeeper using " + zkcConnectString, e )
-        throw new Exception("Failed to start a zookeeper session with(" + zkcConnectString + "): " + e.getMessage())
+        throw new Exception("Failed to start a zookeeper session with(" + zkcConnectString + ")", e)
       }
     }}
 
@@ -144,7 +144,7 @@ object FileProcessor {
         zkc.delete.forPath(znodePath + "/" + fileName)
 
       } catch {
-        case e: Exception => e.printStackTrace()
+        case e: Exception => logger.error(e)
       }
     }
   }
@@ -445,7 +445,7 @@ object FileProcessor {
         }
       }
     }  catch {
-      case ie: InterruptedException => logger.error("InterruptedException: " + ie)
+      case ie: InterruptedException => logger.error("InterruptedException:", ie)
       case ioe: IOException         => logger.error("Unable to find the directory to watch, Shutting down File Consumer", ioe)
       case e: Exception             => logger.error("Exception: ", e)
     }
@@ -490,6 +490,7 @@ object FileProcessor {
         isWatchedFileSystemAccesible = (d1.canRead && d1.canWrite)
       } catch {
         case fio: IOException => {
+          logger.info(fio)
           isWatchedFileSystemAccesible = false
         }
       }
@@ -503,6 +504,7 @@ object FileProcessor {
         }
       } catch {
         case fio: IOException => {
+          logger.info(fio)
           isTargetFileSystemAccesible = false
         }
       }
@@ -517,7 +519,7 @@ object FileProcessor {
           } catch {
             case e: IOException => {
               // Interesting,  we have just died, and need to move the newly added files to the queue
-              logger.warn("SMART FILE CONSUMER (gloabal): Unable to connect to watch directory, will try to shut it down and recreate again")
+              logger.warn("SMART FILE CONSUMER (gloabal): Unable to connect to watch directory, will try to shut it down and recreate again", e)
               watchService.close
               isWatchedFileSystemAccesible = false
               afterErrorConditions = true
@@ -715,7 +717,7 @@ class FileProcessor(val path: Path, val partitionId: Int) extends Runnable {
     try {
       kml = new KafkaMessageLoader(partitionId, props)
     } catch {
-      case e: Exception => {
+      case e: Exception => { logger.warn(e)
         shutdown
         throw e
       }
@@ -1127,9 +1129,10 @@ class FileProcessor(val path: Path, val partitionId: Int) extends Runnable {
       case fnfe: FileNotFoundException => {
         throw fnfe
       }
-      case e: Exception =>
-        val stackTrace = StackTrace.ThrowableTraceString(e)
+      case e: Exception => {
+        logger.warn(e)
         return false
+      }
     }
 
     val maxlen = 2

@@ -22,7 +22,6 @@ import org.json4s.jackson.JsonMethods._
 import scala.collection.mutable.HashMap
 import java.io.File
 import java.io.PrintWriter
-import com.ligadata.Exceptions.StackTrace
 import org.apache.logging.log4j._
 
 object GenerateJsonData {
@@ -97,9 +96,8 @@ class GenerateJsonData {
       outfile.close
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("Stacktrace:"+stackTrace)
-        throw new Exception("Error: " + stackTrace)
+        logger.debug(e)
+        throw e
       }
     }
   }
@@ -133,9 +131,8 @@ class GenerateJsonData {
       count = count + 1
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("Stacktrace:"+stackTrace)
-        throw new Exception("Error: " + stackTrace)
+        logger.debug(e)
+        throw e
       }
     }
 
@@ -148,9 +145,8 @@ class GenerateJsonData {
       outputfile.write("\n")
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("Stacktrace:"+stackTrace)
-        throw new Exception("Error: " + stackTrace)
+        logger.debug(e)
+        throw e
       }
     }
 

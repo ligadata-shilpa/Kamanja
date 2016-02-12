@@ -68,7 +68,6 @@ import com.ligadata.Utils._
 import com.ligadata.AuditAdapterInfo._
 import com.ligadata.SecurityAdapterInfo.SecurityAdapter
 import com.ligadata.keyvaluestore.KeyValueManager
-import com.ligadata.Exceptions.StackTrace
 
 import java.util.Date
 import org.json4s.jackson.Serialization
@@ -95,8 +94,7 @@ object FunctionUtils {
       apiResult.toString()
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        logger.debug(e)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddFunction", null, ErrorCodeConstants.Add_Function_Failed + ":" + dispkey)
         apiResult.toString()
       }
@@ -136,8 +134,7 @@ object FunctionUtils {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:"+stackTrace)
+        logger.debug(e)
         var apiResult = new ApiResult(ErrorCodeConstants.Failure, "RemoveFunction", null, "Error :" + e.toString() + ErrorCodeConstants.Remove_Function_Failed + ":" + dispkey)
         return apiResult.toString()
       }
@@ -173,8 +170,7 @@ object FunctionUtils {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:"+stackTrace)
+        logger.debug(e)
         throw UnexpectedMetadataAPIException(e.getMessage(), e)
       }
     }
@@ -192,14 +188,12 @@ object FunctionUtils {
       apiResult.toString()
     } catch {
       case e: AlreadyExistsException => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.error("Failed to update the function, key => " + key + ",Error => " + e.getMessage()+"\nStackTrace:"+stackTrace)
+        logger.error("Failed to update the function, key => " + key, e)
         var apiResult = new ApiResult(ErrorCodeConstants.Failure, "UpdateFunction", null, "Error :" + e.toString() + ErrorCodeConstants.Update_Function_Failed + ":" + dispkey)
         apiResult.toString()
       }
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.error("Failed to up the type, json => " + key + ",Error => " + e.getMessage()+"\nStackTrace:"+stackTrace)
+        logger.error("Failed to up the type, json => " + key, e)
         var apiResult = new ApiResult(ErrorCodeConstants.Failure, "UpdateFunction", null, "Error :" + e.toString() + ErrorCodeConstants.Update_Function_Failed + ":" + dispkey)
         apiResult.toString()
       }
@@ -237,8 +231,7 @@ object FunctionUtils {
             // Nothing to do after getting the object.
           } catch {
             case e: Exception => {
-              val stackTrace = StackTrace.ThrowableTraceString(e)
-              logger.error("\nStackTrace:"+stackTrace)
+              logger.error(e)
               missingJars += jar
             }
           }
@@ -288,8 +281,7 @@ object FunctionUtils {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.error("\nStackTrace:"+stackTrace)
+        logger.error(e)
         var apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddFunctions", functionsText, "Error :" + e.toString() + ErrorCodeConstants.Add_Function_Failed)
         apiResult.toString()
       }
@@ -326,20 +318,17 @@ object FunctionUtils {
       }
     } catch {
       case e: MappingException => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.error("Failed to parse the function, json => " + functionsText + ",Error => " + e.getMessage()+"\nStackTrace:"+stackTrace)
+        logger.error("Failed to parse the function, json => " + functionsText, e)
         var apiResult = new ApiResult(ErrorCodeConstants.Failure, "UpdateFunctions", null, "Error :" + e.toString() + ErrorCodeConstants.Update_Function_Failed + ":" + functionsText)
         apiResult.toString()
       }
       case e: AlreadyExistsException => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.error("Failed to add the function, json => " + functionsText + ",Error => " + e.getMessage()+"\nStackTrace:"+stackTrace)
+        logger.error("Failed to add the function, json => " + functionsText, e)
         var apiResult = new ApiResult(ErrorCodeConstants.Failure, "UpdateFunctions", null, "Error :" + e.toString() + ErrorCodeConstants.Update_Function_Failed + ":" + functionsText)
         apiResult.toString()
       }
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.error("Failed to up the function, json => " + functionsText + ",Error => " + e.getMessage()+"\nStackTrace:"+stackTrace)
+        logger.error("Failed to up the function, json => " + functionsText, e)
         var apiResult = new ApiResult(ErrorCodeConstants.Failure, "UpdateFunctions", null, "Error :" + e.toString() + ErrorCodeConstants.Update_Function_Failed + ":" + functionsText)
         apiResult.toString()
       }
@@ -353,8 +342,7 @@ object FunctionUtils {
       MetadataAPIImpl.AddObjectToCache(cont.asInstanceOf[FunctionDef], MdMgr.GetMdMgr)
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:"+stackTrace)
+        logger.debug(e)
       }
     }
   }
@@ -374,8 +362,7 @@ object FunctionUtils {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        logger.debug(e)
         var apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetFunctionDef", null, "Error :" + e.toString() + ErrorCodeConstants.Get_Function_Failed + ":" + nameSpace + "." + objectName)
         apiResult.toString()
       }
@@ -411,8 +398,7 @@ object FunctionUtils {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:"+stackTrace)
+        logger.debug(e)
         var apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetAllFunctionDefs", null, "Error :" + e.toString() + ErrorCodeConstants.Get_All_Functions_Failed)
         (0, apiResult.toString())
       }

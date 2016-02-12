@@ -35,8 +35,6 @@ import org.apache.logging.log4j._
 import ObjTypeType._
 import ObjType._
 
-import com.ligadata.Exceptions.StackTrace
-
 /**
  * class MdMgr
  *
@@ -200,8 +198,7 @@ class MdMgr {
           }
         } catch {
           case e: Exception => {
-            val stackTrace = StackTrace.ThrowableTraceString(e)
-            logger.debug("\nStackTrace:"+stackTrace)
+            logger.debug(e)
           }
         }
         elm
@@ -230,8 +227,7 @@ class MdMgr {
           }
         } catch {
           case e: Exception => {
-               val stackTrace = StackTrace.ThrowableTraceString(e)
-            logger.debug("\nStackTrace:"+stackTrace)
+            logger.debug(e)
           }
         }
         elm

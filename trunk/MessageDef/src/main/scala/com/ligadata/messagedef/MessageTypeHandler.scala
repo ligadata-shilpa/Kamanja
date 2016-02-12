@@ -24,7 +24,6 @@ import com.ligadata.kamanja.metadata.AttributeDef
 import com.ligadata.Utils.Utils
 
 import org.apache.logging.log4j.{ Logger, LogManager }
-import com.ligadata.Exceptions.StackTrace
 
 class MessageTypeHandler {
 
@@ -165,8 +164,7 @@ class MessageTypeHandler {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        log.debug("StackTrace:"+stackTrace)
+        log.debug(e)
         throw e
       }
     }

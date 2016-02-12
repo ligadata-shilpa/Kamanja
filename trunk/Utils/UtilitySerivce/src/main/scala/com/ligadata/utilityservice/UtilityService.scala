@@ -13,7 +13,6 @@ import spray.http._
 import org.apache.logging.log4j._
 import scala.util.control.Breaks._
 import com.ligadata.Exceptions._
-import com.ligadata.Exceptions.StackTrace
 
 /**
  * @author danielkozin

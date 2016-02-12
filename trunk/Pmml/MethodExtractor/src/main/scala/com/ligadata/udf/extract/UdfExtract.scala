@@ -37,7 +37,6 @@ import org.json4s._
 import org.json4s.JsonDSL._
 import com.ligadata.Serialize._
 import com.ligadata.Utils.{ Utils, KamanjaClassLoader, KamanjaLoaderInfo }
-import com.ligadata.Exceptions.StackTrace
 
 /**
  * MethodExtract accepts an fully qualifed scala object name.  The object's package
@@ -136,8 +135,7 @@ object MethodExtract extends App with LogTrait {
       if (versionNumberStr != null) versionNumber = versionNumberStr.toLong
     } catch {
       case _: Throwable => {
-        val stackTrace = StackTrace.ThrowableTraceString(_)
-        logger.debug("StackTrace:" + stackTrace)
+        logger.debug(_)
         versionNumber = 1000000
       }
     }
@@ -193,13 +191,11 @@ object MethodExtract extends App with LogTrait {
       members.filter(_.toString.startsWith("method")).foreach(m => mbrs += m)
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.error("Failed to load class %s with Reason:%s Message:%s\nStackTrace:%s".format(clsName + "$", e.getCause, e.getMessage, stackTrace))
+        logger.error("Failed to load class %s".format(clsName + "$"), e)
         sys.exit
       }
       case t: Throwable => {
-        val stackTrace = StackTrace.ThrowableTraceString(t)
-        logger.error("Failed to load class %s with Reason:%s Message:%s\nStackTrace:%s".format(clsName + "$", t.getCause, t.getMessage, stackTrace))
+        logger.error("Failed to load class %s".format(clsName + "$"), t)
         sys.exit
       }
     }

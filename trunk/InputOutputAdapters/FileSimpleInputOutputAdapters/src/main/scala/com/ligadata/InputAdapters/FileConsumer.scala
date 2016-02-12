@@ -26,7 +26,6 @@ import java.nio.file.{ Paths, Files }
 import com.ligadata.InputOutputAdapterInfo.{ AdapterConfiguration, InputAdapter, InputAdapterObj, OutputAdapter, ExecContext, ExecContextObj, CountersAdapter, PartitionUniqueRecordKey, PartitionUniqueRecordValue, StartProcPartInfo, InputAdapterCallerContext }
 import com.ligadata.AdaptersConfiguration.{ FileAdapterConfiguration, FilePartitionUniqueRecordKey, FilePartitionUniqueRecordValue }
 import scala.util.control.Breaks._
-import com.ligadata.Exceptions.StackTrace
 import com.ligadata.KamanjaBase.DataDelimiters
 import com.ligadata.HeartBeat.{Monitorable, MonitorComponentInfo}
 
@@ -77,7 +76,7 @@ class FileConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: InputA
         is = new FileInputStream(sFileName)
     } catch {
       case e: Exception =>
-        LOG.error("Failed to open FileConsumer for %s. Message:%s".format(sFileName, e.getMessage))
+        LOG.error("Failed to open FileConsumer for %s.".format(sFileName), e)
         throw e
         return
     }
@@ -128,7 +127,7 @@ class FileConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: InputA
                       execThread.execute(sendmsg.getBytes, format, uniqueKey, uniqueVal, readTmNs, readTmMs, false, fc.associatedMsg, delimiters)
                     } catch {
                       case e: Exception => {
-                        LOG.error("Failed with Message:" + e.getMessage)
+                        LOG.error(e)
                       }
                     }
 
@@ -183,7 +182,7 @@ class FileConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: InputA
             execThread.execute(sendmsg.getBytes, format, uniqueKey, uniqueVal, readTmNs, readTmMs, false, fc.associatedMsg, delimiters)
           } catch {
             case e: Exception => {
-              LOG.error("Failed with Message:" + e.getMessage)
+              LOG.error(e)
             }
           }
 
@@ -195,7 +194,7 @@ class FileConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: InputA
       }
     } catch {
       case e: Exception => {
-        LOG.error("Failed with Reason:%s Message:%s".format(e.getCause, e.getMessage))
+        LOG.error(e)
       }
     }
 
@@ -275,7 +274,7 @@ class FileConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: InputA
       key.Deserialize(k)
     } catch {
       case e: Exception => {
-        LOG.error("Failed to deserialize Key:%s. Reason:%s Message:%s".format(k, e.getCause, e.getMessage))
+        LOG.error("Failed to deserialize Key:%s.".format(k), e)
         throw e
       }
     }
@@ -291,7 +290,7 @@ class FileConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: InputA
       } catch {
         case e: Exception => {
 
-          LOG.error("Failed to deserialize Value:%s. Reason:%s Message:%s".format(v, e.getCause, e.getMessage))
+          LOG.error("Failed to deserialize Value:%s.".format(v), e)
           throw e
         }
       }

@@ -34,7 +34,6 @@ import com.ibm.msg.client.jms.JmsFactoryFactory
 import com.ibm.msg.client.wmq.WMQConstants
 import com.ibm.msg.client.wmq.common.CommonConstants
 import com.ibm.msg.client.jms.JmsConstants
-import com.ligadata.Exceptions.StackTrace
 import com.ligadata.KamanjaBase.DataDelimiters
 import com.ligadata.HeartBeat.{Monitorable, MonitorComponentInfo}
 
@@ -104,7 +103,7 @@ class IbmMqConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: Input
         consumer.close()
       } catch {
         case jmsex: Exception => {
-          LOG.error("Producer could not be closed.")
+          LOG.error("Producer could not be closed.", jmsex)
           printFailure(jmsex)
         }
       }
@@ -117,7 +116,7 @@ class IbmMqConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: Input
         session.close()
       } catch {
         case jmsex: Exception => {
-          LOG.error("Session could not be closed.")
+          LOG.error("Session could not be closed.", jmsex)
           printFailure(jmsex)
         }
       }
@@ -127,7 +126,7 @@ class IbmMqConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: Input
         connection.close()
       } catch {
         case jmsex: Exception => {
-          LOG.error("Connection could not be closed.")
+          LOG.error("Connection could not be closed.", jmsex)
           printFailure(jmsex)
         }
       }
@@ -179,8 +178,7 @@ class IbmMqConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: Input
       connection.start()
     } catch {
       case jmsex: Exception =>
-        val stackTrace = StackTrace.ThrowableTraceString(jmsex)
-        LOG.debug("\nstackTrace:" + stackTrace)
+        LOG.debug(jmsex)
         printFailure(jmsex)
         return
     }
@@ -273,7 +271,7 @@ class IbmMqConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: Input
                         }
                       } catch {
                         case e: Exception => {
-                          LOG.error("Failed with Message:" + e.getMessage)
+                          LOG.error(e)
                           printFailure(e)
                         }
                       }
@@ -281,7 +279,7 @@ class IbmMqConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: Input
                     }
                   } catch {
                     case e: Exception => {
-                      LOG.error("Failed with Message:" + e.getMessage)
+                      LOG.error(e)
                       printFailure(e)
                     }
                   }
@@ -292,7 +290,7 @@ class IbmMqConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: Input
               }
             } catch {
               case e: Exception => {
-                LOG.error("Failed with Reason:%s Message:%s".format(e.getCause, e.getMessage))
+                LOG.error(e)
                 printFailure(e)
               }
             }
@@ -302,7 +300,7 @@ class IbmMqConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: Input
       }
     } catch {
       case e: Exception => {
-        LOG.error("Failed to setup Streams. Reason:%s Message:%s".format(e.getCause, e.getMessage))
+        LOG.error("Failed to setup Streams.", e)
         printFailure(e)
       }
     }
@@ -331,7 +329,7 @@ class IbmMqConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: Input
       key.Deserialize(k)
     } catch {
       case e: Exception => {
-        LOG.error("Failed to deserialize Key:%s. Reason:%s Message:%s".format(k, e.getCause, e.getMessage))
+        LOG.error("Failed to deserialize Key:%s.".format(k), e)
         printFailure(e)
         throw e
       }
@@ -347,7 +345,7 @@ class IbmMqConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: Input
         vl.Deserialize(v)
       } catch {
         case e: Exception => {
-          LOG.error("Failed to deserialize Value:%s. Reason:%s Message:%s".format(v, e.getCause, e.getMessage))
+          LOG.error("Failed to deserialize Value:%s.".format(v), e)
           printFailure(e)
           throw e
         }

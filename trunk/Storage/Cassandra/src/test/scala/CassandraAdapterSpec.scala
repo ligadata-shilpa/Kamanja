@@ -113,25 +113,6 @@ class CassandraAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAft
     }
   }
 
-  private def ProcessException(e: Exception) = {
-      e match {
-	case e1: StorageDMLException => {
-	  logger.error("Inner Message:%s: Message:%s".format(e1.cause.getMessage,e1.getMessage))
-	}
-	case e2: StorageDDLException => {
-	  logger.error("Innser Message:%s: Message:%s".format(e2.cause.getMessage,e2.getMessage))
-	}
-	case e3: StorageConnectionException => {
-	  logger.error("Inner Message:%s: Message:%s".format(e3.cause.getMessage,e3.getMessage))
-	}
-	case _ => {
-	  logger.error("Message:%s".format(e.getMessage))
-	}
-      }
-      var stackTrace = StackTrace.ThrowableTraceString(e)
-      logger.info("StackTrace:"+stackTrace)
-  }	  
-
   private def CreateAdapter: DataStore = {
     var connectionAttempts = 0
     while (connectionAttempts < maxConnectionAttempts) {
@@ -140,8 +121,7 @@ class CassandraAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAft
         return adapter
       } catch {
         case e: Exception => {
-	  ProcessException(e)
-          logger.error("will retry after one minute ...")
+          logger.error("will retry after one minute ...", e)
           Thread.sleep(60 * 1000L)
           connectionAttempts = connectionAttempts + 1
         }
@@ -157,7 +137,7 @@ class CassandraAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAft
       adapter = CreateAdapter
    }
     catch {
-      case e: Exception => throw new Exception("Failed to execute set up properly\n" + e)
+      case e: Exception => throw new Exception("Failed to execute set up properly", e)
     }
   }
 
@@ -220,8 +200,7 @@ class CassandraAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAft
 	var value = new Value("kryo",v)
 	adapter.put("&&",key,value)
       }
-      stackTrace = StackTrace.ThrowableTraceString(ex2.cause)
-      logger.info("StackTrace:"+stackTrace)
+      logger.info(ex2)
 
       And("Test Put api")
       var keys = new Array[Key](0) // to be used by a delete operation later on
@@ -435,16 +414,14 @@ class CassandraAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAft
       //noException should be thrownBy {
 	adapter.backupContainer(containerName)
       }
-      stackTrace = StackTrace.ThrowableTraceString(ex2.cause)
-      logger.info("StackTrace:"+stackTrace)
+      logger.info(ex2)
 
       And("Test restore container")
       ex2 = the [com.ligadata.Exceptions.StorageDMLException] thrownBy {
 	//noException should be thrownBy {
 	adapter.restoreContainer(containerName)
       }
-      stackTrace = StackTrace.ThrowableTraceString(ex2.cause)
-      logger.info("StackTrace:"+stackTrace)
+      logger.info(ex2)
 
       And("Test drop container again, cleanup")
       noException should be thrownBy {

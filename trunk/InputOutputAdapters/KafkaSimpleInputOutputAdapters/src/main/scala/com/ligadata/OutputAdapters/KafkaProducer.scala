@@ -22,7 +22,7 @@ import kafka.common.{ QueueFullException, FailedToSendMessageException }
 import org.apache.logging.log4j.{ Logger, LogManager }
 import com.ligadata.InputOutputAdapterInfo.{ AdapterConfiguration, OutputAdapter, OutputAdapterObj, CountersAdapter }
 import com.ligadata.AdaptersConfiguration.{ KafkaConstants, KafkaQueueAdapterConfiguration }
-import com.ligadata.Exceptions.{ FatalAdapterException, StackTrace }
+import com.ligadata.Exceptions.{ FatalAdapterException }
 import com.ligadata.HeartBeat.{Monitorable, MonitorComponentInfo}
 import org.json4s.jackson.Serialization
 import scala.collection.mutable.ArrayBuffer
@@ -149,8 +149,8 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
         try {
           Thread.sleep(5000) // Sleeping for 5Sec
         } catch {
-          case e: Exception => {}
-          case e: Throwable => {}
+          case e: Exception => { LOG.warn(e) }
+          case e: Throwable => { LOG.warn(e) }
         }
         if (isShutdown == false) {
           var outstandingMsgs = outstandingMsgCount
@@ -271,8 +271,8 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
       try {
         msgMap.remove(msgAndCntr.cntrToOrder) // This must present. Because we are adding the records into partitionsMap before we send messages. If it does not present we simply ignore it.
       } catch {
-        case e: Exception => {}
-        case e: Throwable => {}
+        case e: Exception => { LOG.warn(e) }
+        case e: Throwable => { LOG.warn(e) }
       }
     }
   }
@@ -312,8 +312,8 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
       try {
         msgMap.remove(msgAndCntr.cntrToOrder)
       } catch {
-        case e: Exception => {}
-        case e: Throwable => {}
+        case e: Exception => { LOG.warn(e) }
+        case e: Throwable => { LOG.warn(e) }
       }
     }
   }

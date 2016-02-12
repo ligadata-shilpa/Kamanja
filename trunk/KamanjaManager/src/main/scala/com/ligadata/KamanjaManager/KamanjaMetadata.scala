@@ -34,7 +34,6 @@ import com.ligadata.ZooKeeper._
 import com.ligadata.MetadataAPI.MetadataAPIImpl
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import com.ligadata.Utils.{ Utils, KamanjaClassLoader, KamanjaLoaderInfo }
-import com.ligadata.Exceptions.StackTrace
 import com.ligadata.KamanjaBase.{ EnvContext, ContainerNameAndDatastoreInfo }
 import scala.actors.threadpool.{ ExecutorService, Executors }
 import com.ligadata.KamanjaBase.ThreadLocalStorage
@@ -93,7 +92,7 @@ class KamanjaMetadata {
       }
     } catch {
       case e: Exception => {
-        LOG.debug("Failed to get message classname :" + clsName)
+        LOG.debug("Failed to get message classname :" + clsName, e)
         return false
       }
     }
@@ -109,8 +108,7 @@ class KamanjaMetadata {
         } catch {
           case e: Exception => {
             // Trying Regular Object instantiation
-            val stackTrace = StackTrace.ThrowableTraceString(e)
-            LOG.debug("StackTrace:" + stackTrace)
+            LOG.debug(e)
             objinst = curClass.newInstance
           }
         }
@@ -150,7 +148,7 @@ class KamanjaMetadata {
         }
       } catch {
         case e: Exception => {
-          LOG.debug("Failed to instantiate message object:" + clsName + ". Reason:" + e.getCause + ". Message:" + e.getMessage())
+          LOG.debug("Failed to instantiate message object:" + clsName, e)
           return false
         }
       }
@@ -198,7 +196,7 @@ class KamanjaMetadata {
       }
     } catch {
       case e: Exception => {
-        LOG.debug("Failed to get container classname: " + clsName)
+        LOG.debug("Failed to get container classname: " + clsName, e)
         return false
       }
     }
@@ -213,8 +211,7 @@ class KamanjaMetadata {
           objinst = obj.instance
         } catch {
           case e: Exception => {
-            val stackTrace = StackTrace.ThrowableTraceString(e)
-            LOG.error("Stacktrace:" + stackTrace)
+            LOG.error(e)
             // Trying Regular Object instantiation
             objinst = curClass.newInstance
           }
@@ -235,7 +232,7 @@ class KamanjaMetadata {
         }
       } catch {
         case e: Exception => {
-          LOG.debug("Failed to instantiate containerObjects object:" + clsName + ". Reason:" + e.getCause + ". Message:" + e.getMessage())
+          LOG.debug("Failed to instantiate containerObjects object:" + clsName, e)
           return false
         }
       }
@@ -350,8 +347,7 @@ class KamanjaMetadata {
                 }
             } catch {
                 case e: Exception => {
-                    val stackTrace = StackTrace.ThrowableTraceString(e)
-                    LOG.debug("Failed to get/initialize ModelInstanceFactory for %s. Reason:%s, Cause:%s\nStackTrace:%s".format(mdl.FullName, e.getMessage, e.getCause, stackTrace))
+                    LOG.debug("Failed to get/initialize ModelInstanceFactory for %s.".format(mdl.FullName), e)
                 }
             }
         }
@@ -543,7 +539,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
       }
     } catch {
       case e: Exception => {
-        LOG.debug("Failed to get model classname :" + clsName)
+        LOG.debug("Failed to get model classname :" + clsName, e)
         return null
       }
     }
@@ -559,8 +555,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
           objinst = obj.instance
         } catch {
           case e: Exception => {
-            val stackTrace = StackTrace.ThrowableTraceString(e)
-            LOG.debug("StackTrace:" + stackTrace)
+            LOG.debug(e)
             // Trying Regular Object instantiation
             objinst = curClass.newInstance
           }
@@ -577,7 +572,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
         }
       } catch {
         case e: Exception =>
-          LOG.debug("Failed to instantiate FactoryOfModelInstanceFactory object:" + clsName + ". Reason:" + e.getCause + ". Message:" + e.getMessage)
+          LOG.debug("Failed to instantiate FactoryOfModelInstanceFactory object:" + clsName, e)
           return null
       }
     }
@@ -636,8 +631,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
       modelRepFacFacKeys = tmpModelRepFacFacObjects.toMap
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        LOG.debug("StackTrace:" + stackTrace)
+        LOG.debug(e)
         exp = e
       }
     } finally {
@@ -659,8 +653,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
       localUpdateKamanjaMdObjects(msgObjects, contObjects, mdlObjects, removedModels, removedMessages, removedContainers)
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        LOG.debug("StackTrace:" + stackTrace)
+        LOG.debug(e)
         exp = e
       }
     } finally {
@@ -835,7 +828,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
       UpdateKamanjaMdObjects(obj.messageObjects, obj.containerObjects, obj.modelObjsMap, null, null, null)
     } catch {
       case e: Exception => {
-        LOG.error("Failed to load messages, containers & models from metadata manager. Reason:%s Message:%s".format(e.getCause, e.getMessage))
+        LOG.error("Failed to load messages, containers & models from metadata manager.", e)
         throw e
       }
     }
@@ -848,7 +841,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
       } catch {
         case e: Exception => {
 
-          LOG.error("Failed to initialize ZooKeeper Connection. Reason:%s Message:%s".format(e.getCause, e.getMessage))
+          LOG.error("Failed to initialize ZooKeeper Connection.", e)
           throw e
         }
       }
@@ -954,8 +947,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
                   }
                 } catch {
                   case e: Exception => {
-                    val stackTrace = StackTrace.ThrowableTraceString(e)
-                    LOG.debug("StackTrace:" + stackTrace)
+                    LOG.debug(e)
                   }
                 }
               }
@@ -974,8 +966,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
                   }
                 } catch {
                   case e: Exception => {
-                    val stackTrace = StackTrace.ThrowableTraceString(e)
-                    LOG.error("StackTrace:" + stackTrace)
+                    LOG.error(e)
                   }
                 }
               }
@@ -994,8 +985,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
                   }
                 } catch {
                   case e: Exception => {
-                    val stackTrace = StackTrace.ThrowableTraceString(e)
-                    LOG.error("StackTrace:" + stackTrace)
+                    LOG.error(e)
                   }
                 }
               }
@@ -1014,7 +1004,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
           KamanjaConfiguration.metadataLoader = new KamanjaLoaderInfo(KamanjaConfiguration.metadataLoader, true, true)
           envCtxt.SetClassLoader(KamanjaConfiguration.metadataLoader.loader)
         } catch {
-          case e: Exception => {
+          case e: Exception => { LOG.warn(e)
           }
         } finally {
           reent_lock.writeLock().unlock();
@@ -1050,8 +1040,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
                   }
                 } catch {
                   case e: Exception => {
-
-                    LOG.error("Failed to Add Model:" + key)
+                    LOG.error("Failed to Add Model:" + key, e)
                   }
                 }
               }
@@ -1060,8 +1049,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
                   removedModels += ((zkMessage.NameSpace, zkMessage.Name, zkMessage.Version.toLong))
                 } catch {
                   case e: Exception => {
-
-                    LOG.error("Failed to Remove Model:" + key)
+                    LOG.error("Failed to Remove Model:" + key, e)
                   }
                 }
               }
@@ -1082,7 +1070,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
                   }
                 } catch {
                   case e: Exception => {
-                    LOG.error("Failed to Add Message:" + key)
+                    LOG.error("Failed to Add Message:" + key, e)
                   }
                 }
               }
@@ -1091,7 +1079,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
                   removedMessages += ((zkMessage.NameSpace, zkMessage.Name, zkMessage.Version.toLong))
                 } catch {
                   case e: Exception => {
-                    LOG.error("Failed to Remove Message:" + key)
+                    LOG.error("Failed to Remove Message:" + key, e)
                   }
                 }
               }
@@ -1112,7 +1100,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
                   }
                 } catch {
                   case e: Exception => {
-                    LOG.error("Failed to Add Container:" + key)
+                    LOG.error("Failed to Add Container:" + key, e)
                   }
                 }
               }
@@ -1121,8 +1109,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
                   removedContainers += ((zkMessage.NameSpace, zkMessage.Name, zkMessage.Version.toLong))
                 } catch {
                   case e: Exception => {
-
-                    LOG.error("Failed to Remove Container:" + key)
+                    LOG.error("Failed to Remove Container:" + key, e)
                   }
                 }
               }
@@ -1167,8 +1154,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
       v = localgetMessgeInfo(msgType)
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        LOG.debug("StackTrace:" + stackTrace)
+        LOG.debug(e)
         exp = e
       }
     } finally {
@@ -1188,8 +1174,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
       v = localgetModel(mdlName)
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        LOG.debug("StackTrace:" + stackTrace)
+        LOG.debug(e)
         exp = e
       }
     } finally {
@@ -1209,8 +1194,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
       v = localgetContainer(containerName)
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        LOG.debug("StackTrace:" + stackTrace)
+        LOG.debug(e)
         exp = e
       }
     } finally {
@@ -1230,8 +1214,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
       v = localgetMessgeOrContainer(msgOrContainerName)
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        LOG.debug("StackTrace:" + stackTrace)
+        LOG.debug(e)
         exp = e
       }
     } finally {
@@ -1251,8 +1234,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
       v = localgetAllMessges
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        LOG.debug("StackTrace:" + stackTrace)
+        LOG.debug(e)
         exp = e
       }
     } finally {
@@ -1272,8 +1254,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
       v = localgetAllModels
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        LOG.debug("StackTrace:" + stackTrace)
+        LOG.debug(e)
         exp = e
       }
     } finally {
@@ -1293,8 +1274,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
       v = localgetAllContainers
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        LOG.debug("StackTrace:" + stackTrace)
+        LOG.debug(e)
         exp = e
       }
     } finally {

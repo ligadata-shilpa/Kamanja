@@ -19,7 +19,6 @@ package com.ligadata.KamanjaBase
 import java.net.URL
 import java.net.URLClassLoader
 import java.io.{ ByteArrayInputStream, DataInputStream, DataOutputStream, ByteArrayOutputStream }
-import com.ligadata.Exceptions.StackTrace
 import org.apache.logging.log4j._
 import java.util.Date
 import java.util.Calendar
@@ -166,8 +165,8 @@ object SerializeDeserialize {
 
     } catch {
       case e: Exception => {
-        //LOG.error("Failed to get classname :" + clsName)
-        logger.debug("StackTrace:" + StackTrace.ThrowableTraceString(e))
+        //LOG.error("Failed to get classname :" + clsName, e)
+        logger.debug("Failed to get classname :" + clsName", e)
         dos.close
         bos.close
         throw e
@@ -184,8 +183,8 @@ object SerializeDeserialize {
       inst.Serialize(dos)
     } catch {
       case e: Exception => {
-        //LOG.error("Failed to get classname :" + clsName)
-        logger.debug("StackTrace:" + StackTrace.ThrowableTraceString(e))
+        //LOG.error("Failed to get classname :" + clsName, e)
+        logger.debug("Failed to get classname :" + clsName, e)
         throw e
       }
     }
@@ -208,7 +207,7 @@ object SerializeDeserialize {
             Class.forName(desClassName, true, loader)
           } catch {
             case e: Exception => {
-              logger.error("Failed to load Message/Container class %s with Reason:%s Message:%s".format(desClassName, e.getCause, e.getMessage))
+              logger.error("Failed to load Message/Container class %s".format(desClassName), e)
               throw e // Rethrow
             }
           }
@@ -223,8 +222,8 @@ object SerializeDeserialize {
       return typ
     } catch {
       case e: Exception => {
-        // LOG.error("Failed to get classname :" + clsName)
-        logger.debug("StackTrace:" + StackTrace.ThrowableTraceString(e))
+        // LOG.error("Failed to get classname :" + clsName, e)
+        logger.debug("Failed to get classname :" + clsName, e)
         dis.close
         throw e
       }

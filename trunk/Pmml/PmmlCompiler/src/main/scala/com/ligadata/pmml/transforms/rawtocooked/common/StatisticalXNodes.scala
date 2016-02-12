@@ -25,7 +25,6 @@ import com.ligadata.pmml.support._
 import com.ligadata.pmml.traits._
 import com.ligadata.pmml.syntaxtree.raw.common._
 import com.ligadata.pmml.syntaxtree.cooked.common._
-import com.ligadata.Exceptions.StackTrace
 
 class ScoreDistributionPmmlExecNodeGenerator(val ctx : PmmlContext) extends PmmlExecNodeGenerator with com.ligadata.pmml.compiler.LogTrait {
 
@@ -64,9 +63,7 @@ class ScoreDistributionPmmlExecNodeGenerator(val ctx : PmmlContext) extends Pmml
 						sd.Probability(node.probability.toDouble)
 					} catch {
 					  case _ : Throwable => {
-              val stackTrace = StackTrace.ThrowableTraceString(_)
-              ctx.logger.debug ("\nStackTrace:"+stackTrace)
-              ctx.logger.debug ("Unable to coerce one or more score probablity Double values"+"\nStackTrace:"+stackTrace)}
+              ctx.logger.debug ("Unable to coerce one or more score probablity Double values", _) }
 					}
 						
 					mf.addScoreDistribution(sd)

@@ -22,7 +22,7 @@ import java.util.zip.{ZipException, GZIPOutputStream}
 import java.nio.file.{ Paths, Files }
 import com.ligadata.InputOutputAdapterInfo.{ AdapterConfiguration, OutputAdapter, OutputAdapterObj, CountersAdapter }
 import com.ligadata.AdaptersConfiguration.FileAdapterConfiguration
-import com.ligadata.Exceptions.{FatalAdapterException, StackTrace}
+import com.ligadata.Exceptions.{FatalAdapterException}
 import com.ligadata.HeartBeat.{Monitorable, MonitorComponentInfo}
 import org.json4s.jackson.Serialization
 
@@ -112,13 +112,13 @@ class FileProducer(val inputConfig: AdapterConfiguration, cntrAdapter: CountersA
           }
           catch {
             case zio: ZipException => {
-              LOG.error("File input adapter " + fc.Name + ": File Corruption (bad compression)")
+              LOG.error("File input adapter " + fc.Name + ": File Corruption (bad compression)", zio)
               throw zio
             }
             case fio: IOException => {
               LOG.warn("File input adapter " + fc.Name + ": Unable to write to file " + sFileName)
               if (numOfRetries >= MAX_RETRIES) {
-                LOG.error("File input adapter " + fc.Name + ": Unable to create a file destination after " + MAX_RETRIES +" tries.  Aborting.")
+                LOG.error("File input adapter " + fc.Name + ": Unable to create a file destination after " + MAX_RETRIES +" tries.  Aborting.", fio)
                 throw FatalAdapterException("Unable to open connection to specified file after " + MAX_RETRIES +" retries", fio)
               }
               numOfRetries += 1
@@ -126,7 +126,7 @@ class FileProducer(val inputConfig: AdapterConfiguration, cntrAdapter: CountersA
               Thread.sleep(FAIL_WAIT)
             }
             case e: Exception => {
-              LOG.error("File input adapter " + fc.Name + ": Unable to write output message: " + new String(message))
+              LOG.error("File input adapter " + fc.Name + ": Unable to write output message: " + new String(message), e)
               throw e
             }
           }
@@ -136,7 +136,7 @@ class FileProducer(val inputConfig: AdapterConfiguration, cntrAdapter: CountersA
       cntrAdapter.addCntr(key, messages.size) // for now adding rows
     } catch {
       case e: Exception => {
-        LOG.error("File input adapter " + fc.Name + ": Failed to send :" + e.getMessage)
+        LOG.error("File input adapter " + fc.Name + ": Failed to send", e)
         throw FatalAdapterException("Unable to send message",e)
       }
     }

@@ -22,7 +22,6 @@ import org.apache.curator.framework.CuratorFrameworkFactory
 import org.apache.curator.retry.ExponentialBackoffRetry
 import org.apache.zookeeper.CreateMode
 import scala.collection.mutable.ArrayBuffer
-import com.ligadata.Exceptions.StackTrace
 import org.apache.logging.log4j._
 
 object CreateClient {
@@ -53,9 +52,8 @@ object CreateClient {
       })
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:" + stackTrace)
-        throw new Exception("Failed to start a zookeeper session with(" + zkcConnectString + "): " + e.getMessage())
+        logger.debug(e)
+        throw new Exception("Failed to start a zookeeper session with(" + zkcConnectString + ")", e)
       }
     } finally {
       if (zkc != null) {
@@ -81,8 +79,7 @@ object CreateClient {
         curatorZookeeperClient.getZookeeperClient.blockUntilConnectedOrTimedOut
       } catch {
         case e: java.lang.InterruptedException => {
-          val stackTrace = StackTrace.ThrowableTraceString(e)
-          logger.warn("Got InterruptedException. Going to retry after 50ms. StackTrace:" + stackTrace)
+          logger.warn("Got InterruptedException. Going to retry after 50ms.", e)
           Thread.sleep(50)
           retry = true
         }
@@ -108,8 +105,7 @@ object CreateClient {
         curatorZookeeperClient.getZookeeperClient.blockUntilConnectedOrTimedOut
       } catch {
         case e: java.lang.InterruptedException => {
-          val stackTrace = StackTrace.ThrowableTraceString(e)
-          logger.warn("Got InterruptedException. Going to retry after 50ms. StackTrace:" + stackTrace)
+          logger.warn("Got InterruptedException. Going to retry after 50ms.", e)
           Thread.sleep(50)
           retry = true
         }

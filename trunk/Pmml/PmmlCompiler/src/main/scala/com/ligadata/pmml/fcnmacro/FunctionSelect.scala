@@ -32,7 +32,6 @@ import com.ligadata.pmml.compiler._
 import com.ligadata.pmml.syntaxtree.cooked.common._
 import com.ligadata.pmml.support._
 import com.ligadata.Utils.{ Utils, KamanjaClassLoader, KamanjaLoaderInfo }
-import com.ligadata.Exceptions.StackTrace
 
 
 /** 
@@ -1233,7 +1232,7 @@ class FunctionSelect(val ctx : PmmlContext, val mgr : MdMgr, val node : xApply) 
           }
         } catch {
           case e: Exception => {
-            PmmlError.logError(ctx, "Jar " + j.trim + " failed added to class path. Message: " + e.getMessage)
+            PmmlError.logError(ctx, "Jar " + j.trim + " failed added to class path.", e)
             return false
           }
         }
@@ -1296,7 +1295,7 @@ class FunctionSelect(val ctx : PmmlContext, val mgr : MdMgr, val node : xApply) 
 				                Class.forName(useThisName, true, pmmlLoader.loader)
 				              } catch {
 				                case e: Exception => {
-				                  logger.error("Failed to load class %s with Reason:%s Message:%s".format(useThisName, e.getCause, e.getMessage))
+				                  logger.error("Failed to load class %s".format(useThisName), e)
 				                  throw e // Rethrow
 				                }
 				              }
@@ -1322,7 +1321,7 @@ class FunctionSelect(val ctx : PmmlContext, val mgr : MdMgr, val node : xApply) 
 					                    Class.forName(clssym, true, pmmlLoader.loader)
 					                  } catch {
 					                    case e: Exception => {
-					                      logger.error("Failed to load type class %s with Reason:%s Message:%s".format(clssym, e.getCause, e.getMessage))
+					                      logger.error("Failed to load type class %s".format(clssym), e)
 					                      throw e // Rethrow
 					                    }
 					                  }
@@ -1452,7 +1451,7 @@ class FunctionSelect(val ctx : PmmlContext, val mgr : MdMgr, val node : xApply) 
                 Class.forName(useThisName, true, pmmlLoader.loader)
               } catch {
                 case e: Exception => {
-                  logger.error("Failed to load class %s with Reason:%s Message:%s".format(useThisName, e.getCause, e.getMessage))
+                  logger.error("Failed to load class %s".format(useThisName), e)
                   throw e // Rethrow
                 }
               }
@@ -1482,7 +1481,7 @@ class FunctionSelect(val ctx : PmmlContext, val mgr : MdMgr, val node : xApply) 
 		                    Class.forName(clssym, true, pmmlLoader.loader)
 		                  } catch {
 		                    case e: Exception => {
-		                      logger.error("Failed to load type class %s with Reason:%s Message:%s".format(clssym, e.getCause, e.getMessage))
+		                      logger.error("Failed to load type class %s".format(clssym), e)
 		                      throw e // Rethrow
 		                    }
 		                  }

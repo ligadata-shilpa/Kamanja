@@ -26,7 +26,6 @@ import com.ibm.msg.client.jms.JmsFactoryFactory
 import com.ibm.msg.client.wmq.WMQConstants
 import com.ibm.msg.client.wmq.common.CommonConstants
 import com.ibm.msg.client.jms.JmsConstants
-import com.ligadata.Exceptions.StackTrace
 import com.ligadata.HeartBeat.{Monitorable, MonitorComponentInfo}
 import org.json4s.jackson.Serialization
 
@@ -97,8 +96,7 @@ class IbmMqProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
   } catch {
     case jmsex: Exception => {
       printFailure(jmsex)
-      val stackTrace = StackTrace.ThrowableTraceString(jmsex)
-      LOG.debug("StackTrace:" + stackTrace)
+      LOG.debug(jmsex)
     }
   }
 
@@ -135,8 +133,7 @@ class IbmMqProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
     } catch {
       case jmsex: Exception => {
         printFailure(jmsex)
-        val stackTrace = StackTrace.ThrowableTraceString(jmsex)
-        LOG.debug("StackTrace:" + stackTrace)
+        LOG.debug(jmsex)
       }
     }
   }
@@ -147,7 +144,7 @@ class IbmMqProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
         producer.close()
       } catch {
         case jmsex: Exception => {
-          LOG.error("Producer could not be closed.")
+          LOG.error("Producer could not be closed.", jmsex)
           printFailure(jmsex)
         }
       }
@@ -160,7 +157,7 @@ class IbmMqProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
         session.close()
       } catch {
         case jmsex: Exception => {
-          LOG.error("Session could not be closed.")
+          LOG.error("Session could not be closed.", jmsex)
           printFailure(jmsex)
         }
       }
@@ -170,7 +167,7 @@ class IbmMqProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
         connection.close()
       } catch {
         case jmsex: Exception => {
-          LOG.error("Connection could not be closed.")
+          LOG.error("Connection could not be closed.", jmsex)
           printFailure(jmsex)
         }
       }

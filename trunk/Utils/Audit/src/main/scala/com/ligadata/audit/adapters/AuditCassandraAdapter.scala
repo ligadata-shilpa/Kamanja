@@ -106,9 +106,8 @@ class AuditCassandraAdapter extends AuditAdapter {
           session.execute(createKeySpaceStmt);
         } catch {
           case e: Exception => {
-              val stackTrace =   StackTrace.ThrowableTraceString(e)
-              logger.debug("Stacktrace:"+stackTrace)
-              throw CreateKeySpaceFailedException("Unable to create keyspace " + keyspace + ":" + e.getMessage(), e) 
+              logger.debug(e)
+              throw CreateKeySpaceFailedException("Unable to create keyspace " + keyspace, e) 
             }
         }
       
@@ -123,9 +122,8 @@ class AuditCassandraAdapter extends AuditAdapter {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("Stacktrace:"+stackTrace)
-        throw ConnectionFailedException("Unable to connect to cassandra at " + hostnames + ":" + e.getMessage(), e)
+        logger.debug(e)
+        throw ConnectionFailedException("Unable to connect to cassandra at " + hostnames, e)
       }
     } 
        
@@ -191,9 +189,7 @@ class AuditCassandraAdapter extends AuditAdapter {
       }
     }catch {
       case e: Exception => 
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("Stacktrace:"+stackTrace)
-        throw new Exception(e.getMessage())
+        throw e
     }
   }
   
@@ -263,9 +259,8 @@ class AuditCassandraAdapter extends AuditAdapter {
       auditRecords
     } catch {
       case e:Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("Stacktrace:"+stackTrace)
-        throw new Exception("Failed to fetch audit records: " + e.getMessage())
+        logger.debug(e)
+        throw new Exception("Failed to fetch audit records", e)
       }
     }
   }
@@ -284,9 +279,8 @@ class AuditCassandraAdapter extends AuditAdapter {
       val rs = session.execute(stmt.bind().setConsistencyLevel(consistencylevelDelete))
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:"+stackTrace)
-        throw new Exception("Failed to truncate Audit Store: " + e.getMessage())
+        logger.debug(e)
+        throw new Exception("Failed to truncate Audit Store", e)
       }
     }
   }
@@ -300,9 +294,8 @@ class AuditCassandraAdapter extends AuditAdapter {
        })
     } catch {
       case e:Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("Stacktrace:"+stackTrace)
-        throw new Exception("Failed to read Audit Configuration: " + e.getMessage())
+        logger.debug(e)
+        throw new Exception("Failed to read Audit Configuration", e)
       }     
     }
   }

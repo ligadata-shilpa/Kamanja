@@ -77,7 +77,7 @@ object ConfigDefaults {
 	    copyFile(f,new File(targetLibDir + "/" + f.getName))
           }
           catch {
-            case e: Exception => throw new Exception("Failed to copy file: " + f + " with exception:\n" + e)
+            case e: Exception => throw new Exception("Failed to copy file: " + f,e)
           }
         }
       })

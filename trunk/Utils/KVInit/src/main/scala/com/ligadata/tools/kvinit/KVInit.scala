@@ -54,7 +54,6 @@ import org.apache.curator.framework._
 import com.ligadata.Serialize.{ JDataStore, JZKInfo, JEnvCtxtJsonStr }
 import com.ligadata.KvBase.{ Key, Value, TimeRange, KvBaseDefalts, KeyWithBucketIdAndPrimaryKey, KeyWithBucketIdAndPrimaryKeyCompHelper, LoadKeyWithBucketId }
 import com.ligadata.StorageBase.{ DataStore, Transaction }
-import com.ligadata.Exceptions.StackTrace
 import java.util.{ Collection, Iterator, TreeMap }
 import com.ligadata.Exceptions._
 
@@ -202,8 +201,7 @@ Sample uses:
               kvmaker.buildContainerOrMessage(dstore)
             } catch {
               case e: Exception => {
-                val stackTrace = StackTrace.ThrowableTraceString(e)
-                logger.error("Failed to build Container or Message." + "\nStackTrace:" + stackTrace)
+                logger.error("Failed to build Container or Message.", e)
               }
             } finally {
               if (dstore != null)
@@ -215,32 +213,25 @@ Sample uses:
           }
         } catch {
           case e: FatalAdapterException => {
-            val causeStackTrace = StackTrace.ThrowableTraceString(e.cause)
-            logger.error("Failed to connect to Datastore. Reason:" + e.getCause + ". Message:" + e.getMessage + "\nCause:\n" + causeStackTrace)
+            logger.error("Failed to connect to Datastore.", e)
           }
           case e: StorageConnectionException => {
-            val causeStackTrace = StackTrace.ThrowableTraceString(e.cause)
-            logger.error("Failed to connect to Datastore. Reason:" + e.getCause + ". Message:" + e.getMessage + "\nCause:\n" + causeStackTrace)
+            logger.error("Failed to connect to Datastore.", e)
           }
           case e: StorageFetchException => {
-            val causeStackTrace = StackTrace.ThrowableTraceString(e.cause)
-            logger.error("Failed to connect to Datastore. Reason:" + e.getCause + ". Message:" + e.getMessage + "\nCause:\n" + causeStackTrace)
+            logger.error("Failed to connect to Datastore.", e)
           }
           case e: StorageDMLException => {
-            val causeStackTrace = StackTrace.ThrowableTraceString(e.cause)
-            logger.error("Failed to connect to Datastore. Reason:" + e.getCause + ". Message:" + e.getMessage + "\nCause:\n" + causeStackTrace)
+            logger.error("Failed to connect to Datastore.", e)
           }
           case e: StorageDDLException => {
-            val causeStackTrace = StackTrace.ThrowableTraceString(e.cause)
-            logger.error("Failed to connect to Datastore. Reason:" + e.getCause + ". Message:" + e.getMessage + "\nCause:\n" + causeStackTrace)
+            logger.error("Failed to connect to Datastore.", e)
           }
           case e: Exception => {
-            val causeStackTrace = StackTrace.ThrowableTraceString(e)
-            logger.error("Failed to connect to Datastore. Reason:" + e.getCause + ". Message:" + e.getMessage + "\nCause:\n" + causeStackTrace)
+            logger.error("Failed to connect to Datastore.", e)
           }
           case e: Throwable => {
-            val causeStackTrace = StackTrace.ThrowableTraceString(e)
-            logger.error("Failed to connect to Datastore. Reason:" + e.getCause + ". Message:" + e.getMessage + "\nCause:\n" + causeStackTrace)
+            logger.error("Failed to connect to Datastore.", e)
           }
         }
       }
@@ -398,7 +389,7 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
         }
       } catch {
         case e: Exception => {
-          logger.error("Failed to load message class %s with Reason:%s Message:%s".format(clsName, e.getCause, e.getMessage))
+          logger.error("Failed to load message class %s".format(clsName), e)
         }
       }
     }
@@ -417,7 +408,7 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
         }
       } catch {
         case e: Exception => {
-          logger.error("Failed to load container class %s with Reason:%s Message:%s".format(clsName, e.getCause, e.getMessage))
+          logger.error("Failed to load container class %s".format(clsName), e)
         }
       }
     }
@@ -439,7 +430,7 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
         }
       } catch {
         case e: Exception => {
-          logger.error("Failed to instantiate message or conatiner object:" + clsName + ". Reason:" + e.getCause + ". Message:" + e.getMessage())
+          logger.error("Failed to instantiate message or conatiner object:" + clsName, e)
           isOk = false
         }
       }
@@ -491,7 +482,7 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
           }
         } catch {
           case e: Exception => {
-            logger.error("Jar " + j.trim + " failed added to class path. Message: " + e.getMessage)
+            logger.error("Jar " + j.trim + " failed added to class path.", e)
             return false
           }
         }
@@ -593,7 +584,7 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
         }
       } catch {
         case e: Exception => {
-          logger.error("Invalid JSON data:%s, Reason:%s, Message:%s".format(inputStr, e.getCause, e.getMessage()))
+          logger.error("Invalid JSON data:%s".format(inputStr), e)
           return null
         }
       }
@@ -632,28 +623,23 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
         doneGet = true
       } catch {
         case e @ (_: ObjectNotFoundException | _: KeyNotFoundException) => {
-          logger.debug("In Container %s Key %s Not found for timerange: %d-%d".format(objFullName, loadKey.bucketKey.mkString(","), loadKey.tmRange.beginTime, loadKey.tmRange.endTime))
+          logger.debug("In Container %s Key %s Not found for timerange: %d-%d".format(objFullName, loadKey.bucketKey.mkString(","), loadKey.tmRange.beginTime, loadKey.tmRange.endTime), e)
           doneGet = true
         }
         case e: FatalAdapterException => {
-          val stackTrace = StackTrace.ThrowableTraceString(e.cause)
-          logger.error("In Container %s Key %s Not found for timerange: %d-%d.\nStackTrace:%s".format(objFullName, loadKey.bucketKey.mkString(","), loadKey.tmRange.beginTime, loadKey.tmRange.endTime, stackTrace))
+          logger.error("In Container %s Key %s Not found for timerange: %d-%d.".format(objFullName, loadKey.bucketKey.mkString(","), loadKey.tmRange.beginTime, loadKey.tmRange.endTime), e)
         }
         case e: StorageDMLException => {
-          val stackTrace = StackTrace.ThrowableTraceString(e.cause)
-          logger.error("In Container %s Key %s Not found for timerange: %d-%d.\nStackTrace:%s".format(objFullName, loadKey.bucketKey.mkString(","), loadKey.tmRange.beginTime, loadKey.tmRange.endTime, stackTrace))
+          logger.error("In Container %s Key %s Not found for timerange: %d-%d.".format(objFullName, loadKey.bucketKey.mkString(","), loadKey.tmRange.beginTime, loadKey.tmRange.endTime), e)
         }
         case e: StorageDDLException => {
-          val stackTrace = StackTrace.ThrowableTraceString(e.cause)
-          logger.error("In Container %s Key %s Not found for timerange: %d-%d.\nStackTrace:%s".format(objFullName, loadKey.bucketKey.mkString(","), loadKey.tmRange.beginTime, loadKey.tmRange.endTime, stackTrace))
+          logger.error("In Container %s Key %s Not found for timerange: %d-%d.".format(objFullName, loadKey.bucketKey.mkString(","), loadKey.tmRange.beginTime, loadKey.tmRange.endTime), e)
         }
         case e: Exception => {
-          val stackTrace = StackTrace.ThrowableTraceString(e)
-          logger.error("In Container %s Key %s Not found for timerange: %d-%d.\nStackTrace:%s".format(objFullName, loadKey.bucketKey.mkString(","), loadKey.tmRange.beginTime, loadKey.tmRange.endTime, stackTrace))
+          logger.error("In Container %s Key %s Not found for timerange: %d-%d.".format(objFullName, loadKey.bucketKey.mkString(","), loadKey.tmRange.beginTime, loadKey.tmRange.endTime), e)
         }
         case e: Throwable => {
-          val stackTrace = StackTrace.ThrowableTraceString(e)
-          logger.error("In Container %s Key %s Not found for timerange: %d-%d.\nStackTrace:%s".format(objFullName, loadKey.bucketKey.mkString(","), loadKey.tmRange.beginTime, loadKey.tmRange.endTime, stackTrace))
+          logger.error("In Container %s Key %s Not found for timerange: %d-%d.".format(objFullName, loadKey.bucketKey.mkString(","), loadKey.tmRange.beginTime, loadKey.tmRange.endTime), e)
         }
       }
 
@@ -662,7 +648,7 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
           logger.error("Failed to get data from datastore. Waiting for another %d milli seconds and going to start them again.".format(failedWaitTime))
           Thread.sleep(failedWaitTime)
         } catch {
-          case e: Exception => {}
+          case e: Exception => { logger.warn(e) }
         }
         // Adjust time for next time
         if (failedWaitTime < maxFailedWaitTime) {
@@ -689,7 +675,7 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
           storeObjects += ((k, v))
         } catch {
           case e: Exception => {
-            logger.error("Failed to serialize/write data.")
+            logger.error("Failed to serialize/write data.", e)
             throw e
           }
         }
@@ -706,24 +692,19 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
         doneSave = true
       } catch {
         case e: FatalAdapterException => {
-          val causeStackTrace = StackTrace.ThrowableTraceString(e.cause)
-          logger.error("Failed to save data into datastore, cause: \n" + causeStackTrace)
+          logger.error("Failed to save data into datastore", e)
         }
         case e: StorageDMLException => {
-          val causeStackTrace = StackTrace.ThrowableTraceString(e.cause)
-          logger.error("Failed to save data into datastore, cause: \n" + causeStackTrace)
+          logger.error("Failed to save data into datastore", e)
         }
         case e: StorageDDLException => {
-          val causeStackTrace = StackTrace.ThrowableTraceString(e.cause)
-          logger.error("Failed to save data into datastore, cause: \n" + causeStackTrace)
+          logger.error("Failed to save data into datastore", e)
         }
         case e: Exception => {
-          val causeStackTrace = StackTrace.ThrowableTraceString(e)
-          logger.error("Failed to save data into datastore, cause: \n" + causeStackTrace)
+          logger.error("Failed to save data into datastore", e)
         }
         case e: Throwable => {
-          val causeStackTrace = StackTrace.ThrowableTraceString(e)
-          logger.error("Failed to save data into datastore, cause: \n" + causeStackTrace)
+          logger.error("Failed to save data into datastore", e)
         }
       }
 
@@ -732,7 +713,7 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
           logger.error("Failed to save data into datastore. Waiting for another %d milli seconds and going to start them again.".format(failedWaitTime))
           Thread.sleep(failedWaitTime)
         } catch {
-          case e: Exception => {}
+          case e: Exception => { logger.warn(e) }
         }
         // Adjust time for next time
         if (failedWaitTime < maxFailedWaitTime) {
@@ -769,7 +750,7 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
         zkcForSetData.setData().forPath(dataChangeZkNodePath, sendJson.getBytes("UTF8"))
       } catch {
         case e: Exception => {
-          logger.error("Failed to send update notification to engine.")
+          logger.error("Failed to send update notification to engine.", e)
           throw e
         }
       }
@@ -853,8 +834,7 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
                 triedForPrimaryKey = true
               } catch {
                 case e: Exception => {
-                  val stackTrace = StackTrace.ThrowableTraceString(e)
-                  logger.debug("Failed to populate message/container." + "\nStackTrace:" + stackTrace)
+                  logger.debug("Failed to populate message/container.", e)
                   errsCnt += 1
                 }
               }
@@ -874,7 +854,7 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
                       }
                     } catch {
                       case e: Exception => {
-                        logger.error("Failed to get value for field:%s. Reason:%s, Message:%s\nStackTrace:%s".format(key, e.getCause, e.getMessage, StackTrace.ThrowableTraceString(e)))
+                        logger.error("Failed to get value for field:%s.".format(key), e)
                         //BUGBUG:: May be we can take empty string if we get any exception in get. which one is correct way?
                         throw e
                       }
@@ -911,8 +891,7 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
                 }
               } catch {
                 case e: Exception => {
-                  val stackTrace = StackTrace.ThrowableTraceString(e)
-                  logger.debug("Failed to serialize/write data." + "\nStackTrace:" + stackTrace)
+                  logger.debug("Failed to serialize/write data.", e)
                   errsCnt += 1
                 }
               }
@@ -949,7 +928,7 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
       }
     } catch {
       case e: Exception => {
-        logger.error("Failed to open Input File %s. Message:%s".format(inputeventfile, e.getMessage))
+        logger.error("Failed to open Input File %s.".format(inputeventfile), e)
         throw e
       }
     }
@@ -1003,7 +982,7 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
                   foundOpen = false
                 } // else // Did not match the correct json even if we have one open brace. Tring for the next open one
               } catch {
-                case e: Exception => {} // Not yet valid json
+                case e: Exception => { logger.warn(e) } // Not yet valid json
               }
             } else {
               buf += ch
@@ -1024,7 +1003,7 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
       }
     } catch {
       case e: Exception => {
-        logger.error("Failed to open Input File %s. Message:%s".format(inputeventfile, e.getMessage))
+        logger.error("Failed to open Input File %s.".format(inputeventfile), e)
         throw e
       }
     }
@@ -1040,8 +1019,7 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
       is = new FileInputStream(inputfile)
     } catch {
       case e: Exception =>
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStacktrace:" + stackTrace)
+        logger.debug(e)
         return false
     }
 

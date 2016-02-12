@@ -69,7 +69,7 @@ class HashMapAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAfter
       adapter = HashMapAdapter.CreateStorageAdapter(kvManagerLoader, dataStoreInfo)
    }
     catch {
-      case e: Exception => throw new Exception("Failed to execute set up properly\n" + e)
+      case e: Exception => throw new Exception("Failed to execute set up properly", e)
     }
   }
 

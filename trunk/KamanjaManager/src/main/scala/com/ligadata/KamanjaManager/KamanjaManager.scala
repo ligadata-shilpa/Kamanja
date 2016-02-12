@@ -21,7 +21,7 @@ import java.net.{ Socket, ServerSocket }
 import java.util.concurrent.{ Executors, ScheduledExecutorService, TimeUnit }
 import com.ligadata.Utils.{ Utils, KamanjaClassLoader, KamanjaLoaderInfo }
 import org.apache.logging.log4j.{ Logger, LogManager }
-import com.ligadata.Exceptions.{ FatalAdapterException, StackTrace }
+import com.ligadata.Exceptions.{ FatalAdapterException }
 
 class KamanjaServer(var mgr: KamanjaManager, port: Int) extends Runnable {
   private val LOG = LogManager.getLogger(getClass);
@@ -36,7 +36,7 @@ class KamanjaServer(var mgr: KamanjaManager, port: Int) extends Runnable {
       }
     } catch {
       case e: Exception => {
-        LOG.error("Socket Error. Reason:%s Message:%s".format(e.getCause, e.getMessage))
+        LOG.error("Socket Error", e)
       }
     } finally {
       if (serverSocket.isClosed() == false)
@@ -68,7 +68,7 @@ class ConnHandler(var socket: Socket, var mgr: KamanjaManager) extends Runnable 
       }
     } catch {
       case e: Exception => {
-        LOG.error("Reason:%s Message:%s".format(e.getCause, e.getMessage))
+        LOG.error(e)
       }
     } finally {
       socket.close;
@@ -200,14 +200,10 @@ object ProcessedAdaptersInfo {
         committed = true
       } catch {
         case e: Exception => {
-          LOG.error("Failed to commit adapter changes. if we can not save this we will reprocess the information when service restarts. Reason:%s Message:%s".format(e.getCause, e.getMessage))
-          val stackTrace = StackTrace.ThrowableTraceString(e)
-          LOG.error("StackTrace:" + stackTrace)
+          LOG.error("Failed to commit adapter changes. if we can not save this we will reprocess the information when service restarts.", e)
         }
         case e: Throwable => {
-          LOG.error("Failed to commit adapter changes. if we can not save this we will reprocess the information when service restarts. Reason:%s Message:%s".format(e.getCause, e.getMessage))
-          val stackTrace = StackTrace.ThrowableTraceString(e)
-          LOG.error("StackTrace:" + stackTrace)
+          LOG.error("Failed to commit adapter changes. if we can not save this we will reprocess the information when service restarts.", e)
         }
       }
 
@@ -411,7 +407,7 @@ class KamanjaManager extends Observer {
           KamanjaConfiguration.adapterInfoCommitTime = adapterCommitTime
         }
       } catch {
-        case e: Exception => {}
+        case e: Exception => { LOG.warn(e) }
       }
 
       try {
@@ -422,7 +418,7 @@ class KamanjaManager extends Observer {
             KamanjaConfiguration.waitProcessingSteps = setps.map(_.toInt).toSet
         }
       } catch {
-        case e: Exception => {}
+        case e: Exception => { LOG.warn(e) }
       }
 
       LOG.debug("Initializing metadata bootstrap")
@@ -506,7 +502,7 @@ class KamanjaManager extends Observer {
           (new Thread(serviceObj)).start()
         } catch {
           case e: Exception => {
-            LOG.error("Failed to create server to accept connection on port:" + nodePort+ ". Reason:" + e.getCause + ". Message:" + e.getMessage)
+            LOG.error("Failed to create server to accept connection on port:" + nodePort, e)
             retval = false
           }
         }
@@ -515,8 +511,7 @@ class KamanjaManager extends Observer {
 
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        LOG.error("Failed to initialize. Reason:%s Message:%s\nStackTrace:%s".format(e.getCause, e.getMessage, stackTrace))
+        LOG.error("Failed to initialize.", e)
         retval = false
       }
     } finally {
@@ -670,7 +665,7 @@ class KamanjaManager extends Observer {
       sh.handleSignal("ABRT")
     } catch {
       case e: Throwable => {
-        LOG.error("Failed to add signal handler.\nStacktrace:" + StackTrace.ThrowableTraceString(e))
+        LOG.error("Failed to add signal handler.", e)
       }
     }
 
@@ -732,8 +727,7 @@ class KamanjaManager extends Observer {
         Thread.sleep(500) // Waiting for 500 milli secs
       } catch {
         case e: Exception => {
-          val stackTrace = StackTrace.ThrowableTraceString(e)
-          LOG.debug("\nStackTrace:" + stackTrace)
+          LOG.debug(e)
         }
       }
 

@@ -35,7 +35,6 @@ import scala.collection.mutable.{ ArrayBuffer, TreeSet }
 // import com.ligadata.Serialize.{ JZKInfo }
 import com.ligadata.KvBase.{ Key, Value, TimeRange, KvBaseDefalts, KeyWithBucketIdAndPrimaryKey, KeyWithBucketIdAndPrimaryKeyCompHelper, LoadKeyWithBucketId }
 import com.ligadata.StorageBase.{ DataStore, Transaction }
-import com.ligadata.Exceptions.StackTrace
 import java.util.{ Collection, Iterator, TreeMap }
 import com.ligadata.Exceptions._
 import org.json4s._
@@ -90,11 +89,11 @@ class SaveContainerDataCompImpl extends LogTrait with MdBaseResolveInfo {
             }
           } catch {
             case e: Exception => {
-              logger.error("Jar " + j.trim + " failed added to class path. Message: " + e.getMessage)
+              logger.error("Jar " + j.trim + " failed added to class path.", e)
               throw e
             }
             case e: Throwable => {
-              logger.error("Jar " + j.trim + " failed added to class path. Message: " + e.getMessage)
+              logger.error("Jar " + j.trim + " failed added to class path.", e)
               throw e
             }
           }
@@ -113,15 +112,11 @@ class SaveContainerDataCompImpl extends LogTrait with MdBaseResolveInfo {
       return KeyValueManager.Get(jarPaths, dataStoreInfo)
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.error("Failed to connect Database:" + dataStoreInfo)
-        logger.error("StackTrace:" + stackTrace)
+        logger.error("Failed to connect Database:" + dataStoreInfo, e)
         throw e
       }
       case e: Throwable => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.error("Failed to connect Database:" + dataStoreInfo)
-        logger.error("StackTrace:" + stackTrace)
+        logger.error("Failed to connect Database:" + dataStoreInfo, e)
         throw e
       }
     }
@@ -149,11 +144,10 @@ class SaveContainerDataCompImpl extends LogTrait with MdBaseResolveInfo {
       loadedKeys.add(loadKey)
     } catch {
       case e: ObjectNotFoundException => {
-        logger.debug("Key %s Not found for timerange: %d-%d".format(loadKey.bucketKey.mkString(","), loadKey.tmRange.beginTime, loadKey.tmRange.endTime))
+        logger.debug("Key %s Not found for timerange: %d-%d".format(loadKey.bucketKey.mkString(","), loadKey.tmRange.beginTime, loadKey.tmRange.endTime), e)
       }
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.error("Key %s Not found for timerange: %d-%d.\nStackTrace:%s".format(loadKey.bucketKey.mkString(","), loadKey.tmRange.beginTime, loadKey.tmRange.endTime, stackTrace))
+        logger.error("Key %s Not found for timerange: %d-%d.".format(loadKey.bucketKey.mkString(","), loadKey.tmRange.beginTime, loadKey.tmRange.endTime), e)
       }
     }
   }
@@ -162,8 +156,8 @@ class SaveContainerDataCompImpl extends LogTrait with MdBaseResolveInfo {
     try {
       return GetMessageContainerBase(MsgContainerType)
     } catch {
-      case e: Exception => {}
-      case e: Throwable => {}
+      case e: Exception => { logger.warn(e) }
+      case e: Throwable => { logger.warn(e) }
     }
     return null
   }
@@ -264,11 +258,11 @@ class SaveContainerDataCompImpl extends LogTrait with MdBaseResolveInfo {
         _transService.init(1)
       } catch {
         case e: Exception => {
-          logger.error("Failed to start Transaction service.")
+          logger.error("Failed to start Transaction service.", e)
           throw e
         }
         case e: Throwable => {
-          logger.error("Failed to start Transaction service.")
+          logger.error("Failed to start Transaction service.", e)
           throw e
         }
       }
@@ -338,11 +332,11 @@ class SaveContainerDataCompImpl extends LogTrait with MdBaseResolveInfo {
         }
       } catch {
         case e: Exception => {
-          logger.error("Failed to load message type:%s (class:%s) with Reason:%s Message:%s".format(typ, clsName, e.getCause, e.getMessage))
+          logger.error("Failed to load message type:%s (class:%s)".format(typ, clsName), e)
           throw e
         }
         case e: Throwable => {
-          logger.error("Failed to load message type:%s (class:%s) with Reason:%s Message:%s".format(typ, clsName, e.getCause, e.getMessage))
+          logger.error("Failed to load message type:%s (class:%s)".format(typ, clsName), e)
           throw e
         }
       }
@@ -362,11 +356,11 @@ class SaveContainerDataCompImpl extends LogTrait with MdBaseResolveInfo {
         }
       } catch {
         case e: Exception => {
-          logger.error("Failed to load container. type:%s (class:%s) with Reason:%s Message:%s".format(typ, clsName, e.getCause, e.getMessage))
+          logger.error("Failed to load container. type:%s (class:%s)".format(typ, clsName), e)
           throw e
         }
         case e: Throwable => {
-          logger.error("Failed to load container. type:%s (class:%s) with Reason:%s Message:%s".format(typ, clsName, e.getCause, e.getMessage))
+          logger.error("Failed to load container. type:%s (class:%s)".format(typ, clsName), e)
           throw e
         }
       }
@@ -394,11 +388,11 @@ class SaveContainerDataCompImpl extends LogTrait with MdBaseResolveInfo {
         }
       } catch {
         case e: Exception => {
-          logger.error("Failed to instantiate message or conatiner. type::" + typ + " (class:" + clsName + "). Reason:" + e.getCause + ". Message:" + e.getMessage())
+          logger.error("Failed to instantiate message or conatiner. type::" + typ + " (class:" + clsName + ").", e)
           throw e
         }
         case e: Throwable => {
-          logger.error("Failed to instantiate message or conatiner. type::" + typ + " (class:" + clsName + "). Reason:" + e.getCause + ". Message:" + e.getMessage())
+          logger.error("Failed to instantiate message or conatiner. type::" + typ + " (class:" + clsName + ").", e)
           throw e
         }
       }
@@ -493,11 +487,11 @@ class SaveContainerDataCompImpl extends LogTrait with MdBaseResolveInfo {
         _dataStore.put(Array((typ, storeObjects)))
       } catch {
         case e: Exception => {
-          logger.error("Failed to write data for type:" + typ)
+          logger.error("Failed to write data for type:" + typ, e)
           throw e
         }
         case e: Throwable => {
-          logger.error("Failed to write data for type:" + typ)
+          logger.error("Failed to write data for type:" + typ, e)
           throw e
         }
       }

@@ -18,7 +18,7 @@ package com.ligadata.MetadataAPI.Utility
 
 import java.io.{FileNotFoundException, File}
 
-import com.ligadata.Exceptions.{StackTrace, AlreadyExistsException}
+import com.ligadata.Exceptions.{AlreadyExistsException}
 import com.ligadata.MetadataAPI.MetadataAPIImpl
 
 import scala.io.Source
@@ -91,7 +91,7 @@ object TypeService {
         try {
           return MetadataAPIImpl.GetType(ns, name,ver,"JSON", userid).toString
         } catch {
-          case e: Exception => e.printStackTrace()
+          case e: Exception => logger.error(e)
         }
       }
       val typeKeys = MetadataAPIImpl.GetAllKeys("TypeDef", None)
@@ -124,6 +124,7 @@ object TypeService {
 
     } catch {
       case e: Exception => {
+       logger.info(e)
         response=e.getStackTrace.toString
       }
     }
@@ -141,7 +142,7 @@ object TypeService {
         try {
           return MetadataAPIImpl.RemoveType(ns, name,ver.toLong, userid).toString
         } catch {
-          case e: Exception => e.printStackTrace()
+          case e: Exception => logger.error(e)
         }
       }
       val typeKeys =MetadataAPIImpl.GetAllKeys("TypeDef", None)
@@ -173,7 +174,8 @@ object TypeService {
 
     } catch {
       case e: Exception => {
-        //e.printStackTrace
+        //logger.error(e)
+        logger.info(e)
         response=e.getStackTrace.toString
       }
     }
@@ -200,13 +202,12 @@ object TypeService {
           case fnf : FileNotFoundException => {
               val filePath : String = if (input != null && input.nonEmpty) input else "bad file path ... blank or null"
               val errorMsg : String = "file supplied to loadTypesFromAFile ($filePath) does not exist...."
-              logger.error(errorMsg)
+              logger.error(errorMsg, fnf)
               errorMsg
           }
           case e: Exception => {
-              val stackTrace = StackTrace.ThrowableTraceString(e)
-              val errorMsg : String = s"Exception $e encountered ... \nstackTrace =\n$stackTrace"
-              logger.debug(errorMsg)
+              val errorMsg : String = s"Exception $e encountered ..."
+              logger.debug(errorMsg, e)
               errorMsg
           }
       }
@@ -252,6 +253,7 @@ object TypeService {
       response = MetadataAPIImpl.GetAllTypesByObjType("JSON", selectedType)
     } catch {
       case e: Exception => {
+        logger.info(e)
         response=e.getStackTrace.toString
       }
     }

@@ -26,7 +26,6 @@ import com.ligadata.kamanja.metadata.MdMgr._
 import com.ligadata.Exceptions._
 import org.apache.logging.log4j.{ Logger, LogManager }
 import scala.collection.mutable.ListBuffer
-import com.ligadata.Exceptions.StackTrace
 
 class OutputMessage(var NameSpace: String, var Name: String, var Version: String, var Description: String, var Queue: String, var PartitionKey: List[String], var Defaults: List[scala.collection.mutable.Map[String, String]], var DataDeclaration: List[scala.collection.mutable.Map[String, String]], var OutputFormat: String)
 
@@ -177,12 +176,11 @@ object OutputMsgDefImpl {
       outputMsgDef = MdMgr.GetMdMgr.MakeOutputMsg(nameSpace.toLowerCase(), name.toLowerCase(), version, outputQ, partionFieldKeys, dfaults, dataDeclrtion, Fields, outputFormat, formatSplittedArray.toArray)
     } catch {
       case e: ObjectNolongerExistsException => {
-        log.error(s"Either Model or Message or Container do not exists in Metadata. Error: " + e.getMessage)
+        log.error(s"Either Model or Message or Container do not exists in Metadata.", e)
         throw e
       }
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        log.trace("Error " + e.getMessage() + "\nStackTrace:" + stackTrace)
+        log.trace(e)
         throw e
       }
     }
@@ -270,12 +268,11 @@ object OutputMsgDefImpl {
 
     } catch {
       case e: ObjectNolongerExistsException => {
-        log.error(s"Either Model or Message or Container do not exists in Metadata. Error: " + e.getMessage)
+        log.error(s"Either Model or Message or Container do not exists in Metadata.", e)
         throw e
       }
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        log.error("Error " + e.getMessage() + "\nStackTrace:" + stackTrace)
+        log.error(e)
         throw e
       }
     }
@@ -297,12 +294,11 @@ object OutputMsgDefImpl {
       })
     } catch {
       case e: ObjectNolongerExistsException => {
-        log.error(s"Either Model or Message or Container do not exists in Metadata. Error: " + e.getMessage)
+        log.error(s"Either Model or Message or Container do not exists in Metadata.", e)
         throw e
       }
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        log.trace("Error " + e.getMessage() + "\nStackTrace:" + stackTrace)
+        log.trace(e)
       }
     }
     fldtype.toLowerCase()
@@ -346,12 +342,11 @@ object OutputMsgDefImpl {
       }
     } catch {
       case e: ObjectNolongerExistsException => {
-        log.error(s"Either Model or Message or Container do not exists in Metadata. Error: " + e.getMessage)
+        log.error(s"Either Model or Message or Container do not exists in Metadata.", e)
         throw e
       }
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        log.trace("Error " + e.getMessage())
+        log.trace(e)
       }
     }
     fieldType
@@ -453,8 +448,7 @@ object OutputMsgDefImpl {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        log.debug("Error " + e.getMessage() + "\nStackTrace:" + stackTrace)
+        log.debug(e)
         throw e
       }
     }

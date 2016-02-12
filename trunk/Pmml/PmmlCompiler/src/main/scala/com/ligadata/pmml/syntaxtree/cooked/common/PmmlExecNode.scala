@@ -30,7 +30,6 @@ import com.ligadata.pmml.support._
 import com.ligadata.pmml.traits._
 import com.ligadata.pmml.syntaxtree.cooked.common._
 import com.ligadata.pmml.transforms.printers.scala.common._
-import com.ligadata.Exceptions.StackTrace
 
 
 class PmmlExecNode (val qName : String, val lineNumber : Int, val columnNumber : Int) extends com.ligadata.pmml.compiler.LogTrait  { 
@@ -1327,9 +1326,7 @@ object PmmlExecNode extends com.ligadata.pmml.compiler.LogTrait {
 			fld.HighValue(d.highValue.toDouble)
 		} catch {
 			case _ : Throwable => {
-        val stackTrace = StackTrace.ThrowableTraceString(_)
-        ctx.logger.debug("\nStackTrace:"+stackTrace)
-        ctx.logger.debug (s"Unable to coerce one or more of the mining field doubles... name = $name")}
+        ctx.logger.debug (s"Unable to coerce one or more of the mining field doubles... name = $name"), _}
       
 		}
 	  	fld
@@ -1388,9 +1385,7 @@ object PmmlExecNode extends com.ligadata.pmml.compiler.LogTrait {
 					rule.Weight(d.weight.toDouble)
 				} catch {
 					case _ : Throwable => {
-            val stackTrace = StackTrace.ThrowableTraceString(_)
-            ctx.logger.debug("\nStackTrace:"+stackTrace)
-            ctx.logger.debug (s"Unable to coerce one or more mining 'double' fields... name = $id")}
+            ctx.logger.debug (s"Unable to coerce one or more mining 'double' fields... name = $id"), _}
 				}
 			
 				rsm.addRule (rule) 
@@ -1415,9 +1410,7 @@ object PmmlExecNode extends com.ligadata.pmml.compiler.LogTrait {
 					sd.Probability(d.probability.toDouble)
 				} catch {
 				  case _ : Throwable => {
-            val stackTrace = StackTrace.ThrowableTraceString(_)
-            ctx.logger.debug("\nStackTrace:"+stackTrace)
-            ctx.logger.debug ("Unable to coerce one or more score probablity Double values")}
+            ctx.logger.debug ("Unable to coerce one or more score probablity Double values"), _}
 				}
 					
 				mf.addScoreDistribution(sd)

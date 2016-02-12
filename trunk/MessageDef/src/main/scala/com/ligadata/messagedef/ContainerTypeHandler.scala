@@ -24,9 +24,6 @@ import com.ligadata.kamanja.metadata.AttributeDef
 import com.ligadata.kamanja.metadata.MappedMsgTypeDef
 import scala.collection.mutable.ArrayBuffer
 import org.apache.logging.log4j.{ Logger, LogManager }
-import com.ligadata.Exceptions.StackTrace
-
-import org.apache.logging.log4j.{ Logger, LogManager }
 
 class ContainerTypeHandler {
 
@@ -213,8 +210,7 @@ class ContainerTypeHandler {
 
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        log.debug("StackTrace:"+stackTrace)
+        log.debug(e)
         throw e
       }
     }

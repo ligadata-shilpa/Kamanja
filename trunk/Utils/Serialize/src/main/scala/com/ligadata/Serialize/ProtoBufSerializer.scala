@@ -24,7 +24,6 @@ import org.apache.logging.log4j._
 import com.ligadata.kamanja.metadata._
 import com.ligadata.Serialize.MetadataObjects.MetadataType._
 import com.ligadata.Exceptions._
-import com.ligadata.Exceptions.StackTrace
 
 class ProtoBufSerializer extends Serializer{
 
@@ -163,9 +162,8 @@ class ProtoBufSerializer extends Serializer{
             m
         }catch{
             case e:Exception => {
-                val stackTrace = StackTrace.ThrowableTraceString(e)
-                logger.debug("StackTrace:"+stackTrace)
-                throw ProtoBufSerializationException("Failed to Deserialize the object: " + e.getMessage, null)
+                logger.debug(e)
+                throw ProtoBufSerializationException("Failed to Deserialize the object", e)
             }
         }
     }
@@ -189,9 +187,8 @@ class ProtoBufSerializer extends Serializer{
             }
         }catch{
             case e:Exception => {
-                val stackTrace = StackTrace.ThrowableTraceString(e)
-                logger.debug("StackTrace:"+stackTrace)
-                throw ProtoBufSerializationException("Failed to Serialize the object(" + obj.getClass.getName + "): " + e.getMessage, null)
+                logger.debug(e)
+                throw ProtoBufSerializationException("Failed to Serialize the object(" + obj.getClass.getName + ")", e)
             }
         }
     }
@@ -218,9 +215,8 @@ class ProtoBufSerializer extends Serializer{
             }
         }catch{
             case e:Exception => {
-                val stackTrace = StackTrace.ThrowableTraceString(e)
-                logger.debug("StackTrace:"+stackTrace)
-                throw ProtoBufSerializationException("Failed to DeSerialize the object:" + e.getMessage, null)
+                logger.debug(e)
+                throw ProtoBufSerializationException("Failed to DeSerialize the object", e)
             }
         }
     }
