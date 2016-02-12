@@ -369,7 +369,7 @@ object KamanjaLeader {
         Thread.sleep(1000) // sleep 1000 ms and then check
       } catch {
         case e: Exception => {
-          LOG.debug("Failed to sleep the thread", e)
+          LOG.debug("Failed to sleep thread", e)
         }
       }
       if ((System.nanoTime - CollectKeyValsFromValidation.getLastUpdateTime) < 1000 * 1000000) // 1000ms
@@ -468,7 +468,7 @@ object KamanjaLeader {
       SetNewDataToZkc(engineDistributionZkNodePath, sendJson.getBytes("UTF8"))
     } catch {
       case e: Exception => {
-        LOG.debug(e)
+        LOG.debug("", e)
       }
     }
   }
@@ -599,7 +599,7 @@ object KamanjaLeader {
           LOG.error("Failed to start processing %d input adapters while distributing. Waiting for another %d milli seconds and going to start them again.".format(remainingInpAdapters.size, failedWaitTime))
           Thread.sleep(failedWaitTime)
         } catch {
-          case e: Exception => { LOG.warn(e) }
+          case e: Exception => { LOG.warn("", e) }
         }
         // Adjust time for next time
         if (failedWaitTime < maxFailedWaitTime) {
@@ -707,7 +707,7 @@ object KamanjaLeader {
                   LOG.error("Failed to stop %d input adapters. Waiting for another %d milli seconds and going to start them again.".format(remInputAdaps.size, failedWaitTime))
                   Thread.sleep(failedWaitTime)
                 } catch {
-                  case e: Exception => { LOG.warn(e) }
+                  case e: Exception => { LOG.warn("", e) }
                 }
                 // Adjust time for next time
                 if (failedWaitTime < maxFailedWaitTime) {
@@ -726,7 +726,7 @@ object KamanjaLeader {
             } catch {
               case e: Exception => {
                 // Not doing anything
-                LOG.debug(e)
+                LOG.debug("", e)
               }
             }
 
@@ -848,13 +848,13 @@ object KamanjaLeader {
           try {
             changedVals = changedMsgsContainers.asInstanceOf[List[String]].toArray
           } catch {
-            case e: Exception => { LOG.warn(e) }
+            case e: Exception => { LOG.warn("", e) }
           }
         } else if (changedMsgsContainers.isInstanceOf[Array[_]]) {
           try {
             changedVals = changedMsgsContainers.asInstanceOf[Array[String]]
           } catch {
-            case e: Exception => { LOG.warn(e) }
+            case e: Exception => { LOG.warn("", e) }
           }
         }
 
@@ -879,25 +879,25 @@ object KamanjaLeader {
                   try {
                     keys = tmpKeys.asInstanceOf[List[Any]]
                   } catch {
-                    case e: Exception => { LOG.warn(e) }
+                    case e: Exception => { LOG.warn("", e) }
                   }
                 } else if (tmpKeys.isInstanceOf[Array[_]]) {
                   try {
                     keys = tmpKeys.asInstanceOf[Array[Any]].toList
                   } catch {
-                    case e: Exception => { LOG.warn(e) }
+                    case e: Exception => { LOG.warn("", e) }
                   }
                 } else if (tmpKeys.isInstanceOf[Map[_, _]]) {
                   try {
                     keys = tmpKeys.asInstanceOf[Map[String, Any]].toList
                   } catch {
-                    case e: Exception => { LOG.warn(e) }
+                    case e: Exception => { LOG.warn("", e) }
                   }
                 } else if (tmpKeys.isInstanceOf[scala.collection.mutable.Map[_, _]]) {
                   try {
                     keys = tmpKeys.asInstanceOf[scala.collection.mutable.Map[String, Any]].toList
                   } catch {
-                    case e: Exception => { LOG.warn(e) }
+                    case e: Exception => { LOG.warn("", e) }
                   }
                 }
 
@@ -909,25 +909,25 @@ object KamanjaLeader {
                       try {
                         oneKey = k.asInstanceOf[List[(String, Any)]].toMap
                       } catch {
-                        case e: Exception => { LOG.warn(e) }
+                        case e: Exception => { LOG.warn("", e) }
                       }
                     } else if (k.isInstanceOf[Array[_]]) {
                       try {
                         oneKey = k.asInstanceOf[Array[(String, Any)]].toMap
                       } catch {
-                        case e: Exception => { LOG.warn(e) }
+                        case e: Exception => { LOG.warn("", e) }
                       }
                     } else if (k.isInstanceOf[Map[_, _]]) {
                       try {
                         oneKey = k.asInstanceOf[Map[String, Any]]
                       } catch {
-                        case e: Exception => { LOG.warn(e) }
+                        case e: Exception => { LOG.warn("", e) }
                       }
                     } else if (k.isInstanceOf[scala.collection.mutable.Map[_, _]]) {
                       try {
                         oneKey = k.asInstanceOf[scala.collection.mutable.Map[String, Any]].toMap
                       } catch {
-                        case e: Exception => { LOG.warn(e) }
+                        case e: Exception => { LOG.warn("", e) }
                       }
                     }
 
@@ -1134,7 +1134,7 @@ object KamanjaLeader {
         } catch {
           case e: Exception => {
             // Not doing anything
-            LOG.debug(e)
+            LOG.debug("", e)
           }
         }
 
@@ -1153,7 +1153,7 @@ object KamanjaLeader {
                 Thread.sleep(1000) // Waiting for 1000 milli secs
               } catch {
                 case e: Exception => {
-                  LOG.debug(e)
+                  LOG.debug("", e)
                 }
               }
 

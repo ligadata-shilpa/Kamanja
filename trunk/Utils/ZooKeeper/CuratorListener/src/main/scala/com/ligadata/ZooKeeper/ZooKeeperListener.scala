@@ -54,7 +54,7 @@ class ZooKeeperListener {
       }
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -80,7 +80,7 @@ class ZooKeeperListener {
       // logger.setLevel(Level.TRACE);
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         throw new Exception("Failed to start a zookeeper session with(" + zkcConnectString + ")", e)
       }
     }
@@ -114,7 +114,7 @@ class ZooKeeperListener {
       pathChildCache.start();
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         throw new Exception("Failed to setup a PatchChildrenCacheListener with the node(" + znodePath + ")", e)
       }
     }
@@ -164,7 +164,7 @@ object ZooKeeperListenerTest {
       cache.start();
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         throw new Exception("Failed to setup a PatchChildrenCacheListener with the node(" + zNodePath + ")", e)
       }
     }

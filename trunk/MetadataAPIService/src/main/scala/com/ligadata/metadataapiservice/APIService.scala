@@ -95,7 +95,7 @@ class APIService extends LigadataSSLConfiguration with Runnable{
             return
           }
           case e: Exception => {
-            logger.error(e)
+            logger.error("", e)
             return
           }
         }
@@ -165,7 +165,7 @@ class APIService extends LigadataSSLConfiguration with Runnable{
         logger.debug("Unexpected Interrupt")
       }
       case e: Exception => {
-              logger.debug(e)
+              logger.debug("", e)
       }
     } finally {
       Shutdown(0)

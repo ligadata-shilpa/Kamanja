@@ -253,7 +253,7 @@ object ExtractData extends MdBaseResolveInfo {
       return KeyValueManager.Get(jarPaths, dataStoreInfo)
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         throw e
       }
     }
@@ -323,7 +323,7 @@ object ExtractData extends MdBaseResolveInfo {
         if (os != null)
           os.close
         os = null
-        logger.debug(e)
+        logger.debug("", e)
         throw e
       }
     }

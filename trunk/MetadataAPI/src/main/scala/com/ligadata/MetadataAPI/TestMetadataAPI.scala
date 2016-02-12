@@ -112,7 +112,7 @@ object TestMetadataAPI {
         logger.error("Type already exists in metadata...", e)
       }
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -152,7 +152,7 @@ object TestMetadataAPI {
       }
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         
       }
     }
@@ -198,7 +198,7 @@ object TestMetadataAPI {
 
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         
       }
     }
@@ -260,7 +260,7 @@ object TestMetadataAPI {
         logger.error("Function already exists in metadata...", e)
       }
       case e: Exception => {
-      logger.debug(e)
+      logger.debug("", e)
       }
     }
   }
@@ -301,7 +301,7 @@ object TestMetadataAPI {
       println("Result as Json String => \n" + apiResult)
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -340,7 +340,7 @@ object TestMetadataAPI {
 
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -438,7 +438,7 @@ object TestMetadataAPI {
       println("Result as Json String => \n" + apiResult)
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -480,7 +480,7 @@ object TestMetadataAPI {
 
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         
       }
     }
@@ -516,7 +516,7 @@ object TestMetadataAPI {
 
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -555,7 +555,7 @@ object TestMetadataAPI {
 
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -594,7 +594,7 @@ object TestMetadataAPI {
 
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -630,7 +630,7 @@ object TestMetadataAPI {
 
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -667,11 +667,11 @@ object TestMetadataAPI {
 
     } catch {
       case e: NumberFormatException => {
-        logger.debug(e)
+        logger.debug("", e)
         print("\n Entry not in desired format. Please enter only one choice correctly")
       }
       case e: Exception => {
-        logger.error(e)
+        logger.error("", e)
       }
     }
   }
@@ -708,7 +708,7 @@ println("Getting Messages")
 
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -745,7 +745,7 @@ println("Getting Messages")
 
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -783,7 +783,7 @@ println("Getting Messages")
 
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -820,7 +820,7 @@ println("Getting Messages")
 
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -857,7 +857,7 @@ println("Getting Messages")
 
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -875,7 +875,7 @@ println("Getting Messages")
       msgKeys.foreach(key => { seq += 1; println("[" + seq + "] " + key) })
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -893,7 +893,7 @@ println("Getting Messages")
       modKeys.foreach(key => { seq += 1; println("[" + seq + "] " + key) })
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -911,7 +911,7 @@ println("Getting Messages")
       msgKeys.foreach(key => { seq += 1; println("[" + seq + "] " + key) })
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -929,7 +929,7 @@ println("Getting Messages")
       msgKeys.foreach(key => { seq += 1; println("[" + seq + "] " + key) })
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -948,7 +948,7 @@ println("Getting Messages")
     } catch {
       case e: Exception => {
         
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -1023,7 +1023,7 @@ println("Getting Messages")
       }
       case e: Exception => {
         
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -1097,7 +1097,7 @@ println("Getting Messages")
         logger.error("Container Already in the metadata....", e)
       }
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -1181,7 +1181,7 @@ println("Getting Messages")
     } catch {
       case e: Exception => {
         
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -1255,7 +1255,7 @@ println("Getting Messages")
         logger.error("Message Already in the metadata....", e)
       }
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -1305,7 +1305,7 @@ println("Getting Messages")
     } catch {
       case e: Exception => {
         
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -1323,7 +1323,7 @@ println("Getting Messages")
         } catch {
           case e: Exception =>{
             
-        logger.debug(e)
+        logger.debug("", e)
             throw new Exception("Failed to load configuration.", e)
           }
         } finally {
@@ -1335,7 +1335,7 @@ println("Getting Messages")
     } catch {
       case e: Exception =>{
         
-        logger.debug(e)
+        logger.debug("", e)
         throw new Exception("Invalid Configuration.", e)
       }
     }
@@ -1433,7 +1433,7 @@ println("Getting Messages")
         logger.error("Model Already in the metadata....", e)
       }
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -1523,7 +1523,7 @@ println("Getting Messages")
         logger.error("Model Already in the metadata....", e)
       }
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -1575,7 +1575,7 @@ println("Getting Messages")
         logger.error("Model Already in the metadata....", e)
       }
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -1626,7 +1626,7 @@ println("Getting Messages")
         logger.error("Object Already in the metadata....", e)
       }
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
       }
     }   
   }
@@ -1678,7 +1678,7 @@ println("Getting Messages")
         logger.error("Object Already in the metadata....", e)
       }
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -1730,7 +1730,7 @@ println("Getting Messages")
         logger.error("Object Already in the metadata....", e)
       }
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -1781,7 +1781,7 @@ println("Getting Messages")
         logger.error("Model Already in the metadata....", e)
       }
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -1835,7 +1835,7 @@ println("Getting Messages")
         logger.error("Function Already in the metadata....", e)
       }
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -1848,7 +1848,7 @@ println("Getting Messages")
     } catch {
       case e: Exception => {
         
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -1903,7 +1903,7 @@ println("Getting Messages")
       }
       case e: Exception => {
         //check again
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -1916,7 +1916,7 @@ println("Getting Messages")
     } catch {
       case e: Exception => {
         
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -1970,7 +1970,7 @@ println("Getting Messages")
         logger.error("Type Already in the metadata....", e)
       }
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -2016,7 +2016,7 @@ println("Getting Messages")
     } catch {
       case e: Exception => {
         
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -2029,7 +2029,7 @@ println("Getting Messages")
     } catch {
       case e: Exception => {
         
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -2042,7 +2042,7 @@ println("Getting Messages")
     } catch {
       case e: Exception => {
         
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -2055,7 +2055,7 @@ println("Getting Messages")
     } catch {
       case e: Exception => {
         
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -2068,7 +2068,7 @@ println("Getting Messages")
     } catch {
       case e: Exception => {
         
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -2081,7 +2081,7 @@ println("Getting Messages")
     } catch {
       case e: Exception => {
         
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -2186,7 +2186,7 @@ println("Getting Messages")
     } catch {
       case e: Exception => {
         
-        logger.debug(e)
+        logger.debug("", e)
       }
     } finally {
       zkc.close();
@@ -2258,7 +2258,7 @@ println("Getting Messages")
     } catch {
       case e: Exception => {
         
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -2338,7 +2338,7 @@ println("Getting Messages")
           logger.error("Object Already in the metadata....", e)
 	      }
 	      case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
 	      }
 	    }
 	  }
@@ -2386,7 +2386,7 @@ println("Getting Messages")
 	    } catch {
 	      case e: Exception => {
 	        
-        logger.debug(e)
+        logger.debug("", e)
 	      }
 	    }
 	  }
@@ -2424,7 +2424,7 @@ println("Getting Messages")
 	    } catch {
 	      case e: Exception => {
 	        
-        logger.debug(e)
+        logger.debug("", e)
 	      }
 	    }
 	  }
@@ -2443,7 +2443,7 @@ println("Getting Messages")
 	    } catch {
 	      case e: Exception => {
 	        
-        logger.debug(e)
+        logger.debug("", e)
 	      }
 	    }
 	  }
@@ -2574,7 +2574,7 @@ println("Getting Messages")
     } catch {
       case e: Exception => {
         
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -2645,7 +2645,7 @@ println("Getting Messages")
       StartTest
     } catch {
       case e: Throwable => {
-        logger.error(e)
+        logger.error("", e)
       }
     } finally {
       MetadataAPIImpl.shutdown

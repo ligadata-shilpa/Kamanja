@@ -98,7 +98,7 @@ class OutputMsgGenerator {
       })
     } catch {
       case e: Exception => {
-        log.error(e)
+        log.error("", e)
         throw e
       }
     }
@@ -179,7 +179,7 @@ class OutputMsgGenerator {
       (outputMsgDefExists, finalOutputMsgs.toArray, mymap)
     } catch {
       case e: Exception => {
-        log.error(e)
+        log.error("", e)
         throw e
       }
     }
@@ -297,7 +297,7 @@ class OutputMsgGenerator {
 
     } catch {
       case e: Exception => {
-        log.error(e)
+        log.error("", e)
         throw e
       }
     }

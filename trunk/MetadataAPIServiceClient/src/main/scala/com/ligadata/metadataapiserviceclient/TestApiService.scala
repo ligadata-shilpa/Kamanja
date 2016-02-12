@@ -315,7 +315,7 @@ object TestApiService {
         throw new FileNotFoundException("Failed to Convert the Jar (" + jarName + ") to array of bytes. Message:" + e.getMessage)
       }
       case e: Exception => {
-        logger.error(e)
+        logger.error("", e)
         throw InternalErrorException("Failed to Convert the Jar (" + jarName + ") to array of bytes", e)
       }
     }
@@ -392,7 +392,7 @@ object TestApiService {
       GetHttpResponse(reqType, url, apiParameters, bodyType)
     } catch {
       case e: Exception =>{
-        logger.debug(e)
+        logger.debug("", e)
         throw e
       }
     }
@@ -434,7 +434,7 @@ object TestApiService {
       return objKeys
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         return null
       }
     }
@@ -451,7 +451,7 @@ object TestApiService {
       objKeys.foreach(k => { println(k) });
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -463,7 +463,7 @@ object TestApiService {
       logger.debug(objJson)
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -482,7 +482,7 @@ object TestApiService {
       apiArgJson
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         throw new Exception("Failed to convert given object key into json string", e)
       }
     }
@@ -516,7 +516,7 @@ object TestApiService {
 
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -555,7 +555,7 @@ object TestApiService {
       keys.foreach(key => { seq += 1; println("[" + seq + "] " + key) })
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -637,7 +637,7 @@ object TestApiService {
 
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -694,7 +694,7 @@ object TestApiService {
 
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -751,7 +751,7 @@ object TestApiService {
 
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -819,7 +819,7 @@ object TestApiService {
       logger.debug("Results of AddModel Operation => " + res)
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -886,7 +886,7 @@ object TestApiService {
         logger.error("Container Already in the metadata....", e)
       }
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -950,7 +950,7 @@ object TestApiService {
         logger.error("Message Already in the metadata....", e)
       }
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -995,7 +995,7 @@ object TestApiService {
         logger.error("Object Already in the metadata....", e)
       }
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -1037,7 +1037,7 @@ object TestApiService {
       println("Results as json string => \n" + res)
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -1082,7 +1082,7 @@ object TestApiService {
         logger.error("Model Already in the metadata....", e)
       }
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -1128,7 +1128,7 @@ object TestApiService {
         logger.error("Function Already in the metadata....", e)
       }
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -1175,7 +1175,7 @@ object TestApiService {
         logger.error("Function Already in the metadata....", e)
       }
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -1221,7 +1221,7 @@ object TestApiService {
         logger.error("Concept Already in the metadata....", e)
       }
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -1272,7 +1272,7 @@ object TestApiService {
         logger.error("Concept Already in the metadata....", e)
       }
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -1319,7 +1319,7 @@ object TestApiService {
         logger.error("Type Already in the metadata....", e)
       }
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -1364,7 +1364,7 @@ object TestApiService {
 
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -1431,7 +1431,7 @@ object TestApiService {
         logger.error("Object Already in the metadata....", e)
       }
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -1473,7 +1473,7 @@ object TestApiService {
       println("Results as json string => \n" + res)
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -1589,7 +1589,7 @@ object TestApiService {
       }
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -1620,7 +1620,7 @@ object TestApiService {
       StartTest
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
       }
     } finally {
       // Cleanup and exit

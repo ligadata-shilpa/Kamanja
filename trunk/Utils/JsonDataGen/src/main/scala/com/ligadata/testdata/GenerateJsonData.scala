@@ -96,7 +96,7 @@ class GenerateJsonData {
       outfile.close
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         throw e
       }
     }
@@ -131,7 +131,7 @@ class GenerateJsonData {
       count = count + 1
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         throw e
       }
     }
@@ -145,7 +145,7 @@ class GenerateJsonData {
       outputfile.write("\n")
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         throw e
       }
     }

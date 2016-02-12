@@ -281,7 +281,7 @@ object TypeUtils {
       }
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         var apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetAllTypes", null, "Error :" + e.toString() + ErrorCodeConstants.Get_All_Types_Failed)
         apiResult.toString()
       }
@@ -309,7 +309,7 @@ object TypeUtils {
       }
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         throw UnexpectedMetadataAPIException("Failed to fetch all the types", e)
       }
     }
@@ -333,7 +333,7 @@ object TypeUtils {
       }
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         var apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetType", null, "Error :" + e.toString() + ErrorCodeConstants.Get_Type_Failed + ":" + objectName)
         apiResult.toString()
       }
@@ -360,7 +360,7 @@ object TypeUtils {
       }
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         var apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetTypeDef", null, "Error :" + e.toString() + ErrorCodeConstants.Get_Type_Def_Failed + ":" + dispkey)
         apiResult.toString()
       }
@@ -416,7 +416,7 @@ object TypeUtils {
       }
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         var apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetAllTypesByObjType", null, "Error :" + e.toString() + ErrorCodeConstants.Get_All_Types_Failed + ":" + objType)
         apiResult.toString()
       }
@@ -442,7 +442,7 @@ object TypeUtils {
       }
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         throw UnexpectedMetadataAPIException(e.getMessage(), e)
       }
     }

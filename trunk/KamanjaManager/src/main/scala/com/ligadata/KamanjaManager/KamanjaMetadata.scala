@@ -108,7 +108,7 @@ class KamanjaMetadata {
         } catch {
           case e: Exception => {
             // Trying Regular Object instantiation
-            LOG.debug(e)
+            LOG.debug("", e)
             objinst = curClass.newInstance
           }
         }
@@ -211,7 +211,7 @@ class KamanjaMetadata {
           objinst = obj.instance
         } catch {
           case e: Exception => {
-            LOG.error(e)
+            LOG.error("", e)
             // Trying Regular Object instantiation
             objinst = curClass.newInstance
           }
@@ -555,7 +555,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
           objinst = obj.instance
         } catch {
           case e: Exception => {
-            LOG.debug(e)
+            LOG.debug("", e)
             // Trying Regular Object instantiation
             objinst = curClass.newInstance
           }
@@ -631,7 +631,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
       modelRepFacFacKeys = tmpModelRepFacFacObjects.toMap
     } catch {
       case e: Exception => {
-        LOG.debug(e)
+        LOG.debug("", e)
         exp = e
       }
     } finally {
@@ -653,7 +653,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
       localUpdateKamanjaMdObjects(msgObjects, contObjects, mdlObjects, removedModels, removedMessages, removedContainers)
     } catch {
       case e: Exception => {
-        LOG.debug(e)
+        LOG.debug("", e)
         exp = e
       }
     } finally {
@@ -947,7 +947,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
                   }
                 } catch {
                   case e: Exception => {
-                    LOG.debug(e)
+                    LOG.debug("", e)
                   }
                 }
               }
@@ -966,7 +966,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
                   }
                 } catch {
                   case e: Exception => {
-                    LOG.error(e)
+                    LOG.error("", e)
                   }
                 }
               }
@@ -985,7 +985,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
                   }
                 } catch {
                   case e: Exception => {
-                    LOG.error(e)
+                    LOG.error("", e)
                   }
                 }
               }
@@ -1004,7 +1004,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
           KamanjaConfiguration.metadataLoader = new KamanjaLoaderInfo(KamanjaConfiguration.metadataLoader, true, true)
           envCtxt.SetClassLoader(KamanjaConfiguration.metadataLoader.loader)
         } catch {
-          case e: Exception => { LOG.warn(e)
+          case e: Exception => { LOG.warn("", e)
           }
         } finally {
           reent_lock.writeLock().unlock();
@@ -1154,7 +1154,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
       v = localgetMessgeInfo(msgType)
     } catch {
       case e: Exception => {
-        LOG.debug(e)
+        LOG.debug("", e)
         exp = e
       }
     } finally {
@@ -1174,7 +1174,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
       v = localgetModel(mdlName)
     } catch {
       case e: Exception => {
-        LOG.debug(e)
+        LOG.debug("", e)
         exp = e
       }
     } finally {
@@ -1194,7 +1194,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
       v = localgetContainer(containerName)
     } catch {
       case e: Exception => {
-        LOG.debug(e)
+        LOG.debug("", e)
         exp = e
       }
     } finally {
@@ -1214,7 +1214,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
       v = localgetMessgeOrContainer(msgOrContainerName)
     } catch {
       case e: Exception => {
-        LOG.debug(e)
+        LOG.debug("", e)
         exp = e
       }
     } finally {
@@ -1234,7 +1234,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
       v = localgetAllMessges
     } catch {
       case e: Exception => {
-        LOG.debug(e)
+        LOG.debug("", e)
         exp = e
       }
     } finally {
@@ -1254,7 +1254,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
       v = localgetAllModels
     } catch {
       case e: Exception => {
-        LOG.debug(e)
+        LOG.debug("", e)
         exp = e
       }
     } finally {
@@ -1274,7 +1274,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
       v = localgetAllContainers
     } catch {
       case e: Exception => {
-        LOG.debug(e)
+        LOG.debug("", e)
         exp = e
       }
     } finally {

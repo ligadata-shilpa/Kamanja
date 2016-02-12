@@ -54,7 +54,7 @@ class KryoSerializer extends Serializer {
       ba
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         throw KryoSerializationException("Failed to Serialize the object(" + obj.getClass().getName() + ")", e)
       }
     }
@@ -73,7 +73,7 @@ class KryoSerializer extends Serializer {
       m
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         throw KryoSerializationException("Failed to DeSerialize the object", e)
       }
     }

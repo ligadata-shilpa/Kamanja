@@ -127,7 +127,7 @@ class FileConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: InputA
                       execThread.execute(sendmsg.getBytes, format, uniqueKey, uniqueVal, readTmNs, readTmMs, false, fc.associatedMsg, delimiters)
                     } catch {
                       case e: Exception => {
-                        LOG.error(e)
+                        LOG.error("", e)
                       }
                     }
 
@@ -182,7 +182,7 @@ class FileConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: InputA
             execThread.execute(sendmsg.getBytes, format, uniqueKey, uniqueVal, readTmNs, readTmMs, false, fc.associatedMsg, delimiters)
           } catch {
             case e: Exception => {
-              LOG.error(e)
+              LOG.error("", e)
             }
           }
 
@@ -194,7 +194,7 @@ class FileConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: InputA
       }
     } catch {
       case e: Exception => {
-        LOG.error(e)
+        LOG.error("", e)
       }
     }
 

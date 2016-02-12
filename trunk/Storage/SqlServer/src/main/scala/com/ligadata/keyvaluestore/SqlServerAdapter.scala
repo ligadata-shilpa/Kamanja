@@ -505,7 +505,7 @@ class SqlServerAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
             con.rollback()
           } catch {
             case ie: Exception => {
-              logger.error(ie)
+              logger.error("", ie)
             }
           }
         }
@@ -608,7 +608,7 @@ class SqlServerAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
             con.rollback()
           } catch {
             case ie: Exception => {
-              logger.error(ie)
+              logger.error("", ie)
             }
           }
         }
@@ -666,7 +666,7 @@ class SqlServerAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
             con.rollback()
           } catch {
             case ie: Exception => {
-              logger.error(e)
+              logger.error("", e)
             }
           }
         }
@@ -727,7 +727,7 @@ class SqlServerAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
             con.rollback()
           } catch {
             case ie: Exception => {
-              logger.error(e)
+              logger.error("", e)
             }
           }
         }

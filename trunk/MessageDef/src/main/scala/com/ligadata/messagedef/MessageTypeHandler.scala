@@ -164,7 +164,7 @@ class MessageTypeHandler {
       }
     } catch {
       case e: Exception => {
-        log.debug(e)
+        log.debug("", e)
         throw e
       }
     }

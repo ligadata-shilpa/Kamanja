@@ -676,7 +676,7 @@ class PmmlCompiler(val mgr : MdMgr, val clientName : String, val logger : Logger
 			xmlreader.parse(is);
 		} catch {
 			case ex: Exception => {
-        logger.debug(ex)
+        logger.debug("", ex)
         throw ex}
 		}
 	}
@@ -687,7 +687,7 @@ class PmmlCompiler(val mgr : MdMgr, val clientName : String, val logger : Logger
 			val xform : PmmlExecNodeGeneratorDispatcher = new PmmlExecNodeGeneratorDispatcher(ctx);
 			xform.transform;
 		} catch {
-			case t: Throwable => { logger.debug(t) }
+			case t: Throwable => { logger.debug("", t) }
 		}
 	}
 
@@ -714,7 +714,7 @@ class PmmlCompiler(val mgr : MdMgr, val clientName : String, val logger : Logger
 				  val errorVicinity : String = buffer.toString
 				  logger.error(s"Exception detected in $errorVicinity")
 			  }
-			  logger.debug(t)
+			  logger.debug("", t)
 			}
 		}
 		srcCode

@@ -301,7 +301,7 @@ class System_HL7_1000001_1430446865995 extends BaseMsg {
       return getWithReflection(key)
     } catch {
       case e: Exception => {
-        logger.info(e)
+        logger.info("", e)
         // Call By Name
         return getByName(key)
       }
@@ -401,7 +401,7 @@ class System_HL7_1000001_1430446865995 extends BaseMsg {
       return null;
     } catch {
       case e: Exception => {
-        log.error(e)
+        log.error("", e)
         throw e
       }
     }
@@ -609,7 +609,7 @@ class System_HL7_1000001_1430446865995 extends BaseMsg {
 
     } catch {
       case e: Exception => {
-        log.error(e)
+        log.error("", e)
         throw e
       }
     }
@@ -621,7 +621,7 @@ class System_HL7_1000001_1430446865995 extends BaseMsg {
       assignJsonData(json)
     } catch {
       case e: Exception => {
-        log.error(e)
+        log.error("", e)
         throw e
       }
     }
@@ -739,7 +739,7 @@ class System_HL7_1000001_1430446865995 extends BaseMsg {
 
     } catch {
       case e: Exception => {
-        log.error(e)
+        log.error("", e)
         throw e
       }
     }
@@ -920,7 +920,7 @@ class System_HL7_1000001_1430446865995 extends BaseMsg {
 
     } catch {
       case e: Exception => {
-        log.error(e)
+        log.error("", e)
         throw e
       }
     }
@@ -1015,7 +1015,7 @@ class System_HL7_1000001_1430446865995 extends BaseMsg {
 
     } catch {
       case e: Exception => {
-        log.error(e)
+        log.error("", e)
       }
     }
   }
@@ -1118,7 +1118,7 @@ class System_HL7_1000001_1430446865995 extends BaseMsg {
 
     } catch {
       case e: Exception => {
-        log.error(e)
+        log.error("", e)
       }
     }
   }

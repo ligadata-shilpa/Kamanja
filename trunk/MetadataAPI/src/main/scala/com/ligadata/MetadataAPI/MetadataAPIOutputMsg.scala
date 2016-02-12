@@ -147,7 +147,7 @@ object MetadataAPIOutputMsg {
       }
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         throw UnexpectedMetadataAPIException(e.getMessage(), e)
       }
     }
@@ -163,7 +163,7 @@ object MetadataAPIOutputMsg {
       apiResult.toString()
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         var apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddOutputMsg", null, "Error :" + e.toString() + ErrorCodeConstants.Add_OutputMessage_Failed + ":" + key)
         apiResult.toString()
       }
@@ -192,7 +192,7 @@ object MetadataAPIOutputMsg {
       }
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         throw UnexpectedMetadataAPIException("Failed to fetch all the OutputMsgs:" + e.toString, e)
       }
     }
@@ -228,7 +228,7 @@ object MetadataAPIOutputMsg {
       }
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         var apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetOutputMessageDefFromCache", null, "Error :" + e.toString() + ErrorCodeConstants.Get_OutputMessage_From_Cache_Failed + ":" + dispkey)
         apiResult.toString()
       }
@@ -262,7 +262,7 @@ object MetadataAPIOutputMsg {
       }
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         var apiResult = new ApiResult(ErrorCodeConstants.Failure, "RemoveOutputMsg", null, "Error :" + e.toString() + ErrorCodeConstants.Remove_OutputMessage_Failed + ":" + key)
         apiResult.toString()
       }

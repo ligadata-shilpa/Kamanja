@@ -89,7 +89,7 @@ class CustPartitioner(props: VerifiableProperties) extends Partitioner {
     } catch {
       case e: Exception =>
         {
-          logger.debug(e)
+          logger.debug("", e)
         }
         // println("Exception found, so , Bucket : 0")
         return 0
@@ -133,7 +133,7 @@ object SimpleKafkaProducer {
       //producer.send(new KeyedMessage(topic, message))
     } catch {
       case e: Exception =>
-        logger.debug(e)
+        logger.debug("", e)
         sys.exit(1)
     }
   }
@@ -176,7 +176,7 @@ object SimpleKafkaProducer {
       }
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         println("Error reading from a file ")}
     } finally {
       if (bis != null) bis.close
@@ -612,7 +612,7 @@ object SimpleKafkaProducer {
       try {
         executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
       } catch {
-        case e: Exception => { logger.debug(e)}
+        case e: Exception => { logger.debug("", e)}
       }
     }
 

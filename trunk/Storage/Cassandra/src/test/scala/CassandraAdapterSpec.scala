@@ -200,7 +200,7 @@ class CassandraAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAft
 	var value = new Value("kryo",v)
 	adapter.put("&&",key,value)
       }
-      logger.info(ex2)
+      logger.info("", ex2)
 
       And("Test Put api")
       var keys = new Array[Key](0) // to be used by a delete operation later on
@@ -414,14 +414,14 @@ class CassandraAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAft
       //noException should be thrownBy {
 	adapter.backupContainer(containerName)
       }
-      logger.info(ex2)
+      logger.info("", ex2)
 
       And("Test restore container")
       ex2 = the [com.ligadata.Exceptions.StorageDMLException] thrownBy {
 	//noException should be thrownBy {
 	adapter.restoreContainer(containerName)
       }
-      logger.info(ex2)
+      logger.info("", ex2)
 
       And("Test drop container again, cleanup")
       noException should be thrownBy {

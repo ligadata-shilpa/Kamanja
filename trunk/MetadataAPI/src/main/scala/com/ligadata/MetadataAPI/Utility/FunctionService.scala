@@ -88,7 +88,7 @@ object FunctionService {
         try {
           return MetadataAPIImpl.GetFunctionDef(ns, name,"JSON", userid)
         } catch {
-          case e: Exception => logger.error(e)
+          case e: Exception => logger.error("", e)
         }
       }
       val functionKeys = MetadataAPIImpl.GetAllFunctionsFromCache(true, None)
@@ -120,7 +120,7 @@ object FunctionService {
 
     } catch {
       case e: Exception => {
-        logger.warn(e)
+        logger.warn("", e)
         response=e.getStackTrace.toString
       }
     }
@@ -134,7 +134,7 @@ object FunctionService {
         try {
           return MetadataAPIImpl.RemoveFunction(ns, name,ver.toInt, userid)
         } catch {
-          case e: Exception => logger.error(e)
+          case e: Exception => logger.error("", e)
         }
       }
 
@@ -167,8 +167,8 @@ object FunctionService {
       }
     } catch {
       case e: Exception => {
-        //logger.error(e)
-        logger.warn(e)
+        //logger.error("", e)
+        logger.warn("", e)
         response=e.getStackTrace.toString
       }
     }
@@ -267,7 +267,7 @@ object FunctionService {
     }
     catch {
       case e: Exception => {
-        logger.warn(e)
+        logger.warn("", e)
         response=e.getStackTrace.toString
       }
     }

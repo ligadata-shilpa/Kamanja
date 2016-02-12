@@ -87,7 +87,7 @@ class ZkLeaderLatch(val zkcConnectString: String, val leaderPath: String, val no
       watchLeaderChildren()
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         throw new Exception("Failed to start a zookeeper session with(" + zkcConnectString + ")", e)
       }
     }

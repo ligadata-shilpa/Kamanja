@@ -197,7 +197,7 @@ class ArrayTypeHandler {
 
     } catch {
       case e: Exception => {
-        LOG.debug(e)
+        LOG.debug("", e)
         throw e
       }
     }
@@ -411,7 +411,7 @@ class ArrayTypeHandler {
 
     } catch {
       case e: Exception => {
-        LOG.debug(e)
+        LOG.debug("", e)
         throw e
       }
     }
@@ -460,7 +460,7 @@ class ArrayTypeHandler {
       }
     } catch {
       case e: Exception => {
-        LOG.debug(e)
+        LOG.debug("", e)
         throw e
       }
     }
@@ -522,7 +522,7 @@ class ArrayTypeHandler {
       }
     } catch {
       case e: Exception => {
-        LOG.debug(e)
+        LOG.debug("", e)
         throw e
       }
     }
@@ -648,7 +648,7 @@ class ArrayTypeHandler {
       }
     } catch {
       case e: Exception => {
-        LOG.debug(e)
+        LOG.debug("", e)
         throw e
       }
     }

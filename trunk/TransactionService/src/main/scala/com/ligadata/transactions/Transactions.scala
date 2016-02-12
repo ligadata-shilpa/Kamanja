@@ -54,7 +54,7 @@ object NodeLevelTransService {
       return KeyValueManager.Get(jarPaths, dataStoreInfo)
     } catch {
       case e: Exception => {
-        LOG.error(e)
+        LOG.error("", e)
         throw e
       }
     }

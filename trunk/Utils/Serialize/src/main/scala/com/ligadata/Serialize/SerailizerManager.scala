@@ -33,7 +33,7 @@ object SerializerManager {
       }
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         throw SerializerManagerException("Failed to create Serializer for : " + serializerType, e)
       }
     }

@@ -41,17 +41,17 @@ class CleanerConfiguration(metadataConfigFile: String) {
   }
   catch {
     case e: IllegalArgumentException => {
-      logger.warn(e)
+      logger.warn("", e)
       shutdown
       throw e
     }
     case e: CleanUtilException => {
-      logger.warn(e)
+      logger.warn("", e)
       shutdown
       throw e
     }
     case e: Exception => {
-      logger.warn(e)
+      logger.warn("", e)
       shutdown
       throw CleanUtilException("CLEAN-UTIL: Failed to initialize", e)
     }

@@ -76,7 +76,10 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
           lastSeen = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
           Thread.sleep(5000)
         } catch {
-          case e: Exception => logger.warn("SimpleEnvContext heartbeat interrupted.", e)
+          case e: Exception => {
+            if (! isShutdown)
+              logger.warn("SimpleEnvContext heartbeat interrupted.", e)
+          }
         }
       }
     }
@@ -99,7 +102,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
               _enableEachTransactionCommit = tmp1.trim().toBoolean
               foundIt = true
             } catch {
-              case e: Exception => { logger.warn(e) }
+              case e: Exception => { logger.warn("", e) }
             }
           }
 
@@ -1234,7 +1237,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
           _modelsRsltBuckets(i).clear()
         } catch {
           case e: Exception => {
-            logger.warn(e)
+            logger.warn("", e)
             // throw e
           }
         } finally {
@@ -1250,7 +1253,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
           _adapterUniqKeyValBuckets(i).clear()
         } catch {
           case e: Exception => {
-            logger.warn(e)
+            logger.warn("", e)
             // throw e
           }
         } finally {
@@ -1723,7 +1726,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
         try {
           _modelsRsltBuckets(i).clear()
         } catch {
-          case e: Exception => { logger.warn(e)
+          case e: Exception => { logger.warn("", e)
             // throw e
           }
         } finally {
@@ -1738,7 +1741,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
         try {
           _adapterUniqKeyValBuckets(i).clear()
         } catch {
-          case e: Exception => { logger.warn(e)
+          case e: Exception => { logger.warn("", e)
             // throw e
           }
         } finally {
@@ -2077,7 +2080,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
           logger.error("Failed to save data into datastore. Waiting for another %d milli seconds and going to start them again.".format(failedWaitTime))
           Thread.sleep(failedWaitTime)
         } catch {
-          case e: Exception => { logger.warn(e)
+          case e: Exception => { logger.warn("", e)
 
           }
         }
@@ -2129,7 +2132,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
           logger.error("Failed to get data from datastore. Waiting for another %d milli seconds and going to start them again.".format(failedWaitTime))
           Thread.sleep(failedWaitTime)
         } catch {
-          case e: Exception => { logger.warn(e) }
+          case e: Exception => { logger.warn("", e) }
         }
         // Adjust time for next time
         if (failedWaitTime < maxFailedWaitTime) {
@@ -2178,7 +2181,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
           logger.error("Failed to get data from datastore. Waiting for another %d milli seconds and going to start them again.".format(failedWaitTime))
           Thread.sleep(failedWaitTime)
         } catch {
-          case e: Exception => { logger.warn(e) }
+          case e: Exception => { logger.warn("", e) }
         }
         // Adjust time for next time
         if (failedWaitTime < maxFailedWaitTime) {
@@ -2227,7 +2230,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
           logger.error("Failed to get data from datastore. Waiting for another %d milli seconds and going to start them again.".format(failedWaitTime))
           Thread.sleep(failedWaitTime)
         } catch {
-          case e: Exception => { logger.warn(e) }
+          case e: Exception => { logger.warn("", e) }
         }
         // Adjust time for next time
         if (failedWaitTime < maxFailedWaitTime) {
@@ -2276,7 +2279,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
           logger.error("Failed to get data from datastore. Waiting for another %d milli seconds and going to start them again.".format(failedWaitTime))
           Thread.sleep(failedWaitTime)
         } catch {
-          case e: Exception => { logger.warn(e) }
+          case e: Exception => { logger.warn("", e) }
         }
         // Adjust time for next time
         if (failedWaitTime < maxFailedWaitTime) {
@@ -2325,7 +2328,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
           logger.error("Failed to get data from datastore. Waiting for another %d milli seconds and going to start them again.".format(failedWaitTime))
           Thread.sleep(failedWaitTime)
         } catch {
-          case e: Exception => { logger.warn(e) }
+          case e: Exception => { logger.warn("", e) }
         }
         // Adjust time for next time
         if (failedWaitTime < maxFailedWaitTime) {

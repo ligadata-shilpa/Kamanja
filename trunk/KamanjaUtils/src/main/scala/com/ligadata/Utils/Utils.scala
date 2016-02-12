@@ -161,7 +161,7 @@ object Utils {
       return classes.toArray
     } catch {
       case e: Exception =>
-        logger.error(e)
+        logger.error("", e)
         return null
     }
   }

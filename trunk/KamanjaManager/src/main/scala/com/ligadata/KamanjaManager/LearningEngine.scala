@@ -231,8 +231,8 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
             }
           } catch {
             // Treating we did not find the message
-            case e: Exception => { LOG.warn(e) }
-            case e: Throwable => { LOG.warn(e) }
+            case e: Exception => { LOG.warn("", e) }
+            case e: Throwable => { LOG.warn("", e) }
           }
         }
         if (msg == null) {

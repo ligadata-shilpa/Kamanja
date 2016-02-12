@@ -626,7 +626,7 @@ class MigrateFrom_V_1_2 extends MigratableFrom {
           logger.error("Failed to get data from datastore. Waiting for another %d milli seconds and going to start them again.".format(failedWaitTime))
           Thread.sleep(failedWaitTime)
         } catch {
-          case e: Exception => { logger.warn(e) }
+          case e: Exception => { logger.warn("", e) }
         }
         // Adjust time for next time
         if (failedWaitTime < maxFailedWaitTime) {
@@ -690,12 +690,12 @@ class MigrateFrom_V_1_2 extends MigratableFrom {
               }
             }
           } catch {
-            case e: Exception => { dumpKeyValueFailures(k, v); logger.warn(e); }
-            case e: Throwable => { dumpKeyValueFailures(k, v); logger.warn(e); }
+            case e: Exception => { dumpKeyValueFailures(k, v); logger.warn("", e); }
+            case e: Throwable => { dumpKeyValueFailures(k, v); logger.warn("", e); }
           }
         } catch {
-          case e: Exception => { dumpKeyValueFailures(k, v); logger.warn(e); }
-          case e: Throwable => { dumpKeyValueFailures(k, v); logger.warn(e); }
+          case e: Exception => { dumpKeyValueFailures(k, v); logger.warn("", e); }
+          case e: Throwable => { dumpKeyValueFailures(k, v); logger.warn("", e); }
         }
       }
 
@@ -736,8 +736,8 @@ class MigrateFrom_V_1_2 extends MigratableFrom {
               }
             }
           } catch {
-            case e: Exception => { dumpKeyValueFailures(k, v); logger.warn(e); }
-            case e: Throwable => { dumpKeyValueFailures(k, v); logger.warn(e); }
+            case e: Exception => { dumpKeyValueFailures(k, v); logger.warn("", e); }
+            case e: Throwable => { dumpKeyValueFailures(k, v); logger.warn("", e); }
           }
         }
         callGetData(_metadataStore, "model_config_objects" + backupTblSufix, buildMdlCfglOne)

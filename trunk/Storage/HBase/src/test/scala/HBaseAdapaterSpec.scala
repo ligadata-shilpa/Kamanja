@@ -212,7 +212,7 @@ class HBaseAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterAl
 	var value = new Value("kryo",v)
 	adapter.put("&&",key,value)
       }
-      logger.info(ex2)
+      logger.info("", ex2)
 
       And("Test Put api")
       var keys = new Array[Key](0) // to be used by a delete operation later on

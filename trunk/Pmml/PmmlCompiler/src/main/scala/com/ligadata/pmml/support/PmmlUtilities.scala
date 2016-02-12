@@ -63,10 +63,7 @@ object PmmlError extends com.ligadata.pmml.compiler.LogTrait {
 				}
 			})
 			val errorVicinity : String = buffer.toString
-			if (e != null)
-				logger.error(s"While processing $errorVicinity...", e)
-			else
-				logger.error(s"While processing $errorVicinity...")
+			logger.error(s"While processing $errorVicinity...")
 		}
 
 		if (e != null)

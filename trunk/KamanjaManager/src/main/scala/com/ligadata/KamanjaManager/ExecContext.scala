@@ -249,7 +249,7 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
               LOG.error("Failed to send %d outputs. Waiting for another %d milli seconds and going to start them again.".format(remOutputs.size, failedWaitTime))
               Thread.sleep(failedWaitTime)
             } catch {
-              case e: Exception => { LOG.warn(e) 
+              case e: Exception => { LOG.warn("", e) 
 
               }
             }
@@ -363,7 +363,7 @@ class ValidateExecCtxtImpl(val input: InputAdapter, val curPartitionKey: Partiti
             results += m.asInstanceOf[Map[String, Any]]
           } catch {
             case e: Exception => {
-              LOG.error(e)
+              LOG.error("", e)
             }
           }
         }
@@ -375,7 +375,7 @@ class ValidateExecCtxtImpl(val input: InputAdapter, val curPartitionKey: Partiti
             })
           } catch {
             case e: Exception => {
-              LOG.error(e)
+              LOG.error("", e)
             }
           }
         }

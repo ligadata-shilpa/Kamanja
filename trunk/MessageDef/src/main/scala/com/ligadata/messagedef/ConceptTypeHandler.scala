@@ -107,7 +107,7 @@ class ConceptTypeHandler {
 
     } catch {
       case e: Exception => {
-        LOG.debug(e)
+        LOG.debug("", e)
         throw e
       }
     }

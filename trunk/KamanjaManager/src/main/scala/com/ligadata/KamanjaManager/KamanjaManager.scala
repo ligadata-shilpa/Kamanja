@@ -68,7 +68,7 @@ class ConnHandler(var socket: Socket, var mgr: KamanjaManager) extends Runnable 
       }
     } catch {
       case e: Exception => {
-        LOG.error(e)
+        LOG.error("", e)
       }
     } finally {
       socket.close;
@@ -407,7 +407,7 @@ class KamanjaManager extends Observer {
           KamanjaConfiguration.adapterInfoCommitTime = adapterCommitTime
         }
       } catch {
-        case e: Exception => { LOG.warn(e) }
+        case e: Exception => { LOG.warn("", e) }
       }
 
       try {
@@ -418,7 +418,7 @@ class KamanjaManager extends Observer {
             KamanjaConfiguration.waitProcessingSteps = setps.map(_.toInt).toSet
         }
       } catch {
-        case e: Exception => { LOG.warn(e) }
+        case e: Exception => { LOG.warn("", e) }
       }
 
       LOG.debug("Initializing metadata bootstrap")
@@ -727,7 +727,7 @@ class KamanjaManager extends Observer {
         Thread.sleep(500) // Waiting for 500 milli secs
       } catch {
         case e: Exception => {
-          LOG.debug(e)
+          LOG.debug("", e)
         }
       }
 

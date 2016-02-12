@@ -59,7 +59,7 @@ class ConstantMethodGenerator {
       """
  	}catch{
 		case e:Exception =>{
-      LOG.debug(e)
+      LOG.debug("", e)
   			throw e
 		}
 	}
@@ -79,7 +79,7 @@ class ConstantMethodGenerator {
       """
 	 	}catch{
 			case e:Exception =>{
-        LOG.debug(e)  
+        LOG.debug("", e)  
 	  			throw e
 			}
 		}
@@ -95,7 +95,7 @@ class ConstantMethodGenerator {
      	 assignJsonData(json)
 	}catch{
 	    case e:Exception =>{
-          LOG.debug(e)
+          LOG.debug("", e)
    	  		throw e	    	
 	  	}
 	  }
@@ -119,7 +119,7 @@ class ConstantMethodGenerator {
       """
 	  }catch{
   			case e:Exception =>{
-          LOG.debug(e)
+          LOG.debug("", e)
    			throw e	    	
 	  	}
 	}
@@ -164,7 +164,7 @@ class ConstantMethodGenerator {
       """
 	  }catch{
   			case e:Exception =>{
-          LOG.debug(e)
+          LOG.debug("", e)
    			throw e	    	
 	  	}
 	}
@@ -226,7 +226,7 @@ class ConstantMethodGenerator {
    
 	  } catch {
       	case e: Exception => {
-        LOG.debug(e)
+        LOG.debug("", e)
         throw e
       }
     }
@@ -263,7 +263,7 @@ class ConstantMethodGenerator {
    
 	  } catch {
       	case e: Exception => {
-        LOG.debug(e)
+        LOG.debug("", e)
         throw e
       }
     }
@@ -292,7 +292,7 @@ class ConstantMethodGenerator {
     	assignXml(xml)
 	} catch{
 		case e:Exception =>{
-        LOG.debug(e)
+        LOG.debug("", e)
    	  		throw e	    	
     	}
 	}
@@ -310,7 +310,7 @@ class ConstantMethodGenerator {
       """
 	}catch{
 	  case e:Exception =>{
-      LOG.debug(e)
+      LOG.debug("", e)
 		throw e	    	
 	  }
    	}
@@ -326,7 +326,7 @@ class ConstantMethodGenerator {
      
 	}catch{
 	  case e:Exception =>{
-        LOG.debug(e)
+        LOG.debug("", e)
 		throw e	    	
 	  }
    	}
@@ -487,7 +487,7 @@ class ConstantMethodGenerator {
           			ctrVar.populate(inputdata)
             } catch {
             	case e: Exception => {
-            	LOG.debug(e)
+            	LOG.debug("", e)
             	throw e
             	}
             }
@@ -601,7 +601,7 @@ class ConstantMethodGenerator {
     	 com.ligadata.BaseTypes.LongImpl.SerializeIntoDataOutputStream(dos, timePartitionData);
     	} catch {
     		case e: Exception => {
-          LOG.debug(e)
+          LOG.debug("", e)
     	  }
         }
      } 
@@ -673,7 +673,7 @@ class ConstantMethodGenerator {
       	""" + deSer + """ 
       	} catch {
       		case e: Exception => {
-              LOG.debug(e)
+              LOG.debug("", e)
       		}
       	}
     } 
@@ -756,7 +756,7 @@ class ConstantMethodGenerator {
      com.ligadata.BaseTypes.LongImpl.SerializeIntoDataOutputStream(dos, fields("timePartitionData")._2.asInstanceOf[Long])
     } catch {
       case e: Exception => {
-        LOG.debug(e)
+        LOG.debug("", e)
       }
     }
   }
@@ -853,7 +853,7 @@ class ConstantMethodGenerator {
          """ + fixedKeyValueData + """  
     } catch {
       case e: Exception => {
-        LOG.debug(e)
+        LOG.debug("", e)
         throw e
       }
     }
@@ -891,7 +891,7 @@ class ConstantMethodGenerator {
 	  	}
 	  } catch {
       	case e: Exception => {
-        	LOG.debug(e)
+        	LOG.debug("", e)
         	throw e
       	}
 	  }

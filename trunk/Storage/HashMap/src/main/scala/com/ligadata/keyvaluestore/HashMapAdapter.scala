@@ -229,7 +229,7 @@ class HashMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
         createTable(fullTableName)
       } catch {
         case e: Exception => {
-          logger.error(e)
+          logger.error("", e)
         }
       }
     }
@@ -493,7 +493,7 @@ class HashMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
       })
     } catch {
       case e: Exception => {
-        logger.error(e)
+        logger.error("", e)
       }
     }
   }

@@ -180,7 +180,7 @@ object OutputMsgDefImpl {
         throw e
       }
       case e: Exception => {
-        log.trace(e)
+        log.trace("", e)
         throw e
       }
     }
@@ -272,7 +272,7 @@ object OutputMsgDefImpl {
         throw e
       }
       case e: Exception => {
-        log.error(e)
+        log.error("", e)
         throw e
       }
     }
@@ -298,7 +298,7 @@ object OutputMsgDefImpl {
         throw e
       }
       case e: Exception => {
-        log.trace(e)
+        log.trace("", e)
       }
     }
     fldtype.toLowerCase()
@@ -346,7 +346,7 @@ object OutputMsgDefImpl {
         throw e
       }
       case e: Exception => {
-        log.trace(e)
+        log.trace("", e)
       }
     }
     fieldType
@@ -448,7 +448,7 @@ object OutputMsgDefImpl {
       }
     } catch {
       case e: Exception => {
-        log.debug(e)
+        log.debug("", e)
         throw e
       }
     }

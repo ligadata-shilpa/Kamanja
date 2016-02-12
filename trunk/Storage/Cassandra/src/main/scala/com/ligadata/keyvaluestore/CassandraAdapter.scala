@@ -601,7 +601,7 @@ class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
       }
     } catch {
       case e: Exception => {
-        logger.error(e)
+        logger.error("", e)
       }
     }
   }

@@ -387,7 +387,7 @@ object StartMetadataAPI {
     catch {
 
       case e: Exception => {
-        logger.warn(e)
+        logger.warn("", e)
         /** tentative answer of unidentified command type failure. */
         response = s"Unexpected action! action = $action"
         /** one more try ... going the alternate route.

@@ -92,7 +92,7 @@ class KeyValueCassandra(parameter: PropertyMap) extends DataStore {
 	session.execute(createKeySpaceStmt);
       } catch {
 	case e: Exception => {
-    logger.debug(e)
+    logger.debug("", e)
 	  throw CreateKeySpaceFailedException("Unable to create keyspace " + keyspace, e)
 	}
       }
@@ -106,7 +106,7 @@ class KeyValueCassandra(parameter: PropertyMap) extends DataStore {
     }
   } catch {
     case e: Exception => {
-      logger.debug(e)
+      logger.debug("", e)
       throw ConnectionFailedException("Unable to connect to cassandra at " + hostnames, e)
     }
   }

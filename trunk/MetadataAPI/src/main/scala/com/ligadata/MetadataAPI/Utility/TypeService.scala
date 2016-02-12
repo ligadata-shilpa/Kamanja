@@ -91,7 +91,7 @@ object TypeService {
         try {
           return MetadataAPIImpl.GetType(ns, name,ver,"JSON", userid).toString
         } catch {
-          case e: Exception => logger.error(e)
+          case e: Exception => logger.error("", e)
         }
       }
       val typeKeys = MetadataAPIImpl.GetAllKeys("TypeDef", None)
@@ -124,7 +124,7 @@ object TypeService {
 
     } catch {
       case e: Exception => {
-       logger.info(e)
+       logger.info("", e)
         response=e.getStackTrace.toString
       }
     }
@@ -142,7 +142,7 @@ object TypeService {
         try {
           return MetadataAPIImpl.RemoveType(ns, name,ver.toLong, userid).toString
         } catch {
-          case e: Exception => logger.error(e)
+          case e: Exception => logger.error("", e)
         }
       }
       val typeKeys =MetadataAPIImpl.GetAllKeys("TypeDef", None)
@@ -174,8 +174,8 @@ object TypeService {
 
     } catch {
       case e: Exception => {
-        //logger.error(e)
-        logger.info(e)
+        //logger.error("", e)
+        logger.info("", e)
         response=e.getStackTrace.toString
       }
     }
@@ -253,7 +253,7 @@ object TypeService {
       response = MetadataAPIImpl.GetAllTypesByObjType("JSON", selectedType)
     } catch {
       case e: Exception => {
-        logger.info(e)
+        logger.info("", e)
         response=e.getStackTrace.toString
       }
     }

@@ -54,21 +54,23 @@ class IbmMqConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: Input
       if (ex.isInstanceOf[JMSException]) {
         processJMSException(ex.asInstanceOf[JMSException])
       } else {
-        LOG.error(ex)
+        LOG.error("", ex)
       }
     }
   }
 
   private def processJMSException(jmsex: JMSException) {
-    LOG.error(jmsex)
+    LOG.error("", jmsex)
     var innerException: Throwable = jmsex.getLinkedException
     if (innerException != null) {
-      LOG.error("Inner exception(s):")
+      LOG.error("Inner exception(s):", innerException)
     }
+      /*
     while (innerException != null) {
       LOG.error(innerException)
       innerException = innerException.getCause
     }
+    */
   }
 
   private[this] val LOG = LogManager.getLogger(getClass);
@@ -178,7 +180,7 @@ class IbmMqConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: Input
       connection.start()
     } catch {
       case jmsex: Exception =>
-        LOG.debug(jmsex)
+        LOG.debug("", jmsex)
         printFailure(jmsex)
         return
     }
@@ -271,7 +273,7 @@ class IbmMqConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: Input
                         }
                       } catch {
                         case e: Exception => {
-                          LOG.error(e)
+                          LOG.error("", e)
                           printFailure(e)
                         }
                       }
@@ -279,7 +281,7 @@ class IbmMqConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: Input
                     }
                   } catch {
                     case e: Exception => {
-                      LOG.error(e)
+                      LOG.error("", e)
                       printFailure(e)
                     }
                   }
@@ -290,7 +292,7 @@ class IbmMqConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: Input
               }
             } catch {
               case e: Exception => {
-                LOG.error(e)
+                LOG.error("", e)
                 printFailure(e)
               }
             }

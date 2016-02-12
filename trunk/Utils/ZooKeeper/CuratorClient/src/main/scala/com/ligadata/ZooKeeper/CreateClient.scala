@@ -52,7 +52,7 @@ object CreateClient {
       })
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         throw new Exception("Failed to start a zookeeper session with(" + zkcConnectString + ")", e)
       }
     } finally {

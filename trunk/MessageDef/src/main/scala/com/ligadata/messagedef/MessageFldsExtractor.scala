@@ -512,7 +512,7 @@ class MessageFldsExtractor {
 
     } catch {
       case e: Exception => {
-        log.debug(e)
+        log.debug("", e)
         throw e
       }
     }
@@ -568,7 +568,7 @@ class MessageFldsExtractor {
 
     } catch {
       case e: Exception => {
-        log.debug(e)
+        log.debug("", e)
       }
     }
     log.debug("version from metadata " + msgdef.get.Version)
@@ -656,7 +656,7 @@ class MessageFldsExtractor {
 
     } catch {
       case e: Exception => {
-        log.debug(e)
+        log.debug("", e)
       }
     }
 

@@ -94,7 +94,7 @@ object FunctionUtils {
       apiResult.toString()
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddFunction", null, ErrorCodeConstants.Add_Function_Failed + ":" + dispkey)
         apiResult.toString()
       }
@@ -134,7 +134,7 @@ object FunctionUtils {
       }
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         var apiResult = new ApiResult(ErrorCodeConstants.Failure, "RemoveFunction", null, "Error :" + e.toString() + ErrorCodeConstants.Remove_Function_Failed + ":" + dispkey)
         return apiResult.toString()
       }
@@ -170,7 +170,7 @@ object FunctionUtils {
       }
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         throw UnexpectedMetadataAPIException(e.getMessage(), e)
       }
     }
@@ -231,7 +231,7 @@ object FunctionUtils {
             // Nothing to do after getting the object.
           } catch {
             case e: Exception => {
-              logger.error(e)
+              logger.error("", e)
               missingJars += jar
             }
           }
@@ -281,7 +281,7 @@ object FunctionUtils {
       }
     } catch {
       case e: Exception => {
-        logger.error(e)
+        logger.error("", e)
         var apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddFunctions", functionsText, "Error :" + e.toString() + ErrorCodeConstants.Add_Function_Failed)
         apiResult.toString()
       }
@@ -342,7 +342,7 @@ object FunctionUtils {
       MetadataAPIImpl.AddObjectToCache(cont.asInstanceOf[FunctionDef], MdMgr.GetMdMgr)
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
       }
     }
   }
@@ -362,7 +362,7 @@ object FunctionUtils {
       }
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         var apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetFunctionDef", null, "Error :" + e.toString() + ErrorCodeConstants.Get_Function_Failed + ":" + nameSpace + "." + objectName)
         apiResult.toString()
       }
@@ -398,7 +398,7 @@ object FunctionUtils {
       }
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         var apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetAllFunctionDefs", null, "Error :" + e.toString() + ErrorCodeConstants.Get_All_Functions_Failed)
         (0, apiResult.toString())
       }

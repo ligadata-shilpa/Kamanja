@@ -34,7 +34,7 @@ object DumpService {
       response="Metadata dumped in DEBUG mode"
     }catch{
       case e: Exception => {
-        logger.warn(e)
+        logger.warn("", e)
         response=e.getStackTrace.toString
       }
     }
@@ -47,7 +47,7 @@ object DumpService {
     }
     catch {
       case e: Exception => {
-        logger.warn(e)
+        logger.warn("", e)
         response=e.getStackTrace.toString
       }
     }
@@ -60,7 +60,7 @@ object DumpService {
     }
     catch {
       case e: Exception => {
-        logger.warn(e)
+        logger.warn("", e)
         response=e.getStackTrace.toString
       }
     }
@@ -73,7 +73,7 @@ object DumpService {
     }
     catch {
       case e: Exception => {
-        logger.warn(e)
+        logger.warn("", e)
         response=e.getStackTrace.toString
       }
     }
@@ -86,7 +86,7 @@ object DumpService {
     }
     catch {
       case e: Exception => {
-        logger.warn(e)
+        logger.warn("", e)
         response=e.getStackTrace.toString
       }
     }

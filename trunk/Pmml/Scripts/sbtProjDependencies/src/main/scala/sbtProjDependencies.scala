@@ -53,7 +53,7 @@ class sbtProjDependencies(rawDepsListStr: String) {
                     attributedElemsSansAttr += mcMatched
             })})
         } catch {
-            case e : Exception => { logger.error(e) }
+            case e : Exception => { logger.error("", e) }
         }
         val implClassesAndDepJars : Array[String] = attributedElemsSansAttr.map(itm => trimBothEndsOfParens(itm)).toArray
         val depJars : Array[String] = implClassesAndDepJars.filter(itm => itm.endsWith(".jar"))

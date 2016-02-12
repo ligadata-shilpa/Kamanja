@@ -162,7 +162,7 @@ class ProtoBufSerializer extends Serializer{
             m
         }catch{
             case e:Exception => {
-                logger.debug(e)
+                logger.debug("", e)
                 throw ProtoBufSerializationException("Failed to Deserialize the object", e)
             }
         }
@@ -187,7 +187,7 @@ class ProtoBufSerializer extends Serializer{
             }
         }catch{
             case e:Exception => {
-                logger.debug(e)
+                logger.debug("", e)
                 throw ProtoBufSerializationException("Failed to Serialize the object(" + obj.getClass.getName + ")", e)
             }
         }
@@ -215,7 +215,7 @@ class ProtoBufSerializer extends Serializer{
             }
         }catch{
             case e:Exception => {
-                logger.debug(e)
+                logger.debug("", e)
                 throw ProtoBufSerializationException("Failed to DeSerialize the object", e)
             }
         }

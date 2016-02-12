@@ -809,8 +809,8 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
             }
           }
         } catch {
-          case e: Exception => { dumpKeyValueFailures(key, tupleBytes); logger.warn(e); }
-          case e: Throwable => { dumpKeyValueFailures(key, tupleBytes); logger.warn(e); }
+          case e: Exception => { dumpKeyValueFailures(key, tupleBytes); logger.warn("", e); }
+          case e: Throwable => { dumpKeyValueFailures(key, tupleBytes); logger.warn("", e); }
         }
       }
       case "manual" => {
@@ -820,8 +820,8 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
           datarec.DeserializeData(valInfo, MdResolve, MdResolve._kamanjaLoader.loader)
           kd = datarec
         } catch {
-          case e: Exception => { dumpKeyValueFailures(key, tupleBytes); logger.warn(e); }
-          case e: Throwable => { dumpKeyValueFailures(key, tupleBytes); logger.warn(e); }
+          case e: Exception => { dumpKeyValueFailures(key, tupleBytes); logger.warn("", e); }
+          case e: Throwable => { dumpKeyValueFailures(key, tupleBytes); logger.warn("", e); }
         }
       }
       case "csv" => {
@@ -878,8 +878,8 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
             throw new Exception("Found un-handled data in CSV format. This is not AdapterUniqKvData")
           }
         } catch {
-          case e: Exception => { dumpKeyValueFailures(key, tupleBytes); logger.warn(e); }
-          case e: Throwable => { dumpKeyValueFailures(key, tupleBytes); logger.warn(e); }
+          case e: Exception => { dumpKeyValueFailures(key, tupleBytes); logger.warn("", e); }
+          case e: Throwable => { dumpKeyValueFailures(key, tupleBytes); logger.warn("", e); }
         }
       }
       case _ => {
@@ -1123,12 +1123,12 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
             }
 
           } catch {
-            case e: Exception => { dumpValueFailures(o); logger.warn(e); }
-            case e: Throwable => { dumpValueFailures(o); logger.warn(e); }
+            case e: Exception => { dumpValueFailures(o); logger.warn("", e); }
+            case e: Throwable => { dumpValueFailures(o); logger.warn("", e); }
           }
         } catch {
-          case e: Exception => { dumpValueFailures(o); logger.warn(e); }
-          case e: Throwable => { dumpValueFailures(o); logger.warn(e); }
+          case e: Exception => { dumpValueFailures(o); logger.warn("", e); }
+          case e: Throwable => { dumpValueFailures(o); logger.warn("", e); }
         }
       })
 
@@ -1165,8 +1165,8 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
                 }
               }
             } catch {
-              case e: Exception => { dumpKeyValueFailures(obj.Key, obj.Value); logger.warn(e); }
-              case e: Throwable => { dumpKeyValueFailures(obj.Key, obj.Value); logger.warn(e); }
+              case e: Exception => { dumpKeyValueFailures(obj.Key, obj.Value); logger.warn("", e); }
+              case e: Throwable => { dumpKeyValueFailures(obj.Key, obj.Value); logger.warn("", e); }
             }
           } catch {
             case e: Exception => throw e

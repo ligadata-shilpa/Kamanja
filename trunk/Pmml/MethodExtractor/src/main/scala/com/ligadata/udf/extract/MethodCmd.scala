@@ -175,7 +175,7 @@ class MethodCmd(  val mgr : MdMgr
 				argNames = ((reNames findAllIn typeSigArgs).mkString(",")).split(',').map(nm => nm.stripSuffix(":"))
 				argTypes = typeSigArgs.split(reTypes).filter(_.length > 0).map(typ => typ.trim)
 			} catch {
-				case e : Exception => { logger.debug(e) }
+				case e : Exception => { logger.debug("", e) }
 			}
 			
 			if (argNames.size == 0 || argTypes.size == 0) {

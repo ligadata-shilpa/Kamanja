@@ -48,21 +48,23 @@ class IbmMqProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
       if (ex.isInstanceOf[JMSException]) {
         processJMSException(ex.asInstanceOf[JMSException])
       } else {
-        LOG.error(ex)
+        LOG.error("", ex)
       }
     }
   }
 
   private def processJMSException(jmsex: JMSException) {
-    LOG.error(jmsex)
+    LOG.error("", jmsex)
     var innerException: Throwable = jmsex.getLinkedException
     if (innerException != null) {
-      LOG.error("Inner exception(s):")
+      LOG.error("Inner exception(s):", innerException)
     }
+    /*
     while (innerException != null) {
       LOG.error(innerException)
       innerException = innerException.getCause
     }
+    */
   }
 
   var connection: Connection = null
@@ -96,7 +98,7 @@ class IbmMqProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
   } catch {
     case jmsex: Exception => {
       printFailure(jmsex)
-      LOG.debug(jmsex)
+      LOG.debug("", jmsex)
     }
   }
 
@@ -133,7 +135,7 @@ class IbmMqProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
     } catch {
       case jmsex: Exception => {
         printFailure(jmsex)
-        LOG.debug(jmsex)
+        LOG.debug("", jmsex)
       }
     }
   }

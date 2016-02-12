@@ -92,7 +92,7 @@ class HBasePerfTestSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterA
       adapter = CreateAdapter
     } catch {
       case e: StorageConnectionException => {
-        logger.error(e)
+        logger.error("", e)
       }
       case e: Exception => {
         logger.error("Failed to connect", e)
@@ -207,7 +207,7 @@ class HBasePerfTestSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterA
 	  }
 	  catch{
 	    case e: Exception => {
-	      logger.info(e)
+	      logger.info("", e)
 	      Thread.sleep(10000)
 	      successful = false
 	    }
@@ -241,7 +241,7 @@ class HBasePerfTestSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterA
 	  }
 	  catch{
 	    case e: Exception => {
-	      logger.info(e)
+	      logger.info("", e)
 	      successful = false
 	    }
 	  }

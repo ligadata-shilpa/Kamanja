@@ -108,7 +108,7 @@ class AuditHashMapAdapter extends AuditAdapter {
         db.commit() //persist changes into disk
     }catch {
       case e: Exception => 
-        logger.error(e)
+        logger.error("", e)
         throw e
     }
   }
@@ -185,7 +185,7 @@ class AuditHashMapAdapter extends AuditAdapter {
       db.compact()
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         throw new Exception("Failed to truncate Audit Store", e)
       }
     }

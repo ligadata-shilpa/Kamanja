@@ -240,7 +240,7 @@ class ConstantMsgObjVarGenerator {
 
     } catch {
       case e: Exception => {
-        LOG.debug(e)
+        LOG.debug("", e)
         throw e
       }
     }
@@ -664,7 +664,7 @@ class XmlData(var dataInput: String) extends InputData(){ }
     		  return getWithReflection(key)
     	} catch {
     		  case e: Exception => {
-          LOG.debug(e)
+          LOG.debug("", e)
     		  // Call By Name
              return getByName(key)
     		  }
@@ -680,7 +680,7 @@ class XmlData(var dataInput: String) extends InputData(){ }
 		      return null;
 		    } catch {
 		      case e: Exception => {
-            LOG.debug(e)
+            LOG.debug("", e)
 		        throw e
 		      }
 		    }

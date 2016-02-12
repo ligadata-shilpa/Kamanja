@@ -156,8 +156,8 @@ class SaveContainerDataCompImpl extends LogTrait with MdBaseResolveInfo {
     try {
       return GetMessageContainerBase(MsgContainerType)
     } catch {
-      case e: Exception => { logger.warn(e) }
-      case e: Throwable => { logger.warn(e) }
+      case e: Exception => { logger.warn("", e) }
+      case e: Throwable => { logger.warn("", e) }
     }
     return null
   }

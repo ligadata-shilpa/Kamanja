@@ -79,7 +79,7 @@ object KamanjaMdCfg {
           KamanjaConfiguration.adapterInfoCommitTime = tm
         LOG.debug("AdapterCommitTime: " + KamanjaConfiguration.adapterInfoCommitTime)
       } catch {
-        case e: Exception => { LOG.warn(e) }
+        case e: Exception => { LOG.warn("", e) }
       }
     }
 

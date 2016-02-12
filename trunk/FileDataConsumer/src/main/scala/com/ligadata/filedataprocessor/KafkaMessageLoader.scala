@@ -179,7 +179,7 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
           }
         } catch {
           case mfe: KVMessageFormatingException =>
-            logger.warn(mfe)
+            logger.warn("", mfe)
             writeErrorMsg(msg)
           case e: Exception => {
             logger.warn("Unknown message format in partition " + partIdx, e)
@@ -554,7 +554,7 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
             throw e
           }
           case e: Exception => {
-            logger.info(e)
+            logger.info("", e)
             objInst = tempCurClass.newInstance
             return objInst.asInstanceOf[com.ligadata.KamanjaBase.BaseMsgObj]
           }
@@ -575,7 +575,7 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
         }
       } catch {
         case e: Exception => {
-          logger.warn(e)
+          logger.warn("", e)
         }
       }
     }

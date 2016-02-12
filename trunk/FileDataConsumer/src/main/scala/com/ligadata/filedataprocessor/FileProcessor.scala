@@ -144,7 +144,7 @@ object FileProcessor {
         zkc.delete.forPath(znodePath + "/" + fileName)
 
       } catch {
-        case e: Exception => logger.error(e)
+        case e: Exception => logger.error("", e)
       }
     }
   }
@@ -490,7 +490,7 @@ object FileProcessor {
         isWatchedFileSystemAccesible = (d1.canRead && d1.canWrite)
       } catch {
         case fio: IOException => {
-          logger.info(fio)
+          logger.info("", fio)
           isWatchedFileSystemAccesible = false
         }
       }
@@ -504,7 +504,7 @@ object FileProcessor {
         }
       } catch {
         case fio: IOException => {
-          logger.info(fio)
+          logger.info("", fio)
           isTargetFileSystemAccesible = false
         }
       }
@@ -717,7 +717,7 @@ class FileProcessor(val path: Path, val partitionId: Int) extends Runnable {
     try {
       kml = new KafkaMessageLoader(partitionId, props)
     } catch {
-      case e: Exception => { logger.warn(e)
+      case e: Exception => { logger.warn("", e)
         shutdown
         throw e
       }
@@ -1130,7 +1130,7 @@ class FileProcessor(val path: Path, val partitionId: Int) extends Runnable {
         throw fnfe
       }
       case e: Exception => {
-        logger.warn(e)
+        logger.warn("", e)
         return false
       }
     }

@@ -734,7 +734,7 @@ class CompilerProxy {
           objinst = obj.instance
         } catch {
           case e: Exception => {
-            logger.debug(e)
+            logger.debug("", e)
             // Trying Regular Object instantiation
             objinst = curClass.newInstance
           }
@@ -917,7 +917,7 @@ class CompilerProxy {
             logger.debug("COMPILER_PROXY: " + clsName + " is a Scala Class... ")
           } catch {
             case e: java.lang.NoClassDefFoundError => {
-              logger.debug(e)
+              logger.debug("", e)
               throw e
             }
             case e: Exception => {

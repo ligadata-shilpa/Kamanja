@@ -192,7 +192,7 @@ class TreeMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
       createTable(fullTableName)
     } catch {
       case e: Exception => {
-        logger.error(e)
+        logger.error("", e)
       }
     }
   }
@@ -256,7 +256,7 @@ class TreeMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
       Commit
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         throw new Exception("Failed to save an object in TreeMap table " + tableName, e)
       }
     }
@@ -281,7 +281,7 @@ class TreeMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
       Commit
     } catch {
       case e: Exception => {
-        logger.error(e)
+        logger.error("", e)
       }
     }
   }
@@ -299,7 +299,7 @@ class TreeMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
       Commit
     } catch {
       case e: Exception => {
-        logger.error(e)
+        logger.error("", e)
       }
     }
   }
@@ -333,7 +333,7 @@ class TreeMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
       Commit
     } catch {
       case e: Exception => {
-        logger.error(e)
+        logger.error("", e)
       }
     }
   }
@@ -394,7 +394,7 @@ class TreeMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
       }
     } catch {
       case e: Exception => {
-        logger.error(e)
+        logger.error("", e)
       }
     }
   }
@@ -412,7 +412,7 @@ class TreeMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
       }
     } catch {
       case e: Exception => {
-        logger.error(e)
+        logger.error("", e)
       }
     }
   }
@@ -432,7 +432,7 @@ class TreeMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
       })
     } catch {
       case e: Exception => {
-        logger.error(e)
+        logger.error("", e)
       }
     }
   }
@@ -452,7 +452,7 @@ class TreeMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
       })
     } catch {
       case e: Exception => {
-        logger.error(e)
+        logger.error("", e)
       }
     }
   }
@@ -481,7 +481,7 @@ class TreeMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
       }
     } catch {
       case e: Exception => {
-        logger.error(e)
+        logger.error("", e)
       }
     }
   }
@@ -506,7 +506,7 @@ class TreeMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
       }
     } catch {
       case e: Exception => {
-        logger.error(e)
+        logger.error("", e)
       }
     }
   }
@@ -545,7 +545,7 @@ class TreeMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
       }
     } catch {
       case e: Exception => {
-        logger.error(e)
+        logger.error("", e)
       }
     }
   }
@@ -580,7 +580,7 @@ class TreeMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
       }
     } catch {
       case e: Exception => {
-        logger.error(e)
+        logger.error("", e)
       }
     }
   }
@@ -614,7 +614,7 @@ class TreeMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
       }
     } catch {
       case e: Exception => {
-        logger.error(e)
+        logger.error("", e)
       }
     }
   }
@@ -644,7 +644,7 @@ class TreeMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
       }
     } catch {
       case e: Exception => {
-        logger.error(e)
+        logger.error("", e)
       }
     }
   }
@@ -674,10 +674,10 @@ class TreeMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
       })
     } catch {
       case e: NullPointerException => {
-        logger.error(e)
+        logger.error("", e)
       }
       case e: Exception => {
-        logger.error(e)
+        logger.error("", e)
       }
     }
   }
@@ -695,7 +695,7 @@ class TreeMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
       Commit
     } catch {
       case e: Exception => {
-        logger.error(e)
+        logger.error("", e)
       }
     }
   }
@@ -715,7 +715,7 @@ class TreeMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
       dropTable(tableName)
     } catch {
       case e: Exception => {
-        logger.error(e)
+        logger.error("", e)
       }
     }
   }

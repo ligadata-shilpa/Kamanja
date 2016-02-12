@@ -149,8 +149,8 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
         try {
           Thread.sleep(5000) // Sleeping for 5Sec
         } catch {
-          case e: Exception => { LOG.warn(e) }
-          case e: Throwable => { LOG.warn(e) }
+          case e: Exception => { if (! isShutdown) LOG.warn("", e) }
+          case e: Throwable => { if (! isShutdown) LOG.warn("", e) }
         }
         if (isShutdown == false) {
           var outstandingMsgs = outstandingMsgCount
@@ -271,8 +271,8 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
       try {
         msgMap.remove(msgAndCntr.cntrToOrder) // This must present. Because we are adding the records into partitionsMap before we send messages. If it does not present we simply ignore it.
       } catch {
-        case e: Exception => { LOG.warn(e) }
-        case e: Throwable => { LOG.warn(e) }
+        case e: Exception => { LOG.warn("", e) }
+        case e: Throwable => { LOG.warn("", e) }
       }
     }
   }
@@ -312,8 +312,8 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
       try {
         msgMap.remove(msgAndCntr.cntrToOrder)
       } catch {
-        case e: Exception => { LOG.warn(e) }
-        case e: Throwable => { LOG.warn(e) }
+        case e: Exception => { LOG.warn("", e) }
+        case e: Throwable => { LOG.warn("", e) }
       }
     }
   }
@@ -516,14 +516,32 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
 
     heartBeatThread.shutdownNow
     while (!heartBeatThread.isTerminated) {
-      Thread.sleep(100)
+      try {
+        Thread.sleep(100)
+      } catch {
+        case e: Exception => {
+          // Don't do anything, because it is shutting down
+        }
+        case e: Throwable => {
+          // Don't do anything, because it is shutting down
+        }
+      }
     }
 
     // First shutdown retry executor
     if (retryExecutor != null) {
       retryExecutor.shutdownNow
       while (!retryExecutor.isTerminated) {
-        Thread.sleep(100)
+        try {
+          Thread.sleep(100)
+        } catch {
+          case e: Exception => {
+            // Don't do anything, because it is shutting down
+          }
+          case e: Throwable => {
+            // Don't do anything, because it is shutting down
+          }
+        }
       }
     }
 
@@ -562,7 +580,8 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
         } catch {
           case e: Exception => {
             isHeartBeating = false
-            LOG.warn(qc.Name + " Heartbeat Interrupt detected")
+            if (isShutdown == false)
+              LOG.warn(qc.Name + " Heartbeat Interrupt detected", e)
           }
         }
         LOG.info(qc.Name + " Heartbeat is shutting down")

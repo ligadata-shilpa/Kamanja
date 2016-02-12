@@ -198,7 +198,7 @@ class MdMgr {
           }
         } catch {
           case e: Exception => {
-            logger.debug(e)
+            logger.debug("", e)
           }
         }
         elm
@@ -227,7 +227,7 @@ class MdMgr {
           }
         } catch {
           case e: Exception => {
-            logger.debug(e)
+            logger.debug("", e)
           }
         }
         elm

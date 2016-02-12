@@ -107,7 +107,7 @@ class SimulateDeadlockSpec extends FunSuite with BeforeAndAfter with BeforeAndAf
       adapter = CreateAdapter
     } catch {
       case e: StorageConnectionException => {
-        logger.error(e)
+        logger.error("", e)
       }
       case e: Exception => {
         logger.error("Failed to connect", e)
@@ -154,7 +154,7 @@ class SimulateDeadlockSpec extends FunSuite with BeforeAndAfter with BeforeAndAf
 	}
 	catch{
 	  case e: Exception => {
-	    logger.info(e)
+	    logger.info("", e)
 	    successful = exitImmediately
 	  }
 	}

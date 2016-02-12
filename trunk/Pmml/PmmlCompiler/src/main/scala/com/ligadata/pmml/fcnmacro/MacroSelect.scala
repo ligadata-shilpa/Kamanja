@@ -506,7 +506,7 @@ class MacroSelect(val ctx : PmmlContext
 		  			arg = argNum
 	  			} catch {
 	  			  case e: Exception => {
-              logger.debug(e)
+              logger.debug("", e)
               arg = null}
 	  			}
 	  			arg

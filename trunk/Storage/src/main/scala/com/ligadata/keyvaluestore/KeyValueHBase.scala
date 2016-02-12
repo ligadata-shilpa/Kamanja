@@ -123,7 +123,7 @@ class KeyValueHBase(parameter: PropertyMap) extends DataStore {
       }
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         throw e
       }
     }
@@ -136,7 +136,7 @@ class KeyValueHBase(parameter: PropertyMap) extends DataStore {
     connection = HConnectionManager.createConnection(config);
   } catch {
     case e: Exception => {
-      logger.debug(e)
+      logger.debug("", e)
       throw ConnectionFailedException("Unable to connect to hbase at " + hostnames, e)
     }
   }
@@ -226,7 +226,7 @@ class KeyValueHBase(parameter: PropertyMap) extends DataStore {
       handler(value)
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         throw KeyNotFoundException(e.getMessage(), e)
       }
     }
@@ -250,7 +250,7 @@ class KeyValueHBase(parameter: PropertyMap) extends DataStore {
       target.Construct(key, value)
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         throw KeyNotFoundException(e.getMessage(), e)
       }
     }

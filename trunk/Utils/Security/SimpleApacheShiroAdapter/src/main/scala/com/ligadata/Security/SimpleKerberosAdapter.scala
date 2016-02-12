@@ -95,7 +95,7 @@ class SimpleKerberosAdapter extends SecurityAdapter {
       Subject.doAsPrivileged(mysubject, action, null);
     } catch {
       case se: SecurityException => {
-        log.debug(se)
+        log.debug("", se)
         return false
       }
     } 

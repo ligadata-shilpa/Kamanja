@@ -92,7 +92,7 @@ class AuditHBaseAdapter extends AuditAdapter
       }
       catch{
         case e:Exception => {
-          logger.debug(e)
+          logger.debug("", e)
           throw ConnectionFailedException("Unable to connect to hbase at " + hostnames, e)
         }
       }
@@ -148,7 +148,7 @@ class AuditHBaseAdapter extends AuditAdapter
       tableHBase.put(p)
     } catch {
       case e:Exception => {
-        logger.debug(e)
+        logger.debug("", e)
 	      throw new Exception("Failed to save an object in HBase table " + table, e)
       }
     }
@@ -241,7 +241,7 @@ class AuditHBaseAdapter extends AuditAdapter
       auditRecords
     } catch {
       case e:Exception => {
-        logger.debug(e)
+        logger.debug("", e)
 	throw new Exception("Failed to fetch audit records", e)
       }
     }
@@ -317,7 +317,7 @@ class AuditHBaseAdapter extends AuditAdapter
        })
     } catch {
       case e:Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         throw new Exception("Failed to read Audit Configuration", e)
       }     
     }

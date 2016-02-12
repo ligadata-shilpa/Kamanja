@@ -160,7 +160,7 @@ class SqlServerAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAft
 	containers = containers :+ containerName
 	adapter.CreateContainer(containers)
       }
-      logger.info(ex)
+      logger.info("", ex)
 
       And("Resume API Testing")
       containerName = "sys.customer1"
@@ -181,7 +181,7 @@ class SqlServerAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAft
 	var value = new Value("kryo",v)
 	adapter.put(containerName,key,value)
       }
-      logger.info(ex1)
+      logger.info("", ex1)
 
       val sqlServerAdapter = adapter.asInstanceOf[SqlServerAdapter]
 
@@ -205,7 +205,7 @@ class SqlServerAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAft
 	var value = new Value("kryo",v)
 	adapter.put("&&",key,value)
       }
-      logger.info(ex2)
+      logger.info("", ex2)
 
       And("Test Put api")
       var keys = new Array[Key](0) // to be used by a delete operation later on

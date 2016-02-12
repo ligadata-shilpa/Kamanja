@@ -648,7 +648,7 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
           logger.error("Failed to get data from datastore. Waiting for another %d milli seconds and going to start them again.".format(failedWaitTime))
           Thread.sleep(failedWaitTime)
         } catch {
-          case e: Exception => { logger.warn(e) }
+          case e: Exception => { logger.warn("", e) }
         }
         // Adjust time for next time
         if (failedWaitTime < maxFailedWaitTime) {
@@ -713,7 +713,7 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
           logger.error("Failed to save data into datastore. Waiting for another %d milli seconds and going to start them again.".format(failedWaitTime))
           Thread.sleep(failedWaitTime)
         } catch {
-          case e: Exception => { logger.warn(e) }
+          case e: Exception => { logger.warn("", e) }
         }
         // Adjust time for next time
         if (failedWaitTime < maxFailedWaitTime) {
@@ -982,7 +982,7 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
                   foundOpen = false
                 } // else // Did not match the correct json even if we have one open brace. Tring for the next open one
               } catch {
-                case e: Exception => { logger.warn(e) } // Not yet valid json
+                case e: Exception => { logger.warn("", e) } // Not yet valid json
               }
             } else {
               buf += ch
@@ -1019,7 +1019,7 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
       is = new FileInputStream(inputfile)
     } catch {
       case e: Exception =>
-        logger.debug(e)
+        logger.debug("", e)
         return false
     }
 

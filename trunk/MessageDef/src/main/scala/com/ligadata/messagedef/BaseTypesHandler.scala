@@ -181,7 +181,7 @@ class BaseTypesHandler {
 
     } catch {
       case e: Exception => {
-        LOG.debug(e)
+        LOG.debug("", e)
         throw e
       }
     }
@@ -221,7 +221,7 @@ class BaseTypesHandler {
       }
     } catch {
       case e: Exception => {
-        LOG.debug(e)
+        LOG.debug("", e)
         throw e
       }
     }
@@ -256,7 +256,7 @@ class BaseTypesHandler {
 
     } catch {
       case e: Exception => {
-        LOG.debug(e)
+        LOG.debug("", e)
         throw e
       }
     }
@@ -337,7 +337,7 @@ class BaseTypesHandler {
 
     } catch {
       case e: Exception => {
-        LOG.debug(e)
+        LOG.debug("", e)
         throw e
       }
     }

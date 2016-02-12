@@ -126,11 +126,11 @@ object JsonSerializer {
       funcDefList.toArray
     } catch {
       case e: MappingException => {
-        logger.debug(e)
+        logger.debug("", e)
         throw Json4sParsingException(e.getMessage(), e)
       }
       case e: Exception => {
-        logger.error(e)
+        logger.error("", e)
         throw FunctionListParsingException(e.getMessage(), e)
       }
     }
@@ -261,11 +261,11 @@ object JsonSerializer {
       typeDefList.toArray
     } catch {
       case e: MappingException => {
-        logger.debug(e)
+        logger.debug("", e)
         throw Json4sParsingException(e.getMessage(), e)
       }
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         throw TypeDefListParsingException(e.getMessage(), e)
       }
     }
@@ -306,11 +306,11 @@ object JsonSerializer {
       attrDefList
     } catch {
       case e: MappingException => {
-        logger.debug(e)
+        logger.debug("", e)
         throw Json4sParsingException(e.getMessage(), e)
       }
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         throw ConceptListParsingException(e.getMessage(), e)
       }
     }
@@ -332,11 +332,11 @@ object JsonSerializer {
       zkTransaction
     } catch {
       case e: MappingException => {
-        logger.debug(e)
+        logger.debug("", e)
         throw Json4sParsingException(e.getMessage(), e)
       }
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         throw ZkTransactionParsingException(e.getMessage(), e)
       }
     }
@@ -371,11 +371,11 @@ object JsonSerializer {
         logger.error("Failed to add the DerivedConcept", e)
       }
       case e: MappingException => {
-        logger.debug(e)
+        logger.debug("", e)
         throw Json4sParsingException(e.getMessage(), e)
       }
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         throw ConceptListParsingException(e.getMessage(), e)
       }
     }
@@ -402,11 +402,11 @@ object JsonSerializer {
       contDef
     } catch {
       case e: MappingException => {
-        logger.debug(e)
+        logger.debug("", e)
         throw Json4sParsingException(e.getMessage(), e)
       }
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         throw ContainerDefParsingException(e.getMessage(), e)
       }
     }
@@ -425,7 +425,7 @@ object JsonSerializer {
       typeDef
     } catch {
       case e: MappingException => {
-        logger.debug(e)
+        logger.debug("", e)
         throw Json4sParsingException(e.getMessage(), e)
       }
       case e: AlreadyExistsException => {
@@ -433,7 +433,7 @@ object JsonSerializer {
         throw AlreadyExistsException(e.getMessage(), e)
       }
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         throw TypeParsingException(e.getMessage(), e)
       }
     }
@@ -458,11 +458,11 @@ object JsonSerializer {
       concept
     } catch {
       case e: MappingException => {
-        logger.debug(e)
+        logger.debug("", e)
         throw Json4sParsingException(e.getMessage(), e)
       }
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         throw ConceptParsingException(e.getMessage(), e)
       }
     }
@@ -496,11 +496,11 @@ object JsonSerializer {
       function
     } catch {
       case e: MappingException => {
-        logger.debug(e)
+        logger.debug("", e)
         throw Json4sParsingException(e.getMessage(), e)
       }
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         throw FunctionParsingException(e.getMessage(), e)
       }
     }
@@ -531,11 +531,11 @@ object JsonSerializer {
       msgDef
     } catch {
       case e: MappingException => {
-        logger.debug(e)
+        logger.debug("", e)
         throw Json4sParsingException(e.getMessage(), e)
       }
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         throw MessageDefParsingException(e.getMessage(), e)
       }
     }
@@ -609,11 +609,11 @@ object JsonSerializer {
       modDef
     } catch {
       case e: MappingException => {
-        logger.debug(e)
+        logger.debug("", e)
         throw Json4sParsingException(e.getMessage(), e)
       }
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         throw ModelDefParsingException(e.getMessage(), e)
       }
     }
@@ -632,11 +632,11 @@ object JsonSerializer {
       fullmap
     } catch {
       case e: MappingException => {
-        logger.debug(e)
+        logger.debug("", e)
         throw Json4sParsingException(e.getMessage(), e)
       }
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         throw EngineConfigParsingException(e.getMessage(), e)
       }
     }
@@ -654,11 +654,11 @@ object JsonSerializer {
       cfg
     } catch {
       case e: MappingException => {
-        logger.debug(e)
+        logger.debug("", e)
         throw Json4sParsingException(e.getMessage(), e)
       }
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         throw ApiArgListParsingException(e.getMessage(), e)
       }
     }
@@ -680,7 +680,7 @@ object JsonSerializer {
       pretty(render(json))
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         throw Json4sSerializationException(e.getMessage(), e)
       }
     }
@@ -898,7 +898,7 @@ object JsonSerializer {
       }
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         throw Json4sSerializationException(e.getMessage(), e)
       }
     }
@@ -1480,7 +1480,7 @@ object JsonSerializer {
       pretty(render(json))
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         throw Json4sSerializationException(e.getMessage(), e)
       }
     }
@@ -1492,7 +1492,7 @@ object JsonSerializer {
       pretty(render(json))
     } catch {
       case e: Exception => {
-        logger.debug(e)
+        logger.debug("", e)
         throw Json4sSerializationException(e.getMessage(), e)
       }
     }

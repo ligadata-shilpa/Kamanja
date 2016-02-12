@@ -94,7 +94,7 @@ object MessageService {
       }
     } catch {
       case e: Exception => {
-        logger.warn(e)
+        logger.warn("", e)
         response = e.getStackTrace.toString
         response= (new ApiResult(ErrorCodeConstants.Failure, "MessageService",null, response)).toString
       }
@@ -152,7 +152,7 @@ object MessageService {
          try {
            return MetadataAPIImpl.RemoveMessage(ns, name, ver.toInt, userid)
          } catch {
-           case e: Exception => logger.error(e)
+           case e: Exception => logger.error("", e)
          }
       }
 
@@ -185,7 +185,7 @@ object MessageService {
       }
     } catch {
       case e: Exception => {
-        logger.warn(e)
+        logger.warn("", e)
         response = e.getStackTrace.toString
       }
     }
@@ -200,7 +200,7 @@ object MessageService {
         try {
           return MetadataAPIImpl.GetMessageDef(ns, name, "JSON", ver,  userid)
         } catch {
-          case e: Exception => logger.error(e)
+          case e: Exception => logger.error("", e)
         }
       }
 
@@ -240,7 +240,7 @@ object MessageService {
 
     } catch {
       case e: Exception => {
-        logger.warn(e)
+        logger.warn("", e)
         e.getStackTrace.toString
       }
     }
@@ -383,7 +383,7 @@ object MessageService {
         try {
           return MetadataAPIOutputMsg.RemoveOutputMsg(ns, name, ver.toLong, userid)
         } catch {
-          case e: Exception => logger.error(e)
+          case e: Exception => logger.error("", e)
         }
       }
 
@@ -416,7 +416,7 @@ object MessageService {
       }
     } catch {
       case e: Exception => {
-        logger.warn(e)
+        logger.warn("", e)
         response = e.getStackTrace.toString
       }
     }
@@ -440,7 +440,7 @@ object MessageService {
       }
     } catch {
       case e: Exception => {
-        logger.warn(e)
+        logger.warn("", e)
         response = e.getStackTrace.toString
       }
     }
@@ -455,7 +455,7 @@ object MessageService {
       try {
         return MetadataAPIOutputMsg.GetOutputMessageDefFromCache(ns, name,"JSON" ,ver,userid)
       } catch {
-        case e: Exception => logger.error(e)
+        case e: Exception => logger.error("", e)
       }
     }
     val outputMessageKeys: Array[String] = MetadataAPIOutputMsg GetAllOutputMsgsFromCache(true,userid)
