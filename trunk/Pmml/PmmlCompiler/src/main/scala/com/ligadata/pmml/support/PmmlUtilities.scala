@@ -45,7 +45,7 @@ object PmmlError extends com.ligadata.pmml.compiler.LogTrait {
 	 *  @param ctx the execution context for the compiler
 	 *  @param errorMsg the error message to print after printing the location information
 	 */
-	def logError(ctx : PmmlContext, errorMsg : String) : Unit = {
+	def logError(ctx : PmmlContext, errorMsg : String, e: Throwable = null) : Unit = {
 		
 		if (ctx.elementStack.nonEmpty) { 
 			val buffer : StringBuilder = new StringBuilder
@@ -63,11 +63,17 @@ object PmmlError extends com.ligadata.pmml.compiler.LogTrait {
 				}
 			})
 			val errorVicinity : String = buffer.toString
-			logger.error(s"While processing $errorVicinity...")
+			if (e != null)
+				logger.error(s"While processing $errorVicinity...", e)
+			else
+				logger.error(s"While processing $errorVicinity...")
 		}
-			
-		logger.error(errorMsg)
-		
+
+		if (e != null)
+			logger.error(errorMsg, e)
+		else
+			logger.error(errorMsg)
+
 		/** count the errors */
 		ctx.IncrErrorCounter
 		

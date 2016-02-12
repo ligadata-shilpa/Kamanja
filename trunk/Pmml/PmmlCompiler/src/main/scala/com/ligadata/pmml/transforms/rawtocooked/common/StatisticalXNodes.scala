@@ -62,8 +62,8 @@ class ScoreDistributionPmmlExecNodeGenerator(val ctx : PmmlContext) extends Pmml
 						sd.Confidence(node.confidence.toDouble)
 						sd.Probability(node.probability.toDouble)
 					} catch {
-					  case _ : Throwable => {
-              ctx.logger.debug ("Unable to coerce one or more score probablity Double values", _) }
+					  case e : Throwable => {
+              ctx.logger.debug ("Unable to coerce one or more score probablity Double values", e) }
 					}
 						
 					mf.addScoreDistribution(sd)
