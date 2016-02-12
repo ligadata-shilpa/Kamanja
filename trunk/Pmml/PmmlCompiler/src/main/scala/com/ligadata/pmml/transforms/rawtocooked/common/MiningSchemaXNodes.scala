@@ -116,8 +116,8 @@ class MiningFieldPmmlExecNodeGenerator(val ctx : PmmlContext) extends PmmlExecNo
 			fld.LowValue(d.lowValue.toDouble)
 			fld.HighValue(d.highValue.toDouble)
 		} catch {
-			case _ : Throwable => {
-        ctx.logger.debug (s"Unable to coerce one or more of the mining field doubles... name = $name"), _}
+			case e : Throwable => {
+        ctx.logger.debug (s"Unable to coerce one or more of the mining field doubles... name = $name", e)}
 		}
 	  	fld
 	}
