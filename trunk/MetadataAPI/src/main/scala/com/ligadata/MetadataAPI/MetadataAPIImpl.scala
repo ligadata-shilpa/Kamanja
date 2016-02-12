@@ -181,7 +181,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       apiResult.toString
     } catch {
       case cce: java.lang.ClassCastException => {
-        logger.warn("Failure processing GET_HEALTH_CHECK - cannot parse the list of desired nodes.", e)
+        logger.warn("Failure processing GET_HEALTH_CHECK - cannot parse the list of desired nodes.", cce)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetHealthCheck", "No data available", ErrorCodeConstants.GetHeartbeat_Failed + " Error:Parsing Error")
         return apiResult.toString
       }
@@ -1316,7 +1316,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     } catch {
       case e: IOException => {
         logger.error(e)
-        throw new FileNotFoundException("Failed to Convert the Jar (" + jarName + ") to array of bytes. Message:" + e.getMessage(), e)
+        throw new FileNotFoundException("Failed to Convert the Jar (" + jarName + ") to array of bytes. Message:" + e.getMessage())
       }
       case e: Exception => {
         logger.error(e)

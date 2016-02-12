@@ -244,7 +244,7 @@ object FunctionService {
         case fnf : FileNotFoundException => {
             val filePath : String = if (input != null && input.nonEmpty) input else "bad file path ... blank or null"
             val errorMsg : String = "file supplied to loadFunctionsFromAfile ($filePath) does not exist...."
-            logger.error(errorMsg, e)
+            logger.error(errorMsg, fnf)
             errorMsg
         }
         case e: Exception => {
