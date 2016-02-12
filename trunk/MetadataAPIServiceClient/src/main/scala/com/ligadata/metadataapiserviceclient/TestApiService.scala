@@ -312,7 +312,7 @@ object TestApiService {
       baos.toByteArray()
     } catch {
       case e: IOException => {
-        throw new FileNotFoundException("Failed to Convert the Jar (" + jarName + ") to array of bytes", e)
+        throw new FileNotFoundException("Failed to Convert the Jar (" + jarName + ") to array of bytes. Message:" + e.getMessage)
       }
       case e: Exception => {
         logger.error(e)

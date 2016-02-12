@@ -1325,8 +1325,8 @@ object PmmlExecNode extends com.ligadata.pmml.compiler.LogTrait {
 			fld.LowValue(d.lowValue.toDouble)
 			fld.HighValue(d.highValue.toDouble)
 		} catch {
-			case _ : Throwable => {
-        ctx.logger.debug (s"Unable to coerce one or more of the mining field doubles... name = $name"), _}
+			case e : Throwable => {
+        ctx.logger.debug (s"Unable to coerce one or more of the mining field doubles... name = $name", e)}
       
 		}
 	  	fld
@@ -1384,8 +1384,8 @@ object PmmlExecNode extends com.ligadata.pmml.compiler.LogTrait {
 					rule.Confidence(d.confidence.toDouble)
 					rule.Weight(d.weight.toDouble)
 				} catch {
-					case _ : Throwable => {
-            ctx.logger.debug (s"Unable to coerce one or more mining 'double' fields... name = $id"), _}
+					case e : Throwable => {
+            ctx.logger.debug (s"Unable to coerce one or more mining 'double' fields... name = $id", e)}
 				}
 			
 				rsm.addRule (rule) 
@@ -1409,8 +1409,8 @@ object PmmlExecNode extends com.ligadata.pmml.compiler.LogTrait {
 					sd.Confidence(d.confidence.toDouble)
 					sd.Probability(d.probability.toDouble)
 				} catch {
-				  case _ : Throwable => {
-            ctx.logger.debug ("Unable to coerce one or more score probablity Double values"), _}
+				  case e : Throwable => {
+            ctx.logger.debug ("Unable to coerce one or more score probablity Double values", e)}
 				}
 					
 				mf.addScoreDistribution(sd)

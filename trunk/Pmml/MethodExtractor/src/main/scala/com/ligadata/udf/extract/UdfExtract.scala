@@ -134,8 +134,8 @@ object MethodExtract extends App with LogTrait {
     try {
       if (versionNumberStr != null) versionNumber = versionNumberStr.toLong
     } catch {
-      case _: Throwable => {
-        logger.debug(_)
+      case e: Throwable => {
+        logger.debug(e)
         versionNumber = 1000000
       }
     }
