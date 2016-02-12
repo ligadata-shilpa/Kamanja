@@ -224,6 +224,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
   }
 
   logger.info("HBase info => Hosts:" + hostnames + ", Namespace:" + namespace + ",autoCreateTables:" + autoCreateTables)
+  println("HERE ARE THE HOSTNAMES: " + hostnames)
 
   var conn: Connection = _
   try {
