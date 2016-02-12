@@ -31,7 +31,7 @@
 #
 #   If you supply all of the options, you will be asked to try again.  An alternate working directory may be supplied.  This 
 #   directory is used by this script to store the built software when compiling as well as the control files that are generated
-#   by the NodeInfoExtract.  By default, "/tmp" is used.  If a special one is supplied as the WorkingDir paramater value, it
+#   by the NodeInfoExtract.  By default, "/tmp" is used.  If a special one is supplied as the WorkingDir parameter value, it
 #   must exist.  The user account must have CRUD access to its content.
 #
 #   If a cluster config is not present there when no NodeConfigPath argument is presented, an exception is thrown.  In fact
