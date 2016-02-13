@@ -156,19 +156,38 @@ public class Migrate {
 						+ gson.toJson(cfg));
 				return cfg;
 			} catch (Exception e) {
+                logger.error("", e);
 			} catch (Throwable e) {
+                logger.error("", e);
 			} finally {
 
 			}
 			return null;
 		} catch (Exception e) {
+			logger.error("", e);
 		} catch (Throwable e) {
+			logger.error("", e);
 		} finally {
 			try {
 				if (reader != null)
 					reader.close();
 			} catch (Exception e) {
 			}
+		}
+		return null;
+	}
+
+	Configuration GetConfigurationFromCfgJsonString(String cfgString) {
+		try {
+			Gson gson = new Gson();
+			Configuration cfg = gson.fromJson(cfgString, Configuration.class);
+			logger.debug("Populated migrate configuration:"
+					+ gson.toJson(cfg));
+			return cfg;
+		} catch (Exception e) {
+			logger.error("", e);
+		} catch (Throwable e) {
+			logger.error("", e);
 		}
 		return null;
 	}
@@ -198,19 +217,12 @@ public class Migrate {
 		return true;
 	}
 
-	public void run(String[] args) {
-		MigratableFrom migrateFrom = null;
-		MigratableTo migrateTo = null;
-		URLClassLoader srcKamanjaLoader = null;
-		URLClassLoader dstKamanjaLoader = null;
-
+	public int runFromArgs(String[] args) {
 		try {
 			if (args.length != 2) {
 				usage();
-				return;
+				return 1;
 			}
-
-			String backupTblSufix = "_migrate_bak";
 
 			String cfgfile = "";
 			if (args[0].equalsIgnoreCase("--config")) {
@@ -218,18 +230,18 @@ public class Migrate {
 			} else {
 				logger.error("Unknown option " + args[0]);
 				usage();
-				System.exit(1);
+                return 1;
 			}
 
 			if (cfgfile.length() == 0) {
 				logger.error("Input required config file");
 				usage();
-				System.exit(1);
+                return 1;
 			}
 
 			if (isValidPath(cfgfile, false, true, "ConfigFile") == false) {
 				usage();
-				System.exit(1);
+                return 1;
 			}
 
 			Configuration configuration = GetConfigurationFromCfgFile(cfgfile);
@@ -238,11 +250,59 @@ public class Migrate {
 				logger.error("Failed to get configuration from given file:"
 						+ cfgfile);
 				usage();
-				System.exit(1);
+                return 1;
+			}
+
+			return run(configuration);
+        } catch (Exception e) {
+			logger.error("Failed to Migrate", e);
+		} catch (Throwable t) {
+			logger.error("Failed to Migrate", t);
+		}
+        return 1;
+	}
+
+	public int runFromJsonConfigString(String jsonConfigString) {
+		try {
+			if (jsonConfigString.length() == 0) {
+				logger.error("Passed invalid json string");
+				usage();
+				return 1;
+			}
+
+			Configuration configuration = GetConfigurationFromCfgJsonString(jsonConfigString);
+
+			if (configuration == null) {
+				logger.error("Failed to get configuration from given JSON String:" + jsonConfigString);
+				usage();
+                return 1;
+			}
+
+            return run(configuration);
+		} catch (Exception e) {
+			logger.error("Failed to Migrate", e);
+		} catch (Throwable t) {
+			logger.error("Failed to Migrate", t);
+		}
+        return 1;
+	}
+
+	private int run(Configuration configuration) {
+		MigratableFrom migrateFrom = null;
+		MigratableTo migrateTo = null;
+		URLClassLoader srcKamanjaLoader = null;
+		URLClassLoader dstKamanjaLoader = null;
+        int retCode = 1;
+        boolean foundError = false;
+
+		try {
+			if (configuration == null) {
+				logger.error("Found invalid configuration");
+				usage();
+                return retCode;
 			}
 
 			// Version check
-
 			String srcVer = configuration.migratingFrom.version.trim();
 			String dstVer = configuration.migratingTo.version.trim();
 
@@ -251,17 +311,19 @@ public class Migrate {
 				logger.error("We support source versions only 1.1 or 1.2. We don't support "
 						+ srcVer);
 				usage();
-				System.exit(1);
+                return retCode;
 			}
 
 			if (dstVer.equalsIgnoreCase("1.3") == false) {
 				logger.error("We support destination version only 1.3. We don't support "
 						+ srcVer);
 				usage();
-				System.exit(1);
+                return retCode;
 			}
 
-			String curMigrationUnhandledMetadataDumpDir = "";
+            String backupTblSufix = "_migrate_" + srcVer.replace('.', '_').trim() + "_to_" + dstVer.replace('.', '_').trim() + "_bak";
+
+            String curMigrationUnhandledMetadataDumpDir = "";
 			String curMigrationSummary = "";
 			String sourceReadFailuresFilePath = "";
 
@@ -291,11 +353,11 @@ public class Migrate {
 				} else {
 					logger.error("Failed to create directory " + newDir);
 					usage();
-					System.exit(1);
+                    return retCode;
 				}
 			} else {
 				usage();
-				System.exit(1);
+                return retCode;
 			}
 
 			// From Srouce version 1.1 to Destination version 1.3 we do both
@@ -310,7 +372,7 @@ public class Migrate {
 			if (canUpgradeData && canUpgradeMetadata == false) {
 				logger.error("We don't support upgrading only data without metadata at this moment");
 				usage();
-				System.exit(1);
+                return retCode;
 			}
 
 			// Modify canUpgradeData depending on exclude flag
@@ -340,6 +402,7 @@ public class Migrate {
 								configuration.migratingFrom.version,
 								configuration.migratingFrom.implemtedClass,
 								configuration.migratingFrom.versionInstallPath));
+                foundError = true;
 			}
 
 			int dstJarsCnt = configuration.migratingTo.jars.size();
@@ -365,169 +428,173 @@ public class Migrate {
 						.format("Failed to Load Destination. Version:%s, migrateToClass:%s",
 								configuration.migratingTo.version,
 								configuration.migratingTo.implemtedClass));
+                foundError = true;
 			}
 
-			logger.debug(String.format(
-					"apiConfigFile:%s, clusterConfigFile:%s",
-					configuration.apiConfigFile,
-					configuration.clusterConfigFile));
-			migrateTo.init(configuration.migratingTo.versionInstallPath,
-					configuration.apiConfigFile,
-					configuration.clusterConfigFile, srcVer,
-					curMigrationUnhandledMetadataDumpDir, curMigrationSummary);
+            if (foundError == false) {
+                logger.debug(String.format(
+                        "apiConfigFile:%s, clusterConfigFile:%s",
+                        configuration.apiConfigFile,
+                        configuration.clusterConfigFile));
+                migrateTo.init(configuration.migratingTo.versionInstallPath,
+                        configuration.apiConfigFile,
+                        configuration.clusterConfigFile, srcVer,
+                        curMigrationUnhandledMetadataDumpDir, curMigrationSummary);
 
-			String metadataStoreInfo = migrateTo.getMetadataStoreInfo();
-			String dataStoreInfo = migrateTo.getDataStoreInfo();
-			String statusStoreInfo = migrateTo.getStatusStoreInfo();
+                String metadataStoreInfo = migrateTo.getMetadataStoreInfo();
+                String dataStoreInfo = migrateTo.getDataStoreInfo();
+                String statusStoreInfo = migrateTo.getStatusStoreInfo();
 
-			logger.debug(String
-					.format("metadataStoreInfo:%s, dataStoreInfo:%s, statusStoreInfo:%s",
-							metadataStoreInfo, dataStoreInfo, statusStoreInfo));
-			migrateFrom.init(configuration.migratingFrom.versionInstallPath,
-					metadataStoreInfo, dataStoreInfo, statusStoreInfo,
-					sourceReadFailuresFilePath);
+                logger.debug(String
+                        .format("metadataStoreInfo:%s, dataStoreInfo:%s, statusStoreInfo:%s",
+                                metadataStoreInfo, dataStoreInfo, statusStoreInfo));
+                migrateFrom.init(configuration.migratingFrom.versionInstallPath,
+                        metadataStoreInfo, dataStoreInfo, statusStoreInfo,
+                        sourceReadFailuresFilePath);
 
-			TableName[] allMetadataTbls = new TableName[0];
-			TableName[] allDataTbls = new TableName[0];
-			TableName[] allStatusTbls = new TableName[0];
+                TableName[] allMetadataTbls = new TableName[0];
+                TableName[] allDataTbls = new TableName[0];
+                TableName[] allStatusTbls = new TableName[0];
 
-			if (canUpgradeMetadata)
-				allMetadataTbls = migrateFrom.getAllMetadataTableNames();
-			if (canUpgradeData) {
-				allDataTbls = migrateFrom.getAllDataTableNames();
-				allStatusTbls = migrateFrom.getAllStatusTableNames();
-			}
+                if (canUpgradeMetadata)
+                    allMetadataTbls = migrateFrom.getAllMetadataTableNames();
+                if (canUpgradeData) {
+                    allDataTbls = migrateFrom.getAllDataTableNames();
+                    allStatusTbls = migrateFrom.getAllStatusTableNames();
+                }
 
-			List<BackupTableInfo> metadataBackupTbls = new ArrayList<BackupTableInfo>();
-			List<BackupTableInfo> dataBackupTbls = new ArrayList<BackupTableInfo>();
-			List<BackupTableInfo> statusBackupTbls = new ArrayList<BackupTableInfo>();
+                List<BackupTableInfo> metadataBackupTbls = new ArrayList<BackupTableInfo>();
+                List<BackupTableInfo> dataBackupTbls = new ArrayList<BackupTableInfo>();
+                List<BackupTableInfo> statusBackupTbls = new ArrayList<BackupTableInfo>();
 
-			List<TableName> metadataDelTbls = new ArrayList<TableName>();
-			List<TableName> dataDelTbls = new ArrayList<TableName>();
-			List<TableName> statusDelTbls = new ArrayList<TableName>();
+                List<TableName> metadataDelTbls = new ArrayList<TableName>();
+                List<TableName> dataDelTbls = new ArrayList<TableName>();
+                List<TableName> statusDelTbls = new ArrayList<TableName>();
 
-			boolean allTblsBackedUp = true;
+                boolean allTblsBackedUp = true;
 
-			for (TableName tblInfo : allMetadataTbls) {
-				BackupTableInfo bkup = new BackupTableInfo(tblInfo.namespace,
-						tblInfo.name, tblInfo.name + backupTblSufix);
+                for (TableName tblInfo : allMetadataTbls) {
+                    BackupTableInfo bkup = new BackupTableInfo(tblInfo.namespace,
+                            tblInfo.name, tblInfo.name + backupTblSufix);
 
-				if (migrateTo.isMetadataTableExists(tblInfo)) {
-					if (migrateTo.isMetadataTableExists(new TableName(
-							tblInfo.namespace, bkup.dstTable)) == false) {
-						allTblsBackedUp = false;
-					}
-					metadataBackupTbls.add(bkup);
-					metadataDelTbls.add(tblInfo);
-				}
-			}
+                    if (migrateTo.isMetadataTableExists(tblInfo)) {
+                        if (migrateTo.isMetadataTableExists(new TableName(
+                                tblInfo.namespace, bkup.dstTable)) == false) {
+                            allTblsBackedUp = false;
+                        }
+                        metadataBackupTbls.add(bkup);
+                        metadataDelTbls.add(tblInfo);
+                    }
+                }
 
-			for (TableName tblInfo : allDataTbls) {
-				BackupTableInfo bkup = new BackupTableInfo(tblInfo.namespace,
-						tblInfo.name, tblInfo.name + backupTblSufix);
-				if (migrateTo.isDataTableExists(tblInfo)) {
-					if (migrateTo.isDataTableExists(new TableName(
-							tblInfo.namespace, bkup.dstTable)) == false) {
-						allTblsBackedUp = false;
-					}
-					dataBackupTbls.add(bkup);
-					dataDelTbls.add(tblInfo);
-				}
+                for (TableName tblInfo : allDataTbls) {
+                    BackupTableInfo bkup = new BackupTableInfo(tblInfo.namespace,
+                            tblInfo.name, tblInfo.name + backupTblSufix);
+                    if (migrateTo.isDataTableExists(tblInfo)) {
+                        if (migrateTo.isDataTableExists(new TableName(
+                                tblInfo.namespace, bkup.dstTable)) == false) {
+                            allTblsBackedUp = false;
+                        }
+                        dataBackupTbls.add(bkup);
+                        dataDelTbls.add(tblInfo);
+                    }
 
-			}
+                }
 
-			for (TableName tblInfo : allStatusTbls) {
-				BackupTableInfo bkup = new BackupTableInfo(tblInfo.namespace,
-						tblInfo.name, tblInfo.name + backupTblSufix);
-				if (migrateTo.isStatusTableExists(tblInfo)) {
-					if (migrateTo.isStatusTableExists(new TableName(
-							tblInfo.namespace, bkup.dstTable)) == false) {
-						allTblsBackedUp = false;
-					}
-					statusBackupTbls.add(bkup);
-					statusDelTbls.add(tblInfo);
-				}
-			}
+                for (TableName tblInfo : allStatusTbls) {
+                    BackupTableInfo bkup = new BackupTableInfo(tblInfo.namespace,
+                            tblInfo.name, tblInfo.name + backupTblSufix);
+                    if (migrateTo.isStatusTableExists(tblInfo)) {
+                        if (migrateTo.isStatusTableExists(new TableName(
+                                tblInfo.namespace, bkup.dstTable)) == false) {
+                            allTblsBackedUp = false;
+                        }
+                        statusBackupTbls.add(bkup);
+                        statusDelTbls.add(tblInfo);
+                    }
+                }
 
-			// Backup all the tables, if any one of them is missing
-			if (allTblsBackedUp == false) {
-				if (metadataBackupTbls.size() > 0)
-					migrateTo.backupMetadataTables(metadataBackupTbls
-							.toArray(new BackupTableInfo[metadataBackupTbls
-									.size()]), true);
-				if (dataBackupTbls.size() > 0)
-					migrateTo.backupDataTables(
-							dataBackupTbls
-									.toArray(new BackupTableInfo[dataBackupTbls
-											.size()]), true);
-				if (statusBackupTbls.size() > 0)
-					migrateTo.backupStatusTables(statusBackupTbls
-							.toArray(new BackupTableInfo[statusBackupTbls
-									.size()]), true);
-			}
+                // Backup all the tables, if any one of them is missing
+                if (allTblsBackedUp == false) {
+                    if (metadataBackupTbls.size() > 0)
+                        migrateTo.backupMetadataTables(metadataBackupTbls
+                                .toArray(new BackupTableInfo[metadataBackupTbls
+                                        .size()]), true);
+                    if (dataBackupTbls.size() > 0)
+                        migrateTo.backupDataTables(
+                                dataBackupTbls
+                                        .toArray(new BackupTableInfo[dataBackupTbls
+                                                .size()]), true);
+                    if (statusBackupTbls.size() > 0)
+                        migrateTo.backupStatusTables(statusBackupTbls
+                                .toArray(new BackupTableInfo[statusBackupTbls
+                                        .size()]), true);
+                }
 
-			// Drop all tables after backup
-			if (metadataDelTbls.size() > 0)
-				migrateTo.dropMetadataTables(metadataDelTbls
-						.toArray(new TableName[metadataDelTbls.size()]));
-			if (dataDelTbls.size() > 0)
-				migrateTo.dropDataTables(dataDelTbls
-						.toArray(new TableName[dataDelTbls.size()]));
-			if (statusDelTbls.size() > 0)
-				migrateTo.dropStatusTables(statusDelTbls
-						.toArray(new TableName[statusDelTbls.size()]));
+                // Drop all tables after backup
+                if (metadataDelTbls.size() > 0)
+                    migrateTo.dropMetadataTables(metadataDelTbls
+                            .toArray(new TableName[metadataDelTbls.size()]));
+                if (dataDelTbls.size() > 0)
+                    migrateTo.dropDataTables(dataDelTbls
+                            .toArray(new TableName[dataDelTbls.size()]));
+                if (statusDelTbls.size() > 0)
+                    migrateTo.dropStatusTables(statusDelTbls
+                            .toArray(new TableName[statusDelTbls.size()]));
 
-			String[] excludeMetadata = new String[0];
-			if (configuration.excludeMetadata != null
-					&& configuration.excludeMetadata.size() > 0) {
-				excludeMetadata = configuration.excludeMetadata
-						.toArray((new String[configuration.excludeMetadata
-								.size()]));
-			}
+                String[] excludeMetadata = new String[0];
+                if (configuration.excludeMetadata != null
+                        && configuration.excludeMetadata.size() > 0) {
+                    excludeMetadata = configuration.excludeMetadata
+                            .toArray((new String[configuration.excludeMetadata
+                                    .size()]));
+                }
 
-			if (canUpgradeMetadata) {
-				migrateFrom.getAllMetadataObjs(backupTblSufix,
-						new MdCallback(), excludeMetadata);
-			}
+                if (canUpgradeMetadata) {
+                    migrateFrom.getAllMetadataObjs(backupTblSufix,
+                            new MdCallback(), excludeMetadata);
+                }
 
-			MetadataFormat[] metadataArr = allMetadata
-					.toArray(new MetadataFormat[allMetadata.size()]);
+                MetadataFormat[] metadataArr = allMetadata
+                        .toArray(new MetadataFormat[allMetadata.size()]);
 
-			if (canUpgradeData)
-				migrateTo.dropMessageContainerTablesFromMetadata(metadataArr);
+                if (canUpgradeData)
+                    migrateTo.dropMessageContainerTablesFromMetadata(metadataArr);
 
-			if (canUpgradeMetadata)
-				migrateTo.addMetadata(metadataArr, true, excludeMetadata);
+                if (canUpgradeMetadata)
+                    migrateTo.addMetadata(metadataArr, true, excludeMetadata);
 
-			if (canUpgradeData) {
-				int kSaveThreshold = 1000;
+                if (canUpgradeData) {
+                    int kSaveThreshold = 1000;
 
-				if (configuration.dataSaveThreshold > 0)
-					kSaveThreshold = configuration.dataSaveThreshold;
+                    if (configuration.dataSaveThreshold > 0)
+                        kSaveThreshold = configuration.dataSaveThreshold;
 
-				List<DataFormat> collectedData = new ArrayList<DataFormat>();
+                    List<DataFormat> collectedData = new ArrayList<DataFormat>();
 
-				DataCallback dataCallback = new DataCallback(migrateTo,
-						collectedData, kSaveThreshold, srcVer, dstVer);
+                    DataCallback dataCallback = new DataCallback(migrateTo,
+                            collectedData, kSaveThreshold, srcVer, dstVer);
 
-				migrateFrom.getAllDataObjs(backupTblSufix, metadataArr,
-						dataCallback);
+                    migrateFrom.getAllDataObjs(backupTblSufix, metadataArr,
+                            dataCallback);
 
-				if (collectedData.size() > 0) {
-					migrateTo.populateAndSaveData(collectedData
-							.toArray(new DataFormat[collectedData.size()]));
-					collectedData.clear();
-				}
-			}
+                    if (collectedData.size() > 0) {
+                        migrateTo.populateAndSaveData(collectedData
+                                .toArray(new DataFormat[collectedData.size()]));
+                        collectedData.clear();
+                    }
+                }
 
-			logger.info("Migration is done. Failed summary is written to "
-					+ curMigrationSummary);
-			if (logger.isInfoEnabled() == false)
-				System.out
-						.println("Migration is done. Failed summary is written to "
-								+ curMigrationSummary
-								+ " and failed to read data written to "
-								+ sourceReadFailuresFilePath);
+                logger.info("Migration is done. Failed summary is written to "
+                        + curMigrationSummary);
+                if (logger.isInfoEnabled() == false)
+                    System.out
+                            .println("Migration is done. Failed summary is written to "
+                                    + curMigrationSummary
+                                    + " and failed to read data written to "
+                                    + sourceReadFailuresFilePath);
+                retCode = 0;
+            }
 		} catch (Exception e) {
 			logger.error("Failed to Migrate", e);
 		} catch (Throwable t) {
@@ -551,9 +618,10 @@ public class Migrate {
 			} catch (Throwable t) {
 			}
 		}
+        return retCode;
 	}
 
 	public static void main(String[] args) {
-		new Migrate().run(args);
+		System.exit(new Migrate().runFromArgs(args));
 	}
 }

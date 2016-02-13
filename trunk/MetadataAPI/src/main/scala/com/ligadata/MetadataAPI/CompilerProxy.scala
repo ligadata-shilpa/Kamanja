@@ -320,7 +320,7 @@ class CompilerProxy {
         compileCommand = Seq("sh", "-c", s"$scalahome/bin/javac -d $jarBuildDir -cp $classpath $jarBuildDir/$srcFileName")
       } else {
         srcFileName = s"$moduleName.scala"
-        compileCommand = Seq("sh", "-c", s"$scalahome/bin/scalac -cp $classpath $jarBuildDir/$srcFileName")
+        compileCommand = Seq("sh", "-c", s"$scalahome/bin/scalac -d $jarBuildDir -cp $classpath $jarBuildDir/$srcFileName")
       }
       logger.info("COMPILER_PROXY: Compiling " + srcFileName + "  source code is in " + jarBuildDir)
       // Save the source file in the correct directory.
@@ -336,23 +336,29 @@ class CompilerProxy {
       } else {
         //  The compiled scala class files are found in com/$client/pmml of the current folder.. mv them to $jarBuildDir.  We 
         //  use the -d option on the java compiler command...  so no need to move anything if java.
+	compileRc
+	/*
         if (sourceLanguage.equalsIgnoreCase("java")) {
           return compileRc
         }
+	*/
 
         /** get the top level package name */
+	/*
         val packageLine: String = sourceCode.takeWhile(ch => ch != '\n')
         val pkgPattern = "package[ \t][ \t]*([A-Za-z0-9_.][A-Za-z0-9_.]+).*".r
         val pkgPattern(fullpkgName) = packageLine
         val topLevelPkg: String = fullpkgName.split('.').head
 
         val mvCmd: String = s"mv $topLevelPkg $compiler_work_dir/$moduleName/"
+	logger.debug(s"mv cmd used: $mvCmd")
         val mvCmdRc: Int = Process(mvCmd).!
         if (mvCmdRc != 0) {
           logger.error(s"unable to move classes to build directory, $jarBuildDir ... rc = $mvCmdRc")
           logger.error(s"cmd used : $mvCmd")
         }
         mvCmdRc
+	*/
       }
     }
 

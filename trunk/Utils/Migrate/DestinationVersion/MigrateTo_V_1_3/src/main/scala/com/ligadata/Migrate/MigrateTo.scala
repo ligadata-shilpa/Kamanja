@@ -39,6 +39,9 @@ import scala.collection.mutable.ArrayBuffer
 import com.ligadata.kamanja.metadata.ModelCompilationConstants
 import com.ligadata.Exceptions.{ FatalAdapterException, StorageDMLException, StorageDDLException }
 
+import scala.actors.threadpool.{ Executors, ExecutorService, TimeUnit }
+import com.ligadata.Exceptions.StackTrace
+
 class MigrateTo_V_1_3 extends MigratableTo {
   lazy val loggerName = this.getClass.getName
   lazy val logger = LogManager.getLogger(loggerName)
@@ -59,6 +62,8 @@ class MigrateTo_V_1_3 extends MigratableTo {
   private var _bInit = false
   private var _flCurMigrationSummary: PrintWriter = _
   private val defaultUserId: Option[String] = Some("metadataapi")
+
+  private var executor: ExecutorService = null
 
   private def isValidPath(path: String, checkForDir: Boolean = false, checkForFile: Boolean = false, str: String = "path"): Unit = {
     val fl = new File(path)
@@ -250,18 +255,48 @@ class MigrateTo_V_1_3 extends MigratableTo {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
     logger.debug("Backup metadata tables:" + tblsToBackedUp.map(t => "(" + t.srcTable + " => " + t.dstTable + ")").mkString(","))
+    var tblCount = tblsToBackedUp.length
+    executor = Executors.newFixedThreadPool(tblCount)
     tblsToBackedUp.foreach(backupTblInfo => {
-      _metaDataStoreDb.copyTable(backupTblInfo.namespace, backupTblInfo.srcTable, backupTblInfo.dstTable, force)
+      executor.execute(new Runnable() {
+        override def run() = {
+	  _metaDataStoreDb.copyTable(backupTblInfo.namespace, backupTblInfo.srcTable, backupTblInfo.dstTable, force)
+        }
+      })
     })
+    executor.shutdown();
+    try {
+      executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
+    } catch {
+      case e: Exception => {
+	val stackTrace = StackTrace.ThrowableTraceString(e)
+	logger.debug("StackTrace:"+stackTrace)
+      }
+    }
   }
-
+  
   override def backupDataTables(tblsToBackedUp: Array[BackupTableInfo], force: Boolean): Unit = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
     logger.debug("Backup data tables:" + tblsToBackedUp.map(t => "(" + t.srcTable + " => " + t.dstTable + ")").mkString(","))
+    var tblCount = tblsToBackedUp.length
+    executor = Executors.newFixedThreadPool(tblCount)
     tblsToBackedUp.foreach(backupTblInfo => {
-      _dataStoreDb.copyTable(backupTblInfo.namespace, backupTblInfo.srcTable, backupTblInfo.dstTable, force)
+      executor.execute(new Runnable() {
+        override def run() = {
+	  _dataStoreDb.copyTable(backupTblInfo.namespace, backupTblInfo.srcTable, backupTblInfo.dstTable, force)
+        }
+      })
     })
+    executor.shutdown();
+    try {
+      executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
+    } catch {
+      case e: Exception => {
+	val stackTrace = StackTrace.ThrowableTraceString(e)
+	logger.debug("StackTrace:"+stackTrace)
+      }
+    }
   }
 
   override def backupStatusTables(tblsToBackedUp: Array[BackupTableInfo], force: Boolean): Unit = {
@@ -279,9 +314,28 @@ class MigrateTo_V_1_3 extends MigratableTo {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
     if (tblsToDrop.size > 0) {
-      val tblsTuples = tblsToDrop.map(t => (t.namespace, t.name))
-      logger.debug("Dropping metadata tables:" + tblsTuples.mkString(","))
-      _metaDataStoreDb.dropTables(tblsTuples)
+      logger.debug("Dropping metadata tables:" + tblsToDrop.mkString(","))
+      var tblCount = tblsToDrop.size
+      executor = Executors.newFixedThreadPool(tblCount)
+      tblsToDrop.foreach(dropTblInfo => {
+	executor.execute(new Runnable() {
+          override def run() = {
+	    var tbls = new Array[String](0)
+	    tbls = tbls :+ dropTblInfo.namespace + ":" + dropTblInfo.name
+	    _metaDataStoreDb.dropTables(tbls)
+          }
+	})
+      })
+      executor.shutdown();
+      try {
+	executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
+      } catch {
+	case e: Exception => {
+	  val stackTrace = StackTrace.ThrowableTraceString(e)
+	  logger.debug("StackTrace:"+stackTrace)
+	}
+      }
+      // _metaDataStoreDb.dropTables(tblsTuples)
     }
   }
 
@@ -391,6 +445,8 @@ class MigrateTo_V_1_3 extends MigratableTo {
 
     newDeps
   }
+
+
 
   private def ProcessObject(mdObjs: ArrayBuffer[(String, Map[String, Any])]): Unit = {
     try {
@@ -859,11 +915,73 @@ class MigrateTo_V_1_3 extends MigratableTo {
 
     ProcessObject(jarDef)
     ProcessObject(types)
-    ProcessObject(containers)
-    ProcessObject(messages)
+
+    // ProcessObject(containers)
+    val contCount = containers.length
+    executor = Executors.newFixedThreadPool(contCount)
+    containers.foreach(obj => {
+      executor.execute(new Runnable() {
+        override def run() = {
+	  val mab = ArrayBuffer[(String, Map[String, Any])]()
+          mab += ((obj._1, obj._2))
+	  ProcessObject(mab)
+        }
+      })
+    })
+    executor.shutdown();
+    try {
+      executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
+    } catch {
+      case e: Exception => {
+	val stackTrace = StackTrace.ThrowableTraceString(e)
+	logger.debug("StackTrace:"+stackTrace)
+      }
+    }
+    //ProcessObject(messages)
+    val msgCount = messages.length
+    executor = Executors.newFixedThreadPool(msgCount)
+    messages.foreach(obj => {
+      executor.execute(new Runnable() {
+        override def run() = {
+	  val mab = ArrayBuffer[(String, Map[String, Any])]()
+          mab += ((obj._1, obj._2))
+	  ProcessObject(mab)
+        }
+      })
+    })
+    executor.shutdown();
+    try {
+      executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
+    } catch {
+      case e: Exception => {
+	val stackTrace = StackTrace.ThrowableTraceString(e)
+	logger.debug("StackTrace:"+stackTrace)
+      }
+    }
+
     ProcessObject(functions)
     ProcessObject(configDef)
-    ProcessObject(models)
+    //ProcessObject(models)
+    val modelCount = models.length
+    executor = Executors.newFixedThreadPool(modelCount)
+    models.foreach(obj => {
+      executor.execute(new Runnable() {
+        override def run() = {
+	  val mab = ArrayBuffer[(String, Map[String, Any])]()
+          mab += ((obj._1, obj._2))
+	  ProcessObject(mab)
+        }
+      })
+    })
+    executor.shutdown();
+    try {
+      executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
+    } catch {
+      case e: Exception => {
+	val stackTrace = StackTrace.ThrowableTraceString(e)
+	logger.debug("StackTrace:"+stackTrace)
+      }
+    }
     ProcessObject(outputMsgDef)
   }
 
