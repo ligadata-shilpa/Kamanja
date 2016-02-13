@@ -30,12 +30,13 @@ import com.ligadata.StorageBase._
 import com.ligadata.Serialize._
 import com.ligadata.Utils.KamanjaLoaderInfo
 import com.ligadata.keyvaluestore.HBaseAdapter
-import com.ligadata.testutils.docker._
+//import com.ligadata.testutils.docker._
 
 import com.ligadata.Exceptions._
 
 case class Customer(name:String, address: String, homePhone: String)
 
+@Ignore
 class HBaseAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterAll with GivenWhenThen {
   private val dockerManager = new DockerManager
   var res : String = null;
@@ -45,8 +46,8 @@ class HBaseAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterAl
 
   private val loggerName = this.getClass.getName
   private val logger = LogManager.getLogger(loggerName)
-  private val dockerHost = dockerManager.getHostIP()
-  private var dockerContainerId = ""
+  //private val dockerHost = dockerManager.getHostIP()
+  //private var dockerContainerId = ""
 
   val dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss")
   val dateFormat1 = new SimpleDateFormat("yyyy/MM/dd")
@@ -56,7 +57,7 @@ class HBaseAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterAl
   private val kvManagerLoader = new KamanjaLoaderInfo
   private var hbaseAdapter:HBaseAdapter = null
   serializer = SerializerManager.GetSerializer("kryo")
-  val dataStoreInfo = s"""{"StoreType": "hbase","SchemaName": "unit_tests","Location":"$dockerHost","autoCreateTables":"YES"}"""
+  val dataStoreInfo = s"""{"StoreType": "hbase","SchemaName": "unit_tests","Location":"localhost","autoCreateTables":"YES"}"""
 
   private val maxConnectionAttempts = 10;
   var cnt:Long = 0
@@ -148,7 +149,7 @@ class HBaseAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterAl
 
   override def beforeAll = {
     try {
-      dockerContainerId = dockerManager.run("ligadatawilliam/hbase", None, List(2181, 9090, 9095, 60000, 60010, 60020, 60030), 120)
+      //dockerContainerId = dockerManager.run("ligadatawilliam/hbase", None, List(2181, 9090, 9095, 60000, 60010, 60020, 60030), 600)
       logger.info("starting...");
       logger.info("Initialize HBaseAdapter")
       adapter = CreateAdapter
@@ -641,7 +642,7 @@ class HBaseAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterAl
     if( logFile != null ){
       deleteFile(logFile)
     }
-    dockerManager.stopContainer(dockerContainerId)
-    dockerManager.removeContainer(dockerContainerId)
+    //dockerManager.stopContainer(dockerContainerId)
+    //dockerManager.removeContainer(dockerContainerId)
   }
 }
