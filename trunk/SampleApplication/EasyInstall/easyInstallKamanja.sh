@@ -729,7 +729,7 @@ cd $srcPath/SampleApplication/InterfacesSamples/src/main/resources/sample-app/me
 cp -rf * $installPath/Kamanja-$ver210/config
 #Finance
 
-cd $srcPath/SampleApplication/EasyInstall/template
+cd $srcPath/SampleApplication/EasyInstall/template/scala-2.10
 cp -rf * $installPath/Kamanja-$ver210/template
 
 cd $srcPath/SampleApplication/EasyInstall
@@ -1337,7 +1337,7 @@ cd $srcPath/SampleApplication/InterfacesSamples/src/main/resources/sample-app/me
 cp -rf * $installPath/Kamanja-$ver211/config
 #Finance
 
-cd $srcPath/SampleApplication/EasyInstall/template
+cd $srcPath/SampleApplication/EasyInstall/template/scala-2.11
 cp -rf * $installPath/Kamanja-$ver211/template
 
 cd $srcPath/SampleApplication/EasyInstall
