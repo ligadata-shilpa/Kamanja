@@ -156,19 +156,38 @@ public class Migrate {
 						+ gson.toJson(cfg));
 				return cfg;
 			} catch (Exception e) {
+                logger.error("", e);
 			} catch (Throwable e) {
+                logger.error("", e);
 			} finally {
 
 			}
 			return null;
 		} catch (Exception e) {
+			logger.error("", e);
 		} catch (Throwable e) {
+			logger.error("", e);
 		} finally {
 			try {
 				if (reader != null)
 					reader.close();
 			} catch (Exception e) {
 			}
+		}
+		return null;
+	}
+
+	Configuration GetConfigurationFromCfgJsonString(String cfgString) {
+		try {
+			Gson gson = new Gson();
+			Configuration cfg = gson.fromJson(cfgString, Configuration.class);
+			logger.debug("Populated migrate configuration:"
+					+ gson.toJson(cfg));
+			return cfg;
+		} catch (Exception e) {
+			logger.error("", e);
+		} catch (Throwable e) {
+			logger.error("", e);
 		}
 		return null;
 	}
@@ -198,19 +217,12 @@ public class Migrate {
 		return true;
 	}
 
-	public void run(String[] args) {
-		MigratableFrom migrateFrom = null;
-		MigratableTo migrateTo = null;
-		URLClassLoader srcKamanjaLoader = null;
-		URLClassLoader dstKamanjaLoader = null;
-
+	public void runFromArgs(String[] args) {
 		try {
 			if (args.length != 2) {
 				usage();
 				return;
 			}
-
-			String backupTblSufix = "_migrate_bak";
 
 			String cfgfile = "";
 			if (args[0].equalsIgnoreCase("--config")) {
@@ -241,6 +253,50 @@ public class Migrate {
 				System.exit(1);
 			}
 
+			run(configuration);
+
+		} catch (Exception e) {
+			logger.error("Failed to Migrate", e);
+		} catch (Throwable t) {
+			logger.error("Failed to Migrate", t);
+		}
+	}
+
+	public void runFromJsonConfigString(String jsonConfigString) {
+		try {
+			if (jsonConfigString.length() == 0) {
+				logger.error("Passed invalid json string");
+				usage();
+				return;
+			}
+
+			Configuration configuration = GetConfigurationFromCfgJsonString(jsonConfigString);
+
+			if (configuration == null) {
+				logger.error("Failed to get configuration from given JSON String:" + jsonConfigString);
+				usage();
+				System.exit(1);
+			}
+		} catch (Exception e) {
+			logger.error("Failed to Migrate", e);
+		} catch (Throwable t) {
+			logger.error("Failed to Migrate", t);
+		}
+	}
+
+	private void run(Configuration configuration) {
+		MigratableFrom migrateFrom = null;
+		MigratableTo migrateTo = null;
+		URLClassLoader srcKamanjaLoader = null;
+		URLClassLoader dstKamanjaLoader = null;
+
+		try {
+			if (configuration == null) {
+				logger.error("Found invalid configuration");
+				usage();
+				System.exit(1);
+			}
+
 			// Version check
 
 			String srcVer = configuration.migratingFrom.version.trim();
@@ -261,7 +317,9 @@ public class Migrate {
 				System.exit(1);
 			}
 
-			String curMigrationUnhandledMetadataDumpDir = "";
+            String backupTblSufix = "_migrate_" + srcVer.replace('.', '_').trim() + "_to_" + dstVer.replace('.', '_').trim() + "_bak";
+
+            String curMigrationUnhandledMetadataDumpDir = "";
 			String curMigrationSummary = "";
 			String sourceReadFailuresFilePath = "";
 
@@ -554,6 +612,6 @@ public class Migrate {
 	}
 
 	public static void main(String[] args) {
-		new Migrate().run(args);
+		new Migrate().runFromArgs(args);
 	}
 }
