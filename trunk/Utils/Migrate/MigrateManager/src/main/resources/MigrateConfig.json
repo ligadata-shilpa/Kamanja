@@ -33,5 +33,9 @@
     "OutputMsgDef"
   ],
   "excludeData": false
+  "parallelDegree" : 0,
+  "mergeContainersAndMessages" : false,
+  "fromScalaVersion" : "2.10",
+  "toScalaVersion" : "2.11"
 }
 
