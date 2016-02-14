@@ -637,9 +637,9 @@ public class Migrate {
 	}
 	return retCode;
     }
+
+    public static void main(String[] args) {
+	System.exit(new Migrate().runFromArgs(args));
+    }
 }
 
-public static void main(String[] args) {
-    System.exit(new Migrate().runFromArgs(args));
-}
-}
