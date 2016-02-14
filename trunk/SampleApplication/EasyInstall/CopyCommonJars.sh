@@ -55,7 +55,7 @@ cp $ivyPath/cache/org.javassist/javassist/bundles/javassist-3.18.1-GA.jar $syste
 cp $srcPath/lib_managed/jars/org.apache.logging.log4j/log4j-api/log4j-api-2.4.1.jar $systemlib
 cp $ivyPath/cache/com.typesafe/config/bundles/config-1.2.1.jar $systemlib
 cp $srcPath/lib_managed/bundles/org.apache.curator/curator-framework/curator-framework-2.7.1.jar $systemlib
-cp $ivyPath/cache/org.json4s/json4s-jackson_2.10/jars/json4s-jackson_2.10-3.2.9.jar $systemlib
+cp $ivyPath/cache/org.json4s/json4s-jackson_2.11/jars/json4s-jackson_2.11-3.2.9.jar $systemlib
 cp $ivyPath/cache/commons-net/commons-net/jars/commons-net-3.1.jar $systemlib
 cp $ivyPath/cache/org.apache.hadoop/hadoop-annotations/jars/hadoop-annotations-2.7.1.jar $systemlib
 cp $ivyPath/cache/com.101tec/zkclient/jars/zkclient-0.3.jar $systemlib
@@ -70,7 +70,7 @@ cp $ivyPath/cache/com.esotericsoftware.reflectasm/reflectasm/jars/reflectasm-1.0
 cp $ivyPath/cache/io.spray/spray-client_2.10/bundles/spray-client_2.10-1.3.3.jar $systemlib
 cp $srcPath/lib_managed/jars/javax.servlet/servlet-api/servlet-api-2.5.jar $systemlib
 cp $srcPath/lib_managed/bundles/com.sun.jersey/jersey-server/jersey-server-1.9.jar $systemlib
-cp $srcPath/lib_managed/jars/org.json4s/json4s-native_2.10/json4s-native_2.10-3.2.9.jar $systemlib
+cp $srcPath/lib_managed/jars/org.json4s/json4s-native_2.11/json4s-native_2.11-3.2.9.jar $systemlib
 cp $ivyPath/cache/org.apache.directory.server/apacheds-i18n/bundles/apacheds-i18n-2.0.0-M15.jar $systemlib
 cp $ivyPath/cache/org.jpmml/pmml-evaluator/jars/pmml-evaluator-1.2.9.jar $systemlib
 cp $ivyPath/cache/commons-httpclient/commons-httpclient/jars/commons-httpclient-3.1.jar $systemlib
@@ -123,8 +123,7 @@ cp $srcPath/lib_managed/jars/com.github.stephenc.findbugs/findbugs-annotations/f
 cp $ivyPath/cache/com.fasterxml.jackson.core/jackson-databind/bundles/jackson-databind-2.3.1.jar $systemlib
 cp $ivyPath/cache/com.fasterxml.jackson.core/jackson-annotations/bundles/jackson-annotations-2.3.0.jar $systemlib
 cp $ivyPath/cache/org.apache.commons/commons-dbcp2/jars/commons-dbcp2-2.1.jar $systemlib
-cp $srcPath/lib_managed/jars/com.twitter/chill_2.10/chill_2.10-0.5.0.jar $systemlib
-cp $ivyPath/cache/org.json4s/json4s-native_2.10/jars/json4s-native_2.10-3.2.9.jar $systemlib
+cp $ivyPath/cache/org.json4s/json4s-native_2.11/jars/json4s-native_2.11-3.2.9.jar $systemlib
 cp $ivyPath/cache/junit/junit/jars/junit-3.8.1.jar $systemlib
 cp $srcPath/lib_managed/jars/org.mortbay.jetty/jetty-util/jetty-util-6.1.26.jar $systemlib
 cp $ivyPath/cache/com.typesafe/config/bundles/config-1.2.0.jar $systemlib
@@ -132,7 +131,6 @@ cp $srcPath/lib_managed/jars/org.apache.hadoop/hadoop-common/hadoop-common-2.7.1
 cp $srcPath/lib_managed/jars/commons-digester/commons-digester/commons-digester-1.8.1.jar $systemlib
 cp $ivyPath/cache/commons-dbcp/commons-dbcp/jars/commons-dbcp-1.4.jar $systemlib
 cp $srcPath/lib_managed/bundles/com.google.guava/guava/guava-16.0.1.jar $systemlib
-cp $srcPath/lib_managed/jars/org.scala-lang/scala-actors/scala-actors-2.10.4.jar $systemlib
 cp $srcPath/lib_managed/jars/org.apache.logging.log4j/log4j-core/log4j-core-2.4.1.jar $systemlib
 cp $ivyPath/cache/org.apache.curator/curator-framework/bundles/curator-framework-2.7.1.jar $systemlib
 cp $srcPath/lib_managed/bundles/log4j/log4j/log4j-1.2.17.jar $systemlib
@@ -141,7 +139,6 @@ cp $ivyPath/cache/org.mortbay.jetty/jetty-embedded/jars/jetty-embedded-6.1.26-so
 cp $ivyPath/cache/org.apache.httpcomponents/httpclient/jars/httpclient-4.2.5.jar $systemlib
 cp $srcPath/lib_managed/bundles/org.apache.directory.api/api-asn1-api/api-asn1-api-1.0.0-M20.jar $systemlib
 cp $ivyPath/cache/net.jpountz.lz4/lz4/jars/lz4-1.2.0.jar $systemlib
-cp $srcPath/lib_managed/jars/org.scala-lang/scala-reflect/scala-reflect-2.10.4.jar $systemlib
 cp $srcPath/lib_managed/jars/org.apache.commons/commons-dbcp2/commons-dbcp2-2.1.jar $systemlib
 # might be only for 2.11
 #cp $ivyPath/cache/org.scala-lang.modules/scala-parser-combinators_2.11/bundles/scala-parser-combinators_2.11-1.0.4.jar $systemlib
@@ -204,7 +201,7 @@ cp $ivyPath/cache/org.apache.thrift/libthrift/jars/libthrift-0.9.2.jar $systemli
 cp $ivyPath/cache/com.google.guava/guava/bundles/guava-19.0.jar $systemlib
 cp $srcPath/lib_managed/jars/com.esotericsoftware.reflectasm/reflectasm/reflectasm-1.07-shaded.jar $systemlib
 cp $ivyPath/cache/org.jpmml/pmml-agent/jars/pmml-agent-1.2.9.jar $systemlib
-cp $ivyPath/cache/org.json4s/json4s-core_2.10/jars/json4s-core_2.10-3.2.9.jar $systemlib
+cp $ivyPath/cache/org.json4s/json4s-core_2.11/jars/json4s-core_2.11-3.2.9.jar $systemlib
 cp $srcPath/lib_managed/jars/commons-configuration/commons-configuration/commons-configuration-1.7.jar $systemlib
 cp $ivyPath/cache/org.codehaus.jackson/jackson-mapper-asl/jars/jackson-mapper-asl-1.9.13.jar $systemlib
 cp $ivyPath/cache/org.hamcrest/hamcrest-core/jars/hamcrest-core-1.3.jar $systemlib
@@ -224,7 +221,6 @@ cp $srcPath/lib_managed/jars/commons-net/commons-net/commons-net-3.1.jar $system
 cp $srcPath/lib_managed/jars/commons-httpclient/commons-httpclient/commons-httpclient-3.1.jar $systemlib
 cp $srcPath/lib_managed/bundles/org.apache.directory.server/apacheds-kerberos-codec/apacheds-kerberos-codec-2.0.0-M15.jar $systemlib
 cp $srcPath/lib_managed/bundles/com.esotericsoftware.kryo/kryo/kryo-2.21.jar $systemlib
-b
 # Might be only for 2.11
 #cp $ivyPath/cache/org.scala-lang.modules/scala-xml_2.11/bundles/scala-xml_2.11-1.0.4.jar $systemlib
 
@@ -271,7 +267,6 @@ cp $srcPath/lib_managed/jars/commons-beanutils/commons-beanutils/commons-beanuti
 cp $srcPath/lib_managed/jars/com.esotericsoftware.minlog/minlog/minlog-1.2.jar $systemlib
 cp $ivyPath/cache/antlr/antlr/jars/antlr-2.7.7.jar $systemlib
 cp $ivyPath/cache/org.apache.curator/curator-framework/bundles/curator-framework-2.6.0.jar $systemlib
-cp $srcPath/lib_managed/jars/org.scala-lang/scala-library/scala-library-2.10.4.jar $systemlib
 cp $ivyPath/cache/org.apache.curator/curator-client/bundles/curator-client-2.6.0.jar $systemlib
 cp $ivyPath/cache/javax.servlet.jsp/jsp-api/jars/jsp-api-2.1.jar $systemlib
 cp $srcPath/lib_managed/jars/org.apache.cassandra/cassandra-thrift/cassandra-thrift-2.0.3.jar $systemlib
@@ -281,7 +276,7 @@ cp $ivyPath/cache/commons-io/commons-io/jars/commons-io-2.4.jar $systemlib
 cp $srcPath/lib_managed/jars/org.joda/joda-convert/joda-convert-1.6.jar $systemlib
 cp $ivyPath/cache/net.sf.jopt-simple/jopt-simple/jars/jopt-simple-3.2.jar $systemlib
 cp $ivyPath/cache/com.github.stephenc.findbugs/findbugs-annotations/jars/findbugs-annotations-1.3.9-1.jar $systemlib
-cp $srcPath/lib_managed/jars/org.json4s/json4s-ast_2.10/json4s-ast_2.10-3.2.9.jar $systemlib
+cp $srcPath/lib_managed/jars/org.json4s/json4s-ast_2.11/json4s-ast_2.11-3.2.9.jar $systemlib
 cp $srcPath/lib_managed/jars/org.apache.thrift/libthrift/libthrift-0.9.2.jar $systemlib
 cp $ivyPath/cache/commons-cli/commons-cli/jars/commons-cli-1.2.jar $systemlib
 cp $srcPath/lib_managed/jars/javax.servlet.jsp/jsp-api/jsp-api-2.1.jar $systemlib
@@ -302,7 +297,7 @@ cp $ivyPath/cache/voldemort/voldemort/jars/voldemort-0.96.jar $systemlib
 cp $srcPath/lib_managed/jars/asm/asm/asm-3.1.jar $systemlib
 cp $ivyPath/cache/com.fasterxml.jackson.core/jackson-core/bundles/jackson-core-2.3.1.jar $systemlib
 cp $srcPath/lib_managed/jars/commons-pool/commons-pool/commons-pool-1.5.4.jar $systemlib
-cp $ivyPath/cache/org.json4s/json4s-ast_2.10/jars/json4s-ast_2.10-3.2.9.jar $systemlib
+cp $ivyPath/cache/org.json4s/json4s-ast_2.11/jars/json4s-ast_2.11-3.2.9.jar $systemlib
 # Might be only for 2.11
 #cp $srcPath/lib_managed/jars/org.scalameta/prettyprinters_2.11/prettyprinters_2.11-0.0.3.jar $systemlib
 cp $ivyPath/cache/commons-lang/commons-lang/jars/commons-lang-2.6.jar $systemlib
@@ -330,10 +325,9 @@ cp $srcPath/lib_managed/jars/com.googlecode.json-simple/json-simple/json-simple-
 cp $ivyPath/cache/javax.xml.stream/stax-api/jars/stax-api-1.0-2.jar $systemlib
 cp $ivyPath/cache/commons-pool/commons-pool/jars/commons-pool-1.6.jar $systemlib
 cp $ivyPath/cache/org.apache.hadoop/hadoop-auth/jars/hadoop-auth-2.7.1.jar $systemlib
-cp $srcPath/lib_managed/jars/org.scala-lang/scalap/scalap-2.10.0.jar $systemlib
 cp $ivyPath/cache/org.codehaus.jettison/jettison/bundles/jettison-1.1.jar $systemlib
 cp $srcPath/lib_managed/jars/org.codehaus.jackson/jackson-mapper-asl/jackson-mapper-asl-1.9.13.jar $systemlib
-cp $srcPath/lib_managed/jars/org.json4s/json4s-jackson_2.10/json4s-jackson_2.10-3.2.9.jar $systemlib
+cp $srcPath/lib_managed/jars/org.json4s/json4s-jackson_2.11/json4s-jackson_2.11-3.2.9.jar $systemlib
 cp $ivyPath/cache/org.apache.commons/commons-lang3/jars/commons-lang3-3.1.jar $systemlib
 cp $ivyPath/cache/com.datastax.cassandra/cassandra-driver-core/bundles/cassandra-driver-core-2.1.2.jar $systemlib
 cp $ivyPath/cache/org.apache.shiro/shiro-core/bundles/shiro-core-1.2.3.jar $systemlib
@@ -356,7 +350,7 @@ cp $srcPath/lib_managed/jars/commons-io/commons-io/commons-io-2.4.jar $systemlib
 cp $srcPath/lib_managed/jars/commons-codec/commons-codec/commons-codec-1.10.jar $systemlib
 cp $ivyPath/cache/com.thoughtworks.paranamer/paranamer/jars/paranamer-2.6.jar $systemlib
 cp $ivyPath/cache/javax.servlet/servlet-api/jars/servlet-api-2.5.jar $systemlib
-cp $srcPath/lib_managed/jars/org.json4s/json4s-core_2.10/json4s-core_2.10-3.2.9.jar $systemlib
+cp $srcPath/lib_managed/jars/org.json4s/json4s-core_2.11/json4s-core_2.11-3.2.9.jar $systemlib
 cp $ivyPath/cache/com.google.code.gson/gson/jars/gson-2.2.4.jar $systemlib
 
 cp $ivyPath/cache/org.ow2.asm/asm-commons/jars/asm-commons-4.0.jar $systemlib
@@ -393,3 +387,4 @@ cp $ivyPath/cache/com.codahale.metrics/metrics-core/bundles/metrics-core-3.0.2.j
 cp $ivyPath/cache/io.spray/spray-httpx_2.10/bundles/spray-httpx_2.10-1.3.3.jar $systemlib
 cp $ivyPath/cache/commons-codec/commons-codec/jars/commons-codec-1.4.jar $systemlib
 cp $ivyPath/cache/com.101tec/zkclient/jars/zkclient-0.6.jar $systemlib
+

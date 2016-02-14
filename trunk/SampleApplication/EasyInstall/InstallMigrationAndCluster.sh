@@ -41,76 +41,80 @@ ivyPath=$(echo $ivyPath | sed 's/[\/]*$//')
 # *******************************
 # Make the directories as needed for version-2.10
 # *******************************
-mkdir -p $installPath/MigrationAndClusterInstall-$ver210/bin
-#mkdir -p $installPath/MigrationAndClusterInstall-$ver210/lib
-mkdir -p $installPath/MigrationAndClusterInstall-$ver210/lib/system
-mkdir -p $installPath/MigrationAndClusterInstall-$ver210/lib/application
-mkdir -p $installPath/MigrationAndClusterInstall-$ver210/storage
-mkdir -p $installPath/MigrationAndClusterInstall-$ver210/logs
-mkdir -p $installPath/MigrationAndClusterInstall-$ver210/config
-mkdir -p $installPath/MigrationAndClusterInstall-$ver210/documentation
-mkdir -p $installPath/MigrationAndClusterInstall-$ver210/output
-mkdir -p $installPath/MigrationAndClusterInstall-$ver210/workingdir
+mkdir -p $installPath/KamanjaInstall-$ver210/bin
+#mkdir -p $installPath/KamanjaInstall-$ver210/lib
+mkdir -p $installPath/KamanjaInstall-$ver210/lib/system
+mkdir -p $installPath/KamanjaInstall-$ver210/lib/application
+mkdir -p $installPath/KamanjaInstall-$ver210/storage
+mkdir -p $installPath/KamanjaInstall-$ver210/logs
+mkdir -p $installPath/KamanjaInstall-$ver210/config
+mkdir -p $installPath/KamanjaInstall-$ver210/documentation
+mkdir -p $installPath/KamanjaInstall-$ver210/output
+mkdir -p $installPath/KamanjaInstall-$ver210/workingdir
 #mkdir -p $installPath/Kamanja-$ver210/template
-mkdir -p $installPath/MigrationAndClusterInstall-$ver210/template/config
-mkdir -p $installPath/MigrationAndClusterInstall-$ver210/template/script
+mkdir -p $installPath/KamanjaInstall-$ver210/template/config
+mkdir -p $installPath/KamanjaInstall-$ver210/template/script
 
 # *******************************
 # Make the directories as needed for version-2.11
 # *******************************
-mkdir -p $installPath/MigrationAndClusterInstall-$ver211/bin
-#mkdir -p $installPath/MigrationAndClusterInstall-$ver211/lib
-mkdir -p $installPath/MigrationAndClusterInstall-$ver211/lib/system
-mkdir -p $installPath/MigrationAndClusterInstall-$ver211/lib/application
-mkdir -p $installPath/MigrationAndClusterInstall-$ver211/storage
-mkdir -p $installPath/MigrationAndClusterInstall-$ver211/logs
-mkdir -p $installPath/MigrationAndClusterInstall-$ver211/config
-mkdir -p $installPath/MigrationAndClusterInstall-$ver211/documentation
-mkdir -p $installPath/MigrationAndClusterInstall-$ver211/output
-mkdir -p $installPath/MigrationAndClusterInstall-$ver211/workingdir
-#mkdir -p $installPath/MigrationAndClusterInstall-$ver211/template
-mkdir -p $installPath/MigrationAndClusterInstall-$ver211/template/config
-mkdir -p $installPath/MigrationAndClusterInstall-$ver211/template/script
+mkdir -p $installPath/KamanjaInstall-$ver211/bin
+#mkdir -p $installPath/KamanjaInstall-$ver211/lib
+mkdir -p $installPath/KamanjaInstall-$ver211/lib/system
+mkdir -p $installPath/KamanjaInstall-$ver211/lib/application
+mkdir -p $installPath/KamanjaInstall-$ver211/storage
+mkdir -p $installPath/KamanjaInstall-$ver211/logs
+mkdir -p $installPath/KamanjaInstall-$ver211/config
+mkdir -p $installPath/KamanjaInstall-$ver211/documentation
+mkdir -p $installPath/KamanjaInstall-$ver211/output
+mkdir -p $installPath/KamanjaInstall-$ver211/workingdir
+#mkdir -p $installPath/KamanjaInstall-$ver211/template
+mkdir -p $installPath/KamanjaInstall-$ver211/template/config
+mkdir -p $installPath/KamanjaInstall-$ver211/template/script
 
-bin210=$installPath/MigrationAndClusterInstall-$ver210/bin
-systemlib210=$installPath/MigrationAndClusterInstall-$ver210/lib/system
-applib210=$installPath/MigrationAndClusterInstall-$ver210/lib/application
+bin210=$installPath/KamanjaInstall-$ver210/bin
+systemlib210=$installPath/KamanjaInstall-$ver210/lib/system
+applib210=$installPath/KamanjaInstall-$ver210/lib/application
 
-bin211=$installPath/MigrationAndClusterInstall-$ver211/bin
-systemlib211=$installPath/MigrationAndClusterInstall-$ver211/lib/system
-applib211=$installPath/MigrationAndClusterInstall-$ver211/lib/application
+bin211=$installPath/KamanjaInstall-$ver211/bin
+systemlib211=$installPath/KamanjaInstall-$ver211/lib/system
+applib211=$installPath/KamanjaInstall-$ver211/lib/application
 
 cd $srcPath 
 
 cd $srcPath
-cp KamanjaManager/target/scala-2.10/KamanjaManager* $bin210
+#cp KamanjaManager/target/scala-2.10/KamanjaManager* $bin210
 
 cp KamanjaManager/target/scala-2.11/KamanjaManager* $bin211
 # only for 2.11 ?
 cp Utils/Migrate/MigrateManager/target/MigrateManager* $bin211
 
-cp $srcPath/Utils/NodeInfoExtract/target/scala-2.10/NodeInfoExtract* $bin210
+#cp $srcPath/Utils/NodeInfoExtract/target/scala-2.10/NodeInfoExtract* $bin210
 cp $srcPath/Utils/NodeInfoExtract/target/scala-2.11/NodeInfoExtract* $bin211
 
-srcPath=$1
-systemlib=$2
-ivyPath=$3
+#srcPath=$2
+#systemlib=$2
+#ivyPath=$3
 cd $srcPath/SampleApplication/EasyInstall
-bash $srcPath/SampleApplication/EasyInstall/CopyCommonJars.sh $srcPath $systemlib210 $ivyPath
-bash $srcPath/SampleApplication/EasyInstall/CopyCommonJars.sh $srcPath $systemlib211 $ivyPath
-bash $srcPath/SampleApplication/EasyInstall/CopyJars.sh $srcPath $ivyPath $systemlib210 $systemlib211
+bash CopyCommonJars.sh $srcPath $systemlib210 $ivyPath
+#bash $srcPath/SampleApplication/EasyInstall/CopyCommonJars.sh $srcPath $systemlib211 $ivyPath
+#bash $srcPath/SampleApplication/EasyInstall/CopyJars.sh $srcPath $ivyPath $systemlib210 $systemlib211
 
-cd $srcPath/SampleApplication/MigrationAndClusterInstall/template2.10
-cp -rf * $installPath/MigrationAndClusterInstall-$ver210/template
+cd $srcPath/SampleApplication/KamanjaInstall/template2.10
+cp -rf * $installPath/KamanjaInstall-$ver210/template
 
-cd $srcPath/SampleApplication/MigrationAndClusterInstall/template2.11
-cp -rf * $installPath/MigrationAndClusterInstall-$ver211/template
-
-bash $srcPath/SampleApplication/EasyInstall/SetPathsMigrateClusterInstall.sh $KafkaRootDir
+cd $srcPath/SampleApplication/KamanjaInstall/template2.11
+cp -rf * $installPath/KamanjaInstall-$ver211/template
 
 
-chmod 0700 $installPath/MigrationAndClusterInstall-$ver211/input/SampleApplications/bin/*sh
-chmod 0700 $installPath/MigrationAndClusterInstall-$ver211/input/SampleApplications/bin/*sh
+cd $srcPath/SampleApplication/EasyInstall
+#cp SetPathsMigrateClusterInstall.sh $installPath/KamanjaInstall-$ver210/bin/
+#cp SetPathsMigrateClusterInstall.sh $installPath/KamanjaInstall-$ver211/bin/
+
+bash $installPath/KamanjaInstall-$ver211/bin/SetPathsMigrateClusterInstall.sh $installPath $KafkaRootDir
+
+chmod 0700 $installPath/KamanjaInstall-$ver211/bin/*sh
+chmod 0700 $installPath/KamanjaInstall-$ver211/bin/*sh
 
 
-echo "MigrationAndClusterInstall install complete..."
+echo "KamanjaInstall install complete..."

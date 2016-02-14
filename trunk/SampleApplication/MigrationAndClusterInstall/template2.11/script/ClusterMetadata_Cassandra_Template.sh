@@ -6,9 +6,9 @@
 ipport="8998"
 
 if [ "$1" != "debug" ]; then
-	java -Dlog4j.configurationFile=file:{InstallDirectory}/MigrationAndClusterInstall-2.11/config/log4j.properties -jar {InstallDirectory}/MigrationAndClusterInstall-2.11/bin/MetadataAPI-1.0 --config {InstallDirectory}/MigrationAndClusterInstall-2.11/config/ClusterCfgMetadataAPIConfig_Cassandra.properties
+	java -Dlog4j.configurationFile=file:{InstallDirectory}/KamanjaInstall-2.11/config/log4j.properties -jar {InstallDirectory}/KamanjaInstall-2.11/bin/MetadataAPI-1.0 --config {InstallDirectory}/KamanjaInstall-2.11/config/ClusterCfgMetadataAPIConfig_Cassandra.properties
 else
-	java -Xdebug -Xrunjdwp:transport=dt_socket,address="$ipport",server=y -Dlog4j.configurationFile=file:{InstallDirectory}/MigrationAndClusterInstall-2.11/config/log4j.properties -jar {InstallDirectory}/MigrationAndClusterInstall-2.11/bin/MetadataAPI-1.0 --config {InstallDirectory}/MigrationAndClusterInstall-2.11/config/ClusterCfgMetadataAPIConfig_Cassandra.properties
+	java -Xdebug -Xrunjdwp:transport=dt_socket,address="$ipport",server=y -Dlog4j.configurationFile=file:{InstallDirectory}/KamanjaInstall-2.11/config/log4j.properties -jar {InstallDirectory}/KamanjaInstall-2.11/bin/MetadataAPI-1.0 --config {InstallDirectory}/KamanjaInstall-2.11/config/ClusterCfgMetadataAPIConfig_Cassandra.properties
 fi
 
 
