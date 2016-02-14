@@ -73,6 +73,21 @@ class MigrateTo_V_1_3 extends MigratableTo {
     globalExceptions += ((failedMsg, e))
   }
 
+  private def LogGlobalException: Boolean = {
+    if (globalExceptions.size > 0) {
+      globalExceptions.foreach(expTup => {
+        if (expTup._2 != null)
+          logger.error(if (expTup._1 != null) expTup._1 else "", expTup._2)
+        else
+          logger.error(if (expTup._1 != null) expTup._1 else "")
+      })
+      return true
+    }
+
+    return false
+  }
+
+
   private def isValidPath(path: String, checkForDir: Boolean = false, checkForFile: Boolean = false, str: String = "path"): Unit = {
     val fl = new File(path)
     if (fl.exists() == false) {
@@ -272,12 +287,8 @@ class MigrateTo_V_1_3 extends MigratableTo {
             try {
               _metaDataStoreDb.copyTable(backupTblInfo.namespace, backupTblInfo.srcTable, backupTblInfo.dstTable, force)
             } catch {
-              case e: Exception => {
-                AddToGlobalException("Failed to backup metadata table:" + backupTblInfo.srcTable, e)
-              }
-              case e: Throwable => {
-                AddToGlobalException("Failed to backup metadata table:" + backupTblInfo.srcTable, e)
-              }
+              case e: Exception => AddToGlobalException("Failed to backup metadata table:" + backupTblInfo.srcTable, e)
+              case e: Throwable => AddToGlobalException("Failed to backup metadata table:" + backupTblInfo.srcTable, e)
             }
           }
         })
@@ -286,19 +297,14 @@ class MigrateTo_V_1_3 extends MigratableTo {
       try {
         executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
       } catch {
-        case e: Exception => {
-          val stackTrace = StackTrace.ThrowableTraceString(e)
-          throw new Exception("Failed to backup metadata tables : " + stackTrace)
-        }
+        case e: Exception => AddToGlobalException("Failed to backup metadata tables", e)
+        case e: Throwable => AddToGlobalException("Failed to backup metadata tables", e)
       }
     } catch {
-      case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        throw new Exception("Failed to backup metadata tables : " + stackTrace)
-      }
+      case e: Exception => AddToGlobalException("Failed to backup metadata tables", e)
+      case e: Throwable => AddToGlobalException("Failed to backup metadata tables", e)
     }
   }
-
 
   override def backupMetadataTables(tblsToBackedUp: Array[BackupTableInfo], force: Boolean): Unit = {
     if (_bInit == false)
@@ -307,23 +313,28 @@ class MigrateTo_V_1_3 extends MigratableTo {
     try {
       backupMetadataTableBatch(tblsToBackedUp, force)
     } catch {
-      case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        throw new Exception("Failed to backup metadata tables : " + stackTrace)
-      }
+      case e: Exception => AddToGlobalException("Failed to backup metadata tables", e)
+      case e: Throwable => AddToGlobalException("Failed to backup metadata tables", e)
+    }
+    if (LogGlobalException) {
+      throw new Exception("Failed to backup metadata tables")
     }
   }
 
-
   private def backupDataTableBatch(tblsToBackedUp: Array[BackupTableInfo], force: Boolean): Unit = {
     logger.debug("Backup metadata tables:" + tblsToBackedUp.map(t => "(" + t.srcTable + " => " + t.dstTable + ")").mkString(","))
-    var tblCount = tblsToBackedUp.length
+    var executor: ExecutorService = null
     try {
-      executor = Executors.newFixedThreadPool(tblCount)
+      executor = Executors.newFixedThreadPool(if (_parallelDegree <= 1) 1 else _parallelDegree)
       tblsToBackedUp.foreach(backupTblInfo => {
         executor.execute(new Runnable() {
           override def run() = {
-            _dataStoreDb.copyTable(backupTblInfo.namespace, backupTblInfo.srcTable, backupTblInfo.dstTable, force)
+            try {
+              _dataStoreDb.copyTable(backupTblInfo.namespace, backupTblInfo.srcTable, backupTblInfo.dstTable, force)
+            } catch {
+              case e: Exception => AddToGlobalException("Failed to backup metadata table:" + backupTblInfo.srcTable, e)
+              case e: Throwable => AddToGlobalException("Failed to backup metadata table:" + backupTblInfo.srcTable, e)
+            }
           }
         })
       })
@@ -349,16 +360,8 @@ class MigrateTo_V_1_3 extends MigratableTo {
       throw new Exception("Not yet Initialized")
     logger.debug("Backup data tables:" + tblsToBackedUp.map(t => "(" + t.srcTable + " => " + t.dstTable + ")").mkString(","))
     try {
-      var tblCount = tblsToBackedUp.length
-      if (_parallelDegree > 0) {
-        // split the tables into batches depending on the parallel degree
-        backupDataTableBatch(tblsToBackedUp, force)
-      }
-      else {
-        tblsToBackedUp.foreach(backupTblInfo => {
-          _dataStoreDb.copyTable(backupTblInfo.namespace, backupTblInfo.srcTable, backupTblInfo.dstTable, force)
-        })
-      }
+      // split the tables into batches depending on the parallel degree
+      backupDataTableBatch(tblsToBackedUp, force)
     } catch {
       case e: Exception => {
         val stackTrace = StackTrace.ThrowableTraceString(e)
@@ -382,6 +385,7 @@ class MigrateTo_V_1_3 extends MigratableTo {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
     if (tblsToDrop.size > 0) {
+      var executor: ExecutorService = null
       logger.debug("Dropping metadata tables:" + tblsToDrop.mkString(","))
       var tblCount = tblsToDrop.size
       executor = Executors.newFixedThreadPool(tblCount)
@@ -986,44 +990,48 @@ class MigrateTo_V_1_3 extends MigratableTo {
 
     // ProcessObject(containers)
     val contCount = containers.length
-    executor = Executors.newFixedThreadPool(contCount)
-    containers.foreach(obj => {
-      executor.execute(new Runnable() {
-        override def run() = {
-          val mab = ArrayBuffer[(String, Map[String, Any])]()
-          mab += ((obj._1, obj._2))
-          ProcessObject(mab)
-        }
+    if (contCount > 0) {
+      val executor = Executors.newFixedThreadPool(contCount)
+      containers.foreach(obj => {
+        executor.execute(new Runnable() {
+          override def run() = {
+            val mab = ArrayBuffer[(String, Map[String, Any])]()
+            mab += ((obj._1, obj._2))
+            ProcessObject(mab)
+          }
+        })
       })
-    })
-    executor.shutdown();
-    try {
-      executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
-    } catch {
-      case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:" + stackTrace)
+      executor.shutdown();
+      try {
+        executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
+      } catch {
+        case e: Exception => {
+          val stackTrace = StackTrace.ThrowableTraceString(e)
+          logger.debug("StackTrace:" + stackTrace)
+        }
       }
     }
     //ProcessObject(messages)
     val msgCount = messages.length
-    executor = Executors.newFixedThreadPool(msgCount)
-    messages.foreach(obj => {
-      executor.execute(new Runnable() {
-        override def run() = {
-          val mab = ArrayBuffer[(String, Map[String, Any])]()
-          mab += ((obj._1, obj._2))
-          ProcessObject(mab)
-        }
+    if (msgCount > 0) {
+      val executor = Executors.newFixedThreadPool(msgCount)
+      messages.foreach(obj => {
+        executor.execute(new Runnable() {
+          override def run() = {
+            val mab = ArrayBuffer[(String, Map[String, Any])]()
+            mab += ((obj._1, obj._2))
+            ProcessObject(mab)
+          }
+        })
       })
-    })
-    executor.shutdown();
-    try {
-      executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
-    } catch {
-      case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:" + stackTrace)
+      executor.shutdown();
+      try {
+        executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
+      } catch {
+        case e: Exception => {
+          val stackTrace = StackTrace.ThrowableTraceString(e)
+          logger.debug("StackTrace:" + stackTrace)
+        }
       }
     }
 
@@ -1031,23 +1039,25 @@ class MigrateTo_V_1_3 extends MigratableTo {
     ProcessObject(configDef)
     //ProcessObject(models)
     val modelCount = models.length
-    executor = Executors.newFixedThreadPool(modelCount)
-    models.foreach(obj => {
-      executor.execute(new Runnable() {
-        override def run() = {
-          val mab = ArrayBuffer[(String, Map[String, Any])]()
-          mab += ((obj._1, obj._2))
-          ProcessObject(mab)
-        }
+    if (modelCount > 0) {
+      val executor = Executors.newFixedThreadPool(modelCount)
+      models.foreach(obj => {
+        executor.execute(new Runnable() {
+          override def run() = {
+            val mab = ArrayBuffer[(String, Map[String, Any])]()
+            mab += ((obj._1, obj._2))
+            ProcessObject(mab)
+          }
+        })
       })
-    })
-    executor.shutdown();
-    try {
-      executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
-    } catch {
-      case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:" + stackTrace)
+      executor.shutdown();
+      try {
+        executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
+      } catch {
+        case e: Exception => {
+          val stackTrace = StackTrace.ThrowableTraceString(e)
+          logger.debug("StackTrace:" + stackTrace)
+        }
       }
     }
     ProcessObject(outputMsgDef)
