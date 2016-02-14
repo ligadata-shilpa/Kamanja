@@ -729,7 +729,7 @@ cd $srcPath/SampleApplication/InterfacesSamples/src/main/resources/sample-app/me
 cp -rf * $installPath/Kamanja-$ver210/config
 #Finance
 
-cd $srcPath/SampleApplication/EasyInstall/template
+cd $srcPath/SampleApplication/EasyInstall/template/scala-2.10
 cp -rf * $installPath/Kamanja-$ver210/template
 
 cd $srcPath/SampleApplication/EasyInstall
@@ -1337,7 +1337,7 @@ cd $srcPath/SampleApplication/InterfacesSamples/src/main/resources/sample-app/me
 cp -rf * $installPath/Kamanja-$ver211/config
 #Finance
 
-cd $srcPath/SampleApplication/EasyInstall/template
+cd $srcPath/SampleApplication/EasyInstall/template/scala-2.11
 cp -rf * $installPath/Kamanja-$ver211/template
 
 cd $srcPath/SampleApplication/EasyInstall
@@ -1346,8 +1346,5 @@ cp SetPaths.sh $installPath/Kamanja-$ver211/bin/
 bash $installPath/Kamanja-$ver211/bin/SetPaths.sh $KafkaRootDir
 
 chmod 0700 $installPath/Kamanja-$ver211/input/SampleApplications/bin/*sh
-
-cd $srcPath/SampleApplication/EasyInstall
-bash InstallMigrationAndCluster.sh $installPath $srcPath $ivyPath $KafkaRootDir
 
 echo "Kamanja install complete..."
