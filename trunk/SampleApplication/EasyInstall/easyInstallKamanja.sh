@@ -1347,4 +1347,6 @@ bash $installPath/Kamanja-$ver211/bin/SetPaths.sh $KafkaRootDir
 
 chmod 0700 $installPath/Kamanja-$ver211/input/SampleApplications/bin/*sh
 
+cd $srcPath/SampleApplication/EasyInstall
+bash InstallMigrationAndCluster.sh $installPath $srcPath $ivyPath $KafkaRootDir
 echo "Kamanja install complete..."
