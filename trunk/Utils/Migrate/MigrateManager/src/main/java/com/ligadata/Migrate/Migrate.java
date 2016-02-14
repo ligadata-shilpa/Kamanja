@@ -296,6 +296,8 @@ public class Migrate {
             // Version check
             String srcVer = configuration.migratingFrom.version.trim();
             String dstVer = configuration.migratingTo.version.trim();
+            String scalaFrom = configuration.migratingFrom.scalaVersion.trim();
+            String scalaTo = configuration.migratingTo.scalaVersion.trim();
 
             if (srcVer.equalsIgnoreCase("1.1") == false
                     && srcVer.equalsIgnoreCase("1.2") == false) {
@@ -308,6 +310,18 @@ public class Migrate {
             if (dstVer.equalsIgnoreCase("1.3") == false) {
                 logger.error("We support destination version only 1.3. We don't support "
                         + srcVer);
+                usage();
+                return retCode;
+            }
+
+            if (scalaFrom.equalsIgnoreCase("2.10") == false /* && scalaFrom.equalsIgnoreCase("2.11") == false */) {
+                logger.error("We support source scala version only 2.10. Given:" + scalaFrom);
+                usage();
+                return retCode;
+            }
+
+            if (scalaTo.equalsIgnoreCase("2.10") == false && scalaTo.equalsIgnoreCase("2.11") == false) {
+                logger.error("We support destination scala version only 2.10 or 2.11. Given:" + scalaTo);
                 usage();
                 return retCode;
             }
@@ -349,6 +363,14 @@ public class Migrate {
             } else {
                 usage();
                 return retCode;
+            }
+
+            if (srcVer.equalsIgnoreCase("1.2") &&
+                    dstVer.equalsIgnoreCase("1.3") &&
+                    scalaFrom.equalsIgnoreCase("2.10") &&
+                    scalaTo.equalsIgnoreCase("2.10")) {
+                logger.warn("Nothing to migrate from 1.2 to 1.3 with scala 2.10 version");
+                return 0;
             }
 
             // From Srouce version 1.1 to Destination version 1.3 we do both
@@ -435,8 +457,8 @@ public class Migrate {
                         curMigrationSummary,
                         configuration.parallelDegree,
                         configuration.mergeContainersAndMessages,
-                        configuration.migratingTo.scalaVersion,
-                        configuration.migratingTo.scalaVersion);
+                        scalaFrom,
+                        scalaTo);
 
                 String metadataStoreInfo = migrateTo.getMetadataStoreInfo();
                 String dataStoreInfo = migrateTo.getDataStoreInfo();
@@ -469,6 +491,8 @@ public class Migrate {
                 List<TableName> statusDelTbls = new ArrayList<TableName>();
 
                 boolean allTblsBackedUp = true;
+                int foundMdTablesWhichBackedUp = 0;
+                int foundMdTablesWhichDidnotBackedUp = 0;
 
                 for (TableName tblInfo : allMetadataTbls) {
                     BackupTableInfo bkup = new BackupTableInfo(tblInfo.namespace,
@@ -481,7 +505,20 @@ public class Migrate {
                         }
                         metadataBackupTbls.add(bkup);
                         metadataDelTbls.add(tblInfo);
+                    } else {
+                        // If main table does not exists and backup table does not exists mean there is some issue with getting tables or something like that
+                        if (migrateTo.isMetadataTableExists(new TableName(
+                                tblInfo.namespace, bkup.dstTable))) {
+                            foundMdTablesWhichBackedUp += 1;
+                        } else {
+                            foundMdTablesWhichDidnotBackedUp += 1;
+                        }
                     }
+                }
+
+                if (foundMdTablesWhichDidnotBackedUp > 0 && foundMdTablesWhichBackedUp == 0) {
+                    // Not really found tables to backup
+                    throw new Exception("Did not find any metadata table and also not found any backed up tables.");
                 }
 
                 for (TableName tblInfo : allDataTbls) {
