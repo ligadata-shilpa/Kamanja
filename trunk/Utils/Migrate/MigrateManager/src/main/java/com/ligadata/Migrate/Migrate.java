@@ -38,16 +38,11 @@ public class Migrate {
 
     class VersionConfig {
         String version = null;
+        String scalaVersion = null;
         String versionInstallPath = null;
         String implemtedClass = null;
         List<String> jars = null;
 
-        /*
-         * VersionConfig(String tversion, String tversionInstallPath, String
-         * timplemtedClass, List<String> tjars) { version = tversion;
-         * versionInstallPath = tversionInstallPath; implemtedClass =
-         * timplemtedClass; jars = tjars; }
-         */
         VersionConfig() {
         }
     }
@@ -63,16 +58,7 @@ public class Migrate {
         boolean excludeData = false;
         int parallelDegree = 0;
         boolean mergeContainersAndMessages = true;
-        String fromScalaVersion = null;
-        String toScalaVersion = null;
 
-        /*
-         * Configuration(String tclusterConfigFile, String tapiConfigFile,
-         * VersionConfig tmigratingFrom, VersionConfig tmigratingTo) {
-         * clusterConfigFile = tclusterConfigFile; apiConfigFile =
-         * tapiConfigFile; migratingFrom = tmigratingFrom; migratingTo =
-         * tmigratingTo; }
-         */
         Configuration() {
         }
     }
@@ -449,8 +435,8 @@ public class Migrate {
                         curMigrationSummary,
                         configuration.parallelDegree,
                         configuration.mergeContainersAndMessages,
-                        configuration.fromScalaVersion,
-                        configuration.toScalaVersion);
+                        configuration.migratingTo.scalaVersion,
+                        configuration.migratingTo.scalaVersion);
 
                 String metadataStoreInfo = migrateTo.getMetadataStoreInfo();
                 String dataStoreInfo = migrateTo.getDataStoreInfo();
