@@ -42,7 +42,6 @@ import com.ligadata.kamanja.metadata.ModelCompilationConstants
 import com.ligadata.Exceptions.{FatalAdapterException, StorageDMLException, StorageDDLException}
 
 import scala.actors.threadpool.{Executors, ExecutorService, TimeUnit}
-import com.ligadata.Exceptions.StackTrace
 
 class MigrateTo_V_1_3 extends MigratableTo {
   lazy val loggerName = this.getClass.getName
@@ -73,6 +72,12 @@ class MigrateTo_V_1_3 extends MigratableTo {
 
   private def AddToGlobalException(failedMsg: String, e: Throwable): Unit = {
     globalExceptions += ((failedMsg, e))
+  }
+
+  private def AddMdObjToGlobalException(mdObj: (String, Map[String, Any]), failedMsg: String, e: Throwable): Unit = {
+    val namespace = mdObj._2.getOrElse("NameSpace", "").toString.trim()
+    val name = mdObj._2.getOrElse("Name", "").toString.trim()
+    AddToGlobalException(failedMsg + ":" + namespace + "." + name, e)
   }
 
   private def LogGlobalException: Boolean = {
@@ -281,6 +286,21 @@ class MigrateTo_V_1_3 extends MigratableTo {
     false
   }
 
+  private def addBackupTablesToExecutor(executor: ExecutorService, storeDb: DataStore, tblsToBackedUp: Array[BackupTableInfo], errMsgTemplate: String, force: Boolean): Unit = {
+    tblsToBackedUp.foreach(backupTblInfo => {
+      executor.execute(new Runnable() {
+        override def run() = {
+          try {
+            storeDb.copyTable(backupTblInfo.namespace, backupTblInfo.srcTable, backupTblInfo.dstTable, force)
+          } catch {
+            case e: Exception => AddToGlobalException(errMsgTemplate + "(" + backupTblInfo.namespace + "," + backupTblInfo.srcTable + " => " + backupTblInfo.namespace + "," + backupTblInfo.dstTable + ")", e)
+            case e: Throwable => AddToGlobalException(errMsgTemplate + "(" + backupTblInfo.namespace + "," + backupTblInfo.srcTable + " => " + backupTblInfo.namespace + "," + backupTblInfo.dstTable + ")", e)
+          }
+        }
+      })
+    })
+  }
+
   override def backupAllTables(metadataTblsToBackedUp: Array[BackupTableInfo], dataTblsToBackedUp: Array[BackupTableInfo], statusTblsToBackedUp: Array[BackupTableInfo], force: Boolean): Unit = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
@@ -290,50 +310,15 @@ class MigrateTo_V_1_3 extends MigratableTo {
     var executor: ExecutorService = null
     try {
       executor = Executors.newFixedThreadPool(if (_parallelDegree <= 1) 1 else _parallelDegree)
-      metadataTblsToBackedUp.foreach(backupTblInfo => {
-        executor.execute(new Runnable() {
-          override def run() = {
-            try {
-              _metaDataStoreDb.copyTable(backupTblInfo.namespace, backupTblInfo.srcTable, backupTblInfo.dstTable, force)
-            } catch {
-              case e: Exception => AddToGlobalException("Failed to backup metadata table:(" + backupTblInfo.namespace + "," + backupTblInfo.srcTable + " => " + backupTblInfo.namespace + "," + backupTblInfo.dstTable + ")", e)
-              case e: Exception => AddToGlobalException("Failed to backup metadata table:(" + backupTblInfo.namespace + "," + backupTblInfo.srcTable + " => " + backupTblInfo.namespace + "," + backupTblInfo.dstTable + ")", e)
-            }
-          }
-        })
-      })
-
-      dataTblsToBackedUp.foreach(backupTblInfo => {
-        executor.execute(new Runnable() {
-          override def run() = {
-            try {
-              _dataStoreDb.copyTable(backupTblInfo.namespace, backupTblInfo.srcTable, backupTblInfo.dstTable, force)
-            } catch {
-              case e: Exception => AddToGlobalException("Failed to backup data table:(" + backupTblInfo.namespace + "," + backupTblInfo.srcTable + " => " + backupTblInfo.namespace + "," + backupTblInfo.dstTable + ")", e)
-              case e: Exception => AddToGlobalException("Failed to backup data table:(" + backupTblInfo.namespace + "," + backupTblInfo.srcTable + " => " + backupTblInfo.namespace + "," + backupTblInfo.dstTable + ")", e)
-            }
-          }
-        })
-      })
 
       if (statusTblsToBackedUp.size > 0) {
         if (_statusStoreDb == null)
           throw new Exception("Does not have Status store information")
-
-        statusTblsToBackedUp.foreach(backupTblInfo => {
-          executor.execute(new Runnable() {
-            override def run() = {
-              try {
-                _statusStoreDb.copyTable(backupTblInfo.namespace, backupTblInfo.srcTable, backupTblInfo.dstTable, force)
-              } catch {
-                case e: Exception => AddToGlobalException("Failed to backup status table:(" + backupTblInfo.namespace + "," + backupTblInfo.srcTable + " => " + backupTblInfo.namespace + "," + backupTblInfo.dstTable + ")", e)
-                case e: Exception => AddToGlobalException("Failed to backup status table:(" + backupTblInfo.namespace + "," + backupTblInfo.srcTable + " => " + backupTblInfo.namespace + "," + backupTblInfo.dstTable + ")", e)
-              }
-            }
-          })
-        })
+        addBackupTablesToExecutor(executor, _statusStoreDb, statusTblsToBackedUp, "Failed to backup status table:", force)
       }
 
+      addBackupTablesToExecutor(executor, _metaDataStoreDb, metadataTblsToBackedUp, "Failed to backup metadata table:", force)
+      addBackupTablesToExecutor(executor, _dataStoreDb, dataTblsToBackedUp, "Failed to backup data table:", force)
       executor.shutdown();
       try {
         executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
@@ -361,6 +346,23 @@ class MigrateTo_V_1_3 extends MigratableTo {
     }
   }
 
+  private def addDropTablesToExecutor(executor: ExecutorService, storeDb: DataStore, tblsToDrop: Array[(String, String)], errMsgTemplate: String): Unit = {
+    if (tblsToDrop.size > 0) {
+      tblsToDrop.foreach(dropTblTuple => {
+        executor.execute(new Runnable() {
+          override def run() = {
+            try {
+              storeDb.dropTables(Array(dropTblTuple))
+            } catch {
+              case e: Exception => AddToGlobalException(errMsgTemplate + dropTblTuple.toString(), e)
+              case e: Throwable => AddToGlobalException(errMsgTemplate + dropTblTuple.toString(), e)
+            }
+          }
+        })
+      })
+    }
+  }
+
   def dropAllTables(metadataTblsToDrop: Array[TableName], dataTblsToDrop: Array[TableName], statusTblsToDrop: Array[TableName]): Unit = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
@@ -373,54 +375,14 @@ class MigrateTo_V_1_3 extends MigratableTo {
       val statusTblsTuples = statusTblsToDrop.map(t => (t.namespace, t.name))
       logger.debug("Drop tables => (Metadata Tables:{" + metadataTblsTuples.mkString(",") + "}, Data Tables:" + dataTblsTuples.mkString(",") + "}, Status Tables:" + statusTblsTuples.mkString(",") + "})")
 
-
-      if (metadataTblsTuples.size > 0) {
-        metadataTblsTuples.foreach(dropTblTuple => {
-          executor.execute(new Runnable() {
-            override def run() = {
-              try {
-                _metaDataStoreDb.dropTables(Array(dropTblTuple))
-              } catch {
-                case e: Exception => AddToGlobalException("Failed to drop metadata table:" + dropTblTuple.toString(), e)
-                case e: Throwable => AddToGlobalException("Failed to drop metadata table:" + dropTblTuple.toString(), e)
-              }
-            }
-          })
-        })
-      }
-
-      if (dataTblsTuples.size > 0) {
-        dataTblsTuples.foreach(dropTblTuple => {
-          executor.execute(new Runnable() {
-            override def run() = {
-              try {
-                _dataStoreDb.dropTables(Array(dropTblTuple))
-              } catch {
-                case e: Exception => AddToGlobalException("Failed to drop data table:" + dropTblTuple.toString(), e)
-                case e: Throwable => AddToGlobalException("Failed to drop data table:" + dropTblTuple.toString(), e)
-              }
-            }
-          })
-        })
-      }
-
       if (statusTblsTuples.size > 0) {
         if (_statusStoreDb == null)
           throw new Exception("Does not have Status store information")
-
-        statusTblsTuples.foreach(dropTblTuple => {
-          executor.execute(new Runnable() {
-            override def run() = {
-              try {
-                _statusStoreDb.dropTables(Array(dropTblTuple))
-              } catch {
-                case e: Exception => AddToGlobalException("Failed to drop status table:" + dropTblTuple.toString(), e)
-                case e: Throwable => AddToGlobalException("Failed to drop status table:" + dropTblTuple.toString(), e)
-              }
-            }
-          })
-        })
+        addDropTablesToExecutor(executor, _statusStoreDb, statusTblsTuples, "Failed to drop status table:")
       }
+
+      addDropTablesToExecutor(executor, _metaDataStoreDb, metadataTblsTuples, "Failed to drop data table:")
+      addDropTablesToExecutor(executor, _dataStoreDb, dataTblsTuples, "Failed to drop metadata table:")
 
       executor.shutdown();
       try {
@@ -473,7 +435,7 @@ class MigrateTo_V_1_3 extends MigratableTo {
     })
 
     if (messagesAndContainers.size > 0) {
-     logger.debug("Dropping messages/containers:" + messagesAndContainers.mkString(","))
+      logger.debug("Dropping messages/containers:" + messagesAndContainers.mkString(","))
       var executor: ExecutorService = null
       try {
         executor = Executors.newFixedThreadPool(if (_parallelDegree <= 1) 1 else _parallelDegree)
@@ -585,100 +547,28 @@ class MigrateTo_V_1_3 extends MigratableTo {
       mdObjs.foreach(mdObj => {
         val objType = mdObj._1
 
-        val namespace = mdObj._2.getOrElse("NameSpace", "").toString.trim()
-        val name = mdObj._2.getOrElse("Name", "").toString.trim()
-        val dispkey = (namespace + "." + name).toLowerCase
-        val ver = mdObj._2.getOrElse("Version", "0.0.1").toString
-        val objFormat = mdObj._2.getOrElse("ObjectFormat", "").toString
+        try {
+          val namespace = mdObj._2.getOrElse("NameSpace", "").toString.trim()
+          val name = mdObj._2.getOrElse("Name", "").toString.trim()
+          val dispkey = (namespace + "." + name).toLowerCase
+          val ver = mdObj._2.getOrElse("Version", "0.0.1").toString
+          val objFormat = mdObj._2.getOrElse("ObjectFormat", "").toString
 
-        objType match {
-          case "ModelDef" => {
-            val mdlType = mdObj._2.getOrElse("ModelType", "").toString
-            val mdlDefStr = mdObj._2.getOrElse("ObjectDefinition", "").toString
+          objType match {
+            case "ModelDef" => {
+              val mdlType = mdObj._2.getOrElse("ModelType", "").toString
+              val mdlDefStr = mdObj._2.getOrElse("ObjectDefinition", "").toString
 
-            logger.info("Adding model:" + dispkey + ", ModelType:" + mdlType + ", ObjectFormat:" + objFormat)
+              logger.info("Adding model:" + dispkey + ", ModelType:" + mdlType + ", ObjectFormat:" + objFormat)
 
-            if (_sourceVersion.equalsIgnoreCase("1.1")) {
-              if ((objFormat.equalsIgnoreCase("JAVA")) || (objFormat.equalsIgnoreCase("scala"))) {
-                val mdlInfo = parse(mdlDefStr).values.asInstanceOf[Map[String, Any]]
-                val defStr = mdlInfo.getOrElse(ModelCompilationConstants.SOURCECODE, "").asInstanceOf[String]
-                // val phyName = mdlInfo.getOrElse(ModelCompilationConstants.PHYSICALNAME, "").asInstanceOf[String]
-                val deps = DepJars(mdlInfo.getOrElse(ModelCompilationConstants.DEPENDENCIES, List[String]()).asInstanceOf[List[String]])
-                val typs = mdlInfo.getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, List[String]()).asInstanceOf[List[String]]
+              if (_sourceVersion.equalsIgnoreCase("1.1")) {
+                if ((objFormat.equalsIgnoreCase("JAVA")) || (objFormat.equalsIgnoreCase("scala"))) {
+                  val mdlInfo = parse(mdlDefStr).values.asInstanceOf[Map[String, Any]]
+                  val defStr = mdlInfo.getOrElse(ModelCompilationConstants.SOURCECODE, "").asInstanceOf[String]
+                  // val phyName = mdlInfo.getOrElse(ModelCompilationConstants.PHYSICALNAME, "").asInstanceOf[String]
+                  val deps = DepJars(mdlInfo.getOrElse(ModelCompilationConstants.DEPENDENCIES, List[String]()).asInstanceOf[List[String]])
+                  val typs = mdlInfo.getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, List[String]()).asInstanceOf[List[String]]
 
-                var defFl = _unhandledMetadataDumpDir + "/" + objFormat + "_mdldef_" + dispkey + "." + ver + "." + objFormat.toLowerCase()
-                var jsonFl = _unhandledMetadataDumpDir + "/" + objFormat + "_mdlinfo_" + dispkey + "." + ver + ".json"
-
-                val dumpMdlInfoStr = ("ModelInfo" ->
-                  ("Dependencies" -> deps) ~
-                    ("MessageAndContainers" -> typs) ~
-                    ("ModelType" -> mdlType) ~
-                    ("ObjectFormat" -> objFormat) ~
-                    ("ModelDefinition" -> defStr) ~
-                    ("NameSpace" -> namespace) ~
-                    ("Name" -> name) ~
-                    ("Version" -> ver))
-
-                WriteStringToFile(defFl, defStr)
-                WriteStringToFile(jsonFl, compact(render(dumpMdlInfoStr)))
-
-                val msgStr = ("%s type models can not be migrated automatically. Model %s definition is dumped into %s, more model information dumped to %s.".format(objFormat, dispkey, defFl, jsonFl))
-                logger.error(msgStr)
-                _flCurMigrationSummary.println(msgStr)
-                _flCurMigrationSummary.flush()
-              } else if (objFormat.equalsIgnoreCase("XML")) {
-                var defFl = _unhandledMetadataDumpDir + "/kPMML_mdldef_" + dispkey + "." + ver + "." + objFormat.toLowerCase()
-                var failed = false
-                try {
-                  val retRes = MetadataAPIImpl.AddModel(MetadataAPI.ModelType.fromString("kpmml"), mdlDefStr, defaultUserId, Some(dispkey), Some(ver))
-                  failed = isFailedStatus(retRes)
-                } catch {
-                  case e: Exception => {
-                    logger.error("Failed to add model:" + dispkey, e)
-                    failed = true
-                  }
-                }
-
-                if (failed) {
-                  WriteStringToFile(defFl, mdlDefStr)
-                  val msgStr = ("kPMML type model failed to migrate. Model %s definition is dumped into %s.".format(dispkey, defFl))
-                  logger.error(msgStr)
-                  _flCurMigrationSummary.println(msgStr)
-                  _flCurMigrationSummary.flush()
-                }
-              }
-            } else if (_sourceVersion.equalsIgnoreCase("1.2")) {
-              if ((objFormat.equalsIgnoreCase("JAVA")) || (objFormat.equalsIgnoreCase("scala"))) {
-                val mdlInfo = parse(mdlDefStr).values.asInstanceOf[Map[String, Any]]
-                val defStr = mdlInfo.getOrElse(ModelCompilationConstants.SOURCECODE, "").asInstanceOf[String]
-                // val phyName = mdlInfo.getOrElse(ModelCompilationConstants.PHYSICALNAME, "").asInstanceOf[String]
-                val deps = DepJars(mdlInfo.getOrElse(ModelCompilationConstants.DEPENDENCIES, List[String]()).asInstanceOf[List[String]])
-                val typs = mdlInfo.getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, List[String]()).asInstanceOf[List[String]]
-
-                val mdlConfig = ("migrationmodelconfig_from_1_2_to_1_3" ->
-                  ("Dependencies" -> deps) ~
-                    ("MessageAndContainers" -> typs))
-
-                var failed = false
-
-                try {
-                  val mdlCfgStr = compact(render(mdlConfig))
-                  logger.debug("Temporary Model Config:" + mdlCfgStr)
-                  val retRes = MetadataAPIImpl.UploadModelsConfig(mdlCfgStr, defaultUserId, "configuration", true)
-                  failed = isFailedStatus(retRes)
-
-                  if (failed == false) {
-                    val retRes1 = MetadataAPIImpl.AddModel(MetadataAPI.ModelType.fromString(objFormat), defStr, defaultUserId, Some((defaultUserId.get + ".migrationmodelconfig_from_1_2_to_1_3").toLowerCase), Some(ver))
-                    failed = isFailedStatus(retRes1)
-                  }
-                } catch {
-                  case e: Exception => {
-                    logger.error("Failed to add model:" + dispkey, e)
-                    failed = true
-                  }
-                }
-
-                if (failed) {
                   var defFl = _unhandledMetadataDumpDir + "/" + objFormat + "_mdldef_" + dispkey + "." + ver + "." + objFormat.toLowerCase()
                   var jsonFl = _unhandledMetadataDumpDir + "/" + objFormat + "_mdlinfo_" + dispkey + "." + ver + ".json"
 
@@ -695,228 +585,351 @@ class MigrateTo_V_1_3 extends MigratableTo {
                   WriteStringToFile(defFl, defStr)
                   WriteStringToFile(jsonFl, compact(render(dumpMdlInfoStr)))
 
-                  val msgStr = ("%s type model failed to migrate. Model %s definition is dumped into %s, more model information dumped to %s.".format(objFormat, dispkey, defFl, jsonFl))
+                  val msgStr = ("%s type models can not be migrated automatically. Model %s definition is dumped into %s, more model information dumped to %s.".format(objFormat, dispkey, defFl, jsonFl))
                   logger.error(msgStr)
                   _flCurMigrationSummary.println(msgStr)
                   _flCurMigrationSummary.flush()
+                } else if (objFormat.equalsIgnoreCase("XML")) {
+                  var defFl = _unhandledMetadataDumpDir + "/kPMML_mdldef_" + dispkey + "." + ver + "." + objFormat.toLowerCase()
+                  var failed = false
+                  try {
+                    val retRes = MetadataAPIImpl.AddModel(MetadataAPI.ModelType.fromString("kpmml"), mdlDefStr, defaultUserId, Some(dispkey), Some(ver))
+                    failed = isFailedStatus(retRes)
+                  } catch {
+                    case e: Exception => {
+                      logger.error("Failed to add model:" + dispkey, e)
+                      failed = true
+                    }
+                  }
+
+                  if (failed) {
+                    WriteStringToFile(defFl, mdlDefStr)
+                    val msgStr = ("kPMML type model failed to migrate. Model %s definition is dumped into %s.".format(dispkey, defFl))
+                    logger.error(msgStr)
+                    _flCurMigrationSummary.println(msgStr)
+                    _flCurMigrationSummary.flush()
+                  }
                 }
-              } else if (objFormat.equalsIgnoreCase("XML")) {
-                var defFl = _unhandledMetadataDumpDir + "/kPMML_mdldef_" + dispkey + "." + ver + "." + objFormat.toLowerCase()
+              } else if (_sourceVersion.equalsIgnoreCase("1.2")) {
+                if ((objFormat.equalsIgnoreCase("JAVA")) || (objFormat.equalsIgnoreCase("scala"))) {
+                  val mdlInfo = parse(mdlDefStr).values.asInstanceOf[Map[String, Any]]
+                  val defStr = mdlInfo.getOrElse(ModelCompilationConstants.SOURCECODE, "").asInstanceOf[String]
+                  // val phyName = mdlInfo.getOrElse(ModelCompilationConstants.PHYSICALNAME, "").asInstanceOf[String]
+                  val deps = DepJars(mdlInfo.getOrElse(ModelCompilationConstants.DEPENDENCIES, List[String]()).asInstanceOf[List[String]])
+                  val typs = mdlInfo.getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, List[String]()).asInstanceOf[List[String]]
+
+                  val mdlConfig = ("migrationmodelconfig_from_1_2_to_1_3" ->
+                    ("Dependencies" -> deps) ~
+                      ("MessageAndContainers" -> typs))
+
+                  var failed = false
+
+                  try {
+                    val mdlCfgStr = compact(render(mdlConfig))
+                    logger.debug("Temporary Model Config:" + mdlCfgStr)
+                    val retRes = MetadataAPIImpl.UploadModelsConfig(mdlCfgStr, defaultUserId, "configuration", true)
+                    failed = isFailedStatus(retRes)
+
+                    if (failed == false) {
+                      val retRes1 = MetadataAPIImpl.AddModel(MetadataAPI.ModelType.fromString(objFormat), defStr, defaultUserId, Some((defaultUserId.get + ".migrationmodelconfig_from_1_2_to_1_3").toLowerCase), Some(ver))
+                      failed = isFailedStatus(retRes1)
+                    }
+                  } catch {
+                    case e: Exception => {
+                      logger.error("Failed to add model:" + dispkey, e)
+                      failed = true
+                    }
+                  }
+
+                  if (failed) {
+                    var defFl = _unhandledMetadataDumpDir + "/" + objFormat + "_mdldef_" + dispkey + "." + ver + "." + objFormat.toLowerCase()
+                    var jsonFl = _unhandledMetadataDumpDir + "/" + objFormat + "_mdlinfo_" + dispkey + "." + ver + ".json"
+
+                    val dumpMdlInfoStr = ("ModelInfo" ->
+                      ("Dependencies" -> deps) ~
+                        ("MessageAndContainers" -> typs) ~
+                        ("ModelType" -> mdlType) ~
+                        ("ObjectFormat" -> objFormat) ~
+                        ("ModelDefinition" -> defStr) ~
+                        ("NameSpace" -> namespace) ~
+                        ("Name" -> name) ~
+                        ("Version" -> ver))
+
+                    WriteStringToFile(defFl, defStr)
+                    WriteStringToFile(jsonFl, compact(render(dumpMdlInfoStr)))
+
+                    val msgStr = ("%s type model failed to migrate. Model %s definition is dumped into %s, more model information dumped to %s.".format(objFormat, dispkey, defFl, jsonFl))
+                    logger.error(msgStr)
+                    _flCurMigrationSummary.println(msgStr)
+                    _flCurMigrationSummary.flush()
+                  }
+                } else if (objFormat.equalsIgnoreCase("XML")) {
+                  var defFl = _unhandledMetadataDumpDir + "/kPMML_mdldef_" + dispkey + "." + ver + "." + objFormat.toLowerCase()
+                  var failed = false
+
+                  try {
+                    val retRes = MetadataAPIImpl.AddModel(MetadataAPI.ModelType.fromString("kpmml"), mdlDefStr, defaultUserId, Some(dispkey), Some(ver))
+                    failed = isFailedStatus(retRes)
+                  } catch {
+                    case e: Exception => {
+                      logger.error("Failed to add model:" + dispkey, e)
+                      failed = true
+                    }
+                  }
+                  if (failed) {
+                    WriteStringToFile(defFl, mdlDefStr)
+                    val msgStr = ("kPMML type model failed to migrate. Model %s definition is dumped into %s.".format(dispkey, defFl))
+                    logger.error(msgStr)
+                    _flCurMigrationSummary.println(msgStr)
+                    _flCurMigrationSummary.flush()
+                  }
+                }
+              } else {
+                logger.error("Not supported any other source migration version other than 1.1 and 1.2")
+              }
+            }
+            case "MessageDef" => {
+              val msgDefStr = mdObj._2.getOrElse("ObjectDefinition", "").toString
+              if (msgDefStr != null && msgDefStr.size > 0) {
+                logger.info("Adding the message:" + dispkey)
+                var defFl = _unhandledMetadataDumpDir + "/message_" + dispkey + "." + ver + "." + objFormat.toLowerCase()
                 var failed = false
 
                 try {
-                  val retRes = MetadataAPIImpl.AddModel(MetadataAPI.ModelType.fromString("kpmml"), mdlDefStr, defaultUserId, Some(dispkey), Some(ver))
+                  val retRes = MetadataAPIImpl.AddMessage(msgDefStr, "JSON", defaultUserId)
                   failed = isFailedStatus(retRes)
                 } catch {
                   case e: Exception => {
-                    logger.error("Failed to add model:" + dispkey, e)
+                    logger.error("Failed to add message:" + dispkey, e)
                     failed = true
                   }
                 }
                 if (failed) {
-                  WriteStringToFile(defFl, mdlDefStr)
-                  val msgStr = ("kPMML type model failed to migrate. Model %s definition is dumped into %s.".format(dispkey, defFl))
+                  WriteStringToFile(defFl, msgDefStr)
+                  val msgStr = ("Message failed to migrate. Message %s definition is dumped into %s.".format(dispkey, defFl))
+                  logger.error(msgStr)
+                  _flCurMigrationSummary.println(msgStr)
+                  _flCurMigrationSummary.flush()
+                }
+              } else {
+                logger.debug("Bootstrap object. Ignore it")
+              }
+            }
+            case "ContainerDef" => {
+              logger.debug("Adding the container:" + dispkey)
+              val contDefStr = mdObj._2.getOrElse("ObjectDefinition", "").toString
+              if (contDefStr != null && contDefStr.size > 0) {
+                logger.info("Adding the message: name of the object =>  " + dispkey)
+                var defFl = _unhandledMetadataDumpDir + "/container_" + dispkey + "." + ver + "." + objFormat.toLowerCase()
+                var failed = false
+
+                try {
+                  val retRes = MetadataAPIImpl.AddContainer(contDefStr, "JSON", defaultUserId)
+                  failed = isFailedStatus(retRes)
+                } catch {
+                  case e: Exception => {
+                    logger.error("Failed to add container:" + dispkey, e)
+                    failed = true
+                  }
+                }
+                if (failed) {
+                  WriteStringToFile(defFl, contDefStr)
+                  val msgStr = ("Container failed to migrate. Container %s definition is dumped into %s.".format(dispkey, defFl))
+                  logger.error(msgStr)
+                  _flCurMigrationSummary.println(msgStr)
+                  _flCurMigrationSummary.flush()
+                }
+              } else {
+                logger.debug("Bootstrap object. Ignore it")
+              }
+            }
+            case "ConfigDef" => {
+              val mdlCfg = mdObj._2.getOrElse("ObjectDefinition", "").toString
+              if (mdlCfg != null && mdlCfg.size > 0) {
+                logger.debug("Adding model config:" + dispkey)
+                var defFl = _unhandledMetadataDumpDir + "/ModelConfig_" + dispkey + "." + ver + "." + objFormat.toLowerCase()
+                var failed = false
+
+                try {
+
+                  val cfgmap = parse(mdlCfg).values.asInstanceOf[Map[String, Any]]
+                  val changedCfg = cfgmap.map(kv => {
+                    val key = kv._1
+                    val mdl = kv._2.asInstanceOf[Map[String, Any]]
+                    val deps1 = mdl.getOrElse(ModelCompilationConstants.DEPENDENCIES, null)
+                    val typs1 = mdl.getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, null)
+                    val phyNm = mdl.getOrElse(ModelCompilationConstants.PHYSICALNAME, "").toString()
+
+                    val deps = if (deps1 != null) DepJars(deps1.asInstanceOf[List[String]]) else List[String]()
+                    val typs = if (typs1 != null) typs1.asInstanceOf[List[String]] else List[String]()
+
+                    (key, Map(ModelCompilationConstants.DEPENDENCIES -> deps, ModelCompilationConstants.TYPES_DEPENDENCIES -> typs, ModelCompilationConstants.PHYSICALNAME -> phyNm))
+                  })
+
+                  implicit val jsonFormats: Formats = DefaultFormats
+                  val newMdlCfgStr = Serialization.write(changedCfg)
+                  val retRes = MetadataAPIImpl.UploadModelsConfig(newMdlCfgStr, Some[String](namespace), null) // Considering namespace as userid
+                  failed = isFailedStatus(retRes)
+                } catch {
+                  case e: Exception => {
+                    logger.error("Failed to add model config:" + dispkey, e)
+                    failed = true
+                  }
+                }
+                if (failed) {
+                  WriteStringToFile(defFl, mdlCfg)
+                  val msgStr = ("Model Config failed to migrate. Model Config %s definition is dumped into %s.".format(dispkey, defFl))
                   logger.error(msgStr)
                   _flCurMigrationSummary.println(msgStr)
                   _flCurMigrationSummary.flush()
                 }
               }
-            } else {
-              logger.error("Not supported any other source migration version other than 1.1 and 1.2")
             }
-          }
-          case "MessageDef" => {
-            val msgDefStr = mdObj._2.getOrElse("ObjectDefinition", "").toString
-            if (msgDefStr != null && msgDefStr.size > 0) {
-              logger.info("Adding the message:" + dispkey)
-              var defFl = _unhandledMetadataDumpDir + "/message_" + dispkey + "." + ver + "." + objFormat.toLowerCase()
-              var failed = false
+            case "FunctionDef" => {
+              val fnCfg = mdObj._2.getOrElse("ObjectDefinition", "").toString
+              if (fnCfg != null && fnCfg.size > 0) {
+                logger.debug("Adding model config:" + dispkey)
+                var defFl = _unhandledMetadataDumpDir + "/Function_" + dispkey + "." + ver + "." + objFormat.toLowerCase()
+                var failed = false
 
-              try {
-                val retRes = MetadataAPIImpl.AddMessage(msgDefStr, "JSON", defaultUserId)
-                failed = isFailedStatus(retRes)
-              } catch {
-                case e: Exception => {
-                  logger.error("Failed to add message:" + dispkey, e)
-                  failed = true
+                try {
+                  val retRes = MetadataAPIImpl.AddFunctions(fnCfg, "JSON", defaultUserId)
+                  failed = isFailedStatus(retRes)
+                } catch {
+                  case e: Exception => {
+                    logger.error("Failed to add function:" + dispkey, e)
+                    failed = true
+                  }
+                }
+                if (failed) {
+                  WriteStringToFile(defFl, fnCfg)
+                  val msgStr = ("Function failed to migrate. Function %s definition is dumped into %s.".format(dispkey, defFl))
+                  logger.error(msgStr)
+                  _flCurMigrationSummary.println(msgStr)
+                  _flCurMigrationSummary.flush()
                 }
               }
-              if (failed) {
-                WriteStringToFile(defFl, msgDefStr)
-                val msgStr = ("Message failed to migrate. Message %s definition is dumped into %s.".format(dispkey, defFl))
-                logger.error(msgStr)
-                _flCurMigrationSummary.println(msgStr)
-                _flCurMigrationSummary.flush()
-              }
-            } else {
-              logger.debug("Bootstrap object. Ignore it")
+            }
+            /*
+            case "JarDef" => {
+              logger.debug("Jar")
+              logger.debug("Adding Jar:" + dispkey)
+              //FIXME:: Yet to handle
+              logger.error("Not yet handled migrating JarDef " + objType)
+            }
+            */
+            /*
+            case "OutputMsgDef" => {
+              logger.debug("Adding the Output Msg: name of the object =>  " + dispkey)
+              //FIXME:: Yet to handle
+              logger.error("Not yet handled migrating OutputMsgDef " + objType)
+            }
+            */
+            /*
+            case "AttributeDef" => {
+              logger.debug("Adding the attribute: name of the object =>  " + dispkey)
+            }
+            case "ScalarTypeDef" => {
+              logger.debug("Adding the Type: name of the object =>  " + dispkey)
+            }
+            case "ArrayTypeDef" => {
+              logger.debug("Adding the Type: name of the object =>  " + dispkey)
+            }
+            case "ArrayBufTypeDef" => {
+              logger.debug("Adding the Type: name of the object =>  " + dispkey)
+            }
+            case "ListTypeDef" => {
+              logger.debug("Adding the Type: name of the object =>  " + dispkey)
+            }
+            case "QueueTypeDef" => {
+              logger.debug("Adding the Type: name of the object =>  " + dispkey)
+            }
+            case "SetTypeDef" => {
+              logger.debug("Adding the Type: name of the object =>  " + dispkey)
+            }
+            case "TreeSetTypeDef" => {
+              logger.debug("Adding the Type: name of the object =>  " + dispkey)
+            }
+            case "SortedSetTypeDef" => {
+              logger.debug("Adding the Type: name of the object =>  " + dispkey)
+            }
+            case "MapTypeDef" => {
+              logger.debug("Adding the Type: name of the object =>  " + dispkey)
+            }
+            case "ImmutableMapTypeDef" => {
+              logger.debug("Adding the Type: name of the object =>  " + dispkey)
+            }
+            case "HashMapTypeDef" => {
+              logger.debug("Adding the Type: name of the object =>  " + dispkey)
+            }
+            case "TupleTypeDef" => {
+              logger.debug("Adding the Type: name of the object =>  " + dispkey)
+            }
+            case "ContainerTypeDef" => {
+              logger.debug("Adding the Type: name of the object =>  " + dispkey)
+            }
+  */
+            case _ => {
+              val msgStr = ("Object type %s of key %s did not handle in migrate. Not captured any information related to this.".format(objType, dispkey))
+              logger.error(msgStr)
+              _flCurMigrationSummary.println(msgStr)
+              _flCurMigrationSummary.flush()
             }
           }
-          case "ContainerDef" => {
-            logger.debug("Adding the container:" + dispkey)
-            val contDefStr = mdObj._2.getOrElse("ObjectDefinition", "").toString
-            if (contDefStr != null && contDefStr.size > 0) {
-              logger.info("Adding the message: name of the object =>  " + dispkey)
-              var defFl = _unhandledMetadataDumpDir + "/container_" + dispkey + "." + ver + "." + objFormat.toLowerCase()
-              var failed = false
-
-              try {
-                val retRes = MetadataAPIImpl.AddContainer(contDefStr, "JSON", defaultUserId)
-                failed = isFailedStatus(retRes)
-              } catch {
-                case e: Exception => {
-                  logger.error("Failed to add container:" + dispkey, e)
-                  failed = true
-                }
-              }
-              if (failed) {
-                WriteStringToFile(defFl, contDefStr)
-                val msgStr = ("Container failed to migrate. Container %s definition is dumped into %s.".format(dispkey, defFl))
-                logger.error(msgStr)
-                _flCurMigrationSummary.println(msgStr)
-                _flCurMigrationSummary.flush()
-              }
-            } else {
-              logger.debug("Bootstrap object. Ignore it")
-            }
-          }
-          case "ConfigDef" => {
-            val mdlCfg = mdObj._2.getOrElse("ObjectDefinition", "").toString
-            if (mdlCfg != null && mdlCfg.size > 0) {
-              logger.debug("Adding model config:" + dispkey)
-              var defFl = _unhandledMetadataDumpDir + "/ModelConfig_" + dispkey + "." + ver + "." + objFormat.toLowerCase()
-              var failed = false
-
-              try {
-
-                val cfgmap = parse(mdlCfg).values.asInstanceOf[Map[String, Any]]
-                val changedCfg = cfgmap.map(kv => {
-                  val key = kv._1
-                  val mdl = kv._2.asInstanceOf[Map[String, Any]]
-                  val deps1 = mdl.getOrElse(ModelCompilationConstants.DEPENDENCIES, null)
-                  val typs1 = mdl.getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, null)
-                  val phyNm = mdl.getOrElse(ModelCompilationConstants.PHYSICALNAME, "").toString()
-
-                  val deps = if (deps1 != null) DepJars(deps1.asInstanceOf[List[String]]) else List[String]()
-                  val typs = if (typs1 != null) typs1.asInstanceOf[List[String]] else List[String]()
-
-                  (key, Map(ModelCompilationConstants.DEPENDENCIES -> deps, ModelCompilationConstants.TYPES_DEPENDENCIES -> typs, ModelCompilationConstants.PHYSICALNAME -> phyNm))
-                })
-
-                implicit val jsonFormats: Formats = DefaultFormats
-                val newMdlCfgStr = Serialization.write(changedCfg)
-                val retRes = MetadataAPIImpl.UploadModelsConfig(newMdlCfgStr, Some[String](namespace), null) // Considering namespace as userid
-                failed = isFailedStatus(retRes)
-              } catch {
-                case e: Exception => {
-                  logger.error("Failed to add model config:" + dispkey, e)
-                  failed = true
-                }
-              }
-              if (failed) {
-                WriteStringToFile(defFl, mdlCfg)
-                val msgStr = ("Model Config failed to migrate. Model Config %s definition is dumped into %s.".format(dispkey, defFl))
-                logger.error(msgStr)
-                _flCurMigrationSummary.println(msgStr)
-                _flCurMigrationSummary.flush()
-              }
-            }
-          }
-          case "FunctionDef" => {
-            val fnCfg = mdObj._2.getOrElse("ObjectDefinition", "").toString
-            if (fnCfg != null && fnCfg.size > 0) {
-              logger.debug("Adding model config:" + dispkey)
-              var defFl = _unhandledMetadataDumpDir + "/Function_" + dispkey + "." + ver + "." + objFormat.toLowerCase()
-              var failed = false
-
-              try {
-                val retRes = MetadataAPIImpl.AddFunctions(fnCfg, "JSON", defaultUserId)
-                failed = isFailedStatus(retRes)
-              } catch {
-                case e: Exception => {
-                  logger.error("Failed to add function:" + dispkey, e)
-                  failed = true
-                }
-              }
-              if (failed) {
-                WriteStringToFile(defFl, fnCfg)
-                val msgStr = ("Function failed to migrate. Function %s definition is dumped into %s.".format(dispkey, defFl))
-                logger.error(msgStr)
-                _flCurMigrationSummary.println(msgStr)
-                _flCurMigrationSummary.flush()
-              }
-            }
-          }
-          /*
-          case "JarDef" => {
-            logger.debug("Jar")
-            logger.debug("Adding Jar:" + dispkey)
-            //FIXME:: Yet to handle
-            logger.error("Not yet handled migrating JarDef " + objType)
-          }
-          */
-          /*
-          case "OutputMsgDef" => {
-            logger.debug("Adding the Output Msg: name of the object =>  " + dispkey)
-            //FIXME:: Yet to handle
-            logger.error("Not yet handled migrating OutputMsgDef " + objType)
-          }
-          */
-          /*
-          case "AttributeDef" => {
-            logger.debug("Adding the attribute: name of the object =>  " + dispkey)
-          }
-          case "ScalarTypeDef" => {
-            logger.debug("Adding the Type: name of the object =>  " + dispkey)
-          }
-          case "ArrayTypeDef" => {
-            logger.debug("Adding the Type: name of the object =>  " + dispkey)
-          }
-          case "ArrayBufTypeDef" => {
-            logger.debug("Adding the Type: name of the object =>  " + dispkey)
-          }
-          case "ListTypeDef" => {
-            logger.debug("Adding the Type: name of the object =>  " + dispkey)
-          }
-          case "QueueTypeDef" => {
-            logger.debug("Adding the Type: name of the object =>  " + dispkey)
-          }
-          case "SetTypeDef" => {
-            logger.debug("Adding the Type: name of the object =>  " + dispkey)
-          }
-          case "TreeSetTypeDef" => {
-            logger.debug("Adding the Type: name of the object =>  " + dispkey)
-          }
-          case "SortedSetTypeDef" => {
-            logger.debug("Adding the Type: name of the object =>  " + dispkey)
-          }
-          case "MapTypeDef" => {
-            logger.debug("Adding the Type: name of the object =>  " + dispkey)
-          }
-          case "ImmutableMapTypeDef" => {
-            logger.debug("Adding the Type: name of the object =>  " + dispkey)
-          }
-          case "HashMapTypeDef" => {
-            logger.debug("Adding the Type: name of the object =>  " + dispkey)
-          }
-          case "TupleTypeDef" => {
-            logger.debug("Adding the Type: name of the object =>  " + dispkey)
-          }
-          case "ContainerTypeDef" => {
-            logger.debug("Adding the Type: name of the object =>  " + dispkey)
-          }
-*/
-          case _ => {
-            val msgStr = ("Object type %s of key %s did not handle in migrate. Not captured any information related to this.".format(objType, dispkey))
-            logger.error(msgStr)
-            _flCurMigrationSummary.println(msgStr)
-            _flCurMigrationSummary.flush()
-          }
+        } catch {
+          case e: Exception => AddMdObjToGlobalException(mdObj, "Failed to add metadata of type " + objType, e)
+          case e: Throwable => AddMdObjToGlobalException(mdObj, "Failed to add metadata of type " + objType, e)
         }
       })
     } catch {
       case e: Exception => throw e
       case e: Throwable => throw e
+    }
+  }
+
+  private def ProcessMdObjectsParallel(mdObjs: ArrayBuffer[(String, Map[String, Any])], errorStr: String): Unit = {
+    if (mdObjs.length > 0) {
+      var executor: ExecutorService = null
+      try {
+        executor = Executors.newFixedThreadPool(if (_parallelDegree <= 1) 1 else _parallelDegree)
+        mdObjs.foreach(obj => {
+          executor.execute(new Runnable() {
+            override def run() = {
+              try {
+                ProcessObject(ArrayBuffer(obj))
+              } catch {
+                case e: Exception => AddMdObjToGlobalException(obj, errorStr, e)
+                case e: Throwable => AddMdObjToGlobalException(obj, errorStr, e)
+              }
+            }
+          })
+        })
+        executor.shutdown();
+        try {
+          executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
+        } catch {
+          case e: Exception => {
+            logger.debug("Failed", e)
+          }
+        }
+      } catch {
+        case e: Exception => AddToGlobalException("Failed to add metadata", e)
+        case e: Throwable => AddToGlobalException("Failed to add metadata", e)
+      }
+
+      if (executor != null) {
+        executor.shutdown();
+        try {
+          executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
+        } catch {
+          case e: Exception => AddToGlobalException("Failed to add metadata", e)
+          case e: Throwable => AddToGlobalException("Failed to add metadata", e)
+        }
+      }
+
+      if (LogGlobalException) {
+        throw new Exception("Failed to add metadata")
+      }
     }
   }
 
@@ -1054,90 +1067,16 @@ class MigrateTo_V_1_3 extends MigratableTo {
         msgsAndContainers ++= containers
       if (messages.length > 0)
         msgsAndContainers ++= messages
-
-      if (msgsAndContainers.length > 0) {
-        val executor = Executors.newFixedThreadPool(if (_parallelDegree <= 1) 1 else _parallelDegree)
-        msgsAndContainers.foreach(obj => {
-          executor.execute(new Runnable() {
-            override def run() = {
-              ProcessObject(ArrayBuffer(obj))
-            }
-          })
-        })
-        executor.shutdown();
-        try {
-          executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
-        } catch {
-          case e: Exception => {
-            val stackTrace = StackTrace.ThrowableTraceString(e)
-            logger.debug("StackTrace:" + stackTrace)
-          }
-        }
-      }
+      ProcessMdObjectsParallel(msgsAndContainers, "Failed to add messages/container")
     } else {
-      if (containers.length > 0) {
-        val executor = Executors.newFixedThreadPool(if (_parallelDegree <= 1) 1 else _parallelDegree)
-        containers.foreach(obj => {
-          executor.execute(new Runnable() {
-            override def run() = {
-              ProcessObject(ArrayBuffer(obj))
-            }
-          })
-        })
-        executor.shutdown();
-        try {
-          executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
-        } catch {
-          case e: Exception => {
-            val stackTrace = StackTrace.ThrowableTraceString(e)
-            logger.debug("StackTrace:" + stackTrace)
-          }
-        }
-      }
-      if (messages.length > 0) {
-        val executor = Executors.newFixedThreadPool(if (_parallelDegree <= 1) 1 else _parallelDegree)
-        messages.foreach(obj => {
-          executor.execute(new Runnable() {
-            override def run() = {
-              ProcessObject(ArrayBuffer(obj))
-            }
-          })
-        })
-        executor.shutdown();
-        try {
-          executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
-        } catch {
-          case e: Exception => {
-            val stackTrace = StackTrace.ThrowableTraceString(e)
-            logger.debug("StackTrace:" + stackTrace)
-          }
-        }
-      }
+      ProcessMdObjectsParallel(containers, "Failed to add container")
+      ProcessMdObjectsParallel(messages, "Failed to add message")
     }
 
     ProcessObject(functions)
     ProcessObject(configDef)
     //ProcessObject(models)
-    val modelCount = models.length
-    if (modelCount > 0) {
-      val executor = Executors.newFixedThreadPool(if (_parallelDegree <= 1) 1 else _parallelDegree)
-      models.foreach(obj => {
-        executor.execute(new Runnable() {
-          override def run() = {
-            ProcessObject(ArrayBuffer(obj))
-          }
-        })
-      })
-      executor.shutdown();
-      try {
-        executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
-      } catch {
-        case e: Exception => {
-          val stackTrace = StackTrace.ThrowableTraceString(e)
-          logger.debug("StackTrace:" + stackTrace)
-        }
-      }
-    }
+    ProcessMdObjectsParallel(models, "Failed to add model")
     ProcessObject(outputMsgDef)
   }
 
