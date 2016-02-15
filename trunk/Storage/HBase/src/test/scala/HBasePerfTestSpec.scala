@@ -64,6 +64,7 @@ class HBasePerfTestSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterA
 
   private def CreateAdapter: DataStore = {
     var connectionAttempts = 0
+    logger.info("Creating adapter...")
     while (connectionAttempts < maxConnectionAttempts) {
       try {
         adapter = HBaseAdapter.CreateStorageAdapter(kvManagerLoader, dataStoreInfo)
@@ -91,6 +92,9 @@ class HBasePerfTestSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterA
       serializer = SerializerManager.GetSerializer("kryo")
       logger.info("Initialize HBaseAdapter")
       adapter = CreateAdapter
+      if( adapter != null ){
+	logger.info("Succesfully Created adapter...")
+      }
     } catch {
       case e: StorageConnectionException => {
         logger.error("%s: Message:%s".format(e.getMessage, e.cause.getMessage))
@@ -156,6 +160,11 @@ class HBasePerfTestSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterA
   }
 
   describe("Load Tests for the adapter") {
+    var batchCount = 100
+    var batchSize  = 1000
+    var totalRecords = batchCount * batchSize
+
+    logger.info("Start the test ...")
 
     // validate property setup
     it("Load data operations") {
@@ -176,14 +185,15 @@ class HBasePerfTestSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterA
 
       And("Test Bulk Put api")
 
-      logger.info(GetCurDtTmStr + ": Start Loading  1 million records 1000 at a time")
 
-      for (batch <- 1 to 10) {
+      logger.info(GetCurDtTmStr + ": Start Loading " + totalRecords + " records " + batchSize + " at a time")
+
+      for (batch <- 1 to batchCount) {
 	var successful = false
 	while ( ! successful ){
           var keyValueList = new Array[(Key, Value)](0)
           var keyStringList = new Array[Array[String]](0)
-          for (i <- 1 to 1000) {
+          for (i <- 1 to batchSize) {
             var cal = Calendar.getInstance();
             cal.add(Calendar.DATE, -i);
             var currentTime = cal.getTime()
@@ -221,16 +231,16 @@ class HBasePerfTestSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterA
 
       And("Check the row count after adding a bunch")
       cnt = hbaseAdapter.getRowCount(containerName)
-      assert(cnt == 10000)
+      assert(cnt == totalRecords)
     }
 
     it("Bulk Read Operations"){
       And("Read 1000 records at a time")
-      for (batch <- 1 to 10) {
+      for (batch <- 1 to batchCount) {
 	var successful = false
 	while ( ! successful ){
           var keyStringList = new Array[Array[String]](0)
-          for (i <- 1 to 1000) {
+          for (i <- 1 to batchSize) {
             var keyArray = new Array[String](0)
             var custName = "batch-" + batch + "-customer-" + i
             keyArray = keyArray :+ custName
@@ -238,7 +248,7 @@ class HBasePerfTestSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterA
 	  }
 	  try{
 	    adapter.get(containerName,keyStringList,readCallBack1 _)
-	    logger.info(GetCurDtTmStr + ": Fetched " + batch * 1000 + " objects ")
+	    logger.info(GetCurDtTmStr + ": Fetched " + batch * batchSize + " objects ")
 	    successful = true
 	  }
 	  catch{
@@ -252,15 +262,14 @@ class HBasePerfTestSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterA
       }
     }
     
-    ignore("Cleanup Operations"){
-      And("Test drop container again, cleanup")
+    it( "Cleanup operations"){
+      And("drop containers used ..")
       noException should be thrownBy {
-        var containers = new Array[String](0)
-        containers = containers :+ containerName
-        adapter.DropContainer(containers)
+	var containers = new Array[String](0)
+	containers = containers :+ containerName
+	adapter.DropContainer(containers)
       }
     }
-
   }
 
   override def afterAll = {

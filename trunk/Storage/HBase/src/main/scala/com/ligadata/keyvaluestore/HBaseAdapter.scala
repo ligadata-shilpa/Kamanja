@@ -161,6 +161,18 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     }
   }
 
+  private def getConnection(config: Configuration): Connection = {
+    try {
+      var conn = ConnectionFactory.createConnection(config);
+      conn
+    } catch {
+      case e: Exception => {
+	throw CreateConnectionException("Unable to connect to hbase at " + hostnames + ":" + e.getMessage(), e)
+      }
+    }
+  }
+
+
   val hostnames = if (parsed_json.contains("hostlist")) parsed_json.getOrElse("hostlist", "localhost").toString.trim else parsed_json.getOrElse("Location", "localhost").toString.trim
   val namespace = if (parsed_json.contains("SchemaName")) parsed_json.getOrElse("SchemaName", "default").toString.trim else parsed_json.getOrElse("SchemaName", "default").toString.trim
 
@@ -225,14 +237,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
 
   logger.info("HBase info => Hosts:" + hostnames + ", Namespace:" + namespace + ",autoCreateTables:" + autoCreateTables)
 
-  var conn: Connection = _
-  try {
-    conn = ConnectionFactory.createConnection(config);
-  } catch {
-    case e: Exception => {
-      throw CreateConnectionException("Unable to connect to hbase at " + hostnames + ":" + e.getMessage(), e)
-    }
-  }
+  var conn: Connection = getConnection(config)
   val admin = new HBaseAdmin(config);
   CreateNameSpace(namespace)
 
@@ -558,26 +563,15 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
   }
 */
 
-  private def getTableFromConnection(tableName: String): Table = {
-    try {
-      relogin
-      return conn.getTable(TableName.valueOf(tableName))
-    } catch {
-      case e: Exception => {
-        throw ConnectionFailedException("Failed to get table " + tableName + ":" + e.getMessage(), e)
-      }
-    }
-
-    return null
-  }
-
   override def put(containerName: String, key: Key, value: Value): Unit = {
     var tableName = toFullTableName(containerName)
     var tableHBase: Table = null
+    var conn:Connection = null
     try {
       relogin
       CheckTableExists(containerName)
-      tableHBase = getTableFromConnection(tableName);
+      conn = getConnection(config)
+      tableHBase = conn.getTable(TableName.valueOf(tableName))
       var kba = MakeCompositeKey(key)
       var p = new Put(kba)
       p.addColumn(stStrBytes, baseStrBytes, Bytes.toBytes(value.serializerType))
@@ -591,18 +585,23 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       if (tableHBase != null) {
         tableHBase.close()
       }
+      if (conn != null) {
+        conn.close()
+      }
     }
   }
 
   override def put(data_list: Array[(String, Array[(Key, Value)])]): Unit = {
     var tableHBase: Table = null
+    var conn:Connection = null
     try {
       relogin
       data_list.foreach(li => {
         var containerName = li._1
         CheckTableExists(containerName)
+	conn = getConnection(config)
         var tableName = toFullTableName(containerName)
-        tableHBase = getTableFromConnection(tableName);
+	tableHBase = conn.getTable(TableName.valueOf(tableName))
         var keyValuePairs = li._2
         var puts = new Array[Put](0)
         keyValuePairs.foreach(keyValuePair => {
@@ -632,6 +631,9 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       if (tableHBase != null) {
         tableHBase.close()
       }
+      if (conn != null) {
+        conn.close()
+      }
     }
   }
 
@@ -639,10 +641,12 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
   override def del(containerName: String, keys: Array[Key]): Unit = {
     var tableName = toFullTableName(containerName)
     var tableHBase: Table = null
+    var conn:Connection = null
     try {
       relogin
       CheckTableExists(containerName)
-      tableHBase = getTableFromConnection(tableName);
+      conn = getConnection(config)
+      tableHBase = conn.getTable(TableName.valueOf(tableName))
       var dels = new ArrayBuffer[Delete]()
 
       keys.foreach(key => {
@@ -667,6 +671,9 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     } finally {
       if (tableHBase != null) {
         tableHBase.close()
+      }
+      if (conn != null) {
+        conn.close()
       }
     }
   }
@@ -726,10 +733,12 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
   override def del(containerName: String, time: TimeRange, bucketKeys: Array[Array[String]]): Unit = {
     var tableName = toFullTableName(containerName)
     var tableHBase: Table = null
+    var conn:Connection = null
     try {
       relogin
       CheckTableExists(containerName)
-      tableHBase = getTableFromConnection(tableName);
+      conn = getConnection(config)
+      tableHBase = conn.getTable(TableName.valueOf(tableName))
       val bucketKeySet = new java.util.TreeSet[Array[String]](arrOfStrsComp)
       bucketKeys.foreach(bucketKey => {
         bucketKeySet.add(bucketKey)
@@ -772,17 +781,22 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       if (tableHBase != null) {
         tableHBase.close()
       }
+      if (conn != null) {
+        conn.close()
+      }
     }
   }
 
   // get operations
   def getRowCount(containerName: String): Long = {
     var tableHBase: Table = null
+    var conn:Connection = null
     try {
       relogin
       var tableName = toFullTableName(containerName)
       CheckTableExists(containerName)
-      tableHBase = getTableFromConnection(tableName);
+      conn = getConnection(config)
+      tableHBase = conn.getTable(TableName.valueOf(tableName))
 
       var scan = new Scan();
       scan.setFilter(new FirstKeyOnlyFilter());
@@ -857,10 +871,12 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
   override def get(containerName: String, callbackFunction: (Key, Value) => Unit): Unit = {
     var tableName = toFullTableName(containerName)
     var tableHBase: Table = null
+    var conn:Connection = null
     try {
       relogin
       CheckTableExists(containerName)
-      tableHBase = getTableFromConnection(tableName);
+      conn = getConnection(config)
+      tableHBase = conn.getTable(TableName.valueOf(tableName))
       var scan = new Scan();
       var rs = tableHBase.getScanner(scan);
 
@@ -879,16 +895,21 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       if (tableHBase != null) {
         tableHBase.close()
       }
+      if (conn != null) {
+        conn.close()
+      }
     }
   }
 
   override def getKeys(containerName: String, callbackFunction: (Key) => Unit): Unit = {
     var tableName = toFullTableName(containerName)
     var tableHBase: Table = null
+    var conn:Connection = null
     try {
       relogin
       CheckTableExists(containerName)
-      tableHBase = getTableFromConnection(tableName);
+      conn = getConnection(config)
+      tableHBase = conn.getTable(TableName.valueOf(tableName))
       var scan = new Scan();
       scan.setFilter(new FirstKeyOnlyFilter());
       var rs = tableHBase.getScanner(scan);
@@ -905,17 +926,21 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       if (tableHBase != null) {
         tableHBase.close()
       }
+      if (conn != null) {
+        conn.close()
+      }
     }
   }
 
   override def getKeys(containerName: String, keys: Array[Key], callbackFunction: (Key) => Unit): Unit = {
     var tableName = toFullTableName(containerName)
     var tableHBase: Table = null
+    var conn:Connection = null
     try {
       relogin
       CheckTableExists(containerName)
-      tableHBase = getTableFromConnection(tableName);
-
+      conn = getConnection(config)
+      tableHBase = conn.getTable(TableName.valueOf(tableName))
       val filters = new java.util.ArrayList[Filter]()
       keys.foreach(key => {
         var kba = MakeCompositeKey(key)
@@ -940,16 +965,21 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       if (tableHBase != null) {
         tableHBase.close()
       }
+      if (conn != null) {
+        conn.close()
+      }
     }
   }
 
   override def get(containerName: String, keys: Array[Key], callbackFunction: (Key, Value) => Unit): Unit = {
     var tableName = toFullTableName(containerName)
     var tableHBase: Table = null
+    var conn:Connection = null
     try {
       relogin
       CheckTableExists(containerName)
-      tableHBase = getTableFromConnection(tableName);
+      conn = getConnection(config)
+      tableHBase = conn.getTable(TableName.valueOf(tableName))
 
       val filters = new java.util.ArrayList[Filter]()
       keys.foreach(key => {
@@ -977,16 +1007,21 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       if (tableHBase != null) {
         tableHBase.close()
       }
+      if (conn != null) {
+        conn.close()
+      }
     }
   }
 
   override def get(containerName: String, time_ranges: Array[TimeRange], callbackFunction: (Key, Value) => Unit): Unit = {
     var tableName = toFullTableName(containerName)
     var tableHBase: Table = null
+    var conn:Connection = null
     try {
       relogin
       CheckTableExists(containerName)
-      tableHBase = getTableFromConnection(tableName);
+      conn = getConnection(config)
+      tableHBase = conn.getTable(TableName.valueOf(tableName))
 
       val tmRanges = getUnsignedTimeRanges(time_ranges)
       tmRanges.foreach(time_range => {
@@ -1011,16 +1046,21 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       if (tableHBase != null) {
         tableHBase.close()
       }
+      if (conn != null) {
+        conn.close()
+      }
     }
   }
 
   override def getKeys(containerName: String, time_ranges: Array[TimeRange], callbackFunction: (Key) => Unit): Unit = {
     var tableName = toFullTableName(containerName)
     var tableHBase: Table = null
+    var conn:Connection = null
     try {
       relogin
       CheckTableExists(containerName)
-      tableHBase = getTableFromConnection(tableName);
+      conn = getConnection(config)
+      tableHBase = conn.getTable(TableName.valueOf(tableName))
 
       val tmRanges = getUnsignedTimeRanges(time_ranges)
       tmRanges.foreach(time_range => {
@@ -1043,6 +1083,9 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       if (tableHBase != null) {
         tableHBase.close()
       }
+      if (conn != null) {
+        conn.close()
+      }
     }
   }
 
@@ -1050,10 +1093,13 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
                    callbackFunction: (Key, Value) => Unit): Unit = {
     var tableName = toFullTableName(containerName)
     var tableHBase: Table = null
+    var conn:Connection = null
     try {
       relogin
       CheckTableExists(containerName)
-      tableHBase = getTableFromConnection(tableName);
+      conn = getConnection(config)
+      tableHBase = conn.getTable(TableName.valueOf(tableName))
+
       var bucketKeySet = new java.util.TreeSet[Array[String]](arrOfStrsComp)
       bucketKeys.foreach(bucketKey => {
         bucketKeySet.add(bucketKey)
@@ -1086,6 +1132,9 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       if (tableHBase != null) {
         tableHBase.close()
       }
+      if (conn != null) {
+        conn.close()
+      }
     }
   }
 
@@ -1093,10 +1142,12 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
                        callbackFunction: (Key) => Unit): Unit = {
     var tableName = toFullTableName(containerName)
     var tableHBase: Table = null
+    var conn:Connection = null
     try {
       relogin
       CheckTableExists(containerName)
-      tableHBase = getTableFromConnection(tableName);
+      conn = getConnection(config)
+      tableHBase = conn.getTable(TableName.valueOf(tableName))
 
       var bucketKeySet = new java.util.TreeSet[Array[String]](arrOfStrsComp)
       bucketKeys.foreach(bucketKey => {
@@ -1129,16 +1180,22 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       if (tableHBase != null) {
         tableHBase.close()
       }
+      if (conn != null) {
+        conn.close()
+      }
     }
   }
 
   override def get(containerName: String, bucketKeys: Array[Array[String]], callbackFunction: (Key, Value) => Unit): Unit = {
     var tableName = toFullTableName(containerName)
     var tableHBase: Table = null
+    var conn:Connection = null
     try {
       relogin
       CheckTableExists(containerName)
-      tableHBase = getTableFromConnection(tableName);
+      conn = getConnection(config)
+      tableHBase = conn.getTable(TableName.valueOf(tableName))
+
       var bucketKeySet = new java.util.TreeSet[Array[String]](arrOfStrsComp)
       bucketKeys.foreach(bucketKey => {
         bucketKeySet.add(bucketKey)
@@ -1166,16 +1223,22 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       if (tableHBase != null) {
         tableHBase.close()
       }
+      if (conn != null) {
+        conn.close()
+      }
     }
   }
 
   override def getKeys(containerName: String, bucketKeys: Array[Array[String]], callbackFunction: (Key) => Unit): Unit = {
     var tableName = toFullTableName(containerName)
     var tableHBase: Table = null
+    var conn:Connection = null
     try {
       relogin
       CheckTableExists(containerName)
-      tableHBase = getTableFromConnection(tableName);
+      conn = getConnection(config)
+      tableHBase = conn.getTable(TableName.valueOf(tableName))
+
       var bucketKeySet = new java.util.TreeSet[Array[String]](arrOfStrsComp)
       bucketKeys.foreach(bucketKey => {
         bucketKeySet.add(bucketKey)
@@ -1198,6 +1261,9 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     } finally {
       if (tableHBase != null) {
         tableHBase.close()
+      }
+      if (conn != null) {
+        conn.close()
       }
     }
   }
@@ -1226,7 +1292,9 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     try {
       relogin
       CheckTableExists(containerName)
-      tableHBase = getTableFromConnection(tableName);
+      conn = getConnection(config)
+      tableHBase = conn.getTable(TableName.valueOf(tableName))
+
       var dels = new ArrayBuffer[Delete]()
       var scan = new Scan()
       val rs = tableHBase.getScanner(scan);
@@ -1244,6 +1312,9 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     } finally {
       if (tableHBase != null) {
         tableHBase.close()
+      }
+      if (conn != null) {
+        conn.close()
       }
     }
   }
@@ -1286,6 +1357,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     }
 
     var tableHBase: Table = null
+    var conn:Connection = null
     var mutator: BufferedMutator = null
 
     try {
@@ -1304,7 +1376,8 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       }
 
       // Open Source Table
-      tableHBase = getTableFromConnection(srcTableName);
+      var conn = getConnection(config)
+      tableHBase = conn.getTable(TableName.valueOf(srcTableName))
 
       val destTableDesc = new HTableDescriptor(TableName.valueOf(destTableName));
       val srcTableDesc = tableHBase.getTableDescriptor
@@ -1368,6 +1441,9 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       }
       if (tableHBase != null) {
         tableHBase.close()
+      }
+      if (conn != null) {
+        conn.close()
       }
     }
   }
