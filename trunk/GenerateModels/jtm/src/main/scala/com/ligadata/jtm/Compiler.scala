@@ -137,7 +137,6 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
       ( elements.head, elements.mkString(".") )
   }
 
-
   /** Creates a metadata instance with defaults and json objects located on the file system
     *
     * @return Metadata manager

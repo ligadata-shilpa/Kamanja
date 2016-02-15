@@ -25,3 +25,7 @@ libraryDependencies += "com.novocode" % "junit-interface" % "0.9" % "test->defau
 libraryDependencies += "junit" % "junit" % "4.11" % "test->default"
 
 libraryDependencies += "org.skyscreamer" % "jsonassert" % "1.3.0"  % "test->default"
+
+libraryDependencies += "org.aicer.grok" % "grok" % "0.9.0"
+
+
