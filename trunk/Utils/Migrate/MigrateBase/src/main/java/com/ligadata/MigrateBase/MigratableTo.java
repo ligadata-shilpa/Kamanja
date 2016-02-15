@@ -25,12 +25,8 @@ public interface MigratableTo {
   public abstract boolean isMetadataTableExists(TableName tblInfo);
   public abstract boolean isDataTableExists(TableName tblInfo);
   public abstract boolean isStatusTableExists(TableName tblInfo);
-  public abstract void backupMetadataTables(BackupTableInfo[] tblsToBackedUp, boolean force);
-  public abstract void backupDataTables(BackupTableInfo[] tblsToBackedUp, boolean force);
-  public abstract void backupStatusTables(BackupTableInfo[] tblsToBackedUp, boolean force);
-  public abstract void dropMetadataTables(TableName[] tblsToDrop);
-  public abstract void dropDataTables(TableName[] tblsToDrop);
-  public abstract void dropStatusTables(TableName[] tblsToDrop);
+  public abstract void backupAllTables(BackupTableInfo[] metadataTblsToBackedUp, BackupTableInfo[] dataTblsToBackedUp, BackupTableInfo[] statusTblsToBackedUp, boolean force);
+  public abstract void dropAllTables(TableName[] metadataTblsToDrop, TableName[] dataTblsToDrop, TableName[] statusTblsToDrop);
   public abstract void dropMessageContainerTablesFromMetadata(MetadataFormat[] allMetadataElemsJson);
   public abstract void addMetadata(MetadataFormat[] allMetadataElemsJson, boolean uploadClusterConfig, String[] excludeMetadata);
   public abstract void populateAndSaveData(DataFormat[] data);

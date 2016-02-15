@@ -550,6 +550,7 @@ public class Migrate {
 
                 // Backup all the tables, if any one of them is missing
                 if (allTblsBackedUp == false) {
+/*
                     if (metadataBackupTbls.size() > 0)
                         migrateTo.backupMetadataTables(metadataBackupTbls
                                 .toArray(new BackupTableInfo[metadataBackupTbls
@@ -563,6 +564,10 @@ public class Migrate {
                         migrateTo.backupStatusTables(statusBackupTbls
                                 .toArray(new BackupTableInfo[statusBackupTbls
                                         .size()]), true);
+*/
+                    migrateTo.backupAllTables(metadataBackupTbls.toArray(new BackupTableInfo[metadataBackupTbls.size()]),
+                            dataBackupTbls.toArray(new BackupTableInfo[dataBackupTbls.size()]),
+                            statusBackupTbls.toArray(new BackupTableInfo[statusBackupTbls.size()]), true);
                 }
 
                 // Drop all tables after backup
