@@ -3,8 +3,11 @@
   "apiConfigFile": "{NewPackageInstallPath}/config/MetadataAPIConfig.properties",
   "unhandledMetadataDumpDir": "{UnhandledMetadataDumpDir}",
   "dataSaveThreshold": 1000,
+  "parallelDegree": 1,
+  "mergeContainersAndMessages": false,
   "migratingFrom": {
     "version": "1.1",
+    "scalaVersion": "2.10",
     "versionInstallPath": "{OldPackageInstallPath}",
     "implemtedClass": "com.ligadata.Migrate.MigrateFrom_V_1_1",
     "jars": [
@@ -15,6 +18,7 @@
   },
   "migratingTo": {
     "version": "1.3",
+    "scalaVersion": "2.11",
     "versionInstallPath": "{NewPackageInstallPath}",
     "implemtedClass": "com.ligadata.Migrate.MigrateTo_V_1_3",
     "jars": [
@@ -24,11 +28,6 @@
     ]
   },
   "excludeMetadata": [
-    "ModelDef",
-    "MessageDef",
-    "ContainerDef",
-    "ConfigDef",
-    "FunctionDef",
     "JarDef",
     "OutputMsgDef"
   ],

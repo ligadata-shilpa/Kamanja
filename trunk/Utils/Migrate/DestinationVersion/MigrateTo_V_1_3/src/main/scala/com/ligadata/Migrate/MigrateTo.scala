@@ -18,7 +18,7 @@ package com.ligadata.Migrate
 
 import com.ligadata.MigrateBase._
 import org.apache.logging.log4j._
-import java.io.{ File, PrintWriter }
+import java.io.{File, PrintWriter}
 
 import com.ligadata.kamanja.metadata.MdMgr
 import com.ligadata.kamanja.metadataload.MetadataLoad
@@ -30,17 +30,16 @@ import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
 import org.json4s.jackson.Serialization
 import scala.io.Source
-// import com.ligadata.tools.SaveContainerDataComponent
-import com.ligadata.KvBase.{ Key, Value }
-// import com.ligadata.KvBase.{ TimeRange, KvBaseDefalts, KeyWithBucketIdAndPrimaryKey, KeyWithBucketIdAndPrimaryKeyCompHelper, LoadKeyWithBucketId }
-import com.ligadata.StorageBase.{ DataStore, Transaction, DataStoreOperations }
+
+import com.ligadata.KvBase.{Key, Value}
+
+import com.ligadata.StorageBase.{DataStore, DataStoreOperations}
 import com.ligadata.keyvaluestore.KeyValueManager
 import scala.collection.mutable.ArrayBuffer
 import com.ligadata.kamanja.metadata.ModelCompilationConstants
-import com.ligadata.Exceptions.{ FatalAdapterException, StorageDMLException, StorageDDLException }
+import com.ligadata.Exceptions.{FatalAdapterException, StorageDMLException, StorageDDLException}
 
-import scala.actors.threadpool.{ Executors, ExecutorService, TimeUnit }
-import com.ligadata.Exceptions.StackTrace
+import scala.actors.threadpool.{Executors, ExecutorService, TimeUnit}
 
 class MigrateTo_V_1_3 extends MigratableTo {
   lazy val loggerName = this.getClass.getName
@@ -49,6 +48,8 @@ class MigrateTo_V_1_3 extends MigratableTo {
   private var _unhandledMetadataDumpDir: String = _
   private var _curMigrationSummaryFlPath: String = _
   private var _sourceVersion: String = _
+  private var _fromScalaVersion: String = _
+  private var _toScalaVersion: String = _
   private var _destInstallPath: String = _
   private var _apiConfigFile: String = _
   private var _clusterConfigFile: String = _
@@ -62,8 +63,35 @@ class MigrateTo_V_1_3 extends MigratableTo {
   private var _bInit = false
   private var _flCurMigrationSummary: PrintWriter = _
   private val defaultUserId: Option[String] = Some("metadataapi")
+  private var _parallelDegree = 0
+  private var _mergeContainerAndMessages = true
 
-  private var executor: ExecutorService = null
+  private val globalExceptions = ArrayBuffer[(String, Throwable)]()
+
+  private def AddToGlobalException(failedMsg: String, e: Throwable): Unit = {
+    globalExceptions += ((failedMsg, e))
+  }
+
+  private def AddMdObjToGlobalException(mdObj: (String, Map[String, Any]), failedMsg: String, e: Throwable): Unit = {
+    val namespace = mdObj._2.getOrElse("NameSpace", "").toString.trim()
+    val name = mdObj._2.getOrElse("Name", "").toString.trim()
+    AddToGlobalException(failedMsg + ":" + namespace + "." + name, e)
+  }
+
+  private def LogGlobalException: Boolean = {
+    if (globalExceptions.size > 0) {
+      globalExceptions.foreach(expTup => {
+        if (expTup._2 != null)
+          logger.error(if (expTup._1 != null) expTup._1 else "", expTup._2)
+        else
+          logger.error(if (expTup._1 != null) expTup._1 else "")
+      })
+      return true
+    }
+
+    return false
+  }
+
 
   private def isValidPath(path: String, checkForDir: Boolean = false, checkForFile: Boolean = false, str: String = "path"): Unit = {
     val fl = new File(path)
@@ -150,7 +178,7 @@ class MigrateTo_V_1_3 extends MigratableTo {
     }
   }
 
-  override def init(destInstallPath: String, apiConfigFile: String, clusterConfigFile: String, sourceVersion: String, unhandledMetadataDumpDir: String, curMigrationSummaryFlPath: String): Unit = {
+  override def init(destInstallPath: String, apiConfigFile: String, clusterConfigFile: String, sourceVersion: String, unhandledMetadataDumpDir: String, curMigrationSummaryFlPath: String, parallelDegree: Int, mergeContainerAndMessages: Boolean, fromScalaVersion: String, toScalaVersion: String): Unit = {
     isValidPath(apiConfigFile, false, true, "apiConfigFile")
     isValidPath(clusterConfigFile, false, true, "clusterConfigFile")
 
@@ -194,6 +222,8 @@ class MigrateTo_V_1_3 extends MigratableTo {
     _statusStoreInfo = if (statusStoreInfo == null) "" else statusStoreInfo
     _jarPaths = toVersionJarPaths
     _sourceVersion = sourceVersion
+    _fromScalaVersion = fromScalaVersion
+    _toScalaVersion = toScalaVersion
 
     _unhandledMetadataDumpDir = unhandledMetadataDumpDir
     _curMigrationSummaryFlPath = curMigrationSummaryFlPath
@@ -207,6 +237,9 @@ class MigrateTo_V_1_3 extends MigratableTo {
     if (_statusStoreInfo.size > 0) {
       _statusStoreDb = GetDataStoreHandle(toVersionJarPaths, _statusStoreInfo)
     }
+
+    _parallelDegree = if (parallelDegree <= 1) 1 else parallelDegree
+    _mergeContainerAndMessages = mergeContainerAndMessages
 
     _bInit = true
   }
@@ -251,113 +284,128 @@ class MigrateTo_V_1_3 extends MigratableTo {
     false
   }
 
-  override def backupMetadataTables(tblsToBackedUp: Array[BackupTableInfo], force: Boolean): Unit = {
-    if (_bInit == false)
-      throw new Exception("Not yet Initialized")
-    logger.debug("Backup metadata tables:" + tblsToBackedUp.map(t => "(" + t.srcTable + " => " + t.dstTable + ")").mkString(","))
-    var tblCount = tblsToBackedUp.length
-    executor = Executors.newFixedThreadPool(tblCount)
+  private def addBackupTablesToExecutor(executor: ExecutorService, storeDb: DataStore, tblsToBackedUp: Array[BackupTableInfo], errMsgTemplate: String, force: Boolean): Unit = {
     tblsToBackedUp.foreach(backupTblInfo => {
       executor.execute(new Runnable() {
         override def run() = {
-	  _metaDataStoreDb.copyTable(backupTblInfo.namespace, backupTblInfo.srcTable, backupTblInfo.dstTable, force)
-        }
-      })
-    })
-    executor.shutdown();
-    try {
-      executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
-    } catch {
-      case e: Exception => {
-	val stackTrace = StackTrace.ThrowableTraceString(e)
-	logger.debug("StackTrace:"+stackTrace)
-      }
-    }
-  }
-  
-  override def backupDataTables(tblsToBackedUp: Array[BackupTableInfo], force: Boolean): Unit = {
-    if (_bInit == false)
-      throw new Exception("Not yet Initialized")
-    logger.debug("Backup data tables:" + tblsToBackedUp.map(t => "(" + t.srcTable + " => " + t.dstTable + ")").mkString(","))
-    var tblCount = tblsToBackedUp.length
-    executor = Executors.newFixedThreadPool(tblCount)
-    tblsToBackedUp.foreach(backupTblInfo => {
-      executor.execute(new Runnable() {
-        override def run() = {
-	  _dataStoreDb.copyTable(backupTblInfo.namespace, backupTblInfo.srcTable, backupTblInfo.dstTable, force)
-        }
-      })
-    })
-    executor.shutdown();
-    try {
-      executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
-    } catch {
-      case e: Exception => {
-	val stackTrace = StackTrace.ThrowableTraceString(e)
-	logger.debug("StackTrace:"+stackTrace)
-      }
-    }
-  }
-
-  override def backupStatusTables(tblsToBackedUp: Array[BackupTableInfo], force: Boolean): Unit = {
-    if (_bInit == false)
-      throw new Exception("Not yet Initialized")
-    logger.debug("Backup status tables:" + tblsToBackedUp.map(t => "(" + t.srcTable + " => " + t.dstTable + ")").mkString(","))
-    if (_statusStoreDb == null && tblsToBackedUp.size > 0)
-      throw new Exception("Does not have Status store information")
-    tblsToBackedUp.foreach(backupTblInfo => {
-      _statusStoreDb.copyTable(backupTblInfo.namespace, backupTblInfo.srcTable, backupTblInfo.dstTable, force)
-    })
-  }
-
-  override def dropMetadataTables(tblsToDrop: Array[TableName]): Unit = {
-    if (_bInit == false)
-      throw new Exception("Not yet Initialized")
-    if (tblsToDrop.size > 0) {
-      logger.debug("Dropping metadata tables:" + tblsToDrop.mkString(","))
-      var tblCount = tblsToDrop.size
-      executor = Executors.newFixedThreadPool(tblCount)
-      tblsToDrop.foreach(dropTblInfo => {
-	executor.execute(new Runnable() {
-          override def run() = {
-	    var tbls = new Array[String](0)
-	    tbls = tbls :+ dropTblInfo.namespace + ":" + dropTblInfo.name
-	    _metaDataStoreDb.dropTables(tbls)
+          try {
+            storeDb.copyTable(backupTblInfo.namespace, backupTblInfo.srcTable, backupTblInfo.dstTable, force)
+          } catch {
+            case e: Exception => AddToGlobalException(errMsgTemplate + "(" + backupTblInfo.namespace + "," + backupTblInfo.srcTable + " => " + backupTblInfo.namespace + "," + backupTblInfo.dstTable + ")", e)
+            case e: Throwable => AddToGlobalException(errMsgTemplate + "(" + backupTblInfo.namespace + "," + backupTblInfo.srcTable + " => " + backupTblInfo.namespace + "," + backupTblInfo.dstTable + ")", e)
           }
-	})
+        }
       })
+    })
+  }
+
+  override def backupAllTables(metadataTblsToBackedUp: Array[BackupTableInfo], dataTblsToBackedUp: Array[BackupTableInfo], statusTblsToBackedUp: Array[BackupTableInfo], force: Boolean): Unit = {
+    if (_bInit == false)
+      throw new Exception("Not yet Initialized")
+    logger.debug("Backup tables => (Metadata Tables:{" + metadataTblsToBackedUp.map(t => "(" + t.namespace + "," + t.srcTable + " => " + t.namespace + "," + t.dstTable + ")").mkString(",") + "}, Data Tables:"
+      + dataTblsToBackedUp.map(t => "(" + t.namespace + "," + t.srcTable + " => " + t.namespace + "," + t.dstTable + ")").mkString(",") + "}, Status Tables:"
+      + statusTblsToBackedUp.map(t => "(" + t.namespace + "," + t.srcTable + " => " + t.namespace + "," + t.dstTable + ")").mkString(",") + "})")
+    var executor: ExecutorService = null
+    try {
+      executor = Executors.newFixedThreadPool(if (_parallelDegree <= 1) 1 else _parallelDegree)
+
+      if (statusTblsToBackedUp.size > 0) {
+        if (_statusStoreDb == null)
+          throw new Exception("Does not have Status store information")
+        addBackupTablesToExecutor(executor, _statusStoreDb, statusTblsToBackedUp, "Failed to backup status table:", force)
+      }
+
+      addBackupTablesToExecutor(executor, _metaDataStoreDb, metadataTblsToBackedUp, "Failed to backup metadata table:", force)
+      addBackupTablesToExecutor(executor, _dataStoreDb, dataTblsToBackedUp, "Failed to backup data table:", force)
       executor.shutdown();
       try {
-	executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
+        executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
       } catch {
-	case e: Exception => {
-	  val stackTrace = StackTrace.ThrowableTraceString(e)
-	  logger.debug("StackTrace:"+stackTrace)
-	}
+        case e: Exception => AddToGlobalException("Failed to backup tables", e)
+        case e: Throwable => AddToGlobalException("Failed to backup tables", e)
       }
-      // _metaDataStoreDb.dropTables(tblsTuples)
+    } catch {
+      case e: Exception => AddToGlobalException("Failed to backup tables", e)
+      case e: Throwable => AddToGlobalException("Failed to backup tables", e)
+    }
+
+    if (executor != null) {
+      executor.shutdown();
+      try {
+        executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
+      } catch {
+        case e: Exception => AddToGlobalException("Failed to backup tables", e)
+        case e: Throwable => AddToGlobalException("Failed to backup tables", e)
+      }
+    }
+
+    if (LogGlobalException) {
+      throw new Exception("Failed to Backup tables")
     }
   }
 
-  override def dropDataTables(tblsToDrop: Array[TableName]): Unit = {
-    if (_bInit == false)
-      throw new Exception("Not yet Initialized")
+  private def addDropTablesToExecutor(executor: ExecutorService, storeDb: DataStore, tblsToDrop: Array[(String, String)], errMsgTemplate: String): Unit = {
     if (tblsToDrop.size > 0) {
-      val tblsTuples = tblsToDrop.map(t => (t.namespace, t.name))
-      logger.debug("Dropping data tables:" + tblsTuples.mkString(","))
-      _dataStoreDb.dropTables(tblsTuples)
+      tblsToDrop.foreach(dropTblTuple => {
+        executor.execute(new Runnable() {
+          override def run() = {
+            try {
+              storeDb.dropTables(Array(dropTblTuple))
+            } catch {
+              case e: Exception => AddToGlobalException(errMsgTemplate + dropTblTuple.toString(), e)
+              case e: Throwable => AddToGlobalException(errMsgTemplate + dropTblTuple.toString(), e)
+            }
+          }
+        })
+      })
     }
   }
 
-  override def dropStatusTables(tblsToDrop: Array[TableName]): Unit = {
+  def dropAllTables(metadataTblsToDrop: Array[TableName], dataTblsToDrop: Array[TableName], statusTblsToDrop: Array[TableName]): Unit = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
-    if (tblsToDrop.size > 0) {
-      if (_statusStoreDb == null)
-        throw new Exception("Does not have Status store information")
-      val tblsTuples = tblsToDrop.map(t => (t.namespace, t.name))
-      logger.debug("Dropping status tables:" + tblsTuples.mkString(","))
-      _statusStoreDb.dropTables(tblsTuples)
+    var executor: ExecutorService = null
+    try {
+      executor = Executors.newFixedThreadPool(if (_parallelDegree <= 1) 1 else _parallelDegree)
+
+      val metadataTblsTuples = metadataTblsToDrop.map(t => (t.namespace, t.name))
+      val dataTblsTuples = dataTblsToDrop.map(t => (t.namespace, t.name))
+      val statusTblsTuples = statusTblsToDrop.map(t => (t.namespace, t.name))
+      logger.debug("Drop tables => (Metadata Tables:{" + metadataTblsTuples.mkString(",") + "}, Data Tables:" + dataTblsTuples.mkString(",") + "}, Status Tables:" + statusTblsTuples.mkString(",") + "})")
+
+      if (statusTblsTuples.size > 0) {
+        if (_statusStoreDb == null)
+          throw new Exception("Does not have Status store information")
+        addDropTablesToExecutor(executor, _statusStoreDb, statusTblsTuples, "Failed to drop status table:")
+      }
+
+      addDropTablesToExecutor(executor, _metaDataStoreDb, metadataTblsTuples, "Failed to drop data table:")
+      addDropTablesToExecutor(executor, _dataStoreDb, dataTblsTuples, "Failed to drop metadata table:")
+
+      executor.shutdown();
+      try {
+        executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
+      } catch {
+        case e: Exception => AddToGlobalException("Failed to drop tables", e)
+        case e: Throwable => AddToGlobalException("Failed to drop tables", e)
+      }
+    } catch {
+      case e: Exception => AddToGlobalException("Failed to drop tables", e)
+      case e: Throwable => AddToGlobalException("Failed to drop tables", e)
+    }
+
+    if (executor != null) {
+      executor.shutdown();
+      try {
+        executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
+      } catch {
+        case e: Exception => AddToGlobalException("Failed to drop tables", e)
+        case e: Throwable => AddToGlobalException("Failed to drop tables", e)
+      }
+    }
+
+    if (LogGlobalException) {
+      throw new Exception("Failed to Drop tables")
     }
   }
 
@@ -385,8 +433,48 @@ class MigrateTo_V_1_3 extends MigratableTo {
     })
 
     if (messagesAndContainers.size > 0) {
-      logger.debug("Dropping containers:" + messagesAndContainers.mkString(","))
-      _dataStoreDb.DropContainer(messagesAndContainers.toArray)
+      logger.debug("Dropping messages/containers:" + messagesAndContainers.mkString(","))
+      var executor: ExecutorService = null
+      try {
+        executor = Executors.newFixedThreadPool(if (_parallelDegree <= 1) 1 else _parallelDegree)
+        messagesAndContainers.foreach(dropContainer => {
+          executor.execute(new Runnable() {
+            override def run() = {
+              try {
+                _dataStoreDb.DropContainer(Array(dropContainer))
+              } catch {
+                case e: Exception => AddToGlobalException("Failed to drop data message/container:" + dropContainer, e)
+                case e: Throwable => AddToGlobalException("Failed to drop data message/container:" + dropContainer, e)
+              }
+            }
+          })
+        })
+
+        executor.shutdown();
+        try {
+          executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
+        } catch {
+          case e: Exception => AddToGlobalException("Failed to drop messsages/containers", e)
+          case e: Throwable => AddToGlobalException("Failed to drop messsages/containers", e)
+        }
+      } catch {
+        case e: Exception => AddToGlobalException("Failed to drop messsages/containers", e)
+        case e: Throwable => AddToGlobalException("Failed to drop messsages/containers", e)
+      }
+
+      if (executor != null) {
+        executor.shutdown();
+        try {
+          executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
+        } catch {
+          case e: Exception => AddToGlobalException("Failed to drop messsages/containers", e)
+          case e: Throwable => AddToGlobalException("Failed to drop messsages/containers", e)
+        }
+      }
+
+      if (LogGlobalException) {
+        throw new Exception("Failed to Drop messsages/containers")
+      }
     }
   }
 
@@ -397,7 +485,9 @@ class MigrateTo_V_1_3 extends MigratableTo {
     } catch {
       case e: Exception => throw e;
       case e: Throwable => throw e;
-    } finally { out.close }
+    } finally {
+      out.close
+    }
   }
 
   private def isFailedStatus(retRes: String): Boolean = {
@@ -423,37 +513,39 @@ class MigrateTo_V_1_3 extends MigratableTo {
   }
 
   private def DepJars(depJars: List[String]): List[String] = {
-    val depJarsMap = Map("scalap-2.10.0.jar" -> "scalap-2.11.0.jar", "kvbase_2.10-0.1.0.jar" -> "kvbase_2.11-0.1.0.jar", "kamanjautils_2.10-1.0.jar" -> "kamanjautils_2.11-1.0.jar",
-      "kamanjabase_2.10-1.0.jar" -> "kamanjabase_2.11-1.0.jar", "customudflib_2.10-1.0.jar" -> "customudflib_2.11-1.0.jar", "pmmlcompiler_2.10-1.0.jar" -> "pmmlcompiler_2.11-1.0.jar",
-      "basetypes_2.10-0.1.0.jar" -> "basetypes_2.11-0.1.0.jar", "basefunctions_2.10-0.1.0.jar" -> "basefunctions_2.11-0.1.0.jar", "json4s-core_2.10-3.2.9.jar" -> "json4s-core_2.11-3.2.9.jar",
-      "json4s-jackson_2.10-3.2.9.jar" -> "json4s-jackson_2.11-3.2.9.jar", "pmmlruntime_2.10-1.0.jar" -> "pmmlruntime_2.11-1.0.jar", "pmmludfs_2.10-1.0.jar" -> "pmmludfs_2.11-1.0.jar",
-      "datadelimiters_2.10-1.0.jar" -> "datadelimiters_2.11-1.0.jar", "metadata_2.10-1.0.jar" -> "metadata_2.11-1.0.jar", "exceptions_2.10-1.0.jar" -> "exceptions_2.11-1.0.jar",
-      "json4s-ast_2.10-3.2.9.jar" -> "json4s-ast_2.11-3.2.9.jar", "json4s-native_2.10-3.2.9.jar" -> "json4s-native_2.11-3.2.9.jar", "bootstrap_2.10-1.0.jar" -> "bootstrap_2.11-1.0.jar",
-      "messagedef_2.10-1.0.jar" -> "messagedef_2.11-1.0.jar")
+    // If source is 2.10 and destination is 2.11, then only tranform this. otherwise just leave them as it is.
+    if (_fromScalaVersion.equalsIgnoreCase("2.10") && _toScalaVersion.equalsIgnoreCase("2.11")) {
+      val depJarsMap = Map("scalap-2.10.0.jar" -> "scalap-2.11.0.jar", "kvbase_2.10-0.1.0.jar" -> "kvbase_2.11-0.1.0.jar", "kamanjautils_2.10-1.0.jar" -> "kamanjautils_2.11-1.0.jar",
+        "kamanjabase_2.10-1.0.jar" -> "kamanjabase_2.11-1.0.jar", "customudflib_2.10-1.0.jar" -> "customudflib_2.11-1.0.jar", "pmmlcompiler_2.10-1.0.jar" -> "pmmlcompiler_2.11-1.0.jar",
+        "basetypes_2.10-0.1.0.jar" -> "basetypes_2.11-0.1.0.jar", "basefunctions_2.10-0.1.0.jar" -> "basefunctions_2.11-0.1.0.jar", "json4s-core_2.10-3.2.9.jar" -> "json4s-core_2.11-3.2.9.jar",
+        "json4s-jackson_2.10-3.2.9.jar" -> "json4s-jackson_2.11-3.2.9.jar", "pmmlruntime_2.10-1.0.jar" -> "pmmlruntime_2.11-1.0.jar", "pmmludfs_2.10-1.0.jar" -> "pmmludfs_2.11-1.0.jar",
+        "datadelimiters_2.10-1.0.jar" -> "datadelimiters_2.11-1.0.jar", "metadata_2.10-1.0.jar" -> "metadata_2.11-1.0.jar", "exceptions_2.10-1.0.jar" -> "exceptions_2.11-1.0.jar",
+        "json4s-ast_2.10-3.2.9.jar" -> "json4s-ast_2.11-3.2.9.jar", "json4s-native_2.10-3.2.9.jar" -> "json4s-native_2.11-3.2.9.jar", "bootstrap_2.10-1.0.jar" -> "bootstrap_2.11-1.0.jar",
+        "messagedef_2.10-1.0.jar" -> "messagedef_2.11-1.0.jar")
 
-    val newDeps = depJars.map(d => {
-      if (d.startsWith("scala-reflect-2.10")) {
-        "scala-reflect-2.11.7.jar"
-      } else if (d.startsWith("scala-library-2.10")) {
-        "scala-library-2.11.7.jar"
-      } else if (d.startsWith("scala-compiler-2.10")) {
-        "scala-compiler-2.11.7.jar"
-      } else {
-        depJarsMap.getOrElse(d, d)
-      }
-    })
+      val newDeps = depJars.map(d => {
+        if (d.startsWith("scala-reflect-2.10")) {
+          "scala-reflect-2.11.7.jar"
+        } else if (d.startsWith("scala-library-2.10")) {
+          "scala-library-2.11.7.jar"
+        } else if (d.startsWith("scala-compiler-2.10")) {
+          "scala-compiler-2.11.7.jar"
+        } else {
+          depJarsMap.getOrElse(d, d)
+        }
+      })
 
-    newDeps
+      return newDeps
+    }
+    return depJars
   }
-
-
 
   private def ProcessObject(mdObjs: ArrayBuffer[(String, Map[String, Any])]): Unit = {
     try {
-      mdObjs.foreach(mdObj =>
-        {
-          val objType = mdObj._1
+      mdObjs.foreach(mdObj => {
+        val objType = mdObj._1
 
+        try {
           val namespace = mdObj._2.getOrElse("NameSpace", "").toString.trim()
           val name = mdObj._2.getOrElse("Name", "").toString.trim()
           val dispkey = (namespace + "." + name).toLowerCase
@@ -480,13 +572,13 @@ class MigrateTo_V_1_3 extends MigratableTo {
 
                   val dumpMdlInfoStr = ("ModelInfo" ->
                     ("Dependencies" -> deps) ~
-                    ("MessageAndContainers" -> typs) ~
-                    ("ModelType" -> mdlType) ~
-                    ("ObjectFormat" -> objFormat) ~
-                    ("ModelDefinition" -> defStr) ~
-                    ("NameSpace" -> namespace) ~
-                    ("Name" -> name) ~
-                    ("Version" -> ver))
+                      ("MessageAndContainers" -> typs) ~
+                      ("ModelType" -> mdlType) ~
+                      ("ObjectFormat" -> objFormat) ~
+                      ("ModelDefinition" -> defStr) ~
+                      ("NameSpace" -> namespace) ~
+                      ("Name" -> name) ~
+                      ("Version" -> ver))
 
                   WriteStringToFile(defFl, defStr)
                   WriteStringToFile(jsonFl, compact(render(dumpMdlInfoStr)))
@@ -526,7 +618,7 @@ class MigrateTo_V_1_3 extends MigratableTo {
 
                   val mdlConfig = ("migrationmodelconfig_from_1_2_to_1_3" ->
                     ("Dependencies" -> deps) ~
-                    ("MessageAndContainers" -> typs))
+                      ("MessageAndContainers" -> typs))
 
                   var failed = false
 
@@ -553,13 +645,13 @@ class MigrateTo_V_1_3 extends MigratableTo {
 
                     val dumpMdlInfoStr = ("ModelInfo" ->
                       ("Dependencies" -> deps) ~
-                      ("MessageAndContainers" -> typs) ~
-                      ("ModelType" -> mdlType) ~
-                      ("ObjectFormat" -> objFormat) ~
-                      ("ModelDefinition" -> defStr) ~
-                      ("NameSpace" -> namespace) ~
-                      ("Name" -> name) ~
-                      ("Version" -> ver))
+                        ("MessageAndContainers" -> typs) ~
+                        ("ModelType" -> mdlType) ~
+                        ("ObjectFormat" -> objFormat) ~
+                        ("ModelDefinition" -> defStr) ~
+                        ("NameSpace" -> namespace) ~
+                        ("Name" -> name) ~
+                        ("Version" -> ver))
 
                     WriteStringToFile(defFl, defStr)
                     WriteStringToFile(jsonFl, compact(render(dumpMdlInfoStr)))
@@ -774,7 +866,7 @@ class MigrateTo_V_1_3 extends MigratableTo {
             case "ContainerTypeDef" => {
               logger.debug("Adding the Type: name of the object =>  " + dispkey)
             }
-*/
+  */
             case _ => {
               val msgStr = ("Object type %s of key %s did not handle in migrate. Not captured any information related to this.".format(objType, dispkey))
               logger.error(msgStr)
@@ -782,10 +874,60 @@ class MigrateTo_V_1_3 extends MigratableTo {
               _flCurMigrationSummary.flush()
             }
           }
-        })
+        } catch {
+          case e: Exception => AddMdObjToGlobalException(mdObj, "Failed to add metadata of type " + objType, e)
+          case e: Throwable => AddMdObjToGlobalException(mdObj, "Failed to add metadata of type " + objType, e)
+        }
+      })
     } catch {
       case e: Exception => throw e
       case e: Throwable => throw e
+    }
+  }
+
+  private def ProcessMdObjectsParallel(mdObjs: ArrayBuffer[(String, Map[String, Any])], errorStr: String): Unit = {
+    if (mdObjs.length > 0) {
+      var executor: ExecutorService = null
+      try {
+        executor = Executors.newFixedThreadPool(if (_parallelDegree <= 1) 1 else _parallelDegree)
+        mdObjs.foreach(obj => {
+          executor.execute(new Runnable() {
+            override def run() = {
+              try {
+                ProcessObject(ArrayBuffer(obj))
+              } catch {
+                case e: Exception => AddMdObjToGlobalException(obj, errorStr, e)
+                case e: Throwable => AddMdObjToGlobalException(obj, errorStr, e)
+              }
+            }
+          })
+        })
+        executor.shutdown();
+        try {
+          executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
+        } catch {
+          case e: Exception => {
+            logger.debug("Failed", e)
+          }
+        }
+      } catch {
+        case e: Exception => AddToGlobalException("Failed to add metadata", e)
+        case e: Throwable => AddToGlobalException("Failed to add metadata", e)
+      }
+
+      if (executor != null) {
+        executor.shutdown();
+        try {
+          executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
+        } catch {
+          case e: Exception => AddToGlobalException("Failed to add metadata", e)
+          case e: Throwable => AddToGlobalException("Failed to add metadata", e)
+        }
+      }
+
+      if (LogGlobalException) {
+        throw new Exception("Failed to add metadata")
+      }
     }
   }
 
@@ -916,72 +1058,23 @@ class MigrateTo_V_1_3 extends MigratableTo {
     ProcessObject(jarDef)
     ProcessObject(types)
 
-    // ProcessObject(containers)
-    val contCount = containers.length
-    executor = Executors.newFixedThreadPool(contCount)
-    containers.foreach(obj => {
-      executor.execute(new Runnable() {
-        override def run() = {
-	  val mab = ArrayBuffer[(String, Map[String, Any])]()
-          mab += ((obj._1, obj._2))
-	  ProcessObject(mab)
-        }
-      })
-    })
-    executor.shutdown();
-    try {
-      executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
-    } catch {
-      case e: Exception => {
-	val stackTrace = StackTrace.ThrowableTraceString(e)
-	logger.debug("StackTrace:"+stackTrace)
-      }
-    }
-    //ProcessObject(messages)
-    val msgCount = messages.length
-    executor = Executors.newFixedThreadPool(msgCount)
-    messages.foreach(obj => {
-      executor.execute(new Runnable() {
-        override def run() = {
-	  val mab = ArrayBuffer[(String, Map[String, Any])]()
-          mab += ((obj._1, obj._2))
-	  ProcessObject(mab)
-        }
-      })
-    })
-    executor.shutdown();
-    try {
-      executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
-    } catch {
-      case e: Exception => {
-	val stackTrace = StackTrace.ThrowableTraceString(e)
-	logger.debug("StackTrace:"+stackTrace)
-      }
+
+    if (_mergeContainerAndMessages) {
+      val msgsAndContainers = ArrayBuffer[(String, Map[String, Any])]()
+      if (containers.length > 0)
+        msgsAndContainers ++= containers
+      if (messages.length > 0)
+        msgsAndContainers ++= messages
+      ProcessMdObjectsParallel(msgsAndContainers, "Failed to add messages/container")
+    } else {
+      ProcessMdObjectsParallel(containers, "Failed to add container")
+      ProcessMdObjectsParallel(messages, "Failed to add message")
     }
 
     ProcessObject(functions)
     ProcessObject(configDef)
     //ProcessObject(models)
-    val modelCount = models.length
-    executor = Executors.newFixedThreadPool(modelCount)
-    models.foreach(obj => {
-      executor.execute(new Runnable() {
-        override def run() = {
-	  val mab = ArrayBuffer[(String, Map[String, Any])]()
-          mab += ((obj._1, obj._2))
-	  ProcessObject(mab)
-        }
-      })
-    })
-    executor.shutdown();
-    try {
-      executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
-    } catch {
-      case e: Exception => {
-	val stackTrace = StackTrace.ThrowableTraceString(e)
-	logger.debug("StackTrace:"+stackTrace)
-      }
-    }
+    ProcessMdObjectsParallel(models, "Failed to add model")
     ProcessObject(outputMsgDef)
   }
 
