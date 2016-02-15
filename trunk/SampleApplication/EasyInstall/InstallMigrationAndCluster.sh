@@ -83,13 +83,13 @@ applib211=$installPath/KamanjaInstall-$ver211/lib/application
 cd $srcPath 
 
 cd $srcPath
-#cp KamanjaManager/target/scala-2.10/KamanjaManager* $bin210
+cp KamanjaManager/target/scala-2.10/KamanjaManager* $bin210
 
 cp KamanjaManager/target/scala-2.11/KamanjaManager* $bin211
 # only for 2.11 ?
 cp Utils/Migrate/MigrateManager/target/MigrateManager* $bin211
 
-#cp $srcPath/Utils/NodeInfoExtract/target/scala-2.10/NodeInfoExtract* $bin210
+cp $srcPath/Utils/NodeInfoExtract/target/scala-2.10/NodeInfoExtract* $bin210
 cp $srcPath/Utils/NodeInfoExtract/target/scala-2.11/NodeInfoExtract* $bin211
 
 #srcPath=$2
@@ -98,18 +98,18 @@ cp $srcPath/Utils/NodeInfoExtract/target/scala-2.11/NodeInfoExtract* $bin211
 cd $srcPath/SampleApplication/EasyInstall
 bash CopyCommonJars.sh $srcPath $systemlib210 $ivyPath
 #bash $srcPath/SampleApplication/EasyInstall/CopyCommonJars.sh $srcPath $systemlib211 $ivyPath
-#bash $srcPath/SampleApplication/EasyInstall/CopyJars.sh $srcPath $ivyPath $systemlib210 $systemlib211
+bash CopyJars.sh $srcPath $ivyPath $systemlib210 $systemlib211
 
-cd $srcPath/SampleApplication/KamanjaInstall/template2.10
-cp -rf * $installPath/KamanjaInstall-$ver210/template
+cd $srcPath/SampleApplication/MigrationAndClusterInstall/template2.10
+cp -rf * $installPath/KamanjaInstall-$ver210/template/.
 
-cd $srcPath/SampleApplication/KamanjaInstall/template2.11
-cp -rf * $installPath/KamanjaInstall-$ver211/template
+cd $srcPath/SampleApplication/MigrationAndClusterInstall/template2.11
+cp -rf * $installPath/KamanjaInstall-$ver211/template/.
 
 
 cd $srcPath/SampleApplication/EasyInstall
-#cp SetPathsMigrateClusterInstall.sh $installPath/KamanjaInstall-$ver210/bin/
-#cp SetPathsMigrateClusterInstall.sh $installPath/KamanjaInstall-$ver211/bin/
+cp SetPathsMigrateClusterInstall.sh $installPath/KamanjaInstall-$ver210/bin/
+cp SetPathsMigrateClusterInstall.sh $installPath/KamanjaInstall-$ver211/bin/
 
 bash $installPath/KamanjaInstall-$ver211/bin/SetPathsMigrateClusterInstall.sh $installPath $KafkaRootDir
 

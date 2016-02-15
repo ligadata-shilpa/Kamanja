@@ -57,7 +57,7 @@ sed "s/{InstallDirectory}/$install_dir_repl/g;s/{ScalaInstallDirectory}/$scala_h
 sed "s/{InstallDirectory}/$install_dir_repl/g" $install_dir/KamanjaInstall-2.10/template/config/log4j2_Template.xml > $install_dir/KamanjaInstall-2.10/config/log4j2.xml
 
 # changing path in config files for 2.10 version
-sed "s/{InstallDirectory}/$install_dir_repl/g;s/{ScalaInstallDirectory}/$scala_home_repl/g;s/{JavaInstallDirectory}/$java_home_repl/g" $install_dir/KamanjaInstall-2.10/template/config/MigrateConfig_Template.json > $install_dir/KamanjaInstall-2.10/config/MigrateConfig.json
+sed "s/{InstallDirectory}/$install_dir_repl/g;s/{ScalaInstallDirectory}/$scala_home_repl/g;s/{JavaInstallDirectory}/$java_home_repl/g" $install_dir/KamanjaInstall-2.10/template/config/MigrateConfig_Template.properties > $install_dir/KamanjaInstall-2.10/config/MigrateConfig.json
 sed "s/{InstallDirectory}/$install_dir_repl/g;s/{ScalaInstallDirectory}/$scala_home_repl/g;s/{JavaInstallDirectory}/$java_home_repl/g" $install_dir/KamanjaInstall-2.10/template/config/ClusterConfig_Template.json > $install_dir/KamanjaInstall-2.10/config/ClusterConfig.json
 sed "s/{InstallDirectory}/$install_dir_repl/g;s/{ScalaInstallDirectory}/$scala_home_repl/g;s/{JavaInstallDirectory}/$java_home_repl/g" $install_dir/KamanjaInstall-2.10/template/config/MetadataAPIConfig_Template.properties > $install_dir/KamanjaInstall-2.10/config/MetadataAPIConfig.properties
 
@@ -70,7 +70,7 @@ sed "s/{InstallDirectory}/$install_dir_repl/g" $install_dir/KamanjaInstall-2.11/
 
 # changing path in config files for 2.11 version
 sed "s/{InstallDirectory}/$install_dir_repl/g;s/{ScalaInstallDirectory}/$scala_home_repl/g;s/{JavaInstallDirectory}/$java_home_repl/g" $install_dir/KamanjaInstall-2.11/template/config/MigrateConfig_Template.properties > $install_dir/KamanjaInstall-2.11/config/MigrateConfig.json
-sed "s/{InstallDirectory}/$install_dir_repl/g;s/{ScalaInstallDirectory}/$scala_home_repl/g;s/{JavaInstallDirectory}/$java_home_repl/g" $install_dir/KamanjaInstall-2.11/template/config/ClusterConfig_Template.properties > $install_dir/KamanjaInstall-2.11/config/ClusterConfig.json
+sed "s/{InstallDirectory}/$install_dir_repl/g;s/{ScalaInstallDirectory}/$scala_home_repl/g;s/{JavaInstallDirectory}/$java_home_repl/g" $install_dir/KamanjaInstall-2.11/template/config/ClusterConfig_Template.json > $install_dir/KamanjaInstall-2.11/config/ClusterConfig.json
 sed "s/{InstallDirectory}/$install_dir_repl/g;s/{ScalaInstallDirectory}/$scala_home_repl/g;s/{JavaInstallDirectory}/$java_home_repl/g" $install_dir/KamanjaInstall-2.11/template/config/MetadataAPIConfig_Template.properties > $install_dir/KamanjaInstall-2.11/config/MetadataAPIConfig.properties
 
 chmod 777 $install_dir/KamanjaInstall-2.10/bin/*.*
