@@ -571,15 +571,7 @@ public class Migrate {
                 }
 
                 // Drop all tables after backup
-                if (metadataDelTbls.size() > 0)
-                    migrateTo.dropMetadataTables(metadataDelTbls
-                            .toArray(new TableName[metadataDelTbls.size()]));
-                if (dataDelTbls.size() > 0)
-                    migrateTo.dropDataTables(dataDelTbls
-                            .toArray(new TableName[dataDelTbls.size()]));
-                if (statusDelTbls.size() > 0)
-                    migrateTo.dropStatusTables(statusDelTbls
-                            .toArray(new TableName[statusDelTbls.size()]));
+                migrateTo.dropAllTables(metadataDelTbls.toArray(new TableName[metadataDelTbls.size()]), dataDelTbls.toArray(new TableName[dataDelTbls.size()]), statusDelTbls.toArray(new TableName[statusDelTbls.size()]));
 
                 String[] excludeMetadata = new String[0];
                 if (configuration.excludeMetadata != null
