@@ -2,9 +2,9 @@ package com.ligadata.filedataprocessor
 
 import java.io.{IOException, File, PrintWriter}
 import java.nio.file.{Path, FileSystems}
-
 import com.ligadata.Exceptions.{InternalErrorException, MissingArgumentException}
 import org.apache.logging.log4j.{ Logger, LogManager }
+import scala.collection.mutable.ArrayBuffer
 
 /**
  * Created by danielkozin on 9/24/15.
@@ -29,7 +29,8 @@ object LocationWatcher {
 
       val lines = scala.io.Source.fromFile(config).getLines.toList
       lines.foreach(line => {
-        if (!line.startsWith("#")) {
+        //Handle empty lines also 
+        if (!line.isEmpty() && !line.startsWith("#")) {
           val lProp = line.split("=")
           try {
             logger.info("SMART FILE CONSUMER "+lProp(0) + " = "+lProp(1))
@@ -57,14 +58,24 @@ object LocationWatcher {
 
       var processors: Array[FileProcessor] = new Array[FileProcessor](numberOfProcessors)
       var threads: Array[Thread] = new Array[Thread](numberOfProcessors)
-      var path: Path= null
+      
+      //var path: Path= null
+      //Create an array of paths
+      var path = new ArrayBuffer[Path]()
+      
       try {
          val dirName = properties.getOrElse(SmartFileAdapterConstants.DIRECTORY_TO_WATCH, null)
          if (dirName == null) {
            logger.error("SMART FILE CONSUMER: Directory to watch is missing, must be specified")
            return
          }
-         path = FileSystems.getDefault().getPath(dirName)
+         
+         //path = FileSystems.getDefault().getPath(dirName)
+         var p:Int = 0;
+         for(x <- dirName.split(System.getProperty("path.separator"))){
+           path += FileSystems.getDefault().getPath(x)
+         }
+         
       } catch {
         case e: IOException => {
           logger.error ("Unable to find the directory to watch")
@@ -72,7 +83,8 @@ object LocationWatcher {
         }
       }
 
-      logger.info("SMART FILE CONSUMER: Starting "+ numberOfProcessors+" file consumers, reading from "+ path)
+      for(dir <- path)
+        logger.info("SMART FILE CONSUMER: Starting "+ numberOfProcessors+" file consumers, reading from "+ dir)
 
       try {
         for (i <- 1 to numberOfProcessors) {

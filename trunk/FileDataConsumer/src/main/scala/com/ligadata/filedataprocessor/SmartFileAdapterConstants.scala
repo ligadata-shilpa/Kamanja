@@ -33,5 +33,13 @@ object SmartFileAdapterConstants {
   val TOTAL_FILE_STATUS = "File_Total_Result,"
   val CORRUPTED_FILE = "Corrupted_File_Detected,"
   val FILE_BUFFERING_TIMEOUT = "fileBufferingTimeout"
+  
+  //*** New constants added for BOFA (which will be read from file consumer configuration
+  //Prepend metadata at the beginning of the message (FileName/ID and Offset) - BOOLEAN
+  val ADD_METADATA_TO_MESSAGE = "message.metadata" 
+  //Log the complete file name, offset and message with any exception - BOOLEAN
+  val EXCEPTION_METADATA = "exception.metadata" 
+  //Applicable content types, sniff them via Apache TIKA
+  val VALID_CONTENT_TYPES="allow.content"
 
 }

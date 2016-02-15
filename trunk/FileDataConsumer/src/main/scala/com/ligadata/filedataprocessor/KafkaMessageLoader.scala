@@ -6,7 +6,6 @@ import java.nio.file.{ Paths, Files }
 import java.text.SimpleDateFormat
 import java.util.concurrent.{TimeUnit, Future}
 import java.util.{TimeZone, Properties, Date, Arrays}
-
 import com.ligadata.Exceptions._
 import com.ligadata.KamanjaBase._
 import com.ligadata.MetadataAPI.MetadataAPIImpl
@@ -19,7 +18,6 @@ import kafka.producer.{ KeyedMessage, Producer, Partitioner }
 import org.apache.curator.framework.CuratorFramework
 import org.apache.logging.log4j.{ Logger, LogManager }
 import kafka.utils.VerifiableProperties
-
 import org.apache.kafka.clients.producer.{Callback, RecordMetadata, KafkaProducer, ProducerRecord}
 import org.apache.kafka.common.serialization.ByteArraySerializer
 import org.apache.kafka.common.serialization.StringSerializer
@@ -27,6 +25,7 @@ import org.apache.kafka.common.serialization.ByteArraySerializer
 import org.apache.kafka.clients.producer.ProducerConfig
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.Promise
+import java.util.regex.Pattern
 
 
 /**
@@ -42,6 +41,12 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
   val RC_RETRY: Int = 3
   var retryCount = 0
   var recPartitionMap: scala.collection.mutable.Map[Int,Int] = scala.collection.mutable.Map[Int,Int]()
+  
+  //Log the File Name and Offset when a parsing exception occurs
+  var exception_metadata=inConfiguration.getOrElse(SmartFileAdapterConstants.EXCEPTION_METADATA, "false").toBoolean
+  
+  //Append File ID/Name and Offset to each message
+  var message_metadata=inConfiguration.getOrElse(SmartFileAdapterConstants.ADD_METADATA_TO_MESSAGE, "false").toBoolean
 
   val MAX_RETRY = 1
   val INIT_KAFKA_UNAVAILABLE_WAIT_VALUE = 1000
@@ -106,8 +111,10 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
       startFileProcessingTimeStamp = 0 //scala.compat.Platform.currentTime
       fileBeingProcessed = messages(0).relatedFileName
       recPartitionMap = messages(0).partMap
-      val fileTokens = fileBeingProcessed.split("/")
-      FileProcessor.addToZK(fileTokens(fileTokens.size - 1), 0)
+      
+      //val fileTokens = fileBeingProcessed.split("/")
+      //FileProcessor.addToZK(fileTokens(fileTokens.size - 1), 0)
+      FileProcessor.addToZK(fileBeingProcessed, 0)
     }
 
     if (startFileProcessingTimeStamp == 0)
@@ -119,16 +126,22 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
     messages.foreach(msg => {
       if (msg.offsetInFile == FileProcessor.BROKEN_FILE) {
         logger.error("SMART FILE ADAPTER "+ partIdx +": aborting kafka data push for " + msg.relatedFileName + " last successful offset for this file is "+ numberOfValidEvents)
-        val tokenName = msg.relatedFileName.split("/")
-        FileProcessor.setFileOffset(tokenName(tokenName.size - 1), numberOfValidEvents)
+       
+        //val tokenName = msg.relatedFileName.split("/")
+        //FileProcessor.setFileOffset(tokenName(tokenName.size - 1), numberOfValidEvents)
+        FileProcessor.setFileOffset(msg.relatedFileName, numberOfValidEvents)
+        
         fileBeingProcessed = ""
         return
       }
 
       if (msg.offsetInFile == FileProcessor.CORRUPT_FILE) {
         logger.error("SMART FILE ADAPTER "+ partIdx +": aborting kafka data push for " + msg.relatedFileName + " Unrecoverable file corruption detected")
-        val tokenName = msg.relatedFileName.split("/")
-        FileProcessor.markFileProcessingEnd(tokenName(tokenName.size - 1))
+        
+        //val tokenName = msg.relatedFileName.split("/")
+        //FileProcessor.markFileProcessingEnd(tokenName(tokenName.size - 1))
+        FileProcessor.markFileProcessingEnd(msg.relatedFileName)
+        
         writeGenericMsg("Corrupt file detected", msg.relatedFileName, inConfiguration(SmartFileAdapterConstants.KAFKA_STATUS_TOPIC))
         closeOutFile(msg.relatedFileName)
         fileBeingProcessed = ""
@@ -141,7 +154,10 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
         var inputData: InputData = null
         val msgStr = new String(msg.msg)
         try {
-          inputData = CreateKafkaInput(msgStr, SmartFileAdapterConstants.MESSAGE_NAME, delimiters)
+          
+          //Pass in the complete message instead of just the message string
+          inputData = CreateKafkaInput(msg, SmartFileAdapterConstants.MESSAGE_NAME, delimiters)
+          
           currentOffset += 1
 
           val partitionKey = objInst.asInstanceOf[MessageContainerObjBase].PartitionKeyData(inputData).mkString(",")
@@ -204,8 +220,11 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
     // Make sure you dont write extra for DummyLast
     if (!isLast) {
       writeStatusMsg(fileBeingProcessed)
-      val fileTokens = fileBeingProcessed.split("/")
-      FileProcessor.addToZK(fileTokens(fileTokens.size - 1), numberOfValidEvents)
+      
+      //val fileTokens = fileBeingProcessed.split("/")
+      //FileProcessor.addToZK(fileTokens(fileTokens.size - 1), numberOfValidEvents)
+      FileProcessor.addToZK(fileBeingProcessed, numberOfValidEvents)
+      
     } else {
       // output the status message to the KAFAKA_STATUS_TOPIC
       writeStatusMsg(fileBeingProcessed, true)
@@ -288,8 +307,11 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
         // We can now fail for some messages, so, we need to update the recovery area in ZK, to make sure the retry does not
         // process these messages.
         if (fileToUpdate != null) {
-          val fileTokens = fileBeingProcessed.split("/")
-          FileProcessor.addToZK(fileTokens(fileTokens.size - 1), fullSuccessOffset, partitionsStats)
+          
+          //val fileTokens = fileBeingProcessed.split("/")
+          //FileProcessor.addToZK(fileTokens(fileTokens.size - 1), fullSuccessOffset, partitionsStats)
+          FileProcessor.addToZK(fileBeingProcessed, fullSuccessOffset, partitionsStats)
+          
         }
       }
       resetSleepTimer
@@ -338,27 +360,51 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
     try {
       logger.info("SMART FILE CONSUMER ("+partIdx+") - cleaning up after " + fileName)
       // Either move or rename the file.
+      
       val fileStruct = fileName.split("/")
-
+      /*
       if (inConfiguration.getOrElse(SmartFileAdapterConstants.DIRECTORY_TO_MOVE_TO, null) != null) {
         logger.info("SMART FILE CONSUMER ("+partIdx+") Moving File" + fileName + " to " + inConfiguration(SmartFileAdapterConstants.DIRECTORY_TO_MOVE_TO))
-        Files.copy(Paths.get(inConfiguration(SmartFileAdapterConstants.DIRECTORY_TO_WATCH) + "/" + fileStruct(fileStruct.size - 1)), Paths.get(inConfiguration(SmartFileAdapterConstants.DIRECTORY_TO_MOVE_TO) + "/" + fileStruct(fileStruct.size - 1)), REPLACE_EXISTING)
+        Files.copy(Paths.get(inConfiguration(SmartFileAdapterConstants.DIRECTORY_TO_WATCH) + "/" + fileStruct(fileStruct.size - 1)), 
+            Paths.get(inConfiguration(SmartFileAdapterConstants.DIRECTORY_TO_MOVE_TO) + "/" + fileStruct(fileStruct.size - 1)), REPLACE_EXISTING)
         Files.deleteIfExists(Paths.get(inConfiguration(SmartFileAdapterConstants.DIRECTORY_TO_WATCH) + "/" + fileStruct(fileStruct.size - 1)))
       } else {
         logger.info(" SMART FILE CONSUMER ("+partIdx+")  Renaming file " + fileName + " to " + fileName + "_COMPLETE")
         (new File(inConfiguration(SmartFileAdapterConstants.DIRECTORY_TO_WATCH) + "/" + fileStruct(fileStruct.size - 1))).renameTo(new File(fileName + "_COMPLETE"))
       }
+      */
+      
+      //Take care of multiple directories
+      if (inConfiguration.getOrElse(SmartFileAdapterConstants.DIRECTORY_TO_MOVE_TO, null) != null) {
+         logger.info("SMART FILE CONSUMER ("+partIdx+") Moving File" + fileName + " to " + inConfiguration(SmartFileAdapterConstants.DIRECTORY_TO_MOVE_TO))
+        Files.copy(Paths.get(fileName), 
+            Paths.get(inConfiguration(SmartFileAdapterConstants.DIRECTORY_TO_MOVE_TO) + "/" + fileStruct(fileStruct.size - 1)), 
+            REPLACE_EXISTING)
+        Files.deleteIfExists(Paths.get(fileName))
+      }else{
+        logger.info(" SMART FILE CONSUMER ("+partIdx+")  Renaming file " + fileName + " to " + fileName + "_COMPLETE")
+        (new File(fileName).renameTo(new File(fileName + "_COMPLETE")))
+      }
+      
 
       //markFileProcessingEnd(fileName)
-      val tokenName = fileName.split("/")
-      FileProcessor.fileCacheRemove(tokenName(tokenName.size - 1))
-      FileProcessor.removeFromZK(tokenName(tokenName.size - 1))
-      FileProcessor.markFileProcessingEnd(tokenName(tokenName.size - 1))
+      //val tokenName = fileName.split("/")
+      //FileProcessor.fileCacheRemove(tokenName(tokenName.size - 1))
+      //FileProcessor.removeFromZK(tokenName(tokenName.size - 1))
+      //FileProcessor.markFileProcessingEnd(tokenName(tokenName.size - 1))
+      
+      //Use the full filename 
+      FileProcessor.fileCacheRemove(fileName)
+      FileProcessor.removeFromZK(fileName)
+      FileProcessor.markFileProcessingEnd(fileName)
+      
     } catch {
       case ioe: IOException => {
         logger.error("Exception moving the file ",ioe)
-        var tokenName = fileName.split("/")
-        FileProcessor.setFileState(tokenName(tokenName.size - 1),FileProcessor.FINISHED_FAILED_TO_COPY)
+        
+        //var tokenName = fileName.split("/")
+        //FileProcessor.setFileState(tokenName(tokenName.size - 1),FileProcessor.FINISHED_FAILED_TO_COPY)
+        FileProcessor.setFileState(fileName,FileProcessor.FINISHED_FAILED_TO_COPY)
       }
     }
   }
@@ -370,17 +416,31 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
   private def writeStatusMsg(fileName: String, isTotal: Boolean = false): Unit = {
 
     if (statusTopic == null) return
-
+    
+    var fileId = FileProcessor.getIDFromFileCache(fileName)
+    
     try {
       val cdate: Date = new Date
       if (inConfiguration.getOrElse(SmartFileAdapterConstants.KAFKA_STATUS_TOPIC, "").length > 0) {
         endFileProcessingTimeStamp = scala.compat.Platform.currentTime
         var statusMsg: String = null
-        val nameToken = fileName.split("/")
-        if (!isTotal)
-          statusMsg = SmartFileAdapterConstants.KAFKA_LOAD_STATUS + dateFormat.format(cdate) + "," + fileName + "," + numberOfMessagesProcessedInFile + "," + (endFileProcessingTimeStamp - startFileProcessingTimeStamp)
-        else
-          statusMsg = SmartFileAdapterConstants.TOTAL_FILE_STATUS + dateFormat.format(cdate) + "," + fileName + "," + numberOfMessagesProcessedInFile + "," + (endFileProcessingTimeStamp - FileProcessor.getTimingFromFileCache(nameToken(nameToken.size - 1)))
+        //val nameToken = fileName.split("/")
+        if (!isTotal){
+          if(message_metadata){
+            statusMsg = SmartFileAdapterConstants.KAFKA_LOAD_STATUS + dateFormat.format(cdate) + "," + fileName + "," + fileId + "," + numberOfMessagesProcessedInFile + "," + (endFileProcessingTimeStamp - startFileProcessingTimeStamp)
+          }else{
+             statusMsg = SmartFileAdapterConstants.KAFKA_LOAD_STATUS + dateFormat.format(cdate) + "," + fileName + "," + numberOfMessagesProcessedInFile + "," + (endFileProcessingTimeStamp - startFileProcessingTimeStamp)
+             
+          }
+        }else{
+          if(message_metadata){
+            statusMsg = SmartFileAdapterConstants.TOTAL_FILE_STATUS + dateFormat.format(cdate) + "," + fileName + "," + fileId + ","+ numberOfMessagesProcessedInFile + "," + (endFileProcessingTimeStamp - FileProcessor.getTimingFromFileCache(fileName))
+          }else{
+            //statusMsg = SmartFileAdapterConstants.TOTAL_FILE_STATUS + dateFormat.format(cdate) + "," + fileName + "," + numberOfMessagesProcessedInFile + "," + (endFileProcessingTimeStamp - FileProcessor.getTimingFromFileCache(nameToken(nameToken.size - 1)))
+            statusMsg = SmartFileAdapterConstants.TOTAL_FILE_STATUS + dateFormat.format(cdate) + "," + fileName + "," + numberOfMessagesProcessedInFile + "," + (endFileProcessingTimeStamp - FileProcessor.getTimingFromFileCache(fileName))
+          }
+        }
+        
         val statusPartitionId = "it does not matter"
 
         // Write a Status Message
@@ -411,16 +471,28 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
     if (errorTopic == null) return
 
     val cdate: Date = new Date
-    val errorMsg = dateFormat.format(cdate) + "," + msg.relatedFileName + "," + (new String(msg.msg))
+    
+    val errorMsg1 = dateFormat.format(cdate) + "," + msg.relatedFileName + "," + (new String(msg.msg))
+    
+    //Add message offset 
+    val errorMsg2 = dateFormat.format(cdate) + "," + msg.relatedFileName + "," +  msg.msgOffset + "," + (new String(msg.msg))
+    
     logger.warn(" SMART FILE CONSUMER ("+partIdx+"): invalid message in file " + msg.relatedFileName)
-    logger.warn(errorMsg)
-
-    // Write a Error Message
+    
     val keyMessages = new ArrayBuffer[ProducerRecord[Array[Byte], Array[Byte]]](1)
-    keyMessages += new ProducerRecord(inConfiguration(SmartFileAdapterConstants.KAFKA_ERROR_TOPIC), "rare event".getBytes("UTF8"), errorMsg.getBytes("UTF8"))
+    
+    if(exception_metadata){
+      logger.warn(errorMsg2)
+      keyMessages += new ProducerRecord(inConfiguration(SmartFileAdapterConstants.KAFKA_ERROR_TOPIC), 
+        "rare event".getBytes("UTF8"), errorMsg2.getBytes("UTF8"))
+    }else{
+      logger.warn(errorMsg1)
+      keyMessages += new ProducerRecord(inConfiguration(SmartFileAdapterConstants.KAFKA_ERROR_TOPIC), 
+        "rare event".getBytes("UTF8"), errorMsg1.getBytes("UTF8"))
+    }
+    // Write a Error Message
     sendToKafka(keyMessages, "Error")
-
-  }
+ }
 
   private def writeGenericMsg(msg: String, fileName: String, topicName: String): Unit = {
 
@@ -449,7 +521,10 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
    * @param delimiters
    * @return
    */
-  private def CreateKafkaInput(inputData: String, associatedMsg: String, delimiters: DataDelimiters): InputData = {
+  private def CreateKafkaInput(inputData: KafkaMessage, associatedMsg: String, delimiters: DataDelimiters): InputData = {
+    
+    val msgStr = new String(inputData.msg)
+    
     if (associatedMsg == null || associatedMsg.size == 0) {
       throw new Exception("KV data expecting Associated messages as input.")
     }
@@ -457,30 +532,52 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
     if (delimiters.fieldDelimiter == null) delimiters.fieldDelimiter = ","
     if (delimiters.valueDelimiter == null) delimiters.valueDelimiter = "~"
     if (delimiters.keyAndValueDelimiter == null) delimiters.keyAndValueDelimiter = "\\x01"
+    
+    //Add Patterns
+    val fieldPattern = Pattern.quote(delimiters.fieldDelimiter)
+    val kvPattern = Pattern.quote(delimiters.keyAndValueDelimiter)
+    val valuePattern = Pattern.quote(delimiters.valueDelimiter)
 
-    val str_arr = inputData.split(delimiters.fieldDelimiter, -1)
-    val inpData = new KvData(inputData, delimiters)
+    val str_arr = msgStr.split(fieldPattern, -1)
+    
+    val inpData = new KvData(msgStr, delimiters)
     val dataMap = scala.collection.mutable.Map[String, String]()
 
     if (delimiters.fieldDelimiter.compareTo(delimiters.keyAndValueDelimiter) == 0) {
       if (str_arr.size % 2 != 0) {
-        val errStr = "Expecting Key & Value pairs are even number of tokens when FieldDelimiter & KeyAndValueDelimiter are matched. We got %d tokens from input string %s".format(str_arr.size, inputData)
-        logger.error(errStr)
-        throw KVMessageFormatingException(errStr, null)
+        
+        val errStr1 = "Expecting Key & Value pairs are even number of tokens when FieldDelimiter & KeyAndValueDelimiter are matched. We got %d tokens from input string %s".format(str_arr.size, msgStr)
+        val errStr2 = "Expecting Key & Value pairs to be even number of tokens when FieldDelimiter & KeyAndValueDelimiter are matched. We got %d tokens from input string %s, reading file %s at offset %d".format(str_arr.size, msgStr, inputData.relatedFileName, inputData.msgOffset)
+        
+        //Flag to handle logging the exception metadata
+        if(exception_metadata){
+          logger.error(errStr2)
+          throw KVMessageFormatingException(errStr2, null)
+        }else{
+          logger.error(errStr1)
+          throw KVMessageFormatingException(errStr1, null)
+        }
+        
       }
       for (i <- 0 until str_arr.size by 2) {
         dataMap(str_arr(i).trim) = str_arr(i + 1)
       }
     } else {
       str_arr.foreach(kv => {
-        val kvpair = kv.split(delimiters.keyAndValueDelimiter)
+        val kvpair = kv.split(kvPattern)
         if (kvpair.size != 2) {
-          throw KVMessageFormatingException("Expecting Key & Value pair only", null)
+          throw KVMessageFormatingException("Expecting Key & Value pair only ", null)
         }
         dataMap(kvpair(0).trim) = kvpair(1)
       })
     }
-
+    
+    //Inject the Filename and Offset here based on the flag
+    if(message_metadata && !dataMap.contains("fileId")){
+      dataMap("fileId") = FileProcessor.getIDFromFileCache(inputData.relatedFileName)
+      dataMap("fileOffset") = inputData.msgOffset.toString()
+    }
+    
     inpData.dataMap = dataMap.toMap
     inpData
 
