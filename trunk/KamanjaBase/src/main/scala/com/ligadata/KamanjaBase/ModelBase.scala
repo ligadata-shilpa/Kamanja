@@ -24,7 +24,6 @@ import org.json4s._
 import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
 import java.io.{ DataInputStream, DataOutputStream }
-import com.ligadata.KvBase.{ TimeRange }
 import com.ligadata.KvBase.{ Key, Value, TimeRange /* , KvBaseDefalts, KeyWithBucketIdAndPrimaryKey, KeyWithBucketIdAndPrimaryKeyCompHelper */ }
 import com.ligadata.Utils.{ KamanjaLoaderInfo }
 import com.ligadata.HeartBeat._
@@ -323,6 +322,28 @@ trait EnvContext extends Monitorable {
   def EnableEachTransactionCommit: Boolean
 }
 
+class ModelContext(val txnContext: TransactionContext, val msg: MessageContainerBase) {
+  def getPropertyValue(clusterId: String, key:String): String = (txnContext.getPropertyValue(clusterId, key))
+}
+
+abstract class ModelBase(val modelContext: ModelContext, val factory: ModelBaseObj) {
+  final def EnvContext() = if (modelContext != null && modelContext.txnContext != null && modelContext.txnContext.nodeCtxt != null) modelContext.txnContext.nodeCtxt.getEnvCtxt() else null
+  final def ModelName() = factory.ModelName() // Model Name
+  final def Version() = factory.Version() // Model Version
+  final def TenantId() = null // Tenant Id
+  final def TransId() = if (modelContext != null && modelContext.txnContext != null) modelContext.txnContext.getTransactionId() else null // transId
+
+  def execute(outputDefault: Boolean): ModelResultBase // if outputDefault is true we will output the default value if nothing matches, otherwise null
+}
+
+trait ModelBaseObj {
+  def IsValidMessage(msg: MessageContainerBase): Boolean // Check to fire the model
+  def CreateNewModel(mdlCtxt: ModelContext): ModelBase // Creating same type of object with given values
+  def ModelName(): String // Model Name
+  def Version(): String // Model Version
+  def CreateResultObject(): ModelResultBase // ResultClass associated the model. Mainly used for Returning results as well as Deserialization
+}
+
 // ModelInstance will be created from ModelInstanceFactory by demand.
 //	If ModelInstanceFactory:isModelInstanceReusable returns true, engine requests one ModelInstance per partition.
 //	If ModelInstanceFactory:isModelInstanceReusable returns false, engine requests one ModelInstance per input message related to this model (message is validated with ModelInstanceFactory.isValidMessage).
@@ -431,3 +452,24 @@ class NodeContext(val gCtx: EnvContext) {
   def getValue(key: String): Any = { valuesMap.get(key) }
 }
 
+// 1.1.x compatible models for execution purpose without changing much in the execution path -- Begin
+class ModelBaseMdlInstance(factory: ModelBaseObjMdlInstanceFactory) extends ModelInstance(factory.asInstanceOf[ModelInstanceFactory]) {
+  override def execute(txnCtxt: TransactionContext, outputDefault: Boolean): ModelResultBase = {
+    val modelContext = new ModelContext(txnCtxt, txnCtxt.getMessage())
+    val mdlInst = factory.mdlBaseObj.CreateNewModel(modelContext)
+    mdlInst.execute(outputDefault)
+  }
+}
+
+class ModelBaseObjMdlInstanceFactory(modelDef: ModelDef, nodeContext: NodeContext, val mdlBaseObj: ModelBaseObj) extends ModelInstanceFactory(modelDef, nodeContext)  {
+  override def getModelName() = mdlBaseObj.ModelName() // Model Name
+
+  override def getVersion() = mdlBaseObj.Version() // Model Version
+
+  override def isValidMessage(msg: MessageContainerBase): Boolean = mdlBaseObj.IsValidMessage(msg)
+
+  override def createModelInstance() = new ModelBaseMdlInstance(this)
+
+  override def createResultObject() = mdlBaseObj.CreateResultObject()
+}
+// 1.1.x compatible models for execution purpose without changing much in the execution path -- End

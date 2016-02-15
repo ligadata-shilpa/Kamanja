@@ -869,7 +869,9 @@ class CompilerProxy {
 
       var isModel = false
       while (curClz != null && isModel == false) {
-        isModel = Utils.isDerivedFrom(curClz, "com.ligadata.KamanjaBase.ModelInstanceFactory")
+        isModel = Utils.isDerivedFrom(curClz, "com.ligadata.KamanjaBase.ModelInstanceFactory") || 
+		           Utils.isDerivedFrom(curClz, "com.ligadata.KamanjaBase.ModelBaseObj")
+
         if (isModel == false)
           curClz = curClz.getSuperclass()
       }
