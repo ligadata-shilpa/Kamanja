@@ -87,7 +87,7 @@ echo $bin
 echo "clean, package and assemble $srcPath ..."
 
 cd $srcPath
-sbt clean package KamanjaManager/assembly MetadataAPI/assembly KVInit/assembly MethodExtractor/assembly SimpleKafkaProducer/assembly NodeInfoExtract/assembly ExtractData/assembly MetadataAPIService/assembly JdbcDataCollector/assembly FileDataConsumer/assembly SaveContainerDataComponent/assembly CleanUtil/assembly MigrateManager/assembly
+sbt clean package KamanjaManager/assembly MetadataAPI/assembly KVInit/assembly MethodExtractor/assembly SimpleKafkaProducer/assembly NodeInfoExtract/assembly ExtractData/assembly MetadataAPIService/assembly JdbcDataCollector/assembly FileDataConsumer/assembly SaveContainerDataComponent/assembly CleanUtil/assembly MigrateManager/assembly clusterInstallerDriver/assembly
 
 # recreate eclipse projects
 #echo "refresh the eclipse projects ..."
@@ -109,6 +109,7 @@ cp MetadataAPIService/target/scala-2.11/MetadataAPIService* $bin
 cp FileDataConsumer/target/scala-2.11/FileDataConsumer* $bin
 cp Utils/CleanUtil/target/scala-2.11/CleanUtil* $bin
 cp Utils/Migrate/MigrateManager/target/MigrateManager* $bin
+cp SampleApplication/clusterInstallerDriver/target/scala-2.11/clusterInstallerDriver* /tmp/drdigital/bin/
 
 # *******************************
 # Copy jars required (more than required if the fat jars are used)

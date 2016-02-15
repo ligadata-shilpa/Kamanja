@@ -159,5 +159,5 @@ lazy val MigrateTo_V_1_3 = project.in(file("Utils/Migrate/DestinationVersion/Mig
 
 lazy val MigrateFrom_V_1_2 = project.in(file("Utils/Migrate/SourceVersion/MigrateFrom_V_1_2")) dependsOn (MigrateBase)
 
-lazy val clusterInstallerDriver = project.in(file("SampleApplication/ClusterInstall/clusterInstallerDriver"))
+lazy val clusterInstallerDriver = project.in(file("SampleApplication/clusterInstallerDriver")) dependsOn (MigrateBase, MigrateManager, KamanjaManager)
 

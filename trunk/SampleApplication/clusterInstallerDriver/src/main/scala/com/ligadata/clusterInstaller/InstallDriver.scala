@@ -16,14 +16,19 @@
 
 package com.ligadata.clusterInstaller
 
+import org.joda.time.DateTime
+import org.joda.time.format.{DateTimeFormat, DateTimeFormatter}
+
 import scala.io.Source
-import sys.process._
+import scala.sys.process._
 
-import java.util.regex.Pattern
-import java.util.regex.Matcher
 import java.io._
+import java.util.regex.{Matcher, Pattern}
 
-import org.apache.logging.log4j.{ Logger, LogManager }
+import org.apache.logging.log4j.LogManager
+import org.json4s._
+
+import com.ligadata.Serialize.JsonSerializer
 
 /**
   * This application installs and upgrades Kamanaja.  It does these essential things:
@@ -108,6 +113,8 @@ class InstallDriverLog(logPath : String) {
 }
 
 object InstallDriver extends App {
+    lazy val loggerName = this.getClass.getName
+    lazy val logger = LogManager.getLogger(loggerName)
 
     def usage: String = {
     """
@@ -139,9 +146,12 @@ object InstallDriver extends App {
     The ClusterInstaller Driver_1_3 is the cluster installer driver for Kamanja 1.3.  It is capable of installing a new version of 1.3 or given the appropriate arguments,
     installing a new version of Kamanja 1.3 *and* upgrading a 1.1 or 1.2 installation to the 1.3 version.
 
-    A log of the installation and optional upgrade is collected in a log file.  Should issues be encountered (missing components, connectivity issues, etc.) this log should be
-    consulted as to how to proceed.  Using the content of the log as a guide, the administrator will see what fixes must be made to their environment to push on and complete
-    the install.  It will also be the guide for backing off/abandoning an upgrade so a prior Kamanja cluster can be restored.
+    A log of the installation and optional upgrade is collected in a log file.  This log file is automatically generated and will be found in the
+    workingDir you supply to the installer driver program.  The name will be of the form: InstallDriver.yyyyMMMdd_HHmmss.log (e.g.,
+    InstallDriver.2016Jul01_231101.log)  Should issues be encountered (missing components, connectivity issues, etc.) this log should be
+    consulted as to how to proceed.  Using the content of the log as a guide, the administrator will see what fixes must be made to their
+    environment to push on and complete the install.  It will also be the guide for backing off/abandoning an upgrade so a prior Kamanja cluster
+    can be restored.
 
     """
     }
@@ -200,14 +210,14 @@ object InstallDriver extends App {
       * of the "your arguments are not satisfactory...Usage:"   */
     val confusedIntention : Boolean = (upgrade && install)
     val reasonableArguments: Boolean = (
-        clusterId != null && clusterId.size > 0
-        && apiConfigPath != null && apiConfigPath.size > 0
-        && nodeConfigPath != null && nodeConfigPath.size > 0
-        && tarballPath != null && tarballPath.size > 0
-        && fromKamanja != null && fromKamanja.size > 0 && (fromKamanja == "1.1" || fromKamanja == "1.2")
-        && fromScala != null && fromScala.size > 0 && fromScala == "2.10"
-        && toScala != null && toScala.size > 0 && (toScala == "2.10" || toScala == "2.11")
-        && workingDir != null && workingDir.size > 0
+        clusterId != null && clusterId.nonEmpty
+        && apiConfigPath != null && apiConfigPath.nonEmpty
+        && nodeConfigPath != null && nodeConfigPath.nonEmpty
+        && tarballPath != null && tarballPath.nonEmpty
+        && fromKamanja != null && fromKamanja.nonEmpty && (fromKamanja == "1.1" || fromKamanja == "1.2")
+        && fromScala != null && fromScala.nonEmpty && fromScala == "2.10"
+        && toScala != null && toScala.nonEmpty && (toScala == "2.10" || toScala == "2.11")
+        && workingDir != null && workingDir.nonEmpty
         && ! confusedIntention)
 
     if (! reasonableArguments) {
@@ -217,7 +227,11 @@ object InstallDriver extends App {
     }
 
     /** make a log ... FIXME: generate a timestamp for the "SomeDate" in the file path below... maybe make better configurable path */
-    val log : InstallDriverLog = new InstallDriverLog("/tmp/installationLog/LogDriverResults.SomeDate.log")
+    val dateTime : DateTime = new DateTime
+    val fmt : DateTimeFormatter  = DateTimeFormat.forPattern("yyyyMMMdd_HHmmss")
+    val datestr : String = fmt.print(dateTime);
+
+    val log : InstallDriverLog = new InstallDriverLog(s"$workingDir/InstallDriver.$datestr.log")
 
     /** Convert the content of the property file into a map.  If the path is bad, an empty map is returned and processing stops */
     val apiConfigMap : Map[String,String] = mapProperties(log, apiConfigPath)
@@ -232,18 +246,30 @@ object InstallDriver extends App {
 
     /** Ascertain what the name of the new installation directory will be, what the name of the prior installation would be (post install), and the parent
       * directory in which both of them will live on each cluster node. Should there be no existing installation, the prior installation value will be null. */
-    val (parentPath, priorInstallDirName, newInstallDirName) : (String, String, String) = CreateInstallationNames(apiConfigMap)
+    val (parentPath, priorInstallDirName, newInstallDirName) : (String, String, String) = CreateInstallationNames(log, apiConfigMap)
 
     /** Run the node info extract on the supplied file and garner all of the information needed to conduct the cluster environment validatation */
     val installDir : String = s"$parentPath/$newInstallDirName"
-    val (ips, ipIdTargPaths, ipPathPairs) : (Array[String], Array[(String, String, String, String)], Array[(String, String)]) =
-                extractNodeInfo(log
-                              , clusterId
-                              , apiConfigMap
-                              , apiConfigPath
-                              , nodeConfigPath
-                              , installDir
-                              , workingDir)
+
+    val clusterConfig : String = Source.fromFile(nodeConfigPath).mkString
+    val clusterConfigMap : ClusterConfigMap = new ClusterConfigMap(clusterConfig, clusterId)
+
+
+    val clusterMap : Map[String,Any] = clusterConfigMap.ClusterMap
+    if (clusterMap.isEmpty) {
+        log.emit(s"There is no cluster info for the supplied clusterId, $clusterId")
+        sys.exit(1)
+    }
+    val clusterIdFromConfig : String = clusterConfigMap.ClusterId
+    val dataStore : Map[String,Any] = clusterConfigMap.DataStore
+    val zooKeeperInfo : Map[String,Any] = clusterConfigMap.ZooKeeperInfo
+    val environmentContext : Map[String,Any] = clusterConfigMap.EnvironmentContext
+    val clusterNodes : List[Map[String,Any]] = clusterConfigMap.ClusterNodes
+    val adapters : List[Map[String,Any]] = clusterConfigMap.Adapters
+
+    /* Collect the node information needed to valididate the implied cluster environment */
+    val (ips, ipIdTargPaths, ipPathPairs) : (Array[String], Array[(String,String,String,String)], Array[(String,String)]) =
+            collectNodeInfo(log, clusterId, clusterNodes, installDir)
 
     /** Validate that the proposed installation has the requisite characteristics (scala, java, zookeeper, kafka, and hbase) */
     val proposedClusterEnvironmentIsSuitable  : Boolean = validateClusterEnvironment(log
@@ -261,7 +287,7 @@ object InstallDriver extends App {
     if (proposedClusterEnvironmentIsSuitable) {
 
         /** Install the new installation */
-        val nodes : String = clusterNodes(ips)
+        val nodes : String = " some nodes " //clusterNodes(ips)
         log.emit(s"Begin cluster installation... installation found on each cluster node(any {$nodes}) at $installDir")
         val installOk : Boolean = installCluster(log, apiConfigPath, nodeConfigPath, parentPath, priorInstallDirName, newInstallDirName, tarballPath)
         if (installOk) {
@@ -325,6 +351,48 @@ object InstallDriver extends App {
         proposedClusterEnvironmentIsSuitable
     }
 
+    def collectNodeInfo(log : InstallDriverLog, clusterId : String, clusterNodes : List[Map[String,Any]], installDir : String)
+    : (Array[String], Array[(String,String,String,String)], Array[(String,String)]) = {
+        val configDir: String = s"$installDir/config"
+        val ipsSet: Set[String] = clusterNodes.map(info => {
+            val nodeInfo: Map[String, _] = info.asInstanceOf[Map[String, _]]
+            val ipAddr: String = nodeInfo.getOrElse("NodeIpAddr", "_bo_gu_us_node_ip_ad_dr").asInstanceOf[String]
+            ipAddr
+        }).toSet
+        if (ipsSet.contains("_bo_gu_us_node_ip_ad_dr")) {
+            log.emit(s"the node ip information for cluster id $clusterId is invalid... aborting")
+            sys.exit(1)
+        }
+        val ips: Array[String] = ipsSet.toSeq.sorted.toArray
+
+        val ipIdTargPathsSet: Set[(String,String,String,String)] = clusterNodes.map(info => {
+            val nodeInfo: Map[String, _] = info.asInstanceOf[Map[String, _]]
+            val ipAddr: String = nodeInfo.getOrElse("NodeIpAddr", "_bo_gu_us_node_ip_ad_dr").asInstanceOf[String]
+            val nodeId : String = nodeInfo.getOrElse("NodeId", "unkn_own_node_id").asInstanceOf[String]
+            val roles : List[String] = nodeInfo.getOrElse("Roles", List[String]()).asInstanceOf[List[String]]
+            val rolesStr : String = if (roles.size > 0) roles.mkString(",") else "UNKNOWN_ROLES"
+            (ipAddr, nodeId, configDir, rolesStr)
+        }).toSet
+        val ipIdTargPathsReasonable : Boolean = ipIdTargPathsSet.filter(quartet => {
+            val (ipAddr, nodeId, _, rolesStr) : (String,String,String,String) = quartet
+            (ipAddr ==  "_bo_gu_us_node_ip_ad_dr" || nodeId == "unkn_own_node_id" || rolesStr == "UNKNOWN_ROLES")
+        }).size == 0
+        if (! ipIdTargPathsReasonable) {
+            log.emit(s"the node ip addr, node identifier, and/or node roles are bad for cluster id $clusterId ... aborting")
+            sys.exit(1)
+        }
+        val ipIdTargPaths: Array[(String,String,String,String)] = ipIdTargPathsSet.toSeq.sorted.toArray
+
+        val uniqueNodePaths: Set[String] = clusterNodes.map(info => {
+            val nodeInfo: Map[String, _] = info.asInstanceOf[Map[String, _]]
+            val ipAddr: String = nodeInfo.getOrElse("NodeIpAddr", "_bo_gu_us_node_ip_ad_dr").asInstanceOf[String]
+            s"$ipAddr~$configDir"
+        }).toSet
+        val ipPathPairs: Array[(String, String)] = uniqueNodePaths.map(itm => (itm.split('~').head, itm.split('~').last)).toSeq.sorted.toArray
+
+        (ips, ipIdTargPaths, ipPathPairs)
+    }
+
 
 
   def clusterNodes(ips : Array[String]) : String = {
@@ -345,62 +413,19 @@ object InstallDriver extends App {
       mapProperties
   }
 
-  def extractNodeInfo(log : InstallDriverLog
-                    , clusterId : String
-                    , apiConfigMap : Map[String,String]
-                    , apiConfigPath : String
-                    , nodeConfigPath : String
-                    , installDir : String
-                    , workDir : String) : (Array[String], Array[(String, String, String, String)], Array[(String, String)]) = {
-
-      val ipFile : String = "ip.txt"
-      val ipPathPairFile : String = "ipPath.txt"
-      val ipIdCfgTargPathQuartetFileName : String = "ipIdCfgTarg.txt"
-
-      val cmdPart : String = "NodeInfoExtract-1.0 --MetadataAPIConfig \\\"%s\\\" --NodeConfigPath \\\"%s\\\" --workDir \\\"%s\\\" --ipFileName \\\"%s\\\"  --ipPathPairFileName \\\"%s\\\"  --ipIdCfgTargPathQuartetFileName   \\\"%s\\\"  --installDir \\\"%s\\\" --clusterId \\\"%s\\\" ".format(apiConfigPath,nodeConfigPath,workDir,ipFile,ipPathPairFile,ipIdCfgTargPathQuartetFileName,installDir,clusterId)
-
-      log.emit(s" NodeInfoExtract cmd = $cmdPart")
-
-      val extractCmd = Seq("bash", "-c", cmdPart)
-        log.emit(s"NodeInfoExtract cmd used: $extractCmd")
-      val extractCmdRc = Process(extractCmd).!
-      val (ips, ipIdTargPaths, ipPathPairs) : (Array[String], Array[(String, String, String, String)], Array[(String, String)]) = if (extractCmdRc != 0) {
-          log.emit(s"NodeInfoExtract has failed...rc = $extractCmdRc")
-          log.emit(s"Command used: $extractCmd")
-          (null,null,null)
-      } else {
-          reconstituteNodeInfoContent(log, workDir, ipFile, ipPathPairFile, ipIdCfgTargPathQuartetFileName)
-      }
-
-      (ips, ipIdTargPaths, ipPathPairs)
-  }
-
-  def reconstituteNodeInfoContent(log : InstallDriverLog, workDir : String, ipFile : String, ipPathPairFile : String, ipIdCfgTargPathQuartetFileName : String) 
-                    :  (Array[String], Array[(String, String, String, String)], Array[(String, String)]) = {
-
-      val nodeLines : List[String] = Source.fromFile(s"$workDir/$ipFile").mkString.split('\n').toList
-      val nodeList : List[String] = nodeLines.filter( l => (l != null && l.size > 0 && l.contains("="))).map(line => line.trim)
-      val ipNodes : Array[String] = nodeList.toArray
-
-      val ipPathPairLines : Array[String] = Source.fromFile(s"$workDir/$ipPathPairFile").mkString.split('\n').toArray
-      val ipTargPathPairs : Array[(String,String)] = ipPathPairLines.filter( l => (l != null && l.size > 0 && l.contains(","))).map(line => {
-            val pair : Array[String] = line.split(',').map(itm => itm.trim)
-            (pair(0), pair(1))
-      })
-
-      val ipIdCfgTarPathQuartetLines : Array[String] = Source.fromFile(s"$workDir/$ipPathPairFile").mkString.split('\n').toArray
-      val ipIdCfgTarPathQuartets : Array[(String,String,String,String)] = ipIdCfgTarPathQuartetLines.filter( l => (l != null && l.size > 0 && l.contains(","))).map(line => {
-            val quartet : Array[String] = line.split(',').map(itm => itm.trim)
-            (quartet(0),quartet(1),quartet(2),quartet(3))
-      })
-
-      (ipNodes, ipIdCfgTarPathQuartets, ipTargPathPairs)
-  }
-
-
   def CreateInstallationNames(log : InstallDriverLog, apiConfigMap : Map[String,String]) : (String, String, String) = {
 
-      val (parentPath, priorInstallDirName, newInstallDirName) : (String, String, String) = ("","","")
+      val parPath : String = apiConfigMap.getOrElse("ROOT_DIR", "NO ROOT PATH")
+
+      val (parentPath, priorInstallDirName, newInstallDirName) : (String, String, String) = if (parPath == "NO ROOT PATH") {
+          log.emit("There is no ROOT_DIR in the supplied api configuration file... Examine that file and correct it... quiting")
+          ("","","")
+      } else {
+          val dateTime : DateTime = new DateTime
+          val fmt : DateTimeFormatter  = DateTimeFormat.forPattern("yyyyMMMdd_HHmmss")
+          val datestr : String = fmt.print(dateTime);
+          (parPath, s"$parPath/priorInstallation$datestr", s"$parPath/newInstallation$datestr")
+      }
 
       (parentPath, priorInstallDirName, newInstallDirName)
   }
@@ -548,6 +573,122 @@ val template : String = """
   }
 
 
+
+
+
+}
+
+class ClusterConfigMap(cfgStr: String, clusterIdOfInterest : String) {
+
+    val clusterMap : Map[String,Any] = getClusterConfigMapOfInterest(cfgStr, clusterIdOfInterest)
+    if (clusterMap.size == 0) {
+        throw new RuntimeException(s"There is no cluster information for cluster $clusterIdOfInterest")
+    }
+    val clusterId : String =  getClusterId
+    val dataStore : Map[String,Any] = getDataStore
+    val zooKeeperInfo : Map[String,Any] = getZooKeeperInfo
+    val environmentContext : Map[String,Any] = getEnvironmentContext
+    val clusterNodes : List[Map[String,Any]] = getClusterNodes
+    val adapters : List[Map[String,Any]] = getAdapters
+
+    def ClusterMap : Map[String,Any] = clusterMap
+    def ClusterId : String = clusterId
+    def DataStore : Map[String,Any] = dataStore
+    def ZooKeeperInfo : Map[String,Any] = zooKeeperInfo
+    def EnvironmentContext : Map[String,Any] = environmentContext
+    def ClusterNodes : List[Map[String,Any]] = clusterNodes
+    def Adapters : List[Map[String,Any]] = adapters
+
+    private def getClusterConfigMapOfInterest(cfgStr: String, clusterIdOfInterest : String): Map[String,Any] = {
+        val clusterMap : Map[String,Any] = try {
+            // extract config objects
+            val map = JsonSerializer.parseEngineConfig(cfgStr)
+            // process clusterInfo object if it exists
+            val mapOfInterest : Map[String,Any] = if (map.contains("Clusters")) {
+                val clusterList : List[_] = map.get("Clusters").get.asInstanceOf[List[_]]
+                val clusters = clusterList.length
+
+                val clusterSought : String = clusterIdOfInterest.toLowerCase
+                val clusterIdList : List[Any] = clusterList.filter(aCluster => {
+                    val cluster : Map[String,Any] =  aCluster.asInstanceOf[Map[String,Any]]
+                    val clusterId = cluster.getOrElse("ClusterId", "").toString.trim.toLowerCase
+                    (clusterId == clusterSought)
+                })
+
+                val clusterOfInterestMap : Map[String,Any] =  if (clusterIdList.size > 0) {
+                    clusterIdList.head.asInstanceOf[Map[String, Any]]
+                } else {
+                    Map[String, Any]()
+                }
+                clusterOfInterestMap
+            } else {
+                Map[String,Any]()
+            }
+            mapOfInterest
+        } catch {
+            case e: Exception => {
+                throw new Exception("Failed to parse clusterconfig", e)
+            }
+            case e: Throwable => {
+                throw new Exception("Failed to parse clusterconfig", e)
+            }
+        }
+        clusterMap
+    }
+
+    private def getClusterId: String = {
+        val clustId : String = if (clusterMap.size > 0 && clusterMap.contains("ClusterId")) {
+            clusterMap("ClusterId").asInstanceOf[String]
+        } else {
+            ""
+        }
+        clustId
+    }
+
+    private def getDataStore : Map[String,Any] = {
+        val dataStoreMap : Map[String,Any] = if (clusterMap.size > 0 && clusterMap.contains("DataStore")) {
+            clusterMap("DataStore").asInstanceOf[Map[String,Any]]
+        } else {
+            Map[String,Any]()
+        }
+        dataStoreMap
+    }
+
+    private def getZooKeeperInfo : Map[String,Any] = {
+        val dataStoreMap : Map[String,Any] = if (clusterMap.size > 0 && clusterMap.contains("ZooKeeperInfo")) {
+            clusterMap("ZooKeeperInfo").asInstanceOf[Map[String,Any]]
+        } else {
+            Map[String,Any]()
+        }
+        dataStoreMap
+    }
+
+    private def getEnvironmentContext : Map[String,Any] = {
+        val envCtxMap : Map[String,Any] = if (clusterMap.size > 0 && clusterMap.contains("EnvironmentContext")) {
+            clusterMap("EnvironmentContext").asInstanceOf[Map[String,Any]]
+        } else {
+            Map[String,Any]()
+        }
+        envCtxMap
+    }
+
+    private def getClusterNodes : List[Map[String,Any]] = {
+        val nodeMapList : List[Map[String,Any]] = if (clusterMap.size > 0 && clusterMap.contains("Nodes")) {
+            clusterMap("Nodes").asInstanceOf[List[Map[String,Any]]]
+        } else {
+            List[Map[String,Any]]()
+        }
+        nodeMapList
+    }
+
+    private def getAdapters : List[Map[String,Any]] = {
+        val adapterMapList : List[Map[String,Any]] = if (clusterMap.size > 0 && clusterMap.contains("Adapters")) {
+            clusterMap("Adapters").asInstanceOf[List[Map[String,Any]]]
+        } else {
+            List[Map[String,Any]]()
+        }
+        adapterMapList
+    }
 
 }
 
