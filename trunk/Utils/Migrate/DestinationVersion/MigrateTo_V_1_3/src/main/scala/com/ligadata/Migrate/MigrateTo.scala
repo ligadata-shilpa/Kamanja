@@ -302,9 +302,9 @@ class MigrateTo_V_1_3 extends MigratableTo {
   override def backupAllTables(metadataTblsToBackedUp: Array[BackupTableInfo], dataTblsToBackedUp: Array[BackupTableInfo], statusTblsToBackedUp: Array[BackupTableInfo], force: Boolean): Unit = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
-    logger.debug("Backup tables => (Metadata Tables:{" + metadataTblsToBackedUp.map(t => "(" + t.namespace + "," + t.srcTable + " => " + t.namespace + "," + t.dstTable + ")").mkString(",") + "}, Data Tables:"
-      + dataTblsToBackedUp.map(t => "(" + t.namespace + "," + t.srcTable + " => " + t.namespace + "," + t.dstTable + ")").mkString(",") + "}, Status Tables:"
-      + statusTblsToBackedUp.map(t => "(" + t.namespace + "," + t.srcTable + " => " + t.namespace + "," + t.dstTable + ")").mkString(",") + "})")
+    logger.debug("Backup tables => (Metadata Tables:{" + metadataTblsToBackedUp.map(t => "((" + t.namespace + "," + t.srcTable + ") => (" + t.namespace + "," + t.dstTable + "))").mkString(",") + "}, Data Tables:{"
+      + dataTblsToBackedUp.map(t => "((" + t.namespace + "," + t.srcTable + ") => (" + t.namespace + "," + t.dstTable + "))").mkString(",") + "}, Status Tables:{"
+      + statusTblsToBackedUp.map(t => "((" + t.namespace + "," + t.srcTable + ") => (" + t.namespace + "," + t.dstTable + "))").mkString(",") + "})")
     var executor: ExecutorService = null
     try {
       executor = Executors.newFixedThreadPool(if (_parallelDegree <= 1) 1 else _parallelDegree)
