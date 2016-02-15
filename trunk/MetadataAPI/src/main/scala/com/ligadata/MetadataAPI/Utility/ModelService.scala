@@ -27,7 +27,7 @@ import com.ligadata.MetadataAPI.{MetadataAPIImpl,ApiResult,ErrorCodeConstants}
 import com.ligadata.MetadataAPI.MetadataAPI.ModelType
 import com.ligadata.MetadataAPI.MetadataAPI.ModelType.ModelType
 import com.ligadata.MetadataAPI.MetadataAPIImpl
-import scala.io.StdIn
+import scala.io._
 
 /**
  * Created by dhaval on 8/7/15.
@@ -113,7 +113,7 @@ object ModelService {
                             println("[" + srNo + "]" + configkey)
                         }
                         print("\nEnter your choice: \n")
-                        var userOption = StdIn.readInt()
+                        var userOption = readInt()
 
                         userOption match {
                             case x if ((1 to srNo).contains(userOption)) => {
@@ -208,7 +208,7 @@ object ModelService {
                             println("[" + srNo + "]" + configkey)
                         }
                         print("\nEnter your choice: \n")
-                        var userOption = StdIn.readInt()
+                        var userOption = readInt()
 
                         userOption match {
                             case x if ((1 to srNo).contains(userOption)) => {
@@ -518,7 +518,7 @@ object ModelService {
 
                 }
                 print("\nEnter your choice: \n")
-                var userOption = StdIn.readInt()
+                var userOption = readInt()
 
                 userOption match {
                   case x if ((1 to srNo).contains(userOption)) => {
@@ -615,7 +615,7 @@ object ModelService {
                     println("[" + srNo + "]" + configkey)
                   }
                   print("\nEnter your choice: \n")
-                  var userOption = StdIn.readInt()
+                  var userOption = readInt()
 
                   userOption match {
                     case x if ((1 to srNo).contains(userOption)) => {
@@ -670,7 +670,7 @@ object ModelService {
               println("["+srno+"] "+modelKey)
             }
             println("Enter your choice: ")
-            val choice: Int = StdIn.readInt()
+            val choice: Int = readInt()
             if (choice < 1 || choice > modelKeys.length) {
               val errormsg="Invalid choice " + choice + ". Start with the main menu."
               response=errormsg
@@ -746,7 +746,7 @@ object ModelService {
                       println("[" + srno + "] " + modelKey)
                   }
                   println("Enter your choice: ")
-                  val choice: Int = StdIn.readInt()
+                  val choice: Int = readInt()
 
                   if (choice < 1 || choice > modelKeys.length) {
                       "Invalid choice " + choice + ". Start with the main menu."
@@ -799,7 +799,7 @@ object ModelService {
               println("["+srno+"] "+modelKey)
             }
             println("Enter your choice: ")
-            val choice: Int = StdIn.readInt()
+            val choice: Int = readInt()
 
             if (choice < 1 || choice > modelKeys.length) {
               val errormsg="Invalid choice " + choice + ". Start with the main menu."
@@ -857,7 +857,7 @@ object ModelService {
               println("["+srno+"] "+modelKey)
             }
             println("Enter your choice: ")
-            val choice: Int = StdIn.readInt()
+            val choice: Int = readInt()
 
 
             if (choice < 1 || choice > modelKeys.length) {
@@ -915,7 +915,7 @@ object ModelService {
           println("[" + srNo + "]" + model)
         }
         print("\nEnter your choice(If more than 1 choice, please use commas to seperate them): \n")
-        var userOptions = StdIn.readLine().split(",")
+        var userOptions = readLine().split(",")
         println("User selected the option(s) " + userOptions.length)
         //check if user input valid. If not exit
         for (userOption <- userOptions) {

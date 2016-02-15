@@ -1,4 +1,4 @@
-import AssemblyKeys._ // put this at the top of the file
+import sbtassembly.AssemblyPlugin.defaultShellScript
 import sbt._
 import Keys._
 
@@ -7,8 +7,6 @@ shellPrompt := { state =>  "sbt (%s)> ".format(Project.extract(state).currentPro
 name := "AuditAdapters"
 
 version := "1.0"
-
-scalaVersion := "2.11.7"
 
 resolvers += "spring-milestones" at "http://repo.springsource.org/libs-milestone"
 

@@ -24,7 +24,7 @@ import com.ligadata.kamanja.metadata.{BaseAttributeDef, MdMgr, AttributeDef}
 import scala.io.Source
 import org.apache.logging.log4j._
 
-import scala.io.StdIn
+import scala.io._
 
 /**
  * Created by dhaval on 8/13/15.
@@ -108,7 +108,7 @@ object ConceptService {
           println(s"[$srno] (${conceptKey.FullNameWithVer} : ${conceptKey.typeString} IsActive=${conceptKey.IsActive} IsDeleted=${conceptKey.IsDeleted}})")
         }
         println("Enter your choice: ")
-        val choice: Int = StdIn.readInt()
+        val choice: Int = readInt()
 
         if (choice < 1 || choice > conceptKeys.length) {
           val errormsg = "Invalid choice " + choice + ". Start with the main menu."
@@ -210,7 +210,7 @@ object ConceptService {
       println("[" + srNo + "]" + message)
     }
     print("\nEnter your choice(If more than 1 choice, please use commas to seperate them): \n")
-    val userOptions: List[Int] = StdIn.readLine().filter(_ != '\n').split(',').filter(ch => (ch != null && ch != "")).map(_.trim.toInt).toList
+    val userOptions: List[Int] = readLine().filter(_ != '\n').split(',').filter(ch => (ch != null && ch != "")).map(_.trim.toInt).toList
     //check if user input valid. If not exit
     for (userOption <- userOptions) {
       userOption match {
