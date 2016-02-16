@@ -133,7 +133,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     if(elements.size==1)
       ("", name)
     else
-      ( elements.head, elements.mkString(".") )
+      ( elements.head, elements.slice(1, elements.size).mkString(".") )
   }
 
   /** Creates a metadata instance with defaults and json objects located on the file system
@@ -308,14 +308,12 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
         if(a.isEmpty) {
           throw new Exception("Missing alias %s for %s".format(alias, n))
         } else {
-         "%s.%s".format(a.get, name)
+          (n -> "%s.%s".format(a.get, name))
         }
       } else {
-        n
+        (n -> n)
       }
-    })
-
-    Map.empty[String, String]
+    }).toMap
   }
 
   def ResolveName(n: String, aliases: Map[String, String] ) : String =  {
@@ -518,23 +516,30 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
         var cnt1 = computes.size
         var cnt2 = 0
 
+        def ResolveToMessageVariable(values: Map[String, String], classToMsgId: Map[String, Int]): Map[String, String] = {
+          values.map( p => {
+            val (cname, variable) = splitNamespaceClass(p._2)
+            (p._1 -> "msg%d.%s".format(classToMsgId(cname), variable))
+          }).toMap
+        }
+
         while(cnt1!=cnt2 && computes.size > 0) {
           cnt2 = cnt1
 
           val computes1 = computes.filter(c => {
 
-            // Check if the compute if determind
-            val (open, expression) =  if(c._2.expression.length > 0) {
+            // Check if the compute if determined
+            val (open, expression, list) =  if(c._2.expression.length > 0) {
               val list = ExtractColumnNames(c._2.expression)
               val rList = ResolveNames(list, root.aliases.toMap)
               val open = rList.filter(f => !fixedMappingSources.contains(f._2))
-              (open, c._2.expression)
+              (open, c._2.expression, ResolveToMessageVariable(rList, incomingToMsgId))
             } else {
               val evaluate = c._2.expressions.map( expression => {
                 val list = ExtractColumnNames(expression)
                 val rList = ResolveNames(list, root.aliases.toMap)
                 val open = rList.filter(f => !fixedMappingSources.contains(f._2))
-                (open, expression)
+                (open, expression, ResolveToMessageVariable(rList, incomingToMsgId))
               })
               evaluate.foldLeft(evaluate.head) ( (r, e) => {
                 if(e._1.size < r._1.size)
@@ -545,7 +550,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
             }
 
             if(open.size==0) {
-              val newExpression = FixupColumnNames(expression, fixedMappingSources)
+              val newExpression = FixupColumnNames(expression, list)
               // Output the actual compute
               methods :+= c._2.Comment
               if(c._2.typename.length>0)
