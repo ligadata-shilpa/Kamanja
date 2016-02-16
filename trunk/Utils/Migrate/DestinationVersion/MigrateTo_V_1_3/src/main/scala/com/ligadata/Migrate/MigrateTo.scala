@@ -512,7 +512,8 @@ class MigrateTo_V_1_3 extends MigratableTo {
     return (statusCode != 0)
   }
 
-  private def DepJars(depJars: List[String]): List[String] = {
+  private def DepJars(depJars1: List[String]): List[String] = {
+    val depJars = depJars1 diff List("methodextractor_2.10-1.0.jar", "methodextractor_2.11-1.0.jar") // Removing jars which are not valid any more
     // If source is 2.10 and destination is 2.11, then only tranform this. otherwise just leave them as it is.
     if (_fromScalaVersion.equalsIgnoreCase("2.10") && _toScalaVersion.equalsIgnoreCase("2.11")) {
       val depJarsMap = Map("scalap-2.10.0.jar" -> "scalap-2.11.0.jar", "kvbase_2.10-0.1.0.jar" -> "kvbase_2.11-0.1.0.jar", "kamanjautils_2.10-1.0.jar" -> "kamanjautils_2.11-1.0.jar",
