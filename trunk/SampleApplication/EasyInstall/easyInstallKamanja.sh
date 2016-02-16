@@ -483,7 +483,6 @@ cp $srcPath/lib_managed/jars/com.thoughtworks.paranamer/paranamer/paranamer-2.6.
 # one line added
 cp $ivyPath/cache/org.scala-lang/scala-compiler/jars/scala-compiler-2.10.0.jar $systemlib
 cp $ivyPath/cache/org.scala-lang/scala-compiler/jars/scala-compiler-2.10.4.jar $systemlib
-cp $ivyPath/cache/org.scala-lang/scala-compiler/jars/scala-compiler-2.10.5.jar $systemlib
 cp $srcPath/Utils/ZooKeeper/CuratorLeaderLatch/target/scala-2.10/zookeeperleaderlatch*.jar $systemlib
 # Might be only for 2.11
 #cp $srcPath/lib_managed/jars/org.scalameta/tokenquasiquotes_2.11/tokenquasiquotes*.jar $systemlib
