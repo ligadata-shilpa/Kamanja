@@ -234,15 +234,16 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
     // Validate any computes nodes if val and vals are set
     val computeconstraint = root.transformations.foldLeft("root/", Map.empty[String, String])( (r, t) => {
-      val r1 = t._2.computes.foldLeft(r._1 + t._1 + "/", r._2 )( (r, c) => {
+
+      val r1 = t._2.computes.foldLeft(r._1 + t._1 + "/", Map.empty[String, String])( (r, c) => {
         if(c._2.expression.length > 0 && c._2.expressions.length > 0) {
           ("", r._2 ++ Map(r._1 + c._1 -> "Vals and val attribute are set, please choose one.") )
         } else {
           r
         }
-      })
+      })._2
 
-      val r2 = t._2.outputs.foldLeft(r._1 + t._1 + "/", r1._2 )( (r, o) => {
+      val r2 = t._2.outputs.foldLeft(r._1 + t._1 + "/", Map.empty[String, String])( (r, o) => {
         o._2.computes.foldLeft( r._1 + o._1 + "/", r._2 )((r, c) => {
           if(c._2.expression.length > 0 && c._2.expressions.length > 0) {
             ("", r._2 ++ Map(r._1 + c._1 -> "Vals and val attribute are set, please choose one.") )
@@ -250,14 +251,14 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
             r
           }
         })
-      })
+      })._2
 
-      ("", r._2)
+      ("", r1 ++ r2)
     })._2
 
-    if(computeconstraint.size > 2) {
-      computeconstraint.foreach( m => logger.warn(m))
-      throw new Exception("Conflicting compute nodes")
+    if(computeconstraint.size > 0) {
+      computeconstraint.foreach( m => logger.warn(m.toString()))
+      throw new Exception("Conflicting %d compute nodes".format(computeconstraint.size))
     }
   }
 
