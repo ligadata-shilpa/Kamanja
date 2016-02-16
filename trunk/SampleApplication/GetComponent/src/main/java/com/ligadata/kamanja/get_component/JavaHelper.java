@@ -1,6 +1,5 @@
-package check_prerequisites;
+package com.ligadata.kamanja.get_component;
 
-import java.io.PrintWriter;
 import java.io.StringWriter;
 
 public class JavaHelper {
@@ -9,22 +8,25 @@ public class JavaHelper {
 	String version;
 	String nodeId;
 	String status;
-	String errorMessage;
+	static String errorMessage = null;
 	StringWriter errors = new StringWriter();
+	StringUtility strutl = new StringUtility();
 
 	private String CheckJavaVersion() {
 		try {
-			version = System.getProperty("java.version");
+			return System.getProperty("java.version");
 		} catch (Exception e) {
-			e.printStackTrace(new PrintWriter(errors));
-			errorMessage = errors.toString();
+			// e.printStackTrace(new PrintWriter(errors));
+			// errorMessage = errors.toString();
+			errorMessage = strutl.getStackTrace(e);
 		}
-		return version;
+		return null;
 	}
 
 	public void AskJava() {
-		JavaHelper java = new JavaHelper();
-		java.CheckJavaVersion();
+		//JavaHelper java = new JavaHelper();
+		//version = java.CheckJavaVersion();
+		version = CheckJavaVersion();
 	}
 
 	public String getComponent() {
@@ -63,6 +65,7 @@ public class JavaHelper {
 		return errorMessage;
 	}
 
+	@SuppressWarnings("static-access")
 	public void setErrorMessage(String errorMessage) {
 		this.errorMessage = errorMessage;
 	}

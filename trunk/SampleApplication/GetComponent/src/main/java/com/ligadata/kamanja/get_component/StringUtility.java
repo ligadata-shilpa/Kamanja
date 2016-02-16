@@ -1,8 +1,11 @@
-package check_prerequisites;
+package com.ligadata.kamanja.get_component;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.net.InetAddress;
+
 public class StringUtility {
 	public StringBuffer ExecuteSHCommandErrStream(String command) {
 		StringBuffer output = new StringBuffer();
@@ -44,6 +47,10 @@ public class StringUtility {
 		return doc.indexOf(word);
 	}
 
+	public int IndexOfStringFrom(String doc, int beginIndex,String word) {
+		return doc.indexOf(word, beginIndex);
+	}
+	
 	public String replaceSpacesFromString(String doc) {
 		return doc.replaceAll("\\s", "");
 	}
@@ -66,6 +73,15 @@ public class StringUtility {
 		return null;
 	}
 
+	public String getStackTrace(final Throwable throwable) {
+		final StringWriter sw = new StringWriter();
+		final PrintWriter pw = new PrintWriter(sw, true);
+		throwable.printStackTrace(pw);
+		// System.out.println(sw.getBuffer().toString());
+		return sw.getBuffer().toString();
+	}
+
+	@SuppressWarnings("unused")
 	public String VersionString(int indexOfVersion, String doc, String component) {
 		String version = null;
 		switch (component) {

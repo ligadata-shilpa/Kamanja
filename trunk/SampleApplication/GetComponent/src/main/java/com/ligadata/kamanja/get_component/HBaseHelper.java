@@ -1,9 +1,7 @@
-package check_prerequisites;
+package com.ligadata.kamanja.get_component;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.io.StringWriter;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
@@ -26,8 +24,13 @@ public class HBaseHelper {
 	String version;
 	String status;
 	StringWriter errors = new StringWriter();
+	StringUtility strutl = new StringUtility();
 
-	public void SetConfiguration(String host, String hadoopAuthentication, String hbaseAuthentication, String masterPrincipal, String regionServer) throws IOException { //for kerberos not tested
+	public void SetConfiguration(String host, String hadoopAuthentication, String hbaseAuthentication,
+			String masterPrincipal, String regionServer) throws IOException { // for
+																				// kerberos
+																				// not
+																				// tested
 		config = HBaseConfiguration.create();
 		config.setInt("zookeeper.session.timeout", 300);
 		config.setInt("zookeeper.recovery.retry", 1);
@@ -39,19 +42,19 @@ public class HBaseHelper {
 		config.set("hbase.master.kerberos.principal", masterPrincipal);
 		config.set("hbase.regionserver.kerberos.principal", regionServer);
 		org.apache.hadoop.security.UserGroupInformation.setConfiguration(config);
-		UserGroupInformation.loginUserFromKeytab(masterPrincipal,
-				"/apps/kamanja/certificateinfo/user.keytab");
+		UserGroupInformation.loginUserFromKeytab(masterPrincipal, "/apps/kamanja/certificateinfo/user.keytab");
 		ugi = UserGroupInformation.getLoginUser();
 	}
 
-	public void relogin() {//not tested
+	public void relogin() {// not tested
 		try {
 			if (ugi != null) {
 				ugi.checkTGTAndReloginFromKeytab();
 			}
 		} catch (Exception e) {
-			e.printStackTrace(new PrintWriter(errors));
-			errorMessage = errors.toString();
+			// e.printStackTrace(new PrintWriter(errors));
+			// errorMessage = errors.toString();
+			errorMessage += strutl.getStackTrace(e);
 		}
 	}
 
@@ -64,12 +67,13 @@ public class HBaseHelper {
 			config.setInt("hbase.client.pause", 5000);
 			config.set("hbase.zookeeper.quorum", host);
 		} catch (Exception e) {
-			e.printStackTrace(new PrintWriter(errors));
-			errorMessage = errors.toString();
+			// e.printStackTrace(new PrintWriter(errors));
+			// errorMessage = errors.toString();
+			errorMessage += strutl.getStackTrace(e);
 		}
 	}
 
-	@SuppressWarnings("deprecation")
+	@SuppressWarnings({ "resource", "deprecation" })
 	public void CreateTable() {
 		try {
 			// Initiating HBase table with family column
@@ -77,29 +81,32 @@ public class HBaseHelper {
 			htable.addFamily(new HColumnDescriptor("person"));
 			htable.addFamily(new HColumnDescriptor("contactinfo"));
 			htable.addFamily(new HColumnDescriptor("creditcard"));
-			System.out.println("Connecting...");
+			//System.out.println("Connecting...");
 			// Initiating HBase Admin class
 			HBaseAdmin hbaseAdmin = new HBaseAdmin(config);
-			System.out.println("Creating Table...");
+			//System.out.println("Creating Table...");
 			if ((hbaseAdmin.tableExists(tableName)) == true)
 				DeleteTable(tableName);
 			hbaseAdmin.createTable(htable);
 			// Create table in HBase
-			System.out.println("Done!");
+			//System.out.println("Done!");
 		} catch (Exception e) {
-			e.printStackTrace(new PrintWriter(errors));
-			errorMessage = errors.toString();
+			// e.printStackTrace(new PrintWriter(errors));
+			// errorMessage = errors.toString();
+			errorMessage = strutl.getStackTrace(e);
 		}
 	}
 
+	@SuppressWarnings({ "resource", "deprecation" })
 	public void DeleteTable(String tableName) {
 		try {
 			HBaseAdmin hbaseAdmin = new HBaseAdmin(config);
 			hbaseAdmin.disableTable(tableName);
 			hbaseAdmin.deleteTable(tableName);
 		} catch (Exception e) {
-			e.printStackTrace(new PrintWriter(errors));
-			errorMessage = errors.toString();
+			// e.printStackTrace(new PrintWriter(errors));
+			// errorMessage = errors.toString();
+			errorMessage += strutl.getStackTrace(e);
 		}
 
 	}
@@ -107,7 +114,6 @@ public class HBaseHelper {
 	@SuppressWarnings("deprecation")
 	public void InsertData() {
 		try {
-			@SuppressWarnings("deprecation")
 			HTable table = new HTable(config, tableName);
 			Put put = new Put(Bytes.toBytes("yousef-ligadata"));
 			put.add(Bytes.toBytes("person"), Bytes.toBytes("givenName"), Bytes.toBytes("yousef"));
@@ -117,26 +123,31 @@ public class HBaseHelper {
 			table.flushCommits();
 			table.close();
 		} catch (IOException e) {
-			e.printStackTrace(new PrintWriter(errors));
-			errorMessage = errors.toString();
+			// e.printStackTrace(new PrintWriter(errors));
+			// errorMessage = errors.toString();
+			errorMessage += strutl.getStackTrace(e);
 		}
 
 	}
 
-	public void GetData() {
+	@SuppressWarnings({ "resource", "deprecation" })
+	public String GetData() {
 		try {
 			HTable table = new HTable(config, tableName);
 			Get get = new Get(Bytes.toBytes("yousef-ligadata"));
 			get.addFamily(Bytes.toBytes("person"));
 			Result result = table.get(get);
 			byte[] givenName = result.getValue(Bytes.toBytes("person"), Bytes.toBytes("givenName"));
-			byte[] sureName = result.getValue(Bytes.toBytes("person"), Bytes.toBytes("sureName"));
-			System.out.println(
-					"givenName is: " + Bytes.toString(givenName) + " and sureName is: " + Bytes.toString(sureName));
+			//byte[] sureName = result.getValue(Bytes.toBytes("person"), Bytes.toBytes("sureName"));
+			//System.out.println(
+			//		"givenName is: " + Bytes.toString(givenName) + " and sureName is: " + Bytes.toString(sureName));
+			return givenName.toString();
 		} catch (Exception e) {
-			e.printStackTrace(new PrintWriter(errors));
-			errorMessage = errors.toString();
+			// e.printStackTrace(new PrintWriter(errors));
+			// errorMessage = errors.toString();
+			errorMessage += strutl.getStackTrace(e);
 		}
+		return null;
 	}
 
 	public String CheckHBaseVersion() {
@@ -146,12 +157,12 @@ public class HBaseHelper {
 	}
 
 	public void AskHBase(String host) {
-		HBaseHelper hbase = new HBaseHelper();
-		hbase.conf(host);
-		version = hbase.CheckHBaseVersion();
-		hbase.CreateTable();
-		hbase.InsertData();
-		hbase.GetData();
+		//HBaseHelper hbase = new HBaseHelper();
+		conf(host);
+		version = CheckHBaseVersion();
+		CreateTable();
+		InsertData();
+		GetData();
 		if (errorMessage != null)
 			status = "Fail";
 		else
@@ -186,6 +197,7 @@ public class HBaseHelper {
 		return errorMessage;
 	}
 
+	@SuppressWarnings("static-access")
 	public void setErrorMessage(String errorMessage) {
 		this.errorMessage = errorMessage;
 	}

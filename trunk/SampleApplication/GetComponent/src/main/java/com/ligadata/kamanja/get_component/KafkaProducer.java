@@ -1,4 +1,4 @@
-package check_prerequisites;
+package com.ligadata.kamanja.get_component;
 
 import java.util.Properties;
 

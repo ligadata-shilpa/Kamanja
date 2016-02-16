@@ -1,11 +1,10 @@
-package check_prerequisites;
+package com.ligadata.kamanja.get_component;
 
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.ZooDefs;
 import org.apache.zookeeper.ZooKeeper;
 import org.apache.zookeeper.ZooKeeper.States;
-import java.io.PrintWriter;
 import java.io.StringWriter;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
@@ -24,6 +23,8 @@ public class ZookeeperHelper {
 	String status;
 	String component;
 	StringWriter errors = new StringWriter();
+	StringUtility strutl = new StringUtility();
+
 	private Watcher watcher = new Watcher() {
 		@Override
 		public void process(WatchedEvent arg0) {
@@ -36,8 +37,9 @@ public class ZookeeperHelper {
 		try {
 			zConnection = new ZooKeeper(hostName, sessionTimout, watcher);
 		} catch (Exception e) {
-			e.printStackTrace(new PrintWriter(errors));
-			errorMessage = errors.toString();
+			// e.printStackTrace(new PrintWriter(errors));
+			// errorMessage += errors.toString();
+			errorMessage += strutl.getStackTrace(e);
 		}
 	}
 
@@ -48,9 +50,10 @@ public class ZookeeperHelper {
 			if (zExist())
 				zDelete();
 			zConnection.create(znode, zdata.getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
-		} catch (Exception e1) {
-			e1.printStackTrace(new PrintWriter(errors));
-			errorMessage = errors.toString();
+		} catch (Exception e) {
+			// e.printStackTrace(new PrintWriter(errors));
+			// errorMessage += errors.toString();
+			errorMessage += strutl.getStackTrace(e);
 		}
 	}
 
@@ -58,8 +61,9 @@ public class ZookeeperHelper {
 		try {
 			stat = zConnection.exists(znode, null);
 		} catch (Exception e) {
-			e.printStackTrace(new PrintWriter(errors));
-			errorMessage = errors.toString();
+			// e.printStackTrace(new PrintWriter(errors));
+			// errorMessage += errors.toString();
+			errorMessage += strutl.getStackTrace(e);
 		}
 		if (stat != null)
 			return true;
@@ -73,8 +77,9 @@ public class ZookeeperHelper {
 		try {
 			bytes = zConnection.getData(znode, null, null);
 		} catch (Exception e) {
-			e.printStackTrace(new PrintWriter(errors));
-			errorMessage = errors.toString();
+			// e.printStackTrace(new PrintWriter(errors));
+			// errorMessage += errors.toString();
+			errorMessage += strutl.getStackTrace(e);
 		}
 		result = new String(bytes);
 		value = Integer.parseInt(result.trim());
@@ -86,8 +91,9 @@ public class ZookeeperHelper {
 		try {
 			zConnection.setData(znode, zdata.getBytes(), 1);
 		} catch (Exception e) {
-			e.printStackTrace(new PrintWriter(errors));
-			errorMessage = errors.toString();
+			// e.printStackTrace(new PrintWriter(errors));
+			// errorMessage += errors.toString();
+			errorMessage += strutl.getStackTrace(e);
 		}
 	}
 
@@ -95,8 +101,9 @@ public class ZookeeperHelper {
 		try {
 			zConnection.delete(znode, 0);
 		} catch (Exception e) {
-			e.printStackTrace(new PrintWriter(errors));
-			errorMessage = errors.toString();
+			// e.printStackTrace(new PrintWriter(errors));
+			// errorMessage += errors.toString();
+			errorMessage += strutl.getStackTrace(e);
 		}
 	}
 
@@ -104,8 +111,9 @@ public class ZookeeperHelper {
 		try {
 			zConnection.close();
 		} catch (Exception e) {
-			e.printStackTrace(new PrintWriter(errors));
-			errorMessage = errors.toString();
+			// e.printStackTrace(new PrintWriter(errors));
+			// errorMessage += errors.toString();
+			errorMessage += strutl.getStackTrace(e);
 		}
 	}
 
@@ -119,29 +127,50 @@ public class ZookeeperHelper {
 		}
 	}
 
-//	public String zGetVersion() {
-//		StringBuffer output = new StringBuffer();
-//		String command = "zkCli.sh start";
-//		StringUtility str = new StringUtility();
-//		output = str.ExecuteSHCommandInputStream(command);
-//		return output.toString();
-//	}
+	// public String zGetVersion() {
+	// StringBuffer output = new StringBuffer();
+	// String command = "zkCli.sh start";
+	// StringUtility str = new StringUtility();
+	// output = str.ExecuteSHCommandInputStream(command);
+	// return output.toString();
+	// }
+	public String CheckVersion() {
+		FileUtility file = new FileUtility();
+		file.ReadLogFile();
+		String content = file.getFileContent();
+		StringUtility str = new StringUtility();
+		String doc = str.replaceSpacesFromString(content.trim().toLowerCase());
+		int beginIndex = str.IndexOfString(doc, "zookeeper.version=");
+		int lastIndex = str.IndexOfStringFrom(doc, beginIndex,",");
+//		System.out.println(str.getWordBetweenIndex(doc, beginIndex + 18, lastIndex));
+//		System.out.println(beginIndex);
+//		System.out.println(lastIndex);
+		//System.out.println(content);
+		return str.getWordBetweenIndex(doc, beginIndex + 18, lastIndex);
+	}
 
 	public void askZookeeper(String host) throws InterruptedException, KeeperException {
-		ZookeeperHelper zookeeper = new ZookeeperHelper();
-		//String output = zookeeper.zGetVersion();
-//		StringUtility str = new StringUtility();
-//		String doc = str.replaceSpacesFromString(output.toString().trim().toLowerCase());
-//		int beginIndex = str.IndexOfString(doc, "version=");
-//		int lastIndex = str.IndexOfString(doc, ",built");
-//		String version = str.getWordBetweenIndex(doc, beginIndex + 8, lastIndex);
-//		System.out.println(version);
-			zookeeper.ZConnect(host);
-			status = zookeeper.zStatus();
-			zookeeper.zCreate();
-			zookeeper.zSet();
-			zookeeper.zGet();
-			zookeeper.zClose();
+		//// ZookeeperHelper zookeeper = new ZookeeperHelper();
+		// String output = zookeeper.zGetVersion();
+		// StringUtility str = new StringUtility();
+		// String doc =
+		// str.replaceSpacesFromString(output.toString().trim().toLowerCase());
+		// int beginIndex = str.IndexOfString(doc, "version=");
+		// int lastIndex = str.IndexOfString(doc, ",built");
+		// String version = str.getWordBetweenIndex(doc, beginIndex + 8,
+		// lastIndex);
+		// System.out.println(version);
+		// //zookeeper.ZConnect(host);
+		// //zookeeper.CheckVersion();
+		// //status = zookeeper.zStatus();
+		ZConnect(host);
+		version = CheckVersion();
+		status = zStatus();
+		// zookeeper.zCreate();
+		// zookeeper.zSet();
+		// zookeeper.zGet();
+		// zookeeper.zClose();
+		//System.out.println(errorMessage);
 	}
 
 	public int getSessionTimout() {

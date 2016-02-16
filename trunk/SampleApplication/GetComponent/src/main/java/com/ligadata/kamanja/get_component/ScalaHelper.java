@@ -1,12 +1,14 @@
-package check_prerequisites;
-
+package com.ligadata.kamanja.get_component;
 
 import java.io.StringWriter;
 
 public class ScalaHelper {
-	String errorMessage = null;
+	static String errorMessage = null;
 	String version = null;
 	String status;
+	StringWriter errors = new StringWriter();
+	StringUtility strutl = new StringUtility();
+
 	public StringWriter getErrors() {
 		return errors;
 	}
@@ -19,17 +21,18 @@ public class ScalaHelper {
 		return errorMessage;
 	}
 
-	StringWriter errors = new StringWriter();
-	public String ScalaVersion(){
-//		try{
-//		System.out.println(scala.util.Properties.versionString());
-//		} catch(Exception e){
-//			e.printStackTrace(new PrintWriter(errors));
-//			errorMessage = errors.toString();
-//		}
-		return scala.util.Properties.versionString();
+	public String ScalaVersion() {
+		try {
+			return scala.util.Properties.versionString();
+		} catch (Exception e) {
+			// e.printStackTrace(new PrintWriter(errors));
+			// errorMessage = errors.toString();
+			errorMessage = strutl.getStackTrace(e);
+		}
+		return null;
 	}
 
+	@SuppressWarnings({ "static-access", "unused" })
 	private void setErrorMessage(String errorMessage) {
 		this.errorMessage = errorMessage;
 	}
@@ -38,6 +41,7 @@ public class ScalaHelper {
 		return version;
 	}
 
+	@SuppressWarnings("unused")
 	private void setVersion(String version) {
 		this.version = version;
 	}
@@ -46,6 +50,7 @@ public class ScalaHelper {
 		return status;
 	}
 
+	@SuppressWarnings("unused")
 	private void setStatus(String status) {
 		this.status = status;
 	}

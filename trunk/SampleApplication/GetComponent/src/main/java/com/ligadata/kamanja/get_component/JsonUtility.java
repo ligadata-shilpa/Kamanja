@@ -1,5 +1,6 @@
-package check_prerequisites;
+package com.ligadata.kamanja.get_component;
 
+import org.json.simple.JSONArray;
 //import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -15,12 +16,29 @@ public class JsonUtility {
 		// "{\"component\":\"zookeeper\",\"hostlist\":\"192.168.10.20:2181,192.168.10.21:2181\"}";
 		// String json =
 		// "{\"component\":\"zookeeper\",\"hostlist\":\"localhost:2181\"}";
-		System.out.println(json);
+		// System.out.println(json);
 		JSONParser jsonParser = new JSONParser();
 		JSONObject jsonObject = (JSONObject) jsonParser.parse(json);
 		component = (String) jsonObject.get("component");
 		hostList = (String) jsonObject.get("hostlist");
 	}
+
+	public JSONArray GetJsonArray(String json) throws ParseException {
+		JSONParser jsonParser = new JSONParser();
+		JSONArray jsonArray = (JSONArray) jsonParser.parse(json);
+		return jsonArray;
+	}
+
+//	public void JsonParseMultiComponent(String json) throws ParseException {
+//		JSONParser jsonParser = new JSONParser();
+//		JSONArray jsonArray = (JSONArray) jsonParser.parse(json);
+//		System.out.println(jsonArray.size());
+//		for (int i = 0; i < jsonArray.size(); i++) {
+//			JSONObject jsonObject = (JSONObject) jsonArray.get(i);
+//			jsonObject.get("componenet");
+//			jsonObject.get("hostlist");
+//		}
+//	}
 
 	public String GetComponent() {
 		return component;
@@ -38,7 +56,7 @@ public class JsonUtility {
 		jsonObj.put("version", version);
 		jsonObj.put("status", status);
 		jsonObj.put("error message", errorMessage);
-		//System.out.println(jsonObj);
+		// System.out.println(jsonObj);
 		return jsonObj;
 	}
 }

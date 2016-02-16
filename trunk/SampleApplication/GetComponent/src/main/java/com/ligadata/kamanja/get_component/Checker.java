@@ -1,13 +1,14 @@
-package check_prerequisites;
+package com.ligadata.kamanja.get_component;
 
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 
+import org.apache.log4j.BasicConfigurator;
 import org.apache.zookeeper.KeeperException;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.json.simple.JSONObject;
+import org.json.simple.JSONArray;
 
 public class Checker {
 
@@ -33,7 +34,8 @@ public class Checker {
 			case "kafka":
 				System.out.println(hostArray[i]);
 				KafkaHelper kafka = new KafkaHelper();
-				kafka.CheckKafkaVersion(hostArray[i]);
+				kafka.CheckVersion();
+				//kafka.CheckKafkaVersion(hostArray[i]);
 				bean.setComponentName(component);
 				break;
 			case "hbase":
@@ -74,16 +76,38 @@ public class Checker {
 		try {
 			JsonUtility json = new JsonUtility();
 			Checker checker = new Checker();
-			json.JsonParse(args);
-			String component = json.GetComponent();
-			String hostList = json.GetHostList();
-			String hostArray[] = checker.hostArray(hostList);
-			ArrayList<ComponentInfo> list = checker.CheckComponent(component, hostArray);
-			return new ObjectMapper().writeValueAsString(list);
+			JSONArray jsonArray = new JSONArray();
+			jsonArray = json.GetJsonArray(args);
+			ArrayList<ComponentInfo> list = null;
+			ArrayList<ComponentInfo> finalList = new ArrayList<ComponentInfo>();
+			for (int i = 0; i < jsonArray.size(); i++) {
+				json.JsonParse(jsonArray.get(i).toString());
+				String component = json.GetComponent();
+				String hostList = json.GetHostList();
+				String hostArray[] = checker.hostArray(hostList);
+				list = checker.CheckComponent(component, hostArray);
+				finalList.addAll(list);
+			}
+//			 json.JsonParse(args);
+//			 String component = json.GetComponent();
+//			 String hostList = json.GetHostList();
+//			 String hostArray[] = checker.hostArray(hostList);
+//			 ArrayList<ComponentInfo> list = checker.CheckComponent(component,
+//			 hostArray);
+//			 return new ObjectMapper().writeValueAsString(list);
+			return new ObjectMapper().writeValueAsString(finalList);
 		} catch (Exception e) {
 			e.printStackTrace(new PrintWriter(x));
 		}
 		return null;
+	}
+
+	public static void main(String[] args) {
+		//BasicConfigurator.configure();
+		//System.out.println(System.getProperty("java.io.tmpdir"));
+//		System.out.println(new Checker().CheckComponent(
+//				/*"[{\"component\":\"zookeeper\",\"hostlist\":\"localhost:2181,loclahost:2181\"},{\"component\":\"java\",\"hostlist\":\"192.168.10.20:2181,192.168.10.21:2181\"}]"*/
+//				"[{\"component\":\"zookeeper\",\"hostlist\":\"localhost:2181\"},{\"component\":\"java\",\"hostlist\":\"localhost:2181\"}]"));
 	}
 
 }
