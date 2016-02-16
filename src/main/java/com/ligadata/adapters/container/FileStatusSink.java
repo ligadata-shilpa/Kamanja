@@ -46,8 +46,8 @@ public class FileStatusSink extends AbstractJDBCSink {
 	@Override
 	public boolean addMessage(String message) {
 		String[] fields = message.split(",");
-		if(fields.length < 4) {
-			logger.error("Incorrect message. Expecting atleast 4 fields. Message: " + message);
+		if(fields.length < 5) {
+			logger.error("Incorrect message. Expecting atleast 5 fields. Message: " + message);
 			return false;
 		}
 
@@ -64,10 +64,11 @@ public class FileStatusSink extends AbstractJDBCSink {
 
 	    for(String[] fields : buffer) {
 			try {
-				statement.setString(1, fields[2]);
+				statement.setString(1, fields[3]);
+				statement.setString(2, fields[2]);
 				java.util.Date dt = inputFormat.parse(fields[1]);
-				statement.setTimestamp(2, new Timestamp(dt.getTime()));
-				statement.setLong(3, Long.parseLong(fields[3]));
+				statement.setTimestamp(3, new Timestamp(dt.getTime()));
+				statement.setLong(4, Long.parseLong(fields[4]));
 				statement.addBatch();
 			} catch (Exception e) {
 				logger.error("Error: " + e.getMessage(), e);

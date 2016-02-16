@@ -79,7 +79,10 @@ public class AdapterConfiguration {
 	
 	public static final String TEST_FLAG             = "test.flag";
 	//End String Template Mail Properties
-	
+
+	public static final String MESSAGE_FIELD_DELIMITER = "message.field.delimiter";
+	public static final String MESSAGE_VALUE_DELIMITER = "message.value.delimiter";
+	public static final String MESSAGE_KEYVALUE_DELIMITER = "message.keyvalue.delimiter";
 	
 	private Properties properties;
 
