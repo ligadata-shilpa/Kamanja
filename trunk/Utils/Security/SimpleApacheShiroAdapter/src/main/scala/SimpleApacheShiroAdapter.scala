@@ -29,7 +29,6 @@ import org.apache.logging.log4j._
 
 import com.ligadata.SecurityAdapterInfo.SecurityAdapter
 import java.util.Properties
-import com.ligadata.Exceptions.StackTrace
 
 class SimpleApacheShiroAdapter extends SecurityAdapter{
 
@@ -94,29 +93,28 @@ class SimpleApacheShiroAdapter extends SecurityAdapter{
         currentUser.login(token);
       } catch {
         case uae:UnknownAccountException => {
-          log.error("SimpleApacheShiroAdapter: There is no user with username of " + token.getPrincipal());
+          log.error("SimpleApacheShiroAdapter: There is no user with username of " + token.getPrincipal(), uae);
           return false
         } 
         case ice:IncorrectCredentialsException => {
           
-          log.error("SimpleApacheShiroAdapter: Password for account " + token.getPrincipal() + " was incorrect!");
+          log.error("SimpleApacheShiroAdapter: Password for account " + token.getPrincipal() + " was incorrect!", ice);
           return false
         } 
         case lae:LockedAccountException => {
           
           log.error("SimpleApacheShiroAdapter: The account for username " + token.getPrincipal() + " is locked.  " +
-                    "Please contact your administrator to unlock it.");
+                    "Please contact your administrator to unlock it.", lae);
           return false
         }
         // ... catch more exceptions here, maybe custom ones specific to your application?
         case ae: AuthenticationException => {
           
-          log.error("SimpleApacheShiroAdapter: Unexpected authorization exception " + ae.getMessage())
+          log.error("SimpleApacheShiroAdapter: Unexpected authorization exception ", ae)
           return false
         }
         case e: Exception => {
-          
-          log.error("SimpleApacheShiroAdapter: Unexpected  exception " + e.getMessage())
+          log.error("SimpleApacheShiroAdapter: Unexpected  exception ", e)
           return false
         }
       }

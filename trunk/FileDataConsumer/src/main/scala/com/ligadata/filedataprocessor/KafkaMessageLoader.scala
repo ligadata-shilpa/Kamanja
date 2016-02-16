@@ -179,10 +179,10 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
           }
         } catch {
           case mfe: KVMessageFormatingException =>
+            logger.warn("", mfe)
             writeErrorMsg(msg)
           case e: Exception => {
-            val stackTrace = StackTrace.ThrowableTraceString(e)
-            logger.warn("Unknown message format in partition " + partIdx + " \n" + stackTrace)
+            logger.warn("Unknown message format in partition " + partIdx, e)
             writeErrorMsg(msg)
           }
         }
@@ -255,7 +255,7 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
               override def onCompletion(metadata: RecordMetadata, exception: Exception): Unit = {
                 if (exception != null) {
                   failedPush += 1
-                  logger.warn("SMART FILE CONSUMER ("+partIdx+") has detected a problem with pushing a message into the " +msg.topic + " will retry " +exception.getMessage)
+                  logger.warn("SMART FILE CONSUMER ("+partIdx+") has detected a problem with pushing a message into the " +msg.topic + " will retry ", exception)
                 }
               }
             })
@@ -295,7 +295,7 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
       resetSleepTimer
     } catch {
       case e: Exception =>
-        logger.error("SMART FILE CONSUMER ("+partIdx+") Could not add to the queue due to an Exception " + e.getMessage, e)
+        logger.error("SMART FILE CONSUMER ("+partIdx+") Could not add to the queue due to an Exception ", e)
     }
     FileProcessor.KAFKA_SEND_SUCCESS
   }
@@ -395,9 +395,7 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
       }
     } catch {
       case e: Exception => {
-        logger.warn(partIdx + " SMART FILE CONSUMER: Unable to externalize status message")
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.warn(stackTrace)
+        logger.warn(partIdx + " SMART FILE CONSUMER: Unable to externalize status message", e)
       }
     }
   }
@@ -500,7 +498,7 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
     } catch {
       case e: Exception => {
         shutdown
-        logger.error("Unable to to parse message defintion")
+        logger.error("Unable to to parse message defintion", e)
         throw UnsupportedObjectException("Unknown message definition " + inConfiguration(SmartFileAdapterConstants.MESSAGE_NAME), e)
       }
     }
@@ -528,7 +526,7 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
         Class.forName(clsName, true, loaderInfo.loader)
       } catch {
         case e: Exception => {
-          logger.error("Failed to load Model class %s with Reason:%s Message:%s".format(clsName, e.getCause, e.getMessage))
+          logger.error("Failed to load Model class %s".format(clsName), e)
           throw e // Rethrow
         }
       }
@@ -552,11 +550,11 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
           return objInst.asInstanceOf[com.ligadata.KamanjaBase.BaseMsgObj]
         } catch {
           case e: java.lang.NoClassDefFoundError => {
-            val stackTrace = StackTrace.ThrowableTraceString(e)
-            logger.error(stackTrace)
+            logger.error("Class not found", e)
             throw e
           }
           case e: Exception => {
+            logger.info("", e)
             objInst = tempCurClass.newInstance
             return objInst.asInstanceOf[com.ligadata.KamanjaBase.BaseMsgObj]
           }
@@ -577,6 +575,7 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
         }
       } catch {
         case e: Exception => {
+          logger.warn("", e)
         }
       }
     }

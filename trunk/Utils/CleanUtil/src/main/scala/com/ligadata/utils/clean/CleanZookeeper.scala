@@ -112,7 +112,7 @@ object CleanZookeeper {
       case e: org.apache.zookeeper.KeeperException.NoNodeException => throw CleanUtilException(
         "CLEAN-UTIL: Failed to find the zookeeper node path after retrieving it previously. " +
           "An external process may have altered zookeeper. " +
-          "Please check that there are no instances of Kamanja or MetadataAPIService running.", null
+          "Please check that there are no instances of Kamanja or MetadataAPIService running.", e
       )
       case e: Exception => throw CleanUtilException("CLEAN-UTIL: Failed to determine if the kamanja cluster is running", e)
     }

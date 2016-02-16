@@ -78,7 +78,7 @@ class CompilerProxy {
         nonTypeDeps,false)
     } catch {
       case e: Exception => {
-        logger.error("COMPILER_PROXY: unable to determine model metadata information during AddModel. ERROR " + e.getMessage)
+        logger.error("COMPILER_PROXY: unable to determine model metadata information during AddModel.", e)
         throw e
       }
     }
@@ -98,7 +98,7 @@ class CompilerProxy {
         modelVersion, msgDefClassFilePath, elements, sourceCode, totalDeps, typeDeps, nonTypeDeps,true)
     } catch {
       case e: Exception => {
-        logger.error("COMPILER_PROXY: unable to determine model metadata information during recompile. ERROR " + e.getMessage)
+        logger.error("COMPILER_PROXY: unable to determine model metadata information during recompile.", e)
         throw e
       }
     }
@@ -175,11 +175,11 @@ class CompilerProxy {
       (classStr, modDef)
     } catch {
       case e: Exception => {
-        logger.error("Failed to compile the model definition " + e.toString)
+        logger.error("Failed to compile the model definition", e)
         throw ModelCompilationFailedException(e.getMessage(), e)
       }
       case e: AlreadyExistsException => {
-        logger.error("Failed to compile the model definition " + e.toString)
+        logger.error("Failed to compile the model definition", e)
         throw ModelCompilationFailedException(e.getMessage(), e)
       }
     }
@@ -291,11 +291,11 @@ class CompilerProxy {
       (classStrVer, msgDef, classStrNoVer)
     } catch {
       case e: Exception => {
-        logger.error("Failed to compile the message definition " + e.toString)
+        logger.error("Failed to compile the message definition ", e)
         throw MsgCompilationFailedException(e.getMessage(), e)
       }
       case e: AlreadyExistsException => {
-        logger.error("Failed to compile the message definition " + e.toString)
+        logger.error("Failed to compile the message definition ", e)
         throw MsgCompilationFailedException(e.getMessage(), e)
       }
     }
@@ -558,13 +558,11 @@ class CompilerProxy {
       modDef
     } catch {
       case e: AlreadyExistsException => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.error("Failed to compile the model definition:%s.\nStackTrace:%s".format(e.toString, stackTrace))
+        logger.error("Failed to compile the model definition", e)
         throw e
       }
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.error("Failed to compile the model definition:%s.\nStackTrace:%s".format(e.toString, stackTrace))
+        logger.error("Failed to compile the model definition", e)
         throw ModelCompilationFailedException(e.getMessage(), e)
       }
     }
@@ -726,7 +724,7 @@ class CompilerProxy {
       }
     } catch {
       case e: Exception => {
-        logger.error("Failed to get classname :" + clsName)
+        logger.error("Failed to get classname :" + clsName, e)
         return null
       }
     }
@@ -742,8 +740,7 @@ class CompilerProxy {
           objinst = obj.instance
         } catch {
           case e: Exception => {
-            val stackTrace = StackTrace.ThrowableTraceString(e)
-            logger.debug("StackTrace:" + stackTrace)
+            logger.debug("", e)
             // Trying Regular Object instantiation
             objinst = curClass.newInstance
           }
@@ -761,7 +758,7 @@ class CompilerProxy {
         }
       } catch {
         case e: Exception =>
-          logger.error("Failed to instantiate FactoryOfModelInstanceFactory object:" + clsName + ". Reason:" + e.getCause + ". Message:" + e.getMessage)
+          logger.error("Failed to instantiate FactoryOfModelInstanceFactory object:" + clsName, e)
           return null
       }
     }
@@ -859,7 +856,7 @@ class CompilerProxy {
         Class.forName(clsName, true, loaderInfo.loader)
       } catch {
         case e: Exception => {
-          logger.error("Failed to load Model class %s with Reason:%s Message:%s".format(clsName, e.getCause, e.getMessage))
+          logger.error("Failed to load Model class %s".format(clsName), e)
           throw e // Rethrow
         }
       }
@@ -910,8 +907,7 @@ class CompilerProxy {
         } catch {
           case e: Exception => {
             // Trying Regular Object instantiation
-            val stackTrace = StackTrace.ThrowableTraceString(e)
-            logger.error("COMPILER_PROXY: Exception encountered trying to determin metadata from Class:%s, Reason:%s Message:%s.\nStackTrace:%s".format(clsName, e.getCause, e.getMessage, stackTrace))
+            logger.error("COMPILER_PROXY: Exception encountered trying to determin metadata from Class:%s".format(clsName), e)
             throw MsgCompilationFailedException(clsName, e)
           }
         }
@@ -929,12 +925,11 @@ class CompilerProxy {
             logger.debug("COMPILER_PROXY: " + clsName + " is a Scala Class... ")
           } catch {
             case e: java.lang.NoClassDefFoundError => {
-              val stackTrace = StackTrace.ThrowableTraceString(e)
-              logger.debug("Stacktrace:" + stackTrace)
+              logger.debug("", e)
               throw e
             }
             case e: Exception => {
-              logger.debug("COMPILER_PROXY: " + clsName + " is a Java Class... ")
+              logger.debug("COMPILER_PROXY: " + clsName + " is a Java Class... ", e)
               objInst = tempCurClass.newInstance
             }
           }
@@ -947,13 +942,12 @@ class CompilerProxy {
             return (fullName.dropRight(1).mkString("."), fullName(fullName.length - 1), baseModelTrait.getVersion, clsName)
           }
           logger.error("COMPILER_PROXY: Unable to resolve a class Object from " + jarName0)
-          throw MsgCompilationFailedException(clsName)
+          throw MsgCompilationFailedException(clsName, null)
         } catch {
           case e: Exception => {
             // Trying Regular Object instantiation
-            val stackTrace = StackTrace.ThrowableTraceString(e)
-            logger.error("COMPILER_PROXY: Exception encountered trying to determin metadata from Class:%s, Reason:%s Message:%s.\nStackTrace:%s".format(clsName, e.getCause, e.getMessage, stackTrace))
-            throw MsgCompilationFailedException(clsName)
+            logger.error("COMPILER_PROXY: Exception encountered trying to determin metadata from Class:%s".format(clsName), e)
+            throw MsgCompilationFailedException(clsName, null)
           }
         }
 */

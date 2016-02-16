@@ -123,6 +123,7 @@ object ConfigService {
     }
     catch {
       case e: Exception => {
+        logger.warn("", e)
         response=e.getStackTrace.toString
       }
     }

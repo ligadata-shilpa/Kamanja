@@ -387,6 +387,7 @@ object StartMetadataAPI {
     catch {
 
       case e: Exception => {
+        logger.warn("", e)
         /** tentative answer of unidentified command type failure. */
         response = s"Unexpected action! action = $action"
         /** one more try ... going the alternate route.
@@ -463,7 +464,7 @@ object StartMetadataAPI {
                                validatedModelVersion = if (modelVer != null) MdMgr.FormatVersion(modelVer) else null
                                validatedMsgVersion = if (msgVer != null) MdMgr.FormatVersion(msgVer) else null
                            } catch {
-                               case e: Exception => throw (new RuntimeException(s"The version parameter is invalid... either not numeric or out of range...modelversion=$modelVer, messageversion=$msgVer"))
+                               case e: Exception => throw (new RuntimeException(s"The version parameter is invalid... either not numeric or out of range...modelversion=$modelVer, messageversion=$msgVer", e))
                            }
                            val optModelVer: Option[String] = Option(validatedModelVersion)
                            val optMsgVer: Option[String] = Option(validatedMsgVersion)
@@ -521,7 +522,7 @@ object StartMetadataAPI {
                                    }
                                    validatedNewVersion = if (newVer != null) MdMgr.FormatVersion(newVer) else null
                                } catch {
-                                   case e: Exception => throw (new RuntimeException(s"One or more version parameters are invalid... oldVer=$oldVer, newVer=$newVer"))
+                                   case e: Exception => throw (new RuntimeException(s"One or more version parameters are invalid... oldVer=$oldVer, newVer=$newVer", e))
                                }
                                val optOldVer: Option[String] = Option(validatedOldVersion)
 
@@ -544,7 +545,7 @@ object StartMetadataAPI {
                null
            }
        } catch {
-           case e: Exception => logger.debug(s"Exception seen ... e=${e.toString}")
+           case e: Exception => logger.debug(s"Exception seen ... e=${e.toString}", e)
            response=""
        }
 

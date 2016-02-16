@@ -110,7 +110,7 @@ class MySqlAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     parsed_json = json.values.asInstanceOf[Map[String, Any]]
   } catch {
     case e: Exception => {
-      logger.error("Failed to parse MySql JSON configuration string:%s. Reason:%s Message:%s".format(adapterConfig, e.getCause, e.getMessage))
+      logger.error("Failed to parse MySql JSON configuration string:%s".format(adapterConfig), e)
       throw e
     }
   }
@@ -130,7 +130,7 @@ class MySqlAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
         adapterSpecificConfig_json = json.values.asInstanceOf[Map[String, Any]]
       } catch {
         case e: Exception => {
-          logger.error("Failed to parse MySql Adapter Specific JSON configuration string:%s. Reason:%s Message:%s".format(adapterSpecificStr, e.getCause, e.getMessage))
+          logger.error("Failed to parse MySql Adapter Specific JSON configuration string:%s.".format(adapterSpecificStr), e)
           throw e
         }
       }
@@ -142,7 +142,7 @@ class MySqlAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
   if (parsed_json.contains("hostname")) {
     hostname = parsed_json.get("hostname").get.toString.trim
   } else {
-    throw ConnectionFailedException("Unable to find hostname in adapterConfig ")
+    throw ConnectionFailedException("Unable to find hostname in adapterConfig ", null)
   }
 
   var instanceName: String = null;
@@ -159,35 +159,35 @@ class MySqlAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
   if (parsed_json.contains("database")) {
     database = parsed_json.get("database").get.toString.trim
   } else {
-    throw ConnectionFailedException("Unable to find database in adapterConfig ")
+    throw ConnectionFailedException("Unable to find database in adapterConfig ", null)
   }
 
   var user: String = null;
   if (parsed_json.contains("user")) {
     user = parsed_json.get("user").get.toString.trim
   } else {
-    throw ConnectionFailedException("Unable to find user in adapterConfig ")
+    throw ConnectionFailedException("Unable to find user in adapterConfig ", null)
   }
 
   var password: String = null;
   if (parsed_json.contains("password")) {
     password = parsed_json.get("password").get.toString.trim
   } else {
-    throw ConnectionFailedException("Unable to find password in adapterConfig ")
+    throw ConnectionFailedException("Unable to find password in adapterConfig ", null)
   }
 
   var jarpaths: String = null;
   if (parsed_json.contains("jarpaths")) {
     jarpaths = parsed_json.get("jarpaths").get.toString.trim
   } else {
-    throw ConnectionFailedException("Unable to find jarpaths in adapterConfig ")
+    throw ConnectionFailedException("Unable to find jarpaths in adapterConfig ", null)
   }
 
   var jdbcJar: String = null;
   if (parsed_json.contains("jdbcJar")) {
     jdbcJar = parsed_json.get("jdbcJar").get.toString.trim
   } else {
-    throw ConnectionFailedException("Unable to find jdbcJar in adapterConfig ")
+    throw ConnectionFailedException("Unable to find jdbcJar in adapterConfig ", null)
   }
 
   // The following three properties are used for connection pooling
@@ -294,9 +294,9 @@ class MySqlAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
           }
         } catch {
           case e: Exception => {
-            val errMsg = "Jar " + jarNm + " failed added to class path. Reason:%s Message:%s".format(e.getCause, e.getMessage)
-            logger.error("Error:" + errMsg)
-            throw new Exception(errMsg)
+            val errMsg = "Jar " + jarNm + " failed added to class path."
+            logger.error("Error:" + errMsg, e)
+            throw new Exception(errMsg, e)
           }
         }
       } else {
@@ -367,9 +367,8 @@ class MySqlAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       */
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.error("Stacktrace:" + stackTrace)
-        throw new Exception("Failed to save an object in the table " + tableName + ":" + e.getMessage())
+        logger.error("", e)
+        throw new Exception("Failed to save an object in the table " + tableName, e)
       }
     } finally {
       if (cstmt != null) {
@@ -450,9 +449,8 @@ class MySqlAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       con.commit()
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.error("Stacktrace:" + stackTrace)
-        throw new Exception("Batch put operation failed:" + e.getMessage())
+        logger.error("", e)
+        throw new Exception("Batch put operation failed", e)
       }
     } finally {
       if (pstmt != null) {
@@ -495,9 +493,8 @@ class MySqlAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       logger.info("Deleted " + totalRowsDeleted + " rows from " + tableName)
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("Stacktrace:" + stackTrace)
-        throw new Exception("Failed to delete object(s) from the table " + tableName + ":" + e.getMessage())
+        logger.debug("", e)
+        throw new Exception("Failed to delete object(s) from the table " + tableName, e)
       }
     } finally {
       if (cstmt != null) {
@@ -544,9 +541,8 @@ class MySqlAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       logger.info("Deleted " + totalRowsDeleted + " rows from " + tableName)
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.error("Stacktrace:" + stackTrace)
-        throw new Exception("Failed to delete object(s) from the table " + tableName + ":" + e.getMessage())
+        logger.error("", e)
+        throw new Exception("Failed to delete object(s) from the table " + tableName, e)
       }
     } finally {
       if (cstmt != null) {
@@ -586,9 +582,8 @@ class MySqlAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       rowCount
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("Stacktrace:" + stackTrace)
-        throw new Exception("Failed to fetch data from the table " + tableName + ":" + e.getMessage())
+        logger.debug("", e)
+        throw new Exception("Failed to fetch data from the table " + tableName, e)
       }
     } finally {
       if (rs != null) {
@@ -630,9 +625,8 @@ class MySqlAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.error("Stacktrace:" + stackTrace)
-        //throw new Exception("Failed to fetch data from the table " + tableName + ":" + e.getMessage())
+        logger.error("", e)
+        //throw new Exception("Failed to fetch data from the table " + tableName, e)
       }
     } finally {
       if (rs != null) {
@@ -675,9 +669,8 @@ class MySqlAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("Stacktrace:" + stackTrace)
-        //throw new Exception("Failed to fetch data from the table " + tableName + ":" + e.getMessage())
+        logger.debug("", e)
+        //throw new Exception("Failed to fetch data from the table " + tableName, e)
       }
     } finally {
       if (rs != null) {
@@ -728,9 +721,8 @@ class MySqlAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       })
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("Stacktrace:" + stackTrace)
-        //throw new Exception("Failed to fetch object(s) from the table " + tableName + ":" + e.getMessage())
+        logger.debug("", e)
+        //throw new Exception("Failed to fetch object(s) from the table " + tableName, e)
       }
     } finally {
       if (pstmt != null) {
@@ -770,9 +762,8 @@ class MySqlAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       })
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("Stacktrace:" + stackTrace)
-        //throw new Exception("Failed to fetch object(s) from the table " + tableName + ":" + e.getMessage())
+        logger.debug("", e)
+        //throw new Exception("Failed to fetch object(s) from the table " + tableName, e)
       }
     } finally {
       if (pstmt != null) {
@@ -839,9 +830,8 @@ class MySqlAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       })
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.error("Stacktrace:" + stackTrace)
-        //throw new Exception("Failed to fetch object(s) from the table " + tableName + ":" + e.getMessage())
+        logger.error("", e)
+        //throw new Exception("Failed to fetch object(s) from the table " + tableName, e)
       }
     } finally {
       if (pstmt != null) {
@@ -886,9 +876,8 @@ class MySqlAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       })
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.error("Stacktrace:" + stackTrace)
-        //throw new Exception("Failed to fetch object(s) from the table " + tableName + ":" + e.getMessage())
+        logger.error("", e)
+        //throw new Exception("Failed to fetch object(s) from the table " + tableName, e)
       }
     } finally {
       if (pstmt != null) {
@@ -929,9 +918,8 @@ class MySqlAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       })
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.error("Stacktrace:" + stackTrace)
-        //throw new Exception("Failed to fetch object(s) from the table " + tableName + ":" + e.getMessage())
+        logger.error("", e)
+        //throw new Exception("Failed to fetch object(s) from the table " + tableName, e)
       }
     } finally {
       if (pstmt != null) {
@@ -969,9 +957,8 @@ class MySqlAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       })
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.error("Stacktrace:" + stackTrace)
-        //throw new Exception("Failed to fetch object(s) from the table " + tableName + ":" + e.getMessage())
+        logger.error("", e)
+        //throw new Exception("Failed to fetch object(s) from the table " + tableName, e)
       }
     } finally {
       if (pstmt != null) {
@@ -1011,9 +998,8 @@ class MySqlAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       stmt.executeUpdate(query);
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("Stacktrace:" + stackTrace)
-        throw new Exception("Failed to truncate table " + tableName + ":" + e.getMessage())
+        logger.debug("", e)
+        throw new Exception("Failed to truncate table " + tableName, e)
       }
     } finally {
       if (stmt != null) {
@@ -1054,9 +1040,8 @@ class MySqlAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.error("Stacktrace:" + stackTrace)
-        throw new Exception("Failed to drop the table " + fullTableName + ":" + e.getMessage())
+        logger.error("", e)
+        throw new Exception("Failed to drop the table " + fullTableName, e)
       }
     } finally {
       if (rs != null) {
@@ -1111,9 +1096,8 @@ class MySqlAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.error("Stacktrace:" + stackTrace)
-        //throw new Exception("Failed to create the table " + tableName + ":" + e.getMessage())
+        logger.error("", e)
+        //throw new Exception("Failed to create the table " + tableName, e)
       }
     } finally {
       if (rs != null) {

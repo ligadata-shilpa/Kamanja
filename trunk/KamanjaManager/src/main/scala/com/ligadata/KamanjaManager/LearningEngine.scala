@@ -31,7 +31,7 @@ import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
 import com.ligadata.outputmsg.OutputMsgGenerator
 import com.ligadata.InputOutputAdapterInfo.{ ExecContext, InputAdapter, PartitionUniqueRecordKey, PartitionUniqueRecordValue }
-import com.ligadata.Exceptions.{ StackTrace, MessagePopulationException }
+import com.ligadata.Exceptions.{ MessagePopulationException }
 
 class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniqueRecordKey) {
   val LOG = LogManager.getLogger(getClass);
@@ -231,8 +231,8 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
             }
           } catch {
             // Treating we did not find the message
-            case e: Exception => {}
-            case e: Throwable => {}
+            case e: Exception => { LOG.warn("", e) }
+            case e: Throwable => { LOG.warn("", e) }
           }
         }
         if (msg == null) {
@@ -280,7 +280,7 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
             })
           } catch {
             case e: Exception => {
-              LOG.error("Failed to get Model results. Reason:%s Message:%s".format(e.getCause, e.getMessage))
+              LOG.error("Failed to get Model results.", e)
 
             }
           }

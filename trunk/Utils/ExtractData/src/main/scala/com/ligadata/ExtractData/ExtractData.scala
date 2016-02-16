@@ -38,7 +38,6 @@ import com.ligadata.Utils.{ Utils, KamanjaClassLoader, KamanjaLoaderInfo }
 import com.ligadata.Serialize.{ JDataStore }
 import com.ligadata.KvBase.{ Key, Value, TimeRange }
 import com.ligadata.StorageBase.{ DataStore, Transaction }
-import com.ligadata.Exceptions.StackTrace
 import java.util.Date
 import java.text.SimpleDateFormat
 
@@ -102,9 +101,9 @@ object ExtractData extends MdBaseResolveInfo {
           }
         } catch {
           case e: Exception => {
-            val errMsg = "Jar " + jarNm + " failed added to class path. Reason:%s Message:%s".format(e.getCause, e.getMessage)
-            logger.error("Error:" + errMsg)
-            throw new Exception(errMsg)
+            val errMsg = "Jar " + jarNm + " failed added to class path."
+            logger.error("Error:" + errMsg, e)
+            throw new Exception(errMsg, e)
           }
         }
       } else {
@@ -169,7 +168,7 @@ object ExtractData extends MdBaseResolveInfo {
           Class.forName(clsName, true, clsLoaderInfo.loader)
         } catch {
           case e: Exception => {
-            logger.error("Failed to load Message class %s with Reason:%s Message:%s".format(clsName, e.getCause, e.getMessage))
+            logger.error("Failed to load Message class %s".format(clsName), e)
             sys.exit(1)
           }
         }
@@ -184,7 +183,7 @@ object ExtractData extends MdBaseResolveInfo {
         }
       } catch {
         case e: Exception => {
-          LOG.error("Failed to get classname:%s as message".format(clsName))
+          LOG.error("Failed to get classname:%s as message".format(clsName), e)
           sys.exit(1)
         }
       }
@@ -197,7 +196,7 @@ object ExtractData extends MdBaseResolveInfo {
           Class.forName(clsName, true, clsLoaderInfo.loader)
         } catch {
           case e: Exception => {
-            logger.error("Failed to load Container class %s with Reason:%s Message:%s".format(clsName, e.getCause, e.getMessage))
+            logger.error("Failed to load Container class %s".format(clsName), e)
             sys.exit(1)
           }
         }
@@ -212,7 +211,7 @@ object ExtractData extends MdBaseResolveInfo {
         }
       } catch {
         case e: Exception => {
-          LOG.error("Failed to get classname:%s as container".format(clsName))
+          LOG.error("Failed to get classname:%s as container".format(clsName), e)
           sys.exit(1)
         }
       }
@@ -238,7 +237,7 @@ object ExtractData extends MdBaseResolveInfo {
         }
       } catch {
         case e: Exception => {
-          LOG.error("Failed to instantiate message or conatiner object:" + clsName + ". Reason:" + e.getCause + ". Message:" + e.getMessage())
+          LOG.error("Failed to instantiate message or conatiner object:" + clsName, e)
           sys.exit(1)
         }
       }
@@ -254,9 +253,8 @@ object ExtractData extends MdBaseResolveInfo {
       return KeyValueManager.Get(jarPaths, dataStoreInfo)
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:" + stackTrace)
-        throw new Exception(e.getMessage())
+        logger.debug("", e)
+        throw e
       }
     }
   }
@@ -325,9 +323,8 @@ object ExtractData extends MdBaseResolveInfo {
         if (os != null)
           os.close
         os = null
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:" + stackTrace)
-        throw new Exception("%s:Exception. Message:%s, Reason:%s".format(GetCurDtTmStr, e.getMessage, e.getCause))
+        logger.debug("", e)
+        throw e
       }
     }
 
@@ -433,7 +430,7 @@ object ExtractData extends MdBaseResolveInfo {
       exitCode = 0
     } catch {
       case e: Exception => {
-        LOG.error("%s:Failed to extract data with exception. Reason:%s, Message:%s".format(GetCurDtTmStr, e.getCause, e.getMessage))
+        LOG.error("%s:Failed to extract data with exception.".format(GetCurDtTmStr), e)
         exitCode = 1
       }
     } finally {

@@ -98,7 +98,7 @@ object JarFactoryOfModelInstanceFactory extends FactoryOfModelInstanceFactory {
               LOG.debug("Created mdlBaseObjInst:" + mdlBaseObjInst)
             } catch {
               case e: Exception => {
-                LOG.debug("Creating mdlBaseObjInst")
+                LOG.debug("Creating mdlBaseObjInst", e)
                 // Trying Regular Object instantiation
                 mdlBaseObjInst = curClass.newInstance
                 LOG.debug("Created mdlBaseObjInst:" + mdlBaseObjInst)

@@ -116,7 +116,7 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
       }
     } catch {
       case e: Exception => {
-        LOG.error("Failed to setContextClassLoader. Reason:%s Message:%s".format(e.getCause, e.getMessage))
+        LOG.error("Failed to setContextClassLoader.", e)
       }
     }
 
@@ -168,7 +168,7 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
         }
       } catch {
         case e: Exception => {
-          LOG.error("Failed to execute message. Reason:%s Message:%s".format(e.getCause, e.getMessage))
+          LOG.error("Failed to execute message.", e)
         }
       } finally {
         // LOG.debug("UniqueKeyValue:%s => %s".format(uk, uv))
@@ -249,7 +249,7 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
               LOG.error("Failed to send %d outputs. Waiting for another %d milli seconds and going to start them again.".format(remOutputs.size, failedWaitTime))
               Thread.sleep(failedWaitTime)
             } catch {
-              case e: Exception => {
+              case e: Exception => { LOG.warn("", e) 
 
               }
             }
@@ -363,7 +363,7 @@ class ValidateExecCtxtImpl(val input: InputAdapter, val curPartitionKey: Partiti
             results += m.asInstanceOf[Map[String, Any]]
           } catch {
             case e: Exception => {
-              LOG.error("Failed reason %s, message %s".format(e.getCause, e.getMessage))
+              LOG.error("", e)
             }
           }
         }
@@ -375,14 +375,14 @@ class ValidateExecCtxtImpl(val input: InputAdapter, val curPartitionKey: Partiti
             })
           } catch {
             case e: Exception => {
-              LOG.error("Failed reason %s, message %s".format(e.getCause, e.getMessage))
+              LOG.error("", e)
             }
           }
         }
       }
     } catch {
       case e: Exception => {
-        LOG.error("Failed to collect model results. Reason %s, message %s".format(e.getCause, e.getMessage))
+        LOG.error("Failed to collect model results.", e)
       }
     }
 
@@ -430,7 +430,7 @@ class ValidateExecCtxtImpl(val input: InputAdapter, val curPartitionKey: Partiti
         })
       } catch {
         case e: Exception => {
-          LOG.error("Failed to execute message. Reason:%s Message:%s".format(e.getCause, e.getMessage))
+          LOG.error("Failed to execute message.", e)
         }
       } finally {
         // LOG.debug("UniqueKeyValue:%s => %s".format(uk, uv))

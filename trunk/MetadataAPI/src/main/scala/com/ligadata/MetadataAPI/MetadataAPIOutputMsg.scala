@@ -24,7 +24,6 @@ import org.json4s._
 
 import com.ligadata.Serialize._
 import com.ligadata.AuditAdapterInfo._
-import com.ligadata.Exceptions.StackTrace
 
 object MetadataAPIOutputMsg {
 
@@ -51,26 +50,22 @@ object MetadataAPIOutputMsg {
       }
     } catch {
       case e: MappingException => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.trace("Failed to parse the output message, json => " + outputMsgText + ",Error => " + e.getMessage() + "\nStackTrace:" + stackTrace)
+        logger.trace("Failed to parse the output message, json => " + outputMsgText, e)
         var apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddOutputMsg", null, "Error :" + ErrorCodeConstants.Add_OutputMessage_Failed + ":" + outputMsgText)
         apiResult.toString()
       }
       case e: AlreadyExistsException => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.trace("Failed to add the output message, json => " + outputMsgText + ",Error => " + e.getMessage() + "\nStackTrace:" + stackTrace)
+        logger.trace("Failed to add the output message, json => " + outputMsgText, e)
         var apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddOutputMsg", null, "Error :" + e.toString() + ErrorCodeConstants.Add_OutputMessage_Failed + ":" + outputMsgText)
         apiResult.toString()
       }
       case e: ObjectNolongerExistsException => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.trace("Failed to add the output message, json => " + outputMsgText + ",Error => " + e.getMessage() + "\nStackTrace:" + stackTrace)
+        logger.trace("Failed to add the output message, json => " + outputMsgText, e)
         var apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddOutputMsg", null, "Error :" + e.toString() + ErrorCodeConstants.Add_OutputMessage_Failed + ":" + outputMsgText)
         apiResult.toString()
       }
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.trace("Failed to up the output message, json => " + outputMsgText + ",Error => " + e.getMessage() + "\nStackTrace:" + stackTrace)
+        logger.trace("Failed to up the output message, json => " + outputMsgText, e)
         var apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddOutputMsg", null, "Error :" + e.toString() + ErrorCodeConstants.Add_OutputMessage_Failed + ":" + outputMsgText)
         apiResult.toString()
       }
@@ -107,24 +102,22 @@ object MetadataAPIOutputMsg {
       }
     } catch {
       case e: MappingException => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.trace("Failed to parse the output message, json => " + outputMsgText + ",Error => " + e.getMessage() + "\nStackTrace:" + stackTrace)
+        logger.trace("Failed to parse the output message, json => " + outputMsgText, e)
         var apiResult = new ApiResult(ErrorCodeConstants.Failure, "UpdateOutputMessage", null, "Error :" + ErrorCodeConstants.Update_OutputMessage_Failed + ":" + outputMsgText)
         apiResult.toString()
       }
       case e: AlreadyExistsException => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.trace("Failed to add the output message, json => " + outputMsgText + ",Error => " + e.getMessage() + "\nStackTrace:" + stackTrace)
+        logger.trace("Failed to add the output message, json => " + outputMsgText, e)
         var apiResult = new ApiResult(ErrorCodeConstants.Failure, "UpdateOutputMessage", null, "Error :" + e.toString() + ErrorCodeConstants.Update_OutputMessage_Failed + ":" + outputMsgText)
         apiResult.toString()
       }
       case e: ObjectNolongerExistsException => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
+        logger.trace("Failed to add the output message, json => " + outputMsgText, e)
         var apiResult = new ApiResult(ErrorCodeConstants.Failure, "UpdateOutputMessage", null, "Error :" + e.toString() + ErrorCodeConstants.Update_OutputMessage_Failed + ":" + outputMsgText)
         apiResult.toString()
       }
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
+        logger.trace("Failed to add the output message, json => " + outputMsgText, e)
         var apiResult = new ApiResult(ErrorCodeConstants.Failure, "UpdateOutputMessage", null, "Error :" + e.toString() + ErrorCodeConstants.Update_OutputMessage_Failed + ":" + outputMsgText)
         apiResult.toString()
       }
@@ -154,8 +147,7 @@ object MetadataAPIOutputMsg {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:" + stackTrace)
+        logger.debug("", e)
         throw UnexpectedMetadataAPIException(e.getMessage(), e)
       }
     }
@@ -171,8 +163,7 @@ object MetadataAPIOutputMsg {
       apiResult.toString()
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:" + stackTrace)
+        logger.debug("", e)
         var apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddOutputMsg", null, "Error :" + e.toString() + ErrorCodeConstants.Add_OutputMessage_Failed + ":" + key)
         apiResult.toString()
       }
@@ -201,8 +192,7 @@ object MetadataAPIOutputMsg {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:" + stackTrace)
+        logger.debug("", e)
         throw UnexpectedMetadataAPIException("Failed to fetch all the OutputMsgs:" + e.toString, e)
       }
     }
@@ -238,8 +228,7 @@ object MetadataAPIOutputMsg {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:" + stackTrace)
+        logger.debug("", e)
         var apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetOutputMessageDefFromCache", null, "Error :" + e.toString() + ErrorCodeConstants.Get_OutputMessage_From_Cache_Failed + ":" + dispkey)
         apiResult.toString()
       }
@@ -273,8 +262,7 @@ object MetadataAPIOutputMsg {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:" + stackTrace)
+        logger.debug("", e)
         var apiResult = new ApiResult(ErrorCodeConstants.Failure, "RemoveOutputMsg", null, "Error :" + e.toString() + ErrorCodeConstants.Remove_OutputMessage_Failed + ":" + key)
         apiResult.toString()
       }

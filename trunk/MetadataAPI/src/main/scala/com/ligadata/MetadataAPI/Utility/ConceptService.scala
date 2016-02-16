@@ -87,7 +87,7 @@ object ConceptService {
         try {
             return MetadataAPIImpl.RemoveConcept(param, userid)
         } catch {
-          case e: Exception => e.printStackTrace()
+          case e: Exception => logger.error("", e)
         }
       }
       //val conceptKeys : String = MetadataAPIImpl.GetAllConcepts("JSON", userid) <<< this returns a JSON string
@@ -122,6 +122,7 @@ object ConceptService {
       }
     } catch {
       case e: Exception => {
+        logger.warn("", e)
         response = e.getStackTrace.toString
       }
     }
@@ -183,6 +184,7 @@ object ConceptService {
     }
     catch {
       case e: Exception => {
+        logger.warn("", e)
         response=e.getStackTrace.toString
       }
     }

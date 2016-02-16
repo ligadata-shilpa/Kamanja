@@ -43,7 +43,6 @@ import com.ligadata.pmml.support._
 import com.ligadata.pmml.xmlingestion._
 import com.ligadata.pmml.transforms.rawtocooked.common._
 import com.ligadata.pmml.transforms.xmltoraw.common._
-import com.ligadata.Exceptions.StackTrace
 import com.ligadata.kamanja.metadata.MiningModelType.MiningModelType
 import com.ligadata.kamanja.metadata.ModelRepresentation.ModelRepresentation
 
@@ -677,8 +676,7 @@ class PmmlCompiler(val mgr : MdMgr, val clientName : String, val logger : Logger
 			xmlreader.parse(is);
 		} catch {
 			case ex: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(ex)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", ex)
         throw ex}
 		}
 	}
@@ -689,9 +687,7 @@ class PmmlCompiler(val mgr : MdMgr, val clientName : String, val logger : Logger
 			val xform : PmmlExecNodeGeneratorDispatcher = new PmmlExecNodeGeneratorDispatcher(ctx);
 			xform.transform;
 		} catch {
-			case t: Throwable => {val stackTrace = StackTrace.ThrowableTraceString(t)
-     logger.debug("StackTrace:"+stackTrace)   
-      }
+			case t: Throwable => { logger.debug("", t) }
 		}
 	}
 
@@ -718,8 +714,7 @@ class PmmlCompiler(val mgr : MdMgr, val clientName : String, val logger : Logger
 				  val errorVicinity : String = buffer.toString
 				  logger.error(s"Exception detected in $errorVicinity")
 			  }
-			  val stackTrace = StackTrace.ThrowableTraceString(t) 
-        logger.debug("StackTrace:"+stackTrace)
+			  logger.debug("", t)
 			}
 		}
 		srcCode

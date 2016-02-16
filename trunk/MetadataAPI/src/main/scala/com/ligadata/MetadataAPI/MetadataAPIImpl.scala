@@ -162,7 +162,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
         zkc = null
       } catch {
         case e: Exception => {
-          logger.error("Unexpected Error while closing zookeeper session: " + e.getMessage())
+          logger.error("Unexpected Error while closing zookeeper session", e)
         }
       }
     }
@@ -181,15 +181,13 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       apiResult.toString
     } catch {
       case cce: java.lang.ClassCastException => {
-        val stackTrace = StackTrace.ThrowableTraceString(cce)
-        logger.warn("Failure processing GET_HEALTH_CHECK - cannot parse the list of desired nodes. \n" + stackTrace)
+        logger.warn("Failure processing GET_HEALTH_CHECK - cannot parse the list of desired nodes.", cce)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetHealthCheck", "No data available", ErrorCodeConstants.GetHeartbeat_Failed + " Error:Parsing Error")
         return apiResult.toString
       }
       case e: Exception => {
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetHealthCheck", "No data available", ErrorCodeConstants.GetHeartbeat_Failed + " Error: Unknown - see Kamanja Logs")
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.error("Failure processing GET_HEALTH_CHECK - unknown  \n" + stackTrace)
+        logger.error("Failure processing GET_HEALTH_CHECK - unknown", e)
         return apiResult.toString
       }
     }
@@ -248,7 +246,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       Class.forName(implClassName, true, classLoader.loader)
     } catch {
       case e: Exception => {
-        logger.error("Failed to load Security Adapter class %s with Reason:%s Message:%s".format(implClassName, e.getCause, e.getMessage))
+        logger.error("Failed to load Security Adapter class %s".format(implClassName), e)
         throw e // Rethrow
       }
     }
@@ -281,7 +279,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
             Class.forName(implClassName, true, classLoader.loader)
         catch {
             case e: Exception => {
-                logger.error("Failed to load Audit Adapter class %s with Reason:%s Message:%s".format(implClassName, e.getCause, e.getMessage))
+                logger.error("Failed to load Audit Adapter class %s".format(implClassName), e)
                 throw e // Rethrow
             }
         }
@@ -437,8 +435,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
         auditObj.addAuditRecord(aRec)
       } catch {
         case e: Exception => {
-          val stackTrace = StackTrace.ThrowableTraceString(e)
-          logger.error("\nStackTrace:" + stackTrace)
+          logger.error("", e)
           throw UpdateStoreFailedException("Failed to save audit record" + aRec.toString + ":" + e.getMessage(), e)
         }
       }
@@ -470,8 +467,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.error("\nStackTrace:" + stackTrace)
+        logger.error("", e)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "Failed to fetch all the audit objects:", null, "Error :" + e.toString)
         apiResultStr = apiResult.toString()
       }
@@ -492,8 +488,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       d
     } catch {
       case e: ParseException => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        logger.debug("", e)
         val format = new java.text.SimpleDateFormat("yyyyMMdd")
         val d = format.parse(dateStr)
         d
@@ -583,8 +578,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       apiResultStr = getAuditRec(startTime, endTime, userOrRole, action, objectAccessed)
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        logger.debug("", e)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "Failed to fetch all the audit objects:", null, "Error :" + e.toString)
         apiResultStr = apiResult.toString()
       }
@@ -613,9 +607,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       zkc = CreateClient.createSimple(zkcConnectString)
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
-        throw InternalErrorException("Failed to start a zookeeper session with(" + zkcConnectString + "): " + e.getMessage(), e)
+        logger.debug("", e)
+        throw InternalErrorException("Failed to start a zookeeper session with(" + zkcConnectString + ")", e)
       }
     }
   }
@@ -654,11 +647,11 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       objs(0)
     } catch {
       case e: ObjectNotFoundException => {
-        logger.debug("ObjectNotFound Exception: Error => " + e.getMessage())
+        logger.debug("ObjectNotFound Exception", e)
         throw e
       }
       case e: Exception => {
-        logger.debug("General Exception: Error => " + e.getMessage())
+        logger.debug("General Exception", e)
         throw ObjectNotFoundException(e.getMessage(), e)
       }
     }
@@ -675,7 +668,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       store.put(containerName, k, v)
     } catch {
       case e: Exception => {
-        logger.error("Failed to insert/update object for : " + bucketKeyStr + ", Reason:" + e.getCause + ", Message:" + e.getMessage)
+        logger.error("Failed to insert/update object for : " + bucketKeyStr, e)
         throw UpdateStoreFailedException("Failed to insert/update object for : " + bucketKeyStr, e)
       }
     }
@@ -714,7 +707,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       store.put(Array((containerName, storeObjects)))
     } catch {
       case e: Exception => {
-        logger.error("Failed to insert/update objects for : " + keyList.mkString(",") + ", Reason:" + e.getCause + ", Message:" + e.getMessage)
+        logger.error("Failed to insert/update objects for : " + keyList.mkString(","), e)
         throw UpdateStoreFailedException("Failed to insert/update object for : " + keyList.mkString(","), e)
       }
     }
@@ -740,7 +733,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       store.del(containerName, delKeys)
     } catch {
       case e: Exception => {
-        logger.error("Failed to delete object batch for : " + keyList.mkString(","))
+        logger.error("Failed to delete object batch for : " + keyList.mkString(","), e)
         throw UpdateStoreFailedException("Failed to delete object batch for : " + keyList.mkString(","), e)
       }
     }
@@ -821,7 +814,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       SaveObjectList(keyList, valueList, typeName, serializerType)
     } catch {
       case e: Exception => {
-        logger.error("Failed to insert/update object for : " + keyList.mkString(","))
+        logger.error("Failed to insert/update object for : " + keyList.mkString(","), e)
         throw UpdateStoreFailedException("Failed to insert/update object for : " + keyList.mkString(","), e)
       }
     }
@@ -884,14 +877,14 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
           oneStoreData._2._1.put(oneStoreData._2._2.toArray)
         } catch {
           case e: Exception => {
-            logger.error("Failed to insert/update objects in : " + oneStoreData._1 + ", Reason:" + e.getCause + ", Message:" + e.getMessage)
+            logger.error("Failed to insert/update objects in : " + oneStoreData._1, e)
             throw UpdateStoreFailedException("Failed to insert/update object for : " + oneStoreData._1, e)
           }
         }
       })
     } catch {
       case e: Exception => {
-        logger.error("Failed to insert/update objects")
+        logger.error("Failed to insert/update objects", e)
         throw UpdateStoreFailedException("Failed to insert/update objects", e)
       }
     }
@@ -939,8 +932,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       notification.getBytes
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.error("\nStackTrace:" + stackTrace)
+        logger.error("", e)
         throw InternalErrorException("Failed to generate a zookeeper message from the objList", e)
       }
     }
@@ -996,8 +988,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       PutTranId(max)
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.error("\nStackTrace:" + stackTrace)
+        logger.error("", e)
         throw InternalErrorException("Failed to notify a zookeeper message from the objectList", e)
       }
     }
@@ -1052,8 +1043,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       SaveObject("transaction_id", tId.toString.getBytes, "transaction_id", "")
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.error("\nStackTrace:" + stackTrace)
+        logger.error("", e)
         throw UpdateStoreFailedException("Unable to Save the transaction id " + tId, e)
       }
     }
@@ -1183,11 +1173,11 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       true
     } catch {
       case e: AlreadyExistsException => {
-        logger.error("Failed to Save the object(" + obj.FullName + "." + MdMgr.Pad0s2Version(obj.Version) + "): " + e.getMessage(), e)
+        logger.error("Failed to Save the object(" + obj.FullName + "." + MdMgr.Pad0s2Version(obj.Version) + ")", e)
         false
       }
       case e: Exception => {
-        logger.error("Failed to Save the object(" + obj.FullName + "." + MdMgr.Pad0s2Version(obj.Version) + "): " + e.getMessage(), e)
+        logger.error("Failed to Save the object(" + obj.FullName + "." + MdMgr.Pad0s2Version(obj.Version) + ")", e)
         false
       }
     }
@@ -1293,10 +1283,10 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
     } catch {
       case e: AlreadyExistsException => {
-        logger.error("Failed to Update the object(" + obj.FullName + "." + MdMgr.Pad0s2Version(obj.Version) + "): " + e.getMessage())
+        logger.error("Failed to Update the object(" + obj.FullName + "." + MdMgr.Pad0s2Version(obj.Version) + ")", e)
       }
       case e: Exception => {
-        logger.error("Failed to Update the object(" + obj.FullName + "." + MdMgr.Pad0s2Version(obj.Version) + "): " + e.getMessage())
+        logger.error("Failed to Update the object(" + obj.FullName + "." + MdMgr.Pad0s2Version(obj.Version) + ")", e)
       }
     }
   }
@@ -1325,11 +1315,11 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       baos.toByteArray()
     } catch {
       case e: IOException => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.error("\nStackTrace:" + stackTrace)
+        logger.error("", e)
         throw new FileNotFoundException("Failed to Convert the Jar (" + jarName + ") to array of bytes. Message:" + e.getMessage())
       }
       case e: Exception => {
+        logger.error("", e)
         throw InternalErrorException("Failed to Convert the Jar (" + jarName + ") to array of bytes", e)
       }
     }
@@ -1349,7 +1339,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       bos.close();
     } catch {
       case e: Exception => {
-        logger.error("Failed to dump array of bytes to the Jar file (" + jarName + "):  " + e.getMessage())
+        logger.error("Failed to dump array of bytes to the Jar file (" + jarName + "):  " + e.getMessage(), e)
       }
     }
   }
@@ -1385,13 +1375,11 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
             mObj = GetObject(obj.jarName, "jar_store")
           } catch {
             case e: ObjectNotFoundException => {
-              val stackTrace = StackTrace.ThrowableTraceString(e)
-              logger.debug("\nStackTrace:" + stackTrace)
+              logger.debug("", e)
               loadObject = true
             }
             case e: Exception => {
-              val stackTrace = StackTrace.ThrowableTraceString(e)
-              logger.debug("\nStackTrace:" + stackTrace)
+              logger.debug("", e)
               loadObject = true
             }
           }
@@ -1428,8 +1416,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
               mObj = GetObject(j, "jar_store")
             } catch {
               case e: ObjectNotFoundException => {
-                val stackTrace = StackTrace.ThrowableTraceString(e)
-                logger.debug("\nStackTrace:" + stackTrace)
+                logger.debug("", e)
                 loadObject = true
               }
             }
@@ -1460,9 +1447,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
-        throw InternalErrorException("Failed to Update the Jar of the object(" + obj.FullName + "." + MdMgr.Pad0s2Version(obj.Version) + "): " + e.getMessage(), e)
+        logger.debug("", e)
+        throw InternalErrorException("Failed to Update the Jar of the object(" + obj.FullName + "." + MdMgr.Pad0s2Version(obj.Version) + ")", e)
       }
     }
   }
@@ -1486,8 +1472,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        logger.debug("", e)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "UploadJarToDB", null, "Error : " + e.toString() + ErrorCodeConstants.Upload_Jar_Failed + ":" + jarName)
         apiResult.toString()
       }
@@ -1513,8 +1498,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       apiResult.toString()
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        logger.debug("", e)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "UploadJarToDB", null, "Error : " + e.toString() + ErrorCodeConstants.Upload_Jar_Failed + ":" + jarName)
         apiResult.toString()
       }
@@ -1557,14 +1541,12 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
     } catch {
       case e: ObjectNotFoundException => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        logger.debug("", e)
         true
       }
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
-        throw InternalErrorException("Failed to verify whether a download is required for the jar " + jar + " of the object(" + obj.FullName + "." + MdMgr.Pad0s2Version(obj.Version) + "): " + e.getMessage(), e)
+        logger.debug("", e)
+        throw InternalErrorException("Failed to verify whether a download is required for the jar " + jar + " of the object(" + obj.FullName + "." + MdMgr.Pad0s2Version(obj.Version) + ")", e)
       }
     }
   }
@@ -1589,9 +1571,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       allJars
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
-        throw InternalErrorException("Failed to get dependant jars for the given object (" + obj.FullName + "." + MdMgr.Pad0s2Version(obj.Version) + "): " + e.getMessage(), e)
+        logger.debug("", e)
+        throw InternalErrorException("Failed to get dependant jars for the given object (" + obj.FullName + "." + MdMgr.Pad0s2Version(obj.Version) + ")", e)
       }
     }
   }
@@ -1645,8 +1626,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
             }
           } catch {
             case e: Exception => {
-              val stackTrace = StackTrace.ThrowableTraceString(e)
-              logger.error("Failed to download the Jar of the object(" + obj.FullName + "." + MdMgr.Pad0s2Version(obj.Version) + "'s dep jar " + curJar + "). Message:" + e.getMessage + " Reason:" + e.getCause)
+              logger.error("Failed to download the Jar of the object(" + obj.FullName + "." + MdMgr.Pad0s2Version(obj.Version) + "'s dep jar " + curJar + ")", e)
 
             }
           }
@@ -1654,8 +1634,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.error("Failed to download the Jar of the object(" + obj.FullName + "." + MdMgr.Pad0s2Version(obj.Version) + "'s dep jar " + curJar + "). Message:" + e.getMessage + " Reason:" + e.getCause)
+        logger.error("Failed to download the Jar of the object(" + obj.FullName + "." + MdMgr.Pad0s2Version(obj.Version) + "'s dep jar " + curJar + ")", e)
 
       }
     }
@@ -1740,14 +1719,12 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       updatedObject
     } catch {
       case e: ObjectNolongerExistsException => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        logger.debug("", e)
         throw ObjectNolongerExistsException("The object " + obj.FullName + "." + MdMgr.Pad0s2Version(obj.Version) + " nolonger exists in metadata : It may have been removed already", e)
       }
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
-        throw new Exception("Unexpected error in UpdateObjectInCache: " + e.getMessage() + "\nStackTrace:" + stackTrace)
+        logger.debug("", e)
+        throw e
       }
     }
   }
@@ -1767,10 +1744,10 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       mdMgr.AddModelConfig(key, mdlConfig)
     } catch { //Map[String, List[String]]
       case e: AlreadyExistsException => {
-        logger.error("Failed to Cache the config object(" + key + "): " + e.getMessage())
+        logger.error("Failed to Cache the config object(" + key + ")", e)
       }
       case e: Exception => {
-        logger.error("Failed to Cache the config object(" + key + "): " + e.getMessage())
+        logger.error("Failed to Cache the config object(" + key + ")", e)
       }
     }
   }
@@ -1876,10 +1853,10 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
     } catch {
       case e: AlreadyExistsException => {
-        logger.error("Already Exists! Failed to Cache the object(" + obj.FullName + "." + MdMgr.Pad0s2Version(obj.Version) + "): " + e.getMessage())
+        logger.error("Already Exists! Failed to Cache the object(" + obj.FullName + "." + MdMgr.Pad0s2Version(obj.Version) + ")", e)
       }
       case e: Exception => {
-        logger.error("Exception! Failed to Cache the object(" + obj.FullName + "." + MdMgr.Pad0s2Version(obj.Version) + "): " + e.getMessage())
+        logger.error("Exception! Failed to Cache the object(" + obj.FullName + "." + MdMgr.Pad0s2Version(obj.Version) + ")", e)
       }
     }
   }
@@ -1895,12 +1872,11 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       UpdateObjectInDB(o1)
     } catch {
       case e: ObjectNolongerExistsException => {
-        logger.error("The object " + obj.FullName + "." + MdMgr.Pad0s2Version(obj.Version) + " nolonger exists in metadata : It may have been removed already")
+        logger.error("The object " + obj.FullName + "." + MdMgr.Pad0s2Version(obj.Version) + " nolonger exists in metadata : It may have been removed already", e)
       }
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
-        throw new Exception("Unexpected error in ModifyObject: " + e.getMessage())
+        logger.debug("", e)
+        throw new Exception("Unexpected error in ModifyObject", e)
       }
     }
   }
@@ -1924,12 +1900,11 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       ModifyObject(obj, "Remove")
     } catch {
       case e: ObjectNolongerExistsException => {
-        logger.error("The object " + obj.FullName + "." + MdMgr.Pad0s2Version(obj.Version) + " nolonger exists in metadata : It may have been removed already")
+        logger.error("The object " + obj.FullName + "." + MdMgr.Pad0s2Version(obj.Version) + " nolonger exists in metadata : It may have been removed already", e)
       }
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
-        throw new Exception("Unexpected error in DeleteObject: " + e.getMessage())
+        logger.debug("", e)
+        throw new Exception("Unexpected error in DeleteObject", e)
       }
     }
   }
@@ -1943,13 +1918,11 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       ModifyObject(obj, "Activate")
     } catch {
       case e: ObjectNolongerExistsException => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("The object " + obj.FullName + "." + MdMgr.Pad0s2Version(obj.Version) + " nolonger exists in metadata : It may have been removed already")
+        logger.debug("The object " + obj.FullName + "." + MdMgr.Pad0s2Version(obj.Version) + " nolonger exists in metadata : It may have been removed already", e)
       }
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
-        throw new Exception("Unexpected error in ActivateObject: " + e.getMessage())
+        logger.debug("", e)
+        throw new Exception("Unexpected error in ActivateObject", e)
       }
     }
   }
@@ -1963,12 +1936,11 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       ModifyObject(obj, "Deactivate")
     } catch {
       case e: ObjectNolongerExistsException => {
-        logger.error("The object " + obj.FullName + "." + MdMgr.Pad0s2Version(obj.Version) + " nolonger exists in metadata : It may have been removed already")
+        logger.error("The object " + obj.FullName + "." + MdMgr.Pad0s2Version(obj.Version) + " nolonger exists in metadata : It may have been removed already", e)
       }
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
-        throw new Exception("Unexpected error in DeactivateObject: " + e.getMessage())
+        logger.debug("", e)
+        throw new Exception("Unexpected error in DeactivateObject", e)
       }
     }
   }
@@ -1990,13 +1962,11 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       (apiResultInfo.APIResults.statusCode + apiResultInfo.APIResults.functionName + apiResultInfo.APIResults.resultData + apiResultInfo.APIResults.description)
     } catch {
       case e: MappingException => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        logger.debug("", e)
         throw Json4sParsingException(e.getMessage(), e)
       }
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        logger.debug("", e)
         throw ApiResultParsingException(e.getMessage(), e)
       }
     }
@@ -2015,9 +1985,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       return KeyValueManager.Get(jarPaths, dataStoreInfo)
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
-        throw new CreateStoreFailedException(e.getMessage(), null)
+        logger.debug("", e)
+        throw new CreateStoreFailedException(e.getMessage(), e)
       }
     }
   }
@@ -2047,38 +2016,31 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
         "transaction_id" -> ("transaction_id", mainDS))
     } catch {
       case e: FatalAdapterException => {
-        val causeStackTrace = StackTrace.ThrowableTraceString(e.cause)
-        logger.error("Failed to connect to Datastore. Reason:" + e.getCause + ". Message:" + e.getMessage + "\nCause:\n" + causeStackTrace)
+        logger.error("Failed to connect to Datastore", e)
         throw CreateStoreFailedException(e.getMessage(), e)
       }
       case e: StorageConnectionException => {
-        val causeStackTrace = StackTrace.ThrowableTraceString(e.cause)
-        logger.error("Failed to connect to Datastore. Reason:" + e.getCause + ". Message:" + e.getMessage + "\nCause:\n" + causeStackTrace)
+        logger.error("Failed to connect to Datastore", e)
         throw CreateStoreFailedException(e.getMessage(), e)
       }
       case e: StorageFetchException => {
-        val causeStackTrace = StackTrace.ThrowableTraceString(e.cause)
-        logger.error("Failed to connect to Datastore. Reason:" + e.getCause + ". Message:" + e.getMessage + "\nCause:\n" + causeStackTrace)
+        logger.error("Failed to connect to Datastore", e)
         throw CreateStoreFailedException(e.getMessage(), e)
       }
       case e: StorageDMLException => {
-        val causeStackTrace = StackTrace.ThrowableTraceString(e.cause)
-        logger.error("Failed to connect to Datastore. Reason:" + e.getCause + ". Message:" + e.getMessage + "\nCause:\n" + causeStackTrace)
+        logger.error("Failed to connect to Datastore", e)
         throw CreateStoreFailedException(e.getMessage(), e)
       }
       case e: StorageDDLException => {
-        val causeStackTrace = StackTrace.ThrowableTraceString(e.cause)
-        logger.error("Failed to connect to Datastore. Reason:" + e.getCause + ". Message:" + e.getMessage + "\nCause:\n" + causeStackTrace)
+        logger.error("Failed to connect to Datastore", e)
         throw CreateStoreFailedException(e.getMessage(), e)
       }
       case e: Exception => {
-        val causeStackTrace = StackTrace.ThrowableTraceString(e)
-        logger.error("Failed to connect to Datastore. Reason:" + e.getCause + ". Message:" + e.getMessage + "\nCause:\n" + causeStackTrace)
+        logger.error("Failed to connect to Datastore", e)
         throw CreateStoreFailedException(e.getMessage(), e)
       }
       case e: Throwable => {
-        val causeStackTrace = StackTrace.ThrowableTraceString(e)
-        logger.error("Failed to connect to Datastore. Reason:" + e.getCause + ". Message:" + e.getMessage + "\nCause:\n" + causeStackTrace)
+        logger.error("Failed to connect to Datastore", e)
         throw CreateStoreFailedException(e.getMessage(), e)
       }
     }
@@ -2097,8 +2059,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.error("\nStackTrace:" + stackTrace)
+        logger.error("", e)
         throw e;
       }
     }
@@ -2113,8 +2074,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       // mainDS.TruncateStore
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.error("\nStackTrace:" + stackTrace)
+        logger.error("", e)
         throw e;
       }
     }
@@ -2131,8 +2091,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.error("\nStackTrace:" + stackTrace)
+        logger.error("", e)
         throw e;
       }
     }
@@ -2263,7 +2222,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     } catch {
       case e: Exception => {
         val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        logger.debug(stackTrace)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "UploadJar", null, "Error :" + e.toString() + ErrorCodeConstants.Upload_Jar_Failed + ":" + jarPath + "\nStackTrace:" + stackTrace)
         apiResult.toString()
       }
@@ -2412,8 +2371,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       apiResult.toString()
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        logger.debug("", e)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddContainerDef", null, "Error :" + e.toString() + ErrorCodeConstants.Add_Container_Failed + ":" + dispkey)
         apiResult.toString()
       }
@@ -2440,8 +2398,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       apiResult.toString()
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.error("\nStackTrace:" + stackTrace)
+        logger.error("", e)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddMessageDef", null, "Error :" + e.toString() + ErrorCodeConstants.Add_Message_Failed + ":" + dispkey)
         apiResult.toString()
       }
@@ -2523,8 +2480,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.error("\nStackTrace:" + stackTrace)
+        logger.error("", e)
         throw e
       }
     }
@@ -2618,20 +2574,17 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
     } catch {
       case e: ModelCompilationFailedException => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        logger.debug("", e)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddContainerOrMessage", contOrMsgText, "Error: " + e.toString + ErrorCodeConstants.Add_Container_Or_Message_Failed)
         apiResult.toString()
       }
       case e: MsgCompilationFailedException => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        logger.debug("", e)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddContainerOrMessage", contOrMsgText, "Error: " + e.toString + ErrorCodeConstants.Add_Container_Or_Message_Failed)
         apiResult.toString()
       }
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        logger.debug("", e)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddContainerOrMessage", contOrMsgText, "Error: " + e.toString + ErrorCodeConstants.Add_Container_Or_Message_Failed)
         apiResult.toString()
       }
@@ -2720,14 +2673,12 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
     } catch {
       case e: MsgCompilationFailedException => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        logger.debug("", e)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "RecompileMessage", null, "Error :" + e.toString() + ErrorCodeConstants.Recompile_Message_Failed + ":" + msgFullName)
         apiResult.toString()
       }
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        logger.debug("", e)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "RecompileMessage", null, "Error :" + e.toString() + ErrorCodeConstants.Recompile_Message_Failed + ":" + msgFullName)
         apiResult.toString()
       }
@@ -2823,20 +2774,17 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
     } catch {
       case e: MsgCompilationFailedException => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        logger.debug("", e)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "UpdateMessage", messageText, "Error :" + e.toString() + ErrorCodeConstants.Update_Message_Failed)
         apiResult.toString()
       }
       case e: ObjectNotFoundException => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        logger.debug("", e)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "UpdateMessage", messageText, "Error :" + e.toString() + ErrorCodeConstants.Update_Message_Failed)
         apiResult.toString()
       }
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        logger.debug("", e)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "UpdateMessage", messageText, "Error :" + e.toString() + ErrorCodeConstants.Update_Message_Failed)
         apiResult.toString()
       }
@@ -2971,8 +2919,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        logger.debug("", e)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "RemoveContainer", null, "Error :" + e.toString() + ErrorCodeConstants.Remove_Container_Failed + ":" + dispkey)
         apiResult.toString()
       }
@@ -3034,8 +2981,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        logger.debug("", e)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "RemoveMessage", null, "Error :" + e.toString() + ErrorCodeConstants.Remove_Message_Failed + ":" + dispkey)
         apiResult.toString()
       }
@@ -3139,9 +3085,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
-        throw new Exception(e.getMessage() + "\nStacktrace:" + stackTrace)
+        logger.debug("", e)
+        throw e
       }
     }
   }
@@ -3177,8 +3122,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.error("Failed to delete the Message from cache:" + e.toString + "\nStackTrace:" + stackTrace)
+        logger.error("Failed to delete the Message from cache:" + e.toString, e)
       }
     }
   }
@@ -3212,8 +3156,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.error("Failed to delete the Message from cache:" + e.toString + "\nStackTrace:" + stackTrace)
+        logger.error("Failed to delete the Message from cache:" + e.toString, e)
       }
     }
   }
@@ -3297,8 +3240,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        logger.debug("", e)
         false
       }
     }
@@ -3379,8 +3321,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     } catch {
 
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        logger.debug("", e)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "ActivateModel", null, "Error :" + e.toString() + ErrorCodeConstants.Activate_Model_Failed + ":" + dispkey)
         apiResult.toString()
       }
@@ -3422,8 +3363,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        logger.debug("", e)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "RemoveModel", null, "Error :" + e.toString() + ErrorCodeConstants.Remove_Model_Failed + ":" + dispkey)
         apiResult.toString()
       }
@@ -3488,8 +3428,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       apiResult.toString()
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        logger.debug("", e)
         val apiResult = new ApiResult(ErrorCodeConstants.Success, "AddModel", null, ErrorCodeConstants.Add_Model_Successful + ":" + dispkey)
         apiResult.toString()
       }
@@ -3524,15 +3463,17 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       apiResult
     } catch {
       case e: AlreadyExistsException => {
+        logger.debug("", e)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddModel", null, "Error : " + ErrorCodeConstants.Add_Model_Failed_Higher_Version_Required)
         apiResult.toString()
       }
       case e: MsgCompilationFailedException => {
+        logger.debug("", e)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddModel", null, "Error : " + ErrorCodeConstants.Model_Compilation_Failed)
         apiResult.toString()
       }
       case e: Exception => {
-        logger.error("Unknown compilation error occured: " + Throwables.getStackTraceAsString(e))
+        logger.error("Unknown compilation error occured", e)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddModel", null, "Error : " + e.toString() + ErrorCodeConstants.Add_Model_Failed)
         apiResult.toString()
       }
@@ -3702,8 +3643,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
         }
     } catch {
         case e: ModelCompilationFailedException => {
-            val stackTrace = StackTrace.ThrowableTraceString(e)
-            logger.debug("\nStackTrace:" + stackTrace)
+            logger.debug("", e)
             val apiResult = new ApiResult(ErrorCodeConstants.Failure
                                         , "AddModel"
                                         , null
@@ -3711,8 +3651,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
             apiResult.toString()
         }
         case e: AlreadyExistsException => {
-            val stackTrace = StackTrace.ThrowableTraceString(e)
-            logger.debug("\nStackTrace:" + stackTrace)
+            logger.debug("", e)
             val apiResult = new ApiResult(ErrorCodeConstants.Failure
                                         , "AddModel"
                                         , null
@@ -3720,8 +3659,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
             apiResult.toString()
         }
         case e: Exception => {
-            val stackTrace = StackTrace.ThrowableTraceString(e)
-            logger.debug("\nStackTrace:" + stackTrace)
+            logger.debug("", e)
             val apiResult = new ApiResult(ErrorCodeConstants.Failure
                                         , "AddModel"
                                         , null
@@ -3770,20 +3708,19 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
     } catch {
       case e: ModelCompilationFailedException => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        logger.debug("", e)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddModel", null, "Error :" + e.toString() + ErrorCodeConstants.Add_Model_Failed)
         apiResult.toString()
       }
       case e: AlreadyExistsException => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        
+        logger.debug("", e)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddModel", null, "Error :" + e.toString() + ErrorCodeConstants.Add_Model_Failed)
         apiResult.toString()
       }
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        
+        logger.debug("", e)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddModel", null, "Error :" + e.toString() + ErrorCodeConstants.Add_Model_Failed)
         apiResult.toString()
       }
@@ -3887,20 +3824,19 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
             }
         } catch {
             case e: ModelCompilationFailedException => {
-                val stackTrace = StackTrace.ThrowableTraceString(e)
-                logger.debug("\nStackTrace:" + stackTrace)
+                logger.debug("", e)
                 var apiResult = new ApiResult(ErrorCodeConstants.Failure, "\nRecompileModel", null, "Error in producing scala file or Jar file.." + ErrorCodeConstants.Add_Model_Failed)
                 apiResult.toString()
             }
             case e: AlreadyExistsException => {
-                val stackTrace = StackTrace.ThrowableTraceString(e)
-                logger.debug("\nStackTrace:" + stackTrace)
+                
+                logger.debug("", e)
                 var apiResult = new ApiResult(ErrorCodeConstants.Failure, "RecompileModel", null, "Error :" + e.toString() + ErrorCodeConstants.Add_Model_Failed)
                 apiResult.toString()
             }
             case e: Exception => {
-                val stackTrace = StackTrace.ThrowableTraceString(e)
-                logger.debug("\nStackTrace:" + stackTrace)
+                
+                logger.debug("", e)
                 var apiResult = new ApiResult(ErrorCodeConstants.Failure, "RecompileModel", null, "Error :" + e.toString() + ErrorCodeConstants.Add_Model_Failed)
                 apiResult.toString()
             }
@@ -4109,8 +4045,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
                 }
             } catch {
                 case e: ModelCompilationFailedException => {
-                    val stackTrace = StackTrace.ThrowableTraceString(e)
-                    logger.debug("\nStackTrace:" + stackTrace)
+                    logger.debug("", e)
                     val apiResult = new ApiResult(ErrorCodeConstants.Failure
                         , s"UpdateModel(type = PMML)"
                         , null
@@ -4118,8 +4053,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
                     apiResult.toString()
                 }
                 case e: AlreadyExistsException => {
-                    val stackTrace = StackTrace.ThrowableTraceString(e)
-                    logger.debug("\nStackTrace:" + stackTrace)
+                    
+                    logger.debug("", e)
                     val apiResult = new ApiResult(ErrorCodeConstants.Failure
                         , s"UpdateModel(type = PMML)"
                         , null
@@ -4127,8 +4062,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
                     apiResult.toString()
                 }
                 case e: Exception => {
-                    val stackTrace = StackTrace.ThrowableTraceString(e)
-                    logger.debug("\nStackTrace:" + stackTrace)
+                    
+                    logger.debug("", e)
                     val apiResult = new ApiResult(ErrorCodeConstants.Failure
                         , s"UpdateModel(type = PMML)"
                         , null
@@ -4213,20 +4148,19 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
             }
         } catch {
             case e: ModelCompilationFailedException => {
-                val stackTrace = StackTrace.ThrowableTraceString(e)
-                logger.debug("\nStackTrace:"+stackTrace)
+                logger.debug("", e)
                 var apiResult = new ApiResult(ErrorCodeConstants.Failure, s"${'"'}UpdateModel(type = $sourceLang)${'"'}", null, "Error :" + e.toString() + ErrorCodeConstants.Update_Model_Failed)
                 apiResult.toString()
             }
             case e: AlreadyExistsException => {
-                val stackTrace = StackTrace.ThrowableTraceString(e)
-                logger.debug("\nStackTrace:"+stackTrace)
+                
+                logger.debug("", e)
                 var apiResult = new ApiResult(ErrorCodeConstants.Failure, s"${'"'}UpdateModel(type = $sourceLang)${'"'}", null, "Error :" + e.toString() + ErrorCodeConstants.Update_Model_Failed)
                 apiResult.toString()
             }
             case e: Exception => {
-                val stackTrace = StackTrace.ThrowableTraceString(e)
-                logger.debug("\nStackTrace:"+stackTrace)
+                
+                logger.debug("", e)
                 var apiResult = new ApiResult(ErrorCodeConstants.Failure, s"${'"'}UpdateModel(type = $sourceLang)${'"'}", null, "Error :" + e.toString() + ErrorCodeConstants.Update_Model_Failed)
                 apiResult.toString()
             }
@@ -4307,14 +4241,13 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
             }
         } catch {
             case e: ObjectNotFoundException => {
-                val stackTrace = StackTrace.ThrowableTraceString(e)
-                logger.debug("\nStackTrace:" + stackTrace)
+                logger.debug("", e)
                 var apiResult = new ApiResult(ErrorCodeConstants.Failure, s"UpdateModel(type = PMML)", null, "Error :" + e.toString() + ErrorCodeConstants.Update_Model_Failed)
                 apiResult.toString()
             }
             case e: Exception => {
-                val stackTrace = StackTrace.ThrowableTraceString(e)
-                logger.debug("\nStackTrace:" + stackTrace)
+                
+                logger.debug("", e)
                 var apiResult = new ApiResult(ErrorCodeConstants.Failure, s"UpdateModel(type = PMML)", null, "Error :" + e.toString() + ErrorCodeConstants.Update_Model_Failed)
                 apiResult.toString()
             }
@@ -4415,8 +4348,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       depModels
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        
+        logger.debug("", e)
         throw InternalErrorException("Unable to find dependent models " + e.getMessage(), e)
       }
     }
@@ -4445,8 +4378,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        
+        logger.debug("", e)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetAllModelDefs", null, "Error :" + e.toString() + ErrorCodeConstants.Get_All_Models_Failed)
         apiResult.toString()
       }
@@ -4476,8 +4409,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        
+        logger.debug("", e)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetAllMessageDefs", null, "Error :" + e.toString() + ErrorCodeConstants.Get_All_Messages_Failed)
         apiResult.toString()
       }
@@ -4508,8 +4441,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        
+        logger.debug("", e)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetAllContainerDefs", null, "Error :" + e.toString() + ErrorCodeConstants.Get_All_Containers_Failed)
         apiResult.toString()
       }
@@ -4544,8 +4477,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        
+        logger.debug("", e)
         throw UnexpectedMetadataAPIException("Failed to fetch all the models:" + e.toString, e)
       }
     }
@@ -4579,8 +4512,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        
+        logger.debug("", e)
         throw UnexpectedMetadataAPIException("Failed to fetch all the messages:" + e.toString, e)
       }
     }
@@ -4614,8 +4547,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        
+        logger.debug("", e)
         throw UnexpectedMetadataAPIException("Failed to fetch all the containers:" + e.toString, e)
       }
     }
@@ -4649,8 +4582,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        
+        logger.debug("", e)
         throw UnexpectedMetadataAPIException("Failed to fetch all the functions:" + e.toString, e)
       }
     }
@@ -4704,8 +4637,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        
+        logger.debug("", e)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetModelDef", null, "Error :" + e.toString() + ErrorCodeConstants.Get_Model_Failed + ":" + nameSpace + "." + objectName)
         apiResult.toString()
       }
@@ -4751,8 +4684,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        
+        logger.debug("", e)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetModelDefFromCache", null, "Error :" + e.toString() + ErrorCodeConstants.Get_Model_From_Cache_Failed + ":" + dispkey)
         apiResult.toString()
       }
@@ -4810,8 +4743,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        
+        logger.debug("", e)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetMessageDefFromCache", null, "Error :" + e.toString() + ErrorCodeConstants.Get_Message_From_Cache_Failed + ":" + dispkey)
         apiResult.toString()
       }
@@ -4847,8 +4780,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        
+        logger.debug("", e)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetContainerDefFromCache", null, "Error :" + e.toString() + ErrorCodeConstants.Get_Container_From_Cache_Failed + ":" + dispkey)
         apiResult.toString()
       }
@@ -4879,8 +4812,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        
+        logger.debug("", e)
         throw ObjectNotFoundException("Failed to Fetch the message:" + dispkey + ":" + e.getMessage(), e)
       }
     }
@@ -4913,8 +4846,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        
+        logger.debug("", e)
         throw UnexpectedMetadataAPIException(e.getMessage(), e)
       }
     }
@@ -4945,8 +4878,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        
+        logger.debug("", e)
         throw UnexpectedMetadataAPIException(e.getMessage(), e)
       }
     }
@@ -4970,9 +4903,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       model = modelmap.getOrElse(verList.max, null)
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
-        throw new Exception("Error in traversing Model set " + e.getMessage() + "\nStackTrace:" + stackTrace)
+        logger.debug("", e)
+        throw new Exception("Error in traversing Model set", e)
       }
     }
     model
@@ -5004,8 +4936,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        
+        logger.debug("", e)
         throw UnexpectedMetadataAPIException(e.getMessage(), e)
       }
     }
@@ -5038,8 +4970,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        
+        logger.debug("", e)
         throw UnexpectedMetadataAPIException(e.getMessage(), e)
       }
     }
@@ -5071,8 +5003,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        
+        logger.debug("", e)
         throw UnexpectedMetadataAPIException(e.getMessage(), e)
       }
     }
@@ -5132,8 +5064,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        
+        logger.debug("", e)
         throw UnexpectedMetadataAPIException(e.getMessage(), e)
       }
     }
@@ -5172,8 +5104,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        
+        logger.debug("", e)
         throw UnexpectedMetadataAPIException(e.getMessage(), e)
       }
     }
@@ -5212,8 +5144,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
           }
         } catch {
           case e: Exception => {
-              val stackTrace = StackTrace.ThrowableTraceString(e)
-              logger.debug("\nStackTrace:" + stackTrace)
+              
+              logger.debug("", e)
               throw UnexpectedMetadataAPIException(e.getMessage(), e)
           }
         }
@@ -5239,8 +5171,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       apiResult.toString()
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        
+        logger.debug("", e)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetModelDefFromCache", null, "Error :" + e.toString() + ErrorCodeConstants.Get_Model_From_DB_Failed + ":" + dispkey)
         apiResult.toString()
       }
@@ -5339,8 +5271,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       keys.toArray
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        
+        logger.debug("", e)
         throw InternalErrorException("Failed to get keys from persistent store", e)
       }
     }
@@ -5397,8 +5329,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       return true
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        
+        logger.debug("", e)
         return false
       }
     }
@@ -5500,8 +5432,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       startup = false
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        
+        logger.debug("", e)
       }
     }
   }
@@ -5524,8 +5456,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       })
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        
+        logger.debug("", e)
       }
     }
   }
@@ -5544,8 +5476,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       })
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        
+        logger.debug("", e)
       }
     }
   }
@@ -5564,8 +5496,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       })
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        
+        logger.debug("", e)
       }
     }
   }
@@ -5584,8 +5516,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       })
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        
+        logger.debug("", e)
       }
     }
   }
@@ -5606,8 +5538,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     } catch {
       case e: Exception => {
 
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        
+        logger.debug("", e)
       }
     }
   }
@@ -5627,8 +5559,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     } catch {
       case e: Exception => {
 
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        
+        logger.debug("", e)
       }
     }
   }
@@ -5648,8 +5580,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       AddObjectToCache(msgDef, MdMgr.GetMdMgr)
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.error("Failed to load message into cache " + key + ":" + e.getMessage() + "\nStackTrace:" + stackTrace)
+        logger.error("Failed to load message into cache " + key, e)
       }
     }
   }
@@ -5670,8 +5601,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.warn("Unable to load the object " + key + " into cache " + "\nStackTrace:" + stackTrace)
+        
+        logger.warn("Unable to load the object " + key + " into cache ", e)
       }
     }
   }
@@ -5693,8 +5624,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       AddObjectToCache(modDef, MdMgr.GetMdMgr)
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        
+        logger.debug("", e)
       }
     }
   }
@@ -5713,8 +5644,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       AddObjectToCache(contDef, MdMgr.GetMdMgr)
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        
+        logger.debug("", e)
       }
     }
   }
@@ -5730,8 +5661,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       AddObjectToCache(cont.asInstanceOf[AttributeDef], MdMgr.GetMdMgr)
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        
+        logger.debug("", e)
       }
     }
   }
@@ -5766,8 +5697,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
               MdMgr.GetMdMgr.ModifyModel(zkMessage.NameSpace, zkMessage.Name, zkMessage.Version.toLong, zkMessage.Operation)
             } catch {
               case e: ObjectNolongerExistsException => {
-                val stackTrace = StackTrace.ThrowableTraceString(e)
-                logger.error("The object " + dispkey + " nolonger exists in metadata : It may have been removed already" + "\nStackTrace:" + stackTrace)
+                logger.error("The object " + dispkey + " nolonger exists in metadata : It may have been removed already", e)
               }
             }
           }
@@ -5784,8 +5714,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
               RemoveMessage(zkMessage.NameSpace, zkMessage.Name, zkMessage.Version.toLong, None, false)
             } catch {
               case e: ObjectNolongerExistsException => {
-                val stackTrace = StackTrace.ThrowableTraceString(e)
-                logger.error("The object " + dispkey + " nolonger exists in metadata : It may have been removed already" + "\nStackTrace:" + stackTrace)
+                logger.error("The object " + dispkey + " nolonger exists in metadata : It may have been removed already", e)
               }
             }
           }
@@ -5794,8 +5723,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
               MdMgr.GetMdMgr.ModifyMessage(zkMessage.NameSpace, zkMessage.Name, zkMessage.Version.toLong, zkMessage.Operation)
             } catch {
               case e: ObjectNolongerExistsException => {
-                val stackTrace = StackTrace.ThrowableTraceString(e)
-                logger.error("The object " + dispkey + " nolonger exists in metadata : It may have been removed already" + "\nStackTrace:" + stackTrace)
+                logger.error("The object " + dispkey + " nolonger exists in metadata : It may have been removed already", e)
               }
             }
           }
@@ -5812,8 +5740,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
               RemoveContainer(zkMessage.NameSpace, zkMessage.Name, zkMessage.Version.toLong, None, false)
             } catch {
               case e: ObjectNolongerExistsException => {
-                val stackTrace = StackTrace.ThrowableTraceString(e)
-                logger.error("The object " + dispkey + " nolonger exists in metadata : It may have been removed already" + "\nStackTrace:" + stackTrace)
+                logger.error("The object " + dispkey + " nolonger exists in metadata : It may have been removed already", e)
               }
             }
           }
@@ -5822,8 +5749,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
               MdMgr.GetMdMgr.ModifyContainer(zkMessage.NameSpace, zkMessage.Name, zkMessage.Version.toLong, zkMessage.Operation)
             } catch {
               case e: ObjectNolongerExistsException => {
-                val stackTrace = StackTrace.ThrowableTraceString(e)
-                logger.error("The object " + dispkey + " nolonger exists in metadata : It may have been removed already" + "\nStackTrace:" + stackTrace)
+                logger.error("The object " + dispkey + " nolonger exists in metadata : It may have been removed already", e)
               }
             }
           }
@@ -5840,8 +5766,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
               MdMgr.GetMdMgr.ModifyFunction(zkMessage.NameSpace, zkMessage.Name, zkMessage.Version.toLong, zkMessage.Operation)
             } catch {
               case e: ObjectNolongerExistsException => {
-                val stackTrace = StackTrace.ThrowableTraceString(e)
-                logger.error("The object " + dispkey + " nolonger exists in metadata : It may have been removed already" + "\nStackTrace:" + stackTrace)
+                logger.error("The object " + dispkey + " nolonger exists in metadata : It may have been removed already", e)
               }
             }
           }
@@ -5858,8 +5783,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
               MdMgr.GetMdMgr.ModifyAttribute(zkMessage.NameSpace, zkMessage.Name, zkMessage.Version.toLong, zkMessage.Operation)
             } catch {
               case e: ObjectNolongerExistsException => {
-                val stackTrace = StackTrace.ThrowableTraceString(e)
-                logger.error("The object " + dispkey + " nolonger exists in metadata : It may have been removed already" + "\nStacktrace:" + stackTrace)
+                logger.error("The object " + dispkey + " nolonger exists in metadata : It may have been removed already", e)
               }
             }
           }
@@ -5885,8 +5809,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
               MdMgr.GetMdMgr.ModifyType(zkMessage.NameSpace, zkMessage.Name, zkMessage.Version.toLong, zkMessage.Operation)
             } catch {
               case e: ObjectNolongerExistsException => {
-                val stackTrace = StackTrace.ThrowableTraceString(e)
-                logger.error("The object " + dispkey + " nolonger exists in metadata : It may have been removed already" + "\nStackTrace:" + stackTrace)
+                logger.error("The object " + dispkey + " nolonger exists in metadata : It may have been removed already", e)
               }
             }
           }
@@ -5903,8 +5826,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
               MdMgr.GetMdMgr.ModifyOutputMsg(zkMessage.NameSpace, zkMessage.Name, zkMessage.Version.toLong, zkMessage.Operation)
             } catch {
               case e: ObjectNolongerExistsException => {
-                val stackTrace = StackTrace.ThrowableTraceString(e)
-                logger.error("The object " + key + " nolonger exists in metadata : It may have been removed already" + "\nStacktrace:" + stackTrace)
+                logger.error("The object " + key + " nolonger exists in metadata : It may have been removed already", e)
               }
             }
           }
@@ -5929,8 +5851,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       AddObjectToCache(outputMsgDef, MdMgr.GetMdMgr)
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        
+        logger.debug("", e)
       }
     }
   }
@@ -5960,12 +5882,12 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       })
     } catch {
       case e: AlreadyExistsException => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.warn("Failed to load the object(" + dispkey + ") into cache: " + e.getMessage() + "\nStackTrace:" + stackTrace)
+        
+        logger.warn("Failed to load the object(" + dispkey + ") into cache", e)
       }
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.warn("Failed to load the object(" + dispkey + ") into cache: " + e.getMessage() + "\nStackTrace:" + stackTrace)
+        
+        logger.warn("Failed to load the object(" + dispkey + ") into cache", e)
       }
     }
   }
@@ -6439,8 +6361,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       apiResult.toString()
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        
+        logger.debug("", e)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddNode", null, "Error :" + e.toString() + ErrorCodeConstants.Add_Node_Failed + ":" + nodeId)
         apiResult.toString()
       }
@@ -6486,6 +6408,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       apiResult.toString()
     } catch {
       case e: Exception => {
+        logger.debug("", e)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "RemoveNode", null, "Error :" + e.toString() + ErrorCodeConstants.Remove_Node_Failed + ":" + nodeId)
         apiResult.toString()
       }
@@ -6522,8 +6445,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       apiResult.toString()
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        
+        logger.debug("", e)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddAdapter", null, "Error :" + e.toString() + ErrorCodeConstants.Add_Adapter_Failed + ":" + name)
         apiResult.toString()
       }
@@ -6564,8 +6487,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       apiResult.toString()
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        
+        logger.debug("", e)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "RemoveAdapter", null, "Error :" + e.toString() + ErrorCodeConstants.Remove_Adapter_Failed + ":" + name)
         apiResult.toString()
       }
@@ -6592,8 +6515,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       apiResult.toString()
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        
+        logger.debug("", e)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddCluster", null, "Error :" + e.toString() + ErrorCodeConstants.Add_Cluster_Failed + ":" + clusterId)
         apiResult.toString()
       }
@@ -6625,8 +6548,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       apiResult.toString()
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        
+        logger.debug("", e)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "RemoveCluster", null, "Error :" + e.toString() + ErrorCodeConstants.Remove_Cluster_Failed + ":" + clusterId)
         apiResult.toString()
       }
@@ -6655,8 +6578,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       apiResult.toString()
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        
+        logger.debug("", e)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddClusterCfg", null, "Error :" + e.toString() + ErrorCodeConstants.Add_Cluster_Config_Failed + ":" + clusterCfgId)
         apiResult.toString()
       }
@@ -6693,8 +6616,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       apiResult.toString()
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        
+        logger.debug("", e)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "RemoveCLusterCfg", null, "Error :" + e.toString() + ErrorCodeConstants.Remove_Cluster_Config_Failed + ":" + clusterCfgId)
         apiResult.toString()
       }
@@ -6775,8 +6698,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       apiResult.toString()
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        
+        logger.debug("", e)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "RemoveConfig", null, "Error :" + e.toString() + ErrorCodeConstants.Remove_Config_Failed + ":" + cfgStr)
         apiResult.toString()
       }
@@ -7102,8 +7025,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        
+        logger.debug("", e)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "UploadConfig", cfgStr, "Error :" + e.toString() + ErrorCodeConstants.Upload_Config_Failed)
         apiResult.toString()
       }
@@ -7148,8 +7071,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        
+        logger.debug("", e)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetAllNodes", null, "Error :" + e.toString() + ErrorCodeConstants.Get_All_Nodes_Failed)
         apiResult.toString()
       }
@@ -7178,8 +7101,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        
+        logger.debug("", e)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetAllAdapters", null, "Error :" + e.toString() + ErrorCodeConstants.Get_All_Adapters_Failed)
 
         apiResult.toString()
@@ -7209,8 +7132,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        
+        logger.debug("", e)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetAllClusters", null, "Error :" + e.toString() + ErrorCodeConstants.Get_All_Clusters_Failed)
         apiResult.toString()
       }
@@ -7241,8 +7164,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        
+        logger.debug("", e)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetAllClusterCfgs", null, "Error :" + e.toString() + ErrorCodeConstants.Get_All_Cluster_Configs_Failed)
 
         apiResult.toString()
@@ -7309,8 +7232,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        
+        logger.debug("", e)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetAllCfgObjects", null, "Error :" + e.toString() + ErrorCodeConstants.Get_All_Configs_Failed)
         apiResult.toString()
       }
@@ -7554,9 +7477,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
     } catch {
       case e: Exception =>
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
-        logger.error("Failed to load configuration: " + e.getMessage + "\nStackTrace:" + stackTrace)
+        logger.error("Failed to load configuration", e)
         sys.exit(1)
     }
   }
@@ -7794,14 +7715,14 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
     } catch {
       case e: MappingException => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        
+        logger.debug("", e)
         throw Json4sParsingException(e.getMessage(), e)
       }
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
-        throw LoadAPIConfigException("Failed to load configuration: " + e.getMessage(), e)
+        
+        logger.debug("", e)
+        throw LoadAPIConfigException("Failed to load configuration", e)
       }
     }
   }
@@ -7900,7 +7821,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
         }
       } catch {
         case e: Exception => {
-          logger.error("Failed to initialize ZooKeeper Connection. Reason:%s Message:%s".format(e.getCause, e.getMessage))
+          logger.error("Failed to initialize ZooKeeper Connection.", e)
           throw e
         }
       }
@@ -7919,7 +7840,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
     } catch {
       case e: Exception => {
-        logger.error("Error trying to shutdown zookeeper listener.  ")
+        logger.error("Error trying to shutdown zookeeper listener.", e)
         throw e
       }
     }
@@ -7936,7 +7857,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       heartBeat = null
     } catch {
       case e: Exception => {
-        logger.error("Error trying to shutdown Hearbbeat. ")
+        logger.error("Error trying to shutdown Hearbbeat. ", e)
         throw e
       }
     }

@@ -1063,9 +1063,7 @@ class MigrateTo_V_1_3 extends MigratableTo {
           logger.error("Failed to save data into datastore. Waiting for another %d milli seconds and going to start them again.".format(failedWaitTime))
           Thread.sleep(failedWaitTime)
         } catch {
-          case e: Exception => {
-
-          }
+          case e: Exception => { logger.warn("", e) }
         }
         // Adjust time for next time
         if (failedWaitTime < maxFailedWaitTime) {

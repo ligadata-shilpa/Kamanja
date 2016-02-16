@@ -54,8 +54,8 @@ object NodeLevelTransService {
       return KeyValueManager.Get(jarPaths, dataStoreInfo)
     } catch {
       case e: Exception => {
-        e.printStackTrace()
-        throw new Exception(e.getMessage())
+        LOG.error("", e)
+        throw e
       }
     }
   }
@@ -91,8 +91,8 @@ object NodeLevelTransService {
         txnsDataStore.get(containerName, Array(TimeRange(KvBaseDefalts.defaultTime, KvBaseDefalts.defaultTime)), Array(bucket_key), buildTxnOff)
         startTxnIdx = objs(0)
       } catch {
-        case e: Exception => LOG.debug("Key %s not found. Reason:%s, Message:%s".format(bucket_key.mkString(","), e.getCause, e.getMessage))
-        case t: Throwable => LOG.debug("Key %s not found. Reason:%s, Message:%s".format(bucket_key.mkString(","), t.getCause, t.getMessage))
+        case e: Exception => LOG.debug("Key %s not found.".format(bucket_key.mkString(",")), e)
+        case t: Throwable => LOG.debug("Key %s not found.".format(bucket_key.mkString(",")), t)
       }
 
       if (startTxnIdx <= 0)
@@ -110,7 +110,7 @@ object NodeLevelTransService {
       txnsDataStore.commitTx(txn)
     } catch {
       case e: Exception => {
-        LOG.debug(s"getNextTransactionRange() -- Unable to get Next Transaction Range")
+        LOG.debug(s"getNextTransactionRange() -- Unable to get Next Transaction Range", e)
       }
     }
     (startTxnIdx, endTxnIdx)

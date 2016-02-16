@@ -430,13 +430,12 @@ object ModelService {
       } catch {
         case fnf : FileNotFoundException => {
             val msg : String = s"updateModelJPmml... supplied file path not found ... path = $pmmlPath"
-            logger.error(msg)
+            logger.error(msg, fnf)
             msg
         }
         case e : Exception => {
-            val stackTrace = StackTrace.ThrowableTraceString(e)
             val msg : String = if (pmmlPath == null) "updateModelJpmml pmml path was not supplied" else s"updateModelJPmml... exception e = ${e.toString}"
-            logger.error(s"$msg...stack = \n$stackTrace")
+            logger.error(s"$msg...", e)
             msg
         }
       }
@@ -654,7 +653,7 @@ object ModelService {
             try {
               return MetadataAPIImpl.GetModelDefFromCache(ns, name,"JSON" ,ver, userid)
             } catch {
-              case e: Exception => e.printStackTrace()
+              case e: Exception => logger.error("", e)
             }
           }
           val modelKeys = MetadataAPIImpl.GetAllModelsFromCache(true, None)
@@ -683,6 +682,7 @@ object ModelService {
 
         } catch {
           case e: Exception => {
+            logger.info("", e)
             response=e.getStackTrace.toString
           }
         }
@@ -728,6 +728,7 @@ object ModelService {
             } catch {
               case e: Exception => {
                   val stackTrace = StackTrace.ThrowableTraceString(e)
+                  logger.info(stackTrace)
                   stackTrace
               }
             }
@@ -760,6 +761,7 @@ object ModelService {
         } catch {
             case e: Exception => {
                 val stackTrace = StackTrace.ThrowableTraceString(e)
+                logger.info(stackTrace)
                 stackTrace
             }
         }
@@ -783,7 +785,7 @@ object ModelService {
             try {
               return MetadataAPIImpl.ActivateModel(ns, name, ver.toInt, userid)
             } catch {
-              case e: Exception => e.printStackTrace()
+              case e: Exception => logger.error("", e)
             }
           }
           val modelKeys = MetadataAPIImpl.GetAllModelsFromCache(false, None)
@@ -814,6 +816,7 @@ object ModelService {
 
         } catch {
           case e: Exception => {
+            logger.info("", e)
             response=e.getStackTrace.toString
           }
         }
@@ -838,7 +841,7 @@ object ModelService {
             try {
               return MetadataAPIImpl.DeactivateModel(ns, name, ver.toInt, userid)
             } catch {
-              case e: Exception => e.printStackTrace()
+              case e: Exception => logger.error("", e)
             }
           }
           progressReport = 1
@@ -872,8 +875,10 @@ object ModelService {
           }
         } catch {
           case e: Exception => {
-            if (progressReport == 0)
+            if (progressReport == 0) {
+              logger.warn("", e)
               response = new ApiResult(ErrorCodeConstants.Failure, "DeactivateModel", null, "Error : Cannot parse ModelName, must be Namespace.Name.Version format").toString
+            }
             else {
               response = new ApiResult(ErrorCodeConstants.Failure, "DeactivateModel", null, "Error : An Exception occured during processing").toString
               logger.error("Unkown exception occured during deactivate model processing ", e)
