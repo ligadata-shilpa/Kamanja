@@ -1426,8 +1426,8 @@ bash SetPathsMigrateClusterInstall.sh $KafkaRootDir
 cd $installPath/KamanjaInstall-$ver211/bin
 bash SetPathsMigrateClusterInstall.sh $KafkaRootDir
 
-chmod 0700 $install_dir/KamanjaInstall-$ver210/bin/*.sh
-chmod 0700 $install_dir/KamanjaInstall-$ver211/bin/*.sh
+chmod 0700 $installPath/KamanjaInstall-$ver210/bin/*.sh
+chmod 0700 $installPath/KamanjaInstall-$ver211/bin/*.sh
 
 
 #Migration and Cluster Install*****************
