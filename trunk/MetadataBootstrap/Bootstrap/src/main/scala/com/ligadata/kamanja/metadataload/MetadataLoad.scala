@@ -52,7 +52,7 @@ trait LogTrait {
  */
 
 object MetadataLoad {
-	val baseTypesVer : Long = 1000000 // Which is 00.01.000000
+	val MetadataLoad.baseTypesVer : Long = 1000000 // Which is 00.01.000000
 	def BaseContainersInfo: Array[(String, String, String, List[(String, String, String, String, Boolean, String)])] = {
 		// nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)
 		return Array[(String, String, String, List[(String, String, String, String, Boolean, String)])](
@@ -165,7 +165,7 @@ class MetadataLoad (val mgr : MdMgr, val typesPath : String, val fcnPath : Strin
     }
 
     private def InitTypeDefs2 = {
-		mgr.AddSortedSet("System", "SortedSetOfAny", "System", "Any", baseTypesVer)
+		mgr.AddSortedSet("System", "SortedSetOfAny", "System", "Any", MetadataLoad.baseTypesVer)
 
 		mgr.AddImmutableSet("System", "ImmutableSetOfAny", "System", "Any", MetadataLoad.baseTypesVer)
 		//mgr.AddImmutableMap("System", "ImmutableSetOfAny", "System", "Any", MetadataLoad.baseTypesVer)
@@ -275,16 +275,16 @@ class MetadataLoad (val mgr : MdMgr, val typesPath : String, val fcnPath : Strin
     }
 
     private def InitTypeDefs3 = {
-		mgr.AddMap(MdMgr.sysNS, "MapOfStringArrayOfAny", (MdMgr.sysNS, "String"), (MdMgr.sysNS, "ArrayOfAny"), baseTypesVer)
-		mgr.AddMap(MdMgr.sysNS, "MapOfIntArrayOfAny", (MdMgr.sysNS, "Int"), (MdMgr.sysNS, "ArrayOfAny"), baseTypesVer)
-		mgr.AddMap(MdMgr.sysNS, "MapOfLongArrayOfAny", (MdMgr.sysNS, "Long"), (MdMgr.sysNS, "ArrayOfAny"), baseTypesVer)
-		mgr.AddMap(MdMgr.sysNS, "MapOfDoubleArrayOfAny", (MdMgr.sysNS, "Double"), (MdMgr.sysNS, "ArrayOfAny"), baseTypesVer)
-		mgr.AddMap(MdMgr.sysNS, "MapOfBooleanArrayOfAny", (MdMgr.sysNS, "Boolean"), (MdMgr.sysNS, "ArrayOfAny"), baseTypesVer)
-		mgr.AddImmutableMap(MdMgr.sysNS, "ImmutableMapOfStringArrayOfAny", (MdMgr.sysNS, "String"), (MdMgr.sysNS, "ArrayOfAny"), baseTypesVer)
-		mgr.AddImmutableMap(MdMgr.sysNS, "ImmutableMapOfIntArrayOfAny", (MdMgr.sysNS, "Int"), (MdMgr.sysNS, "ArrayOfAny"), baseTypesVer)
-		mgr.AddImmutableMap(MdMgr.sysNS, "ImmutableMapOfLongArrayOfAny", (MdMgr.sysNS, "Long"), (MdMgr.sysNS, "ArrayOfAny"), baseTypesVer)
-		mgr.AddImmutableMap(MdMgr.sysNS, "ImmutableMapOfDoubleArrayOfAny", (MdMgr.sysNS, "Double"), (MdMgr.sysNS, "ArrayOfAny"), baseTypesVer)
-		mgr.AddImmutableMap(MdMgr.sysNS, "ImmutableMapOfBooleanArrayOfAny", (MdMgr.sysNS, "Boolean"), (MdMgr.sysNS, "ArrayOfAny"), baseTypesVer)
+		mgr.AddMap(MdMgr.sysNS, "MapOfStringArrayOfAny", (MdMgr.sysNS, "String"), (MdMgr.sysNS, "ArrayOfAny"), MetadataLoad.baseTypesVer)
+		mgr.AddMap(MdMgr.sysNS, "MapOfIntArrayOfAny", (MdMgr.sysNS, "Int"), (MdMgr.sysNS, "ArrayOfAny"), MetadataLoad.baseTypesVer)
+		mgr.AddMap(MdMgr.sysNS, "MapOfLongArrayOfAny", (MdMgr.sysNS, "Long"), (MdMgr.sysNS, "ArrayOfAny"), MetadataLoad.baseTypesVer)
+		mgr.AddMap(MdMgr.sysNS, "MapOfDoubleArrayOfAny", (MdMgr.sysNS, "Double"), (MdMgr.sysNS, "ArrayOfAny"), MetadataLoad.baseTypesVer)
+		mgr.AddMap(MdMgr.sysNS, "MapOfBooleanArrayOfAny", (MdMgr.sysNS, "Boolean"), (MdMgr.sysNS, "ArrayOfAny"), MetadataLoad.baseTypesVer)
+		mgr.AddImmutableMap(MdMgr.sysNS, "ImmutableMapOfStringArrayOfAny", (MdMgr.sysNS, "String"), (MdMgr.sysNS, "ArrayOfAny"), MetadataLoad.baseTypesVer)
+		mgr.AddImmutableMap(MdMgr.sysNS, "ImmutableMapOfIntArrayOfAny", (MdMgr.sysNS, "Int"), (MdMgr.sysNS, "ArrayOfAny"), MetadataLoad.baseTypesVer)
+		mgr.AddImmutableMap(MdMgr.sysNS, "ImmutableMapOfLongArrayOfAny", (MdMgr.sysNS, "Long"), (MdMgr.sysNS, "ArrayOfAny"), MetadataLoad.baseTypesVer)
+		mgr.AddImmutableMap(MdMgr.sysNS, "ImmutableMapOfDoubleArrayOfAny", (MdMgr.sysNS, "Double"), (MdMgr.sysNS, "ArrayOfAny"), MetadataLoad.baseTypesVer)
+		mgr.AddImmutableMap(MdMgr.sysNS, "ImmutableMapOfBooleanArrayOfAny", (MdMgr.sysNS, "Boolean"), (MdMgr.sysNS, "ArrayOfAny"), MetadataLoad.baseTypesVer)
 		
 		mgr.AddMap(MdMgr.sysNS, "MapOfStringArrayBufferOfLong", (MdMgr.sysNS, "String"), (MdMgr.sysNS, "ArrayBufferOfLong"), MetadataLoad.baseTypesVer)
 		mgr.AddMap(MdMgr.sysNS, "MapOfIntArrayBufferOfLong", (MdMgr.sysNS, "Int"), (MdMgr.sysNS, "ArrayBufferOfLong"), MetadataLoad.baseTypesVer)
@@ -339,28 +339,28 @@ def initTypesFor_com_ligadata_pmml_udfs_Udfs {
 
     def  initTypes_com_ligadata_pmml_udfs_Udfs1 {
 
-            mgr.AddTupleType("System", "TupleOfAny1", Array(("System","Any")), baseTypesVer)
-		mgr.AddTupleType("System", "TupleOfAny2", Array(("System","Any"), ("System","Any")), baseTypesVer)
-		mgr.AddTupleType("System", "TupleOfAny3", Array(("System","Any"), ("System","Any"), ("System","Any")), baseTypesVer)
-		mgr.AddTupleType("System", "TupleOfAny4", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), baseTypesVer)
-		mgr.AddTupleType("System", "TupleOfAny5", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), baseTypesVer)
-		mgr.AddTupleType("System", "TupleOfAny6", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), baseTypesVer)
-		mgr.AddTupleType("System", "TupleOfAny7", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), baseTypesVer)
-		mgr.AddTupleType("System", "TupleOfAny8", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), baseTypesVer)
-		mgr.AddTupleType("System", "TupleOfAny9", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), baseTypesVer)
-		mgr.AddTupleType("System", "TupleOfAny10", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), baseTypesVer)
-		mgr.AddTupleType("System", "TupleOfAny11", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), baseTypesVer)
-		mgr.AddTupleType("System", "TupleOfAny12", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), baseTypesVer)
-		mgr.AddTupleType("System", "TupleOfAny13", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), baseTypesVer)
-		mgr.AddTupleType("System", "TupleOfAny14", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), baseTypesVer)
-		mgr.AddTupleType("System", "TupleOfAny15", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), baseTypesVer)
-		mgr.AddTupleType("System", "TupleOfAny16", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), baseTypesVer)
-		mgr.AddTupleType("System", "TupleOfAny17", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), baseTypesVer)
-		mgr.AddTupleType("System", "TupleOfAny18", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), baseTypesVer)
-		mgr.AddTupleType("System", "TupleOfAny19", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), baseTypesVer)
-		mgr.AddTupleType("System", "TupleOfAny20", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), baseTypesVer)
-		mgr.AddTupleType("System", "TupleOfAny21", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), baseTypesVer)
-		mgr.AddTupleType("System", "TupleOfAny22", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), baseTypesVer)
+            mgr.AddTupleType("System", "TupleOfAny1", Array(("System","Any")), MetadataLoad.baseTypesVer)
+		mgr.AddTupleType("System", "TupleOfAny2", Array(("System","Any"), ("System","Any")), MetadataLoad.baseTypesVer)
+		mgr.AddTupleType("System", "TupleOfAny3", Array(("System","Any"), ("System","Any"), ("System","Any")), MetadataLoad.baseTypesVer)
+		mgr.AddTupleType("System", "TupleOfAny4", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), MetadataLoad.baseTypesVer)
+		mgr.AddTupleType("System", "TupleOfAny5", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), MetadataLoad.baseTypesVer)
+		mgr.AddTupleType("System", "TupleOfAny6", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), MetadataLoad.baseTypesVer)
+		mgr.AddTupleType("System", "TupleOfAny7", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), MetadataLoad.baseTypesVer)
+		mgr.AddTupleType("System", "TupleOfAny8", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), MetadataLoad.baseTypesVer)
+		mgr.AddTupleType("System", "TupleOfAny9", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), MetadataLoad.baseTypesVer)
+		mgr.AddTupleType("System", "TupleOfAny10", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), MetadataLoad.baseTypesVer)
+		mgr.AddTupleType("System", "TupleOfAny11", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), MetadataLoad.baseTypesVer)
+		mgr.AddTupleType("System", "TupleOfAny12", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), MetadataLoad.baseTypesVer)
+		mgr.AddTupleType("System", "TupleOfAny13", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), MetadataLoad.baseTypesVer)
+		mgr.AddTupleType("System", "TupleOfAny14", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), MetadataLoad.baseTypesVer)
+		mgr.AddTupleType("System", "TupleOfAny15", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), MetadataLoad.baseTypesVer)
+		mgr.AddTupleType("System", "TupleOfAny16", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), MetadataLoad.baseTypesVer)
+		mgr.AddTupleType("System", "TupleOfAny17", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), MetadataLoad.baseTypesVer)
+		mgr.AddTupleType("System", "TupleOfAny18", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), MetadataLoad.baseTypesVer)
+		mgr.AddTupleType("System", "TupleOfAny19", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), MetadataLoad.baseTypesVer)
+		mgr.AddTupleType("System", "TupleOfAny20", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), MetadataLoad.baseTypesVer)
+		mgr.AddTupleType("System", "TupleOfAny21", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), MetadataLoad.baseTypesVer)
+		mgr.AddTupleType("System", "TupleOfAny22", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), MetadataLoad.baseTypesVer)
 		
     }
 
