@@ -302,9 +302,9 @@ class MigrateTo_V_1_3 extends MigratableTo {
   override def backupAllTables(metadataTblsToBackedUp: Array[BackupTableInfo], dataTblsToBackedUp: Array[BackupTableInfo], statusTblsToBackedUp: Array[BackupTableInfo], force: Boolean): Unit = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
-    logger.debug("Backup tables => (Metadata Tables:{" + metadataTblsToBackedUp.map(t => "(" + t.namespace + "," + t.srcTable + " => " + t.namespace + "," + t.dstTable + ")").mkString(",") + "}, Data Tables:"
-      + dataTblsToBackedUp.map(t => "(" + t.namespace + "," + t.srcTable + " => " + t.namespace + "," + t.dstTable + ")").mkString(",") + "}, Status Tables:"
-      + statusTblsToBackedUp.map(t => "(" + t.namespace + "," + t.srcTable + " => " + t.namespace + "," + t.dstTable + ")").mkString(",") + "})")
+    logger.debug("Backup tables => (Metadata Tables:{" + metadataTblsToBackedUp.map(t => "((" + t.namespace + "," + t.srcTable + ") => (" + t.namespace + "," + t.dstTable + "))").mkString(",") + "}, Data Tables:{"
+      + dataTblsToBackedUp.map(t => "((" + t.namespace + "," + t.srcTable + ") => (" + t.namespace + "," + t.dstTable + "))").mkString(",") + "}, Status Tables:{"
+      + statusTblsToBackedUp.map(t => "((" + t.namespace + "," + t.srcTable + ") => (" + t.namespace + "," + t.dstTable + "))").mkString(",") + "})")
     var executor: ExecutorService = null
     try {
       executor = Executors.newFixedThreadPool(if (_parallelDegree <= 1) 1 else _parallelDegree)
@@ -559,7 +559,7 @@ class MigrateTo_V_1_3 extends MigratableTo {
 
               logger.info("Adding model:" + dispkey + ", ModelType:" + mdlType + ", ObjectFormat:" + objFormat)
 
-              if (_sourceVersion.equalsIgnoreCase("1.1")) {
+              if (_sourceVersion.equalsIgnoreCase("1.1") || _sourceVersion.equalsIgnoreCase("1.2")) {
                 if ((objFormat.equalsIgnoreCase("JAVA")) || (objFormat.equalsIgnoreCase("scala"))) {
                   val mdlInfo = parse(mdlDefStr).values.asInstanceOf[Map[String, Any]]
                   val defStr = mdlInfo.getOrElse(ModelCompilationConstants.SOURCECODE, "").asInstanceOf[String]
@@ -567,56 +567,9 @@ class MigrateTo_V_1_3 extends MigratableTo {
                   val deps = DepJars(mdlInfo.getOrElse(ModelCompilationConstants.DEPENDENCIES, List[String]()).asInstanceOf[List[String]])
                   val typs = mdlInfo.getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, List[String]()).asInstanceOf[List[String]]
 
-                  var defFl = _unhandledMetadataDumpDir + "/" + objFormat + "_mdldef_" + dispkey + "." + ver + "." + objFormat.toLowerCase()
-                  var jsonFl = _unhandledMetadataDumpDir + "/" + objFormat + "_mdlinfo_" + dispkey + "." + ver + ".json"
+                  val cfgnm = "migrationmodelconfig_from_" + _sourceVersion.replace('.', '_') + "_to_1_3";
 
-                  val dumpMdlInfoStr = ("ModelInfo" ->
-                    ("Dependencies" -> deps) ~
-                      ("MessageAndContainers" -> typs) ~
-                      ("ModelType" -> mdlType) ~
-                      ("ObjectFormat" -> objFormat) ~
-                      ("ModelDefinition" -> defStr) ~
-                      ("NameSpace" -> namespace) ~
-                      ("Name" -> name) ~
-                      ("Version" -> ver))
-
-                  WriteStringToFile(defFl, defStr)
-                  WriteStringToFile(jsonFl, compact(render(dumpMdlInfoStr)))
-
-                  val msgStr = ("%s type models can not be migrated automatically. Model %s definition is dumped into %s, more model information dumped to %s.".format(objFormat, dispkey, defFl, jsonFl))
-                  logger.error(msgStr)
-                  _flCurMigrationSummary.println(msgStr)
-                  _flCurMigrationSummary.flush()
-                } else if (objFormat.equalsIgnoreCase("XML")) {
-                  var defFl = _unhandledMetadataDumpDir + "/kPMML_mdldef_" + dispkey + "." + ver + "." + objFormat.toLowerCase()
-                  var failed = false
-                  try {
-                    val retRes = MetadataAPIImpl.AddModel(MetadataAPI.ModelType.fromString("kpmml"), mdlDefStr, defaultUserId, Some(dispkey), Some(ver))
-                    failed = isFailedStatus(retRes)
-                  } catch {
-                    case e: Exception => {
-                      logger.error("Failed to add model:" + dispkey, e)
-                      failed = true
-                    }
-                  }
-
-                  if (failed) {
-                    WriteStringToFile(defFl, mdlDefStr)
-                    val msgStr = ("kPMML type model failed to migrate. Model %s definition is dumped into %s.".format(dispkey, defFl))
-                    logger.error(msgStr)
-                    _flCurMigrationSummary.println(msgStr)
-                    _flCurMigrationSummary.flush()
-                  }
-                }
-              } else if (_sourceVersion.equalsIgnoreCase("1.2")) {
-                if ((objFormat.equalsIgnoreCase("JAVA")) || (objFormat.equalsIgnoreCase("scala"))) {
-                  val mdlInfo = parse(mdlDefStr).values.asInstanceOf[Map[String, Any]]
-                  val defStr = mdlInfo.getOrElse(ModelCompilationConstants.SOURCECODE, "").asInstanceOf[String]
-                  // val phyName = mdlInfo.getOrElse(ModelCompilationConstants.PHYSICALNAME, "").asInstanceOf[String]
-                  val deps = DepJars(mdlInfo.getOrElse(ModelCompilationConstants.DEPENDENCIES, List[String]()).asInstanceOf[List[String]])
-                  val typs = mdlInfo.getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, List[String]()).asInstanceOf[List[String]]
-
-                  val mdlConfig = ("migrationmodelconfig_from_1_2_to_1_3" ->
+                  val mdlConfig = (cfgnm ->
                     ("Dependencies" -> deps) ~
                       ("MessageAndContainers" -> typs))
 
