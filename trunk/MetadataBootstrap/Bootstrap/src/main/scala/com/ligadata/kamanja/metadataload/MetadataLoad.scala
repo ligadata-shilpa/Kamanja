@@ -79,7 +79,6 @@ class MetadataLoad (val mgr : MdMgr, val typesPath : String, val fcnPath : Strin
 
 		logger.debug("MetadataLoad...loading Pmml udfs")
 		init_com_ligadata_pmml_udfs_Udfs
-		init_com_ligadata_pmml_udfs_Udfs1
 		
 		logger.debug("MetadataLoad...loading Iterable functions")
 		InitFcns
@@ -104,8 +103,18 @@ class MetadataLoad (val mgr : MdMgr, val typesPath : String, val fcnPath : Strin
 		})
 	}
 
+    /** Define any types that may be used in the container, message, fcn, and model metadata.  These are broken into smaller functions that
+      * will prevent compilation failures due to large function size. */
+    def InitTypeDefs = {
+        InitTypeDefs1
+        InitTypeDefs2
+        InitTypeDefs3
+        InitTypeDefs4
+    }
+
 	/** Define any types that may be used in the container, message, fcn, and model metadata */
-	def InitTypeDefs = {
+
+    private def InitTypeDefs1 = {
 		ScalaVersionDependentInit.InitTypeDefs(mgr)
 		
 		mgr.AddArray(MdMgr.sysNS, "ArrayOfAny", MdMgr.sysNS, "Any", 1, MetadataLoad.baseTypesVer)
@@ -153,7 +162,10 @@ class MetadataLoad (val mgr : MdMgr, val typesPath : String, val fcnPath : Strin
 
 		mgr.AddTreeSet("System", "TreeSetOfAny", "System", "Any", MetadataLoad.baseTypesVer)
 
-		mgr.AddSet("System", "SetOfAny", "System", "Any", MetadataLoad.baseTypesVer)
+    }
+
+    private def InitTypeDefs2 = {
+		mgr.AddSortedSet("System", "SortedSetOfAny", "System", "Any", baseTypesVer)
 
 		mgr.AddImmutableSet("System", "ImmutableSetOfAny", "System", "Any", MetadataLoad.baseTypesVer)
 		//mgr.AddImmutableMap("System", "ImmutableSetOfAny", "System", "Any", MetadataLoad.baseTypesVer)
@@ -259,16 +271,20 @@ class MetadataLoad (val mgr : MdMgr, val typesPath : String, val fcnPath : Strin
 		mgr.AddImmutableMap(MdMgr.sysNS, "ImmutableMapOfDoubleArrayBufferOfDouble", (MdMgr.sysNS, "Double"), (MdMgr.sysNS, "ArrayBufferOfDouble"), MetadataLoad.baseTypesVer)
 		mgr.AddImmutableMap(MdMgr.sysNS, "ImmutableMapOfBooleanArrayBufferOfDouble", (MdMgr.sysNS, "Boolean"), (MdMgr.sysNS, "ArrayBufferOfDouble"), MetadataLoad.baseTypesVer)
 		
-		mgr.AddMap(MdMgr.sysNS, "MapOfStringArrayBufferOfInt", (MdMgr.sysNS, "String"), (MdMgr.sysNS, "ArrayBufferOfInt"), MetadataLoad.baseTypesVer)
-		mgr.AddMap(MdMgr.sysNS, "MapOfIntArrayBufferOfInt", (MdMgr.sysNS, "Int"), (MdMgr.sysNS, "ArrayBufferOfInt"), MetadataLoad.baseTypesVer)
-		mgr.AddMap(MdMgr.sysNS, "MapOfLongArrayBufferOfInt", (MdMgr.sysNS, "Long"), (MdMgr.sysNS, "ArrayBufferOfInt"), MetadataLoad.baseTypesVer)
-		mgr.AddMap(MdMgr.sysNS, "MapOfDoubleArrayBufferOfInt", (MdMgr.sysNS, "Double"), (MdMgr.sysNS, "ArrayBufferOfInt"), MetadataLoad.baseTypesVer)
-		mgr.AddMap(MdMgr.sysNS, "MapOfBooleanArrayBufferOfInt", (MdMgr.sysNS, "Boolean"), (MdMgr.sysNS, "ArrayBufferOfInt"), MetadataLoad.baseTypesVer)
-		mgr.AddImmutableMap(MdMgr.sysNS, "ImmutableMapOfStringArrayBufferOfInt", (MdMgr.sysNS, "String"), (MdMgr.sysNS, "ArrayBufferOfInt"), MetadataLoad.baseTypesVer)
-		mgr.AddImmutableMap(MdMgr.sysNS, "ImmutableMapOfIntArrayBufferOfInt", (MdMgr.sysNS, "Int"), (MdMgr.sysNS, "ArrayBufferOfInt"), MetadataLoad.baseTypesVer)
-		mgr.AddImmutableMap(MdMgr.sysNS, "ImmutableMapOfLongArrayBufferOfInt", (MdMgr.sysNS, "Long"), (MdMgr.sysNS, "ArrayBufferOfInt"), MetadataLoad.baseTypesVer)
-		mgr.AddImmutableMap(MdMgr.sysNS, "ImmutableMapOfDoubleArrayBufferOfInt", (MdMgr.sysNS, "Double"), (MdMgr.sysNS, "ArrayBufferOfInt"), MetadataLoad.baseTypesVer)
-		mgr.AddImmutableMap(MdMgr.sysNS, "ImmutableMapOfBooleanArrayBufferOfInt", (MdMgr.sysNS, "Boolean"), (MdMgr.sysNS, "ArrayBufferOfInt"), MetadataLoad.baseTypesVer)
+
+    }
+
+    private def InitTypeDefs3 = {
+		mgr.AddMap(MdMgr.sysNS, "MapOfStringArrayOfAny", (MdMgr.sysNS, "String"), (MdMgr.sysNS, "ArrayOfAny"), baseTypesVer)
+		mgr.AddMap(MdMgr.sysNS, "MapOfIntArrayOfAny", (MdMgr.sysNS, "Int"), (MdMgr.sysNS, "ArrayOfAny"), baseTypesVer)
+		mgr.AddMap(MdMgr.sysNS, "MapOfLongArrayOfAny", (MdMgr.sysNS, "Long"), (MdMgr.sysNS, "ArrayOfAny"), baseTypesVer)
+		mgr.AddMap(MdMgr.sysNS, "MapOfDoubleArrayOfAny", (MdMgr.sysNS, "Double"), (MdMgr.sysNS, "ArrayOfAny"), baseTypesVer)
+		mgr.AddMap(MdMgr.sysNS, "MapOfBooleanArrayOfAny", (MdMgr.sysNS, "Boolean"), (MdMgr.sysNS, "ArrayOfAny"), baseTypesVer)
+		mgr.AddImmutableMap(MdMgr.sysNS, "ImmutableMapOfStringArrayOfAny", (MdMgr.sysNS, "String"), (MdMgr.sysNS, "ArrayOfAny"), baseTypesVer)
+		mgr.AddImmutableMap(MdMgr.sysNS, "ImmutableMapOfIntArrayOfAny", (MdMgr.sysNS, "Int"), (MdMgr.sysNS, "ArrayOfAny"), baseTypesVer)
+		mgr.AddImmutableMap(MdMgr.sysNS, "ImmutableMapOfLongArrayOfAny", (MdMgr.sysNS, "Long"), (MdMgr.sysNS, "ArrayOfAny"), baseTypesVer)
+		mgr.AddImmutableMap(MdMgr.sysNS, "ImmutableMapOfDoubleArrayOfAny", (MdMgr.sysNS, "Double"), (MdMgr.sysNS, "ArrayOfAny"), baseTypesVer)
+		mgr.AddImmutableMap(MdMgr.sysNS, "ImmutableMapOfBooleanArrayOfAny", (MdMgr.sysNS, "Boolean"), (MdMgr.sysNS, "ArrayOfAny"), baseTypesVer)
 		
 		mgr.AddMap(MdMgr.sysNS, "MapOfStringArrayBufferOfLong", (MdMgr.sysNS, "String"), (MdMgr.sysNS, "ArrayBufferOfLong"), MetadataLoad.baseTypesVer)
 		mgr.AddMap(MdMgr.sysNS, "MapOfIntArrayBufferOfLong", (MdMgr.sysNS, "Int"), (MdMgr.sysNS, "ArrayBufferOfLong"), MetadataLoad.baseTypesVer)
@@ -294,8 +310,9 @@ class MetadataLoad (val mgr : MdMgr, val typesPath : String, val fcnPath : Strin
 		
 		/** should ImmutableSet and Set be done for the MapOf... above too? Yes */
 		
+    }
 		
-		
+    private def InitTypeDefs4 = {
 		mgr.AddImmutableSet(MdMgr.sysNS, "ImmutableSetOfString", MdMgr.sysNS, "String", MetadataLoad.baseTypesVer)
 		mgr.AddImmutableSet(MdMgr.sysNS, "ImmutableSetOfInt", MdMgr.sysNS, "Int", MetadataLoad.baseTypesVer)
 		mgr.AddImmutableSet(MdMgr.sysNS, "ImmutableSetOfLong", MdMgr.sysNS, "Long", MetadataLoad.baseTypesVer)
@@ -306,39 +323,48 @@ class MetadataLoad (val mgr : MdMgr, val typesPath : String, val fcnPath : Strin
 		mgr.AddSet(MdMgr.sysNS, "SetOfLong", MdMgr.sysNS, "Long", MetadataLoad.baseTypesVer)
 		mgr.AddSet(MdMgr.sysNS, "SetOfFloat", MdMgr.sysNS, "Float", MetadataLoad.baseTypesVer)
 		mgr.AddSet(MdMgr.sysNS, "SetOfDouble", MdMgr.sysNS, "Double", MetadataLoad.baseTypesVer)
-
-		
 	}
 	
-	/**
+	/*
+	    initialize the types used by the pmml core udf function declarations.  These are broken into pieces to prevent compilation failures
+	    caused by excessively large functions.
 	  
-	 
 	 */
 def initTypesFor_com_ligadata_pmml_udfs_Udfs {
+        initTypes_com_ligadata_pmml_udfs_Udfs1
+        initTypes_com_ligadata_pmml_udfs_Udfs2
+        initTypes_com_ligadata_pmml_udfs_Udfs3
+        initTypes_com_ligadata_pmml_udfs_Udfs4
+    }
 
-		mgr.AddTupleType("System", "TupleOfAny1", Array(("System","Any")), MetadataLoad.baseTypesVer)
-		mgr.AddTupleType("System", "TupleOfAny2", Array(("System","Any"), ("System","Any")), MetadataLoad.baseTypesVer)
-		mgr.AddTupleType("System", "TupleOfAny3", Array(("System","Any"), ("System","Any"), ("System","Any")), MetadataLoad.baseTypesVer)
-		mgr.AddTupleType("System", "TupleOfAny4", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), MetadataLoad.baseTypesVer)
-		mgr.AddTupleType("System", "TupleOfAny5", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), MetadataLoad.baseTypesVer)
-		mgr.AddTupleType("System", "TupleOfAny6", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), MetadataLoad.baseTypesVer)
-		mgr.AddTupleType("System", "TupleOfAny7", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), MetadataLoad.baseTypesVer)
-		mgr.AddTupleType("System", "TupleOfAny8", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), MetadataLoad.baseTypesVer)
-		mgr.AddTupleType("System", "TupleOfAny9", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), MetadataLoad.baseTypesVer)
-		mgr.AddTupleType("System", "TupleOfAny10", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), MetadataLoad.baseTypesVer)
-		mgr.AddTupleType("System", "TupleOfAny11", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), MetadataLoad.baseTypesVer)
-		mgr.AddTupleType("System", "TupleOfAny12", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), MetadataLoad.baseTypesVer)
-		mgr.AddTupleType("System", "TupleOfAny13", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), MetadataLoad.baseTypesVer)
-		mgr.AddTupleType("System", "TupleOfAny14", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), MetadataLoad.baseTypesVer)
-		mgr.AddTupleType("System", "TupleOfAny15", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), MetadataLoad.baseTypesVer)
-		mgr.AddTupleType("System", "TupleOfAny16", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), MetadataLoad.baseTypesVer)
-		mgr.AddTupleType("System", "TupleOfAny17", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), MetadataLoad.baseTypesVer)
-		mgr.AddTupleType("System", "TupleOfAny18", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), MetadataLoad.baseTypesVer)
-		mgr.AddTupleType("System", "TupleOfAny19", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), MetadataLoad.baseTypesVer)
-		mgr.AddTupleType("System", "TupleOfAny20", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), MetadataLoad.baseTypesVer)
-		mgr.AddTupleType("System", "TupleOfAny21", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), MetadataLoad.baseTypesVer)
-		mgr.AddTupleType("System", "TupleOfAny22", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), MetadataLoad.baseTypesVer)
+    def  initTypes_com_ligadata_pmml_udfs_Udfs1 {
+
+            mgr.AddTupleType("System", "TupleOfAny1", Array(("System","Any")), baseTypesVer)
+		mgr.AddTupleType("System", "TupleOfAny2", Array(("System","Any"), ("System","Any")), baseTypesVer)
+		mgr.AddTupleType("System", "TupleOfAny3", Array(("System","Any"), ("System","Any"), ("System","Any")), baseTypesVer)
+		mgr.AddTupleType("System", "TupleOfAny4", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), baseTypesVer)
+		mgr.AddTupleType("System", "TupleOfAny5", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), baseTypesVer)
+		mgr.AddTupleType("System", "TupleOfAny6", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), baseTypesVer)
+		mgr.AddTupleType("System", "TupleOfAny7", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), baseTypesVer)
+		mgr.AddTupleType("System", "TupleOfAny8", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), baseTypesVer)
+		mgr.AddTupleType("System", "TupleOfAny9", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), baseTypesVer)
+		mgr.AddTupleType("System", "TupleOfAny10", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), baseTypesVer)
+		mgr.AddTupleType("System", "TupleOfAny11", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), baseTypesVer)
+		mgr.AddTupleType("System", "TupleOfAny12", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), baseTypesVer)
+		mgr.AddTupleType("System", "TupleOfAny13", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), baseTypesVer)
+		mgr.AddTupleType("System", "TupleOfAny14", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), baseTypesVer)
+		mgr.AddTupleType("System", "TupleOfAny15", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), baseTypesVer)
+		mgr.AddTupleType("System", "TupleOfAny16", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), baseTypesVer)
+		mgr.AddTupleType("System", "TupleOfAny17", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), baseTypesVer)
+		mgr.AddTupleType("System", "TupleOfAny18", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), baseTypesVer)
+		mgr.AddTupleType("System", "TupleOfAny19", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), baseTypesVer)
+		mgr.AddTupleType("System", "TupleOfAny20", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), baseTypesVer)
+		mgr.AddTupleType("System", "TupleOfAny21", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), baseTypesVer)
+		mgr.AddTupleType("System", "TupleOfAny22", Array(("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any"), ("System","Any")), baseTypesVer)
 		
+    }
+
+    def initTypes_com_ligadata_pmml_udfs_Udfs2 {
 		/** doing this for arrays only for now... probably should tool out the arraybuffer and the rest in similar way */
 		mgr.AddArray("System", "ArrayOfTupleOfAny2", "System", "TupleOfAny2", 1, MetadataLoad.baseTypesVer)
 		mgr.AddArray("System", "ArrayOfTupleOfAny3", "System", "TupleOfAny3", 1, MetadataLoad.baseTypesVer)
@@ -383,6 +409,9 @@ def initTypesFor_com_ligadata_pmml_udfs_Udfs {
 		mgr.AddTupleType("System", "TupleOfFloat21", Array(("System","Float"), ("System","Float"), ("System","Float"), ("System","Float"), ("System","Float"), ("System","Float"), ("System","Float"), ("System","Float"), ("System","Float"), ("System","Float"), ("System","Float"), ("System","Float"), ("System","Float"), ("System","Float"), ("System","Float"), ("System","Float"), ("System","Float"), ("System","Float"), ("System","Float"), ("System","Float"), ("System","Float")), MetadataLoad.baseTypesVer)
 		mgr.AddTupleType("System", "TupleOfFloat22", Array(("System","Float"), ("System","Float"), ("System","Float"), ("System","Float"), ("System","Float"), ("System","Float"), ("System","Float"), ("System","Float"), ("System","Float"), ("System","Float"), ("System","Float"), ("System","Float"), ("System","Float"), ("System","Float"), ("System","Float"), ("System","Float"), ("System","Float"), ("System","Float"), ("System","Float"), ("System","Float"), ("System","Float"), ("System","Float")), MetadataLoad.baseTypesVer)
 		
+    }
+
+    def  initTypes_com_ligadata_pmml_udfs_Udfs3 {
 		/** doing this for arrays only for now... probably should tool out the arraybuffer and the rest in similar way */
 		mgr.AddArray("System", "ArrayOfTupleOfFloat2", "System", "TupleOfFloat2", 1, MetadataLoad.baseTypesVer)
 		mgr.AddArray("System", "ArrayOfTupleOfFloat3", "System", "TupleOfFloat3", 1, MetadataLoad.baseTypesVer)
@@ -427,6 +456,9 @@ def initTypesFor_com_ligadata_pmml_udfs_Udfs {
 		mgr.AddTupleType("System", "TupleOfDouble21", Array(("System","Double"), ("System","Double"), ("System","Double"), ("System","Double"), ("System","Double"), ("System","Double"), ("System","Double"), ("System","Double"), ("System","Double"), ("System","Double"), ("System","Double"), ("System","Double"), ("System","Double"), ("System","Double"), ("System","Double"), ("System","Double"), ("System","Double"), ("System","Double"), ("System","Double"), ("System","Double"), ("System","Double")), MetadataLoad.baseTypesVer)
 		mgr.AddTupleType("System", "TupleOfDouble22", Array(("System","Double"), ("System","Double"), ("System","Double"), ("System","Double"), ("System","Double"), ("System","Double"), ("System","Double"), ("System","Double"), ("System","Double"), ("System","Double"), ("System","Double"), ("System","Double"), ("System","Double"), ("System","Double"), ("System","Double"), ("System","Double"), ("System","Double"), ("System","Double"), ("System","Double"), ("System","Double"), ("System","Double"), ("System","Double")), MetadataLoad.baseTypesVer)
 		
+    }
+
+    def initTypes_com_ligadata_pmml_udfs_Udfs4 {
 		/** doing this for arrays only for now... probably should tool out the arraybuffer and the rest in similar way */
 		mgr.AddArray("System", "ArrayOfTupleOfDouble2", "System", "TupleOfDouble2", 1, MetadataLoad.baseTypesVer)
 		mgr.AddArray("System", "ArrayOfTupleOfDouble3", "System", "TupleOfDouble3", 1, MetadataLoad.baseTypesVer)
@@ -510,10 +542,26 @@ def initTypesFor_com_ligadata_pmml_udfs_Udfs {
 	}
 
 
+    /** Initialize the function decls for the core pmml udfs.  These are broken into a set of smaller functions so that
+      * the maximum function size limit is not exceeded during compilation
+      */
 		
-	
 	def init_com_ligadata_pmml_udfs_Udfs {
 	  
+        init_com_ligadata_pmml_udfs_Udfs0
+        init_com_ligadata_pmml_udfs_Udfs1
+        init_com_ligadata_pmml_udfs_Udfs2
+        init_com_ligadata_pmml_udfs_Udfs3
+        init_com_ligadata_pmml_udfs_Udfs4
+        init_com_ligadata_pmml_udfs_Udfs5
+        init_com_ligadata_pmml_udfs_Udfs6
+        init_com_ligadata_pmml_udfs_Udfs7
+    }
+
+
+    private def init_com_ligadata_pmml_udfs_Udfs0 {
+
+
 		mgr.AddFunc("Pmml", "MakeStrings", "com.ligadata.pmml.udfs.Udfs.MakeStrings", ("System", "ArrayOfString"), List(("arr", "System", "ArrayOfTupleOfStringString"),("separator", "System", "String")), null)
 		mgr.AddFunc("Pmml", "MakeOrderedPairs", "com.ligadata.pmml.udfs.Udfs.MakeOrderedPairs", ("System", "ArrayOfTupleOfStringString"), List(("left", "System", "String"),("right", "System", "ArrayBufferOfString")), null)
 		mgr.AddFunc("Pmml", "MakeOrderedPairs", "com.ligadata.pmml.udfs.Udfs.MakeOrderedPairs", ("System", "ArrayOfTupleOfStringString"), List(("left", "System", "String"),("right", "System", "ArrayOfString")), null)
@@ -650,7 +698,11 @@ def initTypesFor_com_ligadata_pmml_udfs_Udfs {
 		mgr.AddFunc("Pmml", "Sum", "com.ligadata.pmml.udfs.Udfs.Sum", ("System", "Float"), List(("tup", "System", "TupleOfFloat10")), null)
 		mgr.AddFunc("Pmml", "Sum", "com.ligadata.pmml.udfs.Udfs.Sum", ("System", "Float"), List(("tup", "System", "TupleOfInt10")), null)
 		
+    }
 		
+		
+    private def init_com_ligadata_pmml_udfs_Udfs1 {
+
 		
 		mgr.AddFunc("Pmml", "Max", "com.ligadata.pmml.udfs.Udfs.Max", ("System", "Float"), List(("exprs", "System", "ListOfFloat")), null)
 		mgr.AddFunc("Pmml", "Max", "com.ligadata.pmml.udfs.Udfs.Max", ("System", "Double"), List(("exprs", "System", "ListOfDouble")), null)
@@ -752,6 +804,10 @@ def initTypesFor_com_ligadata_pmml_udfs_Udfs {
 		mgr.AddFunc("Pmml", "Multiply", "com.ligadata.pmml.udfs.Udfs.Multiply", ("System", "Double"), List(("expr1", "System", "Int"),("expr2", "System", "Double")), null)
 		mgr.AddFunc("Pmml", "Multiply", "com.ligadata.pmml.udfs.Udfs.Multiply", ("System", "Double"), List(("expr1", "System", "Double"),("expr2", "System", "Int")), null)
 		mgr.AddFunc("Pmml", "Multiply", "com.ligadata.pmml.udfs.Udfs.Multiply", ("System", "Int"), List(("expr1", "System", "Int"),("expr2", "System", "Int")), null)
+    }
+
+
+    private def init_com_ligadata_pmml_udfs_Udfs2 {
 		mgr.AddFunc("Pmml", "Minus", "com.ligadata.pmml.udfs.Udfs.Minus", ("System", "Float"), List(("exprs", "System", "ArrayOfFloat")), null)
 		mgr.AddFunc("Pmml", "Minus", "com.ligadata.pmml.udfs.Udfs.Minus", ("System", "Double"), List(("exprs", "System", "ArrayOfDouble")), null)
 		mgr.AddFunc("Pmml", "Minus", "com.ligadata.pmml.udfs.Udfs.Minus", ("System", "Long"), List(("exprs", "System", "ArrayOfLong")), null)
@@ -899,6 +955,10 @@ def initTypesFor_com_ligadata_pmml_udfs_Udfs {
 		mgr.AddFunc("Pmml", "GreaterThan", "com.ligadata.pmml.udfs.Udfs.GreaterThan", ("System", "Boolean"), List(("expr1", "System", "Double"),("expr2", "System", "Int")), null)
 		mgr.AddFunc("Pmml", "GreaterThan", "com.ligadata.pmml.udfs.Udfs.GreaterThan", ("System", "Boolean"), List(("expr1", "System", "Int"),("expr2", "System", "Int")), null)
 		mgr.AddFunc("Pmml", "GreaterThan", "com.ligadata.pmml.udfs.Udfs.GreaterThan", ("System", "Boolean"), List(("expr1", "System", "String"),("expr2", "System", "String")), null)
+    }
+
+
+    private def init_com_ligadata_pmml_udfs_Udfs3 {
 		mgr.AddFunc("Pmml", "Between", "com.ligadata.pmml.udfs.Udfs.Between", ("System", "Boolean"), List(("thisOne", "System", "Float"),("leftMargin", "System", "Float"),("rightMargin", "System", "Float"),("inclusive", "System", "Boolean")), null)
 		mgr.AddFunc("Pmml", "Between", "com.ligadata.pmml.udfs.Udfs.Between", ("System", "Boolean"), List(("thisOne", "System", "Int"),("leftMargin", "System", "Int"),("rightMargin", "System", "Float"),("inclusive", "System", "Boolean")), null)
 		mgr.AddFunc("Pmml", "Between", "com.ligadata.pmml.udfs.Udfs.Between", ("System", "Boolean"), List(("thisOne", "System", "Float"),("leftMargin", "System", "Float"),("rightMargin", "System", "Int"),("inclusive", "System", "Boolean")), null)
@@ -1016,6 +1076,10 @@ def initTypesFor_com_ligadata_pmml_udfs_Udfs {
 		mgr.AddFunc("Pmml", "IsIn", "com.ligadata.pmml.udfs.Udfs.IsIn", ("System", "Boolean"), List(("fldRefExpr", "System", "String"),("setExprs", "System", "ImmutableSetOfFloat")), null)
 		mgr.AddFunc("Pmml", "IsIn", "com.ligadata.pmml.udfs.Udfs.IsIn", ("System", "Boolean"), List(("fldRefExpr", "System", "String"),("setExprs", "System", "ImmutableSetOfDouble")), null)
 				
+    }
+
+
+    private def init_com_ligadata_pmml_udfs_Udfs4 {
 		mgr.AddFunc("Pmml", "FoundInAnyRange", "com.ligadata.pmml.udfs.Udfs.FoundInAnyRange", ("System", "Boolean"), List(("fldRefExpr", "System", "String"),("tuples", "System", "ArrayOfTupleOfString2"),("inclusive", "System", "Boolean")), null)
 		mgr.AddFunc("Pmml", "FoundInAnyRange", "com.ligadata.pmml.udfs.Udfs.FoundInAnyRange", ("System", "Boolean"), List(("fldRefExpr", "System", "Int"),("tuples", "System", "ArrayOfTupleOfInt2"),("inclusive", "System", "Boolean")), null)
 		mgr.AddFunc("Pmml", "FoundInAnyRange", "com.ligadata.pmml.udfs.Udfs.FoundInAnyRange", ("System", "Boolean"), List(("fldRefExpr", "System", "Long"),("tuples", "System", "ArrayOfTupleOfLong2"),("inclusive", "System", "Boolean")), null)
@@ -1097,6 +1161,10 @@ def initTypesFor_com_ligadata_pmml_udfs_Udfs {
 		mgr.AddFunc("Pmml", "Put", "com.ligadata.pmml.udfs.Udfs.Put", (MdMgr.sysNS, "Boolean"), List(("ctx", "System", "Context"),("variableName", MdMgr.sysNS, "String"), ("value", MdMgr.sysNS, "SetOfAny")), null)
 		mgr.AddFunc("Pmml", "Put", "com.ligadata.pmml.udfs.Udfs.Put", (MdMgr.sysNS, "Boolean"), List(("ctx", "System", "Context"),("variableName", MdMgr.sysNS, "String"), ("value", MdMgr.sysNS, "ImmutableSetOfAny")), null)
 
+    }
+
+
+    private def init_com_ligadata_pmml_udfs_Udfs5 {
 		mgr.AddFunc("Pmml", "CollectionLength", "com.ligadata.pmml.udfs.Udfs.CollectionLength", ("System", "Int"), List(("coll", "System", "QueueOfAny")), null)
 		mgr.AddFunc("Pmml", "CollectionLength", "com.ligadata.pmml.udfs.Udfs.CollectionLength", ("System", "Int"), List(("coll", "System", "ListOfAny")), null)
 		mgr.AddFunc("Pmml", "CollectionLength", "com.ligadata.pmml.udfs.Udfs.CollectionLength", ("System", "Int"), List(("coll", "System", "SortedSetOfAny")), null)
@@ -1128,7 +1196,7 @@ def initTypesFor_com_ligadata_pmml_udfs_Udfs {
   		mgr.AddFunc("Pmml", "getXid", "com.ligadata.pmml.udfs.Udfs.getXid", ("System", "Long"), List(("ctx", "System", "Context")), null)
  	}
 	
-	def init_com_ligadata_pmml_udfs_Udfs1 {
+    private def init_com_ligadata_pmml_udfs_Udfs6 {
 	  
 		mgr.AddFunc("Pmml", "Between", "com.ligadata.pmml.udfs.Udfs.Between", ("System", "ArrayOfAny"), List(("set", "System", "SetOfAny")), null)
 
@@ -1405,6 +1473,10 @@ def initTypesFor_com_ligadata_pmml_udfs_Udfs {
  		// need to add Stack add mechanism to mdmgr first ...
  		//mgr.AddFunc("Pmml", "ToMap", "com.ligadata.pmml.udfs.Udfs.ToMap", ("System", "MapOfAnyAny"), List(("stack", "System", "StackOfTupleOfAny2")), null)
   
+    }
+
+    private def init_com_ligadata_pmml_udfs_Udfs7 {
+
  		mgr.AddFunc("Pmml", "Zip", "com.ligadata.pmml.udfs.Udfs.Zip", ("System", "ArrayOfTupleOfAny2"), List(("receiver", "System", "ArrayOfAny"), ("other", "System", "ArrayOfAny")), null)
  		mgr.AddFunc("Pmml", "Zip", "com.ligadata.pmml.udfs.Udfs.Zip", ("System", "ArrayBufferOfTupleOfAny2"), List(("receiver", "System", "ArrayBufferOfAny"), ("other", "System", "ArrayBufferOfAny")), null)
  		mgr.AddFunc("Pmml", "Zip", "com.ligadata.pmml.udfs.Udfs.Zip", ("System", "ListOfTupleOfAny2"), List(("receiver", "System", "ListOfAny"), ("other", "System", "ListOfAny")), null)
@@ -1483,29 +1555,29 @@ def initTypesFor_com_ligadata_pmml_udfs_Udfs {
 
 	def InitFcns = {
 		/** 
-		    NOTE: These functions are variable in nature, more like macros than
-		    actual functions.  They actually deploy two
-		    functions (in most cases): the outer container function (e.g., Map or Filter) and the inner
-		    function that will operate on the members of the container in some way.
+          * NOTE: These functions are variable in nature, more like macros than
+          * actual functions.  They actually deploy two
+          * functions (in most cases): the outer container function (e.g., Map or Filter) and the inner
+          * function that will operate on the members of the container in some way.
 		    
-		    Since we only know the outer function that will be used, only it is
-		    described.  The inner function is specified in the pmml and the arguments
-		    and function lookup are separately done for it. The inner functions will be one of the 
-		    be one of the other udfs that are defined in the core udf lib 
-		    (e.g., Between(somefield, low, hi, inclusive) 
+          * Since we only know the outer function that will be used, only it is
+          * described.  The inner function is specified in the pmml and the arguments
+          * and function lookup are separately done for it. The inner functions will be one of the
+          * be one of the other udfs that are defined in the core udf lib
+          * (e.g., Between(somefield, low, hi, inclusive)
 		    
-		    Note too that only the "Any" version of these container types are defined.
-		    The code generation will utilize the real item type of the container
-		    to cast the object "down" to the right type. 
+          * Note too that only the "Any" version of these container types are defined.
+          * The code generation will utilize the real item type of the container
+          * to cast the object "down" to the right type.
 		    
-		    Note that they all have the "isIterable" boolean set to true.
+          * Note that they all have the "isIterable" boolean set to true.
 		    
-		    nameSpace: String
-		      , name: String
-		      , physicalName: String
-		      , retTypeNsName: (String, String)
-		      , args: List[(String, String, String)]
-		      , fmfeatures : Set[FcnMacroAttr.Feature]
+          * nameSpace: String
+          * , name: String
+          * , physicalName: String
+          * , retTypeNsName: (String, String)
+          * , args: List[(String, String, String)]
+          * , fmfeatures : Set[FcnMacroAttr.Feature]
 		 
 		 */
 		var fcnMacrofeatures : Set[FcnMacroAttr.Feature] = Set[FcnMacroAttr.Feature]()
@@ -1666,9 +1738,18 @@ def initTypesFor_com_ligadata_pmml_udfs_Udfs {
 	  
 	}
 	
+    /** Initialize the macro definitions used by the pmml compiler.  The private functions called are utilized to
+      * prevent excessively large functions that will flummox the compiler.
+      */
 	def initMacroDefs {
-
 		logger.debug("MetadataLoad...loading Macro functions")
+        initMacroDefs1
+        initMacroDefs2
+
+    }
+		
+    private def initMacroDefs1 {
+
 
 		
 		/** ************************************************************
@@ -1683,17 +1764,6 @@ def initTypesFor_com_ligadata_pmml_udfs_Udfs {
 		
 		/** catalog the CLASSUPDATE oriented macros: 
 		 
-	  		"incrementBy(Int,Int)"  
-	  		"incrementBy(Double,Double)"  
-	  		"incrementBy(Long,Long)"  
-		 	"Put(Any,Any,Any)"
-		 	"Put(String,String)"
-		 	"Put(Int,Int)"
-		 	"Put(Long,Long)"
-		 	"Put(Double,Double)"
-		 	"Put(Boolean,Boolean)"
-		 	"Put(Any,Any)"
-
 		 */
 
 		var fcnMacrofeatures : Set[FcnMacroAttr.Feature] = Set[FcnMacroAttr.Feature]()
@@ -1701,16 +1771,16 @@ def initTypesFor_com_ligadata_pmml_udfs_Udfs {
 		  
 		
 		/** Macros Associated with this macro template:
-	  		"incrementBy(Any,Int,Int)"  
-	  		"incrementBy(Any,Double,Double)"  
-	  		"incrementBy(Any,Long,Long)"  
+          * "incrementBy(Any,Int,Int)"
+          * "incrementBy(Any,Double,Double)"
+          * "incrementBy(Any,Long,Long)"
 	  		
-	  		Something like the following code would cause the macro to be used were
-	  		the AlertsToday a FixedField container...
-	  		<Apply function="incrementBy">
-				<FieldRef field="AlertsToday.Sent"/>
-				<Constant dataType="integer">1</Constant> 
-			</Apply>
+          * Something like the following code would cause the macro to be used were
+          * the AlertsToday a FixedField container...
+          * <Apply function="incrementBy">
+          * <FieldRef field="AlertsToday.Sent"/>
+          * <Constant dataType="integer">1</Constant>
+          * </Apply>
 	  		
 		 */
 		val SetFieldMacroStringFixed : String =  """
@@ -1941,16 +2011,16 @@ def initTypesFor_com_ligadata_pmml_udfs_Udfs {
 					, (SetFieldMacroContainerStringFixed,SetFieldMacroContainerStringMapped))	  
 		  
 		/** Macros Associated with this macro template:
-	  		"incrementBy(Any,Int,Int)"  
-	  		"incrementBy(Any,Double,Double)"  
-	  		"incrementBy(Any,Long,Long)"  
+          * "incrementBy(Any,Int,Int)"
+          * "incrementBy(Any,Double,Double)"
+          * "incrementBy(Any,Long,Long)"
 	  		
-	  		Something like the following code would cause the macro to be used were
-	  		the AlertsToday a FixedField container...
-	  		<Apply function="incrementBy">
-				<FieldRef field="AlertsToday.Sent"/>
-				<Constant dataType="integer">1</Constant> 
-			</Apply>
+          * Something like the following code would cause the macro to be used were
+          * the AlertsToday a FixedField container...
+          * <Apply function="incrementBy">
+          * <FieldRef field="AlertsToday.Sent"/>
+          * <Constant dataType="integer">1</Constant>
+          * </Apply>
 	  		
 		 */
 		val incrementByMacroStringFixed : String =  """
@@ -1986,6 +2056,12 @@ def initTypesFor_com_ligadata_pmml_udfs_Udfs {
 					, fcnMacrofeatures
 					, (incrementByMacroStringFixed,incrementByMacroStringMapped))	  
 
+    }
+
+    private def initMacroDefs2 {
+
+    var fcnMacrofeatures : Set[FcnMacroAttr.Feature] = Set[FcnMacroAttr.Feature]()
+
 		/** **************************************************************************************************************/
 					
 		val putGlobalContainerFixedMacroTemplate : String =  """
@@ -2004,15 +2080,15 @@ def initTypesFor_com_ligadata_pmml_udfs_Udfs {
 		 * 	  def setObject(transId: Long, containerName: String, key: String, value: MessageContainerBase): Unit
 		 *	  def setObject(transId: Long, containerName: String, key: Any, value: MessageContainerBase): Unit
 		 
-		mgr.AddMacro(MdMgr.sysNS
-					, "Put"
-					, (MdMgr.sysNS, "Boolean")
-					, List(("gCtx", MdMgr.sysNS, "EnvContext")
-						, ("containerName", MdMgr.sysNS, "String")
-						, ("key", MdMgr.sysNS, "ListOfString")
-						, ("value", MdMgr.sysNS, "MessageContainerBase"))
-					, fcnMacrofeatures
-					, (putGlobalContainerFixedMacroTemplate,putGlobalContainerMappedMacroTemplate))	  
+          * mgr.AddMacro(MdMgr.sysNS
+          * , "Put"
+          * , (MdMgr.sysNS, "Boolean")
+          * , List(("gCtx", MdMgr.sysNS, "EnvContext")
+          * , ("containerName", MdMgr.sysNS, "String")
+          * , ("key", MdMgr.sysNS, "ListOfString")
+          * , ("value", MdMgr.sysNS, "MessageContainerBase"))
+          * , fcnMacrofeatures
+          * , (putGlobalContainerFixedMacroTemplate,putGlobalContainerMappedMacroTemplate))
 		*/
 		mgr.AddMacro(MdMgr.sysNS
 					, "Put"
@@ -2035,20 +2111,20 @@ def initTypesFor_com_ligadata_pmml_udfs_Udfs {
 					, (putGlobalContainerFixedMacroTemplate,putGlobalContainerMappedMacroTemplate))	  
 
 		/**
-		val putLongVariableMacroPmmlDict : String =    """
-	class %1%_%2%_PutLong(val ctx : Context, var %1% : %1_type%, val %2% : %2_type%)
-	{
-		 //resort to setting the Long value to local variable to insure scala compiler recognizes the appropriate coercion...
-		 // 	with a constant as the value present, it will match to Int and fail for large values
-	  	def Put  : Boolean = { val l : %2_type% = %2%; Put(ctx, %1%, l); true }
-	} """
+          * val putLongVariableMacroPmmlDict : String =    """
+          * class %1%_%2%_PutLong(val ctx : Context, var %1% : %1_type%, val %2% : %2_type%)
+          * {
+          * //resort to setting the Long value to local variable to insure scala compiler recognizes the appropriate coercion...
+          * // 	with a constant as the value present, it will match to Int and fail for large values
+          * def Put  : Boolean = { val l : %2_type% = %2%; Put(ctx, %1%, l); true }
+          * } """
 
-		mgr.AddMacro(MdMgr.sysNS
-					, "Put"
-					, (MdMgr.sysNS, "Boolean")
-					, List(("variableName", MdMgr.sysNS, "String"), ("value", MdMgr.sysNS, "Long"))
-					, fcnMacrofeatures
-					, (putLongVariableMacroPmmlDict,putLongVariableMacroPmmlDict))	  
+          * mgr.AddMacro(MdMgr.sysNS
+          * , "Put"
+          * , (MdMgr.sysNS, "Boolean")
+          * , List(("variableName", MdMgr.sysNS, "String"), ("value", MdMgr.sysNS, "Long"))
+          * , fcnMacrofeatures
+          * , (putLongVariableMacroPmmlDict,putLongVariableMacroPmmlDict))
  */		  
 
 		/** **************************************************************************************************************/
@@ -2060,18 +2136,18 @@ def initTypesFor_com_ligadata_pmml_udfs_Udfs {
 		fcnMacrofeatures += FcnMacroAttr.ITERABLE
 
 		/** 
-		 	Macros associated with the 'putVariableMacroPmmlDict' macro template:
-			 	"Put(String,String)"
-			 	"Put(String,Int)"
-			 	"Put(String,Long)"
-			 	"Put(String,Double)"
-			 	"Put(String,Boolean)"
-			 	"Put(String,Any)"
+          * Macros associated with the 'putVariableMacroPmmlDict' macro template:
+          * "Put(String,String)"
+          * "Put(String,Int)"
+          * "Put(String,Long)"
+          * "Put(String,Double)"
+          * "Put(String,Boolean)"
+          * "Put(String,Any)"
 		 	
-		 	Notes: 
-		 		1) No "mapped" version of the template needed for this case.
-		 		2) These functions can ONLY be used inside objects that have access to the model's ctx
-		 		   (e.g., inside the 'execute(ctx : Context)' function of a derived field)
+          * Notes:
+          * 1) No "mapped" version of the template needed for this case.
+          * 2) These functions can ONLY be used inside objects that have access to the model's ctx
+          * (e.g., inside the 'execute(ctx : Context)' function of a derived field)
 		 */
 		
 		val putVariableMacroPmmlDict : String =   """Put(ctx, %1%, %2%)"""
@@ -2541,7 +2617,7 @@ def initTypesFor_com_ligadata_pmml_udfs_Udfs {
 					,-1)	  
 
 		/** 
-			DowncastArrayMbr Macro used to cast arrays of MessageContainerBase to arrays of some specified type
+          * DowncastArrayMbr Macro used to cast arrays of MessageContainerBase to arrays of some specified type
 		 */			
 		val DowncastArrayMbrTemplate : String =   """%1%.map(itm => itm.asInstanceOf[%2%])"""
 					
@@ -2554,14 +2630,14 @@ def initTypesFor_com_ligadata_pmml_udfs_Udfs {
 					
 					
 		/** 
-		    Catalog EnvContext read access macros.  Inject the transaction id as the first arg   
+          * Catalog EnvContext read access macros.  Inject the transaction id as the first arg
 
-			def getAllObjects(transId: Long, containerName: String): Array[MessageContainerBase]
-			def getObject(transId: Long, containerName: String, key: String): MessageContainerBase
+          * def getAllObjects(transId: Long, containerName: String): Array[MessageContainerBase]
+          * def getObject(transId: Long, containerName: String, key: String): MessageContainerBase
 			
-			def contains(transId: Long, containerName: String, key: String): Boolean
-			def containsAny(transId: Long, containerName: String, keys: Array[String]): Boolean
-			def containsAll(transId: Long, containerName: String, keys: Array[String]): Boolean
+          * def contains(transId: Long, containerName: String, key: String): Boolean
+          * def containsAny(transId: Long, containerName: String, keys: Array[String]): Boolean
+          * def containsAll(transId: Long, containerName: String, keys: Array[String]): Boolean
 		*/
 
 		val getAllObjectsMacroTemplate : String =   """GetArray(ctx.xId, %1%, %2%)"""

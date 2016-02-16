@@ -19,29 +19,23 @@ package com.ligadata.automation.unittests.hbaseadapter
 import org.scalatest._
 import Matchers._
 
-import com.ligadata.Utils._
-import util.control.Breaks._
-import scala.io._
 import java.util.{Date,Calendar,TimeZone}
 import java.text.{SimpleDateFormat}
 import java.io._
 
-import sys.process._
 import org.apache.logging.log4j._
 
-import com.ligadata.keyvaluestore._
 import com.ligadata.KvBase._
 import com.ligadata.StorageBase._
 import com.ligadata.Serialize._
-import com.ligadata.Utils.Utils._
-import com.ligadata.Utils.{ KamanjaClassLoader, KamanjaLoaderInfo }
-import com.ligadata.StorageBase.StorageAdapterObj
+import com.ligadata.Utils.KamanjaLoaderInfo
 import com.ligadata.keyvaluestore.HBaseAdapter
 
 import com.ligadata.Exceptions._
 
 case class Customer(name:String, address: String, homePhone: String)
 
+@Ignore
 class HBaseAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterAll with GivenWhenThen {
   var res : String = null;
   var statusCode: Int = -1;
@@ -159,7 +153,6 @@ class HBaseAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterAl
       case e: Exception => throw new Exception("Failed to execute set up properly\n" + e)
     }
   }
-
 
   describe("Unit Tests for all hbaseadapter operations") {
 
