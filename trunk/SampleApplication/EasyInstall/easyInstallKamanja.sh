@@ -125,9 +125,10 @@ echo "clean, package and assemble $srcPath ..."
 
 cd $srcPath/
 
-sbt clean '++ 2.10.4 package' '++ 2.10.4 KamanjaManager/assembly' '++ 2.10.4 MetadataAPI/assembly' '++ 2.10.4 KVInit/assembly' '++ 2.10.4 MethodExtractor/assembly' '++ 2.10.4 SimpleKafkaProducer/assembly'
-sbt '++ 2.10.4 NodeInfoExtract/assembly' '++ 2.10.4 ExtractData/assembly' '++ 2.10.4 MetadataAPIService/assembly' '++ 2.10.4 JdbcDataCollector/assembly'
-sbt '++ 2.10.4 FileDataConsumer/assembly' '++ 2.10.4 SaveContainerDataComponent/assembly' '++ 2.10.4 CleanUtil/assembly' '++ 2.10.4 MigrateManager/assembly'
+sbt clean '++ 2.10.4 package' '++ 2.10.4 KamanjaManager/assembly' '++ 2.10.4 MetadataAPI/assembly' '++ 2.10.4 KVInit/assembly' '++ 2.10.4 SimpleKafkaProducer/assembly'
+sbt '++ 2.10.4 NodeInfoExtract/assembly' '++ 2.10.4 MetadataAPIService/assembly' '++ 2.10.4 JdbcDataCollector/assembly'
+sbt '++ 2.10.4 FileDataConsumer/assembly' '++ 2.10.4 CleanUtil/assembly' '++ 2.10.4 MigrateManager/assembly'
+# sbt '++ 2.10.4 MethodExtractor/assembly' '++ 2.10.4 SaveContainerDataComponent/assembly' '++ 2.10.4 ExtractData/assembly' 
 
 # recreate eclipse projects
 #echo "refresh the eclipse projects ..."
@@ -141,9 +142,9 @@ cd $srcPath
 cp Utils/KVInit/target/scala-2.10/KVInit* $bin
 cp MetadataAPI/target/scala-2.10/MetadataAPI* $bin
 cp KamanjaManager/target/scala-2.10/KamanjaManager* $bin
-cp Pmml/MethodExtractor/target/scala-2.10/MethodExtractor* $bin
+# cp Pmml/MethodExtractor/target/scala-2.10/MethodExtractor* $bin
 cp Utils/SimpleKafkaProducer/target/scala-2.10/SimpleKafkaProducer* $bin
-cp Utils/ExtractData/target/scala-2.10/ExtractData* $bin
+# cp Utils/ExtractData/target/scala-2.10/ExtractData* $bin
 cp Utils/JdbcDataCollector/target/scala-2.10/JdbcDataCollector* $bin
 cp MetadataAPIService/target/scala-2.10/MetadataAPIService* $bin
 cp FileDataConsumer/target/scala-2.10/FileDataConsumer* $bin
@@ -222,7 +223,7 @@ cp $srcPath/Utils/Controller/target/scala-2.10/controller*.jar $systemlib
 cp $ivyPath/cache/org.slf4j/slf4j-log4j12/jars/slf4j-log4j12-1.6.1.jar $systemlib
 cp $srcPath/lib_managed/bundles/com.fasterxml.jackson.core/jackson-databind/jackson-databind-2.3.1.jar $systemlib
 cp $srcPath/lib_managed/jars/javax.activation/activation/activation-1.1.jar $systemlib
-cp $srcPath/Utils/ExtractData/target/scala-2.10/extractdata*.jar $systemlib
+# cp $srcPath/Utils/ExtractData/target/scala-2.10/extractdata*.jar $systemlib
 cp $srcPath/lib_managed/bundles/org.xerial.snappy/snappy-java/snappy-java-1.0.4.1.jar $systemlib
 cp $srcPath/lib_managed/jars/joda-time/joda-time/joda-time-2.9.1.jar $systemlib
 cp $ivyPath/cache/io.spray/spray-io_2.10/bundles/spray-io_2.10-1.3.3.jar $systemlib
@@ -425,7 +426,7 @@ cp $ivyPath/cache/antlr/antlr/jars/antlr-2.7.7.jar $systemlib
 cp $srcPath/MetadataAPIServiceClient/target/scala-2.10/metadataapiserviceclient*.jar $systemlib
 cp $ivyPath/cache/org.apache.curator/curator-framework/bundles/curator-framework-2.6.0.jar $systemlib
 cp $srcPath/lib_managed/jars/org.scala-lang/scala-library/scala-library-2.10.4.jar $systemlib
-cp $srcPath/Utils/SaveContainerDataComponent/target/scala-2.10/savecontainerdatacomponent*.jar $systemlib
+# cp $srcPath/Utils/SaveContainerDataComponent/target/scala-2.10/savecontainerdatacomponent*.jar $systemlib
 cp $ivyPath/cache/org.apache.curator/curator-client/bundles/curator-client-2.6.0.jar $systemlib
 cp $srcPath/Storage/HashMap/target/scala-2.10/hashmap*.jar $systemlib
 cp $srcPath/InputOutputAdapters/FileSimpleInputOutputAdapters/target/scala-2.10/filesimpleinputoutputadapters*.jar $systemlib
@@ -448,7 +449,7 @@ cp $ivyPath/cache/com.yammer.metrics/metrics-core/jars/metrics-core-2.2.0.jar $s
 cp $srcPath/FileDataConsumer/target/scala-2.10/filedataconsumer*.jar $systemlib
 cp $ivyPath/cache/org.mapdb/mapdb/bundles/mapdb-1.0.6.jar $systemlib
 cp $srcPath/lib_managed/bundles/com.sun.jersey/jersey-core/jersey-core-1.9.jar $systemlib
-cp $srcPath/Pmml/MethodExtractor/target/scala-2.10/methodextractor*.jar $systemlib
+# cp $srcPath/Pmml/MethodExtractor/target/scala-2.10/methodextractor*.jar $systemlib
 cp $srcPath/lib_managed/jars/net.java.dev.jets3t/jets3t/jets3t-0.9.0.jar $systemlib
 cp $srcPath/lib_managed/bundles/com.google.protobuf/protobuf-java/protobuf-java-2.6.0.jar $systemlib
 cp $ivyPath/cache/net.java.dev.jna/jna/jars/jna-3.2.7.jar $systemlib
@@ -595,7 +596,7 @@ cp $srcPath/InputOutputAdapters/InputOutputAdapterBase/target/scala-2.10/*.jar $
 cp $srcPath/KamanjaUtils/target/scala-2.10/kamanjautils_2.10-1.0.jar $systemlib
 cp $srcPath/SecurityAdapters/SecurityAdapterBase/target/scala-2.10/*.jar $systemlib
 
-cp $srcPath/Utils/SaveContainerDataComponent/target/scala-2.10/SaveContainerDataComponent* $systemlib
+# cp $srcPath/Utils/SaveContainerDataComponent/target/scala-2.10/SaveContainerDataComponent* $systemlib
 cp $srcPath/Utils/UtilsForModels/target/scala-2.10/utilsformodels*.jar $systemlib
 
 
@@ -761,9 +762,10 @@ cp $srcPath/Utils/Migrate/SourceVersion/MigrateFrom_V_1_1/target/scala-2.10/migr
 cp $srcPath/Utils/Migrate/SourceVersion/MigrateFrom_V_1_2/target/scala-2.10/migratefrom_v_1_2_2.10-1.0.jar $systemlib
 
 #Now do full build of 2.11
-sbt clean '++ 2.11.7 package' '++ 2.11.7 KamanjaManager/assembly' '++ 2.11.7 MetadataAPI/assembly' '++ 2.11.7 KVInit/assembly' '++ 2.11.7 MethodExtractor/assembly' '++ 2.11.7 SimpleKafkaProducer/assembly' 
-sbt '++ 2.11.7 NodeInfoExtract/assembly' '++ 2.11.7 ExtractData/assembly' '++ 2.11.7 MetadataAPIService/assembly' '++ 2.11.7 JdbcDataCollector/assembly' '++ 2.11.7 FileDataConsumer/assembly' 
-sbt '++ 2.11.7 SaveContainerDataComponent/assembly' '++ 2.11.7 CleanUtil/assembly' '++ 2.11.7 MigrateManager/assembly'
+sbt clean '++ 2.11.7 package' '++ 2.11.7 KamanjaManager/assembly' '++ 2.11.7 MetadataAPI/assembly' '++ 2.11.7 KVInit/assembly' '++ 2.11.7 SimpleKafkaProducer/assembly' 
+sbt '++ 2.11.7 NodeInfoExtract/assembly' '++ 2.11.7 MetadataAPIService/assembly' '++ 2.11.7 JdbcDataCollector/assembly'
+sbt '++ 2.11.7 FileDataConsumer/assembly' '++ 2.11.7 CleanUtil/assembly' '++ 2.11.7 MigrateManager/assembly'
+# sbt '++ 2.11.7 MethodExtractor/assembly' '++ 2.11.7 SaveContainerDataComponent/assembly' '++ 2.11.7 ExtractData/assembly' 
 
 # recreate eclipse projects
 #echo "refresh the eclipse projects ..."
@@ -777,9 +779,9 @@ cd $srcPath
 cp Utils/KVInit/target/scala-2.11/KVInit* $bin
 cp MetadataAPI/target/scala-2.11/MetadataAPI* $bin
 cp KamanjaManager/target/scala-2.11/KamanjaManager* $bin
-cp Pmml/MethodExtractor/target/scala-2.11/MethodExtractor* $bin
+# cp Pmml/MethodExtractor/target/scala-2.11/MethodExtractor* $bin
 cp Utils/SimpleKafkaProducer/target/scala-2.11/SimpleKafkaProducer* $bin
-cp Utils/ExtractData/target/scala-2.11/ExtractData* $bin
+# cp Utils/ExtractData/target/scala-2.11/ExtractData* $bin
 cp Utils/JdbcDataCollector/target/scala-2.11/JdbcDataCollector* $bin
 cp MetadataAPIService/target/scala-2.11/MetadataAPIService* $bin
 cp FileDataConsumer/target/scala-2.11/FileDataConsumer* $bin
@@ -856,7 +858,7 @@ cp $srcPath/Utils/Controller/target/scala-2.11/controller_2.11-1.0.jar $systemli
 cp $ivyPath/cache/org.slf4j/slf4j-log4j12/jars/slf4j-log4j12-1.6.1.jar $systemlib
 cp $srcPath/lib_managed/bundles/com.fasterxml.jackson.core/jackson-databind/jackson-databind-2.3.1.jar $systemlib
 cp $srcPath/lib_managed/jars/javax.activation/activation/activation-1.1.jar $systemlib
-cp $srcPath/Utils/ExtractData/target/scala-2.11/extractdata_2.11-1.0.jar $systemlib
+# cp $srcPath/Utils/ExtractData/target/scala-2.11/extractdata_2.11-1.0.jar $systemlib
 cp $srcPath/lib_managed/bundles/org.xerial.snappy/snappy-java/snappy-java-1.0.4.1.jar $systemlib
 cp $srcPath/lib_managed/jars/joda-time/joda-time/joda-time-2.9.1.jar $systemlib
 cp $ivyPath/cache/io.spray/spray-io_2.11/bundles/spray-io_2.11-1.3.3.jar $systemlib
@@ -1043,7 +1045,7 @@ cp $ivyPath/cache/antlr/antlr/jars/antlr-2.7.7.jar $systemlib
 cp $srcPath/MetadataAPIServiceClient/target/scala-2.11/metadataapiserviceclient_2.11-0.1.jar $systemlib
 cp $ivyPath/cache/org.apache.curator/curator-framework/bundles/curator-framework-2.6.0.jar $systemlib
 cp $srcPath/lib_managed/jars/org.scala-lang/scala-library/scala-library-2.11.7.jar $systemlib
-cp $srcPath/Utils/SaveContainerDataComponent/target/scala-2.11/savecontainerdatacomponent_2.11-1.0.jar $systemlib
+# cp $srcPath/Utils/SaveContainerDataComponent/target/scala-2.11/savecontainerdatacomponent_2.11-1.0.jar $systemlib
 cp $ivyPath/cache/org.apache.curator/curator-client/bundles/curator-client-2.6.0.jar $systemlib
 cp $srcPath/Storage/HashMap/target/scala-2.11/hashmap_2.11-0.1.0.jar $systemlib
 cp $srcPath/InputOutputAdapters/FileSimpleInputOutputAdapters/target/scala-2.11/filesimpleinputoutputadapters_2.11-1.0.jar $systemlib
@@ -1066,7 +1068,7 @@ cp $ivyPath/cache/com.yammer.metrics/metrics-core/jars/metrics-core-2.2.0.jar $s
 cp $srcPath/FileDataConsumer/target/scala-2.11/filedataconsumer_2.11-0.1.0.jar $systemlib
 cp $ivyPath/cache/org.mapdb/mapdb/bundles/mapdb-1.0.6.jar $systemlib
 cp $srcPath/lib_managed/bundles/com.sun.jersey/jersey-core/jersey-core-1.9.jar $systemlib
-cp $srcPath/Pmml/MethodExtractor/target/scala-2.11/methodextractor_2.11-1.0.jar $systemlib
+# cp $srcPath/Pmml/MethodExtractor/target/scala-2.11/methodextractor_2.11-1.0.jar $systemlib
 cp $srcPath/lib_managed/jars/net.java.dev.jets3t/jets3t/jets3t-0.9.0.jar $systemlib
 cp $srcPath/lib_managed/bundles/com.google.protobuf/protobuf-java/protobuf-java-2.6.0.jar $systemlib
 cp $ivyPath/cache/net.java.dev.jna/jna/jars/jna-3.2.7.jar $systemlib
@@ -1201,7 +1203,7 @@ cp $srcPath/InputOutputAdapters/InputOutputAdapterBase/target/scala-2.11/*.jar $
 cp $srcPath/KamanjaUtils/target/scala-2.11/kamanjautils_2.11-1.0.jar $systemlib
 cp $srcPath/SecurityAdapters/SecurityAdapterBase/target/scala-2.11/*.jar $systemlib
 
-cp $srcPath/Utils/SaveContainerDataComponent/target/scala-2.11/SaveContainerDataComponent* $systemlib
+# cp $srcPath/Utils/SaveContainerDataComponent/target/scala-2.11/SaveContainerDataComponent* $systemlib
 cp $srcPath/Utils/UtilsForModels/target/scala-2.11/utilsformodels*.jar $systemlib
 
 
