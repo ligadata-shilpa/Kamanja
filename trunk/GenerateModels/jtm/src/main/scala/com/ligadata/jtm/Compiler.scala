@@ -458,6 +458,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
         val transformation = root.transformations.get(t).get
         val names = deps.map( m => { "msg%d: %s".format(incomingToMsgId.get(m).get, ResolveToVersionedClassname(md, m))}).mkString(", ")
 
+        methods :+= transformation.Comment
         methods :+= "def exeGenerated_%s_%d(%s): Array[Result] = {".format(t, depId, names)
 
         // Collect form metadata
@@ -497,7 +498,12 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
               val newExpression = FixupColumnNames(c._2.expression, fixedMappingSources)
 
               // Output the actual compute
-              methods ++= Array("val %s = %s\n".format(c._1, newExpression))
+              methods :+= c._2.Comment
+              if(c._2.typename.length>0)
+                methods ++= Array("val %s: %s = %s\n".format(c._1, c._2.typename, newExpression))
+              else
+                methods ++= Array("val %s = %s\n".format(c._1, newExpression))
+
               fixedMappingSources ++= Map(c._1 -> c._1)
               false
             } else {
@@ -579,7 +585,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
                 // Output the actual compute
                 // To Do: multiple vals and type provided
-
+                collect :+= c._2.Comment
                 if(c._2.typename.length>0)
                   collect ++= Array("val %s: %s = %s\n".format(c._1, c._2.typename, newExpression))
                 else

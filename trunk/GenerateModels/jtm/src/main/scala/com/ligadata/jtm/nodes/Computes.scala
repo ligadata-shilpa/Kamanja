@@ -39,4 +39,11 @@ class Computes {
     *
     */
   val comments: Array[String] = Array.empty[String]
+
+  def Comment() : String = {
+    if (comment.length() > 0)
+      "// " + comment
+    else
+      comments.map(comment => "// " + comment).mkString("\n")
+  }
 }
