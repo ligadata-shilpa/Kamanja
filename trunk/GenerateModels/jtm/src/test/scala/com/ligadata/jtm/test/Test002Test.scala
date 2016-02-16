@@ -34,7 +34,7 @@ class Test002Test  extends FunSuite with BeforeAndAfter {
     val fileInput = getClass.getResource("/test002.jtm/test.jtm").getPath
     val fileOutput = getClass.getResource("/test002.jtm/test.scala.result").getPath
     val fileExpected = getClass.getResource("/test002.jtm/test.scala.expected").getPath
-    val metadataLocation = getClass.getResource("/test002.jtm/metadata").getPath
+    val metadataLocation = getClass.getResource("/metadata").getPath
 
     val compiler = CompilerBuilder.create().
       setSuppressTimestamps().

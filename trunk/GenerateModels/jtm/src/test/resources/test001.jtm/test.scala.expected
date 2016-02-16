@@ -20,7 +20,7 @@ import com.ligadata.kamanja.metadata.ModelDef
 import com.ligadata.Utils._
 class Factory(modelDef: ModelDef, nodeContext: NodeContext) extends ModelInstanceFactory(modelDef, nodeContext) {
   override def isValidMessage(msg: MessageContainerBase): Boolean = {
-    msg.isInstanceOf[com.ligadata.kamanja.test001.v1000000.msg1]
+    msg.isInstanceOf[com.ligadata.kamanja.test.v1000000.msg1]
   }
   override def createModelInstance(): ModelInstance = return new Model(this)
   override def getModelName: String = "com.ligadata.jtm.test.filter"
@@ -30,7 +30,7 @@ class Factory(modelDef: ModelDef, nodeContext: NodeContext) extends ModelInstanc
 class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
   override def execute(txnCtxt: TransactionContext, outputDefault: Boolean): ModelResultBase = {
     //
-    def exeGenerated_test1_1(msg1: com.ligadata.kamanja.test001.v1000000.msg1): Array[Result] = {
+    def exeGenerated_test1_1(msg1: com.ligadata.kamanja.test.v1000000.msg1): Array[Result] = {
       // in scala, type could be optional
       val out3: Int = msg1.in1 + 1000
       def process_o1(): Array[Result] = {
@@ -46,7 +46,7 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
     val msgs = Array(txnCtxt.getMessage()).map(m => m.FullName -> m).toMap
     // Evaluate messages
     //
-    val msg1 = msgs.get("com.ligadata.kamanja.test001.msg1").getOrElse(null).asInstanceOf[com.ligadata.kamanja.test001.v1000000.msg1]
+    val msg1 = msgs.get("com.ligadata.kamanja.test.msg1").getOrElse(null).asInstanceOf[com.ligadata.kamanja.test.v1000000.msg1]
     // Main dependency -> execution check
     //
     val results: Array[Result] =

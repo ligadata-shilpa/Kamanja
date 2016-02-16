@@ -6,8 +6,8 @@
   "imports": [ "com.ligadata.Utils._", "com.ligadata.Utils._" ],
 
   "aliases":   {
-    "m1": "com.ligadata.kamanja.test.msg1",
-    "o1": "com.ligadata.kamanja.test.msg2"
+    "m1": "com.ligadata.kamanja.test001.msg1",
+    "o1": "com.ligadata.kamanja.test001.msg2"
   },
 
   "transformations": {

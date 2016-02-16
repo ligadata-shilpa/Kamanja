@@ -1,26 +1,32 @@
 {
   "Message" : {
-    "NameSpace" : "com.ligadata.kamanja.test002",
-    "Name" : "msg1",
+    "NameSpace" : "com.ligadata.kamanja.test",
+    "Name" : "msg2",
     "Version" : "00.01.00",
-    "Description" : "Test message com.ligadata.kamanja.test002.msg1",
+    "Description" : "Test message com.ligadata.kamanja.test.msg2",
     "Fixed" : "true",
     "Elements" : [
       {
         "Field" : {
-          "Name" : "in1",
+          "Name" : "out1",
           "Type" : "System.Int"
         }
       },
       {
         "Field" : {
-          "Name" : "in2",
+          "Name" : "out2",
+          "Type" : "System.String"
+        }
+      },
+      {
+        "Field" : {
+          "Name" : "out3",
           "Type" : "System.Int"
         }
       },
       {
         "Field" : {
-          "Name" : "in3",
+          "Name" : "out4",
           "Type" : "System.Int"
         }
       }

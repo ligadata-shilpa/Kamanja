@@ -19,7 +19,7 @@ import com.ligadata.KvBase.TimeRange
 import com.ligadata.kamanja.metadata.ModelDef
 class Factory(modelDef: ModelDef, nodeContext: NodeContext) extends ModelInstanceFactory(modelDef, nodeContext) {
   override def isValidMessage(msg: MessageContainerBase): Boolean = {
-    msg.isInstanceOf[com.ligadata.kamanja.test002.v1000000.msg1]||msg.isInstanceOf[com.ligadata.kamanja.test002.v1000000.msg3]
+    msg.isInstanceOf[com.ligadata.kamanja.test.v1000000.msg1]||msg.isInstanceOf[com.ligadata.kamanja.test.v1000000.msg3]
   }
   override def createModelInstance(): ModelInstance = return new Model(this)
   override def getModelName: String = "com.ligadata.jtm.test.filter1"
@@ -29,7 +29,7 @@ class Factory(modelDef: ModelDef, nodeContext: NodeContext) extends ModelInstanc
 class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
   override def execute(txnCtxt: TransactionContext, outputDefault: Boolean): ModelResultBase = {
     //
-    def exeGenerated_test1_1(msg1: com.ligadata.kamanja.test002.v1000000.msg1): Array[Result] = {
+    def exeGenerated_test1_1(msg1: com.ligadata.kamanja.test.v1000000.msg1): Array[Result] = {
       // in scala, type could be optional
       val out3: Int = msg1.in1 + 1000
       def process_o1(): Array[Result] = {
@@ -45,7 +45,7 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
       process_o1()++
       process_o2()
     }
-    def exeGenerated_test2_2(msg2: com.ligadata.kamanja.test002.v1000000.msg3): Array[Result] = {
+    def exeGenerated_test2_2(msg2: com.ligadata.kamanja.test.v1000000.msg3): Array[Result] = {
       // in scala, type could be optional
       val out3: Int = msg2.in1 + 1000
       def process_o1(): Array[Result] = {
@@ -67,8 +67,8 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
     val msgs = Array(txnCtxt.getMessage()).map(m => m.FullName -> m).toMap
     // Evaluate messages
     //
-    val msg1 = msgs.get("com.ligadata.kamanja.test002.msg1").getOrElse(null).asInstanceOf[com.ligadata.kamanja.test002.v1000000.msg1]
-    val msg2 = msgs.get("com.ligadata.kamanja.test002.msg3").getOrElse(null).asInstanceOf[com.ligadata.kamanja.test002.v1000000.msg3]
+    val msg1 = msgs.get("com.ligadata.kamanja.test.msg1").getOrElse(null).asInstanceOf[com.ligadata.kamanja.test.v1000000.msg1]
+    val msg2 = msgs.get("com.ligadata.kamanja.test.msg3").getOrElse(null).asInstanceOf[com.ligadata.kamanja.test.v1000000.msg3]
     // Main dependency -> execution check
     //
     val results: Array[Result] =
