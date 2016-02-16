@@ -148,7 +148,6 @@ cp Utils/JdbcDataCollector/target/scala-2.10/JdbcDataCollector* $bin
 cp MetadataAPIService/target/scala-2.10/MetadataAPIService* $bin
 cp FileDataConsumer/target/scala-2.10/FileDataConsumer* $bin
 cp Utils/CleanUtil/target/scala-2.10/CleanUtil* $bin
-# only for 2.11 ?
 cp Utils/Migrate/MigrateManager/target/MigrateManager* $bin
 
 
@@ -582,7 +581,6 @@ cp $ivyPath/cache/io.spray/spray-testkit_2.10/jars/spray-testkit_2.10-1.3.3.jar 
 cp $srcPath/Utils/Migrate/MigrateBase/target/migratebase-1.0.jar $systemlib
 cp $srcPath/Utils/Migrate/SourceVersion/MigrateFrom_V_1_1/target/scala-2.10/migratefrom_v_1_1_2.10-1.0.jar $systemlib
 cp $srcPath/Utils/Migrate/SourceVersion/MigrateFrom_V_1_2/target/scala-2.10/migratefrom_v_1_2_2.10-1.0.jar $systemlib
-# this should be changed?
 cp $srcPath/Utils/Migrate/DestinationVersion/MigrateTo_V_1_3/target/scala-2.10/migrateto_v_1_3_2.10-1.0.jar $systemlib
 
 cp $srcPath/Storage/Cassandra/target/scala-2.10/*.jar $systemlib
@@ -757,6 +755,12 @@ echo $bin
 # sbt clean '++ 2.11.7 package' '++ 2.11.7 KamanjaManager/assembly' '++ 2.11.7 MetadataAPI/assembly' '++ 2.11.7 KVInit/assembly' '++ 2.11.7 MethodExtractor/assembly' '++ 2.11.7 SimpleKafkaProducer/assembly' '++ 2.11.7 NodeInfoExtract/assembly' '++ 2.11.7 ExtractData/assembly' '++ 2.11.7 MetadataAPIService/assembly' '++ 2.11.7 JdbcDataCollector/assembly' '++ 2.11.7 FileDataConsumer/assembly' '++ 2.11.7 SaveContainerDataComponent/assembly' '++ 2.11.7 CleanUtil/assembly' '++ 2.11.7 MigrateManager/assembly'
 
 cd $srcPath
+#Build and copy 2.10 for both MigrateFrom_V_1_1 & MigrateFrom_V_1_2
+sbt clean '++ 2.10.4 MigrateFrom_V_1_1/package' '++ 2.10.4 MigrateFrom_V_1_2/package'
+cp $srcPath/Utils/Migrate/SourceVersion/MigrateFrom_V_1_1/target/scala-2.10/migratefrom_v_1_1_2.10-1.0.jar $systemlib
+cp $srcPath/Utils/Migrate/SourceVersion/MigrateFrom_V_1_2/target/scala-2.10/migratefrom_v_1_2_2.10-1.0.jar $systemlib
+
+#Now do full build of 2.11
 sbt clean '++ 2.11.7 package' '++ 2.11.7 KamanjaManager/assembly' '++ 2.11.7 MetadataAPI/assembly' '++ 2.11.7 KVInit/assembly' '++ 2.11.7 MethodExtractor/assembly' '++ 2.11.7 SimpleKafkaProducer/assembly' 
 sbt '++ 2.11.7 NodeInfoExtract/assembly' '++ 2.11.7 ExtractData/assembly' '++ 2.11.7 MetadataAPIService/assembly' '++ 2.11.7 JdbcDataCollector/assembly' '++ 2.11.7 FileDataConsumer/assembly' 
 sbt '++ 2.11.7 SaveContainerDataComponent/assembly' '++ 2.11.7 CleanUtil/assembly' '++ 2.11.7 MigrateManager/assembly'
@@ -1183,9 +1187,6 @@ cp $ivyPath/cache/org.json4s/json4s-ast_2.11/jars/json4s-ast_2.11-3.2.9.jar $sys
 cp $ivyPath/cache/io.spray/spray-testkit_2.11/jars/spray-testkit_2.11-1.3.3.jar $systemlib
 
 cp $srcPath/Utils/Migrate/MigrateBase/target/migratebase-1.0.jar $systemlib
-# not found
-#cp $srcPath/Utils/Migrate/SourceVersion/MigrateFrom_V_1_1/target/scala-2.11/migratefrom_v_1_1_2.10-1.0.jar $systemlib
-#cp $srcPath/Utils/Migrate/SourceVersion/MigrateFrom_V_1_2/target/scala-2.11/migratefrom_v_1_2_2.10-1.0.jar $systemlib
 cp $srcPath/Utils/Migrate/DestinationVersion/MigrateTo_V_1_3/target/scala-2.11/migrateto_v_1_3_2.11-1.0.jar $systemlib
 
 cp $srcPath/Storage/Cassandra/target/scala-2.11/*.jar $systemlib
