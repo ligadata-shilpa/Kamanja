@@ -51,52 +51,8 @@ import com.ligadata.Serialize.JsonSerializer
   *
   *     "clusterConfigFile": "{NewPackageInstallPath}/config/ClusterConfig.json",
   *
-  * See
-
-  * {
-  * "clusterConfigFile": "{NewPackageInstallPath}/config/ClusterConfig.json",
-  * "apiConfigFile": "{NewPackageInstallPath}/config/MetadataAPIConfig.properties",
-  * "unhandledMetadataDumpDir": "{UnhandledMetadataDumpDir}",
-  * "dataSaveThreshold": 1000,
-  * "migratingFrom": {
-  * "version": "1.1",
-  * "versionInstallPath": "{OldPackageInstallPath}",
-  * "implemtedClass": "com.ligadata.Migrate.MigrateFrom_V_1_1",
-  * "jars": [
-  * "{NewPackageInstallPath}/lib/system/migratebase-1.0.jar",
-  * "{NewPackageInstallPath}/lib/system/migratefrom_v_1_1_2.10-1.0.jar",
-  * "{OldPackageInstallPath}/bin/KamanjaManager-1.0"
-  * ]
-  * },
-  * "migratingTo": {
-  * "version": "1.3",
-  * "versionInstallPath": "{NewPackageInstallPath}",
-  * "implemtedClass": "com.ligadata.Migrate.MigrateTo_V_1_3",
-  * "jars": [
-  * "{NewPackageInstallPath}/lib/system/migratebase-1.0.jar",
-  * "{NewPackageInstallPath}/lib/system/migrateto_v_1_3_2.11-1.0.jar",
-  * "{NewPackageInstallPath}/bin/KamanjaManager-1.0"
-  * ]
-  * },
-  * "excludeMetadata": [
-  * "ModelDef",
-  * "MessageDef",
-  * "ContainerDef",
-  * "ConfigDef",
-  * "FunctionDef",
-  * "JarDef",
-  * "OutputMsgDef"
-  * ],
-  * "excludeData": false
-  * }
-
-  * where {NewPackageInstallPath} will be substituted with the new installation directory found in the parent folder.
-  * {OldPackageInstallPath} will be substituted with the existing installation directory in the parent folder.
-  * 3) This installation process will be discretely logged in a file whose file path is displayed to the console.  All critical details about
-  * the steps taken in the installation/upgrade will be noted.  Should failures occur, the log should be consulted for what went wrong and instruction
-  * on how to roll back the an upgrade to the prior state if appropriate.  For new installations, simply rerunning the script after correcting the
-  * issues in the environment that possibly created the failure should be sufficient.
- */
+  * See trunk/SampleApplication/clusterInstallerDriver/src/main/resources/MigrateConfigTemplate.json in the github dev repo for an example template.
+  */
 
 class InstallDriverLog(logPath : String) {
 
@@ -220,7 +176,7 @@ object InstallDriver extends App {
     /** FIXME: we might want to create more meaningful failure messages here that pinpoint the complaint instead
       * of the "your arguments are not satisfactory...Usage:"   */
     val confusedIntention : Boolean = (upgrade && install)
-        if (confused) explicit message and exit
+        //if (confused) explicit message and exit
 
     val reasonableArguments: Boolean = (
         clusterId != null && clusterId.nonEmpty
@@ -257,10 +213,11 @@ object InstallDriver extends App {
 
     /** make a log ... FIXME: generate a timestamp for the "SomeDate" in the file path below... maybe make better configurable path */
     val dateTime : DateTime = new DateTime
-    val fmt : DateTimeFormatter  = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS")
+    val fmt : DateTimeFormatter  = DateTimeFormat.forPattern("yyyy-MM-dd_HH:mm:ss.SSS")
     val datestr : String = fmt.print(dateTime);
 
-    val log : InstallDriverLog = new InstallDriverLog(s"$logDir/InstallDriver.$datestr.log")
+        //val log : InstallDriverLog = new InstallDriverLog(s"$logDir/InstallDriver.$datestr.log")
+        val log : InstallDriverLog = new InstallDriverLog(s"some/InstallDriver.$datestr.log")
 
       //FIXME: use Utils.loadConfiguration from KamanjaUtils.scala
     /** Convert the content of the property file into a map.  If the path is bad, an empty map is returned and processing stops */
@@ -338,7 +295,7 @@ object InstallDriver extends App {
                                                     , newInstallDirName)
                 log.emit(s"Upgrade completed...successful?  ${if (upgradeOk) true else false}")
                 if (! upgradeOk) {
-                    log.emit(s"The parameters for the migration are incorrect... aborting installation"
+                    log.emit(s"The parameters for the migration are incorrect... aborting installation")
                 }
             } else {
                 log.emit("Migration not required... new installation was selected")

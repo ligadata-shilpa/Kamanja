@@ -127,7 +127,7 @@ cd $srcPath/
 
 sbt clean '++ 2.10.4 package' '++ 2.10.4 KamanjaManager/assembly' '++ 2.10.4 MetadataAPI/assembly' '++ 2.10.4 KVInit/assembly' '++ 2.10.4 MethodExtractor/assembly' '++ 2.10.4 SimpleKafkaProducer/assembly'
 sbt '++ 2.10.4 NodeInfoExtract/assembly' '++ 2.10.4 ExtractData/assembly' '++ 2.10.4 MetadataAPIService/assembly' '++ 2.10.4 JdbcDataCollector/assembly'
-sbt '++ 2.10.4 FileDataConsumer/assembly' '++ 2.10.4 SaveContainerDataComponent/assembly' '++ 2.10.4 CleanUtil/assembly' '++ 2.10.4 MigrateManager/assembly'
+sbt '++ 2.10.4 FileDataConsumer/assembly' '++ 2.10.4 SaveContainerDataComponent/assembly' '++ 2.10.4 CleanUtil/assembly' '++ 2.10.4 MigrateManager/assembly'  '++ 2.10.4 clusterInstallerDriver/assembly'
 
 # recreate eclipse projects
 #echo "refresh the eclipse projects ..."
@@ -148,6 +148,8 @@ cp Utils/JdbcDataCollector/target/scala-2.10/JdbcDataCollector* $bin
 cp MetadataAPIService/target/scala-2.10/MetadataAPIService* $bin
 cp FileDataConsumer/target/scala-2.10/FileDataConsumer* $bin
 cp Utils/CleanUtil/target/scala-2.10/CleanUtil* $bin
+cp SampleApplication/clusterInstallerDriver/target/scala-2.10/clusterInstallerDriver* $bin
+
 # only for 2.11 ?
 cp Utils/Migrate/MigrateManager/target/MigrateManager* $bin
 
@@ -495,6 +497,9 @@ cp $srcPath/lib_managed/bundles/org.mapdb/mapdb/mapdb-1.0.6.jar $systemlib
 cp $srcPath/Pmml/PmmlRuntime/target/scala-2.10/pmmlruntime*.jar $systemlib
 cp $srcPath/lib_managed/jars/org.mortbay.jetty/jetty/jetty-6.1.26.jar $systemlib
 cp $srcPath/lib_managed/jars/com.sun.xml.bind/jaxb-impl/jaxb-impl-2.2.3-1.jar $systemlib
+cp $srcPath/SampleApplication/clusterInstallerDriver/target/scala-2.10/clusterInstallerDriver* $systemlib
+
+
 cp $srcPath/lib_managed/jars/com.googlecode.json-simple/json-simple/json-simple-1.1.jar $systemlib
 cp $srcPath/AuditAdapters/AuditAdapterBase/target/scala-2.10/auditadapterbase*.jar $systemlib
 cp $ivyPath/cache/javax.xml.stream/stax-api/jars/stax-api-1.0-2.jar $systemlib
@@ -785,7 +790,7 @@ cp MetadataAPIService/target/scala-2.11/MetadataAPIService* $bin
 cp FileDataConsumer/target/scala-2.11/FileDataConsumer* $bin
 cp Utils/CleanUtil/target/scala-2.11/CleanUtil* $bin
 cp Utils/Migrate/MigrateManager/target/MigrateManager* $bin
-cp SampleApplication/clusterInstallerDriver/target/scala-2.11/clusterInstallerDriver* /tmp/drdigital/bin/
+cp SampleApplication/clusterInstallerDriver/target/scala-2.11/clusterInstallerDriver* $bin
 
 # *******************************
 # Copy jars required version-2.11 (more than required if the fat jars are used)
@@ -1207,6 +1212,7 @@ cp $srcPath/Storage/TreeMap/target/scala-2.11/*.jar $systemlib
 cp $srcPath/InputOutputAdapters/InputOutputAdapterBase/target/scala-2.11/*.jar $systemlib
 cp $srcPath/KamanjaUtils/target/scala-2.11/kamanjautils_2.11-1.0.jar $systemlib
 cp $srcPath/SecurityAdapters/SecurityAdapterBase/target/scala-2.11/*.jar $systemlib
+cp $srcPath/SampleApplication/clusterInstallerDriver/target/scala-2.11/*jar $systemlib
 
 cp $srcPath/Utils/SaveContainerDataComponent/target/scala-2.11/SaveContainerDataComponent* $systemlib
 cp $srcPath/Utils/UtilsForModels/target/scala-2.11/utilsformodels*.jar $systemlib
@@ -1348,4 +1354,12 @@ bash $installPath/Kamanja-$ver211/bin/SetPaths.sh $KafkaRootDir
 
 chmod 0700 $installPath/Kamanja-$ver211/input/SampleApplications/bin/*sh
 
+cd $srcPath/SampleApplication/EasyInstall
+bash InstallMigrationAndCluster.sh $installPath $srcPath $ivyPath $KafkaRootDir
+
+cd $installPath
+tar -cvzf Kamanja-$ver210.tar.gz Kamanja-$ver210
+tar -cvzf Kamanja-$ver211.tar.gz Kamanja-$ver211
+tar -cvzf KamanjaInstall-$ver210.tar.gz KamanjaInstall-$ver210
+tar -cvzf KamanjaInstall-$ver211.tar.gz KamanjaInstall-$ver211
 echo "Kamanja install complete..."
