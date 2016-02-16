@@ -58,7 +58,7 @@ public class BufferedJDBCSink extends AbstractJDBCSink {
 
 			buffer.add(jsonObject);
 		} catch (Exception e) {
-			logger.error("Error processing message - ignoring message : " + e.getMessage(), e);
+			logger.error("Error processing message: " + e.getMessage() + " - ignoring message : " + message, e);
 			return false;
 		}
 

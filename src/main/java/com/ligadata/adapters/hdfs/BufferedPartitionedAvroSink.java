@@ -84,7 +84,7 @@ public class BufferedPartitionedAvroSink implements BufferedMessageProcessor {
 
 			record = json2Record(message);
 		} catch (Exception e) {
-			logger.error("Error parsing message: " + e.getMessage(), e);
+			logger.error("Error parsing message: " + e.getMessage() + " - ignoring message : " + message, e);
 		}
 		
 		if (record != null) {
