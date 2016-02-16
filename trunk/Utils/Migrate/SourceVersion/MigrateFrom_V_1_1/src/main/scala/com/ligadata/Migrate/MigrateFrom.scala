@@ -1252,7 +1252,8 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
         val obj = GetObject(key, _dataStore)
         val retData = ExtractDataFromTupleData(key, obj.Value, bos, dos)
         if (retData.size > 0 && callbackFunction != null) {
-          callbackFunction.call(retData)
+          if (callbackFunction.call(retData) == false)
+            throw new Exception("Data failed to consume")
         }
       })
 
@@ -1260,7 +1261,8 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
         val obj = GetObject(key, _counterStore)
         val retData = ExtractCountersData(key, obj.Value)
         if (retData.size > 0 && callbackFunction != null) {
-          callbackFunction.call(retData)
+          if (callbackFunction.call(retData) == false)
+            throw new Exception("Data failed to consume")
         }
       })
     } catch {

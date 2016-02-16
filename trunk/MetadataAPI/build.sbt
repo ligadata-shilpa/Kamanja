@@ -79,7 +79,7 @@ libraryDependencies += "org.apache.zookeeper" % "zookeeper" % "3.4.6"
 
 libraryDependencies += "org.apache.curator" % "apache-curator" % "2.0.0-incubating"
 
-libraryDependencies += "com.google.guava" % "guava" % "16.0.1" 
+libraryDependencies += "com.google.guava" % "guava" % "14.0.1" 
 
 libraryDependencies += "org.jpmml" % "pmml-evaluator" % "1.2.4"
 
@@ -87,7 +87,7 @@ libraryDependencies += "org.jpmml" % "pmml-model" % "1.2.5"
 
 libraryDependencies += "org.jpmml" % "pmml-schema" % "1.2.5"
 
-dependencyOverrides += "com.google.guava" % "guava" % "16.0.1" 
+dependencyOverrides += "com.google.guava" % "guava" % "14.0.1" 
 
 libraryDependencies += "commons-codec" % "commons-codec" % "1.10"
 
