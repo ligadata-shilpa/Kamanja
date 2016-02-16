@@ -288,7 +288,18 @@ tarName="$dtPrefix.tgz"
 trunkDir=`pwd` #save the current trunk directory 
 
 installDir=`cat $metadataAPIConfig | grep '[Rr][Oo][Oo][Tt]_[Dd][Ii][Rr]' | sed 's/.*=\(.*\)$/\1/g'`
+installDir=`echo "$installDir" | sed -e 's/\/[\/]*$//'`
 installDirName=`echo $installDir | sed 's/.*\/\(.*\)$/\1/g'`
+installFolder=`echo "$installDir" | sed -e 's/\/[^\/]*$//'`
+
+if [ -d "$installFolder" ]; then 
+	echo "$installFolder is a Folder"
+else
+	echo "$installFolder does not exist"
+	Usage
+	exit 1
+fi
+
 if [ -z "$tarballPath" ]; then
 	# 1 build the installation in the staging directory
 	stagingDir="$workDir/$installDirName"
@@ -387,19 +398,24 @@ exec < "$workDir/$ipPathPairFile"
 while read LINE; do
     machine=$LINE
     read LINE
-    targetPath=$LINE
+    targetPath=`echo "$LINE" | sed -e 's/\/[\/]*$//'`
+    targetFolder=`echo "$targetPath" | sed -e 's/\/[^\/]*$//'`
     targetPath_date="$targetPath"_"$DATE"
     echo "Extract the tarball $tarName and copy it to $targetPath iff $workDir/$installDirName != $targetPath"
 	ssh -o StrictHostKeyChecking=no -T $machine  <<-EOF
-	        cd $workDir
-		if [ ! -L $targetPath ]; then
-			mv 	$targetPath "$targetPath"_pre_"$DATE"			
-		else
-			unlink $targetPath
+		if [ -d "$targetFolder" ]; then 
+			cd $workDir
+			if [ ! -L $targetPath ]; then
+				mv 	$targetPath "$targetPath"_pre_"$DATE"			
+			else
+				unlink $targetPath
+			fi
+			mkdir -p $targetPath_date
+	 		tar xzf $tarName -C $targetPath_date --strip-components 1
+			ln -sf  $targetPath_date $targetPath
+	 	else
+			echo "$targetFolder is not directory"	
 		fi
-		mkdir -p $targetPath_date
- 		tar xzf $tarName -C $targetPath_date --strip-components 1
-		ln -sf  $targetPath_date $targetPath
 EOF
 done
 exec 0<&12 12<&-
