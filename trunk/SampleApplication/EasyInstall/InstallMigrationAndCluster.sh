@@ -45,12 +45,9 @@ mkdir -p $installPath/KamanjaInstall-$ver210/bin
 #mkdir -p $installPath/KamanjaInstall-$ver210/lib
 mkdir -p $installPath/KamanjaInstall-$ver210/lib/system
 mkdir -p $installPath/KamanjaInstall-$ver210/lib/application
-mkdir -p $installPath/KamanjaInstall-$ver210/storage
 mkdir -p $installPath/KamanjaInstall-$ver210/logs
 mkdir -p $installPath/KamanjaInstall-$ver210/config
 mkdir -p $installPath/KamanjaInstall-$ver210/documentation
-mkdir -p $installPath/KamanjaInstall-$ver210/output
-mkdir -p $installPath/KamanjaInstall-$ver210/workingdir
 #mkdir -p $installPath/Kamanja-$ver210/template
 mkdir -p $installPath/KamanjaInstall-$ver210/template/config
 mkdir -p $installPath/KamanjaInstall-$ver210/template/script
@@ -62,12 +59,9 @@ mkdir -p $installPath/KamanjaInstall-$ver211/bin
 #mkdir -p $installPath/KamanjaInstall-$ver211/lib
 mkdir -p $installPath/KamanjaInstall-$ver211/lib/system
 mkdir -p $installPath/KamanjaInstall-$ver211/lib/application
-mkdir -p $installPath/KamanjaInstall-$ver211/storage
 mkdir -p $installPath/KamanjaInstall-$ver211/logs
 mkdir -p $installPath/KamanjaInstall-$ver211/config
 mkdir -p $installPath/KamanjaInstall-$ver211/documentation
-mkdir -p $installPath/KamanjaInstall-$ver211/output
-mkdir -p $installPath/KamanjaInstall-$ver211/workingdir
 #mkdir -p $installPath/KamanjaInstall-$ver211/template
 mkdir -p $installPath/KamanjaInstall-$ver211/template/config
 mkdir -p $installPath/KamanjaInstall-$ver211/template/script
