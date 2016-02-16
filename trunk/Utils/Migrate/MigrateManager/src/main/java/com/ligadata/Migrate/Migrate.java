@@ -846,7 +846,6 @@ public class Migrate {
     }
 
     private void sendStatus(String statusText) {
-        logger.info(statusText);
         for (StatusCallback callback : statusCallbacks) {
             callback.call(statusText);
         }
