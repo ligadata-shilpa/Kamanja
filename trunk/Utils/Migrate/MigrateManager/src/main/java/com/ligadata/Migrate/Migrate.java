@@ -560,6 +560,16 @@ public class Migrate {
                 int foundMdTablesWhichBackedUp = 0;
                 int foundMdTablesWhichDidnotBackedUp = 0;
 
+                sendStatus("Checking backup status in table");
+                String backupStatusStr = "";
+                try {
+                    backupStatusStr = migrateTo.getStatusFromDataStore("BackupStatusFor" + backupTblSufix);
+                } catch (Exception e) {
+                } catch (Throwable t) {
+                }
+
+                boolean havePreviousBackup = (backupStatusStr.startsWith("Done @2016"));
+
                 sendStatus("Checking whether backup is already done or not");
                 logger.debug("Checking whether backup is already done or not");
                 for (TableName tblInfo : allMetadataTbls) {
@@ -617,10 +627,31 @@ public class Migrate {
                     }
                 }
 
-                // Backup all the tables, if any one of them is missing
-                if (allTblsBackedUp == false) {
+                String backupTblsString = "Backup tables:";
+
+                if (havePreviousBackup) {
+                    int pos = backupStatusStr.indexOf(backupTblsString);
+                    String done = "";
+                    String backupTblStr = "";
+                    if (pos >= 0) {
+                        done = backupStatusStr.substring(0, pos);
+                        backupTblStr = backupStatusStr.substring(pos);
+                    } else {
+                        done = backupStatusStr;
+                    }
+                    String msg = "Found backup " + done + ". Using it to do rest of the migration.\nPrevious Backup tables Information:\n" + backupTblStr;
+                    sendStatus(msg);
+                    logger.debug(msg);
+                }
+                else {
+                    if (allTblsBackedUp) {
+                        sendStatus("Looks like all tables backup started but not completed. Going to backup again");
+                        logger.debug("Looks like all tables backup started but not completed. Going to backup again");
+                    }
+
+                    // Backup all the tables, if we did not done or finish before
                     StringBuilder sb = new StringBuilder();
-                    sb.append("Backing up tables:\n");
+                    sb.append(backupTblsString + "\n");
                     sb.append("\tMetadata Tables:{");
                     for (BackupTableInfo bTbl : metadataBackupTbls) {
                         sb.append("\t\t(" + bTbl.namespace + "," + bTbl.srcTable + ") => (" + bTbl.namespace + "," + bTbl.dstTable + ")\n");
@@ -646,8 +677,11 @@ public class Migrate {
                     migrateTo.backupAllTables(metadataBackupTbls.toArray(new BackupTableInfo[metadataBackupTbls.size()]),
                             dataBackupTbls.toArray(new BackupTableInfo[dataBackupTbls.size()]),
                             statusBackupTbls.toArray(new BackupTableInfo[statusBackupTbls.size()]), true);
-                    sendStatus("Completed backing up");
-                    logger.debug("Completed backing up");
+                    String doneTm = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new java.util.Date(System.currentTimeMillis()));
+
+                    migrateTo.setStatusFromDataStore("BackupStatusFor" + backupTblSufix, "Done @" + doneTm + backupTblStr);
+                    sendStatus("Completed backing up. " + doneTm);
+                    logger.debug("Completed backing up. " + doneTm);
                 }
 
                 {

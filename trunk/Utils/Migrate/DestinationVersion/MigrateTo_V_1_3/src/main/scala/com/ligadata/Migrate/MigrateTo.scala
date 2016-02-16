@@ -31,13 +31,13 @@ import org.json4s.jackson.JsonMethods._
 import org.json4s.jackson.Serialization
 import scala.io.Source
 
-import com.ligadata.KvBase.{Key, Value}
+import com.ligadata.KvBase.{KvBaseDefalts, TimeRange, Key, Value}
 
 import com.ligadata.StorageBase.{DataStore, DataStoreOperations}
 import com.ligadata.keyvaluestore.KeyValueManager
 import scala.collection.mutable.ArrayBuffer
 import com.ligadata.kamanja.metadata.ModelCompilationConstants
-import com.ligadata.Exceptions.{FatalAdapterException, StorageDMLException, StorageDDLException}
+import com.ligadata.Exceptions._
 
 import scala.actors.threadpool.{Executors, ExecutorService, TimeUnit}
 
@@ -1077,6 +1077,59 @@ class MigrateTo_V_1_3 extends MigratableTo {
     }
   }
 
+  private def callGetData(dataStore: DataStoreOperations, containerName: String, keys: Array[Key], callbackFunction: (Key, Value) => Unit): Unit = {
+    var failedWaitTime = 15000 // Wait time starts at 15 secs
+    val maxFailedWaitTime = 60000 // Max Wait time 60 secs
+    var doneGet = false
+
+    while (!doneGet) {
+      try {
+        dataStore.get(containerName, keys, callbackFunction)
+        doneGet = true
+      } catch {
+        case e @ (_: ObjectNotFoundException | _: KeyNotFoundException) => {
+          logger.debug("Failed to get data from container:%s".format(containerName))
+          doneGet = true
+        }
+        case e: FatalAdapterException => {
+          val stackTrace = StackTrace.ThrowableTraceString(e.cause)
+          logger.error("Failed to get data from container:%s.\nStackTrace:%s".format(containerName, stackTrace))
+        }
+        case e: StorageDMLException => {
+          val stackTrace = StackTrace.ThrowableTraceString(e.cause)
+          logger.error("Failed to get data from container:%s.\nStackTrace:%s".format(containerName, stackTrace))
+        }
+        case e: StorageDDLException => {
+          val stackTrace = StackTrace.ThrowableTraceString(e.cause)
+          logger.error("Failed to get data from container:%s.\nStackTrace:%s".format(containerName, stackTrace))
+        }
+        case e: Exception => {
+          val stackTrace = StackTrace.ThrowableTraceString(e)
+          logger.error("Failed to get data from container:%s.\nStackTrace:%s".format(containerName, stackTrace))
+        }
+        case e: Throwable => {
+          val stackTrace = StackTrace.ThrowableTraceString(e)
+          logger.error("Failed to get data from container:%s.\nStackTrace:%s".format(containerName, stackTrace))
+        }
+      }
+
+      if (!doneGet) {
+        try {
+          logger.error("Failed to get data from datastore. Waiting for another %d milli seconds and going to start them again.".format(failedWaitTime))
+          Thread.sleep(failedWaitTime)
+        } catch {
+          case e: Exception => {}
+        }
+        // Adjust time for next time
+        if (failedWaitTime < maxFailedWaitTime) {
+          failedWaitTime = failedWaitTime * 2
+          if (failedWaitTime > maxFailedWaitTime)
+            failedWaitTime = maxFailedWaitTime
+        }
+      }
+    }
+  }
+
   // Array of tuples has container name, timepartition value, bucketkey, transactionid, rowid, serializername & data in Gson (JSON) format
   override def populateAndSaveData(data: Array[DataFormat]): Unit = {
     if (_bInit == false)
@@ -1101,6 +1154,31 @@ class MigrateTo_V_1_3 extends MigratableTo {
     _statusStoreDb = null
     _flCurMigrationSummary = null
     MetadataAPIImpl.shutdown
+  }
+
+  override def getStatusFromDataStore(key: String): String = {
+    if (_bInit == false)
+      throw new Exception("Not yet Initialized")
+    if (_dataStoreDb == null)
+      throw new Exception("Not found valid Datastore DB connection")
+
+    var ret = ""
+    val buildAdapOne = (k: Key, v: Value) => {
+      ret = new String(v.serializedInfo)
+    }
+
+    callGetData(_dataStoreDb, "MigrateStatusInformation", Array(Key(KvBaseDefalts.defaultTime, Array(key.toLowerCase), 0, 0)), buildAdapOne)
+
+    ret
+  }
+
+  override def setStatusFromDataStore(key: String, value: String) = {
+    if (_bInit == false)
+      throw new Exception("Not yet Initialized")
+    if (_dataStoreDb == null)
+      throw new Exception("Not found valid Datastore DB connection")
+
+    callSaveData(_dataStoreDb, Array(("MigrateStatusInformation", Array((Key(KvBaseDefalts.defaultTime, Array(key.toLowerCase), 0, 0), Value("txt", value.getBytes()))))))
   }
 }
 

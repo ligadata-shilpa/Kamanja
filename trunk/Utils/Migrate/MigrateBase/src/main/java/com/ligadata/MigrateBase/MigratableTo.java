@@ -31,4 +31,6 @@ public interface MigratableTo {
   public abstract void addMetadata(MetadataFormat[] allMetadataElemsJson, boolean uploadClusterConfig, String[] excludeMetadata);
   public abstract void populateAndSaveData(DataFormat[] data);
   public abstract void shutdown();
+  public abstract String getStatusFromDataStore(String key);
+  public abstract void setStatusFromDataStore(String key, String value);
 }
