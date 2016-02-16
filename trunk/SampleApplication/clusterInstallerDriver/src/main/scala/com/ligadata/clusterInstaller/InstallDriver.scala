@@ -44,7 +44,14 @@ import com.ligadata.Serialize.JsonSerializer
   * 1) The prior installation directory, if upgrading, and the new installation directory are determined from the apiConfig property, ROOT_DIR.  To
   * make sure we no where the new and old installations are located (they are sibling directories in the same parent folder), the parent folder is
   * supplied to the cluster install script.
-  * 2) The migration script requires a JSON file that contains information about the upgrade.  It looks like this:
+  * 2) The migration script requires a JSON file that contains information about the upgrade.  There are substitution symbols ("macros") in the
+  * file that are substituted with the appropriate values, either supplied in the script parameters or from one of the configuation files
+  * whose path was supplied.  The substitution symbols have the form """({[A-Za-z0-9_.-]+})""" ... that is, some run 1 or more Alphamerics and punctuation
+  * enclosed in {} braces.  For example,
+  *
+  *     "clusterConfigFile": "{NewPackageInstallPath}/config/ClusterConfig.json",
+  *
+  * See
 
   * {
   * "clusterConfigFile": "{NewPackageInstallPath}/config/ClusterConfig.json",
@@ -102,7 +109,8 @@ class InstallDriverLog(logPath : String) {
 
   def emit(msg : String) : Unit = {
       /** write the string as a line to the file */
-      bufferedWriter.write(msg)
+    if (initialize)
+      bufferedWriter.write(msg + "\n")
 
   } 
 
@@ -118,7 +126,8 @@ object InstallDriver extends App {
 
     def usage: String = {
     """
-    com.ligadata.clusterInstaller.Driver_1_3 --{upgrade|install} --apiConfig <MetadataAPIConfig.properties file> --clusterConfig <ClusterConig.json file> --fromKamanja "1.1" [--fromScala "2.10"] [--toScala "2.11"] --workingDir <workingdirectory> --clusterId <id> --tarballPath <tarball path>
+    java -Dlog4j.configurationFile=file:./log4j2.xml -jar ClusterInstallerDriver_1.3 --{upgrade|install} --apiConfig <MetadataAPIConfig.properties file> --clusterConfig <ClusterConig.json file> --fromKamanja "1.1"
+    [--fromScala "2.10"] [--toScala "2.11"] --workingDir <workingdirectory> --clusterId <id> --tarballPath <tarball path> --logDir <logDir> --migrationTemplate <MigrationTemplate>
 
     where
         --upgrade explicitly specifies that the intent to upgrade an existing cluster installation with the latest release.
@@ -143,7 +152,9 @@ object InstallDriver extends App {
             compiler, and other future Kamanja components will use when building their respective objects. If the requested version has not been installed
             on the cluster nodes in question, the installation will fail.
 
-    The ClusterInstaller Driver_1_3 is the cluster installer driver for Kamanja 1.3.  It is capable of installing a new version of 1.3 or given the appropriate arguments,
+      --logDir for both Unhandled metadata & logs
+
+    The ClusterInstallerDriver_1.3 is the cluster installer driver for Kamanja 1.3.  It is capable of installing a new version of 1.3 or given the appropriate arguments,
     installing a new version of Kamanja 1.3 *and* upgrading a 1.1 or 1.2 installation to the 1.3 version.
 
     A log of the installation and optional upgrade is collected in a log file.  This log file is automatically generated and will be found in the
@@ -201,7 +212,7 @@ object InstallDriver extends App {
     val tarballPath : String = if (options.contains('tarballPath)) options.apply('tarballPath) else null
     val fromKamanja : String = if (options.contains('fromKamanja)) options.apply('fromKamanja) else null
     val fromScala : String = if (options.contains('fromScala)) options.apply('fromScala) else "2.10"
-    val toScala : String = if (options.contains('toScala)) options.apply('toScala) else "2.11"
+    val toScala : String = if (options.contains('toScala)) options.apply('toScala) else "" // FIXME: Insist to have this
     val workingDir : String = if (options.contains('workingDir)) options.apply('workingDir) else null
     val upgrade : Boolean = if (options.contains('upgrade)) options.apply('upgrade) == "true" else false
     val install : Boolean = if (options.contains('install)) options.apply('install) == "true" else false
@@ -209,6 +220,8 @@ object InstallDriver extends App {
     /** FIXME: we might want to create more meaningful failure messages here that pinpoint the complaint instead
       * of the "your arguments are not satisfactory...Usage:"   */
     val confusedIntention : Boolean = (upgrade && install)
+        if (confused) explicit message and exit
+
     val reasonableArguments: Boolean = (
         clusterId != null && clusterId.nonEmpty
         && apiConfigPath != null && apiConfigPath.nonEmpty
@@ -226,13 +239,30 @@ object InstallDriver extends App {
         sys.exit(1)
     }
 
+      // Validate all arguments
+      // FIXME: Validate here itself
+      val migrationToBeDone : String = if (fromKamanja == "1.1") "1.1=>1.3" else if (fromKamanja == "1.2") "1.2=>1.3" else "hmmm"
+
+      // if (upgrade && install) exists error out
+
+      // is file exists
+      // apiConfig
+      // ClusterConfig
+      // Migrate Template
+      // Tarball
+
+      // is dir exists
+      // Working dir
+      // log dir
+
     /** make a log ... FIXME: generate a timestamp for the "SomeDate" in the file path below... maybe make better configurable path */
     val dateTime : DateTime = new DateTime
-    val fmt : DateTimeFormatter  = DateTimeFormat.forPattern("yyyyMMMdd_HHmmss")
+    val fmt : DateTimeFormatter  = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS")
     val datestr : String = fmt.print(dateTime);
 
-    val log : InstallDriverLog = new InstallDriverLog(s"$workingDir/InstallDriver.$datestr.log")
+    val log : InstallDriverLog = new InstallDriverLog(s"$logDir/InstallDriver.$datestr.log")
 
+      //FIXME: use Utils.loadConfiguration from KamanjaUtils.scala
     /** Convert the content of the property file into a map.  If the path is bad, an empty map is returned and processing stops */
     val apiConfigMap : Map[String,String] = mapProperties(log, apiConfigPath)
     if (apiConfigMap.isEmpty) {
@@ -248,6 +278,9 @@ object InstallDriver extends App {
       * directory in which both of them will live on each cluster node. Should there be no existing installation, the prior installation value will be null. */
     val (parentPath, priorInstallDirName, newInstallDirName) : (String, String, String) = CreateInstallationNames(log, apiConfigMap)
 
+      // FIXME
+      // Check priorInstallDirName is link or dir. If it is DIR take an action (renaming on all nodes) and LOG the task done.
+      // IF priorInstallDirName is link, unlink it. But log the Actual dir & link to make sure for Reverting the installation.
     /** Run the node info extract on the supplied file and garner all of the information needed to conduct the cluster environment validatation */
     val installDir : String = s"$parentPath/$newInstallDirName"
 
@@ -304,6 +337,9 @@ object InstallDriver extends App {
                                                     , priorInstallDirName
                                                     , newInstallDirName)
                 log.emit(s"Upgrade completed...successful?  ${if (upgradeOk) true else false}")
+                if (! upgradeOk) {
+                    log.emit(s"The parameters for the migration are incorrect... aborting installation"
+                }
             } else {
                 log.emit("Migration not required... new installation was selected")
             }
@@ -400,7 +436,7 @@ object InstallDriver extends App {
       ""
   }
 
-
+// FIXME: use kamanja utils for this to produce property file
   def mapProperties(log : InstallDriverLog, apiConfigPath : String) : Map[String,String] = {
 
       val mapPropertyLines : List[String] = Source.fromFile(apiConfigPath).mkString.split('\n').toList
@@ -413,9 +449,11 @@ object InstallDriver extends App {
       mapProperties
   }
 
+
   def CreateInstallationNames(log : InstallDriverLog, apiConfigMap : Map[String,String]) : (String, String, String) = {
 
       val parPath : String = apiConfigMap.getOrElse("ROOT_DIR", "NO ROOT PATH")
+      /** check if this a link */
 
       val (parentPath, priorInstallDirName, newInstallDirName) : (String, String, String) = if (parPath == "NO ROOT PATH") {
           log.emit("There is no ROOT_DIR in the supplied api configuration file... Examine that file and correct it... quiting")
@@ -424,14 +462,27 @@ object InstallDriver extends App {
           val dateTime : DateTime = new DateTime
           val fmt : DateTimeFormatter  = DateTimeFormat.forPattern("yyyyMMMdd_HHmmss")
           val datestr : String = fmt.print(dateTime);
-          (parPath, s"$parPath/priorInstallation$datestr", s"$parPath/newInstallation$datestr")
+/*
+        // ROOT_DIR/parPath as /apps/KamanjaInstall can be link or dir. If it has link that is prior installation. Otherwise create as below
+
+        /apps/KamanjaInstall =>
+
+        /apps/KamanjaInstall_pre_<datetime> if  ROOT_DIR/parPath is DIR
+
+        /apps/KamanjaInstall_<version>_<datetime>
+*/
+
+
+
+        (parPath, s"$parPath/priorInstallation$datestr", s"$parPath/newInstallation$datestr")
       }
 
       (parentPath, priorInstallDirName, newInstallDirName)
   }
 
   def installCluster(log : InstallDriverLog, apiConfigPath : String, nodeConfigPath : String, parentPath : String, priorInstallDirName : String, newInstallDirName : String, tarballPath : String) : Boolean = {
-
+    // FIXME: Check for KamanjaClusterInstall.sh existance. And see whether KamanjaClusterInstall.sh has all error handling or not.
+    // FIXME: Pass NodeIP & Path Information. We should not use NodeInfoExtract in this script.
       val installCmd = Seq("bash", "-c", s"KamanjaClusterInstall.sh  --MetadataAPIConfig $apiConfigPath, --NodeConfigPath $nodeConfigPath, --ParentPath $parentPath, --PriorInstallDirName $priorInstallDirName, --NewInstallDirName $newInstallDirName --TarballPath $tarballPath")
       log.emit(s"KamanjaClusterInstall cmd used: $installCmd")
       val installCmdRc = Process(installCmd).!
@@ -454,7 +505,7 @@ object InstallDriver extends App {
 
       val migrationToBeDone : String = if (fromKamanja == "1.1") "1.1=>1.3" else if (fromKamanja == "1.2") "1.2=>1.3" else "hmmm"
       
-      val cfgPath : String = "/tmp/migrateCfg.json"
+      val cfgPath : String = "/${WoringDIR}/migrateCfg.json"
       val upgradeOk : Boolean = migrationToBeDone match {
           case "1.1=>1.3" => {
               val migrateConfigJSON : String = createMigrationConfig(log
@@ -497,7 +548,10 @@ object InstallDriver extends App {
               }
               ok
           }
-          case _ => false
+          case _ => {
+              log.emit("The 'fromKamanja' parameter is incorrect... this needs to be fixed.  The value can only be '1.1' or '1.2' for the '1.3' upgrade")
+              false
+          }
       }
       upgradeOk
   }
@@ -527,6 +581,7 @@ object InstallDriver extends App {
    */
   def createMigrationConfig(log : InstallDriverLog, fromKamanjaVersion : String, libVersion : String, unhandledMetadataDumpDir : String, priorInstallationPath : String, newInstallationPath : String) : String = {
 
+    // FIXME: Take it from migration template and replace all the values accordingly
 val template : String = """
 {
       "clusterConfigFile": "%newInstallationPath%/config/ClusterConfig.json",
@@ -566,6 +621,7 @@ val template : String = """
 }
 """
 
+      // val subPairs = Map[String,String]( "fromKamanjaVersion" -> fromKamanjaVersion) // FIXME: Use like this
       val subPairs : Array[(String,String)] = Array[(String,String)]( ("fromKamanjaVersion", fromKamanjaVersion), ("libVersion",libVersion), ("unhandledMetadataDumpDir", unhandledMetadataDumpDir), ("priorInstallationPath", priorInstallationPath), ("newInstallationPath", newInstallationPath))
       val substitutionMap : Map[String,String] = subPairs.toMap
       val varSub = new MapSubstitution(template, substitutionMap)
@@ -705,7 +761,7 @@ class MapSubstitution(template: String, vars: scala.collection.immutable.Map[Str
     }
 
     def makeSubstitutions : String = {
-        val m = Pattern.compile("""(%[A-Za-z_.-]+%)""").matcher(template)
+        val m = Pattern.compile("""({[A-Za-z0-9_.-]+})""").matcher(template)
         findAndReplace(m){ x => x }
     }
 
