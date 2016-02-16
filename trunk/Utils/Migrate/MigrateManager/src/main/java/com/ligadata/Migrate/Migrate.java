@@ -31,10 +31,15 @@ import com.google.gson.Gson;
 
 import java.io.FileReader;
 
+import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
+
 public class Migrate {
     String loggerName = this.getClass().getName();
     Logger logger = LogManager.getLogger(loggerName);
     List<StatusCallback> statusCallbacks = new ArrayList<StatusCallback>();
+    Throwable writeFailedException = null;
 
     class VersionConfig {
         String version = null;
@@ -73,14 +78,16 @@ public class Migrate {
         String srcVer = "0";
         String dstVer = "0";
         byte[] appendData = new byte[0];
+        ExecutorService executor = null;
 
         DataCallback(MigratableTo tmigrateTo, List<DataFormat> tcollectedData,
-                     int tkSaveThreshold, String tsrcVer, String tdstVer) {
+                     int tkSaveThreshold, String tsrcVer, String tdstVer, ExecutorService texecutor) {
             migrateTo = tmigrateTo;
             collectedData = tcollectedData;
             kSaveThreshold = tkSaveThreshold;
             srcVer = tsrcVer;
             dstVer = tdstVer;
+            executor = texecutor;
 
             if (srcVer.equalsIgnoreCase("1.1")
                     && dstVer.equalsIgnoreCase("1.3")) {
@@ -114,10 +121,10 @@ public class Migrate {
                 cntr += 1;
             }
             if (collectedData.size() >= kSaveThreshold) {
-                migrateTo.populateAndSaveData(collectedData.toArray(new DataFormat[collectedData.size()]));
-                String msg = String.format("Migrated another batch of data with " + collectedData.size() + " rows");
+                String msg = String.format("Adding batch of Migrated data with " + collectedData.size() + " rows to write");
                 logger.debug(msg);
                 sendStatus(msg);
+                SaveDataInBackground(executor, migrateTo, collectedData.toArray(new DataFormat[collectedData.size()]));
                 collectedData.clear();
             }
             return true;
@@ -130,6 +137,32 @@ public class Migrate {
                     objData.objType, objData.objDataInJson));
             allMetadata.add(objData);
             return true;
+        }
+    }
+
+    class DataSaveTask implements Runnable {
+        private final MigratableTo _migrateTo;
+        private final DataFormat[] _data;
+
+        public DataSaveTask(MigratableTo migrateTo, DataFormat[] data) {
+            _migrateTo = migrateTo;
+            _data = data;
+        }
+
+        public void run() {
+            try {
+                String msg = String.format("Migrating final batch of data with " + _data.length + " rows");
+                logger.debug(msg);
+                sendStatus(msg);
+                _migrateTo.populateAndSaveData(_data);
+                msg = String.format("Migrated final batch of data with " + _data.length + " rows");
+                logger.debug(msg);
+                sendStatus(msg);
+            } catch (Exception e) {
+                SetDataWritingFailure(e);
+            } catch (Throwable t) {
+                SetDataWritingFailure(t);
+            }
         }
     }
 
@@ -186,6 +219,15 @@ public class Migrate {
 
     void usage() {
         logger.warn("Usage: migrate --config <ConfigurationJsonFile>");
+    }
+
+    public void SetDataWritingFailure(Throwable e) {
+        logger.error("Failed to write data", e);
+        writeFailedException = e;
+    }
+
+    public void SaveDataInBackground(ExecutorService executor, MigratableTo migrateTo, DataFormat[] data) {
+        executor.execute(new DataSaveTask(migrateTo, data));
     }
 
     boolean isValidPath(String path, boolean checkForDir, boolean checkForFile, String str) {
@@ -674,6 +716,11 @@ public class Migrate {
                 }
 
                 if (canUpgradeData) {
+                    int parallelDegree = 1;
+                    if (configuration.parallelDegree > 1)
+                        parallelDegree = configuration.parallelDegree;
+                    ExecutorService executor = Executors.newFixedThreadPool(parallelDegree);
+
                     int kSaveThreshold = 1024;
 
                     if (configuration.dataSaveThreshold > 0)
@@ -684,18 +731,30 @@ public class Migrate {
                     List<DataFormat> collectedData = new ArrayList<DataFormat>();
 
                     DataCallback dataCallback = new DataCallback(migrateTo,
-                            collectedData, kSaveThreshold, srcVer, dstVer);
+                            collectedData, kSaveThreshold, srcVer, dstVer, executor);
 
                     migrateFrom.getAllDataObjs(backupTblSufix, metadataArr,
                             dataCallback);
 
                     if (collectedData.size() > 0) {
-                        migrateTo.populateAndSaveData(collectedData.toArray(new DataFormat[collectedData.size()]));
-                        String msg = String.format("Migrated final batch of data with " + collectedData.size() + " rows");
+                        String msg = String.format("Adding final batch of Migrated data with " + collectedData.size() + " rows to write");
                         logger.debug(msg);
                         sendStatus(msg);
+                        SaveDataInBackground(executor, migrateTo, collectedData.toArray(new DataFormat[collectedData.size()]));
                         collectedData.clear();
                     }
+
+                    logger.info("Waiting to flush all data");
+                    sendStatus("Waiting to flush all data");
+                    executor.shutdown();
+                    executor.awaitTermination(86400, TimeUnit.SECONDS); // 1 day waiting at the max
+
+                    if (writeFailedException != null) {
+                        // logger.error("Data failed to migrate.", writeFailedException);
+                        sendStatus("Data failed to migrate. Exception message:" + writeFailedException.getMessage());
+                        throw writeFailedException;
+                    }
+
                     logger.debug("Completed migrating data");
                     sendStatus("Completed migrating data");
                 } else {
