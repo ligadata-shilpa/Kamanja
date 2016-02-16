@@ -40,6 +40,7 @@ public class Migrate {
     Logger logger = LogManager.getLogger(loggerName);
     List<StatusCallback> statusCallbacks = new ArrayList<StatusCallback>();
     Throwable writeFailedException = null;
+    boolean sentFailedStatus = false;
 
     class VersionConfig {
         String version = null;
@@ -127,7 +128,7 @@ public class Migrate {
                 SaveDataInBackground(executor, migrateTo, collectedData.toArray(new DataFormat[collectedData.size()]));
                 collectedData.clear();
             }
-            return true;
+            return (writeFailedException == null); // Stop if we already got some issue to write.
         }
     }
 
@@ -224,6 +225,10 @@ public class Migrate {
     public void SetDataWritingFailure(Throwable e) {
         logger.error("Failed to write data", e);
         writeFailedException = e;
+        if (sentFailedStatus == false && e != null) {
+            sentFailedStatus = true;
+            sendStatus("Data failed to migrate. Exception message:" + e.getMessage()); // Send this at least once.
+        }
     }
 
     public void SaveDataInBackground(ExecutorService executor, MigratableTo migrateTo, DataFormat[] data) {
@@ -750,8 +755,10 @@ public class Migrate {
                     executor.awaitTermination(86400, TimeUnit.SECONDS); // 1 day waiting at the max
 
                     if (writeFailedException != null) {
-                        // logger.error("Data failed to migrate.", writeFailedException);
-                        sendStatus("Data failed to migrate. Exception message:" + writeFailedException.getMessage());
+                        if (sentFailedStatus == false) {
+                            // logger.error("Data failed to migrate.", writeFailedException);
+                            sendStatus("Data failed to migrate. Exception message:" + writeFailedException.getMessage());
+                        }
                         throw writeFailedException;
                     }
 
