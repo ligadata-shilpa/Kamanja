@@ -6,8 +6,8 @@ installPath=$1
 srcPath=$2
 ivyPath=$3
 KafkaRootDir=$4
-ver210=2.10
-ver211=2.11
+ver210=1.3.2_2.10
+ver211=1.3.2_2.11
 
 if [ ! -d "$installPath" ]; then
         echo "Not valid install path supplied.  It should be a directory that can be written to and whose current content is of no value (will be overwritten) "
@@ -1407,6 +1407,31 @@ cp SetPaths.sh $installPath/Kamanja-$ver211/bin/
 bash $installPath/Kamanja-$ver211/bin/SetPaths.sh $KafkaRootDir
 
 chmod 0700 $installPath/Kamanja-$ver211/input/SampleApplications/bin/*sh
+
+#Migration and cluster Install*****************
+
+cd $srcPath/SampleApplication/MigrationAndClusterInstall/template2.10
+cp -rf * $installPath/KamanjaInstall-$ver210/template/.
+
+cd $srcPath/SampleApplication/MigrationAndClusterInstall/template2.11
+cp -rf * $installPath/KamanjaInstall-$ver211/template/.
+
+cd $srcPath/SampleApplication/EasyInstall
+cp SetPathsMigrateClusterInstall.sh $installPath/KamanjaInstall-$ver210/bin/
+cp SetPathsMigrateClusterInstall.sh $installPath/KamanjaInstall-$ver211/bin/
+
+cd $installPath/KamanjaInstall-$ver210/bin
+bash SetPathsMigrateClusterInstall.sh $KafkaRootDir
+
+cd $installPath/KamanjaInstall-$ver211/bin
+bash SetPathsMigrateClusterInstall.sh $KafkaRootDir
+
+chmod 0700 $install_dir/KamanjaInstall-$ver210/bin/*.sh
+chmod 0700 $install_dir/KamanjaInstall-$ver211/bin/*.sh
+
+
+#Migration and Cluster Install*****************
+
 
 cd $installPath
 tar -cvzf Kamanja-$ver210.tar.gz Kamanja-$ver210

@@ -42,13 +42,10 @@ ivyPath=$(echo $ivyPath | sed 's/[\/]*$//')
 # Make the directories as needed for version-2.10
 # *******************************
 mkdir -p $installPath/KamanjaInstall-$ver210/bin
-#mkdir -p $installPath/KamanjaInstall-$ver210/lib
 mkdir -p $installPath/KamanjaInstall-$ver210/lib/system
 mkdir -p $installPath/KamanjaInstall-$ver210/lib/application
 mkdir -p $installPath/KamanjaInstall-$ver210/logs
 mkdir -p $installPath/KamanjaInstall-$ver210/config
-mkdir -p $installPath/KamanjaInstall-$ver210/documentation
-#mkdir -p $installPath/Kamanja-$ver210/template
 mkdir -p $installPath/KamanjaInstall-$ver210/template/config
 mkdir -p $installPath/KamanjaInstall-$ver210/template/script
 
@@ -56,43 +53,32 @@ mkdir -p $installPath/KamanjaInstall-$ver210/template/script
 # Make the directories as needed for version-2.11
 # *******************************
 mkdir -p $installPath/KamanjaInstall-$ver211/bin
-#mkdir -p $installPath/KamanjaInstall-$ver211/lib
 mkdir -p $installPath/KamanjaInstall-$ver211/lib/system
 mkdir -p $installPath/KamanjaInstall-$ver211/lib/application
 mkdir -p $installPath/KamanjaInstall-$ver211/logs
 mkdir -p $installPath/KamanjaInstall-$ver211/config
-mkdir -p $installPath/KamanjaInstall-$ver211/documentation
-#mkdir -p $installPath/KamanjaInstall-$ver211/template
 mkdir -p $installPath/KamanjaInstall-$ver211/template/config
 mkdir -p $installPath/KamanjaInstall-$ver211/template/script
 
-bin210=$installPath/KamanjaInstall-$ver210/bin
-systemlib210=$installPath/KamanjaInstall-$ver210/lib/system
-applib210=$installPath/KamanjaInstall-$ver210/lib/application
+kamanjainstallbin210=$installPath/KamanjaInstall-$ver210/bin
+kamanjainstallsystemlib210=$installPath/KamanjaInstall-$ver210/lib/system
+kamanjainstallapplib210=$installPath/KamanjaInstall-$ver210/lib/application
 
-bin211=$installPath/KamanjaInstall-$ver211/bin
-systemlib211=$installPath/KamanjaInstall-$ver211/lib/system
-applib211=$installPath/KamanjaInstall-$ver211/lib/application
+kamanjainstallbin211=$installPath/KamanjaInstall-$ver211/bin
+kamanjainstallsystemlib211=$installPath/KamanjaInstall-$ver211/lib/system
+kamanjainstallapplib211=$installPath/KamanjaInstall-$ver211/lib/application
 
 cd $srcPath 
 
 cd $srcPath
-cp KamanjaManager/target/scala-2.10/KamanjaManager* $bin210
+cp KamanjaManager/target/scala-2.10/KamanjaManager* $kamanjainstallbin210
 
-cp KamanjaManager/target/scala-2.11/KamanjaManager* $bin211
+cp KamanjaManager/target/scala-2.11/KamanjaManager* $kamanjainstallbin211
 # only for 2.11 ?
-cp Utils/Migrate/MigrateManager/target/MigrateManager* $bin211
+cp Utils/Migrate/MigrateManager/target/MigrateManager* $kamanjainstallbin211
 
-cp $srcPath/Utils/NodeInfoExtract/target/scala-2.10/NodeInfoExtract* $bin210
-cp $srcPath/Utils/NodeInfoExtract/target/scala-2.11/NodeInfoExtract* $bin211
-
-#srcPath=$2
-#systemlib=$2
-#ivyPath=$3
-cd $srcPath/SampleApplication/EasyInstall
-bash CopyCommonJars.sh $srcPath $systemlib210 $ivyPath
-#bash $srcPath/SampleApplication/EasyInstall/CopyCommonJars.sh $srcPath $systemlib211 $ivyPath
-bash CopyJars.sh $srcPath $ivyPath $systemlib210 $systemlib211
+cp $srcPath/Utils/NodeInfoExtract/target/scala-2.10/NodeInfoExtract* $kamanjainstallbin210
+cp $srcPath/Utils/NodeInfoExtract/target/scala-2.11/NodeInfoExtract* $kamanjainstallbin211
 
 cd $srcPath/SampleApplication/MigrationAndClusterInstall/template2.10
 cp -rf * $installPath/KamanjaInstall-$ver210/template/.

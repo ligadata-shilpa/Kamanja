@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Configuration monitorInterval="300">
   <Properties>
-    <Property name="log-path">{InstallDirectory}/KamanjaInstall-2.10/logs</Property>
+    <Property name="log-path">{InstallDirectory}/logs</Property>
   </Properties>
   <Appenders>
     <RollingFile name="HourlyRoll" fileName="${log-path}/KamanjaInstallLog.log" filePattern="${log-path}/KamanjaInstallLog-%d{yyyy-MM-dd-HH}-%i.log.gz">

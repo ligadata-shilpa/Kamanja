@@ -1,17 +1,7 @@
 
 echo "Setting up paths"
 
-install_dir=$1
-
-if [ ! -d "$install_dir" ]; then
-        echo "Not valid install path supplied.  It should be a directory that can be written to and whose current content is of no value (will be overwritten) "
-        echo "$0 <install path> <src tree trunk directory> <ivy directory path for dependencies> <kafka installation path>"
-        exit 1
-fi
-
-nstall_dir=$(echo $ivyPath | sed 's/[\/]*$//')
-
-KafkaRootDir=$2
+KafkaRootDir=$1
 if [ -d "$KafkaRootDir" ]; then
 	KafkaRootDir=$(echo $KafkaRootDir | sed 's/[\/]*$//')
 fi
@@ -41,7 +31,7 @@ scala_home=$(dirname $(dirname $scala_full_path))
 dirnm=$(dirname "$0")
 cd $dirnm
 
-#install_dir=$(dirname $(pwd -P))
+install_dir=$(dirname $(pwd -P))
 
 java_home_repl=$(echo $java_home | sed 's/\//\\\//g')
 scala_home_repl=$(echo $scala_home | sed 's/\//\\\//g')
@@ -51,31 +41,16 @@ install_dir_repl=$(echo $install_dir | sed 's/\//\\\//g')
 
 echo $install_dir
 
-sed "s/{InstallDirectory}/$install_dir_repl/g;s/{ScalaInstallDirectory}/$scala_home_repl/g;s/{JavaInstallDirectory}/$java_home_repl/g" $install_dir/KamanjaInstall-2.10/template/script/MigrateManager_Template.sh > $install_dir/KamanjaInstall-2.10/bin/MigrateManager.sh
+sed "s/{InstallDirectory}/$install_dir_repl/g;s/{ScalaInstallDirectory}/$scala_home_repl/g;s/{JavaInstallDirectory}/$java_home_repl/g" $install_dir/template/script/MigrateManager_Template.sh > $install_dir/bin/MigrateManager.sh
 
-# logfile for 2.10 version
-sed "s/{InstallDirectory}/$install_dir_repl/g" $install_dir/KamanjaInstall-2.10/template/config/log4j2_Template.xml > $install_dir/KamanjaInstall-2.10/config/log4j2.xml
+sed "s/{InstallDirectory}/$install_dir_repl/g" $install_dir/template/config/log4j2_Template.xml > $install_dir/config/log4j2.xml
 
-# changing path in config files for 2.10 version
-sed "s/{InstallDirectory}/$install_dir_repl/g;s/{ScalaInstallDirectory}/$scala_home_repl/g;s/{JavaInstallDirectory}/$java_home_repl/g" $install_dir/KamanjaInstall-2.10/template/config/MigrateConfig_Template.properties > $install_dir/KamanjaInstall-2.10/config/MigrateConfig.json
-sed "s/{InstallDirectory}/$install_dir_repl/g;s/{ScalaInstallDirectory}/$scala_home_repl/g;s/{JavaInstallDirectory}/$java_home_repl/g" $install_dir/KamanjaInstall-2.10/template/config/ClusterConfig_Template.json > $install_dir/KamanjaInstall-2.10/config/ClusterConfig.json
-sed "s/{InstallDirectory}/$install_dir_repl/g;s/{ScalaInstallDirectory}/$scala_home_repl/g;s/{JavaInstallDirectory}/$java_home_repl/g" $install_dir/KamanjaInstall-2.10/template/config/MetadataAPIConfig_Template.properties > $install_dir/KamanjaInstall-2.10/config/MetadataAPIConfig.properties
+sed "s/{InstallDirectory}/$install_dir_repl/g;s/{ScalaInstallDirectory}/$scala_home_repl/g;s/{JavaInstallDirectory}/$java_home_repl/g" $install_dir/template/config/MigrateConfig_Template.properties > $install_dir/config/MigrateConfig.json
 
-# changing path in script files for 2.11 version
+sed "s/{InstallDirectory}/$install_dir_repl/g;s/{ScalaInstallDirectory}/$scala_home_repl/g;s/{JavaInstallDirectory}/$java_home_repl/g" $install_dir/template/config/ClusterConfig_Template.json > $install_dir/config/ClusterConfig.json
 
-sed "s/{InstallDirectory}/$install_dir_repl/g;s/{ScalaInstallDirectory}/$scala_home_repl/g;s/{JavaInstallDirectory}/$java_home_repl/g" $install_dir/KamanjaInstall-2.11/template/script/MigrateManager_Template.sh > $install_dir/KamanjaInstall-2.11/bin/MigrateManager.sh
+sed "s/{InstallDirectory}/$install_dir_repl/g;s/{ScalaInstallDirectory}/$scala_home_repl/g;s/{JavaInstallDirectory}/$java_home_repl/g" $install_dir/template/config/MetadataAPIConfig_Template.properties > $install_dir/config/MetadataAPIConfig.properties
 
-# logfile for 2.11 version
-sed "s/{InstallDirectory}/$install_dir_repl/g" $install_dir/KamanjaInstall-2.11/template/config/log4j2_Template.xml > $install_dir/KamanjaInstall-2.11/config/log4j2.xml
-
-# changing path in config files for 2.11 version
-sed "s/{InstallDirectory}/$install_dir_repl/g;s/{ScalaInstallDirectory}/$scala_home_repl/g;s/{JavaInstallDirectory}/$java_home_repl/g" $install_dir/KamanjaInstall-2.11/template/config/MigrateConfig_Template.properties > $install_dir/KamanjaInstall-2.11/config/MigrateConfig.json
-sed "s/{InstallDirectory}/$install_dir_repl/g;s/{ScalaInstallDirectory}/$scala_home_repl/g;s/{JavaInstallDirectory}/$java_home_repl/g" $install_dir/KamanjaInstall-2.11/template/config/ClusterConfig_Template.json > $install_dir/KamanjaInstall-2.11/config/ClusterConfig.json
-sed "s/{InstallDirectory}/$install_dir_repl/g;s/{ScalaInstallDirectory}/$scala_home_repl/g;s/{JavaInstallDirectory}/$java_home_repl/g" $install_dir/KamanjaInstall-2.11/template/config/MetadataAPIConfig_Template.properties > $install_dir/KamanjaInstall-2.11/config/MetadataAPIConfig.properties
-
-chmod 777 $install_dir/KamanjaInstall-2.10/bin/*.*
-
-chmod 777 $install_dir/KamanjaInstall-2.11/bin/*.*
 
 cd $pwdnm
 
