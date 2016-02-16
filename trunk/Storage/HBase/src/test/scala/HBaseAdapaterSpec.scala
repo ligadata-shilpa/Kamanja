@@ -30,6 +30,7 @@ import com.ligadata.StorageBase._
 import com.ligadata.Serialize._
 import com.ligadata.Utils.KamanjaLoaderInfo
 import com.ligadata.keyvaluestore.HBaseAdapter
+//import com.ligadata.testutils.docker._
 
 import com.ligadata.Exceptions._
 
@@ -37,6 +38,7 @@ case class Customer(name:String, address: String, homePhone: String)
 
 @Ignore
 class HBaseAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterAll with GivenWhenThen {
+  private val dockerManager = new DockerManager
   var res : String = null;
   var statusCode: Int = -1;
   var adapter:DataStore = null
@@ -44,6 +46,8 @@ class HBaseAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterAl
 
   private val loggerName = this.getClass.getName
   private val logger = LogManager.getLogger(loggerName)
+  //private val dockerHost = dockerManager.getHostIP()
+  //private var dockerContainerId = ""
 
   val dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss")
   val dateFormat1 = new SimpleDateFormat("yyyy/MM/dd")
@@ -145,6 +149,7 @@ class HBaseAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterAl
 
   override def beforeAll = {
     try {
+      //dockerContainerId = dockerManager.run("ligadatawilliam/hbase", None, List(2181, 9090, 9095, 60000, 60010, 60020, 60030), 600)
       logger.info("starting...");
       logger.info("Initialize HBaseAdapter")
       adapter = CreateAdapter
@@ -637,5 +642,7 @@ class HBaseAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterAl
     if( logFile != null ){
       deleteFile(logFile)
     }
+    //dockerManager.stopContainer(dockerContainerId)
+    //dockerManager.removeContainer(dockerContainerId)
   }
 }
