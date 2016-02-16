@@ -52,7 +52,7 @@ trait LogTrait {
  */
 
 object MetadataLoad {
-	val MetadataLoad.baseTypesVer : Long = 1000000 // Which is 00.01.000000
+	val baseTypesVer : Long = 1000000 // Which is 00.01.000000
 	def BaseContainersInfo: Array[(String, String, String, List[(String, String, String, String, Boolean, String)])] = {
 		// nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)
 		return Array[(String, String, String, List[(String, String, String, String, Boolean, String)])](
