@@ -109,7 +109,7 @@ lazy val StorageCassandra = project.in(file("Storage/Cassandra")) dependsOn(Stor
 
 lazy val StorageHashMap = project.in(file("Storage/HashMap")) dependsOn(StorageBase, Serialize, Exceptions, KamanjaUtils, KvBase)
 
-lazy val StorageHBase = project.in(file("Storage/HBase")) dependsOn(StorageBase, Serialize, Exceptions, KamanjaUtils, KvBase)
+lazy val StorageHBase = project.in(file("Storage/HBase")) dependsOn(StorageBase, Serialize, Exceptions, KamanjaUtils, KvBase, DockerManager % "test")
 
 // lazy val StorageRedis = project.in(file("Storage/Redis")) dependsOn(StorageBase, Exceptions, KamanjaUtils)
 
@@ -158,3 +158,13 @@ lazy val MigrateManager = project.in(file("Utils/Migrate/MigrateManager")) depen
 lazy val MigrateTo_V_1_3 = project.in(file("Utils/Migrate/DestinationVersion/MigrateTo_V_1_3")) dependsOn (MigrateBase, KamanjaManager)
 
 lazy val MigrateFrom_V_1_2 = project.in(file("Utils/Migrate/SourceVersion/MigrateFrom_V_1_2")) dependsOn (MigrateBase)
+
+// Test Projects
+// These are designed to be companion projects to unit tests. When used as a dependency, they should be used as 'foo dependsOn(bar % "test")'
+// This indicates that your project 'foo' only depends on test project 'bar' when unit tests are run.
+
+lazy val DockerManager = project.in(file("Utils/DockerManager")).
+  settings(libraryDependencies ++= Seq(
+    "org.apache.logging.log4j" % "log4j-api" % "2.4.1",
+    "org.apache.logging.log4j" % "log4j-core" % "2.4.1")
+  )
