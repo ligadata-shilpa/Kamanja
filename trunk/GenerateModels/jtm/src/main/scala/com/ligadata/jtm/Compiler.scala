@@ -38,7 +38,7 @@ c) Model run and validation for unit test => compile, run
 */
 
 object jtmGlobalLogger {
-  val loggerName = this.getClass.getName()
+  val loggerName = this.getClass.getName
   val logger = LogManager.getLogger(loggerName)
 }
 
@@ -73,9 +73,7 @@ object Compiler extends App with LogTrait {
         val cmdconf = new Conf(args)
       }
       catch {
-        case e: Exception => {
-          System.exit(1)
-        }
+        case e: Exception => System.exit(1)
       }
       // Do all validations
 
@@ -129,10 +127,10 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     */
   def splitAlias(name: String): (String, String) = {
     val elements = name.split('.')
-    if(elements.size==1)
+    if(elements.length==1)
       ("", name)
     else
-      ( elements.head, elements.slice(1, elements.size).mkString(".") )
+      ( elements.head, elements.slice(1, elements.length).mkString(".") )
   }
 
   /** Creates a metadata instance with defaults and json objects located on the file system
@@ -228,13 +226,13 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
       }
     }
 
-    if(root.imports.toSet.size < root.imports.size) {
-      val dups = root.imports.groupBy(identity).collect { case (x,ys) if ys.size > 1 => x }
+    if(root.imports.toSet.size < root.imports.length) {
+      val dups = root.imports.groupBy(identity).collect { case (x,ys) if ys.length > 1 => x }
       logger.warn("Dropped duplicate imports: {}", dups.mkString(", "))
     }
 
     // Validate any computes nodes if val and vals are set
-    val computeconstraint = root.transformations.foldLeft("root/", Map.empty[String, String])( (r, t) => {
+    val computeConstraint = root.transformations.foldLeft("root/", Map.empty[String, String])( (r, t) => {
 
       val r1 = t._2.computes.foldLeft(r._1 + t._1 + "/", Map.empty[String, String])( (r, c) => {
         if(c._2.expression.length > 0 && c._2.expressions.length > 0) {
@@ -257,9 +255,9 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
       ("", r1 ++ r2)
     })._2
 
-    if(computeconstraint.size > 0) {
-      computeconstraint.foreach( m => logger.warn(m.toString()))
-      throw new Exception("Conflicting %d compute nodes".format(computeconstraint.size))
+    if(computeConstraint.nonEmpty) {
+      computeConstraint.foreach( m => logger.warn(m.toString()))
+      throw new Exception("Conflicting %d compute nodes".format(computeConstraint.size))
     }
   }
 
@@ -273,7 +271,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
       throw new Exception("Metadata: unable to find class %s".format(classname))
     }
     val members = classinstance.get.containerType.asInstanceOf[StructTypeDef].memberDefs
-    members.map( e => columnNamePatchUp.get(e.Name).getOrElse(e.Name)).toSet
+    members.map( e => columnNamePatchUp.getOrElse(e.Name, e.Name)).toSet
   }
 
   def ResolveToVersionedClassname(mgr: MdMgr, classname: String): String = {
@@ -296,7 +294,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     classList.foldLeft(1, Array.empty[Element])( (r, classname) => {
       val classMd = md.Message(classname, 0, true)
       val members = classMd.get.containerType.asInstanceOf[StructTypeDef].memberDefs
-      (r._1 + 1, r._2 ++ members.map( e => Element("msg%d".format( r._1), classname, columnNamePatchUp.get(e.Name).getOrElse(e.Name))))
+      (r._1 + 1, r._2 ++ members.map( e => Element("msg%d".format( r._1), classname, columnNamePatchUp.getOrElse(e.Name, e.Name))))
     })._2
   }
 
@@ -309,10 +307,10 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
         if(a.isEmpty) {
           throw new Exception("Missing alias %s for %s".format(alias, n))
         } else {
-          (n -> "%s.%s".format(a.get, name))
+          n -> "%s.%s".format(a.get, name)
         }
       } else {
-        (n -> n)
+        n -> n
       }
     }).toMap
   }
@@ -442,7 +440,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     //
     val incomingToMsgId = dependencyToTransformations.foldLeft(Set.empty[String]) ( (r, e) => {
       r ++ e._1
-    }).zipWithIndex.map( e => (e._1, (e._2 + 1))).toMap
+    }).zipWithIndex.map( e => (e._1, e._2 + 1)).toMap
 
     // Return tru if we accept the message, flatten the messages into a list
     //
@@ -459,7 +457,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     // Generate variables
     //
     incomingToMsgId.foreach( e => {
-      messages :+= ("val msg%d = msgs.get(\"%s\").getOrElse(null).asInstanceOf[%s]".format(e._2, e._1, ResolveToVersionedClassname(md, e._1)))
+      messages :+= "val msg%d = msgs.get(\"%s\").getOrElse(null).asInstanceOf[%s]".format(e._2, e._1, ResolveToVersionedClassname(md, e._1))
     })
 
     // Compute the highlevel handler that match dpendencies
@@ -518,13 +516,13 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
         var cnt1 = computes.size
         var cnt2 = 0
 
-        while(cnt1!=cnt2 && computes.size > 0) {
+        while(cnt1!=cnt2 && computes.nonEmpty) {
           cnt2 = cnt1
 
           val computes1 = computes.filter(c => {
 
             // Check if the compute if determined
-            val (open, expression) =  if(c._2.expression.length > 0) {
+            val (open, expression) =  if(c._2.expression.nonEmpty) {
               val list = ExtractColumnNames(c._2.expression)
               val rList = ResolveNames(list, aliases)
               val open = rList.filter(f => !fixedMappingSources.contains(f._2))
@@ -544,7 +542,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
               })
             }
 
-            if(open.size==0) {
+            if(open.isEmpty) {
               val newExpression = FixupColumnNames(expression, fixedMappingSources, aliases)
               // Output the actual compute
               methods :+= c._2.Comment
@@ -564,7 +562,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           computes = computes1
         }
 
-        if(computes.size > 0){
+        if(computes.nonEmpty){
           throw new Exception("Not all elements used")
           logger.trace("Not all elements used")
         }
@@ -605,7 +603,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           mapping = mapping.filterKeys( f => !found.contains(f) )
 
           // Abort this loop if nothing changes or we can satisfy all outputs
-          while(cnt1!=cnt2 && outputSet1.size > 0) {
+          while(cnt1!=cnt2 && outputSet1.nonEmpty) {
 
             cnt2 = cnt1
 
@@ -613,7 +611,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
             val filters1 = filters.filter(f => {
               val list = ExtractColumnNames(f)
               val open = list.filter(f => !mappingSources.contains(f) )
-              if(open.size==0) {
+              if(open.isEmpty) {
                 // Sub names to
                 val newExpression = FixupColumnNames(f, mappingSources, aliases)
                 // Output the actual filter
@@ -648,7 +646,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
                 })
               }
 
-              if(open.size==0) {
+              if(open.isEmpty) {
                 // Sub names to
                 val newExpression = FixupColumnNames(expression, mappingSources, aliases)
 
@@ -669,7 +667,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
             })
 
             // Check Mapping
-            if(mapping.size>0)
+            if(mapping.nonEmpty)
             {
               val found = mapping.filter( f => mappingSources.contains(f._2) )
               found.foreach(f => {outputSet1 --= Set(f._1); mappingSources ++= Map(f._1 -> mappingSources.get(f._2).get)})
@@ -682,7 +680,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
             computes = computes1
           }
 
-          if(outputSet1.size>0){
+          if(outputSet1.nonEmpty){
             logger.trace("Not all outputs satisfied. missing={}" , outputSet1.mkString(", "))
             throw new Exception("Not all outputs satisfied. missing=" + outputSet1.mkString(", "))
           }
