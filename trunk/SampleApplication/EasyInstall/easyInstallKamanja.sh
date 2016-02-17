@@ -669,9 +669,9 @@ cp -rf * $installPath/Kamanja-$ver210/documentation
 # *******************************
 # Copy ClusterInstall
 # *******************************
-mkdir -p $installPath/Kamanja-$ver210/ClusterInstall
-cp -rf $srcPath/SampleApplication/ClusterInstall/scala-2.10/* $installPath/Kamanja-$ver210/ClusterInstall/
-cp $srcPath/Utils/NodeInfoExtract/target/scala-2.10/NodeInfoExtract* $installPath/Kamanja-$ver210/ClusterInstall/
+# mkdir -p $installPath/Kamanja-$ver210/ClusterInstall
+# cp -rf $srcPath/SampleApplication/ClusterInstall/scala-2.10/* $installPath/Kamanja-$ver210/ClusterInstall/
+# cp $srcPath/Utils/NodeInfoExtract/target/scala-2.10/NodeInfoExtract* $installPath/Kamanja-$ver210/ClusterInstall/
 
 # *******************************
 # copy models, messages, containers, config, scripts, types  messages data prep
@@ -1298,9 +1298,9 @@ cp -rf * $installPath/Kamanja-$ver211/documentation
 # *******************************
 # Copy ClusterInstall
 # *******************************
-mkdir -p $installPath/Kamanja-$ver211/ClusterInstall
-cp -rf $srcPath/SampleApplication/ClusterInstall/scala-2.11/* $installPath/Kamanja-$ver211/ClusterInstall/
-cp $srcPath/Utils/NodeInfoExtract/target/scala-2.11/NodeInfoExtract* $installPath/Kamanja-$ver211/ClusterInstall/
+# mkdir -p $installPath/Kamanja-$ver211/ClusterInstall
+# cp -rf $srcPath/SampleApplication/ClusterInstall/scala-2.11/* $installPath/Kamanja-$ver211/ClusterInstall/
+# cp $srcPath/Utils/NodeInfoExtract/target/scala-2.11/NodeInfoExtract* $installPath/Kamanja-$ver211/ClusterInstall/
 
 # *******************************
 # copy models, messages, containers, config, scripts, types  messages data prep
