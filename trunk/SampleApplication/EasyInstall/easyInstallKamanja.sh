@@ -109,6 +109,36 @@ mkdir -p $installPath/Kamanja-$ver211/input/SampleApplications/template
 #new one
 
 
+#************************************************************
+# Making directories for Kamanja InstallMigrationAndCluster
+#************************************************************
+# *******************************
+# Make the directories as needed for version-2.10
+# *******************************
+mkdir -p $installPath/KamanjaInstall-$ver210/bin
+mkdir -p $installPath/KamanjaInstall-$ver210/lib/system
+mkdir -p $installPath/KamanjaInstall-$ver210/lib/application
+mkdir -p $installPath/KamanjaInstall-$ver210/logs
+mkdir -p $installPath/KamanjaInstall-$ver210/config
+mkdir -p $installPath/KamanjaInstall-$ver210/template/config
+mkdir -p $installPath/KamanjaInstall-$ver210/template/script
+
+# *******************************
+# Make the directories as needed for version-2.11
+# *******************************
+mkdir -p $installPath/KamanjaInstall-$ver211/bin
+mkdir -p $installPath/KamanjaInstall-$ver211/lib/system
+mkdir -p $installPath/KamanjaInstall-$ver211/lib/application
+mkdir -p $installPath/KamanjaInstall-$ver211/logs
+mkdir -p $installPath/KamanjaInstall-$ver211/config
+mkdir -p $installPath/KamanjaInstall-$ver211/template/config
+mkdir -p $installPath/KamanjaInstall-$ver211/template/script
+
+kamanjainstallbin=$installPath/KamanjaInstall-$ver210/bin
+kamanjainstallsystemlib=$installPath/KamanjaInstall-$ver210/lib/system
+kamanjainstallapplib=$installPath/KamanjaInstall-$ver210/lib/application
+
+
 # *******************************
 # Build fat-jars for version-2.10
 # *******************************
@@ -151,6 +181,9 @@ cp FileDataConsumer/target/scala-2.10/FileDataConsumer* $bin
 cp Utils/CleanUtil/target/scala-2.10/CleanUtil* $bin
 cp Utils/Migrate/MigrateManager/target/MigrateManager* $bin
 
+# copy fat jars to KamanjaInstall
+cp Utils/Migrate/MigrateManager/target/MigrateManager* $kamanjainstallbin
+cp $srcPath/Utils/NodeInfoExtract/target/scala-2.10/NodeInfoExtract* $kamanjainstallbin
 
 # *******************************
 # Copy jars required for version-2.10 (more than required if the fat jars are used)
@@ -599,6 +632,14 @@ cp $srcPath/SecurityAdapters/SecurityAdapterBase/target/scala-2.10/*.jar $system
 # cp $srcPath/Utils/SaveContainerDataComponent/target/scala-2.10/SaveContainerDataComponent* $systemlib
 cp $srcPath/Utils/UtilsForModels/target/scala-2.10/utilsformodels*.jar $systemlib
 
+#copy jars for kamanjainstallapplib
+cp $srcPath/Utils/Migrate/MigrateBase/target/migratebase-1.0.jar $kamanjainstallsystemlib
+cp $srcPath/Utils/Migrate/SourceVersion/MigrateFrom_V_1_1/target/scala-2.10/migratefrom_v_1_1_2.10-1.0.jar $kamanjainstallsystemlib
+cp $srcPath/Utils/Migrate/SourceVersion/MigrateFrom_V_1_2/target/scala-2.10/migratefrom_v_1_2_2.10-1.0.jar $kamanjainstallsystemlib
+# this should be changed?
+cp $srcPath/Utils/Migrate/DestinationVersion/MigrateTo_V_1_3/target/scala-2.10/migrateto_v_1_3_2.10-1.0.jar $kamanjainstallsystemlib
+
+
 
 # sample configs
 #echo "copy sample configs..."
@@ -748,6 +789,12 @@ bin=$installPath/Kamanja-$ver211/bin
 systemlib=$installPath/Kamanja-$ver211/lib/system
 applib=$installPath/Kamanja-$ver211/lib/application
 
+
+kamanjainstallbin=$installPath/KamanjaInstall-$ver211/bin
+kamanjainstallsystemlib=$installPath/KamanjaInstall-$ver211/lib/system
+kamanjainstallapplib=$installPath/KamanjaInstall-$ver211/lib/application
+
+
 echo $installPath
 echo $srcPath
 echo $bin
@@ -787,6 +834,10 @@ cp MetadataAPIService/target/scala-2.11/MetadataAPIService* $bin
 cp FileDataConsumer/target/scala-2.11/FileDataConsumer* $bin
 cp Utils/CleanUtil/target/scala-2.11/CleanUtil* $bin
 cp Utils/Migrate/MigrateManager/target/MigrateManager* $bin
+
+cp Utils/Migrate/MigrateManager/target/MigrateManager* $kamanjainstallbin
+cp $srcPath/Utils/NodeInfoExtract/target/scala-2.11/NodeInfoExtract* $kamanjainstallbin
+
 
 # *******************************
 # Copy jars required version-2.11 (more than required if the fat jars are used)
@@ -1191,6 +1242,16 @@ cp $ivyPath/cache/io.spray/spray-testkit_2.11/jars/spray-testkit_2.11-1.3.3.jar 
 cp $srcPath/Utils/Migrate/MigrateBase/target/migratebase-1.0.jar $systemlib
 cp $srcPath/Utils/Migrate/DestinationVersion/MigrateTo_V_1_3/target/scala-2.11/migrateto_v_1_3_2.11-1.0.jar $systemlib
 
+
+#copy jars for kamanjainstallapplib
+
+cp $srcPath/Utils/Migrate/MigrateBase/target/migratebase-1.0.jar $kamanjainstallsystemlib
+# not found
+#cp $srcPath/Utils/Migrate/SourceVersion/MigrateFrom_V_1_1/target/scala-2.11/migratefrom_v_1_1_2.10-1.0.jar $kamanjainstallsystemlib
+#cp $srcPath/Utils/Migrate/SourceVersion/MigrateFrom_V_1_2/target/scala-2.11/migratefrom_v_1_2_2.10-1.0.jar $kamanjainstallsystemlib
+cp $srcPath/Utils/Migrate/DestinationVersion/MigrateTo_V_1_3/target/scala-2.11/migrateto_v_1_3_2.11-1.0.jar $kamanjainstallsystemlib
+
+
 cp $srcPath/Storage/Cassandra/target/scala-2.11/*.jar $systemlib
 cp $srcPath/Storage/HashMap/target/scala-2.11/*.jar $systemlib
 cp $srcPath/Storage/HBase/target/scala-2.11/*.jar $systemlib
@@ -1343,14 +1404,36 @@ bash $installPath/Kamanja-$ver211/bin/SetPaths.sh $KafkaRootDir
 
 chmod 0700 $installPath/Kamanja-$ver211/input/SampleApplications/bin/*sh
 
-# cd $srcPath/SampleApplication/EasyInstall
-# bash InstallMigrationAndCluster.sh $installPath $srcPath $ivyPath $KafkaRootDir
+#Migration and cluster Install*****************
 
-# cd $installPath
-# tar -cvzf Kamanja-$ver210.tar.gz Kamanja-$ver210
-# tar -cvzf Kamanja-$ver211.tar.gz Kamanja-$ver211
-# tar -cvzf KamanjaInstall-$ver210.tar.gz KamanjaInstall-$ver210
-# tar -cvzf KamanjaInstall-$ver211.tar.gz KamanjaInstall-$ver211
+cd $srcPath/SampleApplication/MigrationAndClusterInstall/template2.10
+cp -rf * $installPath/KamanjaInstall-$ver210/template/.
+
+cd $srcPath/SampleApplication/MigrationAndClusterInstall/template2.11
+cp -rf * $installPath/KamanjaInstall-$ver211/template/.
+
+cd $srcPath/SampleApplication/EasyInstall
+cp SetPathsMigrateClusterInstall.sh $installPath/KamanjaInstall-$ver210/bin/
+cp SetPathsMigrateClusterInstall.sh $installPath/KamanjaInstall-$ver211/bin/
+
+cd $installPath/KamanjaInstall-$ver210/bin
+bash SetPathsMigrateClusterInstall.sh $KafkaRootDir
+
+cd $installPath/KamanjaInstall-$ver211/bin
+bash SetPathsMigrateClusterInstall.sh $KafkaRootDir
+
+chmod 0700 $installPath/KamanjaInstall-$ver210/bin/*.sh
+chmod 0700 $installPath/KamanjaInstall-$ver211/bin/*.sh
+
+
+#Migration and Cluster Install*****************
+
+
+cd $installPath
+tar -cvzf Kamanja-$ver210.tar.gz Kamanja-$ver210
+tar -cvzf Kamanja-$ver211.tar.gz Kamanja-$ver211
+tar -cvzf KamanjaInstall-$ver210.tar.gz KamanjaInstall-$ver210
+tar -cvzf KamanjaInstall-$ver211.tar.gz KamanjaInstall-$ver211
 
 echo "Kamanja install complete..."
 
