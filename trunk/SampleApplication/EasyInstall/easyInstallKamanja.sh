@@ -1416,12 +1416,6 @@ chmod 0700 $installPath/Kamanja-$ver211/input/SampleApplications/bin/*sh
 
 #Migration and cluster Install*****************
 
-cd $srcPath/SampleApplication/MigrationAndClusterInstall/template2.10
-cp -rf * $installPath/KamanjaInstall-$ver210/template/.
-
-cd $srcPath/SampleApplication/MigrationAndClusterInstall/template2.11
-cp -rf * $installPath/KamanjaInstall-$ver211/template/.
-
 chmod 0700 $installPath/KamanjaInstall-$ver210/bin/*.sh
 chmod 0700 $installPath/KamanjaInstall-$ver211/bin/*.sh
 
