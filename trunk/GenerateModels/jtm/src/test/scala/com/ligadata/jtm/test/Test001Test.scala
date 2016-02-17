@@ -55,7 +55,6 @@ class Test001Test  extends FunSuite with BeforeAndAfter {
     assert(actual == expected)
   }
 
-  /*
   // Multiple input messages with vals in compute
   test("test2") {
 
@@ -80,6 +79,6 @@ class Test001Test  extends FunSuite with BeforeAndAfter {
 
     assert(actual == expected)
   }
-*/
+
 
 }

@@ -198,13 +198,15 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     * @param mapNameSource name to variable mapping
     * @return string with the result
     */
-  def FixupColumnNames(expression: String, mapNameSource: Map[String, String]): String = {
+  def FixupColumnNames(expression: String, mapNameSource: Map[String, String], aliases: Map[String, String]): String = {
     val regex = """(\$[a-zA-Z0-9_.]+)""".r
     val m = regex.pattern.matcher(expression)
     val sb = new StringBuffer
     var i = 0
     while (m.find) {
-      m.appendReplacement(sb, mapNameSource.get(m.group(0).drop(1)).get)
+      val name = m.group(0).drop(1)
+      val resolvedName = ResolveName(name, aliases)
+      m.appendReplacement(sb, mapNameSource.get(resolvedName).get)
       i = i + 1
     }
     m.appendTail(sb)
@@ -357,6 +359,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     // Validate model
     Validate(root)
 
+    val aliases: Map[String, String] = root.aliases.toMap
     var result = Array.empty[String]
     var exechandler = Array.empty[String]
     var methods = Array.empty[String]
@@ -383,7 +386,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
     // Add message so we can actual compile
     // Check how to reconcile during add/compilation
-    //result ++= root.aliases.map(p => p._2).toSet.toArray.map( i => "import %s".format(i))
+    //result ++= aliases.map(p => p._2).toSet.toArray.map( i => "import %s".format(i))
 
     // Collect all classes
     //
@@ -417,7 +420,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
         val resolvedDependencies = dependencies.map(alias => {
           // Translate dependencies, if available
-          root.aliases.getOrElse( alias, alias )
+          aliases.getOrElse( alias, alias )
         }).toSet
 
         val curr = r._2.get(resolvedDependencies)
@@ -498,14 +501,14 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
         // Resolve inputs, either we have unique or qualified names
         //
-        val uniqueInputs = {
-          val u = inputs.map( e => e.fieldName ).groupBy(identity).mapValues(_.size).filter( f => f._2==1).map( p => p._1)
+        val uniqueInputs: Map[String, String] = {
+          val u = inputs.map( e => e.fieldName ).groupBy(identity).mapValues(_.length).filter( f => f._2==1).keys
           val u1 = u.map( e => inputs.find( c => c.fieldName == e).get)
-          u1.map( p => (p.fieldName -> "%s.%s".format(p.argName, p.fieldName)))
+          u1.map( p => p.fieldName -> "%s.%s".format(p.argName, p.fieldName))
         }.toMap
 
-        val qualifiedInputs = inputs.map( p => {
-          ((p.className + "." + p.fieldName) -> "%s.%s".format(p.argName, e))
+        val qualifiedInputs: Map[String, String]  = inputs.map( p => {
+          p.className + "." + p.fieldName -> "%s.%s".format(p.argName, p.fieldName)
         }).toMap
 
         var fixedMappingSources = uniqueInputs ++ qualifiedInputs
@@ -516,30 +519,23 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
         var cnt1 = computes.size
         var cnt2 = 0
 
-        def ResolveToMessageVariable(values: Map[String, String], classToMsgId: Map[String, Int]): Map[String, String] = {
-          values.map( p => {
-            val (cname, variable) = splitNamespaceClass(p._2)
-            (p._1 -> "msg%d.%s".format(classToMsgId(cname), variable))
-          }).toMap
-        }
-
         while(cnt1!=cnt2 && computes.size > 0) {
           cnt2 = cnt1
 
           val computes1 = computes.filter(c => {
 
             // Check if the compute if determined
-            val (open, expression, list) =  if(c._2.expression.length > 0) {
+            val (open, expression) =  if(c._2.expression.length > 0) {
               val list = ExtractColumnNames(c._2.expression)
-              val rList = ResolveNames(list, root.aliases.toMap)
+              val rList = ResolveNames(list, aliases)
               val open = rList.filter(f => !fixedMappingSources.contains(f._2))
-              (open, c._2.expression, ResolveToMessageVariable(rList, incomingToMsgId))
+              (open, c._2.expression)
             } else {
               val evaluate = c._2.expressions.map( expression => {
                 val list = ExtractColumnNames(expression)
-                val rList = ResolveNames(list, root.aliases.toMap)
+                val rList = ResolveNames(list, aliases)
                 val open = rList.filter(f => !fixedMappingSources.contains(f._2))
-                (open, expression, ResolveToMessageVariable(rList, incomingToMsgId))
+                (open, expression)
               })
               evaluate.foldLeft(evaluate.head) ( (r, e) => {
                 if(e._1.size < r._1.size)
@@ -550,7 +546,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
             }
 
             if(open.size==0) {
-              val newExpression = FixupColumnNames(expression, list)
+              val newExpression = FixupColumnNames(expression, fixedMappingSources, aliases)
               // Output the actual compute
               methods :+= c._2.Comment
               if(c._2.typename.length>0)
@@ -581,7 +577,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           var collect = Array.empty[String]
           collect ++= Array("\ndef process_%s(): Array[Result] = {\n".format(o._1))
 
-          val outputSet: Set[String] = ColumnNames(md, ResolveAlias(o._1, root.aliases.toMap))
+          val outputSet: Set[String] = ColumnNames(md, ResolveAlias(o._1, aliases))
 
           // State variables to track the progress
           // a little bit simpler than having val's
@@ -620,7 +616,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
               val open = list.filter(f => !mappingSources.contains(f) )
               if(open.size==0) {
                 // Sub names to
-                val newExpression = FixupColumnNames(f, mappingSources)
+                val newExpression = FixupColumnNames(f, mappingSources, aliases)
                 // Output the actual filter
                 collect ++= Array("if (%s) return Array.empty[Result]\n".format(newExpression))
                 false
@@ -655,7 +651,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
               if(open.size==0) {
                 // Sub names to
-                val newExpression = FixupColumnNames(expression, mappingSources)
+                val newExpression = FixupColumnNames(expression, mappingSources, aliases)
 
                 // Output the actual compute
                 // To Do: multiple vals and type provided
