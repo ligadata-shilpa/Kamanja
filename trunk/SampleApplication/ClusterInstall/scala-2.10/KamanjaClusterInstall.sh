@@ -63,9 +63,11 @@ Usage()
     echo "                               --TarballPath <tarball path>"
     echo "                               --NodeConfigPath <engine config path> "
     echo "                               [ --WorkingDir <alt working dir>  ]"
-    echo "                               [ --ipAddrs <alt working dir>  ]"
-    echo "                               [ --ipIdTargPaths <alt working dir>  ]"
-    echo "                               [ --ipPathPairs <alt working dir>  ]"
+    echo "                               --ipAddrs the ips in the cluster  "
+    echo "                               --ipIdTargPaths unique ips, node ids, target paths, and roles  "
+    echo "                               --ipPathPairs unique ips and target paths  "
+    echo "                               --priorInstallDirPath name to use for rename of prior install if any  "
+    echo "                               --newInstallDirPath new name of physical install  "
     echo
     echo "  NOTES: Only tar'd gzip files are supported for the tarballs at the moment."
     echo "         NodeConfigPath must be supplied always"
@@ -83,7 +85,7 @@ Usage()
 
 
 # Check 1: Is this even close to reasonable?
-if [[ "$#" -eq 1  || "$#" -eq 4  || "$#" -eq 6  || "$#" -eq 8  || "$#" -eq 10  || "$#" -eq 12  || "$#" -eq 14  || "$#" -eq 16 ]]; then
+if [[ "$#" -eq 1  || "$#" -eq 4  || "$#" -eq 6  || "$#" -eq 8  || "$#" -eq 10  || "$#" -eq 12  || "$#" -eq 14  || "$#" -eq 16  || "$#" -eq 18  || "$#" -eq 20 ]]; then
     echo 
 else 
     echo 
@@ -93,9 +95,9 @@ else
 fi
 
 # Check 2: Is this even close to reasonable?
-if [[ "$name1" != "--ClusterId" && "$name1" != "--MetadataAPIConfig" && "$name1" != "--NodeConfigPath"  && "$name1" != "--KafkaInstallPath"   && "$name1" != "--TarballPath"  && "$name1" != "--WorkingDir"   && "$name1" != "--ipAddrs"   && "$name1" != "--ipIdTargPaths"   && "$name1" != "--ipPathPairs" ]]; then
+if [[ "$name1" != "--ClusterId" && "$name1" != "--MetadataAPIConfig" && "$name1" != "--NodeConfigPath"  && "$name1" != "--KafkaInstallPath"   && "$name1" != "--TarballPath"  && "$name1" != "--WorkingDir"   && "$name1" != "--ipAddrs"   && "$name1" != "--ipIdTargPaths"   && "$name1" != "--ipPathPairs" && "$name1" != --priorInstallDirPath" &&  n"$name1" != ""--newInstallDirPath" ]]; then
     echo 
-	echo "Problem: Unreasonable number of arguments... as few as 2 and as many as 4 may be supplied."
+	echo "Problem: Unreasonable number of arguments... as few as 2 and as many as 20 may be supplied."
     Usage
 	exit 1
 fi
@@ -112,6 +114,8 @@ clusterId=""
 ipAddrs=""
 ipIdTargPaths=""
 ipPathPairs=""
+priorInstallDirPath=""
+newInstallDirPath=""
 
 while [ "$1" != "" ]; do
     case $1 in
@@ -142,6 +146,12 @@ while [ "$1" != "" ]; do
                                 ;;
         --ipPathPairs )         shift
                                 ipPathPairs=$1
+                                ;;
+        --priorInstallDirPath ) shift
+                                priorInstallDirPath=$1
+                                ;;
+        --newInstallDirPath )   shift
+                                newInstallDirPath=$1
                                 ;;
         --help )           		Usage
         						exit 0
@@ -431,13 +441,13 @@ while read LINE; do
 		if [ -d "$targetFolder" ]; then 
 			cd $workDir
 			if [ ! -L $targetPath ]; then
-				mv 	$targetPath "$targetPath"_pre_"$DATE"			
+				mv 	$targetPath "$priorInstallDirPath
 			else
 				unlink $targetPath
 			fi
-			mkdir -p $targetPath_date
-	 		tar xzf $tarName -C $targetPath_date --strip-components 1
-			ln -sf  $targetPath_date $targetPath
+			mkdir -p $newInstallDirPath
+	 		tar xzf $tarName -C $newInstallDirPath --strip-components 1
+			ln -sf  $newInstallDirPath $targetPath
 	 	else
 			echo "$targetFolder is not directory"	
 		fi
