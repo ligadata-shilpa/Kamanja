@@ -29,7 +29,6 @@ import com.ligadata.jtm.nodes._
 
 // Laundry list
 /*
-2) Vals in compute based on input message
 3) Support java
 4) Plug into kamanja metadata tool
 
