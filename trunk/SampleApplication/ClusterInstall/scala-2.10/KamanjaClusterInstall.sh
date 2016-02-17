@@ -445,9 +445,11 @@ while read LINE; do
     # Engine Logfile. For now all nodes log files are same. May be later we can change.
     sed "s/{InstallPath}/$installDir_repl/g;s/{NodeId}/$id/g" $script_dir/engine_log4j2_template.xml > $workDir/engine_log4j2.xml
     sed "s/{InstallPath}/$installDir_repl/g;s/{NodeId}/$id/g" $script_dir/restapi_log4j2_template.xml > $workDir/restapi_log4j2.xml
+    sed "s/{InstallPath}/$installDir_repl/g;s/{NodeId}/$id/g" $script_dir/log4j2_template.xml > $workDir/log4j2.xml
     sed "s/{NodeId}/$id/g;s/{HostName}/$machine/g" $script_dir/ClusterCfgMetadataAPIConfig.properties > $workDir/MetadataAPIConfig_${id}.properties
     scp -o StrictHostKeyChecking=no "$workDir/engine_log4j2.xml" "$machine:$targetPath/"
     scp -o StrictHostKeyChecking=no "$workDir/restapi_log4j2.xml" "$machine:$targetPath/"
+    scp -o StrictHostKeyChecking=no "$workDir/log4j2.xml" "$machine:$targetPath/"
     scp -o StrictHostKeyChecking=no "$workDir/MetadataAPIConfig_${id}.properties" "$machine:$targetPath/MetadataAPIConfig_${id}.properties"
 done
 exec 0<&12 12<&-

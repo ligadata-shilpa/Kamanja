@@ -675,7 +675,8 @@ cp -rf * $installPath/Kamanja-$ver210/documentation
 # cp $srcPath/Utils/NodeInfoExtract/target/scala-2.10/NodeInfoExtract* $installPath/Kamanja-$ver210/ClusterInstall/
 cp -rf $srcPath/SampleApplication/ClusterInstall/scala-2.10/*.sh $kamanjainstallbin
 cp -rf $srcPath/SampleApplication/ClusterInstall/scala-2.10/*log4*.xml $kamanjainstallconfig
-cp -rf $srcPath/SampleApplication/ClusterInstall/scala-2.10/ClusterInstall_*.* $kamanjainstallconfig
+cp -rf $srcPath/SampleApplication/ClusterInstall/scala-2.10/*.json $kamanjainstallconfig
+cp -rf $srcPath/SampleApplication/ClusterInstall/scala-2.10/*.properties $kamanjainstallconfig
 
 # *******************************
 # copy models, messages, containers, config, scripts, types  messages data prep
@@ -1308,7 +1309,8 @@ cp -rf * $installPath/Kamanja-$ver211/documentation
 # cp $srcPath/Utils/NodeInfoExtract/target/scala-2.11/NodeInfoExtract* $installPath/Kamanja-$ver211/ClusterInstall/
 cp -rf $srcPath/SampleApplication/ClusterInstall/scala-2.11/*.sh $kamanjainstallbin
 cp -rf $srcPath/SampleApplication/ClusterInstall/scala-2.11/*log4*.xml $kamanjainstallconfig
-cp -rf $srcPath/SampleApplication/ClusterInstall/scala-2.11/ClusterInstall_*.* $kamanjainstallconfig
+cp -rf $srcPath/SampleApplication/ClusterInstall/scala-2.11/*.json $kamanjainstallconfig
+cp -rf $srcPath/SampleApplication/ClusterInstall/scala-2.11/*.properties $kamanjainstallconfig
 
 # *******************************
 # copy models, messages, containers, config, scripts, types  messages data prep
@@ -1420,22 +1422,10 @@ cp -rf * $installPath/KamanjaInstall-$ver210/template/.
 cd $srcPath/SampleApplication/MigrationAndClusterInstall/template2.11
 cp -rf * $installPath/KamanjaInstall-$ver211/template/.
 
-cd $srcPath/SampleApplication/EasyInstall
-cp SetPathsMigrateClusterInstall.sh $installPath/KamanjaInstall-$ver210/bin/
-cp SetPathsMigrateClusterInstall.sh $installPath/KamanjaInstall-$ver211/bin/
-
-cd $installPath/KamanjaInstall-$ver210/bin
-bash SetPathsMigrateClusterInstall.sh $KafkaRootDir
-
-cd $installPath/KamanjaInstall-$ver211/bin
-bash SetPathsMigrateClusterInstall.sh $KafkaRootDir
-
 chmod 0700 $installPath/KamanjaInstall-$ver210/bin/*.sh
 chmod 0700 $installPath/KamanjaInstall-$ver211/bin/*.sh
 
-
 #Migration and Cluster Install*****************
-
 
 cd $installPath
 tar -cvzf Kamanja-$ver210.tar.gz Kamanja-$ver210
