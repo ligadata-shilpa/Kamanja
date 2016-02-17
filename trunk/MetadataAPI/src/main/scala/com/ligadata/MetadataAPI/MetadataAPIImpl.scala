@@ -3566,8 +3566,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     /**
      * Add a PMML model to the metadata.
      *
-     * JPMML models are evaluated, not compiled. To create the model definition, an instance of the evaluator
-     * is obtained from the jpmml-evaluator component and the ModelDef is constructed and added to the store.
+     * PMML models are evaluated, not compiled. To create the model definition, an instance of the evaluator
+     * is obtained from the pmml-evaluator component and the ModelDef is constructed and added to the store.
      * @see com.ligadata.MetadataAPI.JpmmlSupport for more information
      *
      * @param modelName the namespace.name of the model to be injested.
@@ -3670,7 +3670,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
   }
 
     /**
-     * Add Model (format XML)
+     * Add Kamanja PMML Model (format XML).  Kamanja Pmml models obtain their name and version from the header in the Pmml file.
      * @param pmmlText
      * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
      *               method. If Security and/or Audit are configured, this value must be a value other than None.
@@ -3701,7 +3701,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
         apiResult
       } else {
         val reasonForFailure: String = if (modDef != null) ErrorCodeConstants.Add_Model_Failed_Higher_Version_Required else ErrorCodeConstants.Add_Model_Failed
-        val modDefName: String = if (modDef != null) modDef.FullName else "(pmml compile failed)"
+        val modDefName: String = if (modDef != null) modDef.FullName else "(kpmml compile failed)"
         val modDefVer: String = if (modDef != null) MdMgr.Pad0s2Version(modDef.Version) else MdMgr.UnknownVersion
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddModel", null, reasonForFailure + ":" + modDefName + "." + modDefVer)
         apiResult.toString()
@@ -3866,8 +3866,9 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @param input the text element to be added dependent upon the modelType specified.
      * @param optUserid the identity to be used by the security adapter to ascertain if this user has access permissions for this
      *               method.
-     * @param optModelName the namespace.name of the PMML model to be added to the Kamanja metadata
-     * @param optVersion the model version to be used to describe this PMML model
+     * @param optModelName the namespace.name of the PMML model to be added to the Kamanja metadata (Note: KPMML models extract this from
+     *                     the pmml source file header and for this reason is not required for the KPMML model types).
+     * @param optVersion the model version to be used to describe this PMML model (for KPMML types this value is obtained from the source file)
      * @param optVersionBeingUpdated not used .. reserved for future release where explicit modelnamespace.modelname.modelversion
      *                               can be updated (not just the latest version)
      * @return  result string indicating success or failure of operation
@@ -4234,21 +4235,21 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
             } else {
                 val reasonForFailure: String = if (modDef != null) ErrorCodeConstants.Update_Model_Failed_Invalid_Version else ErrorCodeConstants.Update_Model_Failed
-                val modDefName: String = if (modDef != null) modDef.FullName else "(pmml compile failed)"
+                val modDefName: String = if (modDef != null) modDef.FullName else "(kpmml compile failed)"
                 val modDefVer: String = if (modDef != null) MdMgr.Pad0s2Version(modDef.Version) else MdMgr.UnknownVersion
-                var apiResult = new ApiResult(ErrorCodeConstants.Failure, s"UpdateModel(type = PMML)", null, reasonForFailure + ":" + modDefName + "." + modDefVer)
+                var apiResult = new ApiResult(ErrorCodeConstants.Failure, s"UpdateModel(type = KPMML)", null, reasonForFailure + ":" + modDefName + "." + modDefVer)
                 apiResult.toString()
             }
         } catch {
             case e: ObjectNotFoundException => {
                 logger.debug("", e)
-                var apiResult = new ApiResult(ErrorCodeConstants.Failure, s"UpdateModel(type = PMML)", null, "Error :" + e.toString() + ErrorCodeConstants.Update_Model_Failed)
+                var apiResult = new ApiResult(ErrorCodeConstants.Failure, s"UpdateModel(type = KPMML)", null, "Error :" + e.toString() + ErrorCodeConstants.Update_Model_Failed)
                 apiResult.toString()
             }
             case e: Exception => {
                 
                 logger.debug("", e)
-                var apiResult = new ApiResult(ErrorCodeConstants.Failure, s"UpdateModel(type = PMML)", null, "Error :" + e.toString() + ErrorCodeConstants.Update_Model_Failed)
+                var apiResult = new ApiResult(ErrorCodeConstants.Failure, s"UpdateModel(type = KPMML)", null, "Error :" + e.toString() + ErrorCodeConstants.Update_Model_Failed)
                 apiResult.toString()
             }
         }
