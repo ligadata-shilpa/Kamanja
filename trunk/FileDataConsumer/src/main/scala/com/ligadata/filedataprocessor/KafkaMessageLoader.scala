@@ -152,11 +152,19 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
       if (!msg.isLastDummy) {
         numberOfValidEvents += 1
         var inputData: InputData = null
-        val msgStr = new String(msg.msg)
+        var msgStr :String = null
         try {
           
           //Pass in the complete message instead of just the message string
           inputData = CreateKafkaInput(msg, SmartFileAdapterConstants.MESSAGE_NAME, delimiters)
+         
+          if(message_metadata && !msgStr.startsWith("fileId")){
+            msgStr = "fileId" + delimiters.keyAndValueDelimiter + FileProcessor.getIDFromFileCache(msg.relatedFileName) +
+              delimiters.fieldDelimiter +
+              "fileOffset" + delimiters.keyAndValueDelimiter + msg.msgOffset.toString() +
+              delimiters.fieldDelimiter + new String(msg.msg)
+          }else
+            msgStr = new String(msg.msg)
           
           currentOffset += 1
 
@@ -573,10 +581,11 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
     }
     
     //Inject the Filename and Offset here based on the flag
+    /*
     if(message_metadata && !dataMap.contains("fileId")){
       dataMap("fileId") = FileProcessor.getIDFromFileCache(inputData.relatedFileName)
       dataMap("fileOffset") = inputData.msgOffset.toString()
-    }
+    }*/
     
     inpData.dataMap = dataMap.toMap
     inpData
