@@ -745,11 +745,11 @@ object ModelRepresentation extends Enumeration {
 
 /**
  * The ModelDef provides meta data for all models in the system.  The model's input type can currently be either a jar or
- * a pmml text string (used by JPMML type models).  The mining model type is any of the dmg.org's model types as defined in their xsd or
+ * a pmml text string (used by PMML type models).  The mining model type is any of the dmg.org's model types as defined in their xsd or
  * one of our own special types (CustomScala, CustomJava, or Unknown when the caller does not supply one).
  *
  * Models, when marked with isReusable, can be cached (are considered idempotent)
- * @param modelRepresentation The form of model to be cataloged - JAR, JPMML etc.
+ * @param modelRepresentation The form of model to be cataloged - JAR, PMML etc.
  * @param miningModelType a MininingModelType default = "Unknown"
  * @param inputVars an array of the input variables that are consumed by this model (used for dag construction)
  * @param outputVars an array of the output variables published by this model (also used for dag construction)
@@ -758,7 +758,7 @@ object ModelRepresentation extends Enumeration {
  *                    any given model
  * @param supportsInstanceSerialization when true, ModelDef instances are serialized and cached for retrieval by
  *                                      the engine and other consumers of ModelDefs.  This mechanism is useful
- *                                      for JPMML and other models that are relatively expensive to initialize. The
+ *                                      for PMML and other models that are relatively expensive to initialize. The
  *                                      thinking here is that the ingestion will occur at 'add model' time just once
  *                                      and out of band from the cluster bootstrap.  FIXME: NOT IMPLEMENTED YET
  */
