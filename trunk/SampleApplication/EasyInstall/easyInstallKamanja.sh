@@ -137,6 +137,7 @@ mkdir -p $installPath/KamanjaInstall-$ver211/template/script
 kamanjainstallbin=$installPath/KamanjaInstall-$ver210/bin
 kamanjainstallsystemlib=$installPath/KamanjaInstall-$ver210/lib/system
 kamanjainstallapplib=$installPath/KamanjaInstall-$ver210/lib/application
+kamanjainstallconfig=$installPath/KamanjaInstall-$ver210/config
 
 
 # *******************************
@@ -672,6 +673,9 @@ cp -rf * $installPath/Kamanja-$ver210/documentation
 # mkdir -p $installPath/Kamanja-$ver210/ClusterInstall
 # cp -rf $srcPath/SampleApplication/ClusterInstall/scala-2.10/* $installPath/Kamanja-$ver210/ClusterInstall/
 # cp $srcPath/Utils/NodeInfoExtract/target/scala-2.10/NodeInfoExtract* $installPath/Kamanja-$ver210/ClusterInstall/
+cp -rf $srcPath/SampleApplication/ClusterInstall/scala-2.10/*.sh $kamanjainstallbin
+cp -rf $srcPath/SampleApplication/ClusterInstall/scala-2.10/*log4*.xml $kamanjainstallconfig
+cp -rf $srcPath/SampleApplication/ClusterInstall/scala-2.10/ClusterInstall_*.* $kamanjainstallconfig
 
 # *******************************
 # copy models, messages, containers, config, scripts, types  messages data prep
@@ -793,6 +797,7 @@ applib=$installPath/Kamanja-$ver211/lib/application
 kamanjainstallbin=$installPath/KamanjaInstall-$ver211/bin
 kamanjainstallsystemlib=$installPath/KamanjaInstall-$ver211/lib/system
 kamanjainstallapplib=$installPath/KamanjaInstall-$ver211/lib/application
+kamanjainstallconfig=$installPath/KamanjaInstall-$ver211/config
 
 
 echo $installPath
@@ -1301,6 +1306,9 @@ cp -rf * $installPath/Kamanja-$ver211/documentation
 # mkdir -p $installPath/Kamanja-$ver211/ClusterInstall
 # cp -rf $srcPath/SampleApplication/ClusterInstall/scala-2.11/* $installPath/Kamanja-$ver211/ClusterInstall/
 # cp $srcPath/Utils/NodeInfoExtract/target/scala-2.11/NodeInfoExtract* $installPath/Kamanja-$ver211/ClusterInstall/
+cp -rf $srcPath/SampleApplication/ClusterInstall/scala-2.11/*.sh $kamanjainstallbin
+cp -rf $srcPath/SampleApplication/ClusterInstall/scala-2.11/*log4*.xml $kamanjainstallconfig
+cp -rf $srcPath/SampleApplication/ClusterInstall/scala-2.11/ClusterInstall_*.* $kamanjainstallconfig
 
 # *******************************
 # copy models, messages, containers, config, scripts, types  messages data prep
