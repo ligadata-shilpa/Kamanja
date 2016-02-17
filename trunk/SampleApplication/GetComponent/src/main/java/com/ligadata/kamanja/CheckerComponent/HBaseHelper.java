@@ -15,6 +15,8 @@ import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.VersionInfo;
+import org.apache.hadoop.hbase.client.*;
+
 
 public class HBaseHelper {
     // Initiating configuration
@@ -185,12 +187,29 @@ public class HBaseHelper {
         SetConfiguration(host, authentication, masterPrincipal, regionServer, keyType, principal); // kerberos not tested yet
         if (nsp != null)
             namespace = nsp.trim();
-        //conf(host);
-        version = CheckHBaseVersion();
-        CreateTable();
-        // DeleteTable(tableName);
-        InsertData();
-        GetData();
+
+        Connection conn = null;
+        try {
+            conn = ConnectionFactory.createConnection(config);
+        } catch (Exception e) {
+            errorMessage += strutl.getStackTrace(e);
+        }
+
+        if (conn != null) {
+            //conf(host);
+            if (errorMessage != null)
+                version = CheckHBaseVersion();
+            if (errorMessage != null)
+                CreateTable();
+            // DeleteTable(tableName);
+            if (errorMessage != null)
+                InsertData();
+            if (errorMessage != null)
+                GetData();
+            if (errorMessage != null)
+                DeleteTable(getTableName());
+        }
+
         if (errorMessage != null)
             status = "Fail";
         else

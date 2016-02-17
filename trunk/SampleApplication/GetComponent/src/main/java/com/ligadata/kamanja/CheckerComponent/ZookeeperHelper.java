@@ -143,7 +143,7 @@ public class ZookeeperHelper {
     }
 
     public String zStatus() {
-        if (!zConnection.getState().equals(States.CONNECTED) || zConnection == null) {
+        if (zConnection == null || zConnection.getState() != States.CONNECTED) {
             // System.out.println(zConnection.getState());
             return "Fail";
         } else {

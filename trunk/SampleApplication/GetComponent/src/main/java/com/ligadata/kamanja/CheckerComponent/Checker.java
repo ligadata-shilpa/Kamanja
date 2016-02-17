@@ -46,6 +46,7 @@ public class Checker {
 			bean.setVersion(java.getVersion());
 			bean.setErrorMessage(java.getErrorMessage());
 			bean.setComponentName(component);
+			bean.setStatus(java.getStatus());
 			break;
 		case "scala":
 			ScalaHelper scala = new ScalaHelper();
@@ -53,6 +54,7 @@ public class Checker {
 			bean.setVersion(scala.getVersion());
 			bean.setErrorMessage(scala.getErrorMessage());
 			bean.setComponentName(component);
+			bean.setStatus(scala.getStatus());
 			break;
 		// }
 		// list.add(bean);
