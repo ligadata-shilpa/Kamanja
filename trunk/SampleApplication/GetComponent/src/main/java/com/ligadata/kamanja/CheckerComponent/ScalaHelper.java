@@ -37,10 +37,13 @@ public class ScalaHelper {
 			// System.out.println(lastIndex);
 			// System.out.println(str.getWordBetweenIndex(doc, beginIndex +
 			// "scala-".length(), lastIndex));
-			return str.getWordBetweenIndex(doc, beginIndex + "scala-".length(), lastIndex);
+			status = "Success";
+			version = str.getWordBetweenIndex(doc, beginIndex + "scala-".length(), lastIndex);
+			return version;
 		} catch (Exception e) {
 			// e.printStackTrace(new PrintWriter(errors));
 			// errorMessage = errors.toString();
+			status = "Fail";
 			errorMessage = strutl.getStackTrace(e);
 		}
 		return null;

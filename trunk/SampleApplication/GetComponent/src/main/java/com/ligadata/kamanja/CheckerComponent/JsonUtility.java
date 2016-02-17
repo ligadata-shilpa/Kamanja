@@ -27,7 +27,11 @@ public class JsonUtility {
 		jsonParser = new JSONParser();
 		jsonObject = (JSONObject) jsonParser.parse(json);
 		component = (String) jsonObject.get("component");
+		if (component == null)
+			component = (String) jsonObject.get("StoreType");
 		hostList = (String) jsonObject.get("hostlist");
+		if (hostList == null)
+			hostList = (String) jsonObject.get("Location");
 	}
 
 	public JSONArray GetJsonArray(String json) throws ParseException {

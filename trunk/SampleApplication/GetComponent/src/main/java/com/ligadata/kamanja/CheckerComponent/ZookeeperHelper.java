@@ -14,7 +14,7 @@ import org.apache.zookeeper.data.Stat;
 
 public class ZookeeperHelper {
 	// IZkConnection connection;
-	int sessionTimout = 3000;
+	int sessionTimout = 30000;
 	ZooKeeper zConnection;
 	String znode;
 	String zdata;
@@ -51,7 +51,7 @@ public class ZookeeperHelper {
 
 	public void zCreate() {
 		zdata = " 0";
-		znode = "/LigaDataTest";
+		znode = "/kamanja/KamanjaPreReqTest";
 		try {
 			if (zExist())
 				zDelete();

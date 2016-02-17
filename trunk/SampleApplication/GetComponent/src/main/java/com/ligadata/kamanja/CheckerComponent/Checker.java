@@ -126,12 +126,10 @@ public class Checker {
 		return bean;
 	}
 
-//	public static void main(String[] args) {
-//		// BasicConfigurator.configure();
-//		// System.out.println(System.getProperty("java.io.tmpdir"));
-//		System.out.println(new Checker().CheckServices(
-//				/* "[{\"component\":\"zookeeper\",\"hostlist\":\"localhost:2181,loclahost:2181\"},{\"component\":\"java\",\"hostlist\":\"192.168.10.20:2181,192.168.10.21:2181\"}]" */
-//				"[{\"component\":\"hbase\",\"hostlist\":\"localhost:2082,localhost:2181\",\"authentication\": \"kerberos\", \"regionserver_principal\": \"hbase/_HOST@INTRANET.LIGADATA.COM\",\"master_principal\": \"hbase/_HOST@INTRANET.LIGADATA.COM\",\"principal\": \"user@INTRANET.LIGADATA.COM\",\"keytab\": \"/apps/kamanja/CertificateInfo/user.keytab\"},{\"component\":\"java\",\"hostlist\":\"localhost:2181\"}]"));
-//	}
+public static void main(String[] args) {
+		System.out.println(new Checker().CheckServices(
+				/* "[{\"component\":\"zookeeper\",\"hostlist\":\"localhost:2181,loclahost:2181\"},{\"component\":\"java\",\"hostlist\":\"192.168.10.20:2181,192.168.10.21:2181\"}]" */
+				"[{\"component\":\"hbase\",\"hostlist\":\"localhost:2082,localhost:2181\",\"authentication\":\"kerberos\",\"regionserver_principal\":\"hbase/_HOST@INTRANET.LIGADATA.COM\",\"master_principal\":\"hbase/_HOST@INTRANET.LIGADATA.COM\",\"principal\":\"user@INTRANET.LIGADATA.COM\",\"keytab\":\"/apps/kamanja/CertificateInfo/user.keytab\"},{\"component\":\"java\",\"hostlist\":\"localhost\"},{\"component\":\"scala\",\"hostlist\":\"localhost\"},{\"component\":\"zookeeper\",\"hostlist\":\"localhost:2181\"},{\"component\":\"kafka\",\"hostlist\":\"localhost:9092\"}]"));
+	}
 
 }

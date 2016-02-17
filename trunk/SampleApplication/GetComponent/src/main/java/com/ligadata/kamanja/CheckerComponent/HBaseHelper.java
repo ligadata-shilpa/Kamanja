@@ -19,7 +19,7 @@ public class HBaseHelper {
 	// Initiating configuration
 	Configuration config = null;
 	UserGroupInformation ugi = null;
-	String tableName = "LigaDataTesting";
+	String tableName = "testdata:LigaDataTesting";
 	String errorMessage;
 	String version;
 	String status;
@@ -34,7 +34,7 @@ public class HBaseHelper {
 		// tested
 		try {
 			config = HBaseConfiguration.create();
-			config.setInt("zookeeper.session.timeout", 300);
+			config.setInt("zookeeper.session.timeout", 5000);
 			config.setInt("zookeeper.recovery.retry", 1);
 			config.setInt("hbase.client.retries.number", 3);
 			config.setInt("hbase.client.pause", 5000);
