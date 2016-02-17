@@ -4,15 +4,18 @@ public class ComponentInfo {
 	String Version;        // version
 	String Status;         // success/fail
 	String ErrorMessage;   // include stack trace also if it has
-	String invocationNode; // node from where it got invoke
+	// String invocationNode; // node from where it got invoke
 	String ComponentName;  // zookeeper/hbase/kafka/java/scala
-	
+
+/*
 	public String getInvocationNode() {
 		return invocationNode;
 	}
 	public void setInvocationNode(String invocationNode) {
 		this.invocationNode = invocationNode;
 	}
+*/
+
 	public String getComponentName() {
 		return ComponentName;
 	}

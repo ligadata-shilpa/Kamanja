@@ -28,7 +28,7 @@ public class Checker {
 			bean.setVersion(zookeeper.getVersion());
 			bean.setStatus(zookeeper.getStatus());
 			bean.setErrorMessage(zookeeper.getErrorMessage());
-			bean.setInvocationNode(/* hostArray[i] */null);
+			// bean.setInvocationNode(/* hostArray[i] */null);
 			bean.setComponentName(component);
 			break;
 			case "kafka":
@@ -38,7 +38,7 @@ public class Checker {
 			// kafka.CheckKafkaVersion(hostArray[i]);
 			bean.setComponentName(component);
 			bean.setVersion(null);
-			bean.setInvocationNode(null);
+			// bean.setInvocationNode(null);
 			break;
 		case "java":
 			JavaHelper java = new JavaHelper();
@@ -92,7 +92,7 @@ public class Checker {
 					String keyType = json.getKeyType();
 					String principal = json.getPrincipal();
 					list = checker.CheckHBaseComponent(component, /* hostArray */hostList, authentication,
-							masterPrincipal, regionServer, keyType, principal);
+							masterPrincipal, regionServer, keyType, principal, json.getNamespace());
 					// System.out.println(authentication);
 					// System.out.println(masterPrincipal);
 					// System.out.println(regionServer);
@@ -111,16 +111,16 @@ public class Checker {
 
 	private /* ArrayList<ComponentInfo> */ ComponentInfo CheckHBaseComponent(String component,
 			String hostArray/* String[] hostArray */, String authentication, String masterPrincipal,
-			String regionServer, String keyType, String principal) throws IOException {
+			String regionServer, String keyType, String principal, String namespace) throws IOException {
 		// ArrayList<ComponentInfo> list = new ArrayList<ComponentInfo>();
 		HBaseHelper hbase = new HBaseHelper();
 		// for (int i = 0; i < hostArray.length; i++) {
 		ComponentInfo bean = new ComponentInfo();
-		hbase.AskHBase(/* hostArray[i] */hostArray, authentication, masterPrincipal, regionServer, keyType, principal);
+		hbase.AskHBase(/* hostArray[i] */hostArray, authentication, masterPrincipal, regionServer, keyType, principal, namespace);
 		bean.setVersion(/*hbase.getVersion()*/null);
 		bean.setStatus(hbase.getStatus());
 		bean.setErrorMessage(hbase.getErrorMessage());
-		bean.setInvocationNode(/* hostArray[i] */null);
+		// bean.setInvocationNode(/* hostArray[i] */null);
 		bean.setComponentName(component);
 		// }
 		return bean;
@@ -129,7 +129,7 @@ public class Checker {
 public static void main(String[] args) {
 		System.out.println(new Checker().CheckServices(
 				/* "[{\"component\":\"zookeeper\",\"hostlist\":\"localhost:2181,loclahost:2181\"},{\"component\":\"java\",\"hostlist\":\"192.168.10.20:2181,192.168.10.21:2181\"}]" */
-				"[{\"component\":\"hbase\",\"hostlist\":\"localhost:2082,localhost:2181\",\"authentication\":\"kerberos\",\"regionserver_principal\":\"hbase/_HOST@INTRANET.LIGADATA.COM\",\"master_principal\":\"hbase/_HOST@INTRANET.LIGADATA.COM\",\"principal\":\"user@INTRANET.LIGADATA.COM\",\"keytab\":\"/apps/kamanja/CertificateInfo/user.keytab\"},{\"component\":\"java\",\"hostlist\":\"localhost\"},{\"component\":\"scala\",\"hostlist\":\"localhost\"},{\"component\":\"zookeeper\",\"hostlist\":\"localhost:2181\"},{\"component\":\"kafka\",\"hostlist\":\"localhost:9092\"}]"));
+				"[{\"component\":\"hbase\",\"hostlist\":\"localhost\",\"authentication\":\"kerberos\",\"regionserver_principal\":\"hbase/_HOST@INTRANET.LIGADATA.COM\",\"master_principal\":\"hbase/_HOST@INTRANET.LIGADATA.COM\",\"principal\":\"user@INTRANET.LIGADATA.COM\",\"keytab\":\"/apps/kamanja/CertificateInfo/user.keytab\"},{\"component\":\"java\",\"hostlist\":\"localhost\"},{\"component\":\"scala\",\"hostlist\":\"localhost\"},{\"component\":\"zookeeper\",\"hostlist\":\"localhost:2181\"},{\"component\":\"kafka\",\"hostlist\":\"localhost:9092\"}]"));
 	}
 
 }
