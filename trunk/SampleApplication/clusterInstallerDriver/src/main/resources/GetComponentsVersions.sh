@@ -69,6 +69,7 @@ done
 scp -o StrictHostKeyChecking=no "$componentVersionJarAbsolutePath" "$remoteNodeIp:/tmp/$componentVersionJarFileName"
 
 ssh -o StrictHostKeyChecking=no -T $remoteNodeIp  <<-EOF
+	rm -rf /tmp/$resultFileName
 	java -jar /tmp/$componentVersionJarFileName /tmp/$resultFileName $jsonArg 
 	if [ -d "$rootDirPath" ]; then
 		if [ ! -L $rootDirPath ]; then
