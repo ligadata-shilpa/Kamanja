@@ -1,8 +1,6 @@
 package com.ligadata.kamanja.CheckerComponent;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import java.io.*;
 import java.util.ArrayList;
 
 import org.apache.log4j.BasicConfigurator;
@@ -72,7 +70,7 @@ public class Checker {
 
     public String CheckServices(String args) {
         try {
-            if (args.length() == 0 || args == null || args.equals("")) {
+            if (args == null || args.trim().length() == 0) {
                 throw new Exception();
             }
             JsonUtility json = new JsonUtility();
@@ -129,10 +127,39 @@ public class Checker {
         return bean;
     }
 
-    public static void main(String[] args) {
-        System.out.println(new Checker().CheckServices(
-                /* "[{\"component\":\"zookeeper\",\"hostlist\":\"localhost:2181,loclahost:2181\"},{\"component\":\"java\",\"hostlist\":\"192.168.10.20:2181,192.168.10.21:2181\"}]" */
-                "[{\"component\":\"hbase\",\"hostlist\":\"localhost\",\"authentication\":\"kerberos\",\"regionserver_principal\":\"hbase/_HOST@INTRANET.LIGADATA.COM\",\"master_principal\":\"hbase/_HOST@INTRANET.LIGADATA.COM\",\"principal\":\"user@INTRANET.LIGADATA.COM\",\"keytab\":\"/apps/kamanja/CertificateInfo/user.keytab\"},{\"component\":\"java\",\"hostlist\":\"localhost\"},{\"component\":\"scala\",\"hostlist\":\"localhost\"},{\"component\":\"zookeeper\",\"hostlist\":\"localhost:2181\"},{\"component\":\"kafka\",\"hostlist\":\"localhost:9092\"}]"));
+    private boolean WriteStringToFile(String flName, String str) {
+        boolean writtenData = false;
+        PrintWriter out = null;
+        try {
+            out = new PrintWriter(flName, "UTF-8");
+            out.print(str);
+            writtenData = true;
+        } catch (Exception e) {
+            System.out.println("Failed to open file:" + flName + "\nUsage: java -jar GetComponent-1.0 <OutputFile> <InputJsonArrayString>");
+        } catch (Throwable t) {
+            System.out.println("Failed to open file:" + flName + "\nUsage: java -jar GetComponent-1.0 <OutputFile> <InputJsonArrayString>");
+        } finally {
+            if (out != null)
+                out.close();
+        }
+        return writtenData;
     }
 
+    public static void main(String[] args) {
+        /*
+        // System.out.println(new Checker().CheckServices(
+                // "[{\"component\":\"zookeeper\",\"hostlist\":\"localhost:2181,loclahost:2181\"},{\"component\":\"java\",\"hostlist\":\"192.168.10.20:2181,192.168.10.21:2181\"}]"
+                // "[{\"component\":\"hbase\",\"hostlist\":\"localhost\",\"authentication\":\"kerberos\",\"regionserver_principal\":\"hbase/_HOST@INTRANET.LIGADATA.COM\",\"master_principal\":\"hbase/_HOST@INTRANET.LIGADATA.COM\",\"principal\":\"user@INTRANET.LIGADATA.COM\",\"keytab\":\"/apps/kamanja/CertificateInfo/user.keytab\"},{\"component\":\"java\",\"hostlist\":\"localhost\"},{\"component\":\"scala\",\"hostlist\":\"localhost\"},{\"component\":\"zookeeper\",\"hostlist\":\"localhost:2181\"},{\"component\":\"kafka\",\"hostlist\":\"localhost:9092\"}]"));
+        */
+
+        if (args.length != 2) {
+            System.out.println("Usage: java -jar GetComponent-1.0 <OutputFile> <InputJsonArrayString>");
+            System.exit(1);
+        }
+
+        Checker checker = new Checker();
+        checker.WriteStringToFile(args[0], ""); // To make sure this file write is working
+        String componentsInfo = checker.CheckServices(args[1]);
+        checker.WriteStringToFile(args[0], componentsInfo);
+    }
 }
