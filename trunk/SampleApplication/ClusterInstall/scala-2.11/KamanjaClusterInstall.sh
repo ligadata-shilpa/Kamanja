@@ -31,7 +31,7 @@
 #
 #   If you supply all of the options, you will be asked to try again.  An alternate working directory may be supplied.  This 
 #   directory is used by this script to store the built software when compiling as well as the control files that are generated
-#   by the NodeInfoExtract.  By default, "/tmp" is used.  If a special one is supplied as the WorkingDir paramater value, it
+#   by the NodeInfoExtract.  By default, "/tmp" is used.  If a special one is supplied as the WorkingDir parameter value, it
 #   must exist.  The user account must have CRUD access to its content.
 #
 #   If a cluster config is not present there when no NodeConfigPath argument is presented, an exception is thrown.  In fact
@@ -353,45 +353,58 @@ else
 fi
 
 # 3) determine which machines and installation directories are to get the build from the metadata and Kamanja config
-# A number of files are produced, all USED TO BE IN WORKING DIR WHEN THEY WERE created by the NodeInfoExtract.  Now
-# these three files are passed in as full paths from the caller.  NodeInfoExtract is not used.
-ipFile="$ipAddrs"
-ipPathPairFile="$ipIdTargPaths"
-ipIdCfgTargPathQuartetFileName="$ipIdTargPaths"
-#ipFile="ip.txt"
-#ipPathPairFile="ipPath.txt"
-#ipIdCfgTargPathQuartetFileName="ipIdCfgTarg.txt"
 
-#echo "...extract node information for the cluster to be installed from the Metadata configuration and optional node information supplied"
-#if  [ -n "$nodeCfgGiven" ]; then
-#	echo "metadataAPIConfig = $metadataAPIConfig"
-#	echo "nodeConfigPath = $nodeConfigPath"
-#	echo "workDir = $workDir"
-#	echo "ipFile = $ipFile"
-#	echo "ipPathPairFile = $ipPathPairFile"
-#	echo "ipIdCfgTargPathQuartetFileName = $ipIdCfgTargPathQuartetFileName"
-#	echo "installDir = $installDir"
-#	echo "clusterId = $clusterId"
-#	echo "...Command = NodeInfoExtract-1.0 --MetadataAPIConfig \"$metadataAPIConfig\" --NodeConfigPath \"$nodeConfigPath\"  --workDir \"$workDir\" --ipFileName \"$ipFile\" --ipPathPairFileName \"$ipPathPairFile\" --ipIdCfgTargPathQuartetFileName \"$ipIdCfgTargPathQuartetFileName\" --installDir \"$installDir\" --clusterId \"$clusterId\""
-#	NodeInfoExtract-1.0 --MetadataAPIConfig "$metadataAPIConfig" --NodeConfigPath "$nodeConfigPath" --workDir "$workDir" --ipFileName "$ipFile" --ipPathPairFileName "$ipPathPairFile" --ipIdCfgTargPathQuartetFileName "$ipIdCfgTargPathQuartetFileName"  --installDir "$installDir" --clusterId "$clusterId"
-#	# Check 15: Bad NodeInfoExtract-1.0 arguments
-#	if [ "$?" -ne 0 ]; then
-#		echo
-#		echo "Problem: Invalid arguments supplied to the NodeInfoExtract-1.0 application... unable to obtain node configuration... exiting."
-#		Usage
-#		exit 1
-#	fi
-#else # info is assumed to be present in the supplied metadata store... see trunk/utils/NodeInfoExtract for details
-#	echo "...Command = $nodeInfoExtractDir/NodeInfoExtract-1.0 --MetadataAPIConfig \"$metadataAPIConfig\" --workDir \"$workDir\" --ipFileName \"$ipFile\" --ipPathPairFileName \"$ipPathPairFile\" --ipIdCfgTargPathQuartetFileName \"$ipIdCfgTargPathQuartetFileName\" --installDir \"$installDir\" --clusterId \"$clusterId\""
-#		NodeInfoExtract-1.0 --MetadataAPIConfig $metadataAPIConfig --workDir "$workDir" --ipFileName "$ipFile" --ipPathPairFileName "$ipPathPairFile" --ipIdCfgTargPathQuartetFileName "$ipIdCfgTargPathQuartetFileName" --installDir "$installDir" --clusterId "$clusterId"
-#	# Check 15: Bad NodeInfoExtract-1.0 arguments
-#	if [ "$?" -ne 0 ]; then
-#		echo
-#		echo "Problem: Invalid arguments supplied to the NodeInfoExtract-1.0 application... unable to obtain node configuration... exiting."
-#		Usage
-#		exit 1
-#	fi
-#fi
+oldWay="false"
+
+if [ "$ipAddrs" == "" -a "$ipIdTargPaths" == ""  -a "$ipPathPairs" == ""  -a "$priorInstallDirPath" == ""  -a "$newInstallDirPath" == "" ]; then
+	# follow the old way
+	ipTmpFile="ip.txt"
+	ipPathPairTmpFile="ipPath.txt"
+	ipIdCfgTargPathQuartetTmpFileName="ipIdCfgTarg.txt"
+
+	echo "...extract node information for the cluster to be installed from the Metadata configuration and optional node information supplied"
+	if  [ -n "$nodeCfgGiven" ]; then
+		echo "metadataAPIConfig = $metadataAPIConfig"
+		echo "nodeConfigPath = $nodeConfigPath"
+		echo "workDir = $workDir"
+		echo "ipTmpFile = $ipTmpFile"
+		echo "ipPathPairTmpFile = $ipPathPairTmpFile"
+		echo "ipIdCfgTargPathQuartetTmpFileName = $ipIdCfgTargPathQuartetTmpFileName"
+		echo "installDir = $installDir"
+		echo "clusterId = $clusterId"
+		echo "...Command = NodeInfoExtract-1.0 --MetadataAPIConfig \"$metadataAPIConfig\" --NodeConfigPath \"$nodeConfigPath\"  --workDir \"$workDir\" --ipFileName \"$ipTmpFile\" --ipPathPairFileName \"$ipPathPairTmpFile\" --ipIdCfgTargPathQuartetFileName \"$ipIdCfgTargPathQuartetTmpFileName\" --installDir \"$installDir\" --clusterId \"$clusterId\""
+		NodeInfoExtract-1.0 --MetadataAPIConfig "$metadataAPIConfig" --NodeConfigPath "$nodeConfigPath" --workDir "$workDir" --ipFileName "$ipTmpFile" --ipPathPairFileName "$ipPathPairTmpFile" --ipIdCfgTargPathQuartetFileName "$ipIdCfgTargPathQuartetTmpFileName"  --installDir "$installDir" --clusterId "$clusterId"
+		# Check 15: Bad NodeInfoExtract-1.0 arguments
+		if [ "$?" -ne 0 ]; then
+			echo
+			echo "Problem: Invalid arguments supplied to the NodeInfoExtract-1.0 application... unable to obtain node configuration... exiting."
+			Usage
+			exit 1
+		fi
+	else # info is assumed to be present in the supplied metadata store... see trunk/utils/NodeInfoExtract for details
+		echo "...Command = $nodeInfoExtractDir/NodeInfoExtract-1.0 --MetadataAPIConfig \"$metadataAPIConfig\" --workDir \"$workDir\" --ipFileName \"$ipTmpFile\" --ipPathPairFileName \"$ipPathPairTmpFile\" --ipIdCfgTargPathQuartetFileName \"$ipIdCfgTargPathQuartetTmpFileName\" --installDir \"$installDir\" --clusterId \"$clusterId\""
+			NodeInfoExtract-1.0 --MetadataAPIConfig $metadataAPIConfig --workDir "$workDir" --ipFileName "$ipTmpFile" --ipPathPairFileName "$ipPathPairTmpFile" --ipIdCfgTargPathQuartetFileName "$ipIdCfgTargPathQuartetTmpFileName" --installDir "$installDir" --clusterId "$clusterId"
+		# Check 15: Bad NodeInfoExtract-1.0 arguments
+		if [ "$?" -ne 0 ]; then
+			echo
+			echo "Problem: Invalid arguments supplied to the NodeInfoExtract-1.0 application... unable to obtain node configuration... exiting."
+			Usage
+			exit 1
+		fi
+	fi
+
+	ipFile="$workDir/$ipTmpFile"
+	ipPathPairFile="$workDir/$ipPathPairTmpFile"
+	ipIdCfgTargPathQuartetFileName="$workDir/$ipIdCfgTargPathQuartetTmpFileName"
+	oldWay="true"
+else
+	# A number of files are produced, all USED TO BE IN WORKING DIR WHEN THEY WERE created by the NodeInfoExtract.  Now
+	# these three files are passed in as full paths from the caller.  NodeInfoExtract is not used.
+	ipFile="$ipAddrs"
+	ipPathPairFile="$ipIdTargPaths"
+	ipIdCfgTargPathQuartetFileName="$ipIdTargPaths"
+fi
+
 
 echo "...creating directories to copy the tarball to the machines in this cluster"
 exec 12<&0 # save current stdin
@@ -427,6 +440,7 @@ DATE=`date +%Y%m%d%H%M%S`
 
 # 5) untar/decompress tarballs there and move them into place
 echo "...for each directory specified on each machine participating in the cluster, untar and decompress the software to $workDir/$installDirName... then move to corresponding target path"
+priorInstallationDetected="false"
 exec 12<&0 # save current stdin
 #exec < "$workDir/$ipPathPairFile"
 exec < "$ipPathPairFile"
@@ -436,13 +450,22 @@ while read LINE; do
     targetPath=`echo "$LINE" | sed -e 's/\/[\/]*$//'`
     targetFolder=`echo "$targetPath" | sed -e 's/\/[^\/]*$//'`
     targetPath_date="$targetPath"_"$DATE"
+    if [ "$oldWay" == "true" ]; then
+        priorInstallDirPath="$targetPath"_pre_"$DATE"
+        newInstallDirPath="$targetPath_date"
+    fi
     echo "Extract the tarball $tarName and copy it to $targetPath iff $workDir/$installDirName != $targetPath"
 	ssh -o StrictHostKeyChecking=no -T $machine  <<-EOF
 		if [ -d "$targetFolder" ]; then 
 			cd $workDir
 			if [ ! -L $targetPath ]; then
-				mv 	$targetPath "$priorInstallDirPath
+				mv 	"$targetPath" "$priorInstallDirPath"
+				priorInstallationDetected="true"
 			else
+				if [ -d "$targetPath" ]; then
+					priorInstallationDetected="true"
+					mv "$targetPath" "$priorInstallDirPath"
+				fi
 				unlink $targetPath
 			fi
 			mkdir -p $newInstallDirPath
@@ -454,6 +477,13 @@ while read LINE; do
 EOF
 done
 exec 0<&12 12<&-
+
+if [ "$priorInstallationDetected" == "true" ]; then
+	echo "Prior physical installation not found...this is a brand new installation"
+else
+	echo "Prior Kamanja physical installation now named $priorInstallDirPath"
+fi
+echo "New Kamanja physical installation is $newInstallDirPath. The $targetPath now points to this installation."
 
 echo
 
@@ -479,11 +509,13 @@ while read LINE; do
     scp -o StrictHostKeyChecking=no "$cfgFile" "$machine:$targetPath/"
 
     # Engine Logfile. For now all nodes log files are same. May be later we can change.
-    sed "s/{InstallPath}/$installDir_repl/g;s/{NodeId}/$id/g" $script_dir/engine_log4j2_template.xml > $workDir/engine_log4j2.xml
-    sed "s/{InstallPath}/$installDir_repl/g;s/{NodeId}/$id/g" $script_dir/restapi_log4j2_template.xml > $workDir/restapi_log4j2.xml
-    sed "s/{NodeId}/$id/g;s/{HostName}/$machine/g" $script_dir/ClusterCfgMetadataAPIConfig.properties > $workDir/MetadataAPIConfig_${id}.properties
+    sed "s/{InstallPath}/$installDir_repl/g;s/{NodeId}/$id/g" $script_dir/../config/engine_log4j2_template.xml > $workDir/engine_log4j2.xml
+    sed "s/{InstallPath}/$installDir_repl/g;s/{NodeId}/$id/g" $script_dir/../config/restapi_log4j2_template.xml > $workDir/restapi_log4j2.xml
+    sed "s/{InstallPath}/$installDir_repl/g;s/{NodeId}/$id/g" $script_dir/../config/log4j2_template.xml > $workDir/log4j2.xml
+    sed "s/{NodeId}/$id/g;s/{HostName}/$machine/g" $metadataAPIConfig > $workDir/MetadataAPIConfig_${id}.properties
     scp -o StrictHostKeyChecking=no "$workDir/engine_log4j2.xml" "$machine:$targetPath/"
     scp -o StrictHostKeyChecking=no "$workDir/restapi_log4j2.xml" "$machine:$targetPath/"
+    scp -o StrictHostKeyChecking=no "$workDir/log4j2.xml" "$machine:$targetPath/"
     scp -o StrictHostKeyChecking=no "$workDir/MetadataAPIConfig_${id}.properties" "$machine:$targetPath/MetadataAPIConfig_${id}.properties"
 done
 exec 0<&12 12<&-
