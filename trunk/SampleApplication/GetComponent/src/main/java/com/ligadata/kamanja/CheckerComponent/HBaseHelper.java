@@ -210,20 +210,24 @@ public class HBaseHelper {
 
         if (conn != null) {
             //conf(host);
-            if (errorMessage != null)
+            if (errorMessage == null)
                 version = CheckHBaseVersion();
-            if (errorMessage != null)
+            if (errorMessage == null)
                 CreateNameSpace(conn, namespace);
-            if (errorMessage != null)
+            if (errorMessage == null)
                 CreateTable(conn);
             // DeleteTable(tableName);
-            if (errorMessage != null)
+            if (errorMessage == null)
                 InsertData();
-            if (errorMessage != null)
+            if (errorMessage == null)
                 GetData();
             // if (errorMessage != null)
-            DeleteTable(conn, getTableName());
+            if ((conn.getAdmin().tableExists(TableName.valueOf(getTableName()))) == true) {
+                DeleteTable(conn, getTableName());
+            }
             conn.close();
+        } else {
+            status = "Fail";
         }
 
         if (errorMessage != null)
