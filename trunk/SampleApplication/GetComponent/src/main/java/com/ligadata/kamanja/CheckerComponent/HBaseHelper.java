@@ -4,10 +4,7 @@ import java.io.IOException;
 import java.io.StringWriter;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.HBaseConfiguration;
-import org.apache.hadoop.hbase.HColumnDescriptor;
-import org.apache.hadoop.hbase.HTableDescriptor;
-import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.*;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HTable;
@@ -88,6 +85,22 @@ public class HBaseHelper {
             config.set("hbase.zookeeper.quorum", host);
         } catch (Exception e) {
             // e.printStackTrace(new PrintWriter(errors));
+            addError(e);
+        }
+    }
+
+    private void CreateNameSpace(Connection conn, String nameSpace) {
+        relogin();
+        try {
+            NamespaceDescriptor desc = conn.getAdmin().getNamespaceDescriptor(nameSpace);
+            return;
+        } catch (Exception e) {
+            // Namespace doesn't exist, create it"
+        }
+
+        try {
+            conn.getAdmin().createNamespace(NamespaceDescriptor.create(nameSpace).build());
+        } catch (Exception e) {
             addError(e);
         }
     }
@@ -199,6 +212,8 @@ public class HBaseHelper {
             //conf(host);
             if (errorMessage != null)
                 version = CheckHBaseVersion();
+            if (errorMessage != null)
+                CreateNameSpace(conn, namespace);
             if (errorMessage != null)
                 CreateTable(conn);
             // DeleteTable(tableName);
