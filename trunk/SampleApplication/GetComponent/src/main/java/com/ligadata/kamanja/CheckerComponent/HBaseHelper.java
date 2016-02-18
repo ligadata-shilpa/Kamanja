@@ -4,9 +4,7 @@ import java.io.IOException;
 import java.io.StringWriter;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.HBaseConfiguration;
-import org.apache.hadoop.hbase.HColumnDescriptor;
-import org.apache.hadoop.hbase.HTableDescriptor;
+import org.apache.hadoop.hbase.*;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HTable;
@@ -29,7 +27,13 @@ public class HBaseHelper {
     String status;
     StringWriter errors = new StringWriter();
     StringUtility strutl = new StringUtility();
-    HBaseAdmin hbaseAdmin;
+
+    private void addError(Throwable e) {
+        if (errorMessage != null)
+            errorMessage += strutl.getStackTrace(e);
+        else
+            errorMessage = strutl.getStackTrace(e);
+    }
 
     public void SetConfiguration(String host, String authentication, String masterPrincipal, String regionServer,
                                  String keyType, String principal) { // for
@@ -38,10 +42,10 @@ public class HBaseHelper {
         // tested
         try {
             config = HBaseConfiguration.create();
-            config.setInt("zookeeper.session.timeout", 5000);
+            config.setInt("zookeeper.session.timeout", 10000);
             config.setInt("zookeeper.recovery.retry", 1);
-            config.setInt("hbase.client.retries.number", 3);
-            config.setInt("hbase.client.pause", 5000);
+            config.setInt("hbase.client.retries.number", 1);
+            config.setInt("hbase.client.pause", 10000);
             config.set("hbase.zookeeper.quorum", host);
             if (((authentication != null) && authentication.equalsIgnoreCase("kerberos"))) {
                 config.set("hadoop.security.authorization", "true");
@@ -56,8 +60,7 @@ public class HBaseHelper {
             }
         } catch (Exception e) {
             // e.printStackTrace(new PrintWriter(errors));
-            // errorMessage = errors.toString();
-            errorMessage += strutl.getStackTrace(e);
+            addError(e);
         }
     }
 
@@ -68,66 +71,77 @@ public class HBaseHelper {
             }
         } catch (Exception e) {
             // e.printStackTrace(new PrintWriter(errors));
-            // errorMessage = errors.toString();
-            errorMessage += strutl.getStackTrace(e);
+            addError(e);
         }
     }
 
     public void conf(String host) {
         try {
             config = HBaseConfiguration.create();
-            config.setInt("zookeeper.session.timeout", 300);
+            config.setInt("zookeeper.session.timeout", 10000);
             config.setInt("zookeeper.recovery.retry", 1);
-            config.setInt("hbase.client.retries.number", 3);
-            config.setInt("hbase.client.pause", 5000);
+            config.setInt("hbase.client.retries.number", 1);
+            config.setInt("hbase.client.pause", 10000);
             config.set("hbase.zookeeper.quorum", host);
         } catch (Exception e) {
             // e.printStackTrace(new PrintWriter(errors));
-            // errorMessage = errors.toString();
-            errorMessage += strutl.getStackTrace(e);
+            addError(e);
+        }
+    }
+
+    private void CreateNameSpace(Connection conn, String nameSpace) {
+        relogin();
+        try {
+            NamespaceDescriptor desc = conn.getAdmin().getNamespaceDescriptor(nameSpace);
+            return;
+        } catch (Exception e) {
+            // Namespace doesn't exist, create it"
+        }
+
+        try {
+            conn.getAdmin().createNamespace(NamespaceDescriptor.create(nameSpace).build());
+        } catch (Exception e) {
+            addError(e);
         }
     }
 
     // @SuppressWarnings({ "resource", "deprecation" })
-    public void CreateTable() {
+    public void CreateTable(Connection conn) {
         try {
             relogin();// for kerberos
             // Initiating HBase table with family column
             HTableDescriptor htable = new HTableDescriptor(getTableName());
             htable.addFamily(new HColumnDescriptor("person"));
             htable.addFamily(new HColumnDescriptor("contactinfo"));
-            htable.addFamily(new HColumnDescriptor("creditcard"));
             // System.out.println("Connecting...");
             // Initiating HBase Admin class
-            hbaseAdmin = new HBaseAdmin(config);
             // System.out.println("Creating Table...");
             // System.out.println(hbaseAdmin.tableExists(tableName));
             // DeleteTable(tableName);
-            if ((hbaseAdmin.tableExists(getTableName())) == true) {
-                DeleteTable(getTableName());
+
+            if ((conn.getAdmin().tableExists(TableName.valueOf(getTableName()))) == true) {
+                DeleteTable(conn, getTableName());
             }
             // System.out.println(hbaseAdmin.tableExists(tableName));
-            hbaseAdmin.createTable(htable);
+            conn.getAdmin().createTable(htable);
             // Create table in HBase
             // System.out.println("Done!");
         } catch (Exception e) {
             // e.printStackTrace(new PrintWriter(errors));
-            // errorMessage = errors.toString();
-            errorMessage = strutl.getStackTrace(e);
+            addError(e);
         }
     }
 
     @SuppressWarnings({"resource", "deprecation"})
-    public void DeleteTable(String tableName) {
+    public void DeleteTable(Connection conn, String tableName) {
         try {
             relogin();// for kerberos
             // hbaseAdmin = new HBaseAdmin(config);
-            hbaseAdmin.disableTable(tableName);
-            hbaseAdmin.deleteTable(tableName);
+            conn.getAdmin().disableTable(TableName.valueOf(tableName));
+            conn.getAdmin().deleteTable(TableName.valueOf(tableName));
         } catch (Exception e) {
             // e.printStackTrace(new PrintWriter(errors));
-            // errorMessage = errors.toString();
-            errorMessage += strutl.getStackTrace(e);
+            addError(e);
         }
 
     }
@@ -137,17 +151,17 @@ public class HBaseHelper {
         try {
             relogin();// for kerberos
             HTable table = new HTable(config, getTableName());
-            Put put = new Put(Bytes.toBytes("yousef-ligadata"));
-            put.add(Bytes.toBytes("person"), Bytes.toBytes("givenName"), Bytes.toBytes("yousef"));
-            put.add(Bytes.toBytes("person"), Bytes.toBytes("sureName"), Bytes.toBytes("abuElbeh"));
-            put.add(Bytes.toBytes("contactinfo"), Bytes.toBytes("email"), Bytes.toBytes("yulbeh@ligadata.com"));
+            Put put = new Put(Bytes.toBytes("ligadata"));
+            put.add(Bytes.toBytes("person"), Bytes.toBytes("givenName"), Bytes.toBytes("ligaData"));
+            String doneTm = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new java.util.Date(System.currentTimeMillis()));
+            put.add(Bytes.toBytes("person"), Bytes.toBytes("sureName"), Bytes.toBytes(doneTm));
+            put.add(Bytes.toBytes("contactinfo"), Bytes.toBytes("email"), Bytes.toBytes("ligadata@ligadata.com"));
             table.put(put);
             table.flushCommits();
             table.close();
         } catch (IOException e) {
             // e.printStackTrace(new PrintWriter(errors));
-            // errorMessage = errors.toString();
-            errorMessage += strutl.getStackTrace(e);
+            addError(e);
         }
 
     }
@@ -157,7 +171,7 @@ public class HBaseHelper {
         try {
             relogin();// for kerberos
             HTable table = new HTable(config, getTableName());
-            Get get = new Get(Bytes.toBytes("yousef-ligadata"));
+            Get get = new Get(Bytes.toBytes("ligadata"));
             get.addFamily(Bytes.toBytes("person"));
             Result result = table.get(get);
             byte[] givenName = result.getValue(Bytes.toBytes("person"), Bytes.toBytes("givenName"));
@@ -169,8 +183,7 @@ public class HBaseHelper {
             return givenName.toString();
         } catch (Exception e) {
             // e.printStackTrace(new PrintWriter(errors));
-            // errorMessage = errors.toString();
-            errorMessage += strutl.getStackTrace(e);
+            addError(e);
         }
         return null;
     }
@@ -192,22 +205,29 @@ public class HBaseHelper {
         try {
             conn = ConnectionFactory.createConnection(config);
         } catch (Exception e) {
-            errorMessage += strutl.getStackTrace(e);
+            addError(e);
         }
 
         if (conn != null) {
             //conf(host);
-            if (errorMessage != null)
+            if (errorMessage == null)
                 version = CheckHBaseVersion();
-            if (errorMessage != null)
-                CreateTable();
+            if (errorMessage == null)
+                CreateNameSpace(conn, namespace);
+            if (errorMessage == null)
+                CreateTable(conn);
             // DeleteTable(tableName);
-            if (errorMessage != null)
+            if (errorMessage == null)
                 InsertData();
-            if (errorMessage != null)
+            if (errorMessage == null)
                 GetData();
-            if (errorMessage != null)
-                DeleteTable(getTableName());
+            // if (errorMessage != null)
+            if ((conn.getAdmin().tableExists(TableName.valueOf(getTableName()))) == true) {
+                DeleteTable(conn, getTableName());
+            }
+            conn.close();
+        } else {
+            status = "Fail";
         }
 
         if (errorMessage != null)
