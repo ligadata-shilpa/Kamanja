@@ -2001,7 +2001,7 @@ class MdMgr {
 
   /**
    *   @deprecated("compatibility with old style model def...uses of this should be replaced with fully specified version","2015-10-15")
-   *  Construct and catalog a model definition.  NOTE: This function services old style ModelDef uses.  Particularly, PMML and JPMML are no
+   *  Construct and catalog a model definition.  NOTE: This function services old style ModelDef uses.  Particularly, PMML and KPMML are no
    *  longer using this method.  They now use the fully specified argument version.
    *
    *  @param nameSpace - the namespace in which this model should be cataloged
@@ -2020,7 +2020,7 @@ class MdMgr {
    *                   is being replaced).
    *  @param supportsInstanceSerialization when true, instances of this model are serialized and persisted in the metadata store, saving startup costs
    *                 required to prepare new instances.  NOTE: this feature is **not** implemented, but will prove useful for reducing
-   *                 cluster startup costs for JPMML models in particular.
+   *                 cluster startup costs for PMML models in particular.
    *  @return the ModelDef instance
    *
    */
@@ -2045,7 +2045,7 @@ class MdMgr {
                     , modelRep
                     , false /** isReusable */
                     , "" /** msgConsumed */
-                    , "" /** jpmml string */
+                    , "" /** pmml string */
                     , modelType
                     , inputVars: List[(String, String, String, String, Boolean, String)]
                     , outputVars: List[(String, String, String)]
@@ -2065,11 +2065,11 @@ class MdMgr {
    *  @param nameSpace - the namespace in which this model should be cataloged
    *  @param name - the name of the model.
    *  @param physicalName - the fully qualified className for the compiled model.
-   *  @param modelRep - the sort of model input this is (e.g., a Jar, a JPMML src string, et al)
+   *  @param modelRep - the sort of model input this is (e.g., a Jar, a PMML src string, et al)
    *  @param isReusable - can instances of this model be cached by the engine and reused on subsequent calls for same type?
-   *  @param msgConsumed - relevent for JPMML models, this is the full qualified name of the message from which content
-   *                     will be extracted for the jpmml evaluator
-   *  @param jpmmlStr - relevent for JPMML models, this is the actual xml PMML that is to be ingested by the JPMML evaluator factory
+   *  @param msgConsumed - relevent for PMML models, this is the full qualified name of the message from which content
+   *                     will be extracted for the pmml evaluator
+   *  @param jpmmlStr - relevent for PMML models, this is the actual xml PMML that is to be ingested by the PMML evaluator factory
    *  @param miningModelType :  a visual identifier that can be queried for and/or displayed. Values
    *                             for this currently include any of the dmg.org model types or our own types... any {BaselineModel, ClusteringModel,
    *                             GeneralRegressionModel, MiningModel, NaiveBayesModel, NearestNeighborModel, NeuralNetwork, RegressionModel,
@@ -2087,7 +2087,7 @@ class MdMgr {
    *                   is being replaced).
    *  @param supportsInstanceSerialization when true, instances of this model are serialized and persisted in the metadata store, saving startup costs
    *                 required to prepare new instances.  NOTE: this feature is **not** implemented, but will prove useful for reducing
-   *                 cluster startup costs for JPMML models in particular when it **is**.
+   *                 cluster startup costs for PMML models in particular when it **is**.
    *  @return the ModelDef instance
    *
    */
@@ -2162,7 +2162,7 @@ class MdMgr {
         if (depJars != null) depJarSet ++= depJars
         val dJars = if (depJarSet.size > 0) depJarSet.toArray else null
 
-        /** In the case of a JPMML model, save the string in the model representation now.  JPMML strings are
+        /** In the case of a PMML model, save the string in the model representation now.  PMML strings are
           * (for the first go) to be injested at the last possible minute by the shim model's factory object.
           * The instances so created will be cached for subsequent calls on the thread with which the instance
           * is associated.
@@ -2565,8 +2565,8 @@ class MdMgr {
     }
 
     funcDefs.addBinding(fn.FullName, fn)
-    compilerFuncDefs(fcnSig.toLowerCase()) = fn
     /** add it to the pmml compiler's typesignature based map as well */
+    compilerFuncDefs(fcnSig.toLowerCase()) = fn
 
   }
 
@@ -2636,8 +2636,8 @@ class MdMgr {
     fns.foreach(fn => {
       funcDefs.addBinding(fn.FullName, fn)
       val key = fn.typeString
-      compilerFuncDefs(key.toLowerCase()) = fn
       /** add it to the pmml compiler's typesignature based map as well */
+      compilerFuncDefs(key.toLowerCase()) = fn
     })
   }
 

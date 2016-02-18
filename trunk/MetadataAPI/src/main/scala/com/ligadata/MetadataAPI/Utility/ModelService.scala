@@ -237,7 +237,7 @@ object ModelService {
      * attempted if the SecurityAdapter instance deems the user worthy. Similarly if the AuditAdapter is supplied,
      * the userid will be logged there (recommended for production use).
      *
-     * NOTE: Jpmml models are distinct from the Kamanja Pmml model. At runtime, they use a PMML evaluator to interpret
+     * NOTE: Pmml models are distinct from the Kamanja Pmml model. At runtime, they use a PMML evaluator to interpret
      * the runtime representation of the PMML model. Kamanja models are compiled to Scala and then to Jars and executed
      * like the custom byte code models based upon Java or Scala.
      *
@@ -259,7 +259,7 @@ object ModelService {
                     , optMsgVersion: Option[String] = Some("-1")
                     ): String = {
         val response : String = if (input == "") {
-            val reply : String = "JPMML models are only ingested with command line arguments.. default directory selection is deprecated"
+            val reply : String = "PMML models are only ingested with command line arguments.. default directory selection is deprecated"
             logger.error(reply)
             null /// FIXME : we will return null for now and complain with first failure
         } else {
@@ -273,7 +273,7 @@ object ModelService {
                 val version : String = optVersion.getOrElse("no version supplied")
                 val msgConsumed : String = optMsgConsumed.getOrElse("no message supplied")
 
-                val reply : String = s"JPMML model definition ingestion has failed for model $modelName, version = $version, consumes msg = $msgConsumed user=$userId"
+                val reply : String = s"PMML model definition ingestion has failed for model $modelName, version = $version, consumes msg = $msgConsumed user=$userId"
                 logger.error(reply)
                 null /// FIXME : we will return null for now and complain with first failure/
             }
@@ -343,7 +343,7 @@ object ModelService {
     /**
      * Update a Kamanja Pmml model in the metadata with new pmml
      *
-     * @param input the path of the pmml model to be used for the update
+     * @param input the path of the Kamanja pmml model to be used for the update
      * @param userid the optional userId. If security and auditing in place this parameter is required.
      * @return the result of the operation
      */
@@ -374,7 +374,7 @@ object ModelService {
                 case option => {
                   var modelDefs = getUserInputFromMainMenu(models)
                   for (modelDef <- modelDefs)
-                    response = MetadataAPIImpl.UpdateModel(ModelType.PMML, modelDef.toString, userid)
+                    response = MetadataAPIImpl.UpdateModel(ModelType.KPMML, modelDef.toString, userid)
                 }
               }
 
@@ -391,7 +391,7 @@ object ModelService {
         var model = new File(input.toString)
         if (model.exists()) {
           modelDef = Source.fromFile(model).mkString
-          response = MetadataAPIImpl.UpdateModel(ModelType.PMML, modelDef, userid)
+          response = MetadataAPIImpl.UpdateModel(ModelType.KPMML, modelDef, userid)
         } else {
           response = "File does not exist"
         }
@@ -403,7 +403,7 @@ object ModelService {
   }
 
     /**
-      * Update a Jpmml model with the pmml text model found at ''pmmlPath''.  The model namespace, name and version
+      * Update a Pmml model with the pmml text model found at ''pmmlPath''.  The model namespace, name and version
       * are required.  The userid should have a valid value when authentication and auditing has been enabled on
       * the cluster.
       *
@@ -429,13 +429,13 @@ object ModelService {
                               , Some(newVersion))
       } catch {
         case fnf : FileNotFoundException => {
-            val msg : String = s"updateModelJPmml... supplied file path not found ... path = $pmmlPath"
+            val msg : String = s"updateModelPmml... supplied file path not found ... path = $pmmlPath"
             logger.error(msg)
             msg
         }
         case e : Exception => {
             val stackTrace = StackTrace.ThrowableTraceString(e)
-            val msg : String = if (pmmlPath == null) "updateModelJpmml pmml path was not supplied" else s"updateModelJPmml... exception e = ${e.toString}"
+            val msg : String = if (pmmlPath == null) "updateModelPmml pmml path was not supplied" else s"updateModelPmml... exception e = ${e.toString}"
             logger.error(s"$msg...stack = \n$stackTrace")
             msg
         }
