@@ -21,7 +21,7 @@ public class KafkaHelper {
         String[] hlists = hostslist.split(",");
         boolean gotHosts = false;
         int i = 0;
-        Throwable error = null;
+        Throwable error = null; // Getting one error is enough to send back.
         while (!gotHosts && i < hlists.length) {
             String broker = hlists[i];
             try {

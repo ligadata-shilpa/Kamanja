@@ -38,10 +38,10 @@ public class HBaseHelper {
         // tested
         try {
             config = HBaseConfiguration.create();
-            config.setInt("zookeeper.session.timeout", 5000);
+            config.setInt("zookeeper.session.timeout", 10000);
             config.setInt("zookeeper.recovery.retry", 1);
             config.setInt("hbase.client.retries.number", 1);
-            config.setInt("hbase.client.pause", 5000);
+            config.setInt("hbase.client.pause", 10000);
             config.set("hbase.zookeeper.quorum", host);
             if (((authentication != null) && authentication.equalsIgnoreCase("kerberos"))) {
                 config.set("hadoop.security.authorization", "true");
@@ -76,10 +76,10 @@ public class HBaseHelper {
     public void conf(String host) {
         try {
             config = HBaseConfiguration.create();
-            config.setInt("zookeeper.session.timeout", 5000);
+            config.setInt("zookeeper.session.timeout", 10000);
             config.setInt("zookeeper.recovery.retry", 1);
             config.setInt("hbase.client.retries.number", 1);
-            config.setInt("hbase.client.pause", 5000);
+            config.setInt("hbase.client.pause", 10000);
             config.set("hbase.zookeeper.quorum", host);
         } catch (Exception e) {
             // e.printStackTrace(new PrintWriter(errors));

@@ -15,7 +15,7 @@ import org.apache.zookeeper.data.Stat;
 
 public class ZookeeperHelper {
     // IZkConnection connection;
-    int sessionTimout = 30000;
+    int sessionTimout = 10000;
     ZooKeeper zConnection;
     String znode;
     String zdata;
