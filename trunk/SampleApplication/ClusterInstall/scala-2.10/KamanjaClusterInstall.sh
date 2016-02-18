@@ -427,6 +427,7 @@ DATE=`date +%Y%m%d%H%M%S`
 
 # 5) untar/decompress tarballs there and move them into place
 echo "...for each directory specified on each machine participating in the cluster, untar and decompress the software to $workDir/$installDirName... then move to corresponding target path"
+priorInstallationDetected="false"
 exec 12<&0 # save current stdin
 #exec < "$workDir/$ipPathPairFile"
 exec < "$ipPathPairFile"
@@ -441,8 +442,13 @@ while read LINE; do
 		if [ -d "$targetFolder" ]; then 
 			cd $workDir
 			if [ ! -L $targetPath ]; then
-				mv 	$targetPath "$priorInstallDirPath
+				mv 	"$targetPath" "$priorInstallDirPath"
+				priorInstallationDetected="true"
 			else
+				if [ -d "$targetPath" ]; then
+					priorInstallationDetected="true"
+					mv "$targetPath" "$priorInstallDirPath"
+				fi
 				unlink $targetPath
 			fi
 			mkdir -p $newInstallDirPath
@@ -454,6 +460,13 @@ while read LINE; do
 EOF
 done
 exec 0<&12 12<&-
+
+if [ "priorInstallationDetected" == true" ]; then
+	echo "Prior physical installation not found...this is a brand new installation"
+else
+	echo "Prior Kamanja physical installation now named $priorInstallDirPath"
+fi
+echo "New Kamanja physical installation is $newInstallDirPath. The $targetPath now points to this installation."
 
 echo
 

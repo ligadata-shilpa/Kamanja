@@ -1109,7 +1109,10 @@ class ClusterConfigMap(cfgStr: String, clusterIdOfInterest : String) {
     }
 
     def DataStoreConnections : String = {
-        dataStore.getOrElse("Location", "").asInstanceOf[String]
+
+       /** FIXME: does this require something more to format as json string? */
+       DataStore.toString
+
     }
 
 
