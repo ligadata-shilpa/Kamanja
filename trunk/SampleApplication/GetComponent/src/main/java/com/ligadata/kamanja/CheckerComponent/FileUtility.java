@@ -1,4 +1,4 @@
-package com.ligadata.kamanja.get_component;
+package com.ligadata.kamanja.CheckerComponent;
 
 import java.io.BufferedReader;
 import java.io.FileReader;

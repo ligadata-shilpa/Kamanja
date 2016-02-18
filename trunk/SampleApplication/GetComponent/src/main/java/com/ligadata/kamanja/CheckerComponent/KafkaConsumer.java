@@ -1,4 +1,4 @@
-package com.ligadata.kamanja.get_component;
+package com.ligadata.kamanja.CheckerComponent;
 
 import java.util.HashMap;
 import java.util.List;
@@ -19,7 +19,7 @@ public class KafkaConsumer {
 	// kafkaconsumer.consume();
 	public void initialize(String host) {
 		Properties props = new Properties();
-		props.put("zookeeper.connect", "localhost:2181");
+		props.put("zookeeper.connect",host);
 		props.put("group.id", "test1");
 		props.put("zookeeper.session.timeout.ms", "4000");
 		props.put("zookeeper.sync.time.ms", "200");

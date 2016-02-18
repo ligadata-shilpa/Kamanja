@@ -1,4 +1,4 @@
-package com.ligadata.kamanja.get_component;
+package com.ligadata.kamanja.CheckerComponent;
 //package check_prerequisites;
 //
 //import org.eclipse.debug.ui.console.*;

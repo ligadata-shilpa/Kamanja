@@ -1,9 +1,8 @@
-package com.ligadata.kamanja.get_component;
+package com.ligadata.kamanja.CheckerComponent;
 
 import java.io.StringWriter;
 
 public class JavaHelper {
-
 	String component;
 	String version;
 	String nodeId;
@@ -14,10 +13,13 @@ public class JavaHelper {
 
 	private String CheckJavaVersion() {
 		try {
-			return System.getProperty("java.version");
+			version = System.getProperty("java.version");
+			status = "Success";
+			return version;
 		} catch (Exception e) {
 			// e.printStackTrace(new PrintWriter(errors));
 			// errorMessage = errors.toString();
+			status = "Fail";
 			errorMessage = strutl.getStackTrace(e);
 		}
 		return null;

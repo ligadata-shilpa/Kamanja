@@ -4,8 +4,6 @@ import Keys._
 
 shellPrompt := { state =>  "sbt (%s)> ".format(Project.extract(state).currentProject.id) }
 
-mainClass in assembly := Some("com.ligadata.kamanja.get_component.Checker")
-
 assemblyOption in assembly ~= { _.copy(prependShellScript = Some(defaultShellScript)) }
 
 assemblyJarName in assembly := { s"${name.value}-${version.value}" }

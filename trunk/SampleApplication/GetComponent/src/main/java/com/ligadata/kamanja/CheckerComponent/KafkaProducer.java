@@ -1,4 +1,4 @@
-package com.ligadata.kamanja.get_component;
+package com.ligadata.kamanja.CheckerComponent;
 
 import java.util.Properties;
 
@@ -18,6 +18,7 @@ public class KafkaProducer {
 		props.put("serializer.class", "kafka.serializer.StringEncoder");
 		props.put("request.required.acks", "1");
 		ProducerConfig producerConfig = new ProducerConfig(props);
+		System.out.println(producerConfig.brokerList());
 		producer = new Producer<Integer, String>(producerConfig);
 	}
 	

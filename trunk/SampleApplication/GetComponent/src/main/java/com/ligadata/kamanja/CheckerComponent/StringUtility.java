@@ -1,4 +1,4 @@
-package com.ligadata.kamanja.get_component;
+package com.ligadata.kamanja.CheckerComponent;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -74,6 +74,7 @@ public class StringUtility {
 	}
 
 	public String getStackTrace(final Throwable throwable) {
+		//throwable.printStackTrace();
 		final StringWriter sw = new StringWriter();
 		final PrintWriter pw = new PrintWriter(sw, true);
 		throwable.printStackTrace(pw);
