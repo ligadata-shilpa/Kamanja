@@ -7,6 +7,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
+import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HTable;
@@ -29,7 +30,6 @@ public class HBaseHelper {
     String status;
     StringWriter errors = new StringWriter();
     StringUtility strutl = new StringUtility();
-    HBaseAdmin hbaseAdmin;
 
     private void addError(Throwable e) {
         if (errorMessage != null)
@@ -93,7 +93,7 @@ public class HBaseHelper {
     }
 
     // @SuppressWarnings({ "resource", "deprecation" })
-    public void CreateTable() {
+    public void CreateTable(Connection conn) {
         try {
             relogin();// for kerberos
             // Initiating HBase table with family column
@@ -102,15 +102,15 @@ public class HBaseHelper {
             htable.addFamily(new HColumnDescriptor("contactinfo"));
             // System.out.println("Connecting...");
             // Initiating HBase Admin class
-            hbaseAdmin = new HBaseAdmin(config);
             // System.out.println("Creating Table...");
             // System.out.println(hbaseAdmin.tableExists(tableName));
             // DeleteTable(tableName);
-            if ((hbaseAdmin.tableExists(getTableName())) == true) {
-                DeleteTable(getTableName());
+
+            if ((conn.getAdmin().tableExists(TableName.valueOf(getTableName()))) == true) {
+                DeleteTable(conn, getTableName());
             }
             // System.out.println(hbaseAdmin.tableExists(tableName));
-            hbaseAdmin.createTable(htable);
+            conn.getAdmin().createTable(htable);
             // Create table in HBase
             // System.out.println("Done!");
         } catch (Exception e) {
@@ -120,12 +120,12 @@ public class HBaseHelper {
     }
 
     @SuppressWarnings({"resource", "deprecation"})
-    public void DeleteTable(String tableName) {
+    public void DeleteTable(Connection conn, String tableName) {
         try {
             relogin();// for kerberos
             // hbaseAdmin = new HBaseAdmin(config);
-            hbaseAdmin.disableTable(tableName);
-            hbaseAdmin.deleteTable(tableName);
+            conn.getAdmin().disableTable(TableName.valueOf(tableName));
+            conn.getAdmin().deleteTable(TableName.valueOf(tableName));
         } catch (Exception e) {
             // e.printStackTrace(new PrintWriter(errors));
             addError(e);
@@ -199,14 +199,15 @@ public class HBaseHelper {
             if (errorMessage != null)
                 version = CheckHBaseVersion();
             if (errorMessage != null)
-                CreateTable();
+                CreateTable(conn);
             // DeleteTable(tableName);
             if (errorMessage != null)
                 InsertData();
             if (errorMessage != null)
                 GetData();
             // if (errorMessage != null)
-            DeleteTable(getTableName());
+            DeleteTable(conn, getTableName());
+            conn.close();
         }
 
         if (errorMessage != null)
