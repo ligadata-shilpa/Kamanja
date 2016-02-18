@@ -158,8 +158,9 @@ public class Checker {
         }
 
         Checker checker = new Checker();
-        checker.WriteStringToFile(args[0], ""); // To make sure this file write is working
-        String componentsInfo = checker.CheckServices(args[1]);
-        checker.WriteStringToFile(args[0], componentsInfo);
+        if (checker.WriteStringToFile(args[0], "")) { // To make sure this file write is working
+            String componentsInfo = checker.CheckServices(args[1]);
+            checker.WriteStringToFile(args[0], componentsInfo);
+        }
     }
 }

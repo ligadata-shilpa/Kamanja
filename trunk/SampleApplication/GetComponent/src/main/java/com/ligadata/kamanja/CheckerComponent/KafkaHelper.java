@@ -27,7 +27,10 @@ public class KafkaHelper {
             try {
                 String[] brokerNameAndPort = broker.split(":");
                 String brokerName = brokerNameAndPort[0].trim();
-                int port = Integer.parseInt(brokerNameAndPort[1].trim());
+                String portStr = "9092";
+                if (brokerNameAndPort.length > 1)
+                    portStr = brokerNameAndPort[1].trim();
+                int port = Integer.parseInt(portStr);
 
                 SimpleConsumer consumer = new SimpleConsumer(brokerName, port, 100000, 64 * 1024, "test");
                 List<String> topic2 = new ArrayList<String>();
@@ -74,6 +77,7 @@ public class KafkaHelper {
     public String getErrorMessage() {
         return errorMessage;
     }
+
     public String getStatus() {
         return status;
     }

@@ -31,6 +31,13 @@ public class HBaseHelper {
     StringUtility strutl = new StringUtility();
     HBaseAdmin hbaseAdmin;
 
+    private void addError(Throwable e) {
+        if (errorMessage != null)
+            errorMessage += strutl.getStackTrace(e);
+        else
+            errorMessage = strutl.getStackTrace(e);
+    }
+
     public void SetConfiguration(String host, String authentication, String masterPrincipal, String regionServer,
                                  String keyType, String principal) { // for
         // kerberos
@@ -56,8 +63,7 @@ public class HBaseHelper {
             }
         } catch (Exception e) {
             // e.printStackTrace(new PrintWriter(errors));
-            // errorMessage = errors.toString();
-            errorMessage += strutl.getStackTrace(e);
+            addError(e);
         }
     }
 
@@ -68,8 +74,7 @@ public class HBaseHelper {
             }
         } catch (Exception e) {
             // e.printStackTrace(new PrintWriter(errors));
-            // errorMessage = errors.toString();
-            errorMessage += strutl.getStackTrace(e);
+            addError(e);
         }
     }
 
@@ -83,8 +88,7 @@ public class HBaseHelper {
             config.set("hbase.zookeeper.quorum", host);
         } catch (Exception e) {
             // e.printStackTrace(new PrintWriter(errors));
-            // errorMessage = errors.toString();
-            errorMessage += strutl.getStackTrace(e);
+            addError(e);
         }
     }
 
@@ -111,8 +115,7 @@ public class HBaseHelper {
             // System.out.println("Done!");
         } catch (Exception e) {
             // e.printStackTrace(new PrintWriter(errors));
-            // errorMessage = errors.toString();
-            errorMessage = strutl.getStackTrace(e);
+            addError(e);
         }
     }
 
@@ -125,8 +128,7 @@ public class HBaseHelper {
             hbaseAdmin.deleteTable(tableName);
         } catch (Exception e) {
             // e.printStackTrace(new PrintWriter(errors));
-            // errorMessage = errors.toString();
-            errorMessage += strutl.getStackTrace(e);
+            addError(e);
         }
 
     }
@@ -145,8 +147,7 @@ public class HBaseHelper {
             table.close();
         } catch (IOException e) {
             // e.printStackTrace(new PrintWriter(errors));
-            // errorMessage = errors.toString();
-            errorMessage += strutl.getStackTrace(e);
+            addError(e);
         }
 
     }
@@ -168,8 +169,7 @@ public class HBaseHelper {
             return givenName.toString();
         } catch (Exception e) {
             // e.printStackTrace(new PrintWriter(errors));
-            // errorMessage = errors.toString();
-            errorMessage += strutl.getStackTrace(e);
+            addError(e);
         }
         return null;
     }
@@ -191,7 +191,7 @@ public class HBaseHelper {
         try {
             conn = ConnectionFactory.createConnection(config);
         } catch (Exception e) {
-            errorMessage += strutl.getStackTrace(e);
+            addError(e);
         }
 
         if (conn != null) {
@@ -205,8 +205,8 @@ public class HBaseHelper {
                 InsertData();
             if (errorMessage != null)
                 GetData();
-            if (errorMessage != null)
-                DeleteTable(getTableName());
+            // if (errorMessage != null)
+            DeleteTable(getTableName());
         }
 
         if (errorMessage != null)

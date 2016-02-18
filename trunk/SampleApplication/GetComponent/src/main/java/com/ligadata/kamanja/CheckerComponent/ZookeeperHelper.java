@@ -36,6 +36,13 @@ public class ZookeeperHelper {
         }
     };
 
+    private void addError(Throwable e) {
+        if (errorMessage != null)
+            errorMessage += strutl.getStackTrace(e);
+        else
+            errorMessage = strutl.getStackTrace(e);
+    }
+
     public void ZConnect(String hostName) {
         try {
             zConnection = new ZooKeeper(hostName, sessionTimout, watcher);
@@ -56,8 +63,7 @@ public class ZookeeperHelper {
             }
         } catch (Exception e) {
             // e.printStackTrace(new PrintWriter(errors));
-            // errorMessage += errors.toString();
-            errorMessage += strutl.getStackTrace(e);
+            addError(e);
             e.printStackTrace();
         }
     }
@@ -71,9 +77,8 @@ public class ZookeeperHelper {
             zConnection.create(znode, zdata.getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
         } catch (Exception e) {
             // e.printStackTrace(new PrintWriter(errors));
-            // errorMessage += errors.toString();
             e.printStackTrace();
-            errorMessage += strutl.getStackTrace(e);
+            addError(e);
         }
     }
 
@@ -82,9 +87,8 @@ public class ZookeeperHelper {
             stat = zConnection.exists(znode, null);
         } catch (Exception e) {
             // e.printStackTrace(new PrintWriter(errors));
-            // errorMessage += errors.toString();
             e.printStackTrace();
-            errorMessage += strutl.getStackTrace(e);
+            addError(e);
         }
         if (stat != null)
             return true;
@@ -99,9 +103,8 @@ public class ZookeeperHelper {
             bytes = zConnection.getData(znode, null, null);
         } catch (Exception e) {
             // e.printStackTrace(new PrintWriter(errors));
-            // errorMessage += errors.toString();
             e.printStackTrace();
-            errorMessage += strutl.getStackTrace(e);
+            addError(e);
         }
         result = new String(bytes);
         value = Integer.parseInt(result.trim());
@@ -114,9 +117,8 @@ public class ZookeeperHelper {
             zConnection.setData(znode, zdata.getBytes(), 1);
         } catch (Exception e) {
             // e.printStackTrace(new PrintWriter(errors));
-            // errorMessage += errors.toString();
             e.printStackTrace();
-            errorMessage += strutl.getStackTrace(e);
+            addError(e);
         }
     }
 
@@ -125,9 +127,8 @@ public class ZookeeperHelper {
             zConnection.delete(znode, 0);
         } catch (Exception e) {
             // e.printStackTrace(new PrintWriter(errors));
-            // errorMessage += errors.toString();
             e.printStackTrace();
-            errorMessage += strutl.getStackTrace(e);
+            addError(e);
         }
     }
 
@@ -136,9 +137,8 @@ public class ZookeeperHelper {
             zConnection.close();
         } catch (Exception e) {
             // e.printStackTrace(new PrintWriter(errors));
-            // errorMessage += errors.toString();
             e.printStackTrace();
-            errorMessage += strutl.getStackTrace(e);
+            addError(e);
         }
     }
 
