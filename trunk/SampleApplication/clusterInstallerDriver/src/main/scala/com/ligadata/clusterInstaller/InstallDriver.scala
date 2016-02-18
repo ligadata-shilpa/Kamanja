@@ -496,31 +496,20 @@ object InstallDriver extends App {
 
         var phyDirLast : String = null
         val (proposedClusterEnvironmentIsSuitable) : Boolean = try {
-            val hbaseConnections: String = clusterConfigMap.DataStoreConnections
+            val hbaseConnections: String = clusterConfigMap.DataStoreConnections  //
             val kafkaConnections: String = clusterConfigMap.KafkaConnections
             val zkConnections: String = clusterConfigMap.ZooKeeperConnectionString
 
-            /** on the part 1 of the json argument string, the zk, kafka and hbase values are the same for
-              * all nodes. They are substituted outside the loop.
-              */
-            val jsonArgInputPart1: String =
+            val jsonParm: String =
 """
 {[{ "component" : "zookeeper", "hostslist" : "%s" }
 , { "component" : "kafka", "hostslist" : "%s" }
 , { "component" : "hbase", "hostslist" : "%s" }
+, { "component" : "scala", "hostslist" : "localhost" }
+, { "component" : "java", "hostslist" : "localhost" }]}
 """.stripMargin.format(zkConnections,kafkaConnections,hbaseConnections)
 
-            /**
-              * For the part2 of the json argument string, the ip address goes in the substitution meaning
-              * it must be made inside the loop...
-              */
-            val jsonArgInputPart2 : String =
-"""
-, { "component" : "scala", "hostslist" : "%s" }
-, { "component" : "java", "hostslist" : "%s" }]}
-""".stripMargin /** hence we initialize part of the jsonArgs outside, part inside */
 
-            val jsonArgInput :String = s"${jsonArgInputPart1}${jsonArgInputPart2}"
             val rootDirPath :String = apiConfigMap.getProperty("ROOT_DIR")
 
             /**
@@ -530,7 +519,6 @@ object InstallDriver extends App {
               */
              val componentResults : Array[(Array[ComponentInfo],String)] = ips.map(ip => {
                 val resultsFileAbsolutePath : String = s"/tmp/componentResultsFile$ip.txt"
-                val jsonParm : String =jsonArgInput. format(ip,ip)
                 val (componentInfos, physicalRootDir) : (Array[ ComponentInfo], String) =
                     getComponentVersions(log
                         , rootDirPath
@@ -551,7 +539,7 @@ object InstallDriver extends App {
                 val (components, physDir) : (Array[ComponentInfo], String) = pair
                 val optInfo : Option[ComponentInfo] = components.filter(component => component.componentName.toLowerCase == "scala").headOption
                 val info = optInfo.orNull
-                val scalaIsValid : Boolean = (info != null && info.version != null && info.version == toScala)
+                val scalaIsValid : Boolean = (info != null && info.version != null && info.version.startsWith(toScala)
                 if (! scalaIsValid) {
                     if (info != null) {
                         log.emit(s"Scala for ip ${info.invocationNode} is invalid... msg=${info.errorMessage}")
@@ -561,10 +549,10 @@ object InstallDriver extends App {
                 }
                 val joptInfo : Option[ComponentInfo] = components.filter(component => component.componentName.toLowerCase == "java").headOption
                 val jinfo = joptInfo.orNull
-                val javaIsValid : Boolean = (jinfo != null && jinfo.version != null && jinfo.version == toScala)
+                val javaIsValid : Boolean = (jinfo != null && jinfo.version != null && (jinfo.version.startsWith("1.7") || jinfo.version.startsWith("1.8"))
                 if (! javaIsValid) {
                     if (info != null) {
-                        log.emit(s"Java for ip ${info.invocationNode} is invalid... msg=${info.errorMessage}")
+                        log.emit(s"Java for ip ${info.invocationNode} is invalid...must be java 1.7 or java 1.8 msg=${info.errorMessage}")
                     } else {
                         log.emit("Incredible... no java info")
                     }
@@ -583,7 +571,7 @@ object InstallDriver extends App {
                 val (components, physDir) : (Array[ComponentInfo], String) = pair
                 val zkOptInfo : Option[ComponentInfo] = components.filter(component => component.componentName.toLowerCase == "zookeeper").headOption
                 val info = zkOptInfo.orNull
-                val zkIsValid : Boolean = (info != null && info.status != null && info.status == "ok")
+                val zkIsValid : Boolean = (info != null && info.status != null && info.status.toLowerCase == "success")
                 if (! zkIsValid) {
                     if (info != null) {
                         log.emit(s"Zookeeper for ip ${info.invocationNode} is not healthy... msg=${info.errorMessage}")
@@ -593,7 +581,7 @@ object InstallDriver extends App {
                 }
                 val kafkaOptInfo : Option[ComponentInfo] = components.filter(component => component.componentName.toLowerCase == "kafka").headOption
                 val kinfo = kafkaOptInfo.orNull
-                val kafkaIsValid : Boolean = (kinfo != null && kinfo.status != null && kinfo.status == "ok")
+                val kafkaIsValid : Boolean = (kinfo != null && kinfo.status != null && kinfo.status.toLowerCase == "success")
                 if (! kafkaIsValid) {
                     if (info != null) {
                         log.emit(s"Kafka for ip ${kinfo.invocationNode} is not healthy... msg=${kinfo.errorMessage}")
@@ -603,7 +591,7 @@ object InstallDriver extends App {
                 }
                 val hbaseOptInfo : Option[ComponentInfo] = components.filter(component => component.componentName.toLowerCase == "hbase").headOption
                 val hinfo = kafkaOptInfo.orNull
-                val hbaseIsValid : Boolean = (hinfo != null && hinfo.status != null && hinfo.status == "ok")
+                val hbaseIsValid : Boolean = (hinfo != null && hinfo.status != null && hinfo.status.toLowerCase == "success")
                 if (! hbaseIsValid) {
                     if (info != null) {
                         log.emit(s"HBase for ip ${hinfo.invocationNode} is not healthy... msg=${hinfo.errorMessage}")
