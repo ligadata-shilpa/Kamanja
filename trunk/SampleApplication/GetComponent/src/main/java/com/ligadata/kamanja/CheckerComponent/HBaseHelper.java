@@ -139,8 +139,9 @@ public class HBaseHelper {
             relogin();// for kerberos
             HTable table = new HTable(config, getTableName());
             Put put = new Put(Bytes.toBytes("ligadata"));
-            put.add(Bytes.toBytes("person"), Bytes.toBytes("givenName"), Bytes.toBytes("liga"));
-            put.add(Bytes.toBytes("person"), Bytes.toBytes("sureName"), Bytes.toBytes("data"));
+            put.add(Bytes.toBytes("person"), Bytes.toBytes("givenName"), Bytes.toBytes("ligaData"));
+            String doneTm = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new java.util.Date(System.currentTimeMillis()));
+            put.add(Bytes.toBytes("person"), Bytes.toBytes("sureName"), Bytes.toBytes(doneTm));
             put.add(Bytes.toBytes("contactinfo"), Bytes.toBytes("email"), Bytes.toBytes("ligadata@ligadata.com"));
             table.put(put);
             table.flushCommits();
