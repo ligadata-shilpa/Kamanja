@@ -24,6 +24,7 @@ import org.joda.time.format.{DateTimeFormat, DateTimeFormatter}
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
 import scala.sys.process._
+import sys.process._
 
 import java.io._
 import java.util.regex.{Matcher, Pattern}
@@ -200,8 +201,8 @@ object InstallDriver extends App {
                 nextOption(map ++ Map('toScala -> value), tail)
             case "--workingDir" :: value :: tail =>
                 nextOption(map ++ Map('workingDir -> value), tail)
-            case "--migrationTemplate" :: value :: tail =>
-                nextOption(map ++ Map('migrationTemplate -> value), tail)
+            case "--migrateTemplate" :: value :: tail =>
+                nextOption(map ++ Map('migrateTemplate -> value), tail)
             case "--componentVersionScriptAbsolutePath" :: value :: tail =>
                 nextOption(map ++ Map('componentVersionScriptAbsolutePath -> value), tail)
             case "--componentVersionJarAbsolutePath" :: value :: tail =>
@@ -257,23 +258,43 @@ object InstallDriver extends App {
             sys.exit(1)
         }
 
-        val reasonableArguments: Boolean = (
-            clusterId != null && clusterId.nonEmpty
-            && apiConfigPath != null && apiConfigPath.nonEmpty
-            && nodeConfigPath != null && nodeConfigPath.nonEmpty
-            && tarballPath != null && tarballPath.nonEmpty
-            && fromKamanja != null && fromKamanja.nonEmpty && (fromKamanja == "1.1" || fromKamanja == "1.2")
-            && fromScala != null && fromScala.nonEmpty && fromScala == "2.10"
-            && toScala != null && toScala.nonEmpty && (toScala == "2.10" || toScala == "2.11")
-            && workingDir != null && workingDir.nonEmpty
-            && migrateTemplate != null && migrateTemplate.nonEmpty
-            && logDir != null && logDir.nonEmpty
-            && componentVersionScriptAbsolutePath != null && componentVersionScriptAbsolutePath.nonEmpty
-            && componentVersionJarAbsolutePath != null && componentVersionJarAbsolutePath.nonEmpty
-            && ! confusedIntention)
+        val clusterIdOk : Boolean = clusterId != null && clusterId.nonEmpty
+        val apiConfigPathOk : Boolean = apiConfigPath != null && apiConfigPath.nonEmpty
+        val tarballPathOk : Boolean = tarballPath != null && tarballPath.nonEmpty
+        val fromKamanjaOk : Boolean = fromKamanja != null && fromKamanja.nonEmpty && (fromKamanja == "1.1" || fromKamanja == "1.2")
+        val fromScalaOk : Boolean = fromKamanja != null && fromKamanja.nonEmpty && (fromKamanja == "1.1" || fromKamanja == "1.2")
+        val toScalaOk : Boolean = toScala != null && toScala.nonEmpty && (toScala == "2.10" || toScala == "2.11")
+        val workingDirOk : Boolean = workingDir != null && workingDir.nonEmpty
+        val migrateTemplateOk : Boolean = migrateTemplate != null && migrateTemplate.nonEmpty
+        val logDirOk : Boolean = logDir != null && logDir.nonEmpty
+        val componentVersionScriptAbsolutePathOk : Boolean = componentVersionScriptAbsolutePath != null && componentVersionScriptAbsolutePath.nonEmpty
+        val componentVersionJarAbsolutePathOk : Boolean = componentVersionJarAbsolutePath != null && componentVersionJarAbsolutePath.nonEmpty
+        val reasonableArguments: Boolean =
+            (clusterIdOk
+            && apiConfigPathOk
+            && tarballPathOk
+            && fromKamanjaOk
+            && fromScalaOk
+            && toScalaOk
+            && workingDirOk
+            && migrateTemplateOk
+            && logDirOk
+            && componentVersionScriptAbsolutePathOk
+            && componentVersionJarAbsolutePathOk
+            )
 
         if (! reasonableArguments) {
-            println("Your arguments are not satisfactory...Usage:")
+            println("One or more arguments are not set or have bad values...")
+            if (! clusterIdOk) println("\tclusterId")
+            if (! apiConfigPathOk) println("\tapiConfigPath")
+            if (! tarballPathOk) println("\ttarballPath")
+            if (! fromKamanjaOk) println("\tfromKamanja")
+            if (! fromScalaOk) println("\tfromScala")
+            if (! migrateTemplateOk) println("\tmigrateTemplate")
+            if (! logDirOk) println("\tlogDir")
+            if (! componentVersionScriptAbsolutePathOk) println("\tcomponentVersionScriptAbsolutePath")
+            if (! componentVersionJarAbsolutePathOk) println("\tcomponentVersionJarAbsolutePath")
+            println("Usage:")
             println(usage)
             sys.exit(1)
         }
@@ -288,42 +309,44 @@ object InstallDriver extends App {
         }
 
         /** validate the paths before proceeding */
-        val apiCfgExists : Int = Seq("ls ", apiConfigPath).!
-        val nodeConfigPathExists : Int = Seq("ls ", nodeConfigPath).!
-        val tarballPathExists : Int = Seq("ls ", tarballPath).!
-        val workingDirExists : Int = Seq("ls ", workingDir).!
-        val migrateTemplateExists : Int = Seq("ls ", migrateTemplate).!
-        val logDirExists : Int = Seq("ls ", logDir).!
+        val apiCfgExists : Boolean = new File(apiConfigPath).exists
+        val nodeConfigPathExists : Boolean = new File(nodeConfigPath).exists
+        val tarballPathExists : Boolean = new File(tarballPath).exists
+        val workingDirExists : Boolean = new File(workingDir).exists
+        val migrateTemplateExists : Boolean = new File(migrateTemplate).exists
+        val logDirExists : Boolean = new File(logDir).exists
+        val componentVersionScriptAbsolutePathExists : Boolean = new File(componentVersionScriptAbsolutePath).exists
+        val componentVersionJarAbsolutePathExists : Boolean = new File(componentVersionJarAbsolutePath).exists
 
-        if (apiCfgExists != 0) {
+        if (! apiCfgExists) {
             log.emit(s"The apiConfigPath ($apiConfigPath) does not exist")
             cnt += 1
         }
-        if (nodeConfigPathExists != 0) {
+        if (! nodeConfigPathExists) {
             log.emit(s"The nodeConfigPath ($nodeConfigPath) does not exist")
             cnt += 1
         }
-        if (tarballPathExists != 0) {
+        if (! tarballPathExists) {
             log.emit(s"The tarballPath ($tarballPath) does not exist")
             cnt += 1
         }
-        if (workingDirExists != 0) {
+        if (! workingDirExists) {
             log.emit(s"The workingDir ($workingDir) does not exist")
             cnt += 1
         }
-        if (migrateTemplateExists != 0) {
+        if (! migrateTemplateExists) {
             log.emit(s"The migrateTemplate ($migrateTemplate) does not exist")
             cnt += 1
         }
-        if (logDirExists != 0) {
+        if (! logDirExists) {
             log.emit(s"The logDir ($logDir) does not exist")
             cnt += 1
         }
-        if (componentVersionScriptAbsolutePath != 0) {
+        if (! componentVersionScriptAbsolutePathExists) {
             log.emit(s"The componentVersionScriptAbsolutePath ($componentVersionScriptAbsolutePath) does not exist")
             cnt += 1
         }
-        if (componentVersionJarAbsolutePath != 0) {
+        if (! componentVersionJarAbsolutePathExists) {
             log.emit(s"The componentVersionJarAbsolutePath ($componentVersionJarAbsolutePath) does not exist")
             cnt += 1
         }
@@ -345,7 +368,7 @@ object InstallDriver extends App {
         /** Ascertain what the name of the new installation directory will be, what the name of the prior installation would be
           * (post install), and the parent directory in which both of them will live on each cluster node. Should there be no
           * existing installation, the prior installation value will be null. */
-        val rootDirPath :String = apiConfigMap.getProperty("ROOT_DIR") /** use root dir value for the base name */
+        val rootDirPath :String = apiConfigMap.getProperty("root_dir") /** use root dir value for the base name */
         val (parentPath, priorInstallDirName, newInstallDirName) : (String, String, String) = CreateInstallationNames(log
                                                                                                                     ,rootDirPath
                                                                                                                     ,fromKamanja
@@ -510,7 +533,7 @@ object InstallDriver extends App {
 """.stripMargin.format(zkConnections,kafkaConnections,hbaseConnections)
 
 
-            val rootDirPath :String = apiConfigMap.getProperty("ROOT_DIR")
+            val rootDirPath :String = apiConfigMap.getProperty("root_dir")
 
             /**
               * Obtain the component information found on the cluster nodes.  There is a ComponentInfo created for each

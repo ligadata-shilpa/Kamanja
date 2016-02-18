@@ -6,7 +6,7 @@ shellPrompt := { state =>  "sbt (%s)> ".format(Project.extract(state).currentPro
 
 
 
-mainClass in assembly := Some("com.ligadata.MetadataAPI.StartMetadataAPI")
+mainClass in assembly := Some("com.ligadata.clusterInstaller.InstallDriver")
 
 assemblyOption in assembly ~= { _.copy(prependShellScript = Some(defaultShellScript)) }
 

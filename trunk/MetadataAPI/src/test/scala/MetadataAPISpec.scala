@@ -146,7 +146,7 @@ class MetadataAPISpec extends FunSpec with LocalTestFixtures with BeforeAndAfter
    }
     catch {
       case e: EmbeddedZookeeperException => {
-        throw new EmbeddedZookeeperException("EmbeddedZookeeperException detected", e)
+        throw new EmbeddedZookeeperException("EmbeddedZookeeperException detected")
       }
       case e: Exception => throw new Exception("Failed to execute set up properly", e)
     }
