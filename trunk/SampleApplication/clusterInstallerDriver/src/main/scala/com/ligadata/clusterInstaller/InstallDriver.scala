@@ -539,7 +539,7 @@ object InstallDriver extends App {
                 val (components, physDir) : (Array[ComponentInfo], String) = pair
                 val optInfo : Option[ComponentInfo] = components.filter(component => component.componentName.toLowerCase == "scala").headOption
                 val info = optInfo.orNull
-                val scalaIsValid : Boolean = (info != null && info.version != null && info.version.startsWith(toScala)
+                val scalaIsValid : Boolean = (info != null && info.version != null && info.version.startsWith(toScala))
                 if (! scalaIsValid) {
                     if (info != null) {
                         log.emit(s"Scala for ip ${info.invocationNode} is invalid... msg=${info.errorMessage}")
@@ -549,7 +549,7 @@ object InstallDriver extends App {
                 }
                 val joptInfo : Option[ComponentInfo] = components.filter(component => component.componentName.toLowerCase == "java").headOption
                 val jinfo = joptInfo.orNull
-                val javaIsValid : Boolean = (jinfo != null && jinfo.version != null && (jinfo.version.startsWith("1.7") || jinfo.version.startsWith("1.8"))
+                val javaIsValid : Boolean = (jinfo != null && jinfo.version != null && (jinfo.version.startsWith("1.7") || jinfo.version.startsWith("1.8")))
                 if (! javaIsValid) {
                     if (info != null) {
                         log.emit(s"Java for ip ${info.invocationNode} is invalid...must be java 1.7 or java 1.8 msg=${info.errorMessage}")
@@ -611,7 +611,7 @@ object InstallDriver extends App {
             /** Examine the physical directories on each cluster node. The physical directory returned for all of them
               * should be the same path, right?
               */
-            val uniquePhysDirs : Set[String] =  (componentResults.map(pair => pair._2).toSet
+            val uniquePhysDirs : Set[String] =  componentResults.map(pair => pair._2).toSet
             val physDirsAllHaveSamePath : Boolean = (uniquePhysDirs.size == 1)
 
             (scalaAndJavaAreValidAllNodes && zkKafkaHbaseHealthyForAllNodes && physDirsAllHaveSamePath)
