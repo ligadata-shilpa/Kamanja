@@ -854,8 +854,8 @@ object InstallDriver extends App {
 
         /apps/KamanjaInstall_<version>_<datetime>
         */
-        val priorInstallDirName : String = "${phyDirName}_${fromKamanjaVer}_${datestr}"
-        val newInstallDirName : String = "${phyDirName}_${toKamanjaVer}_${datestr}"
+        val priorInstallDirName : String = s"${phyDirName}_${fromKamanjaVer}_${datestr}"
+        val newInstallDirName : String = s"${phyDirName}_${toKamanjaVer}_${datestr}"
 
         (parentPath, priorInstallDirName, newInstallDirName)
     }

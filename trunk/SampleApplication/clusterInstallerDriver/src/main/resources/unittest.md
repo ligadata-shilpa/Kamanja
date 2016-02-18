@@ -27,3 +27,5 @@ java -jar $KAMANJA_INSTALL_HOME/bin/clusterInstallerDriver-1.0  --clusterId "lig
 
 
 java -Xdebug -Xrunjdwp:transport=dt_socket,address="$ipport",server=y -Dlog4j.configurationFile=file:$LOG4J_HOME/config/log4j2.xml -jar $KAMANJA_INSTALL_HOME/bin/clusterInstallerDriver-1.0  --clusterId "ligadata1" --apiConfig "$KAMANJA_HOME/config/MetadataAPIConfig.properties" --clusterConfig "$KAMANJA_HOME/config/ClusterConfig.json" --tarballPath "/tmp/drdigital.tar.gz" --fromKamanja "1.1" --fromScala "2.10" --toScala "2.11" --workingDir /tmp/work --upgrade  --logDir /tmp/clusterInstallerLogs --migrateTemplate $KAMANJA_SRCDIR/SampleApplication/clusterInstallerDriver/src/main/resources/MigrateConfigTemplate.json --componentVersionScriptAbsolutePath $KAMANJA_SRCDIR/SampleApplication/clusterInstallerDriver/src/main/resources/GetComponentsVersions.sh --componentVersionJarAbsolutePath $KAMANJA_INSTALL_HOME/bin/GetComponent-1.0
+
+
