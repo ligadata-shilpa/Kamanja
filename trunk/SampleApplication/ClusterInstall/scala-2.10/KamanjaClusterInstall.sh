@@ -31,7 +31,7 @@
 #
 #   If you supply all of the options, you will be asked to try again.  An alternate working directory may be supplied.  This 
 #   directory is used by this script to store the built software when compiling as well as the control files that are generated
-#   by the NodeInfoExtract.  By default, "/tmp" is used.  If a special one is supplied as the WorkingDir paramater value, it
+#   by the NodeInfoExtract.  By default, "/tmp" is used.  If a special one is supplied as the WorkingDir parameter value, it
 #   must exist.  The user account must have CRUD access to its content.
 #
 #   If a cluster config is not present there when no NodeConfigPath argument is presented, an exception is thrown.  In fact
@@ -63,7 +63,12 @@ Usage()
     echo "                               --TarballPath <tarball path>"
     echo "                               --NodeConfigPath <engine config path> "
     echo "                               [ --WorkingDir <alt working dir>  ]"
-    echo 
+    echo "                               --ipAddrs the ips in the cluster  "
+    echo "                               --ipIdTargPaths unique ips, node ids, target paths, and roles  "
+    echo "                               --ipPathPairs unique ips and target paths  "
+    echo "                               --priorInstallDirPath name to use for rename of prior install if any  "
+    echo "                               --newInstallDirPath new name of physical install  "
+    echo
     echo "  NOTES: Only tar'd gzip files are supported for the tarballs at the moment."
     echo "         NodeConfigPath must be supplied always"
     echo "         The working directory, by default, is /tmp.  If such a public location is abhorrent, chose a private one.  It"
@@ -80,7 +85,7 @@ Usage()
 
 
 # Check 1: Is this even close to reasonable?
-if [[ "$#" -eq 4  || "$#" -eq 6  || "$#" -eq 8  || "$#" -eq 10 ]]; then
+if [[ "$#" -eq 1  || "$#" -eq 4  || "$#" -eq 6  || "$#" -eq 8  || "$#" -eq 10  || "$#" -eq 12  || "$#" -eq 14  || "$#" -eq 16  || "$#" -eq 18  || "$#" -eq 20 ]]; then
     echo 
 else 
     echo 
@@ -90,9 +95,9 @@ else
 fi
 
 # Check 2: Is this even close to reasonable?
-if [[ "$name1" != "--ClusterId" && "$name1" != "--MetadataAPIConfig" && "$name1" != "--NodeConfigPath"  && "$name1" != "--KafkaInstallPath"   && "$name1" != "--TarballPath"  && "$name1" != "--WorkingDir" ]]; then
+if [[ "$name1" != "--ClusterId" && "$name1" != "--MetadataAPIConfig" && "$name1" != "--NodeConfigPath"  && "$name1" != "--KafkaInstallPath"   && "$name1" != "--TarballPath"  && "$name1" != "--WorkingDir"   && "$name1" != "--ipAddrs"   && "$name1" != "--ipIdTargPaths"   && "$name1" != "--ipPathPairs" && "$name1" != --priorInstallDirPath" &&  n"$name1" != ""--newInstallDirPath" ]]; then
     echo 
-	echo "Problem: Unreasonable number of arguments... as few as 2 and as many as 4 may be supplied."
+	echo "Problem: Unreasonable number of arguments... as few as 2 and as many as 20 may be supplied."
     Usage
 	exit 1
 fi
@@ -106,6 +111,11 @@ nodeCfgGiven=""
 workDir="/tmp"
 installDirName="" 
 clusterId=""
+ipAddrs=""
+ipIdTargPaths=""
+ipPathPairs=""
+priorInstallDirPath=""
+newInstallDirPath=""
 
 while [ "$1" != "" ]; do
     case $1 in
@@ -128,7 +138,25 @@ while [ "$1" != "" ]; do
         --ClusterId )           shift
                                 clusterId=$1
                                 ;;
-        * )                     echo 
+        --ipAddrs )           	shift
+                                ipAddrs=$1
+                                ;;
+        --ipIdTargPaths )       shift
+                                ipIdTargPaths=$1
+                                ;;
+        --ipPathPairs )         shift
+                                ipPathPairs=$1
+                                ;;
+        --priorInstallDirPath ) shift
+                                priorInstallDirPath=$1
+                                ;;
+        --newInstallDirPath )   shift
+                                newInstallDirPath=$1
+                                ;;
+        --help )           		Usage
+        						exit 0
+                                ;;
+        * )                     echo
                                 echo "Problem: Argument $1 is invalid named parameter."
                                 Usage
                                 exit 1
@@ -325,45 +353,50 @@ else
 fi
 
 # 3) determine which machines and installation directories are to get the build from the metadata and Kamanja config
-# A number of files are produced, all in the working dir.
-ipFile="ip.txt"
-ipPathPairFile="ipPath.txt"
-ipIdCfgTargPathQuartetFileName="ipIdCfgTarg.txt"
+# A number of files are produced, all USED TO BE IN WORKING DIR WHEN THEY WERE created by the NodeInfoExtract.  Now
+# these three files are passed in as full paths from the caller.  NodeInfoExtract is not used.
+ipFile="$ipAddrs"
+ipPathPairFile="$ipIdTargPaths"
+ipIdCfgTargPathQuartetFileName="$ipIdTargPaths"
+#ipFile="ip.txt"
+#ipPathPairFile="ipPath.txt"
+#ipIdCfgTargPathQuartetFileName="ipIdCfgTarg.txt"
 
-echo "...extract node information for the cluster to be installed from the Metadata configuration and optional node information supplied"
-if  [ -n "$nodeCfgGiven" ]; then
-	echo "metadataAPIConfig = $metadataAPIConfig"
-	echo "nodeConfigPath = $nodeConfigPath"
-	echo "workDir = $workDir"
-	echo "ipFile = $ipFile"
-	echo "ipPathPairFile = $ipPathPairFile"
-	echo "ipIdCfgTargPathQuartetFileName = $ipIdCfgTargPathQuartetFileName"
-	echo "installDir = $installDir"
-	echo "clusterId = $clusterId"
-	echo "...Command = NodeInfoExtract-1.0 --MetadataAPIConfig \"$metadataAPIConfig\" --NodeConfigPath \"$nodeConfigPath\"  --workDir \"$workDir\" --ipFileName \"$ipFile\" --ipPathPairFileName \"$ipPathPairFile\" --ipIdCfgTargPathQuartetFileName \"$ipIdCfgTargPathQuartetFileName\" --installDir \"$installDir\" --clusterId \"$clusterId\""
-	NodeInfoExtract-1.0 --MetadataAPIConfig "$metadataAPIConfig" --NodeConfigPath "$nodeConfigPath" --workDir "$workDir" --ipFileName "$ipFile" --ipPathPairFileName "$ipPathPairFile" --ipIdCfgTargPathQuartetFileName "$ipIdCfgTargPathQuartetFileName"  --installDir "$installDir" --clusterId "$clusterId"
-	# Check 15: Bad NodeInfoExtract-1.0 arguments
-	if [ "$?" -ne 0 ]; then
-		echo
-		echo "Problem: Invalid arguments supplied to the NodeInfoExtract-1.0 application... unable to obtain node configuration... exiting."
-		Usage
-		exit 1
-	fi
-else # info is assumed to be present in the supplied metadata store... see trunk/utils/NodeInfoExtract for details 
-	echo "...Command = $nodeInfoExtractDir/NodeInfoExtract-1.0 --MetadataAPIConfig \"$metadataAPIConfig\" --workDir \"$workDir\" --ipFileName \"$ipFile\" --ipPathPairFileName \"$ipPathPairFile\" --ipIdCfgTargPathQuartetFileName \"$ipIdCfgTargPathQuartetFileName\" --installDir \"$installDir\" --clusterId \"$clusterId\""
-		NodeInfoExtract-1.0 --MetadataAPIConfig $metadataAPIConfig --workDir "$workDir" --ipFileName "$ipFile" --ipPathPairFileName "$ipPathPairFile" --ipIdCfgTargPathQuartetFileName "$ipIdCfgTargPathQuartetFileName" --installDir "$installDir" --clusterId "$clusterId"
-	# Check 15: Bad NodeInfoExtract-1.0 arguments
-	if [ "$?" -ne 0 ]; then
-		echo
-		echo "Problem: Invalid arguments supplied to the NodeInfoExtract-1.0 application... unable to obtain node configuration... exiting."
-		Usage
-		exit 1
-	fi
-fi
+#echo "...extract node information for the cluster to be installed from the Metadata configuration and optional node information supplied"
+#if  [ -n "$nodeCfgGiven" ]; then
+#	echo "metadataAPIConfig = $metadataAPIConfig"
+#	echo "nodeConfigPath = $nodeConfigPath"
+#	echo "workDir = $workDir"
+#	echo "ipFile = $ipFile"
+#	echo "ipPathPairFile = $ipPathPairFile"
+#	echo "ipIdCfgTargPathQuartetFileName = $ipIdCfgTargPathQuartetFileName"
+#	echo "installDir = $installDir"
+#	echo "clusterId = $clusterId"
+#	echo "...Command = NodeInfoExtract-1.0 --MetadataAPIConfig \"$metadataAPIConfig\" --NodeConfigPath \"$nodeConfigPath\"  --workDir \"$workDir\" --ipFileName \"$ipFile\" --ipPathPairFileName \"$ipPathPairFile\" --ipIdCfgTargPathQuartetFileName \"$ipIdCfgTargPathQuartetFileName\" --installDir \"$installDir\" --clusterId \"$clusterId\""
+#	NodeInfoExtract-1.0 --MetadataAPIConfig "$metadataAPIConfig" --NodeConfigPath "$nodeConfigPath" --workDir "$workDir" --ipFileName "$ipFile" --ipPathPairFileName "$ipPathPairFile" --ipIdCfgTargPathQuartetFileName "$ipIdCfgTargPathQuartetFileName"  --installDir "$installDir" --clusterId "$clusterId"
+#	# Check 15: Bad NodeInfoExtract-1.0 arguments
+#	if [ "$?" -ne 0 ]; then
+#		echo
+#		echo "Problem: Invalid arguments supplied to the NodeInfoExtract-1.0 application... unable to obtain node configuration... exiting."
+#		Usage
+#		exit 1
+#	fi
+#else # info is assumed to be present in the supplied metadata store... see trunk/utils/NodeInfoExtract for details
+#	echo "...Command = $nodeInfoExtractDir/NodeInfoExtract-1.0 --MetadataAPIConfig \"$metadataAPIConfig\" --workDir \"$workDir\" --ipFileName \"$ipFile\" --ipPathPairFileName \"$ipPathPairFile\" --ipIdCfgTargPathQuartetFileName \"$ipIdCfgTargPathQuartetFileName\" --installDir \"$installDir\" --clusterId \"$clusterId\""
+#		NodeInfoExtract-1.0 --MetadataAPIConfig $metadataAPIConfig --workDir "$workDir" --ipFileName "$ipFile" --ipPathPairFileName "$ipPathPairFile" --ipIdCfgTargPathQuartetFileName "$ipIdCfgTargPathQuartetFileName" --installDir "$installDir" --clusterId "$clusterId"
+#	# Check 15: Bad NodeInfoExtract-1.0 arguments
+#	if [ "$?" -ne 0 ]; then
+#		echo
+#		echo "Problem: Invalid arguments supplied to the NodeInfoExtract-1.0 application... unable to obtain node configuration... exiting."
+#		Usage
+#		exit 1
+#	fi
+#fi
 
 echo "...creating directories to copy the tarball to the machines in this cluster"
 exec 12<&0 # save current stdin
-exec < "$workDir/$ipFile"
+#exec < "$workDir/$ipFile"
+exec < "$ipFile"
 while read LINE; do
     machine=$LINE
     echo "...creating directory $machine:$workDir"
@@ -377,7 +410,8 @@ exec 0<&12 12<&-
 # 4) Push the tarballs to each machine defined in the supplied configuration
 echo "...copy the tarball to the machines in this cluster"
 exec 12<&0 # save current stdin
-exec < "$workDir/$ipFile"
+#exec < "$workDir/$ipFile"
+exec < "$ipFile"
 while read LINE; do
     machine=$LINE
     echo "...copying $tarName to $machine:$workDir/$tarName"
@@ -393,8 +427,10 @@ DATE=`date +%Y%m%d%H%M%S`
 
 # 5) untar/decompress tarballs there and move them into place
 echo "...for each directory specified on each machine participating in the cluster, untar and decompress the software to $workDir/$installDirName... then move to corresponding target path"
+priorInstallationDetected="false"
 exec 12<&0 # save current stdin
-exec < "$workDir/$ipPathPairFile"
+#exec < "$workDir/$ipPathPairFile"
+exec < "$ipPathPairFile"
 while read LINE; do
     machine=$LINE
     read LINE
@@ -406,19 +442,31 @@ while read LINE; do
 		if [ -d "$targetFolder" ]; then 
 			cd $workDir
 			if [ ! -L $targetPath ]; then
-				mv 	$targetPath "$targetPath"_pre_"$DATE"			
+				mv 	"$targetPath" "$priorInstallDirPath"
+				priorInstallationDetected="true"
 			else
+				if [ -d "$targetPath" ]; then
+					priorInstallationDetected="true"
+					mv "$targetPath" "$priorInstallDirPath"
+				fi
 				unlink $targetPath
 			fi
-			mkdir -p $targetPath_date
-	 		tar xzf $tarName -C $targetPath_date --strip-components 1
-			ln -sf  $targetPath_date $targetPath
+			mkdir -p $newInstallDirPath
+	 		tar xzf $tarName -C $newInstallDirPath --strip-components 1
+			ln -sf  $newInstallDirPath $targetPath
 	 	else
 			echo "$targetFolder is not directory"	
 		fi
 EOF
 done
 exec 0<&12 12<&-
+
+if [ "priorInstallationDetected" == true" ]; then
+	echo "Prior physical installation not found...this is a brand new installation"
+else
+	echo "Prior Kamanja physical installation now named $priorInstallDirPath"
+fi
+echo "New Kamanja physical installation is $newInstallDirPath. The $targetPath now points to this installation."
 
 echo
 
@@ -427,7 +475,8 @@ installDir_repl=$(echo $installDir | sed 's/\//\\\//g')
 # 6) Push the node$nodeId.cfg file to each cluster node's working directory.
 echo "...copy the node$nodeId.cfg & log files to the machines' ($workDir/$installDirName) for this cluster "
 exec 12<&0 # save current stdin
-exec < "$workDir/$ipIdCfgTargPathQuartetFileName"
+#exec < "$workDir/$ipIdCfgTargPathQuartetFileName"
+exec < "$ipIdCfgTargPathQuartetFileName"
 while read LINE; do
     machine=$LINE
     read LINE
@@ -459,7 +508,8 @@ echo
 # 7) Run SetPaths.sh & Copy given Node Config File (Ex: ClusterConfig.json)
 echo "...for each machine set new paths"
 exec 12<&0 # save current stdin
-exec < "$workDir/$ipPathPairFile"
+#exec < "$workDir/$ipPathPairFile"
+exec < "$ipPathPairFile"
 while read LINE; do
 	machine=$LINE
 	read LINE
@@ -478,7 +528,8 @@ echo
 # 8) clean up
 # echo "...clean up "
 # exec 12<&0 # save current stdin
-# exec < "$workDir/$ipPathPairFile"
+### exec < "$workDir/$ipPathPairFile"
+# exec < "$ipPathPairFile"
 # while read LINE; do
 #     machine=$LINE
 #     read LINE
