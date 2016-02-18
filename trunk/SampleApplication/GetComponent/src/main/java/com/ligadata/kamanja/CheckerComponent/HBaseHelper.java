@@ -40,7 +40,7 @@ public class HBaseHelper {
             config = HBaseConfiguration.create();
             config.setInt("zookeeper.session.timeout", 5000);
             config.setInt("zookeeper.recovery.retry", 1);
-            config.setInt("hbase.client.retries.number", 3);
+            config.setInt("hbase.client.retries.number", 1);
             config.setInt("hbase.client.pause", 5000);
             config.set("hbase.zookeeper.quorum", host);
             if (((authentication != null) && authentication.equalsIgnoreCase("kerberos"))) {
@@ -76,9 +76,9 @@ public class HBaseHelper {
     public void conf(String host) {
         try {
             config = HBaseConfiguration.create();
-            config.setInt("zookeeper.session.timeout", 300);
+            config.setInt("zookeeper.session.timeout", 5000);
             config.setInt("zookeeper.recovery.retry", 1);
-            config.setInt("hbase.client.retries.number", 3);
+            config.setInt("hbase.client.retries.number", 1);
             config.setInt("hbase.client.pause", 5000);
             config.set("hbase.zookeeper.quorum", host);
         } catch (Exception e) {
@@ -96,7 +96,6 @@ public class HBaseHelper {
             HTableDescriptor htable = new HTableDescriptor(getTableName());
             htable.addFamily(new HColumnDescriptor("person"));
             htable.addFamily(new HColumnDescriptor("contactinfo"));
-            htable.addFamily(new HColumnDescriptor("creditcard"));
             // System.out.println("Connecting...");
             // Initiating HBase Admin class
             hbaseAdmin = new HBaseAdmin(config);
@@ -137,10 +136,10 @@ public class HBaseHelper {
         try {
             relogin();// for kerberos
             HTable table = new HTable(config, getTableName());
-            Put put = new Put(Bytes.toBytes("yousef-ligadata"));
-            put.add(Bytes.toBytes("person"), Bytes.toBytes("givenName"), Bytes.toBytes("yousef"));
-            put.add(Bytes.toBytes("person"), Bytes.toBytes("sureName"), Bytes.toBytes("abuElbeh"));
-            put.add(Bytes.toBytes("contactinfo"), Bytes.toBytes("email"), Bytes.toBytes("yulbeh@ligadata.com"));
+            Put put = new Put(Bytes.toBytes("ligadata"));
+            put.add(Bytes.toBytes("person"), Bytes.toBytes("givenName"), Bytes.toBytes("liga"));
+            put.add(Bytes.toBytes("person"), Bytes.toBytes("sureName"), Bytes.toBytes("data"));
+            put.add(Bytes.toBytes("contactinfo"), Bytes.toBytes("email"), Bytes.toBytes("ligadata@ligadata.com"));
             table.put(put);
             table.flushCommits();
             table.close();
@@ -157,7 +156,7 @@ public class HBaseHelper {
         try {
             relogin();// for kerberos
             HTable table = new HTable(config, getTableName());
-            Get get = new Get(Bytes.toBytes("yousef-ligadata"));
+            Get get = new Get(Bytes.toBytes("ligadata"));
             get.addFamily(Bytes.toBytes("person"));
             Result result = table.get(get);
             byte[] givenName = result.getValue(Bytes.toBytes("person"), Bytes.toBytes("givenName"));
