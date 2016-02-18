@@ -752,9 +752,7 @@ object InstallDriver extends App {
                 val status = tmpmap.getOrElse("status", null)
                 val errorMessage = tmpmap.getOrElse("errorMessage", null)
                 val componentName = tmpmap.getOrElse("componentName", null)
-                val invocationNode = tmpmap.getOrElse("invocationNode", null)
-
-                // case class ComponentInfo(version: String, status: String, errorMessage: String, componentName: String, invocationNode: String)
+                val invocationNode = tmpmap.getOrElse("invocationNode", remoteNodeIp)
 
                 results += ComponentInfo(if (version == null) "" else version.toString
                                         , if (status == null) "" else status.toString
