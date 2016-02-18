@@ -441,6 +441,8 @@ DATE=`date +%Y%m%d%H%M%S`
 # 5) untar/decompress tarballs there and move them into place
 echo "...for each directory specified on each machine participating in the cluster, untar and decompress the software to $workDir/$installDirName... then move to corresponding target path"
 priorInstallationDetected="false"
+brokenLink="false"
+
 exec 12<&0 # save current stdin
 #exec < "$workDir/$ipPathPairFile"
 exec < "$ipPathPairFile"
@@ -454,18 +456,27 @@ while read LINE; do
         priorInstallDirPath="$targetPath"_pre_"$DATE"
         newInstallDirPath="$targetPath_date"
     fi
-    echo "Extract the tarball $tarName and copy it to $targetPath iff $workDir/$installDirName != $targetPath"
+	
+	curNodePriorInstDetected="false"
+	curNodeBrokenLnk="false"
+	
+    echo "On node $machine extract the tarball $tarName and copy it to $targetPath iff $workDir/$installDirName != $targetPath"
+	echo "Values before execute on node $machine => TargetPath: $targetPath, PriorInstallDirPath: $priorInstallDirPath, NewInstallDirPath:  $newInstallDirPath"
+
 	ssh -o StrictHostKeyChecking=no -T $machine  <<-EOF
 		if [ -d "$targetFolder" ]; then 
 			cd $workDir
 			if [ ! -L $targetPath ]; then
-				mv 	"$targetPath" "$priorInstallDirPath"
-				priorInstallationDetected="true"
-			else
 				if [ -d "$targetPath" ]; then
+					mv 	"$targetPath" "$priorInstallDirPath"
 					priorInstallationDetected="true"
-					mv "$targetPath" "$priorInstallDirPath"
+					curNodePriorInstDetected="true"
 				fi
+			else
+				priorInstallationDetected="true"
+				curNodePriorInstDetected="true"
+				brokenLink="true"
+				curNodeBrokenLnk="true"
 				unlink $targetPath
 			fi
 			mkdir -p $newInstallDirPath
@@ -475,14 +486,29 @@ while read LINE; do
 			echo "$targetFolder is not directory"	
 		fi
 EOF
+
+	if [ "$curNodePriorInstDetected" == "false" ]; then
+		echo "On node $machine prior installation not found at $targetPath. New installation is done at $newInstallDirPath and created link from $targetPath to $newInstallDirPath"
+	else
+		if [ "$curNodeBrokenLnk" == "false" ]; then
+			echo "On node $machine found prior installation path at $targetPath as directory and now moved it to $priorInstallDirPath. New installation is done at $newInstallDirPath and created link from $targetPath to $newInstallDirPath"
+		else
+			echo "On node $machine found prior installation path at $targetPath as link to $priorInstallDirPath. New installation is done at $newInstallDirPath and created link from $targetPath to $newInstallDirPath"
+		fi
+	fi
 done
 exec 0<&12 12<&-
 
-if [ "$priorInstallationDetected" == "true" ]; then
-	echo "Prior physical installation not found...this is a brand new installation"
+if [ "$priorInstallationDetected" == "false" ]; then
+	echo "Prior installation not found at $targetPath. New installation is done at $newInstallDirPath and created link from $targetPath to $newInstallDirPath"
 else
-	echo "Prior Kamanja physical installation now named $priorInstallDirPath"
+	if [ "$brokenLink" == "false" ]; then
+		echo "Found prior installation path at $targetPath as directory and now moved it to $priorInstallDirPath. New installation is done at $newInstallDirPath and created link from $targetPath to $newInstallDirPath"
+	else
+		echo "Found prior installation path at $targetPath as link to $priorInstallDirPath. New installation is done at $newInstallDirPath and created link from $targetPath to $newInstallDirPath"
+	fi
 fi
+
 echo "New Kamanja physical installation is $newInstallDirPath. The $targetPath now points to this installation."
 
 echo
