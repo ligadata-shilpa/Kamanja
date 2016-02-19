@@ -208,27 +208,39 @@ public class HBaseHelper {
             addError(e);
         }
 
-        if (conn != null) {
-            //conf(host);
-            if (errorMessage == null)
-                version = CheckHBaseVersion();
-            if (errorMessage == null)
-                CreateNameSpace(conn, namespace);
-            if (errorMessage == null)
-                CreateTable(conn);
-            // DeleteTable(tableName);
-            if (errorMessage == null)
-                InsertData();
-            if (errorMessage == null)
-                GetData();
-            // if (errorMessage != null)
-            if ((conn.getAdmin().tableExists(TableName.valueOf(getTableName()))) == true) {
-                DeleteTable(conn, getTableName());
+        try {
+            if (conn != null) {
+                //conf(host);
+                if (errorMessage == null)
+                    version = CheckHBaseVersion();
+                if (errorMessage == null)
+                    CreateNameSpace(conn, namespace);
+                if (errorMessage == null)
+                    CreateTable(conn);
+                // DeleteTable(tableName);
+                if (errorMessage == null)
+                    InsertData();
+                if (errorMessage == null)
+                    GetData();
+                // if (errorMessage != null)
+                if ((conn.getAdmin().tableExists(TableName.valueOf(getTableName()))) == true) {
+                    DeleteTable(conn, getTableName());
+                }
+                conn.close();
+            } else {
+                status = "Fail";
             }
-            conn.close();
-        } else {
+        } catch (Exception e) {
             status = "Fail";
+            addError(e);
+        } catch (Throwable e) {
+            status = "Fail";
+            addError(e);
+        } finally {
+            if (conn != null)
+                conn.close();
         }
+
 
         if (errorMessage != null)
             status = "Fail";

@@ -6,11 +6,30 @@ import java.util.ArrayList;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.zookeeper.KeeperException;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.deser.std.ThrowableDeserializer;
 import org.json.simple.JSONArray;
 
 public class Checker {
 
     static StringWriter x = new StringWriter();
+
+    StringUtility strutl = new StringUtility();
+
+    private void getFailedComponentInfo(ComponentInfo bean, String component, Throwable e, String collectedErrorMessage) {
+        bean.setVersion(null);
+        bean.setStatus("Fail");
+
+        if (collectedErrorMessage != null && e != null) {
+            bean.setErrorMessage(collectedErrorMessage + strutl.getStackTrace(e));
+        } else if (collectedErrorMessage != null) {
+            bean.setErrorMessage(collectedErrorMessage);
+        } else if (e != null) {
+            bean.setErrorMessage(strutl.getStackTrace(e));
+        }
+
+        // bean.setInvocationNode(/* hostArray[i] */null);
+        bean.setComponentName(component);
+    }
 
     public /* ArrayList<ComponentInfo> */ComponentInfo CheckComponent(String component,
                                                                       String host/* String hostArray[] */) throws IOException, InterruptedException, KeeperException {
@@ -22,39 +41,63 @@ public class Checker {
         switch (component.trim().toLowerCase()) {
             case "zookeeper":
                 ZookeeperHelper zookeeper = new ZookeeperHelper();
-                zookeeper.askZookeeper(/* hostArray[i] */host);
-                bean.setVersion(zookeeper.getVersion());
-                bean.setStatus(zookeeper.getStatus());
-                bean.setErrorMessage(zookeeper.getErrorMessage());
-                // bean.setInvocationNode(/* hostArray[i] */null);
-                bean.setComponentName(component);
+                try {
+                    zookeeper.askZookeeper(/* hostArray[i] */host);
+                    bean.setVersion(zookeeper.getVersion());
+                    bean.setStatus(zookeeper.getStatus());
+                    bean.setErrorMessage(zookeeper.getErrorMessage());
+                    // bean.setInvocationNode(/* hostArray[i] */null);
+                    bean.setComponentName(component);
+                } catch (Exception e) {
+                    getFailedComponentInfo(bean, component, e, zookeeper.getErrorMessage());
+                } catch (Throwable e) {
+                    getFailedComponentInfo(bean, component, e, zookeeper.getErrorMessage());
+                }
                 break;
             case "kafka":
-                // System.out.println(hostArray[i]);
                 KafkaHelper kafka = new KafkaHelper();
-                kafka.AskKafka(/* hostArray[i] */host);
-                // kafka.CheckKafkaVersion(hostArray[i]);
-                bean.setStatus(kafka.getStatus());
-                bean.setErrorMessage(kafka.getErrorMessage());
-                bean.setComponentName(component);
-                bean.setVersion(null);
-                // bean.setInvocationNode(null);
+                try {
+                    // System.out.println(hostArray[i]);
+                    kafka.AskKafka(/* hostArray[i] */host);
+                    // kafka.CheckKafkaVersion(hostArray[i]);
+                    bean.setStatus(kafka.getStatus());
+                    bean.setErrorMessage(kafka.getErrorMessage());
+                    bean.setComponentName(component);
+                    bean.setVersion(null);
+                    // bean.setInvocationNode(null);
+                } catch (Exception e) {
+                    getFailedComponentInfo(bean, component, e, kafka.getErrorMessage());
+                } catch (Throwable e) {
+                    getFailedComponentInfo(bean, component, e, kafka.getErrorMessage());
+                }
                 break;
             case "java":
                 JavaHelper java = new JavaHelper();
-                java.AskJava();
-                bean.setVersion(java.getVersion());
-                bean.setErrorMessage(java.getErrorMessage());
-                bean.setComponentName(component);
-                bean.setStatus(java.getStatus());
+                try {
+                    java.AskJava();
+                    bean.setVersion(java.getVersion());
+                    bean.setErrorMessage(java.getErrorMessage());
+                    bean.setComponentName(component);
+                    bean.setStatus(java.getStatus());
+                } catch (Exception e) {
+                    getFailedComponentInfo(bean, component, e, java.getErrorMessage());
+                } catch (Throwable e) {
+                    getFailedComponentInfo(bean, component, e, java.getErrorMessage());
+                }
                 break;
             case "scala":
                 ScalaHelper scala = new ScalaHelper();
-                scala.AskScala();
-                bean.setVersion(scala.getVersion());
-                bean.setErrorMessage(scala.getErrorMessage());
-                bean.setComponentName(component);
-                bean.setStatus(scala.getStatus());
+                try {
+                    scala.AskScala();
+                    bean.setVersion(scala.getVersion());
+                    bean.setComponentName(component);
+                    bean.setStatus(scala.getStatus());
+                    bean.setErrorMessage(scala.getErrorMessage());
+                } catch (Exception e) {
+                    getFailedComponentInfo(bean, component, e, scala.getErrorMessage());
+                } catch (Throwable e) {
+                    getFailedComponentInfo(bean, component, e, scala.getErrorMessage());
+                }
                 break;
             // }
             // list.add(bean);
@@ -86,26 +129,32 @@ public class Checker {
                 String hostList = json.GetHostList();
                 // String hostArray[] = checker.hostArray(hostList);
                 if (component.equalsIgnoreCase("hbase")) {
-                    json.ParseOptionalField();
-                    String authentication = json.getAuthentication();
-                    String masterPrincipal = json.getMasterPrincipal();
-                    String regionServer = json.getRegionServer();
-                    String keyType = json.getKeyType();
-                    String principal = json.getPrincipal();
-                    list = checker.CheckHBaseComponent(component, /* hostArray */hostList, authentication,
-                            masterPrincipal, regionServer, keyType, principal, json.getNamespace());
-                    // System.out.println(authentication);
-                    // System.out.println(masterPrincipal);
-                    // System.out.println(regionServer);
-                    // System.out.println(principal);
-                    // System.out.println(keyType);
+                    try {
+                        json.ParseOptionalField();
+                        String authentication = json.getAuthentication();
+                        String masterPrincipal = json.getMasterPrincipal();
+                        String regionServer = json.getRegionServer();
+                        String keyType = json.getKeyType();
+                        String principal = json.getPrincipal();
+                        list = checker.CheckHBaseComponent(component, /* hostArray */hostList, authentication,
+                                masterPrincipal, regionServer, keyType, principal, json.getNamespace());
+                        // System.out.println(authentication);
+                        // System.out.println(masterPrincipal);
+                        // System.out.println(regionServer);
+                        // System.out.println(principal);
+                        // System.out.println(keyType);
+                    } catch (Exception e) {
+                        getFailedComponentInfo(new ComponentInfo(), component, e, null);
+                    } catch (Throwable e) {
+                        getFailedComponentInfo(new ComponentInfo(), component, e, null);
+                    }
                 } else
                     list = checker.CheckComponent(component, /* hostArray */hostList);
                 finalList.add(list);
             }
             return new ObjectMapper().writeValueAsString(finalList);
         } catch (Exception e) {
-            e.printStackTrace(new PrintWriter(x));
+            System.out.println("Failed to get component info. Exception:" + strutl.getStackTrace(e));
         }
         return null;
     }
@@ -117,12 +166,19 @@ public class Checker {
         HBaseHelper hbase = new HBaseHelper();
         // for (int i = 0; i < hostArray.length; i++) {
         ComponentInfo bean = new ComponentInfo();
-        hbase.AskHBase(/* hostArray[i] */hostArray, authentication, masterPrincipal, regionServer, keyType, principal, namespace);
-        bean.setVersion(/*hbase.getVersion()*/null);
-        bean.setStatus(hbase.getStatus());
-        bean.setErrorMessage(hbase.getErrorMessage());
+
+        try {
+            hbase.AskHBase(/* hostArray[i] */hostArray, authentication, masterPrincipal, regionServer, keyType, principal, namespace);
+            bean.setVersion(/*hbase.getVersion()*/null);
+            bean.setStatus(hbase.getStatus());
+            bean.setComponentName(component);
+            bean.setErrorMessage(hbase.getErrorMessage());
+        } catch (Exception e) {
+            getFailedComponentInfo(new ComponentInfo(), component, e, hbase.getErrorMessage());
+        } catch (Throwable e) {
+            getFailedComponentInfo(new ComponentInfo(), component, e, hbase.getErrorMessage());
+        }
         // bean.setInvocationNode(/* hostArray[i] */null);
-        bean.setComponentName(component);
         // }
         return bean;
     }
@@ -152,15 +208,28 @@ public class Checker {
                 // "[{\"component\":\"hbase\",\"hostlist\":\"localhost\",\"authentication\":\"kerberos\",\"regionserver_principal\":\"hbase/_HOST@INTRANET.LIGADATA.COM\",\"master_principal\":\"hbase/_HOST@INTRANET.LIGADATA.COM\",\"principal\":\"user@INTRANET.LIGADATA.COM\",\"keytab\":\"/apps/kamanja/CertificateInfo/user.keytab\"},{\"component\":\"java\",\"hostlist\":\"localhost\"},{\"component\":\"scala\",\"hostlist\":\"localhost\"},{\"component\":\"zookeeper\",\"hostlist\":\"localhost:2181\"},{\"component\":\"kafka\",\"hostlist\":\"localhost:9092\"}]"));
         */
 
+        System.out.println("Got args count:" + args.length);
+        for (String arg : args) {
+            System.out.println("Arg:" + arg);
+        }
+
         if (args.length != 2) {
-            System.out.println("Usage: java -jar GetComponent-1.0 <OutputFile> <InputJsonArrayString>");
+            System.out.println("Usage: java -jar GetComponent-1.0 <OutputFile> <InputJsonArrayString>.");
             System.exit(1);
         }
 
         Checker checker = new Checker();
-        if (checker.WriteStringToFile(args[0], "")) { // To make sure this file write is working
-            String componentsInfo = checker.CheckServices(args[1]);
-            checker.WriteStringToFile(args[0], componentsInfo);
+        try {
+            if (checker.WriteStringToFile(args[0], "")) { // To make sure this file write is working
+                String componentsInfo = checker.CheckServices(args[1]);
+                if (componentsInfo != null)
+                    checker.WriteStringToFile(args[0], componentsInfo);
+            }
+        } catch (Exception e) {
+            System.out.println("Failed to get component info. Exception:" + new StringUtility().getStackTrace(e));
+            System.exit(1);
+        } catch (Throwable e) {
+            System.out.println("Failed to get component info. Exception:" + new StringUtility().getStackTrace(e));
         }
     }
 }

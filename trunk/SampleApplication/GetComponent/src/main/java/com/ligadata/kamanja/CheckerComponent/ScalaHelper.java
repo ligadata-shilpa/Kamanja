@@ -25,7 +25,9 @@ public class ScalaHelper {
 
     public String ScalaVersion() {
         try {
+            System.out.println("Scala started");
             StringBuffer output = new StringBuffer();
+            status = "Success";
             String command = "which scala";
             /// root/Downloads/scala-2.10.4/bin/scala
             StringUtility str = new StringUtility();
@@ -37,8 +39,8 @@ public class ScalaHelper {
             // System.out.println(lastIndex);
             // System.out.println(str.getWordBetweenIndex(doc, beginIndex +
             // "scala-".length(), lastIndex));
-            status = "Success";
             version = str.getWordBetweenIndex(doc, beginIndex + "scala-".length(), lastIndex);
+            System.out.println("Scala Successful");
             return version;
         } catch (Exception e) {
             // e.printStackTrace(new PrintWriter(errors));
@@ -101,8 +103,7 @@ public class ScalaHelper {
     }
 
     public void AskScala() {
-        ScalaHelper scala = new ScalaHelper();
-        version = scala.ScalaVersion();
+        version = ScalaVersion();
         // scala.ScalaVersionsh();
         if (version == null || version.trim().length() == 0 || errorMessage != null)
             status = "Fail";

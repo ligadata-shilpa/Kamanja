@@ -70,22 +70,15 @@ scp -o StrictHostKeyChecking=no "$componentVersionJarAbsolutePath" "$remoteNodeI
 
 ssh -o StrictHostKeyChecking=no -T $remoteNodeIp  <<-EOF
 	rm -rf /tmp/$resultFileName
-	java -jar /tmp/$componentVersionJarFileName /tmp/$resultFileName $jsonArg 
+	java -jar /tmp/$componentVersionJarFileName '/tmp/resultFileName_local' '$jsonArg'
 	if [ -d "$rootDirPath" ]; then
-		if [ ! -L $rootDirPath ]; then
-		    pwdnm=$(pwd -P)
-		    cd $rootDirPath
-		    lnPath=$(pwd -P)
-			echo "$lnPath" > "/tmp/$pathOutputFileName"
-			cd $pwdnm
-		else
-			echo "$rootDirPath" > "/tmp/$pathOutputFileName"
-		fi
+		cd $rootDirPath
+		echo "\$(pwd -P)" > "/tmp/pathOutputFileName_local"
 	else
-		echo "" > "/tmp/$pathOutputFileName"
+		echo "" > "/tmp/pathOutputFileName_local"
 	fi
 EOF
 
-scp -o StrictHostKeyChecking=no "$remoteNodeIp:/tmp/$resultFileName" "$resultsFileAbsolutePath"
-scp -o StrictHostKeyChecking=no "$remoteNodeIp:/tmp/$pathOutputFileName" "/tmp/$pathOutputFileName"
+scp -o StrictHostKeyChecking=no "$remoteNodeIp:/tmp/resultFileName_local" "$resultsFileAbsolutePath"
+scp -o StrictHostKeyChecking=no "$remoteNodeIp:/tmp/pathOutputFileName_local" "/tmp/$pathOutputFileName"
 
