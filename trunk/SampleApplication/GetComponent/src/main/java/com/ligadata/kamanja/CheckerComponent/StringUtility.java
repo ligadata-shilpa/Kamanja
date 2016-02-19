@@ -13,7 +13,7 @@ public class StringUtility {
 		Process p;
 		try {
 			p = Runtime.getRuntime().exec(new String[] { "sh", "-c", command });
-			p.waitFor(timeoutInMs, TimeUnit.MILLISECONDS);
+			p.waitFor(); // timeoutInMs, TimeUnit.MILLISECONDS -- Supports only in Java 1.8
 			BufferedReader reader = new BufferedReader(new InputStreamReader(p.getErrorStream()));
 			String line = "";
 			while ((line = reader.readLine()) != null) {
@@ -31,7 +31,7 @@ public class StringUtility {
 		Process p;
 		try {
 			p = Runtime.getRuntime().exec(new String[] { "sh", "-c", command });
-			p.waitFor(timeoutInMs, TimeUnit.MILLISECONDS);
+			p.waitFor(); // timeoutInMs, TimeUnit.MILLISECONDS -- Supports only in Java 1.8
 			BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
 			String line = "";
 			while ((line = reader.readLine()) != null) {
@@ -49,7 +49,7 @@ public class StringUtility {
 		Process p;
 		try {
 			p = Runtime.getRuntime().exec(command);
-			p.waitFor(timeoutInMs, TimeUnit.MILLISECONDS);
+			p.waitFor(); // timeoutInMs, TimeUnit.MILLISECONDS -- Supports only in Java 1.8
 			BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
 			String line = "";
 			while ((line = reader.readLine()) != null) {
