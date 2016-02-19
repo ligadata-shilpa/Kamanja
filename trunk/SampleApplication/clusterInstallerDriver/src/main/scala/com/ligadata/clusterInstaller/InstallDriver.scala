@@ -170,8 +170,8 @@ object InstallDriver extends App {
     installing a new version of Kamanja 1.3 *and* upgrading a 1.1 or 1.2 installation to the 1.3 version.
 
     A log of the installation and optional upgrade is collected in a log file.  This log file is automatically generated and will be found in the
-    workingDir you supply to the installer driver program.  The name will be of the form: InstallDriver.yyyyMMMdd_HHmmss.log (e.g.,
-    InstallDriver.2016Jul01_231101.log)  Should issues be encountered (missing components, connectivity issues, etc.) this log should be
+    workingDir you supply to the installer driver program.  The name will be of the form: InstallDriver.yyyyMMdd_HHmmss.log (e.g.,
+    InstallDriver.20160201_231101.log)  Should issues be encountered (missing components, connectivity issues, etc.) this log should be
     consulted as to how to proceed.  Using the content of the log as a guide, the administrator will see what fixes must be made to their
     environment to push on and complete the install.  It will also be the guide for backing off/abandoning an upgrade so a prior Kamanja cluster
     can be restored.
@@ -264,8 +264,8 @@ object InstallDriver extends App {
 
     /** make a log ... Warning... if logDir not supplied, logDir defaults to /tmp */
     val dateTime: DateTime = new DateTime
-    val fmt: DateTimeFormatter = DateTimeFormat.forPattern("yyyy-MM-dd_HH:mm:ss.SSS")
-    val datestr: String = fmt.print(dateTime);
+    val flfmt: DateTimeFormatter = DateTimeFormat.forPattern("yyyyMMdd_HHmmss")
+    val datestr: String = flfmt.print(dateTime);
     val log: InstallDriverLog = new InstallDriverLog(s"$logDir/InstallDriver.$datestr.log")
     println(s"The installation log file can be found in $logDir/InstallDriver.$datestr.log")
 
