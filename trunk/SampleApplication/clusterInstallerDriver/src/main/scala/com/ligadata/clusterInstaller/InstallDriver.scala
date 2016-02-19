@@ -538,7 +538,7 @@ object InstallDriver extends App {
         """
 [{ "component" : "zookeeper", "hostslist" : "%s" }
 , { "component" : "kafka", "hostslist" : "%s" }
-, "%s"
+, %s
 , { "component" : "scala", "hostslist" : "localhost" }
 , { "component" : "java", "hostslist" : "localhost" }]
         """.stripMargin.format(zkConnections, kafkaConnections, hbaseConnections)
