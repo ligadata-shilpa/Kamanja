@@ -185,6 +185,22 @@ object InstallDriver extends App {
       println(usage);
       sys.exit(1)
     }
+
+    // locate the clusterInstallerDriver app ... need its working directory to refer to others... this function
+    // returns this form:  file:/tmp/drdigital/KamanjaInstall-1.3.2_2.11/bin/clusterInstallerDriver-1.0
+
+    val thisFatJarsLocationAbs :  String  = getClass().getProtectionDomain().getCodeSource().getLocation().toExternalForm()
+    val pathSwizzlePossible : Boolean = (thisFatJarsLocationAbs.contains(':') && thisFatJarsLocationAbs.contains('/))
+    if (! pathSwizzlePossible) {
+        throw new RuntimeException("unable to determine the current path for clusterInstallerDriver executable...")
+    }
+
+      /** Obtain location of the clusterInstallerDriver fat jar.  Its directory contains the scripts we use to
+        * obtain component info for the env check and the lower level cluster install script that actually does the
+        * install.
+        */
+    val clusterInstallerDriversLocation : String = thisFatJarsLocationAbs.split(':').tail.mkString(":").split('/').dropRight(1).mkString("/")
+
     val arglist = args.toList
     type OptionMap = Map[Symbol, String]
 
@@ -414,6 +430,7 @@ object InstallDriver extends App {
     val shouldUpgrade: Boolean = upgrade
     val (proposedClusterEnvironmentIsSuitable, physicalRootDir): (Boolean, String) =
       validateClusterEnvironment(log
+        , clusterInstallerDriversLocation
         , clusterConfigMap
         , componentVersionScriptAbsolutePath
         , componentVersionJarAbsolutePath
@@ -434,6 +451,7 @@ object InstallDriver extends App {
       val nodes: String = ips.mkString(",")
       log.emit(s"Begin cluster installation... installation found on each cluster node(any {$nodes}) at $installDir")
       val installOk: Boolean = installCluster(log
+        , clusterInstallerDriversLocation
         , physicalRootDir
         , apiConfigPath
         , nodeConfigPath
@@ -491,6 +509,7 @@ object InstallDriver extends App {
     * There is a test of the physical root dirs returned.  They should all be the same path (or so I think).
     *
     * @param log                                the InstallDriverLog instance that records important processing events and information needed if mal configurations detected
+    * @param clusterInstallerDriversLocation    the location of the script that calls GetComponent
     * @param componentVersionScriptAbsolutePath the GetComponent script that invokes the GetComponent program on each node
     * @param componentVersionJarAbsolutePath    the GetComponent tarball that is shipped to each cluster node
     * @param apiConfigMap                       the metadata api properties (including the ROOT_DIR
@@ -511,6 +530,7 @@ object InstallDriver extends App {
     */
 
   def validateClusterEnvironment(log: InstallDriverLog
+                                 , clusterInstallerDriversLocation : String
                                  , clusterConfigMap: ClusterConfigMap
                                  , componentVersionScriptAbsolutePath: String
                                  , componentVersionJarAbsolutePath: String
@@ -998,6 +1018,7 @@ object InstallDriver extends App {
     *
 
     * @param log                 the InstallDriverLog that tracks progress and important events of this installation
+    * @param clusterInstallerDriversLocation the location of the clusterInstallerDriver AND the KamanjaClusterInstall.sh called here
     * @param physicalRootDir     the actual root dir for the installation
     * @param apiConfigPath       the api config that contains seminal information about the cluster installation
     * @param nodeConfigPath      the node config that contains the cluster description used for the installation
@@ -1010,6 +1031,7 @@ object InstallDriver extends App {
     * @return true if the installation succeeded.
     */
   def installCluster(log: InstallDriverLog
+                     , clusterInstallerDriversLocation: String
                      , physicalRootDir: String
                      , apiConfigPath: String
                      , nodeConfigPath: String
@@ -1022,7 +1044,7 @@ object InstallDriver extends App {
 
     // Check for KamanjaClusterInstall.sh existance. And see whether KamanjaClusterInstall.sh has all error handling or not.
     val parentPath: String = physicalRootDir.split('/').dropRight(1).mkString("/")
-    val scriptExitsCheck: Seq[String] = Seq("bash", "-c", s"KamanjaClusterInstall.sh")
+    val scriptExitsCheck: Seq[String] = Seq("bash", "-c", s"$clusterInstallerDriversLocation/KamanjaClusterInstall.sh")
     val scriptExistsCmdRc = Process(scriptExitsCheck).!
     if (scriptExistsCmdRc != 0) {
       log.emit(s"KamanjaClusterInstall script is not installed... it must be on your PATH... rc = $scriptExistsCmdRc")
@@ -1038,7 +1060,7 @@ object InstallDriver extends App {
 
     val priorInstallDirPath: String = s"$parentPath/$priorInstallDirName"
     val newInstallDirPath: String = s"$parentPath/$newInstallDirName"
-    val installCmd: Seq[String] = Seq("bash", "-c", s"KamanjaClusterInstall.sh  --MetadataAPIConfig $apiConfigPath --NodeConfigPath $nodeConfigPath --ParentPath $parentPath --PriorInstallDirName $priorInstallDirName --NewInstallDirName $newInstallDirName --TarballPath $tarballPath --ipAddrs $ips --ipIdTargPaths $ipIdTargPaths --ipPathPairs $ipPathPairs --priorInstallDirPath $priorInstallDirPath --newInstallDirPath $newInstallDirPath --installVerificationFile $verifyFilePath ")
+    val installCmd: Seq[String] = Seq("bash", "-c", s"$clusterInstallerDriversLocation/KamanjaClusterInstall.sh  --MetadataAPIConfig $apiConfigPath --NodeConfigPath $nodeConfigPath --ParentPath $parentPath --PriorInstallDirName $priorInstallDirName --NewInstallDirName $newInstallDirName --TarballPath $tarballPath --ipAddrs $ips --ipIdTargPaths $ipIdTargPaths --ipPathPairs $ipPathPairs --priorInstallDirPath $priorInstallDirPath --newInstallDirPath $newInstallDirPath --installVerificationFile $verifyFilePath ")
     val installCmdRep: String = installCmd.mkString(" ")
     log.emit(s"KamanjaClusterInstall cmd used: \n\n$installCmdRep")
 
