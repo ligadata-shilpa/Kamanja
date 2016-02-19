@@ -100,14 +100,14 @@ while read LINE; do
     pidfile=node$id.pid
      #scp -o StrictHostKeyChecking=no "$cfgFile" "$machine:$targetPath/"
 	ssh -o StrictHostKeyChecking=no -T $machine  <<-EOF
-                ulimit -u 8192
+		ulimit -u 8192
 		cd $targetPath
 		echo "nodeCfg=$nodeCfg"
         if [ "$processingengine_cnt" -gt 0 ]; then
-		java -Xmx4g -Xms4g -Dlog4j.configurationFile=file:$targetPath/engine_log4j2.xml -jar "$installDir/bin/KamanjaManager-1.0" --config "$targetPath/$nodeCfg" < /dev/null > /dev/null 2>&1 & 
+			java -Xmx4g -Xms4g -Dlog4j.configurationFile=file:$targetPath/engine_log4j2.xml -jar "$installDir/bin/KamanjaManager-1.0" --config "$targetPath/$nodeCfg" < /dev/null > /dev/null 2>&1 & 
         fi
         if [ "$restapi_cnt" -gt 0 ]; then
-		java -Dlog4j.configurationFile=file:$targetPath/restapi_log4j2.xml -jar "$installDir/bin/MetadataAPIService-1.0" --config "$targetPath/MetadataAPIConfig_${id}.properties" < /dev/null > /dev/null 2>&1 & 
+# 			java -Dlog4j.configurationFile=file:$targetPath/restapi_log4j2.xml -jar "$installDir/bin/MetadataAPIService-1.0" --config "$targetPath/MetadataAPIConfig_${id}.properties" < /dev/null > /dev/null 2>&1 & 
         fi
 		if [ ! -d "$installDir/run" ]; then
 			mkdir "$installDir/run"

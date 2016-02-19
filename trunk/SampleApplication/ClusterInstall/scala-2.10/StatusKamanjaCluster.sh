@@ -141,17 +141,17 @@ EOF
     fi
     fi
 
-    if [ "$restapi_cnt" -gt 0 ]; then
-    if [ ! -z "$metadatastatuspidcnt" ]; then
-        if [[ -n "$metadatastatuspidcnt" ]] && [[ "$metadatastatuspidcnt" -gt 0 ]]; then
-            echo "Status:UP, Node:$machine, Service:MetadataAPIService"
-        else
-            echo "Status:DOWN, Node:$machine, Service:MetadataAPIService"
-         fi
-    else
-         echo "Status:DOWN, Node:$machine, Service:MetadataAPIService"
-    fi
-    fi
+#    if [ "$restapi_cnt" -gt 0 ]; then
+#    if [ ! -z "$metadatastatuspidcnt" ]; then
+#        if [[ -n "$metadatastatuspidcnt" ]] && [[ "$metadatastatuspidcnt" -gt 0 ]]; then
+#            echo "Status:UP, Node:$machine, Service:MetadataAPIService"
+#        else
+#            echo "Status:DOWN, Node:$machine, Service:MetadataAPIService"
+#         fi
+#    else
+#         echo "Status:DOWN, Node:$machine, Service:MetadataAPIService"
+#    fi
+#    fi
 
 done
 exec 0<&12 12<&-
