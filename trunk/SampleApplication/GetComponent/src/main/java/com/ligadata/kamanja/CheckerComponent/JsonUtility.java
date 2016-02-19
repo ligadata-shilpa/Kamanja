@@ -32,6 +32,8 @@ public class JsonUtility {
             component = (String) jsonObject.get("StoreType");
         hostList = (String) jsonObject.get("hostlist");
         if (hostList == null)
+            hostList = (String) jsonObject.get("hostslist");
+        if (hostList == null)
             hostList = (String) jsonObject.get("Location");
     }
 
