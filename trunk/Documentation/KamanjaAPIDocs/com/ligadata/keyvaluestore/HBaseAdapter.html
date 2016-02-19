@@ -1,0 +1,1514 @@
+<!DOCTYPE html >
+<html>
+        <head>
+          <title>HBaseAdapter - com.ligadata.keyvaluestore.HBaseAdapter</title>
+          <meta name="description" content="HBaseAdapter - com.ligadata.keyvaluestore.HBaseAdapter" />
+          <meta name="keywords" content="HBaseAdapter com.ligadata.keyvaluestore.HBaseAdapter" />
+          <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+          
+      <link href="../../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
+      <link href="../../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../../../lib/jquery.js" id="jquery-js"></script>
+      <script type="text/javascript" src="../../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../../lib/template.js"></script>
+      <script type="text/javascript" src="../../../lib/tools.tooltip.js"></script>
+      
+      <script type="text/javascript">
+         if(top === self) {
+            var url = '../../../index.html';
+            var hash = 'com.ligadata.keyvaluestore.HBaseAdapter';
+            var anchor = window.location.hash;
+            var anchor_opt = '';
+            if (anchor.length >= 1)
+              anchor_opt = '@' + anchor.substring(1);
+            window.location.href = url + '#' + hash + anchor_opt;
+         }
+   	  </script>
+    
+        </head>
+        <body class="type">
+      <div id="definition">
+        <a href="HBaseAdapter$.html" title="See companion object"><img alt="Class/Object" src="../../../lib/class_to_object_big.png" /></a>
+        <p id="owner"><a href="../../package.html" class="extype" name="com">com</a>.<a href="../package.html" class="extype" name="com.ligadata">ligadata</a>.<a href="package.html" class="extype" name="com.ligadata.keyvaluestore">keyvaluestore</a></p>
+        <h1><a href="HBaseAdapter$.html" title="See companion object">HBaseAdapter</a></h1><h3><span class="morelinks"><div>
+            Related Docs:
+            <a href="HBaseAdapter$.html" title="See companion object">object HBaseAdapter</a>
+            | <a href="package.html" class="extype" name="com.ligadata.keyvaluestore">package keyvaluestore</a>
+          </div></span></h3><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      </div>
+
+      <h4 id="signature" class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <span class="name">HBaseAdapter</span><span class="result"> extends <a href="../StorageBase/DataStore.html" class="extype" name="com.ligadata.StorageBase.DataStore">DataStore</a></span>
+      </span>
+      </h4>
+      
+          <div id="comment" class="fullcommenttop"><div class="toggleContainer block">
+          <span class="toggle">Linear Supertypes</span>
+          <div class="superTypes hiddenContent"><a href="../StorageBase/DataStore.html" class="extype" name="com.ligadata.StorageBase.DataStore">DataStore</a>, <a href="../StorageBase/DataStoreOperations.html" class="extype" name="com.ligadata.StorageBase.DataStoreOperations">DataStoreOperations</a>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></div>
+        </div></div>
+        
+
+      <div id="mbrsel">
+        <div id="textfilter"><span class="pre"></span><span class="input"><input id="mbrsel-input" type="text" accesskey="/" /></span><span class="post"></span></div>
+        <div id="order">
+              <span class="filtertype">Ordering</span>
+              <ol>
+                
+                <li class="alpha in"><span>Alphabetic</span></li>
+                <li class="inherit out"><span>By inheritance</span></li>
+              </ol>
+            </div>
+        <div id="ancestors">
+                <span class="filtertype">Inherited<br />
+                </span>
+                <ol id="linearization">
+                  <li class="in" name="com.ligadata.keyvaluestore.HBaseAdapter"><span>HBaseAdapter</span></li><li class="in" name="com.ligadata.StorageBase.DataStore"><span>DataStore</span></li><li class="in" name="com.ligadata.StorageBase.DataStoreOperations"><span>DataStoreOperations</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                </ol>
+              </div><div id="ancestors">
+            <span class="filtertype"></span>
+            <ol>
+              <li class="hideall out"><span>Hide All</span></li>
+              <li class="showall in"><span>Show all</span></li>
+            </ol>
+          </div>
+        <div id="visbl">
+            <span class="filtertype">Visibility</span>
+            <ol><li class="public in"><span>Public</span></li><li class="all out"><span>All</span></li></ol>
+          </div>
+      </div>
+
+      <div id="template">
+        <div id="allMembers">
+        <div id="constructors" class="members">
+              <h3>Instance Constructors</h3>
+              <ol><li name="com.ligadata.keyvaluestore.HBaseAdapter#&lt;init&gt;" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="&lt;init&gt;(kvManagerLoader:com.ligadata.Utils.KamanjaLoaderInfo,datastoreConfig:String):com.ligadata.keyvaluestore.HBaseAdapter"></a>
+      <a id="&lt;init&gt;:HBaseAdapter"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">new</span>
+      </span>
+      <span class="symbol">
+        <span class="name">HBaseAdapter</span><span class="params">(<span name="kvManagerLoader">kvManagerLoader: <a href="../Utils/KamanjaLoaderInfo.html" class="extype" name="com.ligadata.Utils.KamanjaLoaderInfo">KamanjaLoaderInfo</a></span>, <span name="datastoreConfig">datastoreConfig: <span class="extype" name="scala.Predef.String">String</span></span>)</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@&lt;init&gt;(kvManagerLoader:com.ligadata.Utils.KamanjaLoaderInfo,datastoreConfig:String):com.ligadata.keyvaluestore.HBaseAdapter" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li></ol>
+            </div>
+
+        <div id="types" class="types members">
+              <h3>Type Members</h3>
+              <ol><li name="com.ligadata.keyvaluestore.HBaseAdapter.ArrayOfStringsComp" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ArrayOfStringsCompextendsComparator[Array[String]]"></a>
+      <a id="ArrayOfStringsComp:ArrayOfStringsComp"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="HBaseAdapter$ArrayOfStringsComp.html"><span class="name">ArrayOfStringsComp</span></a><span class="result"> extends <span class="extype" name="java.util.Comparator">Comparator</span>[<a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<span class="extype" name="scala.Predef.String">String</span>]]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@ArrayOfStringsCompextendsComparator[Array[String]]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li></ol>
+            </div>
+
+        
+
+        <div id="values" class="values members">
+              <h3>Value Members</h3>
+              <ol><li name="scala.AnyRef#!=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="!=(x$1:Any):Boolean"></a>
+      <a id="!=(Any):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@!=(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.AnyRef###" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="##():Int"></a>
+      <a id="##():Int"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@##():Int" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.AnyRef#==" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="==(x$1:Any):Boolean"></a>
+      <a id="==(Any):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@==(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#CreateContainer" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="CreateContainer(containerNames:Array[String]):Unit"></a>
+      <a id="CreateContainer(Array[String]):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">CreateContainer</span><span class="params">(<span name="containerNames">containerNames: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@CreateContainer(containerNames:Array[String]):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.keyvaluestore.HBaseAdapter">HBaseAdapter</a> → <a href="../StorageBase/DataStore.html" class="extype" name="com.ligadata.StorageBase.DataStore">DataStore</a></dd></dl></div>
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#CreateNameSpace" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="CreateNameSpace(nameSpace:String):Unit"></a>
+      <a id="CreateNameSpace(String):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">CreateNameSpace</span><span class="params">(<span name="nameSpace">nameSpace: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@CreateNameSpace(nameSpace:String):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#DropContainer" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="DropContainer(containerNames:Array[String]):Unit"></a>
+      <a id="DropContainer(Array[String]):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">DropContainer</span><span class="params">(<span name="containerNames">containerNames: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@DropContainer(containerNames:Array[String]):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.keyvaluestore.HBaseAdapter">HBaseAdapter</a> → <a href="../StorageBase/DataStore.html" class="extype" name="com.ligadata.StorageBase.DataStore">DataStore</a></dd></dl></div>
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#DropNameSpace" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="DropNameSpace(namespace:String):Unit"></a>
+      <a id="DropNameSpace(String):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">DropNameSpace</span><span class="params">(<span name="namespace">namespace: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@DropNameSpace(namespace:String):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#Shutdown" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="Shutdown():Unit"></a>
+      <a id="Shutdown():Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">Shutdown</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@Shutdown():Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.keyvaluestore.HBaseAdapter">HBaseAdapter</a> → <a href="../StorageBase/DataStore.html" class="extype" name="com.ligadata.StorageBase.DataStore">DataStore</a></dd></dl></div>
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#TruncateContainer" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="TruncateContainer(containerNames:Array[String]):Unit"></a>
+      <a id="TruncateContainer(Array[String]):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">TruncateContainer</span><span class="params">(<span name="containerNames">containerNames: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@TruncateContainer(containerNames:Array[String]):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.keyvaluestore.HBaseAdapter">HBaseAdapter</a> → <a href="../StorageBase/DataStore.html" class="extype" name="com.ligadata.StorageBase.DataStore">DataStore</a></dd></dl></div>
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#adapterConfig" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="adapterConfig:String"></a>
+      <a id="adapterConfig:String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">adapterConfig</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@adapterConfig:String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#adapterSpecificConfig_json" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="adapterSpecificConfig_json:Map[String,Any]"></a>
+      <a id="adapterSpecificConfig_json:Map[String,Any]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">var</span>
+      </span>
+      <span class="symbol">
+        <span class="name">adapterSpecificConfig_json</span><span class="result">: <span class="extype" name="scala.Predef.Map">Map</span>[<span class="extype" name="scala.Predef.String">String</span>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@adapterSpecificConfig_json:Map[String,Any]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#admin" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="admin:org.apache.hadoop.hbase.client.HBaseAdmin"></a>
+      <a id="admin:HBaseAdmin"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">admin</span><span class="result">: <span class="extype" name="org.apache.hadoop.hbase.client.HBaseAdmin">HBaseAdmin</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@admin:org.apache.hadoop.hbase.client.HBaseAdmin" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#arrOfStrsComp" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="arrOfStrsComp:HBaseAdapter.this.ArrayOfStringsComp"></a>
+      <a id="arrOfStrsComp:ArrayOfStringsComp"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">arrOfStrsComp</span><span class="result">: <a href="HBaseAdapter$ArrayOfStringsComp.html" class="extype" name="com.ligadata.keyvaluestore.HBaseAdapter.ArrayOfStringsComp">ArrayOfStringsComp</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@arrOfStrsComp:HBaseAdapter.this.ArrayOfStringsComp" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="scala.Any#asInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="asInstanceOf[T0]:T0"></a>
+      <a id="asInstanceOf[T0]:T0"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">asInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Any.asInstanceOf.T0">T0</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@asInstanceOf[T0]:T0" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#auth" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="auth:String"></a>
+      <a id="auth:String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">auth</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@auth:String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#autoCreateTables" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="autoCreateTables:String"></a>
+      <a id="autoCreateTables:String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">var</span>
+      </span>
+      <span class="symbol">
+        <span class="name">autoCreateTables</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@autoCreateTables:String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#backupContainer" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="backupContainer(containerName:String):Unit"></a>
+      <a id="backupContainer(String):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">backupContainer</span><span class="params">(<span name="containerName">containerName: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@backupContainer(containerName:String):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.keyvaluestore.HBaseAdapter">HBaseAdapter</a> → <a href="../StorageBase/DataStoreOperations.html" class="extype" name="com.ligadata.StorageBase.DataStoreOperations">DataStoreOperations</a></dd></dl></div>
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#beginTx" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="beginTx():com.ligadata.StorageBase.Transaction"></a>
+      <a id="beginTx():Transaction"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">beginTx</span><span class="params">()</span><span class="result">: <a href="../StorageBase/Transaction.html" class="extype" name="com.ligadata.StorageBase.Transaction">Transaction</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@beginTx():com.ligadata.StorageBase.Transaction" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.keyvaluestore.HBaseAdapter">HBaseAdapter</a> → <a href="../StorageBase/DataStore.html" class="extype" name="com.ligadata.StorageBase.DataStore">DataStore</a></dd></dl></div>
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#clntWrtBufSz" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="clntWrtBufSz:Int"></a>
+      <a id="clntWrtBufSz:Int"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">var</span>
+      </span>
+      <span class="symbol">
+        <span class="name">clntWrtBufSz</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@clntWrtBufSz:Int" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="scala.AnyRef#clone" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="clone():Object"></a>
+      <a id="clone():AnyRef"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@clone():Object" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="defval" name="classOf[java.lang.CloneNotSupportedException]">...</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#commitTx" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="commitTx(tx:com.ligadata.StorageBase.Transaction):Unit"></a>
+      <a id="commitTx(Transaction):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">commitTx</span><span class="params">(<span name="tx">tx: <a href="../StorageBase/Transaction.html" class="extype" name="com.ligadata.StorageBase.Transaction">Transaction</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@commitTx(tx:com.ligadata.StorageBase.Transaction):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.keyvaluestore.HBaseAdapter">HBaseAdapter</a> → <a href="../StorageBase/DataStore.html" class="extype" name="com.ligadata.StorageBase.DataStore">DataStore</a></dd></dl></div>
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#config" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="config:org.apache.hadoop.conf.Configuration"></a>
+      <a id="config:Configuration"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">config</span><span class="result">: <span class="extype" name="org.apache.hadoop.conf.Configuration">Configuration</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@config:org.apache.hadoop.conf.Configuration" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#conn" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="conn:org.apache.hadoop.hbase.client.Connection"></a>
+      <a id="conn:Connection"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">var</span>
+      </span>
+      <span class="symbol">
+        <span class="name">conn</span><span class="result">: <span class="extype" name="org.apache.hadoop.hbase.client.Connection">Connection</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@conn:org.apache.hadoop.hbase.client.Connection" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#copyContainer" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="copyContainer(srcContainerName:String,destContainerName:String,forceCopy:Boolean):Unit"></a>
+      <a id="copyContainer(String,String,Boolean):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">copyContainer</span><span class="params">(<span name="srcContainerName">srcContainerName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="destContainerName">destContainerName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="forceCopy">forceCopy: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@copyContainer(srcContainerName:String,destContainerName:String,forceCopy:Boolean):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.keyvaluestore.HBaseAdapter">HBaseAdapter</a> → <a href="../StorageBase/DataStoreOperations.html" class="extype" name="com.ligadata.StorageBase.DataStoreOperations">DataStoreOperations</a></dd></dl></div>
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#copyTable" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="copyTable(namespace:String,srcTableName:String,destTableName:String,forceCopy:Boolean):Unit"></a>
+      <a id="copyTable(String,String,String,Boolean):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">copyTable</span><span class="params">(<span name="namespace">namespace: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="srcTableName">srcTableName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="destTableName">destTableName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="forceCopy">forceCopy: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@copyTable(namespace:String,srcTableName:String,destTableName:String,forceCopy:Boolean):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.keyvaluestore.HBaseAdapter">HBaseAdapter</a> → <a href="../StorageBase/DataStoreOperations.html" class="extype" name="com.ligadata.StorageBase.DataStoreOperations">DataStoreOperations</a></dd></dl></div>
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#copyTable" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="copyTable(srcTableName:String,destTableName:String,forceCopy:Boolean):Unit"></a>
+      <a id="copyTable(String,String,Boolean):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">copyTable</span><span class="params">(<span name="srcTableName">srcTableName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="destTableName">destTableName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="forceCopy">forceCopy: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@copyTable(srcTableName:String,destTableName:String,forceCopy:Boolean):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.keyvaluestore.HBaseAdapter">HBaseAdapter</a> → <a href="../StorageBase/DataStoreOperations.html" class="extype" name="com.ligadata.StorageBase.DataStoreOperations">DataStoreOperations</a></dd></dl></div>
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#datastoreConfig" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="datastoreConfig:String"></a>
+      <a id="datastoreConfig:String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">datastoreConfig</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@datastoreConfig:String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#del" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="del(containerName:String,time:com.ligadata.KvBase.TimeRange,bucketKeys:Array[Array[String]]):Unit"></a>
+      <a id="del(String,TimeRange,Array[Array[String]]):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">del</span><span class="params">(<span name="containerName">containerName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="time">time: <a href="../KvBase/TimeRange.html" class="extype" name="com.ligadata.KvBase.TimeRange">TimeRange</a></span>, <span name="bucketKeys">bucketKeys: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<span class="extype" name="scala.Predef.String">String</span>]]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@del(containerName:String,time:com.ligadata.KvBase.TimeRange,bucketKeys:Array[Array[String]]):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.keyvaluestore.HBaseAdapter">HBaseAdapter</a> → <a href="../StorageBase/DataStoreOperations.html" class="extype" name="com.ligadata.StorageBase.DataStoreOperations">DataStoreOperations</a></dd></dl></div>
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#del" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="del(containerName:String,keys:Array[com.ligadata.KvBase.Key]):Unit"></a>
+      <a id="del(String,Array[Key]):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">del</span><span class="params">(<span name="containerName">containerName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="keys">keys: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<a href="../KvBase/Key.html" class="extype" name="com.ligadata.KvBase.Key">Key</a>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@del(containerName:String,keys:Array[com.ligadata.KvBase.Key]):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.keyvaluestore.HBaseAdapter">HBaseAdapter</a> → <a href="../StorageBase/DataStoreOperations.html" class="extype" name="com.ligadata.StorageBase.DataStoreOperations">DataStoreOperations</a></dd></dl></div>
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#dropTables" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="dropTables(tbls:Array[(String,String)]):Unit"></a>
+      <a id="dropTables(Array[(String,String)]):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">dropTables</span><span class="params">(<span name="tbls">tbls: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[(<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="scala.Predef.String">String</span>)]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@dropTables(tbls:Array[(String,String)]):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.keyvaluestore.HBaseAdapter">HBaseAdapter</a> → <a href="../StorageBase/DataStoreOperations.html" class="extype" name="com.ligadata.StorageBase.DataStoreOperations">DataStoreOperations</a></dd></dl></div>
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#dropTables" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="dropTables(tbls:Array[String]):Unit"></a>
+      <a id="dropTables(Array[String]):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">dropTables</span><span class="params">(<span name="tbls">tbls: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@dropTables(tbls:Array[String]):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.keyvaluestore.HBaseAdapter">HBaseAdapter</a> → <a href="../StorageBase/DataStoreOperations.html" class="extype" name="com.ligadata.StorageBase.DataStoreOperations">DataStoreOperations</a></dd></dl></div>
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#endTx" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="endTx(tx:com.ligadata.StorageBase.Transaction):Unit"></a>
+      <a id="endTx(Transaction):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">endTx</span><span class="params">(<span name="tx">tx: <a href="../StorageBase/Transaction.html" class="extype" name="com.ligadata.StorageBase.Transaction">Transaction</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@endTx(tx:com.ligadata.StorageBase.Transaction):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.keyvaluestore.HBaseAdapter">HBaseAdapter</a> → <a href="../StorageBase/DataStore.html" class="extype" name="com.ligadata.StorageBase.DataStore">DataStore</a></dd></dl></div>
+    </li><li name="scala.AnyRef#eq" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="eq(x$1:AnyRef):Boolean"></a>
+      <a id="eq(AnyRef):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@eq(x$1:AnyRef):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#equals" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="equals(x$1:Any):Boolean"></a>
+      <a id="equals(Any):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@equals(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.AnyRef#finalize" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="finalize():Unit"></a>
+      <a id="finalize():Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@finalize():Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="symbol">classOf[java.lang.Throwable]</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#get" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="get(containerName:String,bucketKeys:Array[Array[String]],callbackFunction:(com.ligadata.KvBase.Key,com.ligadata.KvBase.Value)=&gt;Unit):Unit"></a>
+      <a id="get(String,Array[Array[String]],(Key,Value)⇒Unit):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">get</span><span class="params">(<span name="containerName">containerName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="bucketKeys">bucketKeys: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<span class="extype" name="scala.Predef.String">String</span>]]</span>, <span name="callbackFunction">callbackFunction: (<a href="../KvBase/Key.html" class="extype" name="com.ligadata.KvBase.Key">Key</a>, <a href="../KvBase/Value.html" class="extype" name="com.ligadata.KvBase.Value">Value</a>) ⇒ <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@get(containerName:String,bucketKeys:Array[Array[String]],callbackFunction:(com.ligadata.KvBase.Key,com.ligadata.KvBase.Value)=&gt;Unit):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.keyvaluestore.HBaseAdapter">HBaseAdapter</a> → <a href="../StorageBase/DataStoreOperations.html" class="extype" name="com.ligadata.StorageBase.DataStoreOperations">DataStoreOperations</a></dd></dl></div>
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#get" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="get(containerName:String,time_ranges:Array[com.ligadata.KvBase.TimeRange],bucketKeys:Array[Array[String]],callbackFunction:(com.ligadata.KvBase.Key,com.ligadata.KvBase.Value)=&gt;Unit):Unit"></a>
+      <a id="get(String,Array[TimeRange],Array[Array[String]],(Key,Value)⇒Unit):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">get</span><span class="params">(<span name="containerName">containerName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="time_ranges">time_ranges: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<a href="../KvBase/TimeRange.html" class="extype" name="com.ligadata.KvBase.TimeRange">TimeRange</a>]</span>, <span name="bucketKeys">bucketKeys: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<span class="extype" name="scala.Predef.String">String</span>]]</span>, <span name="callbackFunction">callbackFunction: (<a href="../KvBase/Key.html" class="extype" name="com.ligadata.KvBase.Key">Key</a>, <a href="../KvBase/Value.html" class="extype" name="com.ligadata.KvBase.Value">Value</a>) ⇒ <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@get(containerName:String,time_ranges:Array[com.ligadata.KvBase.TimeRange],bucketKeys:Array[Array[String]],callbackFunction:(com.ligadata.KvBase.Key,com.ligadata.KvBase.Value)=&gt;Unit):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.keyvaluestore.HBaseAdapter">HBaseAdapter</a> → <a href="../StorageBase/DataStoreOperations.html" class="extype" name="com.ligadata.StorageBase.DataStoreOperations">DataStoreOperations</a></dd></dl></div>
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#get" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="get(containerName:String,time_ranges:Array[com.ligadata.KvBase.TimeRange],callbackFunction:(com.ligadata.KvBase.Key,com.ligadata.KvBase.Value)=&gt;Unit):Unit"></a>
+      <a id="get(String,Array[TimeRange],(Key,Value)⇒Unit):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">get</span><span class="params">(<span name="containerName">containerName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="time_ranges">time_ranges: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<a href="../KvBase/TimeRange.html" class="extype" name="com.ligadata.KvBase.TimeRange">TimeRange</a>]</span>, <span name="callbackFunction">callbackFunction: (<a href="../KvBase/Key.html" class="extype" name="com.ligadata.KvBase.Key">Key</a>, <a href="../KvBase/Value.html" class="extype" name="com.ligadata.KvBase.Value">Value</a>) ⇒ <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@get(containerName:String,time_ranges:Array[com.ligadata.KvBase.TimeRange],callbackFunction:(com.ligadata.KvBase.Key,com.ligadata.KvBase.Value)=&gt;Unit):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.keyvaluestore.HBaseAdapter">HBaseAdapter</a> → <a href="../StorageBase/DataStoreOperations.html" class="extype" name="com.ligadata.StorageBase.DataStoreOperations">DataStoreOperations</a></dd></dl></div>
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#get" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="get(containerName:String,keys:Array[com.ligadata.KvBase.Key],callbackFunction:(com.ligadata.KvBase.Key,com.ligadata.KvBase.Value)=&gt;Unit):Unit"></a>
+      <a id="get(String,Array[Key],(Key,Value)⇒Unit):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">get</span><span class="params">(<span name="containerName">containerName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="keys">keys: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<a href="../KvBase/Key.html" class="extype" name="com.ligadata.KvBase.Key">Key</a>]</span>, <span name="callbackFunction">callbackFunction: (<a href="../KvBase/Key.html" class="extype" name="com.ligadata.KvBase.Key">Key</a>, <a href="../KvBase/Value.html" class="extype" name="com.ligadata.KvBase.Value">Value</a>) ⇒ <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@get(containerName:String,keys:Array[com.ligadata.KvBase.Key],callbackFunction:(com.ligadata.KvBase.Key,com.ligadata.KvBase.Value)=&gt;Unit):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.keyvaluestore.HBaseAdapter">HBaseAdapter</a> → <a href="../StorageBase/DataStoreOperations.html" class="extype" name="com.ligadata.StorageBase.DataStoreOperations">DataStoreOperations</a></dd></dl></div>
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#get" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="get(containerName:String,callbackFunction:(com.ligadata.KvBase.Key,com.ligadata.KvBase.Value)=&gt;Unit):Unit"></a>
+      <a id="get(String,(Key,Value)⇒Unit):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">get</span><span class="params">(<span name="containerName">containerName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="callbackFunction">callbackFunction: (<a href="../KvBase/Key.html" class="extype" name="com.ligadata.KvBase.Key">Key</a>, <a href="../KvBase/Value.html" class="extype" name="com.ligadata.KvBase.Value">Value</a>) ⇒ <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@get(containerName:String,callbackFunction:(com.ligadata.KvBase.Key,com.ligadata.KvBase.Value)=&gt;Unit):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.keyvaluestore.HBaseAdapter">HBaseAdapter</a> → <a href="../StorageBase/DataStoreOperations.html" class="extype" name="com.ligadata.StorageBase.DataStoreOperations">DataStoreOperations</a></dd></dl></div>
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#getAllTables" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getAllTables:Array[String]"></a>
+      <a id="getAllTables:Array[String]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getAllTables</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@getAllTables:Array[String]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.keyvaluestore.HBaseAdapter">HBaseAdapter</a> → <a href="../StorageBase/DataStoreOperations.html" class="extype" name="com.ligadata.StorageBase.DataStoreOperations">DataStoreOperations</a></dd></dl></div>
+    </li><li name="scala.AnyRef#getClass" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getClass():Class[_]"></a>
+      <a id="getClass():Class[_]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getClass</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.Class">Class</span>[_]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@getClass():Class[_]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#getKeys" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getKeys(containerName:String,bucketKeys:Array[Array[String]],callbackFunction:com.ligadata.KvBase.Key=&gt;Unit):Unit"></a>
+      <a id="getKeys(String,Array[Array[String]],(Key)⇒Unit):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getKeys</span><span class="params">(<span name="containerName">containerName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="bucketKeys">bucketKeys: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<span class="extype" name="scala.Predef.String">String</span>]]</span>, <span name="callbackFunction">callbackFunction: (<a href="../KvBase/Key.html" class="extype" name="com.ligadata.KvBase.Key">Key</a>) ⇒ <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@getKeys(containerName:String,bucketKeys:Array[Array[String]],callbackFunction:com.ligadata.KvBase.Key=&gt;Unit):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.keyvaluestore.HBaseAdapter">HBaseAdapter</a> → <a href="../StorageBase/DataStoreOperations.html" class="extype" name="com.ligadata.StorageBase.DataStoreOperations">DataStoreOperations</a></dd></dl></div>
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#getKeys" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getKeys(containerName:String,time_ranges:Array[com.ligadata.KvBase.TimeRange],bucketKeys:Array[Array[String]],callbackFunction:com.ligadata.KvBase.Key=&gt;Unit):Unit"></a>
+      <a id="getKeys(String,Array[TimeRange],Array[Array[String]],(Key)⇒Unit):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getKeys</span><span class="params">(<span name="containerName">containerName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="time_ranges">time_ranges: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<a href="../KvBase/TimeRange.html" class="extype" name="com.ligadata.KvBase.TimeRange">TimeRange</a>]</span>, <span name="bucketKeys">bucketKeys: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<span class="extype" name="scala.Predef.String">String</span>]]</span>, <span name="callbackFunction">callbackFunction: (<a href="../KvBase/Key.html" class="extype" name="com.ligadata.KvBase.Key">Key</a>) ⇒ <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@getKeys(containerName:String,time_ranges:Array[com.ligadata.KvBase.TimeRange],bucketKeys:Array[Array[String]],callbackFunction:com.ligadata.KvBase.Key=&gt;Unit):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.keyvaluestore.HBaseAdapter">HBaseAdapter</a> → <a href="../StorageBase/DataStoreOperations.html" class="extype" name="com.ligadata.StorageBase.DataStoreOperations">DataStoreOperations</a></dd></dl></div>
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#getKeys" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getKeys(containerName:String,time_ranges:Array[com.ligadata.KvBase.TimeRange],callbackFunction:com.ligadata.KvBase.Key=&gt;Unit):Unit"></a>
+      <a id="getKeys(String,Array[TimeRange],(Key)⇒Unit):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getKeys</span><span class="params">(<span name="containerName">containerName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="time_ranges">time_ranges: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<a href="../KvBase/TimeRange.html" class="extype" name="com.ligadata.KvBase.TimeRange">TimeRange</a>]</span>, <span name="callbackFunction">callbackFunction: (<a href="../KvBase/Key.html" class="extype" name="com.ligadata.KvBase.Key">Key</a>) ⇒ <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@getKeys(containerName:String,time_ranges:Array[com.ligadata.KvBase.TimeRange],callbackFunction:com.ligadata.KvBase.Key=&gt;Unit):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.keyvaluestore.HBaseAdapter">HBaseAdapter</a> → <a href="../StorageBase/DataStoreOperations.html" class="extype" name="com.ligadata.StorageBase.DataStoreOperations">DataStoreOperations</a></dd></dl></div>
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#getKeys" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getKeys(containerName:String,keys:Array[com.ligadata.KvBase.Key],callbackFunction:com.ligadata.KvBase.Key=&gt;Unit):Unit"></a>
+      <a id="getKeys(String,Array[Key],(Key)⇒Unit):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getKeys</span><span class="params">(<span name="containerName">containerName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="keys">keys: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<a href="../KvBase/Key.html" class="extype" name="com.ligadata.KvBase.Key">Key</a>]</span>, <span name="callbackFunction">callbackFunction: (<a href="../KvBase/Key.html" class="extype" name="com.ligadata.KvBase.Key">Key</a>) ⇒ <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@getKeys(containerName:String,keys:Array[com.ligadata.KvBase.Key],callbackFunction:com.ligadata.KvBase.Key=&gt;Unit):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.keyvaluestore.HBaseAdapter">HBaseAdapter</a> → <a href="../StorageBase/DataStoreOperations.html" class="extype" name="com.ligadata.StorageBase.DataStoreOperations">DataStoreOperations</a></dd></dl></div>
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#getKeys" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getKeys(containerName:String,callbackFunction:com.ligadata.KvBase.Key=&gt;Unit):Unit"></a>
+      <a id="getKeys(String,(Key)⇒Unit):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getKeys</span><span class="params">(<span name="containerName">containerName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="callbackFunction">callbackFunction: (<a href="../KvBase/Key.html" class="extype" name="com.ligadata.KvBase.Key">Key</a>) ⇒ <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@getKeys(containerName:String,callbackFunction:com.ligadata.KvBase.Key=&gt;Unit):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.keyvaluestore.HBaseAdapter">HBaseAdapter</a> → <a href="../StorageBase/DataStoreOperations.html" class="extype" name="com.ligadata.StorageBase.DataStoreOperations">DataStoreOperations</a></dd></dl></div>
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#getRowCount" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="getRowCount(containerName:String):Long"></a>
+      <a id="getRowCount(String):Long"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getRowCount</span><span class="params">(<span name="containerName">containerName: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Long" class="extype" target="_top">Long</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@getRowCount(containerName:String):Long" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#getTableName" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="getTableName(containerName:String):String"></a>
+      <a id="getTableName(String):String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getTableName</span><span class="params">(<span name="containerName">containerName: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@getTableName(containerName:String):String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="scala.AnyRef#hashCode" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="hashCode():Int"></a>
+      <a id="hashCode():Int"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@hashCode():Int" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#hostnames" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="hostnames:String"></a>
+      <a id="hostnames:String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">hostnames</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@hostnames:String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#isContainerExists" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="isContainerExists(containerName:String):Boolean"></a>
+      <a id="isContainerExists(String):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">isContainerExists</span><span class="params">(<span name="containerName">containerName: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@isContainerExists(containerName:String):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.keyvaluestore.HBaseAdapter">HBaseAdapter</a> → <a href="../StorageBase/DataStoreOperations.html" class="extype" name="com.ligadata.StorageBase.DataStoreOperations">DataStoreOperations</a></dd></dl></div>
+    </li><li name="scala.Any#isInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="isInstanceOf[T0]:Boolean"></a>
+      <a id="isInstanceOf[T0]:Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@isInstanceOf[T0]:Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#isKerberos" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="isKerberos:Boolean"></a>
+      <a id="isKerberos:Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">var</span>
+      </span>
+      <span class="symbol">
+        <span class="name">isKerberos</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@isKerberos:Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#isTableExists" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="isTableExists(tableNamespace:String,tableName:String):Boolean"></a>
+      <a id="isTableExists(String,String):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">isTableExists</span><span class="params">(<span name="tableNamespace">tableNamespace: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="tableName">tableName: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@isTableExists(tableNamespace:String,tableName:String):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.keyvaluestore.HBaseAdapter">HBaseAdapter</a> → <a href="../StorageBase/DataStoreOperations.html" class="extype" name="com.ligadata.StorageBase.DataStoreOperations">DataStoreOperations</a></dd></dl></div>
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#isTableExists" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="isTableExists(tableName:String):Boolean"></a>
+      <a id="isTableExists(String):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">isTableExists</span><span class="params">(<span name="tableName">tableName: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@isTableExists(tableName:String):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.keyvaluestore.HBaseAdapter">HBaseAdapter</a> → <a href="../StorageBase/DataStoreOperations.html" class="extype" name="com.ligadata.StorageBase.DataStoreOperations">DataStoreOperations</a></dd></dl></div>
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#keyMaxSz" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="keyMaxSz:Int"></a>
+      <a id="keyMaxSz:Int"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">keyMaxSz</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@keyMaxSz:Int" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#kvManagerLoader" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="kvManagerLoader:com.ligadata.Utils.KamanjaLoaderInfo"></a>
+      <a id="kvManagerLoader:KamanjaLoaderInfo"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">kvManagerLoader</span><span class="result">: <a href="../Utils/KamanjaLoaderInfo.html" class="extype" name="com.ligadata.Utils.KamanjaLoaderInfo">KamanjaLoaderInfo</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@kvManagerLoader:com.ligadata.Utils.KamanjaLoaderInfo" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#logger" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="logger:org.apache.logging.log4j.Logger"></a>
+      <a id="logger:Logger"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">logger</span><span class="result">: <span class="extype" name="org.apache.logging.log4j.Logger">Logger</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@logger:org.apache.logging.log4j.Logger" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#loggerName" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="loggerName:String"></a>
+      <a id="loggerName:String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">loggerName</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@loggerName:String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#namespace" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="namespace:String"></a>
+      <a id="namespace:String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">namespace</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@namespace:String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="scala.AnyRef#ne" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ne(x$1:AnyRef):Boolean"></a>
+      <a id="ne(AnyRef):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@ne(x$1:AnyRef):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#notify" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="notify():Unit"></a>
+      <a id="notify():Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@notify():Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#notifyAll" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="notifyAll():Unit"></a>
+      <a id="notifyAll():Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@notifyAll():Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#parsed_json" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="parsed_json:Map[String,Any]"></a>
+      <a id="parsed_json:Map[String,Any]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">var</span>
+      </span>
+      <span class="symbol">
+        <span class="name">parsed_json</span><span class="result">: <span class="extype" name="scala.Predef.Map">Map</span>[<span class="extype" name="scala.Predef.String">String</span>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@parsed_json:Map[String,Any]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#put" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="put(data_list:Array[(String,Array[(com.ligadata.KvBase.Key,com.ligadata.KvBase.Value)])]):Unit"></a>
+      <a id="put(Array[(String,Array[(Key,Value)])]):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">put</span><span class="params">(<span name="data_list">data_list: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[(<span class="extype" name="scala.Predef.String">String</span>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[(<a href="../KvBase/Key.html" class="extype" name="com.ligadata.KvBase.Key">Key</a>, <a href="../KvBase/Value.html" class="extype" name="com.ligadata.KvBase.Value">Value</a>)])]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@put(data_list:Array[(String,Array[(com.ligadata.KvBase.Key,com.ligadata.KvBase.Value)])]):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.keyvaluestore.HBaseAdapter">HBaseAdapter</a> → <a href="../StorageBase/DataStoreOperations.html" class="extype" name="com.ligadata.StorageBase.DataStoreOperations">DataStoreOperations</a></dd></dl></div>
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#put" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="put(containerName:String,key:com.ligadata.KvBase.Key,value:com.ligadata.KvBase.Value):Unit"></a>
+      <a id="put(String,Key,Value):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">put</span><span class="params">(<span name="containerName">containerName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="key">key: <a href="../KvBase/Key.html" class="extype" name="com.ligadata.KvBase.Key">Key</a></span>, <span name="value">value: <a href="../KvBase/Value.html" class="extype" name="com.ligadata.KvBase.Value">Value</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@put(containerName:String,key:com.ligadata.KvBase.Key,value:com.ligadata.KvBase.Value):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.keyvaluestore.HBaseAdapter">HBaseAdapter</a> → <a href="../StorageBase/DataStoreOperations.html" class="extype" name="com.ligadata.StorageBase.DataStoreOperations">DataStoreOperations</a></dd></dl></div>
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#renameTable" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="renameTable(srcTableName:String,destTableName:String,forceCopy:Boolean):Unit"></a>
+      <a id="renameTable(String,String,Boolean):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">renameTable</span><span class="params">(<span name="srcTableName">srcTableName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="destTableName">destTableName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="forceCopy">forceCopy: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a> = <span class="symbol">false</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@renameTable(srcTableName:String,destTableName:String,forceCopy:Boolean):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#restoreContainer" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="restoreContainer(containerName:String):Unit"></a>
+      <a id="restoreContainer(String):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">restoreContainer</span><span class="params">(<span name="containerName">containerName: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@restoreContainer(containerName:String):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.keyvaluestore.HBaseAdapter">HBaseAdapter</a> → <a href="../StorageBase/DataStoreOperations.html" class="extype" name="com.ligadata.StorageBase.DataStoreOperations">DataStoreOperations</a></dd></dl></div>
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#rollbackTx" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="rollbackTx(tx:com.ligadata.StorageBase.Transaction):Unit"></a>
+      <a id="rollbackTx(Transaction):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">rollbackTx</span><span class="params">(<span name="tx">tx: <a href="../StorageBase/Transaction.html" class="extype" name="com.ligadata.StorageBase.Transaction">Transaction</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@rollbackTx(tx:com.ligadata.StorageBase.Transaction):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.keyvaluestore.HBaseAdapter">HBaseAdapter</a> → <a href="../StorageBase/DataStore.html" class="extype" name="com.ligadata.StorageBase.DataStore">DataStore</a></dd></dl></div>
+    </li><li name="scala.AnyRef#synchronized" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="synchronized[T0](x$1:=&gt;T0):T0"></a>
+      <a id="synchronized[T0](⇒T0):T0"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">synchronized</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="params">(<span name="arg0">arg0: ⇒ <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>)</span><span class="result">: <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@synchronized[T0](x$1:=&gt;T0):T0" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#toString" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="toString():String"></a>
+      <a id="toString():String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">toString</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@toString():String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#toTableName" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="toTableName(containerName:String):String"></a>
+      <a id="toTableName(String):String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">toTableName</span><span class="params">(<span name="containerName">containerName: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@toTableName(containerName:String):String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter#ugi" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ugi:org.apache.hadoop.security.UserGroupInformation"></a>
+      <a id="ugi:UserGroupInformation"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">var</span>
+      </span>
+      <span class="symbol">
+        <span class="name">ugi</span><span class="result">: <span class="extype" name="org.apache.hadoop.security.UserGroupInformation">UserGroupInformation</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@ugi:org.apache.hadoop.security.UserGroupInformation" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="wait():Unit"></a>
+      <a id="wait():Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@wait():Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="defval" name="classOf[java.lang.InterruptedException]">...</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="wait(x$1:Long,x$2:Int):Unit"></a>
+      <a id="wait(Long,Int):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Long" class="extype" target="_top">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@wait(x$1:Long,x$2:Int):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="defval" name="classOf[java.lang.InterruptedException]">...</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="wait(x$1:Long):Unit"></a>
+      <a id="wait(Long):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Long" class="extype" target="_top">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.HBaseAdapter@wait(x$1:Long):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="defval" name="classOf[java.lang.InterruptedException]">...</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li></ol>
+            </div>
+
+        
+
+        
+        </div>
+
+        <div id="inheritedMembers">
+        <div class="parent" name="com.ligadata.StorageBase.DataStore">
+              <h3>Inherited from <a href="../StorageBase/DataStore.html" class="extype" name="com.ligadata.StorageBase.DataStore">DataStore</a></h3>
+            </div><div class="parent" name="com.ligadata.StorageBase.DataStoreOperations">
+              <h3>Inherited from <a href="../StorageBase/DataStoreOperations.html" class="extype" name="com.ligadata.StorageBase.DataStoreOperations">DataStoreOperations</a></h3>
+            </div><div class="parent" name="scala.AnyRef">
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></h3>
+            </div><div class="parent" name="scala.Any">
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></h3>
+            </div>
+        
+        </div>
+
+        <div id="groupedMembers">
+        <div class="group" name="Ungrouped">
+              <h3>Ungrouped</h3>
+              
+            </div>
+        </div>
+
+      </div>
+
+      <div id="tooltip"></div>
+
+      <div id="footer">  </div>
+
+
+    </body>
+      </html>

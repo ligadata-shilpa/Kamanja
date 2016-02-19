@@ -1,5 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<!DOCTYPE html >
 <html>
         <head>
           <title>MetadataAPI - com.ligadata.MetadataAPI.MetadataAPI</title>
@@ -9,6 +8,11 @@
           
       <link href="../../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
       <link href="../../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../../../lib/jquery.js" id="jquery-js"></script>
+      <script type="text/javascript" src="../../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../../lib/template.js"></script>
+      <script type="text/javascript" src="../../../lib/tools.tooltip.js"></script>
+      
       <script type="text/javascript">
          if(top === self) {
             var url = '../../../index.html';
@@ -24,9 +28,17 @@
         </head>
         <body class="type">
       <div id="definition">
-        <img src="../../../lib/trait_big.png" />
+        <a href="MetadataAPI$.html" title="See companion object"><img alt="Trait/Object" src="../../../lib/trait_to_object_big.png" /></a>
         <p id="owner"><a href="../../package.html" class="extype" name="com">com</a>.<a href="../package.html" class="extype" name="com.ligadata">ligadata</a>.<a href="package.html" class="extype" name="com.ligadata.MetadataAPI">MetadataAPI</a></p>
-        <h1>MetadataAPI</h1>
+        <h1><a href="MetadataAPI$.html" title="See companion object">MetadataAPI</a></h1><h3><span class="morelinks"><div>
+            Related Docs:
+            <a href="MetadataAPI$.html" title="See companion object">object MetadataAPI</a>
+            | <a href="package.html" class="extype" name="com.ligadata.MetadataAPI">package MetadataAPI</a>
+          </div></span></h3><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       </div>
 
       <h4 id="signature" class="signature">
@@ -35,17 +47,17 @@
         <span class="kind">trait</span>
       </span>
       <span class="symbol">
-        <span class="name">MetadataAPI</span><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+        <span class="name">MetadataAPI</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
       </span>
       </h4>
       
           <div id="comment" class="fullcommenttop"><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
-          <div class="superTypes hiddenContent"><span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
+          <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></div>
         </div><div class="toggleContainer block">
-          <span class="toggle">Known Subclasses</span>
-          <div class="subClasses hiddenContent"><a href="MetadataAPIImpl$.html" class="extype" name="com.ligadata.MetadataAPI.MetadataAPIImpl">MetadataAPIImpl</a></div>
-        </div></div>
+            <span class="toggle">Known Subclasses</span>
+            <div class="subClasses hiddenContent"><a href="MetadataAPIImpl$.html" class="extype" name="com.ligadata.MetadataAPI.MetadataAPIImpl">MetadataAPIImpl</a></div>
+          </div></div>
         
 
       <div id="mbrsel">
@@ -70,7 +82,6 @@
               <li class="hideall out"><span>Hide All</span></li>
               <li class="showall in"><span>Show all</span></li>
             </ol>
-            <a href="http://docs.scala-lang.org/overviews/scaladoc/usage.html#members" target="_blank">Learn more about member selection</a>
           </div>
         <div id="visbl">
             <span class="filtertype">Visibility</span>
@@ -87,20 +98,26 @@
         <div id="values" class="values members">
               <h3>Abstract Value Members</h3>
               <ol><li name="com.ligadata.MetadataAPI.MetadataAPI#AddConcepts" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="AddConcepts(conceptsText:String,format:String):String"></a>
-      <a id="AddConcepts(String,String):String"></a>
+      <a id="AddConcepts(conceptsText:String,formatType:String,userid:Option[String]):String"></a>
+      <a id="AddConcepts(String,String,Option[String]):String"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">AddConcepts</span><span class="params">(<span name="conceptsText">conceptsText: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="format">format: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+        <span class="name">AddConcepts</span><span class="params">(<span name="conceptsText">conceptsText: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="userid">userid: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
-      </h4>
-      <p class="shortcomment cmt">Add new concepts</p><div class="fullcomment"><div class="comment cmt"><p>Add new concepts</p></div><dl class="paramcmts block"><dt class="param">conceptsText</dt><dd class="cmt"><p>an input String of concepts in a format defined by the next parameter formatType</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.statusCode
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@AddConcepts(conceptsText:String,formatType:String,userid:Option[String]):String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Add new concepts</p><div class="fullcomment"><div class="comment cmt"><p>Add new concepts</p></div><dl class="paramcmts block"><dt class="param">conceptsText</dt><dd class="cmt"><p>an input String of concepts in a format defined by the next parameter formatType</p></dd><dt class="param">formatType</dt><dd class="cmt"><p>format of conceptsText ( JSON or XML)</p></dd><dt class="param">userid</dt><dd class="cmt"><p>the identity to be used by the security adapter to ascertain if this user has access permissions for this
+              method. If Security and/or Audit are configured, this value must be a value other than None.</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.statusCode
 indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
-ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure</p><p>Example:</p><pre><span class="kw">val</span> sampleConceptStr = <span class="lit">""</span><span class="lit">"
+ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure
+Example:</p><pre>  <span class="kw">val</span> sampleConceptStr = <span class="lit">""</span><span class="lit">"
  {"</span>Concepts<span class="lit">" : [
  "</span>NameSpace<span class="lit">":"</span>Ligadata<span class="lit">",
  "</span>Name<span class="lit">":"</span>ProviderId<span class="lit">",
@@ -113,39 +130,51 @@ ApiResult.statusDescription and ApiResult.resultData indicate the nature of the 
    <span class="kw">var</span> result = MetadataAPIImpl.getApiResult(apiResult)
    println(<span class="lit">"Result as Json String => \n"</span> + result._2)</pre></dd></dl></div>
     </li><li name="com.ligadata.MetadataAPI.MetadataAPI#AddContainer" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="AddContainer(containerText:String,formatType:String):String"></a>
-      <a id="AddContainer(String,String):String"></a>
+      <a id="AddContainer(containerText:String,formatType:String,userid:Option[String]):String"></a>
+      <a id="AddContainer(String,String,Option[String]):String"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">AddContainer</span><span class="params">(<span name="containerText">containerText: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+        <span class="name">AddContainer</span><span class="params">(<span name="containerText">containerText: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="userid">userid: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@AddContainer(containerText:String,formatType:String,userid:Option[String]):String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <p class="shortcomment cmt">Add container given containerText
 </p><div class="fullcomment"><div class="comment cmt"><p>Add container given containerText
-</p></div><dl class="paramcmts block"><dt class="param">containerText</dt><dd class="cmt"><p>text of the container (as JSON/XML string as defined by next parameter formatType)</p></dd><dt class="param">formatType</dt><dd class="cmt"><p>format of containerText ( JSON or XML)</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.statusCode
+</p></div><dl class="paramcmts block"><dt class="param">containerText</dt><dd class="cmt"><p>text of the container (as JSON/XML string as defined by next parameter formatType)</p></dd><dt class="param">formatType</dt><dd class="cmt"><p>format of containerText ( JSON or XML)</p></dd><dt class="param">userid</dt><dd class="cmt"><p>the identity to be used by the security adapter to ascertain if this user has access permissions for this
+              method. If Security and/or Audit are configured, this value must be a value other than None.</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.statusCode
 indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
-ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure</p><p>Example</p><pre><span class="kw">var</span> apiResult = MetadataAPIImpl.AddContainer(msgStr,<span class="lit">"JSON"</span>))
+ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure
+Example</p><pre><span class="kw">var</span> apiResult = MetadataAPIImpl.AddContainer(msgStr,<span class="lit">"JSON"</span>))
 <span class="kw">var</span> result = MetadataAPIImpl.getApiResult(apiResult)
 println(<span class="lit">"Result as Json String => \n"</span> + result._2)</pre></dd></dl></div>
     </li><li name="com.ligadata.MetadataAPI.MetadataAPI#AddFunctions" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="AddFunctions(functionsText:String,formatType:String):String"></a>
-      <a id="AddFunctions(String,String):String"></a>
+      <a id="AddFunctions(functionsText:String,formatType:String,userid:Option[String]):String"></a>
+      <a id="AddFunctions(String,String,Option[String]):String"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">AddFunctions</span><span class="params">(<span name="functionsText">functionsText: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+        <span class="name">AddFunctions</span><span class="params">(<span name="functionsText">functionsText: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="userid">userid: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
-      </h4>
-      <p class="shortcomment cmt">Add new functions</p><div class="fullcomment"><div class="comment cmt"><p>Add new functions</p></div><dl class="paramcmts block"><dt class="param">functionsText</dt><dd class="cmt"><p>an input String of functions in a format defined by the next parameter formatType</p></dd><dt class="param">formatType</dt><dd class="cmt"><p>format of functionsText ( JSON or XML)</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.statusCode
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@AddFunctions(functionsText:String,formatType:String,userid:Option[String]):String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Add new functions</p><div class="fullcomment"><div class="comment cmt"><p>Add new functions</p></div><dl class="paramcmts block"><dt class="param">functionsText</dt><dd class="cmt"><p>an input String of functions in a format defined by the next parameter formatType</p></dd><dt class="param">formatType</dt><dd class="cmt"><p>format of functionsText ( JSON or XML)</p></dd><dt class="param">userid</dt><dd class="cmt"><p>the identity to be used by the security adapter to ascertain if this user has access permissions for this
+              method. If Security and/or Audit are configured, this value must be a value other than None.</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.statusCode
 indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
-ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure</p><p>Example:</p><pre><span class="kw">val</span> sampleFunctionStr = <span class="lit">""</span><span class="lit">"
+ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure
+Example:</p><pre>  <span class="kw">val</span> sampleFunctionStr = <span class="lit">""</span><span class="lit">"
  {
  "</span>NameSpace<span class="lit">" : "</span>pmml<span class="lit">",
  "</span>Name<span class="lit">" : "</span>my_min<span class="lit">",
@@ -170,57 +199,75 @@ ApiResult.statusDescription and ApiResult.resultData indicate the nature of the 
    <span class="kw">var</span> result = MetadataAPIImpl.getApiResult(apiResult)
    println(<span class="lit">"Result as Json String => \n"</span> + result._2)</pre></dd></dl></div>
     </li><li name="com.ligadata.MetadataAPI.MetadataAPI#AddMessage" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="AddMessage(messageText:String,formatType:String):String"></a>
-      <a id="AddMessage(String,String):String"></a>
+      <a id="AddMessage(messageText:String,formatType:String,userid:Option[String]):String"></a>
+      <a id="AddMessage(String,String,Option[String]):String"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">AddMessage</span><span class="params">(<span name="messageText">messageText: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+        <span class="name">AddMessage</span><span class="params">(<span name="messageText">messageText: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="userid">userid: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@AddMessage(messageText:String,formatType:String,userid:Option[String]):String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <p class="shortcomment cmt">Add message given messageText
 </p><div class="fullcomment"><div class="comment cmt"><p>Add message given messageText
-</p></div><dl class="paramcmts block"><dt class="param">messageText</dt><dd class="cmt"><p>text of the message (as JSON/XML string as defined by next parameter formatType)</p></dd><dt class="param">formatType</dt><dd class="cmt"><p>format of messageText ( JSON or XML)</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.statusCode
+</p></div><dl class="paramcmts block"><dt class="param">messageText</dt><dd class="cmt"><p>text of the message (as JSON/XML string as defined by next parameter formatType)</p></dd><dt class="param">formatType</dt><dd class="cmt"><p>format of messageText ( JSON or XML)</p></dd><dt class="param">userid</dt><dd class="cmt"><p>the identity to be used by the security adapter to ascertain if this user has access permissions for this
+              method. If Security and/or Audit are configured, this value must be a value other than None.</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.statusCode
 indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
-ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure</p><p>Example</p><pre><span class="kw">var</span> apiResult = MetadataAPIImpl.AddMessage(msgStr,<span class="lit">"JSON"</span>))
+ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure
+Example</p><pre><span class="kw">var</span> apiResult = MetadataAPIImpl.AddMessage(msgStr,<span class="lit">"JSON"</span>))
 <span class="kw">var</span> result = MetadataAPIImpl.getApiResult(apiResult)
 println(<span class="lit">"Result as Json String => \n"</span> + result._2)</pre></dd></dl></div>
     </li><li name="com.ligadata.MetadataAPI.MetadataAPI#AddModel" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="AddModel(pmmlText:String):String"></a>
-      <a id="AddModel(String):String"></a>
+      <a id="AddModel(modelType:com.ligadata.MetadataAPI.MetadataAPI.ModelType.ModelType,input:String,userid:Option[String],modelName:Option[String],version:Option[String],msgConsumed:Option[String],msgVer:Option[String]):String"></a>
+      <a id="AddModel(ModelType,String,Option[String],Option[String],Option[String],Option[String],Option[String]):String"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">AddModel</span><span class="params">(<span name="pmmlText">pmmlText: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+        <span class="name">AddModel</span><span class="params">(<span name="modelType">modelType: <a href="MetadataAPI$$ModelType$.html#ModelType=com.ligadata.MetadataAPI.MetadataAPI.ModelType.Value" class="extmbr" name="com.ligadata.MetadataAPI.MetadataAPI.ModelType.ModelType">ModelType</a></span>, <span name="input">input: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="userid">userid: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>, <span name="modelName">modelName: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>, <span name="version">version: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>, <span name="msgConsumed">msgConsumed: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>, <span name="msgVer">msgVer: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">Some(&quot;-1&quot;)</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
-      </h4>
-      <p class="shortcomment cmt">Add model given pmmlText in XML
-</p><div class="fullcomment"><div class="comment cmt"><p>Add model given pmmlText in XML
-</p></div><dl class="paramcmts block"><dt class="param">pmmlText</dt><dd class="cmt"><p>text of the model (as XML string)</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.statusCode
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@AddModel(modelType:com.ligadata.MetadataAPI.MetadataAPI.ModelType.ModelType,input:String,userid:Option[String],modelName:Option[String],version:Option[String],msgConsumed:Option[String],msgVer:Option[String]):String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Add model.</p><div class="fullcomment"><div class="comment cmt"><p>Add model. Several model types are currently supported.  They describe the content of the <i>input</i> argument:</p><ul><li>SCALA - a Scala source string</li><li>JAVA - a Java source string</li><li>PMML - a PMML source string</li><li>KPMML - a Kamanja Pmml source string</li><li>BINARY - the path to a jar containing the model</li></ul><p>The remaining arguments, while noted as optional, are required for some model types.  In particular,
+the <i>modelName</i>, <i>version</i>, and <i>msgConsumed</i> must be specified for the PMML model type.  The <i>userid</i> is
+required for systems that have been configured with a SecurityAdapter or AuditAdapter.</p></div><dl class="paramcmts block"><dt class="param">modelType</dt><dd class="cmt"><p>the type of the model submission (any {SCALA,JAVA,PMML,KPMML,BINARY}</p></dd><dt class="param">input</dt><dd class="cmt"><p>the text element to be added dependent upon the modelType specified.</p></dd><dt class="param">userid</dt><dd class="cmt"><p>the identity to be used by the security adapter to ascertain if this user has access permissions for this
+              method. If Security and/or Audit are configured, this value must be a value other than None.</p></dd><dt class="param">modelName</dt><dd class="cmt"><p>the namespace.name of the PMML model to be added to the Kamanja metadata</p></dd><dt class="param">version</dt><dd class="cmt"><p>the model version to be used to describe this PMML model</p></dd><dt class="param">msgConsumed</dt><dd class="cmt"><p>the namespace.name of the message to be consumed by a PMML model</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.statusCode
+indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
+ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure</p></dd></dl><dl class="attributes block"> <dt>See also</dt><dd><span class="cmt"><p><a href="http://kamanja.org/auditing/" target="_blank">auditing wiki</a> for more information about auditing.
+NOTE: The BINARY model is not supported at this time.  The model submitted for this type will be via a jar file.</p></span><span class="cmt"><p><a href="http://kamanja.org/security/" target="_blank">security wiki</a> for more information. The audit adapter, if configured,
+      will also be invoked to take note of this user's action.</p></span></dd></dl></div>
+    </li><li name="com.ligadata.MetadataAPI.MetadataAPI#AddType" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="AddType(typesText:String,formatType:String,userid:Option[String]):String"></a>
+      <a id="AddType(String,String,Option[String]):String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">abstract </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">AddType</span><span class="params">(<span name="typesText">typesText: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="userid">userid: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@AddType(typesText:String,formatType:String,userid:Option[String]):String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Add new types</p><div class="fullcomment"><div class="comment cmt"><p>Add new types</p></div><dl class="paramcmts block"><dt class="param">typesText</dt><dd class="cmt"><p>an input String of types in a format defined by the next parameter formatType</p></dd><dt class="param">formatType</dt><dd class="cmt"><p>format of typesText ( JSON or XML)</p></dd><dt class="param">userid</dt><dd class="cmt"><p>the identity to be used by the security adapter to ascertain if this user has access permissions for this
+              method. If Security and/or Audit are configured, this value must be a value other than None.</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.statusCode
 indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
 ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure
-</p></dd></dl></div>
-    </li><li name="com.ligadata.MetadataAPI.MetadataAPI#AddType" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="AddType(typesText:String,formatType:String):String"></a>
-      <a id="AddType(String,String):String"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier">abstract </span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">AddType</span><span class="params">(<span name="typesText">typesText: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
-      </span>
-      </h4>
-      <p class="shortcomment cmt">Add new types</p><div class="fullcomment"><div class="comment cmt"><p>Add new types</p></div><dl class="paramcmts block"><dt class="param">typesText</dt><dd class="cmt"><p>an input String of types in a format defined by the next parameter formatType</p></dd><dt class="param">formatType</dt><dd class="cmt"><p>format of typesText ( JSON or XML)</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.statusCode
-indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
-ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure</p><p>Example:</p><pre><span class="kw">val</span> sampleScalarTypeStr = <span class="lit">""</span><span class="lit">"
+Example:</p><pre><span class="kw">val</span> sampleScalarTypeStr = <span class="lit">""</span><span class="lit">"
 {
 "</span>MetadataType<span class="lit">" : "</span>ScalarTypeDef<span class="lit">",
 "</span>NameSpace<span class="lit">" : "</span>system<span class="lit">",
@@ -239,498 +286,601 @@ ApiResult.statusDescription and ApiResult.resultData indicate the nature of the 
 <span class="kw">var</span> result = MetadataAPIImpl.getApiResult(apiResult)
 println(<span class="lit">"Result as Json String => \n"</span> + result._2)</pre></dd></dl></div>
     </li><li name="com.ligadata.MetadataAPI.MetadataAPI#GetAllConcepts" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="GetAllConcepts(formatType:String):String"></a>
-      <a id="GetAllConcepts(String):String"></a>
+      <a id="GetAllConcepts(formatType:String,userid:Option[String]):String"></a>
+      <a id="GetAllConcepts(String,Option[String]):String"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">GetAllConcepts</span><span class="params">(<span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+        <span class="name">GetAllConcepts</span><span class="params">(<span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="userid">userid: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@GetAllConcepts(formatType:String,userid:Option[String]):String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <p class="shortcomment cmt">Retrieve All available Concepts from Metadata Store
 </p><div class="fullcomment"><div class="comment cmt"><p>Retrieve All available Concepts from Metadata Store
-</p></div><dl class="paramcmts block"><dt class="param">formatType</dt><dd class="cmt"><p>format of the return value, either JSON or XML</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.resultData contains
-the Concept(s) either as a JSON or XML string depending on the parameter formatType
-</p></dd></dl></div>
-    </li><li name="com.ligadata.MetadataAPI.MetadataAPI#GetAllContainerDefs" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="GetAllContainerDefs(formatType:String):String"></a>
-      <a id="GetAllContainerDefs(String):String"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier">abstract </span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">GetAllContainerDefs</span><span class="params">(<span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
-      </span>
-      </h4>
-      <p class="shortcomment cmt">Retrieve All available ContainerDefs from Metadata Store
-</p><div class="fullcomment"><div class="comment cmt"><p>Retrieve All available ContainerDefs from Metadata Store
-</p></div><dl class="paramcmts block"><dt class="param">formatType</dt><dd class="cmt"><p>format of the return value, either JSON or XML</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.resultData contains
-the ContainerDef(s) either as a JSON or XML string depending on the parameter formatType
-</p></dd></dl></div>
+</p></div><dl class="paramcmts block"><dt class="param">formatType</dt><dd class="cmt"><p>format of the return value, either JSON or XML</p></dd><dt class="param">userid</dt><dd class="cmt"><p>the identity to be used by the security adapter to ascertain if this user has access permissions for this
+              method. If Security and/or Audit are configured, this value must be a value other than None.</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.resultData contains
+the Concept(s) either as a JSON or XML string depending on the parameter formatType</p></dd></dl></div>
     </li><li name="com.ligadata.MetadataAPI.MetadataAPI#GetAllDerivedConcepts" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="GetAllDerivedConcepts(formatType:String):String"></a>
-      <a id="GetAllDerivedConcepts(String):String"></a>
+      <a id="GetAllDerivedConcepts(formatType:String,userid:Option[String]):String"></a>
+      <a id="GetAllDerivedConcepts(String,Option[String]):String"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">GetAllDerivedConcepts</span><span class="params">(<span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+        <span class="name">GetAllDerivedConcepts</span><span class="params">(<span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="userid">userid: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@GetAllDerivedConcepts(formatType:String,userid:Option[String]):String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <p class="shortcomment cmt">Retrieve All available derived concepts from Metadata Store
 </p><div class="fullcomment"><div class="comment cmt"><p>Retrieve All available derived concepts from Metadata Store
-</p></div><dl class="paramcmts block"><dt class="param">formatType</dt><dd class="cmt"><p>format of the return value, either JSON or XML</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.resultData contains
-the Derived Concept(s) either as a JSON or XML string depending on the parameter formatType
-</p></dd></dl></div>
+</p></div><dl class="paramcmts block"><dt class="param">formatType</dt><dd class="cmt"><p>format of the return value, either JSON or XML</p></dd><dt class="param">userid</dt><dd class="cmt"><p>the identity to be used by the security adapter to ascertain if this user has access permissions for this
+              method. If Security and/or Audit are configured, this value must be a value other than None.</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.resultData contains
+the Derived Concept(s) either as a JSON or XML string depending on the parameter formatType</p></dd></dl></div>
     </li><li name="com.ligadata.MetadataAPI.MetadataAPI#GetAllFunctionDefs" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="GetAllFunctionDefs(formatType:String):(Int,String)"></a>
-      <a id="GetAllFunctionDefs(String):(Int,String)"></a>
+      <a id="GetAllFunctionDefs(formatType:String,userid:Option[String]):(Int,String)"></a>
+      <a id="GetAllFunctionDefs(String,Option[String]):(Int,String)"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">GetAllFunctionDefs</span><span class="params">(<span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: (<span class="extype" name="scala.Int">Int</span>, <span class="extype" name="scala.Predef.String">String</span>)</span>
+        <span class="name">GetAllFunctionDefs</span><span class="params">(<span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="userid">userid: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>)</span><span class="result">: (<a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a>, <span class="extype" name="scala.Predef.String">String</span>)</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@GetAllFunctionDefs(formatType:String,userid:Option[String]):(Int,String)" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <p class="shortcomment cmt">Retrieve All available FunctionDefs from Metadata Store.</p><div class="fullcomment"><div class="comment cmt"><p>Retrieve All available FunctionDefs from Metadata Store. Answer the count and a string representation
  of them.
-</p></div><dl class="paramcmts block"><dt class="param">formatType</dt><dd class="cmt"><p>format of the return value, either JSON or XML</p></dd><dt>returns</dt><dd class="cmt"><p>the function count and the result as a JSON String of object ApiResult where ApiResult.resultData contains
-the FunctionDef(s) either as a JSON or XML string depending on the parameter formatType as a Tuple2[Int,String]
-</p></dd></dl></div>
+</p></div><dl class="paramcmts block"><dt class="param">formatType</dt><dd class="cmt"><p>format of the return value, either JSON or XML</p></dd><dt class="param">userid</dt><dd class="cmt"><p>the identity to be used by the security adapter to ascertain if this user has access permissions for this
+              method. If Security and/or Audit are configured, this value must be a value other than None.</p></dd><dt>returns</dt><dd class="cmt"><p>the function count and the result as a JSON String of object ApiResult where ApiResult.resultData contains
+the FunctionDef(s) either as a JSON or XML string depending on the parameter formatType as a Tuple2[Int,String]</p></dd></dl></div>
     </li><li name="com.ligadata.MetadataAPI.MetadataAPI#GetAllMessageDefs" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="GetAllMessageDefs(formatType:String):String"></a>
-      <a id="GetAllMessageDefs(String):String"></a>
+      <a id="GetAllMessageDefs(formatType:String,userid:Option[String]):String"></a>
+      <a id="GetAllMessageDefs(String,Option[String]):String"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">GetAllMessageDefs</span><span class="params">(<span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+        <span class="name">GetAllMessageDefs</span><span class="params">(<span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="userid">userid: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@GetAllMessageDefs(formatType:String,userid:Option[String]):String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <p class="shortcomment cmt">Retrieve All available MessageDefs from Metadata Store
 </p><div class="fullcomment"><div class="comment cmt"><p>Retrieve All available MessageDefs from Metadata Store
-</p></div><dl class="paramcmts block"><dt class="param">formatType</dt><dd class="cmt"><p>format of the return value, either JSON or XML</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.resultData contains
-the MessageDef(s) either as a JSON or XML string depending on the parameter formatType
-</p></dd></dl></div>
+</p></div><dl class="paramcmts block"><dt class="param">formatType</dt><dd class="cmt"><p>format of the return value, either JSON or XML</p></dd><dt class="param">userid</dt><dd class="cmt"><p>the identity to be used by the security adapter to ascertain if this user has access permissions for this
+              method. If Security and/or Audit are configured, this value must be a value other than None</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.resultData contains
+the MessageDef(s) either as a JSON or XML string depending on the parameter formatType</p></dd></dl></div>
     </li><li name="com.ligadata.MetadataAPI.MetadataAPI#GetAllModelDefs" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="GetAllModelDefs(formatType:String):String"></a>
-      <a id="GetAllModelDefs(String):String"></a>
+      <a id="GetAllModelDefs(formatType:String,userid:Option[String]):String"></a>
+      <a id="GetAllModelDefs(String,Option[String]):String"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">GetAllModelDefs</span><span class="params">(<span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+        <span class="name">GetAllModelDefs</span><span class="params">(<span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="userid">userid: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@GetAllModelDefs(formatType:String,userid:Option[String]):String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <p class="shortcomment cmt">Retrieve All available ModelDefs from Metadata Store
 </p><div class="fullcomment"><div class="comment cmt"><p>Retrieve All available ModelDefs from Metadata Store
-</p></div><dl class="paramcmts block"><dt class="param">formatType</dt><dd class="cmt"><p>format of the return value, either JSON or XML</p></dd><dt>returns</dt><dd class="cmt"><p>the ModelDef(s) either as a JSON or XML string depending on the parameter formatType
-</p></dd></dl></div>
+</p></div><dl class="paramcmts block"><dt class="param">formatType</dt><dd class="cmt"><p>format of the return value, either JSON or XML</p></dd><dt>returns</dt><dd class="cmt"><p>the ModelDef(s) either as a JSON or XML string depending on the parameter formatType</p></dd></dl></div>
     </li><li name="com.ligadata.MetadataAPI.MetadataAPI#GetAllTypes" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="GetAllTypes(formatType:String):String"></a>
-      <a id="GetAllTypes(String):String"></a>
+      <a id="GetAllTypes(formatType:String,userid:Option[String]):String"></a>
+      <a id="GetAllTypes(String,Option[String]):String"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">GetAllTypes</span><span class="params">(<span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+        <span class="name">GetAllTypes</span><span class="params">(<span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="userid">userid: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@GetAllTypes(formatType:String,userid:Option[String]):String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <p class="shortcomment cmt">Retrieves all available Types from Metadata Store
 </p><div class="fullcomment"><div class="comment cmt"><p>Retrieves all available Types from Metadata Store
-</p></div><dl class="paramcmts block"><dt class="param">formatType</dt><dd class="cmt"><p>format of the return value, either JSON or XML</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.resultData contains
-the available types as a JSON or XML string depending on the parameter formatType
-</p></dd></dl></div>
+</p></div><dl class="paramcmts block"><dt class="param">formatType</dt><dd class="cmt"><p>format of the return value, either JSON or XML</p></dd><dt class="param">userid</dt><dd class="cmt"><p>the identity to be used by the security adapter to ascertain if this user has access permissions for this
+              method. If Security and/or Audit are configured, this value must be a value other than None.</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.resultData contains
+the available types as a JSON or XML string depending on the parameter formatType</p></dd></dl></div>
     </li><li name="com.ligadata.MetadataAPI.MetadataAPI#GetConcept" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="GetConcept(objectName:String,version:String,formatType:String):String"></a>
-      <a id="GetConcept(String,String,String):String"></a>
+      <a id="GetConcept(objectName:String,version:String,formatType:String,userid:Option[String]):String"></a>
+      <a id="GetConcept(String,String,String,Option[String]):String"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">GetConcept</span><span class="params">(<span name="objectName">objectName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="version">version: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+        <span class="name">GetConcept</span><span class="params">(<span name="objectName">objectName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="version">version: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="userid">userid: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@GetConcept(objectName:String,version:String,formatType:String,userid:Option[String]):String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <p class="shortcomment cmt">Retrieve a specific Concept from Metadata Store
 </p><div class="fullcomment"><div class="comment cmt"><p>Retrieve a specific Concept from Metadata Store
-</p></div><dl class="paramcmts block"><dt class="param">objectName</dt><dd class="cmt"><p>Name of the Concept</p></dd><dt class="param">version</dt><dd class="cmt"><p>Version of the Concept</p></dd><dt class="param">formatType</dt><dd class="cmt"><p>format of the return value, either JSON or XML</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.resultData contains
-the Concept either as a JSON or XML string depending on the parameter formatType
-</p></dd></dl></div>
+</p></div><dl class="paramcmts block"><dt class="param">objectName</dt><dd class="cmt"><p>Name of the Concept</p></dd><dt class="param">version</dt><dd class="cmt"><p>Version of the Concept</p></dd><dt class="param">formatType</dt><dd class="cmt"><p>format of the return value, either JSON or XML</p></dd><dt class="param">userid</dt><dd class="cmt"><p>the identity to be used by the security adapter to ascertain if this user has access permissions for this
+              method. If Security and/or Audit are configured, this value must be a value other than None.</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.resultData contains
+the Concept either as a JSON or XML string depending on the parameter formatType</p></dd></dl></div>
     </li><li name="com.ligadata.MetadataAPI.MetadataAPI#GetConcept" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="GetConcept(objectName:String,formatType:String):String"></a>
-      <a id="GetConcept(String,String):String"></a>
+      <a id="GetConcept(objectName:String,formatType:String,userid:Option[String]):String"></a>
+      <a id="GetConcept(String,String,Option[String]):String"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">GetConcept</span><span class="params">(<span name="objectName">objectName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+        <span class="name">GetConcept</span><span class="params">(<span name="objectName">objectName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="userid">userid: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@GetConcept(objectName:String,formatType:String,userid:Option[String]):String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <p class="shortcomment cmt">Retrieve specific Concept(s) from Metadata Store
 </p><div class="fullcomment"><div class="comment cmt"><p>Retrieve specific Concept(s) from Metadata Store
-</p></div><dl class="paramcmts block"><dt class="param">objectName</dt><dd class="cmt"><p>Name of the Concept</p></dd><dt class="param">formatType</dt><dd class="cmt"><p>format of the return value, either JSON or XML</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.resultData contains
-the Concept(s) either as a JSON or XML string depending on the parameter formatType
-</p></dd></dl></div>
+</p></div><dl class="paramcmts block"><dt class="param">objectName</dt><dd class="cmt"><p>Name of the Concept</p></dd><dt class="param">formatType</dt><dd class="cmt"><p>format of the return value, either JSON or XML</p></dd><dt class="param">userid</dt><dd class="cmt"><p>the identity to be used by the security adapter to ascertain if this user has access permissions for this
+              method. If Security and/or Audit are configured, this value must be a value other than None..</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.resultData contains
+the Concept(s) either as a JSON or XML string depending on the parameter formatType</p></dd></dl></div>
     </li><li name="com.ligadata.MetadataAPI.MetadataAPI#GetContainerDef" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="GetContainerDef(objectNameSpace:String,objectName:String,version:String,formatType:String):String"></a>
-      <a id="GetContainerDef(String,String,String,String):String"></a>
+      <a id="GetContainerDef(objectNameSpace:String,objectName:String,version:String,formatType:String,userid:Option[String]):String"></a>
+      <a id="GetContainerDef(String,String,String,String,Option[String]):String"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">GetContainerDef</span><span class="params">(<span name="objectNameSpace">objectNameSpace: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="objectName">objectName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="version">version: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+        <span class="name">GetContainerDef</span><span class="params">(<span name="objectNameSpace">objectNameSpace: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="objectName">objectName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="version">version: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="userid">userid: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@GetContainerDef(objectNameSpace:String,objectName:String,version:String,formatType:String,userid:Option[String]):String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <p class="shortcomment cmt">Retrieve a specific ContainerDef from Metadata Store
 </p><div class="fullcomment"><div class="comment cmt"><p>Retrieve a specific ContainerDef from Metadata Store
-</p></div><dl class="paramcmts block"><dt class="param">objectNameSpace</dt><dd class="cmt"><p>NameSpace of the ContainerDef</p></dd><dt class="param">objectName</dt><dd class="cmt"><p>Name of the ContainerDef</p></dd><dt class="param">version</dt><dd class="cmt"><p>Version of the ContainerDef</p></dd><dt class="param">formatType</dt><dd class="cmt"><p>format of the return value, either JSON or XML</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.resultData contains
-the ContainerDef either as a JSON or XML string depending on the parameter formatType
-</p></dd></dl></div>
+</p></div><dl class="paramcmts block"><dt class="param">objectNameSpace</dt><dd class="cmt"><p>NameSpace of the ContainerDef</p></dd><dt class="param">objectName</dt><dd class="cmt"><p>Name of the ContainerDef</p></dd><dt class="param">version</dt><dd class="cmt"><p>Version of the ContainerDef</p></dd><dt class="param">formatType</dt><dd class="cmt"><p>format of the return value, either JSON or XML</p></dd><dt class="param">userid</dt><dd class="cmt"><p>the identity to be used by the security adapter to ascertain if this user has access permissions for this
+              method. If Security and/or Audit are configured, this value must be a value other than None.</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.resultData contains
+the ContainerDef either as a JSON or XML string depending on the parameter formatType</p></dd></dl></div>
     </li><li name="com.ligadata.MetadataAPI.MetadataAPI#GetContainerDef" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="GetContainerDef(objectName:String,version:String,formatType:String):String"></a>
-      <a id="GetContainerDef(String,String,String):String"></a>
+      <a id="GetContainerDef(objectName:String,version:String,formatType:String,userid:Option[String]):String"></a>
+      <a id="GetContainerDef(String,String,String,Option[String]):String"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">GetContainerDef</span><span class="params">(<span name="objectName">objectName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="version">version: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+        <span class="name">GetContainerDef</span><span class="params">(<span name="objectName">objectName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="version">version: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="userid">userid: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@GetContainerDef(objectName:String,version:String,formatType:String,userid:Option[String]):String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <p class="shortcomment cmt">Retrieve a specific ContainerDef from Metadata Store
 </p><div class="fullcomment"><div class="comment cmt"><p>Retrieve a specific ContainerDef from Metadata Store
-</p></div><dl class="paramcmts block"><dt class="param">objectName</dt><dd class="cmt"><p>Name of the ContainerDef</p></dd><dt class="param">version</dt><dd class="cmt"><p>Version of the ContainerDef</p></dd><dt class="param">formatType</dt><dd class="cmt"><p>format of the return value, either JSON or XML</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.resultData contains
-the ContainerDef either as a JSON or XML string depending on the parameter formatType
-</p></dd></dl></div>
+</p></div><dl class="paramcmts block"><dt class="param">objectName</dt><dd class="cmt"><p>Name of the ContainerDef</p></dd><dt class="param">version</dt><dd class="cmt"><p>Version of the ContainerDef</p></dd><dt class="param">formatType</dt><dd class="cmt"><p>format of the return value, either JSON or XML</p></dd><dt class="param">userid</dt><dd class="cmt"><p>the identity to be used by the security adapter to ascertain if this user has access permissions for this
+              method. If Security and/or Audit are configured, this value must be a value other than None.</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.resultData contains
+the ContainerDef either as a JSON or XML string depending on the parameter formatType</p></dd></dl></div>
     </li><li name="com.ligadata.MetadataAPI.MetadataAPI#GetContainerDef" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="GetContainerDef(objectName:String,formatType:String):String"></a>
-      <a id="GetContainerDef(String,String):String"></a>
+      <a id="GetContainerDef(objectName:String,formatType:String,userid:Option[String]):String"></a>
+      <a id="GetContainerDef(String,String,Option[String]):String"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">GetContainerDef</span><span class="params">(<span name="objectName">objectName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+        <span class="name">GetContainerDef</span><span class="params">(<span name="objectName">objectName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="userid">userid: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@GetContainerDef(objectName:String,formatType:String,userid:Option[String]):String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <p class="shortcomment cmt">Retrieve specific ContainerDef(s) from Metadata Store
 </p><div class="fullcomment"><div class="comment cmt"><p>Retrieve specific ContainerDef(s) from Metadata Store
-</p></div><dl class="paramcmts block"><dt class="param">objectName</dt><dd class="cmt"><p>Name of the ContainerDef</p></dd><dt class="param">formatType</dt><dd class="cmt"><p>format of the return value, either JSON or XML</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.resultData contains
-the ContainerDef(s) either as a JSON or XML string depending on the parameter formatType
-</p></dd></dl></div>
+</p></div><dl class="paramcmts block"><dt class="param">objectName</dt><dd class="cmt"><p>Name of the ContainerDef</p></dd><dt class="param">formatType</dt><dd class="cmt"><p>format of the return value, either JSON or XML</p></dd><dt class="param">userid</dt><dd class="cmt"><p>the identity to be used by the security adapter to ascertain if this user has access permissions for this
+              method. If Security and/or Audit are configured, this value must be a value other than None.</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.resultData contains
+the ContainerDef(s) either as a JSON or XML string depending on the parameter formatType</p></dd></dl></div>
     </li><li name="com.ligadata.MetadataAPI.MetadataAPI#GetDerivedConcept" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="GetDerivedConcept(objectName:String,version:String,formatType:String):String"></a>
-      <a id="GetDerivedConcept(String,String,String):String"></a>
+      <a id="GetDerivedConcept(objectName:String,version:String,formatType:String,userid:Option[String]):String"></a>
+      <a id="GetDerivedConcept(String,String,String,Option[String]):String"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">GetDerivedConcept</span><span class="params">(<span name="objectName">objectName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="version">version: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+        <span class="name">GetDerivedConcept</span><span class="params">(<span name="objectName">objectName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="version">version: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="userid">userid: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@GetDerivedConcept(objectName:String,version:String,formatType:String,userid:Option[String]):String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <p class="shortcomment cmt">Retrieve a specific Derived Concept from Metadata Store
 </p><div class="fullcomment"><div class="comment cmt"><p>Retrieve a specific Derived Concept from Metadata Store
-</p></div><dl class="paramcmts block"><dt class="param">objectName</dt><dd class="cmt"><p>Name of the Derived Concept</p></dd><dt class="param">version</dt><dd class="cmt"><p>Version of the Derived Concept</p></dd><dt class="param">formatType</dt><dd class="cmt"><p>format of the return value, either JSON or XML</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.resultData contains
-the Derived Concept either as a JSON or XML string depending on the parameter formatType
-</p></dd></dl></div>
+</p></div><dl class="paramcmts block"><dt class="param">objectName</dt><dd class="cmt"><p>Name of the Derived Concept</p></dd><dt class="param">version</dt><dd class="cmt"><p>Version of the Derived Concept</p></dd><dt class="param">formatType</dt><dd class="cmt"><p>format of the return value, either JSON or XML</p></dd><dt class="param">userid</dt><dd class="cmt"><p>the identity to be used by the security adapter to ascertain if this user has access permissions for this
+              method. If Security and/or Audit are configured, this value must be a value other than None.</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.resultData contains
+the Derived Concept either as a JSON or XML string depending on the parameter formatType</p></dd></dl></div>
     </li><li name="com.ligadata.MetadataAPI.MetadataAPI#GetDerivedConcept" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="GetDerivedConcept(objectName:String,formatType:String):String"></a>
-      <a id="GetDerivedConcept(String,String):String"></a>
+      <a id="GetDerivedConcept(objectName:String,formatType:String,userid:Option[String]):String"></a>
+      <a id="GetDerivedConcept(String,String,Option[String]):String"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">GetDerivedConcept</span><span class="params">(<span name="objectName">objectName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+        <span class="name">GetDerivedConcept</span><span class="params">(<span name="objectName">objectName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="userid">userid: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@GetDerivedConcept(objectName:String,formatType:String,userid:Option[String]):String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <p class="shortcomment cmt">Retrieve specific Derived Concept(s) from Metadata Store
 </p><div class="fullcomment"><div class="comment cmt"><p>Retrieve specific Derived Concept(s) from Metadata Store
-</p></div><dl class="paramcmts block"><dt class="param">objectName</dt><dd class="cmt"><p>Name of the Derived Concept</p></dd><dt class="param">formatType</dt><dd class="cmt"><p>format of the return value, either JSON or XML</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.resultData contains
-the Derived Concept(s) either as a JSON or XML string depending on the parameter formatType
-</p></dd></dl></div>
+</p></div><dl class="paramcmts block"><dt class="param">objectName</dt><dd class="cmt"><p>Name of the Derived Concept</p></dd><dt class="param">formatType</dt><dd class="cmt"><p>format of the return value, either JSON or XML</p></dd><dt class="param">userid</dt><dd class="cmt"><p>the identity to be used by the security adapter to ascertain if this user has access permissions for this
+              method. If Security and/or Audit are configured, this value must be a value other than None.</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.resultData contains
+the Derived Concept(s) either as a JSON or XML string depending on the parameter formatType</p></dd></dl></div>
     </li><li name="com.ligadata.MetadataAPI.MetadataAPI#GetFunctionDef" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="GetFunctionDef(objectName:String,version:String,formatType:String):String"></a>
-      <a id="GetFunctionDef(String,String,String):String"></a>
+      <a id="GetFunctionDef(objectName:String,version:String,formatType:String,userid:Option[String]):String"></a>
+      <a id="GetFunctionDef(String,String,String,Option[String]):String"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">GetFunctionDef</span><span class="params">(<span name="objectName">objectName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="version">version: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+        <span class="name">GetFunctionDef</span><span class="params">(<span name="objectName">objectName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="version">version: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="userid">userid: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@GetFunctionDef(objectName:String,version:String,formatType:String,userid:Option[String]):String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <p class="shortcomment cmt">Retrieve a specific FunctionDef from Metadata Store
 </p><div class="fullcomment"><div class="comment cmt"><p>Retrieve a specific FunctionDef from Metadata Store
-</p></div><dl class="paramcmts block"><dt class="param">objectName</dt><dd class="cmt"><p>Name of the FunctionDef</p></dd><dt class="param">version</dt><dd class="cmt"><p>Version of the FunctionDef</p></dd><dt class="param">formatType</dt><dd class="cmt"><p>format of the return value, either JSON or XML</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.resultData contains
-the FunctionDef either as a JSON or XML string depending on the parameter formatType
-</p></dd></dl></div>
+</p></div><dl class="paramcmts block"><dt class="param">objectName</dt><dd class="cmt"><p>Name of the FunctionDef</p></dd><dt class="param">version</dt><dd class="cmt"><p>Version of the FunctionDef</p></dd><dt class="param">formatType</dt><dd class="cmt"><p>format of the return value, either JSON or XML</p></dd><dt class="param">userid</dt><dd class="cmt"><p>the identity to be used by the security adapter to ascertain if this user has access permissions for this
+              method. If Security and/or Audit are configured, this value must be a value other than None..</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.resultData contains
+the FunctionDef either as a JSON or XML string depending on the parameter formatType</p></dd></dl></div>
     </li><li name="com.ligadata.MetadataAPI.MetadataAPI#GetFunctionDef" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="GetFunctionDef(objectName:String,formatType:String):String"></a>
-      <a id="GetFunctionDef(String,String):String"></a>
+      <a id="GetFunctionDef(objectName:String,formatType:String,userid:Option[String]):String"></a>
+      <a id="GetFunctionDef(String,String,Option[String]):String"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">GetFunctionDef</span><span class="params">(<span name="objectName">objectName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+        <span class="name">GetFunctionDef</span><span class="params">(<span name="objectName">objectName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="userid">userid: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@GetFunctionDef(objectName:String,formatType:String,userid:Option[String]):String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <p class="shortcomment cmt">Retrieve specific FunctionDef(s) from Metadata Store
 </p><div class="fullcomment"><div class="comment cmt"><p>Retrieve specific FunctionDef(s) from Metadata Store
-</p></div><dl class="paramcmts block"><dt class="param">objectName</dt><dd class="cmt"><p>Name of the FunctionDef</p></dd><dt class="param">formatType</dt><dd class="cmt"><p>format of the return value, either JSON or XML</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.resultData contains
-the FunctionDef(s) either as a JSON or XML string depending on the parameter formatType
-</p></dd></dl></div>
+</p></div><dl class="paramcmts block"><dt class="param">objectName</dt><dd class="cmt"><p>Name of the FunctionDef</p></dd><dt class="param">formatType</dt><dd class="cmt"><p>format of the return value, either JSON or XML</p></dd><dt class="param">userid</dt><dd class="cmt"><p>the identity to be used by the security adapter to ascertain if this user has access permissions for this
+              method. If Security and/or Audit are configured, this value must be a value other than None.</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.resultData contains
+the FunctionDef(s) either as a JSON or XML string depending on the parameter formatType</p></dd></dl></div>
     </li><li name="com.ligadata.MetadataAPI.MetadataAPI#GetMessageDef" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="GetMessageDef(objectNameSpace:String,objectName:String,version:String,formatType:String):String"></a>
-      <a id="GetMessageDef(String,String,String,String):String"></a>
+      <a id="GetMessageDef(objectNameSpace:String,objectName:String,version:String,formatType:String,userid:Option[String]):String"></a>
+      <a id="GetMessageDef(String,String,String,String,Option[String]):String"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">GetMessageDef</span><span class="params">(<span name="objectNameSpace">objectNameSpace: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="objectName">objectName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="version">version: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+        <span class="name">GetMessageDef</span><span class="params">(<span name="objectNameSpace">objectNameSpace: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="objectName">objectName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="version">version: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="userid">userid: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@GetMessageDef(objectNameSpace:String,objectName:String,version:String,formatType:String,userid:Option[String]):String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <p class="shortcomment cmt">Retrieve a specific MessageDef from Metadata Store
 </p><div class="fullcomment"><div class="comment cmt"><p>Retrieve a specific MessageDef from Metadata Store
-</p></div><dl class="paramcmts block"><dt class="param">objectNameSpace</dt><dd class="cmt"><p>NameSpace of the MessageDef</p></dd><dt class="param">objectName</dt><dd class="cmt"><p>Name of the MessageDef</p></dd><dt class="param">version</dt><dd class="cmt"><p>Version of the MessageDef</p></dd><dt class="param">formatType</dt><dd class="cmt"><p>format of the return value, either JSON or XML</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.resultData contains
-the MessageDef either as a JSON or XML string depending on the parameter formatType
-</p></dd></dl></div>
+</p></div><dl class="paramcmts block"><dt class="param">objectNameSpace</dt><dd class="cmt"><p>NameSpace of the MessageDef</p></dd><dt class="param">objectName</dt><dd class="cmt"><p>Name of the MessageDef</p></dd><dt class="param">version</dt><dd class="cmt"><p>Version of the MessageDef</p></dd><dt class="param">formatType</dt><dd class="cmt"><p>format of the return value, either JSON or XML</p></dd><dt class="param">userid</dt><dd class="cmt"><p>the identity to be used by the security adapter to ascertain if this user has access permissions for this
+              method. If Security and/or Audit are configured, this value must be a value other than None</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.resultData contains
+the MessageDef either as a JSON or XML string depending on the parameter formatType</p></dd></dl></div>
     </li><li name="com.ligadata.MetadataAPI.MetadataAPI#GetMessageDef" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="GetMessageDef(objectName:String,version:String,formatType:String):String"></a>
-      <a id="GetMessageDef(String,String,String):String"></a>
+      <a id="GetMessageDef(objectName:String,version:String,formatType:String,userid:Option[String]):String"></a>
+      <a id="GetMessageDef(String,String,String,Option[String]):String"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">GetMessageDef</span><span class="params">(<span name="objectName">objectName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="version">version: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+        <span class="name">GetMessageDef</span><span class="params">(<span name="objectName">objectName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="version">version: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="userid">userid: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@GetMessageDef(objectName:String,version:String,formatType:String,userid:Option[String]):String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <p class="shortcomment cmt">Retrieve a specific MessageDef from Metadata Store
 </p><div class="fullcomment"><div class="comment cmt"><p>Retrieve a specific MessageDef from Metadata Store
-</p></div><dl class="paramcmts block"><dt class="param">objectName</dt><dd class="cmt"><p>Name of the MessageDef</p></dd><dt class="param">version</dt><dd class="cmt"><p>Version of the MessageDef</p></dd><dt class="param">formatType</dt><dd class="cmt"><p>format of the return value, either JSON or XML</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.resultData contains
-the MessageDef either as a JSON or XML string depending on the parameter formatType
-</p></dd></dl></div>
+</p></div><dl class="paramcmts block"><dt class="param">objectName</dt><dd class="cmt"><p>Name of the MessageDef</p></dd><dt class="param">version</dt><dd class="cmt"><p>Version of the MessageDef</p></dd><dt class="param">formatType</dt><dd class="cmt"><p>format of the return value, either JSON or XML</p></dd><dt class="param">userid</dt><dd class="cmt"><p>the identity to be used by the security adapter to ascertain if this user has access permissions for this
+              method. If Security and/or Audit are configured, this value must be a value other than None</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.resultData contains
+the MessageDef either as a JSON or XML string depending on the parameter formatType</p></dd></dl></div>
     </li><li name="com.ligadata.MetadataAPI.MetadataAPI#GetMessageDef" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="GetMessageDef(objectName:String,formatType:String):String"></a>
-      <a id="GetMessageDef(String,String):String"></a>
+      <a id="GetMessageDef(objectName:String,formatType:String,userid:Option[String]):String"></a>
+      <a id="GetMessageDef(String,String,Option[String]):String"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">GetMessageDef</span><span class="params">(<span name="objectName">objectName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+        <span class="name">GetMessageDef</span><span class="params">(<span name="objectName">objectName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="userid">userid: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@GetMessageDef(objectName:String,formatType:String,userid:Option[String]):String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <p class="shortcomment cmt">Retrieve specific MessageDef(s) from Metadata Store
 </p><div class="fullcomment"><div class="comment cmt"><p>Retrieve specific MessageDef(s) from Metadata Store
-</p></div><dl class="paramcmts block"><dt class="param">objectName</dt><dd class="cmt"><p>Name of the MessageDef</p></dd><dt class="param">formatType</dt><dd class="cmt"><p>format of the return value, either JSON or XML</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.resultData contains
-the MessageDef(s) either as a JSON or XML string depending on the parameter formatType
-</p></dd></dl></div>
+</p></div><dl class="paramcmts block"><dt class="param">objectName</dt><dd class="cmt"><p>Name of the MessageDef</p></dd><dt class="param">formatType</dt><dd class="cmt"><p>format of the return value, either JSON or XML</p></dd><dt class="param">userid</dt><dd class="cmt"><p>the identity to be used by the security adapter to ascertain if this user has access permissions for this
+              method. If Security and/or Audit are configured, this value must be a value other than None.</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.resultData contains
+the MessageDef(s) either as a JSON or XML string depending on the parameter formatType</p></dd></dl></div>
     </li><li name="com.ligadata.MetadataAPI.MetadataAPI#GetModelDef" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="GetModelDef(objectName:String,version:String,formatType:String):String"></a>
-      <a id="GetModelDef(String,String,String):String"></a>
+      <a id="GetModelDef(objectName:String,version:String,formatType:String,userid:Option[String]):String"></a>
+      <a id="GetModelDef(String,String,String,Option[String]):String"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">GetModelDef</span><span class="params">(<span name="objectName">objectName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="version">version: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+        <span class="name">GetModelDef</span><span class="params">(<span name="objectName">objectName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="version">version: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="userid">userid: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@GetModelDef(objectName:String,version:String,formatType:String,userid:Option[String]):String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <p class="shortcomment cmt">Retrieve a specific ModelDef from Metadata Store
 </p><div class="fullcomment"><div class="comment cmt"><p>Retrieve a specific ModelDef from Metadata Store
-</p></div><dl class="paramcmts block"><dt class="param">objectName</dt><dd class="cmt"><p>Name of the ModelDef</p></dd><dt class="param">version</dt><dd class="cmt"><p>Version of the ModelDef</p></dd><dt class="param">formatType</dt><dd class="cmt"><p>format of the return value, either JSON or XML</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.resultData contains
-the ModelDef either as a JSON or XML string depending on the parameter formatType
-</p></dd></dl></div>
+</p></div><dl class="paramcmts block"><dt class="param">objectName</dt><dd class="cmt"><p>Name of the ModelDef</p></dd><dt class="param">version</dt><dd class="cmt"><p>Version of the ModelDef</p></dd><dt class="param">formatType</dt><dd class="cmt"><p>format of the return value, either JSON or XML</p></dd><dt class="param">userid</dt><dd class="cmt"><p>the identity to be used by the security adapter to ascertain if this user has access permissions for this
+              method. If Security and/or Audit are configured, this value must be a value other than None</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.resultData contains
+the ModelDef either as a JSON or XML string depending on the parameter formatType</p></dd></dl></div>
     </li><li name="com.ligadata.MetadataAPI.MetadataAPI#GetModelDef" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="GetModelDef(objectName:String,formatType:String):String"></a>
-      <a id="GetModelDef(String,String):String"></a>
+      <a id="GetModelDef(objectName:String,formatType:String,userid:Option[String]):String"></a>
+      <a id="GetModelDef(String,String,Option[String]):String"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">GetModelDef</span><span class="params">(<span name="objectName">objectName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+        <span class="name">GetModelDef</span><span class="params">(<span name="objectName">objectName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="userid">userid: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@GetModelDef(objectName:String,formatType:String,userid:Option[String]):String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <p class="shortcomment cmt">Retrieve specific ModelDef(s) from Metadata Store
 </p><div class="fullcomment"><div class="comment cmt"><p>Retrieve specific ModelDef(s) from Metadata Store
 </p></div><dl class="paramcmts block"><dt class="param">objectName</dt><dd class="cmt"><p>Name of the ModelDef</p></dd><dt class="param">formatType</dt><dd class="cmt"><p>format of the return value, either JSON or XML</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.resultData contains
-ModelDef(s) either as a JSON or XML string depending on the parameter formatType
-</p></dd></dl></div>
+ModelDef(s) either as a JSON or XML string depending on the parameter formatType</p></dd></dl></div>
     </li><li name="com.ligadata.MetadataAPI.MetadataAPI#GetType" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="GetType(objectName:String,formatType:String):String"></a>
-      <a id="GetType(String,String):String"></a>
+      <a id="GetType(objectName:String,formatType:String,userid:Option[String]):String"></a>
+      <a id="GetType(String,String,Option[String]):String"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">GetType</span><span class="params">(<span name="objectName">objectName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+        <span class="name">GetType</span><span class="params">(<span name="objectName">objectName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="userid">userid: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@GetType(objectName:String,formatType:String,userid:Option[String]):String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <p class="shortcomment cmt">Retrieve a specific Type  from Metadata Store
 </p><div class="fullcomment"><div class="comment cmt"><p>Retrieve a specific Type  from Metadata Store
-</p></div><dl class="paramcmts block"><dt class="param">objectName</dt><dd class="cmt"><p>Name of the Type</p></dd><dt class="param">formatType</dt><dd class="cmt"><p>format of the return value, either JSON or XML</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.resultData contains
-the Type object either as a JSON or XML string depending on the parameter formatType
-</p></dd></dl></div>
+</p></div><dl class="paramcmts block"><dt class="param">objectName</dt><dd class="cmt"><p>Name of the Type</p></dd><dt class="param">formatType</dt><dd class="cmt"><p>format of the return value, either JSON or XML</p></dd><dt class="param">userid</dt><dd class="cmt"><p>the identity to be used by the security adapter to ascertain if this user has access permissions for this
+              method. If Security and/or Audit are configured, this value must be a value other than None.</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.resultData contains
+the Type object either as a JSON or XML string depending on the parameter formatType</p></dd></dl></div>
     </li><li name="com.ligadata.MetadataAPI.MetadataAPI#RemoveConcepts" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="RemoveConcepts(concepts:Array[String]):String"></a>
-      <a id="RemoveConcepts(Array[String]):String"></a>
+      <a id="RemoveConcepts(concepts:Array[String],userid:Option[String]):String"></a>
+      <a id="RemoveConcepts(Array[String],Option[String]):String"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">RemoveConcepts</span><span class="params">(<span name="concepts">concepts: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+        <span class="name">RemoveConcepts</span><span class="params">(<span name="concepts">concepts: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="userid">userid: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
-      </h4>
-      <p class="shortcomment cmt">RemoveConcepts take all concepts names to be removed as an Array</p><div class="fullcomment"><div class="comment cmt"><p>RemoveConcepts take all concepts names to be removed as an Array</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.statusCode
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@RemoveConcepts(concepts:Array[String],userid:Option[String]):String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">RemoveConcepts take all concepts names to be removed as an Array</p><div class="fullcomment"><div class="comment cmt"><p>RemoveConcepts take all concepts names to be removed as an Array</p></div><dl class="paramcmts block"><dt class="param">concepts</dt><dd class="cmt"><p>array of Strings where each string is name of the concept</p></dd><dt class="param">userid</dt><dd class="cmt"><p>the identity to be used by the security adapter to ascertain if this user has access permissions for this
+              method. If Security and/or Audit are configured, this value must be a value other than None.</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.statusCode
 indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
-ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure</p><p>Example:</p><pre><span class="kw">val</span> apiResult = MetadataAPIImpl.RemoveConcepts(<span class="std">Array</span>(<span class="lit">"Ligadata.ProviderId.100"</span>))
+ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure
+Example:</p><pre><span class="kw">val</span> apiResult = MetadataAPIImpl.RemoveConcepts(<span class="std">Array</span>(<span class="lit">"Ligadata.ProviderId.100"</span>))
 <span class="kw">val</span> (statusCode,resultData) = MetadataAPIImpl.getApiResult(apiResult)
 println(<span class="lit">"Result as Json String => \n"</span> + resultData)</pre></dd></dl></div>
     </li><li name="com.ligadata.MetadataAPI.MetadataAPI#RemoveContainer" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="RemoveContainer(containerName:String,version:Int):String"></a>
-      <a id="RemoveContainer(String,Int):String"></a>
+      <a id="RemoveContainer(containerName:String,version:Long,userid:Option[String]):String"></a>
+      <a id="RemoveContainer(String,Long,Option[String]):String"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">RemoveContainer</span><span class="params">(<span name="containerName">containerName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="version">version: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+        <span class="name">RemoveContainer</span><span class="params">(<span name="containerName">containerName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="version">version: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Long" class="extype" target="_top">Long</a></span>, <span name="userid">userid: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@RemoveContainer(containerName:String,version:Long,userid:Option[String]):String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <p class="shortcomment cmt">Remove container with ContainerName and Vesion Number
 </p><div class="fullcomment"><div class="comment cmt"><p>Remove container with ContainerName and Vesion Number
-</p></div><dl class="paramcmts block"><dt class="param">containerName</dt><dd class="cmt"><p>Name of the given container</p></dd><dt class="param">version</dt><dd class="cmt"><p>Version of the given container</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.statusCode
+</p></div><dl class="paramcmts block"><dt class="param">containerName</dt><dd class="cmt"><p>Name of the given container</p></dd><dt class="param">version</dt><dd class="cmt"><p>Version of the given container</p></dd><dt class="param">userid</dt><dd class="cmt"><p>the identity to be used by the security adapter to ascertain if this user has access permissions for this
+              method. If Security and/or Audit are configured, this value must be a value other than None.</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.statusCode
 indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
-ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure
-</p></dd></dl></div>
+ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure</p></dd></dl></div>
     </li><li name="com.ligadata.MetadataAPI.MetadataAPI#RemoveFunction" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="RemoveFunction(nameSpace:String,functionName:String,version:Int):String"></a>
-      <a id="RemoveFunction(String,String,Int):String"></a>
+      <a id="RemoveFunction(nameSpace:String,functionName:String,version:Long,userid:Option[String]):String"></a>
+      <a id="RemoveFunction(String,String,Long,Option[String]):String"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">RemoveFunction</span><span class="params">(<span name="nameSpace">nameSpace: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="functionName">functionName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="version">version: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+        <span class="name">RemoveFunction</span><span class="params">(<span name="nameSpace">nameSpace: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="functionName">functionName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="version">version: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Long" class="extype" target="_top">Long</a></span>, <span name="userid">userid: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
-      </h4>
-      <p class="shortcomment cmt">Remove function for given FunctionName and Version</p><div class="fullcomment"><div class="comment cmt"><p>Remove function for given FunctionName and Version</p></div><dl class="paramcmts block"><dt class="param">functionName</dt><dd class="cmt"><p>name of the function</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.statusCode
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@RemoveFunction(nameSpace:String,functionName:String,version:Long,userid:Option[String]):String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Remove function for given FunctionName and Version</p><div class="fullcomment"><div class="comment cmt"><p>Remove function for given FunctionName and Version</p></div><dl class="paramcmts block"><dt class="param">nameSpace</dt><dd class="cmt"><p>the function's namespace</p></dd><dt class="param">functionName</dt><dd class="cmt"><p>name of the function</p></dd><dt class="param">userid</dt><dd class="cmt"><p>the identity to be used by the security adapter to ascertain if this user has access permissions for this
+              method. If Security and/or Audit are configured, this value must be a value other than None.</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.statusCode
 indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
-ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure</p><p>Example:</p><pre><span class="kw">val</span> apiResult = MetadataAPIImpl.RemoveFunction(MdMgr.sysNS,<span class="lit">"my_min"</span>,<span class="num">100</span>)
+ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure
+Example:</p><pre><span class="kw">val</span> apiResult = MetadataAPIImpl.RemoveFunction(MdMgr.sysNS,<span class="lit">"my_min"</span>,<span class="num">100</span>)
 <span class="kw">val</span> (statusCode,resultData) = MetadataAPIImpl.getApiResult(apiResult)
 println(<span class="lit">"Result as Json String => \n"</span> + resultData)</pre></dd></dl><dl class="attributes block"> <dt>Version</dt><dd><p>version of the function</p></dd></dl></div>
     </li><li name="com.ligadata.MetadataAPI.MetadataAPI#RemoveMessage" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="RemoveMessage(messageName:String,version:Int):String"></a>
-      <a id="RemoveMessage(String,Int):String"></a>
+      <a id="RemoveMessage(messageName:String,version:Long,userid:Option[String]):String"></a>
+      <a id="RemoveMessage(String,Long,Option[String]):String"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">RemoveMessage</span><span class="params">(<span name="messageName">messageName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="version">version: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+        <span class="name">RemoveMessage</span><span class="params">(<span name="messageName">messageName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="version">version: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Long" class="extype" target="_top">Long</a></span>, <span name="userid">userid: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@RemoveMessage(messageName:String,version:Long,userid:Option[String]):String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <p class="shortcomment cmt">Remove message with MessageName and Vesion Number
 </p><div class="fullcomment"><div class="comment cmt"><p>Remove message with MessageName and Vesion Number
-</p></div><dl class="paramcmts block"><dt class="param">messageName</dt><dd class="cmt"><p>Name of the given message</p></dd><dt class="param">version</dt><dd class="cmt"><p>Version of the given message</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.statusCode
+</p></div><dl class="paramcmts block"><dt class="param">messageName</dt><dd class="cmt"><p>Name of the given message</p></dd><dt class="param">version</dt><dd class="cmt"><p>Version of the given message</p></dd><dt class="param">userid</dt><dd class="cmt"><p>the identity to be used by the security adapter to ascertain if this user has access permissions for this
+              method. If Security and/or Audit are configured, this value must be a value other than None.</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.statusCode
 indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
-ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure
-</p></dd></dl></div>
+ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure</p></dd></dl></div>
     </li><li name="com.ligadata.MetadataAPI.MetadataAPI#RemoveModel" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="RemoveModel(modelName:String,version:Int):String"></a>
-      <a id="RemoveModel(String,Int):String"></a>
+      <a id="RemoveModel(modelName:String,version:String,userid:Option[String]):String"></a>
+      <a id="RemoveModel(String,String,Option[String]):String"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">RemoveModel</span><span class="params">(<span name="modelName">modelName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="version">version: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+        <span class="name">RemoveModel</span><span class="params">(<span name="modelName">modelName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="version">version: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="userid">userid: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
-      </h4>
-      <p class="shortcomment cmt">Remove model with ModelName and Vesion Number
-</p><div class="fullcomment"><div class="comment cmt"><p>Remove model with ModelName and Vesion Number
-</p></div><dl class="paramcmts block"><dt class="param">modelName</dt><dd class="cmt"><p>Name of the given model</p></dd><dt class="param">version</dt><dd class="cmt"><p>Version of the given model</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.statusCode
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@RemoveModel(modelName:String,version:String,userid:Option[String]):String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Remove model with the supplied <i>modelName</i> and <i>version</i>.</p><div class="fullcomment"><div class="comment cmt"><p>Remove model with the supplied <i>modelName</i> and <i>version</i>.  If the SecurityAdapter and/or AuditAdapter have
+been configured, the <i>userid</i> must also be supplied.
+</p></div><dl class="paramcmts block"><dt class="param">modelName</dt><dd class="cmt"><p>the Namespace.Name of the given model to be removed</p></dd><dt class="param">version</dt><dd class="cmt"><p>Version of the given model.  The version should comply with the Kamanja version format.  For example,
+                 a value of 1000001000001 is the value for 1.000001.000001. Helper functions for constructing this
+                 Long from a string can be found in the MdMgr object,</p></dd><dt class="param">userid</dt><dd class="cmt"><p>the identity to be used by the security adapter to ascertain if this user has access permissions for this
+              method. If Security and/or Audit are configured, this value must be a value other than None</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.statusCode
+indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
+ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure</p></dd></dl><dl class="attributes block"> <dt>See also</dt><dd><span class="cmt"><p>com.ligadata.kamanja.metadata.ConvertVersionToLong(String):Long for details.</p></span></dd></dl></div>
+    </li><li name="com.ligadata.MetadataAPI.MetadataAPI#RemoveType" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="RemoveType(typeNameSpace:String,typeName:String,version:Long,userid:Option[String]):String"></a>
+      <a id="RemoveType(String,String,Long,Option[String]):String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">abstract </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">RemoveType</span><span class="params">(<span name="typeNameSpace">typeNameSpace: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="typeName">typeName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="version">version: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Long" class="extype" target="_top">Long</a></span>, <span name="userid">userid: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@RemoveType(typeNameSpace:String,typeName:String,version:Long,userid:Option[String]):String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Remove Type for given typeName and version</p><div class="fullcomment"><div class="comment cmt"><p>Remove Type for given typeName and version</p></div><dl class="paramcmts block"><dt class="param">typeName</dt><dd class="cmt"><p>name of the Type</p></dd><dt class="param">userid</dt><dd class="cmt"><p>the identity to be used by the security adapter to ascertain if this user has access permissions for this
+              method. If Security and/or Audit are configured, this value must be a value other than None.</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.statusCode
 indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
 ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure
-</p></dd></dl></div>
-    </li><li name="com.ligadata.MetadataAPI.MetadataAPI#RemoveType" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="RemoveType(typeNameSpace:String,typeName:String,version:Int):String"></a>
-      <a id="RemoveType(String,String,Int):String"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier">abstract </span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">RemoveType</span><span class="params">(<span name="typeNameSpace">typeNameSpace: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="typeName">typeName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="version">version: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
-      </span>
-      </h4>
-      <p class="shortcomment cmt">Remove Type for given typeName and version</p><div class="fullcomment"><div class="comment cmt"><p>Remove Type for given typeName and version</p></div><dl class="paramcmts block"><dt class="param">typeName</dt><dd class="cmt"><p>name of the Type</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.statusCode
-indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
-ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure</p><p>Example:</p><pre><span class="kw">val</span> apiResult = MetadataAPIImpl.RemoveType(MdMgr.sysNS,<span class="lit">"my_char"</span>,<span class="num">100</span>)
+Example:</p><pre><span class="kw">val</span> apiResult = MetadataAPIImpl.RemoveType(MdMgr.sysNS,<span class="lit">"my_char"</span>,<span class="num">100</span>)
 <span class="kw">val</span> (statusCode,resultData) = MetadataAPIImpl.getApiResult(apiResult)
 println(<span class="lit">"Result as Json String => \n"</span> + resultData)</pre></dd></dl><dl class="attributes block"> <dt>Version</dt><dd><p>version of the Type</p></dd></dl></div>
     </li><li name="com.ligadata.MetadataAPI.MetadataAPI#UpdateConcepts" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="UpdateConcepts(conceptsText:String,format:String):String"></a>
-      <a id="UpdateConcepts(String,String):String"></a>
+      <a id="UpdateConcepts(conceptsText:String,formatType:String,userid:Option[String]):String"></a>
+      <a id="UpdateConcepts(String,String,Option[String]):String"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">UpdateConcepts</span><span class="params">(<span name="conceptsText">conceptsText: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="format">format: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+        <span class="name">UpdateConcepts</span><span class="params">(<span name="conceptsText">conceptsText: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="userid">userid: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
-      </h4>
-      <p class="shortcomment cmt">Update existing concepts</p><div class="fullcomment"><div class="comment cmt"><p>Update existing concepts</p></div><dl class="paramcmts block"><dt class="param">conceptsText</dt><dd class="cmt"><p>an input String of concepts in a format defined by the next parameter formatType</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.statusCode
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@UpdateConcepts(conceptsText:String,formatType:String,userid:Option[String]):String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Update existing concepts</p><div class="fullcomment"><div class="comment cmt"><p>Update existing concepts</p></div><dl class="paramcmts block"><dt class="param">conceptsText</dt><dd class="cmt"><p>an input String of concepts in a format defined by the next parameter formatType</p></dd><dt class="param">formatType</dt><dd class="cmt"><p>format of conceptsText ( JSON or XML)</p></dd><dt class="param">userid</dt><dd class="cmt"><p>the identity to be used by the security adapter to ascertain if this user has access permissions for this
+              method. If Security and/or Audit are configured, this value must be a value other than None.</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.statusCode
 indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
-ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure</p><p>Example:</p><pre><span class="kw">val</span> sampleConceptStr = <span class="lit">""</span><span class="lit">"
+ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure
+Example:</p><pre>  <span class="kw">val</span> sampleConceptStr = <span class="lit">""</span><span class="lit">"
  {"</span>Concepts<span class="lit">" : [
  "</span>NameSpace<span class="lit">":"</span>Ligadata<span class="lit">",
  "</span>Name<span class="lit">":"</span>ProviderId<span class="lit">",
@@ -743,38 +893,48 @@ ApiResult.statusDescription and ApiResult.resultData indicate the nature of the 
    <span class="kw">var</span> result = MetadataAPIImpl.getApiResult(apiResult)
    println(<span class="lit">"Result as Json String => \n"</span> + result._2)</pre></dd></dl></div>
     </li><li name="com.ligadata.MetadataAPI.MetadataAPI#UpdateContainer" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="UpdateContainer(containerText:String,format:String):String"></a>
-      <a id="UpdateContainer(String,String):String"></a>
+      <a id="UpdateContainer(containerText:String,formatType:String,userid:Option[String]):String"></a>
+      <a id="UpdateContainer(String,String,Option[String]):String"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">UpdateContainer</span><span class="params">(<span name="containerText">containerText: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="format">format: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+        <span class="name">UpdateContainer</span><span class="params">(<span name="containerText">containerText: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="userid">userid: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@UpdateContainer(containerText:String,formatType:String,userid:Option[String]):String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <p class="shortcomment cmt">Update container given containerText
 </p><div class="fullcomment"><div class="comment cmt"><p>Update container given containerText
-</p></div><dl class="paramcmts block"><dt class="param">containerText</dt><dd class="cmt"><p>text of the container (as JSON/XML string as defined by next parameter formatType)</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.statusCode
+</p></div><dl class="paramcmts block"><dt class="param">containerText</dt><dd class="cmt"><p>text of the container (as JSON/XML string as defined by next parameter formatType)</p></dd><dt class="param">formatType</dt><dd class="cmt"><p>format of containerText (as JSON/XML string)</p></dd><dt class="param">userid</dt><dd class="cmt"><p>the identity to be used by the security adapter to ascertain if this user has access permissions for this
+              method. If Security and/or Audit are configured, this value must be a value other than None.</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.statusCode
 indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
-ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure
-</p></dd></dl></div>
+ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure</p></dd></dl></div>
     </li><li name="com.ligadata.MetadataAPI.MetadataAPI#UpdateFunctions" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="UpdateFunctions(functionsText:String,formatType:String):String"></a>
-      <a id="UpdateFunctions(String,String):String"></a>
+      <a id="UpdateFunctions(functionsText:String,formatType:String,userid:Option[String]):String"></a>
+      <a id="UpdateFunctions(String,String,Option[String]):String"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">UpdateFunctions</span><span class="params">(<span name="functionsText">functionsText: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+        <span class="name">UpdateFunctions</span><span class="params">(<span name="functionsText">functionsText: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="userid">userid: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
-      </h4>
-      <p class="shortcomment cmt">Update existing functions</p><div class="fullcomment"><div class="comment cmt"><p>Update existing functions</p></div><dl class="paramcmts block"><dt class="param">functionsText</dt><dd class="cmt"><p>an input String of functions in a format defined by the next parameter formatType</p></dd><dt class="param">formatType</dt><dd class="cmt"><p>format of functionsText ( JSON or XML)</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.statusCode
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@UpdateFunctions(functionsText:String,formatType:String,userid:Option[String]):String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Update existing functions</p><div class="fullcomment"><div class="comment cmt"><p>Update existing functions</p></div><dl class="paramcmts block"><dt class="param">functionsText</dt><dd class="cmt"><p>an input String of functions in a format defined by the next parameter formatType</p></dd><dt class="param">formatType</dt><dd class="cmt"><p>format of functionsText ( JSON or XML)</p></dd><dt class="param">userid</dt><dd class="cmt"><p>the identity to be used by the security adapter to ascertain if this user has access permissions for this
+              method. If Security and/or Audit are configured, this value must be a value other than None.</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.statusCode
 indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
-ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure</p><p>Example:</p><pre><span class="kw">val</span> sampleFunctionStr = <span class="lit">""</span><span class="lit">"
+ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure
+Example:</p><pre>  <span class="kw">val</span> sampleFunctionStr = <span class="lit">""</span><span class="lit">"
  {
  "</span>NameSpace<span class="lit">" : "</span>pmml<span class="lit">",
  "</span>Name<span class="lit">" : "</span>my_min<span class="lit">",
@@ -799,56 +959,74 @@ ApiResult.statusDescription and ApiResult.resultData indicate the nature of the 
    <span class="kw">var</span> result = MetadataAPIImpl.getApiResult(apiResult)
    println(<span class="lit">"Result as Json String => \n"</span> + result._2)</pre></dd></dl></div>
     </li><li name="com.ligadata.MetadataAPI.MetadataAPI#UpdateMessage" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="UpdateMessage(messageText:String,format:String):String"></a>
-      <a id="UpdateMessage(String,String):String"></a>
+      <a id="UpdateMessage(messageText:String,formatType:String,userid:Option[String]):String"></a>
+      <a id="UpdateMessage(String,String,Option[String]):String"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">UpdateMessage</span><span class="params">(<span name="messageText">messageText: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="format">format: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+        <span class="name">UpdateMessage</span><span class="params">(<span name="messageText">messageText: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="userid">userid: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@UpdateMessage(messageText:String,formatType:String,userid:Option[String]):String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <p class="shortcomment cmt">Update message given messageText
 </p><div class="fullcomment"><div class="comment cmt"><p>Update message given messageText
-</p></div><dl class="paramcmts block"><dt class="param">messageText</dt><dd class="cmt"><p>text of the message (as JSON/XML string as defined by next parameter formatType)</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.statusCode
+</p></div><dl class="paramcmts block"><dt class="param">messageText</dt><dd class="cmt"><p>text of the message (as JSON/XML string as defined by next parameter formatType)</p></dd><dt class="param">formatType</dt><dd class="cmt"><p>format of messageText (as JSON/XML string)</p></dd><dt class="param">userid</dt><dd class="cmt"><p>the identity to be used by the security adapter to ascertain if this user has access permissions for this
+              method. If Security and/or Audit are configured, this value must be a value other than None.</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.statusCode
 indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
-ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure
-</p></dd></dl></div>
+ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure</p></dd></dl></div>
     </li><li name="com.ligadata.MetadataAPI.MetadataAPI#UpdateModel" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="UpdateModel(pmmlText:String):String"></a>
-      <a id="UpdateModel(String):String"></a>
+      <a id="UpdateModel(modelType:com.ligadata.MetadataAPI.MetadataAPI.ModelType.ModelType,input:String,userid:Option[String],modelName:Option[String],version:Option[String],optVersionBeingUpdated:Option[String]):String"></a>
+      <a id="UpdateModel(ModelType,String,Option[String],Option[String],Option[String],Option[String]):String"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">UpdateModel</span><span class="params">(<span name="pmmlText">pmmlText: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+        <span class="name">UpdateModel</span><span class="params">(<span name="modelType">modelType: <a href="MetadataAPI$$ModelType$.html#ModelType=com.ligadata.MetadataAPI.MetadataAPI.ModelType.Value" class="extmbr" name="com.ligadata.MetadataAPI.MetadataAPI.ModelType.ModelType">ModelType</a></span>, <span name="input">input: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="userid">userid: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>, <span name="modelName">modelName: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>, <span name="version">version: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>, <span name="optVersionBeingUpdated">optVersionBeingUpdated: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
-      </h4>
-      <p class="shortcomment cmt">Update model given pmmlText
-</p><div class="fullcomment"><div class="comment cmt"><p>Update model given pmmlText
-</p></div><dl class="paramcmts block"><dt class="param">pmmlText</dt><dd class="cmt"><p>text of the model (as XML string)</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.statusCode
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@UpdateModel(modelType:com.ligadata.MetadataAPI.MetadataAPI.ModelType.ModelType,input:String,userid:Option[String],modelName:Option[String],version:Option[String],optVersionBeingUpdated:Option[String]):String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Update model given the supplied input.</p><div class="fullcomment"><div class="comment cmt"><p>Update model given the supplied input.  Like the Add model, the <i>modelType</i> controls the processing and describes the
+sort of content that has been supplied in the <i>input</i> argument.  The current <i>modelType</i> values are:</p><ul><li>SCALA - a Scala source string</li><li>JAVA - a Java source string</li><li>PMML - a PMML source string</li><li>KPMML - a Kamanja Pmml source string</li><li>BINARY - the path to a jar containing the model</li></ul><p>The remaining arguments, while noted as optional, are required for some model types.  In particular,
+the <i>modelName</i> and <i>version</i> must be specified for the PMML model type.  The <i>userid</i> is
+required for systems that have been configured with a SecurityAdapter or AuditAdapter.</p></div><dl class="paramcmts block"><dt class="param">modelType</dt><dd class="cmt"><p>the type of the model submission (any {SCALA,JAVA,PMML,KPMML,BINARY}</p></dd><dt class="param">input</dt><dd class="cmt"><p>the text element to be added dependent upon the modelType specified.</p></dd><dt class="param">userid</dt><dd class="cmt"><p>the identity to be used by the security adapter to ascertain if this user has access permissions for this
+              method. If Security and/or Audit are configured, this value must be a value other than None</p></dd><dt class="param">modelName</dt><dd class="cmt"><p>appropriate for PMML, the namespace.name of the PMML model to be added to the Kamanja metadata</p></dd><dt class="param">version</dt><dd class="cmt"><p>appropriate for PMML, the model version to be assigned. This version <i>must</i> be greater than the
+               version in use and unique for models with the modelName</p></dd><dt class="param">optVersionBeingUpdated</dt><dd class="cmt"><p>not used .. reserved for future release where explicit modelnamespace.modelname.modelversion
+                              can be updated (not just the latest version)</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.statusCode
+indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
+ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure</p></dd></dl><dl class="attributes block"> <dt>See also</dt><dd><span class="cmt"><p><a href="http://kamanja.org/auditing/" target="_blank">auditing wiki</a> for more information about auditing.</p></span><span class="cmt"><p><a href="http://kamanja.org/security/" target="_blank">security wiki</a> for more information. The audit adapter, if configured,
+      will also be invoked to take note of this user's action.</p></span></dd></dl></div>
+    </li><li name="com.ligadata.MetadataAPI.MetadataAPI#UpdateType" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="UpdateType(typesText:String,formatType:String,userid:Option[String]):String"></a>
+      <a id="UpdateType(String,String,Option[String]):String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">abstract </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">UpdateType</span><span class="params">(<span name="typesText">typesText: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="userid">userid: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@UpdateType(typesText:String,formatType:String,userid:Option[String]):String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Update existing types</p><div class="fullcomment"><div class="comment cmt"><p>Update existing types</p></div><dl class="paramcmts block"><dt class="param">typesText</dt><dd class="cmt"><p>an input String of types in a format defined by the next parameter formatType</p></dd><dt class="param">formatType</dt><dd class="cmt"><p>format of typesText ( JSON or XML)</p></dd><dt class="param">userid</dt><dd class="cmt"><p>the identity to be used by the security adapter to ascertain if this user has access permissions for this
+              method. If Security and/or Audit are configured, this value must be a value other than None.</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.statusCode
 indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
 ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure
-</p></dd></dl></div>
-    </li><li name="com.ligadata.MetadataAPI.MetadataAPI#UpdateType" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="UpdateType(typesText:String,formatType:String):String"></a>
-      <a id="UpdateType(String,String):String"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier">abstract </span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">UpdateType</span><span class="params">(<span name="typesText">typesText: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="formatType">formatType: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
-      </span>
-      </h4>
-      <p class="shortcomment cmt">Update existing types</p><div class="fullcomment"><div class="comment cmt"><p>Update existing types</p></div><dl class="paramcmts block"><dt class="param">typesText</dt><dd class="cmt"><p>an input String of types in a format defined by the next parameter formatType</p></dd><dt class="param">formatType</dt><dd class="cmt"><p>format of typesText ( JSON or XML)</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.statusCode
-indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
-ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure</p><p>Example:</p><pre><span class="kw">val</span> sampleScalarTypeStr = <span class="lit">""</span><span class="lit">"
+Example:</p><pre><span class="kw">val</span> sampleScalarTypeStr = <span class="lit">""</span><span class="lit">"
 {
 "</span>MetadataType<span class="lit">" : "</span>ScalarTypeDef<span class="lit">",
 "</span>NameSpace<span class="lit">" : "</span>system<span class="lit">",
@@ -867,40 +1045,51 @@ ApiResult.statusDescription and ApiResult.resultData indicate the nature of the 
 <span class="kw">var</span> result = MetadataAPIImpl.getApiResult(apiResult)
 println(<span class="lit">"Result as Json String => \n"</span> + result._2)</pre></dd></dl></div>
     </li><li name="com.ligadata.MetadataAPI.MetadataAPI#UploadJar" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="UploadJar(jarPath:String):String"></a>
-      <a id="UploadJar(String):String"></a>
+      <a id="UploadJar(jarPath:String,userid:Option[String]):String"></a>
+      <a id="UploadJar(String,Option[String]):String"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">UploadJar</span><span class="params">(<span name="jarPath">jarPath: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+        <span class="name">UploadJar</span><span class="params">(<span name="jarPath">jarPath: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="userid">userid: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@UploadJar(jarPath:String,userid:Option[String]):String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <p class="shortcomment cmt">Upload Jars into system.</p><div class="fullcomment"><div class="comment cmt"><p>Upload Jars into system. Dependency jars may need to upload first. Once we upload the jar,
-if we retry to upload it will throw an exception.</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.statusCode
+if we retry to upload it will throw an exception.</p></div><dl class="paramcmts block"><dt class="param">jarPath</dt><dd class="cmt"><p>fullPathName of the jar file</p></dd><dt class="param">userid</dt><dd class="cmt"><p>the identity to be used by the security adapter to ascertain if this user has access permissions for this
+              method. If Security and/or Audit are configured, this value must be a value other than None.</p></dd><dt>returns</dt><dd class="cmt"><p>the result as a JSON String of object ApiResult where ApiResult.statusCode
 indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
 ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure</p></dd></dl></div>
+    </li><li name="com.ligadata.MetadataAPI.MetadataAPI#getHealthCheck" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="getHealthCheck(nodeId:String,userid:Option[String]):String"></a>
+      <a id="getHealthCheck(String,Option[String]):String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">abstract </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getHealthCheck</span><span class="params">(<span name="nodeId">nodeId: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="userid">userid: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@getHealthCheck(nodeId:String,userid:Option[String]):String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">getHealthCheck - will return all the health-check information for the nodeId specified.</p><div class="fullcomment"><div class="comment cmt"><p>getHealthCheck - will return all the health-check information for the nodeId specified.
+</p></div><dl class="paramcmts block"><dt class="param">userid</dt><dd class="cmt"><p>the identity to be used by the security adapter to ascertain if this user has access permissions for this
+              method. If Security and/or Audit are configured, this value must be a value other than None.</p></dd><dt>returns</dt><dd class="cmt"><p>status string</p></dd></dl></div>
     </li></ol>
             </div>
 
         <div id="values" class="values members">
               <h3>Concrete Value Members</h3>
               <ol><li name="scala.AnyRef#!=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="!=(x$1:AnyRef):Boolean"></a>
-      <a id="!=(AnyRef):Boolean"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier">final </span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
-      </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="scala.Any#!=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="!=(x$1:Any):Boolean"></a>
       <a id="!=(Any):Boolean"></a>
       <h4 class="signature">
@@ -909,10 +1098,14 @@ ApiResult.statusDescription and ApiResult.resultData indicate the nature of the 
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@!=(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.AnyRef###" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="##():Int"></a>
       <a id="##():Int"></a>
@@ -922,24 +1115,15 @@ ApiResult.statusDescription and ApiResult.resultData indicate the nature of the 
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
+        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@##():Int" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.AnyRef#==" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="==(x$1:AnyRef):Boolean"></a>
-      <a id="==(AnyRef):Boolean"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier">final </span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
-      </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="scala.Any#==" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="==(x$1:Any):Boolean"></a>
       <a id="==(Any):Boolean"></a>
       <h4 class="signature">
@@ -948,10 +1132,14 @@ ApiResult.statusDescription and ApiResult.resultData indicate the nature of the 
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@==(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.Any#asInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="asInstanceOf[T0]:T0"></a>
       <a id="asInstanceOf[T0]:T0"></a>
@@ -963,7 +1151,11 @@ ApiResult.statusDescription and ApiResult.resultData indicate the nature of the 
       <span class="symbol">
         <span class="name">asInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Any.asInstanceOf.T0">T0</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@asInstanceOf[T0]:T0" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
     </li><li name="scala.AnyRef#clone" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="clone():Object"></a>
@@ -974,9 +1166,13 @@ ApiResult.statusDescription and ApiResult.resultData indicate the nature of the 
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">clone</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@clone():Object" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -993,9 +1189,13 @@ ApiResult.statusDescription and ApiResult.resultData indicate the nature of the 
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@eq(x$1:AnyRef):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="scala.AnyRef#equals" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="equals(x$1:Any):Boolean"></a>
@@ -1006,9 +1206,13 @@ ApiResult.statusDescription and ApiResult.resultData indicate the nature of the 
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@equals(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.AnyRef#finalize" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="finalize():Unit"></a>
@@ -1019,9 +1223,13 @@ ApiResult.statusDescription and ApiResult.resultData indicate the nature of the 
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">finalize</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@finalize():Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -1040,7 +1248,11 @@ ApiResult.statusDescription and ApiResult.resultData indicate the nature of the 
       <span class="symbol">
         <span class="name">getClass</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.Class">Class</span>[_]</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@getClass():Class[_]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.AnyRef#hashCode" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="hashCode():Int"></a>
@@ -1051,9 +1263,13 @@ ApiResult.statusDescription and ApiResult.resultData indicate the nature of the 
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
+        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@hashCode():Int" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.Any#isInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="isInstanceOf[T0]:Boolean"></a>
@@ -1064,9 +1280,13 @@ ApiResult.statusDescription and ApiResult.resultData indicate the nature of the 
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@isInstanceOf[T0]:Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
     </li><li name="scala.AnyRef#ne" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ne(x$1:AnyRef):Boolean"></a>
@@ -1077,9 +1297,13 @@ ApiResult.statusDescription and ApiResult.resultData indicate the nature of the 
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@ne(x$1:AnyRef):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="scala.AnyRef#notify" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="notify():Unit"></a>
@@ -1090,9 +1314,13 @@ ApiResult.statusDescription and ApiResult.resultData indicate the nature of the 
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notify</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@notify():Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="scala.AnyRef#notifyAll" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="notifyAll():Unit"></a>
@@ -1103,9 +1331,13 @@ ApiResult.statusDescription and ApiResult.resultData indicate the nature of the 
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@notifyAll():Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="scala.AnyRef#synchronized" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="synchronized[T0](x$1:=&gt;T0):T0"></a>
@@ -1118,7 +1350,11 @@ ApiResult.statusDescription and ApiResult.resultData indicate the nature of the 
       <span class="symbol">
         <span class="name">synchronized</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="params">(<span name="arg0">arg0: ⇒ <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>)</span><span class="result">: <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@synchronized[T0](x$1:=&gt;T0):T0" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="scala.AnyRef#toString" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="toString():String"></a>
@@ -1131,7 +1367,11 @@ ApiResult.statusDescription and ApiResult.resultData indicate the nature of the 
       <span class="symbol">
         <span class="name">toString</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@toString():String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait():Unit"></a>
@@ -1142,9 +1382,13 @@ ApiResult.statusDescription and ApiResult.resultData indicate the nature of the 
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@wait():Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -1161,9 +1405,13 @@ ApiResult.statusDescription and ApiResult.resultData indicate the nature of the 
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Long">Long</span></span>, <span name="arg1">arg1: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Long" class="extype" target="_top">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@wait(x$1:Long,x$2:Int):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -1180,9 +1428,13 @@ ApiResult.statusDescription and ApiResult.resultData indicate the nature of the 
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Long">Long</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Long" class="extype" target="_top">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.MetadataAPI@wait(x$1:Long):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -1200,9 +1452,9 @@ ApiResult.statusDescription and ApiResult.resultData indicate the nature of the 
 
         <div id="inheritedMembers">
         <div class="parent" name="scala.AnyRef">
-              <h3>Inherited from <span class="extype" name="scala.AnyRef">AnyRef</span></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">
-              <h3>Inherited from <span class="extype" name="scala.Any">Any</span></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></h3>
             </div>
         
         </div>
@@ -1219,6 +1471,7 @@ ApiResult.statusDescription and ApiResult.resultData indicate the nature of the 
       <div id="tooltip"></div>
 
       <div id="footer">  </div>
-      <script defer="defer" type="text/javascript" id="jquery-js" src="../../../lib/jquery.js"></script><script defer="defer" type="text/javascript" id="jquery-ui-js" src="../../../lib/jquery-ui.js"></script><script defer="defer" type="text/javascript" id="tools-tooltip-js" src="../../../lib/tools.tooltip.js"></script><script defer="defer" type="text/javascript" id="template-js" src="../../../lib/template.js"></script>
+
+
     </body>
       </html>

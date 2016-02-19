@@ -1,18 +1,22 @@
-<?xml version='1.0' encoding='UTF-8'?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<!DOCTYPE html >
 <html>
         <head>
-          <title>RuleSetModel - com.ligadata.Pmml.Runtime.RuleSetModel</title>
-          <meta name="description" content="RuleSetModel - com.ligadata.Pmml.Runtime.RuleSetModel" />
-          <meta name="keywords" content="RuleSetModel com.ligadata.Pmml.Runtime.RuleSetModel" />
+          <title>RuleSetModel - com.ligadata.pmml.runtime.RuleSetModel</title>
+          <meta name="description" content="RuleSetModel - com.ligadata.pmml.runtime.RuleSetModel" />
+          <meta name="keywords" content="RuleSetModel com.ligadata.pmml.runtime.RuleSetModel" />
           <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
           
       <link href="../../../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
       <link href="../../../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../../../../lib/jquery.js" id="jquery-js"></script>
+      <script type="text/javascript" src="../../../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../../../lib/template.js"></script>
+      <script type="text/javascript" src="../../../../lib/tools.tooltip.js"></script>
+      
       <script type="text/javascript">
          if(top === self) {
             var url = '../../../../index.html';
-            var hash = 'com.ligadata.Pmml.Runtime.RuleSetModel';
+            var hash = 'com.ligadata.pmml.runtime.RuleSetModel';
             var anchor = window.location.hash;
             var anchor_opt = '';
             if (anchor.length >= 1)
@@ -24,9 +28,15 @@
         </head>
         <body class="type">
       <div id="definition">
-        <img src="../../../../lib/class_big.png" />
-        <p id="owner"><a href="../../../package.html" class="extype" name="com">com</a>.<a href="../../package.html" class="extype" name="com.ligadata">ligadata</a>.<a href="../package.html" class="extype" name="com.ligadata.Pmml">Pmml</a>.<a href="package.html" class="extype" name="com.ligadata.Pmml.Runtime">Runtime</a></p>
-        <h1>RuleSetModel</h1>
+        <img alt="Class" src="../../../../lib/class_big.png" />
+        <p id="owner"><a href="../../../package.html" class="extype" name="com">com</a>.<a href="../../package.html" class="extype" name="com.ligadata">ligadata</a>.<a href="../package.html" class="extype" name="com.ligadata.pmml">pmml</a>.<a href="package.html" class="extype" name="com.ligadata.pmml.runtime">runtime</a></p>
+        <h1>RuleSetModel</h1><h3><span class="morelinks"><div>Related Doc:
+            <a href="package.html" class="extype" name="com.ligadata.pmml.runtime">package runtime</a>
+          </div></span></h3><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.RuleSetModel" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       </div>
 
       <h4 id="signature" class="signature">
@@ -35,13 +45,13 @@
         <span class="kind">class</span>
       </span>
       <span class="symbol">
-        <span class="name">RuleSetModel</span><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+        <span class="name">RuleSetModel</span><span class="result"> extends <a href="LogTrait.html" class="extype" name="com.ligadata.pmml.runtime.LogTrait">LogTrait</a></span>
       </span>
       </h4>
       
           <div id="comment" class="fullcommenttop"><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
-          <div class="superTypes hiddenContent"><span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
+          <div class="superTypes hiddenContent"><a href="LogTrait.html" class="extype" name="com.ligadata.pmml.runtime.LogTrait">LogTrait</a>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></div>
         </div></div>
         
 
@@ -59,7 +69,7 @@
                 <span class="filtertype">Inherited<br />
                 </span>
                 <ol id="linearization">
-                  <li class="in" name="com.ligadata.Pmml.Runtime.RuleSetModel"><span>RuleSetModel</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                  <li class="in" name="com.ligadata.pmml.runtime.RuleSetModel"><span>RuleSetModel</span></li><li class="in" name="com.ligadata.pmml.runtime.LogTrait"><span>LogTrait</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
                 </ol>
               </div><div id="ancestors">
             <span class="filtertype"></span>
@@ -67,7 +77,6 @@
               <li class="hideall out"><span>Hide All</span></li>
               <li class="showall in"><span>Show all</span></li>
             </ol>
-            <a href="http://docs.scala-lang.org/overviews/scaladoc/usage.html#members" target="_blank">Learn more about member selection</a>
           </div>
         <div id="visbl">
             <span class="filtertype">Visibility</span>
@@ -79,8 +88,8 @@
         <div id="allMembers">
         <div id="constructors" class="members">
               <h3>Instance Constructors</h3>
-              <ol><li name="com.ligadata.Pmml.Runtime.RuleSetModel#&lt;init&gt;" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="&lt;init&gt;(modelName:String,functionName:String,algorithmName:String,isScorable:String):com.ligadata.Pmml.Runtime.RuleSetModel"></a>
+              <ol><li name="com.ligadata.pmml.runtime.RuleSetModel#&lt;init&gt;" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="&lt;init&gt;(modelName:String,functionName:String,algorithmName:String,isScorable:String):com.ligadata.pmml.runtime.RuleSetModel"></a>
       <a id="&lt;init&gt;:RuleSetModel"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -90,7 +99,11 @@
       <span class="symbol">
         <span class="name">RuleSetModel</span><span class="params">(<span name="modelName">modelName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="functionName">functionName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="algorithmName">algorithmName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="isScorable">isScorable: <span class="extype" name="scala.Predef.String">String</span></span>)</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.RuleSetModel@&lt;init&gt;(modelName:String,functionName:String,algorithmName:String,isScorable:String):com.ligadata.pmml.runtime.RuleSetModel" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li></ol>
             </div>
@@ -102,19 +115,6 @@
         <div id="values" class="values members">
               <h3>Value Members</h3>
               <ol><li name="scala.AnyRef#!=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="!=(x$1:AnyRef):Boolean"></a>
-      <a id="!=(AnyRef):Boolean"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier">final </span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
-      </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="scala.Any#!=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="!=(x$1:Any):Boolean"></a>
       <a id="!=(Any):Boolean"></a>
       <h4 class="signature">
@@ -123,10 +123,14 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.RuleSetModel@!=(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.AnyRef###" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="##():Int"></a>
       <a id="##():Int"></a>
@@ -136,24 +140,15 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
+        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.RuleSetModel@##():Int" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.AnyRef#==" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="==(x$1:AnyRef):Boolean"></a>
-      <a id="==(AnyRef):Boolean"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier">final </span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
-      </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="scala.Any#==" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="==(x$1:Any):Boolean"></a>
       <a id="==(Any):Boolean"></a>
       <h4 class="signature">
@@ -162,12 +157,16 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
-    </li><li name="com.ligadata.Pmml.Runtime.RuleSetModel#AddMiningField" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="AddMiningField(fieldName:String,fieldDetails:com.ligadata.Pmml.Runtime.MiningField):Unit"></a>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.RuleSetModel@==(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="com.ligadata.pmml.runtime.RuleSetModel#AddMiningField" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="AddMiningField(fieldName:String,fieldDetails:com.ligadata.pmml.runtime.MiningField):Unit"></a>
       <a id="AddMiningField(String,MiningField):Unit"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -175,12 +174,16 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">AddMiningField</span><span class="params">(<span name="fieldName">fieldName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="fieldDetails">fieldDetails: <a href="MiningField.html" class="extype" name="com.ligadata.Pmml.Runtime.MiningField">MiningField</a></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">AddMiningField</span><span class="params">(<span name="fieldName">fieldName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="fieldDetails">fieldDetails: <a href="MiningField.html" class="extype" name="com.ligadata.pmml.runtime.MiningField">MiningField</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.RuleSetModel@AddMiningField(fieldName:String,fieldDetails:com.ligadata.pmml.runtime.MiningField):Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <p class="shortcomment cmt">this attribute picked up from RuleSet</p>
-    </li><li name="com.ligadata.Pmml.Runtime.RuleSetModel#AddRule" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="AddRule(r:com.ligadata.Pmml.Runtime.SimpleRule):Unit"></a>
+    </li><li name="com.ligadata.pmml.runtime.RuleSetModel#AddRule" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="AddRule(r:com.ligadata.pmml.runtime.SimpleRule):Unit"></a>
       <a id="AddRule(SimpleRule):Unit"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -188,12 +191,16 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">AddRule</span><span class="params">(<span name="r">r: <a href="SimpleRule.html" class="extype" name="com.ligadata.Pmml.Runtime.SimpleRule">SimpleRule</a></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">AddRule</span><span class="params">(<span name="r">r: <a href="SimpleRule.html" class="extype" name="com.ligadata.pmml.runtime.SimpleRule">SimpleRule</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.RuleSetModel@AddRule(r:com.ligadata.pmml.runtime.SimpleRule):Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
-    </li><li name="com.ligadata.Pmml.Runtime.RuleSetModel#AddRuleSelectionMethod" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="AddRuleSelectionMethod(method:com.ligadata.Pmml.Runtime.RuleSelectionMethod):Unit"></a>
+    </li><li name="com.ligadata.pmml.runtime.RuleSetModel#AddRuleSelectionMethod" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="AddRuleSelectionMethod(method:com.ligadata.pmml.runtime.RuleSelectionMethod):Unit"></a>
       <a id="AddRuleSelectionMethod(RuleSelectionMethod):Unit"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -201,12 +208,16 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">AddRuleSelectionMethod</span><span class="params">(<span name="method">method: <a href="RuleSelectionMethod.html" class="extype" name="com.ligadata.Pmml.Runtime.RuleSelectionMethod">RuleSelectionMethod</a></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">AddRuleSelectionMethod</span><span class="params">(<span name="method">method: <a href="RuleSelectionMethod.html" class="extype" name="com.ligadata.pmml.runtime.RuleSelectionMethod">RuleSelectionMethod</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.RuleSetModel@AddRuleSelectionMethod(method:com.ligadata.pmml.runtime.RuleSelectionMethod):Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
-    </li><li name="com.ligadata.Pmml.Runtime.RuleSetModel#DefaultScore" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="DefaultScore():com.ligadata.Pmml.Runtime.StringDataValue"></a>
+    </li><li name="com.ligadata.pmml.runtime.RuleSetModel#DefaultScore" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="DefaultScore():com.ligadata.pmml.runtime.StringDataValue"></a>
       <a id="DefaultScore():StringDataValue"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -214,12 +225,16 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">DefaultScore</span><span class="params">()</span><span class="result">: <a href="StringDataValue.html" class="extype" name="com.ligadata.Pmml.Runtime.StringDataValue">StringDataValue</a></span>
+        <span class="name">DefaultScore</span><span class="params">()</span><span class="result">: <a href="StringDataValue.html" class="extype" name="com.ligadata.pmml.runtime.StringDataValue">StringDataValue</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.RuleSetModel@DefaultScore():com.ligadata.pmml.runtime.StringDataValue" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
-    </li><li name="com.ligadata.Pmml.Runtime.RuleSetModel#DefaultScore" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="DefaultScore(dflt:com.ligadata.Pmml.Runtime.StringDataValue):Unit"></a>
+    </li><li name="com.ligadata.pmml.runtime.RuleSetModel#DefaultScore" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="DefaultScore(dflt:com.ligadata.pmml.runtime.StringDataValue):Unit"></a>
       <a id="DefaultScore(StringDataValue):Unit"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -227,12 +242,16 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">DefaultScore</span><span class="params">(<span name="dflt">dflt: <a href="StringDataValue.html" class="extype" name="com.ligadata.Pmml.Runtime.StringDataValue">StringDataValue</a></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">DefaultScore</span><span class="params">(<span name="dflt">dflt: <a href="StringDataValue.html" class="extype" name="com.ligadata.pmml.runtime.StringDataValue">StringDataValue</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.RuleSetModel@DefaultScore(dflt:com.ligadata.pmml.runtime.StringDataValue):Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
-    </li><li name="com.ligadata.Pmml.Runtime.RuleSetModel#MakePrediction" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="MakePrediction(ctx:com.ligadata.Pmml.Runtime.Context,results:scala.collection.mutable.ArrayBuffer[String]):Unit"></a>
+    </li><li name="com.ligadata.pmml.runtime.RuleSetModel#MakePrediction" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="MakePrediction(ctx:com.ligadata.pmml.runtime.Context,results:scala.collection.mutable.ArrayBuffer[String]):Unit"></a>
       <a id="MakePrediction(Context,ArrayBuffer[String]):Unit"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -240,16 +259,20 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">MakePrediction</span><span class="params">(<span name="ctx">ctx: <a href="Context.html" class="extype" name="com.ligadata.Pmml.Runtime.Context">Context</a></span>, <span name="results">results: <span class="extype" name="scala.collection.mutable.ArrayBuffer">ArrayBuffer</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">MakePrediction</span><span class="params">(<span name="ctx">ctx: <a href="Context.html" class="extype" name="com.ligadata.pmml.runtime.Context">Context</a></span>, <span name="results">results: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.mutable.ArrayBuffer" class="extype" target="_top">ArrayBuffer</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.RuleSetModel@MakePrediction(ctx:com.ligadata.pmml.runtime.Context,results:scala.collection.mutable.ArrayBuffer[String]):Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <p class="shortcomment cmt"> FIXME: The current mechanism only supports &quot;FirstHit&quot;.</p><div class="fullcomment"><div class="comment cmt"><p> FIXME: The current mechanism only supports &quot;FirstHit&quot;.  For models with selection methods
  &quot;weightedSum&quot; and/or &quot;weightedMax&quot; with no defaultScore, a more elaborate mechanism is needed
  that uses the model developer's rule confidence, weight, and score distribution values to
  choose among the rules that completed
 </p></div></div>
-    </li><li name="com.ligadata.Pmml.Runtime.RuleSetModel#MiningSchemaMap" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="MiningSchemaMap():scala.collection.mutable.Map[String,com.ligadata.Pmml.Runtime.MiningField]"></a>
+    </li><li name="com.ligadata.pmml.runtime.RuleSetModel#MiningSchemaMap" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="MiningSchemaMap():scala.collection.mutable.Map[String,com.ligadata.pmml.runtime.MiningField]"></a>
       <a id="MiningSchemaMap():Map[String,MiningField]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -257,28 +280,33 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">MiningSchemaMap</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.collection.mutable.Map">Map</span>[<span class="extype" name="scala.Predef.String">String</span>, <a href="MiningField.html" class="extype" name="com.ligadata.Pmml.Runtime.MiningField">MiningField</a>]</span>
+        <span class="name">MiningSchemaMap</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.mutable.Map" class="extype" target="_top">Map</a>[<span class="extype" name="scala.Predef.String">String</span>, <a href="MiningField.html" class="extype" name="com.ligadata.pmml.runtime.MiningField">MiningField</a>]</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.RuleSetModel@MiningSchemaMap():scala.collection.mutable.Map[String,com.ligadata.pmml.runtime.MiningField]" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
-    </li><li name="com.ligadata.Pmml.Runtime.RuleSetModel#MissingValueFor" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="MissingValueFor(field:String):com.ligadata.Pmml.Runtime.DataValue"></a>
-      <a id="MissingValueFor(String):DataValue"></a>
+    </li><li name="com.ligadata.pmml.runtime.RuleSetModel#MissingValueFor" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="MissingValueFor(ctx:com.ligadata.pmml.runtime.Context,field:String):com.ligadata.pmml.runtime.DataValue"></a>
+      <a id="MissingValueFor(Context,String):DataValue"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">MissingValueFor</span><span class="params">(<span name="field">field: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="DataValue.html" class="extype" name="com.ligadata.Pmml.Runtime.DataValue">DataValue</a></span>
+        <span class="name">MissingValueFor</span><span class="params">(<span name="ctx">ctx: <a href="Context.html" class="extype" name="com.ligadata.pmml.runtime.Context">Context</a></span>, <span name="field">field: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="DataValue.html" class="extype" name="com.ligadata.pmml.runtime.DataValue">DataValue</a></span>
       </span>
-      </h4>
-      <p class="shortcomment cmt">def OutputFieldValues(ctx : Context) : Array[Option[DataValue]] = {
-		OutputFieldNames().</p><div class="fullcomment"><div class="comment cmt"><p>def OutputFieldValues(ctx : Context) : Array[Option[DataValue]] = {
-		OutputFieldNames().map(outfldName =&gt; ctx.valueFor(outfldName))
-	}
-</p></div></div>
-    </li><li name="com.ligadata.Pmml.Runtime.RuleSetModel#OutputFieldNames" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.RuleSetModel@MissingValueFor(ctx:com.ligadata.pmml.runtime.Context,field:String):com.ligadata.pmml.runtime.DataValue" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">		Answer a value appropriate for the supplied mining field name.</p><div class="fullcomment"><div class="comment cmt"><p>		Answer a value appropriate for the supplied mining field name.  Should one not exist for this name, answer
+		the default value appropriate for this field's type (assuming it in fact is a legitimate data or derived field.</p></div><dl class="paramcmts block"><dt class="param">ctx</dt><dd class="cmt"><p>the runtime context for the model executing</p></dd><dt class="param">field</dt><dd class="cmt"><p>the name of the mining field whose missing value is to be returned.</p></dd><dt>returns</dt><dd class="cmt"><p>a DataValue derivative appropriate for this field's dataType.</p></dd></dl></div>
+    </li><li name="com.ligadata.pmml.runtime.RuleSetModel#OutputFieldNames" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="OutputFieldNames():Array[String]"></a>
       <a id="OutputFieldNames():Array[String]"></a>
       <h4 class="signature">
@@ -287,12 +315,16 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">OutputFieldNames</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>
+        <span class="name">OutputFieldNames</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.RuleSetModel@OutputFieldNames():Array[String]" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
-    </li><li name="com.ligadata.Pmml.Runtime.RuleSetModel#OutputFieldValues" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="OutputFieldValues(ctx:com.ligadata.Pmml.Runtime.Context):Array[Any]"></a>
+    </li><li name="com.ligadata.pmml.runtime.RuleSetModel#OutputFieldValues" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="OutputFieldValues(ctx:com.ligadata.pmml.runtime.Context):Array[Any]"></a>
       <a id="OutputFieldValues(Context):Array[Any]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -300,12 +332,16 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">OutputFieldValues</span><span class="params">(<span name="ctx">ctx: <a href="Context.html" class="extype" name="com.ligadata.Pmml.Runtime.Context">Context</a></span>)</span><span class="result">: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Any">Any</span>]</span>
+        <span class="name">OutputFieldValues</span><span class="params">(<span name="ctx">ctx: <a href="Context.html" class="extype" name="com.ligadata.pmml.runtime.Context">Context</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a>]</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.RuleSetModel@OutputFieldValues(ctx:com.ligadata.pmml.runtime.Context):Array[Any]" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
-    </li><li name="com.ligadata.Pmml.Runtime.RuleSetModel#RuleSelectionMethods" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="RuleSelectionMethods():scala.collection.mutable.ArrayBuffer[com.ligadata.Pmml.Runtime.RuleSelectionMethod]"></a>
+    </li><li name="com.ligadata.pmml.runtime.RuleSetModel#RuleSelectionMethods" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="RuleSelectionMethods():scala.collection.mutable.ArrayBuffer[com.ligadata.pmml.runtime.RuleSelectionMethod]"></a>
       <a id="RuleSelectionMethods():ArrayBuffer[RuleSelectionMethod]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -313,12 +349,16 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">RuleSelectionMethods</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.collection.mutable.ArrayBuffer">ArrayBuffer</span>[<a href="RuleSelectionMethod.html" class="extype" name="com.ligadata.Pmml.Runtime.RuleSelectionMethod">RuleSelectionMethod</a>]</span>
+        <span class="name">RuleSelectionMethods</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.mutable.ArrayBuffer" class="extype" target="_top">ArrayBuffer</a>[<a href="RuleSelectionMethod.html" class="extype" name="com.ligadata.pmml.runtime.RuleSelectionMethod">RuleSelectionMethod</a>]</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.RuleSetModel@RuleSelectionMethods():scala.collection.mutable.ArrayBuffer[com.ligadata.pmml.runtime.RuleSelectionMethod]" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
-    </li><li name="com.ligadata.Pmml.Runtime.RuleSetModel#RuleSet" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="RuleSet():scala.collection.mutable.ArrayBuffer[com.ligadata.Pmml.Runtime.SimpleRule]"></a>
+    </li><li name="com.ligadata.pmml.runtime.RuleSetModel#RuleSet" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="RuleSet():scala.collection.mutable.ArrayBuffer[com.ligadata.pmml.runtime.SimpleRule]"></a>
       <a id="RuleSet():ArrayBuffer[SimpleRule]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -326,11 +366,15 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">RuleSet</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.collection.mutable.ArrayBuffer">ArrayBuffer</span>[<a href="SimpleRule.html" class="extype" name="com.ligadata.Pmml.Runtime.SimpleRule">SimpleRule</a>]</span>
+        <span class="name">RuleSet</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.mutable.ArrayBuffer" class="extype" target="_top">ArrayBuffer</a>[<a href="SimpleRule.html" class="extype" name="com.ligadata.pmml.runtime.SimpleRule">SimpleRule</a>]</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.RuleSetModel@RuleSet():scala.collection.mutable.ArrayBuffer[com.ligadata.pmml.runtime.SimpleRule]" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
-    </li><li name="com.ligadata.Pmml.Runtime.RuleSetModel#algorithmName" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="com.ligadata.pmml.runtime.RuleSetModel#algorithmName" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="algorithmName:String"></a>
       <a id="algorithmName:String"></a>
       <h4 class="signature">
@@ -341,7 +385,11 @@
       <span class="symbol">
         <span class="name">algorithmName</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.RuleSetModel@algorithmName:String" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="scala.Any#asInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="asInstanceOf[T0]:T0"></a>
@@ -354,7 +402,11 @@
       <span class="symbol">
         <span class="name">asInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Any.asInstanceOf.T0">T0</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.RuleSetModel@asInstanceOf[T0]:T0" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
     </li><li name="scala.AnyRef#clone" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="clone():Object"></a>
@@ -365,9 +417,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">clone</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.RuleSetModel@clone():Object" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -375,8 +431,8 @@
     </span>)</span>
               
         </dd></dl></div>
-    </li><li name="com.ligadata.Pmml.Runtime.RuleSetModel#defaultScore" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="defaultScore:com.ligadata.Pmml.Runtime.StringDataValue"></a>
+    </li><li name="com.ligadata.pmml.runtime.RuleSetModel#defaultScore" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="defaultScore:com.ligadata.pmml.runtime.StringDataValue"></a>
       <a id="defaultScore:StringDataValue"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -384,9 +440,13 @@
         <span class="kind">var</span>
       </span>
       <span class="symbol">
-        <span class="name">defaultScore</span><span class="result">: <a href="StringDataValue.html" class="extype" name="com.ligadata.Pmml.Runtime.StringDataValue">StringDataValue</a></span>
+        <span class="name">defaultScore</span><span class="result">: <a href="StringDataValue.html" class="extype" name="com.ligadata.pmml.runtime.StringDataValue">StringDataValue</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.RuleSetModel@defaultScore:com.ligadata.pmml.runtime.StringDataValue" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="scala.AnyRef#eq" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="eq(x$1:AnyRef):Boolean"></a>
@@ -397,9 +457,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.RuleSetModel@eq(x$1:AnyRef):Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="scala.AnyRef#equals" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="equals(x$1:Any):Boolean"></a>
@@ -410,12 +474,16 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.RuleSetModel@equals(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="com.ligadata.Pmml.Runtime.RuleSetModel#execute" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="execute(ctx:com.ligadata.Pmml.Runtime.Context):Unit"></a>
+    </li><li name="com.ligadata.pmml.runtime.RuleSetModel#execute" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="execute(ctx:com.ligadata.pmml.runtime.Context):Unit"></a>
       <a id="execute(Context):Unit"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -423,9 +491,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">execute</span><span class="params">(<span name="ctx">ctx: <a href="Context.html" class="extype" name="com.ligadata.Pmml.Runtime.Context">Context</a></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">execute</span><span class="params">(<span name="ctx">ctx: <a href="Context.html" class="extype" name="com.ligadata.pmml.runtime.Context">Context</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.RuleSetModel@execute(ctx:com.ligadata.pmml.runtime.Context):Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <p class="shortcomment cmt">Subclasses will implement this one</p>
     </li><li name="scala.AnyRef#finalize" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="finalize():Unit"></a>
@@ -436,9 +508,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">finalize</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.RuleSetModel@finalize():Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -446,7 +522,7 @@
     </span>)</span>
               
         </dd></dl></div>
-    </li><li name="com.ligadata.Pmml.Runtime.RuleSetModel#functionName" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="com.ligadata.pmml.runtime.RuleSetModel#functionName" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="functionName:String"></a>
       <a id="functionName:String"></a>
       <h4 class="signature">
@@ -457,7 +533,11 @@
       <span class="symbol">
         <span class="name">functionName</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.RuleSetModel@functionName:String" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="scala.AnyRef#getClass" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="getClass():Class[_]"></a>
@@ -470,7 +550,11 @@
       <span class="symbol">
         <span class="name">getClass</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.Class">Class</span>[_]</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.RuleSetModel@getClass():Class[_]" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.AnyRef#hashCode" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="hashCode():Int"></a>
@@ -481,9 +565,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
+        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.RuleSetModel@hashCode():Int" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.Any#isInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="isInstanceOf[T0]:Boolean"></a>
@@ -494,11 +582,15 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.RuleSetModel@isInstanceOf[T0]:Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
-    </li><li name="com.ligadata.Pmml.Runtime.RuleSetModel#isScorable" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="com.ligadata.pmml.runtime.RuleSetModel#isScorable" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="isScorable:String"></a>
       <a id="isScorable:String"></a>
       <h4 class="signature">
@@ -509,10 +601,31 @@
       <span class="symbol">
         <span class="name">isScorable</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.RuleSetModel@isScorable:String" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
-    </li><li name="com.ligadata.Pmml.Runtime.RuleSetModel#miningSchemaMap" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="miningSchemaMap:scala.collection.mutable.Map[String,com.ligadata.Pmml.Runtime.MiningField]"></a>
+    </li><li name="com.ligadata.pmml.runtime.LogTrait#logger" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="logger:org.apache.logging.log4j.Logger"></a>
+      <a id="logger:Logger"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">logger</span><span class="result">: <span class="extype" name="org.apache.logging.log4j.Logger">Logger</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.RuleSetModel@logger:org.apache.logging.log4j.Logger" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="LogTrait.html" class="extype" name="com.ligadata.pmml.runtime.LogTrait">LogTrait</a></dd></dl></div>
+    </li><li name="com.ligadata.pmml.runtime.RuleSetModel#miningSchemaMap" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="miningSchemaMap:scala.collection.mutable.Map[String,com.ligadata.pmml.runtime.MiningField]"></a>
       <a id="miningSchemaMap:Map[String,MiningField]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -520,11 +633,15 @@
         <span class="kind">var</span>
       </span>
       <span class="symbol">
-        <span class="name">miningSchemaMap</span><span class="result">: <span class="extype" name="scala.collection.mutable.Map">Map</span>[<span class="extype" name="scala.Predef.String">String</span>, <a href="MiningField.html" class="extype" name="com.ligadata.Pmml.Runtime.MiningField">MiningField</a>]</span>
+        <span class="name">miningSchemaMap</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.mutable.Map" class="extype" target="_top">Map</a>[<span class="extype" name="scala.Predef.String">String</span>, <a href="MiningField.html" class="extype" name="com.ligadata.pmml.runtime.MiningField">MiningField</a>]</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.RuleSetModel@miningSchemaMap:scala.collection.mutable.Map[String,com.ligadata.pmml.runtime.MiningField]" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
-    </li><li name="com.ligadata.Pmml.Runtime.RuleSetModel#modelName" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="com.ligadata.pmml.runtime.RuleSetModel#modelName" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="modelName:String"></a>
       <a id="modelName:String"></a>
       <h4 class="signature">
@@ -535,7 +652,11 @@
       <span class="symbol">
         <span class="name">modelName</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.RuleSetModel@modelName:String" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="scala.AnyRef#ne" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ne(x$1:AnyRef):Boolean"></a>
@@ -546,9 +667,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.RuleSetModel@ne(x$1:AnyRef):Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="scala.AnyRef#notify" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="notify():Unit"></a>
@@ -559,9 +684,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notify</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.RuleSetModel@notify():Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="scala.AnyRef#notifyAll" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="notifyAll():Unit"></a>
@@ -572,12 +701,16 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.RuleSetModel@notifyAll():Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="com.ligadata.Pmml.Runtime.RuleSetModel#ruleSelectionMethods" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="ruleSelectionMethods:scala.collection.mutable.ArrayBuffer[com.ligadata.Pmml.Runtime.RuleSelectionMethod]"></a>
+    </li><li name="com.ligadata.pmml.runtime.RuleSetModel#ruleSelectionMethods" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ruleSelectionMethods:scala.collection.mutable.ArrayBuffer[com.ligadata.pmml.runtime.RuleSelectionMethod]"></a>
       <a id="ruleSelectionMethods:ArrayBuffer[RuleSelectionMethod]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -585,12 +718,16 @@
         <span class="kind">var</span>
       </span>
       <span class="symbol">
-        <span class="name">ruleSelectionMethods</span><span class="result">: <span class="extype" name="scala.collection.mutable.ArrayBuffer">ArrayBuffer</span>[<a href="RuleSelectionMethod.html" class="extype" name="com.ligadata.Pmml.Runtime.RuleSelectionMethod">RuleSelectionMethod</a>]</span>
+        <span class="name">ruleSelectionMethods</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.mutable.ArrayBuffer" class="extype" target="_top">ArrayBuffer</a>[<a href="RuleSelectionMethod.html" class="extype" name="com.ligadata.pmml.runtime.RuleSelectionMethod">RuleSelectionMethod</a>]</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.RuleSetModel@ruleSelectionMethods:scala.collection.mutable.ArrayBuffer[com.ligadata.pmml.runtime.RuleSelectionMethod]" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
-    </li><li name="com.ligadata.Pmml.Runtime.RuleSetModel#ruleSet" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="ruleSet:scala.collection.mutable.ArrayBuffer[com.ligadata.Pmml.Runtime.SimpleRule]"></a>
+    </li><li name="com.ligadata.pmml.runtime.RuleSetModel#ruleSet" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ruleSet:scala.collection.mutable.ArrayBuffer[com.ligadata.pmml.runtime.SimpleRule]"></a>
       <a id="ruleSet:ArrayBuffer[SimpleRule]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -598,9 +735,13 @@
         <span class="kind">var</span>
       </span>
       <span class="symbol">
-        <span class="name">ruleSet</span><span class="result">: <span class="extype" name="scala.collection.mutable.ArrayBuffer">ArrayBuffer</span>[<a href="SimpleRule.html" class="extype" name="com.ligadata.Pmml.Runtime.SimpleRule">SimpleRule</a>]</span>
+        <span class="name">ruleSet</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.mutable.ArrayBuffer" class="extype" target="_top">ArrayBuffer</a>[<a href="SimpleRule.html" class="extype" name="com.ligadata.pmml.runtime.SimpleRule">SimpleRule</a>]</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.RuleSetModel@ruleSet:scala.collection.mutable.ArrayBuffer[com.ligadata.pmml.runtime.SimpleRule]" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="scala.AnyRef#synchronized" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="synchronized[T0](x$1:=&gt;T0):T0"></a>
@@ -613,7 +754,11 @@
       <span class="symbol">
         <span class="name">synchronized</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="params">(<span name="arg0">arg0: ⇒ <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>)</span><span class="result">: <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.RuleSetModel@synchronized[T0](x$1:=&gt;T0):T0" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="scala.AnyRef#toString" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="toString():String"></a>
@@ -626,7 +771,11 @@
       <span class="symbol">
         <span class="name">toString</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.RuleSetModel@toString():String" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait():Unit"></a>
@@ -637,9 +786,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.RuleSetModel@wait():Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -656,9 +809,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Long">Long</span></span>, <span name="arg1">arg1: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Long" class="extype" target="_top">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.RuleSetModel@wait(x$1:Long,x$2:Int):Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -675,9 +832,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Long">Long</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Long" class="extype" target="_top">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.RuleSetModel@wait(x$1:Long):Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -694,10 +855,12 @@
         </div>
 
         <div id="inheritedMembers">
-        <div class="parent" name="scala.AnyRef">
-              <h3>Inherited from <span class="extype" name="scala.AnyRef">AnyRef</span></h3>
+        <div class="parent" name="com.ligadata.pmml.runtime.LogTrait">
+              <h3>Inherited from <a href="LogTrait.html" class="extype" name="com.ligadata.pmml.runtime.LogTrait">LogTrait</a></h3>
+            </div><div class="parent" name="scala.AnyRef">
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">
-              <h3>Inherited from <span class="extype" name="scala.Any">Any</span></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></h3>
             </div>
         
         </div>
@@ -714,6 +877,7 @@
       <div id="tooltip"></div>
 
       <div id="footer">  </div>
-      <script defer="defer" type="text/javascript" id="jquery-js" src="../../../../lib/jquery.js"></script><script defer="defer" type="text/javascript" id="jquery-ui-js" src="../../../../lib/jquery-ui.js"></script><script defer="defer" type="text/javascript" id="tools-tooltip-js" src="../../../../lib/tools.tooltip.js"></script><script defer="defer" type="text/javascript" id="template-js" src="../../../../lib/template.js"></script>
+
+
     </body>
       </html>

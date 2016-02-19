@@ -1,5 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<!DOCTYPE html >
 <html>
         <head>
           <title>TestMetadataAPI - com.ligadata.MetadataAPI.TestMetadataAPI</title>
@@ -9,6 +8,11 @@
           
       <link href="../../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
       <link href="../../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../../../lib/jquery.js" id="jquery-js"></script>
+      <script type="text/javascript" src="../../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../../lib/template.js"></script>
+      <script type="text/javascript" src="../../../lib/tools.tooltip.js"></script>
+      
       <script type="text/javascript">
          if(top === self) {
             var url = '../../../index.html';
@@ -24,9 +28,15 @@
         </head>
         <body class="value">
       <div id="definition">
-        <img src="../../../lib/object_big.png" />
+        <img alt="Object" src="../../../lib/object_big.png" />
         <p id="owner"><a href="../../package.html" class="extype" name="com">com</a>.<a href="../package.html" class="extype" name="com.ligadata">ligadata</a>.<a href="package.html" class="extype" name="com.ligadata.MetadataAPI">MetadataAPI</a></p>
-        <h1>TestMetadataAPI</h1>
+        <h1>TestMetadataAPI</h1><h3><span class="morelinks"><div>Related Doc:
+            <a href="package.html" class="extype" name="com.ligadata.MetadataAPI">package MetadataAPI</a>
+          </div></span></h3><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       </div>
 
       <h4 id="signature" class="signature">
@@ -41,7 +51,7 @@
       
           <div id="comment" class="fullcommenttop"><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
-          <div class="superTypes hiddenContent"><span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
+          <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></div>
         </div></div>
         
 
@@ -67,7 +77,6 @@
               <li class="hideall out"><span>Hide All</span></li>
               <li class="showall in"><span>Show all</span></li>
             </ol>
-            <a href="http://docs.scala-lang.org/overviews/scaladoc/usage.html#members" target="_blank">Learn more about member selection</a>
           </div>
         <div id="visbl">
             <span class="filtertype">Visibility</span>
@@ -86,19 +95,6 @@
         <div id="values" class="values members">
               <h3>Value Members</h3>
               <ol><li name="scala.AnyRef#!=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="!=(x$1:AnyRef):Boolean"></a>
-      <a id="!=(AnyRef):Boolean"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier">final </span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
-      </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="scala.Any#!=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="!=(x$1:Any):Boolean"></a>
       <a id="!=(Any):Boolean"></a>
       <h4 class="signature">
@@ -107,10 +103,14 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@!=(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.AnyRef###" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="##():Int"></a>
       <a id="##():Int"></a>
@@ -120,24 +120,15 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
+        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@##():Int" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.AnyRef#==" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="==(x$1:AnyRef):Boolean"></a>
-      <a id="==(AnyRef):Boolean"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier">final </span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
-      </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="scala.Any#==" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="==(x$1:Any):Boolean"></a>
       <a id="==(Any):Boolean"></a>
       <h4 class="signature">
@@ -146,10 +137,14 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@==(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#ActivateModel" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="ActivateModel:Unit"></a>
       <a id="ActivateModel:Unit"></a>
@@ -159,9 +154,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">ActivateModel</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">ActivateModel</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@ActivateModel:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#AddConcept" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="AddConcept:Unit"></a>
@@ -172,9 +171,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">AddConcept</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">AddConcept</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@AddConcept:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#AddContainer" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="AddContainer:Unit"></a>
@@ -185,9 +188,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">AddContainer</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">AddContainer</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@AddContainer:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#AddDerivedConcept" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="AddDerivedConcept:Unit"></a>
@@ -198,9 +205,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">AddDerivedConcept</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">AddDerivedConcept</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@AddDerivedConcept:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#AddFunction" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="AddFunction:Unit"></a>
@@ -211,9 +222,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">AddFunction</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">AddFunction</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@AddFunction:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#AddMessage" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="AddMessage:Unit"></a>
@@ -224,9 +239,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">AddMessage</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">AddMessage</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@AddMessage:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#AddModel" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="AddModel:Unit"></a>
@@ -237,9 +256,64 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">AddModel</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">AddModel</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@AddModel:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#AddModelSourceJava" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="AddModelSourceJava(op:String):Unit"></a>
+      <a id="AddModelSourceJava(String):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">AddModelSourceJava</span><span class="params">(<span name="op">op: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@AddModelSourceJava(op:String):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#AddModelSourceScala" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="AddModelSourceScala(op:String):Unit"></a>
+      <a id="AddModelSourceScala(String):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">AddModelSourceScala</span><span class="params">(<span name="op">op: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@AddModelSourceScala(op:String):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#AddOutputMessage" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="AddOutputMessage:Unit"></a>
+      <a id="AddOutputMessage:Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">AddOutputMessage</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@AddOutputMessage:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#AddType" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="AddType:Unit"></a>
@@ -250,9 +324,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">AddType</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">AddType</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@AddType:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#DeactivateModel" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="DeactivateModel:Unit"></a>
@@ -263,9 +341,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">DeactivateModel</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">DeactivateModel</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@DeactivateModel:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#DumpAllAdaptersAsJson" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="DumpAllAdaptersAsJson:Unit"></a>
@@ -276,9 +358,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">DumpAllAdaptersAsJson</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">DumpAllAdaptersAsJson</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@DumpAllAdaptersAsJson:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#DumpAllCfgObjectsAsJson" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="DumpAllCfgObjectsAsJson:Unit"></a>
@@ -289,9 +375,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">DumpAllCfgObjectsAsJson</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">DumpAllCfgObjectsAsJson</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@DumpAllCfgObjectsAsJson:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#DumpAllClusterCfgsAsJson" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="DumpAllClusterCfgsAsJson:Unit"></a>
@@ -302,9 +392,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">DumpAllClusterCfgsAsJson</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">DumpAllClusterCfgsAsJson</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@DumpAllClusterCfgsAsJson:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#DumpAllClustersAsJson" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="DumpAllClustersAsJson:Unit"></a>
@@ -315,9 +409,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">DumpAllClustersAsJson</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">DumpAllClustersAsJson</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@DumpAllClustersAsJson:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#DumpAllConceptsAsJson" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="DumpAllConceptsAsJson:Unit"></a>
@@ -328,9 +426,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">DumpAllConceptsAsJson</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">DumpAllConceptsAsJson</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@DumpAllConceptsAsJson:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#DumpAllFunctionsAsJson" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="DumpAllFunctionsAsJson:Unit"></a>
@@ -341,9 +443,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">DumpAllFunctionsAsJson</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">DumpAllFunctionsAsJson</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@DumpAllFunctionsAsJson:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#DumpAllNodesAsJson" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="DumpAllNodesAsJson:Unit"></a>
@@ -354,9 +460,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">DumpAllNodesAsJson</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">DumpAllNodesAsJson</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@DumpAllNodesAsJson:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#DumpAllTypesByObjTypeAsJson" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="DumpAllTypesByObjTypeAsJson:Unit"></a>
@@ -367,9 +477,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">DumpAllTypesByObjTypeAsJson</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">DumpAllTypesByObjTypeAsJson</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@DumpAllTypesByObjTypeAsJson:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#DumpMetadata" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="DumpMetadata:Unit"></a>
@@ -380,9 +494,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">DumpMetadata</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">DumpMetadata</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@DumpMetadata:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#GetAllContainersFromCache" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="GetAllContainersFromCache:Unit"></a>
@@ -393,9 +511,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">GetAllContainersFromCache</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">GetAllContainersFromCache</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@GetAllContainersFromCache:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#GetAllMessagesFromCache" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="GetAllMessagesFromCache:Unit"></a>
@@ -406,9 +528,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">GetAllMessagesFromCache</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">GetAllMessagesFromCache</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@GetAllMessagesFromCache:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#GetAllMessagesFromStore" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="GetAllMessagesFromStore:Unit"></a>
@@ -419,9 +545,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">GetAllMessagesFromStore</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">GetAllMessagesFromStore</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@GetAllMessagesFromStore:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#GetAllModelsFromCache" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="GetAllModelsFromCache:Unit"></a>
@@ -432,9 +562,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">GetAllModelsFromCache</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">GetAllModelsFromCache</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@GetAllModelsFromCache:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#GetAllModelsFromStore" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="GetAllModelsFromStore:Unit"></a>
@@ -445,9 +579,30 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">GetAllModelsFromStore</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">GetAllModelsFromStore</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@GetAllModelsFromStore:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#GetAllOutputMsgsFromCache" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="GetAllOutputMsgsFromCache:Unit"></a>
+      <a id="GetAllOutputMsgsFromCache:Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">GetAllOutputMsgsFromCache</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@GetAllOutputMsgsFromCache:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#GetAllTypes" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="GetAllTypes:Unit"></a>
@@ -458,9 +613,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">GetAllTypes</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">GetAllTypes</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@GetAllTypes:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#GetContainerFromCache" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="GetContainerFromCache:Unit"></a>
@@ -471,9 +630,30 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">GetContainerFromCache</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">GetContainerFromCache</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@GetContainerFromCache:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#GetFunction" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="GetFunction:Unit"></a>
+      <a id="GetFunction:Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">GetFunction</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@GetFunction:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#GetMessage" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="GetMessage:Unit"></a>
@@ -484,9 +664,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">GetMessage</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">GetMessage</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@GetMessage:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#GetMessageFromCache" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="GetMessageFromCache:Unit"></a>
@@ -497,9 +681,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">GetMessageFromCache</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">GetMessageFromCache</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@GetMessageFromCache:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#GetModel" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="GetModel:Unit"></a>
@@ -510,9 +698,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">GetModel</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">GetModel</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@GetModel:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#GetModelFromCache" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="GetModelFromCache:Unit"></a>
@@ -523,9 +715,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">GetModelFromCache</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">GetModelFromCache</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@GetModelFromCache:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#GetType" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="GetType:Unit"></a>
@@ -536,9 +732,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">GetType</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">GetType</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@GetType:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#IsValidDir" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="IsValidDir(dirName:String):Boolean"></a>
@@ -549,9 +749,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">IsValidDir</span><span class="params">(<span name="dirName">dirName: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">IsValidDir</span><span class="params">(<span name="dirName">dirName: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@IsValidDir(dirName:String):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#LoadConceptsFromAFile" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="LoadConceptsFromAFile:Unit"></a>
@@ -562,9 +766,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">LoadConceptsFromAFile</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">LoadConceptsFromAFile</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@LoadConceptsFromAFile:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#LoadFunctionsFromAFile" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="LoadFunctionsFromAFile:Unit"></a>
@@ -575,9 +783,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">LoadFunctionsFromAFile</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">LoadFunctionsFromAFile</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@LoadFunctionsFromAFile:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#LoadTypesFromAFile" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="LoadTypesFromAFile:Unit"></a>
@@ -588,9 +800,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">LoadTypesFromAFile</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">LoadTypesFromAFile</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@LoadTypesFromAFile:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#NotifyZooKeeperAddMessageEvent" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="NotifyZooKeeperAddMessageEvent:Unit"></a>
@@ -601,9 +817,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">NotifyZooKeeperAddMessageEvent</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">NotifyZooKeeperAddMessageEvent</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@NotifyZooKeeperAddMessageEvent:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#NotifyZooKeeperAddModelEvent" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="NotifyZooKeeperAddModelEvent:Unit"></a>
@@ -614,9 +834,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">NotifyZooKeeperAddModelEvent</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">NotifyZooKeeperAddModelEvent</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@NotifyZooKeeperAddModelEvent:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#RemoveConcept" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="RemoveConcept:Unit"></a>
@@ -627,9 +851,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">RemoveConcept</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">RemoveConcept</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@RemoveConcept:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#RemoveConcepts" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="RemoveConcepts:Unit"></a>
@@ -640,9 +868,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">RemoveConcepts</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">RemoveConcepts</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@RemoveConcepts:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#RemoveContainer" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="RemoveContainer:Unit"></a>
@@ -653,9 +885,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">RemoveContainer</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">RemoveContainer</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@RemoveContainer:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#RemoveEngineConfig" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="RemoveEngineConfig:Unit"></a>
@@ -666,9 +902,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">RemoveEngineConfig</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">RemoveEngineConfig</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@RemoveEngineConfig:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#RemoveFunction" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="RemoveFunction:Unit"></a>
@@ -679,9 +919,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">RemoveFunction</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">RemoveFunction</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@RemoveFunction:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#RemoveMessage" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="RemoveMessage:Unit"></a>
@@ -692,9 +936,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">RemoveMessage</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">RemoveMessage</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@RemoveMessage:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#RemoveMessageFromStore" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="RemoveMessageFromStore:Unit"></a>
@@ -705,9 +953,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">RemoveMessageFromStore</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">RemoveMessageFromStore</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@RemoveMessageFromStore:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#RemoveModel" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="RemoveModel:Unit"></a>
@@ -718,9 +970,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">RemoveModel</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">RemoveModel</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@RemoveModel:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#RemoveModelFromCache" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="RemoveModelFromCache:Unit"></a>
@@ -731,9 +987,30 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">RemoveModelFromCache</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">RemoveModelFromCache</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@RemoveModelFromCache:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#RemoveOutputMsg" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="RemoveOutputMsg:Unit"></a>
+      <a id="RemoveOutputMsg:Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">RemoveOutputMsg</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@RemoveOutputMsg:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#RemoveType" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="RemoveType:Unit"></a>
@@ -744,9 +1021,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">RemoveType</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">RemoveType</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@RemoveType:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#StartTest" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="StartTest:Unit"></a>
@@ -757,12 +1038,50 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">StartTest</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">StartTest</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@StartTest:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#TestCheckAuth" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="TestCheckAuth:Unit"></a>
+      <a id="TestCheckAuth:Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">TestCheckAuth</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@TestCheckAuth:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#TestCheckAuth1" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="TestCheckAuth1:Unit"></a>
+      <a id="TestCheckAuth1:Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">TestCheckAuth1</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@TestCheckAuth1:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#TestChill" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="TestChill[T&lt;:com.ligadata.olep.metadata.BaseElemDef](obj:List[T]):Unit"></a>
+      <a id="TestChill[T&lt;:com.ligadata.kamanja.metadata.BaseElemDef](obj:List[T]):Unit"></a>
       <a id="TestChill[T&lt;:BaseElemDef](List[T]):Unit"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -770,9 +1089,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">TestChill</span><span class="tparams">[<span name="T">T &lt;: <a href="../olep/metadata/BaseElemDef.html" class="extype" name="com.ligadata.olep.metadata.BaseElemDef">BaseElemDef</a></span>]</span><span class="params">(<span name="obj">obj: <span class="extype" name="scala.List">List</span>[<span class="extype" name="com.ligadata.MetadataAPI.TestMetadataAPI.TestChill.T">T</span>]</span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">TestChill</span><span class="tparams">[<span name="T">T &lt;: <a href="../kamanja/metadata/BaseElemDef.html" class="extype" name="com.ligadata.kamanja.metadata.BaseElemDef">BaseElemDef</a></span>]</span><span class="params">(<span name="obj">obj: <span class="extype" name="scala.List">List</span>[<span class="extype" name="com.ligadata.MetadataAPI.TestMetadataAPI.TestChill.T">T</span>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@TestChill[T&lt;:com.ligadata.kamanja.metadata.BaseElemDef](obj:List[T]):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#TestGenericProtobufSerializer" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="TestGenericProtobufSerializer:Unit"></a>
@@ -783,9 +1106,64 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">TestGenericProtobufSerializer</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">TestGenericProtobufSerializer</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@TestGenericProtobufSerializer:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#TestGetAuditRec" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="TestGetAuditRec:Unit"></a>
+      <a id="TestGetAuditRec:Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">TestGetAuditRec</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@TestGetAuditRec:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#TestGetAuditRec1" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="TestGetAuditRec1:Unit"></a>
+      <a id="TestGetAuditRec1:Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">TestGetAuditRec1</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@TestGetAuditRec1:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#TestGetAuditRec2" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="TestGetAuditRec2:Unit"></a>
+      <a id="TestGetAuditRec2:Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">TestGetAuditRec2</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@TestGetAuditRec2:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#TestKryoSerialize" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="TestKryoSerialize(configFile:String):Unit"></a>
@@ -796,9 +1174,30 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">TestKryoSerialize</span><span class="params">(<span name="configFile">configFile: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">TestKryoSerialize</span><span class="params">(<span name="configFile">configFile: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@TestKryoSerialize(configFile:String):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#TestLogAuditRec" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="TestLogAuditRec:Unit"></a>
+      <a id="TestLogAuditRec:Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">TestLogAuditRec</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@TestLogAuditRec:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#TestNotifyZooKeeper" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="TestNotifyZooKeeper:Unit"></a>
@@ -809,22 +1208,30 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">TestNotifyZooKeeper</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">TestNotifyZooKeeper</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@TestNotifyZooKeeper:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#TestSerialize1" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="TestSerialize1(serializeType:String):&lt;error&gt;"></a>
-      <a id="TestSerialize1(String):&lt;error&gt;"></a>
+      <a id="TestSerialize1(serializeType:String):Unit"></a>
+      <a id="TestSerialize1(String):Unit"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">TestSerialize1</span><span class="params">(<span name="serializeType">serializeType: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: &lt;error&gt;</span>
+        <span class="name">TestSerialize1</span><span class="params">(<span name="serializeType">serializeType: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@TestSerialize1(serializeType:String):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#UpdateConcept" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="UpdateConcept:Unit"></a>
@@ -835,9 +1242,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">UpdateConcept</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">UpdateConcept</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@UpdateConcept:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#UpdateContainer" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="UpdateContainer:Unit"></a>
@@ -848,9 +1259,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">UpdateContainer</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">UpdateContainer</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@UpdateContainer:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#UpdateFunction" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="UpdateFunction:Unit"></a>
@@ -861,9 +1276,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">UpdateFunction</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">UpdateFunction</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@UpdateFunction:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#UpdateMessage" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="UpdateMessage:Unit"></a>
@@ -874,9 +1293,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">UpdateMessage</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">UpdateMessage</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@UpdateMessage:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#UpdateModel" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="UpdateModel:Unit"></a>
@@ -887,9 +1310,30 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">UpdateModel</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">UpdateModel</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@UpdateModel:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#UpdateOutputMsg" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="UpdateOutputMsg:Unit"></a>
+      <a id="UpdateOutputMsg:Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">UpdateOutputMsg</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@UpdateOutputMsg:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#UpdateType" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="UpdateType:Unit"></a>
@@ -900,9 +1344,30 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">UpdateType</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">UpdateType</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@UpdateType:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#UploadCompileConfig" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="UploadCompileConfig:Unit"></a>
+      <a id="UploadCompileConfig:Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">UploadCompileConfig</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@UploadCompileConfig:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#UploadEngineConfig" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="UploadEngineConfig:Unit"></a>
@@ -913,9 +1378,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">UploadEngineConfig</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">UploadEngineConfig</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@UploadEngineConfig:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#UploadJarFile" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="UploadJarFile:Unit"></a>
@@ -926,9 +1395,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">UploadJarFile</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">UploadJarFile</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@UploadJarFile:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="scala.Any#asInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="asInstanceOf[T0]:T0"></a>
@@ -941,7 +1414,11 @@
       <span class="symbol">
         <span class="name">asInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Any.asInstanceOf.T0">T0</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@asInstanceOf[T0]:T0" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
     </li><li name="scala.AnyRef#clone" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="clone():Object"></a>
@@ -952,9 +1429,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">clone</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@clone():Object" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -962,19 +1443,6 @@
     </span>)</span>
               
         </dd></dl></div>
-    </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#databaseOpen" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="databaseOpen:Boolean"></a>
-      <a id="databaseOpen:Boolean"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">var</span>
-      </span>
-      <span class="symbol">
-        <span class="name">databaseOpen</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
-      </span>
-      </h4>
-      
     </li><li name="scala.AnyRef#eq" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="eq(x$1:AnyRef):Boolean"></a>
       <a id="eq(AnyRef):Boolean"></a>
@@ -984,9 +1452,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@eq(x$1:AnyRef):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="scala.AnyRef#equals" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="equals(x$1:Any):Boolean"></a>
@@ -997,9 +1469,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@equals(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#fileToString" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="fileToString(filePath:String):String"></a>
@@ -1012,7 +1488,11 @@
       <span class="symbol">
         <span class="name">fileToString</span><span class="params">(<span name="filePath">filePath: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@fileToString(filePath:String):String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="scala.AnyRef#finalize" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="finalize():Unit"></a>
@@ -1023,9 +1503,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">finalize</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@finalize():Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -1044,7 +1528,11 @@
       <span class="symbol">
         <span class="name">getClass</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.Class">Class</span>[_]</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@getClass():Class[_]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.AnyRef#hashCode" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="hashCode():Int"></a>
@@ -1055,9 +1543,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
+        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@hashCode():Int" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#initModCompilerBootstrap" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="initModCompilerBootstrap:Unit"></a>
@@ -1068,9 +1560,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">initModCompilerBootstrap</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">initModCompilerBootstrap</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@initModCompilerBootstrap:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#initMsgCompilerBootstrap" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="initMsgCompilerBootstrap:Unit"></a>
@@ -1081,9 +1577,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">initMsgCompilerBootstrap</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">initMsgCompilerBootstrap</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@initMsgCompilerBootstrap:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="scala.Any#isInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="isInstanceOf[T0]:Boolean"></a>
@@ -1094,22 +1594,30 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@isInstanceOf[T0]:Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#logger" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="logger:&lt;error&gt;"></a>
-      <a id="logger:&lt;error&gt;"></a>
+      <a id="logger:org.apache.logging.log4j.Logger"></a>
+      <a id="logger:Logger"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">lazy val</span>
       </span>
       <span class="symbol">
-        <span class="name">logger</span><span class="result">: &lt;error&gt;</span>
+        <span class="name">logger</span><span class="result">: <span class="extype" name="org.apache.logging.log4j.Logger">Logger</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@logger:org.apache.logging.log4j.Logger" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#loggerName" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="loggerName:String"></a>
@@ -1122,20 +1630,11 @@
       <span class="symbol">
         <span class="name">loggerName</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
       </span>
-      </h4>
-      
-    </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#main" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="main(args:Array[String]):Unit"></a>
-      <a id="main(Array[String]):Unit"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">main</span><span class="params">(<span name="args">args: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
-      </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@loggerName:String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="scala.AnyRef#ne" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ne(x$1:AnyRef):Boolean"></a>
@@ -1146,9 +1645,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@ne(x$1:AnyRef):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="scala.AnyRef#notify" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="notify():Unit"></a>
@@ -1159,9 +1662,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notify</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@notify():Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="scala.AnyRef#notifyAll" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="notifyAll():Unit"></a>
@@ -1172,9 +1679,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@notifyAll():Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#serializer" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="serializer:com.ligadata.Serialize.Serializer"></a>
@@ -1187,7 +1698,11 @@
       <span class="symbol">
         <span class="name">serializer</span><span class="result">: <a href="../Serialize/Serializer.html" class="extype" name="com.ligadata.Serialize.Serializer">Serializer</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@serializer:com.ligadata.Serialize.Serializer" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="scala.AnyRef#synchronized" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="synchronized[T0](x$1:=&gt;T0):T0"></a>
@@ -1200,7 +1715,11 @@
       <span class="symbol">
         <span class="name">synchronized</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="params">(<span name="arg0">arg0: ⇒ <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>)</span><span class="result">: <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@synchronized[T0](x$1:=&gt;T0):T0" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#testDbConn" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="testDbConn:Unit"></a>
@@ -1211,9 +1730,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">testDbConn</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">testDbConn</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@testDbConn:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#testDbOp" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="testDbOp:Unit"></a>
@@ -1224,22 +1747,30 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">testDbOp</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">testDbOp</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@testDbOp:Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.MetadataAPI.TestMetadataAPI#testSaveObject" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="testSaveObject(key:String,value:String,store:com.ligadata.keyvaluestore.DataStore):Unit"></a>
-      <a id="testSaveObject(String,String,DataStore):Unit"></a>
+      <a id="testSaveObject(key:String,value:String,storeType:String):Unit"></a>
+      <a id="testSaveObject(String,String,String):Unit"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">testSaveObject</span><span class="params">(<span name="key">key: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="value">value: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="store">store: <a href="../keyvaluestore/DataStore.html" class="extype" name="com.ligadata.keyvaluestore.DataStore">DataStore</a></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">testSaveObject</span><span class="params">(<span name="key">key: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="value">value: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="storeType">storeType: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@testSaveObject(key:String,value:String,storeType:String):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="scala.AnyRef#toString" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="toString():String"></a>
@@ -1252,7 +1783,11 @@
       <span class="symbol">
         <span class="name">toString</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@toString():String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait():Unit"></a>
@@ -1263,9 +1798,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@wait():Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -1282,9 +1821,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Long">Long</span></span>, <span name="arg1">arg1: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Long" class="extype" target="_top">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@wait(x$1:Long,x$2:Int):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -1301,9 +1844,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Long">Long</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Long" class="extype" target="_top">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.MetadataAPI.TestMetadataAPI$@wait(x$1:Long):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -1321,9 +1868,9 @@
 
         <div id="inheritedMembers">
         <div class="parent" name="scala.AnyRef">
-              <h3>Inherited from <span class="extype" name="scala.AnyRef">AnyRef</span></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">
-              <h3>Inherited from <span class="extype" name="scala.Any">Any</span></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></h3>
             </div>
         
         </div>
@@ -1340,6 +1887,7 @@
       <div id="tooltip"></div>
 
       <div id="footer">  </div>
-      <script defer="defer" type="text/javascript" id="jquery-js" src="../../../lib/jquery.js"></script><script defer="defer" type="text/javascript" id="jquery-ui-js" src="../../../lib/jquery-ui.js"></script><script defer="defer" type="text/javascript" id="tools-tooltip-js" src="../../../lib/tools.tooltip.js"></script><script defer="defer" type="text/javascript" id="template-js" src="../../../lib/template.js"></script>
+
+
     </body>
       </html>
