@@ -66,6 +66,9 @@ while [ "$1" != "" ]; do
     shift
 done
 
+echo "componentVersionJarAbsolutePath:$componentVersionJarAbsolutePath, componentVersionJarFileName:$componentVersionJarFileName, remoteNodeIp:$remoteNodeIp, resultsFileAbsolutePath:$resultsFileAbsolutePath"
+echo "resultFileName:$resultFileName, rootDirPath:$rootDirPath, pathOutputFileName:$pathOutputFileName, jsonArg:$jsonArg"
+
 scp -o StrictHostKeyChecking=no "$componentVersionJarAbsolutePath" "$remoteNodeIp:/tmp/$componentVersionJarFileName"
 
 ssh -o StrictHostKeyChecking=no -T $remoteNodeIp  <<-EOF
