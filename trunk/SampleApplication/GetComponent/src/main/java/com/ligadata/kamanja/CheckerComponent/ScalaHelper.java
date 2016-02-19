@@ -29,7 +29,7 @@ public class ScalaHelper {
             StringBuffer output = new StringBuffer();
             String command = "which scala";
             /// root/Downloads/scala-2.10.4/bin/scala
-            output = str.ExecuteSHCommandInputStream(command);
+            output = str.ExecuteSHCommandInputStream(command, 2000);
 
             String scalaLocation = output.toString();
 
@@ -37,7 +37,7 @@ public class ScalaHelper {
             StringBuffer output0 = new StringBuffer();
             command = scalaLocation + " -version";
             /// root/Downloads/scala-2.10.4/bin/scala
-            output0 = str.ExecuteSHCommandInputStream(command);
+            output0 = str.ExecuteCommandInputStream(command, 2000);
             String doc = str.replaceSpacesFromString(output0.toString().trim().toLowerCase());
 
             if (doc.length() > 0) {
@@ -67,7 +67,7 @@ public class ScalaHelper {
             StringBuffer output1 = new StringBuffer();
             command = "scala -version";
             /// root/Downloads/scala-2.10.4/bin/scala
-            output1 = str.ExecuteSHCommandInputStream(command);
+            output1 = str.ExecuteCommandInputStream(command, 2000);
             doc = str.replaceSpacesFromString(output1.toString().trim().toLowerCase());
 
             if (doc.length() > 0) {

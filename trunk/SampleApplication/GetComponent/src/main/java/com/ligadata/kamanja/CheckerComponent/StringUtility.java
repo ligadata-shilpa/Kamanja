@@ -5,14 +5,15 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.InetAddress;
+import java.util.concurrent.TimeUnit;
 
 public class StringUtility {
-	public StringBuffer ExecuteSHCommandErrStream(String command) {
+	public StringBuffer ExecuteSHCommandErrStream(String command, long timeoutInMs) {
 		StringBuffer output = new StringBuffer();
 		Process p;
 		try {
 			p = Runtime.getRuntime().exec(new String[] { "sh", "-c", command });
-			p.waitFor();
+			p.waitFor(timeoutInMs, TimeUnit.MILLISECONDS);
 			BufferedReader reader = new BufferedReader(new InputStreamReader(p.getErrorStream()));
 			String line = "";
 			while ((line = reader.readLine()) != null) {
@@ -25,12 +26,30 @@ public class StringUtility {
 		return output;
 	}
 
-	public StringBuffer ExecuteSHCommandInputStream(String command) {
+	public StringBuffer ExecuteSHCommandInputStream(String command, long timeoutInMs) {
 		StringBuffer output = new StringBuffer();
 		Process p;
 		try {
 			p = Runtime.getRuntime().exec(new String[] { "sh", "-c", command });
-			p.waitFor();
+			p.waitFor(timeoutInMs, TimeUnit.MILLISECONDS);
+			BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+			String line = "";
+			while ((line = reader.readLine()) != null) {
+				output.append(line + "\n");
+			}
+			// System.out.println(output.toString());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return output;
+	}
+
+	public StringBuffer ExecuteCommandInputStream(String command, long timeoutInMs) {
+		StringBuffer output = new StringBuffer();
+		Process p;
+		try {
+			p = Runtime.getRuntime().exec(command);
+			p.waitFor(timeoutInMs, TimeUnit.MILLISECONDS);
 			BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
 			String line = "";
 			while ((line = reader.readLine()) != null) {
