@@ -646,11 +646,11 @@ object InstallDriver extends App {
         } catch {
             case e : Exception => {
                 phyDirLast = rootDirPath  // substitute the symbol link to see if we can test more ... this is temporary hack
-                true
+                false
             }
             case t : Throwable => {
                 phyDirLast = rootDirPath
-                true
+                false
             }
         }
 
@@ -861,6 +861,14 @@ object InstallDriver extends App {
         properties
     }
 
+    /**
+
+      * @param log
+      * @param physicalRootDir
+      * @param fromKamanjaVer
+      * @param toKamanjaVer
+      * @return
+      */
 
     def CreateInstallationNames(log : InstallDriverLog, physicalRootDir : String, fromKamanjaVer : String, toKamanjaVer : String)
             : (String, String, String) = {
@@ -889,7 +897,23 @@ object InstallDriver extends App {
     /**
       * Call the KamanjaClusterInstall with the following parameters that it needs to install the software on the cluster.
       * Important events encountered during the installation are added to the InstallDriverLog instance.
+      * Semantics:
       *
+      * The installation is performed and as part of the result a file is produced that has information in it like this that
+      * is used to verify the installation. There will be a row for each cluster node.  The fields are compared/contrasted
+      * to see if the installation was successful.  Here is sample file content:
+      *
+      * # {HostName,LinkDir,LinkExists(Yes|No),LinkPointingToDir,LinkPointingDirExists(Yes|No),NewInstallDir, NewInstallDirExists(Yes|No)}
+
+        10.100.0.53,/opt/KamanjaCluster-2.11,Yes,/opt/KamanjaCluster-2.11_20160218231108,Yes,/opt/KamanjaCluster-2.11_20160218231108,Yes
+        10.100.0.54,/opt/KamanjaCluster-2.11,Yes,/opt/KamanjaCluster-2.11_20160218231108,Yes,/opt/KamanjaCluster-2.11_20160218231108,Yes
+        10.100.0.55,/opt/KamanjaCluster-2.11,Yes,/opt/KamanjaCluster-2.11_20160218231108,Yes,/opt/KamanjaCluster-2.11_20160218231108,Yes
+
+        Checks: 1) All should be Yes/No should be Yes
+                2) LinkPointingToDir and NewInstallDir should be equivalent
+                3) The newInstallDirName passed should match  NewInstallDir
+                4) LinkDir and API config property ROOT_DIR value should match
+
       * @param log the InstallDriverLog that tracks progress and important events of this installation
       * @param physicalRootDir the actual root dir for the installation
       * @param apiConfigPath the api config that contains seminal information about the cluster installation
@@ -924,10 +948,19 @@ object InstallDriver extends App {
             sys.exit(1)
         }
 
+        val dateTime : DateTime = new DateTime
+        val fmt : DateTimeFormatter  = DateTimeFormat.forPattern("yyyyMMdd_HHmmss")
+        val datestr : String = fmt.print(dateTime);
+        val verifyFilePath : String = "/tmp/__KamanjaClusterResults_$datestr"
+
         val priorInstallDirPath : String = s"$parentPath/$priorInstallDirName"
         val newInstallDirPath : String = s"$parentPath/$newInstallDirName"
-        val installCmd : Seq[String]  = Seq("bash", "-c", s"KamanjaClusterInstall.sh  --MetadataAPIConfig $apiConfigPath --NodeConfigPath $nodeConfigPath --ParentPath $parentPath --PriorInstallDirName $priorInstallDirName --NewInstallDirName $newInstallDirName --TarballPath $tarballPath --ipAddrs $ips --ipIdTargPaths $ipIdTargPaths --ipPathPairs $ipPathPairs --priorInstallDirPath $priorInstallDirPath --newInstallDirPath $newInstallDirPath")
-        log.emit(s"KamanjaClusterInstall cmd used: $installCmd")
+        val installCmd : Seq[String]  = Seq("bash", "-c", s"KamanjaClusterInstall.sh  --MetadataAPIConfig $apiConfigPath --NodeConfigPath $nodeConfigPath --ParentPath $parentPath --PriorInstallDirName $priorInstallDirName --NewInstallDirName $newInstallDirName --TarballPath $tarballPath --ipAddrs $ips --ipIdTargPaths $ipIdTargPaths --ipPathPairs $ipPathPairs --priorInstallDirPath $priorInstallDirPath --newInstallDirPath $newInstallDirPath --installVerificationFile $verifyFilePath ")
+        val installCmdRep : String = installCmd.mkString(" ")
+        log.emit(s"KamanjaClusterInstall cmd used: \n\n$installCmdRep")
+
+        //println(s"KamanjaClusterInstall cmd used: \n\n$installCmdRep\n")
+
         val installCmdRc : Int = (installCmd #> new File("/tmp/__install_results_")).!
         val installCmdResults : String = Source.fromFile("/tmp/__install_results_").mkString
         if (installCmdRc != 0) {
@@ -937,6 +970,11 @@ object InstallDriver extends App {
             log.emit(s"Installation is aborted. Consult the log file (${log.logPath}) for details.")
             log.close
             sys.exit(1)
+        } else {
+
+            /**FIXME: The interpretation of the installVerificationFile values are made here or in function call
+              * made from here
+              */
         }
         log.emit(s"New installation command result report:\n$installCmdResults")
 
