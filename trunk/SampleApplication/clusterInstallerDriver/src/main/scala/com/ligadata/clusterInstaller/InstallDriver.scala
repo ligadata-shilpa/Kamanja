@@ -938,7 +938,7 @@ object InstallDriver extends App {
         isInvalid = true;
       }
       if (av(2).equalsIgnoreCase("No") || av(4).equalsIgnoreCase("No") || av(6).equalsIgnoreCase("No")) {
-        val errMsg = ("LinkExists/LinkPointingDirExists/NewInstallDirExists is NOfrom %s".format(, av.mkString(",")))
+        val errMsg = ("LinkExists/LinkPointingDirExists/NewInstallDirExists is NO from %s".format(av.mkString(",")))
         log.emit(errMsg)
         logger.error(errMsg)
         isInvalid = true;
