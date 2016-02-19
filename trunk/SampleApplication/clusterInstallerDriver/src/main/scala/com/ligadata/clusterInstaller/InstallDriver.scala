@@ -535,14 +535,7 @@ object InstallDriver extends App {
       val zkConnections: String = clusterConfigMap.ZooKeeperConnectionString
 
       val jsonParm: String =
-        """
-[{ "component" : "zookeeper", "hostslist" : "%s" }
-, { "component" : "kafka", "hostslist" : "%s" }
-, %s
-, { "component" : "scala", "hostslist" : "localhost" }
-, { "component" : "java", "hostslist" : "localhost" }]
-        """.stripMargin.format(zkConnections, kafkaConnections, hbaseConnections)
-
+        """[{ "component" : "zookeeper", "hostslist" : "%s" }, { "component" : "kafka", "hostslist" : "%s" }, %s, { "component" : "scala", "hostslist" : "localhost" }, { "component" : "java", "hostslist" : "localhost" }]""".stripMargin.format(zkConnections, kafkaConnections, hbaseConnections)
 
 
       /**
@@ -744,7 +737,7 @@ object InstallDriver extends App {
 
     _cntr += 1
     val pathOutputFlName = "__path_output_" + _cntr + "_" + math.abs(this.hashCode) + "_" + math.abs(resultFileName.hashCode) + "_" + math.abs(scriptAbsolutePath.hashCode) + "_" + math.abs(componentVersionJarFileName.hashCode)
-    val getComponentInvokeCmd: String = s"$scriptAbsolutePath  --componentVersionJarAbsolutePath $componentVersionJarAbsolutePath --componentVersionJarFileName $componentVersionJarFileName --remoteNodeIp $remoteNodeIp --resultsFileAbsolutePath $resultsFileAbsolutePath --resultFileName $resultFileName --rootDirPath $rootDirPath --pathOutputFileName $pathOutputFlName --jsonArg ${'"'}$jsonArg ${'"'}"
+    val getComponentInvokeCmd: String = s"$scriptAbsolutePath  --componentVersionJarAbsolutePath $componentVersionJarAbsolutePath --componentVersionJarFileName $componentVersionJarFileName --remoteNodeIp $remoteNodeIp --resultsFileAbsolutePath $resultsFileAbsolutePath --resultFileName $resultFileName --rootDirPath $rootDirPath --pathOutputFileName $pathOutputFlName --jsonArg \'$jsonArg\'"
     val getComponentsVersionCmd: Seq[String] = Seq("bash", "-c", getComponentInvokeCmd)
     _cntr += 1
     val logFile = "/tmp/__get_comp_ver_results_" + _cntr + "_" + math.abs(pathOutputFlName.hashCode) + "_" + math.abs(getComponentsVersionCmd.hashCode) + "_" + math.abs(scriptAbsolutePath.hashCode)
