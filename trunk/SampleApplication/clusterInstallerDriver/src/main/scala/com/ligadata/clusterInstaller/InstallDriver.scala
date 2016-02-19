@@ -36,6 +36,8 @@ import com.ligadata.Serialize.JsonSerializer
 import com.ligadata.Migrate.{Migrate, StatusCallback}
 import com.ligadata.Utils.Utils
 
+import org.json4s.jackson.Serialization
+
 /**
   * This application installs and upgrades Kamanaja.  It does these essential things:
 
@@ -480,6 +482,26 @@ object InstallDriver extends App {
   }
 
   /**
+    * getStringFromJsonNode
+    *
+    * @param v just any old thing
+    * @return a string representation
+    */
+  private def getStringFromJsonNode(v: Any): String = {
+    if (v == null) return ""
+
+    if (v.isInstanceOf[String]) return v.asInstanceOf[String]
+
+    implicit val jsonFormats: Formats = DefaultFormats
+    val lst = List(v)
+    val str = Serialization.write(lst)
+    if (str.size > 2) {
+      return str.substring(1, str.size - 1)
+    }
+    return ""
+  }
+
+  /**
     *
     * The scala version on each cluster node is tested against the toScala version supplied as a parameter value here.
     * The java must be 1.7x or 1.8x.
@@ -534,12 +556,12 @@ object InstallDriver extends App {
 
       val jsonParm: String =
         """
-{[{ "component" : "zookeeper", "hostslist" : "%s" }
+[{ "component" : "zookeeper", "hostslist" : "%s" }
 , { "component" : "kafka", "hostslist" : "%s" }
-, { "component" : "hbase", "hostslist" : "%s" }
+, "%s"
 , { "component" : "scala", "hostslist" : "localhost" }
-, { "component" : "java", "hostslist" : "localhost" }]}
-        """.stripMargin.format(zkConnections, kafkaConnections, hbaseConnections)
+, { "component" : "java", "hostslist" : "localhost" }]
+        """.stripMargin.format(zkConnections, kafkaConnections, getStringFromJsonNode(hbaseConnections))
 
 
 
@@ -1279,7 +1301,7 @@ class ClusterConfigMap(cfgStr: String, clusterIdOfInterest: String) {
       val conn: String = adapterSpecificCfg.getOrElse("HostList", "").asInstanceOf[String]
       conn
     })
-    hostConnections.mkString(",")
+    hostConnections.toSet.mkString(",")
   }
 
   def DataStoreConnections: String = {
