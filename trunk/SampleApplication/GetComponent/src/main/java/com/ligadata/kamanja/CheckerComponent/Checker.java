@@ -99,8 +99,9 @@ public class Checker {
                     getFailedComponentInfo(bean, component, e, scala.getErrorMessage());
                 }
                 break;
-            // }
-            // list.add(bean);
+            default:
+                getFailedComponentInfo(bean, component, null, "Unhandled component");
+                break;
         }
 
         // return list;

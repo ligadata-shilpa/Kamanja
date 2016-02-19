@@ -25,23 +25,90 @@ public class ScalaHelper {
 
     public String ScalaVersion() {
         try {
-            System.out.println("Scala started");
+            StringUtility str = new StringUtility();
             StringBuffer output = new StringBuffer();
-            status = "Success";
             String command = "which scala";
             /// root/Downloads/scala-2.10.4/bin/scala
-            StringUtility str = new StringUtility();
             output = str.ExecuteSHCommandInputStream(command);
-            String doc = str.replaceSpacesFromString(output.toString().trim().toLowerCase());
+
+            String scalaLocation = output.toString();
+
+            // Try1
+            StringBuffer output0 = new StringBuffer();
+            command = scalaLocation + " -version";
+            /// root/Downloads/scala-2.10.4/bin/scala
+            output0 = str.ExecuteSHCommandInputStream(command);
+            String doc = str.replaceSpacesFromString(output0.toString().trim().toLowerCase());
+
+            if (doc.length() > 0) {
+                int beginIndex = str.IndexOfString(doc, "Scala code runner version");
+                if (beginIndex >= 0) {
+                    beginIndex += "Scala code runner version".length();
+                } else {
+                    beginIndex = str.IndexOfString(doc, "2.");
+                }
+
+                if (beginIndex >= 0) {
+                    // System.out.println(beginIndex);
+                    int lastIndex = str.IndexOfStringFrom(doc, beginIndex, "--");
+                    // System.out.println(lastIndex);
+                    // System.out.println(str.getWordBetweenIndex(doc, beginIndex +
+                    // "scala-".length(), lastIndex));
+                    if (lastIndex > 0)
+                        version = doc.substring(beginIndex + "scala-".length(), lastIndex).trim();
+                    else
+                        version = doc.substring(beginIndex + "scala-".length()).trim();
+                    status = "Success";
+                    return version;
+                }
+            }
+
+            // Try2
+            StringBuffer output1 = new StringBuffer();
+            command = "scala -version";
+            /// root/Downloads/scala-2.10.4/bin/scala
+            output1 = str.ExecuteSHCommandInputStream(command);
+            doc = str.replaceSpacesFromString(output1.toString().trim().toLowerCase());
+
+            if (doc.length() > 0) {
+                int beginIndex = str.IndexOfString(doc, "Scala code runner version");
+                if (beginIndex >= 0) {
+                    beginIndex += "Scala code runner version".length();
+                } else {
+                    beginIndex = str.IndexOfString(doc, "2.");
+                }
+
+                if (beginIndex >= 0) {
+                    // System.out.println(beginIndex);
+                    int lastIndex = str.IndexOfStringFrom(doc, beginIndex, "--");
+                    // System.out.println(lastIndex);
+                    // System.out.println(str.getWordBetweenIndex(doc, beginIndex +
+                    // "scala-".length(), lastIndex));
+                    if (lastIndex > 0)
+                        version = doc.substring(beginIndex + "scala-".length(), lastIndex).trim();
+                    else
+                        version = doc.substring(beginIndex + "scala-".length()).trim();
+                    status = "Success";
+                    return version;
+                }
+            }
+
+            // Try3
+            doc = str.replaceSpacesFromString(output.toString().trim().toLowerCase());
             int beginIndex = str.IndexOfString(doc, "scala-");
-            // System.out.println(beginIndex);
-            int lastIndex = str.IndexOfStringFrom(doc, beginIndex, "/");
-            // System.out.println(lastIndex);
-            // System.out.println(str.getWordBetweenIndex(doc, beginIndex +
-            // "scala-".length(), lastIndex));
-            version = str.getWordBetweenIndex(doc, beginIndex + "scala-".length(), lastIndex);
-            System.out.println("Scala Successful");
-            return version;
+            if (beginIndex >= 0) {
+                // System.out.println(beginIndex);
+                int lastIndex = str.IndexOfStringFrom(doc, beginIndex, "/");
+                // System.out.println(lastIndex);
+                // System.out.println(str.getWordBetweenIndex(doc, beginIndex +
+                // "scala-".length(), lastIndex));
+                if (lastIndex > 0)
+                    version = doc.substring(beginIndex + "scala-".length(), lastIndex);
+                else
+                    version = doc.substring(beginIndex + "scala-".length());
+                status = "Success";
+                return version;
+            }
         } catch (Exception e) {
             // e.printStackTrace(new PrintWriter(errors));
             // errorMessage = errors.toString();
