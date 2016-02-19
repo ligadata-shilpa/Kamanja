@@ -63,11 +63,12 @@ Usage()
     echo "                               --TarballPath <tarball path>"
     echo "                               --NodeConfigPath <engine config path> "
     echo "                               [ --WorkingDir <alt working dir>  ]"
-    echo "                               --ipAddrs the ips in the cluster  "
-    echo "                               --ipIdTargPaths unique ips, node ids, target paths, and roles  "
-    echo "                               --ipPathPairs unique ips and target paths  "
-    echo "                               --priorInstallDirPath name to use for rename of prior install if any  "
-    echo "                               --newInstallDirPath new name of physical install  "
+    echo "                               --ipAddrs <the ips in the cluster>  "
+    echo "                               --ipIdTargPaths <unique ips, node ids, target paths, and roles>  "
+    echo "                               --ipPathPairs <unique ips and target paths>  "
+    echo "                               --priorInstallDirPath <name to use for rename of prior install if any>  "
+    echo "                               --newInstallDirPath <new dir path of physical install>  "
+    echo "                               --installVerificationFile <file to get the verification information>  "
     echo
     echo "  NOTES: Only tar'd gzip files are supported for the tarballs at the moment."
     echo "         NodeConfigPath must be supplied always"
@@ -85,7 +86,7 @@ Usage()
 
 
 # Check 1: Is this even close to reasonable?
-if [[ "$#" -eq 1  || "$#" -eq 4  || "$#" -eq 6  || "$#" -eq 8  || "$#" -eq 10  || "$#" -eq 12  || "$#" -eq 14  || "$#" -eq 16  || "$#" -eq 18  || "$#" -eq 20 ]]; then
+if [[ "$#" -eq 1  || "$#" -eq 4  || "$#" -eq 6  || "$#" -eq 8  || "$#" -eq 10  || "$#" -eq 12  || "$#" -eq 14  || "$#" -eq 16  || "$#" -eq 18  || "$#" -eq 20 || "$#" -eq 22 || "$#" -eq 24 ]]; then
     echo 
 else 
     echo 
@@ -97,7 +98,7 @@ fi
 # Check 2: Is this even close to reasonable?
 if [[ "$name1" != "--ClusterId" && "$name1" != "--MetadataAPIConfig" && "$name1" != "--NodeConfigPath"  && "$name1" != "--KafkaInstallPath"   && "$name1" != "--TarballPath"  && "$name1" != "--WorkingDir"   && "$name1" != "--ipAddrs"   && "$name1" != "--ipIdTargPaths"   && "$name1" != "--ipPathPairs" && "$name1" != --priorInstallDirPath" &&  n"$name1" != ""--newInstallDirPath" ]]; then
     echo 
-	echo "Problem: Unreasonable number of arguments... as few as 2 and as many as 20 may be supplied."
+	echo "Problem: Unreasonable number of arguments... as few as 2 and as many as 24 may be supplied."
     Usage
 	exit 1
 fi
@@ -116,6 +117,7 @@ ipIdTargPaths=""
 ipPathPairs=""
 priorInstallDirPath=""
 newInstallDirPath=""
+installVerificationFile=""
 
 while [ "$1" != "" ]; do
     case $1 in
@@ -153,6 +155,9 @@ while [ "$1" != "" ]; do
         --newInstallDirPath )   shift
                                 newInstallDirPath=$1
                                 ;;
+        --installVerificationFile )   shift
+                                installVerificationFile=$1
+                                ;;
         --help )           		Usage
         						exit 0
                                 ;;
@@ -178,8 +183,6 @@ currDir=`echo "$currDirPath" | sed 's/.*\/\(.*\)/\1/g'`
 #	Usage
 #	exit 1
 #fi
-
-
 
 # Check 4: Is this even close to reasonable?
 echo "tarballPath = $tarballPath"
@@ -208,6 +211,13 @@ if [ -z "$workDirHasLeadSlash" ]; then
     Usage
     exit 1
 fi
+
+# if installVerificationFile option is not given, generating file InstallVerificationFile.txt in $workDir
+if [ "$installVerificationFile" == "" ]; then
+	installVerificationFile="$workDir/InstallVerificationFile.txt"
+fi
+
+rm -f $installVerificationFile
 
 # Creating working directory
 mkdir -p $workDir
@@ -457,9 +467,6 @@ while read LINE; do
         newInstallDirPath="$targetPath_date"
     fi
 	
-	curNodePriorInstDetected="false"
-	curNodeBrokenLnk="false"
-	
     echo "On node $machine extract the tarball $tarName and copy it to $targetPath iff $workDir/$installDirName != $targetPath"
 	echo "Values before execute on node $machine => TargetPath: $targetPath, PriorInstallDirPath: $priorInstallDirPath, NewInstallDirPath:  $newInstallDirPath"
 
@@ -469,23 +476,41 @@ while read LINE; do
 			if [ ! -L $targetPath ]; then
 				if [ -d "$targetPath" ]; then
 					mv 	"$targetPath" "$priorInstallDirPath"
-					priorInstallationDetected="true"
-					curNodePriorInstDetected="true"
+					echo "true,false" > "$workDir/curNodeLinksInfoLocal.txt"
+				else
+					echo "false,false" > "$workDir/curNodeLinksInfoLocal.txt"
 				fi
 			else
-				priorInstallationDetected="true"
-				curNodePriorInstDetected="true"
-				brokenLink="true"
-				curNodeBrokenLnk="true"
+				cd $targetPath
+				echo "true,true,\$(pwd -P)" > "$workDir/curNodeLinksInfoLocal.txt"
+				cd $workDir
 				unlink $targetPath
 			fi
 			mkdir -p $newInstallDirPath
 	 		tar xzf $tarName -C $newInstallDirPath --strip-components 1
 			ln -sf  $newInstallDirPath $targetPath
 	 	else
+			echo "false,false" > "$workDir/curNodeLinksInfoLocal.txt"
 			echo "$targetFolder is not directory"	
 		fi
 EOF
+
+    scp -o StrictHostKeyChecking=no "$machine:$workDir/curNodeLinksInfoLocal.txt" "$workDir/curNodeLinksInfo.txt"
+    
+    curNodeFlags=$( cat "$workDir/curNodeLinksInfo.txt" )
+    curNodeFlgsArr=(`echo $curNodeFlags | cut -d ","  --output-delimiter=" " -f 1-`)
+
+	curNodePriorInstDetected=${curNodeFlgsArr[0]}
+	curNodeBrokenLnk=${curNodeFlgsArr[1]}
+	foundPriorInstDir=${curNodeFlgsArr[2]}
+
+	if [ "$curNodePriorInstDetected" == "true" ]; then
+		priorInstallationDetected="true"
+	fi
+
+	if [ "$curNodeBrokenLnk" == "true" ]; then
+		brokenLink="true"
+	fi
 
 	if [ "$curNodePriorInstDetected" == "false" ]; then
 		echo "On node $machine prior installation not found at $targetPath. New installation is done at $newInstallDirPath and created link from $targetPath to $newInstallDirPath"
@@ -493,7 +518,7 @@ EOF
 		if [ "$curNodeBrokenLnk" == "false" ]; then
 			echo "On node $machine found prior installation path at $targetPath as directory and now moved it to $priorInstallDirPath. New installation is done at $newInstallDirPath and created link from $targetPath to $newInstallDirPath"
 		else
-			echo "On node $machine found prior installation path at $targetPath as link to $priorInstallDirPath. New installation is done at $newInstallDirPath and created link from $targetPath to $newInstallDirPath"
+			echo "On node $machine found prior installation path at $targetPath as link to $foundPriorInstDir. New installation is done at $newInstallDirPath and created link from $targetPath to $newInstallDirPath"
 		fi
 	fi
 done
@@ -543,6 +568,7 @@ while read LINE; do
     scp -o StrictHostKeyChecking=no "$workDir/restapi_log4j2.xml" "$machine:$targetPath/"
     scp -o StrictHostKeyChecking=no "$workDir/log4j2.xml" "$machine:$targetPath/"
     scp -o StrictHostKeyChecking=no "$workDir/MetadataAPIConfig_${id}.properties" "$machine:$targetPath/MetadataAPIConfig_${id}.properties"
+    scp -o StrictHostKeyChecking=no "$workDir/MetadataAPIConfig_${id}.properties" "$machine:$targetPath/MetadataAPIConfig.properties"
 done
 exec 0<&12 12<&-
 
@@ -582,4 +608,46 @@ echo
 # EOF
 # done
 # exec 0<&12 12<&-
+
+
+# 9) Check on each node and Write the information for verification purpose
+exec 12<&0 # save current stdin
+exec < "$ipPathPairFile"
+while read LINE; do
+	machine=$LINE
+	read LINE
+	targetPath=$LINE
+
+	ssh -o StrictHostKeyChecking=no -T $machine  <<-EOF
+		# {HostName,LinkDir,LinkExists(Yes|No),LinkPointingToDir,LinkPointingDirExists(Yes|No),NewInstallDir, NewInstallDirExists(Yes|No)} 
+		if [ -d "$targetPath" ]; then 
+			if [ ! -L $targetPath ]; then
+				cd $targetPath
+				if [ -d "$newInstallDirPath" ]; then 
+					echo "$machine,$targetPath,No,\$(pwd -P),Yes,$newInstallDirPath,Yes"	> "$workDir/InstallStatusLocal.txt"
+				else
+					echo "$machine,$targetPath,No,\$(pwd -P),Yes,$newInstallDirPath,No"	> "$workDir/InstallStatusLocal.txt"
+				fi
+			else
+				cd $targetPath
+				if [ -d "$newInstallDirPath" ]; then 
+					echo "$machine,$targetPath,Yes,\$(pwd -P),Yes,$newInstallDirPath,Yes"	> "$workDir/InstallStatusLocal.txt"
+				else
+					echo "$machine,$targetPath,Yes,\$(pwd -P),Yes,$newInstallDirPath,No"	> "$workDir/InstallStatusLocal.txt"
+				fi
+			fi
+		else
+			if [ -d "$newInstallDirPath" ]; then 
+				echo "$machine,$targetPath,No,,No,$newInstallDirPath,Yes"	> "$workDir/InstallStatusLocal.txt"
+			else
+				echo "$machine,$targetPath,No,,No,$newInstallDirPath,No"	> "$workDir/InstallStatusLocal.txt"
+			fi
+		fi
+EOF
+    scp -o StrictHostKeyChecking=no "$machine:$workDir/InstallStatusLocal.txt" "$workDir/InstallStatus.txt"
+    cat "$workDir/InstallStatus.txt" >> $installVerificationFile
+done
+exec 0<&12 12<&-
+
+echo
 
