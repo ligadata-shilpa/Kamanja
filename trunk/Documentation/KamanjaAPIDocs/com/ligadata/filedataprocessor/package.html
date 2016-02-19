@@ -1,0 +1,328 @@
+<!DOCTYPE html >
+<html>
+        <head>
+          <title>filedataprocessor - com.ligadata.filedataprocessor</title>
+          <meta name="description" content="filedataprocessor - com.ligadata.filedataprocessor" />
+          <meta name="keywords" content="filedataprocessor com.ligadata.filedataprocessor" />
+          <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+          
+      <link href="../../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
+      <link href="../../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../../../lib/jquery.js" id="jquery-js"></script>
+      <script type="text/javascript" src="../../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../../lib/template.js"></script>
+      <script type="text/javascript" src="../../../lib/tools.tooltip.js"></script>
+      
+      <script type="text/javascript">
+         if(top === self) {
+            var url = '../../../index.html';
+            var hash = 'com.ligadata.filedataprocessor.package';
+            var anchor = window.location.hash;
+            var anchor_opt = '';
+            if (anchor.length >= 1)
+              anchor_opt = '@' + anchor.substring(1);
+            window.location.href = url + '#' + hash + anchor_opt;
+         }
+   	  </script>
+    
+        </head>
+        <body class="value">
+      <div id="definition">
+        <img alt="Package" src="../../../lib/package_big.png" />
+        <p id="owner"><a href="../../package.html" class="extype" name="com">com</a>.<a href="../package.html" class="extype" name="com.ligadata">ligadata</a></p>
+        <h1>filedataprocessor</h1><span class="permalink">
+      <a href="../../../index.html#com.ligadata.filedataprocessor.package" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      </div>
+
+      <h4 id="signature" class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <span class="name">filedataprocessor</span>
+      </span>
+      </h4>
+      
+          <div id="comment" class="fullcommenttop"></div>
+        
+
+      <div id="mbrsel">
+        <div id="textfilter"><span class="pre"></span><span class="input"><input id="mbrsel-input" type="text" accesskey="/" /></span><span class="post"></span></div>
+        
+        
+        <div id="visbl">
+            <span class="filtertype">Visibility</span>
+            <ol><li class="public in"><span>Public</span></li><li class="all out"><span>All</span></li></ol>
+          </div>
+      </div>
+
+      <div id="template">
+        <div id="allMembers">
+        
+
+        <div id="types" class="types members">
+              <h3>Type Members</h3>
+              <ol><li name="com.ligadata.filedataprocessor.BufferLeftoversArea" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="BufferLeftoversAreaextendsProductwithSerializable"></a>
+      <a id="BufferLeftoversArea:BufferLeftoversArea"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="BufferLeftoversArea.html"><span class="name">BufferLeftoversArea</span></a><span class="params">(<span name="workerNumber">workerNumber: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>, <span name="leftovers">leftovers: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Char" class="extype" target="_top">Char</a>]</span>, <span name="relatedChunk">relatedChunk: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.filedataprocessor.package@BufferLeftoversAreaextendsProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.filedataprocessor.BufferToChunk" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="BufferToChunkextendsProductwithSerializable"></a>
+      <a id="BufferToChunk:BufferToChunk"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="BufferToChunk.html"><span class="name">BufferToChunk</span></a><span class="params">(<span name="len">len: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>, <span name="payload">payload: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Char" class="extype" target="_top">Char</a>]</span>, <span name="chunkNumber">chunkNumber: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>, <span name="relatedFileName">relatedFileName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="firstValidOffset">firstValidOffset: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>, <span name="isEof">isEof: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>, <span name="partMap">partMap: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.mutable.Map" class="extype" target="_top">Map</a>[<a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a>]</span>)</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.filedataprocessor.package@BufferToChunkextendsProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.filedataprocessor.DirectoryListener" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="DirectoryListenerextendsAnyRef"></a>
+      <a id="DirectoryListener:DirectoryListener"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="DirectoryListener.html"><span class="name">DirectoryListener</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.filedataprocessor.package@DirectoryListenerextendsAnyRef" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Created by danielkozin on 9/24/15.</p>
+    </li><li name="com.ligadata.filedataprocessor.EnqueuedFile" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="EnqueuedFileextendsProductwithSerializable"></a>
+      <a id="EnqueuedFile:EnqueuedFile"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="EnqueuedFile.html"><span class="name">EnqueuedFile</span></a><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="offset">offset: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>, <span name="createDate">createDate: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Long" class="extype" target="_top">Long</a></span>, <span name="partMap">partMap: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.mutable.Map" class="extype" target="_top">Map</a>[<a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a>]</span>)</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.filedataprocessor.package@EnqueuedFileextendsProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.filedataprocessor.FileProcessor" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="FileProcessorextendsRunnable"></a>
+      <a id="FileProcessor:FileProcessor"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="FileProcessor.html"><span class="name">FileProcessor</span></a><span class="result"> extends <span class="extype" name="java.lang.Runnable">Runnable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.filedataprocessor.package@FileProcessorextendsRunnable" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt"></p>
+    </li><li name="com.ligadata.filedataprocessor.FileStatus" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="FileStatusextendsProductwithSerializable"></a>
+      <a id="FileStatus:FileStatus"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="FileStatus.html"><span class="name">FileStatus</span></a><span class="params">(<span name="status">status: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>, <span name="offset">offset: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Long" class="extype" target="_top">Long</a></span>, <span name="createDate">createDate: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Long" class="extype" target="_top">Long</a></span>)</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.filedataprocessor.package@FileStatusextendsProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.filedataprocessor.KafkaMessage" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="KafkaMessageextendsProductwithSerializable"></a>
+      <a id="KafkaMessage:KafkaMessage"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="KafkaMessage.html"><span class="name">KafkaMessage</span></a><span class="params">(<span name="msg">msg: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Char" class="extype" target="_top">Char</a>]</span>, <span name="offsetInFile">offsetInFile: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>, <span name="isLast">isLast: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>, <span name="isLastDummy">isLastDummy: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>, <span name="relatedFileName">relatedFileName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="partMap">partMap: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.mutable.Map" class="extype" target="_top">Map</a>[<a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a>]</span>)</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.filedataprocessor.package@KafkaMessageextendsProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.filedataprocessor.KafkaMessageLoader" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="KafkaMessageLoaderextendsAnyRef"></a>
+      <a id="KafkaMessageLoader:KafkaMessageLoader"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="KafkaMessageLoader.html"><span class="name">KafkaMessageLoader</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.filedataprocessor.package@KafkaMessageLoaderextendsAnyRef" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Created by danielkozin on 9/24/15.</p>
+    </li><li name="com.ligadata.filedataprocessor.OffsetValue" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="OffsetValueextendsProductwithSerializable"></a>
+      <a id="OffsetValue:OffsetValue"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="OffsetValue.html"><span class="name">OffsetValue</span></a><span class="params">(<span name="lastGoodOffset">lastGoodOffset: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>, <span name="partitionOffsets">partitionOffsets: <span class="extype" name="scala.Predef.Map">Map</span>[<a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a>]</span>)</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.filedataprocessor.package@OffsetValueextendsProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li></ol>
+            </div>
+
+        
+
+        <div id="values" class="values members">
+              <h3>Value Members</h3>
+              <ol><li name="com.ligadata.filedataprocessor.BufferCounters" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="BufferCounters"></a>
+      <a id="BufferCounters:BufferCounters"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="BufferCounters$.html"><span class="name">BufferCounters</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.filedataprocessor.package@BufferCounters" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Counter of buffers used by the FileProcessors...</p><div class="fullcomment"><div class="comment cmt"><p>Counter of buffers used by the FileProcessors... there is a limit on how much memory File Consumer can use up.
+</p></div></div>
+    </li><li name="com.ligadata.filedataprocessor.FileProcessor" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="FileProcessor"></a>
+      <a id="FileProcessor:FileProcessor"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="FileProcessor$.html"><span class="name">FileProcessor</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.filedataprocessor.package@FileProcessor" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">This is the global area for the File Processor.</p><div class="fullcomment"><div class="comment cmt"><p>This is the global area for the File Processor.  It basically handles File Access and Distribution !!!!!
+the Individual File Processors ask here for what files it they shold be processed.
+</p></div></div>
+    </li><li name="com.ligadata.filedataprocessor.LocationWatcher" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="LocationWatcher"></a>
+      <a id="LocationWatcher:LocationWatcher"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="LocationWatcher$.html"><span class="name">LocationWatcher</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.filedataprocessor.package@LocationWatcher" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.filedataprocessor.SmartFileAdapterConstants" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="SmartFileAdapterConstants"></a>
+      <a id="SmartFileAdapterConstants:SmartFileAdapterConstants"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="SmartFileAdapterConstants$.html"><span class="name">SmartFileAdapterConstants</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.filedataprocessor.package@SmartFileAdapterConstants" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Created by danielkozin on 9/28/15.</p>
+    </li></ol>
+            </div>
+
+        
+
+        
+        </div>
+
+        <div id="inheritedMembers">
+        
+        
+        </div>
+
+        <div id="groupedMembers">
+        <div class="group" name="Ungrouped">
+              <h3>Ungrouped</h3>
+              
+            </div>
+        </div>
+
+      </div>
+
+      <div id="tooltip"></div>
+
+      <div id="footer">  </div>
+
+
+    </body>
+      </html>
