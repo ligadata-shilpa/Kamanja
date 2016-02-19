@@ -8,8 +8,11 @@ import org.apache.zookeeper.KeeperException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.deser.std.ThrowableDeserializer;
 import org.json.simple.JSONArray;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 public class Checker {
+    private Logger LOG = LogManager.getLogger(getClass());
 
     static StringWriter x = new StringWriter();
 
@@ -49,8 +52,10 @@ public class Checker {
                     // bean.setInvocationNode(/* hostArray[i] */null);
                     bean.setComponentName(component);
                 } catch (Exception e) {
+                    LOG.error("Failed to get " + component + " information", e);
                     getFailedComponentInfo(bean, component, e, zookeeper.getErrorMessage());
                 } catch (Throwable e) {
+                    LOG.error("Failed to get " + component + " information", e);
                     getFailedComponentInfo(bean, component, e, zookeeper.getErrorMessage());
                 }
                 break;
@@ -66,8 +71,10 @@ public class Checker {
                     bean.setVersion(null);
                     // bean.setInvocationNode(null);
                 } catch (Exception e) {
+                    LOG.error("Failed to get " + component + " information", e);
                     getFailedComponentInfo(bean, component, e, kafka.getErrorMessage());
                 } catch (Throwable e) {
+                    LOG.error("Failed to get " + component + " information", e);
                     getFailedComponentInfo(bean, component, e, kafka.getErrorMessage());
                 }
                 break;
@@ -80,8 +87,10 @@ public class Checker {
                     bean.setComponentName(component);
                     bean.setStatus(java.getStatus());
                 } catch (Exception e) {
+                    LOG.error("Failed to get " + component + " information", e);
                     getFailedComponentInfo(bean, component, e, java.getErrorMessage());
                 } catch (Throwable e) {
+                    LOG.error("Failed to get " + component + " information", e);
                     getFailedComponentInfo(bean, component, e, java.getErrorMessage());
                 }
                 break;
@@ -94,12 +103,15 @@ public class Checker {
                     bean.setStatus(scala.getStatus());
                     bean.setErrorMessage(scala.getErrorMessage());
                 } catch (Exception e) {
+                    LOG.error("Failed to get " + component + " information", e);
                     getFailedComponentInfo(bean, component, e, scala.getErrorMessage());
                 } catch (Throwable e) {
+                    LOG.error("Failed to get " + component + " information", e);
                     getFailedComponentInfo(bean, component, e, scala.getErrorMessage());
                 }
                 break;
             default:
+                LOG.error("Found Un-hanlded component:" + component);
                 getFailedComponentInfo(bean, component, null, "Unhandled component");
                 break;
         }
@@ -128,6 +140,7 @@ public class Checker {
                 json.JsonParse(jsonArray.get(i).toString());
                 String component = json.GetComponent();
                 String hostList = json.GetHostList();
+                LOG.debug("Getting information for component:" + component);
                 // String hostArray[] = checker.hostArray(hostList);
                 if (component.equalsIgnoreCase("hbase")) {
                     try {
@@ -145,8 +158,10 @@ public class Checker {
                         // System.out.println(principal);
                         // System.out.println(keyType);
                     } catch (Exception e) {
+                        LOG.error("Failed to get " + component + " information", e);
                         getFailedComponentInfo(new ComponentInfo(), component, e, null);
                     } catch (Throwable e) {
+                        LOG.error("Failed to get " + component + " information", e);
                         getFailedComponentInfo(new ComponentInfo(), component, e, null);
                     }
                 } else
@@ -155,6 +170,7 @@ public class Checker {
             }
             return new ObjectMapper().writeValueAsString(finalList);
         } catch (Exception e) {
+            LOG.error("Failed to get component info", e);
             System.out.println("Failed to get component info. Exception:" + strutl.getStackTrace(e));
         }
         return null;
@@ -175,8 +191,10 @@ public class Checker {
             bean.setComponentName(component);
             bean.setErrorMessage(hbase.getErrorMessage());
         } catch (Exception e) {
+            LOG.error("Failed to get hbase information", e);
             getFailedComponentInfo(new ComponentInfo(), component, e, hbase.getErrorMessage());
         } catch (Throwable e) {
+            LOG.error("Failed to get hbase information", e);
             getFailedComponentInfo(new ComponentInfo(), component, e, hbase.getErrorMessage());
         }
         // bean.setInvocationNode(/* hostArray[i] */null);
@@ -192,8 +210,10 @@ public class Checker {
             out.print(str);
             writtenData = true;
         } catch (Exception e) {
+            LOG.error("Failed to write string into file:" + flName, e);
             System.out.println("Failed to open file:" + flName + "\nUsage: java -jar GetComponent-1.0 <OutputFile> <InputJsonArrayString>");
         } catch (Throwable t) {
+            LOG.error("Failed to write string into file:" + flName, t);
             System.out.println("Failed to open file:" + flName + "\nUsage: java -jar GetComponent-1.0 <OutputFile> <InputJsonArrayString>");
         } finally {
             if (out != null)
@@ -227,9 +247,13 @@ public class Checker {
                     checker.WriteStringToFile(args[0], componentsInfo);
             }
         } catch (Exception e) {
+            if (checker != null && checker.LOG != null)
+                checker.LOG.error("Failed to get component info", e);
             System.out.println("Failed to get component info. Exception:" + new StringUtility().getStackTrace(e));
             System.exit(1);
         } catch (Throwable e) {
+            if (checker != null && checker.LOG != null)
+                checker.LOG.error("Failed to get component info", e);
             System.out.println("Failed to get component info. Exception:" + new StringUtility().getStackTrace(e));
         }
     }

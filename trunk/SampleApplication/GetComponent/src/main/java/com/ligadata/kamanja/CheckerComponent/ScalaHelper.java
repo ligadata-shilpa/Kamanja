@@ -3,6 +3,8 @@ package com.ligadata.kamanja.CheckerComponent;
 import java.io.StringWriter;
 
 import com.ligadata.kamanja.CheckerComponent.StringUtility;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 public class ScalaHelper {
     String errorMessage = null;
@@ -10,6 +12,7 @@ public class ScalaHelper {
     String status;
     StringWriter errors = new StringWriter();
     StringUtility strutl = new StringUtility();
+    private Logger LOG = LogManager.getLogger(getClass());
 
     public StringWriter getErrors() {
         return errors;
@@ -28,90 +31,114 @@ public class ScalaHelper {
             StringUtility str = new StringUtility();
             StringBuffer output = new StringBuffer();
             String command = "which scala";
-            /// root/Downloads/scala-2.10.4/bin/scala
-            output = str.ExecuteSHCommandInputStream(command);
+            String scalaLocation = "";
+            String doc = "";
 
-            String scalaLocation = output.toString();
+            try {
+                /// root/Downloads/scala-2.10.4/bin/scala
+                output = str.ExecuteSHCommandInputStream(command, 2000);
+                scalaLocation = output.toString();
+            } catch (Exception e) {
+                LOG.error("Failed to get scala location using which scala", e);
+            } catch (Throwable e) {
+                LOG.error("Failed to get scala location using which scala", e);
+            }
+
 
             // Try1
-            StringBuffer output0 = new StringBuffer();
-            command = scalaLocation + " -version";
-            /// root/Downloads/scala-2.10.4/bin/scala
-            output0 = str.ExecuteSHCommandInputStream(command);
-            String doc = str.replaceSpacesFromString(output0.toString().trim().toLowerCase());
+            if (!scalaLocation.isEmpty()) {
+                StringBuffer output0 = new StringBuffer();
+                command = scalaLocation + " -version";
 
-            if (doc.length() > 0) {
-                int beginIndex = str.IndexOfString(doc, "Scala code runner version");
-                if (beginIndex >= 0) {
-                    beginIndex += "Scala code runner version".length();
-                } else {
-                    beginIndex = str.IndexOfString(doc, "2.");
-                }
+                try {
+                    /// root/Downloads/scala-2.10.4/bin/scala
+                    output0 = str.ExecuteCommandInputStream(command, 2000);
+                    doc = str.replaceSpacesFromString(output0.toString().trim().toLowerCase());
 
-                if (beginIndex >= 0) {
-                    // System.out.println(beginIndex);
-                    int lastIndex = str.IndexOfStringFrom(doc, beginIndex, "--");
-                    // System.out.println(lastIndex);
-                    // System.out.println(str.getWordBetweenIndex(doc, beginIndex +
-                    // "scala-".length(), lastIndex));
-                    if (lastIndex > 0)
-                        version = doc.substring(beginIndex + "scala-".length(), lastIndex).trim();
-                    else
-                        version = doc.substring(beginIndex + "scala-".length()).trim();
-                    status = "Success";
-                    return version;
+                    if (doc.length() > 0) {
+                        int beginIndex = str.IndexOfString(doc, "Scala code runner version");
+                        if (beginIndex >= 0) {
+                            beginIndex += "Scala code runner version".length();
+                        } else {
+                            beginIndex = str.IndexOfString(doc, "2.");
+                        }
+
+                        if (beginIndex >= 0) {
+                            int lastIndex = str.IndexOfStringFrom(doc, beginIndex, "--");
+                            if (lastIndex > 0)
+                                version = doc.substring(beginIndex, lastIndex).trim();
+                            else
+                                version = doc.substring(beginIndex).trim();
+                            status = "Success";
+                            return version;
+                        }
+                    }
+                } catch (Exception e) {
+                    LOG.error("Failed to get scala version using:" + command, e);
+                } catch (Throwable e) {
+                    LOG.error("Failed to get scala version using:" + command, e);
                 }
             }
 
             // Try2
-            StringBuffer output1 = new StringBuffer();
-            command = "scala -version";
-            /// root/Downloads/scala-2.10.4/bin/scala
-            output1 = str.ExecuteSHCommandInputStream(command);
-            doc = str.replaceSpacesFromString(output1.toString().trim().toLowerCase());
+            try {
+                StringBuffer output1 = new StringBuffer();
+                command = "scala -version";
+                /// root/Downloads/scala-2.10.4/bin/scala
+                output1 = str.ExecuteCommandInputStream(command, 2000);
+                doc = str.replaceSpacesFromString(output1.toString().trim().toLowerCase());
 
-            if (doc.length() > 0) {
-                int beginIndex = str.IndexOfString(doc, "Scala code runner version");
-                if (beginIndex >= 0) {
-                    beginIndex += "Scala code runner version".length();
-                } else {
-                    beginIndex = str.IndexOfString(doc, "2.");
+                if (doc.length() > 0) {
+                    int beginIndex = str.IndexOfString(doc, "Scala code runner version");
+                    if (beginIndex >= 0) {
+                        beginIndex += "Scala code runner version".length();
+                    } else {
+                        beginIndex = str.IndexOfString(doc, "2.");
+                    }
+
+                    if (beginIndex >= 0) {
+                        int lastIndex = str.IndexOfStringFrom(doc, beginIndex, "--");
+                        if (lastIndex > 0)
+                            version = doc.substring(beginIndex, lastIndex).trim();
+                        else
+                            version = doc.substring(beginIndex).trim();
+                        status = "Success";
+                        return version;
+                    }
                 }
+            } catch (Exception e) {
+                LOG.error("Failed to get scala version using:" + command, e);
+            } catch (Throwable e) {
+                LOG.error("Failed to get scala version using:" + command, e);
+            }
 
+            // Try3
+            try {
+                doc = str.replaceSpacesFromString(output.toString().trim().toLowerCase());
+                int beginIndex = str.IndexOfString(doc, "scala-");
                 if (beginIndex >= 0) {
                     // System.out.println(beginIndex);
-                    int lastIndex = str.IndexOfStringFrom(doc, beginIndex, "--");
+                    int lastIndex = str.IndexOfStringFrom(doc, beginIndex, "/");
                     // System.out.println(lastIndex);
                     // System.out.println(str.getWordBetweenIndex(doc, beginIndex +
                     // "scala-".length(), lastIndex));
                     if (lastIndex > 0)
-                        version = doc.substring(beginIndex + "scala-".length(), lastIndex).trim();
+                        version = doc.substring(beginIndex + "scala-".length(), lastIndex);
                     else
-                        version = doc.substring(beginIndex + "scala-".length()).trim();
+                        version = doc.substring(beginIndex + "scala-".length());
                     status = "Success";
                     return version;
                 }
+            } catch (Exception e) {
+                LOG.error("Failed to get scala version from which scala", e);
+            } catch (Throwable e) {
+                LOG.error("Failed to get scala version using which scala", e);
             }
 
-            // Try3
-            doc = str.replaceSpacesFromString(output.toString().trim().toLowerCase());
-            int beginIndex = str.IndexOfString(doc, "scala-");
-            if (beginIndex >= 0) {
-                // System.out.println(beginIndex);
-                int lastIndex = str.IndexOfStringFrom(doc, beginIndex, "/");
-                // System.out.println(lastIndex);
-                // System.out.println(str.getWordBetweenIndex(doc, beginIndex +
-                // "scala-".length(), lastIndex));
-                if (lastIndex > 0)
-                    version = doc.substring(beginIndex + "scala-".length(), lastIndex);
-                else
-                    version = doc.substring(beginIndex + "scala-".length());
-                status = "Success";
-                return version;
-            }
         } catch (Exception e) {
             // e.printStackTrace(new PrintWriter(errors));
             // errorMessage = errors.toString();
+            LOG.error("Failed to get scala information", e);
             status = "Fail";
             errorMessage = strutl.getStackTrace(e);
         }
@@ -171,7 +198,6 @@ public class ScalaHelper {
 
     public void AskScala() {
         version = ScalaVersion();
-        // scala.ScalaVersionsh();
         if (version == null || version.trim().length() == 0 || errorMessage != null)
             status = "Fail";
     }

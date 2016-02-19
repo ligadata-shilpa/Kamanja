@@ -106,9 +106,9 @@ while read LINE; do
         if [ "$processingengine_cnt" -gt 0 ]; then
 			java -Xmx4g -Xms4g -Dlog4j.configurationFile=file:$targetPath/engine_log4j2.xml -jar "$installDir/bin/KamanjaManager-1.0" --config "$targetPath/$nodeCfg" < /dev/null > /dev/null 2>&1 & 
         fi
-        if [ "$restapi_cnt" -gt 0 ]; then
+#        if [ "$restapi_cnt" -gt 0 ]; then
 # 			java -Dlog4j.configurationFile=file:$targetPath/restapi_log4j2.xml -jar "$installDir/bin/MetadataAPIService-1.0" --config "$targetPath/MetadataAPIConfig_${id}.properties" < /dev/null > /dev/null 2>&1 & 
-        fi
+#        fi
 		if [ ! -d "$installDir/run" ]; then
 			mkdir "$installDir/run"
 		fi

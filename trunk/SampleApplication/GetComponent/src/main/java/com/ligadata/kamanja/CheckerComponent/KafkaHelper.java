@@ -5,12 +5,15 @@ import java.util.List;
 
 import kafka.javaapi.TopicMetadataRequest;
 import kafka.javaapi.consumer.SimpleConsumer;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 public class KafkaHelper {
     // KafkaProducer pro = new KafkaProducer();
 
     String errorMessage = null;
     String status = null;
+    private Logger LOG = LogManager.getLogger(getClass());
 
     public void CheckVersion() {
 //		System.out.println(kafka.api.OffsetRequest.CurrentVersion());
@@ -53,8 +56,10 @@ public class KafkaHelper {
                 }
                 gotHosts = true;
             } catch (Exception e) {
+                LOG.error("Failed to get partitions from host: " + broker, e);
                 error = e;
             } catch (Throwable t) {
+                LOG.error("Failed to get partitions from host: " + broker, t);
                 error = t;
             }
             i += 1;

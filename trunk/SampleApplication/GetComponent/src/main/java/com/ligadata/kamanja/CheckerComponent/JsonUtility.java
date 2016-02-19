@@ -5,6 +5,8 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 public class JsonUtility {
 
@@ -18,6 +20,7 @@ public class JsonUtility {
     String namespace;
     JSONObject jsonObject;
     JSONParser jsonParser;
+    private Logger LOG = LogManager.getLogger(getClass());
 
     public void JsonParse(String json) throws ParseException {
         // String json =
@@ -35,6 +38,7 @@ public class JsonUtility {
             hostList = (String) jsonObject.get("hostslist");
         if (hostList == null)
             hostList = (String) jsonObject.get("Location");
+        LOG.info("component:" + component + ",  hostList:" + hostList);
     }
 
     public JSONArray GetJsonArray(String json) throws ParseException {
@@ -54,6 +58,7 @@ public class JsonUtility {
             namespace = (String) jsonObject.get("Namespace");
         if (namespace == null)
             namespace = "default";
+        LOG.info("namespace:" + namespace + ",  keyType:" + keyType + ",  principal:" + principal + ",  regionServer:" + regionServer + ",  masterPrincipal:" + masterPrincipal + ",  authentication:" + authentication);
     }
 
     public String getPrincipal() {
