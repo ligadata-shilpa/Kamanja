@@ -1290,18 +1290,10 @@ class ClusterConfigMap(cfgStr: String, clusterIdOfInterest: String) {
     * @param v just any old thing
     * @return a string representation
     */
-  private def getStringFromJsonNode(v: Any): String = {
+  private def getStringFromJsonNode(v: Map[String, Any]): String = {
     if (v == null) return ""
-
-    if (v.isInstanceOf[String]) return v.asInstanceOf[String]
-
     implicit val jsonFormats: Formats = DefaultFormats
-    val lst = List(v)
-    val str = Serialization.write(lst)
-    if (str.size > 2) {
-      return str.substring(1, str.size - 1)
-    }
-    return ""
+    return Serialization.write(v)
   }
 
   def DataStoreConnections: String = {
