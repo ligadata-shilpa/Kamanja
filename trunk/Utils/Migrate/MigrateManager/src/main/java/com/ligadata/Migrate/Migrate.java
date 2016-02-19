@@ -568,7 +568,7 @@ public class Migrate {
                 } catch (Throwable t) {
                 }
 
-                boolean havePreviousBackup = (backupStatusStr.startsWith("Done @2016"));
+                boolean havePreviousBackup = (backupStatusStr.startsWith("Done @20"));
 
                 sendStatus("Checking whether backup is already done or not");
                 logger.debug("Checking whether backup is already done or not");
