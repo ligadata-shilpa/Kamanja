@@ -1,5 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<!DOCTYPE html >
 <html>
         <head>
           <title>root - _root_</title>
@@ -9,6 +8,11 @@
           
       <link href="lib/template.css" media="screen" type="text/css" rel="stylesheet" />
       <link href="lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="lib/jquery.js" id="jquery-js"></script>
+      <script type="text/javascript" src="lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="lib/template.js"></script>
+      <script type="text/javascript" src="lib/tools.tooltip.js"></script>
+      
       <script type="text/javascript">
          if(top === self) {
             var url = 'index.html';
@@ -24,9 +28,13 @@
         </head>
         <body class="value">
       <div id="definition">
-        <img src="lib/package_big.png" />
+        <img alt="Package" src="lib/package_big.png" />
         
-        <h1>root package</h1>
+        <h1>root package</h1><span class="permalink">
+      <a href="index.html#package" title="Permalink" target="_top">
+        <img src="lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       </div>
 
       <h4 id="signature" class="signature">
@@ -58,60 +66,8 @@
 
         <div id="types" class="types members">
               <h3>Type Members</h3>
-              <ol><li name="_root_.BasicCassandraUnitTest" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="BasicCassandraUnitTestextendsAnyRef"></a>
-      <a id="BasicCassandraUnitTest:BasicCassandraUnitTest"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">class</span>
-      </span>
-      <span class="symbol">
-        <a href="BasicCassandraUnitTest.html"><span class="name">BasicCassandraUnitTest</span></a><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
-      </span>
-      </h4>
-      
-    </li><li name="_root_.BasicHBaseUnitTest" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="BasicHBaseUnitTestextendsAnyRef"></a>
-      <a id="BasicHBaseUnitTest:BasicHBaseUnitTest"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">class</span>
-      </span>
-      <span class="symbol">
-        <a href="BasicHBaseUnitTest.html"><span class="name">BasicHBaseUnitTest</span></a><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
-      </span>
-      </h4>
-      
-    </li><li name="_root_.BasicMapDBUnitTest" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="BasicMapDBUnitTestextendsAnyRef"></a>
-      <a id="BasicMapDBUnitTest:BasicMapDBUnitTest"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">class</span>
-      </span>
-      <span class="symbol">
-        <a href="BasicMapDBUnitTest.html"><span class="name">BasicMapDBUnitTest</span></a><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
-      </span>
-      </h4>
-      
-    </li><li name="_root_.BasicVoldemortUnitTest" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="BasicVoldemortUnitTestextendsAnyRef"></a>
-      <a id="BasicVoldemortUnitTest:BasicVoldemortUnitTest"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">class</span>
-      </span>
-      <span class="symbol">
-        <a href="BasicVoldemortUnitTest.html"><span class="name">BasicVoldemortUnitTest</span></a><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
-      </span>
-      </h4>
-      
-    </li><li name="_root_.CustPartitioner" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="CustPartitionerextendsAnyRef"></a>
+              <ol><li name="_root_.CustPartitioner" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="CustPartitionerextendsPartitioner"></a>
       <a id="CustPartitioner:CustPartitioner"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -119,9 +75,30 @@
         <span class="kind">class</span>
       </span>
       <span class="symbol">
-        <a href="CustPartitioner.html"><span class="name">CustPartitioner</span></a><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+        <a href="CustPartitioner.html"><span class="name">CustPartitioner</span></a><span class="result"> extends <span class="extype" name="kafka.producer.Partitioner">Partitioner</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="index.html#package@CustPartitionerextendsPartitioner" title="Permalink" target="_top">
+        <img src="lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="_root_.DriverShim" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="DriverShimextendsDriver"></a>
+      <a id="DriverShim:DriverShim"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="DriverShim.html"><span class="name">DriverShim</span></a><span class="result"> extends <span class="extype" name="java.sql.Driver">Driver</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="index.html#package@DriverShimextendsDriver" title="Permalink" target="_top">
+        <img src="lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="_root_.ExtractKey" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="ExtractKeyextendsAnyRef"></a>
@@ -132,22 +109,30 @@
         <span class="kind">class</span>
       </span>
       <span class="symbol">
-        <a href="ExtractKey.html"><span class="name">ExtractKey</span></a><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+        <a href="ExtractKey.html"><span class="name">ExtractKey</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="index.html#package@ExtractKeyextendsAnyRef" title="Permalink" target="_top">
+        <img src="lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
-    </li><li name="_root_.sbtProjDependencies" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="sbtProjDependenciesextendsAnyRef"></a>
-      <a id="sbtProjDependencies:sbtProjDependencies"></a>
+    </li><li name="_root_.JdbcClassLoader" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="JdbcClassLoaderextendsURLClassLoader"></a>
+      <a id="JdbcClassLoader:JdbcClassLoader"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">class</span>
       </span>
       <span class="symbol">
-        <a href="sbtProjDependencies.html"><span class="name">sbtProjDependencies</span></a><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+        <a href="JdbcClassLoader.html"><span class="name">JdbcClassLoader</span></a><span class="result"> extends <span class="extype" name="java.net.URLClassLoader">URLClassLoader</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="index.html#package@JdbcClassLoaderextendsURLClassLoader" title="Permalink" target="_top">
+        <img src="lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li></ol>
             </div>
@@ -167,7 +152,28 @@
       <span class="symbol">
         <a href="ProducerSimpleStats$.html"><span class="name">ProducerSimpleStats</span></a>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="index.html#package@ProducerSimpleStats" title="Permalink" target="_top">
+        <img src="lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="_root_.RunJdbcCollector" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="RunJdbcCollector"></a>
+      <a id="RunJdbcCollector:RunJdbcCollector"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="RunJdbcCollector$.html"><span class="name">RunJdbcCollector</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="index.html#package@RunJdbcCollector" title="Permalink" target="_top">
+        <img src="lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="_root_.SimpleKafkaProducer" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="SimpleKafkaProducer"></a>
@@ -180,22 +186,13 @@
       <span class="symbol">
         <a href="SimpleKafkaProducer$.html"><span class="name">SimpleKafkaProducer</span></a>
       </span>
-      </h4>
-      <p class="comment cmt"> Object used to insert messages from a specified source (files for now) to a specified Kafka queues
+      </h4><span class="permalink">
+      <a href="index.html#package@SimpleKafkaProducer" title="Permalink" target="_top">
+        <img src="lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt"> Object used to insert messages from a specified source (files for now) to a specified Kafka queues
 </p>
-    </li><li name="_root_.allDeps" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="allDeps"></a>
-      <a id="allDeps:allDeps"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">object</span>
-      </span>
-      <span class="symbol">
-        <a href="allDeps$.html"><span class="name">allDeps</span></a><span class="result"> extends <span class="extype" name="scala.App">App</span></span>
-      </span>
-      </h4>
-      
     </li><li name="_root_.com" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="com"></a>
       <a id="com:com"></a>
@@ -207,33 +204,28 @@
       <span class="symbol">
         <a href="com/package.html"><span class="name">com</span></a>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="index.html#package@com" title="Permalink" target="_top">
+        <img src="lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
-    </li><li name="_root_.extractUdfLibMetadata" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="extractUdfLibMetadata"></a>
-      <a id="extractUdfLibMetadata:extractUdfLibMetadata"></a>
+    </li><li name="_root_.sbt" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="sbt"></a>
+      <a id="sbt:sbt"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
-        <span class="kind">object</span>
+        <span class="kind">package</span>
       </span>
       <span class="symbol">
-        <a href="extractUdfLibMetadata$.html"><span class="name">extractUdfLibMetadata</span></a><span class="result"> extends <span class="extype" name="scala.App">App</span></span>
+        <a href="sbt/package.html"><span class="name">sbt</span></a>
       </span>
-      </h4>
-      
-    </li><li name="_root_.sbtProjDependencies" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="sbtProjDependencies"></a>
-      <a id="sbtProjDependencies:sbtProjDependencies"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">object</span>
-      </span>
-      <span class="symbol">
-        <a href="sbtProjDependencies$.html"><span class="name">sbtProjDependencies</span></a><span class="result"> extends <span class="extype" name="scala.App">App</span></span>
-      </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="index.html#package@sbt" title="Permalink" target="_top">
+        <img src="lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li></ol>
             </div>
@@ -260,6 +252,7 @@
       <div id="tooltip"></div>
 
       <div id="footer">  </div>
-      <script defer="defer" type="text/javascript" id="jquery-js" src="lib/jquery.js"></script><script defer="defer" type="text/javascript" id="jquery-ui-js" src="lib/jquery-ui.js"></script><script defer="defer" type="text/javascript" id="tools-tooltip-js" src="lib/tools.tooltip.js"></script><script defer="defer" type="text/javascript" id="template-js" src="lib/template.js"></script>
+
+
     </body>
       </html>

@@ -1,5 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<!DOCTYPE html >
 <html>
         <head>
           <title>KVInit - com.ligadata.tools.kvinit.KVInit</title>
@@ -9,6 +8,11 @@
           
       <link href="../../../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
       <link href="../../../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../../../../lib/jquery.js" id="jquery-js"></script>
+      <script type="text/javascript" src="../../../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../../../lib/template.js"></script>
+      <script type="text/javascript" src="../../../../lib/tools.tooltip.js"></script>
+      
       <script type="text/javascript">
          if(top === self) {
             var url = '../../../../index.html';
@@ -24,9 +28,17 @@
         </head>
         <body class="type">
       <div id="definition">
-        <a href="KVInit$.html" title="Go to companion"><img src="../../../../lib/class_to_object_big.png" /></a>
+        <a href="KVInit$.html" title="See companion object"><img alt="Class/Object" src="../../../../lib/class_to_object_big.png" /></a>
         <p id="owner"><a href="../../../package.html" class="extype" name="com">com</a>.<a href="../../package.html" class="extype" name="com.ligadata">ligadata</a>.<a href="../package.html" class="extype" name="com.ligadata.tools">tools</a>.<a href="package.html" class="extype" name="com.ligadata.tools.kvinit">kvinit</a></p>
-        <h1><a href="KVInit$.html" title="Go to companion">KVInit</a></h1>
+        <h1><a href="KVInit$.html" title="See companion object">KVInit</a></h1><h3><span class="morelinks"><div>
+            Related Docs:
+            <a href="KVInit$.html" title="See companion object">object KVInit</a>
+            | <a href="package.html" class="extype" name="com.ligadata.tools.kvinit">package kvinit</a>
+          </div></span></h3><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       </div>
 
       <h4 id="signature" class="signature">
@@ -35,13 +47,13 @@
         <span class="kind">class</span>
       </span>
       <span class="symbol">
-        <span class="name">KVInit</span><span class="result"> extends <a href="LogTrait.html" class="extype" name="com.ligadata.tools.kvinit.LogTrait">LogTrait</a></span>
+        <span class="name">KVInit</span><span class="result"> extends <a href="LogTrait.html" class="extype" name="com.ligadata.tools.kvinit.LogTrait">LogTrait</a> with <a href="../../KamanjaBase/MdBaseResolveInfo.html" class="extype" name="com.ligadata.KamanjaBase.MdBaseResolveInfo">MdBaseResolveInfo</a></span>
       </span>
       </h4>
       
           <div id="comment" class="fullcommenttop"><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
-          <div class="superTypes hiddenContent"><a href="LogTrait.html" class="extype" name="com.ligadata.tools.kvinit.LogTrait">LogTrait</a>, <span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
+          <div class="superTypes hiddenContent"><a href="../../KamanjaBase/MdBaseResolveInfo.html" class="extype" name="com.ligadata.KamanjaBase.MdBaseResolveInfo">MdBaseResolveInfo</a>, <a href="LogTrait.html" class="extype" name="com.ligadata.tools.kvinit.LogTrait">LogTrait</a>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></div>
         </div></div>
         
 
@@ -59,7 +71,7 @@
                 <span class="filtertype">Inherited<br />
                 </span>
                 <ol id="linearization">
-                  <li class="in" name="com.ligadata.tools.kvinit.KVInit"><span>KVInit</span></li><li class="in" name="com.ligadata.tools.kvinit.LogTrait"><span>LogTrait</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                  <li class="in" name="com.ligadata.tools.kvinit.KVInit"><span>KVInit</span></li><li class="in" name="com.ligadata.KamanjaBase.MdBaseResolveInfo"><span>MdBaseResolveInfo</span></li><li class="in" name="com.ligadata.tools.kvinit.LogTrait"><span>LogTrait</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
                 </ol>
               </div><div id="ancestors">
             <span class="filtertype"></span>
@@ -67,7 +79,6 @@
               <li class="hideall out"><span>Hide All</span></li>
               <li class="showall in"><span>Show all</span></li>
             </ol>
-            <a href="http://docs.scala-lang.org/overviews/scaladoc/usage.html#members" target="_blank">Learn more about member selection</a>
           </div>
         <div id="visbl">
             <span class="filtertype">Visibility</span>
@@ -80,7 +91,7 @@
         <div id="constructors" class="members">
               <h3>Instance Constructors</h3>
               <ol><li name="com.ligadata.tools.kvinit.KVInit#&lt;init&gt;" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="&lt;init&gt;(loadConfigs:java.util.Properties,kvname:String,csvpath:String,keyfieldname:String):com.ligadata.tools.kvinit.KVInit"></a>
+      <a id="&lt;init&gt;(loadConfigs:java.util.Properties,typename:String,dataFiles:Array[String],keyfieldnames:Array[String],keyAndValueDelimiter1:String,fieldDelimiter1:String,valueDelimiter1:String,ignoreerrors:String,ignoreRecords:Int,format:String,commitBatchSize:Int):com.ligadata.tools.kvinit.KVInit"></a>
       <a id="&lt;init&gt;:KVInit"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -88,9 +99,13 @@
         <span class="kind">new</span>
       </span>
       <span class="symbol">
-        <span class="name">KVInit</span><span class="params">(<span name="loadConfigs">loadConfigs: <span class="extype" name="java.util.Properties">Properties</span></span>, <span name="kvname">kvname: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="csvpath">csvpath: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="keyfieldname">keyfieldname: <span class="extype" name="scala.Predef.String">String</span></span>)</span>
+        <span class="name">KVInit</span><span class="params">(<span name="loadConfigs">loadConfigs: <span class="extype" name="java.util.Properties">Properties</span></span>, <span name="typename">typename: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="dataFiles">dataFiles: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="keyfieldnames">keyfieldnames: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="keyAndValueDelimiter1">keyAndValueDelimiter1: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="fieldDelimiter1">fieldDelimiter1: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="valueDelimiter1">valueDelimiter1: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="ignoreerrors">ignoreerrors: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="ignoreRecords">ignoreRecords: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>, <span name="format">format: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="commitBatchSize">commitBatchSize: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit@&lt;init&gt;(loadConfigs:java.util.Properties,typename:String,dataFiles:Array[String],keyfieldnames:Array[String],keyAndValueDelimiter1:String,fieldDelimiter1:String,valueDelimiter1:String,ignoreerrors:String,ignoreRecords:Int,format:String,commitBatchSize:Int):com.ligadata.tools.kvinit.KVInit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li></ol>
             </div>
@@ -102,19 +117,6 @@
         <div id="values" class="values members">
               <h3>Value Members</h3>
               <ol><li name="scala.AnyRef#!=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="!=(x$1:AnyRef):Boolean"></a>
-      <a id="!=(AnyRef):Boolean"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier">final </span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
-      </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="scala.Any#!=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="!=(x$1:Any):Boolean"></a>
       <a id="!=(Any):Boolean"></a>
       <h4 class="signature">
@@ -123,10 +125,14 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit@!=(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.AnyRef###" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="##():Int"></a>
       <a id="##():Int"></a>
@@ -136,24 +142,15 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
+        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit@##():Int" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.AnyRef#==" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="==(x$1:AnyRef):Boolean"></a>
-      <a id="==(AnyRef):Boolean"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier">final </span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
-      </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="scala.Any#==" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="==(x$1:Any):Boolean"></a>
       <a id="==(Any):Boolean"></a>
       <h4 class="signature">
@@ -162,23 +159,14 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
-    </li><li name="com.ligadata.tools.kvinit.KVInit#GetDataStoreHandle" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="GetDataStoreHandle(storeType:String,storeName:String,tableName:String,dataLocation:String):com.ligadata.keyvaluestore.DataStore"></a>
-      <a id="GetDataStoreHandle(String,String,String,String):DataStore"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">GetDataStoreHandle</span><span class="params">(<span name="storeType">storeType: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="storeName">storeName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="tableName">tableName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="dataLocation">dataLocation: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="../../keyvaluestore/DataStore.html" class="extype" name="com.ligadata.keyvaluestore.DataStore">DataStore</a></span>
-      </span>
-      </h4>
-      
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit@==(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.Any#asInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="asInstanceOf[T0]:T0"></a>
       <a id="asInstanceOf[T0]:T0"></a>
@@ -190,21 +178,12 @@
       <span class="symbol">
         <span class="name">asInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Any.asInstanceOf.T0">T0</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit@asInstanceOf[T0]:T0" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
-    </li><li name="com.ligadata.tools.kvinit.KVInit#buildContainerOrMessage" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="buildContainerOrMessage:com.ligadata.keyvaluestore.DataStore"></a>
-      <a id="buildContainerOrMessage:DataStore"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">buildContainerOrMessage</span><span class="result">: <a href="../../keyvaluestore/DataStore.html" class="extype" name="com.ligadata.keyvaluestore.DataStore">DataStore</a></span>
-      </span>
-      </h4>
-      
     </li><li name="scala.AnyRef#clone" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="clone():Object"></a>
       <a id="clone():AnyRef"></a>
@@ -214,9 +193,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">clone</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit@clone():Object" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -225,7 +208,7 @@
               
         </dd></dl></div>
     </li><li name="com.ligadata.tools.kvinit.KVInit#cluster" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="cluster:com.ligadata.olep.metadata.ClusterCfgInfo"></a>
+      <a id="cluster:com.ligadata.kamanja.metadata.ClusterCfgInfo"></a>
       <a id="cluster:ClusterCfgInfo"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -233,12 +216,16 @@
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">cluster</span><span class="result">: <a href="../../olep/metadata/ClusterCfgInfo.html" class="extype" name="com.ligadata.olep.metadata.ClusterCfgInfo">ClusterCfgInfo</a></span>
+        <span class="name">cluster</span><span class="result">: <a href="../../kamanja/metadata/ClusterCfgInfo.html" class="extype" name="com.ligadata.kamanja.metadata.ClusterCfgInfo">ClusterCfgInfo</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit@cluster:com.ligadata.kamanja.metadata.ClusterCfgInfo" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.tools.kvinit.KVInit#containerObj" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="containerObj:com.ligadata.OnLEPBase.BaseContainerObj"></a>
+      <a id="containerObj:com.ligadata.KamanjaBase.BaseContainerObj"></a>
       <a id="containerObj:BaseContainerObj"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -246,61 +233,47 @@
         <span class="kind">var</span>
       </span>
       <span class="symbol">
-        <span class="name">containerObj</span><span class="result">: <a href="../../OnLEPBase/BaseContainerObj.html" class="extype" name="com.ligadata.OnLEPBase.BaseContainerObj">BaseContainerObj</a></span>
+        <span class="name">containerObj</span><span class="result">: <a href="../../KamanjaBase/BaseContainerObj.html" class="extype" name="com.ligadata.KamanjaBase.BaseContainerObj">BaseContainerObj</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit@containerObj:com.ligadata.KamanjaBase.BaseContainerObj" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
-    </li><li name="com.ligadata.tools.kvinit.KVInit#csvdata" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="csvdata:List[String]"></a>
-      <a id="csvdata:List[String]"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">val</span>
-      </span>
-      <span class="symbol">
-        <span class="name">csvdata</span><span class="result">: <span class="extype" name="scala.List">List</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>
-      </span>
-      </h4>
-      
-    </li><li name="com.ligadata.tools.kvinit.KVInit#csvpath" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="csvpath:String"></a>
-      <a id="csvpath:String"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">val</span>
-      </span>
-      <span class="symbol">
-        <span class="name">csvpath</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
-      </span>
-      </h4>
-      
-    </li><li name="com.ligadata.tools.kvinit.KVInit#dataLocation" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="dataLocation:String"></a>
-      <a id="dataLocation:String"></a>
+    </li><li name="com.ligadata.tools.kvinit.KVInit#dataDataStoreInfo" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="dataDataStoreInfo:String"></a>
+      <a id="dataDataStoreInfo:String"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">var</span>
       </span>
       <span class="symbol">
-        <span class="name">dataLocation</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+        <span class="name">dataDataStoreInfo</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit@dataDataStoreInfo:String" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
-    </li><li name="com.ligadata.tools.kvinit.KVInit#dataSchemaName" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="dataSchemaName:String"></a>
-      <a id="dataSchemaName:String"></a>
+    </li><li name="com.ligadata.tools.kvinit.KVInit#dataFiles" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="dataFiles:Array[String]"></a>
+      <a id="dataFiles:Array[String]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
-        <span class="kind">var</span>
+        <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">dataSchemaName</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+        <span class="name">dataFiles</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit@dataFiles:Array[String]" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.tools.kvinit.KVInit#dataStore" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="dataStore:String"></a>
@@ -313,33 +286,11 @@
       <span class="symbol">
         <span class="name">dataStore</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
-      </h4>
-      
-    </li><li name="com.ligadata.tools.kvinit.KVInit#dataStoreType" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="dataStoreType:String"></a>
-      <a id="dataStoreType:String"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">var</span>
-      </span>
-      <span class="symbol">
-        <span class="name">dataStoreType</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
-      </span>
-      </h4>
-      
-    </li><li name="com.ligadata.tools.kvinit.KVInit#dump" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="dump(datastore:com.ligadata.keyvaluestore.DataStore):Unit"></a>
-      <a id="dump(DataStore):Unit"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">dump</span><span class="params">(<span name="datastore">datastore: <a href="../../keyvaluestore/DataStore.html" class="extype" name="com.ligadata.keyvaluestore.DataStore">DataStore</a></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
-      </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit@dataStore:String" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="scala.AnyRef#eq" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="eq(x$1:AnyRef):Boolean"></a>
@@ -350,9 +301,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit@eq(x$1:AnyRef):Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="scala.AnyRef#equals" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="equals(x$1:Any):Boolean"></a>
@@ -363,10 +318,31 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit@equals(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="com.ligadata.tools.kvinit.KVInit#fieldDelimiter" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="fieldDelimiter:String"></a>
+      <a id="fieldDelimiter:String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">fieldDelimiter</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit@fieldDelimiter:String" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
     </li><li name="scala.AnyRef#finalize" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="finalize():Unit"></a>
       <a id="finalize():Unit"></a>
@@ -376,9 +352,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">finalize</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit@finalize():Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -397,8 +377,29 @@
       <span class="symbol">
         <span class="name">getClass</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.Class">Class</span>[_]</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit@getClass():Class[_]" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="com.ligadata.tools.kvinit.KVInit#getMessgeOrContainerInstance" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getMessgeOrContainerInstance(MsgContainerType:String):com.ligadata.KamanjaBase.MessageContainerBase"></a>
+      <a id="getMessgeOrContainerInstance(String):MessageContainerBase"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getMessgeOrContainerInstance</span><span class="params">(<span name="MsgContainerType">MsgContainerType: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="../../KamanjaBase/MessageContainerBase.html" class="extype" name="com.ligadata.KamanjaBase.MessageContainerBase">MessageContainerBase</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit@getMessgeOrContainerInstance(MsgContainerType:String):com.ligadata.KamanjaBase.MessageContainerBase" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.tools.kvinit.KVInit">KVInit</a> → <a href="../../KamanjaBase/MdBaseResolveInfo.html" class="extype" name="com.ligadata.KamanjaBase.MdBaseResolveInfo">MdBaseResolveInfo</a></dd></dl></div>
     </li><li name="scala.AnyRef#hashCode" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="hashCode():Int"></a>
       <a id="hashCode():Int"></a>
@@ -408,22 +409,30 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
+        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit@hashCode():Int" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="com.ligadata.tools.kvinit.KVInit#header" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="header:Array[String]"></a>
-      <a id="header:Array[String]"></a>
+    </li><li name="com.ligadata.tools.kvinit.KVInit#ignoreErrsCount" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ignoreErrsCount:Int"></a>
+      <a id="ignoreErrsCount:Int"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
-        <span class="kind">val</span>
+        <span class="kind">var</span>
       </span>
       <span class="symbol">
-        <span class="name">header</span><span class="result">: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>
+        <span class="name">ignoreErrsCount</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit@ignoreErrsCount:Int" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.tools.kvinit.KVInit#isContainer" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="isContainer:Boolean"></a>
@@ -434,22 +443,30 @@
         <span class="kind">var</span>
       </span>
       <span class="symbol">
-        <span class="name">isContainer</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">isContainer</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit@isContainer:Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
-    </li><li name="com.ligadata.tools.kvinit.KVInit#isDerivedFrom" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="isDerivedFrom(clz:Class[_],clsName:String):Boolean"></a>
-      <a id="isDerivedFrom(Class[_],String):Boolean"></a>
+    </li><li name="com.ligadata.tools.kvinit.KVInit#isDelimited" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="isDelimited:Boolean"></a>
+      <a id="isDelimited:Boolean"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
-        <span class="kind">def</span>
+        <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">isDerivedFrom</span><span class="params">(<span name="clz">clz: <span class="extype" name="scala.Predef.Class">Class</span>[_]</span>, <span name="clsName">clsName: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">isDelimited</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit@isDelimited:Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="scala.Any#isInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="isInstanceOf[T0]:Boolean"></a>
@@ -460,10 +477,48 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit@isInstanceOf[T0]:Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li name="com.ligadata.tools.kvinit.KVInit#isJson" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="isJson:Boolean"></a>
+      <a id="isJson:Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">isJson</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit@isJson:Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.tools.kvinit.KVInit#isKv" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="isKv:Boolean"></a>
+      <a id="isKv:Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">isKv</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit@isKv:Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
     </li><li name="com.ligadata.tools.kvinit.KVInit#isMsg" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="isMsg:Boolean"></a>
       <a id="isMsg:Boolean"></a>
@@ -473,9 +528,13 @@
         <span class="kind">var</span>
       </span>
       <span class="symbol">
-        <span class="name">isMsg</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">isMsg</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit@isMsg:Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.tools.kvinit.KVInit#isOk" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="isOk:Boolean"></a>
@@ -486,74 +545,64 @@
         <span class="kind">var</span>
       </span>
       <span class="symbol">
-        <span class="name">isOk</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">isOk</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit@isOk:Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
-    </li><li name="com.ligadata.tools.kvinit.KVInit#keyPos" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="keyPos:Int"></a>
-      <a id="keyPos:Int"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">var</span>
-      </span>
-      <span class="symbol">
-        <span class="name">keyPos</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
-      </span>
-      </h4>
-      
-    </li><li name="com.ligadata.tools.kvinit.KVInit#keyfieldname" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="keyfieldname:String"></a>
-      <a id="keyfieldname:String"></a>
+    </li><li name="com.ligadata.tools.kvinit.KVInit#keyAndValueDelimiter" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="keyAndValueDelimiter:String"></a>
+      <a id="keyAndValueDelimiter:String"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">keyfieldname</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+        <span class="name">keyAndValueDelimiter</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit@keyAndValueDelimiter:String" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
-    </li><li name="com.ligadata.tools.kvinit.KVInit#kryoSer" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="kryoSer:com.ligadata.Serialize.Serializer"></a>
-      <a id="kryoSer:Serializer"></a>
+    </li><li name="com.ligadata.tools.kvinit.KVInit#keyfieldnames" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="keyfieldnames:Array[String]"></a>
+      <a id="keyfieldnames:Array[String]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
-        <span class="kind">var</span>
+        <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">kryoSer</span><span class="result">: <a href="../../Serialize/Serializer.html" class="extype" name="com.ligadata.Serialize.Serializer">Serializer</a></span>
+        <span class="name">keyfieldnames</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit@keyfieldnames:Array[String]" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.tools.kvinit.KVInit#kvInitLoader" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="kvInitLoader:com.ligadata.tools.kvinit.KvInitLoaderInfo"></a>
-      <a id="kvInitLoader:KvInitLoaderInfo"></a>
+      <a id="kvInitLoader:com.ligadata.Utils.KamanjaLoaderInfo"></a>
+      <a id="kvInitLoader:KamanjaLoaderInfo"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">kvInitLoader</span><span class="result">: <a href="KvInitLoaderInfo.html" class="extype" name="com.ligadata.tools.kvinit.KvInitLoaderInfo">KvInitLoaderInfo</a></span>
+        <span class="name">kvInitLoader</span><span class="result">: <a href="../../Utils/KamanjaLoaderInfo.html" class="extype" name="com.ligadata.Utils.KamanjaLoaderInfo">KamanjaLoaderInfo</a></span>
       </span>
-      </h4>
-      
-    </li><li name="com.ligadata.tools.kvinit.KVInit#kvNameCorrType" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="kvNameCorrType:com.ligadata.olep.metadata.BaseTypeDef"></a>
-      <a id="kvNameCorrType:BaseTypeDef"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">var</span>
-      </span>
-      <span class="symbol">
-        <span class="name">kvNameCorrType</span><span class="result">: <a href="../../olep/metadata/BaseTypeDef.html" class="extype" name="com.ligadata.olep.metadata.BaseTypeDef">BaseTypeDef</a></span>
-      </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit@kvInitLoader:com.ligadata.Utils.KamanjaLoaderInfo" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.tools.kvinit.KVInit#kvTableName" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="kvTableName:String"></a>
@@ -566,20 +615,11 @@
       <span class="symbol">
         <span class="name">kvTableName</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
-      </h4>
-      
-    </li><li name="com.ligadata.tools.kvinit.KVInit#kvname" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="kvname:String"></a>
-      <a id="kvname:String"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">val</span>
-      </span>
-      <span class="symbol">
-        <span class="name">kvname</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
-      </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit@kvTableName:String" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.tools.kvinit.KVInit#loadConfigs" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="loadConfigs:java.util.Properties"></a>
@@ -592,33 +632,28 @@
       <span class="symbol">
         <span class="name">loadConfigs</span><span class="result">: <span class="extype" name="java.util.Properties">Properties</span></span>
       </span>
-      </h4>
-      
-    </li><li name="com.ligadata.tools.kvinit.KVInit#locateKeyPos" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="locateKeyPos:Unit"></a>
-      <a id="locateKeyPos:Unit"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">locateKeyPos</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
-      </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit@loadConfigs:java.util.Properties" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.tools.kvinit.LogTrait#logger" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="logger:&lt;error&gt;"></a>
-      <a id="logger:&lt;error&gt;"></a>
+      <a id="logger:org.apache.logging.log4j.Logger"></a>
+      <a id="logger:Logger"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">logger</span><span class="result">: &lt;error&gt;</span>
+        <span class="name">logger</span><span class="result">: <span class="extype" name="org.apache.logging.log4j.Logger">Logger</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit@logger:org.apache.logging.log4j.Logger" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="LogTrait.html" class="extype" name="com.ligadata.tools.kvinit.LogTrait">LogTrait</a></dd></dl></div>
     </li><li name="com.ligadata.tools.kvinit.LogTrait#loggerName" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="loggerName:String"></a>
@@ -631,10 +666,14 @@
       <span class="symbol">
         <span class="name">loggerName</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit@loggerName:String" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="LogTrait.html" class="extype" name="com.ligadata.tools.kvinit.LogTrait">LogTrait</a></dd></dl></div>
     </li><li name="com.ligadata.tools.kvinit.KVInit#messageObj" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="messageObj:com.ligadata.OnLEPBase.BaseMsgObj"></a>
+      <a id="messageObj:com.ligadata.KamanjaBase.BaseMsgObj"></a>
       <a id="messageObj:BaseMsgObj"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -642,48 +681,13 @@
         <span class="kind">var</span>
       </span>
       <span class="symbol">
-        <span class="name">messageObj</span><span class="result">: <a href="../../OnLEPBase/BaseMsgObj.html" class="extype" name="com.ligadata.OnLEPBase.BaseMsgObj">BaseMsgObj</a></span>
+        <span class="name">messageObj</span><span class="result">: <a href="../../KamanjaBase/BaseMsgObj.html" class="extype" name="com.ligadata.KamanjaBase.BaseMsgObj">BaseMsgObj</a></span>
       </span>
-      </h4>
-      
-    </li><li name="com.ligadata.tools.kvinit.KVInit#metadataLocation" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="metadataLocation:String"></a>
-      <a id="metadataLocation:String"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">val</span>
-      </span>
-      <span class="symbol">
-        <span class="name">metadataLocation</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
-      </span>
-      </h4>
-      
-    </li><li name="com.ligadata.tools.kvinit.KVInit#metadataSchemaName" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="metadataSchemaName:String"></a>
-      <a id="metadataSchemaName:String"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">val</span>
-      </span>
-      <span class="symbol">
-        <span class="name">metadataSchemaName</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
-      </span>
-      </h4>
-      
-    </li><li name="com.ligadata.tools.kvinit.KVInit#metadataStoreType" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="metadataStoreType:String"></a>
-      <a id="metadataStoreType:String"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">val</span>
-      </span>
-      <span class="symbol">
-        <span class="name">metadataStoreType</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
-      </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit@messageObj:com.ligadata.KamanjaBase.BaseMsgObj" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="scala.AnyRef#ne" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ne(x$1:AnyRef):Boolean"></a>
@@ -694,12 +698,16 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit@ne(x$1:AnyRef):Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="com.ligadata.tools.kvinit.KVInit#nodeInfo" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="nodeInfo:com.ligadata.olep.metadata.NodeInfo"></a>
+      <a id="nodeInfo:com.ligadata.kamanja.metadata.NodeInfo"></a>
       <a id="nodeInfo:NodeInfo"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -707,9 +715,13 @@
         <span class="kind">var</span>
       </span>
       <span class="symbol">
-        <span class="name">nodeInfo</span><span class="result">: <a href="../../olep/metadata/NodeInfo.html" class="extype" name="com.ligadata.olep.metadata.NodeInfo">NodeInfo</a></span>
+        <span class="name">nodeInfo</span><span class="result">: <a href="../../kamanja/metadata/NodeInfo.html" class="extype" name="com.ligadata.kamanja.metadata.NodeInfo">NodeInfo</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit@nodeInfo:com.ligadata.kamanja.metadata.NodeInfo" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="scala.AnyRef#notify" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="notify():Unit"></a>
@@ -720,9 +732,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notify</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit@notify():Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="scala.AnyRef#notifyAll" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="notifyAll():Unit"></a>
@@ -733,9 +749,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit@notifyAll():Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="com.ligadata.tools.kvinit.KVInit#objFullName" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="objFullName:String"></a>
@@ -748,20 +768,11 @@
       <span class="symbol">
         <span class="name">objFullName</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
-      </h4>
-      
-    </li><li name="com.ligadata.tools.kvinit.KVInit#printTuples" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="printTuples(tupleBytes:com.ligadata.keyvaluestore.Value):Unit"></a>
-      <a id="printTuples(Value):Unit"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">printTuples</span><span class="params">(<span name="tupleBytes">tupleBytes: <a href="../../keyvaluestore/Value.html" class="extype" name="com.ligadata.keyvaluestore.Value">Value</a></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
-      </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit@objFullName:String" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="scala.AnyRef#synchronized" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="synchronized[T0](x$1:=&gt;T0):T0"></a>
@@ -774,7 +785,11 @@
       <span class="symbol">
         <span class="name">synchronized</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="params">(<span name="arg0">arg0: ⇒ <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>)</span><span class="result">: <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit@synchronized[T0](x$1:=&gt;T0):T0" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="scala.AnyRef#toString" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="toString():String"></a>
@@ -787,8 +802,80 @@
       <span class="symbol">
         <span class="name">toString</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit@toString():String" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="com.ligadata.tools.kvinit.KVInit#totalCommittedMsgs" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="totalCommittedMsgs:Int"></a>
+      <a id="totalCommittedMsgs:Int"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">var</span>
+      </span>
+      <span class="symbol">
+        <span class="name">totalCommittedMsgs</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit@totalCommittedMsgs:Int" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.tools.kvinit.KVInit#typeNameCorrType" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="typeNameCorrType:com.ligadata.kamanja.metadata.BaseTypeDef"></a>
+      <a id="typeNameCorrType:BaseTypeDef"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">var</span>
+      </span>
+      <span class="symbol">
+        <span class="name">typeNameCorrType</span><span class="result">: <a href="../../kamanja/metadata/BaseTypeDef.html" class="extype" name="com.ligadata.kamanja.metadata.BaseTypeDef">BaseTypeDef</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit@typeNameCorrType:com.ligadata.kamanja.metadata.BaseTypeDef" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.tools.kvinit.KVInit#typename" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="typename:String"></a>
+      <a id="typename:String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">typename</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit@typename:String" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.tools.kvinit.KVInit#valueDelimiter" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="valueDelimiter:String"></a>
+      <a id="valueDelimiter:String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">valueDelimiter</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit@valueDelimiter:String" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
     </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait():Unit"></a>
       <a id="wait():Unit"></a>
@@ -798,9 +885,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit@wait():Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -817,9 +908,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Long">Long</span></span>, <span name="arg1">arg1: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Long" class="extype" target="_top">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit@wait(x$1:Long,x$2:Int):Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -836,9 +931,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Long">Long</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Long" class="extype" target="_top">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit@wait(x$1:Long):Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -846,6 +945,108 @@
     </span>)</span>
               
         </dd></dl></div>
+    </li><li name="com.ligadata.tools.kvinit.KVInit#zkConnectString" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="zkConnectString:String"></a>
+      <a id="zkConnectString:String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">var</span>
+      </span>
+      <span class="symbol">
+        <span class="name">zkConnectString</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit@zkConnectString:String" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.tools.kvinit.KVInit#zkConnectionTimeoutMs" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="zkConnectionTimeoutMs:Int"></a>
+      <a id="zkConnectionTimeoutMs:Int"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">var</span>
+      </span>
+      <span class="symbol">
+        <span class="name">zkConnectionTimeoutMs</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit@zkConnectionTimeoutMs:Int" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.tools.kvinit.KVInit#zkNodeBasePath" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="zkNodeBasePath:String"></a>
+      <a id="zkNodeBasePath:String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">var</span>
+      </span>
+      <span class="symbol">
+        <span class="name">zkNodeBasePath</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit@zkNodeBasePath:String" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.tools.kvinit.KVInit#zkSessionTimeoutMs" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="zkSessionTimeoutMs:Int"></a>
+      <a id="zkSessionTimeoutMs:Int"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">var</span>
+      </span>
+      <span class="symbol">
+        <span class="name">zkSessionTimeoutMs</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit@zkSessionTimeoutMs:Int" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.tools.kvinit.KVInit#zkcForSetData" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="zkcForSetData:org.apache.curator.framework.CuratorFramework"></a>
+      <a id="zkcForSetData:CuratorFramework"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">var</span>
+      </span>
+      <span class="symbol">
+        <span class="name">zkcForSetData</span><span class="result">: <span class="extype" name="org.apache.curator.framework.CuratorFramework">CuratorFramework</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit@zkcForSetData:org.apache.curator.framework.CuratorFramework" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.tools.kvinit.KVInit#zooKeeperInfo" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="zooKeeperInfo:String"></a>
+      <a id="zooKeeperInfo:String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">zooKeeperInfo</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.tools.kvinit.KVInit@zooKeeperInfo:String" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
     </li></ol>
             </div>
 
@@ -855,12 +1056,14 @@
         </div>
 
         <div id="inheritedMembers">
-        <div class="parent" name="com.ligadata.tools.kvinit.LogTrait">
+        <div class="parent" name="com.ligadata.KamanjaBase.MdBaseResolveInfo">
+              <h3>Inherited from <a href="../../KamanjaBase/MdBaseResolveInfo.html" class="extype" name="com.ligadata.KamanjaBase.MdBaseResolveInfo">MdBaseResolveInfo</a></h3>
+            </div><div class="parent" name="com.ligadata.tools.kvinit.LogTrait">
               <h3>Inherited from <a href="LogTrait.html" class="extype" name="com.ligadata.tools.kvinit.LogTrait">LogTrait</a></h3>
             </div><div class="parent" name="scala.AnyRef">
-              <h3>Inherited from <span class="extype" name="scala.AnyRef">AnyRef</span></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">
-              <h3>Inherited from <span class="extype" name="scala.Any">Any</span></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></h3>
             </div>
         
         </div>
@@ -877,6 +1080,7 @@
       <div id="tooltip"></div>
 
       <div id="footer">  </div>
-      <script defer="defer" type="text/javascript" id="jquery-js" src="../../../../lib/jquery.js"></script><script defer="defer" type="text/javascript" id="jquery-ui-js" src="../../../../lib/jquery-ui.js"></script><script defer="defer" type="text/javascript" id="tools-tooltip-js" src="../../../../lib/tools.tooltip.js"></script><script defer="defer" type="text/javascript" id="template-js" src="../../../../lib/template.js"></script>
+
+
     </body>
       </html>

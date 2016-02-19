@@ -1,18 +1,22 @@
-<?xml version='1.0' encoding='UTF-8'?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<!DOCTYPE html >
 <html>
         <head>
-          <title>Context - com.ligadata.Pmml.Runtime.Context</title>
-          <meta name="description" content="Context - com.ligadata.Pmml.Runtime.Context" />
-          <meta name="keywords" content="Context com.ligadata.Pmml.Runtime.Context" />
+          <title>Context - com.ligadata.pmml.runtime.Context</title>
+          <meta name="description" content="Context - com.ligadata.pmml.runtime.Context" />
+          <meta name="keywords" content="Context com.ligadata.pmml.runtime.Context" />
           <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
           
       <link href="../../../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
       <link href="../../../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../../../../lib/jquery.js" id="jquery-js"></script>
+      <script type="text/javascript" src="../../../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../../../lib/template.js"></script>
+      <script type="text/javascript" src="../../../../lib/tools.tooltip.js"></script>
+      
       <script type="text/javascript">
          if(top === self) {
             var url = '../../../../index.html';
-            var hash = 'com.ligadata.Pmml.Runtime.Context';
+            var hash = 'com.ligadata.pmml.runtime.Context';
             var anchor = window.location.hash;
             var anchor_opt = '';
             if (anchor.length >= 1)
@@ -24,9 +28,15 @@
         </head>
         <body class="type">
       <div id="definition">
-        <img src="../../../../lib/class_big.png" />
-        <p id="owner"><a href="../../../package.html" class="extype" name="com">com</a>.<a href="../../package.html" class="extype" name="com.ligadata">ligadata</a>.<a href="../package.html" class="extype" name="com.ligadata.Pmml">Pmml</a>.<a href="package.html" class="extype" name="com.ligadata.Pmml.Runtime">Runtime</a></p>
-        <h1>Context</h1>
+        <img alt="Class" src="../../../../lib/class_big.png" />
+        <p id="owner"><a href="../../../package.html" class="extype" name="com">com</a>.<a href="../../package.html" class="extype" name="com.ligadata">ligadata</a>.<a href="../package.html" class="extype" name="com.ligadata.pmml">pmml</a>.<a href="package.html" class="extype" name="com.ligadata.pmml.runtime">runtime</a></p>
+        <h1>Context</h1><h3><span class="morelinks"><div>Related Doc:
+            <a href="package.html" class="extype" name="com.ligadata.pmml.runtime">package runtime</a>
+          </div></span></h3><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       </div>
 
       <h4 id="signature" class="signature">
@@ -35,13 +45,13 @@
         <span class="kind">class</span>
       </span>
       <span class="symbol">
-        <span class="name">Context</span><span class="result"> extends <a href="LogTrait.html" class="extype" name="com.ligadata.Pmml.Runtime.LogTrait">LogTrait</a></span>
+        <span class="name">Context</span><span class="result"> extends <a href="LogTrait.html" class="extype" name="com.ligadata.pmml.runtime.LogTrait">LogTrait</a></span>
       </span>
       </h4>
       
           <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>class Context(mgr : MdMgr) { &lt;== we may want 'mgr' this at runtime ...</p></div><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
-          <div class="superTypes hiddenContent"><a href="LogTrait.html" class="extype" name="com.ligadata.Pmml.Runtime.LogTrait">LogTrait</a>, <span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
+          <div class="superTypes hiddenContent"><a href="LogTrait.html" class="extype" name="com.ligadata.pmml.runtime.LogTrait">LogTrait</a>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></div>
         </div></div>
         
 
@@ -59,7 +69,7 @@
                 <span class="filtertype">Inherited<br />
                 </span>
                 <ol id="linearization">
-                  <li class="in" name="com.ligadata.Pmml.Runtime.Context"><span>Context</span></li><li class="in" name="com.ligadata.Pmml.Runtime.LogTrait"><span>LogTrait</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                  <li class="in" name="com.ligadata.pmml.runtime.Context"><span>Context</span></li><li class="in" name="com.ligadata.pmml.runtime.LogTrait"><span>LogTrait</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
                 </ol>
               </div><div id="ancestors">
             <span class="filtertype"></span>
@@ -67,7 +77,6 @@
               <li class="hideall out"><span>Hide All</span></li>
               <li class="showall in"><span>Show all</span></li>
             </ol>
-            <a href="http://docs.scala-lang.org/overviews/scaladoc/usage.html#members" target="_blank">Learn more about member selection</a>
           </div>
         <div id="visbl">
             <span class="filtertype">Visibility</span>
@@ -79,8 +88,8 @@
         <div id="allMembers">
         <div id="constructors" class="members">
               <h3>Instance Constructors</h3>
-              <ol><li name="com.ligadata.Pmml.Runtime.Context#&lt;init&gt;" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="&lt;init&gt;(xId:Long):com.ligadata.Pmml.Runtime.Context"></a>
+              <ol><li name="com.ligadata.pmml.runtime.Context#&lt;init&gt;" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="&lt;init&gt;(xId:Long,gCtx:com.ligadata.KamanjaBase.EnvContext):com.ligadata.pmml.runtime.Context"></a>
       <a id="&lt;init&gt;:Context"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -88,9 +97,13 @@
         <span class="kind">new</span>
       </span>
       <span class="symbol">
-        <span class="name">Context</span><span class="params">(<span name="xId">xId: <span class="extype" name="scala.Long">Long</span></span>)</span>
+        <span class="name">Context</span><span class="params">(<span name="xId">xId: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Long" class="extype" target="_top">Long</a></span>, <span name="gCtx">gCtx: <a href="../../KamanjaBase/EnvContext.html" class="extype" name="com.ligadata.KamanjaBase.EnvContext">EnvContext</a></span>)</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@&lt;init&gt;(xId:Long,gCtx:com.ligadata.KamanjaBase.EnvContext):com.ligadata.pmml.runtime.Context" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li></ol>
             </div>
@@ -102,19 +115,6 @@
         <div id="values" class="values members">
               <h3>Value Members</h3>
               <ol><li name="scala.AnyRef#!=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="!=(x$1:AnyRef):Boolean"></a>
-      <a id="!=(AnyRef):Boolean"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier">final </span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
-      </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="scala.Any#!=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="!=(x$1:Any):Boolean"></a>
       <a id="!=(Any):Boolean"></a>
       <h4 class="signature">
@@ -123,10 +123,14 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@!=(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.AnyRef###" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="##():Int"></a>
       <a id="##():Int"></a>
@@ -136,24 +140,15 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
+        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@##():Int" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.AnyRef#==" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="==(x$1:AnyRef):Boolean"></a>
-      <a id="==(AnyRef):Boolean"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier">final </span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
-      </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="scala.Any#==" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="==(x$1:Any):Boolean"></a>
       <a id="==(Any):Boolean"></a>
       <h4 class="signature">
@@ -162,11 +157,15 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
-    </li><li name="com.ligadata.Pmml.Runtime.Context#Counter" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@==(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="com.ligadata.pmml.runtime.Context#Counter" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="Counter():Int"></a>
       <a id="Counter():Int"></a>
       <h4 class="signature">
@@ -175,12 +174,16 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">Counter</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
+        <span class="name">Counter</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>
       </span>
-      </h4>
-      
-    </li><li name="com.ligadata.Pmml.Runtime.Context#GetRuleSetModel" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="GetRuleSetModel:com.ligadata.Pmml.Runtime.RuleSetModel"></a>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@Counter():Int" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Answer a unique number for this model execution</p>
+    </li><li name="com.ligadata.pmml.runtime.Context#GetRuleSetModel" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="GetRuleSetModel:com.ligadata.pmml.runtime.RuleSetModel"></a>
       <a id="GetRuleSetModel:RuleSetModel"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -188,12 +191,33 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">GetRuleSetModel</span><span class="result">: <a href="RuleSetModel.html" class="extype" name="com.ligadata.Pmml.Runtime.RuleSetModel">RuleSetModel</a></span>
+        <span class="name">GetRuleSetModel</span><span class="result">: <a href="RuleSetModel.html" class="extype" name="com.ligadata.pmml.runtime.RuleSetModel">RuleSetModel</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@GetRuleSetModel:com.ligadata.pmml.runtime.RuleSetModel" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
-    </li><li name="com.ligadata.Pmml.Runtime.Context#MiningSchemaMap" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="MiningSchemaMap(m:scala.collection.mutable.Map[String,com.ligadata.Pmml.Runtime.MiningField]):Unit"></a>
+    </li><li name="com.ligadata.pmml.runtime.Context#IsReady" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="IsReady():Unit"></a>
+      <a id="IsReady():Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">IsReady</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@IsReady():Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.pmml.runtime.Context#MiningSchemaMap" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="MiningSchemaMap(m:scala.collection.mutable.Map[String,com.ligadata.pmml.runtime.MiningField]):Unit"></a>
       <a id="MiningSchemaMap(Map[String,MiningField]):Unit"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -201,12 +225,16 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">MiningSchemaMap</span><span class="params">(<span name="m">m: <span class="extype" name="scala.collection.mutable.Map">Map</span>[<span class="extype" name="scala.Predef.String">String</span>, <a href="MiningField.html" class="extype" name="com.ligadata.Pmml.Runtime.MiningField">MiningField</a>]</span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">MiningSchemaMap</span><span class="params">(<span name="m">m: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.mutable.Map" class="extype" target="_top">Map</a>[<span class="extype" name="scala.Predef.String">String</span>, <a href="MiningField.html" class="extype" name="com.ligadata.pmml.runtime.MiningField">MiningField</a>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@MiningSchemaMap(m:scala.collection.mutable.Map[String,com.ligadata.pmml.runtime.MiningField]):Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
-    </li><li name="com.ligadata.Pmml.Runtime.Context#MiningSchemaMap" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="MiningSchemaMap:scala.collection.mutable.Map[String,com.ligadata.Pmml.Runtime.MiningField]"></a>
+    </li><li name="com.ligadata.pmml.runtime.Context#MiningSchemaMap" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="MiningSchemaMap:scala.collection.mutable.Map[String,com.ligadata.pmml.runtime.MiningField]"></a>
       <a id="MiningSchemaMap:Map[String,MiningField]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -214,12 +242,16 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">MiningSchemaMap</span><span class="result">: <span class="extype" name="scala.collection.mutable.Map">Map</span>[<span class="extype" name="scala.Predef.String">String</span>, <a href="MiningField.html" class="extype" name="com.ligadata.Pmml.Runtime.MiningField">MiningField</a>]</span>
+        <span class="name">MiningSchemaMap</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.mutable.Map" class="extype" target="_top">Map</a>[<span class="extype" name="scala.Predef.String">String</span>, <a href="MiningField.html" class="extype" name="com.ligadata.pmml.runtime.MiningField">MiningField</a>]</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@MiningSchemaMap:scala.collection.mutable.Map[String,com.ligadata.pmml.runtime.MiningField]" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
-    </li><li name="com.ligadata.Pmml.Runtime.Context#MissingValueFor" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="MissingValueFor(fldName:String):com.ligadata.Pmml.Runtime.DataValue"></a>
+    </li><li name="com.ligadata.pmml.runtime.Context#MissingValueFor" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="MissingValueFor(fldName:String):com.ligadata.pmml.runtime.DataValue"></a>
       <a id="MissingValueFor(String):DataValue"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -227,11 +259,18 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">MissingValueFor</span><span class="params">(<span name="fldName">fldName: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="DataValue.html" class="extype" name="com.ligadata.Pmml.Runtime.DataValue">DataValue</a></span>
+        <span class="name">MissingValueFor</span><span class="params">(<span name="fldName">fldName: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="DataValue.html" class="extype" name="com.ligadata.pmml.runtime.DataValue">DataValue</a></span>
       </span>
-      </h4>
-      
-    </li><li name="com.ligadata.Pmml.Runtime.Context#ModelAppName" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@MissingValueFor(fldName:String):com.ligadata.pmml.runtime.DataValue" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Answer a value associated with the supplied field when a given field has not been set through
+execution of the model.</p><div class="fullcomment"><div class="comment cmt"><p>Answer a value associated with the supplied field when a given field has not been set through
+execution of the model.  The missing value for data and derived fields are specified on the
+mining field values found in the rule set model's mining schema dictionary.</p></div><dl class="paramcmts block"><dt class="param">fldName</dt><dd class="cmt"><p>a name of a derived or data field</p></dd><dt>returns</dt><dd class="cmt"><p>an appropriate DataValue derivative according to the fldName's dataType</p></dd></dl></div>
+    </li><li name="com.ligadata.pmml.runtime.Context#ModelAppName" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="ModelAppName:String"></a>
       <a id="ModelAppName:String"></a>
       <h4 class="signature">
@@ -242,9 +281,13 @@
       <span class="symbol">
         <span class="name">ModelAppName</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
-      </h4>
-      
-    </li><li name="com.ligadata.Pmml.Runtime.Context#ModelDescription" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@ModelAppName:String" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Answer the Application name (from the header of the PMML)</p>
+    </li><li name="com.ligadata.pmml.runtime.Context#ModelDescription" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="ModelDescription:String"></a>
       <a id="ModelDescription:String"></a>
       <h4 class="signature">
@@ -255,9 +298,13 @@
       <span class="symbol">
         <span class="name">ModelDescription</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
-      </h4>
-      
-    </li><li name="com.ligadata.Pmml.Runtime.Context#ModelSourceFile" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@ModelDescription:String" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Answer the ModelDescription (from the header of the PMML)</p>
+    </li><li name="com.ligadata.pmml.runtime.Context#ModelSourceFile" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="ModelSourceFile:String"></a>
       <a id="ModelSourceFile:String"></a>
       <h4 class="signature">
@@ -268,9 +315,13 @@
       <span class="symbol">
         <span class="name">ModelSourceFile</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
-      </h4>
-      
-    </li><li name="com.ligadata.Pmml.Runtime.Context#ModelVersion" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@ModelSourceFile:String" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Answer the Source file supplied (from the header of the PMML)</p>
+    </li><li name="com.ligadata.pmml.runtime.Context#ModelVersion" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="ModelVersion:String"></a>
       <a id="ModelVersion:String"></a>
       <h4 class="signature">
@@ -281,10 +332,14 @@
       <span class="symbol">
         <span class="name">ModelVersion</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
-      </h4>
-      
-    </li><li name="com.ligadata.Pmml.Runtime.Context#SetRuleSetModel" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="SetRuleSetModel(model:com.ligadata.Pmml.Runtime.RuleSetModel):Unit"></a>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@ModelVersion:String" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Answer the ModelVersion (from the header of the PMML)</p>
+    </li><li name="com.ligadata.pmml.runtime.Context#SetRuleSetModel" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="SetRuleSetModel(model:com.ligadata.pmml.runtime.RuleSetModel):Unit"></a>
       <a id="SetRuleSetModel(RuleSetModel):Unit"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -292,9 +347,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">SetRuleSetModel</span><span class="params">(<span name="model">model: <a href="RuleSetModel.html" class="extype" name="com.ligadata.Pmml.Runtime.RuleSetModel">RuleSetModel</a></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">SetRuleSetModel</span><span class="params">(<span name="model">model: <a href="RuleSetModel.html" class="extype" name="com.ligadata.pmml.runtime.RuleSetModel">RuleSetModel</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@SetRuleSetModel(model:com.ligadata.pmml.runtime.RuleSetModel):Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="scala.Any#asInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="asInstanceOf[T0]:T0"></a>
@@ -307,7 +366,11 @@
       <span class="symbol">
         <span class="name">asInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Any.asInstanceOf.T0">T0</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@asInstanceOf[T0]:T0" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
     </li><li name="scala.AnyRef#clone" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="clone():Object"></a>
@@ -318,9 +381,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">clone</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@clone():Object" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -328,7 +395,7 @@
     </span>)</span>
               
         </dd></dl></div>
-    </li><li name="com.ligadata.Pmml.Runtime.Context#counter" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="com.ligadata.pmml.runtime.Context#counter" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="counter:Int"></a>
       <a id="counter:Int"></a>
       <h4 class="signature">
@@ -337,12 +404,16 @@
         <span class="kind">var</span>
       </span>
       <span class="symbol">
-        <span class="name">counter</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
+        <span class="name">counter</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>
       </span>
-      </h4>
-      <p class="shortcomment cmt">used to generate a unique number for fcn names in same scope during scala code generation</p>
-    </li><li name="com.ligadata.Pmml.Runtime.Context#dDict" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="dDict(dict:scala.collection.mutable.HashMap[String,com.ligadata.Pmml.Runtime.DataField]):Unit"></a>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@counter:Int" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">general unique number counter...</p><div class="fullcomment"><div class="comment cmt"><p>general unique number counter... scope is model instance execution</p></div></div>
+    </li><li name="com.ligadata.pmml.runtime.Context#dDict" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="dDict(dict:scala.collection.mutable.HashMap[String,com.ligadata.pmml.runtime.DataField]):Unit"></a>
       <a id="dDict(HashMap[String,DataField]):Unit"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -350,12 +421,16 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">dDict</span><span class="params">(<span name="dict">dict: <span class="extype" name="scala.collection.mutable.HashMap">HashMap</span>[<span class="extype" name="scala.Predef.String">String</span>, <a href="DataField.html" class="extype" name="com.ligadata.Pmml.Runtime.DataField">DataField</a>]</span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">dDict</span><span class="params">(<span name="dict">dict: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.mutable.HashMap" class="extype" target="_top">HashMap</a>[<span class="extype" name="scala.Predef.String">String</span>, <a href="DataField.html" class="extype" name="com.ligadata.pmml.runtime.DataField">DataField</a>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@dDict(dict:scala.collection.mutable.HashMap[String,com.ligadata.pmml.runtime.DataField]):Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
-    </li><li name="com.ligadata.Pmml.Runtime.Context#dDict" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="dDict:scala.collection.mutable.HashMap[String,com.ligadata.Pmml.Runtime.DataField]"></a>
+    </li><li name="com.ligadata.pmml.runtime.Context#dDict" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="dDict:scala.collection.mutable.HashMap[String,com.ligadata.pmml.runtime.DataField]"></a>
       <a id="dDict:HashMap[String,DataField]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -363,12 +438,16 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">dDict</span><span class="result">: <span class="extype" name="scala.collection.mutable.HashMap">HashMap</span>[<span class="extype" name="scala.Predef.String">String</span>, <a href="DataField.html" class="extype" name="com.ligadata.Pmml.Runtime.DataField">DataField</a>]</span>
+        <span class="name">dDict</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.mutable.HashMap" class="extype" target="_top">HashMap</a>[<span class="extype" name="scala.Predef.String">String</span>, <a href="DataField.html" class="extype" name="com.ligadata.pmml.runtime.DataField">DataField</a>]</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@dDict:scala.collection.mutable.HashMap[String,com.ligadata.pmml.runtime.DataField]" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
-    </li><li name="com.ligadata.Pmml.Runtime.Context#dataDict" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="dataDict:scala.collection.mutable.HashMap[String,com.ligadata.Pmml.Runtime.DataField]"></a>
+    </li><li name="com.ligadata.pmml.runtime.Context#dataDict" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="dataDict:scala.collection.mutable.HashMap[String,com.ligadata.pmml.runtime.DataField]"></a>
       <a id="dataDict:HashMap[String,DataField]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -376,9 +455,13 @@
         <span class="kind">var</span>
       </span>
       <span class="symbol">
-        <span class="name">dataDict</span><span class="result">: <span class="extype" name="scala.collection.mutable.HashMap">HashMap</span>[<span class="extype" name="scala.Predef.String">String</span>, <a href="DataField.html" class="extype" name="com.ligadata.Pmml.Runtime.DataField">DataField</a>]</span>
+        <span class="name">dataDict</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.mutable.HashMap" class="extype" target="_top">HashMap</a>[<span class="extype" name="scala.Predef.String">String</span>, <a href="DataField.html" class="extype" name="com.ligadata.pmml.runtime.DataField">DataField</a>]</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@dataDict:scala.collection.mutable.HashMap[String,com.ligadata.pmml.runtime.DataField]" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="scala.AnyRef#eq" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="eq(x$1:AnyRef):Boolean"></a>
@@ -389,11 +472,15 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@eq(x$1:AnyRef):Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="com.ligadata.Pmml.Runtime.Context#equals" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+    </li><li name="com.ligadata.pmml.runtime.Context#equals" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="equals(another:Any):Boolean"></a>
       <a id="equals(Any):Boolean"></a>
       <h4 class="signature">
@@ -402,10 +489,14 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">equals</span><span class="params">(<span name="another">another: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">equals</span><span class="params">(<span name="another">another: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.Pmml.Runtime.Context">Context</a> → AnyRef → Any</dd></dl></div>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@equals(another:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.pmml.runtime.Context">Context</a> → AnyRef → Any</dd></dl></div>
     </li><li name="scala.AnyRef#finalize" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="finalize():Unit"></a>
       <a id="finalize():Unit"></a>
@@ -415,9 +506,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">finalize</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@finalize():Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -425,6 +520,23 @@
     </span>)</span>
               
         </dd></dl></div>
+    </li><li name="com.ligadata.pmml.runtime.Context#gCtx" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="gCtx:com.ligadata.KamanjaBase.EnvContext"></a>
+      <a id="gCtx:EnvContext"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">gCtx</span><span class="result">: <a href="../../KamanjaBase/EnvContext.html" class="extype" name="com.ligadata.KamanjaBase.EnvContext">EnvContext</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@gCtx:com.ligadata.KamanjaBase.EnvContext" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
     </li><li name="scala.AnyRef#getClass" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="getClass():Class[_]"></a>
       <a id="getClass():Class[_]"></a>
@@ -436,7 +548,11 @@
       <span class="symbol">
         <span class="name">getClass</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.Class">Class</span>[_]</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@getClass():Class[_]" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.AnyRef#hashCode" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="hashCode():Int"></a>
@@ -447,11 +563,15 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
+        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@hashCode():Int" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="com.ligadata.Pmml.Runtime.Context#isFieldInDataDict" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="com.ligadata.pmml.runtime.Context#isFieldInDataDict" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="isFieldInDataDict(fldName:String):Boolean"></a>
       <a id="isFieldInDataDict(String):Boolean"></a>
       <h4 class="signature">
@@ -460,11 +580,15 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">isFieldInDataDict</span><span class="params">(<span name="fldName">fldName: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">isFieldInDataDict</span><span class="params">(<span name="fldName">fldName: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
-      
-    </li><li name="com.ligadata.Pmml.Runtime.Context#isFieldInTransformationDict" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@isFieldInDataDict(fldName:String):Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Answer whether a field with the supplied name exists in the data dictionary</p><div class="fullcomment"><div class="comment cmt"><p>Answer whether a field with the supplied name exists in the data dictionary</p></div><dl class="paramcmts block"><dt class="param">fldName</dt><dd class="cmt"><p>the name of the field sought</p></dd><dt>returns</dt><dd class="cmt"><p>true if it exists</p></dd></dl></div>
+    </li><li name="com.ligadata.pmml.runtime.Context#isFieldInTransformationDict" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="isFieldInTransformationDict(fldName:String):Boolean"></a>
       <a id="isFieldInTransformationDict(String):Boolean"></a>
       <h4 class="signature">
@@ -473,10 +597,14 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">isFieldInTransformationDict</span><span class="params">(<span name="fldName">fldName: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">isFieldInTransformationDict</span><span class="params">(<span name="fldName">fldName: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
-      
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@isFieldInTransformationDict(fldName:String):Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Answer whether a field with the supplied name exists in the transformation dictionary</p><div class="fullcomment"><div class="comment cmt"><p>Answer whether a field with the supplied name exists in the transformation dictionary</p></div><dl class="paramcmts block"><dt class="param">fldName</dt><dd class="cmt"><p>the name of the field sought</p></dd><dt>returns</dt><dd class="cmt"><p>true if it exists</p></dd></dl></div>
     </li><li name="scala.Any#isInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="isInstanceOf[T0]:Boolean"></a>
       <a id="isInstanceOf[T0]:Boolean"></a>
@@ -486,38 +614,50 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@isInstanceOf[T0]:Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
-    </li><li name="com.ligadata.Pmml.Runtime.LogTrait#logger" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="logger:&lt;error&gt;"></a>
-      <a id="logger:&lt;error&gt;"></a>
+    </li><li name="com.ligadata.pmml.runtime.Context#isReady" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="isReady:Boolean"></a>
+      <a id="isReady:Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">var</span>
+      </span>
+      <span class="symbol">
+        <span class="name">isReady</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@isReady:Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.pmml.runtime.LogTrait#logger" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="logger:org.apache.logging.log4j.Logger"></a>
+      <a id="logger:Logger"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">logger</span><span class="result">: &lt;error&gt;</span>
+        <span class="name">logger</span><span class="result">: <span class="extype" name="org.apache.logging.log4j.Logger">Logger</span></span>
       </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="LogTrait.html" class="extype" name="com.ligadata.Pmml.Runtime.LogTrait">LogTrait</a></dd></dl></div>
-    </li><li name="com.ligadata.Pmml.Runtime.LogTrait#loggerName" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="loggerName:String"></a>
-      <a id="loggerName:String"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">val</span>
-      </span>
-      <span class="symbol">
-        <span class="name">loggerName</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
-      </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="LogTrait.html" class="extype" name="com.ligadata.Pmml.Runtime.LogTrait">LogTrait</a></dd></dl></div>
-    </li><li name="com.ligadata.Pmml.Runtime.Context#miningSchemaMap" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="miningSchemaMap:scala.collection.mutable.Map[String,com.ligadata.Pmml.Runtime.MiningField]"></a>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@logger:org.apache.logging.log4j.Logger" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="LogTrait.html" class="extype" name="com.ligadata.pmml.runtime.LogTrait">LogTrait</a></dd></dl></div>
+    </li><li name="com.ligadata.pmml.runtime.Context#miningSchemaMap" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="miningSchemaMap:scala.collection.mutable.Map[String,com.ligadata.pmml.runtime.MiningField]"></a>
       <a id="miningSchemaMap:Map[String,MiningField]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -525,9 +665,13 @@
         <span class="kind">var</span>
       </span>
       <span class="symbol">
-        <span class="name">miningSchemaMap</span><span class="result">: <span class="extype" name="scala.collection.mutable.Map">Map</span>[<span class="extype" name="scala.Predef.String">String</span>, <a href="MiningField.html" class="extype" name="com.ligadata.Pmml.Runtime.MiningField">MiningField</a>]</span>
+        <span class="name">miningSchemaMap</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.mutable.Map" class="extype" target="_top">Map</a>[<span class="extype" name="scala.Predef.String">String</span>, <a href="MiningField.html" class="extype" name="com.ligadata.pmml.runtime.MiningField">MiningField</a>]</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@miningSchemaMap:scala.collection.mutable.Map[String,com.ligadata.pmml.runtime.MiningField]" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="scala.AnyRef#ne" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ne(x$1:AnyRef):Boolean"></a>
@@ -538,9 +682,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@ne(x$1:AnyRef):Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="scala.AnyRef#notify" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="notify():Unit"></a>
@@ -551,9 +699,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notify</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@notify():Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="scala.AnyRef#notifyAll" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="notifyAll():Unit"></a>
@@ -564,11 +716,15 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@notifyAll():Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="com.ligadata.Pmml.Runtime.Context#pmmlModelIdentifiers" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="com.ligadata.pmml.runtime.Context#pmmlModelIdentifiers" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="pmmlModelIdentifiers:scala.collection.mutable.HashMap[String,Option[String]]"></a>
       <a id="pmmlModelIdentifiers:HashMap[String,Option[String]]"></a>
       <h4 class="signature">
@@ -577,14 +733,55 @@
         <span class="kind">var</span>
       </span>
       <span class="symbol">
-        <span class="name">pmmlModelIdentifiers</span><span class="result">: <span class="extype" name="scala.collection.mutable.HashMap">HashMap</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]]</span>
+        <span class="name">pmmlModelIdentifiers</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.mutable.HashMap" class="extype" target="_top">HashMap</a>[<span class="extype" name="scala.Predef.String">String</span>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>]]</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@pmmlModelIdentifiers:scala.collection.mutable.HashMap[String,Option[String]]" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <p class="shortcomment cmt">	    Various model identifiers from the model source file header and RuleSetModel:
 	 	ApplicationName , FunctionName, PMML, Version, Copyright, Description, ModelName
 </p>
-    </li><li name="com.ligadata.Pmml.Runtime.Context#rulesetModel" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="rulesetModel:com.ligadata.Pmml.Runtime.RuleSetModel"></a>
+    </li><li name="com.ligadata.pmml.runtime.Context#reset" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="reset():Unit"></a>
+      <a id="reset():Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">reset</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@reset():Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt"> Generally reset the model instance to an 'idempotent' capable state.</p><div class="fullcomment"><div class="comment cmt"><p> Generally reset the model instance to an 'idempotent' capable state.  For now, this means clearing those
+ derived fields' values that are not to be retained as part of the cached state.  The derived field's 'retain'
+ flag controls this behavior.
+</p></div></div>
+    </li><li name="com.ligadata.pmml.runtime.Context#resetXDict" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="resetXDict():Unit"></a>
+      <a id="resetXDict():Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">resetXDict</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@resetXDict():Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt"> Clear the 'set' flags of the transformation dictionary derived fields unless their retain flag has been set.</p>
+    </li><li name="com.ligadata.pmml.runtime.Context#rulesetModel" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="rulesetModel:com.ligadata.pmml.runtime.RuleSetModel"></a>
       <a id="rulesetModel:RuleSetModel"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -592,9 +789,13 @@
         <span class="kind">var</span>
       </span>
       <span class="symbol">
-        <span class="name">rulesetModel</span><span class="result">: <a href="RuleSetModel.html" class="extype" name="com.ligadata.Pmml.Runtime.RuleSetModel">RuleSetModel</a></span>
+        <span class="name">rulesetModel</span><span class="result">: <a href="RuleSetModel.html" class="extype" name="com.ligadata.pmml.runtime.RuleSetModel">RuleSetModel</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@rulesetModel:com.ligadata.pmml.runtime.RuleSetModel" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="scala.AnyRef#synchronized" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="synchronized[T0](x$1:=&gt;T0):T0"></a>
@@ -607,7 +808,11 @@
       <span class="symbol">
         <span class="name">synchronized</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="params">(<span name="arg0">arg0: ⇒ <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>)</span><span class="result">: <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@synchronized[T0](x$1:=&gt;T0):T0" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="scala.AnyRef#toString" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="toString():String"></a>
@@ -620,10 +825,14 @@
       <span class="symbol">
         <span class="name">toString</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@toString():String" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="com.ligadata.Pmml.Runtime.Context#valueFor" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="valueFor(fldName:String):com.ligadata.Pmml.Runtime.DataValue"></a>
+    </li><li name="com.ligadata.pmml.runtime.Context#valueFor" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="valueFor(fldName:String):com.ligadata.pmml.runtime.DataValue"></a>
       <a id="valueFor(String):DataValue"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -631,12 +840,21 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">valueFor</span><span class="params">(<span name="fldName">fldName: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="DataValue.html" class="extype" name="com.ligadata.Pmml.Runtime.DataValue">DataValue</a></span>
+        <span class="name">valueFor</span><span class="params">(<span name="fldName">fldName: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="DataValue.html" class="extype" name="com.ligadata.pmml.runtime.DataValue">DataValue</a></span>
       </span>
-      </h4>
-      <p class="shortcomment cmt"> General data value access to the data found in the data and transaction dictionaries
-</p>
-    </li><li name="com.ligadata.Pmml.Runtime.Context#valueIncr" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@valueFor(fldName:String):com.ligadata.pmml.runtime.DataValue" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt"> Answer the DataValue derivative associated with the supplied field name - either naming a
+ DataDictionary or TransactionDictionary field.</p><div class="fullcomment"><div class="comment cmt"><p> Answer the DataValue derivative associated with the supplied field name - either naming a
+ DataDictionary or TransactionDictionary field.  Should the field not be set due to failure to
+ initialize the DataField or execute the code that sets the DerivedField, the missing value
+ ascribed to the mining field for this field is accessed and its missingValueReplacement is
+ returned.
+</p></div><dl class="paramcmts block"><dt class="param">fldName</dt><dd class="cmt"><p>the name of the field whose value is sought</p></dd><dt>returns</dt><dd class="cmt"><p>a DataValue derivative appropriate for the fldName's dataType</p></dd></dl></div>
+    </li><li name="com.ligadata.pmml.runtime.Context#valueIncr" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="valueIncr(fldName:String,incrAmt:Int):Boolean"></a>
       <a id="valueIncr(String,Int):Boolean"></a>
       <h4 class="signature">
@@ -645,12 +863,16 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">valueIncr</span><span class="params">(<span name="fldName">fldName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="incrAmt">incrAmt: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">valueIncr</span><span class="params">(<span name="fldName">fldName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="incrAmt">incrAmt: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
-      <p class="shortcomment cmt"> Increment value any numeric fld by supplied amt (only integers supported for incr value at this time)
-</p>
-    </li><li name="com.ligadata.Pmml.Runtime.Context#valuePut" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@valueIncr(fldName:String,incrAmt:Int):Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt"> Explicitly increment the supplied field's value by the increment supplied.</p><div class="fullcomment"><div class="comment cmt"><p> Explicitly increment the supplied field's value by the increment supplied. The field
+ can be an integer, Long, double or float.</p></div><dl class="paramcmts block"><dt class="param">fldName</dt><dd class="cmt"><p>the name of the scalar field to update</p></dd><dt class="param">incrAmt</dt><dd class="cmt"><p>the amount (integers only at this time) to increment or decrement (if negative)</p></dd><dt>returns</dt><dd class="cmt"><p>whether the field was incremented.</p></dd></dl></div>
+    </li><li name="com.ligadata.pmml.runtime.Context#valuePut" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="valuePut(fldName:String,value:Boolean):Boolean"></a>
       <a id="valuePut(String,Boolean):Boolean"></a>
       <h4 class="signature">
@@ -659,11 +881,15 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">valuePut</span><span class="params">(<span name="fldName">fldName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="value">value: <span class="extype" name="scala.Boolean">Boolean</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">valuePut</span><span class="params">(<span name="fldName">fldName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="value">value: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
-      
-    </li><li name="com.ligadata.Pmml.Runtime.Context#valuePut" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@valuePut(fldName:String,value:Boolean):Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt"> Explicitly update the supplied field name with the supplied DataValue.</p><div class="fullcomment"><div class="comment cmt"><p> Explicitly update the supplied field name with the supplied DataValue.</p></div><dl class="paramcmts block"><dt class="param">fldName</dt><dd class="cmt"><p>name of field to update ... could be in either data or transaction dictionary</p></dd><dt class="param">value</dt><dd class="cmt"><p>a Boolean value</p></dd><dt>returns</dt><dd class="cmt"><p>whether the field was set</p></dd></dl></div>
+    </li><li name="com.ligadata.pmml.runtime.Context#valuePut" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="valuePut(fldName:String,value:Any):Boolean"></a>
       <a id="valuePut(String,Any):Boolean"></a>
       <h4 class="signature">
@@ -672,11 +898,15 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">valuePut</span><span class="params">(<span name="fldName">fldName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="value">value: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">valuePut</span><span class="params">(<span name="fldName">fldName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="value">value: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
-      
-    </li><li name="com.ligadata.Pmml.Runtime.Context#valuePut" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@valuePut(fldName:String,value:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt"> Explicitly update the supplied field name with the supplied DataValue.</p><div class="fullcomment"><div class="comment cmt"><p> Explicitly update the supplied field name with the supplied DataValue.</p></div><dl class="paramcmts block"><dt class="param">fldName</dt><dd class="cmt"><p>name of field to update ... could be in either data or transaction dictionary</p></dd><dt class="param">value</dt><dd class="cmt"><p>any dataType value</p></dd><dt>returns</dt><dd class="cmt"><p>whether the field was set</p></dd></dl></div>
+    </li><li name="com.ligadata.pmml.runtime.Context#valuePut" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="valuePut(fldName:String,value:Float):Boolean"></a>
       <a id="valuePut(String,Float):Boolean"></a>
       <h4 class="signature">
@@ -685,11 +915,15 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">valuePut</span><span class="params">(<span name="fldName">fldName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="value">value: <span class="extype" name="scala.Float">Float</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">valuePut</span><span class="params">(<span name="fldName">fldName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="value">value: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Float" class="extype" target="_top">Float</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
-      
-    </li><li name="com.ligadata.Pmml.Runtime.Context#valuePut" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@valuePut(fldName:String,value:Float):Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt"> Explicitly update the supplied field name with the supplied DataValue.</p><div class="fullcomment"><div class="comment cmt"><p> Explicitly update the supplied field name with the supplied DataValue.</p></div><dl class="paramcmts block"><dt class="param">fldName</dt><dd class="cmt"><p>name of field to update ... could be in either data or transaction dictionary</p></dd><dt class="param">value</dt><dd class="cmt"><p>a Float value</p></dd><dt>returns</dt><dd class="cmt"><p>whether the field was set</p></dd></dl></div>
+    </li><li name="com.ligadata.pmml.runtime.Context#valuePut" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="valuePut(fldName:String,value:Double):Boolean"></a>
       <a id="valuePut(String,Double):Boolean"></a>
       <h4 class="signature">
@@ -698,11 +932,15 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">valuePut</span><span class="params">(<span name="fldName">fldName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="value">value: <span class="extype" name="scala.Double">Double</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">valuePut</span><span class="params">(<span name="fldName">fldName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="value">value: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Double" class="extype" target="_top">Double</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
-      
-    </li><li name="com.ligadata.Pmml.Runtime.Context#valuePut" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@valuePut(fldName:String,value:Double):Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt"> Explicitly update the supplied field name with the supplied DataValue.</p><div class="fullcomment"><div class="comment cmt"><p> Explicitly update the supplied field name with the supplied DataValue.</p></div><dl class="paramcmts block"><dt class="param">fldName</dt><dd class="cmt"><p>name of field to update ... could be in either data or transaction dictionary</p></dd><dt class="param">value</dt><dd class="cmt"><p>a Double value</p></dd><dt>returns</dt><dd class="cmt"><p>whether the field was set</p></dd></dl></div>
+    </li><li name="com.ligadata.pmml.runtime.Context#valuePut" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="valuePut(fldName:String,value:Long):Boolean"></a>
       <a id="valuePut(String,Long):Boolean"></a>
       <h4 class="signature">
@@ -711,11 +949,15 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">valuePut</span><span class="params">(<span name="fldName">fldName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="value">value: <span class="extype" name="scala.Long">Long</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">valuePut</span><span class="params">(<span name="fldName">fldName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="value">value: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Long" class="extype" target="_top">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
-      
-    </li><li name="com.ligadata.Pmml.Runtime.Context#valuePut" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@valuePut(fldName:String,value:Long):Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt"> Explicitly update the supplied field name with the supplied DataValue.</p><div class="fullcomment"><div class="comment cmt"><p> Explicitly update the supplied field name with the supplied DataValue.</p></div><dl class="paramcmts block"><dt class="param">fldName</dt><dd class="cmt"><p>name of field to update ... could be in either data or transaction dictionary</p></dd><dt class="param">value</dt><dd class="cmt"><p>Long value</p></dd><dt>returns</dt><dd class="cmt"><p>whether the field was set</p></dd></dl></div>
+    </li><li name="com.ligadata.pmml.runtime.Context#valuePut" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="valuePut(fldName:String,value:Int):Boolean"></a>
       <a id="valuePut(String,Int):Boolean"></a>
       <h4 class="signature">
@@ -724,11 +966,15 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">valuePut</span><span class="params">(<span name="fldName">fldName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="value">value: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">valuePut</span><span class="params">(<span name="fldName">fldName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="value">value: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
-      
-    </li><li name="com.ligadata.Pmml.Runtime.Context#valuePut" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@valuePut(fldName:String,value:Int):Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt"> Explicitly update the supplied field name with the supplied DataValue.</p><div class="fullcomment"><div class="comment cmt"><p> Explicitly update the supplied field name with the supplied DataValue.</p></div><dl class="paramcmts block"><dt class="param">fldName</dt><dd class="cmt"><p>name of field to update ... could be in either data or transaction dictionary</p></dd><dt class="param">value</dt><dd class="cmt"><p>an Int value</p></dd><dt>returns</dt><dd class="cmt"><p>whether the field was set</p></dd></dl></div>
+    </li><li name="com.ligadata.pmml.runtime.Context#valuePut" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="valuePut(fldName:String,value:String):Boolean"></a>
       <a id="valuePut(String,String):Boolean"></a>
       <h4 class="signature">
@@ -737,12 +983,16 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">valuePut</span><span class="params">(<span name="fldName">fldName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="value">value: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">valuePut</span><span class="params">(<span name="fldName">fldName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="value">value: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
-      
-    </li><li name="com.ligadata.Pmml.Runtime.Context#valuePut" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="valuePut(fldName:String,value:com.ligadata.Pmml.Runtime.DataValue):Boolean"></a>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@valuePut(fldName:String,value:String):Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt"> Explicitly update the supplied field name with the supplied DataValue.</p><div class="fullcomment"><div class="comment cmt"><p> Explicitly update the supplied field name with the supplied DataValue.</p></div><dl class="paramcmts block"><dt class="param">fldName</dt><dd class="cmt"><p>name of field to update ... could be in either data or transaction dictionary</p></dd><dt class="param">value</dt><dd class="cmt"><p>String value</p></dd><dt>returns</dt><dd class="cmt"><p>whether the field was set</p></dd></dl></div>
+    </li><li name="com.ligadata.pmml.runtime.Context#valuePut" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="valuePut(fldName:String,value:com.ligadata.pmml.runtime.DataValue):Boolean"></a>
       <a id="valuePut(String,DataValue):Boolean"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -750,11 +1000,33 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">valuePut</span><span class="params">(<span name="fldName">fldName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="value">value: <a href="DataValue.html" class="extype" name="com.ligadata.Pmml.Runtime.DataValue">DataValue</a></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">valuePut</span><span class="params">(<span name="fldName">fldName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="value">value: <a href="DataValue.html" class="extype" name="com.ligadata.pmml.runtime.DataValue">DataValue</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
-      <p class="shortcomment cmt"> General data value update (explicit set of value vs executing associated function (for the derived fields)
-</p>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@valuePut(fldName:String,value:com.ligadata.pmml.runtime.DataValue):Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt"> Explicitly update the supplied field name with the supplied DataValue.</p><div class="fullcomment"><div class="comment cmt"><p> Explicitly update the supplied field name with the supplied DataValue.</p></div><dl class="paramcmts block"><dt class="param">fldName</dt><dd class="cmt"><p>name of field to update ... could be in either data or transaction dictionary</p></dd><dt class="param">value</dt><dd class="cmt"><p>DataValue presumably appropriately matched to the field's dataType</p></dd><dt>returns</dt><dd class="cmt"><p>whether the field was set</p></dd></dl></div>
+    </li><li name="com.ligadata.pmml.runtime.Context#valueSetFor" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="valueSetFor(fldName:String):Boolean"></a>
+      <a id="valueSetFor(String):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">valueSetFor</span><span class="params">(<span name="fldName">fldName: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@valueSetFor(fldName:String):Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt"> Determine if the DataField or DerivedField has been set
+</p><div class="fullcomment"><div class="comment cmt"><p> Determine if the DataField or DerivedField has been set
+</p></div><dl class="paramcmts block"><dt class="param">fldName</dt><dd class="cmt"><p>: the name of the DataField or DerivedField of interest</p></dd><dt>returns</dt><dd class="cmt"><p>true if the field has a valid value.</p></dd></dl></div>
     </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait():Unit"></a>
       <a id="wait():Unit"></a>
@@ -764,9 +1036,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@wait():Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -783,9 +1059,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Long">Long</span></span>, <span name="arg1">arg1: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Long" class="extype" target="_top">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@wait(x$1:Long,x$2:Int):Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -802,9 +1082,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Long">Long</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Long" class="extype" target="_top">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@wait(x$1:Long):Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -812,8 +1096,8 @@
     </span>)</span>
               
         </dd></dl></div>
-    </li><li name="com.ligadata.Pmml.Runtime.Context#xDict" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="xDict(dict:scala.collection.mutable.HashMap[String,com.ligadata.Pmml.Runtime.DerivedField]):Unit"></a>
+    </li><li name="com.ligadata.pmml.runtime.Context#xDict" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="xDict(dict:scala.collection.mutable.HashMap[String,com.ligadata.pmml.runtime.DerivedField]):Unit"></a>
       <a id="xDict(HashMap[String,DerivedField]):Unit"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -821,12 +1105,16 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">xDict</span><span class="params">(<span name="dict">dict: <span class="extype" name="scala.collection.mutable.HashMap">HashMap</span>[<span class="extype" name="scala.Predef.String">String</span>, <a href="DerivedField.html" class="extype" name="com.ligadata.Pmml.Runtime.DerivedField">DerivedField</a>]</span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">xDict</span><span class="params">(<span name="dict">dict: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.mutable.HashMap" class="extype" target="_top">HashMap</a>[<span class="extype" name="scala.Predef.String">String</span>, <a href="DerivedField.html" class="extype" name="com.ligadata.pmml.runtime.DerivedField">DerivedField</a>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@xDict(dict:scala.collection.mutable.HashMap[String,com.ligadata.pmml.runtime.DerivedField]):Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
-    </li><li name="com.ligadata.Pmml.Runtime.Context#xDict" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="xDict:scala.collection.mutable.HashMap[String,com.ligadata.Pmml.Runtime.DerivedField]"></a>
+    </li><li name="com.ligadata.pmml.runtime.Context#xDict" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="xDict:scala.collection.mutable.HashMap[String,com.ligadata.pmml.runtime.DerivedField]"></a>
       <a id="xDict:HashMap[String,DerivedField]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -834,11 +1122,15 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">xDict</span><span class="result">: <span class="extype" name="scala.collection.mutable.HashMap">HashMap</span>[<span class="extype" name="scala.Predef.String">String</span>, <a href="DerivedField.html" class="extype" name="com.ligadata.Pmml.Runtime.DerivedField">DerivedField</a>]</span>
+        <span class="name">xDict</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.mutable.HashMap" class="extype" target="_top">HashMap</a>[<span class="extype" name="scala.Predef.String">String</span>, <a href="DerivedField.html" class="extype" name="com.ligadata.pmml.runtime.DerivedField">DerivedField</a>]</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@xDict:scala.collection.mutable.HashMap[String,com.ligadata.pmml.runtime.DerivedField]" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
-    </li><li name="com.ligadata.Pmml.Runtime.Context#xId" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="com.ligadata.pmml.runtime.Context#xId" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="xId:Long"></a>
       <a id="xId:Long"></a>
       <h4 class="signature">
@@ -847,12 +1139,16 @@
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">xId</span><span class="result">: <span class="extype" name="scala.Long">Long</span></span>
+        <span class="name">xId</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Long" class="extype" target="_top">Long</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@xId:Long" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
-    </li><li name="com.ligadata.Pmml.Runtime.Context#xformDict" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="xformDict:scala.collection.mutable.HashMap[String,com.ligadata.Pmml.Runtime.DerivedField]"></a>
+    </li><li name="com.ligadata.pmml.runtime.Context#xformDict" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="xformDict:scala.collection.mutable.HashMap[String,com.ligadata.pmml.runtime.DerivedField]"></a>
       <a id="xformDict:HashMap[String,DerivedField]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -860,9 +1156,13 @@
         <span class="kind">var</span>
       </span>
       <span class="symbol">
-        <span class="name">xformDict</span><span class="result">: <span class="extype" name="scala.collection.mutable.HashMap">HashMap</span>[<span class="extype" name="scala.Predef.String">String</span>, <a href="DerivedField.html" class="extype" name="com.ligadata.Pmml.Runtime.DerivedField">DerivedField</a>]</span>
+        <span class="name">xformDict</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.mutable.HashMap" class="extype" target="_top">HashMap</a>[<span class="extype" name="scala.Predef.String">String</span>, <a href="DerivedField.html" class="extype" name="com.ligadata.pmml.runtime.DerivedField">DerivedField</a>]</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.runtime.Context@xformDict:scala.collection.mutable.HashMap[String,com.ligadata.pmml.runtime.DerivedField]" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li></ol>
             </div>
@@ -873,12 +1173,12 @@
         </div>
 
         <div id="inheritedMembers">
-        <div class="parent" name="com.ligadata.Pmml.Runtime.LogTrait">
-              <h3>Inherited from <a href="LogTrait.html" class="extype" name="com.ligadata.Pmml.Runtime.LogTrait">LogTrait</a></h3>
+        <div class="parent" name="com.ligadata.pmml.runtime.LogTrait">
+              <h3>Inherited from <a href="LogTrait.html" class="extype" name="com.ligadata.pmml.runtime.LogTrait">LogTrait</a></h3>
             </div><div class="parent" name="scala.AnyRef">
-              <h3>Inherited from <span class="extype" name="scala.AnyRef">AnyRef</span></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">
-              <h3>Inherited from <span class="extype" name="scala.Any">Any</span></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></h3>
             </div>
         
         </div>
@@ -895,6 +1195,7 @@
       <div id="tooltip"></div>
 
       <div id="footer">  </div>
-      <script defer="defer" type="text/javascript" id="jquery-js" src="../../../../lib/jquery.js"></script><script defer="defer" type="text/javascript" id="jquery-ui-js" src="../../../../lib/jquery-ui.js"></script><script defer="defer" type="text/javascript" id="tools-tooltip-js" src="../../../../lib/tools.tooltip.js"></script><script defer="defer" type="text/javascript" id="template-js" src="../../../../lib/template.js"></script>
+
+
     </body>
       </html>

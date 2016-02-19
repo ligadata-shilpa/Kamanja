@@ -1,5 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<!DOCTYPE html >
 <html>
         <head>
           <title>udfs - com.ligadata.pmml.udfs</title>
@@ -9,6 +8,11 @@
           
       <link href="../../../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
       <link href="../../../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../../../../lib/jquery.js" id="jquery-js"></script>
+      <script type="text/javascript" src="../../../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../../../lib/template.js"></script>
+      <script type="text/javascript" src="../../../../lib/tools.tooltip.js"></script>
+      
       <script type="text/javascript">
          if(top === self) {
             var url = '../../../../index.html';
@@ -24,9 +28,13 @@
         </head>
         <body class="value">
       <div id="definition">
-        <img src="../../../../lib/package_big.png" />
+        <img alt="Package" src="../../../../lib/package_big.png" />
         <p id="owner"><a href="../../../package.html" class="extype" name="com">com</a>.<a href="../../package.html" class="extype" name="com.ligadata">ligadata</a>.<a href="../package.html" class="extype" name="com.ligadata.pmml">pmml</a></p>
-        <h1>udfs</h1>
+        <h1>udfs</h1><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.udfs.package" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       </div>
 
       <h4 id="signature" class="signature">
@@ -58,19 +66,23 @@
 
         <div id="types" class="types members">
               <h3>Type Members</h3>
-              <ol><li name="com.ligadata.pmml.udfs.UdfBase" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+              <ol><li name="com.ligadata.pmml.udfs.UdfBase" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
       <a id="UdfBaseextendsAnyRef"></a>
       <a id="UdfBase:UdfBase"></a>
       <h4 class="signature">
       <span class="modifier_kind">
-        <span class="modifier">abstract </span>
-        <span class="kind">class</span>
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
       </span>
       <span class="symbol">
-        <a href="UdfBase.html"><span class="name">UdfBase</span></a><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+        <a href="UdfBase.html"><span class="name">UdfBase</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
       </span>
-      </h4>
-      <p class="comment cmt">UdfBase trait is inherited by all UDF libraries to be used in the Pmml models executed by OnLEP.</p>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.udfs.package@UdfBaseextendsAnyRef" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt"></p><div class="fullcomment"><div class="comment cmt"></div><dl class="attributes block"> <dt>See also</dt><dd><span class="cmt"><p>UdfExtract for how function information is extracted from an object.</p></span></dd></dl></div>
     </li></ol>
             </div>
 
@@ -78,7 +90,65 @@
 
         <div id="values" class="values members">
               <h3>Value Members</h3>
-              <ol><li name="com.ligadata.pmml.udfs.Udfs" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+              <ol><li name="com.ligadata.pmml.udfs.CustomUdfs" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="CustomUdfs"></a>
+      <a id="CustomUdfs:CustomUdfs"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="CustomUdfs$.html"><span class="name">CustomUdfs</span></a><span class="result"> extends <a href="../runtime/LogTrait.html" class="extype" name="com.ligadata.pmml.runtime.LogTrait">LogTrait</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.udfs.package@CustomUdfs" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Sample udfs ..</p><div class="fullcomment"><div class="comment cmt"><p>Sample udfs .. com.ligadata.pmml.udfs.CustomUdfs
+    This is a sample udf library to illustrate how one would add their own library of
+    functions to the Kamanja system such that they could be used in the PMML models run
+    there.
+    The udfs used in Kamanja must be declared in an object (i.e., they are static methods
+    for those of you familiar with java).
+    NOTE: If you want to invoke functions in the core library, make your UDF project that
+    builds your UDFs dependent on PmmlUdfs:
+        lazy val CustomUdfLib = project.in(file(&quot;SampleApplication/CustomUdfLib&quot;)) dependsOn(PmmlUdfs)</p><p>    Include the following two lines in your imports:
+        import com.ligadata.pmml.udfs._
+        import com.ligadata.pmml.udfs.Udfs._
+    The sample udf, ISO8601DateFmt, does use a function from the core udfs, so we include it here.
+    Once it is built, you can run the extractUDFLibMetadata.scala script on it that
+    will produce the metadata from it.
+    Assuming you have the sbtProjDependencies.scala and extractUDFLibMetadata.scala
+    scripts in a folder on your PATH, you can use this command from 'trunk' to compile it:
+    extractUdfLibMetadata.scala --sbtProject PmmlUdfs
+                                --fullObjectPath com.mycompany.pmml.udfs.SomeCustomUdfs
+                                --namespace Pmml
+                                --versionNumber 1000000
+                                --typeDefsPath /tmp/typesforSomeCustomUdfs.json
+                                --fcnDefsPath /tmp/fcnsforSomCustomUdfs.json
+    The version number supplied should be greater than any prior version used for the same
+    Udfs.  This is currently not checked.  It will complain when you try to load the metadata instead.
+    The 1000000 will produce a &quot;000000.000001.000000&quot; version number for each of your udf functions.
+    The last two arguments are paths to the json that is produced by the script looking
+    into the udf jar for PmmlUdfs at the functions on the 'fullObjectPath'.
+    As written, the types do not really need to be loaded into the MetadataAPI, as they
+    have all been defined in the Kamanja metadata bootstrap.  The udfs json file must be loaded
+    however.  The types would be needed if you introduced a type that has not been previously declared
+    in the bootstrap.  If you are not sure there is no harm loading the types file.  If one of
+    the types is already present, an error will be logged to that effect.  This is probably ok,
+    however, you should inspect the types that are duplicate to verify they reflect what
+    your intention is.
+    To use this udf library in one of your models, you need to reference it in the model
+    itself.  In the DataDictionary section, put the following:
+        &lt;DataField name=&quot;UDFSearchPath&quot; displayName=&quot;UDFSearchPath&quot; dataType=&quot;container&quot;&gt;
+          &lt;Value value=&quot;com.mycompany.pmml.udfs.CustomUdfs&quot; property=&quot;valid&quot;/&gt;
+        &lt;/DataField&gt;
+    Important: Don't forget to upload your library to the Kamanja cluster.  There is an upload jar
+    protocol for this purpose.
+</p></div></div>
+    </li><li name="com.ligadata.pmml.udfs.Udfs" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="Udfs"></a>
       <a id="Udfs:Udfs"></a>
       <h4 class="signature">
@@ -87,10 +157,14 @@
         <span class="kind">object</span>
       </span>
       <span class="symbol">
-        <a href="Udfs$.html"><span class="name">Udfs</span></a><span class="result"> extends <a href="UdfBase.html" class="extype" name="com.ligadata.pmml.udfs.UdfBase">UdfBase</a> with <a href="../../Pmml/Runtime/LogTrait.html" class="extype" name="com.ligadata.Pmml.Runtime.LogTrait">LogTrait</a></span>
+        <a href="Udfs$.html"><span class="name">Udfs</span></a><span class="result"> extends <a href="../runtime/LogTrait.html" class="extype" name="com.ligadata.pmml.runtime.LogTrait">LogTrait</a></span>
       </span>
-      </h4>
-      <p class="comment cmt">These are the udfs supplied with the system.</p>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.udfs.package@Udfs" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">These are the udfs supplied with the system.</p>
     </li></ol>
             </div>
 
@@ -116,6 +190,7 @@
       <div id="tooltip"></div>
 
       <div id="footer">  </div>
-      <script defer="defer" type="text/javascript" id="jquery-js" src="../../../../lib/jquery.js"></script><script defer="defer" type="text/javascript" id="jquery-ui-js" src="../../../../lib/jquery-ui.js"></script><script defer="defer" type="text/javascript" id="tools-tooltip-js" src="../../../../lib/tools.tooltip.js"></script><script defer="defer" type="text/javascript" id="template-js" src="../../../../lib/template.js"></script>
+
+
     </body>
       </html>

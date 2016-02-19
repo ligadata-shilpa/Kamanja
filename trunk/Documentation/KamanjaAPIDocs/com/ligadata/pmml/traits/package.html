@@ -1,0 +1,223 @@
+<!DOCTYPE html >
+<html>
+        <head>
+          <title>traits - com.ligadata.pmml.traits</title>
+          <meta name="description" content="traits - com.ligadata.pmml.traits" />
+          <meta name="keywords" content="traits com.ligadata.pmml.traits" />
+          <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+          
+      <link href="../../../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
+      <link href="../../../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../../../../lib/jquery.js" id="jquery-js"></script>
+      <script type="text/javascript" src="../../../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../../../lib/template.js"></script>
+      <script type="text/javascript" src="../../../../lib/tools.tooltip.js"></script>
+      
+      <script type="text/javascript">
+         if(top === self) {
+            var url = '../../../../index.html';
+            var hash = 'com.ligadata.pmml.traits.package';
+            var anchor = window.location.hash;
+            var anchor_opt = '';
+            if (anchor.length >= 1)
+              anchor_opt = '@' + anchor.substring(1);
+            window.location.href = url + '#' + hash + anchor_opt;
+         }
+   	  </script>
+    
+        </head>
+        <body class="value">
+      <div id="definition">
+        <img alt="Package" src="../../../../lib/package_big.png" />
+        <p id="owner"><a href="../../../package.html" class="extype" name="com">com</a>.<a href="../../package.html" class="extype" name="com.ligadata">ligadata</a>.<a href="../package.html" class="extype" name="com.ligadata.pmml">pmml</a></p>
+        <h1>traits</h1><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.traits.package" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      </div>
+
+      <h4 id="signature" class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <span class="name">traits</span>
+      </span>
+      </h4>
+      
+          <div id="comment" class="fullcommenttop"></div>
+        
+
+      <div id="mbrsel">
+        <div id="textfilter"><span class="pre"></span><span class="input"><input id="mbrsel-input" type="text" accesskey="/" /></span><span class="post"></span></div>
+        
+        
+        <div id="visbl">
+            <span class="filtertype">Visibility</span>
+            <ol><li class="public in"><span>Public</span></li><li class="all out"><span>All</span></li></ol>
+          </div>
+      </div>
+
+      <div id="template">
+        <div id="allMembers">
+        
+
+        <div id="types" class="types members">
+              <h3>Type Members</h3>
+              <ol><li name="com.ligadata.pmml.traits.CodePrinter" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="CodePrinterextendsAnyRef"></a>
+      <a id="CodePrinter:CodePrinter"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="CodePrinter.html"><span class="name">CodePrinter</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.traits.package@CodePrinterextendsAnyRef" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">The CodePrinter is an an interface that describes a common print behavior that is
+implemented by all PmmlExecNode instances.</p><div class="fullcomment"><div class="comment cmt"><p>The CodePrinter is an an interface that describes a common print behavior that is
+implemented by all PmmlExecNode instances.  Its method, print, answers a
+string representation of itself according to the code fragment requested and the semantics
+of the generator itself (e.g., will a scala code fragment be generated or a c++ one?).</p></div></div>
+    </li><li name="com.ligadata.pmml.traits.CodePrinterDispatch" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="CodePrinterDispatchextendsAnyRef"></a>
+      <a id="CodePrinterDispatch:CodePrinterDispatch"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="CodePrinterDispatch.html"><span class="name">CodePrinterDispatch</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.traits.package@CodePrinterDispatchextendsAnyRef" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">The CodePrinterDispatch interface accepts some kind of PmmlExecNode, a buffer to fill
+with generated output, an instance of the CodeGeneratorDispatch so that recursive calls back to
+the code printer dispatch can be made, and the sort of code fragment to generate.</p><div class="fullcomment"><div class="comment cmt"><p>The CodePrinterDispatch interface accepts some kind of PmmlExecNode, a buffer to fill
+with generated output, an instance of the CodeGeneratorDispatch so that recursive calls back to
+the code printer dispatch can be made, and the sort of code fragment to generate.</p><p>This interface acts as the manager or central control that is called back when recursion
+to a sub-node is required.</p><p>The intention here is to allow for the generation of alternate outputs either in strategy
+or even in the language used.  Currently there is a Scala printer that implements this
+interface.  A C++ version is planned.  Conceivably alternate versions of a given
+syntax tree node instance could be generated in the same language.</p></div></div>
+    </li><li name="com.ligadata.pmml.traits.PmmlExecNodeGenerator" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="PmmlExecNodeGeneratorextendsAnyRef"></a>
+      <a id="PmmlExecNodeGenerator:PmmlExecNodeGenerator"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="PmmlExecNodeGenerator.html"><span class="name">PmmlExecNodeGenerator</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.traits.package@PmmlExecNodeGeneratorextendsAnyRef" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">The PmmlExecNodeGenerator is an an interface that transforms PmmlNodes (so-called raw nodes) and produces
+a decorated &quot;cooked&quot; node (i.e., a PmmlExecCode).</p><div class="fullcomment"><div class="comment cmt"><p>The PmmlExecNodeGenerator is an an interface that transforms PmmlNodes (so-called raw nodes) and produces
+a decorated &quot;cooked&quot; node (i.e., a PmmlExecCode).  In some cases, no node is returned.</p></div></div>
+    </li><li name="com.ligadata.pmml.traits.PmmlExecNodeGeneratorDispatch" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="PmmlExecNodeGeneratorDispatchextendsAnyRef"></a>
+      <a id="PmmlExecNodeGeneratorDispatch:PmmlExecNodeGeneratorDispatch"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="PmmlExecNodeGeneratorDispatch.html"><span class="name">PmmlExecNodeGeneratorDispatch</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.traits.package@PmmlExecNodeGeneratorDispatchextendsAnyRef" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">The PmmlExecNodeGeneratorDispatch interface accepts an instance of this dispatcher, the element 'qName' of the
+node that is to be built, and the 'raw' PmmlNode that was constructed from the corresponding PMML and from which
+the PmmlExecNode (i.e., the 'cooked' node) will be built.</p>
+    </li><li name="com.ligadata.pmml.traits.PmmlNodeGenerator" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="PmmlNodeGeneratorextendsAnyRef"></a>
+      <a id="PmmlNodeGenerator:PmmlNodeGenerator"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="PmmlNodeGenerator.html"><span class="name">PmmlNodeGenerator</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.traits.package@PmmlNodeGeneratorextendsAnyRef" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">The PmmlNodeGenerator is an an interface that consumes the xml content supplied in the parameter list
+of the generator itself</p>
+    </li><li name="com.ligadata.pmml.traits.PmmlNodeGeneratorDispatch" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="PmmlNodeGeneratorDispatchextendsAnyRef"></a>
+      <a id="PmmlNodeGeneratorDispatch:PmmlNodeGeneratorDispatch"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="PmmlNodeGeneratorDispatch.html"><span class="name">PmmlNodeGeneratorDispatch</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.traits.package@PmmlNodeGeneratorDispatchextendsAnyRef" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">The PmmlNodeGeneratorDispatch interface accepts the PMML element values collected by the Sax parse.</p><div class="fullcomment"><div class="comment cmt"><p>The PmmlNodeGeneratorDispatch interface accepts the PMML element values collected by the Sax parse.
+Based upon the xml &quot;qName&quot; supplied, the appropriate PmmlNodeGenerator is dispatched.  The returned node is added
+to the syntax tree.
+</p></div></div>
+    </li></ol>
+            </div>
+
+        
+
+        
+
+        
+
+        
+        </div>
+
+        <div id="inheritedMembers">
+        
+        
+        </div>
+
+        <div id="groupedMembers">
+        <div class="group" name="Ungrouped">
+              <h3>Ungrouped</h3>
+              
+            </div>
+        </div>
+
+      </div>
+
+      <div id="tooltip"></div>
+
+      <div id="footer">  </div>
+
+
+    </body>
+      </html>
