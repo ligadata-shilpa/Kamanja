@@ -5,23 +5,28 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.InetAddress;
-import java.util.concurrent.TimeUnit;
+// import java.util.concurrent.TimeUnit;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 public class StringUtility {
+	private Logger LOG = LogManager.getLogger(getClass());
 	public StringBuffer ExecuteSHCommandErrStream(String command, long timeoutInMs) {
 		StringBuffer output = new StringBuffer();
 		Process p;
 		try {
+			LOG.debug("Executing shell command: sh -c " + command);
 			p = Runtime.getRuntime().exec(new String[] { "sh", "-c", command });
 			p.waitFor(); // timeoutInMs, TimeUnit.MILLISECONDS -- Supports only in Java 1.8
 			BufferedReader reader = new BufferedReader(new InputStreamReader(p.getErrorStream()));
 			String line = "";
 			while ((line = reader.readLine()) != null) {
 				output.append(line + "\n");
+				LOG.error(line);
 			}
 			// System.out.println(output.toString());
 		} catch (Exception e) {
-			e.printStackTrace();
+			LOG.error("Failed to executing shell command: sh -c " + command, e);
 		}
 		return output;
 	}
@@ -30,16 +35,18 @@ public class StringUtility {
 		StringBuffer output = new StringBuffer();
 		Process p;
 		try {
+			LOG.debug("Executing shell command: sh -c " + command);
 			p = Runtime.getRuntime().exec(new String[] { "sh", "-c", command });
 			p.waitFor(); // timeoutInMs, TimeUnit.MILLISECONDS -- Supports only in Java 1.8
 			BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
 			String line = "";
 			while ((line = reader.readLine()) != null) {
 				output.append(line + "\n");
+				LOG.info(line);
 			}
 			// System.out.println(output.toString());
 		} catch (Exception e) {
-			e.printStackTrace();
+			LOG.error("Failed to executing shell command: sh -c " + command, e);
 		}
 		return output;
 	}
@@ -48,16 +55,18 @@ public class StringUtility {
 		StringBuffer output = new StringBuffer();
 		Process p;
 		try {
+			LOG.debug("Executing shell command: " + command);
 			p = Runtime.getRuntime().exec(command);
 			p.waitFor(); // timeoutInMs, TimeUnit.MILLISECONDS -- Supports only in Java 1.8
 			BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
 			String line = "";
 			while ((line = reader.readLine()) != null) {
 				output.append(line + "\n");
+				LOG.info(line);
 			}
 			// System.out.println(output.toString());
 		} catch (Exception e) {
-			e.printStackTrace();
+			LOG.error("Failed to executing shell command: sh -c " + command, e);
 		}
 		return output;
 	}

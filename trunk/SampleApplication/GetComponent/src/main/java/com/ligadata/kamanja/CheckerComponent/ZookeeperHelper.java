@@ -12,13 +12,16 @@ import java.io.StringWriter;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.data.Stat;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 public class ZookeeperHelper {
     // IZkConnection connection;
     int sessionTimout = 10000;
     ZooKeeper zConnection;
-    String znode;
-    String zdata;
+    String znode = "/kamanja/KamanjaPreReqTest";
+    ;
+    String zdata = " 0";
     Stat stat;
     String errorMessage = null;
     String version;
@@ -27,6 +30,7 @@ public class ZookeeperHelper {
     String component;
     StringWriter errors = new StringWriter();
     StringUtility strutl = new StringUtility();
+    private Logger LOG = LogManager.getLogger(getClass());
 
     private Watcher watcher = new Watcher() {
         @Override
@@ -63,6 +67,7 @@ public class ZookeeperHelper {
             }
         } catch (Exception e) {
             // e.printStackTrace(new PrintWriter(errors));
+            LOG.error("Failed to connnect to Zookeeper. Hosts:" + hostName, e);
             addError(e);
             e.printStackTrace();
         }
@@ -70,7 +75,6 @@ public class ZookeeperHelper {
 
     public void zCreate() {
         zdata = " 0";
-        znode = "/kamanja/KamanjaPreReqTest";
         try {
             if (zExist())
                 zDelete();
@@ -87,6 +91,7 @@ public class ZookeeperHelper {
             stat = zConnection.exists(znode, null);
         } catch (Exception e) {
             // e.printStackTrace(new PrintWriter(errors));
+            LOG.error("Failed to check exists of Zookeeper Znode:" + znode, e);
             e.printStackTrace();
             addError(e);
         }
@@ -103,6 +108,7 @@ public class ZookeeperHelper {
             bytes = zConnection.getData(znode, null, null);
         } catch (Exception e) {
             // e.printStackTrace(new PrintWriter(errors));
+            LOG.error("Failed to get data from Znode:" + znode, e);
             e.printStackTrace();
             addError(e);
         }
@@ -117,6 +123,7 @@ public class ZookeeperHelper {
             zConnection.setData(znode, zdata.getBytes(), 1);
         } catch (Exception e) {
             // e.printStackTrace(new PrintWriter(errors));
+            LOG.error("Failed to set data to Znode:" + znode, e);
             e.printStackTrace();
             addError(e);
         }
@@ -127,6 +134,7 @@ public class ZookeeperHelper {
             zConnection.delete(znode, 0);
         } catch (Exception e) {
             // e.printStackTrace(new PrintWriter(errors));
+            LOG.error("Failed to delete data from Znode:" + znode, e);
             e.printStackTrace();
             addError(e);
         }
@@ -134,9 +142,11 @@ public class ZookeeperHelper {
 
     public void zClose() {
         try {
-            zConnection.close();
+            if (zConnection != null)
+                zConnection.close();
         } catch (Exception e) {
             // e.printStackTrace(new PrintWriter(errors));
+            LOG.error("Failed to close zookeeper connection", e);
             e.printStackTrace();
             addError(e);
         }
@@ -175,6 +185,7 @@ public class ZookeeperHelper {
         //version = CheckVersion();
         version = null;
         status = zStatus();
+        zClose();
     }
 
     public int getSessionTimout() {

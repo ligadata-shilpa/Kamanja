@@ -1,6 +1,8 @@
 package com.ligadata.kamanja.CheckerComponent;
 
 import java.io.StringWriter;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 public class JavaHelper {
     String component;
@@ -10,6 +12,7 @@ public class JavaHelper {
     static String errorMessage = null;
     StringWriter errors = new StringWriter();
     StringUtility strutl = new StringUtility();
+    private Logger LOG = LogManager.getLogger(getClass());
 
     private String CheckJavaVersion() {
         try {
@@ -19,6 +22,7 @@ public class JavaHelper {
         } catch (Exception e) {
             // e.printStackTrace(new PrintWriter(errors));
             // errorMessage = errors.toString();
+            LOG.error("Failed to get Java information", e);
             status = "Fail";
             errorMessage = strutl.getStackTrace(e);
         }

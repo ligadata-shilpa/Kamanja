@@ -14,6 +14,8 @@ import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.VersionInfo;
 import org.apache.hadoop.hbase.client.*;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 
 public class HBaseHelper {
@@ -27,6 +29,7 @@ public class HBaseHelper {
     String status;
     StringWriter errors = new StringWriter();
     StringUtility strutl = new StringUtility();
+    private Logger LOG = LogManager.getLogger(getClass());
 
     private void addError(Throwable e) {
         if (errorMessage != null)
@@ -59,6 +62,7 @@ public class HBaseHelper {
                 ugi = UserGroupInformation.getLoginUser();
             }
         } catch (Exception e) {
+            LOG.error("Failed to get Hbase information", e);
             // e.printStackTrace(new PrintWriter(errors));
             addError(e);
         }
@@ -84,6 +88,7 @@ public class HBaseHelper {
             config.setInt("hbase.client.pause", 10000);
             config.set("hbase.zookeeper.quorum", host);
         } catch (Exception e) {
+            LOG.error("Failed to get Hbase information", e);
             // e.printStackTrace(new PrintWriter(errors));
             addError(e);
         }
@@ -101,6 +106,7 @@ public class HBaseHelper {
         try {
             conn.getAdmin().createNamespace(NamespaceDescriptor.create(nameSpace).build());
         } catch (Exception e) {
+            LOG.error("Failed to create namespace:" + nameSpace, e);
             addError(e);
         }
     }
@@ -128,6 +134,7 @@ public class HBaseHelper {
             // System.out.println("Done!");
         } catch (Exception e) {
             // e.printStackTrace(new PrintWriter(errors));
+            LOG.error("Failed to create table:" + getTableName(), e);
             addError(e);
         }
     }
@@ -141,6 +148,7 @@ public class HBaseHelper {
             conn.getAdmin().deleteTable(TableName.valueOf(tableName));
         } catch (Exception e) {
             // e.printStackTrace(new PrintWriter(errors));
+            LOG.error("Failed to Drop table: " + tableName, e);
             addError(e);
         }
 
@@ -161,6 +169,7 @@ public class HBaseHelper {
             table.close();
         } catch (IOException e) {
             // e.printStackTrace(new PrintWriter(errors));
+            LOG.error("Failed to insert data into table: " + getTableName(), e);
             addError(e);
         }
 
@@ -183,6 +192,7 @@ public class HBaseHelper {
             return givenName.toString();
         } catch (Exception e) {
             // e.printStackTrace(new PrintWriter(errors));
+            LOG.error("Failed to get data into table: " + getTableName(), e);
             addError(e);
         }
         return null;
@@ -205,6 +215,7 @@ public class HBaseHelper {
         try {
             conn = ConnectionFactory.createConnection(config);
         } catch (Exception e) {
+            LOG.error("Failed to connecto to HBase host:" + host, e);
             addError(e);
         }
 
@@ -231,9 +242,11 @@ public class HBaseHelper {
                 status = "Fail";
             }
         } catch (Exception e) {
+            LOG.error("HBase failure for host:" + host, e);
             status = "Fail";
             addError(e);
         } catch (Throwable e) {
+            LOG.error("HBase failure for host:" + host, e);
             status = "Fail";
             addError(e);
         } finally {
