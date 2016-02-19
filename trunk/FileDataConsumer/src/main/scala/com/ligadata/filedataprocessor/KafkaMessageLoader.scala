@@ -157,14 +157,13 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
           
           //Pass in the complete message instead of just the message string
           inputData = CreateKafkaInput(msg, SmartFileAdapterConstants.MESSAGE_NAME, delimiters)
-         
+          msgStr = new String(msg.msg)
           if(message_metadata && !msgStr.startsWith("fileId")){
             msgStr = "fileId" + delimiters.keyAndValueDelimiter + FileProcessor.getIDFromFileCache(msg.relatedFileName) +
               delimiters.fieldDelimiter +
               "fileOffset" + delimiters.keyAndValueDelimiter + msg.msgOffset.toString() +
-              delimiters.fieldDelimiter + new String(msg.msg)
-          }else
-            msgStr = new String(msg.msg)
+              delimiters.fieldDelimiter + msgStr
+          }
           
           currentOffset += 1
 

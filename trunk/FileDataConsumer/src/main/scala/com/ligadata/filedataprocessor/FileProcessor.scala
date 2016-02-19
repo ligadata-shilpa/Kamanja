@@ -962,7 +962,7 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
 
                 // Ok, we could be in recovery, so we have to ignore some messages, but these ignoraable messages must still
                 // appear in the leftover areas
-                messages.add(new KafkaMessage(newMsg, buffer.firstValidOffset, false, false, buffer.relatedFileName,  buffer.partMap, msgNum))
+                messages.add(new KafkaMessage(newMsg, buffer.firstValidOffset, false, false, buffer.relatedFileName,  buffer.partMap, prevIndx))
 
                 prevIndx = indx + 1
               }
