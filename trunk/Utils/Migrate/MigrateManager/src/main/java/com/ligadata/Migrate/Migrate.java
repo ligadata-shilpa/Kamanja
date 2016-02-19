@@ -743,10 +743,11 @@ public class Migrate {
                     sendStatus("Dropped saved messages/container tables if there are any");
                 }
 
+                java.util.List<String> msgsAndContaienrs = null;
                 if (canUpgradeMetadata) {
                     logger.debug("Adding metadata to new version");
                     sendStatus("Adding metadata to new version");
-                    migrateTo.addMetadata(metadataArr, true, excludeMetadata);
+                    msgsAndContaienrs = migrateTo.addMetadata(metadataArr, true, excludeMetadata);
                     logger.debug("Done adding metadata to new version");
                     sendStatus("Done adding metadata to new version");
                 } else {
@@ -755,6 +756,20 @@ public class Migrate {
                 }
 
                 if (canUpgradeData) {
+
+                    if (msgsAndContaienrs != null) {
+                        StringBuilder sb = new StringBuilder();
+                        sb.append("MessagesAndContainers To create Tables from Data Migration:{\n");
+                        for (String cName : msgsAndContaienrs) {
+                            sb.append("\tcName\n");
+                        }
+                        sb.append("}\n");
+
+                        String newTablesStr = sb.toString();
+                        sendStatus(newTablesStr);
+                        logger.debug(newTablesStr);
+                    }
+
                     int parallelDegree = 1;
                     if (configuration.parallelDegree > 1)
                         parallelDegree = configuration.parallelDegree;

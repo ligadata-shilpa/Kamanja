@@ -28,7 +28,7 @@ public interface MigratableTo {
   public abstract void backupAllTables(BackupTableInfo[] metadataTblsToBackedUp, BackupTableInfo[] dataTblsToBackedUp, BackupTableInfo[] statusTblsToBackedUp, boolean force);
   public abstract void dropAllTables(TableName[] metadataTblsToDrop, TableName[] dataTblsToDrop, TableName[] statusTblsToDrop);
   public abstract void dropMessageContainerTablesFromMetadata(MetadataFormat[] allMetadataElemsJson);
-  public abstract void addMetadata(MetadataFormat[] allMetadataElemsJson, boolean uploadClusterConfig, String[] excludeMetadata);
+  public abstract java.util.List<String> addMetadata(MetadataFormat[] allMetadataElemsJson, boolean uploadClusterConfig, String[] excludeMetadata); // Returns Added Messages & Containers Full Qualified Names
   public abstract void populateAndSaveData(DataFormat[] data);
   public abstract void shutdown();
   public abstract String getStatusFromDataStore(String key);

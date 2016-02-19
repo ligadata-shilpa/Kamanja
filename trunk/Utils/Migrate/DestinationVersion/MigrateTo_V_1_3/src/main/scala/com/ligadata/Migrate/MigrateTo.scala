@@ -888,7 +888,7 @@ class MigrateTo_V_1_3 extends MigratableTo {
     }
   }
 
-  override def addMetadata(allMetadataElemsJson: Array[MetadataFormat], uploadClusterConfig: Boolean, excludeMetadata: Array[String]): Unit = {
+  override def addMetadata(allMetadataElemsJson: Array[MetadataFormat], uploadClusterConfig: Boolean, excludeMetadata: Array[String]): java.util.List[String] = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
 
@@ -907,6 +907,8 @@ class MigrateTo_V_1_3 extends MigratableTo {
     val outputMsgDef = ArrayBuffer[(String, Map[String, Any])]()
     val configDef = ArrayBuffer[(String, Map[String, Any])]()
     val typesToIgnore = scala.collection.mutable.Set[String]()
+
+    val addedMessagesContainers: java.util.List[String] = new java.util.ArrayList[String]()
 
     allMetadataElemsJson.foreach(mdf => {
       val json = parse(mdf.objDataInJson)
@@ -934,6 +936,7 @@ class MigrateTo_V_1_3 extends MigratableTo {
 
             if (excludedMetadataTypes.contains(mdf.objType.toLowerCase()) == false) {
               messages += ((mdf.objType, jsonObjMap))
+              addedMessagesContainers.add(namespace + "." + name)
             }
           } else if (mdf.objType == "ContainerDef") {
 
@@ -953,6 +956,7 @@ class MigrateTo_V_1_3 extends MigratableTo {
 
             if (excludedMetadataTypes.contains(mdf.objType.toLowerCase()) == false) {
               containers += ((mdf.objType, jsonObjMap))
+              addedMessagesContainers.add(namespace + "." + name)
             }
           } else {
             if (excludedMetadataTypes.contains(mdf.objType.toLowerCase()) == false) {
@@ -1033,6 +1037,9 @@ class MigrateTo_V_1_3 extends MigratableTo {
     //ProcessObject(models)
     ProcessMdObjectsParallel(models, "Failed to add model")
     ProcessObject(outputMsgDef)
+
+
+    return addedMessagesContainers
   }
 
   private def callSaveData(dataStore: DataStoreOperations, data_list: Array[(String, Array[(Key, Value)])]): Unit = {
