@@ -416,6 +416,7 @@ object InstallDriver extends App {
                                                     , fromScala
                                                     , toScala
                                                     , shouldUpgrade
+                                                    , parentPath
                                                     , priorInstallDirName
                                                     , newInstallDirName
                                                     , ips, ipIdTargPaths, ipPathPairs)
@@ -511,6 +512,7 @@ object InstallDriver extends App {
                                    , fromScala: String
                                    , toScala: String
                                    , upgrade: Boolean
+                                   , parentPath : String
                                    , priorInstallDirName: String
                                    , newInstallDirName: String
                                    , ips: Array[String]
@@ -518,6 +520,8 @@ object InstallDriver extends App {
                                    , ipPathPairs: Array[(String, String)]): (Boolean, String) = {
 
         var phyDirLast : String = null
+        val rootDirPath :String = apiConfigMap.getProperty("root_dir")
+
         val (proposedClusterEnvironmentIsSuitable) : Boolean = try {
             val hbaseConnections: String = clusterConfigMap.DataStoreConnections  //
             val kafkaConnections: String = clusterConfigMap.KafkaConnections
@@ -533,7 +537,6 @@ object InstallDriver extends App {
 """.stripMargin.format(zkConnections,kafkaConnections,hbaseConnections)
 
 
-            val rootDirPath :String = apiConfigMap.getProperty("root_dir")
 
             /**
               * Obtain the component information found on the cluster nodes.  There is a ComponentInfo created for each
@@ -641,8 +644,14 @@ object InstallDriver extends App {
 
 
         } catch {
-            case e : Exception => true
-            case t : Throwable => true
+            case e : Exception => {
+                phyDirLast = rootDirPath  // substitute the symbol link to see if we can test more ... this is temporary hack
+                true
+            }
+            case t : Throwable => {
+                phyDirLast = rootDirPath
+                true
+            }
         }
 
         (proposedClusterEnvironmentIsSuitable, phyDirLast)
@@ -653,22 +662,35 @@ object InstallDriver extends App {
 
      /**
       * If the supplied file path exists, answer the file name
-       *
-       * @param log the installation log... if the file doesn't exist, a message about that is logged here
+      *
+      * @param log the installation log... if the file doesn't exist, a message about that is logged here
       * @param flPath
+      * @param checkForFile when true, the filename (last node in path) must exist in file system
+      * @param checkForParentDir when true, the parent directory that prefixes the file name must exist in file system
       * @return base Filename
       */
-    private def getFileName(log: InstallDriverLog, flPath: String): String = {
-        val fl = new File(flPath)
+     private def getFileName(log: InstallDriverLog, flPath: String, checkForFile: Boolean, checkForParentDir: Boolean): String = {
+         val fl = new File(flPath)
 
-        if (! fl.exists) {
-            val msg = s"$flPath does not exists"
-            log.emit(msg)
-            throw new Exception(msg)
-        }
+         if (checkForFile && ! fl.exists) {
+             val msg = s"$flPath does not exists"
+             log.emit(msg)
+             throw new Exception(msg)
+         }
 
-        fl.getName
-    }
+         if (checkForParentDir) {
+             val parentPath = fl.getParent()
+             val parent = new File(parentPath)
+             if (! parent.exists) {
+                 val msg = s"$parentPath does not exists"
+                 log.emit(msg)
+                 throw new Exception(msg)
+             }
+         }
+
+         fl.getName
+     }
+
 
     /**
       * Does the file path exist?
@@ -704,8 +726,12 @@ object InstallDriver extends App {
                              , remoteNodeIp: String
                              , resultsFileAbsolutePath: String
                              , jsonArgInput: String): (Array[ComponentInfo], String) = {
-        val componentVersionJarFileName = getFileName(log, componentVersionJarAbsolutePath)
-        val resultFileName = getFileName(log, resultsFileAbsolutePath)
+        val checkForJar: Boolean = true
+        val checkForJarParentDir: Boolean = false
+        val componentVersionJarFileName = getFileName(log, componentVersionJarAbsolutePath, checkForJar, checkForJarParentDir)
+        val checkForFile: Boolean = false
+        val checkForParentDir: Boolean = true
+        val resultFileName = getFileName(log, resultsFileAbsolutePath, checkForFile , checkForParentDir)
         val jsonArg = jsonArgInput.replace("\r", " ").replace("\n", " ")
 
         _cntr += 1
