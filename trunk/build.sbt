@@ -1,5 +1,6 @@
 import sbt._
 import Keys._
+import UnidocKeys._
 
 sbtPlugin := true
 
@@ -179,4 +180,19 @@ lazy val MigrateFrom_V_1_2 = project.in(file("Utils/Migrate/SourceVersion/Migrat
 lazy val clusterInstallerDriver = project.in(file("SampleApplication/clusterInstallerDriver")) dependsOn (MigrateBase, MigrateManager, KamanjaManager)
 
 lazy val GetComponent = project.in(file("SampleApplication/GetComponent"))
+
+val commonSettings = Seq(
+    scalaVersion := "2.11.7",
+    autoAPIMappings := true
+  )
+
+val root = (project in file(".")).
+  settings(commonSettings: _*).
+  settings(unidocSettings: _*).
+  settings(
+    name := "KamanjaManager",
+    unidocProjectFilter in (ScalaUnidoc, unidoc) := inAnyProject -- inProjects(MigrateFrom_V_1_1, MigrateFrom_V_1_2)
+  ).
+  aggregate(BaseTypes, BaseFunctions, Serialize, ZooKeeperClient, ZooKeeperListener, Exceptions, KamanjaBase, DataDelimiters, KamanjaManager, InputOutputAdapterBase, KafkaSimpleInputOutputAdapters, FileSimpleInputOutputAdapters, SimpleEnvContextImpl, StorageBase, Metadata, OutputMsgDef, MessageDef, PmmlRuntime, PmmlCompiler, PmmlUdfs, MethodExtractor, MetadataAPI, MetadataBootstrap, MetadataAPIService, MetadataAPIServiceClient, SimpleKafkaProducer, KVInit, ZooKeeperLeaderLatch, JsonDataGen, NodeInfoExtract, Controller, SimpleApacheShiroAdapter, AuditAdapters, CustomUdfLib, JdbcDataCollector, ExtractData, InterfacesSamples, StorageCassandra, StorageHashMap, StorageHBase, StorageTreeMap, StorageSqlServer, StorageManager, AuditAdapterBase, SecurityAdapterBase, KamanjaUtils, UtilityService, HeartBeat, TransactionService, KvBase, FileDataConsumer, CleanUtil, SaveContainerDataComponent, UtilsForModels, JarFactoryOfModelInstanceFactory, JpmmlFactoryOfModelInstanceFactory, MigrateBase, MigrateManager, MigrateTo_V_1_3, clusterInstallerDriver, GetComponent)
+
 
