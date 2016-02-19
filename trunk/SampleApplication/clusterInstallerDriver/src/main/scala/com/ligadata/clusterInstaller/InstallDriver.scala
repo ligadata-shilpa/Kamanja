@@ -90,6 +90,7 @@ class InstallDriverLog(val logPath: String) extends StatusCallback {
       val datestr: String = fmt.print(dateTime);
 
       bufferedWriter.write(msg + "\n")
+      bufferedWriter.flush();
     }
   }
 
