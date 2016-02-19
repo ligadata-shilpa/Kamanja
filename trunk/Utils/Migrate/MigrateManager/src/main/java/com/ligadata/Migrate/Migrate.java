@@ -174,7 +174,7 @@ public class Migrate {
             try {
                 Gson gson = new Gson();
                 Configuration cfg = gson.fromJson(reader, Configuration.class);
-                logger.debug("Populated migrate configuration:" + gson.toJson(cfg));
+                logger.info("Populated migrate configuration:" + gson.toJson(cfg));
                 return cfg;
             } catch (Exception e) {
                 sendStatus("Failed to load configuration. Exception message:" + e.getMessage());
@@ -206,7 +206,7 @@ public class Migrate {
         try {
             Gson gson = new Gson();
             Configuration cfg = gson.fromJson(cfgString, Configuration.class);
-            logger.debug("Populated migrate configuration:" + gson.toJson(cfg));
+            logger.info("Populated migrate configuration:" + gson.toJson(cfg));
             return cfg;
         } catch (Exception e) {
             sendStatus("Failed to load configuration. Exception message:" + e.getMessage());
@@ -514,7 +514,7 @@ public class Migrate {
             if (foundError == false) {
                 String cfgMsg = String.format("apiConfigFile:%s, clusterConfigFile:%s", configuration.apiConfigFile, configuration.clusterConfigFile);
                 sendStatus("Initializing MigrationTo using " + cfgMsg);
-                logger.debug(cfgMsg);
+                logger.info(cfgMsg);
                 migrateTo.init(configuration.migratingTo.versionInstallPath,
                         configuration.apiConfigFile,
                         configuration.clusterConfigFile,
@@ -531,7 +531,7 @@ public class Migrate {
                 String statusStoreInfo = migrateTo.getStatusStoreInfo();
 
                 String dbsMsg = String.format("Got Datastores Information\n\tmetadataStoreInfo:%s\n\tdataStoreInfo:%s\n\tstatusStoreInfo:%s", metadataStoreInfo, dataStoreInfo, statusStoreInfo);
-                logger.debug(dbsMsg);
+                logger.info(dbsMsg);
                 sendStatus(dbsMsg);
                 migrateFrom.init(configuration.migratingFrom.versionInstallPath,
                         metadataStoreInfo, dataStoreInfo, statusStoreInfo,
@@ -571,7 +571,7 @@ public class Migrate {
                 boolean havePreviousBackup = (backupStatusStr.startsWith("Done @20"));
 
                 sendStatus("Checking whether backup is already done or not");
-                logger.debug("Checking whether backup is already done or not");
+                logger.info("Checking whether backup is already done or not");
                 for (TableName tblInfo : allMetadataTbls) {
                     BackupTableInfo bkup = new BackupTableInfo(tblInfo.namespace,
                             tblInfo.name, tblInfo.name + backupTblSufix);
@@ -641,12 +641,12 @@ public class Migrate {
                     }
                     String msg = "Found backup " + done + ". Using it to do rest of the migration.\nPrevious Backup tables Information:\n" + backupTblStr;
                     sendStatus(msg);
-                    logger.debug(msg);
+                    logger.info(msg);
                 }
                 else {
                     if (allTblsBackedUp) {
                         sendStatus("Looks like all tables backup started but not completed. Going to backup again");
-                        logger.debug("Looks like all tables backup started but not completed. Going to backup again");
+                        logger.info("Looks like all tables backup started but not completed. Going to backup again");
                     }
 
                     // Backup all the tables, if we did not done or finish before
@@ -672,7 +672,7 @@ public class Migrate {
 
                     String backupTblStr = sb.toString();
                     sendStatus(backupTblStr);
-                    logger.debug(backupTblStr);
+                    logger.info(backupTblStr);
 
                     migrateTo.backupAllTables(metadataBackupTbls.toArray(new BackupTableInfo[metadataBackupTbls.size()]),
                             dataBackupTbls.toArray(new BackupTableInfo[dataBackupTbls.size()]),
@@ -681,7 +681,7 @@ public class Migrate {
 
                     migrateTo.setStatusFromDataStore("BackupStatusFor" + backupTblSufix, "Done @" + doneTm + backupTblStr);
                     sendStatus("Completed backing up. " + doneTm);
-                    logger.debug("Completed backing up. " + doneTm);
+                    logger.info("Completed backing up. " + doneTm);
                 }
 
                 {
@@ -707,13 +707,13 @@ public class Migrate {
 
                     String delTblStr = sb.toString();
                     sendStatus(delTblStr);
-                    logger.debug(delTblStr);
+                    logger.info(delTblStr);
                 }
 
                 // Drop all tables after backup
                 migrateTo.dropAllTables(metadataDelTbls.toArray(new TableName[metadataDelTbls.size()]), dataDelTbls.toArray(new TableName[dataDelTbls.size()]), statusDelTbls.toArray(new TableName[statusDelTbls.size()]));
                 sendStatus("Completed dropping tables");
-                logger.debug("Completed dropping tables");
+                logger.info("Completed dropping tables");
 
                 String[] excludeMetadata = new String[0];
                 if (configuration.excludeMetadata != null
@@ -736,10 +736,10 @@ public class Migrate {
                         .toArray(new MetadataFormat[allMetadata.size()]);
 
                 if (canUpgradeData) {
-                    logger.debug("Dropping saved messages/container tables if there are any");
+                    logger.info("Dropping saved messages/container tables if there are any");
                     sendStatus("Dropping saved messages/container tables if there are any");
                     migrateTo.dropMessageContainerTablesFromMetadata(metadataArr);
-                    logger.debug("Dropped saved messages/container tables if there are any");
+                    logger.info("Dropped saved messages/container tables if there are any");
                     sendStatus("Dropped saved messages/container tables if there are any");
                 }
 
@@ -761,13 +761,13 @@ public class Migrate {
                         StringBuilder sb = new StringBuilder();
                         sb.append("MessagesAndContainers To create Tables from Data Migration:{\n");
                         for (String cName : msgsAndContaienrs) {
-                            sb.append("\tcName\n");
+                            sb.append("\t" + cName + "\n");
                         }
                         sb.append("}\n");
 
                         String newTablesStr = sb.toString();
                         sendStatus(newTablesStr);
-                        logger.debug(newTablesStr);
+                        logger.info(newTablesStr);
                     }
 
                     int parallelDegree = 1;
@@ -811,7 +811,7 @@ public class Migrate {
                         throw writeFailedException;
                     }
 
-                    logger.debug("Completed migrating data");
+                    logger.info("Completed migrating data");
                     sendStatus("Completed migrating data");
                 } else {
                     logger.debug("Skipping data migration. May not be required or turned off");
