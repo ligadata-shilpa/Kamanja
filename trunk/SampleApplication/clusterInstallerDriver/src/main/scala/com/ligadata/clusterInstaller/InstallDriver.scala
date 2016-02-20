@@ -124,7 +124,7 @@ object InstallDriver extends App {
             --{upgrade|install}
             --apiConfig <MetadataAPIConfig.properties file>
             --clusterConfig <ClusterConig.json file>
-            --fromKamanja "1.1"
+            [--fromKamanja "1.1"]
             [--fromScala "2.10"]
             [--toScala "2.11"]
             --workingDir <workingdirectory>
@@ -143,8 +143,9 @@ object InstallDriver extends App {
         --apiConfig <MetadataAPIConfig.properties file> specifies the path of the properties file that (among others) specifies the location
             of the installation on each cluster node given in the cluster configuration.  Note that all installations exist in the same
             location on all nodes.
-        --clusterConfig <ClusterConig.json file> gives the file that describes the node information for the cluster, including the IP address of each node, et al.
-        --fromKamanja "N.N" where "N.N" can be either "1.1" or "1.2"
+        --clusterConfig <ClusterConig.json file> gives the file that describes the node information for the cluster, including the
+            IP address of each node, et al.
+        [--fromKamanja] optional for install but required for update..."N.N" where "N.N" can be either "1.1" or "1.2"
         --workingDir <workingdirectory> a CRUD directory path that should be addressable on every node specified in the cluster configuration
             file as well as on the machine that this program is executing.  It is used by this program and scripts it invokes to create
             intermediate files used during the installation process.
@@ -152,22 +153,23 @@ object InstallDriver extends App {
             have multiple clusters in the metadata.
         --tarballPath <tarball path> this is the location of the Kamanja 1.3 tarball of the installation directory to be installed
             on the cluster.  The tarball is copied to each of the cluster nodes, extracted and installed there.
-        [--fromScala "2.10"] an optional parameter that, for the 1.3 InstallDriver, simply documents the version of Scala that the current 1.1. or 1.2 is using.  The value
-            "2.10" is the only possible value for this release.
-        [--toScala "2.11"] an optional parameter that when given declares the intent to upgrade the Scala compiler used by the Kamanja engine to 2.11.x
-            instead of using the default 2.10.x compiler.  Note that this controls the compiler version that the Kamanja message compiler, Kamanja pmml
-            compiler, and other future Kamanja components will use when building their respective objects. If the requested version has not been installed
-            on the cluster nodes in question, the installation will fail.
-        --migrationTemplate <MigrationTemplate> the path of the migration template to be used.  This file has several configurable values as well as a number
-          of values that are automatically filled with information gleaned from other files in this list
+        [--fromScala "2.10"] an optional parameter that, for the 1.3 InstallDriver, simply documents the version of Scala that
+            the current 1.1. or 1.2 is using.  The value "2.10" is the only possible value for this release.
+        [--toScala "2.11"] optional for install, required for upgrade, this parameter declares the intent to upgrade the Scala compiler
+            used by the Kamanja engine to 2.11.x instead of using the default 2.10.x compiler.  Note that this controls the compiler
+            version that the Kamanja message compiler, Kamanja pmml compiler, and other future Kamanja components will use when
+            building their respective objects. If the requested version has not been installed on the cluster nodes in question,
+            the installation will fail.
+        --migrationTemplate <MigrationTemplate> the path of the migration template to be used.  This file has several configurable values
+            as well as a number of values that are automatically filled with information gleaned from other files in this list
         --logDir for both Unhandled metadata & logs. If this value is not specified, it defaults to /tmp.  It is highly recommended that you
           specify a more permanent path so that the installations you do can be documented in a location not prone to being deleted.
         --componentVersionScriptAbsolutePath the current path of the script that will fetch component information for each cluster node
         --componentVersionJarAbsolutePath the GetComponent jar that will be installed on each cluster node and called remotely by the supplied
           componentVersionScript (i.e., from the machine executing the cluster installer driver).
 
-    The ClusterInstallerDriver_1.3 is the cluster installer driver for Kamanja 1.3.  It is capable of installing a new version of 1.3 or given the appropriate arguments,
-    installing a new version of Kamanja 1.3 *and* upgrading a 1.1 or 1.2 installation to the 1.3 version.
+    The ClusterInstallerDriver_1.3 is the cluster installer driver for Kamanja 1.3.  It is capable of installing a new version of 1.3
+    or given the appropriate arguments, installing a new version of Kamanja 1.3 *and* upgrading a 1.1 or 1.2 installation to the 1.3 version.
 
     A log of the installation and optional upgrade is collected in a log file.  This log file is automatically generated and will be found in the
     workingDir you supply to the installer driver program.  The name will be of the form: InstallDriver.yyyyMMdd_HHmmss.log (e.g.,
@@ -193,7 +195,7 @@ object InstallDriver extends App {
 
   override def main(args: Array[String]): Unit = {
     if (args.length == 0) {
-      println("Usage:\n");
+      println("Usage: \n");
       println(usage);
       sys.exit(1)
     }
@@ -286,8 +288,8 @@ object InstallDriver extends App {
     val hasBoth = (upgrade && install)
     val hasNone = (!upgrade && !install)
 
-    val bothTxt = "You have specified both 'upgrade' and 'install' as your action.  It must be one or the other.\n"
-    val noneTxt = "You have not specified either 'upgrade' or 'install' as your action.  It must be one or the other.\n"
+    val bothTxt = "\nYou have specified both 'upgrade' and 'install' as your action.  It must be one or the other.\n"
+    val noneTxt = "\nYou have not specified either 'upgrade' or 'install' as your action.  It must be one or the other.\n"
 
     val commonTxt =
       """
@@ -296,13 +298,18 @@ software and upgrade your application metadata to the new system.
 Use 'install' if the desire is to simply create a new installation.  However, if the 'install'
 detects an existing installation, the installation will fail.
 Try again.
+
       """
 
     if (hasBoth || hasNone) {
-      if (hasBoth)
-        log.emit(bothTxt + commonTxt)
-      if (hasNone)
-        log.emit(noneTxt + commonTxt)
+      if (hasBoth) {
+          log.emit(bothTxt + commonTxt)
+          println("\n" + bothTxt + commonTxt)
+      }
+      if (hasNone) {
+          log.emit(noneTxt + commonTxt)
+          println("\n" + noneTxt + commonTxt)
+      }
       log.close
       sys.exit(1)
     }
@@ -312,18 +319,20 @@ Try again.
 
     val clusterIdOk: Boolean = clusterId != null && clusterId.nonEmpty
     val apiConfigPathOk: Boolean = apiConfigPath != null && apiConfigPath.nonEmpty
+    val nodeConfigPathOk: Boolean = apiConfigPath != null && apiConfigPath.nonEmpty
     val tarballPathOk: Boolean = tarballPath != null && tarballPath.nonEmpty
-    val fromKamanjaOk: Boolean = fromKamanja != null && fromKamanja.nonEmpty && (fromKamanja == "1.1" || fromKamanja == "1.2")
-    val fromScalaOk: Boolean = fromKamanja != null && fromKamanja.nonEmpty && (fromKamanja == "1.1" || fromKamanja == "1.2")
-    val toScalaOk: Boolean = toScala != null && toScala.nonEmpty && (toScala == "2.10" || toScala == "2.11")
+    val fromKamanjaOk: Boolean = (upgrade && fromKamanja != null && fromKamanja.nonEmpty && (fromKamanja == "1.1" || fromKamanja == "1.2")) || install
+    val fromScalaOk: Boolean = (upgrade && fromScala != null && fromScala.nonEmpty && (fromScala == "2.10" || fromKamanja == "2.11")) || install
+    val toScalaOk: Boolean = (upgrade && toScala != null && toScala.nonEmpty && (toScala == "2.10" || toScala == "2.11")) || install
     val workingDirOk: Boolean = workingDir != null && workingDir.nonEmpty
-    val migrateTemplateOk: Boolean = migrateTemplate != null && migrateTemplate.nonEmpty
+    val migrateTemplateOk: Boolean = (upgrade && migrateTemplate != null && migrateTemplate.nonEmpty) || install
     val logDirOk: Boolean = logDir != null && logDir.nonEmpty
     val componentVersionScriptAbsolutePathOk: Boolean = componentVersionScriptAbsolutePath != null && componentVersionScriptAbsolutePath.nonEmpty
     val componentVersionJarAbsolutePathOk: Boolean = componentVersionJarAbsolutePath != null && componentVersionJarAbsolutePath.nonEmpty
     val reasonableArguments: Boolean =
-      (clusterIdOk
+        (clusterIdOk
         && apiConfigPathOk
+        && nodeConfigPathOk
         && tarballPathOk
         && fromKamanjaOk
         && fromScalaOk
@@ -336,19 +345,21 @@ Try again.
         )
 
     if (!reasonableArguments) {
-      printAndLogError("One or more arguments are not set or have bad values...")
-      if (!clusterIdOk) printAndLogError("\tclusterId")
-      if (!apiConfigPathOk) printAndLogError("\tapiConfigPath")
-      if (!tarballPathOk) printAndLogError("\ttarballPath")
-      if (!fromKamanjaOk) printAndLogError("\tfromKamanja")
-      if (!fromScalaOk) printAndLogError("\tfromScala")
-      if (!migrateTemplateOk) printAndLogError("\tmigrateTemplate")
-      if (!logDirOk) printAndLogError("\tlogDir")
-      if (!componentVersionScriptAbsolutePathOk) printAndLogError("\tcomponentVersionScriptAbsolutePath")
-      if (!componentVersionJarAbsolutePathOk) printAndLogError("\tcomponentVersionJarAbsolutePath")
-      printAndLogError("Usage:")
-      printAndLogError(usage)
-      sys.exit(1)
+        val installOrUpgrade : String = if (upgrade) "your upgrade" else "your install"
+        printAndLogError(s"One or more arguments for $installOrUpgrade are not set or have bad values...")
+        if (!clusterIdOk) printAndLogError("\t--clusterId <id matching one in --clusterConfig path>")
+        if (!apiConfigPathOk) printAndLogError("\tapiConfigPath")
+        if (!nodeConfigPathOk) printAndLogError("\t--apiConfigPath <path to the metadata api properties file that contains the ROOT_DIR property location>")
+        if (!tarballPathOk) printAndLogError("\t--tarballPath <location of the prepared 1.3 installation tarball to be installed>")
+        if (!fromKamanjaOk) printAndLogError("\t--fromKamanja <the prior installation version being upgraded... either '1.1' or '1.2'>")
+        if (!fromScalaOk) printAndLogError("\t--fromScala <either scala version '2.10' or '2.11'")
+        if (!migrateTemplateOk) printAndLogError("\t--migrateTemplate <path to the migration configuration template file to be used for the upgrade>")
+        if (!logDirOk) printAndLogError("\t--logDir <the directory path where the Cluster logs (InstallDriver.yyyyMMdd_HHmmss.log) is to be written ")
+        if (!componentVersionScriptAbsolutePathOk) printAndLogError("\t--componentVersionScriptAbsolutePath <the path location where the component version script is found")
+        if (!componentVersionJarAbsolutePathOk) printAndLogError("\t--componentVersionJarAbsolutePath <the location of the component check program is found>")
+        printAndLogError("Usage:")
+        printAndLogError(usage)
+        sys.exit(1)
     }
 
     // Validate all arguments
