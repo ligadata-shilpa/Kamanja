@@ -101,7 +101,8 @@ class InstallDriverLog(val logPath: String) extends StatusCallback {
     * Close the buffered FileWriter to flush last buffer and close file.
     */
   def close: Unit = {
-    bufferedWriter.close
+    if (bufferedWriter != null)
+      bufferedWriter.close
     isReady = false
   }
 
@@ -120,9 +121,12 @@ class InstallDriverLog(val logPath: String) extends StatusCallback {
 object InstallDriver extends App {
   lazy val loggerName = this.getClass.getName
   lazy val logger = LogManager.getLogger(loggerName)
+  var log: InstallDriverLog = null
+
 
   def usage: String = {
     """
+Usage:
     java -Dlog4j.configurationFile=file:./log4j2.xml -jar <some path> ClusterInstallerDriver_1.3
             --{upgrade|install}
             --apiConfig <MetadataAPIConfig.properties file>
@@ -184,10 +188,24 @@ object InstallDriver extends App {
     """
   }
 
+  private def closeLog(): Unit = {
+    if (log != null)
+      log.close
+    log = null
+  }
+
+  private def openLog(fl: String): Unit = {
+    if (log != null)
+      log.close
+    log = new InstallDriverLog(fl)
+  }
+
   private def printAndLogDebug(msg: String, log: InstallDriverLog = null): Unit = {
     logger.debug(msg);
     if (!logger.isDebugEnabled())
       println(msg)
+    if (log != null)
+      log.emit(msg)
   }
 
   private def printAndLogError(msg: String, log: InstallDriverLog = null): Unit = {
@@ -199,8 +217,8 @@ object InstallDriver extends App {
 
   override def main(args: Array[String]): Unit = {
     if (args.length == 0) {
-      println("Usage: \n");
-      println(usage);
+      printAndLogError("No arguments provided\n" + usage, log);
+      closeLog
       sys.exit(1)
     }
 
@@ -208,7 +226,7 @@ object InstallDriver extends App {
     // returns this form:  file:/tmp/drdigital/KamanjaInstall-1.3.2_2.11/bin/clusterInstallerDriver-1.0
 
     val thisFatJarsLocationAbs: String = getClass().getProtectionDomain().getCodeSource().getLocation().toExternalForm()
-    logger.debug("Jar Absolute Path:" + thisFatJarsLocationAbs)
+    printAndLogDebug("Jar Absolute Path:" + thisFatJarsLocationAbs)
     val pathSwizzlePossible: Boolean = (thisFatJarsLocationAbs.contains(':') && thisFatJarsLocationAbs.contains('/'))
     if (!pathSwizzlePossible) {
       throw new RuntimeException("unable to determine the current path for clusterInstallerDriver executable... \nFoundLocation:" + thisFatJarsLocationAbs)
@@ -219,12 +237,12 @@ object InstallDriver extends App {
       * install.
       */
     val clusterInstallerDriversLocation: String = thisFatJarsLocationAbs.split(':').tail.mkString(":").split('/').dropRight(1).mkString("/")
-    logger.debug("clusterInstallerDriversLocation:" + clusterInstallerDriversLocation)
+    printAndLogDebug("clusterInstallerDriversLocation:" + clusterInstallerDriversLocation)
 
     val arglist = args.toList
     type OptionMap = Map[Symbol, String]
 
-    //println(s"arguments supplied are:\n $arglist")
+    //printAndLogDebug(s"arguments supplied are:\n $arglist")
     def nextOption(map: OptionMap, list: List[String]): OptionMap = {
       list match {
         case Nil => map
@@ -257,8 +275,9 @@ object InstallDriver extends App {
         case "--install" :: tail =>
           nextOption(map ++ Map('install -> "true"), tail)
         case option :: tail =>
-          println("Unknown option " + option)
-          println(usage)
+          printAndLogError("Unknown option " + option)
+          printAndLogError(usage)
+          closeLog
           sys.exit(1)
       }
     }
@@ -286,8 +305,8 @@ object InstallDriver extends App {
     val dateTime: DateTime = new DateTime
     val flfmt: DateTimeFormatter = DateTimeFormat.forPattern("yyyyMMdd_HHmmss")
     val datestr: String = flfmt.print(dateTime);
-    val log: InstallDriverLog = new InstallDriverLog(s"$logDir/InstallDriver.$datestr.log")
-    println(s"The installation log file can be found in $logDir/InstallDriver.$datestr.log")
+    openLog(s"$logDir/InstallDriver.$datestr.log")
+    printAndLogDebug(s"The installation log file can be found in $logDir/InstallDriver.$datestr.log")
 
     val hasBoth = (upgrade && install)
     val hasNone = (!upgrade && !install)
@@ -307,19 +326,17 @@ Try again.
 
     if (hasBoth || hasNone) {
       if (hasBoth) {
-        log.emit(bothTxt + commonTxt)
-        println("\n" + bothTxt + commonTxt)
+        printAndLogError(bothTxt + commonTxt, log)
       }
       if (hasNone) {
-        log.emit(noneTxt + commonTxt)
-        println("\n" + noneTxt + commonTxt)
+        printAndLogError(noneTxt + commonTxt, log)
       }
-      log.close
+      closeLog
       sys.exit(1)
     }
 
     val operation = if (install) "Installing" else if (upgrade) "Upgrading"
-    logger.debug(s"$operation with clusterId:$clusterId, apiConfigPath:$apiConfigPath, nodeConfigPath:$nodeConfigPath, tarballPath:$tarballPath, fromKamanja:$fromKamanja, fromScala:$fromScala, toScala:$toScala, workingDir:$workingDir, migrateTemplate:$migrateTemplate, logDir:$logDir, componentVersionScriptAbsolutePath:$componentVersionScriptAbsolutePath, componentVersionJarAbsolutePath:$componentVersionJarAbsolutePath, toKamanja:$toKamanja")
+    printAndLogDebug(s"$operation with clusterId:$clusterId, apiConfigPath:$apiConfigPath, nodeConfigPath:$nodeConfigPath, tarballPath:$tarballPath, fromKamanja:$fromKamanja, fromScala:$fromScala, toScala:$toScala, workingDir:$workingDir, migrateTemplate:$migrateTemplate, logDir:$logDir, componentVersionScriptAbsolutePath:$componentVersionScriptAbsolutePath, componentVersionJarAbsolutePath:$componentVersionJarAbsolutePath, toKamanja:$toKamanja")
 
     val clusterIdOk: Boolean = clusterId != null && clusterId.nonEmpty
     val apiConfigPathOk: Boolean = apiConfigPath != null && apiConfigPath.nonEmpty
@@ -361,8 +378,8 @@ Try again.
       if (!logDirOk) printAndLogError("\t--logDir <the directory path where the Cluster logs (InstallDriver.yyyyMMdd_HHmmss.log) is to be written ")
       if (!componentVersionScriptAbsolutePathOk) printAndLogError("\t--componentVersionScriptAbsolutePath <the path location where the component version script is found")
       if (!componentVersionJarAbsolutePathOk) printAndLogError("\t--componentVersionJarAbsolutePath <the location of the component check program is found>")
-      printAndLogError("Usage:")
       printAndLogError(usage)
+      closeLog
       sys.exit(1)
     }
 
@@ -371,8 +388,7 @@ Try again.
     var cnt: Int = 0
     val migrationToBeDone: String = if (fromKamanja == "1.1") "1.1=>1.3" else if (fromKamanja == "1.2") "1.2=>1.3" else "hmmm"
     if (migrationToBeDone == "hmmm") {
-      log.emit(s"The fromKamanja ($fromKamanja) is not valid with this release... the value must be 1.1 or 1.2")
-      logger.debug(s"The fromKamanja ($fromKamanja) is not valid with this release... the value must be 1.1 or 1.2")
+      printAndLogError(s"The fromKamanja ($fromKamanja) is not valid with this release... the value must be 1.1 or 1.2", log)
       cnt += 1
     }
 
@@ -420,7 +436,7 @@ Try again.
     }
     if (cnt > 0) {
       printAndLogError("Please fix your arguments and try again.", log)
-      log.close
+      closeLog
       sys.exit(1)
     }
 
@@ -429,7 +445,7 @@ Try again.
     if (apiConfigMap == null || apiConfigMap.isEmpty) {
       printAndLogError("The configuration file is messed up... it needs to be lines of key=value pairs", log)
       printAndLogError(usage, log)
-      log.close
+      closeLog
       sys.exit(1)
     }
 
@@ -442,7 +458,7 @@ Try again.
     if (tmpRootDirPath == null || tmpRootDirPath.size == 0) {
       printAndLogError("Found ROOT_DIR as empty", log)
       printAndLogError(usage, log)
-      log.close
+      closeLog
       sys.exit(1)
     }
 
@@ -468,6 +484,7 @@ Try again.
     val clusterMap: Map[String, Any] = clusterConfigMap.ClusterMap
     if (clusterMap.isEmpty) {
       printAndLogError(s"There is no cluster info for the supplied clusterId, $clusterId", log)
+      closeLog
       sys.exit(1)
     }
     /** Create the cluster config map and pull out the top level objects... either Maps or Lists of Maps */
@@ -502,15 +519,15 @@ Try again.
         , newInstallDirName
         , ips, ipIdTargPaths, ipPathPairs)
 
-    if (upgrade && (physicalRootDir == null || physicalRootDir.isEmpty)){
+    if (upgrade && (physicalRootDir == null || physicalRootDir.isEmpty)) {
       printAndLogError(s"For upgrade, not found valid directory/link at $rootDirPath on any node.", log)
       printAndLogError(usage, log)
-      log.close
+      closeLog
       sys.exit(1)
     } else if (install && physicalRootDir != null && !physicalRootDir.isEmpty) {
       printAndLogError(s"For fresh install, found valid directory/link at $rootDirPath at least on one node.", log)
       printAndLogError(usage, log)
-      log.close
+      closeLog
       sys.exit(1)
     }
 
@@ -550,7 +567,7 @@ Try again.
 
       /** Install the new installation */
       val nodes: String = ips.mkString(",")
-      log.emit(s"Begin cluster installation... installation found on each cluster node(any {$nodes}) at $installDir")
+      printAndLogDebug(s"Begin cluster installation... installation found on each cluster node(any {$nodes}) at $installDir", log)
       val installOk: Boolean = installCluster(log
         , clusterInstallerDriversLocation
         , rootDirPath
@@ -568,7 +585,7 @@ Try again.
       if (installOk) {
         /** Do upgrade if necessary */
         if (upgrade) {
-          log.emit(s"Upgrade required... upgrade from version $fromKamanja")
+          printAndLogDebug(s"Upgrade required... upgrade from version $fromKamanja", log)
           val upgradeOk: Boolean = doMigration(log
             , apiConfigPath
             , apiConfigMap
@@ -581,28 +598,30 @@ Try again.
             , parentPath
             , priorInstallDirName
             , newInstallDirName
-            , physicalRootDir)
-          log.emit(s"Upgrade completed...successful?  ${if (upgradeOk) "yes!" else "false!"}")
+            , physicalRootDir
+            , rootDirPath)
+          printAndLogDebug(s"Upgrade completed...successful?  ${if (upgradeOk) "yes!" else "no!"}", log)
           if (!upgradeOk) {
-            log.emit(s"The parameters for the migration are incorrect... aborting installation")
-            log.close
+            printAndLogError(s"The parameters for the migration are incorrect... aborting installation", log)
+            closeLog
             sys.exit(1)
           }
         } else {
-          log.emit("Migration not required... new installation was selected")
+          printAndLogDebug("Migration not required... new installation was selected", log)
         }
       } else {
-        log.emit("The cluster installation has failed")
+        printAndLogError("The cluster installation has failed", log)
+        closeLog
         sys.exit(1)
       }
     } else {
-      log.emit("The cluster environment is not suitable for an installation or upgrade... look at the prior log entries for more information.  Corrections are needed.")
-      log.close
+      printAndLogError("The cluster environment is not suitable for an installation or upgrade... look at the prior log entries for more information.  Corrections are needed.", log)
+      closeLog
       sys.exit(1)
     }
 
-    log.emit("Processing is Complete!")
-    log.close
+    printAndLogDebug("Processing is Complete!", log)
+    closeLog
   }
 
   /**
@@ -694,9 +713,9 @@ Try again.
         val scalaIsValid: Boolean = (info != null && info.version != null && info.version.startsWith(toScala))
         if (!scalaIsValid) {
           if (info != null) {
-            log.emit(s"Scala for ip ${info.invocationNode} is invalid... msg=${info.errorMessage}")
+            printAndLogError(s"Scala for ip ${info.invocationNode} is invalid... msg=${info.errorMessage}", log)
           } else {
-            log.emit("Incredible... no scala info")
+            printAndLogError("Incredible... no scala info", log)
           }
         }
         val joptInfo: Option[ComponentInfo] = components.filter(component => component.componentName.toLowerCase == "java").headOption
@@ -704,9 +723,9 @@ Try again.
         val javaIsValid: Boolean = (jinfo != null && jinfo.version != null && (jinfo.version.startsWith("1.7") || jinfo.version.startsWith("1.8")))
         if (!javaIsValid) {
           if (info != null) {
-            log.emit(s"Java for ip ${info.invocationNode} is invalid...must be java 1.7 or java 1.8 msg=${info.errorMessage}")
+            printAndLogError(s"Java for ip ${info.invocationNode} is invalid...must be java 1.7 or java 1.8 msg=${info.errorMessage}", log)
           } else {
-            log.emit("Incredible... no java info")
+            printAndLogError("Incredible... no java info", log)
           }
         }
         (scalaIsValid, javaIsValid)
@@ -726,9 +745,9 @@ Try again.
         val zkIsValid: Boolean = (info != null && info.status != null && info.status.toLowerCase == "success")
         if (!zkIsValid) {
           if (info != null) {
-            log.emit(s"Zookeeper for ip ${info.invocationNode} is not healthy... msg=${info.errorMessage}")
+            printAndLogError(s"Zookeeper for ip ${info.invocationNode} is not healthy... msg=${info.errorMessage}", log)
           } else {
-            log.emit("Incredible... no zookeeper info")
+            printAndLogError("Incredible... no zookeeper info", log)
           }
         }
         val kafkaOptInfo: Option[ComponentInfo] = components.filter(component => component.componentName.toLowerCase == "kafka").headOption
@@ -736,9 +755,9 @@ Try again.
         val kafkaIsValid: Boolean = (kinfo != null && kinfo.status != null && kinfo.status.toLowerCase == "success")
         if (!kafkaIsValid) {
           if (info != null) {
-            log.emit(s"Kafka for ip ${kinfo.invocationNode} is not healthy... msg=${kinfo.errorMessage}")
+            printAndLogError(s"Kafka for ip ${kinfo.invocationNode} is not healthy... msg=${kinfo.errorMessage}", log)
           } else {
-            log.emit("Incredible... no kafka info")
+            printAndLogError("Incredible... no kafka info", log)
           }
         }
         val hbaseOptInfo: Option[ComponentInfo] = components.filter(component => component.componentName.toLowerCase == "hbase").headOption
@@ -746,9 +765,9 @@ Try again.
         val hbaseIsValid: Boolean = (hinfo != null && hinfo.status != null && hinfo.status.toLowerCase == "success")
         if (!hbaseIsValid) {
           if (info != null) {
-            log.emit(s"HBase for ip ${hinfo.invocationNode} is not healthy... msg=${hinfo.errorMessage}")
+            printAndLogError(s"HBase for ip ${hinfo.invocationNode} is not healthy... msg=${hinfo.errorMessage}", log)
           } else {
-            log.emit("Incredible... no hbase info")
+            printAndLogError("Incredible... no hbase info", log)
           }
         }
 
@@ -800,7 +819,7 @@ Try again.
 
     if (checkForFile && !fl.exists) {
       val msg = s"$flPath does not exists"
-      log.emit(msg)
+      printAndLogError(msg, log)
       throw new Exception(msg)
     }
 
@@ -809,7 +828,7 @@ Try again.
       val parent = new File(parentPath)
       if (!parent.exists) {
         val msg = s"$parentPath does not exists"
-        log.emit(msg)
+        printAndLogError(msg, log)
         throw new Exception(msg)
       }
     }
@@ -868,24 +887,24 @@ Try again.
     _cntr += 1
     val logFile = "/tmp/__get_comp_ver_results_" + _cntr + "_" + math.abs(pathOutputFlName.hashCode) + "_" + math.abs(getComponentsVersionCmd.hashCode) + "_" + math.abs(scriptAbsolutePath.hashCode)
 
-    log.emit(s"getComponentsVersion cmd used: $getComponentsVersionCmd")
+    printAndLogError(s"getComponentsVersion cmd used: $getComponentsVersionCmd", log)
     val getVerCmdRc: Int = (getComponentsVersionCmd #> new File(logFile)).!
     val getVerCmdResults = Source.fromFile(logFile).mkString
     if (getVerCmdRc != 0) {
-      log.emit(s"getComponentsVersion has failed...rc = $getVerCmdRc")
-      log.emit(s"Command used: $getComponentsVersionCmd")
-      log.emit(s"Command report:\n$getVerCmdResults")
+      printAndLogError(s"getComponentsVersion has failed...rc = $getVerCmdRc", log)
+      printAndLogError(s"Command used: $getComponentsVersionCmd", log)
+      printAndLogError(s"Command report:\n$getVerCmdResults", log)
       throw new Exception("Failed to get Components Versions. Return code:" + getVerCmdRc)
     }
 
     val pathAbsPath = "/tmp/" + pathOutputFlName
     val physicalRootDir = (if (isFileExists(pathAbsPath)) Source.fromFile("/tmp/" + pathOutputFlName).mkString else "").trim
-    log.emit("Found PhysicalRootDir:" + physicalRootDir)
+    printAndLogDebug("Found PhysicalRootDir:" + physicalRootDir, log)
 
     var results = ArrayBuffer[ComponentInfo]()
     try {
       val jsonStr = Source.fromFile(resultsFileAbsolutePath).mkString
-      log.emit("Components Results:" + jsonStr)
+      printAndLogDebug("Components Results:" + jsonStr, log)
       implicit val jsonFormats = org.json4s.DefaultFormats
       val json = org.json4s.jackson.JsonMethods.parse(jsonStr)
       if (json == null) {
@@ -932,8 +951,8 @@ Try again.
       ipAddr
     }).toSet
     if (ipsSet.contains("_bo_gu_us_node_ip_ad_dr")) {
-      log.emit(s"the node ip information for cluster id $clusterId is invalid... aborting")
-      log.close
+      printAndLogError(s"the node ip information for cluster id $clusterId is invalid... aborting", log)
+      closeLog
       sys.exit(1)
     }
     val ips: Array[String] = ipsSet.toSeq.sorted.toArray
@@ -951,8 +970,8 @@ Try again.
       (ipAddr == "_bo_gu_us_node_ip_ad_dr" || nodeId == "unkn_own_node_id" || rolesStr == "UNKNOWN_ROLES")
     }).size == 0
     if (!ipIdTargPathsReasonable) {
-      log.emit(s"the node ip addr, node identifier, and/or node roles are bad for cluster id $clusterId ... aborting")
-      log.close
+      printAndLogError(s"the node ip addr, node identifier, and/or node roles are bad for cluster id $clusterId ... aborting", log)
+      closeLog
       sys.exit(1)
     }
     val ipIdTargPaths: Array[(String, String, String, String)] = ipIdTargPathsSet.toSeq.sorted.toArray
@@ -980,8 +999,8 @@ Try again.
     val (properties, errorDescr): (Properties, String) = Utils.loadConfiguration(apiConfigPath, true)
 
     if (errorDescr != null) {
-      log.emit(s"The apiConfigPath properties path ($apiConfigPath) could not produce a valid set of properties...aborting")
-      log.close
+      printAndLogError(s"The apiConfigPath properties path ($apiConfigPath) could not produce a valid set of properties...aborting", log)
+      closeLog
       sys.exit(1)
     }
 
@@ -1024,14 +1043,13 @@ Try again.
   private def CheckInstallVerificationFile(log: InstallDriverLog, fl: String, ipPathPairs: Array[(String, String)], newInstallDirPath: String, rootDirPath: String): Boolean = {
     val allValues = ArrayBuffer[Array[String]]()
     val allLines = ArrayBuffer[String]()
-    logger.info(fl + " contents")
+    printAndLogDebug(fl + " contents")
     for (line <- Source.fromFile(fl).getLines()) {
-      logger.info(line)
+      printAndLogDebug(line)
       val vals = line.split(",")
       if (vals.size != 7) {
         val errMsg = "Expecting HostName,LinkDir,LinkExists(Yes|No),LinkPointingToDir,LinkPointingDirExists(Yes|No),NewInstallDir, NewInstallDirExists(Yes|No). But found:" + line
-        log.emit(errMsg)
-        logger.error(errMsg)
+        printAndLogError(errMsg, log)
       } else {
         allValues += vals;
         allLines += line
@@ -1041,8 +1059,7 @@ Try again.
     // Checke whether we have all nodes or not
     if (ipPathPairs.size != allValues.size) {
       val errMsg = "Suppose to get verification information for %d nodes. But we got only for %d".format(ipPathPairs.size, allValues.size)
-      log.emit(errMsg)
-      logger.error(errMsg)
+      printAndLogError(errMsg, log)
       return false
     }
 
@@ -1054,20 +1071,17 @@ Try again.
     allValues.foreach(av => {
       if (av(3).compare(av(5)) != 0) {
         val errMsg = ("LinkPointingToDir:%s != NewInstallDir:%s from %s".format(av(3), av(5), av.mkString(",")))
-        log.emit(errMsg)
-        logger.error(errMsg)
+        printAndLogError(errMsg, log)
         isInvalid = true;
       }
       if (av(2).equalsIgnoreCase("No") || av(4).equalsIgnoreCase("No") || av(6).equalsIgnoreCase("No")) {
         val errMsg = ("LinkExists/LinkPointingDirExists/NewInstallDirExists is NO from %s".format(av.mkString(",")))
-        log.emit(errMsg)
-        logger.error(errMsg)
+        printAndLogError(errMsg, log)
         isInvalid = true;
       }
       if (av(5).compare(newInstallDirPath) != 0) {
         val errMsg = ("NewInstallDir:%s != newInstallDirPath:%s from %s".format(av(3), newInstallDirPath, av.mkString(",")))
-        log.emit(errMsg)
-        logger.error(errMsg)
+        printAndLogError(errMsg, log)
         isInvalid = true;
       }
     })
@@ -1090,8 +1104,7 @@ Try again.
 
     if (isInvalid) {
       val errMsg = ("%s not found in %s ".format(notFoundNodes.mkString(","), allLines.mkString(",")))
-      log.emit(errMsg)
-      logger.error(errMsg)
+      printAndLogError(errMsg, log)
       return false;
     }
 
@@ -1169,7 +1182,7 @@ Try again.
     if (!isFileExists(KamanjaClusterInstallPath, true, false)) {
       printAndLogError(s"KamanjaClusterInstall script is not installed in path:" + clusterInstallerDriversLocation, log)
       printAndLogError(s"Installation is aborted. Consult the log file (${log.logPath}) for details.", log)
-      log.close
+      closeLog
       sys.exit(1)
     }
 
@@ -1197,7 +1210,7 @@ Try again.
     val installCmdRep: String = installCmd.mkString(" ")
     printAndLogDebug(s"KamanjaClusterInstall cmd used: \n\n$installCmdRep", log)
 
-    //println(s"KamanjaClusterInstall cmd used: \n\n$installCmdRep\n")
+    //printAndLogDebug(s"KamanjaClusterInstall cmd used: \n\n$installCmdRep\n")
 
     val installCmdRc: Int = (installCmd #> new File("/tmp/__install_results_")).!
     val installCmdResults: String = Source.fromFile("/tmp/__install_results_").mkString
@@ -1206,12 +1219,12 @@ Try again.
       printAndLogError(s"Command used: $installCmd", log)
       printAndLogError(s"Command report:\n$installCmdResults", log)
       printAndLogError(s"Installation is aborted. Consult the log file (${log.logPath}) for details.", log)
-      log.close
+      closeLog
       sys.exit(1)
     } else {
       if (!CheckInstallVerificationFile(log, verifyFilePath, ipPathPairs, newInstallDirPath, rootDirPath)) {
         printAndLogError("Failed to verify information collected from installation.", log)
-        log.close
+        closeLog
         sys.exit(1)
       }
     }
@@ -1249,7 +1262,8 @@ Try again.
                   , parentPath: String
                   , priorInstallDirName: String
                   , newInstallDirName: String
-                  , physicalRootDir: String): Boolean = {
+                  , physicalRootDir: String
+                  , rootDirPath: String): Boolean = {
 
     val migrationToBeDone: String = if (fromKamanja == "1.1") "1.1=>1.3" else if (fromKamanja == "1.2") "1.2=>1.3" else "hmmm"
 
@@ -1270,6 +1284,7 @@ Try again.
           , unhandledMetadataDumpDir
           , parentPath
           , physicalRootDir
+          , rootDirPath
         )
         printAndLogDebug("Calling migrate %s with config %s".format(migrationToBeDone, migrateConfigJSON))
         val migrateObj: Migrate = new Migrate()
@@ -1293,6 +1308,7 @@ Try again.
           , unhandledMetadataDumpDir
           , parentPath
           , physicalRootDir
+          , rootDirPath
         )
         printAndLogDebug("Calling migrate %s with config %s".format(migrationToBeDone, migrateConfigJSON))
         val migrateObj: Migrate = new Migrate()
@@ -1307,7 +1323,7 @@ Try again.
     }
     if (!upgradeOk) {
       printAndLogError(s"The upgrade has failed.  Please consult the log (${log.logPath}) for guidance as to how to recover from this.", log)
-      log.close
+      closeLog
       sys.exit(1)
     }
     upgradeOk
@@ -1338,8 +1354,8 @@ Try again.
     * @param apiConfigFile                    substitution value
     * @param kamanjaFromVersion               substitution value
     * @param kamanjaFromVersionWithUnderscore substitution value
-    * @param newInstallDirName            substitution value
-    * @param priorInstallDirName            substitution value
+    * @param newInstallDirName                substitution value
+    * @param priorInstallDirName              substitution value
     * @param scalaFromVersion                 substitution value
     * @param scalaToVersion                   substitution value
     * @param unhandledMetadataDumpDir         substitution value
@@ -1358,6 +1374,7 @@ Try again.
                             , unhandledMetadataDumpDir: String
                             , parentPath: String
                             , physicalRootDir: String
+                            , rootDirPath: String
                            ): String = {
 
     val template: String = Source.fromFile(migrateConfigFilePath).mkString
@@ -1378,7 +1395,15 @@ Try again.
 
       */
 
-    // val oldPackageInstallPath: String = s"$parentPath/$priorInstallDirName"
+    val lastChar1 = rootDirPath.charAt(rootDirPath.size - 1)
+    val lastChar2 = physicalRootDir.charAt(physicalRootDir.size - 1)
+
+    val tRootDir = if (lastChar1 == '/' || lastChar1 == '\\') rootDirPath.substring(0, rootDirPath.size - 2) else rootDirPath
+
+    val tPhyRootDir = if (lastChar2 == '/' || lastChar2 == '\\') physicalRootDir.substring(0, physicalRootDir.size - 2) else physicalRootDir
+
+    // If ROOT_DIR & PHYDIR matches, that means it is dir. We moved it to s"$parentPath/$priorInstallDirName"
+    val oldPackageInstallPath: String = if (tRootDir.compareTo(tPhyRootDir) == 0) s"$parentPath/$priorInstallDirName" else physicalRootDir
     val newPackageInstallPath: String = s"$parentPath/$newInstallDirName"
 
     val subPairs = Map[String, String]("{ClusterConfigFile}" -> clusterConfigFile
@@ -1386,7 +1411,7 @@ Try again.
       , "{KamanjaFromVersion}" -> kamanjaFromVersion
       , "{KamanjaFromVersionWithUnderscore}" -> kamanjaFromVersionWithUnderscore
       , "{NewPackageInstallPath}" -> newPackageInstallPath
-      , "{OldPackageInstallPath}" -> physicalRootDir
+      , "{OldPackageInstallPath}" -> oldPackageInstallPath
       , "{ScalaFromVersion}" -> scalaFromVersion
       , "{ScalaToVersion}" -> scalaToVersion
       , "{UnhandledMetadataDumpDir}" -> unhandledMetadataDumpDir)
@@ -1394,6 +1419,12 @@ Try again.
     val substitutionMap: Map[String, String] = subPairs.toMap
     val varSub = new MapSubstitution(template, substitutionMap, logger, log)
     val substitutedTemplate: String = varSub.makeSubstitutions
+    if (substitutedTemplate == null || substitutedTemplate.isEmpty) {
+      printAndLogError("Failed to substitue valuesin Migration Template", log)
+
+      closeLog
+      sys.exit(1)
+    }
     substitutedTemplate
   }
 }
@@ -1560,6 +1591,18 @@ class MapSubstitution(template: String, vars: scala.collection.immutable.Map[Str
     logger.debug(msg);
     if (!logger.isDebugEnabled())
       println(msg)
+    if (log != null)
+      log.emit(msg)
+  }
+
+  private def printAndLogError(msg: String, log: InstallDriverLog = null, e: Throwable): Unit = {
+    if (e != null)
+      logger.error(msg, e);
+    else
+      logger.error(msg, e);
+    println(msg)
+    if (log != null)
+      log.emit(msg)
   }
 
   def findAndReplace(m: Matcher)(callback: String => String): String = {
@@ -1575,11 +1618,24 @@ class MapSubstitution(template: String, vars: scala.collection.immutable.Map[Str
   }
 
   def makeSubstitutions: String = {
-    val patStr = """(\{[A-Za-z0-9_.-]+\})"""
-    printAndLogDebug("Using RegEx:" + patStr)
-    printAndLogDebug("Key & Values to replace:" + vars.mkString(","))
-    val m = Pattern.compile(patStr).matcher(template)
-    findAndReplace(m) { x => x }
+    var retrStr = ""
+    try {
+      val patStr = """(\{[A-Za-z0-9_.-]+\})"""
+      printAndLogDebug("Using RegEx:" + patStr)
+      printAndLogDebug("Key & Values to replace:" + vars.mkString(","))
+      val m = Pattern.compile(patStr).matcher(template)
+      retrStr = findAndReplace(m) { x => x }
+    } catch {
+      case e: Exception => {
+        printAndLogError("Failed to substitute Migration template", log, e)
+        retrStr = ""
+      }
+      case e: Throwable => {
+        printAndLogError("Failed to substitute Migration template", log, e)
+        retrStr = ""
+      }
+    }
+    retrStr
   }
 }
 
