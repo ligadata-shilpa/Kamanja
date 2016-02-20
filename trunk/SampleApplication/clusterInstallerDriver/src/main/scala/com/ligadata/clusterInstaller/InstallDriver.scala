@@ -1112,7 +1112,7 @@ Try again.
 
     val priorInstallDirPath: String = s"$parentPath/$priorInstallDirName"
     val newInstallDirPath: String = s"$parentPath/$newInstallDirName"
-    val installCmd: Seq[String] = Seq("bash", "-c", s"$clusterInstallerDriversLocation/KamanjaClusterInstall.sh  --MetadataAPIConfig $apiConfigPath --NodeConfigPath $nodeConfigPath --ParentPath $parentPath --PriorInstallDirName $priorInstallDirName --NewInstallDirName $newInstallDirName --TarballPath $tarballPath --ipAddrs $ipDataFile --ipIdTargPaths $ipIdCfgTargDataFile --ipPathPairs $ipPathDataFile --priorInstallDirPath $priorInstallDirPath --newInstallDirPath $newInstallDirPath --installVerificationFile $verifyFilePath ")
+    val installCmd: Seq[String] = Seq("bash", "-c", s"$clusterInstallerDriversLocation/KamanjaClusterInstall.sh  --MetadataAPIConfig $apiConfigPath --NodeConfigPath $nodeConfigPath --priorInstallDirPath $priorInstallDirName --newInstallDirPath $newInstallDirName --TarballPath $tarballPath --ipAddrs $ipDataFile --ipIdTargPaths $ipIdCfgTargDataFile --ipPathPairs $ipPathDataFile --priorInstallDirPath $priorInstallDirPath --newInstallDirPath $newInstallDirPath --installVerificationFile $verifyFilePath ")
     val installCmdRep: String = installCmd.mkString(" ")
     printAndLogDebug(s"KamanjaClusterInstall cmd used: \n\n$installCmdRep", log)
 
