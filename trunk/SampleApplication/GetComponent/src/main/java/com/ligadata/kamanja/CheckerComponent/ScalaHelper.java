@@ -36,7 +36,7 @@ public class ScalaHelper {
             try {
                 /// root/Downloads/scala-2.10.4/bin/scala
                 output = str.ExecuteSHCommandInputStream(command, 2000);
-                scalaLocation = output.toString();
+                scalaLocation = output.toString().trim();
             } catch (Exception e) {
                 LOG.error("Failed to get scala location using which scala", e);
             } catch (Throwable e) {
