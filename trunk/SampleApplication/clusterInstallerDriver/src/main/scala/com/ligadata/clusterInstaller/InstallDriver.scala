@@ -183,12 +183,13 @@ object InstallDriver extends App {
 
   private def printAndLogDebug(msg: String, log: InstallDriverLog = null): Unit = {
     logger.debug(msg);
-    println(msg)
+    if (!logger.isDebugEnabled())
+      println(msg)
   }
 
   private def printAndLogError(msg: String, log: InstallDriverLog = null): Unit = {
     logger.error(msg);
-    println(msg)
+    println(msg) // This may go out twice if user set the logger to console
     if (log != null)
       log.emit(msg)
   }
@@ -303,12 +304,12 @@ Try again.
 
     if (hasBoth || hasNone) {
       if (hasBoth) {
-          log.emit(bothTxt + commonTxt)
-          println("\n" + bothTxt + commonTxt)
+        log.emit(bothTxt + commonTxt)
+        println("\n" + bothTxt + commonTxt)
       }
       if (hasNone) {
-          log.emit(noneTxt + commonTxt)
-          println("\n" + noneTxt + commonTxt)
+        log.emit(noneTxt + commonTxt)
+        println("\n" + noneTxt + commonTxt)
       }
       log.close
       sys.exit(1)
@@ -330,7 +331,7 @@ Try again.
     val componentVersionScriptAbsolutePathOk: Boolean = componentVersionScriptAbsolutePath != null && componentVersionScriptAbsolutePath.nonEmpty
     val componentVersionJarAbsolutePathOk: Boolean = componentVersionJarAbsolutePath != null && componentVersionJarAbsolutePath.nonEmpty
     val reasonableArguments: Boolean =
-        (clusterIdOk
+      (clusterIdOk
         && apiConfigPathOk
         && nodeConfigPathOk
         && tarballPathOk
@@ -345,21 +346,21 @@ Try again.
         )
 
     if (!reasonableArguments) {
-        val installOrUpgrade : String = if (upgrade) "your upgrade" else "your install"
-        printAndLogError(s"One or more arguments for $installOrUpgrade are not set or have bad values...")
-        if (!clusterIdOk) printAndLogError("\t--clusterId <id matching one in --clusterConfig path>")
-        if (!apiConfigPathOk) printAndLogError("\tapiConfigPath")
-        if (!nodeConfigPathOk) printAndLogError("\t--apiConfigPath <path to the metadata api properties file that contains the ROOT_DIR property location>")
-        if (!tarballPathOk) printAndLogError("\t--tarballPath <location of the prepared 1.3 installation tarball to be installed>")
-        if (!fromKamanjaOk) printAndLogError("\t--fromKamanja <the prior installation version being upgraded... either '1.1' or '1.2'>")
-        if (!fromScalaOk) printAndLogError("\t--fromScala <either scala version '2.10' or '2.11'")
-        if (!migrateTemplateOk) printAndLogError("\t--migrateTemplate <path to the migration configuration template file to be used for the upgrade>")
-        if (!logDirOk) printAndLogError("\t--logDir <the directory path where the Cluster logs (InstallDriver.yyyyMMdd_HHmmss.log) is to be written ")
-        if (!componentVersionScriptAbsolutePathOk) printAndLogError("\t--componentVersionScriptAbsolutePath <the path location where the component version script is found")
-        if (!componentVersionJarAbsolutePathOk) printAndLogError("\t--componentVersionJarAbsolutePath <the location of the component check program is found>")
-        printAndLogError("Usage:")
-        printAndLogError(usage)
-        sys.exit(1)
+      val installOrUpgrade: String = if (upgrade) "your upgrade" else "your install"
+      printAndLogError(s"One or more arguments for $installOrUpgrade are not set or have bad values...")
+      if (!clusterIdOk) printAndLogError("\t--clusterId <id matching one in --clusterConfig path>")
+      if (!apiConfigPathOk) printAndLogError("\tapiConfigPath")
+      if (!nodeConfigPathOk) printAndLogError("\t--apiConfigPath <path to the metadata api properties file that contains the ROOT_DIR property location>")
+      if (!tarballPathOk) printAndLogError("\t--tarballPath <location of the prepared 1.3 installation tarball to be installed>")
+      if (!fromKamanjaOk) printAndLogError("\t--fromKamanja <the prior installation version being upgraded... either '1.1' or '1.2'>")
+      if (!fromScalaOk) printAndLogError("\t--fromScala <either scala version '2.10' or '2.11'")
+      if (!migrateTemplateOk) printAndLogError("\t--migrateTemplate <path to the migration configuration template file to be used for the upgrade>")
+      if (!logDirOk) printAndLogError("\t--logDir <the directory path where the Cluster logs (InstallDriver.yyyyMMdd_HHmmss.log) is to be written ")
+      if (!componentVersionScriptAbsolutePathOk) printAndLogError("\t--componentVersionScriptAbsolutePath <the path location where the component version script is found")
+      if (!componentVersionJarAbsolutePathOk) printAndLogError("\t--componentVersionJarAbsolutePath <the location of the component check program is found>")
+      printAndLogError("Usage:")
+      printAndLogError(usage)
+      sys.exit(1)
     }
 
     // Validate all arguments
