@@ -502,7 +502,8 @@ Try again.
         , ips
         , ipIdTargPaths
         , ipPathPairs
-        , workingDir)
+        , workingDir
+        , clusterId)
       if (installOk) {
         /** Do upgrade if necessary */
         if (upgrade) {
@@ -1094,7 +1095,8 @@ Try again.
                      , ips: Array[String]
                      , ipIdTargPaths: Array[(String, String, String, String)]
                      , ipPathPairs: Array[(String, String)]
-                     , workDir: String): Boolean = {
+                     , workDir: String
+                     , clusterId: String): Boolean = {
 
     // Check for KamanjaClusterInstall.sh existance. And see whether KamanjaClusterInstall.sh has all error handling or not.
     val parentPath: String = physicalRootDir.split('/').dropRight(1).mkString("/")
@@ -1124,7 +1126,7 @@ Try again.
 
     val priorInstallDirPath: String = s"$parentPath/$priorInstallDirName"
     val newInstallDirPath: String = s"$parentPath/$newInstallDirName"
-    val installCmd: Seq[String] = Seq("bash", "-c", s"$clusterInstallerDriversLocation/KamanjaClusterInstall.sh  --MetadataAPIConfig $apiConfigPath --NodeConfigPath $nodeConfigPath --priorInstallDirPath $priorInstallDirName --newInstallDirPath $newInstallDirName --TarballPath $tarballPath --ipAddrs $ipDataFile --ipIdTargPaths $ipIdCfgTargDataFile --ipPathPairs $ipPathDataFile --priorInstallDirPath $priorInstallDirPath --newInstallDirPath $newInstallDirPath --installVerificationFile $verifyFilePath ")
+    val installCmd: Seq[String] = Seq("bash", "-c", s"$clusterInstallerDriversLocation/KamanjaClusterInstall.sh  --ClusterId $clusterId --WorkingDir $workDir --MetadataAPIConfig $apiConfigPath --NodeConfigPath $nodeConfigPath --TarballPath $tarballPath --ipAddrs $ipDataFile --ipIdTargPaths $ipIdCfgTargDataFile --ipPathPairs $ipPathDataFile --priorInstallDirPath $priorInstallDirPath --newInstallDirPath $newInstallDirPath --installVerificationFile $verifyFilePath ")
     val installCmdRep: String = installCmd.mkString(" ")
     printAndLogDebug(s"KamanjaClusterInstall cmd used: \n\n$installCmdRep", log)
 
