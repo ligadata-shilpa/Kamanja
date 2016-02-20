@@ -200,17 +200,18 @@ Usage:
     log = new InstallDriverLog(fl)
   }
 
-  private def printAndLogDebug(msg: String, log: InstallDriverLog = null): Unit = {
+  private def printAndLogDebug(msg: String, log: InstallDriverLog = null, printToConsole: Boolean = true): Unit = {
     logger.debug(msg);
-    if (!logger.isDebugEnabled())
+    if (printToConsole && !logger.isDebugEnabled())
       println(msg)
     if (log != null)
       log.emit(msg)
   }
 
-  private def printAndLogError(msg: String, log: InstallDriverLog = null): Unit = {
+  private def printAndLogError(msg: String, log: InstallDriverLog = null, printToConsole: Boolean = true): Unit = {
     logger.error(msg);
-    println(msg) // This may go out twice if user set the logger to console
+    if (printToConsole)
+      println(msg) // This may go out twice if user set the logger to console
     if (log != null)
       log.emit(msg)
   }
@@ -852,7 +853,7 @@ Try again.
     if (isFileExists(logFile)) {
       val logStmts = Source.fromFile(logFile).mkString
       if (logStmts != null)
-        printAndLogDebug(logStmts)
+        printAndLogDebug(logStmts, null, false)
     }
   }
 
@@ -902,11 +903,11 @@ Try again.
     if (getVerCmdRc != 0) {
       printAndLogError(s"getComponentsVersion has failed...rc = $getVerCmdRc", log)
       printAndLogError(s"Command used: $getComponentsVersionCmd", log)
-      printAndLogError(s"Command report:\n$getVerCmdResults")
+      printAndLogError(s"Command report:\n$getVerCmdResults", null, false)
       throw new Exception("Failed to get Components Versions. Return code:" + getVerCmdRc)
     }
 
-    printAndLogDebug(s"Command report:\n$getVerCmdResults")
+    printAndLogDebug(s"Command report:\n$getVerCmdResults", null, false)
 
     val pathAbsPath = "/tmp/" + pathOutputFlName
     val physicalRootDir = (if (isFileExists(pathAbsPath)) Source.fromFile("/tmp/" + pathOutputFlName).mkString else "").trim
@@ -1228,18 +1229,18 @@ Try again.
     if (installCmdRc != 0) {
       printAndLogError(s"KamanjaClusterInstall has failed...rc = $installCmdRc", log)
       printAndLogError(s"Command used: $installCmd", log)
-      printAndLogError(s"Command report:\n$installCmdResults")
+      printAndLogError(s"Command report:\n$installCmdResults", null, false)
       printAndLogError(s"Installation is aborted. Consult the log file (${log.logPath}) for details.", log)
       closeLog
       sys.exit(1)
     } else {
+      printAndLogDebug(s"New installation command result report:\n$installCmdResults", null, false)
       if (!CheckInstallVerificationFile(log, verifyFilePath, ipPathPairs, newInstallDirPath, rootDirPath)) {
         printAndLogError("Failed to verify information collected from installation.", log)
         closeLog
         sys.exit(1)
       }
     }
-    printAndLogDebug(s"New installation command result report:\n$installCmdResults")
 
     (installCmdRc == 0)
   }

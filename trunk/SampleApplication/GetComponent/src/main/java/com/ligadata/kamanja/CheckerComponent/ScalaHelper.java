@@ -48,16 +48,16 @@ public class ScalaHelper {
             // Try1
             if (!scalaLocation.isEmpty()) {
                 StringBuffer output0 = new StringBuffer();
-                command = scalaLocation + " -version";
+                command = scalaLocation + " -version 2>&1 | tee  /dev/null";
 
                 try {
                     /// root/Downloads/scala-2.10.4/bin/scala
                     output0 = str.ExecuteCommandInputStream(command, 2000);
-                    doc = str.replaceSpacesFromString(output0.toString().trim().toLowerCase());
+                    doc = output0.toString().trim().toLowerCase(); //str.replaceSpacesFromString(output0.toString().trim().toLowerCase());
                     LOG.debug("Got: " + doc);
 
                     if (doc.length() > 0) {
-                        int beginIndex = str.IndexOfString(doc, "Scala code runner version");
+                        int beginIndex = str.IndexOfString(doc, "Scala code runner version".toLowerCase());
                         if (beginIndex >= 0) {
                             beginIndex += "Scala code runner version".length();
                         } else {
@@ -84,14 +84,14 @@ public class ScalaHelper {
             // Try2
             try {
                 StringBuffer output1 = new StringBuffer();
-                command = "scala -version";
+                command = "scala -version 2>&1 | tee  /dev/null";
                 /// root/Downloads/scala-2.10.4/bin/scala
                 output1 = str.ExecuteCommandInputStream(command, 2000);
-                doc = str.replaceSpacesFromString(output1.toString().trim().toLowerCase());
+                doc = output1.toString().trim().toLowerCase(); // str.replaceSpacesFromString(output1.toString().trim().toLowerCase());
                 LOG.debug("Got: " + doc);
 
                 if (doc.length() > 0) {
-                    int beginIndex = str.IndexOfString(doc, "Scala code runner version");
+                    int beginIndex = str.IndexOfString(doc, "Scala code runner version".toLowerCase()));
                     if (beginIndex >= 0) {
                         beginIndex += "Scala code runner version".length();
                     } else {
