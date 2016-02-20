@@ -37,7 +37,9 @@ import com.ligadata.Serialize.JsonSerializer
 import com.ligadata.Migrate.{Migrate, StatusCallback}
 import com.ligadata.Utils.Utils
 
-import org.json4s.jackson.Serialization
+import org.json4s._
+import org.json4s.JsonDSL._
+import org.json4s.jackson.JsonMethods._
 
 /**
   * This application installs and upgrades Kamanaja.  It does these essential things:
@@ -488,6 +490,37 @@ Try again.
     if (proposedClusterEnvironmentIsSuitable) {
       /** if so... */
 
+      val metadataDataStore: String =
+        if (apiConfigMap.getProperty("METADATA_DATASTORE".toLowerCase()) != null) {
+          apiConfigMap.getProperty("METADATA_DATASTORE".toLowerCase())
+        } else if (apiConfigMap.getProperty("MetadataDataStore".toLowerCase()) != null) {
+          apiConfigMap.getProperty("MetadataDataStore".toLowerCase())
+        } else {
+          val dbType = apiConfigMap.getProperty("DATABASE".toLowerCase())
+          val dbHost = if (apiConfigMap.getProperty("DATABASE_HOST".toLowerCase()) != null) apiConfigMap.getProperty("DATABASE_HOST".toLowerCase()) else apiConfigMap.getProperty("DATABASE_LOCATION".toLowerCase())
+          val dbSchema = apiConfigMap.getProperty("DATABASE_SCHEMA".toLowerCase())
+          val dbAdapterSpecific = apiConfigMap.getProperty("ADAPTER_SPECIFIC_CONFIG".toLowerCase())
+
+          val dbType1 = if (dbType == null) "" else dbType.trim
+          val dbHost1 = if (dbHost == null) "" else dbHost.trim
+          val dbSchema1 = if (dbSchema == null) "" else dbSchema.trim
+
+          val jsonStr =
+            if (dbAdapterSpecific != null) {
+              val json = ("StoreType" -> dbType1) ~
+                ("SchemaName" -> dbSchema1) ~
+                ("Location" -> dbHost1) ~
+                ("AdapterSpecificConfig" -> dbAdapterSpecific)
+              pretty(render(json))
+            } else {
+              val json = ("StoreType" -> dbType1) ~
+                ("SchemaName" -> dbSchema1) ~
+                ("Location" -> dbHost1)
+              pretty(render(json))
+            }
+          jsonStr
+        }
+
       /** Install the new installation */
       val nodes: String = ips.mkString(",")
       log.emit(s"Begin cluster installation... installation found on each cluster node(any {$nodes}) at $installDir")
@@ -503,7 +536,8 @@ Try again.
         , ipIdTargPaths
         , ipPathPairs
         , workingDir
-        , clusterId)
+        , clusterId
+        , metadataDataStore)
       if (installOk) {
         /** Do upgrade if necessary */
         if (upgrade) {
@@ -1096,7 +1130,8 @@ Try again.
                      , ipIdTargPaths: Array[(String, String, String, String)]
                      , ipPathPairs: Array[(String, String)]
                      , workDir: String
-                     , clusterId: String): Boolean = {
+                     , clusterId: String
+                     , metadataDataStore: String): Boolean = {
 
     // Check for KamanjaClusterInstall.sh existance. And see whether KamanjaClusterInstall.sh has all error handling or not.
     val parentPath: String = physicalRootDir.split('/').dropRight(1).mkString("/")
@@ -1110,7 +1145,6 @@ Try again.
       sys.exit(1)
     }
 
-
     val ipDataFile = workDir + "/ipData.txt" // We may need to use workingDir
     val ipPathDataFile = workDir + "/ipPathData.txt" // We may need to use workingDir
     val ipIdCfgTargDataFile = workDir + "/ipIdCfgTargData.txt" // We may need to use workingDir
@@ -1118,6 +1152,11 @@ Try again.
     writeCfgFile(ips.mkString("\n"), ipDataFile)
     writeCfgFile(ipPathPairs.map(pair => pair._1 + "\n" + pair._2).mkString("\n"), ipPathDataFile)
     writeCfgFile(ipIdTargPaths.map(quad => quad._1 + "\n" + quad._2 + "\n" + s"$workDir/node${quad._2}.cfg\n" + quad._3 + "\n" + quad._4).mkString("\n"), ipIdCfgTargDataFile)
+
+    ipIdTargPaths.foreach(quad => {
+      writeCfgFile(metadataDataStore, s"$workDir/node${quad._2}.cfg")
+    })
+
 
     val dateTime: DateTime = new DateTime
     val fmt: DateTimeFormatter = DateTimeFormat.forPattern("yyyyMMdd_HHmmss")
