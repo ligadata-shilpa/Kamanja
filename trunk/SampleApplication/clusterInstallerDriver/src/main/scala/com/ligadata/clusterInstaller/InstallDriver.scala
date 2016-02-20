@@ -1254,6 +1254,7 @@ Try again.
           , toScala
           , unhandledMetadataDumpDir
         )
+        printAndLogDebug("Calling migrate %s with config %s".format(migrationToBeDone, migrateConfigJSON))
         val migrateObj: Migrate = new Migrate()
         migrateObj.registerStatusCallback(log)
         val rc: Int = migrateObj.runFromJsonConfigString(migrateConfigJSON)
@@ -1274,18 +1275,19 @@ Try again.
           , toScala
           , unhandledMetadataDumpDir
         )
+        printAndLogDebug("Calling migrate %s with config %s".format(migrationToBeDone, migrateConfigJSON))
         val migrateObj: Migrate = new Migrate()
         migrateObj.registerStatusCallback(log)
         val rc: Int = migrateObj.runFromJsonConfigString(migrateConfigJSON)
         (rc == 0)
       }
       case _ => {
-        log.emit("The 'fromKamanja' parameter is incorrect... this needs to be fixed.  The value can only be '1.1' or '1.2' for the '1.3' upgrade")
+        printAndLogError("The 'fromKamanja' parameter is incorrect... this needs to be fixed.  The value can only be '1.1' or '1.2' for the '1.3' upgrade", log)
         false
       }
     }
     if (!upgradeOk) {
-      log.emit(s"The upgrade has failed.  Please consult the log (${log.logPath}) for guidance as to how to recover from this.")
+      printAndLogError(s"The upgrade has failed.  Please consult the log (${log.logPath}) for guidance as to how to recover from this.", log)
       log.close
       sys.exit(1)
     }
@@ -1355,23 +1357,21 @@ Try again.
 
       */
 
-    val subPairs = Map[String, String]("ClusterConfigFile" -> clusterConfigFile
-      , "ApiConfigFile" -> apiConfigFile
-      , "KamanjaFromVersion" -> kamanjaFromVersion
-      , "KamanjaFromVersionWithUnderscore" -> kamanjaFromVersionWithUnderscore
-      , "NewPackageInstallPath" -> newPackageInstallPath
-      , "OldPackageInstallPath" -> oldPackageInstallPath
-      , "ScalaFromVersion" -> scalaFromVersion
-      , "ScalaToVersion" -> scalaToVersion
-      , "UnhandledMetadataDumpDir" -> unhandledMetadataDumpDir)
+    val subPairs = Map[String, String]("{ClusterConfigFile}" -> clusterConfigFile
+      , "{ApiConfigFile}" -> apiConfigFile
+      , "{KamanjaFromVersion}" -> kamanjaFromVersion
+      , "{KamanjaFromVersionWithUnderscore}" -> kamanjaFromVersionWithUnderscore
+      , "{NewPackageInstallPath}" -> newPackageInstallPath
+      , "{OldPackageInstallPath}" -> oldPackageInstallPath
+      , "{ScalaFromVersion}" -> scalaFromVersion
+      , "{ScalaToVersion}" -> scalaToVersion
+      , "{UnhandledMetadataDumpDir}" -> unhandledMetadataDumpDir)
 
     val substitutionMap: Map[String, String] = subPairs.toMap
     val varSub = new MapSubstitution(template, substitutionMap, logger, log)
     val substitutedTemplate: String = varSub.makeSubstitutions
     substitutedTemplate
   }
-
-
 }
 
 class ClusterConfigMap(cfgStr: String, clusterIdOfInterest: String) {
@@ -1541,6 +1541,7 @@ class MapSubstitution(template: String, vars: scala.collection.immutable.Map[Str
   def findAndReplace(m: Matcher)(callback: String => String): String = {
     val sb = new StringBuffer
     while (m.find) {
+      printAndLogDebug("Found Template Varibale:" + m.group(1))
       val replStr = vars(m.group(1))
       printAndLogDebug("Replacing Template Varibale from %s to %s".format(m.group(1), replStr))
       m.appendReplacement(sb, callback(replStr))
@@ -1550,8 +1551,10 @@ class MapSubstitution(template: String, vars: scala.collection.immutable.Map[Str
   }
 
   def makeSubstitutions: String = {
-    printAndLogDebug("Using RegEx:{([A-Za-z0-9_.-]+)}")
-    val m = Pattern.compile("""{([A-Za-z0-9_.-]+)}""").matcher(template)
+    val patStr = """(\{[A-Za-z0-9_.-]+\})"""
+    printAndLogDebug("Using RegEx:" + patStr)
+    printAndLogDebug("Key & Values to replace:" + vars.mkString(","))
+    val m = Pattern.compile(patStr).matcher(template)
     findAndReplace(m) { x => x }
   }
 }
