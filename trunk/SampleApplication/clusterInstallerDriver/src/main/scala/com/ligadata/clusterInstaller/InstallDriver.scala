@@ -761,7 +761,7 @@ Try again.
           }
         }
         val hbaseOptInfo: Option[ComponentInfo] = components.filter(component => component.componentName.toLowerCase == "hbase").headOption
-        val hinfo = kafkaOptInfo.orNull
+        val hinfo = hbaseOptInfo.orNull
         val hbaseIsValid: Boolean = (hinfo != null && hinfo.status != null && hinfo.status.toLowerCase == "success")
         if (!hbaseIsValid) {
           if (info != null) {
@@ -887,7 +887,7 @@ Try again.
     _cntr += 1
     val logFile = "/tmp/__get_comp_ver_results_" + _cntr + "_" + math.abs(pathOutputFlName.hashCode) + "_" + math.abs(getComponentsVersionCmd.hashCode) + "_" + math.abs(scriptAbsolutePath.hashCode)
 
-    printAndLogError(s"getComponentsVersion cmd used: $getComponentsVersionCmd", log)
+    printAndLogDebug(s"getComponentsVersion cmd used: $getComponentsVersionCmd", log)
     val getVerCmdRc: Int = (getComponentsVersionCmd #> new File(logFile)).!
     val getVerCmdResults = Source.fromFile(logFile).mkString
     if (getVerCmdRc != 0) {
