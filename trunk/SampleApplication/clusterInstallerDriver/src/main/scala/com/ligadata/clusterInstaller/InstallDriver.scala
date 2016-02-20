@@ -30,6 +30,7 @@ import java.io._
 import java.util.regex.{Matcher, Pattern}
 
 import org.apache.logging.log4j.LogManager
+import org.apache.logging.log4j.Logger;
 import org.json4s._
 
 import com.ligadata.Serialize.JsonSerializer
@@ -63,7 +64,6 @@ import org.json4s.jackson.Serialization
   */
 
 class InstallDriverLog(val logPath: String) extends StatusCallback {
-
   val bufferedWriter = new BufferedWriter(new FileWriter(new File(logPath)))
   var isReady: Boolean = true
 
@@ -179,6 +179,18 @@ object InstallDriver extends App {
     """
   }
 
+  private def printAndLogDebug(msg: String, log: InstallDriverLog = null): Unit = {
+    logger.debug(msg);
+    println(msg)
+  }
+
+  private def printAndLogError(msg: String, log: InstallDriverLog = null): Unit = {
+    logger.error(msg);
+    println(msg)
+    if (log != null)
+      log.emit(msg)
+  }
+
   override def main(args: Array[String]): Unit = {
     if (args.length == 0) {
       println("Usage:\n");
@@ -189,17 +201,19 @@ object InstallDriver extends App {
     // locate the clusterInstallerDriver app ... need its working directory to refer to others... this function
     // returns this form:  file:/tmp/drdigital/KamanjaInstall-1.3.2_2.11/bin/clusterInstallerDriver-1.0
 
-    val thisFatJarsLocationAbs :  String  = getClass().getProtectionDomain().getCodeSource().getLocation().toExternalForm()
-    val pathSwizzlePossible : Boolean = (thisFatJarsLocationAbs.contains(':') && thisFatJarsLocationAbs.contains('/'))
-    if (! pathSwizzlePossible) {
-        throw new RuntimeException("unable to determine the current path for clusterInstallerDriver executable... \nFoundLocation:" + thisFatJarsLocationAbs)
+    val thisFatJarsLocationAbs: String = getClass().getProtectionDomain().getCodeSource().getLocation().toExternalForm()
+    logger.debug("Jar Absolute Path:" + thisFatJarsLocationAbs)
+    val pathSwizzlePossible: Boolean = (thisFatJarsLocationAbs.contains(':') && thisFatJarsLocationAbs.contains('/'))
+    if (!pathSwizzlePossible) {
+      throw new RuntimeException("unable to determine the current path for clusterInstallerDriver executable... \nFoundLocation:" + thisFatJarsLocationAbs)
     }
 
-      /** Obtain location of the clusterInstallerDriver fat jar.  Its directory contains the scripts we use to
-        * obtain component info for the env check and the lower level cluster install script that actually does the
-        * install.
-        */
-    val clusterInstallerDriversLocation : String = thisFatJarsLocationAbs.split(':').tail.mkString(":").split('/').dropRight(1).mkString("/")
+    /** Obtain location of the clusterInstallerDriver fat jar.  Its directory contains the scripts we use to
+      * obtain component info for the env check and the lower level cluster install script that actually does the
+      * install.
+      */
+    val clusterInstallerDriversLocation: String = thisFatJarsLocationAbs.split(':').tail.mkString(":").split('/').dropRight(1).mkString("/")
+    logger.debug("clusterInstallerDriversLocation:" + clusterInstallerDriversLocation)
 
     val arglist = args.toList
     type OptionMap = Map[Symbol, String]
@@ -269,17 +283,32 @@ object InstallDriver extends App {
     val log: InstallDriverLog = new InstallDriverLog(s"$logDir/InstallDriver.$datestr.log")
     println(s"The installation log file can be found in $logDir/InstallDriver.$datestr.log")
 
-    val confusedIntention: Boolean = (upgrade && install)
-    if (confusedIntention) {
-      log.emit("You have specified both 'upgrade' and 'install' as your action.  It must be one or the other. Use ")
-      log.emit("'upgrade' if you have an existing Kamanja installation and wish to install the new version of the ")
-      log.emit("software and upgrade your application metadata to the new system.")
-      log.emit("Use 'install' if the desire is to simply create a new installation.  However, if the 'install' ")
-      log.emit("detects an existing installation, the installation will fail.")
-      log.emit("Try again.")
+    val hasBoth = (upgrade && install)
+    val hasNone = (!upgrade && !install)
+
+    val bothTxt = "You have specified both 'upgrade' and 'install' as your action.  It must be one or the other.\n"
+    val noneTxt = "You have not specified either 'upgrade' or 'install' as your action.  It must be one or the other.\n"
+
+    val commonTxt =
+      """
+Use 'upgrade' if you have an existing Kamanja installation and wish to install the new version of the
+software and upgrade your application metadata to the new system.
+Use 'install' if the desire is to simply create a new installation.  However, if the 'install'
+detects an existing installation, the installation will fail.
+Try again.
+      """
+
+    if (hasBoth || hasNone) {
+      if (hasBoth)
+        log.emit(bothTxt + commonTxt)
+      if (hasNone)
+        log.emit(noneTxt + commonTxt)
       log.close
       sys.exit(1)
     }
+
+    val operation = if (install) "Installing" else if (upgrade) "Upgrading"
+    logger.debug(s"$operation with clusterId:$clusterId, apiConfigPath:$apiConfigPath, nodeConfigPath:$nodeConfigPath, tarballPath:$tarballPath, fromKamanja:$fromKamanja, fromScala:$fromScala, toScala:$toScala, workingDir:$workingDir, migrateTemplate:$migrateTemplate, logDir:$logDir, componentVersionScriptAbsolutePath:$componentVersionScriptAbsolutePath, componentVersionJarAbsolutePath:$componentVersionJarAbsolutePath, toKamanja:$toKamanja")
 
     val clusterIdOk: Boolean = clusterId != null && clusterId.nonEmpty
     val apiConfigPathOk: Boolean = apiConfigPath != null && apiConfigPath.nonEmpty
@@ -307,18 +336,18 @@ object InstallDriver extends App {
         )
 
     if (!reasonableArguments) {
-      println("One or more arguments are not set or have bad values...")
-      if (!clusterIdOk) println("\tclusterId")
-      if (!apiConfigPathOk) println("\tapiConfigPath")
-      if (!tarballPathOk) println("\ttarballPath")
-      if (!fromKamanjaOk) println("\tfromKamanja")
-      if (!fromScalaOk) println("\tfromScala")
-      if (!migrateTemplateOk) println("\tmigrateTemplate")
-      if (!logDirOk) println("\tlogDir")
-      if (!componentVersionScriptAbsolutePathOk) println("\tcomponentVersionScriptAbsolutePath")
-      if (!componentVersionJarAbsolutePathOk) println("\tcomponentVersionJarAbsolutePath")
-      println("Usage:")
-      println(usage)
+      printAndLogError("One or more arguments are not set or have bad values...")
+      if (!clusterIdOk) printAndLogError("\tclusterId")
+      if (!apiConfigPathOk) printAndLogError("\tapiConfigPath")
+      if (!tarballPathOk) printAndLogError("\ttarballPath")
+      if (!fromKamanjaOk) printAndLogError("\tfromKamanja")
+      if (!fromScalaOk) printAndLogError("\tfromScala")
+      if (!migrateTemplateOk) printAndLogError("\tmigrateTemplate")
+      if (!logDirOk) printAndLogError("\tlogDir")
+      if (!componentVersionScriptAbsolutePathOk) printAndLogError("\tcomponentVersionScriptAbsolutePath")
+      if (!componentVersionJarAbsolutePathOk) printAndLogError("\tcomponentVersionJarAbsolutePath")
+      printAndLogError("Usage:")
+      printAndLogError(usage)
       sys.exit(1)
     }
 
@@ -328,6 +357,7 @@ object InstallDriver extends App {
     val migrationToBeDone: String = if (fromKamanja == "1.1") "1.1=>1.3" else if (fromKamanja == "1.2") "1.2=>1.3" else "hmmm"
     if (migrationToBeDone == "hmmm") {
       log.emit(s"The fromKamanja ($fromKamanja) is not valid with this release... the value must be 1.1 or 1.2")
+      logger.debug(s"The fromKamanja ($fromKamanja) is not valid with this release... the value must be 1.1 or 1.2")
       cnt += 1
     }
 
@@ -342,39 +372,39 @@ object InstallDriver extends App {
     val componentVersionJarAbsolutePathExists: Boolean = new File(componentVersionJarAbsolutePath).exists
 
     if (!apiCfgExists) {
-      log.emit(s"The apiConfigPath ($apiConfigPath) does not exist")
+      printAndLogError(s"The apiConfigPath ($apiConfigPath) does not exist", log)
       cnt += 1
     }
     if (!nodeConfigPathExists) {
-      log.emit(s"The nodeConfigPath ($nodeConfigPath) does not exist")
+      printAndLogError(s"The nodeConfigPath ($nodeConfigPath) does not exist", log)
       cnt += 1
     }
     if (!tarballPathExists) {
-      log.emit(s"The tarballPath ($tarballPath) does not exist")
+      printAndLogError(s"The tarballPath ($tarballPath) does not exist", log)
       cnt += 1
     }
     if (!workingDirExists) {
-      log.emit(s"The workingDir ($workingDir) does not exist")
+      printAndLogError(s"The workingDir ($workingDir) does not exist", log)
       cnt += 1
     }
     if (!migrateTemplateExists) {
-      log.emit(s"The migrateTemplate ($migrateTemplate) does not exist")
+      printAndLogError(s"The migrateTemplate ($migrateTemplate) does not exist", log)
       cnt += 1
     }
     if (!logDirExists) {
-      log.emit(s"The logDir ($logDir) does not exist")
+      printAndLogError(s"The logDir ($logDir) does not exist", log)
       cnt += 1
     }
     if (!componentVersionScriptAbsolutePathExists) {
-      log.emit(s"The componentVersionScriptAbsolutePath ($componentVersionScriptAbsolutePath) does not exist")
+      printAndLogError(s"The componentVersionScriptAbsolutePath ($componentVersionScriptAbsolutePath) does not exist", log)
       cnt += 1
     }
     if (!componentVersionJarAbsolutePathExists) {
-      log.emit(s"The componentVersionJarAbsolutePath ($componentVersionJarAbsolutePath) does not exist")
+      printAndLogError(s"The componentVersionJarAbsolutePath ($componentVersionJarAbsolutePath) does not exist", log)
       cnt += 1
     }
     if (cnt > 0) {
-      log.emit("Please fix your arguments and try again.")
+      printAndLogError("Please fix your arguments and try again.", log)
       log.close
       sys.exit(1)
     }
@@ -382,8 +412,8 @@ object InstallDriver extends App {
     /** Convert the content of the property file into a map.  If the path is bad, an empty map is returned and processing stops */
     val apiConfigMap: Properties = mapProperties(log, apiConfigPath)
     if (apiConfigMap == null || apiConfigMap.isEmpty) {
-      log.emit("The configuration file is messed up... it needs to be lines of key=value pairs")
-      log.emit(usage)
+      printAndLogError("The configuration file is messed up... it needs to be lines of key=value pairs", log)
+      printAndLogError(usage, log)
       log.close
       sys.exit(1)
     }
@@ -407,10 +437,9 @@ object InstallDriver extends App {
     val clusterConfig: String = Source.fromFile(nodeConfigPath).mkString
     val clusterConfigMap: ClusterConfigMap = new ClusterConfigMap(clusterConfig, clusterId)
 
-
     val clusterMap: Map[String, Any] = clusterConfigMap.ClusterMap
     if (clusterMap.isEmpty) {
-      log.emit(s"There is no cluster info for the supplied clusterId, $clusterId")
+      printAndLogError(s"There is no cluster info for the supplied clusterId, $clusterId", log)
       sys.exit(1)
     }
     /** Create the cluster config map and pull out the top level objects... either Maps or Lists of Maps */
@@ -530,7 +559,7 @@ object InstallDriver extends App {
     */
 
   def validateClusterEnvironment(log: InstallDriverLog
-                                 , clusterInstallerDriversLocation : String
+                                 , clusterInstallerDriversLocation: String
                                  , clusterConfigMap: ClusterConfigMap
                                  , componentVersionScriptAbsolutePath: String
                                  , componentVersionJarAbsolutePath: String
@@ -993,6 +1022,17 @@ object InstallDriver extends App {
     return true
   }
 
+  private def isFileExists(flPath: String, checkForFile: Boolean, checkForDir: Boolean): Boolean = {
+    val fl = new File(flPath)
+    if (!fl.exists)
+      return false;
+    if (checkForFile)
+      return fl.isFile
+    if (checkForDir)
+      return fl.isDirectory
+    true
+  }
+
 
   /**
     * Call the KamanjaClusterInstall with the following parameters that it needs to install the software on the cluster.
@@ -1017,17 +1057,17 @@ object InstallDriver extends App {
     * CheckInstallVerificationFile check for this information
     *
 
-    * @param log                 the InstallDriverLog that tracks progress and important events of this installation
+    * @param log                             the InstallDriverLog that tracks progress and important events of this installation
     * @param clusterInstallerDriversLocation the location of the clusterInstallerDriver AND the KamanjaClusterInstall.sh called here
-    * @param physicalRootDir     the actual root dir for the installation
-    * @param apiConfigPath       the api config that contains seminal information about the cluster installation
-    * @param nodeConfigPath      the node config that contains the cluster description used for the installation
-    * @param priorInstallDirName the name of the directory to be used for a prior installation that is being upgraded (if appropriate)
-    * @param newInstallDirName   the new installation directory name that will live in parentPath
-    * @param tarballPath         the local tarball path that contains the kamanja installation
-    * @param ips                 a file path that contains the unique ip addresses for each node in the cluster
-    * @param ipIdTargPaths       a file path that contains the ip address, node id, target dir path and roles
-    * @param ipPathPairs         a file containing the unique ip addresses and path pairs
+    * @param physicalRootDir                 the actual root dir for the installation
+    * @param apiConfigPath                   the api config that contains seminal information about the cluster installation
+    * @param nodeConfigPath                  the node config that contains the cluster description used for the installation
+    * @param priorInstallDirName             the name of the directory to be used for a prior installation that is being upgraded (if appropriate)
+    * @param newInstallDirName               the new installation directory name that will live in parentPath
+    * @param tarballPath                     the local tarball path that contains the kamanja installation
+    * @param ips                             a file path that contains the unique ip addresses for each node in the cluster
+    * @param ipIdTargPaths                   a file path that contains the ip address, node id, target dir path and roles
+    * @param ipPathPairs                     a file containing the unique ip addresses and path pairs
     * @return true if the installation succeeded.
     */
   def installCluster(log: InstallDriverLog
@@ -1044,11 +1084,12 @@ object InstallDriver extends App {
 
     // Check for KamanjaClusterInstall.sh existance. And see whether KamanjaClusterInstall.sh has all error handling or not.
     val parentPath: String = physicalRootDir.split('/').dropRight(1).mkString("/")
-    val scriptExitsCheck: Seq[String] = Seq("bash", "-c", s"$clusterInstallerDriversLocation/KamanjaClusterInstall.sh")
-    val scriptExistsCmdRc = Process(scriptExitsCheck).!
-    if (scriptExistsCmdRc != 0) {
-      log.emit(s"KamanjaClusterInstall script is not installed... it must be on your PATH... rc = $scriptExistsCmdRc")
-      log.emit("Installation is aborted. Consult the log file (${log.logPath}) for details.")
+    val KamanjaClusterInstallPath = s"$clusterInstallerDriversLocation/KamanjaClusterInstall.sh"
+    printAndLogDebug("KamanjaClusterInstallPath :" + KamanjaClusterInstallPath)
+
+    if (! isFileExists(KamanjaClusterInstallPath, true, false)) {
+      printAndLogError(s"KamanjaClusterInstall script is not installed in path:" + clusterInstallerDriversLocation, log)
+      printAndLogError(s"Installation is aborted. Consult the log file (${log.logPath}) for details.", log)
       log.close
       sys.exit(1)
     }
@@ -1062,27 +1103,27 @@ object InstallDriver extends App {
     val newInstallDirPath: String = s"$parentPath/$newInstallDirName"
     val installCmd: Seq[String] = Seq("bash", "-c", s"$clusterInstallerDriversLocation/KamanjaClusterInstall.sh  --MetadataAPIConfig $apiConfigPath --NodeConfigPath $nodeConfigPath --ParentPath $parentPath --PriorInstallDirName $priorInstallDirName --NewInstallDirName $newInstallDirName --TarballPath $tarballPath --ipAddrs $ips --ipIdTargPaths $ipIdTargPaths --ipPathPairs $ipPathPairs --priorInstallDirPath $priorInstallDirPath --newInstallDirPath $newInstallDirPath --installVerificationFile $verifyFilePath ")
     val installCmdRep: String = installCmd.mkString(" ")
-    log.emit(s"KamanjaClusterInstall cmd used: \n\n$installCmdRep")
+    printAndLogDebug(s"KamanjaClusterInstall cmd used: \n\n$installCmdRep", log)
 
     //println(s"KamanjaClusterInstall cmd used: \n\n$installCmdRep\n")
 
     val installCmdRc: Int = (installCmd #> new File("/tmp/__install_results_")).!
     val installCmdResults: String = Source.fromFile("/tmp/__install_results_").mkString
     if (installCmdRc != 0) {
-      log.emit(s"KamanjaClusterInstall has failed...rc = $installCmdRc")
-      log.emit(s"Command used: $installCmd")
-      log.emit(s"Command report:\n$installCmdResults")
-      log.emit(s"Installation is aborted. Consult the log file (${log.logPath}) for details.")
+      printAndLogError(s"KamanjaClusterInstall has failed...rc = $installCmdRc", log)
+      printAndLogError(s"Command used: $installCmd", log)
+      printAndLogError(s"Command report:\n$installCmdResults", log)
+      printAndLogError(s"Installation is aborted. Consult the log file (${log.logPath}) for details.", log)
       log.close
       sys.exit(1)
     } else {
       if (!CheckInstallVerificationFile(log, verifyFilePath, ipPathPairs, newInstallDirName, physicalRootDir)) {
-        log.emit("Failed to verify information collected from installation.")
+        printAndLogError("Failed to verify information collected from installation.", log)
         log.close
         sys.exit(1)
       }
     }
-    log.emit(s"New installation command result report:\n$installCmdResults")
+    printAndLogDebug(s"New installation command result report:\n$installCmdResults", log)
 
     (installCmdRc == 0)
   }
