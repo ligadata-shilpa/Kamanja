@@ -124,7 +124,7 @@ object InstallDriver extends App {
             --{upgrade|install}
             --apiConfig <MetadataAPIConfig.properties file>
             --clusterConfig <ClusterConig.json file>
-            --fromKamanja "1.1"
+            [--fromKamanja "1.1"]
             [--fromScala "2.10"]
             [--toScala "2.11"]
             --workingDir <workingdirectory>
@@ -143,7 +143,8 @@ object InstallDriver extends App {
         --apiConfig <MetadataAPIConfig.properties file> specifies the path of the properties file that (among others) specifies the location
             of the installation on each cluster node given in the cluster configuration.  Note that all installations exist in the same
             location on all nodes.
-        --clusterConfig <ClusterConig.json file> gives the file that describes the node information for the cluster, including the IP address of each node, et al.
+        --clusterConfig <ClusterConig.json file> gives the file that describes the node information for the cluster, including the
+            IP address of each node, et al.
         [--fromKamanja] optional for install but required for update..."N.N" where "N.N" can be either "1.1" or "1.2"
         --workingDir <workingdirectory> a CRUD directory path that should be addressable on every node specified in the cluster configuration
             file as well as on the machine that this program is executing.  It is used by this program and scripts it invokes to create
@@ -152,22 +153,23 @@ object InstallDriver extends App {
             have multiple clusters in the metadata.
         --tarballPath <tarball path> this is the location of the Kamanja 1.3 tarball of the installation directory to be installed
             on the cluster.  The tarball is copied to each of the cluster nodes, extracted and installed there.
-        [--fromScala "2.10"] an optional parameter that, for the 1.3 InstallDriver, simply documents the version of Scala that the current 1.1. or 1.2 is using.  The value
-            "2.10" is the only possible value for this release.
-        [--toScala "2.11"] an optional parameter that when given declares the intent to upgrade the Scala compiler used by the Kamanja engine to 2.11.x
-            instead of using the default 2.10.x compiler.  Note that this controls the compiler version that the Kamanja message compiler, Kamanja pmml
-            compiler, and other future Kamanja components will use when building their respective objects. If the requested version has not been installed
-            on the cluster nodes in question, the installation will fail.
-        --migrationTemplate <MigrationTemplate> the path of the migration template to be used.  This file has several configurable values as well as a number
-          of values that are automatically filled with information gleaned from other files in this list
+        [--fromScala "2.10"] an optional parameter that, for the 1.3 InstallDriver, simply documents the version of Scala that
+            the current 1.1. or 1.2 is using.  The value "2.10" is the only possible value for this release.
+        [--toScala "2.11"] optional for install, required for upgrade, this parameter declares the intent to upgrade the Scala compiler
+            used by the Kamanja engine to 2.11.x instead of using the default 2.10.x compiler.  Note that this controls the compiler
+            version that the Kamanja message compiler, Kamanja pmml compiler, and other future Kamanja components will use when
+            building their respective objects. If the requested version has not been installed on the cluster nodes in question,
+            the installation will fail.
+        --migrationTemplate <MigrationTemplate> the path of the migration template to be used.  This file has several configurable values
+            as well as a number of values that are automatically filled with information gleaned from other files in this list
         --logDir for both Unhandled metadata & logs. If this value is not specified, it defaults to /tmp.  It is highly recommended that you
           specify a more permanent path so that the installations you do can be documented in a location not prone to being deleted.
         --componentVersionScriptAbsolutePath the current path of the script that will fetch component information for each cluster node
         --componentVersionJarAbsolutePath the GetComponent jar that will be installed on each cluster node and called remotely by the supplied
           componentVersionScript (i.e., from the machine executing the cluster installer driver).
 
-    The ClusterInstallerDriver_1.3 is the cluster installer driver for Kamanja 1.3.  It is capable of installing a new version of 1.3 or given the appropriate arguments,
-    installing a new version of Kamanja 1.3 *and* upgrading a 1.1 or 1.2 installation to the 1.3 version.
+    The ClusterInstallerDriver_1.3 is the cluster installer driver for Kamanja 1.3.  It is capable of installing a new version of 1.3
+    or given the appropriate arguments, installing a new version of Kamanja 1.3 *and* upgrading a 1.1 or 1.2 installation to the 1.3 version.
 
     A log of the installation and optional upgrade is collected in a log file.  This log file is automatically generated and will be found in the
     workingDir you supply to the installer driver program.  The name will be of the form: InstallDriver.yyyyMMdd_HHmmss.log (e.g.,
@@ -286,8 +288,8 @@ object InstallDriver extends App {
     val hasBoth = (upgrade && install)
     val hasNone = (!upgrade && !install)
 
-    val bothTxt = "You have specified both 'upgrade' and 'install' as your action.  It must be one or the other.\n"
-    val noneTxt = "You have not specified either 'upgrade' or 'install' as your action.  It must be one or the other.\n"
+    val bothTxt = "\nYou have specified both 'upgrade' and 'install' as your action.  It must be one or the other.\n"
+    val noneTxt = "\nYou have not specified either 'upgrade' or 'install' as your action.  It must be one or the other.\n"
 
     val commonTxt =
       """
@@ -296,13 +298,18 @@ software and upgrade your application metadata to the new system.
 Use 'install' if the desire is to simply create a new installation.  However, if the 'install'
 detects an existing installation, the installation will fail.
 Try again.
+
       """
 
     if (hasBoth || hasNone) {
-      if (hasBoth)
-          printAndLogError(bothTxt + commonTxt)
-      if (hasNone)
-          printAndLogError(noneTxt + commonTxt)
+      if (hasBoth) {
+          log.emit(bothTxt + commonTxt)
+          println("\n" + bothTxt + commonTxt)
+      }
+      if (hasNone) {
+          log.emit(noneTxt + commonTxt)
+          println("\n" + noneTxt + commonTxt)
+      }
       log.close
       sys.exit(1)
     }
