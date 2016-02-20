@@ -501,6 +501,14 @@ Try again.
         , priorInstallDirName
         , newInstallDirName
         , ips, ipIdTargPaths, ipPathPairs)
+
+    if (upgrade && (physicalRootDir == null || physicalRootDir.isEmpty)){
+      printAndLogError(s"For the given upgrade, not found valid $rootDirPath directory/link on any node.", log)
+      printAndLogError(usage, log)
+      log.close
+      sys.exit(1)
+    }
+
     if (proposedClusterEnvironmentIsSuitable) {
       /** if so... */
 
@@ -540,7 +548,7 @@ Try again.
       log.emit(s"Begin cluster installation... installation found on each cluster node(any {$nodes}) at $installDir")
       val installOk: Boolean = installCluster(log
         , clusterInstallerDriversLocation
-        , physicalRootDir
+        , rootDirPath
         , apiConfigPath
         , nodeConfigPath
         , priorInstallDirName
@@ -567,7 +575,8 @@ Try again.
             , toScala
             , parentPath
             , priorInstallDirName
-            , newInstallDirName)
+            , newInstallDirName
+            , physicalRootDir)
           log.emit(s"Upgrade completed...successful?  ${if (upgradeOk) "yes!" else "false!"}")
           if (!upgradeOk) {
             log.emit(s"The parameters for the migration are incorrect... aborting installation")
@@ -977,18 +986,18 @@ Try again.
   /**
 
     * @param log
-    * @param physicalRootDir
+    * @param rootDirPath
     * @param fromKamanjaVer
     * @param toKamanjaVer
     * @return
     */
 
-  def CreateInstallationNames(log: InstallDriverLog, physicalRootDir: String, fromKamanjaVer: String, toKamanjaVer: String)
+  def CreateInstallationNames(log: InstallDriverLog, rootDirPath: String, fromKamanjaVer: String, toKamanjaVer: String)
   : (String, String, String) = {
 
 
-    val parentPath: String = physicalRootDir.split('/').dropRight(1).mkString("/")
-    val phyDirName: String = physicalRootDir.split('/').last
+    val parentPath: String = rootDirPath.split('/').dropRight(1).mkString("/")
+    val rootDirName: String = rootDirPath.split('/').last
     val dateTime: DateTime = new DateTime
     val fmt: DateTimeFormatter = DateTimeFormat.forPattern("yyyyMMdd_HHmmss")
     val datestr: String = fmt.print(dateTime);
@@ -1001,13 +1010,13 @@ Try again.
 
     /apps/KamanjaInstall_<version>_<datetime>
     */
-    val priorInstallDirName: String = s"${phyDirName}_${fromKamanjaVer}_${datestr}"
-    val newInstallDirName: String = s"${phyDirName}_${toKamanjaVer}_${datestr}"
+    val priorInstallDirName: String = s"${rootDirName}_${fromKamanjaVer}_${datestr}"
+    val newInstallDirName: String = s"${rootDirName}_${toKamanjaVer}_${datestr}"
 
     (parentPath, priorInstallDirName, newInstallDirName)
   }
 
-  private def CheckInstallVerificationFile(log: InstallDriverLog, fl: String, ipPathPairs: Array[(String, String)], newInstallDirPath: String, physicalRootDir: String): Boolean = {
+  private def CheckInstallVerificationFile(log: InstallDriverLog, fl: String, ipPathPairs: Array[(String, String)], newInstallDirPath: String, rootDirPath: String): Boolean = {
     val allValues = ArrayBuffer[Array[String]]()
     val allLines = ArrayBuffer[String]()
     logger.info(fl + " contents")
@@ -1121,7 +1130,7 @@ Try again.
 
     * @param log                             the InstallDriverLog that tracks progress and important events of this installation
     * @param clusterInstallerDriversLocation the location of the clusterInstallerDriver AND the KamanjaClusterInstall.sh called here
-    * @param physicalRootDir                 the actual root dir for the installation
+    * @param rootDirPath                     the actual root dir for the installation
     * @param apiConfigPath                   the api config that contains seminal information about the cluster installation
     * @param nodeConfigPath                  the node config that contains the cluster description used for the installation
     * @param priorInstallDirName             the name of the directory to be used for a prior installation that is being upgraded (if appropriate)
@@ -1134,7 +1143,7 @@ Try again.
     */
   def installCluster(log: InstallDriverLog
                      , clusterInstallerDriversLocation: String
-                     , physicalRootDir: String
+                     , rootDirPath: String
                      , apiConfigPath: String
                      , nodeConfigPath: String
                      , priorInstallDirName: String
@@ -1148,7 +1157,7 @@ Try again.
                      , metadataDataStore: String): Boolean = {
 
     // Check for KamanjaClusterInstall.sh existance. And see whether KamanjaClusterInstall.sh has all error handling or not.
-    val parentPath: String = physicalRootDir.split('/').dropRight(1).mkString("/")
+    val parentPath: String = rootDirPath.split('/').dropRight(1).mkString("/")
     val KamanjaClusterInstallPath = s"$clusterInstallerDriversLocation/KamanjaClusterInstall.sh"
     printAndLogDebug("KamanjaClusterInstallPath :" + KamanjaClusterInstallPath)
 
@@ -1195,7 +1204,7 @@ Try again.
       log.close
       sys.exit(1)
     } else {
-      if (!CheckInstallVerificationFile(log, verifyFilePath, ipPathPairs, newInstallDirPath, physicalRootDir)) {
+      if (!CheckInstallVerificationFile(log, verifyFilePath, ipPathPairs, newInstallDirPath, rootDirPath)) {
         printAndLogError("Failed to verify information collected from installation.", log)
         log.close
         sys.exit(1)
@@ -1234,7 +1243,8 @@ Try again.
                   , toScala: String
                   , parentPath: String
                   , priorInstallDirName: String
-                  , newInstallDirName: String): Boolean = {
+                  , newInstallDirName: String
+                  , physicalRootDir: String): Boolean = {
 
     val migrationToBeDone: String = if (fromKamanja == "1.1") "1.1=>1.3" else if (fromKamanja == "1.2") "1.2=>1.3" else "hmmm"
 
@@ -1253,6 +1263,8 @@ Try again.
           , fromScala
           , toScala
           , unhandledMetadataDumpDir
+          , parentPath
+          , physicalRootDir
         )
         printAndLogDebug("Calling migrate %s with config %s".format(migrationToBeDone, migrateConfigJSON))
         val migrateObj: Migrate = new Migrate()
@@ -1274,6 +1286,8 @@ Try again.
           , fromScala
           , toScala
           , unhandledMetadataDumpDir
+          , parentPath
+          , physicalRootDir
         )
         printAndLogDebug("Calling migrate %s with config %s".format(migrationToBeDone, migrateConfigJSON))
         val migrateObj: Migrate = new Migrate()
@@ -1319,8 +1333,8 @@ Try again.
     * @param apiConfigFile                    substitution value
     * @param kamanjaFromVersion               substitution value
     * @param kamanjaFromVersionWithUnderscore substitution value
-    * @param newPackageInstallPath            substitution value
-    * @param oldPackageInstallPath            substitution value
+    * @param newInstallDirName            substitution value
+    * @param priorInstallDirName            substitution value
     * @param scalaFromVersion                 substitution value
     * @param scalaToVersion                   substitution value
     * @param unhandledMetadataDumpDir         substitution value
@@ -1332,11 +1346,13 @@ Try again.
                             , apiConfigFile: String
                             , kamanjaFromVersion: String
                             , kamanjaFromVersionWithUnderscore: String
-                            , newPackageInstallPath: String
-                            , oldPackageInstallPath: String
+                            , newInstallDirName: String
+                            , priorInstallDirName: String
                             , scalaFromVersion: String
                             , scalaToVersion: String
                             , unhandledMetadataDumpDir: String
+                            , parentPath: String
+                            , physicalRootDir: String
                            ): String = {
 
     val template: String = Source.fromFile(migrateConfigFilePath).mkString
@@ -1357,12 +1373,15 @@ Try again.
 
       */
 
+    // val oldPackageInstallPath: String = s"$parentPath/$priorInstallDirName"
+    val newPackageInstallPath: String = s"$parentPath/$newInstallDirName"
+
     val subPairs = Map[String, String]("{ClusterConfigFile}" -> clusterConfigFile
       , "{ApiConfigFile}" -> apiConfigFile
       , "{KamanjaFromVersion}" -> kamanjaFromVersion
       , "{KamanjaFromVersionWithUnderscore}" -> kamanjaFromVersionWithUnderscore
       , "{NewPackageInstallPath}" -> newPackageInstallPath
-      , "{OldPackageInstallPath}" -> oldPackageInstallPath
+      , "{OldPackageInstallPath}" -> physicalRootDir
       , "{ScalaFromVersion}" -> scalaFromVersion
       , "{ScalaToVersion}" -> scalaToVersion
       , "{UnhandledMetadataDumpDir}" -> unhandledMetadataDumpDir)
