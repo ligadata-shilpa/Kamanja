@@ -1155,7 +1155,7 @@ Try again.
     writeCfgFile(ipIdTargPaths.map(quad => quad._1 + "\n" + quad._2 + "\n" + s"$workDir/node${quad._2}.cfg\n" + quad._3 + "\n" + quad._4).mkString("\n"), ipIdCfgTargDataFile)
 
     ipIdTargPaths.foreach(quad => {
-      writeCfgFile(metadataDataStore, s"$workDir/node${quad._2}.cfg")
+      writeCfgFile(s"# Node Information\nnodeId=${quad._2}\n\n#Storing metadata using MetadataStoreType, MetadataSchemaName & MetadataLocation\nMetadataDataStore=$metadataDataStore\n", s"$workDir/node${quad._2}.cfg")
     })
 
 
