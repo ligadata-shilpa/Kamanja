@@ -503,7 +503,12 @@ Try again.
         , ips, ipIdTargPaths, ipPathPairs)
 
     if (upgrade && (physicalRootDir == null || physicalRootDir.isEmpty)){
-      printAndLogError(s"For the given upgrade, not found valid $rootDirPath directory/link on any node.", log)
+      printAndLogError(s"For upgrade, not found valid directory/link at $rootDirPath on any node.", log)
+      printAndLogError(usage, log)
+      log.close
+      sys.exit(1)
+    } else if (install && physicalRootDir != null && !physicalRootDir.isEmpty) {
+      printAndLogError(s"For fresh install, found valid directory/link at $rootDirPath at least on one node.", log)
       printAndLogError(usage, log)
       log.close
       sys.exit(1)
@@ -874,7 +879,7 @@ Try again.
     }
 
     val pathAbsPath = "/tmp/" + pathOutputFlName
-    val physicalRootDir = if (isFileExists(pathAbsPath)) Source.fromFile("/tmp/" + pathOutputFlName).mkString else ""
+    val physicalRootDir = (if (isFileExists(pathAbsPath)) Source.fromFile("/tmp/" + pathOutputFlName).mkString else "").trim
     log.emit("Found PhysicalRootDir:" + physicalRootDir)
 
     var results = ArrayBuffer[ComponentInfo]()
