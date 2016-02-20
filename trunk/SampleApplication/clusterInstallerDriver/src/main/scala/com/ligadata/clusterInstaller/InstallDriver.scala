@@ -40,6 +40,7 @@ import com.ligadata.Utils.Utils
 import org.json4s._
 import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
+import org.json4s.jackson.Serialization
 
 /**
   * This application installs and upgrades Kamanaja.  It does these essential things:
