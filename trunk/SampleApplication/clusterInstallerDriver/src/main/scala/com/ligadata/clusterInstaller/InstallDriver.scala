@@ -489,7 +489,8 @@ Try again.
         , tarballPath
         , ips
         , ipIdTargPaths
-        , ipPathPairs)
+        , ipPathPairs
+        , workingDir)
       if (installOk) {
         /** Do upgrade if necessary */
         if (upgrade) {
