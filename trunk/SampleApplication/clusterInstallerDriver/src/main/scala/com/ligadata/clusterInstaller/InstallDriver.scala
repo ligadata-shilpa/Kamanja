@@ -1366,7 +1366,7 @@ Try again.
       , "UnhandledMetadataDumpDir" -> unhandledMetadataDumpDir)
 
     val substitutionMap: Map[String, String] = subPairs.toMap
-    val varSub = new MapSubstitution(template, substitutionMap)
+    val varSub = new MapSubstitution(template, substitutionMap, logger, log)
     val substitutedTemplate: String = varSub.makeSubstitutions
     substitutedTemplate
   }
@@ -1531,12 +1531,18 @@ class ClusterConfigMap(cfgStr: String, clusterIdOfInterest: String) {
 
 }
 
-class MapSubstitution(template: String, vars: scala.collection.immutable.Map[String, String]) {
+class MapSubstitution(template: String, vars: scala.collection.immutable.Map[String, String], logger: Logger, log: InstallDriverLog) {
+  private def printAndLogDebug(msg: String, log: InstallDriverLog = null): Unit = {
+    logger.debug(msg);
+    if (!logger.isDebugEnabled())
+      println(msg)
+  }
 
   def findAndReplace(m: Matcher)(callback: String => String): String = {
     val sb = new StringBuffer
     while (m.find) {
       val replStr = vars(m.group(1))
+      printAndLogDebug("Replacing Template Varibale from %s to %s".format(m.group(1), replStr))
       m.appendReplacement(sb, callback(replStr))
     }
     m.appendTail(sb)
@@ -1544,9 +1550,9 @@ class MapSubstitution(template: String, vars: scala.collection.immutable.Map[Str
   }
 
   def makeSubstitutions: String = {
-    val m = Pattern.compile("""({[A-Za-z0-9_.-]+})""").matcher(template)
+    printAndLogDebug("Using RegEx:{([A-Za-z0-9_.-]+)}")
+    val m = Pattern.compile("""{([A-Za-z0-9_.-]+)}""").matcher(template)
     findAndReplace(m) { x => x }
   }
-
 }
 
