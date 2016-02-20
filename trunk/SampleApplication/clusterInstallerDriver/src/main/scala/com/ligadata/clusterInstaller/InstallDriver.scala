@@ -848,6 +848,14 @@ Try again.
     return fl.exists
   }
 
+  private def logLogFile(logFile: String): Unit = {
+    if (isFileExists(logFile)) {
+      val logStmts = Source.fromFile(logFile).mkString
+      if (logStmts != null)
+        printAndLogDebug(logStmts)
+    }
+  }
+
   /** ComponentInfo packages essential information about some GetComponent request's results */
   case class ComponentInfo(version: String, status: String, errorMessage: String, componentName: String, invocationNode: String)
 
@@ -890,12 +898,15 @@ Try again.
     printAndLogDebug(s"getComponentsVersion cmd used: $getComponentsVersionCmd", log)
     val getVerCmdRc: Int = (getComponentsVersionCmd #> new File(logFile)).!
     val getVerCmdResults = Source.fromFile(logFile).mkString
+    logLogFile("/tmp/Get-Component.log")
     if (getVerCmdRc != 0) {
       printAndLogError(s"getComponentsVersion has failed...rc = $getVerCmdRc", log)
       printAndLogError(s"Command used: $getComponentsVersionCmd", log)
-      printAndLogError(s"Command report:\n$getVerCmdResults", log)
+      printAndLogError(s"Command report:\n$getVerCmdResults")
       throw new Exception("Failed to get Components Versions. Return code:" + getVerCmdRc)
     }
+
+    printAndLogDebug(s"Command report:\n$getVerCmdResults")
 
     val pathAbsPath = "/tmp/" + pathOutputFlName
     val physicalRootDir = (if (isFileExists(pathAbsPath)) Source.fromFile("/tmp/" + pathOutputFlName).mkString else "").trim
@@ -1217,7 +1228,7 @@ Try again.
     if (installCmdRc != 0) {
       printAndLogError(s"KamanjaClusterInstall has failed...rc = $installCmdRc", log)
       printAndLogError(s"Command used: $installCmd", log)
-      printAndLogError(s"Command report:\n$installCmdResults", log)
+      printAndLogError(s"Command report:\n$installCmdResults")
       printAndLogError(s"Installation is aborted. Consult the log file (${log.logPath}) for details.", log)
       closeLog
       sys.exit(1)
@@ -1228,7 +1239,7 @@ Try again.
         sys.exit(1)
       }
     }
-    printAndLogDebug(s"New installation command result report:\n$installCmdResults", log)
+    printAndLogDebug(s"New installation command result report:\n$installCmdResults")
 
     (installCmdRc == 0)
   }

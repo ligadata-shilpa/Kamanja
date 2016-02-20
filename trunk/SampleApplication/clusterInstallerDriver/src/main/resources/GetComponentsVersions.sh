@@ -69,6 +69,8 @@ done
 echo "componentVersionJarAbsolutePath:$componentVersionJarAbsolutePath, componentVersionJarFileName:$componentVersionJarFileName, remoteNodeIp:$remoteNodeIp, resultsFileAbsolutePath:$resultsFileAbsolutePath"
 echo "resultFileName:$resultFileName, rootDirPath:$rootDirPath, pathOutputFileName:$pathOutputFileName, jsonArg:$jsonArg"
 
+rm -rf /tmp/Get-Component.log
+
 scp -o StrictHostKeyChecking=no "$componentVersionJarAbsolutePath" "$remoteNodeIp:/tmp/$componentVersionJarFileName"
 
 ssh -o StrictHostKeyChecking=no -T $remoteNodeIp  <<-EOF
@@ -84,4 +86,5 @@ EOF
 
 scp -o StrictHostKeyChecking=no "$remoteNodeIp:/tmp/resultFileName_local" "$resultsFileAbsolutePath"
 scp -o StrictHostKeyChecking=no "$remoteNodeIp:/tmp/pathOutputFileName_local" "/tmp/$pathOutputFileName"
+scp -o StrictHostKeyChecking=no "$remoteNodeIp:/tmp/Get-Component.log" "/tmp/Get-Component.log"
 
