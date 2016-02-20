@@ -1007,7 +1007,7 @@ Try again.
     (parentPath, priorInstallDirName, newInstallDirName)
   }
 
-  private def CheckInstallVerificationFile(log: InstallDriverLog, fl: String, ipPathPairs: Array[(String, String)], newInstallDirName: String, physicalRootDir: String): Boolean = {
+  private def CheckInstallVerificationFile(log: InstallDriverLog, fl: String, ipPathPairs: Array[(String, String)], newInstallDirPath: String, physicalRootDir: String): Boolean = {
     val allValues = ArrayBuffer[Array[String]]()
     val allLines = ArrayBuffer[String]()
     logger.info(fl + " contents")
@@ -1036,7 +1036,7 @@ Try again.
     // Starting with index 0
     // #3 & #5 should match
     // #2, #4, #6 should have only Yes
-    // #5 & newInstallDirName should match
+    // #5 & newInstallDirPath should match
     allValues.foreach(av => {
       if (av(3).compare(av(5)) != 0) {
         val errMsg = ("LinkPointingToDir:%s != NewInstallDir:%s from %s".format(av(3), av(5), av.mkString(",")))
@@ -1050,8 +1050,8 @@ Try again.
         logger.error(errMsg)
         isInvalid = true;
       }
-      if (av(5).compare(newInstallDirName) != 0) {
-        val errMsg = ("NewInstallDir:%s != newInstallDirName:%s from %s".format(av(3), newInstallDirName, av.mkString(",")))
+      if (av(5).compare(newInstallDirPath) != 0) {
+        val errMsg = ("NewInstallDir:%s != newInstallDirPath:%s from %s".format(av(3), newInstallDirPath, av.mkString(",")))
         log.emit(errMsg)
         logger.error(errMsg)
         isInvalid = true;
@@ -1195,7 +1195,7 @@ Try again.
       log.close
       sys.exit(1)
     } else {
-      if (!CheckInstallVerificationFile(log, verifyFilePath, ipPathPairs, newInstallDirName, physicalRootDir)) {
+      if (!CheckInstallVerificationFile(log, verifyFilePath, ipPathPairs, newInstallDirPath, physicalRootDir)) {
         printAndLogError("Failed to verify information collected from installation.", log)
         log.close
         sys.exit(1)
