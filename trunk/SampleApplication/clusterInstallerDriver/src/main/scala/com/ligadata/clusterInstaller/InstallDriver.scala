@@ -436,11 +436,24 @@ Try again.
     /** Ascertain what the name of the new installation directory will be, what the name of the prior installation would be
       * (post install), and the parent directory in which both of them will live on each cluster node. Should there be no
       * existing installation, the prior installation value will be null. */
-    val rootDirPath: String = apiConfigMap.getProperty("root_dir") /** use root dir value for the base name */
+    val tmpRootDirPath: String = apiConfigMap.getProperty("root_dir").trim
+
+    /** use root dir value for the base name */
+    if (tmpRootDirPath == null || tmpRootDirPath.size == 0) {
+      printAndLogError("Found ROOT_DIR as empty", log)
+      printAndLogError(usage, log)
+      log.close
+      sys.exit(1)
+    }
+
+    val lastChar = tmpRootDirPath.charAt(tmpRootDirPath.size - 1)
+
+    // Trim / at the end if we have it
+    val rootDirPath = if (lastChar == '/' || lastChar == '\\') tmpRootDirPath.substring(0, tmpRootDirPath.size - 2) else tmpRootDirPath
     val (parentPath, priorInstallDirName, newInstallDirName): (String, String, String) = CreateInstallationNames(log
-        , rootDirPath
-        , fromKamanja
-        , toKamanja)
+      , rootDirPath
+      , fromKamanja
+      , toKamanja)
 
     // FIXME: Note that this check must be done on each cluster node.  This work is implemented in the validateClusterEnvironment method below.
     // Check priorInstallDirName is link or dir. If it is DIR take an action (renaming on all nodes) and LOG the task done.
@@ -468,7 +481,7 @@ Try again.
     /* Collect the node information needed to valididate the implied cluster environment and serve as basic
      * parameters for the new cluster installation */
     val (ips, ipIdTargPaths, ipPathPairs): (Array[String], Array[(String, String, String, String)], Array[(String, String)]) =
-      collectNodeInfo(log, clusterId, clusterNodes, installDir)
+      collectNodeInfo(log, clusterId, clusterNodes, installDir, rootDirPath)
 
     /** Validate that the proposed installation has the requisite characteristics (scala, java, zookeeper, kafka, and hbase) */
     val shouldUpgrade: Boolean = upgrade
@@ -896,7 +909,7 @@ Try again.
 
   /** **************************************************************************************************************/
 
-  def collectNodeInfo(log: InstallDriverLog, clusterId: String, clusterNodes: List[Map[String, Any]], installDir: String)
+  def collectNodeInfo(log: InstallDriverLog, clusterId: String, clusterNodes: List[Map[String, Any]], installDir: String, rootDirPath: String)
   : (Array[String], Array[(String, String, String, String)], Array[(String, String)]) = {
     val configDir: String = s"$installDir/config"
     val ipsSet: Set[String] = clusterNodes.map(info => {
@@ -933,7 +946,7 @@ Try again.
     val uniqueNodePaths: Set[String] = clusterNodes.map(info => {
       val nodeInfo: Map[String, _] = info.asInstanceOf[Map[String, _]]
       val ipAddr: String = nodeInfo.getOrElse("NodeIpAddr", "_bo_gu_us_node_ip_ad_dr").asInstanceOf[String]
-      s"$ipAddr~$configDir"
+      s"$ipAddr~$rootDirPath"
     }).toSet
     val ipPathPairs: Array[(String, String)] = uniqueNodePaths.map(itm => (itm.split('~').head, itm.split('~').last)).toSeq.sorted.toArray
 
