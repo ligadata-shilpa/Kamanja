@@ -91,7 +91,7 @@ public class ScalaHelper {
                 LOG.debug("Got: " + doc);
 
                 if (doc.length() > 0) {
-                    int beginIndex = str.IndexOfString(doc, "Scala code runner version".toLowerCase()));
+                    int beginIndex = str.IndexOfString(doc, "Scala code runner version".toLowerCase());
                     if (beginIndex >= 0) {
                         beginIndex += "Scala code runner version".length();
                     } else {
