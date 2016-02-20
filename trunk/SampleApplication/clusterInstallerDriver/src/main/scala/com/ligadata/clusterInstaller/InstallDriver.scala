@@ -1080,28 +1080,38 @@ Try again.
                      , tarballPath: String
                      , ips: Array[String]
                      , ipIdTargPaths: Array[(String, String, String, String)]
-                     , ipPathPairs: Array[(String, String)]): Boolean = {
+                     , ipPathPairs: Array[(String, String)]
+                     , workDir: String): Boolean = {
 
     // Check for KamanjaClusterInstall.sh existance. And see whether KamanjaClusterInstall.sh has all error handling or not.
     val parentPath: String = physicalRootDir.split('/').dropRight(1).mkString("/")
     val KamanjaClusterInstallPath = s"$clusterInstallerDriversLocation/KamanjaClusterInstall.sh"
     printAndLogDebug("KamanjaClusterInstallPath :" + KamanjaClusterInstallPath)
 
-    if (! isFileExists(KamanjaClusterInstallPath, true, false)) {
+    if (!isFileExists(KamanjaClusterInstallPath, true, false)) {
       printAndLogError(s"KamanjaClusterInstall script is not installed in path:" + clusterInstallerDriversLocation, log)
       printAndLogError(s"Installation is aborted. Consult the log file (${log.logPath}) for details.", log)
       log.close
       sys.exit(1)
     }
 
+
+    val ipDataFile = workDir + "/ipData.txt" // We may need to use workingDir
+    val ipPathDataFile = workDir + "/ipPathData.txt" // We may need to use workingDir
+    val ipIdCfgTargDataFile = workDir + "/ipIdCfgTargData.txt" // We may need to use workingDir
+
+    writeCfgFile(ips.mkString("\n"), ipDataFile)
+    writeCfgFile(ipPathPairs.map(pair => pair._1 + "\n" + pair._2).mkString("\n"), ipPathDataFile)
+    writeCfgFile(ipIdTargPaths.map(quad => quad._1 + "\n" + quad._2 + "\n" + s"$workDir/node${quad._2}.cfg\n" + quad._3 + "\n" + quad._4).mkString("\n"), ipIdCfgTargDataFile)
+
     val dateTime: DateTime = new DateTime
     val fmt: DateTimeFormatter = DateTimeFormat.forPattern("yyyyMMdd_HHmmss")
     val datestr: String = fmt.print(dateTime);
-    val verifyFilePath: String = "/tmp/__KamanjaClusterResults_$datestr"
+    val verifyFilePath: String = s"/tmp/__KamanjaClusterResults_$datestr"
 
     val priorInstallDirPath: String = s"$parentPath/$priorInstallDirName"
     val newInstallDirPath: String = s"$parentPath/$newInstallDirName"
-    val installCmd: Seq[String] = Seq("bash", "-c", s"$clusterInstallerDriversLocation/KamanjaClusterInstall.sh  --MetadataAPIConfig $apiConfigPath --NodeConfigPath $nodeConfigPath --ParentPath $parentPath --PriorInstallDirName $priorInstallDirName --NewInstallDirName $newInstallDirName --TarballPath $tarballPath --ipAddrs $ips --ipIdTargPaths $ipIdTargPaths --ipPathPairs $ipPathPairs --priorInstallDirPath $priorInstallDirPath --newInstallDirPath $newInstallDirPath --installVerificationFile $verifyFilePath ")
+    val installCmd: Seq[String] = Seq("bash", "-c", s"$clusterInstallerDriversLocation/KamanjaClusterInstall.sh  --MetadataAPIConfig $apiConfigPath --NodeConfigPath $nodeConfigPath --ParentPath $parentPath --PriorInstallDirName $priorInstallDirName --NewInstallDirName $newInstallDirName --TarballPath $tarballPath --ipAddrs $ipDataFile --ipIdTargPaths $ipIdCfgTargDataFile --ipPathPairs $ipPathDataFile --priorInstallDirPath $priorInstallDirPath --newInstallDirPath $newInstallDirPath --installVerificationFile $verifyFilePath ")
     val installCmdRep: String = installCmd.mkString(" ")
     printAndLogDebug(s"KamanjaClusterInstall cmd used: \n\n$installCmdRep", log)
 
