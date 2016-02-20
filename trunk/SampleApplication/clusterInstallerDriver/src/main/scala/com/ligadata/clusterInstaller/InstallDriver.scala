@@ -190,9 +190,9 @@ object InstallDriver extends App {
     // returns this form:  file:/tmp/drdigital/KamanjaInstall-1.3.2_2.11/bin/clusterInstallerDriver-1.0
 
     val thisFatJarsLocationAbs :  String  = getClass().getProtectionDomain().getCodeSource().getLocation().toExternalForm()
-    val pathSwizzlePossible : Boolean = (thisFatJarsLocationAbs.contains(':') && thisFatJarsLocationAbs.contains('/))
+    val pathSwizzlePossible : Boolean = (thisFatJarsLocationAbs.contains(':') && thisFatJarsLocationAbs.contains('/'))
     if (! pathSwizzlePossible) {
-        throw new RuntimeException("unable to determine the current path for clusterInstallerDriver executable...")
+        throw new RuntimeException("unable to determine the current path for clusterInstallerDriver executable... \nFoundLocation:" + thisFatJarsLocationAbs)
     }
 
       /** Obtain location of the clusterInstallerDriver fat jar.  Its directory contains the scripts we use to
