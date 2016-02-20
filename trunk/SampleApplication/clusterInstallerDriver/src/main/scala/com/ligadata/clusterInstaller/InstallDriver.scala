@@ -1163,12 +1163,12 @@ Try again.
     val ipPathDataFile = workDir + "/ipPathData.txt" // We may need to use workingDir
     val ipIdCfgTargDataFile = workDir + "/ipIdCfgTargData.txt" // We may need to use workingDir
 
-    writeCfgFile(ips.mkString("\n"), ipDataFile)
-    writeCfgFile(ipPathPairs.map(pair => pair._1 + "\n" + pair._2).mkString("\n"), ipPathDataFile)
-    writeCfgFile(ipIdTargPaths.map(quad => quad._1 + "\n" + quad._2 + "\n" + s"$workDir/node${quad._2}.cfg\n" + quad._3 + "\n" + quad._4).mkString("\n"), ipIdCfgTargDataFile)
+    writeCfgFile(ips.mkString("\n") + "\n", ipDataFile)
+    writeCfgFile(ipPathPairs.map(pair => pair._1 + "\n" + pair._2).mkString("\n") + "\n", ipPathDataFile)
+    writeCfgFile(ipIdTargPaths.map(quad => quad._1 + "\n" + quad._2 + "\n" + s"$workDir/node${quad._2}.cfg\n" + quad._3 + "\n" + quad._4).mkString("\n") + "\n", ipIdCfgTargDataFile)
 
     ipIdTargPaths.foreach(quad => {
-      writeCfgFile(s"# Node Information\nnodeId=${quad._2}\n\n#Storing metadata using MetadataStoreType, MetadataSchemaName & MetadataLocation\nMetadataDataStore=$metadataDataStore\n", s"$workDir/node${quad._2}.cfg")
+      writeCfgFile(s"# Node Information\nnodeId=${quad._2}\n\n#Storing metadata using MetadataStoreType, MetadataSchemaName & MetadataLocation\nMetadataDataStore=$metadataDataStore\n\n", s"$workDir/node${quad._2}.cfg")
     })
 
 

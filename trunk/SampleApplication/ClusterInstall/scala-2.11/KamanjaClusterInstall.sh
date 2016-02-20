@@ -187,6 +187,10 @@ currDir=`echo "$currDirPath" | sed 's/.*\/\(.*\)/\1/g'`
 # Check 4: Is this even close to reasonable?
 echo "tarballPath = $tarballPath"
 echo "kafkaInstallPath = $kafkaInstallPath"
+
+echo "$ipAddrs"
+echo "$ipPathPairs"
+echo "$ipIdTargPaths"
 if [ -n "$tarballPath" -a -n "$kafkaInstallPath" ]; then
     echo 
     echo "Problem: Either install from source or use the tarball specification... just don't do both on same run."
@@ -411,9 +415,12 @@ else
 	# A number of files are produced, all USED TO BE IN WORKING DIR WHEN THEY WERE created by the NodeInfoExtract.  Now
 	# these three files are passed in as full paths from the caller.  NodeInfoExtract is not used.
 	ipFile="$ipAddrs"
-	ipPathPairFile="$ipIdTargPaths"
+	ipPathPairFile="$ipPathPairs"
 	ipIdCfgTargPathQuartetFileName="$ipIdTargPaths"
 fi
+echo "$ipFile"
+echo "$ipPathPairFile"
+echo "$ipIdCfgTargPathQuartetFileName"
 
 
 echo "...creating directories to copy the tarball to the machines in this cluster"
