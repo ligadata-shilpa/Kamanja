@@ -5,8 +5,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import org.apache.log4j.*;
 
 public class JsonUtility {
 
@@ -20,7 +19,7 @@ public class JsonUtility {
     String namespace;
     JSONObject jsonObject;
     JSONParser jsonParser;
-    private Logger LOG = LogManager.getLogger(getClass());
+    private Logger LOG = Logger.getLogger(getClass());
 
     public void JsonParse(String json) throws ParseException {
         // String json =

@@ -12,8 +12,7 @@ import java.io.StringWriter;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.data.Stat;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import org.apache.log4j.*;
 
 public class ZookeeperHelper {
     // IZkConnection connection;
@@ -30,7 +29,7 @@ public class ZookeeperHelper {
     String component;
     StringWriter errors = new StringWriter();
     StringUtility strutl = new StringUtility();
-    private Logger LOG = LogManager.getLogger(getClass());
+    private Logger LOG = Logger.getLogger(getClass());
 
     private Watcher watcher = new Watcher() {
         @Override

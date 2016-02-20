@@ -1,8 +1,7 @@
 package com.ligadata.kamanja.CheckerComponent;
 
 import java.io.StringWriter;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import org.apache.log4j.*;
 
 public class JavaHelper {
     String component;
@@ -12,7 +11,7 @@ public class JavaHelper {
     static String errorMessage = null;
     StringWriter errors = new StringWriter();
     StringUtility strutl = new StringUtility();
-    private Logger LOG = LogManager.getLogger(getClass());
+    private Logger LOG = Logger.getLogger(getClass());
 
     private String CheckJavaVersion() {
         try {

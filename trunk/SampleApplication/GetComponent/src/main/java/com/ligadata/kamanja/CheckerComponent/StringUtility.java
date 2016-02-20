@@ -6,11 +6,10 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.InetAddress;
 // import java.util.concurrent.TimeUnit;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import org.apache.log4j.*;
 
 public class StringUtility {
-	private Logger LOG = LogManager.getLogger(getClass());
+	private Logger LOG = Logger.getLogger(getClass());
 	public StringBuffer ExecuteSHCommandErrStream(String command, long timeoutInMs) {
 		StringBuffer output = new StringBuffer();
 		Process p;
@@ -62,7 +61,6 @@ public class StringUtility {
 			String line = "";
 			while ((line = reader.readLine()) != null) {
 				output.append(line + "\n");
-				LOG.info(line);
 			}
 			// System.out.println(output.toString());
 		} catch (Exception e) {

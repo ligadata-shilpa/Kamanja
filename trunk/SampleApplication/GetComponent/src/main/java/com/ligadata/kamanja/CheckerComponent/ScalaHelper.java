@@ -3,8 +3,7 @@ package com.ligadata.kamanja.CheckerComponent;
 import java.io.StringWriter;
 
 import com.ligadata.kamanja.CheckerComponent.StringUtility;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import org.apache.log4j.*;
 
 public class ScalaHelper {
     String errorMessage = null;
@@ -12,7 +11,7 @@ public class ScalaHelper {
     String status;
     StringWriter errors = new StringWriter();
     StringUtility strutl = new StringUtility();
-    private Logger LOG = LogManager.getLogger(getClass());
+    private Logger LOG = Logger.getLogger(getClass());
 
     public StringWriter getErrors() {
         return errors;

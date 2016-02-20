@@ -8,11 +8,10 @@ import org.apache.zookeeper.KeeperException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.deser.std.ThrowableDeserializer;
 import org.json.simple.JSONArray;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import org.apache.log4j.*;
 
 public class Checker {
-    private Logger LOG = LogManager.getLogger(getClass());
+    private Logger LOG = Logger.getLogger(getClass());
 
     static StringWriter x = new StringWriter();
 

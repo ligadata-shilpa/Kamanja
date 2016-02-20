@@ -5,15 +5,14 @@ import java.util.List;
 
 import kafka.javaapi.TopicMetadataRequest;
 import kafka.javaapi.consumer.SimpleConsumer;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import org.apache.log4j.*;
 
 public class KafkaHelper {
     // KafkaProducer pro = new KafkaProducer();
 
     String errorMessage = null;
     String status = null;
-    private Logger LOG = LogManager.getLogger(getClass());
+    private Logger LOG = Logger.getLogger(getClass());
 
     public void CheckVersion() {
 //		System.out.println(kafka.api.OffsetRequest.CurrentVersion());
