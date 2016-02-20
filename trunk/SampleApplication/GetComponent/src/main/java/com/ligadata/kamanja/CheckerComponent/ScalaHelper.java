@@ -36,7 +36,8 @@ public class ScalaHelper {
             try {
                 /// root/Downloads/scala-2.10.4/bin/scala
                 output = str.ExecuteSHCommandInputStream(command, 2000);
-                scalaLocation = output.toString().trim();
+                scalaLocation = str.replaceSpacesFromString(output.toString());
+                LOG.debug("Got: " + scalaLocation);
             } catch (Exception e) {
                 LOG.error("Failed to get scala location using which scala", e);
             } catch (Throwable e) {
@@ -53,6 +54,7 @@ public class ScalaHelper {
                     /// root/Downloads/scala-2.10.4/bin/scala
                     output0 = str.ExecuteCommandInputStream(command, 2000);
                     doc = str.replaceSpacesFromString(output0.toString().trim().toLowerCase());
+                    LOG.debug("Got: " + doc);
 
                     if (doc.length() > 0) {
                         int beginIndex = str.IndexOfString(doc, "Scala code runner version");
@@ -86,6 +88,7 @@ public class ScalaHelper {
                 /// root/Downloads/scala-2.10.4/bin/scala
                 output1 = str.ExecuteCommandInputStream(command, 2000);
                 doc = str.replaceSpacesFromString(output1.toString().trim().toLowerCase());
+                LOG.debug("Got: " + doc);
 
                 if (doc.length() > 0) {
                     int beginIndex = str.IndexOfString(doc, "Scala code runner version");
