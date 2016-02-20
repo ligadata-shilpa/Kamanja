@@ -286,8 +286,8 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
               }
             })
             respFutures(currentMessage) = response
-            currentMessage += 1
           }
+          currentMessage += 1
         })
 
         // Make sure all messages have been successfuly sent, and resend them if we detected bad messages
