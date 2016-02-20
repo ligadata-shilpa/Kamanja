@@ -52,7 +52,7 @@ public class ScalaHelper {
 
                 try {
                     /// root/Downloads/scala-2.10.4/bin/scala
-                    output0 = str.ExecuteCommandInputStream(command, 2000);
+                    output0 = str.ExecuteSHCommandInputStream(command, 2000);
                     doc = output0.toString().trim().toLowerCase(); //str.replaceSpacesFromString(output0.toString().trim().toLowerCase());
                     LOG.debug("Got: " + doc);
 
@@ -86,7 +86,7 @@ public class ScalaHelper {
                 StringBuffer output1 = new StringBuffer();
                 command = "scala -version 2>&1 | tee  /dev/null";
                 /// root/Downloads/scala-2.10.4/bin/scala
-                output1 = str.ExecuteCommandInputStream(command, 2000);
+                output1 = str.ExecuteSHCommandInputStream(command, 2000);
                 doc = output1.toString().trim().toLowerCase(); // str.replaceSpacesFromString(output1.toString().trim().toLowerCase());
                 LOG.debug("Got: " + doc);
 
