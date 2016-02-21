@@ -229,7 +229,8 @@ Usage:
 
   override def main(args: Array[String]): Unit = {
     if (args.length == 0) {
-      printAndLogError("No arguments provided\n" + usage, log);
+      printAndLogError("No arguments provided", log);
+      printAndLogDebug(usage, log);
       closeLog
       sys.exit(1)
     }
@@ -287,8 +288,8 @@ Usage:
         case "--skipPrerequisites" :: value :: tail =>
           nextOption(map ++ Map('skipPrerequisites -> value), tail)
         case option :: tail =>
-          printAndLogError("Unknown option " + option)
-          printAndLogError(usage)
+          printAndLogError("Unknown option " + option, log)
+          printAndLogDebug(usage, log);
           closeLog
           sys.exit(1)
       }
@@ -324,7 +325,8 @@ Usage:
     // Check whether logDir is valid or not
     if (!isFileExists(logDir, false, true)) {
       // If logDir does not exists
-      printAndLogError(s"logDir:$logDir is not valid path")
+      printAndLogError(s"logDir:$logDir is not valid path", log)
+      printAndLogDebug(usage, log);
       closeLog
       sys.exit(1)
     }
@@ -361,6 +363,7 @@ Try again.
       if (hasNone) {
         printAndLogError(noneTxt + commonTxt, log)
       }
+      printAndLogDebug(usage, log)
       closeLog
       sys.exit(1)
     }
@@ -398,14 +401,14 @@ Try again.
 
     if (!reasonableArguments) {
       val installOrUpgrade: String = if (upgrade) "your upgrade" else "your install"
-      printAndLogError(s"One or more arguments for $installOrUpgrade are not set or have bad values...")
-      if (!apiConfigPathOk) printAndLogError("\tapiConfigPath")
-      if (!nodeConfigPathOk) printAndLogError("\t--apiConfigPath <path to the metadata api properties file that contains the ROOT_DIR property location>")
-      if (!tarballPathOk) printAndLogError("\t--tarballPath <location of the prepared 1.3 installation tarball to be installed>")
-      if (upgrade && !fromKamanjaOk) printAndLogError("\t--fromKamanja <the prior installation version being upgraded... either '1.1' or '1.2'>")
-      if (upgrade && !fromScalaOk) printAndLogError("\t--fromScala <either scala version '2.10' or '2.11'")
-      if (!logDirOk) printAndLogError("\t--logDir <the directory path where the Cluster logs (InstallDriver.yyyyMMdd_HHmmss.log) is to be written ")
-      printAndLogError(usage)
+      printAndLogError(s"One or more arguments for $installOrUpgrade are not set or have bad values...", log)
+      if (!apiConfigPathOk) printAndLogError("\tapiConfigPath", log)
+      if (!nodeConfigPathOk) printAndLogError("\t--apiConfigPath <path to the metadata api properties file that contains the ROOT_DIR property location>", log)
+      if (!tarballPathOk) printAndLogError("\t--tarballPath <location of the prepared 1.3 installation tarball to be installed>", log)
+      if (upgrade && !fromKamanjaOk) printAndLogError("\t--fromKamanja <the prior installation version being upgraded... either '1.1' or '1.2'>", log)
+      if (upgrade && !fromScalaOk) printAndLogError("\t--fromScala <either scala version '2.10' or '2.11'", log)
+      if (!logDirOk) printAndLogError("\t--logDir <the directory path where the Cluster logs (InstallDriver.yyyyMMdd_HHmmss.log) is to be written ", log)
+      printAndLogDebug(usage, log)
       closeLog
       sys.exit(1)
     }
@@ -480,6 +483,7 @@ Try again.
 
     if (cnt > 0) {
       printAndLogError(s"Installation is aborted. Consult the log file (${log.logPath}) for details.", log)
+      printAndLogDebug(usage, log)
       closeLog
       sys.exit(1)
     }
@@ -488,7 +492,7 @@ Try again.
     val apiConfigMap: Properties = mapProperties(log, apiConfigPath)
     if (apiConfigMap == null || apiConfigMap.isEmpty) {
       printAndLogError("The configuration file is messed up... it needs to be lines of key=value pairs", log)
-      printAndLogError(usage, log)
+      printAndLogDebug(usage, log)
       closeLog
       sys.exit(1)
     }
@@ -501,7 +505,7 @@ Try again.
     /** use root dir value for the base name */
     if (tmpRootDirPath == null || tmpRootDirPath.size == 0) {
       printAndLogError("Found ROOT_DIR as empty", log)
-      printAndLogError(usage, log)
+      printAndLogDebug(usage, log)
       closeLog
       sys.exit(1)
     }
@@ -529,11 +533,13 @@ Try again.
     } catch {
       case e: Exception => {
         printAndLogError("Failed to extract cluster information. ErrorMessage:" + e.getMessage, log, true, e)
+        printAndLogDebug(usage, log)
         closeLog
         sys.exit(1)
       }
       case e: Throwable => {
         printAndLogError("Failed to extract cluster information. ErrorMessage:" + e.getMessage, log, true, e)
+        printAndLogDebug(usage, log)
         closeLog
         sys.exit(1)
       }
@@ -546,6 +552,7 @@ Try again.
         printAndLogError(s"There is no cluster info for the supplied clusterId, $clusterId", log)
       else
         printAndLogError(s"There is no cluster info found", log)
+      printAndLogDebug(usage, log)
       closeLog
       sys.exit(1)
     }
@@ -586,12 +593,12 @@ Try again.
 
     if (upgrade && (physicalRootDir == null || physicalRootDir.isEmpty)) {
       printAndLogError(s"For upgrade, not found valid directory/link at $rootDirPath on any node.", log)
-      printAndLogError(usage, log)
+      printAndLogDebug(usage, log)
       closeLog
       sys.exit(1)
     } else if (install && physicalRootDir != null && !physicalRootDir.isEmpty) {
       printAndLogError(s"For fresh install, found valid directory/link at $rootDirPath at least on one node.", log)
-      printAndLogError(usage, log)
+      printAndLogDebug(usage, log)
       closeLog
       sys.exit(1)
     }
@@ -669,6 +676,7 @@ Try again.
             printAndLogDebug(s"Upgrade completed...successful?  ${if (upgradeOk) "yes!" else "no!"}", log)
             if (!upgradeOk) {
               printAndLogError(s"The parameters for the migration are incorrect... aborting installation", log)
+              printAndLogDebug(usage, log)
               closeLog
               sys.exit(1)
             }
@@ -677,11 +685,13 @@ Try again.
           }
         } else {
           printAndLogError("The cluster installation has failed", log)
+          printAndLogDebug(usage, log)
           closeLog
           sys.exit(1)
         }
       } else {
         printAndLogError("The cluster environment is not suitable for an installation or upgrade... look at the prior log entries for more information.  Corrections are needed.", log)
+        printAndLogDebug(usage, log)
         closeLog
         sys.exit(1)
       }
@@ -1115,6 +1125,7 @@ Try again.
     }).toSet
     if (ipsSet.contains("_bo_gu_us_node_ip_ad_dr")) {
       printAndLogError(s"the node ip information for cluster id $clusterId is invalid... aborting", log)
+      printAndLogDebug(usage, log)
       closeLog
       sys.exit(1)
     }
@@ -1134,6 +1145,7 @@ Try again.
     }).size == 0
     if (!ipIdTargPathsReasonable) {
       printAndLogError(s"the node ip addr, node identifier, and/or node roles are bad for cluster id $clusterId ... aborting", log)
+      printAndLogDebug(usage, log)
       closeLog
       sys.exit(1)
     }
@@ -1163,6 +1175,7 @@ Try again.
 
     if (errorDescr != null) {
       printAndLogError(s"The apiConfigPath properties path ($apiConfigPath) could not produce a valid set of properties...aborting", log)
+      printAndLogDebug(usage, log)
       closeLog
       sys.exit(1)
     }
@@ -1372,12 +1385,14 @@ Try again.
       printAndLogError(s"Command used: $installCmd", log)
       printAndLogError(s"Command report:\n$installCmdResults", null, false)
       printAndLogError(s"Installation is aborted. Consult the log file (${log.logPath}) for details.", log)
+      printAndLogDebug(usage, log)
       closeLog
       sys.exit(1)
     } else {
       printAndLogDebug(s"New installation command result report:\n$installCmdResults", null, false)
       if (!CheckInstallVerificationFile(log, verifyFilePath, ipPathPairs, newInstallDirPath, rootDirPath)) {
         printAndLogError("Failed to verify information collected from installation.", log)
+        printAndLogDebug(usage, log)
         closeLog
         sys.exit(1)
       }
@@ -1476,6 +1491,7 @@ Try again.
     }
     if (!upgradeOk) {
       printAndLogError(s"The upgrade has failed.  Please consult the log (${log.logPath}) for guidance as to how to recover from this.", log)
+      printAndLogDebug(usage, log)
       closeLog
       sys.exit(1)
     }
@@ -1574,7 +1590,7 @@ Try again.
     val substitutedTemplate: String = varSub.makeSubstitutions
     if (substitutedTemplate == null || substitutedTemplate.isEmpty) {
       printAndLogError("Failed to substitue valuesin Migration Template", log)
-
+      printAndLogDebug(usage, log)
       closeLog
       sys.exit(1)
     }
