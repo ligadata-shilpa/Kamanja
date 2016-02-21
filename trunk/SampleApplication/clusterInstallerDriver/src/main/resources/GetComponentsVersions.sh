@@ -78,7 +78,7 @@ rm -rf /tmp/Get-Component.log
 
 if [ "$ignoreGetComponentsInfo" == "true" ]; then
 	echo "Ignored GetComponentsInfo -- Ignored copying jar"
-	echo "" > "/tmp/$pathOutputFileName"
+	echo "" > "$resultsFileAbsolutePath"
 else
     scp -o StrictHostKeyChecking=no "$componentVersionJarAbsolutePath" "$remoteNodeIp:/tmp/$componentVersionJarFileName"
 fi
@@ -100,11 +100,11 @@ ssh -o StrictHostKeyChecking=no -T $remoteNodeIp  <<-EOF
 EOF
 
 if [ "$ignoreGetComponentsInfo" == "true" ]; then
-	echo "Ignored GetComponentsInfo -- Ignored getting file $remoteNodeIp:/tmp/${pathOutputFileName}_local to local"
+	echo "Ignored GetComponentsInfo -- Ignored getting file $remoteNodeIp:/tmp/${resultFileName}_local to $resultsFileAbsolutePath"
 else
-    scp -o StrictHostKeyChecking=no "$remoteNodeIp:/tmp/${pathOutputFileName}_local" "/tmp/$pathOutputFileName"
+    scp -o StrictHostKeyChecking=no "$remoteNodeIp:/tmp/${resultFileName}_local" "$resultsFileAbsolutePath"
 fi
 
-scp -o StrictHostKeyChecking=no "$remoteNodeIp:/tmp/${resultFileName}_local" "$resultsFileAbsolutePath"
+    scp -o StrictHostKeyChecking=no "$remoteNodeIp:/tmp/${pathOutputFileName}_local" "/tmp/$pathOutputFileName"
 scp -o StrictHostKeyChecking=no "$remoteNodeIp:/tmp/Get-Component.log" "/tmp/Get-Component.log"
 
