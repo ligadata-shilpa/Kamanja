@@ -319,7 +319,7 @@ Usage:
     val toKamanja: String = "1.3"
 
     // Check whether logDir is valid or not
-    if (isFileExists(logDir, false, true)) {
+    if (!isFileExists(logDir, false, true)) {
       // If logDir does not exists
       printAndLogError(s"logDir:$logDir is not valid path")
       closeLog
@@ -1019,7 +1019,7 @@ Try again.
     printAndLogDebug(s"Command report:\n$getVerCmdResults", null, false)
 
     val pathAbsPath = "/tmp/" + pathOutputFlName
-    val physicalRootDir = (if (isFileExists(pathAbsPath)) Source.fromFile("/tmp/" + pathOutputFlName).mkString else "").trim
+    val physicalRootDir = (if (isFileExists(pathAbsPath)) Source.fromFile(pathAbsPath).mkString else "").trim
     printAndLogDebug("Found PhysicalRootDir:" + physicalRootDir, log)
 
     var results = ArrayBuffer[ComponentInfo]()
