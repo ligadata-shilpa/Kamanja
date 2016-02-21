@@ -69,6 +69,7 @@ import org.json4s.jackson.Serialization
 class InstallDriverLog(val logPath: String) extends StatusCallback {
   var bufferedWriter = new BufferedWriter(new FileWriter(new File(logPath)))
   var isReady: Boolean = true
+  val emptyStrOf5Chars = "     "
 
   /**
     * open the discrete log file if possible.  If open fails (file must not previously exist) false is returned */
@@ -89,9 +90,9 @@ class InstallDriverLog(val logPath: String) extends StatusCallback {
   def emit(msg: String, typ: String): Unit = {
     if (ready) {
       val dateTime: DateTime = new DateTime
-      val fmt: DateTimeFormatter = DateTimeFormat.forPattern("yyyy-MM-dd_HH:mm:ss.SSS")
+      val fmt: DateTimeFormatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS")
       val dateStr: String = fmt.print(dateTime);
-      val prntTyp = (typ + "     ").take(5)
+      val prntTyp = if (typ != null) (typ + emptyStrOf5Chars).take(5) else emptyStrOf5Chars
 
       bufferedWriter.write(dateStr + " - " + prntTyp + " - " + msg + "\n")
       bufferedWriter.flush();
