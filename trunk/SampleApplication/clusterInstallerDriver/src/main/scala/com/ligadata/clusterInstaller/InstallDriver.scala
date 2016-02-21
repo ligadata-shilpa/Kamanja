@@ -275,8 +275,8 @@ Usage:
           nextOption(map ++ Map('toScala -> value), tail)
         case "--workingDir" :: value :: tail =>
           nextOption(map ++ Map('workingDir -> value), tail)
-        case "--migrateTemplate" :: value :: tail =>
-          nextOption(map ++ Map('migrateTemplate -> value), tail)
+        case "--migrationTemplate" :: value :: tail =>
+          nextOption(map ++ Map('migrationTemplate -> value), tail)
         case "--logDir" :: value :: tail =>
           nextOption(map ++ Map('logDir -> value), tail)
         case "--upgrade" :: tail =>
@@ -316,7 +316,7 @@ Usage:
     val clusterId_opt: String = if (options.contains('clusterId)) options.apply('clusterId) else null
     val workingDir: String = (if (options.contains('workingDir)) options.apply('workingDir) else "/tmp").trim // Default /tmp if not given
     val logDir: String = (if (options.contains('logDir)) options.apply('logDir) else "/tmp").trim // Default /tmp if not given
-    val migrateTemplate_opt: String = if (options.contains('migrateTemplate)) options.apply('migrateTemplate) else null
+    val migrateTemplate_opt: String = if (options.contains('migrationTemplate)) options.apply('migrationTemplate) else null
     val skipPrerequisites_opt: String = if (options.contains('skipPrerequisites)) options.apply('skipPrerequisites) else null
     val preRequisitesCheckOnly: Boolean = if (options.contains('preRequisitesCheckOnly)) options.apply('preRequisitesCheckOnly) == "true" else false
 
@@ -855,7 +855,7 @@ Try again.
             scalaIsValid = (info != null && info.version != null && info.version.startsWith(toScala))
             if (!scalaIsValid) {
               if (info != null) {
-                printAndLogError(s"Scala for ip ${info.invocationNode} is invalid... msg=${info.errorMessage}", log)
+                printAndLogError(s"Scala for ip ${info.invocationNode} is not same as $toScala or invalid... msg=${info.errorMessage}", log)
               } else {
                 printAndLogError("Incredible... no scala info", log)
               }
