@@ -50,8 +50,8 @@ while [ "$1" != "" ]; do
         --resultFileName )          shift
                                 resultFileName=$1
                                 ;;
-        --jsonArg )          shift
-                                jsonArg=$1
+        --rootDirPath )          shift
+                                rootDirPath=$1
                                 ;;
         --jsonArg )          shift
                                 jsonArg=$1
@@ -84,6 +84,7 @@ else
 fi
 
 ssh -o StrictHostKeyChecking=no -T $remoteNodeIp  <<-EOF
+    echo "" > /tmp/Get-Component.log
     if [ "$ignoreGetComponentsInfo" == "true" ]; then
         echo "Ignored GetComponentsInfo -- Ignored execution"
     else
