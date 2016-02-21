@@ -826,29 +826,40 @@ Try again.
           * case class ComponentInfo(version: String, status: String, errorMessage: String, componentName: String, invocationNode: String)
           */
         val scalaJavaScores: Array[(Boolean, Boolean)] = componentResults.map(pair => {
+          var scalaIsValid = false
+          var javaIsValid = false
           val (components, physDir): (Array[ComponentInfo], String) = pair
-          val optInfo: Option[ComponentInfo] = components.filter(component => component.componentName.toLowerCase == "scala").headOption
-          val info = optInfo.orNull
-          val scalaIsValid: Boolean = (info != null && info.version != null && info.version.startsWith(toScala))
-          if (!scalaIsValid) {
-            if (info != null) {
-              printAndLogError(s"Scala for ip ${info.invocationNode} is invalid... msg=${info.errorMessage}", log)
-            } else {
-              printAndLogError("Incredible... no scala info", log)
+          if (!skipComponents.contains("scala")) {
+            val optInfo: Option[ComponentInfo] = components.filter(component => component.componentName.toLowerCase == "scala").headOption
+            val info = optInfo.orNull
+            scalaIsValid = (info != null && info.version != null && info.version.startsWith(toScala))
+            if (!scalaIsValid) {
+              if (info != null) {
+                printAndLogError(s"Scala for ip ${info.invocationNode} is invalid... msg=${info.errorMessage}", log)
+              } else {
+                printAndLogError("Incredible... no scala info", log)
+              }
             }
+          } else {
+            scalaIsValid = true
           }
-          val joptInfo: Option[ComponentInfo] = components.filter(component => component.componentName.toLowerCase == "java").headOption
-          val jinfo = joptInfo.orNull
-          val javaIsValid: Boolean = (jinfo != null && jinfo.version != null && (jinfo.version.startsWith("1.7") || jinfo.version.startsWith("1.8")))
-          if (!javaIsValid) {
-            if (info != null) {
-              printAndLogError(s"Java for ip ${info.invocationNode} is invalid...must be java 1.7 or java 1.8 msg=${info.errorMessage}", log)
-            } else {
-              printAndLogError("Incredible... no java info", log)
-            }
-          }
-          (scalaIsValid, javaIsValid)
 
+          if (!skipComponents.contains("java")) {
+            val joptInfo: Option[ComponentInfo] = components.filter(component => component.componentName.toLowerCase == "java").headOption
+            val jinfo = joptInfo.orNull
+            javaIsValid = (jinfo != null && jinfo.version != null && (jinfo.version.startsWith("1.7") || jinfo.version.startsWith("1.8")))
+            if (!javaIsValid) {
+              if (jinfo != null) {
+                printAndLogError(s"Java for ip ${jinfo.invocationNode} is invalid...must be java 1.7 or java 1.8 msg=${jinfo.errorMessage}", log)
+              } else {
+                printAndLogError("Incredible... no java info", log)
+              }
+            }
+          } else {
+            javaIsValid = true
+          }
+
+          (scalaIsValid, javaIsValid)
         })
         val scalaAndJavaAreValidAllNodes: Boolean = scalaJavaScores.filter(langScores => {
           val (scala, java): (Boolean, Boolean) = langScores
@@ -859,35 +870,53 @@ Try again.
           * FIXME: For this test, we assume the status is "ok" when the kafka can be used from the corresponding ip node */
         val zkKafkaHbaseHealthCheck: Array[(Boolean, Boolean, Boolean)] = componentResults.map(pair => {
           val (components, physDir): (Array[ComponentInfo], String) = pair
-          val zkOptInfo: Option[ComponentInfo] = components.filter(component => component.componentName.toLowerCase == "zookeeper").headOption
-          val info = zkOptInfo.orNull
-          val zkIsValid: Boolean = (info != null && info.status != null && info.status.toLowerCase == "success")
-          if (!zkIsValid) {
-            if (info != null) {
-              printAndLogError(s"Zookeeper for ip ${info.invocationNode} is not healthy... msg=${info.errorMessage}", log)
-            } else {
-              printAndLogError("Incredible... no zookeeper info", log)
+          var zkIsValid = false
+          var kafkaIsValid = false
+          var hbaseIsValid = false
+
+          if (!skipComponents.contains("zookeeper")) {
+            val zkOptInfo: Option[ComponentInfo] = components.filter(component => component.componentName.toLowerCase == "zookeeper").headOption
+            val info = zkOptInfo.orNull
+            zkIsValid = (info != null && info.status != null && info.status.toLowerCase == "success")
+            if (!zkIsValid) {
+              if (info != null) {
+                printAndLogError(s"Zookeeper for ip ${info.invocationNode} is not healthy... msg=${info.errorMessage}", log)
+              } else {
+                printAndLogError("Incredible... no zookeeper info", log)
+              }
             }
+          } else {
+            zkIsValid = true
           }
-          val kafkaOptInfo: Option[ComponentInfo] = components.filter(component => component.componentName.toLowerCase == "kafka").headOption
-          val kinfo = kafkaOptInfo.orNull
-          val kafkaIsValid: Boolean = (kinfo != null && kinfo.status != null && kinfo.status.toLowerCase == "success")
-          if (!kafkaIsValid) {
-            if (info != null) {
-              printAndLogError(s"Kafka for ip ${kinfo.invocationNode} is not healthy... msg=${kinfo.errorMessage}", log)
-            } else {
-              printAndLogError("Incredible... no kafka info", log)
+
+          if (!skipComponents.contains("kafka")) {
+            val kafkaOptInfo: Option[ComponentInfo] = components.filter(component => component.componentName.toLowerCase == "kafka").headOption
+            val kinfo = kafkaOptInfo.orNull
+            kafkaIsValid = (kinfo != null && kinfo.status != null && kinfo.status.toLowerCase == "success")
+            if (!kafkaIsValid) {
+              if (kinfo != null) {
+                printAndLogError(s"Kafka for ip ${kinfo.invocationNode} is not healthy... msg=${kinfo.errorMessage}", log)
+              } else {
+                printAndLogError("Incredible... no kafka info", log)
+              }
             }
+          } else {
+            kafkaIsValid = true
           }
-          val hbaseOptInfo: Option[ComponentInfo] = components.filter(component => component.componentName.toLowerCase == "hbase").headOption
-          val hinfo = hbaseOptInfo.orNull
-          val hbaseIsValid: Boolean = (hinfo != null && hinfo.status != null && hinfo.status.toLowerCase == "success")
-          if (!hbaseIsValid) {
-            if (info != null) {
-              printAndLogError(s"HBase for ip ${hinfo.invocationNode} is not healthy... msg=${hinfo.errorMessage}", log)
-            } else {
-              printAndLogError("Incredible... no hbase info", log)
+
+          if (!skipComponents.contains("hbase")) {
+            val hbaseOptInfo: Option[ComponentInfo] = components.filter(component => component.componentName.toLowerCase == "hbase").headOption
+            val hinfo = hbaseOptInfo.orNull
+            hbaseIsValid = (hinfo != null && hinfo.status != null && hinfo.status.toLowerCase == "success")
+            if (!hbaseIsValid) {
+              if (hinfo != null) {
+                printAndLogError(s"HBase for ip ${hinfo.invocationNode} is not healthy... msg=${hinfo.errorMessage}", log)
+              } else {
+                printAndLogError("Incredible... no hbase info", log)
+              }
             }
+          } else {
+            hbaseIsValid = true
           }
 
           (zkIsValid, kafkaIsValid, hbaseIsValid)
@@ -1024,7 +1053,7 @@ Try again.
 
     var results = ArrayBuffer[ComponentInfo]()
 
-    if (! ignoreGetComponentsInfo) {
+    if (!ignoreGetComponentsInfo) {
       try {
         val jsonStr = Source.fromFile(resultsFileAbsolutePath).mkString
         printAndLogDebug("Components Results:" + jsonStr, log)
