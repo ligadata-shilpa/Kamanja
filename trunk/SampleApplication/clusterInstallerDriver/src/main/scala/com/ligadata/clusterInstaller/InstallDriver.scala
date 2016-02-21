@@ -128,19 +128,22 @@ object InstallDriver extends App {
     """
 Usage:
     java -Dlog4j.configurationFile=file:./log4j2.xml -jar <some path> ClusterInstallerDriver_1.3
+            /** Mandatory parameters (always) */
             --{upgrade|install}
             --apiConfig <MetadataAPIConfig.properties file>
-            --clusterConfig <ClusterConig.json file>
+            --clusterConfig <ClusterConfig.json file>
+            --tarballPath <tarball path>
+            --toScala <"2.11" or "2.10">
+            /** Mandatory parameters iff --update chosen */
             [--fromKamanja "1.1"]
             [--fromScala "2.10"]
-            [--toScala "2.11"]
-            --workingDir <workingdirectory>
-            --clusterId <id>
-            --tarballPath <tarball path>
-            --logDir <logDir>
-            --migrationTemplate <MigrationTemplate>
-            --componentVersionScriptAbsolutePath <check component invocation script path>
-            --componentVersionJarAbsolutePath <check component jar path>
+            /** Optional parameters */
+            [--workingDir <workingdirectory>]
+            [--clusterId <id>]
+            [--logDir <logDir>]
+            [--migrationTemplate <MigrationTemplate>]
+            [--skipPrerequisites "scala,java,hbase,kafka,zookeeper,all"]
+            [--prePrequisitesCheckOnly]
 
     where
         --upgrade explicitly specifies that the intent to upgrade an existing cluster installation with the latest release.
@@ -152,37 +155,42 @@ Usage:
             location on all nodes.
         --clusterConfig <ClusterConig.json file> gives the file that describes the node information for the cluster, including the
             IP address of each node, et al.
-        [--fromKamanja] optional for install but required for update..."N.N" where "N.N" can be either "1.1" or "1.2"
-        --workingDir <workingdirectory> a CRUD directory path that should be addressable on every node specified in the cluster configuration
-            file as well as on the machine that this program is executing.  It is used by this program and scripts it invokes to create
-            intermediate files used during the installation process.
-        --clusterId <id> describes the key that should be used to extract the cluster metadata from the node configuration.  Note is possible to
-            have multiple clusters in the metadata.
         --tarballPath <tarball path> this is the location of the Kamanja 1.3 tarball of the installation directory to be installed
             on the cluster.  The tarball is copied to each of the cluster nodes, extracted and installed there.
-        [--fromScala "2.10"] an optional parameter that, for the 1.3 InstallDriver, simply documents the version of Scala that
-            the current 1.1. or 1.2 is using.  The value "2.10" is the only possible value for this release.
-        [--toScala "2.11"] optional for install, required for upgrade, this parameter declares the intent to upgrade the Scala compiler
-            used by the Kamanja engine to 2.11.x instead of using the default 2.10.x compiler.  Note that this controls the compiler
+        --toScala which Scala version the engine is to use. Note that this controls the compiler
             version that the Kamanja message compiler, Kamanja pmml compiler, and other future Kamanja components will use when
             building their respective objects. If the requested version has not been installed on the cluster nodes in question,
             the installation will fail.
-        --migrationTemplate <MigrationTemplate> the path of the migration template to be used.  This file has several configurable values
-            as well as a number of values that are automatically filled with information gleaned from other files in this list
-        --logDir for both Unhandled metadata & logs. If this value is not specified, it defaults to /tmp.  It is highly recommended that you
-          specify a more permanent path so that the installations you do can be documented in a location not prone to being deleted.
-        --componentVersionScriptAbsolutePath the current path of the script that will fetch component information for each cluster node
-        --componentVersionJarAbsolutePath the GetComponent jar that will be installed on each cluster node and called remotely by the supplied
-          componentVersionScript (i.e., from the machine executing the cluster installer driver).
+
+        [--fromKamanja] optional for install but required for update..."N.N" where "N.N" can be either "1.1" or "1.2"
+        [--fromScala "2.10"] an optional parameter that, for the 1.3 InstallDriver, simply documents the version of Scala that
+            the current 1.1. or 1.2 is using.  The value "2.10" is the only possible value for this release.
+
+        [--logDir <logDir>] Logs that contain information for both unhandled metadata, and installation and upgrade processing is stored here.
+            If this value is not specified, it defaults to /tmp.  It is highly recommended that you specify a more permanent path so that the
+            installations you do can be documented in a location not prone to being deleted. By default, the logDir is set to /tmp.
+        [--clusterId <id>] describes the key that should be used to extract the cluster metadata from the node configuration.  If no id is
+            given by default the name will be "kamanjacluster_1_3_2_2_11".
+        [--workingDir <workingdirectory>] a CRUD directory path that should be addressable on each node specified in the cluster configuration
+            file as well as on the machine that this program is executing.  It is used by this program and scripts it invokes to create
+            intermediate files used during the installation process. If not specified, /tmp/work is used.
+       [--migrationTemplate <MigrationTemplate>] A migration template file is required
+            when a migration is to be performed.  If one is not given on the command line, the migration template found in the sibling directory, config,
+            called MigrateConfig_template.json is used.  This file has several configurable values as well as a number of values that are automatically
+            filled with information gleaned from other files in this list.  See the [cluster installation page <web page addr>] for more information
+        [--skipPrerequisites "scala,java,hbase,kafka,zookeeper,all"] if specified, the check for those core requirements will be skipped.  This is a bit
+            risky unless you are confident your cluster is well appointed with the required support software.
+        [--prePrequisitesCheckOnly] When specified, the prerequisite software components are checked, but the installation and possible migration are not done.
+            If both --skipPrerequisites and --preRequisitesOnly are specified, only the prerequisites not given in the skip list will be performed.
+            Processing stops after the checks; installation and upgrade are not done.
 
     The ClusterInstallerDriver_1.3 is the cluster installer driver for Kamanja 1.3.  It is capable of installing a new version of 1.3
     or given the appropriate arguments, installing a new version of Kamanja 1.3 *and* upgrading a 1.1 or 1.2 installation to the 1.3 version.
 
     A log of the installation and optional upgrade is collected in a log file.  This log file is automatically generated and will be found in the
-    workingDir you supply to the installer driver program.  The name will be of the form: InstallDriver.yyyyMMdd_HHmmss.log (e.g.,
-    InstallDriver.20160201_231101.log)  Should issues be encountered (missing components, connectivity issues, etc.) this log should be
-    consulted as to how to proceed.  Using the content of the log as a guide, the administrator will see what fixes must be made to their
-    environment to push on and complete the install.  It will also be the guide for backing off/abandoning an upgrade so a prior Kamanja cluster
+    logDir you supply to the installer driver program.  The name will be of the form: InstallDriver.yyyyMMdd_HHmmss.log (e.g., InstallDriver.20160201_231101.log)  Should issues be encountered (missing components, connectivity issues, etc.) this log should be consulted as to how to proceed.
+
+    Using the content of the log as a guide, the administrator will see what fixes must be made to their environment to push on and complete the install.  It will also be the guide for backing off/abandoning an upgrade so a prior Kamanja cluster
     can be restored.
 
     """
