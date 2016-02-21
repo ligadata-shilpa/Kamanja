@@ -67,7 +67,7 @@ import org.json4s.jackson.Serialization
   */
 
 class InstallDriverLog(val logPath: String) extends StatusCallback {
-  val bufferedWriter = new BufferedWriter(new FileWriter(new File(logPath)))
+  var bufferedWriter = new BufferedWriter(new FileWriter(new File(logPath)))
   var isReady: Boolean = true
 
   /**
@@ -86,13 +86,14 @@ class InstallDriverLog(val logPath: String) extends StatusCallback {
     *
     * @param msg a message of importance
     */
-  def emit(msg: String): Unit = {
+  def emit(msg: String, typ: String): Unit = {
     if (ready) {
       val dateTime: DateTime = new DateTime
       val fmt: DateTimeFormatter = DateTimeFormat.forPattern("yyyy-MM-dd_HH:mm:ss.SSS")
-      val datestr: String = fmt.print(dateTime);
+      val dateStr: String = fmt.print(dateTime);
+      val prntTyp = (typ + "     ").take(5)
 
-      bufferedWriter.write(msg + "\n")
+      bufferedWriter.write(dateStr + " - " + prntTyp + " - " + msg + "\n")
       bufferedWriter.flush();
     }
   }
@@ -103,6 +104,7 @@ class InstallDriverLog(val logPath: String) extends StatusCallback {
   def close: Unit = {
     if (bufferedWriter != null)
       bufferedWriter.close
+    bufferedWriter = null
     isReady = false
   }
 
@@ -113,7 +115,7 @@ class InstallDriverLog(val logPath: String) extends StatusCallback {
     * @param statusText
     */
   def call(statusText: String): Unit = {
-    emit(statusText)
+    emit(statusText, "") // FIXME:: Yet to add the type getting from Migrate
   }
 }
 
@@ -213,7 +215,7 @@ Usage:
     if (printToConsole && !logger.isDebugEnabled())
       println(msg)
     if (log != null)
-      log.emit(msg)
+      log.emit(msg, "DEBUG")
   }
 
   private def printAndLogError(msg: String, log: InstallDriverLog = null, printToConsole: Boolean = true, e: Throwable = null): Unit = {
@@ -221,7 +223,7 @@ Usage:
     if (printToConsole)
       println(msg) // This may go out twice if user set the logger to console
     if (log != null)
-      log.emit(msg)
+      log.emit(msg, "ERROR")
   }
 
   override def main(args: Array[String]): Unit = {
@@ -1756,7 +1758,7 @@ class MapSubstitution(template: String, vars: scala.collection.immutable.Map[Str
     if (!logger.isDebugEnabled())
       println(msg)
     if (log != null)
-      log.emit(msg)
+      log.emit(msg, "DEBUG")
   }
 
   private def printAndLogError(msg: String, log: InstallDriverLog = null, e: Throwable = null): Unit = {
@@ -1766,7 +1768,7 @@ class MapSubstitution(template: String, vars: scala.collection.immutable.Map[Str
       logger.error(msg, e);
     println(msg)
     if (log != null)
-      log.emit(msg)
+      log.emit(msg, "ERROR")
   }
 
   def findAndReplace(m: Matcher)(callback: String => String): String = {
