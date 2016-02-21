@@ -1630,6 +1630,7 @@ class ClusterConfigMap(cfgStr: String, var clusterIdOfInterest: String) {
               val clusterId = cluster.getOrElse("ClusterId", "").toString.trim.toLowerCase
               (clusterId == clusterSought)
             })
+            clusterIdList
           }
 
         val clusterOfInterestMap: Map[String, Any] = if (clusterIdList.size > 0) {
