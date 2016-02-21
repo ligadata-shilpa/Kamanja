@@ -10,7 +10,7 @@ mainClass in assembly := Some("com.ligadata.clusterInstaller.InstallDriver")
 
 assemblyOption in assembly ~= { _.copy(prependShellScript = Some(defaultShellScript)) }
 
-assemblyJarName in assembly := { s"${name.value}-${version.value}" }
+assemblyJarName in assembly := { s"ClusterInstallerDriver-${version.value}" }
 
 // for some reason the merge strategy for non ligadata classes are not working and thus added those conflicting jars in exclusions
 // this may result some run time errors

@@ -143,7 +143,7 @@ Usage:
             [--logDir <logDir>]
             [--migrationTemplate <MigrationTemplate>]
             [--skipPrerequisites "scala,java,hbase,kafka,zookeeper,all"]
-            [--prePrequisitesCheckOnly]
+            [--preRequisitesCheckOnly]
 
     where
         --upgrade explicitly specifies that the intent to upgrade an existing cluster installation with the latest release.
@@ -180,7 +180,7 @@ Usage:
             filled with information gleaned from other files in this list.  See the [cluster installation page <web page addr>] for more information
         [--skipPrerequisites "scala,java,hbase,kafka,zookeeper,all"] if specified, the check for those core requirements will be skipped.  This is a bit
             risky unless you are confident your cluster is well appointed with the required support software.
-        [--prePrequisitesCheckOnly] When specified, the prerequisite software components are checked, but the installation and possible migration are not done.
+        [--preRequisitesCheckOnly] When specified, the prerequisite software components are checked, but the installation and possible migration are not done.
             If both --skipPrerequisites and --preRequisitesOnly are specified, only the prerequisites not given in the skip list will be performed.
             Processing stops after the checks; installation and upgrade are not done.
 
@@ -216,7 +216,7 @@ Usage:
       log.emit(msg)
   }
 
-  private def printAndLogError(msg: String, log: InstallDriverLog = null, printToConsole: Boolean = true): Unit = {
+  private def printAndLogError(msg: String, log: InstallDriverLog = null, printToConsole: Boolean = true, e: Throwable = null): Unit = {
     logger.error(msg);
     if (printToConsole)
       println(msg) // This may go out twice if user set the logger to console
@@ -273,16 +273,16 @@ Usage:
           nextOption(map ++ Map('workingDir -> value), tail)
         case "--migrateTemplate" :: value :: tail =>
           nextOption(map ++ Map('migrateTemplate -> value), tail)
-        case "--componentVersionScriptAbsolutePath" :: value :: tail =>
-          nextOption(map ++ Map('componentVersionScriptAbsolutePath -> value), tail)
-        case "--componentVersionJarAbsolutePath" :: value :: tail =>
-          nextOption(map ++ Map('componentVersionJarAbsolutePath -> value), tail)
         case "--logDir" :: value :: tail =>
           nextOption(map ++ Map('logDir -> value), tail)
         case "--upgrade" :: tail =>
           nextOption(map ++ Map('upgrade -> "true"), tail)
         case "--install" :: tail =>
           nextOption(map ++ Map('install -> "true"), tail)
+        case "--preRequisitesCheckOnly" :: tail =>
+          nextOption(map ++ Map('preRequisitesCheckOnly -> "true"), tail)
+        case "--skipPrerequisites" :: value :: tail =>
+          nextOption(map ++ Map('skipPrerequisites -> value), tail)
         case option :: tail =>
           printAndLogError("Unknown option " + option)
           printAndLogError(usage)
@@ -293,29 +293,47 @@ Usage:
 
     val options = nextOption(Map(), arglist)
 
-    val clusterId: String = if (options.contains('clusterId)) options.apply('clusterId) else null
+    // 1st Set of options
+    // Mandatory options
     val apiConfigPath: String = if (options.contains('apiConfig)) options.apply('apiConfig) else null
     val nodeConfigPath: String = if (options.contains('clusterConfig)) options.apply('clusterConfig) else null
     val tarballPath: String = if (options.contains('tarballPath)) options.apply('tarballPath) else null
-    val fromKamanja: String = if (options.contains('fromKamanja)) options.apply('fromKamanja) else null
-    val fromScala: String = if (options.contains('fromScala)) options.apply('fromScala) else "2.10"
     val toScala: String = if (options.contains('toScala)) options.apply('toScala) else "" // FIXME: Insist to have this
-    val workingDir: String = if (options.contains('workingDir)) options.apply('workingDir) else null
     val upgrade: Boolean = if (options.contains('upgrade)) options.apply('upgrade) == "true" else false
     val install: Boolean = if (options.contains('install)) options.apply('install) == "true" else false
-    val migrateTemplate: String = if (options.contains('migrateTemplate)) options.apply('migrateTemplate) else null
-    val logDir: String = if (options.contains('logDir)) options.apply('logDir) else "/tmp"
-    val componentVersionScriptAbsolutePath: String = if (options.contains('componentVersionScriptAbsolutePath)) options.apply('componentVersionScriptAbsolutePath) else null
-    val componentVersionJarAbsolutePath: String = if (options.contains('componentVersionJarAbsolutePath)) options.apply('componentVersionJarAbsolutePath) else null
+
+    // 2nd Set of Options
+    // Mandatory for Upgrade
+    val fromKamanja: String = if (options.contains('fromKamanja)) options.apply('fromKamanja) else null
+    val fromScala: String = if (options.contains('fromScala)) options.apply('fromScala) else null
+
+    // 3rd Set of Options
+    // Optional
+    val clusterId_opt: String = if (options.contains('clusterId)) options.apply('clusterId) else null
+    val workingDir: String = (if (options.contains('workingDir)) options.apply('workingDir) else "/tmp").trim // Default /tmp if not given
+    val logDir: String = (if (options.contains('logDir)) options.apply('logDir) else "/tmp").trim // Default /tmp if not given
+    val migrateTemplate_opt: String = if (options.contains('migrateTemplate)) options.apply('migrateTemplate) else null
+    val skipPrerequisites_opt: String = if (options.contains('skipPrerequisites)) options.apply('skipPrerequisites) else null
+    val preRequisitesCheckOnly: Boolean = if (options.contains('preRequisitesCheckOnly)) options.apply('preRequisitesCheckOnly) == "true" else false
 
     val toKamanja: String = "1.3"
+
+    // Check whether logDir is valid or not
+    if (isFileExists(logDir, false, true)) {
+      // If logDir does not exists
+      printAndLogError(s"logDir:$logDir is not valid path")
+      closeLog
+      sys.exit(1)
+    }
 
     /** make a log ... Warning... if logDir not supplied, logDir defaults to /tmp */
     val dateTime: DateTime = new DateTime
     val flfmt: DateTimeFormatter = DateTimeFormat.forPattern("yyyyMMdd_HHmmss")
     val datestr: String = flfmt.print(dateTime);
-    openLog(s"$logDir/InstallDriver.$datestr.log")
-    printAndLogDebug(s"The installation log file can be found in $logDir/InstallDriver.$datestr.log")
+
+    val installDriverLogFl = s"$logDir/InstallDriver.$datestr.log"
+    openLog(installDriverLogFl)
+    printAndLogDebug(s"The installation log file can be found in $installDriverLogFl")
 
     val hasBoth = (upgrade && install)
     val hasNone = (!upgrade && !install)
@@ -345,108 +363,115 @@ Try again.
     }
 
     val operation = if (install) "Installing" else if (upgrade) "Upgrading"
-    printAndLogDebug(s"$operation with clusterId:$clusterId, apiConfigPath:$apiConfigPath, nodeConfigPath:$nodeConfigPath, tarballPath:$tarballPath, fromKamanja:$fromKamanja, fromScala:$fromScala, toScala:$toScala, workingDir:$workingDir, migrateTemplate:$migrateTemplate, logDir:$logDir, componentVersionScriptAbsolutePath:$componentVersionScriptAbsolutePath, componentVersionJarAbsolutePath:$componentVersionJarAbsolutePath, toKamanja:$toKamanja")
 
-    val clusterIdOk: Boolean = clusterId != null && clusterId.nonEmpty
+    printAndLogDebug(s"Given Arguments:$operation with clusterId:$clusterId_opt, apiConfigPath:$apiConfigPath, nodeConfigPath:$nodeConfigPath, tarballPath:$tarballPath, fromKamanja:$fromKamanja, fromScala:$fromScala, toScala:$toScala, workingDir:$workingDir, migrateTemplate:$migrateTemplate_opt, logDir:$logDir, toKamanja:$toKamanja, skipPrerequisites:$skipPrerequisites_opt, preRequisitesCheckOnly:$preRequisitesCheckOnly")
+
     val apiConfigPathOk: Boolean = apiConfigPath != null && apiConfigPath.nonEmpty
     val nodeConfigPathOk: Boolean = apiConfigPath != null && apiConfigPath.nonEmpty
     val tarballPathOk: Boolean = tarballPath != null && tarballPath.nonEmpty
-    val fromKamanjaOk: Boolean = (upgrade && fromKamanja != null && fromKamanja.nonEmpty && (fromKamanja == "1.1" || fromKamanja == "1.2")) || install
-    val fromScalaOk: Boolean = (upgrade && fromScala != null && fromScala.nonEmpty && (fromScala == "2.10" || fromKamanja == "2.11")) || install
-    val toScalaOk: Boolean = (upgrade && toScala != null && toScala.nonEmpty && (toScala == "2.10" || toScala == "2.11")) || install
+    val fromKamanjaOk: Boolean = install || (upgrade && fromKamanja != null && fromKamanja.nonEmpty && (fromKamanja == "1.1" || fromKamanja == "1.2"))
+    val fromScalaOk: Boolean = install || (upgrade && fromScala != null && fromScala.nonEmpty && (fromScala == "2.10" || fromKamanja == "2.11"))
+    val toScalaOk: Boolean = (toScala != null && toScala.nonEmpty && (toScala == "2.10" || toScala == "2.11"))
     val workingDirOk: Boolean = workingDir != null && workingDir.nonEmpty
-    val migrateTemplateOk: Boolean = (upgrade && migrateTemplate != null && migrateTemplate.nonEmpty) || install
     val logDirOk: Boolean = logDir != null && logDir.nonEmpty
-    val componentVersionScriptAbsolutePathOk: Boolean = componentVersionScriptAbsolutePath != null && componentVersionScriptAbsolutePath.nonEmpty
-    val componentVersionJarAbsolutePathOk: Boolean = componentVersionJarAbsolutePath != null && componentVersionJarAbsolutePath.nonEmpty
     val reasonableArguments: Boolean =
-      (clusterIdOk
-        && apiConfigPathOk
+      (apiConfigPathOk
         && nodeConfigPathOk
         && tarballPathOk
         && fromKamanjaOk
         && fromScalaOk
         && toScalaOk
         && workingDirOk
-        && migrateTemplateOk
         && logDirOk
-        && componentVersionScriptAbsolutePathOk
-        && componentVersionJarAbsolutePathOk
         )
 
     if (!reasonableArguments) {
       val installOrUpgrade: String = if (upgrade) "your upgrade" else "your install"
       printAndLogError(s"One or more arguments for $installOrUpgrade are not set or have bad values...")
-      if (!clusterIdOk) printAndLogError("\t--clusterId <id matching one in --clusterConfig path>")
       if (!apiConfigPathOk) printAndLogError("\tapiConfigPath")
       if (!nodeConfigPathOk) printAndLogError("\t--apiConfigPath <path to the metadata api properties file that contains the ROOT_DIR property location>")
       if (!tarballPathOk) printAndLogError("\t--tarballPath <location of the prepared 1.3 installation tarball to be installed>")
       if (!fromKamanjaOk) printAndLogError("\t--fromKamanja <the prior installation version being upgraded... either '1.1' or '1.2'>")
       if (!fromScalaOk) printAndLogError("\t--fromScala <either scala version '2.10' or '2.11'")
-      if (!migrateTemplateOk) printAndLogError("\t--migrateTemplate <path to the migration configuration template file to be used for the upgrade>")
       if (!logDirOk) printAndLogError("\t--logDir <the directory path where the Cluster logs (InstallDriver.yyyyMMdd_HHmmss.log) is to be written ")
-      if (!componentVersionScriptAbsolutePathOk) printAndLogError("\t--componentVersionScriptAbsolutePath <the path location where the component version script is found")
-      if (!componentVersionJarAbsolutePathOk) printAndLogError("\t--componentVersionJarAbsolutePath <the location of the component check program is found>")
       printAndLogError(usage)
       closeLog
       sys.exit(1)
     }
 
-    // Validate all arguments
-    // FIXME: Validate here itself
+    val componentVersionScriptAbsolutePath = s"$clusterInstallerDriversLocation/GetComponentsVersions.sh"
+    val componentVersionJarAbsolutePath = s"$clusterInstallerDriversLocation/GetComponent-1.0"
+    val kamanjaClusterInstallPath = s"$clusterInstallerDriversLocation/KamanjaClusterInstall.sh"
+
     var cnt: Int = 0
+
+    /** validate the paths before proceeding */
+    if (!isFileExists(componentVersionScriptAbsolutePath, true)) {
+      printAndLogError("GetComponentsVersions.sh script is not installed in path " + clusterInstallerDriversLocation, log)
+      cnt += 1
+    }
+
+    if (!isFileExists(componentVersionJarAbsolutePath, true)) {
+      printAndLogError("GetComponent-1.0 script is not installed in path " + clusterInstallerDriversLocation, log)
+      cnt += 1
+    }
+
+    if (!isFileExists(kamanjaClusterInstallPath, true)) {
+      printAndLogError("KamanjaClusterInstall.sh script is not installed in path " + clusterInstallerDriversLocation, log)
+      cnt += 1
+    }
+
+    if (!isFileExists(apiConfigPath, true)) {
+      printAndLogError(s"The apiConfigPath ($apiConfigPath) does not exist", log)
+      cnt += 1
+    }
+
+    if (!isFileExists(nodeConfigPath, true)) {
+      printAndLogError(s"The nodeConfigPath ($nodeConfigPath) does not exist", log)
+      cnt += 1
+    }
+
+    if (!isFileExists(tarballPath, true)) {
+      printAndLogError(s"The tarballPath ($tarballPath) does not exist", log)
+      cnt += 1
+    }
+
+    if (!isFileExists(workingDir, false, true)) {
+      printAndLogError(s"The workingDir ($workingDir) does not exist", log)
+      cnt += 1
+    }
+
+    var migrateTemplate: String = null
+    if (upgrade) {
+      var givenTemplate = false
+      migrateTemplate = if (migrateTemplate_opt != null && migrateTemplate_opt.nonEmpty) {
+        givenTemplate = true
+        migrateTemplate_opt.trim
+      } else {
+        s"$clusterInstallerDriversLocation/../config/MigrateConfig_template.json"
+      }
+
+      if (!isFileExists(migrateTemplate, true)) {
+        if (givenTemplate)
+          printAndLogError(s"Given migrateTemplate $migrateTemplate is not valid file", log)
+        else
+          printAndLogError(s"MigrateConfig_template.json is not installed in path ${clusterInstallerDriversLocation}/../config", log)
+        cnt += 1
+      }
+    }
+
+    if (cnt > 0) {
+      printAndLogError(s"Installation is aborted. Consult the log file (${log.logPath}) for details.", log)
+      closeLog
+      sys.exit(1)
+    }
+
+    // Validate all arguments
+    cnt = 0
     val migrationToBeDone: String = if (fromKamanja == "1.1") "1.1=>1.3" else if (fromKamanja == "1.2") "1.2=>1.3" else "hmmm"
     if (migrationToBeDone == "hmmm") {
       printAndLogError(s"The fromKamanja ($fromKamanja) is not valid with this release... the value must be 1.1 or 1.2", log)
       cnt += 1
-    }
-
-    /** validate the paths before proceeding */
-    val apiCfgExists: Boolean = new File(apiConfigPath).exists
-    val nodeConfigPathExists: Boolean = new File(nodeConfigPath).exists
-    val tarballPathExists: Boolean = new File(tarballPath).exists
-    val workingDirExists: Boolean = new File(workingDir).exists
-    val migrateTemplateExists: Boolean = new File(migrateTemplate).exists
-    val logDirExists: Boolean = new File(logDir).exists
-    val componentVersionScriptAbsolutePathExists: Boolean = new File(componentVersionScriptAbsolutePath).exists
-    val componentVersionJarAbsolutePathExists: Boolean = new File(componentVersionJarAbsolutePath).exists
-
-    if (!apiCfgExists) {
-      printAndLogError(s"The apiConfigPath ($apiConfigPath) does not exist", log)
-      cnt += 1
-    }
-    if (!nodeConfigPathExists) {
-      printAndLogError(s"The nodeConfigPath ($nodeConfigPath) does not exist", log)
-      cnt += 1
-    }
-    if (!tarballPathExists) {
-      printAndLogError(s"The tarballPath ($tarballPath) does not exist", log)
-      cnt += 1
-    }
-    if (!workingDirExists) {
-      printAndLogError(s"The workingDir ($workingDir) does not exist", log)
-      cnt += 1
-    }
-    if (!migrateTemplateExists) {
-      printAndLogError(s"The migrateTemplate ($migrateTemplate) does not exist", log)
-      cnt += 1
-    }
-    if (!logDirExists) {
-      printAndLogError(s"The logDir ($logDir) does not exist", log)
-      cnt += 1
-    }
-    if (!componentVersionScriptAbsolutePathExists) {
-      printAndLogError(s"The componentVersionScriptAbsolutePath ($componentVersionScriptAbsolutePath) does not exist", log)
-      cnt += 1
-    }
-    if (!componentVersionJarAbsolutePathExists) {
-      printAndLogError(s"The componentVersionJarAbsolutePath ($componentVersionJarAbsolutePath) does not exist", log)
-      cnt += 1
-    }
-    if (cnt > 0) {
-      printAndLogError("Please fix your arguments and try again.", log)
-      closeLog
-      sys.exit(1)
     }
 
     /** Convert the content of the property file into a map.  If the path is bad, an empty map is returned and processing stops */
@@ -488,14 +513,35 @@ Try again.
     val installDir: String = s"$parentPath/$newInstallDirName"
 
     val clusterConfig: String = Source.fromFile(nodeConfigPath).mkString
-    val clusterConfigMap: ClusterConfigMap = new ClusterConfigMap(clusterConfig, clusterId)
+    var clusterConfigMap: ClusterConfigMap = null
+    try {
+      clusterConfigMap = new ClusterConfigMap(clusterConfig, clusterId_opt)
+    } catch {
+      case e: Exception => {
+        printAndLogError("Failed to extract cluster information. ErrorMessage:" + e.getMessage, log, true, e)
+        closeLog
+        sys.exit(1)
+      }
+      case e: Throwable => {
+        printAndLogError("Failed to extract cluster information. ErrorMessage:" + e.getMessage, log, true, e)
+        closeLog
+        sys.exit(1)
+      }
+    }
 
     val clusterMap: Map[String, Any] = clusterConfigMap.ClusterMap
-    if (clusterMap.isEmpty) {
-      printAndLogError(s"There is no cluster info for the supplied clusterId, $clusterId", log)
+    var clusterId = clusterConfigMap.clusterIdOfInterest
+    if (clusterMap == null || clusterMap.isEmpty) {
+      if (clusterId != null)
+        printAndLogError(s"There is no cluster info for the supplied clusterId, $clusterId", log)
+      else
+        printAndLogError(s"There is no cluster info found", log)
       closeLog
       sys.exit(1)
     }
+
+    printAndLogDebug("Processing cluster information for clusterId:" + clusterId, log)
+
     /** Create the cluster config map and pull out the top level objects... either Maps or Lists of Maps */
     val clusterIdFromConfig: String = clusterConfigMap.ClusterId
     val dataStore: Map[String, Any] = clusterConfigMap.DataStore
@@ -526,7 +572,7 @@ Try again.
         , parentPath
         , priorInstallDirName
         , newInstallDirName
-        , ips, ipIdTargPaths, ipPathPairs)
+        , ips, ipIdTargPaths, ipPathPairs, skipPrerequisites_opt)
 
     if (upgrade && (physicalRootDir == null || physicalRootDir.isEmpty)) {
       printAndLogError(s"For upgrade, not found valid directory/link at $rootDirPath on any node.", log)
@@ -540,96 +586,101 @@ Try again.
       sys.exit(1)
     }
 
-    if (proposedClusterEnvironmentIsSuitable) {
-      /** if so... */
+    if (!preRequisitesCheckOnly) {
+      if (proposedClusterEnvironmentIsSuitable) {
+        /** if so... */
 
-      val metadataDataStore: String =
-        if (apiConfigMap.getProperty("METADATA_DATASTORE".toLowerCase()) != null) {
-          apiConfigMap.getProperty("METADATA_DATASTORE".toLowerCase())
-        } else if (apiConfigMap.getProperty("MetadataDataStore".toLowerCase()) != null) {
-          apiConfigMap.getProperty("MetadataDataStore".toLowerCase())
-        } else {
-          val dbType = apiConfigMap.getProperty("DATABASE".toLowerCase())
-          val dbHost = if (apiConfigMap.getProperty("DATABASE_HOST".toLowerCase()) != null) apiConfigMap.getProperty("DATABASE_HOST".toLowerCase()) else apiConfigMap.getProperty("DATABASE_LOCATION".toLowerCase())
-          val dbSchema = apiConfigMap.getProperty("DATABASE_SCHEMA".toLowerCase())
-          val dbAdapterSpecific = apiConfigMap.getProperty("ADAPTER_SPECIFIC_CONFIG".toLowerCase())
+        val metadataDataStore: String =
+          if (apiConfigMap.getProperty("METADATA_DATASTORE".toLowerCase()) != null) {
+            apiConfigMap.getProperty("METADATA_DATASTORE".toLowerCase())
+          } else if (apiConfigMap.getProperty("MetadataDataStore".toLowerCase()) != null) {
+            apiConfigMap.getProperty("MetadataDataStore".toLowerCase())
+          } else {
+            val dbType = apiConfigMap.getProperty("DATABASE".toLowerCase())
+            val dbHost = if (apiConfigMap.getProperty("DATABASE_HOST".toLowerCase()) != null) apiConfigMap.getProperty("DATABASE_HOST".toLowerCase()) else apiConfigMap.getProperty("DATABASE_LOCATION".toLowerCase())
+            val dbSchema = apiConfigMap.getProperty("DATABASE_SCHEMA".toLowerCase())
+            val dbAdapterSpecific = apiConfigMap.getProperty("ADAPTER_SPECIFIC_CONFIG".toLowerCase())
 
-          val dbType1 = if (dbType == null) "" else dbType.trim
-          val dbHost1 = if (dbHost == null) "" else dbHost.trim
-          val dbSchema1 = if (dbSchema == null) "" else dbSchema.trim
+            val dbType1 = if (dbType == null) "" else dbType.trim
+            val dbHost1 = if (dbHost == null) "" else dbHost.trim
+            val dbSchema1 = if (dbSchema == null) "" else dbSchema.trim
 
-          val jsonStr =
-            if (dbAdapterSpecific != null) {
-              val json = ("StoreType" -> dbType1) ~
-                ("SchemaName" -> dbSchema1) ~
-                ("Location" -> dbHost1) ~
-                ("AdapterSpecificConfig" -> dbAdapterSpecific)
-              pretty(render(json))
-            } else {
-              val json = ("StoreType" -> dbType1) ~
-                ("SchemaName" -> dbSchema1) ~
-                ("Location" -> dbHost1)
-              pretty(render(json))
+            val jsonStr =
+              if (dbAdapterSpecific != null) {
+                val json = ("StoreType" -> dbType1) ~
+                  ("SchemaName" -> dbSchema1) ~
+                  ("Location" -> dbHost1) ~
+                  ("AdapterSpecificConfig" -> dbAdapterSpecific)
+                pretty(render(json))
+              } else {
+                val json = ("StoreType" -> dbType1) ~
+                  ("SchemaName" -> dbSchema1) ~
+                  ("Location" -> dbHost1)
+                pretty(render(json))
+              }
+            jsonStr
+          }
+
+        /** Install the new installation */
+        val nodes: String = ips.mkString(",")
+        printAndLogDebug(s"Begin cluster installation... installation found on each cluster node(any {$nodes}) at $installDir", log)
+        val installOk: Boolean = installCluster(log
+          , kamanjaClusterInstallPath
+          , rootDirPath
+          , apiConfigPath
+          , nodeConfigPath
+          , priorInstallDirName
+          , newInstallDirName
+          , tarballPath
+          , ips
+          , ipIdTargPaths
+          , ipPathPairs
+          , workingDir
+          , clusterId
+          , metadataDataStore)
+        if (installOk) {
+          /** Do upgrade if necessary */
+          if (upgrade) {
+            printAndLogDebug(s"Upgrade required... upgrade from version $fromKamanja", log)
+            val upgradeOk: Boolean = doMigration(log
+              , apiConfigPath
+              , apiConfigMap
+              , nodeConfigPath
+              , migrateTemplate
+              , logDir
+              , fromKamanja
+              , fromScala
+              , toScala
+              , parentPath
+              , priorInstallDirName
+              , newInstallDirName
+              , physicalRootDir
+              , rootDirPath)
+            printAndLogDebug(s"Upgrade completed...successful?  ${if (upgradeOk) "yes!" else "no!"}", log)
+            if (!upgradeOk) {
+              printAndLogError(s"The parameters for the migration are incorrect... aborting installation", log)
+              closeLog
+              sys.exit(1)
             }
-          jsonStr
-        }
-
-      /** Install the new installation */
-      val nodes: String = ips.mkString(",")
-      printAndLogDebug(s"Begin cluster installation... installation found on each cluster node(any {$nodes}) at $installDir", log)
-      val installOk: Boolean = installCluster(log
-        , clusterInstallerDriversLocation
-        , rootDirPath
-        , apiConfigPath
-        , nodeConfigPath
-        , priorInstallDirName
-        , newInstallDirName
-        , tarballPath
-        , ips
-        , ipIdTargPaths
-        , ipPathPairs
-        , workingDir
-        , clusterId
-        , metadataDataStore)
-      if (installOk) {
-        /** Do upgrade if necessary */
-        if (upgrade) {
-          printAndLogDebug(s"Upgrade required... upgrade from version $fromKamanja", log)
-          val upgradeOk: Boolean = doMigration(log
-            , apiConfigPath
-            , apiConfigMap
-            , nodeConfigPath
-            , migrateTemplate
-            , logDir
-            , fromKamanja
-            , fromScala
-            , toScala
-            , parentPath
-            , priorInstallDirName
-            , newInstallDirName
-            , physicalRootDir
-            , rootDirPath)
-          printAndLogDebug(s"Upgrade completed...successful?  ${if (upgradeOk) "yes!" else "no!"}", log)
-          if (!upgradeOk) {
-            printAndLogError(s"The parameters for the migration are incorrect... aborting installation", log)
-            closeLog
-            sys.exit(1)
+          } else {
+            printAndLogDebug("Migration not required... new installation was selected", log)
           }
         } else {
-          printAndLogDebug("Migration not required... new installation was selected", log)
+          printAndLogError("The cluster installation has failed", log)
+          closeLog
+          sys.exit(1)
         }
       } else {
-        printAndLogError("The cluster installation has failed", log)
+        printAndLogError("The cluster environment is not suitable for an installation or upgrade... look at the prior log entries for more information.  Corrections are needed.", log)
         closeLog
         sys.exit(1)
       }
+
+      printAndLogDebug("Processing is Complete!", log)
     } else {
-      printAndLogError("The cluster environment is not suitable for an installation or upgrade... look at the prior log entries for more information.  Corrections are needed.", log)
-      closeLog
-      sys.exit(1)
+      printAndLogDebug("Requested to check preRequisitesCheckOnly.\nProcessing is Complete!", log)
     }
 
-    printAndLogDebug("Processing is Complete!", log)
     closeLog
   }
 
@@ -678,7 +729,8 @@ Try again.
                                  , newInstallDirName: String
                                  , ips: Array[String]
                                  , ipIdTargPaths: Array[(String, String, String, String)]
-                                 , ipPathPairs: Array[(String, String)]): (Boolean, String) = {
+                                 , ipPathPairs: Array[(String, String)]
+                                 , skipPrerequisites_opt: String): (Boolean, String) = {
 
     var phyDirLast: String = null
     val rootDirPath: String = apiConfigMap.getProperty("root_dir")
@@ -688,9 +740,61 @@ Try again.
       val kafkaConnections: String = clusterConfigMap.KafkaConnections
       val zkConnections: String = clusterConfigMap.ZooKeeperConnectionString
 
-      val jsonParm: String =
-        """[{ "component" : "zookeeper", "hostslist" : "%s" }, { "component" : "kafka", "hostslist" : "%s" }, %s, { "component" : "scala", "hostslist" : "localhost" }, { "component" : "java", "hostslist" : "localhost" }]""".stripMargin.format(zkConnections, kafkaConnections, hbaseConnections)
+      var skipComponents = Set[String]()
+      var skipedAll = false
 
+      val jsonParm: String =
+        if (skipPrerequisites_opt != null && skipPrerequisites_opt.nonEmpty) {
+          skipComponents = skipPrerequisites_opt.split(",").map(s => s.trim.toLowerCase()).filter(s => s.size > 0).toSet
+          if (!skipComponents.contains("all")) {
+            val sb = new StringBuilder()
+            sb.append("[")
+            var addedComp = 0
+            if (!skipComponents.contains("zookeeper")) {
+              if (addedComp > 0)
+                sb.append(",")
+              sb.append("""{ "component" : "zookeeper", "hostslist" : "%s" }""".stripMargin.format(zkConnections))
+              addedComp += 1
+            }
+            if (!skipComponents.contains("kafka")) {
+              if (addedComp > 0)
+                sb.append(",")
+              sb.append("""{ "component" : "kafka", "hostslist" : "%s" }""".stripMargin.format(kafkaConnections))
+              addedComp += 1
+            }
+            if (addedComp > 0)
+              sb.append(",")
+            if ((!skipComponents.contains("hbase")) && (!skipComponents.contains("storage"))) {
+              sb.append(hbaseConnections)
+              addedComp += 1
+            }
+            if (!skipComponents.contains("scala")) {
+              if (addedComp > 0)
+                sb.append(",")
+              sb.append("""{ "component" : "scala", "hostslist" : "localhost" }""")
+              addedComp += 1
+            }
+            if (!skipComponents.contains("java")) {
+              if (addedComp > 0)
+                sb.append(",")
+              sb.append("""{ "component" : "java", "hostslist" : "localhost" }""")
+              addedComp += 1
+            }
+            if (addedComp > 0) {
+              sb.append("]")
+              sb.toString()
+            }
+            else {
+              skipedAll = true
+              "[]"
+            }
+          } else {
+            skipedAll = true
+            "[]"
+          }
+        } else {
+          """[{ "component" : "zookeeper", "hostslist" : "%s" }, { "component" : "kafka", "hostslist" : "%s" }, %s, { "component" : "scala", "hostslist" : "localhost" }, { "component" : "java", "hostslist" : "localhost" }]""".stripMargin.format(zkConnections, kafkaConnections, hbaseConnections)
+        }
 
       /**
         * Obtain the component information found on the cluster nodes.  There is a ComponentInfo created for each
@@ -706,97 +810,104 @@ Try again.
             , componentVersionJarAbsolutePath
             , ip
             , resultsFileAbsolutePath
-            , jsonParm)
+            , jsonParm, skipedAll)
 
         if (physicalRootDir != null && physicalRootDir.length > 0) phyDirLast = physicalRootDir
         (componentInfos, physicalRootDir)
       })
 
-      /** Let's look at the component results. comparing with expectations
-        * case class ComponentInfo(version: String, status: String, errorMessage: String, componentName: String, invocationNode: String)
-        */
-      val scalaJavaScores: Array[(Boolean, Boolean)] = componentResults.map(pair => {
-        val (components, physDir): (Array[ComponentInfo], String) = pair
-        val optInfo: Option[ComponentInfo] = components.filter(component => component.componentName.toLowerCase == "scala").headOption
-        val info = optInfo.orNull
-        val scalaIsValid: Boolean = (info != null && info.version != null && info.version.startsWith(toScala))
-        if (!scalaIsValid) {
-          if (info != null) {
-            printAndLogError(s"Scala for ip ${info.invocationNode} is invalid... msg=${info.errorMessage}", log)
-          } else {
-            printAndLogError("Incredible... no scala info", log)
+      if (skipedAll) {
+        val uniquePhysDirs: Set[String] = componentResults.map(pair => pair._2).filter(p => p != null).toSet
+        if (uniquePhysDirs.size != 1)
+          printAndLogError(s"Found different targetPaths ($uniquePhysDirs) on nodes. So it is not same path on all nodes", log)
+        (uniquePhysDirs.size == 1)
+      } else {
+        /** Let's look at the component results. comparing with expectations
+          * case class ComponentInfo(version: String, status: String, errorMessage: String, componentName: String, invocationNode: String)
+          */
+        val scalaJavaScores: Array[(Boolean, Boolean)] = componentResults.map(pair => {
+          val (components, physDir): (Array[ComponentInfo], String) = pair
+          val optInfo: Option[ComponentInfo] = components.filter(component => component.componentName.toLowerCase == "scala").headOption
+          val info = optInfo.orNull
+          val scalaIsValid: Boolean = (info != null && info.version != null && info.version.startsWith(toScala))
+          if (!scalaIsValid) {
+            if (info != null) {
+              printAndLogError(s"Scala for ip ${info.invocationNode} is invalid... msg=${info.errorMessage}", log)
+            } else {
+              printAndLogError("Incredible... no scala info", log)
+            }
           }
-        }
-        val joptInfo: Option[ComponentInfo] = components.filter(component => component.componentName.toLowerCase == "java").headOption
-        val jinfo = joptInfo.orNull
-        val javaIsValid: Boolean = (jinfo != null && jinfo.version != null && (jinfo.version.startsWith("1.7") || jinfo.version.startsWith("1.8")))
-        if (!javaIsValid) {
-          if (info != null) {
-            printAndLogError(s"Java for ip ${info.invocationNode} is invalid...must be java 1.7 or java 1.8 msg=${info.errorMessage}", log)
-          } else {
-            printAndLogError("Incredible... no java info", log)
+          val joptInfo: Option[ComponentInfo] = components.filter(component => component.componentName.toLowerCase == "java").headOption
+          val jinfo = joptInfo.orNull
+          val javaIsValid: Boolean = (jinfo != null && jinfo.version != null && (jinfo.version.startsWith("1.7") || jinfo.version.startsWith("1.8")))
+          if (!javaIsValid) {
+            if (info != null) {
+              printAndLogError(s"Java for ip ${info.invocationNode} is invalid...must be java 1.7 or java 1.8 msg=${info.errorMessage}", log)
+            } else {
+              printAndLogError("Incredible... no java info", log)
+            }
           }
-        }
-        (scalaIsValid, javaIsValid)
+          (scalaIsValid, javaIsValid)
 
-      })
-      val scalaAndJavaAreValidAllNodes: Boolean = scalaJavaScores.filter(langScores => {
-        val (scala, java): (Boolean, Boolean) = langScores
-        (scala && java)
-      }).size == componentResults.size
+        })
+        val scalaAndJavaAreValidAllNodes: Boolean = scalaJavaScores.filter(langScores => {
+          val (scala, java): (Boolean, Boolean) = langScores
+          (scala && java)
+        }).size == componentResults.size
 
-      /** Test if the zookeeper, kafka and hbase are healthy and suitable for use
-        * FIXME: For this test, we assume the status is "ok" when the kafka can be used from the corresponding ip node */
-      val zkKafkaHbaseHealthCheck: Array[(Boolean, Boolean, Boolean)] = componentResults.map(pair => {
-        val (components, physDir): (Array[ComponentInfo], String) = pair
-        val zkOptInfo: Option[ComponentInfo] = components.filter(component => component.componentName.toLowerCase == "zookeeper").headOption
-        val info = zkOptInfo.orNull
-        val zkIsValid: Boolean = (info != null && info.status != null && info.status.toLowerCase == "success")
-        if (!zkIsValid) {
-          if (info != null) {
-            printAndLogError(s"Zookeeper for ip ${info.invocationNode} is not healthy... msg=${info.errorMessage}", log)
-          } else {
-            printAndLogError("Incredible... no zookeeper info", log)
+        /** Test if the zookeeper, kafka and hbase are healthy and suitable for use
+          * FIXME: For this test, we assume the status is "ok" when the kafka can be used from the corresponding ip node */
+        val zkKafkaHbaseHealthCheck: Array[(Boolean, Boolean, Boolean)] = componentResults.map(pair => {
+          val (components, physDir): (Array[ComponentInfo], String) = pair
+          val zkOptInfo: Option[ComponentInfo] = components.filter(component => component.componentName.toLowerCase == "zookeeper").headOption
+          val info = zkOptInfo.orNull
+          val zkIsValid: Boolean = (info != null && info.status != null && info.status.toLowerCase == "success")
+          if (!zkIsValid) {
+            if (info != null) {
+              printAndLogError(s"Zookeeper for ip ${info.invocationNode} is not healthy... msg=${info.errorMessage}", log)
+            } else {
+              printAndLogError("Incredible... no zookeeper info", log)
+            }
           }
-        }
-        val kafkaOptInfo: Option[ComponentInfo] = components.filter(component => component.componentName.toLowerCase == "kafka").headOption
-        val kinfo = kafkaOptInfo.orNull
-        val kafkaIsValid: Boolean = (kinfo != null && kinfo.status != null && kinfo.status.toLowerCase == "success")
-        if (!kafkaIsValid) {
-          if (info != null) {
-            printAndLogError(s"Kafka for ip ${kinfo.invocationNode} is not healthy... msg=${kinfo.errorMessage}", log)
-          } else {
-            printAndLogError("Incredible... no kafka info", log)
+          val kafkaOptInfo: Option[ComponentInfo] = components.filter(component => component.componentName.toLowerCase == "kafka").headOption
+          val kinfo = kafkaOptInfo.orNull
+          val kafkaIsValid: Boolean = (kinfo != null && kinfo.status != null && kinfo.status.toLowerCase == "success")
+          if (!kafkaIsValid) {
+            if (info != null) {
+              printAndLogError(s"Kafka for ip ${kinfo.invocationNode} is not healthy... msg=${kinfo.errorMessage}", log)
+            } else {
+              printAndLogError("Incredible... no kafka info", log)
+            }
           }
-        }
-        val hbaseOptInfo: Option[ComponentInfo] = components.filter(component => component.componentName.toLowerCase == "hbase").headOption
-        val hinfo = hbaseOptInfo.orNull
-        val hbaseIsValid: Boolean = (hinfo != null && hinfo.status != null && hinfo.status.toLowerCase == "success")
-        if (!hbaseIsValid) {
-          if (info != null) {
-            printAndLogError(s"HBase for ip ${hinfo.invocationNode} is not healthy... msg=${hinfo.errorMessage}", log)
-          } else {
-            printAndLogError("Incredible... no hbase info", log)
+          val hbaseOptInfo: Option[ComponentInfo] = components.filter(component => component.componentName.toLowerCase == "hbase").headOption
+          val hinfo = hbaseOptInfo.orNull
+          val hbaseIsValid: Boolean = (hinfo != null && hinfo.status != null && hinfo.status.toLowerCase == "success")
+          if (!hbaseIsValid) {
+            if (info != null) {
+              printAndLogError(s"HBase for ip ${hinfo.invocationNode} is not healthy... msg=${hinfo.errorMessage}", log)
+            } else {
+              printAndLogError("Incredible... no hbase info", log)
+            }
           }
-        }
 
-        (zkIsValid, kafkaIsValid, hbaseIsValid)
-      })
+          (zkIsValid, kafkaIsValid, hbaseIsValid)
+        })
 
-      val zkKafkaHbaseHealthyForAllNodes: Boolean = zkKafkaHbaseHealthCheck.filter(healthTriple => {
-        val (zk, kafka, hbase): (Boolean, Boolean, Boolean) = healthTriple
-        (zk && kafka && hbase)
-      }).size == componentResults.size
+        val zkKafkaHbaseHealthyForAllNodes: Boolean = zkKafkaHbaseHealthCheck.filter(healthTriple => {
+          val (zk, kafka, hbase): (Boolean, Boolean, Boolean) = healthTriple
+          (zk && kafka && hbase)
+        }).size == componentResults.size
 
-      /** Examine the physical directories on each cluster node. The physical directory returned for all of them
-        * should be the same path, right?
-        */
-      val uniquePhysDirs: Set[String] = componentResults.map(pair => pair._2).toSet
-      val physDirsAllHaveSamePath: Boolean = (uniquePhysDirs.size == 1)
+        /** Examine the physical directories on each cluster node. The physical directory returned for all of them
+          * should be the same path, right?
+          */
+        val uniquePhysDirs: Set[String] = componentResults.map(pair => pair._2).filter(p => p != null).toSet
+        if (uniquePhysDirs.size != 1)
+          printAndLogError(s"Found different targetPaths ($uniquePhysDirs) on nodes. So it is not same path on all nodes", log)
+        val physDirsAllHaveSamePath: Boolean = (uniquePhysDirs.size == 1)
 
-      (scalaAndJavaAreValidAllNodes && zkKafkaHbaseHealthyForAllNodes && physDirsAllHaveSamePath)
-
-
+        (scalaAndJavaAreValidAllNodes && zkKafkaHbaseHealthyForAllNodes && physDirsAllHaveSamePath)
+      }
     } catch {
       case e: Exception => {
         phyDirLast = rootDirPath // substitute the symbol link to see if we can test more ... this is temporary hack
@@ -845,20 +956,8 @@ Try again.
     fl.getName
   }
 
-
-  /**
-    * Does the file path exist?
-    *
-    * @param flPath input file Path
-    * @return whether file exists or no
-    */
-  private def isFileExists(flPath: String): Boolean = {
-    val fl = new File(flPath)
-    return fl.exists
-  }
-
   private def logLogFile(logFile: String): Unit = {
-    if (isFileExists(logFile)) {
+    if (isFileExists(logFile, true)) {
       val logStmts = Source.fromFile(logFile).mkString
       if (logStmts != null)
         printAndLogDebug(logStmts, null, false)
@@ -888,7 +987,8 @@ Try again.
                            , componentVersionJarAbsolutePath: String
                            , remoteNodeIp: String
                            , resultsFileAbsolutePath: String
-                           , jsonArgInput: String): (Array[ComponentInfo], String) = {
+                           , jsonArgInput: String
+                           , ignoreGetComponentsInfo: Boolean): (Array[ComponentInfo], String) = {
     val checkForJar: Boolean = true
     val checkForJarParentDir: Boolean = false
     val componentVersionJarFileName = getFileName(log, componentVersionJarAbsolutePath, checkForJar, checkForJarParentDir)
@@ -896,10 +996,11 @@ Try again.
     val checkForParentDir: Boolean = true
     val resultFileName = getFileName(log, resultsFileAbsolutePath, checkForFile, checkForParentDir)
     val jsonArg = jsonArgInput.replace("\r", " ").replace("\n", " ")
+    val igStr = if (ignoreGetComponentsInfo) "true" else "false"
 
     _cntr += 1
     val pathOutputFlName = "__path_output_" + _cntr + "_" + math.abs(this.hashCode) + "_" + math.abs(resultFileName.hashCode) + "_" + math.abs(scriptAbsolutePath.hashCode) + "_" + math.abs(componentVersionJarFileName.hashCode)
-    val getComponentInvokeCmd: String = s"$scriptAbsolutePath  --componentVersionJarAbsolutePath $componentVersionJarAbsolutePath --componentVersionJarFileName $componentVersionJarFileName --remoteNodeIp $remoteNodeIp --resultsFileAbsolutePath $resultsFileAbsolutePath --resultFileName $resultFileName --rootDirPath $rootDirPath --pathOutputFileName $pathOutputFlName --jsonArg \'$jsonArg\'"
+    val getComponentInvokeCmd: String = s"$scriptAbsolutePath  --componentVersionJarAbsolutePath $componentVersionJarAbsolutePath --componentVersionJarFileName $componentVersionJarFileName --remoteNodeIp $remoteNodeIp --resultsFileAbsolutePath $resultsFileAbsolutePath --resultFileName $resultFileName --rootDirPath $rootDirPath --pathOutputFileName $pathOutputFlName --ignoreGetComponentsInfo $igStr --jsonArg \'$jsonArg\'"
     val getComponentsVersionCmd: Seq[String] = Seq("bash", "-c", getComponentInvokeCmd)
     _cntr += 1
     val logFile = "/tmp/__get_comp_ver_results_" + _cntr + "_" + math.abs(pathOutputFlName.hashCode) + "_" + math.abs(getComponentsVersionCmd.hashCode) + "_" + math.abs(scriptAbsolutePath.hashCode)
@@ -922,39 +1023,42 @@ Try again.
     printAndLogDebug("Found PhysicalRootDir:" + physicalRootDir, log)
 
     var results = ArrayBuffer[ComponentInfo]()
-    try {
-      val jsonStr = Source.fromFile(resultsFileAbsolutePath).mkString
-      printAndLogDebug("Components Results:" + jsonStr, log)
-      implicit val jsonFormats = org.json4s.DefaultFormats
-      val json = org.json4s.jackson.JsonMethods.parse(jsonStr)
-      if (json == null) {
-        throw new Exception("Failed to parse Components Versions json : " + jsonStr)
+
+    if (! ignoreGetComponentsInfo) {
+      try {
+        val jsonStr = Source.fromFile(resultsFileAbsolutePath).mkString
+        printAndLogDebug("Components Results:" + jsonStr, log)
+        implicit val jsonFormats = org.json4s.DefaultFormats
+        val json = org.json4s.jackson.JsonMethods.parse(jsonStr)
+        if (json == null) {
+          throw new Exception("Failed to parse Components Versions json : " + jsonStr)
+        }
+
+        var components = List[Any]()
+
+        if (json.values.isInstanceOf[List[_]])
+          components = json.values.asInstanceOf[List[_]]
+        else
+          components = List(json.values)
+
+        components.foreach(c => {
+          val tmpmap = c.asInstanceOf[Map[String, Any]]
+          val version = tmpmap.getOrElse("version", null)
+          val status = tmpmap.getOrElse("status", null)
+          val errorMessage = tmpmap.getOrElse("errorMessage", null)
+          val componentName = tmpmap.getOrElse("componentName", null)
+          val invocationNode = tmpmap.getOrElse("invocationNode", remoteNodeIp)
+
+          results += ComponentInfo(if (version == null) "" else version.toString
+            , if (status == null) "" else status.toString
+            , if (errorMessage == null) "" else errorMessage.toString
+            , if (componentName == null) "" else componentName.toString
+            , if (invocationNode == null) "" else invocationNode.toString)
+        })
+      } catch {
+        case e: Exception => throw new Exception("Failed to parse Components Versions json", e)
+        case e: Throwable => throw new Exception("Failed to parse Components Versions json", e)
       }
-
-      var components = List[Any]()
-
-      if (json.values.isInstanceOf[List[_]])
-        components = json.values.asInstanceOf[List[_]]
-      else
-        components = List(json.values)
-
-      components.foreach(c => {
-        val tmpmap = c.asInstanceOf[Map[String, Any]]
-        val version = tmpmap.getOrElse("version", null)
-        val status = tmpmap.getOrElse("status", null)
-        val errorMessage = tmpmap.getOrElse("errorMessage", null)
-        val componentName = tmpmap.getOrElse("componentName", null)
-        val invocationNode = tmpmap.getOrElse("invocationNode", remoteNodeIp)
-
-        results += ComponentInfo(if (version == null) "" else version.toString
-          , if (status == null) "" else status.toString
-          , if (errorMessage == null) "" else errorMessage.toString
-          , if (componentName == null) "" else componentName.toString
-          , if (invocationNode == null) "" else invocationNode.toString)
-      })
-    } catch {
-      case e: Exception => throw new Exception("Failed to parse Components Versions json", e)
-      case e: Throwable => throw new Exception("Failed to parse Components Versions json", e)
     }
 
     (results.toArray, physicalRootDir)
@@ -1131,7 +1235,7 @@ Try again.
     return true
   }
 
-  private def isFileExists(flPath: String, checkForFile: Boolean, checkForDir: Boolean): Boolean = {
+  private def isFileExists(flPath: String, checkForFile: Boolean = false, checkForDir: Boolean = false): Boolean = {
     val fl = new File(flPath)
     if (!fl.exists)
       return false;
@@ -1166,21 +1270,21 @@ Try again.
     * CheckInstallVerificationFile check for this information
     *
 
-    * @param log                             the InstallDriverLog that tracks progress and important events of this installation
-    * @param clusterInstallerDriversLocation the location of the clusterInstallerDriver AND the KamanjaClusterInstall.sh called here
-    * @param rootDirPath                     the actual root dir for the installation
-    * @param apiConfigPath                   the api config that contains seminal information about the cluster installation
-    * @param nodeConfigPath                  the node config that contains the cluster description used for the installation
-    * @param priorInstallDirName             the name of the directory to be used for a prior installation that is being upgraded (if appropriate)
-    * @param newInstallDirName               the new installation directory name that will live in parentPath
-    * @param tarballPath                     the local tarball path that contains the kamanja installation
-    * @param ips                             a file path that contains the unique ip addresses for each node in the cluster
-    * @param ipIdTargPaths                   a file path that contains the ip address, node id, target dir path and roles
-    * @param ipPathPairs                     a file containing the unique ip addresses and path pairs
+    * @param log                       the InstallDriverLog that tracks progress and important events of this installation
+    * @param kamanjaClusterInstallPath the kamanjaClusterInstallPath script, which is invoked to install Kamanja
+    * @param rootDirPath               the actual root dir for the installation
+    * @param apiConfigPath             the api config that contains seminal information about the cluster installation
+    * @param nodeConfigPath            the node config that contains the cluster description used for the installation
+    * @param priorInstallDirName       the name of the directory to be used for a prior installation that is being upgraded (if appropriate)
+    * @param newInstallDirName         the new installation directory name that will live in parentPath
+    * @param tarballPath               the local tarball path that contains the kamanja installation
+    * @param ips                       a file path that contains the unique ip addresses for each node in the cluster
+    * @param ipIdTargPaths             a file path that contains the ip address, node id, target dir path and roles
+    * @param ipPathPairs               a file containing the unique ip addresses and path pairs
     * @return true if the installation succeeded.
     */
   def installCluster(log: InstallDriverLog
-                     , clusterInstallerDriversLocation: String
+                     , kamanjaClusterInstallPath: String
                      , rootDirPath: String
                      , apiConfigPath: String
                      , nodeConfigPath: String
@@ -1194,17 +1298,7 @@ Try again.
                      , clusterId: String
                      , metadataDataStore: String): Boolean = {
 
-    // Check for KamanjaClusterInstall.sh existance. And see whether KamanjaClusterInstall.sh has all error handling or not.
     val parentPath: String = rootDirPath.split('/').dropRight(1).mkString("/")
-    val KamanjaClusterInstallPath = s"$clusterInstallerDriversLocation/KamanjaClusterInstall.sh"
-    printAndLogDebug("KamanjaClusterInstallPath :" + KamanjaClusterInstallPath)
-
-    if (!isFileExists(KamanjaClusterInstallPath, true, false)) {
-      printAndLogError(s"KamanjaClusterInstall script is not installed in path:" + clusterInstallerDriversLocation, log)
-      printAndLogError(s"Installation is aborted. Consult the log file (${log.logPath}) for details.", log)
-      closeLog
-      sys.exit(1)
-    }
 
     val ipDataFile = workDir + "/ipData.txt" // We may need to use workingDir
     val ipPathDataFile = workDir + "/ipPathData.txt" // We may need to use workingDir
@@ -1226,7 +1320,7 @@ Try again.
 
     val priorInstallDirPath: String = s"$parentPath/$priorInstallDirName"
     val newInstallDirPath: String = s"$parentPath/$newInstallDirName"
-    val installCmd: Seq[String] = Seq("bash", "-c", s"$clusterInstallerDriversLocation/KamanjaClusterInstall.sh  --ClusterId $clusterId --WorkingDir $workDir --MetadataAPIConfig $apiConfigPath --NodeConfigPath $nodeConfigPath --TarballPath $tarballPath --ipAddrs $ipDataFile --ipIdTargPaths $ipIdCfgTargDataFile --ipPathPairs $ipPathDataFile --priorInstallDirPath $priorInstallDirPath --newInstallDirPath $newInstallDirPath --installVerificationFile $verifyFilePath ")
+    val installCmd: Seq[String] = Seq("bash", "-c", s"$kamanjaClusterInstallPath --ClusterId $clusterId --WorkingDir $workDir --MetadataAPIConfig $apiConfigPath --NodeConfigPath $nodeConfigPath --TarballPath $tarballPath --ipAddrs $ipDataFile --ipIdTargPaths $ipIdCfgTargDataFile --ipPathPairs $ipPathDataFile --priorInstallDirPath $priorInstallDirPath --newInstallDirPath $newInstallDirPath --installVerificationFile $verifyFilePath ")
     val installCmdRep: String = installCmd.mkString(" ")
     printAndLogDebug(s"KamanjaClusterInstall cmd used: \n\n$installCmdRep", log)
 
@@ -1449,11 +1543,14 @@ Try again.
   }
 }
 
-class ClusterConfigMap(cfgStr: String, clusterIdOfInterest: String) {
+class ClusterConfigMap(cfgStr: String, var clusterIdOfInterest: String) {
 
-  val clusterMap: Map[String, Any] = getClusterConfigMapOfInterest(cfgStr, clusterIdOfInterest)
+  val clusterMap: Map[String, Any] = getClusterConfigMapOfInterest(cfgStr)
   if (clusterMap.size == 0) {
-    throw new RuntimeException(s"There is no cluster information for cluster $clusterIdOfInterest")
+    if (clusterIdOfInterest != null)
+      throw new RuntimeException(s"There is no cluster information for cluster $clusterIdOfInterest")
+    else
+      throw new RuntimeException("Did not find any clusters information")
   }
   val clusterId: String = getClusterId
   val dataStore: Map[String, Any] = getDataStore
@@ -1512,8 +1609,7 @@ class ClusterConfigMap(cfgStr: String, clusterIdOfInterest: String) {
     getStringFromJsonNode(DataStore)
   }
 
-
-  private def getClusterConfigMapOfInterest(cfgStr: String, clusterIdOfInterest: String): Map[String, Any] = {
+  private def getClusterConfigMapOfInterest(cfgStr: String): Map[String, Any] = {
     val clusterMap: Map[String, Any] = try {
       // extract config objects
       val map = JsonSerializer.parseEngineConfig(cfgStr)
@@ -1522,19 +1618,30 @@ class ClusterConfigMap(cfgStr: String, clusterIdOfInterest: String) {
         val clusterList: List[_] = map.get("Clusters").get.asInstanceOf[List[_]]
         val clusters = clusterList.length
 
-        val clusterSought: String = clusterIdOfInterest.toLowerCase
-        val clusterIdList: List[Any] = clusterList.filter(aCluster => {
-          val cluster: Map[String, Any] = aCluster.asInstanceOf[Map[String, Any]]
-          val clusterId = cluster.getOrElse("ClusterId", "").toString.trim.toLowerCase
-          (clusterId == clusterSought)
-        })
+        val clusterIdList: List[Any] =
+          if (clusterIdOfInterest == null) {
+            if (clusterList.size > 1)
+              throw new RuntimeException("Cluster config has more than one cluster defined. Either specify --clusterId to take that cluster or provide config which has only one cluster")
+            clusterList
+          } else {
+            val clusterSought: String = clusterIdOfInterest.toLowerCase
+            val clusterIdList: List[Any] = clusterList.filter(aCluster => {
+              val cluster: Map[String, Any] = aCluster.asInstanceOf[Map[String, Any]]
+              val clusterId = cluster.getOrElse("ClusterId", "").toString.trim.toLowerCase
+              (clusterId == clusterSought)
+            })
+          }
 
         val clusterOfInterestMap: Map[String, Any] = if (clusterIdList.size > 0) {
-          clusterIdList.head.asInstanceOf[Map[String, Any]]
+          val retVal = clusterIdList.head.asInstanceOf[Map[String, Any]]
+          if (clusterIdOfInterest == null)
+            clusterIdOfInterest = retVal.getOrElse("ClusterId", "").toString.trim.toLowerCase
+          retVal
         } else {
           Map[String, Any]()
         }
         clusterOfInterestMap
+
       } else {
         Map[String, Any]()
       }
@@ -1615,7 +1722,7 @@ class MapSubstitution(template: String, vars: scala.collection.immutable.Map[Str
       log.emit(msg)
   }
 
-  private def printAndLogError(msg: String, log: InstallDriverLog = null, e: Throwable): Unit = {
+  private def printAndLogError(msg: String, log: InstallDriverLog = null, e: Throwable = null): Unit = {
     if (e != null)
       logger.error(msg, e);
     else
