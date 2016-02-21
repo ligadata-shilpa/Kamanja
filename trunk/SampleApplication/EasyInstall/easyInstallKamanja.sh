@@ -182,7 +182,7 @@ cp Utils/JdbcDataCollector/target/scala-2.10/JdbcDataCollector* $bin
 cp MetadataAPIService/target/scala-2.10/MetadataAPIService* $bin
 cp FileDataConsumer/target/scala-2.10/FileDataConsumer* $bin
 cp Utils/CleanUtil/target/scala-2.10/CleanUtil* $bin
-cp SampleApplication/clusterInstallerDriver/target/scala-2.10/clusterInstallerDriver* $kamanjainstallbin
+cp SampleApplication/clusterInstallerDriver/target/scala-2.10/ClusterInstallerDriver* $kamanjainstallbin
 cp SampleApplication/GetComponent/target/scala-2.10/GetComponent* $kamanjainstallbin
 cp $srcPath//SampleApplication/clusterInstallerDriver/src/main/resources/GetComponentsVersions.sh $kamanjainstallbin
 
@@ -863,7 +863,7 @@ cp MetadataAPIService/target/scala-2.11/MetadataAPIService* $bin
 cp FileDataConsumer/target/scala-2.11/FileDataConsumer* $bin
 cp Utils/CleanUtil/target/scala-2.11/CleanUtil* $bin
 cp Utils/Migrate/MigrateManager/target/MigrateManager* $bin
-cp SampleApplication/clusterInstallerDriver/target/scala-2.11/clusterInstallerDriver* $kamanjainstallbin
+cp SampleApplication/clusterInstallerDriver/target/scala-2.11/ClusterInstallerDriver* $kamanjainstallbin
 cp SampleApplication/GetComponent/target/scala-2.11/GetComponent* $kamanjainstallbin
 cp $srcPath//SampleApplication/clusterInstallerDriver/src/main/resources/GetComponentsVersions.sh $kamanjainstallbin
 
