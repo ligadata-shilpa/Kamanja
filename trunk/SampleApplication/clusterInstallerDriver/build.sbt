@@ -4,13 +4,11 @@ import Keys._
 
 shellPrompt := { state =>  "sbt (%s)> ".format(Project.extract(state).currentProject.id) }
 
-
-
 mainClass in assembly := Some("com.ligadata.clusterInstaller.InstallDriver")
 
 assemblyOption in assembly ~= { _.copy(prependShellScript = Some(defaultShellScript)) }
 
-assemblyJarName in assembly := { s"ClusterInstallerDriver-${version.value}" }
+assemblyJarName in assembly := { s"${name.value}-${version.value}" }
 
 // for some reason the merge strategy for non ligadata classes are not working and thus added those conflicting jars in exclusions
 // this may result some run time errors
@@ -57,7 +55,7 @@ assemblyExcludedJars <<= (fullClasspath in assembly) map { cp =>
 
 test in assembly := {}
 
-name := "clusterInstallerDriver"
+name := "ClusterInstallerDriver"
 
 //scalaVersion := "2.11.7"
 
