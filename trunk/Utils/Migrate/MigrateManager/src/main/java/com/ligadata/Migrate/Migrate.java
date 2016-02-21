@@ -124,7 +124,7 @@ public class Migrate {
             if (collectedData.size() >= kSaveThreshold) {
                 String msg = String.format("Adding batch of Migrated data with " + collectedData.size() + " rows to write");
                 logger.debug(msg);
-                sendStatus(msg);
+                sendStatus(msg, "DEBUG");
                 SaveDataInBackground(executor, migrateTo, collectedData.toArray(new DataFormat[collectedData.size()]));
                 collectedData.clear();
             }
@@ -154,11 +154,11 @@ public class Migrate {
             try {
                 String msg = String.format("Migrating final batch of data with " + _data.length + " rows");
                 logger.debug(msg);
-                sendStatus(msg);
+                sendStatus(msg, "DEBUG");
                 _migrateTo.populateAndSaveData(_data);
                 msg = String.format("Migrated final batch of data with " + _data.length + " rows");
                 logger.debug(msg);
-                sendStatus(msg);
+                sendStatus(msg, "DEBUG");
             } catch (Exception e) {
                 SetDataWritingFailure(e);
             } catch (Throwable t) {
@@ -177,20 +177,20 @@ public class Migrate {
                 logger.info("Populated migrate configuration:" + gson.toJson(cfg));
                 return cfg;
             } catch (Exception e) {
-                sendStatus("Failed to load configuration. Exception message:" + e.getMessage());
+                sendStatus("Failed to load configuration. Exception message:" + e.getMessage(), "ERROR");
                 logger.error("Failed to load configuration", e);
             } catch (Throwable e) {
-                sendStatus("Failed to load configuration. Exception message:" + e.getMessage());
+                sendStatus("Failed to load configuration. Exception message:" + e.getMessage(), "ERROR");
                 logger.error("Failed to load configuration", e);
             } finally {
 
             }
             return null;
         } catch (Exception e) {
-            sendStatus("Failed to load configuration. Exception message:" + e.getMessage());
+            sendStatus("Failed to load configuration. Exception message:" + e.getMessage(), "ERROR");
             logger.error("Failed to load configuration", e);
         } catch (Throwable e) {
-            sendStatus("Failed to load configuration. Exception message:" + e.getMessage());
+            sendStatus("Failed to load configuration. Exception message:" + e.getMessage(), "ERROR");
             logger.error("Failed to load configuration", e);
         } finally {
             try {
@@ -209,10 +209,10 @@ public class Migrate {
             logger.info("Populated migrate configuration:" + gson.toJson(cfg));
             return cfg;
         } catch (Exception e) {
-            sendStatus("Failed to load configuration. Exception message:" + e.getMessage());
+            sendStatus("Failed to load configuration. Exception message:" + e.getMessage(), "ERROR");
             logger.error("Failed to load configuration", e);
         } catch (Throwable e) {
-            sendStatus("Failed to load configuration. Exception message:" + e.getMessage());
+            sendStatus("Failed to load configuration. Exception message:" + e.getMessage(), "ERROR");
             logger.error("Failed to load configuration", e);
         }
         return null;
@@ -227,7 +227,7 @@ public class Migrate {
         writeFailedException = e;
         if (sentFailedStatus == false && e != null) {
             sentFailedStatus = true;
-            sendStatus("Data failed to migrate. Exception message:" + e.getMessage()); // Send this at least once.
+            sendStatus("Data failed to migrate. Exception message:" + e.getMessage(), "ERROR"); // Send this at least once.
         }
     }
 
@@ -238,19 +238,19 @@ public class Migrate {
     boolean isValidPath(String path, boolean checkForDir, boolean checkForFile, String str) {
         File fl = new File(path);
         if (fl.exists() == false) {
-            sendStatus("Given " + str + ":" + path + " does not exists");
+            sendStatus("Given " + str + ":" + path + " does not exists", "ERROR");
             logger.error("Given " + str + ":" + path + " does not exists");
             return false;
         }
 
         if (checkForDir && fl.isDirectory() == false) {
-            sendStatus("Given " + str + ":" + path + " is not directory");
+            sendStatus("Given " + str + ":" + path + " is not directory", "ERROR");
             logger.error("Given " + str + ":" + path + " is not directory");
             return false;
         }
 
         if (checkForFile && fl.isFile() == false) {
-            sendStatus("Given " + str + ":" + path + " is not file");
+            sendStatus("Given " + str + ":" + path + " is not file", "ERROR");
             logger.error("Given " + str + ":" + path + " is not file");
             return false;
         }
@@ -269,14 +269,14 @@ public class Migrate {
             if (args[0].equalsIgnoreCase("--config")) {
                 cfgfile = args[1].trim();
             } else {
-                sendStatus("Unknown option " + args[0]);
+                sendStatus("Unknown option " + args[0], "ERROR");
                 logger.error("Unknown option " + args[0]);
                 usage();
                 return 1;
             }
 
             if (cfgfile.length() == 0) {
-                sendStatus("Input required config file");
+                sendStatus("Input required config file", "ERROR");
                 logger.error("Input required config file");
                 usage();
                 return 1;
@@ -290,7 +290,7 @@ public class Migrate {
             Configuration configuration = GetConfigurationFromCfgFile(cfgfile);
 
             if (configuration == null) {
-                sendStatus("Failed to get configuration from given file:" + cfgfile);
+                sendStatus("Failed to get configuration from given file:" + cfgfile, "ERROR");
                 logger.error("Failed to get configuration from given file:" + cfgfile);
                 usage();
                 return 1;
@@ -298,10 +298,10 @@ public class Migrate {
 
             return run(configuration);
         } catch (Exception e) {
-            sendStatus("Failed to Migrate. Exception message:" + e.getMessage());
+            sendStatus("Failed to Migrate. Exception message:" + e.getMessage(), "ERROR");
             logger.error("Failed to Migrate", e);
         } catch (Throwable t) {
-            sendStatus("Failed to Migrate. Exception message:" + t.getMessage());
+            sendStatus("Failed to Migrate. Exception message:" + t.getMessage(), "ERROR");
             logger.error("Failed to Migrate", t);
         }
         return 1;
@@ -310,7 +310,7 @@ public class Migrate {
     public int runFromJsonConfigString(String jsonConfigString) {
         try {
             if (jsonConfigString.length() == 0) {
-                sendStatus("Passed invalid json string");
+                sendStatus("Passed invalid json string", "ERROR");
                 logger.error("Passed invalid json string");
                 usage();
                 return 1;
@@ -319,7 +319,7 @@ public class Migrate {
             Configuration configuration = GetConfigurationFromCfgJsonString(jsonConfigString);
 
             if (configuration == null) {
-                sendStatus("Failed to get configuration from given JSON String:" + jsonConfigString);
+                sendStatus("Failed to get configuration from given JSON String:" + jsonConfigString, "ERROR");
                 logger.error("Failed to get configuration from given JSON String:" + jsonConfigString);
                 usage();
                 return 1;
@@ -327,10 +327,10 @@ public class Migrate {
 
             return run(configuration);
         } catch (Exception e) {
-            sendStatus("Failed to Migrate. Exception message:" + e.getMessage());
+            sendStatus("Failed to Migrate. Exception message:" + e.getMessage(), "ERROR");
             logger.error("Failed to Migrate", e);
         } catch (Throwable t) {
-            sendStatus("Failed to Migrate. Exception message:" + t.getMessage());
+            sendStatus("Failed to Migrate. Exception message:" + t.getMessage(), "ERROR");
             logger.error("Failed to Migrate", t);
         }
         return 1;
@@ -346,7 +346,7 @@ public class Migrate {
 
         try {
             if (configuration == null) {
-                sendStatus("Found invalid configuration");
+                sendStatus("Found invalid configuration", "ERROR");
                 logger.error("Found invalid configuration");
                 usage();
                 return retCode;
@@ -360,28 +360,28 @@ public class Migrate {
 
             if (srcVer.equalsIgnoreCase("1.1") == false
                     && srcVer.equalsIgnoreCase("1.2") == false) {
-                sendStatus("We support source versions only 1.1 or 1.2. We don't support " + srcVer);
+                sendStatus("We support source versions only 1.1 or 1.2. We don't support " + srcVer, "ERROR");
                 logger.error("We support source versions only 1.1 or 1.2. We don't support " + srcVer);
                 usage();
                 return retCode;
             }
 
             if (dstVer.equalsIgnoreCase("1.3") == false) {
-                sendStatus("We support destination version only 1.3. We don't support " + dstVer);
+                sendStatus("We support destination version only 1.3. We don't support " + dstVer, "ERROR");
                 logger.error("We support destination version only 1.3. We don't support " + dstVer);
                 usage();
                 return retCode;
             }
 
             if (scalaFrom.equalsIgnoreCase("2.10") == false /* && scalaFrom.equalsIgnoreCase("2.11") == false */) {
-                sendStatus("We support source scala version only 2.10. Given:" + scalaFrom);
+                sendStatus("We support source scala version only 2.10. Given:" + scalaFrom, "ERROR");
                 logger.error("We support source scala version only 2.10. Given:" + scalaFrom);
                 usage();
                 return retCode;
             }
 
             if (scalaTo.equalsIgnoreCase("2.10") == false && scalaTo.equalsIgnoreCase("2.11") == false) {
-                sendStatus("We support destination scala version only 2.10 or 2.11. Given:" + scalaTo);
+                sendStatus("We support destination scala version only 2.10 or 2.11. Given:" + scalaTo, "ERROR");
                 logger.error("We support destination scala version only 2.10 or 2.11. Given:" + scalaTo);
                 usage();
                 return retCode;
@@ -417,7 +417,7 @@ public class Migrate {
                             + " and source read failures are writing into "
                             + sourceReadFailuresFilePath);
                 } else {
-                    sendStatus("Failed to create directory " + newDir);
+                    sendStatus("Failed to create directory " + newDir, "ERROR");
                     logger.error("Failed to create directory " + newDir);
                     usage();
                     return retCode;
@@ -431,7 +431,7 @@ public class Migrate {
                     dstVer.equalsIgnoreCase("1.3") &&
                     scalaFrom.equalsIgnoreCase("2.10") &&
                     scalaTo.equalsIgnoreCase("2.10")) {
-                sendStatus("Nothing to migrate from 1.2 to 1.3 with scala 2.10 version");
+                sendStatus("Nothing to migrate from 1.2 to 1.3 with scala 2.10 version", "WARN");
                 logger.warn("Nothing to migrate from 1.2 to 1.3 with scala 2.10 version");
                 return 0;
             }
@@ -446,7 +446,7 @@ public class Migrate {
                     .equalsIgnoreCase("1.3"));
 
             if (canUpgradeData && canUpgradeMetadata == false) {
-                sendStatus("We don't support upgrading only data without metadata at this moment");
+                sendStatus("We don't support upgrading only data without metadata at this moment", "ERROR");
                 logger.error("We don't support upgrading only data without metadata at this moment");
                 usage();
                 return retCode;
@@ -478,7 +478,7 @@ public class Migrate {
                         configuration.migratingFrom.version,
                         configuration.migratingFrom.implemtedClass,
                         configuration.migratingFrom.versionInstallPath);
-                sendStatus(msg);
+                sendStatus(msg, "ERROR");
                 logger.error(msg);
                 foundError = true;
             }
@@ -506,14 +506,14 @@ public class Migrate {
                         configuration.migratingTo.version,
                         configuration.migratingTo.implemtedClass);
 
-                sendStatus(msg);
+                sendStatus(msg, "ERROR");
                 logger.error(msg);
                 foundError = true;
             }
 
             if (foundError == false) {
                 String cfgMsg = String.format("apiConfigFile:%s, clusterConfigFile:%s", configuration.apiConfigFile, configuration.clusterConfigFile);
-                sendStatus("Initializing MigrationTo using " + cfgMsg);
+                sendStatus("Initializing MigrationTo using " + cfgMsg, "INFO");
                 logger.info(cfgMsg);
                 migrateTo.init(configuration.migratingTo.versionInstallPath,
                         configuration.apiConfigFile,
@@ -532,7 +532,7 @@ public class Migrate {
 
                 String dbsMsg = String.format("Got Datastores Information\n\tmetadataStoreInfo:%s\n\tdataStoreInfo:%s\n\tstatusStoreInfo:%s", metadataStoreInfo, dataStoreInfo, statusStoreInfo);
                 logger.info(dbsMsg);
-                sendStatus(dbsMsg);
+                sendStatus(dbsMsg, "INFO");
                 migrateFrom.init(configuration.migratingFrom.versionInstallPath,
                         metadataStoreInfo, dataStoreInfo, statusStoreInfo,
                         sourceReadFailuresFilePath);
@@ -560,7 +560,7 @@ public class Migrate {
                 int foundMdTablesWhichBackedUp = 0;
                 int foundMdTablesWhichDidnotBackedUp = 0;
 
-                sendStatus("Checking backup status in table");
+                sendStatus("Checking backup status in table", "INFO");
                 String backupStatusStr = "";
                 try {
                     backupStatusStr = migrateTo.getStatusFromDataStore("BackupStatusFor" + backupTblSufix);
@@ -570,7 +570,7 @@ public class Migrate {
 
                 boolean havePreviousBackup = (backupStatusStr.startsWith("Done @20"));
 
-                sendStatus("Checking whether backup is already done or not");
+                sendStatus("Checking whether backup is already done or not", "INFO");
                 logger.info("Checking whether backup is already done or not");
                 for (TableName tblInfo : allMetadataTbls) {
                     BackupTableInfo bkup = new BackupTableInfo(tblInfo.namespace,
@@ -596,7 +596,7 @@ public class Migrate {
 
                 if (foundMdTablesWhichDidnotBackedUp > 0 && foundMdTablesWhichBackedUp == 0) {
                     // Not really found tables to backup
-                    sendStatus("Did not find any metadata table and also not found any backed up tables.");
+                    sendStatus("Did not find any metadata table and also not found any backed up tables.", "ERROR");
                     throw new Exception("Did not find any metadata table and also not found any backed up tables.");
                 }
 
@@ -640,12 +640,12 @@ public class Migrate {
                         done = backupStatusStr;
                     }
                     String msg = "Found backup " + done + ". Using it to do rest of the migration.\nPrevious Backup tables Information:\n" + backupTblStr;
-                    sendStatus(msg);
+                    sendStatus(msg, "INFO");
                     logger.info(msg);
                 }
                 else {
                     if (allTblsBackedUp) {
-                        sendStatus("Looks like all tables backup started but not completed. Going to backup again");
+                        sendStatus("Looks like all tables backup started but not completed. Going to backup again", "INFO");
                         logger.info("Looks like all tables backup started but not completed. Going to backup again");
                     }
 
@@ -671,7 +671,7 @@ public class Migrate {
                     sb.append("}\n");
 
                     String backupTblStr = sb.toString();
-                    sendStatus(backupTblStr);
+                    sendStatus(backupTblStr, "INFO");
                     logger.info(backupTblStr);
 
                     migrateTo.backupAllTables(metadataBackupTbls.toArray(new BackupTableInfo[metadataBackupTbls.size()]),
@@ -680,7 +680,7 @@ public class Migrate {
                     String doneTm = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new java.util.Date(System.currentTimeMillis()));
 
                     migrateTo.setStatusFromDataStore("BackupStatusFor" + backupTblSufix, "Done @" + doneTm + backupTblStr);
-                    sendStatus("Completed backing up. " + doneTm);
+                    sendStatus("Completed backing up. " + doneTm, "INFO");
                     logger.info("Completed backing up. " + doneTm);
                 }
 
@@ -706,13 +706,13 @@ public class Migrate {
                     sb.append("}\n");
 
                     String delTblStr = sb.toString();
-                    sendStatus(delTblStr);
+                    sendStatus(delTblStr, "INFO");
                     logger.info(delTblStr);
                 }
 
                 // Drop all tables after backup
                 migrateTo.dropAllTables(metadataDelTbls.toArray(new TableName[metadataDelTbls.size()]), dataDelTbls.toArray(new TableName[dataDelTbls.size()]), statusDelTbls.toArray(new TableName[statusDelTbls.size()]));
-                sendStatus("Completed dropping tables");
+                sendStatus("Completed dropping tables", "INFO");
                 logger.info("Completed dropping tables");
 
                 String[] excludeMetadata = new String[0];
@@ -725,11 +725,11 @@ public class Migrate {
 
                 if (canUpgradeMetadata) {
                     logger.debug("Getting metadata from old version");
-                    sendStatus("Getting metadata from old version");
+                    sendStatus("Getting metadata from old version", "DEBUG");
                     migrateFrom.getAllMetadataObjs(backupTblSufix,
                             new MdCallback(), excludeMetadata);
                     logger.debug("Got all metadata");
-                    sendStatus("Got all metadata");
+                    sendStatus("Got all metadata", "DEBUG");
                 }
 
                 MetadataFormat[] metadataArr = allMetadata
@@ -737,22 +737,22 @@ public class Migrate {
 
                 if (canUpgradeData) {
                     logger.info("Dropping saved messages/container tables if there are any");
-                    sendStatus("Dropping saved messages/container tables if there are any");
+                    sendStatus("Dropping saved messages/container tables if there are any", "DEBUG");
                     migrateTo.dropMessageContainerTablesFromMetadata(metadataArr);
                     logger.info("Dropped saved messages/container tables if there are any");
-                    sendStatus("Dropped saved messages/container tables if there are any");
+                    sendStatus("Dropped saved messages/container tables if there are any", "DEBUG");
                 }
 
                 java.util.List<String> msgsAndContaienrs = null;
                 if (canUpgradeMetadata) {
                     logger.debug("Adding metadata to new version");
-                    sendStatus("Adding metadata to new version");
+                    sendStatus("Adding metadata to new version", "DEBUG");
                     msgsAndContaienrs = migrateTo.addMetadata(metadataArr, true, excludeMetadata);
                     logger.debug("Done adding metadata to new version");
-                    sendStatus("Done adding metadata to new version");
+                    sendStatus("Done adding metadata to new version", "DEBUG");
                 } else {
                     logger.debug("No need to migrate metadatadata");
-                    sendStatus("No need to migrate metadatadata");
+                    sendStatus("No need to migrate metadatadata", "DEBUG");
                 }
 
                 if (canUpgradeData) {
@@ -766,7 +766,7 @@ public class Migrate {
                         sb.append("}\n");
 
                         String newTablesStr = sb.toString();
-                        sendStatus(newTablesStr);
+                        sendStatus(newTablesStr, "INFO");
                         logger.info(newTablesStr);
                     }
 
@@ -781,7 +781,7 @@ public class Migrate {
                         kSaveThreshold = configuration.dataSaveThreshold;
 
                     logger.debug("Migrating data from old version to new version. Each time we are writing minimum " + kSaveThreshold + " rows as a batch.");
-                    sendStatus("Migrating data from old version to new version. Each time we are writing minimum " + kSaveThreshold + " rows as a batch.");
+                    sendStatus("Migrating data from old version to new version. Each time we are writing minimum " + kSaveThreshold + " rows as a batch.", "DEBUG");
                     List<DataFormat> collectedData = new ArrayList<DataFormat>();
 
                     DataCallback dataCallback = new DataCallback(migrateTo,
@@ -793,29 +793,29 @@ public class Migrate {
                     if (collectedData.size() > 0) {
                         String msg = String.format("Adding final batch of Migrated data with " + collectedData.size() + " rows to write");
                         logger.debug(msg);
-                        sendStatus(msg);
+                        sendStatus(msg, "DEBUG");
                         SaveDataInBackground(executor, migrateTo, collectedData.toArray(new DataFormat[collectedData.size()]));
                         collectedData.clear();
                     }
 
                     logger.info("Waiting to flush all data");
-                    sendStatus("Waiting to flush all data");
+                    sendStatus("Waiting to flush all data", "INFO");
                     executor.shutdown();
                     executor.awaitTermination(86400, TimeUnit.SECONDS); // 1 day waiting at the max
 
                     if (writeFailedException != null) {
                         if (sentFailedStatus == false) {
                             // logger.error("Data failed to migrate.", writeFailedException);
-                            sendStatus("Data failed to migrate. Exception message:" + writeFailedException.getMessage());
+                            sendStatus("Data failed to migrate. Exception message:" + writeFailedException.getMessage(), "ERROR");
                         }
                         throw writeFailedException;
                     }
 
                     logger.info("Completed migrating data");
-                    sendStatus("Completed migrating data");
+                    sendStatus("Completed migrating data", "INFO");
                 } else {
                     logger.debug("Skipping data migration. May not be required or turned off");
-                    sendStatus("Skipping data migration. May not be required or turned off");
+                    sendStatus("Skipping data migration. May not be required or turned off", "DEBUG");
                 }
 
                 logger.info("Migration is done. Failed summary is written to "
@@ -823,15 +823,15 @@ public class Migrate {
                 if (logger.isInfoEnabled() == false)
                     System.out.println("Migration is done. Failed summary is written to "
                             + curMigrationSummary + " and failed to read data written to " + sourceReadFailuresFilePath);
-                sendStatus("Successfully migrated. Failed summary is written to " + curMigrationSummary + " and failed to read data written to " + sourceReadFailuresFilePath);
+                sendStatus("Successfully migrated. Failed summary is written to " + curMigrationSummary + " and failed to read data written to " + sourceReadFailuresFilePath, "INFO");
                 retCode = 0;
             }
         } catch (Exception e) {
             logger.error("Failed to Migrate", e);
-            sendStatus("Failed to migrate with exception message:" + e.getMessage());
+            sendStatus("Failed to migrate with exception message:" + e.getMessage(), "ERROR");
         } catch (Throwable t) {
             logger.error("Failed to Migrate", t);
-            sendStatus("Failed to migrate with throwable message:" + t.getMessage());
+            sendStatus("Failed to migrate with throwable message:" + t.getMessage(), "ERROR");
         } finally {
             if (migrateFrom != null)
                 migrateFrom.shutdown();
@@ -860,9 +860,9 @@ public class Migrate {
         }
     }
 
-    private void sendStatus(String statusText) {
+    private void sendStatus(String statusText, String typStr) {
         for (StatusCallback callback : statusCallbacks) {
-            callback.call(statusText);
+            callback.call(statusText, typStr);
         }
     }
 

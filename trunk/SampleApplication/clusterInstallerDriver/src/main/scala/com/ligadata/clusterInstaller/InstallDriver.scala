@@ -115,8 +115,8 @@ class InstallDriverLog(val logPath: String) extends StatusCallback {
     *
     * @param statusText
     */
-  def call(statusText: String): Unit = {
-    emit(statusText, "") // FIXME:: Yet to add the type getting from Migrate
+  def call(statusText: String, typStr: String): Unit = {
+    emit(statusText, typStr)
   }
 }
 

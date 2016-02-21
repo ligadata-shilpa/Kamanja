@@ -17,5 +17,5 @@
 package com.ligadata.Migrate;
 
 public interface StatusCallback {
-    public void call(String statusText);
+    public void call(String statusText, String typStr);
 }
