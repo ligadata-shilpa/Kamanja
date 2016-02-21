@@ -375,15 +375,23 @@ Try again.
     val workingDirOk: Boolean = workingDir != null && workingDir.nonEmpty
     val logDirOk: Boolean = logDir != null && logDir.nonEmpty
     val reasonableArguments: Boolean =
-      (apiConfigPathOk
+      if (install) (apiConfigPathOk
         && nodeConfigPathOk
         && tarballPathOk
-        && fromKamanjaOk
-        && fromScalaOk
         && toScalaOk
         && workingDirOk
         && logDirOk
         )
+      else
+        (apiConfigPathOk
+          && nodeConfigPathOk
+          && tarballPathOk
+          && fromKamanjaOk
+          && fromScalaOk
+          && toScalaOk
+          && workingDirOk
+          && logDirOk
+          )
 
     if (!reasonableArguments) {
       val installOrUpgrade: String = if (upgrade) "your upgrade" else "your install"
@@ -391,8 +399,8 @@ Try again.
       if (!apiConfigPathOk) printAndLogError("\tapiConfigPath")
       if (!nodeConfigPathOk) printAndLogError("\t--apiConfigPath <path to the metadata api properties file that contains the ROOT_DIR property location>")
       if (!tarballPathOk) printAndLogError("\t--tarballPath <location of the prepared 1.3 installation tarball to be installed>")
-      if (!fromKamanjaOk) printAndLogError("\t--fromKamanja <the prior installation version being upgraded... either '1.1' or '1.2'>")
-      if (!fromScalaOk) printAndLogError("\t--fromScala <either scala version '2.10' or '2.11'")
+      if (upgrade && !fromKamanjaOk) printAndLogError("\t--fromKamanja <the prior installation version being upgraded... either '1.1' or '1.2'>")
+      if (upgrade && !fromScalaOk) printAndLogError("\t--fromScala <either scala version '2.10' or '2.11'")
       if (!logDirOk) printAndLogError("\t--logDir <the directory path where the Cluster logs (InstallDriver.yyyyMMdd_HHmmss.log) is to be written ")
       printAndLogError(usage)
       closeLog
@@ -458,20 +466,19 @@ Try again.
           printAndLogError(s"MigrateConfig_template.json is not installed in path ${clusterInstallerDriversLocation}/../config", log)
         cnt += 1
       }
+
+      // Validate all arguments
+      val migrationToBeDone: String = if (fromKamanja == "1.1") "1.1=>1.3" else if (fromKamanja == "1.2") "1.2=>1.3" else "hmmm"
+      if (migrationToBeDone == "hmmm") {
+        printAndLogError(s"The fromKamanja ($fromKamanja) is not valid with this release... the value must be 1.1 or 1.2", log)
+        cnt += 1
+      }
     }
 
     if (cnt > 0) {
       printAndLogError(s"Installation is aborted. Consult the log file (${log.logPath}) for details.", log)
       closeLog
       sys.exit(1)
-    }
-
-    // Validate all arguments
-    cnt = 0
-    val migrationToBeDone: String = if (fromKamanja == "1.1") "1.1=>1.3" else if (fromKamanja == "1.2") "1.2=>1.3" else "hmmm"
-    if (migrationToBeDone == "hmmm") {
-      printAndLogError(s"The fromKamanja ($fromKamanja) is not valid with this release... the value must be 1.1 or 1.2", log)
-      cnt += 1
     }
 
     /** Convert the content of the property file into a map.  If the path is bad, an empty map is returned and processing stops */
