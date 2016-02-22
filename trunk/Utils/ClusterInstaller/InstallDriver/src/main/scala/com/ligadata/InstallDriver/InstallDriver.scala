@@ -1477,6 +1477,10 @@ Try again.
 
     val migrationToBeDone: String = if (fromKamanja == "1.1") "1.1=>1.3" else if (fromKamanja == "1.2") "1.2=>1.3" else "hmmm"
 
+    // We should use these insted of below ones
+    // val kamanjaFromVersion: String = fromKamanja
+    // val kamanjaFromVersionWithUnderscore: String = fromKamanja.replace('.', '_')
+
     val migratePreparationOk: Boolean = migrationToBeDone match {
       case "1.1=>1.3" => {
         val kamanjaFromVersion: String = "1.1"
@@ -1510,8 +1514,8 @@ Try again.
         true
       }
       case "1.2=>1.3" => {
-        val kamanjaFromVersion: String = "1.1"
-        val kamanjaFromVersionWithUnderscore: String = "1_1"
+        val kamanjaFromVersion: String = "1.2"
+        val kamanjaFromVersionWithUnderscore: String = "1_2"
         val migrateConfigJSON: String = createMigrationConfig(log
           , migrateConfigFilePath
           , nodeConfigPath
