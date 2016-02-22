@@ -699,6 +699,7 @@ cp -rf $srcPath/SampleApplication/ClusterInstall/scala-2.10/*.sh $kamanjainstall
 cp -rf $srcPath/SampleApplication/ClusterInstall/scala-2.10/*log4*.xml $kamanjainstallconfig
 cp -rf $srcPath/SampleApplication/ClusterInstall/scala-2.10/*.json $kamanjainstallconfig
 cp -rf $srcPath/SampleApplication/ClusterInstall/scala-2.10/*.properties $kamanjainstallconfig
+cp $srcPath/Utils/ClusterInstaller/ClusterInstallerDriver/src/main/resources/log4j2.xml $kamanjainstallconfig
 
 # *******************************
 # copy models, messages, containers, config, scripts, types  messages data prep
@@ -1341,6 +1342,7 @@ cp -rf $srcPath/SampleApplication/ClusterInstall/scala-2.11/*.sh $kamanjainstall
 cp -rf $srcPath/SampleApplication/ClusterInstall/scala-2.11/*log4*.xml $kamanjainstallconfig
 cp -rf $srcPath/SampleApplication/ClusterInstall/scala-2.11/*.json $kamanjainstallconfig
 cp -rf $srcPath/SampleApplication/ClusterInstall/scala-2.11/*.properties $kamanjainstallconfig
+cp $srcPath/Utils/ClusterInstaller/ClusterInstallerDriver/src/main/resources/log4j2.xml $kamanjainstallconfig
 
 # *******************************
 # copy models, messages, containers, config, scripts, types  messages data prep
