@@ -52,7 +52,7 @@ unmanagedBase <<= baseDirectory { base => base / "custom_lib" }
 
 unmanagedJars in Compile <<= baseDirectory map { base => (base ** "*.jar").classpath }
 
-name := "ClusterInstallDrv"
+name := "ClusterInstallerDriver"
 
 version := "1.0"
 
