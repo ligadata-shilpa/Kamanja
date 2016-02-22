@@ -84,6 +84,12 @@ else
 fi
 
 ssh -o StrictHostKeyChecking=no -T $remoteNodeIp  <<-EOF
+    if [ -n "~/.bash_profile" ]; then
+        source ~/.bash_profile
+    elif [ -n "~/.bashrc" ]; then
+        source ~/.bashrc    
+    fi
+    
     echo "" > /tmp/Get-Component.log
     if [ "$ignoreGetComponentsInfo" == "true" ]; then
         echo "Ignored GetComponentsInfo -- Ignored execution"
