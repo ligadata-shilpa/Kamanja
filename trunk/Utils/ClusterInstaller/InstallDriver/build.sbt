@@ -55,7 +55,7 @@ assemblyExcludedJars <<= (fullClasspath in assembly) map { cp =>
 
 test in assembly := {}
 
-name := "ClusterInstallerDriver"
+name := "InstallDriver"
 
 //scalaVersion := "2.11.7"
 
