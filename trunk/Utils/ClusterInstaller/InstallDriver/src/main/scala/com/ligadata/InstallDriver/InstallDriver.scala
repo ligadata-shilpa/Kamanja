@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.ligadata.clusterInstaller
+package com.ligadata.InstallDriver
 
 import java.util.Properties
 
@@ -33,9 +33,14 @@ import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger;
 import org.json4s._
 
-import com.ligadata.Serialize.JsonSerializer
-import com.ligadata.Migrate.{Migrate, StatusCallback}
+import com.ligadata.InstallDriverBase.InstallDriverBase
+
 import com.ligadata.Utils.Utils
+import com.ligadata.Serialize.JsonSerializer
+
+/*
+import com.ligadata.Migrate.{Migrate, StatusCallback}
+*/
 
 import org.json4s._
 import org.json4s.JsonDSL._
@@ -66,7 +71,7 @@ import org.json4s.jackson.Serialization
   * See trunk/SampleApplication/clusterInstallerDriver/src/main/resources/MigrateConfigTemplate.json in the github dev repo for an example template.
   */
 
-class InstallDriverLog(val logPath: String) extends StatusCallback {
+class InstallDriverLog(val logPath: String) {
   var bufferedWriter = new BufferedWriter(new FileWriter(new File(logPath)))
   var isReady: Boolean = true
   val emptyStrOf5Chars = "     "
@@ -108,29 +113,23 @@ class InstallDriverLog(val logPath: String) extends StatusCallback {
     bufferedWriter = null
     isReady = false
   }
-
-  /**
-    * StatusCallback implementation.  The InstallDriverLog is passed to the migrate component and it will call back
-    * here that it deems worth reporting to the install driver log.
-    *
-    * @param statusText
-    */
-  def call(statusText: String, typStr: String): Unit = {
-    emit(statusText, typStr)
-  }
 }
 
+class InstallDriver extends InstallDriverBase {
+  private lazy val loggerName = this.getClass.getName
+  private lazy val logger = LogManager.getLogger(loggerName)
+  private var log: InstallDriverLog = null
+  private var migratePending = false
+  private var migrateConfig = ""
 
-object InstallDriver extends App {
-  lazy val loggerName = this.getClass.getName
-  lazy val logger = LogManager.getLogger(loggerName)
-  var log: InstallDriverLog = null
+  override def migrationPending: Boolean = migratePending
 
+  override def migrationConfig: String = migrateConfig
 
   def usage: String = {
     """
 Usage:
-    java -Dlog4j.configurationFile=file:./log4j2.xml -jar <some path> ClusterInstallerDriver_1.3
+    java -Dlog4j.configurationFile=file:./log4j2.xml -jar <some path> ClusterInstallerDriver-1.0
             /** Mandatory parameters (always) */
             --{upgrade|install}
             --apiConfig <MetadataAPIConfig.properties file>
@@ -187,7 +186,7 @@ Usage:
             If both --skipPrerequisites and --preRequisitesOnly are specified, only the prerequisites not given in the skip list will be performed.
             Processing stops after the checks; installation and upgrade are not done.
 
-    The ClusterInstallerDriver_1.3 is the cluster installer driver for Kamanja 1.3.  It is capable of installing a new version of 1.3
+    The ClusterInstallerDriver-1.0 is the cluster installer driver for Kamanja 1.3.  It is capable of installing a new version of 1.3
     or given the appropriate arguments, installing a new version of Kamanja 1.3 *and* upgrading a 1.1 or 1.2 installation to the 1.3 version.
 
     A log of the installation and optional upgrade is collected in a log file.  This log file is automatically generated and will be found in the
@@ -199,7 +198,7 @@ Usage:
     """
   }
 
-  private def closeLog(): Unit = {
+  override def closeLog(): Unit = {
     if (log != null)
       log.close
     log = null
@@ -209,6 +208,39 @@ Usage:
     if (log != null)
       log.close
     log = new InstallDriverLog(fl)
+  }
+
+  private def print(msg: String, typ: String, log: InstallDriverLog = null, printToConsole: Boolean = true): Unit = {
+    typ.toUpperCase match {
+      case "ERROR" => {
+        logger.error(msg);
+        if (printToConsole && !logger.isErrorEnabled())
+          println(msg)
+        if (log != null)
+          log.emit(msg, typ)
+      }
+      case "WARN" => {
+        logger.warn(msg);
+        if (printToConsole && !logger.isWarnEnabled())
+          println(msg)
+        if (log != null)
+          log.emit(msg, typ)
+      }
+      case "INFO" => {
+        logger.info(msg);
+        if (printToConsole && !logger.isInfoEnabled())
+          println(msg)
+        if (log != null)
+          log.emit(msg, typ)
+      }
+      case _ => {
+        logger.debug(msg);
+        if (printToConsole && !logger.isDebugEnabled())
+          println(msg)
+        if (log != null)
+          log.emit(msg, typ)
+      }
+    }
   }
 
   private def printAndLogDebug(msg: String, log: InstallDriverLog = null, printToConsole: Boolean = true): Unit = {
@@ -227,7 +259,7 @@ Usage:
       log.emit(msg, "ERROR")
   }
 
-  override def main(args: Array[String]): Unit = {
+  override def run(args: Array[String]): Unit = {
     if (args.length == 0) {
       printAndLogError("No arguments provided", log);
       printAndLogDebug(usage, log);
@@ -238,19 +270,27 @@ Usage:
     // locate the clusterInstallerDriver app ... need its working directory to refer to others... this function
     // returns this form:  file:/tmp/drdigital/KamanjaInstall-1.3.2_2.11/bin/clusterInstallerDriver-1.0
 
-    val thisFatJarsLocationAbs: String = getClass().getProtectionDomain().getCodeSource().getLocation().toExternalForm()
-    printAndLogDebug("Jar Absolute Path:" + thisFatJarsLocationAbs)
-    val pathSwizzlePossible: Boolean = (thisFatJarsLocationAbs.contains(':') && thisFatJarsLocationAbs.contains('/'))
-    if (!pathSwizzlePossible) {
-      throw new RuntimeException("unable to determine the current path for clusterInstallerDriver executable... \nFoundLocation:" + thisFatJarsLocationAbs)
-    }
-
     /** Obtain location of the clusterInstallerDriver fat jar.  Its directory contains the scripts we use to
       * obtain component info for the env check and the lower level cluster install script that actually does the
       * install.
       */
-    val clusterInstallerDriversLocation: String = thisFatJarsLocationAbs.split(':').tail.mkString(":").split('/').dropRight(1).mkString("/")
-    printAndLogDebug("clusterInstallerDriversLocation:" + clusterInstallerDriversLocation)
+    var thisFatJarsLocationAbs: String = ""
+    var clusterInstallerDriversLocation: String = ""
+    try {
+      val fl = new File(getClass.getProtectionDomain.getCodeSource.getLocation.toURI)
+      thisFatJarsLocationAbs = fl.getAbsolutePath
+      clusterInstallerDriversLocation = new File(fl.getParent).getAbsolutePath
+    }
+    catch {
+      case e: Exception => {
+        logger.error("Failed to get InstallerDriver Jar Absolute Path", e)
+        println("Failed to get InstallerDriver Jar Absolute Path")
+        System.exit(1)
+      }
+    }
+
+    logger.info("Jar Absolute Path:" + thisFatJarsLocationAbs + ", InstallerDriversLocation:" + clusterInstallerDriversLocation)
+    println("Jar Absolute Path:" + thisFatJarsLocationAbs + ", InstallerDriversLocation:" + clusterInstallerDriversLocation)
 
     val arglist = args.toList
     type OptionMap = Map[Symbol, String]
@@ -659,7 +699,7 @@ Try again.
           /** Do upgrade if necessary */
           if (upgrade) {
             printAndLogDebug(s"Upgrade required... upgrade from version $fromKamanja", log)
-            val upgradeOk: Boolean = doMigration(log
+            val migratePreparationOk: Boolean = prepareForMigration(log
               , apiConfigPath
               , apiConfigMap
               , nodeConfigPath
@@ -673,9 +713,9 @@ Try again.
               , newInstallDirName
               , physicalRootDir
               , rootDirPath)
-            printAndLogDebug(s"Upgrade completed...successful?  ${if (upgradeOk) "yes!" else "no!"}", log)
-            if (!upgradeOk) {
-              printAndLogError(s"The parameters for the migration are incorrect... aborting installation", log)
+            printAndLogDebug("Migration preparation " + (if (migratePreparationOk) "Succeed" else "Failed"), log)
+            if (!migratePreparationOk) {
+              printAndLogError(s"Some thing failed to prepare migration configuration. The parameters for the migration may be incorrect... aborting installation", log)
               printAndLogDebug(usage, log)
               closeLog
               sys.exit(1)
@@ -696,12 +736,14 @@ Try again.
         sys.exit(1)
       }
 
-      printAndLogDebug("Processing is Complete!", log)
+      if (!migrationPending) {
+        printAndLogDebug("Processing is Complete!", log)
+        closeLog
+      }
     } else {
       printAndLogDebug("Requested to check preRequisitesCheckOnly.\nProcessing is Complete!", log)
+      closeLog
     }
-
-    closeLog
   }
 
   /**
@@ -1418,24 +1460,24 @@ Try again.
     * @param newInstallDirName        the physical name of the new installation
     * @return
     */
-  def doMigration(log: InstallDriverLog
-                  , apiConfigFile: String
-                  , apiConfigMap: Properties
-                  , nodeConfigPath: String
-                  , migrateConfigFilePath: String
-                  , unhandledMetadataDumpDir: String
-                  , fromKamanja: String
-                  , fromScala: String
-                  , toScala: String
-                  , parentPath: String
-                  , priorInstallDirName: String
-                  , newInstallDirName: String
-                  , physicalRootDir: String
-                  , rootDirPath: String): Boolean = {
+  def prepareForMigration(log: InstallDriverLog
+                          , apiConfigFile: String
+                          , apiConfigMap: Properties
+                          , nodeConfigPath: String
+                          , migrateConfigFilePath: String
+                          , unhandledMetadataDumpDir: String
+                          , fromKamanja: String
+                          , fromScala: String
+                          , toScala: String
+                          , parentPath: String
+                          , priorInstallDirName: String
+                          , newInstallDirName: String
+                          , physicalRootDir: String
+                          , rootDirPath: String): Boolean = {
 
     val migrationToBeDone: String = if (fromKamanja == "1.1") "1.1=>1.3" else if (fromKamanja == "1.2") "1.2=>1.3" else "hmmm"
 
-    val upgradeOk: Boolean = migrationToBeDone match {
+    val migratePreparationOk: Boolean = migrationToBeDone match {
       case "1.1=>1.3" => {
         val kamanjaFromVersion: String = "1.1"
         val kamanjaFromVersionWithUnderscore: String = "1_1"
@@ -1454,11 +1496,18 @@ Try again.
           , physicalRootDir
           , rootDirPath
         )
-        printAndLogDebug("Calling migrate %s with config %s".format(migrationToBeDone, migrateConfigJSON))
-        val migrateObj: Migrate = new Migrate()
-        migrateObj.registerStatusCallback(log)
-        val rc: Int = migrateObj.runFromJsonConfigString(migrateConfigJSON)
-        (rc == 0)
+        migratePending = true
+        migrateConfig = migrateConfigJSON
+        printAndLogDebug("Pending migrate %s with config %s".format(migrationToBeDone, migrateConfigJSON))
+
+
+        /*
+                val migrateObj: Migrate = new Migrate()
+                migrateObj.registerStatusCallback(log)
+                val rc: Int = migrateObj.runFromJsonConfigString(migrateConfigJSON)
+                (rc == 0)
+        */
+        true
       }
       case "1.2=>1.3" => {
         val kamanjaFromVersion: String = "1.1"
@@ -1478,24 +1527,29 @@ Try again.
           , physicalRootDir
           , rootDirPath
         )
-        printAndLogDebug("Calling migrate %s with config %s".format(migrationToBeDone, migrateConfigJSON))
-        val migrateObj: Migrate = new Migrate()
-        migrateObj.registerStatusCallback(log)
-        val rc: Int = migrateObj.runFromJsonConfigString(migrateConfigJSON)
-        (rc == 0)
+        migratePending = true
+        migrateConfig = migrateConfigJSON
+        printAndLogDebug("Pending migrate %s with config %s".format(migrationToBeDone, migrateConfigJSON))
+        /*
+                val migrateObj: Migrate = new Migrate()
+                migrateObj.registerStatusCallback(log)
+                val rc: Int = migrateObj.runFromJsonConfigString(migrateConfigJSON)
+                (rc == 0)
+                */
+        true
       }
       case _ => {
         printAndLogError("The 'fromKamanja' parameter is incorrect... this needs to be fixed.  The value can only be '1.1' or '1.2' for the '1.3' upgrade", log)
         false
       }
     }
-    if (!upgradeOk) {
+    if (!migratePreparationOk) {
       printAndLogError(s"The upgrade has failed.  Please consult the log (${log.logPath}) for guidance as to how to recover from this.", log)
       printAndLogDebug(usage, log)
       closeLog
       sys.exit(1)
     }
-    upgradeOk
+    migratePreparationOk
   }
 
   /**
@@ -1595,6 +1649,10 @@ Try again.
       sys.exit(1)
     }
     substitutedTemplate
+  }
+
+  override def statusUpdate(statusText: String, typStr: String): Unit = {
+    print(statusText, typStr, log)
   }
 }
 
@@ -1766,7 +1824,6 @@ class ClusterConfigMap(cfgStr: String, var clusterIdOfInterest: String) {
     }
     adapterMapList
   }
-
 }
 
 class MapSubstitution(template: String, vars: scala.collection.immutable.Map[String, String], logger: Logger, log: InstallDriverLog) {
@@ -1819,6 +1876,17 @@ class MapSubstitution(template: String, vars: scala.collection.immutable.Map[Str
       }
     }
     retrStr
+  }
+
+}
+
+object InstallDriver {
+  def main(args: Array[String]): Unit = {
+    val inst = new InstallDriver
+    inst.run(args)
+    if (inst.migrationPending) {
+      println("Migration still pending. Migration config:" + inst.migrationConfig)
+    }
   }
 }
 
