@@ -427,6 +427,7 @@ public class Migrate {
                 return retCode;
             }
 
+/*
             if (srcVer.equalsIgnoreCase("1.2") &&
                     dstVer.equalsIgnoreCase("1.3") &&
                     scalaFrom.equalsIgnoreCase("2.10") &&
@@ -435,6 +436,7 @@ public class Migrate {
                 logger.warn("Nothing to migrate from 1.2 to 1.3 with scala 2.10 version");
                 return 0;
             }
+*/
 
             // From Srouce version 1.1 to Destination version 1.3 we do both
             // Metadata Upgrade & Data Upgrade
