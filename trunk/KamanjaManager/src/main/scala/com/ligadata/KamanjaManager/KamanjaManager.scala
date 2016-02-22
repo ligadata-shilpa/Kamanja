@@ -732,6 +732,7 @@ class KamanjaManager extends Observer {
       }
 
       // See if we have to extenrnalize stats, every 5000ms..
+      LOG.trace("KamanjaManager " + KamanjaConfiguration.nodeId.toString + " running iteration " + cntr)
       if (cntr % 10 == 1) {
         externalizeMetrics
       }
