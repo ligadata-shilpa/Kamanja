@@ -39,7 +39,7 @@ object GetAllObjectKeysService {
   case class Process(formatType:String)
 }
 
-class GetAllObjectKeysService(requestContext: RequestContext, userid:Option[String], password:Option[String], cert:Option[String]) extends Actor {
+class GetAllObjectKeysService(requestContext: RequestContext, isGetOnlyActive: Boolean, userid:Option[String], password:Option[String], cert:Option[String]) extends Actor {
 
   import GetAllObjectKeysService._
   
@@ -69,7 +69,10 @@ class GetAllObjectKeysService(requestContext: RequestContext, userid:Option[Stri
 
     objectType match {
       case "model" => {
-	      apiResult = MetadataAPIImpl.GetAllModelsFromCache(false,userid)
+        if (isGetOnlyActive)
+	        apiResult = MetadataAPIImpl.GetAllModelsFromCache(true,userid)
+        else
+          apiResult = MetadataAPIImpl.GetAllModelsFromCache(false,userid)
       }
       case "message" => {
 	      apiResult = MetadataAPIImpl.GetAllMessagesFromCache(true,userid)

@@ -78,7 +78,12 @@ trait MetadataAPIService extends HttpService {
                   }
                 }
                 else if (toknRoute(0).equalsIgnoreCase(KEY_TOKN)) {
-                  requestContext => processGetKeysRequest(toknRoute(1).toLowerCase, requestContext, user, password, role)
+                  // /api/keyes*  goes here... see if this is for ALL keys or for ACTIVE KEYS
+                  var isGetActiveOnly = false
+                  if (toknRoute.size == 3 && toknRoute(2).equalsIgnoreCase("active"))
+                    isGetActiveOnly = true
+
+                  requestContext => processGetKeysRequest(toknRoute(1).toLowerCase, isGetActiveOnly, requestContext, user, password, role)
                 }
                 else if (toknRoute(0).equalsIgnoreCase(AUDIT_LOG_TOKN)) {
                   // strip the first token and send the rest
@@ -365,10 +370,10 @@ trait MetadataAPIService extends HttpService {
    *
    */
 
-  private def processGetKeysRequest(objtype: String, rContext: RequestContext, userid: Option[String], password: Option[String], role: Option[String]): Unit = {
+  private def processGetKeysRequest(objtype: String, isGetActiveOnly: Boolean, rContext: RequestContext, userid: Option[String], password: Option[String], role: Option[String]): Unit = {
     if (objtype.equalsIgnoreCase("Container") || objtype.equalsIgnoreCase("Model") || objtype.equalsIgnoreCase("Message") || objtype.equalsIgnoreCase("Function") ||
       objtype.equalsIgnoreCase("Concept") || objtype.equalsIgnoreCase("Type") || objtype.equalsIgnoreCase("OutputMsg")) {
-      val allObjectKeysService = actorRefFactory.actorOf(Props(new GetAllObjectKeysService(rContext, userid, password, role)))
+      val allObjectKeysService = actorRefFactory.actorOf(Props(new GetAllObjectKeysService(rContext, isGetActiveOnly, userid, password, role)))
       allObjectKeysService ! GetAllObjectKeysService.Process(objtype)
     } else {
       rContext.complete((new ApiResult(ErrorCodeConstants.Failure, APIName, null, "Unknown GET route")).toString)
