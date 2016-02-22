@@ -642,8 +642,7 @@ public class Migrate {
                     String msg = "Found backup " + done + ". Using it to do rest of the migration.\nPrevious Backup tables Information:\n" + backupTblStr;
                     sendStatus(msg, "INFO");
                     logger.info(msg);
-                }
-                else {
+                } else {
                     if (allTblsBackedUp) {
                         sendStatus("Looks like all tables backup started but not completed. Going to backup again", "INFO");
                         logger.info("Looks like all tables backup started but not completed. Going to backup again");
@@ -748,6 +747,20 @@ public class Migrate {
                     logger.debug("Adding metadata to new version");
                     sendStatus("Adding metadata to new version", "DEBUG");
                     msgsAndContaienrs = migrateTo.addMetadata(metadataArr, true, excludeMetadata);
+
+                    FailedMetadataKey[] failedMetadataKeys = migrateTo.getFailedMetadataKeys();
+                    if (failedMetadataKeys != null && failedMetadataKeys.length > 0) {
+                        StringBuilder sb = new StringBuilder();
+                        sb.append("Failed Metadata Keys:{\n");
+                        for (int i = 0; i < failedMetadataKeys.length; i++) {
+                            FailedMetadataKey key = failedMetadataKeys[i];
+                            sb.append("\t(" + key.objType + "," + key.mdKey + "," + key.version + ")\n");
+                        }
+                        sb.append("}\n");
+                        String failedMdKeys = sb.toString();
+                        logger.error(failedMdKeys);
+                        sendStatus(failedMdKeys, "ERROR");
+                    }
                     logger.debug("Done adding metadata to new version");
                     sendStatus("Done adding metadata to new version", "DEBUG");
                 } else {

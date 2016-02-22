@@ -539,7 +539,9 @@ class MigrateTo_V_1_3 extends MigratableTo {
       newDeps
     } else {
       val depJarsMap = Map("guava-16.0.1.jar" -> "guava-14.0.1.jar", "guava-18.0.jar" -> "guava-14.0.1.jar", "guava-19.0.jar" -> "guava-14.0.1.jar")
-      val newDeps = depJars.map(d => { depJarsMap.getOrElse(d, d) })
+      val newDeps = depJars.map(d => {
+        depJarsMap.getOrElse(d, d)
+      })
       newDeps
     }
   }
@@ -548,12 +550,14 @@ class MigrateTo_V_1_3 extends MigratableTo {
     try {
       mdObjs.foreach(mdObj => {
         val objType = mdObj._1
+        var dispkey = ""
+        var ver = ""
 
         try {
           val namespace = mdObj._2.getOrElse("NameSpace", "").toString.trim()
           val name = mdObj._2.getOrElse("Name", "").toString.trim()
-          val dispkey = (namespace + "." + name).toLowerCase
-          val ver = mdObj._2.getOrElse("Version", "0.0.1").toString
+          dispkey = (namespace + "." + name).toLowerCase
+          ver = mdObj._2.getOrElse("Version", "0.0.1").toString
           val objFormat = mdObj._2.getOrElse("ObjectFormat", "").toString
 
           objType match {
@@ -617,6 +621,7 @@ class MigrateTo_V_1_3 extends MigratableTo {
                     logger.error(msgStr)
                     _flCurMigrationSummary.println(msgStr)
                     _flCurMigrationSummary.flush()
+                    AddedFailedMetadataKey(objType, dispkey, ver)
                   }
                 } else if (objFormat.equalsIgnoreCase("XML")) {
                   var defFl = _unhandledMetadataDumpDir + "/kPMML_mdldef_" + dispkey + "." + ver + "." + objFormat.toLowerCase()
@@ -637,6 +642,7 @@ class MigrateTo_V_1_3 extends MigratableTo {
                     logger.error(msgStr)
                     _flCurMigrationSummary.println(msgStr)
                     _flCurMigrationSummary.flush()
+                    AddedFailedMetadataKey(objType, dispkey, ver)
                   }
                 }
               } else {
@@ -665,6 +671,8 @@ class MigrateTo_V_1_3 extends MigratableTo {
                   logger.error(msgStr)
                   _flCurMigrationSummary.println(msgStr)
                   _flCurMigrationSummary.flush()
+                  AddedFailedMessageOrContainer(dispkey)
+                  AddedFailedMetadataKey(objType, dispkey, ver)
                 }
               } else {
                 logger.debug("Bootstrap object. Ignore it")
@@ -693,6 +701,8 @@ class MigrateTo_V_1_3 extends MigratableTo {
                   logger.error(msgStr)
                   _flCurMigrationSummary.println(msgStr)
                   _flCurMigrationSummary.flush()
+                  AddedFailedMessageOrContainer(dispkey)
+                  AddedFailedMetadataKey(objType, dispkey, ver)
                 }
               } else {
                 logger.debug("Bootstrap object. Ignore it")
@@ -737,6 +747,7 @@ class MigrateTo_V_1_3 extends MigratableTo {
                   logger.error(msgStr)
                   _flCurMigrationSummary.println(msgStr)
                   _flCurMigrationSummary.flush()
+                  AddedFailedMetadataKey(objType, dispkey, ver)
                 }
               }
             }
@@ -762,6 +773,7 @@ class MigrateTo_V_1_3 extends MigratableTo {
                   logger.error(msgStr)
                   _flCurMigrationSummary.println(msgStr)
                   _flCurMigrationSummary.flush()
+                  AddedFailedMetadataKey(objType, dispkey, ver)
                 }
               }
             }
@@ -829,17 +841,41 @@ class MigrateTo_V_1_3 extends MigratableTo {
               logger.error(msgStr)
               _flCurMigrationSummary.println(msgStr)
               _flCurMigrationSummary.flush()
+              AddedFailedMetadataKey(objType, dispkey, ver)
             }
           }
         } catch {
-          case e: Exception => AddMdObjToGlobalException(mdObj, "Failed to add metadata of type " + objType, e)
-          case e: Throwable => AddMdObjToGlobalException(mdObj, "Failed to add metadata of type " + objType, e)
+          case e: Exception => AddMdObjToGlobalException(mdObj, "Failed to add metadata of type " + objType, e); AddedFailedMetadataKey(objType, dispkey, ver)
+          case e: Throwable => AddMdObjToGlobalException(mdObj, "Failed to add metadata of type " + objType, e); AddedFailedMetadataKey(objType, dispkey, ver)
         }
       })
     } catch {
       case e: Exception => throw e
       case e: Throwable => throw e
     }
+  }
+
+  private var msgsContainersFailed = ArrayBuffer[String]()
+  private var msgsContainersFailLock = new Object
+  private var mdFailed = ArrayBuffer[FailedMetadataKey]()
+  private var mdFailLock = new Object
+
+  private def AddedFailedMessageOrContainer(con: String): Unit = msgsContainersFailLock.synchronized {
+    if (con != null)
+      msgsContainersFailed += con
+  }
+
+  private def AddedFailedMetadataKey(objType: String, mdKey: String, ver: String): Unit = mdFailLock.synchronized {
+    if (objType != null && mdKey != null && ver != null)
+      mdFailed += new FailedMetadataKey(objType, mdKey, ver)
+  }
+
+  private def GetFailedMessageOrContainer: Array[String] = msgsContainersFailLock.synchronized {
+    return msgsContainersFailed.toArray
+  }
+
+  override def getFailedMetadataKeys(): Array[FailedMetadataKey] = mdFailLock.synchronized {
+    mdFailed.toArray
   }
 
   private def ProcessMdObjectsParallel(mdObjs: ArrayBuffer[(String, Map[String, Any])], errorStr: String): Unit = {
@@ -1032,6 +1068,15 @@ class MigrateTo_V_1_3 extends MigratableTo {
       ProcessMdObjectsParallel(messages, "Failed to add message")
     }
 
+    val failedMsgsContainer = GetFailedMessageOrContainer
+
+    if (failedMsgsContainer.size > 0) {
+      // Report the errors and Stop migration
+      val errMsg = "Migrating Messages/Containers (%s) failed".format(failedMsgsContainer.mkString(","))
+      logger.error(errMsg)
+      throw new Exception(errMsg)
+    }
+
     ProcessObject(functions)
     ProcessObject(configDef)
     //ProcessObject(models)
@@ -1074,7 +1119,9 @@ class MigrateTo_V_1_3 extends MigratableTo {
           logger.error("Failed to save data into datastore. Waiting for another %d milli seconds and going to start them again.".format(failedWaitTime))
           Thread.sleep(failedWaitTime)
         } catch {
-          case e: Exception => { logger.warn("", e) }
+          case e: Exception => {
+            logger.warn("", e)
+          }
         }
         // Adjust time for next time
         if (failedWaitTime < maxFailedWaitTime) {
@@ -1096,7 +1143,7 @@ class MigrateTo_V_1_3 extends MigratableTo {
         dataStore.get(containerName, keys, callbackFunction)
         doneGet = true
       } catch {
-        case e @ (_: ObjectNotFoundException | _: KeyNotFoundException) => {
+        case e@(_: ObjectNotFoundException | _: KeyNotFoundException) => {
           logger.debug("Failed to get data from container:%s".format(containerName))
           doneGet = true
         }

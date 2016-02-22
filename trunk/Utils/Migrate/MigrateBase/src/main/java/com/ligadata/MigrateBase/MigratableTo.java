@@ -33,4 +33,5 @@ public interface MigratableTo {
   public abstract void shutdown();
   public abstract String getStatusFromDataStore(String key);
   public abstract void setStatusFromDataStore(String key, String value);
+  public abstract FailedMetadataKey[] getFailedMetadataKeys();
 }
