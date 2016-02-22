@@ -732,6 +732,8 @@ class KamanjaManager extends Observer {
       }
 
       // See if we have to extenrnalize stats, every 5000ms..
+      if (LOG.isTraceEnabled)
+        LOG.trace("KamanjaManager " + KamanjaConfiguration.nodeId.toString + " running iteration " + cntr)
       if (cntr % 10 == 1) {
         externalizeMetrics
       }
@@ -746,6 +748,10 @@ class KamanjaManager extends Observer {
 
     val zkNodeBasePath = KamanjaConfiguration.zkNodeBasePath.stripSuffix("/").trim
     val zkHeartBeatNodePath = zkNodeBasePath + "/monitor/engine/" + KamanjaConfiguration.nodeId.toString
+    val isLogDebugEnabled = LOG.isDebugEnabled
+
+    if (isLogDebugEnabled)
+      LOG.debug("KamanjaManager " + KamanjaConfiguration.nodeId.toString + " is externalizing metrics to " + zkNodeBasePath)
 
     if (thisEngineInfo == null) {
       thisEngineInfo = new MainInfo
@@ -789,6 +795,8 @@ class KamanjaManager extends Observer {
 
     // get the envContext.
     KamanjaLeader.SetNewDataToZkc(zkHeartBeatNodePath, compact(render(allMetrics)).getBytes)
+    if (isLogDebugEnabled)
+      LOG.debug("KamanjaManager " + KamanjaConfiguration.nodeId.toString + " externalized metrics for UID: " + thisEngineInfo.uniqueId)
   }
 
   class SignalHandler extends Observable with sun.misc.SignalHandler {
