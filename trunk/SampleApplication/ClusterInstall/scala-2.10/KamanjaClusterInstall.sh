@@ -592,7 +592,11 @@ while read LINE; do
 	targetPath=$LINE
 	echo "Running $machine:$targetPath/SetPaths.sh"
 	ssh -o StrictHostKeyChecking=no -T $machine  <<-EOF
-		source ~/.bash_profile
+		if [ -n "~/.bash_profile" ]; then
+			source ~/.bash_profile
+		elif [ -n "~/.bashrc" ]; then
+			source ~/.bashrc    
+		fi
 		bash $targetPath/bin/SetPaths.sh
 EOF
     scp -o StrictHostKeyChecking=no "$nodeConfigPath" "$machine:$targetPath/config/ClusterConfig.json"

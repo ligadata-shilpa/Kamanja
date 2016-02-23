@@ -136,7 +136,7 @@ Usage:
             --clusterConfig <ClusterConfig.json file>
             --tarballPath <tarball path>
             --toScala <"2.11" or "2.10">
-            /** Mandatory parameters iff --update chosen */
+            /** Mandatory parameters iff --upgrade chosen */
             [--fromKamanja "1.1"]
             [--fromScala "2.10"]
             /** Optional parameters */
@@ -164,7 +164,7 @@ Usage:
             building their respective objects. If the requested version has not been installed on the cluster nodes in question,
             the installation will fail.
 
-        [--fromKamanja] optional for install but required for update..."N.N" where "N.N" can be either "1.1" or "1.2"
+        [--fromKamanja] optional for install but required for upgrade..."N.N" where "N.N" can be either "1.1" or "1.2"
         [--fromScala "2.10"] an optional parameter that, for the 1.3 InstallDriver, simply documents the version of Scala that
             the current 1.1. or 1.2 is using.  The value "2.10" is the only possible value for this release.
 
