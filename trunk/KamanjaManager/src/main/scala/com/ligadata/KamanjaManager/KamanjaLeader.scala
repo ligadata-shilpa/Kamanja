@@ -1282,44 +1282,82 @@ object KamanjaLeader {
     }
   }
 
-  def SetNewDataToZkc(zkNodePath: String, data: Array[Byte]): Unit = {
+  private def ReconnectToSetDataZkc: Unit = {
+    CloseSetDataZkc
     setDataLockObj.synchronized {
-      if (zkcForSetData != null)
-        zkcForSetData.setData().forPath(zkNodePath, data)
+      zkcForSetData = CreateClient.createSimple(zkConnectString, zkSessionTimeoutMs, zkConnectionTimeoutMs)
+    }
+  }
+
+  def SetNewDataToZkc(zkNodePath: String, data: Array[Byte]): Unit = {
+    try {
+      setDataLockObj.synchronized {
+        if (zkcForSetData != null)
+          zkcForSetData.setData().forPath(zkNodePath, data)
+      }
+    } catch {
+      case e: Throwable => {
+        LOG.warn("KamanjaLeader: Connection to Zookeeper is temporarily unavailable")
+        ReconnectToSetDataZkc
+      }
     }
   }
 
   def GetDataFromZkc(zkNodePath: String): Array[Byte] = {
-    setDataLockObj.synchronized {
-      if (zkcForSetData != null)
-        return zkcForSetData.getData().forPath(zkNodePath);
-      else
-        return Array[Byte]()
+    try {
+      setDataLockObj.synchronized {
+        if (zkcForSetData != null)
+          return zkcForSetData.getData().forPath(zkNodePath);
+        else
+          return Array[Byte]()
+      }
+    } catch {
+      case e: Throwable => {
+        LOG.warn("KamanjaLeader: Connection to Zookeeper is temporarily unavailable")
+        ReconnectToSetDataZkc
+      }
     }
+    return Array[Byte]()
   }
 
   def GetChildrenFromZkc(zkNodePath: String): List[String] = {
-    setDataLockObj.synchronized {
-      if (zkcForSetData != null)
-        return zkcForSetData.getChildren().forPath(zkNodePath).toList
-      else
-        return List[String]()
+    try {
+      setDataLockObj.synchronized {
+        if (zkcForSetData != null)
+          return zkcForSetData.getChildren().forPath(zkNodePath).toList
+        else
+          return List[String]()
+      }
+    } catch {
+      case e: Throwable => {
+        LOG.warn("KamanjaLeader: Connection to Zookeeper is temporarily unavailable")
+        ReconnectToSetDataZkc
+      }
     }
+    return List[String]()
   }
 
   def GetChildrenDataFromZkc(zkNodePath: String): List[(String, Array[Byte])] = {
-    setDataLockObj.synchronized {
-      if (zkcForSetData != null) {
-        val childs = zkcForSetData.getChildren().forPath(zkNodePath)
-        return childs.map(child => {
-          val path = zkNodePath + "/" + child
-          val chldData = zkcForSetData.getData().forPath(path);
-          (child, chldData)
-        }).toList
-      } else {
-        return List[(String, Array[Byte])]()
+    try {
+      setDataLockObj.synchronized {
+        if (zkcForSetData != null) {
+          val childs = zkcForSetData.getChildren().forPath(zkNodePath)
+          return childs.map(child => {
+            val path = zkNodePath + "/" + child
+            val chldData = zkcForSetData.getData().forPath(path);
+            (child, chldData)
+          }).toList
+        } else {
+          return List[(String, Array[Byte])]()
+        }
+      }
+    } catch {
+      case e: Throwable => {
+        LOG.warn("KamanjaLeader: Connection to Zookeeper is temporarily unavailable")
+        ReconnectToSetDataZkc
       }
     }
+    return List[(String, Array[Byte])]()
   }
 
   def Shutdown: Unit = {
