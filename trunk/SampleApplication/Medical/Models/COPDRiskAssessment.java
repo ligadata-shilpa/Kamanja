@@ -152,7 +152,7 @@ public class COPDRiskAssessment extends ModelInstance {
         Calendar calendar = Calendar.getInstance();
         Date tDate = yearMonthDayHourFormat.parse(date.toString());
         Date today = calendar.getTime();
-        calendar.add(Calendar.YEAR, -1);
+        calendar.add(Calendar.YEAR, -3);
         Date oneYearAgo = calendar.getTime();
         return ((tDate.before(today) || tDate.equals(today)) && (tDate.after(oneYearAgo) || tDate.equals(oneYearAgo)));
     }

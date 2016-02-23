@@ -46,16 +46,16 @@ class COPDRiskAssessment(factory: ModelInstanceFactory) extends ModelInstance(fa
     val dyspnoeaCodeSet: Array[String] = DyspnoeaCodes.getRDD.map { x => (x.icd9code) }.toArray
     var age: Int = 0
     val cal: Calendar = Calendar.getInstance
-    cal.add(Calendar.YEAR, -1)
+    cal.add(Calendar.YEAR, -3)
     var today: Date = Calendar.getInstance.getTime
-    var oneYearBeforeDate = cal.getTime
+    var threeYearsBeforeDate = cal.getTime
     var originalFormat: SimpleDateFormat = new SimpleDateFormat("yyyyMMdd")
     val inPatientInfoThisLastyear: RDD[InpatientClaim] = InpatientClaim.getRDD(msgBeneficiary.PartitionKeyData).filter { x =>
-      originalFormat.parse(x.clm_thru_dt.toString()).before(today) && originalFormat.parse(x.clm_thru_dt.toString()).after(oneYearBeforeDate)
+      originalFormat.parse(x.clm_thru_dt.toString()).before(today) && originalFormat.parse(x.clm_thru_dt.toString()).after(threeYearsBeforeDate)
     }
 
     val outPatientInfoThisLastYear: RDD[OutpatientClaim] = OutpatientClaim.getRDD(msgBeneficiary.PartitionKeyData).filter { x =>
-      originalFormat.parse(x.clm_thru_dt.toString()).before(today) && originalFormat.parse(x.clm_thru_dt.toString()).after(oneYearBeforeDate)
+      originalFormat.parse(x.clm_thru_dt.toString()).before(today) && originalFormat.parse(x.clm_thru_dt.toString()).after(threeYearsBeforeDate)
     }
 
     def getOverSmokingCodesInLastYear(): Boolean = {
@@ -203,7 +203,7 @@ class COPDRiskAssessment(factory: ModelInstanceFactory) extends ModelInstance(fa
     def getHL7InfoThisLastYear(): Boolean = {
 
       val hl7info = HL7.getRDD(msgBeneficiary.PartitionKeyData).filter { x =>
-        originalFormat.parse(x.clm_thru_dt.toString()).before(today) && originalFormat.parse(x.clm_thru_dt.toString()).after(oneYearBeforeDate)
+        originalFormat.parse(x.clm_thru_dt.toString()).before(today) && originalFormat.parse(x.clm_thru_dt.toString()).after(threeYearsBeforeDate)
       }
       for (x <- hl7info) {
 
@@ -217,7 +217,7 @@ class COPDRiskAssessment(factory: ModelInstanceFactory) extends ModelInstance(fa
 
     def getAATDeficiencyInLastYear(): Boolean = {
       val hl7info = HL7.getRDD(msgBeneficiary.PartitionKeyData).filter { x =>
-        originalFormat.parse(x.clm_thru_dt.toString()).before(today) && originalFormat.parse(x.clm_thru_dt.toString()).after(oneYearBeforeDate)
+        originalFormat.parse(x.clm_thru_dt.toString()).before(today) && originalFormat.parse(x.clm_thru_dt.toString()).after(threeYearsBeforeDate)
       }
       for (x <- hl7info) {
 
