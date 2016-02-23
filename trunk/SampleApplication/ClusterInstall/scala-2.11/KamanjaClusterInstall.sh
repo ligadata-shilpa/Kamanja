@@ -575,7 +575,7 @@ while read LINE; do
     scp -o StrictHostKeyChecking=no "$workDir/restapi_log4j2.xml" "$machine:$targetPath/"
     scp -o StrictHostKeyChecking=no "$workDir/log4j2.xml" "$machine:$targetPath/"
     scp -o StrictHostKeyChecking=no "$workDir/MetadataAPIConfig_${id}.properties" "$machine:$targetPath/MetadataAPIConfig_${id}.properties"
-    scp -o StrictHostKeyChecking=no "$workDir/MetadataAPIConfig_${id}.properties" "$machine:$targetPath/MetadataAPIConfig.properties"
+    # scp -o StrictHostKeyChecking=no "$workDir/MetadataAPIConfig_${id}.properties" "$machine:$targetPath/MetadataAPIConfig.properties"
 done
 exec 0<&12 12<&-
 
@@ -600,6 +600,30 @@ while read LINE; do
 		bash $targetPath/bin/SetPaths.sh
 EOF
     scp -o StrictHostKeyChecking=no "$nodeConfigPath" "$machine:$targetPath/config/ClusterConfig.json"
+done
+exec 0<&12 12<&-
+
+echo
+
+# 7.1) Copy $workDir/MetadataAPIConfig_${id}.properties to $machine:$targetPath/MetadataAPIConfig.properties
+exec 12<&0 # save current stdin
+#exec < "$workDir/$ipIdCfgTargPathQuartetFileName"
+exec < "$ipIdCfgTargPathQuartetFileName"
+while read LINE; do
+    machine=$LINE
+    read LINE
+    id=$LINE
+    read LINE
+    cfgFile=$LINE
+    read LINE
+    targetPath=$LINE
+    read LINE
+    roles=$LINE
+    
+	if [ -n "$workDir/MetadataAPIConfig_${id}.properties" ]; then
+		echo "...copying $workDir/MetadataAPIConfig_${id}.properties to $machine:$targetPath/MetadataAPIConfig.properties"
+		scp -o StrictHostKeyChecking=no "$workDir/MetadataAPIConfig_${id}.properties" "$machine:$targetPath/MetadataAPIConfig.properties"
+	fi
 done
 exec 0<&12 12<&-
 
