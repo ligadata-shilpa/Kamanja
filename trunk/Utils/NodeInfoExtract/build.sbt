@@ -1,20 +1,19 @@
-import AssemblyKeys._ // put this at the top of the file
+import sbtassembly.AssemblyPlugin.defaultShellScript
 import sbt._
 import Keys._
 
 shellPrompt := { state =>  "sbt (%s)> ".format(Project.extract(state).currentProject.id) }
 
-assemblySettings
+
 
 assemblyOption in assembly ~= { _.copy(prependShellScript = Some(defaultShellScript)) }
 
-jarName in assembly := { s"${name.value}-${version.value}" }
+assemblyJarName in assembly := { s"${name.value}-${version.value}" }
 
 // for some reason the merge strategy for non ligadata classes are not working and thus added those conflicting jars in exclusions
 // this may result some run time errors
 
-mergeStrategy in assembly <<= (mergeStrategy in assembly) { (old) =>
-  {
+assemblyMergeStrategy in assembly := {
     // case PathList("javax", "servlet", xs @ _*)         => MergeStrategy.first
     // case PathList(ps @ _*) if ps.last endsWith ".html" => MergeStrategy.first
 case PathList("META-INF", "maven","jline","jline", ps) if ps.startsWith("pom") => MergeStrategy.discard
@@ -43,8 +42,10 @@ case PathList("META-INF", "maven","jline","jline", ps) if ps.startsWith("pom") =
     case x if x contains "commons-logging" => MergeStrategy.first
     case "log4j.properties" => MergeStrategy.first
     case "unwanted.txt"     => MergeStrategy.discard
-    case x => old(x)
-  }
+            case x =>
+		        val oldStrategy = (assemblyMergeStrategy in assembly).value
+		        oldStrategy(x)
+
 }
 
 excludedJars in assembly <<= (fullClasspath in assembly) map { cp => 
@@ -55,8 +56,6 @@ excludedJars in assembly <<= (fullClasspath in assembly) map { cp =>
 name := "NodeInfoExtract"
 
 version := "1.0"
-
-scalaVersion := "2.11.7"
 
 scalacOptions += "-deprecation"
 

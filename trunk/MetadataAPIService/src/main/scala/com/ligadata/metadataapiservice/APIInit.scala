@@ -29,7 +29,6 @@ import com.ligadata.kamanja.metadataload.MetadataLoad
 import com.ligadata.MetadataAPI._
 import org.apache.logging.log4j._
 import com.ligadata.Utils._
-import com.ligadata.Exceptions.StackTrace
 
 object APIInit {
   val loggerName = this.getClass.getName
@@ -76,8 +75,7 @@ object APIInit {
       InitLeaderLatch
     } catch {
       case e: Exception => {
-	     val stackTrace =   StackTrace.ThrowableTraceString(e)
-              logger.debug("Stacktrace:"+stackTrace)
+           logger.debug("", e)
       }
     }
   }

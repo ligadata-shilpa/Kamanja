@@ -68,7 +68,6 @@ import com.ligadata.Utils._
 import com.ligadata.AuditAdapterInfo._
 import com.ligadata.SecurityAdapterInfo.SecurityAdapter
 import com.ligadata.keyvaluestore.KeyValueManager
-import com.ligadata.Exceptions.StackTrace
 
 import java.util.Date
 
@@ -100,8 +99,7 @@ object ConceptUtils {
       apiResult.toString()
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:"+stackTrace)
+        logger.debug("", e)
         var apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddConcept", null, "Error :" + e.toString() + ErrorCodeConstants.Add_Concept_Failed + ":" + dispkey)
         apiResult.toString()
       }
@@ -118,8 +116,7 @@ object ConceptUtils {
       apiResult.toString()
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:"+stackTrace)
+        logger.debug("", e)
         var apiResult = new ApiResult(ErrorCodeConstants.Failure, "RemoveConcept", null, "Error :" + e.toString() + ErrorCodeConstants.Remove_Concept_Failed + ":" + dispkey)
         apiResult.toString()
       }
@@ -146,8 +143,7 @@ object ConceptUtils {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:"+stackTrace)
+        logger.debug("", e)
         var apiResult = new ApiResult(ErrorCodeConstants.Failure, "RemoveConcept", null, "Error :" + e.toString() + ErrorCodeConstants.Remove_Concept_Failed + ":" + key)
         apiResult.toString()
       }
@@ -177,8 +173,7 @@ object ConceptUtils {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        logger.debug("", e)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "RemoveConcept", null, "Error :" + e.toString() + ErrorCodeConstants.Remove_Concept_Failed + ":" + dispkey)
         apiResult.toString()
       }
@@ -200,8 +195,7 @@ object ConceptUtils {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:" + stackTrace)
+        logger.debug("", e)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddDerivedConcept", null, "Error :" + e.toString() + ErrorCodeConstants.Add_Concept_Failed + ":" + conceptsText)
         apiResult.toString()
       }
@@ -230,8 +224,7 @@ object ConceptUtils {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:"+stackTrace)
+        logger.debug("", e)
         var apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddConcepts", null, "Error :" + e.toString() + ErrorCodeConstants.Add_Concept_Failed + ":" + conceptsText)
         apiResult.toString()
       }
@@ -257,8 +250,7 @@ object ConceptUtils {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:"+stackTrace)
+        logger.debug("", e)
         throw UnexpectedMetadataAPIException(e.getMessage(), e)
       }
     }
@@ -276,14 +268,12 @@ object ConceptUtils {
       apiResult.toString()
     } catch {
       case e: AlreadyExistsException => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.error("Failed to update the concept, key => " + key + ",Error => " + e.getMessage()+"\nStackTrace:"+stackTrace)
+        logger.error("Failed to update the concept, key => " + key, e)
         var apiResult = new ApiResult(ErrorCodeConstants.Failure, "UpdateConcept", null, "Error :" + e.toString() + ErrorCodeConstants.Update_Concept_Failed + ":" + dispkey)
         apiResult.toString()
       }
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.error("Failed to update the concept, key => " + key + ",Error => " + e.getMessage()+"\nStackTrace:"+stackTrace)
+        logger.error("Failed to update the concept, key => " + key, e)
         var apiResult = new ApiResult(ErrorCodeConstants.Failure, "UpdateConcept", null, "Error :" + e.toString() + ErrorCodeConstants.Update_Concept_Failed + ":" + dispkey)
         apiResult.toString()
       }
@@ -306,8 +296,7 @@ object ConceptUtils {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:"+stackTrace)
+        logger.debug("", e)
         var apiResult = new ApiResult(ErrorCodeConstants.Failure, "UpdateConcepts", null, "Error :" + e.toString() + ErrorCodeConstants.Update_Concept_Failed + ":" + conceptsText)
         apiResult.toString()
       }
@@ -327,8 +316,7 @@ object ConceptUtils {
       apiResult.toString()
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:"+stackTrace)
+        logger.debug("", e)
         var apiResult = new ApiResult(ErrorCodeConstants.Failure, "RemoveConcepts", null, "Error :" + e.toString() + ErrorCodeConstants.Remove_Concept_Failed + ":" + jsonStr)
         apiResult.toString()
       }
@@ -354,8 +342,7 @@ object ConceptUtils {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:"+stackTrace)
+        logger.debug("", e)
         var apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetAllConcepts", null, "Error :" + e.toString() + ErrorCodeConstants.Get_All_Concepts_Failed)
         apiResult.toString()
       }
@@ -383,8 +370,7 @@ object ConceptUtils {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:"+stackTrace)
+        logger.debug("", e)
         throw UnexpectedMetadataAPIException("Failed to fetch all the concepts:" + e.toString, e)
       }
     }
@@ -409,8 +395,7 @@ object ConceptUtils {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:"+stackTrace)
+        logger.debug("", e)
         var apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetConcept", null, "Error :" + e.toString() + ErrorCodeConstants.Get_Concept_Failed + ":" + dispkey)
         apiResult.toString()
       }
@@ -445,8 +430,7 @@ object ConceptUtils {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:"+stackTrace)
+        logger.debug("", e)
         var apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetConcept", null, "Error :" + e.toString() + ErrorCodeConstants.Get_Concept_Failed + ":" + objectName)
         apiResult.toString()
       }
@@ -475,8 +459,7 @@ object ConceptUtils {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:"+stackTrace)
+        logger.debug("", e)
         var apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetAllDerivedConcepts", null, "Error :" + e.toString() + ErrorCodeConstants.Get_All_Derived_Concepts_Failed)
         apiResult.toString()
       }
@@ -504,8 +487,7 @@ object ConceptUtils {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:"+stackTrace)
+        logger.debug("", e)
         var apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetDerivedConcept", null, "Error :" + e.toString() + ErrorCodeConstants.Get_Derived_Concept_Failed + ":" + objectName)
         apiResult.toString()
       }
@@ -535,8 +517,7 @@ object ConceptUtils {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("\nStackTrace:"+stackTrace)
+        logger.debug("", e)
         var apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetDerivedConcept", null, "Error :" + e.toString() + ErrorCodeConstants.Get_Derived_Concept_Failed + ":" + dispkey)
         apiResult.toString()
       }

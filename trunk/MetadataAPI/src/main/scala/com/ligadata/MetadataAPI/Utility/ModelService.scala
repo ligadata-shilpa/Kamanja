@@ -27,7 +27,7 @@ import com.ligadata.MetadataAPI.{MetadataAPIImpl,ApiResult,ErrorCodeConstants}
 import com.ligadata.MetadataAPI.MetadataAPI.ModelType
 import com.ligadata.MetadataAPI.MetadataAPI.ModelType.ModelType
 import com.ligadata.MetadataAPI.MetadataAPIImpl
-import scala.io.StdIn
+import scala.io._
 
 /**
  * Created by dhaval on 8/7/15.
@@ -113,7 +113,7 @@ object ModelService {
                             println("[" + srNo + "]" + configkey)
                         }
                         print("\nEnter your choice: \n")
-                        var userOption = StdIn.readInt()
+                        var userOption = readInt()
 
                         userOption match {
                             case x if ((1 to srNo).contains(userOption)) => {
@@ -208,7 +208,7 @@ object ModelService {
                             println("[" + srNo + "]" + configkey)
                         }
                         print("\nEnter your choice: \n")
-                        var userOption = StdIn.readInt()
+                        var userOption = readInt()
 
                         userOption match {
                             case x if ((1 to srNo).contains(userOption)) => {
@@ -430,13 +430,12 @@ object ModelService {
       } catch {
         case fnf : FileNotFoundException => {
             val msg : String = s"updateModelPmml... supplied file path not found ... path = $pmmlPath"
-            logger.error(msg)
+            logger.error(msg, fnf)
             msg
         }
         case e : Exception => {
-            val stackTrace = StackTrace.ThrowableTraceString(e)
             val msg : String = if (pmmlPath == null) "updateModelPmml pmml path was not supplied" else s"updateModelPmml... exception e = ${e.toString}"
-            logger.error(s"$msg...stack = \n$stackTrace")
+            logger.error(s"$msg...", e)
             msg
         }
       }
@@ -518,7 +517,7 @@ object ModelService {
 
                 }
                 print("\nEnter your choice: \n")
-                var userOption = StdIn.readInt()
+                var userOption = readInt()
 
                 userOption match {
                   case x if ((1 to srNo).contains(userOption)) => {
@@ -615,7 +614,7 @@ object ModelService {
                     println("[" + srNo + "]" + configkey)
                   }
                   print("\nEnter your choice: \n")
-                  var userOption = StdIn.readInt()
+                  var userOption = readInt()
 
                   userOption match {
                     case x if ((1 to srNo).contains(userOption)) => {
@@ -654,7 +653,7 @@ object ModelService {
             try {
               return MetadataAPIImpl.GetModelDefFromCache(ns, name,"JSON" ,ver, userid)
             } catch {
-              case e: Exception => e.printStackTrace()
+              case e: Exception => logger.error("", e)
             }
           }
           val modelKeys = MetadataAPIImpl.GetAllModelsFromCache(true, None)
@@ -670,7 +669,7 @@ object ModelService {
               println("["+srno+"] "+modelKey)
             }
             println("Enter your choice: ")
-            val choice: Int = StdIn.readInt()
+            val choice: Int = readInt()
             if (choice < 1 || choice > modelKeys.length) {
               val errormsg="Invalid choice " + choice + ". Start with the main menu."
               response=errormsg
@@ -683,6 +682,7 @@ object ModelService {
 
         } catch {
           case e: Exception => {
+            logger.info("", e)
             response=e.getStackTrace.toString
           }
         }
@@ -728,6 +728,7 @@ object ModelService {
             } catch {
               case e: Exception => {
                   val stackTrace = StackTrace.ThrowableTraceString(e)
+                  logger.info(stackTrace)
                   stackTrace
               }
             }
@@ -746,7 +747,7 @@ object ModelService {
                       println("[" + srno + "] " + modelKey)
                   }
                   println("Enter your choice: ")
-                  val choice: Int = StdIn.readInt()
+                  val choice: Int = readInt()
 
                   if (choice < 1 || choice > modelKeys.length) {
                       "Invalid choice " + choice + ". Start with the main menu."
@@ -760,6 +761,7 @@ object ModelService {
         } catch {
             case e: Exception => {
                 val stackTrace = StackTrace.ThrowableTraceString(e)
+                logger.info(stackTrace)
                 stackTrace
             }
         }
@@ -783,7 +785,7 @@ object ModelService {
             try {
               return MetadataAPIImpl.ActivateModel(ns, name, ver.toInt, userid)
             } catch {
-              case e: Exception => e.printStackTrace()
+              case e: Exception => logger.error("", e)
             }
           }
           val modelKeys = MetadataAPIImpl.GetAllModelsFromCache(false, None)
@@ -799,7 +801,7 @@ object ModelService {
               println("["+srno+"] "+modelKey)
             }
             println("Enter your choice: ")
-            val choice: Int = StdIn.readInt()
+            val choice: Int = readInt()
 
             if (choice < 1 || choice > modelKeys.length) {
               val errormsg="Invalid choice " + choice + ". Start with the main menu."
@@ -814,6 +816,7 @@ object ModelService {
 
         } catch {
           case e: Exception => {
+            logger.info("", e)
             response=e.getStackTrace.toString
           }
         }
@@ -838,7 +841,7 @@ object ModelService {
             try {
               return MetadataAPIImpl.DeactivateModel(ns, name, ver.toInt, userid)
             } catch {
-              case e: Exception => e.printStackTrace()
+              case e: Exception => logger.error("", e)
             }
           }
           progressReport = 1
@@ -857,7 +860,7 @@ object ModelService {
               println("["+srno+"] "+modelKey)
             }
             println("Enter your choice: ")
-            val choice: Int = StdIn.readInt()
+            val choice: Int = readInt()
 
 
             if (choice < 1 || choice > modelKeys.length) {
@@ -872,8 +875,10 @@ object ModelService {
           }
         } catch {
           case e: Exception => {
-            if (progressReport == 0)
+            if (progressReport == 0) {
+              logger.warn("", e)
               response = new ApiResult(ErrorCodeConstants.Failure, "DeactivateModel", null, "Error : Cannot parse ModelName, must be Namespace.Name.Version format").toString
+            }
             else {
               response = new ApiResult(ErrorCodeConstants.Failure, "DeactivateModel", null, "Error : An Exception occured during processing").toString
               logger.error("Unkown exception occured during deactivate model processing ", e)
@@ -915,7 +920,7 @@ object ModelService {
           println("[" + srNo + "]" + model)
         }
         print("\nEnter your choice(If more than 1 choice, please use commas to seperate them): \n")
-        var userOptions = StdIn.readLine().split(",")
+        var userOptions = readLine().split(",")
         println("User selected the option(s) " + userOptions.length)
         //check if user input valid. If not exit
         for (userOption <- userOptions) {

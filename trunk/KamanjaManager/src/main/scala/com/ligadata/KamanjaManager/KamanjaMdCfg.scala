@@ -79,7 +79,7 @@ object KamanjaMdCfg {
           KamanjaConfiguration.adapterInfoCommitTime = tm
         LOG.debug("AdapterCommitTime: " + KamanjaConfiguration.adapterInfoCommitTime)
       } catch {
-        case e: Exception => {}
+        case e: Exception => { LOG.warn("", e) }
       }
     }
 
@@ -221,7 +221,7 @@ object KamanjaMdCfg {
       Class.forName(className, true, KamanjaConfiguration.adaptersAndEnvCtxtLoader.loader)
     } catch {
       case e: Exception => {
-        LOG.error("Failed to load EnvironmentContext class %s with Reason:%s Message:%s".format(className, e.getCause, e.getMessage))
+        LOG.error("Failed to load EnvironmentContext class %s".format(className), e)
         return null
       }
     }
@@ -270,33 +270,25 @@ object KamanjaMdCfg {
         }
       } catch {
         case e: FatalAdapterException => {
-          val causeStackTrace = StackTrace.ThrowableTraceString(e.cause)
-          LOG.error("Failed to instantiate Environment Context object for Class:" + className + ". Reason:" + e.getCause + ". Message:" + e.getMessage + "\nCause:\n" + causeStackTrace)
+          LOG.error("Failed to instantiate Environment Context object for Class:" + className, e)
         }
         case e: StorageConnectionException => {
-          val causeStackTrace = StackTrace.ThrowableTraceString(e.cause)
-          LOG.error("Failed to instantiate Environment Context object for Class:" + className + ". Reason:" + e.getCause + ". Message:" + e.getMessage + "\nCause:\n" + causeStackTrace)
+          LOG.error("Failed to instantiate Environment Context object for Class:" + className, e)
         }
         case e: StorageFetchException => {
-          val causeStackTrace = StackTrace.ThrowableTraceString(e.cause)
-          LOG.error("Failed to instantiate Environment Context object for Class:" + className + ". Reason:" + e.getCause + ". Message:" + e.getMessage + "\nCause:\n" + causeStackTrace)
+          LOG.error("Failed to instantiate Environment Context object for Class:" + className, e)
         }
         case e: StorageDMLException => {
-          val causeStackTrace = StackTrace.ThrowableTraceString(e.cause)
-          LOG.error("Failed to instantiate Environment Context object for Class:" + className + ". Reason:" + e.getCause + ". Message:" + e.getMessage + "\nCause:\n" + causeStackTrace)
+          LOG.error("Failed to instantiate Environment Context object for Class:" + className, e)
         }
         case e: StorageDDLException => {
-          val causeStackTrace = StackTrace.ThrowableTraceString(e.cause)
-          LOG.error("Failed to instantiate Environment Context object for Class:" + className + ". Reason:" + e.getCause + ". Message:" + e.getMessage + "\nCause:\n" + causeStackTrace)
+          LOG.error("Failed to instantiate Environment Context object for Class:" + className, e)
         }
         case e: Exception => {
-          val causeStackTrace = StackTrace.ThrowableTraceString(e)
-          LOG.error("Failed to instantiate Environment Context object for Class:" + className + ". Reason:" + e.getCause + ". Message:" + e.getMessage + "\nCause:\n" + causeStackTrace)
+          LOG.error("Failed to instantiate Environment Context object for Class:" + className, e)
         }
         case e: Throwable => {
-          e.printStackTrace()
-          val causeStackTrace = StackTrace.ThrowableTraceString(e)
-          LOG.error("Failed to instantiate Environment Context object for Class:" + className + ". Reason:" + e.getCause + ". Message:" + e.getMessage + "\nCause:\n" + causeStackTrace)
+          LOG.error("Failed to instantiate Environment Context object for Class:" + className, e)
         }
       }
     } else {
@@ -392,15 +384,13 @@ object KamanjaMdCfg {
       Class.forName(statusAdapterCfg.className, true, KamanjaConfiguration.adaptersAndEnvCtxtLoader.loader)
     } catch {
       case e: Exception => {
-        val szErrMsg = "Failed to load Status/Output Adapter %s with class %s with Reason:%s Message:%s".format(statusAdapterCfg.Name, statusAdapterCfg.className, e.getCause, e.getMessage)
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        LOG.error(szErrMsg + "\nStackTrace:" + stackTrace)
+        val szErrMsg = "Failed to load Status/Output Adapter %s with class %s".format(statusAdapterCfg.Name, statusAdapterCfg.className)
+        LOG.error(szErrMsg, e)
         return null
       }
       case e: Throwable => {
-        val szErrMsg = "Failed to load Status/Output Adapter %s with class %s with Reason:%s Message:%s".format(statusAdapterCfg.Name, statusAdapterCfg.className, e.getCause, e.getMessage)
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        LOG.error(szErrMsg + "\nStackTrace:" + stackTrace)
+        val szErrMsg = "Failed to load Status/Output Adapter %s with class %s".format(statusAdapterCfg.Name, statusAdapterCfg.className)
+        LOG.error(szErrMsg, e)
         return null
       }
     }
@@ -433,12 +423,10 @@ object KamanjaMdCfg {
         }
       } catch {
         case e: Exception => {
-          val stackTrace = StackTrace.ThrowableTraceString(e)
-          LOG.error("Failed to instantiate output/status adapter object:" + statusAdapterCfg.className + ". Reason:" + e.getCause + ". Message:" + e.getMessage + "\nStackTrace:" + stackTrace)
+          LOG.error("Failed to instantiate output/status adapter object:" + statusAdapterCfg.className , e)
         }
         case e: Throwable => {
-          val stackTrace = StackTrace.ThrowableTraceString(e)
-          LOG.error("Failed to instantiate output/status adapter object:" + statusAdapterCfg.className + ". Reason:" + e.getCause + ". Message:" + e.getMessage + "\nStackTrace:" + stackTrace)
+          LOG.error("Failed to instantiate output/status adapter object:" + statusAdapterCfg.className, e)
         }
       }
     } else {
@@ -473,12 +461,11 @@ object KamanjaMdCfg {
         outputAdapters += adapter
       } catch {
         case e: Exception => {
-          LOG.error("Failed to get output adapter for %s. Reason:%s Message:%s".format(ac, e.getCause, e.getMessage))
+          LOG.error("Failed to get output adapter for %s".format(ac), e)
           return false
         }
         case e: Throwable => {
-          val stackTrace = StackTrace.ThrowableTraceString(e)
-          LOG.error("Failed to get output adapter for %s. Reason:%s Message:%s\nStackTrace:%s".format(ac, e.getCause, e.getMessage, stackTrace))
+          LOG.error("Failed to get output adapter for %s".format(ac), e)
           return false
         }
       }
@@ -508,13 +495,11 @@ object KamanjaMdCfg {
       Class.forName(statusAdapterCfg.className, true, KamanjaConfiguration.adaptersAndEnvCtxtLoader.loader)
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        LOG.error("Failed to load Validate/Input Adapter %s with class %s with Reason:%s Message:%s\nStackTrace:%s".format(statusAdapterCfg.Name, statusAdapterCfg.className, e.getCause, e.getMessage, stackTrace))
+        LOG.error("Failed to load Validate/Input Adapter %s with class %s".format(statusAdapterCfg.Name, statusAdapterCfg.className), e)
         return null
       }
       case e: Throwable => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        LOG.error("Failed to load Validate/Input Adapter %s with class %s with Reason:%s Message:%s\nStackTrace:%s".format(statusAdapterCfg.Name, statusAdapterCfg.className, e.getCause, e.getMessage, stackTrace))
+        LOG.error("Failed to load Validate/Input Adapter %s with class %s".format(statusAdapterCfg.Name, statusAdapterCfg.className), e)
         return null
       }
     }
@@ -547,12 +532,10 @@ object KamanjaMdCfg {
         }
       } catch {
         case e: Exception => {
-          val stackTrace = StackTrace.ThrowableTraceString(e)
-          LOG.error("Failed to instantiate input adapter object:" + statusAdapterCfg.className + ". Reason:" + e.getCause + ". Message:" + e.getMessage + "\nStackTrace:" + stackTrace)
+          LOG.error("Failed to instantiate input adapter object:" + statusAdapterCfg.className, e)
         }
         case e: Throwable => {
-          val stackTrace = StackTrace.ThrowableTraceString(e)
-          LOG.error("Failed to instantiate input adapter object:" + statusAdapterCfg.className + ". Reason:" + e.getCause + ". Message:" + e.getMessage + "\nStackTrace:" + stackTrace)
+          LOG.error("Failed to instantiate input adapter object:" + statusAdapterCfg.className, e)
         }
       }
     } else {
@@ -597,8 +580,7 @@ object KamanjaMdCfg {
         inputAdapters += adapter
       } catch {
         case e: Exception => {
-          val stackTrace = StackTrace.ThrowableTraceString(e)
-          LOG.error("Failed to get input adapter for %s. Reason:%s Message:%s\nStackTrace:%s".format(ac, e.getCause, e.getMessage, stackTrace))
+          LOG.error("Failed to get input adapter for %s.".format(ac), e)
           return false
         }
       }

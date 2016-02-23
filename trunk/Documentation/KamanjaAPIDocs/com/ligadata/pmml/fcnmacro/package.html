@@ -1,0 +1,163 @@
+<!DOCTYPE html >
+<html>
+        <head>
+          <title>fcnmacro - com.ligadata.pmml.fcnmacro</title>
+          <meta name="description" content="fcnmacro - com.ligadata.pmml.fcnmacro" />
+          <meta name="keywords" content="fcnmacro com.ligadata.pmml.fcnmacro" />
+          <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+          
+      <link href="../../../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
+      <link href="../../../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../../../../lib/jquery.js" id="jquery-js"></script>
+      <script type="text/javascript" src="../../../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../../../lib/template.js"></script>
+      <script type="text/javascript" src="../../../../lib/tools.tooltip.js"></script>
+      
+      <script type="text/javascript">
+         if(top === self) {
+            var url = '../../../../index.html';
+            var hash = 'com.ligadata.pmml.fcnmacro.package';
+            var anchor = window.location.hash;
+            var anchor_opt = '';
+            if (anchor.length >= 1)
+              anchor_opt = '@' + anchor.substring(1);
+            window.location.href = url + '#' + hash + anchor_opt;
+         }
+   	  </script>
+    
+        </head>
+        <body class="value">
+      <div id="definition">
+        <img alt="Package" src="../../../../lib/package_big.png" />
+        <p id="owner"><a href="../../../package.html" class="extype" name="com">com</a>.<a href="../../package.html" class="extype" name="com.ligadata">ligadata</a>.<a href="../package.html" class="extype" name="com.ligadata.pmml">pmml</a></p>
+        <h1>fcnmacro</h1><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.fcnmacro.package" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      </div>
+
+      <h4 id="signature" class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <span class="name">fcnmacro</span>
+      </span>
+      </h4>
+      
+          <div id="comment" class="fullcommenttop"></div>
+        
+
+      <div id="mbrsel">
+        <div id="textfilter"><span class="pre"></span><span class="input"><input id="mbrsel-input" type="text" accesskey="/" /></span><span class="post"></span></div>
+        
+        
+        <div id="visbl">
+            <span class="filtertype">Visibility</span>
+            <ol><li class="public in"><span>Public</span></li><li class="all out"><span>All</span></li></ol>
+          </div>
+      </div>
+
+      <div id="template">
+        <div id="allMembers">
+        
+
+        <div id="types" class="types members">
+              <h3>Type Members</h3>
+              <ol><li name="com.ligadata.pmml.fcnmacro.FunctionSelect" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="FunctionSelectextendsLogTrait"></a>
+      <a id="FunctionSelect:FunctionSelect"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="FunctionSelect.html"><span class="name">FunctionSelect</span></a><span class="result"> extends <a href="../compiler/LogTrait.html" class="extype" name="com.ligadata.pmml.compiler.LogTrait">LogTrait</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.fcnmacro.package@FunctionSelectextendsLogTrait" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt"> 1) Build a function typestring from the apply node and its children (function arguments) to locate the appropriate
+ function in the metadata.</p><div class="fullcomment"><div class="comment cmt"><p> 1) Build a function typestring from the apply node and its children (function arguments) to locate the appropriate
+ function in the metadata.
+ 2) Determine the return type for this function.  Use it to update the parent derived field (if needed).
+ 	a) If this function is Iterable the first argument will be considered the receiver, the second a function
+  		that operates on the Iterables elements and the remaining arguments used to select the function
+  		filter, map, retain ... etc function.
+     b) For map functions where the return type of the Iterable returned is different than the receiver, the
+     	type will be inferred from the transformation function used on each element.</p><p>      	For example, consider this map function that converts an array inpatient claims (a struct) to an array of doubles</p><p>       		&lt;DerivedField name=&quot;OutClaimIcd9DgnsFilter&quot; dataType=&quot;Array&quot; optype=&quot;categorical&quot;&gt;
+         		&lt;Apply function=&quot;ContainerMap&quot;&gt;
+           			&lt;FieldRef field=&quot;inPatientClaims&quot;/&gt;
+              		&lt;Constant dataType=&quot;fIdent&quot;&gt;Sum&lt;/Constant&gt;
+                		&lt;Constant dataType=&quot;ident&quot;&gt;Clm_Pmt_Amt&lt;/Constant&gt;
+                  	&lt;Constant dataType=&quot;ident&quot;&gt;Nch_Prmry_Pyr_Clm_Pd_Amt&lt;/Constant&gt;
+                   	&lt;Constant dataType=&quot;ident&quot;&gt;Nch_Bene_Blood_Ddctbl_Lblty_Am&lt;/Constant&gt;
+                    	&lt;Constant dataType=&quot;ident&quot;&gt;Nch_Bene_Ptb_Ddctbl_Amt&lt;/Constant&gt;
+                     &lt;Constant dataType=&quot;ident&quot;&gt;Nch_Bene_Ptb_Coinsrnc_Amt&lt;/Constant&gt;
+                     &lt;Constant dataType=&quot;integer&quot;&gt;1&lt;/Constant&gt;
+                 &lt;/Apply&gt;
+             &lt;/DerivedField&gt;</p><p>          A function key for the &quot;fIdent&quot;, Sum, would be prepared consisting of &quot;Sum(double,double,double,double,double,integer)&quot;
+          If there is not an exact match, a new key will be prepared that relaxes the argument types as necesary.  In this case
+          the new key would be &quot;Sum(double,double,double,double,double,double)&quot;.  If that fails, we are done, complaining about
+          the lack of a suitable function for this usage.</p><p>          Obviously the degree of sophistication employed for determining a matching type can be complex.  The &quot;implicit&quot;-ness
+          used to infer the proper function and its types will be a continuing improvement project.
+	c) When the function is not iterable all arguments are treated as arguments to the named apply function
+</p></div></div>
+    </li><li name="com.ligadata.pmml.fcnmacro.MacroSelect" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="MacroSelectextendsLogTrait"></a>
+      <a id="MacroSelect:MacroSelect"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="MacroSelect.html"><span class="name">MacroSelect</span></a><span class="result"> extends <a href="../compiler/LogTrait.html" class="extype" name="com.ligadata.pmml.compiler.LogTrait">LogTrait</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.fcnmacro.package@MacroSelectextendsLogTrait" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">class MacroSelect retrieves a MacroDef from the mdmgr based upon the function signature.</p><div class="fullcomment"><div class="comment cmt"><p>class MacroSelect retrieves a MacroDef from the mdmgr based upon the function signature.
+Since the Macro is so similar to the function, a FunctionSelect is supplied to service
+key formation and relaxation.
+</p></div></div>
+    </li></ol>
+            </div>
+
+        
+
+        
+
+        
+
+        
+        </div>
+
+        <div id="inheritedMembers">
+        
+        
+        </div>
+
+        <div id="groupedMembers">
+        <div class="group" name="Ungrouped">
+              <h3>Ungrouped</h3>
+              
+            </div>
+        </div>
+
+      </div>
+
+      <div id="tooltip"></div>
+
+      <div id="footer">  </div>
+
+
+    </body>
+      </html>

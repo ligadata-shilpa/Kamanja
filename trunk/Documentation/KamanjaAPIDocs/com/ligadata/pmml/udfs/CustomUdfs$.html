@@ -1,0 +1,711 @@
+<!DOCTYPE html >
+<html>
+        <head>
+          <title>CustomUdfs - com.ligadata.pmml.udfs.CustomUdfs</title>
+          <meta name="description" content="CustomUdfs - com.ligadata.pmml.udfs.CustomUdfs" />
+          <meta name="keywords" content="CustomUdfs com.ligadata.pmml.udfs.CustomUdfs" />
+          <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+          
+      <link href="../../../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
+      <link href="../../../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../../../../lib/jquery.js" id="jquery-js"></script>
+      <script type="text/javascript" src="../../../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../../../lib/template.js"></script>
+      <script type="text/javascript" src="../../../../lib/tools.tooltip.js"></script>
+      
+      <script type="text/javascript">
+         if(top === self) {
+            var url = '../../../../index.html';
+            var hash = 'com.ligadata.pmml.udfs.CustomUdfs$';
+            var anchor = window.location.hash;
+            var anchor_opt = '';
+            if (anchor.length >= 1)
+              anchor_opt = '@' + anchor.substring(1);
+            window.location.href = url + '#' + hash + anchor_opt;
+         }
+   	  </script>
+    
+        </head>
+        <body class="value">
+      <div id="definition">
+        <img alt="Object" src="../../../../lib/object_big.png" />
+        <p id="owner"><a href="../../../package.html" class="extype" name="com">com</a>.<a href="../../package.html" class="extype" name="com.ligadata">ligadata</a>.<a href="../package.html" class="extype" name="com.ligadata.pmml">pmml</a>.<a href="package.html" class="extype" name="com.ligadata.pmml.udfs">udfs</a></p>
+        <h1>CustomUdfs</h1><h3><span class="morelinks"><div>Related Doc:
+            <a href="package.html" class="extype" name="com.ligadata.pmml.udfs">package udfs</a>
+          </div></span></h3><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.udfs.CustomUdfs$" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      </div>
+
+      <h4 id="signature" class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <span class="name">CustomUdfs</span><span class="result"> extends <a href="../runtime/LogTrait.html" class="extype" name="com.ligadata.pmml.runtime.LogTrait">LogTrait</a></span>
+      </span>
+      </h4>
+      
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Sample udfs .. com.ligadata.pmml.udfs.CustomUdfs
+    This is a sample udf library to illustrate how one would add their own library of
+    functions to the Kamanja system such that they could be used in the PMML models run
+    there.
+    The udfs used in Kamanja must be declared in an object (i.e., they are static methods
+    for those of you familiar with java).
+    NOTE: If you want to invoke functions in the core library, make your UDF project that
+    builds your UDFs dependent on PmmlUdfs:
+        lazy val CustomUdfLib = project.in(file(&quot;SampleApplication/CustomUdfLib&quot;)) dependsOn(PmmlUdfs)</p><p>    Include the following two lines in your imports:
+        import com.ligadata.pmml.udfs._
+        import com.ligadata.pmml.udfs.Udfs._
+    The sample udf, ISO8601DateFmt, does use a function from the core udfs, so we include it here.
+    Once it is built, you can run the extractUDFLibMetadata.scala script on it that
+    will produce the metadata from it.
+    Assuming you have the sbtProjDependencies.scala and extractUDFLibMetadata.scala
+    scripts in a folder on your PATH, you can use this command from 'trunk' to compile it:
+    extractUdfLibMetadata.scala --sbtProject PmmlUdfs
+                                --fullObjectPath com.mycompany.pmml.udfs.SomeCustomUdfs
+                                --namespace Pmml
+                                --versionNumber 1000000
+                                --typeDefsPath /tmp/typesforSomeCustomUdfs.json
+                                --fcnDefsPath /tmp/fcnsforSomCustomUdfs.json
+    The version number supplied should be greater than any prior version used for the same
+    Udfs.  This is currently not checked.  It will complain when you try to load the metadata instead.
+    The 1000000 will produce a &quot;000000.000001.000000&quot; version number for each of your udf functions.
+    The last two arguments are paths to the json that is produced by the script looking
+    into the udf jar for PmmlUdfs at the functions on the 'fullObjectPath'.
+    As written, the types do not really need to be loaded into the MetadataAPI, as they
+    have all been defined in the Kamanja metadata bootstrap.  The udfs json file must be loaded
+    however.  The types would be needed if you introduced a type that has not been previously declared
+    in the bootstrap.  If you are not sure there is no harm loading the types file.  If one of
+    the types is already present, an error will be logged to that effect.  This is probably ok,
+    however, you should inspect the types that are duplicate to verify they reflect what
+    your intention is.
+    To use this udf library in one of your models, you need to reference it in the model
+    itself.  In the DataDictionary section, put the following:
+        &lt;DataField name=&quot;UDFSearchPath&quot; displayName=&quot;UDFSearchPath&quot; dataType=&quot;container&quot;&gt;
+          &lt;Value value=&quot;com.mycompany.pmml.udfs.CustomUdfs&quot; property=&quot;valid&quot;/&gt;
+        &lt;/DataField&gt;
+    Important: Don't forget to upload your library to the Kamanja cluster.  There is an upload jar
+    protocol for this purpose.
+</p></div><div class="toggleContainer block">
+          <span class="toggle">Linear Supertypes</span>
+          <div class="superTypes hiddenContent"><a href="../runtime/LogTrait.html" class="extype" name="com.ligadata.pmml.runtime.LogTrait">LogTrait</a>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></div>
+        </div></div>
+        
+
+      <div id="mbrsel">
+        <div id="textfilter"><span class="pre"></span><span class="input"><input id="mbrsel-input" type="text" accesskey="/" /></span><span class="post"></span></div>
+        <div id="order">
+              <span class="filtertype">Ordering</span>
+              <ol>
+                
+                <li class="alpha in"><span>Alphabetic</span></li>
+                <li class="inherit out"><span>By inheritance</span></li>
+              </ol>
+            </div>
+        <div id="ancestors">
+                <span class="filtertype">Inherited<br />
+                </span>
+                <ol id="linearization">
+                  <li class="in" name="com.ligadata.pmml.udfs.CustomUdfs"><span>CustomUdfs</span></li><li class="in" name="com.ligadata.pmml.runtime.LogTrait"><span>LogTrait</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                </ol>
+              </div><div id="ancestors">
+            <span class="filtertype"></span>
+            <ol>
+              <li class="hideall out"><span>Hide All</span></li>
+              <li class="showall in"><span>Show all</span></li>
+            </ol>
+          </div>
+        <div id="visbl">
+            <span class="filtertype">Visibility</span>
+            <ol><li class="public in"><span>Public</span></li><li class="all out"><span>All</span></li></ol>
+          </div>
+      </div>
+
+      <div id="template">
+        <div id="allMembers">
+        
+
+        
+
+        
+
+        <div id="values" class="values members">
+              <h3>Value Members</h3>
+              <ol><li name="scala.AnyRef#!=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="!=(x$1:Any):Boolean"></a>
+      <a id="!=(Any):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.udfs.CustomUdfs$@!=(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.AnyRef###" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="##():Int"></a>
+      <a id="##():Int"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.udfs.CustomUdfs$@##():Int" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.AnyRef#==" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="==(x$1:Any):Boolean"></a>
+      <a id="==(Any):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.udfs.CustomUdfs$@==(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="com.ligadata.pmml.udfs.CustomUdfs#Concat" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="Concat(args:Any*):String"></a>
+      <a id="Concat(Any*):String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">Concat</span><span class="params">(<span name="args">args: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a>*</span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.udfs.CustomUdfs$@Concat(args:Any*):String" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt"> Accept an indefinite number of objects and concatenate their string representations</p><div class="fullcomment"><div class="comment cmt"><p> Accept an indefinite number of objects and concatenate their string representations</p></div><dl class="paramcmts block"><dt class="param">args</dt><dd class="cmt"><p>: arguments whose string representations will be concatenated</p></dd><dt>returns</dt><dd class="cmt"><p>concatenation of args' string representations
+ NOTE: concat(args : Any*) is available in the core udf library now.. this one is deprecated</p></dd></dl></div>
+    </li><li name="com.ligadata.pmml.udfs.CustomUdfs#ID_GEN" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ID_GEN():String"></a>
+      <a id="ID_GEN():String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">ID_GEN</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.udfs.CustomUdfs$@ID_GEN():String" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Returns a random UUID string
+NOTE: idGen() is available in the core udf library now..</p><div class="fullcomment"><div class="comment cmt"><p>Returns a random UUID string
+NOTE: idGen() is available in the core udf library now.. this one is deprecated
+</p></div></div>
+    </li><li name="com.ligadata.pmml.udfs.CustomUdfs#Length" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Length(str:String):Int"></a>
+      <a id="Length(String):Int"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">Length</span><span class="params">(<span name="str">str: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.udfs.CustomUdfs$@Length(str:String):Int" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.pmml.udfs.CustomUdfs#LogMsg" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="LogMsg(severity:String,contextMsg:String,eventMsg:String,bool:Boolean):Boolean"></a>
+      <a id="LogMsg(String,String,String,Boolean):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">LogMsg</span><span class="params">(<span name="severity">severity: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="contextMsg">contextMsg: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="eventMsg">eventMsg: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="bool">bool: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.udfs.CustomUdfs$@LogMsg(severity:String,contextMsg:String,eventMsg:String,bool:Boolean):Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt"> Print the two strings to the log.</p><div class="fullcomment"><div class="comment cmt"><p> Print the two strings to the log.  The first is some location or context information.  The second
+ is the event description.
+</p></div><dl class="paramcmts block"><dt class="param">severity</dt><dd class="cmt"><p>a string describing log severity level ... any {error, warn, info, debug, trace}</p></dd><dt class="param">contextMsg</dt><dd class="cmt"><p>a string describing the context of why this message is to be logged (or anything else for that matter)</p></dd><dt class="param">eventMsg</dt><dd class="cmt"><p>a string that describes what has actually happened</p></dd><dt class="param">bool</dt><dd class="cmt"><p>a Boolean that is returned as this function's result (to play into the pmml logic as desired)</p></dd><dt>returns</dt><dd class="cmt"><p>bool
+ NOTE: logMsg(String,String,String,Boolean) is available in the core udf library now.. this one is deprecated</p></dd></dl></div>
+    </li><li name="scala.Any#asInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="asInstanceOf[T0]:T0"></a>
+      <a id="asInstanceOf[T0]:T0"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">asInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Any.asInstanceOf.T0">T0</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.udfs.CustomUdfs$@asInstanceOf[T0]:T0" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li name="scala.AnyRef#clone" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="clone():Object"></a>
+      <a id="clone():AnyRef"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.udfs.CustomUdfs$@clone():Object" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="defval" name="classOf[java.lang.CloneNotSupportedException]">...</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="com.ligadata.pmml.udfs.CustomUdfs#dateBlock" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="dateBlock(fmtStr:String,yyyymmdds:Any*):String"></a>
+      <a id="dateBlock(String,Any*):String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">dateBlock</span><span class="params">(<span name="fmtStr">fmtStr: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="yyyymmdds">yyyymmdds: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a>*</span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.udfs.CustomUdfs$@dateBlock(fmtStr:String,yyyymmdds:Any*):String" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">       Convert the supplied iso8601 date integers according to these format codes:</p><div class="fullcomment"><div class="comment cmt"><p>       Convert the supplied iso8601 date integers according to these format codes:</p><p>     Symbol  Meaning                      Presentation  Examples
+     ------  -------                      ------------  -------
+     G       era                          text          AD
+     C       century of era (&gt;=0)         number        20
+     Y       year of era (&gt;=0)            year          1996</p><p>     x       weekyear                     year          1996
+     w       week of weekyear             number        27
+     e       day of week                  number        2
+     E       day of week                  text          Tuesday; Tue</p><p>     y       year                         year          1996
+     D       day of year                  number        189
+     M       month of year                month         July; Jul; 07
+     d       day of month                 number        10</p><p>     a       halfday of day               text          PM
+     K       hour of halfday (0~11)       number        0
+     h       clockhour of halfday (1~12)  number        12</p><p>     H       hour of day (0~23)           number        0
+     k       clockhour of day (1~24)      number        24
+     m       minute of hour               number        30
+     s       second of minute             number        55
+     S       fraction of second           number        978</p><p>     z       time zone                    text          Pacific Standard Time; PST
+     Z       time zone offset/id          zone          -0800; -08:00; America/Los_Angeles</p><p>     '       escape for text              delimiter
+     <i>      single quote                 literal
+</i></p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>string rep of this date
+     NOTE: iso8601DateFmt(String, Int) is available in the core udf library now.. this one is deprecated</p></dd></dl></div>
+    </li><li name="scala.AnyRef#eq" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="eq(x$1:AnyRef):Boolean"></a>
+      <a id="eq(AnyRef):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.udfs.CustomUdfs$@eq(x$1:AnyRef):Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#equals" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="equals(x$1:Any):Boolean"></a>
+      <a id="equals(Any):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.udfs.CustomUdfs$@equals(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.AnyRef#finalize" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="finalize():Unit"></a>
+      <a id="finalize():Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.udfs.CustomUdfs$@finalize():Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="symbol">classOf[java.lang.Throwable]</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="scala.AnyRef#getClass" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getClass():Class[_]"></a>
+      <a id="getClass():Class[_]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getClass</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.Class">Class</span>[_]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.udfs.CustomUdfs$@getClass():Class[_]" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="com.ligadata.pmml.udfs.CustomUdfs#getMatchingTokens" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="getMatchingTokens(inputString:String,context:Array[String]):String"></a>
+      <a id="getMatchingTokens(String,Array[String]):String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getMatchingTokens</span><span class="params">(<span name="inputString">inputString: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="context">context: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.udfs.CustomUdfs$@getMatchingTokens(inputString:String,context:Array[String]):String" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="scala.AnyRef#hashCode" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="hashCode():Int"></a>
+      <a id="hashCode():Int"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.udfs.CustomUdfs$@hashCode():Int" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.Any#isInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="isInstanceOf[T0]:Boolean"></a>
+      <a id="isInstanceOf[T0]:Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.udfs.CustomUdfs$@isInstanceOf[T0]:Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li name="com.ligadata.pmml.runtime.LogTrait#logger" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="logger:org.apache.logging.log4j.Logger"></a>
+      <a id="logger:Logger"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">logger</span><span class="result">: <span class="extype" name="org.apache.logging.log4j.Logger">Logger</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.udfs.CustomUdfs$@logger:org.apache.logging.log4j.Logger" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../runtime/LogTrait.html" class="extype" name="com.ligadata.pmml.runtime.LogTrait">LogTrait</a></dd></dl></div>
+    </li><li name="com.ligadata.pmml.udfs.CustomUdfs#matchTermsetBoolean" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="matchTermsetBoolean(inputString:String,context:Array[String],degree:Integer):Boolean"></a>
+      <a id="matchTermsetBoolean(String,Array[String],Integer):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">matchTermsetBoolean</span><span class="params">(<span name="inputString">inputString: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="context">context: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="degree">degree: <span class="extype" name="java.lang.Integer">Integer</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.udfs.CustomUdfs$@matchTermsetBoolean(inputString:String,context:Array[String],degree:Integer):Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">matchTermsetBoolean - Method will analyze a given string for the presence of tokens specified in the context parameters.</p><div class="fullcomment"><div class="comment cmt"><p>matchTermsetBoolean - Method will analyze a given string for the presence of tokens specified in the context parameters.  If the number of
+                     present tokens exceeds the degree parameter, return TRUE, else return FALSE.  This method is CASE INSENSITIVE</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>Boolean</p></dd></dl></div>
+    </li><li name="com.ligadata.pmml.udfs.CustomUdfs#matchTermsetCount" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="matchTermsetCount(inputString:String,context:Array[String]):Array[Integer]"></a>
+      <a id="matchTermsetCount(String,Array[String]):Array[Integer]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">matchTermsetCount</span><span class="params">(<span name="inputString">inputString: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="context">context: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<span class="extype" name="java.lang.Integer">Integer</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.udfs.CustomUdfs$@matchTermsetCount(inputString:String,context:Array[String]):Array[Integer]" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">matchTermsetCount - Method will analyze a given string for the presence of specified tokens and return the Array of integers where
+                     each element corresponds to the number of times a token in that position of the context array appears in the
+                     inputString.</p><div class="fullcomment"><div class="comment cmt"><p>matchTermsetCount - Method will analyze a given string for the presence of specified tokens and return the Array of integers where
+                     each element corresponds to the number of times a token in that position of the context array appears in the
+                     inputString.  This method is CASE INSENSITIVE
+</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>Array[Integer]</p></dd></dl></div>
+    </li><li name="scala.AnyRef#ne" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ne(x$1:AnyRef):Boolean"></a>
+      <a id="ne(AnyRef):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.udfs.CustomUdfs$@ne(x$1:AnyRef):Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#notify" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="notify():Unit"></a>
+      <a id="notify():Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.udfs.CustomUdfs$@notify():Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#notifyAll" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="notifyAll():Unit"></a>
+      <a id="notifyAll():Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.udfs.CustomUdfs$@notifyAll():Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#synchronized" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="synchronized[T0](x$1:=&gt;T0):T0"></a>
+      <a id="synchronized[T0](⇒T0):T0"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">synchronized</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="params">(<span name="arg0">arg0: ⇒ <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>)</span><span class="result">: <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.udfs.CustomUdfs$@synchronized[T0](x$1:=&gt;T0):T0" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#toString" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="toString():String"></a>
+      <a id="toString():String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">toString</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.udfs.CustomUdfs$@toString():String" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="wait():Unit"></a>
+      <a id="wait():Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.udfs.CustomUdfs$@wait():Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="defval" name="classOf[java.lang.InterruptedException]">...</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="wait(x$1:Long,x$2:Int):Unit"></a>
+      <a id="wait(Long,Int):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Long" class="extype" target="_top">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.udfs.CustomUdfs$@wait(x$1:Long,x$2:Int):Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="defval" name="classOf[java.lang.InterruptedException]">...</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="wait(x$1:Long):Unit"></a>
+      <a id="wait(Long):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Long" class="extype" target="_top">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.udfs.CustomUdfs$@wait(x$1:Long):Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="defval" name="classOf[java.lang.InterruptedException]">...</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li></ol>
+            </div>
+
+        
+
+        
+        </div>
+
+        <div id="inheritedMembers">
+        <div class="parent" name="com.ligadata.pmml.runtime.LogTrait">
+              <h3>Inherited from <a href="../runtime/LogTrait.html" class="extype" name="com.ligadata.pmml.runtime.LogTrait">LogTrait</a></h3>
+            </div><div class="parent" name="scala.AnyRef">
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></h3>
+            </div><div class="parent" name="scala.Any">
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></h3>
+            </div>
+        
+        </div>
+
+        <div id="groupedMembers">
+        <div class="group" name="Ungrouped">
+              <h3>Ungrouped</h3>
+              
+            </div>
+        </div>
+
+      </div>
+
+      <div id="tooltip"></div>
+
+      <div id="footer">  </div>
+
+
+    </body>
+      </html>

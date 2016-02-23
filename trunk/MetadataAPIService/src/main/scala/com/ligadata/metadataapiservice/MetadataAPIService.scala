@@ -433,17 +433,17 @@ trait MetadataAPIService extends HttpService {
       return createGetArg(objKey, objType)
     } catch {
       case aobe: ArrayIndexOutOfBoundsException => {
-        logger.debug("METADATASERVICE: Invalid key " + objKey)
+        logger.debug("METADATASERVICE: Invalid key " + objKey, aobe)
         rContext.complete((new ApiResult(ErrorCodeConstants.Failure, APIName, null, "Invalid key: " + objKey)).toString)
         return null
       }
       case nfe: java.lang.NumberFormatException => {
-        logger.debug("METADATASERVICE: Invalid key " + objKey)
+        logger.debug("METADATASERVICE: Invalid key " + objKey, nfe)
         rContext.complete((new ApiResult(ErrorCodeConstants.Failure, APIName, null, "Invalid key: " + objKey)).toString)
         return null
       }
       case iae: com.ligadata.Exceptions.InvalidArgumentException => {
-        logger.debug("METADATASERVICE: Invalid key " + objKey)
+        logger.debug("METADATASERVICE: Invalid key " + objKey, iae)
         rContext.complete((new ApiResult(ErrorCodeConstants.Failure, APIName, null, "Invalid key: " + objKey)).toString)
         return null
       }

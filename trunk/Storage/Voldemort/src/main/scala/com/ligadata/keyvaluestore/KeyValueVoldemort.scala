@@ -79,7 +79,7 @@ class KeyValueVoldemort(val kvManagerLoader: KamanjaLoaderInfo, val datastoreCon
     parsed_json = json.values.asInstanceOf[Map[String, Any]]
   } catch {
     case e: Exception => {
-      logger.error("Failed to parse Voldemort JSON configuration string:%s. Reason:%s Message:%s".format(adapterConfig, e.getCause, e.getMessage))
+      logger.error("Failed to parse Voldemort JSON configuration string:%s.".format(adapterConfig), e)
       throw e
     }
   }
@@ -99,7 +99,7 @@ class KeyValueVoldemort(val kvManagerLoader: KamanjaLoaderInfo, val datastoreCon
         adapterSpecificConfig_json = json.values.asInstanceOf[Map[String, Any]]
       } catch {
         case e: Exception => {
-          logger.error("Failed to parse Cassandra Adapter Specific JSON configuration string:%s. Reason:%s Message:%s".format(adapterSpecificStr, e.getCause, e.getMessage))
+          logger.error("Failed to parse Cassandra Adapter Specific JSON configuration string:%s.".format(adapterSpecificStr), e)
           throw e
         }
       }

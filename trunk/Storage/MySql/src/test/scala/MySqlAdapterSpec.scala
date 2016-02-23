@@ -66,7 +66,7 @@ class MySqlAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterAl
       adapter = MySqlAdapter.CreateStorageAdapter(kvManagerLoader, dataStoreInfo)
    }
     catch {
-      case e: Exception => throw new Exception("Failed to execute set up properly\n" + e)
+      case e: Exception => throw new Exception("Failed to execute set up properly", e)
     }
   }
 

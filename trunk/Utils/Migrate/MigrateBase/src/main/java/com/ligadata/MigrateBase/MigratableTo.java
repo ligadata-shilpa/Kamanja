@@ -17,7 +17,7 @@
 package com.ligadata.MigrateBase;
 
 public interface MigratableTo {
-  public abstract void init(String destInstallPath, String apiConfigFile, String clusterConfigFile, String sourceVersion, String unhandledMetadataDumpDir, String curMigrationSummaryFlPath); // Source version is like 1.1 or 1.2, etc
+    public abstract void init(String destInstallPath, String apiConfigFile, String clusterConfigFile, String sourceVersion, String unhandledMetadataDumpDir, String curMigrationSummaryFlPath,int parallelDegree, boolean mergeContainersAndMessages, String fromScalaVersion, String toScalaVersion ); // Source version is like 1.1 or 1.2, etc
   public abstract boolean isInitialized();
   public abstract String getMetadataStoreInfo();
   public abstract String getDataStoreInfo();
@@ -25,14 +25,13 @@ public interface MigratableTo {
   public abstract boolean isMetadataTableExists(TableName tblInfo);
   public abstract boolean isDataTableExists(TableName tblInfo);
   public abstract boolean isStatusTableExists(TableName tblInfo);
-  public abstract void backupMetadataTables(BackupTableInfo[] tblsToBackedUp, boolean force);
-  public abstract void backupDataTables(BackupTableInfo[] tblsToBackedUp, boolean force);
-  public abstract void backupStatusTables(BackupTableInfo[] tblsToBackedUp, boolean force);
-  public abstract void dropMetadataTables(TableName[] tblsToDrop);
-  public abstract void dropDataTables(TableName[] tblsToDrop);
-  public abstract void dropStatusTables(TableName[] tblsToDrop);
+  public abstract void backupAllTables(BackupTableInfo[] metadataTblsToBackedUp, BackupTableInfo[] dataTblsToBackedUp, BackupTableInfo[] statusTblsToBackedUp, boolean force);
+  public abstract void dropAllTables(TableName[] metadataTblsToDrop, TableName[] dataTblsToDrop, TableName[] statusTblsToDrop);
   public abstract void dropMessageContainerTablesFromMetadata(MetadataFormat[] allMetadataElemsJson);
-  public abstract void addMetadata(MetadataFormat[] allMetadataElemsJson, boolean uploadClusterConfig, String[] excludeMetadata);
+  public abstract java.util.List<String> addMetadata(MetadataFormat[] allMetadataElemsJson, boolean uploadClusterConfig, String[] excludeMetadata); // Returns Added Messages & Containers Full Qualified Names
   public abstract void populateAndSaveData(DataFormat[] data);
   public abstract void shutdown();
+  public abstract String getStatusFromDataStore(String key);
+  public abstract void setStatusFromDataStore(String key, String value);
+  public abstract FailedMetadataKey[] getFailedMetadataKeys();
 }

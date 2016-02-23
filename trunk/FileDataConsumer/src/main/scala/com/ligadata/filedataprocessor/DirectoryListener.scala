@@ -36,7 +36,7 @@ object LocationWatcher {
             properties(lProp(0)) = lProp(1)
           } catch {
             case iobe: IndexOutOfBoundsException => {
-              logger.error("SMART FILE CONSUMER: Invalid format in the configuration file " + config)
+              logger.error("SMART FILE CONSUMER: Invalid format in the configuration file " + config, iobe)
               logger.error("SMART FILE CONSUMER: unable to determine the value for property " + lProp(0))
               return
             }
@@ -67,7 +67,7 @@ object LocationWatcher {
          path = FileSystems.getDefault().getPath(dirName)
       } catch {
         case e: IOException => {
-          logger.error ("Unable to find the directory to watch")
+          logger.error ("Unable to find the directory to watch", e)
           return
         }
       }

@@ -23,7 +23,6 @@ import com.ligadata.kamanja.metadata.{MdMgr, ModelDef, BaseElem}
 import com.ligadata.KamanjaBase.{ FactoryOfModelInstanceFactory, ModelInstanceFactory, EnvContext, NodeContext }
 import com.ligadata.KamanjaBase.{ MappedModelResults, MessageContainerBase, ModelInstance, ModelResultBase, TransactionContext }
 import com.ligadata.Utils.{ Utils, KamanjaClassLoader, KamanjaLoaderInfo }
-import com.ligadata.Exceptions.StackTrace
 
 import org.apache.logging.log4j.LogManager
 

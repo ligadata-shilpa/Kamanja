@@ -1,22 +1,21 @@
-import AssemblyKeys._ // put this at the top of the file
+import sbtassembly.AssemblyPlugin.defaultShellScript
 import sbt._
 import Keys._
 
 shellPrompt := { state =>  "sbt (%s)> ".format(Project.extract(state).currentProject.id) }
 
-assemblySettings
+
 
 mainClass in assembly := Some("com.ligadata.MetadataAPI.StartMetadataAPI")
 
 assemblyOption in assembly ~= { _.copy(prependShellScript = Some(defaultShellScript)) }
 
-jarName in assembly := { s"${name.value}-${version.value}" }
+assemblyJarName in assembly := { s"${name.value}-${version.value}" }
 
 // for some reason the merge strategy for non ligadata classes are not working and thus added those conflicting jars in exclusions
 // this may result some run time errors
 
-mergeStrategy in assembly <<= (mergeStrategy in assembly) { (old) =>
-  {
+assemblyMergeStrategy in assembly := {
     // case PathList("javax", "servlet", xs @ _*)         => MergeStrategy.first
     // case PathList(ps @ _*) if ps.last endsWith ".html" => MergeStrategy.first
 case PathList("META-INF", "maven","jline","jline", ps) if ps.startsWith("pom") => MergeStrategy.discard
@@ -45,8 +44,10 @@ case PathList("META-INF", "maven","jline","jline", ps) if ps.startsWith("pom") =
     case x if x contains "commons-logging" => MergeStrategy.first
     case "log4j.properties" => MergeStrategy.first
     case "unwanted.txt"     => MergeStrategy.discard
-    case x => old(x)
-  }
+            case x =>
+		        val oldStrategy = (assemblyMergeStrategy in assembly).value
+		        oldStrategy(x)
+
 }
 
 excludedJars in assembly <<= (fullClasspath in assembly) map { cp => 
@@ -59,8 +60,6 @@ test in assembly := {}
 name := "MetadataAPI"
 
 version := "1.0"
-
-scalaVersion := "2.11.7"
 
 libraryDependencies += "org.joda" % "joda-convert" % "1.6"
 
@@ -80,7 +79,7 @@ libraryDependencies += "org.apache.zookeeper" % "zookeeper" % "3.4.6"
 
 libraryDependencies += "org.apache.curator" % "apache-curator" % "2.0.0-incubating"
 
-libraryDependencies += "com.google.guava" % "guava" % "16.0.1" 
+libraryDependencies += "com.google.guava" % "guava" % "14.0.1" 
 
 libraryDependencies += "org.jpmml" % "pmml-evaluator" % "1.2.4"
 
@@ -88,7 +87,7 @@ libraryDependencies += "org.jpmml" % "pmml-model" % "1.2.5"
 
 libraryDependencies += "org.jpmml" % "pmml-schema" % "1.2.5"
 
-dependencyOverrides += "com.google.guava" % "guava" % "16.0.1" 
+dependencyOverrides += "com.google.guava" % "guava" % "14.0.1" 
 
 libraryDependencies += "commons-codec" % "commons-codec" % "1.10"
 
@@ -96,7 +95,6 @@ libraryDependencies += "commons-io" % "commons-io" % "2.4"
 
 libraryDependencies ++= Seq(
 "com.twitter" %% "chill" % "0.5.0",
-"org.scalameta" %% "quasiquotes" % "0.0.3",
  "org.apache.shiro" % "shiro-core" % "1.2.3",
  "org.apache.shiro" % "shiro-root" % "1.2.3"
 )

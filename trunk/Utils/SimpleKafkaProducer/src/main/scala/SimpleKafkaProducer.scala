@@ -27,7 +27,6 @@ import java.util.zip.GZIPInputStream
 import java.nio.file.{Files, Paths }
 import kafka.utils.VerifiableProperties
 import com.ligadata.Utils.KeyHasher
-import com.ligadata.Exceptions.StackTrace
 import org.apache.logging.log4j._
 
 object ProducerSimpleStats {
@@ -90,8 +89,7 @@ class CustPartitioner(props: VerifiableProperties) extends Partitioner {
     } catch {
       case e: Exception =>
         {
-          val stackTrace = StackTrace.ThrowableTraceString(e)
-          logger.debug("StackTrace:"+stackTrace)
+          logger.debug("", e)
         }
         // println("Exception found, so , Bucket : 0")
         return 0
@@ -135,8 +133,7 @@ object SimpleKafkaProducer {
       //producer.send(new KeyedMessage(topic, message))
     } catch {
       case e: Exception =>
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
         sys.exit(1)
     }
   }
@@ -179,8 +176,7 @@ object SimpleKafkaProducer {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("Stacktrace:"+stackTrace)
+        logger.debug("", e)
         println("Error reading from a file ")}
     } finally {
       if (bis != null) bis.close
@@ -616,8 +612,7 @@ object SimpleKafkaProducer {
       try {
         executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
       } catch {
-        case e: Exception => {val stackTrace = StackTrace.ThrowableTraceString(e)
-          logger.debug("StackTrace:"+stackTrace)}
+        case e: Exception => { logger.debug("", e)}
       }
     }
 

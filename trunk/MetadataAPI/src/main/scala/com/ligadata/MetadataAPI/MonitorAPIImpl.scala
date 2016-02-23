@@ -154,8 +154,16 @@ object MonitorAPIImpl {
        override def run() = {
          var startTime = System.currentTimeMillis
          while (!_exec.isShutdown) {
-           clockNewActivity
-           Thread.sleep(5000)
+           try {
+             clockNewActivity
+             Thread.sleep(5000)
+           }
+           catch {
+             case e: Exception => {
+               if (!_exec.isShutdown)
+                 logger.warn("", e)
+             }
+           }
          }
        }
       })
