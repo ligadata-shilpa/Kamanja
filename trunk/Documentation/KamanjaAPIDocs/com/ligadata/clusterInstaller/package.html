@@ -1,0 +1,185 @@
+<!DOCTYPE html >
+<html>
+        <head>
+          <title>clusterInstaller - com.ligadata.clusterInstaller</title>
+          <meta name="description" content="clusterInstaller - com.ligadata.clusterInstaller" />
+          <meta name="keywords" content="clusterInstaller com.ligadata.clusterInstaller" />
+          <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+          
+      <link href="../../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
+      <link href="../../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../../../lib/jquery.js" id="jquery-js"></script>
+      <script type="text/javascript" src="../../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../../lib/template.js"></script>
+      <script type="text/javascript" src="../../../lib/tools.tooltip.js"></script>
+      
+      <script type="text/javascript">
+         if(top === self) {
+            var url = '../../../index.html';
+            var hash = 'com.ligadata.clusterInstaller.package';
+            var anchor = window.location.hash;
+            var anchor_opt = '';
+            if (anchor.length >= 1)
+              anchor_opt = '@' + anchor.substring(1);
+            window.location.href = url + '#' + hash + anchor_opt;
+         }
+   	  </script>
+    
+        </head>
+        <body class="value">
+      <div id="definition">
+        <img alt="Package" src="../../../lib/package_big.png" />
+        <p id="owner"><a href="../../package.html" class="extype" name="com">com</a>.<a href="../package.html" class="extype" name="com.ligadata">ligadata</a></p>
+        <h1>clusterInstaller</h1><span class="permalink">
+      <a href="../../../index.html#com.ligadata.clusterInstaller.package" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      </div>
+
+      <h4 id="signature" class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <span class="name">clusterInstaller</span>
+      </span>
+      </h4>
+      
+          <div id="comment" class="fullcommenttop"></div>
+        
+
+      <div id="mbrsel">
+        <div id="textfilter"><span class="pre"></span><span class="input"><input id="mbrsel-input" type="text" accesskey="/" /></span><span class="post"></span></div>
+        
+        
+        <div id="visbl">
+            <span class="filtertype">Visibility</span>
+            <ol><li class="public in"><span>Public</span></li><li class="all out"><span>All</span></li></ol>
+          </div>
+      </div>
+
+      <div id="template">
+        <div id="allMembers">
+        
+
+        <div id="types" class="types members">
+              <h3>Type Members</h3>
+              <ol><li name="com.ligadata.clusterInstaller.ClusterConfigMap" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ClusterConfigMapextendsAnyRef"></a>
+      <a id="ClusterConfigMap:ClusterConfigMap"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="ClusterConfigMap.html"><span class="name">ClusterConfigMap</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.clusterInstaller.package@ClusterConfigMapextendsAnyRef" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.clusterInstaller.InstallDriverLog" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="InstallDriverLogextendsStatusCallback"></a>
+      <a id="InstallDriverLog:InstallDriverLog"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="InstallDriverLog.html"><span class="name">InstallDriverLog</span></a><span class="result"> extends <a href="../Migrate/StatusCallback.html" class="extype" name="com.ligadata.Migrate.StatusCallback">StatusCallback</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.clusterInstaller.package@InstallDriverLogextendsStatusCallback" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">This application installs and upgrades Kamanaja.</p><div class="fullcomment"><div class="comment cmt"><p>This application installs and upgrades Kamanaja.  It does these essential things:</p><p>1)  It verifies that a valid environment is available on the cluster nodes specified in the configuration.  The validation includes determination
+if the nodes mentioned in the node configuration exist, whether they are configured with the apporopriate scala and java, can access a valid
+zookeeper cluster, can access a valid kafka cluster and can use the hBase kv store configured for this cluster.
+2)  The cluster installation script is used to install a new version of the Kamanja release binariesa in the new installation directory on each node.
+3)  If an existing cluster installation is being upgraded, the appropriate migration script is invoked.  A migration json file is prepared with the essential
+details required for this migration.</p><p>Notes:
+1) The prior installation directory, if upgrading, and the new installation directory are determined from the apiConfig property, ROOT_DIR.  To
+make sure we no where the new and old installations are located (they are sibling directories in the same parent folder), the parent folder is
+supplied to the cluster install script.
+2) The migration script requires a JSON file that contains information about the upgrade.  There are substitution symbols (&quot;macros&quot;) in the
+file that are substituted with the appropriate values, either supplied in the script parameters or from one of the configuation files
+whose path was supplied.  The substitution symbols have the form &quot;&quot;&quot;({[A-Za-z0-9_.-]+})&quot;&quot;&quot; ... that is, some run 1 or more Alphamerics and punctuation
+enclosed in {} braces.  For example,</p><p>    &quot;clusterConfigFile&quot;: &quot;{NewPackageInstallPath}/config/ClusterConfig.json&quot;,</p><p>See trunk/SampleApplication/clusterInstallerDriver/src/main/resources/MigrateConfigTemplate.json in the github dev repo for an example template.
+</p></div></div>
+    </li><li name="com.ligadata.clusterInstaller.MapSubstitution" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="MapSubstitutionextendsAnyRef"></a>
+      <a id="MapSubstitution:MapSubstitution"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="MapSubstitution.html"><span class="name">MapSubstitution</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.clusterInstaller.package@MapSubstitutionextendsAnyRef" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li></ol>
+            </div>
+
+        
+
+        <div id="values" class="values members">
+              <h3>Value Members</h3>
+              <ol><li name="com.ligadata.clusterInstaller.InstallDriver" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="InstallDriver"></a>
+      <a id="InstallDriver:InstallDriver"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="InstallDriver$.html"><span class="name">InstallDriver</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.App" class="extype" target="_top">App</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.clusterInstaller.package@InstallDriver" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li></ol>
+            </div>
+
+        
+
+        
+        </div>
+
+        <div id="inheritedMembers">
+        
+        
+        </div>
+
+        <div id="groupedMembers">
+        <div class="group" name="Ungrouped">
+              <h3>Ungrouped</h3>
+              
+            </div>
+        </div>
+
+      </div>
+
+      <div id="tooltip"></div>
+
+      <div id="footer">  </div>
+
+
+    </body>
+      </html>

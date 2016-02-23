@@ -30,7 +30,6 @@ import com.ligadata.pmml.support._
 import com.ligadata.pmml.traits._
 import com.ligadata.pmml.syntaxtree.cooked.common._
 import com.ligadata.pmml.transforms.printers.scala.common._
-import com.ligadata.Exceptions.StackTrace
 
 
 class PmmlExecNode (val qName : String, val lineNumber : Int, val columnNumber : Int) extends com.ligadata.pmml.compiler.LogTrait  { 
@@ -1326,10 +1325,8 @@ object PmmlExecNode extends com.ligadata.pmml.compiler.LogTrait {
 			fld.LowValue(d.lowValue.toDouble)
 			fld.HighValue(d.highValue.toDouble)
 		} catch {
-			case _ : Throwable => {
-        val stackTrace = StackTrace.ThrowableTraceString(_)
-        ctx.logger.debug("\nStackTrace:"+stackTrace)
-        ctx.logger.debug (s"Unable to coerce one or more of the mining field doubles... name = $name")}
+			case e : Throwable => {
+        ctx.logger.debug (s"Unable to coerce one or more of the mining field doubles... name = $name", e)}
       
 		}
 	  	fld
@@ -1387,10 +1384,8 @@ object PmmlExecNode extends com.ligadata.pmml.compiler.LogTrait {
 					rule.Confidence(d.confidence.toDouble)
 					rule.Weight(d.weight.toDouble)
 				} catch {
-					case _ : Throwable => {
-            val stackTrace = StackTrace.ThrowableTraceString(_)
-            ctx.logger.debug("\nStackTrace:"+stackTrace)
-            ctx.logger.debug (s"Unable to coerce one or more mining 'double' fields... name = $id")}
+					case e : Throwable => {
+            ctx.logger.debug (s"Unable to coerce one or more mining 'double' fields... name = $id", e)}
 				}
 			
 				rsm.addRule (rule) 
@@ -1414,10 +1409,8 @@ object PmmlExecNode extends com.ligadata.pmml.compiler.LogTrait {
 					sd.Confidence(d.confidence.toDouble)
 					sd.Probability(d.probability.toDouble)
 				} catch {
-				  case _ : Throwable => {
-            val stackTrace = StackTrace.ThrowableTraceString(_)
-            ctx.logger.debug("\nStackTrace:"+stackTrace)
-            ctx.logger.debug ("Unable to coerce one or more score probablity Double values")}
+				  case e : Throwable => {
+            ctx.logger.debug ("Unable to coerce one or more score probablity Double values", e)}
 				}
 					
 				mf.addScoreDistribution(sd)

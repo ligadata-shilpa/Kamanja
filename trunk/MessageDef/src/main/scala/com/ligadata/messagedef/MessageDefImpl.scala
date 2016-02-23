@@ -37,7 +37,6 @@ import com.ligadata.kamanja.metadata.ArrayTypeDef
 import com.ligadata.kamanja.metadata.ArrayBufTypeDef
 import com.ligadata.kamanja.metadata._
 import com.ligadata.Exceptions._
-import com.ligadata.Exceptions.StackTrace
 import java.text.SimpleDateFormat
 
 trait Attrib {
@@ -201,8 +200,7 @@ class MessageDefImpl {
       writer.close()
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        log.debug("StackTrace:" + stackTrace)
+        log.debug("", e)
         throw e
       }
     }
@@ -241,8 +239,7 @@ class MessageDefImpl {
       } else throw new Exception("MsgDef Type JSON is only supported")
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        log.debug("StackTrace:" + stackTrace)
+        log.debug("", e)
         throw e
       }
     }
@@ -270,8 +267,7 @@ class MessageDefImpl {
         containerDef = createFixedContainerDef(message, list, mdMgr, argsList, recompile)
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        log.debug("StackTrace:" + stackTrace)
+        log.debug("", e)
         throw e
       }
     }
@@ -299,8 +295,7 @@ class MessageDefImpl {
         containerDef = createMappedContainerDef(message, list, mdMgr, argsList, recompile)
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        log.debug("StackTrace:" + stackTrace)
+        log.debug("", e)
         throw e
       }
     }
@@ -375,8 +370,7 @@ class MessageDefImpl {
       nonverJavaFactory = nonverJavaFactory.append(nonVerPkg + rddHandler.javaMessageFactory(message) + " \n")
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        log.debug("StackTrace:" + stackTrace)
+        log.debug("", e)
         throw e
       }
     }
@@ -457,8 +451,7 @@ class MessageDefImpl {
 
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        log.debug("StackTrace:" + stackTrace)
+        log.debug("", e)
         throw e
       }
     }
@@ -487,8 +480,7 @@ class MessageDefImpl {
         containerDef = mdMgr.MakeMappedContainer(msg.NameSpace, msg.Name, msg.PhysicalName, argsList, MdMgr.ConvertVersionToLong(msg.Version), null, msg.jarset.toArray, null, null, null, recompile, msg.Persist)
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        log.debug("StackTrace:" + stackTrace)
+        log.debug("", e)
         throw e
       }
     }
@@ -511,8 +503,7 @@ class MessageDefImpl {
         msgDef = mdMgr.MakeMappedMsg(msg.NameSpace, msg.Name, msg.PhysicalName, argsList, MdMgr.ConvertVersionToLong(msg.Version), null, msg.jarset.toArray, null, null, null, recompile, msg.Persist)
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        log.debug("StackTrace:" + stackTrace)
+        log.debug("", e)
         throw e
       }
     }
@@ -534,8 +525,7 @@ class MessageDefImpl {
         containerDef = mdMgr.MakeFixedContainer(msg.NameSpace, msg.Name, msg.PhysicalName, argsList, MdMgr.ConvertVersionToLong(msg.Version), null, msg.jarset.toArray, null, null, null, recompile, msg.Persist)
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        log.debug("StackTrace:" + stackTrace)
+        log.debug("", e)
         throw e
       }
     }
@@ -559,8 +549,7 @@ class MessageDefImpl {
         msgDef = mdMgr.MakeFixedMsg(msg.NameSpace, msg.Name, msg.PhysicalName, argsList, version, null, msg.jarset.toArray, null, null, null, recompile, msg.Persist)
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        log.debug("StackTrace:" + stackTrace)
+        log.debug("", e)
         throw e
       }
     }
@@ -600,7 +589,7 @@ class MessageDefImpl {
   def parseConceptJson(conceptJson: String): Concepts = {
     try {
       val pConcpt = JSON.parseFull(conceptJson)
-      if (pConcpt.isEmpty) throw MessageException("Unable to parse JSON.")
+      if (pConcpt.isEmpty) throw MessageException("Unable to parse JSON.", null)
 
       val cptsDef = for {
         Some(AsMap(map)) <- List(pConcpt)
@@ -615,8 +604,7 @@ class MessageDefImpl {
       cptsDef.head
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        log.debug("StackTrace:"+stackTrace)
+        log.debug("", e)
         throw e
       }
     }
@@ -636,8 +624,7 @@ class MessageDefImpl {
 
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        log.debug("StackTrace:" + stackTrace)
+        log.debug("", e)
         throw e
       }
     }
@@ -655,8 +642,7 @@ class MessageDefImpl {
         jtype = "Concepts"
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        log.debug("StackTrace:" + stackTrace)
+        log.debug("", e)
         throw e
       }
     }
@@ -680,8 +666,7 @@ class MessageDefImpl {
       } else throw new Exception("Incorrect json")
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        log.debug("StackTrace:" + stackTrace)
+        log.debug("", e)
         throw e
       }
     }
@@ -707,8 +692,7 @@ class MessageDefImpl {
 
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        log.debug("StackTrace:"+stackTrace)
+        log.debug("", e)
         throw e
       }
     }
@@ -839,8 +823,7 @@ class MessageDefImpl {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        log.debug("StackTrace:" + stackTrace)
+        log.debug("", e)
         throw e
       }
     }
@@ -889,8 +872,7 @@ class MessageDefImpl {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        log.debug("StackTrace:" + stackTrace)
+        log.debug("", e)
         throw e
       }
     }
@@ -917,6 +899,7 @@ class MessageDefImpl {
       return true
     } catch {
       case e: Exception => {
+        log.debug("", e)
         return false
       }
     }
@@ -970,8 +953,7 @@ class MessageDefImpl {
       } else throw new Exception("Either Fields or Elements or Concepts  do not exist in " + key + " json")
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        log.debug("StackTrace:" + stackTrace)
+        log.debug("", e)
         throw e
       }
     }
@@ -989,8 +971,7 @@ class MessageDefImpl {
         lbuffer += new Element(null, l.toString(), l.toString(), null, key, null, false, l.toString())
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        log.debug("StackTrace:" + stackTrace)
+        log.debug("", e)
         throw e
       }
     }
@@ -1010,8 +991,7 @@ class MessageDefImpl {
       } else throw new Exception("Elements list do not exist in json")
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        log.debug("StackTrace:" + stackTrace)
+        log.debug("", e)
         throw e
       }
     }
@@ -1072,8 +1052,7 @@ class MessageDefImpl {
       } else throw new Exception("Elements list do not exist in message/container definition json")
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        log.debug("StackTrace:" + stackTrace)
+        log.debug("", e)
         throw e
       }
     }
@@ -1136,8 +1115,7 @@ class MessageDefImpl {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        log.debug("StackTrace:" + stackTrace)
+        log.debug("", e)
         throw e
       }
     }
@@ -1161,8 +1139,7 @@ class MessageDefImpl {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        log.debug("StackTrace:" + stackTrace)
+        log.debug("", e)
         throw e
       }
     }
@@ -1208,8 +1185,7 @@ class MessageDefImpl {
       fld = new Element(namespace, name, ttype, collectionType, key, fldTypeVer, false, nativeName)
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        log.debug("StackTrace:" + stackTrace)
+        log.debug("", e)
         throw e
       }
     }

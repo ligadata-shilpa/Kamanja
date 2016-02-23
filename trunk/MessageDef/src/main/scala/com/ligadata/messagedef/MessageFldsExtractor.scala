@@ -27,7 +27,6 @@ import com.ligadata.kamanja.metadata.StructTypeDef
 import com.ligadata.kamanja.metadata.AttributeDef
 import com.ligadata.kamanja.metadata.MappedMsgTypeDef
 import org.apache.logging.log4j.{ Logger, LogManager }
-import com.ligadata.Exceptions.StackTrace
 
 class MessageFldsExtractor {
 
@@ -513,8 +512,7 @@ class MessageFldsExtractor {
 
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        log.debug("StackTrace:" + stackTrace)
+        log.debug("", e)
         throw e
       }
     }
@@ -570,8 +568,7 @@ class MessageFldsExtractor {
 
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        log.debug("StackTrace:" + stackTrace)
+        log.debug("", e)
       }
     }
     log.debug("version from metadata " + msgdef.get.Version)
@@ -659,8 +656,7 @@ class MessageFldsExtractor {
 
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        log.debug("StackTrace:" + stackTrace)
+        log.debug("", e)
       }
     }
 

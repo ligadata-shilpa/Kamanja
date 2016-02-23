@@ -45,8 +45,7 @@ object KafkaCmdImpl {
       return true
     } catch {
       case e: Exception =>
-        logger.error("Could not add to the queue due to an Exception "+ e.getMessage)
-        e.printStackTrace()
+        logger.error("Could not add to the queue due to an Exception", e)
         return false
     }
   }

@@ -27,7 +27,7 @@ import com.ligadata.MetadataAPI.{MetadataAPIImpl,ApiResult,ErrorCodeConstants}
 import com.ligadata.MetadataAPI.MetadataAPI.ModelType
 import com.ligadata.MetadataAPI.MetadataAPI.ModelType.ModelType
 import com.ligadata.MetadataAPI.MetadataAPIImpl
-import scala.io.StdIn
+import scala.io._
 
 /**
  * Created by dhaval on 8/7/15.
@@ -113,7 +113,7 @@ object ModelService {
                             println("[" + srNo + "]" + configkey)
                         }
                         print("\nEnter your choice: \n")
-                        var userOption = StdIn.readInt()
+                        var userOption = readInt()
 
                         userOption match {
                             case x if ((1 to srNo).contains(userOption)) => {
@@ -208,7 +208,7 @@ object ModelService {
                             println("[" + srNo + "]" + configkey)
                         }
                         print("\nEnter your choice: \n")
-                        var userOption = StdIn.readInt()
+                        var userOption = readInt()
 
                         userOption match {
                             case x if ((1 to srNo).contains(userOption)) => {
@@ -237,7 +237,7 @@ object ModelService {
      * attempted if the SecurityAdapter instance deems the user worthy. Similarly if the AuditAdapter is supplied,
      * the userid will be logged there (recommended for production use).
      *
-     * NOTE: Jpmml models are distinct from the Kamanja Pmml model. At runtime, they use a PMML evaluator to interpret
+     * NOTE: Pmml models are distinct from the Kamanja Pmml model. At runtime, they use a PMML evaluator to interpret
      * the runtime representation of the PMML model. Kamanja models are compiled to Scala and then to Jars and executed
      * like the custom byte code models based upon Java or Scala.
      *
@@ -259,7 +259,7 @@ object ModelService {
                     , optMsgVersion: Option[String] = Some("-1")
                     ): String = {
         val response : String = if (input == "") {
-            val reply : String = "JPMML models are only ingested with command line arguments.. default directory selection is deprecated"
+            val reply : String = "PMML models are only ingested with command line arguments.. default directory selection is deprecated"
             logger.error(reply)
             null /// FIXME : we will return null for now and complain with first failure
         } else {
@@ -273,7 +273,7 @@ object ModelService {
                 val version : String = optVersion.getOrElse("no version supplied")
                 val msgConsumed : String = optMsgConsumed.getOrElse("no message supplied")
 
-                val reply : String = s"JPMML model definition ingestion has failed for model $modelName, version = $version, consumes msg = $msgConsumed user=$userId"
+                val reply : String = s"PMML model definition ingestion has failed for model $modelName, version = $version, consumes msg = $msgConsumed user=$userId"
                 logger.error(reply)
                 null /// FIXME : we will return null for now and complain with first failure/
             }
@@ -343,7 +343,7 @@ object ModelService {
     /**
      * Update a Kamanja Pmml model in the metadata with new pmml
      *
-     * @param input the path of the pmml model to be used for the update
+     * @param input the path of the Kamanja pmml model to be used for the update
      * @param userid the optional userId. If security and auditing in place this parameter is required.
      * @return the result of the operation
      */
@@ -374,7 +374,7 @@ object ModelService {
                 case option => {
                   var modelDefs = getUserInputFromMainMenu(models)
                   for (modelDef <- modelDefs)
-                    response = MetadataAPIImpl.UpdateModel(ModelType.PMML, modelDef.toString, userid)
+                    response = MetadataAPIImpl.UpdateModel(ModelType.KPMML, modelDef.toString, userid)
                 }
               }
 
@@ -391,7 +391,7 @@ object ModelService {
         var model = new File(input.toString)
         if (model.exists()) {
           modelDef = Source.fromFile(model).mkString
-          response = MetadataAPIImpl.UpdateModel(ModelType.PMML, modelDef, userid)
+          response = MetadataAPIImpl.UpdateModel(ModelType.KPMML, modelDef, userid)
         } else {
           response = "File does not exist"
         }
@@ -403,7 +403,7 @@ object ModelService {
   }
 
     /**
-      * Update a Jpmml model with the pmml text model found at ''pmmlPath''.  The model namespace, name and version
+      * Update a Pmml model with the pmml text model found at ''pmmlPath''.  The model namespace, name and version
       * are required.  The userid should have a valid value when authentication and auditing has been enabled on
       * the cluster.
       *
@@ -429,14 +429,13 @@ object ModelService {
                               , Some(newVersion))
       } catch {
         case fnf : FileNotFoundException => {
-            val msg : String = s"updateModelJPmml... supplied file path not found ... path = $pmmlPath"
-            logger.error(msg)
+            val msg : String = s"updateModelPmml... supplied file path not found ... path = $pmmlPath"
+            logger.error(msg, fnf)
             msg
         }
         case e : Exception => {
-            val stackTrace = StackTrace.ThrowableTraceString(e)
-            val msg : String = if (pmmlPath == null) "updateModelJpmml pmml path was not supplied" else s"updateModelJPmml... exception e = ${e.toString}"
-            logger.error(s"$msg...stack = \n$stackTrace")
+            val msg : String = if (pmmlPath == null) "updateModelPmml pmml path was not supplied" else s"updateModelPmml... exception e = ${e.toString}"
+            logger.error(s"$msg...", e)
             msg
         }
       }
@@ -518,7 +517,7 @@ object ModelService {
 
                 }
                 print("\nEnter your choice: \n")
-                var userOption = StdIn.readInt()
+                var userOption = readInt()
 
                 userOption match {
                   case x if ((1 to srNo).contains(userOption)) => {
@@ -615,7 +614,7 @@ object ModelService {
                     println("[" + srNo + "]" + configkey)
                   }
                   print("\nEnter your choice: \n")
-                  var userOption = StdIn.readInt()
+                  var userOption = readInt()
 
                   userOption match {
                     case x if ((1 to srNo).contains(userOption)) => {
@@ -631,8 +630,6 @@ object ModelService {
                   }
                   response+= MetadataAPIImpl.UpdateModel(ModelType.SCALA, modelDef, userid, Some(modelConfig))
                 }
-                response+= MetadataAPIImpl.UpdateModel(ModelType.JAVA, modelDef, userid, Some(modelConfig))
-
               }
             }
           }
@@ -656,7 +653,7 @@ object ModelService {
             try {
               return MetadataAPIImpl.GetModelDefFromCache(ns, name,"JSON" ,ver, userid)
             } catch {
-              case e: Exception => e.printStackTrace()
+              case e: Exception => logger.error("", e)
             }
           }
           val modelKeys = MetadataAPIImpl.GetAllModelsFromCache(true, None)
@@ -672,7 +669,7 @@ object ModelService {
               println("["+srno+"] "+modelKey)
             }
             println("Enter your choice: ")
-            val choice: Int = StdIn.readInt()
+            val choice: Int = readInt()
             if (choice < 1 || choice > modelKeys.length) {
               val errormsg="Invalid choice " + choice + ". Start with the main menu."
               response=errormsg
@@ -685,6 +682,7 @@ object ModelService {
 
         } catch {
           case e: Exception => {
+            logger.info("", e)
             response=e.getStackTrace.toString
           }
         }
@@ -730,6 +728,7 @@ object ModelService {
             } catch {
               case e: Exception => {
                   val stackTrace = StackTrace.ThrowableTraceString(e)
+                  logger.info(stackTrace)
                   stackTrace
               }
             }
@@ -748,7 +747,7 @@ object ModelService {
                       println("[" + srno + "] " + modelKey)
                   }
                   println("Enter your choice: ")
-                  val choice: Int = StdIn.readInt()
+                  val choice: Int = readInt()
 
                   if (choice < 1 || choice > modelKeys.length) {
                       "Invalid choice " + choice + ". Start with the main menu."
@@ -762,6 +761,7 @@ object ModelService {
         } catch {
             case e: Exception => {
                 val stackTrace = StackTrace.ThrowableTraceString(e)
+                logger.info(stackTrace)
                 stackTrace
             }
         }
@@ -785,7 +785,7 @@ object ModelService {
             try {
               return MetadataAPIImpl.ActivateModel(ns, name, ver.toInt, userid)
             } catch {
-              case e: Exception => e.printStackTrace()
+              case e: Exception => logger.error("", e)
             }
           }
           val modelKeys = MetadataAPIImpl.GetAllModelsFromCache(false, None)
@@ -801,7 +801,7 @@ object ModelService {
               println("["+srno+"] "+modelKey)
             }
             println("Enter your choice: ")
-            val choice: Int = StdIn.readInt()
+            val choice: Int = readInt()
 
             if (choice < 1 || choice > modelKeys.length) {
               val errormsg="Invalid choice " + choice + ". Start with the main menu."
@@ -809,15 +809,14 @@ object ModelService {
             }
             val modelKey = modelKeys(choice - 1)
             val modelKeyTokens = modelKey.split("\\.")
-            val modelNameSpace = modelKeyTokens(0)
-            val modelName = modelKeyTokens(1)
-            val modelVersion = modelKeyTokens(2)
+            val (modelNameSpace, modelName, modelVersion) = com.ligadata.kamanja.metadata.Utils.parseNameToken(modelKey)
             val apiResult = MetadataAPIImpl.ActivateModel(modelNameSpace, modelName, modelVersion.toLong, userid).toString
             response=apiResult
           }
 
         } catch {
           case e: Exception => {
+            logger.info("", e)
             response=e.getStackTrace.toString
           }
         }
@@ -842,7 +841,7 @@ object ModelService {
             try {
               return MetadataAPIImpl.DeactivateModel(ns, name, ver.toInt, userid)
             } catch {
-              case e: Exception => e.printStackTrace()
+              case e: Exception => logger.error("", e)
             }
           }
           progressReport = 1
@@ -861,7 +860,7 @@ object ModelService {
               println("["+srno+"] "+modelKey)
             }
             println("Enter your choice: ")
-            val choice: Int = StdIn.readInt()
+            val choice: Int = readInt()
 
 
             if (choice < 1 || choice > modelKeys.length) {
@@ -870,16 +869,16 @@ object ModelService {
             }
             val modelKey = modelKeys(choice - 1)
             val modelKeyTokens = modelKey.split("\\.")
-            val modelNameSpace = modelKeyTokens(0)
-            val modelName = modelKeyTokens(1)
-            val modelVersion = modelKeyTokens(2)
+            val (modelNameSpace, modelName, modelVersion) = com.ligadata.kamanja.metadata.Utils.parseNameToken(modelKey)
             val apiResult = MetadataAPIImpl.DeactivateModel(modelNameSpace, modelName, modelVersion.toLong, userid).toString
             response=apiResult
           }
         } catch {
           case e: Exception => {
-            if (progressReport == 0)
+            if (progressReport == 0) {
+              logger.warn("", e)
               response = new ApiResult(ErrorCodeConstants.Failure, "DeactivateModel", null, "Error : Cannot parse ModelName, must be Namespace.Name.Version format").toString
+            }
             else {
               response = new ApiResult(ErrorCodeConstants.Failure, "DeactivateModel", null, "Error : An Exception occured during processing").toString
               logger.error("Unkown exception occured during deactivate model processing ", e)
@@ -921,7 +920,7 @@ object ModelService {
           println("[" + srNo + "]" + model)
         }
         print("\nEnter your choice(If more than 1 choice, please use commas to seperate them): \n")
-        var userOptions = StdIn.readLine().split(",")
+        var userOptions = readLine().split(",")
         println("User selected the option(s) " + userOptions.length)
         //check if user input valid. If not exit
         for (userOption <- userOptions) {

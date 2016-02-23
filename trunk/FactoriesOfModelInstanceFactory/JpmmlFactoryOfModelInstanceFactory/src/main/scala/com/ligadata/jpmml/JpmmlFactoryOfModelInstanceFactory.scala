@@ -23,7 +23,6 @@ import com.ligadata.kamanja.metadata.{MdMgr, ModelDef, BaseElem}
 import com.ligadata.KamanjaBase.{ FactoryOfModelInstanceFactory, ModelInstanceFactory, EnvContext, NodeContext }
 import com.ligadata.KamanjaBase.{ MappedModelResults, MessageContainerBase, ModelInstance, ModelResultBase, TransactionContext }
 import com.ligadata.Utils.{ Utils, KamanjaClassLoader, KamanjaLoaderInfo }
-import com.ligadata.Exceptions.StackTrace
 
 import org.apache.logging.log4j.LogManager
 
@@ -162,15 +161,15 @@ object JpmmlFactoryOfModelInstanceFactory extends FactoryOfModelInstanceFactory 
 }
 
 /**
-  * JpmmlAdapter serves a "shim" between the engine and a JPMML evaluator that will perform the actual message
+  * JpmmlAdapter serves a "shim" between the engine and a PMML evaluator that will perform the actual message
   * scoring. It exhibits the "adapter" pattern as discussed in "Design Patterns" by Gamma, Helm, Johnson, and Vlissitudes.
   *
   * Kamanja messages are presented to the adapter and transformed to a Map[FieldName, FieldValue] for consumption by
-  * the JPMML evaluator associated with the JpmmlAdapter instance. The target fields (or predictions) and the output fields
+  * the PMML evaluator associated with the JpmmlAdapter instance. The target fields (or predictions) and the output fields
   * are returned in the MappedModelResults instance to the engine for further transformation and dispatch.
   *
   * @param factory This model's factory object
-  * @param modelEvaluator The JPMML evaluator needed to evaluate the model for this model (modelName.modelVersion)
+  * @param modelEvaluator The PMML evaluator needed to evaluate the model for this model (modelName.modelVersion)
   */
 
 class JpmmlAdapter(factory : ModelInstanceFactory, modelEvaluator: ModelEvaluator[_]) extends ModelInstance(factory) {
@@ -204,7 +203,7 @@ class JpmmlAdapter(factory : ModelInstanceFactory, modelEvaluator: ModelEvaluato
     }
 
 
-    /** Since the JPMML decode util for the map results shows that at least one key can possibly be null,
+    /** Since the PMML decode util for the map results shows that at least one key can possibly be null,
       * let's give a name to it for our results.  This is likely just careful coding, but no harm
       * taking precaution.  This is the tag for the null field:
       */
@@ -235,7 +234,7 @@ class JpmmlAdapter(factory : ModelInstanceFactory, modelEvaluator: ModelEvaluato
       *
       * @param activeFields a List of the FieldNames
       * @param msg the incoming message instance
-      * @param evaluator the JPMML evaluator that the factory as arranged for this instance that can process the
+      * @param evaluator the PMML evaluator that the factory as arranged for this instance that can process the
       *                  input values.
       * @return
       */
@@ -256,7 +255,7 @@ class JpmmlAdapter(factory : ModelInstanceFactory, modelEvaluator: ModelEvaluato
 
 
 /**
-  * The JpmmlAdapterFactory instantiates its JPMML model instance when asked by caller.  Its main function is to
+  * The JpmmlAdapterFactory instantiates its PMML model instance when asked by caller.  Its main function is to
   * instantiate a new model whenever asked (createModelInstance) and assess whether the current message being processed
   * by the engine is consumable by this model (isValidMessage)
   *
@@ -346,10 +345,10 @@ class JpmmlAdapterFactory(modelDef: ModelDef, nodeContext: NodeContext) extends 
     }
 
     /**
-      * Create the appropriate JPMML evaluator based upon the pmml text supplied.
+      * Create the appropriate PMML evaluator based upon the pmml text supplied.
       *
-      * @param pmmlText the PMML (xml) text for a JPMML consumable model
-      * @return the appropriate JPMML ModelEvaluator
+      * @param pmmlText the PMML (xml) text for a PMML consumable model
+      * @return the appropriate PMML ModelEvaluator
       */
     private def createEvaluator(pmmlText : String) : ModelEvaluator[_] = {
 
@@ -376,7 +375,7 @@ class JpmmlAdapterFactory(modelDef: ModelDef, nodeContext: NodeContext) extends 
     override def createResultObject(): ModelResultBase = new MappedModelResults
 
     /**
-      *  Is the ModelInstance created by this ModelInstanceFactory is reusable? NOTE: All JPmml models are resusable.
+      *  Is the ModelInstance created by this ModelInstanceFactory is reusable? NOTE: All Pmml models are resusable.
       *
       *  @return true
       */

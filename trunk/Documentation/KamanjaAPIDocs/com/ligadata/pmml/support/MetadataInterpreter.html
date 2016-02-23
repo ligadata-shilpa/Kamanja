@@ -1,0 +1,976 @@
+<!DOCTYPE html >
+<html>
+        <head>
+          <title>MetadataInterpreter - com.ligadata.pmml.support.MetadataInterpreter</title>
+          <meta name="description" content="MetadataInterpreter - com.ligadata.pmml.support.MetadataInterpreter" />
+          <meta name="keywords" content="MetadataInterpreter com.ligadata.pmml.support.MetadataInterpreter" />
+          <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+          
+      <link href="../../../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
+      <link href="../../../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../../../../lib/jquery.js" id="jquery-js"></script>
+      <script type="text/javascript" src="../../../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../../../lib/template.js"></script>
+      <script type="text/javascript" src="../../../../lib/tools.tooltip.js"></script>
+      
+      <script type="text/javascript">
+         if(top === self) {
+            var url = '../../../../index.html';
+            var hash = 'com.ligadata.pmml.support.MetadataInterpreter';
+            var anchor = window.location.hash;
+            var anchor_opt = '';
+            if (anchor.length >= 1)
+              anchor_opt = '@' + anchor.substring(1);
+            window.location.href = url + '#' + hash + anchor_opt;
+         }
+   	  </script>
+    
+        </head>
+        <body class="type">
+      <div id="definition">
+        <img alt="Class" src="../../../../lib/class_big.png" />
+        <p id="owner"><a href="../../../package.html" class="extype" name="com">com</a>.<a href="../../package.html" class="extype" name="com.ligadata">ligadata</a>.<a href="../package.html" class="extype" name="com.ligadata.pmml">pmml</a>.<a href="package.html" class="extype" name="com.ligadata.pmml.support">support</a></p>
+        <h1>MetadataInterpreter</h1><h3><span class="morelinks"><div>Related Doc:
+            <a href="package.html" class="extype" name="com.ligadata.pmml.support">package support</a>
+          </div></span></h3><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.support.MetadataInterpreter" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      </div>
+
+      <h4 id="signature" class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <span class="name">MetadataInterpreter</span><span class="result"> extends <a href="../compiler/LogTrait.html" class="extype" name="com.ligadata.pmml.compiler.LogTrait">LogTrait</a></span>
+      </span>
+      </h4>
+      
+          <div id="comment" class="fullcommenttop"><div class="toggleContainer block">
+          <span class="toggle">Linear Supertypes</span>
+          <div class="superTypes hiddenContent"><a href="../compiler/LogTrait.html" class="extype" name="com.ligadata.pmml.compiler.LogTrait">LogTrait</a>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></div>
+        </div></div>
+        
+
+      <div id="mbrsel">
+        <div id="textfilter"><span class="pre"></span><span class="input"><input id="mbrsel-input" type="text" accesskey="/" /></span><span class="post"></span></div>
+        <div id="order">
+              <span class="filtertype">Ordering</span>
+              <ol>
+                
+                <li class="alpha in"><span>Alphabetic</span></li>
+                <li class="inherit out"><span>By inheritance</span></li>
+              </ol>
+            </div>
+        <div id="ancestors">
+                <span class="filtertype">Inherited<br />
+                </span>
+                <ol id="linearization">
+                  <li class="in" name="com.ligadata.pmml.support.MetadataInterpreter"><span>MetadataInterpreter</span></li><li class="in" name="com.ligadata.pmml.compiler.LogTrait"><span>LogTrait</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                </ol>
+              </div><div id="ancestors">
+            <span class="filtertype"></span>
+            <ol>
+              <li class="hideall out"><span>Hide All</span></li>
+              <li class="showall in"><span>Show all</span></li>
+            </ol>
+          </div>
+        <div id="visbl">
+            <span class="filtertype">Visibility</span>
+            <ol><li class="public in"><span>Public</span></li><li class="all out"><span>All</span></li></ol>
+          </div>
+      </div>
+
+      <div id="template">
+        <div id="allMembers">
+        <div id="constructors" class="members">
+              <h3>Instance Constructors</h3>
+              <ol><li name="com.ligadata.pmml.support.MetadataInterpreter#&lt;init&gt;" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="&lt;init&gt;(ctx:com.ligadata.pmml.compiler.PmmlContext):com.ligadata.pmml.support.MetadataInterpreter"></a>
+      <a id="&lt;init&gt;:MetadataInterpreter"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">new</span>
+      </span>
+      <span class="symbol">
+        <span class="name">MetadataInterpreter</span><span class="params">(<span name="ctx">ctx: <a href="../compiler/PmmlContext.html" class="extype" name="com.ligadata.pmml.compiler.PmmlContext">PmmlContext</a></span>)</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.support.MetadataInterpreter@&lt;init&gt;(ctx:com.ligadata.pmml.compiler.PmmlContext):com.ligadata.pmml.support.MetadataInterpreter" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li></ol>
+            </div>
+
+        
+
+        
+
+        <div id="values" class="values members">
+              <h3>Value Members</h3>
+              <ol><li name="scala.AnyRef#!=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="!=(x$1:Any):Boolean"></a>
+      <a id="!=(Any):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.support.MetadataInterpreter@!=(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.AnyRef###" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="##():Int"></a>
+      <a id="##():Int"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.support.MetadataInterpreter@##():Int" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.AnyRef#==" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="==(x$1:Any):Boolean"></a>
+      <a id="==(Any):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.support.MetadataInterpreter@==(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="com.ligadata.pmml.support.MetadataInterpreter#FunctionByTypeSig" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="FunctionByTypeSig(typesig:String):com.ligadata.kamanja.metadata.FunctionDef"></a>
+      <a id="FunctionByTypeSig(String):FunctionDef"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">FunctionByTypeSig</span><span class="params">(<span name="typesig">typesig: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="../../kamanja/metadata/FunctionDef.html" class="extype" name="com.ligadata.kamanja.metadata.FunctionDef">FunctionDef</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.support.MetadataInterpreter@FunctionByTypeSig(typesig:String):com.ligadata.kamanja.metadata.FunctionDef" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt"> With the supplied function signature, try to find the FunctionDef that matches it.</p><div class="fullcomment"><div class="comment cmt"><p> With the supplied function signature, try to find the FunctionDef that matches it. If a namespace alias is prepended to the
+ function signature (i.e., namespace exists in the [namespace.]fcnName([argtype1,argtype2,...,argtypeN])), look up its
+ actual namespace if possible.
+</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>matching FunctionDef or null</p></dd></dl></div>
+    </li><li name="com.ligadata.pmml.support.MetadataInterpreter#FunctionsAvailableWithIndefiniteArity" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="FunctionsAvailableWithIndefiniteArity(fcnName:String):scala.collection.immutable.Set[com.ligadata.kamanja.metadata.FunctionDef]"></a>
+      <a id="FunctionsAvailableWithIndefiniteArity(String):Set[FunctionDef]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">FunctionsAvailableWithIndefiniteArity</span><span class="params">(<span name="fcnName">fcnName: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.immutable.Set" class="extype" target="_top">Set</a>[<a href="../../kamanja/metadata/FunctionDef.html" class="extype" name="com.ligadata.kamanja.metadata.FunctionDef">FunctionDef</a>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.support.MetadataInterpreter@FunctionsAvailableWithIndefiniteArity(fcnName:String):scala.collection.immutable.Set[com.ligadata.kamanja.metadata.FunctionDef]" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt"> Answer any function definitions with the supplied namespace alias and name that have the indefinite arity feature.</p><div class="fullcomment"><div class="comment cmt"><p> Answer any function definitions with the supplied namespace alias and name that have the indefinite arity feature.
+</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>scala.collection.immutable.Set[FunctionDef] if any are present else null</p></dd></dl></div>
+    </li><li name="com.ligadata.pmml.support.MetadataInterpreter#FunctionsWithIndefiniteArity" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="FunctionsWithIndefiniteArity(fcnName:String):Boolean"></a>
+      <a id="FunctionsWithIndefiniteArity(String):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">FunctionsWithIndefiniteArity</span><span class="params">(<span name="fcnName">fcnName: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.support.MetadataInterpreter@FunctionsWithIndefiniteArity(fcnName:String):Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt"> Answer if indefinite arity feature is present in any function with this name.</p><div class="fullcomment"><div class="comment cmt"><p> Answer if indefinite arity feature is present in any function with this name.
+</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>Boolean</p></dd></dl></div>
+    </li><li name="com.ligadata.pmml.support.MetadataInterpreter#MacroByTypeSig" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="MacroByTypeSig(typesig:String):com.ligadata.kamanja.metadata.MacroDef"></a>
+      <a id="MacroByTypeSig(String):MacroDef"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">MacroByTypeSig</span><span class="params">(<span name="typesig">typesig: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="../../kamanja/metadata/MacroDef.html" class="extype" name="com.ligadata.kamanja.metadata.MacroDef">MacroDef</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.support.MetadataInterpreter@MacroByTypeSig(typesig:String):com.ligadata.kamanja.metadata.MacroDef" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt"> With the supplied function signature, try to find the MacroByTypeSig that matches it
+</p><div class="fullcomment"><div class="comment cmt"><p> With the supplied function signature, try to find the MacroByTypeSig that matches it
+</p></div><dl class="paramcmts block"><dt class="param">typesig</dt><dd class="cmt"><p>: a function identifer with args in the form [namespace.]fcnName([argtype1,argtype2,...,argtypeN])</p></dd><dt>returns</dt><dd class="cmt"><p>matching MacroDef or null
+ Note: At this time, all macros are actually defined in System namespace.  However, there may come a day when
+ macros become first class citizens in metadata and have protocol for adding them, modifying them, and deleting
+ them... all with their own namespaces if that is what the application developer wishes.  For this reason
+ macro lookup by typesig gets the same treatment as the function lookup.</p></dd></dl></div>
+    </li><li name="scala.Any#asInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="asInstanceOf[T0]:T0"></a>
+      <a id="asInstanceOf[T0]:T0"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">asInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Any.asInstanceOf.T0">T0</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.support.MetadataInterpreter@asInstanceOf[T0]:T0" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li name="scala.AnyRef#clone" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="clone():Object"></a>
+      <a id="clone():AnyRef"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.support.MetadataInterpreter@clone():Object" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="defval" name="classOf[java.lang.CloneNotSupportedException]">...</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="com.ligadata.pmml.support.MetadataInterpreter#collectConceptType" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="collectConceptType(name:String,baseTypeTriples:scala.collection.mutable.ArrayBuffer[(String,Boolean,com.ligadata.kamanja.metadata.BaseTypeDef)]):Boolean"></a>
+      <a id="collectConceptType(String,ArrayBuffer[(String,Boolean,BaseTypeDef)]):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">collectConceptType</span><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="baseTypeTriples">baseTypeTriples: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.mutable.ArrayBuffer" class="extype" target="_top">ArrayBuffer</a>[(<span class="extype" name="scala.Predef.String">String</span>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a>, <a href="../../kamanja/metadata/BaseTypeDef.html" class="extype" name="com.ligadata.kamanja.metadata.BaseTypeDef">BaseTypeDef</a>)]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.support.MetadataInterpreter@collectConceptType(name:String,baseTypeTriples:scala.collection.mutable.ArrayBuffer[(String,Boolean,com.ligadata.kamanja.metadata.BaseTypeDef)]):Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt"> Take a flier...</p><div class="fullcomment"><div class="comment cmt"><p> Take a flier... assume it is a base concept (an independently cataloged attribute).  Collect it if
+ you can and report success/failure of this effort.
+</p></div></div>
+    </li><li name="com.ligadata.pmml.support.MetadataInterpreter#collectMemberContainerTypes" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="collectMemberContainerTypes(typedef:com.ligadata.kamanja.metadata.BaseTypeDef):Array[com.ligadata.kamanja.metadata.BaseTypeDef]"></a>
+      <a id="collectMemberContainerTypes(BaseTypeDef):Array[BaseTypeDef]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">collectMemberContainerTypes</span><span class="params">(<span name="typedef">typedef: <a href="../../kamanja/metadata/BaseTypeDef.html" class="extype" name="com.ligadata.kamanja.metadata.BaseTypeDef">BaseTypeDef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<a href="../../kamanja/metadata/BaseTypeDef.html" class="extype" name="com.ligadata.kamanja.metadata.BaseTypeDef">BaseTypeDef</a>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.support.MetadataInterpreter@collectMemberContainerTypes(typedef:com.ligadata.kamanja.metadata.BaseTypeDef):Array[com.ligadata.kamanja.metadata.BaseTypeDef]" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt"> Answer whether this type is a ContainerTypeDef that has member types that are container types.</p><div class="fullcomment"><div class="comment cmt"><p> Answer whether this type is a ContainerTypeDef that has member types that are container types.
+ Nested collections are supported.</p></div><dl class="paramcmts block"><dt class="param">typedef</dt><dd class="cmt"><p>A BaseTypeDef</p></dd><dt>returns</dt><dd class="cmt"><p>true if this a collection with member types in {StructTypeDef, MappedMsgTypeDef}</p></dd></dl></div>
+    </li><li name="com.ligadata.pmml.support.MetadataInterpreter#ctx" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ctx:com.ligadata.pmml.compiler.PmmlContext"></a>
+      <a id="ctx:PmmlContext"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">ctx</span><span class="result">: <a href="../compiler/PmmlContext.html" class="extype" name="com.ligadata.pmml.compiler.PmmlContext">PmmlContext</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.support.MetadataInterpreter@ctx:com.ligadata.pmml.compiler.PmmlContext" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="scala.AnyRef#eq" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="eq(x$1:AnyRef):Boolean"></a>
+      <a id="eq(AnyRef):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.support.MetadataInterpreter@eq(x$1:AnyRef):Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#equals" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="equals(x$1:Any):Boolean"></a>
+      <a id="equals(Any):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.support.MetadataInterpreter@equals(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.AnyRef#finalize" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="finalize():Unit"></a>
+      <a id="finalize():Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.support.MetadataInterpreter@finalize():Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="symbol">classOf[java.lang.Throwable]</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="scala.AnyRef#getClass" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getClass():Class[_]"></a>
+      <a id="getClass():Class[_]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getClass</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.Class">Class</span>[_]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.support.MetadataInterpreter@getClass():Class[_]" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="com.ligadata.pmml.support.MetadataInterpreter#getConcept" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getConcept(name:String):com.ligadata.kamanja.metadata.BaseAttributeDef"></a>
+      <a id="getConcept(String):BaseAttributeDef"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getConcept</span><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="../../kamanja/metadata/BaseAttributeDef.html" class="extype" name="com.ligadata.kamanja.metadata.BaseAttributeDef">BaseAttributeDef</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.support.MetadataInterpreter@getConcept(name:String):com.ligadata.kamanja.metadata.BaseAttributeDef" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt"> Answer a BaseAttributeDef or null for the supplied concept name.</p><div class="fullcomment"><div class="comment cmt"><p> Answer a BaseAttributeDef or null for the supplied concept name.  Namespaces from the namespace
+ search path are used until the concept is found or they are exhausted.
+</p></div></div>
+    </li><li name="com.ligadata.pmml.support.MetadataInterpreter#getConceptType" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getConceptType(name:String):com.ligadata.kamanja.metadata.BaseTypeDef"></a>
+      <a id="getConceptType(String):BaseTypeDef"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getConceptType</span><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="../../kamanja/metadata/BaseTypeDef.html" class="extype" name="com.ligadata.kamanja.metadata.BaseTypeDef">BaseTypeDef</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.support.MetadataInterpreter@getConceptType(name:String):com.ligadata.kamanja.metadata.BaseTypeDef" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt"> Answer a BaseTypeDef or null for the supplied concept name.</p><div class="fullcomment"><div class="comment cmt"><p> Answer a BaseTypeDef or null for the supplied concept name.  Namespaces from the namespace
+ search path are used until the concept is found or they are exhausted.
+</p></div></div>
+    </li><li name="com.ligadata.pmml.support.MetadataInterpreter#getContainer" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getContainer(containerName:String):(String,com.ligadata.kamanja.metadata.ContainerDef)"></a>
+      <a id="getContainer(String):(String,ContainerDef)"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getContainer</span><span class="params">(<span name="containerName">containerName: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: (<span class="extype" name="scala.Predef.String">String</span>, <a href="../../kamanja/metadata/ContainerDef.html" class="extype" name="com.ligadata.kamanja.metadata.ContainerDef">ContainerDef</a>)</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.support.MetadataInterpreter@getContainer(containerName:String):(String,com.ligadata.kamanja.metadata.ContainerDef)" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Answer the ContainerDef for the supplied containerName.</p><div class="fullcomment"><div class="comment cmt"><p>Answer the ContainerDef for the supplied containerName.</p></div><dl class="paramcmts block"><dt class="param">containerName</dt><dd class="cmt"><p>the type name of the transformation dictionary derived field</p></dd><dt>returns</dt><dd class="cmt"><p>(container type name string, ContainerDef)</p></dd></dl></div>
+    </li><li name="com.ligadata.pmml.support.MetadataInterpreter#getContainerType" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getContainerType(name:String):com.ligadata.kamanja.metadata.ContainerTypeDef"></a>
+      <a id="getContainerType(String):ContainerTypeDef"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getContainerType</span><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="../../kamanja/metadata/ContainerTypeDef.html" class="extype" name="com.ligadata.kamanja.metadata.ContainerTypeDef">ContainerTypeDef</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.support.MetadataInterpreter@getContainerType(name:String):com.ligadata.kamanja.metadata.ContainerTypeDef" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt"> Answer a ContainerTypeDef or null if not a container.</p><div class="fullcomment"><div class="comment cmt"><p> Answer a ContainerTypeDef or null if not a container.  If the dataType name supplied has
+ an namespace alias prefix, use it.  Otherwise, use the Namespaces from the namespace
+ search path paired with the supplied name to locate the container.</p><p> NOTE: This function will return any kind of ContainerTypeDef, not just those with
+ known names.  Included types would be class ListTypeDef, QueueTypeDef, ArrayTypeDef
+ ArrayBufTypeDef, TupleTypeDef, among others.
+</p></div><dl class="paramcmts block"><dt class="param">name</dt><dd class="cmt"><p>- the name of a possible container</p></dd><dt>returns</dt><dd class="cmt"><p>the first ContainerTypeDef associated with this name or null if not found</p></dd></dl></div>
+    </li><li name="com.ligadata.pmml.support.MetadataInterpreter#getContainerWithNamesType" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getContainerWithNamesType(nmSpc:String,container:String):com.ligadata.kamanja.metadata.ContainerTypeDef"></a>
+      <a id="getContainerWithNamesType(String,String):ContainerTypeDef"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getContainerWithNamesType</span><span class="params">(<span name="nmSpc">nmSpc: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="container">container: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="../../kamanja/metadata/ContainerTypeDef.html" class="extype" name="com.ligadata.kamanja.metadata.ContainerTypeDef">ContainerTypeDef</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.support.MetadataInterpreter@getContainerWithNamesType(nmSpc:String,container:String):com.ligadata.kamanja.metadata.ContainerTypeDef" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt"> OK
+ Answer a ContainerTypeDef that has named fields or null if not a container.</p><div class="fullcomment"><div class="comment cmt"><p> OK
+ Answer a ContainerTypeDef that has named fields or null if not a container.  Two types currently
+ have this characteristic: StructTypeDef and MappedMsgTypeDef</p></div><dl class="paramcmts block"><dt class="param">nmSpc</dt><dd class="cmt"><p>- the name of a possible container</p></dd><dt class="param">container</dt><dd class="cmt"><p>- the name of a possible container</p></dd><dt>returns</dt><dd class="cmt"><p>the first ContainerTypeDef associated with this name or null if not found</p></dd></dl></div>
+    </li><li name="com.ligadata.pmml.support.MetadataInterpreter#getContainerWithNamesType" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getContainerWithNamesType(name:String):com.ligadata.kamanja.metadata.ContainerTypeDef"></a>
+      <a id="getContainerWithNamesType(String):ContainerTypeDef"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getContainerWithNamesType</span><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="../../kamanja/metadata/ContainerTypeDef.html" class="extype" name="com.ligadata.kamanja.metadata.ContainerTypeDef">ContainerTypeDef</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.support.MetadataInterpreter@getContainerWithNamesType(name:String):com.ligadata.kamanja.metadata.ContainerTypeDef" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt"> Answer a ContainerTypeDef that has names (either StructTypeDef or MappedMsgTypeDef) or null
+ if not a container.</p><div class="fullcomment"><div class="comment cmt"><p> Answer a ContainerTypeDef that has names (either StructTypeDef or MappedMsgTypeDef) or null
+ if not a container.  If there is a namespace alias supplied with the type, use it.  Otherwise
+ use the namespace search path and choose the first match found.</p></div><dl class="paramcmts block"><dt class="param">name</dt><dd class="cmt"><p>the type name from some dataType of a DataField or DerivedField (typically)</p></dd><dt>returns</dt><dd class="cmt"><p>the StructTypeDef or MappedMsgTypeDef with this name ... or null if name not found</p></dd></dl></div>
+    </li><li name="com.ligadata.pmml.support.MetadataInterpreter#getDDictFieldType" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getDDictFieldType(nm:String):(String,com.ligadata.kamanja.metadata.BaseTypeDef)"></a>
+      <a id="getDDictFieldType(String):(String,BaseTypeDef)"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getDDictFieldType</span><span class="params">(<span name="nm">nm: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: (<span class="extype" name="scala.Predef.String">String</span>, <a href="../../kamanja/metadata/BaseTypeDef.html" class="extype" name="com.ligadata.kamanja.metadata.BaseTypeDef">BaseTypeDef</a>)</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.support.MetadataInterpreter@getDDictFieldType(nm:String):(String,com.ligadata.kamanja.metadata.BaseTypeDef)" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Search this bad boy, with and without namespace qualifiers...</p><div class="fullcomment"><div class="comment cmt"><p>Search this bad boy, with and without namespace qualifiers...</p></div><dl class="paramcmts block"><dt class="param">nm</dt><dd class="cmt"><p>the name of the data dictionary data field</p></dd><dt>returns</dt><dd class="cmt"><p>a tuple (type rep string , corresponding base type)</p></dd></dl></div>
+    </li><li name="com.ligadata.pmml.support.MetadataInterpreter#getDictFieldType" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getDictFieldType(nm:String):(String,com.ligadata.kamanja.metadata.BaseTypeDef)"></a>
+      <a id="getDictFieldType(String):(String,BaseTypeDef)"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getDictFieldType</span><span class="params">(<span name="nm">nm: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: (<span class="extype" name="scala.Predef.String">String</span>, <a href="../../kamanja/metadata/BaseTypeDef.html" class="extype" name="com.ligadata.kamanja.metadata.BaseTypeDef">BaseTypeDef</a>)</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.support.MetadataInterpreter@getDictFieldType(nm:String):(String,com.ligadata.kamanja.metadata.BaseTypeDef)" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt"> Search the dictionaries for the supplied field....</p><div class="fullcomment"><div class="comment cmt"><p> Search the dictionaries for the supplied field....  Answer (scala typestring, BaseTypeDef) or (null,null) if not found.
+ Note: Precautions have been taken to guarantee that the Union(xdict names, ddict names) == Intersect (xdict names, ddict names)
+</p></div><dl class="paramcmts block"><dt class="param">nm</dt><dd class="cmt"><p>: String the field name</p></dd><dt>returns</dt><dd class="cmt"><p>pair (scala type string, baseTypeDef for named field's type)</p></dd></dl></div>
+    </li><li name="com.ligadata.pmml.support.MetadataInterpreter#getFieldType" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getFieldType(names:Array[String],fieldRefRep:String,totalNames:Int,parentContainer:com.ligadata.kamanja.metadata.ContainerTypeDef,baseTypeTriples:scala.collection.mutable.ArrayBuffer[(String,Boolean,com.ligadata.kamanja.metadata.BaseTypeDef)]):Unit"></a>
+      <a id="getFieldType(Array[String],String,Int,ContainerTypeDef,ArrayBuffer[(String,Boolean,BaseTypeDef)]):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getFieldType</span><span class="params">(<span name="names">names: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="fieldRefRep">fieldRefRep: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="totalNames">totalNames: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>, <span name="parentContainer">parentContainer: <a href="../../kamanja/metadata/ContainerTypeDef.html" class="extype" name="com.ligadata.kamanja.metadata.ContainerTypeDef">ContainerTypeDef</a></span>, <span name="baseTypeTriples">baseTypeTriples: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.mutable.ArrayBuffer" class="extype" target="_top">ArrayBuffer</a>[(<span class="extype" name="scala.Predef.String">String</span>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a>, <a href="../../kamanja/metadata/BaseTypeDef.html" class="extype" name="com.ligadata.kamanja.metadata.BaseTypeDef">BaseTypeDef</a>)]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.support.MetadataInterpreter@getFieldType(names:Array[String],fieldRefRep:String,totalNames:Int,parentContainer:com.ligadata.kamanja.metadata.ContainerTypeDef,baseTypeTriples:scala.collection.mutable.ArrayBuffer[(String,Boolean,com.ligadata.kamanja.metadata.BaseTypeDef)]):Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt"> Collect an array buffer of(String,Boolean,BaseTypeDef) that describe the types in a nested container field
+ reference (e.g., container.subcontainer.field)
+</p><div class="fullcomment"><div class="comment cmt"><p> Collect an array buffer of(String,Boolean,BaseTypeDef) that describe the types in a nested container field
+ reference (e.g., container.subcontainer.field)
+</p></div><dl class="paramcmts block"><dt class="param">names</dt><dd class="cmt"><p>- the names in a container.subcontainer.subsubcontainer....field reference expression that remain
+ 				to be examined.</p></dd><dt class="param">fieldRefRep</dt><dd class="cmt"><p>- the original field ref as a string rep for diagnostics</p></dd><dt class="param">totalNames</dt><dd class="cmt"><p>- the count of container/field names in the original field ref expression</p></dd><dt class="param">parentContainer</dt><dd class="cmt"><p>- except for the first container in a nested field reference, this parameter contains
+ 		the immediate preceding type reference derived from the prior name.  It is used to lookup the current name.</p></dd><dt class="param">baseTypeTriples</dt><dd class="cmt"><p>- this array buffer is updated with the triples.</p></dd></dl></div>
+    </li><li name="com.ligadata.pmml.support.MetadataInterpreter#getFieldType" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getFieldType(names:Array[String],expandCompoundFieldTypes:Boolean):Array[(String,Boolean,com.ligadata.kamanja.metadata.BaseTypeDef)]"></a>
+      <a id="getFieldType(Array[String],Boolean):Array[(String,Boolean,BaseTypeDef)]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getFieldType</span><span class="params">(<span name="names">names: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="expandCompoundFieldTypes">expandCompoundFieldTypes: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[(<span class="extype" name="scala.Predef.String">String</span>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a>, <a href="../../kamanja/metadata/BaseTypeDef.html" class="extype" name="com.ligadata.kamanja.metadata.BaseTypeDef">BaseTypeDef</a>)]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.support.MetadataInterpreter@getFieldType(names:Array[String],expandCompoundFieldTypes:Boolean):Array[(String,Boolean,com.ligadata.kamanja.metadata.BaseTypeDef)]" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt"> Answer an Array[(String,Boolean,BaseTypeDef)] that describe the types in a nested container field reference.</p><div class="fullcomment"><div class="comment cmt"><p> Answer an Array[(String,Boolean,BaseTypeDef)] that describe the types in a nested container field reference.
+ If expandCompoundFieldTypes is true, all types for each container and final leaf field element are returned in
+ the array.  If false, only the field's type is returned.
+</p></div><dl class="paramcmts block"><dt class="param">names</dt><dd class="cmt"><p>- an array of the string components from a (possibly) compound field reference expression</p></dd><dt class="param">expandCompoundFieldTypes</dt><dd class="cmt"><p>- when true, the full type information for each type in the field expression
+ 	are returned.  When false, only the leaf type information is returned.</p></dd><dt>returns</dt><dd class="cmt"><p>an array of triples consisting of (type string representation, isContainerWithNamedValues, the BaseTypeDef)</p></dd></dl></div>
+    </li><li name="com.ligadata.pmml.support.MetadataInterpreter#getFunctions" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getFunctions(fcnName:String):scala.collection.immutable.Set[com.ligadata.kamanja.metadata.FunctionDef]"></a>
+      <a id="getFunctions(String):Set[FunctionDef]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getFunctions</span><span class="params">(<span name="fcnName">fcnName: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.immutable.Set" class="extype" target="_top">Set</a>[<a href="../../kamanja/metadata/FunctionDef.html" class="extype" name="com.ligadata.kamanja.metadata.FunctionDef">FunctionDef</a>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.support.MetadataInterpreter@getFunctions(fcnName:String):scala.collection.immutable.Set[com.ligadata.kamanja.metadata.FunctionDef]" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Find the Set[FunctionDef] for the function name supplied.</p><div class="fullcomment"><div class="comment cmt"><p>Find the Set[FunctionDef] for the function name supplied.  Function names may be qualified with a namespace
+if desired.  If not qualified this way, the namespaceSearchPath is used to supply the namespace for the
+search.  Each is searched in order until either the namespace.fcnName matches or all namespace.fcnName's
+have been used and the search fails.
+</p></div><dl class="paramcmts block"><dt class="param">fcnName</dt><dd class="cmt"><p>the name, possibly &quot;namespace.&quot; qualified key</p></dd><dt>returns</dt><dd class="cmt"><p>FunctionDef</p></dd></dl></div>
+    </li><li name="com.ligadata.pmml.support.MetadataInterpreter#getMsg" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getMsg(msgName:String):(String,com.ligadata.kamanja.metadata.MessageDef)"></a>
+      <a id="getMsg(String):(String,MessageDef)"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getMsg</span><span class="params">(<span name="msgName">msgName: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: (<span class="extype" name="scala.Predef.String">String</span>, <a href="../../kamanja/metadata/MessageDef.html" class="extype" name="com.ligadata.kamanja.metadata.MessageDef">MessageDef</a>)</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.support.MetadataInterpreter@getMsg(msgName:String):(String,com.ligadata.kamanja.metadata.MessageDef)" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Answer the MessageDef for the supplied msgName.</p><div class="fullcomment"><div class="comment cmt"><p>Answer the MessageDef for the supplied msgName.</p></div><dl class="paramcmts block"><dt class="param">msgName</dt><dd class="cmt"><p>the type name of the transformation dictionary derived field</p></dd><dt>returns</dt><dd class="cmt"><p>(msg type name string, MessageDef)</p></dd></dl></div>
+    </li><li name="com.ligadata.pmml.support.MetadataInterpreter#getType" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getType(typename:String):(String,com.ligadata.kamanja.metadata.BaseTypeDef)"></a>
+      <a id="getType(String):(String,BaseTypeDef)"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getType</span><span class="params">(<span name="typename">typename: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: (<span class="extype" name="scala.Predef.String">String</span>, <a href="../../kamanja/metadata/BaseTypeDef.html" class="extype" name="com.ligadata.kamanja.metadata.BaseTypeDef">BaseTypeDef</a>)</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.support.MetadataInterpreter@getType(typename:String):(String,com.ligadata.kamanja.metadata.BaseTypeDef)" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt"> OK
+ Answer the typedef string and typedef for the supplied typename.</p><div class="fullcomment"><div class="comment cmt"><p> OK
+ Answer the typedef string and typedef for the supplied typename.</p></div><dl class="paramcmts block"><dt class="param">typename</dt><dd class="cmt"><p>the type name of the transformation dictionary derived field</p></dd><dt>returns</dt><dd class="cmt"><p>(type name string, typedef)</p></dd></dl></div>
+    </li><li name="com.ligadata.pmml.support.MetadataInterpreter#getXDictFieldType" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getXDictFieldType(nm:String):(String,com.ligadata.kamanja.metadata.BaseTypeDef)"></a>
+      <a id="getXDictFieldType(String):(String,BaseTypeDef)"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getXDictFieldType</span><span class="params">(<span name="nm">nm: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: (<span class="extype" name="scala.Predef.String">String</span>, <a href="../../kamanja/metadata/BaseTypeDef.html" class="extype" name="com.ligadata.kamanja.metadata.BaseTypeDef">BaseTypeDef</a>)</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.support.MetadataInterpreter@getXDictFieldType(nm:String):(String,com.ligadata.kamanja.metadata.BaseTypeDef)" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Search this bad boy, with and without namespace qualifiers...</p><div class="fullcomment"><div class="comment cmt"><p>Search this bad boy, with and without namespace qualifiers...</p></div><dl class="paramcmts block"><dt class="param">nm</dt><dd class="cmt"><p>the name of the transformation dictionary derived field</p></dd><dt>returns</dt><dd class="cmt"><p>a tuple (type rep string , corresponding base type)</p></dd></dl></div>
+    </li><li name="scala.AnyRef#hashCode" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="hashCode():Int"></a>
+      <a id="hashCode():Int"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.support.MetadataInterpreter@hashCode():Int" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="com.ligadata.pmml.support.MetadataInterpreter#isContainerWithFieldOrKeyNames" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="isContainerWithFieldOrKeyNames(typedef:com.ligadata.kamanja.metadata.BaseTypeDef):Boolean"></a>
+      <a id="isContainerWithFieldOrKeyNames(BaseTypeDef):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">isContainerWithFieldOrKeyNames</span><span class="params">(<span name="typedef">typedef: <a href="../../kamanja/metadata/BaseTypeDef.html" class="extype" name="com.ligadata.kamanja.metadata.BaseTypeDef">BaseTypeDef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.support.MetadataInterpreter@isContainerWithFieldOrKeyNames(typedef:com.ligadata.kamanja.metadata.BaseTypeDef):Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt"> Answer whether this is a container that has a list of keys (MappedMsgTypeDef) or contains fields (StructTypeDef)</p><div class="fullcomment"><div class="comment cmt"><p> Answer whether this is a container that has a list of keys (MappedMsgTypeDef) or contains fields (StructTypeDef)</p></div><dl class="paramcmts block"><dt class="param">typedef</dt><dd class="cmt"><p>A BaseTypeDef</p></dd><dt>returns</dt><dd class="cmt"><p>true if typedef is any {StructTypeDef, MappedMsgTypeDef}</p></dd></dl></div>
+    </li><li name="scala.Any#isInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="isInstanceOf[T0]:Boolean"></a>
+      <a id="isInstanceOf[T0]:Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.support.MetadataInterpreter@isInstanceOf[T0]:Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li name="com.ligadata.pmml.compiler.LogTrait#logger" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="logger:org.apache.logging.log4j.Logger"></a>
+      <a id="logger:Logger"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">logger</span><span class="result">: <span class="extype" name="org.apache.logging.log4j.Logger">Logger</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.support.MetadataInterpreter@logger:org.apache.logging.log4j.Logger" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../compiler/LogTrait.html" class="extype" name="com.ligadata.pmml.compiler.LogTrait">LogTrait</a></dd></dl></div>
+    </li><li name="com.ligadata.pmml.support.MetadataInterpreter#mgr" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="mgr:com.ligadata.kamanja.metadata.MdMgr"></a>
+      <a id="mgr:MdMgr"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">mgr</span><span class="result">: <a href="../../kamanja/metadata/MdMgr.html" class="extype" name="com.ligadata.kamanja.metadata.MdMgr">MdMgr</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.support.MetadataInterpreter@mgr:com.ligadata.kamanja.metadata.MdMgr" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.pmml.support.MetadataInterpreter#minMaxArgsForTheseFcns" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="minMaxArgsForTheseFcns(name:String):(Int,Int)"></a>
+      <a id="minMaxArgsForTheseFcns(String):(Int,Int)"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">minMaxArgsForTheseFcns</span><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: (<a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a>)</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.support.MetadataInterpreter@minMaxArgsForTheseFcns(name:String):(Int,Int)" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt"> Answer min/max count of arguments for the functions with the supplied name</p><div class="fullcomment"><div class="comment cmt"><p> Answer min/max count of arguments for the functions with the supplied name</p></div><dl class="paramcmts block"><dt class="param">name</dt><dd class="cmt"><p>a namespace.name string key.</p></dd></dl></div>
+    </li><li name="scala.AnyRef#ne" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ne(x$1:AnyRef):Boolean"></a>
+      <a id="ne(AnyRef):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.support.MetadataInterpreter@ne(x$1:AnyRef):Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#notify" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="notify():Unit"></a>
+      <a id="notify():Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.support.MetadataInterpreter@notify():Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#notifyAll" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="notifyAll():Unit"></a>
+      <a id="notifyAll():Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.support.MetadataInterpreter@notifyAll():Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#synchronized" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="synchronized[T0](x$1:=&gt;T0):T0"></a>
+      <a id="synchronized[T0](⇒T0):T0"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">synchronized</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="params">(<span name="arg0">arg0: ⇒ <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>)</span><span class="result">: <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.support.MetadataInterpreter@synchronized[T0](x$1:=&gt;T0):T0" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#toString" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="toString():String"></a>
+      <a id="toString():String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">toString</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.support.MetadataInterpreter@toString():String" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="wait():Unit"></a>
+      <a id="wait():Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.support.MetadataInterpreter@wait():Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="defval" name="classOf[java.lang.InterruptedException]">...</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="wait(x$1:Long,x$2:Int):Unit"></a>
+      <a id="wait(Long,Int):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Long" class="extype" target="_top">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.support.MetadataInterpreter@wait(x$1:Long,x$2:Int):Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="defval" name="classOf[java.lang.InterruptedException]">...</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="wait(x$1:Long):Unit"></a>
+      <a id="wait(Long):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Long" class="extype" target="_top">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.support.MetadataInterpreter@wait(x$1:Long):Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="defval" name="classOf[java.lang.InterruptedException]">...</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li></ol>
+            </div>
+
+        
+
+        
+        </div>
+
+        <div id="inheritedMembers">
+        <div class="parent" name="com.ligadata.pmml.compiler.LogTrait">
+              <h3>Inherited from <a href="../compiler/LogTrait.html" class="extype" name="com.ligadata.pmml.compiler.LogTrait">LogTrait</a></h3>
+            </div><div class="parent" name="scala.AnyRef">
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></h3>
+            </div><div class="parent" name="scala.Any">
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></h3>
+            </div>
+        
+        </div>
+
+        <div id="groupedMembers">
+        <div class="group" name="Ungrouped">
+              <h3>Ungrouped</h3>
+              
+            </div>
+        </div>
+
+      </div>
+
+      <div id="tooltip"></div>
+
+      <div id="footer">  </div>
+
+
+    </body>
+      </html>

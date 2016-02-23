@@ -489,7 +489,7 @@ trait MetadataAPI {
     * @param input the text element to be added dependent upon the modelType specified.
     * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
     *               method. If Security and/or Audit are configured, this value must be a value other than None.
-    * @param modelName the namespace.name of the JPMML model to be added to the Kamanja metadata
+    * @param modelName the namespace.name of the PMML model to be added to the Kamanja metadata
     * @param version the model version to be used to describe this PMML model
     * @param msgConsumed the namespace.name of the message to be consumed by a PMML model
     * @return the result as a JSON String of object ApiResult where ApiResult.statusCode
@@ -526,7 +526,7 @@ trait MetadataAPI {
     * @param input the text element to be added dependent upon the modelType specified.
     * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
     *               method. If Security and/or Audit are configured, this value must be a value other than None
-    * @param modelName appropriate for PMML, the namespace.name of the JPMML model to be added to the Kamanja metadata
+    * @param modelName appropriate for PMML, the namespace.name of the PMML model to be added to the Kamanja metadata
     * @param version appropriate for PMML, the model version to be assigned. This version ''must'' be greater than the
     *                version in use and unique for models with the modelName
     * @param optVersionBeingUpdated not used .. reserved for future release where explicit modelnamespace.modelname.modelversion

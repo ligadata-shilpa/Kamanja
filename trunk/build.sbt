@@ -1,15 +1,33 @@
 import sbt._
 import Keys._
+import UnidocKeys._
 
 sbtPlugin := true
 
 version := "0.0.0.1"
 
-scalaVersion := "2.11.7"
+//scalaVersion := "2.11.7"
+
+crossScalaVersions := Seq("2.11.7", "2.10.4")
 
 shellPrompt := { state =>  "sbt (%s)> ".format(Project.extract(state).currentProject.id) }
 
 net.virtualvoid.sbt.graph.Plugin.graphSettings
+
+libraryDependencies := {
+    CrossVersion.partialVersion(scalaVersion.value) match {
+        // if scala 2.11+ is used, quasiquotes are merged into scala-reflect
+        case Some((2, scalaMajor)) if scalaMajor >= 11 =>
+            libraryDependencies.value ++ Seq("org.scalameta" %% "scalameta" % "0.0.3")
+        // libraryDependencies.value
+        // in Scala 2.10, quasiquotes are provided by macro paradise
+        case Some((2, 10)) =>
+            libraryDependencies.value ++ Seq("org.scalamacros" %% "quasiquotes" % "2.1.0")
+            //libraryDependencies.value ++ Seq(
+                //compilerPlugin("org.scalamacros" % "paradise" % "2.0.0" cross CrossVersion.full),
+                //"org.scalamacros" %% "quasiquotes" % "2.1.0" cross CrossVersion.binary)
+    }
+}
 
 libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value
 
@@ -158,3 +176,30 @@ lazy val MigrateManager = project.in(file("Utils/Migrate/MigrateManager")) depen
 lazy val MigrateTo_V_1_3 = project.in(file("Utils/Migrate/DestinationVersion/MigrateTo_V_1_3")) dependsOn (MigrateBase, KamanjaManager)
 
 lazy val MigrateFrom_V_1_2 = project.in(file("Utils/Migrate/SourceVersion/MigrateFrom_V_1_2")) dependsOn (MigrateBase)
+
+lazy val InstallDriverBase = project.in(file("Utils/ClusterInstaller/InstallDriverBase"))
+
+lazy val InstallDriver = project.in(file("Utils/ClusterInstaller/InstallDriver")) dependsOn (InstallDriverBase, Serialize, KamanjaUtils)
+
+lazy val ClusterInstallerDriver = project.in(file("Utils/ClusterInstaller/ClusterInstallerDriver")) dependsOn (InstallDriverBase, MigrateBase, MigrateManager)
+
+lazy val GetComponent = project.in(file("Utils/ClusterInstaller/GetComponent"))
+
+/*
+
+val commonSettings = Seq(
+    scalaVersion := "2.11.7",
+    autoAPIMappings := true
+  )
+
+val root = (project in file(".")).
+  settings(commonSettings: _*).
+  settings(unidocSettings: _*).
+  settings(
+    name := "KamanjaManager",
+    unidocProjectFilter in (ScalaUnidoc, unidoc) := inAnyProject -- inProjects(MigrateFrom_V_1_1, MigrateFrom_V_1_2)
+  ).
+  aggregate(BaseTypes, BaseFunctions, Serialize, ZooKeeperClient, ZooKeeperListener, Exceptions, KamanjaBase, DataDelimiters, KamanjaManager, InputOutputAdapterBase, KafkaSimpleInputOutputAdapters, FileSimpleInputOutputAdapters, SimpleEnvContextImpl, StorageBase, Metadata, OutputMsgDef, MessageDef, PmmlRuntime, PmmlCompiler, PmmlUdfs, MethodExtractor, MetadataAPI, MetadataBootstrap, MetadataAPIService, MetadataAPIServiceClient, SimpleKafkaProducer, KVInit, ZooKeeperLeaderLatch, JsonDataGen, NodeInfoExtract, Controller, SimpleApacheShiroAdapter, AuditAdapters, CustomUdfLib, JdbcDataCollector, ExtractData, InterfacesSamples, StorageCassandra, StorageHashMap, StorageHBase, StorageTreeMap, StorageSqlServer, StorageManager, AuditAdapterBase, SecurityAdapterBase, KamanjaUtils, UtilityService, HeartBeat, TransactionService, KvBase, FileDataConsumer, CleanUtil, SaveContainerDataComponent, UtilsForModels, JarFactoryOfModelInstanceFactory, JpmmlFactoryOfModelInstanceFactory, MigrateBase, MigrateManager)
+
+*/
+

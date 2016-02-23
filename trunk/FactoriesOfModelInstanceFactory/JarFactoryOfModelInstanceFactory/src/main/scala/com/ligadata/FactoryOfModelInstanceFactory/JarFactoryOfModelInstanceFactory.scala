@@ -17,10 +17,9 @@
 package com.ligadata.FactoryOfModelInstanceFactory
 
 import com.ligadata.kamanja.metadata.{ ModelDef, BaseElem }
-import com.ligadata.KamanjaBase.{ FactoryOfModelInstanceFactory, ModelInstanceFactory, EnvContext, NodeContext }
+import com.ligadata.KamanjaBase._
 import com.ligadata.Utils.{ Utils, KamanjaClassLoader, KamanjaLoaderInfo }
 import org.apache.logging.log4j.{ Logger, LogManager }
-import com.ligadata.Exceptions.StackTrace
 
 object JarFactoryOfModelInstanceFactory extends FactoryOfModelInstanceFactory {
   private[this] val loggerName = this.getClass.getName()
@@ -54,6 +53,7 @@ object JarFactoryOfModelInstanceFactory extends FactoryOfModelInstanceFactory {
   }
 
   private[this] def CheckAndPrepModelFactory(nodeContext: NodeContext, metadataLoader: KamanjaLoaderInfo, clsName: String, mdl: ModelDef): ModelInstanceFactory = {
+    var isModelBaseObj = false
     var isModel = true
     var curClass: Class[_] = null
 
@@ -66,13 +66,19 @@ object JarFactoryOfModelInstanceFactory extends FactoryOfModelInstanceFactory {
 
       while (curClz != null && isModel == false) {
         isModel = Utils.isDerivedFrom(curClz, "com.ligadata.KamanjaBase.ModelInstanceFactory")
-        if (isModel == false)
-          curClz = curClz.getSuperclass()
+        if (isModel == false) {
+          isModel = Utils.isDerivedFrom(curClz, "com.ligadata.KamanjaBase.ModelBaseObj")
+          if (isModel == false)
+            curClz = curClz.getSuperclass()
+          else {
+            isModelBaseObj = true
+            LOG.debug("Found ModelBaseObj class:" + clsName)
+          }
+        }
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        LOG.error("Failed to get classname %s. Reason:%s, Cause:%s\nStackTrace:%s".format(clsName, e.getMessage, e.getCause, stackTrace))
+        LOG.error("Failed to get classname %s".format(clsName), e)
         return null
       }
     }
@@ -81,28 +87,55 @@ object JarFactoryOfModelInstanceFactory extends FactoryOfModelInstanceFactory {
       try {
         var objinst: Any = null
         try {
-          // Trying Regular class instantiation
-          objinst = curClass.getConstructor(classOf[ModelDef], classOf[NodeContext]).newInstance(mdl, nodeContext)
+          if (isModelBaseObj) {
+            var mdlBaseObjInst: Any = null
+            try {
+              // Trying Singleton Object
+              LOG.debug("Creating mdlBaseObjInst")
+              val module = metadataLoader.mirror.staticModule(clsName)
+              val obj = metadataLoader.mirror.reflectModule(module)
+              mdlBaseObjInst = obj.instance
+              LOG.debug("Created mdlBaseObjInst:" + mdlBaseObjInst)
+            } catch {
+              case e: Exception => {
+                LOG.debug("Creating mdlBaseObjInst", e)
+                // Trying Regular Object instantiation
+                mdlBaseObjInst = curClass.newInstance
+                LOG.debug("Created mdlBaseObjInst:" + mdlBaseObjInst)
+              }
+            }
+
+            if (mdlBaseObjInst.isInstanceOf[ModelBaseObj]) {
+              LOG.debug("Getting modelBaseobj")
+              val modelBaseobj = mdlBaseObjInst.asInstanceOf[ModelBaseObj]
+              LOG.debug("Got modelBaseobj:" + modelBaseobj)
+              objinst = new ModelBaseObjMdlInstanceFactory(mdl, nodeContext, modelBaseobj)
+              LOG.debug("Got objinst:" + objinst)
+            }
+          } else {
+            LOG.debug("Getting objinst")
+            // Trying Regular class instantiation
+            objinst = curClass.getConstructor(classOf[ModelDef], classOf[NodeContext]).newInstance(mdl, nodeContext)
+            LOG.debug("Got objinst:" + objinst)
+          }
         } catch {
           case e: Exception => {
-            val stackTrace = StackTrace.ThrowableTraceString(e)
-            LOG.error("Failed to instantiate ModelInstanceFactory. Reason:%s, Cause:%s\nStackTrace:%s".format(e.getMessage, e.getCause, stackTrace))
+            LOG.error("Failed to instantiate ModelInstanceFactory. clsName:" + clsName, e)
             return null
           }
         }
 
-        if (objinst.isInstanceOf[ModelInstanceFactory]) {
+        if (objinst != null && objinst.isInstanceOf[ModelInstanceFactory]) {
           val modelobj = objinst.asInstanceOf[ModelInstanceFactory]
           val mdlName = (mdl.NameSpace.trim + "." + mdl.Name.trim).toLowerCase
           LOG.info("Created Model:" + mdlName)
           return modelobj
         }
-        LOG.error("Failed to instantiate ModelInstanceFactory :" + clsName + ". ObjType0:" + objinst.getClass.getSimpleName + ". ObjType1:" + objinst.getClass.getCanonicalName)
+        LOG.error("Failed to instantiate ModelInstanceFactory :" + clsName + ". ObjType0:" + objinst.getClass.getSimpleName + ". ObjType1:" + (if (objinst != null) objinst.getClass.getCanonicalName else ""))
         return null
       } catch {
         case e: Exception =>
-          val stackTrace = StackTrace.ThrowableTraceString(e)
-          LOG.error("Failed to instantiate ModelInstanceFactory for classname:%s. Reason:%s, Cause:%s\nStackTrace:%s".format(clsName, e.getMessage, e.getCause, stackTrace))
+          LOG.error("Failed to instantiate ModelInstanceFactory for classname:%s.".format(clsName), e)
           return null
       }
     }

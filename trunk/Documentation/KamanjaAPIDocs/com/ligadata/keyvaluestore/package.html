@@ -1,5 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<!DOCTYPE html >
 <html>
         <head>
           <title>keyvaluestore - com.ligadata.keyvaluestore</title>
@@ -9,6 +8,11 @@
           
       <link href="../../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
       <link href="../../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../../../lib/jquery.js" id="jquery-js"></script>
+      <script type="text/javascript" src="../../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../../lib/template.js"></script>
+      <script type="text/javascript" src="../../../lib/tools.tooltip.js"></script>
+      
       <script type="text/javascript">
          if(top === self) {
             var url = '../../../index.html';
@@ -24,9 +28,13 @@
         </head>
         <body class="value">
       <div id="definition">
-        <img src="../../../lib/package_big.png" />
+        <img alt="Package" src="../../../lib/package_big.png" />
         <p id="owner"><a href="../../package.html" class="extype" name="com">com</a>.<a href="../package.html" class="extype" name="com.ligadata">ligadata</a></p>
-        <h1>keyvaluestore</h1>
+        <h1>keyvaluestore</h1><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.package" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       </div>
 
       <h4 id="signature" class="signature">
@@ -58,135 +66,209 @@
 
         <div id="types" class="types members">
               <h3>Type Members</h3>
-              <ol><li name="com.ligadata.keyvaluestore.ByteArray" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="ByteArrayextendsArrayBuffer[Byte]"></a>
-      <a id="ByteArray:ByteArray"></a>
+              <ol><li name="com.ligadata.keyvaluestore.CassandraAdapter" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="CassandraAdapterextendsDataStore"></a>
+      <a id="CassandraAdapter:CassandraAdapter"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">class</span>
       </span>
       <span class="symbol">
-        <a href="ByteArray.html"><span class="name">ByteArray</span></a><span class="result"> extends <span class="extype" name="scala.collection.mutable.ArrayBuffer">ArrayBuffer</span>[<span class="extype" name="scala.Byte">Byte</span>]</span>
+        <a href="CassandraAdapter.html"><span class="name">CassandraAdapter</span></a><span class="result"> extends <a href="../StorageBase/DataStore.html" class="extype" name="com.ligadata.StorageBase.DataStore">DataStore</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.package@CassandraAdapterextendsDataStore" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
-    </li><li name="com.ligadata.keyvaluestore.ConnectionFailedException" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="ConnectionFailedExceptionextendsExceptionwithProductwithSerializable"></a>
-      <a id="ConnectionFailedException:ConnectionFailedException"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">case class</span>
-      </span>
-      <span class="symbol">
-        <a href="ConnectionFailedException.html"><span class="name">ConnectionFailedException</span></a><span class="params">(<span name="e">e: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result"> extends <span class="extype" name="scala.Exception">Exception</span> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
-      </span>
-      </h4>
-      
-    </li><li name="com.ligadata.keyvaluestore.DataStore" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="DataStoreextendsDataStoreOperations"></a>
-      <a id="DataStore:DataStore"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">trait</span>
-      </span>
-      <span class="symbol">
-        <a href="DataStore.html"><span class="name">DataStore</span></a><span class="result"> extends <a href="DataStoreOperations.html" class="extype" name="com.ligadata.keyvaluestore.DataStoreOperations">DataStoreOperations</a></span>
-      </span>
-      </h4>
-      
-    </li><li name="com.ligadata.keyvaluestore.DataStoreOperations" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="DataStoreOperationsextendsAnyRef"></a>
-      <a id="DataStoreOperations:DataStoreOperations"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">trait</span>
-      </span>
-      <span class="symbol">
-        <a href="DataStoreOperations.html"><span class="name">DataStoreOperations</span></a><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
-      </span>
-      </h4>
-      
-    </li><li name="com.ligadata.keyvaluestore.IStorage" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="IStorageextendsAnyRef"></a>
-      <a id="IStorage:IStorage"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">trait</span>
-      </span>
-      <span class="symbol">
-        <a href="IStorage.html"><span class="name">IStorage</span></a><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
-      </span>
-      </h4>
-      
-    </li><li name="com.ligadata.keyvaluestore.Key" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="KeyextendsByteArray"></a>
-      <a id="Key:Key"></a>
+    </li><li name="com.ligadata.keyvaluestore.CassandraAdapterTx" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="CassandraAdapterTxextendsTransaction"></a>
+      <a id="CassandraAdapterTx:CassandraAdapterTx"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">class</span>
       </span>
       <span class="symbol">
-        <a href="Key.html"><span class="name">Key</span></a><span class="result"> extends <a href="ByteArray.html" class="extype" name="com.ligadata.keyvaluestore.ByteArray">ByteArray</a></span>
+        <a href="CassandraAdapterTx.html"><span class="name">CassandraAdapterTx</span></a><span class="result"> extends <a href="../StorageBase/Transaction.html" class="extype" name="com.ligadata.StorageBase.Transaction">Transaction</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.package@CassandraAdapterTxextendsTransaction" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
-    </li><li name="com.ligadata.keyvaluestore.KeyNotFoundException" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="KeyNotFoundExceptionextendsExceptionwithProductwithSerializable"></a>
-      <a id="KeyNotFoundException:KeyNotFoundException"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">case class</span>
-      </span>
-      <span class="symbol">
-        <a href="KeyNotFoundException.html"><span class="name">KeyNotFoundException</span></a><span class="params">(<span name="e">e: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result"> extends <span class="extype" name="scala.Exception">Exception</span> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
-      </span>
-      </h4>
-      
-    </li><li name="com.ligadata.keyvaluestore.PropertyMap" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="PropertyMapextendsHashMap[String,String]"></a>
-      <a id="PropertyMap:PropertyMap"></a>
+    </li><li name="com.ligadata.keyvaluestore.DriverShim" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="DriverShimextendsDriver"></a>
+      <a id="DriverShim:DriverShim"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">class</span>
       </span>
       <span class="symbol">
-        <a href="PropertyMap.html"><span class="name">PropertyMap</span></a><span class="result"> extends <span class="extype" name="scala.collection.mutable.HashMap">HashMap</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="scala.Predef.String">String</span>]</span>
+        <a href="DriverShim.html"><span class="name">DriverShim</span></a><span class="result"> extends <span class="extype" name="java.sql.Driver">Driver</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.package@DriverShimextendsDriver" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
-    </li><li name="com.ligadata.keyvaluestore.Transaction" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="TransactionextendsDataStoreOperations"></a>
-      <a id="Transaction:Transaction"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">trait</span>
-      </span>
-      <span class="symbol">
-        <a href="Transaction.html"><span class="name">Transaction</span></a><span class="result"> extends <a href="DataStoreOperations.html" class="extype" name="com.ligadata.keyvaluestore.DataStoreOperations">DataStoreOperations</a></span>
-      </span>
-      </h4>
-      
-    </li><li name="com.ligadata.keyvaluestore.Value" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="ValueextendsByteArray"></a>
-      <a id="Value:Value"></a>
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="HBaseAdapterextendsDataStore"></a>
+      <a id="HBaseAdapter:HBaseAdapter"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">class</span>
       </span>
       <span class="symbol">
-        <a href="Value.html"><span class="name">Value</span></a><span class="result"> extends <a href="ByteArray.html" class="extype" name="com.ligadata.keyvaluestore.ByteArray">ByteArray</a></span>
+        <a href="HBaseAdapter.html"><span class="name">HBaseAdapter</span></a><span class="result"> extends <a href="../StorageBase/DataStore.html" class="extype" name="com.ligadata.StorageBase.DataStore">DataStore</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.package@HBaseAdapterextendsDataStore" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapterTx" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="HBaseAdapterTxextendsTransaction"></a>
+      <a id="HBaseAdapterTx:HBaseAdapterTx"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="HBaseAdapterTx.html"><span class="name">HBaseAdapterTx</span></a><span class="result"> extends <a href="../StorageBase/Transaction.html" class="extype" name="com.ligadata.StorageBase.Transaction">Transaction</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.package@HBaseAdapterTxextendsTransaction" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.keyvaluestore.HashMapAdapter" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="HashMapAdapterextendsDataStore"></a>
+      <a id="HashMapAdapter:HashMapAdapter"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="HashMapAdapter.html"><span class="name">HashMapAdapter</span></a><span class="result"> extends <a href="../StorageBase/DataStore.html" class="extype" name="com.ligadata.StorageBase.DataStore">DataStore</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.package@HashMapAdapterextendsDataStore" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.keyvaluestore.HashMapAdapterTx" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="HashMapAdapterTxextendsTransaction"></a>
+      <a id="HashMapAdapterTx:HashMapAdapterTx"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="HashMapAdapterTx.html"><span class="name">HashMapAdapterTx</span></a><span class="result"> extends <a href="../StorageBase/Transaction.html" class="extype" name="com.ligadata.StorageBase.Transaction">Transaction</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.package@HashMapAdapterTxextendsTransaction" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.keyvaluestore.JdbcClassLoader" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="JdbcClassLoaderextendsURLClassLoader"></a>
+      <a id="JdbcClassLoader:JdbcClassLoader"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="JdbcClassLoader.html"><span class="name">JdbcClassLoader</span></a><span class="result"> extends <span class="extype" name="java.net.URLClassLoader">URLClassLoader</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.package@JdbcClassLoaderextendsURLClassLoader" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.keyvaluestore.SqlServerAdapter" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="SqlServerAdapterextendsDataStore"></a>
+      <a id="SqlServerAdapter:SqlServerAdapter"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="SqlServerAdapter.html"><span class="name">SqlServerAdapter</span></a><span class="result"> extends <a href="../StorageBase/DataStore.html" class="extype" name="com.ligadata.StorageBase.DataStore">DataStore</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.package@SqlServerAdapterextendsDataStore" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.keyvaluestore.SqlServerAdapterTx" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="SqlServerAdapterTxextendsTransaction"></a>
+      <a id="SqlServerAdapterTx:SqlServerAdapterTx"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="SqlServerAdapterTx.html"><span class="name">SqlServerAdapterTx</span></a><span class="result"> extends <a href="../StorageBase/Transaction.html" class="extype" name="com.ligadata.StorageBase.Transaction">Transaction</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.package@SqlServerAdapterTxextendsTransaction" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.keyvaluestore.TreeMapAdapter" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="TreeMapAdapterextendsDataStore"></a>
+      <a id="TreeMapAdapter:TreeMapAdapter"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="TreeMapAdapter.html"><span class="name">TreeMapAdapter</span></a><span class="result"> extends <a href="../StorageBase/DataStore.html" class="extype" name="com.ligadata.StorageBase.DataStore">DataStore</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.package@TreeMapAdapterextendsDataStore" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.keyvaluestore.TreeMapAdapterTx" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="TreeMapAdapterTxextendsTransaction"></a>
+      <a id="TreeMapAdapterTx:TreeMapAdapterTx"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="TreeMapAdapterTx.html"><span class="name">TreeMapAdapterTx</span></a><span class="result"> extends <a href="../StorageBase/Transaction.html" class="extype" name="com.ligadata.StorageBase.Transaction">Transaction</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.package@TreeMapAdapterTxextendsTransaction" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li></ol>
             </div>
@@ -195,7 +277,58 @@
 
         <div id="values" class="values members">
               <h3>Value Members</h3>
-              <ol><li name="com.ligadata.keyvaluestore.KeyValueManager" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+              <ol><li name="com.ligadata.keyvaluestore.CassandraAdapter" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="CassandraAdapter"></a>
+      <a id="CassandraAdapter:CassandraAdapter"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="CassandraAdapter$.html"><span class="name">CassandraAdapter</span></a><span class="result"> extends <a href="../StorageBase/StorageAdapterObj.html" class="extype" name="com.ligadata.StorageBase.StorageAdapterObj">StorageAdapterObj</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.package@CassandraAdapter" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.keyvaluestore.HBaseAdapter" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="HBaseAdapter"></a>
+      <a id="HBaseAdapter:HBaseAdapter"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="HBaseAdapter$.html"><span class="name">HBaseAdapter</span></a><span class="result"> extends <a href="../StorageBase/StorageAdapterObj.html" class="extype" name="com.ligadata.StorageBase.StorageAdapterObj">StorageAdapterObj</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.package@HBaseAdapter" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.keyvaluestore.HashMapAdapter" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="HashMapAdapter"></a>
+      <a id="HashMapAdapter:HashMapAdapter"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="HashMapAdapter$.html"><span class="name">HashMapAdapter</span></a><span class="result"> extends <a href="../StorageBase/StorageAdapterObj.html" class="extype" name="com.ligadata.StorageBase.StorageAdapterObj">StorageAdapterObj</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.package@HashMapAdapter" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.keyvaluestore.KeyValueManager" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="KeyValueManager"></a>
       <a id="KeyValueManager:KeyValueManager"></a>
       <h4 class="signature">
@@ -206,72 +339,45 @@
       <span class="symbol">
         <a href="KeyValueManager$.html"><span class="name">KeyValueManager</span></a>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.package@KeyValueManager" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
-    </li><li name="com.ligadata.keyvaluestore.cassandra" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="cassandra"></a>
-      <a id="cassandra:cassandra"></a>
+    </li><li name="com.ligadata.keyvaluestore.SqlServerAdapter" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="SqlServerAdapter"></a>
+      <a id="SqlServerAdapter:SqlServerAdapter"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
-        <span class="kind">package</span>
+        <span class="kind">object</span>
       </span>
       <span class="symbol">
-        <a href="cassandra/package.html"><span class="name">cassandra</span></a>
+        <a href="SqlServerAdapter$.html"><span class="name">SqlServerAdapter</span></a><span class="result"> extends <a href="../StorageBase/StorageAdapterObj.html" class="extype" name="com.ligadata.StorageBase.StorageAdapterObj">StorageAdapterObj</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.package@SqlServerAdapter" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
-    </li><li name="com.ligadata.keyvaluestore.hbase" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="hbase"></a>
-      <a id="hbase:hbase"></a>
+    </li><li name="com.ligadata.keyvaluestore.TreeMapAdapter" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="TreeMapAdapter"></a>
+      <a id="TreeMapAdapter:TreeMapAdapter"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
-        <span class="kind">package</span>
+        <span class="kind">object</span>
       </span>
       <span class="symbol">
-        <a href="hbase/package.html"><span class="name">hbase</span></a>
+        <a href="TreeMapAdapter$.html"><span class="name">TreeMapAdapter</span></a><span class="result"> extends <a href="../StorageBase/StorageAdapterObj.html" class="extype" name="com.ligadata.StorageBase.StorageAdapterObj">StorageAdapterObj</a></span>
       </span>
-      </h4>
-      
-    </li><li name="com.ligadata.keyvaluestore.mapdb" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="mapdb"></a>
-      <a id="mapdb:mapdb"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">package</span>
-      </span>
-      <span class="symbol">
-        <a href="mapdb/package.html"><span class="name">mapdb</span></a>
-      </span>
-      </h4>
-      
-    </li><li name="com.ligadata.keyvaluestore.redis" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="redis"></a>
-      <a id="redis:redis"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">package</span>
-      </span>
-      <span class="symbol">
-        <a href="redis/package.html"><span class="name">redis</span></a>
-      </span>
-      </h4>
-      
-    </li><li name="com.ligadata.keyvaluestore.voldemort" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="voldemort"></a>
-      <a id="voldemort:voldemort"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">package</span>
-      </span>
-      <span class="symbol">
-        <a href="voldemort/package.html"><span class="name">voldemort</span></a>
-      </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.keyvaluestore.package@TreeMapAdapter" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li></ol>
             </div>
@@ -298,6 +404,7 @@
       <div id="tooltip"></div>
 
       <div id="footer">  </div>
-      <script defer="defer" type="text/javascript" id="jquery-js" src="../../../lib/jquery.js"></script><script defer="defer" type="text/javascript" id="jquery-ui-js" src="../../../lib/jquery-ui.js"></script><script defer="defer" type="text/javascript" id="tools-tooltip-js" src="../../../lib/tools.tooltip.js"></script><script defer="defer" type="text/javascript" id="template-js" src="../../../lib/template.js"></script>
+
+
     </body>
       </html>

@@ -192,6 +192,9 @@ object System_HL7_1000001_1430446865995 extends BaseMsgObj {
 }
 
 class System_HL7_1000001_1430446865995 extends BaseMsg {
+  val logger = this.getClass.getName
+  lazy val log = LogManager.getLogger(logger)
+
   override def IsFixed: Boolean = true;
   override def IsKv: Boolean = false;
 
@@ -298,6 +301,7 @@ class System_HL7_1000001_1430446865995 extends BaseMsg {
       return getWithReflection(key)
     } catch {
       case e: Exception => {
+        logger.info("", e)
         // Call By Name
         return getByName(key)
       }
@@ -397,7 +401,7 @@ class System_HL7_1000001_1430446865995 extends BaseMsg {
       return null;
     } catch {
       case e: Exception => {
-        e.printStackTrace()
+        log.error("", e)
         throw e
       }
     }
@@ -605,7 +609,7 @@ class System_HL7_1000001_1430446865995 extends BaseMsg {
 
     } catch {
       case e: Exception => {
-        e.printStackTrace()
+        log.error("", e)
         throw e
       }
     }
@@ -617,7 +621,7 @@ class System_HL7_1000001_1430446865995 extends BaseMsg {
       assignJsonData(json)
     } catch {
       case e: Exception => {
-        e.printStackTrace()
+        log.error("", e)
         throw e
       }
     }
@@ -735,7 +739,7 @@ class System_HL7_1000001_1430446865995 extends BaseMsg {
 
     } catch {
       case e: Exception => {
-        e.printStackTrace()
+        log.error("", e)
         throw e
       }
     }
@@ -916,7 +920,7 @@ class System_HL7_1000001_1430446865995 extends BaseMsg {
 
     } catch {
       case e: Exception => {
-        e.printStackTrace()
+        log.error("", e)
         throw e
       }
     }
@@ -1011,7 +1015,7 @@ class System_HL7_1000001_1430446865995 extends BaseMsg {
 
     } catch {
       case e: Exception => {
-        e.printStackTrace()
+        log.error("", e)
       }
     }
   }
@@ -1114,7 +1118,7 @@ class System_HL7_1000001_1430446865995 extends BaseMsg {
 
     } catch {
       case e: Exception => {
-        e.printStackTrace()
+        log.error("", e)
       }
     }
   }

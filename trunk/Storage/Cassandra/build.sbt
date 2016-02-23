@@ -2,8 +2,6 @@ name := "Cassandra"
 
 version := "0.1.0"
 
-scalaVersion := "2.11.7"
-
 resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
 
 libraryDependencies += "com.datastax.cassandra" % "cassandra-driver-parent" % "2.1.2"

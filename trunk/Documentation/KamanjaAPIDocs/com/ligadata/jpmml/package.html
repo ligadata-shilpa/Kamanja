@@ -1,0 +1,197 @@
+<!DOCTYPE html >
+<html>
+        <head>
+          <title>jpmml - com.ligadata.jpmml</title>
+          <meta name="description" content="jpmml - com.ligadata.jpmml" />
+          <meta name="keywords" content="jpmml com.ligadata.jpmml" />
+          <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+          
+      <link href="../../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
+      <link href="../../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../../../lib/jquery.js" id="jquery-js"></script>
+      <script type="text/javascript" src="../../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../../lib/template.js"></script>
+      <script type="text/javascript" src="../../../lib/tools.tooltip.js"></script>
+      
+      <script type="text/javascript">
+         if(top === self) {
+            var url = '../../../index.html';
+            var hash = 'com.ligadata.jpmml.package';
+            var anchor = window.location.hash;
+            var anchor_opt = '';
+            if (anchor.length >= 1)
+              anchor_opt = '@' + anchor.substring(1);
+            window.location.href = url + '#' + hash + anchor_opt;
+         }
+   	  </script>
+    
+        </head>
+        <body class="value">
+      <div id="definition">
+        <img alt="Package" src="../../../lib/package_big.png" />
+        <p id="owner"><a href="../../package.html" class="extype" name="com">com</a>.<a href="../package.html" class="extype" name="com.ligadata">ligadata</a></p>
+        <h1>jpmml</h1><span class="permalink">
+      <a href="../../../index.html#com.ligadata.jpmml.package" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      </div>
+
+      <h4 id="signature" class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <span class="name">jpmml</span>
+      </span>
+      </h4>
+      
+          <div id="comment" class="fullcommenttop"></div>
+        
+
+      <div id="mbrsel">
+        <div id="textfilter"><span class="pre"></span><span class="input"><input id="mbrsel-input" type="text" accesskey="/" /></span><span class="post"></span></div>
+        
+        
+        <div id="visbl">
+            <span class="filtertype">Visibility</span>
+            <ol><li class="public in"><span>Public</span></li><li class="all out"><span>All</span></li></ol>
+          </div>
+      </div>
+
+      <div id="template">
+        <div id="allMembers">
+        
+
+        <div id="types" class="types members">
+              <h3>Type Members</h3>
+              <ol><li name="com.ligadata.jpmml.JpmmlAdapter" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="JpmmlAdapterextendsModelInstance"></a>
+      <a id="JpmmlAdapter:JpmmlAdapter"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="JpmmlAdapter.html"><span class="name">JpmmlAdapter</span></a><span class="result"> extends <a href="../KamanjaBase/ModelInstance.html" class="extype" name="com.ligadata.KamanjaBase.ModelInstance">ModelInstance</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.jpmml.package@JpmmlAdapterextendsModelInstance" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">JpmmlAdapter serves a &quot;shim&quot; between the engine and a PMML evaluator that will perform the actual message
+scoring.</p><div class="fullcomment"><div class="comment cmt"><p>JpmmlAdapter serves a &quot;shim&quot; between the engine and a PMML evaluator that will perform the actual message
+scoring. It exhibits the &quot;adapter&quot; pattern as discussed in &quot;Design Patterns&quot; by Gamma, Helm, Johnson, and Vlissitudes.</p><p>Kamanja messages are presented to the adapter and transformed to a Map[FieldName, FieldValue] for consumption by
+the PMML evaluator associated with the JpmmlAdapter instance. The target fields (or predictions) and the output fields
+are returned in the MappedModelResults instance to the engine for further transformation and dispatch.
+</p></div></div>
+    </li><li name="com.ligadata.jpmml.JpmmlAdapterFactory" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="JpmmlAdapterFactoryextendsModelInstanceFactorywithLogTrait"></a>
+      <a id="JpmmlAdapterFactory:JpmmlAdapterFactory"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="JpmmlAdapterFactory.html"><span class="name">JpmmlAdapterFactory</span></a><span class="result"> extends <a href="../KamanjaBase/ModelInstanceFactory.html" class="extype" name="com.ligadata.KamanjaBase.ModelInstanceFactory">ModelInstanceFactory</a> with <a href="LogTrait.html" class="extype" name="com.ligadata.jpmml.LogTrait">LogTrait</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.jpmml.package@JpmmlAdapterFactoryextendsModelInstanceFactorywithLogTrait" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">The JpmmlAdapterFactory instantiates its PMML model instance when asked by caller.</p><div class="fullcomment"><div class="comment cmt"><p>The JpmmlAdapterFactory instantiates its PMML model instance when asked by caller.  Its main function is to
+instantiate a new model whenever asked (createModelInstance) and assess whether the current message being processed
+by the engine is consumable by this model (isValidMessage)
+</p></div></div>
+    </li><li name="com.ligadata.jpmml.LogTrait" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="LogTraitextendsAnyRef"></a>
+      <a id="LogTrait:LogTrait"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="LogTrait.html"><span class="name">LogTrait</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.jpmml.package@LogTraitextendsAnyRef" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li></ol>
+            </div>
+
+        
+
+        <div id="values" class="values members">
+              <h3>Value Members</h3>
+              <ol><li name="com.ligadata.jpmml.GlobalLogger" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="GlobalLogger"></a>
+      <a id="GlobalLogger:GlobalLogger"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="GlobalLogger$.html"><span class="name">GlobalLogger</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.jpmml.package@GlobalLogger" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.jpmml.JpmmlFactoryOfModelInstanceFactory" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="JpmmlFactoryOfModelInstanceFactory"></a>
+      <a id="JpmmlFactoryOfModelInstanceFactory:JpmmlFactoryOfModelInstanceFactory"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="JpmmlFactoryOfModelInstanceFactory$.html"><span class="name">JpmmlFactoryOfModelInstanceFactory</span></a><span class="result"> extends <a href="../KamanjaBase/FactoryOfModelInstanceFactory.html" class="extype" name="com.ligadata.KamanjaBase.FactoryOfModelInstanceFactory">FactoryOfModelInstanceFactory</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.jpmml.package@JpmmlFactoryOfModelInstanceFactory" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">An implementation of the FactoryOfModelInstanceFactory trait that supports all of the JPMML models.</p>
+    </li></ol>
+            </div>
+
+        
+
+        
+        </div>
+
+        <div id="inheritedMembers">
+        
+        
+        </div>
+
+        <div id="groupedMembers">
+        <div class="group" name="Ungrouped">
+              <h3>Ungrouped</h3>
+              
+            </div>
+        </div>
+
+      </div>
+
+      <div id="tooltip"></div>
+
+      <div id="footer">  </div>
+
+
+    </body>
+      </html>

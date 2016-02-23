@@ -146,9 +146,9 @@ class MetadataAPISpec extends FunSpec with LocalTestFixtures with BeforeAndAfter
    }
     catch {
       case e: EmbeddedZookeeperException => {
-        throw new EmbeddedZookeeperException("EmbeddedZookeeperException detected\n" + e)
+        throw new EmbeddedZookeeperException("EmbeddedZookeeperException detected")
       }
-      case e: Exception => throw new Exception("Failed to execute set up properly\n" + e)
+      case e: Exception => throw new Exception("Failed to execute set up properly", e)
     }
   }
 
@@ -521,7 +521,7 @@ class MetadataAPISpec extends FunSpec with LocalTestFixtures with BeforeAndAfter
 
 	And("Call AddModel MetadataAPI Function to add Model from " + file.getPath)
 	var modStr = Source.fromFile(file).mkString
-	res = MetadataAPIImpl.AddModel(ModelType.PMML, modStr, None, None)
+	res = MetadataAPIImpl.AddModel(ModelType.KPMML, modStr, None, None)
 	res should include regex ("\"Status Code\" : 0")
 
 	And("GetModelDef API to fetch the model that was just added")
@@ -542,7 +542,7 @@ class MetadataAPISpec extends FunSpec with LocalTestFixtures with BeforeAndAfter
 
 	And("AddModel again to add Model from " + file.getPath)
 	//modStr = Source.fromFile(file).mkString
-	res = MetadataAPIImpl.AddModel(ModelType.PMML, modStr, None, None)
+	res = MetadataAPIImpl.AddModel(ModelType.KPMML, modStr, None, None)
 	res should include regex ("\"Status Code\" : 0")
 
 	And("GetModelDef API to fetch  the model that was just added")
@@ -575,7 +575,7 @@ class MetadataAPISpec extends FunSpec with LocalTestFixtures with BeforeAndAfter
 	And("Clone the input json and update the version number to simulate a model for an update operation")
 	modStr = modStr.replaceFirst("01.00","01.01")
 	assert(modStr.indexOf("\"00.01.01\"") >= 0)
-	res = MetadataAPIImpl.UpdateModel(ModelType.PMML, modStr, None)
+	res = MetadataAPIImpl.UpdateModel(ModelType.KPMML, modStr, None)
 	res should include regex ("\"Status Code\" : 0")
 
 	And("GetModelDef API to fetch the model that was just updated")
@@ -1053,13 +1053,15 @@ class MetadataAPISpec extends FunSpec with LocalTestFixtures with BeforeAndAfter
   override def afterAll = {
     logger.info("Truncating dbstore")
     var logFile = new java.io.File("logs")
-    if( logFile != null ){
+		if( logFile != null ){
       TestUtils.deleteFile(logFile)
     }
+		/*
     logFile = new java.io.File("lib_managed")
     if( logFile != null ){
       TestUtils.deleteFile(logFile)
     }
+    */
     val db = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("DATABASE")
     assert(null != db)
     db match {

@@ -31,7 +31,6 @@ import org.apache.logging.log4j._
 import com.ligadata.Utils._
 import scala.util.control.Breaks._
 import com.ligadata.Exceptions._
-import com.ligadata.Exceptions.StackTrace
 
 class APIService extends LigadataSSLConfiguration with Runnable{
 
@@ -96,7 +95,7 @@ class APIService extends LigadataSSLConfiguration with Runnable{
             return
           }
           case e: Exception => {
-            e.printStackTrace()
+            logger.error("", e)
             return
           }
         }
@@ -166,8 +165,7 @@ class APIService extends LigadataSSLConfiguration with Runnable{
         logger.debug("Unexpected Interrupt")
       }
       case e: Exception => {
-        val stackTrace =   StackTrace.ThrowableTraceString(e)
-              logger.debug("Stacktrace:"+stackTrace)
+              logger.debug("", e)
       }
     } finally {
       Shutdown(0)
@@ -176,6 +174,8 @@ class APIService extends LigadataSSLConfiguration with Runnable{
 }
  
 object APIService {
+  val loggerName = this.getClass.getName
+  lazy val logger = LogManager.getLogger(loggerName)
 
   def main(args: Array[String]): Unit = {
     val mgr = new APIService
@@ -192,6 +192,7 @@ object APIService {
       inParm = parse(jsonObj).values.asInstanceOf[Map[String,Any]] 
     } catch {
       case e: Exception => {
+        logger.warn("Unknown:NameParsingError", e)
         return "Unknown:NameParsingError"
       }
     }

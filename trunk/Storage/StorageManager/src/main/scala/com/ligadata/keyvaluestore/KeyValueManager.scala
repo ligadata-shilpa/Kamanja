@@ -52,7 +52,7 @@ object KeyValueManager {
       parsed_json = json.values.asInstanceOf[Map[String, Any]]
     } catch {
       case e: Exception => {
-        logger.error("Failed to parse Storage JSON configuration string:%s. Reason:%s Message:%s".format(adapterConfig, e.getCause, e.getMessage))
+        logger.error("Failed to parse Storage JSON configuration string:%s.".format(adapterConfig), e)
         throw e
       }
     }
@@ -109,7 +109,7 @@ object KeyValueManager {
             Class.forName(className, true, kvManagerLoader.loader)
           } catch {
             case e: Exception => {
-              logger.error("Failed to load Storage Adapter class %s with Reason:%s Message:%s".format(className, e.getCause, e.getMessage))
+              logger.error("Failed to load Storage Adapter class %s".format(className), e)
               throw e // Rethrow
             }
           }
@@ -142,7 +142,7 @@ object KeyValueManager {
 
             } catch {
               case e: Exception => {
-                logger.error("Failed to instantiate Storage Adapter with configuration:" + adapterConfig + ". Reason:" + e.getCause + ". Message:" + e.getMessage)
+                logger.error("Failed to instantiate Storage Adapter with configuration:" + adapterConfig, e)
                 return null
               }
             }

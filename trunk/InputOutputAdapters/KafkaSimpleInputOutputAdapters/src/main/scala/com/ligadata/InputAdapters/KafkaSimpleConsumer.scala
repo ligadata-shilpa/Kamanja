@@ -28,7 +28,7 @@ import kafka.consumer.{ SimpleConsumer }
 import java.net.{ InetAddress }
 import org.apache.logging.log4j.{ Logger, LogManager }
 import scala.collection.mutable.Map
-import com.ligadata.Exceptions.{FatalAdapterException, StackTrace}
+import com.ligadata.Exceptions.{FatalAdapterException}
 import com.ligadata.KamanjaBase.DataDelimiters
 import com.ligadata.HeartBeat.{Monitorable, MonitorComponentInfo}
 
@@ -76,6 +76,8 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
   metrics(KafkaSimpleConsumer.EXCEPTION_SUMMARY) = partitionExceptions
   metrics(KafkaSimpleConsumer.PARTITION_DEPTH_KEYS) = partitonDepths
 
+  var localReadOffsets: collection.mutable.Map[Int,Long] = collection.mutable.Map[Int,Long]()
+
   private val qc = KafkaQueueAdapterConfiguration.GetAdapterConfig(inputConfig)
 
   LOG.debug("KAFKA ADAPTER: allocating kafka adapter for " + qc.hosts.size + " broker hosts")
@@ -122,8 +124,32 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
     timeoutTimer = KafkaSimpleConsumer.INIT_TIMEOUT
   }
 
+
   override def getComponentStatusAndMetrics: MonitorComponentInfo = {
     implicit val formats = org.json4s.DefaultFormats
+
+    val depths = getAllPartitionEndValues
+    partitonDepths.clear
+    depths.foreach(t => {
+      try {
+        val partId = t._1.asInstanceOf[KafkaPartitionUniqueRecordKey]
+        val localPart = kvs.getOrElse(partId.PartitionId,null)
+        if (localPart != null) {
+          val partVal = t._2.asInstanceOf[KafkaPartitionUniqueRecordValue]
+          var thisDepth: Long = 0
+          if(localReadOffsets.contains(partId.PartitionId)) {
+            thisDepth = localReadOffsets(partId.PartitionId)
+          }
+          partitonDepths(partId.PartitionId.toString) = partVal.Offset - thisDepth
+        }
+
+      } catch {
+        case e: Exception => LOG.warn("KAFKA-ADAPTER: Broker:  error trying to determine queue depths.",e)
+      }
+    })
+
+
+
     return new MonitorComponentInfo( AdapterConfiguration.TYPE_INPUT, qc.Name, KafkaSimpleConsumer.ADAPTER_DESCRIPTION, startHeartBeat, lastSeen,  Serialization.write(metrics).toString)
   }
 
@@ -231,6 +257,9 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
             readOffset = partition._2.Offset
           }
 
+          // So, initialize local offsets here.
+          localReadOffsets(partitionId) = readOffset
+
           // See if we can determine the right offset, bail if we can't
           if (readOffset == -1) {
             LOG.error("KAFKA-ADAPTER: Unable to initialize new reader thread for partition {" + partitionId + "} starting at offset " + readOffset + " on server - " + leadBroker + ", Invalid OFFSET")
@@ -285,7 +314,7 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
                 }
               } catch {
                 case e: InterruptedException => {
-                  LOG.error(qc.Name + " KAFKA ADAPTER: Read retry interrupted")
+                  LOG.error(qc.Name + " KAFKA ADAPTER: Read retry interrupted", e)
                   Shutdown()
                   return
                 }
@@ -347,6 +376,8 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
                 val dontSendOutputToOutputAdap = uniqueVal.Offset <= uniqueRecordValue
                 execThread.execute(message, qc.formatName, uniqueKey, uniqueVal, readTmNs, readTmMs, dontSendOutputToOutputAdap, qc.associatedMsg, delimiters)
 
+                // Kafka offsets are 0 based, so add 1
+                localReadOffsets(partitionId) = (uniqueVal.Offset + 1)
                 val key = Category + "/" + qc.Name + "/evtCnt"
                 cntrAdapter.addCntr(key, 1) // for now adding each row
               }
@@ -369,28 +400,12 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
                 LOG.debug("KAFKA-ADAPTER: Broker: " + leadBroker + " is marked alive,")
                 lastHb = thisHb
                 lastSeen = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
-
-                // Check the depth of this partition - returns Array[(PartitionUniqueRecordKey, PartitionUniqueRecordValue)]
-                val depths = getAllPartitionEndValues
-                depths.foreach(t => {
-                  try {
-                    val partId = t._1.asInstanceOf[KafkaPartitionUniqueRecordKey]
-                    val partVal = t._2.asInstanceOf[KafkaPartitionUniqueRecordValue]
-                    if (partId.PartitionId == partitionId) {
-                      // Keep the highest value we've seen. This is a weird metric until we implement multiple destinations
-                      partitonDepths(partitionId.toString) = scala.math.max(partVal.Offset - readOffset, partitonDepths(partitionId.toString))
-                    }
-                  } catch {
-                    case e: Exception => LOG.warn("KAFKA-ADAPTER: Broker: " + leadBroker + " error trying to determine queue depths.",e)
-                  }
-                })
               }
 
             } catch {
               case e: java.lang.InterruptedException =>
                 {
-                  val stackTrace = StackTrace.ThrowableTraceString(e)
-                  LOG.debug("KAFKA ADAPTER: Forcing down the Consumer Reader thread" + "\nStackTrace:" + stackTrace)
+                  LOG.debug("KAFKA ADAPTER: Forcing down the Consumer Reader thread", e)
                 }
             }
           }
@@ -456,7 +471,7 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
       } catch {
         case fae: FatalAdapterException => throw fae
         case npe: NullPointerException => {
-          if (isQuiesced) LOG.warn("Kafka Simple Consumer is shutting down during kafka call for partition information - ignoring the call")
+          if (isQuiesced) LOG.warn("Kafka Simple Consumer is shutting down during kafka call for partition information - ignoring the call", npe)
         }
         case e: Exception => throw FatalAdapterException("failed to SEND MetadataRequest to Kafka Server ", e)
       } finally {
@@ -507,7 +522,7 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
       key.Deserialize(k)
     } catch {
       case e: Exception => {
-        LOG.error("Failed to deserialize Key:%s. Reason:%s Message:%s".format(k, e.getCause, e.getMessage))
+        LOG.error("Failed to deserialize Key:%s.".format(k), e)
         throw e
       }
     }
@@ -522,7 +537,7 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
         vl.Deserialize(v)
       } catch {
         case e: Exception => {
-          LOG.error("Failed to deserialize Value:%s. Reason:%s Message:%s".format(v, e.getCause, e.getMessage))
+          LOG.error("Failed to deserialize Value:%s.".format(v), e)
           throw e
         }
       }
@@ -589,7 +604,7 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
           } catch {
             case fae: FatalAdapterException => throw fae
             case npe: NullPointerException => {
-              if (isQuiesced) LOG.warn("Kafka Simple Consumer is shutting down during kafka call looking for leader - ignoring the call")
+              if (isQuiesced) LOG.warn("Kafka Simple Consumer is shutting down during kafka call looking for leader - ignoring the call", npe)
             }
             case e: Exception => throw FatalAdapterException("failed to SEND MetadataRequest to Kafka Server ", e)
           } finally {
@@ -600,8 +615,7 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
 
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        LOG.debug("KAFKA ADAPTER - Fatal Error for FindLeader for partition " + inPartition + "\nStackTrace:" + stackTrace)
+        LOG.debug("KAFKA ADAPTER - Fatal Error for FindLeader for partition " + inPartition, e)
       }
     }
     return leaderMetadata;
@@ -676,10 +690,10 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
     } catch {
       case fae: FatalAdapterException => throw fae
       case npe: NullPointerException => {
-        if (isQuiesced) LOG.warn("Kafka Simple Consumer is shutting down during kafka call looking for offsets - ignoring the call")
+        if (isQuiesced) LOG.warn("Kafka Simple Consumer is shutting down during kafka call looking for offsets - ignoring the call", npe)
       }
       case e: java.lang.Exception => {
-        LOG.error("KAFKA ADAPTER: Exception during offset inquiry request for partiotion {" + partitionId + "}")
+        LOG.error("KAFKA ADAPTER: Exception during offset inquiry request for partiotion {" + partitionId + "}", e)
       }
     } finally {
       if (llConsumer != null) { llConsumer.close }
@@ -721,8 +735,7 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
       } catch {
         case fae: FatalAdapterException => throw fae
         case e: InterruptedException => {
-          val stackTrace = StackTrace.ThrowableTraceString(e)
-          LOG.error("Adapter terminated during findNewLeader" + "\nStackTrace:" + stackTrace)
+          LOG.error("Adapter terminated during findNewLeader", e)
         }
       }
     }

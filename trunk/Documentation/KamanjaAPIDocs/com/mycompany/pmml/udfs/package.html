@@ -1,0 +1,163 @@
+<!DOCTYPE html >
+<html>
+        <head>
+          <title>udfs - com.mycompany.pmml.udfs</title>
+          <meta name="description" content="udfs - com.mycompany.pmml.udfs" />
+          <meta name="keywords" content="udfs com.mycompany.pmml.udfs" />
+          <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+          
+      <link href="../../../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
+      <link href="../../../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../../../../lib/jquery.js" id="jquery-js"></script>
+      <script type="text/javascript" src="../../../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../../../lib/template.js"></script>
+      <script type="text/javascript" src="../../../../lib/tools.tooltip.js"></script>
+      
+      <script type="text/javascript">
+         if(top === self) {
+            var url = '../../../../index.html';
+            var hash = 'com.mycompany.pmml.udfs.package';
+            var anchor = window.location.hash;
+            var anchor_opt = '';
+            if (anchor.length >= 1)
+              anchor_opt = '@' + anchor.substring(1);
+            window.location.href = url + '#' + hash + anchor_opt;
+         }
+   	  </script>
+    
+        </head>
+        <body class="value">
+      <div id="definition">
+        <img alt="Package" src="../../../../lib/package_big.png" />
+        <p id="owner"><a href="../../../package.html" class="extype" name="com">com</a>.<a href="../../package.html" class="extype" name="com.mycompany">mycompany</a>.<a href="../package.html" class="extype" name="com.mycompany.pmml">pmml</a></p>
+        <h1>udfs</h1><span class="permalink">
+      <a href="../../../../index.html#com.mycompany.pmml.udfs.package" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      </div>
+
+      <h4 id="signature" class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <span class="name">udfs</span>
+      </span>
+      </h4>
+      
+          <div id="comment" class="fullcommenttop"></div>
+        
+
+      <div id="mbrsel">
+        <div id="textfilter"><span class="pre"></span><span class="input"><input id="mbrsel-input" type="text" accesskey="/" /></span><span class="post"></span></div>
+        
+        
+        <div id="visbl">
+            <span class="filtertype">Visibility</span>
+            <ol><li class="public in"><span>Public</span></li><li class="all out"><span>All</span></li></ol>
+          </div>
+      </div>
+
+      <div id="template">
+        <div id="allMembers">
+        
+
+        <div id="types" class="types members">
+              <h3>Type Members</h3>
+              <ol><li name="com.mycompany.pmml.udfs.LogTrait" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="LogTraitextendsAnyRef"></a>
+      <a id="LogTrait:LogTrait"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="LogTrait.html"><span class="name">LogTrait</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.mycompany.pmml.udfs.package@LogTraitextendsAnyRef" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Sample udfs ..</p><div class="fullcomment"><div class="comment cmt"><p>Sample udfs .. com.mycompany.pmml.udfs.SomeCustomUdfs</p><p>    This is a sample udf library to illustrate how one would add their own library of
+    functions to the Kamanja system such that they could be used in the PMML models run
+    there.</p><p>    The udfs used in Kamanja must be declared in an object (i.e., they are static methods
+    for those of you familiar with java).</p><p>    NOTE: If you want to invoke functions in the core library, make your UDF project that
+    builds your UDFs dependent on PmmlUdfs:</p><p>        lazy val CustomUdfLib = project.in(file(&quot;SampleApplication/CustomUdfLib&quot;)) dependsOn(PmmlUdfs)</p><p>    Include the following two lines in your imports:</p><p>	    import com.ligadata.pmml.udfs._
+	    import com.ligadata.pmml.udfs.Udfs._</p><p>    The sample udf, ISO8601DateFmt, does use a function from the core udfs, so we include it here.</p><p>    Once it is built, you can run the extractUDFLibMetadata.scala script on it that
+    will produce the metadata from it.</p><p>    Assuming you have the sbtProjDependencies.scala and extractUDFLibMetadata.scala
+    scripts in a folder on your PATH, you can use this command from 'trunk' to compile it:</p><p>    extractUdfLibMetadata.scala --sbtProject PmmlUdfs
+                                --fullObjectPath com.mycompany.pmml.udfs.SomeCustomUdfs
+                                --namespace Pmml
+                                --versionNumber 1000000
+                                --typeDefsPath /tmp/typesforSomeCustomUdfs.json
+                                --fcnDefsPath /tmp/fcnsforSomCustomUdfs.json</p><p>    The version number supplied should be greater than any prior version used for the same
+    Udfs.  This is currently not checked.  It will complain when you try to load the metadata instead.
+    The 1000000 will produce a &quot;000000.000001.000000&quot; version number for each of your udf functions.</p><p>    The last two arguments are paths to the json that is produced by the script looking
+    into the udf jar for PmmlUdfs at the functions on the 'fullObjectPath'.</p><p>    As written, the types do not really need to be loaded into the MetadataAPI, as they
+    have all been defined in the Kamanja metadata bootstrap.  The udfs json file must be loaded
+    however.  The types would be needed if you introduced a type that has not been previously declared
+    in the bootstrap.  If you are not sure there is no harm loading the types file.  If one of
+    the types is already present, an error will be logged to that effect.  This is probably ok,
+    however, you should inspect the types that are duplicate to verify they reflect what
+    your intention is.</p><p>    To use this udf library in one of your models, you need to reference it in the model
+    itself.  In the DataDictionary section, put the following:</p><p>        &lt;DataField name=&quot;UDFSearchPath&quot; displayName=&quot;UDFSearchPath&quot; dataType=&quot;container&quot;&gt;
+          &lt;Value value=&quot;com.mycompany.pmml.udfs.CustomUdfs&quot; property=&quot;valid&quot;/&gt;
+        &lt;/DataField&gt;</p><p>    Important: Don't forget to upload your library to the Kamanja cluster.  There is an upload jar
+    protocol for this purpose.</p></div></div>
+    </li></ol>
+            </div>
+
+        
+
+        <div id="values" class="values members">
+              <h3>Value Members</h3>
+              <ol><li name="com.mycompany.pmml.udfs.CustomUdfs" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="CustomUdfs"></a>
+      <a id="CustomUdfs:CustomUdfs"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="CustomUdfs$.html"><span class="name">CustomUdfs</span></a><span class="result"> extends <a href="LogTrait.html" class="extype" name="com.mycompany.pmml.udfs.LogTrait">LogTrait</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.mycompany.pmml.udfs.package@CustomUdfs" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li></ol>
+            </div>
+
+        
+
+        
+        </div>
+
+        <div id="inheritedMembers">
+        
+        
+        </div>
+
+        <div id="groupedMembers">
+        <div class="group" name="Ungrouped">
+              <h3>Ungrouped</h3>
+              
+            </div>
+        </div>
+
+      </div>
+
+      <div id="tooltip"></div>
+
+      <div id="footer">  </div>
+
+
+    </body>
+      </html>

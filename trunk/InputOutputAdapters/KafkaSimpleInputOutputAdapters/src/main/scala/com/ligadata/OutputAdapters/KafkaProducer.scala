@@ -22,7 +22,7 @@ import kafka.common.{ QueueFullException, FailedToSendMessageException }
 import org.apache.logging.log4j.{ Logger, LogManager }
 import com.ligadata.InputOutputAdapterInfo.{ AdapterConfiguration, OutputAdapter, OutputAdapterObj, CountersAdapter }
 import com.ligadata.AdaptersConfiguration.{ KafkaConstants, KafkaQueueAdapterConfiguration }
-import com.ligadata.Exceptions.{ FatalAdapterException, StackTrace }
+import com.ligadata.Exceptions.{ FatalAdapterException }
 import com.ligadata.HeartBeat.{Monitorable, MonitorComponentInfo}
 import org.json4s.jackson.Serialization
 import scala.collection.mutable.ArrayBuffer
@@ -78,6 +78,8 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
   val linger_ms = qc.otherconfigs.getOrElse("linger.ms", default_linger_ms).toString.trim()
   val timeout_ms = qc.otherconfigs.getOrElse("timeout.ms", default_timeout_ms).toString.trim()
   val metadata_fetch_timeout_ms = qc.otherconfigs.getOrElse("metadata.fetch.timeout.ms", default_metadata_fetch_timeout_ms).toString.trim()
+
+  val counterLock = new Object
 
   private var metrics: collection.mutable.Map[String,Any] = collection.mutable.Map[String,Any]()
   private var startTime: String = "n/a"
@@ -147,8 +149,8 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
         try {
           Thread.sleep(5000) // Sleeping for 5Sec
         } catch {
-          case e: Exception => {}
-          case e: Throwable => {}
+          case e: Exception => { if (! isShutdown) LOG.warn("", e) }
+          case e: Throwable => { if (! isShutdown) LOG.warn("", e) }
         }
         if (isShutdown == false) {
           var outstandingMsgs = outstandingMsgCount
@@ -269,8 +271,8 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
       try {
         msgMap.remove(msgAndCntr.cntrToOrder) // This must present. Because we are adding the records into partitionsMap before we send messages. If it does not present we simply ignore it.
       } catch {
-        case e: Exception => {}
-        case e: Throwable => {}
+        case e: Exception => { LOG.warn("", e) }
+        case e: Throwable => { LOG.warn("", e) }
       }
     }
   }
@@ -310,8 +312,8 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
       try {
         msgMap.remove(msgAndCntr.cntrToOrder)
       } catch {
-        case e: Exception => {}
-        case e: Throwable => {}
+        case e: Exception => { LOG.warn("", e) }
+        case e: Throwable => { LOG.warn("", e) }
       }
     }
   }
@@ -514,14 +516,32 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
 
     heartBeatThread.shutdownNow
     while (!heartBeatThread.isTerminated) {
-      Thread.sleep(100)
+      try {
+        Thread.sleep(100)
+      } catch {
+        case e: Exception => {
+          // Don't do anything, because it is shutting down
+        }
+        case e: Throwable => {
+          // Don't do anything, because it is shutting down
+        }
+      }
     }
 
     // First shutdown retry executor
     if (retryExecutor != null) {
       retryExecutor.shutdownNow
       while (!retryExecutor.isTerminated) {
-        Thread.sleep(100)
+        try {
+          Thread.sleep(100)
+        } catch {
+          case e: Exception => {
+            // Don't do anything, because it is shutting down
+          }
+          case e: Throwable => {
+            // Don't do anything, because it is shutting down
+          }
+        }
       }
     }
 
@@ -532,14 +552,16 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
 
   // Accumulate the metrics.. simple for now
   private def updateMetricValue(key: String, value: Any): Unit = {
-    if (key.equalsIgnoreCase(KafkaProducer.LAST_FAILURE_TIME) ||
+    counterLock.synchronized {
+      if (key.equalsIgnoreCase(KafkaProducer.LAST_FAILURE_TIME) ||
         key.equalsIgnoreCase(KafkaProducer.LAST_RECOVERY_TIME)) {
-      metrics(key) = value.toString
-    } else {
-      // This is an aggregated Long value
-      val cur = metrics.getOrElse(key,"0").toString
-      val longCur = cur.toLong
-      metrics(key) = longCur + value.toString.toLong
+        metrics(key) = value.toString
+      } else {
+        // This is an aggregated Long value
+        val cur = metrics.getOrElse(key,"0").toString
+        val longCur = cur.toLong
+        metrics(key) = longCur + value.toString.toLong
+      }
     }
   }
 
@@ -558,7 +580,8 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
         } catch {
           case e: Exception => {
             isHeartBeating = false
-            LOG.warn(qc.Name + " Heartbeat Interrupt detected")
+            if (isShutdown == false)
+              LOG.warn(qc.Name + " Heartbeat Interrupt detected", e)
           }
         }
         LOG.info(qc.Name + " Heartbeat is shutting down")

@@ -37,7 +37,6 @@ import java.util.Date
 import java.util.Properties
 import com.ligadata.Exceptions._
 import com.ligadata.kamanja.metadata.Utils
-import com.ligadata.Exceptions.StackTrace
 
 object TestMetadataAPI {
 
@@ -92,7 +91,7 @@ object TestMetadataAPI {
       println("[" + seq + "] Main Menu")
 
       print("\nEnter your choice: ")
-      val choice: Int = StdIn.readInt()
+      val choice: Int = readInt()
 
       if (choice == typFiles.length + 1) {
         return
@@ -110,11 +109,10 @@ object TestMetadataAPI {
       println("Results as json string => \n" + MetadataAPIImpl.AddTypes(typStr, "JSON", userid))
     } catch {
       case e: AlreadyExistsException => {
-        logger.error("Type already exists in metadata...")
+        logger.error("Type already exists in metadata...", e)
       }
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
       }
     }
   }
@@ -134,7 +132,7 @@ object TestMetadataAPI {
       typKeys.foreach(key => { seq += 1; println("[" + seq + "] " + key) })
 
       print("\nEnter your choice: ")
-      val choice: Int = StdIn.readInt()
+      val choice: Int = readInt()
 
       if (choice < 1 || choice > typKeys.length) {
         println("Invalid choice " + choice + ",start with main menu...")
@@ -154,8 +152,7 @@ object TestMetadataAPI {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
         
       }
     }
@@ -185,7 +182,7 @@ object TestMetadataAPI {
       typKeys.foreach(key => { seq += 1; println("[" + seq + "] " + key) })
 
       print("\nEnter your choice: ")
-      val choice: Int = StdIn.readInt()
+      val choice: Int = readInt()
 
       if (choice < 1 || choice > typKeys.length) {
         println("Invalid choice " + choice + ",start with main menu...")
@@ -201,8 +198,7 @@ object TestMetadataAPI {
 
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
         
       }
     }
@@ -243,7 +239,7 @@ object TestMetadataAPI {
       println("[" + seq + "] Main Menu")
 
       print("\nEnter your choice: ")
-      val choice: Int = StdIn.readInt()
+      val choice: Int = readInt()
 
       if (choice == fcnFiles.length + 1) {
         return
@@ -261,11 +257,10 @@ object TestMetadataAPI {
       println("Results as json string => \n" + MetadataAPIImpl.AddFunctions(fcnStr, "JSON", userid))
     } catch {
       case e: AlreadyExistsException => {
-        logger.error("Function already exists in metadata...")
+        logger.error("Function already exists in metadata...", e)
       }
       case e: Exception => {
-      val stackTrace = StackTrace.ThrowableTraceString(e)
-      logger.debug("StackTrace:"+stackTrace)
+      logger.debug("", e)
       }
     }
   }
@@ -291,7 +286,7 @@ object TestMetadataAPI {
       })
 
       print("\nEnter your choice: ")
-      val choice: Int = StdIn.readInt()
+      val choice: Int = readInt()
 
       if (choice < 1 || choice > fcnKeys.length) {
         println("Invalid choice " + choice + ",start with main menu...")
@@ -306,9 +301,7 @@ object TestMetadataAPI {
       println("Result as Json String => \n" + apiResult)
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
       }
     }
   }
@@ -331,7 +324,7 @@ object TestMetadataAPI {
       fcnKeys.foreach(key => { seq += 1; println("[" + seq + "] " + key) })
 
       print("\nEnter your choice: ")
-      val choice: Int = StdIn.readInt()
+      val choice: Int = readInt()
 
       if (choice < 1 || choice > fcnKeys.length) {
         println("Invalid choice " + choice + ", start with main menu...")
@@ -347,9 +340,7 @@ object TestMetadataAPI {
 
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
       }
     }
   }
@@ -428,7 +419,7 @@ object TestMetadataAPI {
       msgKeys.foreach(key => { seq += 1; println("[" + seq + "] " + key) })
 
       print("\nEnter your choice: ")
-      val choice: Int = StdIn.readInt()
+      val choice: Int = readInt()
 
       if (choice < 1 || choice > msgKeys.length) {
         println("Invalid choice " + choice + ",start with main menu...")
@@ -447,9 +438,7 @@ object TestMetadataAPI {
       println("Result as Json String => \n" + apiResult)
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
       }
     }
   }
@@ -471,7 +460,7 @@ object TestMetadataAPI {
       msgKeys.foreach(key => { seq += 1; println("[" + seq + "] " + key) })
 
       print("\nEnter your choice: ")
-      val choice: Int = StdIn.readInt()
+      val choice: Int = readInt()
 
       if (choice < 1 || choice > msgKeys.length) {
         println("Invalid choice " + choice + ",start with main menu...")
@@ -491,8 +480,7 @@ object TestMetadataAPI {
 
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
         
       }
     }
@@ -515,7 +503,7 @@ object TestMetadataAPI {
       contKeys.foreach(key => { seq += 1; println("[" + seq + "] " + key) })
 
       print("\nEnter your choice: ")
-      val choice: Int = StdIn.readInt()
+      val choice: Int = readInt()
 
       if (choice < 1 || choice > contKeys.length) {
         println("Invalid choice " + choice + ",start with main menu...")
@@ -528,9 +516,7 @@ object TestMetadataAPI {
 
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
       }
     }
   }
@@ -553,7 +539,7 @@ object TestMetadataAPI {
       modKeys.foreach(key => { seq += 1; println("[" + seq + "] " + key) })
 
       print("\nEnter your choice: ")
-      val choice: Int = StdIn.readInt()
+      val choice: Int = readInt()
 
       if (choice < 1 || choice > modKeys.length) {
         println("Invalid choice " + choice + ",start with main menu...")
@@ -569,8 +555,7 @@ object TestMetadataAPI {
 
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
       }
     }
   }
@@ -593,7 +578,7 @@ object TestMetadataAPI {
       modKeys.foreach(key => { seq += 1; println("[" + seq + "] " + key) })
 
       print("\nEnter your choice: ")
-      val choice: Int = StdIn.readInt()
+      val choice: Int = readInt()
 
       if (choice < 1 || choice > modKeys.length) {
         println("Invalid choice " + choice + ",start with main menu...")
@@ -609,8 +594,7 @@ object TestMetadataAPI {
 
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
       }
     }
   }
@@ -630,7 +614,7 @@ object TestMetadataAPI {
       msgKeys.foreach(key => { seq += 1; println("[" + seq + "] " + key) })
 
       print("\nEnter your choice: ")
-      val choice: Int = StdIn.readInt()
+      val choice: Int = readInt()
 
       if (choice < 1 || choice > msgKeys.length) {
         println("Invalid choice " + choice + ",start with main menu...")
@@ -646,8 +630,7 @@ object TestMetadataAPI {
 
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
       }
     }
   }
@@ -668,7 +651,7 @@ object TestMetadataAPI {
       contKeys.foreach(key => { seq += 1; println("[" + seq + "] " + key) })
 
       print("\nEnter your choice: ")
-      val choice: Int = StdIn.readInt()
+      val choice: Int = readInt()
 
       if (choice < 1 || choice > contKeys.length) {
         println("Invalid choice " + choice + ",start with main menu...")
@@ -684,14 +667,11 @@ object TestMetadataAPI {
 
     } catch {
       case e: NumberFormatException => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
         print("\n Entry not in desired format. Please enter only one choice correctly")
       }
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.error(e.toString)
-        logger.debug("\nStackTrace:"+stackTrace)
+        logger.error("", e)
       }
     }
   }
@@ -712,7 +692,7 @@ println("Getting Messages")
       msgKeys.foreach(key => { seq += 1; println("[" + seq + "] " + key) })
 
       print("\nEnter your choice: ")
-      val choice: Int = StdIn.readInt()
+      val choice: Int = readInt()
 
       if (choice < 1 || choice > msgKeys.length) {
         println("Invalid choice " + choice + ",start with main menu...")
@@ -728,8 +708,7 @@ println("Getting Messages")
 
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
       }
     }
   }
@@ -750,7 +729,7 @@ println("Getting Messages")
       modKeys.foreach(key => { seq += 1; println("[" + seq + "] " + key) })
 
       print("\nEnter your choice: ")
-      val choice: Int = StdIn.readInt()
+      val choice: Int = readInt()
 
       if (choice < 1 || choice > modKeys.length) {
         println("Invalid choice " + choice + ",start with main menu...")
@@ -766,8 +745,7 @@ println("Getting Messages")
 
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
       }
     }
   }
@@ -789,7 +767,7 @@ println("Getting Messages")
       modKeys.foreach(key => { seq += 1; println("[" + seq + "] " + key) })
 
       print("\nEnter your choice: ")
-      val choice: Int = StdIn.readInt()
+      val choice: Int = readInt()
 
       if (choice < 1 || choice > modKeys.length) {
         println("Invalid choice " + choice + ",start with main menu...")
@@ -805,8 +783,7 @@ println("Getting Messages")
 
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
       }
     }
   }
@@ -827,7 +804,7 @@ println("Getting Messages")
       modKeys.foreach(key => { seq += 1; println("[" + seq + "] " + key) })
 
       print("\nEnter your choice: ")
-      val choice: Int = StdIn.readInt()
+      val choice: Int = readInt()
 
       if (choice < 1 || choice > modKeys.length) {
         println("Invalid choice " + choice + ",start with main menu...")
@@ -843,8 +820,7 @@ println("Getting Messages")
 
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
       }
     }
   }
@@ -865,7 +841,7 @@ println("Getting Messages")
       modKeys.foreach(key => { seq += 1; println("[" + seq + "] " + key) })
 
       print("\nEnter your choice: ")
-      val choice: Int = StdIn.readInt()
+      val choice: Int = readInt()
 
       if (choice < 1 || choice > modKeys.length) {
         println("Invalid choice " + choice + ",start with main menu...")
@@ -881,8 +857,7 @@ println("Getting Messages")
 
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
       }
     }
   }
@@ -900,8 +875,7 @@ println("Getting Messages")
       msgKeys.foreach(key => { seq += 1; println("[" + seq + "] " + key) })
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
       }
     }
   }
@@ -919,8 +893,7 @@ println("Getting Messages")
       modKeys.foreach(key => { seq += 1; println("[" + seq + "] " + key) })
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
       }
     }
   }
@@ -938,8 +911,7 @@ println("Getting Messages")
       msgKeys.foreach(key => { seq += 1; println("[" + seq + "] " + key) })
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
       }
     }
   }
@@ -957,8 +929,7 @@ println("Getting Messages")
       msgKeys.foreach(key => { seq += 1; println("[" + seq + "] " + key) })
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
       }
     }
   }
@@ -976,8 +947,8 @@ println("Getting Messages")
       modKeys.foreach(key => { seq += 1; println("[" + seq + "] " + key) })
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        
+        logger.debug("", e)
       }
     }
   }
@@ -1007,8 +978,8 @@ println("Getting Messages")
       println("[" + seq + "] Main Menu")
 
       print("\nEnter your choices (separate with commas if more than 1 choice given): ")
-      //val choice:Int = StdIn.readInt()
-      val choicesStr: String = StdIn.readLine()
+      //val choice:Int = readInt()
+      val choicesStr: String = readLine()
 
       var valid: Boolean = true
       var choices: List[Int] = List[Int]()
@@ -1048,11 +1019,11 @@ println("Getting Messages")
 
     } catch {
       case e: AlreadyExistsException => {
-        logger.error("Container Already in the metadata...." + e.getMessage())
+        logger.error("Container Already in the metadata....", e)
       }
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        
+        logger.debug("", e)
       }
     }
   }
@@ -1082,8 +1053,8 @@ println("Getting Messages")
       println("[" + seq + "] Main Menu")
 
       print("\nEnter your choices (separate with commas if more than 1 choice given): ")
-      //val choice:Int = StdIn.readInt()
-      val choicesStr: String = StdIn.readLine()
+      //val choice:Int = readInt()
+      val choicesStr: String = readLine()
 
       var valid: Boolean = true
       var choices: List[Int] = List[Int]()
@@ -1123,12 +1094,10 @@ println("Getting Messages")
 
     } catch {
       case e: AlreadyExistsException => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.error("Container Already in the metadata...." + e.getMessage())
+        logger.error("Container Already in the metadata....", e)
       }
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
       }
     }
   }
@@ -1169,8 +1138,8 @@ println("Getting Messages")
       println("[" + seq + "] Main Menu")
 
       print("\nEnter your choices (separate with commas if more than 1 choice given): ")
-      //val choice:Int = StdIn.readInt()
-      val choicesStr: String = StdIn.readLine()
+      //val choice:Int = readInt()
+      val choicesStr: String = readLine()
 
       var valid: Boolean = true
       var choices: List[Int] = List[Int]()
@@ -1211,8 +1180,8 @@ println("Getting Messages")
 
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        
+        logger.debug("", e)
       }
     }
   }
@@ -1241,8 +1210,8 @@ println("Getting Messages")
       println("[" + seq + "] Main Menu")
 
       print("\nEnter your choices (separate with commas if more than 1 choice given): ")
-      //val choice:Int = StdIn.readInt()
-      val choicesStr: String = StdIn.readLine()
+      //val choice:Int = readInt()
+      val choicesStr: String = readLine()
 
       var valid: Boolean = true
       var choices: List[Int] = List[Int]()
@@ -1283,12 +1252,10 @@ println("Getting Messages")
 
     } catch {
       case e: AlreadyExistsException => {
-        e.printStackTrace()
-        logger.error("Message Already in the metadata....")
+        logger.error("Message Already in the metadata....", e)
       }
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
       }
     }
   }
@@ -1319,7 +1286,7 @@ println("Getting Messages")
       println("[" + seq + "] Main Menu")
 
       print("\nEnter your choice: ")
-      val choice: Int = StdIn.readInt()
+      val choice: Int = readInt()
 
       if (choice == pmmlFiles.length + 1)
         return
@@ -1337,8 +1304,8 @@ println("Getting Messages")
       println("Results as json string => \n" + MetadataAPIImpl.UpdateModel(ModelType.KPMML, pmmlStr, userid))
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        
+        logger.debug("", e)
       }
     }
   }
@@ -1355,9 +1322,9 @@ println("Getting Messages")
           configs.load(input);
         } catch {
           case e: Exception =>{
-            val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
-            throw new Exception("Failed to load configuration. Message:" + e.getMessage)
+            
+        logger.debug("", e)
+            throw new Exception("Failed to load configuration.", e)
           }
         } finally {
           input.close();
@@ -1367,9 +1334,9 @@ println("Getting Messages")
       }
     } catch {
       case e: Exception =>{
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
-        throw new Exception("Invalid Configuration. Message: " + e.getMessage())
+        
+        logger.debug("", e)
+        throw new Exception("Invalid Configuration.", e)
       }
     }
     return configs
@@ -1408,7 +1375,7 @@ println("Getting Messages")
       println("[" + seq + "] Main Menu")
 
       print("\nEnter your choice: ")
-      val choice: Int = StdIn.readInt()
+      val choice: Int = readInt()
 
       if (choice == sourceFiles.length + 1) {
         return
@@ -1439,7 +1406,7 @@ println("Getting Messages")
       seq += 1
       println("[" + seq + "] Main Menu")      
       print("\nEnter your choice: ")
-      val choice2: Int = StdIn.readInt()
+      val choice2: Int = readInt()
       println("Entered CHOICE: "+choice2)
       if (choice2 == configsKeys.length + 1) {
         return
@@ -1463,11 +1430,10 @@ println("Getting Messages")
       }
     } catch {
       case e: AlreadyExistsException => {
-        logger.error("Model Already in the metadata....")
+        logger.error("Model Already in the metadata....", e)
       }
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
       }
     }
   }
@@ -1498,7 +1464,7 @@ println("Getting Messages")
       println("[" + seq + "] Main Menu")
 
       print("\nEnter your choice: ")
-      val choice: Int = StdIn.readInt()
+      val choice: Int = readInt()
 
       if (choice == sourceFiles.length + 1) {
         return
@@ -1530,7 +1496,7 @@ println("Getting Messages")
       seq += 1
       println("[" + seq + "] Main Menu")      
       print("\nEnter your choice: ")
-      val choice2: Int = StdIn.readInt()
+      val choice2: Int = readInt()
  
       if (choice2 == configsKeys.length + 1) {
         return
@@ -1554,11 +1520,10 @@ println("Getting Messages")
 	
     } catch {
       case e: AlreadyExistsException => {
-        logger.error("Model Already in the metadata....")
+        logger.error("Model Already in the metadata....", e)
       }
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
       }
     }
   }
@@ -1589,7 +1554,7 @@ println("Getting Messages")
       println("[" + seq + "] Main Menu")
 
       print("\nEnter your choice: ")
-      val choice: Int = StdIn.readInt()
+      val choice: Int = readInt()
 
       if (choice == pmmlFiles.length + 1) {
         return
@@ -1607,11 +1572,10 @@ println("Getting Messages")
       println("Results as json string => \n" + MetadataAPIImpl.AddModel(ModelType.KPMML, pmmlStr, userid, None))
     } catch {
       case e: AlreadyExistsException => {
-        logger.error("Model Already in the metadata....")
+        logger.error("Model Already in the metadata....", e)
       }
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
       }
     }
   }
@@ -1642,7 +1606,7 @@ println("Getting Messages")
       println("[" + seq + "] Main Menu")
 
       print("\nEnter your choice: ")
-      val choice: Int = StdIn.readInt()
+      val choice: Int = readInt()
 
       if (choice == cfgFiles.length + 1) {
         return
@@ -1659,12 +1623,10 @@ println("Getting Messages")
       println("Results as json string => \n" + MetadataAPIImpl.UploadModelsConfig(cfgStr, userid, "testConf"))
     } catch {
       case e: AlreadyExistsException => {
-        
-        logger.error("Object Already in the metadata....")
+        logger.error("Object Already in the metadata....", e)
       }
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
       }
     }   
   }
@@ -1695,7 +1657,7 @@ println("Getting Messages")
       println("[" + seq + "] Main Menu")
 
       print("\nEnter your choice: ")
-      val choice: Int = StdIn.readInt()
+      val choice: Int = readInt()
 
       if (choice == cfgFiles.length + 1) {
         return
@@ -1713,11 +1675,10 @@ println("Getting Messages")
     } catch {
       case e: AlreadyExistsException => {
         
-        logger.error("Object Already in the metadata....")
+        logger.error("Object Already in the metadata....", e)
       }
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
       }
     }
   }
@@ -1748,7 +1709,7 @@ println("Getting Messages")
       println("[" + seq + "] Main Menu")
 
       print("\nEnter your choice: ")
-      val choice: Int = StdIn.readInt()
+      val choice: Int = readInt()
 
       if (choice == cfgFiles.length + 1) {
         return
@@ -1766,11 +1727,10 @@ println("Getting Messages")
     } catch {
       case e: AlreadyExistsException => {
        
-        logger.error("Object Already in the metadata....")
+        logger.error("Object Already in the metadata....", e)
       }
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
       }
     }
   }
@@ -1801,7 +1761,7 @@ println("Getting Messages")
       println("[" + seq + "] Main Menu")
 
       print("\nEnter your choice: ")
-      val choice: Int = StdIn.readInt()
+      val choice: Int = readInt()
 
       if (choice == jarFiles.length + 1) {
         return
@@ -1818,11 +1778,10 @@ println("Getting Messages")
     } catch {
       case e: AlreadyExistsException => {
         
-        logger.error("Model Already in the metadata....")
+        logger.error("Model Already in the metadata....", e)
       }
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
       }
     }
   }
@@ -1853,7 +1812,7 @@ println("Getting Messages")
       println("[" + seq + "] Main Menu")
 
       print("\nEnter your choice: ")
-      val choice: Int = StdIn.readInt()
+      val choice: Int = readInt()
 
       if (choice == functionFiles.length + 1) {
         return
@@ -1873,11 +1832,10 @@ println("Getting Messages")
     } catch {
       case e: AlreadyExistsException => {
        
-        logger.error("Function Already in the metadata....")
+        logger.error("Function Already in the metadata....", e)
       }
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
       }
     }
   }
@@ -1889,8 +1847,8 @@ println("Getting Messages")
       println("Result as Json String => \n" + apiResult)
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        
+        logger.debug("", e)
       }
     }
   }
@@ -1921,7 +1879,7 @@ println("Getting Messages")
       println("[" + seq + "] Main Menu")
 
       print("\nEnter your choice: ")
-      val choice: Int = StdIn.readInt()
+      val choice: Int = readInt()
 
       if (choice == conceptFiles.length + 1) {
         return
@@ -1941,12 +1899,11 @@ println("Getting Messages")
     } catch {
       case e: AlreadyExistsException => {
        
-        logger.error("Concept Already in the metadata....")
+        logger.error("Concept Already in the metadata....", e)
       }
       case e: Exception => {
         //check again
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
       }
     }
   }
@@ -1958,8 +1915,8 @@ println("Getting Messages")
       println("Result as Json String => \n" + apiResult)
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        
+        logger.debug("", e)
       }
     }
   }
@@ -1990,7 +1947,7 @@ println("Getting Messages")
       println("[" + seq + "] Main Menu")
 
       print("\nEnter your choice: ")
-      val choice: Int = StdIn.readInt()
+      val choice: Int = readInt()
 
       if (choice == typeFiles.length + 1) {
         return
@@ -2010,11 +1967,10 @@ println("Getting Messages")
     } catch {
       case e: AlreadyExistsException => {
        
-        logger.error("Type Already in the metadata....")
+        logger.error("Type Already in the metadata....", e)
       }
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
       }
     }
   }
@@ -2043,7 +1999,7 @@ println("Getting Messages")
         seq += 1
         println("[" + seq + "] Main Menu")
         print("\nEnter your choice: ")
-        val choice: Int = StdIn.readInt()
+        val choice: Int = readInt()
         if (choice <= typeMenu.size) {
           selectedType = "com.ligadata.kamanja.metadata." + typeMenu(choice)
           done = true
@@ -2059,8 +2015,8 @@ println("Getting Messages")
       println("Result as Json String => " + apiResult)
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        
+        logger.debug("", e)
       }
     }
   }
@@ -2072,8 +2028,8 @@ println("Getting Messages")
       println("Result as Json String => \n" + apiResult)
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        
+        logger.debug("", e)
       }
     }
   }
@@ -2085,8 +2041,8 @@ println("Getting Messages")
       println("Result as Json String => \n" + apiResult)
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        
+        logger.debug("", e)
       }
     }
   }
@@ -2098,8 +2054,8 @@ println("Getting Messages")
       println("Result as Json String => \n" + apiResult)
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        
+        logger.debug("", e)
       }
     }
   }
@@ -2111,8 +2067,8 @@ println("Getting Messages")
       println("Result as Json String => \n" + apiResult)
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        
+        logger.debug("", e)
       }
     }
   }
@@ -2124,8 +2080,8 @@ println("Getting Messages")
       println("Result as Json String => \n" + apiResult)
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        
+        logger.debug("", e)
       }
     }
   }
@@ -2229,8 +2185,8 @@ println("Getting Messages")
       zkc.setData().forPath("/ligadata/models", "Activate ModelDef-2".getBytes);
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        
+        logger.debug("", e)
       }
     } finally {
       zkc.close();
@@ -2278,8 +2234,8 @@ println("Getting Messages")
       MetadataAPIImpl.UpdateObject(key, ba, storeType, "kryo")
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("Failed to save the object : " + e.getMessage()+"\nStackTrace:"+stackTrace)
+        
+        logger.debug("Failed to save the object : " + e.getMessage(), e)
       }
     }
   }
@@ -2301,8 +2257,8 @@ println("Getting Messages")
       assert(v == "value3")
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        
+        logger.debug("", e)
       }
     }
   }
@@ -2337,8 +2293,8 @@ println("Getting Messages")
 	      println("[" + seq + "] Main Menu")
 
 	      print("\nEnter your choices (separate with commas if more than 1 choice given): ")
-	      //val choice:Int = StdIn.readInt()
-	      val choicesStr: String = StdIn.readLine()
+	      //val choice:Int = readInt()
+	      val choicesStr: String = readLine()
 
 	      var valid: Boolean = true
 	      var choices: List[Int] = List[Int]()
@@ -2379,11 +2335,10 @@ println("Getting Messages")
 
 	    } catch {
 	      case e: AlreadyExistsException => {
-          logger.error("Object Already in the metadata....")
+          logger.error("Object Already in the metadata....", e)
 	      }
 	      case e: Exception => {
-	        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
 	      }
 	    }
 	  }
@@ -2414,7 +2369,7 @@ println("Getting Messages")
 	      println("[" + seq + "] Main Menu")
 
 	      print("\nEnter your choice: ")
-	      val choice: Int = StdIn.readInt()
+	      val choice: Int = readInt()
 
 	      if (choice == outputmsgFiles.length + 1)
 	        return
@@ -2430,8 +2385,8 @@ println("Getting Messages")
 	      println("Results as json string => \n" + MetadataAPIOutputMsg.UpdateOutputMsg(outputmsgStr, userid))
 	    } catch {
 	      case e: Exception => {
-	        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+	        
+        logger.debug("", e)
 	      }
 	    }
 	  }
@@ -2452,7 +2407,7 @@ println("Getting Messages")
 	      outputMsgKeys.foreach(key => { seq += 1; println("[" + seq + "] " + key) })
 
 	      print("\nEnter your choice: ")
-	      val choice: Int = StdIn.readInt()
+	      val choice: Int = readInt()
 
 	      if (choice < 1 || choice > outputMsgKeys.length) {
 	        println("Invalid choice " + choice + ",start with main menu...")
@@ -2468,8 +2423,8 @@ println("Getting Messages")
 
 	    } catch {
 	      case e: Exception => {
-	        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+	        
+        logger.debug("", e)
 	      }
 	    }
 	  }
@@ -2487,8 +2442,8 @@ println("Getting Messages")
 	      outputMsgsKeys.foreach(key => { seq += 1; println("[" + seq + "] " + key) })
 	    } catch {
 	      case e: Exception => {
-	        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+	        
+        logger.debug("", e)
 	      }
 	    }
 	  }
@@ -2607,7 +2562,7 @@ println("Getting Messages")
         for ((key, idx) <- topLevelMenu.zipWithIndex) { println("[" + (idx + 1) + "] " + key._1) }
         println("[" + (topLevelMenu.size + 1) + "] Exit")
         print("\nEnter your choice: ")
-        val choice: Int = StdIn.readInt()
+        val choice: Int = readInt()
         if (choice <= topLevelMenu.size) {
           topLevelMenu(choice - 1)._2.apply
         } else if (choice == topLevelMenu.size + 1) {
@@ -2618,8 +2573,8 @@ println("Getting Messages")
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        
+        logger.debug("", e)
       }
     }
   }
@@ -2681,7 +2636,7 @@ println("Getting Messages")
         val cfgfile = options.getOrElse('config, null)
         if (cfgfile == null) {
           logger.error("Need configuration file as parameter")
-          throw MissingArgumentException("Usage: configFile  supplied as --config myConfig.json")
+          throw MissingArgumentException("Usage: configFile  supplied as --config myConfig.json", null)
         }
         myConfigFile = cfgfile.asInstanceOf[String]
       }
@@ -2690,8 +2645,7 @@ println("Getting Messages")
       StartTest
     } catch {
       case e: Throwable => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.error("StackTrace:"+stackTrace)
+        logger.error("", e)
       }
     } finally {
       MetadataAPIImpl.shutdown

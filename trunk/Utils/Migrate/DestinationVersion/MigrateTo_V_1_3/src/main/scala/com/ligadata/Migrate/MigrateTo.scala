@@ -18,7 +18,7 @@ package com.ligadata.Migrate
 
 import com.ligadata.MigrateBase._
 import org.apache.logging.log4j._
-import java.io.{ File, PrintWriter }
+import java.io.{File, PrintWriter}
 
 import com.ligadata.kamanja.metadata.MdMgr
 import com.ligadata.kamanja.metadataload.MetadataLoad
@@ -30,14 +30,16 @@ import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
 import org.json4s.jackson.Serialization
 import scala.io.Source
-// import com.ligadata.tools.SaveContainerDataComponent
-import com.ligadata.KvBase.{ Key, Value }
-// import com.ligadata.KvBase.{ TimeRange, KvBaseDefalts, KeyWithBucketIdAndPrimaryKey, KeyWithBucketIdAndPrimaryKeyCompHelper, LoadKeyWithBucketId }
-import com.ligadata.StorageBase.{ DataStore, Transaction, DataStoreOperations }
+
+import com.ligadata.KvBase.{KvBaseDefalts, TimeRange, Key, Value}
+
+import com.ligadata.StorageBase.{DataStore, DataStoreOperations}
 import com.ligadata.keyvaluestore.KeyValueManager
 import scala.collection.mutable.ArrayBuffer
 import com.ligadata.kamanja.metadata.ModelCompilationConstants
-import com.ligadata.Exceptions.{ FatalAdapterException, StorageDMLException, StorageDDLException }
+import com.ligadata.Exceptions._
+
+import scala.actors.threadpool.{Executors, ExecutorService, TimeUnit}
 
 class MigrateTo_V_1_3 extends MigratableTo {
   lazy val loggerName = this.getClass.getName
@@ -46,6 +48,8 @@ class MigrateTo_V_1_3 extends MigratableTo {
   private var _unhandledMetadataDumpDir: String = _
   private var _curMigrationSummaryFlPath: String = _
   private var _sourceVersion: String = _
+  private var _fromScalaVersion: String = _
+  private var _toScalaVersion: String = _
   private var _destInstallPath: String = _
   private var _apiConfigFile: String = _
   private var _clusterConfigFile: String = _
@@ -59,6 +63,35 @@ class MigrateTo_V_1_3 extends MigratableTo {
   private var _bInit = false
   private var _flCurMigrationSummary: PrintWriter = _
   private val defaultUserId: Option[String] = Some("metadataapi")
+  private var _parallelDegree = 0
+  private var _mergeContainerAndMessages = true
+
+  private val globalExceptions = ArrayBuffer[(String, Throwable)]()
+
+  private def AddToGlobalException(failedMsg: String, e: Throwable): Unit = {
+    globalExceptions += ((failedMsg, e))
+  }
+
+  private def AddMdObjToGlobalException(mdObj: (String, Map[String, Any]), failedMsg: String, e: Throwable): Unit = {
+    val namespace = mdObj._2.getOrElse("NameSpace", "").toString.trim()
+    val name = mdObj._2.getOrElse("Name", "").toString.trim()
+    AddToGlobalException(failedMsg + ":" + namespace + "." + name, e)
+  }
+
+  private def LogGlobalException: Boolean = {
+    if (globalExceptions.size > 0) {
+      globalExceptions.foreach(expTup => {
+        if (expTup._2 != null)
+          logger.error(if (expTup._1 != null) expTup._1 else "", expTup._2)
+        else
+          logger.error(if (expTup._1 != null) expTup._1 else "")
+      })
+      return true
+    }
+
+    return false
+  }
+
 
   private def isValidPath(path: String, checkForDir: Boolean = false, checkForFile: Boolean = false, str: String = "path"): Unit = {
     val fl = new File(path)
@@ -145,7 +178,7 @@ class MigrateTo_V_1_3 extends MigratableTo {
     }
   }
 
-  override def init(destInstallPath: String, apiConfigFile: String, clusterConfigFile: String, sourceVersion: String, unhandledMetadataDumpDir: String, curMigrationSummaryFlPath: String): Unit = {
+  override def init(destInstallPath: String, apiConfigFile: String, clusterConfigFile: String, sourceVersion: String, unhandledMetadataDumpDir: String, curMigrationSummaryFlPath: String, parallelDegree: Int, mergeContainerAndMessages: Boolean, fromScalaVersion: String, toScalaVersion: String): Unit = {
     isValidPath(apiConfigFile, false, true, "apiConfigFile")
     isValidPath(clusterConfigFile, false, true, "clusterConfigFile")
 
@@ -189,6 +222,8 @@ class MigrateTo_V_1_3 extends MigratableTo {
     _statusStoreInfo = if (statusStoreInfo == null) "" else statusStoreInfo
     _jarPaths = toVersionJarPaths
     _sourceVersion = sourceVersion
+    _fromScalaVersion = fromScalaVersion
+    _toScalaVersion = toScalaVersion
 
     _unhandledMetadataDumpDir = unhandledMetadataDumpDir
     _curMigrationSummaryFlPath = curMigrationSummaryFlPath
@@ -202,6 +237,9 @@ class MigrateTo_V_1_3 extends MigratableTo {
     if (_statusStoreInfo.size > 0) {
       _statusStoreDb = GetDataStoreHandle(toVersionJarPaths, _statusStoreInfo)
     }
+
+    _parallelDegree = if (parallelDegree <= 1) 1 else parallelDegree
+    _mergeContainerAndMessages = mergeContainerAndMessages
 
     _bInit = true
   }
@@ -246,64 +284,128 @@ class MigrateTo_V_1_3 extends MigratableTo {
     false
   }
 
-  override def backupMetadataTables(tblsToBackedUp: Array[BackupTableInfo], force: Boolean): Unit = {
-    if (_bInit == false)
-      throw new Exception("Not yet Initialized")
-    logger.debug("Backup metadata tables:" + tblsToBackedUp.map(t => "(" + t.srcTable + " => " + t.dstTable + ")").mkString(","))
+  private def addBackupTablesToExecutor(executor: ExecutorService, storeDb: DataStore, tblsToBackedUp: Array[BackupTableInfo], errMsgTemplate: String, force: Boolean): Unit = {
     tblsToBackedUp.foreach(backupTblInfo => {
-      _metaDataStoreDb.copyTable(backupTblInfo.namespace, backupTblInfo.srcTable, backupTblInfo.dstTable, force)
+      executor.execute(new Runnable() {
+        override def run() = {
+          try {
+            storeDb.copyTable(backupTblInfo.namespace, backupTblInfo.srcTable, backupTblInfo.dstTable, force)
+          } catch {
+            case e: Exception => AddToGlobalException(errMsgTemplate + "(" + backupTblInfo.namespace + "," + backupTblInfo.srcTable + " => " + backupTblInfo.namespace + "," + backupTblInfo.dstTable + ")", e)
+            case e: Throwable => AddToGlobalException(errMsgTemplate + "(" + backupTblInfo.namespace + "," + backupTblInfo.srcTable + " => " + backupTblInfo.namespace + "," + backupTblInfo.dstTable + ")", e)
+          }
+        }
+      })
     })
   }
 
-  override def backupDataTables(tblsToBackedUp: Array[BackupTableInfo], force: Boolean): Unit = {
+  override def backupAllTables(metadataTblsToBackedUp: Array[BackupTableInfo], dataTblsToBackedUp: Array[BackupTableInfo], statusTblsToBackedUp: Array[BackupTableInfo], force: Boolean): Unit = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
-    logger.debug("Backup data tables:" + tblsToBackedUp.map(t => "(" + t.srcTable + " => " + t.dstTable + ")").mkString(","))
-    tblsToBackedUp.foreach(backupTblInfo => {
-      _dataStoreDb.copyTable(backupTblInfo.namespace, backupTblInfo.srcTable, backupTblInfo.dstTable, force)
-    })
-  }
+    logger.debug("Backup tables => (Metadata Tables:{" + metadataTblsToBackedUp.map(t => "((" + t.namespace + "," + t.srcTable + ") => (" + t.namespace + "," + t.dstTable + "))").mkString(",") + "}, Data Tables:{"
+      + dataTblsToBackedUp.map(t => "((" + t.namespace + "," + t.srcTable + ") => (" + t.namespace + "," + t.dstTable + "))").mkString(",") + "}, Status Tables:{"
+      + statusTblsToBackedUp.map(t => "((" + t.namespace + "," + t.srcTable + ") => (" + t.namespace + "," + t.dstTable + "))").mkString(",") + "})")
+    var executor: ExecutorService = null
+    try {
+      executor = Executors.newFixedThreadPool(if (_parallelDegree <= 1) 1 else _parallelDegree)
 
-  override def backupStatusTables(tblsToBackedUp: Array[BackupTableInfo], force: Boolean): Unit = {
-    if (_bInit == false)
-      throw new Exception("Not yet Initialized")
-    logger.debug("Backup status tables:" + tblsToBackedUp.map(t => "(" + t.srcTable + " => " + t.dstTable + ")").mkString(","))
-    if (_statusStoreDb == null && tblsToBackedUp.size > 0)
-      throw new Exception("Does not have Status store information")
-    tblsToBackedUp.foreach(backupTblInfo => {
-      _statusStoreDb.copyTable(backupTblInfo.namespace, backupTblInfo.srcTable, backupTblInfo.dstTable, force)
-    })
-  }
+      if (statusTblsToBackedUp.size > 0) {
+        if (_statusStoreDb == null)
+          throw new Exception("Does not have Status store information")
+        addBackupTablesToExecutor(executor, _statusStoreDb, statusTblsToBackedUp, "Failed to backup status table:", force)
+      }
 
-  override def dropMetadataTables(tblsToDrop: Array[TableName]): Unit = {
-    if (_bInit == false)
-      throw new Exception("Not yet Initialized")
-    if (tblsToDrop.size > 0) {
-      val tblsTuples = tblsToDrop.map(t => (t.namespace, t.name))
-      logger.debug("Dropping metadata tables:" + tblsTuples.mkString(","))
-      _metaDataStoreDb.dropTables(tblsTuples)
+      addBackupTablesToExecutor(executor, _metaDataStoreDb, metadataTblsToBackedUp, "Failed to backup metadata table:", force)
+      addBackupTablesToExecutor(executor, _dataStoreDb, dataTblsToBackedUp, "Failed to backup data table:", force)
+      executor.shutdown();
+      try {
+        executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
+      } catch {
+        case e: Exception => AddToGlobalException("Failed to backup tables", e)
+        case e: Throwable => AddToGlobalException("Failed to backup tables", e)
+      }
+    } catch {
+      case e: Exception => AddToGlobalException("Failed to backup tables", e)
+      case e: Throwable => AddToGlobalException("Failed to backup tables", e)
+    }
+
+    if (executor != null) {
+      executor.shutdown();
+      try {
+        executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
+      } catch {
+        case e: Exception => AddToGlobalException("Failed to backup tables", e)
+        case e: Throwable => AddToGlobalException("Failed to backup tables", e)
+      }
+    }
+
+    if (LogGlobalException) {
+      throw new Exception("Failed to Backup tables")
     }
   }
 
-  override def dropDataTables(tblsToDrop: Array[TableName]): Unit = {
-    if (_bInit == false)
-      throw new Exception("Not yet Initialized")
+  private def addDropTablesToExecutor(executor: ExecutorService, storeDb: DataStore, tblsToDrop: Array[(String, String)], errMsgTemplate: String): Unit = {
     if (tblsToDrop.size > 0) {
-      val tblsTuples = tblsToDrop.map(t => (t.namespace, t.name))
-      logger.debug("Dropping data tables:" + tblsTuples.mkString(","))
-      _dataStoreDb.dropTables(tblsTuples)
+      tblsToDrop.foreach(dropTblTuple => {
+        executor.execute(new Runnable() {
+          override def run() = {
+            try {
+              storeDb.dropTables(Array(dropTblTuple))
+            } catch {
+              case e: Exception => AddToGlobalException(errMsgTemplate + dropTblTuple.toString(), e)
+              case e: Throwable => AddToGlobalException(errMsgTemplate + dropTblTuple.toString(), e)
+            }
+          }
+        })
+      })
     }
   }
 
-  override def dropStatusTables(tblsToDrop: Array[TableName]): Unit = {
+  def dropAllTables(metadataTblsToDrop: Array[TableName], dataTblsToDrop: Array[TableName], statusTblsToDrop: Array[TableName]): Unit = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
-    if (tblsToDrop.size > 0) {
-      if (_statusStoreDb == null)
-        throw new Exception("Does not have Status store information")
-      val tblsTuples = tblsToDrop.map(t => (t.namespace, t.name))
-      logger.debug("Dropping status tables:" + tblsTuples.mkString(","))
-      _statusStoreDb.dropTables(tblsTuples)
+    var executor: ExecutorService = null
+    try {
+      executor = Executors.newFixedThreadPool(if (_parallelDegree <= 1) 1 else _parallelDegree)
+
+      val metadataTblsTuples = metadataTblsToDrop.map(t => (t.namespace, t.name))
+      val dataTblsTuples = dataTblsToDrop.map(t => (t.namespace, t.name))
+      val statusTblsTuples = statusTblsToDrop.map(t => (t.namespace, t.name))
+      logger.debug("Drop tables => (Metadata Tables:{" + metadataTblsTuples.mkString(",") + "}, Data Tables:" + dataTblsTuples.mkString(",") + "}, Status Tables:" + statusTblsTuples.mkString(",") + "})")
+
+      if (statusTblsTuples.size > 0) {
+        if (_statusStoreDb == null)
+          throw new Exception("Does not have Status store information")
+        addDropTablesToExecutor(executor, _statusStoreDb, statusTblsTuples, "Failed to drop status table:")
+      }
+
+      addDropTablesToExecutor(executor, _metaDataStoreDb, metadataTblsTuples, "Failed to drop data table:")
+      addDropTablesToExecutor(executor, _dataStoreDb, dataTblsTuples, "Failed to drop metadata table:")
+
+      executor.shutdown();
+      try {
+        executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
+      } catch {
+        case e: Exception => AddToGlobalException("Failed to drop tables", e)
+        case e: Throwable => AddToGlobalException("Failed to drop tables", e)
+      }
+    } catch {
+      case e: Exception => AddToGlobalException("Failed to drop tables", e)
+      case e: Throwable => AddToGlobalException("Failed to drop tables", e)
+    }
+
+    if (executor != null) {
+      executor.shutdown();
+      try {
+        executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
+      } catch {
+        case e: Exception => AddToGlobalException("Failed to drop tables", e)
+        case e: Throwable => AddToGlobalException("Failed to drop tables", e)
+      }
+    }
+
+    if (LogGlobalException) {
+      throw new Exception("Failed to Drop tables")
     }
   }
 
@@ -331,8 +433,48 @@ class MigrateTo_V_1_3 extends MigratableTo {
     })
 
     if (messagesAndContainers.size > 0) {
-      logger.debug("Dropping containers:" + messagesAndContainers.mkString(","))
-      _dataStoreDb.DropContainer(messagesAndContainers.toArray)
+      logger.debug("Dropping messages/containers:" + messagesAndContainers.mkString(","))
+      var executor: ExecutorService = null
+      try {
+        executor = Executors.newFixedThreadPool(if (_parallelDegree <= 1) 1 else _parallelDegree)
+        messagesAndContainers.foreach(dropContainer => {
+          executor.execute(new Runnable() {
+            override def run() = {
+              try {
+                _dataStoreDb.DropContainer(Array(dropContainer))
+              } catch {
+                case e: Exception => AddToGlobalException("Failed to drop data message/container:" + dropContainer, e)
+                case e: Throwable => AddToGlobalException("Failed to drop data message/container:" + dropContainer, e)
+              }
+            }
+          })
+        })
+
+        executor.shutdown();
+        try {
+          executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
+        } catch {
+          case e: Exception => AddToGlobalException("Failed to drop messsages/containers", e)
+          case e: Throwable => AddToGlobalException("Failed to drop messsages/containers", e)
+        }
+      } catch {
+        case e: Exception => AddToGlobalException("Failed to drop messsages/containers", e)
+        case e: Throwable => AddToGlobalException("Failed to drop messsages/containers", e)
+      }
+
+      if (executor != null) {
+        executor.shutdown();
+        try {
+          executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
+        } catch {
+          case e: Exception => AddToGlobalException("Failed to drop messsages/containers", e)
+          case e: Throwable => AddToGlobalException("Failed to drop messsages/containers", e)
+        }
+      }
+
+      if (LogGlobalException) {
+        throw new Exception("Failed to Drop messsages/containers")
+      }
     }
   }
 
@@ -343,7 +485,9 @@ class MigrateTo_V_1_3 extends MigratableTo {
     } catch {
       case e: Exception => throw e;
       case e: Throwable => throw e;
-    } finally { out.close }
+    } finally {
+      out.close
+    }
   }
 
   private def isFailedStatus(retRes: String): Boolean = {
@@ -368,40 +512,52 @@ class MigrateTo_V_1_3 extends MigratableTo {
     return (statusCode != 0)
   }
 
-  private def DepJars(depJars: List[String]): List[String] = {
-    val depJarsMap = Map("scalap-2.10.0.jar" -> "scalap-2.11.0.jar", "kvbase_2.10-0.1.0.jar" -> "kvbase_2.11-0.1.0.jar", "kamanjautils_2.10-1.0.jar" -> "kamanjautils_2.11-1.0.jar",
-      "kamanjabase_2.10-1.0.jar" -> "kamanjabase_2.11-1.0.jar", "customudflib_2.10-1.0.jar" -> "customudflib_2.11-1.0.jar", "pmmlcompiler_2.10-1.0.jar" -> "pmmlcompiler_2.11-1.0.jar",
-      "basetypes_2.10-0.1.0.jar" -> "basetypes_2.11-0.1.0.jar", "basefunctions_2.10-0.1.0.jar" -> "basefunctions_2.11-0.1.0.jar", "json4s-core_2.10-3.2.9.jar" -> "json4s-core_2.11-3.2.9.jar",
-      "json4s-jackson_2.10-3.2.9.jar" -> "json4s-jackson_2.11-3.2.9.jar", "pmmlruntime_2.10-1.0.jar" -> "pmmlruntime_2.11-1.0.jar", "pmmludfs_2.10-1.0.jar" -> "pmmludfs_2.11-1.0.jar",
-      "datadelimiters_2.10-1.0.jar" -> "datadelimiters_2.11-1.0.jar", "metadata_2.10-1.0.jar" -> "metadata_2.11-1.0.jar", "exceptions_2.10-1.0.jar" -> "exceptions_2.11-1.0.jar",
-      "json4s-ast_2.10-3.2.9.jar" -> "json4s-ast_2.11-3.2.9.jar", "json4s-native_2.10-3.2.9.jar" -> "json4s-native_2.11-3.2.9.jar", "bootstrap_2.10-1.0.jar" -> "bootstrap_2.11-1.0.jar",
-      "messagedef_2.10-1.0.jar" -> "messagedef_2.11-1.0.jar")
+  private def DepJars(depJars1: List[String]): List[String] = {
+    val depJars = depJars1 diff List("methodextractor_2.10-1.0.jar", "methodextractor_2.11-1.0.jar") // Removing jars which are not valid any more
+    // If source is 2.10 and destination is 2.11, then only tranform this. otherwise just leave them as it is.
+    if (_fromScalaVersion.equalsIgnoreCase("2.10") && _toScalaVersion.equalsIgnoreCase("2.11")) {
+      val depJarsMap = Map("scalap-2.10.0.jar" -> "scalap-2.11.0.jar", "kvbase_2.10-0.1.0.jar" -> "kvbase_2.11-0.1.0.jar", "kamanjautils_2.10-1.0.jar" -> "kamanjautils_2.11-1.0.jar",
+        "kamanjabase_2.10-1.0.jar" -> "kamanjabase_2.11-1.0.jar", "customudflib_2.10-1.0.jar" -> "customudflib_2.11-1.0.jar", "pmmlcompiler_2.10-1.0.jar" -> "pmmlcompiler_2.11-1.0.jar",
+        "basetypes_2.10-0.1.0.jar" -> "basetypes_2.11-0.1.0.jar", "basefunctions_2.10-0.1.0.jar" -> "basefunctions_2.11-0.1.0.jar", "json4s-core_2.10-3.2.9.jar" -> "json4s-core_2.11-3.2.9.jar",
+        "json4s-jackson_2.10-3.2.9.jar" -> "json4s-jackson_2.11-3.2.9.jar", "pmmlruntime_2.10-1.0.jar" -> "pmmlruntime_2.11-1.0.jar", "pmmludfs_2.10-1.0.jar" -> "pmmludfs_2.11-1.0.jar",
+        "datadelimiters_2.10-1.0.jar" -> "datadelimiters_2.11-1.0.jar", "metadata_2.10-1.0.jar" -> "metadata_2.11-1.0.jar", "exceptions_2.10-1.0.jar" -> "exceptions_2.11-1.0.jar",
+        "json4s-ast_2.10-3.2.9.jar" -> "json4s-ast_2.11-3.2.9.jar", "json4s-native_2.10-3.2.9.jar" -> "json4s-native_2.11-3.2.9.jar", "bootstrap_2.10-1.0.jar" -> "bootstrap_2.11-1.0.jar",
+        "messagedef_2.10-1.0.jar" -> "messagedef_2.11-1.0.jar", "guava-16.0.1.jar" -> "guava-14.0.1.jar", "guava-18.0.jar" -> "guava-14.0.1.jar", "guava-19.0.jar" -> "guava-14.0.1.jar")
 
-    val newDeps = depJars.map(d => {
-      if (d.startsWith("scala-reflect-2.10")) {
-        "scala-reflect-2.11.7.jar"
-      } else if (d.startsWith("scala-library-2.10")) {
-        "scala-library-2.11.7.jar"
-      } else if (d.startsWith("scala-compiler-2.10")) {
-        "scala-compiler-2.11.7.jar"
-      } else {
+      val newDeps = depJars.map(d => {
+        if (d.startsWith("scala-reflect-2.10")) {
+          "scala-reflect-2.11.7.jar"
+        } else if (d.startsWith("scala-library-2.10")) {
+          "scala-library-2.11.7.jar"
+        } else if (d.startsWith("scala-compiler-2.10")) {
+          "scala-compiler-2.11.7.jar"
+        } else {
+          depJarsMap.getOrElse(d, d)
+        }
+      })
+
+      newDeps
+    } else {
+      val depJarsMap = Map("guava-16.0.1.jar" -> "guava-14.0.1.jar", "guava-18.0.jar" -> "guava-14.0.1.jar", "guava-19.0.jar" -> "guava-14.0.1.jar")
+      val newDeps = depJars.map(d => {
         depJarsMap.getOrElse(d, d)
-      }
-    })
-
-    newDeps
+      })
+      newDeps
+    }
   }
 
   private def ProcessObject(mdObjs: ArrayBuffer[(String, Map[String, Any])]): Unit = {
     try {
-      mdObjs.foreach(mdObj =>
-        {
-          val objType = mdObj._1
+      mdObjs.foreach(mdObj => {
+        val objType = mdObj._1
+        var dispkey = ""
+        var ver = ""
 
+        try {
           val namespace = mdObj._2.getOrElse("NameSpace", "").toString.trim()
           val name = mdObj._2.getOrElse("Name", "").toString.trim()
-          val dispkey = (namespace + "." + name).toLowerCase
-          val ver = mdObj._2.getOrElse("Version", "0.0.1").toString
+          dispkey = (namespace + "." + name).toLowerCase
+          ver = mdObj._2.getOrElse("Version", "0.0.1").toString
           val objFormat = mdObj._2.getOrElse("ObjectFormat", "").toString
 
           objType match {
@@ -411,7 +567,7 @@ class MigrateTo_V_1_3 extends MigratableTo {
 
               logger.info("Adding model:" + dispkey + ", ModelType:" + mdlType + ", ObjectFormat:" + objFormat)
 
-              if (_sourceVersion.equalsIgnoreCase("1.1")) {
+              if (_sourceVersion.equalsIgnoreCase("1.1") || _sourceVersion.equalsIgnoreCase("1.2")) {
                 if ((objFormat.equalsIgnoreCase("JAVA")) || (objFormat.equalsIgnoreCase("scala"))) {
                   val mdlInfo = parse(mdlDefStr).values.asInstanceOf[Map[String, Any]]
                   val defStr = mdlInfo.getOrElse(ModelCompilationConstants.SOURCECODE, "").asInstanceOf[String]
@@ -419,58 +575,11 @@ class MigrateTo_V_1_3 extends MigratableTo {
                   val deps = DepJars(mdlInfo.getOrElse(ModelCompilationConstants.DEPENDENCIES, List[String]()).asInstanceOf[List[String]])
                   val typs = mdlInfo.getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, List[String]()).asInstanceOf[List[String]]
 
-                  var defFl = _unhandledMetadataDumpDir + "/" + objFormat + "_mdldef_" + dispkey + "." + ver + "." + objFormat.toLowerCase()
-                  var jsonFl = _unhandledMetadataDumpDir + "/" + objFormat + "_mdlinfo_" + dispkey + "." + ver + ".json"
+                  val cfgnm = "migrationmodelconfig_from_" + _sourceVersion.replace('.', '_') + "_to_1_3";
 
-                  val dumpMdlInfoStr = ("ModelInfo" ->
+                  val mdlConfig = (cfgnm ->
                     ("Dependencies" -> deps) ~
-                    ("MessageAndContainers" -> typs) ~
-                    ("ModelType" -> mdlType) ~
-                    ("ObjectFormat" -> objFormat) ~
-                    ("ModelDefinition" -> defStr) ~
-                    ("NameSpace" -> namespace) ~
-                    ("Name" -> name) ~
-                    ("Version" -> ver))
-
-                  WriteStringToFile(defFl, defStr)
-                  WriteStringToFile(jsonFl, compact(render(dumpMdlInfoStr)))
-
-                  val msgStr = ("%s type models can not be migrated automatically. Model %s definition is dumped into %s, more model information dumped to %s.".format(objFormat, dispkey, defFl, jsonFl))
-                  logger.error(msgStr)
-                  _flCurMigrationSummary.println(msgStr)
-                  _flCurMigrationSummary.flush()
-                } else if (objFormat.equalsIgnoreCase("XML")) {
-                  var defFl = _unhandledMetadataDumpDir + "/kPMML_mdldef_" + dispkey + "." + ver + "." + objFormat.toLowerCase()
-                  var failed = false
-                  try {
-                    val retRes = MetadataAPIImpl.AddModel(MetadataAPI.ModelType.fromString("kpmml"), mdlDefStr, defaultUserId, Some(dispkey), Some(ver))
-                    failed = isFailedStatus(retRes)
-                  } catch {
-                    case e: Exception => {
-                      logger.error("Failed to add model:" + dispkey, e)
-                      failed = true
-                    }
-                  }
-
-                  if (failed) {
-                    WriteStringToFile(defFl, mdlDefStr)
-                    val msgStr = ("kPMML type model failed to migrate. Model %s definition is dumped into %s.".format(dispkey, defFl))
-                    logger.error(msgStr)
-                    _flCurMigrationSummary.println(msgStr)
-                    _flCurMigrationSummary.flush()
-                  }
-                }
-              } else if (_sourceVersion.equalsIgnoreCase("1.2")) {
-                if ((objFormat.equalsIgnoreCase("JAVA")) || (objFormat.equalsIgnoreCase("scala"))) {
-                  val mdlInfo = parse(mdlDefStr).values.asInstanceOf[Map[String, Any]]
-                  val defStr = mdlInfo.getOrElse(ModelCompilationConstants.SOURCECODE, "").asInstanceOf[String]
-                  // val phyName = mdlInfo.getOrElse(ModelCompilationConstants.PHYSICALNAME, "").asInstanceOf[String]
-                  val deps = DepJars(mdlInfo.getOrElse(ModelCompilationConstants.DEPENDENCIES, List[String]()).asInstanceOf[List[String]])
-                  val typs = mdlInfo.getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, List[String]()).asInstanceOf[List[String]]
-
-                  val mdlConfig = ("migrationmodelconfig_from_1_2_to_1_3" ->
-                    ("Dependencies" -> deps) ~
-                    ("MessageAndContainers" -> typs))
+                      ("MessageAndContainers" -> typs))
 
                   var failed = false
 
@@ -481,7 +590,7 @@ class MigrateTo_V_1_3 extends MigratableTo {
                     failed = isFailedStatus(retRes)
 
                     if (failed == false) {
-                      val retRes1 = MetadataAPIImpl.AddModel(MetadataAPI.ModelType.fromString(objFormat), defStr, defaultUserId, Some((defaultUserId.get + ".migrationmodelconfig_from_1_2_to_1_3").toLowerCase), Some(ver))
+                      val retRes1 = MetadataAPIImpl.AddModel(MetadataAPI.ModelType.fromString(objFormat), defStr, defaultUserId, Some((defaultUserId.get + "." + cfgnm).toLowerCase), Some(ver))
                       failed = isFailedStatus(retRes1)
                     }
                   } catch {
@@ -497,13 +606,13 @@ class MigrateTo_V_1_3 extends MigratableTo {
 
                     val dumpMdlInfoStr = ("ModelInfo" ->
                       ("Dependencies" -> deps) ~
-                      ("MessageAndContainers" -> typs) ~
-                      ("ModelType" -> mdlType) ~
-                      ("ObjectFormat" -> objFormat) ~
-                      ("ModelDefinition" -> defStr) ~
-                      ("NameSpace" -> namespace) ~
-                      ("Name" -> name) ~
-                      ("Version" -> ver))
+                        ("MessageAndContainers" -> typs) ~
+                        ("ModelType" -> mdlType) ~
+                        ("ObjectFormat" -> objFormat) ~
+                        ("ModelDefinition" -> defStr) ~
+                        ("NameSpace" -> namespace) ~
+                        ("Name" -> name) ~
+                        ("Version" -> ver))
 
                     WriteStringToFile(defFl, defStr)
                     WriteStringToFile(jsonFl, compact(render(dumpMdlInfoStr)))
@@ -512,6 +621,7 @@ class MigrateTo_V_1_3 extends MigratableTo {
                     logger.error(msgStr)
                     _flCurMigrationSummary.println(msgStr)
                     _flCurMigrationSummary.flush()
+                    AddedFailedMetadataKey(objType, dispkey, ver)
                   }
                 } else if (objFormat.equalsIgnoreCase("XML")) {
                   var defFl = _unhandledMetadataDumpDir + "/kPMML_mdldef_" + dispkey + "." + ver + "." + objFormat.toLowerCase()
@@ -532,6 +642,7 @@ class MigrateTo_V_1_3 extends MigratableTo {
                     logger.error(msgStr)
                     _flCurMigrationSummary.println(msgStr)
                     _flCurMigrationSummary.flush()
+                    AddedFailedMetadataKey(objType, dispkey, ver)
                   }
                 }
               } else {
@@ -560,6 +671,8 @@ class MigrateTo_V_1_3 extends MigratableTo {
                   logger.error(msgStr)
                   _flCurMigrationSummary.println(msgStr)
                   _flCurMigrationSummary.flush()
+                  AddedFailedMessageOrContainer(dispkey)
+                  AddedFailedMetadataKey(objType, dispkey, ver)
                 }
               } else {
                 logger.debug("Bootstrap object. Ignore it")
@@ -588,6 +701,8 @@ class MigrateTo_V_1_3 extends MigratableTo {
                   logger.error(msgStr)
                   _flCurMigrationSummary.println(msgStr)
                   _flCurMigrationSummary.flush()
+                  AddedFailedMessageOrContainer(dispkey)
+                  AddedFailedMetadataKey(objType, dispkey, ver)
                 }
               } else {
                 logger.debug("Bootstrap object. Ignore it")
@@ -632,6 +747,7 @@ class MigrateTo_V_1_3 extends MigratableTo {
                   logger.error(msgStr)
                   _flCurMigrationSummary.println(msgStr)
                   _flCurMigrationSummary.flush()
+                  AddedFailedMetadataKey(objType, dispkey, ver)
                 }
               }
             }
@@ -657,6 +773,7 @@ class MigrateTo_V_1_3 extends MigratableTo {
                   logger.error(msgStr)
                   _flCurMigrationSummary.println(msgStr)
                   _flCurMigrationSummary.flush()
+                  AddedFailedMetadataKey(objType, dispkey, ver)
                 }
               }
             }
@@ -718,22 +835,96 @@ class MigrateTo_V_1_3 extends MigratableTo {
             case "ContainerTypeDef" => {
               logger.debug("Adding the Type: name of the object =>  " + dispkey)
             }
-*/
+  */
             case _ => {
               val msgStr = ("Object type %s of key %s did not handle in migrate. Not captured any information related to this.".format(objType, dispkey))
               logger.error(msgStr)
               _flCurMigrationSummary.println(msgStr)
               _flCurMigrationSummary.flush()
+              AddedFailedMetadataKey(objType, dispkey, ver)
             }
           }
-        })
+        } catch {
+          case e: Exception => AddMdObjToGlobalException(mdObj, "Failed to add metadata of type " + objType, e); AddedFailedMetadataKey(objType, dispkey, ver)
+          case e: Throwable => AddMdObjToGlobalException(mdObj, "Failed to add metadata of type " + objType, e); AddedFailedMetadataKey(objType, dispkey, ver)
+        }
+      })
     } catch {
       case e: Exception => throw e
       case e: Throwable => throw e
     }
   }
 
-  override def addMetadata(allMetadataElemsJson: Array[MetadataFormat], uploadClusterConfig: Boolean, excludeMetadata: Array[String]): Unit = {
+  private var msgsContainersFailed = ArrayBuffer[String]()
+  private var msgsContainersFailLock = new Object
+  private var mdFailed = ArrayBuffer[FailedMetadataKey]()
+  private var mdFailLock = new Object
+
+  private def AddedFailedMessageOrContainer(con: String): Unit = msgsContainersFailLock.synchronized {
+    if (con != null)
+      msgsContainersFailed += con
+  }
+
+  private def AddedFailedMetadataKey(objType: String, mdKey: String, ver: String): Unit = mdFailLock.synchronized {
+    if (objType != null && mdKey != null && ver != null)
+      mdFailed += new FailedMetadataKey(objType, mdKey, ver)
+  }
+
+  private def GetFailedMessageOrContainer: Array[String] = msgsContainersFailLock.synchronized {
+    return msgsContainersFailed.toArray
+  }
+
+  override def getFailedMetadataKeys(): Array[FailedMetadataKey] = mdFailLock.synchronized {
+    mdFailed.toArray
+  }
+
+  private def ProcessMdObjectsParallel(mdObjs: ArrayBuffer[(String, Map[String, Any])], errorStr: String): Unit = {
+    if (mdObjs.length > 0) {
+      var executor: ExecutorService = null
+      try {
+        executor = Executors.newFixedThreadPool(if (_parallelDegree <= 1) 1 else _parallelDegree)
+        mdObjs.foreach(obj => {
+          executor.execute(new Runnable() {
+            override def run() = {
+              try {
+                ProcessObject(ArrayBuffer(obj))
+              } catch {
+                case e: Exception => AddMdObjToGlobalException(obj, errorStr, e)
+                case e: Throwable => AddMdObjToGlobalException(obj, errorStr, e)
+              }
+            }
+          })
+        })
+        executor.shutdown();
+        try {
+          executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
+        } catch {
+          case e: Exception => {
+            logger.debug("Failed", e)
+          }
+        }
+      } catch {
+        case e: Exception => AddToGlobalException("Failed to add metadata", e)
+        case e: Throwable => AddToGlobalException("Failed to add metadata", e)
+      }
+
+      if (executor != null) {
+        executor.shutdown();
+        try {
+          executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
+        } catch {
+          case e: Exception => AddToGlobalException("Failed to add metadata", e)
+          case e: Throwable => AddToGlobalException("Failed to add metadata", e)
+        }
+      }
+
+      if (LogGlobalException) {
+        throw new Exception("Failed to add metadata")
+      }
+    }
+  }
+
+  override def addMetadata(allMetadataElemsJson: Array[MetadataFormat], uploadClusterConfig: Boolean, excludeMetadata: Array[String]): java.util.List[String] = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
 
@@ -752,6 +943,8 @@ class MigrateTo_V_1_3 extends MigratableTo {
     val outputMsgDef = ArrayBuffer[(String, Map[String, Any])]()
     val configDef = ArrayBuffer[(String, Map[String, Any])]()
     val typesToIgnore = scala.collection.mutable.Set[String]()
+
+    val addedMessagesContainers: java.util.List[String] = new java.util.ArrayList[String]()
 
     allMetadataElemsJson.foreach(mdf => {
       val json = parse(mdf.objDataInJson)
@@ -779,6 +972,7 @@ class MigrateTo_V_1_3 extends MigratableTo {
 
             if (excludedMetadataTypes.contains(mdf.objType.toLowerCase()) == false) {
               messages += ((mdf.objType, jsonObjMap))
+              addedMessagesContainers.add(namespace + "." + name)
             }
           } else if (mdf.objType == "ContainerDef") {
 
@@ -798,6 +992,7 @@ class MigrateTo_V_1_3 extends MigratableTo {
 
             if (excludedMetadataTypes.contains(mdf.objType.toLowerCase()) == false) {
               containers += ((mdf.objType, jsonObjMap))
+              addedMessagesContainers.add(namespace + "." + name)
             }
           } else {
             if (excludedMetadataTypes.contains(mdf.objType.toLowerCase()) == false) {
@@ -859,12 +1054,37 @@ class MigrateTo_V_1_3 extends MigratableTo {
 
     ProcessObject(jarDef)
     ProcessObject(types)
-    ProcessObject(containers)
-    ProcessObject(messages)
+
+
+    if (_mergeContainerAndMessages) {
+      val msgsAndContainers = ArrayBuffer[(String, Map[String, Any])]()
+      if (containers.length > 0)
+        msgsAndContainers ++= containers
+      if (messages.length > 0)
+        msgsAndContainers ++= messages
+      ProcessMdObjectsParallel(msgsAndContainers, "Failed to add messages/container")
+    } else {
+      ProcessMdObjectsParallel(containers, "Failed to add container")
+      ProcessMdObjectsParallel(messages, "Failed to add message")
+    }
+
+    val failedMsgsContainer = GetFailedMessageOrContainer
+
+    if (failedMsgsContainer.size > 0) {
+      // Report the errors and Stop migration
+      val errMsg = "Migrating Messages/Containers (%s) failed".format(failedMsgsContainer.mkString(","))
+      logger.error(errMsg)
+      throw new Exception(errMsg)
+    }
+
     ProcessObject(functions)
     ProcessObject(configDef)
-    ProcessObject(models)
+    //ProcessObject(models)
+    ProcessMdObjectsParallel(models, "Failed to add model")
     ProcessObject(outputMsgDef)
+
+
+    return addedMessagesContainers
   }
 
   private def callSaveData(dataStore: DataStoreOperations, data_list: Array[(String, Array[(Key, Value)])]): Unit = {
@@ -900,8 +1120,61 @@ class MigrateTo_V_1_3 extends MigratableTo {
           Thread.sleep(failedWaitTime)
         } catch {
           case e: Exception => {
-
+            logger.warn("", e)
           }
+        }
+        // Adjust time for next time
+        if (failedWaitTime < maxFailedWaitTime) {
+          failedWaitTime = failedWaitTime * 2
+          if (failedWaitTime > maxFailedWaitTime)
+            failedWaitTime = maxFailedWaitTime
+        }
+      }
+    }
+  }
+
+  private def callGetData(dataStore: DataStoreOperations, containerName: String, keys: Array[Key], callbackFunction: (Key, Value) => Unit): Unit = {
+    var failedWaitTime = 15000 // Wait time starts at 15 secs
+    val maxFailedWaitTime = 60000 // Max Wait time 60 secs
+    var doneGet = false
+
+    while (!doneGet) {
+      try {
+        dataStore.get(containerName, keys, callbackFunction)
+        doneGet = true
+      } catch {
+        case e@(_: ObjectNotFoundException | _: KeyNotFoundException) => {
+          logger.debug("Failed to get data from container:%s".format(containerName))
+          doneGet = true
+        }
+        case e: FatalAdapterException => {
+          val stackTrace = StackTrace.ThrowableTraceString(e.cause)
+          logger.error("Failed to get data from container:%s.\nStackTrace:%s".format(containerName, stackTrace))
+        }
+        case e: StorageDMLException => {
+          val stackTrace = StackTrace.ThrowableTraceString(e.cause)
+          logger.error("Failed to get data from container:%s.\nStackTrace:%s".format(containerName, stackTrace))
+        }
+        case e: StorageDDLException => {
+          val stackTrace = StackTrace.ThrowableTraceString(e.cause)
+          logger.error("Failed to get data from container:%s.\nStackTrace:%s".format(containerName, stackTrace))
+        }
+        case e: Exception => {
+          val stackTrace = StackTrace.ThrowableTraceString(e)
+          logger.error("Failed to get data from container:%s.\nStackTrace:%s".format(containerName, stackTrace))
+        }
+        case e: Throwable => {
+          val stackTrace = StackTrace.ThrowableTraceString(e)
+          logger.error("Failed to get data from container:%s.\nStackTrace:%s".format(containerName, stackTrace))
+        }
+      }
+
+      if (!doneGet) {
+        try {
+          logger.error("Failed to get data from datastore. Waiting for another %d milli seconds and going to start them again.".format(failedWaitTime))
+          Thread.sleep(failedWaitTime)
+        } catch {
+          case e: Exception => {}
         }
         // Adjust time for next time
         if (failedWaitTime < maxFailedWaitTime) {
@@ -937,6 +1210,31 @@ class MigrateTo_V_1_3 extends MigratableTo {
     _statusStoreDb = null
     _flCurMigrationSummary = null
     MetadataAPIImpl.shutdown
+  }
+
+  override def getStatusFromDataStore(key: String): String = {
+    if (_bInit == false)
+      throw new Exception("Not yet Initialized")
+    if (_dataStoreDb == null)
+      throw new Exception("Not found valid Datastore DB connection")
+
+    var ret = ""
+    val buildAdapOne = (k: Key, v: Value) => {
+      ret = new String(v.serializedInfo)
+    }
+
+    callGetData(_dataStoreDb, "MigrateStatusInformation", Array(Key(KvBaseDefalts.defaultTime, Array(key.toLowerCase), 0, 0)), buildAdapOne)
+
+    ret
+  }
+
+  override def setStatusFromDataStore(key: String, value: String) = {
+    if (_bInit == false)
+      throw new Exception("Not yet Initialized")
+    if (_dataStoreDb == null)
+      throw new Exception("Not found valid Datastore DB connection")
+
+    callSaveData(_dataStoreDb, Array(("MigrateStatusInformation", Array((Key(KvBaseDefalts.defaultTime, Array(key.toLowerCase), 0, 0), Value("txt", value.getBytes()))))))
   }
 }
 
