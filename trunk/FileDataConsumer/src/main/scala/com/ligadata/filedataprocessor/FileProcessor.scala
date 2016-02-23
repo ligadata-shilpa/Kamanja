@@ -704,12 +704,16 @@ object FileProcessor {
   private def moveFile(fileName: String): Unit = {
     val fileStruct = fileName.split("/")
     if (targetMoveDir != null) {
-      logger.info("SMART FILE CONSUMER Moving File" + dirToWatch+"/"+fileStruct(fileStruct.size - 1) + " to " + targetMoveDir)
-      Files.copy(Paths.get(dirToWatch+"/"+fileStruct(fileStruct.size - 1)), Paths.get(targetMoveDir + "/" + fileStruct(fileStruct.size - 1)), REPLACE_EXISTING)
-      Files.deleteIfExists(Paths.get(dirToWatch+"/"+fileStruct(fileStruct.size - 1)))
+      logger.info("SMART FILE CONSUMER Moving File" + fileName+ " to " + targetMoveDir)
+      if(Paths.get(fileName).toFile().exists()){
+        Files.copy(Paths.get(fileName), Paths.get(targetMoveDir + "/" + fileStruct(fileStruct.size - 1)), REPLACE_EXISTING)
+        Files.deleteIfExists(Paths.get(fileName))
+      }else{
+        logger.warn("SMART FILE CONSUMER File has been deleted" + fileName);
+      }
     } else {
       logger.info("SMART FILE CONSUMER Renaming file " + fileName + " to " + fileName + "_COMPLETE")
-      (new File(fileName)).renameTo(new File(dirToWatch+"/"+fileStruct(fileStruct.size - 1) + "_COMPLETE"))
+      (new File(fileName)).renameTo(new File(fileName + "_COMPLETE"))
     }
   }
 }
