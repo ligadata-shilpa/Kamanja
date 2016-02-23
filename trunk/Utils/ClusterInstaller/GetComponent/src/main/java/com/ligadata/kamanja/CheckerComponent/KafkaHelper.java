@@ -50,7 +50,13 @@ public class KafkaHelper {
                         for (kafka.cluster.Broker replica : part.isr()) {
                             isr += " " + replica.host();
                         }
-                        System.out.println("    Partition: " + part.partitionId() + ": Leader: " + part.leader().host() + " Replicas:[" + replicas + "] ISR:[" + isr + "]");
+                        int partId = -1;
+                        if (part != null)
+                            partId = part.partitionId();
+                        String leaderHost = "";
+                        if (part != null && part.leader() != null && part.leader().host() != null)
+                            leaderHost = part.leader().host();
+                        System.out.println("    Partition: " + partId + ": Leader: " + leaderHost + " Replicas:[" + replicas + "] ISR:[" + isr + "]");
                     }
                 }
                 gotHosts = true;
