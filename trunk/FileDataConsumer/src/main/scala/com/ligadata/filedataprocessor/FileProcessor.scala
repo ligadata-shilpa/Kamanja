@@ -59,12 +59,11 @@ object FileProcessor {
   
   private var watchService: WatchService = null
   private var keys = new HashMap[WatchKey, Path]
+  private var contentTypes = new scala.collection.mutable.HashMap[String,String]
 
   var dirToWatch: String = _
   var targetMoveDir: String = _
   var readyToProcessKey: String = _
-  
-  private var contentTypes = new HashMap[String,String]
   
   var globalFileMonitorService: ExecutorService = Executors.newFixedThreadPool(3)
   val DEBUG_MAIN_CONSUMER_THREAD_ACTION = 1000
@@ -366,8 +365,8 @@ object FileProcessor {
                   //var nameTokens = fileTuple._1.split("/")
                   //fileCacheRemove(nameTokens(nameTokens.size - 1))
                   fileCacheRemove(fileTuple._1)
-                  
                   moveFile(fileTuple._1)
+                  
                 }
               }
             } else {
@@ -400,18 +399,21 @@ object FileProcessor {
           //val tokenName = file.toString.split("/")
           //if (!checkIfFileBeingProcessed(tokenName(tokenName.size - 1))) {
           if (!checkIfFileBeingProcessed(file.toString)) {
-            logger.info("SMART FILE CONSUMER (global)  Processing " + file.toString)
             FileProcessor.enQBufferedFile(file.toString)
           }
-        }
+        }else{
+          //Invalid File - Move out file and log error
+          moveFile(file.toString())
+          logger.error("SMART FILE CONSUMER (global): Moving out " + file.toString() + " with invalid file type " )
+         }
       })
     }
   }
   
   private def isValidFile(fileName: String): Boolean = {
     logger.info("SMART FILE CONSUMER (MI): isValidFile "+fileName)
-    if (!fileName.endsWith("_COMPLETE"))
-      return true
+    if (fileName.endsWith("_COMPLETE"))
+      return false
     else{
       //Sniff only text/plain and application/gzip for now
       var tis = TikaInputStream.get(new File(fileName))
@@ -422,12 +424,12 @@ object FileProcessor {
       
       //Currently handling only text/plain and application/gzip contents
       //Need to bubble this property out into the Constants and Configuration
-      if(contentTypes.contains(contentType))
+      if(contentTypes contains contentType){
         return true;
-      else{
-        logger.info("SMART FILE CONSUMER (Content Type Invalid) - ("+contentType+") for "+fileName)
+      }else{
+        //Log error for invalid content type
+        logger.error("SMART FILE CONSUMER (global): Invalid content type " + contentType + " for file "+fileName);
       }
-      
     }
     return false
   }
@@ -716,6 +718,7 @@ object FileProcessor {
       (new File(fileName)).renameTo(new File(fileName + "_COMPLETE"))
     }
   }
+  
 }
 
 
@@ -738,8 +741,7 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
   private var watchService = FileSystems.getDefault.newWatchService()
   
   private var keys = new HashMap[WatchKey, Path]
-  
-  private var contentTypes = new HashMap[String,String]
+  //private var contentTypes :scala.collection.mutable.HashMap[String,String] = null
 
   private var kml: KafkaMessageLoader = null
   private var zkc: CuratorFramework = null
@@ -799,12 +801,16 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
     
     //Default allowed content types - 
     var cTypes  = props.getOrElse(SmartFileAdapterConstants.VALID_CONTENT_TYPES, "text/plain;application/gzip")
+    
     for(cType <- cTypes.split(";")){
-      contentTypes.put(cType, cType)
+      logger.info("SMART_FILE_CONSUMER Putting "+cType+" into allowed content types")
+      if(!FileProcessor.contentTypes.contains(cType))
+        FileProcessor.contentTypes.put(cType, cType)
     }
     
     
     kafkaTopic = props.getOrElse(SmartFileAdapterConstants.KAFKA_TOPIC, null)
+    
     // Bail out if dirToWatch, Topic are not set
     if (kafkaTopic == null) {
       logger.error("SMART_FILE_CONSUMER ("+partitionId+") Kafka Topic to populate must be specified")
@@ -1172,6 +1178,7 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
       } else {
         Thread.sleep(100)
       }
+      
     }
     // Done with this file... mark is as closed
     try {
@@ -1307,3 +1314,5 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
   
    
 }
+
+
