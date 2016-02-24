@@ -42,6 +42,7 @@ import com.ligadata.Exceptions._
 
 case class Customer(name:String, address: String, homePhone: String)
 
+@Ignore
 class SqlServerAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterAll with GivenWhenThen {
   var res : String = null;
   var statusCode: Int = -1;
@@ -49,8 +50,8 @@ class SqlServerAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAft
   var serializer:Serializer = null
 
   private val loggerName = this.getClass.getName
-  private val logger = Logger.getLogger(loggerName)
-  logger.setLevel(Level.INFO)
+  private val logger = LogManager.getLogger(loggerName)
+
   val dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
   val dateFormat1 = new SimpleDateFormat("yyyy/MM/dd")
   // set the timezone to UTC for all time values
@@ -61,26 +62,7 @@ class SqlServerAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAft
 
   serializer = SerializerManager.GetSerializer("kryo")
   logger.info("Initialize SqlServerAdapter")
-  val dataStoreInfo = """{"StoreType": "sqlserver","hostname": "192.168.56.1","instancename":"KAMANJA","portnumber":"1433","database": "bofa","user":"bofauser","SchemaName":"bofauser","password":"bofauser","jarpaths":"/media/home2/jdbc","jdbcJar":"sqljdbc4-2.0.jar","clusteredIndex":"YES"}"""
-  
-  private def ProcessException(e: Exception) = {
-      e match {
-	case e1: StorageDMLException => {
-	  logger.error("Inner Message:%s: Message:%s".format(e1.cause.getMessage,e1.getMessage))
-	}
-	case e2: StorageDDLException => {
-	  logger.error("Innser Message:%s: Message:%s".format(e2.cause.getMessage,e2.getMessage))
-	}
-	case e3: StorageConnectionException => {
-	  logger.error("Inner Message:%s: Message:%s".format(e3.cause.getMessage,e3.getMessage))
-	}
-	case _ => {
-	  logger.error("Message:%s".format(e.getMessage))
-	}
-      }
-      var stackTrace = StackTrace.ThrowableTraceString(e)
-      logger.info("StackTrace:"+stackTrace)
-  }	  
+  val dataStoreInfo = """{"StoreType": "sqlserver","hostname": "192.168.56.1","instancename":"KAMANJA","portnumber":"1433","database": "bofa","user":"bofauser","SchemaName":"bofauser","password":"bofauser","jarpaths":"/media/home2/jdbc","jdbcJar":"sqljdbc4-2.0.jar","clusteredIndex":"YES","autoCreateTables":"YES"}"""
 
   private def CreateAdapter: DataStore = {
     var connectionAttempts = 0
@@ -90,8 +72,7 @@ class SqlServerAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAft
         return adapter
       } catch {
         case e: Exception => {
-	  ProcessException(e)
-          logger.error("will retry after one minute ...")
+          logger.error("will retry after one minute ...", e)
           Thread.sleep(60 * 1000L)
           connectionAttempts = connectionAttempts + 1
         }
@@ -160,6 +141,11 @@ class SqlServerAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAft
 	adapter.DropContainer(containers)
       }
 
+      And("Test auto create of a table")
+      noException should be thrownBy {
+	adapter.get(containerName,readCallBack _)
+      }
+
       And("Test create container")
       noException should be thrownBy {
 	var containers = new Array[String](0)
@@ -174,8 +160,7 @@ class SqlServerAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAft
 	containers = containers :+ containerName
 	adapter.CreateContainer(containers)
       }
-      var stackTrace = StackTrace.ThrowableTraceString(ex)
-      logger.info("StackTrace:"+stackTrace)
+      logger.info("", ex)
 
       And("Resume API Testing")
       containerName = "sys.customer1"
@@ -196,8 +181,7 @@ class SqlServerAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAft
 	var value = new Value("kryo",v)
 	adapter.put(containerName,key,value)
       }
-      stackTrace = StackTrace.ThrowableTraceString(ex1)
-      logger.info("StackTrace:"+stackTrace)
+      logger.info("", ex1)
 
       val sqlServerAdapter = adapter.asInstanceOf[SqlServerAdapter]
 
@@ -221,8 +205,7 @@ class SqlServerAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAft
 	var value = new Value("kryo",v)
 	adapter.put("&&",key,value)
       }
-      stackTrace = StackTrace.ThrowableTraceString(ex2.cause)
-      logger.info("StackTrace:"+stackTrace)
+      logger.info("", ex2)
 
       And("Test Put api")
       var keys = new Array[Key](0) // to be used by a delete operation later on

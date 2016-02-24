@@ -16,4 +16,3 @@ libraryDependencies += "log4j" % "log4j" % "1.2.17"
 
 libraryDependencies += "org.apache.commons" % "commons-dbcp2" % "2.1"
 
-parallelExecution := false

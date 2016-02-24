@@ -48,8 +48,8 @@ class SqlServerPerfTestSpec extends FunSpec with BeforeAndAfter with BeforeAndAf
   var serializer: Serializer = null
 
   private val loggerName = this.getClass.getName
-  private val logger = Logger.getLogger(loggerName)
-  logger.setLevel(Level.INFO)
+  private val logger = LogManager.getLogger(loggerName)
+
   val dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
   val dateFormat1 = new SimpleDateFormat("yyyy/MM/dd")
   // set the timezone to UTC for all time values
@@ -68,13 +68,12 @@ class SqlServerPerfTestSpec extends FunSpec with BeforeAndAfter with BeforeAndAf
         return adapter
       } catch {
         case e: StorageConnectionException => {
-          logger.error("%s: Message:%s".format(e.getMessage, e.cause.getMessage))
-          logger.error("will retry after one minute ...")
+          logger.error("will retry after one minute ...", e)
           connectionAttempts = connectionAttempts + 1
           Thread.sleep(60 * 1000L)
         }
         case e: Exception => {
-          logger.error("Failed to connect: Message:%s".format(e.getMessage))
+          logger.error("Failed to connect", e)
           logger.error("retrying ...")
         }
       }
@@ -91,10 +90,10 @@ class SqlServerPerfTestSpec extends FunSpec with BeforeAndAfter with BeforeAndAf
       adapter = CreateAdapter
     } catch {
       case e: StorageConnectionException => {
-        logger.error("%s: Message:%s".format(e.getMessage, e.cause.getMessage))
+        logger.error("", e)
       }
       case e: Exception => {
-        logger.error("Failed to connect: Message:%s".format(e.getMessage))
+        logger.error("Failed to connect", e)
       }
     }
   }
@@ -168,7 +167,7 @@ class SqlServerPerfTestSpec extends FunSpec with BeforeAndAfter with BeforeAndAf
 
       logger.info(GetCurDtTmStr + ": Start Loading  1 million records 1000 at a time")
 
-      for (batch <- 1 to 10000) {
+      for (batch <- 1 to 1000) {
 	var successful = false
 	while ( ! successful ){
           var keyValueList = new Array[(Key, Value)](0)
@@ -198,8 +197,7 @@ class SqlServerPerfTestSpec extends FunSpec with BeforeAndAfter with BeforeAndAf
 	  }
 	  catch{
 	    case e: Exception => {
-	      val stackTrace = StackTrace.ThrowableTraceString(e)
-	      logger.info("StackTrace:"+stackTrace)
+	      logger.info("", e)
 	      successful = false
 	    }
 	  }
