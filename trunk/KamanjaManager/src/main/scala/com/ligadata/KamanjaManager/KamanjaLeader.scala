@@ -83,6 +83,8 @@ object KamanjaLeader {
   private[this] var updatePartitionsFlag = false
   private[this] var distributionExecutor = Executors.newFixedThreadPool(1)
 
+  private val MAX_ZK_RETRIES = 1
+
   def Reset: Unit = {
     clusterStatus = ClusterStatus("", false, "", null)
     zkLeaderLatch = null
@@ -1290,73 +1292,106 @@ object KamanjaLeader {
   }
 
   def SetNewDataToZkc(zkNodePath: String, data: Array[Byte]): Unit = {
-    try {
-      setDataLockObj.synchronized {
-        if (zkcForSetData != null)
+
+    var retriesAttempted = 0
+    while (retriesAttempted <= MAX_ZK_RETRIES) {
+      try {
+        setDataLockObj.synchronized {
+          if (zkcForSetData == null) return
+          if (retriesAttempted > 0) {
+            LOG.warn("KamanjaLeader: retrying zk call (SetNewDataToZkc)")
+          }
           zkcForSetData.setData().forPath(zkNodePath, data)
-      }
-    } catch {
-      case e: Throwable => {
-        LOG.warn("KamanjaLeader: Connection to Zookeeper is temporarily unavailable")
-        ReconnectToSetDataZkc
+          return
+        }
+      } catch {
+        case e: Throwable => {
+          retriesAttempted += 1
+          LOG.warn("KamanjaLeader: Connection to Zookeeper is temporarily unavailable (SetNewDataToZkc).due to " + e)
+          ReconnectToSetDataZkc
+        }
       }
     }
+    LOG.warn("KamanjaLeader: failed to conntect to Zookeeper after retry")
   }
 
   def GetDataFromZkc(zkNodePath: String): Array[Byte] = {
-    try {
-      setDataLockObj.synchronized {
-        if (zkcForSetData != null)
+
+    var retriesAttempted = 0
+    while (retriesAttempted <= MAX_ZK_RETRIES) {
+      try {
+        setDataLockObj.synchronized {
+          if (zkcForSetData == null) return Array[Byte]()
+          if (retriesAttempted > 0) {
+            LOG.warn("KamanjaLeader: retrying zk call (GetDataFromZkc)")
+          }
           return zkcForSetData.getData().forPath(zkNodePath);
-        else
-          return Array[Byte]()
-      }
-    } catch {
-      case e: Throwable => {
-        LOG.warn("KamanjaLeader: Connection to Zookeeper is temporarily unavailable")
-        ReconnectToSetDataZkc
+        }
+      } catch {
+        case e: Throwable => {
+          retriesAttempted += 1
+          LOG.warn("KamanjaLeader: Connection to Zookeeper is temporarily unavailable (GetDataFromZkc)..due to " + e)
+          ReconnectToSetDataZkc
+        }
       }
     }
+    // The only way to get here is by catching an exceptions, retyring and then failing again.
+    LOG.warn("KamanjaLeader: failed to conntect to Zookeeper after retry")
     return Array[Byte]()
   }
 
   def GetChildrenFromZkc(zkNodePath: String): List[String] = {
-    try {
-      setDataLockObj.synchronized {
-        if (zkcForSetData != null)
+    var retriesAttempted = 0
+    while (retriesAttempted <= MAX_ZK_RETRIES) {
+      try {
+        setDataLockObj.synchronized {
+          if (zkcForSetData == null) return List[String]()
+          if (retriesAttempted > 0) {
+            LOG.warn("KamanjaLeader: retrying zk call (GetChildrenFromZkc)")
+          }
           return zkcForSetData.getChildren().forPath(zkNodePath).toList
-        else
-          return List[String]()
-      }
-    } catch {
-      case e: Throwable => {
-        LOG.warn("KamanjaLeader: Connection to Zookeeper is temporarily unavailable")
-        ReconnectToSetDataZkc
+        }
+      } catch {
+        case e: Throwable => {
+          retriesAttempted += 1
+          LOG.warn("KamanjaLeader: Connection to Zookeeper is temporarily unavailable (GetChildrenFromZkc) due to " + e)
+          ReconnectToSetDataZkc
+        }
       }
     }
+    // The only way to get here is by catching an exceptions, retyring and then failing again.
+    LOG.warn("KamanjaLeader: failed to conntect to Zookeeper after retry")
     return List[String]()
   }
 
   def GetChildrenDataFromZkc(zkNodePath: String): List[(String, Array[Byte])] = {
-    try {
-      setDataLockObj.synchronized {
-        if (zkcForSetData != null) {
-          val childs = zkcForSetData.getChildren().forPath(zkNodePath)
-          return childs.map(child => {
+
+    var retriesAttempted = 0
+    while (retriesAttempted <= MAX_ZK_RETRIES) {
+      try {
+        setDataLockObj.synchronized {
+          if (zkcForSetData == null) return List[(String, Array[Byte])]()
+          if (retriesAttempted > 0) {
+            LOG.warn("KamanjaLeader: retrying zk call (GetChildrenDataFromZkc)")
+          }
+
+          val children = zkcForSetData.getChildren().forPath(zkNodePath)
+          return children.map(child => {
             val path = zkNodePath + "/" + child
-            val chldData = zkcForSetData.getData().forPath(path);
+            val chldData = zkcForSetData.getData().forPath(path)
             (child, chldData)
           }).toList
-        } else {
-          return List[(String, Array[Byte])]()
+        }
+      } catch {
+        case e: Throwable => {
+          retriesAttempted += 1
+          LOG.warn("KamanjaLeader: Connection to Zookeeper is temporarily unavailable (GetChildrenDataFromZkc).due to " + e)
+          ReconnectToSetDataZkc
         }
       }
-    } catch {
-      case e: Throwable => {
-        LOG.warn("KamanjaLeader: Connection to Zookeeper is temporarily unavailable")
-        ReconnectToSetDataZkc
-      }
     }
+    // The only way to get here is by catching an exceptions, retyring and then failing again.
+    LOG.warn("KamanjaLeader: failed to conntect to Zookeeper after retry")
     return List[(String, Array[Byte])]()
   }
 

@@ -22,6 +22,7 @@ import java.util.concurrent.{ Executors, ScheduledExecutorService, TimeUnit }
 import com.ligadata.Utils.{ Utils, KamanjaClassLoader, KamanjaLoaderInfo }
 import org.apache.logging.log4j.{ Logger, LogManager }
 import com.ligadata.Exceptions.{ FatalAdapterException }
+import scala.actors.threadpool.{ ExecutorService }
 
 class KamanjaServer(var mgr: KamanjaManager, port: Int) extends Runnable {
   private val LOG = LogManager.getLogger(getClass);
@@ -227,7 +228,9 @@ class KamanjaManager extends Observer {
   private var adapterMetricInfo: scala.collection.mutable.MutableList[com.ligadata.HeartBeat.MonitorComponentInfo] = null
   private val failedEventsAdapters = new ArrayBuffer[OutputAdapter]
 
-
+  private var metricsService: ExecutorService = scala.actors.threadpool.Executors.newFixedThreadPool(1)
+  private var isTimerRunning = false
+  private var isTimerStarted = false
   private type OptionMap = Map[Symbol, Any]
 
   private def PrintUsage(): Unit = {
@@ -734,18 +737,45 @@ class KamanjaManager extends Observer {
       // See if we have to extenrnalize stats, every 5000ms..
       if (LOG.isTraceEnabled)
         LOG.trace("KamanjaManager " + KamanjaConfiguration.nodeId.toString + " running iteration " + cntr)
-      if (cntr % 10 == 1) {
-        externalizeMetrics
+
+      if (!isTimerStarted) {
+        metricsService.execute(new Runnable() {
+          override def run() = {
+            isTimerRunning = true
+            runMetricsTimer
+          }
+        })
+        isTimerStarted = true
       }
     }
 
+    isTimerRunning = false
     scheduledThreadPool.shutdownNow()
+    metricsService.shutdownNow()
     sh = null
     return Shutdown(0)
   }
 
-  private def externalizeMetrics: Unit = {
+  /**
+   *
+   */
+  private def runMetricsTimer: Unit = {
+    if(LOG.isDebugEnabled) {
+      LOG.debug("KamanjaManager " + KamanjaConfiguration.nodeId.toString + " metrics timer is starting up")
+    }
+    while (isTimerRunning) {
+      externalizeMetrics
+      Thread.sleep(5000)
+    }
+    if(LOG.isDebugEnabled) {
+      LOG.debug("KamanjaManager " + KamanjaConfiguration.nodeId.toString + " metrics timer is shutting down")
+    }
+  }
 
+  /**
+   *
+   */
+  private def externalizeMetrics: Unit = {
     val zkNodeBasePath = KamanjaConfiguration.zkNodeBasePath.stripSuffix("/").trim
     val zkHeartBeatNodePath = zkNodeBasePath + "/monitor/engine/" + KamanjaConfiguration.nodeId.toString
     val isLogDebugEnabled = LOG.isDebugEnabled
