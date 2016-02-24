@@ -28,6 +28,7 @@ import org.apache.tika.detect.Detector
 import org.apache.tika.detect.DefaultDetector
 import org.apache.tika.mime.MimeTypes
 import scala.collection.mutable.Map
+import java.net.URLDecoder
 
 case class BufferLeftoversArea(workerNumber: Int, leftovers: Array[Char], relatedChunk: Int)
 case class BufferToChunk(len: Int, payload: Array[Char], chunkNumber: Int, relatedFileName: String, firstValidOffset: Int, isEof: Boolean, partMap: scala.collection.mutable.Map[Int,Int])
@@ -450,11 +451,18 @@ object FileProcessor {
           var map = priorFailures.toArray
           //var map = parse(new String(priorFailures)).values.asInstanceOf[Map[String, Any]]
           if (map != null) map.foreach(fileToReprocess => {
-            logger.info("SMART FILE CONSUMER (global): Consumer  recovery of file " + fileToReprocess)
-            if (!checkIfFileBeingProcessed(fileToReprocess.asInstanceOf[String])) {
-              val offset = zkc.getData.forPath(znodePath + "/" + fileToReprocess)
+            logger.info("SMART FILE CONSUMER (global): Consumer  recovery of file " + URLDecoder.decode(fileToReprocess.asInstanceOf[String],"UTF-8"))
+            
+            var fileToRecover = URLDecoder.decode(fileToReprocess.asInstanceOf[String],"UTF-8")
+            
+            if (!checkIfFileBeingProcessed(fileToRecover)
+                //Additional check, see if it exists, possibility that it is moved but not updated in ZK
+                //Should we be more particular and check in Processed directory ??? TODO
+                && Files.exists(Paths.get(fileToRecover))) {
+              
+              val offset = zkc.getData.forPath(znodePath + "/" + fileToReprocess.asInstanceOf[String])
               var recoveryInfo = new String(offset)
-              logger.info("SMART FILE CONSUMER (global): " + fileToReprocess+ " from offset " + recoveryInfo)
+              logger.info("SMART FILE CONSUMER (global): " + fileToRecover + " from offset " + recoveryInfo)
 
               // There will always be 2 parts here.
               var partMap = scala.collection.mutable.Map[Int,Int]()
@@ -480,27 +488,34 @@ object FileProcessor {
               */
               
               //Start Changes -- Instead of a single file, run with the ArrayBuffer of Paths
-              var files: ArrayBuffer[File] = new ArrayBuffer[File];
-              for(dir <- path){
-                FileProcessor.enQFile(dir.toAbsolutePath().toString() + "/" + fileToReprocess.asInstanceOf[String],recoveryTokens(0).toInt, FileProcessor.RECOVERY_DUMMY_START_TIME, partMap)
-                 if(dir.toFile().exists() && dir.toFile().isDirectory()){
-                  files.appendAll(dir.toFile().listFiles.filter(file => { file.isFile && (file.getName).equals(fileToReprocess.asInstanceOf[String]) }))
-                }
-              }
+             
+              FileProcessor.enQFile(fileToRecover,recoveryTokens(0).toInt, FileProcessor.RECOVERY_DUMMY_START_TIME, partMap)
               
-              while (files.size != 0) {
-                Thread.sleep(1000)
-                for(dir <- path){
-                  if(dir.toFile().exists() && dir.toFile().isDirectory()){
-                    files.appendAll(dir.toFile().listFiles.filter(file => { file.isFile && (file.getName).equals(fileToReprocess.asInstanceOf[String]) }))
+              for(dir <- path){
+                if(dir.toFile().exists() && dir.toFile().isDirectory()){
+                  var files = dir.toFile().listFiles.filter(file => { 
+                    file.isFile && (file.getName).equals(fileToRecover) 
+                  })
+                  while (files.size != 0) {
+                    Thread.sleep(1000)
+                    files = dir.toFile().listFiles.filter(file => { 
+                      file.isFile && (file.getName).equals(fileToRecover) 
+                    })
                   }
                 }
               }
               //End Changes -- Instead of a single file, run with the ArrayBuffer of Paths
-              
+            
+            }else if(!Files.exists(Paths.get(fileToRecover))){
+              //Check if file is already moved, if yes remove from ZK
+              val tokenName = fileToRecover.split("/")
+              if(Files.exists(Paths.get(targetMoveDir+"/"+tokenName(tokenName.size - 1)))){
+                logger.info("SMART FILE CONSUMER (global): Found file " +fileToRecover+" processed ")
+                removeFromZK(fileToRecover)
+              }
               
             } else {
-              logger.info("SMART FILE CONSUMER (global): " +fileToReprocess+" already being processed ")
+              logger.info("SMART FILE CONSUMER (global): " +fileToRecover+" already being processed ")
             }
           })
         }
