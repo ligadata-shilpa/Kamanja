@@ -350,24 +350,28 @@ object FileProcessor {
         iter.foreach(fileTuple => {
           try {
             val d = new File(fileTuple._1)
-            // If the the new length of the file is the same as a second ago... this file is done, so move it
-            // onto the ready to process q.  Else update the latest length
-            if (fileTuple._2 == d.length) {
-              if (d.length > 0) {
-                logger.info("SMART FILE CONSUMER (global):  File READY TO PROCESS " + d.toString)
-                enQFile(fileTuple._1, FileProcessor.NOT_RECOVERY_SITUATION, d.lastModified)
-                bufferingQ_map.remove(fileTuple._1)
-              } else {
-                var diff = (System.currentTimeMillis - d.lastModified)
-                if (diff > bufferTimeout) {
-                  logger.warn("SMART FILE CONSUMER (global): Detected that " + d.toString + " has been on the buffering queue longer then " + bufferTimeout / 1000 + " seconds - Cleaning up" )
+            if (d.exists) {
+              // If the the new length of the file is the same as a second ago... this file is done, so move it
+              // onto the ready to process q.  Else update the latest length
+              if (fileTuple._2 == d.length) {
+                if (d.length > 0) {
+                  logger.info("SMART FILE CONSUMER (global):  File READY TO PROCESS " + d.toString)
+                  enQFile(fileTuple._1, FileProcessor.NOT_RECOVERY_SITUATION, d.lastModified)
                   bufferingQ_map.remove(fileTuple._1)
-                  fileCacheRemove(fileTuple._1)
-                  moveFile(fileTuple._1)
+                } else {
+                  var diff = (System.currentTimeMillis - d.lastModified)
+                  if (diff > bufferTimeout) {
+                    logger.warn("SMART FILE CONSUMER (global): Detected that " + d.toString + " has been on the buffering queue longer then " + bufferTimeout / 1000 + " seconds - Cleaning up" )
+                    bufferingQ_map.remove(fileTuple._1)
+                    fileCacheRemove(fileTuple._1)
+                    moveFile(fileTuple._1)
+                  }
                 }
+              } else {
+                bufferingQ_map(fileTuple._1) = d.length
               }
             } else {
-              bufferingQ_map(fileTuple._1) = d.length
+              logger.warn("SMART FILE CONSUMER (global): File on the buffering Q is not found " + fileTuple._1)
             }
           } catch {
             case ioe: IOException => {
@@ -430,9 +434,6 @@ object FileProcessor {
   private def runFileWatcher(): Unit = {
     try {
 
-      // Register a listener on a watch directory.
-      register(path)
-      
       //val d = new File(dirToWatch)
 
       // Lets see if we have failed previously on this partition Id, and need to replay some messages first.
@@ -468,19 +469,7 @@ object FileProcessor {
                 })
               }
               
-              /*
-              FileProcessor.enQFile(dirToWatch + "/" + fileToReprocess.asInstanceOf[String],recoveryTokens(0).toInt, FileProcessor.RECOVERY_DUMMY_START_TIME, partMap)
-              if (d.exists && d.isDirectory) {
-                var files = d.listFiles.filter(file => { file.isFile && (file.getName).equals(fileToReprocess.asInstanceOf[String]) })
-                while (files.size != 0) {
-                  Thread.sleep(1000)
-                  files = d.listFiles.filter(file => { file.isFilse && (file.getName).equals(fileToReprocess.asInstanceOf[String]) })
-                }
-              }
-              */
-              
               //Start Changes -- Instead of a single file, run with the ArrayBuffer of Paths
-             
               FileProcessor.enQFile(fileToRecover,recoveryTokens(0).toInt, FileProcessor.RECOVERY_DUMMY_START_TIME, partMap)
               
               for(dir <- path){
@@ -547,29 +536,6 @@ object FileProcessor {
     }
   }
 
-  private def resetWatcher: Unit = {
-    watchService.close()
-    //watchService = path.getFileSystem().newWatchService()
-    watchService = FileSystems.getDefault.newWatchService()
-    keys = new HashMap[WatchKey, Path]
-    register(path)
-  }
-
-  /**
-   * Register a particular file or directory to be watched
-   */
-   private def register(dirs: ArrayBuffer[Path]): Unit = {
-     for(dir <- dirs){ 
-       val key = dir.register(watchService, 
-          StandardWatchEventKinds.ENTRY_CREATE, 
-          StandardWatchEventKinds.ENTRY_MODIFY, 
-          StandardWatchEventKinds.OVERFLOW)
-        keys(key) = dir
-     }
-   }
-
-
- 
 
   private def monitorActiveFiles: Unit = {
 
@@ -900,13 +866,6 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
     }
   }
 
-  /**
-   * Register a particular file or directory to be watched
-   */
-  private def register(dir: Path): Unit = {
-    val key = dir.register(watchService, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY, StandardWatchEventKinds.OVERFLOW)
-    keys(key) = dir
-  }
 
   /**
    * Each worker bee will run this code... looking for work to do.
@@ -1031,7 +990,7 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
   }
 
   /**
-   * This will be run under a CONSUMER THREAD.
+   * This will be run under a CONSUMER THREAD. - will get called once per consumer thread (from doSomeConsuming)
    * @param file
    */
   private def readBytesChunksFromFile(file: EnqueuedFile): Unit = {
@@ -1062,7 +1021,6 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
 
     // Grab the InputStream from the file and start processing it.  Enqueue the chunks onto the BufferQ for the
     // worker bees to pick them up.
-    //var bis: InputStream = new ByteArrayInputStream(Files.readAllBytes(Paths.get(fileName)))
     var bis: BufferedReader = null
     try {
       if (isCompressed(fileName)) {
@@ -1072,8 +1030,12 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
       }
     } catch {
       case fio: java.io.FileNotFoundException => {
+
+        // Ok, sooo if the file is not Found, either someone moved the file manually, or this specific destination is not reachable..
+        // We just drop the file, if it is still in the directory, then it will get picked up and reprocessed the next tick.
         logger.error("SMART_FILE_CONSUMER (" + partitionId + ") Exception accessing the file for processing the file - File is missing",fio)
         FileProcessor.markFileProcessingEnd(fileName)
+        FileProcessor.fileCacheRemove(fileName)
         return
       }
       case fio: IOException => {
@@ -1179,7 +1141,6 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
         logger.warn("SMART FILE CONSUMER: Check to make sure the input directory does not still contain this file " + ioe)
       }
     }
-
   }
 
   /**
@@ -1227,7 +1188,7 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
 
 
   /**
-   * The main directory watching thread
+   * The main this will start the Consumer and the Pusher threads.
    */
   override def run(): Unit = {
       // Initialize and launch the File Processor thread(s), and kafka producers
@@ -1242,14 +1203,10 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
           doSomePushing
         }
       })
-
-      //FileProcessor.startGlobalFileMonitor
-
-
   }
 
   /**
-   *
+   * See if this file is compressed.
    * @param inputfile
    * @return
    */
