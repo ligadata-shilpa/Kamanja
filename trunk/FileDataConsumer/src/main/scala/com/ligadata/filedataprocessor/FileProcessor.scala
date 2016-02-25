@@ -362,12 +362,8 @@ object FileProcessor {
                 if (diff > bufferTimeout) {
                   logger.warn("SMART FILE CONSUMER (global): Detected that " + d.toString + " has been on the buffering queue longer then " + bufferTimeout / 1000 + " seconds - Cleaning up" )
                   bufferingQ_map.remove(fileTuple._1)
-                  
-                  //var nameTokens = fileTuple._1.split("/")
-                  //fileCacheRemove(nameTokens(nameTokens.size - 1))
                   fileCacheRemove(fileTuple._1)
                   moveFile(fileTuple._1)
-                  
                 }
               }
             } else {
@@ -394,11 +390,7 @@ object FileProcessor {
     if (d.exists && d.isDirectory) {
       val files = d.listFiles.filter(_.isFile).sortWith(_.lastModified < _.lastModified).toList
       files.foreach(file => {
-        //if (isValidFile(file.toString) && file.toString.endsWith(readyToProcessKey)) {
         if(FileProcessor.isValidFile(file.toString)){
-          
-          //val tokenName = file.toString.split("/")
-          //if (!checkIfFileBeingProcessed(tokenName(tokenName.size - 1))) {
           if (!checkIfFileBeingProcessed(file.toString)) {
             FileProcessor.enQBufferedFile(file.toString)
           }
@@ -560,10 +552,7 @@ object FileProcessor {
     //watchService = path.getFileSystem().newWatchService()
     watchService = FileSystems.getDefault.newWatchService()
     keys = new HashMap[WatchKey, Path]
-    
     register(path)
-    
-    
   }
 
   /**
@@ -694,26 +683,14 @@ object FileProcessor {
       logger.info("SMART FILE CONSUMER {global): - cleaning up after " + fileName)
       // Either move or rename the file.
       moveFile(fileName)
-
-      //val tokenName = fileName.split("/")
-      //Use full file name instead
-      //markFileProcessingEnd(tokenName(tokenName.size - 1))
-      //fileCacheRemove(tokenName(tokenName.size - 1))
-      //removeFromZK(tokenName(tokenName.size - 1))
       
       markFileProcessingEnd(fileName)
       fileCacheRemove(fileName)
       removeFromZK(fileName)
-
-      
     } catch {
       case ioe: IOException => {
         logger.error("Exception moving the file ",ioe)
-        
-        //val tokenName = fileName.split("/")
-        //FileProcessor.setFileState(tokenName(tokenName.size - 1),FileProcessor.FINISHED_FAILED_TO_COPY)
         FileProcessor.setFileState(fileName,FileProcessor.FINISHED_FAILED_TO_COPY)
-        
       }
     }
   }
@@ -1088,24 +1065,20 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
     //var bis: InputStream = new ByteArrayInputStream(Files.readAllBytes(Paths.get(fileName)))
     var bis: BufferedReader = null
     try {
-      
-      //val tokenName = fileName.split("/")
-      //val fullFileName = dirToWatch + "/" + tokenName(tokenName.size - 1)
-      //if (isCompressed(fullFileName)) {
-      
       if (isCompressed(fileName)) {
         bis = new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(fileName))))
       } else {
         bis = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)))
       }
     } catch {
+      case fio: java.io.FileNotFoundException => {
+        logger.error("SMART_FILE_CONSUMER (" + partitionId + ") Exception accessing the file for processing the file - File is missing",fio)
+        FileProcessor.markFileProcessingEnd(fileName)
+        return
+      }
       case fio: IOException => {
         logger.error("SMART_FILE_CONSUMER (" + partitionId + ") Exception accessing the file for processing the file ",fio)
-        
-        //val tokenName = fileName.split("/")
-        //FileProcessor.setFileState(tokenName(tokenName.size - 1),FileProcessor.MISSING)
         FileProcessor.setFileState(fileName,FileProcessor.MISSING)
-        
         return
       }
     }
@@ -1221,9 +1194,7 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
         Thread.sleep(500)
       } else {
         logger.info("SMART_FILE_CONSUMER partition " + partitionId + " Processing file " + fileToProcess)
-        
-        //val tokenName = fileToProcess.name.split("/")
-        //FileProcessor.markFileProcessing(tokenName(tokenName.size - 1), fileToProcess.offset, fileToProcess.createDate)
+
         FileProcessor.markFileProcessing(fileToProcess.name, fileToProcess.offset, fileToProcess.createDate)
         
         curTimeStart = System.currentTimeMillis
