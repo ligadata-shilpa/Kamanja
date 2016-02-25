@@ -24,6 +24,7 @@ import com.ligadata.kamanja.metadata.MdMgr
 
 import scala.collection.mutable
 import scala.collection.immutable
+import com.ligadata.KamanjaVersion.KamanjaVersion
 
 /**
  * Created by dhaval Kolapkar on 7/24/15.
@@ -33,7 +34,7 @@ object StartMetadataAPI {
 
   var response = ""
   //get default config
-  val defaultConfig = sys.env("KAMANJA_HOME") + "/config/MetadataAPIConfig.properties"
+  val defaultConfig = scala.util.Properties.envOrElse("KAMANJA_HOME", scala.util.Properties.envOrElse("HOME", "~" )) + "/config/MetadataAPIConfig.properties"
   val loggerName = this.getClass.getName
   lazy val logger = LogManager.getLogger(loggerName)
   var action = ""
@@ -62,6 +63,10 @@ object StartMetadataAPI {
   var expectMessageName = false
 
   def main(args: Array[String]) {
+    if (args.length > 0 && args(0).equalsIgnoreCase("--version")) {
+      KamanjaVersion.print
+      return
+    }
 
     /** FIXME: the user id should be discovered in the parse of the args array */
     val userId: Option[String] = Some("metadataapi")
