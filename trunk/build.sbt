@@ -123,7 +123,7 @@ lazy val ExtractData = project.in(file("Utils/ExtractData")) dependsOn(Metadata,
 
 lazy val InterfacesSamples = project.in(file("SampleApplication/InterfacesSamples")) dependsOn(Metadata, KamanjaBase, MetadataBootstrap, MetadataAPI, StorageBase, Exceptions)
 
-lazy val StorageCassandra = project.in(file("Storage/Cassandra")) dependsOn(StorageBase, Serialize, Exceptions, KamanjaUtils, KvBase)
+lazy val StorageCassandra = project.in(file("Storage/Cassandra")) dependsOn(StorageBase, Serialize, Exceptions, KamanjaUtils, KvBase, DockerManager % "test")
 
 lazy val StorageHashMap = project.in(file("Storage/HashMap")) dependsOn(StorageBase, Serialize, Exceptions, KamanjaUtils, KvBase)
 
@@ -184,6 +184,11 @@ lazy val InstallDriver = project.in(file("Utils/ClusterInstaller/InstallDriver")
 lazy val ClusterInstallerDriver = project.in(file("Utils/ClusterInstaller/ClusterInstallerDriver")) dependsOn (InstallDriverBase, MigrateBase, MigrateManager)
 
 lazy val GetComponent = project.in(file("Utils/ClusterInstaller/GetComponent"))
+
+// The following projects should be used only in unit/integrations tests and the jars created from them should not be packaged.
+// To ensure this, when referencing these projects reference them as such:
+//      lazy val MyProject = project.in(file("My/Project/Path")) dependsOn (Proj1, Proj2, TestProject % "test")
+lazy val DockerManager = project.in(file("DockerManager"))
 
 /*
 
