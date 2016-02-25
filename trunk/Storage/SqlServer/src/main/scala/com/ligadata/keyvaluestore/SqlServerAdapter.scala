@@ -231,7 +231,7 @@ class SqlServerAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
     autoCreateTables = parsed_json.get("autoCreateTables").get.toString.trim
   }
 
-  var autoCommit = "YES"
+  var autoCommit = "NO"
   if (parsed_json.contains("autoCommit")) {
     autoCommit = parsed_json.get("autoCommit").get.toString.trim
   }
@@ -244,6 +244,8 @@ class SqlServerAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
   logger.info("clusterdIndex  => " + clusteredIndex)
   logger.info("autoCreateTables  => " + autoCreateTables)
   logger.info("autoCommit  => " + autoCommit)
+
+  var isAutoCommitOff = autoCommit.equalsIgnoreCase("NO")
 
   var sqlServerInstance: String = hostname
   if (instanceName != null) {
@@ -553,9 +555,8 @@ class SqlServerAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
         logger.debug("Get a new connection...")
         con = getConnection
         // we need to commit entire batch
-	if( autoCommit.equalsIgnoreCase("NO") ){
+        if( isAutoCommitOff )
           con.setAutoCommit(false)
-	}
         data_list.foreach(li => {
           var containerName = li._1
           CheckTableExists(containerName)
@@ -605,7 +606,8 @@ class SqlServerAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
           }
           logger.info("Inserted/Updated " + totalRowsUpdated + " rows for " + tableName)
         })
-        con.commit()
+        if( isAutoCommitOff )
+          con.commit()
         con.close
         con = null
       }
@@ -648,9 +650,8 @@ class SqlServerAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
       sql = "delete from " + tableName + " where timePartition = ? and bucketKey = ? and transactionid = ? and rowId = ?"
       pstmt = con.prepareStatement(sql)
       // we need to commit entire batch
-      if( autoCommit.equalsIgnoreCase("NO") ){
-	con.setAutoCommit(false)
-      }
+      if( isAutoCommitOff )
+        con.setAutoCommit(false)
       keys.foreach(key => {
         pstmt.setLong(1, key.timePartition)
         pstmt.setString(2, key.bucketKey.mkString(","))
@@ -660,7 +661,8 @@ class SqlServerAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
         pstmt.addBatch()
       })
       var deleteCount = pstmt.executeBatch();
-      con.commit()
+      if( isAutoCommitOff )
+        con.commit()
       var totalRowsDeleted = 0;
       deleteCount.foreach(cnt => { totalRowsDeleted += cnt });
       logger.info("Deleted " + totalRowsDeleted + " rows from " + tableName)
@@ -709,9 +711,8 @@ class SqlServerAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
 
       con = getConnection
       // we need to commit entire batch
-      if( autoCommit.equalsIgnoreCase("NO") ){
-	con.setAutoCommit(false)
-      }
+      if( isAutoCommitOff )
+        con.setAutoCommit(false)
       sql = "delete from " + tableName + " where timePartition >= ?  and timePartition <= ? and bucketKey = ?"
       pstmt = con.prepareStatement(sql)
       keys.foreach(keyList => {
@@ -723,7 +724,8 @@ class SqlServerAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
         pstmt.addBatch()
       })
       var deleteCount = pstmt.executeBatch();
-      con.commit()
+      if( isAutoCommitOff )
+        con.commit()
       var totalRowsDeleted = 0;
       deleteCount.foreach(cnt => { totalRowsDeleted += cnt });
       logger.info("Deleted " + totalRowsDeleted + " rows from " + tableName)
