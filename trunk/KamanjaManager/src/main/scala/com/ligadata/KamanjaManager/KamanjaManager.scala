@@ -241,7 +241,7 @@ class KamanjaManager extends Observer {
   }
   private val majorVersion = 1
   private val minorVersion = 3
-  private val microVersion = 0
+  private val microVersion = 3
   private val build = 0
 
   private def Shutdown(exitCode: Int): Int = {
