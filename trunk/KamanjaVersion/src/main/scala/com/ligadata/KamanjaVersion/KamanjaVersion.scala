@@ -35,7 +35,7 @@ object KamanjaVersion {
 
   def getVersionStringWithBuildNumber: String = ("Kamanja version " + majorVersion + "." + minorVersion + "." + microVersion + "." + buildNumber)
 
-  def print: String = println(getVersionStringWithBuildNumber)
+  def print: Unit = println(getVersionStringWithBuildNumber)
 
 }
 
