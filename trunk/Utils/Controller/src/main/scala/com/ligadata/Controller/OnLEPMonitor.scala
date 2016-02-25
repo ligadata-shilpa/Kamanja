@@ -29,6 +29,7 @@ import scala.io.Source
 import org.json4s.jackson.JsonMethods._
 import scala.sys.process.{ ProcessIO, Process }
 import com.ligadata.KamanjaBase.DataDelimiters
+import com.ligadata.KamanjaVersion.KamanjaVersion
 
 object SimpleStats extends CountersAdapter {
 
@@ -201,6 +202,10 @@ class KamanjaMonitor {
 
     // Parse the input.
     val options = nextOption(Map(), inParms.toList)
+    if (version.equalsIgnoreCase("true")) {
+      KamanjaVersion.print
+      return
+    }
 
     // Validate and set flags based on the input
     val parmFile = options.getOrElse('parm, null).asInstanceOf[String]
@@ -369,6 +374,8 @@ class KamanjaMonitor {
       case Nil => map
       case "--parm" :: value :: tail =>
         nextOption(map ++ Map('parm -> value), tail)
+      case "--version" :: tail =>
+        nextOption(map ++ Map('version -> "true"), tail)
       case option :: tail => {
         LOG.error("Unknown option " + option)
         sys.exit(1)

@@ -26,6 +26,8 @@ import scala.reflect.runtime.{ universe => ru }
 import java.net.{ URL, URLClassLoader }
 import scala.collection.mutable.TreeSet
 import java.sql.{ Driver, DriverPropertyInfo }
+import com.ligadata.KamanjaVersion.KamanjaVersion
+
 // ClassLoader
 class JdbcClassLoader(urls: Array[URL], parent: ClassLoader) extends URLClassLoader(urls, parent) {
   override def addURL(url: URL) {
@@ -63,6 +65,7 @@ object RunJdbcCollector {
   private def PrintUsage(): Unit = {
     LOG.warn("Available commands:")
     LOG.warn("    --config <configfilename>")
+    LOG.warn("    --version")
   }
 
   private def LoadJars(jars: Array[String]): Unit = {
@@ -214,6 +217,8 @@ object RunJdbcCollector {
       case Nil => map
       case "--config" :: value :: tail =>
         nextOption(map ++ Map('config -> value), tail)
+      case "--version" :: tail =>
+        nextOption(map ++ Map('version -> "true"), tail)
       case option :: tail => {
         LOG.error("%s:Unknown option:%s".format(GetCurDtTmStr, option))
         sys.exit(1)
@@ -247,6 +252,10 @@ object RunJdbcCollector {
 
     LOG.debug("%s:Parsing options".format(GetCurDtTmStr))
     val options = nextOption(Map(), args.toList)
+    if (version.equalsIgnoreCase("true")) {
+      KamanjaVersion.print
+      return
+    }
     val cfgfile = options.getOrElse('config, "").toString.trim
     if (cfgfile.size == 0) {
       LOG.error("%s:Configuration file missing".format(GetCurDtTmStr))

@@ -21,6 +21,7 @@ import java.io.InputStream
 import com.ligadata.Exceptions._
 
 import scala.io.Source
+import com.ligadata.KamanjaVersion.KamanjaVersion
 
 object CleanUtil {
   private val logger = org.apache.logging.log4j.LogManager.getLogger(this.getClass)
@@ -33,6 +34,7 @@ object CleanUtil {
     """Usage: CleanUtil --config /path/to/MetadataAPIConfig.properties [--clean-kafka] [--clean-zookeeper] [--clean-testdata [List of messages/containers]] [--clean-metadata] 
        or CleanUtil --config /path/to/MetadataAPIConfig.properties [--clean-all [List of messages/containers]]
        or CleanUtil --help
+       or CleanUtil --version
     """.stripMargin
 
 
@@ -59,6 +61,8 @@ object CleanUtil {
         nextOption(map ++ Map('cleanall -> value), tail)
       case "--clean-all" :: tail =>
         nextOption(map ++ Map('cleanall -> true), tail)
+      case "--version" :: tail =>
+        nextOption(map ++ Map('version -> "true"), tail)
       case option :: tail => {
         throw CleanUtilException(s"CLEAN-UTIL: Unknown option or invalid usage of option $option.\n$usage", null)
       }
@@ -75,6 +79,10 @@ object CleanUtil {
       }
       else {
         val options = nextOption(Map(), args.toList)
+        if (version.equalsIgnoreCase("true")) {
+          KamanjaVersion.print
+          return
+        }
         val helpOpt = options.getOrElse('help, false).asInstanceOf[Boolean]
         if (helpOpt) {
           println(helpStr)

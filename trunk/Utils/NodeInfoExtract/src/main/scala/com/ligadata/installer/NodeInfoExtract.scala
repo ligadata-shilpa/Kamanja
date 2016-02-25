@@ -24,6 +24,7 @@ import com.ligadata.kamanja.metadata._
 import org.json4s._
 import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
+import com.ligadata.KamanjaVersion.KamanjaVersion
 
 class NodeInfoExtract(val metadataAPIConfig: String, val nodeConfigPath: String, val clusterId: String, val installDir: String) {
 
@@ -112,6 +113,8 @@ NodeInfoExtract --MetadataAPIConfig  <MetadataAPI config file path>
           nextOption(map ++ Map('ipIdCfgTargPathQuartetFileName -> value), tail)
         case "--installDir" :: value :: tail =>
           nextOption(map ++ Map('installDir -> value), tail)
+        case "--version" :: tail =>
+          nextOption(map ++ Map('version -> "true"), tail)
         case option :: tail =>
           println("Unknown option " + option)
           println(usage)
@@ -120,6 +123,10 @@ NodeInfoExtract --MetadataAPIConfig  <MetadataAPI config file path>
     }
 
     val options = nextOption(Map(), arglist)
+    if (version.equalsIgnoreCase("true")) {
+      KamanjaVersion.print
+      return
+    }
 
     val metadataAPIConfig = if (options.contains('MetadataAPIConfig)) options.apply('MetadataAPIConfig) else null
     val nodeConfigPath = if (options.contains('NodeConfigPath)) options.apply('NodeConfigPath) else null

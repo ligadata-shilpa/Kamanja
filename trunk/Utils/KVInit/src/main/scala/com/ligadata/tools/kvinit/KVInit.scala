@@ -56,6 +56,7 @@ import com.ligadata.KvBase.{ Key, Value, TimeRange, KvBaseDefalts, KeyWithBucket
 import com.ligadata.StorageBase.{ DataStore, Transaction }
 import java.util.{ Collection, Iterator, TreeMap }
 import com.ligadata.Exceptions._
+import com.ligadata.KamanjaVersion.KamanjaVersion
 
 trait LogTrait {
   val loggerName = this.getClass.getName()
@@ -67,6 +68,7 @@ object KVInit extends App with LogTrait {
   def usage: String = {
     """ 
 Usage: scala com.ligadata.kvinit.KVInit 
+    --version
     --config <config file while has jarpaths, metadata store information & data store information>
     --typename <full package qualified name of a Container or Message> 
     --datafiles <input to load> 
@@ -126,6 +128,8 @@ Sample uses:
           nextOption(map ++ Map('ignorerecords -> value), tail)
         case "--format" :: value :: tail =>
           nextOption(map ++ Map('format -> value), tail)
+        case "--version" :: tail =>
+          nextOption(map ++ Map('version -> "true"), tail)
         case option :: tail =>
           logger.error("Unknown option " + option)
           sys.exit(1)
@@ -133,6 +137,10 @@ Sample uses:
     }
 
     val options = nextOption(Map(), arglist)
+    if (version.equalsIgnoreCase("true")) {
+      KamanjaVersion.print
+      return
+    }
 
     var cfgfile = if (options.contains('config)) options.apply('config) else null
     var typename = if (options.contains('typename)) options.apply('typename) else if (options.contains('kvname)) options.apply('kvname) else null

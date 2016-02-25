@@ -29,6 +29,7 @@ import org.apache.logging.log4j._
 import scala.collection.JavaConverters._
 import org.apache.curator.framework.api.CuratorEventType._;
 import org.apache.logging.log4j._
+import com.ligadata.KamanjaVersion.KamanjaVersion
 
 case class ClusterStatus(nodeId: String, isLeader: Boolean, leader: String, participants: Iterable[String])
 
@@ -140,6 +141,8 @@ object ZkLeaderLatchTest {
         nextOption(map ++ Map('leaderpath -> value), tail)
       case "--nodeid" :: value :: tail =>
         nextOption(map ++ Map('nodeid -> value), tail)
+      case "--version" :: tail =>
+        nextOption(map ++ Map('version -> "true"), tail)
       case option :: tail => {
         LOG.error("Unknown option " + option)
         sys.exit(1)
@@ -159,6 +162,10 @@ object ZkLeaderLatchTest {
     }
 
     val options = nextOption(Map(), args.toList)
+    if (version.equalsIgnoreCase("true")) {
+      KamanjaVersion.print
+      return
+    }
     val zkcConnectString = options.getOrElse('zkconnectstring, "").toString.replace("\"", "").trim
     if (zkcConnectString.size == 0) {
       LOG.debug("Need zkcConnectString")

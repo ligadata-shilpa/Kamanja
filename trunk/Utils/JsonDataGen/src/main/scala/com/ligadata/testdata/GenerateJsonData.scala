@@ -23,6 +23,7 @@ import scala.collection.mutable.HashMap
 import java.io.File
 import java.io.PrintWriter
 import org.apache.logging.log4j._
+import com.ligadata.KamanjaVersion.KamanjaVersion
 
 object GenerateJsonData {
 
@@ -38,6 +39,8 @@ object GenerateJsonData {
         nextOption(map ++ Map('outputfile -> value), tail)
       case "--formatfile" :: value :: tail =>
         nextOption(map ++ Map('formatfile -> value), tail)
+      case "--version" :: tail =>
+        nextOption(map ++ Map('version -> "true"), tail)
       case option :: tail => {
         println("Unknown option " + option)
         sys.exit(1)
@@ -50,6 +53,10 @@ object GenerateJsonData {
     if (args.length == 0)
       throw new Exception("Please pass the input file as parameter")
     val options = nextOption(Map(), args.toList)
+    if (version.equalsIgnoreCase("true")) {
+      KamanjaVersion.print
+      return
+    }
 
     val inputfile = options.getOrElse('inputfile, null).toString.trim
     if (inputfile == null && inputfile.toString().trim() == "")

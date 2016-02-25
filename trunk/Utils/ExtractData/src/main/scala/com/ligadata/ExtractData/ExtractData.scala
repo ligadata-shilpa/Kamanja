@@ -40,6 +40,7 @@ import com.ligadata.KvBase.{ Key, Value, TimeRange }
 import com.ligadata.StorageBase.{ DataStore, Transaction }
 import java.util.Date
 import java.text.SimpleDateFormat
+import com.ligadata.KamanjaVersion.KamanjaVersion
 
 object ExtractData extends MdBaseResolveInfo {
   private val LOG = LogManager.getLogger(getClass);
@@ -55,6 +56,7 @@ object ExtractData extends MdBaseResolveInfo {
   private def PrintUsage(): Unit = {
     LOG.warn("Available options:")
     LOG.warn("    --config <configfilename>")
+    LOG.warn("    --version")
   }
 
   override def getMessgeOrContainerInstance(MsgContainerType: String): MessageContainerBase = {
@@ -131,6 +133,8 @@ object ExtractData extends MdBaseResolveInfo {
       case Nil => map
       case "--config" :: value :: tail =>
         nextOption(map ++ Map('config -> value), tail)
+      case "--version" :: tail =>
+        nextOption(map ++ Map('version -> "true"), tail)
       case option :: tail => {
         LOG.error("%s:Unknown option:%s".format(GetCurDtTmStr, option))
         sys.exit(1)
@@ -341,6 +345,10 @@ object ExtractData extends MdBaseResolveInfo {
     try {
       LOG.debug("%s:Parsing options".format(GetCurDtTmStr))
       val options = nextOption(Map(), args.toList)
+      if (version.equalsIgnoreCase("true")) {
+        KamanjaVersion.print
+        return
+      }
       val cfgfile = options.getOrElse('config, "").toString.trim
       if (cfgfile.size == 0) {
         LOG.error("%s:Configuration file missing".format(GetCurDtTmStr))

@@ -14,7 +14,7 @@ import scala.io.Source
 import sys.process._
 import java.util.regex.Pattern
 import java.util.regex.Matcher
-
+import com.ligadata.KamanjaVersion.KamanjaVersion
 
 object allDeps extends App {
   
@@ -47,6 +47,8 @@ allDeps.scala
               case Nil => map
               case "--excludeProjects" :: value :: tail =>
                 nextOption(map ++ Map('excludeProjects -> value), tail)
+              case "--version" :: tail =>
+                nextOption(map ++ Map('version -> "true"), tail)
               case _ =>
                 projects += list.head
                 nextOption(map, list.tail)
@@ -54,6 +56,10 @@ allDeps.scala
         }
       
         val options = nextOption(Map(), arglist)
+        if (version.equalsIgnoreCase("true")) {
+          KamanjaVersion.print
+          return
+        }
 
         val excludedProjects : String = if (options.contains('excludeProjects)) options.apply('excludeProjects) else null
         val projectsToConsider : Array[String] = if (excludedProjects != null) {

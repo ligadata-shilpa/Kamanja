@@ -32,7 +32,7 @@ import scala.io.Source
 import sys.process._
 import java.util.regex.Pattern
 import java.util.regex.Matcher
-
+import com.ligadata.KamanjaVersion.KamanjaVersion
 
 object extractUdfLibMetadata extends App {
   
@@ -91,7 +91,8 @@ extractUdfLibMetadata.scala --sbtProject <projectName>
               nextOption(map ++ Map('fcnDefsPath -> value), tail)
             case "--exclude" :: value :: tail =>
               nextOption(map ++ Map('exclude -> value), tail)
-
+            case "--version" :: tail =>
+              nextOption(map ++ Map('version -> "true"), tail)
             case option :: tail =>
               println("Unknown option " + option)
               println(usage)
@@ -100,6 +101,10 @@ extractUdfLibMetadata.scala --sbtProject <projectName>
         }
     
         val options = nextOption(Map(), arglist)
+        if (version.equalsIgnoreCase("true")) {
+          KamanjaVersion.print
+          return
+        }
         
         val sbtProject = if (options.contains('sbtProject)) options.apply('sbtProject) else null
         val fullObjectPath = if (options.contains('fullObjectPath)) options.apply('fullObjectPath) else null

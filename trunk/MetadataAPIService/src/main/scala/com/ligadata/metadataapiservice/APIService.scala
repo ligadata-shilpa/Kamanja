@@ -31,6 +31,7 @@ import org.apache.logging.log4j._
 import com.ligadata.Utils._
 import scala.util.control.Breaks._
 import com.ligadata.Exceptions._
+import com.ligadata.KamanjaVersion.KamanjaVersion
 
 class APIService extends LigadataSSLConfiguration with Runnable{
 
@@ -63,6 +64,7 @@ class APIService extends LigadataSSLConfiguration with Runnable{
   
   private def PrintUsage(): Unit = {
     logger.warn("    --config <configfilename>")
+    logger.warn("    --version")
   }
 
   private def nextOption(map: OptionMap, list: List[String]): OptionMap = {
@@ -71,6 +73,8 @@ class APIService extends LigadataSSLConfiguration with Runnable{
       case Nil => map
       case "--config" :: value :: tail =>
         nextOption(map ++ Map('config -> value), tail)
+      case "--version" :: tail =>
+        nextOption(map ++ Map('version -> "true"), tail)
       case option :: tail => {
         logger.error("Unknown option " + option)
         sys.exit(1)
@@ -105,6 +109,10 @@ class APIService extends LigadataSSLConfiguration with Runnable{
         logger.warn("The config file supplied is a complete path name of a  json file similar to one in github/Kamanja/trunk/MetadataAPI/src/main/resources/MetadataAPIConfig.properties")
       } else {
         val options = nextOption(Map(), args.toList)
+        if (version.equalsIgnoreCase("true")) {
+          KamanjaVersion.print
+          return
+        }
         val cfgfile = options.getOrElse('config, null)
         if (cfgfile == null) {
           logger.error("Need configuration file as parameter")
