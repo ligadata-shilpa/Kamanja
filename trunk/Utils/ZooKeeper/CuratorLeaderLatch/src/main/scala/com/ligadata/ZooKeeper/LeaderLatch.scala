@@ -162,7 +162,7 @@ object ZkLeaderLatchTest {
     }
 
     val options = nextOption(Map(), args.toList)
-    val version = options.getOrElse('version, "false")
+    val version = options.getOrElse('version, "false").toString
     if (version.equalsIgnoreCase("true")) {
       KamanjaVersion.print
       return
