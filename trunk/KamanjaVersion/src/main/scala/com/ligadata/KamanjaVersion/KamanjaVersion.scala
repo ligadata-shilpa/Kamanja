@@ -22,14 +22,14 @@ object KamanjaVersion {
   val microVersion = 3
   val buildNumber = 0
 
-  def getMajorVersion:int = majorVersion
-  def getMinorVersion:int = minorVersion
-  def getMicroVersion:int = microVersion
-  def getBuildNumber:int = buildNumber
+  def getMajorVersion:Int = majorVersion
+  def getMinorVersion:Int = minorVersion
+  def getMicroVersion:Int = microVersion
+  def getBuildNumber:Int = buildNumber
 
-  def getVersions: (int, int, int) = ((majorVersion, minorVersion, microVersion))
+  def getVersions: (Int, Int, Int) = ((majorVersion, minorVersion, microVersion))
 
-  def getVersionsWithBuildNumber: (int, int, int, int) = ((majorVersion, minorVersion, microVersion, buildNumber))
+  def getVersionsWithBuildNumber: (Int, Int, Int, Int) = ((majorVersion, minorVersion, microVersion, buildNumber))
 
   def getVersionString: String = ("Kamanja version " + majorVersion + "." + minorVersion + "." + microVersion)
 
