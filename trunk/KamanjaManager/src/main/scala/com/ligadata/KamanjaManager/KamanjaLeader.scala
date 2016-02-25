@@ -37,7 +37,7 @@ import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
 import org.apache.curator.utils.ZKPaths
 import scala.actors.threadpool.{ Executors, ExecutorService }
-import com.ligadata.Exceptions.{ FatalAdapterException }
+import com.ligadata.Exceptions.{KamanjaException, FatalAdapterException}
 import scala.collection.JavaConversions._
 import com.ligadata.KvBase.{ Key }
 
@@ -1278,8 +1278,15 @@ object KamanjaLeader {
 
   private def CloseSetDataZkc: Unit = {
     setDataLockObj.synchronized {
-      if (zkcForSetData != null)
-        zkcForSetData.close
+      if (zkcForSetData != null) {
+        try {
+          zkcForSetData.close
+        } catch {
+          case e: Throwable => {
+            LOG.warn("KamanjaLeader: unable to close zk connection due to",e )
+          }
+        }
+      }
       zkcForSetData = null
     }
   }
@@ -1287,7 +1294,13 @@ object KamanjaLeader {
   private def ReconnectToSetDataZkc: Unit = {
     CloseSetDataZkc
     setDataLockObj.synchronized {
-      zkcForSetData = CreateClient.createSimple(zkConnectString, zkSessionTimeoutMs, zkConnectionTimeoutMs)
+      try {
+        zkcForSetData = CreateClient.createSimple(zkConnectString, zkSessionTimeoutMs, zkConnectionTimeoutMs)
+      } catch {
+        case e: Throwable => {
+          LOG.warn("KamanjaLeader: unable to create new zk connection due to",e )
+        }
+      }
     }
   }
 
@@ -1297,17 +1310,22 @@ object KamanjaLeader {
     while (retriesAttempted <= MAX_ZK_RETRIES) {
       try {
         setDataLockObj.synchronized {
-          if (zkcForSetData == null) return
+
           if (retriesAttempted > 0) {
             LOG.warn("KamanjaLeader: retrying zk call (SetNewDataToZkc)")
           }
-          zkcForSetData.setData().forPath(zkNodePath, data)
-          return
+
+          if ((zkcForSetData != null)) {
+            zkcForSetData.setData().forPath(zkNodePath, data)
+            return
+          }
+          else
+            throw new KamanjaException("Connection to ZK does not exists", null)
         }
       } catch {
         case e: Throwable => {
           retriesAttempted += 1
-          LOG.warn("KamanjaLeader: Connection to Zookeeper is temporarily unavailable (SetNewDataToZkc).due to " + e)
+          LOG.warn("KamanjaLeader: Connection to Zookeeper is temporarily unavailable (SetNewDataToZkc).due to ", e)
           ReconnectToSetDataZkc
         }
       }
@@ -1321,16 +1339,18 @@ object KamanjaLeader {
     while (retriesAttempted <= MAX_ZK_RETRIES) {
       try {
         setDataLockObj.synchronized {
-          if (zkcForSetData == null) return Array[Byte]()
           if (retriesAttempted > 0) {
             LOG.warn("KamanjaLeader: retrying zk call (GetDataFromZkc)")
           }
-          return zkcForSetData.getData().forPath(zkNodePath);
+          if (zkcForSetData != null)
+            return zkcForSetData.getData().forPath(zkNodePath)
+          // Bad juju here...
+          throw new KamanjaException("Connection to ZK does not exists", null)
         }
       } catch {
         case e: Throwable => {
           retriesAttempted += 1
-          LOG.warn("KamanjaLeader: Connection to Zookeeper is temporarily unavailable (GetDataFromZkc)..due to " + e)
+          LOG.warn("KamanjaLeader: Connection to Zookeeper is temporarily unavailable (GetDataFromZkc)..due to ", e)
           ReconnectToSetDataZkc
         }
       }
@@ -1345,16 +1365,18 @@ object KamanjaLeader {
     while (retriesAttempted <= MAX_ZK_RETRIES) {
       try {
         setDataLockObj.synchronized {
-          if (zkcForSetData == null) return List[String]()
           if (retriesAttempted > 0) {
             LOG.warn("KamanjaLeader: retrying zk call (GetChildrenFromZkc)")
           }
-          return zkcForSetData.getChildren().forPath(zkNodePath).toList
+          if (zkcForSetData != null)
+            return zkcForSetData.getChildren().forPath(zkNodePath).toList
+          // bad juju here
+          throw new KamanjaException("Connection to ZK does not exists", null)
         }
       } catch {
         case e: Throwable => {
           retriesAttempted += 1
-          LOG.warn("KamanjaLeader: Connection to Zookeeper is temporarily unavailable (GetChildrenFromZkc) due to " + e)
+          LOG.warn("KamanjaLeader: Connection to Zookeeper is temporarily unavailable (GetChildrenFromZkc) due to ", e)
           ReconnectToSetDataZkc
         }
       }
@@ -1370,22 +1392,25 @@ object KamanjaLeader {
     while (retriesAttempted <= MAX_ZK_RETRIES) {
       try {
         setDataLockObj.synchronized {
-          if (zkcForSetData == null) return List[(String, Array[Byte])]()
           if (retriesAttempted > 0) {
             LOG.warn("KamanjaLeader: retrying zk call (GetChildrenDataFromZkc)")
           }
+          if (zkcForSetData != null) {
+            val children = zkcForSetData.getChildren().forPath(zkNodePath)
+            return children.map(child => {
+              val path = zkNodePath + "/" + child
+              val chldData = zkcForSetData.getData().forPath(path)
+              (child, chldData)
+            }).toList
+          }
+          // bad juju here
+          throw new KamanjaException("Connection to ZK does not exists", null)
 
-          val children = zkcForSetData.getChildren().forPath(zkNodePath)
-          return children.map(child => {
-            val path = zkNodePath + "/" + child
-            val chldData = zkcForSetData.getData().forPath(path)
-            (child, chldData)
-          }).toList
         }
       } catch {
         case e: Throwable => {
           retriesAttempted += 1
-          LOG.warn("KamanjaLeader: Connection to Zookeeper is temporarily unavailable (GetChildrenDataFromZkc).due to " + e)
+          LOG.warn("KamanjaLeader: Connection to Zookeeper is temporarily unavailable (GetChildrenDataFromZkc).due to ", e)
           ReconnectToSetDataZkc
         }
       }

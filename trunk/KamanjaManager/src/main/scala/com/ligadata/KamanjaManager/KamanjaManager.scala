@@ -635,7 +635,19 @@ class KamanjaManager extends Observer {
       }
     }
 
-    val scheduledThreadPool = Executors.newScheduledThreadPool(2);
+    val metricsCollector = new Runnable {
+      def run(): Unit = {
+        try {
+          externalizeMetrics
+        } catch {
+          case e: Throwable => {
+            LOG.warn("KamanjaManager " + KamanjaConfiguration.nodeId.toString + " unable to externalize statistics due to internal error. Check ZK connection", e)
+          }
+        }
+      }
+    }
+
+    val scheduledThreadPool = Executors.newScheduledThreadPool(3);
 
     scheduledThreadPool.scheduleWithFixedDelay(statusPrint_PD, 0, 1000, TimeUnit.MILLISECONDS);
 
@@ -739,38 +751,17 @@ class KamanjaManager extends Observer {
         LOG.trace("KamanjaManager " + KamanjaConfiguration.nodeId.toString + " running iteration " + cntr)
 
       if (!isTimerStarted) {
-        metricsService.execute(new Runnable() {
-          override def run() = {
-            isTimerRunning = true
-            runMetricsTimer
-          }
-        })
+        println("Starting metrics")
+        scheduledThreadPool.scheduleWithFixedDelay(metricsCollector, 0, 5000, TimeUnit.MILLISECONDS);
         isTimerStarted = true
       }
     }
 
-    isTimerRunning = false
     scheduledThreadPool.shutdownNow()
-    metricsService.shutdownNow()
     sh = null
     return Shutdown(0)
   }
 
-  /**
-   *
-   */
-  private def runMetricsTimer: Unit = {
-    if(LOG.isDebugEnabled) {
-      LOG.debug("KamanjaManager " + KamanjaConfiguration.nodeId.toString + " metrics timer is starting up")
-    }
-    while (isTimerRunning) {
-      externalizeMetrics
-      Thread.sleep(5000)
-    }
-    if(LOG.isDebugEnabled) {
-      LOG.debug("KamanjaManager " + KamanjaConfiguration.nodeId.toString + " metrics timer is shutting down")
-    }
-  }
 
   /**
    *
