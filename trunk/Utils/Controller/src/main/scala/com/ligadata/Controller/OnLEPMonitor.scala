@@ -202,6 +202,7 @@ class KamanjaMonitor {
 
     // Parse the input.
     val options = nextOption(Map(), inParms.toList)
+    val version = options.getOrElse('version, "false").toString
     if (version.equalsIgnoreCase("true")) {
       KamanjaVersion.print
       return

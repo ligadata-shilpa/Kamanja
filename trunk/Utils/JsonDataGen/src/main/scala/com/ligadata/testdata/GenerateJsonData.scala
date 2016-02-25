@@ -53,6 +53,7 @@ object GenerateJsonData {
     if (args.length == 0)
       throw new Exception("Please pass the input file as parameter")
     val options = nextOption(Map(), args.toList)
+    val version = options.getOrElse('version, "false").toString
     if (version.equalsIgnoreCase("true")) {
       KamanjaVersion.print
       return

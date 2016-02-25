@@ -234,6 +234,7 @@ object ZooKeeperListenerTest {
       logger.error("The config file supplied is a complete path name of a  json file similar to one in github/Kamanja/trunk/MetadataAPI/src/main/resources/MetadataAPIConfig.json")
     } else {
       val options = nextOption(Map(), args.toList)
+      val version = options.getOrElse('version, "false").toString
       if (version.equalsIgnoreCase("true")) {
         KamanjaVersion.print
         return

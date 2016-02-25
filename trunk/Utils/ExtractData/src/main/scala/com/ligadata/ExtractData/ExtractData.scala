@@ -345,6 +345,7 @@ object ExtractData extends MdBaseResolveInfo {
     try {
       LOG.debug("%s:Parsing options".format(GetCurDtTmStr))
       val options = nextOption(Map(), args.toList)
+      val version = options.getOrElse('version, "false").toString
       if (version.equalsIgnoreCase("true")) {
         KamanjaVersion.print
         return
