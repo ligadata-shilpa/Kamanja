@@ -252,6 +252,7 @@ object RunJdbcCollector {
 
     LOG.debug("%s:Parsing options".format(GetCurDtTmStr))
     val options = nextOption(Map(), args.toList)
+    val version = options.getOrElse('version, "false")
     if (version.equalsIgnoreCase("true")) {
       KamanjaVersion.print
       return

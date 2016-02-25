@@ -339,6 +339,7 @@ Usage:
     }
 
     val options = nextOption(Map(), arglist)
+    val version = options.getOrElse('version, "false")
     if (version.equalsIgnoreCase("true")) {
       KamanjaVersion.print
       return
