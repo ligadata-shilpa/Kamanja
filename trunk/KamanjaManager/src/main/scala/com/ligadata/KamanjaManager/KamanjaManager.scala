@@ -785,7 +785,7 @@ class KamanjaManager extends Observer {
     import org.json4s.JsonDSL._
     val allMetrics =
         ("Name" -> thisEngineInfo.name) ~
-        ("Version" -> (KamanjaVersion.majorVersion.toString + "." + KamanjaVersion.minorVersion.toString + "." + KamanjaVersion.microVersion + "." + KamanjaVersion.build)) ~
+        ("Version" -> (KamanjaVersion.getMajorVersion.toString + "." + KamanjaVersion.getMinorVersion.toString + "." + KamanjaVersion.getMicroVersion + "." + KamanjaVersion.getBuildNumber)) ~
         ("UniqueId" -> thisEngineInfo.uniqueId) ~
         ("LastSeen" -> thisEngineInfo.lastSeen) ~
         ("StartTime" -> thisEngineInfo.startTime) ~

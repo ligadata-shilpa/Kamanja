@@ -17,10 +17,10 @@
 package com.ligadata.KamanjaVersion
 
 object KamanjaVersion {
-  val majorVersion = 1
-  val minorVersion = 3
-  val microVersion = 3
-  val buildNumber = 0
+  private val majorVersion = 1
+  private val minorVersion = 3
+  private val microVersion = 3
+  private val buildNumber = 0
 
   def getMajorVersion:Int = majorVersion
   def getMinorVersion:Int = minorVersion
