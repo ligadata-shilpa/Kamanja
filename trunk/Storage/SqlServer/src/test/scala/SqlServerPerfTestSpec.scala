@@ -55,7 +55,7 @@ class SqlServerPerfTestSpec extends FunSpec with BeforeAndAfter with BeforeAndAf
   // set the timezone to UTC for all time values
   TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
   
-  val dataStoreInfo = """{"StoreType": "sqlserver","hostname": "192.168.56.1","instancename":"KAMANJA","portnumber":"1433","database": "test_db","user":"bofauser1","SchemaName":"bofauser","password":"bofauser2","jarpaths":"/media/home2/jdbc","jdbcJar":"sqljdbc4-2.0.jar"}"""
+  val dataStoreInfo = """{"StoreType": "sqlserver","hostname": "192.168.56.1","instancename":"KAMANJA","portnumber":"1433","database": "bofa","user":"bofauser","SchemaName":"bofauser","password":"bofauser","jarpaths":"/media/home2/jdbc","jdbcJar":"sqljdbc4-2.0.jar"}"""
   private val kvManagerLoader = new KamanjaLoaderInfo
   private val maxConnectionAttempts = 10;
   var cnt = 0
@@ -165,14 +165,16 @@ class SqlServerPerfTestSpec extends FunSpec with BeforeAndAfter with BeforeAndAf
 
       And("Test Bulk Put api")
 
-      logger.info(GetCurDtTmStr + ": Start Loading  1 million records 1000 at a time")
+      var batchCount = 1000
+      var batchSize = 1000
+      logger.info(GetCurDtTmStr + ": Start Loading  "  + batchCount * batchSize  + " records " + batchSize + " at a time ")
 
-      for (batch <- 1 to 1000) {
+      for (batch <- 1 to batchCount) {
 	var successful = false
 	while ( ! successful ){
           var keyValueList = new Array[(Key, Value)](0)
           var keyStringList = new Array[Array[String]](0)
-          for (i <- 1 to 1000) {
+          for (i <- 1 to batchSize ) {
             var cal = Calendar.getInstance();
             cal.add(Calendar.DATE, -i);
             var currentTime = cal.getTime()
@@ -192,7 +194,7 @@ class SqlServerPerfTestSpec extends FunSpec with BeforeAndAfter with BeforeAndAf
           dataList = dataList :+ (containerName, keyValueList)
 	  try{
 	    adapter.put(dataList)
-            logger.info(GetCurDtTmStr + ": Loaded " + batch * 1000 + " objects ")
+            logger.info(GetCurDtTmStr + ": Loaded " + batch * batchSize + " objects ")
 	    successful = true
 	  }
 	  catch{
@@ -208,7 +210,7 @@ class SqlServerPerfTestSpec extends FunSpec with BeforeAndAfter with BeforeAndAf
 
       And("Check the row count after adding a bunch")
       cnt = sqlServerAdapter.getRowCount(containerName, null)
-      assert(cnt == 1000000)
+      assert(cnt == batchCount * batchSize )
 
       And("Test drop container again, cleanup")
       noException should be thrownBy {

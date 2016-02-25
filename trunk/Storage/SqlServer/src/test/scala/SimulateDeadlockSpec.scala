@@ -40,6 +40,7 @@ import com.ligadata.keyvaluestore.SqlServerAdapter
 
 import com.ligadata.Exceptions._
 
+case class kafkaoffset(offset: Long)
 
 object SimulateDeadlockSpec {
   private var adapter:DataStore = null
@@ -47,7 +48,7 @@ object SimulateDeadlockSpec {
   private val logger = LogManager.getLogger(loggerName)
   private[this] val lock = new Object
 
-  val dataStoreInfo = """{"StoreType": "sqlserver","hostname": "192.168.56.1","instancename":"KAMANJA","portnumber":"1433","database": "bofa","user":"bofauser","SchemaName":"bofauser","password":"bofauser","jarpaths":"/media/home2/jdbc","jdbcJar":"sqljdbc4-2.0.jar","clusteredIndex":"YES","autoCreateTables":"YES"}"""
+  val dataStoreInfo = """{"StoreType": "sqlserver","hostname": "192.168.56.1","instancename":"KAMANJA","portnumber":"1433","database": "bofa","user":"bofauser","SchemaName":"bofauser","password":"bofauser","jarpaths":"/media/home2/jdbc","jdbcJar":"sqljdbc4-2.0.jar","clusteredIndex":"YES","autoCreateTables":"YES","autoCommit":"YES"}"""
 
   private val kvManagerLoader = new KamanjaLoaderInfo
   private val maxConnectionAttempts = 10;
@@ -83,7 +84,6 @@ object SimulateDeadlockSpec {
   }
 }
 
-@Ignore
 class SimulateDeadlockSpec extends FunSuite with BeforeAndAfter with BeforeAndAfterAll with ParallelTestExecution {
   var adapter: DataStore = null
   var serializer: Serializer = null
@@ -93,7 +93,7 @@ class SimulateDeadlockSpec extends FunSuite with BeforeAndAfter with BeforeAndAf
   private val logger = LogManager.getLogger(loggerName)
   TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
   
-  val containerName = "sys.uniquedata"
+  val containerName = "sys.uniquekvdata"
   var exitImmediately = true
 
   private def CreateAdapter: DataStore = lock.synchronized {
@@ -131,23 +131,24 @@ class SimulateDeadlockSpec extends FunSuite with BeforeAndAfter with BeforeAndAf
   }
 
   private def SimulateDML(keyIndex: Int): Unit = {
-    for (batch <- 1 to 100 ) {
-      logger.info("put for batch " + batch + ",row : " + keyIndex)
+    for (batch <- 1 to 1000 ) {
+      logger.info("thread: " + keyIndex + ",Batch: " + batch)
       var successful = false
       while ( ! successful ){
 	try{
           var keyValueList = new Array[(Key, Value)](0)
 	  var dataList = new Array[(String, Array[(Key, Value)])](0)
-          var keyArray = new Array[String](0)
-          var custName = "customer-" + keyIndex
-          keyArray = keyArray :+ custName
-          var key = new Key(0, keyArray, 0, 0)
-          var custAddress = "1000" + batch * keyIndex + ",Main St, Redmond WA 98052"
-          var custNumber = "4256667777" + batch * keyIndex
-          var obj = new Customer(custName, custAddress, custNumber)
-          var v = serializer.SerializeObjectToByteArray(obj)
-          var value = new Value("kryo", v)
-          keyValueList = keyValueList :+ (key, value)
+	  for( p <- 1 to 12 ){
+            var keyName = "partition-" + p
+            var keyArray = new Array[String](0)
+            keyArray = keyArray :+ keyName
+            var key = new Key(0, keyArray, 0, 0)
+            var offset = 1000000 + batch * p
+            var obj = new kafkaoffset(offset)
+            var v = serializer.SerializeObjectToByteArray(obj)
+            var value = new Value("kryo", v)
+            keyValueList = keyValueList :+ (key, value)
+	  }
           dataList = dataList :+ (containerName, keyValueList)
 	  adapter.put(dataList)
 	  successful = true
@@ -192,6 +193,22 @@ class SimulateDeadlockSpec extends FunSuite with BeforeAndAfter with BeforeAndAf
 
   test("thread8") {
     SimulateDML(8)
+  }
+
+  test("thread9") {
+    SimulateDML(9)
+  }
+
+  test("thread10") {
+    SimulateDML(10)
+  }
+
+  test("thread11") {
+    SimulateDML(11)
+  }
+
+  test("thread12") {
+    SimulateDML(12)
   }
 
   after {
