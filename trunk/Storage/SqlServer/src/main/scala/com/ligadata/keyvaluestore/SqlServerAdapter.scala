@@ -200,7 +200,7 @@ class SqlServerAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
   }
 
   // The following three properties are used for connection pooling
-  var maxActiveConnections = 1000
+  var maxActiveConnections = 128
   if (parsed_json.contains("maxActiveConnections")) {
     maxActiveConnections = parsed_json.get("maxActiveConnections").get.toString.trim.toInt
   }
@@ -511,7 +511,8 @@ class SqlServerAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
         if (con != null) {
           try {
             // rollback has thrown exception in some special scenarios, capture it
-            con.rollback()
+            // con.rollback()
+	    logger.debug("Transaction will rollback automatically..")
           } catch {
             case ie: Exception => {
               logger.error("", ie)
@@ -616,7 +617,8 @@ class SqlServerAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
         if (con != null) {
           try {
             // rollback has thrown exception in some special scenarios, capture it
-            con.rollback()
+            if( isAutoCommitOff )
+              con.rollback()
           } catch {
             case ie: Exception => {
               logger.error("", ie)
@@ -676,7 +678,8 @@ class SqlServerAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
         if (con != null) {
           try {
             // rollback has thrown exception in some special scenarios, capture it
-            con.rollback()
+            if( isAutoCommitOff )
+              con.rollback()
           } catch {
             case ie: Exception => {
               logger.error("", e)
@@ -739,7 +742,8 @@ class SqlServerAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
         if (con != null) {
           try {
             // rollback has thrown exception in some special scenarios, capture it
-            con.rollback()
+            if( isAutoCommitOff )
+              con.rollback()
           } catch {
             case ie: Exception => {
               logger.error("", e)
