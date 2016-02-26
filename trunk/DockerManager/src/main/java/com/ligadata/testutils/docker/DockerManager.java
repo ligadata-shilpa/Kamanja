@@ -17,11 +17,17 @@
 package com.ligadata.testutils.docker;
 
 import com.github.dockerjava.api.*;
+import com.github.dockerjava.api.async.ResultCallback;
 import com.github.dockerjava.api.command.*;
 import com.github.dockerjava.api.model.*;
 import com.github.dockerjava.core.*;
+import com.github.dockerjava.core.command.ExecStartResultCallback;
 import com.github.dockerjava.core.command.PullImageResultCallback;
 
+import java.io.Closeable;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InterruptedIOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -68,7 +74,9 @@ public class DockerManager {
         }
 
         for(String envVar: envVariables.keySet()) {
-            envVars.add(envVar + "=" + envVariables.get(envVar));
+            String e = envVar + "=" + envVariables.get(envVar);
+            System.out.println("Adding Environmental Variable: " + e);
+            envVars.add(e);
         }
 
         System.out.println("Pulling image: " + imageName + "... This may take a few minutes");
@@ -102,5 +110,20 @@ public class DockerManager {
 
     public String getDockerHost() {
         return dockerHost;
+    }
+
+    public void executeCmd(String containerId, String... commands) throws InterruptedException {
+        ExecCreateCmdResponse execCreateCmdResponse = dockerClient
+                .execCreateCmd(containerId)
+                .withAttachStderr(true)
+                .withAttachStdout(true)
+                .withCmd(commands)
+                .exec();
+
+        dockerClient.execStartCmd(containerId)
+                .withExecId(execCreateCmdResponse.getId())
+                .withDetach(false)
+                .exec(new ExecStartResultCallback(System.out, System.err))
+                .awaitCompletion();
     }
 }
