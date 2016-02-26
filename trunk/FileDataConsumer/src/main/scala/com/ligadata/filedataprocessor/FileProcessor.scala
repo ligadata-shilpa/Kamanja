@@ -29,6 +29,9 @@ import org.apache.tika.detect.DefaultDetector
 import org.apache.tika.mime.MimeTypes
 import scala.collection.mutable.Map
 import java.net.URLDecoder
+import org.apache.tika.Tika
+import net.sf.jmimemagic.Magic
+import net.sf.jmimemagic.MagicMatch
 
 case class BufferLeftoversArea(workerNumber: Int, leftovers: Array[Char], relatedChunk: Int)
 case class BufferToChunk(len: Int, payload: Array[Char], chunkNumber: Int, relatedFileName: String, firstValidOffset: Int, isEof: Boolean, partMap: scala.collection.mutable.Map[Int,Int])
@@ -350,29 +353,35 @@ object FileProcessor {
         iter.foreach(fileTuple => {
           try {
             val d = new File(fileTuple._1)
-            // If the the new length of the file is the same as a second ago... this file is done, so move it
-            // onto the ready to process q.  Else update the latest length
-            if (fileTuple._2 == d.length) {
-              if (d.length > 0) {
-                logger.info("SMART FILE CONSUMER (global):  File READY TO PROCESS " + d.toString)
-                enQFile(fileTuple._1, FileProcessor.NOT_RECOVERY_SITUATION, d.lastModified)
-                bufferingQ_map.remove(fileTuple._1)
-              } else {
-                var diff = (System.currentTimeMillis - d.lastModified)
-                if (diff > bufferTimeout) {
-                  logger.warn("SMART FILE CONSUMER (global): Detected that " + d.toString + " has been on the buffering queue longer then " + bufferTimeout / 1000 + " seconds - Cleaning up" )
+            
+            if (d.exists) {
+              if (fileTuple._2 == d.length) {
+                if (d.length > 0 && FileProcessor.isValidFile(fileTuple._1)) {
+                  logger.info("SMART FILE CONSUMER (global):  File READY TO PROCESS " + d.toString)
+                  enQFile(fileTuple._1, FileProcessor.NOT_RECOVERY_SITUATION, d.lastModified)
                   bufferingQ_map.remove(fileTuple._1)
-                  
-                  //var nameTokens = fileTuple._1.split("/")
-                  //fileCacheRemove(nameTokens(nameTokens.size - 1))
-                  fileCacheRemove(fileTuple._1)
+                }else if(d.length == 0){
+                  var diff = (System.currentTimeMillis - d.lastModified)
+                   if (diff > bufferTimeout) {
+                     logger.warn("SMART FILE CONSUMER (global): Detected that " + d.toString + " has been on the buffering queue longer then " + bufferTimeout / 1000 + " seconds - Cleaning up" )
+                      bufferingQ_map.remove(fileTuple._1)
+                      fileCacheRemove(fileTuple._1)
+                      moveFile(fileTuple._1)
+                   }
+                }else{
+                  //Invalid File - due to content type
                   moveFile(fileTuple._1)
-                  
+                  logger.error("SMART FILE CONSUMER (global): Moving out " + fileTuple._1 + " with invalid file type " )
                 }
+              }else{
+                bufferingQ_map(fileTuple._1) = d.length
               }
-            } else {
-              bufferingQ_map(fileTuple._1) = d.length
+              
+            }else{
+              logger.warn("SMART FILE CONSUMER (global): File on the buffering Q is not found " + fileTuple._1)
             }
+            
+            
           } catch {
             case ioe: IOException => {
               logger.error("SMART_FILE_CONSUMER: IOException trying to monitor the buffering queue ",ioe)
@@ -388,11 +397,15 @@ object FileProcessor {
 
   private def processExistingFiles(d: File): Unit = {
     // Process all the existing files in the directory that are not marked complete.
-   
-    logger.info("SMART FILE CONSUMER (MI): processExistingFiles on "+d.getAbsolutePath)
+    //logger.info("SMART FILE CONSUMER (MI): processExistingFiles on "+d.getAbsolutePath)
     
     if (d.exists && d.isDirectory) {
-      val files = d.listFiles.filter(_.isFile).sortWith(_.lastModified < _.lastModified).toList
+      
+      //Additional Filter Conditions
+      val files = d.listFiles.filter(_.isFile)
+                     //Ignore files starting with a . (period)
+                    .filter(!_.getName.startsWith("."))
+                    .sortWith(_.lastModified < _.lastModified).toList
       files.foreach(file => {
         //if (isValidFile(file.toString) && file.toString.endsWith(readyToProcessKey)) {
         if(FileProcessor.isValidFile(file.toString)){
@@ -412,24 +425,48 @@ object FileProcessor {
   }
   
   private def isValidFile(fileName: String): Boolean = {
-    logger.info("SMART FILE CONSUMER (MI): isValidFile "+fileName)
+    //logger.info("SMART FILE CONSUMER (MI): isValidFile "+fileName)
     if (fileName.endsWith("_COMPLETE"))
       return false
     else{
-      //Sniff only text/plain and application/gzip for now
-      var tis = TikaInputStream.get(new File(fileName))
-      var metadata = new Metadata
-      var detector = new DefaultDetector(MimeTypes.getDefaultMimeTypes())
-      var contentType = detector.detect(tis, metadata).toString();
-      tis.close()
-      
-      //Currently handling only text/plain and application/gzip contents
-      //Need to bubble this property out into the Constants and Configuration
-      if(contentTypes contains contentType){
+      //Check if the File exists
+      if(Files.exists(Paths.get(fileName)) && (Paths.get(fileName).toFile().length()>0)){
+        //Sniff only text/plain and application/gzip for now
+        /*
+        var tis = TikaInputStream.get(new File(fileName))
+        var metadata = new Metadata
+        var detector = new DefaultDetector(MimeTypes.getDefaultMimeTypes())
+        var contentType = detector.detect(tis, metadata).toString();
+        tis.close()
+        */
+        
+        var detector = new DefaultDetector()
+        var tika = new Tika(detector)
+        var fis = new FileInputStream(new File(fileName))
+        var contentType = tika.detect(fis)
+        
+        if(contentType.equalsIgnoreCase("application/octet-stream")){
+		      var magicMatcher =  Magic.getMagicMatch(new File(fileName), false)
+		      contentType = magicMatcher.getMimeType
+        }
+        
+        fis.close()
+        
+        
+        //Currently handling only text/plain and application/gzip contents
+        //Need to bubble this property out into the Constants and Configuration
+        if(contentTypes contains contentType){
+          //logger.info("SMART FILE CONSUMER (global): Valid content type " + contentType + " for file "+fileName);
+          return true;
+        }else{
+          //Log error for invalid content type
+          logger.error("SMART FILE CONSUMER (global): Invalid content type " + contentType + " for file "+fileName);
+        }
+      }else if(!Files.exists(Paths.get(fileName))){
+        //File doesnot exists - it is already processed
+        logger.info("SMART FILE CONSUMER (global): File aready processed "+fileName);
+      }else if(Paths.get(fileName).toFile().length() == 0 ){
         return true;
-      }else{
-        //Log error for invalid content type
-        logger.error("SMART FILE CONSUMER (global): Invalid content type " + contentType + " for file "+fileName);
       }
     }
     return false
@@ -461,6 +498,7 @@ object FileProcessor {
                 && Files.exists(Paths.get(fileToRecover))) {
               
               val offset = zkc.getData.forPath(znodePath + "/" + fileToReprocess.asInstanceOf[String])
+                  
               var recoveryInfo = new String(offset)
               logger.info("SMART FILE CONSUMER (global): " + fileToRecover + " from offset " + recoveryInfo)
 
@@ -511,6 +549,9 @@ object FileProcessor {
               val tokenName = fileToRecover.split("/")
               if(Files.exists(Paths.get(targetMoveDir+"/"+tokenName(tokenName.size - 1)))){
                 logger.info("SMART FILE CONSUMER (global): Found file " +fileToRecover+" processed ")
+                removeFromZK(fileToRecover)
+              }else{
+                logger.info("SMART FILE CONSUMER (global): File possibly moved out manually " +fileToRecover)
                 removeFromZK(fileToRecover)
               }
               
@@ -753,7 +794,7 @@ object BufferCounters {
 class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends Runnable {
   
   //private var watchService = path.getFileSystem().newWatchService()
-  private var watchService = FileSystems.getDefault.newWatchService()
+  //private var watchService = FileSystems.getDefault.newWatchService()
   
   private var keys = new HashMap[WatchKey, Path]
   //private var contentTypes :scala.collection.mutable.HashMap[String,String] = null
@@ -818,7 +859,7 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
     var cTypes  = props.getOrElse(SmartFileAdapterConstants.VALID_CONTENT_TYPES, "text/plain;application/gzip")
     
     for(cType <- cTypes.split(";")){
-      logger.info("SMART_FILE_CONSUMER Putting "+cType+" into allowed content types")
+      //logger.info("SMART_FILE_CONSUMER Putting "+cType+" into allowed content types")
       if(!FileProcessor.contentTypes.contains(cType))
         FileProcessor.contentTypes.put(cType, cType)
     }
@@ -926,10 +967,15 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
   /**
    * Register a particular file or directory to be watched
    */
+  /*
   private def register(dir: Path): Unit = {
-    val key = dir.register(watchService, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY, StandardWatchEventKinds.OVERFLOW)
+    val key = dir.register(FileProcessor.watchService, 
+    	StandardWatchEventKinds.ENTRY_CREATE, 
+    	StandardWatchEventKinds.ENTRY_MODIFY, 
+    	StandardWatchEventKinds.OVERFLOW)
     keys(key) = dir
   }
+  */
 
   /**
    * Each worker bee will run this code... looking for work to do.
@@ -953,7 +999,7 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
 
       // If the buffer is there to process, do it
       if (buffer != null) {
-        // If the new file being processed, reset offsets to messages in this file to 0.
+        // If the new file being processed,  offsets to messages in this file to 0.
         if (!fileNameToProcess.equalsIgnoreCase(buffer.relatedFileName)) {
           msgNum = 0
           fileNameToProcess = buffer.relatedFileName
@@ -1099,13 +1145,20 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
         bis = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)))
       }
     } catch {
+      // Ok, sooo if the file is not Found, either someone moved the file manually, or this specific destination is not reachable..
+      // We just drop the file, if it is still in the directory, then it will get picked up and reprocessed the next tick.
+      case fio: java.io.FileNotFoundException => {
+         logger.error("SMART_FILE_CONSUMER (" + partitionId + ") Exception accessing the file for processing the file - File is missing",fio)
+         FileProcessor.markFileProcessingEnd(fileName)
+         FileProcessor.fileCacheRemove(fileName)
+         return
+      }
       case fio: IOException => {
         logger.error("SMART_FILE_CONSUMER (" + partitionId + ") Exception accessing the file for processing the file ",fio)
         
         //val tokenName = fileName.split("/")
         //FileProcessor.setFileState(tokenName(tokenName.size - 1),FileProcessor.MISSING)
         FileProcessor.setFileState(fileName,FileProcessor.MISSING)
-        
         return
       }
     }
@@ -1327,7 +1380,5 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
     Thread.sleep(2000)
   }
   
-   
+    
 }
-
-
