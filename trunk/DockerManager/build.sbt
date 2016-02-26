@@ -9,3 +9,5 @@ shellPrompt := { state =>  "sbt (%s)> ".format(Project.extract(state).currentPro
 libraryDependencies += "com.github.docker-java" % "docker-java" % "2.2.1"
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.6" % "test"
+
+coverageEnabled := false

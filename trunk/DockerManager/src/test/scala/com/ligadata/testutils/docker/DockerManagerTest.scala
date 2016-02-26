@@ -43,6 +43,6 @@ class DockerManagerTest extends FlatSpec with BeforeAndAfter {
     // startContainer is looking for a java.util.Map<Integer, Integer>, so the below converts a scala Map[Int, Int] in java Map<Integer, Integer>
     val exposedPortMap = mapAsJavaMap(Map(7000 -> 7000, 9042 -> 9042, 9160 -> 9160)).asInstanceOf[java.util.Map[Integer, Integer]]
     val envVariables = mapAsJavaMap(Map("CASSANDRA_RPC_ADDRESS" -> "0.0.0.0"))
-    containerId = dm.startContainer("cassandra:2.1.2", exposedPortMap, envVariables)
+    containerId = dm.startContainer("cassandra:2.1", exposedPortMap, envVariables)
   }
 }
