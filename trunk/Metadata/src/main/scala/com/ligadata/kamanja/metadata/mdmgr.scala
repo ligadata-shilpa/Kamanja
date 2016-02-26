@@ -297,7 +297,11 @@ class MdMgr {
    */
 
   private def SetBaseElem(be: BaseElemDef, nameSpace: String, name: String, ver: Long, jarNm: String, depJars: Array[String]): Unit = {
-    be.name = name.trim.toLowerCase
+    if(name.trim.toLowerCase.equalsIgnoreCase("transactionId")){
+      be.name = name.trim
+    } else{
+      be.name = name.trim.toLowerCase
+    }
     be.nameSpace = nameSpace.trim.toLowerCase
     be.ver = ver
     be.uniqueId = MdIdSeq.next
