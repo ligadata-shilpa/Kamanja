@@ -400,18 +400,13 @@ object FileProcessor {
     //logger.info("SMART FILE CONSUMER (MI): processExistingFiles on "+d.getAbsolutePath)
     
     if (d.exists && d.isDirectory) {
-      
-      //Additional Filter Conditions
+      //Additional Filter Conditions, Ignore files starting with a . (period)
       val files = d.listFiles.filter(_.isFile)
-                     //Ignore files starting with a . (period)
                     .filter(!_.getName.startsWith("."))
                     .sortWith(_.lastModified < _.lastModified).toList
       files.foreach(file => {
         //if (isValidFile(file.toString) && file.toString.endsWith(readyToProcessKey)) {
         if(FileProcessor.isValidFile(file.toString)){
-          
-          //val tokenName = file.toString.split("/")
-          //if (!checkIfFileBeingProcessed(tokenName(tokenName.size - 1))) {
           if (!checkIfFileBeingProcessed(file.toString)) {
             FileProcessor.enQBufferedFile(file.toString)
           }
@@ -425,61 +420,44 @@ object FileProcessor {
   }
   
   private def isValidFile(fileName: String): Boolean = {
-    //logger.info("SMART FILE CONSUMER (MI): isValidFile "+fileName)
-    if (fileName.endsWith("_COMPLETE"))
-      return false
-    else{
-      //Check if the File exists
-      if(Files.exists(Paths.get(fileName)) && (Paths.get(fileName).toFile().length()>0)){
-        //Sniff only text/plain and application/gzip for now
-        /*
-        var tis = TikaInputStream.get(new File(fileName))
-        var metadata = new Metadata
-        var detector = new DefaultDetector(MimeTypes.getDefaultMimeTypes())
-        var contentType = detector.detect(tis, metadata).toString();
-        tis.close()
-        */
+
+    //Check if the File exists
+    if(Files.exists(Paths.get(fileName)) && (Paths.get(fileName).toFile().length()>0)){
+      //Sniff only text/plain and application/gzip for now
+      var detector = new DefaultDetector()
+      var tika = new Tika(detector)
+      var fis = new FileInputStream(new File(fileName))
+      var contentType = tika.detect(fis)
         
-        var detector = new DefaultDetector()
-        var tika = new Tika(detector)
-        var fis = new FileInputStream(new File(fileName))
-        var contentType = tika.detect(fis)
-        
-        if(contentType.equalsIgnoreCase("application/octet-stream")){
-		      var magicMatcher =  Magic.getMagicMatch(new File(fileName), false)
-		      contentType = magicMatcher.getMimeType
-        }
-        
-        fis.close()
-        
-        
-        //Currently handling only text/plain and application/gzip contents
-        //Need to bubble this property out into the Constants and Configuration
-        if(contentTypes contains contentType){
-          //logger.info("SMART FILE CONSUMER (global): Valid content type " + contentType + " for file "+fileName);
-          return true;
-        }else{
-          //Log error for invalid content type
-          logger.error("SMART FILE CONSUMER (global): Invalid content type " + contentType + " for file "+fileName);
-        }
-      }else if(!Files.exists(Paths.get(fileName))){
-        //File doesnot exists - it is already processed
-        logger.info("SMART FILE CONSUMER (global): File aready processed "+fileName);
-      }else if(Paths.get(fileName).toFile().length() == 0 ){
-        return true;
+      if(contentType.equalsIgnoreCase("application/octet-stream")){
+		    var magicMatcher =  Magic.getMagicMatch(new File(fileName), false)
+		    contentType = magicMatcher.getMimeType
       }
+      fis.close()
+
+      //Currently handling only text/plain and application/gzip contents
+      //Need to bubble this property out into the Constants and Configuration
+      if(contentTypes contains contentType){
+         return true;
+      }else{
+        //Log error for invalid content type
+        logger.error("SMART FILE CONSUMER (global): Invalid content type " + contentType + " for file " + fileName)
+      }
+    } else if (!Files.exists(Paths.get(fileName))){
+      //File doesnot exists - it is already processed
+      logger.info("SMART FILE CONSUMER (global): File aready processed " + fileName)
+    } else if (Paths.get(fileName).toFile().length() == 0 ){
+      return true
     }
+
     return false
   }
 
+  /**
+   *
+   */
   private def runFileWatcher(): Unit = {
     try {
-
-      // Register a listener on a watch directory.
-      register(path)
-      
-      //val d = new File(dirToWatch)
-
       // Lets see if we have failed previously on this partition Id, and need to replay some messages first.
       logger.info(" SMART FILE CONSUMER (global): Recovery operations, checking  => " + MetadataAPIImpl.GetMetadataAPIConfig.getProperty("ZNODE_PATH") + "/smartFileConsumer")
       if (zkc.checkExists().forPath(MetadataAPIImpl.GetMetadataAPIConfig.getProperty("ZNODE_PATH") + "/smartFileConsumer") != null) {
@@ -513,20 +491,9 @@ object FileProcessor {
                   partMap(pair(0).toInt) = pair(1).toInt
                 })
               }
-              
-              /*
-              FileProcessor.enQFile(dirToWatch + "/" + fileToReprocess.asInstanceOf[String],recoveryTokens(0).toInt, FileProcessor.RECOVERY_DUMMY_START_TIME, partMap)
-              if (d.exists && d.isDirectory) {
-                var files = d.listFiles.filter(file => { file.isFile && (file.getName).equals(fileToReprocess.asInstanceOf[String]) })
-                while (files.size != 0) {
-                  Thread.sleep(1000)
-                  files = d.listFiles.filter(file => { file.isFilse && (file.getName).equals(fileToReprocess.asInstanceOf[String]) })
-                }
-              }
-              */
+
               
               //Start Changes -- Instead of a single file, run with the ArrayBuffer of Paths
-             
               FileProcessor.enQFile(fileToRecover,recoveryTokens(0).toInt, FileProcessor.RECOVERY_DUMMY_START_TIME, partMap)
               
               for(dir <- path){
@@ -595,33 +562,6 @@ object FileProcessor {
       case e: Exception             => logger.error("Exception: ", e)
     }
   }
-
-  private def resetWatcher: Unit = {
-    watchService.close()
-    //watchService = path.getFileSystem().newWatchService()
-    watchService = FileSystems.getDefault.newWatchService()
-    keys = new HashMap[WatchKey, Path]
-    
-    register(path)
-    
-    
-  }
-
-  /**
-   * Register a particular file or directory to be watched
-   */
-   private def register(dirs: ArrayBuffer[Path]): Unit = {
-     for(dir <- dirs){ 
-       val key = dir.register(watchService, 
-          StandardWatchEventKinds.ENTRY_CREATE, 
-          StandardWatchEventKinds.ENTRY_MODIFY, 
-          StandardWatchEventKinds.OVERFLOW)
-        keys(key) = dir
-     }
-   }
-
-
- 
 
   private def monitorActiveFiles: Unit = {
 
@@ -735,24 +675,12 @@ object FileProcessor {
       logger.info("SMART FILE CONSUMER {global): - cleaning up after " + fileName)
       // Either move or rename the file.
       moveFile(fileName)
-
-      //val tokenName = fileName.split("/")
-      //Use full file name instead
-      //markFileProcessingEnd(tokenName(tokenName.size - 1))
-      //fileCacheRemove(tokenName(tokenName.size - 1))
-      //removeFromZK(tokenName(tokenName.size - 1))
-      
       markFileProcessingEnd(fileName)
       fileCacheRemove(fileName)
       removeFromZK(fileName)
-
-      
     } catch {
       case ioe: IOException => {
         logger.error("Exception moving the file ",ioe)
-        
-        //val tokenName = fileName.split("/")
-        //FileProcessor.setFileState(tokenName(tokenName.size - 1),FileProcessor.FINISHED_FAILED_TO_COPY)
         FileProcessor.setFileState(fileName,FileProcessor.FINISHED_FAILED_TO_COPY)
         
       }
@@ -761,17 +689,12 @@ object FileProcessor {
 
   private def moveFile(fileName: String): Unit = {
     val fileStruct = fileName.split("/")
-    if (targetMoveDir != null) {
-      logger.info("SMART FILE CONSUMER Moving File" + fileName+ " to " + targetMoveDir)
-      if(Paths.get(fileName).toFile().exists()){
-        Files.copy(Paths.get(fileName), Paths.get(targetMoveDir + "/" + fileStruct(fileStruct.size - 1)), REPLACE_EXISTING)
-        Files.deleteIfExists(Paths.get(fileName))
-      }else{
-        logger.warn("SMART FILE CONSUMER File has been deleted" + fileName);
-      }
+    logger.info("SMART FILE CONSUMER Moving File" + fileName+ " to " + targetMoveDir)
+    if (Paths.get(fileName).toFile().exists()) {
+      Files.copy(Paths.get(fileName), Paths.get(targetMoveDir + "/" + fileStruct(fileStruct.size - 1)), REPLACE_EXISTING)
+      Files.deleteIfExists(Paths.get(fileName))
     } else {
-      logger.info("SMART FILE CONSUMER Renaming file " + fileName + " to " + fileName + "_COMPLETE")
-      (new File(fileName)).renameTo(new File(fileName + "_COMPLETE"))
+      logger.warn("SMART FILE CONSUMER File has been deleted" + fileName);
     }
   }
   
@@ -823,6 +746,7 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
 
   // Confugurable Properties
   private var dirToWatch: String = ""
+  private var dirToMoveTo: String = ""
   private var message_separator: Char = _
   private var field_separator: Char = _
   private var kv_separator: Char = _
@@ -842,6 +766,7 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
   def init(props: scala.collection.mutable.Map[String, String]): Unit = {
     message_separator = props.getOrElse(SmartFileAdapterConstants.MSG_SEPARATOR, "10").toInt.toChar
     dirToWatch = props.getOrElse(SmartFileAdapterConstants.DIRECTORY_TO_WATCH, null)
+    dirToMoveTo = props.getOrElse(SmartFileAdapterConstants.DIRECTORY_TO_MOVE_TO, null)
     NUMBER_OF_BEES = props.getOrElse(SmartFileAdapterConstants.PAR_DEGREE_OF_FILE_CONSUMER, "1").toInt
     maxlen = props.getOrElse(SmartFileAdapterConstants.WORKER_BUFFER_SIZE, "4").toInt * 1024 * 1024
     partitionSelectionNumber = props(SmartFileAdapterConstants.NUMBER_OF_FILE_CONSUMERS).toInt
@@ -880,6 +805,12 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
       throw MissingPropertyException("Missing Paramter: " + SmartFileAdapterConstants.DIRECTORY_TO_WATCH, null)
     }
 
+    if (dirToMoveTo == null) {
+      logger.error("SMART_FILE_CONSUMER ("+partitionId+") Destination directory must be specified")
+      shutdown
+      throw MissingPropertyException("Missing Paramter: " + SmartFileAdapterConstants.DIRECTORY_TO_MOVE_TO, null)
+    }
+
     if (mdConfig == null) {
       logger.error("SMART_FILE_CONSUMER ("+partitionId+") Directory to watch must be specified")
       shutdown
@@ -897,7 +828,6 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
       shutdown
       throw new MissingPropertyException("Missing Paramter: " + SmartFileAdapterConstants.KAFKA_BROKER, null)
     }
-   
 
     FileProcessor.setProperties(props, path)
     FileProcessor.startGlobalFileMonitor
@@ -912,13 +842,6 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
         throw e
       }
     }
-
-    // will need to check zookeeper here
-    //val zkcConnectString = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("ZOOKEEPER_CONNECT_STRING")
-   // logger.debug("SMART_FILE_CONSUMER Using zookeeper " + zkcConnectString)
-   // val znodePath = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("ZNODE_PATH") + "/smartFileConsumer/" + partitionId
-   // zkc = initZookeeper
-
   }
 
   private def enQMsg(buffer: Array[KafkaMessage], bee: Int): Unit = {
@@ -963,19 +886,6 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
       blg = in
     }
   }
-
-  /**
-   * Register a particular file or directory to be watched
-   */
-  /*
-  private def register(dir: Path): Unit = {
-    val key = dir.register(FileProcessor.watchService, 
-    	StandardWatchEventKinds.ENTRY_CREATE, 
-    	StandardWatchEventKinds.ENTRY_MODIFY, 
-    	StandardWatchEventKinds.OVERFLOW)
-    keys(key) = dir
-  }
-  */
 
   /**
    * Each worker bee will run this code... looking for work to do.
@@ -1134,11 +1044,6 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
     //var bis: InputStream = new ByteArrayInputStream(Files.readAllBytes(Paths.get(fileName)))
     var bis: BufferedReader = null
     try {
-      
-      //val tokenName = fileName.split("/")
-      //val fullFileName = dirToWatch + "/" + tokenName(tokenName.size - 1)
-      //if (isCompressed(fullFileName)) {
-      
       if (isCompressed(fileName)) {
         bis = new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(fileName))))
       } else {
@@ -1324,10 +1229,6 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
           doSomePushing
         }
       })
-
-      //FileProcessor.startGlobalFileMonitor
-
-
   }
 
   /**

@@ -74,8 +74,13 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
   var numPartitionsForMainTopic = producer.partitionsFor(inConfiguration(SmartFileAdapterConstants.KAFKA_TOPIC))
 
   var delimiters = new DataDelimiters
-  delimiters.keyAndValueDelimiter = inConfiguration.getOrElse(SmartFileAdapterConstants.KV_SEPARATOR, "\\x01")
-  delimiters.fieldDelimiter = inConfiguration.getOrElse(SmartFileAdapterConstants.FIELD_SEPARATOR, "\\x01")
+  var msgFormatType = inConfiguration.getOrElse(SmartFileAdapterConstants.MSG_FORMAT,null)
+  if (msgFormatType == null) {
+    throw MissingPropertyException("Missing Paramter: " + SmartFileAdapterConstants.MSG_FORMAT, null)
+  }
+
+  delimiters.keyAndValueDelimiter = inConfiguration.getOrElse(SmartFileAdapterConstants.KV_SEPARATOR, ":")
+  delimiters.fieldDelimiter = inConfiguration.getOrElse(SmartFileAdapterConstants.FIELD_SEPARATOR, ":")
   delimiters.valueDelimiter = inConfiguration.getOrElse(SmartFileAdapterConstants.VALUE_SEPARATOR, "~")
 
   var debug_IgnoreKafka = inConfiguration.getOrElse("READ_TEST_ONLY", "FALSE")
@@ -314,11 +319,7 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
         // We can now fail for some messages, so, we need to update the recovery area in ZK, to make sure the retry does not
         // process these messages.
         if (fileToUpdate != null) {
-          
-          //val fileTokens = fileBeingProcessed.split("/")
-          //FileProcessor.addToZK(fileTokens(fileTokens.size - 1), fullSuccessOffset, partitionsStats)
           FileProcessor.addToZK(fileBeingProcessed, fullSuccessOffset, partitionsStats)
-          
         }
       }
       resetSleepTimer
@@ -369,17 +370,6 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
       // Either move or rename the file.
       
       val fileStruct = fileName.split("/")
-      /*
-      if (inConfiguration.getOrElse(SmartFileAdapterConstants.DIRECTORY_TO_MOVE_TO, null) != null) {
-        logger.info("SMART FILE CONSUMER ("+partIdx+") Moving File" + fileName + " to " + inConfiguration(SmartFileAdapterConstants.DIRECTORY_TO_MOVE_TO))
-        Files.copy(Paths.get(inConfiguration(SmartFileAdapterConstants.DIRECTORY_TO_WATCH) + "/" + fileStruct(fileStruct.size - 1)), 
-            Paths.get(inConfiguration(SmartFileAdapterConstants.DIRECTORY_TO_MOVE_TO) + "/" + fileStruct(fileStruct.size - 1)), REPLACE_EXISTING)
-        Files.deleteIfExists(Paths.get(inConfiguration(SmartFileAdapterConstants.DIRECTORY_TO_WATCH) + "/" + fileStruct(fileStruct.size - 1)))
-      } else {
-        logger.info(" SMART FILE CONSUMER ("+partIdx+")  Renaming file " + fileName + " to " + fileName + "_COMPLETE")
-        (new File(inConfiguration(SmartFileAdapterConstants.DIRECTORY_TO_WATCH) + "/" + fileStruct(fileStruct.size - 1))).renameTo(new File(fileName + "_COMPLETE"))
-      }
-      */
       
       //Take care of multiple directories
       if (inConfiguration.getOrElse(SmartFileAdapterConstants.DIRECTORY_TO_MOVE_TO, null) != null) {
@@ -392,13 +382,6 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
         logger.info(" SMART FILE CONSUMER ("+partIdx+")  Renaming file " + fileName + " to " + fileName + "_COMPLETE")
         (new File(fileName).renameTo(new File(fileName + "_COMPLETE")))
       }
-      
-
-      //markFileProcessingEnd(fileName)
-      //val tokenName = fileName.split("/")
-      //FileProcessor.fileCacheRemove(tokenName(tokenName.size - 1))
-      //FileProcessor.removeFromZK(tokenName(tokenName.size - 1))
-      //FileProcessor.markFileProcessingEnd(tokenName(tokenName.size - 1))
       
       //Use the full filename 
       FileProcessor.fileCacheRemove(fileName)
@@ -578,13 +561,6 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
         dataMap(kvpair(0).trim) = kvpair(1)
       })
     }
-    
-    //Inject the Filename and Offset here based on the flag
-    /*
-    if(message_metadata && !dataMap.contains("fileId")){
-      dataMap("fileId") = FileProcessor.getIDFromFileCache(inputData.relatedFileName)
-      dataMap("fileOffset") = inputData.msgOffset.toString()
-    }*/
     
     inpData.dataMap = dataMap.toMap
     inpData
