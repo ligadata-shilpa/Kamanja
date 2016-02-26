@@ -34,6 +34,7 @@ import java.io.FileReader;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+
 import com.ligadata.KamanjaVersion.KamanjaVersion;
 
 public class Migrate {
@@ -262,17 +263,17 @@ public class Migrate {
 
     public int runFromArgs(String[] args) {
         try {
+            if (args.length > 0 && args[0].equalsIgnoreCase("--version")) {
+                KamanjaVersion.print();
+                return 0;
+            }
+
             if (args.length != 2) {
                 usage();
                 return 1;
             }
 
             String cfgfile = "";
-            if (args[0].equalsIgnoreCase("--version")) {
-                KamanjaVersion.print();
-                return 0;
-            }
-
 
             if (args[0].equalsIgnoreCase("--config")) {
                 cfgfile = args[1].trim();
