@@ -33,7 +33,7 @@ class AuditRecord {
   var userPrivilege: String = _
 
   override def toString: String =
-    "(" + actionTime + "," + action + "," + "," + objectAccessed + "," + success + "," + transactionId + "," + userOrRole + "," + userPrivilege + ")"
+    "(" + actionTime + "," + action + "," + objectAccessed + "," + success + "," + transactionId + "," + userOrRole + "," + userPrivilege + ")"
 
   def toJson: JObject = {
     val ft = new java.text.SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
