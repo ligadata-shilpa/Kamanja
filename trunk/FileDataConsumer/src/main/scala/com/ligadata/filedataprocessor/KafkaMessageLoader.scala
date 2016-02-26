@@ -76,6 +76,7 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
   var delimiters = new DataDelimiters
   var msgFormatType = inConfiguration.getOrElse(SmartFileAdapterConstants.MSG_FORMAT,null)
   if (msgFormatType == null) {
+    shutdown
     throw MissingPropertyException("Missing Paramter: " + SmartFileAdapterConstants.MSG_FORMAT, null)
   }
 
@@ -91,8 +92,6 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
 
   val zkcConnectString = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("ZOOKEEPER_CONNECT_STRING")
   logger.debug(partIdx + " SMART FILE CONSUMER Using zookeeper " + zkcConnectString)
-  //val znodePath = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("ZNODE_PATH") + "/smartFileConsumer/" + partIdx
- // var zkc: CuratorFramework = initZookeeper
   var objInst: Any = configureMessageDef
   if (objInst == null) {
     shutdown
@@ -671,8 +670,6 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
     MetadataAPIImpl.shutdown
     if (producer != null)
       producer.close
-   // if (zkc != null)
-   //   zkc.close
 
     Thread.sleep(2000)
   }
