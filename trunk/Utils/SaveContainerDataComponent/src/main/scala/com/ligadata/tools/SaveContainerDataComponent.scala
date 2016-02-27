@@ -34,8 +34,7 @@ import scala.collection.mutable.{ ArrayBuffer, TreeSet }
 // import org.apache.curator.framework._
 // import com.ligadata.Serialize.{ JZKInfo }
 import com.ligadata.KvBase.{ Key, Value, TimeRange, KvBaseDefalts, KeyWithBucketIdAndPrimaryKey, KeyWithBucketIdAndPrimaryKeyCompHelper, LoadKeyWithBucketId }
-import com.ligadata.StorageBase.{ DataStore, Transaction }
-import com.ligadata.Exceptions.StackTrace
+import com.ligadata.StorageBase.{ DataStore }
 import java.util.{ Collection, Iterator, TreeMap }
 import com.ligadata.Exceptions._
 import org.json4s._
@@ -90,11 +89,11 @@ class SaveContainerDataCompImpl extends LogTrait with MdBaseResolveInfo {
             }
           } catch {
             case e: Exception => {
-              logger.error("Jar " + j.trim + " failed added to class path. Message: " + e.getMessage)
+              logger.error("Jar " + j.trim + " failed added to class path.", e)
               throw e
             }
             case e: Throwable => {
-              logger.error("Jar " + j.trim + " failed added to class path. Message: " + e.getMessage)
+              logger.error("Jar " + j.trim + " failed added to class path.", e)
               throw e
             }
           }
@@ -113,47 +112,12 @@ class SaveContainerDataCompImpl extends LogTrait with MdBaseResolveInfo {
       return KeyValueManager.Get(jarPaths, dataStoreInfo)
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.error("Failed to connect Database:" + dataStoreInfo)
-        logger.error("StackTrace:" + stackTrace)
+        logger.error("Failed to connect Database:" + dataStoreInfo, e)
         throw e
       }
       case e: Throwable => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.error("Failed to connect Database:" + dataStoreInfo)
-        logger.error("StackTrace:" + stackTrace)
+        logger.error("Failed to connect Database:" + dataStoreInfo, e)
         throw e
-      }
-    }
-  }
-
-  private def collectKeyAndValues(k: Key, v: Value, dataByBucketKeyPart: TreeMap[KeyWithBucketIdAndPrimaryKey, MessageContainerBaseWithModFlag], loadedKeys: java.util.TreeSet[LoadKeyWithBucketId]): Unit = {
-    val value = SerializeDeserialize.Deserialize(v.serializedInfo, this, _kamanjaLoader.loader, true, "")
-    val primarykey = value.PrimaryKeyData
-    val key = KeyWithBucketIdAndPrimaryKey(KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(k.bucketKey), k, primarykey != null && primarykey.size > 0, primarykey)
-    dataByBucketKeyPart.put(key, MessageContainerBaseWithModFlag(false, value))
-
-    val bucketId = KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(k.bucketKey)
-    val loadKey = LoadKeyWithBucketId(bucketId, TimeRange(k.timePartition, k.timePartition), k.bucketKey)
-    loadedKeys.add(loadKey)
-  }
-
-  private def LoadDataIfNeeded(typ: String, loadKey: LoadKeyWithBucketId, loadedKeys: java.util.TreeSet[LoadKeyWithBucketId], dataByBucketKeyPart: TreeMap[KeyWithBucketIdAndPrimaryKey, MessageContainerBaseWithModFlag]): Unit = {
-    if (loadedKeys.contains(loadKey))
-      return
-    val buildOne = (k: Key, v: Value) => {
-      collectKeyAndValues(k, v, dataByBucketKeyPart, loadedKeys)
-    }
-    try {
-      _dataStore.get(typ, Array(loadKey.tmRange), Array(loadKey.bucketKey), buildOne)
-      loadedKeys.add(loadKey)
-    } catch {
-      case e: ObjectNotFoundException => {
-        logger.debug("Key %s Not found for timerange: %d-%d".format(loadKey.bucketKey.mkString(","), loadKey.tmRange.beginTime, loadKey.tmRange.endTime))
-      }
-      case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.error("Key %s Not found for timerange: %d-%d.\nStackTrace:%s".format(loadKey.bucketKey.mkString(","), loadKey.tmRange.beginTime, loadKey.tmRange.endTime, stackTrace))
       }
     }
   }
@@ -162,8 +126,8 @@ class SaveContainerDataCompImpl extends LogTrait with MdBaseResolveInfo {
     try {
       return GetMessageContainerBase(MsgContainerType)
     } catch {
-      case e: Exception => {}
-      case e: Throwable => {}
+      case e: Exception => { logger.warn("", e) }
+      case e: Throwable => { logger.warn("", e) }
     }
     return null
   }
@@ -264,11 +228,11 @@ class SaveContainerDataCompImpl extends LogTrait with MdBaseResolveInfo {
         _transService.init(1)
       } catch {
         case e: Exception => {
-          logger.error("Failed to start Transaction service.")
+          logger.error("Failed to start Transaction service.", e)
           throw e
         }
         case e: Throwable => {
-          logger.error("Failed to start Transaction service.")
+          logger.error("Failed to start Transaction service.", e)
           throw e
         }
       }
@@ -338,11 +302,11 @@ class SaveContainerDataCompImpl extends LogTrait with MdBaseResolveInfo {
         }
       } catch {
         case e: Exception => {
-          logger.error("Failed to load message type:%s (class:%s) with Reason:%s Message:%s".format(typ, clsName, e.getCause, e.getMessage))
+          logger.error("Failed to load message type:%s (class:%s)".format(typ, clsName), e)
           throw e
         }
         case e: Throwable => {
-          logger.error("Failed to load message type:%s (class:%s) with Reason:%s Message:%s".format(typ, clsName, e.getCause, e.getMessage))
+          logger.error("Failed to load message type:%s (class:%s)".format(typ, clsName), e)
           throw e
         }
       }
@@ -362,11 +326,11 @@ class SaveContainerDataCompImpl extends LogTrait with MdBaseResolveInfo {
         }
       } catch {
         case e: Exception => {
-          logger.error("Failed to load container. type:%s (class:%s) with Reason:%s Message:%s".format(typ, clsName, e.getCause, e.getMessage))
+          logger.error("Failed to load container. type:%s (class:%s)".format(typ, clsName), e)
           throw e
         }
         case e: Throwable => {
-          logger.error("Failed to load container. type:%s (class:%s) with Reason:%s Message:%s".format(typ, clsName, e.getCause, e.getMessage))
+          logger.error("Failed to load container. type:%s (class:%s)".format(typ, clsName), e)
           throw e
         }
       }
@@ -394,11 +358,11 @@ class SaveContainerDataCompImpl extends LogTrait with MdBaseResolveInfo {
         }
       } catch {
         case e: Exception => {
-          logger.error("Failed to instantiate message or conatiner. type::" + typ + " (class:" + clsName + "). Reason:" + e.getCause + ". Message:" + e.getMessage())
+          logger.error("Failed to instantiate message or conatiner. type::" + typ + " (class:" + clsName + ").", e)
           throw e
         }
         case e: Throwable => {
-          logger.error("Failed to instantiate message or conatiner. type::" + typ + " (class:" + clsName + "). Reason:" + e.getCause + ". Message:" + e.getMessage())
+          logger.error("Failed to instantiate message or conatiner. type::" + typ + " (class:" + clsName + ").", e)
           throw e
         }
       }
@@ -477,6 +441,341 @@ class SaveContainerDataCompImpl extends LogTrait with MdBaseResolveInfo {
     }
   }
 
+
+  /*
+    private def collectKeyAndValues(k: Key, v: Value, dataByBucketKeyPart: TreeMap[KeyWithBucketIdAndPrimaryKey, MessageContainerBaseWithModFlag], loadedKeys: java.util.TreeSet[LoadKeyWithBucketId]): Unit = {
+      val value = SerializeDeserialize.Deserialize(v.serializedInfo, this, _kamanjaLoader.loader, true, "")
+      val primarykey = value.PrimaryKeyData
+      val key = KeyWithBucketIdAndPrimaryKey(KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(k.bucketKey), k, primarykey != null && primarykey.size > 0, primarykey)
+      dataByBucketKeyPart.put(key, MessageContainerBaseWithModFlag(false, value))
+
+      val bucketId = KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(k.bucketKey)
+      val loadKey = LoadKeyWithBucketId(bucketId, TimeRange(k.timePartition, k.timePartition), k.bucketKey)
+      loadedKeys.add(loadKey)
+    }
+
+    private def LoadDataIfNeeded(typ: String, loadKey: LoadKeyWithBucketId, loadedKeys: java.util.TreeSet[LoadKeyWithBucketId], dataByBucketKeyPart: TreeMap[KeyWithBucketIdAndPrimaryKey, MessageContainerBaseWithModFlag]): Unit = {
+      if (loadedKeys.contains(loadKey))
+        return
+      val buildOne = (k: Key, v: Value) => {
+        collectKeyAndValues(k, v, dataByBucketKeyPart, loadedKeys)
+      }
+      try {
+        _dataStore.get(typ, Array(loadKey.tmRange), Array(loadKey.bucketKey), buildOne)
+        loadedKeys.add(loadKey)
+      } catch {
+        case e: ObjectNotFoundException => {
+          logger.debug("Key %s Not found for timerange: %d-%d".format(loadKey.bucketKey.mkString(","), loadKey.tmRange.beginTime, loadKey.tmRange.endTime), e)
+        }
+        case e: Exception => {
+          logger.error("Key %s Not found for timerange: %d-%d.".format(loadKey.bucketKey.mkString(","), loadKey.tmRange.beginTime, loadKey.tmRange.endTime), e)
+        }
+      }
+    }
+  */
+
+  private def collectKeyAndValues(k: Key, v: Value, callbackFunction: (MessageContainerBase) => Unit): Unit = {
+    logger.debug("Key:(%d, %s, %d, %d), Value Info:(Ser:%s, Size:%d)".format(k.timePartition, k.bucketKey.mkString(","), k.transactionId, k.rowId, v.serializerType, v.serializedInfo.size))
+    val value = SerializeDeserialize.Deserialize(v.serializedInfo, this, _kamanjaLoader.loader, true, "")
+    if (callbackFunction != null && value != null)
+      callbackFunction(value)
+  }
+
+  @throws(classOf[Exception])
+  def callGetData(containerName: String, callbackFunction: (MessageContainerBase) => Unit): Unit = {
+    if (_initialized == false) {
+      val msgStr = "SaveContainerDataComponent is not yet initialized"
+      logger.error(msgStr)
+      throw new Exception(msgStr)
+    }
+
+    val buildOne = (k: Key, v: Value) => {
+      collectKeyAndValues(k, v, callbackFunction)
+    }
+
+    var failedWaitTime = 15000 // Wait time starts at 15 secs
+    val maxFailedWaitTime = 60000 // Max Wait time 60 secs
+    var doneGet = false
+
+    while (!doneGet) {
+      try {
+        _dataStore.get(containerName, buildOne)
+        doneGet = true
+      } catch {
+        case e @ (_: ObjectNotFoundException | _: KeyNotFoundException) => {
+          logger.debug("Failed to get data from container:%s".format(containerName), e)
+          doneGet = true
+        }
+        case e: FatalAdapterException => {
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
+        }
+        case e: StorageDMLException => {
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
+        }
+        case e: StorageDDLException => {
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
+        }
+        case e: Exception => {
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
+        }
+        case e: Throwable => {
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
+        }
+      }
+
+      if (!doneGet) {
+        try {
+          logger.error("Failed to get data from datastore. Waiting for another %d milli seconds and going to start them again.".format(failedWaitTime))
+          Thread.sleep(failedWaitTime)
+        } catch {
+          case e: Exception => { logger.warn("", e) }
+        }
+        // Adjust time for next time
+        if (failedWaitTime < maxFailedWaitTime) {
+          failedWaitTime = failedWaitTime * 2
+          if (failedWaitTime > maxFailedWaitTime)
+            failedWaitTime = maxFailedWaitTime
+        }
+      }
+    }
+  }
+
+  @throws(classOf[Exception])
+  def callGetData(containerName: String, keys: Array[Key], callbackFunction: (MessageContainerBase) => Unit): Unit = {
+    if (_initialized == false) {
+      val msgStr = "SaveContainerDataComponent is not yet initialized"
+      logger.error(msgStr)
+      throw new Exception(msgStr)
+    }
+
+    val buildOne = (k: Key, v: Value) => {
+      collectKeyAndValues(k, v, callbackFunction)
+    }
+
+    var failedWaitTime = 15000 // Wait time starts at 15 secs
+    val maxFailedWaitTime = 60000 // Max Wait time 60 secs
+    var doneGet = false
+
+    while (!doneGet) {
+      try {
+        _dataStore.get(containerName, keys, buildOne)
+        doneGet = true
+      } catch {
+        case e @ (_: ObjectNotFoundException | _: KeyNotFoundException) => {
+          logger.debug("Failed to get data from container:%s".format(containerName), e)
+          doneGet = true
+        }
+        case e: FatalAdapterException => {
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
+        }
+        case e: StorageDMLException => {
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
+        }
+        case e: StorageDDLException => {
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
+        }
+        case e: Exception => {
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
+        }
+        case e: Throwable => {
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
+        }
+      }
+
+      if (!doneGet) {
+        try {
+          logger.error("Failed to get data from datastore. Waiting for another %d milli seconds and going to start them again.".format(failedWaitTime))
+          Thread.sleep(failedWaitTime)
+        } catch {
+          case e: Exception => { logger.warn("", e) }
+        }
+        // Adjust time for next time
+        if (failedWaitTime < maxFailedWaitTime) {
+          failedWaitTime = failedWaitTime * 2
+          if (failedWaitTime > maxFailedWaitTime)
+            failedWaitTime = maxFailedWaitTime
+        }
+      }
+    }
+  }
+
+  @throws(classOf[Exception])
+  def callGetData(containerName: String, timeRanges: Array[TimeRange], callbackFunction: (MessageContainerBase) => Unit): Unit = {
+    if (_initialized == false) {
+      val msgStr = "SaveContainerDataComponent is not yet initialized"
+      logger.error(msgStr)
+      throw new Exception(msgStr)
+    }
+
+    val buildOne = (k: Key, v: Value) => {
+      collectKeyAndValues(k, v, callbackFunction)
+    }
+
+    var failedWaitTime = 15000 // Wait time starts at 15 secs
+    val maxFailedWaitTime = 60000 // Max Wait time 60 secs
+    var doneGet = false
+
+    while (!doneGet) {
+      try {
+        _dataStore.get(containerName, timeRanges, buildOne)
+        doneGet = true
+      } catch {
+        case e @ (_: ObjectNotFoundException | _: KeyNotFoundException) => {
+          logger.debug("Failed to get data from container:%s".format(containerName), e)
+          doneGet = true
+        }
+        case e: FatalAdapterException => {
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
+        }
+        case e: StorageDMLException => {
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
+        }
+        case e: StorageDDLException => {
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
+        }
+        case e: Exception => {
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
+        }
+        case e: Throwable => {
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
+        }
+      }
+
+      if (!doneGet) {
+        try {
+          logger.error("Failed to get data from datastore. Waiting for another %d milli seconds and going to start them again.".format(failedWaitTime))
+          Thread.sleep(failedWaitTime)
+        } catch {
+          case e: Exception => { logger.warn("", e) }
+        }
+        // Adjust time for next time
+        if (failedWaitTime < maxFailedWaitTime) {
+          failedWaitTime = failedWaitTime * 2
+          if (failedWaitTime > maxFailedWaitTime)
+            failedWaitTime = maxFailedWaitTime
+        }
+      }
+    }
+  }
+
+  @throws(classOf[Exception])
+  def callGetData(containerName: String, timeRanges: Array[TimeRange], bucketKeys: Array[Array[String]], callbackFunction: (MessageContainerBase) => Unit): Unit = {
+    if (_initialized == false) {
+      val msgStr = "SaveContainerDataComponent is not yet initialized"
+      logger.error(msgStr)
+      throw new Exception(msgStr)
+    }
+
+    val buildOne = (k: Key, v: Value) => {
+      collectKeyAndValues(k, v, callbackFunction)
+    }
+
+    var failedWaitTime = 15000 // Wait time starts at 15 secs
+    val maxFailedWaitTime = 60000 // Max Wait time 60 secs
+    var doneGet = false
+
+    while (!doneGet) {
+      try {
+        _dataStore.get(containerName, timeRanges, bucketKeys, buildOne)
+        doneGet = true
+      } catch {
+        case e @ (_: ObjectNotFoundException | _: KeyNotFoundException) => {
+          logger.debug("Failed to get data from container:%s".format(containerName), e)
+          doneGet = true
+        }
+        case e: FatalAdapterException => {
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
+        }
+        case e: StorageDMLException => {
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
+        }
+        case e: StorageDDLException => {
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
+        }
+        case e: Exception => {
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
+        }
+        case e: Throwable => {
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
+        }
+      }
+
+      if (!doneGet) {
+        try {
+          logger.error("Failed to get data from datastore. Waiting for another %d milli seconds and going to start them again.".format(failedWaitTime))
+          Thread.sleep(failedWaitTime)
+        } catch {
+          case e: Exception => { logger.warn("", e) }
+        }
+        // Adjust time for next time
+        if (failedWaitTime < maxFailedWaitTime) {
+          failedWaitTime = failedWaitTime * 2
+          if (failedWaitTime > maxFailedWaitTime)
+            failedWaitTime = maxFailedWaitTime
+        }
+      }
+    }
+  }
+
+  @throws(classOf[Exception])
+  def callGetData(containerName: String, bucketKeys: Array[Array[String]], callbackFunction: (MessageContainerBase) => Unit): Unit = {
+    if (_initialized == false) {
+      val msgStr = "SaveContainerDataComponent is not yet initialized"
+      logger.error(msgStr)
+      throw new Exception(msgStr)
+    }
+
+    val buildOne = (k: Key, v: Value) => {
+      collectKeyAndValues(k, v, callbackFunction)
+    }
+
+    var failedWaitTime = 15000 // Wait time starts at 15 secs
+    val maxFailedWaitTime = 60000 // Max Wait time 60 secs
+    var doneGet = false
+
+    while (!doneGet) {
+      try {
+        _dataStore.get(containerName, bucketKeys, buildOne)
+        doneGet = true
+      } catch {
+        case e @ (_: ObjectNotFoundException | _: KeyNotFoundException) => {
+          logger.debug("Failed to get data from container:%s".format(containerName), e)
+          doneGet = true
+        }
+        case e: FatalAdapterException => {
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
+        }
+        case e: StorageDMLException => {
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
+        }
+        case e: StorageDDLException => {
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
+        }
+        case e: Exception => {
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
+        }
+        case e: Throwable => {
+          logger.error("Failed to get data from container:%s.".format(containerName), e)
+        }
+      }
+
+      if (!doneGet) {
+        try {
+          logger.error("Failed to get data from datastore. Waiting for another %d milli seconds and going to start them again.".format(failedWaitTime))
+          Thread.sleep(failedWaitTime)
+        } catch {
+          case e: Exception => { logger.warn("", e) }
+        }
+        // Adjust time for next time
+        if (failedWaitTime < maxFailedWaitTime) {
+          failedWaitTime = failedWaitTime * 2
+          if (failedWaitTime > maxFailedWaitTime)
+            failedWaitTime = maxFailedWaitTime
+        }
+      }
+    }
+  }
+
   def Shutdown: Unit = {
     if (_initialized) {
       _dataStore.Shutdown()
@@ -520,6 +819,81 @@ class SaveContainerDataComponent {
   @throws(classOf[Exception])
   def SaveMessageContainerBase(typ: String, data: Array[MessageContainerBase], setNewTransactionId: Boolean, setNewRowNumber: Boolean): Unit = {
     impl.SaveMessageContainerBase(typ, data, setNewTransactionId, setNewRowNumber)
+  }
+
+  /* Get data. */
+  @throws(classOf[Exception])
+  def callGetData(containerName: String, callbackFunction: (MessageContainerBase) => Unit): Unit = {
+    impl.callGetData(containerName, callbackFunction)
+  }
+
+  /* Get data. Java Function */
+  @throws(classOf[Exception])
+  def callGetData(containerName: String, callbackFunction: GetDataCallback): Unit = {
+    val getOne = (data: MessageContainerBase) => {
+      callbackFunction.call(data)
+    }
+    impl.callGetData(containerName, getOne)
+  }
+
+  /* Get data. */
+  @throws(classOf[Exception])
+  def callGetData(containerName: String, keys: Array[Key], callbackFunction: (MessageContainerBase) => Unit): Unit = {
+    impl.callGetData(containerName, keys, callbackFunction)
+  }
+
+  /* Get data. Java Function */
+  @throws(classOf[Exception])
+  def callGetData(containerName: String, keys: Array[Key], callbackFunction: GetDataCallback): Unit = {
+    val getOne = (data: MessageContainerBase) => {
+      callbackFunction.call(data)
+    }
+    impl.callGetData(containerName, keys, getOne)
+  }
+
+  /* Get data. */
+  @throws(classOf[Exception])
+  def callGetData(containerName: String, timeRanges: Array[TimeRange], callbackFunction: (MessageContainerBase) => Unit): Unit = {
+    impl.callGetData(containerName, timeRanges, callbackFunction)
+  }
+
+  /* Get data. Java Function*/
+  @throws(classOf[Exception])
+  def callGetData(containerName: String, timeRanges: Array[TimeRange], callbackFunction: GetDataCallback): Unit = {
+    val getOne = (data: MessageContainerBase) => {
+      callbackFunction.call(data)
+    }
+    impl.callGetData(containerName, timeRanges, getOne)
+  }
+
+  /* Get data. */
+  @throws(classOf[Exception])
+  def callGetData(containerName: String, timeRanges: Array[TimeRange], bucketKeys: Array[Array[String]], callbackFunction: (MessageContainerBase) => Unit): Unit = {
+    impl.callGetData(containerName, timeRanges, bucketKeys, callbackFunction)
+  }
+
+  /* Get data. Java Function*/
+  @throws(classOf[Exception])
+  def callGetData(containerName: String, timeRanges: Array[TimeRange], bucketKeys: Array[Array[String]], callbackFunction: GetDataCallback): Unit = {
+    val getOne = (data: MessageContainerBase) => {
+      callbackFunction.call(data)
+    }
+    impl.callGetData(containerName, timeRanges, bucketKeys, getOne)
+  }
+
+  /* Get data. */
+  @throws(classOf[Exception])
+  def callGetData(containerName: String, bucketKeys: Array[Array[String]], callbackFunction: (MessageContainerBase) => Unit): Unit = {
+    impl.callGetData(containerName, bucketKeys, callbackFunction)
+  }
+
+  /* Get data. Java Function*/
+  @throws(classOf[Exception])
+  def callGetData(containerName: String, bucketKeys: Array[Array[String]], callbackFunction: GetDataCallback): Unit = {
+    val getOne = (data: MessageContainerBase) => {
+      callbackFunction.call(data)
+    }
+    impl.callGetData(containerName, bucketKeys, getOne)
   }
 
   /* Shutdown services and reset everything */
