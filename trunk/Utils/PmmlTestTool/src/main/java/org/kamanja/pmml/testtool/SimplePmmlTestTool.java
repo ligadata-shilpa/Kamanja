@@ -43,7 +43,7 @@ import org.dmg.pmml.PMML;
 import org.dmg.pmml.Visitor;
 import org.jpmml.evaluator.*;
 
-public class EvaluationExample extends Example {
+public class SimplePmmlTestTool extends SimplePmmlTestToolBase {
 
 	@Parameter (
 		names = {"--pmmlSrc"},
@@ -89,7 +89,7 @@ public class EvaluationExample extends Example {
 
 	static
 	public void main(String... args) throws Exception {
-		execute(EvaluationExample.class, args);
+		execute(SimplePmmlTestTool.class, args);
 	}
 
 	@Override
