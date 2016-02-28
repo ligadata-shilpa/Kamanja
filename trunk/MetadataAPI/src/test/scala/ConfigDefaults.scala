@@ -58,7 +58,7 @@ object ConfigDefaults {
   private def createDirectory(dirName:String){
     var dir = new File(dirName)
     if( ! dir.exists() ){
-      dir.mkdir()
+      dir.mkdirs()
     }
   }
 
