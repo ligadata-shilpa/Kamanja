@@ -219,7 +219,7 @@ class HdfsFileHandler extends FileHandler{
         if(tempHdFileSystem != null)
           tempHdFileSystem.close()
       }
-      catch{case e => {logger.error(e)}
+      catch{case e : Exception => {logger.error(e)}
       }
       compressed
     }

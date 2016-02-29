@@ -265,7 +265,7 @@ class SftpFileHandler extends FileHandler{
       try{
         tempInputStream.close()
       }
-      catch{case e => }
+      catch{case e : Exception => }
     }
     compressed
 
