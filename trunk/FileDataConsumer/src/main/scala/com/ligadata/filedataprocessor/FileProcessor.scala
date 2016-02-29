@@ -353,31 +353,40 @@ object FileProcessor {
         iter.foreach(fileTuple => {
           try {
             val d = new File(fileTuple._1)
-            
+
+            // If the filesystem is accessible
             if (d.exists) {
+              // If file hasn't grown in the past 2 seconds - either a delay OR a completed transfer.
               if (fileTuple._2 == d.length) {
+                // If the length is > 0, we assume that the file completed transfer... (very problematic, but unless
+                // told otherwise by BofA, not sure what else we can do here.
                 if (d.length > 0 && FileProcessor.isValidFile(fileTuple._1)) {
                   logger.info("SMART FILE CONSUMER (global):  File READY TO PROCESS " + d.toString)
                   enQFile(fileTuple._1, FileProcessor.NOT_RECOVERY_SITUATION, d.lastModified)
                   bufferingQ_map.remove(fileTuple._1)
-                }else if(d.length == 0){
-                  var diff = (System.currentTimeMillis - d.lastModified)
-                   if (diff > bufferTimeout) {
-                     logger.warn("SMART FILE CONSUMER (global): Detected that " + d.toString + " has been on the buffering queue longer then " + bufferTimeout / 1000 + " seconds - Cleaning up" )
+                } else
+                  // Here becayse either the file is sitll of len 0,or its deemed to be invalid.
+                  if(d.length == 0){
+                    val diff = System.currentTimeMillis - d.lastModified
+                    if (diff > bufferTimeout) {
+                      logger.warn("SMART FILE CONSUMER (global): Detected that " + d.toString + " has been on the buffering queue longer then " + bufferTimeout / 1000 + " seconds - Cleaning up" )
                       bufferingQ_map.remove(fileTuple._1)
                       fileCacheRemove(fileTuple._1)
                       moveFile(fileTuple._1)
-                   }
-                }else{
-                  //Invalid File - due to content type
-                  moveFile(fileTuple._1)
-                  logger.error("SMART FILE CONSUMER (global): Moving out " + fileTuple._1 + " with invalid file type " )
-                }
-              }else{
+                    }
+                  } else {
+                    //Invalid File - due to content type
+                    logger.error("SMART FILE CONSUMER (global): Moving out " + fileTuple._1 + " with invalid file type " )
+                    bufferingQ_map.remove(fileTuple._1)
+                    fileCacheRemove(fileTuple._1)
+                    moveFile(fileTuple._1)
+                  }
+              } else {
                 bufferingQ_map(fileTuple._1) = d.length
               }
               
-            }else{
+            } else {
+              // File System is not accessible.. issue a warning and go on to the next file.
               logger.warn("SMART FILE CONSUMER (global): File on the buffering Q is not found " + fileTuple._1)
             }
             
@@ -422,7 +431,7 @@ object FileProcessor {
   private def isValidFile(fileName: String): Boolean = {
 
     //Check if the File exists
-    if(Files.exists(Paths.get(fileName)) && (Paths.get(fileName).toFile().length()>0)){
+    if(Files.exists(Paths.get(fileName)) && (Paths.get(fileName).toFile().length()>0)) {
       //Sniff only text/plain and application/gzip for now
       var detector = new DefaultDetector()
       var tika = new Tika(detector)
@@ -438,14 +447,14 @@ object FileProcessor {
       //Currently handling only text/plain and application/gzip contents
       //Need to bubble this property out into the Constants and Configuration
       if(contentTypes contains contentType){
-         return true;
+         return true
       }else{
         //Log error for invalid content type
         logger.error("SMART FILE CONSUMER (global): Invalid content type " + contentType + " for file " + fileName)
       }
-    } else if (!Files.exists(Paths.get(fileName))){
+    } else if (!Files.exists(Paths.get(fileName))) {
       //File doesnot exists - it is already processed
-      logger.info("SMART FILE CONSUMER (global): File aready processed " + fileName)
+      logger.warn ("SMART FILE CONSUMER (global): File aready processed " + fileName)
     } else if (Paths.get(fileName).toFile().length() == 0 ){
       return true
     }
@@ -691,8 +700,7 @@ object FileProcessor {
     val fileStruct = fileName.split("/")
     logger.info("SMART FILE CONSUMER Moving File" + fileName+ " to " + targetMoveDir)
     if (Paths.get(fileName).toFile().exists()) {
-      Files.copy(Paths.get(fileName), Paths.get(targetMoveDir + "/" + fileStruct(fileStruct.size - 1)), REPLACE_EXISTING)
-      Files.deleteIfExists(Paths.get(fileName))
+      Files.move(Paths.get(fileName), Paths.get(targetMoveDir + "/" + fileStruct(fileStruct.size - 1)),REPLACE_EXISTING)
     } else {
       logger.warn("SMART FILE CONSUMER File has been deleted" + fileName);
     }
