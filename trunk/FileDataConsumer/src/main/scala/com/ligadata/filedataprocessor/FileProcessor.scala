@@ -60,10 +60,7 @@ object FileProcessor {
   //private var path: Path = null
   //Create multiple path watcher
   private var path: ArrayBuffer[Path] = null
-  
-  private var watchService: WatchService = null
-  private var keys = new HashMap[WatchKey, Path]
-  private var contentTypes = new scala.collection.mutable.HashMap[String,String]
+  private val contentTypes = new scala.collection.mutable.HashMap[String,String]
 
   var dirToWatch: String = _
   var targetMoveDir: String = _
@@ -305,12 +302,6 @@ object FileProcessor {
     MetadataAPIImpl.InitMdMgrFromBootStrap(localMetadataConfig, false)
     zkc = initZookeeper
 
-    //watchService = path.getFileSystem().newWatchService()
-    //Create a single watchService and register all directories to be watched
-    watchService = FileSystems.getDefault().newWatchService()
-    
-    keys = new HashMap[WatchKey, Path]
-
     isBufferMonitorRunning = true
     globalFileMonitorService.execute(new Runnable() {
       override def run() = {
@@ -386,7 +377,7 @@ object FileProcessor {
               }
               
             } else {
-              // File System is not accessible.. issue a warning and go on to the next file.
+               // File System is not accessible.. issue a warning and go on to the next file.
               logger.warn("SMART FILE CONSUMER (global): File on the buffering Q is not found " + fileTuple._1)
             }
             
@@ -624,7 +615,6 @@ object FileProcessor {
             case e: IOException => {
               // Interesting,  we have just died, and need to move the newly added files to the queue
               logger.warn("SMART FILE CONSUMER (gloabal): Unable to connect to watch directory, will try to shut it down and recreate again")
-              watchService.close
               isWatchedFileSystemAccesible = false
               afterErrorConditions = true
             }
@@ -645,7 +635,6 @@ object FileProcessor {
         if (!isWatchedFileSystemAccesible) {
           afterErrorConditions = true
           logger.warn("SMART FILE CONSUMER (gloabal): Unable to access a watched directory, will try to shut it down and recreate")
-          watchService.close
         }
         logger.warn("SMART FILE CONSUMER (gloabal): File system is not accessible")
       }
@@ -723,12 +712,6 @@ object BufferCounters {
  */
 //class FileProcessor(val path: Path, val partitionId: Int) extends Runnable {
 class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends Runnable {
-  
-  //private var watchService = path.getFileSystem().newWatchService()
-  //private var watchService = FileSystems.getDefault.newWatchService()
-  
-  private var keys = new HashMap[WatchKey, Path]
-  //private var contentTypes :scala.collection.mutable.HashMap[String,String] = null
 
   private var kml: KafkaMessageLoader = null
   private var zkc: CuratorFramework = null
