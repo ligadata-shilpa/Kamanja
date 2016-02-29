@@ -31,6 +31,7 @@ import org.apache.logging.log4j._
 import com.ligadata.Utils._
 import scala.util.control.Breaks._
 import com.ligadata.Exceptions._
+import com.ligadata.KamanjaVersion.KamanjaVersion
 
 class APIService extends LigadataSSLConfiguration with Runnable{
 
@@ -63,6 +64,7 @@ class APIService extends LigadataSSLConfiguration with Runnable{
   
   private def PrintUsage(): Unit = {
     logger.warn("    --config <configfilename>")
+    logger.warn("    --version")
   }
 
   private def nextOption(map: OptionMap, list: List[String]): OptionMap = {
@@ -71,6 +73,8 @@ class APIService extends LigadataSSLConfiguration with Runnable{
       case Nil => map
       case "--config" :: value :: tail =>
         nextOption(map ++ Map('config -> value), tail)
+      case "--version" :: tail =>
+        nextOption(map ++ Map('version -> "true"), tail)
       case option :: tail => {
         logger.error("Unknown option " + option)
         sys.exit(1)
@@ -88,7 +92,7 @@ class APIService extends LigadataSSLConfiguration with Runnable{
       var configFile = ""
       if (args.length == 0) {
         try {
-          configFile = sys.env("KAMANJA_HOME") + "/config/MetadataAPIConfig.properties"
+          configFile = scala.util.Properties.envOrElse("KAMANJA_HOME", scala.util.Properties.envOrElse("HOME", "~" )) + "/config/MetadataAPIConfig.properties"
         } catch {
           case nsee: java.util.NoSuchElementException => {
             logger.warn("Either a CONFIG FILE parameter must be passed to start this service or KAMANJA_HOME must be set")
@@ -105,6 +109,11 @@ class APIService extends LigadataSSLConfiguration with Runnable{
         logger.warn("The config file supplied is a complete path name of a  json file similar to one in github/Kamanja/trunk/MetadataAPI/src/main/resources/MetadataAPIConfig.properties")
       } else {
         val options = nextOption(Map(), args.toList)
+        val version = options.getOrElse('version, "false").toString
+        if (version.equalsIgnoreCase("true")) {
+          KamanjaVersion.print
+          sys.exit(0)
+        }
         val cfgfile = options.getOrElse('config, null)
         if (cfgfile == null) {
           logger.error("Need configuration file as parameter")

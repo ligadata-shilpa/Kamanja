@@ -37,6 +37,7 @@ import java.util.Date
 import java.util.Properties
 import com.ligadata.Exceptions._
 import com.ligadata.kamanja.metadata.Utils
+import com.ligadata.KamanjaVersion.KamanjaVersion
 
 object TestMetadataAPI {
 
@@ -2581,6 +2582,7 @@ println("Getting Messages")
 
   private def PrintUsage(): Unit = {
     logger.warn("    --config <configfilename>")
+    logger.warn("    --version")
   }
 
   private def nextOption(map: OptionMap, list: List[String]): OptionMap = {
@@ -2589,6 +2591,8 @@ println("Getting Messages")
       case Nil => map
       case "--config" :: value :: tail =>
         nextOption(map ++ Map('config -> value), tail)
+      case "--version" :: tail =>
+        nextOption(map ++ Map('version -> "true"), tail)
       case option :: tail => {
         logger.error("Unknown option " + option)
         sys.exit(1)
@@ -2633,6 +2637,11 @@ println("Getting Messages")
         return
       } else {
         val options = nextOption(Map(), args.toList)
+        val version = options.getOrElse('version, "false").toString
+        if (version.equalsIgnoreCase("true")) {
+          KamanjaVersion.print
+          return
+        }
         val cfgfile = options.getOrElse('config, null)
         if (cfgfile == null) {
           logger.error("Need configuration file as parameter")

@@ -49,7 +49,9 @@ lazy val ZooKeeperClient = project.in(file("Utils/ZooKeeper/CuratorClient")) dep
 
 lazy val ZooKeeperListener = project.in(file("Utils/ZooKeeper/CuratorListener")) dependsOn(ZooKeeperClient, Serialize, Exceptions)
 
-lazy val Exceptions = project.in(file("Exceptions"))
+lazy val KamanjaVersion = project.in(file("KamanjaVersion"))
+
+lazy val Exceptions = project.in(file("Exceptions")) dependsOn(KamanjaVersion)
 
 lazy val KamanjaBase = project.in(file("KamanjaBase")) dependsOn(Metadata, Exceptions, KamanjaUtils, HeartBeat, KvBase, DataDelimiters)
 
@@ -171,7 +173,7 @@ lazy val MigrateBase = project.in(file("Utils/Migrate/MigrateBase"))
 
 lazy val MigrateFrom_V_1_1 = project.in(file("Utils/Migrate/SourceVersion/MigrateFrom_V_1_1")) dependsOn (MigrateBase)
 
-lazy val MigrateManager = project.in(file("Utils/Migrate/MigrateManager")) dependsOn (MigrateBase)
+lazy val MigrateManager = project.in(file("Utils/Migrate/MigrateManager")) dependsOn (MigrateBase, KamanjaVersion)
 
 lazy val MigrateTo_V_1_3 = project.in(file("Utils/Migrate/DestinationVersion/MigrateTo_V_1_3")) dependsOn (MigrateBase, KamanjaManager)
 

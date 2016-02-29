@@ -46,6 +46,7 @@ import org.json4s._
 import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
 import org.json4s.jackson.Serialization
+import com.ligadata.KamanjaVersion.KamanjaVersion
 
 /**
   * This application installs and upgrades Kamanaja.  It does these essential things:
@@ -329,6 +330,8 @@ Usage:
           nextOption(map ++ Map('skipPrerequisites -> value), tail)
         case "--externalJarsDir" :: value :: tail =>
           nextOption(map ++ Map('externalJarsDir -> value), tail)
+        case "--version" :: tail =>
+          nextOption(map ++ Map('version -> "true"), tail)
         case option :: tail =>
           printAndLogError("Unknown option " + option, log)
           printAndLogDebug(usage, log);
@@ -338,6 +341,11 @@ Usage:
     }
 
     val options = nextOption(Map(), arglist)
+    val version = options.getOrElse('version, "false").toString
+    if (version.equalsIgnoreCase("true")) {
+      KamanjaVersion.print
+      return
+    }
 
     // 1st Set of options
     // Mandatory options

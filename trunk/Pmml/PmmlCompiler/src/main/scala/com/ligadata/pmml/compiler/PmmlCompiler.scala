@@ -45,7 +45,7 @@ import com.ligadata.pmml.transforms.rawtocooked.common._
 import com.ligadata.pmml.transforms.xmltoraw.common._
 import com.ligadata.kamanja.metadata.MiningModelType.MiningModelType
 import com.ligadata.kamanja.metadata.ModelRepresentation.ModelRepresentation
-
+import com.ligadata.KamanjaVersion.KamanjaVersion
 
 /** 
 	Original Notes (of historical interest only):
@@ -302,12 +302,19 @@ As such, it must be simple name with alphanumerics and ideally all lower case.
 		                           nextOption(map ++ Map('client -> value), tail)
 		    case "--skipjar" :: tail =>
 		                           nextOption(map ++ Map('skipjar -> "true"), tail)
+            case "--version" :: tail =>
+		                           nextOption(map ++ Map('version -> "true"), tail)
 		    case option :: tail => logger.error("Unknown option " + option) 
 		                           sys.exit(1) 
 		  }
 		}
 		
 		val options = nextOption(Map(),arglist)
+        val version = options.getOrElse('version, "false").toString
+        if (version.equalsIgnoreCase("true")) {
+          KamanjaVersion.print
+          return
+        }
 		val pmmlFilePath = if (options.contains('pmml)) options.apply('pmml) else null
 		val classpath = if (options.contains('classpath)) options.apply('classpath) else null 
 		val scalahome = if (options.contains('scalahome)) options.apply('scalahome) else null 
