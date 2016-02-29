@@ -69,6 +69,7 @@ Usage()
     echo "                               --priorInstallDirPath <name to use for rename of prior install if any>  "
     echo "                               --newInstallDirPath <new dir path of physical install>  "
     echo "                               --installVerificationFile <file to get the verification information>  "
+    echo "                               --externalJarsDir <external jars directory to be copied to installation lib/application> "
     echo
     echo "  NOTES: Only tar'd gzip files are supported for the tarballs at the moment."
     echo "         NodeConfigPath must be supplied always"
@@ -96,9 +97,9 @@ else
 fi
 
 # Check 2: Is this even close to reasonable?
-if [[ "$name1" != "--ClusterId" && "$name1" != "--MetadataAPIConfig" && "$name1" != "--NodeConfigPath"  && "$name1" != "--KafkaInstallPath"   && "$name1" != "--TarballPath"  && "$name1" != "--WorkingDir"   && "$name1" != "--ipAddrs"   && "$name1" != "--ipIdTargPaths"   && "$name1" != "--ipPathPairs" && "$name1" != --priorInstallDirPath" &&  n"$name1" != ""--newInstallDirPath" ]]; then
+if [[ "$name1" != "--ClusterId" && "$name1" != "--MetadataAPIConfig" && "$name1" != "--NodeConfigPath"  && "$name1" != "--KafkaInstallPath"   && "$name1" != "--TarballPath"  && "$name1" != "--WorkingDir"   && "$name1" != "--ipAddrs"   && "$name1" != "--ipIdTargPaths"   && "$name1" != "--ipPathPairs" && "$name1" != --priorInstallDirPath" &&  n"$name1" != ""--newInstallDirPath"  &&  n"$name1" != ""--externalJarsDir" ]]; then
     echo 
-	echo "Problem: Unreasonable number of arguments... as few as 2 and as many as 24 may be supplied."
+	echo "Problem: Unreasonable number of arguments... as few as 2 and as many as 26 may be supplied."
     Usage
 	exit 1
 fi
@@ -118,6 +119,7 @@ ipPathPairs=""
 priorInstallDirPath=""
 newInstallDirPath=""
 installVerificationFile=""
+externalJarsDir=""
 
 while [ "$1" != "" ]; do
     case $1 in
@@ -157,6 +159,9 @@ while [ "$1" != "" ]; do
                                 ;;
         --installVerificationFile )   shift
                                 installVerificationFile=$1
+                                ;;
+        --externalJarsDir )   shift
+                                externalJarsDir=$1
                                 ;;
         --help )           		Usage
         						exit 0
@@ -517,6 +522,10 @@ EOF
 
 	if [ "$curNodeBrokenLnk" == "true" ]; then
 		brokenLink="true"
+	fi
+
+	if [ "$externalJarsDir" != "" ]; then
+        scp -o StrictHostKeyChecking=no "$externalJarsDir/*" "$machine:$newInstallDirPath/lib/application/"
 	fi
 
 	if [ "$curNodePriorInstDetected" == "false" ]; then
