@@ -108,7 +108,6 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
   def StopProcessing(): Unit = {
     isShutdown = true
     terminateReaderTasks
-    //terminateHBTasks
   }
 
   private def getTimeoutTimer: Long = {
@@ -743,21 +742,6 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
   }
 
   /**
-   * beginHeartbeat - This adapter will begin monitoring the partitions for the specified topic
-   */
-  def beginHeartbeat(): Unit = lock.synchronized {
-    return
-  }
-
-  /**
-   *  stopHeartbeat - signal this adapter to shut down the monitor thread
-   */
-  def stopHearbeat(): Unit = lock.synchronized {
-
-  }
-
-
-  /**
    *  Convert the "localhost:XXXX" into an actual IP address.
    */
   private def convertIp(inString: String): String = {
@@ -774,13 +758,6 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
    */
   private def getKafkaConfigId(metadata: kafka.api.PartitionMetadata): String = {
     return metadata.leader.get.host + ":" + metadata.leader.get.port;
-  }
-
-  /**
-   * terminateHBTasks - Just what it says
-   */
-  private def terminateHBTasks(): Unit = {
-
   }
 
   /**
