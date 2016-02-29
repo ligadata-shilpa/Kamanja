@@ -1060,9 +1060,6 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
       }
       case fio: IOException => {
         logger.error("SMART_FILE_CONSUMER (" + partitionId + ") Exception accessing the file for processing the file ",fio)
-        
-        //val tokenName = fileName.split("/")
-        //FileProcessor.setFileState(tokenName(tokenName.size - 1),FileProcessor.MISSING)
         FileProcessor.setFileState(fileName,FileProcessor.MISSING)
         return
       }
