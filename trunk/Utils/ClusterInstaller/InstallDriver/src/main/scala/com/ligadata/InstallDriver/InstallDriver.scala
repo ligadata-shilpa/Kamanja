@@ -853,9 +853,9 @@ Try again.
             sb.append("""{ "component" : "kafka", "hostslist" : "%s" }""".stripMargin.format(kafkaConnections))
             addedComp += 1
           }
-          if (addedComp > 0)
-            sb.append(",")
           if ((!skipComponents.contains("hbase")) && (!skipComponents.contains("storage")) && hbaseConnections.nonEmpty) {
+            if (addedComp > 0)
+              sb.append(",")
             sb.append(hbaseConnections)
             addedComp += 1
           }
