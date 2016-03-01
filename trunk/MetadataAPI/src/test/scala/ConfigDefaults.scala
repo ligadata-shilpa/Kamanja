@@ -34,10 +34,10 @@ object ConfigDefaults {
   private val loggerName = this.getClass.getName
   private val logger = LogManager.getLogger(loggerName)
 
-  private val RootDir = "./MetadataAPI/target/scala-2.11/test-classes"
-  private val targetLibDir = RootDir + "/jars/lib/system"
-  private val appLibDir = RootDir + "/jars/lib/application"
-  private val workDir = RootDir + "/jars/lib/workingdir"
+  private val RootDir = "./MetadataAPI/target/scala-2.11/test-classes/"
+  private val targetLibDir = RootDir + "jars/lib/system"
+  private val appLibDir = RootDir + "jars/lib/application"
+  private val workDir = RootDir + "jars/lib/workingdir"
 
   private def copyFile(sourceFile:File, destFile:File)  {
     
