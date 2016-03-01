@@ -97,7 +97,7 @@ else
 fi
 
 # Check 2: Is this even close to reasonable?
-if [[ "$name1" != "--ClusterId" && "$name1" != "--MetadataAPIConfig" && "$name1" != "--NodeConfigPath"  && "$name1" != "--KafkaInstallPath"   && "$name1" != "--TarballPath"  && "$name1" != "--WorkingDir"   && "$name1" != "--ipAddrs"   && "$name1" != "--ipIdTargPaths"   && "$name1" != "--ipPathPairs" && "$name1" != --priorInstallDirPath" &&  n"$name1" != ""--newInstallDirPath"  &&  n"$name1" != ""--externalJarsDir" ]]; then
+if [[ "$name1" != "--ClusterId" && "$name1" != "--MetadataAPIConfig" && "$name1" != "--NodeConfigPath"  && "$name1" != "--KafkaInstallPath"   && "$name1" != "--TarballPath"  && "$name1" != "--WorkingDir"   && "$name1" != "--ipAddrs"   && "$name1" != "--ipIdTargPaths"   && "$name1" != "--ipPathPairs" && "$name1" != "--priorInstallDirPath" &&  "$name1" != "--newInstallDirPath"  &&  "$name1" != "--externalJarsDir" ]]; then
     echo 
 	echo "Problem: Unreasonable number of arguments... as few as 2 and as many as 26 may be supplied."
     Usage
