@@ -84,6 +84,7 @@ class MdMgr {
   private var adapters = new HashMap[String, AdapterInfo]
   private var modelConfigs = new HashMap[String,scala.collection.immutable.Map[String,List[String]]]
   private var configurations = new HashMap[String,UserPropertiesInfo]
+  private var msgdefSystemCols = List("transactionid", "timepartitiondata", "rownumber")
 
   def truncate {
     typeDefs.clear
@@ -297,7 +298,11 @@ class MdMgr {
    */
 
   private def SetBaseElem(be: BaseElemDef, nameSpace: String, name: String, ver: Long, jarNm: String, depJars: Array[String]): Unit = {
-    be.name = name.trim.toLowerCase
+    if(msgdefSystemCols.contains(name.trim.toLowerCase)){
+      be.name = name.trim
+    } else{
+      be.name = name.trim.toLowerCase
+    }
     be.nameSpace = nameSpace.trim.toLowerCase
     be.ver = ver
     be.uniqueId = MdIdSeq.next
