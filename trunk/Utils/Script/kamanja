@@ -112,6 +112,8 @@ elif [ "$INPUT" = "watch output queue" ]; then
   $KAMANJA_HOME/bin/WatchOutputQueue.sh
 elif [ "$INPUT" = "watch failed events queue" ]; then
   $KAMANJA_HOME/bin/WatchFailedEventQueue.sh
+elif [ "$INPUT" = "--version" ]; then
+  $KAMANJA_HOME/bin/MetadataAPI-1.0 --version
 elif [ "$INPUT" = "help" ]; then
 cat $KAMANJA_HOME/input/HelpMenu.txt
     echo ""
