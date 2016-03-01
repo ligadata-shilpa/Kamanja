@@ -22,6 +22,7 @@ import java.util.concurrent.{ Executors, ScheduledExecutorService, TimeUnit }
 import com.ligadata.Utils.{ Utils, KamanjaClassLoader, KamanjaLoaderInfo }
 import org.apache.logging.log4j.{ Logger, LogManager }
 import com.ligadata.Exceptions.{ FatalAdapterException }
+import scala.actors.threadpool.{ ExecutorService }
 import com.ligadata.KamanjaVersion.KamanjaVersion
 
 class KamanjaServer(var mgr: KamanjaManager, port: Int) extends Runnable {
@@ -228,7 +229,9 @@ class KamanjaManager extends Observer {
   private var adapterMetricInfo: scala.collection.mutable.MutableList[com.ligadata.HeartBeat.MonitorComponentInfo] = null
   private val failedEventsAdapters = new ArrayBuffer[OutputAdapter]
 
-
+  private var metricsService: ExecutorService = scala.actors.threadpool.Executors.newFixedThreadPool(1)
+  private var isTimerRunning = false
+  private var isTimerStarted = false
   private type OptionMap = Map[Symbol, Any]
 
   private def PrintUsage(): Unit = {
@@ -637,7 +640,19 @@ class KamanjaManager extends Observer {
       }
     }
 
-    val scheduledThreadPool = Executors.newScheduledThreadPool(2);
+    val metricsCollector = new Runnable {
+      def run(): Unit = {
+        try {
+          externalizeMetrics
+        } catch {
+          case e: Throwable => {
+            LOG.warn("KamanjaManager " + KamanjaConfiguration.nodeId.toString + " unable to externalize statistics due to internal error. Check ZK connection", e)
+          }
+        }
+      }
+    }
+
+    val scheduledThreadPool = Executors.newScheduledThreadPool(3);
 
     scheduledThreadPool.scheduleWithFixedDelay(statusPrint_PD, 0, 1000, TimeUnit.MILLISECONDS);
 
@@ -739,8 +754,11 @@ class KamanjaManager extends Observer {
       // See if we have to extenrnalize stats, every 5000ms..
       if (LOG.isTraceEnabled)
         LOG.trace("KamanjaManager " + KamanjaConfiguration.nodeId.toString + " running iteration " + cntr)
-      if (cntr % 10 == 1) {
-        externalizeMetrics
+
+      if (!isTimerStarted) {
+        println("Starting metrics")
+        scheduledThreadPool.scheduleWithFixedDelay(metricsCollector, 0, 5000, TimeUnit.MILLISECONDS);
+        isTimerStarted = true
       }
     }
 
@@ -749,8 +767,11 @@ class KamanjaManager extends Observer {
     return Shutdown(0)
   }
 
-  private def externalizeMetrics: Unit = {
 
+  /**
+   *
+   */
+  private def externalizeMetrics: Unit = {
     val zkNodeBasePath = KamanjaConfiguration.zkNodeBasePath.stripSuffix("/").trim
     val zkHeartBeatNodePath = zkNodeBasePath + "/monitor/engine/" + KamanjaConfiguration.nodeId.toString
     val isLogDebugEnabled = LOG.isDebugEnabled
