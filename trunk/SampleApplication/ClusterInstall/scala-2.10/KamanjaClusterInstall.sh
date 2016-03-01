@@ -231,6 +231,8 @@ rm -f $installVerificationFile
 # Creating working directory
 mkdir -p $workDir
 
+echo "" > $workDir/InstallStatus.txt
+
 # Check 7: working directory must exist
 if [ ! -d "$workDir" ]; then
     echo 
@@ -525,7 +527,7 @@ EOF
 	fi
 
 	if [ "$externalJarsDir" != "" ]; then
-        scp -o StrictHostKeyChecking=no "$externalJarsDir/*" "$machine:$newInstallDirPath/lib/application/"
+        scp -o StrictHostKeyChecking=no "$externalJarsDir"/* "$machine:$newInstallDirPath/lib/application/"
 	fi
 
 	if [ "$curNodePriorInstDetected" == "false" ]; then
@@ -664,6 +666,7 @@ while read LINE; do
 
 	ssh -o StrictHostKeyChecking=no -T $machine  <<-EOF
 		# {HostName,LinkDir,LinkExists(Yes|No),LinkPointingToDir,LinkPointingDirExists(Yes|No),NewInstallDir, NewInstallDirExists(Yes|No)} 
+		echo "" > $workDir/InstallStatusLocal.txt
 		if [ -d "$targetPath" ]; then 
 			if [ ! -L $targetPath ]; then
 				cd $targetPath
