@@ -187,6 +187,8 @@ lazy val ClusterInstallerDriver = project.in(file("Utils/ClusterInstaller/Cluste
 
 lazy val GetComponent = project.in(file("Utils/ClusterInstaller/GetComponent"))
 
+lazy val PmmlTestTool = project.in(file("Utils/PmmlTestTool"))
+
 /*
 
 val commonSettings = Seq(
