@@ -87,7 +87,7 @@ Usage()
 
 
 # Check 1: Is this even close to reasonable?
-if [[ "$#" -eq 1  || "$#" -eq 4  || "$#" -eq 6  || "$#" -eq 8  || "$#" -eq 10  || "$#" -eq 12  || "$#" -eq 14  || "$#" -eq 16  || "$#" -eq 18  || "$#" -eq 20 || "$#" -eq 22 || "$#" -eq 24 ]]; then
+if [[ "$#" -eq 1  || "$#" -eq 4  || "$#" -eq 6  || "$#" -eq 8  || "$#" -eq 10  || "$#" -eq 12  || "$#" -eq 14  || "$#" -eq 16  || "$#" -eq 18  || "$#" -eq 20 || "$#" -eq 22 || "$#" -eq 24 || "$#" -eq 26 ]]; then
     echo 
 else 
     echo 
