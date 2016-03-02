@@ -406,11 +406,10 @@ object FileProcessor {
                     .sortWith(_.lastModified < _.lastModified).toList
       files.foreach(file => {
         //if (isValidFile(file.toString) && file.toString.endsWith(readyToProcessKey)) {
-        if(FileProcessor.isValidFile(file.toString)){
-          if (!checkIfFileBeingProcessed(file.toString)) {
-            FileProcessor.enQBufferedFile(file.toString)
-          }
-        }else{
+        
+        if (!checkIfFileBeingProcessed(file.toString) && FileProcessor.isValidFile(file.toString)) {
+          FileProcessor.enQBufferedFile(file.toString)
+        }else if(!FileProcessor.isValidFile(file.toString)){
           //Invalid File - Move out file and log error
           moveFile(file.toString())
           logger.error("SMART FILE CONSUMER (global): Moving out " + file.toString() + " with invalid file type " )
@@ -858,7 +857,7 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
   }
 
   private def deQBuffer(bee: Int): BufferToChunk = {
-    msgQLock.synchronized {
+    bufferQLock.synchronized {
       if (bufferQ.isEmpty) {
         return null
       }
