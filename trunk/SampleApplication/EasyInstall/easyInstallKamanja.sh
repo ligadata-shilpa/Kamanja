@@ -160,7 +160,7 @@ cd $srcPath/
 
 sbt clean '++ 2.10.4 package' '++ 2.10.4 KamanjaManager/assembly' '++ 2.10.4 MetadataAPI/assembly' '++ 2.10.4 KVInit/assembly' '++ 2.10.4 SimpleKafkaProducer/assembly'
 sbt '++ 2.10.4 NodeInfoExtract/assembly' '++ 2.10.4 MetadataAPIService/assembly' '++ 2.10.4 JdbcDataCollector/assembly'
-sbt '++ 2.10.4 FileDataConsumer/assembly' '++ 2.10.4 CleanUtil/assembly' '++ 2.10.4 MigrateManager/assembly' '++ 2.10.4 ClusterInstallerDriver/assembly' '++ 2.10.4 InstallDriver/assembly' '++ 2.10.4 GetComponent/assembly'
+sbt '++ 2.10.4 FileDataConsumer/assembly' '++ 2.10.4 CleanUtil/assembly' '++ 2.10.4 MigrateManager/assembly' '++ 2.10.4 ClusterInstallerDriver/assembly' '++ 2.10.4 InstallDriver/assembly' '++ 2.10.4 GetComponent/assembly' '++ 2.10.4 PmmlTestTool/assembly'
 # sbt '++ 2.10.4 MethodExtractor/assembly' '++ 2.10.4 SaveContainerDataComponent/assembly' '++ 2.10.4 ExtractData/assembly' 
 
 # recreate eclipse projects
@@ -186,6 +186,7 @@ cp Utils/ClusterInstaller/ClusterInstallerDriver/target/ClusterInstallerDriver* 
 cp Utils/ClusterInstaller/InstallDriver/target/scala-2.10/InstallDriver* $kamanjainstallbin
 cp Utils/ClusterInstaller/GetComponent/target/scala-2.10/GetComponent* $kamanjainstallbin
 cp Utils/ClusterInstaller/InstallDriver/src/main/resources/GetComponentsVersions.sh $kamanjainstallbin
+cp Utils/PmmlTestTool/target/PmmlTestTool-1.0 $bin
 
 # only for 2.11 ?
 cp Utils/Migrate/MigrateManager/target/MigrateManager* $bin
@@ -844,7 +845,7 @@ fi
 #Now do full build of 2.11
 sbt clean '++ 2.11.7 package' '++ 2.11.7 KamanjaManager/assembly' '++ 2.11.7 MetadataAPI/assembly' '++ 2.11.7 KVInit/assembly' '++ 2.11.7 SimpleKafkaProducer/assembly' 
 sbt '++ 2.11.7 NodeInfoExtract/assembly' '++ 2.11.7 MetadataAPIService/assembly' '++ 2.11.7 JdbcDataCollector/assembly'
-sbt '++ 2.11.7 FileDataConsumer/assembly' '++ 2.11.7 CleanUtil/assembly' '++ 2.11.7 MigrateManager/assembly' '++ 2.11.7 ClusterInstallerDriver/assembly' '++ 2.11.7 InstallDriver/assembly' '++ 2.11.7 GetComponent/assembly'
+sbt '++ 2.11.7 FileDataConsumer/assembly' '++ 2.11.7 CleanUtil/assembly' '++ 2.11.7 MigrateManager/assembly' '++ 2.11.7 ClusterInstallerDriver/assembly' '++ 2.11.7 InstallDriver/assembly' '++ 2.11.7 GetComponent/assembly' '++ 2.11.7 PmmlTestTool/assembly'
 # sbt '++ 2.11.7 MethodExtractor/assembly' '++ 2.11.7 SaveContainerDataComponent/assembly' '++ 2.11.7 ExtractData/assembly' 
 
 # recreate eclipse projects
@@ -873,7 +874,7 @@ cp Utils/ClusterInstaller/GetComponent/target/scala-2.11/GetComponent* $kamanjai
 cp Utils/ClusterInstaller/InstallDriver/src/main/resources/GetComponentsVersions.sh $kamanjainstallbin
 cp Utils/Migrate/MigrateManager/target/MigrateManager* $kamanjainstallbin
 cp $srcPath/Utils/NodeInfoExtract/target/scala-2.11/NodeInfoExtract* $kamanjainstallbin
-
+cp Utils/PmmlTestTool/target/PmmlTestTool-1.0 $bin
 
 # *******************************
 # Copy jars required version-2.11 (more than required if the fat jars are used)
