@@ -6,7 +6,7 @@ This tool *does not* use Kamanja, but allows the user to quickly test their gene
 
 **Command Semantics**
   
-Usage: org.kamanja.pmml.testtool.SimplePmmlTestTool [options]
+Usage: org.kamanja.pmml.testtool.PmmlTestTool [options]
   Options:
   * --dataset
        CSV dataset file path
@@ -38,6 +38,12 @@ export ipport=8998
 export KAMANJA_HOME=/path/to/your/kamanja/installation
 cd $KAMANJA_SRCDIR
 
+Running with java...
+java -jar $KAMANJA_SRCDIR/Utils/PmmlTestTool/target/PmmlTestTool-1.0 --pmmlSrc $KAMANJA_SRCDIR/Utils/PmmlTestTool/src/main/resources/metadata/model/KNIME/DecisionTreeEnsembleIris.pmml --dataset $KAMANJA_SRCDIR/Utils/PmmlTestTool/src/main/resources/data/iris.raw.csv | wc -l
+
+java -jar $KAMANJA_SRCDIR/Utils/PmmlTestTool/target/PmmlTestTool-1.0 --pmmlSrc $KAMANJA_SRCDIR/Utils/PmmlTestTool/src/main/resources/metadata/model/KNIME/DecisionTreeEnsembleIris.pmml --dataset $KAMANJA_SRCDIR/Utils/PmmlTestTool/src/main/resources/data/iris.raw.csv --omitInputs >/tmp/results.txt
+
+Directly executing the fat jar...
 $KAMANJA_SRCDIR/Utils/PmmlTestTool/target/PmmlTestTool-1.0 --pmmlSrc $KAMANJA_SRCDIR/Utils/PmmlTestTool/src/main/resources/metadata/model/KNIME/DecisionTreeEnsembleIris.pmml --dataset $KAMANJA_SRCDIR/Utils/PmmlTestTool/src/main/resources/data/iris.raw.csv | wc -l
 
 $KAMANJA_SRCDIR/Utils/PmmlTestTool/target/PmmlTestTool-1.0 --pmmlSrc $KAMANJA_SRCDIR/Utils/PmmlTestTool/src/main/resources/metadata/model/KNIME/DecisionTreeEnsembleIris.pmml --dataset $KAMANJA_SRCDIR/Utils/PmmlTestTool/src/main/resources/data/iris.raw.csv --omitInputs >/tmp/results.txt
