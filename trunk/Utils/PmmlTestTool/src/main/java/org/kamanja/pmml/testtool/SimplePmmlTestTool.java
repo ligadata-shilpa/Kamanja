@@ -38,6 +38,7 @@ import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.ligadata.KamanjaVersion.KamanjaVersion;
 import org.dmg.pmml.FieldName;
 import org.dmg.pmml.PMML;
 import org.dmg.pmml.Visitor;
@@ -79,15 +80,21 @@ public class SimplePmmlTestTool extends SimplePmmlTestToolBase {
     private String separator = null;
 
     @Parameter (
-		names = "--loop",
-		description = "The number of repetitions",
-		hidden = true,
-		validateWith = PositiveInteger.class
-	)
-	private int _loop = 1;
+            names = "--loop",
+            description = "The number of repetitions",
+            hidden = true,
+            validateWith = PositiveInteger.class
+    )
+    private int _loop = 1;
+
+    @Parameter (
+            names = {"--version"},
+            description = "print version and exit"
+    )
+    private boolean _version = false;
 
 
-	static
+    static
 	public void main(String... args) throws Exception {
 		execute(SimplePmmlTestTool.class, args);
 	}
