@@ -770,7 +770,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
     }
 
     // Order Models (if property is given) if we added any
-    if (mdlObjects != null && mdlObjects.size > 0) {
+    if (modelObjs != null && modelObjs.size > 0) {
       // Order Models Execution
       val tmpExecOrderStr = mdMgr.GetUserProperty(KamanjaConfiguration.clusterId, "modelsexecutionorder")
       val ExecOrderStr = if (tmpExecOrderStr != null) tmpExecOrderStr.trim.toLowerCase.split(",").map(s => s.trim).filter(s => s.size > 0) else Array[String]()
