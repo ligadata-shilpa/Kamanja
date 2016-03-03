@@ -56,7 +56,7 @@ public class SimplePmmlTestToolBase {
             boolean hasVersion = false;
             if (args != null && args.length > 0) {
                 for (String arg:args) {
-                    if (arg.equals("--version")) {
+                    if (arg.equalsIgnoreCase("--version")) {
                         hasVersion = true;
                         break;
                     }
