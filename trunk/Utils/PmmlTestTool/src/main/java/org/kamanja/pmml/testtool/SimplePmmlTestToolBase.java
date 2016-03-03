@@ -32,6 +32,7 @@ import javax.xml.transform.stream.StreamResult;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
+import com.ligadata.KamanjaVersion.KamanjaVersion;
 import org.dmg.pmml.PMML;
 import org.jpmml.evaluator.*;
 import org.jpmml.model.ImportFilter;
@@ -52,10 +53,23 @@ public class SimplePmmlTestToolBase {
         commander.setProgramName(clazz.getName());
 
         try {
+            boolean hasVersion = false;
+            if (args != null && args.length > 0) {
+                for (String arg:args) {
+                    if (arg.equals("--version")) {
+                        hasVersion = true;
+                        break;
+                    }
+                }
+                /** if version is specified we print it and leave... regardless of other paramaters that may be present */
+                if (hasVersion) {
+                    KamanjaVersion.print();
+                    System.exit(0);
+                }
+            }
             commander.parse(args);
         } catch (ParameterException pe) {
             commander.usage();
-
             System.exit(-1);
         }
 
