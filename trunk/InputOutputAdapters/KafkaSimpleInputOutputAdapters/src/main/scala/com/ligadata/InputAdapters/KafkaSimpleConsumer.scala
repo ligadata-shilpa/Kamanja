@@ -575,7 +575,7 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
   /**
    *  Find a leader of for this topic for a given partition.
    */
-  private def findLeader(brokers: Array[String], inPartition: Int, blah: Boolean = false): kafka.api.PartitionMetadata = lock.synchronized {
+  private def findLeader(brokers: Array[String], inPartition: Int): kafka.api.PartitionMetadata = lock.synchronized {
     var leaderMetadata: kafka.api.PartitionMetadata = null
 
     LOG.debug("KAFKA-ADAPTER: Looking for Kafka Topic Leader for partition " + inPartition)
@@ -685,14 +685,28 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
 
     // Now that we know for sure we have a partition list.. process them
     partitionList.foreach(partitionId => {
-      val offset = getKeyValueForPartition(getKafkaConfigId(findLeader(qc.hosts, partitionId, true)), partitionId, time)
-      val rKey = new KafkaPartitionUniqueRecordKey
-      val rValue = new KafkaPartitionUniqueRecordValue
-      rKey.PartitionId = partitionId
-      rKey.Name = qc.Name
-      rKey.TopicName = qc.topic
-      rValue.Offset = offset
-      infoList = (rKey, rValue) :: infoList
+      var offset: Long = 0
+      breakable {
+        try {
+          offset = getKeyValueForPartition(getKafkaConfigId(findLeader(qc.hosts, partitionId)), partitionId, time)
+        } catch {
+          case e1: KamanjaException => {
+            LOG.warn("KAFKA ADAPTER: Could  not determine a leader for partition " + partitionId)
+            break
+          }
+          case e2: Exception => {
+            LOG.error("KAFKA ADAPTER: Unknown exception... Could  not determine a leader for partition " + partitionId, e2)
+            break
+          }
+        }
+        val rKey = new KafkaPartitionUniqueRecordKey
+        val rValue = new KafkaPartitionUniqueRecordValue
+        rKey.PartitionId = partitionId
+        rKey.Name = qc.Name
+        rKey.TopicName = qc.topic
+        rValue.Offset = offset
+        infoList = (rKey, rValue) :: infoList
+      }
     })
     return infoList.toArray
   }
