@@ -770,35 +770,38 @@ object KamanjaMetadata extends MdBaseResolveInfo {
     }
 
     // Order Models (if property is given) if we added any
-    if (modelObjs != null && modelObjs.size > 0) {
-      // Order Models Execution
-      val tmpExecOrderStr = mdMgr.GetUserProperty(KamanjaConfiguration.clusterId, "modelsexecutionorder")
-      val ExecOrderStr = if (tmpExecOrderStr != null) tmpExecOrderStr.trim.toLowerCase.split(",").map(s => s.trim).filter(s => s.size > 0) else Array[String]()
+    if ((removedModels != null && removedModels.size > 0) || (mdlObjects != null && mdlObjects.size > 0)) {
+      // Re-arrange only if there are any changes in models (add/remove)
+      if (modelObjs != null && modelObjs.size > 0) {
+        // Order Models Execution
+        val tmpExecOrderStr = mdMgr.GetUserProperty(KamanjaConfiguration.clusterId, "modelsexecutionorder")
+        val ExecOrderStr = if (tmpExecOrderStr != null) tmpExecOrderStr.trim.toLowerCase.split(",").map(s => s.trim).filter(s => s.size > 0) else Array[String]()
 
-      if (ExecOrderStr.size > 0 && modelObjs != null) {
-        var mdlsOrder = ArrayBuffer[(String, MdlInfo)]()
-        ExecOrderStr.foreach(mdlNm => {
-          val m = modelObjs.getOrElse(mdlNm, null)
-          if (m != null)
-            mdlsOrder += ((mdlNm, m))
-        })
+        if (ExecOrderStr.size > 0 && modelObjs != null) {
+          var mdlsOrder = ArrayBuffer[(String, MdlInfo)]()
+          ExecOrderStr.foreach(mdlNm => {
+            val m = modelObjs.getOrElse(mdlNm, null)
+            if (m != null)
+              mdlsOrder += ((mdlNm, m))
+          })
 
-        var orderedMdlsSet = ExecOrderStr.toSet
-        modelObjs.foreach(kv => {
-          val mdlNm = kv._1.toLowerCase()
-          if (orderedMdlsSet.contains(mdlNm) == false)
-            mdlsOrder += ((mdlNm, kv._2))
-        })
+          var orderedMdlsSet = ExecOrderStr.toSet
+          modelObjs.foreach(kv => {
+            val mdlNm = kv._1.toLowerCase()
+            if (orderedMdlsSet.contains(mdlNm) == false)
+              mdlsOrder += ((mdlNm, kv._2))
+          })
 
-        LOG.warn("Models Order changed from %s to %s".format(modelObjs.map(kv => kv._1).mkString(","), mdlsOrder.map(kv => kv._1).mkString(",")))
-        modelExecOrderedObjects = mdlsOrder.toArray
+          LOG.warn("Models Order changed from %s to %s".format(modelObjs.map(kv => kv._1).mkString(","), mdlsOrder.map(kv => kv._1).mkString(",")))
+          modelExecOrderedObjects = mdlsOrder.toArray
+        } else {
+          modelExecOrderedObjects = if (modelObjs != null) modelObjs.toArray else Array[(String, MdlInfo)]()
+        }
+
+        mdlsChanged = true
       } else {
-        modelExecOrderedObjects = if (modelObjs != null) modelObjs.toArray else Array[(String, MdlInfo)]()
+        modelExecOrderedObjects = Array[(String, MdlInfo)]()
       }
-
-      mdlsChanged = true
-    } else {
-      modelExecOrderedObjects = Array[(String, MdlInfo)]()
     }
 
     LOG.debug("mdlsChanged:" + mdlsChanged.toString)
