@@ -281,7 +281,7 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
             val fetchReq = new FetchRequestBuilder().clientId(clientName).addFetch(qc.topic, partitionId, readOffset, KafkaSimpleConsumer.FETCHSIZE).build()
             var fetchResp: FetchResponse = null
             var isFetchError = false
-            var isErrorRecorded = false\
+            var isErrorRecorded = false
             // Call the broker and get a response.
             while ((fetchResp == null || isFetchError) && !isQuiesced) {
               try {
