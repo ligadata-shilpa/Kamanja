@@ -199,6 +199,17 @@ object StartMetadataAPI {
             response = MessageService.getMessage(param)
         }
 
+
+        //output message management
+        case Action.ADDOUTPUTMESSAGE => response = MessageService.addOutputMessage(input)
+        case Action.UPDATEOUTPUTMESSAGE => response =MessageService.updateOutputMessage(input)
+        case Action.REMOVEOUTPUTMESSAGE => response ={
+          if (param.length == 0)
+            MessageService.removeOutputMessage()
+          else
+            MessageService.removeOutputMessage(param)
+        }
+
         case Action.GETALLOUTPUTMESSAGES => response = MessageService.getAllOutputMessages
         case Action.GETOUTPUTMESSAGE => response = {
           if (param.length == 0)
