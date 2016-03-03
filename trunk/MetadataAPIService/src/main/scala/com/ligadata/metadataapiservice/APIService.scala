@@ -32,6 +32,7 @@ import com.ligadata.Utils._
 import scala.util.control.Breaks._
 import com.ligadata.Exceptions._
 
+// $COVERAGE-OFF$
 class APIService extends LigadataSSLConfiguration with Runnable{
 
   private type OptionMap = Map[Symbol, Any]
@@ -172,7 +173,7 @@ class APIService extends LigadataSSLConfiguration with Runnable{
     }
   }
 }
- 
+
 object APIService {
   val loggerName = this.getClass.getName
   lazy val logger = LogManager.getLogger(loggerName)
@@ -220,3 +221,4 @@ object APIService {
     return firstOccurence
   }
 }
+// $COVERAGE-ON$

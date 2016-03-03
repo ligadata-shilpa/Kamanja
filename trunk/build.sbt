@@ -37,6 +37,8 @@ resolvers += Resolver.typesafeRepo("releases")
 
 resolvers += Resolver.sonatypeRepo("releases")
 
+coverageEnabled in ThisBuild := true
+
 val Organization = "com.ligadata"
 
 lazy val BaseTypes = project.in(file("BaseTypes")) dependsOn(Metadata, Exceptions)
