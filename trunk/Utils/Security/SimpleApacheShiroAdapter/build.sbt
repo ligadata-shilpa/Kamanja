@@ -48,7 +48,7 @@ assemblyMergeStrategy in assembly := {
 }
 
 excludedJars in assembly <<= (fullClasspath in assembly) map { cp => 
-  val excludes = Set("commons-beanutils-1.7.0.jar", "google-collections-1.0.jar", "commons-collections4-4.0.jar" )
+  val excludes = Set("commons-beanutils-1.7.0.jar", "google-collections-1.0.jar", "commons-collections4-4.0.jar", "log4j-1.2.17.jar", "log4j-1.2.16.jar" )
   cp filter { jar => excludes(jar.data.getName) }
 }
 
@@ -61,6 +61,8 @@ libraryDependencies += "org.joda" % "joda-convert" % "1.6"
 libraryDependencies += "joda-time" % "joda-time" % "2.8.2"
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.0"
+
+libraryDependencies += "org.apache.logging.log4j" % "log4j-1.2-api" % "2.4.1"
 
 libraryDependencies += "org.apache.logging.log4j" % "log4j-api" % "2.4.1"
 

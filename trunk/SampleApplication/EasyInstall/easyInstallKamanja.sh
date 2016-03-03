@@ -225,6 +225,7 @@ cp $ivyPath/cache/org.apache.commons/commons-collections4/jars/commons-collectio
 cp $srcPath/Storage/SqlServer/target/scala-2.10/sqlserver*.jar $systemlib
 cp $srcPath/lib_managed/jars/org.apache.commons/commons-compress/commons-compress-1.4.1.jar $systemlib
 cp $ivyPath/cache/org.apache.logging.log4j/log4j-api/jars/log4j-api-2.4.1.jar $systemlib
+cp $ivyPath/cache/org.apache.logging.log4j/log4j-1.2-api/bundles/log4j-1.2-api-2.4.1.jar $systemlib
 cp $srcPath/lib_managed/jars/org.apache.hadoop/hadoop-auth/hadoop-auth-2.7.1.jar $systemlib
 cp $srcPath/lib_managed/jars/commons-lang/commons-lang/commons-lang-2.6.jar $systemlib
 cp $srcPath/lib_managed/jars/com.google.code.gson/gson/gson-2.2.4.jar $systemlib
@@ -906,6 +907,7 @@ cp $ivyPath/cache/org.apache.commons/commons-collections4/jars/commons-collectio
 cp $srcPath/Storage/SqlServer/target/scala-2.11/sqlserver_2.11-0.1.0.jar $systemlib
 cp $srcPath/lib_managed/jars/org.apache.commons/commons-compress/commons-compress-1.4.1.jar $systemlib
 cp $ivyPath/cache/org.apache.logging.log4j/log4j-api/jars/log4j-api-2.4.1.jar $systemlib
+cp $ivyPath/cache/org.apache.logging.log4j/log4j-1.2-api/bundles/log4j-1.2-api-2.4.1.jar $systemlib
 cp $srcPath/lib_managed/jars/org.apache.hadoop/hadoop-auth/hadoop-auth-2.7.1.jar $systemlib
 cp $srcPath/lib_managed/jars/commons-lang/commons-lang/commons-lang-2.6.jar $systemlib
 cp $srcPath/lib_managed/jars/com.google.code.gson/gson/gson-2.2.4.jar $systemlib
