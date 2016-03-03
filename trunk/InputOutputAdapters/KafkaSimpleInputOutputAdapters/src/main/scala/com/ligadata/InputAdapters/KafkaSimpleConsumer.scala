@@ -108,7 +108,6 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
   def StopProcessing(): Unit = {
     isShutdown = true
     terminateReaderTasks
-    //terminateHBTasks
   }
 
   private def getTimeoutTimer: Long = {
@@ -128,7 +127,20 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
   override def getComponentStatusAndMetrics: MonitorComponentInfo = {
     implicit val formats = org.json4s.DefaultFormats
 
-    val depths = getAllPartitionEndValues
+    var depths:  Array[(PartitionUniqueRecordKey, PartitionUniqueRecordValue)] = null
+
+    try {
+      depths = getAllPartitionEndValues
+    } catch {
+      case e: KamanjaException => {
+        return new MonitorComponentInfo(AdapterConfiguration.TYPE_INPUT, qc.Name, KafkaSimpleConsumer.ADAPTER_DESCRIPTION, startHeartBeat, lastSeen, Serialization.write(metrics).toString)
+      }
+      case e: Exception => {
+        LOG.error ("KAFKA-ADAPTER: Unexpected exception determining kafka queue depths for " + qc.topic, e)
+        return new MonitorComponentInfo(AdapterConfiguration.TYPE_INPUT, qc.Name, KafkaSimpleConsumer.ADAPTER_DESCRIPTION, startHeartBeat, lastSeen, Serialization.write(metrics).toString)
+      }
+    }
+
     partitonDepths.clear
     depths.foreach(t => {
       try {
@@ -144,11 +156,9 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
         }
 
       } catch {
-        case e: Exception => LOG.warn("KAFKA-ADAPTER: Broker:  error trying to determine queue depths.",e)
+        case e: Exception => LOG.warn("KAFKA-ADAPTER: Broker:  error trying to determine kafka queue depths for "+qc.topic,e)
       }
     })
-
-
 
     return new MonitorComponentInfo( AdapterConfiguration.TYPE_INPUT, qc.Name, KafkaSimpleConsumer.ADAPTER_DESCRIPTION, startHeartBeat, lastSeen,  Serialization.write(metrics).toString)
   }
@@ -422,7 +432,7 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
             } catch {
               case e: java.lang.InterruptedException =>
                 {
-                  LOG.debug("KAFKA ADAPTER: Forcing down the Consumer Reader thread", e)
+                  LOG.info("KAFKA ADAPTER: shutting down thread for " + qc.topic + " partition: " + partitionId )
                   Shutdown()
                 }
             }
@@ -639,7 +649,8 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
             } catch {
               case fae: FatalAdapterException => throw fae
               case npe: NullPointerException => {
-                if (isQuiesced) LOG.warn("Kafka Simple Consumer is shutting down during kafka call looking for leader - ignoring the call", npe)
+                if (isQuiesced) LOG.warn("KAFKA ADAPTER - unable to find leader (shutdown detected), leader for this partition may be temporarily unavailable. partition ID: " + inPartition, npe)
+                else  LOG.warn("KAFKA ADAPTER - unable to find leader, leader for this partition may be temporarily unavailable. partition ID: " + inPartition, npe)
               }
               case e: Exception => throw FatalAdapterException("failed to SEND MetadataRequest to Kafka Server ", e)
             } finally {
