@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 ###################################################################
 #
 #  Copyright 2015 ligaDATA
@@ -14,7 +15,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 ###################################################################
-#!/usr/bin/env bash
+
 
 echo "Setting up paths"
 KafkaRootDir=$1
