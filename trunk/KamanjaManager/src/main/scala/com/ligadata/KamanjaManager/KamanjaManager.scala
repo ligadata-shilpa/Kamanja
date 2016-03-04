@@ -756,7 +756,6 @@ class KamanjaManager extends Observer {
         LOG.trace("KamanjaManager " + KamanjaConfiguration.nodeId.toString + " running iteration " + cntr)
 
       if (!isTimerStarted) {
-        println("Starting metrics")
         scheduledThreadPool.scheduleWithFixedDelay(metricsCollector, 0, 5000, TimeUnit.MILLISECONDS);
         isTimerStarted = true
       }
