@@ -311,8 +311,9 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
                   LOG.warn("KAFKA ADAPTER: Error fetching topic " + qc.topic + ", partition " + partitionId + ", failing over to the new leader " + leadBroker)
                   brokerId = convertIp(leadBroker)
                   brokerName = brokerId.split(":")
-                  consumer = createConsumer(brokerName(0), brokerName(1))
-
+                  var newConsumer = createConsumer(brokerName(0), brokerName(1))
+                  consumer.close()
+                  consumer = newConsumer
                   Thread.sleep(getTimeoutTimer)
                 } else {
                   resetTimeoutTimer
@@ -348,7 +349,9 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
                   LOG.warn("KAFKA ADAPTER: Recovered from error fetching " + qc.topic + ", partition " + partitionId + ", failing over to the new leader " + leadBroker)
                   brokerId = convertIp(leadBroker)
                   brokerName = brokerId.split(":")
-                  consumer = createConsumer(brokerName(0), brokerName(1))
+                  var newConsumer = createConsumer(brokerName(0), brokerName(1))
+                  consumer.close()
+                  consumer = newConsumer
                   Thread.sleep(getTimeoutTimer)
                 }
               }
@@ -489,6 +492,7 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
           val metaData = result._1.topicsMetadata
           metaData.foreach(topicMeta => {
             topicMeta.partitionsMetadata.foreach(partitionMeta => {
+              //partitionMeta.
               val uniqueKey = new KafkaPartitionUniqueRecordKey
               uniqueKey.PartitionId = partitionMeta.partitionId
               uniqueKey.Name = qc.Name
@@ -499,6 +503,9 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
               }
             })
           })
+          // If we are here, that means that we actually got a Broker to return to us info about this topic.  return
+          // what ever is in there now.
+          return partitionNames.toArray
         } catch {
           case fae: FatalAdapterException => throw fae
           case npe: NullPointerException => {
@@ -747,6 +754,7 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
       // Issue the call
       // val response: kafka.javaapi.OffsetResponse = llConsumer.getOffsetsBefore(offsetRequest)
       var retryCount = 0
+      //  Get the OffsetResponse
       var result = doSendJavaConsumer(llConsumer,offsetRequest)
       while(result._1 == null && !isQuiesced) {
         if (retryCount > KafkaSimpleConsumer.MAX_FAILURES)
