@@ -69,6 +69,7 @@ Usage()
     echo "                               --priorInstallDirPath <name to use for rename of prior install if any>  "
     echo "                               --newInstallDirPath <new dir path of physical install>  "
     echo "                               --installVerificationFile <file to get the verification information>  "
+    echo "                               --externalJarsDir <external jars directory to be copied to installation lib/application> "
     echo
     echo "  NOTES: Only tar'd gzip files are supported for the tarballs at the moment."
     echo "         NodeConfigPath must be supplied always"
@@ -86,7 +87,7 @@ Usage()
 
 
 # Check 1: Is this even close to reasonable?
-if [[ "$#" -eq 1  || "$#" -eq 4  || "$#" -eq 6  || "$#" -eq 8  || "$#" -eq 10  || "$#" -eq 12  || "$#" -eq 14  || "$#" -eq 16  || "$#" -eq 18  || "$#" -eq 20 || "$#" -eq 22 || "$#" -eq 24 ]]; then
+if [[ "$#" -eq 1  || "$#" -eq 4  || "$#" -eq 6  || "$#" -eq 8  || "$#" -eq 10  || "$#" -eq 12  || "$#" -eq 14  || "$#" -eq 16  || "$#" -eq 18  || "$#" -eq 20 || "$#" -eq 22 || "$#" -eq 24 || "$#" -eq 26 ]]; then
     echo 
 else 
     echo 
@@ -96,9 +97,9 @@ else
 fi
 
 # Check 2: Is this even close to reasonable?
-if [[ "$name1" != "--ClusterId" && "$name1" != "--MetadataAPIConfig" && "$name1" != "--NodeConfigPath"  && "$name1" != "--KafkaInstallPath"   && "$name1" != "--TarballPath"  && "$name1" != "--WorkingDir"   && "$name1" != "--ipAddrs"   && "$name1" != "--ipIdTargPaths"   && "$name1" != "--ipPathPairs" && "$name1" != --priorInstallDirPath" &&  n"$name1" != ""--newInstallDirPath" ]]; then
+if [[ "$name1" != "--ClusterId" && "$name1" != "--MetadataAPIConfig" && "$name1" != "--NodeConfigPath"  && "$name1" != "--KafkaInstallPath"   && "$name1" != "--TarballPath"  && "$name1" != "--WorkingDir"   && "$name1" != "--ipAddrs"   && "$name1" != "--ipIdTargPaths"   && "$name1" != "--ipPathPairs" && "$name1" != "--priorInstallDirPath" &&  "$name1" != "--newInstallDirPath"  &&  "$name1" != "--externalJarsDir" ]]; then
     echo 
-	echo "Problem: Unreasonable number of arguments... as few as 2 and as many as 24 may be supplied."
+	echo "Problem: Unreasonable number of arguments... as few as 2 and as many as 26 may be supplied."
     Usage
 	exit 1
 fi
@@ -118,6 +119,7 @@ ipPathPairs=""
 priorInstallDirPath=""
 newInstallDirPath=""
 installVerificationFile=""
+externalJarsDir=""
 
 while [ "$1" != "" ]; do
     case $1 in
@@ -157,6 +159,9 @@ while [ "$1" != "" ]; do
                                 ;;
         --installVerificationFile )   shift
                                 installVerificationFile=$1
+                                ;;
+        --externalJarsDir )   shift
+                                externalJarsDir=$1
                                 ;;
         --help )           		Usage
         						exit 0
@@ -225,6 +230,8 @@ rm -f $installVerificationFile
 
 # Creating working directory
 mkdir -p $workDir
+
+echo "" > $workDir/InstallStatus.txt
 
 # Check 7: working directory must exist
 if [ ! -d "$workDir" ]; then
@@ -519,6 +526,10 @@ EOF
 		brokenLink="true"
 	fi
 
+	if [ "$externalJarsDir" != "" ]; then
+        scp -o StrictHostKeyChecking=no "$externalJarsDir"/* "$machine:$newInstallDirPath/lib/application/"
+	fi
+
 	if [ "$curNodePriorInstDetected" == "false" ]; then
 		echo "On node $machine prior installation not found at $targetPath. New installation is done at $newInstallDirPath and created link from $targetPath to $newInstallDirPath"
 	else
@@ -655,6 +666,7 @@ while read LINE; do
 
 	ssh -o StrictHostKeyChecking=no -T $machine  <<-EOF
 		# {HostName,LinkDir,LinkExists(Yes|No),LinkPointingToDir,LinkPointingDirExists(Yes|No),NewInstallDir, NewInstallDirExists(Yes|No)} 
+		echo "" > $workDir/InstallStatusLocal.txt
 		if [ -d "$targetPath" ]; then 
 			if [ ! -L $targetPath ]; then
 				cd $targetPath

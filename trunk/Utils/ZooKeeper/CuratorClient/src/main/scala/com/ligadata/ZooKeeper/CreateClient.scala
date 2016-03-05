@@ -21,6 +21,7 @@ import org.apache.curator.framework.CuratorFramework
 import org.apache.curator.framework.CuratorFrameworkFactory
 import org.apache.curator.retry.ExponentialBackoffRetry
 import org.apache.zookeeper.CreateMode
+import org.apache.zookeeper.KeeperException.NodeExistsException
 import scala.collection.mutable.ArrayBuffer
 import org.apache.logging.log4j._
 
@@ -47,7 +48,21 @@ object CreateClient {
 
       allZNodePaths.foreach(path => {
         if (zkc.checkExists().forPath(path) == null) {
-          zkc.create().withMode(CreateMode.PERSISTENT).forPath(path, null);
+          try {
+            zkc.create().withMode(CreateMode.PERSISTENT).forPath(path, null);
+          } catch {
+            case e: NodeExistsException => {
+              // Not already exists. May be somebody else created just before this. Ignore this exception.
+            }
+            case e: Exception => {
+              // Rethrow exception
+              throw e
+            }
+            case e: Throwable => {
+              // Rethrow exception
+              throw e
+            }
+          }
         }
       })
     } catch {

@@ -19,7 +19,7 @@ package com.ligadata.automation.unittests.hbaseadapter
 import org.scalatest._
 import Matchers._
 
-import java.util.{Date,Calendar,TimeZone}
+import java.util.{Date, Calendar, TimeZone}
 import java.text.{SimpleDateFormat}
 import java.io._
 
@@ -33,14 +33,12 @@ import com.ligadata.keyvaluestore.HBaseAdapter
 
 import com.ligadata.Exceptions._
 
-case class Customer(name:String, address: String, homePhone: String)
+case class Customer(name: String, address: String, homePhone: String)
 
 @Ignore
 class HBaseAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterAll with GivenWhenThen {
-  var res : String = null;
-  var statusCode: Int = -1;
-  var adapter:DataStore = null
-  var serializer:Serializer = null
+  var adapter: DataStore = null
+  var serializer: Serializer = null
 
   private val loggerName = this.getClass.getName
   private val logger = LogManager.getLogger(loggerName)
@@ -51,29 +49,29 @@ class HBaseAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterAl
   TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
 
   private val kvManagerLoader = new KamanjaLoaderInfo
-  private var hbaseAdapter:HBaseAdapter = null
+  private var hbaseAdapter: HBaseAdapter = null
   serializer = SerializerManager.GetSerializer("kryo")
   val dataStoreInfo = s"""{"StoreType": "hbase","SchemaName": "unit_tests","Location":"localhost","autoCreateTables":"YES"}"""
 
   private val maxConnectionAttempts = 10;
-  var cnt:Long = 0
+  var cnt: Long = 0
   private val containerName = "sys.customer1"
   private var readCount = 0
 
-  private def RoundDateToSecs(d:Date): Date = {
+  private def RoundDateToSecs(d: Date): Date = {
     var c = Calendar.getInstance()
-    if( d == null ){
+    if (d == null) {
       c.setTime(new Date(0))
       c.getTime
     }
-    else{
+    else {
       c.setTime(d)
-      c.set(Calendar.MILLISECOND,0)
+      c.set(Calendar.MILLISECOND, 0)
       c.getTime
     }
   }
 
-  def readCallBack(key:Key, value: Value) {
+  def readCallBack(key: Key, value: Value) {
     logger.info("timePartition => " + key.timePartition)
     logger.info("bucketKey => " + key.bucketKey.mkString(","))
     logger.info("transactionId => " + key.transactionId)
@@ -86,7 +84,7 @@ class HBaseAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterAl
     readCount = readCount + 1
   }
 
-  def readKeyCallBack(key:Key) {
+  def readKeyCallBack(key: Key) {
     logger.info("timePartition => " + key.timePartition)
     logger.info("bucketKey => " + key.bucketKey.mkString(","))
     logger.info("transactionId => " + key.transactionId)
@@ -95,12 +93,12 @@ class HBaseAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterAl
     readCount = readCount + 1
   }
 
-  def deleteFile(path:File):Unit = {
-    if(path.exists()){
-      if (path.isDirectory){
-	for(f <- path.listFiles) {
+  def deleteFile(path: File): Unit = {
+    if (path.exists()) {
+      if (path.isDirectory) {
+        for (f <- path.listFiles) {
           deleteFile(f)
-	}
+        }
       }
       path.delete()
     }
@@ -128,7 +126,7 @@ class HBaseAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterAl
       logger.info("starting...");
       logger.info("Initialize HBaseAdapter")
       adapter = CreateAdapter
-   }
+    }
     catch {
       case e: Exception => throw new Exception("Failed to execute set up properly", e)
     }
@@ -137,31 +135,31 @@ class HBaseAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterAl
   describe("Unit Tests for all hbaseadapter operations") {
 
     // validate property setup
-    it ("Validate api operations") {
+    it("Validate api operations") {
       val containerName = "sys.customer1"
 
       hbaseAdapter = adapter.asInstanceOf[HBaseAdapter]
 
       And("Test create namespace")
       noException should be thrownBy {
-	hbaseAdapter.CreateNameSpace("unit_tests3")
+        hbaseAdapter.CreateNameSpace("unit_tests3")
       }
 
       And("Test drop namespace")
       noException should be thrownBy {
-	hbaseAdapter.DropNameSpace("unit_tests3")
+        hbaseAdapter.DropNameSpace("unit_tests3")
       }
 
       And("Test drop container")
       noException should be thrownBy {
-	var containers = new Array[String](0)
-	containers = containers :+ containerName
-	adapter.DropContainer(containers)
+        var containers = new Array[String](0)
+        containers = containers :+ containerName
+        adapter.DropContainer(containers)
       }
 
       And("Make sure a Get doesn't fail even when the container doesn't exist")
       noException should be thrownBy {
-	adapter.get(containerName,readCallBack _)
+        adapter.get(containerName, readCallBack _)
       }
 
       And("Check the row count after doing a Get, an empty container must have been created")
@@ -170,66 +168,66 @@ class HBaseAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterAl
 
       And("Test create container that has spaces")
       noException should be thrownBy {
-	var containers = new Array[String](0)
-	containers = containers :+ "my test container"
-	adapter.CreateContainer(containers)
+        var containers = new Array[String](0)
+        containers = containers :+ "my test container"
+        adapter.CreateContainer(containers)
       }
 
       And("Test drop container that has spaces")
       noException should be thrownBy {
-	var containers = new Array[String](0)
-	containers = containers :+ "my test container"
-	adapter.DropContainer(containers)
+        var containers = new Array[String](0)
+        containers = containers :+ "my test container"
+        adapter.DropContainer(containers)
       }
 
       And("Test create container")
       noException should be thrownBy {
-	var containers = new Array[String](0)
-	containers = containers :+ containerName
-	adapter.CreateContainer(containers)
+        var containers = new Array[String](0)
+        containers = containers :+ containerName
+        adapter.CreateContainer(containers)
       }
 
       And("Test Put api throwing DDL Exception - use invalid container name")
-      var ex2 = the [com.ligadata.Exceptions.StorageDMLException] thrownBy {
-	var keys = new Array[Key](0) // to be used by a delete operation later on
-	var currentTime = new Date()
-	var keyArray = new Array[String](0)
-	// pick a bucketKey values longer than 1024 characters
-	var custName = "customer1"
-	keyArray = keyArray :+ custName
-	var key = new Key(currentTime.getTime(),keyArray,1,1)
-	var custAddress = "1000"  + ",Main St, Redmond WA 98052"
-	var custNumber = "4256667777"
-	var obj = new Customer(custName,custAddress,custNumber)
-	var v = serializer.SerializeObjectToByteArray(obj)
-	var value = new Value("kryo",v)
-	adapter.put("&&",key,value)
+      var ex2 = the[com.ligadata.Exceptions.StorageDMLException] thrownBy {
+        var keys = new Array[Key](0) // to be used by a delete operation later on
+        var currentTime = new Date()
+        var keyArray = new Array[String](0)
+        // pick a bucketKey values longer than 1024 characters
+        var custName = "customer1"
+        keyArray = keyArray :+ custName
+        var key = new Key(currentTime.getTime(), keyArray, 1, 1)
+        var custAddress = "1000" + ",Main St, Redmond WA 98052"
+        var custNumber = "4256667777"
+        var obj = new Customer(custName, custAddress, custNumber)
+        var v = serializer.SerializeObjectToByteArray(obj)
+        var value = new Value("kryo", v)
+        adapter.put("&&", key, value)
       }
       logger.info("", ex2)
 
       And("Test Put api")
       var keys = new Array[Key](0) // to be used by a delete operation later on
-      for( i <- 1 to 10 ){
-	var currentTime = new Date()
-	//var currentTime = null
-	var keyArray = new Array[String](0)
-	var custName = "customer-" + i
-	keyArray = keyArray :+ custName
-	var key = new Key(currentTime.getTime(),keyArray,i,i)
-	keys = keys :+ key
-	var custAddress = "1000" + i + ",Main St, Redmond WA 98052"
-	var custNumber = "425666777" + i
-	var obj = new Customer(custName,custAddress,custNumber)
-	var v = serializer.SerializeObjectToByteArray(obj)
-	var value = new Value("kryo",v)
-	noException should be thrownBy {
-	  adapter.put(containerName,key,value)
-	}
+      for (i <- 1 to 10) {
+        var currentTime = new Date()
+        //var currentTime = null
+        var keyArray = new Array[String](0)
+        var custName = "customer-" + i
+        keyArray = keyArray :+ custName
+        var key = new Key(currentTime.getTime(), keyArray, i, i)
+        keys = keys :+ key
+        var custAddress = "1000" + i + ",Main St, Redmond WA 98052"
+        var custNumber = "425666777" + i
+        var obj = new Customer(custName, custAddress, custNumber)
+        var v = serializer.SerializeObjectToByteArray(obj)
+        var value = new Value("kryo", v)
+        noException should be thrownBy {
+          adapter.put(containerName, key, value)
+        }
       }
 
       And("Get all the rows that were just added")
       noException should be thrownBy {
-	adapter.get(containerName,readCallBack _)
+        adapter.get(containerName, readCallBack _)
       }
 
       hbaseAdapter = adapter.asInstanceOf[HBaseAdapter]
@@ -240,12 +238,12 @@ class HBaseAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterAl
 
       And("Get all the keys for the rows that were just added")
       noException should be thrownBy {
-	adapter.getKeys(containerName,readKeyCallBack _)
+        adapter.getKeys(containerName, readKeyCallBack _)
       }
 
       And("Test Del api")
       noException should be thrownBy {
-	adapter.del(containerName,keys)
+        adapter.del(containerName, keys)
       }
 
       And("Check the row count after deleting a bunch")
@@ -255,30 +253,30 @@ class HBaseAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterAl
       And("Add rows with same bucketKey and different timestamp")
       keys = new Array[Key](0) // to be used by a delete operation later on
       var custName = "customer0"
-      for( i <- 1 to 10 ){
-	var currentTime = new Date()
-	var keyArray = new Array[String](0)
-	keyArray = keyArray :+ custName
-	var key = new Key(currentTime.getTime(),keyArray,i,i)
-	keys = keys :+ key
-	var custAddress = "1000" + i + ",Main St, Redmond WA 98052"
-	var custNumber = "425666777" + i
-	var obj = new Customer(custName,custAddress,custNumber)
-	var v = serializer.SerializeObjectToByteArray(obj)
-	var value = new Value("kryo",v)
-	noException should be thrownBy {
-	  adapter.put(containerName,key,value)
-	}
+      for (i <- 1 to 10) {
+        var currentTime = new Date()
+        var keyArray = new Array[String](0)
+        keyArray = keyArray :+ custName
+        var key = new Key(currentTime.getTime(), keyArray, i, i)
+        keys = keys :+ key
+        var custAddress = "1000" + i + ",Main St, Redmond WA 98052"
+        var custNumber = "425666777" + i
+        var obj = new Customer(custName, custAddress, custNumber)
+        var v = serializer.SerializeObjectToByteArray(obj)
+        var value = new Value("kryo", v)
+        noException should be thrownBy {
+          adapter.put(containerName, key, value)
+        }
       }
 
       And("Get all the rows that were just added")
       noException should be thrownBy {
-	adapter.get(containerName,readCallBack _)
+        adapter.get(containerName, readCallBack _)
       }
 
       And("Test Delete same bucketKey and different timestamp")
       noException should be thrownBy {
-	adapter.del(containerName,keys)
+        adapter.del(containerName, keys)
       }
 
 
@@ -288,20 +286,20 @@ class HBaseAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterAl
 
 
       And("Adding hundred rows for testing truncate")
-      for( i <- 1 to 100 ){
-	var currentTime = new Date()
-	var keyArray = new Array[String](0)
-	var custName = "customer-" + i
-	keyArray = keyArray :+ custName
-	var key = new Key(currentTime.getTime(),keyArray,i,i)
-	var custAddress = "1000" + i + ",Main St, Redmond WA 98052"
-	var custNumber = "425666777" + i
-	var obj = new Customer(custName,custAddress,custNumber)
-	var v = serializer.SerializeObjectToByteArray(obj)
-	var value = new Value("kryo",v)
-	noException should be thrownBy {
-	  adapter.put(containerName,key,value)
-	}
+      for (i <- 1 to 100) {
+        var currentTime = new Date()
+        var keyArray = new Array[String](0)
+        var custName = "customer-" + i
+        keyArray = keyArray :+ custName
+        var key = new Key(currentTime.getTime(), keyArray, i, i)
+        var custAddress = "1000" + i + ",Main St, Redmond WA 98052"
+        var custNumber = "425666777" + i
+        var obj = new Customer(custName, custAddress, custNumber)
+        var v = serializer.SerializeObjectToByteArray(obj)
+        var value = new Value("kryo", v)
+        noException should be thrownBy {
+          adapter.put(containerName, key, value)
+        }
       }
 
       And("Check the row count after adding a hundred rows")
@@ -310,9 +308,9 @@ class HBaseAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterAl
 
       And("Test truncate container")
       noException should be thrownBy {
-	var containers = new Array[String](0)
-	containers = containers :+ containerName
-	adapter.TruncateContainer(containers)
+        var containers = new Array[String](0)
+        containers = containers :+ containerName
+        adapter.TruncateContainer(containers)
       }
 
       And("Check the row count after truncating the container")
@@ -323,32 +321,32 @@ class HBaseAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterAl
 
       var keyValueList = new Array[(Key, Value)](0)
       var keyStringList = new Array[Array[String]](0)
-      for( i <- 1 to 10 ){
-	var  cal = Calendar.getInstance();
-        cal.add(Calendar.DATE, -i);    
-	var currentTime = cal.getTime()
-	var keyArray = new Array[String](0)
-	var custName = "customer-" + i
-	keyArray = keyArray :+ custName
-	// keyStringList is only used to test a del operation later
-	keyStringList = keyStringList :+ keyArray
-	var key = new Key(currentTime.getTime(),keyArray,i,i)
-	var custAddress = "1000" + i + ",Main St, Redmond WA 98052"
-	var custNumber = "4256667777" + i
-	var obj = new Customer(custName,custAddress,custNumber)
-	var v = serializer.SerializeObjectToByteArray(obj)
-	var value = new Value("kryo",v)
-	keyValueList = keyValueList :+ (key,value)
+      for (i <- 1 to 10) {
+        var cal = Calendar.getInstance();
+        cal.add(Calendar.DATE, -i);
+        var currentTime = cal.getTime()
+        var keyArray = new Array[String](0)
+        var custName = "customer-" + i
+        keyArray = keyArray :+ custName
+        // keyStringList is only used to test a del operation later
+        keyStringList = keyStringList :+ keyArray
+        var key = new Key(currentTime.getTime(), keyArray, i, i)
+        var custAddress = "1000" + i + ",Main St, Redmond WA 98052"
+        var custNumber = "4256667777" + i
+        var obj = new Customer(custName, custAddress, custNumber)
+        var v = serializer.SerializeObjectToByteArray(obj)
+        var value = new Value("kryo", v)
+        keyValueList = keyValueList :+(key, value)
       }
-      var dataList = new Array[(String, Array[(Key,Value)])](0)
-      dataList = dataList :+ (containerName,keyValueList)
+      var dataList = new Array[(String, Array[(Key, Value)])](0)
+      dataList = dataList :+(containerName, keyValueList)
       noException should be thrownBy {
-	adapter.put(dataList)
+        adapter.put(dataList)
       }
 
       And("Get all the rows that were just added")
       noException should be thrownBy {
-	adapter.get(containerName,readCallBack _)
+        adapter.get(containerName, readCallBack _)
       }
 
       And("Check the row count after adding a bunch")
@@ -357,23 +355,23 @@ class HBaseAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterAl
 
       And("Get all the keys for the rows that were just added")
       noException should be thrownBy {
-	adapter.getKeys(containerName,readKeyCallBack _)
+        adapter.getKeys(containerName, readKeyCallBack _)
       }
 
       And("Set time range for 2 days ")
-      var  cal = Calendar.getInstance();
-      cal.add(Calendar.DATE, -10);    
+      var cal = Calendar.getInstance();
+      cal.add(Calendar.DATE, -10);
       var beginTime = cal.getTime()
       logger.info("begin time => " + dateFormat.format(beginTime))
       cal = Calendar.getInstance();
-      cal.add(Calendar.DATE, -8);    
+      cal.add(Calendar.DATE, -8);
       var endTime = cal.getTime()
       logger.info("end time => " + dateFormat.format(endTime))
-      var timeRange = new TimeRange(beginTime.getTime(),endTime.getTime())
+      var timeRange = new TimeRange(beginTime.getTime(), endTime.getTime())
 
       And("Test Delete for a time range")
       noException should be thrownBy {
-	adapter.del(containerName,timeRange,keyStringList)
+        adapter.del(containerName, timeRange, keyStringList)
       }
 
       And("Check the row count after deleting a bunch based on time range")
@@ -382,138 +380,138 @@ class HBaseAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterAl
 
       And("Test the count by Setting time range for all days ")
       cal = Calendar.getInstance();
-      cal.add(Calendar.DATE, -11);    
+      cal.add(Calendar.DATE, -11);
       beginTime = cal.getTime()
       logger.info("begin time => " + dateFormat.format(beginTime))
       cal = Calendar.getInstance();
-      cal.add(Calendar.DATE, +1);    
+      cal.add(Calendar.DATE, +1);
       endTime = cal.getTime()
       logger.info("end time => " + dateFormat.format(endTime))
-      timeRange = new TimeRange(beginTime.getTime(),endTime.getTime())
+      timeRange = new TimeRange(beginTime.getTime(), endTime.getTime())
       var timeRanges = new Array[TimeRange](0)
       timeRanges = timeRanges :+ timeRange
       readCount = 0
       noException should be thrownBy {
-	adapter.getKeys(containerName,timeRanges,readKeyCallBack _)
+        adapter.getKeys(containerName, timeRanges, readKeyCallBack _)
       }
       assert(readCount == 8)
 
 
       And("Test the count by Setting time range to Long.MinValue to Long.MaxValue  ")
-      timeRange = new TimeRange(Long.MinValue,Long.MaxValue)
+      timeRange = new TimeRange(Long.MinValue, Long.MaxValue)
       timeRanges = new Array[TimeRange](0)
       timeRanges = timeRanges :+ timeRange
       readCount = 0
       noException should be thrownBy {
-	adapter.getKeys(containerName,timeRanges,readKeyCallBack _)
+        adapter.getKeys(containerName, timeRanges, readKeyCallBack _)
       }
       assert(readCount == 8)
 
       And("Test the count by Setting time range to 0 to Long.MaxValue  ")
-      timeRange = new TimeRange(0,Long.MaxValue)
+      timeRange = new TimeRange(0, Long.MaxValue)
       timeRanges = new Array[TimeRange](0)
       timeRanges = timeRanges :+ timeRange
       readCount = 0
       noException should be thrownBy {
-	adapter.getKeys(containerName,timeRanges,readKeyCallBack _)
+        adapter.getKeys(containerName, timeRanges, readKeyCallBack _)
       }
       assert(readCount == 8)
 
 
       And("Test the count by Setting time range to some negative value to  another  negative value ")
-      timeRange = new TimeRange(-1000000000,-900000000)
+      timeRange = new TimeRange(-1000000000, -900000000)
       timeRanges = new Array[TimeRange](0)
       timeRanges = timeRanges :+ timeRange
       readCount = 0
       noException should be thrownBy {
-	adapter.getKeys(containerName,timeRanges,readKeyCallBack _)
+        adapter.getKeys(containerName, timeRanges, readKeyCallBack _)
       }
       assert(readCount == 0)
 
       And("Test the count by Setting time range to some radom negative value to  some good value ")
       cal = Calendar.getInstance();
-      cal.add(Calendar.DATE, -6);    
+      cal.add(Calendar.DATE, -6);
       endTime = cal.getTime()
       logger.info("end time => " + dateFormat.format(endTime))
-      timeRange = new TimeRange(-1000000000,endTime.getTime())
+      timeRange = new TimeRange(-1000000000, endTime.getTime())
       timeRanges = new Array[TimeRange](0)
       timeRanges = timeRanges :+ timeRange
       readCount = 0
       noException should be thrownBy {
-	adapter.getKeys(containerName,timeRanges,readKeyCallBack _)
+        adapter.getKeys(containerName, timeRanges, readKeyCallBack _)
       }
       assert(readCount == 3)
 
 
       And("Test Get for a time range")
       cal = Calendar.getInstance();
-      cal.add(Calendar.DATE, -7);    
+      cal.add(Calendar.DATE, -7);
       beginTime = cal.getTime()
       logger.info("begin time => " + dateFormat.format(beginTime))
       cal = Calendar.getInstance();
-      cal.add(Calendar.DATE, -6);    
+      cal.add(Calendar.DATE, -6);
       endTime = cal.getTime()
       logger.info("end time => " + dateFormat.format(endTime))
 
-      timeRange = new TimeRange(beginTime.getTime(),endTime.getTime())
+      timeRange = new TimeRange(beginTime.getTime(), endTime.getTime())
       timeRanges = new Array[TimeRange](0)
       timeRanges = timeRanges :+ timeRange
 
       noException should be thrownBy {
-	adapter.get(containerName,timeRanges,readCallBack _)
+        adapter.get(containerName, timeRanges, readCallBack _)
       }
 
       And("Test GetKeys for a time range")
       noException should be thrownBy {
-	adapter.getKeys(containerName,timeRanges,readKeyCallBack _)
+        adapter.getKeys(containerName, timeRanges, readKeyCallBack _)
       }
 
       And("Test Get for a given keyString Arrays")
       keyStringList = new Array[Array[String]](0)
-      for( i <- 1 to 5 ){
-	var keyArray = new Array[String](0)
-	var custName = "customer-" + i
-	keyArray = keyArray :+ custName
-	keyStringList = keyStringList :+ keyArray
+      for (i <- 1 to 5) {
+        var keyArray = new Array[String](0)
+        var custName = "customer-" + i
+        keyArray = keyArray :+ custName
+        keyStringList = keyStringList :+ keyArray
       }
       noException should be thrownBy {
-	adapter.get(containerName,keyStringList,readCallBack _)
+        adapter.get(containerName, keyStringList, readCallBack _)
       }
-      
+
       And("Test GetKeys for a given keyString Arrays")
       noException should be thrownBy {
-	adapter.getKeys(containerName,keyStringList,readKeyCallBack _)
+        adapter.getKeys(containerName, keyStringList, readKeyCallBack _)
       }
 
 
       And("Test Get for a given set of keyStrings and also an array of time ranges")
       keyStringList = new Array[Array[String]](0)
-      for( i <- 1 to 5 ){
-	var keyArray = new Array[String](0)
-	var custName = "customer-" + i
-	keyArray = keyArray :+ custName
-	keyStringList = keyStringList :+ keyArray
+      for (i <- 1 to 5) {
+        var keyArray = new Array[String](0)
+        var custName = "customer-" + i
+        keyArray = keyArray :+ custName
+        keyStringList = keyStringList :+ keyArray
       }
       cal = Calendar.getInstance();
-      cal.add(Calendar.DATE, -3);    
+      cal.add(Calendar.DATE, -3);
       beginTime = cal.getTime()
       logger.info("begin time => " + dateFormat.format(beginTime))
       cal = Calendar.getInstance();
-      cal.add(Calendar.DATE, -2);    
+      cal.add(Calendar.DATE, -2);
       endTime = cal.getTime()
       logger.info("end time => " + dateFormat.format(endTime))
 
-      timeRange = new TimeRange(beginTime.getTime(),endTime.getTime())
+      timeRange = new TimeRange(beginTime.getTime(), endTime.getTime())
       timeRanges = new Array[TimeRange](0)
       timeRanges = timeRanges :+ timeRange
 
       noException should be thrownBy {
-	adapter.get(containerName,timeRanges,keyStringList,readCallBack _)
+        adapter.get(containerName, timeRanges, keyStringList, readCallBack _)
       }
 
       And("Test GetKeys for a given set of keyStrings and also an array of time ranges")
       noException should be thrownBy {
-	adapter.getKeys(containerName,timeRanges,keyStringList,readKeyCallBack _)
+        adapter.getKeys(containerName, timeRanges, keyStringList, readKeyCallBack _)
       }
 
       var exists = adapter.isContainerExists(containerName)
@@ -523,8 +521,8 @@ class HBaseAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterAl
       var destContainerName = containerName
 
       And("Test copy container with src and dest are same ")
-      var ex3 = the [com.ligadata.Exceptions.StorageDDLException] thrownBy {
-	adapter.copyContainer(srcContainerName,destContainerName,false)
+      var ex3 = the[com.ligadata.Exceptions.StorageDDLException] thrownBy {
+        adapter.copyContainer(srcContainerName, destContainerName, false)
       }
       logger.info("Exception => " + ex3.cause)
 
@@ -533,21 +531,21 @@ class HBaseAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterAl
 
       And("Test copy container")
       noException should be thrownBy {
-	adapter.copyContainer(srcContainerName,destContainerName,true)
+        adapter.copyContainer(srcContainerName, destContainerName, true)
       }
 
       exists = adapter.isContainerExists(destContainerName)
       assert(exists == true)
 
       And("Test copy container without force")
-      ex3 = the [com.ligadata.Exceptions.StorageDDLException] thrownBy {
-	adapter.copyContainer(srcContainerName,destContainerName,false)
+      ex3 = the[com.ligadata.Exceptions.StorageDDLException] thrownBy {
+        adapter.copyContainer(srcContainerName, destContainerName, false)
       }
       logger.info("Exception => " + ex3.cause)
 
       And("Test copy container with force")
       noException should be thrownBy {
-	adapter.copyContainer(srcContainerName,destContainerName,true)
+        adapter.copyContainer(srcContainerName, destContainerName, true)
       }
 
       And("Test the existence of the source table")
@@ -561,17 +559,17 @@ class HBaseAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterAl
       assert(exists == true)
 
       And("Copy source table to destination table using force option")
-      adapter.copyTable(srcTableName,destTableName,true)
+      adapter.copyTable(srcTableName, destTableName, true)
 
       And("get all tables")
       var tbls = new Array[String](0)
       noException should be thrownBy {
-	tbls = adapter.getAllTables
+        tbls = adapter.getAllTables
       }
-      
+
       And("drop all tables")
       noException should be thrownBy {
-	adapter.dropTables(tbls)
+        adapter.dropTables(tbls)
       }
 
       And("Test the existence of the source table after dropTables")
@@ -584,10 +582,10 @@ class HBaseAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterAl
 
       And("Test drop container again, cleanup")
       noException should be thrownBy {
-	var containers = new Array[String](0)
-	containers = containers :+ srcContainerName
-	containers = containers :+ destContainerName
-	adapter.DropContainer(containers)
+        var containers = new Array[String](0)
+        containers = containers :+ srcContainerName
+        containers = containers :+ destContainerName
+        adapter.DropContainer(containers)
       }
 
       And("Test the existence of the source container after DropContainer")
@@ -597,23 +595,24 @@ class HBaseAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterAl
       And("Test the existence of the destination container after DropContainer")
       exists = adapter.isContainerExists(destContainerName)
       assert(exists == false)
-      
+
 
       And("Test drop keyspace")
       noException should be thrownBy {
-	hbaseAdapter.DropNameSpace("unit_tests")
+        hbaseAdapter.DropNameSpace("unit_tests")
       }
 
       And("Shutdown hbase session")
       noException should be thrownBy {
-	adapter.Shutdown
+        adapter.Shutdown
       }
 
     }
   }
+
   override def afterAll = {
     var logFile = new java.io.File("logs")
-    if( logFile != null ){
+    if (logFile != null) {
       deleteFile(logFile)
     }
   }
