@@ -22,6 +22,8 @@ import java.util.concurrent.{ Executors, ScheduledExecutorService, TimeUnit }
 import com.ligadata.Utils.{ Utils, KamanjaClassLoader, KamanjaLoaderInfo }
 import org.apache.logging.log4j.{ Logger, LogManager }
 import com.ligadata.Exceptions.{ FatalAdapterException }
+import scala.actors.threadpool.{ ExecutorService }
+import com.ligadata.KamanjaVersion.KamanjaVersion
 
 class KamanjaServer(var mgr: KamanjaManager, port: Int) extends Runnable {
   private val LOG = LogManager.getLogger(getClass);
@@ -227,19 +229,18 @@ class KamanjaManager extends Observer {
   private var adapterMetricInfo: scala.collection.mutable.MutableList[com.ligadata.HeartBeat.MonitorComponentInfo] = null
   private val failedEventsAdapters = new ArrayBuffer[OutputAdapter]
 
-
+  private var metricsService: ExecutorService = scala.actors.threadpool.Executors.newFixedThreadPool(1)
+  private var isTimerRunning = false
+  private var isTimerStarted = false
   private type OptionMap = Map[Symbol, Any]
 
   private def PrintUsage(): Unit = {
     LOG.warn("Available commands:")
     LOG.warn("    Quit")
     LOG.warn("    Help")
+    LOG.warn("    --version")
     LOG.warn("    --config <configfilename>")
   }
-  private val majorVersion = 1
-  private val minorVersion = 3
-  private val microVersion = 0
-  private val build = 0
 
   private def Shutdown(exitCode: Int): Int = {
     /*
@@ -263,6 +264,8 @@ class KamanjaManager extends Observer {
       case Nil => map
       case "--config" :: value :: tail =>
         nextOption(map ++ Map('config -> value), tail)
+      case "--version" :: tail =>
+        nextOption(map ++ Map('version -> "true"), tail)
       case option :: tail => {
         LOG.error("Unknown option " + option)
         throw new Exception("Unknown option " + option)
@@ -548,6 +551,11 @@ class KamanjaManager extends Observer {
     }
 
     val options = nextOption(Map(), args.toList)
+    val version = options.getOrElse('version, "false").toString
+    if (version.equalsIgnoreCase("true")) {
+      KamanjaVersion.print
+      return Shutdown(0)
+    }
     val cfgfile = options.getOrElse('config, null)
     if (cfgfile == null) {
       LOG.error("Need configuration file as parameter")
@@ -632,7 +640,19 @@ class KamanjaManager extends Observer {
       }
     }
 
-    val scheduledThreadPool = Executors.newScheduledThreadPool(2);
+    val metricsCollector = new Runnable {
+      def run(): Unit = {
+        try {
+          externalizeMetrics
+        } catch {
+          case e: Throwable => {
+            LOG.warn("KamanjaManager " + KamanjaConfiguration.nodeId.toString + " unable to externalize statistics due to internal error. Check ZK connection", e)
+          }
+        }
+      }
+    }
+
+    val scheduledThreadPool = Executors.newScheduledThreadPool(3);
 
     scheduledThreadPool.scheduleWithFixedDelay(statusPrint_PD, 0, 1000, TimeUnit.MILLISECONDS);
 
@@ -734,8 +754,10 @@ class KamanjaManager extends Observer {
       // See if we have to extenrnalize stats, every 5000ms..
       if (LOG.isTraceEnabled)
         LOG.trace("KamanjaManager " + KamanjaConfiguration.nodeId.toString + " running iteration " + cntr)
-      if (cntr % 10 == 1) {
-        externalizeMetrics
+
+      if (!isTimerStarted) {
+        scheduledThreadPool.scheduleWithFixedDelay(metricsCollector, 0, 5000, TimeUnit.MILLISECONDS);
+        isTimerStarted = true
       }
     }
 
@@ -744,8 +766,11 @@ class KamanjaManager extends Observer {
     return Shutdown(0)
   }
 
-  private def externalizeMetrics: Unit = {
 
+  /**
+   *
+   */
+  private def externalizeMetrics: Unit = {
     val zkNodeBasePath = KamanjaConfiguration.zkNodeBasePath.stripSuffix("/").trim
     val zkHeartBeatNodePath = zkNodeBasePath + "/monitor/engine/" + KamanjaConfiguration.nodeId.toString
     val isLogDebugEnabled = LOG.isDebugEnabled
@@ -769,7 +794,6 @@ class KamanjaManager extends Observer {
     }
     adapterMetricInfo.clear
 
-
     inputAdapters.foreach(ad => { adapterMetricInfo += ad.getComponentStatusAndMetrics })
     outputAdapters.foreach(ad => { adapterMetricInfo += ad.getComponentStatusAndMetrics })
     statusAdapters.foreach(ad => { adapterMetricInfo += ad.getComponentStatusAndMetrics })
@@ -781,7 +805,7 @@ class KamanjaManager extends Observer {
     import org.json4s.JsonDSL._
     val allMetrics =
         ("Name" -> thisEngineInfo.name) ~
-        ("Version" -> (majorVersion.toString + "." + minorVersion.toString + "." + microVersion + "." + build)) ~
+        ("Version" -> (KamanjaVersion.getMajorVersion.toString + "." + KamanjaVersion.getMinorVersion.toString + "." + KamanjaVersion.getMicroVersion + "." + KamanjaVersion.getBuildNumber)) ~
         ("UniqueId" -> thisEngineInfo.uniqueId) ~
         ("LastSeen" -> thisEngineInfo.lastSeen) ~
         ("StartTime" -> thisEngineInfo.startTime) ~

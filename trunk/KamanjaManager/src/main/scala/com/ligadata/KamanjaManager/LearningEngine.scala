@@ -21,8 +21,8 @@ import com.ligadata.KamanjaBase._
 import com.ligadata.Utils.Utils
 import java.util.Map
 import com.ligadata.outputmsg.OutputMsgGenerator
-import org.apache.logging.log4j.{ Logger, LogManager }
-import java.io.{ PrintWriter, File }
+import org.apache.logging.log4j.{Logger, LogManager}
+import java.io.{PrintWriter, File}
 import scala.xml.XML
 import scala.xml.Elem
 import scala.collection.mutable.ArrayBuffer
@@ -30,20 +30,22 @@ import org.json4s._
 import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
 import com.ligadata.outputmsg.OutputMsgGenerator
-import com.ligadata.InputOutputAdapterInfo.{ ExecContext, InputAdapter, PartitionUniqueRecordKey, PartitionUniqueRecordValue }
-import com.ligadata.Exceptions.{ MessagePopulationException }
+import com.ligadata.InputOutputAdapterInfo.{ExecContext, InputAdapter, PartitionUniqueRecordKey, PartitionUniqueRecordValue}
+import com.ligadata.Exceptions.{MessagePopulationException}
 
 class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniqueRecordKey) {
   val LOG = LogManager.getLogger(getClass);
   var cntr: Long = 0
   var mdlsChangedCntr: Long = -1
   var outputGen = new OutputMsgGenerator()
-  var models = Array[(String, MdlInfo, Boolean, ModelInstance, Boolean)]() // ModelName, ModelInfo, IsModelInstanceReusable, Global ModelInstance if the model is IsModelInstanceReusable == true. The last boolean is to check whether we tested message type or not (thi is to check Reusable flag)  
-  var validateMsgsForMdls = scala.collection.mutable.Set[String]() // Message Names for creating models instances   
+  // ModelName, ModelInfo, IsModelInstanceReusable, Global ModelInstance if the model is IsModelInstanceReusable == true. The last boolean is to check whether we tested message type or not (thi is to check Reusable flag)
+  var models = Array[(String, MdlInfo, Boolean, ModelInstance, Boolean)]()
+  var validateMsgsForMdls = scala.collection.mutable.Set[String]() // Message Names for creating models instances
 
   private def RunAllModels(transId: Long, inputData: Array[Byte], finalTopMsgOrContainer: MessageContainerBase, txnCtxt: TransactionContext, uk: String, uv: String, xformedMsgCntr: Int, totalXformedMsgs: Int): Array[SavedMdlResult] = {
     var results: ArrayBuffer[SavedMdlResult] = new ArrayBuffer[SavedMdlResult]()
-    LOG.debug("Processing uniqueKey:%s, uniqueVal:%s".format(uk, uv))
+    if (LOG.isDebugEnabled)
+      LOG.debug(s"Processing uniqueKey:$uk, uniqueVal:$uv, finalTopMsgOrContainer:$finalTopMsgOrContainer, previousModles:${models.size}")
 
     if (finalTopMsgOrContainer != null) {
       txnCtxt.setMessage(finalTopMsgOrContainer)
@@ -65,7 +67,8 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
           var newMdlsSet = scala.collection.mutable.Set[String]()
 
           tModels.foreach(tup => {
-            LOG.debug("Model:" + tup._1)
+            if (LOG.isDebugEnabled)
+              LOG.debug("Model:" + tup._1)
             val md = tup._2
             val mInfo = map.getOrElse(tup._1, null)
 
@@ -124,7 +127,10 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
           models = newModels.toArray
           mdlsChangedCntr = tMdlsChangedCntr
           validateMsgsForMdls += msgFullName
-        } else if (validateMsgsForMdls.contains(msgFullName) == false) { // found new Msg
+
+          LOG.info("Refreshed models for Partition:%s, mdlsChangedCntr:%d, total models in metadata:%s, total collected models:%d".format(uk, mdlsChangedCntr, tModels.size, models.size))
+        } else if (validateMsgsForMdls.contains(msgFullName) == false) {
+          // found new Msg
           for (i <- 0 until models.size) {
             val mInfo = models(i)
             if (mInfo._5 == false && mInfo._2.mdl.isValidMessage(finalTopMsgOrContainer)) {
@@ -135,7 +141,7 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
                 newInst = tInst
                 newInst.init(uk)
               }
-              val msgTypeWasChecked : Boolean = true
+              val msgTypeWasChecked: Boolean = true
               models(i) = (mInfo._1, mInfo._2, isReusable, newInst, msgTypeWasChecked)
             }
           }
@@ -149,7 +155,8 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
           val md = q._2
           try {
             if (md.mdl.isValidMessage(finalTopMsgOrContainer)) {
-              LOG.debug("Processing uniqueKey:%s, uniqueVal:%s, model:%s".format(uk, uv, md.mdl.getModelName))
+              if (LOG.isDebugEnabled)
+                LOG.debug("Processing uniqueKey:%s, uniqueVal:%s, model:%s".format(uk, uv, md.mdl.getModelName))
               // Checking whether this message has any fields/concepts to execute in this model
               val curMd = if (q._3) {
                 q._4
@@ -169,7 +176,7 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
                 LOG.error("Failed to create model " + md.mdl.getModelName())
               }
             } else {
-                /** message was not interesting to md... */
+              /** message was not interesting to md... */
             }
           } catch {
             case e: Exception => {
@@ -231,8 +238,12 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
             }
           } catch {
             // Treating we did not find the message
-            case e: Exception => { LOG.warn("", e) }
-            case e: Throwable => { LOG.warn("", e) }
+            case e: Exception => {
+              LOG.warn("", e)
+            }
+            case e: Throwable => {
+              LOG.warn("", e)
+            }
           }
         }
         if (msg == null) {
@@ -287,7 +298,9 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
           val resMap = scala.collection.mutable.Map[String, Array[(String, Any)]]()
 
           results.map(res => {
-            resMap(res.mdlName) = res.mdlRes.asKeyValuesMap.map(r => { (r._1, r._2) }).toArray
+            resMap(res.mdlName) = res.mdlRes.asKeyValuesMap.map(r => {
+              (r._1, r._2)
+            }).toArray
           })
 
           val outputMsgs = KamanjaMetadata.getMdMgr.OutputMessages(true, true)

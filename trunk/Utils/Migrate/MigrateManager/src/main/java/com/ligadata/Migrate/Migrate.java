@@ -35,6 +35,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import com.ligadata.KamanjaVersion.KamanjaVersion;
+
 public class Migrate {
     String loggerName = this.getClass().getName();
     Logger logger = LogManager.getLogger(loggerName);
@@ -219,7 +221,8 @@ public class Migrate {
     }
 
     void usage() {
-        logger.warn("Usage: migrate --config <ConfigurationJsonFile>");
+        logger.warn("Usage:\n\tmigrate --config <ConfigurationJsonFile>\n" +
+                "\tmigrate --version");
     }
 
     public void SetDataWritingFailure(Throwable e) {
@@ -260,12 +263,18 @@ public class Migrate {
 
     public int runFromArgs(String[] args) {
         try {
+            if (args.length > 0 && args[0].equalsIgnoreCase("--version")) {
+                KamanjaVersion.print();
+                return 0;
+            }
+
             if (args.length != 2) {
                 usage();
                 return 1;
             }
 
             String cfgfile = "";
+
             if (args[0].equalsIgnoreCase("--config")) {
                 cfgfile = args[1].trim();
             } else {

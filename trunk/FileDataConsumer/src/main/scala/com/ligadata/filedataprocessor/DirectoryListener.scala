@@ -5,6 +5,7 @@ import java.nio.file.{Path, FileSystems}
 
 import com.ligadata.Exceptions.{InternalErrorException, MissingArgumentException}
 import org.apache.logging.log4j.{ Logger, LogManager }
+import com.ligadata.KamanjaVersion.KamanjaVersion
 
 /**
  * Created by danielkozin on 9/24/15.
@@ -22,6 +23,11 @@ object LocationWatcher {
         logger.error("Smart File Consumer requires a configuration file as its argument")
         return
       }
+
+    if (args(0).equalsIgnoreCase("--version")) {
+      KamanjaVersion.print
+      return
+    }
 
       // Read the config and figure out how many consumers to start
       var config = args(0)

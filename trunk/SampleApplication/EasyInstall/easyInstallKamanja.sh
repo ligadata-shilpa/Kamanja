@@ -6,8 +6,8 @@ installPath=$1
 srcPath=$2
 ivyPath=$3
 KafkaRootDir=$4
-ver210=1.3.2_2.10
-ver211=1.3.2_2.11
+ver210=1.3.3_2.10
+ver211=1.3.3_2.11
 
 if [ ! -d "$installPath" ]; then
         echo "Not valid install path supplied.  It should be a directory that can be written to and whose current content is of no value (will be overwritten) "
@@ -160,7 +160,7 @@ cd $srcPath/
 
 sbt clean '++ 2.10.4 package' '++ 2.10.4 KamanjaManager/assembly' '++ 2.10.4 MetadataAPI/assembly' '++ 2.10.4 KVInit/assembly' '++ 2.10.4 SimpleKafkaProducer/assembly'
 sbt '++ 2.10.4 NodeInfoExtract/assembly' '++ 2.10.4 MetadataAPIService/assembly' '++ 2.10.4 JdbcDataCollector/assembly'
-sbt '++ 2.10.4 FileDataConsumer/assembly' '++ 2.10.4 CleanUtil/assembly' '++ 2.10.4 MigrateManager/assembly' '++ 2.10.4 ClusterInstallerDriver/assembly' '++ 2.10.4 InstallDriver/assembly' '++ 2.10.4 GetComponent/assembly'
+sbt '++ 2.10.4 FileDataConsumer/assembly' '++ 2.10.4 CleanUtil/assembly' '++ 2.10.4 MigrateManager/assembly' '++ 2.10.4 ClusterInstallerDriver/assembly' '++ 2.10.4 InstallDriver/assembly' '++ 2.10.4 GetComponent/assembly' '++ 2.10.4 PmmlTestTool/assembly'
 # sbt '++ 2.10.4 MethodExtractor/assembly' '++ 2.10.4 SaveContainerDataComponent/assembly' '++ 2.10.4 ExtractData/assembly' 
 
 # recreate eclipse projects
@@ -186,6 +186,7 @@ cp Utils/ClusterInstaller/ClusterInstallerDriver/target/ClusterInstallerDriver* 
 cp Utils/ClusterInstaller/InstallDriver/target/scala-2.10/InstallDriver* $kamanjainstallbin
 cp Utils/ClusterInstaller/GetComponent/target/scala-2.10/GetComponent* $kamanjainstallbin
 cp Utils/ClusterInstaller/InstallDriver/src/main/resources/GetComponentsVersions.sh $kamanjainstallbin
+cp Utils/PmmlTestTool/target/PmmlTestTool-1.0 $bin
 
 # only for 2.11 ?
 cp Utils/Migrate/MigrateManager/target/MigrateManager* $bin
@@ -224,6 +225,7 @@ cp $ivyPath/cache/org.apache.commons/commons-collections4/jars/commons-collectio
 cp $srcPath/Storage/SqlServer/target/scala-2.10/sqlserver*.jar $systemlib
 cp $srcPath/lib_managed/jars/org.apache.commons/commons-compress/commons-compress-1.4.1.jar $systemlib
 cp $ivyPath/cache/org.apache.logging.log4j/log4j-api/jars/log4j-api-2.4.1.jar $systemlib
+cp $ivyPath/cache/org.apache.logging.log4j/log4j-1.2-api/bundles/log4j-1.2-api-2.4.1.jar $systemlib
 cp $srcPath/lib_managed/jars/org.apache.hadoop/hadoop-auth/hadoop-auth-2.7.1.jar $systemlib
 cp $srcPath/lib_managed/jars/commons-lang/commons-lang/commons-lang-2.6.jar $systemlib
 cp $srcPath/lib_managed/jars/com.google.code.gson/gson/gson-2.2.4.jar $systemlib
@@ -844,7 +846,7 @@ fi
 #Now do full build of 2.11
 sbt clean '++ 2.11.7 package' '++ 2.11.7 KamanjaManager/assembly' '++ 2.11.7 MetadataAPI/assembly' '++ 2.11.7 KVInit/assembly' '++ 2.11.7 SimpleKafkaProducer/assembly' 
 sbt '++ 2.11.7 NodeInfoExtract/assembly' '++ 2.11.7 MetadataAPIService/assembly' '++ 2.11.7 JdbcDataCollector/assembly'
-sbt '++ 2.11.7 FileDataConsumer/assembly' '++ 2.11.7 CleanUtil/assembly' '++ 2.11.7 MigrateManager/assembly' '++ 2.11.7 ClusterInstallerDriver/assembly' '++ 2.11.7 InstallDriver/assembly' '++ 2.11.7 GetComponent/assembly'
+sbt '++ 2.11.7 FileDataConsumer/assembly' '++ 2.11.7 CleanUtil/assembly' '++ 2.11.7 MigrateManager/assembly' '++ 2.11.7 ClusterInstallerDriver/assembly' '++ 2.11.7 InstallDriver/assembly' '++ 2.11.7 GetComponent/assembly' '++ 2.11.7 PmmlTestTool/assembly'
 # sbt '++ 2.11.7 MethodExtractor/assembly' '++ 2.11.7 SaveContainerDataComponent/assembly' '++ 2.11.7 ExtractData/assembly' 
 
 # recreate eclipse projects
@@ -873,7 +875,7 @@ cp Utils/ClusterInstaller/GetComponent/target/scala-2.11/GetComponent* $kamanjai
 cp Utils/ClusterInstaller/InstallDriver/src/main/resources/GetComponentsVersions.sh $kamanjainstallbin
 cp Utils/Migrate/MigrateManager/target/MigrateManager* $kamanjainstallbin
 cp $srcPath/Utils/NodeInfoExtract/target/scala-2.11/NodeInfoExtract* $kamanjainstallbin
-
+cp Utils/PmmlTestTool/target/PmmlTestTool-1.0 $bin
 
 # *******************************
 # Copy jars required version-2.11 (more than required if the fat jars are used)
@@ -905,6 +907,7 @@ cp $ivyPath/cache/org.apache.commons/commons-collections4/jars/commons-collectio
 cp $srcPath/Storage/SqlServer/target/scala-2.11/sqlserver_2.11-0.1.0.jar $systemlib
 cp $srcPath/lib_managed/jars/org.apache.commons/commons-compress/commons-compress-1.4.1.jar $systemlib
 cp $ivyPath/cache/org.apache.logging.log4j/log4j-api/jars/log4j-api-2.4.1.jar $systemlib
+cp $ivyPath/cache/org.apache.logging.log4j/log4j-1.2-api/bundles/log4j-1.2-api-2.4.1.jar $systemlib
 cp $srcPath/lib_managed/jars/org.apache.hadoop/hadoop-auth/hadoop-auth-2.7.1.jar $systemlib
 cp $srcPath/lib_managed/jars/commons-lang/commons-lang/commons-lang-2.6.jar $systemlib
 cp $srcPath/lib_managed/jars/com.google.code.gson/gson/gson-2.2.4.jar $systemlib

@@ -30,7 +30,7 @@ import scala.io.Source
 import sys.process._
 import java.util.regex.Pattern
 import java.util.regex.Matcher
-
+import com.ligadata.KamanjaVersion.KamanjaVersion
 
 class sbtProjDependencies(rawDepsListStr: String) {
 
@@ -149,6 +149,8 @@ sbtProjectDependencies --sbtDeps <deps from "`sbt 'show <proj>/fullClasspath' | 
               nextOption(map ++ Map('emitJsonJarNamesOnlyList -> value), tail)
             case "--emitAll" :: value :: tail =>
               nextOption(map ++ Map('emitAll -> value), tail)
+            case "--version" :: tail =>
+              nextOption(map ++ Map('version -> "true"), tail)
             case option :: tail =>
               println("Unknown option " + option)
               println(usage)
@@ -157,6 +159,11 @@ sbtProjectDependencies --sbtDeps <deps from "`sbt 'show <proj>/fullClasspath' | 
         }
     
         val options = nextOption(Map(), arglist)
+        val version = options.getOrElse('version, "false").toString
+        if (version.equalsIgnoreCase("true")) {
+          KamanjaVersion.print
+          return
+        }
         
         val sbtDeps = if (options.contains('sbtDeps)) options.apply('sbtDeps) else null
         val emitCp = if (options.contains('emitCp)) options.apply('emitCp) else null

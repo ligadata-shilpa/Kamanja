@@ -82,7 +82,6 @@ class MessageFldsExtractor {
     var nativeKeyMapBuf = new StringBuilder(8 * 1024)
     var getNativeKeyValues = new StringBuilder(8 * 1024)
 
-
     var list = List[(String, String)]()
     var argsList = List[(String, String, String, String, Boolean, String)]()
     val pad1 = "\t"
@@ -209,7 +208,6 @@ class MessageFldsExtractor {
                 nativeKeyMapBuf = nativeKeyMapBuf.append(arr_4(19))
                 getNativeKeyValues = getNativeKeyValues.append(arr_4(20))
 
-
                 //       =  assignCsvdata.toString, assignJsondata.toString, assignXmldata.toString,  list, argsList, addMsg.toString)  = 
               } else if (typ.get.tType.toString().equals("tArrayBuf")) {
                 val (arrayBuf_1, arrayBuf_2, arrayBuf_3, arrayBuf_4) = arrayTypeHandler.handleArrayBuffer(keys, message, typ, f, childs, prevVerMsgBaseTypesIdxArry, recompile)
@@ -240,7 +238,6 @@ class MessageFldsExtractor {
                 assignKvData = assignKvData.append(arrayBuf_4(20))
                 nativeKeyMapBuf = nativeKeyMapBuf.append(arrayBuf_4(21))
                 getNativeKeyValues = getNativeKeyValues.append(arrayBuf_4(22))
-
 
               } else if (typ.get.tType.toString().equals("tHashMap")) {
 
@@ -288,7 +285,6 @@ class MessageFldsExtractor {
                 assignKvData = assignKvData.append(baseTyp_6(17))
                 nativeKeyMapBuf = nativeKeyMapBuf.append(baseTyp_6(18))
                 getNativeKeyValues = getNativeKeyValues.append(baseTyp_6(19))
-
 
                 if (paritionkeys != null && paritionkeys.size > 0) {
                   if (paritionkeys.contains(f.Name)) {
@@ -351,7 +347,6 @@ class MessageFldsExtractor {
                   nativeKeyMapBuf = nativeKeyMapBuf.append(arrayBuf_4(21))
                   getNativeKeyValues = getNativeKeyValues.append(arrayBuf_4(22))
 
-
                 } else if (typ.get.tType.toString().equals("tArray")) {
 
                   val (arr_1, arr_2, arr_3, arr_4) = arrayTypeHandler.handleArrayType(keys, typ, f, message, childs, prevVerMsgBaseTypesIdxArry, recompile)
@@ -381,7 +376,6 @@ class MessageFldsExtractor {
                   nativeKeyMapBuf = nativeKeyMapBuf.append(arr_4(19))
                   getNativeKeyValues = getNativeKeyValues.append(arr_4(20))
 
-
                   //       =  assignCsvdata.toString, assignJsondata.toString, assignXmldata.toString,  list, argsList, addMsg.toString)  = 
                 } else {
 
@@ -408,10 +402,10 @@ class MessageFldsExtractor {
                     withMethods = withMethods.append(cntnr_4(13))
                     fromFuncBuf = fromFuncBuf.append(cntnr_4(14))
                     nativeKeyMapBuf = nativeKeyMapBuf.append(cntnr_4(15))
-                  
+
                     assignKvData = assignKvData.append("// Not Handling Container")
                     getNativeKeyValues = getNativeKeyValues.append(cntnr_4(16))
-                
+
                     //   mappedPrevVerMatchkeys
 
                   }
@@ -517,6 +511,14 @@ class MessageFldsExtractor {
       }
     }
 
+    /**
+     * Adding system columns "timePartitionData and rowNumber " to argslist to add it to metadata
+     */
+
+    argsList = ("system", "timePartitionData", "system", "long", false, null) :: argsList
+    argsList = ("system", "rowNumber", "system", "int", false, null) :: argsList
+
+    /***************/
     var returnClassStr = new ArrayBuffer[String]
 
     returnClassStr += scalaclass.toString
