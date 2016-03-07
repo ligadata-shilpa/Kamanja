@@ -13,6 +13,7 @@ import spray.http._
 import org.apache.logging.log4j._
 import scala.util.control.Breaks._
 import com.ligadata.Exceptions._
+import com.ligadata.KamanjaVersion.KamanjaVersion
 
 /**
  * @author danielkozin
@@ -65,6 +66,10 @@ class UtilityService extends Runnable {
         logger.error("Invalid Parameters")
         sys.exit(1)
       }
+      if (args(0).trim.equalsIgnoreCase("--version")) {
+        KamanjaVersion.print
+        return
+      }
       if (args(0).toLowerCase.trim.equalsIgnoreCase(PORT))
         servicePort = args(1).trim.toInt
       else {
@@ -102,6 +107,8 @@ class UtilityService extends Runnable {
       case Nil => map
       case "--config" :: value :: tail =>
         nextOption(map ++ Map('config -> value), tail)
+      case "--version" :: tail =>
+        nextOption(map ++ Map('version -> "true"), tail)
       case option :: tail => {
         logger.error("Unknown option " + option)
         sys.exit(1)

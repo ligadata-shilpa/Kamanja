@@ -46,6 +46,7 @@ import org.json4s._
 import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
 import org.json4s.jackson.Serialization
+import com.ligadata.KamanjaVersion.KamanjaVersion
 
 /**
   * This application installs and upgrades Kamanaja.  It does these essential things:
@@ -146,6 +147,7 @@ Usage:
             [--migrationTemplate <MigrationTemplate>]
             [--skipPrerequisites "scala,java,hbase,kafka,zookeeper,all"]
             [--preRequisitesCheckOnly]
+            [--externalJarsDir <external jars directory to be copied to installation lib/application>]
 
     where
         --upgrade explicitly specifies that the intent to upgrade an existing cluster installation with the latest release.
@@ -185,6 +187,7 @@ Usage:
         [--preRequisitesCheckOnly] When specified, the prerequisite software components are checked, but the installation and possible migration are not done.
             If both --skipPrerequisites and --preRequisitesOnly are specified, only the prerequisites not given in the skip list will be performed.
             Processing stops after the checks; installation and upgrade are not done.
+        [--externalJarsDir <external jars directory to be copied to installation lib/application] External jars to be copied while installing/upgrading new package.
 
     The ClusterInstallerDriver-1.0 is the cluster installer driver for Kamanja 1.3.  It is capable of installing a new version of 1.3
     or given the appropriate arguments, installing a new version of Kamanja 1.3 *and* upgrading a 1.1 or 1.2 installation to the 1.3 version.
@@ -268,7 +271,7 @@ Usage:
     }
 
     // locate the clusterInstallerDriver app ... need its working directory to refer to others... this function
-    // returns this form:  file:/tmp/drdigital/KamanjaInstall-1.3.2_2.11/bin/clusterInstallerDriver-1.0
+    // returns this form:  file:/tmp/drdigital/KamanjaInstall-1.3.3_2.11/bin/clusterInstallerDriver-1.0
 
     /** Obtain location of the clusterInstallerDriver fat jar.  Its directory contains the scripts we use to
       * obtain component info for the env check and the lower level cluster install script that actually does the
@@ -327,6 +330,10 @@ Usage:
           nextOption(map ++ Map('preRequisitesCheckOnly -> "true"), tail)
         case "--skipPrerequisites" :: value :: tail =>
           nextOption(map ++ Map('skipPrerequisites -> value), tail)
+        case "--externalJarsDir" :: value :: tail =>
+          nextOption(map ++ Map('externalJarsDir -> value), tail)
+        case "--version" :: tail =>
+          nextOption(map ++ Map('version -> "true"), tail)
         case option :: tail =>
           printAndLogError("Unknown option " + option, log)
           printAndLogDebug(usage, log);
@@ -336,6 +343,11 @@ Usage:
     }
 
     val options = nextOption(Map(), arglist)
+    val version = options.getOrElse('version, "false").toString
+    if (version.equalsIgnoreCase("true")) {
+      KamanjaVersion.print
+      return
+    }
 
     // 1st Set of options
     // Mandatory options
@@ -359,6 +371,7 @@ Usage:
     val migrateTemplate_opt: String = if (options.contains('migrationTemplate)) options.apply('migrationTemplate) else null
     val skipPrerequisites_opt: String = if (options.contains('skipPrerequisites)) options.apply('skipPrerequisites) else null
     val preRequisitesCheckOnly: Boolean = if (options.contains('preRequisitesCheckOnly)) options.apply('preRequisitesCheckOnly) == "true" else false
+    val externalJarsDir_opt: String = if (options.contains('externalJarsDir)) options.apply('externalJarsDir) else null
 
     val toKamanja: String = "1.3"
 
@@ -492,6 +505,11 @@ Try again.
 
     if (!isFileExists(workingDir, false, true)) {
       printAndLogError(s"The workingDir ($workingDir) does not exist", log)
+      cnt += 1
+    }
+
+    if (externalJarsDir_opt != null && !isFileExists(externalJarsDir_opt, false, true)) {
+      printAndLogError(s"The externalJarsDir ($externalJarsDir_opt) does not exist", log)
       cnt += 1
     }
 
@@ -678,6 +696,14 @@ Try again.
             jsonStr
           }
 
+        val externalJarsDir =
+          if (externalJarsDir_opt != null) {
+            val fl = new File(externalJarsDir_opt)
+            fl.getAbsolutePath
+          } else {
+            ""
+          }
+
         /** Install the new installation */
         val nodes: String = ips.mkString(",")
         printAndLogDebug(s"Begin cluster installation... installation found on each cluster node(any {$nodes}) at $installDir", log)
@@ -694,7 +720,8 @@ Try again.
           , ipPathPairs
           , workingDir
           , clusterId
-          , metadataDataStore)
+          , metadataDataStore
+          , externalJarsDir)
         if (installOk) {
           /** Do upgrade if necessary */
           if (upgrade) {
@@ -798,64 +825,63 @@ Try again.
     val rootDirPath: String = apiConfigMap.getProperty("root_dir")
 
     val (proposedClusterEnvironmentIsSuitable): Boolean = try {
-      val hbaseConnections: String = clusterConfigMap.DataStoreConnections //
-      val kafkaConnections: String = clusterConfigMap.KafkaConnections
-      val zkConnections: String = clusterConfigMap.ZooKeeperConnectionString
+      val hbaseConnections: String = clusterConfigMap.DataStoreConnections.trim //
+      val kafkaConnections: String = clusterConfigMap.KafkaConnections.trim
+      val zkConnections: String = clusterConfigMap.ZooKeeperConnectionString.trim
 
-      var skipComponents = Set[String]()
+      var skipComponents =
+        if (skipPrerequisites_opt != null && skipPrerequisites_opt.nonEmpty)
+          skipPrerequisites_opt.split(",").map(s => s.trim.toLowerCase()).filter(s => s.size > 0).toSet
+        else
+          Set[String]()
       var skipedAll = false
 
       val jsonParm: String =
-        if (skipPrerequisites_opt != null && skipPrerequisites_opt.nonEmpty) {
-          skipComponents = skipPrerequisites_opt.split(",").map(s => s.trim.toLowerCase()).filter(s => s.size > 0).toSet
-          if (!skipComponents.contains("all")) {
-            val sb = new StringBuilder()
-            sb.append("[")
-            var addedComp = 0
-            if (!skipComponents.contains("zookeeper")) {
-              if (addedComp > 0)
-                sb.append(",")
-              sb.append("""{ "component" : "zookeeper", "hostslist" : "%s" }""".stripMargin.format(zkConnections))
-              addedComp += 1
-            }
-            if (!skipComponents.contains("kafka")) {
-              if (addedComp > 0)
-                sb.append(",")
-              sb.append("""{ "component" : "kafka", "hostslist" : "%s" }""".stripMargin.format(kafkaConnections))
-              addedComp += 1
-            }
+        if (!skipComponents.contains("all")) {
+          val sb = new StringBuilder()
+          sb.append("[")
+          var addedComp = 0
+          if (!skipComponents.contains("zookeeper") && zkConnections.nonEmpty) {
             if (addedComp > 0)
               sb.append(",")
-            if ((!skipComponents.contains("hbase")) && (!skipComponents.contains("storage"))) {
-              sb.append(hbaseConnections)
-              addedComp += 1
-            }
-            if (!skipComponents.contains("scala")) {
-              if (addedComp > 0)
-                sb.append(",")
-              sb.append("""{ "component" : "scala", "hostslist" : "localhost" }""")
-              addedComp += 1
-            }
-            if (!skipComponents.contains("java")) {
-              if (addedComp > 0)
-                sb.append(",")
-              sb.append("""{ "component" : "java", "hostslist" : "localhost" }""")
-              addedComp += 1
-            }
-            if (addedComp > 0) {
-              sb.append("]")
-              sb.toString()
-            }
-            else {
-              skipedAll = true
-              "[]"
-            }
-          } else {
+            sb.append("""{ "component" : "zookeeper", "hostslist" : "%s" }""".stripMargin.format(zkConnections))
+            addedComp += 1
+          }
+          if (!skipComponents.contains("kafka") && kafkaConnections.nonEmpty) {
+            if (addedComp > 0)
+              sb.append(",")
+            sb.append("""{ "component" : "kafka", "hostslist" : "%s" }""".stripMargin.format(kafkaConnections))
+            addedComp += 1
+          }
+          if ((!skipComponents.contains("hbase")) && (!skipComponents.contains("storage")) && hbaseConnections.nonEmpty) {
+            if (addedComp > 0)
+              sb.append(",")
+            sb.append(hbaseConnections)
+            addedComp += 1
+          }
+          if (!skipComponents.contains("scala")) {
+            if (addedComp > 0)
+              sb.append(",")
+            sb.append("""{ "component" : "scala", "hostslist" : "localhost" }""")
+            addedComp += 1
+          }
+          if (!skipComponents.contains("java")) {
+            if (addedComp > 0)
+              sb.append(",")
+            sb.append("""{ "component" : "java", "hostslist" : "localhost" }""")
+            addedComp += 1
+          }
+          if (addedComp > 0) {
+            sb.append("]")
+            sb.toString()
+          }
+          else {
             skipedAll = true
             "[]"
           }
         } else {
-          """[{ "component" : "zookeeper", "hostslist" : "%s" }, { "component" : "kafka", "hostslist" : "%s" }, %s, { "component" : "scala", "hostslist" : "localhost" }, { "component" : "java", "hostslist" : "localhost" }]""".stripMargin.format(zkConnections, kafkaConnections, hbaseConnections)
+          skipedAll = true
+          "[]"
         }
 
       /**
@@ -936,7 +962,7 @@ Try again.
           var kafkaIsValid = false
           var hbaseIsValid = false
 
-          if (!skipComponents.contains("zookeeper")) {
+          if (!skipComponents.contains("zookeeper") && zkConnections.nonEmpty) {
             val zkOptInfo: Option[ComponentInfo] = components.filter(component => component.componentName.toLowerCase == "zookeeper").headOption
             val info = zkOptInfo.orNull
             zkIsValid = (info != null && info.status != null && info.status.toLowerCase == "success")
@@ -951,7 +977,7 @@ Try again.
             zkIsValid = true
           }
 
-          if (!skipComponents.contains("kafka")) {
+          if (!skipComponents.contains("kafka") && kafkaConnections.nonEmpty) {
             val kafkaOptInfo: Option[ComponentInfo] = components.filter(component => component.componentName.toLowerCase == "kafka").headOption
             val kinfo = kafkaOptInfo.orNull
             kafkaIsValid = (kinfo != null && kinfo.status != null && kinfo.status.toLowerCase == "success")
@@ -966,7 +992,7 @@ Try again.
             kafkaIsValid = true
           }
 
-          if (!skipComponents.contains("hbase")) {
+          if (!skipComponents.contains("hbase") && hbaseConnections.nonEmpty) {
             val hbaseOptInfo: Option[ComponentInfo] = components.filter(component => component.componentName.toLowerCase == "hbase").headOption
             val hinfo = hbaseOptInfo.orNull
             hbaseIsValid = (hinfo != null && hinfo.status != null && hinfo.status.toLowerCase == "success")
@@ -1390,7 +1416,8 @@ Try again.
                      , ipPathPairs: Array[(String, String)]
                      , workDir: String
                      , clusterId: String
-                     , metadataDataStore: String): Boolean = {
+                     , metadataDataStore: String
+                     , externalJarsDir: String): Boolean = {
 
     val parentPath: String = rootDirPath.split('/').dropRight(1).mkString("/")
 
@@ -1406,7 +1433,6 @@ Try again.
       writeCfgFile(s"# Node Information\nnodeId=${quad._2}\n\n#Storing metadata using MetadataStoreType, MetadataSchemaName & MetadataLocation\nMetadataDataStore=$metadataDataStore\n\n", s"$workDir/node${quad._2}.cfg")
     })
 
-
     val dateTime: DateTime = new DateTime
     val fmt: DateTimeFormatter = DateTimeFormat.forPattern("yyyyMMdd_HHmmss")
     val datestr: String = fmt.print(dateTime);
@@ -1414,7 +1440,12 @@ Try again.
 
     val priorInstallDirPath: String = s"$parentPath/$priorInstallDirName"
     val newInstallDirPath: String = s"$parentPath/$newInstallDirName"
-    val installCmd: Seq[String] = Seq("bash", "-c", s"$kamanjaClusterInstallPath --ClusterId $clusterId --WorkingDir $workDir --MetadataAPIConfig $apiConfigPath --NodeConfigPath $nodeConfigPath --TarballPath $tarballPath --ipAddrs $ipDataFile --ipIdTargPaths $ipIdCfgTargDataFile --ipPathPairs $ipPathDataFile --priorInstallDirPath $priorInstallDirPath --newInstallDirPath $newInstallDirPath --installVerificationFile $verifyFilePath ")
+    val externalJarsDirOptStr = if (externalJarsDir != null && externalJarsDir.nonEmpty) {
+      s" --externalJarsDir '$externalJarsDir' "
+    } else {
+      ""
+    }
+    val installCmd: Seq[String] = Seq("bash", "-c", s"$kamanjaClusterInstallPath --ClusterId '$clusterId' --WorkingDir '$workDir' --MetadataAPIConfig '$apiConfigPath' --NodeConfigPath '$nodeConfigPath' --TarballPath '$tarballPath' --ipAddrs '$ipDataFile' --ipIdTargPaths '$ipIdCfgTargDataFile' --ipPathPairs '$ipPathDataFile' --priorInstallDirPath '$priorInstallDirPath' --newInstallDirPath '$newInstallDirPath' --installVerificationFile '$verifyFilePath' $externalJarsDirOptStr ")
     val installCmdRep: String = installCmd.mkString(" ")
     printAndLogDebug(s"KamanjaClusterInstall cmd used: \n\n$installCmdRep", log)
 
@@ -1691,6 +1722,7 @@ class ClusterConfigMap(cfgStr: String, var clusterIdOfInterest: String) {
   def Adapters: List[Map[String, Any]] = adapters
 
   def ZooKeeperConnectionString: String = {
+
     zooKeeperInfo.getOrElse("ZooKeeperConnectString", "").asInstanceOf[String]
   }
 
@@ -1705,6 +1737,8 @@ class ClusterConfigMap(cfgStr: String, var clusterIdOfInterest: String) {
       val conn: String = adapterSpecificCfg.getOrElse("HostList", "").asInstanceOf[String]
       conn
     })
+
+    if (hostConnections.isEmpty) return ""
     hostConnections.toSet.mkString(",")
   }
 
@@ -1722,8 +1756,12 @@ class ClusterConfigMap(cfgStr: String, var clusterIdOfInterest: String) {
 
   def DataStoreConnections: String = {
 
-    /** FIXME: does this require something more to format as json string? */
-    getStringFromJsonNode(DataStore)
+    if (DataStore != null) {
+      var storeTyp = DataStore.getOrElse("StoreType", DataStore.getOrElse("component", "")).toString
+      if (!storeTyp.equalsIgnoreCase("hbase")) return "" // if it is not hbase we are returning empty string for now.
+      return getStringFromJsonNode(DataStore)
+    }
+    ""
   }
 
   private def getClusterConfigMapOfInterest(cfgStr: String): Map[String, Any] = {
