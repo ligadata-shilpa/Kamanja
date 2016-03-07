@@ -95,6 +95,7 @@ object FileProcessor {
   var bufferTimeout: Int = 300000  // Default to 5 minutes
 
   val HEALTHCHECK_TIMEOUT = 30000
+  val maxRetry = 3
 
   private var fileCache: scala.collection.mutable.Map[String, String] = scala.collection.mutable.Map[String, String]()
   private var fileCacheLock = new Object
@@ -389,7 +390,10 @@ object FileProcessor {
             
           } catch {
             case ioe: IOException => {
-              logger.error("SMART_FILE_CONSUMER: IOException trying to monitor the buffering queue ",ioe)
+              logger.warn("SMART_FILE_CONSUMER: IOException trying to monitor the buffering queue ",ioe)
+            }
+            case e: Throwable => {
+              logger.error("SMART_FILE_CONSUMER: IOException trying to monitor the buffering queue ",e)
             }
           }
 
@@ -403,21 +407,24 @@ object FileProcessor {
   private def processExistingFiles(d: File): Unit = {
     // Process all the existing files in the directory that are not marked complete.
     //logger.info("SMART FILE CONSUMER (MI): processExistingFiles on "+d.getAbsolutePath)
-    
+
+
+    // TODO:  Can this block the processoing????????
     if (d.exists && d.isDirectory) {
       //Additional Filter Conditions, Ignore files starting with a . (period)
       val files = d.listFiles.filter(_.isFile)
                     .filter(!_.getName.startsWith("."))
                     .sortWith(_.lastModified < _.lastModified).toList
       files.foreach(file => {
-        //Add a sanity check to see if a file exists - rare condition  
-        if (!checkIfFileBeingProcessed(file.toString) && Files.exists(file.toPath()) && FileProcessor.isValidFile(file.toString)) {
-          FileProcessor.enQBufferedFile(file.toString)
-        }else if(!FileProcessor.isValidFile(file.toString)){
-          //Invalid File - Move out file and log error
-          moveFile(file.toString())
-          logger.error("SMART FILE CONSUMER (global): Moving out " + file.toString() + " with invalid file type " )
-         }
+        breakable {
+          if (!Files.exists(file.toPath())) {
+            logger.warn("SMART FILE CONSUMER (global): " + file.toString() + " does not exist in the  " + d.toString )
+            break
+          }
+          if (!checkIfFileBeingProcessed(file.toString)) {
+            FileProcessor.enQBufferedFile(file.toString)
+          }
+        }
       })
     }
   }
@@ -437,13 +444,18 @@ object FileProcessor {
       }catch{
         case e:IOException =>{
           logger.warn("SmartFileConsumer - Tika unable to read from InputStream - "+e.getMessage)
+          throw e
         }
         case e:Exception =>{
           logger.warn("SmartFileConsumer - Tika processing generic exception - "+e.getMessage)
+          throw e
         }
         case e:Throwable =>{
           logger.warn("SmartFileConsumer - Tika processing runtime exception - "+e.getMessage)
+          throw e
         }
+      } finally {
+        fis.close()
       }
         
       if(contentType!= null && !contentType.isEmpty() && contentType.equalsIgnoreCase("application/octet-stream")){
@@ -456,24 +468,27 @@ object FileProcessor {
 		    }catch{
 		      case e:MagicParseException =>{
 		        logger.warn("SmartFileConsumer - MimeMagic caught a parsing exception - "+e.getMessage)
+            throw e
 		      }
 		      case e:MagicMatchNotFoundException =>{
 		        logger.warn("SmartFileConsumer -MimeMagic Mime Not Found -"+e.getMessage)
+            throw e
 		      }
 		      case e:MagicException =>{
 		        logger.warn("SmartFileConsumer - MimeMagic generic exception - "+e.getMessage)
+            throw e
 		      }
 		      case e:Exception =>{
             logger.warn("SmartFileConsumer - MimeMagic processing generic exception - "+e.getMessage)
+            throw e
           }
           case e:Throwable =>{
             logger.warn("SmartFileConsumer - MimeMagic processing runtime exception - "+e.getMessage)
+            throw e
           }
 		      
 		    }
-		    
       }
-      fis.close()
 
       //Currently handling only text/plain and application/gzip contents
       //Need to bubble this property out into the Constants and Configuration
