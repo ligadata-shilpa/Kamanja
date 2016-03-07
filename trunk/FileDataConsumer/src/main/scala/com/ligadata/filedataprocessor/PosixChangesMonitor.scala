@@ -8,7 +8,7 @@ import com.ligadata.Exceptions.StackTrace
 import com.ligadata.filedataprocessor.FileChangeType._
 import org.apache.logging.log4j.{ Logger, LogManager }
 
-import scala.collection.mutable.HashMap
+import scala.collection.mutable.{ArrayBuffer, HashMap}
 import scala.util.control.Breaks._
 
 /**
@@ -159,9 +159,22 @@ class PosixChangesMonitor(val REFRESH_RATE : Int, modifiedFileCallback:(FileHand
         while (true) {
           try {
             logger.info(s"Watching directory $targetFolder")
-            val dir = new File(targetFolder)
-            checkExistingFiles(dir)
-            errorWaitTime = 1000
+
+
+            val dirsToCheck = new ArrayBuffer[String]()
+            dirsToCheck += targetFolder
+
+
+            while(dirsToCheck.nonEmpty ) {
+              val dirToCheck = dirsToCheck.head
+              dirsToCheck.remove(0)
+
+              val dir = new File(dirToCheck)
+              checkExistingFiles(dir)
+              dir.listFiles.filter(_.isDirectory).foreach(d => dirsToCheck += d.toString)
+
+              errorWaitTime = 1000
+            }
           } catch {
             case e: Exception => {
               logger.warn("Unable to access Directory, Retrying after " + errorWaitTime + " seconds", e)
@@ -188,7 +201,7 @@ class PosixChangesMonitor(val REFRESH_RATE : Int, modifiedFileCallback:(FileHand
       val files = d.listFiles.filter(_.isFile).sortWith(_.lastModified < _.lastModified).toList
       files.foreach(file => {
         val tokenName = file.toString.split("/")
-          if (!checkIfFileHandled(tokenName(tokenName.size - 1))) {
+          if (!checkIfFileHandled(file.toString)) {
             logger.info("SMART FILE CONSUMER (global)  Processing " + file.toString)
             //FileProcessor.enQBufferedFile(file.toString)
             val changeType = New

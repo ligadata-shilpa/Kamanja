@@ -5,6 +5,10 @@ import java.util.zip.{ZipException, GZIPInputStream}
 import com.ligadata.Exceptions.{ MissingPropertyException }
 import com.ligadata.MetadataAPI.MetadataAPIImpl
 import com.ligadata.ZooKeeper.CreateClient
+import com.ligadata.filedataprocessor.FileChangeType._
+import com.ligadata.filedataprocessor.FsType.FsType
+import com.ligadata.filedataprocessor.hdfs.{HdfsChangesMonitor, HdfsConnectionConfig}
+import com.ligadata.filedataprocessor.sftp.{SftpChangesMonitor, SftpConnectionConfig}
 import com.ligadata.kamanja.metadata.MessageDef
 import org.apache.curator.framework.CuratorFramework
 import org.apache.logging.log4j.{ Logger, LogManager }
@@ -22,17 +26,17 @@ import java.nio.file.Files.copy
 import java.nio.file.Paths.get
 
 case class BufferLeftoversArea(workerNumber: Int, leftovers: Array[Char], relatedChunk: Int)
-case class BufferToChunk(len: Int, payload: Array[Char], chunkNumber: Int, relatedFileName: String, firstValidOffset: Int, isEof: Boolean, partMap: scala.collection.mutable.Map[Int,Int])
-case class KafkaMessage(msg: Array[Char], offsetInFile: Int, isLast: Boolean, isLastDummy: Boolean, relatedFileName: String, partMap: scala.collection.mutable.Map[Int,Int])
+case class BufferToChunk(len: Int, payload: Array[Char], chunkNumber: Int, relatedFileHandler: FileHandler, firstValidOffset: Int, isEof: Boolean, partMap: scala.collection.mutable.Map[Int,Int])
+case class KafkaMessage(msg: Array[Char], offsetInFile: Int, isLast: Boolean, isLastDummy: Boolean, relatedFileHandler: FileHandler, partMap: scala.collection.mutable.Map[Int,Int])
 case class EnqueuedFile(name: String, offset: Int, createDate: Long,  partMap: scala.collection.mutable.Map[Int,Int])
 case class FileStatus(status: Int, offset: Long, createDate: Long)
 case class OffsetValue (lastGoodOffset: Int, partitionOffsets: Map[Int,Int])
-
+case class EnqueuedFileHandler(fileHandler: FileHandler, offset: Int, createDate: Long,  partMap: scala.collection.mutable.Map[Int,Int])
 
 /**
- * This is the global area for the File Processor.  It basically handles File Access and Distribution !!!!!
- * the Individual File Processors ask here for what files it they shold be processed.
- */
+  * This is the global area for the File Processor.  It basically handles File Access and Distribution !!!!!
+  * the Individual File Processors ask here for what files it they shold be processed.
+  */
 object FileProcessor {
   lazy val loggerName = this.getClass.getName
   lazy val logger = LogManager.getLogger(loggerName)
@@ -46,19 +50,26 @@ object FileProcessor {
   var zkcConnectString: String = ""
 
   private var path: Path = null
-  private var watchService: WatchService = null
-  private var keys = new HashMap[WatchKey, Path]
+  //private var watchService: WatchService = null
+  //private var keys = new HashMap[WatchKey, Path]
 
   var dirToWatch: String = _
   var targetMoveDir: String = _
   var readyToProcessKey: String = _
+
+  var fsType : FsType = null
+  private var authUser : String = ""
+  private var authPass : String = ""
+  private var host : String = ""
+  private var port = -1
+
 
   var globalFileMonitorService: ExecutorService = Executors.newFixedThreadPool(3)
   val DEBUG_MAIN_CONSUMER_THREAD_ACTION = 1000
   val NOT_RECOVERY_SITUATION = -1
   val BROKEN_FILE = -100
   val CORRUPT_FILE = -200
-  val REFRESH_RATE = 2000
+  val REFRESH_RATE = 10000
   val MAX_WAIT_TIME = 60000
   var errorWaitTime = 1000
 
@@ -87,15 +98,16 @@ object FileProcessor {
   private var activeFiles: scala.collection.mutable.Map[String, FileStatus] = scala.collection.mutable.Map[String, FileStatus]()
   private val activeFilesLock = new Object
   // READY TO PROCESS FILE QUEUES
-  private var fileQ: scala.collection.mutable.PriorityQueue[EnqueuedFile] = new scala.collection.mutable.PriorityQueue[EnqueuedFile]()(Ordering.by(OldestFile))
+  private var fileQ: scala.collection.mutable.PriorityQueue[EnqueuedFileHandler] = new scala.collection.mutable.PriorityQueue[EnqueuedFileHandler]()(Ordering.by(OldestFile))
   private val fileQLock = new Object
-  private val bufferingQ_map: scala.collection.mutable.Map[String, Long] = scala.collection.mutable.Map[String, Long]()
+  //private val bufferingQ_map: scala.collection.mutable.Map[String, Long] = scala.collection.mutable.Map[String, Long]()
+  private val bufferingQ_map: scala.collection.mutable.Map[FileHandler, Long] = scala.collection.mutable.Map[FileHandler, Long]()
   private val bufferingQLock = new Object
   private val zkRecoveryLock = new Object
 
   /**
-   *
-   */
+    *
+    */
   def initZookeeper: CuratorFramework = {
     try {
       zkcConnectString = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("ZOOKEEPER_CONNECT_STRING")
@@ -150,10 +162,10 @@ object FileProcessor {
   }
 
   /**
-   * checkIfFileBeingProcessed - if for some reason a file name is queued twice... this will prevent it
-   * @param file
-   * @return
-   */
+    * checkIfFileBeingProcessed - if for some reason a file name is queued twice... this will prevent it
+    * @param file
+    * @return
+    */
   def checkIfFileBeingProcessed(file: String): Boolean = {
     fileCacheLock.synchronized {
       if (fileCache.contains(file)) {
@@ -184,6 +196,24 @@ object FileProcessor {
     dirToWatch = props.getOrElse(SmartFileAdapterConstants.DIRECTORY_TO_WATCH, null)
     targetMoveDir = props.getOrElse(SmartFileAdapterConstants.DIRECTORY_TO_MOVE_TO, null)
     readyToProcessKey = props.getOrElse(SmartFileAdapterConstants.READY_MESSAGE_MASK, ".gzip")
+
+    val fs = props.getOrElse(SmartFileAdapterConstants.FILE_SYSTEM, null)
+    fsType = FileHandler.getFsType(fs)
+    println(s"fs=$fs")
+    println(s"fsType=${fsType.toString}")
+
+    authUser = props.getOrElse(SmartFileAdapterConstants.AUTH_USER, null)
+    authPass = props.getOrElse(SmartFileAdapterConstants.AUTH_PASS, null)
+    host = props.getOrElse(SmartFileAdapterConstants.HOST, null)
+
+    val portStr = props.getOrElse(SmartFileAdapterConstants.PORT, null)
+    if(portStr != null)
+      try{
+        port = portStr.toInt
+      }
+    catch{
+      case ex : NumberFormatException =>
+    }
   }
 
   def markFileProcessing (fileName: String, offset: Int, createDate: Long): Unit = {
@@ -230,37 +260,37 @@ object FileProcessor {
   }
 
   def getFileStatus(fileName: String): FileStatus = {
-     activeFilesLock.synchronized{
-       logger.info("SMART FILE CONSUMER (global): checking file in a list of active files " + fileName)
-       if (!activeFiles.contains(fileName)) {
-         logger.warn("SMART FILE CONSUMER (global): Trying to get status on unknown file " + fileName)
-         return null
-       }
-       return activeFiles(fileName)
-     }
-   }
+    activeFilesLock.synchronized{
+      logger.info("SMART FILE CONSUMER (global): checking file in a list of active files " + fileName)
+      if (!activeFiles.contains(fileName)) {
+        logger.warn("SMART FILE CONSUMER (global): Trying to get status on unknown file " + fileName)
+        return null
+      }
+      return activeFiles(fileName)
+    }
+  }
 
 
 
   // Stuff used by the File Priority Queue.
-  def OldestFile(file: EnqueuedFile): Long = {
+  def OldestFile(file: EnqueuedFileHandler): Long = {
     file.createDate * -1
   }
 
-  private def enQFile(file: String, offset: Int, createDate: Long, partMap: scala.collection.mutable.Map[Int,Int] = scala.collection.mutable.Map[Int,Int]()): Unit = {
+  private def enQFile(fileHandler: FileHandler, offset: Int, createDate: Long, partMap: scala.collection.mutable.Map[Int,Int] = scala.collection.mutable.Map[Int,Int]()): Unit = {
     fileQLock.synchronized {
-      logger.info("SMART FILE CONSUMER (global):  enq file " + file + " with priority " + createDate+" --- curretnly " + fileQ.size + " files on a QUEUE")
-      fileQ += new EnqueuedFile(file, offset, createDate, partMap)
+      logger.info("SMART FILE CONSUMER (global):  enq file " + fileHandler.fullPath + " with priority " + createDate+" --- curretnly " + fileQ.size + " files on a QUEUE")
+      fileQ += new EnqueuedFileHandler(fileHandler, offset, createDate, partMap)
     }
   }
 
-  private def deQFile: EnqueuedFile = {
+  private def deQFile: EnqueuedFileHandler = {
     fileQLock.synchronized {
       if (fileQ.isEmpty) {
         return null
       }
       val ef = fileQ.dequeue()
-      logger.info("SMART FILE CONSUMER (global):  deq file " + ef.name + " with priority " + ef.createDate+" --- curretnly " + fileQ.size + " files left on a QUEUE")
+      logger.info("SMART FILE CONSUMER (global):  deq file " + ef.fileHandler.fullPath + " with priority " + ef.createDate+" --- curretnly " + fileQ.size + " files left on a QUEUE")
       return ef
 
     }
@@ -280,8 +310,8 @@ object FileProcessor {
     MetadataAPIImpl.InitMdMgrFromBootStrap(localMetadataConfig, false)
     zkc = initZookeeper
 
-    watchService = path.getFileSystem().newWatchService()
-    keys = new HashMap[WatchKey, Path]
+    //watchService = path.getFileSystem().newWatchService()
+    //keys = new HashMap[WatchKey, Path]
 
 
     isBufferMonitorRunning = true
@@ -304,16 +334,16 @@ object FileProcessor {
     })
   }
 
-  private def enQBufferedFile(file: String): Unit = {
+  private def enQBufferedFile(fileHandler: FileHandler): Unit = {
     bufferingQLock.synchronized {
-      bufferingQ_map(file) = new File(file).length
+      bufferingQ_map(fileHandler) = fileHandler.length
     }
   }
 
   /**
-   *  Look at the files on the DEFERRED QUEUE... if we see that it stops growing, then move the file onto the READY
-   *  to process QUEUE.
-   */
+    *  Look at the files on the DEFERRED QUEUE... if we see that it stops growing, then move the file onto the READY
+    *  to process QUEUE.
+    */
   private def monitorBufferingFiles: Unit = {
     // This guys will keep track of when to exgernalize a WARNING Message.  Since this loop really runs every second,
     // we want to throttle the warning messages.
@@ -325,26 +355,26 @@ object FileProcessor {
         val iter = bufferingQ_map.iterator
         iter.foreach(fileTuple => {
           try {
-            val d = new File(fileTuple._1)
+            val fileHandler = fileTuple._1
             // If the the new length of the file is the same as a second ago... this file is done, so move it
             // onto the ready to process q.  Else update the latest length
-            if (fileTuple._2 == d.length) {
-              if (d.length > 0) {
-                logger.info("SMART FILE CONSUMER (global):  File READY TO PROCESS " + d.toString)
-                enQFile(fileTuple._1, FileProcessor.NOT_RECOVERY_SITUATION, d.lastModified)
+            if (fileTuple._2 == fileHandler.length) {
+              if (fileHandler.length > 0) {
+                logger.info("SMART FILE CONSUMER (global):  File READY TO PROCESS " + fileHandler.fullPath)
+                enQFile(fileHandler, NOT_RECOVERY_SITUATION, fileHandler.lastModified)
                 bufferingQ_map.remove(fileTuple._1)
               } else {
-                var diff = (System.currentTimeMillis - d.lastModified)
+                var diff = (System.currentTimeMillis - fileHandler.lastModified)
                 if (diff > bufferTimeout) {
-                  logger.warn("SMART FILE CONSUMER (global): Detected that " + d.toString + " has been on the buffering queue longer then " + bufferTimeout / 1000 + " seconds - Cleaning up" )
+                  logger.warn("SMART FILE CONSUMER (global): Detected that " + fileHandler.fullPath + " has been on the buffering queue longer then " + bufferTimeout / 1000 + " seconds - Cleaning up" )
                   bufferingQ_map.remove(fileTuple._1)
-                  var nameTokens = fileTuple._1.split("/")
+                  var nameTokens = fileHandler.fullPath.split("/")
                   fileCacheRemove(nameTokens(nameTokens.size - 1))
-                  moveFile(fileTuple._1)
+                  moveFile(fileHandler)
                 }
               }
             } else {
-              bufferingQ_map(fileTuple._1) = d.length
+              bufferingQ_map(fileTuple._1) = fileHandler.length
             }
           } catch {
             case ioe: IOException => {
@@ -359,36 +389,41 @@ object FileProcessor {
     }
   }
 
-  private def processExistingFiles(d: File): Unit = {
+  /*private def processExistingFiles(fileHandler : FileHandler): Unit = {
     // Process all the existing files in the directory that are not marked complete.
-    if (d.exists && d.isDirectory) {
+    if (d.exists && d.isDirectory)
+    {
       val files = d.listFiles.filter(_.isFile).sortWith(_.lastModified < _.lastModified).toList
       files.foreach(file => {
         if (isValidFile(file.toString) && file.toString.endsWith(readyToProcessKey)) {
           val tokenName = file.toString.split("/")
           if (!checkIfFileBeingProcessed(tokenName(tokenName.size - 1))) {
             logger.info("SMART FILE CONSUMER (global)  Processing " + file.toString)
-            FileProcessor.enQBufferedFile(file.toString)
+            enQBufferedFile(file.toString)
           }
         }
       })
     }
-  }
+  }*/
 
   private def runFileWatcher(): Unit = {
     try {
 
       // Register a listener on a watch directory.
-      register(path)
-      val d = new File(dirToWatch)
+      //register(path)
+
+
+      //val d = new File(dirToWatch)
+
+      //find the best way to handle previously failed file processing considering different fs types
 
       // Lets see if we have failed previously on this partition Id, and need to replay some messages first.
-      logger.info(" SMART FILE CONSUMER (global): Recovery operations, checking  => " + MetadataAPIImpl.GetMetadataAPIConfig.getProperty("ZNODE_PATH") + "/smartFileConsumer")
+      /*logger.info(" SMART FILE CONSUMER (global): Recovery operations, checking  => " + MetadataAPIImpl.GetMetadataAPIConfig.getProperty("ZNODE_PATH") + "/smartFileConsumer")
       if (zkc.checkExists().forPath(MetadataAPIImpl.GetMetadataAPIConfig.getProperty("ZNODE_PATH") + "/smartFileConsumer") != null) {
         var priorFailures = zkc.getChildren.forPath(MetadataAPIImpl.GetMetadataAPIConfig.getProperty("ZNODE_PATH") + "/smartFileConsumer")
         if (priorFailures != null) {
           var map = priorFailures.toArray
-        //  var map = parse(new String(priorFailures)).values.asInstanceOf[Map[String, Any]]
+          //  var map = parse(new String(priorFailures)).values.asInstanceOf[Map[String, Any]]
           if (map != null) map.foreach(fileToReprocess => {
             logger.info("SMART FILE CONSUMER (global): Consumer  recovery of file " + fileToReprocess)
             if (!checkIfFileBeingProcessed(fileToReprocess.asInstanceOf[String])) {
@@ -400,14 +435,15 @@ object FileProcessor {
               var partMap = scala.collection.mutable.Map[Int,Int]()
               var recoveryTokens = recoveryInfo.split(",")
               var parts = recoveryTokens(1).substring(1,recoveryTokens(1).size - 1)
-              if (parts.size != 0) {
+              if (
+                parts.size != 0) {
                 var kvs = parts.split(";")
                 kvs.foreach(kv => {
                   var pair = kv.split(":")
                   partMap(pair(0).toInt) = pair(1).toInt
                 })
               }
-              FileProcessor.enQFile(dirToWatch + "/" + fileToReprocess.asInstanceOf[String],recoveryTokens(0).toInt, FileProcessor.RECOVERY_DUMMY_START_TIME, partMap)
+              enQFile(dirToWatch + "/" + fileToReprocess.asInstanceOf[String],recoveryTokens(0).toInt, RECOVERY_DUMMY_START_TIME, partMap)
               if (d.exists && d.isDirectory) {
                 var files = d.listFiles.filter(file => { file.isFile && (file.getName).equals(fileToReprocess.asInstanceOf[String]) })
                 while (files.size != 0) {
@@ -420,16 +456,16 @@ object FileProcessor {
             }
           })
         }
-      }
+      }*/
 
-      logger.info("SMART FILE CONSUMER (global): Consumer Continuing Startup process, checking for existing files")
-      processExistingFiles(d)
+      /*logger.info("SMART FILE CONSUMER (global): Consumer Continuing Startup process, checking for existing files")
+      processExistingFiles(d)*/
 
 
       logger.info("SMART_FILE_CONSUMER partition Initialization complete  Monitoring specidfied directory for new files")
       // Begin the listening process, TAKE()
 
-      breakable {
+      /*breakable {
         while (true) {
           try {
             processExistingFiles(d)
@@ -437,13 +473,35 @@ object FileProcessor {
           } catch {
             case e: Exception => {
               logger.warn("Unable to access Directory, Retrying after " + errorWaitTime + " seconds", e)
-              errorWaitTime = scala.math.min((errorWaitTime * 2), FileProcessor.MAX_WAIT_TIME)
+              errorWaitTime = scala.math.min((errorWaitTime * 2), MAX_WAIT_TIME)
             }
           }
-          Thread.sleep(FileProcessor.REFRESH_RATE)
+          Thread.sleep(REFRESH_RATE)
 
         }
+      }*/
+
+      import FsType._
+      //import FileChangeType._
+
+      fsType match{
+        case POSIX =>
+          val dirMonitor = new PosixChangesMonitor(REFRESH_RATE, processFile)
+          dirMonitor.monitorDirChanges(dirToWatch, Array(AlreadyExisting, New))
+
+        case SFTP=>
+          val sftpConfig = new SftpConnectionConfig(host, authUser, authPass)
+          val dirMonitor = new SftpChangesMonitor(sftpConfig, REFRESH_RATE, processFile)
+          dirMonitor.monitorDirChanges(dirToWatch, Array(AlreadyExisting, New))
+
+        case HDFS=>
+          val hdfsConfig = new HdfsConnectionConfig(host, port)
+          val dirMonitor = new HdfsChangesMonitor(hdfsConfig, REFRESH_RATE, processFile)
+          dirMonitor.monitorDirChanges(dirToWatch, Array(AlreadyExisting, New))
+
+        case _ => throw new Exception("Unsopported file sytesm")
       }
+
     }  catch {
       case ie: InterruptedException => logger.error("InterruptedException:", ie)
       case ioe: IOException         => logger.error("Unable to find the directory to watch, Shutting down File Consumer", ioe)
@@ -451,20 +509,25 @@ object FileProcessor {
     }
   }
 
-  private def resetWatcher: Unit = {
+  def processFile (fileHandler : FileHandler, fileChangeType : FileChangeType) : Unit = {
+    if (isValidFile(fileHandler.fullPath) && fileHandler.fullPath.endsWith(readyToProcessKey))
+      enQBufferedFile(fileHandler)
+  }
+
+  /*private def resetWatcher: Unit = {
     watchService.close()
     watchService = path.getFileSystem().newWatchService()
     keys = new HashMap[WatchKey, Path]
     register(path)
-  }
+  }*/
 
   /**
-   * Register a particular file or directory to be watched
-   */
-  private def register(dir: Path): Unit = {
+    * Register a particular file or directory to be watched
+    */
+  /*private def register(dir: Path): Unit = {
     val key = dir.register(watchService, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY, StandardWatchEventKinds.OVERFLOW)
     keys(key) = dir
-  }
+  }*/
 
 
   private def isValidFile(fileName: String): Boolean = {
@@ -474,8 +537,8 @@ object FileProcessor {
   }
 
   private def monitorActiveFiles: Unit = {
-
-    var afterErrorConditions = false
+//is this method useful anymore?????????????????????????????????????????????????????
+    /*var afterErrorConditions = false
 
     while(true) {
       var isWatchedFileSystemAccesible = true
@@ -513,7 +576,7 @@ object FileProcessor {
       if (isWatchedFileSystemAccesible && isTargetFileSystemAccesible) {
         logger.info("SMART FILE CONSUMER (gloabal): File system is accessible, perform cleanup for problem files")
         if (afterErrorConditions) {
-           try {
+          try {
             processExistingFiles(d1)
             afterErrorConditions = false
           } catch {
@@ -529,10 +592,10 @@ object FileProcessor {
 
         if (isWatchedFileSystemAccesible) {
           val missingFiles = getFailedFiles(MISSING)
-          missingFiles.foreach(file => FileProcessor.enQFile(file._1, file._2.asInstanceOf[FileStatus].offset.asInstanceOf[Int], file._2.asInstanceOf[FileStatus].createDate))
+          missingFiles.foreach(file => enQFile(file._1, file._2.asInstanceOf[FileStatus].offset.asInstanceOf[Int], file._2.asInstanceOf[FileStatus].createDate))
 
           val failedFiles = getFailedFiles(IN_PROCESS_FAILED)
-          failedFiles.foreach(file => FileProcessor.enQFile(file._1, file._2.asInstanceOf[FileStatus].offset.asInstanceOf[Int], FileProcessor.RECOVERY_DUMMY_START_TIME))
+          failedFiles.foreach(file => enQFile(file._1, file._2.asInstanceOf[FileStatus].offset.asInstanceOf[Int], RECOVERY_DUMMY_START_TIME))
 
           val unmovedFiles = getFailedFiles(FINISHED_FAILED_TO_COPY)
           unmovedFiles.foreach(file => completeFile(file._1))
@@ -546,7 +609,7 @@ object FileProcessor {
         logger.warn("SMART FILE CONSUMER (gloabal): File system is not accessible")
       }
       Thread.sleep(HEALTHCHECK_TIMEOUT)
-    }
+    }*/
 
   }
 
@@ -567,7 +630,7 @@ object FileProcessor {
       logger.warn("SMART FILE CONSUMER (gloabal): Tracking issue for file type " + fileType)
       logger.warn("SMART FILE CONSUMER (gloabal): " + returnMap.toString)
       returnMap.foreach(item => {
-        setFileState(item._1, FileProcessor.ACTIVE)
+        setFileState(item._1, ACTIVE)
       })
     }
     return returnMap
@@ -575,51 +638,53 @@ object FileProcessor {
 
   // This gets called inthe error case by the recovery logic
   // in normal cases, the KafkaMessafeLoader will handle the completing the file.
-  private def completeFile (fileName: String): Unit = {
+  private def completeFile (fileHandler: FileHandler): Unit = {
     try {
-      logger.info("SMART FILE CONSUMER {global): - cleaning up after " + fileName)
+      logger.info("SMART FILE CONSUMER {global): - cleaning up after " + fileHandler.fullPath)
       // Either move or rename the file.
-      moveFile(fileName)
+      moveFile(fileHandler)
 
-      val tokenName = fileName.split("/")
+      val tokenName = fileHandler.fullPath.split("/")
       markFileProcessingEnd(tokenName(tokenName.size - 1))
       fileCacheRemove(tokenName(tokenName.size - 1))
       removeFromZK(tokenName(tokenName.size - 1))
     } catch {
       case ioe: IOException => {
         logger.error("Exception moving the file ",ioe)
-        val tokenName = fileName.split("/")
-        FileProcessor.setFileState(tokenName(tokenName.size - 1),FileProcessor.FINISHED_FAILED_TO_COPY)
+        val tokenName = fileHandler.fullPath.split("/")
+        setFileState(tokenName(tokenName.size - 1),FINISHED_FAILED_TO_COPY)
       }
     }
   }
 
-  private def moveFile(fileName: String): Unit = {
-    val fileStruct = fileName.split("/")
+  private def moveFile(fileHandler: FileHandler): Unit = {
+    val fileStruct = fileHandler.fullPath.split("/")
     if (targetMoveDir != null) {
       logger.info("SMART FILE CONSUMER Moving File" + dirToWatch+"/"+fileStruct(fileStruct.size - 1) + " to " + targetMoveDir)
-      Files.copy(Paths.get(dirToWatch+"/"+fileStruct(fileStruct.size - 1)), Paths.get(targetMoveDir + "/" + fileStruct(fileStruct.size - 1)), REPLACE_EXISTING)
-      Files.deleteIfExists(Paths.get(dirToWatch+"/"+fileStruct(fileStruct.size - 1)))
+      /*Files.copy(Paths.get(dirToWatch+"/"+fileStruct(fileStruct.size - 1)), Paths.get(targetMoveDir + "/" + fileStruct(fileStruct.size - 1)), REPLACE_EXISTING)
+      Files.deleteIfExists(Paths.get(dirToWatch+"/"+fileStruct(fileStruct.size - 1)))*/
+      fileHandler.moveTo(targetMoveDir + "/" + fileStruct(fileStruct.size - 1))
     } else {
-      logger.info("SMART FILE CONSUMER Renaming file " + fileName + " to " + fileName + "_COMPLETE")
-      (new File(dirToWatch+"/"+fileStruct(fileStruct.size - 1))).renameTo(new File(dirToWatch+"/"+fileStruct(fileStruct.size - 1) + "_COMPLETE"))
+      logger.info("SMART FILE CONSUMER Renaming file " + fileHandler.fullPath + " to " + fileHandler.fullPath + "_COMPLETE")
+      //(new File(dirToWatch+"/"+fileStruct(fileStruct.size - 1))).renameTo(new File(dirToWatch+"/"+fileStruct(fileStruct.size - 1) + "_COMPLETE"))
+      fileHandler.moveTo(dirToWatch+"/"+fileStruct(fileStruct.size - 1) + "_COMPLETE")
     }
   }
 }
 
 
 /**
- * Counter of buffers used by the FileProcessors... there is a limit on how much memory File Consumer can use up.
- */
+  * Counter of buffers used by the FileProcessors... there is a limit on how much memory File Consumer can use up.
+  */
 object BufferCounters {
   val inMemoryBuffersCntr = new java.util.concurrent.atomic.AtomicLong()
 }
 
 /**
- *
- * @param path
- * @param partitionId
- */
+  *
+  * @param path
+  * @param partitionId
+  */
 class FileProcessor(val path: Path, val partitionId: Int) extends Runnable {
 
   private var watchService = path.getFileSystem().newWatchService()
@@ -661,10 +726,18 @@ class FileProcessor(val path: Path, val partitionId: Int) extends Runnable {
   private var throttleTime: Int = 0
   private var isRecoveryOps = true
 
+  //new configurable properties
+  private var authUser : String = ""
+  private var authPass : String = ""
+  private var host : String = ""
+  private var port = -1
+
+  private var fsType : FsType = null
+
   /**
-   * Called by the Directory Listener to initialize
-   * @param props
-   */
+    * Called by the Directory Listener to initialize
+    * @param props
+    */
   def init(props: scala.collection.mutable.Map[String, String]): Unit = {
     message_separator = props.getOrElse(SmartFileAdapterConstants.MSG_SEPARATOR, "10").toInt.toChar
     dirToWatch = props.getOrElse(SmartFileAdapterConstants.DIRECTORY_TO_WATCH, null)
@@ -678,6 +751,35 @@ class FileProcessor(val path: Path, val partitionId: Int) extends Runnable {
     var msgName = props.getOrElse(SmartFileAdapterConstants.MESSAGE_NAME, null)
     var kafkaBroker = props.getOrElse(SmartFileAdapterConstants.KAFKA_BROKER, null)
     kafkaTopic = props.getOrElse(SmartFileAdapterConstants.KAFKA_TOPIC, null)
+
+    authUser = props.getOrElse(SmartFileAdapterConstants.AUTH_USER, null)
+    authPass = props.getOrElse(SmartFileAdapterConstants.AUTH_PASS, null)
+    host = props.getOrElse(SmartFileAdapterConstants.HOST, null)
+
+    val fs = props.getOrElse(SmartFileAdapterConstants.FILE_SYSTEM, null)
+    fsType = FileHandler.getFsType(fs)
+
+    val portStr = props.getOrElse(SmartFileAdapterConstants.PORT, null)
+    if(portStr != null)
+      try{
+        port = portStr.toInt
+      }
+      catch{
+        case ex : NumberFormatException => {
+          logger.error("SMART_FILE_CONSUMER Hdfs config needs port")
+          shutdown
+          throw MissingPropertyException("Wrong Paramter: " + SmartFileAdapterConstants.PORT, null)
+        }
+      }
+    else{
+      if(fsType == FsType.HDFS){
+        logger.error("SMART_FILE_CONSUMER Hdfs config needs port")
+        shutdown
+        throw MissingPropertyException("Missing Paramter: " + SmartFileAdapterConstants.PORT, null)
+      }
+
+    }
+
     // Bail out if dirToWatch, Topic are not set
     if (kafkaTopic == null) {
       logger.error("SMART_FILE_CONSUMER ("+partitionId+") Kafka Topic to populate must be specified")
@@ -709,6 +811,25 @@ class FileProcessor(val path: Path, val partitionId: Int) extends Runnable {
       throw new MissingPropertyException("Missing Paramter: " + SmartFileAdapterConstants.KAFKA_BROKER, null)
     }
 
+    import FsType._
+    if(fsType == SFTP){
+      if (host == null) {
+        logger.error("SMART_FILE_CONSUMER SFTP host must be specified")
+        shutdown
+        throw new MissingPropertyException("Missing Paramter: " + SmartFileAdapterConstants.HOST, null)
+      }
+      if (authUser == null) {
+        logger.error("SMART_FILE_CONSUMER SFTP user must be specified")
+        shutdown
+        throw new MissingPropertyException("Missing Paramter: " + SmartFileAdapterConstants.AUTH_USER, null)
+      }
+      if (authPass == null) {
+        logger.error("SMART_FILE_CONSUMER SFTP pass must be specified")
+        shutdown
+        throw new MissingPropertyException("Missing Paramter: " + SmartFileAdapterConstants.AUTH_PASS, null)
+      }
+    }
+
     FileProcessor.setProperties(props, path)
     FileProcessor.startGlobalFileMonitor
 
@@ -717,7 +838,8 @@ class FileProcessor(val path: Path, val partitionId: Int) extends Runnable {
     try {
       kml = new KafkaMessageLoader(partitionId, props)
     } catch {
-      case e: Exception => { logger.warn("", e)
+      case e: Exception => {
+        logger.warn("", e)
         shutdown
         throw e
       }
@@ -725,9 +847,9 @@ class FileProcessor(val path: Path, val partitionId: Int) extends Runnable {
 
     // will need to check zookeeper here
     //val zkcConnectString = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("ZOOKEEPER_CONNECT_STRING")
-   // logger.debug("SMART_FILE_CONSUMER Using zookeeper " + zkcConnectString)
-   // val znodePath = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("ZNODE_PATH") + "/smartFileConsumer/" + partitionId
-   // zkc = initZookeeper
+    // logger.debug("SMART_FILE_CONSUMER Using zookeeper " + zkcConnectString)
+    // val znodePath = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("ZNODE_PATH") + "/smartFileConsumer/" + partitionId
+    // zkc = initZookeeper
 
   }
 
@@ -775,23 +897,23 @@ class FileProcessor(val path: Path, val partitionId: Int) extends Runnable {
   }
 
   /**
-   * Register a particular file or directory to be watched
-   */
+    * Register a particular file or directory to be watched
+    */
   private def register(dir: Path): Unit = {
     val key = dir.register(watchService, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY, StandardWatchEventKinds.OVERFLOW)
     keys(key) = dir
   }
 
   /**
-   * Each worker bee will run this code... looking for work to do.
-   * @param beeNumber
-   */
+    * Each worker bee will run this code... looking for work to do.
+    * @param beeNumber
+    */
   private def processBuffers(beeNumber: Int) = {
 
     var msgNum: Int = 0
     var myLeftovers: BufferLeftoversArea = null
     var buffer: BufferToChunk = null;
-    var fileNameToProcess: String = ""
+    var fileHandlerToProcess: FileHandler = null
     var isEofBuffer = false
 
     // basically, keep running until shutdown.
@@ -805,9 +927,9 @@ class FileProcessor(val path: Path, val partitionId: Int) extends Runnable {
       // If the buffer is there to process, do it
       if (buffer != null) {
         // If the new file being processed, reset offsets to messages in this file to 0.
-        if (!fileNameToProcess.equalsIgnoreCase(buffer.relatedFileName)) {
+        if (fileHandlerToProcess == null || !fileHandlerToProcess.fullPath.equalsIgnoreCase(buffer.relatedFileHandler.fullPath)) {
           msgNum = 0
-          fileNameToProcess = buffer.relatedFileName
+          fileHandlerToProcess = buffer.relatedFileHandler
           isEofBuffer = false
         }
 
@@ -822,10 +944,10 @@ class FileProcessor(val path: Path, val partitionId: Int) extends Runnable {
           // Broken File is recoverable, CORRUPTED FILE ISNT!!!!!
           if (buffer.firstValidOffset == FileProcessor.BROKEN_FILE) {
             logger.error("SMART FILE CONSUMER (" + partitionId + "): Detected a broken file")
-            messages.add(new KafkaMessage(Array[Char](), FileProcessor.BROKEN_FILE, true, true, buffer.relatedFileName, buffer.partMap))
+            messages.add(new KafkaMessage(Array[Char](), FileProcessor.BROKEN_FILE, true, true, buffer.relatedFileHandler, buffer.partMap))
           } else {
             logger.error("SMART FILE CONSUMER (" + partitionId + "): Detected a broken file")
-            messages.add(new KafkaMessage(Array[Char](), FileProcessor.CORRUPT_FILE, true, true, buffer.relatedFileName, buffer.partMap))
+            messages.add(new KafkaMessage(Array[Char](), FileProcessor.CORRUPT_FILE, true, true, buffer.relatedFileHandler, buffer.partMap))
           }
         } else {
           // Look for messages.
@@ -838,7 +960,7 @@ class FileProcessor(val path: Path, val partitionId: Int) extends Runnable {
 
                 // Ok, we could be in recovery, so we have to ignore some messages, but these ignoraable messages must still
                 // appear in the leftover areas
-                messages.add(new KafkaMessage(newMsg, buffer.firstValidOffset, false, false, buffer.relatedFileName,  buffer.partMap))
+                messages.add(new KafkaMessage(newMsg, buffer.firstValidOffset, false, false, buffer.relatedFileHandler,  buffer.partMap))
 
                 prevIndx = indx + 1
               }
@@ -865,13 +987,13 @@ class FileProcessor(val path: Path, val partitionId: Int) extends Runnable {
             var firstMsgWithLefovers: KafkaMessage = null
             if (isEofBuffer) {
               if (leftOvers.size > 0) {
-                firstMsgWithLefovers = new KafkaMessage(leftOvers, buffer.firstValidOffset, false, false, buffer.relatedFileName, buffer.partMap)
+                firstMsgWithLefovers = new KafkaMessage(leftOvers, buffer.firstValidOffset, false, false, buffer.relatedFileHandler, buffer.partMap)
                 messages.add(firstMsgWithLefovers)
                 enQMsg(messages.toArray, beeNumber)
               }
             } else {
               if (messages.size > 0) {
-                firstMsgWithLefovers = new KafkaMessage(leftOvers ++ msgArray(0).msg, msgArray(0).offsetInFile, false, false, buffer.relatedFileName, msgArray(0).partMap)
+                firstMsgWithLefovers = new KafkaMessage(leftOvers ++ msgArray(0).msg, msgArray(0).offsetInFile, false, false, buffer.relatedFileHandler, msgArray(0).partMap)
                 msgArray(0) = firstMsgWithLefovers
                 enQMsg(msgArray, beeNumber)
               }
@@ -905,20 +1027,22 @@ class FileProcessor(val path: Path, val partitionId: Int) extends Runnable {
   }
 
   /**
-   * This will be run under a CONSUMER THREAD.
-   * @param file
-   */
-  private def readBytesChunksFromFile(file: EnqueuedFile): Unit = {
+    * This will be run under a CONSUMER THREAD.
+    * @param file
+    */
+  private def readBytesChunksFromFile(file: EnqueuedFileHandler): Unit = {
 
-    val buffer = new Array[Char](maxlen)
+    val byteBuffer = new Array[Byte](maxlen)
+
     var readlen = 0
     var len: Int = 0
     var totalLen = 0
     var chunkNumber = 0
 
-    val fileName = file.name
+    val fileName = file.fileHandler.fullPath
     val offset = file.offset
     val partMap = file.partMap
+    val fileHandler = file.fileHandler
 
     // Start the worker bees... should only be started the first time..
     if (workerBees == null) {
@@ -934,16 +1058,17 @@ class FileProcessor(val path: Path, val partitionId: Int) extends Runnable {
 
     // Grab the InputStream from the file and start processing it.  Enqueue the chunks onto the BufferQ for the
     // worker bees to pick them up.
-    //var bis: InputStream = new ByteArrayInputStream(Files.readAllBytes(Paths.get(fileName)))
-    var bis: BufferedReader = null
+
+    //var bis: BufferedReader = null
     try {
       val tokenName = fileName.split("/")
-      val fullFileName = dirToWatch + "/" + tokenName(tokenName.size - 1)
+      /*val fullFileName = dirToWatch + "/" + tokenName(tokenName.size - 1)
       if (isCompressed(fullFileName)) {
         bis = new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(fullFileName))))
       } else {
         bis = new BufferedReader(new InputStreamReader(new FileInputStream(fullFileName)))
-      }
+      }*/
+      fileHandler.openForRead()
     } catch {
       case fio: IOException => {
         logger.error("SMART_FILE_CONSUMER (" + partitionId + ") Exception accessing the file for processing the file ",fio)
@@ -979,37 +1104,41 @@ class FileProcessor(val path: Path, val partitionId: Int) extends Runnable {
       BufferCounters.inMemoryBuffersCntr.incrementAndGet() // Incrementing when we enQBuffer and Decrementing when we deQMsg
       var isLastChunk = false
       try {
-        readlen = bis.read(buffer, 0, maxlen - 1)
+        readlen = fileHandler.read(byteBuffer, maxlen - 1)
         // if (readlen < (maxlen - 1)) isLastChunk = true
       } catch {
         case ze: ZipException => {
           logger.error("Failed to read file, file currupted " + fileName, ze)
-          val BufferToChunk = new BufferToChunk(readlen, buffer.slice(0, readlen), chunkNumber, fileName, FileProcessor.CORRUPT_FILE, isLastChunk, partMap)
-          enQBuffer(BufferToChunk)
+          val buffer = FileProcessorUtils.toCharArray(byteBuffer)
+          val GenericBufferToChunk = new BufferToChunk(readlen, buffer.slice(0, readlen), chunkNumber, fileHandler, FileProcessor.CORRUPT_FILE, isLastChunk, partMap)
+          enQBuffer(GenericBufferToChunk)
           return
         }
         case ioe: IOException => {
           logger.error("Failed to read file " + fileName, ioe)
-          val BufferToChunk = new BufferToChunk(readlen, buffer.slice(0, readlen), chunkNumber, fileName, FileProcessor.BROKEN_FILE, isLastChunk, partMap)
-          enQBuffer(BufferToChunk)
+          val buffer = FileProcessorUtils.toCharArray(byteBuffer)
+          val GenericBufferToChunk = new BufferToChunk(readlen, buffer.slice(0, readlen), chunkNumber, fileHandler, FileProcessor.BROKEN_FILE, isLastChunk, partMap)
+          enQBuffer(GenericBufferToChunk)
           return
         }
         case e: Exception => {
           logger.error("Failed to read file, file currupted " + fileName, e)
-          val BufferToChunk = new BufferToChunk(readlen, buffer.slice(0, readlen), chunkNumber, fileName, FileProcessor.CORRUPT_FILE, isLastChunk, partMap)
-          enQBuffer(BufferToChunk)
+          val buffer = FileProcessorUtils.toCharArray(byteBuffer)
+          val GenericBufferToChunk = new BufferToChunk(readlen, buffer.slice(0, readlen), chunkNumber, fileHandler, FileProcessor.CORRUPT_FILE, isLastChunk, partMap)
+          enQBuffer(GenericBufferToChunk)
           return
         }
       }
       if (readlen > 0) {
         totalLen += readlen
         len += readlen
-        val BufferToChunk = new BufferToChunk(readlen, buffer.slice(0, readlen), chunkNumber, fileName, offset, isLastChunk, partMap)
-        enQBuffer(BufferToChunk)
+        val buffer = FileProcessorUtils.toCharArray(byteBuffer)
+        val GenericBufferToChunk = new BufferToChunk(readlen, buffer.slice(0, readlen), chunkNumber, fileHandler, offset, isLastChunk, partMap)
+        enQBuffer(GenericBufferToChunk)
         chunkNumber += 1
       } else {
-        val BufferToChunk = new BufferToChunk(readlen, Array[Char](message_separator), chunkNumber, fileName, offset, true, partMap)
-        enQBuffer(BufferToChunk)
+        val GenericBufferToChunk = new BufferToChunk(readlen, Array[Char](message_separator), chunkNumber, fileHandler, offset, true, partMap)
+        enQBuffer(GenericBufferToChunk)
         chunkNumber += 1
       }
 
@@ -1029,7 +1158,7 @@ class FileProcessor(val path: Path, val partitionId: Int) extends Runnable {
           logger.warn("SMART FILE CONSUMER: partition " + partitionId + ": NON-EMPTY final leftovers, this really should not happend... check the file ")
         } else {
           val messages: scala.collection.mutable.LinkedHashSet[KafkaMessage] = scala.collection.mutable.LinkedHashSet[KafkaMessage]()
-          messages.add(new KafkaMessage(null, 0, true, true, fileName, scala.collection.mutable.Map[Int,Int]()))
+          messages.add(new KafkaMessage(null, 0, true, true, fileHandler, scala.collection.mutable.Map[Int,Int]()))
           enQMsg(messages.toArray, 1000)
         }
         foundRelatedLeftovers = true
@@ -1040,8 +1169,8 @@ class FileProcessor(val path: Path, val partitionId: Int) extends Runnable {
     // Done with this file... mark is as closed
     try {
       // markFileAsFinished(fileName)
-      if (bis != null) bis.close
-      bis = null
+      if (fileHandler != null) fileHandler.close
+      //bis = null
     } catch {
       case ioe: IOException => {
         logger.warn("SMART FILE CONSUMER: partition " + partitionId + " Unable to detect file as being processed " + fileName)
@@ -1052,8 +1181,8 @@ class FileProcessor(val path: Path, val partitionId: Int) extends Runnable {
   }
 
   /**
-   *  This is the "FILE CONSUMER"
-   */
+    *  This is the "FILE CONSUMER"
+    */
   private def doSomeConsuming(): Unit = {
     while (isConsuming) {
       val fileToProcess = FileProcessor.deQFile
@@ -1063,7 +1192,7 @@ class FileProcessor(val path: Path, val partitionId: Int) extends Runnable {
         Thread.sleep(500)
       } else {
         logger.info("SMART_FILE_CONSUMER partition " + partitionId + " Processing file " + fileToProcess)
-        val tokenName = fileToProcess.name.split("/")
+        val tokenName = fileToProcess.fileHandler.fullPath.split("/")
         FileProcessor.markFileProcessing(tokenName(tokenName.size - 1), fileToProcess.offset, fileToProcess.createDate)
         curTimeStart = System.currentTimeMillis
         try {
@@ -1079,8 +1208,8 @@ class FileProcessor(val path: Path, val partitionId: Int) extends Runnable {
   }
 
   /**
-   * This is a "PUSHER" file.
-   */
+    * This is a "PUSHER" file.
+    */
   private def doSomePushing(): Unit = {
     while (isProducing) {
       var msg = deQMsg
@@ -1095,32 +1224,32 @@ class FileProcessor(val path: Path, val partitionId: Int) extends Runnable {
 
 
   /**
-   * The main directory watching thread
-   */
+    * The main directory watching thread
+    */
   override def run(): Unit = {
-      // Initialize and launch the File Processor thread(s), and kafka producers
-      fileConsumers.execute(new Runnable() {
-        override def run() = {
-          doSomeConsuming
-        }
-      })
+    // Initialize and launch the File Processor thread(s), and kafka producers
+    fileConsumers.execute(new Runnable() {
+      override def run() = {
+        doSomeConsuming
+      }
+    })
 
-      fileConsumers.execute(new Runnable() {
-        override def run() = {
-          doSomePushing
-        }
-      })
+    fileConsumers.execute(new Runnable() {
+      override def run() = {
+        doSomePushing
+      }
+    })
 
-      //FileProcessor.startGlobalFileMonitor
+    //FileProcessor.startGlobalFileMonitor
 
 
   }
 
   /**
-   *
-   * @param inputfile
-   * @return
-   */
+    *
+    * @param inputfile
+    * @return
+    */
   private def isCompressed(inputfile: String): Boolean = {
     var is: FileInputStream = null
     try {
@@ -1153,8 +1282,8 @@ class FileProcessor(val path: Path, val partitionId: Int) extends Runnable {
   }
 
   /**
-   *
-   */
+    *
+    */
   private def shutdown: Unit = {
     isConsuming = false
     isProducing = false

@@ -32,7 +32,7 @@ object FileHandler{
   def getFsType(fs : String) : FsType = {
     if(fs == null)
       POSIX
-    if(fs.toLowerCase == "sftp")
+    else if(fs.toLowerCase == "sftp")
       SFTP
     else if(fs.toLowerCase == "hdfs")
       HDFS
