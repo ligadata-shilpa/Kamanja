@@ -128,16 +128,16 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
   private var compileCfg: String = ""
   private var heartBeat: HeartBeatUtil = null
   var zkHeartBeatNodePath = ""
-  private val storageDefaultTime = 0L
-  private val storageDefaultTxnId = 0L
 
   def getCurrentTranLevel = currentTranLevel
+  def setCurrentTranLevel(tranLevel: Long) = {
+    currentTranLevel = tranLevel
+  }
 
+  def GetMainDS: DataStore = PersistenceUtils.GetMainDS
   var isCassandra = false
   private[this] val lock = new Object
   var startup = false
-
-  private var tableStoreMap: Map[String, (String, DataStore)] = Map()
 
     /**
      * CloseZKSession
@@ -279,6 +279,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     logger.debug("Created class " + className.getName)
   }
 
+  def GetAuditObj: AuditAdapter = auditObj
     /**
      * loadJar- load the specified jar into the classLoader
      * @param classLoader a
@@ -617,50 +618,24 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     metadataAPIConfig
   }
 
-  private var mainDS: DataStore = _
-
-  def GetMainDS: DataStore = mainDS
-
+    /**
+     * GetObject
+     * @param bucketKeyStr
+     * @param typeName
+     */
   def GetObject(bucketKeyStr: String, typeName: String): Value = {
-    val (containerName, store) = tableStoreMap(typeName)
-    var objs = new Array[Value](1)
-    val getObjFn = (k: Key, v: Value) => {
-      objs(0) = v
-    }
-
-    try {
-      objs(0) = null
-      store.get(containerName, Array(TimeRange(storageDefaultTime, storageDefaultTime)), Array(Array(bucketKeyStr)), getObjFn)
-      if (objs(0) == null)
-        throw ObjectNotFoundException("Object %s not found in container %s".format(bucketKeyStr, containerName), null)
-      objs(0)
-    } catch {
-      case e: ObjectNotFoundException => {
-        logger.debug("ObjectNotFound Exception", e)
-        throw e
-      }
-      case e: Exception => {
-        logger.debug("General Exception", e)
-        throw ObjectNotFoundException(e.getMessage(), e)
-      }
-    }
+    PersistenceUtils.GetObject(bucketKeyStr,typeName)
   }
 
+    /**
+     * SaveObject
+     * @param bucketKeyStr
+     * @param value
+     * @param typeName
+     * @param serializerTyp
+     */
   def SaveObject(bucketKeyStr: String, value: Array[Byte], typeName: String, serializerTyp: String) {
-
-
-    val (containerName, store) = tableStoreMap(typeName)
-    val k = Key(storageDefaultTime, Array(bucketKeyStr), storageDefaultTxnId, 0)
-    val v = Value(serializerTyp, value)
-
-    try {
-      store.put(containerName, k, v)
-    } catch {
-      case e: Exception => {
-        logger.error("Failed to insert/update object for : " + bucketKeyStr, e)
-        throw UpdateStoreFailedException("Failed to insert/update object for : " + bucketKeyStr, e)
-      }
-    }
+    PersistenceUtils.SaveObject(bucketKeyStr,value,typeName,serializerTyp)
   }
 
     /**
@@ -671,35 +646,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @param serializerTyp
      */
   def SaveObjectList(keyList: Array[String], valueList: Array[Array[Byte]], typeName: String, serializerTyp: String) {
-    val (containerName, store) = tableStoreMap(typeName)
-
-    var i = 0
-    /*
-    keyList.foreach(key => {
-      var value = valueList(i)
-      logger.debug("Writing Key:" + key)
-      SaveObject(key, value, store, containerName)
-      i = i + 1
-    })
-*/
-    var storeObjects = new Array[(Key, Value)](keyList.length)
-    i = 0
-    keyList.foreach(bucketKeyStr => {
-      var value = valueList(i)
-      val k = Key(storageDefaultTime, Array(bucketKeyStr), storageDefaultTxnId, 0)
-      val v = Value(serializerTyp, value)
-      storeObjects(i) = (k, v)
-      i = i + 1
-    })
-
-    try {
-      store.put(Array((containerName, storeObjects)))
-    } catch {
-      case e: Exception => {
-        logger.error("Failed to insert/update objects for : " + keyList.mkString(","), e)
-        throw UpdateStoreFailedException("Failed to insert/update object for : " + keyList.mkString(","), e)
-      }
-    }
+    PersistenceUtils.SaveObjectList(keyList,valueList,typeName,serializerTyp)
   }
 
     /**
@@ -708,24 +655,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @param store
      */
   def RemoveObjectList(keyList: Array[String], typeName: String) {
-    val (containerName, store) = tableStoreMap(typeName)
-    var i = 0
-    var delKeys = new Array[(Key)](keyList.length)
-    i = 0
-    keyList.foreach(bucketKeyStr => {
-      val k = Key(storageDefaultTime, Array(bucketKeyStr), storageDefaultTxnId, 0)
-      delKeys(i) = k
-      i = i + 1
-    })
-
-    try {
-      store.del(containerName, delKeys)
-    } catch {
-      case e: Exception => {
-        logger.error("Failed to delete object batch for : " + keyList.mkString(","), e)
-        throw UpdateStoreFailedException("Failed to delete object batch for : " + keyList.mkString(","), e)
-      }
-    }
+    PersistenceUtils.RemoveObjectList(keyList,typeName)
   }
 
     /**
@@ -734,33 +664,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @return
      */
   def getMdElemTypeName(obj: BaseElemDef): String = {
-    obj match {
-      case o: ModelDef => {
-        "models"
-      }
-      case o: MessageDef => {
-        "messages"
-      }
-      case o: ContainerDef => {
-        "containers"
-      }
-      case o: FunctionDef => {
-        "functions"
-      }
-      case o: AttributeDef => {
-        "concepts"
-      }
-      case o: OutputMsgDef => {
-        "outputmsgs"
-      }
-      case o: BaseTypeDef => {
-        "types"
-      }
-      case _ => {
-        logger.error("getMdElemTypeName is not implemented for objects of type " + obj.getClass.getName)
-        throw InternalErrorException("getMdElemTypeName is not implemented for objects of type " + obj.getClass.getName, null)
-      }
-    }
+    PersistenceUtils.getMdElemTypeName(obj)
   }
 
     /**
@@ -769,8 +673,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @return <description please>
      */
   def getObjectType(obj: BaseElemDef): String = {
-    val className = obj.getClass().getName();
-    className.split("\\.").last
+    PersistenceUtils.getObjectType(obj)
   }
 
     /**
@@ -785,28 +688,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @param typeName
      */
   def SaveObjectList(objList: Array[BaseElemDef], typeName: String) {
-
-    logger.debug("Save " + objList.length + " objects in a single transaction ")
-    val tranId = GetNewTranId
-    var keyList = new Array[String](objList.length)
-    var valueList = new Array[Array[Byte]](objList.length)
-    try {
-      var i = 0;
-      objList.foreach(obj => {
-        obj.tranId = tranId
-        val key = (getObjectType(obj) + "." + obj.FullNameWithVer).toLowerCase
-        var value = serializer.SerializeObjectToByteArray(obj)
-        keyList(i) = key
-        valueList(i) = value
-        i = i + 1
-      })
-      SaveObjectList(keyList, valueList, typeName, serializerType)
-    } catch {
-      case e: Exception => {
-        logger.error("Failed to insert/update object for : " + keyList.mkString(","), e)
-        throw UpdateStoreFailedException("Failed to insert/update object for : " + keyList.mkString(","), e)
-      }
-    }
+    PersistenceUtils.SaveObjectList(objList,typeName)
   }
 
     /**
@@ -819,64 +701,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @param objList
      */
   def SaveObjectList(objList: Array[BaseElemDef]) {
-    logger.debug("Save " + objList.length + " objects in a single transaction ")
-    val tranId = GetNewTranId
-    var saveDataMap = scala.collection.mutable.Map[String, ArrayBuffer[(Key, Value)]]()
-
-    try {
-      var i = 0;
-      objList.foreach(obj => {
-        obj.tranId = tranId
-        val key = (getObjectType(obj) + "." + obj.FullNameWithVer).toLowerCase
-        var value = serializer.SerializeObjectToByteArray(obj)
-        val elemTyp = getMdElemTypeName(obj)
-
-        val k = Key(storageDefaultTime, Array(key), storageDefaultTxnId, 0)
-        val v = Value(serializerType, value)
-
-        val ab = saveDataMap.getOrElse(elemTyp, null)
-        if (ab != null) {
-          ab += ((k, v))
-          saveDataMap(elemTyp) = ab
-        } else {
-          val newab = ArrayBuffer[(Key, Value)]()
-          newab += ((k, v))
-          saveDataMap(elemTyp) = newab
-        }
-        i = i + 1
-      })
-
-      var storeData = scala.collection.mutable.Map[String, (DataStore, ArrayBuffer[(String, Array[(Key, Value)])])]()
-
-      saveDataMap.foreach(elemTypData => {
-        val storeInfo = tableStoreMap(elemTypData._1)
-        val oneStoreData = storeData.getOrElse(storeInfo._1, null)
-        if (oneStoreData != null) {
-          oneStoreData._2 += ((elemTypData._1, elemTypData._2.toArray))
-          storeData(storeInfo._1) = ((oneStoreData._1, oneStoreData._2))
-        } else {
-          val ab = ArrayBuffer[(String, Array[(Key, Value)])]()
-          ab += ((elemTypData._1, elemTypData._2.toArray))
-          storeData(storeInfo._1) = ((storeInfo._2, ab))
-        }
-      })
-
-      storeData.foreach(oneStoreData => {
-        try {
-          oneStoreData._2._1.put(oneStoreData._2._2.toArray)
-        } catch {
-          case e: Exception => {
-            logger.error("Failed to insert/update objects in : " + oneStoreData._1, e)
-            throw UpdateStoreFailedException("Failed to insert/update object for : " + oneStoreData._1, e)
-          }
-        }
-      })
-    } catch {
-      case e: Exception => {
-        logger.error("Failed to insert/update objects", e)
-        throw UpdateStoreFailedException("Failed to insert/update objects", e)
-      }
-    }
+    PersistenceUtils.SaveObjectList(objList)
   }
 
     /**
@@ -884,19 +709,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @param objList <description please>
      */
   def SaveOutputMsObjectList(objList: Array[BaseElemDef]) {
-    SaveObjectList(objList, "outputmsgs")
+    PersistenceUtils.SaveObjectList(objList, "outputmsgs")
   }
-
-    /**
-     * SaveObject (use default serializerType (i.e., currently kryo).
-     * @param key
-     * @param value
-     * @param typeName
-  def SaveObject(key: String, value: String, typeName: String) {
-    val ba = serializer.SerializeObjectToByteArray(value)
-    SaveObject(key, ba, store, containerName, serializerType)
-  }
-     */
 
     /**
      * UpdateObject
@@ -906,7 +720,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @param serializerTyp
      */
   def UpdateObject(key: String, value: Array[Byte], typeName: String, serializerTyp: String) {
-     SaveObject(key, value, typeName, serializerTyp)
+     PersistenceUtils.SaveObject(key, value, typeName, serializerTyp)
   }
 
     /**
@@ -928,14 +742,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
   }
 
    def UpdateTranId (objList:Array[BaseElemDef] ): Unit ={
-    var max: Long = 0
-     objList.foreach(obj =>{
-       max = scala.math.max(max, obj.TranId)
-     })
-    if (currentTranLevel < max) currentTranLevel = max
-    PutTranId(max)
-  }
-
+     PersistenceUtils.UpdateTranId(objList)
+   }
 
     /**
      * NotifyEngine
@@ -956,7 +764,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
       if (notifyEngine != "YES") {
         logger.warn("Not Notifying the engine about this operation because The property NOTIFY_ENGINE is not set to YES")
-        PutTranId(max)
+        PersistenceUtils.PutTranId(max)
         return
       }
 
@@ -974,7 +782,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       logger.debug("Set the data on the zookeeper node " + znodePath)
       zkc.setData().forPath(znodePath, data)
 
-      PutTranId(max)
+      PersistenceUtils.PutTranId(max)
     } catch {
       case e: Exception => {
         logger.error("", e)
@@ -988,19 +796,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @return <description please>
      */
   def GetNewTranId: Long = {
-    try {
-      val obj = GetObject("transaction_id", "transaction_id")
-      val idStr = new String(obj.serializedInfo)
-      idStr.toLong + 1
-    } catch {
-      case e: ObjectNotFoundException => {
-        // first time
-        1
-      }
-      case e: Exception => {
-        throw TranIdNotFoundException("Unable to retrieve the transaction id", e)
-      }
-    }
+    PersistenceUtils.GetNewTranId
   }
 
     /**
@@ -1008,19 +804,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @return <description please>
      */
   def GetTranId: Long = {
-    try {
-      val obj = GetObject("transaction_id", "transaction_id")
-      val idStr = new String(obj.serializedInfo)
-      idStr.toLong
-    } catch {
-      case e: ObjectNotFoundException => {
-        // first time
-        0
-      }
-      case e: Exception => {
-        throw TranIdNotFoundException("Unable to retrieve the transaction id", e)
-      }
-    }
+    PersistenceUtils.GetTranId
   }
 
     /**
@@ -1028,14 +812,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @param tId <description please>
      */
   def PutTranId(tId: Long) = {
-    try {
-      SaveObject("transaction_id", tId.toString.getBytes, "transaction_id", "")
-    } catch {
-      case e: Exception => {
-        logger.error("", e)
-        throw UpdateStoreFailedException("Unable to Save the transaction id " + tId, e)
-      }
-    }
+    PersistenceUtils.PutTranId(tId)
   }
 
     /**
@@ -1055,7 +832,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       var value = serializer.SerializeObjectToByteArray(obj)
 
       val saveObjFn = () => {
-        SaveObject(key, value, getMdElemTypeName(obj), serializerType) // Make sure getMdElemTypeName is success full all types we handle here
+        PersistenceUtils.SaveObject(key, value, getMdElemTypeName(obj), serializerType) // Make sure getMdElemTypeName is success full all types we handle here
       }
 
       obj match {
@@ -1185,7 +962,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       var value = serializer.SerializeObjectToByteArray(obj)
 
       val updObjFn = () => {
-        UpdateObject(key, value, getMdElemTypeName(obj), serializerType) // Make sure getMdElemTypeName is success full all types we handle here
+        PersistenceUtils.UpdateObject(key, value, getMdElemTypeName(obj), serializerType) // Make sure getMdElemTypeName is success full all types we handle here
       }
 
       obj match {
@@ -1340,106 +1117,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @param alreadyCheckedJars <description please>
     */
   def UploadJarsToDB(obj: BaseElemDef, forceUploadMainJar: Boolean = true, alreadyCheckedJars: scala.collection.mutable.Set[String] = null): Unit = {
-    val checkedJars: scala.collection.mutable.Set[String] = if (alreadyCheckedJars == null) scala.collection.mutable.Set[String]() else alreadyCheckedJars
-
-    try {
-      var keyList = new ArrayBuffer[String](0)
-      var valueList = new ArrayBuffer[Array[Byte]](0)
-
-      val tmpJarPaths = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("JAR_PATHS")
-      val jarPaths = if (tmpJarPaths != null) tmpJarPaths.split(",").toSet else scala.collection.immutable.Set[String]()
-      if (obj.jarName != null && (forceUploadMainJar || checkedJars.contains(obj.jarName) == false)) {
-        //BUGBUG
-        val jarsPathsInclTgtDir = jarPaths + MetadataAPIImpl.GetMetadataAPIConfig.getProperty("JAR_TARGET_DIR")
-        var jarName = com.ligadata.Utils.Utils.GetValidJarFile(jarsPathsInclTgtDir, obj.jarName)
-        var value = GetJarAsArrayOfBytes(jarName)
-
-        var loadObject = false
-
-        if (forceUploadMainJar) {
-          loadObject = true
-        } else {
-          var mObj: Value = null
-          try {
-            mObj = GetObject(obj.jarName, "jar_store")
-          } catch {
-            case e: ObjectNotFoundException => {
-              logger.debug("", e)
-              loadObject = true
-            }
-            case e: Exception => {
-              logger.debug("", e)
-              loadObject = true
-            }
-          }
-
-          if (loadObject == false) {
-            val ba = mObj.serializedInfo
-            val fs = ba.length
-            if (fs != value.length) {
-              logger.debug("A jar file already exists, but it's size (" + fs + ") doesn't match with the size of the Jar (" +
-                jarName + "," + value.length + ") of the object(" + obj.FullNameWithVer + ")")
-              loadObject = true
-            }
-          }
-        }
-
-        checkedJars += obj.jarName
-
-        if (loadObject) {
-          logger.debug("Update the jarfile (size => " + value.length + ") of the object: " + obj.jarName)
-          keyList += obj.jarName
-          valueList += value
-        }
-      }
-
-      if (obj.DependencyJarNames != null) {
-        obj.DependencyJarNames.foreach(j => {
-          // do not upload if it already exist & just uploaded/checked in db, minor optimization
-          if (j.endsWith(".jar") && checkedJars.contains(j) == false) {
-            var loadObject = false
-            val jarName = com.ligadata.Utils.Utils.GetValidJarFile(jarPaths, j)
-            val value = GetJarAsArrayOfBytes(jarName)
-            var mObj: Value = null
-            try {
-              mObj = GetObject(j, "jar_store")
-            } catch {
-              case e: ObjectNotFoundException => {
-                logger.debug("", e)
-                loadObject = true
-              }
-            }
-
-            if (loadObject == false) {
-              val ba = mObj.serializedInfo
-              val fs = ba.length
-              if (fs != value.length) {
-                logger.debug("A jar file already exists, but it's size (" + fs + ") doesn't match with the size of the Jar (" +
-                  jarName + "," + value.length + ") of the object(" + obj.FullName + "." + MdMgr.Pad0s2Version(obj.Version) + ")")
-                loadObject = true
-              }
-            }
-
-            if (loadObject) {
-              keyList += j
-              logger.debug("Update the jarfile (size => " + value.length + ") of the object: " + j)
-              valueList += value
-            } else {
-              logger.debug("The jarfile " + j + " already exists in DB.")
-            }
-            checkedJars += j
-          }
-        })
-      }
-      if (keyList.length > 0) {
-        SaveObjectList(keyList.toArray, valueList.toArray, "jar_store", "")
-      }
-    } catch {
-      case e: Exception => {
-        logger.debug("", e)
-        throw InternalErrorException("Failed to Update the Jar of the object(" + obj.FullName + "." + MdMgr.Pad0s2Version(obj.Version) + ")", e)
-      }
-    }
+    PersistenceUtils.UploadJarsToDB(obj,forceUploadMainJar,alreadyCheckedJars)
   }
 
     /**
@@ -1447,25 +1125,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @param jarName <description please>
      */
   def UploadJarToDB(jarName: String) {
-    try {
-      val f = new File(jarName)
-      if (f.exists()) {
-        var key = f.getName()
-        var value = GetJarAsArrayOfBytes(jarName)
-        logger.debug("Update the jarfile (size => " + value.length + ") of the object: " + jarName)
-        SaveObject(key, value, "jar_store", "")
-
-        var apiResult = new ApiResult(ErrorCodeConstants.Success, "UploadJarToDB", null, ErrorCodeConstants.Upload_Jar_Successful + ":" + jarName)
-        apiResult.toString()
-
-      }
-    } catch {
-      case e: Exception => {
-        logger.debug("", e)
-        val apiResult = new ApiResult(ErrorCodeConstants.Failure, "UploadJarToDB", null, "Error : " + e.toString() + ErrorCodeConstants.Upload_Jar_Failed + ":" + jarName)
-        apiResult.toString()
-      }
-    }
+    PersistenceUtils.UploadJarToDB(jarName)
   }
 
     /**
@@ -1477,19 +1137,31 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @return <description please>
      */
   def UploadJarToDB(jarName: String, byteArray: Array[Byte], userid: Option[String] = None): String = {
+    PersistenceUtils.UploadJarToDB(jarName,byteArray,userid)
+  }
+
+    /**
+     * GetDependantJars of some base element (e.g., model, type, message, container, etc)
+     * @param obj <description please>
+     * @return <description please>
+     */
+  def GetDependantJars(obj: BaseElemDef): Array[String] = {
     try {
-      var key = jarName
-      var value = byteArray
-      logger.debug("Update the jarfile (size => " + value.length + ") of the object: " + jarName)
-      logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.INSERTJAR, jarName, AuditConstants.SUCCESS, "", jarName)
-      SaveObject(key, value, "jar_store", "")
-      var apiResult = new ApiResult(ErrorCodeConstants.Success, "UploadJarToDB", null, ErrorCodeConstants.Upload_Jar_Successful + ":" + jarName)
-      apiResult.toString()
+      var allJars = new Array[String](0)
+      if (obj.JarName != null)
+        allJars = allJars :+ obj.JarName
+      if (obj.DependencyJarNames != null) {
+        obj.DependencyJarNames.foreach(j => {
+          if (j.endsWith(".jar")) {
+            allJars = allJars :+ j
+          }
+        })
+      }
+      allJars
     } catch {
       case e: Exception => {
         logger.debug("", e)
-        val apiResult = new ApiResult(ErrorCodeConstants.Failure, "UploadJarToDB", null, "Error : " + e.toString() + ErrorCodeConstants.Upload_Jar_Failed + ":" + jarName)
-        apiResult.toString()
+        throw InternalErrorException("Failed to get dependant jars for the given object (" + obj.FullName + "." + MdMgr.Pad0s2Version(obj.Version) + ")", e)
       }
     }
   }
@@ -1540,31 +1212,6 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     }
   }
 
-    /**
-     * GetDependantJars of some base element (e.g., model, type, message, container, etc)
-     * @param obj <description please>
-     * @return <description please>
-     */
-  def GetDependantJars(obj: BaseElemDef): Array[String] = {
-    try {
-      var allJars = new Array[String](0)
-      if (obj.JarName != null)
-        allJars = allJars :+ obj.JarName
-      if (obj.DependencyJarNames != null) {
-        obj.DependencyJarNames.foreach(j => {
-          if (j.endsWith(".jar")) {
-            allJars = allJars :+ j
-          }
-        })
-      }
-      allJars
-    } catch {
-      case e: Exception => {
-        logger.debug("", e)
-        throw InternalErrorException("Failed to get dependant jars for the given object (" + obj.FullName + "." + MdMgr.Pad0s2Version(obj.Version) + ")", e)
-      }
-    }
-  }
 
     /**
      * DownloadJarFromDB
@@ -1876,8 +1523,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @param typeName
      */
   def DeleteObject(bucketKeyStr: String, typeName: String) {
-    val (containerName, store) = tableStoreMap(typeName)
-    store.del(containerName, Array(Key(storageDefaultTime, Array(bucketKeyStr), storageDefaultTxnId, 0)))
+    PersistenceUtils.DeleteObject(bucketKeyStr,typeName)
   }
 
     /**
@@ -1961,24 +1607,6 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     }
   }
 
-    /**
-     * GetDataStoreHandle
-     * @param jarPaths Set of paths where jars are located Set of paths where jars are located
-     * @param dataStoreInfo information needed to access the data store (kv store dependent)
-     * @return
-     */
-  private def GetDataStoreHandle(jarPaths: collection.immutable.Set[String], dataStoreInfo: String): DataStore = {
-  //private def GetDataStoreHandle(jarPaths: collection.immutable.Set[String], dataStoreInfo: String, tableName: String): DataStore = {
-    try {
-      logger.debug("Getting DB Connection for dataStoreInfo:%s".format(dataStoreInfo))
-      return KeyValueManager.Get(jarPaths, dataStoreInfo)
-    } catch {
-      case e: Exception => {
-        logger.debug("", e)
-        throw new CreateStoreFailedException(e.getMessage(), e)
-      }
-    }
-  }
 
     /**
      * OpenDbStore
@@ -1986,104 +1614,28 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @param dataStoreInfo information needed to access the data store (kv store dependent)
      */
   def OpenDbStore(jarPaths: collection.immutable.Set[String], dataStoreInfo: String) {
-    try {
-      logger.debug("Opening datastore")
-      mainDS = GetDataStoreHandle(jarPaths, dataStoreInfo)
-
-      tableStoreMap = Map("metadata_objects" -> ("metadata_objects", mainDS),
-        "models" -> ("metadata_objects", mainDS),
-        "messages" -> ("metadata_objects", mainDS),
-        "containers" -> ("metadata_objects", mainDS),
-        "functions" -> ("metadata_objects", mainDS),
-        "concepts" -> ("metadata_objects", mainDS),
-        "types" -> ("metadata_objects", mainDS),
-        "others" -> ("metadata_objects", mainDS),
-        "outputmsgs" -> ("metadata_objects", mainDS),
-        "jar_store" -> ("jar_store", mainDS),
-        "config_objects" -> ("config_objects", mainDS),
-        "model_config_objects" -> ("model_config_objects", mainDS),
-        "transaction_id" -> ("transaction_id", mainDS))
-    } catch {
-      case e: FatalAdapterException => {
-        logger.error("Failed to connect to Datastore", e)
-        throw CreateStoreFailedException(e.getMessage(), e)
-      }
-      case e: StorageConnectionException => {
-        logger.error("Failed to connect to Datastore", e)
-        throw CreateStoreFailedException(e.getMessage(), e)
-      }
-      case e: StorageFetchException => {
-        logger.error("Failed to connect to Datastore", e)
-        throw CreateStoreFailedException(e.getMessage(), e)
-      }
-      case e: StorageDMLException => {
-        logger.error("Failed to connect to Datastore", e)
-        throw CreateStoreFailedException(e.getMessage(), e)
-      }
-      case e: StorageDDLException => {
-        logger.error("Failed to connect to Datastore", e)
-        throw CreateStoreFailedException(e.getMessage(), e)
-      }
-      case e: Exception => {
-        logger.error("Failed to connect to Datastore", e)
-        throw CreateStoreFailedException(e.getMessage(), e)
-      }
-      case e: Throwable => {
-        logger.error("Failed to connect to Datastore", e)
-        throw CreateStoreFailedException(e.getMessage(), e)
-      }
-    }
+    PersistenceUtils.OpenDbStore(jarPaths,dataStoreInfo)
   }
 
     /**
      * CloseDbStore
      */
   def CloseDbStore: Unit = lock.synchronized {
-    try {
-      logger.debug("Closing datastore")
-      if (mainDS != null) {
-        mainDS.Shutdown()
-        mainDS = null
-        logger.debug("main datastore closed")
-      }
-    } catch {
-      case e: Exception => {
-        logger.error("", e)
-        throw e;
-      }
-    }
+    PersistenceUtils.CloseDbStore
   }
 
     /**
      * TruncateDbStore
      */
   def TruncateDbStore: Unit = lock.synchronized {
-    try {
-      logger.debug("Not allowing to truncate the whole datastore")
-      // mainDS.TruncateStore
-    } catch {
-      case e: Exception => {
-        logger.error("", e)
-        throw e;
-      }
-    }
+    PersistenceUtils.TruncateDbStore
   }
 
     /**
      * TruncateAuditStore
      */
   def TruncateAuditStore: Unit = lock.synchronized {
-    try {
-      logger.debug("Truncating Audit datastore")
-      if (auditObj != null) {
-        auditObj.TruncateStore
-      }
-    } catch {
-      case e: Exception => {
-        logger.error("", e)
-        throw e;
-      }
-    }
+    PersistenceUtils.TruncateAuditStore
   }
 
     /**
@@ -2606,51 +2158,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @return
      */
   def DeactivateModel(nameSpace: String, name: String, version: Long, userid: Option[String] = None): String = {
-    val dispkey = nameSpace + "." + name + "." + MdMgr.Pad0s2Version(version)
-    logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.DEACTIVATEOBJECT, AuditConstants.MODEL, AuditConstants.SUCCESS, "", dispkey)
-    if (DeactivateLocalModel(nameSpace, name, version)) {
-      (new ApiResult(ErrorCodeConstants.Success, "Deactivate Model", null, ErrorCodeConstants.Deactivate_Model_Successful + ":" + dispkey)).toString
-    } else {
-      (new ApiResult(ErrorCodeConstants.Failure, "Deactivate Model", null, ErrorCodeConstants.Deactivate_Model_Failed_Not_Active + ":" + dispkey)).toString
-    }
-  }
-
-    /**
-     * Deactivate a model FIXME: Explain what it means to do this locally.
-     * @param nameSpace namespace of the object
-     * @param name
-     * @param version  Version of the object
-     * @return
-     */
-  private def DeactivateLocalModel(nameSpace: String, name: String, version: Long): Boolean = {
-    var key = nameSpace + "." + name + "." + version
-    val dispkey = nameSpace + "." + name + "." + MdMgr.Pad0s2Version(version)
-    val newTranId = GetNewTranId
-    try {
-      val o = MdMgr.GetMdMgr.Model(nameSpace.toLowerCase, name.toLowerCase, version, true)
-      o match {
-        case None =>
-          None
-          logger.debug("No active model found => " + dispkey)
-          false
-        case Some(m) =>
-          logger.debug("model found => " + m.asInstanceOf[ModelDef].FullName + "." + MdMgr.Pad0s2Version(m.asInstanceOf[ModelDef].Version))
-          DeactivateObject(m.asInstanceOf[ModelDef])
-
-          // TODO: Need to deactivate the appropriate message?
-          m.tranId = newTranId
-          var objectsUpdated = new Array[BaseElemDef](0)
-          objectsUpdated = objectsUpdated :+ m.asInstanceOf[ModelDef]
-          val operations = for (op <- objectsUpdated) yield "Deactivate"
-          NotifyEngine(objectsUpdated, operations)
-          true
-      }
-    } catch {
-      case e: Exception => {
-        logger.debug("", e)
-        false
-      }
-    }
+    ModelUtils.DeactivateModel(nameSpace,name,version,userid)
   }
 
     /**
@@ -2663,119 +2171,9 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @return
      */
   def ActivateModel(nameSpace: String, name: String, version: Long, userid: Option[String] = None): String = {
-    var key = nameSpace + "." + name + "." + version
-    val dispkey = nameSpace + "." + name + "." + MdMgr.Pad0s2Version(version)
-    var currActiveModel: ModelDef = null
-    val newTranId = GetNewTranId
-
-    // Audit this call
-    logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.ACTIVATEOBJECT, AuditConstants.MODEL, AuditConstants.SUCCESS, "", nameSpace + "." + name + "." + version)
-
-    try {
-      // We may need to deactivate an model if something else is active.  Find the active model
-      val oCur = MdMgr.GetMdMgr.Models(nameSpace, name, true, false)
-      oCur match {
-        case None =>
-        case Some(m) =>
-          var setOfModels = m.asInstanceOf[scala.collection.immutable.Set[ModelDef]]
-          if (setOfModels.size > 1) {
-            logger.error("Internal Metadata error, there are more then 1 versions of model " + nameSpace + "." + name + " active on this system.")
-          }
-
-          // If some model is active, deactivate it.
-          if (setOfModels.size != 0) {
-            currActiveModel = setOfModels.last
-            if (currActiveModel.NameSpace.equalsIgnoreCase(nameSpace) &&
-              currActiveModel.name.equalsIgnoreCase(name) &&
-              currActiveModel.Version == version) {
-              return (new ApiResult(ErrorCodeConstants.Success, "ActivateModel", null, dispkey + " already active")).toString
-
-            }
-            var isSuccess = DeactivateLocalModel(currActiveModel.nameSpace, currActiveModel.name, currActiveModel.Version)
-            if (!isSuccess) {
-              logger.error("Error while trying to activate " + dispkey + ", unable to deactivate active model. model ")
-              val apiResult = new ApiResult(ErrorCodeConstants.Failure, "ActivateModel", null, "Error :" + ErrorCodeConstants.Activate_Model_Failed + ":" + dispkey + " -Unable to deactivate existing model")
-              apiResult.toString()
-            }
-          }
-
-      }
-
-      // Ok, at this point, we have deactivate  a previously active model.. now we activate this one.
-      val o = MdMgr.GetMdMgr.Model(nameSpace.toLowerCase, name.toLowerCase, version, false)
-      o match {
-        case None =>
-          None
-          logger.debug("No active model found => " + dispkey)
-          val apiResult = new ApiResult(ErrorCodeConstants.Failure, "ActivateModel", null, ErrorCodeConstants.Activate_Model_Failed_Not_Active + ":" + dispkey)
-          apiResult.toString()
-        case Some(m) =>
-          logger.debug("model found => " + m.asInstanceOf[ModelDef].FullName + "." + MdMgr.Pad0s2Version(m.asInstanceOf[ModelDef].Version))
-          ActivateObject(m.asInstanceOf[ModelDef])
-
-          // Issue a Notification to all registered listeners that an Acivation took place.
-          // TODO: Need to activate the appropriate message?
-          var objectsUpdated = new Array[BaseElemDef](0)
-          m.tranId = newTranId
-          objectsUpdated = objectsUpdated :+ m.asInstanceOf[ModelDef]
-          val operations = for (op <- objectsUpdated) yield "Activate"
-          NotifyEngine(objectsUpdated, operations)
-
-          // No exceptions, we succeded
-          val apiResult = new ApiResult(ErrorCodeConstants.Success, "ActivateModel", null, ErrorCodeConstants.Activate_Model_Successful + ":" + dispkey)
-          apiResult.toString()
-      }
-    } catch {
-
-      case e: Exception => {
-        logger.debug("", e)
-        val apiResult = new ApiResult(ErrorCodeConstants.Failure, "ActivateModel", null, "Error :" + e.toString() + ErrorCodeConstants.Activate_Model_Failed + ":" + dispkey)
-        apiResult.toString()
-      }
-    }
+    ModelUtils.ActivateModel(nameSpace,name,version,userid)
   }
 
-    /**
-     * Remove model with Model Name and Version Number
-     * @param nameSpace namespace of the object
-     * @param name
-     * @param version  Version of the object
-     * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
-     *               method. If Security and/or Audit are configured, this value must be a value other than None.
-     * @return
-     */
-  private def RemoveModel(nameSpace: String, name: String, version: Long, userid: Option[String]): String = {
-    var key = nameSpace + "." + name + "." + version
-    if (userid != None) logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.DELETEOBJECT, "Model", AuditConstants.SUCCESS, "", key)
-    val dispkey = nameSpace + "." + name + "." + MdMgr.Pad0s2Version(version)
-    var newTranId = GetNewTranId
-    try {
-      val o = MdMgr.GetMdMgr.Model(nameSpace.toLowerCase, name.toLowerCase, version, true)
-      o match {
-        case None =>
-          None
-          logger.debug("model not found => " + dispkey)
-          val apiResult = new ApiResult(ErrorCodeConstants.Failure, "RemoveModel", null, ErrorCodeConstants.Remove_Model_Failed_Not_Found + ":" + dispkey)
-          apiResult.toString()
-        case Some(m) =>
-          logger.debug("model found => " + m.asInstanceOf[ModelDef].FullName + "." + MdMgr.Pad0s2Version(m.asInstanceOf[ModelDef].Version))
-          DeleteObject(m)
-          var objectsUpdated = new Array[BaseElemDef](0)
-          m.tranId = newTranId
-          objectsUpdated = objectsUpdated :+ m
-          var operations = for (op <- objectsUpdated) yield "Remove"
-          NotifyEngine(objectsUpdated, operations)
-          val apiResult = new ApiResult(ErrorCodeConstants.Success, "RemoveModel", null, ErrorCodeConstants.Remove_Model_Successful + ":" + dispkey)
-          apiResult.toString()
-      }
-    } catch {
-      case e: Exception => {
-        logger.debug("", e)
-        val apiResult = new ApiResult(ErrorCodeConstants.Failure, "RemoveModel", null, "Error :" + e.toString() + ErrorCodeConstants.Remove_Model_Failed + ":" + dispkey)
-        apiResult.toString()
-      }
-    }
-  }
 
    /**
     * Remove model with Model Name and Version Number
@@ -2792,30 +2190,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     *         ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure
     */
     override def RemoveModel(modelName: String, version: String, userid: Option[String] = None): String = {
-
-        val reasonable : Boolean = modelName != null && modelName.length > 0
-        val result : String = if (reasonable) {
-            val buffer: StringBuilder = new StringBuilder
-            val modelNameAdjusted: String = if (modelName.contains(".")) {
-                modelName
-            } else {
-                logger.warn(s"No namespace qualification given...attempting removal with the ${sysNS} as the namespace")
-                s"$sysNS.$modelName"
-            }
-            val modelNameNodes: Array[String] = modelNameAdjusted.split('.')
-            val modelNm: String = modelNameNodes.last
-            modelNameNodes.take(modelNameNodes.size - 1).addString(buffer, ".")
-            val modelNmSpace: String = buffer.toString
-
-            // old way; The Sytem namespace assumed... RemoveModel(sysNS, modelName, version, userid)
-
-            RemoveModel(modelNmSpace, modelNm, MdMgr.ConvertVersionToLong(version), userid)
-
-        } else {
-            val modelNameStr : String = if (modelName == null) "NO MODEL NAME GIVEN" else "MODEL NAME of zero length"
-            new ApiResult(ErrorCodeConstants.Failure, "RemoveModel", null, s"${ErrorCodeConstants.Remove_Model_Failed} : supplied model name ($modelNameStr) is bad").toString
-        }
-        result
+      ModelUtils.RemoveModel(modelName,version,userid)
     }
 
 
@@ -2827,64 +2202,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @return
      */
   def AddModel(model: ModelDef, userid : Option[String]): String = {
-    var key = model.FullNameWithVer
-    val dispkey = model.FullName + "." + MdMgr.Pad0s2Version(model.Version)
-    try {
-      SaveObject(model, MdMgr.GetMdMgr)
-      val apiResult = new ApiResult(ErrorCodeConstants.Success, "AddModel", null, ErrorCodeConstants.Add_Model_Successful + ":" + dispkey)
-      apiResult.toString()
-    } catch {
-      case e: Exception => {
-        logger.debug("", e)
-        val apiResult = new ApiResult(ErrorCodeConstants.Success, "AddModel", null, ErrorCodeConstants.Add_Model_Successful + ":" + dispkey)
-        apiResult.toString()
-      }
-    }
-  }
-
-    /**
-     * AddModelFromSource - compiles and catalogs a custom Scala or Java model from source.
-     * @param sourceCode
-     * @param sourceLang
-     * @param modelName
-     * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
-     *               method. If Security and/or Audit are configured, this value must be a value other than None.
-     * @return
-     */
-  private def AddModelFromSource(sourceCode: String, sourceLang: String, modelName: String, userid: Option[String] = None): String = {
-    try {
-      var compProxy = new CompilerProxy
-      compProxy.setSessionUserId(userid)
-      val modDef: ModelDef = compProxy.compileModelFromSource(sourceCode, modelName, sourceLang)
-      logger.info("Begin uploading dependent Jars, please wait.")
-      UploadJarsToDB(modDef)
-      logger.info("Finished uploading dependent Jars.")
-      val apiResult = AddModel(modDef, userid)
-
-      // Add all the objects and NOTIFY the world
-      var objectsAdded = new Array[BaseElemDef](0)
-      objectsAdded = objectsAdded :+ modDef
-      val operations = for (op <- objectsAdded) yield "Add"
-      logger.debug("Notify engine via zookeeper")
-      NotifyEngine(objectsAdded, operations)
-      apiResult
-    } catch {
-      case e: AlreadyExistsException => {
-        logger.debug("", e)
-        val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddModel", null, "Error : " + ErrorCodeConstants.Add_Model_Failed_Higher_Version_Required)
-        apiResult.toString()
-      }
-      case e: MsgCompilationFailedException => {
-        logger.debug("", e)
-        val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddModel", null, "Error : " + ErrorCodeConstants.Model_Compilation_Failed)
-        apiResult.toString()
-      }
-      case e: Exception => {
-        logger.error("Unknown compilation error occured", e)
-        val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddModel", null, "Error : " + e.toString() + ErrorCodeConstants.Add_Model_Failed)
-        apiResult.toString()
-      }
-    }
+    ModelUtils.AddModel(model,userid)
   }
 
     /** Add model. Several model types are currently supported.  They describe the content of the ''input'' argument:
@@ -2922,217 +2240,9 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
                            , optVersion: Option[String] = None
                            , optMsgConsumed: Option[String] = None
                            , optMsgVersion: Option[String] = Some("-1") ): String  = {
-        val modelResult : String = modelType match {
-            case ModelType.KPMML => {
-                AddKPMMLModel(input, optUserid)
-            }
-            case ModelType.JAVA | ModelType.SCALA => {
-                val result : String = optModelName.fold(throw new RuntimeException("Model name should be provided for Java/Scala models"))(name => {
-                    AddModelFromSource(input, modelType.toString, name, optUserid)
-                })
-                result
-            }
-            case ModelType.PMML => {
-                val modelName: String = optModelName.orNull
-                val version: String = optVersion.orNull
-                val msgConsumed: String = optMsgConsumed.orNull
-                val msgVer : String = optMsgVersion.getOrElse("-1")
-                val result: String = if (modelName != null && version != null && msgConsumed != null) {
-                    val res : String = AddPMMLModel(modelName
-                                                    , version
-                                                    , msgConsumed
-                                                    , msgVer
-                                                    , input
-                                                    , optUserid)
-                    res
-                } else {
-                    val inputRep: String = if (input != null && input.size > 200) input.substring(0, 199)
-                                            else if (input != null) input
-                                            else "no model text"
-                    val apiResult = new ApiResult(ErrorCodeConstants.Failure
-                                                , "AddModel"
-                                                , null
-                                                , s"One or more PMML arguments have not been specified... modelName = $modelName, version = $version, input = $inputRep error = ${ErrorCodeConstants.Add_Model_Failed}")
-                    apiResult.toString
-                }
-                result
-            }
-
-            case ModelType.BINARY =>
-                new ApiResult(ErrorCodeConstants.Failure, "AddModel", null, s"BINARY model type NOT SUPPORTED YET ...${ErrorCodeConstants.Add_Model_Failed}").toString
-
-            case _ => {
-                    val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddModel", null, s"Unknown model type ${modelType.toString} error = ${ErrorCodeConstants.Add_Model_Failed}")
-                    apiResult.toString
-            }
-        }
-        modelResult
-    }
-
-
-    /**
-     * Add a PMML model to the metadata.
-     *
-     * PMML models are evaluated, not compiled. To create the model definition, an instance of the evaluator
-     * is obtained from the pmml-evaluator component and the ModelDef is constructed and added to the store.
-     * @see com.ligadata.MetadataAPI.JpmmlSupport for more information
-     *
-     * @param modelName the namespace.name of the model to be injested.
-     * @param version the version as string in the form "MMMMMM.mmmmmmmm.nnnnnn" (3 nodes .. could be fewer chars per node)
-     * @param msgConsumed the namespace.name of the message that this model is to consume.  NOTE: the
-     *                    fields used in the pmml model and the fields in the message must match.  If
-     *                    the message does not supply all input fields in the model, there should be a default
-     *                    specified for those not filled in that mining variable.
-     * @param msgVersion the version of the message that this PMML model will consume
-     * @param pmmlText the actual PMML (xml) that is submitted by the client.
-     * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
-     *               method. If Security and/or Audit are configured, this value must be a value other than None.
-     * @return json string result
-     */
-  private def AddPMMLModel(  modelName : String
-                            , version : String
-                            , msgConsumed : String
-                            , msgVersion : String
-                            , pmmlText : String
-                            , userid : Option[String]
-                            ): String = {
-    try {
-        val buffer : StringBuilder = new StringBuilder
-        val modelNameNodes : Array[String] = modelName.split('.')
-        val modelNm : String = modelNameNodes.last
-        modelNameNodes.take(modelNameNodes.size - 1).addString(buffer,".")
-        val modelNmSpace : String = buffer.toString
-        buffer.clear
-        val msgNameNodes : Array[String] = msgConsumed.split('.')
-        val msgName : String = msgNameNodes.last
-        msgNameNodes.take(msgNameNodes.size - 1).addString(buffer,".")
-        val msgNamespace : String = buffer.toString
-        val jpmmlSupport : JpmmlSupport = new JpmmlSupport(mdMgr
-                                                        , modelNmSpace
-                                                        , modelNm
-                                                        , version
-                                                        , msgNamespace
-                                                        , msgName
-                                                        , msgVersion
-                                                        , pmmlText)
-        val recompile : Boolean = false
-        val modDef : ModelDef = jpmmlSupport.CreateModel(recompile)
-
-        // ModelDef may be null if the model evaluation failed
-        val latestVersion : Option[ModelDef] = if (modDef == null) None else GetLatestModel(modDef)
-        val isValid: Boolean = if (latestVersion.isDefined) IsValidVersion(latestVersion.get, modDef) else true
-
-        if (isValid && modDef != null) {
-            logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.INSERTOBJECT, pmmlText, AuditConstants.SUCCESS, "", modDef.FullNameWithVer)
-            // save the jar file first
-            UploadJarsToDB(modDef)
-            val apiResult = AddModel(modDef, userid)
-            logger.debug("Model is added..")
-            var objectsAdded = new Array[BaseElemDef](0)
-            objectsAdded = objectsAdded :+ modDef
-            val operations = for (op <- objectsAdded) yield "Add"
-            logger.debug("Notify engine via zookeeper")
-            NotifyEngine(objectsAdded, operations)
-            apiResult
-        } else {
-            val reasonForFailure: String = if (modDef != null) {
-                ErrorCodeConstants.Add_Model_Failed_Higher_Version_Required
-            } else {
-                ErrorCodeConstants.Add_Model_Failed
-            }
-            val modDefName: String = if (modDef != null) modDef.FullName else "(pmml compile failed)"
-            val modDefVer: String = if (modDef != null) MdMgr.Pad0s2Version(modDef.Version) else MdMgr.UnknownVersion
-            var apiResult = new ApiResult(ErrorCodeConstants.Failure
-                , "AddModel"
-                , null
-                , s"$reasonForFailure : $modDefName.$modDefVer)")
-            apiResult.toString()
-        }
-    } catch {
-        case e: ModelCompilationFailedException => {
-            logger.debug("", e)
-            val apiResult = new ApiResult(ErrorCodeConstants.Failure
-                                        , "AddModel"
-                                        , null
-                                        , s"Error : ${e.toString} + ${ErrorCodeConstants.Add_Model_Failed}")
-            apiResult.toString()
-        }
-        case e: AlreadyExistsException => {
-            logger.debug("", e)
-            val apiResult = new ApiResult(ErrorCodeConstants.Failure
-                                        , "AddModel"
-                                        , null
-                                        , s"Error : ${e.toString} + ${ErrorCodeConstants.Add_Model_Failed}")
-            apiResult.toString()
-        }
-        case e: Exception => {
-            logger.debug("", e)
-            val apiResult = new ApiResult(ErrorCodeConstants.Failure
-                                        , "AddModel"
-                                        , null
-                                        , s"Error : ${e.toString} + ${ErrorCodeConstants.Add_Model_Failed}")
-            apiResult.toString()
-        }
-    }
+    ModelUtils.AddModel(modelType,input,optUserid,optModelName,optVersion,optMsgConsumed,optMsgVersion)
   }
 
-    /**
-     * Add Kamanja PMML Model (format XML).  Kamanja Pmml models obtain their name and version from the header in the Pmml file.
-     * @param pmmlText
-     * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
-     *               method. If Security and/or Audit are configured, this value must be a value other than None.
-     * @return json string result
-     */
-  private def AddKPMMLModel(pmmlText: String, userid: Option[String]): String = {
-    try {
-      var compProxy = new CompilerProxy
-      //compProxy.setLoggerLevel(Level.TRACE)
-      var (classStr, modDef) = compProxy.compilePmml(pmmlText)
-
-      // ModelDef may be null if there were pmml compiler errors... act accordingly.  If modelDef present,
-      // make sure the version of the model is greater than any of previous models with same FullName
-      val latestVersion = if (modDef == null) None else GetLatestModel(modDef)
-      val isValid: Boolean = if (latestVersion != None) IsValidVersion(latestVersion.get, modDef) else true
-
-      if (isValid && modDef != null) {
-        logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.INSERTOBJECT, pmmlText, AuditConstants.SUCCESS, "", modDef.FullNameWithVer)
-        // save the jar file first
-        UploadJarsToDB(modDef)
-        val apiResult = AddModel(modDef, userid)
-        logger.debug("Model is added..")
-        var objectsAdded = new Array[BaseElemDef](0)
-        objectsAdded = objectsAdded :+ modDef
-        val operations = for (op <- objectsAdded) yield "Add"
-        logger.debug("Notify engine via zookeeper")
-        NotifyEngine(objectsAdded, operations)
-        apiResult
-      } else {
-        val reasonForFailure: String = if (modDef != null) ErrorCodeConstants.Add_Model_Failed_Higher_Version_Required else ErrorCodeConstants.Add_Model_Failed
-        val modDefName: String = if (modDef != null) modDef.FullName else "(kpmml compile failed)"
-        val modDefVer: String = if (modDef != null) MdMgr.Pad0s2Version(modDef.Version) else MdMgr.UnknownVersion
-        val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddModel", null, reasonForFailure + ":" + modDefName + "." + modDefVer)
-        apiResult.toString()
-      }
-    } catch {
-      case e: ModelCompilationFailedException => {
-        logger.debug("", e)
-        val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddModel", null, "Error :" + e.toString() + ErrorCodeConstants.Add_Model_Failed)
-        apiResult.toString()
-      }
-      case e: AlreadyExistsException => {
-        
-        logger.debug("", e)
-        val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddModel", null, "Error :" + e.toString() + ErrorCodeConstants.Add_Model_Failed)
-        apiResult.toString()
-      }
-      case e: Exception => {
-        
-        logger.debug("", e)
-        val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddModel", null, "Error :" + e.toString() + ErrorCodeConstants.Add_Model_Failed)
-        apiResult.toString()
-      }
-    }
-  }
 
     /**
      * Recompile the supplied model. Optionally the message definition is supplied that was just built.
@@ -3145,109 +2255,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @return the result string reflecting what happened with this operation.
      */
     def RecompileModel(mod: ModelDef, userid : Option[String], optMsgDef : Option[MessageDef]): String = {
-        try {
-            /** FIXME: This should really handle BINARY models too.  When we start supporting them, we cannot recompile
-              * it but we can send notifications to consoles or some thing like this to help identify the need for
-              * a replacement to the prior binary model.  This needs to be discussed and documented how we are going to
-              * do this.
-              * FIXME: Actually an update to a message that supports BINARY models needs to be detected up front and
-              * a warning and rejection of the message update made. Perhaps adding a "force" flag to get the message
-              * to compile despite this obstacle is warranted.
-              */
-            val isJpmml : Boolean = mod.modelRepresentation == ModelRepresentation.PMML
-            val msgDef : MessageDef = optMsgDef.orNull
-            val modDef: ModelDef = if (! isJpmml) {
-
-                val compProxy = new CompilerProxy
-                //compProxy.setLoggerLevel(Level.TRACE)
-
-                // Recompile the model based upon its model type.Models can be either PMML or Custom Sourced.  See which one we are dealing with
-                // here.
-                if (mod.objectFormat == ObjFormatType.fXML) {
-                    val pmmlText = mod.ObjectDefinition
-                    val (classStrTemp, modDefTemp) = compProxy.compilePmml(pmmlText, true)
-                    modDefTemp
-                } else {
-                    val saveModelParms = parse(mod.ObjectDefinition).values.asInstanceOf[Map[String, Any]]
-                    val custModDef: ModelDef = compProxy.recompileModelFromSource(
-                        saveModelParms.getOrElse(ModelCompilationConstants.SOURCECODE, "").asInstanceOf[String],
-                        saveModelParms.getOrElse(ModelCompilationConstants.PHYSICALNAME, "").asInstanceOf[String],
-                        saveModelParms.getOrElse(ModelCompilationConstants.DEPENDENCIES, List[String]()).asInstanceOf[List[String]],
-                        saveModelParms.getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, List[String]()).asInstanceOf[List[String]],
-                        ObjFormatType.asString(mod.objectFormat))
-                    custModDef
-                }
-            } else {
-                /** the msgConsumed is namespace.name.version  ... drop the version so as to compare the "FullName" */
-                val buffer : StringBuilder = new StringBuilder
-                val modMsgNameParts : Array[String] = if (mod.msgConsumed != null) mod.msgConsumed.split('.') else Array[String]()
-                val modMsgFullName : String = modMsgNameParts.dropRight(1).addString(buffer,".").toString.toLowerCase
-                val reasonable : Boolean = (modMsgFullName == msgDef.FullName)
-                if (reasonable) {
-                    val msgName: String = msgDef.Name
-                    val msgNamespace: String = msgDef.NameSpace
-                    val msgVersion: String = MdMgr.ConvertLongVersionToString(msgDef.Version)
-                    val modelNmSpace : String = mod.NameSpace
-                    val modelName : String = mod.Name
-                    val modelVersion : String = MdMgr.ConvertLongVersionToString(mod.Version)
-                    val jpmmlSupport: JpmmlSupport = new JpmmlSupport(mdMgr
-                                                                    , modelNmSpace
-                                                                    , modelName
-                                                                    , modelVersion
-                                                                    , msgNamespace
-                                                                    , msgName
-                                                                    , msgVersion
-                                                                    , mod.jpmmlText)
-                    val recompile : Boolean = true
-                    val model : ModelDef = jpmmlSupport.CreateModel(recompile)
-                    model
-                } else {
-                    /** this means that the dependencies are incorrect.. message is not the PMML message of interest */
-                    logger.error(s"The message names for model ${mod.FullName} and the message just built (${msgDef.FullName}) don't match up. It suggests model dependencies and/or the model type are messed up.")
-                    null
-                }
-            }
-
-            val latestVersion = if (modDef == null) None else GetLatestModel(modDef)
-            val isValid: Boolean = (modDef != null)
-            if (isValid) {
-                val rmResult : String = RemoveModel(latestVersion.get.nameSpace, latestVersion.get.name, latestVersion.get.ver, None)
-                UploadJarsToDB(modDef)
-                val addResult : String = AddModel(modDef,userid)
-                var objectsUpdated = new Array[BaseElemDef](0)
-                var operations = new Array[String](0)
-                objectsUpdated = objectsUpdated :+ latestVersion.get
-                operations = operations :+ "Remove"
-                objectsUpdated = objectsUpdated :+ modDef
-                operations = operations :+ "Add"
-                NotifyEngine(objectsUpdated, operations)
-                s"\nRecompileModel results for ${mod.NameSpace}.${mod.Name}.${mod.Version}\n$rmResult$addResult"
-            } else {
-                val reasonForFailure: String = ErrorCodeConstants.Model_ReCompilation_Failed
-                val modDefName: String = if (mod != null) mod.FullName else "(compilation failed)"
-                val modDefVer: String = if (mod != null) MdMgr.Pad0s2Version(mod.Version) else MdMgr.UnknownVersion
-                var apiResult = new ApiResult(ErrorCodeConstants.Failure, "\nRecompileModel", null, reasonForFailure + ":" + modDefName + "." + modDefVer)
-                apiResult.toString()
-            }
-        } catch {
-            case e: ModelCompilationFailedException => {
-                logger.debug("", e)
-                var apiResult = new ApiResult(ErrorCodeConstants.Failure, "\nRecompileModel", null, "Error in producing scala file or Jar file.." + ErrorCodeConstants.Add_Model_Failed)
-                apiResult.toString()
-            }
-            case e: AlreadyExistsException => {
-                
-                logger.debug("", e)
-                var apiResult = new ApiResult(ErrorCodeConstants.Failure, "RecompileModel", null, "Error :" + e.toString() + ErrorCodeConstants.Add_Model_Failed)
-                apiResult.toString()
-            }
-            case e: Exception => {
-                
-                logger.debug("", e)
-                var apiResult = new ApiResult(ErrorCodeConstants.Failure, "RecompileModel", null, "Error :" + e.toString() + ErrorCodeConstants.Add_Model_Failed)
-                apiResult.toString()
-            }
-        }
+      ModelUtils.RecompileModel(mod,userid,optMsgDef)
     }
 
     /**
@@ -3286,381 +2294,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
                             , optModelName: Option[String] = None
                             , optVersion: Option[String] = None
                             , optVersionBeingUpdated : Option[String] = None): String = {
-        /**
-         * FIXME: The current strategy is that only the most recent version can be updated.
-         * FIXME: This is not a satisfactory condition. It may be desirable to have 10 models all with
-         * FIXME: the same name but differing only in their version numbers. If someone wants to tune
-         * FIXME: #6 of the 10, that number six is not the latest.  It is just a unique model.
-         *
-         * For this reason, the version of the model that is to be changed should be supplied here and all of the
-         * associated handler functions that service update for the various model types should be amended to
-         * consider which model it is that is to be updated exactly.  The removal of the model being replaced
-         * must be properly handled to remove the one with the version supplied.
-         */
-
-        val modelResult: String = modelType match {
-            case ModelType.KPMML => {
-                val result: String = UpdateKPMMLModel(modelType, input, optUserid, optModelName, optVersion)
-                result
-            }
-            case ModelType.JAVA | ModelType.SCALA => {
-                val result: String = UpdateCustomModel(modelType, input, optUserid, optModelName, optVersion)
-                result
-            }
-            case ModelType.PMML => {
-                val result : String = UpdatePMMLModel(modelType, input, optUserid, optModelName, optVersion, optVersionBeingUpdated)
-                result
-            }
-            case ModelType.BINARY =>
-                new ApiResult(ErrorCodeConstants.Failure, "AddModel", null, s"BINARY model type NOT SUPPORTED YET ...${ErrorCodeConstants.Add_Model_Failed}").toString
-            case _ => {
-                val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddModel", null, s"Unknown model type ${modelType.toString} error = ${ErrorCodeConstants.Add_Model_Failed}")
-                apiResult.toString
-            }
-        }
-        modelResult
-
+      ModelUtils.UpdateModel(modelType,input,optUserid,optModelName,optVersion,optVersionBeingUpdated)
     }
-
-    /**
-     * Update a PMML model with the supplied inputs.  The input is presumed to be a new version of a PMML model that
-     * is currently cataloged.  The user id should be supplied for any installation that is using the security or audit
-     * plugins. The model namespace.name and its new version are supplied.  The message ingested by the current version
-     * is used by the for the update.
-     *
-     * @param modelType the type of the model... PMML in this case
-     * @param input the new source to ingest for the model being updated/replaced
-     * @param optUserid the identity to be used by the security adapter to ascertain if this user has access permissions for this
-     *               method. If Security and/or Audit are configured, this value must be a value other than None.
-     * @param optModelName the name of the model to be ingested (only relevant for PMML ingestion)
-     * @param optModelVersion the version number of the model to be updated (only relevant for PMML ingestion)
-     * @param optVersionBeingUpdated not used... reserved
-     * @return result string indicating success or failure of operation
-     */
-    private def UpdatePMMLModel(modelType: ModelType.ModelType
-                                  , input: String
-                                  , optUserid: Option[String] = None
-                                  , optModelName: Option[String] = None
-                                  , optModelVersion: Option[String] = None
-                                  , optVersionBeingUpdated : Option[String] ): String = {
-
-        val modelName: String = optModelName.orNull
-        val version: String = optModelVersion.getOrElse("-1")
-        val result: String = if (modelName != null && version != null) {
-            try {
-                val buffer: StringBuilder = new StringBuilder
-                val modelNameNodes: Array[String] = modelName.split('.')
-                val modelNm: String = modelNameNodes.last
-                modelNameNodes.take(modelNameNodes.size - 1).addString(buffer, ".")
-                val modelNmSpace: String = buffer.toString
-
-                val currentVer : Long = -1
-                val onlyActive : Boolean = false  /** allow active or inactive models to be updated */
-                val optCurrent : Option[ModelDef] = mdMgr.Model(modelNmSpace, modelNm, currentVer, onlyActive)
-                val currentModel : ModelDef = optCurrent.orNull
-                val currentMsg : String = if (currentModel != null) currentModel.msgConsumed else null
-                val (currMsgNmSp, currMsgNm, currMsgVer) : (String,String,String) = MdMgr.SplitFullNameWithVersion(currentMsg)
-
-                val jpmmlSupport: JpmmlSupport = new JpmmlSupport(mdMgr
-                    , modelNmSpace
-                    , modelNm
-                    , version
-                    , currMsgNmSp
-                    , currMsgNm
-                    , currMsgVer
-                    , input)
-
-                val modDef: ModelDef = jpmmlSupport.UpdateModel
-
-                /**
-                 * FIXME: The current strategy is that only the most recent version can be updated.
-                 * FIXME: This is not a satisfactory condition. It may be desirable to have 10 models all with
-                 * FIXME: the same name but differing only in their version numbers. If someone wants to tune
-                 * FIXME: #6 of the 10, that number six is not the latest.  It is just a unique model.
-                 *
-                 * For this reason, the version of the model that is to be changed should be supplied here and in the
-                 * more generic interface implementation that calls here.
-                 */
-
-                //def Model(nameSpace: String, name: String, ver: Long, onlyActive: Boolean): Option[ModelDef]
-                val tentativeVersionBeingUpdated : String = optVersionBeingUpdated.orNull
-                val versionBeingUpdated : String = if (tentativeVersionBeingUpdated != null) tentativeVersionBeingUpdated else "-1"
-                val versionLong : Long = MdMgr.ConvertVersionToLong(version)
-                val optVersionUpdated : Option[ModelDef] = MdMgr.GetMdMgr.Model(modelNmSpace, modelNm, versionLong, onlyActive)
-                val versionUpdated : ModelDef = optVersionUpdated.orNull
-
-                // ModelDef may be null if the model evaluation failed
-                // old .... val latestVersion: Option[ModelDef] = if (modDef == null) None else GetLatestModel(modDef) was compared
-                // with modeDef in IsValidVersion
-                //val isValid: Boolean = if (latestVersion.isDefined) IsValidVersion(latestVersion.get, modDef) else true
-                val isValid: Boolean = if (optVersionUpdated.isDefined) IsValidVersion(versionUpdated, modDef) else true
-
-                if (isValid && modDef != null) {
-                    logAuditRec(optUserid, Some(AuditConstants.WRITE), AuditConstants.INSERTOBJECT, input, AuditConstants.SUCCESS, "", modDef.FullNameWithVer)
-
-                    /**
-                     * FIXME: Considering the design goal of NON-STOP cluster model management, it seems that the window
-                     * FIXME: for something to go wrong is too likely with this current approach.  The old model is being
-                     * FIXME: deleted before the engine is notified.  Should the engine ask for metadata on that model
-                     * FIXME: after the model being updated is removed but before the new version has been added, there
-                     * FIXME: is likelihood that unpredictable behavior that would be difficult to diagnose could occur.
-                     *
-                     * FIXME: Furthermore, who is to say that the user doesn't want the model to be updated all right, but
-                     * FIXME: but that they are not sure that they want the old version to be removed.  In other words,
-                     * FIXME: "the model is to be updated" means "add the modified version of the model, and atomically
-                     * FIXME: swap the old active version (deactivate it) and the new version (activate it)?
-                     *
-                     * FIXME: We need to think it through... what the semantics of the Update is.  In fact we might want
-                     * FIXME: to deprecate it altogether.  There should be just Add model, Activate model, Deactivate model,
-                     * FIXME: Swap Models (activate and deactivate same model/different versions atomically), and Remove
-                     * FIXME: model. Removes would fail if they are active; they need to be deactivated before removal.
-                     *
-                     * FIXME: The design goals are to not stop the cluster and to not miss an incoming message. The windows
-                     * FIXME: of opportunity for calamity are measured by how long it takes to swap inactive/active.  Everything
-                     * FIXME: else is "offline" as it were.
-                     *
-                     */
-                    val rmModelResult : String = if( versionUpdated != null ){
-                        RemoveModel(versionUpdated.NameSpace, versionUpdated.Name, versionUpdated.Version, None)
-                    } else {
-                        ""
-                    }
-                    logger.info("Begin uploading dependent Jars, please wait...")
-                    UploadJarsToDB(modDef)
-                    logger.info("uploading dependent Jars complete")
-
-                    val addResult = AddModel(modDef, optUserid)
-                    logger.debug("Model is added..")
-                    var objectsAdded = new Array[BaseElemDef](0)
-                    objectsAdded = objectsAdded :+ modDef
-                    val operations = for (op <- objectsAdded) yield "Add"
-                    logger.debug("Notify engine via zookeeper")
-                    NotifyEngine(objectsAdded, operations)
-                    s"UpdateModel version $version of $modelNmSpace.$modelNm results:\n$rmModelResult\n$addResult"
-                } else {
-                    val reasonForFailure: String = if (modDef != null) {
-                        ErrorCodeConstants.Update_Model_Failed_Invalid_Version
-                    } else {
-                        ErrorCodeConstants.Update_Model_Failed
-                    }
-                    val modDefName: String = if (modDef != null) modDef.FullName else "(pmml compile failed)"
-                    val modDefVer: String = if (modDef != null) MdMgr.Pad0s2Version(modDef.Version) else MdMgr.UnknownVersion
-                    var apiResult = new ApiResult(ErrorCodeConstants.Failure
-                        , "AddModel"
-                        , null
-                        , s"$reasonForFailure : $modDefName.$modDefVer)")
-                    apiResult.toString()
-                }
-            } catch {
-                case e: ModelCompilationFailedException => {
-                    logger.debug("", e)
-                    val apiResult = new ApiResult(ErrorCodeConstants.Failure
-                        , s"UpdateModel(type = PMML)"
-                        , null
-                        , s"Error : ${e.toString} + ${ErrorCodeConstants.Update_Model_Failed}")
-                    apiResult.toString()
-                }
-                case e: AlreadyExistsException => {
-                    
-                    logger.debug("", e)
-                    val apiResult = new ApiResult(ErrorCodeConstants.Failure
-                        , s"UpdateModel(type = PMML)"
-                        , null
-                        , s"Error : ${e.toString} + ${ErrorCodeConstants.Update_Model_Failed}")
-                    apiResult.toString()
-                }
-                case e: Exception => {
-                    
-                    logger.debug("", e)
-                    val apiResult = new ApiResult(ErrorCodeConstants.Failure
-                        , s"UpdateModel(type = PMML)"
-                        , null
-                        , s"Error : ${e.toString} + ${ErrorCodeConstants.Update_Model_Failed}")
-                    apiResult.toString()
-                }
-            }
-        } else {
-            val apiResult = new ApiResult(ErrorCodeConstants.Failure
-                , s"UpdateModel(type = PMML)"
-                , null
-                , s"The model name and new version was not supplied for this PMML model : name=$modelName version=$version\nOptionally one should consider supplying the exact version of the model being updated, especially important when you are maintaining multiple versions with the same model name and tweaking versions of same for your 'a/b/c...' score comparisons.")
-            apiResult.toString()
-
-        }
-        result
-    }
-
-    /**
-     * Update the java or scala model with new source.
-     *
-     * @param modelType the type of the model... JAVA | SCALA in this case
-     * @param input the source of the model to ingest
-     * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
-     *               method. If Security and/or Audit are configured, this value must be a value other than None.
-     * @param modelName the name of the model to be ingested (PMML)
-     *                  or the model's config for java and scala
-     * @param version the version number of the model to be updated (only relevant for PMML ingestion)
-     * @return result string indicating success or failure of operation
-     */
-    private def UpdateCustomModel(modelType: ModelType.ModelType
-                                  , input: String
-                                  , userid: Option[String] = None
-                                  , modelName: Option[String] = None
-                                  , version: Option[String] = None): String = {
-        val sourceLang : String = modelType.toString /** to get here it is either 'java' or 'scala' */
-        try {
-            val compProxy = new CompilerProxy
-            compProxy.setSessionUserId(userid)
-            val modelNm : String = modelName.orNull
-            val modDef : ModelDef =  compProxy.compileModelFromSource(input, modelNm, sourceLang)
-
-            /**
-             * FIXME: The current strategy is that only the most recent version can be updated.
-             * FIXME: This is not a satisfactory condition. It may be desirable to have 10 models all with
-             * FIXME: the same name but differing only in their version numbers. If someone wants to tune
-             * FIXME: #6 of the 10, that number six is not the latest.  It is just a unique model.
-             *
-             * For this reason, the version of the model that is to be changed should be supplied here and in the
-             * more generic interface implementation that calls here.
-             */
-
-            val latestVersion = if (modDef == null) None else GetLatestModel(modDef)
-            val isValid: Boolean = if (latestVersion != None) IsValidVersion(latestVersion.get, modDef) else true
-
-            if (isValid && modDef != null) {
-                logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.UPDATEOBJECT, input, AuditConstants.SUCCESS, "", modDef.FullNameWithVer)
-                val key = MdMgr.MkFullNameWithVersion(modDef.nameSpace, modDef.name, modDef.ver)
-                if( latestVersion != None ){
-                    RemoveModel(latestVersion.get.nameSpace, latestVersion.get.name, latestVersion.get.ver, None)
-                }
-                logger.info("Begin uploading dependent Jars, please wait...")
-                UploadJarsToDB(modDef)
-                logger.info("Finished uploading dependent Jars.")
-                val apiResult = AddModel(modDef, userid)
-                var objectsUpdated = new Array[BaseElemDef](0)
-                var operations = new Array[String](0)
-                if( latestVersion != None ) {
-                    objectsUpdated = objectsUpdated :+ latestVersion.get
-                    operations = operations :+ "Remove"
-                }
-                objectsUpdated = objectsUpdated :+ modDef
-                operations = operations :+ "Add"
-                NotifyEngine(objectsUpdated, operations)
-                apiResult
-            } else {
-                val reasonForFailure: String = if (modDef != null) ErrorCodeConstants.Add_Model_Failed_Higher_Version_Required else ErrorCodeConstants.Add_Model_Failed
-                val modDefName: String = if (modDef != null) modDef.FullName else "(source compile failed)"
-                val modDefVer: String = if (modDef != null) MdMgr.Pad0s2Version(modDef.Version) else MdMgr.UnknownVersion
-                var apiResult = new ApiResult(ErrorCodeConstants.Failure, "UpdateModel", null, reasonForFailure + ":" + modDefName + "." + modDefVer)
-                apiResult.toString()
-            }
-        } catch {
-            case e: ModelCompilationFailedException => {
-                logger.debug("", e)
-                var apiResult = new ApiResult(ErrorCodeConstants.Failure, s"${'"'}UpdateModel(type = $sourceLang)${'"'}", null, "Error :" + e.toString() + ErrorCodeConstants.Update_Model_Failed)
-                apiResult.toString()
-            }
-            case e: AlreadyExistsException => {
-                
-                logger.debug("", e)
-                var apiResult = new ApiResult(ErrorCodeConstants.Failure, s"${'"'}UpdateModel(type = $sourceLang)${'"'}", null, "Error :" + e.toString() + ErrorCodeConstants.Update_Model_Failed)
-                apiResult.toString()
-            }
-            case e: Exception => {
-                
-                logger.debug("", e)
-                var apiResult = new ApiResult(ErrorCodeConstants.Failure, s"${'"'}UpdateModel(type = $sourceLang)${'"'}", null, "Error :" + e.toString() + ErrorCodeConstants.Update_Model_Failed)
-                apiResult.toString()
-            }
-        }
-    }
-
-    /**
-     * UpdateModel - Update a Kamanja Pmml model
-     *
-     * Current semantics are that the source supplied in pmmlText is compiled and a new model is reproduced. The Kamanja
-     * PMML version is specified in the KPMML source itself in the header's Version attribute. The version of the updated
-     * model must be > the most recent cataloged one that is being updated. With this strategy ONLY the most recent
-     * version can be updated.
-     *
-     * @param modelType the type of the model submission... PMML in this case
-     * @param pmmlText the text element to be added dependent upon the modelType specified.
-     * @param optUserid the identity to be used by the security adapter to ascertain if this user has access permissions for this
-     *               method.
-     * @param optModelName the model's namespace.name (ignored in this implementation of the UpdatePmmlModel... only used in PMML updates)
-     * @param optVersion the model's version (ignored in this implementation of the UpdatePmmlModel... only used in PMML updates)
-     * @return  result string indicating success or failure of operation
-     */
-    private def UpdateKPMMLModel(modelType: ModelType.ModelType
-                             , pmmlText: String
-                             , optUserid: Option[String] = None
-                             , optModelName: Option[String] = None
-                             , optVersion: Option[String] = None ): String = {
-        try {
-            var compProxy = new CompilerProxy
-            //compProxy.setLoggerLevel(Level.TRACE)
-            var (classStr, modDef) = compProxy.compilePmml(pmmlText)
-            val optLatestVersion = if (modDef == null) None else GetLatestModel(modDef)
-            val latestVersion : ModelDef = optLatestVersion.orNull
-
-            /**
-             * FIXME: The current strategy is that only the most recent version can be updated.
-             * FIXME: This is not a satisfactory condition. It may be desirable to have 10 PMML models all with
-             * FIXME: the same name but differing only in their version numbers. If someone wants to tune
-             * FIXME: #6 of the 10, that number six is not the latest.  It is just a unique model.
-             *
-             * For this reason, the version of the model that is to be changed should be supplied here and in the
-             * more generic interface implementation that calls here.
-             */
-
-            val isValid: Boolean = (modDef != null && latestVersion != null && latestVersion.Version <  modDef.Version)
-
-            if (isValid && modDef != null) {
-                logAuditRec(optUserid, Some(AuditConstants.WRITE), AuditConstants.UPDATEOBJECT, pmmlText, AuditConstants.SUCCESS, "", modDef.FullNameWithVer)
-                val key = MdMgr.MkFullNameWithVersion(modDef.nameSpace, modDef.name, modDef.ver)
-
-                // when a version number changes, latestVersion  has different namespace making it unique
-                // latest version may not be found in the cache. So need to remove it
-                if( latestVersion != None ) {
-                    RemoveModel(latestVersion.nameSpace, latestVersion.name, latestVersion.ver, None)
-                }
-
-                UploadJarsToDB(modDef)
-                val result = AddModel(modDef,optUserid)
-                var objectsUpdated = new Array[BaseElemDef](0)
-                var operations = new Array[String](0)
-
-                if( latestVersion != None ) {
-                    objectsUpdated = objectsUpdated :+ latestVersion
-                    operations = operations :+ "Remove"
-                }
-
-                objectsUpdated = objectsUpdated :+ modDef
-                operations = operations :+ "Add"
-                NotifyEngine(objectsUpdated, operations)
-                result
-
-            } else {
-                val reasonForFailure: String = if (modDef != null) ErrorCodeConstants.Update_Model_Failed_Invalid_Version else ErrorCodeConstants.Update_Model_Failed
-                val modDefName: String = if (modDef != null) modDef.FullName else "(kpmml compile failed)"
-                val modDefVer: String = if (modDef != null) MdMgr.Pad0s2Version(modDef.Version) else MdMgr.UnknownVersion
-                var apiResult = new ApiResult(ErrorCodeConstants.Failure, s"UpdateModel(type = KPMML)", null, reasonForFailure + ":" + modDefName + "." + modDefVer)
-                apiResult.toString()
-            }
-        } catch {
-            case e: ObjectNotFoundException => {
-                logger.debug("", e)
-                var apiResult = new ApiResult(ErrorCodeConstants.Failure, s"UpdateModel(type = KPMML)", null, "Error :" + e.toString() + ErrorCodeConstants.Update_Model_Failed)
-                apiResult.toString()
-            }
-            case e: Exception => {
-                
-                logger.debug("", e)
-                var apiResult = new ApiResult(ErrorCodeConstants.Failure, s"UpdateModel(type = KPMML)", null, "Error :" + e.toString() + ErrorCodeConstants.Update_Model_Failed)
-                apiResult.toString()
-            }
-        }
-  }
 
     /**
      * GetDependentModels
@@ -3684,27 +2319,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @return string representation in specified format.
      */
   def GetAllModelDefs(formatType: String, userid: Option[String] = None): String = {
-    try {
-      val modDefs = MdMgr.GetMdMgr.Models(true, true)
-      modDefs match {
-        case None =>
-          None
-          logger.debug("No Models found ")
-          val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetAllModelDefs", null, ErrorCodeConstants.Get_All_Models_Failed_Not_Available)
-          apiResult.toString()
-        case Some(ms) =>
-          val msa = ms.toArray
-          val apiResult = new ApiResult(ErrorCodeConstants.Success, "GetAllModelDefs", JsonSerializer.SerializeObjectListToJson("Models", msa), ErrorCodeConstants.Get_All_Models_Successful)
-          apiResult.toString()
-      }
-    } catch {
-      case e: Exception => {
-        
-        logger.debug("", e)
-        val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetAllModelDefs", null, "Error :" + e.toString() + ErrorCodeConstants.Get_All_Models_Failed)
-        apiResult.toString()
-      }
-    }
+    ModelUtils.GetAllModelDefs(formatType,userid)
   }
 
     /**
@@ -3738,31 +2353,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @return
      */
   def GetAllModelsFromCache(active: Boolean, userid: Option[String] = None): Array[String] = {
-    var modelList: Array[String] = new Array[String](0)
-    if (userid != None) logAuditRec(userid, Some(AuditConstants.READ), AuditConstants.GETKEYS, AuditConstants.MODEL, AuditConstants.SUCCESS, "", AuditConstants.MODEL)
-    try {
-      val modDefs = MdMgr.GetMdMgr.Models(active, true)
-      modDefs match {
-        case None =>
-          None
-          logger.debug("No Models found ")
-          modelList
-        case Some(ms) =>
-          val msa = ms.toArray
-          val modCount = msa.length
-          modelList = new Array[String](modCount)
-          for (i <- 0 to modCount - 1) {
-            modelList(i) = msa(i).FullName + "." + MdMgr.Pad0s2Version(msa(i).Version)
-          }
-          modelList
-      }
-    } catch {
-      case e: Exception => {
-        
-        logger.debug("", e)
-        throw UnexpectedMetadataAPIException("Failed to fetch all the models:" + e.toString, e)
-      }
-    }
+    ModelUtils.GetAllModelsFromCache(active,userid)
   }
 
     /**
@@ -3831,27 +2422,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @return
      */
   def GetModelDef(nameSpace: String, objectName: String, formatType: String, userid : Option[String]): String = {
-    try {
-      val modDefs = MdMgr.GetMdMgr.Models(nameSpace, objectName, true, true)
-      modDefs match {
-        case None =>
-          None
-          logger.debug("No Models found ")
-          val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetModelDef", null, ErrorCodeConstants.Get_Model_Failed_Not_Available + ":" + nameSpace + "." + objectName)
-          apiResult.toString()
-        case Some(ms) =>
-          val msa = ms.toArray
-          val apiResult = new ApiResult(ErrorCodeConstants.Success, "GetModelDef", JsonSerializer.SerializeObjectListToJson("Models", msa), ErrorCodeConstants.Get_Model_Successful)
-          apiResult.toString()
-      }
-    } catch {
-      case e: Exception => {
-        
-        logger.debug("", e)
-        val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetModelDef", null, "Error :" + e.toString() + ErrorCodeConstants.Get_Model_Failed + ":" + nameSpace + "." + objectName)
-        apiResult.toString()
-      }
-    }
+    ModelUtils.GetModelDef(nameSpace,objectName,formatType,userid)
   }
 
     /**
@@ -3875,30 +2446,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @return
      */
   def GetModelDefFromCache(nameSpace: String, name: String, formatType: String, version: String, userid: Option[String] = None): String = {
-    val dispkey = nameSpace + "." + name + "." + MdMgr.Pad0s2Version(version.toLong)
-    if (userid != None) logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.GETOBJECT, AuditConstants.MODEL, AuditConstants.SUCCESS, "", dispkey)
-    try {
-      var key = nameSpace + "." + name + "." + version.toLong
-      val o = MdMgr.GetMdMgr.Model(nameSpace.toLowerCase, name.toLowerCase, version.toLong, true)
-      o match {
-        case None =>
-          None
-          logger.debug("model not found => " + dispkey)
-          val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetModelDefFromCache", null, ErrorCodeConstants.Get_Model_From_Cache_Failed_Not_Active + ":" + dispkey)
-          apiResult.toString()
-        case Some(m) =>
-          logger.debug("model found => " + m.asInstanceOf[ModelDef].FullName + "." + MdMgr.Pad0s2Version(m.asInstanceOf[ModelDef].Version))
-          val apiResult = new ApiResult(ErrorCodeConstants.Success, "GetModelDefFromCache", JsonSerializer.SerializeObjectToJson(m), ErrorCodeConstants.Get_Model_From_Cache_Successful + ":" + dispkey)
-          apiResult.toString()
-      }
-    } catch {
-      case e: Exception => {
-        
-        logger.debug("", e)
-        val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetModelDefFromCache", null, "Error :" + e.toString() + ErrorCodeConstants.Get_Model_From_Cache_Failed + ":" + dispkey)
-        apiResult.toString()
-      }
-    }
+    ModelUtils.GetModelDefFromCache(nameSpace,name,formatType,version,userid)
   }
 
   // Specific models (format JSON or XML) as an array of strings using modelName(without version) as the key
@@ -3934,30 +2482,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @return
      */
   def GetMessageDefFromCache(nameSpace: String, name: String, formatType: String, version: String, userid: Option[String] = None): String = {
-    val dispkey = nameSpace + "." + name + "." + MdMgr.Pad0s2Version(version.toLong)
-    var key = nameSpace + "." + name + "." + version.toLong
-    if (userid != None) logAuditRec(userid, Some(AuditConstants.GETOBJECT), AuditConstants.GETOBJECT, AuditConstants.MESSAGE, AuditConstants.SUCCESS, "", dispkey)
-    try {
-      val o = MdMgr.GetMdMgr.Message(nameSpace.toLowerCase, name.toLowerCase, version.toLong, true)
-      o match {
-        case None =>
-          None
-          logger.debug("message not found => " + dispkey)
-          val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetMessageDefFromCache", null, ErrorCodeConstants.Get_Message_From_Cache_Failed + ":" + dispkey)
-          apiResult.toString()
-        case Some(m) =>
-          logger.debug("message found => " + m.asInstanceOf[MessageDef].FullName + "." + MdMgr.Pad0s2Version(m.asInstanceOf[MessageDef].Version))
-          val apiResult = new ApiResult(ErrorCodeConstants.Success, "GetMessageDefFromCache", JsonSerializer.SerializeObjectToJson(m), ErrorCodeConstants.Get_Message_From_Cache_Successful)
-          apiResult.toString()
-      }
-    } catch {
-      case e: Exception => {
-        
-        logger.debug("", e)
-        val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetMessageDefFromCache", null, "Error :" + e.toString() + ErrorCodeConstants.Get_Message_From_Cache_Failed + ":" + dispkey)
-        apiResult.toString()
-      }
-    }
+    MessageAndContainerUtils.GetMessageDefFromCache(nameSpace,name,formatType,version,userid)
   }
 
     /**
@@ -3982,29 +2507,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @return
      */
   def DoesModelAlreadyExist(modDef: ModelDef): Boolean = {
-    try {
-      var key = modDef.nameSpace + "." + modDef.name + "." + modDef.ver
-      val dispkey = modDef.nameSpace + "." + modDef.name + "." + MdMgr.Pad0s2Version(modDef.ver)
-      val o = MdMgr.GetMdMgr.Model(modDef.nameSpace.toLowerCase,
-        modDef.name.toLowerCase,
-        modDef.ver,
-        false)
-      o match {
-        case None =>
-          None
-          logger.debug("model not in the cache => " + dispkey)
-          return false;
-        case Some(m) =>
-          logger.debug("model found => " + m.asInstanceOf[ModelDef].FullName + "." + MdMgr.Pad0s2Version(m.asInstanceOf[ModelDef].ver))
-          return true
-      }
-    } catch {
-      case e: Exception => {
-        
-        logger.debug("", e)
-        throw UnexpectedMetadataAPIException(e.getMessage(), e)
-      }
-    }
+    ModelUtils.DoesModelAlreadyExist(modDef)
   }
 
     /**
@@ -4013,30 +2516,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @return
      */
   def GetLatestModel(modDef: ModelDef): Option[ModelDef] = {
-    try {
-      var key = modDef.nameSpace + "." + modDef.name + "." + modDef.ver
-      val dispkey = modDef.nameSpace + "." + modDef.name + "." + MdMgr.Pad0s2Version(modDef.ver)
-      val o = MdMgr.GetMdMgr.Models(modDef.nameSpace.toLowerCase,
-        modDef.name.toLowerCase, false, true)
-      o match {
-        case None =>
-          None
-          logger.debug("model not in the cache => " + dispkey)
-          None
-        case Some(m) =>
-          if (m.size > 0) {
-            logger.debug("model found => " + m.head.asInstanceOf[ModelDef].FullName + "." + MdMgr.Pad0s2Version(m.head.asInstanceOf[ModelDef].ver))
-            Some(m.head.asInstanceOf[ModelDef])
-          } else
-            None
-      }
-    } catch {
-      case e: Exception => {
-        
-        logger.debug("", e)
-        throw UnexpectedMetadataAPIException(e.getMessage(), e)
-      }
-    }
+    ModelUtils.GetLatestModel(modDef)
   }
 
   //
@@ -4046,22 +2526,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @return
      */
   def GetLatestModelFromModels(modelSet: Set[ModelDef]): ModelDef = {
-    var model: ModelDef = null
-    var verList: List[Long] = List[Long]()
-    var modelmap: scala.collection.mutable.Map[Long, ModelDef] = scala.collection.mutable.Map()
-    try {
-      modelSet.foreach(m => {
-        modelmap.put(m.Version, m)
-        verList = m.Version :: verList
-      })
-      model = modelmap.getOrElse(verList.max, null)
-    } catch {
-      case e: Exception => {
-        logger.debug("", e)
-        throw new Exception("Error in traversing Model set", e)
-      }
-    }
-    model
+    ModelUtils.GetLatestModelFromModels(modelSet)
   }
 
     /**
@@ -4178,21 +2643,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @return
      */
   def GetModelDefFromDB(nameSpace: String, objectName: String, formatType: String, version: String, userid: Option[String] = None): String = {
-    var key = "ModelDef" + "." + nameSpace + '.' + objectName + "." + version.toLong
-    val dispkey = "ModelDef" + "." + nameSpace + '.' + objectName + "." + MdMgr.Pad0s2Version(version.toLong)
-    if (userid != None) logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.GETOBJECT, AuditConstants.MODEL, AuditConstants.SUCCESS, "", dispkey)
-    try {
-      var obj = GetObject(key.toLowerCase, "models")
-      var apiResult = new ApiResult(ErrorCodeConstants.Success, "GetModelDefFromCache", new String(obj.serializedInfo), ErrorCodeConstants.Get_Model_From_DB_Successful + ":" + dispkey)
-      apiResult.toString()
-    } catch {
-      case e: Exception => {
-        
-        logger.debug("", e)
-        val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetModelDefFromCache", null, "Error :" + e.toString() + ErrorCodeConstants.Get_Model_From_DB_Failed + ":" + dispkey)
-        apiResult.toString()
-      }
-    }
+    ModelUtils.GetModelDefFromDB(nameSpace,objectName,formatType,version,userid)
   }
 
     /**
@@ -4227,7 +2678,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       val processedContainersSet = Set[String]()
 
       reqTypes.foreach(typ => {
-        val storeInfo = tableStoreMap(typ)
+        val storeInfo = PersistenceUtils.GetTableStoreMap(typ)
 
         if (processedContainersSet(storeInfo._1) == false) {
           processedContainersSet += storeInfo._1
@@ -4295,102 +2746,19 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
   }
 
     /**
-     * LoadAllConfigObjectsIntoCache
-     * @return
-     */
-  def LoadAllConfigObjectsIntoCache: Boolean = {
-    try {
-      var processed: Long = 0L
-      val storeInfo = tableStoreMap("config_objects")
-      storeInfo._2.get(storeInfo._1, { (k: Key, v: Value) =>
-        {
-          val strKey = k.bucketKey.mkString(".")
-          val i = strKey.indexOf(".")
-          val objType = strKey.substring(0, i)
-          val typeName = strKey.substring(i + 1)
-          processed += 1
-          objType match {
-            case "nodeinfo" => {
-              val ni = serializer.DeserializeObjectFromByteArray(v.serializedInfo).asInstanceOf[NodeInfo]
-              MdMgr.GetMdMgr.AddNode(ni)
-            }
-            case "adapterinfo" => {
-              val ai = serializer.DeserializeObjectFromByteArray(v.serializedInfo).asInstanceOf[AdapterInfo]
-              MdMgr.GetMdMgr.AddAdapter(ai)
-            }
-            case "clusterinfo" => {
-              val ci = serializer.DeserializeObjectFromByteArray(v.serializedInfo).asInstanceOf[ClusterInfo]
-              MdMgr.GetMdMgr.AddCluster(ci)
-            }
-            case "clustercfginfo" => {
-              val ci = serializer.DeserializeObjectFromByteArray(v.serializedInfo).asInstanceOf[ClusterCfgInfo]
-              MdMgr.GetMdMgr.AddClusterCfg(ci)
-            }
-            case "userproperties" => {
-              val up = serializer.DeserializeObjectFromByteArray(v.serializedInfo).asInstanceOf[UserPropertiesInfo]
-              MdMgr.GetMdMgr.AddUserProperty(up)
-            }
-            case _ => {
-              throw InternalErrorException("LoadAllConfigObjectsIntoCache: Unknown objectType " + objType, null)
-            }
-          }
-        }
-      })
-
-      if (processed == 0) {
-        logger.debug("No config objects available in the Database")
-        return false
-      }
-
-      return true
-    } catch {
-      case e: Exception => {
-        
-        logger.debug("", e)
-        return false
-      }
-    }
-  }
-
-    /**
-     * LoadAllModelConfigsIntoChache
-     */
-  private def LoadAllModelConfigsIntoCache: Unit = {
-    val maxTranId = GetTranId
-    currentTranLevel = maxTranId
-    logger.debug("Max Transaction Id => " + maxTranId)
-
-    var processed: Long = 0L
-    val storeInfo = tableStoreMap("model_config_objects")
-    storeInfo._2.get(storeInfo._1, { (k: Key, v: Value) =>
-      {
-        processed += 1
-        val conf = serializer.DeserializeObjectFromByteArray(v.serializedInfo).asInstanceOf[Map[String, List[String]]]
-        MdMgr.GetMdMgr.AddModelConfig(k.bucketKey.mkString("."), conf)
-      }
-    })
-
-    if (processed == 0) {
-      logger.debug("No model config objects available in the Database")
-      return
-    }
-    MdMgr.GetMdMgr.DumpModelConfigs
-  }
-
-    /**
      * LoadAllObjectsIntoCache
      */
   def LoadAllObjectsIntoCache {
     try {
-      val configAvailable = LoadAllConfigObjectsIntoCache
+      val configAvailable = ConfigUtils.LoadAllConfigObjectsIntoCache
       if (configAvailable) {
-        RefreshApiConfigForGivenNode(metadataAPIConfig.getProperty("NODE_ID"))
+        ConfigUtils.RefreshApiConfigForGivenNode(metadataAPIConfig.getProperty("NODE_ID"))
       } else {
         logger.debug("Assuming bootstrap... No config objects in persistent store")
       }
 
       // Load All the Model Configs here... 
-      LoadAllModelConfigsIntoCache
+      ConfigUtils.LoadAllModelConfigsIntoCache
       //LoadAllUserPopertiesIntoChache
       startup = true
       val maxTranId = currentTranLevel
@@ -4402,7 +2770,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       var processed: Long = 0L
 
       reqTypes.foreach(typ => {
-        val storeInfo = tableStoreMap(typ)
+        val storeInfo = PersistenceUtils.GetTableStoreMap(typ)
         if (processedContainersSet(storeInfo._1) == false) {
           processedContainersSet += storeInfo._1
           storeInfo._2.get(storeInfo._1, { (k: Key, v: Value) =>
@@ -4455,21 +2823,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
   }
 
   def LoadMessageIntoCache(key: String) {
-    try {
-      logger.debug("Fetch the object " + key + " from database ")
-      val obj = GetObject(key.toLowerCase, "messages")
-      logger.debug("Deserialize the object " + key)
-      val msg = serializer.DeserializeObjectFromByteArray(obj.serializedInfo)
-      logger.debug("Get the jar from database ")
-      val msgDef = msg.asInstanceOf[MessageDef]
-      DownloadJarFromDB(msgDef)
-      logger.debug("Add the object " + key + " to the cache ")
-      AddObjectToCache(msgDef, MdMgr.GetMdMgr)
-    } catch {
-      case e: Exception => {
-        logger.error("Failed to load message into cache " + key, e)
-      }
-    }
+    MessageAndContainerUtils.LoadMessageIntoCache(key)
   }
 
     /**
@@ -4477,21 +2831,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @param key
      */
   def LoadTypeIntoCache(key: String) {
-    try {
-      logger.debug("Fetch the object " + key + " from database ")
-      val obj = GetObject(key.toLowerCase, "types")
-      logger.debug("Deserialize the object " + key)
-      val typ = serializer.DeserializeObjectFromByteArray(obj.serializedInfo)
-      if (typ != null) {
-        logger.debug("Add the object " + key + " to the cache ")
-        AddObjectToCache(typ, MdMgr.GetMdMgr)
-      }
-    } catch {
-      case e: Exception => {
-        
-        logger.warn("Unable to load the object " + key + " into cache ", e)
-      }
-    }
+    TypeUtils.LoadTypeIntoCache(key)
   }
 
     /**
@@ -4499,22 +2839,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @param key
      */
   def LoadModelIntoCache(key: String) {
-    try {
-      logger.debug("Fetch the object " + key + " from database ")
-      val obj = GetObject(key.toLowerCase, "models")
-      logger.debug("Deserialize the object " + key)
-      val model = serializer.DeserializeObjectFromByteArray(obj.serializedInfo)
-      logger.debug("Get the jar from database ")
-      val modDef = model.asInstanceOf[ModelDef]
-      DownloadJarFromDB(modDef)
-      logger.debug("Add the object " + key + " to the cache ")
-      AddObjectToCache(modDef, MdMgr.GetMdMgr)
-    } catch {
-      case e: Exception => {
-        
-        logger.debug("", e)
-      }
-    }
+    ModelUtils.LoadModelIntoCache(key)
   }
 
     /**
@@ -4522,19 +2847,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @param key
      */
   def LoadContainerIntoCache(key: String) {
-    try {
-      val obj = GetObject(key.toLowerCase, "containers")
-      val cont = serializer.DeserializeObjectFromByteArray(obj.serializedInfo)
-      logger.debug("Get the jar from database ")
-      val contDef = cont.asInstanceOf[ContainerDef]
-      DownloadJarFromDB(contDef)
-      AddObjectToCache(contDef, MdMgr.GetMdMgr)
-    } catch {
-      case e: Exception => {
-        
-        logger.debug("", e)
-      }
-    }
+    MessageAndContainerUtils.LoadContainerIntoCache(key)
   }
 
     /**
@@ -4542,16 +2855,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @param key
      */
   def LoadAttributeIntoCache(key: String) {
-    try {
-      val obj = GetObject(key.toLowerCase, "concepts")
-      val cont = serializer.DeserializeObjectFromByteArray(obj.serializedInfo)
-      AddObjectToCache(cont.asInstanceOf[AttributeDef], MdMgr.GetMdMgr)
-    } catch {
-      case e: Exception => {
-        
-        logger.debug("", e)
-      }
-    }
+    ConceptUtils.LoadAttributeIntoCache(key)
   }
 
     /**
@@ -4728,20 +3032,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @param key
      */
   def LoadOutputMsgIntoCache(key: String) {
-    try {
-      logger.debug("Fetch the object " + key + " from database ")
-      val obj = GetObject(key.toLowerCase, "outputmsgs")
-      logger.debug("Deserialize the object " + key)
-      val outputMsg = serializer.DeserializeObjectFromByteArray(obj.serializedInfo)
-      val outputMsgDef = outputMsg.asInstanceOf[OutputMsgDef]
-      logger.debug("Add the output msg def object " + key + " to the cache ")
-      AddObjectToCache(outputMsgDef, MdMgr.GetMdMgr)
-    } catch {
-      case e: Exception => {
-        
-        logger.debug("", e)
-      }
-    }
+    MessageAndContainerUtils.LoadOutputMsgIntoCache(key)
   }
 
     /**

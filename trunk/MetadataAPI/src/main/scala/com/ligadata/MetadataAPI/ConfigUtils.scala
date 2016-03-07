@@ -1458,4 +1458,88 @@ object ConfigUtils {
       }
     }
   }
+
+    /**
+     * LoadAllConfigObjectsIntoCache
+     * @return
+     */
+  def LoadAllConfigObjectsIntoCache: Boolean = {
+    try {
+      var processed: Long = 0L
+      val storeInfo = PersistenceUtils.GetTableStoreMap("config_objects")
+      storeInfo._2.get(storeInfo._1, { (k: Key, v: Value) =>
+        {
+          val strKey = k.bucketKey.mkString(".")
+          val i = strKey.indexOf(".")
+          val objType = strKey.substring(0, i)
+          val typeName = strKey.substring(i + 1)
+          processed += 1
+          objType match {
+            case "nodeinfo" => {
+              val ni = serializer.DeserializeObjectFromByteArray(v.serializedInfo).asInstanceOf[NodeInfo]
+              MdMgr.GetMdMgr.AddNode(ni)
+            }
+            case "adapterinfo" => {
+              val ai = serializer.DeserializeObjectFromByteArray(v.serializedInfo).asInstanceOf[AdapterInfo]
+              MdMgr.GetMdMgr.AddAdapter(ai)
+            }
+            case "clusterinfo" => {
+              val ci = serializer.DeserializeObjectFromByteArray(v.serializedInfo).asInstanceOf[ClusterInfo]
+              MdMgr.GetMdMgr.AddCluster(ci)
+            }
+            case "clustercfginfo" => {
+              val ci = serializer.DeserializeObjectFromByteArray(v.serializedInfo).asInstanceOf[ClusterCfgInfo]
+              MdMgr.GetMdMgr.AddClusterCfg(ci)
+            }
+            case "userproperties" => {
+              val up = serializer.DeserializeObjectFromByteArray(v.serializedInfo).asInstanceOf[UserPropertiesInfo]
+              MdMgr.GetMdMgr.AddUserProperty(up)
+            }
+            case _ => {
+              throw InternalErrorException("LoadAllConfigObjectsIntoCache: Unknown objectType " + objType, null)
+            }
+          }
+        }
+      })
+
+      if (processed == 0) {
+        logger.debug("No config objects available in the Database")
+        return false
+      }
+
+      return true
+    } catch {
+      case e: Exception => {
+        
+        logger.debug("", e)
+        return false
+      }
+    }
+  }
+
+    /**
+     * LoadAllModelConfigsIntoChache
+     */
+  def LoadAllModelConfigsIntoCache: Unit = {
+    val maxTranId = PersistenceUtils.GetTranId
+    MetadataAPIImpl.setCurrentTranLevel(maxTranId)
+    logger.debug("Max Transaction Id => " + maxTranId)
+
+    var processed: Long = 0L
+    val storeInfo = PersistenceUtils.GetTableStoreMap("model_config_objects")
+    storeInfo._2.get(storeInfo._1, { (k: Key, v: Value) =>
+      {
+        processed += 1
+        val conf = serializer.DeserializeObjectFromByteArray(v.serializedInfo).asInstanceOf[Map[String, List[String]]]
+        MdMgr.GetMdMgr.AddModelConfig(k.bucketKey.mkString("."), conf)
+      }
+    })
+
+    if (processed == 0) {
+      logger.debug("No model config objects available in the Database")
+      return
+    }
+    MdMgr.GetMdMgr.DumpModelConfigs
+  }
+
 }

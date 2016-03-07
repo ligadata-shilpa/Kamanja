@@ -35,24 +35,25 @@ object ConfigDefaults {
   private val logger = LogManager.getLogger(loggerName)
 
   private val RootDir = "./MetadataAPI/target/scala-2.11/test-classes/"
+  // private val RootDir = getClass.getResource("/").getPath
   private val targetLibDir = RootDir + "jars/lib/system"
   private val appLibDir = RootDir + "jars/lib/application"
   private val workDir = RootDir + "jars/lib/workingdir"
 
   private def copyFile(sourceFile:File, destFile:File)  {
-    
-    if(!destFile.exists()) {
-        destFile.createNewFile();
+    try{
+      var source:FileChannel = null;
+      var destination:FileChannel = null;
+
+      source = new FileInputStream(sourceFile).getChannel();
+      destination = new FileOutputStream(destFile).getChannel();
+      destination.transferFrom(source, 0, source.size());
+      source.close()
+      destination.close()
     }
-
-    var source:FileChannel = null;
-    var destination:FileChannel = null;
-
-    source = new FileInputStream(sourceFile).getChannel();
-    destination = new FileOutputStream(destFile).getChannel();
-    destination.transferFrom(source, 0, source.size());
-    source.close()
-    destination.close()
+    catch {
+      case e: Exception => throw new Exception("Failed to copy file: " + sourceFile.getName(),e)
+    }
   }
 
   private def createDirectory(dirName:String){
@@ -65,6 +66,7 @@ object ConfigDefaults {
   private def copy(path: File): Unit = {
     if(path.isDirectory ){
       if( path.getPath.contains(targetLibDir) ){
+	logger.info("We don't copy from target directory " + targetLibDir)
 	return
       }
       Option(path.listFiles).map(_.toList).getOrElse(Nil).foreach(f => {
@@ -74,7 +76,11 @@ object ConfigDefaults {
         else if (f.getPath.endsWith(".jar")) {
           try {
 	    logger.info("Copying " + f + "," + "(file size => " + f.length() + ") to " + targetLibDir + "/" + f.getName)
-	    copyFile(f,new File(targetLibDir + "/" + f.getName))
+	    val d = new File(targetLibDir + "/" + f.getName)
+	    if( ! d.exists() ){
+	      d.createNewFile()
+	    }
+	    copyFile(f,d)
           }
           catch {
             case e: Exception => throw new Exception("Failed to copy file: " + f,e)
