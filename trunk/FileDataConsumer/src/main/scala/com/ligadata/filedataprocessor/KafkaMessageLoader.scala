@@ -373,20 +373,19 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
       //Take care of multiple directories
       if (inConfiguration.getOrElse(SmartFileAdapterConstants.DIRECTORY_TO_MOVE_TO, null) != null) {
          logger.info("SMART FILE CONSUMER ("+partIdx+") Moving File" + fileName + " to " + inConfiguration(SmartFileAdapterConstants.DIRECTORY_TO_MOVE_TO))
-        Files.copy(Paths.get(fileName), 
-            Paths.get(inConfiguration(SmartFileAdapterConstants.DIRECTORY_TO_MOVE_TO) + "/" + fileStruct(fileStruct.size - 1)), 
-            REPLACE_EXISTING)
-        Files.deleteIfExists(Paths.get(fileName))
+         
+         Files.move(Paths.get(fileName), Paths.get( inConfiguration(SmartFileAdapterConstants.DIRECTORY_TO_MOVE_TO) + "/" + fileStruct(fileStruct.size - 1)),REPLACE_EXISTING)
+        
       }else{
         logger.info(" SMART FILE CONSUMER ("+partIdx+")  Renaming file " + fileName + " to " + fileName + "_COMPLETE")
         (new File(fileName).renameTo(new File(fileName + "_COMPLETE")))
       }
       
       //Use the full filename 
+      FileProcessor.markFileProcessingEnd(fileName)
       FileProcessor.fileCacheRemove(fileName)
       FileProcessor.removeFromZK(fileName)
-      FileProcessor.markFileProcessingEnd(fileName)
-      
+       
     } catch {
       case ioe: IOException => {
         logger.error("Exception moving the file ",ioe)

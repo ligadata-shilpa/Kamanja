@@ -32,6 +32,10 @@ import java.net.URLDecoder
 import org.apache.tika.Tika
 import net.sf.jmimemagic.Magic
 import net.sf.jmimemagic.MagicMatch
+import net.sf.jmimemagic.MagicParseException
+import net.sf.jmimemagic.MagicMatchNotFoundException
+import net.sf.jmimemagic.MagicException
+
 
 case class BufferLeftoversArea(workerNumber: Int, leftovers: Array[Char], relatedChunk: Int)
 case class BufferToChunk(len: Int, payload: Array[Char], chunkNumber: Int, relatedFileName: String, firstValidOffset: Int, isEof: Boolean, partMap: scala.collection.mutable.Map[Int,Int])
@@ -206,6 +210,7 @@ object FileProcessor {
     dirToWatch = props.getOrElse(SmartFileAdapterConstants.DIRECTORY_TO_WATCH, null)
     targetMoveDir = props.getOrElse(SmartFileAdapterConstants.DIRECTORY_TO_MOVE_TO, null)
     readyToProcessKey = props.getOrElse(SmartFileAdapterConstants.READY_MESSAGE_MASK, ".gzip")
+    
   }
 
   def markFileProcessing (fileName: String, offset: Int, createDate: Long): Unit = {
@@ -405,9 +410,8 @@ object FileProcessor {
                     .filter(!_.getName.startsWith("."))
                     .sortWith(_.lastModified < _.lastModified).toList
       files.foreach(file => {
-        //if (isValidFile(file.toString) && file.toString.endsWith(readyToProcessKey)) {
-        
-        if (!checkIfFileBeingProcessed(file.toString) && FileProcessor.isValidFile(file.toString)) {
+        //Add a sanity check to see if a file exists - rare condition  
+        if (!checkIfFileBeingProcessed(file.toString) && Files.exists(file.toPath()) && FileProcessor.isValidFile(file.toString)) {
           FileProcessor.enQBufferedFile(file.toString)
         }else if(!FileProcessor.isValidFile(file.toString)){
           //Invalid File - Move out file and log error
@@ -426,11 +430,48 @@ object FileProcessor {
       var detector = new DefaultDetector()
       var tika = new Tika(detector)
       var fis = new FileInputStream(new File(fileName))
-      var contentType = tika.detect(fis)
+      var contentType :String = null
+      
+      try{
+        contentType = tika.detect(fis)
+      }catch{
+        case e:IOException =>{
+          logger.warn("SmartFileConsumer - Tika unable to read from InputStream - "+e.getMessage)
+        }
+        case e:Exception =>{
+          logger.warn("SmartFileConsumer - Tika processing generic exception - "+e.getMessage)
+        }
+        case e:Throwable =>{
+          logger.warn("SmartFileConsumer - Tika processing runtime exception - "+e.getMessage)
+        }
+      }
         
-      if(contentType.equalsIgnoreCase("application/octet-stream")){
-		    var magicMatcher =  Magic.getMagicMatch(new File(fileName), false)
-		    contentType = magicMatcher.getMimeType
+      if(contentType!= null && !contentType.isEmpty() && contentType.equalsIgnoreCase("application/octet-stream")){
+		    var magicMatcher : MagicMatch =  null;
+		    
+		    try{
+		      magicMatcher = Magic.getMagicMatch(new File(fileName), false)
+		      if(magicMatcher != null)
+		        contentType = magicMatcher.getMimeType
+		    }catch{
+		      case e:MagicParseException =>{
+		        logger.warn("SmartFileConsumer - MimeMagic caught a parsing exception - "+e.getMessage)
+		      }
+		      case e:MagicMatchNotFoundException =>{
+		        logger.warn("SmartFileConsumer -MimeMagic Mime Not Found -"+e.getMessage)
+		      }
+		      case e:MagicException =>{
+		        logger.warn("SmartFileConsumer - MimeMagic generic exception - "+e.getMessage)
+		      }
+		      case e:Exception =>{
+            logger.warn("SmartFileConsumer - MimeMagic processing generic exception - "+e.getMessage)
+          }
+          case e:Throwable =>{
+            logger.warn("SmartFileConsumer - MimeMagic processing runtime exception - "+e.getMessage)
+          }
+		      
+		    }
+		    
       }
       fis.close()
 
@@ -536,23 +577,22 @@ object FileProcessor {
 
       logger.info("SMART_FILE_CONSUMER partition Initialization complete  Monitoring specified directory for new files")
       // Begin the listening process, TAKE()
-
+      
       breakable {
         while (true) {
-          try {
             //processExistingFiles(d)
             for(dir <- path){
-              processExistingFiles(dir.toFile())
+              try {
+                processExistingFiles(dir.toFile())
+                errorWaitTime = 1000
+              } catch {
+                case e: Exception => {
+                  logger.warn("Unable to access Directory, Retrying after " + errorWaitTime + " seconds", e)
+                  errorWaitTime = scala.math.min((errorWaitTime * 2), FileProcessor.MAX_WAIT_TIME)
+                }
+              }
             }
-            errorWaitTime = 1000
-          } catch {
-            case e: Exception => {
-              logger.warn("Unable to access Directory, Retrying after " + errorWaitTime + " seconds", e)
-              errorWaitTime = scala.math.min((errorWaitTime * 2), FileProcessor.MAX_WAIT_TIME)
-            }
-          }
-          Thread.sleep(FileProcessor.REFRESH_RATE)
-
+            Thread.sleep(FileProcessor.REFRESH_RATE)
         }
       }
     }  catch {
@@ -896,7 +936,7 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
 
       // Try to get a new file to process.
       buffer = deQBuffer(beeNumber)
-
+      
       // If the buffer is there to process, do it
       if (buffer != null) {
         // If the new file being processed,  offsets to messages in this file to 0.
@@ -929,7 +969,7 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
               if (x.asInstanceOf[Char] == message_separator) {
                 var newMsg: Array[Char] = buffer.payload.slice(prevIndx, indx)
                 msgNum += 1
-                logger.debug("SMART_FILE_CONSUMER (" + partitionId + ") Message offset " + msgNum + ", and the buffer offset is " + buffer.firstValidOffset)
+                logger.debug("SMART_FILE_CONSUMER (" + partitionId + ") Message offset " + msgNum + ", and the buffer offset is " + buffer.firstValidOffset )
 
                 // Ok, we could be in recovery, so we have to ignore some messages, but these ignoraable messages must still
                 // appear in the leftover areas
@@ -938,6 +978,7 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
                 prevIndx = indx + 1
               }
               indx = indx + 1
+              
             })
           }
         }
@@ -952,6 +993,7 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
         while (!foundRelatedLeftovers && buffer.chunkNumber != 0) {
           myLeftovers = getLeftovers(beeNumber)
           if (myLeftovers.relatedChunk == (buffer.chunkNumber - 1)) {
+            
             leftOvers = myLeftovers.leftovers
             foundRelatedLeftovers = true
 
@@ -978,7 +1020,9 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
 
         // whatever is left is the leftover we need to pass to another thread.
         indx = scala.math.min(indx, buffer.len)
+        
         if (indx != prevIndx) {
+          
           if (!isEofBuffer) {
             val newFileLeftOvers = BufferLeftoversArea(beeNumber, buffer.payload.slice(prevIndx, indx), buffer.chunkNumber)
             setLeftovers(newFileLeftOvers, beeNumber)
@@ -987,7 +1031,7 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
             setLeftovers(newFileLeftOvers, beeNumber)
           }
 
-        } else {
+        } else{
           val newFileLeftOvers = BufferLeftoversArea(beeNumber, new Array[Char](0), buffer.chunkNumber)
           setLeftovers(newFileLeftOvers, beeNumber)
         }
@@ -1014,8 +1058,6 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
     val fileName = file.name
     val offset = file.offset
     val partMap = file.partMap
-    
-    logger.info("From readBytesChunksFromFile method - Enqueued File - "+fileName)
 
     // Start the worker bees... should only be started the first time..
     if (workerBees == null) {
