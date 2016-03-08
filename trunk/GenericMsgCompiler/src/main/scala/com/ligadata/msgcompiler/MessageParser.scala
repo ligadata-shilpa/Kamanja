@@ -336,7 +336,7 @@ class MessageParser {
 
     try {
       if (key.equals("elements") || key.equals("fields")) {
-       // log.info("Element Map " + message)
+        // log.info("Element Map " + message)
         val (elementlist, messagelist) = getElements(message, key, msgLevel)
         elist = elementlist
         msglist = messagelist
@@ -504,24 +504,30 @@ class MessageParser {
         val fieldtype: Any = field.get("type").get
         if (fieldtype.isInstanceOf[string]) {
           val fieldstr = fieldtype.toString.split("\\.")
-          if ((fieldstr != null) && (fieldstr.size == 2)) {
-            namespace = fieldstr(0).toLowerCase()
-            ttype = fieldtype.asInstanceOf[String].toLowerCase()
-          } else
-            ttype = fieldtype.asInstanceOf[String].toLowerCase()
+          if (fieldstr != null) {
+            if (fieldstr.size == 1) {
+              namespace = "system"
+              ttype = namespace + "." + fieldtype.asInstanceOf[String].toLowerCase()
+            } else if (fieldstr.size == 2) {
+              namespace = fieldstr(0).toLowerCase()
+              ttype = fieldtype.asInstanceOf[String].toLowerCase()
+            } else
+              ttype = fieldtype.asInstanceOf[String].toLowerCase()
+          }
           if (field.contains("collectionType") && (field.get("collectionType").get.isInstanceOf[string])) {
             collectionType = field.get("collectionType").get.asInstanceOf[String].toLowerCase()
           }
+
           if (field.contains("version") && (field.get("version").get.isInstanceOf[string])) {
             fldTypeVer = field.get("version").get.asInstanceOf[String].toLowerCase()
           }
           fld = new Element(namespace, name, ttype, collectionType, key, fldTypeVer, ordinal, null, null, null)
 
         } else if (fieldtype.isInstanceOf[FieldMap]) {
-        //  log.info("Child Container ========== Start ==============  ")
+          //  log.info("Child Container ========== Start ==============  ")
 
           val childFld = fieldtype.asInstanceOf[Map[String, Any]]
-        //  log.info("Child Map ************ " + childFld)
+          //  log.info("Child Map ************ " + childFld)
 
           val field: scala.collection.mutable.Map[String, Any] = scala.collection.mutable.Map[String, Any]()
           childFld.foreach(kv => { field(kv._1.toLowerCase()) = kv._2 })
@@ -595,7 +601,7 @@ class MessageParser {
     val pkg = NameSpace + ".V" + MdMgr.ConvertVersionToLong(msgVersion).toString
     val partitionKeysList = null
     val primaryKeysList = null
-    val physicalName: String =  pkg + "." + Name
+    val physicalName: String = pkg + "." + Name
     val cur_time = System.currentTimeMillis
     val msg = new Message(mtype, NameSpace, Name, physicalName, msgVersion, "Description", Fixed, persistMsg, lbuffer.toList, tdataexists, tdata, null, pkg.trim(), null, null, null, partitionKeysList, primaryKeysList, cur_time, msgLevel, null, null)
 

@@ -3,18 +3,20 @@ package com.ligadata.msgcompiler
 import com.ligadata.Exceptions._;
 import com.ligadata.Exceptions.StackTrace;
 import org.apache.logging.log4j.{ Logger, LogManager }
+import com.ligadata.kamanja.metadata._;
 
 class MessageBuilderGenerator {
 
   val logger = this.getClass.getName
   lazy val log = LogManager.getLogger(logger)
   var msgConstants = new MessageConstants
+  var mappedMsgGenerator = new MappedMsgGenerator()
   val newline: String = "\n"
   val pad1: String = "\t"
   val pad2: String = "\t\t"
   val closeBrace = "}"
 
-  def generatorBuilder(message: Message): String = {
+  def generatorBuilder(message: Message, mdMgr: MdMgr): String = {
     var builderGenerator = new StringBuilder(8 * 1024)
     try {
       builderGenerator = builderGenerator.append(builderClassGen(message) + newline)
@@ -25,7 +27,7 @@ class MessageBuilderGenerator {
       } else if (message.Fixed.equalsIgnoreCase("false")) {
        var fieldIndexMap: Map[String, Int] = msgConstants.getScalarFieldindex(message.Elements)
         builderGenerator = builderGenerator.append(msgConstants.newline + msgConstants.pad1 + msgConstants.fieldsForMappedVar)
-        builderGenerator = builderGenerator.append(getFuncGenerationForMapped(message.Elements))
+        builderGenerator = builderGenerator.append(mappedMsgGenerator.getFuncGenerationForMapped(message.Elements, mdMgr))
         builderGenerator = builderGenerator.append(setFuncGenerationForMapped(message.Elements, fieldIndexMap))
       }
 

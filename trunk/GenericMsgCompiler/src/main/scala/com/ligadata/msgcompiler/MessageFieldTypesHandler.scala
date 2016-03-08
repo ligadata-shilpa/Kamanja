@@ -25,6 +25,7 @@ class MessageFieldTypesHandler {
     message.Elements.foreach(field => {
       //   log.info("fields name " + field.Name)
       //  log.info("fields type " + field.Ttype)
+
       val typ = MdMgr.GetMdMgr.Type(field.Ttype, -1, true) // message.Version.toLong
 
       if (typ.getOrElse("None").equals("None"))
@@ -96,23 +97,24 @@ class MessageFieldTypesHandler {
     val fieldBaseType: BaseTypeDef = field.FldMetaataType
     var types: Array[String] = new Array[String](2);
     val fieldType = fieldBaseType.tType.toString().toLowerCase()
+
     val fieldTypeType = fieldBaseType.tTypeType.toString().toLowerCase()
     var arrayType: ArrayTypeDef = null
     if (fieldBaseType.isInstanceOf[ArrayTypeDef])
       arrayType = fieldBaseType.asInstanceOf[ArrayTypeDef]
 
-   // log.info("fieldTypeType " + fieldTypeType)
-   // log.info("fieldBaseType 1 " + fieldBaseType.tType)
-   // log.info("fieldBaseType 2 " + fieldBaseType.typeString)
-   // log.info("fieldBaseType 3" + fieldBaseType.tTypeType)
+    log.info("fieldTypeType " + fieldTypeType)
+    log.info("fieldBaseType 1 " + fieldBaseType.tType)
+    // log.info("fieldBaseType 2 " + fieldBaseType.typeString)
+    // log.info("fieldBaseType 3" + fieldBaseType.tTypeType)
 
-   // log.info("fieldType " + fieldType)
+    // log.info("fieldType " + fieldType)
 
     fieldTypeType match {
       case "tscalar" => {
         types(0) = fieldBaseType.PhysicalName
         types(1) = fieldBaseType.implementationName
-      //  log.info("fieldBaseType.implementationName    " + fieldBaseType.implementationName)
+        //  log.info("fieldBaseType.implementationName    " + fieldBaseType.implementationName)
 
       }
       case "tcontainer" => {
@@ -137,19 +139,24 @@ class MessageFieldTypesHandler {
             var ctrDef: ContainerDef = mdMgr.Container(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
             types(0) = ctrDef.PhysicalName
             types(1) = ""
-            log.info("#################################" +  ctrDef.PhysicalName);
+            log.info("#################################" + ctrDef.PhysicalName);
+          }
+          case "tmap" => {
+            var maptypeDef: MapTypeDef = null;
+            maptypeDef = fieldBaseType.asInstanceOf[MapTypeDef]
+            types(0) = maptypeDef.typeString
+            types(1) = maptypeDef.keyDef.implementationName
+            log.info("!!!!!!!!!!!!!!!!!!!!!!!!" + types(1) + ".......... " + types(0))
+            log.info("!!!!!!!!!!!!!!!!!!!!!!!!" + maptypeDef.valDef.tType)
           }
           case _ => {
             throw new Exception("This types is not handled at this time ") // BUGBUG - Need to handled other cases
           }
-
         }
-
       }
       case _ => {
         throw new Exception("This types is not handled at this time ") // BUGBUG - Need to handled other cases
       }
-
     }
     return types
   }

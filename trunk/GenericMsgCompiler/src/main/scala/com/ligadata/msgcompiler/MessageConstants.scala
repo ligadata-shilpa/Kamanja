@@ -6,6 +6,8 @@ class MessageConstants {
   val logger = this.getClass.getName
   lazy val log = LogManager.getLogger(logger)
 
+  val primitives = List("string", "int", "boolean", "float", "double", "long", "char");
+
   val newline: String = "\n";
   val pad1: String = "\t";
   val pad2: String = "\t\t";
@@ -13,7 +15,7 @@ class MessageConstants {
   val True: String = "true";
   val False: String = "false";
   val packageStr: String = "package %s; %s";
-  
+
   val messageStr: String = "message";
   val containerStr: String = "container";
   val baseMsgObj: String = "BaseMsgObj";
@@ -127,13 +129,18 @@ import com.ligadata.KamanjaBase.{ BaseMsg, BaseMsgObj, TransformMessage, BaseCon
     for (a <- fields) {
       setFields = setFields + a.FieldTypePhysicalName
     }
+
     var b = 0;
     for (b <- setFields) {
-      if (!b.equalsIgnoreCase("string"))
-        fldsSclarIndex = fldsSclarIndex + ((b, index + 1))
+      if (primitives.contains(b.toLowerCase())) {
+        if (!b.equalsIgnoreCase("string"))
+          fldsSclarIndex = fldsSclarIndex + ((b, index + 1))
+        index = index + 1
+      } else fldsSclarIndex = fldsSclarIndex + ((b, -1))
     }
-    //log.info("fldsSclarIndex  fields " + fldsSclarIndex.toList)
-   // log.info("set fields " + setFields.toList)
+
+    log.info("fldsSclarIndex  fields " + fldsSclarIndex.toList)
+    log.info("set fields " + setFields.toList)
     return fldsSclarIndex
   }
 

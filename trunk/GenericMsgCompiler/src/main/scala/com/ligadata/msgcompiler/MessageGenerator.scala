@@ -60,7 +60,7 @@ class MessageGenerator {
         messageGenerator = messageGenerator.append(getFuncByOffset(message.Elements))
         messageGenerator = messageGenerator.append(setFuncByOffset(message.Elements))
         messageGenerator = messageGenerator.append(builderMethod)
-        messageGenerator = messageGenerator.append(builderGenerator.generatorBuilder(message))
+        messageGenerator = messageGenerator.append(builderGenerator.generatorBuilder(message, mdMgr))
         messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.closeBrace)
 
         messageVerGenerator = messageVerGenerator.append(messageGenerator.toString())
@@ -86,7 +86,7 @@ class MessageGenerator {
         messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + generatePrimaryKeysData(message) + msgConstants.newline)
         messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + generateSchema(message))
         messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + msgConstants.fieldsForMappedVar)
-        messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + mappedMsgGen.keysVarforMapped(message.Elements))
+        messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + mappedMsgGen.keysVarforMapped(message.Elements, fieldIndexMap))
         messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + msgConstants.getByNameFuncForMapped)
         messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + msgConstants.getOrElseFuncForMapped)
         messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + msgConstants.setByNameFuncForMappedMsgs)
@@ -95,9 +95,8 @@ class MessageGenerator {
         messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + msgConstants.CollectionAsArrString)
         messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.pad1 + mappedMsgGen.AddArraysInConstructor(message.Elements))
         messageGenerator = messageGenerator.append(builderMethod)
-        messageGenerator = messageGenerator.append(builderGenerator.generatorBuilder(message))
+        messageGenerator = messageGenerator.append(builderGenerator.generatorBuilder(message, mdMgr))
         messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.closeBrace)
-
         messageVerGenerator = messageVerGenerator.append(messageGenerator.toString())
         messageNonVerGenerator = messageNonVerGenerator.append(messageGenerator.toString())
 
@@ -355,14 +354,8 @@ class MessageGenerator {
   private def getWithReflection(key: String): Any = null
   override def AddMessage(childPath: Array[(String, String)], msg: BaseMsg): Unit = {}
   override def GetMessage(childPath: Array[(String, String)], primaryKey: Array[String]): com.ligadata.KamanjaBase.BaseMsg = null
-  def populate(inputdata: InputData) = {}
-  private def populateCSV(inputdata: DelimitedData): Unit = {}
-  private def populateJson(json: JsonData): Unit = {}
-  private def assignJsonData(json: JsonData): Unit = {}
-  private def populateXml(xmlData: XmlData): Unit = {}
   override def Serialize(dos: DataOutputStream): Unit = {}
   override def Deserialize(dis: DataInputStream, mdResolver: MdBaseResolveInfo, loader: java.lang.ClassLoader, savedDataVersion: String): Unit = {}
-  def ConvertPrevToNewVerObj(obj: Any): Unit = {}
   override def getNativeKeyValues(): scala.collection.immutable.Map[String, (String, Any)] = null
  
   
