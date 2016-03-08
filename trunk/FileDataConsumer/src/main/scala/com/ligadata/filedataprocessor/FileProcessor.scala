@@ -94,6 +94,7 @@ object FileProcessor {
   val BUFFERING_FAILED = 4
   var bufferTimeout: Int = 300000  // Default to 5 minutes
   var maxTimeFileAllowedToLive: Int = 3000  // default to 50 minutes.. will be multiplied by 1000 later
+  var refreshRate: Int = 2000 //Refresh rate for monitorBufferingFiles and runFileWatcher methods
   var maxBufferErrors = 5
 
   val HEALTHCHECK_TIMEOUT = 30000
@@ -215,6 +216,7 @@ object FileProcessor {
     targetMoveDir = props.getOrElse(SmartFileAdapterConstants.DIRECTORY_TO_MOVE_TO, null)
     readyToProcessKey = props.getOrElse(SmartFileAdapterConstants.READY_MESSAGE_MASK, ".gzip")
     maxTimeFileAllowedToLive = (1000 * props.getOrElse(SmartFileAdapterConstants.MAX_TIME_ALLOWED_TO_BUFFER, "3000").toInt)
+    refreshRate = props.getOrElse(SmartFileAdapterConstants.REFRESH_RATE, "2000").toInt
   }
 
   def markFileProcessing (fileName: String, offset: Int, createDate: Long): Unit = {
@@ -351,16 +353,20 @@ object FileProcessor {
       bufferingQLock.synchronized {
         val iter = bufferingQ_map.iterator
         iter.foreach(fileTuple => {
-          var thisFileFailures: Int = 0
-          var thisFileStarttime: Long = 0
-          var thisFileOrigLength:Long = 0
+          
+          //TODO C&S - changes
+          var thisFileFailures: Int = fileTuple._2._3
+          var thisFileStarttime: Long = fileTuple._2._2
+          var thisFileOrigLength:Long = fileTuple._2._1
+          
+          
           try {
             val d = new File(fileTuple._1)
 
             // If the filesystem is accessible
             if (d.exists) {
-              thisFileFailures = fileTuple._2._3  // Third parm is the number of failures
-              thisFileStarttime = fileTuple._2._2 // Second is the startup time
+              
+              //TODO C&S - Changes
               thisFileOrigLength = d.length
 
               // If file hasn't grown in the past 2 seconds - either a delay OR a completed transfer.
@@ -434,7 +440,8 @@ object FileProcessor {
         })
       }
       // Give all the files a 1 second to add a few bytes to the contents
-      Thread.sleep(2000)
+      //TODO C&S - make it to parameter
+      Thread.sleep(refreshRate)
     }
   }
 
@@ -617,7 +624,9 @@ object FileProcessor {
       }
 
       logger.info("SMART FILE CONSUMER (global): Consumer Continuing Startup process, checking for existing files")
-      //processExistingFiles(d)
+      
+      //TODO C&S- No need to process here just before entering the loop
+      //If need is to exit, do a shutdown on error
       for(dir <- path)
         processExistingFiles(dir.toFile())
       
@@ -639,7 +648,8 @@ object FileProcessor {
                 }
               }
             }
-            Thread.sleep(FileProcessor.REFRESH_RATE)
+            //TODO C&S - Need to parameterize
+            Thread.sleep(refreshRate)
         }
       }
     }  catch {
