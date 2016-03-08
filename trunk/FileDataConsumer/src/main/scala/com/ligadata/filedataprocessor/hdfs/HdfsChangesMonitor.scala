@@ -54,8 +54,8 @@ class HdfsFileHandler extends FileHandler{
 
     fileFullPath = fullPath
     hdfsConnectionConfig = config
-
     hdfsConfig = getHdfsConfig
+    hdFileSystem = FileSystem.newInstance(hdfsConfig)
   }
 
   def getHdfsConfig : Configuration = {
@@ -76,8 +76,8 @@ class HdfsFileHandler extends FileHandler{
   @throws(classOf[IOException])
   def openForRead(): Unit = {
     val compressed = isCompressed
-    hdFileSystem = FileSystem.get(getHdfsConfig)
     val inFile : Path = new Path(fullPath)
+    hdFileSystem = FileSystem.newInstance(getHdfsConfig)
     in = hdFileSystem.open(inFile)
 
     if(compressed)
@@ -87,24 +87,37 @@ class HdfsFileHandler extends FileHandler{
   @throws(classOf[IOException])
   def read(buf : Array[Byte], length : Int) : Int = {
 
-    if (in == null)
-      return -1
-    in.read(buf, 0, length)
+    try {
+      logger.debug("Reading from hdfs file " + fileFullPath)
+
+      if (in == null)
+        return -1
+      val readLength = in.read(buf, 0, length)
+      logger.debug("readLength= " + readLength)
+      readLength
+    }
+    catch{
+      case e : Exception => {
+        logger.warn("Error while reading from hdfs file [" + fileFullPath + "]",e)
+        throw e
+      }
+    }
   }
 
   @throws(classOf[IOException])
   def moveTo(newFilePath : String) : Boolean = {
-      if(fullPath.equals(newFilePath)){
+     if(fullPath.equals(newFilePath)){
       logger.warn(s"Trying to move file ($fullPath) but source and destination are the same")
       return false
-    }
+     }
+
      try {
        hdFileSystem = FileSystem.get(hdfsConfig)
        val srcPath = new Path(fullPath)
        val destPath = new Path(newFilePath)
        
         if (hdFileSystem.exists(srcPath)) {
-            hdFileSystem.rename(srcPath, destPath)
+          hdFileSystem.rename(srcPath, destPath)
             logger.info("Move remote file success")
             fileFullPath = newFilePath
             return true
@@ -118,8 +131,7 @@ class HdfsFileHandler extends FileHandler{
        case ex : Exception => ex.printStackTrace()
         return false
      } finally {
-       if(hdFileSystem!=null)
-    	   hdFileSystem.close()
+
      }
   }
   
@@ -140,8 +152,7 @@ class HdfsFileHandler extends FileHandler{
        }
         
      } finally {
-       if(hdFileSystem!=null)
-    	   hdFileSystem.close()
+
      }
   }
 
@@ -149,12 +160,15 @@ class HdfsFileHandler extends FileHandler{
   def close(): Unit = {
     if(in != null)
       in.close()
-    if(hdFileSystem != null)
+    if(hdFileSystem != null) {
+      logger.debug("Closing Hd File System object hdFileSystem")
       hdFileSystem.close()
+    }
   }
 
   @throws(classOf[IOException])
   def length : Long = {
+
     try {
       hdFileSystem = FileSystem.get(hdfsConfig)
       hdFileSystem.getFileStatus(new Path(fullPath)).getLen
@@ -166,13 +180,12 @@ class HdfsFileHandler extends FileHandler{
       }
 
     } finally {
-      if(hdFileSystem!=null)
-        hdFileSystem.close()
     }
   }
 
   @throws(classOf[IOException])
   def lastModified : Long = {
+
     try {
       hdFileSystem = FileSystem.get(hdfsConfig)
       hdFileSystem.getFileStatus(new Path(fullPath)).getModificationTime
@@ -184,27 +197,17 @@ class HdfsFileHandler extends FileHandler{
       }
 
     } finally {
-      if(hdFileSystem!=null)
-        hdFileSystem.close()
     }
   }
 
   private def isCompressed : Boolean = {
 
-    val tempHdFileSystem =
-      try {
-        FileSystem.get(hdfsConfig)
-      }
-      catch {
-        case e: Exception =>
-          logger.error(e)
-          null
-      }
+     hdFileSystem = FileSystem.get(hdfsConfig)
 
       val tempInputStream : FSDataInputStream =
         try {
           val inFile : Path = new Path(fullPath)
-          tempHdFileSystem.open(inFile)
+          hdFileSystem.open(inFile)
         }
         catch {
           case e: Exception =>
@@ -216,8 +219,7 @@ class HdfsFileHandler extends FileHandler{
         if (tempInputStream != null) {
           tempInputStream.close()
         }
-        if(tempHdFileSystem != null)
-          tempHdFileSystem.close()
+
       }
       catch{case e : Exception => {logger.error(e)}
       }
@@ -288,7 +290,9 @@ class HdfsChangesMonitor (val hdfsConnectionConfig : HdfsConnectionConfig, val w
           modifiedDirs.remove(0)
           val fs = FileSystem.get(hdfsConfig)
           findDirModifiedDirectChilds(aFolder , fs , filesStatusMap, modifiedDirs, modifiedFiles, firstCheck)
-          fs.close()
+
+          //logger.debug("Closing Hd File System object fs in monitorDirChanges()")
+          //fs.close()
 
           if(modifiedFiles.nonEmpty)
             modifiedFiles.foreach(tuple =>
