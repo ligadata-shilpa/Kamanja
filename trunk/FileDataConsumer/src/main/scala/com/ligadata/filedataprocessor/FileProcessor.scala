@@ -114,6 +114,27 @@ object FileProcessor {
   private val bufferingQLock = new Object
   private val zkRecoveryLock = new Object
 
+
+  //----------------------------------------
+  //----------------------------------------
+  //----STRESS TEST CODE            --------
+  //----------------------------------------
+  //----------------------------------------
+
+  def injectException(i: String): Unit = {
+    val r = scala.util.Random
+    var rnum = scala.math.abs(r.nextInt(100))
+
+    println(" called by "+i + " result is " + rnum)
+    if (rnum > 10) {
+      println("injecting exception... in the " + i + " code --->" + rnum)
+      throw new IOException ("INJECTED IO Exception ")
+    }
+  }
+  //-----------------------------------------
+
+
+
   /**
    *
    */
@@ -346,6 +367,7 @@ object FileProcessor {
   private def monitorBufferingFiles: Unit = {
     // This guys will keep track of when to exgernalize a WARNING Message.  Since this loop really runs every second,
     // we want to throttle the warning messages.
+    maxTimeFileAllowedToLive = 10000
     var specialWarnCounter: Int = 1
     while (true) {
       // Scan all the files that we are buffering, if there is not difference in their file size.. move them onto
@@ -368,11 +390,11 @@ object FileProcessor {
               
               //TODO C&S - Changes
               thisFileOrigLength = d.length
-
               // If file hasn't grown in the past 2 seconds - either a delay OR a completed transfer.
               if (fileTuple._2._1 == thisFileOrigLength) {
                 // If the length is > 0, we assume that the file completed transfer... (very problematic, but unless
                 // told otherwise by BofA, not sure what else we can do here.
+                println("1A  - " + d.toString)
                 if (thisFileOrigLength > 0 && FileProcessor.isValidFile(fileTuple._1)) {
                   logger.info("SMART FILE CONSUMER (global):  File READY TO PROCESS " + d.toString)
                   enQFile(fileTuple._1, FileProcessor.NOT_RECOVERY_SITUATION, d.lastModified)
@@ -394,6 +416,7 @@ object FileProcessor {
                   }
                 }
               } else {
+                println("1B")
                 bufferingQ_map(fileTuple._1) = (thisFileOrigLength, thisFileStarttime, thisFileFailures)
               }
             } else {
@@ -402,9 +425,10 @@ object FileProcessor {
             }
           } catch {
             case ioe: IOException => {
+              println(" IOEXCEPTION !!!!")
               thisFileFailures += 1
               if ((System.currentTimeMillis - thisFileStarttime) > maxTimeFileAllowedToLive && thisFileFailures > maxBufferErrors) {
-                logger.warn("SMART FILE CONSUMER (global): Detected that a stuck file " + fileTuple._1 + " on the buffering queue",ioe )
+                logger.error("SMART FILE CONSUMER (global): Detected that a stuck file " + fileTuple._1 + " on the buffering queue",ioe )
                 try {
                   moveFile(fileTuple._1)
                   bufferingQ_map.remove(fileTuple._1)
@@ -414,11 +438,13 @@ object FileProcessor {
                   }
                 }
               } else {
+                println("Rescheduling the file IOE " + thisFileFailures)
                 bufferingQ_map(fileTuple._1) = (thisFileOrigLength, thisFileStarttime, thisFileFailures)
-                logger.warn("SMART_FILE_CONSUMER: IOException trying to monitor the buffering queue ",ioe)
+                logger.error("SMART_FILE_CONSUMER: IOException trying to monitor the buffering queue ",ioe)
               }
             }
             case e: Throwable => {
+              println(" THROWABLE !!!!!")
               thisFileFailures +=1
               if ((System.currentTimeMillis - thisFileStarttime) > maxTimeFileAllowedToLive && thisFileFailures > maxBufferErrors) {
                 logger.error("SMART FILE CONSUMER (global): Detected that a stuck file " + fileTuple._1 + " on the buffering queue", e)
@@ -431,6 +457,7 @@ object FileProcessor {
                   }
                 }
               } else {
+                println("Rescheduling the file T "  + thisFileFailures)
                 bufferingQ_map(fileTuple._1) = (thisFileOrigLength, thisFileStarttime, thisFileFailures)
                 logger.error("SMART_FILE_CONSUMER: IOException trying to monitor the buffering queue ",e)
               }
@@ -462,6 +489,7 @@ object FileProcessor {
             logger.warn("SMART FILE CONSUMER (global): " + file.toString() + " does not exist in the  " + d.toString )
             break
           }
+          injectException("processExistingFiles")
           if (!checkIfFileBeingProcessed(file.toString)) {
             FileProcessor.enQBufferedFile(file.toString)
           }
@@ -471,8 +499,11 @@ object FileProcessor {
   }
   
   private def isValidFile(fileName: String): Boolean = {
+
+   // injectException("isValidFile")
+
     //Check if the File exists
-    if(Files.exists(Paths.get(fileName)) && (Paths.get(fileName).toFile().length()>0)) {
+    if(Files.exists(Paths.get(fileName)) && (Paths.get(fileName).toFile().length() > 0)) {
       //Sniff only text/plain and application/gzip for now
       var detector = new DefaultDetector()
       var tika = new Tika(detector)
@@ -627,11 +658,11 @@ object FileProcessor {
       
       //TODO C&S- No need to process here just before entering the loop
       //If need is to exit, do a shutdown on error
-      for(dir <- path)
-        processExistingFiles(dir.toFile())
+    //  for(dir <- path)
+    //    processExistingFiles(dir.toFile())
       
 
-      logger.info("SMART_FILE_CONSUMER partition Initialization complete  Monitoring specified directory for new files")
+    //  logger.info("SMART_FILE_CONSUMER partition Initialization complete  Monitoring specified directory for new files")
       // Begin the listening process, TAKE()
       
       breakable {
@@ -643,7 +674,7 @@ object FileProcessor {
                 errorWaitTime = 1000
               } catch {
                 case e: Exception => {
-                  logger.warn("Unable to access Directory, Retrying after " + errorWaitTime + " seconds", e)
+                  logger.error("Unable to access Directory, Retrying after " + errorWaitTime + " seconds", e)
                   errorWaitTime = scala.math.min((errorWaitTime * 2), FileProcessor.MAX_WAIT_TIME)
                 }
               }
@@ -782,6 +813,7 @@ object FileProcessor {
 
   private def moveFile(fileName: String): Unit = {
     val fileStruct = fileName.split("/")
+    injectException("moveFile")
     logger.info("SMART FILE CONSUMER Moving File" + fileName+ " to " + targetMoveDir)
     if (Paths.get(fileName).toFile().exists()) {
       Files.move(Paths.get(fileName), Paths.get(targetMoveDir + "/" + fileStruct(fileStruct.size - 1)),REPLACE_EXISTING)
@@ -1325,6 +1357,7 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
   private def isCompressed(inputfile: String): Boolean = {
     var is: FileInputStream = null
     try {
+      FileProcessor.injectException("isCompressed")
       is = new FileInputStream(inputfile)
     } catch {
       case fnfe: FileNotFoundException => {

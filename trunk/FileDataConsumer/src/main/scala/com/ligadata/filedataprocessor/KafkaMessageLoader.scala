@@ -369,7 +369,8 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
       // Either move or rename the file.
       
       val fileStruct = fileName.split("/")
-      
+
+      FileProcessor.injectException("CloseOutFile")
       //Take care of multiple directories
       logger.info("SMART FILE CONSUMER ("+partIdx+") Moving File" + fileName + " to " + inConfiguration(SmartFileAdapterConstants.DIRECTORY_TO_MOVE_TO))
       Files.move(Paths.get(fileName), Paths.get( inConfiguration(SmartFileAdapterConstants.DIRECTORY_TO_MOVE_TO) + "/" + fileStruct(fileStruct.size - 1)),REPLACE_EXISTING)
