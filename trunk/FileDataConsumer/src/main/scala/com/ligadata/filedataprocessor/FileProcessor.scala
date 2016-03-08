@@ -93,6 +93,8 @@ object FileProcessor {
   val FINISHED_FAILED_TO_COPY = 3
   val BUFFERING_FAILED = 4
   var bufferTimeout: Int = 300000  // Default to 5 minutes
+  var maxTimeFileAllowedToLive: Int = 3000  // default to 50 minutes.. will be multiplied by 1000 later
+  var maxBufferErrors = 5
 
   val HEALTHCHECK_TIMEOUT = 30000
   val maxRetry = 3
@@ -107,7 +109,7 @@ object FileProcessor {
   // READY TO PROCESS FILE QUEUES
   private var fileQ: scala.collection.mutable.PriorityQueue[EnqueuedFile] = new scala.collection.mutable.PriorityQueue[EnqueuedFile]()(Ordering.by(OldestFile))
   private val fileQLock = new Object
-  private val bufferingQ_map: scala.collection.mutable.Map[String, Long] = scala.collection.mutable.Map[String, Long]()
+  private val bufferingQ_map: scala.collection.mutable.Map[String, (Long, Long, Int)] = scala.collection.mutable.Map[String, (Long, Long, Int)]()
   private val bufferingQLock = new Object
   private val zkRecoveryLock = new Object
 
@@ -123,10 +125,11 @@ object FileProcessor {
       return CreateClient.createSimple(zkcConnectString)
     } catch {
       case e: Exception => {
-        logger.error("SMART FILE CONSUMRE (global): unable to connect to zookeeper using " + zkcConnectString, e )
+        logger.error("SMART FILE CONSUMER (global): unable to connect to zookeeper using " + zkcConnectString, e )
         throw new Exception("Failed to start a zookeeper session with(" + zkcConnectString + "): " + e.getMessage())
       }
-    }}
+    }
+  }
 
   //
   def addToZK (fileName: String, offset: Int, partitions: scala.collection.mutable.Map[Int,Int] = null) : Unit = {
@@ -211,7 +214,7 @@ object FileProcessor {
     dirToWatch = props.getOrElse(SmartFileAdapterConstants.DIRECTORY_TO_WATCH, null)
     targetMoveDir = props.getOrElse(SmartFileAdapterConstants.DIRECTORY_TO_MOVE_TO, null)
     readyToProcessKey = props.getOrElse(SmartFileAdapterConstants.READY_MESSAGE_MASK, ".gzip")
-    
+    maxTimeFileAllowedToLive = (1000 * props.getOrElse(SmartFileAdapterConstants.MAX_TIME_ALLOWED_TO_BUFFER, "3000").toInt)
   }
 
   def markFileProcessing (fileName: String, offset: Int, createDate: Long): Unit = {
@@ -330,7 +333,7 @@ object FileProcessor {
 
   private def enQBufferedFile(file: String): Unit = {
     bufferingQLock.synchronized {
-      bufferingQ_map(file) = new File(file).length
+      bufferingQ_map(file) = (0L, System.currentTimeMillis(),0) // Initially, always set to 0.. this way we will ensure that it has time to be processed
     }
   }
 
@@ -348,52 +351,81 @@ object FileProcessor {
       bufferingQLock.synchronized {
         val iter = bufferingQ_map.iterator
         iter.foreach(fileTuple => {
+          var thisFileFailures: Int = 0
+          var thisFileStarttime: Long = 0
+          var thisFileOrigLength:Long = 0
           try {
             val d = new File(fileTuple._1)
 
             // If the filesystem is accessible
             if (d.exists) {
+              thisFileFailures = fileTuple._2._3  // Third parm is the number of failures
+              thisFileStarttime = fileTuple._2._2 // Second is the startup time
+              thisFileOrigLength = d.length
+
               // If file hasn't grown in the past 2 seconds - either a delay OR a completed transfer.
-              if (fileTuple._2 == d.length) {
+              if (fileTuple._2._1 == thisFileOrigLength) {
                 // If the length is > 0, we assume that the file completed transfer... (very problematic, but unless
                 // told otherwise by BofA, not sure what else we can do here.
-                if (d.length > 0 && FileProcessor.isValidFile(fileTuple._1)) {
+                if (thisFileOrigLength > 0 && FileProcessor.isValidFile(fileTuple._1)) {
                   logger.info("SMART FILE CONSUMER (global):  File READY TO PROCESS " + d.toString)
                   enQFile(fileTuple._1, FileProcessor.NOT_RECOVERY_SITUATION, d.lastModified)
                   bufferingQ_map.remove(fileTuple._1)
-                } else
+                } else {
                   // Here becayse either the file is sitll of len 0,or its deemed to be invalid.
-                  if(d.length == 0){
+                  if(thisFileOrigLength == 0) {
                     val diff = System.currentTimeMillis - d.lastModified
                     if (diff > bufferTimeout) {
                       logger.warn("SMART FILE CONSUMER (global): Detected that " + d.toString + " has been on the buffering queue longer then " + bufferTimeout / 1000 + " seconds - Cleaning up" )
-                      bufferingQ_map.remove(fileTuple._1)
-                      fileCacheRemove(fileTuple._1)
                       moveFile(fileTuple._1)
+                      bufferingQ_map.remove(fileTuple._1)
                     }
                   } else {
                     //Invalid File - due to content type
                     logger.error("SMART FILE CONSUMER (global): Moving out " + fileTuple._1 + " with invalid file type " )
-                    bufferingQ_map.remove(fileTuple._1)
-                    fileCacheRemove(fileTuple._1)
                     moveFile(fileTuple._1)
+                    bufferingQ_map.remove(fileTuple._1)
                   }
+                }
               } else {
-                bufferingQ_map(fileTuple._1) = d.length
+                bufferingQ_map(fileTuple._1) = (thisFileOrigLength, thisFileStarttime, thisFileFailures)
               }
-              
             } else {
                // File System is not accessible.. issue a warning and go on to the next file.
               logger.warn("SMART FILE CONSUMER (global): File on the buffering Q is not found " + fileTuple._1)
             }
-            
-            
           } catch {
             case ioe: IOException => {
-              logger.warn("SMART_FILE_CONSUMER: IOException trying to monitor the buffering queue ",ioe)
+              thisFileFailures += 1
+              if ((System.currentTimeMillis() - thisFileStarttime) > maxTimeFileAllowedToLive && thisFileFailures > maxBufferErrors) {
+                logger.warn("SMART FILE CONSUMER (global): Detected that a stuck file " + fileTuple._1 + " on the buffering queue",ioe )
+                try {
+                  moveFile(fileTuple._1)
+                  bufferingQ_map.remove(fileTuple._1)
+                } catch {
+                  case e: Throwable => logger.error("SMART_FILE_CONSUMER: Failed to move file, retyring", e)
+                }
+              } else {
+                bufferingQ_map(fileTuple._1) = (thisFileOrigLength, thisFileStarttime, thisFileFailures)
+                logger.warn("SMART_FILE_CONSUMER: IOException trying to monitor the buffering queue ",ioe)
+              }
             }
             case e: Throwable => {
-              logger.error("SMART_FILE_CONSUMER: IOException trying to monitor the buffering queue ",e)
+              thisFileFailures +=1
+              if ((System.currentTimeMillis() - thisFileStarttime) > maxTimeFileAllowedToLive && thisFileFailures > maxBufferErrors) {
+                logger.error("SMART FILE CONSUMER (global): Detected that a stuck file " + fileTuple._1 + " on the buffering queue", e)
+                try {
+                  moveFile(fileTuple._1)
+                  bufferingQ_map.remove(fileTuple._1)
+                } catch {
+                  case e: Throwable => {
+                    logger.error("SMART_FILE_CONSUMER: Failed to move file, retyring", e)
+                  }
+                }
+              } else {
+                bufferingQ_map(fileTuple._1) = (thisFileOrigLength, thisFileStarttime, thisFileFailures)
+                logger.error("SMART_FILE_CONSUMER: IOException trying to monitor the buffering queue ",e)
+              }
             }
           }
 
@@ -728,7 +760,6 @@ object FileProcessor {
       // Either move or rename the file.
       moveFile(fileName)
       markFileProcessingEnd(fileName)
-      fileCacheRemove(fileName)
       removeFromZK(fileName)
     } catch {
       case ioe: IOException => {
@@ -744,6 +775,7 @@ object FileProcessor {
     logger.info("SMART FILE CONSUMER Moving File" + fileName+ " to " + targetMoveDir)
     if (Paths.get(fileName).toFile().exists()) {
       Files.move(Paths.get(fileName), Paths.get(targetMoveDir + "/" + fileStruct(fileStruct.size - 1)),REPLACE_EXISTING)
+      fileCacheRemove(fileName)
     } else {
       logger.warn("SMART FILE CONSUMER File has been deleted" + fileName);
     }

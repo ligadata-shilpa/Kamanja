@@ -28,6 +28,7 @@ object SmartFileAdapterConstants {
   val ZOOKEEPER_IGNORE = "ignore_zookeeper"
   val MAX_MEM = "maxAllowedMemory"
   val THROTTLE_TIME = "throttle_ms"
+  val MAX_TIME_ALLOWED_TO_BUFFER = "maxTimeFileIsAllowedToBuffer"
 
   val KAFKA_LOAD_STATUS = "Kafka_Load_Result,"
   val TOTAL_FILE_STATUS = "File_Total_Result,"
