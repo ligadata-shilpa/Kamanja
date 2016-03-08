@@ -374,7 +374,7 @@ object FileProcessor {
                 } else {
                   // Here becayse either the file is sitll of len 0,or its deemed to be invalid.
                   if(thisFileOrigLength == 0) {
-                    val diff = System.currentTimeMillis - d.lastModified
+                    val diff = System.currentTimeMillis -  thisFileStarttime  //d.lastModified
                     if (diff > bufferTimeout) {
                       logger.warn("SMART FILE CONSUMER (global): Detected that " + d.toString + " has been on the buffering queue longer then " + bufferTimeout / 1000 + " seconds - Cleaning up" )
                       moveFile(fileTuple._1)
@@ -397,13 +397,15 @@ object FileProcessor {
           } catch {
             case ioe: IOException => {
               thisFileFailures += 1
-              if ((System.currentTimeMillis() - thisFileStarttime) > maxTimeFileAllowedToLive && thisFileFailures > maxBufferErrors) {
+              if ((System.currentTimeMillis - thisFileStarttime) > maxTimeFileAllowedToLive && thisFileFailures > maxBufferErrors) {
                 logger.warn("SMART FILE CONSUMER (global): Detected that a stuck file " + fileTuple._1 + " on the buffering queue",ioe )
                 try {
                   moveFile(fileTuple._1)
                   bufferingQ_map.remove(fileTuple._1)
                 } catch {
-                  case e: Throwable => logger.error("SMART_FILE_CONSUMER: Failed to move file, retyring", e)
+                  case e: Throwable => {
+                    logger.error("SMART_FILE_CONSUMER: Failed to move file, retyring", e)
+                  }
                 }
               } else {
                 bufferingQ_map(fileTuple._1) = (thisFileOrigLength, thisFileStarttime, thisFileFailures)
@@ -412,7 +414,7 @@ object FileProcessor {
             }
             case e: Throwable => {
               thisFileFailures +=1
-              if ((System.currentTimeMillis() - thisFileStarttime) > maxTimeFileAllowedToLive && thisFileFailures > maxBufferErrors) {
+              if ((System.currentTimeMillis - thisFileStarttime) > maxTimeFileAllowedToLive && thisFileFailures > maxBufferErrors) {
                 logger.error("SMART FILE CONSUMER (global): Detected that a stuck file " + fileTuple._1 + " on the buffering queue", e)
                 try {
                   moveFile(fileTuple._1)
@@ -462,7 +464,6 @@ object FileProcessor {
   }
   
   private def isValidFile(fileName: String): Boolean = {
-
     //Check if the File exists
     if(Files.exists(Paths.get(fileName)) && (Paths.get(fileName).toFile().length()>0)) {
       //Sniff only text/plain and application/gzip for now
@@ -536,7 +537,6 @@ object FileProcessor {
     } else if (Paths.get(fileName).toFile().length() == 0 ){
       return true
     }
-
     return false
   }
 
@@ -715,7 +715,7 @@ object FileProcessor {
           failedFiles.foreach(file => FileProcessor.enQFile(file._1, file._2.asInstanceOf[FileStatus].offset.asInstanceOf[Int], FileProcessor.RECOVERY_DUMMY_START_TIME))
 
           val unmovedFiles = getFailedFiles(FINISHED_FAILED_TO_COPY)
-          unmovedFiles.foreach(file => completeFile(file._1))
+          unmovedFiles.foreach(file => {completeFile(file._1)})
         }
       } else {
         if (!isWatchedFileSystemAccesible) {
