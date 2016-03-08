@@ -34,11 +34,14 @@ object ConfigDefaults {
   private val loggerName = this.getClass.getName
   private val logger = LogManager.getLogger(loggerName)
 
-  private val RootDir = "./MetadataAPI/target/scala-2.11/test-classes/"
-  // private val RootDir = getClass.getResource("/").getPath
+  //private val RootDir = "./MetadataAPI/target/scala-2.11/test-classes/"
+
+  private val RootDir = getClass.getResource("/").getPath
   private val targetLibDir = RootDir + "jars/lib/system"
   private val appLibDir = RootDir + "jars/lib/application"
   private val workDir = RootDir + "jars/lib/workingdir"
+
+  private val IgnoreDir = "MetadataAPI/target"
 
   private def copyFile(sourceFile:File, destFile:File)  {
     try{
@@ -65,8 +68,8 @@ object ConfigDefaults {
 
   private def copy(path: File): Unit = {
     if(path.isDirectory ){
-      if( path.getPath.contains(targetLibDir) ){
-	logger.info("We don't copy from target directory " + targetLibDir)
+      if( path.getPath.contains(IgnoreDir) ){
+	//logger.debug("We don't copy any files from directory that contains " + IgnoreDir)
 	return
       }
       Option(path.listFiles).map(_.toList).getOrElse(Nil).foreach(f => {
