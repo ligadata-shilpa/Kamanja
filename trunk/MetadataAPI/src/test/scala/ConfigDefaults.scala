@@ -42,11 +42,6 @@ object ConfigDefaults {
   private val appLibDir = RootDir + "/jars/lib/application"
   private val workDir = RootDir + "/jars/lib/workingdir"
 
-  private val RootDir = getClass.getResource("/").getPath
-  private val targetLibDir = RootDir + "jars/lib/system"
-  private val appLibDir = RootDir + "jars/lib/application"
-  private val workDir = RootDir + "jars/lib/workingdir"
-    
   private val IgnoreDir = "MetadataAPI/target"
 
   private def copyFile(sourceFile:File, destFile:File)  {
