@@ -42,7 +42,7 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
   var models = Array[(String, MdlInfo, Boolean, ModelInstance, Boolean)]()
   var validateMsgsForMdls = scala.collection.mutable.Set[String]() // Message Names for creating models instances
 
-  private def RunAllModels(transId: Long, inputData: Array[Byte], finalTopMsgOrContainer: MessageContainerBase, txnCtxt: TransactionContext, uk: String, uv: String, xformedMsgCntr: Int, totalXformedMsgs: Int): Array[SavedMdlResult] = {
+  private def RunAllModels(transId: Long, inputData: Array[Byte], finalTopMsgOrContainer: MessageContainerBase, txnCtxt: TransactionContext, uk: String, uv: String, xformedMsgCntr: Int, totalXformedMsgs: Int, msgEvent: KamanjaMessageEvent): Array[SavedMdlResult] = {
     var results: ArrayBuffer[SavedMdlResult] = new ArrayBuffer[SavedMdlResult]()
     if (LOG.isDebugEnabled)
       LOG.debug(s"Processing uniqueKey:$uk, uniqueVal:$uv, finalTopMsgOrContainer:$finalTopMsgOrContainer, previousModles:${models.size}")
@@ -210,7 +210,8 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
   // Returns Adapter/Queue Name, Partition Key & Output String
   def execute(transId: Long, inputData: Array[Byte], msgType: String, msgInfo: MsgContainerObjAndTransformInfo, inputdata: InputData, txnCtxt: TransactionContext, readTmNs: Long, rdTmMs: Long, uk: String, uv: String, xformedMsgCntr: Int, totalXformedMsgs: Int, ignoreOutput: Boolean, allOutputQueueNames: Array[String]): Array[(String, String, String)] = {
     // LOG.debug("LE => " + msgData)
-    LOG.debug("Processing uniqueKey:%s, uniqueVal:%s".format(uk, uv))
+    if (LOG.isDebugEnabled)
+      LOG.debug("Processing uniqueKey:%s, uniqueVal:%s".format(uk, uv))
     val returnOutput = ArrayBuffer[(String, String, String)]() // Adapter/Queue name, PartitionKey & output message 
 
     var isValidMsg = false
@@ -218,6 +219,12 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
     var createdNewMsg = false
     var isValidPartitionKey = false
     var partKeyDataList: List[String] = null
+
+    // Initialize Event message
+    var msgEvent: KamanjaMessageEvent = new KamanjaMessageEvent()
+    msgEvent.messageName = msgType
+    msgEvent.messageVersion = "unknown"
+    msgEvent.totalElapsedTime = -1
 
     try {
       if (msgInfo != null && inputdata != null) {
@@ -253,16 +260,23 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
         msg.populate(inputdata)
         isValidMsg = true
       } else {
+        // TODO: Create an ErrorMessage
+        msgEvent.error = "Recieved null message object for input"
         LOG.error("Recieved null message object for input:" + inputdata.dataInput)
       }
     } catch {
       case e: Exception => {
+        msgEvent.error = "Failed to Populate message: " + e.getMessage
         throw MessagePopulationException("Failed to Populate message", e)
       }
       case e: Throwable => {
+        msgEvent.error = "Failed to Populate message: " + e.getMessage
         throw MessagePopulationException("Failed to Populate message", e)
       }
     }
+
+    // We have a valid message.. populate its version.
+    msgEvent.messageVersion = msg.Version
 
     try {
       if (isValidMsg) {
@@ -275,8 +289,9 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
           allMdlsResults = scala.collection.mutable.Map[String, SavedMdlResult]()
         // Run all models
         val mdlsStartTime = System.nanoTime
-        val results = RunAllModels(transId, inputData, msg, txnCtxt, uk, uv, xformedMsgCntr, totalXformedMsgs)
+        val results = RunAllModels(transId, inputData, msg, txnCtxt, uk, uv, xformedMsgCntr, totalXformedMsgs, msgEvent)
         LOG.info(ManagerUtils.getComponentElapsedTimeStr("Models", uv, readTmNs, mdlsStartTime))
+        msgEvent.totalElapsedTime = System.nanoTime - mdlsStartTime
 
         if (results.size > 0) {
           var elapseTmFromRead = (System.nanoTime - readTmNs) / 1000
@@ -320,12 +335,15 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
           }
         }
       }
+      println("***MESSAGE RAN -> " + msgEvent.toString)
       return returnOutput.toArray
     } catch {
       case e: Exception => {
+        msgEvent.error = "Failed to execute models after creating message " + e.getMessage
         LOG.error("Failed to execute models after creating message", e)
       }
       case e: Throwable => {
+        msgEvent.error = "Failed to execute models after creating message " + e.getMessage
         LOG.error("Failed to execute models after creating message", e)
       }
     }
