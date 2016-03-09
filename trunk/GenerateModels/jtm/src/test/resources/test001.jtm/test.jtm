@@ -10,9 +10,11 @@
     "packages": [ "com.ligadata.Utils._", "com.ligadata.Utils._" ]
   },
 
-  "aliases":   {
-    "m1": "com.ligadata.kamanja.test.msg1",
-    "o1": "com.ligadata.kamanja.test.msg2"
+  "aliases": {
+    "messages": {
+      "m1": "com.ligadata.kamanja.test.msg1",
+      "o1": "com.ligadata.kamanja.test.msg2"
+    }
   },
 
   "transformations": {

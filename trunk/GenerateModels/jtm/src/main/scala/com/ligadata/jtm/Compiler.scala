@@ -195,14 +195,14 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     * @param mapNameSource name to variable mapping
     * @return string with the result
     */
-  def FixupColumnNames(expression: String, mapNameSource: Map[String, String], aliases: Map[String, String]): String = {
+  def FixupColumnNames(expression: String, mapNameSource: Map[String, String], aliaseMessages: Map[String, String]): String = {
     val regex = """(\$[a-zA-Z0-9_.]+)""".r
     val m = regex.pattern.matcher(expression)
     val sb = new StringBuffer
     var i = 0
     while (m.find) {
       val name = m.group(0).drop(1)
-      val resolvedName = ResolveName(name, aliases)
+      val resolvedName = ResolveName(name, aliaseMessages)
       m.appendReplacement(sb, mapNameSource.get(resolvedName).get)
       i = i + 1
     }
@@ -216,6 +216,15 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     //
     if(root.header==null)
       throw new Exception("No header provided")
+
+    if(root.aliases!=null) {
+      if(root.aliases.concepts.size>0) {
+        throw new Exception("Currently concept aren't supported")
+      }
+      if(root.aliases.variables.size>0) {
+        throw new Exception("Currently variables aren't supported")
+      }
+    }
 
     val header = root.header
 
@@ -308,12 +317,12 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     })._2
   }
 
-  def ResolveNames(names: Set[String], aliases: Map[String, String] ) : Map[String, String] =  {
+  def ResolveNames(names: Set[String], aliaseMessages: Map[String, String] ) : Map[String, String] =  {
 
     names.map ( n => {
       val (alias, name) = splitAlias(n)
       if(alias.length>0) {
-        val a = aliases.get(alias)
+        val a = aliaseMessages.get(alias)
         if(a.isEmpty) {
           throw new Exception("Missing alias %s for %s".format(alias, n))
         } else {
@@ -325,11 +334,11 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     }).toMap
   }
 
-  def ResolveName(n: String, aliases: Map[String, String] ) : String =  {
+  def ResolveName(n: String, aliaseMessages: Map[String, String] ) : String =  {
 
     val (alias, name) = splitAlias(n)
     if(alias.length>0) {
-      val a = aliases.get(alias)
+      val a = aliaseMessages.get(alias)
       if(a.isEmpty) {
         throw new Exception("Missing alias %s for %s".format(alias, n))
       } else {
@@ -340,9 +349,9 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     }
   }
 
-  def ResolveAlias(n: String, aliases: Map[String, String] ) : String =  {
+  def ResolveAlias(n: String, aliaseMessages: Map[String, String] ) : String =  {
 
-    val a = aliases.get(n)
+    val a = aliaseMessages.get(n)
     if(a.isEmpty) {
       throw new Exception("Missing alias %s".format(n))
     } else {
@@ -366,7 +375,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     // Validate model
     Validate(root)
 
-    val aliases: Map[String, String] = root.aliases.toMap
+    val aliaseMessages: Map[String, String] = root.aliases.messages.toMap
     var result = Array.empty[String]
     var exechandler = Array.empty[String]
     var methods = Array.empty[String]
@@ -393,12 +402,12 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
     // Add message so we can actual compile
     // Check how to reconcile during add/compilation
-    //result ++= aliases.map(p => p._2).toSet.toArray.map( i => "import %s".format(i))
+    //result ++= aliaseMessages.map(p => p._2).toSet.toArray.map( i => "import %s".format(i))
 
     // Collect all classes
     //
     val messagesSet = EvalTypes.CollectMessages(root)
-    messagesSet.map( e => "%s aliases %s".format(e._1, e._2.mkString(", ")) ).foreach( m => {
+    messagesSet.map( e => "%s aliaseMessages %s".format(e._1, e._2.mkString(", ")) ).foreach( m => {
       logger.trace(m)
     })
 
@@ -421,13 +430,13 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
       val transformation = t._2
 
       // Normalize the dependencies, target must be a class
-      // ToDo: Do we need chains of aliases, or detect chains of aliases
+      // ToDo: Do we need chains of aliaseMessages, or detect chains of aliaseMessages
 
       t._2.dependsOn.foldLeft(r1)( (r, dependencies) => {
 
         val resolvedDependencies = dependencies.map(alias => {
           // Translate dependencies, if available
-          aliases.getOrElse( alias, alias )
+          aliaseMessages.getOrElse( alias, alias )
         }).toSet
 
         val curr = r._2.get(resolvedDependencies)
@@ -534,13 +543,13 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
             // Check if the compute if determined
             val (open, expression) =  if(c._2.expression.nonEmpty) {
               val list = ExtractColumnNames(c._2.expression)
-              val rList = ResolveNames(list, aliases)
+              val rList = ResolveNames(list, aliaseMessages)
               val open = rList.filter(f => !fixedMappingSources.contains(f._2))
               (open, c._2.expression)
             } else {
               val evaluate = c._2.expressions.map( expression => {
                 val list = ExtractColumnNames(expression)
-                val rList = ResolveNames(list, aliases)
+                val rList = ResolveNames(list, aliaseMessages)
                 val open = rList.filter(f => !fixedMappingSources.contains(f._2))
                 (open, expression)
               })
@@ -553,7 +562,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
             }
 
             if(open.isEmpty) {
-              val newExpression = FixupColumnNames(expression, fixedMappingSources, aliases)
+              val newExpression = FixupColumnNames(expression, fixedMappingSources, aliaseMessages)
               // Output the actual compute
               methods :+= c._2.Comment
               if(c._2.typename.length>0)
@@ -584,7 +593,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           var collect = Array.empty[String]
           collect ++= Array("\ndef process_%s(): Array[Result] = {\n".format(o._1))
 
-          val outputSet: Set[String] = ColumnNames(md, ResolveAlias(o._1, aliases))
+          val outputSet: Set[String] = ColumnNames(md, ResolveAlias(o._1, aliaseMessages))
 
           // State variables to track the progress
           // a little bit simpler than having val's
@@ -623,7 +632,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
               val open = list.filter(f => !mappingSources.contains(f) )
               if(open.isEmpty) {
                 // Sub names to
-                val newExpression = FixupColumnNames(f, mappingSources, aliases)
+                val newExpression = FixupColumnNames(f, mappingSources, aliaseMessages)
                 // Output the actual filter
                 collect ++= Array("if (%s) return Array.empty[Result]\n".format(newExpression))
                 false
@@ -638,13 +647,13 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
               // Check if the compute if determind
               val (open, expression) =  if(c._2.expression.length > 0) {
                 val list = ExtractColumnNames(c._2.expression)
-                val rList = ResolveNames(list, root.aliases.toMap)
+                val rList = ResolveNames(list, root.aliases.messages.toMap)
                 val open = rList.filter(f => !fixedMappingSources.contains(f._2))
                 (open, c._2.expression)
               } else {
                 val evaluate = c._2.expressions.map( expression => {
                   val list = ExtractColumnNames(expression)
-                  val rList = ResolveNames(list, root.aliases.toMap)
+                  val rList = ResolveNames(list, root.aliases.messages.toMap)
                   val open = rList.filter(f => !fixedMappingSources.contains(f._2))
                   (open, expression)
                 })
@@ -658,7 +667,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
               if(open.isEmpty) {
                 // Sub names to
-                val newExpression = FixupColumnNames(expression, mappingSources, aliases)
+                val newExpression = FixupColumnNames(expression, mappingSources, aliaseMessages)
 
                 // Output the actual compute
                 // To Do: multiple vals and type provided

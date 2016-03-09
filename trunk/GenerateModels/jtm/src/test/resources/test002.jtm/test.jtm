@@ -6,11 +6,13 @@
     "minVersion" : "2.11"
   },
 
-  "aliases":   {
-    "m1": "com.ligadata.kamanja.test.msg1",
-    "m2": "com.ligadata.kamanja.test.msg3",
-    "o1": "com.ligadata.kamanja.test.msg2",
-    "o2": "com.ligadata.kamanja.test.msg4"
+  "aliases": {
+    "messages": {
+      "m1": "com.ligadata.kamanja.test.msg1",
+      "m2": "com.ligadata.kamanja.test.msg3",
+      "o1": "com.ligadata.kamanja.test.msg2",
+      "o2": "com.ligadata.kamanja.test.msg4"
+    }
   },
 
   "transformations": {

@@ -18,32 +18,21 @@ package com.ligadata.jtm.nodes
 /**
   *
   */
-class Computes {
+class Aliases {
 
-  /** Map with computations
+  /** Map with messages
     *
     */
-  val computes: scala.collection.Map[String, Compute] = scala.collection.Map.empty[String, Compute]
+  val messages: scala.collection.Map[String, String] = scala.collection.Map.empty[String, String]
 
-  /** Map with output targets
+  /** Map with concepts
     *
     */
-  val outputs: scala.collection.Map[String, Output] = scala.collection.Map.empty[String, Output]
+  val concepts: scala.collection.Map[String, String] = scala.collection.Map.empty[String, String]
 
-  /** Single comment, to be output to code
+  /** Map with variables
     *
     */
-  val comment: String = ""
+  val variables: scala.collection.Map[String, String] = scala.collection.Map.empty[String, String]
 
-  /** Multiple comments, to be output to code
-    *
-    */
-  val comments: Array[String] = Array.empty[String]
-
-  def Comment() : String = {
-    if (comment.length() > 0)
-      "// " + comment
-    else
-      comments.map(comment => "// " + comment).mkString("\n")
-  }
 }

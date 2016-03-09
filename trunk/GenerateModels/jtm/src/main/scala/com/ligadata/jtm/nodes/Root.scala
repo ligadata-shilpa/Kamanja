@@ -167,7 +167,7 @@ class Root {
   /** Map with aliases
     *
     */
-  val aliases: scala.collection.Map[String, String] = scala.collection.Map.empty[String, String]
+  val aliases: Aliases = new Aliases
 
   /** List of Grok configurations, currently we only expect to
     * find only a single one

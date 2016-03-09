@@ -25,7 +25,7 @@ object Types {
     * @return
     */
   def CollectMessages(root: Root): Map[String, Set[String]] = {
-    val givenAlias = root.aliases
+    val givenAlias = root.aliases.messages
     implicit var result = scala.collection.mutable.Map.empty[String, Set[String]]
 
     // Go through all transformations
