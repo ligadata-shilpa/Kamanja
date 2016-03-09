@@ -83,6 +83,17 @@ public class AdapterConfiguration {
 	public static final String MESSAGE_FIELD_DELIMITER = "message.field.delimiter";
 	public static final String MESSAGE_VALUE_DELIMITER = "message.value.delimiter";
 	public static final String MESSAGE_KEYVALUE_DELIMITER = "message.keyvalue.delimiter";
+	public static final String MESSAGE_FIELD_NAMES = "message.field.names";
+	public static final String COLLECTION_FIELD_NAMES = "collection.field.names";
+	public static final String MESSAGE_GROUP_BY_FIELDS = "message.groupby.fields";
+	public static final String MESSAGE_SUM_FIELDS = "message.sum.fields";
+
+	public static final String SOURCE_CONTAINER_NAME = "source.container.name";
+	public static final String TARGET_CONTAINER_NAME = "target.container.name";
+	public static final String SOURCE_FIELD_NAMES = "source.field.names";
+	public static final String TARGET_FIELD_NAMES = "target.field.names";
+	public static final String SOURCE_COLLECTION_FIELDS = "source.collection.fields";
+	public static final String TARGET_COLLECTION_FIELDS = "target.collection.fields";
 	
 	private Properties properties;
 
