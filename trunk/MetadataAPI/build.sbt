@@ -65,7 +65,9 @@ libraryDependencies += "org.joda" % "joda-convert" % "1.6"
 
 libraryDependencies += "joda-time" % "joda-time" % "2.8.2"
 
-libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.0"
+libraryDependencies += "org.scalactic" %% "scalactic" % "2.2.6"
+
+libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.6" % "test"
 
 libraryDependencies += "org.apache.logging.log4j" % "log4j-1.2-api" % "2.4.1"
 
