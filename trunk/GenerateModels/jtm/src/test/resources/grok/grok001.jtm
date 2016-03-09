@@ -6,7 +6,9 @@
     "minVersion" : "2.11"
   },
 
-  "imports": [ "com.ligadata.Utils._", "com.ligadata.Utils._" ],
+  "imports": {
+    "packages": [ "com.ligadata.Utils._", "com.ligadata.Utils._" ]
+  },
 
   "aliases":   {
     "m1": "com.ligadata.kamanja.test001.msg1",

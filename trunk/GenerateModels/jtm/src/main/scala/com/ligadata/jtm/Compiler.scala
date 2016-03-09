@@ -231,8 +231,8 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
       }
     }
 
-    if(root.imports.toSet.size < root.imports.length) {
-      val dups = root.imports.groupBy(identity).collect { case (x,ys) if ys.length > 1 => x }
+    if(root.imports.packages.toSet.size < root.imports.packages.length) {
+      val dups = root.imports.packages.groupBy(identity).collect { case (x,ys) if ys.length > 1 => x }
       logger.warn("Dropped duplicate imports: {}", dups.mkString(", "))
     }
 
@@ -389,7 +389,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
     // Process additional imports
     //
-    result ++= root.imports.distinct.map( i => "import %s".format(i) )
+    result ++= root.imports.packages.distinct.map( i => "import %s".format(i) )
 
     // Add message so we can actual compile
     // Check how to reconcile during add/compilation

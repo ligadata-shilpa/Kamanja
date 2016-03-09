@@ -8,8 +8,10 @@
 
   "dependencies": ["list of jars/modules - this should go into command line arguments instead of this file"],
 
-  "imports": [ "com.ligadata.Utils._",  "com.ligadata.Utils1._"  ],
-
+  "imports": {
+    "packages": [ "com.ligadata.Utils._", "com.ligadata.Utils._" ]
+  },
+  
   "aliases":   {
     "m1": "com.ligadata.kamanja.samples.messages.msg1",
     "m2": "com.ligadata.kamanja.samples.messages.msg2",

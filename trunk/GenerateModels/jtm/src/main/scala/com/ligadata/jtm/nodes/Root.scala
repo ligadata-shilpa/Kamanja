@@ -144,8 +144,10 @@ object Root {
   */
 class Root {
 
-
-  val header: Header = null;
+  /** Header information of jtm
+    *
+    */
+  val header: Header = null
 
   /** List of dependencies, should be empty
     *
@@ -155,7 +157,7 @@ class Root {
   /** List of imports to be added
     *
     */
-  val imports: Array[String] = Array.empty[String]
+  val imports: Imports = new Imports
 
   /** Map with "name" to transformations
     *
