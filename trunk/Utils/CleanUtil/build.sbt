@@ -1,12 +1,10 @@
-import AssemblyKeys._ // put this at the top of the file
+import sbtassembly.AssemblyPlugin.defaultShellScript
 import sbt._
 import Keys._
 
 name := "CleanUtil"
 
 version := "1.0"
-
-scalaVersion := "2.11.7"
 
 shellPrompt := { state =>  "sbt (%s)> ".format(Project.extract(state).currentProject.id) }
 
@@ -27,14 +25,13 @@ libraryDependencies ++= Seq (
 
 fork := true
 
-assemblySettings
+
 
 test in assembly := {}
 
-jarName in assembly := { s"${name.value}-${version.value}" }
+assemblyJarName in assembly := { s"${name.value}-${version.value}" }
 
-mergeStrategy in assembly <<= (mergeStrategy in assembly) { (old) =>
-{
+assemblyMergeStrategy in assembly := {
   // case PathList("javax", "servlet", xs @ _*)         => MergeStrategy.first
   // case PathList(ps @ _*) if ps.last endsWith ".html" => MergeStrategy.first
 case PathList("META-INF", "maven","jline","jline", ps) if ps.startsWith("pom") => MergeStrategy.discard
@@ -63,11 +60,13 @@ case PathList("META-INF", "maven","jline","jline", ps) if ps.startsWith("pom") =
   case x if x contains "commons-logging" => MergeStrategy.first
   case "log4j.properties" => MergeStrategy.first
   case "unwanted.txt"     => MergeStrategy.discard
-  case x => old(x)
-}
+          case x =>
+  	        val oldStrategy = (assemblyMergeStrategy in assembly).value
+  	        oldStrategy(x)
+
 }
 
 excludedJars in assembly <<= (fullClasspath in assembly) map { cp =>
-  val excludes = Set("commons-beanutils-1.7.0.jar", "google-collections-1.0.jar", "commons-collections4-4.0.jar" )
+  val excludes = Set("commons-beanutils-1.7.0.jar", "google-collections-1.0.jar", "commons-collections4-4.0.jar", "log4j-1.2.17.jar", "log4j-1.2.16.jar" )
   cp filter { jar => excludes(jar.data.getName) }
 }

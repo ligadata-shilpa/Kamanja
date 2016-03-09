@@ -16,6 +16,8 @@
 
 package com.ligadata.InputAdapters
 
+import org.json4s.jackson.Serialization
+
 import scala.actors.threadpool.{ Executors, ExecutorService }
 import java.util.Properties
 import scala.collection.mutable.ArrayBuffer
@@ -32,34 +34,43 @@ import com.ibm.msg.client.jms.JmsFactoryFactory
 import com.ibm.msg.client.wmq.WMQConstants
 import com.ibm.msg.client.wmq.common.CommonConstants
 import com.ibm.msg.client.jms.JmsConstants
-import com.ligadata.Exceptions.StackTrace
 import com.ligadata.KamanjaBase.DataDelimiters
+import com.ligadata.HeartBeat.{Monitorable, MonitorComponentInfo}
 
 object IbmMqConsumer extends InputAdapterObj {
+  val ADAPTER_DESCRIPTION = "IBM MQ Consumer"
   def CreateInputAdapter(inputConfig: AdapterConfiguration, callerCtxt: InputAdapterCallerContext, execCtxtObj: ExecContextObj, cntrAdapter: CountersAdapter): InputAdapter = new IbmMqConsumer(inputConfig, callerCtxt, execCtxtObj, cntrAdapter)
 }
 
 class IbmMqConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: InputAdapterCallerContext, val execCtxtObj: ExecContextObj, cntrAdapter: CountersAdapter) extends InputAdapter {
+
+  private var startTime = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
+  private var lastSeen = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
+  private var metrics: scala.collection.mutable.Map[String,Any] = scala.collection.mutable.Map[String,Any]()
+
+
   private def printFailure(ex: Exception) {
     if (ex != null) {
       if (ex.isInstanceOf[JMSException]) {
         processJMSException(ex.asInstanceOf[JMSException])
       } else {
-        LOG.error(ex)
+        LOG.error("", ex)
       }
     }
   }
 
   private def processJMSException(jmsex: JMSException) {
-    LOG.error(jmsex)
+    LOG.error("", jmsex)
     var innerException: Throwable = jmsex.getLinkedException
     if (innerException != null) {
-      LOG.error("Inner exception(s):")
+      LOG.error("Inner exception(s):", innerException)
     }
+      /*
     while (innerException != null) {
       LOG.error(innerException)
       innerException = innerException.getCause
     }
+    */
   }
 
   private[this] val LOG = LogManager.getLogger(getClass);
@@ -81,6 +92,11 @@ class IbmMqConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: Input
     StopProcessing
   }
 
+  override  def getComponentStatusAndMetrics: MonitorComponentInfo = {
+    implicit val formats = org.json4s.DefaultFormats
+    return new MonitorComponentInfo(AdapterConfiguration.TYPE_INPUT, qc.Name, IbmMqConsumer.ADAPTER_DESCRIPTION, startTime, lastSeen,  Serialization.write(metrics).toString)
+  }
+
   override def StopProcessing: Unit = lock.synchronized {
     LOG.debug("===============> Called StopProcessing")
     //BUGBUG:: Make sure we finish processing the current running messages.
@@ -89,7 +105,7 @@ class IbmMqConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: Input
         consumer.close()
       } catch {
         case jmsex: Exception => {
-          LOG.error("Producer could not be closed.")
+          LOG.error("Producer could not be closed.", jmsex)
           printFailure(jmsex)
         }
       }
@@ -102,7 +118,7 @@ class IbmMqConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: Input
         session.close()
       } catch {
         case jmsex: Exception => {
-          LOG.error("Session could not be closed.")
+          LOG.error("Session could not be closed.", jmsex)
           printFailure(jmsex)
         }
       }
@@ -112,7 +128,7 @@ class IbmMqConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: Input
         connection.close()
       } catch {
         case jmsex: Exception => {
-          LOG.error("Connection could not be closed.")
+          LOG.error("Connection could not be closed.", jmsex)
           printFailure(jmsex)
         }
       }
@@ -164,8 +180,7 @@ class IbmMqConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: Input
       connection.start()
     } catch {
       case jmsex: Exception =>
-        val stackTrace = StackTrace.ThrowableTraceString(jmsex)
-        LOG.debug("\nstackTrace:" + stackTrace)
+        LOG.debug("", jmsex)
         printFailure(jmsex)
         return
     }
@@ -247,7 +262,7 @@ class IbmMqConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: Input
 
                         if (msgData != null) {
                           uniqueVal.MessageId = msgId
-                          execThread.execute(msgData, qc.formatOrInputAdapterName, uniqueKey, uniqueVal, readTmNs, readTmMs, false, qc.associatedMsg, delimiters)
+                          execThread.execute(msgData, qc.formatName, uniqueKey, uniqueVal, readTmNs, readTmMs, false, qc.associatedMsg, delimiters)
                           // consumerConnector.commitOffsets // BUGBUG:: Bad way of calling to save all offsets
                           cntr += 1
                           val key = Category + "/" + qc.Name + "/evtCnt"
@@ -258,7 +273,7 @@ class IbmMqConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: Input
                         }
                       } catch {
                         case e: Exception => {
-                          LOG.error("Failed with Message:" + e.getMessage)
+                          LOG.error("", e)
                           printFailure(e)
                         }
                       }
@@ -266,7 +281,7 @@ class IbmMqConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: Input
                     }
                   } catch {
                     case e: Exception => {
-                      LOG.error("Failed with Message:" + e.getMessage)
+                      LOG.error("", e)
                       printFailure(e)
                     }
                   }
@@ -277,7 +292,7 @@ class IbmMqConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: Input
               }
             } catch {
               case e: Exception => {
-                LOG.error("Failed with Reason:%s Message:%s".format(e.getCause, e.getMessage))
+                LOG.error("", e)
                 printFailure(e)
               }
             }
@@ -287,7 +302,7 @@ class IbmMqConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: Input
       }
     } catch {
       case e: Exception => {
-        LOG.error("Failed to setup Streams. Reason:%s Message:%s".format(e.getCause, e.getMessage))
+        LOG.error("Failed to setup Streams.", e)
         printFailure(e)
       }
     }
@@ -316,7 +331,7 @@ class IbmMqConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: Input
       key.Deserialize(k)
     } catch {
       case e: Exception => {
-        LOG.error("Failed to deserialize Key:%s. Reason:%s Message:%s".format(k, e.getCause, e.getMessage))
+        LOG.error("Failed to deserialize Key:%s.".format(k), e)
         printFailure(e)
         throw e
       }
@@ -332,7 +347,7 @@ class IbmMqConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: Input
         vl.Deserialize(v)
       } catch {
         case e: Exception => {
-          LOG.error("Failed to deserialize Value:%s. Reason:%s Message:%s".format(v, e.getCause, e.getMessage))
+          LOG.error("Failed to deserialize Value:%s.".format(v), e)
           printFailure(e)
           throw e
         }

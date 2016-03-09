@@ -37,7 +37,7 @@ import org.json4s._
 import org.json4s.JsonDSL._
 import com.ligadata.Serialize._
 import com.ligadata.Utils.{ Utils, KamanjaClassLoader, KamanjaLoaderInfo }
-import com.ligadata.Exceptions.StackTrace
+import com.ligadata.KamanjaVersion.KamanjaVersion
 
 /**
  * MethodExtract accepts an fully qualifed scala object name.  The object's package
@@ -106,6 +106,8 @@ object MethodExtract extends App with LogTrait {
           nextOption(map ++ Map('typeDefsPath -> value), tail)
         case "--fcnDefsPath" :: value :: tail =>
           nextOption(map ++ Map('fcnDefsPath -> value), tail)
+        case "--version" :: tail =>
+          nextOption(map ++ Map('version -> "true"), tail)
         case option :: tail => {
           logger.error("Unknown option " + option)
           val usageMsg: String = usage
@@ -117,6 +119,11 @@ object MethodExtract extends App with LogTrait {
     }
 
     val options = nextOption(Map(), arglist)
+    val version = options.getOrElse('version, "false").toString
+    if (version.equalsIgnoreCase("true")) {
+      KamanjaVersion.print
+      return
+    }
     val clsName = if (options.contains('object)) options.apply('object) else null
     val classPath = if (options.contains('cp)) options.apply('cp) else null
     val namespace: String = if (clsName != null && clsName.contains('.')) {
@@ -135,9 +142,8 @@ object MethodExtract extends App with LogTrait {
     try {
       if (versionNumberStr != null) versionNumber = versionNumberStr.toLong
     } catch {
-      case _: Throwable => {
-        val stackTrace = StackTrace.ThrowableTraceString(_)
-        logger.debug("StackTrace:" + stackTrace)
+      case e: Throwable => {
+        logger.debug("", e)
         versionNumber = 1000000
       }
     }
@@ -187,19 +193,17 @@ object MethodExtract extends App with LogTrait {
       val clz1 = Class.forName(clsName + "$", true, udfLoaderInfo.loader)
       val clz1Sym = mirror.classSymbol(clz1)
       val istrait = clz1Sym.isTrait
-      val isabstract = clz1Sym.isAbstract
+      val isabstract = clz1Sym.isAbstractClass
       val clsType = clz1Sym.toType
-      val members = clsType.decls
+      val members = clsType.declarations
       members.filter(_.toString.startsWith("method")).foreach(m => mbrs += m)
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.error("Failed to load class %s with Reason:%s Message:%s\nStackTrace:%s".format(clsName + "$", e.getCause, e.getMessage, stackTrace))
+        logger.error("Failed to load class %s".format(clsName + "$"), e)
         sys.exit
       }
       case t: Throwable => {
-        val stackTrace = StackTrace.ThrowableTraceString(t)
-        logger.error("Failed to load class %s with Reason:%s Message:%s\nStackTrace:%s".format(clsName + "$", t.getCause, t.getMessage, stackTrace))
+        logger.error("Failed to load class %s".format(clsName + "$"), t)
         sys.exit
       }
     }

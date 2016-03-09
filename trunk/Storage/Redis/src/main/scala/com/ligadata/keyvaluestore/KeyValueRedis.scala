@@ -70,7 +70,7 @@ class KeyValueRedis(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig:
     parsed_json = json.values.asInstanceOf[Map[String, Any]]
   } catch {
     case e: Exception => {
-      logger.error("Failed to parse Redis JSON configuration string:%s. Reason:%s Message:%s".format(adapterConfig, e.getCause, e.getMessage))
+      logger.error("Failed to parse Redis JSON configuration string:%s.".format(adapterConfig), e)
       throw e
     }
   }

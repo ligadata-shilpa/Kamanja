@@ -29,6 +29,7 @@ import scala.io.Source
 import org.json4s.jackson.JsonMethods._
 import scala.sys.process.{ ProcessIO, Process }
 import com.ligadata.KamanjaBase.DataDelimiters
+import com.ligadata.KamanjaVersion.KamanjaVersion
 
 object SimpleStats extends CountersAdapter {
 
@@ -201,6 +202,11 @@ class KamanjaMonitor {
 
     // Parse the input.
     val options = nextOption(Map(), inParms.toList)
+    val version = options.getOrElse('version, "false").toString
+    if (version.equalsIgnoreCase("true")) {
+      KamanjaVersion.print
+      return
+    }
 
     // Validate and set flags based on the input
     val parmFile = options.getOrElse('parm, null).asInstanceOf[String]
@@ -302,7 +308,9 @@ class KamanjaMonitor {
       statusQs.foreach(qConf => {
         val thisConf: AdapterConfiguration = new AdapterConfiguration
         thisConf.Name = qConf.getOrElse("Name", "").toString
-        thisConf.formatOrInputAdapterName = qConf.getOrElse("Format", "").toString
+        thisConf.formatName = qConf.getOrElse("Format", "").toString
+        thisConf.validateAdapterName = qConf.getOrElse("InputAdapterToVerify", "").toString
+        thisConf.failedEventsAdapterName = qConf.getOrElse("FailedEventsAdapter", "").toString
         thisConf.className = qConf.getOrElse("ClassName", "").toString
         thisConf.jarName = qConf.getOrElse("JarName", "").toString
         thisConf.dependencyJars = qConf.getOrElse("DependencyJars", "").asInstanceOf[List[String]].toSet
@@ -316,7 +324,7 @@ class KamanjaMonitor {
 
         // Ignore if any value in the adapter was not set.
         if (thisConf.Name.size > 0 &&
-          thisConf.formatOrInputAdapterName.size > 0 &&
+          // thisConf.formatName.size > 0 &&
           thisConf.className.size > 0 &&
           thisConf.jarName.size > 0 &&
           thisConf.dependencyJars.size > 0 &&
@@ -331,7 +339,9 @@ class KamanjaMonitor {
       outputQs.foreach(qConf => {
         val thisConf: AdapterConfiguration = new AdapterConfiguration
         thisConf.Name = qConf.getOrElse("Name", "").toString
-        thisConf.formatOrInputAdapterName = qConf.getOrElse("Format", "").toString
+        thisConf.formatName = qConf.getOrElse("Format", "").toString
+        thisConf.validateAdapterName = qConf.getOrElse("InputAdapterToVerify", "").toString
+        thisConf.failedEventsAdapterName = qConf.getOrElse("FailedEventsAdapter", "").toString
         thisConf.className = qConf.getOrElse("ClassName", "").toString
         thisConf.jarName = qConf.getOrElse("JarName", "").toString
         thisConf.dependencyJars = qConf.getOrElse("DependencyJars", "").asInstanceOf[List[String]].toSet
@@ -345,7 +355,7 @@ class KamanjaMonitor {
 
         // Ignore if any value in the adapter was not set.
         if (thisConf.Name.size > 0 &&
-          thisConf.formatOrInputAdapterName.size > 0 &&
+          // thisConf.formatName.size > 0 &&
           thisConf.className.size > 0 &&
           thisConf.jarName.size > 0 &&
           thisConf.dependencyJars.size > 0 &&
@@ -365,6 +375,8 @@ class KamanjaMonitor {
       case Nil => map
       case "--parm" :: value :: tail =>
         nextOption(map ++ Map('parm -> value), tail)
+      case "--version" :: tail =>
+        nextOption(map ++ Map('version -> "true"), tail)
       case option :: tail => {
         LOG.error("Unknown option " + option)
         sys.exit(1)

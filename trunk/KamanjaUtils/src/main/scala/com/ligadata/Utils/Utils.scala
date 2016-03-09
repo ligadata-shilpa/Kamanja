@@ -95,6 +95,7 @@ object Utils {
           configs.load(input);
         } catch {
           case e: Exception =>
+            logger.info("Failed to load configuration", e)
             failStr = "Failed to load configuration. Message:" + e.getMessage
             configs = null
         } finally {
@@ -160,7 +161,7 @@ object Utils {
       return classes.toArray
     } catch {
       case e: Exception =>
-        e.printStackTrace();
+        logger.error("", e)
         return null
     }
   }
@@ -189,7 +190,7 @@ object Utils {
             }
           } catch {
             case e: Exception => {
-              logger.error("Jar " + j.trim + " failed added to class path. Reason:%s Message:%s".format(e.getCause, e.getMessage))
+              logger.error("Jar " + j.trim + " failed added to class path.", e)
               return false
             }
           }

@@ -1,4 +1,4 @@
-import AssemblyKeys._ // put this at the top of the file
+import sbtassembly.AssemblyPlugin.defaultShellScript
 import sbt._
 import Keys._
 
@@ -7,8 +7,6 @@ shellPrompt := { state =>  "sbt (%s)> ".format(Project.extract(state).currentPro
 name := "AuditAdapters"
 
 version := "1.0"
-
-scalaVersion := "2.11.7"
 
 resolvers += "spring-milestones" at "http://repo.springsource.org/libs-milestone"
 
@@ -22,11 +20,13 @@ libraryDependencies += "com.novocode" % "junit-interface" % "0.11-RC1" % "test"
 
 libraryDependencies += "commons-lang" % "commons-lang" % "2.4"
 
-libraryDependencies += "jdom" % "jdom" % "1.1"
+libraryDependencies += "org.jdom" % "jdom" % "1.1"
 
 libraryDependencies += "com.google.protobuf" % "protobuf-java" % "2.3.0"
 
 libraryDependencies += "voldemort" % "voldemort" % "0.96"
+
+libraryDependencies += "org.apache.logging.log4j" % "log4j-1.2-api" % "2.4.1"
 
 libraryDependencies += "org.apache.logging.log4j" % "log4j-api" % "2.4.1"
 

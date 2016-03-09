@@ -19,12 +19,12 @@ package com.ligadata.MetadataAPI.Utility
 import java.io.File
 
 import com.ligadata.MetadataAPI.MetadataAPIImpl
-import com.ligadata.kamanja.metadata.AttributeDef
+import com.ligadata.kamanja.metadata.{BaseAttributeDef, MdMgr, AttributeDef}
 
 import scala.io.Source
 import org.apache.logging.log4j._
 
-import scala.io.StdIn
+import scala.io._
 
 /**
  * Created by dhaval on 8/13/15.
@@ -80,17 +80,21 @@ object ConceptService {
     }
     response
   }
-  def removeConcept(param: String = ""): String ={
+  def removeConcept(param: String, userid : Option[String]): String ={
     var response = ""
     try {
-      if (param.length > 0) {
+      if (param != null && param.size > 0) {
         try {
-            return MetadataAPIImpl.RemoveConcept(param.asInstanceOf[AttributeDef])
+            return MetadataAPIImpl.RemoveConcept(param, userid)
         } catch {
-          case e: Exception => e.printStackTrace()
+          case e: Exception => logger.error("", e)
         }
       }
-      val conceptKeys = MetadataAPIImpl.GetAllConcepts("JSON", userid).toArray
+      //val conceptKeys : String = MetadataAPIImpl.GetAllConcepts("JSON", userid) <<< this returns a JSON string
+      val onlyActive: Boolean = false
+      val latestVersion: Boolean = false
+      val optConceptKeys : Option[scala.collection.immutable.Set[BaseAttributeDef]] = MdMgr.GetMdMgr.Attributes(onlyActive, latestVersion)
+      val conceptKeys : Array[BaseAttributeDef] = optConceptKeys.getOrElse(scala.collection.immutable.Set[BaseAttributeDef]()).toArray
 
       if (conceptKeys.length == 0) {
         val errorMsg = "Sorry, No concepts available, in the Metadata, to delete!"
@@ -101,10 +105,10 @@ object ConceptService {
         var srno = 0
         for (conceptKey <- conceptKeys) {
           srno += 1
-          println("[" + srno + "] " + conceptKey)
+          println(s"[$srno] (${conceptKey.FullNameWithVer} : ${conceptKey.typeString} IsActive=${conceptKey.IsActive} IsDeleted=${conceptKey.IsDeleted}})")
         }
         println("Enter your choice: ")
-        val choice: Int = StdIn.readInt()
+        val choice: Int = readInt()
 
         if (choice < 1 || choice > conceptKeys.length) {
           val errormsg = "Invalid choice " + choice + ". Start with the main menu."
@@ -112,12 +116,13 @@ object ConceptService {
         }
 
         val conceptKey = conceptKeys(choice - 1)
-
-        response=MetadataAPIImpl.RemoveConcept(conceptKey.asInstanceOf[AttributeDef])
+        val conceptName : String = conceptKey.FullName
+        response=MetadataAPIImpl.RemoveConcept(conceptName, userid)
 
       }
     } catch {
       case e: Exception => {
+        logger.warn("", e)
         response = e.getStackTrace.toString
       }
     }
@@ -179,6 +184,7 @@ object ConceptService {
     }
     catch {
       case e: Exception => {
+        logger.warn("", e)
         response=e.getStackTrace.toString
       }
     }
@@ -206,7 +212,7 @@ object ConceptService {
       println("[" + srNo + "]" + message)
     }
     print("\nEnter your choice(If more than 1 choice, please use commas to seperate them): \n")
-    val userOptions: List[Int] = StdIn.readLine().filter(_ != '\n').split(',').filter(ch => (ch != null && ch != "")).map(_.trim.toInt).toList
+    val userOptions: List[Int] = readLine().filter(_ != '\n').split(',').filter(ch => (ch != null && ch != "")).map(_.trim.toInt).toList
     //check if user input valid. If not exit
     for (userOption <- userOptions) {
       userOption match {

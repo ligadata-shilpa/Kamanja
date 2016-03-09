@@ -27,16 +27,22 @@ SCRIPT_DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 KAMANJA_HOME="$(dirname "$SCRIPT_DIR")"
 export KAMANJA_HOME=$KAMANJA_HOME
 INPUT=$@
+
+if [ "$1" == "debug" ]; then
+    attachDebugger="true"
+    shift
+fi
+
 jar_full_path=$(which jar)
 if [ "$?" != "0" ]; then
-	echo "Not found java home directory."
-	exit 1
+  echo "Not found java home directory."
+  exit 1
 fi
 
 scala_full_path=$(which scala)
 if [ "$?" != "0" ]; then
-	echo "Not found scala home directory."
-	exit 1
+  echo "Not found scala home directory."
+  exit 1
 fi
 
 pwdnm=$(pwd -P)
@@ -86,11 +92,11 @@ elif [ "$INPUT" = "start" ]; then
  nohup $KAMANJA_HOME/bin/StartEngine.sh >> $HOME/kamanjastart.log &
  echo "Kamanja engine started in background. Please check the engine log at /tmp/kamanjastart.log"
 elif [ "$INPUT" = "stop" ]; then
-    ID=`ps -ef | grep -i java | grep -i KamanjaManager-1.0 | tr -s " " | cut -d" " -f3`
+    ID=`ps -ef | grep -i java | grep -i KamanjaManager-1.0 | tr -s " " | cut -d" " -f2`
     echo "Stopping Kamanja with process id: $ID"
     kill $ID
     sleep 2
-    ID=`ps -ef | grep -i java | grep -i KamanjaManager-1.0 | tr -s " " | cut -d" " -f3`
+    ID=`ps -ef | grep -i java | grep -i KamanjaManager-1.0 | tr -s " " | cut -d" " -f2`
     if [ "$ID" != "" ]; then
         echo "Failed to stop Kamanja. Found process $ID"
     else
@@ -104,28 +110,37 @@ elif [ "$INPUT" = "watch input queue" ]; then
   $KAMANJA_HOME/bin/WatchInputQueue.sh
 elif [ "$INPUT" = "watch output queue" ]; then
   $KAMANJA_HOME/bin/WatchOutputQueue.sh
+elif [ "$INPUT" = "watch failed events queue" ]; then
+  $KAMANJA_HOME/bin/WatchFailedEventQueue.sh
+elif [ "$INPUT" = "--version" ]; then
+  $KAMANJA_HOME/bin/MetadataAPI-1.0 --version
 elif [ "$INPUT" = "help" ]; then
 cat $KAMANJA_HOME/input/HelpMenu.txt
     echo ""
 elif [ "$INPUT" = "push data" ]; then
     $KAMANJA_HOME/bin/PushSampleDataToKafka.sh $INPUT
-#elif [ "$INPUT" = "kvinit" ]; then
-#count=0
-#FILEDIR=$KAMANJA_HOME/input/SampleApplications/bin
-#for entry in "$FILEDIR"/*
-#do
-#echo $entry | grep -i InitKvStores >> /dev/null
-#if [ $? = 0 ]; then
-#count=$((count+1))
-#  echo "$count: $entry"
-#  LISTOFFILES[count-1]=$entry
-#fi
-#done
-#read -p "Please select from the above options: " useroption
-#OPTION=useroption-1
-#INPUTFILE=${LISTOFFILES[OPTION]}
-#echo "User selected: $INPUTFILE"
-#$INPUTFILE
+  #elif [ "$INPUT" = "kvinit" ]; then
+  #count=0
+  #FILEDIR=$KAMANJA_HOME/input/SampleApplications/bin
+  #for entry in "$FILEDIR"/*
+  #do
+  #echo $entry | grep -i InitKvStores >> /dev/null
+  #if [ $? = 0 ]; then
+  #count=$((count+1))
+  #  echo "$count: $entry"
+  #  LISTOFFILES[count-1]=$entry
+  #fi
+  #done
+  #read -p "Please select from the above options: " useroption
+  #OPTION=useroption-1
+  #INPUTFILE=${LISTOFFILES[OPTION]}
+  #echo "User selected: $INPUTFILE"
+  #$INPUTFILE
 else
-java -Dlog4j.configurationFile=file:$KAMANJA_HOME/config/log4j2.xml -jar $KAMANJA_HOME/bin/MetadataAPI-1.0 $INPUT
+    if [ -n "$attachDebugger" ]; then
+        ipport="8998"
+        java -Xdebug -Xrunjdwp:transport=dt_socket,address="$ipport",server=y -Dlog4j.configurationFile=file:$KAMANJA_HOME/config/log4j2.xml -jar $KAMANJA_HOME/bin/MetadataAPI-1.0 $INPUT
+    else
+        java -Dlog4j.configurationFile=file:$KAMANJA_HOME/config/log4j2.xml -jar $KAMANJA_HOME/bin/MetadataAPI-1.0 $INPUT
+    fi
 fi

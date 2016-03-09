@@ -34,7 +34,7 @@
 //     
 package com.ligadata.models.samples.models
 
-import com.ligadata.KvBase.{ Key, Value, TimeRange }
+import com.ligadata.KvBase.{ Key, Value }
 import com.ligadata.KamanjaBase._
 import RddUtils._
 import RddDate._

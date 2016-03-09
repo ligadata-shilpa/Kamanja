@@ -1,5 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<!DOCTYPE html >
 <html>
         <head>
           <title>KafkaProducer - com.ligadata.OutputAdapters.KafkaProducer</title>
@@ -9,6 +8,11 @@
           
       <link href="../../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
       <link href="../../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../../../lib/jquery.js" id="jquery-js"></script>
+      <script type="text/javascript" src="../../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../../lib/template.js"></script>
+      <script type="text/javascript" src="../../../lib/tools.tooltip.js"></script>
+      
       <script type="text/javascript">
          if(top === self) {
             var url = '../../../index.html';
@@ -24,9 +28,17 @@
         </head>
         <body class="type">
       <div id="definition">
-        <a href="KafkaProducer$.html" title="Go to companion"><img src="../../../lib/class_to_object_big.png" /></a>
+        <a href="KafkaProducer$.html" title="See companion object"><img alt="Class/Object" src="../../../lib/class_to_object_big.png" /></a>
         <p id="owner"><a href="../../package.html" class="extype" name="com">com</a>.<a href="../package.html" class="extype" name="com.ligadata">ligadata</a>.<a href="package.html" class="extype" name="com.ligadata.OutputAdapters">OutputAdapters</a></p>
-        <h1><a href="KafkaProducer$.html" title="Go to companion">KafkaProducer</a></h1>
+        <h1><a href="KafkaProducer$.html" title="See companion object">KafkaProducer</a></h1><h3><span class="morelinks"><div>
+            Related Docs:
+            <a href="KafkaProducer$.html" title="See companion object">object KafkaProducer</a>
+            | <a href="package.html" class="extype" name="com.ligadata.OutputAdapters">package OutputAdapters</a>
+          </div></span></h3><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       </div>
 
       <h4 id="signature" class="signature">
@@ -35,13 +47,13 @@
         <span class="kind">class</span>
       </span>
       <span class="symbol">
-        <span class="name">KafkaProducer</span><span class="result"> extends <a href="../OnLEPBase/OutputAdapter.html" class="extype" name="com.ligadata.OnLEPBase.OutputAdapter">OutputAdapter</a></span>
+        <span class="name">KafkaProducer</span><span class="result"> extends <a href="../InputOutputAdapterInfo/OutputAdapter.html" class="extype" name="com.ligadata.InputOutputAdapterInfo.OutputAdapter">OutputAdapter</a></span>
       </span>
       </h4>
       
           <div id="comment" class="fullcommenttop"><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
-          <div class="superTypes hiddenContent"><a href="../OnLEPBase/OutputAdapter.html" class="extype" name="com.ligadata.OnLEPBase.OutputAdapter">OutputAdapter</a>, <span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
+          <div class="superTypes hiddenContent"><a href="../InputOutputAdapterInfo/OutputAdapter.html" class="extype" name="com.ligadata.InputOutputAdapterInfo.OutputAdapter">OutputAdapter</a>, <a href="../HeartBeat/Monitorable.html" class="extype" name="com.ligadata.HeartBeat.Monitorable">Monitorable</a>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></div>
         </div></div>
         
 
@@ -59,7 +71,7 @@
                 <span class="filtertype">Inherited<br />
                 </span>
                 <ol id="linearization">
-                  <li class="in" name="com.ligadata.OutputAdapters.KafkaProducer"><span>KafkaProducer</span></li><li class="in" name="com.ligadata.OnLEPBase.OutputAdapter"><span>OutputAdapter</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                  <li class="in" name="com.ligadata.OutputAdapters.KafkaProducer"><span>KafkaProducer</span></li><li class="in" name="com.ligadata.InputOutputAdapterInfo.OutputAdapter"><span>OutputAdapter</span></li><li class="in" name="com.ligadata.HeartBeat.Monitorable"><span>Monitorable</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
                 </ol>
               </div><div id="ancestors">
             <span class="filtertype"></span>
@@ -67,7 +79,6 @@
               <li class="hideall out"><span>Hide All</span></li>
               <li class="showall in"><span>Show all</span></li>
             </ol>
-            <a href="http://docs.scala-lang.org/overviews/scaladoc/usage.html#members" target="_blank">Learn more about member selection</a>
           </div>
         <div id="visbl">
             <span class="filtertype">Visibility</span>
@@ -80,7 +91,7 @@
         <div id="constructors" class="members">
               <h3>Instance Constructors</h3>
               <ol><li name="com.ligadata.OutputAdapters.KafkaProducer#&lt;init&gt;" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="&lt;init&gt;(inputConfig:com.ligadata.OnLEPBase.AdapterConfiguration,cntrAdapter:com.ligadata.OnLEPBase.CountersAdapter):com.ligadata.OutputAdapters.KafkaProducer"></a>
+      <a id="&lt;init&gt;(inputConfig:com.ligadata.InputOutputAdapterInfo.AdapterConfiguration,cntrAdapter:com.ligadata.InputOutputAdapterInfo.CountersAdapter):com.ligadata.OutputAdapters.KafkaProducer"></a>
       <a id="&lt;init&gt;:KafkaProducer"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -88,33 +99,61 @@
         <span class="kind">new</span>
       </span>
       <span class="symbol">
-        <span class="name">KafkaProducer</span><span class="params">(<span name="inputConfig">inputConfig: <a href="../OnLEPBase/AdapterConfiguration.html" class="extype" name="com.ligadata.OnLEPBase.AdapterConfiguration">AdapterConfiguration</a></span>, <span name="cntrAdapter">cntrAdapter: <a href="../OnLEPBase/CountersAdapter.html" class="extype" name="com.ligadata.OnLEPBase.CountersAdapter">CountersAdapter</a></span>)</span>
+        <span class="name">KafkaProducer</span><span class="params">(<span name="inputConfig">inputConfig: <a href="../InputOutputAdapterInfo/AdapterConfiguration.html" class="extype" name="com.ligadata.InputOutputAdapterInfo.AdapterConfiguration">AdapterConfiguration</a></span>, <span name="cntrAdapter">cntrAdapter: <a href="../InputOutputAdapterInfo/CountersAdapter.html" class="extype" name="com.ligadata.InputOutputAdapterInfo.CountersAdapter">CountersAdapter</a></span>)</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@&lt;init&gt;(inputConfig:com.ligadata.InputOutputAdapterInfo.AdapterConfiguration,cntrAdapter:com.ligadata.InputOutputAdapterInfo.CountersAdapter):com.ligadata.OutputAdapters.KafkaProducer" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li></ol>
+            </div>
+
+        <div id="types" class="types members">
+              <h3>Type Members</h3>
+              <ol><li name="com.ligadata.OutputAdapters.KafkaProducer.MsgDataRecievedCnt" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="MsgDataRecievedCntextendsProductwithSerializable"></a>
+      <a id="MsgDataRecievedCnt:MsgDataRecievedCnt"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="KafkaProducer$MsgDataRecievedCnt.html"><span class="name">MsgDataRecievedCnt</span></a><span class="params">(<span name="cntrToOrder">cntrToOrder: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Long" class="extype" target="_top">Long</a></span>, <span name="msg">msg: <span class="extype" name="org.apache.kafka.clients.producer.ProducerRecord">ProducerRecord</span>[<a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Byte" class="extype" target="_top">Byte</a>], <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Byte" class="extype" target="_top">Byte</a>]]</span>)</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@MsgDataRecievedCntextendsProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.OutputAdapters.KafkaProducer.RetryFailedMessages" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="RetryFailedMessagesextendsRunnable"></a>
+      <a id="RetryFailedMessages:RetryFailedMessages"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="KafkaProducer$RetryFailedMessages.html"><span class="name">RetryFailedMessages</span></a><span class="result"> extends <span class="extype" name="java.lang.Runnable">Runnable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@RetryFailedMessagesextendsRunnable" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li></ol>
             </div>
 
         
 
-        
-
         <div id="values" class="values members">
               <h3>Value Members</h3>
               <ol><li name="scala.AnyRef#!=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="!=(x$1:AnyRef):Boolean"></a>
-      <a id="!=(AnyRef):Boolean"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier">final </span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
-      </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="scala.Any#!=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="!=(x$1:Any):Boolean"></a>
       <a id="!=(Any):Boolean"></a>
       <h4 class="signature">
@@ -123,10 +162,14 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@!=(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.AnyRef###" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="##():Int"></a>
       <a id="##():Int"></a>
@@ -136,24 +179,15 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
+        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@##():Int" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.AnyRef#==" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="==(x$1:AnyRef):Boolean"></a>
-      <a id="==(AnyRef):Boolean"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier">final </span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
-      </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="scala.Any#==" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="==(x$1:Any):Boolean"></a>
       <a id="==(Any):Boolean"></a>
       <h4 class="signature">
@@ -162,11 +196,15 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
-    </li><li name="com.ligadata.OnLEPBase.OutputAdapter#Category" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@==(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="com.ligadata.InputOutputAdapterInfo.OutputAdapter#Category" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="Category:String"></a>
       <a id="Category:String"></a>
       <h4 class="signature">
@@ -177,8 +215,12 @@
       <span class="symbol">
         <span class="name">Category</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
       </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../OnLEPBase/OutputAdapter.html" class="extype" name="com.ligadata.OnLEPBase.OutputAdapter">OutputAdapter</a></dd></dl></div>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@Category:String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../InputOutputAdapterInfo/OutputAdapter.html" class="extype" name="com.ligadata.InputOutputAdapterInfo.OutputAdapter">OutputAdapter</a></dd></dl></div>
     </li><li name="com.ligadata.OutputAdapters.KafkaProducer#Shutdown" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="Shutdown():Unit"></a>
       <a id="Shutdown():Unit"></a>
@@ -188,10 +230,14 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">Shutdown</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">Shutdown</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.OutputAdapters.KafkaProducer">KafkaProducer</a> → <a href="../OnLEPBase/OutputAdapter.html" class="extype" name="com.ligadata.OnLEPBase.OutputAdapter">OutputAdapter</a></dd></dl></div>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@Shutdown():Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.OutputAdapters.KafkaProducer">KafkaProducer</a> → <a href="../InputOutputAdapterInfo/OutputAdapter.html" class="extype" name="com.ligadata.InputOutputAdapterInfo.OutputAdapter">OutputAdapter</a></dd></dl></div>
     </li><li name="scala.Any#asInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="asInstanceOf[T0]:T0"></a>
       <a id="asInstanceOf[T0]:T0"></a>
@@ -203,47 +249,12 @@
       <span class="symbol">
         <span class="name">asInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Any.asInstanceOf.T0">T0</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@asInstanceOf[T0]:T0" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
-    </li><li name="com.ligadata.OutputAdapters.KafkaProducer#batchSize" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="batchSize:Integer"></a>
-      <a id="batchSize:Integer"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">val</span>
-      </span>
-      <span class="symbol">
-        <span class="name">batchSize</span><span class="result">: <span class="extype" name="java.lang.Integer">Integer</span></span>
-      </span>
-      </h4>
-      
-    </li><li name="com.ligadata.OutputAdapters.KafkaProducer#bufferMemory" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="bufferMemory:Integer"></a>
-      <a id="bufferMemory:Integer"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">val</span>
-      </span>
-      <span class="symbol">
-        <span class="name">bufferMemory</span><span class="result">: <span class="extype" name="java.lang.Integer">Integer</span></span>
-      </span>
-      </h4>
-      
-    </li><li name="com.ligadata.OutputAdapters.KafkaProducer#clientId" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="clientId:String"></a>
-      <a id="clientId:String"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">val</span>
-      </span>
-      <span class="symbol">
-        <span class="name">clientId</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
-      </span>
-      </h4>
-      
     </li><li name="scala.AnyRef#clone" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="clone():Object"></a>
       <a id="clone():AnyRef"></a>
@@ -253,9 +264,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">clone</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@clone():Object" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -263,31 +278,294 @@
     </span>)</span>
               
         </dd></dl></div>
-    </li><li name="com.ligadata.OutputAdapters.KafkaProducer#codec" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="codec:&lt;error&gt;"></a>
-      <a id="codec:&lt;error&gt;"></a>
+    </li><li name="com.ligadata.OutputAdapters.KafkaProducer#counterLock" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="counterLock:Object"></a>
+      <a id="counterLock:AnyRef"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">codec</span><span class="result">: &lt;error&gt;</span>
+        <span class="name">counterLock</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@counterLock:Object" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
-    </li><li name="com.ligadata.OutputAdapters.KafkaProducer#compress" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="compress:Boolean"></a>
-      <a id="compress:Boolean"></a>
+    </li><li name="com.ligadata.OutputAdapters.KafkaProducer#default_batch_size" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="default_batch_size:String"></a>
+      <a id="default_batch_size:String"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">compress</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">default_batch_size</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@default_batch_size:String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.OutputAdapters.KafkaProducer#default_block_on_buffer_full" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="default_block_on_buffer_full:String"></a>
+      <a id="default_block_on_buffer_full:String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">default_block_on_buffer_full</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@default_block_on_buffer_full:String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.OutputAdapters.KafkaProducer#default_buffer_memory" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="default_buffer_memory:String"></a>
+      <a id="default_buffer_memory:String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">default_buffer_memory</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@default_buffer_memory:String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.OutputAdapters.KafkaProducer#default_client_id" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="default_client_id:String"></a>
+      <a id="default_client_id:String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">default_client_id</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@default_client_id:String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.OutputAdapters.KafkaProducer#default_compression_type" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="default_compression_type:String"></a>
+      <a id="default_compression_type:String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">default_compression_type</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@default_compression_type:String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.OutputAdapters.KafkaProducer#default_key_serializer" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="default_key_serializer:String"></a>
+      <a id="default_key_serializer:String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">default_key_serializer</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@default_key_serializer:String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.OutputAdapters.KafkaProducer#default_linger_ms" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="default_linger_ms:String"></a>
+      <a id="default_linger_ms:String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">default_linger_ms</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@default_linger_ms:String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.OutputAdapters.KafkaProducer#default_max_block_ms" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="default_max_block_ms:String"></a>
+      <a id="default_max_block_ms:String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">default_max_block_ms</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@default_max_block_ms:String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.OutputAdapters.KafkaProducer#default_max_buffer_full_block_ms" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="default_max_buffer_full_block_ms:String"></a>
+      <a id="default_max_buffer_full_block_ms:String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">default_max_buffer_full_block_ms</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@default_max_buffer_full_block_ms:String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.OutputAdapters.KafkaProducer#default_metadata_fetch_timeout_ms" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="default_metadata_fetch_timeout_ms:String"></a>
+      <a id="default_metadata_fetch_timeout_ms:String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">default_metadata_fetch_timeout_ms</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@default_metadata_fetch_timeout_ms:String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.OutputAdapters.KafkaProducer#default_network_request_timeout_ms" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="default_network_request_timeout_ms:String"></a>
+      <a id="default_network_request_timeout_ms:String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">default_network_request_timeout_ms</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@default_network_request_timeout_ms:String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.OutputAdapters.KafkaProducer#default_outstanding_messages" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="default_outstanding_messages:String"></a>
+      <a id="default_outstanding_messages:String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">default_outstanding_messages</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@default_outstanding_messages:String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.OutputAdapters.KafkaProducer#default_request_timeout_ms" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="default_request_timeout_ms:String"></a>
+      <a id="default_request_timeout_ms:String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">default_request_timeout_ms</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@default_request_timeout_ms:String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.OutputAdapters.KafkaProducer#default_timeout_ms" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="default_timeout_ms:String"></a>
+      <a id="default_timeout_ms:String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">default_timeout_ms</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@default_timeout_ms:String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.OutputAdapters.KafkaProducer#default_value_serializer" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="default_value_serializer:String"></a>
+      <a id="default_value_serializer:String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">default_value_serializer</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@default_value_serializer:String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.OutputAdapters.KafkaProducer#defrault_metadata_max_age_ms" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="defrault_metadata_max_age_ms:String"></a>
+      <a id="defrault_metadata_max_age_ms:String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">defrault_metadata_max_age_ms</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@defrault_metadata_max_age_ms:String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="scala.AnyRef#eq" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="eq(x$1:AnyRef):Boolean"></a>
@@ -298,9 +576,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@eq(x$1:AnyRef):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="scala.AnyRef#equals" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="equals(x$1:Any):Boolean"></a>
@@ -311,10 +593,31 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@equals(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="com.ligadata.OutputAdapters.KafkaProducer#failedMsgsMap" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="failedMsgsMap:java.util.concurrent.ConcurrentHashMap[Int,java.util.concurrent.ConcurrentHashMap[Long,KafkaProducer.this.MsgDataRecievedCnt]]"></a>
+      <a id="failedMsgsMap:ConcurrentHashMap[Int,ConcurrentHashMap[Long,MsgDataRecievedCnt]]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">failedMsgsMap</span><span class="result">: <span class="extype" name="java.util.concurrent.ConcurrentHashMap">ConcurrentHashMap</span>[<a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a>, <span class="extype" name="java.util.concurrent.ConcurrentHashMap">ConcurrentHashMap</span>[<a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Long" class="extype" target="_top">Long</a>, <a href="KafkaProducer$MsgDataRecievedCnt.html" class="extype" name="com.ligadata.OutputAdapters.KafkaProducer.MsgDataRecievedCnt">MsgDataRecievedCnt</a>]]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@failedMsgsMap:java.util.concurrent.ConcurrentHashMap[Int,java.util.concurrent.ConcurrentHashMap[Long,KafkaProducer.this.MsgDataRecievedCnt]]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
     </li><li name="scala.AnyRef#finalize" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="finalize():Unit"></a>
       <a id="finalize():Unit"></a>
@@ -324,9 +627,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">finalize</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@finalize():Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -345,8 +652,29 @@
       <span class="symbol">
         <span class="name">getClass</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.Class">Class</span>[_]</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@getClass():Class[_]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="com.ligadata.OutputAdapters.KafkaProducer#getComponentStatusAndMetrics" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getComponentStatusAndMetrics:com.ligadata.HeartBeat.MonitorComponentInfo"></a>
+      <a id="getComponentStatusAndMetrics:MonitorComponentInfo"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getComponentStatusAndMetrics</span><span class="result">: <a href="../HeartBeat/MonitorComponentInfo.html" class="extype" name="com.ligadata.HeartBeat.MonitorComponentInfo">MonitorComponentInfo</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@getComponentStatusAndMetrics:com.ligadata.HeartBeat.MonitorComponentInfo" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt"></p><div class="fullcomment"><div class="comment cmt"></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.OutputAdapters.KafkaProducer">KafkaProducer</a> → <a href="../HeartBeat/Monitorable.html" class="extype" name="com.ligadata.HeartBeat.Monitorable">Monitorable</a></dd></dl></div>
     </li><li name="scala.AnyRef#hashCode" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="hashCode():Int"></a>
       <a id="hashCode():Int"></a>
@@ -356,12 +684,16 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
+        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@hashCode():Int" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="com.ligadata.OutputAdapters.KafkaProducer#inputConfig" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="inputConfig:com.ligadata.OnLEPBase.AdapterConfiguration"></a>
+      <a id="inputConfig:com.ligadata.InputOutputAdapterInfo.AdapterConfiguration"></a>
       <a id="inputConfig:AdapterConfiguration"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -369,10 +701,14 @@
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">inputConfig</span><span class="result">: <a href="../OnLEPBase/AdapterConfiguration.html" class="extype" name="com.ligadata.OnLEPBase.AdapterConfiguration">AdapterConfiguration</a></span>
+        <span class="name">inputConfig</span><span class="result">: <a href="../InputOutputAdapterInfo/AdapterConfiguration.html" class="extype" name="com.ligadata.InputOutputAdapterInfo.AdapterConfiguration">AdapterConfiguration</a></span>
       </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.OutputAdapters.KafkaProducer">KafkaProducer</a> → <a href="../OnLEPBase/OutputAdapter.html" class="extype" name="com.ligadata.OnLEPBase.OutputAdapter">OutputAdapter</a></dd></dl></div>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@inputConfig:com.ligadata.InputOutputAdapterInfo.AdapterConfiguration" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.OutputAdapters.KafkaProducer">KafkaProducer</a> → <a href="../InputOutputAdapterInfo/OutputAdapter.html" class="extype" name="com.ligadata.InputOutputAdapterInfo.OutputAdapter">OutputAdapter</a></dd></dl></div>
     </li><li name="scala.Any#isInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="isInstanceOf[T0]:Boolean"></a>
       <a id="isInstanceOf[T0]:Boolean"></a>
@@ -382,22 +718,98 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@isInstanceOf[T0]:Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
-    </li><li name="com.ligadata.OutputAdapters.KafkaProducer#messageSendMaxRetries" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="messageSendMaxRetries:Integer"></a>
-      <a id="messageSendMaxRetries:Integer"></a>
+    </li><li name="com.ligadata.OutputAdapters.KafkaProducer#key" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="key:String"></a>
+      <a id="key:String"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">messageSendMaxRetries</span><span class="result">: <span class="extype" name="java.lang.Integer">Integer</span></span>
+        <span class="name">key</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@key:String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.OutputAdapters.KafkaProducer#linger_ms" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="linger_ms:String"></a>
+      <a id="linger_ms:String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">linger_ms</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@linger_ms:String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.OutputAdapters.KafkaProducer#max_outstanding_messages" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="max_outstanding_messages:Int"></a>
+      <a id="max_outstanding_messages:Int"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">max_outstanding_messages</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@max_outstanding_messages:Int" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.OutputAdapters.KafkaProducer#metadata_fetch_timeout_ms" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="metadata_fetch_timeout_ms:String"></a>
+      <a id="metadata_fetch_timeout_ms:String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">metadata_fetch_timeout_ms</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@metadata_fetch_timeout_ms:String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.OutputAdapters.KafkaProducer#msgInOrder" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="msgInOrder:java.util.concurrent.atomic.AtomicLong"></a>
+      <a id="msgInOrder:AtomicLong"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">var</span>
+      </span>
+      <span class="symbol">
+        <span class="name">msgInOrder</span><span class="result">: <span class="extype" name="java.util.concurrent.atomic.AtomicLong">AtomicLong</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@msgInOrder:java.util.concurrent.atomic.AtomicLong" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="scala.AnyRef#ne" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ne(x$1:AnyRef):Boolean"></a>
@@ -408,9 +820,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@ne(x$1:AnyRef):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="scala.AnyRef#notify" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="notify():Unit"></a>
@@ -421,9 +837,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notify</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@notify():Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="scala.AnyRef#notifyAll" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="notifyAll():Unit"></a>
@@ -434,22 +854,64 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@notifyAll():Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="com.ligadata.OutputAdapters.KafkaProducer#producer" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="producer:&lt;error&gt;"></a>
-      <a id="producer:&lt;error&gt;"></a>
+    </li><li name="com.ligadata.OutputAdapters.KafkaProducer#partitionsGetTm" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="partitionsGetTm:Long"></a>
+      <a id="partitionsGetTm:Long"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">var</span>
+      </span>
+      <span class="symbol">
+        <span class="name">partitionsGetTm</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Long" class="extype" target="_top">Long</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@partitionsGetTm:Long" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.OutputAdapters.KafkaProducer#partitionsMap" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="partitionsMap:java.util.concurrent.ConcurrentHashMap[Int,java.util.concurrent.ConcurrentHashMap[Long,KafkaProducer.this.MsgDataRecievedCnt]]"></a>
+      <a id="partitionsMap:ConcurrentHashMap[Int,ConcurrentHashMap[Long,MsgDataRecievedCnt]]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">producer</span><span class="result">: &lt;error&gt;</span>
+        <span class="name">partitionsMap</span><span class="result">: <span class="extype" name="java.util.concurrent.ConcurrentHashMap">ConcurrentHashMap</span>[<a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a>, <span class="extype" name="java.util.concurrent.ConcurrentHashMap">ConcurrentHashMap</span>[<a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Long" class="extype" target="_top">Long</a>, <a href="KafkaProducer$MsgDataRecievedCnt.html" class="extype" name="com.ligadata.OutputAdapters.KafkaProducer.MsgDataRecievedCnt">MsgDataRecievedCnt</a>]]</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@partitionsMap:java.util.concurrent.ConcurrentHashMap[Int,java.util.concurrent.ConcurrentHashMap[Long,KafkaProducer.this.MsgDataRecievedCnt]]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.OutputAdapters.KafkaProducer#producer" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="producer:org.apache.kafka.clients.producer.KafkaProducer[Array[Byte],Array[Byte]]"></a>
+      <a id="producer:org.apache.kafka.clients.producer.KafkaProducer[Array[Byte],Array[Byte]]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">producer</span><span class="result">: <span class="extype" name="org.apache.kafka.clients.producer.KafkaProducer">org.apache.kafka.clients.producer.KafkaProducer</span>[<a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Byte" class="extype" target="_top">Byte</a>], <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Byte" class="extype" target="_top">Byte</a>]]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@producer:org.apache.kafka.clients.producer.KafkaProducer[Array[Byte],Array[Byte]]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.OutputAdapters.KafkaProducer#props" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="props:java.util.Properties"></a>
@@ -462,48 +924,98 @@
       <span class="symbol">
         <span class="name">props</span><span class="result">: <span class="extype" name="java.util.Properties">Properties</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@props:java.util.Properties" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
-    </li><li name="com.ligadata.OutputAdapters.KafkaProducer#queueSize" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="queueSize:Integer"></a>
-      <a id="queueSize:Integer"></a>
+    </li><li name="com.ligadata.OutputAdapters.KafkaProducer#randomPartitionCntr" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="randomPartitionCntr:java.util.Random"></a>
+      <a id="randomPartitionCntr:Random"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">queueSize</span><span class="result">: <span class="extype" name="java.lang.Integer">Integer</span></span>
+        <span class="name">randomPartitionCntr</span><span class="result">: <span class="extype" name="java.util.Random">Random</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@randomPartitionCntr:java.util.Random" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
-    </li><li name="com.ligadata.OutputAdapters.KafkaProducer#queueTime" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="queueTime:Integer"></a>
-      <a id="queueTime:Integer"></a>
+    </li><li name="com.ligadata.OutputAdapters.KafkaProducer#refreshPartitionTime" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="refreshPartitionTime:Int"></a>
+      <a id="refreshPartitionTime:Int"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">queueTime</span><span class="result">: <span class="extype" name="java.lang.Integer">Integer</span></span>
+        <span class="name">refreshPartitionTime</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@refreshPartitionTime:Int" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
-    </li><li name="com.ligadata.OutputAdapters.KafkaProducer#requestRequiredAcks" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="requestRequiredAcks:Integer"></a>
-      <a id="requestRequiredAcks:Integer"></a>
+    </li><li name="com.ligadata.OutputAdapters.KafkaProducer#reqCntr" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="reqCntr:Int"></a>
+      <a id="reqCntr:Int"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
-        <span class="kind">val</span>
+        <span class="kind">var</span>
       </span>
       <span class="symbol">
-        <span class="name">requestRequiredAcks</span><span class="result">: <span class="extype" name="java.lang.Integer">Integer</span></span>
+        <span class="name">reqCntr</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@reqCntr:Int" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.OutputAdapters.KafkaProducer#send" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="send(messages:Array[Array[Byte]],partKeys:Array[Array[Byte]]):Unit"></a>
+      <a id="send(Array[Array[Byte]],Array[Array[Byte]]):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">send</span><span class="params">(<span name="messages">messages: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Byte" class="extype" target="_top">Byte</a>]]</span>, <span name="partKeys">partKeys: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Byte" class="extype" target="_top">Byte</a>]]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@send(messages:Array[Array[Byte]],partKeys:Array[Array[Byte]]):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt"></p><div class="fullcomment"><div class="comment cmt"></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.OutputAdapters.KafkaProducer">KafkaProducer</a> → <a href="../InputOutputAdapterInfo/OutputAdapter.html" class="extype" name="com.ligadata.InputOutputAdapterInfo.OutputAdapter">OutputAdapter</a></dd></dl></div>
+    </li><li name="com.ligadata.InputOutputAdapterInfo.OutputAdapter#send" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="send(messages:Array[String],partKeys:Array[String]):Unit"></a>
+      <a id="send(Array[String],Array[String]):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">send</span><span class="params">(<span name="messages">messages: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="partKeys">partKeys: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@send(messages:Array[String],partKeys:Array[String]):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../InputOutputAdapterInfo/OutputAdapter.html" class="extype" name="com.ligadata.InputOutputAdapterInfo.OutputAdapter">OutputAdapter</a></dd></dl></div>
+    </li><li name="com.ligadata.InputOutputAdapterInfo.OutputAdapter#send" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="send(message:Array[Byte],partKey:Array[Byte]):Unit"></a>
       <a id="send(Array[Byte],Array[Byte]):Unit"></a>
       <h4 class="signature">
@@ -512,11 +1024,15 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">send</span><span class="params">(<span name="message">message: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Byte">Byte</span>]</span>, <span name="partKey">partKey: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Byte">Byte</span>]</span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">send</span><span class="params">(<span name="message">message: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Byte" class="extype" target="_top">Byte</a>]</span>, <span name="partKey">partKey: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Byte" class="extype" target="_top">Byte</a>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.OutputAdapters.KafkaProducer">KafkaProducer</a> → <a href="../OnLEPBase/OutputAdapter.html" class="extype" name="com.ligadata.OnLEPBase.OutputAdapter">OutputAdapter</a></dd></dl></div>
-    </li><li name="com.ligadata.OutputAdapters.KafkaProducer#send" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@send(message:Array[Byte],partKey:Array[Byte]):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../InputOutputAdapterInfo/OutputAdapter.html" class="extype" name="com.ligadata.InputOutputAdapterInfo.OutputAdapter">OutputAdapter</a></dd></dl></div>
+    </li><li name="com.ligadata.InputOutputAdapterInfo.OutputAdapter#send" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="send(message:String,partKey:String):Unit"></a>
       <a id="send(String,String):Unit"></a>
       <h4 class="signature">
@@ -525,10 +1041,14 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">send</span><span class="params">(<span name="message">message: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="partKey">partKey: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">send</span><span class="params">(<span name="message">message: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="partKey">partKey: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.OutputAdapters.KafkaProducer">KafkaProducer</a> → <a href="../OnLEPBase/OutputAdapter.html" class="extype" name="com.ligadata.OnLEPBase.OutputAdapter">OutputAdapter</a></dd></dl></div>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@send(message:String,partKey:String):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../InputOutputAdapterInfo/OutputAdapter.html" class="extype" name="com.ligadata.InputOutputAdapterInfo.OutputAdapter">OutputAdapter</a></dd></dl></div>
     </li><li name="scala.AnyRef#synchronized" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="synchronized[T0](x$1:=&gt;T0):T0"></a>
       <a id="synchronized[T0](⇒T0):T0"></a>
@@ -540,20 +1060,28 @@
       <span class="symbol">
         <span class="name">synchronized</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="params">(<span name="arg0">arg0: ⇒ <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>)</span><span class="result">: <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@synchronized[T0](x$1:=&gt;T0):T0" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="com.ligadata.OutputAdapters.KafkaProducer#synchronously" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="synchronously:Boolean"></a>
-      <a id="synchronously:Boolean"></a>
+    </li><li name="com.ligadata.OutputAdapters.KafkaProducer#timeout_ms" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="timeout_ms:String"></a>
+      <a id="timeout_ms:String"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">synchronously</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">timeout_ms</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@timeout_ms:String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="scala.AnyRef#toString" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="toString():String"></a>
@@ -566,8 +1094,29 @@
       <span class="symbol">
         <span class="name">toString</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@toString():String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="com.ligadata.OutputAdapters.KafkaProducer#topicPartitionsCount" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="topicPartitionsCount:Int"></a>
+      <a id="topicPartitionsCount:Int"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">var</span>
+      </span>
+      <span class="symbol">
+        <span class="name">topicPartitionsCount</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@topicPartitionsCount:Int" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
     </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait():Unit"></a>
       <a id="wait():Unit"></a>
@@ -577,9 +1126,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@wait():Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -596,9 +1149,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Long">Long</span></span>, <span name="arg1">arg1: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Long" class="extype" target="_top">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@wait(x$1:Long,x$2:Int):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -615,9 +1172,13 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Long">Long</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Long" class="extype" target="_top">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.OutputAdapters.KafkaProducer@wait(x$1:Long):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -634,12 +1195,14 @@
         </div>
 
         <div id="inheritedMembers">
-        <div class="parent" name="com.ligadata.OnLEPBase.OutputAdapter">
-              <h3>Inherited from <a href="../OnLEPBase/OutputAdapter.html" class="extype" name="com.ligadata.OnLEPBase.OutputAdapter">OutputAdapter</a></h3>
+        <div class="parent" name="com.ligadata.InputOutputAdapterInfo.OutputAdapter">
+              <h3>Inherited from <a href="../InputOutputAdapterInfo/OutputAdapter.html" class="extype" name="com.ligadata.InputOutputAdapterInfo.OutputAdapter">OutputAdapter</a></h3>
+            </div><div class="parent" name="com.ligadata.HeartBeat.Monitorable">
+              <h3>Inherited from <a href="../HeartBeat/Monitorable.html" class="extype" name="com.ligadata.HeartBeat.Monitorable">Monitorable</a></h3>
             </div><div class="parent" name="scala.AnyRef">
-              <h3>Inherited from <span class="extype" name="scala.AnyRef">AnyRef</span></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">
-              <h3>Inherited from <span class="extype" name="scala.Any">Any</span></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></h3>
             </div>
         
         </div>
@@ -656,6 +1219,7 @@
       <div id="tooltip"></div>
 
       <div id="footer">  </div>
-      <script defer="defer" type="text/javascript" id="jquery-js" src="../../../lib/jquery.js"></script><script defer="defer" type="text/javascript" id="jquery-ui-js" src="../../../lib/jquery-ui.js"></script><script defer="defer" type="text/javascript" id="tools-tooltip-js" src="../../../lib/tools.tooltip.js"></script><script defer="defer" type="text/javascript" id="template-js" src="../../../lib/template.js"></script>
+
+
     </body>
       </html>

@@ -35,7 +35,7 @@ import java.io._
 import scala.io._
 import java.util.concurrent._
 import scala.collection.JavaConverters._
-import com.ligadata.Exceptions.StackTrace
+import com.ligadata.KamanjaVersion.KamanjaVersion
 
 class ZooKeeperListener {
   val loggerName = this.getClass.getName
@@ -55,8 +55,7 @@ class ZooKeeperListener {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
       }
     }
   }
@@ -73,7 +72,7 @@ class ZooKeeperListener {
             ProcessData(dataFromZNode, ListenCallback)
           } catch {
             case ex: Exception => {
-              logger.error("Exception while fetching properties from zookeeper ZNode, reason " + ex.getCause())
+              logger.error("Exception while fetching properties from zookeeper ZNode", ex)
             }
           }
         }
@@ -82,9 +81,8 @@ class ZooKeeperListener {
       // logger.setLevel(Level.TRACE);
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
-        throw new Exception("Failed to start a zookeeper session with(" + zkcConnectString + "): " + e.getMessage()+"\nStackTrace:"+stackTrace)
+        logger.debug("", e)
+        throw new Exception("Failed to start a zookeeper session with(" + zkcConnectString + ")", e)
       }
     }
   }
@@ -109,7 +107,7 @@ class ZooKeeperListener {
 
           } catch {
             case e: Exception => {
-              logger.error("Exception while processing event from zookeeper ZNode %s, reason %s, message %s".format(znodePath, e.getCause, e.getMessage))
+              logger.error("Exception while processing event from zookeeper ZNode %s".format(znodePath), e)
             }
           }
         }
@@ -117,9 +115,8 @@ class ZooKeeperListener {
       pathChildCache.start();
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
-        throw new Exception("Failed to setup a PatchChildrenCacheListener with the node(" + znodePath + "):" + e.getMessage())
+        logger.debug("", e)
+        throw new Exception("Failed to setup a PatchChildrenCacheListener with the node(" + znodePath + ")", e)
       }
     }
   }
@@ -168,9 +165,8 @@ object ZooKeeperListenerTest {
       cache.start();
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
-        throw new Exception("Failed to setup a PatchChildrenCacheListener with the node(" + zNodePath + "):" + e.getMessage())
+        logger.debug("", e)
+        throw new Exception("Failed to setup a PatchChildrenCacheListener with the node(" + zNodePath + ")", e)
       }
     }
   }
@@ -201,7 +197,7 @@ object ZooKeeperListenerTest {
       }
     } catch {
       case e: Exception => {
-        throw new Exception("Failed to start a zookeeper session: " + e.getMessage())
+        throw new Exception("Failed to start a zookeeper session", e)
       }
     } finally {
       zkListener.Shutdown
@@ -210,6 +206,7 @@ object ZooKeeperListenerTest {
 
   private def PrintUsage(): Unit = {
     logger.warn("    --config <configfilename>")
+    logger.warn("    --version")
   }
 
   private def nextOption(map: OptionMap, list: List[String]): OptionMap = {
@@ -218,6 +215,8 @@ object ZooKeeperListenerTest {
       case Nil => map
       case "--config" :: value :: tail =>
         nextOption(map ++ Map('config -> value), tail)
+      case "--version" :: tail =>
+        nextOption(map ++ Map('version -> "true"), tail)
       case option :: tail => {
         logger.error("Unknown option " + option)
         sys.exit(1)
@@ -235,10 +234,15 @@ object ZooKeeperListenerTest {
       logger.error("The config file supplied is a complete path name of a  json file similar to one in github/Kamanja/trunk/MetadataAPI/src/main/resources/MetadataAPIConfig.json")
     } else {
       val options = nextOption(Map(), args.toList)
+      val version = options.getOrElse('version, "false").toString
+      if (version.equalsIgnoreCase("true")) {
+        KamanjaVersion.print
+        return
+      }
       val cfgfile = options.getOrElse('config, null)
       if (cfgfile == null) {
         logger.error("Need configuration file as parameter")
-        throw MissingArgumentException("Usage: configFile  supplied as --config myConfig.properties")
+        throw MissingArgumentException("Usage: configFile  supplied as --config myConfig.properties", null)
       }
       configFile = cfgfile.asInstanceOf[String]
     }
@@ -251,7 +255,7 @@ object ZooKeeperListenerTest {
       StartLocalListener
     } catch {
       case e: Exception => {
-        throw new Exception("Failed to start a zookeeper session: " + e.getMessage())
+        throw new Exception("Failed to start a zookeeper session", e)
       }
     } finally {
       if (databaseOpen) {

@@ -30,7 +30,7 @@ import scala.io.Source
 import sys.process._
 import java.util.regex.Pattern
 import java.util.regex.Matcher
-
+import com.ligadata.KamanjaVersion.KamanjaVersion
 
 class sbtProjDependencies(rawDepsListStr: String) {
 
@@ -53,7 +53,7 @@ class sbtProjDependencies(rawDepsListStr: String) {
                     attributedElemsSansAttr += mcMatched
             })})
         } catch {
-            case e : Exception => { }
+            case e : Exception => { logger.error("", e) }
         }
         val implClassesAndDepJars : Array[String] = attributedElemsSansAttr.map(itm => trimBothEndsOfParens(itm)).toArray
         val depJars : Array[String] = implClassesAndDepJars.filter(itm => itm.endsWith(".jar"))
@@ -120,7 +120,7 @@ sbtProjectDependencies --sbtDeps <deps from "`sbt 'show <proj>/fullClasspath' | 
 
     def testPaths : String = { 
 """
-[info] List(Attributed(/home/rich/github/Med/Kamanja/trunk/Pmml/PmmlUdfs/target/scala-2.11/classes), Attributed(/home/rich/github/Med/Kamanja/trunk/Metadata/target/scala-2.11/classes), Attributed(/home/rich/github/Med/Kamanja/trunk/Pmml/PmmlRuntime/target/scala-2.11/classes), Attributed(/home/rich/github/Med/Kamanja/trunk/KamanjaBase/target/scala-2.11/classes), Attributed(/home/rich/.ivy2/cache/org.scala-lang/scala-library/jars/scala-library-2.11.7.jar), Attributed(/home/rich/.ivy2/cache/org.joda/joda-convert/jars/joda-convert-1.6.jar), Attributed(/home/rich/.ivy2/cache/joda-time/joda-time/jars/joda-time-2.3.jar), Attributed(/home/rich/.ivy2/cache/log4j/log4j/bundles/log4j-1.2.17.jar), Attributed(/home/rich/.ivy2/cache/org.json4s/json4s-native_2.11/jars/json4s-native_2.11-3.2.9.jar), Attributed(/home/rich/.ivy2/cache/org.json4s/json4s-core_2.11/jars/json4s-core_2.11-3.2.9.jar), Attributed(/home/rich/.ivy2/cache/org.json4s/json4s-ast_2.11/jars/json4s-ast_2.11-3.2.9.jar), Attributed(/home/rich/.ivy2/cache/com.thoughtworks.paranamer/paranamer/jars/paranamer-2.6.jar), Attributed(/home/rich/.ivy2/cache/org.scala-lang/scalap/jars/scalap-2.11.0.jar), Attributed(/home/rich/.ivy2/cache/org.scala-lang/scala-compiler/jars/scala-compiler-2.11.0.jar), Attributed(/home/rich/.ivy2/cache/org.scala-lang/scala-reflect/jars/scala-reflect-2.11.0.jar))
+[info] List(Attributed(/home/rich/github/Med/Kamanja/trunk/Pmml/PmmlUdfs/target/scala-2.11/classes), Attributed(/home/rich/github/Med/Kamanja/trunk/Metadata/target/scala-2.11/classes), Attributed(/home/rich/github/Med/Kamanja/trunk/Pmml/PmmlRuntime/target/scala-2.11/classes), Attributed(/home/rich/github/Med/Kamanja/trunk/KamanjaBase/target/scala-2.11/classes), Attributed(/home/rich/.ivy2/cache/org.scala-lang/scala-library/jars/scala-library-2.11.7.jar), Attributed(/home/rich/.ivy2/cache/org.joda/joda-convert/jars/joda-convert-1.6.jar), Attributed(/home/rich/.ivy2/cache/joda-time/joda-time/jars/joda-time-2.9.1.jar), Attributed(/home/rich/.ivy2/cache/log4j/log4j/bundles/log4j-1.2.17.jar), Attributed(/home/rich/.ivy2/cache/org.json4s/json4s-native_2.11/jars/json4s-native_2.11-3.2.9.jar), Attributed(/home/rich/.ivy2/cache/org.json4s/json4s-core_2.11/jars/json4s-core_2.11-3.2.9.jar), Attributed(/home/rich/.ivy2/cache/org.json4s/json4s-ast_2.11/jars/json4s-ast_2.11-3.2.9.jar), Attributed(/home/rich/.ivy2/cache/com.thoughtworks.paranamer/paranamer/jars/paranamer-2.6.jar), Attributed(/home/rich/.ivy2/cache/org.scala-lang/scalap/jars/scalap-2.11.0.jar), Attributed(/home/rich/.ivy2/cache/org.scala-lang/scala-compiler/jars/scala-compiler-2.11.0.jar), Attributed(/home/rich/.ivy2/cache/org.scala-lang/scala-reflect/jars/scala-reflect-2.11.0.jar))
 """
     }
       
@@ -149,6 +149,8 @@ sbtProjectDependencies --sbtDeps <deps from "`sbt 'show <proj>/fullClasspath' | 
               nextOption(map ++ Map('emitJsonJarNamesOnlyList -> value), tail)
             case "--emitAll" :: value :: tail =>
               nextOption(map ++ Map('emitAll -> value), tail)
+            case "--version" :: tail =>
+              nextOption(map ++ Map('version -> "true"), tail)
             case option :: tail =>
               println("Unknown option " + option)
               println(usage)
@@ -157,6 +159,11 @@ sbtProjectDependencies --sbtDeps <deps from "`sbt 'show <proj>/fullClasspath' | 
         }
     
         val options = nextOption(Map(), arglist)
+        val version = options.getOrElse('version, "false").toString
+        if (version.equalsIgnoreCase("true")) {
+          KamanjaVersion.print
+          return
+        }
         
         val sbtDeps = if (options.contains('sbtDeps)) options.apply('sbtDeps) else null
         val emitCp = if (options.contains('emitCp)) options.apply('emitCp) else null

@@ -1,20 +1,19 @@
-import AssemblyKeys._ // put this at the top of the file
+import sbtassembly.AssemblyPlugin.defaultShellScript
 import sbt._
 import Keys._
 
 shellPrompt := { state =>  "sbt (%s)> ".format(Project.extract(state).currentProject.id) }
 
-assemblySettings
+
 
 assemblyOption in assembly ~= { _.copy(prependShellScript = Some(defaultShellScript)) }
 
-jarName in assembly := { s"${name.value}-${version.value}" }
+assemblyJarName in assembly := { s"${name.value}-${version.value}" }
 
 // for some reason the merge strategy for non ligadata classes are not working and thus added those conflicting jars in exclusions
 // this may result some run time errors
 
-mergeStrategy in assembly <<= (mergeStrategy in assembly) { (old) =>
-  {
+assemblyMergeStrategy in assembly := {
     // case PathList("javax", "servlet", xs @ _*)         => MergeStrategy.first
     // case PathList(ps @ _*) if ps.last endsWith ".html" => MergeStrategy.first
 case PathList("META-INF", "maven","jline","jline", ps) if ps.startsWith("pom") => MergeStrategy.discard
@@ -46,20 +45,20 @@ case PathList("META-INF", "maven","jline","jline", ps) if ps.startsWith("pom") =
     case x if x contains "commons-logging" => MergeStrategy.first
     case "log4j.properties" => MergeStrategy.first
     case "unwanted.txt"     => MergeStrategy.discard
-    case x => old(x)
-  }
+            case x =>
+		        val oldStrategy = (assemblyMergeStrategy in assembly).value
+		        oldStrategy(x)
+
 }
 
 excludedJars in assembly <<= (fullClasspath in assembly) map { cp => 
-  val excludes = Set("commons-beanutils-1.7.0.jar", "google-collections-1.0.jar", "commons-collections-4-4.0.jar" )
+  val excludes = Set("commons-beanutils-1.7.0.jar", "google-collections-1.0.jar", "commons-collections-4-4.0.jar", "scalatest_2.11-2.2.0.jar", "scala-reflect-2.11.0.jar", "akka-actor_2.11-2.3.2.jar", "scala-reflect-2.11.2.jar", "scalatest_2.11-2.2.4.jar", "joda-time-2.9.1-javadoc.jar", "voldemort-0.96.jar", "scala-compiler-2.11.0.jar", "guava-14.0.1.jar", "log4j-1.2.17.jar", "log4j-1.2.16.jar")
   cp filter { jar => excludes(jar.data.getName) }
 }
 
 name := "MetadataAPIService"
 
 version := "1.0"
-
-scalaVersion := "2.11.7"
 
 scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
 

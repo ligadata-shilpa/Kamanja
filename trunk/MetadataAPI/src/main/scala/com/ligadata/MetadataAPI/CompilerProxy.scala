@@ -78,7 +78,7 @@ class CompilerProxy {
         nonTypeDeps,false)
     } catch {
       case e: Exception => {
-        logger.error("COMPILER_PROXY: unable to determine model metadata information during AddModel. ERROR " + e.getMessage)
+        logger.error("COMPILER_PROXY: unable to determine model metadata information during AddModel.", e)
         throw e
       }
     }
@@ -98,7 +98,7 @@ class CompilerProxy {
         modelVersion, msgDefClassFilePath, elements, sourceCode, totalDeps, typeDeps, nonTypeDeps,true)
     } catch {
       case e: Exception => {
-        logger.error("COMPILER_PROXY: unable to determine model metadata information during recompile. ERROR " + e.getMessage)
+        logger.error("COMPILER_PROXY: unable to determine model metadata information during recompile.", e)
         throw e
       }
     }
@@ -165,9 +165,6 @@ class CompilerProxy {
         if (modDef.ver == 0) {
           modDef.ver = 1
         }
-        if (modDef.modelType == null) {
-          modDef.modelType = "RuleSet"
-        }
 
         modDef.objectDefinition = pmmlStr
         modDef.objectFormat = fXML
@@ -178,11 +175,11 @@ class CompilerProxy {
       (classStr, modDef)
     } catch {
       case e: Exception => {
-        logger.error("Failed to compile the model definition " + e.toString)
+        logger.error("Failed to compile the model definition", e)
         throw ModelCompilationFailedException(e.getMessage(), e)
       }
       case e: AlreadyExistsException => {
-        logger.error("Failed to compile the model definition " + e.toString)
+        logger.error("Failed to compile the model definition", e)
         throw ModelCompilationFailedException(e.getMessage(), e)
       }
     }
@@ -294,11 +291,11 @@ class CompilerProxy {
       (classStrVer, msgDef, classStrNoVer)
     } catch {
       case e: Exception => {
-        logger.error("Failed to compile the message definition " + e.toString)
+        logger.error("Failed to compile the message definition ", e)
         throw MsgCompilationFailedException(e.getMessage(), e)
       }
       case e: AlreadyExistsException => {
-        logger.error("Failed to compile the message definition " + e.toString)
+        logger.error("Failed to compile the message definition ", e)
         throw MsgCompilationFailedException(e.getMessage(), e)
       }
     }
@@ -317,13 +314,13 @@ class CompilerProxy {
       var compileCommand: scala.collection.mutable.Seq[String] = null
 
       // See what is the source language the source code is in.
-      if (sourceLanguage.equals("java")) {
+      if (sourceLanguage.equalsIgnoreCase("java")) {
         srcFileName = s"$moduleName.java"
         // need to add the -d option to the JAVAC
         compileCommand = Seq("sh", "-c", s"$scalahome/bin/javac -d $jarBuildDir -cp $classpath $jarBuildDir/$srcFileName")
       } else {
         srcFileName = s"$moduleName.scala"
-        compileCommand = Seq("sh", "-c", s"$scalahome/bin/scalac -cp $classpath $jarBuildDir/$srcFileName")
+        compileCommand = Seq("sh", "-c", s"$scalahome/bin/scalac -d $jarBuildDir -cp $classpath $jarBuildDir/$srcFileName")
       }
       logger.info("COMPILER_PROXY: Compiling " + srcFileName + "  source code is in " + jarBuildDir)
       // Save the source file in the correct directory.
@@ -339,23 +336,29 @@ class CompilerProxy {
       } else {
         //  The compiled scala class files are found in com/$client/pmml of the current folder.. mv them to $jarBuildDir.  We 
         //  use the -d option on the java compiler command...  so no need to move anything if java.
+	compileRc
+	/*
         if (sourceLanguage.equalsIgnoreCase("java")) {
           return compileRc
         }
+	*/
 
         /** get the top level package name */
+	/*
         val packageLine: String = sourceCode.takeWhile(ch => ch != '\n')
         val pkgPattern = "package[ \t][ \t]*([A-Za-z0-9_.][A-Za-z0-9_.]+).*".r
         val pkgPattern(fullpkgName) = packageLine
         val topLevelPkg: String = fullpkgName.split('.').head
 
         val mvCmd: String = s"mv $topLevelPkg $compiler_work_dir/$moduleName/"
+	logger.debug(s"mv cmd used: $mvCmd")
         val mvCmdRc: Int = Process(mvCmd).!
         if (mvCmdRc != 0) {
           logger.error(s"unable to move classes to build directory, $jarBuildDir ... rc = $mvCmdRc")
           logger.error(s"cmd used : $mvCmd")
         }
         mvCmdRc
+	*/
       }
     }
 
@@ -464,11 +467,26 @@ class CompilerProxy {
     }
 
   /**
-   * compileModelFromSource - Generate a jarfile from a sourceCode.
+   * compileModelFromSource - Generate a jarfile from a sourceCode.  This method used by the java and scala custom models
+   *
+   * @param repackagedCode
+   * @param sourceLang
+   * @param pname
+   * @param classPath
+   * @param modelNamespace
+   * @param modelName
+   * @param modelVersion
+   * @param msgDefClassFilePath
+   * @param elements
+   * @param originalSource
+   * @param deps
+   * @param typeDeps
+   * @param notTypeDeps
+   * @return ModelDef
    *
    */
   // The last parameter of generateModelDef represents whether we are recompiling a model due to a change
-  // on a dependant message(or container) or compiling for the first time. 
+  // on a dependent message(or container) or compiling for the first time.
   // MdMgr.MakeModelDef requires this information and function behaves differently depending on whether 
   // we are compiling first time or recompiling an existing model.
   private def generateModelDef(repackagedCode: String, sourceLang: String, pname: String, classPath: String, modelNamespace: String, modelName: String,
@@ -502,15 +520,35 @@ class CompilerProxy {
       val depJars = getJarsFromClassPath(classPath)
       
       // figure out the Physical Model Name
-      var (dummy1, dummy2, dummy3, pName) = getModelMetadataFromJar(jarFileName, elements, depJars)
+      var (dummy1, dummy2, dummy3, pName) = getModelMetadataFromJar(jarFileName, elements, depJars, sourceLang)
 
-      // Create the ModelDef object
-      val modDef: ModelDef = MdMgr.GetMdMgr.MakeModelDef(modelNamespace, modelName, "", "RuleSet",
-        getInputVarsFromElements(elements),
-        List[(String, String, String)](),
-        MdMgr.ConvertVersionToLong(MdMgr.FormatVersion(modelVersion)), "",
-        deps.toArray[String],
-        recompile,false)
+      /* Create the ModelDef object
+
+        def MakeModelDef(nameSpace: String
+                   , name: String
+                   , physicalName: String
+                   , mdlType: String
+                   , inputVars: List[(String, String, String, String, Boolean, String)]
+                   , outputVars: List[(String, String, String)]
+                   , ver: Long
+                   , jarNm: String
+                   , depJars: Array[String]
+                   , recompile: Boolean
+                   , supportsInstanceSerialization: Boolean): ModelDef = {
+
+       */
+      val modelType : String = if (sourceLang.equalsIgnoreCase("scala")) "Scala" else "Java"
+      val modDef: ModelDef = MdMgr.GetMdMgr.MakeModelDef(modelNamespace
+                                                        , modelName
+                                                        , pName
+                                                        , modelType
+                                                        , getInputVarsFromElements(elements)
+                                                        , List[(String, String, String)]()
+                                                        , MdMgr.ConvertVersionToLong(MdMgr.FormatVersion(modelVersion))
+                                                        , jarFileName
+                                                        , deps.toArray[String]
+                                                        , recompile
+                                                        , false)
 
       // Need to set some values by hand here.
       modDef.jarName = jarFileName
@@ -520,13 +558,11 @@ class CompilerProxy {
       modDef
     } catch {
       case e: AlreadyExistsException => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.error("Failed to compile the model definition:%s.\nStackTrace:%s".format(e.toString, stackTrace))
+        logger.error("Failed to compile the model definition", e)
         throw e
       }
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.error("Failed to compile the model definition:%s.\nStackTrace:%s".format(e.toString, stackTrace))
+        logger.error("Failed to compile the model definition", e)
         throw ModelCompilationFailedException(e.getMessage(), e)
       }
     }
@@ -647,7 +683,7 @@ class CompilerProxy {
     
     val depJars = getJarsFromClassPath(classPath)
 
-    (getModelMetadataFromJar(jarFileName, elements, depJars), finalSourceCode, packageName)
+    (getModelMetadataFromJar(jarFileName, elements, depJars, sourceLang), finalSourceCode, packageName)
 
   }
 
@@ -688,7 +724,7 @@ class CompilerProxy {
       }
     } catch {
       case e: Exception => {
-        logger.error("Failed to get classname :" + clsName)
+        logger.error("Failed to get classname :" + clsName, e)
         return null
       }
     }
@@ -704,8 +740,7 @@ class CompilerProxy {
           objinst = obj.instance
         } catch {
           case e: Exception => {
-            val stackTrace = StackTrace.ThrowableTraceString(e)
-            logger.debug("StackTrace:" + stackTrace)
+            logger.debug("", e)
             // Trying Regular Object instantiation
             objinst = curClass.newInstance
           }
@@ -723,7 +758,7 @@ class CompilerProxy {
         }
       } catch {
         case e: Exception =>
-          logger.error("Failed to instantiate FactoryOfModelInstanceFactory object:" + clsName + ". Reason:" + e.getCause + ". Message:" + e.getMessage)
+          logger.error("Failed to instantiate FactoryOfModelInstanceFactory object:" + clsName, e)
           return null
       }
     }
@@ -787,7 +822,7 @@ class CompilerProxy {
       }
   }
 
-  private def getModelMetadataFromJar(jarFileName: String, elements: Set[BaseElemDef], depJars: List[String]): (String, String, String, String) = {
+  private def getModelMetadataFromJar(jarFileName: String, elements: Set[BaseElemDef], depJars: List[String], sourceLang : String): (String, String, String, String) = {
 
     // Resolve ModelNames and Models versions - note, the jar file generated is still in the workDirectory.
     val loaderInfo = new KamanjaLoaderInfo()
@@ -821,7 +856,7 @@ class CompilerProxy {
         Class.forName(clsName, true, loaderInfo.loader)
       } catch {
         case e: Exception => {
-          logger.error("Failed to load Model class %s with Reason:%s Message:%s".format(clsName, e.getCause, e.getMessage))
+          logger.error("Failed to load Model class %s".format(clsName), e)
           throw e // Rethrow
         }
       }
@@ -831,27 +866,48 @@ class CompilerProxy {
 
       var isModel = false
       while (curClz != null && isModel == false) {
-        isModel = Utils.isDerivedFrom(curClz, "com.ligadata.KamanjaBase.ModelInstanceFactory")
+        isModel = Utils.isDerivedFrom(curClz, "com.ligadata.KamanjaBase.ModelInstanceFactory") || 
+		           Utils.isDerivedFrom(curClz, "com.ligadata.KamanjaBase.ModelBaseObj")
+
         if (isModel == false)
           curClz = curClz.getSuperclass()
       }
       if (isModel) {
         try {
-          val mdlDef = MdMgr.GetMdMgr.MakeModelDef("", "", clsName, "jar", List[(String, String, String, String, Boolean, String)](), List[(String, String, String)]()) // Java/Scala/Jar/PMML models are marked as JAR here.
-          val mdlFactory = PrepareModelFactory(loaderInfo, jarPaths0, mdlDef)
+
+            /**
+              * Manufacture a proxy of the model def.  There are some subtleties here.  For the java and scala native
+              * models, the fully qualified class path (i.e., the variable clsName in use here), is really the
+              * model namespace.name where the class name is the model name and the package prefix is the namespace.
+              *
+              * The thinking here is that if this mechanism changes, it will not be hard coded here in the proxy. It will
+              * exist in but one place, namely in the getModelInstanceFactory method found in the FactoryOfModelInstanceFactory.
+              * For this reason, the trouble of manufacturing a ModelDef is taken so it can turn around and just pull
+              * out the pkg prefix and class name from the 'clsName' variable.
+              */
+
+              val mdlDef = MdMgr.GetMdMgr.MakeModelDef("", ""
+                  , clsName
+                  , sourceLang
+                  , List[(String, String, String, String, Boolean, String)]()
+                  , List[(String, String, String)]()
+                  , 1000000L
+                  , ""
+                  , Array[String]()
+                  , false, false)
+              val mdlFactory = PrepareModelFactory(loaderInfo, jarPaths0, mdlDef)
   
-          if (mdlFactory != null) {
-            var fullName = mdlFactory.getModelName.split('.')
-            return (fullName.dropRight(1).mkString("."), fullName(fullName.length - 1), mdlFactory.getVersion, clsName)
-          }
+              if (mdlFactory != null) {
+                var fullName = mdlFactory.getModelName.split('.')
+                return (fullName.dropRight(1).mkString("."), fullName(fullName.length - 1), mdlFactory.getVersion, clsName)
+              }
 
           logger.error("COMPILER_PROXY: Unable to resolve a class Object from " + jarName0)
           throw MsgCompilationFailedException(clsName, null)
         } catch {
           case e: Exception => {
             // Trying Regular Object instantiation
-            val stackTrace = StackTrace.ThrowableTraceString(e)
-            logger.error("COMPILER_PROXY: Exception encountered trying to determin metadata from Class:%s, Reason:%s Message:%s.\nStackTrace:%s".format(clsName, e.getCause, e.getMessage, stackTrace))
+            logger.error("COMPILER_PROXY: Exception encountered trying to determin metadata from Class:%s".format(clsName), e)
             throw MsgCompilationFailedException(clsName, e)
           }
         }
@@ -869,12 +925,11 @@ class CompilerProxy {
             logger.debug("COMPILER_PROXY: " + clsName + " is a Scala Class... ")
           } catch {
             case e: java.lang.NoClassDefFoundError => {
-              val stackTrace = StackTrace.ThrowableTraceString(e)
-              logger.debug("Stacktrace:" + stackTrace)
+              logger.debug("", e)
               throw e
             }
             case e: Exception => {
-              logger.debug("COMPILER_PROXY: " + clsName + " is a Java Class... ")
+              logger.debug("COMPILER_PROXY: " + clsName + " is a Java Class... ", e)
               objInst = tempCurClass.newInstance
             }
           }
@@ -887,13 +942,12 @@ class CompilerProxy {
             return (fullName.dropRight(1).mkString("."), fullName(fullName.length - 1), baseModelTrait.getVersion, clsName)
           }
           logger.error("COMPILER_PROXY: Unable to resolve a class Object from " + jarName0)
-          throw MsgCompilationFailedException(clsName)
+          throw MsgCompilationFailedException(clsName, null)
         } catch {
           case e: Exception => {
             // Trying Regular Object instantiation
-            val stackTrace = StackTrace.ThrowableTraceString(e)
-            logger.error("COMPILER_PROXY: Exception encountered trying to determin metadata from Class:%s, Reason:%s Message:%s.\nStackTrace:%s".format(clsName, e.getCause, e.getMessage, stackTrace))
-            throw MsgCompilationFailedException(clsName)
+            logger.error("COMPILER_PROXY: Exception encountered trying to determin metadata from Class:%s".format(clsName), e)
+            throw MsgCompilationFailedException(clsName, null)
           }
         }
 */

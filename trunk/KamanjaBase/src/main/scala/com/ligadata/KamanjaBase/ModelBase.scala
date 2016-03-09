@@ -19,25 +19,26 @@ package com.ligadata.KamanjaBase
 
 import scala.collection.immutable.Map
 import com.ligadata.Utils.Utils
-import com.ligadata.kamanja.metadata.{ MdMgr, ModelDef }
+import com.ligadata.kamanja.metadata.{MdMgr, ModelDef}
 import org.json4s._
 import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
-import java.io.{ DataInputStream, DataOutputStream }
-import com.ligadata.KvBase.{ TimeRange }
-import com.ligadata.KvBase.{ Key, Value, TimeRange /* , KvBaseDefalts, KeyWithBucketIdAndPrimaryKey, KeyWithBucketIdAndPrimaryKeyCompHelper */ }
-import com.ligadata.Utils.{ KamanjaLoaderInfo }
+import java.io.{DataInputStream, DataOutputStream}
+import com.ligadata.KvBase.{Key, Value, TimeRange /* , KvBaseDefalts, KeyWithBucketIdAndPrimaryKey, KeyWithBucketIdAndPrimaryKeyCompHelper */}
+import com.ligadata.Utils.{KamanjaLoaderInfo}
+import com.ligadata.HeartBeat._
 
 object MinVarType extends Enumeration {
   type MinVarType = Value
   val Unknown, Active, Predicted, Supplementary, FeatureExtraction = Value
+
   def StrToMinVarType(tsTypeStr: String): MinVarType = {
     tsTypeStr.toLowerCase.trim() match {
-      case "active"            => Active
-      case "predicted"         => Predicted
-      case "supplementary"     => Supplementary
+      case "active" => Active
+      case "predicted" => Predicted
+      case "supplementary" => Supplementary
       case "featureextraction" => FeatureExtraction
-      case _                   => Unknown
+      case _ => Unknown
     }
   }
 }
@@ -78,8 +79,10 @@ class SavedMdlResult {
   var uniqKey: String = ""
   var uniqVal: String = ""
   var txnId: Long = 0
-  var xformedMsgCntr: Int = 0 // Current message Index, In case if we have multiple Transformed messages for a given input message
-  var totalXformedMsgs: Int = 0 // Total transformed messages, In case if we have multiple Transformed messages for a given input message
+  // Current message Index, In case if we have multiple Transformed messages for a given input message
+  var xformedMsgCntr: Int = 0
+  // Total transformed messages, In case if we have multiple Transformed messages for a given input message
+  var totalXformedMsgs: Int = 0
   var mdlRes: ModelResultBase = null
 
   def withMdlName(mdl_Name: String): SavedMdlResult = {
@@ -142,11 +145,21 @@ class SavedMdlResult {
 
 trait ModelResultBase {
   def toJson: List[org.json4s.JsonAST.JObject]
-  def toString: String // Returns JSON string
-  def get(key: String): Any // Get the value for the given key, if exists, otherwise NULL
-  def asKeyValuesMap: Map[String, Any] // Return all key & values as Map of KeyValue pairs
-  def Deserialize(dis: DataInputStream): Unit // Serialize this object
-  def Serialize(dos: DataOutputStream): Unit // Deserialize this object
+
+  // Returns JSON string
+  def toString: String
+
+  // Get the value for the given key, if exists, otherwise NULL
+  def get(key: String): Any
+
+  // Return all key & values as Map of KeyValue pairs
+  def asKeyValuesMap: Map[String, Any]
+
+  // Deserialize this object
+  def Deserialize(dis: DataInputStream): Unit
+
+  // Serialize this object
+  def Serialize(dos: DataOutputStream): Unit
 }
 
 // Keys are handled as case sensitive
@@ -232,12 +245,16 @@ class MappedModelResults extends ModelResultBase {
 
 case class ContainerNameAndDatastoreInfo(containerName: String, dataDataStoreInfo: String)
 
-trait EnvContext {
+trait EnvContext extends Monitorable {
   // Metadata Ops
   var _mgr: MdMgr = _
+
   def setMdMgr(mgr: MdMgr): Unit
+
   def getPropertyValue(clusterId: String, key: String): String
+
   def SetClassLoader(cl: java.lang.ClassLoader): Unit
+
   def SetMetadataResolveInfo(mdres: MdBaseResolveInfo): Unit
 
   // Setting JarPaths
@@ -245,35 +262,45 @@ trait EnvContext {
 
   // Datastores
   def SetDefaultDatastore(dataDataStoreInfo: String): Unit
-  def SetStatusInfoDatastore(statusDataStoreInfo: String): Unit
 
   // Registerd Messages/Containers
   def RegisterMessageOrContainers(containersInfo: Array[ContainerNameAndDatastoreInfo]): Unit
 
   // RDD Ops
   def getRecent(transId: Long, containerName: String, partKey: List[String], tmRange: TimeRange, f: MessageContainerBase => Boolean): Option[MessageContainerBase]
+
   def getRDD(transId: Long, containerName: String, partKey: List[String], tmRange: TimeRange, f: MessageContainerBase => Boolean): Array[MessageContainerBase]
+
   def saveOne(transId: Long, containerName: String, partKey: List[String], value: MessageContainerBase): Unit
+
   def saveRDD(transId: Long, containerName: String, values: Array[MessageContainerBase]): Unit
 
   // RDD Ops
   def Shutdown: Unit
+
   def getAllObjects(transId: Long, containerName: String): Array[MessageContainerBase]
+
   def getObject(transId: Long, containerName: String, partKey: List[String], primaryKey: List[String]): MessageContainerBase
-  def getHistoryObjects(transId: Long, containerName: String, partKey: List[String], appendCurrentChanges: Boolean): Array[MessageContainerBase] // if appendCurrentChanges is true return output includes the in memory changes (new or mods) at the end otherwise it ignore them.
+
+  // if appendCurrentChanges is true return output includes the in memory changes (new or mods) at the end otherwise it ignore them.
+  def getHistoryObjects(transId: Long, containerName: String, partKey: List[String], appendCurrentChanges: Boolean): Array[MessageContainerBase]
+
   def setObject(transId: Long, containerName: String, partKey: List[String], value: MessageContainerBase): Unit
+
   def contains(transId: Long, containerName: String, partKey: List[String], primaryKey: List[String]): Boolean
-  def containsAny(transId: Long, containerName: String, partKeys: Array[List[String]], primaryKeys: Array[List[String]]): Boolean //partKeys.size should be same as primaryKeys.size  
+
+  def containsAny(transId: Long, containerName: String, partKeys: Array[List[String]], primaryKeys: Array[List[String]]): Boolean
+
+  //partKeys.size should be same as primaryKeys.size
   def containsAll(transId: Long, containerName: String, partKeys: Array[List[String]], primaryKeys: Array[List[String]]): Boolean //partKeys.size should be same as primaryKeys.size
 
   // Adapters Keys & values
   def setAdapterUniqueKeyValue(transId: Long, key: String, value: String, outputResults: List[(String, String, String)]): Unit
+
   def getAdapterUniqueKeyValue(transId: Long, key: String): (Long, String, List[(String, String, String)])
-  /*
-  def getAllIntermediateStatusInfo: Array[(String, (String, Int, Int))] // Get all Status information from intermediate table. No Transaction required here.
-  def getIntermediateStatusInfo(keys: Array[String]): Array[(String, (String, Int, Int))] // Get Status information from intermediate table for given keys. No Transaction required here.
-*/
+
   def setAdapterUniqKeyAndValues(keyAndValues: List[(String, String)]): Unit
+
   def getAllAdapterUniqKvDataInfo(keys: Array[String]): Array[(String, (Long, String, List[(String, String, String)]))] // Get Status information from Final table. No Transaction required here.
 
   //  def getAllIntermediateCommittingInfo: Array[(String, (Long, String, List[(String, String)]))] // Getting intermediate committing information. Once we commit we don't have this, because we remove after commit
@@ -285,11 +312,13 @@ trait EnvContext {
 
   // Model Results Saving & retrieving. Don't return null, always return empty, if we don't find
   def saveModelsResult(transId: Long, key: List[String], value: scala.collection.mutable.Map[String, SavedMdlResult]): Unit
+
   def getModelsResult(transId: Long, key: List[String]): scala.collection.mutable.Map[String, SavedMdlResult]
 
   // Final Commit for the given transaction
   // outputResults has AdapterName, PartitionKey & Message
   def commitData(transId: Long, key: String, value: String, outputResults: List[(String, String, String)], forceCommit: Boolean): Unit
+
   def rollbackData(transId: Long): Unit
 
   // Save State Entries on local node & on Leader
@@ -304,26 +333,86 @@ trait EnvContext {
 
   // Changed Data & Reloading data are Time in MS, Bucket Key & TransactionId
   def getChangedData(tempTransId: Long, includeMessages: Boolean, includeContainers: Boolean): scala.collection.immutable.Map[String, List[Key]]
+
   def ReloadKeys(tempTransId: Long, containerName: String, keys: List[Key]): Unit
 
   // Set Reload Flag
   //  def setReloadFlag(transId: Long, containerName: String): Unit
 
   def PersistValidateAdapterInformation(validateUniqVals: Array[(String, String)]): Unit
+
   def GetValidateAdapterInformation: Array[(String, String)]
 
   /**
-   *  Answer an empty instance of the message or container with the supplied fully qualified class name.  If the name is
-   *  invalid, null is returned.
-   *  @param fqclassname : a full package qualifed class name
-   *  @return a MesssageContainerBase of that ilk
-   */
+    * Answer an empty instance of the message or container with the supplied fully qualified class name.  If the name is
+    * invalid, null is returned.
+    *
+    * @param fqclassname : a full package qualified class name
+    * @return a MesssageContainerBase of that ilk
+    */
   def NewMessageOrContainer(fqclassname: String): MessageContainerBase
 
   // Just get the cached container key and see what are the containers we need to cache
   def CacheContainers(clusterId: String): Unit
 
   def EnableEachTransactionCommit: Boolean
+}
+
+// partitionKey is the one used for this message
+class ModelContext(val txnContext: TransactionContext, val msg: MessageContainerBase, val msgData: Array[Byte], val partitionKey: String) {
+  def InputMessageData: Array[Byte] = msgData
+
+  def Message: MessageContainerBase = msg
+
+  def TransactionContext: TransactionContext = txnContext
+
+  def PartitionKey: String = partitionKey
+
+  def getPropertyValue(clusterId: String, key: String): String = (txnContext.getPropertyValue(clusterId, key))
+}
+
+abstract class ModelBase(var modelContext: ModelContext, val factory: ModelBaseObj) {
+  final def EnvContext() = if (modelContext != null && modelContext.txnContext != null && modelContext.txnContext.nodeCtxt != null) modelContext.txnContext.nodeCtxt.getEnvCtxt() else null
+
+  // Model Name
+  final def ModelName() = factory.ModelName()
+
+  // Model Version
+  final def Version() = factory.Version()
+
+  // Tenant Id
+  final def TenantId() = null
+
+  final def TransId() = if (modelContext != null && modelContext.txnContext != null) modelContext.txnContext.getTransactionId() else null // transId
+
+  // Instance initialization. Once per instance
+  def init(partitionHash: Int): Unit = {}
+
+  // Shutting down the instance
+  def shutdown(): Unit = {}
+
+  // if outputDefault is true we will output the default value if nothing matches, otherwise null
+  def execute(outputDefault: Boolean): ModelResultBase
+
+  // Can we reuse the instances created for this model?
+  def isModelInstanceReusable(): Boolean = false
+}
+
+trait ModelBaseObj {
+  // Check to fire the model
+  def IsValidMessage(msg: MessageContainerBase): Boolean
+
+  // Creating same type of object with given values
+  def CreateNewModel(mdlCtxt: ModelContext): ModelBase
+
+  // Model Name
+  def ModelName(): String
+
+  // Model Version
+  def Version(): String
+
+  // ResultClass associated the model. Mainly used for Returning results as well as Deserialization
+  def CreateResultObject(): ModelResultBase
 }
 
 // ModelInstance will be created from ModelInstanceFactory by demand.
@@ -403,6 +492,7 @@ abstract class ModelInstanceFactory(val modelDef: ModelDef, val nodeContext: Nod
 
 trait FactoryOfModelInstanceFactory {
   def getModelInstanceFactory(modelDef: ModelDef, nodeContext: NodeContext, loaderInfo: KamanjaLoaderInfo, jarPaths: collection.immutable.Set[String]): ModelInstanceFactory
+
   // Input:
   //  modelDefStr is Model Definition String
   //  inpMsgName is Input Message Name
@@ -413,24 +503,101 @@ trait FactoryOfModelInstanceFactory {
 
 class TransactionContext(val transId: Long, val nodeCtxt: NodeContext, val msgData: Array[Byte], val partitionKey: String) {
   private var msg: MessageContainerBase = _
+
   def getInputMessageData(): Array[Byte] = msgData
+
   def getPartitionKey(): String = partitionKey
+
   def getMessage(): MessageContainerBase = msg
-  def setMessage(m: MessageContainerBase): Unit = { msg = m }
+
+  def setMessage(m: MessageContainerBase): Unit = {
+    msg = m
+  }
+
   def getTransactionId() = transId
+
   def getNodeCtxt() = nodeCtxt
+
   private var valuesMap = new java.util.HashMap[String, Any]()
-  def getPropertyValue(clusterId: String, key: String): String = { if (nodeCtxt != null) nodeCtxt.getPropertyValue(clusterId, key) else "" }
-  def putValue(key: String, value: Any): Unit = { valuesMap.put(key, value) }
-  def getValue(key: String): Any = { valuesMap.get(key) }
+
+  def getPropertyValue(clusterId: String, key: String): String = {
+    if (nodeCtxt != null) nodeCtxt.getPropertyValue(clusterId, key) else ""
+  }
+
+  def putValue(key: String, value: Any): Unit = {
+    valuesMap.put(key, value)
+  }
+
+  def getValue(key: String): Any = {
+    valuesMap.get(key)
+  }
+
+  def setContextValue(key: String, value: Any): Unit = {
+    putValue(key, value)
+  }
+
+  // Deprecated. Use putValue
+  def getContextValue(key: String): Any = {
+    getValue(key)
+  } // Deprecated. Use getValue
 }
 
 // Node level context
 class NodeContext(val gCtx: EnvContext) {
   def getEnvCtxt() = gCtx
+
   private var valuesMap = new java.util.HashMap[String, Any]()
-  def getPropertyValue(clusterId: String, key: String): String = { if (gCtx != null) gCtx.getPropertyValue(clusterId, key) else "" }
-  def putValue(key: String, value: Any): Unit = { valuesMap.put(key, value) }
-  def getValue(key: String): Any = { valuesMap.get(key) }
+
+  def getPropertyValue(clusterId: String, key: String): String = {
+    if (gCtx != null) gCtx.getPropertyValue(clusterId, key) else ""
+  }
+
+  def putValue(key: String, value: Any): Unit = {
+    valuesMap.put(key, value)
+  }
+
+  def getValue(key: String): Any = {
+    valuesMap.get(key)
+  }
 }
 
+// 1.1.x/Berkeley1.2 compatible models for execution purpose without changing much in the execution path -- Begin
+class ModelBaseMdlInstance(factory: ModelBaseObjMdlInstanceFactory) extends ModelInstance(factory.asInstanceOf[ModelInstanceFactory]) {
+  var mdlInst: ModelBase = null
+
+  // Caching if the model is cached. Not using any locks or anything at this moment.
+  override def execute(txnCtxt: TransactionContext, outputDefault: Boolean): ModelResultBase = {
+    val modelContext = new ModelContext(txnCtxt, txnCtxt.getMessage(), txnCtxt.getInputMessageData(), txnCtxt.getPartitionKey())
+
+    if (mdlInst == null) {
+      mdlInst = factory.mdlBaseObj.CreateNewModel(modelContext)
+      mdlInst.init(txnCtxt.getPartitionKey().hashCode())
+    }
+    else {
+      mdlInst.modelContext = modelContext
+    }
+
+    mdlInst.execute(outputDefault)
+  }
+}
+
+class ModelBaseObjMdlInstanceFactory(modelDef: ModelDef, nodeContext: NodeContext, val mdlBaseObj: ModelBaseObj) extends ModelInstanceFactory(modelDef, nodeContext) {
+  override def getModelName() = mdlBaseObj.ModelName() // Model Name
+
+  override def getVersion() = mdlBaseObj.Version() // Model Version
+
+  override def isValidMessage(msg: MessageContainerBase): Boolean = mdlBaseObj.IsValidMessage(msg)
+
+  override def createModelInstance() = new ModelBaseMdlInstance(this)
+
+  override def createResultObject() = mdlBaseObj.CreateResultObject()
+
+  override def isModelInstanceReusable(): Boolean = {
+    // Temporary Transaction context & model contexts
+    val tmpTxnCtxt = new TransactionContext(0, nodeContext, Array[Byte](), "")
+    val modelContext = new ModelContext(tmpTxnCtxt, null, tmpTxnCtxt.getInputMessageData(), tmpTxnCtxt.getPartitionKey())
+    mdlBaseObj.CreateNewModel(modelContext).isModelInstanceReusable()
+  }
+}
+
+// 1.1.x/Berkeley1.2 compatible models for execution purpose without changing much in the execution path -- End

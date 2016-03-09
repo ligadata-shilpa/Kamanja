@@ -19,7 +19,6 @@ package com.ligadata.messagedef
 import com.ligadata.kamanja.metadata._
 import scala.collection.mutable.ArrayBuffer
 import org.apache.logging.log4j.{ Logger, LogManager }
-import com.ligadata.Exceptions.StackTrace
 import org.apache.logging.log4j.{ Logger, LogManager }
 
 class ArrayTypeHandler {
@@ -198,8 +197,7 @@ class ArrayTypeHandler {
 
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        LOG.debug("StackTrace:" + stackTrace)
+        LOG.debug("", e)
         throw e
       }
     }
@@ -413,8 +411,7 @@ class ArrayTypeHandler {
 
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        LOG.debug("StackTrace:" + stackTrace)
+        LOG.debug("", e)
         throw e
       }
     }
@@ -463,9 +460,8 @@ class ArrayTypeHandler {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        LOG.debug("StackTrace:" + stackTrace)
-        throw new Exception("Exception occured " + e.getCause())
+        LOG.debug("", e)
+        throw e
       }
     }
 
@@ -526,9 +522,8 @@ class ArrayTypeHandler {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        LOG.debug("StackTrace:" + stackTrace)
-        throw new Exception("Exception occured " + e.getCause())
+        LOG.debug("", e)
+        throw e
       }
     }
     return deserializedBuf.toString
@@ -653,9 +648,8 @@ class ArrayTypeHandler {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        LOG.debug("StackTrace:" + stackTrace)
-        throw new Exception("Exception occured " + e.getCause())
+        LOG.debug("", e)
+        throw e
       }
     }
 
@@ -824,7 +818,7 @@ class ArrayTypeHandler {
       }
 
     } catch {
-      case e: Exception => throw new Exception("Exception occured " + e.getCause())
+      case e: Exception => throw e
     }
 
     fromFuncBuf.toString
@@ -880,7 +874,7 @@ class ArrayTypeHandler {
       }
 
     } catch {
-      case e: Exception => throw new Exception("Exception occured " + e.getCause())
+      case e: Exception => throw e
     }
 
     fromFuncBuf.toString

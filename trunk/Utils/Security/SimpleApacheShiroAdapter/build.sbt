@@ -1,20 +1,19 @@
-import AssemblyKeys._ // put this at the top of the file
+import sbtassembly.AssemblyPlugin.defaultShellScript
 import sbt._
 import Keys._
 
 shellPrompt := { state =>  "sbt (%s)> ".format(Project.extract(state).currentProject.id) }
 
-assemblySettings
+
 
 assemblyOption in assembly ~= { _.copy(prependShellScript = Some(defaultShellScript)) }
 
-jarName in assembly := { s"${name.value}-${version.value}" }
+assemblyJarName in assembly := { s"${name.value}-${version.value}" }
 
 // for some reason the merge strategy for non ligadata classes are not working and thus added those conflicting jars in exclusions
 // this may result some run time errors
 
-mergeStrategy in assembly <<= (mergeStrategy in assembly) { (old) =>
-  {
+assemblyMergeStrategy in assembly := {
     // case PathList("javax", "servlet", xs @ _*)         => MergeStrategy.first
     // case PathList(ps @ _*) if ps.last endsWith ".html" => MergeStrategy.first
     case PathList(ps @ _*) if ps.last endsWith ".html" => MergeStrategy.first
@@ -42,12 +41,14 @@ mergeStrategy in assembly <<= (mergeStrategy in assembly) { (old) =>
     case x if x contains "commons-logging" => MergeStrategy.first
     case "log4j.properties" => MergeStrategy.first
     case "unwanted.txt"     => MergeStrategy.discard
-    case x => old(x)
-  }
+            case x =>
+		        val oldStrategy = (assemblyMergeStrategy in assembly).value
+		        oldStrategy(x)
+
 }
 
 excludedJars in assembly <<= (fullClasspath in assembly) map { cp => 
-  val excludes = Set("commons-beanutils-1.7.0.jar", "google-collections-1.0.jar", "commons-collections4-4.0.jar" )
+  val excludes = Set("commons-beanutils-1.7.0.jar", "google-collections-1.0.jar", "commons-collections4-4.0.jar", "log4j-1.2.17.jar", "log4j-1.2.16.jar" )
   cp filter { jar => excludes(jar.data.getName) }
 }
 
@@ -55,13 +56,13 @@ name := "SimpleApacheShiroAdapter"
 
 version := "1.0"
 
-scalaVersion := "2.11.7"
-
 libraryDependencies += "org.joda" % "joda-convert" % "1.6"
 
 libraryDependencies += "joda-time" % "joda-time" % "2.8.2"
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.0"
+
+libraryDependencies += "org.apache.logging.log4j" % "log4j-1.2-api" % "2.4.1"
 
 libraryDependencies += "org.apache.logging.log4j" % "log4j-api" % "2.4.1"
 
@@ -77,7 +78,6 @@ libraryDependencies += "org.apache.curator" % "apache-curator" % "2.0.0-incubati
 
 libraryDependencies ++= Seq(
 "com.twitter" %% "chill" % "0.5.0",
-"org.scalameta" %% "quasiquotes" % "0.0.3",
  "org.apache.shiro" % "shiro-core" % "1.2.3",
  "org.apache.shiro" % "shiro-root" % "1.2.3"
 )

@@ -38,6 +38,8 @@ import com.ligadata.Utils.{ KamanjaClassLoader, KamanjaLoaderInfo }
 import com.ligadata.StorageBase.StorageAdapterObj
 import com.ligadata.keyvaluestore.CassandraAdapter
 
+import com.ligadata.Exceptions._
+
 case class Customer(name:String, address: String, homePhone: String)
 
 @Ignore
@@ -47,8 +49,11 @@ class CassandraAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAft
   var adapter:DataStore = null
   var serializer:Serializer = null
 
+  var stackTrace = ""
+
   private val loggerName = this.getClass.getName
   private val logger = LogManager.getLogger(loggerName)
+
   val dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
   val dateFormat1 = new SimpleDateFormat("yyyy/MM/dd")
   // set the timezone to UTC for all time values
@@ -56,20 +61,13 @@ class CassandraAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAft
 
   private val kvManagerLoader = new KamanjaLoaderInfo
   private var cassandraAdapter:CassandraAdapter = null
+  serializer = SerializerManager.GetSerializer("kryo")
+  val dataStoreInfo = """{"StoreType": "cassandra","SchemaName": "unit_tests","Location":"localhost","autoCreateTables":"YES"}"""
 
-  override def beforeAll = {
-    try {
-      logger.info("starting...");
+  private val maxConnectionAttempts = 10;
+  var cnt:Long = 0
+  private val containerName = "sys.customer1"
 
-      serializer = SerializerManager.GetSerializer("kryo")
-      logger.info("Initialize CassandraAdapter")
-      val dataStoreInfo = """{"StoreType": "cassandra","SchemaName": "unit_tests","Location":"localhost"}"""
-      adapter = CassandraAdapter.CreateStorageAdapter(kvManagerLoader, dataStoreInfo)
-   }
-    catch {
-      case e: Exception => throw new Exception("Failed to execute set up properly\n" + e)
-    }
-  }
 
   private def RoundDateToSecs(d:Date): Date = {
     var c = Calendar.getInstance()
@@ -115,6 +113,34 @@ class CassandraAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAft
     }
   }
 
+  private def CreateAdapter: DataStore = {
+    var connectionAttempts = 0
+    while (connectionAttempts < maxConnectionAttempts) {
+      try {
+        adapter = CassandraAdapter.CreateStorageAdapter(kvManagerLoader, dataStoreInfo)
+        return adapter
+      } catch {
+        case e: Exception => {
+          logger.error("will retry after one minute ...", e)
+          Thread.sleep(60 * 1000L)
+          connectionAttempts = connectionAttempts + 1
+        }
+      }
+    }
+    return null;
+  }
+
+  override def beforeAll = {
+    try {
+      logger.info("starting...");
+      logger.info("Initialize CassandraAdapter")
+      adapter = CreateAdapter
+   }
+    catch {
+      case e: Exception => throw new Exception("Failed to execute set up properly", e)
+    }
+  }
+
   describe("Unit Tests for all cassandraadapter operations") {
 
     // validate property setup
@@ -126,6 +152,11 @@ class CassandraAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAft
 	var containers = new Array[String](0)
 	containers = containers :+ containerName
 	adapter.DropContainer(containers)
+      }
+
+      And("Test auto create of a table")
+      noException should be thrownBy {
+	adapter.get(containerName,readCallBack _)
       }
 
       And("Test create container")
@@ -153,6 +184,23 @@ class CassandraAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAft
 	adapter.CreateContainer(containers)
       }
 
+      And("Test Put api throwing DDL Exception - use invalid container name")
+      var ex2 = the [com.ligadata.Exceptions.StorageDMLException] thrownBy {
+	var keys = new Array[Key](0) // to be used by a delete operation later on
+	var currentTime = new Date()
+	var keyArray = new Array[String](0)
+	// pick a bucketKey values longer than 1024 characters
+	var custName = "customer1"
+	keyArray = keyArray :+ custName
+	var key = new Key(currentTime.getTime(),keyArray,1,1)
+	var custAddress = "1000"  + ",Main St, Redmond WA 98052"
+	var custNumber = "4256667777"
+	var obj = new Customer(custName,custAddress,custNumber)
+	var v = serializer.SerializeObjectToByteArray(obj)
+	var value = new Value("kryo",v)
+	adapter.put("&&",key,value)
+      }
+      logger.info("", ex2)
 
       And("Test Put api")
       var keys = new Array[Key](0) // to be used by a delete operation later on
@@ -361,16 +409,30 @@ class CassandraAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAft
 	adapter.getKeys(containerName,timeRanges,keyStringList,readKeyCallBack _)
       }
       
+      And("Test backup container")
+      ex2 = the [com.ligadata.Exceptions.StorageDMLException] thrownBy {
+      //noException should be thrownBy {
+	adapter.backupContainer(containerName)
+      }
+      logger.info("", ex2)
+
+      And("Test restore container")
+      ex2 = the [com.ligadata.Exceptions.StorageDMLException] thrownBy {
+	//noException should be thrownBy {
+	adapter.restoreContainer(containerName)
+      }
+      logger.info("", ex2)
+
       And("Test drop container again, cleanup")
       noException should be thrownBy {
 	var containers = new Array[String](0)
 	containers = containers :+ containerName
-	adapter.DropContainer(containers)
+	//adapter.DropContainer(containers)
       }
 
       And("Test drop keyspace")
       noException should be thrownBy {
-	cassandraAdapter.DropKeySpace("unit_tests")
+	//cassandraAdapter.DropKeySpace("unit_tests")
       }
 
       And("Shutdown cassandra session")

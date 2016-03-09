@@ -16,15 +16,16 @@
 
 package com.ligadata.MetadataAPI.Utility
 
-import java.io.File
+import java.io.{FileNotFoundException, File}
 
+import com.ligadata.Exceptions.{AlreadyExistsException}
 import com.ligadata.MetadataAPI.MetadataAPIImpl
 
 import scala.io.Source
 
 import org.apache.logging.log4j._
 
-import scala.io.StdIn
+import scala.io._
 
 
 /**
@@ -90,7 +91,7 @@ object TypeService {
         try {
           return MetadataAPIImpl.GetType(ns, name,ver,"JSON", userid).toString
         } catch {
-          case e: Exception => e.printStackTrace()
+          case e: Exception => logger.error("", e)
         }
       }
       val typeKeys = MetadataAPIImpl.GetAllKeys("TypeDef", None)
@@ -106,7 +107,7 @@ object TypeService {
           println("["+srno+"] "+typeKey)
         }
         println("Enter your choice: ")
-        val choice: Int = StdIn.readInt()
+        val choice: Int = readInt()
 
         if (choice < 1 || choice > typeKeys.length) {
           val errormsg="Invalid choice " + choice + ". Start with the main menu."
@@ -123,6 +124,7 @@ object TypeService {
 
     } catch {
       case e: Exception => {
+       logger.info("", e)
         response=e.getStackTrace.toString
       }
     }
@@ -140,7 +142,7 @@ object TypeService {
         try {
           return MetadataAPIImpl.RemoveType(ns, name,ver.toLong, userid).toString
         } catch {
-          case e: Exception => e.printStackTrace()
+          case e: Exception => logger.error("", e)
         }
       }
       val typeKeys =MetadataAPIImpl.GetAllKeys("TypeDef", None)
@@ -158,7 +160,7 @@ object TypeService {
           println("["+srno+"] "+modelKey)
         }
         println("Enter your choice: ")
-        val choice: Int = StdIn.readInt()
+        val choice: Int = readInt()
 
         if (choice < 1 || choice > typeKeys.length) {
           val errormsg="Invalid choice " + choice + ". Start with the main menu."
@@ -172,17 +174,44 @@ object TypeService {
 
     } catch {
       case e: Exception => {
-        //e.printStackTrace
+        //logger.error("", e)
+        logger.info("", e)
         response=e.getStackTrace.toString
       }
     }
     response
   }
-  //NOT REQUIRED
-  def loadTypesFromAFile: String ={
 
-    val response="NOT REQUIRED. Please use the ADD TYPE option."
-    response
+    /**
+      * loadTypesFromAFile is used to load type information to the Metadata store for use principally by
+      * the kamanja pmml models.
+      *
+      * @param input path of the file containing the json function definitions
+      * @param userid optional user id needed for authentication and logging
+      * @return api results as a string
+      */
+  def loadTypesFromAFile(input : String, userid : Option[String] = None): String ={
+      val response : String = try {
+          val jsonTypeStr : String = Source.fromFile(input).mkString
+          val apiResult = MetadataAPIImpl.AddTypes(jsonTypeStr, "JSON", userid)
+
+          val resultMsg : String = s"Result as Json String => \n$apiResult"
+          println(resultMsg)
+          resultMsg
+      } catch {
+          case fnf : FileNotFoundException => {
+              val filePath : String = if (input != null && input.nonEmpty) input else "bad file path ... blank or null"
+              val errorMsg : String = "file supplied to loadTypesFromAFile ($filePath) does not exist...."
+              logger.error(errorMsg, fnf)
+              errorMsg
+          }
+          case e: Exception => {
+              val errorMsg : String = s"Exception $e encountered ..."
+              logger.debug(errorMsg, e)
+              errorMsg
+          }
+      }
+      response
   }
 
   def dumpAllTypesByObjTypeAsJson: String ={
@@ -210,7 +239,7 @@ object TypeService {
         seq += 1
         println("[" + seq + "] Main Menu")
         print("\nEnter your choice: ")
-        val choice: Int = StdIn.readInt()
+        val choice: Int = readInt()
         if (choice <= typeMenu.size) {
           selectedType = "com.ligadata.kamanja.metadata." + typeMenu(choice)
           done = true
@@ -224,6 +253,7 @@ object TypeService {
       response = MetadataAPIImpl.GetAllTypesByObjType("JSON", selectedType)
     } catch {
       case e: Exception => {
+        logger.info("", e)
         response=e.getStackTrace.toString
       }
     }
@@ -252,7 +282,7 @@ object TypeService {
       println("[" + srNo + "]" + message)
     }
     print("\nEnter your choice(If more than 1 choice, please use commas to seperate them): \n")
-    val userOptions: List[Int] = StdIn.readLine().filter(_ != '\n').split(',').filter(ch => (ch != null && ch != "")).map(_.trim.toInt).toList
+    val userOptions: List[Int] = readLine().filter(_ != '\n').split(',').filter(ch => (ch != null && ch != "")).map(_.trim.toInt).toList
     //check if user input valid. If not exit
     for (userOption <- userOptions) {
       userOption match {

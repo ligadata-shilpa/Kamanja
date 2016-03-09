@@ -26,7 +26,8 @@ import scala.reflect.runtime.{ universe => ru }
 import java.net.{ URL, URLClassLoader }
 import scala.collection.mutable.TreeSet
 import java.sql.{ Driver, DriverPropertyInfo }
-import com.ligadata.Exceptions.StackTrace
+import com.ligadata.KamanjaVersion.KamanjaVersion
+
 // ClassLoader
 class JdbcClassLoader(urls: Array[URL], parent: ClassLoader) extends URLClassLoader(urls, parent) {
   override def addURL(url: URL) {
@@ -64,6 +65,7 @@ object RunJdbcCollector {
   private def PrintUsage(): Unit = {
     LOG.warn("Available commands:")
     LOG.warn("    --config <configfilename>")
+    LOG.warn("    --version")
   }
 
   private def LoadJars(jars: Array[String]): Unit = {
@@ -83,9 +85,9 @@ object RunJdbcCollector {
           }
         } catch {
           case e: Exception => {
-            val errMsg = "Jar " + jarNm + " failed added to class path. Reason:%s Message:%s".format(e.getCause, e.getMessage)
-            LOG.error("Error:" + errMsg)
-            throw new Exception(errMsg)
+            val errMsg = "Jar " + jarNm + " failed added to class path."
+            LOG.error("Error:" + errMsg, e)
+            throw new Exception(errMsg, e)
           }
         }
       } else {
@@ -106,7 +108,7 @@ object RunJdbcCollector {
       // conn.setNetworkTimeout(Executor executor, timeoutInSec)
     } catch {
       case e: Exception => {
-        LOG.error("%s:Failed to establish connection. URL:%s, User:%s, Passwd:%s. Message:%s, Reason:%s".format(GetCurDtTmStr, urlstr, userId, passwd, e.getMessage, e.getCause))
+        LOG.error("%s:Failed to establish connection. URL:%s, User:%s, Passwd:%s.".format(GetCurDtTmStr, urlstr, userId, passwd), e)
       }
     }
     return conn;
@@ -125,7 +127,7 @@ object RunJdbcCollector {
         st.setQueryTimeout(timeoutInSec)
       } catch {
         case e: Exception => {
-          LOG.error("%s:Failed to create statement. Message:%s, Reason:%s".format(GetCurDtTmStr, e.getMessage, e.getCause))
+          LOG.error("%s:Failed to create statement.".format(GetCurDtTmStr), e)
           return false
         }
       }
@@ -133,7 +135,7 @@ object RunJdbcCollector {
         res = st.executeQuery(selectQry)
       } catch {
         case e: Exception => {
-          LOG.error("%s:Failed to exeucte query:%s. Message:%s, Reason:%s".format(GetCurDtTmStr, selectQry, e.getMessage, e.getCause))
+          LOG.error("%s:Failed to exeucte query:%s.".format(GetCurDtTmStr, selectQry), e)
           res.close
           return false
         }
@@ -188,7 +190,7 @@ object RunJdbcCollector {
       retVal = true
     } catch {
       case e: Exception => {
-        LOG.error("%s:Exception. Message:%s, Reason:%s".format(GetCurDtTmStr, e.getMessage, e.getCause))
+        LOG.error("%s:Exception.".format(GetCurDtTmStr), e)
         retVal = false
       }
     } finally {
@@ -201,7 +203,7 @@ object RunJdbcCollector {
           st.close()
       } catch {
         case e: Exception => {
-          LOG.error("%s:Exception. Message:%s, Reason:%s".format(GetCurDtTmStr, e.getMessage, e.getCause))
+          LOG.error("%s:Exception.".format(GetCurDtTmStr), e)
           retVal = false
         }
       }
@@ -215,6 +217,8 @@ object RunJdbcCollector {
       case Nil => map
       case "--config" :: value :: tail =>
         nextOption(map ++ Map('config -> value), tail)
+      case "--version" :: tail =>
+        nextOption(map ++ Map('version -> "true"), tail)
       case option :: tail => {
         LOG.error("%s:Unknown option:%s".format(GetCurDtTmStr, option))
         sys.exit(1)
@@ -248,6 +252,11 @@ object RunJdbcCollector {
 
     LOG.debug("%s:Parsing options".format(GetCurDtTmStr))
     val options = nextOption(Map(), args.toList)
+    val version = options.getOrElse('version, "false").toString
+    if (version.equalsIgnoreCase("true")) {
+      KamanjaVersion.print
+      return
+    }
     val cfgfile = options.getOrElse('config, "").toString.trim
     if (cfgfile.size == 0) {
       LOG.error("%s:Configuration file missing".format(GetCurDtTmStr))
@@ -280,7 +289,7 @@ object RunJdbcCollector {
       })
     } catch {
       case e: Exception => {
-        LOG.error("%s:Failed with exception. Message:%s, Reason:%s ".format(GetCurDtTmStr, e.getMessage, e.getCause))
+        LOG.error("%s:Failed with exception.".format(GetCurDtTmStr), e)
         sys.exit(1)
       }
     }
@@ -351,7 +360,7 @@ object RunJdbcCollector {
         Class.forName(driverType, true, clsLoader)
       } catch {
         case e: Exception => {
-          LOG.error("Failed to load Driver class %s with Reason:%s Message:%s".format(driverType, e.getCause, e.getMessage))
+          LOG.error("Failed to load Driver class %s".format(driverType), e)
           sys.exit(1)
         }
       }
@@ -377,7 +386,7 @@ object RunJdbcCollector {
       }
     } catch {
       case e: Exception => {
-        LOG.error("%s:Exception:%s. Message:%s, Reason:%s".format(GetCurDtTmStr, e.toString, e.getMessage, e.getCause))
+        LOG.error("%s:Exception:".format(GetCurDtTmStr), e)
         exitCode = 1
       }
     } finally {
@@ -386,7 +395,7 @@ object RunJdbcCollector {
           db.close
       } catch {
         case e: Exception => {
-          LOG.error("%s:Exception:%s. Message:%s, Reason:%s".format(GetCurDtTmStr, e.toString, e.getMessage, e.getCause))
+          LOG.error("%s:Exception:".format(GetCurDtTmStr), e)
           exitCode = 1
         }
       }

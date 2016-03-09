@@ -21,8 +21,8 @@ import org.apache.curator.framework.CuratorFramework
 import org.apache.curator.framework.CuratorFrameworkFactory
 import org.apache.curator.retry.ExponentialBackoffRetry
 import org.apache.zookeeper.CreateMode
+import org.apache.zookeeper.KeeperException.NodeExistsException
 import scala.collection.mutable.ArrayBuffer
-import com.ligadata.Exceptions.StackTrace
 import org.apache.logging.log4j._
 
 object CreateClient {
@@ -48,14 +48,27 @@ object CreateClient {
 
       allZNodePaths.foreach(path => {
         if (zkc.checkExists().forPath(path) == null) {
-          zkc.create().withMode(CreateMode.PERSISTENT).forPath(path, null);
+          try {
+            zkc.create().withMode(CreateMode.PERSISTENT).forPath(path, null);
+          } catch {
+            case e: NodeExistsException => {
+              // Not already exists. May be somebody else created just before this. Ignore this exception.
+            }
+            case e: Exception => {
+              // Rethrow exception
+              throw e
+            }
+            case e: Throwable => {
+              // Rethrow exception
+              throw e
+            }
+          }
         }
       })
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:" + stackTrace)
-        throw new Exception("Failed to start a zookeeper session with(" + zkcConnectString + "): " + e.getMessage())
+        logger.debug("", e)
+        throw new Exception("Failed to start a zookeeper session with(" + zkcConnectString + ")", e)
       }
     } finally {
       if (zkc != null) {
@@ -81,8 +94,7 @@ object CreateClient {
         curatorZookeeperClient.getZookeeperClient.blockUntilConnectedOrTimedOut
       } catch {
         case e: java.lang.InterruptedException => {
-          val stackTrace = StackTrace.ThrowableTraceString(e)
-          logger.warn("Got InterruptedException. Going to retry after 50ms. StackTrace:" + stackTrace)
+          logger.warn("Got InterruptedException. Going to retry after 50ms.", e)
           Thread.sleep(50)
           retry = true
         }
@@ -108,8 +120,7 @@ object CreateClient {
         curatorZookeeperClient.getZookeeperClient.blockUntilConnectedOrTimedOut
       } catch {
         case e: java.lang.InterruptedException => {
-          val stackTrace = StackTrace.ThrowableTraceString(e)
-          logger.warn("Got InterruptedException. Going to retry after 50ms. StackTrace:" + stackTrace)
+          logger.warn("Got InterruptedException. Going to retry after 50ms.", e)
           Thread.sleep(50)
           retry = true
         }

@@ -16,11 +16,13 @@
 
 package com.ligadata.pmml.compiler
 
+
 import scala.collection.mutable._
 import scala.io.Source
+import sys.process._
+
 import java.io.BufferedWriter
 import java.io.FileWriter
-import sys.process._
 import java.io.PrintWriter
 import java.io.File
 import java.io.FileInputStream
@@ -29,6 +31,7 @@ import java.io.ByteArrayInputStream
 import java.io.InputStreamReader
 import java.nio.charset.StandardCharsets
 import javax.xml.parsers.SAXParserFactory
+
 import org.xml.sax.InputSource
 import org.xml.sax.XMLReader
 import org.apache.logging.log4j.{ Logger, LogManager }
@@ -40,8 +43,9 @@ import com.ligadata.pmml.support._
 import com.ligadata.pmml.xmlingestion._
 import com.ligadata.pmml.transforms.rawtocooked.common._
 import com.ligadata.pmml.transforms.xmltoraw.common._
-import com.ligadata.Exceptions.StackTrace
-
+import com.ligadata.kamanja.metadata.MiningModelType.MiningModelType
+import com.ligadata.kamanja.metadata.ModelRepresentation.ModelRepresentation
+import com.ligadata.KamanjaVersion.KamanjaVersion
 
 /** 
 	Original Notes (of historical interest only):
@@ -298,12 +302,19 @@ As such, it must be simple name with alphanumerics and ideally all lower case.
 		                           nextOption(map ++ Map('client -> value), tail)
 		    case "--skipjar" :: tail =>
 		                           nextOption(map ++ Map('skipjar -> "true"), tail)
+            case "--version" :: tail =>
+		                           nextOption(map ++ Map('version -> "true"), tail)
 		    case option :: tail => logger.error("Unknown option " + option) 
 		                           sys.exit(1) 
 		  }
 		}
 		
 		val options = nextOption(Map(),arglist)
+        val version = options.getOrElse('version, "false").toString
+        if (version.equalsIgnoreCase("true")) {
+          KamanjaVersion.print
+          return
+        }
 		val pmmlFilePath = if (options.contains('pmml)) options.apply('pmml) else null
 		val classpath = if (options.contains('classpath)) options.apply('classpath) else null 
 		val scalahome = if (options.contains('scalahome)) options.apply('scalahome) else null 
@@ -558,19 +569,47 @@ class PmmlCompiler(val mgr : MdMgr, val clientName : String, val logger : Logger
 		
 		ctx.pmmlTerms("PMML") = Some(pmmlFilePath)  /** to document/identify originating file in source to be generated */
 		ctx.ClientName(clientName)
-		
-		val jarName : String = JarName(ctx)
 
-		val modelDef : ModelDef = mgr.MakeModelDef(modelNamespace
-							    , className
-							    , fqClassName
-							    , modelType
-							    , inputVars
-							    , outputVars
-							    , modelVersion
-							    , jarName
-							    , ctx.classPathJars.toArray
-							    , recompile)
+        /**
+        def MakeModelDef(nameSpace: String
+                       , name: String
+                       , physicalName: String
+                       , modelRep: ModelRepresentation
+                       , isReusable : Boolean
+                       , msgConsumed: String
+                       , jpmmlStr : String
+                       , miningModelType: MiningModelType
+                       , inputVars: List[(String, String, String, String, Boolean, String)]
+                       , outputVars: List[(String, String, String)]
+                       , ver: Long = 1
+                       , jarNm: String = null
+                       , depJars: Array[String] = null
+                       , recompile: Boolean = false
+                       ,supportsInstanceSerialization: Boolean = false): ModelDef
+
+          */
+        val jarName : String = JarName(ctx)
+        val modelRep : ModelRepresentation =  ModelRepresentation.JAR
+        val isReusable : Boolean = true
+        val msgConsumed : String = "" /** jpmml specific... ignored here */
+        val jpmmlStr : String = ""    /** jpmml specific... ignored here */
+        val miningModelType : MiningModelType = MiningModelType.RULESETMODEL /** FIXME: this should be discerned by compiler and cached in context */
+        val supportsInstanceSerialization: Boolean = false /** FIXME: NOT SUPPORTED YET */
+        val modelDef : ModelDef = mgr.MakeModelDef(modelNamespace
+                                                , className
+                                                , fqClassName
+                                                , modelRep
+                                                , isReusable
+                                                , msgConsumed
+                                                , jpmmlStr
+                                                , miningModelType
+                                                , inputVars
+                                                , outputVars
+                                                , modelVersion
+                                                , jarName
+                                                , ctx.classPathJars.toArray
+                                                , recompile
+                                                , supportsInstanceSerialization)
 
 		modelDef
 	  
@@ -644,8 +683,7 @@ class PmmlCompiler(val mgr : MdMgr, val clientName : String, val logger : Logger
 			xmlreader.parse(is);
 		} catch {
 			case ex: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(ex)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", ex)
         throw ex}
 		}
 	}
@@ -656,9 +694,7 @@ class PmmlCompiler(val mgr : MdMgr, val clientName : String, val logger : Logger
 			val xform : PmmlExecNodeGeneratorDispatcher = new PmmlExecNodeGeneratorDispatcher(ctx);
 			xform.transform;
 		} catch {
-			case t: Throwable => {val stackTrace = StackTrace.ThrowableTraceString(t)
-     logger.debug("StackTrace:"+stackTrace)   
-      }
+			case t: Throwable => { logger.debug("", t) }
 		}
 	}
 
@@ -685,8 +721,7 @@ class PmmlCompiler(val mgr : MdMgr, val clientName : String, val logger : Logger
 				  val errorVicinity : String = buffer.toString
 				  logger.error(s"Exception detected in $errorVicinity")
 			  }
-			  val stackTrace = StackTrace.ThrowableTraceString(t) 
-        logger.debug("StackTrace:"+stackTrace)
+			  logger.debug("", t)
 			}
 		}
 		srcCode

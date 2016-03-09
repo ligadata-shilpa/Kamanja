@@ -24,7 +24,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
 import org.apache.logging.log4j._
 
-import scala.io.StdIn
+import scala.io._
 
 /**
  * Created by dhaval on 8/7/15.
@@ -94,9 +94,9 @@ object MessageService {
       }
     } catch {
       case e: Exception => {
+        logger.warn("", e)
         response = e.getStackTrace.toString
-       response= (new ApiResult(ErrorCodeConstants.Failure, "MessageService",null, response)).toString
-
+        response= (new ApiResult(ErrorCodeConstants.Failure, "MessageService",null, response)).toString
       }
     }
     response
@@ -104,10 +104,9 @@ object MessageService {
 
   def updateMessage(input: String): String = {
     var response = ""
-    var msgFileDir: String = ""
     //val gitMsgFile = "https://raw.githubusercontent.com/ligadata-dhaval/Kamanja/master/HelloWorld_Msg_Def.json"
     if (input == "") {
-      msgFileDir = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("MESSAGE_FILES_DIR")
+      val msgFileDir = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("MESSAGE_FILES_DIR")
       if (msgFileDir == null) {
         response = "MESSAGE_FILES_DIR property missing in the metadata API configuration"
       } else {
@@ -139,7 +138,7 @@ object MessageService {
       //input provided
       var message = new File(input.toString)
       val messageDef = Source.fromFile(message).mkString
-      response = MetadataAPIImpl.UpdateMessage(messageDef, userid)
+      response = MetadataAPIImpl.UpdateMessage(messageDef, "JSON", userid)
     }
     //Got the message. Now add them
     response
@@ -153,7 +152,7 @@ object MessageService {
          try {
            return MetadataAPIImpl.RemoveMessage(ns, name, ver.toInt, userid)
          } catch {
-           case e: Exception => e.printStackTrace()
+           case e: Exception => logger.error("", e)
          }
       }
 
@@ -171,7 +170,7 @@ object MessageService {
           println("[" + srno + "] " + messageKey)
         }
         println("Enter your choice: ")
-        val choice: Int = StdIn.readInt()
+        val choice: Int = readInt()
 
         if (choice < 1 || choice > messageKeys.length) {
           val errormsg = "Invalid choice " + choice + ". Start with the main menu."
@@ -186,6 +185,7 @@ object MessageService {
       }
     } catch {
       case e: Exception => {
+        logger.warn("", e)
         response = e.getStackTrace.toString
       }
     }
@@ -198,9 +198,9 @@ object MessageService {
       if (param.length > 0) {
         val(ns, name, ver) = com.ligadata.kamanja.metadata.Utils.parseNameToken(param)
         try {
-          return MetadataAPIImpl.GetMessageDef(ns, name,"JSON", ver, userid)
+          return MetadataAPIImpl.GetMessageDef(ns, name, "JSON", ver,  userid)
         } catch {
-          case e: Exception => e.printStackTrace()
+          case e: Exception => logger.error("", e)
         }
       }
 
@@ -217,7 +217,7 @@ object MessageService {
         msgKeys.foreach(key => { seq += 1; println("[" + seq + "] " + key) })
 
         print("\nEnter your choice: ")
-        val choice: Int = StdIn.readInt()
+        val choice: Int = readInt()
 
         if (choice < 1 || choice > msgKeys.length) {
           response = "Invalid choice " + choice + ",start with main menu..."
@@ -240,6 +240,7 @@ object MessageService {
 
     } catch {
       case e: Exception => {
+        logger.warn("", e)
         e.getStackTrace.toString
       }
     }
@@ -266,7 +267,7 @@ object MessageService {
       println("[" + srNo + "]" + message)
     }
     print("\nEnter your choice(If more than 1 choice, please use commas to seperate them): \n")
-    val userOptions: List[Int] = StdIn.readLine().filter(_ != '\n').split(',').filter(ch => (ch != null && ch != "")).map(_.trim.toInt).toList
+    val userOptions: List[Int] = readLine().filter(_ != '\n').split(',').filter(ch => (ch != null && ch != "")).map(_.trim.toInt).toList
     //check if user input valid. If not exit
     for (userOption <- userOptions) {
       userOption match {
@@ -382,7 +383,7 @@ object MessageService {
         try {
           return MetadataAPIOutputMsg.RemoveOutputMsg(ns, name, ver.toLong, userid)
         } catch {
-          case e: Exception => e.printStackTrace()
+          case e: Exception => logger.error("", e)
         }
       }
 
@@ -400,7 +401,7 @@ object MessageService {
           println("[" + srno + "] " + messageKey)
         }
         println("Enter your choice: ")
-        val choice: Int = StdIn.readInt()
+        val choice: Int = readInt()
 
         if (choice < 1 || choice > outputMessageKeys.length) {
           val errormsg = "Invalid choice " + choice + ". Start with the main menu."
@@ -415,6 +416,7 @@ object MessageService {
       }
     } catch {
       case e: Exception => {
+        logger.warn("", e)
         response = e.getStackTrace.toString
       }
     }
@@ -438,6 +440,7 @@ object MessageService {
       }
     } catch {
       case e: Exception => {
+        logger.warn("", e)
         response = e.getStackTrace.toString
       }
     }
@@ -452,7 +455,7 @@ object MessageService {
       try {
         return MetadataAPIOutputMsg.GetOutputMessageDefFromCache(ns, name,"JSON" ,ver,userid)
       } catch {
-        case e: Exception => e.printStackTrace()
+        case e: Exception => logger.error("", e)
       }
     }
     val outputMessageKeys: Array[String] = MetadataAPIOutputMsg GetAllOutputMsgsFromCache(true,userid)
@@ -465,7 +468,7 @@ object MessageService {
       outputMessageKeys.foreach(key => { seq += 1; println("[" + seq + "] " + key) })
 
       print("\nEnter your choice: ")
-      val choice: Int = StdIn.readInt()
+      val choice: Int = readInt()
 
       if (choice < 1 || choice > outputMessageKeys.length) {
         response = "Invalid choice " + choice + ",start with main menu..."

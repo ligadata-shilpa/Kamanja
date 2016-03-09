@@ -26,14 +26,19 @@ import com.ibm.msg.client.jms.JmsFactoryFactory
 import com.ibm.msg.client.wmq.WMQConstants
 import com.ibm.msg.client.wmq.common.CommonConstants
 import com.ibm.msg.client.jms.JmsConstants
-import com.ligadata.Exceptions.StackTrace
+import com.ligadata.HeartBeat.{Monitorable, MonitorComponentInfo}
+import org.json4s.jackson.Serialization
 
 object IbmMqProducer extends OutputAdapterObj {
+  val ADAPTER_DESCRIPTION = "IBM MQ Producer"
   def CreateOutputAdapter(inputConfig: AdapterConfiguration, cntrAdapter: CountersAdapter): OutputAdapter = new IbmMqProducer(inputConfig, cntrAdapter)
 }
 
 class IbmMqProducer(val inputConfig: AdapterConfiguration, cntrAdapter: CountersAdapter) extends OutputAdapter {
-  private[this] val LOG = LogManager.getLogger(getClass);
+  private[this] val LOG = LogManager.getLogger(getClass)
+  private var startTime = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
+  private var lastSeen = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
+  private var metrics: scala.collection.mutable.Map[String,Any] = scala.collection.mutable.Map[String,Any]()
 
   //BUGBUG:: Not Checking whether inputConfig is really QueueAdapterConfiguration or not. 
   private[this] val qc = IbmMqAdapterConfiguration.GetAdapterConfig(inputConfig)
@@ -43,21 +48,23 @@ class IbmMqProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
       if (ex.isInstanceOf[JMSException]) {
         processJMSException(ex.asInstanceOf[JMSException])
       } else {
-        LOG.error(ex)
+        LOG.error("", ex)
       }
     }
   }
 
   private def processJMSException(jmsex: JMSException) {
-    LOG.error(jmsex)
+    LOG.error("", jmsex)
     var innerException: Throwable = jmsex.getLinkedException
     if (innerException != null) {
-      LOG.error("Inner exception(s):")
+      LOG.error("Inner exception(s):", innerException)
     }
+    /*
     while (innerException != null) {
       LOG.error(innerException)
       innerException = innerException.getCause
     }
+    */
   }
 
   var connection: Connection = null
@@ -91,9 +98,13 @@ class IbmMqProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
   } catch {
     case jmsex: Exception => {
       printFailure(jmsex)
-      val stackTrace = StackTrace.ThrowableTraceString(jmsex)
-      LOG.debug("StackTrace:" + stackTrace)
+      LOG.debug("", jmsex)
     }
+  }
+
+  override  def getComponentStatusAndMetrics: MonitorComponentInfo = {
+    implicit val formats = org.json4s.DefaultFormats
+    return new MonitorComponentInfo(AdapterConfiguration.TYPE_OUTPUT, qc.Name, IbmMqProducer.ADAPTER_DESCRIPTION, startTime, lastSeen,  Serialization.write(metrics).toString)
   }
 
   // To send an array of messages. messages.size should be same as partKeys.size
@@ -124,8 +135,7 @@ class IbmMqProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
     } catch {
       case jmsex: Exception => {
         printFailure(jmsex)
-        val stackTrace = StackTrace.ThrowableTraceString(jmsex)
-        LOG.debug("StackTrace:" + stackTrace)
+        LOG.debug("", jmsex)
       }
     }
   }
@@ -136,7 +146,7 @@ class IbmMqProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
         producer.close()
       } catch {
         case jmsex: Exception => {
-          LOG.error("Producer could not be closed.")
+          LOG.error("Producer could not be closed.", jmsex)
           printFailure(jmsex)
         }
       }
@@ -149,7 +159,7 @@ class IbmMqProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
         session.close()
       } catch {
         case jmsex: Exception => {
-          LOG.error("Session could not be closed.")
+          LOG.error("Session could not be closed.", jmsex)
           printFailure(jmsex)
         }
       }
@@ -159,7 +169,7 @@ class IbmMqProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
         connection.close()
       } catch {
         case jmsex: Exception => {
-          LOG.error("Connection could not be closed.")
+          LOG.error("Connection could not be closed.", jmsex)
           printFailure(jmsex)
         }
       }

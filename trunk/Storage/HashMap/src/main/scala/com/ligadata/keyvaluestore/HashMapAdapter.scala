@@ -62,19 +62,19 @@ class HashMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
   private var dbStoreMap: scala.collection.mutable.Map[String, DB] = new scala.collection.mutable.HashMap()
 
   private def CreateConnectionException(msg: String, ie: Exception): StorageConnectionException = {
-    logger.error(msg)
+    logger.error(msg, ie)
     val ex = new StorageConnectionException("Failed to connect to Database", ie)
     ex
   }
 
   private def CreateDMLException(msg: String, ie: Exception): StorageDMLException = {
-    logger.error(msg)
+    logger.error(msg, ie)
     val ex = new StorageDMLException("Failed to execute select/insert/delete/update operation on Database", ie)
     ex
   }
 
   private def CreateDDLException(msg: String, ie: Exception): StorageDDLException = {
-    logger.error(msg)
+    logger.error(msg, ie)
     val ex = new StorageDDLException("Failed to execute create/drop operations on Database", ie)
     ex
   }
@@ -95,7 +95,7 @@ class HashMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
     parsed_json = json.values.asInstanceOf[Map[String, Any]]
   } catch {
     case e: Exception => {
-      var msg = "Failed to parse Cassandra JSON configuration string:%s. Message:%s".format(adapterConfig, e.getMessage)
+      var msg = "Failed to parse Cassandra JSON configuration string:%s".format(adapterConfig)
       throw CreateConnectionException(msg, e)
     }
   }
@@ -115,7 +115,7 @@ class HashMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
         adapterSpecificConfig_json = json.values.asInstanceOf[Map[String, Any]]
       } catch {
         case e: Exception => {
-          msg = "Failed to parse Cassandra Adapter Specific JSON configuration string:%s. Message:%s".format(adapterSpecificStr, e.getMessage)
+          msg = "Failed to parse Cassandra Adapter Specific JSON configuration string:%s. Message:%s".format(adapterSpecificStr)
           throw CreateConnectionException(msg, e)
         }
       }
@@ -168,7 +168,7 @@ class HashMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
       }
     } catch {
       case e: Exception => {
-        throw CreateDDLException("Failed to create table " + tableName + ":" + e.getMessage(), e)
+        throw CreateDDLException("Failed to create table " + tableName, e)
       }
     }
     logger.debug("Done creating table:" + tableName)
@@ -229,8 +229,7 @@ class HashMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
         createTable(fullTableName)
       } catch {
         case e: Exception => {
-          val stackTrace = StackTrace.ThrowableTraceString(e)
-          logger.error("Stacktrace:" + stackTrace)
+          logger.error("", e)
         }
       }
     }
@@ -305,7 +304,7 @@ class HashMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
       case e: Exception => {
         out.close()
         byteOs.close()
-        throw CreateDMLException("Failed to save an object in table " + tableName + ":" + e.getMessage(), e)
+        throw CreateDMLException("Failed to save an object in table " + tableName, e)
       }
     }
     out.close()
@@ -334,7 +333,7 @@ class HashMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
       })
     } catch {
       case e: Exception => {
-        throw CreateDMLException("Failed to save an object in table " + tableName + ":" + e.getMessage(), e)
+        throw CreateDMLException("Failed to save an object in table " + tableName, e)
         out.close()
         byteOs.close()
       }
@@ -357,7 +356,7 @@ class HashMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
       Commit(tableName)
     } catch {
       case e: Exception => {
-        throw CreateDMLException("Failed to delete object(s) from table " + tableName + ":" + e.getMessage(), e)
+        throw CreateDMLException("Failed to delete object(s) from table " + tableName, e)
       }
     }
   }
@@ -392,7 +391,7 @@ class HashMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
       Commit(tableName)
     } catch {
       case e: Exception => {
-        throw CreateDMLException("Failed to delete object(s) from table " + tableName + ":" + e.getMessage(), e)
+        throw CreateDMLException("Failed to delete object(s) from table " + tableName, e)
       }
     }
   }
@@ -454,7 +453,7 @@ class HashMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
       }
     } catch {
       case e: Exception => {
-        throw CreateDMLException("Failed to fetch data from the table " + tableName + ":" + e.getMessage(), e)
+        throw CreateDMLException("Failed to fetch data from the table " + tableName, e)
       }
     }
   }
@@ -473,7 +472,7 @@ class HashMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
       }
     } catch {
       case e: Exception => {
-        throw CreateDMLException("Failed to fetch data from the table " + tableName + ":" + e.getMessage(), e)
+        throw CreateDMLException("Failed to fetch data from the table " + tableName, e)
       }
     }
   }
@@ -494,8 +493,7 @@ class HashMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
       })
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.error("Stacktrace:" + stackTrace)
+        logger.error("", e)
       }
     }
   }
@@ -516,7 +514,7 @@ class HashMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
       })
     } catch {
       case e: Exception => {
-        throw CreateDMLException("Failed to fetch data from the table " + tableName + ":" + e.getMessage(), e)
+        throw CreateDMLException("Failed to fetch data from the table " + tableName, e)
       }
     }
   }
@@ -546,7 +544,7 @@ class HashMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
       }
     } catch {
       case e: Exception => {
-        throw CreateDMLException("Failed to fetch data from the table " + tableName + ":" + e.getMessage(), e)
+        throw CreateDMLException("Failed to fetch data from the table " + tableName, e)
       }
     }
   }
@@ -572,7 +570,7 @@ class HashMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
       }
     } catch {
       case e: Exception => {
-        throw CreateDMLException("Failed to fetch data from the table " + tableName + ":" + e.getMessage(), e)
+        throw CreateDMLException("Failed to fetch data from the table " + tableName, e)
       }
     }
   }
@@ -612,7 +610,7 @@ class HashMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
       }
     } catch {
       case e: Exception => {
-        throw CreateDMLException("Failed to fetch data from the table " + tableName + ":" + e.getMessage(), e)
+        throw CreateDMLException("Failed to fetch data from the table " + tableName, e)
       }
     }
   }
@@ -648,7 +646,7 @@ class HashMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
       }
     } catch {
       case e: Exception => {
-        throw CreateDMLException("Failed to fetch data from the table " + tableName + ":" + e.getMessage(), e)
+        throw CreateDMLException("Failed to fetch data from the table " + tableName, e)
       }
     }
   }
@@ -683,7 +681,7 @@ class HashMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
       }
     } catch {
       case e: Exception => {
-        throw CreateDMLException("Failed to fetch data from the table " + tableName + ":" + e.getMessage(), e)
+        throw CreateDMLException("Failed to fetch data from the table " + tableName, e)
       }
     }
   }
@@ -714,7 +712,7 @@ class HashMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
       }
     } catch {
       case e: Exception => {
-        throw CreateDMLException("Failed to fetch data from the table " + tableName + ":" + e.getMessage(), e)
+        throw CreateDMLException("Failed to fetch data from the table " + tableName, e)
       }
     }
   }
@@ -744,10 +742,10 @@ class HashMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
       })
     } catch {
       case e: NullPointerException => {
-        throw CreateDDLException("Failed to shutdown map " + ":" + e.getMessage(), e)
+        throw CreateDDLException("Failed to shutdown map ", e)
       }
       case e: Exception => {
-        throw CreateDDLException("Failed to shutdown map " + ":" + e.getMessage(), e)
+        throw CreateDDLException("Failed to shutdown map ", e)
       }
     }
   }
@@ -766,7 +764,7 @@ class HashMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
       Commit
     } catch {
       case e: Exception => {
-        throw CreateDMLException("Unable to truncate table " + tableName + ":" + e.getMessage(), e)
+        throw CreateDMLException("Unable to truncate table " + tableName, e)
       }
     }
   }
@@ -787,7 +785,7 @@ class HashMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
       dropTable(tableName)
     } catch {
       case e: Exception => {
-        throw CreateDDLException("Unable to drop table " + tableName + ":" + e.getMessage(), e)
+        throw CreateDDLException("Unable to drop table " + tableName, e)
       }
     }
   }
@@ -798,6 +796,53 @@ class HashMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
       logger.info("drop the container " + cont)
       DropContainer(cont)
     })
+  }
+
+  def backupContainer(containerName: String): Unit = {
+    logger.info("Not Implemeted yet")
+  }
+
+  def restoreContainer(containerName: String): Unit = {
+    logger.info("Not Implemeted yet")
+  }
+
+  override def isContainerExists(containerName: String): Boolean = {
+    throw CreateDDLException("Not Implemented yet :", new Exception("Failed to check container existence " + containerName))
+  }
+
+  override def copyContainer(srcContainerName: String, destContainerName: String, forceCopy: Boolean): Unit = {
+    throw CreateDDLException("Not Implemented yet :", new Exception("Failed to copy container " + srcContainerName))
+  }
+
+  override def getAllTables: Array[String] = {
+    logger.info("Not Implemeted yet")
+    new Array[String](0)
+  }
+
+  override def dropTables(tbls: Array[String]): Unit = {
+    logger.info("Not Implemeted yet")
+  }
+
+  override def dropTables(tbls: Array[(String, String)]): Unit = {
+    logger.info("Not Implemeted yet")
+  }
+
+  override def copyTable(srcTableName: String, destTableName: String, forceCopy: Boolean): Unit = {
+    logger.info("Not Implemeted yet")
+  }
+
+  override def copyTable(namespace: String, srcTableName: String, destTableName: String, forceCopy: Boolean): Unit = {
+    logger.info("Not Implemeted yet")
+  }
+
+  override def isTableExists(tableName: String): Boolean = {
+    logger.info("Not Implemeted yet")
+    false
+  }
+
+  override def isTableExists(tableNamespace: String, tableName: String): Boolean = {
+    logger.info("Not Implemeted yet")
+    false
   }
 }
 
@@ -860,6 +905,53 @@ class HashMapAdapterTx(val parent: DataStore) extends Transaction {
 
   def getKeys(containerName: String, bucketKeys: Array[Array[String]], callbackFunction: (Key) => Unit): Unit = {
     parent.getKeys(containerName, bucketKeys, callbackFunction)
+  }
+
+  def backupContainer(containerName: String): Unit = {
+    parent.backupContainer(containerName: String)
+  }
+
+  def restoreContainer(containerName: String): Unit = {
+    parent.restoreContainer(containerName: String)
+  }
+
+  override def isContainerExists(containerName: String): Boolean = {
+    parent.isContainerExists(containerName)
+  }
+
+  override def copyContainer(srcContainerName: String, destContainerName: String, forceCopy: Boolean): Unit = {
+    parent.copyContainer(srcContainerName, destContainerName, forceCopy)
+  }
+
+  override def getAllTables: Array[String] = {
+    parent.getAllTables
+  }
+
+  // Here tables are full qualified names
+  override def dropTables(tbls: Array[String]): Unit = {
+    parent.dropTables(tbls)
+  }
+
+  override def dropTables(tbls: Array[(String, String)]): Unit = {
+    parent.dropTables(tbls)
+  }
+
+  // Here tables are full qualified names
+  override def copyTable(srcTableName: String, destTableName: String, forceCopy: Boolean): Unit = {
+    parent.copyTable(srcTableName, destTableName, forceCopy)
+  }
+
+  override def copyTable(namespace: String, srcTableName: String, destTableName: String, forceCopy: Boolean): Unit = {
+    parent.copyTable(namespace, srcTableName, destTableName, forceCopy)
+  }
+
+  // Here table is full qualified name
+  override def isTableExists(tableName: String): Boolean = {
+    parent.isTableExists(tableName)
+  }
+
+  override def isTableExists(tableNamespace: String, tableName: String): Boolean = {
+    parent.isTableExists(tableNamespace, tableName)
   }
 }
 

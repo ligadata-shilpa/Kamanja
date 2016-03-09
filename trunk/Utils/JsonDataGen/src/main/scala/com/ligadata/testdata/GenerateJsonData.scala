@@ -22,8 +22,8 @@ import org.json4s.jackson.JsonMethods._
 import scala.collection.mutable.HashMap
 import java.io.File
 import java.io.PrintWriter
-import com.ligadata.Exceptions.StackTrace
 import org.apache.logging.log4j._
+import com.ligadata.KamanjaVersion.KamanjaVersion
 
 object GenerateJsonData {
 
@@ -39,6 +39,8 @@ object GenerateJsonData {
         nextOption(map ++ Map('outputfile -> value), tail)
       case "--formatfile" :: value :: tail =>
         nextOption(map ++ Map('formatfile -> value), tail)
+      case "--version" :: tail =>
+        nextOption(map ++ Map('version -> "true"), tail)
       case option :: tail => {
         println("Unknown option " + option)
         sys.exit(1)
@@ -51,6 +53,11 @@ object GenerateJsonData {
     if (args.length == 0)
       throw new Exception("Please pass the input file as parameter")
     val options = nextOption(Map(), args.toList)
+    val version = options.getOrElse('version, "false").toString
+    if (version.equalsIgnoreCase("true")) {
+      KamanjaVersion.print
+      return
+    }
 
     val inputfile = options.getOrElse('inputfile, null).toString.trim
     if (inputfile == null && inputfile.toString().trim() == "")
@@ -97,9 +104,8 @@ class GenerateJsonData {
       outfile.close
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("Stacktrace:"+stackTrace)
-        throw new Exception("Error: " + stackTrace)
+        logger.debug("", e)
+        throw e
       }
     }
   }
@@ -133,9 +139,8 @@ class GenerateJsonData {
       count = count + 1
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("Stacktrace:"+stackTrace)
-        throw new Exception("Error: " + stackTrace)
+        logger.debug("", e)
+        throw e
       }
     }
 
@@ -148,9 +153,8 @@ class GenerateJsonData {
       outputfile.write("\n")
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("Stacktrace:"+stackTrace)
-        throw new Exception("Error: " + stackTrace)
+        logger.debug("", e)
+        throw e
       }
     }
 

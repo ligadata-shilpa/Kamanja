@@ -27,8 +27,8 @@ import java.util.zip.GZIPInputStream
 import java.nio.file.{Files, Paths }
 import kafka.utils.VerifiableProperties
 import com.ligadata.Utils.KeyHasher
-import com.ligadata.Exceptions.StackTrace
 import org.apache.logging.log4j._
+import com.ligadata.KamanjaVersion.KamanjaVersion
 
 object ProducerSimpleStats {
 
@@ -90,8 +90,7 @@ class CustPartitioner(props: VerifiableProperties) extends Partitioner {
     } catch {
       case e: Exception =>
         {
-          val stackTrace = StackTrace.ThrowableTraceString(e)
-          logger.debug("StackTrace:"+stackTrace)
+          logger.debug("", e)
         }
         // println("Exception found, so , Bucket : 0")
         return 0
@@ -135,8 +134,7 @@ object SimpleKafkaProducer {
       //producer.send(new KeyedMessage(topic, message))
     } catch {
       case e: Exception =>
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
         sys.exit(1)
     }
   }
@@ -179,8 +177,7 @@ object SimpleKafkaProducer {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("Stacktrace:"+stackTrace)
+        logger.debug("", e)
         println("Error reading from a file ")}
     } finally {
       if (bis != null) bis.close
@@ -441,6 +438,8 @@ object SimpleKafkaProducer {
         nextOption(map ++ Map('brokerlist -> value), tail)
       case "--verbose" :: value :: tail =>
         nextOption(map ++ Map('verbose -> value), tail)
+      case "--version" :: tail =>
+        nextOption(map ++ Map('version -> "true"), tail)
       case option :: tail => {
         println("Unknown option " + option)
         sys.exit(1)
@@ -471,6 +470,11 @@ object SimpleKafkaProducer {
   def main(args: Array[String]): Unit = {
 
     val options = nextOption(Map(), args.toList)
+    val version = options.getOrElse('version, "false").toString
+    if (version.equalsIgnoreCase("true")) {
+      KamanjaVersion.print
+      return
+    }
     val sFilesNames = options.getOrElse('files, null).asInstanceOf[String]
     if (sFilesNames == null) {
       println("Need input files as parameter")
@@ -616,8 +620,7 @@ object SimpleKafkaProducer {
       try {
         executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
       } catch {
-        case e: Exception => {val stackTrace = StackTrace.ThrowableTraceString(e)
-          logger.debug("StackTrace:"+stackTrace)}
+        case e: Exception => { logger.debug("", e)}
       }
     }
 

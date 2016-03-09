@@ -1,5 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<!DOCTYPE html >
 <html>
         <head>
           <title>KafkaSimpleConsumer - com.ligadata.InputAdapters.KafkaSimpleConsumer</title>
@@ -9,6 +8,11 @@
           
       <link href="../../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
       <link href="../../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../../../lib/jquery.js" id="jquery-js"></script>
+      <script type="text/javascript" src="../../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../../lib/template.js"></script>
+      <script type="text/javascript" src="../../../lib/tools.tooltip.js"></script>
+      
       <script type="text/javascript">
          if(top === self) {
             var url = '../../../index.html';
@@ -24,9 +28,17 @@
         </head>
         <body class="type">
       <div id="definition">
-        <a href="KafkaSimpleConsumer$.html" title="Go to companion"><img src="../../../lib/class_to_object_big.png" /></a>
+        <a href="KafkaSimpleConsumer$.html" title="See companion object"><img alt="Class/Object" src="../../../lib/class_to_object_big.png" /></a>
         <p id="owner"><a href="../../package.html" class="extype" name="com">com</a>.<a href="../package.html" class="extype" name="com.ligadata">ligadata</a>.<a href="package.html" class="extype" name="com.ligadata.InputAdapters">InputAdapters</a></p>
-        <h1><a href="KafkaSimpleConsumer$.html" title="Go to companion">KafkaSimpleConsumer</a></h1>
+        <h1><a href="KafkaSimpleConsumer$.html" title="See companion object">KafkaSimpleConsumer</a></h1><h3><span class="morelinks"><div>
+            Related Docs:
+            <a href="KafkaSimpleConsumer$.html" title="See companion object">object KafkaSimpleConsumer</a>
+            | <a href="package.html" class="extype" name="com.ligadata.InputAdapters">package InputAdapters</a>
+          </div></span></h3><span class="permalink">
+      <a href="../../../index.html#com.ligadata.InputAdapters.KafkaSimpleConsumer" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       </div>
 
       <h4 id="signature" class="signature">
@@ -35,13 +47,13 @@
         <span class="kind">class</span>
       </span>
       <span class="symbol">
-        <span class="name">KafkaSimpleConsumer</span><span class="result"> extends <a href="../OnLEPBase/InputAdapter.html" class="extype" name="com.ligadata.OnLEPBase.InputAdapter">InputAdapter</a></span>
+        <span class="name">KafkaSimpleConsumer</span><span class="result"> extends <a href="../InputOutputAdapterInfo/InputAdapter.html" class="extype" name="com.ligadata.InputOutputAdapterInfo.InputAdapter">InputAdapter</a></span>
       </span>
       </h4>
       
           <div id="comment" class="fullcommenttop"><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
-          <div class="superTypes hiddenContent"><a href="../OnLEPBase/InputAdapter.html" class="extype" name="com.ligadata.OnLEPBase.InputAdapter">InputAdapter</a>, <span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
+          <div class="superTypes hiddenContent"><a href="../InputOutputAdapterInfo/InputAdapter.html" class="extype" name="com.ligadata.InputOutputAdapterInfo.InputAdapter">InputAdapter</a>, <a href="../HeartBeat/Monitorable.html" class="extype" name="com.ligadata.HeartBeat.Monitorable">Monitorable</a>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></div>
         </div></div>
         
 
@@ -59,7 +71,7 @@
                 <span class="filtertype">Inherited<br />
                 </span>
                 <ol id="linearization">
-                  <li class="in" name="com.ligadata.InputAdapters.KafkaSimpleConsumer"><span>KafkaSimpleConsumer</span></li><li class="in" name="com.ligadata.OnLEPBase.InputAdapter"><span>InputAdapter</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                  <li class="in" name="com.ligadata.InputAdapters.KafkaSimpleConsumer"><span>KafkaSimpleConsumer</span></li><li class="in" name="com.ligadata.InputOutputAdapterInfo.InputAdapter"><span>InputAdapter</span></li><li class="in" name="com.ligadata.HeartBeat.Monitorable"><span>Monitorable</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
                 </ol>
               </div><div id="ancestors">
             <span class="filtertype"></span>
@@ -67,7 +79,6 @@
               <li class="hideall out"><span>Hide All</span></li>
               <li class="showall in"><span>Show all</span></li>
             </ol>
-            <a href="http://docs.scala-lang.org/overviews/scaladoc/usage.html#members" target="_blank">Learn more about member selection</a>
           </div>
         <div id="visbl">
             <span class="filtertype">Visibility</span>
@@ -80,7 +91,7 @@
         <div id="constructors" class="members">
               <h3>Instance Constructors</h3>
               <ol><li name="com.ligadata.InputAdapters.KafkaSimpleConsumer#&lt;init&gt;" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="&lt;init&gt;(inputConfig:com.ligadata.OnLEPBase.AdapterConfiguration,output:Array[com.ligadata.OnLEPBase.OutputAdapter],envCtxt:com.ligadata.OnLEPBase.EnvContext,mkExecCtxt:com.ligadata.OnLEPBase.MakeExecContext,cntrAdapter:com.ligadata.OnLEPBase.CountersAdapter):com.ligadata.InputAdapters.KafkaSimpleConsumer"></a>
+      <a id="&lt;init&gt;(inputConfig:com.ligadata.InputOutputAdapterInfo.AdapterConfiguration,callerCtxt:com.ligadata.InputOutputAdapterInfo.InputAdapterCallerContext,execCtxtObj:com.ligadata.InputOutputAdapterInfo.ExecContextObj,cntrAdapter:com.ligadata.InputOutputAdapterInfo.CountersAdapter):com.ligadata.InputAdapters.KafkaSimpleConsumer"></a>
       <a id="&lt;init&gt;:KafkaSimpleConsumer"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -88,9 +99,13 @@
         <span class="kind">new</span>
       </span>
       <span class="symbol">
-        <span class="name">KafkaSimpleConsumer</span><span class="params">(<span name="inputConfig">inputConfig: <a href="../OnLEPBase/AdapterConfiguration.html" class="extype" name="com.ligadata.OnLEPBase.AdapterConfiguration">AdapterConfiguration</a></span>, <span name="output">output: <span class="extype" name="scala.Array">Array</span>[<a href="../OnLEPBase/OutputAdapter.html" class="extype" name="com.ligadata.OnLEPBase.OutputAdapter">OutputAdapter</a>]</span>, <span name="envCtxt">envCtxt: <a href="../OnLEPBase/EnvContext.html" class="extype" name="com.ligadata.OnLEPBase.EnvContext">EnvContext</a></span>, <span name="mkExecCtxt">mkExecCtxt: <a href="../OnLEPBase/MakeExecContext.html" class="extype" name="com.ligadata.OnLEPBase.MakeExecContext">MakeExecContext</a></span>, <span name="cntrAdapter">cntrAdapter: <a href="../OnLEPBase/CountersAdapter.html" class="extype" name="com.ligadata.OnLEPBase.CountersAdapter">CountersAdapter</a></span>)</span>
+        <span class="name">KafkaSimpleConsumer</span><span class="params">(<span name="inputConfig">inputConfig: <a href="../InputOutputAdapterInfo/AdapterConfiguration.html" class="extype" name="com.ligadata.InputOutputAdapterInfo.AdapterConfiguration">AdapterConfiguration</a></span>, <span name="callerCtxt">callerCtxt: <a href="../InputOutputAdapterInfo/InputAdapterCallerContext.html" class="extype" name="com.ligadata.InputOutputAdapterInfo.InputAdapterCallerContext">InputAdapterCallerContext</a></span>, <span name="execCtxtObj">execCtxtObj: <a href="../InputOutputAdapterInfo/ExecContextObj.html" class="extype" name="com.ligadata.InputOutputAdapterInfo.ExecContextObj">ExecContextObj</a></span>, <span name="cntrAdapter">cntrAdapter: <a href="../InputOutputAdapterInfo/CountersAdapter.html" class="extype" name="com.ligadata.InputOutputAdapterInfo.CountersAdapter">CountersAdapter</a></span>)</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.InputAdapters.KafkaSimpleConsumer@&lt;init&gt;(inputConfig:com.ligadata.InputOutputAdapterInfo.AdapterConfiguration,callerCtxt:com.ligadata.InputOutputAdapterInfo.InputAdapterCallerContext,execCtxtObj:com.ligadata.InputOutputAdapterInfo.ExecContextObj,cntrAdapter:com.ligadata.InputOutputAdapterInfo.CountersAdapter):com.ligadata.InputAdapters.KafkaSimpleConsumer" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li></ol>
             </div>
@@ -102,19 +117,6 @@
         <div id="values" class="values members">
               <h3>Value Members</h3>
               <ol><li name="scala.AnyRef#!=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="!=(x$1:AnyRef):Boolean"></a>
-      <a id="!=(AnyRef):Boolean"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier">final </span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
-      </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="scala.Any#!=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="!=(x$1:Any):Boolean"></a>
       <a id="!=(Any):Boolean"></a>
       <h4 class="signature">
@@ -123,10 +125,14 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.InputAdapters.KafkaSimpleConsumer@!=(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.AnyRef###" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="##():Int"></a>
       <a id="##():Int"></a>
@@ -136,24 +142,15 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
+        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.InputAdapters.KafkaSimpleConsumer@##():Int" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.AnyRef#==" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="==(x$1:AnyRef):Boolean"></a>
-      <a id="==(AnyRef):Boolean"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier">final </span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
-      </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="scala.Any#==" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="==(x$1:Any):Boolean"></a>
       <a id="==(Any):Boolean"></a>
       <h4 class="signature">
@@ -162,11 +159,15 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
-    </li><li name="com.ligadata.OnLEPBase.InputAdapter#Category" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.InputAdapters.KafkaSimpleConsumer@==(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="com.ligadata.InputOutputAdapterInfo.InputAdapter#Category" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="Category:String"></a>
       <a id="Category:String"></a>
       <h4 class="signature">
@@ -177,10 +178,14 @@
       <span class="symbol">
         <span class="name">Category</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
       </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../OnLEPBase/InputAdapter.html" class="extype" name="com.ligadata.OnLEPBase.InputAdapter">InputAdapter</a></dd></dl></div>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.InputAdapters.KafkaSimpleConsumer@Category:String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../InputOutputAdapterInfo/InputAdapter.html" class="extype" name="com.ligadata.InputOutputAdapterInfo.InputAdapter">InputAdapter</a></dd></dl></div>
     </li><li name="com.ligadata.InputAdapters.KafkaSimpleConsumer#DeserializeKey" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="DeserializeKey(k:String):com.ligadata.OnLEPBase.PartitionUniqueRecordKey"></a>
+      <a id="DeserializeKey(k:String):com.ligadata.InputOutputAdapterInfo.PartitionUniqueRecordKey"></a>
       <a id="DeserializeKey(String):PartitionUniqueRecordKey"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -188,12 +193,16 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">DeserializeKey</span><span class="params">(<span name="k">k: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="../OnLEPBase/PartitionUniqueRecordKey.html" class="extype" name="com.ligadata.OnLEPBase.PartitionUniqueRecordKey">PartitionUniqueRecordKey</a></span>
+        <span class="name">DeserializeKey</span><span class="params">(<span name="k">k: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="../InputOutputAdapterInfo/PartitionUniqueRecordKey.html" class="extype" name="com.ligadata.InputOutputAdapterInfo.PartitionUniqueRecordKey">PartitionUniqueRecordKey</a></span>
       </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.InputAdapters.KafkaSimpleConsumer">KafkaSimpleConsumer</a> → <a href="../OnLEPBase/InputAdapter.html" class="extype" name="com.ligadata.OnLEPBase.InputAdapter">InputAdapter</a></dd></dl></div>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.InputAdapters.KafkaSimpleConsumer@DeserializeKey(k:String):com.ligadata.InputOutputAdapterInfo.PartitionUniqueRecordKey" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.InputAdapters.KafkaSimpleConsumer">KafkaSimpleConsumer</a> → <a href="../InputOutputAdapterInfo/InputAdapter.html" class="extype" name="com.ligadata.InputOutputAdapterInfo.InputAdapter">InputAdapter</a></dd></dl></div>
     </li><li name="com.ligadata.InputAdapters.KafkaSimpleConsumer#DeserializeValue" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="DeserializeValue(v:String):com.ligadata.OnLEPBase.PartitionUniqueRecordValue"></a>
+      <a id="DeserializeValue(v:String):com.ligadata.InputOutputAdapterInfo.PartitionUniqueRecordValue"></a>
       <a id="DeserializeValue(String):PartitionUniqueRecordValue"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -201,12 +210,16 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">DeserializeValue</span><span class="params">(<span name="v">v: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="../OnLEPBase/PartitionUniqueRecordValue.html" class="extype" name="com.ligadata.OnLEPBase.PartitionUniqueRecordValue">PartitionUniqueRecordValue</a></span>
+        <span class="name">DeserializeValue</span><span class="params">(<span name="v">v: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="../InputOutputAdapterInfo/PartitionUniqueRecordValue.html" class="extype" name="com.ligadata.InputOutputAdapterInfo.PartitionUniqueRecordValue">PartitionUniqueRecordValue</a></span>
       </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.InputAdapters.KafkaSimpleConsumer">KafkaSimpleConsumer</a> → <a href="../OnLEPBase/InputAdapter.html" class="extype" name="com.ligadata.OnLEPBase.InputAdapter">InputAdapter</a></dd></dl></div>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.InputAdapters.KafkaSimpleConsumer@DeserializeValue(v:String):com.ligadata.InputOutputAdapterInfo.PartitionUniqueRecordValue" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.InputAdapters.KafkaSimpleConsumer">KafkaSimpleConsumer</a> → <a href="../InputOutputAdapterInfo/InputAdapter.html" class="extype" name="com.ligadata.InputOutputAdapterInfo.InputAdapter">InputAdapter</a></dd></dl></div>
     </li><li name="com.ligadata.InputAdapters.KafkaSimpleConsumer#GetAllPartitionUniqueRecordKey" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="GetAllPartitionUniqueRecordKey:Array[com.ligadata.OnLEPBase.PartitionUniqueRecordKey]"></a>
+      <a id="GetAllPartitionUniqueRecordKey:Array[com.ligadata.InputOutputAdapterInfo.PartitionUniqueRecordKey]"></a>
       <a id="GetAllPartitionUniqueRecordKey:Array[PartitionUniqueRecordKey]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -214,11 +227,14 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">GetAllPartitionUniqueRecordKey</span><span class="result">: <span class="extype" name="scala.Array">Array</span>[<a href="../OnLEPBase/PartitionUniqueRecordKey.html" class="extype" name="com.ligadata.OnLEPBase.PartitionUniqueRecordKey">PartitionUniqueRecordKey</a>]</span>
+        <span class="name">GetAllPartitionUniqueRecordKey</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<a href="../InputOutputAdapterInfo/PartitionUniqueRecordKey.html" class="extype" name="com.ligadata.InputOutputAdapterInfo.PartitionUniqueRecordKey">PartitionUniqueRecordKey</a>]</span>
       </span>
-      </h4>
-      <p class="shortcomment cmt">getServerInfo - returns information about hosts and their coresponding partitions.</p><div class="fullcomment"><div class="comment cmt"><p>getServerInfo - returns information about hosts and their coresponding partitions.</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>Array[PartitionUniqueRecordKey] - return data
-</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.InputAdapters.KafkaSimpleConsumer">KafkaSimpleConsumer</a> → <a href="../OnLEPBase/InputAdapter.html" class="extype" name="com.ligadata.OnLEPBase.InputAdapter">InputAdapter</a></dd></dl></div>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.InputAdapters.KafkaSimpleConsumer@GetAllPartitionUniqueRecordKey:Array[com.ligadata.InputOutputAdapterInfo.PartitionUniqueRecordKey]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">getServerInfo - returns information about hosts and their coresponding partitions.</p><div class="fullcomment"><div class="comment cmt"><p>getServerInfo - returns information about hosts and their coresponding partitions.</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>Array[PartitionUniqueRecordKey] - return data</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.InputAdapters.KafkaSimpleConsumer">KafkaSimpleConsumer</a> → <a href="../InputOutputAdapterInfo/InputAdapter.html" class="extype" name="com.ligadata.InputOutputAdapterInfo.InputAdapter">InputAdapter</a></dd></dl></div>
     </li><li name="com.ligadata.InputAdapters.KafkaSimpleConsumer#Shutdown" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="Shutdown():Unit"></a>
       <a id="Shutdown():Unit"></a>
@@ -228,28 +244,35 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">Shutdown</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">Shutdown</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.InputAdapters.KafkaSimpleConsumer@Shutdown():Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <p class="shortcomment cmt"> This will stop all the running reading threads and close all the underlying connections to Kafka.</p><div class="fullcomment"><div class="comment cmt"><p> This will stop all the running reading threads and close all the underlying connections to Kafka.
-</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.InputAdapters.KafkaSimpleConsumer">KafkaSimpleConsumer</a> → <a href="../OnLEPBase/InputAdapter.html" class="extype" name="com.ligadata.OnLEPBase.InputAdapter">InputAdapter</a></dd></dl></div>
+</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.InputAdapters.KafkaSimpleConsumer">KafkaSimpleConsumer</a> → <a href="../InputOutputAdapterInfo/InputAdapter.html" class="extype" name="com.ligadata.InputOutputAdapterInfo.InputAdapter">InputAdapter</a></dd></dl></div>
     </li><li name="com.ligadata.InputAdapters.KafkaSimpleConsumer#StartProcessing" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="StartProcessing(maxParts:Int,partitionIds:Array[(com.ligadata.OnLEPBase.PartitionUniqueRecordKey,com.ligadata.OnLEPBase.PartitionUniqueRecordValue,Long,(com.ligadata.OnLEPBase.PartitionUniqueRecordValue,Int,Int))],ignoreFirstMsg:Boolean):Unit"></a>
-      <a id="StartProcessing(Int,Array[(PartitionUniqueRecordKey,PartitionUniqueRecordValue,Long,(PartitionUniqueRecordValue,Int,Int))],Boolean):Unit"></a>
+      <a id="StartProcessing(partitionIds:Array[com.ligadata.InputOutputAdapterInfo.StartProcPartInfo],ignoreFirstMsg:Boolean):Unit"></a>
+      <a id="StartProcessing(Array[StartProcPartInfo],Boolean):Unit"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">StartProcessing</span><span class="params">(<span name="maxParts">maxParts: <span class="extype" name="scala.Int">Int</span></span>, <span name="partitionIds">partitionIds: <span class="extype" name="scala.Array">Array</span>[(<a href="../OnLEPBase/PartitionUniqueRecordKey.html" class="extype" name="com.ligadata.OnLEPBase.PartitionUniqueRecordKey">PartitionUniqueRecordKey</a>, <a href="../OnLEPBase/PartitionUniqueRecordValue.html" class="extype" name="com.ligadata.OnLEPBase.PartitionUniqueRecordValue">PartitionUniqueRecordValue</a>, <span class="extype" name="scala.Long">Long</span>, (<a href="../OnLEPBase/PartitionUniqueRecordValue.html" class="extype" name="com.ligadata.OnLEPBase.PartitionUniqueRecordValue">PartitionUniqueRecordValue</a>, <span class="extype" name="scala.Int">Int</span>, <span class="extype" name="scala.Int">Int</span>))]</span>, <span name="ignoreFirstMsg">ignoreFirstMsg: <span class="extype" name="scala.Boolean">Boolean</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">StartProcessing</span><span class="params">(<span name="partitionIds">partitionIds: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<a href="../InputOutputAdapterInfo/StartProcPartInfo.html" class="extype" name="com.ligadata.InputOutputAdapterInfo.StartProcPartInfo">StartProcPartInfo</a>]</span>, <span name="ignoreFirstMsg">ignoreFirstMsg: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.InputAdapters.KafkaSimpleConsumer@StartProcessing(partitionIds:Array[com.ligadata.InputOutputAdapterInfo.StartProcPartInfo],ignoreFirstMsg:Boolean):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <p class="shortcomment cmt">Start processing - will start a number of threads to read the Kafka queues for a topic.</p><div class="fullcomment"><div class="comment cmt"><p>Start processing - will start a number of threads to read the Kafka queues for a topic.  The list of Hosts servicing a
 given topic, and the topic have been set when this KafkaConsumer_V2 Adapter was instantiated.  The partitionIds should be
 obtained via a prior call to the adapter.  One of the hosts will be a chosen as a leader to service the requests by the
-spawned threads.</p></div><dl class="paramcmts block"><dt class="param">maxParts</dt><dd class="cmt"><p>Int - Number of Partitions</p></dd><dt class="param">partitionIds</dt><dd class="cmt"><p>Array[(PartitionUniqueRecordKey, PartitionUniqueRecordValue, Long, PartitionUniqueRecordValue)] - an Array of partition ids
-</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.InputAdapters.KafkaSimpleConsumer">KafkaSimpleConsumer</a> → <a href="../OnLEPBase/InputAdapter.html" class="extype" name="com.ligadata.OnLEPBase.InputAdapter">InputAdapter</a></dd></dl></div>
+spawned threads.</p></div><dl class="paramcmts block"><dt class="param">partitionIds</dt><dd class="cmt"><p>Array[(PartitionUniqueRecordKey, PartitionUniqueRecordValue, Long, PartitionUniqueRecordValue)] - an Array of partition ids</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.InputAdapters.KafkaSimpleConsumer">KafkaSimpleConsumer</a> → <a href="../InputOutputAdapterInfo/InputAdapter.html" class="extype" name="com.ligadata.InputOutputAdapterInfo.InputAdapter">InputAdapter</a></dd></dl></div>
     </li><li name="com.ligadata.InputAdapters.KafkaSimpleConsumer#StopProcessing" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="StopProcessing():Unit"></a>
       <a id="StopProcessing():Unit"></a>
@@ -259,13 +282,17 @@ spawned threads.</p></div><dl class="paramcmts block"><dt class="param">maxParts
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">StopProcessing</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">StopProcessing</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.InputAdapters.KafkaSimpleConsumer@StopProcessing():Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <p class="shortcomment cmt">Will stop all the running read threads only - a call to StartProcessing will restart the reading process
 </p><div class="fullcomment"><div class="comment cmt"><p>Will stop all the running read threads only - a call to StartProcessing will restart the reading process
-</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.InputAdapters.KafkaSimpleConsumer">KafkaSimpleConsumer</a> → <a href="../OnLEPBase/InputAdapter.html" class="extype" name="com.ligadata.OnLEPBase.InputAdapter">InputAdapter</a></dd></dl></div>
-    </li><li name="com.ligadata.OnLEPBase.InputAdapter#UniqueName" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.InputAdapters.KafkaSimpleConsumer">KafkaSimpleConsumer</a> → <a href="../InputOutputAdapterInfo/InputAdapter.html" class="extype" name="com.ligadata.InputOutputAdapterInfo.InputAdapter">InputAdapter</a></dd></dl></div>
+    </li><li name="com.ligadata.InputOutputAdapterInfo.InputAdapter#UniqueName" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="UniqueName:String"></a>
       <a id="UniqueName:String"></a>
       <h4 class="signature">
@@ -276,8 +303,12 @@ spawned threads.</p></div><dl class="paramcmts block"><dt class="param">maxParts
       <span class="symbol">
         <span class="name">UniqueName</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../OnLEPBase/InputAdapter.html" class="extype" name="com.ligadata.OnLEPBase.InputAdapter">InputAdapter</a></dd></dl></div>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.InputAdapters.KafkaSimpleConsumer@UniqueName:String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../InputOutputAdapterInfo/InputAdapter.html" class="extype" name="com.ligadata.InputOutputAdapterInfo.InputAdapter">InputAdapter</a></dd></dl></div>
     </li><li name="scala.Any#asInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="asInstanceOf[T0]:T0"></a>
       <a id="asInstanceOf[T0]:T0"></a>
@@ -289,7 +320,11 @@ spawned threads.</p></div><dl class="paramcmts block"><dt class="param">maxParts
       <span class="symbol">
         <span class="name">asInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Any.asInstanceOf.T0">T0</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.InputAdapters.KafkaSimpleConsumer@asInstanceOf[T0]:T0" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
     </li><li name="com.ligadata.InputAdapters.KafkaSimpleConsumer#beginHeartbeat" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="beginHeartbeat():Unit"></a>
@@ -300,11 +335,32 @@ spawned threads.</p></div><dl class="paramcmts block"><dt class="param">maxParts
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">beginHeartbeat</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">beginHeartbeat</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.InputAdapters.KafkaSimpleConsumer@beginHeartbeat():Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <p class="shortcomment cmt">beginHeartbeat - This adapter will begin monitoring the partitions for the specified topic
 </p>
+    </li><li name="com.ligadata.InputAdapters.KafkaSimpleConsumer#callerCtxt" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="callerCtxt:com.ligadata.InputOutputAdapterInfo.InputAdapterCallerContext"></a>
+      <a id="callerCtxt:InputAdapterCallerContext"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">callerCtxt</span><span class="result">: <a href="../InputOutputAdapterInfo/InputAdapterCallerContext.html" class="extype" name="com.ligadata.InputOutputAdapterInfo.InputAdapterCallerContext">InputAdapterCallerContext</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.InputAdapters.KafkaSimpleConsumer@callerCtxt:com.ligadata.InputOutputAdapterInfo.InputAdapterCallerContext" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.InputAdapters.KafkaSimpleConsumer">KafkaSimpleConsumer</a> → <a href="../InputOutputAdapterInfo/InputAdapter.html" class="extype" name="com.ligadata.InputOutputAdapterInfo.InputAdapter">InputAdapter</a></dd></dl></div>
     </li><li name="scala.AnyRef#clone" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="clone():Object"></a>
       <a id="clone():AnyRef"></a>
@@ -314,9 +370,13 @@ spawned threads.</p></div><dl class="paramcmts block"><dt class="param">maxParts
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">clone</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.InputAdapters.KafkaSimpleConsumer@clone():Object" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -324,19 +384,6 @@ spawned threads.</p></div><dl class="paramcmts block"><dt class="param">maxParts
     </span>)</span>
               
         </dd></dl></div>
-    </li><li name="com.ligadata.InputAdapters.KafkaSimpleConsumer#envCtxt" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="envCtxt:com.ligadata.OnLEPBase.EnvContext"></a>
-      <a id="envCtxt:EnvContext"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">val</span>
-      </span>
-      <span class="symbol">
-        <span class="name">envCtxt</span><span class="result">: <a href="../OnLEPBase/EnvContext.html" class="extype" name="com.ligadata.OnLEPBase.EnvContext">EnvContext</a></span>
-      </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.InputAdapters.KafkaSimpleConsumer">KafkaSimpleConsumer</a> → <a href="../OnLEPBase/InputAdapter.html" class="extype" name="com.ligadata.OnLEPBase.InputAdapter">InputAdapter</a></dd></dl></div>
     </li><li name="scala.AnyRef#eq" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="eq(x$1:AnyRef):Boolean"></a>
       <a id="eq(AnyRef):Boolean"></a>
@@ -346,9 +393,13 @@ spawned threads.</p></div><dl class="paramcmts block"><dt class="param">maxParts
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.InputAdapters.KafkaSimpleConsumer@eq(x$1:AnyRef):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="scala.AnyRef#equals" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="equals(x$1:Any):Boolean"></a>
@@ -359,10 +410,31 @@ spawned threads.</p></div><dl class="paramcmts block"><dt class="param">maxParts
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.InputAdapters.KafkaSimpleConsumer@equals(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="com.ligadata.InputAdapters.KafkaSimpleConsumer#execCtxtObj" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="execCtxtObj:com.ligadata.InputOutputAdapterInfo.ExecContextObj"></a>
+      <a id="execCtxtObj:ExecContextObj"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">execCtxtObj</span><span class="result">: <a href="../InputOutputAdapterInfo/ExecContextObj.html" class="extype" name="com.ligadata.InputOutputAdapterInfo.ExecContextObj">ExecContextObj</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.InputAdapters.KafkaSimpleConsumer@execCtxtObj:com.ligadata.InputOutputAdapterInfo.ExecContextObj" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
     </li><li name="scala.AnyRef#finalize" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="finalize():Unit"></a>
       <a id="finalize():Unit"></a>
@@ -372,9 +444,13 @@ spawned threads.</p></div><dl class="paramcmts block"><dt class="param">maxParts
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">finalize</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.InputAdapters.KafkaSimpleConsumer@finalize():Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -383,7 +459,7 @@ spawned threads.</p></div><dl class="paramcmts block"><dt class="param">maxParts
               
         </dd></dl></div>
     </li><li name="com.ligadata.InputAdapters.KafkaSimpleConsumer#getAllPartitionBeginValues" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="getAllPartitionBeginValues:Array[(com.ligadata.OnLEPBase.PartitionUniqueRecordKey,com.ligadata.OnLEPBase.PartitionUniqueRecordValue)]"></a>
+      <a id="getAllPartitionBeginValues:Array[(com.ligadata.InputOutputAdapterInfo.PartitionUniqueRecordKey,com.ligadata.InputOutputAdapterInfo.PartitionUniqueRecordValue)]"></a>
       <a id="getAllPartitionBeginValues:Array[(PartitionUniqueRecordKey,PartitionUniqueRecordValue)]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -391,15 +467,18 @@ spawned threads.</p></div><dl class="paramcmts block"><dt class="param">maxParts
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">getAllPartitionBeginValues</span><span class="result">: <span class="extype" name="scala.Array">Array</span>[(<a href="../OnLEPBase/PartitionUniqueRecordKey.html" class="extype" name="com.ligadata.OnLEPBase.PartitionUniqueRecordKey">PartitionUniqueRecordKey</a>, <a href="../OnLEPBase/PartitionUniqueRecordValue.html" class="extype" name="com.ligadata.OnLEPBase.PartitionUniqueRecordValue">PartitionUniqueRecordValue</a>)]</span>
+        <span class="name">getAllPartitionBeginValues</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[(<a href="../InputOutputAdapterInfo/PartitionUniqueRecordKey.html" class="extype" name="com.ligadata.InputOutputAdapterInfo.PartitionUniqueRecordKey">PartitionUniqueRecordKey</a>, <a href="../InputOutputAdapterInfo/PartitionUniqueRecordValue.html" class="extype" name="com.ligadata.InputOutputAdapterInfo.PartitionUniqueRecordValue">PartitionUniqueRecordValue</a>)]</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.InputAdapters.KafkaSimpleConsumer@getAllPartitionBeginValues:Array[(com.ligadata.InputOutputAdapterInfo.PartitionUniqueRecordKey,com.ligadata.InputOutputAdapterInfo.PartitionUniqueRecordValue)]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <p class="shortcomment cmt">Return an array of PartitionUniqueKey/PartitionUniqueRecordValues whre key is the partion and value is the offset
 within the kafka queue where it begins.</p><div class="fullcomment"><div class="comment cmt"><p>Return an array of PartitionUniqueKey/PartitionUniqueRecordValues whre key is the partion and value is the offset
-within the kafka queue where it begins.</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>Array[(PartitionUniqueRecordKey, PartitionUniqueRecordValue)]
-</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.InputAdapters.KafkaSimpleConsumer">KafkaSimpleConsumer</a> → <a href="../OnLEPBase/InputAdapter.html" class="extype" name="com.ligadata.OnLEPBase.InputAdapter">InputAdapter</a></dd></dl></div>
+within the kafka queue where it begins.</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>Array[(PartitionUniqueRecordKey, PartitionUniqueRecordValue)]</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.InputAdapters.KafkaSimpleConsumer">KafkaSimpleConsumer</a> → <a href="../InputOutputAdapterInfo/InputAdapter.html" class="extype" name="com.ligadata.InputOutputAdapterInfo.InputAdapter">InputAdapter</a></dd></dl></div>
     </li><li name="com.ligadata.InputAdapters.KafkaSimpleConsumer#getAllPartitionEndValues" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="getAllPartitionEndValues:Array[(com.ligadata.OnLEPBase.PartitionUniqueRecordKey,com.ligadata.OnLEPBase.PartitionUniqueRecordValue)]"></a>
+      <a id="getAllPartitionEndValues:Array[(com.ligadata.InputOutputAdapterInfo.PartitionUniqueRecordKey,com.ligadata.InputOutputAdapterInfo.PartitionUniqueRecordValue)]"></a>
       <a id="getAllPartitionEndValues:Array[(PartitionUniqueRecordKey,PartitionUniqueRecordValue)]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -407,13 +486,16 @@ within the kafka queue where it begins.</p></div><dl class="paramcmts block"><dt
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">getAllPartitionEndValues</span><span class="result">: <span class="extype" name="scala.Array">Array</span>[(<a href="../OnLEPBase/PartitionUniqueRecordKey.html" class="extype" name="com.ligadata.OnLEPBase.PartitionUniqueRecordKey">PartitionUniqueRecordKey</a>, <a href="../OnLEPBase/PartitionUniqueRecordValue.html" class="extype" name="com.ligadata.OnLEPBase.PartitionUniqueRecordValue">PartitionUniqueRecordValue</a>)]</span>
+        <span class="name">getAllPartitionEndValues</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[(<a href="../InputOutputAdapterInfo/PartitionUniqueRecordKey.html" class="extype" name="com.ligadata.InputOutputAdapterInfo.PartitionUniqueRecordKey">PartitionUniqueRecordKey</a>, <a href="../InputOutputAdapterInfo/PartitionUniqueRecordValue.html" class="extype" name="com.ligadata.InputOutputAdapterInfo.PartitionUniqueRecordValue">PartitionUniqueRecordValue</a>)]</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.InputAdapters.KafkaSimpleConsumer@getAllPartitionEndValues:Array[(com.ligadata.InputOutputAdapterInfo.PartitionUniqueRecordKey,com.ligadata.InputOutputAdapterInfo.PartitionUniqueRecordValue)]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <p class="shortcomment cmt">Return an array of PartitionUniqueKey/PartitionUniqueRecordValues whre key is the partion and value is the offset
 within the kafka queue where it eds.</p><div class="fullcomment"><div class="comment cmt"><p>Return an array of PartitionUniqueKey/PartitionUniqueRecordValues whre key is the partion and value is the offset
-within the kafka queue where it eds.</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>Array[(PartitionUniqueRecordKey, PartitionUniqueRecordValue)]
-</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.InputAdapters.KafkaSimpleConsumer">KafkaSimpleConsumer</a> → <a href="../OnLEPBase/InputAdapter.html" class="extype" name="com.ligadata.OnLEPBase.InputAdapter">InputAdapter</a></dd></dl></div>
+within the kafka queue where it eds.</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>Array[(PartitionUniqueRecordKey, PartitionUniqueRecordValue)]</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.InputAdapters.KafkaSimpleConsumer">KafkaSimpleConsumer</a> → <a href="../InputOutputAdapterInfo/InputAdapter.html" class="extype" name="com.ligadata.InputOutputAdapterInfo.InputAdapter">InputAdapter</a></dd></dl></div>
     </li><li name="scala.AnyRef#getClass" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="getClass():Class[_]"></a>
       <a id="getClass():Class[_]"></a>
@@ -425,21 +507,29 @@ within the kafka queue where it eds.</p></div><dl class="paramcmts block"><dt>re
       <span class="symbol">
         <span class="name">getClass</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.Class">Class</span>[_]</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.InputAdapters.KafkaSimpleConsumer@getClass():Class[_]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="com.ligadata.InputAdapters.KafkaSimpleConsumer#getKeyValueForPartition" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="getKeyValueForPartition(leadBroker:String,partitionId:Int,timeFrame:Long):Long"></a>
-      <a id="getKeyValueForPartition(String,Int,Long):Long"></a>
+    </li><li name="com.ligadata.InputAdapters.KafkaSimpleConsumer#getComponentStatusAndMetrics" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getComponentStatusAndMetrics:com.ligadata.HeartBeat.MonitorComponentInfo"></a>
+      <a id="getComponentStatusAndMetrics:MonitorComponentInfo"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">getKeyValueForPartition</span><span class="params">(<span name="leadBroker">leadBroker: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="partitionId">partitionId: <span class="extype" name="scala.Int">Int</span></span>, <span name="timeFrame">timeFrame: <span class="extype" name="scala.Long">Long</span></span>)</span><span class="result">: <span class="extype" name="scala.Long">Long</span></span>
+        <span class="name">getComponentStatusAndMetrics</span><span class="result">: <a href="../HeartBeat/MonitorComponentInfo.html" class="extype" name="com.ligadata.HeartBeat.MonitorComponentInfo">MonitorComponentInfo</a></span>
       </span>
-      </h4>
-      <p class="shortcomment cmt">getKeyValueForPartition - get the valid offset range in a given partition.</p>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.InputAdapters.KafkaSimpleConsumer@getComponentStatusAndMetrics:com.ligadata.HeartBeat.MonitorComponentInfo" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.InputAdapters.KafkaSimpleConsumer">KafkaSimpleConsumer</a> → <a href="../HeartBeat/Monitorable.html" class="extype" name="com.ligadata.HeartBeat.Monitorable">Monitorable</a></dd></dl></div>
     </li><li name="scala.AnyRef#hashCode" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="hashCode():Int"></a>
       <a id="hashCode():Int"></a>
@@ -449,9 +539,13 @@ within the kafka queue where it eds.</p></div><dl class="paramcmts block"><dt>re
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
+        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.InputAdapters.KafkaSimpleConsumer@hashCode():Int" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="com.ligadata.InputAdapters.KafkaSimpleConsumer#input" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="input:com.ligadata.InputAdapters.KafkaSimpleConsumer"></a>
@@ -464,10 +558,14 @@ within the kafka queue where it eds.</p></div><dl class="paramcmts block"><dt>re
       <span class="symbol">
         <span class="name">input</span><span class="result">: <a href="" class="extype" name="com.ligadata.InputAdapters.KafkaSimpleConsumer">KafkaSimpleConsumer</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.InputAdapters.KafkaSimpleConsumer@input:com.ligadata.InputAdapters.KafkaSimpleConsumer" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="com.ligadata.InputAdapters.KafkaSimpleConsumer#inputConfig" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="inputConfig:com.ligadata.OnLEPBase.AdapterConfiguration"></a>
+      <a id="inputConfig:com.ligadata.InputOutputAdapterInfo.AdapterConfiguration"></a>
       <a id="inputConfig:AdapterConfiguration"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -475,10 +573,14 @@ within the kafka queue where it eds.</p></div><dl class="paramcmts block"><dt>re
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">inputConfig</span><span class="result">: <a href="../OnLEPBase/AdapterConfiguration.html" class="extype" name="com.ligadata.OnLEPBase.AdapterConfiguration">AdapterConfiguration</a></span>
+        <span class="name">inputConfig</span><span class="result">: <a href="../InputOutputAdapterInfo/AdapterConfiguration.html" class="extype" name="com.ligadata.InputOutputAdapterInfo.AdapterConfiguration">AdapterConfiguration</a></span>
       </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.InputAdapters.KafkaSimpleConsumer">KafkaSimpleConsumer</a> → <a href="../OnLEPBase/InputAdapter.html" class="extype" name="com.ligadata.OnLEPBase.InputAdapter">InputAdapter</a></dd></dl></div>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.InputAdapters.KafkaSimpleConsumer@inputConfig:com.ligadata.InputOutputAdapterInfo.AdapterConfiguration" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.InputAdapters.KafkaSimpleConsumer">KafkaSimpleConsumer</a> → <a href="../InputOutputAdapterInfo/InputAdapter.html" class="extype" name="com.ligadata.InputOutputAdapterInfo.InputAdapter">InputAdapter</a></dd></dl></div>
     </li><li name="scala.Any#isInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="isInstanceOf[T0]:Boolean"></a>
       <a id="isInstanceOf[T0]:Boolean"></a>
@@ -488,22 +590,30 @@ within the kafka queue where it eds.</p></div><dl class="paramcmts block"><dt>re
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.InputAdapters.KafkaSimpleConsumer@isInstanceOf[T0]:Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
-    </li><li name="com.ligadata.InputAdapters.KafkaSimpleConsumer#mkExecCtxt" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="mkExecCtxt:com.ligadata.OnLEPBase.MakeExecContext"></a>
-      <a id="mkExecCtxt:MakeExecContext"></a>
+    </li><li name="com.ligadata.InputAdapters.KafkaSimpleConsumer#localReadOffsets" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="localReadOffsets:scala.collection.mutable.Map[Int,Long]"></a>
+      <a id="localReadOffsets:Map[Int,Long]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
-        <span class="kind">val</span>
+        <span class="kind">var</span>
       </span>
       <span class="symbol">
-        <span class="name">mkExecCtxt</span><span class="result">: <a href="../OnLEPBase/MakeExecContext.html" class="extype" name="com.ligadata.OnLEPBase.MakeExecContext">MakeExecContext</a></span>
+        <span class="name">localReadOffsets</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.mutable.Map" class="extype" target="_top">Map</a>[<a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Long" class="extype" target="_top">Long</a>]</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.InputAdapters.KafkaSimpleConsumer@localReadOffsets:scala.collection.mutable.Map[Int,Long]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       
     </li><li name="scala.AnyRef#ne" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ne(x$1:AnyRef):Boolean"></a>
@@ -514,9 +624,13 @@ within the kafka queue where it eds.</p></div><dl class="paramcmts block"><dt>re
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.InputAdapters.KafkaSimpleConsumer@ne(x$1:AnyRef):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="scala.AnyRef#notify" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="notify():Unit"></a>
@@ -527,9 +641,13 @@ within the kafka queue where it eds.</p></div><dl class="paramcmts block"><dt>re
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notify</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.InputAdapters.KafkaSimpleConsumer@notify():Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="scala.AnyRef#notifyAll" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="notifyAll():Unit"></a>
@@ -540,23 +658,14 @@ within the kafka queue where it eds.</p></div><dl class="paramcmts block"><dt>re
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.InputAdapters.KafkaSimpleConsumer@notifyAll():Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="com.ligadata.InputAdapters.KafkaSimpleConsumer#output" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="output:Array[com.ligadata.OnLEPBase.OutputAdapter]"></a>
-      <a id="output:Array[OutputAdapter]"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">val</span>
-      </span>
-      <span class="symbol">
-        <span class="name">output</span><span class="result">: <span class="extype" name="scala.Array">Array</span>[<a href="../OnLEPBase/OutputAdapter.html" class="extype" name="com.ligadata.OnLEPBase.OutputAdapter">OutputAdapter</a>]</span>
-      </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.ligadata.InputAdapters.KafkaSimpleConsumer">KafkaSimpleConsumer</a> → <a href="../OnLEPBase/InputAdapter.html" class="extype" name="com.ligadata.OnLEPBase.InputAdapter">InputAdapter</a></dd></dl></div>
     </li><li name="com.ligadata.InputAdapters.KafkaSimpleConsumer#stopHearbeat" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="stopHearbeat():Unit"></a>
       <a id="stopHearbeat():Unit"></a>
@@ -566,9 +675,13 @@ within the kafka queue where it eds.</p></div><dl class="paramcmts block"><dt>re
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">stopHearbeat</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">stopHearbeat</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.InputAdapters.KafkaSimpleConsumer@stopHearbeat():Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <p class="shortcomment cmt"> stopHeartbeat - signal this adapter to shut down the monitor thread
 </p>
     </li><li name="scala.AnyRef#synchronized" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
@@ -582,7 +695,11 @@ within the kafka queue where it eds.</p></div><dl class="paramcmts block"><dt>re
       <span class="symbol">
         <span class="name">synchronized</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="params">(<span name="arg0">arg0: ⇒ <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>)</span><span class="result">: <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.InputAdapters.KafkaSimpleConsumer@synchronized[T0](x$1:=&gt;T0):T0" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="scala.AnyRef#toString" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="toString():String"></a>
@@ -595,7 +712,11 @@ within the kafka queue where it eds.</p></div><dl class="paramcmts block"><dt>re
       <span class="symbol">
         <span class="name">toString</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.InputAdapters.KafkaSimpleConsumer@toString():String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait():Unit"></a>
@@ -606,9 +727,13 @@ within the kafka queue where it eds.</p></div><dl class="paramcmts block"><dt>re
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.InputAdapters.KafkaSimpleConsumer@wait():Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -625,9 +750,13 @@ within the kafka queue where it eds.</p></div><dl class="paramcmts block"><dt>re
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Long">Long</span></span>, <span name="arg1">arg1: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Long" class="extype" target="_top">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.InputAdapters.KafkaSimpleConsumer@wait(x$1:Long,x$2:Int):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -644,9 +773,13 @@ within the kafka queue where it eds.</p></div><dl class="paramcmts block"><dt>re
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Long">Long</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Long" class="extype" target="_top">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.ligadata.InputAdapters.KafkaSimpleConsumer@wait(x$1:Long):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -663,12 +796,14 @@ within the kafka queue where it eds.</p></div><dl class="paramcmts block"><dt>re
         </div>
 
         <div id="inheritedMembers">
-        <div class="parent" name="com.ligadata.OnLEPBase.InputAdapter">
-              <h3>Inherited from <a href="../OnLEPBase/InputAdapter.html" class="extype" name="com.ligadata.OnLEPBase.InputAdapter">InputAdapter</a></h3>
+        <div class="parent" name="com.ligadata.InputOutputAdapterInfo.InputAdapter">
+              <h3>Inherited from <a href="../InputOutputAdapterInfo/InputAdapter.html" class="extype" name="com.ligadata.InputOutputAdapterInfo.InputAdapter">InputAdapter</a></h3>
+            </div><div class="parent" name="com.ligadata.HeartBeat.Monitorable">
+              <h3>Inherited from <a href="../HeartBeat/Monitorable.html" class="extype" name="com.ligadata.HeartBeat.Monitorable">Monitorable</a></h3>
             </div><div class="parent" name="scala.AnyRef">
-              <h3>Inherited from <span class="extype" name="scala.AnyRef">AnyRef</span></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">
-              <h3>Inherited from <span class="extype" name="scala.Any">Any</span></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></h3>
             </div>
         
         </div>
@@ -685,6 +820,7 @@ within the kafka queue where it eds.</p></div><dl class="paramcmts block"><dt>re
       <div id="tooltip"></div>
 
       <div id="footer">  </div>
-      <script defer="defer" type="text/javascript" id="jquery-js" src="../../../lib/jquery.js"></script><script defer="defer" type="text/javascript" id="jquery-ui-js" src="../../../lib/jquery-ui.js"></script><script defer="defer" type="text/javascript" id="tools-tooltip-js" src="../../../lib/tools.tooltip.js"></script><script defer="defer" type="text/javascript" id="template-js" src="../../../lib/template.js"></script>
+
+
     </body>
       </html>

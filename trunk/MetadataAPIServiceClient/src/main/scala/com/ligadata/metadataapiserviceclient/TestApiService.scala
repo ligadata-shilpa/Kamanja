@@ -67,7 +67,7 @@ object TestApiService {
         } catch {
           case e: Exception =>
             val stackTrace = StackTrace.ThrowableTraceString(e)
-            logger.debug("StackTrace:"+stackTrace)
+            logger.debug(stackTrace)
             failStr = "Failed to load configuration. Message:" + e.getMessage+"\nStackTrace:"+stackTrace
             configs = null
         } finally {
@@ -88,9 +88,8 @@ object TestApiService {
       }
     } catch {
       case e: Exception =>
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        failStr = "Invalid Configuration. Message: " + e.getMessage()
-        logger.error("Error:"+failStr)
+        failStr = "Invalid Configuration."
+        logger.error(failStr, e)
         configs = null
     }
     return (configs, failStr)
@@ -140,7 +139,7 @@ object TestApiService {
       var scala_home = root_dir + "/scala-2.11"
       var java_home = root_dir + "/jdk1.8.0_05"
       var manifest_path = git_root + "/Kamanja/trunk/MetadataAPI/src/test/SampleTestFiles/Models/manifest.mf"
-      var classpath = ".:/tmp/KamanjaInstall/metadata_2.11-1.0.jar:/tmp/KamanjaInstall/basefunctions_2.11-0.1.0.jar:/tmp/KamanjaInstall/messagedef_2.11-1.0.jar:/tmp/KamanjaInstall/methodextractor_2.11-1.0.jar:/tmp/KamanjaInstall/pmmlcompiler_2.11-1.0.jar:/tmp/KamanjaInstall/bankenvcontext_2.11-1.0.jar:/tmp/KamanjaInstall/kamanjabase_2.11-1.0.jar:/tmp/KamanjaInstall/bankbootstrap_2.11-1.0.jar:/tmp/KamanjaInstall/bankmsgsandcontainers_2.11-1.0.jar:/tmp/KamanjaInstall/medicalbootstrap_2.11-1.0.jar:/tmp/KamanjaInstall/joda-time-2.3.jar:/tmp/KamanjaInstall/joda-convert-1.6.jar:/tmp/KamanjaInstall/basetypes_2.11-0.1.0.jar:/tmp/KamanjaInstall/pmmludfs_2.11-1.0.jar:/tmp/KamanjaInstall/pmmlruntime_2.11-1.0.jar:/tmp/KamanjaInstall/json4s-native_2.11-3.2.9.jar:/tmp/KamanjaInstall/json4s-core_2.11-3.2.9.jar:/tmp/KamanjaInstall/json4s-ast_2.11-3.2.9.jar:/tmp/KamanjaInstall/jackson-databind-2.3.1.jar:/tmp/KamanjaInstall/jackson-annotations-2.3.0.jar:/tmp/KamanjaInstall/json4s-jackson_2.11-3.2.9.jar:/tmp/KamanjaInstall/jackson-core-2.3.1.jar:/tmp/KamanjaInstall/log4j-1.2.17.jar"
+      var classpath = ".:/tmp/KamanjaInstall/metadata_2.11-1.0.jar:/tmp/KamanjaInstall/basefunctions_2.11-0.1.0.jar:/tmp/KamanjaInstall/messagedef_2.11-1.0.jar:/tmp/KamanjaInstall/pmmlcompiler_2.11-1.0.jar:/tmp/KamanjaInstall/bankenvcontext_2.11-1.0.jar:/tmp/KamanjaInstall/kamanjabase_2.11-1.0.jar:/tmp/KamanjaInstall/bankbootstrap_2.11-1.0.jar:/tmp/KamanjaInstall/bankmsgsandcontainers_2.11-1.0.jar:/tmp/KamanjaInstall/medicalbootstrap_2.11-1.0.jar:/tmp/KamanjaInstall/joda-time-2.9.1.jar:/tmp/KamanjaInstall/joda-convert-1.6.jar:/tmp/KamanjaInstall/basetypes_2.11-0.1.0.jar:/tmp/KamanjaInstall/pmmludfs_2.11-1.0.jar:/tmp/KamanjaInstall/pmmlruntime_2.11-1.0.jar:/tmp/KamanjaInstall/json4s-native_2.11-3.2.9.jar:/tmp/KamanjaInstall/json4s-core_2.11-3.2.9.jar:/tmp/KamanjaInstall/json4s-ast_2.11-3.2.9.jar:/tmp/KamanjaInstall/jackson-databind-2.3.1.jar:/tmp/KamanjaInstall/jackson-annotations-2.3.0.jar:/tmp/KamanjaInstall/json4s-jackson_2.11-3.2.9.jar:/tmp/KamanjaInstall/jackson-core-2.3.1.jar:/tmp/KamanjaInstall/log4j-1.2.17.jar"
       var notify_engine = "NO"
       var znode_path = "/ligadata/metadata"
       var zookeeper_connect_string = "localhost:2181"
@@ -288,7 +287,7 @@ object TestApiService {
 
     } catch {
       case e: Exception =>
-        logger.error("Failed to load configuration: " + e.getMessage)
+        logger.error("Failed to load configuration", e)
         sys.exit(1)
     }
   }
@@ -313,13 +312,11 @@ object TestApiService {
       baos.toByteArray()
     } catch {
       case e: IOException => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        throw new FileNotFoundException("Failed to Convert the Jar (" + jarName + ") to array of bytes: " + e.getMessage())
+        throw new FileNotFoundException("Failed to Convert the Jar (" + jarName + ") to array of bytes. Message:" + e.getMessage)
       }
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.error("StackTrace:"+stackTrace)
-        throw InternalErrorException("Failed to Convert the Jar (" + jarName + ") to array of bytes: " + e.getMessage(), e)
+        logger.error("", e)
+        throw InternalErrorException("Failed to Convert the Jar (" + jarName + ") to array of bytes", e)
       }
     }
   }
@@ -369,10 +366,9 @@ object TestApiService {
       response.body.asString
     } catch {
       case e: Exception =>
-       
         val errStr = "Failed to get response for the API call(" + url + "), status = " + response.status
-        logger.error("Error:"+errStr)
-        throw new Exception(errStr)
+        logger.error("Error:"+errStr, e)
+        throw new Exception(errStr, e)
     }
   }
 
@@ -396,9 +392,8 @@ object TestApiService {
       GetHttpResponse(reqType, url, apiParameters, bodyType)
     } catch {
       case e: Exception =>{
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
-        throw new Exception(e.getMessage())
+        logger.debug("", e)
+        throw e
       }
     }
   }
@@ -439,8 +434,7 @@ object TestApiService {
       return objKeys
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
         return null
       }
     }
@@ -457,8 +451,7 @@ object TestApiService {
       objKeys.foreach(k => { println(k) });
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
       }
     }
   }
@@ -470,8 +463,7 @@ object TestApiService {
       logger.debug(objJson)
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
       }
     }
   }
@@ -490,9 +482,8 @@ object TestApiService {
       apiArgJson
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
-        throw new Exception("Failed to convert given object key into json string" + e.getMessage())
+        logger.debug("", e)
+        throw new Exception("Failed to convert given object key into json string", e)
       }
     }
   }
@@ -510,7 +501,7 @@ object TestApiService {
       keys.foreach(key => { seq += 1; println("[" + seq + "] " + key) })
 
       print("\nEnter your choice: ")
-      val choice: Int = StdIn.readInt()
+      val choice: Int = readInt()
 
       if (choice < 1 || choice > keys.length) {
         println("Invalid choice " + choice + ",start with main menu...")
@@ -525,8 +516,7 @@ object TestApiService {
 
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
       }
     }
   }
@@ -565,8 +555,7 @@ object TestApiService {
       keys.foreach(key => { seq += 1; println("[" + seq + "] " + key) })
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
       }
     }
   }
@@ -632,7 +621,7 @@ object TestApiService {
       keys.foreach(key => { seq += 1; println("[" + seq + "] " + key) })
 
       print("\nEnter your choice: ")
-      val choice: Int = StdIn.readInt()
+      val choice: Int = readInt()
 
       if (choice < 1 || choice > keys.length) {
         println("Invalid choice " + choice + ",start with main menu...")
@@ -648,8 +637,7 @@ object TestApiService {
 
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
       }
     }
   }
@@ -690,7 +678,7 @@ object TestApiService {
       keys.foreach(key => { seq += 1; println("[" + seq + "] " + key) })
 
       print("\nEnter your choice: ")
-      val choice: Int = StdIn.readInt()
+      val choice: Int = readInt()
 
       if (choice < 1 || choice > keys.length) {
         println("Invalid choice " + choice + ",start with main menu...")
@@ -706,8 +694,7 @@ object TestApiService {
 
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
       }
     }
   }
@@ -748,7 +735,7 @@ object TestApiService {
       keys.foreach(key => { seq += 1; println("[" + seq + "] " + key) })
 
       print("\nEnter your choice: ")
-      val choice: Int = StdIn.readInt()
+      val choice: Int = readInt()
 
       if (choice < 1 || choice > keys.length) {
         println("Invalid choice " + choice + ",start with main menu...")
@@ -764,8 +751,7 @@ object TestApiService {
 
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
       }
     }
   }
@@ -816,7 +802,7 @@ object TestApiService {
       println("[" + seq + "] Main Menu")
 
       print("\nEnter your choice: ")
-      val choice: Int = StdIn.readInt()
+      val choice: Int = readInt()
 
       if (choice == pmmlFiles.length + 1) {
         return
@@ -833,8 +819,7 @@ object TestApiService {
       logger.debug("Results of AddModel Operation => " + res)
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
       }
     }
   }
@@ -859,8 +844,8 @@ object TestApiService {
       println("[" + seq + "] Main Menu")
 
       print("\nEnter your choices (separate with commas if more than 1 choice given): ")
-      //val choice:Int = StdIn.readInt()
-      val choicesStr: String = StdIn.readLine()
+      //val choice:Int = readInt()
+      val choicesStr: String = readLine()
 
       var valid: Boolean = true
       var choices: List[Int] = List[Int]()
@@ -898,11 +883,10 @@ object TestApiService {
       })
     } catch {
       case e: AlreadyExistsException => {
-        logger.error("Container Already in the metadata...." + e.getMessage())
+        logger.error("Container Already in the metadata....", e)
       }
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
       }
     }
   }
@@ -926,8 +910,8 @@ object TestApiService {
       println("[" + seq + "] Main Menu")
 
       print("\nEnter your choices (separate with commas if more than 1 choice given): ")
-      //val choice:Int = StdIn.readInt()
-      val choicesStr: String = StdIn.readLine()
+      //val choice:Int = readInt()
+      val choicesStr: String = readLine()
 
       var valid: Boolean = true
       var choices: List[Int] = List[Int]()
@@ -963,11 +947,10 @@ object TestApiService {
       })
     } catch {
       case e: AlreadyExistsException => {
-        logger.error("Message Already in the metadata....")
+        logger.error("Message Already in the metadata....", e)
       }
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
       }
     }
   }
@@ -993,7 +976,7 @@ object TestApiService {
       println("[" + seq + "] Main Menu")
 
       print("\nEnter your choice: ")
-      val choice: Int = StdIn.readInt()
+      val choice: Int = readInt()
 
       if (choice == cfgFiles.length + 1) {
         return
@@ -1009,11 +992,10 @@ object TestApiService {
       println("Results as json string => \n" + res)
     } catch {
       case e: AlreadyExistsException => {
-        logger.error("Object Already in the metadata....")
+        logger.error("Object Already in the metadata....", e)
       }
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
       }
     }
   }
@@ -1039,7 +1021,7 @@ object TestApiService {
       println("[" + seq + "] Main Menu")
 
       print("\nEnter your choice: ")
-      val choice: Int = StdIn.readInt()
+      val choice: Int = readInt()
 
       if (choice == cfgFiles.length + 1) {
         return
@@ -1055,8 +1037,7 @@ object TestApiService {
       println("Results as json string => \n" + res)
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
       }
     }
   }
@@ -1082,7 +1063,7 @@ object TestApiService {
       println("[" + seq + "] Main Menu")
 
       print("\nEnter your choice: ")
-      val choice: Int = StdIn.readInt()
+      val choice: Int = readInt()
 
       if (choice == jarFiles.length + 1) {
         return
@@ -1098,11 +1079,10 @@ object TestApiService {
       println("Results as json string => \n" + res)
     } catch {
       case e: AlreadyExistsException => {
-        logger.error("Model Already in the metadata....")
+        logger.error("Model Already in the metadata....", e)
       }
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
       }
     }
   }
@@ -1128,7 +1108,7 @@ object TestApiService {
       println("[" + seq + "] Main Menu")
 
       print("\nEnter your choice: ")
-      val choice: Int = StdIn.readInt()
+      val choice: Int = readInt()
 
       if (choice == functionFiles.length + 1) {
         return
@@ -1145,11 +1125,10 @@ object TestApiService {
       println("Results as json string => \n" + res)
     } catch {
       case e: AlreadyExistsException => {
-        logger.error("Function Already in the metadata....")
+        logger.error("Function Already in the metadata....", e)
       }
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
       }
     }
   }
@@ -1175,7 +1154,7 @@ object TestApiService {
       println("[" + seq + "] Main Menu")
 
       print("\nEnter your choice: ")
-      val choice: Int = StdIn.readInt()
+      val choice: Int = readInt()
 
       if (choice == functionFiles.length + 1) {
         return
@@ -1193,11 +1172,10 @@ object TestApiService {
 
     } catch {
       case e: AlreadyExistsException => {
-        logger.error("Function Already in the metadata....")
+        logger.error("Function Already in the metadata....", e)
       }
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
       }
     }
   }
@@ -1223,7 +1201,7 @@ object TestApiService {
       println("[" + seq + "] Main Menu")
 
       print("\nEnter your choice: ")
-      val choice: Int = StdIn.readInt()
+      val choice: Int = readInt()
 
       if (choice == conceptFiles.length + 1) {
         return
@@ -1240,11 +1218,10 @@ object TestApiService {
       println("Results as json string => \n" + res)
     } catch {
       case e: AlreadyExistsException => {
-        logger.error("Concept Already in the metadata....")
+        logger.error("Concept Already in the metadata....", e)
       }
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
       }
     }
   }
@@ -1275,7 +1252,7 @@ object TestApiService {
       println("[" + seq + "] Main Menu")
 
       print("\nEnter your choice: ")
-      val choice: Int = StdIn.readInt()
+      val choice: Int = readInt()
 
       if (choice == conceptFiles.length + 1) {
         return
@@ -1292,11 +1269,10 @@ object TestApiService {
       println("Results as json string => \n" + res)
     } catch {
       case e: AlreadyExistsException => {
-        logger.error("Concept Already in the metadata....")
+        logger.error("Concept Already in the metadata....", e)
       }
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
       }
     }
   }
@@ -1323,7 +1299,7 @@ object TestApiService {
       println("[" + seq + "] Main Menu")
 
       print("\nEnter your choice: ")
-      val choice: Int = StdIn.readInt()
+      val choice: Int = readInt()
 
       if (choice == typeFiles.length + 1) {
         return
@@ -1340,11 +1316,10 @@ object TestApiService {
       println("Results as json string => \n" + res)
     } catch {
       case e: AlreadyExistsException => {
-        logger.error("Type Already in the metadata....")
+        logger.error("Type Already in the metadata....", e)
       }
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
       }
     }
   }
@@ -1373,7 +1348,7 @@ object TestApiService {
         seq += 1
         println("[" + seq + "] Main Menu")
         print("\nEnter your choice: ")
-        val choice: Int = StdIn.readInt()
+        val choice: Int = readInt()
         if (choice <= typeMenu.size) {
           selectedType = "com.ligadata.kamanja.metadata." + typeMenu(choice)
           done = true
@@ -1389,8 +1364,7 @@ object TestApiService {
 
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
       }
     }
   }
@@ -1414,8 +1388,8 @@ object TestApiService {
       println("[" + seq + "] Main Menu")
 
       print("\nEnter your choices (separate with commas if more than 1 choice given): ")
-      //val choice:Int = StdIn.readInt()
-      val choicesStr: String = StdIn.readLine()
+      //val choice:Int = readInt()
+      val choicesStr: String = readLine()
 
       var valid: Boolean = true
       var choices: List[Int] = List[Int]()
@@ -1454,11 +1428,10 @@ object TestApiService {
 
     } catch {
       case e: AlreadyExistsException => {
-        logger.error("Object Already in the metadata....")
+        logger.error("Object Already in the metadata....", e)
       }
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
       }
     }
   }
@@ -1484,7 +1457,7 @@ object TestApiService {
       println("[" + seq + "] Main Menu")
 
       print("\nEnter your choice: ")
-      val choice: Int = StdIn.readInt()
+      val choice: Int = readInt()
 
       if (choice == outputmsgFiles.length + 1)
         return
@@ -1500,8 +1473,7 @@ object TestApiService {
       println("Results as json string => \n" + res)
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
       }
     }
   }
@@ -1606,7 +1578,7 @@ object TestApiService {
         for ((key, idx) <- topLevelMenu.zipWithIndex) { println("[" + (idx + 1) + "] " + key._1) }
         println("[" + (topLevelMenu.size + 1) + "] Exit")
         print("\nEnter your choice: ")
-        val choice: Int = StdIn.readInt()
+        val choice: Int = readInt()
         if (choice <= topLevelMenu.size) {
           topLevelMenu(choice - 1)._2.apply
         } else if (choice == topLevelMenu.size + 1) {
@@ -1617,8 +1589,7 @@ object TestApiService {
       }
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
       }
     }
   }
@@ -1649,8 +1620,7 @@ object TestApiService {
       StartTest
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
+        logger.debug("", e)
       }
     } finally {
       // Cleanup and exit

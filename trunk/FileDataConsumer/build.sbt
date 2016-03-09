@@ -1,21 +1,20 @@
 // put this at the top of the file
 import sbt._
-import AssemblyKeys._
+import sbtassembly.AssemblyPlugin.defaultShellScript
 import sbt.Keys._
 
 shellPrompt := { state =>  "sbt (%s)> ".format(Project.extract(state).currentProject.id) }
 
-assemblySettings
+
 
 assemblyOption in assembly ~= { _.copy(prependShellScript = Some(defaultShellScript)) }
 
-jarName in assembly := { s"${name.value}-${version.value}" }
+assemblyJarName in assembly := { s"${name.value}-${version.value}" }
 
 // for some reason the merge strategy for non ligadata classes are not working and thus added those conflicting jars in exclusions
 // this may result some run time errors
 
-mergeStrategy in assembly <<= (mergeStrategy in assembly) { (old) =>
-{
+assemblyMergeStrategy in assembly := {
   // case PathList("javax", "servlet", xs @ _*)         => MergeStrategy.first
   // case PathList(ps @ _*) if ps.last endsWith ".html" => MergeStrategy.first
 case PathList("META-INF", "maven","jline","jline", ps) if ps.startsWith("pom") => MergeStrategy.discard
@@ -44,12 +43,14 @@ case PathList("META-INF", "maven","jline","jline", ps) if ps.startsWith("pom") =
     case x if x contains "commons-logging" => MergeStrategy.first
   case "log4j.properties" => MergeStrategy.first
   case "unwanted.txt"     => MergeStrategy.discard
-  case x => old(x)
-}
+          case x =>
+  	        val oldStrategy = (assemblyMergeStrategy in assembly).value
+  	        oldStrategy(x)
+
 }
 
 excludedJars in assembly <<= (fullClasspath in assembly) map { cp =>
-  val excludes = Set("commons-beanutils-1.7.0.jar", "google-collections-1.0.jar", "commons-collections4-4.0.jar" )
+  val excludes = Set("commons-beanutils-1.7.0.jar", "google-collections-1.0.jar", "commons-collections4-4.0.jar", "log4j-1.2.17.jar", "log4j-1.2.16.jar" )
   cp filter { jar => excludes(jar.data.getName) }
 }
 
@@ -57,31 +58,11 @@ excludedJars in assembly <<= (fullClasspath in assembly) map { cp =>
 name := "FileDataConsumer"
 
 version := "0.1.0"
-scalaVersion := "2.11.7"
-
 libraryDependencies ++= {
   val sprayVersion = "1.3.3"
   val akkaVersion = "2.3.9"
-  val scalaVersion= "2.11.7"
   Seq(
-   // "io.spray" %% "spray-can" % sprayVersion,
-   // "io.spray" %% "spray-routing" % sprayVersion,
-   // "io.spray" %% "spray-testkit" % sprayVersion,
-   // "io.spray" %% "spray-client" % sprayVersion,
-   // "io.spray" %%  "spray-json" % "1.3.2",
-
-    "org.apache.kafka" %% "kafka" % "0.8.2.1",
-    //"org.apache.kafka" % "kafka_2.10" % "0.8.2.2",
-   // "org.apache.logging.log4j" % "log4j-api" % "2.4.1",
-  //  "org.apache.logging.log4j" % "log4j-core" % "2.4.1",
- //     exclude("javax.jms", "jms")
- //     exclude("com.sun.jdmk", "jmxtools")
- //     exclude("com.sun.jmx", "jmxri"),
-   // "org.apache.kafka" % "kafka_2.10" % "0.8.2.0",
-  //  "com.typesafe.akka" %% "akka-actor" % akkaVersion,
-  //  "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
-   // "ch.qos.logback" % "logback-classic" % "1.0.12",
-  //  "org.apache.camel" % "camel-core" % "2.9.2",
-    "org.scala-lang" % "scala-actors" % scalaVersion
+    "org.apache.kafka" %% "kafka" % "0.8.2.2",
+    "org.scala-lang" % "scala-actors" % scalaVersion.value
   )
 }

@@ -1,0 +1,310 @@
+<!DOCTYPE html >
+<html>
+        <head>
+          <title>compiler - com.ligadata.pmml.compiler</title>
+          <meta name="description" content="compiler - com.ligadata.pmml.compiler" />
+          <meta name="keywords" content="compiler com.ligadata.pmml.compiler" />
+          <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+          
+      <link href="../../../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
+      <link href="../../../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../../../../lib/jquery.js" id="jquery-js"></script>
+      <script type="text/javascript" src="../../../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../../../lib/template.js"></script>
+      <script type="text/javascript" src="../../../../lib/tools.tooltip.js"></script>
+      
+      <script type="text/javascript">
+         if(top === self) {
+            var url = '../../../../index.html';
+            var hash = 'com.ligadata.pmml.compiler.package';
+            var anchor = window.location.hash;
+            var anchor_opt = '';
+            if (anchor.length >= 1)
+              anchor_opt = '@' + anchor.substring(1);
+            window.location.href = url + '#' + hash + anchor_opt;
+         }
+   	  </script>
+    
+        </head>
+        <body class="value">
+      <div id="definition">
+        <img alt="Package" src="../../../../lib/package_big.png" />
+        <p id="owner"><a href="../../../package.html" class="extype" name="com">com</a>.<a href="../../package.html" class="extype" name="com.ligadata">ligadata</a>.<a href="../package.html" class="extype" name="com.ligadata.pmml">pmml</a></p>
+        <h1>compiler</h1><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.compiler.package" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      </div>
+
+      <h4 id="signature" class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <span class="name">compiler</span>
+      </span>
+      </h4>
+      
+          <div id="comment" class="fullcommenttop"></div>
+        
+
+      <div id="mbrsel">
+        <div id="textfilter"><span class="pre"></span><span class="input"><input id="mbrsel-input" type="text" accesskey="/" /></span><span class="post"></span></div>
+        
+        
+        <div id="visbl">
+            <span class="filtertype">Visibility</span>
+            <ol><li class="public in"><span>Public</span></li><li class="all out"><span>All</span></li></ol>
+          </div>
+      </div>
+
+      <div id="template">
+        <div id="allMembers">
+        
+
+        <div id="types" class="types members">
+              <h3>Type Members</h3>
+              <ol><li name="com.ligadata.pmml.compiler.LogTrait" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="LogTraitextendsAnyRef"></a>
+      <a id="LogTrait:LogTrait"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="LogTrait.html"><span class="name">LogTrait</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.compiler.package@LogTraitextendsAnyRef" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.pmml.compiler.PmmlCompiler" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="PmmlCompilerextendsAnyRef"></a>
+      <a id="PmmlCompiler:PmmlCompiler"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="PmmlCompiler.html"><span class="name">PmmlCompiler</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.compiler.package@PmmlCompilerextendsAnyRef" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.pmml.compiler.PmmlContext" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="PmmlContextextendsLogTrait"></a>
+      <a id="PmmlContext:PmmlContext"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="PmmlContext.html"><span class="name">PmmlContext</span></a><span class="result"> extends <a href="LogTrait.html" class="extype" name="com.ligadata.pmml.compiler.LogTrait">LogTrait</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.compiler.package@PmmlContextextendsLogTrait" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">3) PmmlContext is a global container for the application.</p><div class="fullcomment"><div class="comment cmt"><p>3) PmmlContext is a global container for the application.  It has a number of key containers and variables:</p><p>	a) pmmlNodeQueue contains those elements pulled from the Pmml file traverse that are to be processed further.
+	b) pmmlExecNodeQueue contains decorated versions of the PmmlNodeQueue.
+	c) pmmlNodeStack contains PmmlNodes that are of interest during the XML tree navigation.  The start events
+	allocate new PmmlNode instances of the appropriate subtype corresponding to the XML detected and push them to
+	this stack.
+	d) To specialize handling of the various element types and their child elements, a number of dispatch tables
+	are used:  val fs = Map(&quot;John&quot; -&gt; helloJohn _, &quot;Joe&quot; -&gt; helloJoe _)
+		i) pmmlElementVistitorMap(qName -&gt; visitorFcn(ctx:PmmlContext, currNode:PmmlNode[+A]) - this will collect
+		the appropriate information from the element/child element being currently visited.  Should a child element
+		not be represented in this visitor map, it and its contents are ignored and the traversal continues.
+		ii) pmmlXformDispatchMap(pmmlNodeName -&gt; xFormFcn(ctx:PmmlContext, currNode:PmmlNode[+A]) - this is a
+		dispatch map that knows how to transform the raw PmmlNode derivative to a corresponding PmmlExecNode
+		derivative.
+		iii) pmmlFcnNameDerivationMap (pmmlNodeName -&gt; derivationFcn(ctx:PmmlContext, currNode:PmmlNode[+A]) - this
+		function will create a unique name for the function represented by this PmmlNode.
+		iv) pmmlBuiltinMap (pmmlBuiltinFcnName -&gt; builtinFcn(ctx:PmmlContext, currNode:PmmlExecNode[+A])
+		v) pmmlCodeGeneratorMap (pmmlNodeName -&gt; codeGeneratorFcn(ctx:PmmlContext, currNode:PmmlExecNode[+A]) - this map
+		will generate appropriate Scala source to represent this node for emission.
+	e) a sequence number generator that will be used to help disambiguate names used for functions.
+	f) To manage the variables in the Pmml file's DataDictionary and TransformationDictionary the type information about
+	the variables contained there are kept in the dataFieldMap(fieldName -&gt; PmmlDataTypeInfo) and
+	derivedFieldMap(derivedFieldName -&gt; PmmlDataTypeInfo) respectively.
+	g) To manage the variables to be returned by the model, the MiningField elements marked with usageType value
+	'predicted' or 'supplementary' are gathered in a list, modelOutput : List[Any].  These are emitted at the end of
+	the object main function to return the model scoring results to the scoring component's client.
+	h) log4j logger is available.</p></div></div>
+    </li></ol>
+            </div>
+
+        
+
+        <div id="values" class="values members">
+              <h3>Value Members</h3>
+              <ol><li name="com.ligadata.pmml.compiler.PmmlCompiler" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="PmmlCompiler"></a>
+      <a id="PmmlCompiler:PmmlCompiler"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="PmmlCompiler$.html"><span class="name">PmmlCompiler</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.App" class="extype" target="_top">App</a> with <a href="LogTrait.html" class="extype" name="com.ligadata.pmml.compiler.LogTrait">LogTrait</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.compiler.package@PmmlCompiler" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="com.ligadata.pmml.compiler.PmmlCompilerGlobalLogger" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="PmmlCompilerGlobalLogger"></a>
+      <a id="PmmlCompilerGlobalLogger:PmmlCompilerGlobalLogger"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="PmmlCompilerGlobalLogger$.html"><span class="name">PmmlCompilerGlobalLogger</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#com.ligadata.pmml.compiler.package@PmmlCompilerGlobalLogger" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">	Original Notes (of historical interest only):
+    This object manages the parse, transform, and source code generation and compilation of pmml models.</p><div class="fullcomment"><div class="comment cmt"><p>	Original Notes (of historical interest only):
+    This object manages the parse, transform, and source code generation and compilation of pmml models.</p><p>	Basic idea - xml parsing</p><p>		There are two types of elements we examine.  One type is a root element that with its children will be enqueued
+		for further processing.  Then there are general nodes of interest.  These are collected and added to the current
+		element on the stack as that element's child.</p><p>		There is a container queue and a stack are used to manage the XML SAX traverse data collection effort.  Generally
+		results of the XML tree navigation to be retained for further processing are added to the queue.  The processing stack
+		is used strictly to manage hierarchical state in the collection effort. These collections are used as follows:</p><p>			a) At container start, a new PmmlNode is created and pushed to the top of the processing stack.  It is
+			updated with its children's content assuming the children are in fact of interest to the collection
+			effort.  Similarly their children's content updates their top of stack element, etc.</p><p>			b) At container end event, the top stack on the process stack contains a PmmlNode with any
+			of its children found in the 'children' ArrayBuffer each PmmlNode has. One of two things can
+			happen.  That node is the sole element on the stack (it is also checked against the ctx.topLevelContainers list)
+			and is enqueued in the ctx.pmmlNodeQueue to await further processing.</p><p>			The other possibility is that this is a node of interest that will be added to the previous node on the
+			stack as its child.</p><p>		The decision as to what to add to the current container is made by the function associated with each element of interest
+		found in a PmmlContext dispatcher.  Almost all elements are collected, as most are germane to the generation of
+		an executable program.</p><p>	Basic idea - PmmlNode transformation to PmmlExecNode</p><p>		The PmmlNode hierarchy rooted at each node in the container queue is transformed.  Generally the information found
+		in a given PmmlNode instance will be extracted and update a new PmmlExecNode that corresponds to it.  Additional
+		information will be generated and or derived to create a rich set of information capable of generating the
+		Scala source code.  Here is a list of the basic steps:</p><p>		a) The type information represented by the DataDictionary elements and the TransformationDictionary
+		derived elements is collected into a dictionary (a map).</p><p>		b) This dictionary will be consulted to mark type information of the uses in the function bodies and rule bodies.</p><p>		c) In the case of the functions, the local variables (in function scope are identified).  For example, an &quot;if&quot;
+		function can be represented as follows:</p><p>			def foo001() : boolean = {
+				boolean truth = false;
+				for {
+				 	i &lt;- 1 to NumChildBoolExpressionsInIf
+				 		boolExpr1()
+				 		boolExpr2()
+				 		.
+				 		.
+				 		.
+				 		boolExprN()
+				 	} truth = true</p><p>				truth
+			}</p><p>		In this case the boolean variable, 'truth', is generated and added to the local Variables for the if function.
+		To simplify the example, it is assumed that the if function returns a boolean value rather than coercing to
+		some other type (e.g., representing the return as an integer).</p><p>		d) Each function will have a name generated for it such that it is unique.  This will decorate the PmmlExecNode
+		so that it can be disambiguated from other instances of the same function.  Note that no attempt to optimize
+		functions with same syntax tree will be performed.  It is up to the Pmml author to use the TransformationDictionary
+		to represent such shared functions with the derived variable type.</p><p>		e) Certain PmmlExecNode derivatives will have a name generated for them.  If they get a special name, the
+		function Name(PmmlContext) is defined in the PmmlExecNode derivative.  The PmmlContext allows access to the
+		global unique number generator to disambiguate the same functions used in the same scope (for instance... there
+		are likely other reasons.  When in doubt a serial number is suffixed to the function names.</p><p>		h) Where the functions are used, the argument list to call it must be prepared.  For example, RuleSets with a
+		default score should pass it to each SimpleRule function in the model.</p><p>		i) The MiningFields with usageType values of 'predicted' or 'supplementary' are noted as fields to be returned
+		by the model as the result.  These fields are returned as the RuleSet function's value.</p><p>		j) Obviously there could be other decorations to be derived for annotation on the PmmlExecNode instances.  We will
+		try to add them here in the documentation as well of course in the implementation.</p><p>		k) Once the PmmlExecNode for a given PmmlNode derivative is complete, it is enqueued in the execution queue that
+		is part of the application context object.</p><p>	Basic idea - PmmlExecNode Code Generation</p><p>		Each enriched PmmlExecNode is transformed into a series of Scala statements.  The following steps are used:</p><p>		a) The module comment is generated from the Header container information collected.
+		b) The class declaration is started based upon the RuleSetModel name.
+		c) The data and transformation dictionary variables are traversed and the 'var' statements are generated for each element.
+		d) If one or more MapValues is/are present in the transformation dictionary, these maps are constructed.
+		If more than one is present a mapOfMapValues is generated keyed by field name.
+		e) The functions found in the transformation dictionary and RuleSet are generated (AS REQUIRED)MetadataBootstrap using the
+		derived names associated with each PmmlExecNode.
+			i) The function signature will be derived based upon the
+			ii) The function bodies will include possible setup	of local variables.
+			iii) In some situations, there will be a conversion to another type (e.g., boolean -&gt; {0|1})
+		f) For SimpleRules, accept the &quot;default&quot; score as input.  Based upon the outcome, the function will
+			return the default value or the SimpleRule's score
+		g) For the RuleSet function, it will supply the default score to each of the SimpleRule's called.  It will
+		answer a tuple that contains those MiningField variables that have been marked either 'predicted' or
+		'supplementary'.
+		h) For RuleSet, there are several 'RuleSelectionMethod' types.  Initially only 'firstHit' will be supported.  In
+		this approach (for this version at least) rules are executed in order of appearance in the RuleSet.  When
+		confidence and weighting are applied in a later version of this, it may be useful to execute the rules in parallel
+		and then apply the weight and confidence metrics to the solutions returned to create the score.</p><p>	Basic Idea - Class Responsibilities Described</p><p>		This note describes how the PmmlCompiler project divides responsibilities and accomplishes key functionality:</p><p>		1) PmmlCompiler contains the main application that is invoked.  Arguments:</p><p>			a) the path of the Pmml file to compile
+			b) the path of the target directory where the class file will be published.
+			c) ... and a lot of others now.. see the main inner function, nextOption, for what can
+			be collected from the command line.  Hopefully the String, 'usage', matches that.</p><p>		2) PmmlParseEventParser is the event handler for the Sax traversal of the Pmml file.</p><p>		3) PmmlContext is a global container for the application.  It has a number of key containers and variables:</p><p>			a) pmmlNodeQueue contains those elements pulled from the Pmml file traverse that are to be processed further.
+			b) pmmlExecNodeQueue contains decorated versions of the PmmlNodeQueue.
+			c) pmmlNodeStack contains PmmlNodes that are of interest during the XML tree navigation.  The start events
+			allocate new PmmlNode instances of the appropriate subtype corresponding to the XML detected and push them to
+			this stack.
+			d) To specialize handling of the various element types and their child elements, a number of dispatch tables
+			are used:</p><p>				i) pmmlElementVistitorMap(qName -&gt; ElementVisitFcn) - this will collect the appropriate information from
+				the element/child element being currently visited including the attributes that may be present.  Attributes
+				mentioned in the xml schema for PMML will be set to 'None' values for now. Ideally these are set to defaults
+				specified in the XSD.  If important, we will fix next revision. Should a child element not be represented in
+				this visitor map, it and its contents are ignored and the traversal continues.</p><p>				ii) pmmlNodeToPmmlExecNodeXformMap(pmmlNodeName -&gt; PmmlNodeToPmmlExecNodeXformFcn) - this is a
+				dispatch map that knows how to transform the raw PmmlNode derivative to a corresponding PmmlExecNode
+				derivative.</p><p>				iii) pmmlExecNodeNameDerivationMap (pmmlExecNodeName -&gt; PmmlExecNodeNameDerivationFcn) - this
+				function will create a unique name for the function represented by this PmmlNode.  Only the functions
+				will need this feature (or so I think at this moment)</p><p>				iv) pmmlBuiltinMap (pmmlBuiltinFcnName -&gt; builtinFcn(ctx:PmmlContext, currNode:PmmlExecNode[+A])</p><p>				v) pmmlCodeGeneratorMap (pmmlNodeName -&gt; codeGeneratorFcn(ctx:PmmlContext, currNode:PmmlExecNode[+A]) - this map
+				will generate appropriate Scala source to represent this node for emission.</p><p>			e) a sequence number generator that will be used to help disambiguate names used for functions.
+			f) To manage the variables in the Pmml file's DataDictionary and TransformationDictionary the type information about
+			the variables contained there are kept in the dataFieldMap(fieldName -&gt; PmmlDataTypeInfo) and
+			derivedFieldMap(derivedFieldName -&gt; PmmlDataTypeInfo) respectively.
+			g) To manage the variables to be returned by the model, the MiningField elements marked with usageType value
+			'predicted' or 'supplementary' are gathered in a list, modelOutput : List[Any].  These are emitted at the end of
+			the object main function to return the model scoring results to the scoring component's client.
+			h) To contain the generated Scala source code, a StringBuilder is used called scoringModelSource.</p><p>		4) PmmlNode class hierarchy.  PmmlNode is a abstract class represents a raw XML element of interest to the compiler.
+		These are collected in a list for transformation and ultimately the Scala code generation process.  This class
+		has numerous concrete subclasses that describe the various XML nodes of interest found in the PMML file.</p><p>		5) PmmlExecNode class hierarchy.  Similar to the but contains the type information for the content of the element and
+		any additional information that will prove useful later when the node is transformed to Scala code (e.g., unique
+		function name for the same function type appearing in same scope).</p><p>		6) Static objects are used to contain the dispatch map functions described above for each PmmlNode and PmmlExecNode
+		derived class.  Their class names will be the same as their respective class name counterparts (where there is no
+		name conflict with Scala language...e.g., 'if').</p><p>		7) The class, PmmlExecute, generated by the compiler class PmmlExecuteCompile, will accept the data vector from the
+		companion data extract/filter/aggregate module(s) in the constructor generated, organizing it as necessary for use in
+		the execute function to be generated..  The PmmlExecuteCompile will generate code for function, execute(), that will
+		send this data to the RuleSet function that will score the data according to the rules found in the PMML for the
+		model.  Code is generated that returns the prediction and any supplementary data requested by the model as a tuple to
+		the model user that submitted the input data.</p></div></div>
+    </li></ol>
+            </div>
+
+        
+
+        
+        </div>
+
+        <div id="inheritedMembers">
+        
+        
+        </div>
+
+        <div id="groupedMembers">
+        <div class="group" name="Ungrouped">
+              <h3>Ungrouped</h3>
+              
+            </div>
+        </div>
+
+      </div>
+
+      <div id="tooltip"></div>
+
+      <div id="footer">  </div>
+
+
+    </body>
+      </html>

@@ -2,8 +2,6 @@ name := "MetadataAPIServiceClient"
 
 version := "0.1"
 
-scalaVersion := "2.11.7"
-
 scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
 
 libraryDependencies ++= Seq(
@@ -13,6 +11,8 @@ libraryDependencies ++= Seq(
     "uk.co.bigbeeconsultants" %% "bee-client" % "0.28.0",
     "org.apache.httpcomponents" % "httpclient" % "4.1.2"
 )
+
+libraryDependencies += "org.apache.logging.log4j" % "log4j-1.2-api" % "2.4.1"
 
 libraryDependencies += "org.apache.logging.log4j" % "log4j-api" % "2.4.1"
 

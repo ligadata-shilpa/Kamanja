@@ -63,25 +63,6 @@ class SqlServerAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAft
   serializer = SerializerManager.GetSerializer("kryo")
   logger.info("Initialize SqlServerAdapter")
   val dataStoreInfo = """{"StoreType": "sqlserver","hostname": "192.168.56.1","instancename":"KAMANJA","portnumber":"1433","database": "bofa","user":"bofauser","SchemaName":"bofauser","password":"bofauser","jarpaths":"/media/home2/jdbc","jdbcJar":"sqljdbc4-2.0.jar","clusteredIndex":"YES","autoCreateTables":"YES"}"""
-  
-  private def ProcessException(e: Exception) = {
-      e match {
-	case e1: StorageDMLException => {
-	  logger.error("Inner Message:%s: Message:%s".format(e1.cause.getMessage,e1.getMessage))
-	}
-	case e2: StorageDDLException => {
-	  logger.error("Innser Message:%s: Message:%s".format(e2.cause.getMessage,e2.getMessage))
-	}
-	case e3: StorageConnectionException => {
-	  logger.error("Inner Message:%s: Message:%s".format(e3.cause.getMessage,e3.getMessage))
-	}
-	case _ => {
-	  logger.error("Message:%s".format(e.getMessage))
-	}
-      }
-      var stackTrace = StackTrace.ThrowableTraceString(e)
-      logger.info("StackTrace:"+stackTrace)
-  }	  
 
   private def CreateAdapter: DataStore = {
     var connectionAttempts = 0
@@ -91,8 +72,7 @@ class SqlServerAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAft
         return adapter
       } catch {
         case e: Exception => {
-	  ProcessException(e)
-          logger.error("will retry after one minute ...")
+          logger.error("will retry after one minute ...", e)
           Thread.sleep(60 * 1000L)
           connectionAttempts = connectionAttempts + 1
         }
@@ -180,8 +160,7 @@ class SqlServerAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAft
 	containers = containers :+ containerName
 	adapter.CreateContainer(containers)
       }
-      var stackTrace = StackTrace.ThrowableTraceString(ex)
-      logger.info("StackTrace:"+stackTrace)
+      logger.info("", ex)
 
       And("Resume API Testing")
       containerName = "sys.customer1"
@@ -202,8 +181,7 @@ class SqlServerAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAft
 	var value = new Value("kryo",v)
 	adapter.put(containerName,key,value)
       }
-      stackTrace = StackTrace.ThrowableTraceString(ex1)
-      logger.info("StackTrace:"+stackTrace)
+      logger.info("", ex1)
 
       val sqlServerAdapter = adapter.asInstanceOf[SqlServerAdapter]
 
@@ -227,8 +205,7 @@ class SqlServerAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAft
 	var value = new Value("kryo",v)
 	adapter.put("&&",key,value)
       }
-      stackTrace = StackTrace.ThrowableTraceString(ex2.cause)
-      logger.info("StackTrace:"+stackTrace)
+      logger.info("", ex2)
 
       And("Test Put api")
       var keys = new Array[Key](0) // to be used by a delete operation later on
@@ -433,6 +410,127 @@ class SqlServerAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAft
       And("Test GetKeys for a given set of keyStrings and also an array of time ranges")
       noException should be thrownBy {
 	adapter.getKeys(containerName,timeRanges,keyStringList,readKeyCallBack _)
+      }
+
+      And("Test the existence of the source container")
+      var exists = adapter.isContainerExists(containerName)
+      assert(exists == true)
+
+      var srcContainerName = containerName
+      var destContainerName = containerName
+
+      And("Test copy container with src and dest are same ")
+      var ex3 = the [com.ligadata.Exceptions.StorageDDLException] thrownBy {
+	adapter.copyContainer(srcContainerName,destContainerName,false)
+      }
+      logger.info("Exception => " + ex3.cause)
+
+      srcContainerName = containerName
+      destContainerName = containerName + "_bak"
+
+      And("Test copy container")
+      noException should be thrownBy {
+	adapter.copyContainer(srcContainerName,destContainerName,true)
+      }
+
+      And("Test the existence of the destination container")
+      exists = adapter.isContainerExists(destContainerName)
+      assert(exists == true)
+
+      // in Sqlserver we use sp_rename to backup the table
+      // when a table is renamed, we nolonger have any reference to old table
+      And("Test the non-existence of the source container")
+      exists = adapter.isContainerExists(srcContainerName)
+      assert(exists == false)
+
+      And("Test create container after renaming it")
+      noException should be thrownBy {
+	var containers = new Array[String](0)
+	containers = containers :+ containerName
+	adapter.CreateContainer(containers)
+      }
+
+      And("Test copy container without force option")
+      ex3 = the [com.ligadata.Exceptions.StorageDDLException] thrownBy {
+	adapter.copyContainer(srcContainerName,destContainerName,false)
+      }
+      logger.info("Exception => " + ex3.cause)
+
+      And("Test copy container with force")
+      noException should be thrownBy {
+	adapter.copyContainer(srcContainerName,destContainerName,true)
+      }
+
+      And("Test the non-existence of the source table")
+      var srcTableName = sqlServerAdapter.getTableName(srcContainerName)
+      exists = adapter.isTableExists(srcTableName)
+      assert(exists == false)
+
+      And("Test the existence of the destination table")
+      var destTableName = sqlServerAdapter.getTableName(destContainerName)
+      exists = adapter.isTableExists(destTableName)
+      assert(exists == true)
+
+      And("Test create container again after renaming it ")
+      noException should be thrownBy {
+	var containers = new Array[String](0)
+	containers = containers :+ containerName
+	adapter.CreateContainer(containers)
+      }
+
+      And("Copy source table to destination table using force option")
+      adapter.copyTable(srcTableName,destTableName,true)
+
+      And("get all tables")
+      var tbls = new Array[String](0)
+      noException should be thrownBy {
+	tbls = adapter.getAllTables
+      }
+      
+      And("drop all tables")
+      noException should be thrownBy {
+	adapter.dropTables(tbls)
+      }
+
+      And("Test the existence of the source table after dropTables")
+      exists = adapter.isTableExists(srcTableName)
+      assert(exists == false)
+
+      And("Test the existence of the destination table after dropTables")
+      exists = adapter.isTableExists(destTableName)
+      assert(exists == false)
+
+      And("Test drop container again, cleanup")
+      noException should be thrownBy {
+	var containers = new Array[String](0)
+	containers = containers :+ srcContainerName
+	containers = containers :+ destContainerName
+	adapter.DropContainer(containers)
+      }
+
+      And("Test the existence of the source container after DropContainer")
+      exists = adapter.isContainerExists(srcContainerName)
+      assert(exists == false)
+
+      And("Test the existence of the destination container after DropContainer")
+      exists = adapter.isContainerExists(destContainerName)
+      assert(exists == false)
+      
+      And("Test create container for backup/restore tests")
+      noException should be thrownBy {
+	var containers = new Array[String](0)
+	containers = containers :+ containerName
+	adapter.CreateContainer(containers)
+      }
+
+      And("Test backup container")
+      noException should be thrownBy {
+	adapter.backupContainer(containerName)
+      }
+
+      And("Test restore container")
+      noException should be thrownBy {
+	adapter.restoreContainer(containerName)
       }
       
       And("Test drop container again, cleanup")

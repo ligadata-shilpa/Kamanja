@@ -28,8 +28,8 @@ import java.util.concurrent.Callable
 import org.apache.logging.log4j._
 import scala.collection.JavaConverters._
 import org.apache.curator.framework.api.CuratorEventType._;
-import com.ligadata.Exceptions.StackTrace
 import org.apache.logging.log4j._
+import com.ligadata.KamanjaVersion.KamanjaVersion
 
 case class ClusterStatus(nodeId: String, isLeader: Boolean, leader: String, participants: Iterable[String])
 
@@ -88,9 +88,8 @@ class ZkLeaderLatch(val zkcConnectString: String, val leaderPath: String, val no
       watchLeaderChildren()
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.debug("StackTrace:"+stackTrace)
-        throw new Exception("Failed to start a zookeeper session with(" + zkcConnectString + "): " + e.getMessage())
+        logger.debug("", e)
+        throw new Exception("Failed to start a zookeeper session with(" + zkcConnectString + ")", e)
       }
     }
   }
@@ -109,8 +108,7 @@ class ZkLeaderLatch(val zkcConnectString: String, val leaderPath: String, val no
         EventChangeCallback(clstStatus)
     } catch {
       case e: Exception => {
-        
-        LOG.error("Leader callback has some error. Reason:%s, Message:%s".format(e.getCause, e.getMessage))
+        LOG.error("Leader callback has some error.", e)
       }
     }
   }
@@ -143,6 +141,8 @@ object ZkLeaderLatchTest {
         nextOption(map ++ Map('leaderpath -> value), tail)
       case "--nodeid" :: value :: tail =>
         nextOption(map ++ Map('nodeid -> value), tail)
+      case "--version" :: tail =>
+        nextOption(map ++ Map('version -> "true"), tail)
       case option :: tail => {
         LOG.error("Unknown option " + option)
         sys.exit(1)
@@ -162,6 +162,11 @@ object ZkLeaderLatchTest {
     }
 
     val options = nextOption(Map(), args.toList)
+    val version = options.getOrElse('version, "false").toString
+    if (version.equalsIgnoreCase("true")) {
+      KamanjaVersion.print
+      return
+    }
     val zkcConnectString = options.getOrElse('zkconnectstring, "").toString.replace("\"", "").trim
     if (zkcConnectString.size == 0) {
       LOG.debug("Need zkcConnectString")
