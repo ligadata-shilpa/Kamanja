@@ -58,37 +58,37 @@ import scala.collection.JavaConversions._
 case class CassandraColumn(column_name:String, dtype: String, isKey: Boolean)
 /*
 datastoreConfig should have the following:
-	Mandatory Options:
-		hostlist/Location
-		schema/SchemaName
+Mandatory Options:
+hostlist/Location
+schema/SchemaName
 
-	Optional Options:
-		user
-		password
-		replication_class
-		replication_factor
-		ConsistencyLevelRead
-		ConsistencyLevelWrite
-		ConsistencyLevelDelete
-		
-		All the optional values may come from "AdapterSpecificConfig" also. That is the old way of giving more information specific to Adapter
+Optional Options:
+user
+password
+replication_class
+replication_factor
+ConsistencyLevelRead
+ConsistencyLevelWrite
+ConsistencyLevelDelete
+
+All the optional values may come from "AdapterSpecificConfig" also. That is the old way of giving more information specific to Adapter
 */
 
 /*
-  	You open connection to a cluster hostname[,hostname]:port
-  	You could provide username/password
+You open connection to a cluster hostname[,hostname]:port
+You could provide username/password
 
- 	You can operator on keyspace / table
+You can operator on keyspace / table
 
- 	if key space is missing we will try to create
- 	if table is missing we will try to create
+if key space is missing we will try to create
+if table is missing we will try to create
 
-	-- Lets start with this schema
-	--
-	CREATE KEYSPACE default WITH replication = { 'class': 'SimpleStrategy', 'replication_factor': '4' };
-	USE default;
-	CREATE TABLE default (key blob, value blob, primary key(key) );
- */
+-- Lets start with this schema
+--
+CREATE KEYSPACE default WITH replication = { 'class': 'SimpleStrategy', 'replication_factor': '4' };
+USE default;
+CREATE TABLE default (key blob, value blob, primary key(key) );
+*/
 
 class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: String) extends DataStore {
   val adapterConfig = if (datastoreConfig != null) datastoreConfig.trim else ""
@@ -394,12 +394,12 @@ class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
       }
       var byteBuf = ByteBuffer.wrap(value.serializedInfo.toArray[Byte]);
       session.execute(prepStmt.bind(value.serializerType,
-        byteBuf,
-        new java.lang.Long(key.timePartition),
-        bucketKeyToString(key.bucketKey),
-        new java.lang.Long(key.transactionId),
-        new java.lang.Integer(key.rowId)).
-        setConsistencyLevel(consistencylevelWrite))
+				    byteBuf,
+				    new java.lang.Long(key.timePartition),
+				    bucketKeyToString(key.bucketKey),
+				    new java.lang.Long(key.transactionId),
+				    new java.lang.Integer(key.rowId)).
+		      setConsistencyLevel(consistencylevelWrite))
     } catch {
       case e: Exception => {
         throw CreateDMLException("Failed to save an object in table " + tableName, e)
@@ -441,20 +441,20 @@ class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
           // one at a time until we have a better solution.
           if (batchPuts.equalsIgnoreCase("YES")) {
             batch.add(prepStmt.bind(value.serializerType,
-              byteBuf,
-              new java.lang.Long(key.timePartition),
-              bucketKeyToString(key.bucketKey),
-              new java.lang.Long(key.transactionId),
-              new java.lang.Integer(key.rowId)).
-              setConsistencyLevel(consistencylevelWrite))
+				    byteBuf,
+				    new java.lang.Long(key.timePartition),
+				    bucketKeyToString(key.bucketKey),
+				    new java.lang.Long(key.transactionId),
+				    new java.lang.Integer(key.rowId)).
+		      setConsistencyLevel(consistencylevelWrite))
           } else {
             session.execute(prepStmt.bind(value.serializerType,
-              byteBuf,
-              new java.lang.Long(key.timePartition),
-              bucketKeyToString(key.bucketKey),
-              new java.lang.Long(key.transactionId),
-              new java.lang.Integer(key.rowId)).
-              setConsistencyLevel(consistencylevelWrite))
+					  byteBuf,
+					  new java.lang.Long(key.timePartition),
+					  bucketKeyToString(key.bucketKey),
+					  new java.lang.Long(key.transactionId),
+					  new java.lang.Integer(key.rowId)).
+			    setConsistencyLevel(consistencylevelWrite))
           }
         })
       })
@@ -483,10 +483,10 @@ class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
       }
       keys.foreach(key => {
         batch.add(prepStmt.bind(new java.lang.Long(key.timePartition),
-          bucketKeyToString(key.bucketKey),
-          new java.lang.Long(key.transactionId),
-          new java.lang.Integer(key.rowId)).
-          setConsistencyLevel(consistencylevelDelete))
+				bucketKeyToString(key.bucketKey),
+				new java.lang.Long(key.transactionId),
+				new java.lang.Integer(key.rowId)).
+		  setConsistencyLevel(consistencylevelDelete))
       })
       session.execute(batch);
     } catch {
@@ -520,9 +520,9 @@ class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
       var rowKeys = new Array[Key](0)
       bucketKeys.foreach(bucketKey => {
         var rows = session.execute(prepStmt.bind(bucketKeyToString(bucketKey),
-          new java.lang.Long(time.beginTime),
-          new java.lang.Long(time.endTime)).
-          setConsistencyLevel(consistencylevelDelete))
+						 new java.lang.Long(time.beginTime),
+						 new java.lang.Long(time.endTime)).
+				   setConsistencyLevel(consistencylevelDelete))
         for (rs <- rows) {
           rowKeys = rowKeys :+ getRowKey(rs)
         }
@@ -563,7 +563,7 @@ class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
     var key = new Key(timePartition, bucketKey, tId, rId)
     var ba = convertByteBufToArrayOfBytes(buf)
     var value = new Value(st, ba)
-    (callbackFunction)(key, value)
+			 (callbackFunction)(key, value)
   }
 
   private def processRow(key: Key, rs: Row, callbackFunction: (Key, Value) => Unit) {
@@ -571,7 +571,7 @@ class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
     var buf = rs.getBytes("serializedinfo")
     var ba = convertByteBufToArrayOfBytes(buf)
     var value = new Value(st, ba)
-    (callbackFunction)(key, value)
+			 (callbackFunction)(key, value)
   }
 
   private def processKey(rs: Row, callbackFunction: (Key) => Unit) {
@@ -582,7 +582,7 @@ class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
     // format the data to create Key/Value
     val bucketKey = strToBucketKey(keyStr)
     var key = new Key(timePartition, bucketKey, tId, rId)
-    (callbackFunction)(key)
+		     (callbackFunction)(key)
   }
 
   private def getData(tableName: String, query: String, callbackFunction: (Key, Value) => Unit): Unit = {
@@ -641,10 +641,10 @@ class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
       }
       keys.foreach(key => {
         var rows = session.execute(prepStmt.bind(new java.lang.Long(key.timePartition),
-          bucketKeyToString(key.bucketKey),
-          new java.lang.Long(key.transactionId),
-          new java.lang.Integer(key.rowId)).
-          setConsistencyLevel(consistencylevelRead))
+						 bucketKeyToString(key.bucketKey),
+						 new java.lang.Long(key.transactionId),
+						 new java.lang.Integer(key.rowId)).
+				   setConsistencyLevel(consistencylevelRead))
         var rs: Row = null
         for (rs <- rows) {
           processKey(rs, callbackFunction)
@@ -669,10 +669,10 @@ class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
       }
       keys.foreach(key => {
         var rows = session.execute(prepStmt.bind(new java.lang.Long(key.timePartition),
-          bucketKeyToString(key.bucketKey),
-          new java.lang.Long(key.transactionId),
-          new java.lang.Integer(key.rowId)).
-          setConsistencyLevel(consistencylevelRead))
+						 bucketKeyToString(key.bucketKey),
+						 new java.lang.Long(key.transactionId),
+						 new java.lang.Integer(key.rowId)).
+				   setConsistencyLevel(consistencylevelRead))
         var rs: Row = null
         for (rs <- rows) {
           processRow(key, rs, callbackFunction)
@@ -698,8 +698,8 @@ class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
     time_ranges.foreach(time_range => {
       var rs: Row = null
       var rows = session.execute(prepStmt.bind(new java.lang.Long(time_range.beginTime),
-        new java.lang.Long(time_range.endTime)).
-        setConsistencyLevel(consistencylevelRead))
+					       new java.lang.Long(time_range.endTime)).
+				 setConsistencyLevel(consistencylevelRead))
       for (rs <- rows) {
         processRow(rs, callbackFunction)
       }
@@ -718,8 +718,8 @@ class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
     time_ranges.foreach(time_range => {
       var rs: Row = null
       var rows = session.execute(prepStmt.bind(new java.lang.Long(time_range.beginTime),
-        new java.lang.Long(time_range.endTime)).
-        setConsistencyLevel(consistencylevelRead))
+					       new java.lang.Long(time_range.endTime)).
+				 setConsistencyLevel(consistencylevelRead))
       for (rs <- rows) {
         processKey(rs, callbackFunction)
       }
@@ -740,9 +740,9 @@ class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
         bucketKeys.foreach(bucketKey => {
           var rs: Row = null
           var rows = session.execute(prepStmt.bind(new java.lang.Long(time_range.beginTime),
-            new java.lang.Long(time_range.endTime),
-            bucketKeyToString(bucketKey)).
-            setConsistencyLevel(consistencylevelRead))
+						   new java.lang.Long(time_range.endTime),
+						   bucketKeyToString(bucketKey)).
+				     setConsistencyLevel(consistencylevelRead))
           for (rs <- rows) {
             processRow(rs, callbackFunction)
           }
@@ -769,9 +769,9 @@ class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
         bucketKeys.foreach(bucketKey => {
           var rs: Row = null
           var rows = session.execute(prepStmt.bind(new java.lang.Long(time_range.beginTime),
-            new java.lang.Long(time_range.endTime),
-            bucketKeyToString(bucketKey)).
-            setConsistencyLevel(consistencylevelRead))
+						   new java.lang.Long(time_range.endTime),
+						   bucketKeyToString(bucketKey)).
+				     setConsistencyLevel(consistencylevelRead))
           for (rs <- rows) {
             processKey(rs, callbackFunction)
           }
@@ -797,7 +797,7 @@ class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
       bucketKeys.foreach(bucketKey => {
         var rs: Row = null
         var rows = session.execute(prepStmt.bind(bucketKeyToString(bucketKey)).
-          setConsistencyLevel(consistencylevelRead))
+				   setConsistencyLevel(consistencylevelRead))
         for (rs <- rows) {
           processRow(rs, callbackFunction)
         }
@@ -821,7 +821,7 @@ class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
       }
       bucketKeys.foreach(bucketKey => {
         var rows = session.execute(prepStmt.bind(bucketKeyToString(bucketKey)).
-          setConsistencyLevel(consistencylevelRead))
+				   setConsistencyLevel(consistencylevelRead))
         for (rs <- rows) {
           processKey(rs, callbackFunction)
         }
@@ -963,7 +963,7 @@ class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
 
 	var cc = new CassandraColumn(column_name,dtype,isKey)
         columnArray = columnArray :+ cc
-        }
+      }
       columnArray
     } catch {
       case e: Exception => {
@@ -1027,9 +1027,9 @@ class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
     } catch {
       case e: Exception => {
         throw CreateDMLException("Unable to clone the table " + tableName + ":" + e.getMessage(), e)
-	    }
-	    }
-	    }
+      }
+    }
+  }
 
   private def byteBufferToHexStr(bb: java.nio.ByteBuffer): String = {
     logger.debug("byte buffer capacity => " + bb.capacity)
@@ -1039,7 +1039,7 @@ class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
     val hexStr = "0x" + ba.map("%02x".format(_)).mkString
     logger.debug("hexStr => " + hexStr)
     hexStr
-	    }
+  }
 
   private def copyData(oldTableName: String, newTableName: String, ks: String = null): Unit = {
     var tn = newTableName;
@@ -1047,7 +1047,7 @@ class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
     try {
       if( ks != null && ! ks.equalsIgnoreCase(keyspace) ){
 	tn = ks + "." + newTableName
-	  }
+      }
       val columns = getColumns(oldTableName);
       val stmt = new SimpleStatement(selectStr(oldTableName,columns))
       stmt.setFetchSize(1000);
@@ -1193,7 +1193,7 @@ class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
   override def copyContainer(srcContainerName: String, destContainerName: String, forceCopy: Boolean = false): Unit = {
     if (srcContainerName.equalsIgnoreCase(destContainerName)) {
       throw CreateDDLException("Failed to copy the container " + srcContainerName, new Exception("Source Container Name can't be same as destination container name"))
-  }
+    }
     var oldTableName = toFullTableName(srcContainerName)
     var newTableName = toFullTableName(destContainerName)
     logger.info("copy the table " + oldTableName + " to " + newTableName);
@@ -1216,7 +1216,7 @@ class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
       for (rs <- rows) {
         var table_name = rs.getString("columnfamily_name")
         tables = tables :+ table_name
-  }
+      }
       tables
     } catch {
       case e: Exception => {
@@ -1233,7 +1233,7 @@ class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
     } catch {
       case e: Exception => {
         throw CreateDDLException("Failed to drop table list  ", e)
-  }
+      }
     }
   }
 
