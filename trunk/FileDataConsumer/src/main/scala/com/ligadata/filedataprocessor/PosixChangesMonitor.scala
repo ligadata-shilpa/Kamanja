@@ -4,12 +4,13 @@ import java.io._
 import java.nio.file.Path
 import java.nio.file._
 import java.util.zip.GZIPInputStream
-import com.ligadata.Exceptions.StackTrace
+import com.ligadata.Exceptions.{KamanjaException, StackTrace}
 import com.ligadata.filedataprocessor.FileChangeType._
 import org.apache.logging.log4j.{ Logger, LogManager }
 
 import scala.collection.mutable.{ArrayBuffer, HashMap}
 import scala.util.control.Breaks._
+import CompressionUtil._
 
 /**
   * Created by Yasser on 1/14/2016.
@@ -22,7 +23,7 @@ import scala.util.control.Breaks._
 class PosixFileHandler extends FileHandler{
 
   private var fileFullPath = ""
-  def fullPath = fileFullPath
+  def getFullPath = fileFullPath
 
   def fileObject = new File(fileFullPath)
   private var bufferedReader: BufferedReader = null
@@ -59,30 +60,39 @@ class PosixFileHandler extends FileHandler{
     compressed
   }
 
-  @throws(classOf[IOException])
+  @throws(classOf[KamanjaException])
   def openForRead(): Unit = {
-
-    if (isCompressed) {
-      in = new GZIPInputStream(new FileInputStream(fileFullPath))
-    } else {
-      in = new FileInputStream(fileFullPath)
+    try {
+      if (isCompressed) {
+        in = new GZIPInputStream(new FileInputStream(fileFullPath))
+      } else {
+        in = new FileInputStream(fileFullPath)
+      }
+      //bufferedReader = new BufferedReader(in)
     }
-    //bufferedReader = new BufferedReader(in)
+    catch{
+      case e : Exception => throw new KamanjaException (e.getMessage, e)
+    }
   }
 
-  @throws(classOf[IOException])
+  @throws(classOf[KamanjaException])
   def read(buf : Array[Byte], length : Int) : Int = {
 
-    if (in == null)
-      return -1
+    try {
+      if (in == null)
+        return -1
 
-    in.read(buf, 0, length)
+      in.read(buf, 0, length)
+    }
+    catch{
+      case e : Exception => throw new KamanjaException (e.getMessage, e)
+    }
   }
 
-  @throws(classOf[IOException])
+  @throws(classOf[KamanjaException])
   def moveTo(newFilePath : String) : Boolean = {
-    if(fullPath.equals(newFilePath)){
-      logger.warn(s"Trying to move file ($fullPath) but source and destination are the same")
+    if(getFullPath.equals(newFilePath)){
+      logger.warn(s"Trying to move file ($getFullPath) but source and destination are the same")
       return false
     }
     try {
@@ -101,14 +111,15 @@ class PosixFileHandler extends FileHandler{
       }
     }
     catch {
-      case ex : Exception => logger.error(ex.getMessage)
+      case ex : Exception =>
+        logger.error(ex.getMessage)
         return false
     }
   }
 
-  @throws(classOf[IOException])
+  @throws(classOf[KamanjaException])
   def delete() : Boolean = {
-    logger.info(s"Deleting file ($fullPath)")
+    logger.info(s"Deleting file ($getFullPath)")
     try {
       fileObject.delete
       logger.info("Successfully deleted")
@@ -116,7 +127,6 @@ class PosixFileHandler extends FileHandler{
     }
     catch {
       case ex : Exception => {
-        ex.printStackTrace()
         logger.error(ex.getMessage)
         return false
       }
@@ -124,22 +134,27 @@ class PosixFileHandler extends FileHandler{
     }
   }
 
-  @throws(classOf[IOException])
+  @throws(classOf[KamanjaException])
   def length : Long = fileObject.length
 
   def lastModified : Long = fileObject.lastModified
 
-  @throws(classOf[IOException])
+  @throws(classOf[KamanjaException])
   def close(): Unit = {
-    if(in != null)
-      in.close()
+    try {
+      if (in != null)
+        in.close()
+    }
+    catch{
+      case e : Exception => throw new KamanjaException (e.getMessage, e)
+    }
   }
 
 }
 
 
-//TODO : create a trait for dir monitors and change sfp, hdfs and posix monitors to extend it
-class PosixChangesMonitor(val REFRESH_RATE : Int, modifiedFileCallback:(FileHandler, FileChangeType) => Unit) {
+
+class PosixChangesMonitor(modifiedFileCallback:(FileHandler) => Unit) extends Monitor {
 
   lazy val loggerName = this.getClass.getName
   lazy val logger = LogManager.getLogger(loggerName)
@@ -152,11 +167,24 @@ class PosixChangesMonitor(val REFRESH_RATE : Int, modifiedFileCallback:(FileHand
 
   private var fileCache: scala.collection.mutable.Map[String, Long] = scala.collection.mutable.Map[String, Long]()
   private var fileCacheLock = new Object
+  private var connectionConf : ConnectionConfig = null
+  private var monitoringConf :  MonitoringConfig = null
 
-  def monitorDirChanges(targetFolder : String, changeTypesToMonitor : Array[FileChangeType]): Unit ={
+  private var isMonitoring = false
+
+  def init(connectionConfJson: String, monitoringConfJson: String): Unit ={
+    connectionConf = JsonHelper.getConnectionConfigObj(connectionConfJson)
+    monitoringConf = JsonHelper.getMonitoringConfigObj(monitoringConfJson)
+  }
+
+  def monitor: Unit ={
+
+    //TODO : changes this and monitor multi-dirs
+    val targetFolder = connectionConf.Locations(0)
+    isMonitoring = true
     try{
       breakable {
-        while (true) {
+        while (isMonitoring) {
           try {
             logger.info(s"Watching directory $targetFolder")
 
@@ -181,7 +209,7 @@ class PosixChangesMonitor(val REFRESH_RATE : Int, modifiedFileCallback:(FileHand
               errorWaitTime = scala.math.min((errorWaitTime * 2), MAX_WAIT_TIME)
             }
           }
-          Thread.sleep(REFRESH_RATE)
+          Thread.sleep(monitoringConf.WaitingTimeMS)
 
         }
       }
@@ -192,6 +220,10 @@ class PosixChangesMonitor(val REFRESH_RATE : Int, modifiedFileCallback:(FileHand
     }
   }
 
+  def shutdown: Unit ={
+    //TODO : use an executor object to run the monitoring and stop here
+    isMonitoring = false
+  }
 
   //TODO : for now just keep it similar to Dan's code: check only direct child files
   //hdfs and sftp monitors are checking for subfolders actually
@@ -204,11 +236,10 @@ class PosixChangesMonitor(val REFRESH_RATE : Int, modifiedFileCallback:(FileHand
           if (!checkIfFileHandled(file.toString)) {
             logger.info("SMART FILE CONSUMER (global)  Processing " + file.toString)
             //FileProcessor.enQBufferedFile(file.toString)
-            val changeType = New
             val fileHandler = new PosixFileHandler(file.toString)
             //call the callback for new files
-            logger.info(s"A new file found ${fileHandler.fullPath}")
-            modifiedFileCallback(fileHandler, changeType)
+            logger.info(s"A new file found ${fileHandler.getFullPath}")
+            modifiedFileCallback(fileHandler)
           }
       })
     }

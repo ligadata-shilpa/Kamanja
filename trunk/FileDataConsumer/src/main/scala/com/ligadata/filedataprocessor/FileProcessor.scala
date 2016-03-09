@@ -198,7 +198,7 @@ object FileProcessor {
     readyToProcessKey = props.getOrElse(SmartFileAdapterConstants.READY_MESSAGE_MASK, ".gzip")
 
     val fs = props.getOrElse(SmartFileAdapterConstants.FILE_SYSTEM, null)
-    fsType = FileHandler.getFsType(fs)
+    fsType = FileHandlerUtil.getFsType(fs)
     println(s"fs=$fs")
     println(s"fsType=${fsType.toString}")
 
@@ -279,7 +279,7 @@ object FileProcessor {
 
   private def enQFile(fileHandler: FileHandler, offset: Int, createDate: Long, partMap: scala.collection.mutable.Map[Int,Int] = scala.collection.mutable.Map[Int,Int]()): Unit = {
     fileQLock.synchronized {
-      logger.info("SMART FILE CONSUMER (global):  enq file " + fileHandler.fullPath + " with priority " + createDate+" --- curretnly " + fileQ.size + " files on a QUEUE")
+      logger.info("SMART FILE CONSUMER (global):  enq file " + fileHandler.getFullPath + " with priority " + createDate+" --- curretnly " + fileQ.size + " files on a QUEUE")
       fileQ += new EnqueuedFileHandler(fileHandler, offset, createDate, partMap)
     }
   }
@@ -290,7 +290,7 @@ object FileProcessor {
         return null
       }
       val ef = fileQ.dequeue()
-      logger.info("SMART FILE CONSUMER (global):  deq file " + ef.fileHandler.fullPath + " with priority " + ef.createDate+" --- curretnly " + fileQ.size + " files left on a QUEUE")
+      logger.info("SMART FILE CONSUMER (global):  deq file " + ef.fileHandler.getFullPath + " with priority " + ef.createDate+" --- curretnly " + fileQ.size + " files left on a QUEUE")
       return ef
 
     }
@@ -360,15 +360,15 @@ object FileProcessor {
             // onto the ready to process q.  Else update the latest length
             if (fileTuple._2 == fileHandler.length) {
               if (fileHandler.length > 0) {
-                logger.info("SMART FILE CONSUMER (global):  File READY TO PROCESS " + fileHandler.fullPath)
+                logger.info("SMART FILE CONSUMER (global):  File READY TO PROCESS " + fileHandler.getFullPath)
                 enQFile(fileHandler, NOT_RECOVERY_SITUATION, fileHandler.lastModified)
                 bufferingQ_map.remove(fileTuple._1)
               } else {
                 var diff = (System.currentTimeMillis - fileHandler.lastModified)
                 if (diff > bufferTimeout) {
-                  logger.warn("SMART FILE CONSUMER (global): Detected that " + fileHandler.fullPath + " has been on the buffering queue longer then " + bufferTimeout / 1000 + " seconds - Cleaning up" )
+                  logger.warn("SMART FILE CONSUMER (global): Detected that " + fileHandler.getFullPath + " has been on the buffering queue longer then " + bufferTimeout / 1000 + " seconds - Cleaning up" )
                   bufferingQ_map.remove(fileTuple._1)
-                  var nameTokens = fileHandler.fullPath.split("/")
+                  var nameTokens = fileHandler.getFullPath.split("/")
                   fileCacheRemove(nameTokens(nameTokens.size - 1))
                   moveFile(fileHandler)
                 }
@@ -484,23 +484,21 @@ object FileProcessor {
       import FsType._
       //import FileChangeType._
 
-      fsType match{
-        case POSIX =>
-          val dirMonitor = new PosixChangesMonitor(REFRESH_RATE, processFile)
-          dirMonitor.monitorDirChanges(dirToWatch, Array(AlreadyExisting, New))
+      val monitor : Monitor =
+        fsType match{
+          case POSIX => new PosixChangesMonitor(processFile)
+          case SFTP=>
+            //val sftpConfig = new SftpConnectionConfig(host, authUser, authPass)
+            new SftpChangesMonitor(processFile)
+          case HDFS=>
+            //val hdfsConfig = new HdfsConnectionConfig(host, port)
+            new HdfsChangesMonitor(processFile)
+          case _ => throw new Exception("Unsopported file sytesm")
+        }
 
-        case SFTP=>
-          val sftpConfig = new SftpConnectionConfig(host, authUser, authPass)
-          val dirMonitor = new SftpChangesMonitor(sftpConfig, REFRESH_RATE, processFile)
-          dirMonitor.monitorDirChanges(dirToWatch, Array(AlreadyExisting, New))
-
-        case HDFS=>
-          val hdfsConfig = new HdfsConnectionConfig(host, port)
-          val dirMonitor = new HdfsChangesMonitor(hdfsConfig, REFRESH_RATE, processFile)
-          dirMonitor.monitorDirChanges(dirToWatch, Array(AlreadyExisting, New))
-
-        case _ => throw new Exception("Unsopported file sytesm")
-      }
+      //TODO : this is not working, must get json values
+      monitor.init("", "")
+      monitor.monitor()
 
     }  catch {
       case ie: InterruptedException => logger.error("InterruptedException:", ie)
@@ -509,8 +507,8 @@ object FileProcessor {
     }
   }
 
-  def processFile (fileHandler : FileHandler, fileChangeType : FileChangeType) : Unit = {
-    if (isValidFile(fileHandler.fullPath) && fileHandler.fullPath.endsWith(readyToProcessKey))
+  def processFile (fileHandler : FileHandler) : Unit = {
+    if (isValidFile(fileHandler.getFullPath) && fileHandler.getFullPath.endsWith(readyToProcessKey))
       enQBufferedFile(fileHandler)
   }
 
@@ -640,32 +638,32 @@ object FileProcessor {
   // in normal cases, the KafkaMessafeLoader will handle the completing the file.
   private def completeFile (fileHandler: FileHandler): Unit = {
     try {
-      logger.info("SMART FILE CONSUMER {global): - cleaning up after " + fileHandler.fullPath)
+      logger.info("SMART FILE CONSUMER {global): - cleaning up after " + fileHandler.getFullPath)
       // Either move or rename the file.
       moveFile(fileHandler)
 
-      val tokenName = fileHandler.fullPath.split("/")
+      val tokenName = fileHandler.getFullPath.split("/")
       markFileProcessingEnd(tokenName(tokenName.size - 1))
       fileCacheRemove(tokenName(tokenName.size - 1))
       removeFromZK(tokenName(tokenName.size - 1))
     } catch {
       case ioe: IOException => {
         logger.error("Exception moving the file ",ioe)
-        val tokenName = fileHandler.fullPath.split("/")
+        val tokenName = fileHandler.getFullPath.split("/")
         setFileState(tokenName(tokenName.size - 1),FINISHED_FAILED_TO_COPY)
       }
     }
   }
 
   private def moveFile(fileHandler: FileHandler): Unit = {
-    val fileStruct = fileHandler.fullPath.split("/")
+    val fileStruct = fileHandler.getFullPath.split("/")
     if (targetMoveDir != null) {
       logger.info("SMART FILE CONSUMER Moving File" + dirToWatch+"/"+fileStruct(fileStruct.size - 1) + " to " + targetMoveDir)
       /*Files.copy(Paths.get(dirToWatch+"/"+fileStruct(fileStruct.size - 1)), Paths.get(targetMoveDir + "/" + fileStruct(fileStruct.size - 1)), REPLACE_EXISTING)
       Files.deleteIfExists(Paths.get(dirToWatch+"/"+fileStruct(fileStruct.size - 1)))*/
       fileHandler.moveTo(targetMoveDir + "/" + fileStruct(fileStruct.size - 1))
     } else {
-      logger.info("SMART FILE CONSUMER Renaming file " + fileHandler.fullPath + " to " + fileHandler.fullPath + "_COMPLETE")
+      logger.info("SMART FILE CONSUMER Renaming file " + fileHandler.getFullPath + " to " + fileHandler.getFullPath + "_COMPLETE")
       //(new File(dirToWatch+"/"+fileStruct(fileStruct.size - 1))).renameTo(new File(dirToWatch+"/"+fileStruct(fileStruct.size - 1) + "_COMPLETE"))
       fileHandler.moveTo(dirToWatch+"/"+fileStruct(fileStruct.size - 1) + "_COMPLETE")
     }
@@ -757,7 +755,7 @@ class FileProcessor(val path: Path, val partitionId: Int) extends Runnable {
     host = props.getOrElse(SmartFileAdapterConstants.HOST, null)
 
     val fs = props.getOrElse(SmartFileAdapterConstants.FILE_SYSTEM, null)
-    fsType = FileHandler.getFsType(fs)
+    fsType = FileHandlerUtil.getFsType(fs)
 
     val portStr = props.getOrElse(SmartFileAdapterConstants.PORT, null)
     if(portStr != null)
@@ -927,7 +925,7 @@ class FileProcessor(val path: Path, val partitionId: Int) extends Runnable {
       // If the buffer is there to process, do it
       if (buffer != null) {
         // If the new file being processed, reset offsets to messages in this file to 0.
-        if (fileHandlerToProcess == null || !fileHandlerToProcess.fullPath.equalsIgnoreCase(buffer.relatedFileHandler.fullPath)) {
+        if (fileHandlerToProcess == null || !fileHandlerToProcess.getFullPath.equalsIgnoreCase(buffer.relatedFileHandler.getFullPath)) {
           msgNum = 0
           fileHandlerToProcess = buffer.relatedFileHandler
           isEofBuffer = false
@@ -1039,7 +1037,7 @@ class FileProcessor(val path: Path, val partitionId: Int) extends Runnable {
     var totalLen = 0
     var chunkNumber = 0
 
-    val fileName = file.fileHandler.fullPath
+    val fileName = file.fileHandler.getFullPath
     val offset = file.offset
     val partMap = file.partMap
     val fileHandler = file.fileHandler
@@ -1192,7 +1190,7 @@ class FileProcessor(val path: Path, val partitionId: Int) extends Runnable {
         Thread.sleep(500)
       } else {
         logger.info("SMART_FILE_CONSUMER partition " + partitionId + " Processing file " + fileToProcess)
-        val tokenName = fileToProcess.fileHandler.fullPath.split("/")
+        val tokenName = fileToProcess.fileHandler.getFullPath.split("/")
         FileProcessor.markFileProcessing(tokenName(tokenName.size - 1), fileToProcess.offset, fileToProcess.createDate)
         curTimeStart = System.currentTimeMillis
         try {

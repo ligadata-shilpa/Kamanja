@@ -13,10 +13,26 @@ class DirectoryListener {
 
 }
 
+class ConnectionConfig(var Type: String, var Host : String, var Locations : Array[String], var UserId : String, var Password : String)
+class MonitoringConfig(var WaitingTimeMS : Int)
+
 object LocationWatcher {
   lazy val loggerName = this.getClass.getName
   lazy val logger = LogManager.getLogger(loggerName)
   def main (args: Array[String]) : Unit = {
+
+    /*val json1 = "{ \"Type\": \"sftp\", \"Host\": \"10.20.30.40:2000\", \"Locations\": [\"folder1\", \"folder2\"], \"UserId\": \"user\", \"Password\": \"passwd\"}"
+    val connectionConf = JsonHelper.getConnectionConfigObj(json1)
+    println(connectionConf.Type)
+    println(connectionConf.Host)
+    connectionConf.Locations.foreach(println)
+    println(connectionConf.UserId)
+    println(connectionConf.Password)*/
+
+    /*val json2 = "{ \"WaitingTimeMS\": 300}"
+    val conf = JsonHelper.getMonitoringConfigObj(json2)
+    println(conf.WaitingTimeMS)
+    return;*/
 
       if (args.size == 0 || args.size > 1) {
         logger.error("Smart File Consumer requires a configuration file as its argument")

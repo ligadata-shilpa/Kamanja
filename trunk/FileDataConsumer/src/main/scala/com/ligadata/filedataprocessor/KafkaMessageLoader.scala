@@ -99,14 +99,14 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
     if (messages.size == 0) return
 
     // If we start processing a new file, then mark so in the zk.
-    if (fileHandlerBeingProcessed == null || fileHandlerBeingProcessed.fullPath.compareToIgnoreCase(messages(0).relatedFileHandler.fullPath) != 0) {
+    if (fileHandlerBeingProcessed == null || fileHandlerBeingProcessed.getFullPath.compareToIgnoreCase(messages(0).relatedFileHandler.getFullPath) != 0) {
       numberOfMessagesProcessedInFile = 0
       currentOffset = 0
       numberOfValidEvents = 0
       startFileProcessingTimeStamp = 0 //scala.compat.Platform.currentTime
       fileHandlerBeingProcessed = messages(0).relatedFileHandler
       recPartitionMap = messages(0).partMap
-      val fileTokens = fileHandlerBeingProcessed.fullPath.split("/")
+      val fileTokens = fileHandlerBeingProcessed.getFullPath.split("/")
       FileProcessor.addToZK(fileTokens(fileTokens.size - 1), 0)
     }
 
@@ -118,18 +118,18 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
     var isLast = false
     messages.foreach(msg => {
       if (msg.offsetInFile == FileProcessor.BROKEN_FILE) {
-        logger.error("SMART FILE ADAPTER "+ partIdx +": aborting kafka data push for " + msg.relatedFileHandler.fullPath + " last successful offset for this file is "+ numberOfValidEvents)
-        val tokenName = msg.relatedFileHandler.fullPath.split("/")
+        logger.error("SMART FILE ADAPTER "+ partIdx +": aborting kafka data push for " + msg.relatedFileHandler.getFullPath + " last successful offset for this file is "+ numberOfValidEvents)
+        val tokenName = msg.relatedFileHandler.getFullPath.split("/")
         FileProcessor.setFileOffset(tokenName(tokenName.size - 1), numberOfValidEvents)
         fileHandlerBeingProcessed = null
         return
       }
 
       if (msg.offsetInFile == FileProcessor.CORRUPT_FILE) {
-        logger.error("SMART FILE ADAPTER "+ partIdx +": aborting kafka data push for " + msg.relatedFileHandler.fullPath + " Unrecoverable file corruption detected")
-        val tokenName = msg.relatedFileHandler.fullPath.split("/")
+        logger.error("SMART FILE ADAPTER "+ partIdx +": aborting kafka data push for " + msg.relatedFileHandler.getFullPath + " Unrecoverable file corruption detected")
+        val tokenName = msg.relatedFileHandler.getFullPath.split("/")
         FileProcessor.markFileProcessingEnd(tokenName(tokenName.size - 1))
-        writeGenericMsg("Corrupt file detected", msg.relatedFileHandler.fullPath, inConfiguration(SmartFileAdapterConstants.KAFKA_STATUS_TOPIC))
+        writeGenericMsg("Corrupt file detected", msg.relatedFileHandler.getFullPath, inConfiguration(SmartFileAdapterConstants.KAFKA_STATUS_TOPIC))
         closeOutFile(msg.relatedFileHandler)
         fileHandlerBeingProcessed = null
         return
@@ -199,16 +199,16 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
     if (isLast)
       sendToKafka(keyMessages, "msgPush1", numberOfValidEvents)
     else
-      sendToKafka(keyMessages, "msgPush2", (numberOfValidEvents - messages.size), fileHandlerBeingProcessed.fullPath)
+      sendToKafka(keyMessages, "msgPush2", (numberOfValidEvents - messages.size), fileHandlerBeingProcessed.getFullPath)
 
     // Make sure you dont write extra for DummyLast
     if (!isLast) {
-      writeStatusMsg(fileHandlerBeingProcessed.fullPath)
-      val fileTokens = fileHandlerBeingProcessed.fullPath.split("/")
+      writeStatusMsg(fileHandlerBeingProcessed.getFullPath)
+      val fileTokens = fileHandlerBeingProcessed.getFullPath.split("/")
       FileProcessor.addToZK(fileTokens(fileTokens.size - 1), numberOfValidEvents)
     } else {
       // output the status message to the KAFAKA_STATUS_TOPIC
-      writeStatusMsg(fileHandlerBeingProcessed.fullPath, true)
+      writeStatusMsg(fileHandlerBeingProcessed.getFullPath, true)
       closeOutFile(fileHandlerBeingProcessed)
       numberOfMessagesProcessedInFile = 0
       currentOffset = 0
@@ -288,7 +288,7 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
         // We can now fail for some messages, so, we need to update the recovery area in ZK, to make sure the retry does not
         // process these messages.
         if (fileToUpdate != null) {
-          val fileTokens = fileHandlerBeingProcessed.fullPath.split("/")
+          val fileTokens = fileHandlerBeingProcessed.getFullPath.split("/")
           FileProcessor.addToZK(fileTokens(fileTokens.size - 1), fullSuccessOffset, partitionsStats)
         }
       }
@@ -336,32 +336,32 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
    */
   private def closeOutFile(fileHandler: FileHandler): Unit = {
     try {
-      logger.info("SMART FILE CONSUMER ("+partIdx+") - cleaning up after " + fileHandler.fullPath)
+      logger.info("SMART FILE CONSUMER ("+partIdx+") - cleaning up after " + fileHandler.getFullPath)
       // Either move or rename the file.
-      val fileStruct = fileHandler.fullPath.split("/")
+      val fileStruct = fileHandler.getFullPath.split("/")
 
       if (inConfiguration.getOrElse(SmartFileAdapterConstants.DIRECTORY_TO_MOVE_TO, null) != null) {
         val newPath = inConfiguration(SmartFileAdapterConstants.DIRECTORY_TO_MOVE_TO) + "/" + fileStruct(fileStruct.size - 1)
-        logger.info("SMART FILE CONSUMER ("+partIdx+") Moving File" + fileHandler.fullPath + " to " + inConfiguration(SmartFileAdapterConstants.DIRECTORY_TO_MOVE_TO))
+        logger.info("SMART FILE CONSUMER ("+partIdx+") Moving File" + fileHandler.getFullPath + " to " + inConfiguration(SmartFileAdapterConstants.DIRECTORY_TO_MOVE_TO))
         //Files.copy(Paths.get(inConfiguration(SmartFileAdapterConstants.DIRECTORY_TO_WATCH) + "/" + fileStruct(fileStruct.size - 1)), Paths.get(inConfiguration(SmartFileAdapterConstants.DIRECTORY_TO_MOVE_TO) + "/" + fileStruct(fileStruct.size - 1)), REPLACE_EXISTING)
         //Files.deleteIfExists(Paths.get(inConfiguration(SmartFileAdapterConstants.DIRECTORY_TO_WATCH) + "/" + fileStruct(fileStruct.size - 1)))
         fileHandler.moveTo(newPath)
       } else {
         val newPath = inConfiguration(SmartFileAdapterConstants.DIRECTORY_TO_WATCH) + "/" + fileStruct(fileStruct.size - 1) + "_COMPLETE"
-        logger.info(" SMART FILE CONSUMER ("+partIdx+")  Renaming file " + fileHandler.fullPath + " to " + newPath)
+        logger.info(" SMART FILE CONSUMER ("+partIdx+")  Renaming file " + fileHandler.getFullPath + " to " + newPath)
         //(new File(inConfiguration(SmartFileAdapterConstants.DIRECTORY_TO_WATCH) + "/" + fileStruct(fileStruct.size - 1))).renameTo(new File(fileName + "_COMPLETE"))
         fileHandler.moveTo(newPath)
       }
 
       //markFileProcessingEnd(fileName)
-      val tokenName = fileHandler.fullPath.split("/")
+      val tokenName = fileHandler.getFullPath.split("/")
       FileProcessor.fileCacheRemove(tokenName(tokenName.size - 1))
       FileProcessor.removeFromZK(tokenName(tokenName.size - 1))
       FileProcessor.markFileProcessingEnd(tokenName(tokenName.size - 1))
     } catch {
       case ioe: IOException => {
         logger.error("Exception moving the file ",ioe)
-        var tokenName = fileHandler.fullPath.split("/")
+        var tokenName = fileHandler.getFullPath.split("/")
         FileProcessor.setFileState(tokenName(tokenName.size - 1),FileProcessor.FINISHED_FAILED_TO_COPY)
       }
     }
@@ -413,8 +413,8 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
     if (errorTopic == null) return
 
     val cdate: Date = new Date
-    val errorMsg = dateFormat.format(cdate) + "," + msg.relatedFileHandler.fullPath + "," + (new String(msg.msg))
-    logger.warn(" SMART FILE CONSUMER ("+partIdx+"): invalid message in file " + msg.relatedFileHandler.fullPath)
+    val errorMsg = dateFormat.format(cdate) + "," + msg.relatedFileHandler.getFullPath + "," + (new String(msg.msg))
+    logger.warn(" SMART FILE CONSUMER ("+partIdx+"): invalid message in file " + msg.relatedFileHandler.getFullPath)
     logger.warn(errorMsg)
 
     // Write a Error Message

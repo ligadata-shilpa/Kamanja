@@ -8,7 +8,8 @@ import java.io._
 import java.net.URI
 import java.net.URISyntaxException
 import java.util.zip.GZIPInputStream
-import com.ligadata.Exceptions.StackTrace
+import com.ligadata.Exceptions.{KamanjaException, StackTrace}
+import com.ligadata.filedataprocessor.FileChangeType.FileChangeType
 
 import scala.collection.mutable.{ArrayBuffer, Map}
 import org.apache.commons.vfs2.FileObject
@@ -17,10 +18,13 @@ import org.apache.commons.vfs2.Selectors
 import org.apache.commons.vfs2.impl.StandardFileSystemManager
 import org.apache.commons.vfs2.provider.sftp.SftpFileSystemConfigBuilder
 import com.ligadata.filedataprocessor.FileChangeType._
-import com.ligadata.filedataprocessor.FileHandler
+import com.ligadata.filedataprocessor._
 import org.apache.commons.lang.NotImplementedException
 import java.net.URLEncoder
 import org.apache.logging.log4j.{ Logger, LogManager }
+import CompressionUtil._
+
+import scala.util.control.Breaks._
 
 
 class SftpConnectionConfig(val serverAddress: String, val userId: String, val password : String)
@@ -93,7 +97,6 @@ class SftpFileEntry {
 
 class SftpFileHandler extends FileHandler{
   private var remoteFullPath = ""
-  def fullPath = remoteFullPath
     
   private var sftpConnectionConfig : SftpConnectionConfig = null
   private var manager : StandardFileSystemManager = null
@@ -107,50 +110,62 @@ class SftpFileHandler extends FileHandler{
   def sftpEncodedUri =
     if(sftpConnectionConfig == null ) ""
     else "sftp://" + sftpConnectionConfig.userId + ":" + URLEncoder.encode(sftpConnectionConfig.password) +
-      "@" + sftpConnectionConfig.serverAddress + "/" +  fullPath
+      "@" + sftpConnectionConfig.serverAddress + "/" +  getFullPath
   
   def this(path : String, config : SftpConnectionConfig){
     this()
     this.remoteFullPath = path
     sftpConnectionConfig = config
   }
-  
-   @throws(classOf[IOException])
+
+  def getFullPath = remoteFullPath
+
+   @throws(classOf[KamanjaException])
   def openForRead(): Unit = {
-    logger.info(s"Opening SFTP file ($fullPath) to read")
+     try {
+       logger.info(s"Opening SFTP file ($getFullPath) to read")
 
-	  manager  = new StandardFileSystemManager()
-    manager.init()
-    
-    val remoteFileObj = manager.resolveFile(sftpEncodedUri, opts)
-    in = remoteFileObj.getContent().getInputStream()
+       manager = new StandardFileSystemManager()
+       manager.init()
 
-     if(isCompressed)
-       in = new GZIPInputStream(in)
-    //bufferedReader = new BufferedReader(new InputStreamReader(in))
+       val remoteFileObj = manager.resolveFile(sftpEncodedUri, opts)
+       in = remoteFileObj.getContent().getInputStream()
+
+       if (isCompressed)
+         in = new GZIPInputStream(in)
+       //bufferedReader = new BufferedReader(new InputStreamReader(in))
+     }
+     catch{
+       case e : Exception => throw new KamanjaException (e.getMessage, e)
+     }
   }
 
-  @throws(classOf[IOException])
-  def read(buf : Array[Byte], length : Int) : Int = { 
-	if (in == null){
-	  logger.warn(s"Trying to read from SFTP file ($fullPath) but input stream is null")
-      return -1
-	}
-	logger.info(s"Reading from SFTP file ($fullPath)")
-    in.read(buf, 0, length)
+  @throws(classOf[KamanjaException])
+  def read(buf : Array[Byte], length : Int) : Int = {
+    try {
+      if (in == null) {
+        logger.warn(s"Trying to read from SFTP file ($getFullPath) but input stream is null")
+        return -1
+      }
+      logger.info(s"Reading from SFTP file ($getFullPath)")
+      in.read(buf, 0, length)
+    }
+    catch{
+      case e : Exception => throw new KamanjaException (e.getMessage, e)
+    }
   }
 
-  @throws(classOf[IOException])
+  @throws(classOf[KamanjaException])
   def moveTo(remoteNewFilePath : String) : Boolean = {
-    if(fullPath.equals(remoteNewFilePath)){
-      logger.warn(s"Trying to move file ($fullPath) but source and destination are the same")
+    if(getFullPath.equals(remoteNewFilePath)){
+      logger.warn(s"Trying to move file ($getFullPath) but source and destination are the same")
       return false
     }
      try {
        manager  = new StandardFileSystemManager()
        manager.init()
     
-        val remoteSrcFile = manager.resolveFile(createConnectionString(sftpConnectionConfig, fullPath), createDefaultOptions())
+        val remoteSrcFile = manager.resolveFile(createConnectionString(sftpConnectionConfig, getFullPath), createDefaultOptions())
         val remoteDestFile = manager.resolveFile(createConnectionString(sftpConnectionConfig, remoteNewFilePath), createDefaultOptions())
 
         if (remoteSrcFile.exists()) {
@@ -165,22 +180,24 @@ class SftpFileHandler extends FileHandler{
         }
      } 
      catch {
-       case ex : Exception => ex.printStackTrace()
+       case ex : Exception => {
+        logger.error("", ex)
         return false
+       }
      } finally {
        if(manager!=null)
     	   manager.close()
      }
   }
   
-  @throws(classOf[IOException])
+  @throws(classOf[KamanjaException])
   def delete() : Boolean = {
-     logger.info(s"Deleting file ($fullPath)")
+     logger.info(s"Deleting file ($getFullPath)")
      try {
        manager  = new StandardFileSystemManager()
        manager.init()
     
-        val remoteFile = manager.resolveFile(createConnectionString(sftpConnectionConfig, fullPath), createDefaultOptions())
+        val remoteFile = manager.resolveFile(createConnectionString(sftpConnectionConfig, getFullPath), createDefaultOptions())
         remoteFile.delete()
         logger.info("Successfully deleted")
         return true
@@ -197,9 +214,9 @@ class SftpFileHandler extends FileHandler{
      }
   }
 
-  @throws(classOf[IOException])
+  @throws(classOf[KamanjaException])
   def close(): Unit = {
-    logger.info(s"closing SFTP file ($fullPath)")
+    logger.info(s"closing SFTP file ($getFullPath)")
     /*if(bufferedReader != null)
       bufferedReader.close()*/
     if(in != null)
@@ -208,12 +225,12 @@ class SftpFileHandler extends FileHandler{
       manager.close()
   }
 
-  @throws(classOf[IOException])
+  @throws(classOf[KamanjaException])
   def length : Long = {
     try {
       manager = new StandardFileSystemManager()
       manager.init()
-      val remoteFile = manager.resolveFile(createConnectionString(sftpConnectionConfig, fullPath), createDefaultOptions())
+      val remoteFile = manager.resolveFile(createConnectionString(sftpConnectionConfig, getFullPath), createDefaultOptions())
       remoteFile.getContent.getSize
     }
     catch {
@@ -228,12 +245,12 @@ class SftpFileHandler extends FileHandler{
     }
   }
 
-  @throws(classOf[IOException])
+  @throws(classOf[KamanjaException])
   def lastModified : Long = {
     try {
       manager = new StandardFileSystemManager()
       manager.init()
-      val remoteFile = manager.resolveFile(createConnectionString(sftpConnectionConfig, fullPath), createDefaultOptions())
+      val remoteFile = manager.resolveFile(createConnectionString(sftpConnectionConfig, getFullPath), createDefaultOptions())
       remoteFile.getContent.getLastModifiedTime
     }
     catch {
@@ -272,88 +289,104 @@ class SftpFileHandler extends FileHandler{
   }
 }
 
-class SftpChangesMonitor (val sftpConnectionConfig : SftpConnectionConfig, val waitingTimeMS : Int,
-                          modifiedFileCallback:(FileHandler, FileChangeType) => Unit){
+class SftpChangesMonitor (modifiedFileCallback:(FileHandler) => Unit) extends Monitor{
   
   private var isMonitoring = false
   lazy val loggerName = this.getClass.getName
   lazy val logger = LogManager.getLogger(loggerName)
-  
-  def monitorDirChanges(targetRemoteFolder : String, changeTypesToMonitor : Array[FileChangeType]){
 
-    if(sftpConnectionConfig == null)
-      throw new Exception("Invalid config params")
+  private var connectionConf : ConnectionConfig = null
+  private var monitoringConf :  MonitoringConfig = null
+  private var sftpConnectionConfig : SftpConnectionConfig = null
+
+  def init(connectionConfJson: String, monitoringConfJson: String): Unit ={
+    connectionConf = JsonHelper.getConnectionConfigObj(connectionConfJson)
+    monitoringConf = JsonHelper.getMonitoringConfigObj(monitoringConfJson)
+
+    sftpConnectionConfig = new SftpConnectionConfig(connectionConf.Host, connectionConf.UserId, connectionConf.Password)
+  }
+
+  def monitor: Unit ={
+
+    //TODO : changes this and monitor multi-dirs
+    val targetRemoteFolder = connectionConf.Locations(0)
 
     val manager : StandardFileSystemManager  = new StandardFileSystemManager()
     try{
-	    //Initializes the file manager
-	   manager.init();
-	   
-	   //Setup our SFTP configuration
-	   val opts = createDefaultOptions
-	   
-	   val sftpEncodedUri = createConnectionString(sftpConnectionConfig, targetRemoteFolder) 
-	
-	    val filesStatusMap = Map[String, SftpFileEntry]()
-	    var firstCheck = true
-	
-	    isMonitoring = true
-	
-	    while(isMonitoring){
-	
-	      try{
-	        logger.info(s"Checking configured SFTP directory ($targetRemoteFolder)...")
-	
-	        val modifiedDirs = new ArrayBuffer[String]()
-	        modifiedDirs += sftpEncodedUri
-	        while(modifiedDirs.nonEmpty ){
-	          //each time checking only updated folders: first find direct children of target folder that were modified
-	          // then for each folder of these search for modified files and folders, repeat for the modified folders
-	
-	          val aFolder = modifiedDirs.head
-	          val modifiedFiles = Map[FileHandler, FileChangeType]() // these are the modified files found in folder $aFolder
-	
-	          modifiedDirs.remove(0)
-	          findDirModifiedDirectChilds(aFolder, manager,  filesStatusMap, modifiedDirs, modifiedFiles, firstCheck)
-	
-	          if(modifiedFiles.nonEmpty)
-	            modifiedFiles.foreach(tuple =>
-	            {
-	              //get only files with specified change types
-	              if(changeTypesToMonitor.contains(tuple._2)){
-	                /*val handler = new MofifiedFileCallbackHandler(tuple._1, tuple._2, modifiedFileCallback)
-	                 // run the callback in a different thread
-	                //new Thread(handler).start()
-	                globalFileMonitorCallbackService.execute(handler)*/
-	                modifiedFileCallback(tuple._1,tuple._2)
-	              }
-	            }
-	            )
-	        }
-	
-	      }
-	      catch{
-	        case ex: Exception => ex.printStackTrace()
-	      }
-	
-	      firstCheck = false
-	
-	      logger.info(s"Sleepng for $waitingTimeMS milliseconds...............................")
-	      Thread.sleep(waitingTimeMS)
-	    }
-	
-	    //if(!isMonitoring)
-	      //globalFileMonitorCallbackService.shutdown()
-     }
-	 catch {
-	    case ex : Exception => {
-	    	ex.printStackTrace()
-	    }
-	 }
-	 finally {
-	   manager.close()
-	 }
+      //Initializes the file manager
+      manager.init();
+
+      //Setup our SFTP configuration
+      val opts = createDefaultOptions
+
+      val sftpEncodedUri = createConnectionString(sftpConnectionConfig, targetRemoteFolder)
+
+      val filesStatusMap = Map[String, SftpFileEntry]()
+      var firstCheck = true
+
+      isMonitoring = true
+
+      while(isMonitoring){
+
+        try{
+          logger.info(s"Checking configured SFTP directory ($targetRemoteFolder)...")
+
+          val modifiedDirs = new ArrayBuffer[String]()
+          modifiedDirs += sftpEncodedUri
+          while(modifiedDirs.nonEmpty ){
+            //each time checking only updated folders: first find direct children of target folder that were modified
+            // then for each folder of these search for modified files and folders, repeat for the modified folders
+
+            val aFolder = modifiedDirs.head
+            val modifiedFiles = Map[FileHandler, FileChangeType]() // these are the modified files found in folder $aFolder
+
+            modifiedDirs.remove(0)
+            findDirModifiedDirectChilds(aFolder, manager,  filesStatusMap, modifiedDirs, modifiedFiles, firstCheck)
+
+            if(modifiedFiles.nonEmpty)
+              modifiedFiles.foreach(tuple =>
+              {
+
+                  /*val handler = new MofifiedFileCallbackHandler(tuple._1, tuple._2, modifiedFileCallback)
+                   // run the callback in a different thread
+                  //new Thread(handler).start()
+                  globalFileMonitorCallbackService.execute(handler)*/
+                  modifiedFileCallback(tuple._1)
+
+              }
+              )
+          }
+
+        }
+        catch{
+          case ex: Exception => ex.printStackTrace()
+        }
+
+        firstCheck = false
+
+        logger.info(s"Sleepng for ${monitoringConf.WaitingTimeMS} milliseconds...............................")
+        Thread.sleep(monitoringConf.WaitingTimeMS)
+      }
+
+      //if(!isMonitoring)
+      //globalFileMonitorCallbackService.shutdown()
+    }
+    catch {
+      case ex : Exception => {
+        ex.printStackTrace()
+      }
+    }
+    finally {
+      manager.close()
+    }
   }
+
+  def shutdown: Unit ={
+    //TODO : use an executor object to run the monitoring and stop here
+    isMonitoring = false
+
+  }
+
 
   private def findDirModifiedDirectChilds(parentfolder : String, manager : StandardFileSystemManager, filesStatusMap : Map[String, SftpFileEntry],
                                           modifiedDirs : ArrayBuffer[String], modifiedFiles : Map[FileHandler, FileChangeType], isFirstCheck : Boolean){
@@ -397,9 +430,10 @@ class SftpChangesMonitor (val sftpConnectionConfig : SftpConnectionConfig, val w
           
         }
         else{
-
-          val fileHandler = new SftpFileHandler(getPathOnly(uniquePath), sftpConnectionConfig)
-          modifiedFiles.put(fileHandler, changeType)
+          if(changeType == New || changeType == AlreadyExisting) {
+            val fileHandler = new SftpFileHandler(getPathOnly(uniquePath), sftpConnectionConfig)
+            modifiedFiles.put(fileHandler, changeType)
+          }
         }
       }
     }

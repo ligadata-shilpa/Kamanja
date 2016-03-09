@@ -6,6 +6,8 @@ package com.ligadata.filedataprocessor.hdfs
 
 import java.util.zip.GZIPInputStream
 
+import com.ligadata.Exceptions.KamanjaException
+import com.ligadata.filedataprocessor.FileChangeType.FileChangeType
 import org.apache.hadoop.fs.FileStatus
 import org.apache.hadoop.fs.FileSystem
 import org.apache.hadoop.fs.Path
@@ -14,12 +16,13 @@ import org.apache.hadoop.conf.Configuration
 
 import scala.collection.mutable.{ArrayBuffer, Map}
 import scala.actors.threadpool.{ Executors, ExecutorService }
-import com.ligadata.filedataprocessor.FileHandler
-import java.io.{InputStream, IOException}
+import com.ligadata.filedataprocessor._
+import java.io.{InputStream}
 import com.ligadata.filedataprocessor.FileChangeType._
 import org.apache.commons.lang.NotImplementedException
 
 import org.apache.logging.log4j.{ Logger, LogManager }
+import CompressionUtil._
 
 class HdfsConnectionConfig(val nameNodeURL: String, val nameNodePort: Int)
 
@@ -30,16 +33,15 @@ class HdfsFileEntry {
   //boolean processed
 }
 
-class MofifiedFileCallbackHandler(fileHandler : FileHandler, fileChangeType : FileChangeType, modifiedFileCallback:(FileHandler, FileChangeType) => Unit) extends Runnable{
+class MofifiedFileCallbackHandler(fileHandler : FileHandler, modifiedFileCallback:(FileHandler) => Unit) extends Runnable{
   def run() {
-    modifiedFileCallback(fileHandler, fileChangeType)
+    modifiedFileCallback(fileHandler)
   }
 }
 
 class HdfsFileHandler extends FileHandler{
 
   private var fileFullPath = ""
-  def fullPath = fileFullPath
   
   private var in : InputStream = null
   private var hdFileSystem : FileSystem = null
@@ -73,10 +75,12 @@ class HdfsFileHandler extends FileHandler{
 	closeFileSystem = false
   }*/
 
-  @throws(classOf[IOException])
+  def getFullPath = fileFullPath
+
+  @throws(classOf[KamanjaException])
   def openForRead(): Unit = {
     val compressed = isCompressed
-    val inFile : Path = new Path(fullPath)
+    val inFile : Path = new Path(getFullPath)
     hdFileSystem = FileSystem.newInstance(getHdfsConfig)
     in = hdFileSystem.open(inFile)
 
@@ -84,7 +88,7 @@ class HdfsFileHandler extends FileHandler{
       in = new GZIPInputStream(in)
   }
 
-  @throws(classOf[IOException])
+  @throws(classOf[KamanjaException])
   def read(buf : Array[Byte], length : Int) : Int = {
 
     try {
@@ -104,16 +108,16 @@ class HdfsFileHandler extends FileHandler{
     }
   }
 
-  @throws(classOf[IOException])
+  @throws(classOf[KamanjaException])
   def moveTo(newFilePath : String) : Boolean = {
-     if(fullPath.equals(newFilePath)){
-      logger.warn(s"Trying to move file ($fullPath) but source and destination are the same")
+     if(getFullPath.equals(newFilePath)){
+      logger.warn(s"Trying to move file ($getFullPath) but source and destination are the same")
       return false
      }
 
      try {
        hdFileSystem = FileSystem.get(hdfsConfig)
-       val srcPath = new Path(fullPath)
+       val srcPath = new Path(getFullPath)
        val destPath = new Path(newFilePath)
        
         if (hdFileSystem.exists(srcPath)) {
@@ -135,12 +139,12 @@ class HdfsFileHandler extends FileHandler{
      }
   }
   
-  @throws(classOf[IOException])
+  @throws(classOf[KamanjaException])
   def delete() : Boolean = {
-    logger.info(s"Deleting file ($fullPath)")
+    logger.info(s"Deleting file ($getFullPath)")
      try {
        hdFileSystem = FileSystem.get(hdfsConfig)
-       hdFileSystem.delete(new Path(fullPath), true)
+       hdFileSystem.delete(new Path(getFullPath), true)
         logger.info("Successfully deleted")
         return true
      } 
@@ -156,7 +160,7 @@ class HdfsFileHandler extends FileHandler{
      }
   }
 
-  @throws(classOf[IOException])
+  @throws(classOf[KamanjaException])
   def close(): Unit = {
     if(in != null)
       in.close()
@@ -166,12 +170,12 @@ class HdfsFileHandler extends FileHandler{
     }
   }
 
-  @throws(classOf[IOException])
+  @throws(classOf[KamanjaException])
   def length : Long = {
 
     try {
       hdFileSystem = FileSystem.get(hdfsConfig)
-      hdFileSystem.getFileStatus(new Path(fullPath)).getLen
+      hdFileSystem.getFileStatus(new Path(getFullPath)).getLen
     }
     catch {
       case ex : Exception => {
@@ -183,12 +187,12 @@ class HdfsFileHandler extends FileHandler{
     }
   }
 
-  @throws(classOf[IOException])
+  @throws(classOf[KamanjaException])
   def lastModified : Long = {
 
     try {
       hdFileSystem = FileSystem.get(hdfsConfig)
-      hdFileSystem.getFileStatus(new Path(fullPath)).getModificationTime
+      hdFileSystem.getFileStatus(new Path(getFullPath)).getModificationTime
     }
     catch {
       case ex : Exception => {
@@ -206,7 +210,7 @@ class HdfsFileHandler extends FileHandler{
 
       val tempInputStream : FSDataInputStream =
         try {
-          val inFile : Path = new Path(fullPath)
+          val inFile : Path = new Path(getFullPath)
           hdFileSystem.open(inFile)
         }
         catch {
@@ -230,16 +234,35 @@ class HdfsFileHandler extends FileHandler{
 /**
  * callback is the function to call when finding a modified file, currently has one parameter which is the file path
  */
-class HdfsChangesMonitor (val hdfsConnectionConfig : HdfsConnectionConfig, val waitingTimeMS : Int,
-                          modifiedFileCallback:(FileHandler, FileChangeType) => Unit){
+class HdfsChangesMonitor (modifiedFileCallback:(FileHandler) => Unit) extends Monitor{
 
   private var isMonitoring = false
   
   lazy val loggerName = this.getClass.getName
   lazy val logger = LogManager.getLogger(loggerName)
 
+  private var connectionConf : ConnectionConfig = null
+  private var monitoringConf :  MonitoringConfig = null
+  private var hdfsConnectionConfig : HdfsConnectionConfig = null
+
   val poolSize = 5
   private val globalFileMonitorCallbackService: ExecutorService = Executors.newFixedThreadPool(poolSize)
+
+  def init(connectionConfJson: String, monitoringConfJson: String): Unit ={
+    connectionConf = JsonHelper.getConnectionConfigObj(connectionConfJson)
+    monitoringConf = JsonHelper.getMonitoringConfigObj(monitoringConfJson)
+
+    //TODO : validate
+    val hostParts = connectionConf.Host.split(":")
+    val hostUrl = hostParts(0)
+    val port = hostParts(1).toInt
+    hdfsConnectionConfig = new HdfsConnectionConfig(hostUrl, port)
+  }
+
+  def shutdown: Unit ={
+    //TODO : use an executor object to run the monitoring and stop here
+    isMonitoring = false
+  }
 
   def getFolderContents(parentfolder : String, hdFileSystem : FileSystem) : Array[FileStatus] = {
     try {
@@ -254,10 +277,10 @@ class HdfsChangesMonitor (val hdfsConnectionConfig : HdfsConnectionConfig, val w
     }
   }
 
-  def monitorDirChanges(targetFolder : String, changeTypesToMonitor : Array[FileChangeType]){
+  def monitor(){
 
-    if(hdfsConnectionConfig == null || hdfsConnectionConfig.nameNodeURL == null || hdfsConnectionConfig.nameNodeURL.trim().length() == 0)
-      throw new Exception("Invalid HDFS config params")
+    //TODO : changes this and monitor multi-dirs
+    val targetFolder = connectionConf.Locations(0)
 
     // Instantiate HDFS Configuration.
     val hdfsConfig = new Configuration()
@@ -297,14 +320,12 @@ class HdfsChangesMonitor (val hdfsConnectionConfig : HdfsConnectionConfig, val w
           if(modifiedFiles.nonEmpty)
             modifiedFiles.foreach(tuple =>
             {
-              //get only files with specified change types
-              if(changeTypesToMonitor.contains(tuple._2)){
-                val handler = new MofifiedFileCallbackHandler(tuple._1, tuple._2, modifiedFileCallback)
+                val handler = new MofifiedFileCallbackHandler(tuple._1, modifiedFileCallback)
                  // run the callback in a different thread
                 new Thread(handler).start()
                 //globalFileMonitorCallbackService.execute(handler)
                 //modifiedFileCallback(tuple._1,tuple._2)
-              }
+
             }
             )
 
@@ -320,12 +341,10 @@ class HdfsChangesMonitor (val hdfsConnectionConfig : HdfsConnectionConfig, val w
 
       firstCheck = false
 
-      logger.info(s"Sleepng for $waitingTimeMS milliseconds...............................")
-      Thread.sleep(waitingTimeMS)
+      logger.info(s"Sleepng for ${monitoringConf.WaitingTimeMS} milliseconds...............................")
+      Thread.sleep(monitoringConf.WaitingTimeMS)
     }
 
-    if(!isMonitoring)
-      globalFileMonitorCallbackService.shutdown()
   }
 
   private def findDirModifiedDirectChilds(parentfolder : String, hdFileSystem : FileSystem, filesStatusMap : Map[String, HdfsFileEntry],
@@ -368,9 +387,10 @@ class HdfsChangesMonitor (val hdfsConnectionConfig : HdfsConnectionConfig, val w
           
         }
         else{
-
-          val fileHandler = new HdfsFileHandler(uniquePath, hdfsConnectionConfig)
-          modifiedFiles.put(fileHandler, changeType)
+          if(changeType == New || changeType == AlreadyExisting) {
+            val fileHandler = new HdfsFileHandler(uniquePath, hdfsConnectionConfig)
+            modifiedFiles.put(fileHandler, changeType)
+          }
         }
       }
     }

@@ -116,4 +116,28 @@ object CompressionUtil {
     }
 
   }
+
+  /**
+    * only temporarily used, will be removed later, to support other compression types
+    * @param inputStream
+    * @return
+    */
+  def isStreamCompressed(inputStream: InputStream): Boolean = {
+
+    val maxlen = 2
+    val buffer = new Array[Byte](maxlen)
+    val readlen = inputStream.read(buffer, 0, maxlen)
+
+    //inputStream.close() // Close before we really check and return the data
+
+    if (readlen < 2)
+      return false
+
+    val b0: Int = buffer(0)
+    val b1: Int = buffer(1)
+
+    val head = (b0 & 0xff) | ((b1 << 8) & 0xff00)
+
+    return (head == GZIPInputStream.GZIP_MAGIC);
+  }
 }

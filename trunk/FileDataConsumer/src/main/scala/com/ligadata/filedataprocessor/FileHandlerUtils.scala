@@ -18,7 +18,7 @@ object FsType extends Enumeration {
 
 import FsType._
 
-object FileHandler{
+object FileHandlerUtil{
   /*def getFsType(path : String) : FsType = {
     if(path.toLowerCase.startsWith("sftp"))
       SFTP
@@ -48,42 +48,3 @@ object FileChangeType extends Enumeration {
   val AlreadyExisting, New, Modified = Value
 }
 
-trait FileHandler{
-  def fullPath : String
-
-  @throws(classOf[IOException])
-  def openForRead(): Unit
-  @throws(classOf[IOException])
-  def read(buf : Array[Byte], length : Int) : Int
-  @throws(classOf[IOException])
-  def close(): Unit
-  @throws(classOf[IOException])
-  def moveTo(newPath : String) : Boolean
-  @throws(classOf[IOException])
-  def delete() : Boolean
-
-  @throws(classOf[IOException])
-  def length : Long
-
-  @throws(classOf[IOException])
-  def lastModified : Long
-
-  def isStreamCompressed(inputStream: InputStream): Boolean = {
-
-    val maxlen = 2
-    val buffer = new Array[Byte](maxlen)
-    val readlen = inputStream.read(buffer, 0, maxlen)
-
-    //inputStream.close() // Close before we really check and return the data
-
-    if (readlen < 2)
-      return false
-
-    val b0: Int = buffer(0)
-    val b1: Int = buffer(1)
-
-    val head = (b0 & 0xff) | ((b1 << 8) & 0xff00)
-
-    return (head == GZIPInputStream.GZIP_MAGIC);
-  }
-}
