@@ -28,11 +28,21 @@ object SmartFileAdapterConstants {
   val ZOOKEEPER_IGNORE = "ignore_zookeeper"
   val MAX_MEM = "maxAllowedMemory"
   val THROTTLE_TIME = "throttle_ms"
+  val MAX_TIME_ALLOWED_TO_BUFFER = "maxTimeFileIsAllowedToBuffer"
+  val REFRESH_RATE = "refreshrate_ms"
 
   val KAFKA_LOAD_STATUS = "Kafka_Load_Result,"
   val TOTAL_FILE_STATUS = "File_Total_Result,"
   val CORRUPTED_FILE = "Corrupted_File_Detected,"
   val FILE_BUFFERING_TIMEOUT = "fileBufferingTimeout"
+  
+  //*** New constants added for BOFA (which will be read from file consumer configuration
+  //Prepend metadata at the beginning of the message (FileName/ID and Offset) - BOOLEAN
+  val ADD_METADATA_TO_MESSAGE = "message.metadata" 
+  //Log the complete file name, offset and message with any exception - BOOLEAN
+  val EXCEPTION_METADATA = "exception.metadata" 
+  //Applicable content types, sniff them via Apache TIKA
+  val VALID_CONTENT_TYPES="allow.content"
 
   val FILE_SYSTEM = "fileSystem"
   val AUTH_USER="authUser"

@@ -43,6 +43,10 @@ case PathList("META-INF", "maven","jline","jline", ps) if ps.startsWith("pom") =
     case x if x contains "commons-logging" => MergeStrategy.first
   case "log4j.properties" => MergeStrategy.first
   case "unwanted.txt"     => MergeStrategy.discard
+  case PathList("META-INF", "cxf", "bus-extensions.txt") => MergeStrategy.concat
+  case x if x contains "javax/ws/rs" => MergeStrategy.last
+  case x if x contains "org/apache/commons/logging" => MergeStrategy.last
+  case x if x contains "org/w3c/dom/html" => MergeStrategy.last
   case x if x endsWith ".html" => MergeStrategy.first
   case x if x endsWith ".xml" => MergeStrategy.first
   case x if x endsWith ".class" => MergeStrategy.first
@@ -66,7 +70,10 @@ libraryDependencies ++= {
   val akkaVersion = "2.3.9"
   Seq(
     "org.apache.kafka" %% "kafka" % "0.8.2.2",
-    "org.scala-lang" % "scala-actors" % scalaVersion.value
+    "org.scala-lang" % "scala-actors" % scalaVersion,
+	"org.apache.commons" % "commons-lang3" % "3.4",
+	"org.apache.tika" % "tika-core" % "1.11",
+	"jmimemagic" % "jmimemagic" % "0.1.2"
   )
 }
 
