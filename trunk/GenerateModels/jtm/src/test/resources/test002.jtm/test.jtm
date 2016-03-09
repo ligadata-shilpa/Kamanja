@@ -1,8 +1,10 @@
 {
-  "namespace": "com.ligadata.jtm.test.filter1",
-  "version": "0.0.1",
-  "language" : "scala",
-  "minVersion" : "2.11",
+  "header": {
+    "namespace": "com.ligadata.jtm.test.filter1",
+    "version": "0.0.1",
+    "language" : "scala",
+    "minVersion" : "2.11"
+  },
 
   "aliases":   {
     "m1": "com.ligadata.kamanja.test.msg1",

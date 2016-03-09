@@ -144,25 +144,8 @@ object Root {
   */
 class Root {
 
-  /** Code will be generated in this namespace
-    *
-    */
-  val namespace: String = ""
 
-  /** Version of the json level
-    *
-    */
-  val version: String = ""
-
-  /** Target language
-    * Scala | Java | Python
-    */
-  val language: String = ""
-
-  /** Interpreter or compiler level to be generated
-    *
-    */
-  val minVersion: String = ""
+  val header: Header = null;
 
   /** List of dependencies, should be empty
     *

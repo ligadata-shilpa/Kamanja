@@ -1,8 +1,11 @@
 {
-  "namespace": "com.ligadata.jtm.test.grok",
-  "version": "0.0.1",
-  "language" : "scala",
-  "minVersion" : "2.11",
+  "header": {
+    "namespace": "com.ligadata.jtm.test.grok",
+    "version": "0.0.1",
+    "language" : "scala",
+    "minVersion" : "2.11"
+  },
+
   "imports": [ "com.ligadata.Utils._", "com.ligadata.Utils._" ],
 
   "aliases":   {
@@ -10,18 +13,18 @@
     "o1": "com.ligadata.kamanja.test001.msg2"
   },
 
-  "builtin": {
-    "grok": [
-      { "name_grok_instance" : {
-          "builtInDictionary": true,
-          "match": "{EMAIL: email}",
-          "file": ["path"],
-          "patterns": {
-            "DOMAINTLD": "[a-zA-Z]+",
-            "EMAIL": "%{NOTSPACE}@%{WORD}\\.%{DOMAINTLD}"
-      }}}
-    ]
-  },
+  "grok": [ {
+      "name_grok_instance" : {
+        "builtInDictionary": true,
+        "match": "{EMAIL: email}",
+        "file": ["path"],
+        "patterns": {
+          "DOMAINTLD": "[a-zA-Z]+",
+          "EMAIL": "%{NOTSPACE}@%{WORD}\\.%{DOMAINTLD}"
+        }
+      }
+    }
+  ],
 
   "transformations": {
     "test1": {

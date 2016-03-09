@@ -214,14 +214,19 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
     // Check requested language
     //
-    if(root.language.trim.toLowerCase() !="scala")
+    if(root.header==null)
+      throw new Exception("No header provided")
+
+    val header = root.header
+
+    if(header.language.trim.toLowerCase() !="scala")
         throw new Exception("Currently only Scala is supported")
 
     // Check the min version
     //
-    if(root.language.trim.toLowerCase=="scala") {
+    if(header.language.trim.toLowerCase=="scala") {
       // ToDo: Add version parser here
-      if(root.minVersion.toDouble < 2.11) {
+      if(header.minVersion.toDouble < 2.11) {
         throw new Exception("The minimum language requirement must be 2.11")
       }
     }
@@ -368,13 +373,13 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
     // Namespace
     //
-    result :+= "package %s\n".format(root.namespace)
+    result :+= "package %s\n".format(root.header.namespace)
 
     // Process the imports
     //
     var subtitutions = new Substitution
-    subtitutions.Add("model.name", root.namespace)
-    subtitutions.Add("model.version", root.version)
+    subtitutions.Add("model.name", root.header.namespace)
+    subtitutions.Add("model.version", root.header.version)
     result :+= subtitutions.Run(Parts.imports)
 
     // Process additional imports

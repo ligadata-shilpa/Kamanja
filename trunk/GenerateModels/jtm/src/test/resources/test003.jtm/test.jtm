@@ -1,9 +1,14 @@
 {
-  "namespace": "com.ligadata.jtm.test.filter",
-  "version": "0.0.1",
-  "language" : "scala",
-  "minVersion" : "2.11",
+
+  "header": {
+    "namespace": "com.ligadata.jtm.test.filter",
+    "version": "0.0.1",
+    "language" : "scala",
+    "minVersion" : "2.11"
+  },
+
   "dependencies": ["list of jars/modules - this should go into command line arguments instead of this file"],
+
   "imports": [ "com.ligadata.Utils._",  "com.ligadata.Utils1._"  ],
 
   "aliases":   {
