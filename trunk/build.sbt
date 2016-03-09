@@ -183,6 +183,8 @@ lazy val MigrateTo_V_1_3 = project.in(file("Utils/Migrate/DestinationVersion/Mig
 
 lazy val MigrateFrom_V_1_2 = project.in(file("Utils/Migrate/SourceVersion/MigrateFrom_V_1_2")) dependsOn (MigrateBase)
 
+lazy val jtm = project.in(file("GenerateModels/jtm")) dependsOn(Metadata, KamanjaBase, Exceptions, MetadataBootstrap, MessageDef)
+
 lazy val InstallDriverBase = project.in(file("Utils/ClusterInstaller/InstallDriverBase"))
 
 lazy val InstallDriver = project.in(file("Utils/ClusterInstaller/InstallDriver")) dependsOn (InstallDriverBase, Serialize, KamanjaUtils)
