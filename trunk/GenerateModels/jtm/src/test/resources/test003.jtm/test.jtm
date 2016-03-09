@@ -41,7 +41,7 @@
             "out5": "in3",
             "out7": "tmp8"
           },
-          "filter": "!($in2 != -1 && $in2 < 100)",
+          "where": "!($in2 != -1 && $in2 < 100)",
           "computes": {
             "tmp8": { "type": "String", "val":"somefunc2($in7)" }
           }

@@ -264,6 +264,11 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
       computeConstraint.foreach( m => logger.warn(m.toString()))
       throw new Exception("Conflicting %d compute nodes".format(computeConstraint.size))
     }
+
+    // Check that we only have a single grok instance
+    if(root.grok.size>1) {
+      throw new Exception("Found %d grok configurations, only a single configuration allowed.".format(root.grok.size))
+    }
   }
 
   // Casing of system columns is inconsistsent
@@ -594,9 +599,9 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           }
 
           var mapping = o._2.mapping
-          var filters =  Array(o._2.filter)
+          var wheres =  Array(o._2.where)
           var computes = o._2.computes
-          var cnt1 = filters.length + computes.size
+          var cnt1 = wheres.length + computes.size
           var cnt2 = 0
 
           // Remove provided computes -  outer computes
@@ -613,7 +618,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
             cnt2 = cnt1
 
             // filters
-            val filters1 = filters.filter(f => {
+            val wheres1 = wheres.filter(f => {
               val list = ExtractColumnNames(f)
               val open = list.filter(f => !mappingSources.contains(f) )
               if(open.isEmpty) {
@@ -680,8 +685,8 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
             }
 
             // Update state
-            cnt1 = filters1.length + computes1.size
-            filters = filters1
+            cnt1 = wheres1.length + computes1.size
+            wheres = wheres1
             computes = computes1
           }
 

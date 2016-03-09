@@ -29,7 +29,7 @@
             "out4": "in3"
           },
 
-          "filter": "!($in2 != -1 && $in2 < 100)",
+          "where": "!($in2 != -1 && $in2 < 100)",
 
           "computes": {
             "t1": { "type": "String", "val": "\"s:\" + ($in2).toString()" }
