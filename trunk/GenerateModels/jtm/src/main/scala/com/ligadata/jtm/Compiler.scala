@@ -15,7 +15,7 @@
  */
 package com.ligadata.jtm
 
-import com.ligadata.jtm.eval.{Types => EvalTypes }
+import com.ligadata.jtm.eval.{Types => EvalTypes}
 import com.ligadata.kamanja.metadata.{StructTypeDef, MdMgr}
 import com.ligadata.kamanja.metadataload.MetadataLoad
 import com.ligadata.messagedef.MessageDefImpl
@@ -407,7 +407,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     // Collect all classes
     //
     val messagesSet = EvalTypes.CollectMessages(root)
-    messagesSet.map( e => "%s aliaseMessages %s".format(e._1, e._2.mkString(", ")) ).foreach( m => {
+    messagesSet.map( e => "%s aliases %s".format(e._1, e._2.mkString(", ")) ).foreach( m => {
       logger.trace(m)
     })
 
@@ -421,33 +421,9 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     // Check all found types against metadata
     //
 
-    // Resolve dependencies
+    // Resolve dependencies fro transformations
     //
-    type aliasSet = Set[String]
-    type transSet = Set[String]
-    val dependencyToTransformations = root.transformations.foldLeft( (0, Map.empty[Set[String], (Long, Set[String])]))( (r1, t) => {
-      val transformationName = t._1
-      val transformation = t._2
-
-      // Normalize the dependencies, target must be a class
-      // ToDo: Do we need chains of aliaseMessages, or detect chains of aliaseMessages
-
-      t._2.dependsOn.foldLeft(r1)( (r, dependencies) => {
-
-        val resolvedDependencies = dependencies.map(alias => {
-          // Translate dependencies, if available
-          aliaseMessages.getOrElse( alias, alias )
-        }).toSet
-
-        val curr = r._2.get(resolvedDependencies)
-        if(curr.isDefined) {
-          ( r._1,     r._2 ++ Map[Set[String],(Long, Set[String])](resolvedDependencies -> (curr.get._1, curr.get._2 + t._1)) )
-        } else {
-          ( r._1 + 1, r._2 ++ Map[Set[String],(Long, Set[String])](resolvedDependencies -> (r._1 + 1, Set(t._1))) )
-        }
-      })
-
-    })._2
+    val dependencyToTransformations = EvalTypes.ResolveDependencies(root)
 
     // Upshot of the dependencies
     //
