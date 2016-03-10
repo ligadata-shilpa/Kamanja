@@ -120,7 +120,7 @@ class CompilerProxy {
       val compiler = new PmmlCompiler(MdMgr.GetMdMgr, "ligadata", logger, injectLoggingStmts,
         MetadataAPIImpl.GetMetadataAPIConfig.getProperty("JAR_PATHS").split(","))
       val (classStr, modDef) = compiler.compile(pmmlStr, compiler_work_dir, recompile)
-
+      modDef.lastModifiedAt=System.nanoTime()
       /**
        * if errors were encountered... the model definition is not manufactured.
        *  Avoid Scala compilation of the broken src.  Src file MAY be available
@@ -554,7 +554,7 @@ class CompilerProxy {
       modDef.jarName = jarFileName
       modDef.physicalName = pName
       if (sourceLang.equalsIgnoreCase("scala")) modDef.objectFormat = fSCALA else modDef.objectFormat = fJAVA
-      modDef.ObjectDefinition(createSavedSourceCode(originalSource, notTypeDeps, typeDeps, pname))
+      modDef.ObjectDefinition(createSavedSourceCode(modDef.lastModifiedAt, originalSource, notTypeDeps, typeDeps, pname))
       modDef
     } catch {
       case e: AlreadyExistsException => {
@@ -1144,10 +1144,11 @@ class CompilerProxy {
    *                           "physicalname":"physicalName"
    *                         }
    */
-  private def createSavedSourceCode(source: String, deps: scala.collection.immutable.Set[String], typeDeps: List[String], pName: String): String = {
+  private def createSavedSourceCode(lastModifiedAt:Long, source: String, deps: scala.collection.immutable.Set[String], typeDeps: List[String], pName: String): String = {
     val json = ((ModelCompilationConstants.SOURCECODE -> source) ~
       (ModelCompilationConstants.DEPENDENCIES -> deps.toList) ~
       (ModelCompilationConstants.TYPES_DEPENDENCIES -> typeDeps) ~
+      (ModelCompilationConstants.LASTMODIFIEDAT -> lastModifiedAt) ~
       (ModelCompilationConstants.PHYSICALNAME -> pName))
     compact(render(json))
   }

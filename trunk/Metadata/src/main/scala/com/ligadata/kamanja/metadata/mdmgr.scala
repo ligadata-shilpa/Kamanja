@@ -750,7 +750,9 @@ class MdMgr {
   }
 
   /** Get All Versions of Models for Key */
-  def Models(key: String, onlyActive: Boolean, latestVersion: Boolean): Option[scala.collection.immutable.Set[ModelDef]] = { GetImmutableSet(modelDefs.get(key.trim.toLowerCase), onlyActive, latestVersion) }
+  def Models(key: String, onlyActive: Boolean, latestVersion: Boolean): Option[scala.collection.immutable.Set[ModelDef]] = {
+    GetImmutableSet(modelDefs.get(key.trim.toLowerCase), onlyActive, latestVersion).foreach(println)
+    GetImmutableSet(modelDefs.get(key.trim.toLowerCase), onlyActive, latestVersion) }
   def Models(nameSpace: String, name: String, onlyActive: Boolean, latestVersion: Boolean): Option[scala.collection.immutable.Set[ModelDef]] = Models(MdMgr.MkFullName(nameSpace, name), onlyActive, latestVersion)
 
   /** Answer the ModelDef with the supplied namespace and name  */
@@ -2110,6 +2112,7 @@ class MdMgr {
                    , supportsInstanceSerialization: Boolean = false): ModelDef = {
 
         /** Determine model existence constraints and throw exception if they are not met */
+        //val lastModifiedAt=System.nanoTime()
         var modelExists: Boolean = false
         val existingModel = Model(nameSpace, name, -1, false)
         if (existingModel != None) {
@@ -2173,6 +2176,7 @@ class MdMgr {
             mdl.ObjectFormat(ObjFormatType.fPMML)
         }
         mdl.PhysicalName(physicalName)
+
         SetBaseElem(mdl, nameSpace, name, ver, jarNm, dJars)
 
         mdl

@@ -769,7 +769,7 @@ class ModelDef( val modelRepresentation: ModelRepresentation = ModelRepresentati
                 , val isReusable: Boolean = false
                 , val msgConsumed: String = ""
                 , val supportsInstanceSerialization : Boolean = false) extends BaseElemDef {
-
+    val lastModifiedAt=System.nanoTime()
     def typeString: String = PhysicalName
     def jpmmlText : String = ObjectDefinition
     def SupportsInstanceSerialization : Boolean = supportsInstanceSerialization
@@ -906,6 +906,7 @@ object ModelCompilationConstants {
   val TYPES_DEPENDENCIES: String = "MessageAndContainers"
   val SOURCECODE: String = "source"
   val PHYSICALNAME: String = "pName"
+  val LASTMODIFIEDAT: String = "lastModifiedAt"
 }
 
 // These case classes define the monitoring structures that will appear in the zookeepr.
