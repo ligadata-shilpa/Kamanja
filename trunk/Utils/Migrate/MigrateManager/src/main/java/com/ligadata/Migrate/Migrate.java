@@ -93,7 +93,7 @@ public class Migrate {
             executor = texecutor;
 
             if (srcVer.equalsIgnoreCase("1.1")
-                    && dstVer.equalsIgnoreCase("1.3")) {
+		&& ( dstVer.equalsIgnoreCase("1.3") || dstVer.equalsIgnoreCase("1.4") )) {
                 appendData = new byte[8]; // timepartition bytes at the end.
                 for (int i = 0; i < 8; i++)
                     appendData[0] = 0;
@@ -368,16 +368,18 @@ public class Migrate {
             String scalaTo = configuration.migratingTo.scalaVersion.trim();
 
             if (srcVer.equalsIgnoreCase("1.1") == false
-                    && srcVer.equalsIgnoreCase("1.2") == false) {
-                sendStatus("We support source versions only 1.1 or 1.2. We don't support " + srcVer, "ERROR");
-                logger.error("We support source versions only 1.1 or 1.2. We don't support " + srcVer);
+                    && srcVer.equalsIgnoreCase("1.2") == false 
+                    && srcVer.equalsIgnoreCase("1.3") == false) {
+                sendStatus("We support source versions only 1.1 or 1.2 or 1.3. We don't support " + srcVer, "ERROR");
+                logger.error("We support source versions only 1.1 or 1.2 or 1.3. We don't support " + srcVer);
                 usage();
                 return retCode;
             }
 
-            if (dstVer.equalsIgnoreCase("1.3") == false) {
-                sendStatus("We support destination version only 1.3. We don't support " + dstVer, "ERROR");
-                logger.error("We support destination version only 1.3. We don't support " + dstVer);
+            if (dstVer.equalsIgnoreCase("1.3") == false &&
+		dstVer.equalsIgnoreCase("1.4") == false ) {
+                sendStatus("We support destination version only 1.3 or 1.4. We don't support " + dstVer, "ERROR");
+                logger.error("We support destination version only 1.3 or 1.4. We don't support " + dstVer);
                 usage();
                 return retCode;
             }
@@ -436,16 +438,6 @@ public class Migrate {
                 return retCode;
             }
 
-/*
-            if (srcVer.equalsIgnoreCase("1.2") &&
-                    dstVer.equalsIgnoreCase("1.3") &&
-                    scalaFrom.equalsIgnoreCase("2.10") &&
-                    scalaTo.equalsIgnoreCase("2.10")) {
-                sendStatus("Nothing to migrate from 1.2 to 1.3 with scala 2.10 version", "WARN");
-                logger.warn("Nothing to migrate from 1.2 to 1.3 with scala 2.10 version");
-                return 0;
-            }
-*/
 
             // From Srouce version 1.1 to Destination version 1.3 we do both
             // Metadata Upgrade & Data Upgrade
