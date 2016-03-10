@@ -16,7 +16,7 @@
 package com.ligadata.jtm.nodes
 
 /**
-  * Created by joerg on 2/1/16.
+  *
   */
 class Computes {
 

@@ -144,25 +144,10 @@ object Root {
   */
 class Root {
 
-  /** Code will be generated in this namespace
+  /** Header information of jtm
     *
     */
-  val namespace: String = ""
-
-  /** Version of the json level
-    *
-    */
-  val version: String = ""
-
-  /** Target language
-    * Scala | Java | Python
-    */
-  val language: String = ""
-
-  /** Interpreter or compiler level to be generated
-    *
-    */
-  val minVersion: String = ""
+  val header: Header = null
 
   /** List of dependencies, should be empty
     *
@@ -172,7 +157,7 @@ class Root {
   /** List of imports to be added
     *
     */
-  val imports: Array[String] = Array.empty[String]
+  val imports: Imports = new Imports
 
   /** Map with "name" to transformations
     *
@@ -182,5 +167,10 @@ class Root {
   /** Map with aliases
     *
     */
-  val aliases: scala.collection.Map[String, String] = scala.collection.Map.empty[String, String]
+  val aliases: Aliases = new Aliases
+
+  /** List of Grok configurations, currently we only expect to
+    * find only a single one
+    */
+  val grok: scala.collection.Map[String, Grok] = scala.collection.Map.empty[String, Grok]
 }

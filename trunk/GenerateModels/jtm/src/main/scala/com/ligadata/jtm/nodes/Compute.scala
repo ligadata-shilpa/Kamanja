@@ -18,7 +18,7 @@ package com.ligadata.jtm.nodes
 import com.google.gson.annotations.SerializedName
 
 /**
-  * Created by joerg on 1/26/16.
+  *
   */
 class Compute {
 

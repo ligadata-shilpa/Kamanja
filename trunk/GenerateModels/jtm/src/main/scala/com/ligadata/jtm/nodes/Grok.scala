@@ -15,28 +15,31 @@
  */
 package com.ligadata.jtm.nodes
 
+import com.google.gson.annotations.SerializedName
+
 /**
-  *
+  * Grok expression support
   */
-class Output {
+class Grok {
 
-  /** Mapping variables / expressions to output attributes
+  /** true, indicates to use the internal dictornary
     *
     */
-  val mapping: scala.collection.Map[String, String] = scala.collection.Map.empty[String, String]
+  val builtInDictionary: Boolean = true
 
-  /** Filter to be checked
-    * expression of the target language expected
+  /** match string in the form of {EMAIL: email}, used if not provided in
+    * the transformation
     */
-  val where: String = ""
+  @SerializedName("match")
+  val matchstring: String = ""
 
-  /** Map with computations
+  /** List of files to load into the matcher
     *
     */
-  val computes: scala.collection.Map[String, Compute] = scala.collection.Map.empty[String, Compute]
+  val file: Array[String] = Array.empty[String]
 
-  /** If true, map by name the  outputs if not provided
+  /** Inline specification for additional patterns
     *
     */
-  val mappingByName: Boolean = false
+  val patterns: Map[String, String] = Map.empty[String, String]
 }

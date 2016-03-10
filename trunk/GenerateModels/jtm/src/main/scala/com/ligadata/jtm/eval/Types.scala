@@ -3,10 +3,9 @@ package com.ligadata.jtm.eval
 import com.ligadata.jtm.nodes.Root
 
 /**
-  * Created by joerg on 2/3/16.
+  *
   */
 object Types {
-
 
   def upsert(key: String, value: Set[String]) (implicit map: scala.collection.mutable.Map[String, Set[String]])= {
     val c = map.get(key)
@@ -25,7 +24,7 @@ object Types {
     * @return
     */
   def CollectMessages(root: Root): Map[String, Set[String]] = {
-    val givenAlias = root.aliases
+    val givenAlias = root.aliases.messages
     implicit var result = scala.collection.mutable.Map.empty[String, Set[String]]
 
     // Go through all transformations
@@ -94,4 +93,44 @@ object Types {
 
     result.toMap
   }
+
+  /** Resolve the input dependencies in terms of transformations
+    *
+    * @param root
+    * @return
+    *         0 = {Tuple2@17339} "(Set(com.ligadata.kamanja.test.msg1),(1,Set(test1)))"
+    *         1 = {Tuple2@17340} "(Set(com.ligadata.kamanja.test.msg3),(2,Set(test2)))"
+    */
+  def ResolveDependencies(root: Root): Map[Set[String], (Long, Set[String])] = {
+
+    val aliaseMessages: Map[String, String] = root.aliases.messages.toMap
+
+    val dependencyToTransformations = root.transformations.foldLeft( (0, Map.empty[Set[String], (Long, Set[String])]))( (r1, t) => {
+      val transformationName = t._1
+      val transformation = t._2
+
+      // Normalize the dependencies, target must be a class
+      // ToDo: Do we need chains of aliases, or detect chains of aliases
+
+      t._2.dependsOn.foldLeft(r1)( (r, dependencies) => {
+
+        val resolvedDependencies = dependencies.map(alias => {
+          // Translate dependencies, if available
+          aliaseMessages.getOrElse( alias, alias )
+        }).toSet
+
+        val curr = r._2.get(resolvedDependencies)
+        if(curr.isDefined) {
+          ( r._1,     r._2 ++ Map[Set[String],(Long, Set[String])](resolvedDependencies -> (curr.get._1, curr.get._2 + t._1)) )
+        } else {
+          ( r._1 + 1, r._2 ++ Map[Set[String],(Long, Set[String])](resolvedDependencies -> (r._1 + 1, Set(t._1))) )
+        }
+      })
+    })._2
+
+    dependencyToTransformations
+  }
+
+
+
 }

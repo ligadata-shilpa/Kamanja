@@ -15,28 +15,21 @@
  */
 package com.ligadata.jtm.nodes
 
+import com.google.gson.annotations.SerializedName
+
 /**
   *
   */
-class Output {
+class Imports {
 
-  /** Mapping variables / expressions to output attributes
+  /** List with package names
     *
     */
-  val mapping: scala.collection.Map[String, String] = scala.collection.Map.empty[String, String]
+  val packages: Array[String] = Array.empty[String]
 
-  /** Filter to be checked
-    * expression of the target language expected
+  /** List with files to load that contain grok
+    * patterns
     */
-  val where: String = ""
-
-  /** Map with computations
-    *
-    */
-  val computes: scala.collection.Map[String, Compute] = scala.collection.Map.empty[String, Compute]
-
-  /** If true, map by name the  outputs if not provided
-    *
-    */
-  val mappingByName: Boolean = false
+  @SerializedName("grok patterns")
+  val grokpatterns: Array[String] = Array.empty[String]
 }

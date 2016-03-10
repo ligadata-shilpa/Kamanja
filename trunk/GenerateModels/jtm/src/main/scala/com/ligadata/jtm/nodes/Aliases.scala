@@ -18,25 +18,21 @@ package com.ligadata.jtm.nodes
 /**
   *
   */
-class Output {
+class Aliases {
 
-  /** Mapping variables / expressions to output attributes
+  /** Map with messages
     *
     */
-  val mapping: scala.collection.Map[String, String] = scala.collection.Map.empty[String, String]
+  val messages: scala.collection.Map[String, String] = scala.collection.Map.empty[String, String]
 
-  /** Filter to be checked
-    * expression of the target language expected
-    */
-  val where: String = ""
-
-  /** Map with computations
+  /** Map with concepts
     *
     */
-  val computes: scala.collection.Map[String, Compute] = scala.collection.Map.empty[String, Compute]
+  val concepts: scala.collection.Map[String, String] = scala.collection.Map.empty[String, String]
 
-  /** If true, map by name the  outputs if not provided
+  /** Map with variables
     *
     */
-  val mappingByName: Boolean = false
+  val variables: scala.collection.Map[String, String] = scala.collection.Map.empty[String, String]
+
 }

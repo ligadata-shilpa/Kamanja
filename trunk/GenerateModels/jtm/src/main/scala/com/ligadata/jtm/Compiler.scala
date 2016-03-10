@@ -15,7 +15,7 @@
  */
 package com.ligadata.jtm
 
-import com.ligadata.jtm.eval.{Types => EvalTypes }
+import com.ligadata.jtm.eval.{Types => EvalTypes}
 import com.ligadata.kamanja.metadata.{StructTypeDef, MdMgr}
 import com.ligadata.kamanja.metadataload.MetadataLoad
 import com.ligadata.messagedef.MessageDefImpl
@@ -195,14 +195,14 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     * @param mapNameSource name to variable mapping
     * @return string with the result
     */
-  def FixupColumnNames(expression: String, mapNameSource: Map[String, String], aliases: Map[String, String]): String = {
+  def FixupColumnNames(expression: String, mapNameSource: Map[String, String], aliaseMessages: Map[String, String]): String = {
     val regex = """(\$[a-zA-Z0-9_.]+)""".r
     val m = regex.pattern.matcher(expression)
     val sb = new StringBuffer
     var i = 0
     while (m.find) {
       val name = m.group(0).drop(1)
-      val resolvedName = ResolveName(name, aliases)
+      val resolvedName = ResolveName(name, aliaseMessages)
       m.appendReplacement(sb, mapNameSource.get(resolvedName).get)
       i = i + 1
     }
@@ -214,20 +214,34 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
     // Check requested language
     //
-    if(root.language.trim.toLowerCase() !="scala")
+    if(root.header==null)
+      throw new Exception("No header provided")
+
+    if(root.aliases!=null) {
+      if(root.aliases.concepts.size>0) {
+        throw new Exception("Currently concept aren't supported")
+      }
+      if(root.aliases.variables.size>0) {
+        throw new Exception("Currently variables aren't supported")
+      }
+    }
+
+    val header = root.header
+
+    if(header.language.trim.toLowerCase() !="scala")
         throw new Exception("Currently only Scala is supported")
 
     // Check the min version
     //
-    if(root.language.trim.toLowerCase=="scala") {
+    if(header.language.trim.toLowerCase=="scala") {
       // ToDo: Add version parser here
-      if(root.minVersion.toDouble < 2.11) {
+      if(header.minVersion.toDouble < 2.11) {
         throw new Exception("The minimum language requirement must be 2.11")
       }
     }
 
-    if(root.imports.toSet.size < root.imports.length) {
-      val dups = root.imports.groupBy(identity).collect { case (x,ys) if ys.length > 1 => x }
+    if(root.imports.packages.toSet.size < root.imports.packages.length) {
+      val dups = root.imports.packages.groupBy(identity).collect { case (x,ys) if ys.length > 1 => x }
       logger.warn("Dropped duplicate imports: {}", dups.mkString(", "))
     }
 
@@ -258,6 +272,11 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     if(computeConstraint.nonEmpty) {
       computeConstraint.foreach( m => logger.warn(m.toString()))
       throw new Exception("Conflicting %d compute nodes".format(computeConstraint.size))
+    }
+
+    // Check that we only have a single grok instance
+    if(root.grok.size>1) {
+      throw new Exception("Found %d grok configurations, only a single configuration allowed.".format(root.grok.size))
     }
   }
 
@@ -298,12 +317,12 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     })._2
   }
 
-  def ResolveNames(names: Set[String], aliases: Map[String, String] ) : Map[String, String] =  {
+  def ResolveNames(names: Set[String], aliaseMessages: Map[String, String] ) : Map[String, String] =  {
 
     names.map ( n => {
       val (alias, name) = splitAlias(n)
       if(alias.length>0) {
-        val a = aliases.get(alias)
+        val a = aliaseMessages.get(alias)
         if(a.isEmpty) {
           throw new Exception("Missing alias %s for %s".format(alias, n))
         } else {
@@ -315,11 +334,11 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     }).toMap
   }
 
-  def ResolveName(n: String, aliases: Map[String, String] ) : String =  {
+  def ResolveName(n: String, aliaseMessages: Map[String, String] ) : String =  {
 
     val (alias, name) = splitAlias(n)
     if(alias.length>0) {
-      val a = aliases.get(alias)
+      val a = aliaseMessages.get(alias)
       if(a.isEmpty) {
         throw new Exception("Missing alias %s for %s".format(alias, n))
       } else {
@@ -330,9 +349,9 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     }
   }
 
-  def ResolveAlias(n: String, aliases: Map[String, String] ) : String =  {
+  def ResolveAlias(n: String, aliaseMessages: Map[String, String] ) : String =  {
 
-    val a = aliases.get(n)
+    val a = aliaseMessages.get(n)
     if(a.isEmpty) {
       throw new Exception("Missing alias %s".format(n))
     } else {
@@ -356,7 +375,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     // Validate model
     Validate(root)
 
-    val aliases: Map[String, String] = root.aliases.toMap
+    val aliaseMessages: Map[String, String] = root.aliases.messages.toMap
     var result = Array.empty[String]
     var exechandler = Array.empty[String]
     var methods = Array.empty[String]
@@ -368,22 +387,22 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
     // Namespace
     //
-    result :+= "package %s\n".format(root.namespace)
+    result :+= "package %s\n".format(root.header.namespace)
 
     // Process the imports
     //
     var subtitutions = new Substitution
-    subtitutions.Add("model.name", root.namespace)
-    subtitutions.Add("model.version", root.version)
+    subtitutions.Add("model.name", root.header.namespace)
+    subtitutions.Add("model.version", root.header.version)
     result :+= subtitutions.Run(Parts.imports)
 
     // Process additional imports
     //
-    result ++= root.imports.distinct.map( i => "import %s".format(i) )
+    result ++= root.imports.packages.distinct.map( i => "import %s".format(i) )
 
     // Add message so we can actual compile
     // Check how to reconcile during add/compilation
-    //result ++= aliases.map(p => p._2).toSet.toArray.map( i => "import %s".format(i))
+    //result ++= aliaseMessages.map(p => p._2).toSet.toArray.map( i => "import %s".format(i))
 
     // Collect all classes
     //
@@ -402,33 +421,9 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     // Check all found types against metadata
     //
 
-    // Resolve dependencies
+    // Resolve dependencies fro transformations
     //
-    type aliasSet = Set[String]
-    type transSet = Set[String]
-    val dependencyToTransformations = root.transformations.foldLeft( (0, Map.empty[Set[String], (Long, Set[String])]))( (r1, t) => {
-      val transformationName = t._1
-      val transformation = t._2
-
-      // Normalize the dependencies, target must be a class
-      // ToDo: Do we need chains of aliases, or detect chains of aliases
-
-      t._2.dependsOn.foldLeft(r1)( (r, dependencies) => {
-
-        val resolvedDependencies = dependencies.map(alias => {
-          // Translate dependencies, if available
-          aliases.getOrElse( alias, alias )
-        }).toSet
-
-        val curr = r._2.get(resolvedDependencies)
-        if(curr.isDefined) {
-          ( r._1,     r._2 ++ Map[Set[String],(Long, Set[String])](resolvedDependencies -> (curr.get._1, curr.get._2 + t._1)) )
-        } else {
-          ( r._1 + 1, r._2 ++ Map[Set[String],(Long, Set[String])](resolvedDependencies -> (r._1 + 1, Set(t._1))) )
-        }
-      })
-
-    })._2
+    val dependencyToTransformations = EvalTypes.ResolveDependencies(root)
 
     // Upshot of the dependencies
     //
@@ -524,13 +519,13 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
             // Check if the compute if determined
             val (open, expression) =  if(c._2.expression.nonEmpty) {
               val list = ExtractColumnNames(c._2.expression)
-              val rList = ResolveNames(list, aliases)
+              val rList = ResolveNames(list, aliaseMessages)
               val open = rList.filter(f => !fixedMappingSources.contains(f._2))
               (open, c._2.expression)
             } else {
               val evaluate = c._2.expressions.map( expression => {
                 val list = ExtractColumnNames(expression)
-                val rList = ResolveNames(list, aliases)
+                val rList = ResolveNames(list, aliaseMessages)
                 val open = rList.filter(f => !fixedMappingSources.contains(f._2))
                 (open, expression)
               })
@@ -543,7 +538,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
             }
 
             if(open.isEmpty) {
-              val newExpression = FixupColumnNames(expression, fixedMappingSources, aliases)
+              val newExpression = FixupColumnNames(expression, fixedMappingSources, aliaseMessages)
               // Output the actual compute
               methods :+= c._2.Comment
               if(c._2.typename.length>0)
@@ -574,7 +569,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           var collect = Array.empty[String]
           collect ++= Array("\ndef process_%s(): Array[Result] = {\n".format(o._1))
 
-          val outputSet: Set[String] = ColumnNames(md, ResolveAlias(o._1, aliases))
+          val outputSet: Set[String] = ColumnNames(md, ResolveAlias(o._1, aliaseMessages))
 
           // State variables to track the progress
           // a little bit simpler than having val's
@@ -589,9 +584,9 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           }
 
           var mapping = o._2.mapping
-          var filters =  Array(o._2.filter)
+          var wheres =  Array(o._2.where)
           var computes = o._2.computes
-          var cnt1 = filters.length + computes.size
+          var cnt1 = wheres.length + computes.size
           var cnt2 = 0
 
           // Remove provided computes -  outer computes
@@ -608,12 +603,12 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
             cnt2 = cnt1
 
             // filters
-            val filters1 = filters.filter(f => {
+            val wheres1 = wheres.filter(f => {
               val list = ExtractColumnNames(f)
               val open = list.filter(f => !mappingSources.contains(f) )
               if(open.isEmpty) {
                 // Sub names to
-                val newExpression = FixupColumnNames(f, mappingSources, aliases)
+                val newExpression = FixupColumnNames(f, mappingSources, aliaseMessages)
                 // Output the actual filter
                 collect ++= Array("if (%s) return Array.empty[Result]\n".format(newExpression))
                 false
@@ -628,13 +623,13 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
               // Check if the compute if determind
               val (open, expression) =  if(c._2.expression.length > 0) {
                 val list = ExtractColumnNames(c._2.expression)
-                val rList = ResolveNames(list, root.aliases.toMap)
+                val rList = ResolveNames(list, root.aliases.messages.toMap)
                 val open = rList.filter(f => !fixedMappingSources.contains(f._2))
                 (open, c._2.expression)
               } else {
                 val evaluate = c._2.expressions.map( expression => {
                   val list = ExtractColumnNames(expression)
-                  val rList = ResolveNames(list, root.aliases.toMap)
+                  val rList = ResolveNames(list, root.aliases.messages.toMap)
                   val open = rList.filter(f => !fixedMappingSources.contains(f._2))
                   (open, expression)
                 })
@@ -648,7 +643,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
               if(open.isEmpty) {
                 // Sub names to
-                val newExpression = FixupColumnNames(expression, mappingSources, aliases)
+                val newExpression = FixupColumnNames(expression, mappingSources, aliaseMessages)
 
                 // Output the actual compute
                 // To Do: multiple vals and type provided
@@ -675,8 +670,8 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
             }
 
             // Update state
-            cnt1 = filters1.length + computes1.size
-            filters = filters1
+            cnt1 = wheres1.length + computes1.size
+            wheres = wheres1
             computes = computes1
           }
 

@@ -1,18 +1,27 @@
 {
-  "namespace": "com.ligadata.jtm.test.filter",
-  "version": "0.0.1",
-  "language" : "scala",
-  "minVersion" : "2.11",
-  "dependencies": ["list of jars/modules - this should go into command line arguments instead of this file"],
-  "imports": [ "com.ligadata.Utils._",  "com.ligadata.Utils1._"  ],
 
-  "aliases":   {
-    "m1": "com.ligadata.kamanja.samples.messages.msg1",
-    "m2": "com.ligadata.kamanja.samples.messages.msg2",
-    "omsg2": "com.ligadata.kamanja.samples.messages.omsg2",
-    "omsg3": "com.ligadata.kamanja.samples.messages.omsg3",
-    "c1": "com.ligadata.kamanja.samples.concepts.c1",
-    "c2": "com.ligadata.kamanja.samples.concepts.c1"
+  "header": {
+    "namespace": "com.ligadata.jtm.test.filter",
+    "version": "0.0.1",
+    "language" : "scala",
+    "minVersion" : "2.11"
+  },
+
+  "dependencies": ["list of jars/modules - this should go into command line arguments instead of this file"],
+
+  "imports": {
+    "packages": [ "com.ligadata.Utils._", "com.ligadata.Utils._" ]
+  },
+
+  "aliases": {
+    "messages": {
+      "m1": "com.ligadata.kamanja.samples.messages.msg1",
+      "m2": "com.ligadata.kamanja.samples.messages.msg2",
+      "omsg2": "com.ligadata.kamanja.samples.messages.omsg2",
+      "omsg3": "com.ligadata.kamanja.samples.messages.omsg3",
+      "c1": "com.ligadata.kamanja.samples.concepts.c1",
+      "c2": "com.ligadata.kamanja.samples.concepts.c1"
+    }
   },
 
   "transformations": {
@@ -36,7 +45,7 @@
             "out5": "in3",
             "out7": "tmp8"
           },
-          "filter": "!($in2 != -1 && $in2 < 100)",
+          "where": "!($in2 != -1 && $in2 < 100)",
           "computes": {
             "tmp8": { "type": "String", "val":"somefunc2($in7)" }
           }
