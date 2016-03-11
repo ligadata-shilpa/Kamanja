@@ -161,7 +161,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
       // Load all json files for the metadata directory
       files.map ( jsonFile => {
-        val json = FileUtils.readFileToString(jsonFile, null)
+        val json = FileUtils.readFileToString(jsonFile, null:String)
         val map = parse(json).values.asInstanceOf[Map[String, Any]]
         val msg = new MessageDefImpl()
         val ((classStrVer, classStrVerJava), msgDef, (classStrNoVer, classStrNoVerJava)) = msg.processMsgDef(json, "JSON", mgr, false)

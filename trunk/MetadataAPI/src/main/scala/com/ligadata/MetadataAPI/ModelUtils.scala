@@ -414,6 +414,9 @@ object ModelUtils {
             case ModelType.KPMML => {
                 AddKPMMLModel(input, optUserid)
             }
+            case ModelType.JTM => {
+                AddJTMModel(input, optUserid)
+            }
             case ModelType.JAVA | ModelType.SCALA => {
                 val result : String = optModelName.fold(throw new RuntimeException("Model name should be provided for Java/Scala models"))(name => {
                     AddModelFromSource(input, modelType.toString, name, optUserid)
@@ -565,62 +568,120 @@ object ModelUtils {
   }
 
     /**
-     * Add Kamanja PMML Model (format XML).  Kamanja Pmml models obtain their name and version from the header in the Pmml file.
-     * @param pmmlText
-     * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
-     *               method. If Security and/or Audit are configured, this value must be a value other than None.
-     * @return json string result
-     */
-  private def AddKPMMLModel(pmmlText: String, userid: Option[String]): String = {
-    try {
-      var compProxy = new CompilerProxy
-      //compProxy.setLoggerLevel(Level.TRACE)
-      var (classStr, modDef) = compProxy.compilePmml(pmmlText)
+      * Add Kamanja PMML Model (format XML).  Kamanja Pmml models obtain their name and version from the header in the Pmml file.
+      * @param pmmlText
+      * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+      *               method. If Security and/or Audit are configured, this value must be a value other than None.
+      * @return json string result
+      */
+    private def AddKPMMLModel(pmmlText: String, userid: Option[String]): String = {
+        try {
+            var compProxy = new CompilerProxy
+            //compProxy.setLoggerLevel(Level.TRACE)
+            var (classStr, modDef) = compProxy.compilePmml(pmmlText)
 
-      // ModelDef may be null if there were pmml compiler errors... act accordingly.  If modelDef present,
-      // make sure the version of the model is greater than any of previous models with same FullName
-      val latestVersion = if (modDef == null) None else GetLatestModel(modDef)
-      val isValid: Boolean = if (latestVersion != None) MetadataAPIImpl.IsValidVersion(latestVersion.get, modDef) else true
+            // ModelDef may be null if there were pmml compiler errors... act accordingly.  If modelDef present,
+            // make sure the version of the model is greater than any of previous models with same FullName
+            val latestVersion = if (modDef == null) None else GetLatestModel(modDef)
+            val isValid: Boolean = if (latestVersion != None) MetadataAPIImpl.IsValidVersion(latestVersion.get, modDef) else true
 
-      if (isValid && modDef != null) {
-        MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.INSERTOBJECT, pmmlText, AuditConstants.SUCCESS, "", modDef.FullNameWithVer)
-        // save the jar file first
-        PersistenceUtils.UploadJarsToDB(modDef)
-        val apiResult = AddModel(modDef, userid)
-        logger.debug("Model is added..")
-        var objectsAdded = new Array[BaseElemDef](0)
-        objectsAdded = objectsAdded :+ modDef
-        val operations = for (op <- objectsAdded) yield "Add"
-        logger.debug("Notify engine via zookeeper")
-        MetadataAPIImpl.NotifyEngine(objectsAdded, operations)
-        apiResult
-      } else {
-        val reasonForFailure: String = if (modDef != null) ErrorCodeConstants.Add_Model_Failed_Higher_Version_Required else ErrorCodeConstants.Add_Model_Failed
-        val modDefName: String = if (modDef != null) modDef.FullName else "(kpmml compile failed)"
-        val modDefVer: String = if (modDef != null) MdMgr.Pad0s2Version(modDef.Version) else MdMgr.UnknownVersion
-        val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddModel", null, reasonForFailure + ":" + modDefName + "." + modDefVer)
-        apiResult.toString()
-      }
-    } catch {
-      case e: ModelCompilationFailedException => {
-        logger.debug("", e)
-        val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddModel", null, "Error :" + e.toString() + ErrorCodeConstants.Add_Model_Failed)
-        apiResult.toString()
-      }
-      case e: AlreadyExistsException => {
-        
-        logger.debug("", e)
-        val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddModel", null, "Error :" + e.toString() + ErrorCodeConstants.Add_Model_Failed)
-        apiResult.toString()
-      }
-      case e: Exception => {
-        
-        logger.debug("", e)
-        val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddModel", null, "Error :" + e.toString() + ErrorCodeConstants.Add_Model_Failed)
-        apiResult.toString()
-      }
+            if (isValid && modDef != null) {
+                MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.INSERTOBJECT, pmmlText, AuditConstants.SUCCESS, "", modDef.FullNameWithVer)
+                // save the jar file first
+                PersistenceUtils.UploadJarsToDB(modDef)
+                val apiResult = AddModel(modDef, userid)
+                logger.debug("Model is added..")
+                var objectsAdded = new Array[BaseElemDef](0)
+                objectsAdded = objectsAdded :+ modDef
+                val operations = for (op <- objectsAdded) yield "Add"
+                logger.debug("Notify engine via zookeeper")
+                MetadataAPIImpl.NotifyEngine(objectsAdded, operations)
+                apiResult
+            } else {
+                val reasonForFailure: String = if (modDef != null) ErrorCodeConstants.Add_Model_Failed_Higher_Version_Required else ErrorCodeConstants.Add_Model_Failed
+                val modDefName: String = if (modDef != null) modDef.FullName else "(kpmml compile failed)"
+                val modDefVer: String = if (modDef != null) MdMgr.Pad0s2Version(modDef.Version) else MdMgr.UnknownVersion
+                val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddModel", null, reasonForFailure + ":" + modDefName + "." + modDefVer)
+                apiResult.toString()
+            }
+        } catch {
+            case e: ModelCompilationFailedException => {
+                logger.debug("", e)
+                val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddModel", null, "Error :" + e.toString() + ErrorCodeConstants.Add_Model_Failed)
+                apiResult.toString()
+            }
+            case e: AlreadyExistsException => {
+
+                logger.debug("", e)
+                val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddModel", null, "Error :" + e.toString() + ErrorCodeConstants.Add_Model_Failed)
+                apiResult.toString()
+            }
+            case e: Exception => {
+
+                logger.debug("", e)
+                val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddModel", null, "Error :" + e.toString() + ErrorCodeConstants.Add_Model_Failed)
+                apiResult.toString()
+            }
+        }
     }
-  }
+
+    /**
+      * Add Kamanja JTM Model (format json).  Kamanja JTM models obtain their name and version from the header in the JTM s file.
+      * @param jsonText
+      * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+      *               method. If Security and/or Audit are configured, this value must be a value other than None.
+      * @return json string result
+      */
+    private def AddJTMModel(jsonText: String, userid: Option[String]): String = {
+        try {
+            var compProxy = new CompilerProxy
+            //compProxy.setLoggerLevel(Level.TRACE)
+            var (classStr, modDef) = compProxy.compileJTM(jsonText)
+
+            // ModelDef may be null if there were pmml compiler errors... act accordingly.  If modelDef present,
+            // make sure the version of the model is greater than any of previous models with same FullName
+            val latestVersion = if (modDef == null) None else GetLatestModel(modDef)
+            val isValid: Boolean = if (latestVersion != None) MetadataAPIImpl.IsValidVersion(latestVersion.get, modDef) else true
+
+            if (isValid && modDef != null) {
+                MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.INSERTOBJECT, jsonText, AuditConstants.SUCCESS, "", modDef.FullNameWithVer)
+                // save the jar file first
+                PersistenceUtils.UploadJarsToDB(modDef)
+                val apiResult = AddModel(modDef, userid)
+                logger.debug("Model is added..")
+                var objectsAdded = new Array[BaseElemDef](0)
+                objectsAdded = objectsAdded :+ modDef
+                val operations = for (op <- objectsAdded) yield "Add"
+                logger.debug("Notify engine via zookeeper")
+                MetadataAPIImpl.NotifyEngine(objectsAdded, operations)
+                apiResult
+            } else {
+                val reasonForFailure: String = if (modDef != null) ErrorCodeConstants.Add_Model_Failed_Higher_Version_Required else ErrorCodeConstants.Add_Model_Failed
+                val modDefName: String = if (modDef != null) modDef.FullName else "(JTM compile failed)"
+                val modDefVer: String = if (modDef != null) MdMgr.Pad0s2Version(modDef.Version) else MdMgr.UnknownVersion
+                val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddJTMModel", null, reasonForFailure + ":" + modDefName + "." + modDefVer)
+                apiResult.toString()
+            }
+        } catch {
+            case e: ModelCompilationFailedException => {
+                logger.debug("", e)
+                val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddJTMModel", null, "Error :" + e.toString() + ErrorCodeConstants.Add_Model_Failed)
+                apiResult.toString()
+            }
+            case e: AlreadyExistsException => {
+
+                logger.debug("", e)
+                val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddJTMModel", null, "Error :" + e.toString() + ErrorCodeConstants.Add_Model_Failed)
+                apiResult.toString()
+            }
+            case e: Exception => {
+
+                logger.debug("", e)
+                val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddJTMModel", null, "Error :" + e.toString() + ErrorCodeConstants.Add_Model_Failed)
+                apiResult.toString()
+            }
+        }
+    }
 
     /**
      * Recompile the supplied model. Optionally the message definition is supplied that was just built.

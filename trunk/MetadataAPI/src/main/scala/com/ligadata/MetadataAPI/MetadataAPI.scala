@@ -33,7 +33,7 @@ class ApiResult(var statusCode:Int, var functionName: String, var resultData: St
  */
   override def toString: String = {
     
-    var json = ("APIResults" -> ("Status Code" -> statusCode) ~ 
+    val json = ("APIResults" -> ("Status Code" -> statusCode) ~
                                 ("Function Name" -> functionName) ~ 
                                 ("Result Data"  -> resultData) ~ 
                                 ("Result Description" -> description))    
@@ -50,6 +50,7 @@ object MetadataAPI {
       val SCALA = Value("scala")
       val KPMML = Value("kpmml")
       val PMML = Value("pmml")
+      val JTM = Value("jtm")
       val BINARY = Value("binary")
       val UNKNOWN = Value("unknown")
 
@@ -59,6 +60,7 @@ object MetadataAPI {
               case "scala" => SCALA
               case "pmml" => PMML
               case "kpmml" => KPMML
+              case "jtm" => JTM
               case "binary" => BINARY
               case _ => UNKNOWN
           }
