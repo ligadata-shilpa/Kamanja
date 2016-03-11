@@ -29,7 +29,6 @@ class Test001Test  extends FunSuite with BeforeAndAfter {
 
   val logger = LogManager.getLogger(this.getClass.getName())
 
-
   // Simple jtm
   test("test1") {
 

@@ -219,7 +219,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
     if(root.aliases!=null) {
       if(root.aliases.concepts.size>0) {
-        throw new Exception("Currently concept aren't supported")
+        throw new Exception("Currently concepts aren't supported")
       }
       if(root.aliases.variables.size>0) {
         throw new Exception("Currently variables aren't supported")
@@ -280,9 +280,9 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     }
   }
 
-  // Casing of system columns is inconsistsent
-  // provide a atch up map
-  val columnNamePatchUp = Map("transactionid" -> "transactionId")
+  // Casing of system columns is inconsistent
+  // provide a patch up map
+  val columnNamePatchUp = Map.empty[String, String]
 
   def ColumnNames(mgr: MdMgr, classname: String): Set[String] = {
     val classinstance = md.Message(classname, 0, true)

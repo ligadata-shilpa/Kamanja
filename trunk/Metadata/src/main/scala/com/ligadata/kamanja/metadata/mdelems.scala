@@ -25,7 +25,7 @@ import com.ligadata.kamanja.metadata.ModelRepresentation.ModelRepresentation
 import scala.Enumeration
 import scala.collection.mutable.{Map, Set}
 
-// define some enumerations 
+// define some enumerations
 object ObjFormatType extends Enumeration {
   type FormatType = Value
   val fCSV, fJSON, fXML, fSERIALIZED, fJAVA, fSCALA, fPMML, fUNKNOWN = Value
@@ -70,7 +70,7 @@ object ObjScalarType extends Enumeration {
 	val tInt, tFloat, tDouble, tString, tBoolean = Value
 }
 
-import ObjContainerType._ 
+import ObjContainerType._
 import ObjScalarType._
 */
 
@@ -150,7 +150,7 @@ object ObjTypeType extends Enumeration {
 import com.ligadata.kamanja.metadata.ObjTypeType._
 
 object DefaultMdElemStructVer {
-  def Version = 1 // Default version is 1 
+  def Version = 1 // Default version is 1
 }
 
 // case class FullName (nameSpace: String, name: String)
@@ -247,7 +247,7 @@ class BaseElemDef extends BaseElem {
     var objectFormat: ObjFormatType.FormatType = fJSON
 }
 
-// All these metadata elements should have specialized serialization and deserialization 
+// All these metadata elements should have specialized serialization and deserialization
 // functions when storing in key/value store as many member objects should be stored as reference rather than entire object
 
 trait TypeDefInfo {
@@ -730,13 +730,14 @@ object MiningModelType extends Enumeration {
 
 object ModelRepresentation extends Enumeration {
     type ModelRepresentation = Value
-    val JAR, PMML, PYTHON, UNKNOWN = Value
+    val JAR, PMML, PYTHON, JTM, UNKNOWN = Value
 
   def modelRep(mdlRep: String): ModelRepresentation = {
       val rep: ModelRepresentation = mdlRep.toUpperCase match {
           case "JAR" => JAR
           case "PMML" => PMML
           case "PYTHON" => PYTHON
+          case "JTM" => JTM
           case _ => UNKNOWN
       }
       rep
@@ -898,7 +899,7 @@ class OutputMsgDef extends BaseElemDef {
   var Defaults: Map[String, String] = _ // Local Variables. So, we are not expecting qualified names here.
   var Fields: Map[(String, String), Set[(Array[(String, String, String, String)], String)]] = _ // Fields from Message/Model. Map Key is Message/Model Full Qualified Name as first value in key tuple(filed name, field type, tType string, tTypeType string) and "Mdl" Or "Msg" String as the second value in key tuple. Value is Set of fields & corresponding Default Value (if not present NULL)
   var OutputFormat: String = _ // Format String
-  var FormatSplittedArray: Array[(String, String)] = _ // OutputFormat split to substitute like (constant & substitute variable) tuples 
+  var FormatSplittedArray: Array[(String, String)] = _ // OutputFormat split to substitute like (constant & substitute variable) tuples
 }
 
 object ModelCompilationConstants {
