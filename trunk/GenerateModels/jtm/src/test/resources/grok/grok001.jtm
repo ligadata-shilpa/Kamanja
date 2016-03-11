@@ -34,7 +34,7 @@
       "dependsOn": [ ["m1"] ],
 
       "grok match": {
-        "in1": "{EMAIL: email}"},
+        "in3": "{EMAIL: email}"},
         "url": "{URLDOMAIN: domain}"
       },
 
@@ -47,7 +47,7 @@
           "mapping": {
             "out1": "in1",
             "out2": "t1",
-            "out4": "in1"
+            "out4": "email"
           },
 
           "where": "!($in2 != -1 && $in2 < 100)",

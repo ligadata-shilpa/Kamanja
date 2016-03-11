@@ -54,10 +54,10 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
   name_grok_instance.addBuiltInDictionaries()
 
   // Files for load
-  Seq("filename").map (f => name_grok_instance.addDictionary(new File(f)) )
+  Seq("filename").foreach(f => name_grok_instance.addDictionary(new File(f)) )
 
   // Patterns to load
-  Map("DOMAINTLD" -> "[a-zA-Z]+", "EMAIL" -> "%{NOTSPACE}@%{WORD}\\.%{DOMAINTLD}").map( f=>
+  Map("DOMAINTLD" -> "[a-zA-Z]+", "EMAIL" -> "%{NOTSPACE}@%{WORD}\\.%{DOMAINTLD}").foreach( f =>
     name_grok_instance.addDictionary(new StringReader(f._1 + " " + f._2)
   ))
 
@@ -70,9 +70,20 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
       // in scala, type could be optional
       val out3: Int = msg1.in1 + 1000
       def process_o1(): Array[Result] = {
+
+        lazy val p1 = name_grok_instance.compileExpression("{EMAIL: email}")
+        lazy val p2 = name_grok_instance.compileExpression("{URLDOMAIN: domain}")
+        lazy val p1_r = p1.extractNamedGroups(msg1.in3.toString)
+
         if (!(msg1.in2 != -1 && msg1.in2 < 100)) return Array.empty[Result]
-        val t1: String = "s:" + (msg1.in2).toString()
-        Array[Result](new Result("rowNumber", msg1.rowNumber), new Result("transactionId", msg1.transactionId), new Result("out1", msg1.in1), new Result("out4", msg1.in3), new Result("out2", t1), new Result("timePartitionData", msg1.timePartitionData), new Result("out3", out3))
+        val t1: String = "s:" + (msg1.in2).toString
+        Array[Result](new Result("rowNumber", msg1.rowNumber),
+          new Result("transactionId", msg1.transactionId),
+          new Result("out1", msg1.in1),
+          new Result("out4", if(p1_r.containsKey("email")) p1_r.get("email") else ""),
+          new Result("out2", t1),
+          new Result("timePartitionData", msg1.timePartitionData),
+          new Result("out3", out3))
       }
       process_o1()
     }
