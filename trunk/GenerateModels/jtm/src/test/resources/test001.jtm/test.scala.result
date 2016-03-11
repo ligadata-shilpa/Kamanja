@@ -1,3 +1,6 @@
+    }
+    factory.createResultObject().asInstanceOf[MappedModelResults].withResults(results)
+  }
 /*
 * Copyright 2016 ligaDATA
 *
@@ -53,7 +56,4 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
       exeGenerated_test1_1(msg1)
     } else {
       Array.empty[Result]
-    }
-    factory.createResultObject().asInstanceOf[MappedModelResults].withResults(results)
-  }
 }
