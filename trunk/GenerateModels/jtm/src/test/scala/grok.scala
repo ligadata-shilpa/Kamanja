@@ -47,22 +47,25 @@ class Factory(modelDef: ModelDef, nodeContext: NodeContext) extends ModelInstanc
 }
 class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
 
-  // Produce the instance
-  val name_grok_instance: GrokDictionary = new GrokDictionary
+  // Produce the grok instance
+  lazy val name_grok_instance: GrokDictionary = {
+    val i = new GrokDictionary
+    // If builtInDictionary
+    i.addBuiltInDictionaries()
+    // Files for load
+    Seq("filename").foreach(f => i.addDictionary(new File(f)))
+    // Patterns to load
+    Map("DOMAINTLD" -> "[a-zA-Z]+", "EMAIL" -> "%{NOTSPACE}@%{WORD}\\.%{DOMAINTLD}").foreach(f =>
+      i.addDictionary(new StringReader(f._1 + " " + f._2)
+      ))
+    // Finalize
+    i.bind()
+    i
+  }
 
-  // If builtInDictionary
-  name_grok_instance.addBuiltInDictionaries()
-
-  // Files for load
-  Seq("filename").foreach(f => name_grok_instance.addDictionary(new File(f)) )
-
-  // Patterns to load
-  Map("DOMAINTLD" -> "[a-zA-Z]+", "EMAIL" -> "%{NOTSPACE}@%{WORD}\\.%{DOMAINTLD}").foreach( f =>
-    name_grok_instance.addDictionary(new StringReader(f._1 + " " + f._2)
-  ))
-
-  // Finalize
-  name_grok_instance.bind()
+  // Compile all unique expressions
+  lazy val p1 = name_grok_instance.compileExpression("{EMAIL: email}")
+  lazy val p2 = name_grok_instance.compileExpression("{URLDOMAIN: domain}")
 
   override def execute(txnCtxt: TransactionContext, outputDefault: Boolean): ModelResultBase = {
     //
@@ -70,13 +73,10 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
       // in scala, type could be optional
       val out3: Int = msg1.in1 + 1000
       def process_o1(): Array[Result] = {
-
-        lazy val p1 = name_grok_instance.compileExpression("{EMAIL: email}")
-        lazy val p2 = name_grok_instance.compileExpression("{URLDOMAIN: domain}")
         lazy val p1_r = p1.extractNamedGroups(msg1.in3.toString)
-
         if (!(msg1.in2 != -1 && msg1.in2 < 100)) return Array.empty[Result]
         val t1: String = "s:" + (msg1.in2).toString
+
         Array[Result](new Result("rowNumber", msg1.rowNumber),
           new Result("transactionId", msg1.transactionId),
           new Result("out1", msg1.in1),
