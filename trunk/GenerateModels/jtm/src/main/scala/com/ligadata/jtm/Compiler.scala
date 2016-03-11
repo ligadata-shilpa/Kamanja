@@ -219,7 +219,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
     if(root.aliases!=null) {
       if(root.aliases.concepts.size>0) {
-        throw new Exception("Currently concept aren't supported")
+        throw new Exception("Currently concepts aren't supported")
       }
       if(root.aliases.variables.size>0) {
         throw new Exception("Currently variables aren't supported")

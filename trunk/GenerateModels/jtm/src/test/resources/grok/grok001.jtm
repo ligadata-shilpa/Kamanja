@@ -10,12 +10,14 @@
     "packages": [ "com.ligadata.Utils._", "com.ligadata.Utils._" ]
   },
 
-  "aliases":   {
-    "m1": "com.ligadata.kamanja.test001.msg1",
-    "o1": "com.ligadata.kamanja.test001.msg2"
+  "aliases": {
+    "messages": {
+      "m1": "com.ligadata.kamanja.test.msg1",
+      "o1": "com.ligadata.kamanja.test.msg2"
+    }
   },
 
-  "grok": [ {
+  "grok": {
       "name_grok_instance" : {
         "builtInDictionary": true,
         "match": "{EMAIL: email}",
@@ -25,12 +27,17 @@
           "EMAIL": "%{NOTSPACE}@%{WORD}\\.%{DOMAINTLD}"
         }
       }
-    }
-  ],
+  },
 
   "transformations": {
     "test1": {
       "dependsOn": [ ["m1"] ],
+
+      "grok match": {
+        "in1": "{EMAIL: email}"},
+        "url": "{URLDOMAIN: domain}"
+      },
+
       "computes": {
         "out3":{ "type": "Int", "val": "$in1 + 1000", "comment": "in scala, type could be optional" }
       },
@@ -40,7 +47,7 @@
           "mapping": {
             "out1": "in1",
             "out2": "t1",
-            "out4": "name_grok_instance($in2).email"
+            "out4": "in1"
           },
 
           "where": "!($in2 != -1 && $in2 < 100)",
