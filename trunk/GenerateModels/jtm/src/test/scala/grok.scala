@@ -30,6 +30,11 @@ import com.ligadata.KamanjaBase._
 import com.ligadata.KvBase.TimeRange
 import com.ligadata.kamanja.metadata.ModelDef
 import com.ligadata.Utils._
+import org.aicer.grok.dictionary.GrokDictionary
+
+import org.apache.commons.io.FileUtils
+import java.io.File
+import java.io.StringReader
 
 class Factory(modelDef: ModelDef, nodeContext: NodeContext) extends ModelInstanceFactory(modelDef, nodeContext) {
   override def isValidMessage(msg: MessageContainerBase): Boolean = {
@@ -41,6 +46,24 @@ class Factory(modelDef: ModelDef, nodeContext: NodeContext) extends ModelInstanc
   override def createResultObject(): ModelResultBase = new MappedModelResults()
 }
 class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
+
+  // Produce the instance
+  val name_grok_instance: GrokDictionary = new GrokDictionary
+
+  // If builtInDictionary
+  name_grok_instance.addBuiltInDictionaries()
+
+  // Files for load
+  Seq("filename").map (f => name_grok_instance.addDictionary(new File(f)) )
+
+  // Patterns to load
+  Map("DOMAINTLD" -> "[a-zA-Z]+", "EMAIL" -> "%{NOTSPACE}@%{WORD}\\.%{DOMAINTLD}").map( f=>
+    name_grok_instance.addDictionary(new StringReader(f._1 + " " + f._2)
+  ))
+
+  // Finalize
+  name_grok_instance.bind()
+
   override def execute(txnCtxt: TransactionContext, outputDefault: Boolean): ModelResultBase = {
     //
     def exeGenerated_test1_1(msg1: msg1): Array[Result] = {
