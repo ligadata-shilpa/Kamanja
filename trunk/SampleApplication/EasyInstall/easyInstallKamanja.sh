@@ -214,7 +214,7 @@ cp $ivyPath/cache/com.sun.jersey/jersey-core/bundles/jersey-core-1.9.jar $system
 cp $srcPath/lib_managed/bundles/org.codehaus.jettison/jettison/jettison-1.1.jar $systemlib
 cp $ivyPath/cache/org.jruby.jcodings/jcodings/jars/jcodings-1.0.8.jar $systemlib
 cp $ivyPath/cache/org.scalatest/scalatest_2.10/bundles/scalatest*.jar $systemlib
-cp $ivyPath/cache/org.apache.curator/curator-client/bundles/curator-client-2.7.1.jar $systemlib
+cp $ivyPath/cache/org.apache.curator/curator-client/bundles/curator-client-3.1.0.jar $systemlib
 cp $ivyPath/cache/commons-digester/commons-digester/jars/commons-digester-1.8.jar $systemlib
 cp $ivyPath/cache/org.jruby.joni/joni/jars/joni-2.1.2.jar $systemlib
 cp $ivyPath/cache/org.apache.directory.api/api-util/bundles/api-util-1.0.0-M20.jar $systemlib
@@ -233,7 +233,7 @@ cp $ivyPath/cache/org.jpmml/pmml-schema/jars/pmml-schema-1.2.9.jar $systemlib
 cp $ivyPath/cache/org.javassist/javassist/bundles/javassist-3.18.1-GA.jar $systemlib
 cp $srcPath/lib_managed/jars/org.apache.logging.log4j/log4j-api/log4j-api-2.4.1.jar $systemlib
 cp $ivyPath/cache/com.typesafe/config/bundles/config-1.2.1.jar $systemlib
-cp $srcPath/lib_managed/bundles/org.apache.curator/curator-framework/curator-framework-2.7.1.jar $systemlib
+cp $srcPath/lib_managed/bundles/org.apache.curator/curator-framework/curator-framework-3.1.0.jar $systemlib
 cp $ivyPath/cache/org.json4s/json4s-jackson_2.10/jars/json4s-jackson_2.10-3.2.9.jar $systemlib
 cp $ivyPath/cache/commons-net/commons-net/jars/commons-net-3.1.jar $systemlib
 cp $ivyPath/cache/org.apache.hadoop/hadoop-annotations/jars/hadoop-annotations-2.7.1.jar $systemlib
@@ -289,12 +289,12 @@ cp $ivyPath/cache/ch.qos.logback/logback-classic/jars/logback-classic-1.0.13.jar
 cp $srcPath/lib_managed/jars/org.apache.hadoop/hadoop-annotations/hadoop-annotations-2.7.1.jar $systemlib
 cp $ivyPath/cache/io.spray/spray-util_2.10/bundles/spray-util_2.10-1.3.3.jar $systemlib
 cp $srcPath/lib_managed/jars/org.apache.commons/commons-collections4/commons-collections4-4.0.jar $systemlib
-cp $srcPath/lib_managed/jars/org.apache.zookeeper/zookeeper/zookeeper-3.4.6.jar $systemlib
+cp $srcPath/lib_managed/jars/org.apache.zookeeper/zookeeper/zookeeper-3.5.1-alpha.jar $systemlib
 cp $ivyPath/cache/com.twitter/chill-java/jars/chill-java-0.5.0.jar $systemlib
 cp $ivyPath/cache/asm/asm/jars/asm-3.1.jar $systemlib
 # might be only for 2.11
 #cp $ivyPath/cache/org.scalameta/quasiquotes_2.11/jars/quasiquotes_2.11-0.0.3.jar $systemlib
-cp $ivyPath/cache/org.apache.curator/curator-recipes/bundles/curator-recipes-2.7.1.jar $systemlib
+cp $ivyPath/cache/org.apache.curator/curator-recipes/bundles/curator-recipes-3.1.0.jar $systemlib
 cp $srcPath/MetadataAPI/target/scala-2.10/metadataapi*.jar $systemlib
 cp $ivyPath/cache/org.apache.commons/commons-math/jars/commons-math-2.2.jar $systemlib
 cp $ivyPath/cache/com.sun.xml.bind/jaxb-impl/jars/jaxb-impl-2.2.3-1.jar $systemlib
@@ -318,7 +318,7 @@ cp $srcPath/lib_managed/jars/commons-digester/commons-digester/commons-digester-
 cp $ivyPath/cache/commons-dbcp/commons-dbcp/jars/commons-dbcp-1.4.jar $systemlib
 cp $srcPath/lib_managed/jars/org.scala-lang/scala-actors/scala-actors-2.10.4.jar $systemlib
 cp $srcPath/lib_managed/jars/org.apache.logging.log4j/log4j-core/log4j-core-2.4.1.jar $systemlib
-cp $ivyPath/cache/org.apache.curator/curator-framework/bundles/curator-framework-2.7.1.jar $systemlib
+cp $ivyPath/cache/org.apache.curator/curator-framework/bundles/curator-framework-3.1.0.jar $systemlib
 cp $srcPath/lib_managed/bundles/log4j/log4j/log4j-1.2.17.jar $systemlib
 cp $srcPath/lib_managed/jars/xmlenc/xmlenc/xmlenc-0.52.jar $systemlib
 cp $ivyPath/cache/org.mortbay.jetty/jetty-embedded/jars/jetty-embedded-6.1.26-sources.jar $systemlib
@@ -370,10 +370,9 @@ cp $ivyPath/cache/org.parboiled/parboiled-scala_2.10/jars/parboiled-scala_2.10-1
 cp $ivyPath/cache/org.parboiled/parboiled-core/jars/parboiled-core-1.1.7.jar $systemlib
 cp $srcPath/lib_managed/jars/io.netty/netty-all/netty-all-4.0.23.Final.jar $systemlib
 cp $srcPath/lib_managed/jars/org.apache.htrace/htrace-core/htrace-core-3.1.0-incubating.jar $systemlib
-cp $srcPath/lib_managed/bundles/org.apache.curator/curator-client/curator-client-2.7.1.jar $systemlib
+cp $srcPath/lib_managed/bundles/org.apache.curator/curator-client/curator-client-3.1.0.jar $systemlib
 cp $ivyPath/cache/org.apache.commons/commons-compress/jars/commons-compress-1.4.1.jar $systemlib
 cp $srcPath/lib_managed/jars/org.codehaus.jackson/jackson-xc/jackson-xc-1.8.3.jar $systemlib
-cp $srcPath/lib_managed/jars/jline/jline/jline-0.9.94.jar $systemlib
 cp $ivyPath/cache/commons-beanutils/commons-beanutils/jars/commons-beanutils-1.7.0.jar $systemlib
 cp $ivyPath/cache/org.apache.avro/avro/jars/avro-1.7.4.jar $systemlib
 cp $ivyPath/cache/ch.qos.logback/logback-core/jars/logback-core-1.0.13.jar $systemlib
@@ -409,10 +408,10 @@ cp $ivyPath/cache/commons-collections/commons-collections/jars/commons-collectio
 # Might be only for 2.11
 #cp $ivyPath/cache/org.scalameta/tokenizers_2.11/jars/tokenizers_2.11-0.0.3.jar $systemlib
 cp $srcPath/lib_managed/jars/org.slf4j/slf4j-api/slf4j-api-1.7.10.jar $systemlib
-cp $ivyPath/cache/org.apache.zookeeper/zookeeper/jars/zookeeper-3.4.6.jar $systemlib
+cp $ivyPath/cache/org.apache.zookeeper/zookeeper/jars/zookeeper-3.5.1-alpha.jar $systemlib
 # Might be only for 2.11
 #cp $ivyPath/cache/org.scalameta/foundation_2.11/jars/foundation_2.11-0.0.3.jar $systemlib
-cp $srcPath/lib_managed/bundles/org.apache.curator/curator-recipes/curator-recipes-2.7.1.jar $systemlib
+cp $srcPath/lib_managed/bundles/org.apache.curator/curator-recipes/curator-recipes-3.1.0.jar $systemlib
 cp $ivyPath/cache/org.objenesis/objenesis/jars/objenesis-1.2.jar $systemlib
 cp $srcPath/lib_managed/bundles/org.scalatest/scalatest_2.10/scalatest*.jar $systemlib
 cp $srcPath/lib_managed/jars/commons-net/commons-net/commons-net-3.1.jar $systemlib
@@ -437,11 +436,11 @@ cp $ivyPath/cache/org.jpmml/pmml-model/jars/pmml-model-1.2.9.jar $systemlib
 cp $ivyPath/cache/org.apache.httpcomponents/httpcore/jars/httpcore-4.2.4.jar $systemlib
 cp $ivyPath/cache/commons-configuration/commons-configuration/jars/commons-configuration-1.6.jar $systemlib
 cp $ivyPath/cache/log4j/log4j/bundles/log4j-1.2.17.jar $systemlib
-cp $ivyPath/cache/org.apache.curator/curator-test/jars/curator-test-2.8.0.jar $systemlib
+cp $ivyPath/cache/org.apache.curator/curator-test/jars/curator-test-3.1.0.jar $systemlib
 cp $srcPath/Storage/StorageManager/target/scala-2.10/storagemanager*.jar $systemlib
 cp $srcPath/lib_managed/jars/org.jpmml/pmml-evaluator/pmml-evaluator-1.2.9.jar $systemlib
 cp $srcPath/lib_managed/jars/com.jcraft/jsch/jsch-0.1.42.jar $systemlib
-cp $ivyPath/cache/org.apache.curator/curator-recipes/bundles/curator-recipes-2.6.0.jar $systemlib
+cp $ivyPath/cache/org.apache.curator/curator-recipes/bundles/curator-recipes-3.1.0.jar $systemlib
 # Might be only for 2.11
 #cp $srcPath/lib_managed/bundles/org.scala-lang.modules/scala-parser-combinators_2.11/scala-parser-combinators_2.11-1.0.4.jar $systemlib
 cp $ivyPath/cache/org.ow2.asm/asm/jars/asm-4.0.jar $systemlib
@@ -468,10 +467,10 @@ cp $srcPath/lib_managed/jars/commons-beanutils/commons-beanutils/commons-beanuti
 cp $srcPath/lib_managed/jars/com.esotericsoftware.minlog/minlog/minlog-1.2.jar $systemlib
 cp $ivyPath/cache/antlr/antlr/jars/antlr-2.7.7.jar $systemlib
 cp $srcPath/MetadataAPIServiceClient/target/scala-2.10/metadataapiserviceclient*.jar $systemlib
-cp $ivyPath/cache/org.apache.curator/curator-framework/bundles/curator-framework-2.6.0.jar $systemlib
+cp $ivyPath/cache/org.apache.curator/curator-framework/bundles/curator-framework-3.1.0.jar $systemlib
 cp $srcPath/lib_managed/jars/org.scala-lang/scala-library/scala-library-2.10.4.jar $systemlib
 # cp $srcPath/Utils/SaveContainerDataComponent/target/scala-2.10/savecontainerdatacomponent*.jar $systemlib
-cp $ivyPath/cache/org.apache.curator/curator-client/bundles/curator-client-2.6.0.jar $systemlib
+cp $ivyPath/cache/org.apache.curator/curator-client/bundles/curator-client-3.1.0.jar $systemlib
 cp $srcPath/Storage/HashMap/target/scala-2.10/hashmap*.jar $systemlib
 cp $srcPath/InputOutputAdapters/FileSimpleInputOutputAdapters/target/scala-2.10/filesimpleinputoutputadapters*.jar $systemlib
 cp $ivyPath/cache/javax.servlet.jsp/jsp-api/jars/jsp-api-2.1.jar $systemlib
@@ -598,7 +597,6 @@ cp $srcPath/lib_managed/jars/org.objenesis/objenesis/objenesis-1.2.jar $systemli
 cp $ivyPath/cache/org.codehaus.jackson/jackson-core-asl/jars/jackson-core-asl-1.9.13.jar $systemlib
 cp $srcPath/lib_managed/jars/org.apache.hbase/hbase-common/hbase-common-1.0.2.jar $systemlib
 cp $srcPath/DataDelimiters/target/scala-2.10/datadelimiters*.jar $systemlib
-cp $ivyPath/cache/jline/jline/jars/jline-0.9.94.jar $systemlib
 cp $ivyPath/cache/org.scala-lang/scalap/jars/scalap-2.10.0.jar $systemlib
 cp $srcPath/MetadataBootstrap/Bootstrap/target/scala-2.10/bootstrap*.jar $systemlib
 cp $ivyPath/cache/org.apache.commons/commons-math3/jars/commons-math3-3.1.1.jar $systemlib
@@ -896,7 +894,7 @@ cp $ivyPath/cache/com.sun.jersey/jersey-core/bundles/jersey-core-1.9.jar $system
 cp $srcPath/lib_managed/bundles/org.codehaus.jettison/jettison/jettison-1.1.jar $systemlib
 cp $ivyPath/cache/org.jruby.jcodings/jcodings/jars/jcodings-1.0.8.jar $systemlib
 cp $ivyPath/cache/org.scalatest/scalatest_2.11/bundles/scalatest_2.11-2.2.0.jar $systemlib
-cp $ivyPath/cache/org.apache.curator/curator-client/bundles/curator-client-2.7.1.jar $systemlib
+cp $ivyPath/cache/org.apache.curator/curator-client/bundles/curator-client-3.1.0.jar $systemlib
 cp $ivyPath/cache/commons-digester/commons-digester/jars/commons-digester-1.8.jar $systemlib
 cp $ivyPath/cache/org.jruby.joni/joni/jars/joni-2.1.2.jar $systemlib
 cp $ivyPath/cache/org.apache.directory.api/api-util/bundles/api-util-1.0.0-M20.jar $systemlib
@@ -915,7 +913,7 @@ cp $ivyPath/cache/org.jpmml/pmml-schema/jars/pmml-schema-1.2.9.jar $systemlib
 cp $ivyPath/cache/org.javassist/javassist/bundles/javassist-3.18.1-GA.jar $systemlib
 cp $srcPath/lib_managed/jars/org.apache.logging.log4j/log4j-api/log4j-api-2.4.1.jar $systemlib
 cp $ivyPath/cache/com.typesafe/config/bundles/config-1.2.1.jar $systemlib
-cp $srcPath/lib_managed/bundles/org.apache.curator/curator-framework/curator-framework-2.7.1.jar $systemlib
+cp $srcPath/lib_managed/bundles/org.apache.curator/curator-framework/curator-framework-3.1.0.jar $systemlib
 cp $ivyPath/cache/org.json4s/json4s-jackson_2.11/jars/json4s-jackson_2.11-3.2.9.jar $systemlib
 cp $ivyPath/cache/commons-net/commons-net/jars/commons-net-3.1.jar $systemlib
 cp $ivyPath/cache/org.apache.hadoop/hadoop-annotations/jars/hadoop-annotations-2.7.1.jar $systemlib
@@ -968,11 +966,11 @@ cp $ivyPath/cache/ch.qos.logback/logback-classic/jars/logback-classic-1.0.13.jar
 cp $srcPath/lib_managed/jars/org.apache.hadoop/hadoop-annotations/hadoop-annotations-2.7.1.jar $systemlib
 cp $ivyPath/cache/io.spray/spray-util_2.11/bundles/spray-util_2.11-1.3.3.jar $systemlib
 cp $srcPath/lib_managed/jars/org.apache.commons/commons-collections4/commons-collections4-4.0.jar $systemlib
-cp $srcPath/lib_managed/jars/org.apache.zookeeper/zookeeper/zookeeper-3.4.6.jar $systemlib
+cp $srcPath/lib_managed/jars/org.apache.zookeeper/zookeeper/zookeeper-3.5.1-alpha.jar $systemlib
 cp $ivyPath/cache/com.twitter/chill-java/jars/chill-java-0.5.0.jar $systemlib
 cp $ivyPath/cache/asm/asm/jars/asm-3.1.jar $systemlib
 cp $ivyPath/cache/org.scalameta/quasiquotes_2.11/jars/quasiquotes_2.11-0.0.3.jar $systemlib
-cp $ivyPath/cache/org.apache.curator/curator-recipes/bundles/curator-recipes-2.7.1.jar $systemlib
+cp $ivyPath/cache/org.apache.curator/curator-recipes/bundles/curator-recipes-3.1.0.jar $systemlib
 cp $srcPath/MetadataAPI/target/scala-2.11/metadataapi_2.11-1.0.jar $systemlib
 cp $ivyPath/cache/org.apache.commons/commons-math/jars/commons-math-2.2.jar $systemlib
 cp $ivyPath/cache/com.sun.xml.bind/jaxb-impl/jars/jaxb-impl-2.2.3-1.jar $systemlib
@@ -994,7 +992,7 @@ cp $srcPath/lib_managed/jars/commons-digester/commons-digester/commons-digester-
 cp $ivyPath/cache/commons-dbcp/commons-dbcp/jars/commons-dbcp-1.4.jar $systemlib
 cp $srcPath/lib_managed/jars/org.scala-lang/scala-actors/scala-actors-2.11.7.jar $systemlib
 cp $srcPath/lib_managed/jars/org.apache.logging.log4j/log4j-core/log4j-core-2.4.1.jar $systemlib
-cp $ivyPath/cache/org.apache.curator/curator-framework/bundles/curator-framework-2.7.1.jar $systemlib
+cp $ivyPath/cache/org.apache.curator/curator-framework/bundles/curator-framework-3.1.0.jar $systemlib
 cp $srcPath/lib_managed/bundles/log4j/log4j/log4j-1.2.17.jar $systemlib
 cp $srcPath/lib_managed/jars/xmlenc/xmlenc/xmlenc-0.52.jar $systemlib
 cp $ivyPath/cache/org.mortbay.jetty/jetty-embedded/jars/jetty-embedded-6.1.26-sources.jar $systemlib
@@ -1041,10 +1039,9 @@ cp $ivyPath/cache/org.parboiled/parboiled-scala_2.11/jars/parboiled-scala_2.11-1
 cp $ivyPath/cache/org.parboiled/parboiled-core/jars/parboiled-core-1.1.7.jar $systemlib
 cp $srcPath/lib_managed/jars/io.netty/netty-all/netty-all-4.0.23.Final.jar $systemlib
 cp $srcPath/lib_managed/jars/org.apache.htrace/htrace-core/htrace-core-3.1.0-incubating.jar $systemlib
-cp $srcPath/lib_managed/bundles/org.apache.curator/curator-client/curator-client-2.7.1.jar $systemlib
+cp $srcPath/lib_managed/bundles/org.apache.curator/curator-client/curator-client-3.1.0.jar $systemlib
 cp $ivyPath/cache/org.apache.commons/commons-compress/jars/commons-compress-1.4.1.jar $systemlib
 cp $srcPath/lib_managed/jars/org.codehaus.jackson/jackson-xc/jackson-xc-1.8.3.jar $systemlib
-cp $srcPath/lib_managed/jars/jline/jline/jline-0.9.94.jar $systemlib
 cp $ivyPath/cache/commons-beanutils/commons-beanutils/jars/commons-beanutils-1.7.0.jar $systemlib
 cp $ivyPath/cache/org.apache.avro/avro/jars/avro-1.7.4.jar $systemlib
 cp $ivyPath/cache/ch.qos.logback/logback-core/jars/logback-core-1.0.13.jar $systemlib
@@ -1079,9 +1076,9 @@ cp $ivyPath/cache/org.scala-lang/scala-library/jars/scala-library-2.11.7.jar $sy
 cp $ivyPath/cache/commons-collections/commons-collections/jars/commons-collections-3.2.1.jar $systemlib
 cp $ivyPath/cache/org.scalameta/tokenizers_2.11/jars/tokenizers_2.11-0.0.3.jar $systemlib
 cp $srcPath/lib_managed/jars/org.slf4j/slf4j-api/slf4j-api-1.7.10.jar $systemlib
-cp $ivyPath/cache/org.apache.zookeeper/zookeeper/jars/zookeeper-3.4.6.jar $systemlib
+cp $ivyPath/cache/org.apache.zookeeper/zookeeper/jars/zookeeper-3.5.1-alpha.jar $systemlib
 cp $ivyPath/cache/org.scalameta/foundation_2.11/jars/foundation_2.11-0.0.3.jar $systemlib
-cp $srcPath/lib_managed/bundles/org.apache.curator/curator-recipes/curator-recipes-2.7.1.jar $systemlib
+cp $srcPath/lib_managed/bundles/org.apache.curator/curator-recipes/curator-recipes-3.1.0.jar $systemlib
 cp $ivyPath/cache/org.objenesis/objenesis/jars/objenesis-1.2.jar $systemlib
 cp $srcPath/lib_managed/bundles/org.scalatest/scalatest_2.11/scalatest_2.11-2.2.4.jar $systemlib
 cp $srcPath/lib_managed/jars/commons-net/commons-net/commons-net-3.1.jar $systemlib
@@ -1104,11 +1101,11 @@ cp $ivyPath/cache/org.jpmml/pmml-model/jars/pmml-model-1.2.9.jar $systemlib
 cp $ivyPath/cache/org.apache.httpcomponents/httpcore/jars/httpcore-4.2.4.jar $systemlib
 cp $ivyPath/cache/commons-configuration/commons-configuration/jars/commons-configuration-1.6.jar $systemlib
 cp $ivyPath/cache/log4j/log4j/bundles/log4j-1.2.17.jar $systemlib
-cp $ivyPath/cache/org.apache.curator/curator-test/jars/curator-test-2.8.0.jar $systemlib
+cp $ivyPath/cache/org.apache.curator/curator-test/jars/curator-test-3.1.0.jar $systemlib
 cp $srcPath/Storage/StorageManager/target/scala-2.11/storagemanager_2.11-0.1.0.jar $systemlib
 cp $srcPath/lib_managed/jars/org.jpmml/pmml-evaluator/pmml-evaluator-1.2.9.jar $systemlib
 cp $srcPath/lib_managed/jars/com.jcraft/jsch/jsch-0.1.42.jar $systemlib
-cp $ivyPath/cache/org.apache.curator/curator-recipes/bundles/curator-recipes-2.6.0.jar $systemlib
+cp $ivyPath/cache/org.apache.curator/curator-recipes/bundles/curator-recipes-3.1.0.jar $systemlib
 cp $srcPath/lib_managed/bundles/org.scala-lang.modules/scala-parser-combinators_2.11/scala-parser-combinators_2.11-1.0.4.jar $systemlib
 cp $ivyPath/cache/org.ow2.asm/asm/jars/asm-4.0.jar $systemlib
 cp $ivyPath/cache/org.apache.hbase/hbase-annotations/jars/hbase-annotations-1.0.2.jar $systemlib
@@ -1133,10 +1130,10 @@ cp $ivyPath/cache/org.scalameta/dialects_2.11/jars/dialects_2.11-0.0.3.jar $syst
 cp $srcPath/lib_managed/jars/com.esotericsoftware.minlog/minlog/minlog-1.2.jar $systemlib
 cp $ivyPath/cache/antlr/antlr/jars/antlr-2.7.7.jar $systemlib
 cp $srcPath/MetadataAPIServiceClient/target/scala-2.11/metadataapiserviceclient_2.11-0.1.jar $systemlib
-cp $ivyPath/cache/org.apache.curator/curator-framework/bundles/curator-framework-2.6.0.jar $systemlib
+cp $ivyPath/cache/org.apache.curator/curator-framework/bundles/curator-framework-3.1.0.jar $systemlib
 cp $srcPath/lib_managed/jars/org.scala-lang/scala-library/scala-library-2.11.7.jar $systemlib
 # cp $srcPath/Utils/SaveContainerDataComponent/target/scala-2.11/savecontainerdatacomponent_2.11-1.0.jar $systemlib
-cp $ivyPath/cache/org.apache.curator/curator-client/bundles/curator-client-2.6.0.jar $systemlib
+cp $ivyPath/cache/org.apache.curator/curator-client/bundles/curator-client-3.1.0.jar $systemlib
 cp $srcPath/Storage/HashMap/target/scala-2.11/hashmap_2.11-0.1.0.jar $systemlib
 cp $srcPath/InputOutputAdapters/FileSimpleInputOutputAdapters/target/scala-2.11/filesimpleinputoutputadapters_2.11-1.0.jar $systemlib
 cp $ivyPath/cache/javax.servlet.jsp/jsp-api/jars/jsp-api-2.1.jar $systemlib
@@ -1249,7 +1246,6 @@ cp $srcPath/lib_managed/jars/org.objenesis/objenesis/objenesis-1.2.jar $systemli
 cp $ivyPath/cache/org.codehaus.jackson/jackson-core-asl/jars/jackson-core-asl-1.9.13.jar $systemlib
 cp $srcPath/lib_managed/jars/org.apache.hbase/hbase-common/hbase-common-1.0.2.jar $systemlib
 cp $srcPath/DataDelimiters/target/scala-2.11/datadelimiters_2.11-1.0.jar $systemlib
-cp $ivyPath/cache/jline/jline/jars/jline-0.9.94.jar $systemlib
 cp $ivyPath/cache/org.scala-lang/scalap/jars/scalap-2.11.0.jar $systemlib
 cp $srcPath/MetadataBootstrap/Bootstrap/target/scala-2.11/bootstrap_2.11-1.0.jar $systemlib
 cp $ivyPath/cache/org.apache.commons/commons-math3/jars/commons-math3-3.1.1.jar $systemlib

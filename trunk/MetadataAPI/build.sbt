@@ -77,7 +77,7 @@ libraryDependencies += "org.json4s" %% "json4s-native" % "3.2.9"
 
 libraryDependencies += "org.json4s" %% "json4s-jackson" % "3.2.9" 
 
-libraryDependencies += "org.apache.zookeeper" % "zookeeper" % "3.4.6"
+libraryDependencies += "org.apache.zookeeper" % "zookeeper" % "3.5.1-alpha"
 
 libraryDependencies += "org.apache.curator" % "apache-curator" % "2.0.0-incubating"
 

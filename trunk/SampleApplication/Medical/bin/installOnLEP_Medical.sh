@@ -157,7 +157,6 @@ cp $HOME/.ivy2/cache/javax.servlet.jsp/jsp-api/jars/jsp-api-2.1.jar $KAMANJALIBP
 cp $HOME/.ivy2/cache/javax.servlet/servlet-api/jars/servlet-api-2.5.jar $KAMANJALIBPATH
 cp $HOME/.ivy2/cache/javax.xml.bind/jaxb-api/jars/jaxb-api-2.2.2.jar $KAMANJALIBPATH
 cp $HOME/.ivy2/cache/javax.xml.stream/stax-api/jars/stax-api-1.0-2.jar $KAMANJALIBPATH
-cp $HOME/.ivy2/cache/jline/jline/jars/jline-0.9.94.jar $KAMANJALIBPATH
 cp $HOME/.ivy2/cache/joda-time/joda-time/jars/joda-time-2.3.jar $KAMANJALIBPATH
 cp $HOME/.ivy2/cache/junit/junit/jars/junit-4.11.jar $KAMANJALIBPATH
 cp $HOME/.ivy2/cache/log4j/log4j/bundles/log4j-1.2.17.jar $KAMANJALIBPATH
@@ -174,7 +173,7 @@ cp $HOME/.ivy2/cache/org.apache.hbase/hbase-common/jars/hbase-common-0.98.4-hado
 cp $HOME/.ivy2/cache/org.apache.hbase/hbase-protocol/jars/hbase-protocol-0.98.4-hadoop2.jar $KAMANJALIBPATH
 cp $HOME/.ivy2/cache/org.apache.httpcomponents/httpclient/jars/httpclient-4.2.5.jar $KAMANJALIBPATH
 cp $HOME/.ivy2/cache/org.apache.httpcomponents/httpcore/jars/httpcore-4.2.4.jar $KAMANJALIBPATH
-cp $HOME/.ivy2/cache/org.apache.zookeeper/zookeeper/jars/zookeeper-3.4.6.jar $KAMANJALIBPATH
+cp $HOME/.ivy2/cache/org.apache.zookeeper/zookeeper/jars/zookeeper-3.5.1-alpha.jar $KAMANJALIBPATH
 cp $HOME/.ivy2/cache/org.cloudera.htrace/htrace-core/jars/htrace-core-2.04.jar $KAMANJALIBPATH
 cp $HOME/.ivy2/cache/org.codehaus.jackson/jackson-core-asl/jars/jackson-core-asl-1.8.8.jar $KAMANJALIBPATH
 cp $HOME/.ivy2/cache/org.codehaus.jackson/jackson-jaxrs/jars/jackson-jaxrs-1.8.3.jar $KAMANJALIBPATH

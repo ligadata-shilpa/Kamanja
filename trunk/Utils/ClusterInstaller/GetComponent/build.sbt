@@ -65,7 +65,7 @@ libraryDependencies += "org.apache.hbase" % "hbase-common" % "1.0.2"
 
 libraryDependencies += "org.apache.hadoop" % "hadoop-common" % "2.7.1"
 
-libraryDependencies += "org.apache.zookeeper" % "zookeeper" % "3.4.6"
+libraryDependencies += "org.apache.zookeeper" % "zookeeper" % "3.5.1-alpha"
 
 libraryDependencies += "org.apache.kafka" %% "kafka" % "0.8.2.2"
 

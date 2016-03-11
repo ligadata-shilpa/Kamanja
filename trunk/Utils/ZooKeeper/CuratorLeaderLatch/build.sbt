@@ -69,9 +69,9 @@ libraryDependencies ++= Seq(
 "org.apache.commons" % "commons-collections4" % "4.0",
 "commons-configuration" % "commons-configuration" % "1.7",
 "commons-logging" % "commons-logging" % "1.1.1",
-"org.apache.curator" % "curator-client" % "2.6.0",
-"org.apache.curator" % "curator-framework" % "2.6.0",
-"org.apache.curator" % "curator-recipes" % "2.6.0",
+"org.apache.curator" % "curator-client" % "3.1.0",
+"org.apache.curator" % "curator-framework" % "3.1.0",
+"org.apache.curator" % "curator-recipes" % "3.1.0",
 "com.googlecode.json-simple" % "json-simple" % "1.1"
 )
 

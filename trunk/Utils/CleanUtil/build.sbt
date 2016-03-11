@@ -14,10 +14,10 @@ libraryDependencies ++= Seq (
   "org.apache.logging.log4j" % "log4j-core" % "2.4.1",
   "org.json4s" %% "json4s-native" % "{latestVersion}",
   "org.json4s" %% "json4s-jackson" % "{latestVersion}",
-  "org.apache.curator" % "curator-client" % "2.6.0",
-  "org.apache.curator" % "curator-framework" % "2.6.0",
-  "org.apache.curator" % "curator-recipes" % "2.6.0",
-  "org.apache.curator" % "curator-test" % "2.8.0"
+  "org.apache.curator" % "curator-client" % "3.1.0",
+  "org.apache.curator" % "curator-framework" % "3.1.0",
+  "org.apache.curator" % "curator-recipes" % "3.1.0",
+  "org.apache.curator" % "curator-test" % "3.1.0"
     exclude("javax.jms", "jms")
     exclude("com.sun.jdmk", "jmxtools")
     exclude("com.sun.jmx", "jmxri")
