@@ -22,7 +22,7 @@
         "builtInDictionary": true,
         "match": "{EMAIL: email}",
         "file": ["path"],
-        "patterns": {
+        "patterns_dis": {
           "DOMAINTLD": "[a-zA-Z]+",
           "EMAIL": "%{NOTSPACE}@%{WORD}\\.%{DOMAINTLD}"
         }

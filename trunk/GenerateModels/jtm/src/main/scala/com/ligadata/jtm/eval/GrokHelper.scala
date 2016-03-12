@@ -13,16 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.ligadata.jtm
+package com.ligadata.jtm.eval
 
-import java.io.{StringReader, File}
-import com.ligadata.jtm.nodes.{Root, Grok}
+import java.io.{File, StringReader}
+
+import com.ligadata.jtm.LogTrait
+import com.ligadata.jtm.nodes.{Grok, Root}
 import org.aicer.grok.dictionary.GrokDictionary
 
 /**
   *
   */
-class GrokHelper extends LogTrait {
+object GrokHelper extends LogTrait {
 
   /** Returns the list of files after validating
     *
@@ -30,8 +32,15 @@ class GrokHelper extends LogTrait {
     * @return
     */
   def FileList(root: Root): Array[String] = {
-      Validate(root.grok)
       FileList(root.grok)
+  }
+
+  /**
+    *
+    * @param root
+    */
+  def Validate(root: Root): Unit = {
+    Validate(root.grok)
   }
 
   /**
@@ -59,15 +68,15 @@ class GrokHelper extends LogTrait {
     })
 
     if(filecheck.length > 0) {
-      throw new Exception(filecheck.mkString("\n"))
+      //throw new Exception(filecheck.mkString("\n"))
     }
 
     // Walk through the dictionay
-    grok.patterns.map( p =>
+    grok.patterns.foreach( p =>
       dict.addDictionary(new StringReader(p._1 + " " + p._2))
     )
 
-    dict.bind
+    dict.bind()
     dict
   }
 

@@ -15,15 +15,16 @@
  */
 package com.ligadata.jtm
 
-import com.ligadata.jtm.eval.{Types => EvalTypes}
+import com.ligadata.jtm.eval.{Types => EvalTypes, GrokHelper}
 import com.ligadata.kamanja.metadata.{StructTypeDef, MdMgr}
 import com.ligadata.kamanja.metadataload.MetadataLoad
 import com.ligadata.messagedef.MessageDefImpl
+import org.aicer.grok.dictionary.GrokDictionary
 import org.apache.logging.log4j.{ Logger, LogManager }
 import org.json4s.jackson.JsonMethods._
 import org.rogach.scallop._
 import org.apache.commons.io.FileUtils
-import java.io.File
+import java.io.{StringReader, File}
 
 import com.ligadata.jtm.nodes._
 
@@ -278,6 +279,50 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     if(root.grok.size>1) {
       throw new Exception("Found %d grok configurations, only a single configuration allowed.".format(root.grok.size))
     }
+
+    // Validate any grok configuration
+    GrokHelper.Validate(root)
+  }
+
+  /** Escape string as literal
+    *
+    * @param raw
+    * @return
+    */
+  def escape(raw: String): String = {
+    import scala.reflect.runtime.universe._
+    Literal(Constant(raw)).toString
+  }
+  /** Product the configuration
+    *
+    * @param grok
+    * @return
+    */
+  def BuildGrokInstance(grok : Grok): Array[String] = {
+
+    var result = Array.empty[String]
+
+    result :+= "lazy val grok_instance_1: GrokDictionary = {"
+    result :+= "val dict = new GrokDictionary"
+
+    if(grok.builtInDictionary)
+      result :+= "dict.addBuiltInDictionaries"
+
+    result ++= grok.file.distinct.map(
+      f => {
+        val file = new File(f)
+        val name = "grok/%08X/%s".format(f.hashCode, file.getName)
+        s"dict.addDictionary(new File(getClass.getResource($name).getPath))"
+    })
+
+    result ++= grok.patterns.map( p => {
+      "dict.addDictionary(new StringReader(\"%s %s\")".format(escape(p._1), escape(p._2))
+    })
+
+    result :+= "dict.bind()"
+    result :+= "dict"
+    result :+= "}"
+    result
   }
 
   // Casing of system columns is inconsistent
@@ -376,6 +421,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     Validate(root)
 
     val aliaseMessages: Map[String, String] = root.aliases.messages.toMap
+    var groks = Array.empty[String]
     var result = Array.empty[String]
     var exechandler = Array.empty[String]
     var methods = Array.empty[String]
@@ -396,9 +442,22 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     subtitutions.Add("model.version", root.header.version)
     result :+= subtitutions.Run(Parts.imports)
 
-    // Process additional imports
+    // Process additional imports like grok
     //
-    result ++= root.imports.packages.distinct.map( i => "import %s".format(i) )
+    val imports = if(root.grok.size>0) {
+                    root.imports.packages :+ "org.aicer.grok.dictionary.GrokDictionary"
+                  } else {
+                    root.imports.packages
+                  }
+
+    // Emit grok intialization
+    if(root.grok.size>0) {
+      groks ++= BuildGrokInstance(root.grok.head._2)
+    }
+
+    // Append the packages needed
+    //
+    result ++= imports.distinct.map( i => "import %s".format(i) )
 
     // Add message so we can actual compile
     // Check how to reconcile during add/compilation
@@ -421,7 +480,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     // Check all found types against metadata
     //
 
-    // Resolve dependencies fro transformations
+    // Resolve dependencies from transformations
     //
     val dependencyToTransformations = EvalTypes.ResolveDependencies(root)
 
@@ -455,7 +514,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
       messages :+= "val msg%d = msgs.get(\"%s\").getOrElse(null).asInstanceOf[%s]".format(e._2, e._1, ResolveToVersionedClassname(md, e._1))
     })
 
-    // Compute the highlevel handler that match dpendencies
+    // Compute the highlevel handler that match dependencies
     //
     val handler = dependencyToTransformations.map( e => {
         val check = e._1.map( m => { "msg%d!=null".format(incomingToMsgId.get(m).get)}).mkString(" && ")
@@ -716,6 +775,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
     val resultVar = "val results: Array[Result] = \n"
     val returnValue = "factory.createResultObject().asInstanceOf[MappedModelResults].withResults(results)"
+    subtitutions.Add("model.grok", groks.mkString("\n"))
     subtitutions.Add("model.message", messages.mkString("\n"))
     subtitutions.Add("model.methods", methods.mkString("\n"))
     subtitutions.Add("model.code", resultVar + "\n" + exechandler.mkString("\n") + "\n" + returnValue + "\n")
