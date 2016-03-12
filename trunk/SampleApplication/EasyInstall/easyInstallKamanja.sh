@@ -1022,7 +1022,7 @@ cp $srcPath/Utils/Migrate/DestinationVersion/MigrateTo_V_1_3/target/scala-2.11/m
 cp $srcPath/Utils/Migrate/DestinationVersion/MigrateTo_V_1_4/target/scala-2.11/migrateto_v_1_4_2.11-1.0.jar $systemlib
 cp $srcPath/Utils/Migrate/SourceVersion/MigrateFrom_V_1_1/target/scala-2.11/migratefrom_v_1_1_2.11-1.0.jar $systemlib
 cp $srcPath/Utils/Migrate/SourceVersion/MigrateFrom_V_1_2/target/scala-2.11/migratefrom_v_1_2_2.11-1.0.jar $systemlib
-cp $srcPath/Utils/Migrate/SourceVersion/MigrateFrom_V_1_4/target/scala-2.11/migratefrom_v_1_3_2.11-0.1-SNAPSHOT.jar $systemlib
+#cp $srcPath/Utils/Migrate/SourceVersion/MigrateFrom_V_1_4/target/scala-2.11/migratefrom_v_1_3_2.11-0.1-SNAPSHOT.jar $systemlib
 cp $srcPath/Utils/NodeInfoExtract/target/scala-2.11/nodeinfoextract_2.11-1.0.jar $systemlib
 cp $srcPath/Utils/SaveContainerDataComponent/target/scala-2.11/savecontainerdatacomponent_2.11-1.0.jar $systemlib
 cp $srcPath/Utils/Security/SimpleApacheShiroAdapter/target/scala-2.11/simpleapacheshiroadapter_2.11-1.0.jar $systemlib
