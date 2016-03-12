@@ -53,7 +53,10 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
     // If builtInDictionary
     i.addBuiltInDictionaries()
     // Files for load
-    Seq("filename").foreach(f => i.addDictionary(new File(f)))
+    Seq("filename").foreach(fname => {
+      val f = getClass.getResource(fname).getPath
+      i.addDictionary(new File(f))
+    })
     // Patterns to load
     Map("DOMAINTLD" -> "[a-zA-Z]+", "EMAIL" -> "%{NOTSPACE}@%{WORD}\\.%{DOMAINTLD}").foreach(f =>
       i.addDictionary(new StringReader(f._1 + " " + f._2)
