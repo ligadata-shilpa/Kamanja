@@ -2211,6 +2211,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       *   - JAVA - a Java source string
       *   - PMML - a PMML source string
       *   - KPMML - a Kamanja Pmml source string
+      *   - JTM - a JSON string for a Jason Transformation Model
       *   - BINARY - the path to a jar containing the model
       *
       * The remaining arguments, while noted as optional, are required for some model types.  In particular,

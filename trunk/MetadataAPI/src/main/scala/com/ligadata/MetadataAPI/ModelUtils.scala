@@ -86,7 +86,8 @@ object ModelUtils {
 
     /**
      * Deactivate the model that presumably is active and waiting for input in the working set of the cluster engines.
-     * @param nameSpace namespace of the object
+      *
+      * @param nameSpace namespace of the object
      * @param name
      * @param version  Version of the object
      * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
@@ -105,7 +106,8 @@ object ModelUtils {
 
     /**
      * Deactivate a model FIXME: Explain what it means to do this locally.
-     * @param nameSpace namespace of the object
+      *
+      * @param nameSpace namespace of the object
      * @param name
      * @param version  Version of the object
      * @return
@@ -143,7 +145,8 @@ object ModelUtils {
 
     /**
      * Activate the model with the supplied keys. The engine is notified and the model factory is loaded.
-     * @param nameSpace namespace of the object
+      *
+      * @param nameSpace namespace of the object
      * @param name
      * @param version  Version of the object
      * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
@@ -225,7 +228,8 @@ object ModelUtils {
 
     /**
      * Remove model with Model Name and Version Number
-     * @param nameSpace namespace of the object
+      *
+      * @param nameSpace namespace of the object
      * @param name
      * @param version  Version of the object
      * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
@@ -267,7 +271,8 @@ object ModelUtils {
 
    /**
     * Remove model with Model Name and Version Number
-    * @param modelName the Namespace.Name of the given model to be removed
+     *
+     * @param modelName the Namespace.Name of the given model to be removed
     * @param version   Version of the given model.  The version should comply with the Kamanja version format.  For example,
     *                  a value of "000001.000001.000001" shows the digits available for version.  All must be base 10 digits
     *                  with up to 6 digits for major version, minor version and micro version sections.
@@ -309,7 +314,8 @@ object ModelUtils {
 
     /**
      * The ModelDef returned by the compilers is added to the metadata.
-     * @param model
+      *
+      * @param model
      * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
      *               method. If Security and/or Audit are configured,supply something other than None
      * @return
@@ -332,7 +338,8 @@ object ModelUtils {
 
     /**
      * AddModelFromSource - compiles and catalogs a custom Scala or Java model from source.
-     * @param sourceCode
+      *
+      * @param sourceCode
      * @param sourceLang
      * @param modelName
      * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
@@ -386,11 +393,11 @@ object ModelUtils {
       * The remaining arguments, while noted as optional, are required for some model types.  In particular,
       * the ''modelName'', ''version'', and ''msgConsumed'' must be specified for the PMML model type.  The ''userid'' is
       * required for systems that have been configured with a SecurityAdapter or AuditAdapter.
+      *
       * @see [[http://kamanja.org/security/ security wiki]] for more information. The audit adapter, if configured,
       *       will also be invoked to take note of this user's action.
       * @see [[http://kamanja.org/auditing/ auditing wiki]] for more information about auditing.
       * NOTE: The BINARY model is not supported at this time.  The model submitted for this type will via a jar file.
-      *
       * @param modelType the type of the model submission (any {SCALA,JAVA,PMML,KPMML,BINARY})
       * @param input the text element to be added dependent upon the modelType specified.
       * @param optUserid the identity to be used by the security adapter to ascertain if this user has access permissions for this
@@ -466,9 +473,9 @@ object ModelUtils {
      *
      * PMML models are evaluated, not compiled. To create the model definition, an instance of the evaluator
      * is obtained from the pmml-evaluator component and the ModelDef is constructed and added to the store.
-     * @see com.ligadata.MetadataAPI.JpmmlSupport for more information
-     *
-     * @param modelName the namespace.name of the model to be injested.
+      *
+      * @see com.ligadata.MetadataAPI.JpmmlSupport for more information
+      * @param modelName the namespace.name of the model to be injested.
      * @param version the version as string in the form "MMMMMM.mmmmmmmm.nnnnnn" (3 nodes .. could be fewer chars per node)
      * @param msgConsumed the namespace.name of the message that this model is to consume.  NOTE: the
      *                    fields used in the pmml model and the fields in the message must match.  If
@@ -569,6 +576,7 @@ object ModelUtils {
 
     /**
       * Add Kamanja PMML Model (format XML).  Kamanja Pmml models obtain their name and version from the header in the Pmml file.
+      *
       * @param pmmlText
       * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
       *               method. If Security and/or Audit are configured, this value must be a value other than None.
@@ -627,6 +635,7 @@ object ModelUtils {
 
     /**
       * Add Kamanja JTM Model (format json).  Kamanja JTM models obtain their name and version from the header in the JTM s file.
+      *
       * @param jsonText
       * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
       *               method. If Security and/or Audit are configured, this value must be a value other than None.
@@ -704,27 +713,34 @@ object ModelUtils {
               * to compile despite this obstacle is warranted.
               */
             val isJpmml : Boolean = mod.modelRepresentation == ModelRepresentation.PMML
+            val isJtm : Boolean = mod.modelRepresentation == ModelRepresentation.JTM
             val msgDef : MessageDef = optMsgDef.orNull
             val modDef: ModelDef = if (! isJpmml) {
 
                 val compProxy = new CompilerProxy
                 //compProxy.setLoggerLevel(Level.TRACE)
 
-                // Recompile the model based upon its model type.Models can be either PMML or Custom Sourced.  See which one we are dealing with
+                // Recompile the model based upon its model type.Models can be either PMML, JSON or Custom Sourced.  See which one we are dealing with
                 // here.
-                if (mod.objectFormat == ObjFormatType.fXML) {
-                    val pmmlText = mod.ObjectDefinition
-                    val (classStrTemp, modDefTemp) = compProxy.compilePmml(pmmlText, true)
+                if (isJtm && mod.objectFormat == ObjFormatType.fJSON) {
+                    val jtmTxt = mod.ObjectDefinition
+                    val (classStrTemp, modDefTemp) = compProxy.compileJTM(jtmTxt, true)
                     modDefTemp
                 } else {
-                    val saveModelParms = parse(mod.ObjectDefinition).values.asInstanceOf[Map[String, Any]]
-                    val custModDef: ModelDef = compProxy.recompileModelFromSource(
-                        saveModelParms.getOrElse(ModelCompilationConstants.SOURCECODE, "").asInstanceOf[String],
-                        saveModelParms.getOrElse(ModelCompilationConstants.PHYSICALNAME, "").asInstanceOf[String],
-                        saveModelParms.getOrElse(ModelCompilationConstants.DEPENDENCIES, List[String]()).asInstanceOf[List[String]],
-                        saveModelParms.getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, List[String]()).asInstanceOf[List[String]],
-                        ObjFormatType.asString(mod.objectFormat))
-                    custModDef
+                    if (mod.objectFormat == ObjFormatType.fXML) {
+                        val pmmlText = mod.ObjectDefinition
+                        val (classStrTemp, modDefTemp) = compProxy.compilePmml(pmmlText, true)
+                        modDefTemp
+                    } else {
+                        val saveModelParms = parse(mod.ObjectDefinition).values.asInstanceOf[Map[String, Any]]
+                        val custModDef: ModelDef = compProxy.recompileModelFromSource(
+                            saveModelParms.getOrElse(ModelCompilationConstants.SOURCECODE, "").asInstanceOf[String],
+                            saveModelParms.getOrElse(ModelCompilationConstants.PHYSICALNAME, "").asInstanceOf[String],
+                            saveModelParms.getOrElse(ModelCompilationConstants.DEPENDENCIES, List[String]()).asInstanceOf[List[String]],
+                            saveModelParms.getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, List[String]()).asInstanceOf[List[String]],
+                            ObjFormatType.asString(mod.objectFormat))
+                        custModDef
+                    }
                 }
             } else {
                 /** the msgConsumed is namespace.name.version  ... drop the version so as to compare the "FullName" */
@@ -817,8 +833,7 @@ object ModelUtils {
      *
      * If both the model and the message are changing, consider using AddModel to create a new PMML model and then remove the older
      * version if appropriate.
-     *
-     * @param modelType the type of the model submission (any {SCALA,JAVA,PMML,KPMML,BINARY})
+      * @param modelType the type of the model submission (any {SCALA,JAVA,PMML,KPMML,BINARY})
      * @param input the text element to be added dependent upon the modelType specified.
      * @param optUserid the identity to be used by the security adapter to ascertain if this user has access permissions for this
      *               method.
@@ -850,6 +865,10 @@ object ModelUtils {
         val modelResult: String = modelType match {
             case ModelType.KPMML => {
                 val result: String = UpdateKPMMLModel(modelType, input, optUserid, optModelName, optVersion)
+                result
+            }
+            case ModelType.JTM => {
+                val result: String = UpdateJTMModel(modelType, input, optUserid, optModelName, optVersion)
                 result
             }
             case ModelType.JAVA | ModelType.SCALA => {
@@ -1125,26 +1144,26 @@ object ModelUtils {
     }
 
     /**
-     * UpdateModel - Update a Kamanja Pmml model
-     *
-     * Current semantics are that the source supplied in pmmlText is compiled and a new model is reproduced. The Kamanja
-     * PMML version is specified in the KPMML source itself in the header's Version attribute. The version of the updated
-     * model must be > the most recent cataloged one that is being updated. With this strategy ONLY the most recent
-     * version can be updated.
-     *
-     * @param modelType the type of the model submission... PMML in this case
-     * @param pmmlText the text element to be added dependent upon the modelType specified.
-     * @param optUserid the identity to be used by the security adapter to ascertain if this user has access permissions for this
-     *               method.
-     * @param optModelName the model's namespace.name (ignored in this implementation of the UpdatePmmlModel... only used in PMML updates)
-     * @param optVersion the model's version (ignored in this implementation of the UpdatePmmlModel... only used in PMML updates)
-     * @return  result string indicating success or failure of operation
-     */
+      * UpdateModel - Update a Kamanja Pmml model
+      *
+      * Current semantics are that the source supplied in pmmlText is compiled and a new model is reproduced. The Kamanja
+      * PMML version is specified in the KPMML source itself in the header's Version attribute. The version of the updated
+      * model must be > the most recent cataloged one that is being updated. With this strategy ONLY the most recent
+      * version can be updated.
+      *
+      * @param modelType the type of the model submission... PMML in this case
+      * @param pmmlText the text element to be added dependent upon the modelType specified.
+      * @param optUserid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+      *               method.
+      * @param optModelName the model's namespace.name (ignored in this implementation of the UpdatePmmlModel... only used in PMML updates)
+      * @param optVersion the model's version (ignored in this implementation of the UpdatePmmlModel... only used in PMML updates)
+      * @return  result string indicating success or failure of operation
+      */
     private def UpdateKPMMLModel(modelType: ModelType.ModelType
-                             , pmmlText: String
-                             , optUserid: Option[String] = None
-                             , optModelName: Option[String] = None
-                             , optVersion: Option[String] = None ): String = {
+                                 , pmmlText: String
+                                 , optUserid: Option[String] = None
+                                 , optModelName: Option[String] = None
+                                 , optVersion: Option[String] = None ): String = {
         try {
             var compProxy = new CompilerProxy
             //compProxy.setLoggerLevel(Level.TRACE)
@@ -1153,14 +1172,14 @@ object ModelUtils {
             val latestVersion : ModelDef = optLatestVersion.orNull
 
             /**
-             * FIXME: The current strategy is that only the most recent version can be updated.
-             * FIXME: This is not a satisfactory condition. It may be desirable to have 10 PMML models all with
-             * FIXME: the same name but differing only in their version numbers. If someone wants to tune
-             * FIXME: #6 of the 10, that number six is not the latest.  It is just a unique model.
-             *
-             * For this reason, the version of the model that is to be changed should be supplied here and in the
-             * more generic interface implementation that calls here.
-             */
+              * FIXME: The current strategy is that only the most recent version can be updated.
+              * FIXME: This is not a satisfactory condition. It may be desirable to have 10 PMML models all with
+              * FIXME: the same name but differing only in their version numbers. If someone wants to tune
+              * FIXME: #6 of the 10, that number six is not the latest.  It is just a unique model.
+              *
+              * For this reason, the version of the model that is to be changed should be supplied here and in the
+              * more generic interface implementation that calls here.
+              */
 
             val isValid: Boolean = (modDef != null && latestVersion != null && latestVersion.Version <  modDef.Version)
 
@@ -1203,17 +1222,102 @@ object ModelUtils {
                 apiResult.toString()
             }
             case e: Exception => {
-                
+
                 logger.debug("", e)
                 var apiResult = new ApiResult(ErrorCodeConstants.Failure, s"UpdateModel(type = KPMML)", null, "Error :" + e.toString() + ErrorCodeConstants.Update_Model_Failed)
                 apiResult.toString()
             }
         }
-  }
+    }
+
+    /**
+      * UpdateModel - Update a Json Transformation Model (JTM)
+      *
+      * Current semantics are that the source supplied in jtmText is compiled and a new model is reproduced.
+      *
+      * @param modelType the type of the model submission... PMML in this case
+      * @param jtmText the text element to be added dependent upon the modelType specified.
+      * @param optUserid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+      *               method.
+      * @param optModelName the model's namespace.name (ignored in this implementation of the UpdatePmmlModel... only used in PMML updates)
+      * @param optVersion the model's version (ignored in this implementation of the UpdatePmmlModel... only used in PMML updates)
+      * @return  result string indicating success or failure of operation
+      */
+    private def UpdateJTMModel(modelType: ModelType.ModelType
+                                 , jtmText: String
+                                 , optUserid: Option[String] = None
+                                 , optModelName: Option[String] = None
+                                 , optVersion: Option[String] = None ): String = {
+        try {
+            var compProxy = new CompilerProxy
+            //compProxy.setLoggerLevel(Level.TRACE)
+            var (classStr, modDef) = compProxy.compileJTM(jtmText)
+            val optLatestVersion = if (modDef == null) None else GetLatestModel(modDef)
+            val latestVersion : ModelDef = optLatestVersion.orNull
+
+            /**
+              * FIXME: The current strategy is that only the most recent version can be updated.
+              * FIXME: This is not a satisfactory condition. It may be desirable to have 10 PMML models all with
+              * FIXME: the same name but differing only in their version numbers. If someone wants to tune
+              * FIXME: #6 of the 10, that number six is not the latest.  It is just a unique model.
+              *
+              * For this reason, the version of the model that is to be changed should be supplied here and in the
+              * more generic interface implementation that calls here.
+              */
+
+            val isValid: Boolean = (modDef != null && latestVersion != null && latestVersion.Version <  modDef.Version)
+
+            if (isValid && modDef != null) {
+                MetadataAPIImpl.logAuditRec(optUserid, Some(AuditConstants.WRITE), AuditConstants.UPDATEOBJECT, jtmText, AuditConstants.SUCCESS, "", modDef.FullNameWithVer)
+                val key = MdMgr.MkFullNameWithVersion(modDef.nameSpace, modDef.name, modDef.ver)
+
+                // when a version number changes, latestVersion  has different namespace making it unique
+                // latest version may not be found in the cache. So need to remove it
+                if( latestVersion != None ) {
+                    RemoveModel(latestVersion.nameSpace, latestVersion.name, latestVersion.ver, None)
+                }
+
+                PersistenceUtils.UploadJarsToDB(modDef)
+                val result = AddModel(modDef,optUserid)
+                var objectsUpdated = new Array[BaseElemDef](0)
+                var operations = new Array[String](0)
+
+                if( latestVersion != None ) {
+                    objectsUpdated = objectsUpdated :+ latestVersion
+                    operations = operations :+ "Remove"
+                }
+
+                objectsUpdated = objectsUpdated :+ modDef
+                operations = operations :+ "Add"
+                MetadataAPIImpl.NotifyEngine(objectsUpdated, operations)
+                result
+
+            } else {
+                val reasonForFailure: String = if (modDef != null) ErrorCodeConstants.Update_Model_Failed_Invalid_Version else ErrorCodeConstants.Update_Model_Failed
+                val modDefName: String = if (modDef != null) modDef.FullName else "(jtm compile failed)"
+                val modDefVer: String = if (modDef != null) MdMgr.Pad0s2Version(modDef.Version) else MdMgr.UnknownVersion
+                var apiResult = new ApiResult(ErrorCodeConstants.Failure, s"UpdateModel(type = JTM)", null, reasonForFailure + ":" + modDefName + "." + modDefVer)
+                apiResult.toString()
+            }
+        } catch {
+            case e: ObjectNotFoundException => {
+                logger.debug("", e)
+                var apiResult = new ApiResult(ErrorCodeConstants.Failure, s"UpdateModel(type = JTM)", null, "Error :" + e.toString() + ErrorCodeConstants.Update_Model_Failed)
+                apiResult.toString()
+            }
+            case e: Exception => {
+
+                logger.debug("", e)
+                var apiResult = new ApiResult(ErrorCodeConstants.Failure, s"UpdateModel(type = JTM)", null, "Error :" + e.toString() + ErrorCodeConstants.Update_Model_Failed)
+                apiResult.toString()
+            }
+        }
+    }
 
     /**
      * GetDependentModels
-     * @param msgNameSpace
+      *
+      * @param msgNameSpace
      * @param msgName
      * @param msgVer
      * @return
@@ -1224,7 +1328,8 @@ object ModelUtils {
 
     /**
      * Get all available models (format JSON or XML) as string.
-     * @param formatType format of the return value, either JSON or XML
+      *
+      * @param formatType format of the return value, either JSON or XML
      * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
      *               method. If Security and/or Audit are configured, this value must be a value other than None
      * @return string representation in specified format.
@@ -1255,7 +1360,8 @@ object ModelUtils {
 
     /**
      * GetAllModelsFromCache
-     * @param active
+      *
+      * @param active
      * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
      *               method. If Security and/or Audit are configured, this value must be a value other than None.
      * @return
@@ -1325,7 +1431,8 @@ object ModelUtils {
 
     /**
      * Get a specific models (format JSON or XML) as an array of strings using modelName(without version) as the key
-     * @param objectName name of the desired object, possibly namespace qualified
+      *
+      * @param objectName name of the desired object, possibly namespace qualified
      * @param formatType format of the return value, either JSON or XML
      * @return
      */
@@ -1335,7 +1442,8 @@ object ModelUtils {
 
     /**
      * Get a specific model (format JSON or XML) as a String using modelName(with version) as the key
-     * @param nameSpace namespace of the object
+      *
+      * @param nameSpace namespace of the object
      * @param name
      * @param formatType format of the return value, either JSON or XML
      * @param version  Version of the object
@@ -1397,7 +1505,8 @@ object ModelUtils {
      * we should never add the model into metadata manager more than once
      * and there is no need to use this function in main code flow
      * This is just a utility function being used during these initial phases
-     * @param modDef the model def to be tested
+      *
+      * @param modDef the model def to be tested
      * @return
      */
   def DoesModelAlreadyExist(modDef: ModelDef): Boolean = {
@@ -1428,7 +1537,8 @@ object ModelUtils {
 
     /**
      * Get the latest model for a given FullName
-     * @param modDef
+      *
+      * @param modDef
      * @return
      */
   def GetLatestModel(modDef: ModelDef): Option[ModelDef] = {
@@ -1461,7 +1571,8 @@ object ModelUtils {
   //
     /**
      * Get the latest cataloged models from the supplied set
-     * @param modelSet
+      *
+      * @param modelSet
      * @return
      */
   def GetLatestModelFromModels(modelSet: Set[ModelDef]): ModelDef = {
@@ -1485,7 +1596,8 @@ object ModelUtils {
 
     /**
      * Get a specific model definition from persistent store
-     * @param nameSpace namespace of the object
+      *
+      * @param nameSpace namespace of the object
      * @param objectName name of the desired object, possibly namespace qualified
      * @param formatType format of the return value, either JSON or XML
      * @param version  Version of the object
@@ -1539,7 +1651,8 @@ object ModelUtils {
 
     /**
      * LoadModelIntoCache
-     * @param key
+      *
+      * @param key
      */
   def LoadModelIntoCache(key: String) {
     try {
@@ -1563,7 +1676,8 @@ object ModelUtils {
     /**
      * Answer the model compilation dependencies
      * FIXME: Which ones? input or output?
-     * @param modelConfigName
+      *
+      * @param modelConfigName
      * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
      *               method. If Security and/or Audit are configured, this value must be a value other than None.
      * @return
