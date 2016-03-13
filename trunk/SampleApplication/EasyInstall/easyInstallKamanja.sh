@@ -1291,18 +1291,19 @@ cp $ivyPath/cache/io.spray/spray-testkit_2.11/jars/spray-testkit_2.11-1.3.3.jar 
 cp $srcPath/Utils/Migrate/MigrateBase/target/migratebase-1.0.jar $systemlib
 cp $srcPath/Utils/Migrate/DestinationVersion/MigrateTo_V_1_3/target/scala-2.11/migrateto_v_1_3_2.11-1.0.jar $systemlib
 cp $srcPath/Utils/Migrate/DestinationVersion/MigrateTo_V_1_4/target/scala-2.11/migrateto_v_1_4_2.11-1.0.jar $systemlib
-
+cp $srcPath/Utils/Migrate/SourceVersion/MigrateFrom_V_1_3/target/scala-2.11/migratefrom_v_1_3_2.11-1.0.jar $systemlib
 
 #copy jars for kamanjainstallapplib
-
 cp $srcPath/Utils/Migrate/MigrateBase/target/migratebase-1.0.jar $kamanjainstallsystemlib
-# not found
 #cp $srcPath/Utils/Migrate/SourceVersion/MigrateFrom_V_1_1/target/scala-2.11/migratefrom_v_1_1_2.10-1.0.jar $kamanjainstallsystemlib
 #cp $srcPath/Utils/Migrate/SourceVersion/MigrateFrom_V_1_2/target/scala-2.11/migratefrom_v_1_2_2.10-1.0.jar $kamanjainstallsystemlib
 cp $srcPath/Utils/Migrate/SourceVersion/MigrateFrom_V_1_3/target/scala-2.11/migratefrom_v_1_3_2.11-1.0.jar $kamanjainstallsystemlib
 cp $srcPath/Utils/Migrate/DestinationVersion/MigrateTo_V_1_3/target/scala-2.11/migrateto_v_1_3_2.11-1.0.jar $kamanjainstallsystemlib
 cp $srcPath/Utils/Migrate/DestinationVersion/MigrateTo_V_1_4/target/scala-2.11/migrateto_v_1_4_2.11-1.0.jar $kamanjainstallsystemlib
 
+# copy 2.11 migrate libraries into 2.10 install directories, useful just in case of reverse migration
+cp $srcPath/Utils/Migrate/SourceVersion/MigrateFrom_V_1_3/target/scala-2.11/migratefrom_v_1_3_2.11-1.0.jar $installPath/Kamanja-$ver210/lib/system/
+cp $srcPath/Utils/Migrate/SourceVersion/MigrateFrom_V_1_3/target/scala-2.11/migratefrom_v_1_3_2.11-1.0.jar $installPath/KamanjaInstall-$ver210/lib/system/
 
 cp $srcPath/Storage/Cassandra/target/scala-2.11/*.jar $systemlib
 cp $srcPath/Storage/HashMap/target/scala-2.11/*.jar $systemlib
