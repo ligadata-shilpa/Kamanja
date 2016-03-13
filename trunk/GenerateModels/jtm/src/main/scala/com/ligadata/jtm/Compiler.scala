@@ -609,7 +609,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
         //
         var groks = transformation.grokMatch
         var computes = transformation.computes
-        var cnt1 = computes.size
+        var cnt1 = computes.size + groks.size
         var cnt2 = 0
 
         while(cnt1!=cnt2 && computes.nonEmpty) {
@@ -626,11 +626,14 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
               // Get the expression
               //
               val d = grokExpressions.get(g._2).get
+              // The var name might generate conflicts
+              // Let's be optimistic for now
               val varName = "%s_%s".format(d._1, g._1)
               methods :+= "lazy val %s = %s.extractNamedGroups(%s)".format(varName, d._1, nameColumn)
 
               // Emit variables w/ null value is needed
-              //
+              // we are adding a complete expression here
+              // potentially we have to decorate it to avoid naming conflicts
               d._3.foreach( e =>
                 fixedMappingSources ++= Map(e -> "if(%s.containsKey(\"%s\")) %s.get(\"%s\") else \"\")".format(varName, e, varName, e))
               )
@@ -639,8 +642,6 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
               true
             }
           })
-
-          groks = groks1
 
           // Check computes
           val computes1 = computes.filter(c => {
@@ -682,8 +683,9 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
             }
           })
 
-          cnt1 = computes1.size
+          cnt1 = computes1.size + groks.size
           computes = computes1
+          groks = groks1
         }
 
         if(computes.nonEmpty){
