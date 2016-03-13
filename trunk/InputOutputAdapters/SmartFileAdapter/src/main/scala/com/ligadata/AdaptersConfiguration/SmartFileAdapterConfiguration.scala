@@ -27,6 +27,9 @@ class FileAdapterMonitoringConfig {
 }
 
 object SmartFileAdapterConfiguration{
+
+  val defaultWaitingTimeMS = 1000
+
   def GetAdapterConfig(inputConfig: AdapterConfiguration): SmartFileAdapterConfiguration = {
 
     if (inputConfig.adapterSpecificCfg == null || inputConfig.adapterSpecificCfg.size == 0) {
@@ -53,24 +56,53 @@ object SmartFileAdapterConfiguration{
       throw new KamanjaException(err, null)
     }
 
-    val adapCfgValues = adapCfg.values.asInstanceOf[Map[String, String]]
+    val adapCfgValues = adapCfg.values.asInstanceOf[Map[String, Any]]
+
+    if(adapCfgValues.getOrElse("Type", null) == null) {
+      val err = "Not found Type for Smart File Adapter Config:" + inputConfig.Name
+      throw new KamanjaException(err, null)
+    }
+    adapterConfig._type = adapCfgValues.get("Type").get.toString
+
+    if(adapCfgValues.getOrElse("Locations", null) == null) {
+      val err = "Not found Locations for Smart File Adapter Config:" + inputConfig.Name
+      throw new KamanjaException(err, null)
+    }
+    adapterConfig.locations = adapCfgValues.get("Locations").get.toString.split(",").map(str => str.trim).filter(str => str.size > 0)
 
     adapterConfig.connectionConfig = new FileAdapterConnectionConfig()
     adapterConfig.monitoringConfig = new FileAdapterMonitoringConfig()
 
-    /*adapCfgValues.foreach(kv => {
+    if(adapCfgValues.getOrElse("ConnectionConfig", null) == null){
+      val err = "Not found ConnectionConfig for Smart File Adapter Config:" + inputConfig.Name
+      throw new KamanjaException(err, null)
+    }
+
+    val connConf = adapCfgValues.get("ConnectionConfig").get.asInstanceOf[Map[String, String]]
+    //val connConfValues = connConf.values.asInstanceOf[Map[String, String]]
+    connConf.foreach(kv => {
       if (kv._1.compareToIgnoreCase("HostLists") == 0) {
         adapterConfig.connectionConfig.hostsList = kv._2.split(",").map(str => str.trim).filter(str => str.size > 0)
-      } else if (kv._1.compareToIgnoreCase("TopicName") == 0) {
-        qc.topic = kv._2.trim
-      } else if (kv._1.compareToIgnoreCase("NoDataSleepTimeInMs") == 0) {
-        qc.noDataSleepTimeInMs = kv._2.trim.toInt
-        if (qc.noDataSleepTimeInMs < 0)
-          qc.noDataSleepTimeInMs = 0
-      } else {
-        qc.otherconfigs(kv._1.toLowerCase()) = kv._2
+      } else if (kv._1.compareToIgnoreCase("UserId") == 0) {
+        adapterConfig.connectionConfig.userId = kv._2.trim
+      } else if (kv._1.compareToIgnoreCase("Password") == 0) {
+        adapterConfig.connectionConfig.password = kv._2.trim
       }
-    })*/
+    })
+
+    if(adapCfgValues.getOrElse("MonitoringConfig", null) == null){
+      val err = "Not found MonitoringConfig for Smart File Adapter Config:" + inputConfig.Name
+      throw new KamanjaException(err, null)
+    }
+    val monConf = (adapCfgValues.get("MonitoringConfig").get.asInstanceOf[Map[String, String]])
+    //val monConfValues = monConf.values.asInstanceOf[Map[String, String]]
+    monConf.foreach(kv => {
+      if (kv._1.compareToIgnoreCase("MaxTimeWait") == 0) {
+        adapterConfig.monitoringConfig.waitingTimeMS = kv._2.trim.toInt
+        if (adapterConfig.monitoringConfig.waitingTimeMS < 0)
+          adapterConfig.monitoringConfig.waitingTimeMS = defaultWaitingTimeMS
+      }
+    })
 
     adapterConfig
   }

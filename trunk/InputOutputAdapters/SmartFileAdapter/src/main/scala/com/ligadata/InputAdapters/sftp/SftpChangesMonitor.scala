@@ -4,10 +4,8 @@ package com.ligadata.InputAdapters.sftp
   * Created by Yasser on 3/10/2016.
   */
 import java.io._
-import java.net.URI
-import java.net.URISyntaxException
 import java.util.zip.GZIPInputStream
-import com.ligadata.Exceptions.{KamanjaException, StackTrace}
+import com.ligadata.Exceptions.{KamanjaException}
 import com.ligadata.InputAdapters.FileChangeType.FileChangeType
 import com.ligadata.InputAdapters.FileChangeType._
 
@@ -19,10 +17,10 @@ import org.apache.commons.vfs2.impl.StandardFileSystemManager
 import org.apache.commons.vfs2.provider.sftp.SftpFileSystemConfigBuilder
 
 import com.ligadata.InputAdapters._
-import org.apache.commons.lang.NotImplementedException
 import java.net.URLEncoder
 import org.apache.logging.log4j.{ Logger, LogManager }
 import com.ligadata.InputAdapters.CompressionUtil._
+
 
 import scala.util.control.Breaks._
 
@@ -95,7 +93,7 @@ class SftpFileEntry {
   var isDirectory : Boolean = false
 }
 
-class SftpFileHandler extends FileHandler{
+class SftpFileHandler extends SmartFileHandler{
   private var remoteFullPath = ""
 
   private var sftpConnectionConfig : SftpConnectionConfig = null
@@ -289,25 +287,25 @@ class SftpFileHandler extends FileHandler{
   }
 }
 
-class SftpChangesMonitor (modifiedFileCallback:(FileHandler) => Unit) extends Monitor{
+class SftpChangesMonitor (modifiedFileCallback:(SmartFileHandler) => Unit) extends SmartFileMonitor{
 
   private var isMonitoring = false
   lazy val loggerName = this.getClass.getName
   lazy val logger = LogManager.getLogger(loggerName)
 
-  private var connectionConf : ConnectionConfig = null
-  private var monitoringConf :  MonitoringConfig = null
+  /*private var connectionConf : ConnectionConfig = null
+  private var monitoringConf :  MonitoringConfig = null*/
   private var sftpConnectionConfig : SftpConnectionConfig = null
 
   def init(connectionConfJson: String, monitoringConfJson: String): Unit ={
-    connectionConf = JsonHelper.getConnectionConfigObj(connectionConfJson)
+   /* connectionConf = JsonHelper.getConnectionConfigObj(connectionConfJson)
     monitoringConf = JsonHelper.getMonitoringConfigObj(monitoringConfJson)
 
-    sftpConnectionConfig = new SftpConnectionConfig(connectionConf.Host, connectionConf.UserId, connectionConf.Password)
+    sftpConnectionConfig = new SftpConnectionConfig(connectionConf.Host, connectionConf.UserId, connectionConf.Password)*/
   }
 
   def monitor: Unit ={
-
+/*
     //TODO : changes this and monitor multi-dirs
     val targetRemoteFolder = connectionConf.Locations(0)
 
@@ -338,7 +336,7 @@ class SftpChangesMonitor (modifiedFileCallback:(FileHandler) => Unit) extends Mo
             // then for each folder of these search for modified files and folders, repeat for the modified folders
 
             val aFolder = modifiedDirs.head
-            val modifiedFiles = Map[FileHandler, FileChangeType]() // these are the modified files found in folder $aFolder
+            val modifiedFiles = Map[SmartFileHandler, FileChangeType]() // these are the modified files found in folder $aFolder
 
             modifiedDirs.remove(0)
             findDirModifiedDirectChilds(aFolder, manager,  filesStatusMap, modifiedDirs, modifiedFiles, firstCheck)
@@ -378,7 +376,7 @@ class SftpChangesMonitor (modifiedFileCallback:(FileHandler) => Unit) extends Mo
     }
     finally {
       manager.close()
-    }
+    }*/
   }
 
   def shutdown: Unit ={
@@ -389,7 +387,7 @@ class SftpChangesMonitor (modifiedFileCallback:(FileHandler) => Unit) extends Mo
 
 
   private def findDirModifiedDirectChilds(parentfolder : String, manager : StandardFileSystemManager, filesStatusMap : Map[String, SftpFileEntry],
-                                          modifiedDirs : ArrayBuffer[String], modifiedFiles : Map[FileHandler, FileChangeType], isFirstCheck : Boolean){
+                                          modifiedDirs : ArrayBuffer[String], modifiedFiles : Map[SmartFileHandler, FileChangeType], isFirstCheck : Boolean){
     val parentfolderHashed = hashPath(parentfolder)//used for logging since path contains user and password
     logger.info("checking folder with full path: " + parentfolderHashed)
 

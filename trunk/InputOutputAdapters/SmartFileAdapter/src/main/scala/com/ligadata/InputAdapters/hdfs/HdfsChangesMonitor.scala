@@ -17,12 +17,10 @@ import org.apache.hadoop.conf.Configuration
 
 import scala.collection.mutable.{ArrayBuffer, Map}
 import scala.actors.threadpool.{ Executors, ExecutorService }
-import com.ligadata.filedataprocessor._
 import java.io.{InputStream}
-import org.apache.commons.lang.NotImplementedException
-
+import com.ligadata.InputAdapters.CompressionUtil._
 import org.apache.logging.log4j.{ Logger, LogManager }
-import CompressionUtil._
+import com.ligadata.InputAdapters.{SmartFileHandler, SmartFileMonitor}
 
 class HdfsConnectionConfig(val nameNodeURL: String, val nameNodePort: Int)
 
@@ -33,13 +31,13 @@ class HdfsFileEntry {
   //boolean processed
 }
 
-class MofifiedFileCallbackHandler(fileHandler : FileHandler, modifiedFileCallback:(FileHandler) => Unit) extends Runnable{
+class MofifiedFileCallbackHandler(fileHandler : SmartFileHandler, modifiedFileCallback:(SmartFileHandler) => Unit) extends Runnable{
   def run() {
     modifiedFileCallback(fileHandler)
   }
 }
 
-class HdfsFileHandler extends FileHandler{
+class HdfsFileHandler extends SmartFileHandler{
 
   private var fileFullPath = ""
   
@@ -234,29 +232,27 @@ class HdfsFileHandler extends FileHandler{
 /**
  * callback is the function to call when finding a modified file, currently has one parameter which is the file path
  */
-class HdfsChangesMonitor (modifiedFileCallback:(FileHandler) => Unit) extends Monitor{
+class HdfsChangesMonitor (modifiedFileCallback:(SmartFileHandler) => Unit) extends SmartFileMonitor{
 
   private var isMonitoring = false
   
   lazy val loggerName = this.getClass.getName
   lazy val logger = LogManager.getLogger(loggerName)
 
-  private var connectionConf : ConnectionConfig = null
-  private var monitoringConf :  MonitoringConfig = null
   private var hdfsConnectionConfig : HdfsConnectionConfig = null
 
   val poolSize = 5
   private val globalFileMonitorCallbackService: ExecutorService = Executors.newFixedThreadPool(poolSize)
 
   def init(connectionConfJson: String, monitoringConfJson: String): Unit ={
-    connectionConf = JsonHelper.getConnectionConfigObj(connectionConfJson)
+    /*connectionConf = JsonHelper.getConnectionConfigObj(connectionConfJson)
     monitoringConf = JsonHelper.getMonitoringConfigObj(monitoringConfJson)
 
     //TODO : validate
     val hostParts = connectionConf.Host.split(":")
     val hostUrl = hostParts(0)
     val port = hostParts(1).toInt
-    hdfsConnectionConfig = new HdfsConnectionConfig(hostUrl, port)
+    hdfsConnectionConfig = new HdfsConnectionConfig(hostUrl, port)*/
   }
 
   def shutdown: Unit ={
@@ -278,7 +274,7 @@ class HdfsChangesMonitor (modifiedFileCallback:(FileHandler) => Unit) extends Mo
   }
 
   def monitor(){
-
+/*
     //TODO : changes this and monitor multi-dirs
     val targetFolder = connectionConf.Locations(0)
 
@@ -308,7 +304,7 @@ class HdfsChangesMonitor (modifiedFileCallback:(FileHandler) => Unit) extends Mo
           // then for each folder of these search for modified files and folders, repeat for the modified folders
 
           val aFolder = modifiedDirs.head
-          val modifiedFiles = Map[FileHandler, FileChangeType]() // these are the modified files found in folder $aFolder
+          val modifiedFiles = Map[SmartFileHandler, FileChangeType]() // these are the modified files found in folder $aFolder
 
           modifiedDirs.remove(0)
           val fs = FileSystem.get(hdfsConfig)
@@ -343,12 +339,12 @@ class HdfsChangesMonitor (modifiedFileCallback:(FileHandler) => Unit) extends Mo
 
       logger.info(s"Sleepng for ${monitoringConf.WaitingTimeMS} milliseconds...............................")
       Thread.sleep(monitoringConf.WaitingTimeMS)
-    }
+    }*/
 
   }
 
   private def findDirModifiedDirectChilds(parentfolder : String, hdFileSystem : FileSystem, filesStatusMap : Map[String, HdfsFileEntry],
-                                          modifiedDirs : ArrayBuffer[String], modifiedFiles : Map[FileHandler, FileChangeType], isFirstCheck : Boolean){
+                                          modifiedDirs : ArrayBuffer[String], modifiedFiles : Map[SmartFileHandler, FileChangeType], isFirstCheck : Boolean){
     logger.info("checking folder with full path: " + parentfolder)
 
     val directChildren = getFolderContents(parentfolder, hdFileSystem)
