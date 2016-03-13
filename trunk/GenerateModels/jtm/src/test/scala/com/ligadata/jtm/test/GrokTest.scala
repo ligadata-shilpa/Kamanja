@@ -54,4 +54,5 @@ class GrokTest extends FunSuite with BeforeAndAfter {
 
     //assert(actual == expected)
   }
+
 }

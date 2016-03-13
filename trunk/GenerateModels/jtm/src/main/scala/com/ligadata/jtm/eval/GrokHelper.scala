@@ -26,6 +26,35 @@ import org.aicer.grok.dictionary.GrokDictionary
   */
 object GrokHelper extends LogTrait {
 
+
+  /** Extract the key from an expressions
+    *
+    * @param expression
+    * @return
+    */
+  def ExtractDictionaryKeys(expression: String): Set[String] = {
+
+    val r = """\{[\s]*([A-Za-z][A-Za-z0-9]*)[\s]*:[\s]*([A-Za-z][A-Za-z0-9]*)[\s]*\}""".r
+    val m = r.findAllMatchIn(expression)
+    m.foldLeft(Set.empty[String])( (r, m) => {
+      r + m.group(2)
+    })
+  }
+
+  /** Extract the key from an expressions
+    *
+    * @param expression
+    * @return
+    */
+  def ConvertToGrokPattern( expression: String): String = {
+
+    val r = """\{[\s]*([A-Za-z][A-Za-z0-9]*)[\s]*:[\s]*([A-Za-z][A-Za-z0-9]*)[\s]*\}""".r
+    val m = r.findAllMatchIn(expression)
+    m.map(m => {
+       "%%{%s:%s}".format(m.group(1), m.group(2))
+    }).mkString(" ")
+  }
+
   /** Returns the list of files after validating
     *
     * @param root

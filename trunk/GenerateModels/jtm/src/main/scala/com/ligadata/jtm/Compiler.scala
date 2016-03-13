@@ -316,7 +316,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     })
 
     result ++= grok.patterns.map( p => {
-      "dict.addDictionary(new StringReader(\"%s %s\")".format(escape(p._1), escape(p._2))
+      "dict.addDictionary(new StringReader(%s)".format(escape(p._1 + " " + p._2))
     })
 
     result :+= "dict.bind()"
@@ -325,6 +325,42 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     result
   }
 
+  /** Emit code to compile the unique expressions
+    *
+    * @param root
+    * @return
+    */
+  def BuildGrokCompiledExpression(root: Root) : (Array[String], Map[String, (String, String, Set[String])]) = {
+
+    var result = Array.empty[String]
+
+    // Get the root instance - we only support 1 right now
+    val grok : Grok = root.grok.head._2
+    //val grokInstance: GrokDictionary = GrokHelper.Validate(grok)
+
+    // Collect all unique expressions
+    val expressions = root.transformations.foldLeft(Set.empty[String])((r, t) => {
+      t._2.grokMatch.foldLeft(r) ((r, m) => {
+        r + m._2
+      })
+    }).zipWithIndex.toMap
+
+    val mapping = expressions.map( p => {
+
+      val index = p._2
+      val expressionString = p._1
+      val outputs = GrokHelper.ExtractDictionaryKeys(expressionString)
+      val pattern =  GrokHelper.ConvertToGrokPattern(expressionString)
+
+      expressionString -> ("grok_instance_1_%d".format(p._2), pattern, outputs)
+    }).toMap
+
+    val defs = mapping.map( p=>
+      "lazy val %s = grok_instance_1.compileExpression(%s)".format(p._2._1, escape(p._2._2))
+    ).toArray
+
+    (defs, mapping)
+  }
   // Casing of system columns is inconsistent
   // provide a patch up map
   val columnNamePatchUp = Map.empty[String, String]
@@ -444,15 +480,20 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
     // Process additional imports like grok
     //
-    val imports = if(root.grok.size>0) {
+    val imports = if(root.grok.nonEmpty) {
                     root.imports.packages :+ "org.aicer.grok.dictionary.GrokDictionary"
                   } else {
                     root.imports.packages
                   }
 
-    // Emit grok intialization
-    if(root.grok.size>0) {
+    // Emit grok initialization
+    val grokExpressions = if(root.grok.nonEmpty) {
       groks ++= BuildGrokInstance(root.grok.head._2)
+      val (e, m) = BuildGrokCompiledExpression(root)
+      groks ++= e
+      m
+    } else {
+      Map.empty[String, Int]
     }
 
     // Append the packages needed
@@ -573,6 +614,11 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
         while(cnt1!=cnt2 && computes.nonEmpty) {
           cnt2 = cnt1
 
+          // Check grok matches
+          // lazy val p1_r = p1.extractNamedGroups(msg1.in3.toString)
+          //
+
+          // Check computes
           val computes1 = computes.filter(c => {
 
             // Check if the compute if determined
@@ -660,6 +706,8 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           while(cnt1!=cnt2 && outputSet1.nonEmpty) {
 
             cnt2 = cnt1
+
+            // Check grok matches
 
             // filters
             val wheres1 = wheres.filter(f => {
