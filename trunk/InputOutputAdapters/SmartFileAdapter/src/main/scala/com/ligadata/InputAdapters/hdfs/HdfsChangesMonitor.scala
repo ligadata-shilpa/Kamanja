@@ -6,6 +6,7 @@ package com.ligadata.InputAdapters.hdfs
 
 import java.util.zip.GZIPInputStream
 
+import com.ligadata.AdaptersConfiguration.{SmartFileAdapterConfiguration, FileAdapterMonitoringConfig, FileAdapterConnectionConfig}
 import com.ligadata.Exceptions.KamanjaException
 import com.ligadata.InputAdapters.FileChangeType.FileChangeType
 import com.ligadata.InputAdapters.FileChangeType._
@@ -23,7 +24,7 @@ import com.ligadata.InputAdapters.CompressionUtil._
 import org.apache.logging.log4j.{ Logger, LogManager }
 import com.ligadata.InputAdapters.{SmartFileHandler, SmartFileMonitor}
 
-class HdfsConnectionConfig(val nameNodeURL: String, val nameNodePort: Int)
+class HdfsConnectionConfig(val hostsList: String)
 
 class HdfsFileEntry {
   var name : String = ""
@@ -61,7 +62,7 @@ class HdfsFileHandler extends SmartFileHandler{
 
   def getHdfsConfig : Configuration = {
     hdfsConfig = new Configuration()
-    hdfsConfig.set("fs.default.name", hdfsConnectionConfig.nameNodeURL + ":" + hdfsConnectionConfig.nameNodePort)
+    hdfsConfig.set("fs.default.name", hdfsConnectionConfig.hostsList)
     hdfsConfig.set("fs.hdfs.impl", classOf[org.apache.hadoop.hdfs.DistributedFileSystem].getName)
     hdfsConfig.set("fs.file.impl", classOf[org.apache.hadoop.fs.LocalFileSystem].getName)
     hdfsConfig
@@ -233,7 +234,7 @@ class HdfsFileHandler extends SmartFileHandler{
 /**
  * callback is the function to call when finding a modified file, currently has one parameter which is the file path
  */
-class HdfsChangesMonitor (modifiedFileCallback:(SmartFileHandler) => Unit) extends SmartFileMonitor{
+class HdfsChangesMonitor (adapterName : String, modifiedFileCallback:(SmartFileHandler) => Unit) extends SmartFileMonitor{
 
   private var isMonitoring = false
   
@@ -245,15 +246,19 @@ class HdfsChangesMonitor (modifiedFileCallback:(SmartFileHandler) => Unit) exten
   val poolSize = 5
   private val globalFileMonitorCallbackService: ExecutorService = Executors.newFixedThreadPool(poolSize)
 
-  def init(adapterSpecificCfgJson: String): Unit ={
-    /*connectionConf = JsonHelper.getConnectionConfigObj(connectionConfJson)
-    monitoringConf = JsonHelper.getMonitoringConfigObj(monitoringConfJson)
+  private var connectionConf : FileAdapterConnectionConfig = null
+  private var monitoringConf :  FileAdapterMonitoringConfig = null
 
-    //TODO : validate
-    val hostParts = connectionConf.Host.split(":")
-    val hostUrl = hostParts(0)
-    val port = hostParts(1).toInt
-    hdfsConnectionConfig = new HdfsConnectionConfig(hostUrl, port)*/
+  def init(adapterSpecificCfgJson: String): Unit ={
+    val(_type, c, m) =  SmartFileAdapterConfiguration.parseSmartFileAdapterSpecificConfig(adapterName, adapterSpecificCfgJson)
+    connectionConf = c
+    monitoringConf = m
+
+    if(connectionConf.hostsList == null || connectionConf.hostsList.length == 0){
+      val err = "HostsList is missing or invalid for Smart HDFS File Adapter Config:" + adapterName
+      throw new KamanjaException(err, null)
+    }
+    hdfsConnectionConfig = new HdfsConnectionConfig(connectionConf.hostsList.mkString(","))
   }
 
   def shutdown: Unit ={
@@ -275,72 +280,72 @@ class HdfsChangesMonitor (modifiedFileCallback:(SmartFileHandler) => Unit) exten
   }
 
   def monitor(){
-/*
-    //TODO : changes this and monitor multi-dirs
-    val targetFolder = connectionConf.Locations(0)
 
-    // Instantiate HDFS Configuration.
-    val hdfsConfig = new Configuration()
-    hdfsConfig.set("fs.default.name", hdfsConnectionConfig.nameNodeURL + ":" + hdfsConnectionConfig.nameNodePort)
+    monitoringConf.locations.foreach(targetFolder => {
+      // Instantiate HDFS Configuration.
+      val hdfsConfig = new Configuration()
+      hdfsConfig.set("fs.default.name", hdfsConnectionConfig.hostsList)
 
-    hdfsConfig.set("fs.hdfs.impl", classOf[org.apache.hadoop.hdfs.DistributedFileSystem].getName)
-    hdfsConfig.set("fs.file.impl", classOf[org.apache.hadoop.fs.LocalFileSystem].getName)
-    //hdfsConfig.set("hadoop.job.ugi", "hadoop");//user ???
+      hdfsConfig.set("fs.hdfs.impl", classOf[org.apache.hadoop.hdfs.DistributedFileSystem].getName)
+      hdfsConfig.set("fs.file.impl", classOf[org.apache.hadoop.fs.LocalFileSystem].getName)
+      //hdfsConfig.set("hadoop.job.ugi", "hadoop");//user ???
 
-    val filesStatusMap = Map[String, HdfsFileEntry]()
-    var firstCheck = true
+      val filesStatusMap = Map[String, HdfsFileEntry]()
+      var firstCheck = true
 
-    isMonitoring = true
+      isMonitoring = true
 
-    while(isMonitoring){
+      while(isMonitoring){
 
-      try{
-        logger.info(s"Checking configured HDFS directory (targetFolder)...")
+        try{
+          logger.info(s"Checking configured HDFS directory (targetFolder)...")
 
 
-        val modifiedDirs = new ArrayBuffer[String]()
-        modifiedDirs += targetFolder
-        while(modifiedDirs.nonEmpty ){
-          //each time checking only updated folders: first find direct children of target folder that were modified
-          // then for each folder of these search for modified files and folders, repeat for the modified folders
+          val modifiedDirs = new ArrayBuffer[String]()
+          modifiedDirs += targetFolder
+          while(modifiedDirs.nonEmpty ){
+            //each time checking only updated folders: first find direct children of target folder that were modified
+            // then for each folder of these search for modified files and folders, repeat for the modified folders
 
-          val aFolder = modifiedDirs.head
-          val modifiedFiles = Map[SmartFileHandler, FileChangeType]() // these are the modified files found in folder $aFolder
+            val aFolder = modifiedDirs.head
+            val modifiedFiles = Map[SmartFileHandler, FileChangeType]() // these are the modified files found in folder $aFolder
 
-          modifiedDirs.remove(0)
-          val fs = FileSystem.get(hdfsConfig)
-          findDirModifiedDirectChilds(aFolder , fs , filesStatusMap, modifiedDirs, modifiedFiles, firstCheck)
+            modifiedDirs.remove(0)
+            val fs = FileSystem.get(hdfsConfig)
+            findDirModifiedDirectChilds(aFolder , fs , filesStatusMap, modifiedDirs, modifiedFiles, firstCheck)
 
-          //logger.debug("Closing Hd File System object fs in monitorDirChanges()")
-          //fs.close()
+            //logger.debug("Closing Hd File System object fs in monitorDirChanges()")
+            //fs.close()
 
-          if(modifiedFiles.nonEmpty)
-            modifiedFiles.foreach(tuple =>
-            {
+            if(modifiedFiles.nonEmpty)
+              modifiedFiles.foreach(tuple =>
+              {
                 val handler = new MofifiedFileCallbackHandler(tuple._1, modifiedFileCallback)
-                 // run the callback in a different thread
+                // run the callback in a different thread
                 new Thread(handler).start()
                 //globalFileMonitorCallbackService.execute(handler)
                 //modifiedFileCallback(tuple._1,tuple._2)
 
-            }
-            )
+              }
+              )
+
+          }
 
         }
-
-      }
-      catch{
-        case ex: Exception => {
-          logger.error(ex.getMessage)
-          ex.printStackTrace()
+        catch{
+          case ex: Exception => {
+            logger.error(ex.getMessage)
+            ex.printStackTrace()
+          }
         }
+
+        firstCheck = false
+
+        logger.info(s"Sleepng for ${monitoringConf.waitingTimeMS} milliseconds...............................")
+        Thread.sleep(monitoringConf.waitingTimeMS)
       }
+    })
 
-      firstCheck = false
-
-      logger.info(s"Sleepng for ${monitoringConf.WaitingTimeMS} milliseconds...............................")
-      Thread.sleep(monitoringConf.WaitingTimeMS)
-    }*/
 
   }
 
