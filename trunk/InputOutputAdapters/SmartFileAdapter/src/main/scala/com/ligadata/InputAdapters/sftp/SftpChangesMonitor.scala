@@ -8,6 +8,7 @@ import java.util.zip.GZIPInputStream
 import com.ligadata.Exceptions.{KamanjaException}
 import com.ligadata.InputAdapters.FileChangeType.FileChangeType
 import com.ligadata.InputAdapters.FileChangeType._
+import com.ligadata.InputOutputAdapterInfo.AdapterConfiguration
 
 import scala.collection.mutable.{ArrayBuffer, Map}
 import org.apache.commons.vfs2.FileObject
@@ -297,7 +298,7 @@ class SftpChangesMonitor (modifiedFileCallback:(SmartFileHandler) => Unit) exten
   private var monitoringConf :  MonitoringConfig = null*/
   private var sftpConnectionConfig : SftpConnectionConfig = null
 
-  def init(connectionConfJson: String, monitoringConfJson: String): Unit ={
+  def init(adapterSpecificCfgJson: String): Unit ={
    /* connectionConf = JsonHelper.getConnectionConfigObj(connectionConfJson)
     monitoringConf = JsonHelper.getMonitoringConfigObj(monitoringConfJson)
 

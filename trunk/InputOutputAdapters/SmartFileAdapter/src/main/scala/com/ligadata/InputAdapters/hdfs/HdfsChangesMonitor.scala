@@ -9,6 +9,7 @@ import java.util.zip.GZIPInputStream
 import com.ligadata.Exceptions.KamanjaException
 import com.ligadata.InputAdapters.FileChangeType.FileChangeType
 import com.ligadata.InputAdapters.FileChangeType._
+import com.ligadata.InputOutputAdapterInfo.AdapterConfiguration
 import org.apache.hadoop.fs.FileStatus
 import org.apache.hadoop.fs.FileSystem
 import org.apache.hadoop.fs.Path
@@ -244,7 +245,7 @@ class HdfsChangesMonitor (modifiedFileCallback:(SmartFileHandler) => Unit) exten
   val poolSize = 5
   private val globalFileMonitorCallbackService: ExecutorService = Executors.newFixedThreadPool(poolSize)
 
-  def init(connectionConfJson: String, monitoringConfJson: String): Unit ={
+  def init(adapterSpecificCfgJson: String): Unit ={
     /*connectionConf = JsonHelper.getConnectionConfigObj(connectionConfJson)
     monitoringConf = JsonHelper.getMonitoringConfigObj(monitoringConfJson)
 
