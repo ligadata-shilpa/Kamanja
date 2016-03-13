@@ -11,7 +11,6 @@ import org.json4s.native.JsonMethods._
   */
 class SmartFileAdapterConfiguration extends AdapterConfiguration {
   var _type: String = _ // FileSystem, hdfs, sftp
-  var locations : Array[String] = Array.empty[String] //folders to monitor
 
   var connectionConfig : FileAdapterConnectionConfig = null
   var monitoringConfig : FileAdapterMonitoringConfig = null
@@ -24,13 +23,14 @@ class FileAdapterConnectionConfig {
 }
 class FileAdapterMonitoringConfig {
   var waitingTimeMS : Int = _
+  var locations : Array[String] = Array.empty[String] //folders to monitor
 }
 
 object SmartFileAdapterConfiguration{
 
   val defaultWaitingTimeMS = 1000
 
-  def GetAdapterConfig(inputConfig: AdapterConfiguration): SmartFileAdapterConfiguration = {
+  def getAdapterConfig(inputConfig: AdapterConfiguration): SmartFileAdapterConfiguration = {
 
     if (inputConfig.adapterSpecificCfg == null || inputConfig.adapterSpecificCfg.size == 0) {
       val err = "Not found Type and Connection info for Smart File Adapter Config:" + inputConfig.Name
@@ -64,12 +64,6 @@ object SmartFileAdapterConfiguration{
     }
     adapterConfig._type = adapCfgValues.get("Type").get.toString
 
-    if(adapCfgValues.getOrElse("Locations", null) == null) {
-      val err = "Not found Locations for Smart File Adapter Config:" + inputConfig.Name
-      throw new KamanjaException(err, null)
-    }
-    adapterConfig.locations = adapCfgValues.get("Locations").get.toString.split(",").map(str => str.trim).filter(str => str.size > 0)
-
     adapterConfig.connectionConfig = new FileAdapterConnectionConfig()
     adapterConfig.monitoringConfig = new FileAdapterMonitoringConfig()
 
@@ -101,8 +95,16 @@ object SmartFileAdapterConfiguration{
         adapterConfig.monitoringConfig.waitingTimeMS = kv._2.trim.toInt
         if (adapterConfig.monitoringConfig.waitingTimeMS < 0)
           adapterConfig.monitoringConfig.waitingTimeMS = defaultWaitingTimeMS
+      } else  if (kv._1.compareToIgnoreCase("Locations") == 0) {
+        adapterConfig.monitoringConfig.locations = kv._2.split(",").map(str => str.trim).filter(str => str.size > 0)
       }
     })
+
+    if(adapterConfig.monitoringConfig.locations == null || adapterConfig.monitoringConfig.locations.length == 0) {
+      val err = "Not found Locations for Smart File Adapter Config:" + inputConfig.Name
+      throw new KamanjaException(err, null)
+    }
+
 
     adapterConfig
   }
