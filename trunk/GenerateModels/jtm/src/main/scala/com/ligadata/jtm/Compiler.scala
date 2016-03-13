@@ -493,7 +493,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
       groks ++= e
       m
     } else {
-      Map.empty[String, Int]
+      Map.empty[String, (String, String, Set[String])]
     }
 
     // Append the packages needed
@@ -607,6 +607,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
         // Common computes section
         //
+        var groks = transformation.grokMatch
         var computes = transformation.computes
         var cnt1 = computes.size
         var cnt2 = 0
@@ -615,8 +616,31 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           cnt2 = cnt1
 
           // Check grok matches
-          // lazy val p1_r = p1.extractNamedGroups(msg1.in3.toString)
           //
+          val groks1 = groks.filter( g => {
+
+            // fs the input determined, emit as output expressions
+            if(fixedMappingSources.contains(g._1)) {
+
+              val nameColumn = ResolveName(g._1, aliaseMessages)
+              // Get the expression
+              //
+              val d = grokExpressions.get(g._2).get
+              val varName = "%s_%s".format(d._1, g._1)
+              methods :+= "lazy val %s = %s.extractNamedGroups(%s)".format(varName, d._1, nameColumn)
+
+              // Emit variables w/ null value is needed
+              //
+              d._3.foreach( e =>
+                fixedMappingSources ++= Map(e -> "if(%s.containsKey(\"%s\")) %s.get(\"%s\") else \"\")".format(varName, e, varName, e))
+              )
+              false
+            } else {
+              true
+            }
+          })
+
+          groks = groks1
 
           // Check computes
           val computes1 = computes.filter(c => {
