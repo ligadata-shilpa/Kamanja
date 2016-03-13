@@ -19,7 +19,7 @@ trait DataStoreOperations {
   // delete operations
   def del(containerName: String, keys: Array[Key]): Unit // For the given keys, delete the values
   def del(containerName: String, time: TimeRange, keys: Array[Array[String]]): Unit // For the given multiple bucket key strings, delete the values with in given date range
-
+  def del(containerName: String, time: TimeRange): Unit // For the given date range, delete the values /*Added by Yousef Abu Elbeh at 2016-03-13*/
   // get operations
   def get(containerName: String, callbackFunction: (Key, Value) => Unit): Unit
   def get(containerName: String, keys: Array[Key], callbackFunction: (Key, Value) => Unit): Unit

@@ -535,6 +535,34 @@ class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
     }
   }
 
+  //Added by Yousef Abu Elbeh at -2016-03-13 from here
+  override def del(containerName: String, time: TimeRange): Unit = {
+    var tableName = toFullTableName(containerName)
+    try {
+      CheckTableExists(containerName)
+      var query = "select timepartition,bucketkey,transactionid,rowid from " + tableName + " where timepartition >= ?  and timepartition <= ? "
+      var prepStmt = preparedStatementsMap.getOrElse(query, null)
+      if (prepStmt == null) {
+        prepStmt = session.prepare(query)
+        preparedStatementsMap.put(query, prepStmt)
+      }
+      var rowKeys = new Array[Key](0)
+        var rows = session.execute(prepStmt.bind(
+          new java.lang.Long(time.beginTime),
+          new java.lang.Long(time.endTime)).
+          setConsistencyLevel(consistencylevelDelete))
+        for (rs <- rows) {
+          rowKeys = rowKeys :+ getRowKey(rs)
+        }
+      del(containerName, rowKeys)
+    } catch {
+      case e: Exception => {
+        throw CreateDMLException("Failed to delete object(s) from table " + tableName, e)
+      }
+    }
+  }
+  //to here
+
   // get operations
   def getRowCount(containerName: String, whereClause: String): Long = {
     var tableName = toFullTableName(containerName)
@@ -1279,6 +1307,11 @@ class CassandraAdapterTx(val parent: DataStore) extends Transaction {
   override def del(containerName: String, time: TimeRange, keys: Array[Array[String]]): Unit = {
     parent.del(containerName, time, keys)
   }
+  //Added by Yousef Abu Elbeh at 2016-03-13 from here
+  override def del(containerName: String, time: TimeRange): Unit = {
+    parent.del(containerName, time)
+  }
+  //to here
 
   // get operations
   override def get(containerName: String, callbackFunction: (Key, Value) => Unit): Unit = {

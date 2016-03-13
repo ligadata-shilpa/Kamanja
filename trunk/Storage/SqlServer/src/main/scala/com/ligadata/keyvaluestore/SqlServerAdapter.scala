@@ -745,7 +745,64 @@ class SqlServerAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
       }
     }
   }
+  // Added by Yousef Abu Elbeh at 2016-03-13 from here
+  override def del(containerName: String, time: TimeRange/*, keys: Array[Array[String]]*/): Unit = {
+    var con: Connection = null
+    var pstmt: PreparedStatement = null
+    var cstmt: CallableStatement = null
+    var tableName = toFullTableName(containerName)
+    var sql = ""
+    try {
+      logger.info("begin time => " + dateFormat.format(time.beginTime))
+      logger.info("end time => " + dateFormat.format(time.endTime))
+      CheckTableExists(containerName)
 
+      con = getConnection
+      // we need to commit entire batch
+      con.setAutoCommit(false)
+      sql = "delete from " + tableName + " where timePartition >= ?  and timePartition <= ?"
+      pstmt = con.prepareStatement(sql)
+        pstmt.setLong(1, time.beginTime)
+        pstmt.setLong(2, time.endTime)
+        // Add it to the batch
+        pstmt.addBatch()
+      var deleteCount = pstmt.executeBatch();
+      con.commit()
+      var totalRowsDeleted = 0;
+      deleteCount.foreach(cnt => { totalRowsDeleted += cnt });
+      logger.info("Deleted " + totalRowsDeleted + " rows from " + tableName)
+      pstmt.clearBatch()
+      pstmt.close
+      pstmt = null
+      con.close
+      con = null
+    } catch {
+      case e: Exception => {
+        if (con != null) {
+          try {
+            // rollback has thrown exception in some special scenarios, capture it
+            con.rollback()
+          } catch {
+            case ie: Exception => {
+              logger.error("", e)
+            }
+          }
+        }
+        throw CreateDMLException("Failed to delete object(s) from the table " + tableName + ":" + "sql => " + sql, e)
+      }
+    } finally {
+      if (cstmt != null) {
+        cstmt.close
+      }
+      if (pstmt != null) {
+        pstmt.close
+      }
+      if (con != null) {
+        con.close
+      }
+    }
+  }
+  // to here
   // get operations
   def getRowCount(containerName: String, whereClause: String): Int = {
     var con: Connection = null
@@ -1510,7 +1567,11 @@ class SqlServerAdapterTx(val parent: DataStore) extends Transaction {
   override def del(containerName: String, time: TimeRange, keys: Array[Array[String]]): Unit = {
     parent.del(containerName, time, keys)
   }
-
+  //Added by Yousef Abu Elbeh at 2016-3-13 from here
+  override def del(containerName: String, time: TimeRange): Unit = {
+    parent.del(containerName, time)
+  }
+  // to here
   // get operations
   override def get(containerName: String, callbackFunction: (Key, Value) => Unit): Unit = {
     parent.get(containerName, callbackFunction)

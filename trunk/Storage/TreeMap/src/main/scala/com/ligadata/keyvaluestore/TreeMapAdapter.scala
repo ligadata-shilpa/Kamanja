@@ -338,6 +338,30 @@ class TreeMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
     }
   }
 
+  //Added by Yousef Abu Elbeh at 2016-03-13 from here
+  override def del(containerName: String, time: TimeRange): Unit = {
+    try {
+      CheckTableExists(containerName)
+      var tableName = toFullTableName(containerName)
+      var map = tablesMap(tableName)
+      var iter = map.keySet().iterator()
+      while (iter.hasNext()) {
+        val kba = iter.next()
+        val k = new String(kba)
+        var keyArray = k.split('|')
+        var tp = keyArray(0).toLong
+        if (tp >= time.beginTime && tp <= time.endTime) {
+            map.remove(kba)
+        }
+      }
+      Commit
+    } catch {
+      case e: Exception => {
+        logger.error("", e)
+      }
+    }
+  }
+  // to here
   // get operations
   def getRowCount(containerName: String): Long = {
     var tableName = toFullTableName(containerName)
@@ -796,7 +820,11 @@ class TreeMapAdapterTx(val parent: DataStore) extends Transaction {
   override def del(containerName: String, time: TimeRange, keys: Array[Array[String]]): Unit = {
     parent.del(containerName, time, keys)
   }
-
+  //Added by Yousef Abu Elbeh in 2016-03-13 from here
+  override def del(containerName: String, time: TimeRange): Unit = {
+    parent.del(containerName, time)
+  }
+  //to here
   // get operations
   override def get(containerName: String, callbackFunction: (Key, Value) => Unit): Unit = {
     parent.get(containerName, callbackFunction)

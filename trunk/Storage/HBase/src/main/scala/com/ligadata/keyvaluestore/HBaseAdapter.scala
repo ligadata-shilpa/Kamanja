@@ -775,6 +775,51 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     }
   }
 
+  //Added by Yousef Abu Elbeh in 2016-03-13 from here
+  override def del(containerName: String, time: TimeRange): Unit = {
+    var tableName = toFullTableName(containerName)
+    var tableHBase: Table = null
+    try {
+      relogin
+      CheckTableExists(containerName)
+      tableHBase = getTableFromConnection(tableName);
+      val bucketKeySet = new java.util.TreeSet[Array[String]](arrOfStrsComp)
+
+      // try scan with beginRow and endRow
+      logger.info("beginTime => " + time.beginTime)
+      logger.info("endTime => " + time.endTime)
+
+      var dels = new ArrayBuffer[Delete]()
+
+      val tmRanges = getUnsignedTimeRanges(Array(time))
+      tmRanges.foreach(tr => {
+          var scan = new Scan()
+        scan.setTimeRange(tr.beginTime,tr.endTime)
+          val rs = tableHBase.getScanner(scan);
+          val it = rs.iterator()
+          while (it.hasNext()) {
+            val r = it.next()
+            logger.info("searching for data in timerange: " + tr.beginTime +"-"+ tr.endTime)
+              dels += new Delete(r.getRow())
+            }
+          })
+      if (dels.length > 0) {
+        tableHBase.delete(new java.util.ArrayList(dels.toList)) // callling tableHBase.delete(dels.toList) results java.lang.UnsupportedOperationException
+      } else {
+        logger.info("No rows found for the delete operation")
+      }
+    } catch {
+      case e: Exception => {
+        throw CreateDMLException("Failed to delete object(s) from table " + tableName, e)
+      }
+    } finally {
+      if (tableHBase != null) {
+        tableHBase.close()
+      }
+    }
+  }
+  // to here
+
   // get operations
   def getRowCount(containerName: String): Long = {
     var tableHBase: Table = null
@@ -1494,6 +1539,11 @@ class HBaseAdapterTx(val parent: DataStore) extends Transaction {
   override def del(containerName: String, time: TimeRange, keys: Array[Array[String]]): Unit = {
     parent.del(containerName, time, keys)
   }
+  //Added by Yousef Abu Elbeh in 2016-03-13 from here
+  override def del(containerName: String, time: TimeRange): Unit = {
+    parent.del(containerName, time)
+  }
+  // to here
 
   // get operations
   override def get(containerName: String, callbackFunction: (Key, Value) => Unit): Unit = {
