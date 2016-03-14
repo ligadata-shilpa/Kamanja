@@ -30,6 +30,8 @@ class Node(useXmlConfig: Boolean=false, cacheName: String, nodeName: String) {
     val cacheManager: EmbeddedCacheManager = createCacheManagerFromXml
     val cache: Cache[String, String] = cacheManager.getCache(cacheName)
     System.out.printf("Cache %s started on %s, cache members are now %s\n", cacheName, cacheManager.getAddress, cache.getAdvancedCache.getRpcManager.getMembers)
+
+    cache.addListener(new LoggingListener)
   }
 
   @throws(classOf[IOException])
