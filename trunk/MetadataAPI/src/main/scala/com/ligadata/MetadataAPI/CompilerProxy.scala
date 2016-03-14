@@ -93,7 +93,7 @@ class CompilerProxy {
     */
   def recompileModelFromSource(sourceCode: String, pName: String, deps: List[String], typeDeps: List[String], sourceLang: String = "scala"): ModelDef = {
     try {
-      val (classPath, elements, totalDeps, nonTypeDeps, inputMsg) = buildClassPath(deps, typeDeps)
+      val (classPath, elements, totalDeps, nonTypeDeps) = buildClassPath(deps, typeDeps)
       val msgDefClassFilePath = compiler_work_dir + "/tempCode." + sourceLang
       val ((modelNamespace, modelName, modelVersion, pname), repackagedCode, tempPackage) = parseSourceForMetadata(sourceCode, "tempCode", sourceLang, msgDefClassFilePath, classPath, elements)
       return generateModelDef(repackagedCode, sourceLang, pname, classPath, tempPackage, modelName,
