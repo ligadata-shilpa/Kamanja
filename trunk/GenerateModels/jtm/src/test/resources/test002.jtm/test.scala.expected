@@ -29,6 +29,7 @@ class Factory(modelDef: ModelDef, nodeContext: NodeContext) extends ModelInstanc
 class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
   override def execute(txnCtxt: TransactionContext, outputDefault: Boolean): ModelResultBase = {
     //
+    //
     def exeGenerated_test1_1(msg1: com.ligadata.kamanja.test.v1000000.msg1): Array[Result] = {
       // in scala, type could be optional
       val out3: Int = msg1.in1 + 1000
