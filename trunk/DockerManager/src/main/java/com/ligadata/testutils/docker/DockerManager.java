@@ -17,22 +17,20 @@
 package com.ligadata.testutils.docker;
 
 import com.github.dockerjava.api.*;
-import com.github.dockerjava.api.async.ResultCallback;
 import com.github.dockerjava.api.command.*;
 import com.github.dockerjava.api.model.*;
 import com.github.dockerjava.core.*;
 import com.github.dockerjava.core.command.ExecStartResultCallback;
 import com.github.dockerjava.core.command.PullImageResultCallback;
 
-import java.io.Closeable;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InterruptedIOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 /**
  * Created by will on 2/24/16.
@@ -40,6 +38,7 @@ import java.util.Map;
 public class DockerManager {
     private DockerClient dockerClient;
     private String dockerHost;
+    private Logger logger = LogManager.getLogger(DockerManager.class);
 
     public DockerManager() {
         try {
@@ -47,6 +46,9 @@ public class DockerManager {
             dockerClient = DockerClientBuilder.getInstance(config).build();
             URI uri = config.getUri();
             dockerHost = uri.getHost();
+        }
+        catch(NullPointerException e) {
+            throw new RuntimeException("Failed to instantiate DockerManager due to missing Environment Variables", e);
         }
         catch(Exception e) {
             throw new RuntimeException("Failed to instantiate DockerManager", e);
@@ -75,12 +77,18 @@ public class DockerManager {
 
         for(String envVar: envVariables.keySet()) {
             String e = envVar + "=" + envVariables.get(envVar);
-            System.out.println("Adding Environmental Variable: " + e);
+            logger.info("Adding Environmental Variable: " + e);
             envVars.add(e);
         }
 
-        System.out.println("Pulling image: " + imageName + "... This may take a few minutes");
-        dockerClient.pullImageCmd(imageName).exec(new PullImageResultCallback()).awaitCompletion();
+        logger.info("Pulling image: " + imageName + "... This may take a few minutes");
+        try {
+            PullImageResultCallback result = dockerClient.pullImageCmd(imageName).exec(new PullImageResultCallback());
+            result.awaitSuccess();
+        }
+        catch(DockerClientException e) {
+            throw new IllegalArgumentException("Image " + imageName + " does not exist", e);
+        }
 
         CreateContainerResponse container = dockerClient.createContainerCmd(imageName)
                 .withPortBindings(portBindings)
@@ -88,7 +96,7 @@ public class DockerManager {
                 .withEnv(envVars.toArray(new String[envVars.size()]))
                 .exec();
 
-        System.out.println("Starting Docker Container with Image Name: " + imageName + " and with ID: " + container.getId());
+        logger.info("Starting Docker Container with Image Name: " + imageName + " and with ID: " + container.getId());
 
         dockerClient.startContainerCmd(container.getId()).exec();
         return container.getId();
@@ -103,9 +111,17 @@ public class DockerManager {
     }
 
     public void stopContainer(String containerId) {
-        System.out.println("Stopping Docker Container with container ID: " + containerId);
-        dockerClient.stopContainerCmd(containerId).exec();
-        dockerClient.waitContainerCmd(containerId).exec();
+        logger.info("Stopping Docker Container with container ID: " + containerId);
+        try {
+            dockerClient.stopContainerCmd(containerId).exec();
+            dockerClient.waitContainerCmd(containerId).exec();
+        }
+        catch(NotModifiedException e) {
+            logger.warn("Docker container with ID: " + containerId + " not running");
+        }
+        catch(Exception e) {
+            throw new RuntimeException("Unexpected Exception. Failed to stop container '" + containerId + "'", e);
+        }
     }
 
     public String getDockerHost() {

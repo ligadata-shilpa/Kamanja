@@ -16,6 +16,7 @@
 
 package com.ligadata.testutils.docker
 
+import com.github.dockerjava.api.NotModifiedException
 import org.scalatest._
 import collection.JavaConversions._
 
@@ -36,7 +37,12 @@ class DockerManagerTest extends FlatSpec with BeforeAndAfter {
   }
 
   after {
-    dm.stopContainer(containerId)
+    try {
+      dm.stopContainer(containerId)
+    }
+    catch {
+      case e: NotModifiedException =>
+    }
   }
 
   "DockerManager" should "start a container given an image name" in {
@@ -45,4 +51,18 @@ class DockerManagerTest extends FlatSpec with BeforeAndAfter {
     val envVariables = mapAsJavaMap(Map("CASSANDRA_RPC_ADDRESS" -> "0.0.0.0"))
     containerId = dm.startContainer("cassandra:2.1", exposedPortMap, envVariables)
   }
+
+  it should "throw IllegalArgumentException when attempting to start a container with a non-existent image name" in {
+    intercept[IllegalArgumentException] {
+      dm.startContainer("doesntexist")
+    }
+  }
+
+  /*
+  // Unable to test this at the moment as environment variables apparently can't be locally set in code.
+  it should "throw an <someType>Exception when Docker's environment variables are not set" in {
+    sys.env.put("DOCKER_HOST", "")
+    dm = new DockerManager()
+  }
+  */
 }
