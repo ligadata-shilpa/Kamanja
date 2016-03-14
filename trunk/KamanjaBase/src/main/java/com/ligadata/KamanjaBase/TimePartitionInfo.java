@@ -1,4 +1,4 @@
-package org.kamanja;
+package com.ligadata.KamanjaBase;
 
 public class TimePartitionInfo {
 
@@ -7,7 +7,7 @@ public class TimePartitionInfo {
 	TimePartitionType timePartitionType; // types - Daily, Monthly, Yearly
 
 	enum TimePartitionType {
-		DAILY, MONTHLY, YEARLY;
+		DAILY, MONTHLY, YEARLY, NONE;
 	}
 
 	public String getFieldName() {

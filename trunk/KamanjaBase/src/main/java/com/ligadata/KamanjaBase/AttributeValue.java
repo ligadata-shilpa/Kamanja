@@ -1,6 +1,6 @@
-package org.kamanja;
+package com.ligadata.KamanjaBase;
 
-public class ValuePair {
+public class AttributeValue {
 
 	String valueType = "";
 	Object value = "";
