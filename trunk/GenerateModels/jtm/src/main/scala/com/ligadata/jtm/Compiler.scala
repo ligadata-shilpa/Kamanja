@@ -311,7 +311,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     result ++= grok.file.distinct.map(
       f => {
         val file = new File(f)
-        val name = "grok/%08X/%s".format(f.hashCode, file.getName)
+        val name = "\"grok/%08X/%s\"".format(f.hashCode, file.getName)
         s"dict.addDictionary(new File(getClass.getResource($name).getPath))"
     })
 
@@ -612,7 +612,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
         var cnt1 = computes.size + groks.size
         var cnt2 = 0
 
-        while(cnt1!=cnt2 && computes.nonEmpty) {
+        while(cnt1!=cnt2 && (computes.nonEmpty || groks.nonEmpty)) {
           cnt2 = cnt1
 
           // Check grok matches
@@ -621,6 +621,8 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
             // fs the input determined, emit as output expressions
             if(fixedMappingSources.contains(g._1)) {
+
+              //logger.trace("Grok matched {}", g._1)
 
               val nameColumn = ResolveName(g._1, aliaseMessages)
               // Get the expression
@@ -639,6 +641,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
               )
               false
             } else {
+              //logger.trace("Grok not matched {}", g._1)
               true
             }
           })

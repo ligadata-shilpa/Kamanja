@@ -7,12 +7,12 @@
   },
 
   "imports": {
-    "packages": [ "com.ligadata.Utils._", "com.ligadata.Utils._" ]
+    "packages": [ "com.ligadata.Utils._" ]
   },
 
   "aliases": {
     "messages": {
-      "m1": "com.ligadata.kamanja.test.msg1",
+      "m1": "com.ligadata.kamanja.test.msg5",
       "o1": "com.ligadata.kamanja.test.msg2"
     }
   },
@@ -34,26 +34,16 @@
       "dependsOn": [ ["m1"] ],
 
       "grok match": {
-        "in3": "{EMAIL: email}"},
-        "url": "{URLDOMAIN: domain}"
-      },
-
-      "computes": {
-        "out3":{ "type": "Int", "val": "$in1 + 1000", "comment": "in scala, type could be optional" }
+        "in1": "{EMAIL: email} {DOMAIN: domain} {USER: user}"
       },
 
       "outputs": {
         "o1": {
           "mapping": {
-            "out1": "in1",
-            "out2": "t1",
-            "out4": "email"
-          },
-
-          "where": "!($in2 != -1 && $in2 < 100)",
-
-          "computes": {
-            "t1": { "type": "String", "val": "\"s:\" + ($in2).toString()" }
+            "out1": "in3",
+            "out2": "email",
+            "out3": "domain",
+            "out4": "user"
           }
         }
       }

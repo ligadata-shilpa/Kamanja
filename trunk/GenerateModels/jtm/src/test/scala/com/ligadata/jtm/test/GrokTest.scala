@@ -52,7 +52,7 @@ class GrokTest extends FunSuite with BeforeAndAfter {
     logger.info("actual path={}", outputFile)
     logger.info("expected path={}", outputFile)
 
-    //assert(actual == expected)
+    assert(actual == expected)
   }
 
 }
