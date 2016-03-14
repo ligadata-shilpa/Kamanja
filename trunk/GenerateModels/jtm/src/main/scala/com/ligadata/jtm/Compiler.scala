@@ -236,8 +236,8 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     //
     if(header.language.trim.toLowerCase=="scala") {
       // ToDo: Add version parser here
-      if(header.minVersion.toDouble < 2.11) {
-        throw new Exception("The minimum language requirement must be 2.11")
+      if(header.minVersion.toDouble < 2.10) {
+        throw new Exception("The minimum language requirement must be 2.10")
       }
     }
 
