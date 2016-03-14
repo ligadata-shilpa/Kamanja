@@ -22,7 +22,7 @@ import scala.actors.threadpool.{ Executors, ExecutorService }
 import java.io.{InputStream}
 import com.ligadata.InputAdapters.CompressionUtil._
 import org.apache.logging.log4j.{ Logger, LogManager }
-import com.ligadata.InputAdapters.{SmartFileHandler, SmartFileMonitor}
+import com.ligadata.InputAdapters.{CompressionUtil, SmartFileHandler, SmartFileMonitor}
 
 class HdfsConnectionConfig(val hostsList: String)
 
@@ -77,15 +77,35 @@ class HdfsFileHandler extends SmartFileHandler{
 
   def getFullPath = fileFullPath
 
+  //gets the input stream according to file system type - HDFS here
+  private def getDefaultInputStream() : InputStream = {
+
+    hdFileSystem = FileSystem.newInstance(hdfsConfig)
+    val inputStream : FSDataInputStream =
+      try {
+        val inFile : Path = new Path(getFullPath)
+        hdFileSystem.open(inFile)
+      }
+      catch {
+        case e: Exception =>
+          logger.error(e)
+          null
+      }
+
+    inputStream
+  }
+
   @throws(classOf[KamanjaException])
   def openForRead(): Unit = {
-    val compressed = isCompressed
-    val inFile : Path = new Path(getFullPath)
-    hdFileSystem = FileSystem.newInstance(getHdfsConfig)
-    in = hdFileSystem.open(inFile)
-
-    if(compressed)
-      in = new GZIPInputStream(in)
+    try {
+      val tempInputStream = getDefaultInputStream()
+      val compressionType = CompressionUtil.getCompressionType(fileFullPath, tempInputStream, null)
+      tempInputStream.close() //close this one, only first bytes were read to decide compression type, reopen to read from the beginning
+      in = CompressionUtil.getProperInputStream(getDefaultInputStream, compressionType)
+    }
+    catch{
+      case e : Exception => throw new KamanjaException (e.getMessage, e)
+    }
   }
 
   @throws(classOf[KamanjaException])
@@ -203,32 +223,6 @@ class HdfsFileHandler extends SmartFileHandler{
     } finally {
     }
   }
-
-  private def isCompressed : Boolean = {
-
-     hdFileSystem = FileSystem.get(hdfsConfig)
-
-      val tempInputStream : FSDataInputStream =
-        try {
-          val inFile : Path = new Path(getFullPath)
-          hdFileSystem.open(inFile)
-        }
-        catch {
-          case e: Exception =>
-            logger.error(e)
-            null
-        }
-      val compressed = if(tempInputStream == null) false else isStreamCompressed(tempInputStream)
-      try {
-        if (tempInputStream != null) {
-          tempInputStream.close()
-        }
-
-      }
-      catch{case e : Exception => {logger.error(e)}
-      }
-      compressed
-    }
 }
 
 /**

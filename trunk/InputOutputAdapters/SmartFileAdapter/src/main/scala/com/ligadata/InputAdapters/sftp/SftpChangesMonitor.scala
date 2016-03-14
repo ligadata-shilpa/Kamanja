@@ -120,20 +120,55 @@ class SftpFileHandler extends SmartFileHandler{
 
   def getFullPath = remoteFullPath
 
+  /*private def isCompressed : Boolean = {
+    val tempInputStream : InputStream =
+      try {
+        val remoteFileObj = manager.resolveFile(sftpEncodedUri, opts)
+        remoteFileObj.getContent().getInputStream()
+      }
+      catch {
+        case e: Exception =>
+          logger.error(e)
+          null
+      }
+    val compressed = if(tempInputStream == null) false else isStreamCompressed(tempInputStream)
+    if(tempInputStream != null){
+      try{
+        tempInputStream.close()
+      }
+      catch{case e : Exception => }
+    }
+    compressed
+  }*/
+
+  //gets the input stream according to file system type - SFTP here
+  private def getDefaultInputStream() : InputStream = {
+    val inputStream : InputStream =
+      try {
+        val remoteFileObj = manager.resolveFile(sftpEncodedUri, opts)
+        remoteFileObj.getContent().getInputStream()
+      }
+      catch {
+        case e: Exception =>
+          logger.error(e)
+          null
+      }
+
+    inputStream
+  }
+
   @throws(classOf[KamanjaException])
   def openForRead(): Unit = {
-    try {
-      logger.info(s"Opening SFTP file ($getFullPath) to read")
+    logger.info(s"Opening SFTP file ($getFullPath) to read")
 
+    try {
       manager = new StandardFileSystemManager()
       manager.init()
 
-      val remoteFileObj = manager.resolveFile(sftpEncodedUri, opts)
-      in = remoteFileObj.getContent().getInputStream()
-
-      if (isCompressed)
-        in = new GZIPInputStream(in)
-      //bufferedReader = new BufferedReader(new InputStreamReader(in))
+      val tempInputStream = getDefaultInputStream()
+      val compressionType = CompressionUtil.getCompressionType(getFullPath, tempInputStream, null)
+      tempInputStream.close() //close this one, only first bytes were read to decide compression type, reopen to read from the beginning
+      in = CompressionUtil.getProperInputStream(getDefaultInputStream, compressionType)
     }
     catch{
       case e : Exception => throw new KamanjaException (e.getMessage, e)
@@ -263,29 +298,6 @@ class SftpFileHandler extends SmartFileHandler{
       if(manager!=null)
         manager.close()
     }
-  }
-
-  private def isCompressed : Boolean = {
-
-    val tempInputStream : InputStream =
-      try {
-        val remoteFileObj = manager.resolveFile(sftpEncodedUri, opts)
-        remoteFileObj.getContent().getInputStream()
-      }
-      catch {
-        case e: Exception =>
-          logger.error(e)
-          null
-      }
-    val compressed = if(tempInputStream == null) false else isStreamCompressed(tempInputStream)
-    if(tempInputStream != null){
-      try{
-        tempInputStream.close()
-      }
-      catch{case e : Exception => }
-    }
-    compressed
-
   }
 }
 

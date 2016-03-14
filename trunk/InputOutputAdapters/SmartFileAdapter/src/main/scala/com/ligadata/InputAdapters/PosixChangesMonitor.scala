@@ -41,9 +41,9 @@ class PosixFileHandler extends SmartFileHandler{
     fileFullPath = fullPath
   }
 
-  private def isCompressed: Boolean = {
-
-    val tempInputStream : InputStream =
+  //gets the input stream according to file system type - POSIX here
+  private def getDefaultInputStream() : InputStream = {
+    val inputStream : InputStream =
       try {
         new FileInputStream(fileFullPath)
       }
@@ -52,24 +52,16 @@ class PosixFileHandler extends SmartFileHandler{
           logger.error(e)
           null
       }
-    val compressed = if(tempInputStream == null) false else isStreamCompressed(tempInputStream)
-    if(tempInputStream != null){
-      try{
-        tempInputStream.close()
-      }
-      catch{case e : Exception => }
-    }
-    compressed
+    inputStream
   }
 
   @throws(classOf[KamanjaException])
   def openForRead(): Unit = {
     try {
-      if (isCompressed) {
-        in = new GZIPInputStream(new FileInputStream(fileFullPath))
-      } else {
-        in = new FileInputStream(fileFullPath)
-      }
+      val tempInputStream = getDefaultInputStream()
+      val compressionType = CompressionUtil.getCompressionType(fileFullPath, tempInputStream, null)
+      tempInputStream.close() //close this one, only first bytes were read to decide compression type, reopen to read from the beginning
+      in = CompressionUtil.getProperInputStream(getDefaultInputStream, compressionType)
       //bufferedReader = new BufferedReader(in)
     }
     catch{

@@ -5,6 +5,7 @@ package com.ligadata.InputAdapters
   */
 import java.io.{InputStream, IOException}
 import java.util.zip.GZIPInputStream
+import com.ligadata.Exceptions.KamanjaException
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream
 import org.anarres.lzo.LzopInputStream
 import org.apache.logging.log4j.LogManager
@@ -25,6 +26,21 @@ object CompressionUtil {
 
   lazy val loggerName = this.getClass.getName
   lazy val logger = LogManager.getLogger(loggerName)
+
+  /**
+    * gets what type of compression used to compress the file
+    * @param is
+    * @param detectionType : how to detect the compression type. for now only ByMagicNumbers is supported, it is also default if no value is provided
+    * @return
+    */
+  def getCompressionType(filePath : String, is : InputStream, detectionType : String) : CompressionType = {
+
+    if(detectionType == null || detectionType.length == 0 || detectionType.equalsIgnoreCase("ByMagicNumbers")){
+      detectCompressionTypeByMagicNumbers(is)
+    }
+    else
+      throw new KamanjaException("Unsupported type for detecting files compression: " + detectionType, null)
+  }
 
   /**
     * checking the compression type by comparing magic numbers which is the head of the file
@@ -116,28 +132,5 @@ object CompressionUtil {
 
   }
 
-  /**
-    * only temporarily used, will be removed later, to support other compression types
-    * @param inputStream
-    * @return
-    */
-  def isStreamCompressed(inputStream: InputStream): Boolean = {
-
-    val maxlen = 2
-    val buffer = new Array[Byte](maxlen)
-    val readlen = inputStream.read(buffer, 0, maxlen)
-
-    //inputStream.close() // Close before we really check and return the data
-
-    if (readlen < 2)
-      return false
-
-    val b0: Int = buffer(0)
-    val b1: Int = buffer(1)
-
-    val head = (b0 & 0xff) | ((b1 << 8) & 0xff00)
-
-    return (head == GZIPInputStream.GZIP_MAGIC);
-  }
 }
 
