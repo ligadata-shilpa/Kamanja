@@ -147,7 +147,7 @@ class SavedMdlResult {
   }
 }
 
-trait ModelResultBase extends BaseMsg {
+trait ModelResultBase {
   def toJson: List[org.json4s.JsonAST.JObject]
 
   // Returns JSON string
