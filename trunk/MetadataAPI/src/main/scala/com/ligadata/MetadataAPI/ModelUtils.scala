@@ -1585,7 +1585,16 @@ object ModelUtils {
     * @return
     */
   def getModelDependencies(modelConfigName: String, userid: Option[String] = None): List[String] = {
-    var config: scala.collection.immutable.Map[String, List[String]] = MdMgr.GetMdMgr.GetModelConfig(modelConfigName)
-    config.getOrElse(ModelCompilationConstants.DEPENDENCIES, List[String]())
+    var config = MdMgr.GetMdMgr.GetModelConfig(modelConfigName)
+    val tmpDeps = config.getOrElse(ModelCompilationConstants.DEPENDENCIES, null)
+
+    if (tmpDeps != null) {
+      if (tmpDeps.isInstanceOf[List[_]])
+        return tmpDeps.asInstanceOf[List[String]]
+      if (tmpDeps.isInstanceOf[Array[_]])
+        return tmpDeps.asInstanceOf[Array[String]].toList
+    }
+
+    List[String]()
   }
 }
