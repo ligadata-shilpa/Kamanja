@@ -21,9 +21,9 @@ import com.ligadata.KamanjaBase.FactoryOfModelInstanceFactory
 import com.ligadata.kamanja.metadata.MiningModelType._
 
 import com.ligadata.Serialize._
+import org.dmg.pmml.{DataField, FieldName, PMML}
 
 import scala.collection.JavaConverters._
-import scala.collection.immutable.List
 
 import java.io.{ByteArrayInputStream, PushbackInputStream, InputStream}
 import java.nio.charset.StandardCharsets
@@ -34,7 +34,6 @@ import java.util.{List => JList}
 import com.ligadata.kamanja.metadata._
 import com.ligadata.jpmml.JpmmlAdapter
 import org.jpmml.model.{JAXBUtil, ImportFilter}
-import org.dmg.pmml._
 import org.jpmml.evaluator._
 import org.xml.sax.InputSource
 import org.xml.sax.helpers.XMLReaderFactory
