@@ -70,14 +70,14 @@ class CompilerProxy {
     try {
       // Figure out the metadata information needed for 
       val additinalDeps = addDepsFromClassPath
-      val (classPath, elements, totalDeps, nonTypeDeps, inputMsg) = getClassPathFromModelConfig(modelConfigName, additinalDeps)
+      val (classPath, elements, totalDeps, nonTypeDeps, inMsgSets, outMsgs) = getClassPathFromModelConfig(modelConfigName, additinalDeps)
       val msgDefClassFilePath = compiler_work_dir + "/" + removeUserid(modelConfigName) + "." + sourceLang
       val ((modelNamespace, modelName, modelVersion, pname), repackagedCode, tempPackage) = parseSourceForMetadata(sourceCode, modelConfigName, sourceLang, msgDefClassFilePath, classPath, elements)
       return generateModelDef(repackagedCode, sourceLang, pname, classPath, tempPackage, modelName,
         modelVersion, msgDefClassFilePath, elements, sourceCode,
         totalDeps,
         MetadataAPIImpl.getModelMessagesContainers(modelConfigName, None),
-        nonTypeDeps, false, inputMsg)
+        nonTypeDeps, false, inMsgSets, outMsgs)
     } catch {
       case e: Exception => {
         logger.error("COMPILER_PROXY: unable to determine model metadata information during AddModel.", e)
@@ -91,13 +91,13 @@ class CompilerProxy {
     * is available.. so just generate the new ModelDef
     *
     */
-  def recompileModelFromSource(sourceCode: String, pName: String, deps: List[String], typeDeps: List[String], sourceLang: String = "scala"): ModelDef = {
+  def recompileModelFromSource(sourceCode: String, pName: String, deps: List[String], typeDeps: List[String], inputMsgSets: List[List[String]], outputMsgs: List[String], sourceLang: String = "scala"): ModelDef = {
     try {
       val (classPath, elements, totalDeps, nonTypeDeps) = buildClassPath(deps, typeDeps)
       val msgDefClassFilePath = compiler_work_dir + "/tempCode." + sourceLang
       val ((modelNamespace, modelName, modelVersion, pname), repackagedCode, tempPackage) = parseSourceForMetadata(sourceCode, "tempCode", sourceLang, msgDefClassFilePath, classPath, elements)
       return generateModelDef(repackagedCode, sourceLang, pname, classPath, tempPackage, modelName,
-        modelVersion, msgDefClassFilePath, elements, sourceCode, totalDeps, typeDeps, nonTypeDeps, true, typeDeps)
+        modelVersion, msgDefClassFilePath, elements, sourceCode, totalDeps, typeDeps, nonTypeDeps, true, inputMsgSets, outputMsgs)
     } catch {
       case e: Exception => {
         logger.error("COMPILER_PROXY: unable to determine model metadata information during recompile.", e)
@@ -496,7 +496,8 @@ class CompilerProxy {
   // we are compiling first time or recompiling an existing model.
   private def generateModelDef(repackagedCode: String, sourceLang: String, pname: String, classPath: String, modelNamespace: String, modelName: String,
                                modelVersion: String, msgDefClassFilePath: String, elements: Set[BaseElemDef], originalSource: String,
-                               deps: scala.collection.immutable.Set[String], typeDeps: List[String], notTypeDeps: scala.collection.immutable.Set[String], recompile: Boolean, inputMsg: List[String]): ModelDef = {
+                               deps: scala.collection.immutable.Set[String], typeDeps: List[String], notTypeDeps: scala.collection.immutable.Set[String], recompile: Boolean,
+                               inMsgSets: List[List[String]], outMsgs: List[String]): ModelDef = {
     try {
       // Now, we need to create a real jar file - Need to add an actual Package name with a real Napespace and Version numbers.
       val packageName = modelNamespace + ".V" + MdMgr.ConvertVersionToLong(MdMgr.FormatVersion(modelVersion))
@@ -543,15 +544,35 @@ class CompilerProxy {
 
        */
 
-      val inpMsgs = if (inputMsg != null) inputMsg.map(m => {
-        val t = new MessageAndAttributes
-        t.message = m
-        t.attributes = Array[String]()
-        t
-      }).toArray
-      else {
-        Array[MessageAndAttributes]()
-      }
+
+      val inpM =
+        if (inMsgSets != null) {
+          val filterdSets = inMsgSets.filter(set => {
+            if (set != null) {
+              val filInnerSet = set.filter(m => (m != null && m.trim.nonEmpty))
+              (filInnerSet.size > 0)
+            } else {
+              false
+            }
+          })
+          filterdSets.map(set => {
+            set.map(m => {
+              val t = new MessageAndAttributes
+              t.message = m
+              t.attributes = Array[String]()
+              t
+            }).toArray
+          }).toArray
+        } else {
+          Array[Array[MessageAndAttributes]]()
+        }
+
+      val outM =
+        if (outMsgs != null) {
+          outMsgs.filter(m => (m != null && m.trim.nonEmpty)).toArray
+        } else {
+          Array[String]()
+        }
 
       val objDef = createSavedSourceCode(originalSource, notTypeDeps, typeDeps, pname)
 
@@ -560,8 +581,8 @@ class CompilerProxy {
         , modelName
         , pName
         , ModelRepresentation.JAR
-        , Array(inpMsgs)
-        , Array[String]()
+        , inpM
+        , outM
         , false
         , objDef
         , MiningModelType.modelType(modelType)
@@ -575,7 +596,7 @@ class CompilerProxy {
       modDef.jarName = jarFileName
       modDef.physicalName = pName
       if (sourceLang.equalsIgnoreCase("scala")) modDef.objectFormat = fSCALA else modDef.objectFormat = fJAVA
-      modDef.ObjectDefinition(createSavedSourceCode(originalSource, notTypeDeps, typeDeps, pname))
+      modDef.ObjectDefinition(objDef)
       modDef
     } catch {
       case e: AlreadyExistsException => {
@@ -1157,13 +1178,14 @@ class CompilerProxy {
     * getClassPath -
     *
     */
-  private def getClassPathFromModelConfig(modelName: String, cpDeps: List[String]): (String, Set[BaseElemDef], scala.collection.immutable.Set[String], scala.collection.immutable.Set[String], List[String])
-  = {
+  private def getClassPathFromModelConfig(modelName: String, cpDeps: List[String]): (String, Set[BaseElemDef], scala.collection.immutable.Set[String], scala.collection.immutable.Set[String], List[List[String]], List[String]) = {
+    val inMsgSets = MetadataAPIImpl.getModelInputTypesSets(modelName, userId)
+    val outMsgs = MetadataAPIImpl.getModelOutputTypes(modelName, userId)
     val inMC = MetadataAPIImpl.getModelMessagesContainers(modelName, userId)
     val retVals = buildClassPath(MetadataAPIImpl.getModelDependencies(modelName, userId),
       inMC,
       cpDeps)
-    (retVals._1, retVals._2, retVals._3, retVals._4, inMC)
+    (retVals._1, retVals._2, retVals._3, retVals._4, inMsgSets, outMsgs)
   }
 
   /**

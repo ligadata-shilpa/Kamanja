@@ -3679,8 +3679,15 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @return
      */
   def getModelDependencies(modelConfigName: String, userid: Option[String] = None): List[String] = {
-    var config: scala.collection.immutable.Map[String, List[String]] = MdMgr.GetMdMgr.GetModelConfig(modelConfigName)
-    config.getOrElse(ModelCompilationConstants.DEPENDENCIES, List[String]())
+      var config = MdMgr.GetMdMgr.GetModelConfig(modelConfigName)
+      val typDeps = config.getOrElse(ModelCompilationConstants.DEPENDENCIES, null)
+      if (typDeps != null) {
+        if (typDeps.isInstanceOf[List[_]])
+          return typDeps.asInstanceOf[List[String]]
+        if (typDeps.isInstanceOf[Array[_]])
+          return typDeps.asInstanceOf[Array[String]].toList
+      }
+      List[String]()
   }
 
     /**
@@ -3694,7 +3701,15 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     MessageAndContainerUtils.getModelMessagesContainers(modelConfigName,userid)
   }
 
-    /**
+  def getModelInputTypesSets(modelConfigName: String, userid: Option[String] = None): List[List[String]] = {
+    MessageAndContainerUtils.getModelInputTypesSets(modelConfigName,userid)
+  }
+
+  def getModelOutputTypes(modelConfigName: String, userid: Option[String] = None): List[String] = {
+    MessageAndContainerUtils.getModelOutputTypes(modelConfigName,userid)
+  }
+
+  /**
      * Get the model config keys
      * @return
      */

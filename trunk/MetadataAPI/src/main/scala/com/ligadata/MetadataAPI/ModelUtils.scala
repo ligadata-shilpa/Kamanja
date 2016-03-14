@@ -666,12 +666,38 @@ object ModelUtils {
           modDefTemp
         } else {
           val saveModelParms = parse(mod.ObjectDefinition).values.asInstanceOf[Map[String, Any]]
+
+          val tmpInputMsgSets = saveModelParms.getOrElse(ModelCompilationConstants.INPUT_TYPES_SETS, null)
+          var inputMsgSets = List[List[String]]()
+          if (tmpInputMsgSets != null) {
+            if (tmpInputMsgSets.isInstanceOf[List[Any]]) {
+              if (tmpInputMsgSets.isInstanceOf[List[List[Any]]])
+                inputMsgSets = tmpInputMsgSets.asInstanceOf[List[List[String]]]
+              if (tmpInputMsgSets.isInstanceOf[List[Array[Any]]])
+                inputMsgSets = tmpInputMsgSets.asInstanceOf[List[Array[String]]].map(lst => lst.toList)
+            } else if (tmpInputMsgSets.isInstanceOf[Array[Any]]) {
+              if (tmpInputMsgSets.isInstanceOf[Array[List[Any]]])
+                inputMsgSets = tmpInputMsgSets.asInstanceOf[Array[List[String]]].toList
+              if (tmpInputMsgSets.isInstanceOf[Array[Array[Any]]])
+                inputMsgSets = tmpInputMsgSets.asInstanceOf[Array[Array[String]]].map(lst => lst.toList).toList
+            }
+          }
+
+          var outputMsgs = List[String]()
+          val tmpOnputMsgs = saveModelParms.getOrElse(ModelCompilationConstants.OUTPUT_TYPES_SETS, null)
+          if (tmpOnputMsgs != null) {
+            if (tmpOnputMsgs.isInstanceOf[List[_]])
+              outputMsgs = tmpOnputMsgs.asInstanceOf[List[String]]
+            if (tmpOnputMsgs.isInstanceOf[Array[_]])
+              outputMsgs = tmpOnputMsgs.asInstanceOf[Array[String]].toList
+          }
+
           val custModDef: ModelDef = compProxy.recompileModelFromSource(
             saveModelParms.getOrElse(ModelCompilationConstants.SOURCECODE, "").asInstanceOf[String],
             saveModelParms.getOrElse(ModelCompilationConstants.PHYSICALNAME, "").asInstanceOf[String],
             saveModelParms.getOrElse(ModelCompilationConstants.DEPENDENCIES, List[String]()).asInstanceOf[List[String]],
             saveModelParms.getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, List[String]()).asInstanceOf[List[String]],
-            ObjFormatType.asString(mod.objectFormat))
+            inputMsgSets, outputMsgs, ObjFormatType.asString(mod.objectFormat))
           custModDef
         }
       } else {

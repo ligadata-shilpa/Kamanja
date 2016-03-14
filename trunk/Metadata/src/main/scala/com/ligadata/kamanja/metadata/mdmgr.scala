@@ -82,7 +82,7 @@ class MdMgr {
   private var clusters = new HashMap[String, ClusterInfo]
   private var nodes = new HashMap[String, NodeInfo]
   private var adapters = new HashMap[String, AdapterInfo]
-  private var modelConfigs = new HashMap[String, scala.collection.immutable.Map[String, List[String]]]
+  private var modelConfigs = new HashMap[String, scala.collection.immutable.Map[String, Any]]
   private var configurations = new HashMap[String, UserPropertiesInfo]
   private var msgdefSystemCols = List("transactionid", "timepartitiondata", "rownumber")
 
@@ -2129,6 +2129,7 @@ class MdMgr {
     * @param supportsInstanceSerialization when true, instances of this model are serialized and persisted in the metadata store, saving startup costs
     *                                      required to prepare new instances.  NOTE: this feature is **not** implemented, but will prove useful for reducing
     *                                      cluster startup costs for PMML models in particular when it **is**.
+    * @param modelConfig                   - Any extract configuration for this model (like config for JAVA/SCALA models etc)
     * @return the ModelDef instance
     *
     */
@@ -2146,7 +2147,8 @@ class MdMgr {
                    , jarNm: String = null
                    , depJars: Array[String] = null
                    , recompile: Boolean = false
-                   , supportsInstanceSerialization: Boolean = false): ModelDef = {
+                   , supportsInstanceSerialization: Boolean = false
+                   , modelConfig: String = ""): ModelDef = {
 
     /** Determine model existence constraints and throw exception if they are not met */
     var modelExists: Boolean = false
@@ -2178,7 +2180,8 @@ class MdMgr {
       , inputMsgSets
       , outputMsgs
       , isReusable
-      , supportsInstanceSerialization)
+      , supportsInstanceSerialization
+      , modelConfig)
 
     /** FIXME: All of the statements down to the return of the ModelDef instance really should be just arguments
       * to the constructor that utilizes values instead of the variables now in use... save this work for a refactor
@@ -2898,12 +2901,11 @@ class MdMgr {
     *
     */
   def AddModelDef(nameSpace: String, name: String, physicalName: String, modelRep: ModelRepresentation.ModelRepresentation, inputMsgSets: Array[Array[MessageAndAttributes]], outputMsgs: Array[String],
-                  isReusable: Boolean, objectDefStr: String, miningModelType: MiningModelType.MiningModelType, ver: Long = 1, jarNm: String = null, depJars: Array[String] = Array[String]()): Unit = {
-    AddModelDef(MakeModelDef(nameSpace, name, physicalName, modelRep,  inputMsgSets, outputMsgs, isReusable, objectDefStr, miningModelType, ver, jarNm, depJars, false, false), false)
+                  isReusable: Boolean, objectDefStr: String, miningModelType: MiningModelType.MiningModelType, ver: Long = 1, jarNm: String = null, depJars: Array[String] = Array[String](), modelConfig: String = ""): Unit = {
+    AddModelDef(MakeModelDef(nameSpace, name, physicalName, modelRep,  inputMsgSets, outputMsgs, isReusable, objectDefStr, miningModelType, ver, jarNm, depJars, false, false, modelConfig), false)
   }
 
   def AddModelDef(mdl: ModelDef, allowLatestVersion: Boolean): Unit = {
-
     var modelExists: Boolean = false
     val existingModel = Model(mdl.FullName, -1, false)
     if (existingModel != None) {
@@ -2991,12 +2993,12 @@ class MdMgr {
     modelConfigs.keySet.toArray[String]
   }
 
-  def AddModelConfig(key: String, inCfg: scala.collection.immutable.Map[String, List[String]]): Unit = {
+  def AddModelConfig(key: String, inCfg: scala.collection.immutable.Map[String, Any]): Unit = {
     modelConfigs(key.toLowerCase) = inCfg
   }
 
-  def GetModelConfig(key: String): scala.collection.immutable.Map[String, List[String]] = {
-    modelConfigs.getOrElse(key.toLowerCase, scala.collection.immutable.Map[String, List[String]]())
+  def GetModelConfig(key: String): scala.collection.immutable.Map[String, Any] = {
+    modelConfigs.getOrElse(key.toLowerCase, scala.collection.immutable.Map[String, Any]())
   }
 
   /**

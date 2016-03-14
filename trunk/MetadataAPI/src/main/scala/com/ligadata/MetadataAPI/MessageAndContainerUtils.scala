@@ -1573,7 +1573,47 @@ object MessageAndContainerUtils {
     * @return
     */
   def getModelMessagesContainers(modelConfigName: String, userid: Option[String]): List[String] = {
-    var config: scala.collection.immutable.Map[String, List[String]] = MdMgr.GetMdMgr.GetModelConfig(modelConfigName)
-    config.getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, List[String]())
+    var config = MdMgr.GetMdMgr.GetModelConfig(modelConfigName)
+    val typDeps = config.getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, null)
+    if (typDeps != null) {
+      if (typDeps.isInstanceOf[List[_]])
+        return typDeps.asInstanceOf[List[String]]
+      if (typDeps.isInstanceOf[Array[_]])
+        return typDeps.asInstanceOf[Array[String]].toList
+    }
+    List[String]()
   }
+
+  def getModelInputTypesSets(modelConfigName: String, userid: Option[String] = None): List[List[String]] = {
+    var config = MdMgr.GetMdMgr.GetModelConfig(modelConfigName)
+    val inputTypDeps = config.getOrElse(ModelCompilationConstants.INPUT_TYPES_SETS, null)
+    if (inputTypDeps != null) {
+      if (inputTypDeps.isInstanceOf[List[Any]]) {
+        if (inputTypDeps.isInstanceOf[List[List[Any]]])
+          return inputTypDeps.asInstanceOf[List[List[String]]]
+        if (inputTypDeps.isInstanceOf[List[Array[Any]]])
+          return inputTypDeps.asInstanceOf[List[Array[String]]].map(lst => lst.toList)
+      } else if (inputTypDeps.isInstanceOf[Array[Any]]) {
+        if (inputTypDeps.isInstanceOf[Array[List[Any]]])
+          return inputTypDeps.asInstanceOf[Array[List[String]]].toList
+        if (inputTypDeps.isInstanceOf[Array[Array[Any]]])
+          return inputTypDeps.asInstanceOf[Array[Array[String]]].map(lst => lst.toList).toList
+      }
+    }
+    List[List[String]]()
+  }
+
+  def getModelOutputTypes(modelConfigName: String, userid: Option[String]): List[String] = {
+    var config = MdMgr.GetMdMgr.GetModelConfig(modelConfigName)
+    val typDeps = config.getOrElse(ModelCompilationConstants.OUTPUT_TYPES_SETS, null)
+    if (typDeps != null) {
+      if (typDeps.isInstanceOf[List[_]])
+        return typDeps.asInstanceOf[List[String]]
+      if (typDeps.isInstanceOf[Array[_]])
+        return typDeps.asInstanceOf[Array[String]].toList
+    }
+    List[String]()
+  }
+
+
 }

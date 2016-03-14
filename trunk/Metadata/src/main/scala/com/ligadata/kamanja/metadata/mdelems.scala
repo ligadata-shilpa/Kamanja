@@ -772,7 +772,8 @@ class ModelDef( val modelRepresentation: ModelRepresentation = ModelRepresentati
                 , val inputMsgSets : Array[Array[MessageAndAttributes]] = Array[Array[MessageAndAttributes]]()
                 , val outputMsgs: Array[String] = Array[String]()
                 , val isReusable: Boolean = false
-                , val supportsInstanceSerialization : Boolean = false) extends BaseElemDef {
+                , val supportsInstanceSerialization: Boolean = false
+                , val modelConfig: String = "") extends BaseElemDef {
     def typeString: String = PhysicalName
     def SupportsInstanceSerialization : Boolean = supportsInstanceSerialization
 }
@@ -908,6 +909,8 @@ object ModelCompilationConstants {
   val TYPES_DEPENDENCIES: String = "MessageAndContainers"
   val SOURCECODE: String = "source"
   val PHYSICALNAME: String = "pName"
+  val INPUT_TYPES_SETS: String = "InputTypesSets"
+  val OUTPUT_TYPES_SETS: String = "OutputTypes"
 }
 
 // These case classes define the monitoring structures that will appear in the zookeepr.
