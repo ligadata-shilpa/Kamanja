@@ -3,11 +3,18 @@ package com.ligadata.tools.containersutility
 /**
   * Created by Yousef on 3/9/2016.
   */
+
+import com.ligadata.KvBase.TimeRange
+
 import scala.collection.mutable._
 import org.apache.logging.log4j. LogManager
 import com.ligadata.Utils.Utils
 import com.ligadata.MetadataAPI.MetadataAPIImpl
 import com.ligadata.Exceptions._
+import org.json4s._
+import org.json4s.JsonDSL._
+import org.json4s.native.JsonMethods._
+import scala.collection.immutable.Map
 
 trait LogTrait {
   val loggerName = this.getClass.getName()
@@ -50,10 +57,12 @@ Sample uses:
           nextOption(map ++ Map('operation -> value), tail)
         case "--keyfields" :: value :: tail =>
           nextOption(map ++ Map('keyfields -> value), tail)
-        case "--keyid" :: value :: tail =>
-          nextOption(map ++ Map('keyid -> value), tail)
-        case "--timerange" :: value :: tail =>
-          nextOption(map ++ Map('timerange -> value), tail)
+//        case "--keyid" :: value :: tail =>
+//          nextOption(map ++ Map('keyid -> value), tail)
+//        case "--timerange" :: value :: tail =>
+//          nextOption(map ++ Map('timerange -> value), tail)
+        case "--filter " :: value :: tail =>
+          nextOption(map ++ Map('filter  -> value), tail)
         case option :: tail =>
           logger.error("Unknown option " + option)
           sys.exit(1)
@@ -62,13 +71,39 @@ Sample uses:
 
     val options = nextOption(Map(), arglist)
 
-    var cfgfile = if (options.contains('config)) options.apply('config) else null
-    var containerName = if (options.contains('containername)) options.apply('containername) else null
-    var operation = if (options.contains('operation)) options.apply('operation) else null
-    val tmpkeyfieldnames = if (options.contains('keyfields)) options.apply('keyfields) else null
-    val keyid = if (options.contains('keyid)) options.apply('keyid) else null
-    val timerange = if (options.contains('timerange)) options.apply('timerange) else null 
-    
+    var cfgfile = if (options.contains('config)) options.apply('config) else null // datatore name and connection string
+    var containerName = if (options.contains('containername)) options.apply('containername) else null // container name
+    var operation = if (options.contains('operation)) options.apply('operation) else null // operation select/truncate/delete
+    val tmpkeyfieldnames = if (options.contains('keyfields)) options.apply('keyfields) else null //key field name
+//    val keyid = if (options.contains('keyid)) options.apply('keyid) else null
+//    val timerange = if (options.contains('timerange)) options.apply('timerange) else null
+    val filter = if(options.contains('filter)) options.apply('filter) else null // include keyid and timeranges
+    val filterFile = scala.io.Source.fromFile(filter).mkString // read filter file config (JSON file)
+    val parsedKey = parse(filterFile)
+    val timeRangeArraybuf = scala.collection.mutable.ArrayBuffer.empty[TimeRange] //create an arrayBuffer to append data into it
+    val insiderKeyArraybuf = scala.collection.mutable.ArrayBuffer.empty[Array[String]] // create an ArrayBuffer to append data into it
+    val values = parsedKey.values.asInstanceOf[Map[String, Any]]
+    values.foreach(kv => {
+      if (kv._1.compareToIgnoreCase("keyid") == 0) {
+        val keyList = kv._2.asInstanceOf[List[List[Any]]]
+        keyList.foreach(listitem => {
+          if(listitem != null){
+            insiderKeyArraybuf += listitem.map(item => item.toString).toArray
+          }
+        })
+      } else  if (kv._1.compareToIgnoreCase("timerange") == 0) {
+        val list = kv._2.asInstanceOf[List[Map[String, String]]]
+        list.foreach(listItem => {
+          if (!listItem("begintime").equalsIgnoreCase(null) && !listItem("endtime").equalsIgnoreCase(null)) {
+            var timeRangeObj = new TimeRange(listItem("begintime").toLong, listItem("endtime").toLong)
+            timeRangeArraybuf += timeRangeObj
+          }
+        })
+      }
+    })
+    val timeRangeArray : Array[TimeRange] = timeRangeArraybuf.toArray // include a list list of TimeRange objects
+    val keysArray : Array[Array[String]] = insiderKeyArraybuf.toArray  // include a list of bucketKey
+
     var valid: Boolean = (cfgfile != null && containerName != null)
 
   if (valid) {
@@ -96,7 +131,35 @@ if (utilmaker.isOk) {
         val dstore = utilmaker.GetDataStoreHandle(containersUtilityConfiguration.jarPaths, utilmaker.dataDataStoreInfo)
         if (dstore != null) {
           try {
-            //do truncate/select/delete
+            if (operation != null) {
+              if (operation.equalsIgnoreCase("truncate")) {
+                utilmaker.TruncateContainer(containerName, dstore)
+              } else if (operation.equalsIgnoreCase("delete")) {
+                if (keysArray.length > 0 && timeRangeArray.length == 0) {
+                  utilmaker.DeleteFromContainer(containerName,keysArray, dstore)
+                } else if (keysArray.length == 0 && timeRangeArray.length > 0) {
+                  utilmaker.DeleteFromContainer(containerName,timeRangeArray,dstore)
+                } else if (keysArray.length > 0 && timeRangeArray.length > 0) {
+                  timeRangeArray.foreach(timerange => {
+                    utilmaker.DeleteFromContainer(containerName,keysArray, timerange, dstore)
+                  })
+                } else /*if(keyid.equalsIgnoreCase(null) && timerange.equalsIgnoreCase(null))*/ {
+                  logger.error("Failed to delete data from %s container, maybe keyid is null or timerange is null or both are null".format(containerName))
+                }
+              } else if (operation.equalsIgnoreCase("select")) {
+                if (keysArray.length > 0 && timeRangeArray.length == 0) {
+                  utilmaker.GetFromContainer(containerName, keysArray, dstore)
+                } else if (keysArray.length == 0 && timeRangeArray.length > 0) {
+                  utilmaker.GetFromContainer(containerName, timeRangeArray, dstore)
+                } else if (keysArray.length > 0 && timeRangeArray.length > 0) {
+                  utilmaker.GetFromContainer(containerName, keysArray, timeRangeArray, dstore)
+                } else {
+                  logger.error("Failed to select data from %s container, maybe keyid is null or timerange is null or both are null".format(containerName))
+                }
+              }
+            } else {
+              logger.error("Unknown operation you should use one of this three options: select, delete, truncate")
+            }
           } catch {
             case e: Exception => {
               logger.error("Failed to build Container or Message.", e)
