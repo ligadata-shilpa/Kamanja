@@ -16,7 +16,7 @@
 package com.ligadata.jtm
 
 import com.ligadata.jtm.eval.{Types => EvalTypes, Stamp, Expressions, GrokHelper}
-import com.ligadata.kamanja.metadata.{StructTypeDef, MdMgr}
+import com.ligadata.kamanja.metadata.{ModelDef, StructTypeDef, MdMgr}
 import com.ligadata.kamanja.metadataload.MetadataLoad
 import com.ligadata.messagedef.MessageDefImpl
 import org.aicer.grok.dictionary.GrokDictionary
@@ -110,6 +110,28 @@ class CompilerBuilder {
  *
  */
 class Compiler(params: CompilerBuilder) extends LogTrait {
+
+  /** The generated code
+    *
+    */
+  private var code: String = null
+
+  /** Returns the modeldef after compiler completed
+    *
+    */
+  def MakeModelDef(inputFile: String ) : ModelDef = {
+    if(code==null)
+      throw new Exception("No code was successful created")
+
+    null
+  }
+
+  def Code() : String = {
+    if(code==null)
+      throw new Exception("No code was successful created")
+
+    code
+  }
 
   /** Split a fully qualified object name into namspace and class
     *
@@ -787,10 +809,20 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     result :+= model
 
     // Write to output file
-    val code = CodeHelper.Indent(result)
-    logger.trace("Output to file {}", outputFile)
-    FileUtils.writeStringToFile(new File(outputFile), code)
+    // Store a copy in the object
+    code = CodeHelper.Indent(result)
 
-    outputFile
+    if(outputFile!=null && outputFile.nonEmpty) {
+      logger.trace("Output to file {}", outputFile)
+      FileUtils.writeStringToFile(new File(outputFile), code)
+      outputFile
+    } else {
+      code
+    }
+
   }
+
+
+
+
 }
