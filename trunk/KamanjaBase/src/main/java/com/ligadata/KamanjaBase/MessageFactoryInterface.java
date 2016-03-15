@@ -1,5 +1,5 @@
 package com.ligadata.KamanjaBase;
 
-public abstract class MessageFactoryInterface extends ContainerFactoryInterface {
+public interface MessageFactoryInterface extends ContainerFactoryInterface {
 
 }

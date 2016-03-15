@@ -8,7 +8,7 @@ public abstract class ContainerInterface implements ContainerOrConcept {
 
     ContainerFactoryInterface factory = null;
 
-    ContainerInterface(ContainerFactoryInterface factory) {
+    public ContainerInterface(ContainerFactoryInterface factory) {
         this.factory = factory;
     }
 
