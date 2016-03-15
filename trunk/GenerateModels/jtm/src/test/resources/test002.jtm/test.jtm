@@ -46,7 +46,7 @@
           "where": "!($in2 != -1 && $in2 < 100)",
 
           "computes": {
-            "t1": { "type": "String", "val": "\"s:\" +($in2.toString()" }
+            "t1": { "type": "String", "val": "\"s:\" + $in2.toString()" }
           }
         }
       }

@@ -15,7 +15,7 @@
  */
 package com.ligadata.jtm
 
-import com.ligadata.jtm.eval.{Types => EvalTypes, GrokHelper}
+import com.ligadata.jtm.eval.{Types => EvalTypes, Expressions, GrokHelper}
 import com.ligadata.kamanja.metadata.{StructTypeDef, MdMgr}
 import com.ligadata.kamanja.metadataload.MetadataLoad
 import com.ligadata.messagedef.MessageDefImpl
@@ -121,19 +121,6 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     (elements.dropRight(1).mkString("."), elements.last)
   }
 
-  /** Split a name into alias and field name
-    *
-    * @param name Name
-    * @return
-    */
-  def splitAlias(name: String): (String, String) = {
-    val elements = name.split('.')
-    if(elements.length==1)
-      ("", name)
-    else
-      ( elements.head, elements.slice(1, elements.length).mkString(".") )
-  }
-
   /** Creates a metadata instance with defaults and json objects located on the file system
     *
     * @return Metadata manager
@@ -174,41 +161,6 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     }
 
     mgr
-  }
-
-  /** Find all logical column names that are encode in this expression $name
-    *
-    * @param expression
-    * @return
-    */
-  def ExtractColumnNames(expression: String): Set[String] = {
-
-    // ToDo: Extract only the first two components
-    // ToDo: allow to throw away the 2nd component if the first matches
-    // and attribute to the expression
-    val regex = """(\$[a-zA-Z0-9_.]+)""".r
-    regex.findAllMatchIn(expression).toArray.map( m => m.matched.drop(1)).toSet
-  }
-
-  /** Replace all logical column names with the variables
-    *
-    * @param expression expression to update
-    * @param mapNameSource name to variable mapping
-    * @return string with the result
-    */
-  def FixupColumnNames(expression: String, mapNameSource: Map[String, String], aliaseMessages: Map[String, String]): String = {
-    val regex = """(\$[a-zA-Z0-9_.]+)""".r
-    val m = regex.pattern.matcher(expression)
-    val sb = new StringBuffer
-    var i = 0
-    while (m.find) {
-      val name = m.group(0).drop(1)
-      val resolvedName = ResolveName(name, aliaseMessages)
-      m.appendReplacement(sb, mapNameSource.get(resolvedName).get)
-      i = i + 1
-    }
-    m.appendTail(sb)
-    sb.toString
   }
 
   def Validate(root: Root) = {
@@ -399,45 +351,15 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
   }
 
   def ResolveNames(names: Set[String], aliaseMessages: Map[String, String] ) : Map[String, String] =  {
-
-    names.map ( n => {
-      val (alias, name) = splitAlias(n)
-      if(alias.length>0) {
-        val a = aliaseMessages.get(alias)
-        if(a.isEmpty) {
-          throw new Exception("Missing alias %s for %s".format(alias, n))
-        } else {
-          n -> "%s.%s".format(a.get, name)
-        }
-      } else {
-        n -> n
-      }
-    }).toMap
+    Expressions.ResolveNames(names, aliaseMessages)
   }
 
   def ResolveName(n: String, aliaseMessages: Map[String, String] ) : String =  {
-
-    val (alias, name) = splitAlias(n)
-    if(alias.length>0) {
-      val a = aliaseMessages.get(alias)
-      if(a.isEmpty) {
-        throw new Exception("Missing alias %s for %s".format(alias, n))
-      } else {
-        "%s.%s".format(a.get, name)
-      }
-    } else {
-      n
-    }
+    Expressions.ResolveName(n, aliaseMessages)
   }
 
   def ResolveAlias(n: String, aliaseMessages: Map[String, String] ) : String =  {
-
-    val a = aliaseMessages.get(n)
-    if(a.isEmpty) {
-      throw new Exception("Missing alias %s".format(n))
-    } else {
-      a.get
-    }
+    Expressions.ResolveAlias(n, aliaseMessages)
   }
 
   // Load metadata
@@ -651,13 +573,13 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
             // Check if the compute if determined
             val (open, expression) =  if(c._2.expression.nonEmpty) {
-              val list = ExtractColumnNames(c._2.expression)
+              val list = Expressions.ExtractColumnNames(c._2.expression)
               val rList = ResolveNames(list, aliaseMessages)
               val open = rList.filter(f => !fixedMappingSources.contains(f._2))
               (open, c._2.expression)
             } else {
               val evaluate = c._2.expressions.map( expression => {
-                val list = ExtractColumnNames(expression)
+                val list = Expressions.ExtractColumnNames(expression)
                 val rList = ResolveNames(list, aliaseMessages)
                 val open = rList.filter(f => !fixedMappingSources.contains(f._2))
                 (open, expression)
@@ -671,7 +593,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
             }
 
             if(open.isEmpty) {
-              val newExpression = FixupColumnNames(expression, fixedMappingSources, aliaseMessages)
+              val newExpression = Expressions.FixupColumnNames(expression, fixedMappingSources, aliaseMessages)
               // Output the actual compute
               methods :+= c._2.Comment
               if(c._2.typename.length>0)
@@ -740,11 +662,11 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
             // filters
             val wheres1 = wheres.filter(f => {
-              val list = ExtractColumnNames(f)
+              val list = Expressions.ExtractColumnNames(f)
               val open = list.filter(f => !mappingSources.contains(f) )
               if(open.isEmpty) {
                 // Sub names to
-                val newExpression = FixupColumnNames(f, mappingSources, aliaseMessages)
+                val newExpression = Expressions.FixupColumnNames(f, mappingSources, aliaseMessages)
                 // Output the actual filter
                 collect ++= Array("if (%s) return Array.empty[Result]\n".format(newExpression))
                 false
@@ -758,13 +680,13 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
               // Check if the compute if determind
               val (open, expression) =  if(c._2.expression.length > 0) {
-                val list = ExtractColumnNames(c._2.expression)
+                val list = Expressions.ExtractColumnNames(c._2.expression)
                 val rList = ResolveNames(list, root.aliases.messages.toMap)
                 val open = rList.filter(f => !fixedMappingSources.contains(f._2))
                 (open, c._2.expression)
               } else {
                 val evaluate = c._2.expressions.map( expression => {
-                  val list = ExtractColumnNames(expression)
+                  val list = Expressions.ExtractColumnNames(expression)
                   val rList = ResolveNames(list, root.aliases.messages.toMap)
                   val open = rList.filter(f => !fixedMappingSources.contains(f._2))
                   (open, expression)
@@ -779,7 +701,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
               if(open.isEmpty) {
                 // Sub names to
-                val newExpression = FixupColumnNames(expression, mappingSources, aliaseMessages)
+                val newExpression = Expressions.FixupColumnNames(expression, mappingSources, aliaseMessages)
 
                 // Output the actual compute
                 // To Do: multiple vals and type provided

@@ -22,7 +22,7 @@
     "test1": {
       "dependsOn": [ ["m1"],  ["m2"]],
       "computes": {
-        "out3":{ "type": "Int", "vals": ["$m1.$in1 + 1000", "$m2.$in1 + 2000"], "comment": "in scala, type could be optional" }
+        "out3":{ "type": "Int", "vals": ["${m1.in1} + 1000", "${m2.in1} + 2000"], "comment": "in scala, type could be optional" }
       },
 
       "outputs": {

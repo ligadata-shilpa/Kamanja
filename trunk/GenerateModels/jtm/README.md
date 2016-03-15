@@ -27,8 +27,8 @@ References
 
     If an expression needs to reference an external element it need to be marked with a $element
 
-    $element - references something in the current name space like a alias or a generated variable. There referenced element must be unique
-    $alias.$element - references something in the current alias name space
+    $element or ${element} - references something in the current name space like a alias or a generated variable. There referenced element must be unique
+    ${alias.element} - references something in the current alias name space
 
 
 

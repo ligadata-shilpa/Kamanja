@@ -15,11 +15,12 @@
  */
 package com.ligadata.jtm.eval
 
+import scala.util.matching.Regex
+
 /**
   *
   */
 object Expressions {
-
 
   /** Find all logical column names that are encode in this expression $name
     *
@@ -41,4 +42,90 @@ object Expressions {
     val m2 = regex2.findAllMatchIn(expression).toArray
     m1.map(m => m.group(1)).toSet ++  m2.map(m => m.group(1)).toSet
   }
+
+  /** Replace all logical column names with the variables
+    *
+    * @param expression expression to update
+    * @param mapNameSource name to variable mapping
+    * @return string with the result
+    */
+  def FixupColumnNames(expression: String, mapNameSource: Map[String, String], aliaseMessages: Map[String, String]): String = {
+
+    val regex1 = """\$([a-zA-Z0-9_]+)""".r
+    val regex2 = """\$\{([a-zA-Z0-9_]+\.[a-zA-Z0-9_]+)\}""".r
+
+    def ReplaceWithResolve(regex: Regex, expression: String): String = {
+      val m = regex.pattern.matcher(expression)
+      val sb = new StringBuffer
+      var i = 0
+      while (m.find) {
+        val name = m.group(1)
+        val resolvedName = ResolveName(name, aliaseMessages)
+        m.appendReplacement(sb, mapNameSource.get(resolvedName).get)
+        i = i + 1
+      }
+      m.appendTail(sb)
+      sb.toString
+    }
+
+    val expression1 = ReplaceWithResolve(regex1, expression)
+    val expression2 = ReplaceWithResolve(regex2, expression1)
+    return expression2
+  }
+
+  def ResolveNames(names: Set[String], aliaseMessages: Map[String, String] ) : Map[String, String] =  {
+
+    names.map ( n => {
+      val (alias, name) = splitAlias(n)
+      if(alias.length>0) {
+        val a = aliaseMessages.get(alias)
+        if(a.isEmpty) {
+          throw new Exception("Missing alias %s for %s".format(alias, n))
+        } else {
+          n -> "%s.%s".format(a.get, name)
+        }
+      } else {
+        n -> n
+      }
+    }).toMap
+  }
+
+  def ResolveName(n: String, aliaseMessages: Map[String, String] ) : String =  {
+
+    val (alias, name) = splitAlias(n)
+    if(alias.length>0) {
+      val a = aliaseMessages.get(alias)
+      if(a.isEmpty) {
+        throw new Exception("Missing alias %s for %s".format(alias, n))
+      } else {
+        "%s.%s".format(a.get, name)
+      }
+    } else {
+      n
+    }
+  }
+
+  def ResolveAlias(n: String, aliaseMessages: Map[String, String] ) : String =  {
+
+    val a = aliaseMessages.get(n)
+    if(a.isEmpty) {
+      throw new Exception("Missing alias %s".format(n))
+    } else {
+      a.get
+    }
+  }
+
+  /** Split a name into alias and field name
+    *
+    * @param name Name
+    * @return
+    */
+  def splitAlias(name: String): (String, String) = {
+    val elements = name.split('.')
+    if(elements.length==1)
+      ("", name)
+    else
+      ( elements.head, elements.slice(1, elements.length).mkString(".") )
+  }
+
 }
