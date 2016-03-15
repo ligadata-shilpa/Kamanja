@@ -316,9 +316,10 @@ class JpmmlAdapterFactory(modelDef: ModelDef, nodeContext: NodeContext) extends 
         val msgFullName : String = msg.FullName
         val msgVersionDots : String = msg.Version
         val msgVersion : String = msgVersionDots.filter(_ != '.').toString
-        val msgNameKey : String = s"$msgFullName.$msgVersion"
-        val yum : Boolean = if (modelDef != null) {
-            (msgNameKey.toLowerCase == modelDef.msgConsumed.toLowerCase)
+        val msgNameKey : String = s"$msgFullName.$msgVersion".toLowerCase()
+        val yum : Boolean = if (modelDef != null && modelDef.inputMsgSets != null) {
+            val filter = modelDef.inputMsgSets.filter(s => (s.size == 1 && s(0).message.toLowerCase == msgNameKey))
+            return filter.size > 0
         } else {
             false
         }
@@ -333,7 +334,7 @@ class JpmmlAdapterFactory(modelDef: ModelDef, nodeContext: NodeContext) extends 
 
         val useThisModel : ModelInstance = if (modelDef != null) {
             /** Ingest the pmml here and build an evaluator */
-            val modelEvaluator: ModelEvaluator[_] = createEvaluator(modelDef.jpmmlText)
+            val modelEvaluator: ModelEvaluator[_] = createEvaluator(modelDef.objectDefinition)
             val isInstanceReusable : Boolean = true
             val builtModel : ModelInstance = new JpmmlAdapter( this, modelEvaluator)
             builtModel

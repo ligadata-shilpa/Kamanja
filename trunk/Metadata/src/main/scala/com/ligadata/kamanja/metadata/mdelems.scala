@@ -745,6 +745,13 @@ object ModelRepresentation extends Enumeration {
 }
 
 /**
+*/
+class MessageAndAttributes {
+  var message: String = _ // Type of the message
+  var attributes: Array[String] = _ // Attributes are full qualified names with respect to message.
+}
+
+/**
  * The ModelDef provides meta data for all models in the system.  The model's input type can currently be either a jar or
  * a pmml text string (used by PMML type models).  The mining model type is any of the dmg.org's model types as defined in their xsd or
  * one of our own special types (CustomScala, CustomJava, or Unknown when the caller does not supply one).
@@ -752,11 +759,9 @@ object ModelRepresentation extends Enumeration {
  * Models, when marked with isReusable, can be cached (are considered idempotent)
  * @param modelRepresentation The form of model to be cataloged - JAR, PMML etc.
  * @param miningModelType a MininingModelType default = "Unknown"
- * @param inputVars an array of the input variables that are consumed by this model (used for dag construction)
- * @param outputVars an array of the output variables published by this model (also used for dag construction)
+ * @param inputMsgSets Sets of Messages it depends on (attributes referred in this model). Each set must met (all messages should available) to trigger this model
+ * @param outputMsgs All possible output messages produced by this model
  * @param isReusable Whether the model execution is referentially transparent
- * @param msgConsumed Namespace.name.ver of message consumed by this model...for now only one messages is consumed by
- *                    any given model
  * @param supportsInstanceSerialization when true, ModelDef instances are serialized and cached for retrieval by
  *                                      the engine and other consumers of ModelDefs.  This mechanism is useful
  *                                      for PMML and other models that are relatively expensive to initialize. The
@@ -765,14 +770,12 @@ object ModelRepresentation extends Enumeration {
  */
 class ModelDef( val modelRepresentation: ModelRepresentation = ModelRepresentation.JAR
                 , val miningModelType : MiningModelType = MiningModelType.UNKNOWN
-                , val inputVars : Array[BaseAttributeDef] = null
-                , val outputVars: Array[BaseAttributeDef] = null
+                , val inputMsgSets : Array[Array[MessageAndAttributes]] = Array[Array[MessageAndAttributes]]()
+                , val outputMsgs: Array[String] = Array[String]()
                 , val isReusable: Boolean = false
-                , val msgConsumed: String = ""
-                , val supportsInstanceSerialization : Boolean = false) extends BaseElemDef {
-
+                , val supportsInstanceSerialization: Boolean = false
+                , val modelConfig: String = "") extends BaseElemDef {
     def typeString: String = PhysicalName
-    def jpmmlText : String = ObjectDefinition
     def SupportsInstanceSerialization : Boolean = supportsInstanceSerialization
 }
 
@@ -907,6 +910,8 @@ object ModelCompilationConstants {
   val TYPES_DEPENDENCIES: String = "MessageAndContainers"
   val SOURCECODE: String = "source"
   val PHYSICALNAME: String = "pName"
+  val INPUT_TYPES_SETS: String = "InputTypesSets"
+  val OUTPUT_TYPES_SETS: String = "OutputTypes"
 }
 
 // These case classes define the monitoring structures that will appear in the zookeepr.

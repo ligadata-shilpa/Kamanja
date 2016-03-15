@@ -17,6 +17,8 @@
 
 package com.ligadata.KamanjaBase
 
+import com.ligadata.Exceptions.{DeprecatedException, NotImplementedFunctionException}
+
 import scala.collection.immutable.Map
 import com.ligadata.Utils.Utils
 import com.ligadata.kamanja.metadata.{MdMgr, ModelDef}
@@ -27,6 +29,8 @@ import java.io.{DataInputStream, DataOutputStream}
 import com.ligadata.KvBase.{Key, Value, TimeRange /* , KvBaseDefalts, KeyWithBucketIdAndPrimaryKey, KeyWithBucketIdAndPrimaryKeyCompHelper */}
 import com.ligadata.Utils.{KamanjaLoaderInfo}
 import com.ligadata.HeartBeat._
+
+import scala.collection.mutable.ArrayBuffer
 
 object MinVarType extends Enumeration {
   type MinVarType = Value
@@ -448,7 +452,19 @@ abstract class ModelInstance(val factory: ModelInstanceFactory) {
   //		outputDefault: If this is true, engine is expecting output always.
   //	Output:
   //		Derived class of ModelResultBase is the return results expected. null if no results.
-  def execute(txnCtxt: TransactionContext, outputDefault: Boolean): ModelResultBase
+  // This call is deprecated and valid for models upto 1.3.x. Use run method for new implementation
+  def execute(txnCtxt: TransactionContext, outputDefault: Boolean): ModelResultBase = {
+    throw new DeprecatedException("Deprecated", null)
+  }
+
+  //	Intput:
+  //		txnCtxt: Transaction context related to this execution
+  //		outputDefault: If this is true, engine is expecting output always.
+  //	Output:
+  //		Derived messages are the return results expected.
+  def run(txnCtxt: TransactionContext, outputDefault: Boolean): Array[BaseMsg] = {
+    throw new NotImplementedFunctionException("Not implemented", null)
+  }
 }
 
 // ModelInstanceFactory will be created from FactoryOfModelInstanceFactory when metadata got resolved (while engine is starting and when metadata adding while running the engine).
@@ -478,7 +494,10 @@ abstract class ModelInstanceFactory(val modelDef: ModelDef, val nodeContext: Nod
   def getVersion(): String // Model Version
 
   // Checking whether the message is valid to execute this model instance or not.
-  def isValidMessage(msg: MessageContainerBase): Boolean
+  // Deprecated and no more supported in new versions from 1.4.0
+  def isValidMessage(msg: MessageContainerBase): Boolean = {
+    throw new DeprecatedException("Deprecated", null)
+  }
 
   // Creating new model instance related to this ModelInstanceFactory.
   def createModelInstance(): ModelInstance
@@ -501,24 +520,39 @@ trait FactoryOfModelInstanceFactory {
   def prepareModel(nodeContext: NodeContext, modelDefStr: String, inpMsgName: String, outMsgName: String, loaderInfo: KamanjaLoaderInfo, jarPaths: collection.immutable.Set[String]): ModelDef
 }
 
+// FIXME: Need to have message creator (Model/InputMessage/Get(from db/cache))
 class TransactionContext(val transId: Long, val nodeCtxt: NodeContext, val msgData: Array[Byte], val partitionKey: String) {
-  private var msg: MessageContainerBase = _
+  private var orgInputMsg: MessageContainerBase = _
+  private val msgs = scala.collection.mutable.Map[String, ArrayBuffer[MessageContainerBase]]() // orgInputMsg is part in this also
+  private val valuesMap = new java.util.HashMap[String, Any]()
 
   def getInputMessageData(): Array[Byte] = msgData
 
   def getPartitionKey(): String = partitionKey
 
-  def getMessage(): MessageContainerBase = msg
+  def getMessage(): MessageContainerBase = orgInputMsg// Original messages
 
-  def setMessage(m: MessageContainerBase): Unit = {
-    msg = m
+  def getMessages(msgType: String): Array[MessageContainerBase] = msgs.getOrElse(msgType.toLowerCase(), ArrayBuffer[MessageContainerBase]()).toArray
+
+  def addMessage(m: MessageContainerBase): Unit = {
+    val msgNm = m.FullName.toLowerCase()
+    val tmp = msgs.getOrElse(msgNm, ArrayBuffer[MessageContainerBase]())
+    tmp += m
+    msgs(msgNm) = tmp
+  }
+
+  def addMessages(curMsgs: Array[MessageContainerBase]): Unit = {
+    curMsgs.foreach(m => addMessage(m))
+  }
+
+  def setInitialMessage(orgMsg: MessageContainerBase): Unit = {
+    orgInputMsg = orgMsg
+    addMessage(orgMsg)
   }
 
   def getTransactionId() = transId
 
   def getNodeCtxt() = nodeCtxt
-
-  private var valuesMap = new java.util.HashMap[String, Any]()
 
   def getPropertyValue(clusterId: String, key: String): String = {
     if (nodeCtxt != null) nodeCtxt.getPropertyValue(clusterId, key) else ""
