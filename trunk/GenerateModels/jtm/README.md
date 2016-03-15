@@ -19,7 +19,7 @@ Map: and object with key value pairs. Value can be string or objects
     name : {
         "key1": {...},
         "key2": {...},
-        "keyN": {...}"        
+        "keyN": {...}        
     }
 ```
 
@@ -147,9 +147,9 @@ Transformations
 ### Deep-dive transformation section 
 
 
-
-
 ===================== Other =============================
+
+
 jtm structure:
         1. grok match - common grok match expressions across all transformations
         2. computes - common computed values used by all transformations
