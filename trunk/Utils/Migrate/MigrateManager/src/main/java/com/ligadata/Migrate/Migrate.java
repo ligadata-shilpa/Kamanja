@@ -448,10 +448,8 @@ public class Migrate {
 					   srcVer.equalsIgnoreCase("1.3")) && 
 					  dstVer.equalsIgnoreCase("1.4"));
 
-		boolean canUpgradeData = ((srcVer.equalsIgnoreCase("1.1") || 
-					   srcVer.equalsIgnoreCase("1.2") ||
-					   srcVer.equalsIgnoreCase("1.3")) && 
-					  dstVer.equalsIgnoreCase("1.4"));
+	    boolean canUpgradeData = (srcVer.equalsIgnoreCase("1.1") &&
+				       dstVer.equalsIgnoreCase("1.4"));
 
             if (canUpgradeData && canUpgradeMetadata == false) {
                 sendStatus("We don't support upgrading only data without metadata at this moment", "ERROR");
