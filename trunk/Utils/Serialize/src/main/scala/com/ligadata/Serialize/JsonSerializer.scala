@@ -54,7 +54,8 @@ case class ContainerDefinition(Container: MessageStruct)
 
 //case class ModelInfo(NameSpace: String, Name: String, Version: String, ModelType: String, JarName: String, PhysicalName: String, DependencyJars: List[String], InputAttributes: List[Attr], OutputAttributes: List[Attr])
 
-case class ModelInfo(NameSpace: String
+case class ModelInfo(NameSpace: String,
+                     LastModifiedAt: String
                      , Name: String
                      , Version: String
                      , PhysicalName: String
@@ -1086,6 +1087,7 @@ object JsonSerializer {
         val json = ("Model" ->
                     ("NameSpace" -> o.nameSpace) ~
                     ("Name" -> o.name) ~
+                      ("LastModifiedAt" -> o.lastModifiedAt) ~
                     ("Version" -> MdMgr.Pad0s2Version(o.ver)) ~
                     ("ModelRep" -> o.modelRepresentation.toString) ~
                     ("ModelType" -> o.miningModelType.toString) ~

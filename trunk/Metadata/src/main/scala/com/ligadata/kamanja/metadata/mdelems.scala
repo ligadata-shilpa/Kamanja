@@ -228,7 +228,7 @@ class BaseElemDef extends BaseElem {
 
     var uniqueId: Long = 0
     var creationTime: Long = _ // Time in milliseconds from 1970-01-01T00:00:00 (Mostly it is Local time. May be we need to get GMT)
-    var modTime: Long = _ // Time in milliseconds from 1970-01-01T00:00:00 (Mostly it is Local time. May be we need to get GMT)
+    var modTime: Long = _// Time in milliseconds from 1970-01-01T00:00:00 (Mostly it is Local time. May be we need to get GMT)
 
     var origDef: String = _ // string associated with this definition
     var description: String = _
