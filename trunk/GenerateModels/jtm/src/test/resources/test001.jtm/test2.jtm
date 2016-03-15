@@ -22,7 +22,7 @@
     "test1": {
       "dependsOn": [ ["m1"],  ["m2"]],
       "computes": {
-        "out3":{ "type": "Int", "vals": ["$m1.in1 + 1000", "$m2.in1 + 2000"], "comment": "in scala, type could be optional" }
+        "out3":{ "type": "Int", "vals": ["$m1.$in1 + 1000", "$m2.$in1 + 2000"], "comment": "in scala, type could be optional" }
       },
 
       "outputs": {
@@ -36,7 +36,7 @@
           "where": "!($in2 != -1 && $in2 < 100)",
 
           "computes": {
-            "t1": { "type": "String", "val": "\"s:\" + ($in2).toString()" }
+            "t1": { "type": "String", "val": "\"s:\" + $in2.toString()" }
           }
         }
       }

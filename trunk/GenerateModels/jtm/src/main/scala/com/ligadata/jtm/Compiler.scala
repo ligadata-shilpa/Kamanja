@@ -190,7 +190,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     regex.findAllMatchIn(expression).toArray.map( m => m.matched.drop(1)).toSet
   }
 
-  /** Replace all logical column namess with the variables
+  /** Replace all logical column names with the variables
     *
     * @param expression expression to update
     * @param mapNameSource name to variable mapping
