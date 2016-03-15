@@ -1,5 +1,7 @@
 package com.ligadata.BasicCacheConcurrency
 
+import java.util._
+
 import net.sf.ehcache
 import net.sf.ehcache.{Cache, Element, Ehcache, CacheManager}
 import net.sf.ehcache.event.CacheEventListener
@@ -9,38 +11,23 @@ import net.sf.ehcache.event.CacheEventListener
   */
 object NodeEhCache {
   def main(args: Array[String]) {
-    val node = new NodeEhCache
 
-    node.run("C:\\Users\\Saleh\\Documents\\GitHub\\Kamanja\\trunk\\BasicCacheConcurrency\\src\\main\\resources\\ehcache.xml")
-    val cache = node.getCache("userCache")
+    val aclass = Class.forName("com.ligadata.BasicCacheConcurrency.MemoryCacheImp").newInstance
+    val node = aclass.asInstanceOf[MemoryCache]
 
-    cache.getCacheEventNotificationService.registerListener(new NotNullCacheEventListener)
+    node.start()
+    var map = new HashMap[String,String]
+    map.put("1","1")
 
-    cache.put(new Element("1","1"))
+    node.putInCache(map)
 
-    val ele:Element = cache.get("1")
-    System.out.println(ele.getObjectValue.toString);
+    System.out.println(node.getFromCache("1").toString)
+
+    node.shutdwon()
+
   }
 }
 
-class NodeEhCache{
-
-  var cm:CacheManager = null
-
-  def run(xmlPath:String) : Unit = {
-     cm = CacheManager.newInstance(xmlPath)
-  }
-
-  def getCache(cacheName:String) : Cache ={
-    val cache = cm.getCache(cacheName)
-
-    cache
-  }
-
-  def shutdown() : Unit={
-    cm.shutdown()
-  }
-}
 
 
 
