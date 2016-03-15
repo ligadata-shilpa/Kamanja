@@ -158,7 +158,7 @@ object DefaultMdElemStructVer {
 
 // common fields for all metadata elements
 trait BaseElem {
-    def UniqID: Long
+    def UniqID: String
     def FullName: String // Logical Name
     def FullNameWithVer: String
     def CreationTime: Long // Time in milliseconds from 1970-01-01T00:00:00
@@ -188,7 +188,7 @@ trait BaseElem {
 }
 
 class BaseElemDef extends BaseElem {
-    override def UniqID: Long = uniqueId
+    override def UniqID: String = uniqueId
     override def FullName: String = nameSpace + "." + name // Logical Name
     override def FullNameWithVer: String = nameSpace + "." + name + "." + Version
     override def CreationTime: Long = creationTime // Time in milliseconds from 1970-01-01T00:00:00
@@ -226,7 +226,7 @@ class BaseElemDef extends BaseElem {
       }
     }
 
-    var uniqueId: Long = 0
+    var uniqueId: String = UUID.randomUUID.toString
     var creationTime: Long = _ // Time in milliseconds from 1970-01-01T00:00:00 (Mostly it is Local time. May be we need to get GMT)
     var modTime: Long = _ // Time in milliseconds from 1970-01-01T00:00:00 (Mostly it is Local time. May be we need to get GMT)
 

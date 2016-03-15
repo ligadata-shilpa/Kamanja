@@ -305,7 +305,7 @@ class MdMgr {
     }
     be.nameSpace = nameSpace.trim.toLowerCase
     be.ver = ver
-    be.uniqueId = MdIdSeq.next
+    be.uniqueId = UUID.randomUUID.toString
     be.creationTime = System.currentTimeMillis // Taking current local time. May be we need to get GMT time
     be.modTime = be.creationTime
     be.jarName = jarNm
