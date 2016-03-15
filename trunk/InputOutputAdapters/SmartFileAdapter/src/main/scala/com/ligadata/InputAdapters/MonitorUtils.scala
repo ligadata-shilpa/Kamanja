@@ -32,6 +32,11 @@ object MonitorUtils {
   }
 
   def isValidFile(fileHandler: SmartFileHandler): Boolean = {
+    val filepathParts = fileHandler.getFullPath.split("/")
+    val fileName = filepathParts(filepathParts.length - 1)
+    if(fileName.startsWith("."))
+      return false
+
     //Check if the File exists
     if(fileHandler.exists && fileHandler.length>0) {
       //Sniff only text/plain and application/gzip for now

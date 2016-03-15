@@ -40,8 +40,7 @@ import net.sf.jmimemagic.MagicException
 
 case class BufferLeftoversArea(workerNumber: Int, leftovers: Array[Char], relatedChunk: Int)
 case class BufferToChunk(len: Int, payload: Array[Char], chunkNumber: Int, relatedFileHandler: SmartFileHandler, firstValidOffset: Int, isEof: Boolean, partMap: scala.collection.mutable.Map[Int,Int])
-case class KafkaMessage(msg: Array[Char], offsetInFile: Int, isLast: Boolean, isLastDummy: Boolean, relatedFileHandler: SmartFileHandler, partMap: scala.collection.mutable.Map[Int,Int])
-case class EnqueuedFile(name: String, offset: Int, createDate: Long,  partMap: scala.collection.mutable.Map[Int,Int])
+case class KafkaMessage(msg: Array[Char], offsetInFile: Int, isLast: Boolean, isLastDummy: Boolean, relatedFileHandler: SmartFileHandler, partMap: scala.collection.mutable.Map[Int,Int], msgOffset: Long)
 case class FileStatus(status: Int, offset: Long, createDate: Long)
 case class OffsetValue (lastGoodOffset: Int, partitionOffsets: Map[Int,Int])
 case class EnqueuedFileHandler(fileHandler: SmartFileHandler, offset: Int, createDate: Long,  partMap: scala.collection.mutable.Map[Int,Int])
@@ -1061,10 +1060,10 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
           // Broken File is recoverable, CORRUPTED FILE ISNT!!!!!
           if (buffer.firstValidOffset == FileProcessor.BROKEN_FILE) {
             logger.error("SMART FILE CONSUMER (" + partitionId + "): Detected a broken file")
-            messages.add(new KafkaMessage(Array[Char](), FileProcessor.BROKEN_FILE, true, true, buffer.relatedFileHandler, buffer.partMap))
+            messages.add(new KafkaMessage(Array[Char](), FileProcessor.BROKEN_FILE, true, true, buffer.relatedFileHandler, buffer.partMap, FileProcessor.BROKEN_FILE))
           } else {
             logger.error("SMART FILE CONSUMER (" + partitionId + "): Detected a broken file")
-            messages.add(new KafkaMessage(Array[Char](), FileProcessor.CORRUPT_FILE, true, true, buffer.relatedFileHandler, buffer.partMap))
+            messages.add(new KafkaMessage(Array[Char](), FileProcessor.CORRUPT_FILE, true, true, buffer.relatedFileHandler, buffer.partMap, FileProcessor.CORRUPT_FILE))
           }
         } else {
           // Look for messages.
@@ -1077,7 +1076,7 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
 
                 // Ok, we could be in recovery, so we have to ignore some messages, but these ignoraable messages must still
                 // appear in the leftover areas
-                messages.add(new KafkaMessage(newMsg, buffer.firstValidOffset, false, false, buffer.relatedFileHandler,  buffer.partMap))
+                messages.add(new KafkaMessage(newMsg, buffer.firstValidOffset, false, false, buffer.relatedFileHandler,  buffer.partMap, prevIndx))
 
                 prevIndx = indx + 1
               }
@@ -1106,13 +1105,14 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
             var firstMsgWithLefovers: KafkaMessage = null
             if (isEofBuffer) {
               if (leftOvers.size > 0) {
-                firstMsgWithLefovers = new KafkaMessage(leftOvers, buffer.firstValidOffset, false, false, buffer.relatedFileHandler, buffer.partMap)
+                firstMsgWithLefovers = new KafkaMessage(leftOvers, buffer.firstValidOffset, false, false, buffer.relatedFileHandler, buffer.partMap, buffer.firstValidOffset)
                 messages.add(firstMsgWithLefovers)
                 enQMsg(messages.toArray, beeNumber)
               }
             } else {
               if (messages.size > 0) {
-                firstMsgWithLefovers = new KafkaMessage(leftOvers ++ msgArray(0).msg, msgArray(0).offsetInFile, false, false, buffer.relatedFileHandler, msgArray(0).partMap)
+                firstMsgWithLefovers = new KafkaMessage(leftOvers ++ msgArray(0).msg, msgArray(0).offsetInFile, false, false, buffer.relatedFileHandler, msgArray(0).partMap,
+                  msgArray(0).offsetInFile)
                 msgArray(0) = firstMsgWithLefovers
                 enQMsg(msgArray, beeNumber)
               }
@@ -1284,7 +1284,7 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
           logger.warn("SMART FILE CONSUMER: partition " + partitionId + ": NON-EMPTY final leftovers, this really should not happend... check the file ")
         } else {
           val messages: scala.collection.mutable.LinkedHashSet[KafkaMessage] = scala.collection.mutable.LinkedHashSet[KafkaMessage]()
-          messages.add(new KafkaMessage(null, 0, true, true, fileHandler, scala.collection.mutable.Map[Int,Int]()))
+          messages.add(new KafkaMessage(null, 0, true, true, fileHandler, scala.collection.mutable.Map[Int,Int](), 0))
           enQMsg(messages.toArray, 1000)
         }
         foundRelatedLeftovers = true
