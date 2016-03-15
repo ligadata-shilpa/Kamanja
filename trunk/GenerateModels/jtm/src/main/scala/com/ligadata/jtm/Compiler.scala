@@ -15,7 +15,7 @@
  */
 package com.ligadata.jtm
 
-import com.ligadata.jtm.eval.{Types => EvalTypes, Expressions, GrokHelper}
+import com.ligadata.jtm.eval.{Types => EvalTypes, Stamp, Expressions, GrokHelper}
 import com.ligadata.kamanja.metadata.{StructTypeDef, MdMgr}
 import com.ligadata.kamanja.metadataload.MetadataLoad
 import com.ligadata.messagedef.MessageDefImpl
@@ -388,6 +388,11 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     // Process header
     // ToDo: do we need a different license here
     result :+= Parts.header
+
+    // Only output generation stamp for production environments
+    if(!suppressTimestamps) {
+      result ++= Stamp.Generate()
+    }
 
     // Namespace
     //
