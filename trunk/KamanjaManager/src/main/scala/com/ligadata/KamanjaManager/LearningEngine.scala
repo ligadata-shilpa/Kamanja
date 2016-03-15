@@ -48,7 +48,7 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
       LOG.debug(s"Processing uniqueKey:$uk, uniqueVal:$uv, finalTopMsgOrContainer:$finalTopMsgOrContainer, previousModles:${models.size}")
 
     if (finalTopMsgOrContainer != null) {
-      txnCtxt.setMessage(finalTopMsgOrContainer)
+      txnCtxt.setInitialMessage(finalTopMsgOrContainer)
       ThreadLocalStorage.txnContextInfo.set(txnCtxt)
       try {
         val mdlChngCntr = KamanjaMetadata.GetModelsChangedCounter

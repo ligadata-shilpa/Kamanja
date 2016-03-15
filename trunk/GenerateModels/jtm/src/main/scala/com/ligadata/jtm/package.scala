@@ -17,7 +17,7 @@ package com.ligadata
 
 import com.ligadata.jtm.eval.Types
 import com.ligadata.jtm.nodes.Root
-import com.ligadata.kamanja.metadata.{BaseAttributeDef, MiningModelType, ModelRepresentation, ModelDef}
+import com.ligadata.kamanja.metadata._
 
 /**
   *
@@ -29,8 +29,6 @@ package object jtm {
     // Load Json
     val root = Root.fromJson(inputFile)
 
-    val inputVars : Array[BaseAttributeDef] = null
-    val outputVars: Array[BaseAttributeDef] = null
     val isReusable: Boolean = true
 
     // Collect all messages consumed
@@ -39,6 +37,7 @@ package object jtm {
 
     // Return tru if we accept the message, flatten the messages into a list
     //
+/*
     val msgs = dependencyToTransformations.foldLeft(Set.empty[String]) ( (r, d) => {
       d._1.foldLeft(r) ((r, n) => {
         r ++ Set(n)
@@ -46,6 +45,7 @@ package object jtm {
     })
 
     val msgConsumed: String = msgs.mkString(",")
+*/
 
     val supportsInstanceSerialization : Boolean = false
 
@@ -58,6 +58,6 @@ package object jtm {
     val msgConsumed: String = ""
     val supportsInstanceSerialization : Boolean = false
     */
-    new ModelDef(ModelRepresentation.JTM, MiningModelType.UNKNOWN, inputVars, outputVars, isReusable, msgConsumed, supportsInstanceSerialization)
+    new ModelDef(ModelRepresentation.JTM, MiningModelType.UNKNOWN, Array[Array[MessageAndAttributes]](), Array[String](), isReusable, supportsInstanceSerialization)
   }
 }

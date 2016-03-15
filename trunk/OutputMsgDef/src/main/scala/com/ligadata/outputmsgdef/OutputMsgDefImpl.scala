@@ -441,8 +441,8 @@ object OutputMsgDefImpl {
           log.info(typeOf)
         }
       } else if (model != null) {
-        childs ++= model.inputVars.map(a => { (a.Name, a) })
-        childs ++= model.outputVars.map(a => (a.Name, a))
+        // childs ++= model.inputVars.map(a => { (a.Name, a) })
+        // childs ++= model.outputVars.map(a => (a.Name, a))
         typeOf = "model"
         log.info(typeOf)
       }

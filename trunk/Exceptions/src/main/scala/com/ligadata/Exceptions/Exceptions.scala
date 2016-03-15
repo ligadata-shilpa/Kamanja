@@ -78,3 +78,6 @@ case class StorageDDLException(msg: String, cause: Throwable) extends KamanjaExc
 
 case class MessagePopulationException(msg: String, cause: Throwable) extends KamanjaException(msg, cause)
 
+case class NotImplementedFunctionException(msg: String, cause: Throwable) extends KamanjaException(msg, cause)
+
+case class DeprecatedException(msg: String, cause: Throwable) extends KamanjaException(msg, cause)
