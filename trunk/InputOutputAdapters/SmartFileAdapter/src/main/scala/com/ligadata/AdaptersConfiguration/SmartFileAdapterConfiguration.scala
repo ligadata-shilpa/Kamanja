@@ -25,6 +25,10 @@ class FileAdapterConnectionConfig {
 class FileAdapterMonitoringConfig {
   var waitingTimeMS : Int = _
   var locations : Array[String] = Array.empty[String] //folders to monitor
+
+  var fileBufferingTimeout = 300 // in seconds
+  var metadataConfigFile = ""
+  var targetMoveDir = ""
 }
 
 object SmartFileAdapterConfiguration{
