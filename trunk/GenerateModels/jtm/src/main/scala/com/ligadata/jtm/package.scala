@@ -58,6 +58,6 @@ package object jtm {
     val msgConsumed: String = ""
     val supportsInstanceSerialization : Boolean = false
     */
-    new ModelDef(ModelRepresentation.JTM, MiningModelType.UNKNOWN, Array[Array[MessageAndAttributes]](), Array[String](), isReusable, supportsInstanceSerialization)
+    new ModelDef(ModelRepresentation.JAR, MiningModelType.UNKNOWN, Array[Array[MessageAndAttributes]](), Array[String](), isReusable, supportsInstanceSerialization)
   }
 }
