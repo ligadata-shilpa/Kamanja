@@ -55,7 +55,7 @@ lazy val KamanjaVersion = project.in(file("KamanjaVersion"))
 
 lazy val Exceptions = project.in(file("Exceptions")) dependsOn(KamanjaVersion)
 
-lazy val KamanjaBase = project.in(file("KamanjaBase")) dependsOn(Metadata, Exceptions, KamanjaUtils, HeartBeat, KvBase, DataDelimiters)
+lazy val KamanjaBase = project.in(file("KamanjaBase")) dependsOn(Metadata, Exceptions, KamanjaUtils, HeartBeat, KvBase, DataDelimiters, BaseTypes)
 
 lazy val DataDelimiters = project.in(file("DataDelimiters"))
 

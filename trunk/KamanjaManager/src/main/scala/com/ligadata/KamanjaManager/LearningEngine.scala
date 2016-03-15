@@ -40,7 +40,10 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
   var outputGen = new OutputMsgGenerator()
   // ModelName, ModelInfo, IsModelInstanceReusable, Global ModelInstance if the model is IsModelInstanceReusable == true. The last boolean is to check whether we tested message type or not (thi is to check Reusable flag)
   var models = Array[(String, MdlInfo, Boolean, ModelInstance, Boolean)]()
-  var validateMsgsForMdls = scala.collection.mutable.Set[String]() // Message Names for creating models instances
+  var validateMsgsForMdls = scala.collection.mutable.Set[String]() // Message Names for creating models inst val results = RunAllModels(transId, iances
+
+  var messageEventFactory: BaseMsgObj = null
+  var modelEventFactory: BaseMsgObj = null
 
   private def RunAllModels(transId: Long, inputData: Array[Byte], finalTopMsgOrContainer: MessageContainerBase, txnCtxt: TransactionContext, uk: String, uv: String, xformedMsgCntr: Int, totalXformedMsgs: Int, msgEvent: KamanjaMessageEvent): Array[SavedMdlResult] = {
     var results: ArrayBuffer[SavedMdlResult] = new ArrayBuffer[SavedMdlResult]()
@@ -166,12 +169,22 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
                 tInst
               }
               if (curMd != null) {
+                var modelEvent: KamanjaModelEvent = modelEventFactory.CreateNewMessage.asInstanceOf[KamanjaModelEvent]
+                modelEvent.name = curMd.getModelName
+                modelEvent.version = curMd.getVersion()
+                val modelStartTime = System.currentTimeMillis
+                curMd.getModelName()
                 val res = curMd.execute(txnCtxt, outputDefault)
+                // TODO: Add the results to the model Event
                 if (res != null) {
                   results += new SavedMdlResult().withMdlName(md.mdl.getModelName).withMdlVersion(md.mdl.getVersion).withUniqKey(uk).withUniqVal(uv).withTxnId(transId).withXformedMsgCntr(xformedMsgCntr).withTotalXformedMsgs(totalXformedMsgs).withMdlResult(res)
                 } else {
                   // Nothing to output
                 }
+                val currTime: Long = System.currentTimeMillis()
+                modelEvent.elapsedtimeinms = (currTime - modelStartTime).toInt
+               // modelEvent.eventtimeinepochms = currTime
+                msgEvent.modelinfo.append(modelEvent) // =+ modelEvent //= msgEvent.modelInfo ++ modelEvent
               } else {
                 LOG.error("Failed to create model " + md.mdl.getModelName())
               }
@@ -220,11 +233,18 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
     var isValidPartitionKey = false
     var partKeyDataList: List[String] = null
 
+    // The first time throught this, init the Event Obj for metrics reporting
+    if (messageEventFactory == null) {
+      messageEventFactory = KamanjaMetadata.getMessgeInfo("system.KamanjaMessageEvent").contmsgobj.asInstanceOf[BaseMsgObj]
+      modelEventFactory = KamanjaMetadata.getMessgeInfo("system.KamanjaModelEvent").contmsgobj.asInstanceOf[BaseMsgObj]
+    }
+
+
     // Initialize Event message
-    var msgEvent: KamanjaMessageEvent = new KamanjaMessageEvent()
-    msgEvent.messageName = msgType
-    msgEvent.messageVersion = "unknown"
-    msgEvent.totalElapsedTime = -1
+    var msgEvent: KamanjaMessageEvent = messageEventFactory.CreateNewMessage.asInstanceOf[KamanjaMessageEvent]
+    msgEvent.name = msgType
+    msgEvent.version = "unknown"
+    msgEvent.elapsedtimeinms = -1
 
     try {
       if (msgInfo != null && inputdata != null) {
@@ -276,7 +296,7 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
     }
 
     // We have a valid message.. populate its version.
-    msgEvent.messageVersion = msg.Version
+   // msgEvent.version = msg.Version
 
     try {
       if (isValidMsg) {
@@ -291,7 +311,7 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
         val mdlsStartTime = System.nanoTime
         val results = RunAllModels(transId, inputData, msg, txnCtxt, uk, uv, xformedMsgCntr, totalXformedMsgs, msgEvent)
         LOG.info(ManagerUtils.getComponentElapsedTimeStr("Models", uv, readTmNs, mdlsStartTime))
-        msgEvent.totalElapsedTime = System.nanoTime - mdlsStartTime
+        msgEvent.elapsedtimeinms = (System.nanoTime - mdlsStartTime).toInt
 
         if (results.size > 0) {
           var elapseTmFromRead = (System.nanoTime - readTmNs) / 1000
