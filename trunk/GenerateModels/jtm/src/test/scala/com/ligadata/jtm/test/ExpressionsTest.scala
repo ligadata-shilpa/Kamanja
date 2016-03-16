@@ -43,5 +43,4 @@ class ExpressionsTest  extends FunSuite with BeforeAndAfter {
     val actual = eval.Expressions.ExtractColumnNames("${ns_3.na1_me}")
     assert(Set("ns_3.na1_me") == actual)
   }
-
 }

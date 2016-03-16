@@ -558,6 +558,10 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           u1.map( p => p.fieldName -> "%s.%s".format(p.argName, p.fieldName))
         }.toMap
 
+        val notUniqueInputs: Set[String] = {
+          inputs.map( e => e.fieldName ).groupBy(identity).mapValues(_.length).filter( f => f._2>1).keys.toSet
+        }
+
         val qualifiedInputs: Map[String, String]  = inputs.map( p => {
           p.className + "." + p.fieldName -> "%s.%s".format(p.argName, p.fieldName)
         }).toMap
@@ -613,12 +617,24 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
               val list = Expressions.ExtractColumnNames(c._2.expression)
               val rList = ResolveNames(list, aliaseMessages)
               val open = rList.filter(f => !fixedMappingSources.contains(f._2))
+              val ambiguous = rList.filter(f => notUniqueInputs.contains(f._2)).map( m=> m._2 )
+              if(ambiguous.nonEmpty) {
+                val a = ambiguous.mkString(", ")
+                logger.error("Found ambiguous variables %s in expression %s".format(a, c._2.expression))
+                throw new Exception("Found ambiguous variables %s in expression %s".format(a, c._2.expression))
+              }
               (open, c._2.expression)
             } else {
               val evaluate = c._2.expressions.map( expression => {
                 val list = Expressions.ExtractColumnNames(expression)
                 val rList = ResolveNames(list, aliaseMessages)
                 val open = rList.filter(f => !fixedMappingSources.contains(f._2))
+                val ambiguous = rList.filter(f => notUniqueInputs.contains(f._2)).map( m=> m._2 )
+                if(ambiguous.nonEmpty) {
+                  val a = ambiguous.mkString(", ")
+                  logger.error("Found ambiguous variables %s in expression %s".format(a, c._2.expression))
+                  throw new Exception("Found ambiguous variables %s in expression %s".format(a, c._2.expression))
+                }
                 (open, expression)
               })
               evaluate.foldLeft(evaluate.head) ( (r, e) => {
@@ -631,6 +647,8 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
             if(open.isEmpty) {
               val newExpression = Expressions.FixupColumnNames(expression, fixedMappingSources, aliaseMessages)
+              logger.trace("matched expression {} -> {}", newExpression, c._1)
+
               // Output the actual compute
               methods :+= c._2.Comment
               if(c._2.typename.length>0)
@@ -651,7 +669,9 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
         }
 
         if(computes.nonEmpty){
-          throw new Exception("Not all elements used")
+
+          val c = computes.map(c => c._1).mkString(",")
+          throw new Exception("Not all elements used. transformation: %s computes: %s".format(t, c))
           logger.trace("Not all elements used")
         }
 
@@ -668,14 +688,23 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           // a little bit simpler than having val's
           var mappingSources: Map[String, String] = fixedMappingSources
 
+          logger.trace("Procesing transfromation: {} output: {} outputs: {} mapping: {}",
+            t, o._1, outputSet.mkString(","), mappingSources.mkString(","))
+
           var outputSet1: Set[String] = outputSet
-          // To Do: Clarify how to resolve transactionId (and other auto columns)
+
+          // To Do: Clarify how to resolve transactionId, timePartitionData, rowNumber (and other auto columns)
           // Transaction id is in the input
           // so will just push it back if needed
           if(outputSet1.contains("transactionId")) {
             outputSet1 --= Set("transactionId")
           }
-
+          if(outputSet1.contains("timePartitionData")) {
+            outputSet1 --= Set("timePartitionData")
+          }
+          if(outputSet1.contains("rowNumber")) {
+            outputSet1 --= Set("rowNumber")
+          }
           var mapping = o._2.mapping
           var wheres =  Array(o._2.where)
           var computes = o._2.computes
@@ -704,6 +733,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
               if(open.isEmpty) {
                 // Sub names to
                 val newExpression = Expressions.FixupColumnNames(f, mappingSources, aliaseMessages)
+                logger.trace("matched where expression {}", newExpression)
                 // Output the actual filter
                 collect ++= Array("if (%s) return Array.empty[Result]\n".format(newExpression))
                 false
@@ -739,7 +769,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
               if(open.isEmpty) {
                 // Sub names to
                 val newExpression = Expressions.FixupColumnNames(expression, mappingSources, aliaseMessages)
-
+                logger.trace("matched expression {} -> {}", newExpression, c._1)
                 // Output the actual compute
                 // To Do: multiple vals and type provided
                 collect :+= c._2.Comment
@@ -759,6 +789,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
             // Check Mapping
             if(mapping.nonEmpty)
             {
+              logger.trace("mappings left {}", mapping.mkString(", "))
               val found = mapping.filter( f => mappingSources.contains(f._2) )
               found.foreach(f => {outputSet1 --= Set(f._1); mappingSources ++= Map(f._1 -> mappingSources.get(f._2).get)})
               mapping = mapping.filterKeys( f => !found.contains(f)  )
@@ -770,9 +801,16 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
             computes = computes1
           }
 
+          if(computes.nonEmpty){
+            val c = computes.map(c => c._1).mkString(",")
+            val m = "Not all elements used. transformation: %s computes: %s".format(t, c)
+            logger.trace(m)
+          }
+
           if(outputSet1.nonEmpty){
-            logger.trace("Not all outputs satisfied. missing={}" , outputSet1.mkString(", "))
-            throw new Exception("Not all outputs satisfied. missing=" + outputSet1.mkString(", "))
+            val m = "Not all outputs satisfied. transformation: %s output: %s missing: %s".format(t, o._1, outputSet1.mkString(", "))
+            logger.trace(m)
+            throw new Exception(m)
           }
 
           if(cnt2!=0){
