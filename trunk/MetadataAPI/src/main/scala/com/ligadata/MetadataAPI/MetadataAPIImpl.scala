@@ -3423,6 +3423,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     var key = model.FullNameWithVer
     val dispkey = model.FullName + "." + MdMgr.Pad0s2Version(model.Version)
     try {
+      model.uniqueId = System.currentTimeMillis
       SaveObject(model, MdMgr.GetMdMgr)
       val apiResult = new ApiResult(ErrorCodeConstants.Success, "AddModel", null, ErrorCodeConstants.Add_Model_Successful + ":" + dispkey)
       apiResult.toString()

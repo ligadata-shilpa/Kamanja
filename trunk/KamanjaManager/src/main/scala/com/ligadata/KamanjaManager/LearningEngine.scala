@@ -170,19 +170,28 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
               }
               if (curMd != null) {
                 var modelEvent: KamanjaModelEvent = modelEventFactory.CreateNewMessage.asInstanceOf[KamanjaModelEvent]
-                modelEvent.name = curMd.getModelName
-                modelEvent.version = curMd.getVersion()
                 val modelStartTime = System.currentTimeMillis
                 curMd.getModelName()
                 val res = curMd.execute(txnCtxt, outputDefault)
+
                 // TODO: Add the results to the model Event
                 if (res != null) {
+                  modelEvent.isresultproduced = true
+                  modelEvent.producedmessages = Array[String]("TBD")
                   results += new SavedMdlResult().withMdlName(md.mdl.getModelName).withMdlVersion(md.mdl.getVersion).withUniqKey(uk).withUniqVal(uv).withTxnId(transId).withXformedMsgCntr(xformedMsgCntr).withTotalXformedMsgs(totalXformedMsgs).withMdlResult(res)
                 } else {
+                  modelEvent.isresultproduced = false
                   // Nothing to output
                 }
                 val currTime: Long = System.currentTimeMillis()
                 modelEvent.elapsedtimeinms = (currTime - modelStartTime).toInt
+                var mdlId: Long = -1
+                // Get the modelId for reporing purposes
+                var mdlDefs = KamanjaMetadata.getMdMgr.Models(md.mdl.getModelDef().FullName,true, false).getOrElse(null)
+                if (mdlDefs != null)
+                  mdlId = mdlDefs.head.uniqueId
+
+                modelEvent.modelid = mdlId
                // modelEvent.eventtimeinepochms = currTime
                 msgEvent.modelinfo.append(modelEvent) // =+ modelEvent //= msgEvent.modelInfo ++ modelEvent
               } else {
@@ -239,11 +248,8 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
       modelEventFactory = KamanjaMetadata.getMessgeInfo("system.KamanjaModelEvent").contmsgobj.asInstanceOf[BaseMsgObj]
     }
 
-
     // Initialize Event message
     var msgEvent: KamanjaMessageEvent = messageEventFactory.CreateNewMessage.asInstanceOf[KamanjaMessageEvent]
-    msgEvent.name = msgType
-    msgEvent.version = "unknown"
     msgEvent.elapsedtimeinms = -1
 
     try {
@@ -295,8 +301,12 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
       }
     }
 
-    // We have a valid message.. populate its version.
-   // msgEvent.version = msg.Version
+    var msgId: Long = -1
+    // Figure out its reporting ID
+    var msgDefs = KamanjaMetadata.getMdMgr.Messages(msgType,true, false).getOrElse(null)
+    if (msgDefs != null)
+      msgId = msgDefs.head.uniqueId
+    msgEvent.messageid = msgId
 
     try {
       if (isValidMsg) {
@@ -308,10 +318,10 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
         if (allMdlsResults == null)
           allMdlsResults = scala.collection.mutable.Map[String, SavedMdlResult]()
         // Run all models
-        val mdlsStartTime = System.nanoTime
+        val mdlsStartTime = System.currentTimeMillis
         val results = RunAllModels(transId, inputData, msg, txnCtxt, uk, uv, xformedMsgCntr, totalXformedMsgs, msgEvent)
         LOG.info(ManagerUtils.getComponentElapsedTimeStr("Models", uv, readTmNs, mdlsStartTime))
-        msgEvent.elapsedtimeinms = (System.nanoTime - mdlsStartTime).toInt
+        msgEvent.elapsedtimeinms = (System.currentTimeMillis - mdlsStartTime).toInt
 
         if (results.size > 0) {
           var elapseTmFromRead = (System.nanoTime - readTmNs) / 1000
@@ -355,7 +365,7 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
           }
         }
       }
-      println("***MESSAGE RAN -> " + msgEvent.toString)
+      println(msgEvent.toString)
       return returnOutput.toArray
     } catch {
       case e: Exception => {
