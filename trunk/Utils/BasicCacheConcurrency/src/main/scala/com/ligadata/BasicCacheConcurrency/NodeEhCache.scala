@@ -12,8 +12,8 @@ import net.sf.ehcache.event.CacheEventListener
 object NodeEhCache {
   def main(args: Array[String]) {
 
-    val aclass = Class.forName("com.ligadata.BasicCacheConcurrency.MemoryCacheImp").newInstance
-    val node = aclass.asInstanceOf[MemoryCache]
+    val aclass = Class.forName("com.ligadata.BasicCacheConcurrency.MemoryDataCacheImp").newInstance
+    val node = aclass.asInstanceOf[DataCache]
 
     node.start()
     var map = new HashMap[String,String]

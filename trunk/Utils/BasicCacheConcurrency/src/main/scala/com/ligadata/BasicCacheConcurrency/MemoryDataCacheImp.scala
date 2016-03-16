@@ -10,7 +10,7 @@ import scala.collection.JavaConverters._
 /**
   * Created by Saleh on 3/15/2016.
   */
-class MemoryCacheImp extends MemoryCache{
+class MemoryDataCacheImp extends DataCache{
 
   var cm:CacheManager = null
   var cache:Cache = null
