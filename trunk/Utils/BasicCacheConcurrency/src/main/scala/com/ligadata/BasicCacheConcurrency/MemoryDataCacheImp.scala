@@ -1,9 +1,8 @@
 package com.ligadata.BasicCacheConcurrency
 
-import java.util._
-
 
 import net.sf.ehcache.{Element, Cache, CacheManager}
+import org.json4s.jackson.JsonMethods._
 
 import scala.collection.JavaConverters._
 
@@ -14,10 +13,19 @@ class MemoryDataCacheImp extends DataCache{
 
   var cm:CacheManager = null
   var cache:Cache = null
+  var xmlPath:String = null
+  var cacheName:String = null
 
-  override def init(): Unit = ???
+  override def init(jsonString:String): Unit = {
 
-  override def putInCache(map: Map[_, _]): Unit = {
+    val json = parse(jsonString)
+    val values = json.values.asInstanceOf[Map[String, String]]
+    xmlPath = values.getOrElse("xmlPath", null)
+    cacheName = values.getOrElse("cacheName", null)
+
+  }
+
+  override def putInCache(map: java.util.Map[_, _]): Unit = {
     val scalaMap = map.asScala
     scalaMap.foreach {keyVal => cache.put(new Element(keyVal._1,keyVal._2))}
   }
@@ -29,8 +37,8 @@ class MemoryDataCacheImp extends DataCache{
   }
 
   override def start(): Unit = {
-    cm = CacheManager.newInstance()
-    cache = cm.getCache("userCache")
+    cm = CacheManager.newInstance(xmlPath)
+    cache = cm.getCache(cacheName)
   }
 
   override def shutdwon(): Unit = {

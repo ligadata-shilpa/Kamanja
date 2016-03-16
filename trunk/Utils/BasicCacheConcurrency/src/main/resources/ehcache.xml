@@ -11,7 +11,7 @@
             propertySeparator="::"
     />
 
-    <cache name="userCache"
+    <cache name="Node"
            maxEntriesLocalHeap="10000"
            maxEntriesLocalDisk="1000"
            eternal="false"
