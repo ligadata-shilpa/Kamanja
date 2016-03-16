@@ -16,7 +16,7 @@
 package com.ligadata.jtm
 
 import com.ligadata.jtm.eval.{Types => EvalTypes, Stamp, Expressions, GrokHelper}
-import com.ligadata.kamanja.metadata.{ModelDef, StructTypeDef, MdMgr}
+import com.ligadata.kamanja.metadata._
 import com.ligadata.kamanja.metadataload.MetadataLoad
 import com.ligadata.messagedef.MessageDefImpl
 import org.aicer.grok.dictionary.GrokDictionary
@@ -95,11 +95,15 @@ class CompilerBuilder {
   def setInputFile(filename: String) = { inputFile = filename; this }
   def setOutputFile(filename: String) = { outputFile = filename; this }
   def setMetadataLocation(filename: String) = { metadataLocation = filename; this }
+  def setMetadata(md: MdMgr) = { metadataMgr = md; this }
+  def setJtm(jtm: String) = { jtmData = jtm; this }
 
-  var inputFile : String = null
-  var outputFile : String = null
-  var metadataLocation : String = null
-  var suppressTimestamps : Boolean = false
+  var jtmData: String = null
+  var inputFile: String = null
+  var outputFile: String = null
+  var metadataLocation: String = null
+  var suppressTimestamps: Boolean = false
+  var metadataMgr: MdMgr = null
 
   def build() : Compiler = {
     new Compiler(this)
@@ -111,19 +115,69 @@ class CompilerBuilder {
  */
 class Compiler(params: CompilerBuilder) extends LogTrait {
 
-  /** The generated code
+  /** Initialize from parameter block
     *
     */
-  private var code: String = null
+  val md = if(params.metadataMgr==null) {
+    loadMetadata(params.metadataLocation) // Load metadata if not passed in
+  } else {
+    params.metadataMgr
+  }
+
+  val suppressTimestamps: Boolean = params.suppressTimestamps // Suppress timestamps
+
+  val inputFile: String = params.inputFile // Input file to compile
+  val outputFile: String = params.outputFile // Output file to write
+  val root = Root.fromJson(inputFile) // Load Json
+
+  private var code: String = null // The generated code
+
+  /**
+    * Collect information needed for modeldef
+    */
+  private var inmessages = Array.empty[Map[String, Set[String]]] // Records all sets of incoming classes and attributes accessed
+  private var outmessages = Set.empty[String] //Records all outgoing classes
 
   /** Returns the modeldef after compiler completed
     *
     */
-  def MakeModelDef(inputFile: String ) : ModelDef = {
+  def MakeModelDef() : ModelDef = {
+
     if(code==null)
       throw new Exception("No code was successful created")
 
-    null
+    val supportsInstanceSerialization : Boolean = false
+    val isReusable: Boolean = true
+
+    val out: Array[String] = outmessages.toArray
+
+    val in: Array[Array[MessageAndAttributes]] = inmessages.map( s =>
+          s.map( m => {
+            val ma = new MessageAndAttributes
+            ma.message = m._1
+            ma.attributes = m._2.toArray
+            ma
+          }).toArray
+    )
+
+    /*
+    val in = inmessages.map( m =>  {
+      val msg = new MessageAndAttributes
+      msg.message = m._1
+      msg.attributes = m._2.toArray
+      msg
+    }).toArray
+    */
+    /*
+     val modelRepresentation: ModelRepresentation = ModelRepresentation.JAR
+     val miningModelType : MiningModelType = MiningModelType.UNKNOWN
+     val inputVars : Array[BaseAttributeDef] = null
+     val outputVars: Array[BaseAttributeDef] = null
+     val isReusable: Boolean = false
+     val msgConsumed: String = ""
+     val supportsInstanceSerialization : Boolean = false
+     */
+    new ModelDef(ModelRepresentation.JAR, MiningModelType.UNKNOWN, in, out, isReusable, supportsInstanceSerialization)
   }
 
   def Code() : String = {
@@ -141,48 +195,6 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
   def splitNamespaceClass(name: String): (String, String) = {
     val elements = name.split('.')
     (elements.dropRight(1).mkString("."), elements.last)
-  }
-
-  /** Creates a metadata instance with defaults and json objects located on the file system
-    *
-    * @return Metadata manager
-    */
-  def loadMetadata(): MdMgr= {
-
-    val typesPath : String = ""
-    val fcnPath : String = ""
-    val attrPath : String = ""
-    val msgCtnPath : String = ""
-    val mgr : MdMgr = MdMgr.GetMdMgr
-
-    // If the compiler is called again this will throw
-    // To Do: move the metadata and improve handling
-    try {
-      val mdLoader = new MetadataLoad(mgr, typesPath, fcnPath, attrPath, msgCtnPath)
-      mdLoader.initialize
-
-      def getRecursiveListOfFiles(dir: File): Array[File] = {
-        val these = dir.listFiles.filter(_.isFile)
-        val those = dir.listFiles.filter(_.isDirectory)
-        these ++ those.flatMap(getRecursiveListOfFiles)
-      }
-
-      val files = getRecursiveListOfFiles(new File(params.metadataLocation))
-
-      // Load all json files for the metadata directory
-      files.map ( jsonFile => {
-        val json = FileUtils.readFileToString(jsonFile, null)
-        val map = parse(json).values.asInstanceOf[Map[String, Any]]
-        val msg = new MessageDefImpl()
-        val ((classStrVer, classStrVerJava), msgDef, (classStrNoVer, classStrNoVerJava)) = msg.processMsgDef(json, "JSON", mgr, false)
-        val msg1 = msgDef.asInstanceOf[com.ligadata.kamanja.metadata.MessageDef]
-        mgr.AddMsg(msg1)
-      })
-    } catch {
-      case _ : Throwable => ;
-    }
-
-    mgr
   }
 
   def Validate(root: Root) = {
@@ -384,18 +396,8 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     Expressions.ResolveAlias(n, aliaseMessages)
   }
 
-  // Load metadata
-  val md = loadMetadata
-
-  val suppressTimestamps: Boolean = params.suppressTimestamps // Suppress timestamps
-  val inputFile: String = params.inputFile // Input file to compile
-  val outputFile: String = params.outputFile // Output file to write
-
   // Controls the code generation
   def Execute(): String = {
-
-    // Load Json
-    val root = Root.fromJson(inputFile)
 
     // Validate model
     Validate(root)
@@ -494,7 +496,12 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
       })
     })
 
-    subtitutions.Add("factory.isvalidmessage", msgs.map( m => "msg.isInstanceOf[%s]".format(ResolveToVersionedClassname(md, m))).mkString("||") )
+    subtitutions.Add("factory.isvalidmessage", msgs.map( m => {
+      outmessages += m
+      val verMsg = ResolveToVersionedClassname(md, m)
+      "msg.isInstanceOf[%s]".format(verMsg)
+    }).mkString("||") )
+
     val factory = subtitutions.Run(Parts.factory)
     result :+= factory
 
@@ -507,6 +514,9 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     // Compute the highlevel handler that match dependencies
     //
     val handler = dependencyToTransformations.map( e => {
+
+        // Trigger of incomming messages
+
         val check = e._1.map( m => { "msg%d!=null".format(incomingToMsgId.get(m).get)}).mkString(" && ")
         val names = e._1.map( m => { "msg%d".format(incomingToMsgId.get(m).get)}).mkString(", ")
         val depId = e._2._1
@@ -815,14 +825,8 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     if(outputFile!=null && outputFile.nonEmpty) {
       logger.trace("Output to file {}", outputFile)
       FileUtils.writeStringToFile(new File(outputFile), code)
-      outputFile
-    } else {
-      code
     }
 
+    code
   }
-
-
-
-
 }
