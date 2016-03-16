@@ -20,6 +20,7 @@ import scala.collection.mutable.TreeSet
 import org.json4s._
 import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
+import scala.collection.immutable.Map
 /**
   * Created by Yousef on 3/9/2016.
   */
@@ -271,74 +272,6 @@ class UtilityForContainers(val loadConfigs: Properties, val typename: String/*,v
     }
   }
 
-
-
-  private def collectKeyAndValues(k: Key, v: Value, dataByBucketKeyPart: TreeMap[KeyWithBucketIdAndPrimaryKey, MessageContainerBaseWithModFlag], loadedKeys: java.util.TreeSet[LoadKeyWithBucketId]): Unit = {
-    val value = SerializeDeserialize.Deserialize(v.serializedInfo, this, containerUtilityLoder.loader, true, "")
-    val primarykey = value.PrimaryKeyData
-    val key = KeyWithBucketIdAndPrimaryKey(KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(k.bucketKey), k, primarykey != null && primarykey.size > 0, primarykey)
-    dataByBucketKeyPart.put(key, MessageContainerBaseWithModFlag(false, value))
-
-    val bucketId = KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(k.bucketKey)
-    val loadKey = LoadKeyWithBucketId(bucketId, TimeRange(k.timePartition, k.timePartition), k.bucketKey)
-    loadedKeys.add(loadKey)
-  }
-
-  private def LoadDataIfNeeded(loadKey: LoadKeyWithBucketId, loadedKeys: java.util.TreeSet[LoadKeyWithBucketId], dataByBucketKeyPart: TreeMap[KeyWithBucketIdAndPrimaryKey, MessageContainerBaseWithModFlag], kvstore: DataStore): Unit = {
-    if (loadedKeys.contains(loadKey))
-      return
-    val buildOne = (k: Key, v: Value) => {
-      collectKeyAndValues(k, v, dataByBucketKeyPart, loadedKeys)
-    }
-
-    var failedWaitTime = 15000 // Wait time starts at 15 secs
-    val maxFailedWaitTime = 60000 // Max Wait time 60 secs
-    var doneGet = false
-
-    while (!doneGet) {
-      try {
-        kvstore.get(objFullName, Array(loadKey.tmRange), Array(loadKey.bucketKey), buildOne)
-        loadedKeys.add(loadKey)
-        doneGet = true
-      } catch {
-        case e @ (_: ObjectNotFoundException | _: KeyNotFoundException) => {
-          logger.debug("In Container %s Key %s Not found for timerange: %d-%d".format(objFullName, loadKey.bucketKey.mkString(","), loadKey.tmRange.beginTime, loadKey.tmRange.endTime), e)
-          doneGet = true
-        }
-        case e: FatalAdapterException => {
-          logger.error("In Container %s Key %s Not found for timerange: %d-%d.".format(objFullName, loadKey.bucketKey.mkString(","), loadKey.tmRange.beginTime, loadKey.tmRange.endTime), e)
-        }
-        case e: StorageDMLException => {
-          logger.error("In Container %s Key %s Not found for timerange: %d-%d.".format(objFullName, loadKey.bucketKey.mkString(","), loadKey.tmRange.beginTime, loadKey.tmRange.endTime), e)
-        }
-        case e: StorageDDLException => {
-          logger.error("In Container %s Key %s Not found for timerange: %d-%d.".format(objFullName, loadKey.bucketKey.mkString(","), loadKey.tmRange.beginTime, loadKey.tmRange.endTime), e)
-        }
-        case e: Exception => {
-          logger.error("In Container %s Key %s Not found for timerange: %d-%d.".format(objFullName, loadKey.bucketKey.mkString(","), loadKey.tmRange.beginTime, loadKey.tmRange.endTime), e)
-        }
-        case e: Throwable => {
-          logger.error("In Container %s Key %s Not found for timerange: %d-%d.".format(objFullName, loadKey.bucketKey.mkString(","), loadKey.tmRange.beginTime, loadKey.tmRange.endTime), e)
-        }
-      }
-
-      if (!doneGet) {
-        try {
-          logger.error("Failed to get data from datastore. Waiting for another %d milli seconds and going to start them again.".format(failedWaitTime))
-          Thread.sleep(failedWaitTime)
-        } catch {
-          case e: Exception => { logger.warn("", e) }
-        }
-        // Adjust time for next time
-        if (failedWaitTime < maxFailedWaitTime) {
-          failedWaitTime = failedWaitTime * 2
-          if (failedWaitTime > maxFailedWaitTime)
-            failedWaitTime = maxFailedWaitTime
-        }
-      }
-    }
-  }
-
   private val formatter = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS")
 
   private def SimpDateFmtTimeFromMs(tmMs: Long): String = {
@@ -354,9 +287,11 @@ class UtilityForContainers(val loadConfigs: Properties, val typename: String/*,v
     kvstore.TruncateContainer(Array(typename))
   }
   // this method used to dalete data from container for a specific keys in a specific time ranges
-   def DeleteFromContainer(typename: String, keyids: Array[Array[String]], timeranges: TimeRange, kvstore: DataStore): Unit ={
+   def DeleteFromContainer(typename: String, keyids: Array[Array[String]], timeranges: Array[TimeRange], kvstore: DataStore): Unit ={
 //    logger.info("delete data from %s container for %s keys and timerange: %d-%d".format(typename,keyids,timeranges.beginTime,timeranges.endTime))
-    kvstore.del(typename, timeranges, keyids)
+    timeranges.foreach(timerange => {
+      kvstore.del(typename, timerange, keyids)
+    })
   }
   // this method used to delete data from container for a specific keys
    def DeleteFromContainer(typename: String, keyArray: Array[Array[String]], kvstore: DataStore): Unit ={
@@ -377,40 +312,55 @@ class UtilityForContainers(val loadConfigs: Properties, val typename: String/*,v
      })
   }
   //this method used to get data from container for a specific key
-   def GetFromContainer(typename:String, keyArray: Array[Array[String]], kvstore: DataStore): Unit ={
+   def GetFromContainer(typename:String, keyArray: Array[Array[String]], kvstore: DataStore): Map[String,String] ={
     //logger.info("select data from %s container for %s key".format(typename,keyids))
-    val keyArraybuf = scala.collection.mutable.ArrayBuffer.empty[Key]
-    val saveKey = (k: Key) => {
-      keyArraybuf.append(k)
-    }
+  //  val keyArraybuf = scala.collection.mutable.ArrayBuffer.empty[Key]
+   var data : Map[String,String] = null
+  //  val saveKey = (k: Key) => {
+ //     keyArraybuf.append(k)
+  //  }
     val retriveData = (k: Key, v: Value)=>{
       val value = SerializeDeserialize.Deserialize(v.serializedInfo, this, containerUtilityLoder.loader, true, "")
-      val key = k.bucketKey
+      val primarykey = value.PrimaryKeyData
+      val key = KeyWithBucketIdAndPrimaryKey(KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(k.bucketKey), k, primarykey != null && primarykey.size > 0, primarykey)
+      val bucketId = KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(k.bucketKey)
+      val keyValue = value.get(k.toString)
+      data = data + (bucketId.toString -> keyValue.toString) // this includes key and value
     }
-    kvstore.getKeys(typename, keyArray, saveKey)
-    val keyArrays: Array[Key] = keyArraybuf.toArray
-    kvstore.get(typename, keyArrays, retriveData)
+   // kvstore.getKeys(typename, keyArray, saveKey)
+   // val keyArrays: Array[Key] = keyArraybuf.toArray
+    kvstore.get(typename, keyArray, retriveData)
+    return data
   }
   //this method used to get data from container for a specific key in a specific time ranges
-   def GetFromContainer(typename: String, keyArray: Array[Array[String]], timeranges: Array[TimeRange], kvstore: DataStore): Unit ={
+   def GetFromContainer(typename: String, keyArray: Array[Array[String]], timeranges: Array[TimeRange], kvstore: DataStore): Map[String,String] ={
+
+    var data : Map[String,String] = null
     val retriveData = (k: Key, v: Value)=>{
       val value = SerializeDeserialize.Deserialize(v.serializedInfo, this, containerUtilityLoder.loader, true, "")
-      val key = k.bucketKey
+      val primarykey = value.PrimaryKeyData
+      val key = KeyWithBucketIdAndPrimaryKey(KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(k.bucketKey), k, primarykey != null && primarykey.size > 0, primarykey)
+      val bucketId = KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(k.bucketKey)
+      val keyValue = value.get(k.toString)
+      data = data + (bucketId.toString -> keyValue.toString) // this includes key and value
     }
       //logger.info("select data from %s container for %s key and timerange: %d-%d".format(typename,timerange.beginTime,timerange.endTime))
       kvstore.get(typename,timeranges,keyArray,retriveData)
+    return data
   }
 
-   def GetFromContainer(typename:String, timeranges: Array[TimeRange], kvstore: DataStore): Unit ={
+   def GetFromContainer(typename:String, timeranges: Array[TimeRange], kvstore: DataStore): Map[String,String] ={
       //logger.info("select data from %s container for timerange: %d-%d".format((typename,timerange.beginTime,timerange.endTime)))
-      // shuld change from this line
+      var data : Map[String,String] = null
       val retriveData = (k: Key, v: Value)=>{
         val value = SerializeDeserialize.Deserialize(v.serializedInfo, this, containerUtilityLoder.loader, true, "")
-        val key = k.bucketKey
+        val primarykey = value.PrimaryKeyData
+        val key = KeyWithBucketIdAndPrimaryKey(KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(k.bucketKey), k, primarykey != null && primarykey.size > 0, primarykey)
+        val bucketId = KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(k.bucketKey)
+        val keyValue = value.get(k.toString)
+        data = data + (bucketId.toString -> keyValue.toString) // this includes key and value
       }
       kvstore.get(typename, timeranges, retriveData)
+     return data
   }
-
-  //def CollectData(){}
-
 }
