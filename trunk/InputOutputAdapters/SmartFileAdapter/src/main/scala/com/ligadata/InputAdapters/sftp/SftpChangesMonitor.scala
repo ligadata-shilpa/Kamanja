@@ -158,7 +158,7 @@ class SftpFileHandler extends SmartFileHandler{
   }
 
   @throws(classOf[KamanjaException])
-  def openForRead(): Unit = {
+  def openForRead(): InputStream = {
     logger.info(s"Opening SFTP file ($getFullPath) to read")
 
     try {
@@ -169,6 +169,7 @@ class SftpFileHandler extends SmartFileHandler{
       val compressionType = CompressionUtil.getCompressionType(getFullPath, tempInputStream, null)
       tempInputStream.close() //close this one, only first bytes were read to decide compression type, reopen to read from the beginning
       in = CompressionUtil.getProperInputStream(getDefaultInputStream, compressionType)
+      in
     }
     catch{
       case e : Exception => throw new KamanjaException (e.getMessage, e)
@@ -299,6 +300,12 @@ class SftpFileHandler extends SmartFileHandler{
         manager.close()
     }
   }
+
+  override def exists(): Boolean = ???
+
+  override def isFile: Boolean = ???
+
+  override def isDirectory: Boolean = ???
 }
 
 class SftpChangesMonitor (adapterName : String, modifiedFileCallback:(SmartFileHandler) => Unit) extends SmartFileMonitor{
