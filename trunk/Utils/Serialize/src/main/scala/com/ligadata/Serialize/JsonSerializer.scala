@@ -1088,6 +1088,7 @@ object JsonSerializer {
                     ("NameSpace" -> o.nameSpace) ~
                     ("Name" -> o.name) ~
                     ("Version" -> MdMgr.Pad0s2Version(o.ver)) ~
+                    ("ReportingId" -> o.uniqueId) ~
                     ("ModelRep" -> o.modelRepresentation.toString) ~
                     ("ModelType" -> o.miningModelType.toString) ~
                     ("JarName" -> o.jarName) ~
