@@ -113,6 +113,8 @@ lazy val ZooKeeperLeaderLatch = project.in(file("Utils/ZooKeeper/CuratorLeaderLa
 
 lazy val JsonDataGen = project.in(file("Utils/JsonDataGen")) dependsOn(Exceptions, KamanjaBase)
 
+lazy val JsonChecker = project.in(file("Utils/JsonChecker")) dependsOn(Exceptions)
+
 lazy val NodeInfoExtract  = project.in(file("Utils/NodeInfoExtract")) dependsOn(MetadataAPI, Exceptions)
 
 lazy val Controller = project.in(file("Utils/Controller")) dependsOn(ZooKeeperClient,ZooKeeperListener,KafkaSimpleInputOutputAdapters, Exceptions)
