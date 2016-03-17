@@ -7,6 +7,7 @@ version := "0.0.0.1"
 
 //scalaVersion := "2.11.7"
 
+
 crossScalaVersions := Seq("2.11.7", "2.10.4")
 
 shellPrompt := { state => "sbt (%s)> ".format(Project.extract(state).currentProject.id) }
@@ -52,12 +53,13 @@ lazy val KamanjaInternalDeps = project.in(file("KamanjaInternalDeps")) dependsOn
 
 lazy val KamanjaDependencyLibs = project.in(file("KamanjaDependencyLibs")) dependsOn(KamanjaManager, MetadataAPI, KVInit, NodeInfoExtract, MetadataAPIService, JdbcDataCollector, FileDataConsumer, CleanUtil, InstallDriver, GetComponent, SimpleKafkaProducer)
 
-//
+////////////////////////
 
 //lazy val BaseTypes = project.in(file("BaseTypes")) dependsOn(Metadata, Exceptions) // no external dependancies
 lazy val BaseTypes = project.in(file("BaseTypes")) dependsOn(ExtDependencyLibs, Metadata, Exceptions)
 
-lazy val BaseFunctions = project.in(file("BaseFunctions")) dependsOn(Metadata, Exceptions)
+//lazy val BaseFunctions = project.in(file("BaseFunctions")) dependsOn(Metadata, Exceptions)
+lazy val BaseFunctions = project.in(file("BaseFunctions")) dependsOn(ExtDependencyLibs,Metadata, Exceptions) // has only resolvers , no dependencies
 
 //lazy val Serialize = project.in(file("Utils/Serialize")) dependsOn(ExtDependencyLibs)
 lazy val Serialize = project.in(file("Utils/Serialize")) dependsOn(ExtDependencyLibs, Metadata, AuditAdapterBase, Exceptions)
@@ -79,7 +81,8 @@ lazy val KamanjaBase = project.in(file("KamanjaBase")) dependsOn(ExtDependencyLi
 
 lazy val DataDelimiters = project.in(file("DataDelimiters")) dependsOn (ExtDependencyLibs)
 
-lazy val KamanjaManager = project.in(file("KamanjaManager")) dependsOn(Metadata, KamanjaBase, MetadataBootstrap, MetadataAPI, Serialize, ZooKeeperListener, ZooKeeperLeaderLatch, Exceptions, KamanjaUtils, TransactionService, DataDelimiters, InputOutputAdapterBase)
+//lazy val KamanjaManager = project.in(file("KamanjaManager")) dependsOn(Metadata, KamanjaBase, MetadataBootstrap, MetadataAPI, Serialize, ZooKeeperListener, ZooKeeperLeaderLatch, Exceptions, KamanjaUtils, TransactionService, DataDelimiters, InputOutputAdapterBase)
+lazy val KamanjaManager = project.in(file("KamanjaManager")) dependsOn(ExtDependencyLibs,Metadata, KamanjaBase, MetadataBootstrap, MetadataAPI, Serialize, ZooKeeperListener, ZooKeeperLeaderLatch, Exceptions, KamanjaUtils, TransactionService, DataDelimiters, InputOutputAdapterBase)
 
 //lazy val InputOutputAdapterBase = project.in(file("InputOutputAdapters/InputOutputAdapterBase")) dependsOn(ExtDependencyLibs)
 lazy val InputOutputAdapterBase = project.in(file("InputOutputAdapters/InputOutputAdapterBase")) dependsOn(ExtDependencyLibs, Exceptions, DataDelimiters, HeartBeat)
@@ -87,11 +90,14 @@ lazy val InputOutputAdapterBase = project.in(file("InputOutputAdapters/InputOutp
 
 // lazy val IbmMqSimpleInputOutputAdapters = project.in(file("InputOutputAdapters/IbmMqSimpleInputOutputAdapters")) dependsOn(InputOutputAdapterBase, Exceptions, DataDelimiters)
 
-lazy val KafkaSimpleInputOutputAdapters = project.in(file("InputOutputAdapters/KafkaSimpleInputOutputAdapters")) dependsOn(InputOutputAdapterBase, Exceptions, DataDelimiters)
+//lazy val KafkaSimpleInputOutputAdapters = project.in(file("InputOutputAdapters/KafkaSimpleInputOutputAdapters")) dependsOn(InputOutputAdapterBase, Exceptions, DataDelimiters)
+lazy val KafkaSimpleInputOutputAdapters = project.in(file("InputOutputAdapters/KafkaSimpleInputOutputAdapters")) dependsOn(ExtDependencyLibs,InputOutputAdapterBase, Exceptions, DataDelimiters)
 
-lazy val FileSimpleInputOutputAdapters = project.in(file("InputOutputAdapters/FileSimpleInputOutputAdapters")) dependsOn(InputOutputAdapterBase, Exceptions, DataDelimiters)
+//lazy val FileSimpleInputOutputAdapters = project.in(file("InputOutputAdapters/FileSimpleInputOutputAdapters")) dependsOn(InputOutputAdapterBase, Exceptions, DataDelimiters)
+lazy val FileSimpleInputOutputAdapters = project.in(file("InputOutputAdapters/FileSimpleInputOutputAdapters")) dependsOn(ExtDependencyLibs,InputOutputAdapterBase, Exceptions, DataDelimiters)
 
-lazy val SimpleEnvContextImpl = project.in(file("EnvContexts/SimpleEnvContextImpl")) dependsOn(KamanjaBase, StorageManager, Serialize, Exceptions)
+//lazy val SimpleEnvContextImpl = project.in(file("EnvContexts/SimpleEnvContextImpl")) dependsOn(KamanjaBase, StorageManager, Serialize, Exceptions)
+lazy val SimpleEnvContextImpl = project.in(file("EnvContexts/SimpleEnvContextImpl")) dependsOn(ExtDependencyLibs,KamanjaBase, StorageManager, Serialize, Exceptions)
 
 //lazy val StorageBase = project.in(file("Storage/StorageBase")) dependsOn(ExtDependencyLibs)
 lazy val StorageBase = project.in(file("Storage/StorageBase")) dependsOn(ExtDependencyLibs, Exceptions, KamanjaUtils, KvBase)
@@ -106,7 +112,8 @@ lazy val OutputMsgDef = project.in(file("OutputMsgDef")) dependsOn(ExtDependency
 //lazy val MessageDef = project.in(file("MessageDef")) dependsOn(ExtDependencyLibs)
 lazy val MessageDef = project.in(file("MessageDef")) dependsOn(ExtDependencyLibs, Metadata, MetadataBootstrap, Exceptions)
 
-lazy val GenericMsgCompiler = project.in(file("GenericMsgCompiler")) dependsOn(Metadata, MetadataBootstrap, Exceptions)
+//lazy val GenericMsgCompiler = project.in(file("GenericMsgCompiler")) dependsOn(Metadata, MetadataBootstrap, Exceptions)
+lazy val GenericMsgCompiler = project.in(file("GenericMsgCompiler")) dependsOn(ExtDependencyLibs,Metadata, MetadataBootstrap, Exceptions)
 
 // lazy val LoadtestCommon = project.in(file("Tools/LoadtestCommon")) dependsOn(StorageManager, Exceptions)
 
@@ -124,50 +131,62 @@ lazy val PmmlRuntime = project.in(file("Pmml/PmmlRuntime")) dependsOn(ExtDepende
 lazy val PmmlCompiler = project.in(file("Pmml/PmmlCompiler")) dependsOn(ExtDependencyLibs, PmmlRuntime, PmmlUdfs, Metadata, KamanjaBase, MetadataBootstrap, Exceptions)
 
 
-
 //lazy val PmmlUdfs = project.in(file("Pmml/PmmlUdfs")) dependsOn(Metadata, PmmlRuntime, KamanjaBase, Exceptions)
 lazy val PmmlUdfs = project.in(file("Pmml/PmmlUdfs")) dependsOn(ExtDependencyLibs, Metadata, PmmlRuntime, KamanjaBase, Exceptions)
 
 
-
 lazy val MethodExtractor = project.in(file("Pmml/MethodExtractor")) dependsOn(PmmlUdfs, Metadata, KamanjaBase, Serialize, Exceptions)
+// no external dependencies
 
-lazy val MetadataAPI = project.in(file("MetadataAPI")) dependsOn(StorageManager, Metadata, MessageDef, PmmlCompiler, Serialize, ZooKeeperClient, ZooKeeperListener, OutputMsgDef, Exceptions, SecurityAdapterBase, KamanjaUtils, HeartBeat, KamanjaBase, JpmmlFactoryOfModelInstanceFactory, SimpleApacheShiroAdapter % "test")
+//lazy val MetadataAPI = project.in(file("MetadataAPI")) dependsOn(StorageManager, Metadata, MessageDef, PmmlCompiler, Serialize, ZooKeeperClient, ZooKeeperListener, OutputMsgDef, Exceptions, SecurityAdapterBase, KamanjaUtils, HeartBeat, KamanjaBase, JpmmlFactoryOfModelInstanceFactory, SimpleApacheShiroAdapter % "test")
+lazy val MetadataAPI = project.in(file("MetadataAPI")) dependsOn(ExtDependencyLibs,StorageManager, Metadata, MessageDef, PmmlCompiler, Serialize, ZooKeeperClient, ZooKeeperListener, OutputMsgDef, Exceptions, SecurityAdapterBase, KamanjaUtils, HeartBeat, KamanjaBase, JpmmlFactoryOfModelInstanceFactory, SimpleApacheShiroAdapter % "test")
 
 //lazy val MetadataBootstrap = project.in(file("MetadataBootstrap/Bootstrap")) dependsOn(ExtDependencyLibs) //dependsOn( BaseTypes)
 lazy val MetadataBootstrap = project.in(file("MetadataBootstrap/Bootstrap")) dependsOn(ExtDependencyLibs, Metadata, KamanjaBase, BaseTypes, Exceptions)
 
-lazy val MetadataAPIService = project.in(file("MetadataAPIService")) dependsOn(KamanjaBase, MetadataAPI, ZooKeeperLeaderLatch, Exceptions)
+//lazy val MetadataAPIService = project.in(file("MetadataAPIService")) dependsOn(KamanjaBase, MetadataAPI, ZooKeeperLeaderLatch, Exceptions)
+lazy val MetadataAPIService = project.in(file("MetadataAPIService")) dependsOn(ExtDependencyLibs,KamanjaBase, MetadataAPI, ZooKeeperLeaderLatch, Exceptions)
 
-lazy val MetadataAPIServiceClient = project.in(file("MetadataAPIServiceClient")) dependsOn(Serialize, Exceptions, KamanjaBase)
+//lazy val MetadataAPIServiceClient = project.in(file("MetadataAPIServiceClient")) dependsOn(Serialize, Exceptions, KamanjaBase)
+lazy val MetadataAPIServiceClient = project.in(file("MetadataAPIServiceClient")) dependsOn(ExtDependencyLibs,Serialize, Exceptions, KamanjaBase)
 
-lazy val SimpleKafkaProducer = project.in(file("Utils/SimpleKafkaProducer")) dependsOn(Metadata, KamanjaBase, Exceptions)
+//lazy val SimpleKafkaProducer = project.in(file("Utils/SimpleKafkaProducer")) dependsOn(Metadata, KamanjaBase, Exceptions)
+lazy val SimpleKafkaProducer = project.in(file("Utils/SimpleKafkaProducer")) dependsOn(ExtDependencyLibs,Metadata, KamanjaBase, Exceptions)
 
-lazy val KVInit = project.in(file("Utils/KVInit")) dependsOn(Metadata, KamanjaBase, MetadataBootstrap, MetadataAPI, StorageManager, Exceptions, TransactionService)
+//lazy val KVInit = project.in(file("Utils/KVInit")) dependsOn(Metadata, KamanjaBase, MetadataBootstrap, MetadataAPI, StorageManager, Exceptions, TransactionService)
+lazy val KVInit = project.in(file("Utils/KVInit")) dependsOn(ExtDependencyLibs,Metadata, KamanjaBase, MetadataBootstrap, MetadataAPI, StorageManager, Exceptions, TransactionService)
 
 //lazy val ZooKeeperLeaderLatch = project.in(file("Utils/ZooKeeper/CuratorLeaderLatch")) dependsOn(ExtDependencyLibs)
 lazy val ZooKeeperLeaderLatch = project.in(file("Utils/ZooKeeper/CuratorLeaderLatch")) dependsOn(ExtDependencyLibs, ZooKeeperClient, Exceptions)
 
 
-lazy val JsonDataGen = project.in(file("Utils/JsonDataGen")) dependsOn(Exceptions, KamanjaBase)
+//lazy val JsonDataGen = project.in(file("Utils/JsonDataGen")) dependsOn(Exceptions, KamanjaBase)
+lazy val JsonDataGen = project.in(file("Utils/JsonDataGen")) dependsOn(ExtDependencyLibs,Exceptions, KamanjaBase)
 
-lazy val NodeInfoExtract = project.in(file("Utils/NodeInfoExtract")) dependsOn(MetadataAPI, Exceptions)
+//lazy val NodeInfoExtract = project.in(file("Utils/NodeInfoExtract")) dependsOn(MetadataAPI, Exceptions)
+lazy val NodeInfoExtract = project.in(file("Utils/NodeInfoExtract")) dependsOn(ExtDependencyLibs,MetadataAPI, Exceptions)
 
-lazy val Controller = project.in(file("Utils/Controller")) dependsOn(ZooKeeperClient, ZooKeeperListener, KafkaSimpleInputOutputAdapters, Exceptions)
+//lazy val Controller = project.in(file("Utils/Controller")) dependsOn(ZooKeeperClient, ZooKeeperListener, KafkaSimpleInputOutputAdapters, Exceptions)
+lazy val Controller = project.in(file("Utils/Controller")) dependsOn(ExtDependencyLibs,ZooKeeperClient, ZooKeeperListener, KafkaSimpleInputOutputAdapters, Exceptions)
 
 //lazy val SimpleApacheShiroAdapter = project.in(file("Utils/Security/SimpleApacheShiroAdapter")) dependsOn(ExtDependencyLibs)
 lazy val SimpleApacheShiroAdapter = project.in(file("Utils/Security/SimpleApacheShiroAdapter")) dependsOn(ExtDependencyLibs, Metadata, Exceptions, SecurityAdapterBase)
 
 
-lazy val AuditAdapters = project.in(file("Utils/Audit")) dependsOn(StorageManager, Exceptions, AuditAdapterBase, Serialize)
+//lazy val AuditAdapters = project.in(file("Utils/Audit")) dependsOn(StorageManager, Exceptions, AuditAdapterBase, Serialize)
+lazy val AuditAdapters = project.in(file("Utils/Audit")) dependsOn(ExtDependencyLibs,StorageManager, Exceptions, AuditAdapterBase, Serialize)
 
 lazy val CustomUdfLib = project.in(file("SampleApplication/CustomUdfLib")) dependsOn(PmmlUdfs, Exceptions)
+// no external dependencies
 
-lazy val JdbcDataCollector = project.in(file("Utils/JdbcDataCollector")) dependsOn (Exceptions)
+//lazy val JdbcDataCollector = project.in(file("Utils/JdbcDataCollector")) dependsOn (Exceptions)
+lazy val JdbcDataCollector = project.in(file("Utils/JdbcDataCollector")) dependsOn (ExtDependencyLibs,Exceptions)
 
-lazy val ExtractData = project.in(file("Utils/ExtractData")) dependsOn(Metadata, KamanjaBase, MetadataBootstrap, MetadataAPI, StorageManager, Exceptions)
+//lazy val ExtractData = project.in(file("Utils/ExtractData")) dependsOn(Metadata, KamanjaBase, MetadataBootstrap, MetadataAPI, StorageManager, Exceptions)
+lazy val ExtractData = project.in(file("Utils/ExtractData")) dependsOn(ExtDependencyLibs,Metadata, KamanjaBase, MetadataBootstrap, MetadataAPI, StorageManager, Exceptions)
 
-lazy val InterfacesSamples = project.in(file("SampleApplication/InterfacesSamples")) dependsOn(Metadata, KamanjaBase, MetadataBootstrap, MetadataAPI, StorageBase, Exceptions)
+//lazy val InterfacesSamples = project.in(file("SampleApplication/InterfacesSamples")) dependsOn(Metadata, KamanjaBase, MetadataBootstrap, MetadataAPI, StorageBase, Exceptions)
+lazy val InterfacesSamples = project.in(file("SampleApplication/InterfacesSamples")) dependsOn(ExtDependencyLibs,Metadata, KamanjaBase, MetadataBootstrap, MetadataAPI, StorageBase, Exceptions)
 
 //lazy val StorageCassandra = project.in(file("Storage/Cassandra")) dependsOn(ExtDependencyLibs)
 lazy val StorageCassandra = project.in(file("Storage/Cassandra")) dependsOn(ExtDependencyLibs, StorageBase, Serialize, Exceptions, KamanjaUtils, KvBase)
@@ -216,22 +235,29 @@ lazy val HeartBeat = project.in(file("HeartBeat")) dependsOn(ExtDependencyLibs, 
 lazy val TransactionService = project.in(file("TransactionService")) dependsOn(ExtDependencyLibs, Exceptions, KamanjaBase, ZooKeeperClient, StorageBase, StorageManager)
 
 
-lazy val KvBase = project.in(file("KvBase")) // depends on nothing
+lazy val KvBase = project.in(file("KvBase"))
+//no external dependencies
 
-lazy val FileDataConsumer = project.in(file("FileDataConsumer")) dependsOn(Exceptions, MetadataAPI)
+//lazy val FileDataConsumer = project.in(file("FileDataConsumer")) dependsOn(Exceptions, MetadataAPI)
+lazy val FileDataConsumer = project.in(file("FileDataConsumer")) dependsOn(ExtDependencyLibs,Exceptions, MetadataAPI)
 
-lazy val CleanUtil = project.in(file("Utils/CleanUtil")) dependsOn (MetadataAPI)
+//lazy val CleanUtil = project.in(file("Utils/CleanUtil")) dependsOn (MetadataAPI)
+lazy val CleanUtil = project.in(file("Utils/CleanUtil")) dependsOn (ExtDependencyLibs,MetadataAPI)
 
-lazy val SaveContainerDataComponent = project.in(file("Utils/SaveContainerDataComponent")) dependsOn(Metadata, KamanjaBase, MetadataBootstrap, MetadataAPI, StorageManager, Exceptions, TransactionService)
+//lazy val SaveContainerDataComponent = project.in(file("Utils/SaveContainerDataComponent")) dependsOn(Metadata, KamanjaBase, MetadataBootstrap, MetadataAPI, StorageManager, Exceptions, TransactionService)
+lazy val SaveContainerDataComponent = project.in(file("Utils/SaveContainerDataComponent")) dependsOn(ExtDependencyLibs,Metadata, KamanjaBase, MetadataBootstrap, MetadataAPI, StorageManager, Exceptions, TransactionService)
 
-lazy val UtilsForModels = project.in(file("Utils/UtilsForModels"))
+//lazy val UtilsForModels = project.in(file("Utils/UtilsForModels"))
+lazy val UtilsForModels = project.in(file("Utils/UtilsForModels")) dependsOn(ExtDependencyLibs)
 
-lazy val JarFactoryOfModelInstanceFactory = project.in(file("FactoriesOfModelInstanceFactory/JarFactoryOfModelInstanceFactory")) dependsOn(Metadata, KamanjaBase, Exceptions)
+//lazy val JarFactoryOfModelInstanceFactory = project.in(file("FactoriesOfModelInstanceFactory/JarFactoryOfModelInstanceFactory")) dependsOn(Metadata, KamanjaBase, Exceptions)
+lazy val JarFactoryOfModelInstanceFactory = project.in(file("FactoriesOfModelInstanceFactory/JarFactoryOfModelInstanceFactory")) dependsOn(ExtDependencyLibs,Metadata, KamanjaBase, Exceptions)
 
 //lazy val JpmmlFactoryOfModelInstanceFactory = project.in(file("FactoriesOfModelInstanceFactory/JpmmlFactoryOfModelInstanceFactory")) dependsOn(ExtDependencyLibs)
 lazy val JpmmlFactoryOfModelInstanceFactory = project.in(file("FactoriesOfModelInstanceFactory/JpmmlFactoryOfModelInstanceFactory")) dependsOn(ExtDependencyLibs, Metadata, KamanjaBase, Exceptions)
 
-lazy val MigrateBase = project.in(file("Utils/Migrate/MigrateBase")) dependsOn (ExtDependencyLibs) // was depending on nothing
+lazy val MigrateBase = project.in(file("Utils/Migrate/MigrateBase")) dependsOn (ExtDependencyLibs)
+// no external dependencies
 
 lazy val MigrateFrom_V_1_1 = project.in(file("Utils/Migrate/SourceVersion/MigrateFrom_V_1_1")) dependsOn (MigrateBase)
 
@@ -247,7 +273,8 @@ lazy val MigrateFrom_V_1_3 = project.in(file("Utils/Migrate/SourceVersion/Migrat
 
 lazy val jtm = project.in(file("GenerateModels/jtm")) dependsOn(Metadata, KamanjaBase, Exceptions, MetadataBootstrap, MessageDef)
 
-lazy val InstallDriverBase = project.in(file("Utils/ClusterInstaller/InstallDriverBase")) dependsOn (ExtDependencyLibs) // was depending on nothing
+lazy val InstallDriverBase = project.in(file("Utils/ClusterInstaller/InstallDriverBase")) dependsOn (ExtDependencyLibs)
+// no external dependencies
 
 lazy val InstallDriver = project.in(file("Utils/ClusterInstaller/InstallDriver")) dependsOn(InstallDriverBase, Serialize, KamanjaUtils)
 

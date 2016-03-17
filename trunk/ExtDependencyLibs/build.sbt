@@ -126,7 +126,6 @@ libraryDependencies ++= Seq("org.apache.kafka" %% "kafka" % "0.8.2.2"
 libraryDependencies += "org.apache.hbase" % "hbase-client" % "1.0.2"
 libraryDependencies += "org.apache.hbase" % "hbase-common" % "1.0.2"
 libraryDependencies += "org.apache.hadoop" % "hadoop-common" % "2.7.1"
-//libraryDependencies += "org.apache.kafka" %% "kafka" % "0.8.2.2"
 libraryDependencies += "com.googlecode.json-simple" % "json-simple" % "1.1"
 libraryDependencies += "com.fasterxml.jackson.core" % "jackson-databind" % "2.6.3"
 libraryDependencies += "log4j" % "log4j" % "1.2.17"
@@ -282,6 +281,24 @@ libraryDependencies ++= Seq(
   "org.apache.curator" % "curator-recipes" % "2.6.0"
   //  "com.googlecode.json-simple" % "json-simple" % "1.1"
 )
+
+
+
+////////////////////// CleanUtil
+libraryDependencies ++= Seq (
+  "com.101tec" % "zkclient" % "0.6",
+  "org.apache.curator" % "curator-test" % "2.8.0"
+    exclude("javax.jms", "jms")
+    exclude("com.sun.jdmk", "jmxtools")
+    exclude("com.sun.jmx", "jmxri")
+)
+
+
+
+
+////////////////////// KafkaSimpleInputOutputAdapters
+//already available
+
 
 
 ////////////////////// ZooKeeperLeaderLatch
@@ -548,3 +565,9 @@ libraryDependencies += "org.apache.commons" % "commons-dbcp2" % "2.1"
 
 ////////////////////// JarFactoryOfModelInstanceFactory
 //already available
+
+
+
+////////////////////// MigrateBase
+//already available
+

@@ -58,11 +58,11 @@ excludedJars in assembly <<= (fullClasspath in assembly) map { cp =>
 name := "FileDataConsumer"
 
 version := "0.1.0"
-libraryDependencies ++= {
-  val sprayVersion = "1.3.3"
-  val akkaVersion = "2.3.9"
-  Seq(
-    "org.apache.kafka" %% "kafka" % "0.8.2.2",
-    "org.scala-lang" % "scala-actors" % scalaVersion.value
-  )
-}
+//libraryDependencies ++= {
+//  val sprayVersion = "1.3.3"
+//  val akkaVersion = "2.3.9"
+//  Seq(
+//    "org.apache.kafka" %% "kafka" % "0.8.2.2",
+//    "org.scala-lang" % "scala-actors" % scalaVersion.value
+//  )
+//}
