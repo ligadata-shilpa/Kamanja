@@ -574,7 +574,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
         var groks = transformation.grokMatch
         var computes = transformation.computes
         var cnt1 = computes.size + groks.size
-        var cnt2 = 0
+        var cnt2 = -1
 
         while(cnt1!=cnt2 && (computes.nonEmpty || groks.nonEmpty)) {
           cnt2 = cnt1
@@ -714,23 +714,57 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           })
 
           var mapping = o._2.mapping
-          var wheres =  Array(o._2.where)
+          var wheres =  if(o._2.where.nonEmpty) Array(o._2.where) else Array.empty[String]
           var computes = o._2.computes
           var cnt1 = wheres.length + computes.size
-          var cnt2 = 0
-
-          // Remove provided computes -  outer computes
-          outputSet1 = outputSet1.filter(f => !mappingSources.contains(f))
-
-          // Removed if mappings are provided
-          val found = mapping.filter( f => mappingSources.contains(f._2) )
-          found.foreach( f => { outputSet1 --= Set(f._1); mappingSources ++= Map(f._1 -> mappingSources.get(f._2).get) } )
-          mapping = mapping.filterKeys( f => !found.contains(f) )
+          var cnt2 = -1
 
           // Abort this loop if nothing changes or we can satisfy all outputs
           while(cnt1!=cnt2 && outputSet1.nonEmpty) {
 
             cnt2 = cnt1
+
+            // Check Mapping
+            if(mapping.nonEmpty)
+            {
+              logger.trace("Mappings left {}", mapping.mkString(", "))
+
+              val found = mapping.filter( f => {
+                // Try to extract variables, than it is an expression
+                val list = Expressions.ExtractColumnNames(f._2)
+                if(list.nonEmpty) {
+                  val rList = ResolveNames(list, root.aliases.messages.toMap)
+                  val open = rList.filter(f => !mappingSources.contains(f._2))
+                  if(open.nonEmpty) logger.trace("{} not found {}", t.toString, open.mkString(", "))
+                  open.isEmpty
+                } else {
+                  mappingSources.contains(f._2)
+                }
+              })
+
+              found.foreach(f => {
+                // Try to extract variables, than it is an expression
+                val expression = f._2
+                val list = Expressions.ExtractColumnNames(expression)
+
+                val newExpression = if (list.nonEmpty) {
+                  val newExpression = Expressions.FixupColumnNames(expression, mappingSources, aliaseMessages)
+                  val rList = ResolveNames(list, root.aliases.messages.toMap)
+                  val open = rList.filter(f => !mappingSources.contains(f._2))
+                  logger.trace("Matched mapping expression {} -> {}", f._1, newExpression)
+                  trackedUsedSourceInner ++= rList.map(m => m._2).toSet
+                  newExpression
+                } else {
+                  val nameColumn = ResolveName(expression, aliaseMessages)
+                  trackedUsedSourceInner += nameColumn
+                  nameColumn
+                }
+                outputSet1 --= Set(f._1)
+                mappingSources ++= Map(f._1 -> newExpression)
+              })
+
+              mapping = mapping.filterKeys( f => !found.contains(f)  )
+            }
 
             // Check grok matches
 
@@ -818,47 +852,6 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
               }
             })
 
-            // Check Mapping
-            if(mapping.nonEmpty)
-            {
-              logger.trace("Mappings left {}", mapping.mkString(", "))
-
-              val found = mapping.filter( f => {
-                // Try to extract variables, than it is an expression
-                val list = Expressions.ExtractColumnNames(f._2)
-                if(list.nonEmpty) {
-                  val rList = ResolveNames(list, root.aliases.messages.toMap)
-                  val open = rList.filter(f => !mappingSources.contains(f._2))
-                  if(open.nonEmpty) logger.trace("{} not found {}", t.toString, open.mkString(", "))
-                  open.isEmpty
-                } else {
-                  mappingSources.contains(f._2)
-                }
-              })
-
-              found.foreach(f => {
-                // Try to extract variables, than it is an expression
-                val expression = f._2
-                val list = Expressions.ExtractColumnNames(expression)
-
-                val newExpression = if (list.nonEmpty) {
-                  val newExpression = Expressions.FixupColumnNames(expression, mappingSources, aliaseMessages)
-                  val rList = ResolveNames(list, root.aliases.messages.toMap)
-                  val open = rList.filter(f => !mappingSources.contains(f._2))
-                  logger.trace("Matched mapping expression {} -> {}", f._1, newExpression)
-                  trackedUsedSourceInner ++= rList.map(m => m._2).toSet
-                  newExpression
-                } else {
-                  trackedUsedSourceInner += expression
-                  expression
-                }
-                outputSet1 --= Set(f._1)
-                mappingSources ++= Map(f._1 -> newExpression)
-              })
-
-              mapping = mapping.filterKeys( f => !found.contains(f)  )
-            }
-
             // Update state
             cnt1 = wheres1.length + computes1.size
             wheres = wheres1
@@ -899,7 +892,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           collect ++= Array(outputResult)
           collect ++= Array("}\n")
 
-          // Collect all inputmessages attribute used
+          // Collect all input messages attribute used
           logger.trace("Final map: transformation %s ouput %s used %s".format(t, o._1, trackedUsedSourceInner.mkString(", ")))
 
           // outputs

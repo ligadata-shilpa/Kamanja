@@ -39,6 +39,7 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
       // type could be some class available from imports
       val ipinfo: IpInfo = iplookup(msg2.in1)
       def process_omsg2(): Array[Result] = {
+        if (!(msg2.in2 != -1 && msg2.in2 < 100)) return Array.empty[Result]
         val tmp8: String = somefunc2(msg2.in3)
         Array[Result](new Result("rowNumber", msg1.rowNumber), new Result("transactionId", msg1.transactionId), new Result("out4", ipinfo.zipCode), new Result("out1", msg2.in1), new Result("timePartitionData", msg1.timePartitionData), new Result("out2", tmp8), new Result("out3", somefunc(zipcode, zipcode1)))
       }
@@ -52,6 +53,7 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
       // type could be some class available from imports
       val ipinfo: IpInfo = iplookup(msg2.in1)
       def process_omsg2(): Array[Result] = {
+        if (!(msg2.in2 != -1 && msg2.in2 < 100)) return Array.empty[Result]
         val tmp8: String = somefunc2(msg2.in3)
         Array[Result](new Result("out4", ipinfo.zipCode), new Result("out1", msg2.in1), new Result("rowNumber", msg2.rowNumber), new Result("out2", tmp8), new Result("timePartitionData", msg2.timePartitionData), new Result("transactionId", msg2.transactionId), new Result("out3", somefunc(zipcode, zipcode1)))
       }
@@ -59,7 +61,7 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
     }
     def exeGenerated_test2_3(msg2: com.ligadata.kamanja.test.v1000000.msg3): Array[Result] = {
       def process_omsg3(): Array[Result] = {
-        Array[Result](new Result("out3", msg2.in1), new Result("out2", msg2.in1), new Result("out1", msg2.in1), new Result("out4", msg2.in1), new Result("rowNumber", msg2.rowNumber), new Result("timePartitionData", msg2.timePartitionData), new Result("transactionId", msg2.transactionId))
+        Array[Result](new Result("out4", in1), new Result("out1", in1), new Result("rowNumber", msg2.rowNumber), new Result("out3", in1), new Result("out2", in1), new Result("timePartitionData", msg2.timePartitionData), new Result("transactionId", msg2.transactionId))
       }
       process_omsg3()
     }

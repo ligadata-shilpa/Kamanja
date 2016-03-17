@@ -43,7 +43,7 @@
             "out3": "somefunc($zipcode, $zipcode1)",
             "out4": "$ipinfo.zipCode"
           },
-          "where": "!(${m2.$in2} != -1 && ${m2.in2} < 100)",
+          "where": "!(${m2.in2} != -1 && ${m2.in2} < 100)",
           "computes": {
             "tmp8": { "type": "String", "val":"somefunc2(${m2.in3})" }
           }
