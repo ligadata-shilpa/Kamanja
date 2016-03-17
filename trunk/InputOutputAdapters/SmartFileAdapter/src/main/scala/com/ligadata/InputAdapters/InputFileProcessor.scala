@@ -20,6 +20,7 @@ import scala.collection.mutable.PriorityQueue
 import java.nio.file.StandardCopyOption.REPLACE_EXISTING
 import java.nio.file.Files.copy
 import java.nio.file.Paths.get
+import java.nio.file.{Path, FileSystems}
 import scala.collection.mutable.ArrayBuffer
 import org.apache.commons.lang3.RandomStringUtils
 import java.net.URLEncoder
@@ -61,18 +62,13 @@ object FileProcessor {
   var localMetadataConfig: String = ""
   var zkcConnectString: String = ""
 
-  private var path: ArrayBuffer[Path] = null
+  private val path = ArrayBuffer[Path]()
   //private var watchService: WatchService = null
   //private var keys = new HashMap[WatchKey, Path]
 
   var dirToWatch: String = _
   var targetMoveDir: String = _
   var readyToProcessKey: String = _
-
-  private var authUser : String = ""
-  private var authPass : String = ""
-  private var host : String = ""
-  private var port = -1
 
 
   var globalFileMonitorService: ExecutorService = Executors.newFixedThreadPool(3)
@@ -125,6 +121,7 @@ object FileProcessor {
   private var connectionConf : FileAdapterConnectionConfig = null
   private var monitoringConf :  FileAdapterMonitoringConfig = null
   private var adapterConfig : SmartFileAdapterConfiguration = null
+  private var smartFileMonitor : SmartFileMonitor = null
 
   /**
     *
@@ -221,32 +218,12 @@ object FileProcessor {
   }
 
   //def setProperties(inprops: scala.collection.mutable.Map[String, String], inPath: Path): Unit = {
-  def setProperties(inprops: scala.collection.mutable.Map[String, String], inPath: ArrayBuffer[Path]): Unit = {
-    /*props = inprops
-    path = inPath
-    dirToWatch = props.getOrElse(SmartFileAdapterConstants.DIRECTORY_TO_WATCH, null)
-    targetMoveDir = props.getOrElse(SmartFileAdapterConstants.DIRECTORY_TO_MOVE_TO, null)
-    readyToProcessKey = props.getOrElse(SmartFileAdapterConstants.READY_MESSAGE_MASK, ".gzip")
-    maxTimeFileAllowedToLive = (1000 * props.getOrElse(SmartFileAdapterConstants.MAX_TIME_ALLOWED_TO_BUFFER, "3000").toInt)
-    refreshRate = props.getOrElse(SmartFileAdapterConstants.REFRESH_RATE, "2000").toInt
+  def setProperties(conf : SmartFileAdapterConfiguration): Unit = {
 
-    val fs = props.getOrElse(SmartFileAdapterConstants.FILE_SYSTEM, null)
-    fsType = FileHandlerUtil.getFsType(fs)
-    println(s"fs=$fs")
-    println(s"fsType=${fsType.toString}")
-
-    authUser = props.getOrElse(SmartFileAdapterConstants.AUTH_USER, null)
-    authPass = props.getOrElse(SmartFileAdapterConstants.AUTH_PASS, null)
-    host = props.getOrElse(SmartFileAdapterConstants.HOST, null)
-
-    val portStr = props.getOrElse(SmartFileAdapterConstants.PORT, null)
-    if(portStr != null)
-      try{
-        port = portStr.toInt
-      }
-    catch{
-      case ex : NumberFormatException =>
-    }*/
+    adapterConfig = conf
+    connectionConf = adapterConfig.connectionConfig
+    monitoringConf = adapterConfig.monitoringConfig
+    monitoringConf.locations.foreach(location => path += FileSystems.getDefault.getPath(location))
   }
 
   def markFileProcessing (fileName: String, offset: Int, createDate: Long): Unit = {
@@ -480,7 +457,7 @@ object FileProcessor {
   }
 
   private def processExistingFiles(fileHandler: SmartFileHandler): Unit = {
-    //this method should be replaced by the monitors: simply detected new files should be enqueued using - FileProcessor.enQBufferedFile(file.toString)
+    //this method is replaced by the monitors: simply detected new files should be enqueued using - FileProcessor.enQBufferedFile(file.toString)
 
     /*
     // Process all the existing files in the directory that are not marked complete.
@@ -597,24 +574,11 @@ object FileProcessor {
       logger.info("SMART_FILE_CONSUMER partition Initialization complete  Monitoring specified directory for new files")
       // Begin the listening process, TAKE()
 
-      /*breakable {
-        while (true) {
-          //processExistingFiles(d)
-          for(dir <- path){
-            try {
-              processExistingFiles(dir.toFile())
-              errorWaitTime = 1000
-            } catch {
-              case e: Exception => {
-                logger.warn("Unable to access Directory, Retrying after " + errorWaitTime + " seconds", e)
-                errorWaitTime = scala.math.min((errorWaitTime * 2), FileProcessor.MAX_WAIT_TIME)
-              }
-            }
-          }
-          //TODO C&S - Need to parameterize
-          Thread.sleep(refreshRate)
-        }
-      }*/
+      //instead of calling processExistingFiles repeatedly, use the monitor
+      smartFileMonitor = SmartFileMonitorFactory.createSmartFileMonitor(adapterConfig.Name, adapterConfig._type, null )
+      smartFileMonitor.init(adapterConfig.adapterSpecificCfg)
+      smartFileMonitor.monitor()
+
     }  catch {
       case ie: InterruptedException => logger.error("InterruptedException: " + ie)
       case ioe: IOException         => logger.error("Unable to find the directory to watch, Shutting down File Consumer", ioe)
@@ -622,9 +586,13 @@ object FileProcessor {
     }
   }
 
+  /**
+    * this method is used as callback to be passed to monitor
+    * it basically does what method processExistingFiles used to do in file consumer tool
+    * @param fileHandler
+    */
   def processFile (fileHandler : SmartFileHandler) : Unit = {
-    // BUGBUG:: Take the changes from issue_331 branch
-    if (MonitorUtils.isValidFile(fileHandler) && fileHandler.getFullPath.endsWith(readyToProcessKey))
+    if (MonitorUtils.isValidFile(fileHandler))
       enQBufferedFile(fileHandler)
   }
 
@@ -792,11 +760,10 @@ object BufferCounters {
 
 /**
   *
-  * @param path
   * @param partitionId
   */
 //class FileProcessor(val path: Path, val partitionId: Int) extends Runnable {
-class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends Runnable {
+class FileProcessor(val partitionId: Int) extends Runnable {
 
   private var zkc: CuratorFramework = null
   lazy val loggerName = this.getClass.getName
@@ -843,130 +810,25 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
   private var connectionConf : FileAdapterConnectionConfig = null
   private var monitoringConf :  FileAdapterMonitoringConfig = null
   private var adapterConfig : SmartFileAdapterConfiguration = null
+  private var path = ArrayBuffer[Path]()
 
   /**
     * Called by the Directory Listener to initialize
-    * @param props
+    * @param conf
     */
-  def init(props: scala.collection.mutable.Map[String, String]): Unit = {
-    /*message_separator = props.getOrElse(SmartFileAdapterConstants.MSG_SEPARATOR, "10").toInt.toChar
-    dirToWatch = props.getOrElse(SmartFileAdapterConstants.DIRECTORY_TO_WATCH, null)
-    dirToMoveTo = props.getOrElse(SmartFileAdapterConstants.DIRECTORY_TO_MOVE_TO, null)
-    NUMBER_OF_BEES = props.getOrElse(SmartFileAdapterConstants.PAR_DEGREE_OF_FILE_CONSUMER, "1").toInt
-    maxlen = props.getOrElse(SmartFileAdapterConstants.WORKER_BUFFER_SIZE, "4").toInt * 1024 * 1024
-    partitionSelectionNumber = props(SmartFileAdapterConstants.NUMBER_OF_FILE_CONSUMERS).toInt
-    
-    //Code commented
-    readyToProcessKey = props.getOrElse(SmartFileAdapterConstants.READY_MESSAGE_MASK, ".gzip")
-    
-    maxBufAllowed = props.getOrElse(SmartFileAdapterConstants.MAX_MEM, "512").toLong * 1024L *1024L
-    throttleTime = props.getOrElse(SmartFileAdapterConstants.THROTTLE_TIME, "250").toInt
-    var mdConfig = props.getOrElse(SmartFileAdapterConstants.METADATA_CONFIG_FILE,null)
-    var msgName = props.getOrElse(SmartFileAdapterConstants.MESSAGE_NAME, null)
-    var kafkaBroker = props.getOrElse(SmartFileAdapterConstants.KAFKA_BROKER, null)
-    
-    //Default allowed content types - 
-    var cTypes  = props.getOrElse(SmartFileAdapterConstants.VALID_CONTENT_TYPES, "text/plain;application/gzip")
-    
-    for(cType <- cTypes.split(";")){
-      //logger.info("SMART_FILE_CONSUMER Putting "+cType+" into allowed content types")
-      if(!FileProcessor.contentTypes.contains(cType))
-        FileProcessor.contentTypes.put(cType, cType)
-    }
-    
-    
-    kafkaTopic = props.getOrElse(SmartFileAdapterConstants.KAFKA_TOPIC, null)
+  def init(conf : SmartFileAdapterConfiguration): Unit = {
 
-    authUser = props.getOrElse(SmartFileAdapterConstants.AUTH_USER, null)
-    authPass = props.getOrElse(SmartFileAdapterConstants.AUTH_PASS, null)
-    host = props.getOrElse(SmartFileAdapterConstants.HOST, null)
+    adapterConfig = conf
+    connectionConf = adapterConfig.connectionConfig
+    monitoringConf = adapterConfig.monitoringConfig
 
-    val fs = props.getOrElse(SmartFileAdapterConstants.FILE_SYSTEM, null)
-    fsType = FileHandlerUtil.getFsType(fs)
+    monitoringConf.locations.foreach(location => path += FileSystems.getDefault.getPath(location))
 
-    val portStr = props.getOrElse(SmartFileAdapterConstants.PORT, null)
-    if(portStr != null)
-      try{
-        port = portStr.toInt
-      }
-      catch{
-        case ex : NumberFormatException => {
-          logger.error("SMART_FILE_CONSUMER Hdfs config needs port")
-          shutdown
-          throw MissingPropertyException("Wrong Paramter: " + SmartFileAdapterConstants.PORT, null)
-        }
-      }
-    else{
-      if(fsType == FsType.HDFS){
-        logger.error("SMART_FILE_CONSUMER Hdfs config needs port")
-        shutdown
-        throw MissingPropertyException("Missing Paramter: " + SmartFileAdapterConstants.PORT, null)
-      }
-
-    }
-
-    // Bail out if dirToWatch, Topic are not set
-    if (kafkaTopic == null) {
-      logger.error("SMART_FILE_CONSUMER ("+partitionId+") Kafka Topic to populate must be specified")
-      shutdown
-      throw MissingPropertyException("Missing Paramter: " + SmartFileAdapterConstants.KAFKA_TOPIC, null)
-    }
-
-    if (dirToWatch == null) {
-      logger.error("SMART_FILE_CONSUMER ("+partitionId+") Directory to watch must be specified")
-      shutdown
-      throw MissingPropertyException("Missing Paramter: " + SmartFileAdapterConstants.DIRECTORY_TO_WATCH, null)
-    }
-
-    if (dirToMoveTo == null) {
-      logger.error("SMART_FILE_CONSUMER ("+partitionId+") Destination directory must be specified")
-      shutdown
-      throw MissingPropertyException("Missing Paramter: " + SmartFileAdapterConstants.DIRECTORY_TO_MOVE_TO, null)
-    }
-
-    if (mdConfig == null) {
-      logger.error("SMART_FILE_CONSUMER ("+partitionId+") Directory to watch must be specified")
-      shutdown
-      throw new MissingPropertyException("Missing Paramter: " + SmartFileAdapterConstants.METADATA_CONFIG_FILE, null)
-    }
-
-    if (msgName == null) {
-      logger.error("SMART_FILE_CONSUMER ("+partitionId+") Message name must be specified")
-      shutdown
-      throw new MissingPropertyException("Missing Paramter: " + SmartFileAdapterConstants.MESSAGE_NAME, null)
-    }
-
-    if (kafkaBroker == null) {
-      logger.error("SMART_FILE_CONSUMER ("+partitionId+") Kafka Broker details must be specified")
-      shutdown
-      throw new MissingPropertyException("Missing Paramter: " + SmartFileAdapterConstants.KAFKA_BROKER, null)
-    }
-
-    import FsType._
-    if(fsType == SFTP){
-      if (host == null) {
-        logger.error("SMART_FILE_CONSUMER SFTP host must be specified")
-        shutdown
-        throw new MissingPropertyException("Missing Paramter: " + SmartFileAdapterConstants.HOST, null)
-      }
-      if (authUser == null) {
-        logger.error("SMART_FILE_CONSUMER SFTP user must be specified")
-        shutdown
-        throw new MissingPropertyException("Missing Paramter: " + SmartFileAdapterConstants.AUTH_USER, null)
-      }
-      if (authPass == null) {
-        logger.error("SMART_FILE_CONSUMER SFTP pass must be specified")
-        shutdown
-        throw new MissingPropertyException("Missing Paramter: " + SmartFileAdapterConstants.AUTH_PASS, null)
-      }
-    }
-
-    FileProcessor.setProperties(props, path)
+    FileProcessor.setProperties(adapterConfig)
     FileProcessor.startGlobalFileMonitor
 
-    logger.info("SMART_FILE_CONSUMER ("+partitionId+") Initializing Kafka loading process")
     // Initialize threads
-    try {
+    /*try {
       kml = new KafkaMessageLoader(partitionId, props)
     } catch {
       case e: Exception => {

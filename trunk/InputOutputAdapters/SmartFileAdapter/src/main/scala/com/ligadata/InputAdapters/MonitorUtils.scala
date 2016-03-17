@@ -157,3 +157,18 @@ object SmartFileHandlerFactory{
     handler
   }
 }
+
+object SmartFileMonitorFactory{
+  def createSmartFileMonitor(adapterName : String, adapterType : String, modifiedFileCallback:(SmartFileHandler) => Unit) : SmartFileMonitor = {
+
+    val monitor : SmartFileMonitor =
+      adapterType.toLowerCase() match {
+        case "das/nas" => new PosixChangesMonitor(adapterName, modifiedFileCallback)
+        case "sftp" => new SftpChangesMonitor(adapterName, modifiedFileCallback)
+        case "hdfs" => new HdfsChangesMonitor(adapterName, modifiedFileCallback)
+        case _ => throw new KamanjaException("Unsupported Smart file adapter type", null)
+      }
+
+    monitor
+  }
+}
