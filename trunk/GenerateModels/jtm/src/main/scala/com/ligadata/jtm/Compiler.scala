@@ -728,11 +728,11 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
             val wheres1 = wheres.filter(f => {
               val list = Expressions.ExtractColumnNames(f)
               val rList = ResolveNames(list, root.aliases.messages.toMap)
-              val open = rList.filter(f => !fixedMappingSources.contains(f._2) )
+              val open = rList.filter(f => !mappingSources.contains(f._2) )
               if(open.isEmpty) {
                 // Sub names to
                 val newExpression = Expressions.FixupColumnNames(f, mappingSources, aliaseMessages)
-                logger.trace("matched where expression {}", newExpression)
+                logger.trace("Matched where expression {}", newExpression)
                 // Output the actual filter
                 collect ++= Array("if (%s) return Array.empty[Result]\n".format(newExpression))
                 false
@@ -748,13 +748,13 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
               val (open, expression) =  if(c._2.expression.length > 0) {
                 val list = Expressions.ExtractColumnNames(c._2.expression)
                 val rList = ResolveNames(list, root.aliases.messages.toMap)
-                val open = rList.filter(f => !fixedMappingSources.contains(f._2))
+                val open = rList.filter(f => !mappingSources.contains(f._2))
                 (open, c._2.expression)
               } else {
                 val evaluate = c._2.expressions.map( expression => {
                   val list = Expressions.ExtractColumnNames(expression)
                   val rList = ResolveNames(list, root.aliases.messages.toMap)
-                  val open = rList.filter(f => !fixedMappingSources.contains(f._2))
+                  val open = rList.filter(f => !mappingSources.contains(f._2))
                   (open, expression)
                 })
                 evaluate.foldLeft(evaluate.head) ( (r, e) => {
@@ -768,7 +768,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
               if(open.isEmpty) {
                 // Sub names to
                 val newExpression = Expressions.FixupColumnNames(expression, mappingSources, aliaseMessages)
-                logger.trace("Matched expression {} -> {}", newExpression, c._1)
+                logger.trace("Matched compute expression {} -> {}", newExpression, c._1)
                 // Output the actual compute
                 // To Do: multiple vals and type provided
                 collect :+= c._2.Comment
@@ -779,7 +779,6 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
                 outputSet1 --= Set(c._1)
                 mappingSources ++= Map(c._1 -> c._1)
-                fixedMappingSources ++= Map(c._1 -> c._1)
                 false
               } else {
                 true
@@ -796,11 +795,11 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
                 val list = Expressions.ExtractColumnNames(f._2)
                 if(list.nonEmpty) {
                   val rList = ResolveNames(list, root.aliases.messages.toMap)
-                  val open = rList.filter(f => !fixedMappingSources.contains(f._2))
+                  val open = rList.filter(f => !mappingSources.contains(f._2))
                   if(open.nonEmpty) logger.trace("{} not found {}", t.toString, open.mkString(", "))
                   open.isEmpty
                 } else {
-                  fixedMappingSources.contains(f._2)
+                  mappingSources.contains(f._2)
                 }
               })
 
@@ -812,15 +811,14 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
                 val newExpression = if (list.nonEmpty) {
                   val newExpression = Expressions.FixupColumnNames(expression, mappingSources, aliaseMessages)
                   val rList = ResolveNames(list, root.aliases.messages.toMap)
-                  val open = rList.filter(f => !fixedMappingSources.contains(f._2))
-                  logger.trace("matched expression {} -> {}", f._1, newExpression)
+                  val open = rList.filter(f => !mappingSources.contains(f._2))
+                  logger.trace("Matched mapping expression {} -> {}", f._1, newExpression)
                   newExpression
                 } else {
                   expression
                 }
                 outputSet1 --= Set(f._1)
                 mappingSources ++= Map(f._1 -> newExpression)
-                fixedMappingSources ++= Map(f._1 -> f._1)
               })
 
               mapping = mapping.filterKeys( f => !found.contains(f)  )
