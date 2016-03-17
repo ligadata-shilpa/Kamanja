@@ -51,36 +51,16 @@ case class EnqueuedFileHandler(fileHandler: SmartFileHandler, offset: Int, creat
  * the Individual File Processors ask here for what files it they should be processed.
   */
 object FileProcessor {
-  lazy val loggerName = this.getClass.getName
-  lazy val logger = LogManager.getLogger(loggerName)
-  private var initRecoveryLock = new Object
-  private var numberOfReadyConsumers = 0
-  private var isBufferMonitorRunning = false
-  private var props: scala.collection.mutable.Map[String, String] = null
-  var zkc: CuratorFramework = null
-  var znodePath: String = ""
-  var localMetadataConfig: String = ""
-  var zkcConnectString: String = ""
 
-  private val path = ArrayBuffer[Path]()
   //private var watchService: WatchService = null
   //private var keys = new HashMap[WatchKey, Path]
 
-  var dirToWatch: String = _
-  var targetMoveDir: String = _
-  var readyToProcessKey: String = _
-
-
-  var globalFileMonitorService: ExecutorService = Executors.newFixedThreadPool(3)
   val DEBUG_MAIN_CONSUMER_THREAD_ACTION = 1000
   val NOT_RECOVERY_SITUATION = -1
   val BROKEN_FILE = -100
   val CORRUPT_FILE = -200
   val REFRESH_RATE = 10000
   val MAX_WAIT_TIME = 60000
-  var errorWaitTime = 1000
-
-  var reset_watcher = false
 
   val KAFKA_SEND_SUCCESS = 0
   val KAFKA_SEND_Q_FULL = 1
@@ -93,14 +73,76 @@ object FileProcessor {
   val IN_PROCESS_FAILED = 2
   val FINISHED_FAILED_TO_COPY = 3
   val BUFFERING_FAILED = 4
-  var bufferTimeout: Int = 300000  // Default to 5 minutes
-  var maxTimeFileAllowedToLive: Int = 3000  // default to 50 minutes.. will be multiplied by 1000 later
-  var refreshRate: Int = 2000 //Refresh rate for monitorBufferingFiles and runFileWatcher methods
-  var maxBufferErrors = 5
 
   val HEALTHCHECK_TIMEOUT = 30000
   val maxRetry = 3
 
+}
+
+
+/**
+  * Counter of buffers used by the FileProcessors... there is a limit on how much memory File Consumer can use up.
+  */
+object BufferCounters {
+  val inMemoryBuffersCntr = new java.util.concurrent.atomic.AtomicLong()
+}
+
+/**
+  *
+  * @param partitionId
+  */
+//class FileProcessor(val path: Path, val partitionId: Int) extends Runnable {
+class FileProcessor(val partitionId: Int) extends Runnable {
+
+  private var zkc: CuratorFramework = null
+  lazy val loggerName = this.getClass.getName
+  lazy val logger = LogManager.getLogger(loggerName)
+  var fileConsumers: ExecutorService = Executors.newFixedThreadPool(3)
+
+  var isConsuming = true
+  var isProducing = true
+
+  private var workerBees: ExecutorService = null
+  private var tempKMS = false
+  // QUEUES used in file processing... will be synchronized.s
+  private var msgQ: scala.collection.mutable.Queue[Array[KafkaMessage]] = scala.collection.mutable.Queue[Array[KafkaMessage]]()
+  private var bufferQ: scala.collection.mutable.Queue[BufferToChunk] = scala.collection.mutable.Queue[BufferToChunk]()
+  private var blg = new BufferLeftoversArea(-1, null, -1)
+
+  private val msgQLock = new Object
+  private val bufferQLock = new Object
+  private val beeLock = new Object
+
+  private var msgCount = 0
+
+  // Confugurable Properties
+  private var dirToWatch: String = ""
+  private var dirToMoveTo: String = ""
+  private var message_separator: Char = _
+  private var field_separator: Char = _
+  private var kv_separator: Char = _
+  private var NUMBER_OF_BEES: Int = 2
+  private var maxlen: Int = _
+  private var partitionSelectionNumber: Int = _
+  private var kafkaTopic = ""
+  private var readyToProcessKey = ""
+  private var maxBufAllowed: Long  = 0
+  private var throttleTime: Int = 0
+  private var isRecoveryOps = true
+
+  //new configurable properties
+  private var authUser : String = ""
+  private var authPass : String = ""
+  private var host : String = ""
+  private var port = -1
+
+  private var connectionConf : FileAdapterConnectionConfig = null
+  private var monitoringConf :  FileAdapterMonitoringConfig = null
+  private var adapterConfig : SmartFileAdapterConfiguration = null
+  private var path = ArrayBuffer[Path]()
+  private var smartFileMonitor : SmartFileMonitor = null
+
+  //------------previously object variables------------
   private var fileCache: scala.collection.mutable.Map[String, String] = scala.collection.mutable.Map[String, String]()
   private var fileCacheLock = new Object
   // Files in Progress! and their statuses.
@@ -114,15 +156,52 @@ object FileProcessor {
   private val bufferingQ_map: scala.collection.mutable.Map[SmartFileHandler, (Long, Long, Int)] = scala.collection.mutable.Map[SmartFileHandler, (Long, Long, Int)]()
   private val bufferingQLock = new Object
   private val zkRecoveryLock = new Object
+  var errorWaitTime = 1000
+  var reset_watcher = false
+  var bufferTimeout: Int = 300000  // Default to 5 minutes
+  var maxTimeFileAllowedToLive: Int = 3000  // default to 50 minutes.. will be multiplied by 1000 later
+  var refreshRate: Int = 2000 //Refresh rate for monitorBufferingFiles and runFileWatcher methods
+  var maxBufferErrors = 5
+  var targetMoveDir: String = _
+  private var initRecoveryLock = new Object
+  private var numberOfReadyConsumers = 0
+  private var isBufferMonitorRunning = false
+  private var props: scala.collection.mutable.Map[String, String] = null
+  var znodePath: String = ""
+  var localMetadataConfig: String = ""
+  var zkcConnectString: String = ""
 
 
-  //TODO: these should have value from cluster config
-  //also must remove duplicatoin in config between object FileProcessor and class FileProcessor
-  private var connectionConf : FileAdapterConnectionConfig = null
-  private var monitoringConf :  FileAdapterMonitoringConfig = null
-  private var adapterConfig : SmartFileAdapterConfiguration = null
-  private var smartFileMonitor : SmartFileMonitor = null
+  var globalFileMonitorService: ExecutorService = Executors.newFixedThreadPool(3)
 
+  /**
+    * Called by the Directory Listener to initialize
+    * @param conf
+    */
+  def init(conf : SmartFileAdapterConfiguration): Unit = {
+
+    adapterConfig = conf
+    connectionConf = adapterConfig.connectionConfig
+    monitoringConf = adapterConfig.monitoringConfig
+
+    monitoringConf.locations.foreach(location => path += FileSystems.getDefault.getPath(location))
+
+    startGlobalFileMonitor
+
+    // Initialize threads
+    /*try {
+      kml = new KafkaMessageLoader(partitionId, props)
+    } catch {
+      case e: Exception => {
+        logger.warn("", e)
+        shutdown
+        throw e
+      }
+    }*/
+  }
+
+
+  //-------------------------------------------------------------------------------------------------
   /**
     *
     */
@@ -146,7 +225,7 @@ object FileProcessor {
     zkRecoveryLock.synchronized {
       var zkValue: String = ""
       logger.info("SMART_FILE_CONSUMER (global): Getting zookeeper info for "+ znodePath)
-      
+
       logger.info("SMART_FILE_CONSUMER (MI): addToZK "+ fileName)
       CreateClient.CreateNodeIfNotExists(zkcConnectString, znodePath + "/" + URLEncoder.encode(fileName,"UTF-8"))
       zkValue = zkValue + offset.toString
@@ -210,26 +289,17 @@ object FileProcessor {
       fileCache(file).split("::")(0).toLong
     }
   }
-  
-   def getIDFromFileCache (file: String): String = {
+
+  def getIDFromFileCache (file: String): String = {
     fileCacheLock.synchronized {
       fileCache(file)
     }
   }
 
-  //def setProperties(inprops: scala.collection.mutable.Map[String, String], inPath: Path): Unit = {
-  def setProperties(conf : SmartFileAdapterConfiguration): Unit = {
-
-    adapterConfig = conf
-    connectionConf = adapterConfig.connectionConfig
-    monitoringConf = adapterConfig.monitoringConfig
-    monitoringConf.locations.foreach(location => path += FileSystems.getDefault.getPath(location))
-  }
-
   def markFileProcessing (fileName: String, offset: Int, createDate: Long): Unit = {
     activeFilesLock.synchronized{
       logger.info("SMART FILE CONSUMER (global): begin tracking the processing of a file " + fileName + "  begin at offset " + offset)
-      var fs = new FileStatus(ACTIVE, offset, createDate)
+      var fs = new FileStatus(FileProcessor.ACTIVE, offset, createDate)
       activeFiles(fileName) = fs
     }
   }
@@ -263,7 +333,7 @@ object FileProcessor {
         logger.warn("SMART FILE CONSUMER (global): Trying to set state for an unknown file "+ fileName)
       } else {
         val fs = activeFiles(fileName)
-        val fs_new = new FileStatus(IN_PROCESS_FAILED, scala.math.max(fs.offset,offset), fs.createDate)
+        val fs_new = new FileStatus(FileProcessor.IN_PROCESS_FAILED, scala.math.max(fs.offset,offset), fs.createDate)
         activeFiles(fileName) = fs_new
       }
     }
@@ -364,19 +434,19 @@ object FileProcessor {
       bufferingQLock.synchronized {
         val iter = bufferingQ_map.iterator
         iter.foreach(fileTuple => {
-          
+
           //TODO C&S - changes
           var thisFileFailures: Int = fileTuple._2._3
           var thisFileStarttime: Long = fileTuple._2._2
           var thisFileOrigLength:Long = fileTuple._2._1
-          
-          
+
+
           try {
             val fileHandler = fileTuple._1
 
             // If the filesystem is accessible
             if (fileHandler.exists) {
-              
+
               //TODO C&S - Changes
               thisFileOrigLength = fileHandler.length
 
@@ -408,7 +478,7 @@ object FileProcessor {
                 bufferingQ_map(fileTuple._1) = (thisFileOrigLength, thisFileStarttime, thisFileFailures)
               }
             } else {
-               // File System is not accessible.. issue a warning and go on to the next file.
+              // File System is not accessible.. issue a warning and go on to the next file.
               logger.warn("SMART FILE CONSUMER (global): File on the buffering Q is not found " + fileTuple._1)
             }
           } catch {
@@ -486,8 +556,8 @@ object FileProcessor {
 
 
   /**
-   *
-   */
+    *
+    */
   private def runFileWatcher(): Unit = {
     try {
       // Lets see if we have failed previously on this partition Id, and need to replay some messages first.
@@ -527,7 +597,7 @@ object FileProcessor {
 
 
               //Start Changes -- Instead of a single file, run with the ArrayBuffer of Paths
-              FileProcessor.enQFile(fileHandlerToRecover,recoveryTokens(0).toInt, FileProcessor.RECOVERY_DUMMY_START_TIME, partMap)
+              enQFile(fileHandlerToRecover,recoveryTokens(0).toInt, FileProcessor.RECOVERY_DUMMY_START_TIME, partMap)
 
               //TODO : yasser : looks like this code waits for the files to get deleted/moved, must rewrite in another way
               /*for(dir <- path){
@@ -568,7 +638,7 @@ object FileProcessor {
       //TODO C&S- No need to process here just before entering the loop
       //If need is to exit, do a shutdown on error
       //for(dir <- path)
-        //processExistingFiles(dir.toFile())
+      //processExistingFiles(dir.toFile())
 
 
       logger.info("SMART_FILE_CONSUMER partition Initialization complete  Monitoring specified directory for new files")
@@ -713,7 +783,7 @@ object FileProcessor {
       logger.warn("SMART FILE CONSUMER (gloabal): Tracking issue for file type " + fileType)
       logger.warn("SMART FILE CONSUMER (gloabal): " + returnMap.toString)
       returnMap.foreach(item => {
-        setFileState(item._1, ACTIVE)
+        setFileState(item._1, FileProcessor.ACTIVE)
       })
     }
     return returnMap
@@ -731,8 +801,8 @@ object FileProcessor {
     } catch {
       case ioe: IOException => {
         logger.error("Exception moving the file ",ioe)
-        FileProcessor.setFileState(fileHandler.getFullPath,FileProcessor.FINISHED_FAILED_TO_COPY)
-        
+        setFileState(fileHandler.getFullPath,FileProcessor.FINISHED_FAILED_TO_COPY)
+
       }
     }
   }
@@ -747,97 +817,7 @@ object FileProcessor {
       logger.warn("SMART FILE CONSUMER File has been deleted" + fileHandler.getFullPath);
     }
   }
-  
-}
-
-
-/**
-  * Counter of buffers used by the FileProcessors... there is a limit on how much memory File Consumer can use up.
-  */
-object BufferCounters {
-  val inMemoryBuffersCntr = new java.util.concurrent.atomic.AtomicLong()
-}
-
-/**
-  *
-  * @param partitionId
-  */
-//class FileProcessor(val path: Path, val partitionId: Int) extends Runnable {
-class FileProcessor(val partitionId: Int) extends Runnable {
-
-  private var zkc: CuratorFramework = null
-  lazy val loggerName = this.getClass.getName
-  lazy val logger = LogManager.getLogger(loggerName)
-  var fileConsumers: ExecutorService = Executors.newFixedThreadPool(3)
-
-  var isConsuming = true
-  var isProducing = true
-
-  private var workerBees: ExecutorService = null
-  private var tempKMS = false
-  // QUEUES used in file processing... will be synchronized.s
-  private var msgQ: scala.collection.mutable.Queue[Array[KafkaMessage]] = scala.collection.mutable.Queue[Array[KafkaMessage]]()
-  private var bufferQ: scala.collection.mutable.Queue[BufferToChunk] = scala.collection.mutable.Queue[BufferToChunk]()
-  private var blg = new BufferLeftoversArea(-1, null, -1)
-
-  private val msgQLock = new Object
-  private val bufferQLock = new Object
-  private val beeLock = new Object
-
-  private var msgCount = 0
-
-  // Confugurable Properties
-  private var dirToWatch: String = ""
-  private var dirToMoveTo: String = ""
-  private var message_separator: Char = _
-  private var field_separator: Char = _
-  private var kv_separator: Char = _
-  private var NUMBER_OF_BEES: Int = 2
-  private var maxlen: Int = _
-  private var partitionSelectionNumber: Int = _
-  private var kafkaTopic = ""
-  private var readyToProcessKey = ""
-  private var maxBufAllowed: Long  = 0
-  private var throttleTime: Int = 0
-  private var isRecoveryOps = true
-
-  //new configurable properties
-  private var authUser : String = ""
-  private var authPass : String = ""
-  private var host : String = ""
-  private var port = -1
-
-  private var connectionConf : FileAdapterConnectionConfig = null
-  private var monitoringConf :  FileAdapterMonitoringConfig = null
-  private var adapterConfig : SmartFileAdapterConfiguration = null
-  private var path = ArrayBuffer[Path]()
-
-  /**
-    * Called by the Directory Listener to initialize
-    * @param conf
-    */
-  def init(conf : SmartFileAdapterConfiguration): Unit = {
-
-    adapterConfig = conf
-    connectionConf = adapterConfig.connectionConfig
-    monitoringConf = adapterConfig.monitoringConfig
-
-    monitoringConf.locations.foreach(location => path += FileSystems.getDefault.getPath(location))
-
-    FileProcessor.setProperties(adapterConfig)
-    FileProcessor.startGlobalFileMonitor
-
-    // Initialize threads
-    /*try {
-      kml = new KafkaMessageLoader(partitionId, props)
-    } catch {
-      case e: Exception => {
-        logger.warn("", e)
-        shutdown
-        throw e
-      }
-    }*/
-  }
+  //---------------------------------------------------------------------------------------------------------------------
 
   private def enQMsg(buffer: Array[KafkaMessage], bee: Int): Unit = {
     msgQLock.synchronized {
@@ -1055,13 +1035,13 @@ class FileProcessor(val partitionId: Int) extends Runnable {
       // We just drop the file, if it is still in the directory, then it will get picked up and reprocessed the next tick.
       case fio: java.io.FileNotFoundException => {
          logger.error("SMART_FILE_CONSUMER (" + partitionId + ") Exception accessing the file for processing the file - File is missing",fio)
-         FileProcessor.markFileProcessingEnd(fileName)
-         FileProcessor.fileCacheRemove(fileName)
+         markFileProcessingEnd(fileName)
+         fileCacheRemove(fileName)
          return
       }
       case fio: IOException => {
         logger.error("SMART_FILE_CONSUMER (" + partitionId + ") Exception accessing the file for processing the file ",fio)
-        FileProcessor.setFileState(fileName,FileProcessor.MISSING)
+        setFileState(fileName,FileProcessor.MISSING)
         return
       }
     }
@@ -1174,7 +1154,7 @@ class FileProcessor(val partitionId: Int) extends Runnable {
     */
   private def doSomeConsuming(): Unit = {
     while (isConsuming) {
-      val fileToProcess = FileProcessor.deQFile
+      val fileToProcess = deQFile
       var curTimeStart: Long = 0
       var curTimeEnd: Long = 0
       if (fileToProcess == null) {
@@ -1184,7 +1164,7 @@ class FileProcessor(val partitionId: Int) extends Runnable {
         
         //val tokenName = fileToProcess.name.split("/")
         //FileProcessor.markFileProcessing(tokenName(tokenName.size - 1), fileToProcess.offset, fileToProcess.createDate)
-        FileProcessor.markFileProcessing(fileToProcess.fileHandler.getFullPath, fileToProcess.offset, fileToProcess.createDate)
+        markFileProcessing(fileToProcess.fileHandler.getFullPath, fileToProcess.offset, fileToProcess.createDate)
         
         curTimeStart = System.currentTimeMillis
         try {
