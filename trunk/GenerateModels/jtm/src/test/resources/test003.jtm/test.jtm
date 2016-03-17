@@ -45,7 +45,7 @@
           },
           "where": "!($in2 != -1 && $in2 < 100)",
           "computes": {
-            "tmp8": { "type": "String", "val":"somefunc2($in3)" }
+            "tmp8": { "type": "String", "val":"somefunc2(${m2.in3})" }
           }
         }
       }

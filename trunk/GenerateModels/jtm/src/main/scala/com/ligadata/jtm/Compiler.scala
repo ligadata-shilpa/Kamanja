@@ -789,9 +789,35 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
             // Check Mapping
             if(mapping.nonEmpty)
             {
-              logger.trace("mappings left {}", mapping.mkString(", "))
-              val found = mapping.filter( f => mappingSources.contains(f._2) )
-              found.foreach(f => {outputSet1 --= Set(f._1); mappingSources ++= Map(f._1 -> mappingSources.get(f._2).get)})
+              logger.trace("Mappings left {}", mapping.mkString(", "))
+
+              val found = mapping.filter( f => {
+                // Try to extract variables, than it is an expression
+                val list = Expressions.ExtractColumnNames(f._2)
+                val open = list.filter(f => !mappingSources.contains(f) )
+                if(list.nonEmpty) {
+                  open.isEmpty
+                } else {
+                  mappingSources.contains(f._2)
+                }
+              })
+
+              found.foreach(f => {
+                // Try to extract variables, than it is an expression
+                val expression = f._2
+                val list = Expressions.ExtractColumnNames(expression)
+
+                val newExpression = if (list.nonEmpty) {
+                  val newExpression = Expressions.FixupColumnNames(expression, mappingSources, aliaseMessages)
+                  logger.trace("matched expression {} -> {}", newExpression, f._1)
+                  newExpression
+                } else {
+                  expression
+                }
+                outputSet1 --= Set(f._1)
+                mappingSources ++= Map(f._1 -> newExpression)
+              })
+
               mapping = mapping.filterKeys( f => !found.contains(f)  )
             }
 
