@@ -350,6 +350,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
   // Casing of system columns is inconsistent
   // provide a patch up map
   val columnNamePatchUp = Map.empty[String, String]
+  val columnSystem = Set("transactionId", "rowNumber", "timePartitionData")
 
   def ColumnNames(mgr: MdMgr, classname: String): Set[String] = {
     val classinstance = md.Message(classname, 0, true)
@@ -688,23 +689,20 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           // a little bit simpler than having val's
           var mappingSources: Map[String, String] = fixedMappingSources
 
-          logger.trace("Procesing transfromation: {} output: {} outputs: {} mapping: {}",
+          logger.trace("Procesing transformation: {} output: {} outputs: {} mapping: {}",
             t, o._1, outputSet.mkString(","), mappingSources.mkString(","))
 
           var outputSet1: Set[String] = outputSet
 
-          // To Do: Clarify how to resolve transactionId, timePartitionData, rowNumber (and other auto columns)
-          // Transaction id is in the input
-          // so will just push it back if needed
-          if(outputSet1.contains("transactionId")) {
-            outputSet1 --= Set("transactionId")
-          }
-          if(outputSet1.contains("timePartitionData")) {
-            outputSet1 --= Set("timePartitionData")
-          }
-          if(outputSet1.contains("rowNumber")) {
-            outputSet1 --= Set("rowNumber")
-          }
+          // Go through the inputs and find the system column so we can just funnel it through
+          columnSystem.foreach( c => {
+            if(outputSet1.contains(c)) {
+              val i = inputs.find( f => f.fieldName == c)
+              outputSet1 --= Set(c)
+              mappingSources ++= Map(c -> "%s.%s".format(i.get.argName, i.get.fieldName))
+            }
+          })
+
           var mapping = o._2.mapping
           var wheres =  Array(o._2.where)
           var computes = o._2.computes
@@ -712,7 +710,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           var cnt2 = 0
 
           // Remove provided computes -  outer computes
-          outputSet1 = outputSet1.filter( f => !mappingSources.contains(f))
+          outputSet1 = outputSet1.filter(f => !mappingSources.contains(f))
 
           // Removed if mappings are provided
           val found = mapping.filter( f => mappingSources.contains(f._2) )
@@ -729,7 +727,8 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
             // filters
             val wheres1 = wheres.filter(f => {
               val list = Expressions.ExtractColumnNames(f)
-              val open = list.filter(f => !mappingSources.contains(f) )
+              val rList = ResolveNames(list, root.aliases.messages.toMap)
+              val open = rList.filter(f => !fixedMappingSources.contains(f._2) )
               if(open.isEmpty) {
                 // Sub names to
                 val newExpression = Expressions.FixupColumnNames(f, mappingSources, aliaseMessages)
@@ -769,7 +768,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
               if(open.isEmpty) {
                 // Sub names to
                 val newExpression = Expressions.FixupColumnNames(expression, mappingSources, aliaseMessages)
-                logger.trace("matched expression {} -> {}", newExpression, c._1)
+                logger.trace("Matched expression {} -> {}", newExpression, c._1)
                 // Output the actual compute
                 // To Do: multiple vals and type provided
                 collect :+= c._2.Comment
@@ -778,8 +777,9 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
                 else
                   collect ++= Array("val %s = %s\n".format(c._1, newExpression))
 
-                mappingSources ++= Map(c._1 -> c._1)
                 outputSet1 --= Set(c._1)
+                mappingSources ++= Map(c._1 -> c._1)
+                fixedMappingSources ++= Map(c._1 -> c._1)
                 false
               } else {
                 true
@@ -794,11 +794,13 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
               val found = mapping.filter( f => {
                 // Try to extract variables, than it is an expression
                 val list = Expressions.ExtractColumnNames(f._2)
-                val open = list.filter(f => !mappingSources.contains(f) )
                 if(list.nonEmpty) {
+                  val rList = ResolveNames(list, root.aliases.messages.toMap)
+                  val open = rList.filter(f => !fixedMappingSources.contains(f._2))
+                  if(open.nonEmpty) logger.trace("{} not found {}", t.toString, open.mkString(", "))
                   open.isEmpty
                 } else {
-                  mappingSources.contains(f._2)
+                  fixedMappingSources.contains(f._2)
                 }
               })
 
@@ -809,13 +811,16 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
                 val newExpression = if (list.nonEmpty) {
                   val newExpression = Expressions.FixupColumnNames(expression, mappingSources, aliaseMessages)
-                  logger.trace("matched expression {} -> {}", newExpression, f._1)
+                  val rList = ResolveNames(list, root.aliases.messages.toMap)
+                  val open = rList.filter(f => !fixedMappingSources.contains(f._2))
+                  logger.trace("matched expression {} -> {}", f._1, newExpression)
                   newExpression
                 } else {
                   expression
                 }
                 outputSet1 --= Set(f._1)
                 mappingSources ++= Map(f._1 -> newExpression)
+                fixedMappingSources ++= Map(f._1 -> f._1)
               })
 
               mapping = mapping.filterKeys( f => !found.contains(f)  )
@@ -848,7 +853,11 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           // Translate outputs to the values
           val outputElements = outputSet.map( e => {
             // e.name -> from input, from mapping, from variable
-            "new Result(\"%s\", %s)".format(e, mappingSources.get(e).get)
+            val m = mappingSources.get(e)
+            if(m.isEmpty) {
+              throw new Exception("Output %s not found".format(e))
+            }
+            "new Result(\"%s\", %s)".format(e, m.get)
           }).mkString(", ")
 
           // To Do: this is not correct
