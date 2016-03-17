@@ -67,7 +67,8 @@ object MetadataLoad {
   def BaseMessagesInfo:  Array[(String, String, String, List[(String, String, String, String, Boolean, String)], Long, String)] = {
     return Array[(String, String, String, List[(String, String, String, String, Boolean, String)], Long, String)](
       (MdMgr.sysNS, "KamanjaMessageEvent", "com.ligadata.KamanjaBase.KamanjaMessageEvent", List(),1,"kamanjabase_" + scalaVer +"-1.0.jar"),
-      (MdMgr.sysNS, "KamanjaModelEvent", "com.ligadata.KamanjaBase.KamanjaModelEvent", List(),1,"kamanjabase_" + scalaVer +"-1.0.jar"))
+      (MdMgr.sysNS, "KamanjaModelEvent", "com.ligadata.KamanjaBase.KamanjaModelEvent", List(),1,"kamanjabase_" + scalaVer +"-1.0.jar"),
+		  (MdMgr.sysNS, "KamanjaExceptionEvent", "com.ligadata.KamanjaBase.KamanjaExceptionEvent", List(),1,"kamanjabase_" + scalaVer +"-1.0.jar"))
   }
 }
 

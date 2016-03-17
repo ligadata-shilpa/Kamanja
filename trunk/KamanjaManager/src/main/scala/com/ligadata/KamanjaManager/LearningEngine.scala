@@ -31,7 +31,16 @@ import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
 import com.ligadata.outputmsg.OutputMsgGenerator
 import com.ligadata.InputOutputAdapterInfo.{ExecContext, InputAdapter, PartitionUniqueRecordKey, PartitionUniqueRecordValue}
-import com.ligadata.Exceptions.{MessagePopulationException}
+import com.ligadata.Exceptions.{StackTrace, MessagePopulationException}
+
+object LeanringEngine {
+  // There are 3 types of error that we can create an ExceptionMessage for
+  val invalidMessage: String = "Invalid_message"
+  val invalidResult: String = "Invalid_result"
+  val modelExecutionException: String = "Model_Excecution_Exception"
+
+  val engineComponent: String = "Kamanja_Manager"
+}
 
 class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniqueRecordKey) {
   val LOG = LogManager.getLogger(getClass);
@@ -44,6 +53,7 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
 
   var messageEventFactory: BaseMsgObj = null
   var modelEventFactory: BaseMsgObj = null
+  var exceptionEventFactory: BaseMsgObj = null
 
   private def RunAllModels(transId: Long, inputData: Array[Byte], finalTopMsgOrContainer: MessageContainerBase, txnCtxt: TransactionContext, uk: String, uv: String, xformedMsgCntr: Int, totalXformedMsgs: Int, msgEvent: KamanjaMessageEvent): Array[SavedMdlResult] = {
     var results: ArrayBuffer[SavedMdlResult] = new ArrayBuffer[SavedMdlResult]()
@@ -170,7 +180,7 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
               }
               if (curMd != null) {
                 var modelEvent: KamanjaModelEvent = modelEventFactory.CreateNewMessage.asInstanceOf[KamanjaModelEvent]
-                val modelStartTime = System.currentTimeMillis
+                val modelStartTime = System.nanoTime
                 curMd.getModelName()
                 val res = curMd.execute(txnCtxt, outputDefault)
 
@@ -183,8 +193,7 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
                   modelEvent.isresultproduced = false
                   // Nothing to output
                 }
-                val currTime: Long = System.currentTimeMillis()
-                modelEvent.elapsedtimeinms = (currTime - modelStartTime).toInt
+                modelEvent.elapsedtimeinms = (System.currentTimeMillis() - modelStartTime).toInt
                 var mdlId: Long = -1
                 // Get the modelId for reporing purposes
                 var mdlDefs = KamanjaMetadata.getMdMgr.Models(md.mdl.getModelDef().FullName,true, false).getOrElse(null)
@@ -202,18 +211,34 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
             }
           } catch {
             case e: Exception => {
+              val st = StackTrace.ThrowableTraceString(e)
+              msgEvent.error = "Model Failed: \n" + st
+              var eEvent = createExceptionEvent(LeanringEngine.modelExecutionException, LeanringEngine.engineComponent, st)
+              // TODO:  Do something with these events (not the msgEvent)
               LOG.error("Model Failed => " + md.mdl.getModelName(), e)
             }
             case t: Throwable => {
+              val st = StackTrace.ThrowableTraceString(t)
+              msgEvent.error = "Model Failed: \n" + st
+              var eEvent = createExceptionEvent(LeanringEngine.modelExecutionException, LeanringEngine.engineComponent, st)
+              // TODO:  Do something with these events (not the msgEvent)
               LOG.error("Model Failed => " + md.mdl.getModelName(), t)
             }
           }
         })
       } catch {
         case e: Exception => {
+          val st = StackTrace.ThrowableTraceString(e)
+          msgEvent.error = "Failed to execute models.: \n" + st
+          var eEvent = createExceptionEvent(LeanringEngine.modelExecutionException, LeanringEngine.engineComponent, st)
+          // TODO:  Do something with these events (not the msgEvent)
           LOG.error("Failed to execute models.", e)
         }
         case t: Throwable => {
+          val st = StackTrace.ThrowableTraceString(t)
+          msgEvent.error = "Failed to execute models.: \n" + st
+          var eEvent = createExceptionEvent(LeanringEngine.modelExecutionException, LeanringEngine.engineComponent, st)
+          // TODO:  Do something with these events (not the msgEvent)
           LOG.error("Failed to execute models.", t)
         }
       } finally {
@@ -227,6 +252,16 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
     val topMsgInfo = KamanjaMetadata.getMessgeInfo(msgName)
     if (topMsgInfo == null || topMsgInfo.parents.size == 0) return (msgName, false, null)
     (topMsgInfo.parents(0)._1, true, topMsgInfo)
+  }
+
+  private def createExceptionEvent(errorType: String, compName: String, errorString: String): KamanjaExceptionEvent = {
+    // ExceptionEventFactory is guaranteed to be here....
+    var exceptionEvent = exceptionEventFactory.CreateNewMessage.asInstanceOf[KamanjaExceptionEvent]
+    exceptionEvent.errortype = errorType
+    exceptionEvent.timeoferrorepochms = System.currentTimeMillis
+    exceptionEvent.componentname = compName
+    exceptionEvent.errorstring = errorString
+    exceptionEvent
   }
 
   // Returns Adapter/Queue Name, Partition Key & Output String
@@ -246,6 +281,7 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
     if (messageEventFactory == null) {
       messageEventFactory = KamanjaMetadata.getMessgeInfo("system.KamanjaMessageEvent").contmsgobj.asInstanceOf[BaseMsgObj]
       modelEventFactory = KamanjaMetadata.getMessgeInfo("system.KamanjaModelEvent").contmsgobj.asInstanceOf[BaseMsgObj]
+      exceptionEventFactory = KamanjaMetadata.getMessgeInfo("system.KamanjaExceptionEvent").contmsgobj.asInstanceOf[BaseMsgObj]
     }
 
     // Initialize Event message
@@ -273,9 +309,16 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
             // Treating we did not find the message
             case e: Exception => {
               LOG.warn("", e)
+              val st = StackTrace.ThrowableTraceString(e)
+              msgEvent.error = "Exception during input message processing: \n " + st
+              var eEvent = createExceptionEvent(LeanringEngine.invalidMessage, LeanringEngine.engineComponent, st)
             }
             case e: Throwable => {
               LOG.warn("", e)
+              val st = StackTrace.ThrowableTraceString(e)
+              msgEvent.error = "Exception during input message processing: \n " + st
+              var eEvent = createExceptionEvent(LeanringEngine.invalidMessage, LeanringEngine.engineComponent, st)
+              //TODO: do somethign with this event
             }
           }
         }
@@ -286,27 +329,44 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
         msg.populate(inputdata)
         isValidMsg = true
       } else {
-        // TODO: Create an ErrorMessage
         msgEvent.error = "Recieved null message object for input"
+        var eEvent = createExceptionEvent(LeanringEngine.invalidMessage, LeanringEngine.engineComponent,"Recieved null message object for input:" + inputdata.dataInput )
         LOG.error("Recieved null message object for input:" + inputdata.dataInput)
+        // TODO:  Do something with these eEvents
       }
     } catch {
       case e: Exception => {
-        msgEvent.error = "Failed to Populate message: " + e.getMessage
-        throw MessagePopulationException("Failed to Populate message", e)
+        var kEx =  MessagePopulationException("Failed to Populate message", e)
+        val st = StackTrace.ThrowableTraceString(kEx)
+        msgEvent.error = "Failed to Populate message: \n" + st
+        var eEvent = createExceptionEvent(LeanringEngine.modelExecutionException, LeanringEngine.engineComponent, st)
+        // TODO:  Do something with these eEvents
+        throw kEx
       }
       case e: Throwable => {
-        msgEvent.error = "Failed to Populate message: " + e.getMessage
-        throw MessagePopulationException("Failed to Populate message", e)
+        var kEx =  MessagePopulationException("Failed to Populate message", e)
+        val st = StackTrace.ThrowableTraceString(kEx)
+        msgEvent.error = "Failed to Populate message: \n" + st
+        var eEvent = createExceptionEvent(LeanringEngine.modelExecutionException, LeanringEngine.engineComponent, st)
+        // TODO:  Do something with eEvent
+        throw kEx
       }
     }
 
-    var msgId: Long = -1
-    // Figure out its reporting ID
-    var msgDefs = KamanjaMetadata.getMdMgr.Messages(msgType,true, false).getOrElse(null)
-    if (msgDefs != null)
-      msgId = msgDefs.head.uniqueId
-    msgEvent.messageid = msgId
+    try {
+      // Ok, we have a message here, record some metadata regarding this message.
+      var msgId: Long = -1
+      // Figure out its reporting ID
+      var msgDefs = KamanjaMetadata.getMdMgr.Messages(msgType,true, false).getOrElse(null)
+      if (msgDefs != null)
+        msgId = msgDefs.head.uniqueId
+      msgEvent.messageid = msgId
+    } catch {
+      // If we are hitting this path.. something is really screwed up, but tolerate the error.
+      case e: Throwable => {
+        LOG.error("Unable to find message " + msgType + " in KmanajaMetadata... resolve the problem", e)
+      }
+    }
 
     try {
       if (isValidMsg) {
@@ -337,7 +397,9 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
           } catch {
             case e: Exception => {
               LOG.error("Failed to get Model results.", e)
-
+              val st = StackTrace.ThrowableTraceString(e)
+              var eEvent = createExceptionEvent(LeanringEngine.invalidResult, LeanringEngine.engineComponent, st)
+              // TODO: Do something with these events
             }
           }
           val resMap = scala.collection.mutable.Map[String, Array[(String, Any)]]()
@@ -369,11 +431,17 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
       return returnOutput.toArray
     } catch {
       case e: Exception => {
-        msgEvent.error = "Failed to execute models after creating message " + e.getMessage
+        val st = StackTrace.ThrowableTraceString(e)
+        msgEvent.error = "Failed to execute models after creating message: \n" + st
+        var eEvent = createExceptionEvent(LeanringEngine.invalidMessage, LeanringEngine.engineComponent, st)
+        // TODO:  Do something with these events
         LOG.error("Failed to execute models after creating message", e)
       }
       case e: Throwable => {
-        msgEvent.error = "Failed to execute models after creating message " + e.getMessage
+        val st = StackTrace.ThrowableTraceString(e)
+        msgEvent.error = "Failed to execute models after creating message: \n " + st
+        var eEvent = createExceptionEvent(LeanringEngine.invalidMessage, LeanringEngine.engineComponent, st)
+        // TODO:  Do something with these events
         LOG.error("Failed to execute models after creating message", e)
       }
     }
