@@ -192,44 +192,33 @@ class HdfsFileHandler extends SmartFileHandler{
   }
 
   @throws(classOf[KamanjaException])
-  def length : Long = {
-
-    try {
-      hdFileSystem = FileSystem.get(hdfsConfig)
-      hdFileSystem.getFileStatus(new Path(getFullPath)).getLen
-    }
-    catch {
-      case ex : Exception => {
-        logger.error(ex.getMessage)
-        return 0
-      }
-
-    } finally {
-    }
-  }
+  def length : Long = getHdFileSystem.getFileStatus(new Path(getFullPath)).getLen
 
   @throws(classOf[KamanjaException])
-  def lastModified : Long = {
+  def lastModified : Long = getHdFileSystem.getFileStatus(new Path(getFullPath)).getModificationTime
 
+  @throws(classOf[KamanjaException])
+  override def exists(): Boolean = getHdFileSystem.exists(new Path(getFullPath))
+
+  @throws(classOf[KamanjaException])
+  override def isFile: Boolean = getHdFileSystem.isFile(new Path(getFullPath))
+
+  @throws(classOf[KamanjaException])
+  override def isDirectory: Boolean = getHdFileSystem.isDirectory(new Path(getFullPath))
+
+  private def getHdFileSystem() : FileSystem = {
     try {
       hdFileSystem = FileSystem.get(hdfsConfig)
-      hdFileSystem.getFileStatus(new Path(getFullPath)).getModificationTime
+      hdFileSystem
     }
     catch {
       case ex : Exception => {
-        logger.error(ex.getMessage)
-        return -1
+        throw new KamanjaException("", ex)
       }
 
     } finally {
     }
   }
-
-  override def exists(): Boolean = ???
-
-  override def isFile: Boolean = ???
-
-  override def isDirectory: Boolean = ???
 }
 
 /**

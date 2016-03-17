@@ -12,9 +12,7 @@ import com.ligadata.InputAdapters.FileChangeType._
 import com.ligadata.InputOutputAdapterInfo.AdapterConfiguration
 
 import scala.collection.mutable.{ArrayBuffer, Map}
-import org.apache.commons.vfs2.FileObject
-import org.apache.commons.vfs2.FileSystemOptions
-import org.apache.commons.vfs2.Selectors
+import org.apache.commons.vfs2.{FileType, FileObject, FileSystemOptions, Selectors}
 import org.apache.commons.vfs2.impl.StandardFileSystemManager
 import org.apache.commons.vfs2.provider.sftp.SftpFileSystemConfigBuilder
 
@@ -262,37 +260,30 @@ class SftpFileHandler extends SmartFileHandler{
   }
 
   @throws(classOf[KamanjaException])
-  def length : Long = {
-    try {
-      manager = new StandardFileSystemManager()
-      manager.init()
-      val remoteFile = manager.resolveFile(createConnectionString(sftpConnectionConfig, getFullPath), createDefaultOptions())
-      remoteFile.getContent.getSize
-    }
-    catch {
-      case ex : Exception => {
-        logger.error(ex.getMessage)
-        return 0
-      }
-
-    } finally {
-      if(manager!=null)
-        manager.close()
-    }
-  }
+  def length : Long = getRemoteFileObject.getContent.getSize
 
   @throws(classOf[KamanjaException])
-  def lastModified : Long = {
+  def lastModified : Long = getRemoteFileObject.getContent.getLastModifiedTime
+
+  @throws(classOf[KamanjaException])
+  override def exists(): Boolean = getRemoteFileObject.exists()
+
+  @throws(classOf[KamanjaException])
+  override def isFile: Boolean = getRemoteFileObject.getType == FileType.FILE
+
+  @throws(classOf[KamanjaException])
+  override def isDirectory: Boolean = getRemoteFileObject.getType == FileType.FOLDER
+
+  private def getRemoteFileObject : FileObject = {
     try {
       manager = new StandardFileSystemManager()
       manager.init()
       val remoteFile = manager.resolveFile(createConnectionString(sftpConnectionConfig, getFullPath), createDefaultOptions())
-      remoteFile.getContent.getLastModifiedTime
+      remoteFile
     }
     catch {
       case ex : Exception => {
-        logger.error(ex.getMessage)
-        return -1
+        throw new KamanjaException("", ex)
       }
 
     } finally {
@@ -300,12 +291,6 @@ class SftpFileHandler extends SmartFileHandler{
         manager.close()
     }
   }
-
-  override def exists(): Boolean = ???
-
-  override def isFile: Boolean = ???
-
-  override def isDirectory: Boolean = ???
 }
 
 class SftpChangesMonitor (adapterName : String, modifiedFileCallback:(SmartFileHandler) => Unit) extends SmartFileMonitor{

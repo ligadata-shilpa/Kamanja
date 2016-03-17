@@ -145,11 +145,11 @@ class PosixFileHandler extends SmartFileHandler{
     }
   }
 
-  override def exists(): Boolean = ???
+  override def exists(): Boolean = new File(fileFullPath).exists
 
-  override def isFile: Boolean = ???
+  override def isFile: Boolean = new File(fileFullPath).isFile
 
-  override def isDirectory: Boolean = ???
+  override def isDirectory: Boolean = new File(fileFullPath).isDirectory
 }
 
 
