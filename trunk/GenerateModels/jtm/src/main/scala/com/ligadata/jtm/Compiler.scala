@@ -588,7 +588,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
               val nameColumn = ResolveName(g._1, aliaseMessages)
 
-              trackedUsedSource += nameColumn
+              trackedUsedSource += fixedMappingSources.get(g._1).get
 
               // Get the expression
               //
