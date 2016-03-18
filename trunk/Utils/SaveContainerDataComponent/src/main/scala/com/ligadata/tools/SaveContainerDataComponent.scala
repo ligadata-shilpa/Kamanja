@@ -123,7 +123,7 @@ class SaveContainerDataCompImpl extends LogTrait with MdBaseResolveInfo {
   }
 
   private def collectKeyAndValues(k: Key, v: Value, dataByBucketKeyPart: TreeMap[KeyWithBucketIdAndPrimaryKey, MessageContainerBaseWithModFlag], loadedKeys: java.util.TreeSet[LoadKeyWithBucketId]): Unit = {
-    val value = SerializeDeserialize.Deserialize(v.serializedInfo, this, _kamanjaLoader.loader, true, "")
+    val value = SerializeDeserializeOld.Deserialize(v.serializedInfo, this, _kamanjaLoader.loader, true, "")
     val primarykey = value.PrimaryKeyData
     val key = KeyWithBucketIdAndPrimaryKey(KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(k.bucketKey), k, primarykey != null && primarykey.size > 0, primarykey)
     dataByBucketKeyPart.put(key, MessageContainerBaseWithModFlag(false, value))
@@ -467,7 +467,7 @@ class SaveContainerDataCompImpl extends LogTrait with MdBaseResolveInfo {
         val keyData = d.PartitionKeyData
         val timeVal = d.TimePartitionData
         val k = Key(timeVal, keyData, d.TransactionId, d.RowNumber)
-        val v = Value("manual", SerializeDeserialize.Serialize(d))
+        val v = Value("manual", SerializeDeserializeOld.Serialize(d))
         arrBuf += ((k, v))
       })
 

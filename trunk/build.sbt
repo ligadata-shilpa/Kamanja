@@ -199,6 +199,14 @@ lazy val GetComponent = project.in(file("Utils/ClusterInstaller/GetComponent"))
 
 lazy val PmmlTestTool = project.in(file("Utils/PmmlTestTool")) dependsOn (KamanjaVersion)
 
+lazy val JsonSerDeser = project.in(file("Utils/AdapterSerializers/JsonSerDeser")) dependsOn(KamanjaVersion, KamanjaBase)
+
+lazy val CsvSerDeser = project.in(file("Utils/AdapterSerializers/CsvSerDeser")) dependsOn(KamanjaVersion, KamanjaBase)
+
+lazy val KryoSerDeser = project.in(file("Utils/AdapterSerializers/KryoSerDeser")) dependsOn(KamanjaVersion, KamanjaBase)
+
+
+
 /*
 
 val commonSettings = Seq(

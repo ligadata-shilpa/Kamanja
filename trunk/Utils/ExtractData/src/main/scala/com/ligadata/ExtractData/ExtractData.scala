@@ -266,7 +266,7 @@ object ExtractData extends MdBaseResolveInfo {
   private def deSerializeData(v: Value): MessageContainerBase = {
     v.serializerType.toLowerCase match {
       case "manual" => {
-        return SerializeDeserialize.Deserialize(v.serializedInfo, this, clsLoaderInfo.loader, true, "")
+        return SerializeDeserializeOld.Deserialize(v.serializedInfo, this, clsLoaderInfo.loader, true, "")
       }
       case _ => {
         throw new Exception("Found un-handled Serializer Info: " + v.serializerType)

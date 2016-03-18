@@ -604,7 +604,7 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
   }
 
   private def collectKeyAndValues(k: Key, v: Value, dataByBucketKeyPart: TreeMap[KeyWithBucketIdAndPrimaryKey, MessageContainerBaseWithModFlag], loadedKeys: java.util.TreeSet[LoadKeyWithBucketId]): Unit = {
-    val value = SerializeDeserialize.Deserialize(v.serializedInfo, this, kvInitLoader.loader, true, "")
+    val value = SerializeDeserializeOld.Deserialize(v.serializedInfo, this, kvInitLoader.loader, true, "")
     val primarykey = value.PrimaryKeyData
     val key = KeyWithBucketIdAndPrimaryKey(KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(k.bucketKey), k, primarykey != null && primarykey.size > 0, primarykey)
     dataByBucketKeyPart.put(key, MessageContainerBaseWithModFlag(false, value))
@@ -680,7 +680,7 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
         val key = entry.getKey();
         try {
           val k = entry.getKey().key
-          val v = Value("manual", SerializeDeserialize.Serialize(value.value))
+          val v = Value("manual", SerializeDeserializeOld.Serialize(value.value))
           storeObjects += ((k, v))
         } catch {
           case e: Exception => {
