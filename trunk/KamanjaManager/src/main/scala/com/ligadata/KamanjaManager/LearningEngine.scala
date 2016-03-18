@@ -57,6 +57,7 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
 
   private def RunAllModels(transId: Long, inputData: Array[Byte], finalTopMsgOrContainer: MessageContainerBase, txnCtxt: TransactionContext, uk: String, uv: String, xformedMsgCntr: Int, totalXformedMsgs: Int, msgEvent: KamanjaMessageEvent): Array[SavedMdlResult] = {
     var results: ArrayBuffer[SavedMdlResult] = new ArrayBuffer[SavedMdlResult]()
+    var tempModelAB: ArrayBuffer[KamanjaModelEvent] = ArrayBuffer[KamanjaModelEvent]()
     if (LOG.isDebugEnabled)
       LOG.debug(s"Processing uniqueKey:$uk, uniqueVal:$uv, finalTopMsgOrContainer:$finalTopMsgOrContainer, previousModles:${models.size}")
 
@@ -202,7 +203,7 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
 
                 modelEvent.modelid = mdlId
                 modelEvent.eventepochtime = System.currentTimeMillis()
-                msgEvent.modelinfo.append(modelEvent) // =+ modelEvent //= msgEvent.modelInfo ++ modelEvent
+                tempModelAB.append(modelEvent)
               } else {
                 LOG.error("Failed to create model " + md.mdl.getModelName())
               }
@@ -245,6 +246,7 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
         ThreadLocalStorage.txnContextInfo.remove
       }
     }
+    msgEvent.modelinfo = tempModelAB.toArray[KamanjaModelEvent]
     return results.toArray
   }
 
@@ -287,6 +289,7 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
     // Initialize Event message
     var msgEvent: KamanjaMessageEvent = messageEventFactory.CreateNewMessage.asInstanceOf[KamanjaMessageEvent]
     msgEvent.elapsedtimeinms = -1
+   // msgEvent.adaptername = uk.
 
     try {
       if (msgInfo != null && inputdata != null) {

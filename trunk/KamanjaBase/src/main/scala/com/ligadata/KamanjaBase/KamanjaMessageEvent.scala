@@ -18,7 +18,7 @@ object KamanjaMessageEvent extends RDDObject[KamanjaMessageEvent] with BaseMsgOb
 	override def FullName: String = "com.ligadata.KamanjaBase.KamanjaMessageEvent"
 	override def NameSpace: String = "com.ligadata.KamanjaBase"
 	override def Name: String = "KamanjaMessageEvent"
-	override def Version: String = "000001.000002.000000"
+	override def Version: String = "000001.000005.000000"
 	override def CreateNewMessage: BaseMsg  = new KamanjaMessageEvent()
 	override def IsFixed:Boolean = true;
 	override def IsKv:Boolean = false;
@@ -78,9 +78,10 @@ class KamanjaMessageEvent(var transactionId: Long, other: KamanjaMessageEvent) e
 
 
 	var messageid:Long = _ ;
-	var modelinfo: scala.collection.mutable.ArrayBuffer[com.ligadata.KamanjaBase.KamanjaModelEvent] = new scala.collection.mutable.ArrayBuffer[com.ligadata.KamanjaBase.KamanjaModelEvent];
+	var modelinfo: scala.Array[com.ligadata.KamanjaBase.KamanjaModelEvent] = scala.Array[com.ligadata.KamanjaBase.KamanjaModelEvent]();
 	var elapsedtimeinms:Float = _ ;
-	var eventepochtime:Long = _ ;
+	var messagekey:String = _ ;
+	var messagevalue:String = _ ;
 	var error:String = _ ;
 
 	override def PartitionKeyData: Array[String] = Array[String]()
@@ -108,7 +109,8 @@ class KamanjaMessageEvent(var transactionId: Long, other: KamanjaMessageEvent) e
 			if(key.equals("messageid")) return messageid;
 			if(key.equals("modelinfo")) return modelinfo;
 			if(key.equals("elapsedtimeinms")) return elapsedtimeinms;
-			if(key.equals("eventepochtime")) return eventepochtime;
+			if(key.equals("messagekey")) return messagekey;
+			if(key.equals("messagevalue")) return messagevalue;
 			if(key.equals("error")) return error;
 			if(key.equals("transactionId")) return transactionId;
 
@@ -145,7 +147,7 @@ class KamanjaMessageEvent(var transactionId: Long, other: KamanjaMessageEvent) e
 		KamanjaMessageEvent.saveOne(this)
 	}
 
-	var nativeKeyMap  =  scala.collection.mutable.Map[String, String](("messageid", "messageId"), ("modelinfo", "ModelInfo"), ("elapsedtimeinms", "ElapsedTimeInMs"), ("eventepochtime", "eventEpochTime"), ("error", "Error"))
+	var nativeKeyMap  =  scala.collection.mutable.Map[String, String](("messageid", "messageId"), ("modelinfo", "ModelInfo"), ("elapsedtimeinms", "ElapsedTimeInMs"), ("messagekey", "messageKey"), ("messagevalue", "messageValue"), ("error", "Error"))
 
 	override def getNativeKeyValues(): scala.collection.immutable.Map[String, (String, Any)] = {
 
@@ -155,7 +157,8 @@ class KamanjaMessageEvent(var transactionId: Long, other: KamanjaMessageEvent) e
 			keyValues("messageid") = ("messageId", messageid);
 			keyValues("modelinfo") = ("ModelInfo", modelinfo);
 			keyValues("elapsedtimeinms") = ("ElapsedTimeInMs", elapsedtimeinms);
-			keyValues("eventepochtime") = ("eventEpochTime", eventepochtime);
+			keyValues("messagekey") = ("messageKey", messagekey);
+			keyValues("messagevalue") = ("messageValue", messagevalue);
 			keyValues("error") = ("Error", error);
 
 		} catch {
@@ -185,12 +188,29 @@ class KamanjaMessageEvent(var transactionId: Long, other: KamanjaMessageEvent) e
 		val list = inputdata.tokens
 		val arrvaldelim = inputdata.delimiters.valueDelimiter
 		try{
-			if(list.size < 5) throw new Exception("Incorrect input data size")
+			if(list.size < 6) throw new Exception("Incorrect input data size")
 			messageid = com.ligadata.BaseTypes.LongImpl.Input(list(inputdata.curPos));
 			inputdata.curPos = inputdata.curPos+1;
+
+			for (i <- 0 until modelinfo.length) {
+				var ctrVar: com.ligadata.KamanjaBase.KamanjaModelEvent = i.asInstanceOf[com.ligadata.KamanjaBase.KamanjaModelEvent]
+				try {
+					if (ctrVar != null)
+						ctrVar.populate(inputdata)
+				} catch {
+					case e: Exception => {
+						LOG.debug("", e)
+						throw e
+					}
+				}
+			}
+
+			inputdata.curPos = inputdata.curPos+1
 			elapsedtimeinms = com.ligadata.BaseTypes.FloatImpl.Input(list(inputdata.curPos));
 			inputdata.curPos = inputdata.curPos+1;
-			eventepochtime = com.ligadata.BaseTypes.LongImpl.Input(list(inputdata.curPos));
+			messagekey = com.ligadata.BaseTypes.StringImpl.Input(list(inputdata.curPos));
+			inputdata.curPos = inputdata.curPos+1;
+			messagevalue = com.ligadata.BaseTypes.StringImpl.Input(list(inputdata.curPos));
 			inputdata.curPos = inputdata.curPos+1;
 			error = com.ligadata.BaseTypes.StringImpl.Input(list(inputdata.curPos));
 			inputdata.curPos = inputdata.curPos+1;
@@ -241,8 +261,23 @@ class KamanjaMessageEvent(var transactionId: Long, other: KamanjaMessageEvent) e
 			mapOriginal.foreach(kv => {map(kv._1.toLowerCase()) = kv._2 } )
 
 			messageid = com.ligadata.BaseTypes.LongImpl.Input(map.getOrElse("messageid", 0).toString);
+
+
+			if (map.getOrElse("modelinfo", null).isInstanceOf[List[tMap]])
+				list = map.getOrElse("modelinfo", null).asInstanceOf[List[Map[String, Any]]]
+			if (list != null) {
+				modelinfo++= list.map(item => {
+					val inputData = new JsonData(json.dataInput)
+					inputData.root_json = json.root_json
+					inputData.cur_json = Option(item)
+					val elem = new com.ligadata.KamanjaBase.KamanjaModelEvent()
+					elem.populate(inputData)
+					elem
+				})
+			}
 			elapsedtimeinms = com.ligadata.BaseTypes.FloatImpl.Input(map.getOrElse("elapsedtimeinms", 0).toString);
-			eventepochtime = com.ligadata.BaseTypes.LongImpl.Input(map.getOrElse("eventepochtime", 0).toString);
+			messagekey = com.ligadata.BaseTypes.StringImpl.Input(map.getOrElse("messagekey", "").toString);
+			messagevalue = com.ligadata.BaseTypes.StringImpl.Input(map.getOrElse("messagevalue", "").toString);
 			error = com.ligadata.BaseTypes.StringImpl.Input(map.getOrElse("error", "").toString);
 
 		}catch{
@@ -261,8 +296,10 @@ class KamanjaMessageEvent(var transactionId: Long, other: KamanjaMessageEvent) e
 			if (_messageidval_  != "")		messageid =  com.ligadata.BaseTypes.LongImpl.Input( _messageidval_ ) else messageid = 0;
 			val _elapsedtimeinmsval_  = (xml \\ "elapsedtimeinms").text.toString
 			if (_elapsedtimeinmsval_  != "")		elapsedtimeinms =  com.ligadata.BaseTypes.FloatImpl.Input( _elapsedtimeinmsval_ ) else elapsedtimeinms = 0;
-			val _eventepochtimeval_  = (xml \\ "eventepochtime").text.toString
-			if (_eventepochtimeval_  != "")		eventepochtime =  com.ligadata.BaseTypes.LongImpl.Input( _eventepochtimeval_ ) else eventepochtime = 0;
+			val _messagekeyval_  = (xml \\ "messagekey").text.toString
+			if (_messagekeyval_  != "")		messagekey =  com.ligadata.BaseTypes.StringImpl.Input( _messagekeyval_ ) else messagekey = "";
+			val _messagevalueval_  = (xml \\ "messagevalue").text.toString
+			if (_messagevalueval_  != "")		messagevalue =  com.ligadata.BaseTypes.StringImpl.Input( _messagevalueval_ ) else messagevalue = "";
 			val _errorval_  = (xml \\ "error").text.toString
 			if (_errorval_  != "")		error =  com.ligadata.BaseTypes.StringImpl.Input( _errorval_ ) else error = "";
 
@@ -285,7 +322,8 @@ class KamanjaMessageEvent(var transactionId: Long, other: KamanjaMessageEvent) e
 
 			messageid = com.ligadata.BaseTypes.LongImpl.Input(map.getOrElse("messageid", 0).toString);
 			elapsedtimeinms = com.ligadata.BaseTypes.FloatImpl.Input(map.getOrElse("elapsedtimeinms", 0).toString);
-			eventepochtime = com.ligadata.BaseTypes.LongImpl.Input(map.getOrElse("eventepochtime", 0).toString);
+			messagekey = com.ligadata.BaseTypes.StringImpl.Input(map.getOrElse("messagekey", "").toString);
+			messagevalue = com.ligadata.BaseTypes.StringImpl.Input(map.getOrElse("messagevalue", "").toString);
 			error = com.ligadata.BaseTypes.StringImpl.Input(map.getOrElse("error", "").toString);
 
 		}catch{
@@ -307,7 +345,8 @@ class KamanjaMessageEvent(var transactionId: Long, other: KamanjaMessageEvent) e
 					com.ligadata.BaseTypes.IntImpl.SerializeIntoDataOutputStream(dos,bytes.length)
 					dos.write(bytes)})}
 			com.ligadata.BaseTypes.FloatImpl.SerializeIntoDataOutputStream(dos,elapsedtimeinms);
-			com.ligadata.BaseTypes.LongImpl.SerializeIntoDataOutputStream(dos,eventepochtime);
+			com.ligadata.BaseTypes.StringImpl.SerializeIntoDataOutputStream(dos,messagekey);
+			com.ligadata.BaseTypes.StringImpl.SerializeIntoDataOutputStream(dos,messagevalue);
 			com.ligadata.BaseTypes.StringImpl.SerializeIntoDataOutputStream(dos,error);
 			com.ligadata.BaseTypes.LongImpl.SerializeIntoDataOutputStream(dos,transactionId);
 
@@ -327,22 +366,39 @@ class KamanjaMessageEvent(var transactionId: Long, other: KamanjaMessageEvent) e
 			val prevVer = savedDataVersion.replaceAll("[.]", "").toLong
 			val currentVer = Version.replaceAll("[.]", "").toLong
 
+			if (prevVer < currentVer) {
+				val prevVerObj = new com.ligadata.KamanjaBase.KamanjaMessageEvent()
+				prevVerObj.Deserialize(dis, mdResolver, loader, savedDataVersion)
+				messageid = prevVerObj.messageid;
+				for(i <- 0 until prevVerObj.modelinfo.length) {
+					modelinfo(i) = prevVerObj.modelinfo(i)};
+				elapsedtimeinms = prevVerObj.elapsedtimeinms;
+				error = prevVerObj.error;
+				transactionId = prevVerObj.transactionId;
+
+				timePartitionData = prevVerObj.timePartitionData;
+
+
+			} else
 
 			if(prevVer == currentVer){
 				messageid = com.ligadata.BaseTypes.LongImpl.DeserializeFromDataInputStream(dis);
 				{
 					var arraySize = com.ligadata.BaseTypes.IntImpl.DeserializeFromDataInputStream(dis);
+
+					modelinfo = new scala.Array[com.ligadata.KamanjaBase.KamanjaModelEvent](arraySize)
 					val i:Int = 0;
 					for (i <- 0 until arraySize) {
 						var bytes = new Array[Byte](com.ligadata.BaseTypes.IntImpl.DeserializeFromDataInputStream(dis))
 						dis.read(bytes);
 						val inst = SerializeDeserialize.Deserialize(bytes, mdResolver, loader, false, "com.ligadata.KamanjaBase.KamanjaModelEvent");
-						modelinfo += inst.asInstanceOf[com.ligadata.KamanjaBase.KamanjaModelEvent];
+						modelinfo(i) = inst.asInstanceOf[com.ligadata.KamanjaBase.KamanjaModelEvent];
 					}
 
 				}
 				elapsedtimeinms = com.ligadata.BaseTypes.FloatImpl.DeserializeFromDataInputStream(dis);
-				eventepochtime = com.ligadata.BaseTypes.LongImpl.DeserializeFromDataInputStream(dis);
+				messagekey = com.ligadata.BaseTypes.StringImpl.DeserializeFromDataInputStream(dis);
+				messagevalue = com.ligadata.BaseTypes.StringImpl.DeserializeFromDataInputStream(dis);
 				error = com.ligadata.BaseTypes.StringImpl.DeserializeFromDataInputStream(dis);
 				transactionId = com.ligadata.BaseTypes.LongImpl.DeserializeFromDataInputStream(dis);
 
@@ -358,14 +414,22 @@ class KamanjaMessageEvent(var transactionId: Long, other: KamanjaMessageEvent) e
 		}
 	}
 
-	def ConvertPrevToNewVerObj(obj : Any) : Unit = { }
+	def ConvertPrevToNewVerObj(oldObj : com.ligadata.KamanjaBase.KamanjaMessageEvent) : Unit = {
+		if( oldObj != null){
+			messageid = oldObj.messageid;
+			elapsedtimeinms = oldObj.elapsedtimeinms;
+			error = oldObj.error;
+			transactionId = oldObj.transactionId;
 
+			timePartitionData = oldObj.timePartitionData;
+		}
+	}
 	def withmessageid(value: Long) : KamanjaMessageEvent = {
 		this.messageid = value
 		return this
 	}
 
-	def withmodelinfo(value: scala.collection.mutable.ArrayBuffer[com.ligadata.KamanjaBase.KamanjaModelEvent]) : KamanjaMessageEvent = {
+	def withmodelinfo(value: scala.Array[com.ligadata.KamanjaBase.KamanjaModelEvent]) : KamanjaMessageEvent = {
 		this.modelinfo = value
 		return this
 	}
@@ -375,8 +439,13 @@ class KamanjaMessageEvent(var transactionId: Long, other: KamanjaMessageEvent) e
 		return this
 	}
 
-	def witheventepochtime(value: Long) : KamanjaMessageEvent = {
-		this.eventepochtime = value
+	def withmessagekey(value: String) : KamanjaMessageEvent = {
+		this.messagekey = value
+		return this
+	}
+
+	def withmessagevalue(value: String) : KamanjaMessageEvent = {
+		this.messagevalue = value
 		return this
 	}
 
@@ -388,12 +457,13 @@ class KamanjaMessageEvent(var transactionId: Long, other: KamanjaMessageEvent) e
 	private def fromFunc(other: KamanjaMessageEvent): KamanjaMessageEvent = {
 		messageid = com.ligadata.BaseTypes.LongImpl.Clone(other.messageid);
 		elapsedtimeinms = com.ligadata.BaseTypes.FloatImpl.Clone(other.elapsedtimeinms);
-		eventepochtime = com.ligadata.BaseTypes.LongImpl.Clone(other.eventepochtime);
+		messagekey = com.ligadata.BaseTypes.StringImpl.Clone(other.messagekey);
+		messagevalue = com.ligadata.BaseTypes.StringImpl.Clone(other.messagevalue);
 		error = com.ligadata.BaseTypes.StringImpl.Clone(other.error);
 
-		if (other.modelinfo != null ) {
-			modelinfo.clear;
-			other.modelinfo.map(v =>{ modelinfo :+= v.Clone.asInstanceOf[com.ligadata.KamanjaBase.KamanjaModelEvent]});
+		if (other.modelinfo != null) {
+			modelinfo = new scala.Array[com.ligadata.KamanjaBase.KamanjaModelEvent](other.modelinfo.length)
+			modelinfo = other.modelinfo.map(f => f.Clone.asInstanceOf[com.ligadata.KamanjaBase.KamanjaModelEvent] );
 		}
 		else modelinfo = null;
 
