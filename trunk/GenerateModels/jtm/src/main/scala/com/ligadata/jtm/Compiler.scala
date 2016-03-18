@@ -594,7 +594,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
               //
               val d = grokExpressions.get(g._2).get
 
-              logger.trace("Grok matched {} -> {}", nameColumn, d._3.mkString(", "))
+              logger.trace("Grok common matched {} -> {}", nameColumn, d._3.mkString(", "))
 
               // The var name might generate conflicts
               // Let's be optimistic for now
@@ -652,10 +652,10 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
             if(open.isEmpty) {
 
-              trackedUsedSource ++= list.map(m => m._2).toSet
+              trackedUsedSource ++= list.map(m => fixedMappingSources.get(m._2).get).toSet
 
               val newExpression = Expressions.FixupColumnNames(expression, fixedMappingSources, aliaseMessages)
-              logger.trace("matched expression {} -> {}", newExpression, c._1)
+              logger.trace("Matched common expression {} -> {}", newExpression, c._1)
 
               // Output the actual compute
               methods :+= c._2.Comment
@@ -700,6 +700,8 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           logger.trace("Procesing transformation: {} output: {} outputs: {} mapping: {}",
             t, o._1, outputSet.mkString(","), mappingSources.mkString(","))
 
+          logger.trace("Tracked {}", trackedUsedSourceInner.mkString(", "));
+
           var outputSet1: Set[String] = outputSet
 
           // Go through the inputs and find the system column so we can just funnel it through
@@ -733,7 +735,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
                 // Try to extract variables, than it is an expression
                 val list = Expressions.ExtractColumnNames(f._2)
                 if(list.nonEmpty) {
-                  val rList = ResolveNames(list, root.aliases.messages.toMap)
+                  val rList = ResolveNames(list, aliaseMessages)
                   val open = rList.filter(f => !mappingSources.contains(f._2))
                   if(open.nonEmpty) logger.trace("{} not found {}", t.toString, open.mkString(", "))
                   open.isEmpty
@@ -753,14 +755,13 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
                   val newExpression = Expressions.FixupColumnNames(expression, mappingSources, aliaseMessages)
                   val rList = ResolveNames(list, aliaseMessages)
                   val open = rList.filter(f => !mappingSources.contains(f._2))
-                  logger.trace("Matched mapping expression {} -> {}", f._1, newExpression)
-                  trackedUsedSourceInner ++= rList.map(m => m._2).toSet
+                  logger.trace("Matched mapping expression {} ({})-> {}", f._1, f._2, newExpression)
+                  trackedUsedSourceInner ++= rList.map(m => mappingSources.get(m._2).get).toSet
                   newExpression
                 } else {
                   val mapped = mappingSources.get(expression).get
-                  val nameColumn = ResolveName(expression, aliaseMessages)
-                  trackedUsedSourceInner += nameColumn
-                  logger.trace("Column mapping {} -> {}", expression, nameColumn)
+                  trackedUsedSourceInner += mapped
+                  logger.trace("Column mapping {} -> {}", expression, mapped)
                   mapped
                 }
                 outputSet1 --= Set(f._1)
@@ -786,7 +787,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
               if(open.isEmpty) {
 
-                trackedUsedSourceInner ++= rList.map(m => m._2).toSet
+                trackedUsedSourceInner ++= rList.map(m => mappingSources.get(m._2).get).toSet
 
                 // Sub names to
                 val newExpression = Expressions.FixupColumnNames(f, mappingSources, aliaseMessages)
@@ -836,7 +837,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
               }
 
               if(open.isEmpty) {
-                trackedUsedSourceInner ++= list.map(m => m._2).toSet
+                trackedUsedSourceInner ++= list.map(m => mappingSources.get(m._2).get).toSet
                 // Sub names to
                 val newExpression = Expressions.FixupColumnNames(expression, mappingSources, aliaseMessages)
                 logger.trace("Matched compute expression {} -> {}", newExpression, c._1)
