@@ -61,7 +61,7 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
     }
     def exeGenerated_test2_3(msg2: com.ligadata.kamanja.test.v1000000.msg3): Array[Result] = {
       def process_omsg3(): Array[Result] = {
-        Array[Result](new Result("out4", in1), new Result("out1", in1), new Result("rowNumber", msg2.rowNumber), new Result("out3", in1), new Result("out2", in1), new Result("timePartitionData", msg2.timePartitionData), new Result("transactionId", msg2.transactionId))
+        Array[Result](new Result("out3", msg2.in1), new Result("out2", msg2.in1), new Result("out1", msg2.in1), new Result("out4", msg2.in1), new Result("rowNumber", msg2.rowNumber), new Result("timePartitionData", msg2.timePartitionData), new Result("transactionId", msg2.transactionId))
       }
       process_omsg3()
     }

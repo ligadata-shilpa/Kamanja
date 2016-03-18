@@ -742,6 +742,8 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
                 }
               })
 
+              logger.trace("Mappings found {}", found.mkString(", "))
+
               found.foreach(f => {
                 // Try to extract variables, than it is an expression
                 val expression = f._2
@@ -749,15 +751,17 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
                 val newExpression = if (list.nonEmpty) {
                   val newExpression = Expressions.FixupColumnNames(expression, mappingSources, aliaseMessages)
-                  val rList = ResolveNames(list, root.aliases.messages.toMap)
+                  val rList = ResolveNames(list, aliaseMessages)
                   val open = rList.filter(f => !mappingSources.contains(f._2))
                   logger.trace("Matched mapping expression {} -> {}", f._1, newExpression)
                   trackedUsedSourceInner ++= rList.map(m => m._2).toSet
                   newExpression
                 } else {
+                  val mapped = mappingSources.get(expression).get
                   val nameColumn = ResolveName(expression, aliaseMessages)
                   trackedUsedSourceInner += nameColumn
-                  nameColumn
+                  logger.trace("Column mapping {} -> {}", expression, nameColumn)
+                  mapped
                 }
                 outputSet1 --= Set(f._1)
                 mappingSources ++= Map(f._1 -> newExpression)
@@ -771,7 +775,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
             // filters
             val wheres1 = wheres.filter(f => {
               val list = Expressions.ExtractColumnNames(f)
-              val rList = ResolveNames(list, root.aliases.messages.toMap)
+              val rList = ResolveNames(list, aliaseMessages)
               val open = rList.filter(f => !mappingSources.contains(f._2) )
               val ambiguous = rList.filter(f => notUniqueInputs.contains(f._2)).map(m => m._2)
               if(ambiguous.nonEmpty) {
