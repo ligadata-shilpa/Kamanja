@@ -193,7 +193,7 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
                   modelEvent.isresultproduced = false
                   // Nothing to output
                 }
-                modelEvent.elapsedtimeinms = (System.currentTimeMillis() - modelStartTime).toInt
+                modelEvent.elapsedtimeinms = ((System.nanoTime - modelStartTime)/1000000.0).toFloat
                 var mdlId: Long = -1
                 // Get the modelId for reporing purposes
                 var mdlDefs = KamanjaMetadata.getMdMgr.Models(md.mdl.getModelDef().FullName,true, false).getOrElse(null)
@@ -201,7 +201,7 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
                   mdlId = mdlDefs.head.uniqueId
 
                 modelEvent.modelid = mdlId
-               // modelEvent.eventtimeinepochms = currTime
+                modelEvent.eventepochtime = System.currentTimeMillis()
                 msgEvent.modelinfo.append(modelEvent) // =+ modelEvent //= msgEvent.modelInfo ++ modelEvent
               } else {
                 LOG.error("Failed to create model " + md.mdl.getModelName())
@@ -378,11 +378,10 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
         if (allMdlsResults == null)
           allMdlsResults = scala.collection.mutable.Map[String, SavedMdlResult]()
         // Run all models
-        val mdlsStartTime = System.currentTimeMillis
+        val mdlsStartTime = System.nanoTime
         val results = RunAllModels(transId, inputData, msg, txnCtxt, uk, uv, xformedMsgCntr, totalXformedMsgs, msgEvent)
         LOG.info(ManagerUtils.getComponentElapsedTimeStr("Models", uv, readTmNs, mdlsStartTime))
-        msgEvent.elapsedtimeinms = (System.currentTimeMillis - mdlsStartTime).toInt
-
+        msgEvent.elapsedtimeinms = ((System.nanoTime - mdlsStartTime)/ 1000000.0).toFloat
         if (results.size > 0) {
           var elapseTmFromRead = (System.nanoTime - readTmNs) / 1000
 
@@ -427,7 +426,6 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
           }
         }
       }
-      println(msgEvent.toString)
       return returnOutput.toArray
     } catch {
       case e: Exception => {
