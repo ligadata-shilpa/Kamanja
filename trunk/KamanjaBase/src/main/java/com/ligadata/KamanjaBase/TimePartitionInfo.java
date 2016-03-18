@@ -6,7 +6,7 @@ public class TimePartitionInfo {
 	String format = "";
 	TimePartitionType timePartitionType; // types - Daily, Monthly, Yearly
 
-	enum TimePartitionType {
+	public enum TimePartitionType {
 		DAILY, MONTHLY, YEARLY, NONE;
 	}
 

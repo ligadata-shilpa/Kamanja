@@ -98,7 +98,7 @@ public abstract class ContainerInterface implements ContainerOrConcept {
 
     public abstract void save();
 
-    public abstract ContainerOrConcept clone();
+    public abstract ContainerOrConcept Clone();
 
     public abstract String[] getAttributeNames();
 
@@ -110,9 +110,13 @@ public abstract class ContainerInterface implements ContainerOrConcept {
 
     public abstract AttributeValue getOrElse(int index, Object defaultVal); // Return (value,  type)
 
-    public abstract AttributeNameAndValue[] getAllAttributeValues(); // Has (name, value, type))
+    public abstract java.util.HashMap<String, AttributeValue> getAllAttributeValues(); // Has (name, value, type))
 
     public abstract void set(String key, Object value);
 
     public abstract void set(int index, Object value);
+    
+    public abstract void set(String key, Object value, String valTyp) ;
+    
+    public abstract java.util.Iterator<java.util.Map.Entry<String, AttributeValue>> getAttributeNameAndValueIterator();
 }
