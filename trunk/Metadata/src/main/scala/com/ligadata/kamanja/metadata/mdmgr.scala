@@ -389,7 +389,7 @@ class MdMgr {
     }
 
     if (pKeys != null && fKeys != null)
-      entity.keys = pKeys ++ pKeys
+      entity.keys = pKeys ++ fKeys
   }
 
   /**

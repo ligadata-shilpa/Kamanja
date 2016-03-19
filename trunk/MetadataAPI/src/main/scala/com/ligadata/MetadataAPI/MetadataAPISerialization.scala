@@ -56,7 +56,7 @@ object MetadataAPISerialization {
           var primaryKeys = List[(String, List[String])]()
           var foreignKeys = List[(String, List[String], String, List[String])]()
 
-          o.cType.Keys.toList.map(m => {
+          o.cType.Keys.toList.foreach(m => {
             if (m.KeyType == RelationKeyType.tPrimary) {
               var pr = m.asInstanceOf[PrimaryKey]
               primaryKeys ::=(pr.constraintName, pr.key.toList)
@@ -92,7 +92,7 @@ object MetadataAPISerialization {
 
           var primaryKeys = List[(String, List[String])]()
           var foreignKeys = List[(String, List[String], String, List[String])]()
-          o.cType.Keys.toList.map(m => {
+          o.cType.Keys.toList.foreach(m => {
             if (m.KeyType == RelationKeyType.tPrimary) {
               var pr = m.asInstanceOf[PrimaryKey]
               primaryKeys ::=(pr.constraintName, pr.key.toList)
@@ -218,12 +218,17 @@ object MetadataAPISerialization {
 
       var primaryKeys = List[(String, List[String])]()
       val pr = MsgDefInst.Message.PrimaryKeys
-      if (pr.isDefined)
-        primaryKeys ::=(pr.get.constraintName, pr.get.key)
+
+      pr.foreach(f => {
+        primaryKeys ::=(f.constraintName, f.key)
+      })
+
       var foreignKeys = List[(String, List[String], String, List[String])]()
       val fr = MsgDefInst.Message.ForeignKeys
-      if (fr.isDefined)
-        foreignKeys ::=(fr.get.constraintName, fr.get.key, fr.get.forignContainerName, fr.get.forignKey)
+
+      fr.foreach(f => {
+        foreignKeys ::=(f.constraintName, f.key, f.forignContainerName, f.forignKey)
+      })
 
 
       val msgDef = MdMgr.GetMdMgr.MakeFixedMsg(
@@ -285,12 +290,16 @@ object MetadataAPISerialization {
 
       var primaryKeys = List[(String, List[String])]()
       val pr = ContDefInst.Container.PrimaryKeys
-      if (pr.isDefined)
-        primaryKeys ::=(pr.get.constraintName, pr.get.key)
+
+      pr.foreach(m => {
+        primaryKeys ::=(m.constraintName, m.key)
+      })
       var foreignKeys = List[(String, List[String], String, List[String])]()
       val fr = ContDefInst.Container.ForeignKeys
-      if (fr.isDefined)
-        foreignKeys ::=(fr.get.constraintName, fr.get.key, fr.get.forignContainerName, fr.get.forignKey)
+
+      fr.foreach(f => {
+        foreignKeys ::=(f.constraintName, f.key, f.forignContainerName, f.forignKey)
+      })
 
 
       val msgDef = MdMgr.GetMdMgr.MakeFixedContainer(
@@ -359,8 +368,8 @@ case class MessageInfo(NameSpace: String,
                        IsActive: Boolean,
                        IsDeleted: Boolean,
                        Recompile: Boolean,
-                       PrimaryKeys: Option[PrimaryKeys],
-                       ForeignKeys: Option[ForeignKeys],
+                       PrimaryKeys: List[PrimaryKeys],
+                       ForeignKeys: List[ForeignKeys],
                        NumericTypes: NumericTypes
                       )
 
