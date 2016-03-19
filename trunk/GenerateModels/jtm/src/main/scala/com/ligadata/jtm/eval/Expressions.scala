@@ -17,6 +17,9 @@ package com.ligadata.jtm.eval
 
 import scala.util.matching.Regex
 
+// Track details of any used element
+case class Tracker(variableName: String, className: String, typeName: String, isInput: Boolean)
+
 /**
   *
   */
@@ -49,7 +52,7 @@ object Expressions {
     * @param mapNameSource name to variable mapping
     * @return string with the result
     */
-  def FixupColumnNames(expression: String, mapNameSource: Map[String, String], aliaseMessages: Map[String, String]): String = {
+  def FixupColumnNames(expression: String, mapNameSource: Map[String, Tracker], aliaseMessages: Map[String, String]): String = {
 
     val regex1 = """\$([a-zA-Z0-9_]+)""".r
     val regex2 = """\$\{([a-zA-Z0-9_]+\.[a-zA-Z0-9_]+)\}""".r
@@ -61,7 +64,7 @@ object Expressions {
       while (m.find) {
         val name = m.group(1)
         val resolvedName = ResolveName(name, aliaseMessages)
-        m.appendReplacement(sb, mapNameSource.get(resolvedName).get)
+        m.appendReplacement(sb, mapNameSource.get(resolvedName).get.variableName)
         i = i + 1
       }
       m.appendTail(sb)
