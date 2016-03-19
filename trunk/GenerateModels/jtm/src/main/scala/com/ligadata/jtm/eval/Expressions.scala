@@ -18,7 +18,7 @@ package com.ligadata.jtm.eval
 import scala.util.matching.Regex
 
 // Track details of any used element
-case class Tracker(variableName: String, className: String, typeName: String, isInput: Boolean)
+case class Tracker(variableName: String, className: String="", typeName: String="", isInput: Boolean=false, accessor: String="")
 
 /**
   *
