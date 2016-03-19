@@ -68,10 +68,10 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
 
     // Retrieve messages
     //
-    val msg1 = txnCtxt.getMessages("com.ligadata.kamanja.test.msg1").headOption(null).asInstanceOf[com.ligadata.kamanja.test.v1000000.msg1]
-    val msg2 = txnCtxt.getMessages("com.ligadata.kamanja.test.msg3").headOption(null).asInstanceOf[com.ligadata.kamanja.test.v1000000.msg3]
-    val msg3 = txnCtxt.getMessages("com.ligadata.kamanja.test.msg5").headOption(null).asInstanceOf[com.ligadata.kamanja.test.v1000000.msg5]
-    val msg4 = txnCtxt.getMessages("com.ligadata.kamanja.test.msg6").headOption(null).asInstanceOf[com.ligadata.kamanja.test.v1000000.msg6]
+    val msg1 = txnCtxt.getMessages("com.ligadata.kamanja.test.msg1").headOption.getOrElse(null).asInstanceOf[com.ligadata.kamanja.test.v1000000.msg1]
+    val msg2 = txnCtxt.getMessages("com.ligadata.kamanja.test.msg3").headOption.getOrElse(null).asInstanceOf[com.ligadata.kamanja.test.v1000000.msg3]
+    val msg3 = txnCtxt.getMessages("com.ligadata.kamanja.test.msg5").headOption.getOrElse(null).asInstanceOf[com.ligadata.kamanja.test.v1000000.msg5]
+    val msg4 = txnCtxt.getMessages("com.ligadata.kamanja.test.msg6").headOption.getOrElse(null).asInstanceOf[com.ligadata.kamanja.test.v1000000.msg6]
 
     // Main dependency -> execution check
     //
