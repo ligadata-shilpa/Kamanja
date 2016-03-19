@@ -82,14 +82,6 @@ case class ParameterMap(RootDir: String, GitRootDir: String, MetadataStoreType: 
 
 case class Argument(ArgName: String, ArgTypeNameSpace: String, ArgTypeName: String)
 
-// case class Attr(NameSpace: String, Name: String, Version: Long, Type: TypeDef)
-
-// case class MessageStruct(NameSpace: String, Name: String, FullName: String, Version: Long, JarName: String, PhysicalName: String, DependencyJars: List[String], Attributes: List[Attr])
-case class MessageDefinition(Message: MessageStruct)
-case class ContainerDefinition(Container: MessageStruct)
-
-case class ModelInfo(NameSpace: String, Name: String, Version: String, ModelType: String, JarName: String, PhysicalName: String, DependencyJars: List[String], InputAttributes: List[Attr], OutputAttributes: List[Attr])
-case class ModelDefinition(Model: ModelInfo)
 
 case class ZooKeeperInfo(ZooKeeperNodeBasePath: String, ZooKeeperConnectString: String, ZooKeeperSessionTimeoutMs: Option[String], ZooKeeperConnectionTimeoutMs: Option[String])
 
@@ -111,7 +103,7 @@ trait LogTrait {
 object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
   lazy val sysNS = "System" // system name space
-  
+
   lazy val serializerType = "kryo"
   lazy val serializer = SerializerManager.GetSerializer(serializerType)
   lazy val metadataAPIConfig = new Properties()
@@ -579,7 +571,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
   /**
    * InitZooKeeper - Establish a connection to zookeeper
-   */ 
+   */
   def InitZooKeeper: Unit = {
     logger.debug("Connect to zookeeper..")
     if (zkc != null) {
@@ -1280,7 +1272,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * UpdateObjectInCache
      * @param obj <description please>
      * @param operation depending upon object type, operations to add, remove, et al
-     * @param mdMgr the metadata manager receiver 
+     * @param mdMgr the metadata manager receiver
      * @return <description please>
      */
   def UpdateObjectInCache(obj: BaseElemDef, operation: String, mdMgr: MdMgr): BaseElemDef = {
@@ -2060,7 +2052,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @return
      */
   def RemoveContainer(nameSpace: String, name: String, version: Long, userid: Option[String], zkNotify: Boolean = true): String = {
-    MessageAndContainerUtils.RemoveContainer(nameSpace,name,version,userid,zkNotify)   
+    MessageAndContainerUtils.RemoveContainer(nameSpace,name,version,userid,zkNotify)
   }
 
     /**
@@ -2074,7 +2066,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @return
      */
   def RemoveMessage(nameSpace: String, name: String, version: Long, userid: Option[String], zkNotify: Boolean = true): String = {
-    MessageAndContainerUtils.RemoveMessage(nameSpace,name,version,userid,zkNotify)   
+    MessageAndContainerUtils.RemoveMessage(nameSpace,name,version,userid,zkNotify)
   }
 
     /**
@@ -2413,7 +2405,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
   // Specific models (format JSON or XML) as an array of strings using modelName(without version) as the key
     /**
-     * 
+     *
      * @param nameSpace namespace of the object
      * @param objectName name of the desired object, possibly namespace qualified
      * @param formatType format of the return value, either JSON or XML
@@ -2451,7 +2443,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
   // Specific models (format JSON or XML) as an array of strings using modelName(without version) as the key
     /**
-     * 
+     *
      * @param nameSpace namespace of the object
      * @param objectName name of the desired object, possibly namespace qualified
      * @param formatType format of the return value, either JSON or XML
@@ -2540,7 +2532,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
   // Get the latest message for a given FullName
     /**
-     * 
+     *
      * @param msgDef
      * @return
      */
@@ -2593,7 +2585,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @return
      */
     def IsMessageAlreadyExists(msgDef: MessageDef): Boolean = {
-      MessageAndContainerUtils.IsMessageAlreadyExists(msgDef)      
+      MessageAndContainerUtils.IsMessageAlreadyExists(msgDef)
     }
 
     /**
@@ -2738,7 +2730,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       keys.toArray
     } catch {
       case e: Exception => {
-        
+
         logger.debug("", e)
         throw InternalErrorException("Failed to get keys from persistent store", e)
       }
@@ -2757,7 +2749,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
         logger.debug("Assuming bootstrap... No config objects in persistent store")
       }
 
-      // Load All the Model Configs here... 
+      // Load All the Model Configs here...
       ConfigUtils.LoadAllModelConfigsIntoCache
       //LoadAllUserPopertiesIntoChache
       startup = true
@@ -2816,7 +2808,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       startup = false
     } catch {
       case e: Exception => {
-        
+
         logger.debug("", e)
       }
     }
@@ -3060,11 +3052,11 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       })
     } catch {
       case e: AlreadyExistsException => {
-        
+
         logger.warn("Failed to load the object(" + dispkey + ") into cache", e)
       }
       case e: Exception => {
-        
+
         logger.warn("Failed to load the object(" + dispkey + ") into cache", e)
       }
     }
@@ -3291,7 +3283,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
     /**
      * GetFunctionDef
-     * @param nameSpace namespace of the object 
+     * @param nameSpace namespace of the object
      * @param objectName name of the desired object, possibly namespace qualified
      * @param formatType format of the return value, either JSON or XML
      * @param version  Version of the object
@@ -3746,7 +3738,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * Answer nodes as an array.
      * @return
      */
-  def getNodeList1: Array[NodeInfo] = { 
+  def getNodeList1: Array[NodeInfo] = {
     ConfigUtils.getNodeList1
   }
   // All available nodes(format JSON) as a String
@@ -3829,7 +3821,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
     /**
      * Read metadata api configuration properties
-     * @param configFile the MetadataAPI configuration file 
+     * @param configFile the MetadataAPI configuration file
      */
   @throws(classOf[MissingPropertyException])
   @throws(classOf[InvalidPropertyException])
@@ -3850,8 +3842,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     /**
      * Initialize the metadata from the bootstrap, establish zookeeper listeners, load the cached information from
      * persistent storage, set up heartbeat and authorization implementations.
-     * 
-     * @param configFile the MetadataAPI configuration file 
+     *
+     * @param configFile the MetadataAPI configuration file
      * @param startHB
      */
   def InitMdMgr(configFile: String, startHB: Boolean) {
@@ -3879,7 +3871,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * persistent storage, set up heartbeat and authorization implementations.
      * FIXME: Is there a difference between this function and InitMdMgr?
      * @see InitMdMgr(String,Boolean)
-     * @param configFile the MetadataAPI configuration file 
+     * @param configFile the MetadataAPI configuration file
      * @param startHB
      */
   def InitMdMgrFromBootStrap(configFile: String, startHB: Boolean) {
@@ -3997,8 +3989,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     /**
      * UpdateMetadata - This is a callback function for the Zookeeper Listener.  It will get called when we detect Metadata being updated from
      *                  a different metadataImpl service.
-     * 
-     * @param receivedJsonStr message from another cluster node 
+     *
+     * @param receivedJsonStr message from another cluster node
      */
   def UpdateMetadata(receivedJsonStr: String): Unit = {
     logger.debug("Process ZooKeeper notification " + receivedJsonStr)
