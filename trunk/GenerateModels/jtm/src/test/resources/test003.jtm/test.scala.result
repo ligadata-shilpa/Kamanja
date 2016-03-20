@@ -32,36 +32,60 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
     //
     //
     // msg2 is part of com.ligadata.jtm.test.filter
-    def exeGenerated_test1_1(msg1: com.ligadata.kamanja.test.v1000000.msg1, msg2: com.ligadata.kamanja.test.v1000000.msg3, msg3: com.ligadata.kamanja.test.v1000000.msg5): Array[Result] = {
+    def exeGenerated_test1_1(msg1: com.ligadata.kamanja.test.v1000000.msg1, msg2: com.ligadata.kamanja.test.v1000000.msg3, msg3: com.ligadata.kamanja.test.v1000000.msg5): Array[BaseMsg] = {
       // in scala, type could be optional
       val zipcode: Int = iplookup(msg2.in1).zipcode
       val zipcode1: Int = iplookup(msg1.in1).zipcode
       // type could be some class available from imports
       val ipinfo: IpInfo = iplookup(msg2.in1)
-      def process_omsg2(): Array[Result] = {
+      def process_omsg2(): Array[BaseMsg] = {
         if (!(msg2.in2 != -1 && msg2.in2 < 100)) return Array.empty[Result]
         val tmp8: String = somefunc2(msg2.in3)
-        Array[Result](new Result("rowNumber", msg1.rowNumber), new Result("transactionId", msg1.transactionId), new Result("out4", ipinfo.zipCode), new Result("out1", msg2.in1), new Result("timePartitionData", msg1.timePartitionData), new Result("out2", tmp8), new Result("out3", somefunc(zipcode, zipcode1)))
+        val result = new com.ligadata.kamanja.test.v1000000.msg2
+        result.timePartitionData = msg1.timePartitionData
+        result.out1 = msg2.in1
+        result.rowNumber = msg1.rowNumber
+        result.out4 = ipinfo.zipCode
+        result.out2 = tmp8
+        result.out3 = somefunc(zipcode, zipcode1)
+        result.transactionId = msg1.transactionId
+        Array(result)
       }
       process_omsg2()
     }
     // msg2 is part of com.ligadata.jtm.test.filter
-    def exeGenerated_test1_2(msg2: com.ligadata.kamanja.test.v1000000.msg3, msg3: com.ligadata.kamanja.test.v1000000.msg5, msg4: com.ligadata.kamanja.test.v1000000.msg6): Array[Result] = {
+    def exeGenerated_test1_2(msg2: com.ligadata.kamanja.test.v1000000.msg3, msg3: com.ligadata.kamanja.test.v1000000.msg5, msg4: com.ligadata.kamanja.test.v1000000.msg6): Array[BaseMsg] = {
       // in scala, type could be optional
       val zipcode: Int = iplookup(msg2.in1).zipcode
       val zipcode1: Int = iplookup(msg2.in1.zipcode
       // type could be some class available from imports
       val ipinfo: IpInfo = iplookup(msg2.in1)
-      def process_omsg2(): Array[Result] = {
+      def process_omsg2(): Array[BaseMsg] = {
         if (!(msg2.in2 != -1 && msg2.in2 < 100)) return Array.empty[Result]
         val tmp8: String = somefunc2(msg2.in3)
-        Array[Result](new Result("out4", ipinfo.zipCode), new Result("out1", msg2.in1), new Result("rowNumber", msg2.rowNumber), new Result("out2", tmp8), new Result("timePartitionData", msg2.timePartitionData), new Result("transactionId", msg2.transactionId), new Result("out3", somefunc(zipcode, zipcode1)))
+        val result = new com.ligadata.kamanja.test.v1000000.msg2
+        result.rowNumber = msg2.rowNumber
+        result.out1 = msg2.in1
+        result.out4 = ipinfo.zipCode
+        result.out2 = tmp8
+        result.out3 = somefunc(zipcode, zipcode1)
+        result.transactionId = msg2.transactionId
+        result.timePartitionData = msg2.timePartitionData
+        Array(result)
       }
       process_omsg2()
     }
-    def exeGenerated_test2_3(msg2: com.ligadata.kamanja.test.v1000000.msg3): Array[Result] = {
-      def process_omsg3(): Array[Result] = {
-        Array[Result](new Result("out3", msg2.in1), new Result("out2", msg2.in1), new Result("out1", msg2.in1), new Result("out4", msg2.in1), new Result("rowNumber", msg2.rowNumber), new Result("timePartitionData", msg2.timePartitionData), new Result("transactionId", msg2.transactionId))
+    def exeGenerated_test2_3(msg2: com.ligadata.kamanja.test.v1000000.msg3): Array[BaseMsg] = {
+      def process_omsg3(): Array[BaseMsg] = {
+        val result = new com.ligadata.kamanja.test.v1000000.msg4
+        result.out2 = msg2.in1
+        result.rowNumber = msg2.rowNumber
+        result.out1 = msg2.in1
+        result.out4 = msg2.in1
+        result.transactionId = msg2.transactionId
+        result.out3 = msg2.in1
+        result.timePartitionData = msg2.timePartitionData
+        Array(result)
       }
       process_omsg3()
     }
@@ -72,7 +96,7 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
     val msg4 = txnCtxt.getMessages("com.ligadata.kamanja.test.msg6").headOption.getOrElse(null).asInstanceOf[com.ligadata.kamanja.test.v1000000.msg6]
     // Main dependency -> execution check
     //
-    val results: Array[Result] =
+    val results: Array[BaseMsg] =
     if(msg1!=null && msg2!=null && msg3!=null) {
       exeGenerated_test1_1(msg1, msg2, msg3)
     } else {
@@ -90,6 +114,6 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
     } else {
       Array.empty[Result]
     }
-    factory.createResultObject().asInstanceOf[MappedModelResults].withResults(results)
+    result
   }
 }

@@ -40,10 +40,18 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
     }
     lazy val grok_instance_1_0 = grok_instance_1.compileExpression("%{EMAIL:email} %{DOMAIN:domain} %{USER:user}")
     //
-    def exeGenerated_test1_1(msg1: com.ligadata.kamanja.test.v1000000.msg5): Array[Result] = {
+    def exeGenerated_test1_1(msg1: com.ligadata.kamanja.test.v1000000.msg5): Array[BaseMsg] = {
       lazy val grok_instance_1_0_in1 = grok_instance_1_0.extractNamedGroups(in1)
-      def process_o1(): Array[Result] = {
-        Array[Result](new Result("out2", if(grok_instance_1_0_in1.containsKey("email")) grok_instance_1_0_in1.get("email") else "")), new Result("out3", if(grok_instance_1_0_in1.containsKey("domain")) grok_instance_1_0_in1.get("domain") else "")), new Result("rowNumber", msg1.rowNumber), new Result("transactionId", msg1.transactionId), new Result("timePartitionData", msg1.timePartitionData), new Result("out1", msg1.in3), new Result("out4", if(grok_instance_1_0_in1.containsKey("user")) grok_instance_1_0_in1.get("user") else "")))
+      def process_o1(): Array[BaseMsg] = {
+        val result = new com.ligadata.kamanja.test.v1000000.msg2
+        result.out2 = if(grok_instance_1_0_in1.containsKey("email")) grok_instance_1_0_in1.get("email") else "")
+        result.out4 = if(grok_instance_1_0_in1.containsKey("user")) grok_instance_1_0_in1.get("user") else "")
+        result.out1 = msg1.in3
+        result.timePartitionData = msg1.timePartitionData
+        result.out3 = if(grok_instance_1_0_in1.containsKey("domain")) grok_instance_1_0_in1.get("domain") else "")
+        result.rowNumber = msg1.rowNumber
+        result.transactionId = msg1.transactionId
+        Array(result)
       }
       process_o1()
     }
@@ -51,12 +59,12 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
     val msg1 = txnCtxt.getMessages("com.ligadata.kamanja.test.msg5").headOption.getOrElse(null).asInstanceOf[com.ligadata.kamanja.test.v1000000.msg5]
     // Main dependency -> execution check
     //
-    val results: Array[Result] =
+    val results: Array[BaseMsg] =
     if(msg1!=null) {
       exeGenerated_test1_1(msg1)
     } else {
       Array.empty[Result]
     }
-    factory.createResultObject().asInstanceOf[MappedModelResults].withResults(results)
+    result
   }
 }

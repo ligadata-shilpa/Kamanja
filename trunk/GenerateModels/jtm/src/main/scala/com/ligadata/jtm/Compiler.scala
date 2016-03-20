@@ -535,7 +535,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
         val names = deps.map( m => { "msg%d: %s".format(incomingToMsgId.get(m).get, ResolveToVersionedClassname(md, m))}).mkString(", ")
 
         methods :+= transformation.Comment
-        methods :+= "def exeGenerated_%s_%d(%s): Array[Result] = {".format(t, depId, names)
+        methods :+= "def exeGenerated_%s_%d(%s): Array[BaseMsg] = {".format(t, depId, names)
 
         // Collect form metadata
         val inputs: Array[Element] = ColumnNames(md, deps).map( e => {
@@ -697,9 +697,11 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
         val inner = transformation.outputs.foldLeft(Array.empty[String]) ( (r, o) => {
 
           var collect = Array.empty[String]
-          collect ++= Array("\ndef process_%s(): Array[Result] = {\n".format(o._1))
+          collect ++= Array("\ndef process_%s(): Array[BaseMsg] = {\n".format(o._1))
 
-          val outputSet: Set[String] = ColumnNames(md, ResolveAlias(o._1, aliaseMessages))
+          val outputType1 = ResolveAlias(o._1, aliaseMessages)
+          val outputType = ResolveToVersionedClassname(md, outputType1)
+          val outputSet: Set[String] = ColumnNames(md, outputType1)
 
           // State variables to track the progress
           // a little bit simpler than having val's
@@ -890,17 +892,18 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
           // Generate the output for this iteration
           // Translate outputs to the values
+          val ouputVar = s"val result = new $outputType"
           val outputElements = outputSet.map(e => {
             // e.name -> from input, from mapping, from variable
             val m = mappingSources.get(e)
             if (m.isEmpty) {
               throw new Exception("Output %s not found".format(e))
             }
-            "new Result(\"%s\", %s)".format(e, m.get.variableName)
-          }).mkString(", ")
+            "result.%s = %s".format(e, m.get.variableName)
+          }).mkString("\n")
 
           // To Do: this is not correct
-          val outputResult = "Array[Result](%s)".format(outputElements)
+          val outputResult = "%s\n%s\nArray(result)".format(ouputVar, outputElements)
 
           collect ++= Array(outputResult)
           collect ++= Array("}\n")
@@ -943,8 +946,8 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
       })
     })
 
-    val resultVar = "val results: Array[Result] = \n"
-    val returnValue = "factory.createResultObject().asInstanceOf[MappedModelResults].withResults(results)"
+    val resultVar = "val results: Array[BaseMsg] = \n"
+    val returnValue = "result"
     subtitutions.Add("model.grok", groks.mkString("\n"))
     subtitutions.Add("model.message", messages.mkString("\n"))
     subtitutions.Add("model.methods", methods.mkString("\n"))
