@@ -135,7 +135,7 @@ lazy val PmmlCompiler = project.in(file("Pmml/PmmlCompiler")) dependsOn(ExtDepen
 lazy val PmmlUdfs = project.in(file("Pmml/PmmlUdfs")) dependsOn(ExtDependencyLibs % "provided", Metadata, PmmlRuntime, KamanjaBase, Exceptions)
 
 
-lazy val MethodExtractor = project.in(file("Pmml/MethodExtractor")) dependsOn(ExtDependencyLibs % "provided",PmmlUdfs, Metadata, KamanjaBase, Serialize, Exceptions)   // added
+lazy val MethodExtractor = project.in(file("Pmml/MethodExtractor")) dependsOn(ExtDependencyLibs % "provided", PmmlUdfs, Metadata, KamanjaBase, Serialize, Exceptions) // added
 // no external dependencies
 
 //lazy val MetadataAPI = project.in(file("MetadataAPI")) dependsOn(StorageManager, Metadata, MessageDef, PmmlCompiler, Serialize, ZooKeeperClient, ZooKeeperListener, OutputMsgDef, Exceptions, SecurityAdapterBase, KamanjaUtils, HeartBeat, KamanjaBase, JpmmlFactoryOfModelInstanceFactory, SimpleApacheShiroAdapter % "test")
@@ -176,7 +176,7 @@ lazy val SimpleApacheShiroAdapter = project.in(file("Utils/Security/SimpleApache
 //lazy val AuditAdapters = project.in(file("Utils/Audit")) dependsOn(StorageManager, Exceptions, AuditAdapterBase, Serialize)
 lazy val AuditAdapters = project.in(file("Utils/Audit")) dependsOn(ExtDependencyLibs % "provided", StorageManager, Exceptions, AuditAdapterBase, Serialize)
 
-lazy val CustomUdfLib = project.in(file("SampleApplication/CustomUdfLib")) dependsOn(ExtDependencyLibs % "provided",PmmlUdfs, Exceptions)
+lazy val CustomUdfLib = project.in(file("SampleApplication/CustomUdfLib")) dependsOn(ExtDependencyLibs % "provided", PmmlUdfs, Exceptions)
 // no external dependencies
 
 //lazy val JdbcDataCollector = project.in(file("Utils/JdbcDataCollector")) dependsOn (Exceptions)
@@ -274,15 +274,14 @@ lazy val MigrateFrom_V_1_3 = project.in(file("Utils/Migrate/SourceVersion/Migrat
 lazy val jtm = project.in(file("GenerateModels/jtm")) dependsOn(Metadata, KamanjaBase, Exceptions, MetadataBootstrap, MessageDef)
 
 lazy val InstallDriverBase = project.in(file("Utils/ClusterInstaller/InstallDriverBase")) dependsOn (ExtDependencyLibs % "provided")
-// no external dependencies
 
-lazy val InstallDriver = project.in(file("Utils/ClusterInstaller/InstallDriver")) dependsOn(InstallDriverBase, Serialize, KamanjaUtils)
+lazy val InstallDriver = project.in(file("Utils/ClusterInstaller/InstallDriver")) dependsOn(ExtDependencyLibs % "provided",InstallDriverBase, Serialize, KamanjaUtils)
 
 lazy val ClusterInstallerDriver = project.in(file("Utils/ClusterInstaller/ClusterInstallerDriver")) dependsOn(InstallDriverBase, MigrateBase, MigrateManager)
 
 lazy val GetComponent = project.in(file("Utils/ClusterInstaller/GetComponent"))
 
-lazy val PmmlTestTool = project.in(file("Utils/PmmlTestTool")) dependsOn (KamanjaVersion)
+lazy val PmmlTestTool = project.in(file("Utils/PmmlTestTool")) dependsOn(ExtDependencyLibs % "provided", KamanjaVersion)
 
 /*
 val commonSettings = Seq(

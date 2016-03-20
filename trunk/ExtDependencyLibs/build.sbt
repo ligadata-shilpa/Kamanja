@@ -571,3 +571,17 @@ libraryDependencies += "org.apache.commons" % "commons-dbcp2" % "2.1"
 ////////////////////// MigrateBase
 //already available
 
+
+
+//////////////////////  InstallDriverBase
+//already available
+
+
+
+//////////////////////  PmmlTestTool
+libraryDependencies += "org.jpmml" % "pmml-evaluator" % "1.2.9"
+
+
+
+//////////////////////  InstallDriver
+//already available

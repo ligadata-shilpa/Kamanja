@@ -78,14 +78,14 @@ resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/release
 
 // 1.2.9 is currently used in other engine... use same here
 
-libraryDependencies += "org.jpmml" % "pmml-evaluator" % "1.2.9"
-
-libraryDependencies += "org.jpmml" % "pmml-model" % "1.2.9"
-
-libraryDependencies += "org.jpmml" % "pmml-schema" % "1.2.9"
-
-libraryDependencies += "com.beust" % "jcommander" % "1.48"
-
-libraryDependencies += "com.codahale.metrics" % "metrics-core" % "3.0.2"
-
-libraryDependencies += "org.glassfish.jaxb" % "jaxb-runtime" % "2.2.11"
+//libraryDependencies += "org.jpmml" % "pmml-evaluator" % "1.2.9"
+//
+//libraryDependencies += "org.jpmml" % "pmml-model" % "1.2.9"
+//
+//libraryDependencies += "org.jpmml" % "pmml-schema" % "1.2.9"
+//
+//libraryDependencies += "com.beust" % "jcommander" % "1.48"
+//
+//libraryDependencies += "com.codahale.metrics" % "metrics-core" % "3.0.2"
+//
+//libraryDependencies += "org.glassfish.jaxb" % "jaxb-runtime" % "2.2.11"
