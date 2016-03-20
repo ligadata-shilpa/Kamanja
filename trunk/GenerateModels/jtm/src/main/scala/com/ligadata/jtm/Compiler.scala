@@ -516,7 +516,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
       """|if(%s) {
          |%s
          |} else {
-         |  Array.empty[Result]
+         |  Array.empty[BaseMsg]
          |}
          |""".stripMargin('|').format(check, calls)
     })

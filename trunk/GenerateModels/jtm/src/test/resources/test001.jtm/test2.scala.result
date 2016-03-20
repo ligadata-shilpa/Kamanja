@@ -76,13 +76,13 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
     if(msg1!=null) {
       exeGenerated_test1_1(msg1)
     } else {
-      Array.empty[Result]
+      Array.empty[BaseMsg]
     }
     ++
     if(msg2!=null) {
       exeGenerated_test1_2(msg2)
     } else {
-      Array.empty[Result]
+      Array.empty[BaseMsg]
     }
     result
   }

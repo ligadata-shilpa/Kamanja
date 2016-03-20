@@ -100,19 +100,19 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
     if(msg1!=null && msg2!=null && msg3!=null) {
       exeGenerated_test1_1(msg1, msg2, msg3)
     } else {
-      Array.empty[Result]
+      Array.empty[BaseMsg]
     }
     ++
     if(msg2!=null && msg3!=null && msg4!=null) {
       exeGenerated_test1_2(msg2, msg3, msg4)
     } else {
-      Array.empty[Result]
+      Array.empty[BaseMsg]
     }
     ++
     if(msg2!=null) {
       exeGenerated_test2_3(msg2)
     } else {
-      Array.empty[Result]
+      Array.empty[BaseMsg]
     }
     result
   }
