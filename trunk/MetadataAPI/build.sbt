@@ -101,7 +101,7 @@ version := "1.0"
 // "org.apache.shiro" % "shiro-root" % "1.2.3"
 //)
 //
-//scalacOptions += "-deprecation"
+scalacOptions += "-deprecation"
 
 retrieveManaged := true
 

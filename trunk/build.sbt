@@ -51,7 +51,7 @@ lazy val KamanjaInternalDeps = project.in(file("KamanjaInternalDeps")) dependsOn
   SimpleApacheShiroAdapter, MigrateBase, KamanjaVersion, InstallDriverBase)
 // Exclude ExtDependencyLibs in the fat jar
 
-lazy val KamanjaDependencyLibs = project.in(file("KamanjaDependencyLibs")) dependsOn(KamanjaManager, MetadataAPI, KVInit, NodeInfoExtract, MetadataAPIService, JdbcDataCollector, FileDataConsumer, CleanUtil, InstallDriver, GetComponent, SimpleKafkaProducer)
+//lazy val KamanjaDependencyLibs = project.in(file("KamanjaDependencyLibs")) dependsOn(KamanjaManager, MetadataAPI, KVInit, NodeInfoExtract, MetadataAPIService, JdbcDataCollector, FileDataConsumer, CleanUtil, InstallDriver, GetComponent, SimpleKafkaProducer)
 
 ////////////////////////
 
@@ -135,7 +135,7 @@ lazy val PmmlCompiler = project.in(file("Pmml/PmmlCompiler")) dependsOn(ExtDepen
 lazy val PmmlUdfs = project.in(file("Pmml/PmmlUdfs")) dependsOn(ExtDependencyLibs % "provided", Metadata, PmmlRuntime, KamanjaBase, Exceptions)
 
 
-lazy val MethodExtractor = project.in(file("Pmml/MethodExtractor")) dependsOn(PmmlUdfs, Metadata, KamanjaBase, Serialize, Exceptions)
+lazy val MethodExtractor = project.in(file("Pmml/MethodExtractor")) dependsOn(ExtDependencyLibs % "provided",PmmlUdfs, Metadata, KamanjaBase, Serialize, Exceptions)   // added
 // no external dependencies
 
 //lazy val MetadataAPI = project.in(file("MetadataAPI")) dependsOn(StorageManager, Metadata, MessageDef, PmmlCompiler, Serialize, ZooKeeperClient, ZooKeeperListener, OutputMsgDef, Exceptions, SecurityAdapterBase, KamanjaUtils, HeartBeat, KamanjaBase, JpmmlFactoryOfModelInstanceFactory, SimpleApacheShiroAdapter % "test")
@@ -176,7 +176,7 @@ lazy val SimpleApacheShiroAdapter = project.in(file("Utils/Security/SimpleApache
 //lazy val AuditAdapters = project.in(file("Utils/Audit")) dependsOn(StorageManager, Exceptions, AuditAdapterBase, Serialize)
 lazy val AuditAdapters = project.in(file("Utils/Audit")) dependsOn(ExtDependencyLibs % "provided", StorageManager, Exceptions, AuditAdapterBase, Serialize)
 
-lazy val CustomUdfLib = project.in(file("SampleApplication/CustomUdfLib")) dependsOn(PmmlUdfs, Exceptions)
+lazy val CustomUdfLib = project.in(file("SampleApplication/CustomUdfLib")) dependsOn(ExtDependencyLibs % "provided",PmmlUdfs, Exceptions)
 // no external dependencies
 
 //lazy val JdbcDataCollector = project.in(file("Utils/JdbcDataCollector")) dependsOn (Exceptions)
@@ -225,7 +225,7 @@ lazy val SecurityAdapterBase = project.in(file("SecurityAdapters/SecurityAdapter
 lazy val KamanjaUtils = project.in(file("KamanjaUtils")) dependsOn(ExtDependencyLibs % "provided", Exceptions)
 
 
-lazy val UtilityService = project.in(file("Utils/UtilitySerivce")) dependsOn(Exceptions, KamanjaUtils)
+lazy val UtilityService = project.in(file("Utils/UtilitySerivce")) dependsOn(ExtDependencyLibs % "provided", Exceptions, KamanjaUtils)
 
 //lazy val HeartBeat = project.in(file("HeartBeat")) dependsOn(ExtDependencyLibs)
 lazy val HeartBeat = project.in(file("HeartBeat")) dependsOn(ExtDependencyLibs % "provided", ZooKeeperListener, ZooKeeperLeaderLatch, Exceptions)
