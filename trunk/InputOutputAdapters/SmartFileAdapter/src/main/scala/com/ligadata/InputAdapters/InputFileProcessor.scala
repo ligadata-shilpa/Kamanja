@@ -39,9 +39,9 @@ import net.sf.jmimemagic.MagicMatchNotFoundException
 import net.sf.jmimemagic.MagicException
 
 
-case class BufferLeftoversArea(workerNumber: Int, leftovers: Array[Char], relatedChunk: Int)
-case class BufferToChunk(len: Int, payload: Array[Char], chunkNumber: Int, relatedFileHandler: SmartFileHandler, firstValidOffset: Int, isEof: Boolean, partMap: scala.collection.mutable.Map[Int,Int])
-case class KafkaMessage(msg: Array[Char], offsetInFile: Int, isLast: Boolean, isLastDummy: Boolean, relatedFileHandler: SmartFileHandler, partMap: scala.collection.mutable.Map[Int,Int], msgOffset: Long)
+case class BufferLeftoversArea(workerNumber: Int, leftovers: Array[Byte], relatedChunk: Int)
+case class BufferToChunk(len: Int, payload: Array[Byte], chunkNumber: Int, relatedFileHandler: SmartFileHandler, firstValidOffset: Int, isEof: Boolean, partMap: scala.collection.mutable.Map[Int,Int])
+case class KafkaMessage(msg: Array[Byte], offsetInFile: Int, isLast: Boolean, isLastDummy: Boolean, relatedFileHandler: SmartFileHandler, partMap: scala.collection.mutable.Map[Int,Int], msgOffset: Long)
 case class FileStatus(status: Int, offset: Long, createDate: Long)
 case class OffsetValue (lastGoodOffset: Int, partitionOffsets: Map[Int,Int])
 case class EnqueuedFileHandler(fileHandler: SmartFileHandler, offset: Int, createDate: Long,  partMap: scala.collection.mutable.Map[Int,Int])
@@ -877,7 +877,7 @@ class FileProcessor(val partitionId: Int) extends Runnable {
     // basically, keep running until shutdown.
     while (isConsuming) {
       var messages: scala.collection.mutable.LinkedHashSet[KafkaMessage] = null
-      var leftOvers: Array[Char] = new Array[Char](0)
+      var leftOvers: Array[Byte] = new Array[Byte](0)
 
       // Try to get a new file to process.
       buffer = deQBuffer(beeNumber)
@@ -902,17 +902,17 @@ class FileProcessor(val partitionId: Int) extends Runnable {
           // Broken File is recoverable, CORRUPTED FILE ISNT!!!!!
           if (buffer.firstValidOffset == FileProcessor.BROKEN_FILE) {
             logger.error("SMART FILE CONSUMER (" + partitionId + "): Detected a broken file")
-            messages.add(new KafkaMessage(Array[Char](), FileProcessor.BROKEN_FILE, true, true, buffer.relatedFileHandler, buffer.partMap, FileProcessor.BROKEN_FILE))
+            messages.add(new KafkaMessage(Array[Byte](), FileProcessor.BROKEN_FILE, true, true, buffer.relatedFileHandler, buffer.partMap, FileProcessor.BROKEN_FILE))
           } else {
             logger.error("SMART FILE CONSUMER (" + partitionId + "): Detected a broken file")
-            messages.add(new KafkaMessage(Array[Char](), FileProcessor.CORRUPT_FILE, true, true, buffer.relatedFileHandler, buffer.partMap, FileProcessor.CORRUPT_FILE))
+            messages.add(new KafkaMessage(Array[Byte](), FileProcessor.CORRUPT_FILE, true, true, buffer.relatedFileHandler, buffer.partMap, FileProcessor.CORRUPT_FILE))
           }
         } else {
           // Look for messages.
           if (!buffer.isEof){
             buffer.payload.foreach(x => {
               if (x.asInstanceOf[Char] == message_separator) {
-                var newMsg: Array[Char] = buffer.payload.slice(prevIndx, indx)
+                var newMsg: Array[Byte] = buffer.payload.slice(prevIndx, indx)
                 msgNum += 1
                 logger.debug("SMART_FILE_CONSUMER (" + partitionId + ") Message offset " + msgNum + ", and the buffer offset is " + buffer.firstValidOffset)
 
@@ -973,12 +973,12 @@ class FileProcessor(val partitionId: Int) extends Runnable {
             val newFileLeftOvers = BufferLeftoversArea(beeNumber, buffer.payload.slice(prevIndx, indx), buffer.chunkNumber)
             setLeftovers(newFileLeftOvers, beeNumber)
           } else {
-            val newFileLeftOvers = BufferLeftoversArea(beeNumber, new Array[Char](0), buffer.chunkNumber)
+            val newFileLeftOvers = BufferLeftoversArea(beeNumber, new Array[Byte](0), buffer.chunkNumber)
             setLeftovers(newFileLeftOvers, beeNumber)
           }
 
         } else {
-          val newFileLeftOvers = BufferLeftoversArea(beeNumber, new Array[Char](0), buffer.chunkNumber)
+          val newFileLeftOvers = BufferLeftoversArea(beeNumber, new Array[Byte](0), buffer.chunkNumber)
           setLeftovers(newFileLeftOvers, beeNumber)
         }
 
@@ -1047,7 +1047,7 @@ class FileProcessor(val partitionId: Int) extends Runnable {
     }
 
     // Intitialize the leftover area for this file reading.
-    var newFileLeftOvers = BufferLeftoversArea(0, Array[Char](), -1)
+    var newFileLeftOvers = BufferLeftoversArea(0, Array[Byte](), -1)
     setLeftovers(newFileLeftOvers, 0)
 
     var waitedCntr = 0
@@ -1077,22 +1077,22 @@ class FileProcessor(val partitionId: Int) extends Runnable {
       } catch {
         case ze: ZipException => {
           logger.error("Failed to read file, file currupted " + fileName, ze)
-          val buffer = MonitorUtils.toCharArray(byteBuffer)
-          val GenericBufferToChunk = new BufferToChunk(readlen, buffer.slice(0, readlen), chunkNumber, fileHandler, FileProcessor.CORRUPT_FILE, isLastChunk, partMap)
+          //val buffer = MonitorUtils.toCharArray(byteBuffer)
+          val GenericBufferToChunk = new BufferToChunk(readlen, byteBuffer.slice(0, readlen), chunkNumber, fileHandler, FileProcessor.CORRUPT_FILE, isLastChunk, partMap)
           enQBuffer(GenericBufferToChunk)
           return
         }
         case ioe: IOException => {
           logger.error("Failed to read file " + fileName, ioe)
           val buffer = MonitorUtils.toCharArray(byteBuffer)
-          val GenericBufferToChunk = new BufferToChunk(readlen, buffer.slice(0, readlen), chunkNumber, fileHandler, FileProcessor.BROKEN_FILE, isLastChunk, partMap)
+          val GenericBufferToChunk = new BufferToChunk(readlen, byteBuffer.slice(0, readlen), chunkNumber, fileHandler, FileProcessor.BROKEN_FILE, isLastChunk, partMap)
           enQBuffer(GenericBufferToChunk)
           return
         }
         case e: Exception => {
           logger.error("Failed to read file, file corrupted " + fileName, e)
           val buffer = MonitorUtils.toCharArray(byteBuffer)
-          val GenericBufferToChunk = new BufferToChunk(readlen, buffer.slice(0, readlen), chunkNumber, fileHandler, FileProcessor.CORRUPT_FILE, isLastChunk, partMap)
+          val GenericBufferToChunk = new BufferToChunk(readlen, byteBuffer.slice(0, readlen), chunkNumber, fileHandler, FileProcessor.CORRUPT_FILE, isLastChunk, partMap)
           enQBuffer(GenericBufferToChunk)
           return
         }
@@ -1101,11 +1101,11 @@ class FileProcessor(val partitionId: Int) extends Runnable {
         totalLen += readlen
         len += readlen
         val buffer = MonitorUtils.toCharArray(byteBuffer)
-        val GenericBufferToChunk = new BufferToChunk(readlen, buffer.slice(0, readlen), chunkNumber, fileHandler, offset, isLastChunk, partMap)
+        val GenericBufferToChunk = new BufferToChunk(readlen, byteBuffer.slice(0, readlen), chunkNumber, fileHandler, offset, isLastChunk, partMap)
         enQBuffer(GenericBufferToChunk)
         chunkNumber += 1
       } else {
-        val GenericBufferToChunk = new BufferToChunk(readlen, Array[Char](message_separator), chunkNumber, fileHandler, offset, true, partMap)
+        val GenericBufferToChunk = new BufferToChunk(readlen, Array[Byte](message_separator.toByte), chunkNumber, fileHandler, offset, true, partMap)
         enQBuffer(GenericBufferToChunk)
         chunkNumber += 1
       }
@@ -1188,6 +1188,9 @@ class FileProcessor(val partitionId: Int) extends Runnable {
       if (msg == null) {
         Thread.sleep(250)
       } else {
+        logger.debug("---------------doSomePushing, dequeued following messages----------------------");
+        msg.foreach(m => logger.debug("          " + new String(m.msg)))
+        logger.debug("----------------------------------------------------------------");
         //push using kafka msg loader
         //kml.pushData(msg)
         msg = null
@@ -1256,6 +1259,10 @@ class FileProcessor(val partitionId: Int) extends Runnable {
   private def shutdown: Unit = {
     isConsuming = false
     isProducing = false
+
+    if(smartFileMonitor != null)
+      smartFileMonitor.shutdown()
+
     if (fileConsumers != null) {
       fileConsumers.shutdown()
     }
