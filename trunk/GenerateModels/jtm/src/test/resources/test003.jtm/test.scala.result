@@ -28,7 +28,7 @@ class Factory(modelDef: ModelDef, nodeContext: NodeContext) extends ModelInstanc
   override def createResultObject(): ModelResultBase = new MappedModelResults()
 }
 class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
-  override def execute(txnCtxt: TransactionContext, outputDefault: Boolean): ModelResultBase = {
+  override def run(txnCtxt: TransactionContext, outputDefault: Boolean): Array[BaseMsg]  = {
     //
     //
     // msg2 is part of com.ligadata.jtm.test.filter
@@ -65,56 +65,31 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
       }
       process_omsg3()
     }
-
-    // Retrieve all messages we care about
+    // Evaluate messages
+    val msg1 = txnCtxt.getMessages("com.ligadata.kamanja.test.msg1").headOption.getOrElse(null).asInstanceOf[com.ligadata.kamanja.test.v1000000.msg1]
+    val msg2 = txnCtxt.getMessages("com.ligadata.kamanja.test.msg3").headOption.getOrElse(null).asInstanceOf[com.ligadata.kamanja.test.v1000000.msg3]
+    val msg3 = txnCtxt.getMessages("com.ligadata.kamanja.test.msg5").headOption.getOrElse(null).asInstanceOf[com.ligadata.kamanja.test.v1000000.msg5]
+    val msg4 = txnCtxt.getMessages("com.ligadata.kamanja.test.msg6").headOption.getOrElse(null).asInstanceOf[com.ligadata.kamanja.test.v1000000.msg6]
+    // Main dependency -> execution check
     //
-    val types = Array("com.ligadata.kamanja.test.msg1", "com.ligadata.kamanja.test.msg3", "com.ligadata.kamanja.test.msg5", "com.ligadata.kamanja.test.msg6")
-    val lists = types.foldLeft(Array.empty[Array[MessageContainerBase]]) ((r, m) =>
-        r :+ txnCtxt.getMessages(m)
-    )
-
-    // Find the longest list
-    //
-    val n = lists.foldLeft(0) ((r, l) => max(r, l.length))
-
-    def getOrNull(list: Array[MessageContainerBase], index: Integer): MessageContainerBase = {
-        if(lists.isDefinedAt(i)) {
-            list(index)
-        } else {
-            null
-        }
+    val results: Array[Result] =
+    if(msg1!=null && msg2!=null && msg3!=null) {
+      exeGenerated_test1_1(msg1, msg2, msg3)
+    } else {
+      Array.empty[Result]
     }
-
-    // Retrieve messages
-    //
-    for(var i <- 0 until n)
-    {
-        val msg1 = getOrNull(lists(0), i).asInstanceOf[com.ligadata.kamanja.test.v1000000.msg1]
-        val msg2 = getOrNull(lists(1), i).asInstanceOf[com.ligadata.kamanja.test.v1000000.msg3]
-        val msg3 = getOrNull(lists(2), i).asInstanceOf[com.ligadata.kamanja.test.v1000000.msg5]
-        val msg4 = getOrNull(lists(3), i).asInstanceOf[com.ligadata.kamanja.test.v1000000.msg6]
-
-        // Main dependency -> execution check
-        //
-        val results: Array[Result] =
-        if(msg1!=null && msg2!=null && msg3!=null) {
-          exeGenerated_test1_1(msg1, msg2, msg3)
-        } else {
-          Array.empty[Result]
-        }
-        ++
-        if(msg2!=null && msg3!=null && msg4!=null) {
-          exeGenerated_test1_2(msg2, msg3, msg4)
-        } else {
-          Array.empty[Result]
-        }
-        ++
-        if(msg2!=null) {
-          exeGenerated_test2_3(msg2)
-        } else {
-          Array.empty[Result]
-        }
-        factory.createResultObject().asInstanceOf[MappedModelResults].withResults(results)
+    ++
+    if(msg2!=null && msg3!=null && msg4!=null) {
+      exeGenerated_test1_2(msg2, msg3, msg4)
+    } else {
+      Array.empty[Result]
     }
+    ++
+    if(msg2!=null) {
+      exeGenerated_test2_3(msg2)
+    } else {
+      Array.empty[Result]
+    }
+    factory.createResultObject().asInstanceOf[MappedModelResults].withResults(results)
   }
 }

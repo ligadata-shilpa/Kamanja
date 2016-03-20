@@ -501,7 +501,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     // Generate variables
     //
     incomingToMsgId.foreach( e => {
-      messages :+= "val msg%d = msgs.get(\"%s\").getOrElse(null).asInstanceOf[%s]".format(e._2, e._1, ResolveToVersionedClassname(md, e._1))
+      messages :+= "val msg%d = txnCtxt.getMessages(\"%s\").headOption.getOrElse(null).asInstanceOf[%s]".format(e._2, e._1, ResolveToVersionedClassname(md, e._1))
     })
 
     // Compute the highlevel handler that match dependencies

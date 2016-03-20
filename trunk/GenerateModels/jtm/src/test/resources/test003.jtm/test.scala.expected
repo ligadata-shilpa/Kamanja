@@ -28,7 +28,7 @@ class Factory(modelDef: ModelDef, nodeContext: NodeContext) extends ModelInstanc
   override def createResultObject(): ModelResultBase = new MappedModelResults()
 }
 class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
-  override def execute(txnCtxt: TransactionContext, outputDefault: Boolean): ModelResultBase = {
+  override def run(txnCtxt: TransactionContext, outputDefault: Boolean): Array[BaseMsg]  = {
     //
     //
     // msg2 is part of com.ligadata.jtm.test.filter
@@ -65,16 +65,11 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
       }
       process_omsg3()
     }
-    //
-    // ToDo: we expect an array of messages
-    //
-    val msgs = Array(txnCtxt.getMessage()).map(m => m.FullName -> m).toMap
     // Evaluate messages
-    //
-    val msg1 = msgs.get("com.ligadata.kamanja.test.msg1").getOrElse(null).asInstanceOf[com.ligadata.kamanja.test.v1000000.msg1]
-    val msg2 = msgs.get("com.ligadata.kamanja.test.msg3").getOrElse(null).asInstanceOf[com.ligadata.kamanja.test.v1000000.msg3]
-    val msg3 = msgs.get("com.ligadata.kamanja.test.msg5").getOrElse(null).asInstanceOf[com.ligadata.kamanja.test.v1000000.msg5]
-    val msg4 = msgs.get("com.ligadata.kamanja.test.msg6").getOrElse(null).asInstanceOf[com.ligadata.kamanja.test.v1000000.msg6]
+    val msg1 = txnCtxt.getMessages("com.ligadata.kamanja.test.msg1").headOption.getOrElse(null).asInstanceOf[com.ligadata.kamanja.test.v1000000.msg1]
+    val msg2 = txnCtxt.getMessages("com.ligadata.kamanja.test.msg3").headOption.getOrElse(null).asInstanceOf[com.ligadata.kamanja.test.v1000000.msg3]
+    val msg3 = txnCtxt.getMessages("com.ligadata.kamanja.test.msg5").headOption.getOrElse(null).asInstanceOf[com.ligadata.kamanja.test.v1000000.msg5]
+    val msg4 = txnCtxt.getMessages("com.ligadata.kamanja.test.msg6").headOption.getOrElse(null).asInstanceOf[com.ligadata.kamanja.test.v1000000.msg6]
     // Main dependency -> execution check
     //
     val results: Array[Result] =
