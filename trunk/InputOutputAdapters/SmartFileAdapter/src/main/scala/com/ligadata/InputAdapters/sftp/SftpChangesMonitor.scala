@@ -140,7 +140,7 @@ class SftpFileHandler extends SmartFileHandler{
   }*/
 
   //gets the input stream according to file system type - SFTP here
-  private def getDefaultInputStream() : InputStream = {
+  def getDefaultInputStream() : InputStream = {
     val inputStream : InputStream =
       try {
         val remoteFileObj = manager.resolveFile(sftpEncodedUri, opts)
@@ -164,7 +164,7 @@ class SftpFileHandler extends SmartFileHandler{
       manager.init()
 
       val tempInputStream = getDefaultInputStream()
-      val compressionType = CompressionUtil.getCompressionType(getFullPath, tempInputStream, null)
+      val compressionType = CompressionUtil.getFileType(this, null)
       tempInputStream.close() //close this one, only first bytes were read to decide compression type, reopen to read from the beginning
       in = CompressionUtil.getProperInputStream(getDefaultInputStream, compressionType)
       in

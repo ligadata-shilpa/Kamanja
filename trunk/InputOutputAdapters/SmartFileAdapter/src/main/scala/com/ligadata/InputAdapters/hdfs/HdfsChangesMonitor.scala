@@ -84,7 +84,7 @@ class HdfsFileHandler extends SmartFileHandler{
   def getFullPath = fileFullPath
 
   //gets the input stream according to file system type - HDFS here
-  private def getDefaultInputStream() : InputStream = {
+  def getDefaultInputStream() : InputStream = {
 
     hdFileSystem = FileSystem.newInstance(hdfsConfig)
     val inputStream : FSDataInputStream =
@@ -105,7 +105,7 @@ class HdfsFileHandler extends SmartFileHandler{
   def openForRead(): InputStream = {
     try {
       val tempInputStream = getDefaultInputStream()
-      val compressionType = CompressionUtil.getCompressionType(fileFullPath, tempInputStream, null)
+      val compressionType = CompressionUtil.getFileType(this, null)
       tempInputStream.close() //close this one, only first bytes were read to decide compression type, reopen to read from the beginning
       in = CompressionUtil.getProperInputStream(getDefaultInputStream, compressionType)
       in

@@ -42,7 +42,7 @@ class PosixFileHandler extends SmartFileHandler{
   }
 
   //gets the input stream according to file system type - POSIX here
-  private def getDefaultInputStream() : InputStream = {
+  def getDefaultInputStream() : InputStream = {
     val inputStream : InputStream =
       try {
         new FileInputStream(fileFullPath)
@@ -59,9 +59,9 @@ class PosixFileHandler extends SmartFileHandler{
   def openForRead(): InputStream = {
     try {
       val tempInputStream = getDefaultInputStream()
-      val compressionType = CompressionUtil.getCompressionType(fileFullPath, tempInputStream, null)
+      val fileType = CompressionUtil.getFileType(this, null)
       tempInputStream.close() //close this one, only first bytes were read to decide compression type, reopen to read from the beginning
-      in = CompressionUtil.getProperInputStream(getDefaultInputStream, compressionType)
+      in = CompressionUtil.getProperInputStream(getDefaultInputStream, fileType)
       //bufferedReader = new BufferedReader(in)
       in
     }
