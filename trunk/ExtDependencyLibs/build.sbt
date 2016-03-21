@@ -5,6 +5,8 @@ name := "ExtDependencyLibs"
 version := "1.0"
 
 
+shellPrompt := { state =>  "sbt (%s)> ".format(Project.extract(state).currentProject.id) }
+
 assemblyOption in assembly ~= {
   _.copy(prependShellScript = Some(defaultShellScript))
 }
@@ -14,7 +16,7 @@ assemblyJarName in assembly := {
 }
 
 assemblyMergeStrategy in assembly := {
-  // case PathList("javax", "servlet", xs @ _*)         => MergeStrategy.first
+   case PathList("javax", "servlet", xs @ _*)         => MergeStrategy.first
   // case PathList(ps @ _*) if ps.last endsWith ".html" => MergeStrategy.first
   case PathList("META-INF", "maven", "jline", "jline", ps) if ps.startsWith("pom") => MergeStrategy.discard
   case PathList(ps@_*) if ps.last endsWith ".html" => MergeStrategy.first
@@ -53,7 +55,7 @@ assemblyMergeStrategy in assembly := {
 }
 
 excludedJars in assembly <<= (fullClasspath in assembly) map { cp =>
-  val excludes = Set("commons-beanutils-1.7.0.jar", "google-collections-1.0.jar", "commons-collections4-4.0.jar")
+  val excludes = Set("commons-beanutils-1.7.0.jar", "google-collections-1.0.jar", "commons-collections4-4.0.jar","log4j-1.2.17.jar")
   cp filter { jar => excludes(jar.data.getName) }
 }
 //"log4j-1.2.17.jar", "log4j-1.2.16.jar", "commons-collections-4-4.0.jar", "scalatest_2.11-2.2.0.jar"
@@ -172,7 +174,7 @@ libraryDependencies += "org.jpmml" % "pmml-model" % "1.2.9"
 libraryDependencies += "org.jpmml" % "pmml-schema" % "1.2.9"
 libraryDependencies += "com.beust" % "jcommander" % "1.48"
 libraryDependencies += "com.codahale.metrics" % "metrics-core" % "3.0.2"
-libraryDependencies += "org.glassfish.jaxb" % "jaxb-runtime" % "2.2.11"
+//libraryDependencies += "org.glassfish.jaxb" % "jaxb-runtime" % "2.2.11"
 //// Do not append Scala versions to the generated artifacts
 //crossPaths := false
 //// This forbids including Scala related libraries into the dependency
