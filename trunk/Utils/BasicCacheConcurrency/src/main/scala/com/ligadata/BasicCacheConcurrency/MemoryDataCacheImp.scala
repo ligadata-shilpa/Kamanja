@@ -1,32 +1,31 @@
 package com.ligadata.BasicCacheConcurrency
 
 
-import net.sf.ehcache.config.CacheConfiguration
 import net.sf.ehcache.{Element, Cache, CacheManager}
-import org.json4s.jackson.JsonMethods._
+
 
 import scala.collection.JavaConverters._
 
 /**
   * Created by Saleh on 3/15/2016.
   */
+
 class MemoryDataCacheImp extends DataCache{
 
   var cm:CacheManager = null
   var cache:Cache = null
-  var config:CacheConfiguration = null
+  var cacheConfig:CacheCustomConfig = null
 
   override def init(jsonString:String): Unit = {
 
-    config = new CacheCustomConfig(jsonString)
+    cacheConfig = new CacheCustomConfig(jsonString)
 
   }
 
   override def start(): Unit = {
-    cm = CacheManager.newInstance()
-    cm.addCache(new Cache(config))
-    cache = cm.getCache(config.getName)
-
+    cm = CacheManager.create(cacheConfig.getConfiguration())
+    cm.addCache(new Cache(cacheConfig))
+    cache = cm.getCache(cacheConfig.getName)
   }
 
   override def shutdown(): Unit = {

@@ -1,14 +1,18 @@
 package com.ligadata.BasicCacheConcurrency
 
-import net.sf.ehcache.config.CacheConfiguration
+import net.sf.ehcache.config.{FactoryConfiguration, Configuration, CacheConfiguration}
+import net.sf.ehcache.distribution.jgroups.JGroupsCacheManagerPeerProviderFactory
 
 
 /**
   * Created by Saleh on 3/21/2016.
   */
 class CacheCustomConfig(jsonString:String) extends CacheConfiguration{
-  val json = org.json4s.jackson.JsonMethods.parse(jsonString)
-  val values = json.values.asInstanceOf[Map[String, String]]
+  private val config:Configuration = new Configuration
+  private val factory:FactoryConfiguration[Nothing] = new FactoryConfiguration
+
+  private val json = org.json4s.jackson.JsonMethods.parse(jsonString)
+  private val values = json.values.asInstanceOf[Map[String, String]]
 
   /*
              name="Node"
@@ -31,4 +35,14 @@ class CacheCustomConfig(jsonString:String) extends CacheConfiguration{
     .timeToIdleSeconds(values.getOrElse("timeToIdleSeconds","300").toInt)
     .memoryStoreEvictionPolicy(values.getOrElse("memoryStoreEvictionPolicy","LFU"))
     .transactionalMode(values.getOrElse("transactionalMode","off"))
+
+  factory.setClass("net.sf.ehcache.distribution.jgroups.JGroupsCacheManagerPeerProviderFactory")
+  factory.setPropertySeparator("::")
+  factory.setProperties("channelName=EH_CACHE::file=jgroups.xml");
+  config.addCacheManagerPeerProviderFactory(factory)
+
+
+  def  getConfiguration() : Configuration = {
+    return config
+  }
 }
