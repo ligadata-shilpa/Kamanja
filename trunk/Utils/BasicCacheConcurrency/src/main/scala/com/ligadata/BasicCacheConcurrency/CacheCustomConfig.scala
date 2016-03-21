@@ -12,11 +12,23 @@ import net.sf.ehcache.event.CacheEventListener
   */
 
 object CacheCustomConfig{
-  val REPLICATE_PUTS:String = "replicatePuts";
-  val REPLICATE_UPDATES:String = "replicateUpdates";
-  val REPLICATE_UPDATES_VIA_COPY:String = "replicateUpdatesViaCopy";
-  val REPLICATE_REMOVALS:String = "replicateRemovals";
-  val REPLICATE_ASYNCHRONOUSLY:String = "replicateAsynchronously";
+  val REPLICATE_PUTS:String = "replicatePuts"
+  val REPLICATE_UPDATES:String = "replicateUpdates"
+  val REPLICATE_UPDATES_VIA_COPY:String = "replicateUpdatesViaCopy"
+  val REPLICATE_REMOVALS:String = "replicateRemovals"
+  val REPLICATE_ASYNCHRONOUSLY:String = "replicateAsynchronously"
+  val NAME:String="name"
+  val MAXENTRIESLOCALHEAP:String="maxEntriesLocalHeap"
+  val MAXENTRIESLOCALDISK:String="maxEntriesLocalDisk"
+  val ETERNAL:String="eternal"
+  val DISKSPOOLBUFFERSIZEMB:String="diskSpoolBufferSizeMB"
+  val TIMETOIDLESECONDS:String="timeToIdleSeconds"
+  val TIMETOLIVESECONDS:String="timeToLiveSeconds"
+  val MEMORYSTOREEVICTIONPOLICY:String="memoryStoreEvictionPolicy"
+  val TRANSACTIONALMODE:String="transactionalMode"
+  val CLASS:String="class"
+  val SEPARATOR:String="separator"
+  val PEERCONFIG:String="peerconfig"
 }
 
 class CacheCustomConfig(jsonString:String) extends CacheConfiguration{
@@ -39,24 +51,31 @@ class CacheCustomConfig(jsonString:String) extends CacheConfiguration{
              class="net.sf.ehcache.distribution.jgroups.JGroupsCacheManagerPeerProviderFactory"
              separator="::"
              peerconfig="channelName=EH_CACHE::file=jgroups.xml"
+             replicatePuts=true
+             replicateUpdates=true
+             replicateUpdatesViaCopy=false
+             replicateRemovals=true
+             replicateAsynchronously=true
 
    */
 
-  this.name(values.getOrElse("name","Node"))
-    .eternal(values.getOrElse("eternal","false").toBoolean)
-    .maxEntriesLocalHeap(values.getOrElse("maxEntriesLocalHeap","10000").toInt)
-    .maxEntriesLocalDisk(values.getOrElse("maxEntriesLocalDisk","1000").toInt)
-    .diskSpoolBufferSizeMB(values.getOrElse("diskSpoolBufferSizeMB","20").toInt)
-    .timeToLiveSeconds(values.getOrElse("timeToLiveSeconds","600").toInt)
-    .timeToIdleSeconds(values.getOrElse("timeToIdleSeconds","300").toInt)
-    .memoryStoreEvictionPolicy(values.getOrElse("memoryStoreEvictionPolicy","LFU"))
-    .transactionalMode(values.getOrElse("transactionalMode","off"))
+  this.name(values.getOrElse(CacheCustomConfig.NAME,"Node"))
+    .eternal(values.getOrElse(CacheCustomConfig.ETERNAL,"false").toBoolean)
+    .maxEntriesLocalHeap(values.getOrElse(CacheCustomConfig.MAXENTRIESLOCALHEAP,"10000").toInt)
+    .maxEntriesLocalDisk(values.getOrElse(CacheCustomConfig.MAXENTRIESLOCALDISK,"1000").toInt)
+    .diskSpoolBufferSizeMB(values.getOrElse(CacheCustomConfig.DISKSPOOLBUFFERSIZEMB,"20").toInt)
+    .timeToLiveSeconds(values.getOrElse(CacheCustomConfig.TIMETOLIVESECONDS,"600").toInt)
+    .timeToIdleSeconds(values.getOrElse(CacheCustomConfig.TIMETOIDLESECONDS,"300").toInt)
+    .memoryStoreEvictionPolicy(values.getOrElse(CacheCustomConfig.MEMORYSTOREEVICTIONPOLICY,"LFU"))
+    .transactionalMode(values.getOrElse(CacheCustomConfig.TRANSACTIONALMODE,"off"))
 
-  factory.setClass(values.getOrElse("class","net.sf.ehcache.distribution.jgroups.JGroupsCacheManagerPeerProviderFactory"))
-  factory.setPropertySeparator(values.getOrElse("separator","::"))
-  factory.setProperties(values.getOrElse("peerconfig","channelName=EH_CACHE::file=jgroups.xml"));
+  //ADD A PROVIDER DEFUALT JGROUPS
+  factory.setClass(values.getOrElse(CacheCustomConfig.CLASS,"net.sf.ehcache.distribution.jgroups.JGroupsCacheManagerPeerProviderFactory"))
+  factory.setPropertySeparator(values.getOrElse(CacheCustomConfig.SEPARATOR,"::"))
+  factory.setProperties(values.getOrElse(CacheCustomConfig.PEERCONFIG,"channelName=EH_CACHE::file=jgroups.xml"));
   config.addCacheManagerPeerProviderFactory(factory)
 
+  //LISTENER PROPERTIES
   properties.setProperty(CacheCustomConfig.REPLICATE_PUTS,(values.getOrElse(CacheCustomConfig.REPLICATE_PUTS,"true")).toString)
   properties.setProperty(CacheCustomConfig.REPLICATE_UPDATES,(values.getOrElse(CacheCustomConfig.REPLICATE_UPDATES,"true")).toString)
   properties.setProperty(CacheCustomConfig.REPLICATE_UPDATES_VIA_COPY,(values.getOrElse(CacheCustomConfig.REPLICATE_UPDATES_VIA_COPY,"false")).toString)
