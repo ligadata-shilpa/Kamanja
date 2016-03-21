@@ -20,6 +20,9 @@ class FileAdapterConnectionConfig {
   var hostsList: Array[String] = Array.empty[String]
   var userId: String = _
   var password: String = _
+  var authentication: String = _
+  var principal: String = _
+  var keytab: String = _
 }
 
 class FileAdapterMonitoringConfig {
@@ -97,8 +100,16 @@ object SmartFileAdapterConfiguration{
         connectionConfig.userId = kv._2.trim
       } else if (kv._1.compareToIgnoreCase("Password") == 0) {
         connectionConfig.password = kv._2.trim
+      } else if (kv._1.compareToIgnoreCase("Authentication") == 0) {
+        connectionConfig.authentication = kv._2.trim
+      } else if (kv._1.compareToIgnoreCase("Principal") == 0) {
+        connectionConfig.principal = kv._2.trim
+      } else if (kv._1.compareToIgnoreCase("Keytab") == 0) {
+        connectionConfig.keytab = kv._2.trim
       }
     })
+    if(connectionConfig.authentication == null || connectionConfig.authentication == "")
+      connectionConfig.authentication = "simple"//default
 
     if(adapCfgValues.getOrElse("MonitoringConfig", null) == null){
       val err = "Not found MonitoringConfig for Smart File Adapter Config:" + adapterName

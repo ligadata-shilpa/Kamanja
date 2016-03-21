@@ -16,6 +16,8 @@ import org.apache.hadoop.fs.FileSystem
 import org.apache.hadoop.fs.Path
 import org.apache.hadoop.fs.FSDataInputStream
 import org.apache.hadoop.conf.Configuration
+import org.apache.hadoop.hdfs.client.HdfsUtils
+import org.apache.hadoop.security.UserGroupInformation
 
 import scala.collection.mutable.{ArrayBuffer, Map}
 import scala.actors.threadpool.{ Executors, ExecutorService }
@@ -24,13 +26,27 @@ import com.ligadata.InputAdapters.CompressionUtil._
 import org.apache.logging.log4j.{ Logger, LogManager }
 import com.ligadata.InputAdapters.{CompressionUtil, SmartFileHandler, SmartFileMonitor}
 
-class HdfsConnectionConfig(val hostsList: String)
-
 class HdfsFileEntry {
   var name : String = ""
   var lastReportedSize : Long = 0
   var lastModificationTime : Long = 0
   //boolean processed
+}
+
+object HdfsUtility{
+  def createConfig(connectionConf : FileAdapterConnectionConfig) : Configuration = {
+    val hdfsConfig = new Configuration()
+    hdfsConfig.set("fs.default.name", connectionConf.hostsList.mkString(","))
+    hdfsConfig.set("fs.hdfs.impl", classOf[org.apache.hadoop.hdfs.DistributedFileSystem].getName)
+    hdfsConfig.set("fs.file.impl", classOf[org.apache.hadoop.fs.LocalFileSystem].getName)
+    //hdfsConfig.set("hadoop.job.ugi", "hadoop");//user ???
+    if(connectionConf.authentication.equalsIgnoreCase("kerberos")){
+      hdfsConfig.set("hadoop.security.authentication", "Kerberos")
+      UserGroupInformation.setConfiguration(hdfsConfig)
+      UserGroupInformation.loginUserFromKeytab(connectionConf.principal, connectionConf.keytab)
+    }
+    hdfsConfig
+  }
 }
 
 class MofifiedFileCallbackHandler(fileHandler : SmartFileHandler, modifiedFileCallback:(SmartFileHandler) => Unit) extends Runnable{
@@ -46,26 +62,16 @@ class HdfsFileHandler extends SmartFileHandler{
   private var in : InputStream = null
   private var hdFileSystem : FileSystem = null
   private var hdfsConfig : Configuration = null
-  private var hdfsConnectionConfig : HdfsConnectionConfig = null
 
   lazy val loggerName = this.getClass.getName
   lazy val logger = LogManager.getLogger(loggerName)
   
-  def this(fullPath : String, config : HdfsConnectionConfig){
+  def this(fullPath : String, connectionConf : FileAdapterConnectionConfig){
     this()
 
     fileFullPath = fullPath
-    hdfsConnectionConfig = config
-    hdfsConfig = getHdfsConfig
+    hdfsConfig = HdfsUtility.createConfig(connectionConf)
     hdFileSystem = FileSystem.newInstance(hdfsConfig)
-  }
-
-  def getHdfsConfig : Configuration = {
-    hdfsConfig = new Configuration()
-    hdfsConfig.set("fs.default.name", hdfsConnectionConfig.hostsList)
-    hdfsConfig.set("fs.hdfs.impl", classOf[org.apache.hadoop.hdfs.DistributedFileSystem].getName)
-    hdfsConfig.set("fs.file.impl", classOf[org.apache.hadoop.fs.LocalFileSystem].getName)
-    hdfsConfig
   }
 
   /*def this(fullPath : String, fs : FileSystem){
@@ -231,13 +237,13 @@ class HdfsChangesMonitor (adapterName : String, modifiedFileCallback:(SmartFileH
   lazy val loggerName = this.getClass.getName
   lazy val logger = LogManager.getLogger(loggerName)
 
-  private var hdfsConnectionConfig : HdfsConnectionConfig = null
-
   val poolSize = 5
   private val globalFileMonitorCallbackService: ExecutorService = Executors.newFixedThreadPool(poolSize)
 
   private var connectionConf : FileAdapterConnectionConfig = null
   private var monitoringConf :  FileAdapterMonitoringConfig = null
+
+  private var hdfsConfig : Configuration = null
 
   def init(adapterSpecificCfgJson: String): Unit ={
     val(_type, c, m) =  SmartFileAdapterConfiguration.parseSmartFileAdapterSpecificConfig(adapterName, adapterSpecificCfgJson)
@@ -248,7 +254,15 @@ class HdfsChangesMonitor (adapterName : String, modifiedFileCallback:(SmartFileH
       val err = "HostsList is missing or invalid for Smart HDFS File Adapter Config:" + adapterName
       throw new KamanjaException(err, null)
     }
-    hdfsConnectionConfig = new HdfsConnectionConfig(connectionConf.hostsList.mkString(","))
+    if(connectionConf.authentication.equalsIgnoreCase("kerberos")){
+      if(connectionConf.principal == null || connectionConf.principal.length == 0 ||
+        connectionConf.keytab == null || connectionConf.keytab.length == 0){
+        val err = "Principal and Keytab cannot be empty for Kerberos authentication for Smart HDFS File Adapter Config:" + adapterName
+        throw new KamanjaException(err, null)
+      }
+    }
+
+    hdfsConfig = HdfsUtility.createConfig(connectionConf)
   }
 
   def shutdown: Unit ={
@@ -273,12 +287,6 @@ class HdfsChangesMonitor (adapterName : String, modifiedFileCallback:(SmartFileH
 
     monitoringConf.locations.foreach(targetFolder => {
       // Instantiate HDFS Configuration.
-      val hdfsConfig = new Configuration()
-      hdfsConfig.set("fs.default.name", hdfsConnectionConfig.hostsList)
-
-      hdfsConfig.set("fs.hdfs.impl", classOf[org.apache.hadoop.hdfs.DistributedFileSystem].getName)
-      hdfsConfig.set("fs.file.impl", classOf[org.apache.hadoop.fs.LocalFileSystem].getName)
-      //hdfsConfig.set("hadoop.job.ugi", "hadoop");//user ???
 
       val filesStatusMap = Map[String, HdfsFileEntry]()
       var firstCheck = true
@@ -380,7 +388,7 @@ class HdfsChangesMonitor (adapterName : String, modifiedFileCallback:(SmartFileH
         }
         else{
           if(changeType == New || changeType == AlreadyExisting) {
-            val fileHandler = new HdfsFileHandler(uniquePath, hdfsConnectionConfig)
+            val fileHandler = new HdfsFileHandler(uniquePath, connectionConf)
             modifiedFiles.put(fileHandler, changeType)
           }
         }

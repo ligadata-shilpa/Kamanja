@@ -22,6 +22,9 @@ object MonitorUtils {
 
   //Default allowed content types -
   var cTypes  = "text/plain;application/gzip" //might get that from some configuration
+  //"application/x-bzip2;application/x-lzop"
+
+
   def contentTypes = {
     val map = new scala.collection.mutable.HashMap[String,String]
     for(cType <- cTypes.split(";")){
@@ -149,7 +152,7 @@ object SmartFileHandlerFactory{
     val handler : SmartFileHandler =
       adapterConfig._type.toLowerCase() match {
         case "das/nas" => new PosixFileHandler(fileFullPath)
-        case "sftp" => new HdfsFileHandler(fileFullPath, new HdfsConnectionConfig(connectionConf.hostsList.mkString(",")))
+        case "sftp" => new HdfsFileHandler(fileFullPath, connectionConf)
         case "hdfs" => new SftpFileHandler(fileFullPath, new SftpConnectionConfig(connectionConf.hostsList(0), connectionConf.userId, connectionConf.password))
         case _ => throw new KamanjaException("Unsupported Smart file adapter type", null)
       }
