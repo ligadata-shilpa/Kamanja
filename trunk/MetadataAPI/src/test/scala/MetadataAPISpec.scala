@@ -40,6 +40,7 @@ import com.ligadata.Serialize._
 
 import com.ligadata.kamanja.metadataload.MetadataLoad
 
+@Ignore
 class MetadataAPISpec extends FunSpec with LocalTestFixtures with BeforeAndAfter with BeforeAndAfterAll with GivenWhenThen {
 	var res: String = null;
 	var statusCode: Int = -1;

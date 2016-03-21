@@ -769,11 +769,11 @@ class MessageAndAttributes {
  */
 class ModelDef( val modelRepresentation: ModelRepresentation = ModelRepresentation.JAR
                 , val miningModelType : MiningModelType = MiningModelType.UNKNOWN
-                , val inputMsgSets : Array[Array[MessageAndAttributes]] = Array[Array[MessageAndAttributes]]()
-                , val outputMsgs: Array[String] = Array[String]()
-                , val isReusable: Boolean = false
-                , val supportsInstanceSerialization: Boolean = false
-                , val modelConfig: String = "") extends BaseElemDef {
+                , var inputMsgSets : Array[Array[MessageAndAttributes]] = Array[Array[MessageAndAttributes]]()
+                , var outputMsgs: Array[String] = Array[String]()
+                , var isReusable: Boolean = false
+                , var supportsInstanceSerialization: Boolean = false
+                , var modelConfig: String = "") extends BaseElemDef {
     def typeString: String = PhysicalName
     def SupportsInstanceSerialization : Boolean = supportsInstanceSerialization
 }

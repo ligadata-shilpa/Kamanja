@@ -1341,6 +1341,81 @@ object MessageAndContainerUtils {
     }
   }
 
+
+  /**
+    * Check whether message already exists in metadata manager. Ideally,
+    * we should never add the message into metadata manager more than once
+    * and there is no need to use this function in main code flow
+    * This is just a utility function being during these initial phases
+    *
+    * @param msgDef
+    * @return
+    */
+  def IsMessageExists(objectName: String): Boolean = {
+    try {
+      val nameNodes: Array[String] = if (objectName != null && 
+					 objectName.contains('.')) objectName.split('.') 
+				     else Array(MdMgr.sysNS, objectName)
+      var name = nameNodes(nameNodes.size-1)
+      val nmspcNodes: Array[String] = nameNodes.splitAt(nameNodes.size - 1)._1
+      val buffer: StringBuilder = new StringBuilder
+      val nameSpace: String = nmspcNodes.addString(buffer, ".").toString
+
+      val o = MdMgr.GetMdMgr.Message(nameSpace.toLowerCase,
+				     name.toLowerCase,
+				     -1,
+				     false)
+      o match {
+        case None =>
+          None
+          logger.debug("message not in the cache => " + objectName)
+          return false;
+        case Some(m) =>
+          logger.debug("message found => " + m.asInstanceOf[MessageDef].FullName + "." + 
+		       MdMgr.Pad0s2Version(m.asInstanceOf[MessageDef].ver))
+          return true
+      }
+    } catch {
+      case e: Exception => {
+        logger.debug("", e)
+        throw UnexpectedMetadataAPIException(e.getMessage(), e)
+      }
+    }
+  }
+
+  def createDefaultOutputMessage(modDef: ModelDef,optUserId: Option[String]): String = {
+    try{
+      logger.info("Creating a default output message for the model " + modDef.FullNameWithVer + " if it doesn't already exist ")
+      val nameSpace = modDef.NameSpace
+      val name = modDef.Name
+
+      val msgName = name + "_outputmsg"
+      val msgFullName = nameSpace + "." + msgName
+
+      if( IsMessageExists(msgFullName) ){
+	logger.info("The message " + msgFullName + " already exist, not recreating it...")
+	return msgFullName
+      }
+      else{
+	var msgJson = "{\"Message\":{" + 
+	"\"NameSpace\":" + "\"" + nameSpace + "\"" + 
+	",\"Name\":" + "\"" + msgName + "\"" + 
+	",\"Version\":\"00.00.01\"" +
+	",\"Description\":\"Default Output Message for " + name + "\"" +
+        ",\"Fixed\":\"false\"" +
+	"}}"
+	logger.info("The default output message string => " + msgJson)
+	val resultStr = AddContainerOrMessage(msgJson,"JSON",optUserId,false)
+	return msgFullName
+      } 
+    }catch {
+      case e: Exception => {
+        logger.debug("", e)
+        throw e
+      }
+    }
+  }
+
   /**
     * DoesContainerAlreadyExist
     *
@@ -1573,7 +1648,12 @@ object MessageAndContainerUtils {
     * @return
     */
   def getModelMessagesContainers(modelConfigName: String, userid: Option[String]): List[String] = {
-    var config = MdMgr.GetMdMgr.GetModelConfig(modelConfigName)
+    // if userid is not supplied, it seem to defualt to "_"
+    val u = if( userid != None ) userid.get else "_"
+    var key = u + "." + modelConfigName
+    logger.debug("Get the model config for " + key)
+    var config = MdMgr.GetMdMgr.GetModelConfig(key)
+    logger.debug("Size of the model config map => " + config.keys.size);
     val typDeps = config.getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, null)
     if (typDeps != null) {
       if (typDeps.isInstanceOf[List[_]])
@@ -1581,6 +1661,7 @@ object MessageAndContainerUtils {
       if (typDeps.isInstanceOf[Array[_]])
         return typDeps.asInstanceOf[Array[String]].toList
     }
+    logger.debug("Types in modelConfig object are not defined")
     List[String]()
   }
 

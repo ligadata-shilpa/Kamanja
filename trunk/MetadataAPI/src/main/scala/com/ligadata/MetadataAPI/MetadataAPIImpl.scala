@@ -2239,8 +2239,11 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
                            , optModelName: Option[String] = None
                            , optVersion: Option[String] = None
                            , optMsgConsumed: Option[String] = None
-                           , optMsgVersion: Option[String] = Some("-1") ): String  = {
-    ModelUtils.AddModel(modelType,input,optUserid,optModelName,optVersion,optMsgConsumed,optMsgVersion)
+                           , optMsgVersion: Option[String] = Some("-1") 
+			   , optMsgProduced: Option[String] = None
+		       ): String  = {
+    ModelUtils.AddModel(modelType,input,optUserid,optModelName,optVersion,optMsgConsumed,
+			optMsgVersion,optMsgProduced)
   }
 
 
@@ -2293,8 +2296,9 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
                             , optUserid: Option[String] = None
                             , optModelName: Option[String] = None
                             , optVersion: Option[String] = None
-                            , optVersionBeingUpdated : Option[String] = None): String = {
-      ModelUtils.UpdateModel(modelType,input,optUserid,optModelName,optVersion,optVersionBeingUpdated)
+                            , optVersionBeingUpdated : Option[String] = None
+			    , optMsgProduced: Option[String] = None): String = {
+      ModelUtils.UpdateModel(modelType,input,optUserid,optModelName,optVersion,optVersionBeingUpdated,optMsgProduced)
     }
 
     /**
@@ -3679,7 +3683,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @return
      */
   def getModelDependencies(modelConfigName: String, userid: Option[String] = None): List[String] = {
-      var config = MdMgr.GetMdMgr.GetModelConfig(modelConfigName)
+      var config = MdMgr.GetMdMgr.GetModelConfig(modelConfigName.toLowerCase)
       val typDeps = config.getOrElse(ModelCompilationConstants.DEPENDENCIES, null)
       if (typDeps != null) {
         if (typDeps.isInstanceOf[List[_]])
