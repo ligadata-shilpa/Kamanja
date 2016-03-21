@@ -25,24 +25,34 @@ class MemoryDataCacheImp extends DataCache{
 
   }
 
-  override def putInCache(map: java.util.Map[_, _]): Unit = {
-    val scalaMap = map.asScala
-    scalaMap.foreach {keyVal => cache.put(new Element(keyVal._1,keyVal._2))}
-  }
-
-  override def getFromCache(key: String): Object = {
-    val ele:Element = cache.get(key)
-
-    ele.getObjectValue
-  }
-
   override def start(): Unit = {
     cm = CacheManager.newInstance(xmlPath)
     cache = cm.getCache(cacheName)
   }
 
-  override def shutdwon(): Unit = {
+  override def shutdown(): Unit = {
     cm.shutdown()
   }
 
+  override def put(key: String, value: scala.Any): Unit = {
+    cache.put(new Element(key,value))
+  }
+
+  override def get(key: String): AnyRef = {
+    val ele:Element = cache.get(key)
+
+    ele.getObjectValue
+  }
+
+  override def get(keys: Array[String]): java.util.Map[String, AnyRef] = {
+    val map = new java.util.HashMap[String, AnyRef]
+    keys.foreach(str => map.put(str,cache.get(str)))
+
+    map
+  }
+
+  override def put(map: java.util.Map[_, _]): Unit = {
+    val scalaMap = map.asScala
+    scalaMap.foreach {keyVal => cache.put(new Element(keyVal._1,keyVal._2))}
+  }
 }

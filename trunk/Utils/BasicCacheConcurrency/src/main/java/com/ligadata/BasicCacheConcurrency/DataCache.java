@@ -8,7 +8,9 @@ import java.util.Map;
 public interface DataCache {
     public void init(String jsonString);
     public void start();
-    public void putInCache(Map map);
-    public Object getFromCache(String key);
-    public void shutdwon();
+    public void put(String key, Object value);
+    public void put(Map map);
+    public Object get(String key);
+    public Map<String, Object> get(String[] keys);
+    public void shutdown();
 }

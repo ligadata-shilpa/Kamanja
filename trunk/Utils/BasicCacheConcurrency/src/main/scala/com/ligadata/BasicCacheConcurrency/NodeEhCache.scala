@@ -16,11 +16,11 @@ object NodeEhCache {
     var map = new java.util.HashMap[String,String]
     map.put("1","1")
 
-    node.putInCache(map)
+    node.put(map)
 
-    System.out.println(node.getFromCache("1").toString)
+    System.out.println(node.get("1").toString)
 
-    node.shutdwon()
+    node.shutdown()
 
   }
 }
