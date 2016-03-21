@@ -89,7 +89,7 @@ lazy val GenericMsgCompiler = project.in(file("GenericMsgCompiler")) dependsOn(M
 
 // lazy val Loadtest = project.in(file("Tools/Loadtest")) dependsOn(StorageManager, Exceptions)
 
-lazy val PmmlRuntime = project.in(file("Pmml/PmmlRuntime")) dependsOn(Metadata, KamanjaBase, Exceptions) 
+lazy val PmmlRuntime = project.in(file("Pmml/PmmlRuntime")) dependsOn(Metadata, KamanjaBase, Exceptions)
 
 lazy val PmmlCompiler = project.in(file("Pmml/PmmlCompiler")) dependsOn(PmmlRuntime, PmmlUdfs, Metadata, KamanjaBase, MetadataBootstrap, Exceptions)
 
@@ -188,6 +188,8 @@ lazy val MigrateTo_V_1_4 = project.in(file("Utils/Migrate/DestinationVersion/Mig
 lazy val MigrateFrom_V_1_3 = project.in(file("Utils/Migrate/SourceVersion/MigrateFrom_V_1_3")) dependsOn (MigrateBase)
 
 lazy val jtm = project.in(file("GenerateModels/jtm")) dependsOn(Metadata, KamanjaBase, Exceptions, MetadataBootstrap, MessageDef)
+
+lazy val runtime = project.in(file("GenerateModels/Runtime")) dependsOn(Metadata, KamanjaBase, Exceptions, MetadataBootstrap, MessageDef)
 
 lazy val InstallDriverBase = project.in(file("Utils/ClusterInstaller/InstallDriverBase"))
 

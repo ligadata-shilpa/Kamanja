@@ -364,16 +364,17 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
   /**
     *
-    * @param argName
-    * @param className
-    * @param fieldName
+    * @param argName arg name as string
+    * @param className class anme as string
+    * @param fieldName field name as string
+    * @param fieldType type anem as string
     */
-  case class Element(argName: String, className: String, fieldName: String)
+  case class Element(argName: String, className: String, fieldName: String, fieldType: String)
   def ColumnNames(mgr: MdMgr, classList: Set[String]): Array[Element] = {
     classList.foldLeft(1, Array.empty[Element])( (r, classname) => {
       val classMd = md.Message(classname, 0, true)
       val members = classMd.get.containerType.asInstanceOf[StructTypeDef].memberDefs
-      (r._1 + 1, r._2 ++ members.map( e => Element("msg%d".format( r._1), classname, columnNamePatchUp.getOrElse(e.Name, e.Name))))
+      (r._1 + 1, r._2 ++ members.map( e => Element("msg%d".format( r._1), classname, columnNamePatchUp.getOrElse(e.Name, e.Name), e.typeString)))
     })._2
   }
 
@@ -387,6 +388,218 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
   def ResolveAlias(n: String, aliaseMessages: Map[String, String] ) : String =  {
     Expressions.ResolveAlias(n, aliaseMessages)
+  }
+
+  def Generate(groks_in: scala.collection.Map[String, String],
+               mapping_in: scala.collection.Map[String, String],
+               wheres_in: Array[String],
+               computes_in: scala.collection.Map[String, Compute],
+               output_in: String,
+               mappingset_in: Map[String, eval.Tracker],
+               trackingset_in: Set[String],
+               aliaseMessages: Map[String, String],
+               grokExpressions: Map[String, (String, String, Set[String])],
+               notUniqueInputs: Set[String]) : Array[String] = {
+
+    var collect: Array[String] = Array.empty[String]
+    var methods: Array[String] = Array.empty[String]
+
+    var groks = groks_in
+    var mapping = mapping_in
+    var wheres = wheres_in
+    var computes = computes_in
+    var cnt1 = wheres.length + computes.size + groks.size
+    var cnt2 = -1
+    var (outputSet, outputtype) = if(output_in.nonEmpty) {
+      val outputType1 = ResolveAlias(output_in, aliaseMessages)
+      val outputType = ResolveToVersionedClassname(md, outputType1)
+      (ColumnNames(md, outputType1), outputType)
+    } else {
+      (Set.empty[String], "")
+    }
+
+    // State variables to track the progress
+    // a little bit simpler than having val's
+    var innerMapping: Map[String, eval.Tracker] = mappingset_in
+    var innerTracking = trackingset_in
+
+    // Abort this loop if nothing changes or we can satisfy all outputs
+    while (cnt1 != cnt2 && outputSet.nonEmpty) {
+
+      cnt2 = cnt1
+
+      // Check Mapping
+      if (mapping.nonEmpty) {
+        logger.trace("Mappings left {}", mapping.mkString(", "))
+
+        val found = mapping.filter(f => {
+          // Try to extract variables, than it is an expression
+          val list = Expressions.ExtractColumnNames(f._2)
+          if (list.nonEmpty) {
+            val rList = ResolveNames(list, aliaseMessages)
+            val open = rList.filter(f => !innerMapping.contains(f._2))
+            //if (open.nonEmpty) logger.trace("{} not found {}", t.toString, open.mkString(", "))
+            open.isEmpty
+          } else {
+            innerMapping.contains(f._2)
+          }
+        })
+
+        logger.trace("Mappings found {}", found.mkString(", "))
+        found.foreach(f => {
+          // Try to extract variables, than it is an expression
+          val expression = f._2
+          val list = Expressions.ExtractColumnNames(expression)
+
+          val newExpression = if (list.nonEmpty) {
+            val newExpression = Expressions.FixupColumnNames(expression, innerMapping, aliaseMessages)
+            val rList = ResolveNames(list, aliaseMessages)
+            val open = rList.filter(f => !innerMapping.contains(f._2))
+            logger.trace("Matched mapping expression {} ({})-> {}", f._1, f._2, newExpression)
+            innerTracking ++= rList.map(m => innerMapping.get(m._2).get.variableName).toSet
+            newExpression
+          } else {
+            val mapped = innerMapping.get(expression).get.variableName
+            innerTracking += mapped
+            logger.trace("Column mapping {} -> {}", expression, mapped)
+            mapped
+          }
+          outputSet --= Set(f._1)
+          innerMapping ++= Map(f._1 -> eval.Tracker(newExpression, "", "", false))
+        })
+
+        mapping = mapping.filterKeys(f => !found.contains(f))
+      }
+
+      // Check grok matches
+      //
+      val groks1 = groks.filter( g => {
+        // fs the input determined, emit as output expressions
+        if(innerMapping.contains(g._1)) {
+
+          val nameColumn = ResolveName(g._1, aliaseMessages)
+
+          innerTracking += innerMapping.get(g._1).get.variableName
+
+          // Get the expression
+          //
+          val d = grokExpressions.get(g._2).get
+
+          logger.trace("Grok common matched {} -> {}", nameColumn, d._3.mkString(", "))
+
+          // The var name might generate conflicts
+          // Let's be optimistic for now
+          val varName = "%s_%s".format(d._1, g._1)
+          methods :+= "lazy val %s = %s.extractNamedGroups(%s)".format(varName, d._1, nameColumn)
+
+          // Emit variables w/ null value is needed
+          // we are adding a complete expression here
+          // potentially we have to decorate it to avoid naming conflicts
+          d._3.foreach( e => {
+            val expr = "if(%s.containsKey(\"%s\")) %s.get(\"%s\") else \"\")".format(varName, e, varName, e)
+            innerMapping ++= Map(e -> eval.Tracker(expr, "", "", false))
+          })
+          false
+        } else {
+          //logger.trace("Grok not matched {}", g._1)
+          true
+        }
+      })
+
+      // Check grok matches
+
+      // filters
+      val wheres1 = wheres.filter(f => {
+        val list = Expressions.ExtractColumnNames(f)
+        val rList = ResolveNames(list, aliaseMessages)
+        val open = rList.filter(f => !innerMapping.contains(f._2))
+        val ambiguous = rList.filter(f => notUniqueInputs.contains(f._2)).map(m => m._2)
+        if (ambiguous.nonEmpty) {
+          val a = ambiguous.mkString(", ")
+          logger.error("Found ambiguous variables %s in expression %s".format(a, f))
+          throw new Exception("Found ambiguous variables %s in expression %s".format(a, f))
+        }
+
+        if (open.isEmpty) {
+
+          innerTracking ++= rList.map(m => innerMapping.get(m._2).get.variableName).toSet
+
+          // Sub names to
+          val newExpression = Expressions.FixupColumnNames(f, innerMapping, aliaseMessages)
+          logger.trace("Matched where expression {}", newExpression)
+          // Output the actual filter
+          collect ++= Array("if (%s) return Array.empty[Result]\n".format(newExpression))
+          false
+        } else {
+          true
+        }
+      })
+
+      // computes
+      val computes1 = computes.filter(c => {
+
+        // Check if the compute if determind
+        val (open, expression, list) = if (c._2.expression.length > 0) {
+          val list = Expressions.ExtractColumnNames(c._2.expression)
+          val rList = ResolveNames(list, aliaseMessages)
+          val open = rList.filter(f => !innerMapping.contains(f._2))
+          val ambiguous = rList.filter(f => notUniqueInputs.contains(f._2)).map(m => m._2)
+          if (ambiguous.nonEmpty) {
+            val a = ambiguous.mkString(", ")
+            logger.error("Found ambiguous variables %s in expression %s".format(a, c._2.expression))
+            throw new Exception("Found ambiguous variables %s in expression %s".format(a, c._2.expression))
+          }
+          (open, c._2.expression, rList)
+        } else {
+          val evaluate = c._2.expressions.map(expression => {
+            val list = Expressions.ExtractColumnNames(expression)
+            val rList = ResolveNames(list, aliaseMessages)
+            val open = rList.filter(f => !innerMapping.contains(f._2))
+            val ambiguous = rList.filter(f => notUniqueInputs.contains(f._2)).map(m => m._2)
+            if (ambiguous.nonEmpty) {
+              val a = ambiguous.mkString(", ")
+              logger.error("Found ambiguous variables %s in expression %s".format(a, c._2.expression))
+              throw new Exception("Found ambiguous variables %s in expression %s".format(a, c._2.expression))
+            }
+            (open, expression, rList)
+          })
+          evaluate.foldLeft(evaluate.head)((r, e) => {
+            if (e._1.size < r._1.size)
+              e
+            else
+              r
+          })
+        }
+
+        if (open.isEmpty) {
+          innerTracking ++= list.map(m => innerMapping.get(m._2).get.variableName).toSet
+          // Sub names to
+          val newExpression = Expressions.FixupColumnNames(expression, innerMapping, aliaseMessages)
+          logger.trace("Matched compute expression {} -> {}", newExpression, c._1)
+          // Output the actual compute
+          // To Do: multiple vals and type provided
+          collect :+= c._2.Comment
+          if (c._2.typename.length > 0)
+            collect ++= Array("val %s: %s = %s\n".format(c._1, c._2.typename, newExpression))
+          else
+            collect ++= Array("val %s = %s\n".format(c._1, newExpression))
+
+          outputSet --= Set(c._1)
+          innerMapping ++= Map(c._1 -> eval.Tracker(c._1, "", "", false))
+          false
+        } else {
+          true
+        }
+      })
+
+      // Update state
+      cnt1 = wheres1.length + computes1.size + groks1.size
+      wheres = wheres1
+      computes = computes1
+      groks = groks1
+    }
+
+    collect
   }
 
   // Controls the code generation
@@ -539,7 +752,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
         // Collect form metadata
         val inputs: Array[Element] = ColumnNames(md, deps).map( e => {
-          Element("msg%d".format(incomingToMsgId.get(e.className).get), e.className, e.fieldName)
+          Element("msg%d".format(incomingToMsgId.get(e.className).get), e.className, e.fieldName, e.fieldType)
         })
 
         // Resolve inputs, either we have unique or qualified names
@@ -549,7 +762,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           val u1 = u.map( e => inputs.find( c => c.fieldName == e).get)
           u1.map( p => {
             val variableName = "%s.%s".format(p.argName, p.fieldName)
-            p.fieldName -> eval.Tracker(variableName, p.className, "", true, p.fieldName)
+            p.fieldName -> eval.Tracker(variableName, p.className, p.fieldType, true, p.fieldName)
           })
         }.toMap
 
@@ -560,13 +773,13 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
         val qualifiedInputs: Map[String, eval.Tracker]  = inputs.map( p => {
           val variableName = "%s.%s".format(p.argName, p.fieldName)
           val classString = "%s.%s".format(p.className, p.fieldName)
-          classString -> eval.Tracker(variableName, p.className, "", true, p.fieldName)
+          classString -> eval.Tracker(variableName, p.className, p.fieldType, true, p.fieldName)
         }).toMap
 
-        var fixedMappingSources: Map[String, eval.Tracker] = uniqueInputs ++ qualifiedInputs
-        var trackedUsedSource: Set[String] = Set.empty[String]
+        var outerMapping: Map[String, eval.Tracker] = uniqueInputs ++ qualifiedInputs
+        var outerTracking: Set[String] = Set.empty[String]
 
-        logger.trace("fixedMappingSources\n{}", fixedMappingSources.mkString(",\n"))
+        logger.trace("outerMapping\n{}", outerMapping.mkString(",\n"))
 
         // Common computes section
         //
@@ -583,11 +796,11 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           val groks1 = groks.filter( g => {
 
             // fs the input determined, emit as output expressions
-            if(fixedMappingSources.contains(g._1)) {
+            if(outerMapping.contains(g._1)) {
 
               val nameColumn = ResolveName(g._1, aliaseMessages)
 
-              trackedUsedSource += fixedMappingSources.get(g._1).get.variableName
+              outerTracking += outerMapping.get(g._1).get.variableName
 
               // Get the expression
               //
@@ -605,7 +818,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
               // potentially we have to decorate it to avoid naming conflicts
               d._3.foreach( e => {
                 val expr = "if(%s.containsKey(\"%s\")) %s.get(\"%s\") else \"\")".format(varName, e, varName, e)
-                fixedMappingSources ++= Map(e -> eval.Tracker(expr, "", "", false))
+                outerMapping ++= Map(e -> eval.Tracker(expr, "", "", false))
               })
               false
             } else {
@@ -624,7 +837,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
               logger.trace("Variables {}", list.mkString(", "))
 
               val rlist = ResolveNames(list, aliaseMessages)
-              val open = rlist.filter(f => !fixedMappingSources.contains(f._2))
+              val open = rlist.filter(f => !outerMapping.contains(f._2))
               val ambiguous = rlist.filter(f => notUniqueInputs.contains(f._2)).map(m => m._2)
               if(ambiguous.nonEmpty) {
                 val a = ambiguous.mkString(", ")
@@ -642,7 +855,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
                 logger.trace("Resolved variables {}", rlist.mkString(", "))
 
-                val open = rlist.filter(f => !fixedMappingSources.contains(f._2))
+                val open = rlist.filter(f => !outerMapping.contains(f._2))
                 val ambiguous = rlist.filter(f => notUniqueInputs.contains(f._2)).map(m => m._2)
                 if(ambiguous.nonEmpty) {
                   val a = ambiguous.mkString(", ")
@@ -661,9 +874,9 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
             if(open.isEmpty) {
 
-              trackedUsedSource ++= list.map(m => fixedMappingSources.get(m._2).get.variableName).toSet
+              outerTracking ++= list.map(m => outerMapping.get(m._2).get.variableName).toSet
 
-              val newExpression = Expressions.FixupColumnNames(expression, fixedMappingSources, aliaseMessages)
+              val newExpression = Expressions.FixupColumnNames(expression, outerMapping, aliaseMessages)
               logger.trace("Matched common expression {} -> {}", newExpression, c._1)
 
               // Output the actual compute
@@ -673,7 +886,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
               else
                 methods ++= Array("val %s = %s\n".format(c._1, newExpression))
 
-              fixedMappingSources ++= Map(c._1 -> eval.Tracker(c._1, "", "", false))
+              outerMapping ++= Map(c._1 -> eval.Tracker(c._1, "", "", false))
               false
             } else {
               true
@@ -705,13 +918,13 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
           // State variables to track the progress
           // a little bit simpler than having val's
-          var mappingSources: Map[String, eval.Tracker] = fixedMappingSources
-          var trackedUsedSourceInner = trackedUsedSource
+          var innerMapping: Map[String, eval.Tracker] = outerMapping
+          var innerTracking = outerTracking
 
           logger.trace("Procesing transformation: {} output: {} outputs: {} mapping: {}",
-            t, o._1, outputSet.mkString(","), mappingSources.mkString(","))
+            t, o._1, outputSet.mkString(","), innerMapping.mkString(","))
 
-          logger.trace("Tracked {}", trackedUsedSourceInner.mkString(", "))
+          logger.trace("Tracked {}", innerTracking.mkString(", "))
 
           var outputSet1: Set[String] = outputSet
 
@@ -721,8 +934,8 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
               val i = inputs.find(f => f.fieldName == c)
               outputSet1 --= Set(c)
               val f = "%s.%s".format(i.get.argName, i.get.fieldName)
-              mappingSources ++= Map(c -> eval.Tracker(f, "", "", false))
-              trackedUsedSourceInner += f
+              innerMapping ++= Map(c -> eval.Tracker(f, "", "", false))
+              innerTracking += f
             }
           })
 
@@ -746,11 +959,11 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
                 val list = Expressions.ExtractColumnNames(f._2)
                 if (list.nonEmpty) {
                   val rList = ResolveNames(list, aliaseMessages)
-                  val open = rList.filter(f => !mappingSources.contains(f._2))
+                  val open = rList.filter(f => !innerMapping.contains(f._2))
                   if (open.nonEmpty) logger.trace("{} not found {}", t.toString, open.mkString(", "))
                   open.isEmpty
                 } else {
-                  mappingSources.contains(f._2)
+                  innerMapping.contains(f._2)
                 }
               })
 
@@ -762,20 +975,20 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
                 val list = Expressions.ExtractColumnNames(expression)
 
                 val newExpression = if (list.nonEmpty) {
-                  val newExpression = Expressions.FixupColumnNames(expression, mappingSources, aliaseMessages)
+                  val newExpression = Expressions.FixupColumnNames(expression, innerMapping, aliaseMessages)
                   val rList = ResolveNames(list, aliaseMessages)
-                  val open = rList.filter(f => !mappingSources.contains(f._2))
+                  val open = rList.filter(f => !innerMapping.contains(f._2))
                   logger.trace("Matched mapping expression {} ({})-> {}", f._1, f._2, newExpression)
-                  trackedUsedSourceInner ++= rList.map(m => mappingSources.get(m._2).get.variableName).toSet
+                  innerTracking ++= rList.map(m => innerMapping.get(m._2).get.variableName).toSet
                   newExpression
                 } else {
-                  val mapped = mappingSources.get(expression).get.variableName
-                  trackedUsedSourceInner += mapped
+                  val mapped = innerMapping.get(expression).get.variableName
+                  innerTracking += mapped
                   logger.trace("Column mapping {} -> {}", expression, mapped)
                   mapped
                 }
                 outputSet1 --= Set(f._1)
-                mappingSources ++= Map(f._1 -> eval.Tracker(newExpression, "", "", false))
+                innerMapping ++= Map(f._1 -> eval.Tracker(newExpression, "", "", false))
               })
 
               mapping = mapping.filterKeys(f => !found.contains(f))
@@ -787,7 +1000,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
             val wheres1 = wheres.filter(f => {
               val list = Expressions.ExtractColumnNames(f)
               val rList = ResolveNames(list, aliaseMessages)
-              val open = rList.filter(f => !mappingSources.contains(f._2))
+              val open = rList.filter(f => !innerMapping.contains(f._2))
               val ambiguous = rList.filter(f => notUniqueInputs.contains(f._2)).map(m => m._2)
               if (ambiguous.nonEmpty) {
                 val a = ambiguous.mkString(", ")
@@ -797,10 +1010,10 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
               if (open.isEmpty) {
 
-                trackedUsedSourceInner ++= rList.map(m => mappingSources.get(m._2).get.variableName).toSet
+                innerTracking ++= rList.map(m => innerMapping.get(m._2).get.variableName).toSet
 
                 // Sub names to
-                val newExpression = Expressions.FixupColumnNames(f, mappingSources, aliaseMessages)
+                val newExpression = Expressions.FixupColumnNames(f, innerMapping, aliaseMessages)
                 logger.trace("Matched where expression {}", newExpression)
                 // Output the actual filter
                 collect ++= Array("if (%s) return Array.empty[Result]\n".format(newExpression))
@@ -817,7 +1030,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
               val (open, expression, list) = if (c._2.expression.length > 0) {
                 val list = Expressions.ExtractColumnNames(c._2.expression)
                 val rList = ResolveNames(list, aliaseMessages)
-                val open = rList.filter(f => !mappingSources.contains(f._2))
+                val open = rList.filter(f => !innerMapping.contains(f._2))
                 val ambiguous = rList.filter(f => notUniqueInputs.contains(f._2)).map(m => m._2)
                 if (ambiguous.nonEmpty) {
                   val a = ambiguous.mkString(", ")
@@ -829,7 +1042,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
                 val evaluate = c._2.expressions.map(expression => {
                   val list = Expressions.ExtractColumnNames(expression)
                   val rList = ResolveNames(list, aliaseMessages)
-                  val open = rList.filter(f => !mappingSources.contains(f._2))
+                  val open = rList.filter(f => !innerMapping.contains(f._2))
                   val ambiguous = rList.filter(f => notUniqueInputs.contains(f._2)).map(m => m._2)
                   if (ambiguous.nonEmpty) {
                     val a = ambiguous.mkString(", ")
@@ -847,9 +1060,9 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
               }
 
               if (open.isEmpty) {
-                trackedUsedSourceInner ++= list.map(m => mappingSources.get(m._2).get.variableName).toSet
+                innerTracking ++= list.map(m => innerMapping.get(m._2).get.variableName).toSet
                 // Sub names to
-                val newExpression = Expressions.FixupColumnNames(expression, mappingSources, aliaseMessages)
+                val newExpression = Expressions.FixupColumnNames(expression, innerMapping, aliaseMessages)
                 logger.trace("Matched compute expression {} -> {}", newExpression, c._1)
                 // Output the actual compute
                 // To Do: multiple vals and type provided
@@ -860,7 +1073,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
                   collect ++= Array("val %s = %s\n".format(c._1, newExpression))
 
                 outputSet1 --= Set(c._1)
-                mappingSources ++= Map(c._1 -> eval.Tracker(c._1, "", "", false))
+                innerMapping ++= Map(c._1 -> eval.Tracker(c._1, "", "", false))
                 false
               } else {
                 true
@@ -895,7 +1108,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           val ouputVar = s"val result = new $outputType"
           val outputElements = outputSet.map(e => {
             // e.name -> from input, from mapping, from variable
-            val m = mappingSources.get(e)
+            val m = innerMapping.get(e)
             if (m.isEmpty) {
               throw new Exception("Output %s not found".format(e))
             }
@@ -909,13 +1122,13 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           collect ++= Array("}\n")
 
           // Collect all input messages attribute used
-          logger.trace("Final map: transformation %s ouput %s used %s".format(t, o._1, trackedUsedSourceInner.mkString(", ")))
+          logger.trace("Final map: transformation %s ouput %s used %s".format(t, o._1, innerTracking.mkString(", ")))
 
           // Create the inmessage entry
           //
           {
-            val a = mappingSources.filter(f => f._2.isInput).map(e => e._2.variableName -> (e._2.className, e._2.accessor))
-            val t = trackedUsedSourceInner.foldLeft(Array.empty[(String, String)])((r, e) => {
+            val a = innerMapping.filter(f => f._2.isInput).map(e => e._2.variableName -> (e._2.className, e._2.accessor))
+            val t = innerTracking.foldLeft(Array.empty[(String, String)])((r, e) => {
               if (a.contains(e)) {
                 val i = a.get(e).get
                 r :+ (i._1, i._2)
