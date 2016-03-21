@@ -1,6 +1,7 @@
 package com.ligadata.BasicCacheConcurrency
 
 
+import net.sf.ehcache.config.CacheConfiguration
 import net.sf.ehcache.{Element, Cache, CacheManager}
 import org.json4s.jackson.JsonMethods._
 
@@ -13,21 +14,19 @@ class MemoryDataCacheImp extends DataCache{
 
   var cm:CacheManager = null
   var cache:Cache = null
-  var xmlPath:String = null
-  var cacheName:String = null
+  var config:CacheConfiguration = null
 
   override def init(jsonString:String): Unit = {
 
-    val json = parse(jsonString)
-    val values = json.values.asInstanceOf[Map[String, String]]
-    xmlPath = values.getOrElse("xmlPath", null)
-    cacheName = values.getOrElse("cacheName", null)
+    config = new CacheCustomConfig(jsonString)
 
   }
 
   override def start(): Unit = {
-    cm = CacheManager.newInstance(xmlPath)
-    cache = cm.getCache(cacheName)
+    cm = CacheManager.newInstance()
+    cm.addCache(new Cache(config))
+    cache = cm.getCache(config.getName)
+
   }
 
   override def shutdown(): Unit = {

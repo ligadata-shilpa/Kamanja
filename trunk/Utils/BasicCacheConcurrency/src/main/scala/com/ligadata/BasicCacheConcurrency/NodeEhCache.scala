@@ -11,7 +11,7 @@ object NodeEhCache {
     val aclass = Class.forName("com.ligadata.BasicCacheConcurrency.MemoryDataCacheImp").newInstance
     val node = aclass.asInstanceOf[DataCache]
 
-    node.init("""{"xmlPath":"C:\\Users\\Saleh\\Documents\\GitHub\\Kamanja\\trunk\\Utils\\BasicCacheConcurrency\\src\\main\\resources\\ehcache.xml","cacheName":"Node"}""")
+    node.init("""{"name":"Node2","maxEntriesLocalHeap":"10000","maxEntriesLocalDisk":"1000","eternal":"false","diskSpoolBufferSizeMB":"20","timeToIdleSeconds":"300","timeToLiveSeconds":"600","memoryStoreEvictionPolicy":"LFU","transactionalMode":"off"}""")
     node.start()
     var map = new java.util.HashMap[String,String]
     map.put("1","1")
