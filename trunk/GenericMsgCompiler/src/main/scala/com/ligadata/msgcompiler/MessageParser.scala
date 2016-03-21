@@ -38,8 +38,8 @@ class MessageParser {
     var msgList: List[Message] = List[Message]()
     var jtype: String = null
 
-    val schema: String = json.replaceAllLiterally(" ", "").replaceAllLiterally("\"", "\\\"")
-
+    val schema: String = json.replaceAllLiterally("\t", "").trim().replaceAllLiterally(" ", "").trim().replaceAllLiterally("\"", "\\\"").trim();
+    log.info("Schema : " +schema)
     val mapOriginal = parse(json).values.asInstanceOf[scala.collection.immutable.Map[String, Any]]
 
     if (mapOriginal == null)
