@@ -1,6 +1,8 @@
 package com.ligadata.BasicCacheConcurrency
 
 
+import net.sf.ehcache.distribution.jgroups.JGroupsCacheReplicatorFactory
+import net.sf.ehcache.event.CacheEventListener
 import net.sf.ehcache.{Element, Cache, CacheManager}
 
 
@@ -26,6 +28,7 @@ class MemoryDataCacheImp extends DataCache{
     cm = CacheManager.create(cacheConfig.getConfiguration())
     cm.addCache(new Cache(cacheConfig))
     cache = cm.getCache(cacheConfig.getName)
+    cache.getCacheEventNotificationService.registerListener(cacheConfig.getListener())
   }
 
   override def shutdown(): Unit = {

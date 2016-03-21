@@ -1,7 +1,8 @@
 package com.ligadata.BasicCacheConcurrency
 
 import net.sf.ehcache.config.{FactoryConfiguration, Configuration, CacheConfiguration}
-import net.sf.ehcache.distribution.jgroups.JGroupsCacheManagerPeerProviderFactory
+import net.sf.ehcache.distribution.jgroups.{JGroupsCacheReplicatorFactory, JGroupsCacheManagerPeerProviderFactory}
+import net.sf.ehcache.event.CacheEventListener
 
 
 /**
@@ -44,5 +45,9 @@ class CacheCustomConfig(jsonString:String) extends CacheConfiguration{
 
   def  getConfiguration() : Configuration = {
     return config
+  }
+
+  def  getListener() : CacheEventListener = {
+    return (new JGroupsCacheReplicatorFactory).createCacheEventListener(null)
   }
 }
