@@ -39,14 +39,22 @@ class MemoryDataCacheImp extends DataCache{
   }
 
   override def get(key: String): AnyRef = {
-    val ele:Element = cache.get(key)
+    if(cache.isKeyInCache(key)){
 
-    ele.getObjectValue
+      val ele:Element = cache.get(key)
+
+      return ele.getObjectValue
+    }else{
+      System.out.println("get data from SSD");
+
+      return ""
+    }
+
   }
 
   override def get(keys: Array[String]): java.util.Map[String, AnyRef] = {
     val map = new java.util.HashMap[String, AnyRef]
-    keys.foreach(str => map.put(str,cache.get(str)))
+    keys.foreach(str => map.put(str,get(str)))
 
     map
   }

@@ -19,6 +19,7 @@ object NodeEhCache {
     node.put(map)
 
     System.out.println(node.get("1").toString)
+    System.out.println(node.get("4").toString)
 
     node.shutdown()
 
