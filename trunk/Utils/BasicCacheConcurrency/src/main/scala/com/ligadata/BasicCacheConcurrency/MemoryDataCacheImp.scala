@@ -21,12 +21,12 @@ class MemoryDataCacheImp extends DataCache{
   override def init(jsonString:String): Unit = {
 
     cacheConfig = new CacheCustomConfig(jsonString)
+    cm = CacheManager.create(cacheConfig.getConfiguration())
+    cm.addCache(new Cache(cacheConfig))
 
   }
 
   override def start(): Unit = {
-    cm = CacheManager.create(cacheConfig.getConfiguration())
-    cm.addCache(new Cache(cacheConfig))
     cache = cm.getCache(cacheConfig.getName)
     cache.getCacheEventNotificationService.registerListener(cacheConfig.getListener())
   }

@@ -11,7 +11,7 @@ object NodeEhCache {
     val aclass = Class.forName("com.ligadata.BasicCacheConcurrency.MemoryDataCacheImp").newInstance
     val node = aclass.asInstanceOf[DataCache]
 
-    node.init("""{"name":"Node2","maxEntriesLocalHeap":"10000","maxEntriesLocalDisk":"1000","eternal":"false","diskSpoolBufferSizeMB":"20","timeToIdleSeconds":"300","timeToLiveSeconds":"600","memoryStoreEvictionPolicy":"LFU","transactionalMode":"off"}""")
+    node.init("""{"name":"Node","maxEntriesLocalHeap":"10000","maxEntriesLocalDisk":"1000","eternal":"false","diskSpoolBufferSizeMB":"20","timeToIdleSeconds":"300","timeToLiveSeconds":"600","memoryStoreEvictionPolicy":"LFU","transactionalMode":"off","class":"net.sf.ehcache.distribution.jgroups.JGroupsCacheManagerPeerProviderFactory","separator":"::","peerconfig":"channelName=EH_CACHE::file=jgroups.xml","replicatePuts":"true","replicateUpdates":"true","replicateUpdatesViaCopy":"false","replicateRemovals":"true","replicateAsynchronously":"true"}""")
     node.start()
     var map = new java.util.HashMap[String,String]
     map.put("1","1")
