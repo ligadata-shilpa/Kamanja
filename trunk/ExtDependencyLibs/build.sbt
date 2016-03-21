@@ -75,7 +75,7 @@ libraryDependencies += "org.scala-lang" % "scala-actors" % scalaVersion.value
 /////////////////////// MetadataAPI
 libraryDependencies += "org.joda" % "joda-convert" % "1.6"
 libraryDependencies += "joda-time" % "joda-time" % "2.8.2"
-libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.0"
+//libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.0"
 libraryDependencies += "org.json4s" %% "json4s-native" % "3.2.9"
 libraryDependencies += "org.json4s" %% "json4s-jackson" % "3.2.9"
 libraryDependencies += "org.apache.zookeeper" % "zookeeper" % "3.4.6"
@@ -198,7 +198,7 @@ libraryDependencies += "org.glassfish.jaxb" % "jaxb-runtime" % "2.2.11"
 //crossPaths := false
 //// This forbids including Scala related libraries into the dependency
 //autoScalaLibrary := false
-libraryDependencies += "com.google.code.gson" % "gson" % "2.3.1"
+//libraryDependencies += "com.google.code.gson" % "gson" % "2.3.1"
 
 
 
@@ -242,7 +242,7 @@ libraryDependencies += "com.google.code.gson" % "gson" % "2.3.1"
 
 ////////////////////// Metadata
 //libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.0" % "test"
-libraryDependencies += "com.novocode" % "junit-interface" % "0.11-RC1" % "test"
+//libraryDependencies += "com.novocode" % "junit-interface" % "0.11-RC1" % "test"
 //testOptions += Tests.Argument(TestFrameworks.JUnit, "-q", "-v")
 
 
@@ -352,7 +352,7 @@ libraryDependencies ++= Seq (
 
 
 ////////////////////// OutputMsgDef
-libraryDependencies ++= Seq("junit" % "junit" % "4.8.1" % "test")
+//libraryDependencies ++= Seq("junit" % "junit" % "4.8.1" % "test")
 
 
 ////////////////////// SecurityAdapterBase
@@ -593,3 +593,23 @@ libraryDependencies += "org.jpmml" % "pmml-evaluator" % "1.2.9"
 
 //////////////////////  MigrateTo_V_1_4
 //already available
+
+
+
+
+//////////////////////  jtm
+libraryDependencies += {
+  CrossVersion.partialVersion(scalaVersion.value) match {
+    case Some((2, scalaMajor)) =>
+      "org.rogach" % s"scallop_2.$scalaMajor"  % "0.9.5"
+    case _ => throw new Exception("Unsupported version")
+  }
+}
+
+libraryDependencies += "com.google.code.gson" % "gson" % "2.5"
+libraryDependencies += "org.apache.commons" % "commons-io" % "1.3.2"
+libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.4" % "test->default"
+libraryDependencies += "com.novocode" % "junit-interface" % "0.9" % "test->default"
+libraryDependencies += "junit" % "junit" % "4.11" % "test->default"
+libraryDependencies += "org.skyscreamer" % "jsonassert" % "1.3.0"  % "test->default"
+libraryDependencies += "org.aicer.grok" % "grok" % "0.9.0"

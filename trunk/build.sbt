@@ -271,7 +271,7 @@ lazy val MigrateTo_V_1_4 = project.in(file("Utils/Migrate/DestinationVersion/Mig
 
 lazy val MigrateFrom_V_1_3 = project.in(file("Utils/Migrate/SourceVersion/MigrateFrom_V_1_3")) dependsOn (MigrateBase)
 
-lazy val jtm = project.in(file("GenerateModels/jtm")) dependsOn(Metadata, KamanjaBase, Exceptions, MetadataBootstrap, MessageDef)
+lazy val jtm = project.in(file("GenerateModels/jtm")) dependsOn(ExtDependencyLibs % "provided",Metadata, KamanjaBase, Exceptions, MetadataBootstrap, MessageDef)
 
 lazy val InstallDriverBase = project.in(file("Utils/ClusterInstaller/InstallDriverBase")) dependsOn (ExtDependencyLibs % "provided")
 
