@@ -106,3 +106,7 @@ scalacOptions += "-deprecation"
 retrieveManaged := true
 
 parallelExecution := false
+
+coverageMinimum := 80
+
+coverageFailOnMinimum := true

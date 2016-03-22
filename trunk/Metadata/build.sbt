@@ -22,3 +22,6 @@ scalacOptions += "-deprecation"
 
 testOptions += Tests.Argument(TestFrameworks.JUnit, "-q", "-v")
 
+coverageMinimum := 80
+
+coverageFailOnMinimum := true

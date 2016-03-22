@@ -78,3 +78,7 @@ libraryDependencies += "org.apache.logging.log4j" % "log4j-core" % "2.4.1"
 libraryDependencies += "com.google.code.gson" % "gson" % "2.3.1"
 
 // EclipseKeys.projectFlavor := EclipseProjectFlavor.Java
+
+coverageMinimum := 80
+
+coverageFailOnMinimum := true

@@ -89,3 +89,7 @@ libraryDependencies += "com.beust" % "jcommander" % "1.48"
 libraryDependencies += "com.codahale.metrics" % "metrics-core" % "3.0.2"
 
 libraryDependencies += "org.glassfish.jaxb" % "jaxb-runtime" % "2.2.11"
+
+coverageMinimum := 80
+
+coverageFailOnMinimum := true

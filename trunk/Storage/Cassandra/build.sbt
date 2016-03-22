@@ -25,3 +25,7 @@ libraryDependencies += "org.apache.logging.log4j" % "log4j-core" % "2.4.1"
 libraryDependencies += "commons-dbcp" % "commons-dbcp" % "1.4"
 
 libraryDependencies += "org.apache.thrift" % "libthrift" % "0.9.2"
+
+coverageMinimum := 80
+
+coverageFailOnMinimum := true

@@ -12,3 +12,6 @@ libraryDependencies += "org.apache.logging.log4j" % "log4j-core" % "2.4.1"
 
 libraryDependencies <+= scalaVersion("org.scala-lang" % "scala-actors" % _)
 
+coverageMinimum := 80
+
+coverageFailOnMinimum := true
