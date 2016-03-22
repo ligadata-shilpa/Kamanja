@@ -74,4 +74,4 @@ libraryDependencies += "com.google.code.gson" % "gson" % "2.3.1"
 
 coverageMinimum := 80
 
-coverageFailOnMinimum := true
+coverageFailOnMinimum := false

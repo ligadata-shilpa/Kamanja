@@ -28,4 +28,4 @@ libraryDependencies += "org.apache.thrift" % "libthrift" % "0.9.2"
 
 coverageMinimum := 80
 
-coverageFailOnMinimum := true
+coverageFailOnMinimum := false

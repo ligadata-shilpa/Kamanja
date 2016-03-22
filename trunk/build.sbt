@@ -209,4 +209,4 @@ val root = (project in file(".")).
 
 */
 coverageMinimum := 80
-coverageFailOnMinimum := true
+coverageFailOnMinimum := false

@@ -14,4 +14,4 @@ libraryDependencies <+= scalaVersion("org.scala-lang" % "scala-actors" % _)
 
 coverageMinimum := 80
 
-coverageFailOnMinimum := true
+coverageFailOnMinimum := false

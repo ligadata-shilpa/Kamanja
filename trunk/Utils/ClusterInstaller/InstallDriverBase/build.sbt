@@ -21,4 +21,4 @@ resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/release
 
 coverageMinimum := 80
 
-coverageFailOnMinimum := true
+coverageFailOnMinimum := false

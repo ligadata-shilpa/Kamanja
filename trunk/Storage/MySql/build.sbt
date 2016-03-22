@@ -22,4 +22,4 @@ libraryDependencies += "mysql" % "mysql-connector-java" % "5.1.36"
 
 coverageMinimum := 80
 
-coverageFailOnMinimum := true
+coverageFailOnMinimum := false

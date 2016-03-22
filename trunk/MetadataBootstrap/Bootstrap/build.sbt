@@ -11,4 +11,4 @@ unmanagedSourceDirectories in Compile <+= (scalaVersion, sourceDirectory in Comp
 
 coverageMinimum := 80
 
-coverageFailOnMinimum := true
+coverageFailOnMinimum := false

@@ -73,4 +73,4 @@ excludedJars in assembly <<= (fullClasspath in assembly) map { cp =>
 
 coverageMinimum := 80
 
-coverageFailOnMinimum := true
+coverageFailOnMinimum := false

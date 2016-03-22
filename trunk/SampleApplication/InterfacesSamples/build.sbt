@@ -16,4 +16,4 @@ libraryDependencies += "com.google.guava" % "guava" % "14.0.1"
 
 coverageMinimum := 80
 
-coverageFailOnMinimum := true
+coverageFailOnMinimum := false

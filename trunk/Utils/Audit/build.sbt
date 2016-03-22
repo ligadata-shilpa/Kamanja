@@ -48,4 +48,4 @@ libraryDependencies ++= Seq("net.debasishg" %% "redisclient" % "2.13")
 
 coverageMinimum := 80
 
-coverageFailOnMinimum := true
+coverageFailOnMinimum := false

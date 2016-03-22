@@ -84,4 +84,4 @@ libraryDependencies ++= {
 
 coverageMinimum := 80
 
-coverageFailOnMinimum := true
+coverageFailOnMinimum := false

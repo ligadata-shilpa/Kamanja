@@ -18,3 +18,6 @@ libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value
 
 EclipseKeys.relativizeLibs := false
 
+coverageMinimum := 80
+
+coverageFailOnMinimum := false

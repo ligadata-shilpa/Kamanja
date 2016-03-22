@@ -92,4 +92,4 @@ libraryDependencies += "org.glassfish.jaxb" % "jaxb-runtime" % "2.2.11"
 
 coverageMinimum := 80
 
-coverageFailOnMinimum := true
+coverageFailOnMinimum := false

@@ -18,4 +18,4 @@ libraryDependencies += "com.google.code.findbugs" % "jsr305" % "1.3.9"
 
 coverageMinimum := 80
 
-coverageFailOnMinimum := true
+coverageFailOnMinimum := false

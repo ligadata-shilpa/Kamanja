@@ -20,4 +20,4 @@ libraryDependencies += "org.apache.commons" % "commons-dbcp2" % "2.1"
 
 coverageMinimum := 80
 
-coverageFailOnMinimum := true
+coverageFailOnMinimum := false

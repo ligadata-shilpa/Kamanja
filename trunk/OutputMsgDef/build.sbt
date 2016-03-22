@@ -20,4 +20,4 @@ libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.0" % "test"
 
 coverageMinimum := 80
 
-coverageFailOnMinimum := true
+coverageFailOnMinimum := false

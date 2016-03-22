@@ -63,5 +63,5 @@ net.virtualvoid.sbt.graph.Plugin.graphSettings
 
 coverageMinimum := 80
 
-coverageFailOnMinimum := true
+coverageFailOnMinimum := false
 

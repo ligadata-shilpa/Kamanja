@@ -70,4 +70,4 @@ libraryDependencies += "org.json4s" %% "json4s-jackson" % "3.2.9"
 
 coverageMinimum := 80
 
-coverageFailOnMinimum := true
+coverageFailOnMinimum := false

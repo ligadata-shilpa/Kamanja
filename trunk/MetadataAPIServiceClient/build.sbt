@@ -26,4 +26,4 @@ resolvers += "Big Bee Consultants" at "http://repo.bigbeeconsultants.co.uk/repo"
 
 coverageMinimum := 80
 
-coverageFailOnMinimum := true
+coverageFailOnMinimum := false
