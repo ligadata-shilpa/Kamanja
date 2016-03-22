@@ -1299,74 +1299,74 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     }
   }
 
-  // Adding new messages or Containers
-  override def RegisterMessageOrContainers(containersInfo: Array[ContainerNameAndDatastoreInfo]): Unit = {
-    /*
-    if (containersInfo != null)
-      logger.info("Messages/Containers:%s".format(containersInfo.map(ci => (if (ci.containerName != null) ci.containerName else "", if (ci.dataDataStoreInfo != null) ci.dataDataStoreInfo else "")).mkString(",")))
+//  // Adding new messages or Containers
+//  override def RegisterMessageOrContainers(containersInfo: Array[ContainerNameAndDatastoreInfo]): Unit = {
+//    /*
+//    if (containersInfo != null)
+//      logger.info("Messages/Containers:%s".format(containersInfo.map(ci => (if (ci.containerName != null) ci.containerName else "", if (ci.dataDataStoreInfo != null) ci.dataDataStoreInfo else "")).mkString(",")))
+//
+//    containersInfo.foreach(ci => {
+//      val c = ci.containerName.toLowerCase
+//      val (namespace, name) = Utils.parseNameTokenNoVersion(c)
+//      var containerType = _mgr.ActiveType(namespace, name)
+//
+//      if (containerType != null) {
+//        val objFullName: String = containerType.FullName.toLowerCase
+//        val fnd = _messagesOrContainers.getOrElse(objFullName, null)
+//        if (fnd != null) {
+//          // We already have this
+//        } else {
+//          val newMsgOrContainer = new MsgContainerInfo
+//          newMsgOrContainer.containerType = containerType
+//          newMsgOrContainer.objFullName = objFullName
+//          newMsgOrContainer.isContainer = (_mgr.ActiveContainer(namespace, name) != null)
+//
+//          if (ci.dataDataStoreInfo != null)
+//            newMsgOrContainer.dataStore = GetDataStoreHandle(_jarPaths, ci.dataDataStoreInfo)
+//          else
+//            newMsgOrContainer.dataStore = _defaultDataStore
+//
+//          /** create a map to cache the entries to be resurrected from the mapdb */
+//          _messagesOrContainers(objFullName) = newMsgOrContainer
+//        }
+//      } else {
+//        var error_msg = "Message/Container %s not found".format(c)
+//        logger.error(error_msg)
+//        throw new Exception(error_msg)
+//      }
+//    })
+//*/
+//    if (containersInfo != null) {
+//      containersInfo.foreach(ci => {
+//        val c = ci.containerName.toLowerCase
+//        if (_mgr.Container(c, -1, false) != None)
+//          _containersNames.add(c)
+//        else
+//          _containersNames.remove(c) // remove it incase if it exists in set
+//      })
+//    }
+//
+//    ResolveEnableEachTransactionCommit
+//  }
 
-    containersInfo.foreach(ci => {
-      val c = ci.containerName.toLowerCase
-      val (namespace, name) = Utils.parseNameTokenNoVersion(c)
-      var containerType = _mgr.ActiveType(namespace, name)
-
-      if (containerType != null) {
-        val objFullName: String = containerType.FullName.toLowerCase
-        val fnd = _messagesOrContainers.getOrElse(objFullName, null)
-        if (fnd != null) {
-          // We already have this
-        } else {
-          val newMsgOrContainer = new MsgContainerInfo
-          newMsgOrContainer.containerType = containerType
-          newMsgOrContainer.objFullName = objFullName
-          newMsgOrContainer.isContainer = (_mgr.ActiveContainer(namespace, name) != null)
-
-          if (ci.dataDataStoreInfo != null)
-            newMsgOrContainer.dataStore = GetDataStoreHandle(_jarPaths, ci.dataDataStoreInfo)
-          else
-            newMsgOrContainer.dataStore = _defaultDataStore
-
-          /** create a map to cache the entries to be resurrected from the mapdb */
-          _messagesOrContainers(objFullName) = newMsgOrContainer
-        }
-      } else {
-        var error_msg = "Message/Container %s not found".format(c)
-        logger.error(error_msg)
-        throw new Exception(error_msg)
-      }
-    })
-*/
-    if (containersInfo != null) {
-      containersInfo.foreach(ci => {
-        val c = ci.containerName.toLowerCase
-        if (_mgr.Container(c, -1, false) != None)
-          _containersNames.add(c)
-        else
-          _containersNames.remove(c) // remove it incase if it exists in set
-      })
-    }
-
-    ResolveEnableEachTransactionCommit
-  }
-
-  override def CacheContainers(clusterId: String): Unit = {
-    val tmpContainersStr = _mgr.GetUserProperty(clusterId, "containers2cache")
-    val containersNames = if (tmpContainersStr != null) tmpContainersStr.trim.toLowerCase.split(",").map(s => s.trim).filter(s => s.size > 0) else Array[String]()
-    if (containersNames.size > 0) {
-      containersNames.foreach(c => {
-        var cacheContainer = _cachedContainers.getOrElse(c, null)
-        if (cacheContainer == null) {
-          // Load the container data into cache
-          cacheContainer = new MsgContainerInfo(true)
-          val buildOne = (k: Key, v: Value) => {
-            collectKeyAndValues(k, v, cacheContainer)
-          }
-          callGetData(_defaultDataStore, c, buildOne)
-          _cachedContainers(c) = cacheContainer
-        }
-      })
-    }
-  }
+//  override def CacheContainers(clusterId: String): Unit = {
+//    val tmpContainersStr = _mgr.GetUserProperty(clusterId, "containers2cache")
+//    val containersNames = if (tmpContainersStr != null) tmpContainersStr.trim.toLowerCase.split(",").map(s => s.trim).filter(s => s.size > 0) else Array[String]()
+//    if (containersNames.size > 0) {
+//      containersNames.foreach(c => {
+//        var cacheContainer = _cachedContainers.getOrElse(c, null)
+//        if (cacheContainer == null) {
+//          // Load the container data into cache
+//          cacheContainer = new MsgContainerInfo(true)
+//          val buildOne = (k: Key, v: Value) => {
+//            collectKeyAndValues(k, v, cacheContainer)
+//          }
+//          callGetData(_defaultDataStore, c, buildOne)
+//          _cachedContainers(c) = cacheContainer
+//        }
+//      })
+//    }
+//  }
 
   private def Clone(vals: Array[MessageContainerBase]): Array[MessageContainerBase] = {
     if (vals == null) return null
@@ -1404,9 +1404,9 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     localGetAdapterUniqueKeyValue(transId, key)
   }
 
-  override def getModelsResult(transId: Long, key: List[String]): scala.collection.mutable.Map[String, SavedMdlResult] = {
-    localGetModelsResult(transId, key)
-  }
+//  override def getModelsResult(transId: Long, key: List[String]): scala.collection.mutable.Map[String, SavedMdlResult] = {
+//    localGetModelsResult(transId, key)
+//  }
 
   /**
    * Does the supplied key exist in a container with the supplied name?
@@ -1435,9 +1435,9 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     localSetAdapterUniqueKeyValue(transId, key, value, outputResults)
   }
 
-  override def saveModelsResult(transId: Long, key: List[String], value: scala.collection.mutable.Map[String, SavedMdlResult]): Unit = {
-    localSaveModelsResult(transId, key, value)
-  }
+//  override def saveModelsResult(transId: Long, key: List[String], value: scala.collection.mutable.Map[String, SavedMdlResult]): Unit = {
+//    localSaveModelsResult(transId, key, value)
+//  }
 
   override def getChangedData(tempTransId: Long, includeMessages: Boolean, includeContainers: Boolean): scala.collection.immutable.Map[String, List[Key]] = {
     val changedContainersData = scala.collection.mutable.Map[String, List[Key]]()
@@ -1702,82 +1702,82 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 
   // Clear Intermediate results before Restart processing
   //BUGBUG:: May be we need to lock before we do anything here
-  override def clearIntermediateResults: Unit = {
-    /*
-    _messagesOrContainers.foreach(v => {
-      TxnContextCommonFunctions.WriteLockContainer(v._2)
-      try {
-        v._2.dataByBucketKey.clear()
-        v._2.dataByTmPart.clear()
-        // v._2.current_msg_cont_data.clear
-      } catch {
-        case e: Exception => {
-          throw e
-        }
-      } finally {
-        TxnContextCommonFunctions.WriteUnlockContainer(v._2)
-      }
-    })
-*/
-
-    if (_modelsRsltBuckets != null) {
-      for (i <- 0 until _parallelBuciets) {
-        _modelsRsltBktlocks(i).writeLock().lock()
-        try {
-          _modelsRsltBuckets(i).clear()
-        } catch {
-          case e: Exception => { logger.warn("", e)
-            // throw e
-          }
-        } finally {
-          _modelsRsltBktlocks(i).writeLock().unlock()
-        }
-      }
-    }
-
-    if (_adapterUniqKeyValBuckets != null) {
-      for (i <- 0 until _parallelBuciets) {
-        _adapterUniqKeyValBktlocks(i).writeLock().lock()
-        try {
-          _adapterUniqKeyValBuckets(i).clear()
-        } catch {
-          case e: Exception => { logger.warn("", e)
-            // throw e
-          }
-        } finally {
-          _adapterUniqKeyValBktlocks(i).writeLock().unlock()
-        }
-      }
-    }
-  }
-
-  // Clear Intermediate results After updating them on different node or different component (like KVInit), etc
-  //BUGBUG:: May be we need to lock before we do anything here
-  def clearIntermediateResults(unloadMsgsContainers: Array[String]): Unit = {
-    if (unloadMsgsContainers == null)
-      return
-    /*
-    unloadMsgsContainers.foreach(mc => {
-      val msgCont = _messagesOrContainers.getOrElse(mc.trim.toLowerCase, null)
-      if (msgCont != null) {
-        TxnContextCommonFunctions.WriteLockContainer(msgCont)
-        try {
-          if (msgCont.dataByBucketKey != null)
-            msgCont.dataByBucketKey.clear()
-          if (msgCont.dataByTmPart != null)
-            msgCont.dataByTmPart.clear()
-          if (msgCont.current_msg_cont_data != null) msgCont.current_msg_cont_data.clear
-        } catch {
-          case e: Exception => {
-            throw e
-          }
-        } finally {
-          TxnContextCommonFunctions.WriteUnlockContainer(msgCont)
-        }
-      }
-    })
-*/
-  }
+//  override def clearIntermediateResults: Unit = {
+//    /*
+//    _messagesOrContainers.foreach(v => {
+//      TxnContextCommonFunctions.WriteLockContainer(v._2)
+//      try {
+//        v._2.dataByBucketKey.clear()
+//        v._2.dataByTmPart.clear()
+//        // v._2.current_msg_cont_data.clear
+//      } catch {
+//        case e: Exception => {
+//          throw e
+//        }
+//      } finally {
+//        TxnContextCommonFunctions.WriteUnlockContainer(v._2)
+//      }
+//    })
+//*/
+//
+//    if (_modelsRsltBuckets != null) {
+//      for (i <- 0 until _parallelBuciets) {
+//        _modelsRsltBktlocks(i).writeLock().lock()
+//        try {
+//          _modelsRsltBuckets(i).clear()
+//        } catch {
+//          case e: Exception => { logger.warn("", e)
+//            // throw e
+//          }
+//        } finally {
+//          _modelsRsltBktlocks(i).writeLock().unlock()
+//        }
+//      }
+//    }
+//
+//    if (_adapterUniqKeyValBuckets != null) {
+//      for (i <- 0 until _parallelBuciets) {
+//        _adapterUniqKeyValBktlocks(i).writeLock().lock()
+//        try {
+//          _adapterUniqKeyValBuckets(i).clear()
+//        } catch {
+//          case e: Exception => { logger.warn("", e)
+//            // throw e
+//          }
+//        } finally {
+//          _adapterUniqKeyValBktlocks(i).writeLock().unlock()
+//        }
+//      }
+//    }
+//  }
+//
+//  // Clear Intermediate results After updating them on different node or different component (like KVInit), etc
+//  //BUGBUG:: May be we need to lock before we do anything here
+//  def clearIntermediateResults(unloadMsgsContainers: Array[String]): Unit = {
+//    if (unloadMsgsContainers == null)
+//      return
+//    /*
+//    unloadMsgsContainers.foreach(mc => {
+//      val msgCont = _messagesOrContainers.getOrElse(mc.trim.toLowerCase, null)
+//      if (msgCont != null) {
+//        TxnContextCommonFunctions.WriteLockContainer(msgCont)
+//        try {
+//          if (msgCont.dataByBucketKey != null)
+//            msgCont.dataByBucketKey.clear()
+//          if (msgCont.dataByTmPart != null)
+//            msgCont.dataByTmPart.clear()
+//          if (msgCont.current_msg_cont_data != null) msgCont.current_msg_cont_data.clear
+//        } catch {
+//          case e: Exception => {
+//            throw e
+//          }
+//        } finally {
+//          TxnContextCommonFunctions.WriteUnlockContainer(msgCont)
+//        }
+//      }
+//    })
+//*/
+//  }
 
   // Get Status information from Final table
   override def getAllAdapterUniqKvDataInfo(keys: Array[String]): Array[(String, (Long, String, List[(String, String, String)]))] = {
@@ -1827,6 +1827,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     results.toArray
   }
 
+/*
   override def ReloadKeys(tempTransId: Long, containerName: String, keys: List[Key]): Unit = {
     if (containerName == null || keys == null || keys.size == 0) return ;
     val contName = containerName.toLowerCase
@@ -1838,6 +1839,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
       callGetData(_defaultDataStore, contName, keys.toArray, buildOne)
     }
   }
+*/
 
   private def getLocalRecent(transId: Long, containerName: String, partKey: List[String], tmRange: TimeRange, f: MessageContainerBase => Boolean): Option[MessageContainerBase] = {
     if (TxnContextCommonFunctions.IsEmptyKey(partKey))

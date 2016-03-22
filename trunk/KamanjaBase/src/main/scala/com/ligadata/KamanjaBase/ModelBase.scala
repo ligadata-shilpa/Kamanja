@@ -353,10 +353,10 @@ trait EnvContext extends Monitorable {
     * Answer an empty instance of the message or container with the supplied fully qualified class name.  If the name is
     * invalid, null is returned.
     *
-//    * @param fqclassname : a full package qualified class name
-//    * @return a MesssageContainerBase of that ilk
+    * @param fqclassname : a full package qualified class name
+    * @return a MesssageContainerBase of that ilk
     */
-//  def NewMessageOrContainer(fqclassname: String): MessageContainerBase
+  def NewMessageOrContainer(fqclassname: String): MessageContainerBase
 
   // Just get the cached container key and see what are the containers we need to cache
 //  def CacheContainers(clusterId: String): Unit
