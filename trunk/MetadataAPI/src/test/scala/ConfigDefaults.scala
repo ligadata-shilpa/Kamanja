@@ -79,7 +79,7 @@ object ConfigDefaults {
 	}
         else if (f.getPath.endsWith(".jar")) {
           try {
-	    logger.info("Copying " + f + "," + "(file size => " + f.length() + ") to " + targetLibDir + "/" + f.getName)
+	    logger.debug("Copying " + f + "," + "(file size => " + f.length() + ") to " + targetLibDir + "/" + f.getName)
 	    val d = new File(targetLibDir + "/" + f.getName)
 	    if( ! d.exists() ){
 	      d.createNewFile()

@@ -40,8 +40,10 @@ import com.ligadata.Serialize._
 
 import com.ligadata.kamanja.metadataload.MetadataLoad
 
+import com.ligadata.MetadataAPI.Utility._
+
 @Ignore
-class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter with BeforeAndAfterAll with GivenWhenThen {
+class CmdLineAPISpec extends FunSpec with LocalTestFixtures with BeforeAndAfter with BeforeAndAfterAll with GivenWhenThen {
   var res: String = null;
   var statusCode: Int = -1;
   var apiResKey: String = "\"Status Code\" : 0"
@@ -298,16 +300,15 @@ class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter wi
 	assert(true == exists)
 
 	And("AddContainer first time from " + file.getPath)
-	contStr = Source.fromFile(file).mkString
-	res = MetadataAPIImpl.AddContainer(contStr, "JSON", None)
+	var a:Action.Value = Action.ADDCONTAINER
+	res = StartMetadataAPI.route(a,file.getPath,"",null,Array("add","container",f1),userid,null)
 	res should include regex ("\"Status Code\" : 0")
 
 	And("GetContainerDef API to fetch the container that was just added")
-	var objName = f1.stripSuffix(".json").toLowerCase
-	var version = "0000000000001000000"
-	res = MetadataAPIImpl.GetContainerDef("system", objName, "JSON", version, None)
+	a = Action.GETCONTAINER
+	var objName = "system" + "." + f1.stripSuffix(".json").toLowerCase + "." + "0000000000001000000"
+	res = StartMetadataAPI.route(a,null,objName,null,Array("get","container",objName),userid,null)
 	res should include regex ("\"Status Code\" : 0")
-
       })
     }
 
@@ -348,20 +349,21 @@ class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter wi
 	assert(true == exists)
 
 	And("AddMessage first time from " + file.getPath)
-	var msgStr = Source.fromFile(file).mkString
-	res = MetadataAPIImpl.AddMessage(msgStr, "JSON", None)
+	var a:Action.Value = Action.ADDMESSAGE
+	res = StartMetadataAPI.route(a,file.getPath,"",null,Array("add","message",f1),userid,null)
 	res should include regex ("\"Status Code\" : 0")
 
 	And("GetMessageDef API to fetch the message that was just added")
-	var objName = f1.stripSuffix(".json").toLowerCase
-	var version = "0000000000001000000"
-	res = MetadataAPIImpl.GetMessageDef("system", objName, "JSON", version, None)
+	a = Action.GETMESSAGE
+	var objName = "system" + "." + f1.stripSuffix(".json").toLowerCase + "." + "0000000000001000000"
+	res = StartMetadataAPI.route(a,null,objName,null,Array("get","message",objName),userid,null)
 	res should include regex ("\"Status Code\" : 0")
+
       })
     }
 
     // CRUD operations on Model objects
-    ignore("Add KPPML Models") {
+    it("Add KPPML Models") {
       And("Check whether MODEL_FILES_DIR defined as property")
       dirName = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("MODEL_FILES_DIR")
       assert(null != dirName)
@@ -395,38 +397,29 @@ class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter wi
 	}
 	assert(true == exists)
 
-	And("Call AddModel MetadataAPI Function to add Model from " + file.getPath)
-	var modStr = Source.fromFile(file).mkString
-	res = MetadataAPIImpl.AddModel(ModelType.KPMML, // modelType
-				       modStr, // input
-				       None,   // optUserid
-				       None,   // optModelName
-				       None,   // optVersion
-				       None,   // optMsgConsumed
-				       None,   // optMsgVersion
-				       //Some("system.helloworld_msg_output_def") // optMsgProduced
-				       None
-				     )
+	And("AddMessage first time from " + file.getPath)
+	var a:Action.Value = Action.ADDMODELKPMML
+	res = StartMetadataAPI.route(a,file.getPath,"",null,Array("add","model","kpmml",f1),userid,null)
 	res should include regex ("\"Status Code\" : 0")
 
-	And("GetModelDef API to fetch the model that was just added")
-	// Unable to use fileName to identify the name of the object
-	// Use this function to extract the name of the model
+	And("GetMessageDef API to fetch the message that was just added")
+	a = Action.GETMODEL
 	var nameSpace  = "system"
-	var objName = extractNameFromPMML(modStr).toLowerCase
-	logger.info("ModelName => " + objName)
-	assert(objName != "unknownModel")
-
-	var version = "0000000000001000000"
-	res = MetadataAPIImpl.GetModelDef(nameSpace, objName, "XML", version, None)
+	var modStr = Source.fromFile(file).mkString
+	var modelName = extractNameFromPMML(modStr).toLowerCase
+	logger.info("ModelName => " + modelName)
+	assert(modelName != "unknownModel")
+	var objName = nameSpace + "." + modelName + "." + "0000000000001000000"
+	res = StartMetadataAPI.route(a,null,objName,null,Array("get","message",objName),userid,null)
 	res should include regex ("\"Status Code\" : 0")
 
-	val msgName = objName + "_outputmsg"
-	version = "000000000000000001"
-	res = MetadataAPIImpl.GetMessageDef(nameSpace, msgName, "JSON", version, None)
+	a = Action.GETMESSAGE
+	var outputMsgName = modelName + "_outputmsg"
+	val msgFullNameWithVersion = nameSpace + "." + outputMsgName + "." + "000000000000000001"
+	res = StartMetadataAPI.route(a,null,msgFullNameWithVersion,null,Array("get","message",msgFullNameWithVersion),userid,null)
 	res should include regex ("\"Status Code\" : 0")
 
-	val modDefs = MdMgr.GetMdMgr.Models(nameSpace, objName, true, true)
+	val modDefs = MdMgr.GetMdMgr.Models(nameSpace, modelName, true, true)
 	assert(modDefs != None)
 	
 	val models = modDefs.get.toArray
@@ -434,142 +427,8 @@ class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter wi
 	
 	var omsgs = models(0).outputMsgs
 	assert(omsgs.length == 1)
-	val msgFullName = nameSpace + "." + msgName
+	val msgFullName = nameSpace + "." + outputMsgName
 	assert(omsgs(0) == msgFullName)
-      })
-    }
-
-    it("Add Model Config Object in preparation for adding scala source models") {
-      And("Check whether CONFIG_FILES_DIR defined as property")
-      dirName = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("CONFIG_FILES_DIR")
-      assert(null != dirName)
-
-      And("Check Directory Path")
-      iFile = new File(dirName)
-      assert(true == iFile.exists)
-
-      And("Check whether " + dirName + " is a directory ")
-      assert(true == iFile.isDirectory)
-
-      And("Make sure there are few scala model files in " + dirName);
-      val modFiles = new java.io.File(dirName).listFiles.filter(_.getName.endsWith(".json"))
-      assert(0 != modFiles.length)
-
-      // Scala Models
-      fileList = List("Model_Config_HelloWorld.json")
-      fileList.foreach(f1 => {
-	And("Add the Model Config From " + f1)
-	And("Make Sure " + f1 + " exist")
-	var exists = false
-	var file: java.io.File = null
-	breakable {
-	  modFiles.foreach(f2 => {
-	    if (f2.getName() == f1) {
-	      exists = true
-	      file = f2
-	      break
-	    }
-	  })
-	}
-	assert(true == exists)
-
-	And("Call UploadModelConfig MetadataAPI Function to add Model from " + file.getPath)
-	var modStr = Source.fromFile(file).mkString
-	res = MetadataAPIImpl.UploadModelsConfig(modStr,
-						 userid,   // userid
-						 null,   // objectList
-						 true   // isFromNotify
-					       )
-	res should include regex ("\"Status Code\" : 0")
-
-	And("Dump  modelConfig that was just added")
-	MdMgr.GetMdMgr.DumpModelConfigs
-	And("GetModelDependencies to fetch the modelConfig that was just added")
-
-	var cfgName = "HelloWorldModel"
-	var dependencies = MetadataAPIImpl.getModelDependencies(cfgName,userid)
-	assert(dependencies.length == 0) // empty in our helloworld example
-
-	var msgsAndContainers = MetadataAPIImpl.getModelMessagesContainers(cfgName,userid)
-	assert(msgsAndContainers.length == 1) // just one input msg in our helloworld example
-	val msgStr = msgsAndContainers(0)
-	assert(msgStr.equalsIgnoreCase("system.helloworld_msg_def"))
-      })
-    }
-
-    it("Add Scala Models") {
-      And("Check whether MODEL_FILES_DIR defined as property")
-      dirName = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("MODEL_FILES_DIR")
-      assert(null != dirName)
-
-      And("Check Directory Path")
-      iFile = new File(dirName)
-      assert(true == iFile.exists)
-
-      And("Check whether " + dirName + " is a directory ")
-      assert(true == iFile.isDirectory)
-
-      And("Make sure there are few scala model files in " + dirName);
-      val modFiles = new java.io.File(dirName).listFiles.filter(_.getName.endsWith(".scala"))
-      assert(0 != modFiles.length)
-
-      // Scala Models
-      fileList = List("HelloWorld.scala")
-      fileList.foreach(f1 => {
-	And("Add the Model From " + f1)
-	And("Make Sure " + f1 + " exist")
-	var exists = false
-	var file: java.io.File = null
-	breakable {
-	  modFiles.foreach(f2 => {
-	    if (f2.getName() == f1) {
-	      exists = true
-	      file = f2
-	      break
-	    }
-	  })
-	}
-	assert(true == exists)
-
-	And("Call AddModel MetadataAPI Function to add Model from " + file.getPath)
-	var modStr = Source.fromFile(file).mkString
-	res = MetadataAPIImpl.AddModel(ModelType.SCALA, // modelType
-				       modStr, // input
-				       userid,   // optUserid
-				       Some("HelloWorldModel"),   // optModelName
-				       None,   // optVersion
-				       None,   // optMsgConsumed
-				       None,   // optMsgVersion
-				       //Some("system.helloworld_msg_output_def") // optMsgProduced
-				       None
-				     )
-	res should include regex ("\"Status Code\" : 0")
-
-	And("GetModelDef API to fetch the model that was just added")
-	// Unable to use fileName to identify the name of the object
-	// Use this function to extract the name of the model
-	var nameSpace = "com.ligadata.samples.models"
-	var objName = "HelloWorldModel"
-	logger.info("ModelName => " + objName)
-	var version = "0000000000000000001"
-	res = MetadataAPIImpl.GetModelDef(nameSpace, objName, "XML", version, userid)
-	res should include regex ("\"Status Code\" : 0")
-
-	val msgName = objName + "_outputmsg"
-	version = "000000000000000001"
-	res = MetadataAPIImpl.GetMessageDef(nameSpace, msgName, "JSON", version, userid)
-	res should include regex ("\"Status Code\" : 0")
-
-	val modDefs = MdMgr.GetMdMgr.Models(nameSpace, objName, true, true)
-	assert(modDefs != None)
-	
-	val models = modDefs.get.toArray
-	assert(models.length == 1)
-	
-	var omsgs = models(0).outputMsgs
-	assert(omsgs.length == 1)
-	val msgFullName = nameSpace + "." + msgName
-	assert(omsgs(0) == msgFullName.toLowerCase)
       })
     }
   }

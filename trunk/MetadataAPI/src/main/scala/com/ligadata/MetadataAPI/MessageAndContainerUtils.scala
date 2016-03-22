@@ -1649,8 +1649,9 @@ object MessageAndContainerUtils {
     */
   def getModelMessagesContainers(modelConfigName: String, userid: Option[String]): List[String] = {
     // if userid is not supplied, it seem to defualt to "_"
-    val u = if( userid != None ) userid.get else "_"
-    var key = u + "." + modelConfigName
+    //val u = if( userid != None ) userid.get else "_"
+    //var key = u + "." + modelConfigName
+    var key = modelConfigName
     logger.debug("Get the model config for " + key)
     var config = MdMgr.GetMdMgr.GetModelConfig(key)
     logger.debug("Size of the model config map => " + config.keys.size);

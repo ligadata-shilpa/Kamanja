@@ -451,7 +451,7 @@ object ModelUtils {
       }
       case ModelType.JAVA | ModelType.SCALA => {
         val result: String = optModelName.fold(throw new RuntimeException("Model name should be provided for Java/Scala models"))(name => {
-          AddModelFromSource(input, modelType.toString, name, optUserid)
+          AddModelFromSource(input, modelType.toString, name, optUserid,optMsgProduced)
         })
         result
       }
