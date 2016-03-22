@@ -366,20 +366,6 @@ class KamanjaMessageEvent(var transactionId: Long, other: KamanjaMessageEvent) e
 			val prevVer = savedDataVersion.replaceAll("[.]", "").toLong
 			val currentVer = Version.replaceAll("[.]", "").toLong
 
-			if (prevVer < currentVer) {
-				val prevVerObj = new com.ligadata.KamanjaBase.KamanjaMessageEvent()
-				prevVerObj.Deserialize(dis, mdResolver, loader, savedDataVersion)
-				messageid = prevVerObj.messageid;
-				for(i <- 0 until prevVerObj.modelinfo.length) {
-					modelinfo(i) = prevVerObj.modelinfo(i)};
-				elapsedtimeinms = prevVerObj.elapsedtimeinms;
-				error = prevVerObj.error;
-				transactionId = prevVerObj.transactionId;
-
-				timePartitionData = prevVerObj.timePartitionData;
-
-
-			} else
 
 			if(prevVer == currentVer){
 				messageid = com.ligadata.BaseTypes.LongImpl.DeserializeFromDataInputStream(dis);
@@ -414,16 +400,8 @@ class KamanjaMessageEvent(var transactionId: Long, other: KamanjaMessageEvent) e
 		}
 	}
 
-	def ConvertPrevToNewVerObj(oldObj : com.ligadata.KamanjaBase.KamanjaMessageEvent) : Unit = {
-		if( oldObj != null){
-			messageid = oldObj.messageid;
-			elapsedtimeinms = oldObj.elapsedtimeinms;
-			error = oldObj.error;
-			transactionId = oldObj.transactionId;
+	def ConvertPrevToNewVerObj(obj : Any) : Unit = { }
 
-			timePartitionData = oldObj.timePartitionData;
-		}
-	}
 	def withmessageid(value: Long) : KamanjaMessageEvent = {
 		this.messageid = value
 		return this

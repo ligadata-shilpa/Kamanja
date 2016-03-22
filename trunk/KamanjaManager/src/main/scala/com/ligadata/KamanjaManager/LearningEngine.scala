@@ -31,7 +31,7 @@ import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
 import com.ligadata.outputmsg.OutputMsgGenerator
 import com.ligadata.InputOutputAdapterInfo.{ExecContext, InputAdapter, PartitionUniqueRecordKey, PartitionUniqueRecordValue}
-import com.ligadata.Exceptions.{StackTrace, MessagePopulationException}
+import com.ligadata.Exceptions.{KamanjaException, StackTrace, MessagePopulationException}
 
 object LeanringEngine {
   // There are 3 types of error that we can create an ExceptionMessage for
@@ -54,9 +54,11 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
   var messageEventFactory: BaseMsgObj = null
   var modelEventFactory: BaseMsgObj = null
   var exceptionEventFactory: BaseMsgObj = null
-
+  var tempBlah = 3
   private def RunAllModels(transId: Long, inputData: Array[Byte], finalTopMsgOrContainer: MessageContainerBase, txnCtxt: TransactionContext, uk: String, uv: String, xformedMsgCntr: Int, totalXformedMsgs: Int, msgEvent: KamanjaMessageEvent): Array[SavedMdlResult] = {
     var results: ArrayBuffer[SavedMdlResult] = new ArrayBuffer[SavedMdlResult]()
+    var oMsgIds: ArrayBuffer[Long] = new ArrayBuffer[Long]()
+
     var tempModelAB: ArrayBuffer[KamanjaModelEvent] = ArrayBuffer[KamanjaModelEvent]()
     if (LOG.isDebugEnabled)
       LOG.debug(s"Processing uniqueKey:$uk, uniqueVal:$uv, finalTopMsgOrContainer:$finalTopMsgOrContainer, previousModles:${models.size}")
@@ -163,6 +165,8 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
         }
 
         val outputDefault: Boolean = false;
+        tempBlah = tempBlah - 1
+        if (tempBlah > 0) throw new KamanjaException("FUCK YOU EXCEPTION",null)
 
         // Execute all modes here
         models.foreach(q => {
@@ -188,12 +192,14 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
                 // TODO: Add the results to the model Event
                 if (res != null) {
                   modelEvent.isresultproduced = true
-                  modelEvent.producedmessages = Array[String]("TBD")
+                  oMsgIds.append(0L)
+
                   results += new SavedMdlResult().withMdlName(md.mdl.getModelName).withMdlVersion(md.mdl.getVersion).withUniqKey(uk).withUniqVal(uv).withTxnId(transId).withXformedMsgCntr(xformedMsgCntr).withTotalXformedMsgs(totalXformedMsgs).withMdlResult(res)
                 } else {
                   modelEvent.isresultproduced = false
                   // Nothing to output
                 }
+                modelEvent.producedmessages = oMsgIds.toArray[Long]
                 modelEvent.elapsedtimeinms = ((System.nanoTime - modelStartTime)/1000000.0).toFloat
                 var mdlId: Long = -1
                 // Get the modelId for reporing purposes
@@ -246,7 +252,7 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
         ThreadLocalStorage.txnContextInfo.remove
       }
     }
-    msgEvent.modelinfo = tempModelAB.toArray[KamanjaModelEvent]
+    msgEvent.modelinfo = if (tempModelAB.isEmpty) new Array[KamanjaModelEvent](0) else tempModelAB.toArray[KamanjaModelEvent]
     return results.toArray
   }
 
@@ -289,7 +295,9 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
     // Initialize Event message
     var msgEvent: KamanjaMessageEvent = messageEventFactory.CreateNewMessage.asInstanceOf[KamanjaMessageEvent]
     msgEvent.elapsedtimeinms = -1
-   // msgEvent.adaptername = uk.
+    msgEvent.messagekey = uk
+    msgEvent.messagevalue = uv
+
 
     try {
       if (msgInfo != null && inputdata != null) {
@@ -298,7 +306,6 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
         partKeyDataList = if (isValidPartitionKey) partKeyData.toList else null
         val primaryKey = if (isValidPartitionKey) msgInfo.contmsgobj.asInstanceOf[BaseMsgObj].PrimaryKeyData(inputdata) else null
         val primaryKeyList = if (primaryKey != null && primaryKey.size > 0) primaryKey.toList else null
-
         if (isValidPartitionKey && primaryKeyList != null) {
           try {
             val fndmsg = txnCtxt.getNodeCtxt.getEnvCtxt.getObject(transId, msgType, partKeyDataList, primaryKeyList)
@@ -315,6 +322,7 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
               val st = StackTrace.ThrowableTraceString(e)
               msgEvent.error = "Exception during input message processing: \n " + st
               var eEvent = createExceptionEvent(LeanringEngine.invalidMessage, LeanringEngine.engineComponent, st)
+              //TODO: do somethign with this event
             }
             case e: Throwable => {
               LOG.warn("", e)
@@ -433,6 +441,7 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
     } catch {
       case e: Exception => {
         val st = StackTrace.ThrowableTraceString(e)
+        println(st)
         msgEvent.error = "Failed to execute models after creating message: \n" + st
         var eEvent = createExceptionEvent(LeanringEngine.invalidMessage, LeanringEngine.engineComponent, st)
         // TODO:  Do something with these events

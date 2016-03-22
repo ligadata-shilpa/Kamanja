@@ -81,7 +81,7 @@ class KamanjaModelEvent(var transactionId: Long, other: KamanjaModelEvent) exten
 	var elapsedtimeinms:Float = _ ;
 	var eventepochtime:Long = _ ;
 	var isresultproduced:Boolean = _ ;
-	var producedmessages: scala.Array[String] = _ ;
+	var producedmessages: scala.Array[Long] = _ ;
 	var error:String = _ ;
 
 	override def PartitionKeyData: Array[String] = Array[String]()
@@ -197,7 +197,7 @@ class KamanjaModelEvent(var transactionId: Long, other: KamanjaModelEvent) exten
 			inputdata.curPos = inputdata.curPos+1;
 			isresultproduced = com.ligadata.BaseTypes.BoolImpl.Input(list(inputdata.curPos));
 			inputdata.curPos = inputdata.curPos+1;
-			producedmessages = list(inputdata.curPos).split(arrvaldelim, -1).map(v => com.ligadata.BaseTypes.StringImpl.Input(v));
+			producedmessages = list(inputdata.curPos).split(arrvaldelim, -1).map(v => com.ligadata.BaseTypes.LongImpl.Input(v));
 			inputdata.curPos = inputdata.curPos+1
 			error = com.ligadata.BaseTypes.StringImpl.Input(list(inputdata.curPos));
 			inputdata.curPos = inputdata.curPos+1;
@@ -256,8 +256,8 @@ class KamanjaModelEvent(var transactionId: Long, other: KamanjaModelEvent) exten
 				val arr = map.getOrElse("producedmessages", null)
 				if (arr != null) {
 					val arrFld = CollectionAsArrString(arr)
-					producedmessages  = arrFld.map(v => com.ligadata.BaseTypes.StringImpl.Input(v.toString)).toArray
-				} else producedmessages  = new scala.Array[String](0)
+					producedmessages  = arrFld.map(v => com.ligadata.BaseTypes.LongImpl.Input(v.toString)).toArray
+				} else producedmessages  = new scala.Array[Long](0)
 			}
 			error = com.ligadata.BaseTypes.StringImpl.Input(map.getOrElse("error", "").toString);
 
@@ -309,8 +309,8 @@ class KamanjaModelEvent(var transactionId: Long, other: KamanjaModelEvent) exten
 			if (map.contains("producedmessages")){
 				val arr = map.getOrElse("producedmessages", null)
 				if (arr != null) {
-					producedmessages  = arr.split(kvData.delimiters.valueDelimiter, -1).map(v => com.ligadata.BaseTypes.StringImpl.Input(v.toString)).toArray
-				} else producedmessages  = new scala.Array[String](0)
+					producedmessages  = arr.split(kvData.delimiters.valueDelimiter, -1).map(v => com.ligadata.BaseTypes.LongImpl.Input(v.toString)).toArray
+				} else producedmessages  = new scala.Array[Long](0)
 			}
 			error = com.ligadata.BaseTypes.StringImpl.Input(map.getOrElse("error", "").toString);
 
@@ -332,7 +332,7 @@ class KamanjaModelEvent(var transactionId: Long, other: KamanjaModelEvent) exten
 			else {
 				com.ligadata.BaseTypes.IntImpl.SerializeIntoDataOutputStream(dos,producedmessages.size);
 				producedmessages.foreach(v => {
-					com.ligadata.BaseTypes.StringImpl.SerializeIntoDataOutputStream(dos, v);
+					com.ligadata.BaseTypes.LongImpl.SerializeIntoDataOutputStream(dos, v);
 				})}
 			com.ligadata.BaseTypes.StringImpl.SerializeIntoDataOutputStream(dos,error);
 			com.ligadata.BaseTypes.LongImpl.SerializeIntoDataOutputStream(dos,transactionId);
@@ -362,9 +362,9 @@ class KamanjaModelEvent(var transactionId: Long, other: KamanjaModelEvent) exten
 				{
 					var arraySize = com.ligadata.BaseTypes.IntImpl.DeserializeFromDataInputStream(dis);
 					val i:Int = 0;
-					if(arraySize > 0){ producedmessages = new scala.Array[String](arraySize)
+					if(arraySize > 0){ producedmessages = new scala.Array[Long](arraySize)
 						for (i <- 0 until arraySize) {
-							val inst = com.ligadata.BaseTypes.StringImpl.DeserializeFromDataInputStream(dis);
+							val inst = com.ligadata.BaseTypes.LongImpl.DeserializeFromDataInputStream(dis);
 							producedmessages(i) = inst;
 						}
 
@@ -406,7 +406,7 @@ class KamanjaModelEvent(var transactionId: Long, other: KamanjaModelEvent) exten
 		return this
 	}
 
-	def withproducedmessages(value: scala.Array[String]) : KamanjaModelEvent = {
+	def withproducedmessages(value: scala.Array[Long]) : KamanjaModelEvent = {
 		this.producedmessages = value
 		return this
 	}
@@ -424,8 +424,8 @@ class KamanjaModelEvent(var transactionId: Long, other: KamanjaModelEvent) exten
 		error = com.ligadata.BaseTypes.StringImpl.Clone(other.error);
 
 		if (other.producedmessages != null ) {
-			producedmessages = new scala.Array[String](other.producedmessages.length);
-			producedmessages = other.producedmessages.map(v => com.ligadata.BaseTypes.StringImpl.Clone(v));
+			producedmessages = new scala.Array[Long](other.producedmessages.length);
+			producedmessages = other.producedmessages.map(v => com.ligadata.BaseTypes.LongImpl.Clone(v));
 		}
 		else producedmessages = null;
 
