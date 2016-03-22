@@ -7,7 +7,7 @@ name := "KamanjaInternalDeps"
 version := "1.0"
 
 assemblyJarName in assembly := {
-  s"${name.value}_${scalaVersion.value}-${version.value}"
+  s"${name.value}_${scalaBinaryVersion.value}-${version.value}"
 }
 
 excludedJars in assembly <<= (fullClasspath in assembly) map { cp =>

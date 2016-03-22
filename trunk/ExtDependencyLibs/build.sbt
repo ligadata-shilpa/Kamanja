@@ -13,9 +13,8 @@ assemblyOption in assembly ~= {
 
 //assemblyJarName in assembly := { s"${name.value}-${version.value}"}
 assemblyJarName in assembly := {
-  s"${name.value}_${scalaVersion.value}-${version.value}"
+  s"${name.value}_${scalaBinaryVersion.value}-${version.value}"
 }
-
 
 
 assemblyMergeStrategy in assembly := {
