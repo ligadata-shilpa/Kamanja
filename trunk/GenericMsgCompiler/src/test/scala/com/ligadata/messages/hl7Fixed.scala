@@ -239,7 +239,23 @@ class hl7Fixed(factory: ContainerFactoryInterface) extends ContainerInterface(fa
   }
 
   override def getOrElse(index: Int, defaultVal: Any): AttributeValue = { // Return (value,  type)
-    throw new Exception("Get By Index is not sup[ported in mapped messages");
+    var attributeValue: AttributeValue = new AttributeValue();
+    try {
+      val value = get(index)
+      if (value == null) {
+        attributeValue.setValue(defaultVal);
+        attributeValue.setValueType("Any");
+        return attributeValue;
+      } else {
+        return value;
+      }
+    } catch {
+      case e: Exception => {
+        log.debug("", e)
+        throw e
+      }
+    }
+    return null; ;
   }
 
   override def getAllAttributeValues(): java.util.HashMap[String, AttributeValue] = { // Has (name, value, type))
