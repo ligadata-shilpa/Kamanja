@@ -5,18 +5,21 @@ name := "ExtDependencyLibs"
 version := "1.0"
 
 
-shellPrompt := { state =>  "sbt (%s)> ".format(Project.extract(state).currentProject.id) }
+shellPrompt := { state => "sbt (%s)> ".format(Project.extract(state).currentProject.id) }
 
 assemblyOption in assembly ~= {
   _.copy(prependShellScript = Some(defaultShellScript))
 }
 
+//assemblyJarName in assembly := { s"${name.value}-${version.value}"}
 assemblyJarName in assembly := {
-  s"${name.value}-${version.value}"
+  s"${name.value}_${scalaVersion.value}-${version.value}"
 }
 
+
+
 assemblyMergeStrategy in assembly := {
-   case PathList("javax", "servlet", xs @ _*)         => MergeStrategy.first
+  case PathList("javax", "servlet", xs@_*) => MergeStrategy.first
   // case PathList(ps @ _*) if ps.last endsWith ".html" => MergeStrategy.first
   case PathList("META-INF", "maven", "jline", "jline", ps) if ps.startsWith("pom") => MergeStrategy.discard
   case PathList(ps@_*) if ps.last endsWith ".html" => MergeStrategy.first
@@ -55,7 +58,7 @@ assemblyMergeStrategy in assembly := {
 }
 
 excludedJars in assembly <<= (fullClasspath in assembly) map { cp =>
-  val excludes = Set("commons-beanutils-1.7.0.jar", "google-collections-1.0.jar", "commons-collections4-4.0.jar","log4j-1.2.17.jar")
+  val excludes = Set("commons-beanutils-1.7.0.jar", "google-collections-1.0.jar", "commons-collections4-4.0.jar", "log4j-1.2.17.jar")
   cp filter { jar => excludes(jar.data.getName) }
 }
 //"log4j-1.2.17.jar", "log4j-1.2.16.jar", "commons-collections-4-4.0.jar", "scalatest_2.11-2.2.0.jar"
@@ -71,7 +74,7 @@ libraryDependencies += "org.apache.logging.log4j" % "log4j-api" % "2.4.1"
 libraryDependencies += "org.apache.logging.log4j" % "log4j-core" % "2.4.1"
 libraryDependencies += "org.ow2.asm" % "asm-tree" % "4.0"
 libraryDependencies += "org.ow2.asm" % "asm-commons" % "4.0"
-libraryDependencies <+= scalaVersion("org.scala-lang" % "scala-actors" % _)               // ???
+libraryDependencies <+= scalaVersion("org.scala-lang" % "scala-actors" % _) // ???
 libraryDependencies += "org.scala-lang" % "scala-actors" % scalaVersion.value
 
 /////////////////////// MetadataAPI
@@ -134,12 +137,7 @@ libraryDependencies += "log4j" % "log4j" % "1.2.17"
 //scalacOptions += "-deprecation"
 
 
-
-
 ////////////////////// NodeInfoExtract
-
-
-
 
 
 ////////////////////// MetadataAPIService
@@ -155,7 +153,7 @@ libraryDependencies ++= {
     "io.spray" %% "spray-routing" % sprayVersion,
     "io.spray" %% "spray-testkit" % sprayVersion,
     "io.spray" %% "spray-client" % sprayVersion,
-    "io.spray" %%  "spray-json" % "1.3.2",
+    "io.spray" %% "spray-json" % "1.3.2",
     "com.typesafe.akka" %% "akka-actor" % akkaVersion,
     //  "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
     "ch.qos.logback" % "logback-classic" % "1.0.12",
@@ -181,17 +179,11 @@ libraryDependencies += "com.codahale.metrics" % "metrics-core" % "3.0.2"
 //autoScalaLibrary := false
 
 
-
-
-
 /////////////////////// ClusterInstallerDriver
 //// Do not append Scala versions to the generated artifacts
 //crossPaths := false
 //// This forbids including Scala related libraries into the dependency
 //autoScalaLibrary := false
-
-
-
 
 
 /////////////////////// MigrateManager
@@ -203,31 +195,21 @@ libraryDependencies += "com.codahale.metrics" % "metrics-core" % "3.0.2"
 //libraryDependencies += "com.google.code.gson" % "gson" % "2.3.1"
 
 
-
-
 /////////////////////// InstallerDriver
 //already available
 //scalacOptions += "-deprecation"
-
-
 
 
 //////////////////////// KVInit
 //already available
 
 
-
-
 ////////////////////// JdbcDataCollector
 //already available
 
 
-
-
-
 ////////////////////// CleanUtil
 //already available
-
 
 
 ////////////////////// FileDataConsumer
@@ -246,7 +228,6 @@ libraryDependencies += "com.codahale.metrics" % "metrics-core" % "3.0.2"
 //libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.0" % "test"
 libraryDependencies += "com.novocode" % "junit-interface" % "0.11-RC1" % "test"
 //testOptions += Tests.Argument(TestFrameworks.JUnit, "-q", "-v")
-
 
 
 ////////////////////// KamanjaBase
@@ -271,8 +252,6 @@ libraryDependencies += "com.google.protobuf" % "protobuf-java" % "2.6.0"
 //scalacOptions += "-deprecation"
 
 
-
-
 ////////////////////// ZooKeeperListener
 libraryDependencies ++= Seq(
   "org.apache.commons" % "commons-collections4" % "4.0",
@@ -287,7 +266,7 @@ libraryDependencies ++= Seq(
 
 
 ////////////////////// CleanUtil
-libraryDependencies ++= Seq (
+libraryDependencies ++= Seq(
   "com.101tec" % "zkclient" % "0.6",
   "org.apache.curator" % "curator-test" % "2.8.0"
     exclude("javax.jms", "jms")
@@ -300,7 +279,6 @@ libraryDependencies ++= Seq (
 
 ////////////////////// KafkaSimpleInputOutputAdapters
 //already available
-
 
 
 ////////////////////// ZooKeeperLeaderLatch
@@ -319,7 +297,6 @@ libraryDependencies ++= Seq (
 //already available
 
 
-
 ////////////////////// DataDelimiters
 //already available
 
@@ -328,12 +305,8 @@ libraryDependencies ++= Seq (
 //already available
 
 
-
-
-
 ////////////////////// StorageManager
 //already available
-
 
 
 ////////////////////// MessageDef
@@ -341,12 +314,7 @@ libraryDependencies ++= Seq (
 //libraryDependencies += "metadata" %% "metadata" % "1.0"
 
 
-
-
 ////////////////////// PmmlCompiler
-
-
-
 
 
 ////////////////////// ZooKeeperClient
@@ -361,31 +329,20 @@ libraryDependencies ++= Seq("junit" % "junit" % "4.8.1" % "test")
 //already available
 
 
-
 ////////////////////// HeartBeat
 //already available
-
-
-
 
 
 ////////////////////// JpmmlFactoryOfModelInstanceFactory
 //already available
 
 
-
-
-
 ////////////////////// SimpleApacheShiroAdapter
 //already available
 
 
-
-
 ////////////////////// KVInit
 //already available
-
-
 
 
 ////////////////////// MetadataBootstrap
@@ -403,49 +360,30 @@ libraryDependencies ++= Seq("junit" % "junit" % "4.8.1" % "test")
 //already available
 
 
-
 ////////////////////// FileSimpleInputOutputAdapters"
 //already available
-
 
 
 ////////////////////// SimpleEnvContextImpl
 //already available
 
 
-
-
 ////////////////////// StorageBase
 //already available
-
-
 
 
 ////////////////////// GenericMsgCompiler
 //already available
 
 
-
-
-
-
 ////////////////////// PmmlRuntime
-
-
-
 
 
 ////////////////////// PmmlUdfs
 //libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.4"
 
 
-
-
 ////////////////////// MethodExtractor
-
-
-
-
 
 
 ////////////////////// MetadataAPIServiceClient
@@ -467,38 +405,24 @@ resolvers += "Big Bee Consultants" at "http://repo.bigbeeconsultants.co.uk/repo"
 //already available
 
 
-
-
-
 ////////////////////// Controller
 //already available
-
 
 
 ////////////////////// AuditAdapterBase / AuditAdapters
 //already available
 
 
-
-
 ////////////////////// CustomUdfLib
 //already available
-
-
-
 
 
 ////////////////////// ExtractData
 //already available
 
 
-
-
-
 //////////////////////InterfacesSamples
 //already available
-
-
 
 
 ////////////////////// Cassandra / StorageCassandra
@@ -523,11 +447,8 @@ libraryDependencies += "org.mapdb" % "mapdb" % "1.0.6"
 //already available
 
 
-
 ////////////////////// TreeMap
 //already available
-
-
 
 
 ////////////////////// SqlServer
@@ -541,43 +462,28 @@ libraryDependencies += "org.apache.commons" % "commons-dbcp2" % "2.1"
 //already available
 
 
-
-
-
 ////////////////////// KvBase
 //already available
-
-
-
-
 
 
 ////////////////////// SaveContainerDataComponent
 //already available
 
 
-
-
-
 ////////////////////// UtilsForModels
 //already available
-
-
 
 
 ////////////////////// JarFactoryOfModelInstanceFactory
 //already available
 
 
-
 ////////////////////// MigrateBase
 //already available
 
 
-
 //////////////////////  InstallDriverBase
 //already available
-
 
 
 //////////////////////  PmmlTestTool
@@ -597,13 +503,11 @@ libraryDependencies += "org.jpmml" % "pmml-evaluator" % "1.2.9"
 //already available
 
 
-
-
 //////////////////////  jtm
 libraryDependencies += {
   CrossVersion.partialVersion(scalaVersion.value) match {
     case Some((2, scalaMajor)) =>
-      "org.rogach" % s"scallop_2.$scalaMajor"  % "0.9.5"
+      "org.rogach" % s"scallop_2.$scalaMajor" % "0.9.5"
     case _ => throw new Exception("Unsupported version")
   }
 }
@@ -613,5 +517,5 @@ libraryDependencies += "org.apache.commons" % "commons-io" % "1.3.2"
 //libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.4" % "test->default"
 libraryDependencies += "com.novocode" % "junit-interface" % "0.9" % "test->default"
 //libraryDependencies += "junit" % "junit" % "4.11" % "test->default"
-libraryDependencies += "org.skyscreamer" % "jsonassert" % "1.3.0"  % "test->default"
+libraryDependencies += "org.skyscreamer" % "jsonassert" % "1.3.0" % "test->default"
 libraryDependencies += "org.aicer.grok" % "grok" % "0.9.0"
