@@ -227,9 +227,6 @@ trait MetadataAPIService extends HttpService {
     } else if (objtype.equalsIgnoreCase("UploadConfig")) {
       val uploadConfigService = actorRefFactory.actorOf(Props(new UploadEngineConfigService(rContext, userid, password, role)))
       uploadConfigService ! UploadEngineConfigService.Process(body)
-    } else if (objtype.equalsIgnoreCase("OutputMsg")) {
-      val updateOutputMsgDefService = actorRefFactory.actorOf(Props(new UpdateOutputMsgService(rContext, userid, password, role)))
-      updateOutputMsgDefService ! UpdateOutputMsgService.Process(body, "JSON")
     }else if (objtype.equalsIgnoreCase("UploadModelConfig")) {
       logger.debug("In put request process of UploadModelConfig")
       val addModelDefsService = actorRefFactory.actorOf(Props(new UploadModelConfigService(rContext, userid, password, role)))
@@ -307,9 +304,6 @@ trait MetadataAPIService extends HttpService {
     } else if (objtype.equalsIgnoreCase("Function")) {
       val addFunctionDefsService = actorRefFactory.actorOf(Props(new AddFunctionService(rContext, userid, password, role)))
       addFunctionDefsService ! AddFunctionService.Process(body, "JSON")
-    } else if (objtype.equalsIgnoreCase("OutputMsg")) {
-      val addOutputMsgDefsService = actorRefFactory.actorOf(Props(new AddOutputMsgService(rContext, userid, password, role)))
-      addOutputMsgDefsService ! AddOutputMsgService.Process(body, "JSON")
     } else if (objtype.equalsIgnoreCase("UploadModelConfig")) {
       //TODO
       //call the UploadModelConfig in the MetadataAPIImpl
