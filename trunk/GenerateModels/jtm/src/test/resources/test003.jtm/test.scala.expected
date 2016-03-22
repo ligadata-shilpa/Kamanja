@@ -39,7 +39,7 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
       // type could be some class available from imports
       val ipinfo: IpInfo = iplookup(msg2.in1)
       def process_omsg2(): Array[BaseMsg] = {
-        if (!(msg2.in2 != -1 && msg2.in2 < 100)) return Array.empty[Result]
+        if (!(msg2.in2 != -1 && msg2.in2 < 100)) return Array.empty[BaseMsg]
         val tmp8: String = somefunc2(msg2.in3)
         val result = new com.ligadata.kamanja.test.v1000000.msg2
         result.timePartitionData = msg1.timePartitionData
@@ -61,7 +61,7 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
       // type could be some class available from imports
       val ipinfo: IpInfo = iplookup(msg2.in1)
       def process_omsg2(): Array[BaseMsg] = {
-        if (!(msg2.in2 != -1 && msg2.in2 < 100)) return Array.empty[Result]
+        if (!(msg2.in2 != -1 && msg2.in2 < 100)) return Array.empty[BaseMsg]
         val tmp8: String = somefunc2(msg2.in3)
         val result = new com.ligadata.kamanja.test.v1000000.msg2
         result.rowNumber = msg2.rowNumber

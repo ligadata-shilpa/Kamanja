@@ -78,6 +78,4 @@ class Test001Test  extends FunSuite with BeforeAndAfter {
 
     assert(actual == expected)
   }
-
-
 }

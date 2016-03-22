@@ -35,7 +35,7 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
       // in scala, type could be optional
       val out3: Int = msg1.in1 + 1000
       def process_o1(): Array[BaseMsg] = {
-        if (!(msg1.in2 != -1 && msg1.in2 < 100)) return Array.empty[Result]
+        if (!(msg1.in2 != -1 && msg1.in2 < 100)) return Array.empty[BaseMsg]
         val t1: String = "s:" + msg1.in2.toString()
         val result = new com.ligadata.kamanja.test.v1000000.msg2
         result.timePartitionData = msg1.timePartitionData

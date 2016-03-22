@@ -399,7 +399,9 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
                trackingset_in: Set[String],
                aliaseMessages: Map[String, String],
                grokExpressions: Map[String, (String, String, Set[String])],
-               notUniqueInputs: Set[String]) : Array[String] = {
+               notUniqueInputs: Set[String],
+               currentPath: String,
+               inputs: Array[Element]) : (Array[String], Array[String], Map[String, eval.Tracker], Set[String]) = {
 
     var collect: Array[String] = Array.empty[String]
     var methods: Array[String] = Array.empty[String]
@@ -423,8 +425,31 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     var innerMapping: Map[String, eval.Tracker] = mappingset_in
     var innerTracking = trackingset_in
 
+    logger.trace("\n\nProcessing: {} outputs: {}\n", currentPath, outputSet.mkString(","))
+    logger.trace("Mapping: \n{}", innerMapping.mkString("\n"))
+    logger.trace("Tracked: \n{}\n\n", innerTracking.mkString("\n"))
+
+    logger.trace("Grocks: \n{}", groks.mkString("\n"))
+    logger.trace("Mapping: \n{}", mapping.mkString("\n"))
+    logger.trace("Wheres: \n{}", wheres.mkString("\n"))
+    logger.trace("computes: \n{}", computes.map(m => s"${m._1} -> ${m._2.expression}").mkString("\n"))
+
+    if(output_in.nonEmpty) {
+      // Go through the inputs and find the system column so we can just funnel it through
+      columnSystem.foreach(c => {
+        if (outputSet.contains(c)) {
+          val i = inputs.find(f => f.fieldName == c)
+          outputSet --= Set(c)
+          val f = "%s.%s".format(i.get.argName, i.get.fieldName)
+          innerMapping ++= Map(c -> eval.Tracker(f, "", i.get.fieldType, false))
+          innerTracking += f
+        }
+      })
+    }
+
     // Abort this loop if nothing changes or we can satisfy all outputs
-    while (cnt1 != cnt2 && outputSet.nonEmpty) {
+    //
+    while (cnt1 != cnt2 && (output_in.isEmpty || outputSet.nonEmpty)) {
 
       cnt2 = cnt1
 
@@ -438,7 +463,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           if (list.nonEmpty) {
             val rList = ResolveNames(list, aliaseMessages)
             val open = rList.filter(f => !innerMapping.contains(f._2))
-            //if (open.nonEmpty) logger.trace("{} not found {}", t.toString, open.mkString(", "))
+            if (open.nonEmpty) logger.trace("{} not found {}", currentPath, open.mkString(", "))
             open.isEmpty
           } else {
             innerMapping.contains(f._2)
@@ -446,6 +471,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
         })
 
         logger.trace("Mappings found {}", found.mkString(", "))
+
         found.foreach(f => {
           // Try to extract variables, than it is an expression
           val expression = f._2
@@ -506,8 +532,6 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
         }
       })
 
-      // Check grok matches
-
       // filters
       val wheres1 = wheres.filter(f => {
         val list = Expressions.ExtractColumnNames(f)
@@ -528,7 +552,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           val newExpression = Expressions.FixupColumnNames(f, innerMapping, aliaseMessages)
           logger.trace("Matched where expression {}", newExpression)
           // Output the actual filter
-          collect ++= Array("if (%s) return Array.empty[Result]\n".format(newExpression))
+          collect ++= Array("if (%s) return Array.empty[BaseMsg]\n".format(newExpression))
           false
         } else {
           true
@@ -599,7 +623,17 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
       groks = groks1
     }
 
-    collect
+    if (outputSet.nonEmpty) {
+      val m = "Not all outputs satisfied. transformation: %s missing: %s".format(currentPath, outputSet.mkString(", "))
+      logger.trace(m)
+      throw new Exception(m)
+    }
+
+    if (cnt2 != 0) {
+      logger.trace("Not all elements used")
+    }
+
+    (collect, methods, innerMapping, innerTracking)
   }
 
   // Controls the code generation
@@ -669,7 +703,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     })
 
     // Collect all specified types
-      // Should check we can resolve them
+    // Should check we can resolve them
     val types = EvalTypes.CollectTypes(root)
     types.map( e => "%s usedby %s".format(e._1, e._2.mkString(", ")) ).foreach( m => {
       logger.trace(m)
@@ -776,350 +810,73 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           classString -> eval.Tracker(variableName, p.className, p.fieldType, true, p.fieldName)
         }).toMap
 
-        var outerMapping: Map[String, eval.Tracker] = uniqueInputs ++ qualifiedInputs
-        var outerTracking: Set[String] = Set.empty[String]
-
-        logger.trace("outerMapping\n{}", outerMapping.mkString(",\n"))
-
         // Common computes section
         //
-        var groks = transformation.grokMatch
-        var computes = transformation.computes
-        var cnt1 = computes.size + groks.size
-        var cnt2 = -1
+        val (collectOuter, methodsOuter, outerMapping, outerTracking) = {
 
-        while(cnt1!=cnt2 && (computes.nonEmpty || groks.nonEmpty)) {
-          cnt2 = cnt1
-
-          // Check grok matches
-          //
-          val groks1 = groks.filter( g => {
-
-            // fs the input determined, emit as output expressions
-            if(outerMapping.contains(g._1)) {
-
-              val nameColumn = ResolveName(g._1, aliaseMessages)
-
-              outerTracking += outerMapping.get(g._1).get.variableName
-
-              // Get the expression
-              //
-              val d = grokExpressions.get(g._2).get
-
-              logger.trace("Grok common matched {} -> {}", nameColumn, d._3.mkString(", "))
-
-              // The var name might generate conflicts
-              // Let's be optimistic for now
-              val varName = "%s_%s".format(d._1, g._1)
-              methods :+= "lazy val %s = %s.extractNamedGroups(%s)".format(varName, d._1, nameColumn)
-
-              // Emit variables w/ null value is needed
-              // we are adding a complete expression here
-              // potentially we have to decorate it to avoid naming conflicts
-              d._3.foreach( e => {
-                val expr = "if(%s.containsKey(\"%s\")) %s.get(\"%s\") else \"\")".format(varName, e, varName, e)
-                outerMapping ++= Map(e -> eval.Tracker(expr, "", "", false))
-              })
-              false
-            } else {
-              //logger.trace("Grok not matched {}", g._1)
-              true
-            }
-          })
-
-          // Check computes
-          val computes1 = computes.filter(c => {
-
-            // Check if the compute if determined
-            val (open, expression, list) =  if(c._2.expression.nonEmpty) {
-              val list = Expressions.ExtractColumnNames(c._2.expression)
-
-              logger.trace("Variables {}", list.mkString(", "))
-
-              val rlist = ResolveNames(list, aliaseMessages)
-              val open = rlist.filter(f => !outerMapping.contains(f._2))
-              val ambiguous = rlist.filter(f => notUniqueInputs.contains(f._2)).map(m => m._2)
-              if(ambiguous.nonEmpty) {
-                val a = ambiguous.mkString(", ")
-                logger.error("Found ambiguous variables %s in expression %s".format(a, c._2.expression))
-                throw new Exception("Found ambiguous variables %s in expression %s".format(a, c._2.expression))
-              }
-              (open, c._2.expression, rlist)
-            } else {
-              val evaluate = c._2.expressions.map( expression => {
-                val list = Expressions.ExtractColumnNames(expression)
-
-                logger.trace("Variables {}", list.mkString(", "))
-
-                val rlist = ResolveNames(list, aliaseMessages)
-
-                logger.trace("Resolved variables {}", rlist.mkString(", "))
-
-                val open = rlist.filter(f => !outerMapping.contains(f._2))
-                val ambiguous = rlist.filter(f => notUniqueInputs.contains(f._2)).map(m => m._2)
-                if(ambiguous.nonEmpty) {
-                  val a = ambiguous.mkString(", ")
-                  logger.error("Found ambiguous variables %s in expression %s".format(a, c._2.expression))
-                  throw new Exception("Found ambiguous variables %s in expression %s".format(a, c._2.expression))
-                }
-                (open, expression, rlist)
-              })
-              evaluate.foldLeft(evaluate.head) ( (r, e) => {
-                if(e._1.size < r._1.size)
-                  e
-                else
-                  r
-              })
-            }
-
-            if(open.isEmpty) {
-
-              outerTracking ++= list.map(m => outerMapping.get(m._2).get.variableName).toSet
-
-              val newExpression = Expressions.FixupColumnNames(expression, outerMapping, aliaseMessages)
-              logger.trace("Matched common expression {} -> {}", newExpression, c._1)
-
-              // Output the actual compute
-              methods :+= c._2.Comment
-              if(c._2.typename.length>0)
-                methods ++= Array("val %s: %s = %s\n".format(c._1, c._2.typename, newExpression))
-              else
-                methods ++= Array("val %s = %s\n".format(c._1, newExpression))
-
-              outerMapping ++= Map(c._1 -> eval.Tracker(c._1, "", "", false))
-              false
-            } else {
-              true
-            }
-          })
-
-          cnt1 = computes1.size + groks.size
-          computes = computes1
-          groks = groks1
+          Generate(transformation.grokMatch,
+            Map.empty[String, String],
+            Array.empty[String],
+            transformation.computes,
+            "",
+            uniqueInputs ++ qualifiedInputs, // Mapping
+            Set.empty[String], // Tracking
+            aliaseMessages,
+            grokExpressions,
+            notUniqueInputs,
+            t.toString(),
+            Array.empty[Element])
         }
 
-        if(computes.nonEmpty){
-
-          val c = computes.map(c => c._1).mkString(",")
-          throw new Exception("Not all elements used. transformation: %s computes: %s".format(t, c))
-          logger.trace("Not all elements used")
-        }
+        methods ++= methodsOuter
+        methods ++= collectOuter
 
         // Individual outputs
         //
         val inner = transformation.outputs.foldLeft(Array.empty[String]) ( (r, o) => {
 
+          val (collectInner, methodsInner, innerMapping, innerTracking) = {
+
+            val mapping = uniqueInputs ++ qualifiedInputs
+
+            Generate(transformation.grokMatch,
+              o._2.mapping,
+              if (o._2.where.nonEmpty) Array(o._2.where) else Array.empty[String],
+              o._2.computes,
+              o._1,
+              outerMapping, // Mapping
+              outerTracking, // Tracking
+              aliaseMessages,
+              grokExpressions,
+              notUniqueInputs,
+              t.toString() + "@" + o._1,
+              inputs)
+          }
+
           var collect = Array.empty[String]
           collect ++= Array("\ndef process_%s(): Array[BaseMsg] = {\n".format(o._1))
+          collect ++= collectInner
 
-          val outputType1 = ResolveAlias(o._1, aliaseMessages)
-          val outputType = ResolveToVersionedClassname(md, outputType1)
-          val outputSet: Set[String] = ColumnNames(md, outputType1)
-
-          // State variables to track the progress
-          // a little bit simpler than having val's
-          var innerMapping: Map[String, eval.Tracker] = outerMapping
-          var innerTracking = outerTracking
-
-          logger.trace("Procesing transformation: {} output: {} outputs: {} mapping: {}",
-            t, o._1, outputSet.mkString(","), innerMapping.mkString(","))
-
-          logger.trace("Tracked {}", innerTracking.mkString(", "))
-
-          var outputSet1: Set[String] = outputSet
-
-          // Go through the inputs and find the system column so we can just funnel it through
-          columnSystem.foreach(c => {
-            if (outputSet1.contains(c)) {
-              val i = inputs.find(f => f.fieldName == c)
-              outputSet1 --= Set(c)
-              val f = "%s.%s".format(i.get.argName, i.get.fieldName)
-              innerMapping ++= Map(c -> eval.Tracker(f, "", "", false))
-              innerTracking += f
-            }
-          })
-
-          var mapping = o._2.mapping
-          var wheres = if (o._2.where.nonEmpty) Array(o._2.where) else Array.empty[String]
-          var computes = o._2.computes
-          var cnt1 = wheres.length + computes.size
-          var cnt2 = -1
-
-          // Abort this loop if nothing changes or we can satisfy all outputs
-          while (cnt1 != cnt2 && outputSet1.nonEmpty) {
-
-            cnt2 = cnt1
-
-            // Check Mapping
-            if (mapping.nonEmpty) {
-              logger.trace("Mappings left {}", mapping.mkString(", "))
-
-              val found = mapping.filter(f => {
-                // Try to extract variables, than it is an expression
-                val list = Expressions.ExtractColumnNames(f._2)
-                if (list.nonEmpty) {
-                  val rList = ResolveNames(list, aliaseMessages)
-                  val open = rList.filter(f => !innerMapping.contains(f._2))
-                  if (open.nonEmpty) logger.trace("{} not found {}", t.toString, open.mkString(", "))
-                  open.isEmpty
-                } else {
-                  innerMapping.contains(f._2)
-                }
-              })
-
-              logger.trace("Mappings found {}", found.mkString(", "))
-
-              found.foreach(f => {
-                // Try to extract variables, than it is an expression
-                val expression = f._2
-                val list = Expressions.ExtractColumnNames(expression)
-
-                val newExpression = if (list.nonEmpty) {
-                  val newExpression = Expressions.FixupColumnNames(expression, innerMapping, aliaseMessages)
-                  val rList = ResolveNames(list, aliaseMessages)
-                  val open = rList.filter(f => !innerMapping.contains(f._2))
-                  logger.trace("Matched mapping expression {} ({})-> {}", f._1, f._2, newExpression)
-                  innerTracking ++= rList.map(m => innerMapping.get(m._2).get.variableName).toSet
-                  newExpression
-                } else {
-                  val mapped = innerMapping.get(expression).get.variableName
-                  innerTracking += mapped
-                  logger.trace("Column mapping {} -> {}", expression, mapped)
-                  mapped
-                }
-                outputSet1 --= Set(f._1)
-                innerMapping ++= Map(f._1 -> eval.Tracker(newExpression, "", "", false))
-              })
-
-              mapping = mapping.filterKeys(f => !found.contains(f))
-            }
-
-            // Check grok matches
-
-            // filters
-            val wheres1 = wheres.filter(f => {
-              val list = Expressions.ExtractColumnNames(f)
-              val rList = ResolveNames(list, aliaseMessages)
-              val open = rList.filter(f => !innerMapping.contains(f._2))
-              val ambiguous = rList.filter(f => notUniqueInputs.contains(f._2)).map(m => m._2)
-              if (ambiguous.nonEmpty) {
-                val a = ambiguous.mkString(", ")
-                logger.error("Found ambiguous variables %s in expression %s".format(a, f))
-                throw new Exception("Found ambiguous variables %s in expression %s".format(a, f))
+          {
+            // Generate the output for this iteration
+            // Translate outputs to the values
+            val outputType1 = ResolveAlias(o._1, aliaseMessages)
+            val outputType = ResolveToVersionedClassname(md, outputType1)
+            val outputSet: Set[String] = ColumnNames(md, outputType1)
+            val outputElements = outputSet.map(e => {
+              // e.name -> from input, from mapping, from variable
+              val m = innerMapping.get(e)
+              if (m.isEmpty) {
+                throw new Exception("Output %s not found".format(e))
               }
+              "result.%s = %s".format(e, m.get.variableName)
+            }).mkString("\n")
 
-              if (open.isEmpty) {
-
-                innerTracking ++= rList.map(m => innerMapping.get(m._2).get.variableName).toSet
-
-                // Sub names to
-                val newExpression = Expressions.FixupColumnNames(f, innerMapping, aliaseMessages)
-                logger.trace("Matched where expression {}", newExpression)
-                // Output the actual filter
-                collect ++= Array("if (%s) return Array.empty[Result]\n".format(newExpression))
-                false
-              } else {
-                true
-              }
-            })
-
-            // computes
-            val computes1 = computes.filter(c => {
-
-              // Check if the compute if determind
-              val (open, expression, list) = if (c._2.expression.length > 0) {
-                val list = Expressions.ExtractColumnNames(c._2.expression)
-                val rList = ResolveNames(list, aliaseMessages)
-                val open = rList.filter(f => !innerMapping.contains(f._2))
-                val ambiguous = rList.filter(f => notUniqueInputs.contains(f._2)).map(m => m._2)
-                if (ambiguous.nonEmpty) {
-                  val a = ambiguous.mkString(", ")
-                  logger.error("Found ambiguous variables %s in expression %s".format(a, c._2.expression))
-                  throw new Exception("Found ambiguous variables %s in expression %s".format(a, c._2.expression))
-                }
-                (open, c._2.expression, rList)
-              } else {
-                val evaluate = c._2.expressions.map(expression => {
-                  val list = Expressions.ExtractColumnNames(expression)
-                  val rList = ResolveNames(list, aliaseMessages)
-                  val open = rList.filter(f => !innerMapping.contains(f._2))
-                  val ambiguous = rList.filter(f => notUniqueInputs.contains(f._2)).map(m => m._2)
-                  if (ambiguous.nonEmpty) {
-                    val a = ambiguous.mkString(", ")
-                    logger.error("Found ambiguous variables %s in expression %s".format(a, c._2.expression))
-                    throw new Exception("Found ambiguous variables %s in expression %s".format(a, c._2.expression))
-                  }
-                  (open, expression, rList)
-                })
-                evaluate.foldLeft(evaluate.head)((r, e) => {
-                  if (e._1.size < r._1.size)
-                    e
-                  else
-                    r
-                })
-              }
-
-              if (open.isEmpty) {
-                innerTracking ++= list.map(m => innerMapping.get(m._2).get.variableName).toSet
-                // Sub names to
-                val newExpression = Expressions.FixupColumnNames(expression, innerMapping, aliaseMessages)
-                logger.trace("Matched compute expression {} -> {}", newExpression, c._1)
-                // Output the actual compute
-                // To Do: multiple vals and type provided
-                collect :+= c._2.Comment
-                if (c._2.typename.length > 0)
-                  collect ++= Array("val %s: %s = %s\n".format(c._1, c._2.typename, newExpression))
-                else
-                  collect ++= Array("val %s = %s\n".format(c._1, newExpression))
-
-                outputSet1 --= Set(c._1)
-                innerMapping ++= Map(c._1 -> eval.Tracker(c._1, "", "", false))
-                false
-              } else {
-                true
-              }
-            })
-
-            // Update state
-            cnt1 = wheres1.length + computes1.size
-            wheres = wheres1
-            computes = computes1
+            // To Do: this is not correct
+            val outputResult = "val result = new %s\n%s\nArray(result)".format(outputType, outputElements)
+            collect ++= Array(outputResult)
+            collect ++= Array("}\n")
           }
-
-          if (computes.nonEmpty) {
-            val c = computes.map(c => c._1).mkString(",")
-            val m = "Not all elements used. transformation: %s computes: %s".format(t, c)
-            logger.trace(m)
-          }
-
-          if (outputSet1.nonEmpty) {
-            val m = "Not all outputs satisfied. transformation: %s output: %s missing: %s".format(t, o._1, outputSet1.mkString(", "))
-            logger.trace(m)
-            throw new Exception(m)
-          }
-
-          if (cnt2 != 0) {
-            logger.trace("Not all elements used")
-            //throw new Exception("Not all elements used")
-          }
-
-          // Generate the output for this iteration
-          // Translate outputs to the values
-          val ouputVar = s"val result = new $outputType"
-          val outputElements = outputSet.map(e => {
-            // e.name -> from input, from mapping, from variable
-            val m = innerMapping.get(e)
-            if (m.isEmpty) {
-              throw new Exception("Output %s not found".format(e))
-            }
-            "result.%s = %s".format(e, m.get.variableName)
-          }).mkString("\n")
-
-          // To Do: this is not correct
-          val outputResult = "%s\n%s\nArray(result)".format(ouputVar, outputElements)
-
-          collect ++= Array(outputResult)
-          collect ++= Array("}\n")
 
           // Collect all input messages attribute used
           logger.trace("Final map: transformation %s ouput %s used %s".format(t, o._1, innerTracking.mkString(", ")))
@@ -1143,7 +900,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
             inmessages :+= map1
           }
 
-          // outputs
+          // Outputs result
           r ++ collect
         })
 
