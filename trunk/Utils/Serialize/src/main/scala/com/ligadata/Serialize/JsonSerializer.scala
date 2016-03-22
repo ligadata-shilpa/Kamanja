@@ -569,21 +569,21 @@ object JsonSerializer {
        *
        *
        *case class ModelInfo(NameSpace: String
-                     , Name: String
-                     , Version: String
-                     , PhysicalName: String
-                     , ModelRep : String
-                     , ModelType: String
-                     , IsReusable : Boolean
-                     , MsgConsumed : String
-                     , ObjectDefinition : String
-                     , ObjectFormat : String
-                     , JarName: String
-                     , DependencyJars: List[String]
-                     , InputAttributes: List[Attr]
-                     , OutputAttributes: List[Attr]
-                     , Recompile : Boolean
-                     , SupportsInstanceSerialization : Boolean)
+        * , Name: String
+        * , Version: String
+        * , PhysicalName: String
+        * , ModelRep : String
+        * , ModelType: String
+        * , IsReusable : Boolean
+        * , MsgConsumed : String
+        * , ObjectDefinition : String
+        * , ObjectFormat : String
+        * , JarName: String
+        * , DependencyJars: List[String]
+        * , InputAttributes: List[Attr]
+        * , OutputAttributes: List[Attr]
+        * , Recompile : Boolean
+        * , SupportsInstanceSerialization : Boolean)
 
        */
       val modDef = MdMgr.GetMdMgr.MakeModelDef(ModDefInst.Model.NameSpace
@@ -690,7 +690,7 @@ object JsonSerializer {
     try {
       mdObj match {
           /**
-                Assuming that zookeeper transaction will be different based on type of object
+            * Assuming that zookeeper transaction will be different based on type of object
            */
         case o: ModelDef => {
           val json = (("ObjectType" -> "ModelDef") ~
@@ -1464,6 +1464,12 @@ object JsonSerializer {
     objList.foreach(obj => { max = scala.math.max(obj.TranId, max) })
 
     var json = "{\n" + "\"transactionId\":\"" + max + "\",\n" + "\"" + objType + "\" :" + zkSerializeObjectListToJson(objList, operations) + "\n}"
+    json
+  }
+
+  def zkSerializeConfigToJson[T <: Map[String,Any]](tid: Long, objType: String, config: T, operations: Array[String]): String = {
+
+    var json = "{\n" + "\"transactionId\":\"" + tid + "\",\n" + "\"" + objType + "\" :" + SerializeMapToJsonString(config) + "\n}"
     json
   }
 
