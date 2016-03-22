@@ -17,6 +17,7 @@ public class AdapterConfiguration {
 	public static final String HDFS_KERBEROS_PRINCIPAL = "hdfs.kerberos.principal";
 	public static final String HDFS_RESOURCE_FILE = "hdfs.resource.file";
 	public static final String FILE_PREFIX = "file.prefix";
+	public static final String FILE_MODE = "file.mode";	
 	public static final String SYNC_MESSAGE_COUNT = "sync.messages.count";
 	public static final String SYNC_INTERVAL_SECONDS = "sync.interval.seconds";
 	public static final String KAFKA_TOPIC = "kafka.topic";
@@ -94,7 +95,7 @@ public class AdapterConfiguration {
 	public static final String TARGET_FIELD_NAMES = "target.field.names";
 	public static final String SOURCE_COLLECTION_FIELDS = "source.collection.fields";
 	public static final String TARGET_COLLECTION_FIELDS = "target.collection.fields";
-	
+
 	private Properties properties;
 
 	public AdapterConfiguration() throws IOException {

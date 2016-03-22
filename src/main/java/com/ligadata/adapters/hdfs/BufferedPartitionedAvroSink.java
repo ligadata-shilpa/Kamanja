@@ -27,6 +27,7 @@ public class BufferedPartitionedAvroSink implements BufferedMessageProcessor {
 	private Map<String, ArrayList<Record>> buffer;
 	private AvroHDFSWriter hdfsWriter;
 	private Schema schema;
+	private boolean createNewFile = false;
 	
 	public BufferedPartitionedAvroSink() {
 	}
@@ -60,6 +61,13 @@ public class BufferedPartitionedAvroSink implements BufferedMessageProcessor {
 		String schemaFile = configuration.getProperty(AdapterConfiguration.SCHEMA_FILE, "InstrumentationLog.avsc");
 		logger.info("Using avro schema from file: " + schemaFile);
 		this.schema = new Schema.Parser().parse(new File(schemaFile));
+
+		String fileMode = configuration.getProperty(AdapterConfiguration.FILE_MODE, "append");
+		this.createNewFile = "new".equalsIgnoreCase(fileMode);
+		if(this.createNewFile)
+			logger.info("Will create a new file in partition directory for every write.");
+		else
+			logger.info("Will append to a file in partition directory if the file exists.");
 
 		this.hdfsWriter = new AvroHDFSWriter(schema, 
 				configuration.getProperty(AdapterConfiguration.HDFS_URI),
@@ -98,16 +106,18 @@ public class BufferedPartitionedAvroSink implements BufferedMessageProcessor {
 	public void processAll() throws Exception {
 		for (String key : buffer.keySet()) {
 			try {
-				logger.debug("Writing partition [" + key + "]");
-				String filename = name + ".avro";
-				if(key != null && !key.equalsIgnoreCase(""))
-					filename = key + "/" + filename;
-				hdfsWriter.open(filename);
 				ArrayList<Record> records = buffer.get(key);
-				for (Record rec : records) {
-					hdfsWriter.write(rec);
+				if(records != null && records.size() > 0) {
+					logger.debug("Writing partition [" + key + "]");
+					String filename = createNewFile ? name + System.currentTimeMillis() + ".avro" : name + ".avro";
+					if(key != null && !key.equalsIgnoreCase(""))
+						filename = key + "/" + filename;
+					hdfsWriter.open(filename);
+					for (Record rec : records) {
+						hdfsWriter.write(rec);
+					}
+					logger.info("Sucessfully wrote " + records.size() + " records to partition [" + key + "]");
 				}
-				logger.info("Sucessfully wrote " + records.size() + " records to partition [" + key + "]");
 			} finally {
 				hdfsWriter.close();
 			}
