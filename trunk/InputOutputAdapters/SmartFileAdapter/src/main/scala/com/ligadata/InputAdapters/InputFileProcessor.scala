@@ -645,7 +645,7 @@ class FileProcessor(val partitionId: Int) extends Runnable {
       // Begin the listening process, TAKE()
 
       //instead of calling processExistingFiles repeatedly, use the monitor
-      smartFileMonitor = SmartFileMonitorFactory.createSmartFileMonitor(adapterConfig.Name, adapterConfig._type, null )
+      smartFileMonitor = SmartFileMonitorFactory.createSmartFileMonitor(adapterConfig.Name, adapterConfig._type, processFile)
       smartFileMonitor.init(adapterConfig.adapterSpecificCfg)
       smartFileMonitor.monitor()
 

@@ -6,6 +6,7 @@ import com.ligadata.AdaptersConfiguration._
 import org.apache.logging.log4j.LogManager
 
 import scala.actors.threadpool.ExecutorService
+import scala.collection.mutable.ArrayBuffer
 
 /**
   * Created by Yasser on 3/13/2016.
@@ -41,16 +42,80 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: I
     StopProcessing
   }
 
-  override def DeserializeKey(k: String): PartitionUniqueRecordKey = ???
+  override def DeserializeKey(k: String): PartitionUniqueRecordKey = {
+    val key = new SmartFilePartitionUniqueRecordKey
+    try {
+      LOG.debug("Deserializing Key:" + k)
+      key.Deserialize(k)
+    } catch {
+      case e: Exception => {
+        LOG.error("Failed to deserialize Key:%s.".format(k), e)
+        throw e
+      }
+    }
+    key
+  }
 
-  override def DeserializeValue(v: String): PartitionUniqueRecordValue = ???
+  override def DeserializeValue(v: String): PartitionUniqueRecordValue = {
+    val vl = new SmartFilePartitionUniqueRecordValue
+    if (v != null) {
+      try {
+        LOG.debug("Deserializing Value:" + v)
+        vl.Deserialize(v)
+      } catch {
+        case e: Exception => {
+          LOG.error("Failed to deserialize Value:%s.".format(v), e)
+          throw e
+        }
+      }
+    }
+    vl
+  }
 
-  override def getAllPartitionBeginValues: Array[(PartitionUniqueRecordKey, PartitionUniqueRecordValue)] = ???
+  override def getAllPartitionBeginValues: Array[(PartitionUniqueRecordKey, PartitionUniqueRecordValue)] = lock.synchronized {
+    getKeyValuePairs()
+  }
+
+  override def getAllPartitionEndValues: Array[(PartitionUniqueRecordKey, PartitionUniqueRecordValue)] = lock.synchronized {
+    getKeyValuePairs()
+  }
+
+  private def getKeyValuePairs(): Array[(PartitionUniqueRecordKey, PartitionUniqueRecordValue)] = {
+    val infoBuffer = ArrayBuffer[(PartitionUniqueRecordKey, PartitionUniqueRecordValue)]()
+
+    for(partitionId <- 1 to adapterConfig.monitoringConfig.consumersCount){
+      val rKey = new SmartFilePartitionUniqueRecordKey
+      val rValue = new SmartFilePartitionUniqueRecordValue
+
+      rKey.PartitionId = partitionId
+      rKey.Name = adapterConfig.Name
+
+      rValue.Offset = -1
+      rValue.FileName = ""
+
+      infoBuffer.append((rKey, rValue))
+    }
+
+    infoBuffer.toArray
+  }
 
   // each value in partitionInfo is (PartitionUniqueRecordKey, PartitionUniqueRecordValue, Long, PartitionUniqueRecordValue). // key, processed value, Start transactionid, Ignore Output Till given Value (Which is written into Output Adapter) & processing Transformed messages (processing & total)
-  override def GetAllPartitionUniqueRecordKey: Array[PartitionUniqueRecordKey] = ???
+  override def GetAllPartitionUniqueRecordKey: Array[PartitionUniqueRecordKey] = lock.synchronized {
 
-  override def getAllPartitionEndValues: Array[(PartitionUniqueRecordKey, PartitionUniqueRecordValue)] = ???
+    val infoBuffer = ArrayBuffer[PartitionUniqueRecordKey]()
+
+    for(partitionId <- 1 to adapterConfig.monitoringConfig.consumersCount){
+      val rKey = new SmartFilePartitionUniqueRecordKey
+      val rValue = new SmartFilePartitionUniqueRecordValue
+
+      rKey.PartitionId = partitionId
+      rKey.Name = adapterConfig.Name
+
+      infoBuffer.append(rKey)
+    }
+
+    infoBuffer.toArray
+  }
 
   override def StartProcessing(partitionInfo: Array[StartProcPartInfo], ignoreFirstMsg: Boolean): Unit = ???
 

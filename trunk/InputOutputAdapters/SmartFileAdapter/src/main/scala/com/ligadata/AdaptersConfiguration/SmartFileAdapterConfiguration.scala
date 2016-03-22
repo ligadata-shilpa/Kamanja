@@ -1,7 +1,7 @@
 package com.ligadata.AdaptersConfiguration
 
 import com.ligadata.Exceptions.KamanjaException
-import com.ligadata.InputOutputAdapterInfo.AdapterConfiguration
+import com.ligadata.InputOutputAdapterInfo._
 import org.json4s._
 import org.json4s.JsonDSL._
 import org.json4s.native.JsonMethods._
@@ -30,13 +30,15 @@ class FileAdapterMonitoringConfig {
   var locations : Array[String] = Array.empty[String] //folders to monitor
 
   var fileBufferingTimeout = 300 // in seconds
-  var metadataConfigFile = ""
+  var metadataConfigFile = "" // will check if needed
   var targetMoveDir = ""
+  var consumersCount : Int = _
 }
 
 object SmartFileAdapterConfiguration{
 
   val defaultWaitingTimeMS = 1000
+  val defaultConsumerCount = 1000
 
   def getAdapterConfig(inputConfig: AdapterConfiguration): SmartFileAdapterConfiguration = {
 
@@ -122,7 +124,12 @@ object SmartFileAdapterConfiguration{
         monitoringConfig.waitingTimeMS = kv._2.trim.toInt
         if (monitoringConfig.waitingTimeMS < 0)
           monitoringConfig.waitingTimeMS = defaultWaitingTimeMS
-      } else  if (kv._1.compareToIgnoreCase("Locations") == 0) {
+      } else if (kv._1.compareToIgnoreCase("ConsumersCount") == 0) {
+        monitoringConfig.consumersCount = kv._2.trim.toInt
+        if (monitoringConfig.consumersCount < 0)
+          monitoringConfig.consumersCount = defaultConsumerCount
+      }
+      else  if (kv._1.compareToIgnoreCase("Locations") == 0) {
         monitoringConfig.locations = kv._2.split(",").map(str => str.trim).filter(str => str.size > 0)
       }
     })
@@ -133,5 +140,59 @@ object SmartFileAdapterConfiguration{
     }
 
     (_type, connectionConfig, monitoringConfig)
+  }
+}
+
+case class SmartFileKeyData(Version: Int, Type: String, Name: String, PartitionId: Int)
+
+class SmartFilePartitionUniqueRecordKey extends PartitionUniqueRecordKey {
+  val Version: Int = 1
+  var Name: String = _ // Name
+  val Type: String = "SmartFile"
+  var PartitionId: Int = _ // Partition Id
+
+  override def Serialize: String = { // Making String from key
+  val json =
+    ("Version" -> Version) ~
+      ("Type" -> Type) ~
+      ("PartitionId" -> PartitionId)
+    compact(render(json))
+  }
+
+  override def Deserialize(key: String): Unit = { // Making Key from Serialized String
+  implicit val jsonFormats: Formats = DefaultFormats
+    val keyData = parse(key).extract[SmartFileKeyData]
+    if (keyData.Version == Version && keyData.Type.compareTo(Type) == 0) {
+      PartitionId = keyData.PartitionId
+    }
+    // else { } // Not yet handling other versions
+  }
+}
+
+case class SmartFileRecData(Version: Int, FileName : String, Offset: Option[Long])
+
+class SmartFilePartitionUniqueRecordValue extends PartitionUniqueRecordValue {
+  val Version: Int = 1
+  var FileName : String = _
+  var Offset: Long = -1 // Offset in the file
+
+  override def Serialize: String = {
+    // Making String from Value
+    val json =
+      ("Version" -> Version) ~
+        ("Offset" -> Offset) ~
+        ("FileName" -> FileName)
+    compact(render(json))
+  }
+
+  override def Deserialize(key: String): Unit = {
+    // Making Value from Serialized String
+    implicit val jsonFormats: Formats = DefaultFormats
+    val recData = parse(key).extract[SmartFileRecData]
+    if (recData.Version == Version) {
+      Offset = recData.Offset.get
+      FileName = recData.FileName
+    }
+    // else { } // Not yet handling other versions
   }
 }
