@@ -264,10 +264,6 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
     try {
       if (isValidMsg) {
         var allMdlsResults: scala.collection.mutable.Map[String, SavedMdlResult] = null
-        if (isValidPartitionKey) {
-          txnCtxt.getNodeCtxt.getEnvCtxt.setObject(transId, msgType, partKeyDataList, msg) // Whether it is newmsg or oldmsg, we are still doing createdNewMsg
-          allMdlsResults = txnCtxt.getNodeCtxt.getEnvCtxt.getModelsResult(transId, partKeyDataList)
-        }
         if (allMdlsResults == null)
           allMdlsResults = scala.collection.mutable.Map[String, SavedMdlResult]()
         // Run all models
@@ -303,10 +299,6 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
           val json = ("ModelsResult" -> results.toList.map(res => res.toJson))
           // returnOutput ++= allOutputQueueNames.map(adapNm => (adapNm, cntr.toString, compact(render(json)))) // Sending the same result to all queues
           // cntr += 1
-
-          if (isValidPartitionKey) {
-            txnCtxt.getNodeCtxt.getEnvCtxt.saveModelsResult(transId, partKeyDataList, allMdlsResults)
-          }
         }
       }
       return returnOutput.toArray

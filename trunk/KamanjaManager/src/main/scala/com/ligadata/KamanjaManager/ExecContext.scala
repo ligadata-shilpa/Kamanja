@@ -169,7 +169,7 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
         // kamanjaCallerCtxt.envCtxt.setAdapterUniqueKeyValue(transId, uk, uv, outputResults.toList)
         val forceCommitVal = txnCtxt.getValue("forcecommit")
         val forceCommitFalg = forceCommitVal != null
-        val containerData = if (forceCommitFalg || nodeContext.getEnvCtxt.EnableEachTransactionCommit) nodeContext.getEnvCtxt.getChangedData(transId, false, true) else scala.collection.immutable.Map[String, List[Key]]() // scala.collection.immutable.Map[String, List[List[String]]]
+        // val containerData = if (forceCommitFalg || nodeContext.getEnvCtxt.EnableEachTransactionCommit) nodeContext.getEnvCtxt.getChangedData(transId, false, true) else scala.collection.immutable.Map[String, List[Key]]() // scala.collection.immutable.Map[String, List[List[String]]]
         nodeContext.getEnvCtxt.commitData(transId, uk, uv, outputResults.toList, forceCommitFalg)
 
         // Set the uk & uv
@@ -257,19 +257,19 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
         // kamanjaCallerCtxt.envCtxt.removeCommittedKey(transId, uk)
         LOG.info(ManagerUtils.getComponentElapsedTimeStr("SendResults", uv, readTmNanoSecs, sendOutStartTime))
 
-        if (containerData != null && containerData.size > 0) {
-          val datachangedata = ("txnid" -> transId.toString) ~
-            ("changeddatakeys" -> containerData.map(kv =>
-              ("C" -> kv._1) ~
-                ("K" -> kv._2.map(k =>
-                  ("tm" -> k.timePartition) ~
-                    ("bk" -> k.bucketKey.toList) ~
-                    ("tx" -> k.transactionId) ~
-                    ("rid" -> k.rowId)))))
-          val sendJson = compact(render(datachangedata))
-          // Do we need to log this?
-          KamanjaLeader.SetNewDataToZkc(KamanjaConfiguration.zkNodeBasePath + "/datachange", sendJson.getBytes("UTF8"))
-        }
+//        if (containerData != null && containerData.size > 0) {
+//          val datachangedata = ("txnid" -> transId.toString) ~
+//            ("changeddatakeys" -> containerData.map(kv =>
+//              ("C" -> kv._1) ~
+//                ("K" -> kv._2.map(k =>
+//                  ("tm" -> k.timePartition) ~
+//                    ("bk" -> k.bucketKey.toList) ~
+//                    ("tx" -> k.transactionId) ~
+//                    ("rid" -> k.rowId)))))
+//          val sendJson = compact(render(datachangedata))
+//          // Do we need to log this?
+//          KamanjaLeader.SetNewDataToZkc(KamanjaConfiguration.zkNodeBasePath + "/datachange", sendJson.getBytes("UTF8"))
+//        }
       }
     } catch {
       case e: Exception => {
