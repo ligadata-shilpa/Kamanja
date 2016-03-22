@@ -15,3 +15,9 @@ libraryDependencies += "org.json4s" %% "json4s-jackson" % "3.2.9"
 libraryDependencies += "com.google.guava" % "guava" % "14.0.1" 
 
 libraryDependencies += "com.google.code.findbugs" % "jsr305" % "1.3.9"
+
+libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.0"
+
+retrieveManaged := true
+
+parallelExecution := false
