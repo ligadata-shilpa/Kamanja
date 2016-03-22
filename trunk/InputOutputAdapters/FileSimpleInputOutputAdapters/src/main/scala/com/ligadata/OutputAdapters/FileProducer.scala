@@ -16,23 +16,23 @@
 
 package com.ligadata.OutputAdapters
 
+import com.ligadata.KamanjaBase.NodeContext
 import org.apache.logging.log4j.{ Logger, LogManager }
 import java.io._
 import java.util.zip.{ZipException, GZIPOutputStream}
 import java.nio.file.{ Paths, Files }
-import com.ligadata.InputOutputAdapterInfo.{ AdapterConfiguration, OutputAdapter, OutputAdapterObj, CountersAdapter }
+import com.ligadata.InputOutputAdapterInfo._
 import com.ligadata.AdaptersConfiguration.FileAdapterConfiguration
 import com.ligadata.Exceptions.{FatalAdapterException}
 import com.ligadata.HeartBeat.{Monitorable, MonitorComponentInfo}
 import org.json4s.jackson.Serialization
 
-
-object FileProducer extends OutputAdapterObj {
+object FileProducer extends OutputAdapterFactory {
   val ADAPTER_DESCRIPTION = "File Producer"
-  def CreateOutputAdapter(inputConfig: AdapterConfiguration, cntrAdapter: CountersAdapter): OutputAdapter = new FileProducer(inputConfig, cntrAdapter)
+  def CreateOutputAdapter(inputConfig: AdapterConfiguration, nodeContext: NodeContext): OutputAdapter = new FileProducer(inputConfig, nodeContext)
 }
 
-class FileProducer(val inputConfig: AdapterConfiguration, cntrAdapter: CountersAdapter) extends OutputAdapter {
+class FileProducer(val inputConfig: AdapterConfiguration, val nodeContext: NodeContext) extends OutputAdapter {
   private[this] val _lock = new Object()
   private[this] val LOG = LogManager.getLogger(getClass);
 
@@ -132,8 +132,8 @@ class FileProducer(val inputConfig: AdapterConfiguration, cntrAdapter: CountersA
           }
         }
       })
-      val key = Category + "/" + fc.Name + "/evtCnt"
-      cntrAdapter.addCntr(key, messages.size) // for now adding rows
+      // val key = Category + "/" + fc.Name + "/evtCnt"
+      // cntrAdapter.addCntr(key, messages.size) // for now adding rows
     } catch {
       case e: Exception => {
         LOG.error("File input adapter " + fc.Name + ": Failed to send", e)

@@ -20,7 +20,6 @@ package com.ligadata.KamanjaManager
 import com.ligadata.KamanjaBase._
 import com.ligadata.Utils.Utils
 import java.util.Map
-import com.ligadata.outputmsg.OutputMsgGenerator
 import org.apache.logging.log4j.{Logger, LogManager}
 import java.io.{PrintWriter, File}
 import scala.xml.XML
@@ -29,7 +28,6 @@ import scala.collection.mutable.ArrayBuffer
 import org.json4s._
 import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
-import com.ligadata.outputmsg.OutputMsgGenerator
 import com.ligadata.InputOutputAdapterInfo.{ExecContext, InputAdapter, PartitionUniqueRecordKey, PartitionUniqueRecordValue}
 import com.ligadata.Exceptions.{MessagePopulationException}
 
@@ -37,7 +35,6 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
   val LOG = LogManager.getLogger(getClass);
   var cntr: Long = 0
   var mdlsChangedCntr: Long = -1
-  var outputGen = new OutputMsgGenerator()
   // ModelName, ModelInfo, IsModelInstanceReusable, Global ModelInstance if the model is IsModelInstanceReusable == true. The last boolean is to check whether we tested message type or not (thi is to check Reusable flag)
   var models = Array[(String, MdlInfo, Boolean, ModelInstance, Boolean)]()
   var validateMsgsForMdls = scala.collection.mutable.Set[String]() // Message Names for creating models instances
@@ -208,7 +205,7 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
   }
 
   // Returns Adapter/Queue Name, Partition Key & Output String
-  def execute(transId: Long, inputData: Array[Byte], msgType: String, msgInfo: MsgContainerObjAndTransformInfo, inputdata: InputData, txnCtxt: TransactionContext, readTmNs: Long, rdTmMs: Long, uk: String, uv: String, xformedMsgCntr: Int, totalXformedMsgs: Int, ignoreOutput: Boolean, allOutputQueueNames: Array[String]): Array[(String, String, String)] = {
+  def execute(transId: Long, inputData: Array[Byte], msgType: String, msgInfo: MsgContainerObjAndTransformInfo, inputdata: InputData, txnCtxt: TransactionContext, readTmNs: Long, rdTmMs: Long, uk: String, uv: String, xformedMsgCntr: Int, totalXformedMsgs: Int, ignoreOutput: Boolean): Array[(String, String, String)] = {
     // LOG.debug("LE => " + msgData)
     LOG.debug("Processing uniqueKey:%s, uniqueVal:%s".format(uk, uv))
     val returnOutput = ArrayBuffer[(String, String, String)]() // Adapter/Queue name, PartitionKey & output message 
@@ -303,17 +300,9 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
             }).toArray
           })
 
-          val outputMsgs = KamanjaMetadata.getMdMgr.OutputMessages(true, true)
-          if (outputMsgs != None && outputMsgs != null && outputMsgs.get.size > 0) {
-            LOG.info("msg " + msg.FullName)
-            LOG.info(" outputMsgs.size" + outputMsgs.get.size)
-            val resultedoutput = outputGen.generateOutputMsg(msg, resMap, outputMsgs.get.toArray)
-            returnOutput ++= resultedoutput.map(resout => (resout._1, resout._2.mkString(","), resout._3))
-          } else {
-            val json = ("ModelsResult" -> results.toList.map(res => res.toJson))
-            returnOutput ++= allOutputQueueNames.map(adapNm => (adapNm, cntr.toString, compact(render(json)))) // Sending the same result to all queues
-            cntr += 1
-          }
+          val json = ("ModelsResult" -> results.toList.map(res => res.toJson))
+          // returnOutput ++= allOutputQueueNames.map(adapNm => (adapNm, cntr.toString, compact(render(json)))) // Sending the same result to all queues
+          // cntr += 1
 
           if (isValidPartitionKey) {
             txnCtxt.getNodeCtxt.getEnvCtxt.saveModelsResult(transId, partKeyDataList, allMdlsResults)

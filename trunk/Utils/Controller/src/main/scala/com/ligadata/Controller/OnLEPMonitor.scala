@@ -28,30 +28,21 @@ import org.apache.logging.log4j.{ Logger, LogManager }
 import scala.io.Source
 import org.json4s.jackson.JsonMethods._
 import scala.sys.process.{ ProcessIO, Process }
-import com.ligadata.KamanjaBase.DataDelimiters
+import com.ligadata.KamanjaBase.{NodeContext, DataDelimiters}
 import com.ligadata.KamanjaVersion.KamanjaVersion
-
-object SimpleStats extends CountersAdapter {
-
-  override def addCntr(key: String, cnt: Long): Long = 0
-  override def addCntr(cntrs: scala.collection.immutable.Map[String, Long]): Unit = {}
-  override def getCntr(key: String): Long = 0
-  override def getDispString(delim: String): String = ""
-  override def copyMap: scala.collection.immutable.Map[String, Long] = null
-}
 
 object KamanjaMonitorConfig {
   var modelsData: List[Map[String, Any]] = null
 }
 
-object ExecContextObjImpl extends ExecContextObj {
-  def CreateExecContext(input: InputAdapter, curPartitionKey: PartitionUniqueRecordKey, callerCtxt: InputAdapterCallerContext): ExecContext = {
-    new ExecContextImpl(input, curPartitionKey, callerCtxt)
+object ExecContextFactoryImpl extends ExecContextFactory {
+  def CreateExecContext(input: InputAdapter, curPartitionKey: PartitionUniqueRecordKey, nodeContext: NodeContext): ExecContext = {
+    new ExecContextImpl(input, curPartitionKey, nodeContext)
   }
 }
 
 // There are no locks at this moment. Make sure we don't call this with multiple threads for same object
-class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUniqueRecordKey, val callerCtxt: InputAdapterCallerContext) extends ExecContext {
+class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUniqueRecordKey, val nodeContext: NodeContext) extends ExecContext {
   val agg = SampleAggregator.getNewSampleAggregator
   initializeModelsToMonitor(KamanjaMonitorConfig.modelsData, agg)
   agg.setIsLookingForSeed(true)
@@ -121,7 +112,7 @@ class KamanjaMonitor {
       // Start all the neede Kafka Adapters for Output queues
       oAdaptersConfigs.foreach(conf => {
         // Create Kafka Consumer Here for the output queue
-        val t_adapter = KafkaSimpleConsumer.CreateInputAdapter(conf, null, ExecContextObjImpl, SimpleStats)
+        val t_adapter = KafkaSimpleConsumer.CreateInputAdapter(conf, ExecContextFactoryImpl, null)
         val t_adapterMeta: Array[(PartitionUniqueRecordKey, PartitionUniqueRecordValue)] = t_adapter.getAllPartitionEndValues
 
         //  Initialize and start the adapter that is going to read the output queues here.
@@ -138,7 +129,7 @@ class KamanjaMonitor {
 
       // Initialize and start the adapter that is going to read the status queue here.  - there is onlly 1 of these for now.
       var sub: Boolean = false
-      s_adapter = KafkaSimpleConsumer.CreateInputAdapter(sAdaptersConfigs.head, null, ExecContextObjImpl, SimpleStats)
+      s_adapter = KafkaSimpleConsumer.CreateInputAdapter(sAdaptersConfigs.head, ExecContextFactoryImpl, null)
       val s_adapterMeta: Array[(PartitionUniqueRecordKey, PartitionUniqueRecordValue)] = s_adapter.getAllPartitionEndValues
       val s_inputMeta = s_adapterMeta.map(partMeta => {
         if (!sub) {
@@ -297,7 +288,7 @@ class KamanjaMonitor {
 
   /**
    * configureKafkaAdapters - set up the oAdapters and sAdapter arrays here.
-   * @param aConfigs  Map[String,List[Any]]
+   * @param aConfigs  Map[String,List[Any] ]
    */
   private def configureKafkaAdapters(aConfigs: Map[String, List[Any]]): Unit = {
     val statusQs: List[Map[String, Any]] = aConfigs.getOrElse("StatusQs", null).asInstanceOf[List[Map[String, Any]]]

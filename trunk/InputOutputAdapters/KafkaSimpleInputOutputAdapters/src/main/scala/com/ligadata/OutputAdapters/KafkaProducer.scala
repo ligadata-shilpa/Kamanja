@@ -18,9 +18,10 @@
 package com.ligadata.OutputAdapters
 
 import java.util.{ Properties, Arrays }
+import com.ligadata.KamanjaBase.NodeContext
 import kafka.common.{ QueueFullException, FailedToSendMessageException }
 import org.apache.logging.log4j.{ Logger, LogManager }
-import com.ligadata.InputOutputAdapterInfo.{ AdapterConfiguration, OutputAdapter, OutputAdapterObj, CountersAdapter }
+import com.ligadata.InputOutputAdapterInfo._
 import com.ligadata.AdaptersConfiguration.{ KafkaConstants, KafkaQueueAdapterConfiguration }
 import com.ligadata.Exceptions.{ FatalAdapterException }
 import com.ligadata.HeartBeat.{Monitorable, MonitorComponentInfo}
@@ -35,8 +36,8 @@ import scala.actors.threadpool.{ TimeUnit, ExecutorService, Executors }
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 
-object KafkaProducer extends OutputAdapterObj {
-  def CreateOutputAdapter(inputConfig: AdapterConfiguration, cntrAdapter: CountersAdapter): OutputAdapter = new KafkaProducer(inputConfig, cntrAdapter)
+object KafkaProducer extends OutputAdapterFactory {
+  def CreateOutputAdapter(inputConfig: AdapterConfiguration, nodeContext: NodeContext): OutputAdapter = new KafkaProducer(inputConfig, nodeContext)
   val HB_PERIOD = 5000
 
   // Statistics Keys
@@ -51,7 +52,7 @@ object KafkaProducer extends OutputAdapterObj {
 // New Producer configs are found @ http://kafka.apache.org/082/documentation.html#newproducerconfigs
 // We still have ordering issues with Kafka. Once case is, if Kafka goes down and comes back and if we have list of new messages to send before it trigger failure, the new messages may go first
 
-class KafkaProducer(val inputConfig: AdapterConfiguration, cntrAdapter: CountersAdapter) extends OutputAdapter {
+class KafkaProducer(val inputConfig: AdapterConfiguration, val nodeContext: NodeContext) extends OutputAdapter {
   private[this] val LOG = LogManager.getLogger(getClass);
 
   //BUGBUG:: Not Checking whether inputConfig is really QueueAdapterConfiguration or not. 
@@ -485,7 +486,7 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
         })
         lastAccessRec = null
         sentMsgsCntr += 1
-        cntrAdapter.addCntr(key, 1)
+        // cntrAdapter.addCntr(key, 1)
       })
 
       keyMessages.clear()

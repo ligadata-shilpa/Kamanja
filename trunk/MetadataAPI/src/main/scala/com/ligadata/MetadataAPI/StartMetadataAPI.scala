@@ -44,7 +44,6 @@ object StartMetadataAPI {
   val REMOVE = "remove"
   val GET = "get"
   val ACTIVATE = "activate"
-  val OUTPUT = "output"
   val DEACTIVATE = "deactivate"
   val UPDATE = "update"
   val MODELS = "models"
@@ -74,7 +73,7 @@ object StartMetadataAPI {
       var argsUntilParm = 2
 
       args.foreach(arg =>
-        if (arg.equalsIgnoreCase(OUTPUT) || arg.equalsIgnoreCase(UPDATE) || arg.equalsIgnoreCase(MODELS) || arg.equalsIgnoreCase(MESSAGES) || arg.equalsIgnoreCase(CONTAINERS)) {
+        if (arg.equalsIgnoreCase(UPDATE) || arg.equalsIgnoreCase(MODELS) || arg.equalsIgnoreCase(MESSAGES) || arg.equalsIgnoreCase(CONTAINERS)) {
           argsUntilParm = 3
         }
       )
@@ -201,25 +200,6 @@ object StartMetadataAPI {
             response = MessageService.getMessage()
           else
             response = MessageService.getMessage(param)
-        }
-
-
-        //output message management
-        case Action.ADDOUTPUTMESSAGE => response = MessageService.addOutputMessage(input)
-        case Action.UPDATEOUTPUTMESSAGE => response =MessageService.updateOutputMessage(input)
-        case Action.REMOVEOUTPUTMESSAGE => response ={
-          if (param.length == 0)
-            MessageService.removeOutputMessage()
-          else
-            MessageService.removeOutputMessage(param)
-        }
-
-        case Action.GETALLOUTPUTMESSAGES => response = MessageService.getAllOutputMessages
-        case Action.GETOUTPUTMESSAGE => response = {
-          if (param.length == 0)
-            MessageService.getOutputMessage()
-          else
-            MessageService.getOutputMessage(param)
         }
 
         //model management

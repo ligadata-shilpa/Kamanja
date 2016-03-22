@@ -17,8 +17,8 @@
 
 package com.ligadata.KamanjaManager
 
-import com.ligadata.KamanjaBase.{ EnvContext, DataDelimiters, TransactionContext, InputData }
-import com.ligadata.InputOutputAdapterInfo.{ ExecContext, InputAdapter, OutputAdapter, ExecContextObj, PartitionUniqueRecordKey, PartitionUniqueRecordValue, InputAdapterCallerContext }
+import com.ligadata.KamanjaBase._
+import com.ligadata.InputOutputAdapterInfo._
 import com.ligadata.KvBase.{ Key }
 
 import org.apache.logging.log4j.{ Logger, LogManager }
@@ -33,46 +33,24 @@ import com.ligadata.transactions._
 import com.ligadata.transactions._
 
 // There are no locks at this moment. Make sure we don't call this with multiple threads for same object
-class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUniqueRecordKey, val callerCtxt: InputAdapterCallerContext) extends ExecContext {
+class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUniqueRecordKey, val nodeContext: NodeContext) extends ExecContext {
   private val LOG = LogManager.getLogger(getClass);
-  if (callerCtxt.isInstanceOf[KamanjaInputAdapterCallerContext] == false) {
-    throw new Exception("Handling only KamanjaInputAdapterCallerContext in ValidateExecCtxtImpl")
-  }
 
   NodeLevelTransService.init(KamanjaConfiguration.zkConnectString, KamanjaConfiguration.zkSessionTimeoutMs, KamanjaConfiguration.zkConnectionTimeoutMs, KamanjaConfiguration.zkNodeBasePath, KamanjaConfiguration.txnIdsRangeForNode, KamanjaConfiguration.dataDataStoreInfo, KamanjaConfiguration.jarPaths)
 
-  private val kamanjaCallerCtxt = callerCtxt.asInstanceOf[KamanjaInputAdapterCallerContext]
   private val transService = new SimpleTransService
   transService.init(KamanjaConfiguration.txnIdsRangeForPartition)
 
   private val xform = new TransformMessageData
   private val engine = new LearningEngine(input, curPartitionKey)
   private var previousLoader: com.ligadata.Utils.KamanjaClassLoader = null
-  private val allOutputAdaptersNames = if (kamanjaCallerCtxt.outputAdapters != null) kamanjaCallerCtxt.outputAdapters.map(o => o.inputConfig.Name.toLowerCase) else Array[String]()
-  private val allOuAdapters = if (kamanjaCallerCtxt.outputAdapters != null) kamanjaCallerCtxt.outputAdapters.map(o => (o.inputConfig.Name.toLowerCase, o)).toMap else Map[String, OutputAdapter]()
-  private val failedEventsAdapter =
-    if (input != null && input.inputConfig != null && input.inputConfig.failedEventsAdapterName != null && kamanjaCallerCtxt.failedEventsAdapters != null && kamanjaCallerCtxt.failedEventsAdapters.size > 0) {
-      val failedEventsAdapterName = input.inputConfig.failedEventsAdapterName.trim()
-      var failedAdap: OutputAdapter = null
-      if (failedEventsAdapterName.size > 0) {
-        val filtred = kamanjaCallerCtxt.failedEventsAdapters.filter(a => (a.inputConfig.Name.trim().compareToIgnoreCase(failedEventsAdapterName) == 0))
-        if (filtred.size > 0) {
-          LOG.debug("Found FailedEventsAdapter %s for InputAdapter %s".format(input.inputConfig.failedEventsAdapterName, input.inputConfig.Name))
-          failedAdap = filtred(0)
-        } else {
-          LOG.warn("Not found FailedEventsAdapter %s for InputAdapter %s. Ignoring message failed in InputAdapter %s".format(input.inputConfig.failedEventsAdapterName, input.inputConfig.Name, input.inputConfig.Name))
-        }
-      }
-      failedAdap
-    } else {
-      null
-    }
 
   private val failedEventDtFormat = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
 
   private val adapterInfoMap = ProcessedAdaptersInfo.getOneInstance(this.hashCode(), true)
 
   private def SendFailedEvent(data: Array[Byte], format: String, associatedMsg: String, uk: String, uv: String, e: Throwable): Unit = {
+/*
     if (failedEventsAdapter == null)
       return
 
@@ -105,6 +83,7 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
         LOG.error("Failed to send data to failedevent adapter:" + failedEventsAdapter.inputConfig.Name, t)
       }
     }
+*/
   }
 
   def execute(data: Array[Byte], format: String, uniqueKey: PartitionUniqueRecordKey, uniqueVal: PartitionUniqueRecordValue, readTmNanoSecs: Long, readTmMilliSecs: Long, ignoreOutput: Boolean, associatedMsg: String, delimiters: DataDelimiters): Unit = {
@@ -124,7 +103,7 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
       val uk = uniqueKey.Serialize
       val uv = uniqueVal.Serialize
       val transId = transService.getNextTransId
-      val txnCtxt = new TransactionContext(transId, kamanjaCallerCtxt.gNodeContext, data, uk)
+      val txnCtxt = new TransactionContext(transId, nodeContext, data, uk)
       LOG.debug("Processing uniqueKey:%s, uniqueVal:%s, Datasize:%d".format(uk, uv, data.size))
 
       var outputResults = ArrayBuffer[(String, String, String)]() // Adapter/Queue name, Partition Key & output message 
@@ -149,7 +128,7 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
           xformedmsgs.foreach(xformed => {
             xformedMsgCntr += 1
             try {
-              var output = engine.execute(transId, data, xformed._1, xformed._2, xformed._3, txnCtxt, readTmNanoSecs, readTmMilliSecs, uk, uv, xformedMsgCntr, totalXformedMsgs, ignoreOutput, allOutputAdaptersNames)
+              var output = engine.execute(transId, data, xformed._1, xformed._2, xformed._3, txnCtxt, readTmNanoSecs, readTmMilliSecs, uk, uv, xformedMsgCntr, totalXformedMsgs, ignoreOutput)
               if (output != null) {
                 outputResults ++= output
               }
@@ -190,8 +169,8 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
         // kamanjaCallerCtxt.envCtxt.setAdapterUniqueKeyValue(transId, uk, uv, outputResults.toList)
         val forceCommitVal = txnCtxt.getValue("forcecommit")
         val forceCommitFalg = forceCommitVal != null
-        val containerData = if (forceCommitFalg || kamanjaCallerCtxt.gNodeContext.getEnvCtxt.EnableEachTransactionCommit) kamanjaCallerCtxt.gNodeContext.getEnvCtxt.getChangedData(transId, false, true) else scala.collection.immutable.Map[String, List[Key]]() // scala.collection.immutable.Map[String, List[List[String]]]
-        kamanjaCallerCtxt.gNodeContext.getEnvCtxt.commitData(transId, uk, uv, outputResults.toList, forceCommitFalg)
+        val containerData = if (forceCommitFalg || nodeContext.getEnvCtxt.EnableEachTransactionCommit) nodeContext.getEnvCtxt.getChangedData(transId, false, true) else scala.collection.immutable.Map[String, List[Key]]() // scala.collection.immutable.Map[String, List[List[String]]]
+        nodeContext.getEnvCtxt.commitData(transId, uk, uv, outputResults.toList, forceCommitFalg)
 
         // Set the uk & uv
         if (adapterInfoMap != null)
@@ -209,58 +188,59 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
             }
           }
         }
-
         val sendOutStartTime = System.nanoTime
-        val outputs = outputResults.groupBy(_._1)
+        /*
+                val outputs = outputResults.groupBy(_._1)
 
-        var remOutputs = outputs.toArray
-        var failedWaitTime = 15000 // Wait time starts at 15 secs
-        val maxFailedWaitTime = 60000 // Max Wait time 60 secs
+                var remOutputs = outputs.toArray
+                var failedWaitTime = 15000 // Wait time starts at 15 secs
+                val maxFailedWaitTime = 60000 // Max Wait time 60 secs
 
-        while (remOutputs.size > 0) {
-          var failedOutputs = ArrayBuffer[(String, ArrayBuffer[(String, String, String)])]()
-          remOutputs.foreach(output => {
-            val oadap = allOuAdapters.getOrElse(output._1, null)
-            LOG.debug("Sending data => " + output._2.map(o => o._1 + "~~~" + o._2 + "~~~" + o._3).mkString("###"))
-            if (oadap != null) {
-              try {
-                oadap.send(output._2.map(out => out._3.getBytes("UTF8")).toArray, output._2.map(out => out._2.getBytes("UTF8")).toArray)
-              } catch {
-                case fae: FatalAdapterException => {
-                  LOG.error("Failed to send data to output adapter:" + oadap.inputConfig.Name, fae)
-                  failedOutputs += output
+                while (remOutputs.size > 0) {
+                  var failedOutputs = ArrayBuffer[(String, ArrayBuffer[(String, String, String)])]()
+                  remOutputs.foreach(output => {
+                    val oadap = allOuAdapters.getOrElse(output._1, null)
+                    LOG.debug("Sending data => " + output._2.map(o => o._1 + "~~~" + o._2 + "~~~" + o._3).mkString("###"))
+                    if (oadap != null) {
+                      try {
+                        oadap.send(output._2.map(out => out._3.getBytes("UTF8")).toArray, output._2.map(out => out._2.getBytes("UTF8")).toArray)
+                      } catch {
+                        case fae: FatalAdapterException => {
+                          LOG.error("Failed to send data to output adapter:" + oadap.inputConfig.Name, fae)
+                          failedOutputs += output
+                        }
+                        case e: Exception => {
+                          LOG.error("Failed to send data to output adapter:" + oadap.inputConfig.Name, e)
+                          failedOutputs += output
+                        }
+                        case t: Throwable => {
+                          LOG.error("Failed to send data to output adapter:" + oadap.inputConfig.Name, t)
+                          failedOutputs += output
+                        }
+                      }
+                    }
+                  })
+
+                  remOutputs = failedOutputs.toArray
+
+                  if (remOutputs.size > 0) {
+                    try {
+                      LOG.error("Failed to send %d outputs. Waiting for another %d milli seconds and going to start them again.".format(remOutputs.size, failedWaitTime))
+                      Thread.sleep(failedWaitTime)
+                    } catch {
+                      case e: Exception => { LOG.warn("", e)
+
+                      }
+                    }
+                    // Adjust time for next time
+                    if (failedWaitTime < maxFailedWaitTime) {
+                      failedWaitTime = failedWaitTime * 2
+                      if (failedWaitTime > maxFailedWaitTime)
+                        failedWaitTime = maxFailedWaitTime
+                    }
+                  }
                 }
-                case e: Exception => {
-                  LOG.error("Failed to send data to output adapter:" + oadap.inputConfig.Name, e)
-                  failedOutputs += output
-                }
-                case t: Throwable => {
-                  LOG.error("Failed to send data to output adapter:" + oadap.inputConfig.Name, t)
-                  failedOutputs += output
-                }
-              }
-            }
-          })
-
-          remOutputs = failedOutputs.toArray
-
-          if (remOutputs.size > 0) {
-            try {
-              LOG.error("Failed to send %d outputs. Waiting for another %d milli seconds and going to start them again.".format(remOutputs.size, failedWaitTime))
-              Thread.sleep(failedWaitTime)
-            } catch {
-              case e: Exception => { LOG.warn("", e) 
-
-              }
-            }
-            // Adjust time for next time
-            if (failedWaitTime < maxFailedWaitTime) {
-              failedWaitTime = failedWaitTime * 2
-              if (failedWaitTime > maxFailedWaitTime)
-                failedWaitTime = maxFailedWaitTime
-            }
-          }
-        }
+        */
 
         if (KamanjaConfiguration.waitProcessingTime > 0 && KamanjaConfiguration.waitProcessingSteps(3)) {
           try {
@@ -299,9 +279,9 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
   }
 }
 
-object ExecContextObjImpl extends ExecContextObj {
-  def CreateExecContext(input: InputAdapter, curPartitionKey: PartitionUniqueRecordKey, callerCtxt: InputAdapterCallerContext): ExecContext = {
-    new ExecContextImpl(input, curPartitionKey, callerCtxt)
+object ExecContextFactoryImpl extends ExecContextFactory {
+  def CreateExecContext(input: InputAdapter, curPartitionKey: PartitionUniqueRecordKey, nodeContext: NodeContext): ExecContext = {
+    new ExecContextImpl(input, curPartitionKey, nodeContext)
   }
 }
 
@@ -337,14 +317,8 @@ object CollectKeyValsFromValidation {
 }
 
 // There are no locks at this moment. Make sure we don't call this with multiple threads for same object
-class ValidateExecCtxtImpl(val input: InputAdapter, val curPartitionKey: PartitionUniqueRecordKey, val callerCtxt: InputAdapterCallerContext) extends ExecContext {
+class ValidateExecCtxtImpl(val input: InputAdapter, val curPartitionKey: PartitionUniqueRecordKey, val nodeContext: NodeContext) extends ExecContext {
   val LOG = LogManager.getLogger(getClass);
-
-  if (callerCtxt.isInstanceOf[KamanjaInputAdapterCallerContext] == false) {
-    throw new Exception("Handling only KamanjaInputAdapterCallerContext in ValidateExecCtxtImpl")
-  }
-
-  val kamanjaCallerCtxt = callerCtxt.asInstanceOf[KamanjaInputAdapterCallerContext]
 
   NodeLevelTransService.init(KamanjaConfiguration.zkConnectString, KamanjaConfiguration.zkSessionTimeoutMs, KamanjaConfiguration.zkConnectionTimeoutMs, KamanjaConfiguration.zkNodeBasePath, KamanjaConfiguration.txnIdsRangeForNode, KamanjaConfiguration.dataDataStoreInfo, KamanjaConfiguration.jarPaths)
 
@@ -434,7 +408,7 @@ class ValidateExecCtxtImpl(val input: InputAdapter, val curPartitionKey: Partiti
         }
       } finally {
         // LOG.debug("UniqueKeyValue:%s => %s".format(uk, uv))
-        kamanjaCallerCtxt.gNodeContext.getEnvCtxt.commitData(transId, null, null, null, false)
+        nodeContext.getEnvCtxt.commitData(transId, null, null, null, false)
       }
     } catch {
       case e: Exception => {
@@ -444,9 +418,9 @@ class ValidateExecCtxtImpl(val input: InputAdapter, val curPartitionKey: Partiti
   }
 }
 
-object ValidateExecContextObjImpl extends ExecContextObj {
-  def CreateExecContext(input: InputAdapter, curPartitionKey: PartitionUniqueRecordKey, callerCtxt: InputAdapterCallerContext): ExecContext = {
-    new ValidateExecCtxtImpl(input, curPartitionKey, callerCtxt)
+object ValidateExecContextFactoryImpl extends ExecContextFactory {
+  def CreateExecContext(input: InputAdapter, curPartitionKey: PartitionUniqueRecordKey, nodeContext: NodeContext): ExecContext = {
+    new ValidateExecCtxtImpl(input, curPartitionKey, nodeContext)
   }
 }
 
