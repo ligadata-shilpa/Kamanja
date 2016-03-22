@@ -5,6 +5,7 @@ import org.json4s.{MappingException, DefaultFormats, Formats}
 import scala.reflect.runtime.{universe => ru}
 
 import scala.collection.mutable.{ArrayBuffer }
+import scala.collection.JavaConverters._
 
 import java.io.{DataInputStream, ByteArrayInputStream, DataOutputStream, ByteArrayOutputStream}
 
@@ -73,15 +74,18 @@ class JSONSerDes(val mgr : MdMgr
         dos.writeUTF(containerVersionJson)
         dos.writeUTF(containerPhyNameJson)
 
-        val fields : Array[AttributeNameAndValue] = v.getAllAttributeValues
-        val lastAttr : AttributeNameAndValue = fields.last
-        fields.foreach(attr => {
-            val name : String = attr.getAttributeName
-            val attrTypeValue : AttributeValue = attr.getAttributeValue
-            val typeName : String = attrTypeValue.getValueType
-            val fieldTypeDef : BaseTypeDef = mgr.ActiveType(typeName)
-            val rawValue : Any = attrTypeValue.getValue
-            val useComma : Boolean = if (lastAttr != attr) withComma else withoutComma
+        val fields : java.util.HashMap[String,com.ligadata.KamanjaBase.AttributeValue] = v.getAllAttributeValues
+        var processCnt : Int = 0
+        val fieldCnt : Int = fields.size()
+        fields.asScala.foreach(attr => {
+            processCnt += 1
+            val key : String = attr._1
+            val value : com.ligadata.KamanjaBase.AttributeValue = attr._2
+            val valueType : String = value.getValueType
+            val fieldTypeDef : BaseTypeDef = mgr.ActiveType(valueType)
+            val typeName : String = fieldTypeDef.FullName
+            val rawValue : Any = value.getValue
+            val useComma : Boolean = if (fieldCnt < fieldCnt) withComma else withoutComma
 
             val isContainerType : Boolean = isContainerTypeDef(fieldTypeDef)
             val fldRep : String = if (isContainerType) {
