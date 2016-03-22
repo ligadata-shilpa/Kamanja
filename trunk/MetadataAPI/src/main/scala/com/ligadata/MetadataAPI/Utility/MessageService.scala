@@ -18,7 +18,7 @@ package com.ligadata.MetadataAPI.Utility
 
 import java.io.File
 
-import com.ligadata.MetadataAPI.{MetadataAPIOutputMsg, MetadataAPIImpl,ApiResult,ErrorCodeConstants}
+import com.ligadata.MetadataAPI.{MetadataAPIImpl,ApiResult,ErrorCodeConstants}
 
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
