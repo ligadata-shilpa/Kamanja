@@ -1,7 +1,8 @@
 package com.ligadata.BasicCacheConcurrency
 
 
-import net.sf.ehcache.distribution.jgroups.JGroupsCacheReplicatorFactory
+import net.sf.ehcache.bootstrap.{BootstrapCacheLoader, BootstrapCacheLoaderFactory}
+import net.sf.ehcache.distribution.jgroups.{JGroupsBootstrapCacheLoaderFactory, JGroupsCacheReplicatorFactory}
 import net.sf.ehcache.event.CacheEventListener
 import net.sf.ehcache.{Element, Cache, CacheManager}
 
@@ -22,7 +23,9 @@ class MemoryDataCacheImp extends DataCache{
 
     cacheConfig = new CacheCustomConfig(jsonString)
     cm = CacheManager.create(cacheConfig.getConfiguration())
-    cm.addCache(new Cache(cacheConfig))
+    val cache = new Cache(cacheConfig)
+    cache.setBootstrapCacheLoader(cacheConfig.getBootStrap())
+    cm.addCache(cache)
 
   }
 
@@ -43,8 +46,9 @@ class MemoryDataCacheImp extends DataCache{
     if(cache.isKeyInCache(key)){
 
       val ele:Element = cache.get(key)
+      //val obj:Object = ele.getValue
 
-      return ele.getObjectValue
+      return ele.getObjectKey
     }else{
       System.out.println("get data from SSD");
 

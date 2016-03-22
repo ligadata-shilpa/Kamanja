@@ -2,8 +2,9 @@ package com.ligadata.BasicCacheConcurrency
 
 import java.util.Properties
 
-import net.sf.ehcache.config.{FactoryConfiguration, Configuration, CacheConfiguration}
-import net.sf.ehcache.distribution.jgroups.{JGroupsCacheReplicatorFactory, JGroupsCacheManagerPeerProviderFactory}
+import net.sf.ehcache.bootstrap.BootstrapCacheLoader
+import net.sf.ehcache.config.{MemoryUnit, FactoryConfiguration, Configuration, CacheConfiguration}
+import net.sf.ehcache.distribution.jgroups.{JGroupsBootstrapCacheLoaderFactory, JGroupsCacheReplicatorFactory, JGroupsCacheManagerPeerProviderFactory}
 import net.sf.ehcache.event.CacheEventListener
 
 
@@ -18,8 +19,8 @@ object CacheCustomConfig{
   val REPLICATE_REMOVALS:String = "replicateRemovals"
   val REPLICATE_ASYNCHRONOUSLY:String = "replicateAsynchronously"
   val NAME:String="name"
-  val MAXENTRIESLOCALHEAP:String="maxEntriesLocalHeap"
-  val MAXENTRIESLOCALDISK:String="maxEntriesLocalDisk"
+  val MAXBYTESLOCALHEAP:String="maxBytesLocalHeap"
+  val MAXBYTESLOCALDISK:String="maxBytesLocalDisk"
   val ETERNAL:String="eternal"
   val DISKSPOOLBUFFERSIZEMB:String="diskSpoolBufferSizeMB"
   val TIMETOIDLESECONDS:String="timeToIdleSeconds"
@@ -29,19 +30,21 @@ object CacheCustomConfig{
   val CLASS:String="class"
   val SEPARATOR:String="separator"
   val PEERCONFIG:String="peerconfig"
+  val BOOTSTRAPASYNCHRONOUSLY:String="bootstrapAsynchronously"
 }
 
 class CacheCustomConfig(jsonString:String) extends CacheConfiguration{
   private val config:Configuration = new Configuration
   private val factory:FactoryConfiguration[Nothing] = new FactoryConfiguration
   private val properties:Properties = new Properties
+  private val propertiesBootStrap:Properties = new Properties
   private val json = org.json4s.jackson.JsonMethods.parse(jsonString)
   private val values = json.values.asInstanceOf[Map[String, String]]
 
   /*
              name="Node"
-             maxEntriesLocalHeap="10000"
-             maxEntriesLocalDisk="1000"
+             maxBytesLocalHeap="10000"
+             maxBytesLocalDisk="1000"
              eternal="false"
              diskSpoolBufferSizeMB="20"
              timeToIdleSeconds="300"
@@ -56,13 +59,14 @@ class CacheCustomConfig(jsonString:String) extends CacheConfiguration{
              replicateUpdatesViaCopy=false
              replicateRemovals=true
              replicateAsynchronously=true
+             bootstrapAsynchronously=false
 
    */
 
   this.name(values.getOrElse(CacheCustomConfig.NAME,"Node"))
     .eternal(values.getOrElse(CacheCustomConfig.ETERNAL,"false").toBoolean)
-    .maxEntriesLocalHeap(values.getOrElse(CacheCustomConfig.MAXENTRIESLOCALHEAP,"10000").toInt)
-    .maxEntriesLocalDisk(values.getOrElse(CacheCustomConfig.MAXENTRIESLOCALDISK,"1000").toInt)
+    .maxBytesLocalHeap(values.getOrElse(CacheCustomConfig.MAXBYTESLOCALHEAP,"10000").toLong,MemoryUnit.MEGABYTES)
+    .maxBytesLocalDisk(values.getOrElse(CacheCustomConfig.MAXBYTESLOCALDISK,"1000").toLong,MemoryUnit.MEGABYTES)
     .diskSpoolBufferSizeMB(values.getOrElse(CacheCustomConfig.DISKSPOOLBUFFERSIZEMB,"20").toInt)
     .timeToLiveSeconds(values.getOrElse(CacheCustomConfig.TIMETOLIVESECONDS,"600").toInt)
     .timeToIdleSeconds(values.getOrElse(CacheCustomConfig.TIMETOIDLESECONDS,"300").toInt)
@@ -82,11 +86,18 @@ class CacheCustomConfig(jsonString:String) extends CacheConfiguration{
   properties.setProperty(CacheCustomConfig.REPLICATE_REMOVALS,(values.getOrElse(CacheCustomConfig.REPLICATE_REMOVALS,"true")).toString)
   properties.setProperty(CacheCustomConfig.REPLICATE_ASYNCHRONOUSLY,(values.getOrElse(CacheCustomConfig.REPLICATE_ASYNCHRONOUSLY,"true")).toString)
 
+  //ADD BOOTSTRAP PROPERTIES
+  propertiesBootStrap.setProperty(CacheCustomConfig.BOOTSTRAPASYNCHRONOUSLY,(values.getOrElse(CacheCustomConfig.BOOTSTRAPASYNCHRONOUSLY,"false")).toString)
+
   def  getConfiguration() : Configuration = {
     return config
   }
 
   def  getListener() : CacheEventListener = {
     return (new JGroupsCacheReplicatorFactory).createCacheEventListener(properties)
+  }
+
+  def  getBootStrap() : BootstrapCacheLoader = {
+    return (new JGroupsBootstrapCacheLoaderFactory).createBootstrapCacheLoader(propertiesBootStrap)
   }
 }
