@@ -249,6 +249,8 @@ class MappedModelResults extends ModelResultBase {
 
 case class ContainerNameAndDatastoreInfo(containerName: String, dataDataStoreInfo: String)
 
+case class KeyValuePair(key: String, value: Any);
+
 trait EnvContext extends Monitorable {
   // Metadata Ops
   var _mgr: MdMgr = _
@@ -268,7 +270,7 @@ trait EnvContext extends Monitorable {
   def SetDefaultDatastore(dataDataStoreInfo: String): Unit
 
   // Registerd Messages/Containers
-  def RegisterMessageOrContainers(containersInfo: Array[ContainerNameAndDatastoreInfo]): Unit
+//  def RegisterMessageOrContainers(containersInfo: Array[ContainerNameAndDatastoreInfo]): Unit
 
   // RDD Ops
   def getRecent(transId: Long, containerName: String, partKey: List[String], tmRange: TimeRange, f: MessageContainerBase => Boolean): Option[MessageContainerBase]
@@ -315,9 +317,9 @@ trait EnvContext extends Monitorable {
   //  def removeCommittedKeys(keys: Array[String]): Unit
 
   // Model Results Saving & retrieving. Don't return null, always return empty, if we don't find
-  def saveModelsResult(transId: Long, key: List[String], value: scala.collection.mutable.Map[String, SavedMdlResult]): Unit
-
-  def getModelsResult(transId: Long, key: List[String]): scala.collection.mutable.Map[String, SavedMdlResult]
+//  def saveModelsResult(transId: Long, key: List[String], value: scala.collection.mutable.Map[String, SavedMdlResult]): Unit
+//
+//  def getModelsResult(transId: Long, key: List[String]): scala.collection.mutable.Map[String, SavedMdlResult]
 
   // Final Commit for the given transaction
   // outputResults has AdapterName, PartitionKey & Message
@@ -330,15 +332,15 @@ trait EnvContext extends Monitorable {
   // def PersistRemainingStateEntriesOnLeader: Unit
 
   // Clear Intermediate results before Restart processing
-  def clearIntermediateResults: Unit
+//  def clearIntermediateResults: Unit
 
   // Clear Intermediate results After updating them on different node or different component (like KVInit), etc
-  def clearIntermediateResults(unloadMsgsContainers: Array[String]): Unit
+//  def clearIntermediateResults(unloadMsgsContainers: Array[String]): Unit
 
   // Changed Data & Reloading data are Time in MS, Bucket Key & TransactionId
   def getChangedData(tempTransId: Long, includeMessages: Boolean, includeContainers: Boolean): scala.collection.immutable.Map[String, List[Key]]
 
-  def ReloadKeys(tempTransId: Long, containerName: String, keys: List[Key]): Unit
+//  def ReloadKeys(tempTransId: Long, containerName: String, keys: List[Key]): Unit
 
   // Set Reload Flag
   //  def setReloadFlag(transId: Long, containerName: String): Unit
@@ -351,15 +353,47 @@ trait EnvContext extends Monitorable {
     * Answer an empty instance of the message or container with the supplied fully qualified class name.  If the name is
     * invalid, null is returned.
     *
-    * @param fqclassname : a full package qualified class name
-    * @return a MesssageContainerBase of that ilk
+//    * @param fqclassname : a full package qualified class name
+//    * @return a MesssageContainerBase of that ilk
     */
-  def NewMessageOrContainer(fqclassname: String): MessageContainerBase
+//  def NewMessageOrContainer(fqclassname: String): MessageContainerBase
 
   // Just get the cached container key and see what are the containers we need to cache
-  def CacheContainers(clusterId: String): Unit
+//  def CacheContainers(clusterId: String): Unit
 
-  def EnableEachTransactionCommit: Boolean
+//  def EnableEachTransactionCommit: Boolean
+
+  // Lock functions
+  def lockKeyInCluster(key: String): Unit
+  def lockKeyInNode(nodeId: String, key: String): Unit
+
+  // Unlock functions
+  def unlockKeyInCluster(key: String): Unit
+  def unlockKeyInNode(nodeId: String, key: String): Unit
+
+  def getAllClusterLocks(): Array[String]
+  def getAllNodeLocks(nodeId: String): Array[String]
+
+  // Saving & getting temporary objects in cache
+  def saveObjectInClusterCache(key: String, value: Any): Unit
+  def saveObjectInNodeCache(nodeId: String, key: String, value: Any): Unit
+
+  def getObjectFromClusterCache(key: String): Any
+  def getObjectFromNodeCache(nodeId: String, key: String): Any
+
+  def getAllKeysFromClusterCache(): Array[String]
+  def getAllKeysFromNodeCache(nodeId: String): Array[String]
+
+  def getAllObjectsFromClusterCache(): Array[KeyValuePair]
+  def getAllObjectsFromNodeCache(nodeId: String): Array[KeyValuePair]
+
+  // Saving & getting data
+  def saveData(key: String, value: Any): Unit
+  def getData(key: String): Any
+
+  // Zookeeper functions
+  def setDataToZNode(zNodePath: String, value: Array[Byte]): Unit
+  def getDataFromZNode(zNodePath: String): Array[Byte]
 }
 
 // partitionKey is the one used for this message

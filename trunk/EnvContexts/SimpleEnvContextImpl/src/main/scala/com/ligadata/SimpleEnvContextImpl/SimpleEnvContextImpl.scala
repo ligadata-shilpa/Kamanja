@@ -2359,4 +2359,37 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     }
     metrics(SimpleEnvContextImpl.STORAGE_WRITE_COUNT) = curr + 1
   }
+
+  // Lock functions
+  def lockKeyInCluster(key: String): Unit = {}
+  def lockKeyInNode(nodeId: String, key: String): Unit = {}
+
+  // Unlock functions
+  def unlockKeyInCluster(key: String): Unit = {}
+  def unlockKeyInNode(nodeId: String, key: String): Unit = {}
+
+  def getAllClusterLocks(): Array[String] = null
+  def getAllNodeLocks(nodeId: String): Array[String] = null
+
+  // Saving & getting temporary objects in cache
+  def saveObjectInClusterCache(key: String, value: Any): Unit = {}
+  def saveObjectInNodeCache(nodeId: String, key: String, value: Any): Unit = {}
+
+  def getObjectFromClusterCache(key: String): Any = null
+  def getObjectFromNodeCache(nodeId: String, key: String): Any = null
+
+  def getAllKeysFromClusterCache(): Array[String] = null
+  def getAllKeysFromNodeCache(nodeId: String): Array[String] = null
+
+  def getAllObjectsFromClusterCache(): Array[KeyValuePair] = null
+  def getAllObjectsFromNodeCache(nodeId: String): Array[KeyValuePair] = null
+
+  // Saving & getting data
+  def saveData(key: String, value: Any): Unit = {}
+  def getData(key: String): Any = {}
+
+  // Zookeeper functions
+  def setDataToZNode(zNodePath: String, value: Array[Byte]): Unit = {}
+  def getDataFromZNode(zNodePath: String): Array[Byte] = null
+
 }
