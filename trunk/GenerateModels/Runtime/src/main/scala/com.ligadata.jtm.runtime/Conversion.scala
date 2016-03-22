@@ -32,28 +32,41 @@ a) string
 b) id -> to map
 
 */
-
 class Conversion {
 
   var errors : Map[Integer, String] = Map.empty[Integer, String]
 
-  def ToString(l: Integer, v: BigInt): String = {
+  // Source -> Map[Target, Function]
+  val builtin: Map[String, Map[String, String]] = Map(
+    "Integer" -> Map("String" -> "ToString"),
+    "Double" -> Map("String" -> "ToString"),
+    "Boolean" -> Map("String" -> "ToString"),
+    "Date" -> Map("String" -> "ToString"),
+    "BigDecimal" -> Map("String" -> "ToString"),
+    "String" -> Map("Integer" -> "ToInteger",
+                    "Double" -> "ToDouble",
+                    "Boolean" -> "ToBoolean",
+                    "Date" -> "ToDate",
+                    "BigDecimal" -> "ToBigDecimal")
+  )
+
+  def ToString(context: Integer, v: BigInt): String = {
     null
   }
 
-  def ToDate(): String = {
+  def ToDate(context: Integer, s: String): Date = {
     null
   }
-  def ToInteger(): Integer = {
+  def ToInteger(context: Integer, s: String): Integer = {
     null
   }
-  def ToBigInt(): BigInt = {
+  def ToBigInt(context: Integer, s: String): BigInt = {
     null
   }
-  def ToDecimal(): BigDecimal = {
+  def ToDecimal(context: Integer, s: String): BigDecimal = {
     null
   }
-  def ToFloat(): Double = {
+  def ToDouble(context: Integer, s: String): Double = {
     0.0
   }
 
