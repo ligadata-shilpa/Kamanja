@@ -892,17 +892,6 @@ object JsonSerializer {
             ("DependantJars" -> o.CheckAndGetDependencyJarNames.toList))
           pretty(render(json))
         }
-        case o: OutputMsgDef => {
-          val json = (("ObjectType" -> "OutputMsgDef") ~
-            ("Operation" -> operation) ~
-            ("NameSpace" -> o.nameSpace) ~
-            ("Name" -> o.name) ~
-            ("Version" -> o.ver) ~
-            ("PhysicalName" -> o.physicalName) ~
-            ("JarName" -> "") ~
-            ("DependantJars" -> o.CheckAndGetDependencyJarNames.toList))
-          pretty(render(json))
-        }
         case o: ConfigDef => {
           val json = (("ObjectType" -> "ConfigDef") ~
             ("Operation" -> operation) ~
@@ -1426,16 +1415,6 @@ object JsonSerializer {
           ("DependencyJars" -> o.CheckAndGetDependencyJarNames.toList) ~
           ("Implementation" -> o.implementationName) ~
           ("TransactionId" -> o.tranId))
-        pretty(render(json))
-      }
-      case o: OutputMsgDef => {
-        val json = (("ObjectType" -> "OutputMsgDef") ~
-          ("NameSpace" -> o.nameSpace) ~
-          ("Name" -> o.name) ~
-          ("Version" -> o.ver) ~
-          ("PhysicalName" -> o.physicalName) ~
-          ("JarName" -> "") ~
-          ("DependantJars" -> o.CheckAndGetDependencyJarNames.toList))
         pretty(render(json))
       }
       case _ => {
