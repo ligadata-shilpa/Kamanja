@@ -41,7 +41,7 @@ import net.sf.jmimemagic.MagicException
 
 case class BufferLeftoversArea(workerNumber: Int, leftovers: Array[Byte], relatedChunk: Int)
 case class BufferToChunk(len: Int, payload: Array[Byte], chunkNumber: Int, relatedFileHandler: SmartFileHandler, firstValidOffset: Int, isEof: Boolean, partMap: scala.collection.mutable.Map[Int,Int])
-case class KafkaMessage(msg: Array[Byte], offsetInFile: Int, isLast: Boolean, isLastDummy: Boolean, relatedFileHandler: SmartFileHandler, partMap: scala.collection.mutable.Map[Int,Int], msgOffset: Long)
+case class SmartFileMessage(msg: Array[Byte], offsetInFile: Int, isLast: Boolean, isLastDummy: Boolean, relatedFileHandler: SmartFileHandler, partMap: scala.collection.mutable.Map[Int,Int], msgOffset: Long)
 case class FileStatus(status: Int, offset: Long, createDate: Long)
 case class OffsetValue (lastGoodOffset: Int, partitionOffsets: Map[Int,Int])
 case class EnqueuedFileHandler(fileHandler: SmartFileHandler, offset: Int, createDate: Long,  partMap: scala.collection.mutable.Map[Int,Int])
@@ -105,7 +105,7 @@ class FileProcessor(val partitionId: Int) extends Runnable {
   private var workerBees: ExecutorService = null
   private var tempKMS = false
   // QUEUES used in file processing... will be synchronized.s
-  private var msgQ: scala.collection.mutable.Queue[Array[KafkaMessage]] = scala.collection.mutable.Queue[Array[KafkaMessage]]()
+  private var msgQ: scala.collection.mutable.Queue[Array[SmartFileMessage]] = scala.collection.mutable.Queue[Array[SmartFileMessage]]()
   private var bufferQ: scala.collection.mutable.Queue[BufferToChunk] = scala.collection.mutable.Queue[BufferToChunk]()
   private var blg = new BufferLeftoversArea(-1, null, -1)
 
@@ -171,6 +171,8 @@ class FileProcessor(val partitionId: Int) extends Runnable {
   var localMetadataConfig: String = ""
   var zkcConnectString: String = ""
 
+  private var sendMsgToEngine : (SmartFileMessage, SmartFileConsumerContext) => Unit = null
+  private var smartFileConsumerContext: SmartFileConsumerContext = null
 
   var globalFileMonitorService: ExecutorService = Executors.newFixedThreadPool(3)
 
@@ -178,13 +180,17 @@ class FileProcessor(val partitionId: Int) extends Runnable {
     * Called by the Directory Listener to initialize
     * @param conf
     */
-  def init(conf : SmartFileAdapterConfiguration): Unit = {
+  def init(conf : SmartFileAdapterConfiguration, context: SmartFileConsumerContext,
+           sendMsgCallback : (SmartFileMessage, SmartFileConsumerContext) => Unit): Unit = {
 
     adapterConfig = conf
     connectionConf = adapterConfig.connectionConfig
     monitoringConf = adapterConfig.monitoringConfig
 
     monitoringConf.locations.foreach(location => path += FileSystems.getDefault.getPath(location))
+
+    sendMsgToEngine = sendMsgCallback
+    smartFileConsumerContext = context
 
     startGlobalFileMonitor
 
@@ -819,13 +825,13 @@ class FileProcessor(val partitionId: Int) extends Runnable {
   }
   //---------------------------------------------------------------------------------------------------------------------
 
-  private def enQMsg(buffer: Array[KafkaMessage], bee: Int): Unit = {
+  private def enQMsg(buffer: Array[SmartFileMessage], bee: Int): Unit = {
     msgQLock.synchronized {
       msgQ += buffer
     }
   }
 
-  private def deQMsg(): Array[KafkaMessage] = {
+  private def deQMsg(): Array[SmartFileMessage] = {
     msgQLock.synchronized {
       if (msgQ.isEmpty) {
         return null
@@ -876,7 +882,7 @@ class FileProcessor(val partitionId: Int) extends Runnable {
 
     // basically, keep running until shutdown.
     while (isConsuming) {
-      var messages: scala.collection.mutable.LinkedHashSet[KafkaMessage] = null
+      var messages: scala.collection.mutable.LinkedHashSet[SmartFileMessage] = null
       var leftOvers: Array[Byte] = new Array[Byte](0)
 
       // Try to get a new file to process.
@@ -892,7 +898,7 @@ class FileProcessor(val partitionId: Int) extends Runnable {
         }
 
         // need a ordered structure to keep the messages.
-        messages = scala.collection.mutable.LinkedHashSet[KafkaMessage]()
+        messages = scala.collection.mutable.LinkedHashSet[SmartFileMessage]()
 
         var indx = 0
         var prevIndx = indx
@@ -902,10 +908,10 @@ class FileProcessor(val partitionId: Int) extends Runnable {
           // Broken File is recoverable, CORRUPTED FILE ISNT!!!!!
           if (buffer.firstValidOffset == FileProcessor.BROKEN_FILE) {
             logger.error("SMART FILE CONSUMER (" + partitionId + "): Detected a broken file")
-            messages.add(new KafkaMessage(Array[Byte](), FileProcessor.BROKEN_FILE, true, true, buffer.relatedFileHandler, buffer.partMap, FileProcessor.BROKEN_FILE))
+            messages.add(new SmartFileMessage(Array[Byte](), FileProcessor.BROKEN_FILE, true, true, buffer.relatedFileHandler, buffer.partMap, FileProcessor.BROKEN_FILE))
           } else {
             logger.error("SMART FILE CONSUMER (" + partitionId + "): Detected a broken file")
-            messages.add(new KafkaMessage(Array[Byte](), FileProcessor.CORRUPT_FILE, true, true, buffer.relatedFileHandler, buffer.partMap, FileProcessor.CORRUPT_FILE))
+            messages.add(new SmartFileMessage(Array[Byte](), FileProcessor.CORRUPT_FILE, true, true, buffer.relatedFileHandler, buffer.partMap, FileProcessor.CORRUPT_FILE))
           }
         } else {
           // Look for messages.
@@ -918,7 +924,7 @@ class FileProcessor(val partitionId: Int) extends Runnable {
 
                 // Ok, we could be in recovery, so we have to ignore some messages, but these ignoraable messages must still
                 // appear in the leftover areas
-                messages.add(new KafkaMessage(newMsg, buffer.firstValidOffset, false, false, buffer.relatedFileHandler,  buffer.partMap, prevIndx))
+                messages.add(new SmartFileMessage(newMsg, buffer.firstValidOffset, false, false, buffer.relatedFileHandler,  buffer.partMap, prevIndx))
 
                 prevIndx = indx + 1
               }
@@ -944,16 +950,16 @@ class FileProcessor(val partitionId: Int) extends Runnable {
 
             // Prepend the leftovers to the first element of the array of messages
             val msgArray = messages.toArray
-            var firstMsgWithLefovers: KafkaMessage = null
+            var firstMsgWithLefovers: SmartFileMessage = null
             if (isEofBuffer) {
               if (leftOvers.size > 0) {
-                firstMsgWithLefovers = new KafkaMessage(leftOvers, buffer.firstValidOffset, false, false, buffer.relatedFileHandler, buffer.partMap, buffer.firstValidOffset)
+                firstMsgWithLefovers = new SmartFileMessage(leftOvers, buffer.firstValidOffset, false, false, buffer.relatedFileHandler, buffer.partMap, buffer.firstValidOffset)
                 messages.add(firstMsgWithLefovers)
                 enQMsg(messages.toArray, beeNumber)
               }
             } else {
               if (messages.size > 0) {
-                firstMsgWithLefovers = new KafkaMessage(leftOvers ++ msgArray(0).msg, msgArray(0).offsetInFile, false, false, buffer.relatedFileHandler, msgArray(0).partMap,
+                firstMsgWithLefovers = new SmartFileMessage(leftOvers ++ msgArray(0).msg, msgArray(0).offsetInFile, false, false, buffer.relatedFileHandler, msgArray(0).partMap,
                   msgArray(0).offsetInFile)
                 msgArray(0) = firstMsgWithLefovers
                 enQMsg(msgArray, beeNumber)
@@ -1125,8 +1131,8 @@ class FileProcessor(val partitionId: Int) extends Runnable {
           // Not sure how we got there... this should not happen.
           logger.warn("SMART FILE CONSUMER: partition " + partitionId + ": NON-EMPTY final leftovers, this really should not happend... check the file ")
         } else {
-          val messages: scala.collection.mutable.LinkedHashSet[KafkaMessage] = scala.collection.mutable.LinkedHashSet[KafkaMessage]()
-          messages.add(new KafkaMessage(null, 0, true, true, fileHandler, scala.collection.mutable.Map[Int,Int](), 0))
+          val messages: scala.collection.mutable.LinkedHashSet[SmartFileMessage] = scala.collection.mutable.LinkedHashSet[SmartFileMessage]()
+          messages.add(new SmartFileMessage(null, 0, true, true, fileHandler, scala.collection.mutable.Map[Int,Int](), 0))
           enQMsg(messages.toArray, 1000)
         }
         foundRelatedLeftovers = true
@@ -1184,16 +1190,17 @@ class FileProcessor(val partitionId: Int) extends Runnable {
     */
   private def doSomePushing(): Unit = {
     while (isProducing) {
-      var msg = deQMsg
-      if (msg == null) {
+      var msgs = deQMsg
+      if (msgs == null) {
         Thread.sleep(250)
       } else {
         logger.debug("---------------doSomePushing, dequeued following messages----------------------");
-        msg.foreach(m => logger.debug("          " + new String(m.msg)))
+        msgs.foreach(m => logger.debug("          " + new String(m.msg)))
         logger.debug("----------------------------------------------------------------");
         //push using kafka msg loader
         //kml.pushData(msg)
-        msg = null
+        msgs.foreach(msg => sendMsgToEngine(msg, smartFileConsumerContext))
+        msgs = null
       }
     }
   }
@@ -1217,41 +1224,6 @@ class FileProcessor(val partitionId: Int) extends Runnable {
     })
   }
 
-  /**
-    *
-    * @param inputfile
-    * @return
-    */
-  private def isCompressed(inputfile: String): Boolean = {
-    var is: FileInputStream = null
-    try {
-      is = new FileInputStream(inputfile)
-    } catch {
-      case fnfe: FileNotFoundException => {
-        throw fnfe
-      }
-      case e: Exception => {
-        logger.warn("", e)
-        return false
-      }
-    }
-
-    val maxlen = 2
-    val buffer = new Array[Byte](maxlen)
-    val readlen = is.read(buffer, 0, maxlen)
-
-    is.close() // Close before we really check and return the data
-
-    if (readlen < 2)
-      return false;
-
-    val b0: Int = buffer(0)
-    val b1: Int = buffer(1)
-
-    val head = (b0 & 0xff) | ((b1 << 8) & 0xff00)
-
-    return (head == GZIPInputStream.GZIP_MAGIC);
-  }
 
   /**
     *
