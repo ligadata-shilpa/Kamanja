@@ -5,6 +5,10 @@ sbtPlugin := true
 
 version := "0.0.0.1"
 
+//lazy val kamanjaVersion = settingKey[String]("kamanjaVersion")
+//lazy val kamanjaVersion = "1.4.0"
+
+
 //scalaVersion := "2.11.7"
 
 
@@ -42,14 +46,14 @@ coverageEnabled in ThisBuild := true
 val Organization = "com.ligadata"
 
 //newly added
-//lazy val KamanjaDependencyLibs = project.in(file("KamanjaDependencyLibs"))
-
 lazy val ExtDependencyLibs = project.in(file("ExtDependencyLibs")) //dependsOn( Metadata) because of libraryDependencies += "metadata" %% "metadata" % "1.0"
-
 lazy val KamanjaInternalDeps = project.in(file("KamanjaInternalDeps")) dependsOn(ExtDependencyLibs % "provided", InputOutputAdapterBase, Exceptions, DataDelimiters, Metadata, KamanjaBase, MetadataBootstrap, Serialize, ZooKeeperListener,
-  ZooKeeperLeaderLatch, KamanjaUtils, TransactionService, StorageManager, MessageDef, PmmlCompiler, ZooKeeperClient, OutputMsgDef, SecurityAdapterBase, HeartBeat, JpmmlFactoryOfModelInstanceFactory,
-  SimpleApacheShiroAdapter, MigrateBase, KamanjaVersion, InstallDriverBase)
-// Exclude ExtDependencyLibs in the fat jar
+    ZooKeeperLeaderLatch, KamanjaUtils, TransactionService, StorageManager, MessageDef, PmmlCompiler, ZooKeeperClient, OutputMsgDef, SecurityAdapterBase, HeartBeat, JpmmlFactoryOfModelInstanceFactory,
+    SimpleApacheShiroAdapter, MigrateBase, KamanjaVersion, InstallDriverBase,BaseFunctions,KafkaSimpleInputOutputAdapters,FileSimpleInputOutputAdapters,SimpleEnvContextImpl,GenericMsgCompiler,MethodExtractor,MetadataAPIServiceClient,JsonDataGen,Controller,AuditAdapters,CustomUdfLib,ExtractData,InterfacesSamples,UtilityService,SaveContainerDataComponent,UtilsForModels,JarFactoryOfModelInstanceFactory)
+
+//lazy val KamanjaInternalDeps = project.in(file("KamanjaInternalDeps")) dependsOn(ExtDependencyLibs % "provided", InputOutputAdapterBase, Exceptions, DataDelimiters, Metadata, KamanjaBase, MetadataBootstrap, Serialize, ZooKeeperListener,
+//  ZooKeeperLeaderLatch, KamanjaUtils, TransactionService, StorageManager, MessageDef, PmmlCompiler, ZooKeeperClient, OutputMsgDef, SecurityAdapterBase, HeartBeat, JpmmlFactoryOfModelInstanceFactory,
+//  SimpleApacheShiroAdapter, MigrateBase, KamanjaVersion, InstallDriverBase)
 
 //lazy val KamanjaDependencyLibs = project.in(file("KamanjaDependencyLibs")) dependsOn(KamanjaManager, MetadataAPI, KVInit, NodeInfoExtract, MetadataAPIService, JdbcDataCollector, FileDataConsumer, CleanUtil, InstallDriver, GetComponent, SimpleKafkaProducer)
 

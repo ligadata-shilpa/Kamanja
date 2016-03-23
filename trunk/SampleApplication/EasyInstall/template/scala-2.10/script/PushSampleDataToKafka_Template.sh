@@ -16,4 +16,4 @@ OPTION=useroption-1
 INPUTFILE=${LISTOFFILES[OPTION]}
 fi
 echo "User selected: $INPUTFILE"
-java -cp $KAMANJA_HOME/lib/system/ExtDependencyLibs_2.10-1.0:$KAMANJA_HOME/lib/system/KamanjaInternalDeps_2.10-1.0:$KAMANJA_HOME/bin/SimpleKafkaProducer-0.1.0 com.ligadata.simplekafkaproducer --gz true --topics "testin_1" --threads 1 --topicpartitions 8 --brokerlist "localhost:9092" --files $INPUTFILE   --partitionkeyidxs "1" --format CSV
+java -cp $KAMANJA_HOME/lib/system/ExtDependencyLibs_2.10-1.4.0:$KAMANJA_HOME/lib/system/KamanjaInternalDeps_2.10-1.4.0:$KAMANJA_HOME/bin/SimpleKafkaProducer-0.1.0 com.ligadata.simplekafkaproducer --gz true --topics "testin_1" --threads 1 --topicpartitions 8 --brokerlist "localhost:9092" --files $INPUTFILE   --partitionkeyidxs "1" --format CSV

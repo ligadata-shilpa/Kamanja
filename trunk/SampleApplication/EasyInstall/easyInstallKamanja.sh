@@ -195,8 +195,8 @@ cp Utils/Migrate/MigrateManager/target/MigrateManager* $kamanjainstallbin
 cp $srcPath/Utils/NodeInfoExtract/target/scala-2.10/NodeInfoExtract* $kamanjainstallbin
 
 # copy jars used to reduce package size
-cp ExtDependencyLibs/target/scala-2.10/ExtDependencyLibs_2.10-1.0 $systemlib
-cp KamanjaInternalDeps/target/scala-2.10/KamanjaInternalDeps_2.10-1.0 $systemlib
+cp ExtDependencyLibs/target/scala-2.10/ExtDependencyLibs_2.10-1.4.0 $systemlib
+cp KamanjaInternalDeps/target/scala-2.10/KamanjaInternalDeps_2.10-1.4.0 $systemlib
 
 # *******************************
 # Copy jars required for version-2.10 (more than required if the fat jars are used)
