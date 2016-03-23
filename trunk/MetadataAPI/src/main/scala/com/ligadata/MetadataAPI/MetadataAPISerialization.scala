@@ -1,11 +1,12 @@
 package com.ligadata.MetadataAPI
 
+import java.util.Date
+
 import com.ligadata.Exceptions._
 import com.ligadata.Serialize.TypeDef
 import com.ligadata.kamanja.metadata._
 import org.apache.logging.log4j.LogManager
 import org.json4s.{DefaultFormats, Formats, MappingException}
-import org.json4s.JsonAST.JObject
 import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
 
@@ -220,6 +221,24 @@ object MetadataAPISerialization {
               ("Description" -> o.description)
           ("JarDef", compact(render(json)))
         }
+        case o: ConfigDef => {
+          val json = "Config" ->
+            ("IsActive" -> o.IsActive) ~
+              ("IsDeleted" -> o.IsDeleted) ~
+              ("OrigDef" -> o.OrigDef) ~
+              ("ObjectDefinition" -> o.ObjectDefinition) ~
+              ("ObjectFormat" -> ObjFormatType.asString(o.ObjectFormat)) ~
+              ("NameSpace" -> o.NameSpace) ~
+              ("Contents" -> o.contents) ~
+              ("Name" -> o.Name) ~
+              ("Author" -> o.Author) ~
+              ("PhysicalName" -> o.PhysicalName) ~
+              ("JarName" -> getEmptyIfNull(o.jarName)) ~
+              ("DependencyJars" -> o.CheckAndGetDependencyJarNames.toList) ~
+              ("NumericTypes" -> ("Version" -> ver) ~ ("TransId" -> o.TranId) ~ ("UniqID" -> o.UniqID) ~ ("CreationTime" -> o.CreationTime) ~ ("ModTime" -> o.ModTime) ~ ("MdElemStructVer" -> o.MdElemStructVer)) ~
+              ("Description" -> o.description)
+          ("ConfigDef", compact(render(json)))
+        }
         case _ => {
           throw new Exception("serializeObjectToJson doesn't support the objects of type objectType of " + mdObj.getClass().getName() + " yet.")
         }
@@ -232,6 +251,78 @@ object MetadataAPISerialization {
     }
   }
 
+  def serializeConfig(clusterCfgObj: Any): (String, String) = {
+
+    try {
+      clusterCfgObj match {
+        case o: NodeInfo => {
+          val json = "Node" ->
+            ("NodeId" -> o.NodeId) ~
+              ("NodePort" -> o.NodePort) ~
+              ("NodeIpAddr" -> o.NodeIpAddr) ~
+              ("JarPaths" -> o.JarPaths.toList) ~
+              ("Scala_home" -> o.Scala_home) ~
+              ("Java_home" -> o.Java_home) ~
+              ("Classpath" -> o.Classpath) ~
+              ("ClusterId" -> o.ClusterId) ~
+              ("Power" -> o.Power) ~
+              ("Roles" -> o.Roles.toList) ~
+              ("Description" -> o.Description)
+          ("NodeInfo", compact(render(json)))
+        }
+        case o: ClusterInfo => {
+          val json = "Cluster" ->
+            ("ClusterId" -> o.ClusterId) ~
+              ("Description" -> o.Description) ~
+              ("Privileges" -> o.Privileges)
+
+          ("ClusterInfo", compact(render(json)))
+        }
+        case o: ClusterCfgInfo => {
+          val json = "ClusterCfg" ->
+            ("ClusterId" -> o.ClusterId) ~
+              ("CfgMap" -> o.CfgMap.toList.map(m => ("Key" -> m._1) ~ ("Value" -> m._2))) ~
+              ("ModifiedTime" -> o.ModifiedTime.getTime) ~
+              ("CreatedTime" -> o.CreatedTime.getTime) ~
+              ("UsrConfigs" -> o.getUsrConfigs.toList.map(m => ("Key" -> m._1) ~ ("Value" -> m._2)))
+          ("ClusterCfgInfo", compact(render(json)))
+        }
+        case o: AdapterInfo => {
+          val json = "Adapter" ->
+            ("Name" -> o.Name) ~
+              ("TypeString" -> o.TypeString) ~
+              ("DataFormat" -> o.DataFormat) ~
+              ("ClassName" -> o.ClassName) ~
+              ("JarName" -> o.JarName) ~
+              ("DependencyJars" -> o.DependencyJars.toList) ~
+              ("AdapterSpecificCfg" -> o.AdapterSpecificCfg) ~
+              ("InputAdapterToValidate" -> o.InputAdapterToValidate) ~
+              ("FailedEventsAdapter" -> o.FailedEventsAdapter) ~
+              ("DelimiterString1" -> o.DelimiterString1) ~
+              ("AssociatedMessage" -> o.AssociatedMessage) ~
+              ("KeyAndValueDelimiter" -> o.KeyAndValueDelimiter) ~
+              ("FieldDelimiter" -> o.FieldDelimiter) ~
+              ("ValueDelimiter" -> o.ValueDelimiter)
+          ("AdapterInfo", compact(render(json)))
+        }
+        case o: UserPropertiesInfo => {
+          val json = "UserProperties" ->
+            ("ClusterId" -> o.ClusterId) ~
+              ("Props" -> o.Props.toList.map(m => ("Key" -> m._1) ~ ("Value" -> m._2)))
+
+          ("UserPropertiesInfo", compact(render(json)))
+        }
+        case _ => {
+          throw new Exception("serializeObjectToJson doesn't support the objects of type objectType of " + clusterCfgObj.getClass().getName() + " yet.")
+        }
+      }
+    } catch {
+      case e: Exception => {
+        logger.debug("Failed to serialize", e)
+        throw e
+      }
+    }
+  }
 
   def parseModelDef(modDefJson: String, formatType: String): ModelDef = {
     try {
@@ -639,6 +730,228 @@ object MetadataAPISerialization {
     }
   }
 
+  def parseConfigDef(configDefJson: String, formatType: String): ConfigDef = {
+    try {
+      implicit val jsonFormats: Formats = DefaultFormats
+      val json = parse(configDefJson)
+
+      logger.debug("Parsed the json : " + configDefJson)
+
+      val configInst = json.extract[Config]
+
+
+      val configDef = new ConfigDef
+
+      configDef.nameSpace = configInst.Config.NameSpace;
+      configDef.name = configInst.Config.Name;
+      configDef.ver = configInst.Config.NumericTypes.Version;
+      configDef.origDef = configInst.Config.OrigDef
+      val objFmt: ObjFormatType.FormatType = ObjFormatType.fromString(configInst.Config.ObjectFormat)
+      configDef.ObjectFormat(objFmt)
+      configDef.author = configInst.Config.Author
+      configDef.description = configInst.Config.Description
+      configDef.tranId = configInst.Config.NumericTypes.TransId
+      configDef.uniqueId = configInst.Config.NumericTypes.UniqID
+      configDef.creationTime = configInst.Config.NumericTypes.CreationTime
+      configDef.modTime = configInst.Config.NumericTypes.ModTime
+      configDef.mdElemStructVer = configInst.Config.NumericTypes.MdElemStructVer
+      configDef.active = configInst.Config.IsActive
+      configDef.deleted = configInst.Config.IsDeleted
+      configDef.dependencyJarNames = configInst.Config.DependencyJars.toArray
+      configDef.jarName = configInst.Config.JarName
+      configDef.contents = configInst.Config.Contents
+      configDef.PhysicalName(configInst.Config.PhysicalName)
+      configDef.ObjectDefinition(configInst.Config.ObjectDefinition)
+
+      configDef
+
+    } catch {
+      case e: MappingException => {
+        logger.debug("", e)
+        throw Json4sParsingException(e.getMessage(), e)
+      }
+      case e: Exception => {
+        logger.error("Failed to parse JSON" + configDefJson, e)
+        throw e
+      }
+    }
+  }
+
+  def parseNodeInfo(nodeInfoJson: String, formatType: String): NodeInfo = {
+    try {
+      implicit val jsonFormats: Formats = DefaultFormats
+      val json = parse(nodeInfoJson)
+
+      logger.debug("Parsed the json : " + nodeInfoJson)
+
+      val nodeInst = json.extract[Node]
+
+      val nodeInfo = MdMgr.GetMdMgr.MakeNode(
+        nodeInst.Node.NodeId,
+        nodeInst.Node.NodePort,
+        nodeInst.Node.NodeIpAddr,
+        nodeInst.Node.JarPaths,
+        nodeInst.Node.Scala_home,
+        nodeInst.Node.Java_home,
+        nodeInst.Node.Classpath,
+        nodeInst.Node.ClusterId,
+        nodeInst.Node.Power,
+        nodeInst.Node.Roles.toArray,
+        nodeInst.Node.Description)
+
+      nodeInfo
+
+    } catch {
+      case e: MappingException => {
+        logger.debug("", e)
+        throw Json4sParsingException(e.getMessage(), e)
+      }
+      case e: Exception => {
+        logger.error("Failed to parse JSON" + nodeInfoJson, e)
+        throw e
+      }
+    }
+  }
+
+  def parseClusterInfo(clusterInfoJson: String, formatType: String): ClusterInfo = {
+    try {
+      implicit val jsonFormats: Formats = DefaultFormats
+      val json = parse(clusterInfoJson)
+
+      logger.debug("Parsed the json : " + clusterInfoJson)
+
+      val clusterInst = json.extract[Cluster]
+
+      val clusterInfo = MdMgr.GetMdMgr.MakeCluster(
+        clusterInst.Cluster.ClusterId,
+        clusterInst.Cluster.Description,
+        clusterInst.Cluster.Privileges
+      )
+      clusterInfo
+
+    } catch {
+      case e: MappingException => {
+        logger.debug("", e)
+        throw Json4sParsingException(e.getMessage(), e)
+      }
+      case e: Exception => {
+        logger.error("Failed to parse JSON" + clusterInfoJson, e)
+        throw e
+      }
+    }
+  }
+
+  def parseClusterCfgInfo(clusterCfgInfoJson: String, formatType: String): ClusterCfgInfo = {
+    try {
+      implicit val jsonFormats: Formats = DefaultFormats
+      val json = parse(clusterCfgInfoJson)
+
+      logger.debug("Parsed the json : " + clusterCfgInfoJson)
+
+      val clusterCfgInst = json.extract[ClusterCfg]
+
+      val cfgMap = new scala.collection.mutable.HashMap[String, String]
+      for (m <- clusterCfgInst.ClusterCfg.CfgMap) {
+        cfgMap.put(m.Key, m.Value)
+      }
+
+      val clusterCfgInfo = MdMgr.GetMdMgr.MakeClusterCfg(
+        clusterCfgInst.ClusterCfg.ClusterId,
+        cfgMap,
+        new Date(clusterCfgInst.ClusterCfg.ModifiedTime),
+        new Date(clusterCfgInst.ClusterCfg.ModifiedTime)
+      )
+      val usrConfigs = new scala.collection.mutable.HashMap[String, String]
+
+      for (m <- clusterCfgInst.ClusterCfg.UsrConfigs) {
+        usrConfigs.put(m.Key, m.Value)
+      }
+
+      clusterCfgInfo.usrConfigs = usrConfigs
+
+      clusterCfgInfo
+
+    } catch {
+      case e: MappingException => {
+        logger.debug("", e)
+        throw Json4sParsingException(e.getMessage(), e)
+      }
+      case e: Exception => {
+        logger.error("Failed to parse JSON" + clusterCfgInfoJson, e)
+        throw e
+      }
+    }
+  }
+
+  def parseAdapterInfo(adapterInfoJson: String, formatType: String): AdapterInfo = {
+    try {
+      implicit val jsonFormats: Formats = DefaultFormats
+      val json = parse(adapterInfoJson)
+
+      logger.debug("Parsed the json : " + adapterInfoJson)
+
+      val adapterInst = json.extract[Adapter]
+
+      val adapterInfo = MdMgr.GetMdMgr.MakeAdapter(
+        adapterInst.Adapter.Name,
+        adapterInst.Adapter.TypeString,
+        adapterInst.Adapter.DataFormat,
+        adapterInst.Adapter.ClassName,
+        adapterInst.Adapter.JarName,
+        adapterInst.Adapter.DependencyJars,
+        adapterInst.Adapter.AdapterSpecificCfg,
+        adapterInst.Adapter.InputAdapterToValidate,
+        adapterInst.Adapter.KeyAndValueDelimiter,
+        adapterInst.Adapter.FieldDelimiter,
+        adapterInst.Adapter.ValueDelimiter,
+        adapterInst.Adapter.AssociatedMessage,
+        adapterInst.Adapter.FailedEventsAdapter
+      )
+      //adapterInfo.DelimiterString1 = adapterInst.Adapter.DelimiterString1
+      adapterInfo
+
+    } catch {
+      case e: MappingException => {
+        logger.debug("", e)
+        throw Json4sParsingException(e.getMessage(), e)
+      }
+      case e: Exception => {
+        logger.error("Failed to parse JSON" + adapterInfoJson, e)
+        throw e
+      }
+    }
+  }
+
+  def parseUserPropertiesInfo(userPropertiesInfoJson: String, formatType: String): UserPropertiesInfo = {
+    try {
+      implicit val jsonFormats: Formats = DefaultFormats
+      val json = parse(userPropertiesInfoJson)
+
+      logger.debug("Parsed the json : " + userPropertiesInfoJson)
+
+      val userPropertiesInst = json.extract[UserProperties]
+
+      val props = new scala.collection.mutable.HashMap[String, String]
+      for (m <- userPropertiesInst.UserProperties.Props) {
+        props.put(m.Key, m.Value)
+      }
+
+      val upi = new UserPropertiesInfo
+      upi.clusterId = userPropertiesInst.UserProperties.ClusterId
+      upi.props = props
+      upi
+
+    } catch {
+      case e: MappingException => {
+        logger.debug("", e)
+        throw Json4sParsingException(e.getMessage(), e)
+      }
+      case e: Exception => {
+        logger.error("Failed to parse JSON" + userPropertiesInfoJson, e)
+        throw e
+      }
+    }
+  }
 
   private def getEmptyIfNull(jarName: String): String = {
     if (jarName != null) jarName else ""
@@ -646,7 +959,70 @@ object MetadataAPISerialization {
 
 }
 
+case class UserPropertiesInformation(ClusterId: String, Props: List[KeyVale])
+
+case class UserProperties(UserProperties: UserPropertiesInformation)
+
+case class AdapterInformation(Name: String,
+                              TypeString: String,
+                              DataFormat: String,
+                              ClassName: String,
+                              JarName: String,
+                              DependencyJars: List[String],
+                              AdapterSpecificCfg: String,
+                              InputAdapterToValidate: String,
+                              FailedEventsAdapter: String,
+                              DelimiterString1: String,
+                              AssociatedMessage: String,
+                              KeyAndValueDelimiter: String,
+                              FieldDelimiter: String,
+                              ValueDelimiter: String)
+
+case class Adapter(Adapter: AdapterInformation)
+
+case class KeyVale(Key: String, Value: String)
+
+case class ClusterCfgInformation(ClusterId: String, CfgMap: List[KeyVale], ModifiedTime: Long, CreatedTime: Long, UsrConfigs: List[KeyVale])
+
+case class ClusterCfg(ClusterCfg: ClusterCfgInformation)
+
+case class ClusterInformation(ClusterId: String, Description: String, Privileges: String)
+
+case class Cluster(Cluster: ClusterInformation)
+
+case class NodeInformation(NodeId: String,
+                           NodePort: Int,
+                           NodeIpAddr: String,
+                           JarPaths: List[String],
+                           Scala_home: String,
+                           Java_home: String,
+                           Classpath: String,
+                           ClusterId: String,
+                           Power: Int,
+                           Roles: List[String],
+                           Description: String)
+
+case class Node(Node: NodeInformation)
+
 case class Argument(ArgName: String, ArgTypeNameSpace: String, ArgTypeName: String)
+
+case class ConfigInfo(Name: String,
+                      PhysicalName: String,
+                      JarName: String,
+                      NameSpace: String,
+                      ObjectDefinition: String,
+                      DependencyJars: List[String],
+                      OrigDef: String,
+                      ObjectFormat: String,
+                      Author: String,
+                      IsActive: Boolean,
+                      IsDeleted: Boolean,
+                      Description: String,
+                      Contents: String,
+                      NumericTypes: NumericTypes)
+
+
+case class Config(Config: ConfigInfo)
 
 
 case class JarInfo(Name: String,
