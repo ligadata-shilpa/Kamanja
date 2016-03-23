@@ -25,7 +25,7 @@ class MessageConstants {
   val baseContainerObj: String = "ContainerFactoryInterface";
   val baseContainer: String = "ContainerInterface(factory)";
   val msgObjectStr: String = "object %s extends RDDObject[%s] with %s { %s";
-  val classStr: String = "class %s(factory: %s) extends %s { %s";
+  val classStr: String = "class %s(factory: %s, other: %s) extends %s { %s";
 
   val template: String = "%stype T = %s ;%s";
 
@@ -93,7 +93,7 @@ import java.util.Date
 
   def msgObjectBuildStmts = {
 """
-    def build = new T
+    def build = new T(this)
     def build(from: T) = new T(from)
 """
   }

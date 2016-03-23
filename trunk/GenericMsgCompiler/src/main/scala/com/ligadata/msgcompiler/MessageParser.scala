@@ -96,7 +96,7 @@ class MessageParser {
     var msgLevel: Int = 0
     try {
       if (map.contains(key)) {
-        if (map.get(key).get.isInstanceOf[messageMap]) {
+        if (map.get(key).get.isInstanceOf[scala.collection.immutable.Map[_, _]]) {
           val message = map.get(key).get.asInstanceOf[messageMap]
           log.info("message map" + message)
           val messageMap: scala.collection.mutable.Map[String, Any] = scala.collection.mutable.Map[String, Any]()
@@ -155,20 +155,17 @@ class MessageParser {
         if (message.getOrElse("version", null) == null)
           throw new Exception("Please provide the Version of the message definition ")
 
-        // if (message.getOrElse("fixed", null) == null)
-        //  throw new Exception("Please provide the type of the message definition (either Fixed or Mapped) ")
         if (message.getOrElse("fixed", null) == null)
-          Fixed = ""
-        else
-          Fixed = message.get("fixed").get.toString()
+          throw new Exception("Please provide the type of the message definition (either Fixed or Mapped) ")
+
+        Fixed = message.get("fixed").get.toString();
+        NameSpace = message.get("namespace").get.toString()
+        Name = message.get("name").get.toString()
 
         val persist = message.getOrElse("persist", "false").toString.toLowerCase
         if (MsgUtils.isTrue(MsgUtils.LowerCase(persist)))
           persistMsg = true
 
-        NameSpace = message.getOrElse("namespace", "").toString
-        ParentMsgNameSpace = NameSpace
-        Name = message.getOrElse("name", " ").toString
         if (message.getOrElse("description", null) == null)
           Description = ""
         else
@@ -179,46 +176,16 @@ class MessageParser {
         msgVersion = MsgUtils.extractVersion(message)
 
         for (key: String <- message.keys) {
-
           if (key.equals("elements") || key.equals("fields")) {
             val (elmnts, msgs) = getElementsObj(message, key)
             elements = elmnts
-            // messages = msgs
-
-            //for child messages if the name space, version, persist and version are not defined in the message definition of child message use the values from the parent message
-            /*  log.info("-----------------------" +messages.size)
-            if (messages != null && messages.size > 0)
-              messages.foreach(m => {
-                
-                log.info("-----------------------" + m.Name)
-                log.info("-----------------------" + m.NameSpace)
-                log.info("-----------------------" + m.Version)
-                log.info("-----------------------" + m.Fixed)
-                log.info("-----------------------" + m.Persist)
-                
-                if (m.NameSpace == null || m.NameSpace.trim() == "")
-                  m.NameSpace = NameSpace
-
-                if (m.Version == null || m.Version.trim() == "")
-                  m.Version = msgVersion
-
-                if (m.Fixed == null || m.Fixed.trim() == "")
-                  m.Fixed = Fixed
-
-                
-
-              })
-              * */
-
           }
-
           if (mtype.equals("message") && message.contains(tkey)) {
             if (key.equals(tkey)) {
               tdataexists = true
               tdata = getTransformData(message, key)
             }
           }
-
           if (key.equals("partitionkey")) {
             var partitionKeys = message.getOrElse("partitionkey", null)
             if (partitionKeys != null) {
@@ -226,7 +193,6 @@ class MessageParser {
               partitionKeysList = partitionKeysList.map(p => MsgUtils.LowerCase(p))
             }
           }
-
           if (key.equals("primarykey")) {
             var primaryKeys = message.getOrElse("primarykey", null)
 
@@ -235,7 +201,6 @@ class MessageParser {
               primaryKeysList = primaryKeysList.map(p => MsgUtils.LowerCase(p))
             }
           }
-
           var fldList: Set[String] = Set[String]()
           if (elements != null && elements.size > 0) {
             elements.foreach(Fld => { fldList += Fld.Name })
@@ -243,12 +208,12 @@ class MessageParser {
             if (fldList != null && fldList.size > 0) {
               if (partitionKeysList != null && partitionKeysList.size > 0) {
                 if (!(partitionKeysList.toSet subsetOf fldList))
-                  throw new Exception("Partition Keys should be included in fields/elements of message/container definition " + message.get("Name").get.toString())
+                  throw new Exception("Partition Key Names should be included in fields/elements of message/container definition " + message.get("Name").get.toString())
               }
 
               if (primaryKeysList != null && primaryKeysList.size > 0) {
                 if (!(primaryKeysList.toSet subsetOf fldList))
-                  throw new Exception("Primary Keys should be included in fields/elements of message/container definition " + message.get("Name").get.toString())
+                  throw new Exception("Primary Key Names should be included in fields/elements of message/container definition " + message.get("Name").get.toString())
               }
             }
           }
@@ -269,7 +234,7 @@ class MessageParser {
           elements = elements :+ new Element("", "transactionId", "system.long", "", "Fields", null, -1, null, null)
         else
           elements = List(new Element("", "transactionId", "system.long", "", "Fields", null, -1, null, null))
-		*/
+				*/
 
         // ele.foreach(f => log.debug("====" + f.Name))
 
@@ -383,7 +348,7 @@ class MessageParser {
       if (message.get(key).get == null || message.get(key).get == "None")
         throw new Exception("Elements list do not exist in message/container definition json")
 
-      if (message.get(key).get.isInstanceOf[messageList]) {
+      if (message.get(key).get.isInstanceOf[List[_]]) { //List[Map[String, Any]]]
 
         val eList = message.get(key).get.asInstanceOf[List[Map[String, Any]]]
         var count: Int = 0
@@ -417,7 +382,7 @@ class MessageParser {
               else if (eMap.contains("messages"))
                 key = "messages"
 
-              if (eMap.get(key).get.isInstanceOf[keyMap]) {
+              if (eMap.get(key).get.isInstanceOf[Map[_, _]]) {
                 val containerMap: Map[String, Any] = eMap.get(key).get.asInstanceOf[Map[String, Any]]
                 val map: scala.collection.mutable.Map[String, Any] = scala.collection.mutable.Map[String, Any]()
                 containerMap.foreach(kv => { map(kv._1) = kv._2 })
@@ -463,7 +428,7 @@ class MessageParser {
     try {
       for (eKey: String <- eMap.keys) {
         val fldMap = eMap.get(eKey).get
-        if (fldMap != null && fldMap != "None" && fldMap.isInstanceOf[keyMap]) {
+        if (fldMap != null && fldMap != "None" && fldMap.isInstanceOf[Map[_, _]]) {
           val fldMap1 = fldMap.asInstanceOf[scala.collection.immutable.Map[String, Any]]
           val mapElement: scala.collection.mutable.Map[String, Any] = scala.collection.mutable.Map[String, Any]()
           fldMap1.foreach(kv => { mapElement(kv._1.toLowerCase()) = kv._2 })
@@ -518,6 +483,10 @@ class MessageParser {
         if (fieldtype.isInstanceOf[string]) {
           val fieldstr = fieldtype.toString.split("\\.")
           if (fieldstr != null) {
+            
+            //FIXE ME: Add Field Type Validation....
+            
+            
             if (fieldstr.size == 1) {
               namespace = "system"
               ttype = namespace + "." + fieldtype.asInstanceOf[String].toLowerCase()
@@ -536,7 +505,7 @@ class MessageParser {
           }
           fld = new Element(namespace, name, ttype, collectionType, key, fldTypeVer, ordinal, null, null, null)
 
-        } else if (fieldtype.isInstanceOf[FieldMap]) {
+        } else if (fieldtype.isInstanceOf[Map[_, _]]) {
           //  log.info("Child Container ========== Start ==============  ")
 
           val childFld = fieldtype.asInstanceOf[Map[String, Any]]
@@ -647,7 +616,7 @@ class MessageParser {
     var karr: Array[String] = null
     type tMap = Map[String, Any]
 
-    if (message.get(tkey).get.isInstanceOf[tMap]) {
+    if (message.get(tkey).get.isInstanceOf[Map[_, _]]) {
       val tmap: Map[String, Any] = message.get(tkey).get.asInstanceOf[Map[String, Any]]
       for (key <- tmap.keys) {
         if (key.equals("input"))
@@ -667,7 +636,7 @@ class MessageParser {
   private def gettData(tmap: Map[String, Any], key: String): Array[String] = {
     type tList = List[String]
     var tlist: List[String] = null
-    if (tmap.contains(key) && tmap.get(key).get.isInstanceOf[tList])
+    if (tmap.contains(key) && tmap.get(key).get.isInstanceOf[List[_]])
       tlist = tmap.get(key).get.asInstanceOf[List[String]]
     tlist.toArray
   }
@@ -682,7 +651,7 @@ class MessageParser {
     type sMap = Map[String, String]
     try {
 
-      if (message.getOrElse(key, null) != null && message.get(key).get.isInstanceOf[sMap]) {
+      if (message.getOrElse(key, null) != null && message.get(key).get.isInstanceOf[Map[_, _]]) {
         val timePartitionMap: sMap = message.get(key).get.asInstanceOf[sMap]
 
         if (timePartitionMap.contains("Key") && (timePartitionMap.get("Key").get.isInstanceOf[String])) {

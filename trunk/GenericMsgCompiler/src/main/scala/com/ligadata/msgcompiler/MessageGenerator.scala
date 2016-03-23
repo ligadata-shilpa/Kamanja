@@ -86,7 +86,7 @@ class MessageGenerator {
       factoryStr = msgConstants.baseContainerObj
     }
     // (var transactionId: Long, other: CustAlertHistory) extends BaseContainer {
-    return msgConstants.classStr.format(message.Name, factoryStr, baseMsgType, msgConstants.newline)
+    return msgConstants.classStr.format(message.Name, factoryStr, message.Name, baseMsgType, msgConstants.newline)
 
   }
 
@@ -101,6 +101,7 @@ class MessageGenerator {
       getSetFixed = getSetFixed.append(getByName(message));
       getSetFixed = getSetFixed.append(getOrElseFunc());
       getSetFixed = getSetFixed.append(getOrElseByIndexFunc);
+      getSetFixed = getSetFixed.append(getAttributeNamesFixed);
       getSetFixed = getSetFixed.append(getAllAttributeValuesFixed(message));
       getSetFixed = getSetFixed.append(getAttributeNameAndValueIterator);
       getSetFixed = getSetFixed.append(getFuncByOffset(message.Elements));
@@ -326,40 +327,43 @@ class MessageGenerator {
   }
 
   private def messageContructor(message: Message): String = {
-    """
-   def this(txnId: Long) = {
-    this(txnId, null)
-  }
-  def this(other: """ + message.Name + """) = {
-    this(0, other)
-  }
-  def this() = {
-    this(0, null)
-  }
-   
+    var msgInterfaceType: String = " ";
+
+    if (message.MsgType.equalsIgnoreCase("message")) {
+      msgInterfaceType = "MessageFactoryInterface";
+    } else if (message.MsgType.equalsIgnoreCase("message")) {
+      msgInterfaceType = "ContainerFactoryInterface";
+    }
+"""
+    def this(factory:""" + msgInterfaceType + """) = {
+      this(factory, null)
+     }
     
-  """
+    def this(other: """ + message.Name + """) = {
+      this(other.getFactory.asInstanceOf[""" + msgInterfaceType + """], other)
+    }
+"""
   }
 
   /*
    * message basic details in class
    */
   private def getMessgeBasicDetails(message: Message): String = {
-    """ 
+""" 
     val logger = this.getClass.getName
     lazy val log = LogManager.getLogger(logger)
-   """
+"""
   }
 
   /*
    * some overridable methods from BaseMsg
    */
   private def methodsFromBaseMsg(message: Message): String = {
-    """    
+"""    
     override def save: Unit = { """ + message.Name + """.saveOne(this) }
   
     def Clone(): ContainerOrConcept = { """ + message.Name + """.build(this) }
-    """
+"""
   }
 
   /*
@@ -786,6 +790,30 @@ class MessageGenerator {
       }
     }
     return setMethod.toString
+  }
+
+  /*
+   * Get All Attribute Names
+   */
+  private def getAttributeNamesFixed = {
+    """
+    override def getAttributeNames(): Array[String] = {
+      var attributeNames: scala.collection.mutable.ArrayBuffer[String] = scala.collection.mutable.ArrayBuffer[String]();
+      try {
+        if (keyTypes.isEmpty) {
+          return null;
+          } else {
+          return keyTypes.keySet.toArray;
+        }
+      } catch {
+        case e: Exception => {
+          log.debug("", e)
+          throw e
+        }
+      }
+      return null;
+    }
+ """
   }
 
   /*var typstring = field.ttyp.get.implementationName
