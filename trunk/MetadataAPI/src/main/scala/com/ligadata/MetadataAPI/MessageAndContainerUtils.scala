@@ -1424,29 +1424,6 @@ object MessageAndContainerUtils {
   }
 
   /**
-    * LoadOutputMsgIntoCache
-    *
-    * @param key
-    */
-  def LoadOutputMsgIntoCache(key: String) {
-    try {
-      logger.debug("Fetch the object " + key + " from database ")
-      val obj = MetadataAPIImpl.GetObject(key.toLowerCase, "outputmsgs")
-      logger.debug("Deserialize the object " + key)
-      val outputMsg = serializer.DeserializeObjectFromByteArray(obj.serializedInfo)
-      val outputMsgDef = outputMsg.asInstanceOf[OutputMsgDef]
-      logger.debug("Add the output msg def object " + key + " to the cache ")
-      MetadataAPIImpl.AddObjectToCache(outputMsgDef, MdMgr.GetMdMgr)
-    } catch {
-      case e: Exception => {
-
-        logger.debug("", e)
-      }
-    }
-  }
-
-
-  /**
     * Get a the most recent mesage def (format JSON or XML) as a String
     *
     * @param objectName the name of the message possibly namespace qualified (is simple name, "system" namespace is substituted)

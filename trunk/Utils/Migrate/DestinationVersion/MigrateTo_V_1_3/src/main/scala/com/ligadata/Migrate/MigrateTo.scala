@@ -787,13 +787,6 @@ class MigrateTo_V_1_3 extends MigratableTo {
             }
             */
             /*
-            case "OutputMsgDef" => {
-              logger.debug("Adding the Output Msg: name of the object =>  " + dispkey)
-              //FIXME:: Yet to handle
-              logger.error("Not yet handled migrating OutputMsgDef " + objType)
-            }
-            */
-            /*
             case "AttributeDef" => {
               logger.debug("Adding the attribute: name of the object =>  " + dispkey)
             }
@@ -941,7 +934,6 @@ class MigrateTo_V_1_3 extends MigratableTo {
     val mdlConfig = ArrayBuffer[(String, Map[String, Any])]()
     val models = ArrayBuffer[(String, Map[String, Any])]()
     val jarDef = ArrayBuffer[(String, Map[String, Any])]()
-    val outputMsgDef = ArrayBuffer[(String, Map[String, Any])]()
     val configDef = ArrayBuffer[(String, Map[String, Any])]()
     val typesToIgnore = scala.collection.mutable.Set[String]()
 
@@ -1027,8 +1019,6 @@ class MigrateTo_V_1_3 extends MigratableTo {
         functions += jsonObjMap
       } else if (objType == "JarDef") {
         jarDef += jsonObjMap
-      } else if (objType == "OutputMsgDef") {
-        outputMsgDef += jsonObjMap
       } else if (objType == "ConfigDef") {
         configDef += jsonObjMap
       } else {
@@ -1082,8 +1072,6 @@ class MigrateTo_V_1_3 extends MigratableTo {
     ProcessObject(configDef)
     //ProcessObject(models)
     ProcessMdObjectsParallel(models, "Failed to add model")
-    ProcessObject(outputMsgDef)
-
 
     return addedMessagesContainers
   }
