@@ -47,13 +47,16 @@ val Organization = "com.ligadata"
 
 //newly added
 lazy val ExtDependencyLibs = project.in(file("ExtDependencyLibs")) //dependsOn( Metadata) because of libraryDependencies += "metadata" %% "metadata" % "1.0"
-lazy val KamanjaInternalDeps = project.in(file("KamanjaInternalDeps")) dependsOn(ExtDependencyLibs % "provided", InputOutputAdapterBase, Exceptions, DataDelimiters, Metadata, KamanjaBase, MetadataBootstrap, Serialize, ZooKeeperListener,
-    ZooKeeperLeaderLatch, KamanjaUtils, TransactionService, StorageManager, MessageDef, PmmlCompiler, ZooKeeperClient, OutputMsgDef, SecurityAdapterBase, HeartBeat, JpmmlFactoryOfModelInstanceFactory,
-    SimpleApacheShiroAdapter, MigrateBase, KamanjaVersion, InstallDriverBase,BaseFunctions,KafkaSimpleInputOutputAdapters,FileSimpleInputOutputAdapters,SimpleEnvContextImpl,GenericMsgCompiler,MethodExtractor,MetadataAPIServiceClient,JsonDataGen,Controller,AuditAdapters,CustomUdfLib,ExtractData,InterfacesSamples,UtilityService,SaveContainerDataComponent,UtilsForModels,JarFactoryOfModelInstanceFactory)
+
+lazy val KamanjaInternalDeps = project.in(file("KamanjaInternalDeps")) dependsOn(ExtDependencyLibs % "provided", InputOutputAdapterBase, Exceptions, DataDelimiters, Metadata, KamanjaBase, MetadataBootstrap,
+  Serialize, ZooKeeperListener, ZooKeeperLeaderLatch, KamanjaUtils, TransactionService, StorageManager, MessageDef, PmmlCompiler, ZooKeeperClient, OutputMsgDef, SecurityAdapterBase, HeartBeat,
+  JpmmlFactoryOfModelInstanceFactory, SimpleApacheShiroAdapter, KamanjaVersion, InstallDriverBase, BaseFunctions, KafkaSimpleInputOutputAdapters, FileSimpleInputOutputAdapters, SimpleEnvContextImpl,
+  GenericMsgCompiler, MethodExtractor, MetadataAPIServiceClient, JsonDataGen, Controller, AuditAdapters, CustomUdfLib, ExtractData, InterfacesSamples, UtilityService, SaveContainerDataComponent,
+  UtilsForModels, JarFactoryOfModelInstanceFactory)
 
 //lazy val KamanjaInternalDeps = project.in(file("KamanjaInternalDeps")) dependsOn(ExtDependencyLibs % "provided", InputOutputAdapterBase, Exceptions, DataDelimiters, Metadata, KamanjaBase, MetadataBootstrap, Serialize, ZooKeeperListener,
 //  ZooKeeperLeaderLatch, KamanjaUtils, TransactionService, StorageManager, MessageDef, PmmlCompiler, ZooKeeperClient, OutputMsgDef, SecurityAdapterBase, HeartBeat, JpmmlFactoryOfModelInstanceFactory,
-//  SimpleApacheShiroAdapter, MigrateBase, KamanjaVersion, InstallDriverBase)
+//  SimpleApacheShiroAdapter, KamanjaVersion, InstallDriverBase)
 
 //lazy val KamanjaDependencyLibs = project.in(file("KamanjaDependencyLibs")) dependsOn(KamanjaManager, MetadataAPI, KVInit, NodeInfoExtract, MetadataAPIService, JdbcDataCollector, FileDataConsumer, CleanUtil, InstallDriver, GetComponent, SimpleKafkaProducer)
 
@@ -212,19 +215,19 @@ lazy val MigrateFrom_V_1_1 = project.in(file("Utils/Migrate/SourceVersion/Migrat
 
 lazy val MigrateManager = project.in(file("Utils/Migrate/MigrateManager")) dependsOn(MigrateBase, KamanjaVersion)
 
-lazy val MigrateTo_V_1_3 = project.in(file("Utils/Migrate/DestinationVersion/MigrateTo_V_1_3")) dependsOn(ExtDependencyLibs % "provided",MigrateBase, KamanjaManager)
+lazy val MigrateTo_V_1_3 = project.in(file("Utils/Migrate/DestinationVersion/MigrateTo_V_1_3")) dependsOn(ExtDependencyLibs % "provided", MigrateBase, KamanjaManager)
 
 lazy val MigrateFrom_V_1_2 = project.in(file("Utils/Migrate/SourceVersion/MigrateFrom_V_1_2")) dependsOn (MigrateBase)
 
-lazy val MigrateTo_V_1_4 = project.in(file("Utils/Migrate/DestinationVersion/MigrateTo_V_1_4")) dependsOn(ExtDependencyLibs % "provided",MigrateBase, KamanjaManager)
+lazy val MigrateTo_V_1_4 = project.in(file("Utils/Migrate/DestinationVersion/MigrateTo_V_1_4")) dependsOn(ExtDependencyLibs % "provided", MigrateBase, KamanjaManager)
 
 lazy val MigrateFrom_V_1_3 = project.in(file("Utils/Migrate/SourceVersion/MigrateFrom_V_1_3")) dependsOn (MigrateBase)
 
-//lazy val jtm = project.in(file("GenerateModels/jtm")) dependsOn(ExtDependencyLibs % "provided",Metadata, KamanjaBase, Exceptions, MetadataBootstrap, MessageDef)
+//lazy val jtm = project.in(file("GenerateModels/jtm")) dependsOn(ExtDependencyLibs % "provided", Metadata, KamanjaBase, Exceptions, MetadataBootstrap, MessageDef)
 
 lazy val InstallDriverBase = project.in(file("Utils/ClusterInstaller/InstallDriverBase")) dependsOn (ExtDependencyLibs % "provided")
 
-lazy val InstallDriver = project.in(file("Utils/ClusterInstaller/InstallDriver")) dependsOn(ExtDependencyLibs % "provided",InstallDriverBase, Serialize, KamanjaUtils)
+lazy val InstallDriver = project.in(file("Utils/ClusterInstaller/InstallDriver")) dependsOn(ExtDependencyLibs % "provided", InstallDriverBase, Serialize, KamanjaUtils)
 
 lazy val ClusterInstallerDriver = project.in(file("Utils/ClusterInstaller/ClusterInstallerDriver")) dependsOn(InstallDriverBase, MigrateBase, MigrateManager)
 
