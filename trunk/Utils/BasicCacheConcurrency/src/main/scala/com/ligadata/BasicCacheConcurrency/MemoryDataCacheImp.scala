@@ -48,7 +48,7 @@ class MemoryDataCacheImp extends DataCache{
       val ele:Element = cache.get(key)
       //val obj:Object = ele.getValue
 
-      return ele.getObjectKey
+      return ele.getObjectValue
     }else{
       System.out.println("get data from SSD");
 
