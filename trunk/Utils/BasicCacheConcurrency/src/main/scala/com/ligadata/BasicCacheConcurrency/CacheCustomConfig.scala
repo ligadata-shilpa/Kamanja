@@ -32,6 +32,7 @@ object CacheCustomConfig{
   val PEERCONFIG:String="peerconfig"
   val BOOTSTRAPASYNCHRONOUSLY:String="bootstrapAsynchronously"
   val PREFERIPV4STACK:String="java.net.preferIPv4Stack"
+  val SKIPUPDATECHECK:String="net.sf.ehcache.skipUpdateCheck"
 
 }
 
@@ -92,6 +93,7 @@ class CacheCustomConfig(jsonString:String) extends CacheConfiguration{
   propertiesBootStrap.setProperty(CacheCustomConfig.BOOTSTRAPASYNCHRONOUSLY,(values.getOrElse(CacheCustomConfig.BOOTSTRAPASYNCHRONOUSLY,"false")).toString)
 
   System.setProperty(CacheCustomConfig.PREFERIPV4STACK,"true")
+  System.setProperty(CacheCustomConfig.SKIPUPDATECHECK, "true");
 
   def  getConfiguration() : Configuration = {
     return config
