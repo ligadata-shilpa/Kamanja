@@ -67,7 +67,7 @@ lazy val InputOutputAdapterBase = project.in(file("InputOutputAdapters/InputOutp
 
 lazy val KafkaSimpleInputOutputAdapters = project.in(file("InputOutputAdapters/KafkaSimpleInputOutputAdapters")) dependsOn(InputOutputAdapterBase, Exceptions, DataDelimiters)
 
-lazy val SmartFileAdapter = project.in(file("InputOutputAdapters/SmartFileAdapter")) dependsOn(InputOutputAdapterBase, Exceptions, DataDelimiters)
+lazy val SmartFileAdapter = project.in(file("InputOutputAdapters/SmartFileAdapter")) dependsOn(InputOutputAdapterBase, Exceptions, DataDelimiters, MetadataAPI)
 
 lazy val FileSimpleInputOutputAdapters = project.in(file("InputOutputAdapters/FileSimpleInputOutputAdapters")) dependsOn(InputOutputAdapterBase, Exceptions, DataDelimiters)
 

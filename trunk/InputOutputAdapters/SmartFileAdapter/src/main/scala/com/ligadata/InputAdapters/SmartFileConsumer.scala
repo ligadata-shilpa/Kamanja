@@ -3,7 +3,7 @@ package com.ligadata.InputAdapters
 import com.ligadata.HeartBeat.MonitorComponentInfo
 import com.ligadata.InputOutputAdapterInfo._
 import com.ligadata.AdaptersConfiguration._
-import com.ligadata.KamanjaBase.DataDelimiters
+import com.ligadata.KamanjaBase.{NodeContext, DataDelimiters}
 import org.apache.logging.log4j.LogManager
 import org.json4s.jackson.Serialization
 
@@ -19,7 +19,7 @@ class SmartFileConsumerContext{
 /**
   * Created by Yasser on 3/13/2016.
   */
-object SmartFileConsumer extends InputAdapterObj {
+object SmartFileConsumer extends InputAdapterFactory {
   val MONITOR_FREQUENCY = 10000 // Monitor Topic queues every 20 seconds
   val SLEEP_DURATION = 1000 // Allow 1 sec between unsucessful fetched
   var CURRENT_BROKER: String = _
@@ -29,10 +29,10 @@ object SmartFileConsumer extends InputAdapterObj {
   val INIT_TIMEOUT = 250
   val ADAPTER_DESCRIPTION = "Smart File Consumer"
 
-  def CreateInputAdapter(inputConfig: AdapterConfiguration, callerCtxt: InputAdapterCallerContext, execCtxtObj: ExecContextObj, cntrAdapter: CountersAdapter): InputAdapter = new SmartFileConsumer(inputConfig, callerCtxt, execCtxtObj, cntrAdapter)
+  def CreateInputAdapter(inputConfig: AdapterConfiguration, execCtxtObj: ExecContextFactory, nodeContext: NodeContext): InputAdapter = new SmartFileConsumer(inputConfig, execCtxtObj, nodeContext)
 }
 
-class SmartFileConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: InputAdapterCallerContext, val execCtxtObj: ExecContextObj, cntrAdapter: CountersAdapter) extends InputAdapter {
+class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: ExecContextFactory, val nodeContext: NodeContext) extends InputAdapter {
 
   val input = this
   lazy val loggerName = this.getClass.getName
@@ -274,7 +274,7 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: I
 
     // Create a new EngineMessage and call the engine.
     if (execThread == null) {
-      execThread = execCtxtObj.CreateExecContext(input, uniqueKey, callerCtxt)
+      execThread = execCtxtObj.CreateExecContext(input, uniqueKey, nodeContext)
     }
 
     incrementCountForPartition(partitionId)
