@@ -69,37 +69,37 @@ class JSONSerDes(val mgr : MdMgr
         val containerVersionJson : String = nameValueAsJson(JsonContainerInterfaceKeys.version.toString, containerVersion,  true, withComma)
         val containerPhyNameJson : String = nameValueAsJson(JsonContainerInterfaceKeys.physicalname.toString, className,  true, withComma)
 
-        dos.writeChars(containerJsonHead)
+        dos.writeUTF(containerJsonHead)
         dos.writeUTF(containerNameJson)
         dos.writeUTF(containerVersionJson)
         dos.writeUTF(containerPhyNameJson)
 
+        val containerFieldsInOrder : Array[BaseTypeDef] = container.ElementTypes
         val fields : java.util.HashMap[String,com.ligadata.KamanjaBase.AttributeValue] = v.getAllAttributeValues
         var processCnt : Int = 0
         val fieldCnt : Int = fields.size()
-        fields.asScala.foreach(attr => {
+        containerFieldsInOrder.foreach(typedef => {
             processCnt += 1
-            val key : String = attr._1
-            val value : com.ligadata.KamanjaBase.AttributeValue = attr._2
-            val valueType : String = value.getValueType
-            val fieldTypeDef : BaseTypeDef = mgr.ActiveType(valueType)
-            val typeName : String = fieldTypeDef.FullName
-            val rawValue : Any = value.getValue
+
+            val attr : com.ligadata.KamanjaBase.AttributeValue = fields.get(typedef.FullName)
+            val valueType : String = attr.getValueType
+            val rawValue : Any = attr.getValue
+            val typeName : String = typedef.FullName
             val useComma : Boolean = if (fieldCnt < fieldCnt) withComma else withoutComma
 
-            val isContainerType : Boolean = isContainerTypeDef(fieldTypeDef)
+            val isContainerType : Boolean = isContainerTypeDef(typedef)
             val fldRep : String = if (isContainerType) {
-                processContainerTypeAsJson(fieldTypeDef.asInstanceOf[ContainerTypeDef]
+                processContainerTypeAsJson(typedef.asInstanceOf[ContainerTypeDef]
                                         , rawValue
                                         , useComma)
             } else {
-                val quoteValue : Boolean = useQuotesOnValue(fieldTypeDef)
+                val quoteValue : Boolean = useQuotesOnValue(typedef)
                 nameValueAsJson(typeName, rawValue, quoteValue, useComma)
             }
 
             dos.writeBytes(fldRep)
         })
-        dos.writeChars(containerJsonTail)
+        dos.writeUTF(containerJsonTail)
 
         val strRep : String = dos.toString
         logger.debug(s"attribute as JSON:\n$strRep")
@@ -366,7 +366,7 @@ class JSONSerDes(val mgr : MdMgr
         val containerPhyNameJson : String = containerInstanceMap.getOrElse(JsonContainerInterfaceKeys.physicalname.toString, "").asInstanceOf[String]
 
         if (containerNameJson.size == 0) {
-            throw new MissingPropertyException("the supplied byte array to deserialize does not have a container name.", null)
+            throw new MissingPropertyException("the supplied byte array to deserialize does not have a known container name.", null)
         }
 
         /** get an empty ContainerInterface instance for this type name from the objResolver */

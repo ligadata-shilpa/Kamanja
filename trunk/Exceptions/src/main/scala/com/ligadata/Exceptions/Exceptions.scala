@@ -19,6 +19,7 @@ package com.ligadata.Exceptions
 class KamanjaException(msg: String, cause: Throwable) extends Exception(msg, cause)
 
 case class UnsupportedObjectException(msg: String, cause: Throwable) extends KamanjaException(msg, cause)
+case class UnsupportedOperationException(msg: String, cause: Throwable) extends KamanjaException(msg, cause)
 case class Json4sParsingException(msg: String, cause: Throwable) extends KamanjaException(msg, cause)
 case class FunctionListParsingException(msg: String, cause: Throwable) extends KamanjaException(msg, cause)
 case class FunctionParsingException(msg: String, cause: Throwable) extends KamanjaException(msg, cause)

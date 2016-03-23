@@ -901,6 +901,38 @@ class OutputMsgDef extends BaseElemDef {
   var FormatSplittedArray: Array[(String, String)] = _ // OutputFormat split to substitute like (constant & substitute variable) tuples 
 }
 
+/**
+  * Current Serialization Types supported
+  * <ul>
+  *     <li>CSV - serialize to csv format</li>
+  *     <li>JSON - serialize to json string </li>
+  *     <li>KBinary - a binary format used internally in Kamanja</li>
+  *     <li>Custom - an unknown format </li>
+  * </ul>
+  */
+object SerializeDeserializeType extends Enumeration {
+    type SerDeserType = Value
+    val CSV, JSON, KBinary, Custom = Value
+}
+
+/**
+  * The SerializeDeserializeConfig describes the behavior
+  * @param jar the jar name that has been submitted that contains the SerializeDeserialize
+  * @param lineDelimiter (FOR CSV) the line terminator... any {\n, \r\n}
+  * @param fieldDelimiter (FOR CSV) the field delimiter (a single character for now)... e.g., ',', ';', ':', '\t'
+  * @param produceHeader (FOR CSV) when true, the column names of the container instance are added as the first line of a series
+  *                      of serializations.  This instance variable only indicates the configuration intention.  The
+  *                      SerializeDeserialize implementation should only respond with the header before the first
+  *                      message/container serialization.
+  * @param alwaysQuoteField (FOR CSV) when true, all of the fields will be individually enclosed in double quotes
+  */
+class SerializeDeserializeConfig ( var serDeserType : SerializeDeserializeType.SerDeserType
+                                 , var jar : String
+                                 , var lineDelimiter : String = "\r\n"
+                                 , var fieldDelimiter : String = ","
+                                 , var produceHeader : Boolean = false
+                                 , var alwaysQuoteField : Boolean = false) extends BaseElemDef {}
+
 object ModelCompilationConstants {
   val DEPENDENCIES: String = "Dependencies"
   val TYPES_DEPENDENCIES: String = "MessageAndContainers"
