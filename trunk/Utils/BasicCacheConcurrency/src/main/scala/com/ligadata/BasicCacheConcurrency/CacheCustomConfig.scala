@@ -53,7 +53,7 @@ class CacheCustomConfig(jsonString:String) extends CacheConfiguration{
              transactionalMode="off"
              class="net.sf.ehcache.distribution.jgroups.JGroupsCacheManagerPeerProviderFactory"
              separator="::"
-             peerconfig="channelName=EH_CACHE::file=jgroups.xml"
+             peerconfig="channelName=EH_CACHE::file=jgroups_upd.xml"
              replicatePuts=true
              replicateUpdates=true
              replicateUpdatesViaCopy=false
@@ -65,8 +65,8 @@ class CacheCustomConfig(jsonString:String) extends CacheConfiguration{
 
   this.name(values.getOrElse(CacheCustomConfig.NAME,"Node"))
     .eternal(values.getOrElse(CacheCustomConfig.ETERNAL,"false").toBoolean)
-    .maxBytesLocalHeap(values.getOrElse(CacheCustomConfig.MAXBYTESLOCALHEAP,"10000").toLong,MemoryUnit.MEGABYTES)
-    .maxBytesLocalDisk(values.getOrElse(CacheCustomConfig.MAXBYTESLOCALDISK,"1000").toLong,MemoryUnit.MEGABYTES)
+    .maxBytesLocalHeap(values.getOrElse(CacheCustomConfig.MAXBYTESLOCALHEAP,"10000").toLong,MemoryUnit.BYTES)
+    .maxBytesLocalDisk(values.getOrElse(CacheCustomConfig.MAXBYTESLOCALDISK,"1000").toLong,MemoryUnit.BYTES)
     .diskSpoolBufferSizeMB(values.getOrElse(CacheCustomConfig.DISKSPOOLBUFFERSIZEMB,"20").toInt)
     .timeToLiveSeconds(values.getOrElse(CacheCustomConfig.TIMETOLIVESECONDS,"600").toInt)
     .timeToIdleSeconds(values.getOrElse(CacheCustomConfig.TIMETOIDLESECONDS,"300").toInt)
@@ -76,7 +76,7 @@ class CacheCustomConfig(jsonString:String) extends CacheConfiguration{
   //ADD A PROVIDER DEFUALT JGROUPS
   factory.setClass(values.getOrElse(CacheCustomConfig.CLASS,"net.sf.ehcache.distribution.jgroups.JGroupsCacheManagerPeerProviderFactory"))
   factory.setPropertySeparator(values.getOrElse(CacheCustomConfig.SEPARATOR,"::"))
-  factory.setProperties(values.getOrElse(CacheCustomConfig.PEERCONFIG,"channelName=EH_CACHE::file=jgroups.xml"));
+  factory.setProperties(values.getOrElse(CacheCustomConfig.PEERCONFIG,"channelName=EH_CACHE::file=jgroups_upd.xml"));
   config.addCacheManagerPeerProviderFactory(factory)
 
   //LISTENER PROPERTIES
