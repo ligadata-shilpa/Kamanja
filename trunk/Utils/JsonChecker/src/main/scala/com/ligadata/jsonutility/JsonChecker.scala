@@ -31,7 +31,11 @@ trait LogTrait {
   val logger = LogManager.getLogger(loggerName)
 }
 
-object JsonChecker extends App with LogTrait{
+
+object JsonChecker {
+
+  lazy val loggerName = this.getClass.getName
+  lazy val logger = LogManager.getLogger(loggerName)
 
   private type OptionMap = Map[Symbol, Any]
 
@@ -48,7 +52,7 @@ object JsonChecker extends App with LogTrait{
     }
   }
 
-  override def main(args: Array[String]) {
+   def main(args: Array[String]) {
 
     logger.debug("JsonChecker.main begins")
 
@@ -67,26 +71,33 @@ object JsonChecker extends App with LogTrait{
     var jsonBen: JsonChecker = new JsonChecker()
     val jsonFileFlag = jsonBen.FindFileExtension(inputfile)
     if(jsonFileFlag == false){
-      logger.error("the file extension is not .json, please pass json file")
+      logger.error("The file extension is not .json. We only accept json files.")
       sys.exit(1)
     }else {
       val fileExistFlag = jsonBen.FileExist(inputfile)
       if (fileExistFlag == true) {
         val fileContent = jsonBen.ReadFile(inputfile)
         if (fileContent.equalsIgnoreCase(null) || fileContent.size == 0) {
-          logger.error("the file does not include data, check your file please")
+          logger.error("The file does not include data. Check your file please.")
+          sys.exit(1)
         } else {
           jsonBen.ParseFile(fileContent)
         }
       }else {
-        logger.error("file does not exists: ", inputfile)
+        logger.error("The file does not exist. Check the name of the file.")
+        sys.exit(1)
     }
     }
+
+    logger.info("Json file parsed successfully");
   }
 
 }
 
-class JsonChecker extends App with LogTrait{
+class JsonChecker {
+
+  lazy val loggerName = this.getClass.getName
+  lazy val logger = LogManager.getLogger(loggerName)
 
   def FindFileExtension (filePath: String) : Boolean = {
     val ext = FilenameUtils.getExtension(filePath);
@@ -102,6 +113,7 @@ class JsonChecker extends App with LogTrait{
       val parsedFile = parse(filePath)
     } catch{
       case e: Exception => logger.error("there is an error in the format of file \n ErrorMsg : ", e)
+        sys.exit(1)
     }
   }
 

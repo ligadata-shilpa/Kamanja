@@ -70,6 +70,7 @@ libraryDependencies += "org.json4s" %% "json4s-jackson" % "3.2.9"
 
 libraryDependencies += "commons-io" % "commons-io" % "2.4"
 
+libraryDependencies += "org.scalatest" % "scalatest_2.10" % "2.0" % "test"
 
 
 
