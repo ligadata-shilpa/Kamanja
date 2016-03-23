@@ -17,6 +17,8 @@
 
 package com.ligadata.KamanjaBase
 
+import com.ligadata.Exceptions.{DeprecatedException, NotImplementedFunctionException}
+
 import scala.collection.immutable.Map
 import com.ligadata.Utils.Utils
 import com.ligadata.kamanja.metadata.{MdMgr, ModelDef}
@@ -27,6 +29,8 @@ import java.io.{DataInputStream, DataOutputStream}
 import com.ligadata.KvBase.{Key, Value, TimeRange /* , KvBaseDefalts, KeyWithBucketIdAndPrimaryKey, KeyWithBucketIdAndPrimaryKeyCompHelper */}
 import com.ligadata.Utils.{KamanjaLoaderInfo}
 import com.ligadata.HeartBeat._
+
+import scala.collection.mutable.ArrayBuffer
 
 object MinVarType extends Enumeration {
   type MinVarType = Value
@@ -245,6 +249,8 @@ class MappedModelResults extends ModelResultBase {
 
 case class ContainerNameAndDatastoreInfo(containerName: String, dataDataStoreInfo: String)
 
+case class KeyValuePair(key: String, value: Any);
+
 trait EnvContext extends Monitorable {
   // Metadata Ops
   var _mgr: MdMgr = _
@@ -264,7 +270,7 @@ trait EnvContext extends Monitorable {
   def SetDefaultDatastore(dataDataStoreInfo: String): Unit
 
   // Registerd Messages/Containers
-  def RegisterMessageOrContainers(containersInfo: Array[ContainerNameAndDatastoreInfo]): Unit
+//  def RegisterMessageOrContainers(containersInfo: Array[ContainerNameAndDatastoreInfo]): Unit
 
   // RDD Ops
   def getRecent(transId: Long, containerName: String, partKey: List[String], tmRange: TimeRange, f: MessageContainerBase => Boolean): Option[MessageContainerBase]
@@ -311,9 +317,9 @@ trait EnvContext extends Monitorable {
   //  def removeCommittedKeys(keys: Array[String]): Unit
 
   // Model Results Saving & retrieving. Don't return null, always return empty, if we don't find
-  def saveModelsResult(transId: Long, key: List[String], value: scala.collection.mutable.Map[String, SavedMdlResult]): Unit
-
-  def getModelsResult(transId: Long, key: List[String]): scala.collection.mutable.Map[String, SavedMdlResult]
+//  def saveModelsResult(transId: Long, key: List[String], value: scala.collection.mutable.Map[String, SavedMdlResult]): Unit
+//
+//  def getModelsResult(transId: Long, key: List[String]): scala.collection.mutable.Map[String, SavedMdlResult]
 
   // Final Commit for the given transaction
   // outputResults has AdapterName, PartitionKey & Message
@@ -326,15 +332,15 @@ trait EnvContext extends Monitorable {
   // def PersistRemainingStateEntriesOnLeader: Unit
 
   // Clear Intermediate results before Restart processing
-  def clearIntermediateResults: Unit
+//  def clearIntermediateResults: Unit
 
   // Clear Intermediate results After updating them on different node or different component (like KVInit), etc
-  def clearIntermediateResults(unloadMsgsContainers: Array[String]): Unit
+//  def clearIntermediateResults(unloadMsgsContainers: Array[String]): Unit
 
   // Changed Data & Reloading data are Time in MS, Bucket Key & TransactionId
   def getChangedData(tempTransId: Long, includeMessages: Boolean, includeContainers: Boolean): scala.collection.immutable.Map[String, List[Key]]
 
-  def ReloadKeys(tempTransId: Long, containerName: String, keys: List[Key]): Unit
+//  def ReloadKeys(tempTransId: Long, containerName: String, keys: List[Key]): Unit
 
   // Set Reload Flag
   //  def setReloadFlag(transId: Long, containerName: String): Unit
@@ -353,9 +359,41 @@ trait EnvContext extends Monitorable {
   def NewMessageOrContainer(fqclassname: String): MessageContainerBase
 
   // Just get the cached container key and see what are the containers we need to cache
-  def CacheContainers(clusterId: String): Unit
+//  def CacheContainers(clusterId: String): Unit
 
-  def EnableEachTransactionCommit: Boolean
+//  def EnableEachTransactionCommit: Boolean
+
+  // Lock functions
+  def lockKeyInCluster(key: String): Unit
+  def lockKeyInNode(nodeId: String, key: String): Unit
+
+  // Unlock functions
+  def unlockKeyInCluster(key: String): Unit
+  def unlockKeyInNode(nodeId: String, key: String): Unit
+
+  def getAllClusterLocks(): Array[String]
+  def getAllNodeLocks(nodeId: String): Array[String]
+
+  // Saving & getting temporary objects in cache
+  def saveObjectInClusterCache(key: String, value: Any): Unit
+  def saveObjectInNodeCache(nodeId: String, key: String, value: Any): Unit
+
+  def getObjectFromClusterCache(key: String): Any
+  def getObjectFromNodeCache(nodeId: String, key: String): Any
+
+  def getAllKeysFromClusterCache(): Array[String]
+  def getAllKeysFromNodeCache(nodeId: String): Array[String]
+
+  def getAllObjectsFromClusterCache(): Array[KeyValuePair]
+  def getAllObjectsFromNodeCache(nodeId: String): Array[KeyValuePair]
+
+  // Saving & getting data
+  def saveData(key: String, value: Any): Unit
+  def getData(key: String): Any
+
+  // Zookeeper functions
+  def setDataToZNode(zNodePath: String, value: Array[Byte]): Unit
+  def getDataFromZNode(zNodePath: String): Array[Byte]
 }
 
 // partitionKey is the one used for this message
@@ -448,7 +486,19 @@ abstract class ModelInstance(val factory: ModelInstanceFactory) {
   //		outputDefault: If this is true, engine is expecting output always.
   //	Output:
   //		Derived class of ModelResultBase is the return results expected. null if no results.
-  def execute(txnCtxt: TransactionContext, outputDefault: Boolean): ModelResultBase
+  // This call is deprecated and valid for models upto 1.3.x. Use run method for new implementation
+  def execute(txnCtxt: TransactionContext, outputDefault: Boolean): ModelResultBase = {
+    throw new DeprecatedException("Deprecated", null)
+  }
+
+  //	Intput:
+  //		txnCtxt: Transaction context related to this execution
+  //		outputDefault: If this is true, engine is expecting output always.
+  //	Output:
+  //		Derived messages are the return results expected.
+  def run(txnCtxt: TransactionContext, outputDefault: Boolean): Array[BaseMsg] = {
+    throw new NotImplementedFunctionException("Not implemented", null)
+  }
 }
 
 // ModelInstanceFactory will be created from FactoryOfModelInstanceFactory when metadata got resolved (while engine is starting and when metadata adding while running the engine).
@@ -478,7 +528,10 @@ abstract class ModelInstanceFactory(val modelDef: ModelDef, val nodeContext: Nod
   def getVersion(): String // Model Version
 
   // Checking whether the message is valid to execute this model instance or not.
-  def isValidMessage(msg: MessageContainerBase): Boolean
+  // Deprecated and no more supported in new versions from 1.4.0
+  def isValidMessage(msg: MessageContainerBase): Boolean = {
+    throw new DeprecatedException("Deprecated", null)
+  }
 
   // Creating new model instance related to this ModelInstanceFactory.
   def createModelInstance(): ModelInstance
@@ -501,24 +554,39 @@ trait FactoryOfModelInstanceFactory {
   def prepareModel(nodeContext: NodeContext, modelDefStr: String, inpMsgName: String, outMsgName: String, loaderInfo: KamanjaLoaderInfo, jarPaths: collection.immutable.Set[String]): ModelDef
 }
 
+// FIXME: Need to have message creator (Model/InputMessage/Get(from db/cache))
 class TransactionContext(val transId: Long, val nodeCtxt: NodeContext, val msgData: Array[Byte], val partitionKey: String) {
-  private var msg: MessageContainerBase = _
+  private var orgInputMsg: MessageContainerBase = _
+  private val msgs = scala.collection.mutable.Map[String, ArrayBuffer[MessageContainerBase]]() // orgInputMsg is part in this also
+  private val valuesMap = new java.util.HashMap[String, Any]()
 
   def getInputMessageData(): Array[Byte] = msgData
 
   def getPartitionKey(): String = partitionKey
 
-  def getMessage(): MessageContainerBase = msg
+  def getMessage(): MessageContainerBase = orgInputMsg// Original messages
 
-  def setMessage(m: MessageContainerBase): Unit = {
-    msg = m
+  def getMessages(msgType: String): Array[MessageContainerBase] = msgs.getOrElse(msgType.toLowerCase(), ArrayBuffer[MessageContainerBase]()).toArray
+
+  def addMessage(m: MessageContainerBase): Unit = {
+    val msgNm = m.FullName.toLowerCase()
+    val tmp = msgs.getOrElse(msgNm, ArrayBuffer[MessageContainerBase]())
+    tmp += m
+    msgs(msgNm) = tmp
+  }
+
+  def addMessages(curMsgs: Array[MessageContainerBase]): Unit = {
+    curMsgs.foreach(m => addMessage(m))
+  }
+
+  def setInitialMessage(orgMsg: MessageContainerBase): Unit = {
+    orgInputMsg = orgMsg
+    addMessage(orgMsg)
   }
 
   def getTransactionId() = transId
 
   def getNodeCtxt() = nodeCtxt
-
-  private var valuesMap = new java.util.HashMap[String, Any]()
 
   def getPropertyValue(clusterId: String, key: String): String = {
     if (nodeCtxt != null) nodeCtxt.getPropertyValue(clusterId, key) else ""

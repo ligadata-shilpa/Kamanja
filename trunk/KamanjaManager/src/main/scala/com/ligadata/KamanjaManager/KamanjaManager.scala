@@ -3,7 +3,7 @@ package com.ligadata.KamanjaManager
 
 import com.ligadata.HeartBeat.MonitoringContext
 import com.ligadata.KamanjaBase._
-import com.ligadata.InputOutputAdapterInfo.{ ExecContext, InputAdapter, OutputAdapter, ExecContextObj, PartitionUniqueRecordKey, PartitionUniqueRecordValue }
+import com.ligadata.InputOutputAdapterInfo.{ ExecContext, InputAdapter, OutputAdapter, ExecContextFactory, PartitionUniqueRecordKey, PartitionUniqueRecordValue }
 import com.ligadata.ZooKeeper.CreateClient
 import org.json4s.jackson.JsonMethods._
 
@@ -467,7 +467,7 @@ class KamanjaManager extends Observer {
       if (retval) {
         LOG.debug("Initialize Metadata Manager")
         KamanjaMetadata.InitMdMgr(KamanjaConfiguration.zkConnectString, metadataUpdatesZkNodePath, KamanjaConfiguration.zkSessionTimeoutMs, KamanjaConfiguration.zkConnectionTimeoutMs)
-        KamanjaMetadata.envCtxt.CacheContainers(KamanjaConfiguration.clusterId) // Load data for Caching
+//        KamanjaMetadata.envCtxt.CacheContainers(KamanjaConfiguration.clusterId) // Load data for Caching
         LOG.debug("Initializing Leader")
 
         var txnCtxt: TransactionContext = null
@@ -596,7 +596,7 @@ class KamanjaManager extends Observer {
     val exceptionStatusAdaps = scala.collection.mutable.Set[String]()
     var curCntr = 0
     val maxFailureCnt = 30
-
+/*
     val statusPrint_PD = new Runnable {
       def run() {
         val stats: scala.collection.immutable.Map[String, Long] = SimpleStats.copyMap
@@ -639,6 +639,7 @@ class KamanjaManager extends Observer {
         }
       }
     }
+*/
 
     val metricsCollector = new Runnable {
       def run(): Unit = {
@@ -654,7 +655,7 @@ class KamanjaManager extends Observer {
 
     val scheduledThreadPool = Executors.newScheduledThreadPool(3);
 
-    scheduledThreadPool.scheduleWithFixedDelay(statusPrint_PD, 0, 1000, TimeUnit.MILLISECONDS);
+    // scheduledThreadPool.scheduleWithFixedDelay(statusPrint_PD, 0, 1000, TimeUnit.MILLISECONDS);
 
     /**
      * print("=> ")

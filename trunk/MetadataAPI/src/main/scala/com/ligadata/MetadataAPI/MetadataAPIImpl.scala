@@ -927,11 +927,6 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
           saveObjFn()
           mdMgr.AddContainerType(o)
         }
-        case o: OutputMsgDef => {
-          logger.trace("Adding the Output Message to the cache: name of the object =>  " + dispkey)
-          saveObjFn()
-          mdMgr.AddOutputMsg(o)
-        }
         case _ => {
           logger.error("SaveObject is not implemented for objects of type " + obj.getClass.getName)
         }
@@ -1037,10 +1032,6 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
         }
         case o: ContainerTypeDef => {
           logger.debug("Updating the Type in the DB: name of the object =>  " + dispkey)
-          updObjFn()
-        }
-        case o: OutputMsgDef => {
-          logger.debug("Updating the output message in the DB: name of the object =>  " + dispkey)
           updObjFn()
         }
         case _ => {
@@ -1345,9 +1336,6 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
         case o: ContainerTypeDef => {
           updatedObject = mdMgr.ModifyType(o.nameSpace, o.name, o.ver, operation)
         }
-        case o: OutputMsgDef => {
-          updatedObject = mdMgr.ModifyOutputMsg(o.nameSpace, o.name, o.ver, operation)
-        }
         case _ => {
           throw InternalErrorException("UpdateObjectInCache is not implemented for objects of type " + obj.getClass.getName, null)
         }
@@ -1478,10 +1466,6 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
         case o: ContainerTypeDef => {
           logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
           mdMgr.AddContainerType(o)
-        }
-        case o: OutputMsgDef => {
-          logger.trace("Adding the Output Msg to the cache: name of the object =>  " + key)
-          mdMgr.AddOutputMsg(o)
         }
         case _ => {
           logger.error("SaveObject is not implemented for objects of type " + obj.getClass.getName)
@@ -3007,32 +2991,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
           case _ => { logger.error("Unknown Operation " + zkMessage.Operation + " in zookeeper notification, notification is not processed ..") }
         }
       }
-      case "OutputMsgDef" => {
-        zkMessage.Operation match {
-          case "Add" => {
-            LoadOutputMsgIntoCache(key)
-          }
-          case "Remove" | "Activate" | "Deactivate" => {
-            try {
-              MdMgr.GetMdMgr.ModifyOutputMsg(zkMessage.NameSpace, zkMessage.Name, zkMessage.Version.toLong, zkMessage.Operation)
-            } catch {
-              case e: ObjectNolongerExistsException => {
-                logger.error("The object " + key + " nolonger exists in metadata : It may have been removed already", e)
-              }
-            }
-          }
-        }
-      }
       case _ => { logger.error("Unknown objectType " + zkMessage.ObjectType + " in zookeeper notification, notification is not processed ..") }
     }
-  }
-
-    /**
-     * LoadOutputMsgIntoCache
-     * @param key
-     */
-  def LoadOutputMsgIntoCache(key: String) {
-    MessageAndContainerUtils.LoadOutputMsgIntoCache(key)
   }
 
     /**
@@ -3679,8 +3639,15 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @return
      */
   def getModelDependencies(modelConfigName: String, userid: Option[String] = None): List[String] = {
-    var config: scala.collection.immutable.Map[String, List[String]] = MdMgr.GetMdMgr.GetModelConfig(modelConfigName)
-    config.getOrElse(ModelCompilationConstants.DEPENDENCIES, List[String]())
+      var config = MdMgr.GetMdMgr.GetModelConfig(modelConfigName)
+      val typDeps = config.getOrElse(ModelCompilationConstants.DEPENDENCIES, null)
+      if (typDeps != null) {
+        if (typDeps.isInstanceOf[List[_]])
+          return typDeps.asInstanceOf[List[String]]
+        if (typDeps.isInstanceOf[Array[_]])
+          return typDeps.asInstanceOf[Array[String]].toList
+      }
+      List[String]()
   }
 
     /**
@@ -3694,7 +3661,15 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     MessageAndContainerUtils.getModelMessagesContainers(modelConfigName,userid)
   }
 
-    /**
+  def getModelInputTypesSets(modelConfigName: String, userid: Option[String] = None): List[List[String]] = {
+    MessageAndContainerUtils.getModelInputTypesSets(modelConfigName,userid)
+  }
+
+  def getModelOutputTypes(modelConfigName: String, userid: Option[String] = None): List[String] = {
+    MessageAndContainerUtils.getModelOutputTypes(modelConfigName,userid)
+  }
+
+  /**
      * Get the model config keys
      * @return
      */

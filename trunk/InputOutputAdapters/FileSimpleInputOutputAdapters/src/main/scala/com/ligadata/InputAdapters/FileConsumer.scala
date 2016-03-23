@@ -23,18 +23,18 @@ import org.apache.logging.log4j.{ Logger, LogManager }
 import java.io.{ InputStream, FileInputStream }
 import java.util.zip.GZIPInputStream
 import java.nio.file.{ Paths, Files }
-import com.ligadata.InputOutputAdapterInfo.{ AdapterConfiguration, InputAdapter, InputAdapterObj, OutputAdapter, ExecContext, ExecContextObj, CountersAdapter, PartitionUniqueRecordKey, PartitionUniqueRecordValue, StartProcPartInfo, InputAdapterCallerContext }
+import com.ligadata.InputOutputAdapterInfo._
 import com.ligadata.AdaptersConfiguration.{ FileAdapterConfiguration, FilePartitionUniqueRecordKey, FilePartitionUniqueRecordValue }
 import scala.util.control.Breaks._
-import com.ligadata.KamanjaBase.DataDelimiters
+import com.ligadata.KamanjaBase.{NodeContext, DataDelimiters}
 import com.ligadata.HeartBeat.{Monitorable, MonitorComponentInfo}
 
-object FileConsumer extends InputAdapterObj {
+object FileConsumer extends InputAdapterFactory {
   val ADAPTER_DESCRIPTION = "File Consumer"
-  def CreateInputAdapter(inputConfig: AdapterConfiguration, callerCtxt: InputAdapterCallerContext, execCtxtObj: ExecContextObj, cntrAdapter: CountersAdapter): InputAdapter = new FileConsumer(inputConfig, callerCtxt, execCtxtObj, cntrAdapter)
+  def CreateInputAdapter(inputConfig: AdapterConfiguration, execCtxtObj: ExecContextFactory, nodeContext: NodeContext): InputAdapter = new FileConsumer(inputConfig, execCtxtObj, nodeContext)
 }
 
-class FileConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: InputAdapterCallerContext, val execCtxtObj: ExecContextObj, cntrAdapter: CountersAdapter) extends InputAdapter {
+class FileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: ExecContextFactory, val nodeContext: NodeContext) extends InputAdapter {
   private[this] val LOG = LogManager.getLogger(getClass);
 
   private[this] val fc = FileAdapterConfiguration.GetAdapterConfig(inputConfig)
@@ -50,7 +50,7 @@ class FileConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: InputA
 
   val input = this
 
-  val execThread = execCtxtObj.CreateExecContext(input, uniqueKey, callerCtxt)
+  val execThread = execCtxtObj.CreateExecContext(input, uniqueKey, nodeContext)
 
   class Stats {
     var totalLines: Long = 0;
@@ -146,8 +146,8 @@ class FileConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: InputA
                 }
                 st.totalLines += 1;
 
-                val key = Category + "/" + fc.Name + "/evtCnt"
-                cntrAdapter.addCntr(key, 1)
+                // val key = Category + "/" + fc.Name + "/evtCnt"
+                // cntrAdapter.addCntr(key, 1)
 
                 val curTm = System.nanoTime
                 if ((curTm - tm) > 1000000000L) {

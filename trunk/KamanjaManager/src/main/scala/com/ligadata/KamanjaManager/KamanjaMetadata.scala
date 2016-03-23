@@ -701,23 +701,23 @@ object KamanjaMetadata extends MdBaseResolveInfo {
     // Adding container
     if (contObjects != null && contObjects.size > 0) {
       messageContainerObjects ++= contObjects
-      if (envCtxt != null) {
-        val containerNames = contObjects.map(container => container._1.toLowerCase).toList.sorted.toArray // Sort topics by names
-        val containerInfos = containerNames.map(c => { ContainerNameAndDatastoreInfo(c, null) })
-        envCtxt.RegisterMessageOrContainers(containerInfos) // Containers
-        envCtxt.CacheContainers(KamanjaConfiguration.clusterId) // Load data for Caching
-      }
+//      if (envCtxt != null) {
+//        val containerNames = contObjects.map(container => container._1.toLowerCase).toList.sorted.toArray // Sort topics by names
+//        val containerInfos = containerNames.map(c => { ContainerNameAndDatastoreInfo(c, null) })
+//        envCtxt.RegisterMessageOrContainers(containerInfos) // Containers
+//        envCtxt.CacheContainers(KamanjaConfiguration.clusterId) // Load data for Caching
+//      }
     }
 
     // Adding Messages
     if (msgObjects != null && msgObjects.size > 0) {
       messageContainerObjects ++= msgObjects
-      if (envCtxt != null) {
-        val topMessageNames = msgObjects.filter(msg => msg._2.parents.size == 0).map(msg => msg._1.toLowerCase).toList.sorted.toArray // Sort topics by names
-        val messagesInfos = topMessageNames.map(c => { ContainerNameAndDatastoreInfo(c, null) })
-        envCtxt.RegisterMessageOrContainers(messagesInfos) // Messages
-        envCtxt.CacheContainers(KamanjaConfiguration.clusterId) // Load data for Caching
-      }
+//      if (envCtxt != null) {
+//        val topMessageNames = msgObjects.filter(msg => msg._2.parents.size == 0).map(msg => msg._1.toLowerCase).toList.sorted.toArray // Sort topics by names
+//        val messagesInfos = topMessageNames.map(c => { ContainerNameAndDatastoreInfo(c, null) })
+//        envCtxt.RegisterMessageOrContainers(messagesInfos) // Messages
+//        envCtxt.CacheContainers(KamanjaConfiguration.clusterId) // Load data for Caching
+//      }
     }
 
     // Adding Models
@@ -1014,8 +1014,8 @@ object KamanjaMetadata extends MdBaseResolveInfo {
         }
       }
 
-      if (unloadMsgsContainers.size > 0)
-        envCtxt.clearIntermediateResults(unloadMsgsContainers.toArray)
+//      if (unloadMsgsContainers.size > 0)
+//        envCtxt.clearIntermediateResults(unloadMsgsContainers.toArray)
 
       val nonExistsJars = Utils.CheckForNonExistanceJars(allJarsToBeValidated.toSet)
       if (nonExistsJars.size > 0) {
@@ -1120,9 +1120,6 @@ object KamanjaMetadata extends MdBaseResolveInfo {
                 LOG.error("Unknown Operation " + zkMessage.Operation + " in zookeeper notification, notification is not processed ..")
               }
             }
-          }
-          case "OutputMsgDef" => {
-
           }
           case _ => {
             LOG.warn("Unknown objectType " + zkMessage.ObjectType + " in zookeeper notification, notification is not processed ..")

@@ -16,7 +16,7 @@
 
 package com.ligadata.InputOutputAdapterInfo
 
-import com.ligadata.KamanjaBase.DataDelimiters
+import com.ligadata.KamanjaBase.{NodeContext, DataDelimiters}
 import com.ligadata.HeartBeat._
 
 object AdapterConfiguration {
@@ -39,20 +39,9 @@ class AdapterConfiguration {
   var valueDelimiter: String = _ // Delimiter String for valueDelimiter
 }
 
-trait CountersAdapter {
-  def addCntr(key: String, cnt: Long): Long
-  def addCntr(cntrs: scala.collection.immutable.Map[String, Long]): Unit
-  def getCntr(key: String): Long
-  def getDispString(delim: String): String
-  def copyMap: scala.collection.immutable.Map[String, Long]
-}
-
-trait InputAdapterCallerContext {
-}
-
 // Input Adapter Object to create Adapter
-trait InputAdapterObj {
-  def CreateInputAdapter(inputConfig: AdapterConfiguration, callerCtxt: InputAdapterCallerContext, execCtxtObj: ExecContextObj, cntrAdapter: CountersAdapter): InputAdapter
+trait InputAdapterFactory {
+  def CreateInputAdapter(inputConfig: AdapterConfiguration, execCtxtObj: ExecContextFactory, nodeContext: NodeContext): InputAdapter
 }
 
 class StartProcPartInfo {
@@ -63,8 +52,8 @@ class StartProcPartInfo {
 
 // Input Adapter
 trait InputAdapter extends Monitorable {
+  val nodeContext: NodeContext // NodeContext
   val inputConfig: AdapterConfiguration // Configuration
-  val callerCtxt: InputAdapterCallerContext
 
   def UniqueName: String = { // Making String from key
     return "{\"Name\" : \"%s\"}".format(inputConfig.Name)
@@ -82,12 +71,13 @@ trait InputAdapter extends Monitorable {
 }
 
 // Output Adapter Object to create Adapter
-trait OutputAdapterObj {
-  def CreateOutputAdapter(inputConfig: AdapterConfiguration, cntrAdapter: CountersAdapter): OutputAdapter
+trait OutputAdapterFactory {
+  def CreateOutputAdapter(inputConfig: AdapterConfiguration, nodeContext: NodeContext): OutputAdapter
 }
 
 // Output Adapter
 trait OutputAdapter extends Monitorable {
+  val nodeContext: NodeContext // NodeContext
   val inputConfig: AdapterConfiguration // Configuration
 
   def send(message: String, partKey: String): Unit = send(Array(message.getBytes("UTF8")), Array(partKey.getBytes("UTF8")))
@@ -107,13 +97,13 @@ trait OutputAdapter extends Monitorable {
 trait ExecContext {
   val input: InputAdapter
   val curPartitionKey: PartitionUniqueRecordKey
-  val callerCtxt: InputAdapterCallerContext
+  val nodeContext: NodeContext
 
   def execute(data: Array[Byte], format: String, uniqueKey: PartitionUniqueRecordKey, uniqueVal: PartitionUniqueRecordValue, readTmNanoSecs: Long, readTmMilliSecs: Long, ignoreOutput: Boolean, associatedMsg: String, delimiters: DataDelimiters): Unit
 }
 
-trait ExecContextObj {
-  def CreateExecContext(input: InputAdapter, curPartitionKey: PartitionUniqueRecordKey, callerCtxt: InputAdapterCallerContext): ExecContext
+trait ExecContextFactory {
+  def CreateExecContext(input: InputAdapter, curPartitionKey: PartitionUniqueRecordKey, nodeContext: NodeContext): ExecContext
 }
 
 trait PartitionUniqueRecordKey {

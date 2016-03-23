@@ -214,9 +214,6 @@ object PersistenceUtils {
       case o: AttributeDef => {
         "concepts"
       }
-      case o: OutputMsgDef => {
-        "outputmsgs"
-      }
       case o: BaseTypeDef => {
         "types"
       }
@@ -341,14 +338,6 @@ object PersistenceUtils {
         throw UpdateStoreFailedException("Failed to insert/update objects", e)
       }
     }
-  }
-
-    /**
-     * SaveOutputMsObjectList
-     * @param objList <description please>
-     */
-  def SaveOutputMsObjectList(objList: Array[BaseElemDef]) {
-    SaveObjectList(objList, "outputmsgs")
   }
 
     /**

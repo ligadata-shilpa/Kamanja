@@ -29,12 +29,12 @@ import java.net.{ InetAddress }
 import org.apache.logging.log4j.{ Logger, LogManager }
 import scala.collection.mutable.Map
 import com.ligadata.Exceptions.{KamanjaException, FatalAdapterException}
-import com.ligadata.KamanjaBase.DataDelimiters
+import com.ligadata.KamanjaBase.{NodeContext, DataDelimiters}
 import com.ligadata.HeartBeat.{Monitorable, MonitorComponentInfo}
 
 case class ExceptionInfo (Last_Failure: String, Last_Recovery: String)
 
-object KafkaSimpleConsumer extends InputAdapterObj {
+object KafkaSimpleConsumer extends InputAdapterFactory {
   val METADATA_REQUEST_CORR_ID = 2
   val QUEUE_FETCH_REQUEST_TYPE = 1
   val METADATA_REQUEST_TYPE = "metadataLookup"
@@ -54,10 +54,10 @@ object KafkaSimpleConsumer extends InputAdapterObj {
   val PARTITION_DEPTH_KEYS = "Partition Depths"
   val EXCEPTION_SUMMARY = "Exception Summary"
 
-  def CreateInputAdapter(inputConfig: AdapterConfiguration, callerCtxt: InputAdapterCallerContext, execCtxtObj: ExecContextObj, cntrAdapter: CountersAdapter): InputAdapter = new KafkaSimpleConsumer(inputConfig, callerCtxt, execCtxtObj, cntrAdapter)
+  def CreateInputAdapter(inputConfig: AdapterConfiguration, execCtxtObj: ExecContextFactory, nodeContext: NodeContext): InputAdapter = new KafkaSimpleConsumer(inputConfig, execCtxtObj, nodeContext)
 }
 
-class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt: InputAdapterCallerContext, val execCtxtObj: ExecContextObj, cntrAdapter: CountersAdapter) extends InputAdapter {
+class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: ExecContextFactory, val nodeContext: NodeContext) extends InputAdapter {
   val input = this
   private val lock = new Object()
   private val LOG = LogManager.getLogger(getClass)
@@ -168,7 +168,7 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
    * given topic, and the topic have been set when this KafkaConsumer_V2 Adapter was instantiated.  The partitionIds should be
    * obtained via a prior call to the adapter.  One of the hosts will be a chosen as a leader to service the requests by the
    * spawned threads.
-   * @param maxParts Int - Number of Partitions
+   * @param ignoreFirstMsg Boolean - if true, ignore the first message sending to engine
    * @param partitionIds Array[(PartitionUniqueRecordKey, PartitionUniqueRecordValue, Long, PartitionUniqueRecordValue)] - an Array of partition ids
    */
   def StartProcessing(partitionIds: Array[StartProcPartInfo], ignoreFirstMsg: Boolean): Unit = lock.synchronized {
@@ -395,7 +395,7 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
 
                 // Create a new EngineMessage and call the engine.
                 if (execThread == null) {
-                  execThread = execCtxtObj.CreateExecContext(input, uniqueKey, callerCtxt)
+                  execThread = execCtxtObj.CreateExecContext(input, uniqueKey, nodeContext)
                 }
 
                 incrementCountForPartition(partitionId)
@@ -406,8 +406,8 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
 
                 // Kafka offsets are 0 based, so add 1
                 localReadOffsets(partitionId) = (uniqueVal.Offset + 1)
-                val key = Category + "/" + qc.Name + "/evtCnt"
-                cntrAdapter.addCntr(key, 1) // for now adding each row
+                // val key = Category + "/" + qc.Name + "/evtCnt"
+                // cntrAdapter.addCntr(key, 1) // for now adding each row
               }
 
             })
