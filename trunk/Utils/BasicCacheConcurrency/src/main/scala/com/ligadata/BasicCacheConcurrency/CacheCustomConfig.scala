@@ -31,6 +31,8 @@ object CacheCustomConfig{
   val SEPARATOR:String="separator"
   val PEERCONFIG:String="peerconfig"
   val BOOTSTRAPASYNCHRONOUSLY:String="bootstrapAsynchronously"
+  val PREFERIPV4STACK:String="java.net.preferIPv4Stack"
+
 }
 
 class CacheCustomConfig(jsonString:String) extends CacheConfiguration{
@@ -88,6 +90,8 @@ class CacheCustomConfig(jsonString:String) extends CacheConfiguration{
 
   //ADD BOOTSTRAP PROPERTIES
   propertiesBootStrap.setProperty(CacheCustomConfig.BOOTSTRAPASYNCHRONOUSLY,(values.getOrElse(CacheCustomConfig.BOOTSTRAPASYNCHRONOUSLY,"false")).toString)
+
+  System.setProperty(CacheCustomConfig.PREFERIPV4STACK,"true")
 
   def  getConfiguration() : Configuration = {
     return config

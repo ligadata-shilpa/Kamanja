@@ -9,15 +9,26 @@ object TestMaxSize {
     val aclass = Class.forName("com.ligadata.BasicCacheConcurrency.MemoryDataCacheImp").newInstance
     val node = aclass.asInstanceOf[DataCache]
 
-    node.init("""{"name":"Node1","maxBytesLocalHeap":"20","maxBytesLocalDisk":"1000","eternal":"false","diskSpoolBufferSizeMB":"20","timeToIdleSeconds":"300","timeToLiveSeconds":"300","memoryStoreEvictionPolicy":"LFU","transactionalMode":"off","class":"net.sf.ehcache.distribution.jgroups.JGroupsCacheManagerPeerProviderFactory","separator":"::","peerconfig":"channelName=EH_CACHE::file=jgroups_tcp.xml","replicatePuts":"true","replicateUpdates":"true","replicateUpdatesViaCopy":"false","replicateRemovals":"true","replicateAsynchronously":"true","bootstrapAsynchronously":"false"}""")
+    node.init("""{"name":"CacheCluster","maxBytesLocalHeap":"1048576","maxBytesLocalDisk":"1024","eternal":"false","diskSpoolBufferSizeMB":"20","timeToIdleSeconds":"300","timeToLiveSeconds":"300","memoryStoreEvictionPolicy":"LFU","transactionalMode":"off","class":"net.sf.ehcache.distribution.jgroups.JGroupsCacheManagerPeerProviderFactory","separator":"::","peerconfig":"channelName=EH_CACHE::file=jgroups_tcp.xml","replicatePuts":"true","replicateUpdates":"true","replicateUpdatesViaCopy":"false","replicateRemovals":"true","replicateAsynchronously":"true","bootstrapAsynchronously":"false"}""")
     node.start()
-    var map = new java.util.HashMap[String,String]
 
+    System.out.println("====================")
+    for(i<-1 until 1000){
+      node.put(i.toString,"this is a memory test"+i)
+    }
+    System.out.println("====================")
 
-    node.put("1","HI ALL")
-    System.out.println(node.get("1").toString)
+    System.out.println("====================")
+    for(i<-1 until 1000) {
+      System.out.println(node.get(i.toString).toString)
+    }
+    System.out.println("====================")
 
-
+    System.out.println("====================")
+    for(i<-1 until 1000) {
+      System.out.println(node.get(i.toString).toString)
+    }
+    System.out.println("====================")
 
   }
 }

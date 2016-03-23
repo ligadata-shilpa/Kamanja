@@ -6,7 +6,6 @@ import com.ligadata.BasicCacheConcurrency.DataCache
 object Node1 {
   def main(args: Array[String]) {
 
-    System.setProperty("java.net.preferIPv4Stack","true")
 
     val aclass = Class.forName("com.ligadata.BasicCacheConcurrency.MemoryDataCacheImp").newInstance
     val node = aclass.asInstanceOf[DataCache]
