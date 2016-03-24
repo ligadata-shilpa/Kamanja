@@ -104,6 +104,7 @@ class CsvSerDeser(val mgr : MdMgr
 
     /**
       * Format one of the type info fields by quoting the supplied value and tagging the delimiter in use to it.
+      *
       * @param value
       * @param fldDelim
       * @return decorated string for emission
@@ -117,6 +118,7 @@ class CsvSerDeser(val mgr : MdMgr
     /**
       * Write the field data type names to the supplied stream.  This is called whenever the emitHeaderFirst instance
       * variable is true... usually just once in a given stream creation.
+      *
       * @param dos
       * @param containerFieldsInOrder
       */
@@ -197,6 +199,7 @@ class CsvSerDeser(val mgr : MdMgr
     /**
       * Escape all double quotes found in this string by prefixing the double quote with another double quote.  If
       * none are found, the original string is returned.
+      *
       * @param valueStr string presumably that has embedded double quotes.
       * @return adjusted string
       */
@@ -205,36 +208,43 @@ class CsvSerDeser(val mgr : MdMgr
         val buffer : StringBuilder = new StringBuilder
         var base : Int = 0
         var startPoint : Int = 0
-        while (startPoint >= 0) {
-            startPoint = valueStr.indexOf('"', startPoint)
-            if (startPoint >= 0) {
-                val aSlice : String = valueStr.slice(base,startPoint)
-                buffer.append(aSlice)
-                buffer.append(s"${'"'}${'"'}")
-                startPoint += 1 // start after the processed quote
-                base = startPoint
-                if (startPoint == len) {
-                    startPoint = -1 // end it ... avoid out of bounds
+        if (valueStr != null) {
+            while (startPoint >= 0) {
+                startPoint = valueStr.indexOf('"', startPoint)
+                if (startPoint >= 0) {
+                    val aSlice: String = valueStr.slice(base, startPoint)
+                    buffer.append(aSlice)
+                    buffer.append(s"${'"'}${'"'}")
+                    startPoint += 1 // start after the processed quote
+                    base = startPoint
+                    if (startPoint >= len) {
+                        startPoint = -1 // end it ... avoid out of bounds
+                    }
                 }
             }
         }
-        val escapeQuotedStr : String = if (buffer.length == 0) valueStr else buffer.toString
+        val escapeQuotedStr : String = if (buffer.isEmpty) valueStr else buffer.toString
         escapeQuotedStr
     }
 
     /**
       *
       * serDeserConfig
-    class SerializeDeserializeConfig ( var serDeserType : SerializeDeserializeType.SerDeserType
-                                 , var jar : String
-                                 , var lineDelimiter : String = "\r\n"
-                                 , var fieldDelimiter : String = ","
-                                 , var produceHeader : Boolean = false
-                                 , var alwaysQuoteField : Boolean = false) extends BaseElemDef {}
+      * class SerializeDeserializeConfig ( var serDeserType : SerializeDeserializeType.SerDeserType
+      * , var jar : String
+      * , var lineDelimiter : String = "\r\n"
+      * , var fieldDelimiter : String = ","
+      * , var produceHeader : Boolean = false
+      * , var alwaysQuoteField : Boolean = false) extends BaseElemDef {}
       */
 
 
-
+    /**
+      * Discern if the supplied BaseTypeDef is a ContainerTypeDef.  ContainerTypeDefs are used to describe
+      * messages, containers, and the collection types.
+      * @param aType a metadata base type
+      * @return true if container
+      */
     private def isContainerTypeDef(aType : BaseTypeDef) : Boolean = {
         aType.isInstanceOf[ContainerTypeDef]
     }
@@ -256,20 +266,24 @@ class CsvSerDeser(val mgr : MdMgr
       * @param b the byte array containing the serialized ContainerInterface instance
       * @return a ContainerInterface
       */
+    @throws(classOf[com.ligadata.Exceptions.MissingPropertyException])
+    @throws(classOf[com.ligadata.Exceptions.ObjectNotFoundException])
+    @throws(classOf[com.ligadata.Exceptions.UnsupportedObjectException])
     def deserialize(b: Array[Byte]) : ContainerInterface = {
 
         val rawCsvContainerStr : String = new String(b)
-        val containerInstanceMap : Map[String, Any] = csvStringAsMap(rawCsvContainerStr)
+        val (containerfFieldMap, containerType, containerFldTypes)
+                : (Map[String, Any], ContainerTypeDef, Array[BaseTypeDef]) = dataMapAndTypesForCsvString(rawCsvContainerStr)
 
         /** Decode the map to produce an instance of ContainerInterface */
 
         /** get the container key information.. the top level object must be a ContainerInterface... if these
           * are not present, nothing good will come of it */
-        val containerNameCsv : String = containerInstanceMap.getOrElse(CsvContainerInterfaceKeys.typename.toString, "").asInstanceOf[String]
-        val containerVersionCsv : String = containerInstanceMap.getOrElse(CsvContainerInterfaceKeys.version.toString, "").asInstanceOf[String]
-        val containerPhyNameCsv : String = containerInstanceMap.getOrElse(CsvContainerInterfaceKeys.physicalname.toString, "").asInstanceOf[String]
+        val containerNameCsv : String = if (containerType != null) containerType.FullName else ""
+        //val containerVersionCsv : String = containerfFieldMap.getOrElse(CsvContainerInterfaceKeys.version.toString, "").asInstanceOf[String]
+        //val containerPhyNameCsv : String = containerfFieldMap.getOrElse(CsvContainerInterfaceKeys.physicalname.toString, "").asInstanceOf[String]
 
-        if (containerNameCsv.size == 0) {
+        if (containerNameCsv.isEmpty) {
             throw new MissingPropertyException("the supplied byte array to deserialize does not have a known container name.", null)
         }
 
@@ -280,19 +294,17 @@ class CsvSerDeser(val mgr : MdMgr
         }
 
         /** get the fields information */
-        val containerBaseType : BaseTypeDef = mgr.ActiveType(containerNameCsv)
-        val containerType : ContainerTypeDef = if (containerBaseType != null) containerBaseType.asInstanceOf[ContainerTypeDef] else null
         if (containerType == null) {
             throw new ObjectNotFoundException(s"type name $containerNameCsv is not a container type... deserialize fails.",null)
         }
-        val fieldTypes : Array[BaseTypeDef] = containerType.ElementTypes
-        fieldTypes.foreach(fieldType => {
+        containerFldTypes.foreach(fieldType => {
 
-            val fieldsCsv : Any = containerInstanceMap.getOrElse(fieldType.FullName, null)
+            val fieldsCsv : Any = containerfFieldMap.getOrElse(fieldType.FullName, null)
             val isContainerType : Boolean = isContainerTypeDef(fieldType)
             val fld : Any = if (isContainerType) {
                 val containerTypeInfo : ContainerTypeDef = fieldType.asInstanceOf[ContainerTypeDef]
-                createContainerType(containerTypeInfo, fieldsCsv)
+                logger.error(s"field type name ${containerTypeInfo.FullName} is a container type... containers are not supported by the CSV deserializerat this time... deserializatin fails.")
+                throw new UnsupportedObjectException(s"field type name ${containerTypeInfo.FullName} is a container type... containers are not supported by the CSV deserializerat this time... deserializatin fails.",null)
             } else {
                 /** currently assumed to be one of the scalars or simple types supported by json/avro */
                 fieldsCsv
@@ -304,200 +316,121 @@ class CsvSerDeser(val mgr : MdMgr
         container
     }
 
-    def createContainerType(containerTypeInfo : ContainerTypeDef, fieldsCsv : Any) : Any = {
-        /** ContainerInterface instance? */
-        val isContainerInterface : Boolean = containerTypeInfo.isInstanceOf[MappedMsgTypeDef] || containerTypeInfo.isInstanceOf[StructTypeDef]
-        val containerInst : Any = if (isContainerInterface) {
-            /** recurse to obtain the subcontainer */
-            val containerBytes : Array[Byte] = fieldsCsv.toString.toCharArray.map(_.toByte)
-            val container : ContainerInterface = deserialize(containerBytes)
-            container
-        } else { /** Check for collection that is currently supported */
-
-        val coll : Any = containerTypeInfo match {
-                case a : ArrayTypeDef =>  {
-                    val collElements : List[Map[String, Any]] = fieldsCsv.asInstanceOf[List[Map[String, Any]]]
-                    csvAsArray(containerTypeInfo, collElements)
-                }
-                case ab : ArrayBufTypeDef => {
-                    val collElements : List[Map[String, Any]] = fieldsCsv.asInstanceOf[List[Map[String, Any]]]
-                    csvAsArrayBuffer(containerTypeInfo, collElements)
-                }
-                case m : MapTypeDef => {
-                    val collElements : Map[String, Any] = fieldsCsv.asInstanceOf[Map[String, Any]]
-                    csvAsMap(containerTypeInfo, collElements)
-                }
-                case im : ImmutableMapTypeDef =>  {
-                    val collElements : Map[String, Any] = fieldsCsv.asInstanceOf[Map[String, Any]]
-                    csvAsMutableMap(containerTypeInfo, collElements)
-                }
-                case _ => throw new UnsupportedObjectException(s"container type ${containerTypeInfo.typeString} not currently serializable",null)
-            }
-
-            coll
-        }
-        containerInst
-    }
-
     /**
-      * Coerce the list of mapped elements to an array of the mapped elements' values
-      *
-      * @param arrayTypeInfo the metadata that describes the array
-      * @param collElements the list of json elements for the array buffer
-      * @return an array instance
-      */
-    def csvAsArray(arrayTypeInfo : ContainerTypeDef, collElements : List[Map[String,Any]]) : Array[Any] = {
-
-        /**
-          * FIXME: if we intend to support arrays of hetergeneous items (i.e, Array[Any]), this has to change.  At the
-          * moment only arrays of homogeneous types are supported.
-          */
-
-        val memberTypes : Array[BaseTypeDef] = arrayTypeInfo.asInstanceOf[ImmutableMapTypeDef].ElementTypes
-        val itmType : BaseTypeDef = memberTypes.last
-        val arrayMbrTypeIsContainer : Boolean = itmType.isInstanceOf[ContainerTypeDef]
-        val array : Array[Any] = if (collElements.size > 0) {
-            val list : List[Any] = collElements.map(itm => {
-                if (arrayMbrTypeIsContainer) {
-                    val itmType : ContainerTypeDef = itm.asInstanceOf[ContainerTypeDef]
-                    createContainerType(itmType, itm)
-                } else {
-                    itm
-                }
-            })
-            list.toArray
-        } else {
-            Array[Any]()
-        }
-        array
-    }
-
-    /**
-      * Coerce the list of mapped elements to an array buffer of the mapped elements' values
-      *
-      * @param arrayTypeInfo the metadata that describes the array buffer
-      * @param collElements the list of json elements for the array buffer
-      * @return an array buffer instance
-      */
-    def csvAsArrayBuffer(arrayTypeInfo : ContainerTypeDef, collElements : List[Map[String,Any]]) : ArrayBuffer[Any] = {
-
-        /**
-          * FIXME: if we intend to support arrays of hetergeneous items (i.e, Array[Any]), this has to change.  At the
-          * moment only arrays of homogeneous types are supported.
-          */
-
-        val memberTypes : Array[BaseTypeDef] = arrayTypeInfo.asInstanceOf[ImmutableMapTypeDef].ElementTypes
-        val itmType : BaseTypeDef = memberTypes.last
-        val arrayMbrTypeIsContainer : Boolean = itmType.isInstanceOf[ContainerTypeDef]
-        val arraybuffer : ArrayBuffer[Any] = ArrayBuffer[Any]()
-        collElements.foreach(itm => {
-            if (arrayMbrTypeIsContainer) {
-                val itmType : ContainerTypeDef = itm.asInstanceOf[ContainerTypeDef]
-                val arrbItm : Any = createContainerType(itmType, itm)
-                arraybuffer += arrbItm
-            } else {
-                arraybuffer += itm
-            }
-        })
-        arraybuffer
-
-    }
-
-    /**
-      * Coerce the list of mapped elements to an immutable map of the mapped elements' values
-      *
-      * @param mapTypeInfo
-      * @param collElements
-      * @return
-      */
-    def csvAsMap(mapTypeInfo : ContainerTypeDef, collElements : Map[String,Any]) : scala.collection.immutable.Map[Any,Any] = {
-        val memberTypes : Array[BaseTypeDef] = mapTypeInfo.asInstanceOf[ImmutableMapTypeDef].ElementTypes
-        val sanityChk : Boolean = memberTypes.length == 2
-        val keyType : BaseTypeDef = memberTypes.head
-        val valType : BaseTypeDef = memberTypes.last
-        val map : scala.collection.immutable.Map[Any,Any] = collElements.map(pair => {
-            val key : String = pair._1
-            val value : Any = pair._2
-            val keyRep : Any =  if (keyType.isInstanceOf[ContainerTypeDef]) {
-                val itmType : ContainerTypeDef = key.asInstanceOf[ContainerTypeDef]
-                createContainerType(itmType, key)
-            } else {
-                key
-            }
-
-            val valRep : Any =  if (valType.isInstanceOf[ContainerTypeDef]) {
-                val itmType : ContainerTypeDef = value.asInstanceOf[ContainerTypeDef]
-                createContainerType(itmType, value)
-            } else {
-                value
-            }
-            (keyRep,valRep)
-        }).toMap
-
-        map
-    }
-
-    /**
-      * Coerce the list of mapped elements to an mutable map of the mapped elements' values
-      *
-      * @param mapTypeInfo
-      * @param collElements
-      * @return
-      */
-    def csvAsMutableMap(mapTypeInfo : ContainerTypeDef, collElements : Map[String,Any]) : scala.collection.mutable.Map[Any,Any] = {
-        val memberTypes : Array[BaseTypeDef] = mapTypeInfo.asInstanceOf[ImmutableMapTypeDef].ElementTypes
-        val sanityChk : Boolean = memberTypes.length == 2
-        val keyType : BaseTypeDef = memberTypes.head
-        val valType : BaseTypeDef = memberTypes.last
-        val map : scala.collection.mutable.Map[Any,Any] = scala.collection.mutable.Map[Any,Any]()
-        collElements.foreach(pair => {
-            val key : String = pair._1
-            val value : Any = pair._2
-            val keyRep : Any =  if (keyType.isInstanceOf[ContainerTypeDef]) {
-                val itmType : ContainerTypeDef = key.asInstanceOf[ContainerTypeDef]
-                createContainerType(itmType, key)
-            } else {
-                key
-            }
-
-            val valRep : Any =  if (valType.isInstanceOf[ContainerTypeDef]) {
-                val itmType : ContainerTypeDef = value.asInstanceOf[ContainerTypeDef]
-                createContainerType(itmType, value)
-            } else {
-                value
-            }
-            map(keyRep) = valRep
-        })
-
-        map
-    }
-
-    /**
-      * Translate the supplied json string to a Map[String, Any]
+      * Translate the supplied CSV string to a Map[String, Any]. The expectation is that the first field is expected
+      * to be the ContainerInterface's ContainerTypeDef's namespace.name.  With this name, the type is obtained from
+      * the metadata so that the BaseTypeDef instances that describe each field in the supplied csv record can be
+      * determined.
       *
       * @param configCsv
       * @return Map[String, Any]
       */
 
-    @throws(classOf[com.ligadata.Exceptions.EngineConfigParsingException])
-    def csvStringAsMap(configCsv: String): Map[String, Any] = {
-        try {
-            //implicit val jsonFormats: Formats = DefaultFormats
-            //val json = parse(configCsv)
-            logger.debug("Parsed the json : " + configCsv)
-
-            //val fullmap = json.values.asInstanceOf[Map[String, Any]]
-
-            //fullmap
-            null
-        } catch {
-            case e: Exception => {
-                logger.debug("", e)
-                throw EngineConfigParsingException(e.getMessage, e)
-            }
+    @throws(classOf[com.ligadata.Exceptions.ObjectNotFoundException])
+    @throws(classOf[com.ligadata.Exceptions.TypeParsingException])
+    def dataMapAndTypesForCsvString(configCsv: String): (Map[String, Any], ContainerTypeDef, Array[BaseTypeDef]) = {
+        val rawCsvFields : Array[String] = if (configCsv != null) {
+            configCsv.split(serDeserConfig.fieldDelimiter)
+        } else {
+            Array[String]()
         }
+        if (rawCsvFields.isEmpty) {
+            logger.error("The supplied CSV record is empty...abandoning processing")
+            throw new ObjectNotFoundException("The supplied CSV record is empty...abandoning processing", null)
+        }
+
+        val containerTypeName : String = rawCsvFields.head
+        val containerCsvFields : Array[String] = rawCsvFields.tail
+
+        val basetypedef : BaseTypeDef = mdMgr.ActiveType(containerTypeName)
+        if (basetypedef == null) {
+            logger.error("The supplied CSV record's first field that describes the container type was not found in the metadata...abandoning processing")
+            throw new ObjectNotFoundException("The supplied CSV record's first field that describes the container type was not found in the metadata...abandoning processing", null)
+        }
+        if (! isContainerTypeDef(basetypedef)) {
+            logger.error("The supplied CSV record's first field is not a container type...abandoning processing")
+            throw new TypeParsingException("The supplied CSV record's first field is not a container type...abandoning processing", null)
+        }
+        val containerTypeDef : ContainerTypeDef = basetypedef.asInstanceOf[ContainerTypeDef]
+        val fieldTypes : Array[BaseTypeDef] = containerTypeDef.ElementTypes
+        if (fieldTypes == null || (fieldTypes != null && fieldTypes.isEmpty)) {
+            logger.error("The supplied CSV record's container type is either not a container or has no fields...abandoning processing")
+            throw new TypeParsingException("The supplied CSV record's container type is either not a container or has no fields...abandoning processing", null)
+        }
+
+        // FIXME: this doesn't support mapped messages at the moment.  How should these be handled?  For example,
+        // FIXME: when there are 100 fields defined, but only 10 are to be serialized, we should be able to do that.
+        // FIXME: The type info for each field needs to be present in the csv stream.
+
+        /** Produce the Map[typename,descapedStringValue] */
+        var idx : Int = -1
+        val containerCsvFieldMap : Map[String, Any] = fieldTypes.map(fld => {
+            idx += 1
+            val descapedString : String = containerCsvFields(idx)
+            (fld.FullName,descapedString)
+        }).toMap
+
+        (containerCsvFieldMap, containerTypeDef, fieldTypes)
+     }
+
+    private def stripEnclosedEscapedQuotesAsNeeded(str : String) : String = {
+        val returnStr : String = if (str != null && str.size > 0 && str.contains(s"${'"'}")) {
+            /** first deal with enclosed quotes */
+            val strEnclQuotesGone : String = if (str.startsWith(s"${'"'}") && str.endsWith(s"${'"'}")) str.tail.dropRight(1) else str
+            /** next deal with escaped quotes */
+            val strDescaped : String = if (strEnclQuotesGone.contains(s"${'"'}${'"'}")) {
+                descapeQuotes(strEnclQuotesGone)
+            } else {
+                strEnclQuotesGone
+            }
+            strDescaped
+        } else {
+            str
+        }
+        returnStr
     }
 
+
+
+    /**
+      * The compliment to the escapeQuotes function, *remove* enclosed quotes that may have been added and any escaped
+      * quotes that may be internal to the supplied valueStr argument.
+      *
+      * Precondition: the supplied string has at least one instance of consecutive double quotes
+      *
+      * @param valueStr string presumably that may be enclosed in double quotes and could possibly have
+      *                 embedded double quotes.
+      * @return adjusted string
+      */
+    @throws(classOf[com.ligadata.Exceptions.InvalidArgumentException])
+    private def descapeQuotes(valueStr : String) : String = {
+        val len : Int = if (valueStr != null) valueStr.length else 0
+        val buffer : StringBuilder = new StringBuilder
+        var base : Int = 0
+        var startPoint : Int = 0
+        if (valueStr != null) {
+            while (startPoint >= 0) {
+                startPoint = valueStr.indexOf('"', startPoint)
+                if (startPoint >= 0) {
+                    val aSlice: String = valueStr.slice(base, startPoint)
+                    buffer.append(aSlice)
+                    buffer.append('"')
+                    if (valueStr(startPoint+1) == '"')
+                        startPoint += 2 // start after both quotes
+                    else {
+                        logger.error("The string is supposed to have consecutive double quoates... it does not... abandoning processing")
+                        throw new InvalidArgumentException("The string is supposed to have consecutive double quoates... it does not... abandoning processing", null)
+                    }
+                    base = startPoint
+                    if (startPoint >= len) {
+                        startPoint = -1 // end it ... avoid out of bounds
+                    }
+                }
+            }
+        }
+        val escapeQuotedStr : String = if (buffer.isEmpty) valueStr else buffer.toString
+        escapeQuotedStr
+    }
 
 
 }
