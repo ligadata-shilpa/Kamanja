@@ -3,14 +3,15 @@ import sbt._
 
 sbtPlugin := true
 
-version := "0.0.0.1"
+//version := "0.0.0.1"
 
 //lazy val kamanjaVersion = settingKey[String]("kamanjaVersion")
-//lazy val kamanjaVersion = "1.4.0"
+// kamanjaVersion := "1.4.0"
 
 
 //scalaVersion := "2.11.7"
 
+//kamanjaVersion in ThisBuild := "1.4.0"
 
 crossScalaVersions := Seq("2.11.7", "2.10.4")
 
@@ -49,10 +50,18 @@ val Organization = "com.ligadata"
 lazy val ExtDependencyLibs = project.in(file("ExtDependencyLibs")) //dependsOn( Metadata) because of libraryDependencies += "metadata" %% "metadata" % "1.0"
 
 lazy val KamanjaInternalDeps = project.in(file("KamanjaInternalDeps")) dependsOn(ExtDependencyLibs % "provided", InputOutputAdapterBase, Exceptions, DataDelimiters, Metadata, KamanjaBase, MetadataBootstrap,
-  Serialize, ZooKeeperListener, ZooKeeperLeaderLatch, KamanjaUtils, TransactionService, StorageManager, MessageDef, PmmlCompiler, ZooKeeperClient, OutputMsgDef, SecurityAdapterBase, HeartBeat,
-  JpmmlFactoryOfModelInstanceFactory, SimpleApacheShiroAdapter, KamanjaVersion, InstallDriverBase, BaseFunctions, KafkaSimpleInputOutputAdapters, FileSimpleInputOutputAdapters, SimpleEnvContextImpl,
-  GenericMsgCompiler, MethodExtractor, MetadataAPIServiceClient, JsonDataGen, Controller, AuditAdapters, CustomUdfLib, ExtractData, InterfacesSamples, UtilityService, SaveContainerDataComponent,
-  UtilsForModels, JarFactoryOfModelInstanceFactory)
+  Serialize, ZooKeeperListener, ZooKeeperLeaderLatch, KamanjaUtils, TransactionService, StorageManager, PmmlCompiler, ZooKeeperClient, OutputMsgDef, SecurityAdapterBase, HeartBeat,
+  JpmmlFactoryOfModelInstanceFactory, KamanjaVersion, InstallDriverBase, BaseFunctions, KafkaSimpleInputOutputAdapters, FileSimpleInputOutputAdapters, SimpleEnvContextImpl,
+  GenericMsgCompiler, MethodExtractor, MetadataAPIServiceClient, JsonDataGen, Controller, AuditAdapters, CustomUdfLib, ExtractData, InterfacesSamples, UtilityService,
+  UtilsForModels)
+
+
+//lazy val KamanjaInternalDeps = project.in(file("KamanjaInternalDeps")) dependsOn(ExtDependencyLibs % "provided", InputOutputAdapterBase, Exceptions, DataDelimiters, Metadata, KamanjaBase, MetadataBootstrap,
+//  Serialize, ZooKeeperListener, ZooKeeperLeaderLatch, KamanjaUtils, TransactionService, StorageManager, MessageDef, PmmlCompiler, ZooKeeperClient, OutputMsgDef, SecurityAdapterBase, HeartBeat,
+//  JpmmlFactoryOfModelInstanceFactory, KamanjaVersion, InstallDriverBase, BaseFunctions, KafkaSimpleInputOutputAdapters, FileSimpleInputOutputAdapters, SimpleEnvContextImpl,
+//  GenericMsgCompiler, MethodExtractor, JsonDataGen, Controller, AuditAdapters, CustomUdfLib, ExtractData, InterfacesSamples, UtilityService, SaveContainerDataComponent,
+//  UtilsForModels, JarFactoryOfModelInstanceFactory)
+
 
 //lazy val KamanjaInternalDeps = project.in(file("KamanjaInternalDeps")) dependsOn(ExtDependencyLibs % "provided", InputOutputAdapterBase, Exceptions, DataDelimiters, Metadata, KamanjaBase, MetadataBootstrap, Serialize, ZooKeeperListener,
 //  ZooKeeperLeaderLatch, KamanjaUtils, TransactionService, StorageManager, MessageDef, PmmlCompiler, ZooKeeperClient, OutputMsgDef, SecurityAdapterBase, HeartBeat, JpmmlFactoryOfModelInstanceFactory,
@@ -61,6 +70,8 @@ lazy val KamanjaInternalDeps = project.in(file("KamanjaInternalDeps")) dependsOn
 //lazy val KamanjaDependencyLibs = project.in(file("KamanjaDependencyLibs")) dependsOn(KamanjaManager, MetadataAPI, KVInit, NodeInfoExtract, MetadataAPIService, JdbcDataCollector, FileDataConsumer, CleanUtil, InstallDriver, GetComponent, SimpleKafkaProducer)
 
 ////////////////////////
+
+//lazy val BaseTypes = project.in(file("BaseTypes")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(ExtDependencyLibs % "provided", Metadata, Exceptions)
 
 lazy val BaseTypes = project.in(file("BaseTypes")) dependsOn(ExtDependencyLibs % "provided", Metadata, Exceptions)
 
@@ -84,7 +95,6 @@ lazy val DataDelimiters = project.in(file("DataDelimiters")) dependsOn (ExtDepen
 lazy val KamanjaManager = project.in(file("KamanjaManager")) dependsOn(ExtDependencyLibs % "provided", Metadata, KamanjaBase, MetadataBootstrap, MetadataAPI, Serialize, ZooKeeperListener, ZooKeeperLeaderLatch, Exceptions, KamanjaUtils, TransactionService, DataDelimiters, InputOutputAdapterBase)
 
 lazy val InputOutputAdapterBase = project.in(file("InputOutputAdapters/InputOutputAdapterBase")) dependsOn(ExtDependencyLibs % "provided", Exceptions, DataDelimiters, HeartBeat)
-
 
 // lazy val IbmMqSimpleInputOutputAdapters = project.in(file("InputOutputAdapters/IbmMqSimpleInputOutputAdapters")) dependsOn(InputOutputAdapterBase, Exceptions, DataDelimiters)
 
@@ -141,7 +151,7 @@ lazy val ZooKeeperLeaderLatch = project.in(file("Utils/ZooKeeper/CuratorLeaderLa
 
 lazy val JsonDataGen = project.in(file("Utils/JsonDataGen")) dependsOn(ExtDependencyLibs % "provided", Exceptions, KamanjaBase)
 
-lazy val NodeInfoExtract = project.in(file("Utils/NodeInfoExtract")) dependsOn(ExtDependencyLibs % "provided", MetadataAPI, Exceptions)
+lazy val NodeInfoExtract = project.in(file("Utils/NodeInfoExtract")) dependsOn(MetadataAPI, Exceptions)
 
 lazy val Controller = project.in(file("Utils/Controller")) dependsOn(ExtDependencyLibs % "provided", ZooKeeperClient, ZooKeeperListener, KafkaSimpleInputOutputAdapters, Exceptions)
 
@@ -215,11 +225,11 @@ lazy val MigrateFrom_V_1_1 = project.in(file("Utils/Migrate/SourceVersion/Migrat
 
 lazy val MigrateManager = project.in(file("Utils/Migrate/MigrateManager")) dependsOn(MigrateBase, KamanjaVersion)
 
-lazy val MigrateTo_V_1_3 = project.in(file("Utils/Migrate/DestinationVersion/MigrateTo_V_1_3")) dependsOn(ExtDependencyLibs % "provided", MigrateBase, KamanjaManager)
+lazy val MigrateTo_V_1_3 = project.in(file("Utils/Migrate/DestinationVersion/MigrateTo_V_1_3")) dependsOn(MigrateBase, KamanjaManager)
 
 lazy val MigrateFrom_V_1_2 = project.in(file("Utils/Migrate/SourceVersion/MigrateFrom_V_1_2")) dependsOn (MigrateBase)
 
-lazy val MigrateTo_V_1_4 = project.in(file("Utils/Migrate/DestinationVersion/MigrateTo_V_1_4")) dependsOn(ExtDependencyLibs % "provided", MigrateBase, KamanjaManager)
+lazy val MigrateTo_V_1_4 = project.in(file("Utils/Migrate/DestinationVersion/MigrateTo_V_1_4")) dependsOn(MigrateBase, KamanjaManager)
 
 lazy val MigrateFrom_V_1_3 = project.in(file("Utils/Migrate/SourceVersion/MigrateFrom_V_1_3")) dependsOn (MigrateBase)
 

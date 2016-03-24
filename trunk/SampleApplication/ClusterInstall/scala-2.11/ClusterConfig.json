@@ -159,7 +159,7 @@
           "Roles": [
             "ProcessingEngine"
           ],
-          "Classpath": ".:{InstallDirectory}/lib/system/ExtDependencyLibs_2.11-1.0:{InstallDirectory}/lib/system/KamanjaInternalDeps_2.11-1.0"
+          "Classpath": ".:{InstallDirectory}/lib/system/ExtDependencyLibs_2.11-1.0.jar:{InstallDirectory}/lib/system/KamanjaInternalDeps_2.11-1.0.jar"
         }
       ],
       "Adapters": [

@@ -137,7 +137,6 @@ libraryDependencies += "log4j" % "log4j" % "1.2.17"
 //scalacOptions += "-deprecation"
 
 
-////////////////////// NodeInfoExtract
 
 
 ////////////////////// MetadataAPIService
@@ -184,15 +183,6 @@ libraryDependencies += "com.codahale.metrics" % "metrics-core" % "3.0.2"
 //crossPaths := false
 //// This forbids including Scala related libraries into the dependency
 //autoScalaLibrary := false
-
-
-/////////////////////// MigrateManager
-// should this be excluded from here ?
-//// Do not append Scala versions to the generated artifacts
-//crossPaths := false
-//// This forbids including Scala related libraries into the dependency
-//autoScalaLibrary := false
-//libraryDependencies += "com.google.code.gson" % "gson" % "2.3.1"
 
 
 /////////////////////// InstallerDriver
@@ -478,9 +468,6 @@ libraryDependencies += "org.apache.commons" % "commons-dbcp2" % "2.1"
 //already available
 
 
-////////////////////// MigrateBase
-//already available
-
 
 //////////////////////  InstallDriverBase
 //already available
@@ -494,13 +481,6 @@ libraryDependencies += "org.jpmml" % "pmml-evaluator" % "1.2.9"
 //////////////////////  InstallDriver
 //already available
 
-
-//////////////////////  MigrateTo_V_1_3
-//already available
-
-
-//////////////////////  MigrateTo_V_1_4
-//already available
 
 
 //////////////////////  jtm
