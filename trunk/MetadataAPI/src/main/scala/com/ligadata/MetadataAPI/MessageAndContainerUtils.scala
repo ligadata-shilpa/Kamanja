@@ -1651,6 +1651,25 @@ object MessageAndContainerUtils {
     // if userid is not supplied, it seem to defualt to "_"
     //val u = if( userid != None ) userid.get else "_"
     //var key = u + "." + modelConfigName
+    var key = "metadataapi" + "." + modelConfigName
+    if( userid != None ){
+      key = userid.get + "." + modelConfigName
+    }
+    logger.debug("Get the model config for " + key)
+    var config = MdMgr.GetMdMgr.GetModelConfig(key)
+    logger.debug("Size of the model config map => " + config.keys.size);
+    val typDeps = config.getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, null)
+    if (typDeps != null) {
+      if (typDeps.isInstanceOf[List[_]])
+        return typDeps.asInstanceOf[List[String]]
+      if (typDeps.isInstanceOf[Array[_]])
+        return typDeps.asInstanceOf[Array[String]].toList
+    }
+    logger.debug("Types in modelConfig object are not defined")
+    List[String]()
+  }
+
+  def convertModelMessagesContainersToInputTypesSets(modelConfigName: String, userid: Option[String]): List[String] = {
     var key = modelConfigName
     logger.debug("Get the model config for " + key)
     var config = MdMgr.GetMdMgr.GetModelConfig(key)
@@ -1665,6 +1684,7 @@ object MessageAndContainerUtils {
     logger.debug("Types in modelConfig object are not defined")
     List[String]()
   }
+
 
   def getModelInputTypesSets(modelConfigName: String, userid: Option[String] = None): List[List[String]] = {
     var config = MdMgr.GetMdMgr.GetModelConfig(modelConfigName)

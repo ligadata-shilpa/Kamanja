@@ -40,7 +40,6 @@ import com.ligadata.Serialize._
 
 import com.ligadata.kamanja.metadataload.MetadataLoad
 
-@Ignore
 class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter with BeforeAndAfterAll with GivenWhenThen {
   var res: String = null;
   var statusCode: Int = -1;
@@ -330,7 +329,7 @@ class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter wi
 
       //fileList = List("outpatientclaim.json","inpatientclaim.json","hl7.json","beneficiary.json")
       //fileList = List("HelloWorld_Msg_Def.json","HelloWorld_Msg_Output_Def.json")
-      fileList = List("HelloWorld_Msg_Def.json")
+      fileList = List("HelloWorld_Msg_Def.json","HelloWorld_Msg_Def_2.json")
       fileList.foreach(f1 => {
 	And("Add the Message From " + f1)
 	And("Make Sure " + f1 + " exist")
@@ -399,7 +398,7 @@ class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter wi
 	var modStr = Source.fromFile(file).mkString
 	res = MetadataAPIImpl.AddModel(ModelType.KPMML, // modelType
 				       modStr, // input
-				       None,   // optUserid
+				       userid,   // optUserid
 				       None,   // optModelName
 				       None,   // optVersion
 				       None,   // optMsgConsumed
@@ -456,7 +455,7 @@ class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter wi
       assert(0 != modFiles.length)
 
       // Scala Models
-      fileList = List("Model_Config_HelloWorld.json")
+      fileList = List("Model_Config_HelloWorld2.json")
       fileList.foreach(f1 => {
 	And("Add the Model Config From " + f1)
 	And("Make Sure " + f1 + " exist")
@@ -486,14 +485,17 @@ class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter wi
 	MdMgr.GetMdMgr.DumpModelConfigs
 	And("GetModelDependencies to fetch the modelConfig that was just added")
 
-	var cfgName = "HelloWorldModel"
+	var cfgName = "HelloWorld2Model"
 	var dependencies = MetadataAPIImpl.getModelDependencies(cfgName,userid)
 	assert(dependencies.length == 0) // empty in our helloworld example
 
 	var msgsAndContainers = MetadataAPIImpl.getModelMessagesContainers(cfgName,userid)
-	assert(msgsAndContainers.length == 1) // just one input msg in our helloworld example
-	val msgStr = msgsAndContainers(0)
+	assert(msgsAndContainers.length == 2) // just one input msg in our helloworld example
+	var msgStr = msgsAndContainers(0)
 	assert(msgStr.equalsIgnoreCase("system.helloworld_msg_def"))
+	msgStr = msgsAndContainers(1)
+	assert(msgStr.equalsIgnoreCase("system.helloworld_msg_def_2"))
+
       })
     }
 
@@ -514,7 +516,7 @@ class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter wi
       assert(0 != modFiles.length)
 
       // Scala Models
-      fileList = List("HelloWorld.scala")
+      fileList = List("HelloWorld2.scala")
       fileList.foreach(f1 => {
 	And("Add the Model From " + f1)
 	And("Make Sure " + f1 + " exist")
@@ -536,7 +538,7 @@ class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter wi
 	res = MetadataAPIImpl.AddModel(ModelType.SCALA, // modelType
 				       modStr, // input
 				       userid,   // optUserid
-				       Some("HelloWorldModel"),   // optModelName
+				       Some("HelloWorld2Model"),   // optModelName
 				       None,   // optVersion
 				       None,   // optMsgConsumed
 				       None,   // optMsgVersion
@@ -549,7 +551,7 @@ class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter wi
 	// Unable to use fileName to identify the name of the object
 	// Use this function to extract the name of the model
 	var nameSpace = "com.ligadata.samples.models"
-	var objName = "HelloWorldModel"
+	var objName = "HelloWorld2Model"
 	logger.info("ModelName => " + objName)
 	var version = "0000000000000000001"
 	res = MetadataAPIImpl.GetModelDef(nameSpace, objName, "XML", version, userid)
@@ -570,6 +572,24 @@ class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter wi
 	assert(omsgs.length == 1)
 	val msgFullName = nameSpace + "." + msgName
 	assert(omsgs(0) == msgFullName.toLowerCase)
+
+	// there should be two sets in this test
+	var imsgs = models(0).inputMsgSets
+	assert(imsgs.length == 2)
+
+	// The order of msgSets in ModelDef.inputMsgSets may not exactly correspond to the order in model config definition
+	var msgAttrArrays = imsgs(0)
+	assert(msgAttrArrays.length == 1 )
+	var msgAttr = msgAttrArrays(0)
+	assert(msgAttr != null)
+	assert(msgAttr.message.equalsIgnoreCase("system.helloworld_msg_def") || msgAttr.message.equalsIgnoreCase("system.helloworld_msg_def_2"))
+
+	msgAttrArrays = imsgs(1)
+	assert(msgAttrArrays.length == 1 )
+	msgAttr = msgAttrArrays(0)
+	assert(msgAttr != null)
+	assert(msgAttr.message.equalsIgnoreCase("system.helloworld_msg_def_2") || msgAttr.message.equalsIgnoreCase("system.helloworld_msg_def"))
+	
       })
     }
   }

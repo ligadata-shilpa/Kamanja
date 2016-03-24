@@ -351,7 +351,7 @@ object ModelUtils {
     try {
       var compProxy = new CompilerProxy
       compProxy.setSessionUserId(userid)
-      val modDef: ModelDef = compProxy.compileModelFromSource(sourceCode, modelName, sourceLang)
+      val modDef: ModelDef = compProxy.compileModelFromSource(sourceCode, modelName, sourceLang,userid)
 
       // save the outMessage as well
       if( optMsgProduced != None ){
@@ -750,7 +750,7 @@ object ModelUtils {
             saveModelParms.getOrElse(ModelCompilationConstants.PHYSICALNAME, "").asInstanceOf[String],
             saveModelParms.getOrElse(ModelCompilationConstants.DEPENDENCIES, List[String]()).asInstanceOf[List[String]],
             saveModelParms.getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, List[String]()).asInstanceOf[List[String]],
-            inputMsgSets, outputMsgs, ObjFormatType.asString(mod.objectFormat))
+            inputMsgSets, outputMsgs, ObjFormatType.asString(mod.objectFormat),userid)
           custModDef
         }
       } else {
@@ -1132,7 +1132,7 @@ object ModelUtils {
       val compProxy = new CompilerProxy
       compProxy.setSessionUserId(userid)
       val modelNm: String = modelName.orNull
-      val modDef: ModelDef = compProxy.compileModelFromSource(input, modelNm, sourceLang)
+      val modDef: ModelDef = compProxy.compileModelFromSource(input, modelNm, sourceLang,userid)
 
       /**
         * FIXME: The current strategy is that only the most recent version can be updated.

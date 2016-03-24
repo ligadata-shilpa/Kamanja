@@ -1,0 +1,10 @@
+{
+    "HelloWorld2Model": {
+        "Dependencies": [
+        ],
+        "MessageAndContainers": [
+            "system.helloworld_msg_def",
+            "system.helloworld_msg_def_2"
+        ]
+    }
+}
