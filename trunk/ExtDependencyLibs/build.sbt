@@ -14,7 +14,7 @@ assemblyOption in assembly ~= {
 
 //assemblyJarName in assembly := { s"${name.value}-${version.value}"}
 assemblyJarName in assembly := {
-  s"${name.value}_${scalaBinaryVersion.value}-${kamanjaVersion}"
+  s"${name.value}_${scalaBinaryVersion.value}-${kamanjaVersion}.jar"
 }
 
 
