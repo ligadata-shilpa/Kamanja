@@ -6,26 +6,129 @@
  */
 package com.ligadata.StorageBase
 
-import com.ligadata.KvBase.{ Key, Value, TimeRange }
+import com.ligadata.KamanjaBase.{AdaptersSerializeDeserializers, TransactionContext, MessageContainerBase}
+import com.ligadata.KvBase.{ Key, TimeRange }
 import com.ligadata.Utils.{ KamanjaLoaderInfo }
-import java.util.Date
 
-trait DataStoreOperations {
+case class Value(schemaId: Int, serializerType: String, serializedInfo: Array[Byte])
+
+trait DataStoreOperations extends AdaptersSerializeDeserializers {
   // update operations, add & update semantics are different for relational databases
-  def put(containerName: String, key: Key, value: Value): Unit
+  def put(tnxCtxt: TransactionContext, container: MessageContainerBase): Unit = {
+    val (outputContainers, serializedContainerData, serializerNames) = serialize(tnxCtxt, Array(container))
+    // Call put methods with container name, key & values
+  }
+
+  def put(tnxCtxt: TransactionContext, containers: Array[MessageContainerBase]): Unit = {
+    val (outputContainers, serializedContainerData, serializerNames) = serialize(tnxCtxt, containers)
+    // Call put methods with container name, key & values
+  }
+
+  def put(tnxCtxt: TransactionContext, key: Key, container: MessageContainerBase): Unit = {
+    val (outputContainers, serializedContainerData, serializerNames) = serialize(tnxCtxt, Array(container))
+    // Call put methods with container name, key & values
+  }
+
+  def put(tnxCtxt: TransactionContext, keys: Array[Key], containers: Array[MessageContainerBase]): Unit = {
+    val (outputContainers, serializedContainerData, serializerNames) = serialize(tnxCtxt, containers)
+    // Call put methods with container name, key & values
+  }
+
+  def put(tnxCtxt: TransactionContext, key: Key, value: Any): Unit = {
+    // Check for value.isInstanceOf[MessageContainerBase]
+    // Call put methods with container name, key & values
+  }
+
+  def put(tnxCtxt: TransactionContext, keys: Array[Key], values: Array[Any]): Unit = {
+    // Call put methods with container name, key & values
+  }
+
+  // update operations, add & update semantics are different for relational databases
+  protected def put(containerName: String, key: Key, value: Value): Unit
   // def put(containerName: String, data_list: Array[(Key, Value)]): Unit
-  def put(data_list: Array[(String, Array[(Key, Value)])]): Unit // data_list has List of container names, and each container has list of key & value
+  protected def put(data_list: Array[(String, Array[(Key, Value)])]): Unit // data_list has List of container names, and each container has list of key & value
 
   // delete operations
   def del(containerName: String, keys: Array[Key]): Unit // For the given keys, delete the values
   def del(containerName: String, time: TimeRange, keys: Array[Array[String]]): Unit // For the given multiple bucket key strings, delete the values with in given date range
 
   // get operations
-  def get(containerName: String, callbackFunction: (Key, Value) => Unit): Unit
-  def get(containerName: String, keys: Array[Key], callbackFunction: (Key, Value) => Unit): Unit
-  def get(containerName: String, timeRanges: Array[TimeRange], callbackFunction: (Key, Value) => Unit): Unit // Range of dates
-  def get(containerName: String, timeRanges: Array[TimeRange], bucketKeys: Array[Array[String]], callbackFunction: (Key, Value) => Unit): Unit
-  def get(containerName: String, bucketKeys: Array[Array[String]], callbackFunction: (Key, Value) => Unit): Unit
+  def get(containerName: String, callbackFunction: (Key, Any) => Unit): Unit = {
+    val getCallbackFn = (k: Key, v: Value) => {
+      if (callbackFunction != null) {
+        if (v.serializerType != null && v.serializerType.size > 0) {
+          val (cont, deserializerName) = deserialize(v.serializedInfo, v.serializerType)
+          callbackFunction(k, cont)
+        } else {
+          callbackFunction(k, v.serializedInfo)
+        }
+      }
+    }
+    get(containerName, if (callbackFunction != null) getCallbackFn else null)
+  }
+
+  def get(containerName: String, keys: Array[Key], callbackFunction: (Key, Any) => Unit): Unit = {
+    val getCallbackFn = (k: Key, v: Value) => {
+      if (callbackFunction != null) {
+        if (v.serializerType != null && v.serializerType.size > 0) {
+          val (cont, deserializerName) = deserialize(v.serializedInfo, v.serializerType)
+          callbackFunction(k, cont)
+        } else {
+          callbackFunction(k, v.serializedInfo)
+        }
+      }
+    }
+    get(containerName, keys, getCallbackFn)
+  }
+
+  // Range of dates
+  def get(containerName: String, timeRanges: Array[TimeRange], callbackFunction: (Key, Any) => Unit): Unit  = {
+    val getCallbackFn = (k: Key, v: Value) => {
+      if (callbackFunction != null) {
+        if (v.serializerType != null && v.serializerType.size > 0) {
+          val (cont, deserializerName) = deserialize(v.serializedInfo, v.serializerType)
+          callbackFunction(k, cont)
+        } else {
+          callbackFunction(k, v.serializedInfo)
+        }
+      }
+    }
+    get(containerName, timeRanges, getCallbackFn)
+  }
+
+  def get(containerName: String, timeRanges: Array[TimeRange], bucketKeys: Array[Array[String]], callbackFunction: (Key, Any) => Unit): Unit  = {
+    val getCallbackFn = (k: Key, v: Value) => {
+      if (callbackFunction != null) {
+        if (v.serializerType != null && v.serializerType.size > 0) {
+          val (cont, deserializerName) = deserialize(v.serializedInfo, v.serializerType)
+          callbackFunction(k, cont)
+        } else {
+          callbackFunction(k, v.serializedInfo)
+        }
+      }
+    }
+    get(containerName, timeRanges, bucketKeys, getCallbackFn)
+  }
+
+  def get(containerName: String, bucketKeys: Array[Array[String]], callbackFunction: (Key, Any) => Unit): Unit  = {
+    val getCallbackFn = (k: Key, v: Value) => {
+      if (callbackFunction != null) {
+        if (v.serializerType != null && v.serializerType.size > 0) {
+          val (cont, deserializerName) = deserialize(v.serializedInfo, v.serializerType)
+          callbackFunction(k, cont)
+        } else {
+          callbackFunction(k, v.serializedInfo)
+        }
+      }
+    }
+    get(containerName, bucketKeys, getCallbackFn)
+  }
+
+  protected def get(containerName: String, callbackFunction: (Key, Value) => Unit): Unit
+  protected def get(containerName: String, keys: Array[Key], callbackFunction: (Key, Value) => Unit): Unit
+  protected def get(containerName: String, timeRanges: Array[TimeRange], callbackFunction: (Key, Value) => Unit): Unit // Range of dates
+  protected def get(containerName: String, timeRanges: Array[TimeRange], bucketKeys: Array[Array[String]], callbackFunction: (Key, Value) => Unit): Unit
+  protected def get(containerName: String, bucketKeys: Array[Array[String]], callbackFunction: (Key, Value) => Unit): Unit
 
   /*
   // Passing filter to storage

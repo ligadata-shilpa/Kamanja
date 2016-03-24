@@ -19,10 +19,14 @@ package com.ligadata.KamanjaBase
 import java.net.URL
 import java.net.URLClassLoader
 import java.io.{ ByteArrayInputStream, DataInputStream, DataOutputStream, ByteArrayOutputStream }
+import com.ligadata.Utils.KamanjaClassLoader
+import com.ligadata.kamanja.metadata.MdMgr
 import org.apache.logging.log4j._
 import java.util.Date
 import java.util.Calendar
 import java.text.SimpleDateFormat
+
+import scala.collection.mutable.ArrayBuffer
 
 trait MessageContainerBase {
   // System Columns
@@ -252,18 +256,107 @@ trait BaseMsgObj extends MessageContainerObjBase {
   override def isMessage: Boolean = true
   override def isContainer: Boolean = false
   def NeedToTransformData: Boolean // Filter & Rearrange input attributes if needed
-  def TransformDataAttributes: TransformMessage // Filter & Rearrange input columns if needed
   def CreateNewMessage: BaseMsg
 }
 
-// BUGBUG:: for now handling only CSV input data.
-// Assuming this is filled properly, we are not checking whether outputFields are subset of inputFields or not.
-// Assuming the field names are all same case (lower or upper). Because we don't want to convert them every time.
-class TransformMessage {
-  var messageType: String = null // Type of the message (first field from incoming data)
-  var inputFields: Array[String] = null // All input fields
-  var outputFields: Array[String] = null // All output fields filters from input field. These are subset of input fields.
-  var outputKeys: Array[String] = null // Output Key field names from input fields.
+trait AdaptersSerializeDeserializers {
+  var mdMgr: MdMgr = _
+  var classLoader: KamanjaClassLoader = _
+  // This tuple has Message Name, Serializer Name
+  //  val msgAndSerializers = ArrayBuffer[(String, String)]()
+
+  final def setMdMgrAndClassLoader(mdMgr: MdMgr, classLoader: KamanjaClassLoader): Unit = {
+    this.mdMgr = mdMgr
+    this.classLoader = classLoader
+    resolveBinding()
+  }
+
+  private def resolveBinding(): Unit = {
+    //FIXME:- Do we need to lock here & resolve Bindings
+  }
+
+  // This tuple has Message Name, Serializer Name.
+  final def addMessageBinding(msgName: String, serName: String): Unit = {
+    //FIXME:- Do we need to lock here
+    //    if (msgName != null && serName != null)
+    //      msgAndSerializers += ((msgName, serName))
+  }
+
+  // This tuple has Message Name, Serializer Name.
+  final def addMessageBinding(binding: (String, String)): Unit = {
+    //FIXME:- Do we need to lock here
+    //    if (binding != null)
+    //      msgAndSerializers += binding
+  }
+
+  // This tuple has Message Name, Serializer Name.
+  final def addMessageBinding(bindings: Array[(String, String)]): Unit = {
+    //FIXME:- Do we need to lock here
+    //    if (bindings != null)
+    //      msgAndSerializers ++= bindings
+  }
+
+  // This tuple has Message Name, Serializer Name.
+  final def removeMessageBinding(msgName: String, serName: String): Unit = {
+    //FIXME:- Do we need to lock here
+  }
+
+  // This tuple has Message Name, Serializer Name.
+  final def removeMessageBinding(binding: (String, String)): Unit = {
+    //FIXME:- Do we need to lock here
+  }
+
+  // This tuple has Message Name, Serializer Name.
+  final def removeMessageBinding(bindings: Array[(String, String)]): Unit = {
+    //FIXME:- Do we need to lock here
+  }
+
+  // Returns serialized msgs, serialized msgs data & serializers names applied on these messages.
+  final def serialize(tnxCtxt: TransactionContext, outputContainers: Array[MessageContainerBase]): (Array[MessageContainerBase], Array[Array[Byte]], Array[String]) = {
+
+    val outputContainers = ArrayBuffer[MessageContainerBase]()
+    val serializedContainerData = ArrayBuffer[Array[Byte]]()
+    val usedSerializersNames = ArrayBuffer[String]()
+
+    //FIXME:- Convert each container/message from outputContainers and collect into outputContainers, serializedContainerData, serializerNames
+
+    (outputContainers.toArray, serializedContainerData.toArray, usedSerializersNames.toArray)
+  }
+
+  // Returns serialized msgs, serialized msgs data & serializers names applied on these messages.
+  final def serialize(tnxCtxt: TransactionContext, outputContainers: Array[MessageContainerBase], serializersNames: Array[String]): (Array[MessageContainerBase], Array[Array[Byte]], Array[String]) = {
+
+    val outputContainers = ArrayBuffer[MessageContainerBase]()
+    val serializedContainerData = ArrayBuffer[Array[Byte]]()
+    val usedSerializersNames = ArrayBuffer[String]()
+
+    //FIXME:- Convert each container/message from outputContainers and collect into outputContainers, serializedContainerData, serializerNames
+
+    (outputContainers.toArray, serializedContainerData.toArray, usedSerializersNames.toArray)
+  }
+
+  // Returns deserialized msg, deserialized msg data & deserializer name applied.
+  final def deserialize(data: Array[Byte]): (MessageContainerBase, String) = {
+
+    var container: MessageContainerBase = null
+    var deserializerName: String = null
+
+    //FIXME:- Convert incoming data into message using deserializer
+
+    (container, deserializerName)
+  }
+
+  // Returns deserialized msg, deserialized msg data & deserializer name applied.
+  final def deserialize(data: Array[Byte], deserializerName: String): (MessageContainerBase, String) = {
+
+    var container: MessageContainerBase = null
+
+    //FIXME:- Convert incoming data into message using deserializer
+
+    (container, deserializerName)
+  }
+
+
 }
 
 case class MessageContainerBaseWithModFlag(modified: Boolean, value: MessageContainerBase)

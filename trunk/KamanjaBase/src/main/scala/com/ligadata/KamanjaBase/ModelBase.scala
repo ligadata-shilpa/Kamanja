@@ -394,6 +394,8 @@ trait EnvContext extends Monitorable {
   // Zookeeper functions
   def setDataToZNode(zNodePath: String, value: Array[Byte]): Unit
   def getDataFromZNode(zNodePath: String): Array[Byte]
+
+  // def getLeaderInfo(zNodePath: String): Array[Byte]
 }
 
 // partitionKey is the one used for this message

@@ -16,8 +16,10 @@
 
 package com.ligadata.InputOutputAdapterInfo
 
-import com.ligadata.KamanjaBase.{NodeContext, DataDelimiters}
+import com.ligadata.KamanjaBase._
 import com.ligadata.HeartBeat._
+
+import scala.collection.mutable.ArrayBuffer
 
 object AdapterConfiguration {
   val TYPE_INPUT = "Input_Adapter"
@@ -25,18 +27,29 @@ object AdapterConfiguration {
 }
 
 class AdapterConfiguration {
-  var Name: String = _ // Name of the Adapter, KafkaQueue Name/MQ Name/File Adapter Logical Name/etc
-  var formatName: String = _ // CSV/JSON/XML for input adapter.
-  var validateAdapterName: String = _ // For output adapter it is just corresponding validate adapter name.
-  var failedEventsAdapterName: String = _ // For input adapter it is just corresponding failed events adapter name.
-  var associatedMsg: String = _ // Queue Associated Message
-  var className: String = _ // Class where the Adapter can be loaded (Object derived from InputAdapterObj)
-  var jarName: String = _ // Jar where the className can be found
-  var dependencyJars: Set[String] = _ // All dependency Jars for jarName 
-  var adapterSpecificCfg: String = _ // adapter specific (mostly json) string 
-  var keyAndValueDelimiter: String = _ // Delimiter String for keyAndValueDelimiter
-  var fieldDelimiter: String = _ // Delimiter String for fieldDelimiter
-  var valueDelimiter: String = _ // Delimiter String for valueDelimiter
+  // Name of the Adapter, KafkaQueue Name/MQ Name/File Adapter Logical Name/etc
+  var Name: String = _
+//  // CSV/JSON/XML for input adapter.
+//  var formatName: String = _
+//  // For output adapter it is just corresponding validate adapter name.
+//  var validateAdapterName: String = _
+//  // For input adapter it is just corresponding failed events adapter name.
+//  var failedEventsAdapterName: String = _
+//  // Queue Associated Message
+//  var associatedMsg: String = _
+  // Class where the Adapter can be loaded (Object derived from InputAdapterObj)
+  var className: String = _
+  // Jar where the className can be found
+  var jarName: String = _
+  // All dependency Jars for jarName
+  var dependencyJars: Set[String] = _
+  // adapter specific (mostly json) string
+  var adapterSpecificCfg: String = _
+//  // Delimiter String for keyAndValueDelimiter
+//  var keyAndValueDelimiter: String = _
+//  // Delimiter String for fieldDelimiter
+//  var fieldDelimiter: String = _
+//  var valueDelimiter: String = _ // Delimiter String for valueDelimiter
 }
 
 // Input Adapter Object to create Adapter
@@ -52,21 +65,32 @@ class StartProcPartInfo {
 
 // Input Adapter
 trait InputAdapter extends Monitorable {
-  val nodeContext: NodeContext // NodeContext
+  val nodeContext: NodeContext
+  // NodeContext
   val inputConfig: AdapterConfiguration // Configuration
 
-  def UniqueName: String = { // Making String from key
+  def UniqueName: String = {
+    // Making String from key
     return "{\"Name\" : \"%s\"}".format(inputConfig.Name)
   }
 
   def Category = "Input"
+
   def Shutdown: Unit
+
   def StopProcessing: Unit
-  def StartProcessing(partitionInfo: Array[StartProcPartInfo], ignoreFirstMsg: Boolean): Unit // each value in partitionInfo is (PartitionUniqueRecordKey, PartitionUniqueRecordValue, Long, PartitionUniqueRecordValue). // key, processed value, Start transactionid, Ignore Output Till given Value (Which is written into Output Adapter) & processing Transformed messages (processing & total)
+
+  def StartProcessing(partitionInfo: Array[StartProcPartInfo], ignoreFirstMsg: Boolean): Unit
+
+  // each value in partitionInfo is (PartitionUniqueRecordKey, PartitionUniqueRecordValue, Long, PartitionUniqueRecordValue). // key, processed value, Start transactionid, Ignore Output Till given Value (Which is written into Output Adapter) & processing Transformed messages (processing & total)
   def GetAllPartitionUniqueRecordKey: Array[PartitionUniqueRecordKey]
+
   def DeserializeKey(k: String): PartitionUniqueRecordKey
+
   def DeserializeValue(v: String): PartitionUniqueRecordValue
+
   def getAllPartitionBeginValues: Array[(PartitionUniqueRecordKey, PartitionUniqueRecordValue)]
+
   def getAllPartitionEndValues: Array[(PartitionUniqueRecordKey, PartitionUniqueRecordValue)]
 }
 
@@ -76,30 +100,36 @@ trait OutputAdapterFactory {
 }
 
 // Output Adapter
-trait OutputAdapter extends Monitorable {
-  val nodeContext: NodeContext // NodeContext
-  val inputConfig: AdapterConfiguration // Configuration
+trait OutputAdapter extends AdaptersSerializeDeserializers with Monitorable {
+  // NodeContext
+  val nodeContext: NodeContext
+  // Configuration
+  val inputConfig: AdapterConfiguration
 
-  def send(message: String, partKey: String): Unit = send(Array(message.getBytes("UTF8")), Array(partKey.getBytes("UTF8")))
+  def send(tnxCtxt: TransactionContext, outputContainers: Array[MessageContainerBase]): Unit = {
+    val (outputContainers, serializedContainerData, serializerNames) = serialize(tnxCtxt, outputContainers)
+    send(tnxCtxt, outputContainers, serializedContainerData, serializerNames)
+  }
 
-  def send(message: Array[Byte], partKey: Array[Byte]): Unit = send(Array(message), Array(partKey))
+  // This is protected override method. After applying serialization, pass original messages, Serialized data & Serializer names
+  protected def send(tnxCtxt: TransactionContext, outputContainers: Array[MessageContainerBase], serializedContainerData: Array[Array[Byte]], serializerNames: Array[String]): Unit
 
-  // To send an array of messages. messages.size should be same as partKeys.size
-  def send(messages: Array[String], partKeys: Array[String]): Unit = send(messages.map(m => m.getBytes("UTF8")), partKeys.map(k => k.getBytes("UTF8")))
-  
-  // To send an array of messages. messages.size should be same as partKeys.size
-  def send(messages: Array[Array[Byte]], partKeys: Array[Array[Byte]]): Unit
-  
   def Shutdown: Unit
+
   def Category = "Output"
 }
 
-trait ExecContext {
+trait ExecContext extends AdaptersSerializeDeserializers {
   val input: InputAdapter
   val curPartitionKey: PartitionUniqueRecordKey
   val nodeContext: NodeContext
 
-  def execute(data: Array[Byte], format: String, uniqueKey: PartitionUniqueRecordKey, uniqueVal: PartitionUniqueRecordValue, readTmNanoSecs: Long, readTmMilliSecs: Long, ignoreOutput: Boolean, associatedMsg: String, delimiters: DataDelimiters): Unit
+  def execute(data: Array[Byte], uniqueKey: PartitionUniqueRecordKey, uniqueVal: PartitionUniqueRecordValue, readTmNanoSecs: Long, readTmMilliSecs: Long): Unit = {
+    val (msg, deserializerName) = deserialize(data)
+    executeMessage(msg, data, uniqueKey, uniqueVal, readTmNanoSecs, readTmMilliSecs, deserializerName): Unit
+  }
+
+  protected def executeMessage(msg: MessageContainerBase, data: Array[Byte], uniqueKey: PartitionUniqueRecordKey, uniqueVal: PartitionUniqueRecordValue, readTmNanoSecs: Long, readTmMilliSecs: Long, deserializerName: String): Unit
 }
 
 trait ExecContextFactory {
@@ -107,13 +137,19 @@ trait ExecContextFactory {
 }
 
 trait PartitionUniqueRecordKey {
-  val Type: String // Type of the Key -- For now putting File/Kafka like that. This is mostly for readable purpose (for which adapter etc)
-  def Serialize: String // Making String from key
+  val Type: String
+
+  // Type of the Key -- For now putting File/Kafka like that. This is mostly for readable purpose (for which adapter etc)
+  def Serialize: String
+
+  // Making String from key
   def Deserialize(key: String): Unit // Making Key from Serialized String
 }
 
 trait PartitionUniqueRecordValue {
-  def Serialize: String // Making String from Value
+  def Serialize: String
+
+  // Making String from Value
   def Deserialize(key: String): Unit // Making Value from Serialized String
 }
 

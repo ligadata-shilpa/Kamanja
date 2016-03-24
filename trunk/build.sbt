@@ -71,7 +71,7 @@ lazy val FileSimpleInputOutputAdapters = project.in(file("InputOutputAdapters/Fi
 
 lazy val SimpleEnvContextImpl = project.in(file("EnvContexts/SimpleEnvContextImpl")) dependsOn(KamanjaBase, StorageManager, Serialize, Exceptions)
 
-lazy val StorageBase = project.in(file("Storage/StorageBase")) dependsOn(Exceptions, KamanjaUtils, KvBase)
+lazy val StorageBase = project.in(file("Storage/StorageBase")) dependsOn(Exceptions, KamanjaUtils, KvBase, KamanjaBase)
 
 lazy val Metadata = project.in(file("Metadata")) dependsOn(Exceptions)
 
