@@ -26,7 +26,7 @@ import org.json4s._
 import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
 import java.io.{DataInputStream, DataOutputStream}
-import com.ligadata.KvBase.{Key, Value, TimeRange /* , KvBaseDefalts, KeyWithBucketIdAndPrimaryKey, KeyWithBucketIdAndPrimaryKeyCompHelper */}
+import com.ligadata.KvBase.{Key, TimeRange /* , KvBaseDefalts, KeyWithBucketIdAndPrimaryKey, KeyWithBucketIdAndPrimaryKeyCompHelper */}
 import com.ligadata.Utils.{KamanjaLoaderInfo}
 import com.ligadata.HeartBeat._
 

@@ -22,7 +22,7 @@ import com.esotericsoftware.kryo.io.{ Input, Output }
 import com.ligadata.MetadataAPI.MetadataAPI.ModelType
 import com.ligadata.Serialize._
 import com.ligadata.ZooKeeper._
-import com.ligadata.KvBase.{ Key, Value, TimeRange }
+import com.ligadata.KvBase.{ Key, TimeRange }
 import com.ligadata.StorageBase.{ DataStore, Transaction }
 import com.ligadata.kamanja.metadata._
 import com.ligadata.kamanja.metadataload.MetadataLoad

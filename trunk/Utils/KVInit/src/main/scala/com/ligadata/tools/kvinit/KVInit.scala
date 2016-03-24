@@ -52,7 +52,7 @@ import scala.collection.mutable.ArrayBuffer
 import com.ligadata.ZooKeeper._
 import org.apache.curator.framework._
 import com.ligadata.Serialize.{ JDataStore, JZKInfo, JEnvCtxtJsonStr }
-import com.ligadata.KvBase.{ Key, Value, TimeRange, KvBaseDefalts, KeyWithBucketIdAndPrimaryKey, KeyWithBucketIdAndPrimaryKeyCompHelper, LoadKeyWithBucketId }
+import com.ligadata.KvBase.{ Key, TimeRange, KvBaseDefalts, KeyWithBucketIdAndPrimaryKey, KeyWithBucketIdAndPrimaryKeyCompHelper, LoadKeyWithBucketId }
 import com.ligadata.StorageBase.{ DataStore, Transaction }
 import java.util.{ Collection, Iterator, TreeMap }
 import com.ligadata.Exceptions._

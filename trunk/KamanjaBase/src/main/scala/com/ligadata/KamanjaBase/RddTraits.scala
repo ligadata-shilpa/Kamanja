@@ -32,7 +32,7 @@ import java.util.{ Comparator, List => JList, Iterator => JIterator }
 import java.lang.{ Iterable => JIterable, Long => JLong }
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.JavaConversions._
-import com.ligadata.KvBase.{ Key, Value, TimeRange }
+import com.ligadata.KvBase.{ Key, TimeRange }
 
 object ThreadLocalStorage {
   final val txnContextInfo = new ThreadLocal[TransactionContext]();

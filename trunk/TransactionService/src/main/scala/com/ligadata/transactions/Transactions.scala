@@ -29,7 +29,7 @@ import org.apache.curator.framework.CuratorFramework
 import org.apache.curator.framework.recipes.locks.InterProcessMutex
 import com.ligadata.StorageBase.{ DataStore, Transaction }
 import com.ligadata.keyvaluestore.KeyValueManager
-import com.ligadata.KvBase.{ Key, Value, TimeRange, KvBaseDefalts }
+import com.ligadata.KvBase.{ Key, TimeRange, KvBaseDefalts }
 
 object NodeLevelTransService {
   private[this] val LOG = LogManager.getLogger(getClass);
