@@ -9,81 +9,15 @@ import com.ligadata.AdaptersConfiguration.{SmartFileAdapterConfiguration, FileAd
 import com.ligadata.Exceptions.{KamanjaException}
 import com.ligadata.InputAdapters.FileChangeType.FileChangeType
 import com.ligadata.InputAdapters.FileChangeType._
-import com.ligadata.InputOutputAdapterInfo.AdapterConfiguration
 
 import scala.collection.mutable.{ArrayBuffer, Map}
 import org.apache.commons.vfs2.{FileType, FileObject, FileSystemOptions, Selectors}
 import org.apache.commons.vfs2.impl.StandardFileSystemManager
-import org.apache.commons.vfs2.provider.sftp.SftpFileSystemConfigBuilder
-
 import com.ligadata.InputAdapters._
-import java.net.URLEncoder
 import org.apache.logging.log4j.{ Logger, LogManager }
-import com.ligadata.InputAdapters.CompressionUtil._
-
-
-import scala.util.control.Breaks._
-
-
-class SftpConnectionConfig(val serverAddress: String, val userId: String, val password : String)
-
-object SftpUtility{
-  def createConnectionString(sftpConnectionConfig : SftpConnectionConfig, remoteFilePath : String) : String = {
-    //"sftp://" + username + ":" + password + "@" + hostName + "/" + remoteFilePath
-    "sftp://" + sftpConnectionConfig.userId + ":" + URLEncoder.encode(sftpConnectionConfig.password) +
-      "@" + sftpConnectionConfig.serverAddress + "/" +  remoteFilePath
-  }
-
-  /**
-    * To setup default SFTP config
-    */
-  def createDefaultOptions() : FileSystemOptions = {
-    // Create SFTP options
-    val opts = new FileSystemOptions();
-    // SSH Key checking
-    SftpFileSystemConfigBuilder.getInstance().setStrictHostKeyChecking(opts, "no")
-    /*
-     * Using the following line will cause VFS to choose File System's Root
-     * as VFS's root. If I wanted to use User's home as VFS's root then set
-     * 2nd method parameter to "true"
-     */
-    // Root directory set to user home
-    SftpFileSystemConfigBuilder.getInstance().setUserDirIsRoot(opts, false);
-
-    // Timeout is count by Milliseconds
-    SftpFileSystemConfigBuilder.getInstance().setTimeout(opts, 10000);
-
-    return opts;
-  }
-
-
-  def hashPath(origianlPathWithConnectionString : String) : String = {
-    val colonIndex = origianlPathWithConnectionString.indexOf("://")
-    val atIndex = origianlPathWithConnectionString.indexOf("@")
-
-    if(colonIndex < 0 || atIndex < 0  )
-      return origianlPathWithConnectionString
-
-    val partToReplace = origianlPathWithConnectionString.substring(colonIndex, atIndex)
-    //val hashedPath = origianlPath.replace(partToReplace, "://"+sftpConnectionConfig.userId +":"+"*****")
-    val hashedPath = origianlPathWithConnectionString.replace(partToReplace, "://"+"user:pass")
-    hashedPath
-  }
-
-  def getPathOnly(origianlPathWithConnectionString : String) : String = {
-    val atIndex = origianlPathWithConnectionString.indexOf("@")
-
-    if(atIndex < 0  )
-      return origianlPathWithConnectionString
-
-    val partToReplace = origianlPathWithConnectionString.substring(0, atIndex + 1)
-    val pathWithHost = origianlPathWithConnectionString.replace(partToReplace, "")
-    val hostPos = pathWithHost.indexOf("/")
-    val pathOnly = pathWithHost.substring(hostPos)
-    pathOnly
-  }
-}
 import SftpUtility._
+
+
 
 class SftpFileEntry {
   var name : String = ""
@@ -96,7 +30,7 @@ class SftpFileEntry {
 class SftpFileHandler extends SmartFileHandler{
   private var remoteFullPath = ""
 
-  private var sftpConnectionConfig : SftpConnectionConfig = null
+  private var connectionConfig : FileAdapterConnectionConfig = null
   private var manager : StandardFileSystemManager = null
   private var in : InputStream = null
   //private var bufferedReader : BufferedReader = null
@@ -104,16 +38,13 @@ class SftpFileHandler extends SmartFileHandler{
   lazy val loggerName = this.getClass.getName
   lazy val logger = LogManager.getLogger(loggerName)
 
-  def opts = createDefaultOptions
-  def sftpEncodedUri =
-    if(sftpConnectionConfig == null ) ""
-    else "sftp://" + sftpConnectionConfig.userId + ":" + URLEncoder.encode(sftpConnectionConfig.password) +
-      "@" + sftpConnectionConfig.serverAddress + "/" +  getFullPath
+  def opts = createDefaultOptions(connectionConfig)
+  def sftpEncodedUri = SftpUtility.createConnectionString(connectionConfig, getFullPath)
 
-  def this(path : String, config : SftpConnectionConfig){
+  def this(path : String, config : FileAdapterConnectionConfig){
     this()
     this.remoteFullPath = path
-    sftpConnectionConfig = config
+    connectionConfig = config
   }
 
   def getFullPath = remoteFullPath
@@ -143,6 +74,9 @@ class SftpFileHandler extends SmartFileHandler{
   def getDefaultInputStream() : InputStream = {
     val inputStream : InputStream =
       try {
+        manager = new StandardFileSystemManager()
+        manager.init()
+
         val remoteFileObj = manager.resolveFile(sftpEncodedUri, opts)
         remoteFileObj.getContent().getInputStream()
       }
@@ -150,6 +84,10 @@ class SftpFileHandler extends SmartFileHandler{
         case e: Exception =>
           logger.error(e)
           null
+      }
+      finally {
+        if(manager!=null)
+          manager.close()
       }
 
     inputStream
@@ -199,8 +137,8 @@ class SftpFileHandler extends SmartFileHandler{
       manager  = new StandardFileSystemManager()
       manager.init()
 
-      val remoteSrcFile = manager.resolveFile(createConnectionString(sftpConnectionConfig, getFullPath), createDefaultOptions())
-      val remoteDestFile = manager.resolveFile(createConnectionString(sftpConnectionConfig, remoteNewFilePath), createDefaultOptions())
+      val remoteSrcFile = manager.resolveFile(createConnectionString(connectionConfig, getFullPath), createDefaultOptions(connectionConfig))
+      val remoteDestFile = manager.resolveFile(createConnectionString(connectionConfig, remoteNewFilePath), createDefaultOptions(connectionConfig))
 
       if (remoteSrcFile.exists()) {
         remoteSrcFile.moveTo(remoteDestFile)
@@ -231,7 +169,7 @@ class SftpFileHandler extends SmartFileHandler{
       manager  = new StandardFileSystemManager()
       manager.init()
 
-      val remoteFile = manager.resolveFile(createConnectionString(sftpConnectionConfig, getFullPath), createDefaultOptions())
+      val remoteFile = manager.resolveFile(createConnectionString(connectionConfig, getFullPath), createDefaultOptions(connectionConfig))
       remoteFile.delete()
       logger.info("Successfully deleted")
       return true
@@ -278,7 +216,7 @@ class SftpFileHandler extends SmartFileHandler{
     try {
       manager = new StandardFileSystemManager()
       manager.init()
-      val remoteFile = manager.resolveFile(createConnectionString(sftpConnectionConfig, getFullPath), createDefaultOptions())
+      val remoteFile = manager.resolveFile(createConnectionString(connectionConfig, getFullPath), createDefaultOptions(connectionConfig))
       remoteFile
     }
     catch {
@@ -302,7 +240,6 @@ class SftpChangesMonitor (adapterName : String, modifiedFileCallback:(SmartFileH
   private var connectionConf : FileAdapterConnectionConfig = null
   private var monitoringConf :  FileAdapterMonitoringConfig = null
 
-  private var sftpConnectionConfig : SftpConnectionConfig = null
 
   def init(adapterSpecificCfgJson: String): Unit ={
     val(_type, c, m) =  SmartFileAdapterConfiguration.parseSmartFileAdapterSpecificConfig(adapterName, adapterSpecificCfgJson)
@@ -314,7 +251,6 @@ class SftpChangesMonitor (adapterName : String, modifiedFileCallback:(SmartFileH
       throw new KamanjaException(err, null)
     }
 
-    sftpConnectionConfig = new SftpConnectionConfig(connectionConf.hostsList(0), connectionConf.userId, connectionConf.password)
   }
 
   def monitor: Unit ={
@@ -327,9 +263,9 @@ class SftpChangesMonitor (adapterName : String, modifiedFileCallback:(SmartFileH
         manager.init();
 
         //Setup our SFTP configuration
-        val opts = createDefaultOptions
+        val opts = createDefaultOptions(connectionConf)
 
-        val sftpEncodedUri = createConnectionString(sftpConnectionConfig, targetRemoteFolder)
+        val sftpEncodedUri = createConnectionString(connectionConf, targetRemoteFolder)
 
         val filesStatusMap = Map[String, SftpFileEntry]()
         var firstCheck = true
@@ -443,7 +379,7 @@ class SftpChangesMonitor (adapterName : String, modifiedFileCallback:(SmartFileH
         }
         else{
           if(changeType == New || changeType == AlreadyExisting) {
-            val fileHandler = new SftpFileHandler(getPathOnly(uniquePath), sftpConnectionConfig)
+            val fileHandler = new SftpFileHandler(getPathOnly(uniquePath), connectionConf)
             modifiedFiles.put(fileHandler, changeType)
           }
         }

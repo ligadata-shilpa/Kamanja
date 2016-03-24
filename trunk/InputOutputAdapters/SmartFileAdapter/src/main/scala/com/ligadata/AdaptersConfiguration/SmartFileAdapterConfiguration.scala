@@ -23,6 +23,8 @@ class FileAdapterConnectionConfig {
   var authentication: String = _
   var principal: String = _
   var keytab: String = _
+  var passphrase: String = _
+  var keyFile: String = _
 }
 
 class FileAdapterMonitoringConfig {
@@ -104,10 +106,14 @@ object SmartFileAdapterConfiguration{
         connectionConfig.password = kv._2.trim
       } else if (kv._1.compareToIgnoreCase("Authentication") == 0) {
         connectionConfig.authentication = kv._2.trim
-      } else if (kv._1.compareToIgnoreCase("Principal") == 0) {
+      } else if (kv._1.compareToIgnoreCase("Principal") == 0) {//kerberos
         connectionConfig.principal = kv._2.trim
-      } else if (kv._1.compareToIgnoreCase("Keytab") == 0) {
+      } else if (kv._1.compareToIgnoreCase("Keytab") == 0) {//kerberos
         connectionConfig.keytab = kv._2.trim
+      } else if (kv._1.compareToIgnoreCase("Passphrase") == 0) {//ssh
+        connectionConfig.passphrase = kv._2.trim
+      } else if (kv._1.compareToIgnoreCase("KeyFile") == 0) {//ssh
+        connectionConfig.keyFile = kv._2.trim
       }
     })
     if(connectionConfig.authentication == null || connectionConfig.authentication == "")

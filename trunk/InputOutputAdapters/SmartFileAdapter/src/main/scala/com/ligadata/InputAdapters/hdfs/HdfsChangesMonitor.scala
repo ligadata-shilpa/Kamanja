@@ -3,26 +3,18 @@ package com.ligadata.InputAdapters.hdfs
 /**
  * Created by Yasser on 12/6/2015.
  */
-
-import java.util.zip.GZIPInputStream
-
 import com.ligadata.AdaptersConfiguration.{SmartFileAdapterConfiguration, FileAdapterMonitoringConfig, FileAdapterConnectionConfig}
 import com.ligadata.Exceptions.KamanjaException
 import com.ligadata.InputAdapters.FileChangeType.FileChangeType
 import com.ligadata.InputAdapters.FileChangeType._
-import com.ligadata.InputOutputAdapterInfo.AdapterConfiguration
 import org.apache.hadoop.fs.FileStatus
 import org.apache.hadoop.fs.FileSystem
 import org.apache.hadoop.fs.Path
 import org.apache.hadoop.fs.FSDataInputStream
 import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.hdfs.client.HdfsUtils
-import org.apache.hadoop.security.UserGroupInformation
-
 import scala.collection.mutable.{ArrayBuffer, Map}
 import scala.actors.threadpool.{ Executors, ExecutorService }
 import java.io.{InputStream}
-import com.ligadata.InputAdapters.CompressionUtil._
 import org.apache.logging.log4j.{ Logger, LogManager }
 import com.ligadata.InputAdapters.{CompressionUtil, SmartFileHandler, SmartFileMonitor}
 
@@ -31,22 +23,6 @@ class HdfsFileEntry {
   var lastReportedSize : Long = 0
   var lastModificationTime : Long = 0
   //boolean processed
-}
-
-object HdfsUtility{
-  def createConfig(connectionConf : FileAdapterConnectionConfig) : Configuration = {
-    val hdfsConfig = new Configuration()
-    hdfsConfig.set("fs.default.name", connectionConf.hostsList.mkString(","))
-    hdfsConfig.set("fs.hdfs.impl", classOf[org.apache.hadoop.hdfs.DistributedFileSystem].getName)
-    hdfsConfig.set("fs.file.impl", classOf[org.apache.hadoop.fs.LocalFileSystem].getName)
-    //hdfsConfig.set("hadoop.job.ugi", "hadoop");//user ???
-    if(connectionConf.authentication.equalsIgnoreCase("kerberos")){
-      hdfsConfig.set("hadoop.security.authentication", "Kerberos")
-      UserGroupInformation.setConfiguration(hdfsConfig)
-      UserGroupInformation.loginUserFromKeytab(connectionConf.principal, connectionConf.keytab)
-    }
-    hdfsConfig
-  }
 }
 
 class MofifiedFileCallbackHandler(fileHandler : SmartFileHandler, modifiedFileCallback:(SmartFileHandler) => Unit) extends Runnable{

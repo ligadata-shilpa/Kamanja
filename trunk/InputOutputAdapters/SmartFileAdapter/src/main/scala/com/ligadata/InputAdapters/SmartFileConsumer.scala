@@ -195,8 +195,9 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
       val context = new SmartFileConsumerContext()
       context.partitionId = partitionId
       context.ignoreFirstMsg = ignoreFirstMsg
-      processor.init(adapterConfig, context, sendSmartFileMessage)
 
+      //initialize the file processor and start it. whenever it gets a new message, it will call sendSmartFileMessage()
+      processor.init(adapterConfig, context, sendSmartFileMessage)
       readExecutor.execute(processor)
 
 

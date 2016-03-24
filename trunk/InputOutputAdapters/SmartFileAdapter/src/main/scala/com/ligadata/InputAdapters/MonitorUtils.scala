@@ -65,7 +65,7 @@ object SmartFileHandlerFactory{
       adapterConfig._type.toLowerCase() match {
         case "das/nas" => new PosixFileHandler(fileFullPath)
         case "sftp" => new HdfsFileHandler(fileFullPath, connectionConf)
-        case "hdfs" => new SftpFileHandler(fileFullPath, new SftpConnectionConfig(connectionConf.hostsList(0), connectionConf.userId, connectionConf.password))
+        case "hdfs" => new SftpFileHandler(fileFullPath, connectionConf)
         case _ => throw new KamanjaException("Unsupported Smart file adapter type", null)
       }
 
