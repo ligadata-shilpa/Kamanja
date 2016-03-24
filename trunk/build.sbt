@@ -14,6 +14,10 @@ shellPrompt := { state =>  "sbt (%s)> ".format(Project.extract(state).currentPro
 
 net.virtualvoid.sbt.graph.Plugin.graphSettings
 
+coverageExcludedPackages in ThisBuild := "com.ligadata.Migrate.MdResolve;com.ligadata.Migrate.Migrate*;com.ligadata.MigrateBase;com.ligadata.pmml.udfs.Udfs;com.ligadata.pmml.udfs.UdfBase;com.ligadata.pmml.udfs.CustomUdfs"
+
+coverageEnabled in ThisBuild := true
+
 libraryDependencies := {
   CrossVersion.partialVersion(scalaVersion.value) match {
     // if scala 2.11+ is used, quasiquotes are merged into scala-reflect
@@ -140,9 +144,10 @@ lazy val PmmlCompiler = project.in(file("Pmml/PmmlCompiler"))
   .dependsOn(PmmlRuntime, PmmlUdfs, Metadata, KamanjaBase, MetadataBootstrap, Exceptions)
 
 lazy val PmmlUdfs = project.in(file("Pmml/PmmlUdfs"))
-  .configs(TestConfigs.all: _*)
-  .settings(TestSettings.settings: _*)
-  .dependsOn(Metadata, PmmlRuntime, KamanjaBase, Exceptions)
+    .configs(TestConfigs.all: _*)
+    .settings(TestSettings.settings: _*)
+    .settings(coverageExcludedPackages := "com.ligadata.pmml.udfs.Udfs;com.ligadata.pmml.udfs.UdfBase;com.ligadata.pmml.udfs.CustomUdfs")
+    .dependsOn(Metadata, PmmlRuntime, KamanjaBase, Exceptions)
 
 lazy val MethodExtractor = project.in(file("Pmml/MethodExtractor"))
   .configs(TestConfigs.all: _*)
@@ -386,4 +391,3 @@ val root = (project in file(".")).
   aggregate(BaseTypes, BaseFunctions, Serialize, ZooKeeperClient, ZooKeeperListener, Exceptions, KamanjaBase, DataDelimiters, KamanjaManager, InputOutputAdapterBase, KafkaSimpleInputOutputAdapters, FileSimpleInputOutputAdapters, SimpleEnvContextImpl, StorageBase, Metadata, OutputMsgDef, MessageDef, PmmlRuntime, PmmlCompiler, PmmlUdfs, MethodExtractor, MetadataAPI, MetadataBootstrap, MetadataAPIService, MetadataAPIServiceClient, SimpleKafkaProducer, KVInit, ZooKeeperLeaderLatch, JsonDataGen, NodeInfoExtract, Controller, SimpleApacheShiroAdapter, AuditAdapters, CustomUdfLib, JdbcDataCollector, ExtractData, InterfacesSamples, StorageCassandra, StorageHashMap, StorageHBase, StorageTreeMap, StorageSqlServer, StorageManager, AuditAdapterBase, SecurityAdapterBase, KamanjaUtils, UtilityService, HeartBeat, TransactionService, KvBase, FileDataConsumer, CleanUtil, SaveContainerDataComponent, UtilsForModels, JarFactoryOfModelInstanceFactory, JpmmlFactoryOfModelInstanceFactory, MigrateBase, MigrateManager)
 
 */
-
