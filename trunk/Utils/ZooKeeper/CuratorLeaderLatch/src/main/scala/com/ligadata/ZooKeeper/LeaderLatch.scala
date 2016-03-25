@@ -30,6 +30,7 @@ import scala.collection.JavaConverters._
 import org.apache.curator.framework.api.CuratorEventType._;
 import org.apache.logging.log4j._
 import com.ligadata.KamanjaVersion.KamanjaVersion
+import com.ligadata.Utils.ClusterStatus
 
 class ZkLeaderLatch(val zkcConnectString: String, val leaderPath: String, val nodeId: String, val EventChangeCallback: (ClusterStatus) => Unit, sessionTimeoutMs: Int = 1000, connectionTimeoutMs: Int = 30000) {
   private var curatorFramework: CuratorFramework = null

@@ -27,12 +27,10 @@ import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
 import java.io.{DataInputStream, DataOutputStream}
 import com.ligadata.KvBase.{Key, TimeRange /* , KvBaseDefalts, KeyWithBucketIdAndPrimaryKey, KeyWithBucketIdAndPrimaryKeyCompHelper */}
-import com.ligadata.Utils.{KamanjaLoaderInfo}
+import com.ligadata.Utils.{KamanjaLoaderInfo, ClusterStatus}
 import com.ligadata.HeartBeat._
 
 import scala.collection.mutable.ArrayBuffer
-
-case class ClusterStatus(nodeId: String, isLeader: Boolean, leaderNodeId: String, participantsNodeIds: Iterable[String])
 
 object MinVarType extends Enumeration {
   type MinVarType = Value
