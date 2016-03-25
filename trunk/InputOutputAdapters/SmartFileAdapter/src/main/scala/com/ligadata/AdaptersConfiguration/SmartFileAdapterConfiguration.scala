@@ -51,16 +51,16 @@ object SmartFileAdapterConfiguration{
 
     val adapterConfig = new SmartFileAdapterConfiguration()
     adapterConfig.Name = inputConfig.Name
-    adapterConfig.formatName = inputConfig.formatName
-    adapterConfig.validateAdapterName = inputConfig.validateAdapterName
-    adapterConfig.failedEventsAdapterName = inputConfig.failedEventsAdapterName
+//    adapterConfig.formatName = inputConfig.formatName
+//    adapterConfig.validateAdapterName = inputConfig.validateAdapterName
+//    adapterConfig.failedEventsAdapterName = inputConfig.failedEventsAdapterName
     adapterConfig.className = inputConfig.className
     adapterConfig.jarName = inputConfig.jarName
     adapterConfig.dependencyJars = inputConfig.dependencyJars
-    adapterConfig.associatedMsg = if (inputConfig.associatedMsg == null) null else inputConfig.associatedMsg.trim
-    adapterConfig.keyAndValueDelimiter = if (inputConfig.keyAndValueDelimiter == null) null else inputConfig.keyAndValueDelimiter.trim
-    adapterConfig.fieldDelimiter = if (inputConfig.fieldDelimiter == null) null else inputConfig.fieldDelimiter.trim
-    adapterConfig.valueDelimiter = if (inputConfig.valueDelimiter == null) null else inputConfig.valueDelimiter.trim
+//    adapterConfig.associatedMsg = if (inputConfig.associatedMsg == null) null else inputConfig.associatedMsg.trim
+//    adapterConfig.keyAndValueDelimiter = if (inputConfig.keyAndValueDelimiter == null) null else inputConfig.keyAndValueDelimiter.trim
+//    adapterConfig.fieldDelimiter = if (inputConfig.fieldDelimiter == null) null else inputConfig.fieldDelimiter.trim
+//    adapterConfig.valueDelimiter = if (inputConfig.valueDelimiter == null) null else inputConfig.valueDelimiter.trim
 
     val (_type, connectionConfig, monitoringConfig) = parseSmartFileAdapterSpecificConfig(inputConfig.Name, inputConfig.adapterSpecificCfg)
     adapterConfig._type = _type

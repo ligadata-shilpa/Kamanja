@@ -177,10 +177,6 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
       partitionKVs(partitionInfo._1.PartitionId) = partitionInfo
     })
 
-    delimiters.keyAndValueDelimiter = adapterConfig.keyAndValueDelimiter
-    delimiters.fieldDelimiter = adapterConfig.fieldDelimiter
-    delimiters.valueDelimiter = adapterConfig.valueDelimiter
-
     // Enable the adapter to process
     isQuiesced = false
     LOG.debug("SMART_FILE_ADAPTER: Starting " + partitionKVs.size + " threads to process partitions")
@@ -284,7 +280,7 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
     uniqueVal.FileName = fileName
     val dontSendOutputToOutputAdap = uniqueVal.Offset <= uniqueRecordValue
 
-    execThread.execute(message, adapterConfig.formatName, uniqueKey, uniqueVal, readTmNs, readTmMs, dontSendOutputToOutputAdap, adapterConfig.associatedMsg, delimiters)
+    execThread.execute(message, uniqueKey, uniqueVal, readTmNs, readTmMs)
 
   }
 
