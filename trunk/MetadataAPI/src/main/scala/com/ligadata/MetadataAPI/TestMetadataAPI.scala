@@ -22,7 +22,7 @@ import com.esotericsoftware.kryo.io.{ Input, Output }
 import com.ligadata.MetadataAPI.MetadataAPI.ModelType
 import com.ligadata.Serialize._
 import com.ligadata.ZooKeeper._
-import com.ligadata.KvBase.{ Key, Value, TimeRange }
+import com.ligadata.KvBase.{ Key, TimeRange }
 import com.ligadata.StorageBase.{ DataStore, Transaction }
 import com.ligadata.kamanja.metadata._
 import com.ligadata.kamanja.metadataload.MetadataLoad
@@ -2246,15 +2246,15 @@ println("Getting Messages")
       val serializer = SerializerManager.GetSerializer("kryo")
       testSaveObject("key1", "value1", "other")
       var obj = MetadataAPIImpl.GetObject("key1", "other")
-      var v = serializer.DeserializeObjectFromByteArray(obj.serializedInfo).asInstanceOf[String]
+      var v = serializer.DeserializeObjectFromByteArray(obj._2.asInstanceOf[Array[Byte]]).asInstanceOf[String]
       assert(v == "value1")
       testSaveObject("key1", "value2", "other")
       obj = MetadataAPIImpl.GetObject("key1", "other")
-      v = serializer.DeserializeObjectFromByteArray(obj.serializedInfo).asInstanceOf[String]
+      v = serializer.DeserializeObjectFromByteArray(obj._2.asInstanceOf[Array[Byte]]).asInstanceOf[String]
       assert(v == "value2")
       testSaveObject("key1", "value3", "other")
       obj = MetadataAPIImpl.GetObject("key1", "other")
-      v = serializer.DeserializeObjectFromByteArray(obj.serializedInfo).asInstanceOf[String]
+      v = serializer.DeserializeObjectFromByteArray(obj._2.asInstanceOf[Array[Byte]]).asInstanceOf[String]
       assert(v == "value3")
     } catch {
       case e: Exception => {

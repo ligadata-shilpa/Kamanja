@@ -38,7 +38,7 @@ import com.ligadata.kamanja.metadataload.MetadataLoad
 // import com.ligadata.keyvaluestore._
 import com.ligadata.HeartBeat.HeartBeatUtil
 import com.ligadata.StorageBase.{ DataStore, Transaction }
-import com.ligadata.KvBase.{ Key, Value, TimeRange }
+import com.ligadata.KvBase.{ Key, TimeRange }
 
 import scala.util.parsing.json.JSON
 import scala.util.parsing.json.{ JSONObject, JSONArray }
@@ -530,7 +530,7 @@ object ConceptUtils {
   def LoadAttributeIntoCache(key: String) {
     try {
       val obj = PersistenceUtils.GetObject(key.toLowerCase, "concepts")
-      val cont = serializer.DeserializeObjectFromByteArray(obj.serializedInfo)
+      val cont:BaseElem = null // serializer.DeserializeObjectFromByteArray(obj.serializedInfo)
       MetadataAPIImpl.AddObjectToCache(cont.asInstanceOf[AttributeDef], MdMgr.GetMdMgr)
     } catch {
       case e: Exception => {

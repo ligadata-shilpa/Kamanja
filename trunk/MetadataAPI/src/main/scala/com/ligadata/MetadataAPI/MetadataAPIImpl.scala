@@ -41,7 +41,7 @@ import com.ligadata.kamanja.metadataload.MetadataLoad
 // import com.ligadata.keyvaluestore._
 import com.ligadata.HeartBeat.{MonitoringContext, HeartBeatUtil}
 import com.ligadata.StorageBase.{ DataStore, Transaction }
-import com.ligadata.KvBase.{ Key, Value, TimeRange }
+import com.ligadata.KvBase.{ Key, TimeRange }
 
 import scala.util.parsing.json.JSON
 import scala.util.parsing.json.{ JSONObject, JSONArray }
@@ -623,7 +623,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @param bucketKeyStr
      * @param typeName
      */
-  def GetObject(bucketKeyStr: String, typeName: String): Value = {
+  def GetObject(bucketKeyStr: String, typeName: String): (String, Any) = {
     PersistenceUtils.GetObject(bucketKeyStr,typeName)
   }
 
@@ -652,7 +652,6 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     /**
      * Remove all of the elements with the supplied keys in the list from the supplied DataStore
      * @param keyList
-     * @param store
      */
   def RemoveObjectList(keyList: Array[String], typeName: String) {
     PersistenceUtils.RemoveObjectList(keyList,typeName)
@@ -1176,7 +1175,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       if (f.exists()) {
         val key = jar
         val mObj = GetObject(key, "jar_store")
-        val ba = mObj.serializedInfo
+        val ba = mObj._2.asInstanceOf[Array[Byte]]
         val fs = f.length()
         if (fs != ba.length) {
           logger.debug("A jar file already exists, but it's size (" + fs + ") doesn't match with the size of the Jar (" +
@@ -1245,7 +1244,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
             if (b == true) {
               val key = jar
               val mObj = GetObject(key, "jar_store")
-              val ba = mObj.serializedInfo
+              val ba = mObj._2.asInstanceOf[Array[Byte]]
               val jarName = dirPath + "/" + jar
               PutArrayOfBytesToJar(ba, jarName)
             } else {
@@ -1503,7 +1502,6 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
     /**
      * DeleteObject
-     * @param key
      * @param typeName
      */
   def DeleteObject(bucketKeyStr: String, typeName: String) {
@@ -2757,9 +2755,9 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
         val storeInfo = PersistenceUtils.GetTableStoreMap(typ)
         if (processedContainersSet(storeInfo._1) == false) {
           processedContainersSet += storeInfo._1
-          storeInfo._2.get(storeInfo._1, { (k: Key, v: Value) =>
+          storeInfo._2.get(storeInfo._1, { (k: Key, v: Any, serType: String, typ: String, ver:Int) =>
             {
-              val mObj = serializer.DeserializeObjectFromByteArray(v.serializedInfo).asInstanceOf[BaseElemDef]
+              val mObj = serializer.DeserializeObjectFromByteArray(v.asInstanceOf[Array[Byte]]).asInstanceOf[BaseElemDef]
               if (mObj != null) {
                 if (mObj.tranId <= maxTranId) {
                   AddObjectToCache(mObj, MdMgr.GetMdMgr)
@@ -3508,16 +3506,13 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @param jarName
      * @param dependencyJars
      * @param adapterSpecificCfg
-     * @param inputAdapterToVerify
-     * @param delimiterString
-     * @param associatedMsg
      * @return
      */
   def AddAdapter(name: String, typeString: String, dataFormat: String, className: String,
                  jarName: String, dependencyJars: List[String],
-                 adapterSpecificCfg: String, inputAdapterToVerify: String, keyAndValueDelimiter: String, fieldDelimiter: String, valueDelimiter: String, associatedMsg: String, failedEventsAdapter: String): String = {
+                 adapterSpecificCfg: String): String = {
     ConfigUtils.AddAdapter(name, typeString, dataFormat, className, jarName,
-        dependencyJars, adapterSpecificCfg, inputAdapterToVerify, keyAndValueDelimiter, fieldDelimiter, valueDelimiter, associatedMsg, failedEventsAdapter)
+        dependencyJars, adapterSpecificCfg)
   }
 
     /**
@@ -3529,15 +3524,12 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @param jarName
      * @param dependencyJars
      * @param adapterSpecificCfg
-     * @param inputAdapterToVerify
-     * @param delimiterString
-     * @param associatedMsg
      * @return
      */
   def UpdateAdapter(name: String, typeString: String, dataFormat: String, className: String,
                     jarName: String, dependencyJars: List[String],
-                    adapterSpecificCfg: String, inputAdapterToVerify: String, keyAndValueDelimiter: String, fieldDelimiter: String, valueDelimiter: String, associatedMsg: String, failedEventsAdapter: String): String = {
-    ConfigUtils.AddAdapter(name, typeString, dataFormat, className, jarName, dependencyJars, adapterSpecificCfg, inputAdapterToVerify, keyAndValueDelimiter, fieldDelimiter, valueDelimiter, associatedMsg, failedEventsAdapter)
+                    adapterSpecificCfg: String): String = {
+    ConfigUtils.AddAdapter(name, typeString, dataFormat, className, jarName, dependencyJars, adapterSpecificCfg)
   }
 
     /**

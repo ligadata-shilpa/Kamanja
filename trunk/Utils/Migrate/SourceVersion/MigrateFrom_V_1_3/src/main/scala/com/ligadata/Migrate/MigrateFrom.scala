@@ -193,7 +193,9 @@ class MigrateFrom_V_1_3 extends MigratableFrom {
   }
 
   private def serializeObjectToJson(mdObj: BaseElem): (String, String) = {
+    logger.debug("mdObj.Version before conversion =>" + mdObj.Version)
     val ver = MdMgr.ConvertLongVersionToString(mdObj.Version)
+    logger.debug("mdObj.Version after conversion  =>" + ver)
     try {
       mdObj match {
         // Assuming that zookeeper transaction will be different based on type of object
@@ -205,7 +207,7 @@ class MigrateFrom_V_1_3 extends MigratableFrom {
             ("OrigDef" -> o.OrigDef) ~
             ("ObjectDefinition" -> o.ObjectDefinition) ~
             ("ObjectFormat" -> ObjFormatType.asString(o.ObjectFormat)) ~
-            ("ModelType" -> o.modelType) ~
+            ("ModelType" -> o.miningModelType.toString) ~
             ("NameSpace" -> o.nameSpace) ~
             ("Name" -> o.name) ~
             ("Version" -> ver) ~

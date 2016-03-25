@@ -38,7 +38,7 @@ import com.ligadata.kamanja.metadataload.MetadataLoad
 // import com.ligadata.keyvaluestore._
 import com.ligadata.HeartBeat.HeartBeatUtil
 import com.ligadata.StorageBase.{ DataStore, Transaction }
-import com.ligadata.KvBase.{ Key, Value, TimeRange }
+import com.ligadata.KvBase.{ Key, TimeRange }
 
 import scala.util.parsing.json.JSON
 import scala.util.parsing.json.{ JSONObject, JSONArray }
@@ -338,7 +338,7 @@ object FunctionUtils {
   def LoadFunctionIntoCache(key: String) {
     try {
       val obj = MetadataAPIImpl.GetObject(key.toLowerCase, "functions")
-      val cont = serializer.DeserializeObjectFromByteArray(obj.serializedInfo)
+      val cont: FunctionDef = null // serializer.DeserializeObjectFromByteArray(obj.serializedInfo)
       MetadataAPIImpl.AddObjectToCache(cont.asInstanceOf[FunctionDef], MdMgr.GetMdMgr)
     } catch {
       case e: Exception => {

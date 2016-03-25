@@ -31,7 +31,7 @@ import org.json4s.jackson.JsonMethods._
 import org.json4s.jackson.Serialization
 import scala.io.Source
 
-import com.ligadata.KvBase.{KvBaseDefalts, TimeRange, Key, Value}
+import com.ligadata.KvBase.{KvBaseDefalts, TimeRange, Key}
 
 import com.ligadata.StorageBase.{DataStore, DataStoreOperations}
 import com.ligadata.keyvaluestore.KeyValueManager
@@ -1076,14 +1076,14 @@ class MigrateTo_V_1_4 extends MigratableTo {
     return addedMessagesContainers
   }
 
-  private def callSaveData(dataStore: DataStoreOperations, data_list: Array[(String, Array[(Key, Value)])]): Unit = {
+  private def callSaveData(dataStore: DataStoreOperations, data_list: Array[(String, Array[(Key, String, Any)])]): Unit = {
     var failedWaitTime = 15000 // Wait time starts at 15 secs
     val maxFailedWaitTime = 60000 // Max Wait time 60 secs
     var doneSave = false
 
     while (!doneSave) {
       try {
-        dataStore.put(data_list)
+        dataStore.put(null, data_list)
         doneSave = true
       } catch {
         case e: FatalAdapterException => {
@@ -1122,7 +1122,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
     }
   }
 
-  private def callGetData(dataStore: DataStoreOperations, containerName: String, keys: Array[Key], callbackFunction: (Key, Value) => Unit): Unit = {
+  private def callGetData(dataStore: DataStoreOperations, containerName: String, keys: Array[Key], callbackFunction: (Key, Any, String, String, Int) => Unit): Unit = {
     var failedWaitTime = 15000 // Wait time starts at 15 secs
     val maxFailedWaitTime = 60000 // Max Wait time 60 secs
     var doneGet = false
@@ -1180,7 +1180,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
     val containersData = data.groupBy(_.containerName.toLowerCase)
-    val data_list = containersData.map(kv => (kv._1, kv._2.map(d => (Key(d.timePartition, d.bucketKey, d.transactionid, d.rowid), Value(d.serializername, d.data))).toArray)).toArray
+    val data_list = containersData.map(kv => (kv._1, kv._2.map(d => (Key(d.timePartition, d.bucketKey, d.transactionid, d.rowid), d.serializername, d.data.asInstanceOf[Any])).toArray)).toArray
 
     callSaveData(_dataStoreDb, data_list);
   }
@@ -1208,8 +1208,8 @@ class MigrateTo_V_1_4 extends MigratableTo {
       throw new Exception("Not found valid Datastore DB connection")
 
     var ret = ""
-    val buildAdapOne = (k: Key, v: Value) => {
-      ret = new String(v.serializedInfo)
+    val buildAdapOne = (k: Key, v: Any, serType: String, typ: String, ver:Int) => {
+      ret = new String(v.asInstanceOf[Array[Byte]])
     }
 
     callGetData(_dataStoreDb, "MigrateStatusInformation", Array(Key(KvBaseDefalts.defaultTime, Array(key.toLowerCase), 0, 0)), buildAdapOne)
@@ -1223,7 +1223,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
     if (_dataStoreDb == null)
       throw new Exception("Not found valid Datastore DB connection")
 
-    callSaveData(_dataStoreDb, Array(("MigrateStatusInformation", Array((Key(KvBaseDefalts.defaultTime, Array(key.toLowerCase), 0, 0), Value("txt", value.getBytes()))))))
+    callSaveData(_dataStoreDb, Array(("MigrateStatusInformation", Array((Key(KvBaseDefalts.defaultTime, Array(key.toLowerCase), 0, 0), "txt", value.getBytes().asInstanceOf[Any])))))
   }
 }
 

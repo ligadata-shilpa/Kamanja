@@ -16,6 +16,7 @@
 
 package com.ligadata.SimpleEnvContextImpl
 
+import com.ligadata.Utils.ClusterStatus
 import org.json4s.jackson.Serialization
 
 import scala.actors.threadpool.{ Executors, ExecutorService }
@@ -24,7 +25,7 @@ import scala.collection.mutable._
 import scala.util.control.Breaks._
 import scala.reflect.runtime.{ universe => ru }
 import org.apache.logging.log4j.{ Logger, LogManager }
-import com.ligadata.KvBase.{ Key, Value, TimeRange, KvBaseDefalts, KeyWithBucketIdAndPrimaryKey, KeyWithBucketIdAndPrimaryKeyCompHelper, LoadKeyWithBucketId }
+import com.ligadata.KvBase.{ Key, TimeRange, KvBaseDefalts, KeyWithBucketIdAndPrimaryKey, KeyWithBucketIdAndPrimaryKeyCompHelper, LoadKeyWithBucketId }
 import com.ligadata.StorageBase.{ DataStore, Transaction, DataStoreOperations }
 import com.ligadata.KamanjaBase._
 // import com.ligadata.KamanjaBase.{ EnvContext, MessageContainerBase }
@@ -618,6 +619,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     }
   }
 
+/*
   private def buildObject(k: Key, v: Value): MessageContainerBase = {
     v.serializerType.toLowerCase match {
       case "kryo" => {
@@ -641,6 +643,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 
     return null
   }
+*/
 
   private def GetDataStoreHandle(jarPaths: collection.immutable.Set[String], dataStoreInfo: String): DataStore = {
     try {
@@ -654,19 +657,22 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 
   val results = new ArrayBuffer[(String, (Long, String, List[(String, String)]))]()
 
-  private def buildAdapterUniqueValue(k: Key, v: Value, results: ArrayBuffer[(String, (Long, String, List[(String, String, String)]))]) {
-    implicit val jsonFormats: Formats = DefaultFormats
-    val uniqVal = parse(new String(v.serializedInfo)).extract[AdapterUniqueValueDes]
-
+  private def buildAdapterUniqueValue(k: Key, v: Any, results: ArrayBuffer[(String, (Long, String, List[(String, String, String)]))]) {
     var res = List[(String, String, String)]()
+    if (v != null && v.isInstanceOf[Array[Byte]]) {
+      implicit val jsonFormats: Formats = DefaultFormats
+      val uniqVal = parse(new String(v.asInstanceOf[Array[Byte]])).extract[AdapterUniqueValueDes]
 
-    if (uniqVal.Out != None) {
-      res = uniqVal.Out.get.map(o => { (o(0), o(1), o(2)) })
+
+      if (uniqVal.Out != None) {
+        res = uniqVal.Out.get.map(o => { (o(0), o(1), o(2)) })
+      }
+
+      results += ((k.bucketKey(0), (uniqVal.T, uniqVal.V, res.toList))) // taking 1st key, that is what we are expecting
     }
-
-    results += ((k.bucketKey(0), (uniqVal.T, uniqVal.V, res.toList))) // taking 1st key, that is what we are expecting
   }
 
+/*
   private def buildModelsResult(k: Key, v: Value, objs: Array[(Key, scala.collection.mutable.Map[String, SavedMdlResult])]) {
     v.serializerType.toLowerCase match {
       case "kryo" => {
@@ -685,6 +691,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
       }
     }
   }
+*/
 
   /*
   private def loadObjFromDb(transId: Long, msgOrCont: MsgContainerInfo, key: List[String]): KamanjaData = {
@@ -802,7 +809,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 
     if (v != null) return v
     val results = new ArrayBuffer[(String, (Long, String, List[(String, String, String)]))]()
-    val buildAdapOne = (k: Key, v: Value) => {
+    val buildAdapOne = (k: Key, v: Any, serType: String, t: String, ver: Int) => {
       buildAdapterUniqueValue(k, v, results)
     }
     try {
@@ -829,6 +836,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   }
 
   private def localGetModelsResult(transId: Long, key: List[String]): scala.collection.mutable.Map[String, SavedMdlResult] = {
+/*
     val k = Key(KvBaseDefalts.defaultTime, key.toArray, 0L, 0)
     val txnCtxt = getTransactionContext(transId, false)
     if (txnCtxt != null) {
@@ -875,6 +883,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
       }
       return objs(0)._2
     }
+*/
     return scala.collection.mutable.Map[String, SavedMdlResult]()
   }
 
@@ -965,28 +974,30 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     false
   }
 
-  private def collectKeyAndValues(k: Key, v: Value, container: MsgContainerInfo): Unit = {
-    logger.debug("Key:(%d, %s, %d, %d), Value Info:(Ser:%s, Size:%d)".format(k.timePartition, k.bucketKey.mkString(","), k.transactionId, k.rowId, v.serializerType, v.serializedInfo.size))
-    val value = SerializeDeserialize.Deserialize(v.serializedInfo, _mdres, _classLoader, true, "")
-    val primarykey = value.PrimaryKeyData
-    val key = KeyWithBucketIdAndPrimaryKey(KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(k.bucketKey), k, primarykey != null && primarykey.size > 0, primarykey)
-    val v1 = MessageContainerBaseWithModFlag(false, value)
+  private def collectKeyAndValues(k: Key, v: Any, container: MsgContainerInfo): Unit = {
+    if (v != null && v.isInstanceOf[MessageContainerBase]) {
+      logger.debug("Key:(%d, %s, %d, %d)".format(k.timePartition, k.bucketKey.mkString(","), k.transactionId, k.rowId))
+      val value = v.asInstanceOf[MessageContainerBase]
+      val primarykey = value.PrimaryKeyData
+      val key = KeyWithBucketIdAndPrimaryKey(KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(k.bucketKey), k, primarykey != null && primarykey.size > 0, primarykey)
+      val v1 = MessageContainerBaseWithModFlag(false, value)
 
-    TxnContextCommonFunctions.WriteLockContainer(container)
-    try {
-      container.dataByBucketKey.put(key, v1)
-      container.dataByTmPart.put(key, v1)
+      TxnContextCommonFunctions.WriteLockContainer(container)
+      try {
+        container.dataByBucketKey.put(key, v1)
+        container.dataByTmPart.put(key, v1)
 
-      val bucketId = KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(k.bucketKey)
-      val loadKey = LoadKeyWithBucketId(bucketId, TimeRange(k.timePartition, k.timePartition), k.bucketKey)
-      container.loadedKeys.add(loadKey)
+        val bucketId = KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(k.bucketKey)
+        val loadKey = LoadKeyWithBucketId(bucketId, TimeRange(k.timePartition, k.timePartition), k.bucketKey)
+        container.loadedKeys.add(loadKey)
 
-    } catch {
-      case e: Exception => {
-        throw e
+      } catch {
+        case e: Exception => {
+          throw e
+        }
+      } finally {
+        TxnContextCommonFunctions.WriteUnlockContainer(container)
       }
-    } finally {
-      TxnContextCommonFunctions.WriteUnlockContainer(container)
     }
   }
 
@@ -999,7 +1010,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 
       val container = txnCtxt.getMsgContainer(containerName.toLowerCase, true) // adding if not there
       if (container != null) {
-        val buildOne = (k: Key, v: Value) => {
+        val buildOne = (k: Key, v: Any, serType: String, typ: String, ver: Int) => {
           collectKeyAndValues(k, v, container)
         }
 
@@ -1215,13 +1226,15 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     keys += parsed_key
   }
 */
-  override def SetClassLoader(cl: java.lang.ClassLoader): Unit = {
+  override def setClassLoader(cl: java.lang.ClassLoader): Unit = {
     _classLoader = cl
     if (_kryoSer != null)
       _kryoSer.SetClassLoader(_classLoader)
   }
 
-  override def SetMetadataResolveInfo(mdres: MdBaseResolveInfo): Unit = {
+  override def getClassLoader: java.lang.ClassLoader = _classLoader
+
+  override def setMetadataResolveInfo(mdres: MdBaseResolveInfo): Unit = {
     _mdres = mdres
   }
 
@@ -1284,14 +1297,14 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     _mgr.GetUserProperty(clusterId, key)
   }
 
-  override def SetJarPaths(jarPaths: collection.immutable.Set[String]): Unit = {
+  override def setJarPaths(jarPaths: collection.immutable.Set[String]): Unit = {
     if (jarPaths != null) {
       logger.debug("JarPaths:%s".format(jarPaths.mkString(",")))
     }
     _jarPaths = jarPaths
   }
 
-  override def SetDefaultDatastore(dataDataStoreInfo: String): Unit = {
+  override def setDefaultDatastore(dataDataStoreInfo: String): Unit = {
     if (dataDataStoreInfo != null)
       logger.debug("DefaultDatastore Information:%s".format(dataDataStoreInfo))
     if (_defaultDataStore == null) { // Doing it only once
@@ -1438,7 +1451,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 //  override def saveModelsResult(transId: Long, key: List[String], value: scala.collection.mutable.Map[String, SavedMdlResult]): Unit = {
 //    localSaveModelsResult(transId, key, value)
 //  }
-
+/*
   override def getChangedData(tempTransId: Long, includeMessages: Boolean, includeContainers: Boolean): scala.collection.immutable.Map[String, List[Key]] = {
     val changedContainersData = scala.collection.mutable.Map[String, List[Key]]()
 
@@ -1483,6 +1496,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 
     return changedContainersData.toMap
   }
+*/
 
   override def rollbackData(transId: Long): Unit = {
     removeTransactionContext(transId)
@@ -1563,8 +1577,8 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     val bos = new ByteArrayOutputStream(1024 * 1024)
     val dos = new DataOutputStream(bos)
 
-    val commiting_data = ArrayBuffer[(String, Array[(Key, Value)])]()
-    val dataForContainer = ArrayBuffer[(Key, Value)]()
+    val commiting_data = ArrayBuffer[(String, Array[(Key, String, Any)])]()
+    val dataForContainer = ArrayBuffer[(Key, String, Any)]()
 
     messagesOrContainers.foreach(v => {
       dataForContainer.clear
@@ -1578,8 +1592,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
           if (v.modified) {
             val k = entry.getKey()
             bos.reset
-            SerializeDeserialize.Serialize(v.value, dos)
-            dataForContainer += ((k.key, Value("manual", bos.toByteArray)))
+            dataForContainer += ((k.key, "manual", v.value))
           }
         }
         // Make sure we lock it if we need to populate mc
@@ -1617,12 +1630,13 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
         ("Qs" -> v1._2._3.map(qsres => { qsres._1 })) ~
         ("Res" -> v1._2._3.map(qsres => { qsres._2 }))
       val compjson = compact(render(json))
-      dataForContainer += ((Key(KvBaseDefalts.defaultTime, Array(v1._1), 0, 0), Value("json", compjson.getBytes("UTF8"))))
+      dataForContainer += ((Key(KvBaseDefalts.defaultTime, Array(v1._1), 0, 0), "json", compjson.getBytes("UTF8")))
     })
     if (dataForContainer.size > 0)
       commiting_data += (("AdapterUniqKvData", dataForContainer.toArray))
 
     dataForContainer.clear
+/*
     modelsResult.foreach(v1 => {
       val keystr = v1._1.bucketKey.mkString(",")
       val bktIdx = getParallelBucketIdx(keystr)
@@ -1638,8 +1652,10 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
       }
       dataForContainer += ((v1._1, Value("kryo", _kryoSer.SerializeObjectToByteArray(v1._2))))
     })
-    if (dataForContainer.size > 0)
-      commiting_data += (("ModelResults", dataForContainer.toArray))
+*/
+
+//    if (dataForContainer.size > 0)
+//      commiting_data += (("ModelResults", dataForContainer.toArray))
 
     /*
     dataForContainer.clear
@@ -1672,7 +1688,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
       logger.debug("Going to commit data into datastore.")
       commiting_data.foreach(cd => {
         cd._2.foreach(kv => {
-          logger.debug("ObjKey:(%d, %s, %d, %d), Value Info:(Ser:%s, Size:%d)".format(kv._1.timePartition, kv._1.bucketKey.mkString(","), kv._1.transactionId, kv._1.rowId, kv._2.serializerType, kv._2.serializedInfo.size))
+          logger.debug("ObjKey:(%d, %s, %d, %d)".format(kv._1.timePartition, kv._1.bucketKey.mkString(","), kv._1.transactionId, kv._1.rowId))
         })
       })
 
@@ -1783,7 +1799,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   override def getAllAdapterUniqKvDataInfo(keys: Array[String]): Array[(String, (Long, String, List[(String, String, String)]))] = {
     val results = new ArrayBuffer[(String, (Long, String, List[(String, String, String)]))]()
 
-    val buildAdapOne = (k: Key, v: Value) => {
+    val buildAdapOne = (k: Key, v: Any, serType: String, t: String, ver: Int) => {
       buildAdapterUniqueValue(k, v, results)
     }
 
@@ -1804,7 +1820,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     // BUGBUG:: Persist Remaining state (when other nodes goes down, this helps)
   }
 */
-
+/*
   override def PersistValidateAdapterInformation(validateUniqVals: Array[(String, String)]): Unit = {
     val ukvs = validateUniqVals.map(kv => {
       (Key(KvBaseDefalts.defaultTime, Array(kv._1), 0L, 0), Value("", kv._2.getBytes("UTF8")))
@@ -1826,7 +1842,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     logger.debug("Loaded %d Validate (Check Point) Adapter Information".format(results.size))
     results.toArray
   }
-
+*/
 /*
   override def ReloadKeys(tempTransId: Long, containerName: String, keys: List[Key]): Unit = {
     if (containerName == null || keys == null || keys.size == 0) return ;
@@ -2021,7 +2037,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   }
 
   override def setAdapterUniqKeyAndValues(keyAndValues: List[(String, String)]): Unit = {
-    val dataForContainer = ArrayBuffer[(Key, Value)]()
+    val dataForContainer = ArrayBuffer[(Key, String, Any)]()
     val emptyLst = List[(String, String, String)]()
     keyAndValues.foreach(v1 => {
       val bktIdx = getParallelBucketIdx(v1._1)
@@ -2042,21 +2058,21 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
         ("Qs" -> emptyLst.map(qsres => { qsres._1 })) ~
         ("Res" -> emptyLst.map(qsres => { qsres._2 }))
       val compjson = compact(render(json))
-      dataForContainer += ((Key(KvBaseDefalts.defaultTime, Array(v1._1), 0, 0), Value("json", compjson.getBytes("UTF8"))))
+      dataForContainer += ((Key(KvBaseDefalts.defaultTime, Array(v1._1), 0, 0), "json", compjson.getBytes("UTF8")))
     })
     if (dataForContainer.size > 0) {
       callSaveData(_defaultDataStore, Array(("AdapterUniqKvData", dataForContainer.toArray)))
     }
   }
 
-  private def callSaveData(dataStore: DataStoreOperations, data_list: Array[(String, Array[(Key, Value)])]): Unit = {
+  private def callSaveData(dataStore: DataStoreOperations, data_list: Array[(String, Array[(Key, String, Any)])]): Unit = {
     var failedWaitTime = 15000 // Wait time starts at 15 secs
     val maxFailedWaitTime = 60000 // Max Wait time 60 secs
     var doneSave = false
 
     while (!doneSave) {
       try {
-        dataStore.put(data_list)
+        dataStore.put(null, data_list)
         incrementWriteCount
         doneSave = true
       } catch {
@@ -2097,7 +2113,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   }
 
   // BUGBUG:: We can make all gets as simple template for exceptions handling and call that.
-  private def callGetData(dataStore: DataStoreOperations, containerName: String, callbackFunction: (Key, Value) => Unit): Unit = {
+  private def callGetData(dataStore: DataStoreOperations, containerName: String, callbackFunction: (Key, Any, String, String, Int) => Unit): Unit = {
     var failedWaitTime = 15000 // Wait time starts at 15 secs
     val maxFailedWaitTime = 60000 // Max Wait time 60 secs
     var doneGet = false
@@ -2146,7 +2162,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     }
   }
 
-  private def callGetData(dataStore: DataStoreOperations, containerName: String, keys: Array[Key], callbackFunction: (Key, Value) => Unit): Unit = {
+  private def callGetData(dataStore: DataStoreOperations, containerName: String, keys: Array[Key], callbackFunction: (Key, Any, String, String, Int) => Unit): Unit = {
     var failedWaitTime = 15000 // Wait time starts at 15 secs
     val maxFailedWaitTime = 60000 // Max Wait time 60 secs
     var doneGet = false
@@ -2195,7 +2211,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     }
   }
 
-  private def callGetData(dataStore: DataStoreOperations, containerName: String, timeRanges: Array[TimeRange], callbackFunction: (Key, Value) => Unit): Unit = {
+  private def callGetData(dataStore: DataStoreOperations, containerName: String, timeRanges: Array[TimeRange], callbackFunction: (Key, Any, String, String, Int) => Unit): Unit = {
     var failedWaitTime = 15000 // Wait time starts at 15 secs
     val maxFailedWaitTime = 60000 // Max Wait time 60 secs
     var doneGet = false
@@ -2244,7 +2260,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     }
   }
 
-  private def callGetData(dataStore: DataStoreOperations, containerName: String, timeRanges: Array[TimeRange], bucketKeys: Array[Array[String]], callbackFunction: (Key, Value) => Unit): Unit = {
+  private def callGetData(dataStore: DataStoreOperations, containerName: String, timeRanges: Array[TimeRange], bucketKeys: Array[Array[String]], callbackFunction: (Key, Any, String, String, Int) => Unit): Unit = {
     var failedWaitTime = 15000 // Wait time starts at 15 secs
     val maxFailedWaitTime = 60000 // Max Wait time 60 secs
     var doneGet = false
@@ -2293,7 +2309,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     }
   }
 
-  private def callGetData(dataStore: DataStoreOperations, containerName: String, bucketKeys: Array[Array[String]], callbackFunction: (Key, Value) => Unit): Unit = {
+  private def callGetData(dataStore: DataStoreOperations, containerName: String, bucketKeys: Array[Array[String]], callbackFunction: (Key, Any, String, String, Int) => Unit): Unit = {
     var failedWaitTime = 15000 // Wait time starts at 15 secs
     val maxFailedWaitTime = 60000 // Max Wait time 60 secs
     var doneGet = false
@@ -2387,11 +2403,19 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   def getAllObjectsFromNodeCache(nodeId: String): Array[KeyValuePair] = null
 
   // Saving & getting data
-  def saveData(key: String, value: Any): Unit = {}
-  def getData(key: String): Any = {}
+  def saveData(key: String, value: Array[Byte]): Unit = {}
+  def saveData(containerName: String, key: String, value: Array[Byte]): Unit = {}
+  def getData(key: String): Array[Byte] = null
+  def getData(containerName: String, key: String): Array[Byte] = null
 
   // Zookeeper functions
   def setDataToZNode(zNodePath: String, value: Array[Byte]): Unit = {}
   def getDataFromZNode(zNodePath: String): Array[Byte] = null
+
+  def getLeaderInfo(): ClusterStatus = null
+
+  // This post the message into where ever these messages are associated immediately
+  // Later this will be posted to logical queue where it can execute on logical partition.
+  def postMessages(msgs: Array[MessageContainerBase]): Unit = {}
 
 }

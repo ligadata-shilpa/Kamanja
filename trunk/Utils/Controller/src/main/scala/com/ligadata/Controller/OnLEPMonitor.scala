@@ -28,7 +28,7 @@ import org.apache.logging.log4j.{ Logger, LogManager }
 import scala.io.Source
 import org.json4s.jackson.JsonMethods._
 import scala.sys.process.{ ProcessIO, Process }
-import com.ligadata.KamanjaBase.{NodeContext, DataDelimiters}
+import com.ligadata.KamanjaBase.{MessageContainerBase, NodeContext, DataDelimiters}
 import com.ligadata.KamanjaVersion.KamanjaVersion
 
 object KamanjaMonitorConfig {
@@ -64,14 +64,13 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
 
   }
 
-  def execute(data: Array[Byte], format: String, uniqueKey: PartitionUniqueRecordKey, uniqueVal: PartitionUniqueRecordValue, readTmNanoSecs: Long, readTmMilliSecs: Long, ignoreOutput: Boolean, associatedMsg: String, delimiters: DataDelimiters): Unit = {
-
-    if (format.equalsIgnoreCase("json")) {
-      //if (data.charAt(0).toString.equals("{")) {
-      agg.processJsonMessage(parse(new String(data)).values.asInstanceOf[Map[String, Any]])
-    } else {
-      agg.processCSVMessage(new String(data), uniqueVal.asInstanceOf[KafkaPartitionUniqueRecordValue].Offset)
-    }
+  protected override def executeMessage(msg: MessageContainerBase, data: Array[Byte], uniqueKey: PartitionUniqueRecordKey, uniqueVal: PartitionUniqueRecordValue, readTmNanoSecs: Long, readTmMilliSecs: Long, deserializerName: String): Unit = {
+//    if (format.equalsIgnoreCase("json")) {
+//      //if (data.charAt(0).toString.equals("{")) {
+//      agg.processJsonMessage(parse(new String(data)).values.asInstanceOf[Map[String, Any]])
+//    } else {
+//      agg.processCSVMessage(new String(data), uniqueVal.asInstanceOf[KafkaPartitionUniqueRecordValue].Offset)
+//    }
   }
 }
 
@@ -299,19 +298,11 @@ class KamanjaMonitor {
       statusQs.foreach(qConf => {
         val thisConf: AdapterConfiguration = new AdapterConfiguration
         thisConf.Name = qConf.getOrElse("Name", "").toString
-        thisConf.formatName = qConf.getOrElse("Format", "").toString
-        thisConf.validateAdapterName = qConf.getOrElse("InputAdapterToVerify", "").toString
-        thisConf.failedEventsAdapterName = qConf.getOrElse("FailedEventsAdapter", "").toString
         thisConf.className = qConf.getOrElse("ClassName", "").toString
         thisConf.jarName = qConf.getOrElse("JarName", "").toString
         thisConf.dependencyJars = qConf.getOrElse("DependencyJars", "").asInstanceOf[List[String]].toSet
         thisConf.adapterSpecificCfg = qConf.getOrElse("AdapterSpecificCfg", "").toString
         val delimiterString = qConf.getOrElse("DelimiterString", null)
-        thisConf.keyAndValueDelimiter = qConf.getOrElse("KeyAndValueDelimiter", "").toString
-        val fieldDelimiter = qConf.getOrElse("FieldDelimiter", null)
-        thisConf.fieldDelimiter = if (fieldDelimiter != null) fieldDelimiter.toString else if (delimiterString != null) delimiterString.toString else "" 
-        thisConf.valueDelimiter = qConf.getOrElse("ValueDelimiter", "").toString
-        thisConf.associatedMsg = qConf.getOrElse("AssociatedMessage", "").toString
 
         // Ignore if any value in the adapter was not set.
         if (thisConf.Name.size > 0 &&
@@ -330,19 +321,11 @@ class KamanjaMonitor {
       outputQs.foreach(qConf => {
         val thisConf: AdapterConfiguration = new AdapterConfiguration
         thisConf.Name = qConf.getOrElse("Name", "").toString
-        thisConf.formatName = qConf.getOrElse("Format", "").toString
-        thisConf.validateAdapterName = qConf.getOrElse("InputAdapterToVerify", "").toString
-        thisConf.failedEventsAdapterName = qConf.getOrElse("FailedEventsAdapter", "").toString
         thisConf.className = qConf.getOrElse("ClassName", "").toString
         thisConf.jarName = qConf.getOrElse("JarName", "").toString
         thisConf.dependencyJars = qConf.getOrElse("DependencyJars", "").asInstanceOf[List[String]].toSet
         thisConf.adapterSpecificCfg = qConf.getOrElse("AdapterSpecificCfg", "").toString
         val delimiterString = qConf.getOrElse("DelimiterString", null)
-        thisConf.keyAndValueDelimiter = qConf.getOrElse("KeyAndValueDelimiter", "").toString
-        val fieldDelimiter = qConf.getOrElse("FieldDelimiter", null)
-        thisConf.fieldDelimiter = if (fieldDelimiter != null) fieldDelimiter.toString else if (delimiterString != null) delimiterString.toString else "" 
-        thisConf.valueDelimiter = qConf.getOrElse("ValueDelimiter", "").toString
-        thisConf.associatedMsg = qConf.getOrElse("AssociatedMessage", "").toString
 
         // Ignore if any value in the adapter was not set.
         if (thisConf.Name.size > 0 &&

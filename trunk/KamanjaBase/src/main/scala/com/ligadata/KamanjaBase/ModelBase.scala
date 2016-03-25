@@ -26,8 +26,8 @@ import org.json4s._
 import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
 import java.io.{DataInputStream, DataOutputStream}
-import com.ligadata.KvBase.{Key, Value, TimeRange /* , KvBaseDefalts, KeyWithBucketIdAndPrimaryKey, KeyWithBucketIdAndPrimaryKeyCompHelper */}
-import com.ligadata.Utils.{KamanjaLoaderInfo}
+import com.ligadata.KvBase.{Key, TimeRange /* , KvBaseDefalts, KeyWithBucketIdAndPrimaryKey, KeyWithBucketIdAndPrimaryKeyCompHelper */}
+import com.ligadata.Utils.{KamanjaLoaderInfo, ClusterStatus}
 import com.ligadata.HeartBeat._
 
 import scala.collection.mutable.ArrayBuffer
@@ -259,15 +259,16 @@ trait EnvContext extends Monitorable {
 
   def getPropertyValue(clusterId: String, key: String): String
 
-  def SetClassLoader(cl: java.lang.ClassLoader): Unit
+  def setClassLoader(cl: java.lang.ClassLoader): Unit
+  def getClassLoader: java.lang.ClassLoader
 
-  def SetMetadataResolveInfo(mdres: MdBaseResolveInfo): Unit
+  def setMetadataResolveInfo(mdres: MdBaseResolveInfo): Unit
 
   // Setting JarPaths
-  def SetJarPaths(jarPaths: collection.immutable.Set[String]): Unit
+  def setJarPaths(jarPaths: collection.immutable.Set[String]): Unit
 
   // Datastores
-  def SetDefaultDatastore(dataDataStoreInfo: String): Unit
+  def setDefaultDatastore(dataDataStoreInfo: String): Unit
 
   // Registerd Messages/Containers
 //  def RegisterMessageOrContainers(containersInfo: Array[ContainerNameAndDatastoreInfo]): Unit
@@ -338,16 +339,16 @@ trait EnvContext extends Monitorable {
 //  def clearIntermediateResults(unloadMsgsContainers: Array[String]): Unit
 
   // Changed Data & Reloading data are Time in MS, Bucket Key & TransactionId
-  def getChangedData(tempTransId: Long, includeMessages: Boolean, includeContainers: Boolean): scala.collection.immutable.Map[String, List[Key]]
+//  def getChangedData(tempTransId: Long, includeMessages: Boolean, includeContainers: Boolean): scala.collection.immutable.Map[String, List[Key]]
 
 //  def ReloadKeys(tempTransId: Long, containerName: String, keys: List[Key]): Unit
 
   // Set Reload Flag
   //  def setReloadFlag(transId: Long, containerName: String): Unit
 
-  def PersistValidateAdapterInformation(validateUniqVals: Array[(String, String)]): Unit
+//  def PersistValidateAdapterInformation(validateUniqVals: Array[(String, String)]): Unit
 
-  def GetValidateAdapterInformation: Array[(String, String)]
+//  def GetValidateAdapterInformation: Array[(String, String)]
 
   /**
     * Answer an empty instance of the message or container with the supplied fully qualified class name.  If the name is
@@ -375,6 +376,7 @@ trait EnvContext extends Monitorable {
   def getAllNodeLocks(nodeId: String): Array[String]
 
   // Saving & getting temporary objects in cache
+  // value should be Array[Byte]
   def saveObjectInClusterCache(key: String, value: Any): Unit
   def saveObjectInNodeCache(nodeId: String, key: String, value: Any): Unit
 
@@ -388,12 +390,20 @@ trait EnvContext extends Monitorable {
   def getAllObjectsFromNodeCache(nodeId: String): Array[KeyValuePair]
 
   // Saving & getting data
-  def saveData(key: String, value: Any): Unit
-  def getData(key: String): Any
+  def saveData(key: String, value: Array[Byte]): Unit
+  def saveData(containerName: String, key: String, value: Array[Byte]): Unit
+  def getData(key: String): Array[Byte]
+  def getData(containerName: String, key: String): Array[Byte]
 
   // Zookeeper functions
   def setDataToZNode(zNodePath: String, value: Array[Byte]): Unit
   def getDataFromZNode(zNodePath: String): Array[Byte]
+
+  def getLeaderInfo(): ClusterStatus
+
+  // This post the message into where ever these messages are associated immediately
+  // Later this will be posted to logical queue where it can execute on logical partition.
+  def postMessages(msgs: Array[MessageContainerBase]): Unit
 }
 
 // partitionKey is the one used for this message

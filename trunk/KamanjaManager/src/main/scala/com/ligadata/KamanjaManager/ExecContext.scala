@@ -49,44 +49,44 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
 
   private val adapterInfoMap = ProcessedAdaptersInfo.getOneInstance(this.hashCode(), true)
 
-  private def SendFailedEvent(data: Array[Byte], format: String, associatedMsg: String, uk: String, uv: String, e: Throwable): Unit = {
-/*
-    if (failedEventsAdapter == null)
-      return
+  /*
+    private def SendFailedEvent(data: Array[Byte], format: String, associatedMsg: String, uk: String, uv: String, e: Throwable): Unit = {
+      if (failedEventsAdapter == null)
+        return
 
-    val failedTm = failedEventDtFormat.format(new java.util.Date(System.currentTimeMillis))
+      val failedTm = failedEventDtFormat.format(new java.util.Date(System.currentTimeMillis))
 
-    val evntData = new String(data)
+      val evntData = new String(data)
 
-    val failMsg = if (e != null) e.getMessage else ""
-    val stackTrace = if (e != null) StackTrace.ThrowableTraceString(e) else ""
+      val failMsg = if (e != null) e.getMessage else ""
+      val stackTrace = if (e != null) StackTrace.ThrowableTraceString(e) else ""
 
-    val out = ("MessageType" -> associatedMsg) ~
-      ("Deserializer" -> format) ~
-      ("SourceAdapter" -> input.inputConfig.Name) ~
-      ("FailedAt" -> failedTm) ~
-      ("EventData" -> evntData) ~
-      ("Partition" -> ("Key" -> uk) ~ ("Value" -> uv)) ~
-      ("Failure" -> ("Message" -> failMsg) ~ ("StackTrace" -> stackTrace))
-    val json = compact(render(out))
+      val out = ("MessageType" -> associatedMsg) ~
+        ("Deserializer" -> format) ~
+        ("SourceAdapter" -> input.inputConfig.Name) ~
+        ("FailedAt" -> failedTm) ~
+        ("EventData" -> evntData) ~
+        ("Partition" -> ("Key" -> uk) ~ ("Value" -> uv)) ~
+        ("Failure" -> ("Message" -> failMsg) ~ ("StackTrace" -> stackTrace))
+      val json = compact(render(out))
 
-    try {
-      failedEventsAdapter.send(json, "")
-    } catch {
-      case fae: FatalAdapterException => {
-        LOG.error("Failed to send data to failedevent adapter:" + failedEventsAdapter.inputConfig.Name, fae)
-      }
-      case e: Exception => {
-        LOG.error("Failed to send data to failedevent adapter:" + failedEventsAdapter.inputConfig.Name, e)
-      }
-      case t: Throwable => {
-        LOG.error("Failed to send data to failedevent adapter:" + failedEventsAdapter.inputConfig.Name, t)
+      try {
+        failedEventsAdapter.send(json, "")
+      } catch {
+        case fae: FatalAdapterException => {
+          LOG.error("Failed to send data to failedevent adapter:" + failedEventsAdapter.inputConfig.Name, fae)
+        }
+        case e: Exception => {
+          LOG.error("Failed to send data to failedevent adapter:" + failedEventsAdapter.inputConfig.Name, e)
+        }
+        case t: Throwable => {
+          LOG.error("Failed to send data to failedevent adapter:" + failedEventsAdapter.inputConfig.Name, t)
+        }
       }
     }
-*/
-  }
+  */
 
-  def execute(data: Array[Byte], format: String, uniqueKey: PartitionUniqueRecordKey, uniqueVal: PartitionUniqueRecordValue, readTmNanoSecs: Long, readTmMilliSecs: Long, ignoreOutput: Boolean, associatedMsg: String, delimiters: DataDelimiters): Unit = {
+  def executeMessage(msg: MessageContainerBase, data: Array[Byte], uniqueKey: PartitionUniqueRecordKey, uniqueVal: PartitionUniqueRecordValue, readTmNanoSecs: Long, readTmMilliSecs: Long, deserializerName: String): Unit = {
     try {
       val curLoader = KamanjaConfiguration.metadataLoader.loader // Protecting from changing it between below statements
       if (curLoader != null && previousLoader != curLoader) { // Checking for every messages and setting when changed. We can set for every message, but the problem is it tries to do SecurityManager check every time.
@@ -106,9 +106,10 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
       val txnCtxt = new TransactionContext(transId, nodeContext, data, uk)
       LOG.debug("Processing uniqueKey:%s, uniqueVal:%s, Datasize:%d".format(uk, uv, data.size))
 
-      var outputResults = ArrayBuffer[(String, String, String)]() // Adapter/Queue name, Partition Key & output message 
+//      var outputResults = ArrayBuffer[(String, String, String)]() // Adapter/Queue name, Partition Key & output message
 
       try {
+/*
         val transformStartTime = System.nanoTime
         var xformedmsgs = Array[(String, MsgContainerObjAndTransformInfo, InputData)]()
         try {
@@ -145,11 +146,13 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
             }
           })
         }
+*/
       } catch {
         case e: Exception => {
           LOG.error("Failed to execute message.", e)
         }
       } finally {
+/*
         // LOG.debug("UniqueKeyValue:%s => %s".format(uk, uv))
         val dispMsg = if (KamanjaConfiguration.waitProcessingTime > 0) new String(data) else ""
         if (KamanjaConfiguration.waitProcessingTime > 0 && KamanjaConfiguration.waitProcessingSteps(1)) {
@@ -188,6 +191,7 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
             }
           }
         }
+*/
         val sendOutStartTime = System.nanoTime
         /*
                 val outputs = outputResults.groupBy(_._1)
@@ -244,9 +248,9 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
 
         if (KamanjaConfiguration.waitProcessingTime > 0 && KamanjaConfiguration.waitProcessingSteps(3)) {
           try {
-            LOG.debug("Started Waiting in Step 3 (before removing sent data) for Message:" + dispMsg)
-            Thread.sleep(KamanjaConfiguration.waitProcessingTime)
-            LOG.debug("Done Waiting in Step 3 (before removing sent data) for Message:" + dispMsg)
+//            LOG.debug("Started Waiting in Step 3 (before removing sent data) for Message:" + dispMsg)
+//            Thread.sleep(KamanjaConfiguration.waitProcessingTime)
+//            LOG.debug("Done Waiting in Step 3 (before removing sent data) for Message:" + dispMsg)
           } catch {
             case e: Exception => {
               LOG.debug("Failed to Wait.", e)
@@ -286,7 +290,7 @@ object ExecContextFactoryImpl extends ExecContextFactory {
 }
 
 //--------------------------------
-
+/*
 object CollectKeyValsFromValidation {
   // Key to (Value, xCntr, xTotl & TxnId)
   private[this] val keyVals = scala.collection.mutable.Map[String, (String, Int, Int, Long)]()
@@ -423,4 +427,5 @@ object ValidateExecContextFactoryImpl extends ExecContextFactory {
     new ValidateExecCtxtImpl(input, curPartitionKey, nodeContext)
   }
 }
+*/
 

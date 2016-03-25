@@ -41,7 +41,7 @@ import com.ligadata.kamanja.metadataload.MetadataLoad
 // import com.ligadata.keyvaluestore._
 import com.ligadata.HeartBeat.{MonitoringContext, HeartBeatUtil}
 import com.ligadata.StorageBase.{DataStore, Transaction}
-import com.ligadata.KvBase.{Key, Value, TimeRange}
+import com.ligadata.KvBase.{Key, TimeRange}
 
 import scala.util.parsing.json.JSON
 import scala.util.parsing.json.{JSONObject, JSONArray}
@@ -1514,7 +1514,7 @@ object ModelUtils {
     if (userid != None) MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.GETOBJECT, AuditConstants.MODEL, AuditConstants.SUCCESS, "", dispkey)
     try {
       var obj = PersistenceUtils.GetObject(key.toLowerCase, "models")
-      var apiResult = new ApiResult(ErrorCodeConstants.Success, "GetModelDefFromCache", new String(obj.serializedInfo), ErrorCodeConstants.Get_Model_From_DB_Successful + ":" + dispkey)
+      var apiResult = new ApiResult(ErrorCodeConstants.Success, "GetModelDefFromCache", new String(obj._2.asInstanceOf[Array[Byte]]), ErrorCodeConstants.Get_Model_From_DB_Successful + ":" + dispkey)
       apiResult.toString()
     } catch {
       case e: Exception => {
@@ -1536,9 +1536,9 @@ object ModelUtils {
 
     var processed: Long = 0L
     val storeInfo = PersistenceUtils.GetTableStoreMap("model_config_objects")
-    storeInfo._2.get(storeInfo._1, { (k: Key, v: Value) => {
+    storeInfo._2.get(storeInfo._1, { (k: Key, v: Any, serType: String, typ: String, ver:Int) => {
       processed += 1
-      val conf = serializer.DeserializeObjectFromByteArray(v.serializedInfo).asInstanceOf[Map[String, List[String]]]
+      val conf = serializer.DeserializeObjectFromByteArray(v.asInstanceOf[Array[Byte]]).asInstanceOf[Map[String, List[String]]]
       MdMgr.GetMdMgr.AddModelConfig(k.bucketKey.mkString("."), conf)
     }
     })
@@ -1561,7 +1561,7 @@ object ModelUtils {
       logger.debug("Fetch the object " + key + " from database ")
       val obj = PersistenceUtils.GetObject(key.toLowerCase, "models")
       logger.debug("Deserialize the object " + key)
-      val model = serializer.DeserializeObjectFromByteArray(obj.serializedInfo)
+      val model = serializer.DeserializeObjectFromByteArray(obj._2.asInstanceOf[Array[Byte]])
       logger.debug("Get the jar from database ")
       val modDef = model.asInstanceOf[ModelDef]
       MetadataAPIImpl.DownloadJarFromDB(modDef)

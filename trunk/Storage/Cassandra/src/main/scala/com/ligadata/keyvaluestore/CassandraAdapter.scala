@@ -41,8 +41,8 @@ import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
 import com.ligadata.Utils.{ KamanjaLoaderInfo }
 
-import com.ligadata.KvBase.{ Key, Value, TimeRange }
-import com.ligadata.StorageBase.{ DataStore, Transaction, StorageAdapterObj }
+import com.ligadata.KvBase.{ Key, TimeRange }
+import com.ligadata.StorageBase.{ DataStore, Transaction, StorageAdapterFactory, Value }
 import java.util.{ Date, Calendar, TimeZone }
 import java.text.SimpleDateFormat
 import java.io.File
@@ -326,7 +326,7 @@ class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
             }
           }
         }
-        var query = "create table if not exists " + fullTableName + "(bucketkey varchar,timepartition bigint,transactionid bigint, rowid int, serializertype varchar, serializedinfo blob, primary key(bucketkey,timepartition,transactionid,rowid));"
+        var query = "create table if not exists " + fullTableName + "(bucketkey varchar,timepartition bigint,transactionid bigint, rowid int, schemaid int, serializertype varchar, serializedinfo blob, primary key(bucketkey,timepartition,transactionid,rowid));"
         session.execute(query);
       }
     } catch {
@@ -386,14 +386,14 @@ class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
     try {
       CheckTableExists(containerName)
       tableName = toFullTableName(containerName)
-      var query = "UPDATE " + tableName + " SET serializertype = ? , serializedinfo = ? where timepartition = ? and bucketkey = ? and transactionid = ? and rowid = ?;"
+      var query = "UPDATE " + tableName + " SET schemaid = ? , serializertype = ? , serializedinfo = ? where timepartition = ? and bucketkey = ? and transactionid = ? and rowid = ?;"
       var prepStmt = preparedStatementsMap.getOrElse(query, null)
       if (prepStmt == null) {
         prepStmt = session.prepare(query)
         preparedStatementsMap.put(query, prepStmt)
       }
       var byteBuf = ByteBuffer.wrap(value.serializedInfo.toArray[Byte]);
-      session.execute(prepStmt.bind(value.serializerType,
+      session.execute(prepStmt.bind(new java.lang.Integer(value.schemaId), value.serializerType,
 				    byteBuf,
 				    new java.lang.Long(key.timePartition),
 				    bucketKeyToString(key.bucketKey),
@@ -415,7 +415,7 @@ class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
         var containerName = li._1
         CheckTableExists(containerName)
         tableName = toFullTableName(containerName)
-        var query = "UPDATE " + tableName + " SET serializertype = ? , serializedinfo = ? where timepartition = ? and bucketkey = ? and transactionid = ? and rowid = ?;"
+        var query = "UPDATE " + tableName + " SET schemaid = ? , serializertype = ? , serializedinfo = ? where timepartition = ? and bucketkey = ? and transactionid = ? and rowid = ?;"
         var prepStmt = preparedStatementsMap.getOrElse(query, null)
         if (prepStmt == null) {
           prepStmt = session.prepare(query)
@@ -440,7 +440,7 @@ class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
           // whether updates are done in bulk or one at a time. By default we are doing this 
           // one at a time until we have a better solution.
           if (batchPuts.equalsIgnoreCase("YES")) {
-            batch.add(prepStmt.bind(value.serializerType,
+            batch.add(prepStmt.bind(new java.lang.Integer(value.schemaId), value.serializerType,
 				    byteBuf,
 				    new java.lang.Long(key.timePartition),
 				    bucketKeyToString(key.bucketKey),
@@ -448,7 +448,7 @@ class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
 				    new java.lang.Integer(key.rowId)).
 		      setConsistencyLevel(consistencylevelWrite))
           } else {
-            session.execute(prepStmt.bind(value.serializerType,
+            session.execute(prepStmt.bind(new java.lang.Integer(value.schemaId), value.serializerType,
 					  byteBuf,
 					  new java.lang.Long(key.timePartition),
 					  bucketKeyToString(key.bucketKey),
@@ -552,44 +552,46 @@ class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
   }
 
   private def processRow(rs: Row, callbackFunction: (Key, Value) => Unit) {
-    var timePartition = rs.getLong("timepartition")
-    var keyStr = rs.getString("bucketkey")
-    var tId = rs.getLong("transactionid")
-    var rId = rs.getInt("rowid")
-    var st = rs.getString("serializertype")
-    var buf = rs.getBytes("serializedinfo")
+    val timePartition = rs.getLong("timepartition")
+    val keyStr = rs.getString("bucketkey")
+    val tId = rs.getLong("transactionid")
+    val rId = rs.getInt("rowid")
+    val schemaid = rs.getInt("schemaid")
+    val st = rs.getString("serializertype")
+    val buf = rs.getBytes("serializedinfo")
     // format the data to create Key/Value
     val bucketKey = strToBucketKey(keyStr)
-    var key = new Key(timePartition, bucketKey, tId, rId)
-    var ba = convertByteBufToArrayOfBytes(buf)
-    var value = new Value(st, ba)
+    val key = new Key(timePartition, bucketKey, tId, rId)
+    val ba = convertByteBufToArrayOfBytes(buf)
+    val value = new Value(schemaid, st, ba)
 			 (callbackFunction)(key, value)
   }
 
   private def processRow(key: Key, rs: Row, callbackFunction: (Key, Value) => Unit) {
-    var st = rs.getString("serializertype")
-    var buf = rs.getBytes("serializedinfo")
-    var ba = convertByteBufToArrayOfBytes(buf)
-    var value = new Value(st, ba)
+    val schemaid = rs.getInt("schemaid")
+    val st = rs.getString("serializertype")
+    val buf = rs.getBytes("serializedinfo")
+    val ba = convertByteBufToArrayOfBytes(buf)
+    val value = new Value(schemaid, st, ba)
 			 (callbackFunction)(key, value)
   }
 
   private def processKey(rs: Row, callbackFunction: (Key) => Unit) {
-    var timePartition = rs.getLong("timepartition")
-    var keyStr = rs.getString("bucketkey")
-    var tId = rs.getLong("transactionid")
-    var rId = rs.getInt("rowid")
+    val timePartition = rs.getLong("timepartition")
+    val keyStr = rs.getString("bucketkey")
+    val tId = rs.getLong("transactionid")
+    val rId = rs.getInt("rowid")
     // format the data to create Key/Value
     val bucketKey = strToBucketKey(keyStr)
-    var key = new Key(timePartition, bucketKey, tId, rId)
+    val key = new Key(timePartition, bucketKey, tId, rId)
 		     (callbackFunction)(key)
   }
 
   private def getData(tableName: String, query: String, callbackFunction: (Key, Value) => Unit): Unit = {
     try {
-      var getDataStmt = new SimpleStatement(query)
-      var rows = session.execute(getDataStmt)
-      var rs: Row = null
+      val getDataStmt = new SimpleStatement(query)
+      val rows = session.execute(getDataStmt)
+      val rs: Row = null
       for (rs <- rows) {
         processRow(rs, callbackFunction)
       }
@@ -661,7 +663,7 @@ class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
     var tableName = toFullTableName(containerName)
     try {
       CheckTableExists(containerName)
-      var query = "select serializertype,serializedinfo from " + tableName + " where timepartition = ? and bucketkey = ? and transactionid = ? and rowid = ?"
+      var query = "select schemaid,serializertype,serializedinfo from " + tableName + " where timepartition = ? and bucketkey = ? and transactionid = ? and rowid = ?"
       var prepStmt = preparedStatementsMap.getOrElse(query, null)
       if (prepStmt == null) {
         prepStmt = session.prepare(query)
@@ -689,7 +691,7 @@ class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
   override def get(containerName: String, time_ranges: Array[TimeRange], callbackFunction: (Key, Value) => Unit): Unit = {
     CheckTableExists(containerName)
     var tableName = toFullTableName(containerName)
-    var query = "select timepartition,bucketkey,transactionid,rowid,serializertype,serializedinfo from " + tableName + " where timepartition >= ? and timepartition <= ? ALLOW FILTERING;"
+    var query = "select timepartition,bucketkey,transactionid,rowid,schemaid,serializertype,serializedinfo from " + tableName + " where timepartition >= ? and timepartition <= ? ALLOW FILTERING;"
     var prepStmt = preparedStatementsMap.getOrElse(query, null)
     if (prepStmt == null) {
       prepStmt = session.prepare(query)
@@ -730,7 +732,7 @@ class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
     var tableName = toFullTableName(containerName)
     try {
       CheckTableExists(containerName)
-      var query = "select timepartition,bucketkey,transactionid,rowid,serializertype,serializedinfo from " + tableName + " where timepartition >= ?  and timepartition <= ?  and bucketkey = ? "
+      var query = "select timepartition,bucketkey,transactionid,rowid,schemaid,serializertype,serializedinfo from " + tableName + " where timepartition >= ?  and timepartition <= ?  and bucketkey = ? "
       var prepStmt = preparedStatementsMap.getOrElse(query, null)
       if (prepStmt == null) {
         prepStmt = session.prepare(query)
@@ -788,7 +790,7 @@ class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
     var tableName = toFullTableName(containerName)
     try {
       CheckTableExists(containerName)
-      var query = "select timepartition,bucketkey,transactionid,rowid,serializertype,serializedinfo from " + tableName + " where  bucketkey = ? "
+      var query = "select timepartition,bucketkey,transactionid,rowid,schemaid,serializertype,serializedinfo from " + tableName + " where  bucketkey = ? "
       var prepStmt = preparedStatementsMap.getOrElse(query, null)
       if (prepStmt == null) {
         prepStmt = session.prepare(query)
@@ -1364,6 +1366,6 @@ class CassandraAdapterTx(val parent: DataStore) extends Transaction {
 }
 
 // To create Cassandra Datastore instance
-object CassandraAdapter extends StorageAdapterObj {
+object CassandraAdapter extends StorageAdapterFactory {
   override def CreateStorageAdapter(kvManagerLoader: KamanjaLoaderInfo, datastoreConfig: String): DataStore = new CassandraAdapter(kvManagerLoader, datastoreConfig)
 }

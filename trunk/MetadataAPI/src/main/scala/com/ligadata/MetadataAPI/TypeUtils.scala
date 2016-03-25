@@ -38,7 +38,7 @@ import com.ligadata.kamanja.metadataload.MetadataLoad
 // import com.ligadata.keyvaluestore._
 import com.ligadata.HeartBeat.HeartBeatUtil
 import com.ligadata.StorageBase.{ DataStore, Transaction }
-import com.ligadata.KvBase.{ Key, Value, TimeRange }
+import com.ligadata.KvBase.{ Key, TimeRange }
 
 import scala.util.parsing.json.JSON
 import scala.util.parsing.json.{ JSONObject, JSONArray }
@@ -456,7 +456,7 @@ object TypeUtils {
       logger.debug("Fetch the object " + key + " from database ")
       val obj = PersistenceUtils.GetObject(key.toLowerCase, "types")
       logger.debug("Deserialize the object " + key)
-      val typ = serializer.DeserializeObjectFromByteArray(obj.serializedInfo)
+      val typ = serializer.DeserializeObjectFromByteArray(obj._2.asInstanceOf[Array[Byte]])
       if (typ != null) {
         logger.debug("Add the object " + key + " to the cache ")
         MetadataAPIImpl.AddObjectToCache(typ, MdMgr.GetMdMgr)
