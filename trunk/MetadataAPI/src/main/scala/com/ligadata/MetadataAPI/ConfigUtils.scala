@@ -194,18 +194,14 @@ object ConfigUtils {
      * @param jarName
      * @param dependencyJars
      * @param adapterSpecificCfg
-     * @param inputAdapterToVerify
-     * @param keyAndValueDelimiter
-     * @param associatedMsg
      * @return
      */
   def AddAdapter(name: String, typeString: String, dataFormat: String, className: String,
                  jarName: String, dependencyJars: List[String],
-                 adapterSpecificCfg: String, inputAdapterToVerify: String, keyAndValueDelimiter: String, fieldDelimiter: String, valueDelimiter: String, associatedMsg: String, failedEventsAdapter: String): String = {
+                 adapterSpecificCfg: String): String = {
     try {
       // save in memory
-      val ai = MdMgr.GetMdMgr.MakeAdapter(name, typeString, dataFormat, className, jarName,
-        dependencyJars, adapterSpecificCfg, inputAdapterToVerify, keyAndValueDelimiter, fieldDelimiter, valueDelimiter, associatedMsg, failedEventsAdapter)
+      val ai = MdMgr.GetMdMgr.MakeAdapter(name, typeString, dataFormat, className, jarName, dependencyJars, adapterSpecificCfg)
       MdMgr.GetMdMgr.AddAdapter(ai)
       // save in database
       val key = "AdapterInfo." + name
@@ -232,15 +228,12 @@ object ConfigUtils {
      * @param jarName
      * @param dependencyJars
      * @param adapterSpecificCfg
-     * @param inputAdapterToVerify
-     * @param keyAndValueDelimiter
-     * @param associatedMsg
      * @return
      */
   def UpdateAdapter(name: String, typeString: String, dataFormat: String, className: String,
                     jarName: String, dependencyJars: List[String],
-                    adapterSpecificCfg: String, inputAdapterToVerify: String, keyAndValueDelimiter: String, fieldDelimiter: String, valueDelimiter: String, associatedMsg: String, failedEventsAdapter: String): String = {
-    AddAdapter(name, typeString, dataFormat, className, jarName, dependencyJars, adapterSpecificCfg, inputAdapterToVerify, keyAndValueDelimiter, fieldDelimiter, valueDelimiter, associatedMsg, failedEventsAdapter)
+                    adapterSpecificCfg: String): String = {
+    AddAdapter(name, typeString, dataFormat, className, jarName, dependencyJars, adapterSpecificCfg)
   }
 
     /**
@@ -687,39 +680,12 @@ object ConfigUtils {
                 if (adap.contains("AdapterSpecificCfg")) {
                   ascfg = getStringFromJsonNode(adap.get("AdapterSpecificCfg"))
                 }
-                var inputAdapterToVerify: String = null
-                if (adap.contains("InputAdapterToVerify")) {
-                  inputAdapterToVerify = adap.get("InputAdapterToVerify").get.asInstanceOf[String]
-                }
-                var failedEventsAdapter: String = null
-                if (adap.contains("FailedEventsAdapter")) {
-                  failedEventsAdapter = adap.get("FailedEventsAdapter").get.asInstanceOf[String]
-                }
                 var dataFormat: String = null
                 if (adap.contains("DataFormat")) {
                   dataFormat = adap.get("DataFormat").get.asInstanceOf[String]
                 }
-                var keyAndValueDelimiter: String = null
-                var fieldDelimiter: String = null
-                var valueDelimiter: String = null
-                var associatedMsg: String = null
-
-                if (adap.contains("KeyAndValueDelimiter")) {
-                  keyAndValueDelimiter = adap.get("KeyAndValueDelimiter").get.asInstanceOf[String]
-                }
-                if (adap.contains("FieldDelimiter")) {
-                  fieldDelimiter = adap.get("FieldDelimiter").get.asInstanceOf[String]
-                } else if (adap.contains("DelimiterString")) { // If not found FieldDelimiter
-                  fieldDelimiter = adap.get("DelimiterString").get.asInstanceOf[String]
-                }
-                if (adap.contains("ValueDelimiter")) {
-                  valueDelimiter = adap.get("ValueDelimiter").get.asInstanceOf[String]
-                }
-                if (adap.contains("AssociatedMessage")) {
-                  associatedMsg = adap.get("AssociatedMessage").get.asInstanceOf[String]
-                }
                 // save in memory
-                val ai = MdMgr.GetMdMgr.MakeAdapter(nm, typStr, dataFormat, clsNm, jarnm, depJars, ascfg, inputAdapterToVerify, keyAndValueDelimiter, fieldDelimiter, valueDelimiter, associatedMsg, failedEventsAdapter)
+                val ai = MdMgr.GetMdMgr.MakeAdapter(nm, typStr, dataFormat, clsNm, jarnm, depJars, ascfg)
                 MdMgr.GetMdMgr.AddAdapter(ai)
                 val key = "AdapterInfo." + ai.name
                 val value = serializer.SerializeObjectToByteArray(ai)
