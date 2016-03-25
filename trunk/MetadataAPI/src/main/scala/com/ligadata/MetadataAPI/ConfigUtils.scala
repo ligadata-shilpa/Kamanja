@@ -195,7 +195,7 @@ object ConfigUtils {
      * @param dependencyJars
      * @param adapterSpecificCfg
      * @param inputAdapterToVerify
-     * @param delimiterString
+     * @param keyAndValueDelimiter
      * @param associatedMsg
      * @return
      */
@@ -233,7 +233,7 @@ object ConfigUtils {
      * @param dependencyJars
      * @param adapterSpecificCfg
      * @param inputAdapterToVerify
-     * @param delimiterString
+     * @param keyAndValueDelimiter
      * @param associatedMsg
      * @return
      */
@@ -1104,7 +1104,7 @@ object ConfigUtils {
       return false
     } else {
       MetadataAPIImpl.GetMetadataAPIConfig.setProperty("JAR_PATHS", jarPaths.mkString(","))
-      logger.debug("JarPaths Based on node(%s) => %s".format(nodeId, jarPaths))
+      logger.debug("JarPaths Based on node(%s) => %s".format(nodeId, jarPaths.mkString(",")))
       val jarDir = compact(render(jarPaths(0))).replace("\"", "").trim
 
       // If JAR_TARGET_DIR is unset.. set it ot the first value of the the JAR_PATH.. whatever it is... ????? I think we should error on start up.. this seems like wrong
@@ -1467,7 +1467,7 @@ object ConfigUtils {
     try {
       var processed: Long = 0L
       val storeInfo = PersistenceUtils.GetTableStoreMap("config_objects")
-      storeInfo._2.get(storeInfo._1, { (k: Key, v: Value) =>
+      storeInfo._2.get(storeInfo._1, { (k: Key, v: Any, typ: String, ver:Int) =>
         {
           val strKey = k.bucketKey.mkString(".")
           val i = strKey.indexOf(".")
@@ -1476,23 +1476,23 @@ object ConfigUtils {
           processed += 1
           objType match {
             case "nodeinfo" => {
-              val ni = serializer.DeserializeObjectFromByteArray(v.serializedInfo).asInstanceOf[NodeInfo]
+              val ni: NodeInfo = null // serializer.DeserializeObjectFromByteArray(v.serializedInfo).asInstanceOf[NodeInfo]
               MdMgr.GetMdMgr.AddNode(ni)
             }
             case "adapterinfo" => {
-              val ai = serializer.DeserializeObjectFromByteArray(v.serializedInfo).asInstanceOf[AdapterInfo]
+              val ai: AdapterInfo = null // serializer.DeserializeObjectFromByteArray(v.serializedInfo).asInstanceOf[AdapterInfo]
               MdMgr.GetMdMgr.AddAdapter(ai)
             }
             case "clusterinfo" => {
-              val ci = serializer.DeserializeObjectFromByteArray(v.serializedInfo).asInstanceOf[ClusterInfo]
+              val ci: ClusterInfo = null // serializer.DeserializeObjectFromByteArray(v.serializedInfo).asInstanceOf[ClusterInfo]
               MdMgr.GetMdMgr.AddCluster(ci)
             }
             case "clustercfginfo" => {
-              val ci = serializer.DeserializeObjectFromByteArray(v.serializedInfo).asInstanceOf[ClusterCfgInfo]
+              val ci: ClusterCfgInfo = null // serializer.DeserializeObjectFromByteArray(v.serializedInfo).asInstanceOf[ClusterCfgInfo]
               MdMgr.GetMdMgr.AddClusterCfg(ci)
             }
             case "userproperties" => {
-              val up = serializer.DeserializeObjectFromByteArray(v.serializedInfo).asInstanceOf[UserPropertiesInfo]
+              val up: UserPropertiesInfo = null // serializer.DeserializeObjectFromByteArray(v.serializedInfo).asInstanceOf[UserPropertiesInfo]
               MdMgr.GetMdMgr.AddUserProperty(up)
             }
             case _ => {
@@ -1527,10 +1527,10 @@ object ConfigUtils {
 
     var processed: Long = 0L
     val storeInfo = PersistenceUtils.GetTableStoreMap("model_config_objects")
-    storeInfo._2.get(storeInfo._1, { (k: Key, v: Value) =>
+    storeInfo._2.get(storeInfo._1, { (k: Key, v: Any, typ: String, ver:Int) =>
       {
         processed += 1
-        val conf = serializer.DeserializeObjectFromByteArray(v.serializedInfo).asInstanceOf[Map[String, List[String]]]
+        val conf: Map[String, List[String]] = null // serializer.DeserializeObjectFromByteArray(v.serializedInfo).asInstanceOf[Map[String, List[String]]]
         MdMgr.GetMdMgr.AddModelConfig(k.bucketKey.mkString("."), conf)
       }
     })

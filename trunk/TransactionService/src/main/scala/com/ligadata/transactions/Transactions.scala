@@ -82,7 +82,7 @@ object NodeLevelTransService {
         throw new Exception("Not found Status DataStore to save Status.")
       }
 
-      val buildTxnOff = (k: Key, v: Any, t: String, ver: Int) => {
+      val buildTxnOff = (k: Key, v: Any, serType: String, t: String, ver: Int) => {
         buildTxnStartOffset(k, v, objs)
       }
 

@@ -809,7 +809,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 
     if (v != null) return v
     val results = new ArrayBuffer[(String, (Long, String, List[(String, String, String)]))]()
-    val buildAdapOne = (k: Key, v: Any, t: String, ver: Int) => {
+    val buildAdapOne = (k: Key, v: Any, serType: String, t: String, ver: Int) => {
       buildAdapterUniqueValue(k, v, results)
     }
     try {
@@ -1010,7 +1010,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 
       val container = txnCtxt.getMsgContainer(containerName.toLowerCase, true) // adding if not there
       if (container != null) {
-        val buildOne = (k: Key, v: Any, typ: String, ver: Int) => {
+        val buildOne = (k: Key, v: Any, serType: String, typ: String, ver: Int) => {
           collectKeyAndValues(k, v, container)
         }
 
@@ -1799,7 +1799,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   override def getAllAdapterUniqKvDataInfo(keys: Array[String]): Array[(String, (Long, String, List[(String, String, String)]))] = {
     val results = new ArrayBuffer[(String, (Long, String, List[(String, String, String)]))]()
 
-    val buildAdapOne = (k: Key, v: Any, t: String, ver: Int) => {
+    val buildAdapOne = (k: Key, v: Any, serType: String, t: String, ver: Int) => {
       buildAdapterUniqueValue(k, v, results)
     }
 

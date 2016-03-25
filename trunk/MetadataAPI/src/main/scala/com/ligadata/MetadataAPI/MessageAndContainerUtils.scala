@@ -1389,7 +1389,7 @@ object MessageAndContainerUtils {
       logger.debug("Fetch the object " + key + " from database ")
       val obj = MetadataAPIImpl.GetObject(key.toLowerCase, "messages")
       logger.debug("Deserialize the object " + key)
-      val msg = serializer.DeserializeObjectFromByteArray(obj.serializedInfo)
+      val msg: MessageDef = null // serializer.DeserializeObjectFromByteArray(obj.serializedInfo)
       logger.debug("Get the jar from database ")
       val msgDef = msg.asInstanceOf[MessageDef]
       MetadataAPIImpl.DownloadJarFromDB(msgDef)
@@ -1410,7 +1410,7 @@ object MessageAndContainerUtils {
   def LoadContainerIntoCache(key: String) {
     try {
       val obj = MetadataAPIImpl.GetObject(key.toLowerCase, "containers")
-      val cont = serializer.DeserializeObjectFromByteArray(obj.serializedInfo)
+      val cont: ContainerDef = null // serializer.DeserializeObjectFromByteArray(obj.serializedInfo)
       logger.debug("Get the jar from database ")
       val contDef = cont.asInstanceOf[ContainerDef]
       MetadataAPIImpl.DownloadJarFromDB(contDef)

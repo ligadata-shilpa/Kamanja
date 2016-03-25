@@ -338,7 +338,7 @@ object FunctionUtils {
   def LoadFunctionIntoCache(key: String) {
     try {
       val obj = MetadataAPIImpl.GetObject(key.toLowerCase, "functions")
-      val cont = serializer.DeserializeObjectFromByteArray(obj.serializedInfo)
+      val cont: FunctionDef = null // serializer.DeserializeObjectFromByteArray(obj.serializedInfo)
       MetadataAPIImpl.AddObjectToCache(cont.asInstanceOf[FunctionDef], MdMgr.GetMdMgr)
     } catch {
       case e: Exception => {
