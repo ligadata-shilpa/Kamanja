@@ -986,7 +986,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       * @param objList <description please>
      * @param operations <description please>
      */
-  def NotifyEngine(objList: Array[BaseElemDef], operations: Array[String], cnfgList: Map[String,Any] = null) {
+  def NotifyEngine(objList: Array[BaseElemDef], operations: Array[String]) {
     try {
       val notifyEngine = GetMetadataAPIConfig.getProperty("NOTIFY_ENGINE")
 
@@ -996,13 +996,6 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       objList.foreach(obj => {
         max = scala.math.max(max, obj.TranId)
       })
-
-      // TODO BOOYA
-      if (cnfgList != null) {
-        // get the right transaction id.  There is not really a path where both the objList and confglist are passed
-        // in together, so for now max will always be the TranId.
-        max = scala.math.max(max, GetNewTranId)
-      }
 
       if (currentTranLevel < max) currentTranLevel = max
 
@@ -1020,7 +1013,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
         corrId = corrId + 1
       })
 
-      val data = ZooKeeperMessage(objList, operations, cnfgList, max)
+      val data = ZooKeeperMessage(objList, operations)
       InitZooKeeper
       val znodePath = GetMetadataAPIConfig.getProperty("ZNODE_PATH") + "/metadataupdate"
       logger.debug("Set the data on the zookeeper node " + znodePath)
@@ -5830,6 +5823,14 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
           case _ => { logger.error("Unknown Operation " + zkMessage.Operation + " in zookeeper notification, notification is not processed ..") }
         }
       }
+      case "adapterDef" | "nodeDef" | "clusterInfoDef" | "clusterDef" | "upDef"=> {
+        zkMessage.Operation match {
+          case "Add" => {
+            updateClusterConfigForKey(zkMessage.ObjectType, zkMessage.Name, zkMessage.NameSpace)
+          }
+          case _ => { logger.error("Unknown Operation " + zkMessage.Operation + " in zookeeper notification, notification is not processed ..") }
+        }
+      }
       case "ModelDef" => {
         zkMessage.Operation match {
           case "Add" => {
@@ -7033,7 +7034,11 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       val map = JsonSerializer.parseEngineConfig(cfgStr)
 
       //TODO: BOOOYA
-      val operations = Array[String]("Upload")
+      var adapterNotifications: ArrayBuffer[BaseElemDef] = new ArrayBuffer[BaseElemDef]
+      var clusterNotifications: ArrayBuffer[BaseElemDef] = new ArrayBuffer[BaseElemDef]
+      var clusterInfoNotifications: ArrayBuffer[BaseElemDef] = new ArrayBuffer[BaseElemDef]
+      var nodesNotifications: ArrayBuffer[BaseElemDef] = new ArrayBuffer[BaseElemDef]
+      var upNotifications: ArrayBuffer[BaseElemDef] = new ArrayBuffer[BaseElemDef]
 
       // process clusterInfo object if it exists
       if (map.contains("Clusters") == false) {
@@ -7051,6 +7056,14 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
             // save in memory
             var ci = MdMgr.GetMdMgr.MakeCluster(ClusterId, null, null)
             MdMgr.GetMdMgr.AddCluster(ci)
+
+            var clusterDef: ClusterConfigDef = new ClusterConfigDef
+            clusterDef.clusterId = ci.clusterId
+            clusterDef.elementType = "clusterDef"
+            clusterDef.name = ci.clusterId
+            clusterDef.tranId = GetNewTranId
+            clusterNotifications.append(clusterDef)
+
             var key = "ClusterInfo." + ci.clusterId
             var value = serializer.SerializeObjectToByteArray(ci)
             keyList = keyList :+ key.toLowerCase
@@ -7076,6 +7089,15 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
             // save in memory
             val cic = MdMgr.GetMdMgr.MakeClusterCfg(ClusterId, cfgMap, null, null)
             MdMgr.GetMdMgr.AddClusterCfg(cic)
+
+            var clusterInfoDef: ClusterConfigDef = new ClusterConfigDef
+            clusterInfoDef.clusterId = cic.clusterId
+            clusterInfoDef.elementType = "clusterInfoDef"
+            clusterInfoDef.name = cic.clusterId
+            clusterInfoDef.nameSpace = "clusterInfo"
+            clusterInfoDef.tranId = GetNewTranId
+            clusterNotifications.append(clusterInfoDef)
+
             key = "ClusterCfgInfo." + cic.clusterId
             value = serializer.SerializeObjectToByteArray(cic)
             keyList = keyList :+ key.toLowerCase
@@ -7113,6 +7135,15 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
                 val ni = MdMgr.GetMdMgr.MakeNode(nodeId, nodePort, nodeIpAddr, jarPaths,
                   scala_home, java_home, classpath, ClusterId, 0, foundRoles.toArray, null)
                 MdMgr.GetMdMgr.AddNode(ni)
+
+                var nodeDef: ClusterConfigDef = new ClusterConfigDef
+                nodeDef.name = ni.nodeId
+                nodeDef.tranId = GetNewTranId
+                nodeDef.nameSpace = "nodeIds"
+                nodeDef.clusterId = ci.clusterId
+                nodeDef.elementType = "nodeDef"
+                clusterNotifications.append(nodeDef)
+
                 val key = "NodeInfo." + ni.nodeId
                 val value = serializer.SerializeObjectToByteArray(ni)
                 keyList = keyList :+ key.toLowerCase
@@ -7134,15 +7165,24 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
               globalAdaptersCollected = true // to support previous versions
 
               adapters.foreach(a => {
+                var adapterDef: ClusterConfigDef = new ClusterConfigDef
                 val adap = a.asInstanceOf[Map[String, Any]]
                 val nm = adap.getOrElse("Name", "").toString.trim
                 val jarnm = adap.getOrElse("JarName", "").toString.trim
                 val typStr = adap.getOrElse("TypeString", "").toString.trim
                 val clsNm = adap.getOrElse("ClassName", "").toString.trim
 
+                adapterDef.name = nm
+                adapterDef.nameSpace = typStr
+                adapterDef.tranId = GetNewTranId
+                adapterDef.clusterId = ClusterId
+                adapterDef.elementType = "adapterDef"
+                clusterNotifications.append(adapterDef)
+
                 var depJars: List[String] = null
                 if (adap.contains("DependencyJars")) {
                   depJars = adap.get("DependencyJars").get.asInstanceOf[List[String]]
+                  depJars.foreach(x=> {println("dep jar is "+x)})
                 }
                 var ascfg: String = null
                 if (adap.contains("AdapterSpecificCfg")) {
@@ -7199,6 +7239,14 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
               userDefinedProps.keys.foreach(key => {
                 upProps.Props(key) = userDefinedProps(key).toString
               })
+              var upDef: ClusterConfigDef = new ClusterConfigDef
+              upDef.name = upProps.clusterId
+              upDef.nameSpace = "userProperties"
+              upDef.tranId = GetNewTranId
+              upDef.clusterId = ClusterId
+              upDef.elementType = "upDef"
+              clusterNotifications.append(upDef)
+
               MdMgr.GetMdMgr.AddUserProperty(upProps)
               val upKey = "userProperties." + upProps.clusterId
               val upValue = serializer.SerializeObjectToByteArray(upProps)
@@ -7213,17 +7261,16 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
         }
 
         SaveObjectList(keyList, valueList, "config_objects", serializerType)
-
         //TODO: BOOOYA
-        val operations = Array[String]("Upload")
-        NotifyEngine(new Array[BaseElemDef](0), operations, map)
+        val operations = for (op <- clusterNotifications) yield "Add"
+        NotifyEngine(clusterNotifications.toArray, operations.toArray)
 
         var apiResult = new ApiResult(ErrorCodeConstants.Success, "UploadConfig", cfgStr, ErrorCodeConstants.Upload_Config_Successful)
         apiResult.toString()
       }
     } catch {
       case e: Exception => {
-        
+        println(e)
         logger.debug("", e)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "UploadConfig", cfgStr, "Error :" + e.toString() + ErrorCodeConstants.Upload_Config_Failed)
         apiResult.toString()
@@ -7312,6 +7359,116 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     }
   }
 
+  private def updateClusterConfigForKey(elemType: String, key: String, clusterId: String): Unit = {
+
+    //HOOOYA
+
+    if (elemType.equalsIgnoreCase("adapterDef")) {
+      val obj = GetObject("adapterinfo."+key.toLowerCase, "config_objects")
+      val storedInfo = serializer.DeserializeObjectFromByteArray(obj.serializedInfo).asInstanceOf[AdapterInfo]
+      var cachedInfo = MdMgr.GetMdMgr.GetAdapter(key.toLowerCase)
+
+      // If storedInfo is null, that means that the adapter has been removed... maybe
+      if (storedInfo == null) {
+        MdMgr.GetMdMgr.addConfigChange(elemType +"."+"remove"+"."+storedInfo.name.toLowerCase)
+      }
+
+      // if cachedInfo is null, this a new apdater
+      if (cachedInfo == null) {
+        MdMgr.GetMdMgr.addConfigChange(elemType +"."+"add"+"."+storedInfo.name.toLowerCase)
+      }
+
+      if (!storedInfo.equals(cachedInfo)) {
+        MdMgr.GetMdMgr.addConfigChange(elemType + "." + "update" + "." + storedInfo.name.toLowerCase)
+      }
+      MdMgr.GetMdMgr.AddAdapter(storedInfo)
+    }
+
+    if (elemType.equalsIgnoreCase("nodeDef")) {
+      val obj = GetObject("nodeinfo."+key.toLowerCase, "config_objects")
+      val storedInfo = serializer.DeserializeObjectFromByteArray(obj.serializedInfo).asInstanceOf[NodeInfo]
+      var cachedInfo = MdMgr.GetMdMgr.GetNode(key.toLowerCase)
+
+      // If storedInfo is null, that means that the adapter has been removed... maybe
+      if (storedInfo == null) {
+        MdMgr.GetMdMgr.addConfigChange(elemType +"."+"remove"+"."+storedInfo.nodeId.toLowerCase)
+      }
+
+      // if cachedInfo is null, this a new apdater
+      if (cachedInfo == null) {
+        MdMgr.GetMdMgr.addConfigChange(elemType +"."+"add"+"."+storedInfo.nodeId.toLowerCase)
+      }
+
+      if (!storedInfo.equals(cachedInfo)) {
+        MdMgr.GetMdMgr.addConfigChange(elemType + "." + "update" + "." + storedInfo.nodeId.toLowerCase)
+      }
+      MdMgr.GetMdMgr.AddNode(storedInfo)
+    }
+
+    if (elemType.equalsIgnoreCase("clusterInfoDef")) {
+      val obj = GetObject("clustercfginfo."+key.toLowerCase, "config_objects")
+      val storedInfo = serializer.DeserializeObjectFromByteArray(obj.serializedInfo).asInstanceOf[ClusterCfgInfo]
+      var cachedInfo = MdMgr.GetMdMgr.GetClusterCfg(key.toLowerCase)
+
+      // If storedInfo is null, that means that the adapter has been removed... maybe
+      if (storedInfo == null) {
+        MdMgr.GetMdMgr.addConfigChange(elemType +"."+"remove"+"."+storedInfo.clusterId.toLowerCase)
+      }
+
+      // if cachedInfo is null, this a new apdater
+      if (cachedInfo == null) {
+        MdMgr.GetMdMgr.addConfigChange(elemType +"."+"add"+"."+storedInfo.clusterId.toLowerCase)
+      }
+
+      if (!storedInfo.equals(cachedInfo)) {
+        MdMgr.GetMdMgr.addConfigChange(elemType + "." + "update" + "." + storedInfo.clusterId.toLowerCase)
+      }
+      MdMgr.GetMdMgr.AddClusterCfg(storedInfo)
+    }
+
+
+    if (elemType.equalsIgnoreCase("clusterDef")) {
+      val obj = GetObject("clusterinfo."+key.toLowerCase, "config_objects")
+      val storedInfo = serializer.DeserializeObjectFromByteArray(obj.serializedInfo).asInstanceOf[ClusterInfo]
+      var cachedInfo = MdMgr.GetMdMgr.GetCluster(key.toLowerCase)
+
+      // If storedInfo is null, that means that the adapter has been removed... maybe
+      if (storedInfo == null) {
+        MdMgr.GetMdMgr.addConfigChange(elemType +"."+"remove"+"."+storedInfo.ClusterId.toLowerCase)
+      }
+
+      // if cachedInfo is null, this a new apdater
+      if (cachedInfo == null) {
+        MdMgr.GetMdMgr.addConfigChange(elemType +"."+"add"+"."+storedInfo.ClusterId.toLowerCase)
+      }
+
+      if (!storedInfo.equals(cachedInfo)) {
+        MdMgr.GetMdMgr.addConfigChange(elemType + "." + "update" + "." + storedInfo.ClusterId.toLowerCase)
+      }
+      MdMgr.GetMdMgr.AddCluster(storedInfo)
+    }
+
+    if (elemType.equalsIgnoreCase("upDef")) {
+      val obj = GetObject("userproperties."+key.toLowerCase, "config_objects")
+      val storedInfo = serializer.DeserializeObjectFromByteArray(obj.serializedInfo).asInstanceOf[UserPropertiesInfo]
+      var cachedInfo = MdMgr.GetMdMgr.GetUserProperty(clusterId, key.toLowerCase)
+
+      // If storedInfo is null, that means that the adapter has been removed... maybe
+      if (storedInfo == null) {
+        MdMgr.GetMdMgr.addConfigChange(elemType +"."+"remove"+"."+storedInfo.clusterId.toLowerCase)
+      }
+
+      // if cachedInfo is null, this a new apdater
+      if (cachedInfo == null) {
+        MdMgr.GetMdMgr.addConfigChange(elemType +"."+"add"+"."+storedInfo.clusterId.toLowerCase)
+      }
+
+      if (!storedInfo.equals(cachedInfo)) {
+        MdMgr.GetMdMgr.addConfigChange(elemType + "." + "update" + "." + storedInfo.clusterId.toLowerCase)
+      }
+      MdMgr.GetMdMgr.AddUserProperty(storedInfo)
+    }
+  }
     /**
      * All available clusters(format JSON) as a String
       *

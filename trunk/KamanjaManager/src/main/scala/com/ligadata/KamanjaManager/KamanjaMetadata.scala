@@ -440,6 +440,7 @@ class KamanjaMetadata {
 object KamanjaMetadata extends MdBaseResolveInfo {
   var envCtxt: EnvContext = null // Engine will set it once EnvContext is initialized
   var gNodeContext: NodeContext = null
+  var isConfigChanged = false
   private[this] val LOG = LogManager.getLogger(getClass);
   private[this] val mdMgr = GetMdMgr
   private[this] var messageContainerObjects = new HashMap[String, MsgContainerObjAndTransformInfo]
@@ -452,6 +453,12 @@ object KamanjaMetadata extends MdBaseResolveInfo {
   private[this] var initializedFactOfMdlInstFactObjs = false
   private[this] val reent_lock = new ReentrantReadWriteLock(true);
   private[this] val updMetadataExecutor = Executors.newFixedThreadPool(1)
+  private var updatedClusterConfig: Map[String,Any] = null
+
+
+  def getConfigChanges: Array[String] = {
+    return GetMdMgr.getConfigChanges
+  }
 
   def AllFactoryOfMdlInstFactoriesObjects = factoryOfMdlInstFactoriesObjects.toMap
   def AllModelRepFacFacKeys : scala.collection.immutable.Map[String,String] = modelRepFacFacKeys.toMap
@@ -871,7 +878,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
       LOG.error("Metadata Manager should not be NULL while updaing metadta in Kamanja manager.")
       return
     }
-    
+
     if (zkTransaction.transactionId.getOrElse("0").toLong <= MetadataAPIImpl.getCurrentTranLevel) return
 
     updMetadataExecutor.execute(new MetadataUpdate(zkTransaction))
@@ -1121,9 +1128,12 @@ object KamanjaMetadata extends MdBaseResolveInfo {
               }
             }
           }
-          case "OutputMsgDef" => {
-
-          }
+          case "OutputMsgDef" => {}
+          case "adapterDef" => {}
+          case "nodeDef" => {}
+          case "clusterInfoDef" => {}
+          case "clusterDef" => {}
+          case "upDef" => {}
           case _ => {
             LOG.warn("Unknown objectType " + zkMessage.ObjectType + " in zookeeper notification, notification is not processed ..")
           }

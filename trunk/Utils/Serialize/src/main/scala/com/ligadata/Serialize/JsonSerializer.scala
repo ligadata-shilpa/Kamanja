@@ -77,6 +77,7 @@ case class MetadataApiConfig(ApiConfigParameters: ParameterMap)
 
 case class ZooKeeperNotification(ObjectType: String, Operation: String, NameSpace: String, Name: String, Version: String, PhysicalName: String, JarName: String, DependantJars: List[String], ConfigContnent: Option[String])
 case class ZooKeeperTransaction(Notifications: List[ZooKeeperNotification], transactionId: Option[String])
+//case class ZooKeeperConfigTransaction()
 
 case class JDataStore(StoreType: String, SchemaName: String, Location: String, AdapterSpecificConfig: Option[String])
 case class JZKInfo(ZooKeeperNodeBasePath: String, ZooKeeperConnectString: String, ZooKeeperSessionTimeoutMs: Option[String], ZooKeeperConnectionTimeoutMs: Option[String])
@@ -892,6 +893,19 @@ object JsonSerializer {
             ("ConfigContnent" -> o.contents))   
           pretty(render(json))
         }
+        case o: ClusterConfigDef => {
+          val json = (("ObjectType" ->  o.elementType) ~
+            ("Operation" -> operation) ~
+            ("NameSpace" -> o.NameSpace) ~
+            ("Name" -> o.name) ~
+            ("Version" -> "0") ~
+            ("PhysicalName" -> "") ~
+            ("JarName" -> "") ~
+            ("DependantJars" -> List[String]()) ~
+            ("ElementType" -> o.elementType) ~
+            ("ClusterId" -> o.clusterId))
+          pretty(render(json))
+        }
         case _ => {
           throw UnsupportedObjectException("zkSerializeObjectToJson doesn't support the  objects of type objectType of " + mdObj.getClass().getName() + " yet.", null)
         }
@@ -1468,8 +1482,7 @@ object JsonSerializer {
   }
 
   def zkSerializeConfigToJson[T <: Map[String,Any]](tid: Long, objType: String, config: T, operations: Array[String]): String = {
-
-    var json = "{\n" + "\"transactionId\":\"" + tid + "\",\n" + "\"" + objType + "\" :" + SerializeMapToJsonString(config) + "\n}"
+    val json = "{\n" + "\"transactionId\":\"" + tid + "\",\n" + "\"" + objType + "\" :" + SerializeMapToJsonString(config) + "\n}"
     json
   }
 

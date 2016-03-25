@@ -779,6 +779,11 @@ class ConfigDef extends BaseElemDef {
   var contents: String = _
 }
 
+class ClusterConfigDef extends BaseElemDef {
+  var clusterId: String = _
+  var elementType: String = _
+}
+
 class JarDef extends BaseElemDef {
   def typeString: String = PhysicalName
 }
@@ -815,6 +820,77 @@ class NodeInfo {
   def Roles: Array[String] = roles
   def Description: String = description
   def NodeAddr: String = nodeIpAddr + ":" + nodePort.toString
+
+  def equals(in: NodeInfo): Boolean = {
+
+    // Check nodeId
+    if ((nodeId != null && in.nodeId != null)) {
+      if(!nodeId.equals(in.nodeId)) return false
+    } else if(!(nodeId == null && in.nodeId == null)) {
+      return false
+    }
+    // Check nodePort
+    if ((nodePort != null && in.nodePort != null)) {
+      if(!nodePort.equals(in.nodePort)) return false
+    } else if(!(nodePort == null && in.nodePort == null)) {
+      return false
+    }
+    // Check nodeIpAddr
+    if ((nodeIpAddr != null && in.nodeIpAddr != null)) {
+      if(!nodeIpAddr.equals(in.nodeIpAddr)) return false
+    } else if(!(nodeIpAddr == null && in.nodeIpAddr == null)) {
+      return false
+    }
+    // Check JarPaths
+    if ((jarPaths != null && in.jarPaths != null)) {
+      if((jarPaths.size !=  in.jarPaths.size) || (jarPaths.deep != in.jarPaths.deep)) return false
+    } else if(!(jarPaths == null && in.jarPaths == null)) {
+      return false
+    }
+    // Check description
+    if ((scala_home != null && in.scala_home != null)) {
+      if(!scala_home.equals(in.scala_home)) return false
+    } else if(!(scala_home == null && in.scala_home == null)) {
+      return false
+    }
+    // Check description
+    if ((java_home != null && in.java_home != null)) {
+      if(!java_home.equals(in.java_home)) return false
+    } else if(!(java_home == null && in.java_home == null)) {
+      return false
+    }
+    // Check description
+    if ((classpath != null && in.classpath != null)) {
+      if(!classpath.equals(in.classpath)) return false
+    } else if(!(classpath == null && in.classpath == null)) {
+      return false
+    }
+    // Check description
+    if ((clusterId != null && in.clusterId != null)) {
+      if(!clusterId.equals(in.clusterId)) return false
+    } else if(!(clusterId == null && in.clusterId == null)) {
+      return false
+    }
+    // Check description
+    if ((power != null && in.power != null)) {
+      if (power != in.power) return false
+    } else if(!(power == null && in.power == null)) {
+      return false
+    }
+    // Check description
+    if ((roles != null && in.roles != null)) {
+      if((roles.size !=  in.roles.size) || (Roles.deep != in.Roles.deep)) return false
+    } else if(!(roles == null && in.roles == null)) {
+      return false
+    }
+    // Check description
+    if ((description != null && in.description != null)) {
+      if(!description.equals(in.description)) return false
+    } else if(!(description == null && in.description == null)) {
+      return false
+    }
+    true
+  }
 }
 
 class ClusterInfo {
@@ -828,6 +904,28 @@ class ClusterInfo {
   def ClusterId: String = clusterId
   def Description: String = description
   def Privileges: String = privileges
+
+  def equals(in: ClusterInfo): Boolean = {
+    // Check description
+    if ((clusterId != null && in.clusterId != null)) {
+      if(!clusterId.equals(in.clusterId)) return false
+    } else if(!(clusterId == null && in.clusterId == null)) {
+      return false
+    }
+    // Check description
+    if ((description != null && in.description != null)) {
+      if(!description.equals(in.description)) return false
+    } else if(!(description == null && in.description == null)) {
+      return false
+    }
+    // Check description
+    if ((privileges != null && in.privileges != null)) {
+      if(!privileges.equals(in.privileges)) return false
+    } else if(!(privileges == null && in.privileges == null)) {
+      return false
+    }
+    true
+  }
 }
 
 class ClusterCfgInfo {
@@ -845,6 +943,43 @@ class ClusterCfgInfo {
   def ModifiedTime: Date = modifiedTime
   def CreatedTime: Date = createdTime
   def getUsrConfigs: scala.collection.mutable.HashMap[String, String] = usrConfigs
+
+  def equals(in: ClusterCfgInfo): Boolean = {
+    // Check clusterId
+    if ((clusterId != null && in.clusterId != null)) {
+      if(!clusterId.equals(in.clusterId)) return false
+    } else if(!(clusterId == null && in.clusterId == null)) {
+      return false
+    }
+    // Check modifiedTime
+    if ((modifiedTime != null && in.modifiedTime != null)) {
+      if(!modifiedTime.equals(in.modifiedTime)) return false
+    } else if(!(modifiedTime == null && in.modifiedTime == null)) {
+      return false
+    }
+    // Check createdTime
+    if ((createdTime != null && in.createdTime != null)) {
+      if(!createdTime.equals(in.createdTime)) return false
+    } else if(!(createdTime == null && in.createdTime == null)) {
+      return false
+    }
+
+    // Check createdTime
+    if ((usrConfigs != null && in.usrConfigs != null)) {
+      if(!((usrConfigs.toSet diff in.usrConfigs.toSet).toMap.isEmpty)) return false
+    } else if(!(usrConfigs == null && in.usrConfigs == null)) {
+      return false
+    }
+    // Check createdTime
+    if ((cfgMap != null && in.cfgMap != null)) {
+      if(!((cfgMap.toSet diff in.cfgMap.toSet).toMap.isEmpty)) return false
+    } else if(!(cfgMap == null && in.cfgMap == null)) {
+      return false
+    }
+    //(m1.toSet diff m2.toSet).toMap
+
+    true
+  }
 }
 
 class AdapterInfo {
@@ -881,6 +1016,90 @@ class AdapterInfo {
   def FieldDelimiter: String = if (fieldDelimiter != null) fieldDelimiter else delimiterString1
   def ValueDelimiter: String = valueDelimiter
 
+  def equals(aInfo: AdapterInfo): Boolean = {
+
+    // Check name
+    if ((name != null && aInfo.name != null)) {
+      if(!name.equals(aInfo.name)) return false
+    } else if(!(name == null && aInfo.name == null)) {
+      return false
+    }
+    // Check dataFormat
+    if ((dataFormat != null && aInfo.dataFormat != null)) {
+      if(!dataFormat.equals(aInfo.dataFormat)) return false
+    } else if(!(dataFormat == null && aInfo.dataFormat == null)) {
+      return false
+    }
+    // Check className
+    if ((className != null && aInfo.className != null)) {
+      if(!className.equals(aInfo.className)) return false
+    } else if(!(className == null && aInfo.className == null)) {
+      return false
+    }
+    // Check inputAdapterToValidate
+    if ((inputAdapterToValidate != null && aInfo.inputAdapterToValidate != null)) {
+      if(!inputAdapterToValidate.equals(aInfo.inputAdapterToValidate)) return false
+    } else if(!(inputAdapterToValidate == null && aInfo.inputAdapterToValidate == null)) {
+      return false
+    }
+    // Check failedEventsAdapter
+    if ((failedEventsAdapter != null && aInfo.failedEventsAdapter != null)) {
+      if(!failedEventsAdapter.equals(aInfo.failedEventsAdapter)) return false
+    } else if(!(failedEventsAdapter == null && aInfo.failedEventsAdapter == null)) {
+      return false
+    }
+    // Check delimiterString1
+    if ((delimiterString1 != null && aInfo.delimiterString1 != null)) {
+      if(!delimiterString1.equals(aInfo.delimiterString1)) return false
+    } else if(!(delimiterString1 == null && aInfo.delimiterString1 == null)) {
+      return false
+    }
+    // Check associatedMsg
+    if ((associatedMsg != null && aInfo.associatedMsg != null)) {
+      if(!associatedMsg.equals(aInfo.associatedMsg)) return false
+    } else if(!(associatedMsg == null && aInfo.associatedMsg == null)) {
+      return false
+    }
+    // Check jarName
+    if ((jarName != null && aInfo.jarName != null)) {
+      if(!jarName.equals(aInfo.jarName)) return false
+    } else if(!(jarName == null && aInfo.jarName == null)) {
+      return false
+    }
+    // Check dependencyJars
+    if ((dependencyJars != null && aInfo.dependencyJars != null)) {
+      if((dependencyJars.size !=  aInfo.dependencyJars.size) || (dependencyJars.deep != aInfo.dependencyJars.deep)) return false
+    } else if(!(dependencyJars == null && aInfo.dependencyJars == null)) {
+      return false
+    }
+    // Check adapterSpecificCfg
+    if ((adapterSpecificCfg != null && aInfo.adapterSpecificCfg != null)) {
+      if(!adapterSpecificCfg.equals(aInfo.adapterSpecificCfg)) return false
+    } else if(!(adapterSpecificCfg == null && aInfo.adapterSpecificCfg == null)) {
+      return false
+    }
+    // Check keyAndValueDelimiter
+    if ((keyAndValueDelimiter != null && aInfo.keyAndValueDelimiter != null)) {
+      if(!keyAndValueDelimiter.equals(aInfo.keyAndValueDelimiter)) return false
+    } else if(!(keyAndValueDelimiter == null && aInfo.keyAndValueDelimiter == null)) {
+      return false
+    }
+    // Check FieldDelimiter
+    if ((fieldDelimiter != null && aInfo.fieldDelimiter != null)) {
+      if(!fieldDelimiter.equals(aInfo.fieldDelimiter)) return false
+    } else if(!(fieldDelimiter == null && aInfo.fieldDelimiter == null)) {
+      return false
+    }
+    // Check valueDelimiter
+    if ((valueDelimiter != null && aInfo.valueDelimiter != null)) {
+      if(!valueDelimiter.equals(aInfo.valueDelimiter)) return false
+    } else if(!(valueDelimiter == null && aInfo.valueDelimiter == null)) {
+      return false
+    }
+
+
+    true
+  }
 }
 
 class UserPropertiesInfo {
@@ -889,6 +1108,22 @@ class UserPropertiesInfo {
 
   def ClusterId: String = clusterId
   def Props: scala.collection.mutable.HashMap[String, String] = props
+
+  def equals(in: UserPropertiesInfo): Boolean = {
+    // Check createdTime
+    if ((props != null && in.props != null)) {
+      if(!((props.toSet diff in.props.toSet).toMap.isEmpty)) return false
+    } else if(!(props == null && in.props == null)) {
+      return false
+    }
+    // Check clusterId
+    if ((clusterId != null && in.clusterId != null)) {
+      if(!clusterId.equals(in.clusterId)) return false
+    } else if(!(clusterId == null && in.clusterId == null)) {
+      return false
+    }
+    true
+  }
 }
 
 class OutputMsgDef extends BaseElemDef {
