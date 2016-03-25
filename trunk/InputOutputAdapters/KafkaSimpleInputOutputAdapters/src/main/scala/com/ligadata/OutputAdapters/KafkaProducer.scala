@@ -18,7 +18,7 @@
 package com.ligadata.OutputAdapters
 
 import java.util.{ Properties, Arrays }
-import com.ligadata.KamanjaBase.NodeContext
+import com.ligadata.KamanjaBase.{MessageContainerBase, TransactionContext, NodeContext}
 import kafka.common.{ QueueFullException, FailedToSendMessageException }
 import org.apache.logging.log4j.{ Logger, LogManager }
 import com.ligadata.InputOutputAdapterInfo._
@@ -344,10 +344,12 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, val nodeContext: Node
 
   /**
    *
-   * @param messages
-   * @param partKeys
+   * @param tnxCtxt
+   * @param outputContainers
+    * @param serializedContainerData
+    * @param serializerNames
    */
-  override def send(messages: Array[Array[Byte]], partKeys: Array[Array[Byte]]): Unit = {
+  protected override def send(tnxCtxt: TransactionContext, outputContainers: Array[MessageContainerBase], serializedContainerData: Array[Array[Byte]], serializerNames: Array[String]): Unit = {
 
     // Sanity checks
     if (isShutdown) {
@@ -356,12 +358,13 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, val nodeContext: Node
       throw new Exception(szMsg)
     }
 
-    if (messages.size != partKeys.size) {
-      val szMsg = qc.Name + " KAFKA PRODUCER: Message and Partition Keys should has same number of elements. Message has %d and Partition Keys has %d".format(messages.size, partKeys.size)
+    if (outputContainers.size != serializedContainerData.size || outputContainers.size != serializerNames.size) {
+      val szMsg = qc.Name + " KAFKA PRODUCER: Messages, messages serialized data & serializer names should has same number of elements. Messages:%d, Messages Serialized data:%d, serializerNames:%d".format(outputContainers.size, serializedContainerData.size, serializerNames.size)
       LOG.error(szMsg)
       throw new Exception(szMsg)
     }
-    if (messages.size == 0) return
+
+    if (serializedContainerData.size == 0) return
 
     if (!isHeartBeating) runHeartBeat
 
@@ -375,14 +378,14 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, val nodeContext: Node
     try {
       var partitionsMsgMap = scala.collection.mutable.Map[Int, ArrayBuffer[MsgDataRecievedCnt]]();
 
-      for (i <- 0 until messages.size) {
-        val partId = getPartition(partKeys(i), topicPartitionsCount)
+      for (i <- 0 until serializedContainerData.size) {
+        val partId = getPartition(outputContainers(i).PartitionKeyData.mkString(",").getBytes(), topicPartitionsCount)
         var ab = partitionsMsgMap.getOrElse(partId, null)
         if (ab == null) {
           ab = new ArrayBuffer[MsgDataRecievedCnt](256)
           partitionsMsgMap(partId) = ab
         }
-        val pr = new ProducerRecord(qc.topic, partId, partKeys(i), messages(i))
+        val pr = new ProducerRecord(qc.topic, partId, outputContainers(i).PartitionKeyData.mkString(",").getBytes(), serializedContainerData(i))
         ab += MsgDataRecievedCnt(msgInOrder.getAndIncrement, pr)
       }
 
