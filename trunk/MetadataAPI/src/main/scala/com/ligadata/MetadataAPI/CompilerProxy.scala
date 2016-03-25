@@ -80,7 +80,7 @@ class CompilerProxy {
         modelVersion, msgDefClassFilePath, elements, sourceCode,
         totalDeps,
         MetadataAPIImpl.getModelMessagesContainers(modelConfigName, userid),
-        nonTypeDeps, false, inputMsgSets, outMsgs,userid)
+        nonTypeDeps, false, inputMsgSets, outMsgs,userid,modelConfigName)
     } catch {
       case e: Exception => {
         logger.error("COMPILER_PROXY: unable to determine model metadata information during AddModel.", e)
@@ -102,7 +102,7 @@ class CompilerProxy {
       var inputMsgSets = 
 	if( inMsgSets == null ) defaultInputMsgSets.map(lst => lst.toList).toList else inMsgSets
       return generateModelDef(repackagedCode, sourceLang, pname, classPath, tempPackage, modelName,
-        modelVersion, msgDefClassFilePath, elements, sourceCode, totalDeps, typeDeps, nonTypeDeps, true, inputMsgSets, outputMsgs,userid)
+        modelVersion, msgDefClassFilePath, elements, sourceCode, totalDeps, typeDeps, nonTypeDeps, true, inputMsgSets, outputMsgs,userid,null)
     } catch {
       case e: Exception => {
         logger.error("COMPILER_PROXY: unable to determine model metadata information during recompile.", e)
@@ -502,7 +502,7 @@ class CompilerProxy {
   private def generateModelDef(repackagedCode: String, sourceLang: String, pname: String, classPath: String, modelNamespace: String, modelName: String,
                                modelVersion: String, msgDefClassFilePath: String, elements: Set[BaseElemDef], originalSource: String,
                                deps: scala.collection.immutable.Set[String], typeDeps: List[String], notTypeDeps: scala.collection.immutable.Set[String], recompile: Boolean,
-                               inMsgSets: List[List[String]], outMsgs: List[String],userid: Option[String] = None): ModelDef = {
+                               inMsgSets: List[List[String]], outMsgs: List[String],userid: Option[String] = None,modelConfigName:String = null): ModelDef = {
     try {
       // Now, we need to create a real jar file - Need to add an actual Package name with a real Napespace and Version numbers.
       val packageName = modelNamespace + ".V" + MdMgr.ConvertVersionToLong(MdMgr.FormatVersion(modelVersion))
@@ -531,7 +531,7 @@ class CompilerProxy {
       val depJars = getJarsFromClassPath(classPath)
 
       // figure out the Physical Model Name
-      var (dummy1, dummy2, dummy3, pName,defaultInputMsgSets) = getModelMetadataFromJar(jarFileName, elements, depJars, sourceLang,userid)
+      var (dummy1, dummy2, dummy3, pName,defaultInputMsgSets) = getModelMetadataFromJar(jarFileName, elements, depJars, sourceLang,userid,modelConfigName)
 
       /* Create the ModelDef object
 
@@ -594,6 +594,12 @@ class CompilerProxy {
 
       val objDef = createSavedSourceCode(originalSource, notTypeDeps, typeDeps, pname)
 
+      // reconstruct modDef json string from modelConfig object
+      logger.debug("generateModelDef: Get the model config for " + modelConfigName)
+      var config = MdMgr.GetMdMgr.GetModelConfig((userid.get + "." + modelConfigName).toLowerCase)
+      var modCfgJson = JsonSerializer.SerializeModelConfigToJson(modelConfigName,config)
+      logger.debug("generateModelDef: modelConfig in json  " + modCfgJson)
+      
       val modelType: String = if (sourceLang.equalsIgnoreCase("scala")) "Scala" else "Java"
       val modDef: ModelDef = MdMgr.GetMdMgr.MakeModelDef(modelNamespace
         , modelName
@@ -608,7 +614,8 @@ class CompilerProxy {
         , jarFileName
         , deps.toArray[String]
         , recompile
-        , false)
+        , false
+	, modCfgJson)
 
       // Need to set some values by hand here.
       modDef.jarName = jarFileName
@@ -744,7 +751,7 @@ class CompilerProxy {
 
     val depJars = getJarsFromClassPath(classPath)
 
-    (getModelMetadataFromJar(jarFileName, elements, depJars, sourceLang,userid), finalSourceCode, packageName)
+    (getModelMetadataFromJar(jarFileName, elements, depJars, sourceLang,userid,modelConfigName), finalSourceCode, packageName)
 
   }
 
@@ -955,8 +962,7 @@ class CompilerProxy {
     }
   }
 
-
-  private def getModelMetadataFromJar(jarFileName: String, elements: Set[BaseElemDef], depJars: List[String], sourceLang: String,userid: Option[String]): (String, String, String, String,List[List[String]]) = {
+  private def getModelMetadataFromJar(jarFileName: String, elements: Set[BaseElemDef], depJars: List[String], sourceLang: String,userid: Option[String],modelConfigName:String): (String, String, String, String,List[List[String]]) = {
 
     // Resolve ModelNames and Models versions - note, the jar file generated is still in the workDirectory.
     val loaderInfo = new KamanjaLoaderInfo()
@@ -1038,10 +1044,10 @@ class CompilerProxy {
           if (mdlFactory != null) {
 	    // create possible default input messages from model_config.Type_dependencies for java/scala models
             var fullName = mdlFactory.getModelName.split('.')
-	    var modelName = fullName(fullName.length - 1) // is modelConfig name same as model name ?
-	    var key = "metadataapi" + "." + modelName
+	    var modelName = fullName(fullName.length - 1)
+	    var key = "metadataapi" + "." + modelConfigName
 	    if( userid != None ){
-	      key = userid.get + "." + modelName
+	      key = userid.get + "." + modelConfigName
 	    }
 	    logger.debug("getModelMetadataFromJar: Get the model config for " + key)
 	    var config = MdMgr.GetMdMgr.GetModelConfig(key)

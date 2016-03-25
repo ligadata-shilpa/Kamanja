@@ -33,6 +33,7 @@ import com.ligadata.Exceptions._
 import com.ligadata.AuditAdapterInfo.AuditRecord
 
 import java.util.Date
+import scala.collection.mutable.{HashMap}
 
 case class TypeDef(MetadataType: String, NameSpace: String, Name: String, TypeTypeName: String, TypeNameSpace: String, TypeName: String, PhysicalName: String, var Version: String, JarName: String, DependencyJars: List[String], Implementation: String, Fixed: Option[Boolean], NumberOfDimensions: Option[Int], KeyTypeNameSpace: Option[String], KeyTypeName: Option[String], ValueTypeNameSpace: Option[String], ValueTypeName: Option[String], TupleDefinitions: Option[List[TypeDef]])
 
@@ -1532,4 +1533,16 @@ object JsonSerializer {
     return Serialization.write(map)
   }
 
+  def SerializeModelConfigToJson(mcfgKey: String, config: scala.collection.immutable.Map[String, Any]): String = {
+    var jsonStr = ""
+    try{
+      jsonStr = jsonStr + SerializeMapToJsonString(Map(mcfgKey -> config))
+      jsonStr
+    } catch {
+      case e: Exception => {
+        logger.debug("", e)
+        throw Json4sSerializationException(e.getMessage(), e)
+      }
+    }
+  }
 }

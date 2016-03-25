@@ -41,7 +41,7 @@ import com.ligadata.Serialize._
 import com.ligadata.kamanja.metadataload.MetadataLoad
 
 @Ignore
-class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter with BeforeAndAfterAll with GivenWhenThen {
+class TestModelConfigToJsonSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter with BeforeAndAfterAll with GivenWhenThen {
   var res: String = null;
   var statusCode: Int = -1;
   var apiResKey: String = "\"Status Code\" : 0"
@@ -263,7 +263,7 @@ class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter wi
     }
 
     // CRUD operations on container objects
-    it("Container Tests") {
+    ignore("Container Tests") {
       And("Check whether CONTAINER_FILES_DIR defined as property")
       dirName = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("CONTAINER_FILES_DIR")
       assert(null != dirName)
@@ -312,7 +312,7 @@ class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter wi
     }
 
     // CRUD operations on message objects
-    it("Message Tests") {
+    ignore("Message Tests") {
       And("Check whether MESSAGE_FILES_DIR defined as property")
       dirName = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("MESSAGE_FILES_DIR")
       assert(null != dirName)
@@ -491,16 +491,36 @@ class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter wi
 	assert(dependencies.length == 0) // empty in our helloworld example
 
 	var msgsAndContainers = MetadataAPIImpl.getModelMessagesContainers(cfgName,userid)
-	assert(msgsAndContainers.length == 2) 
+	assert(msgsAndContainers.length == 2) // just one input msg in our helloworld example
 	var msgStr = msgsAndContainers(0)
 	assert(msgStr.equalsIgnoreCase("system.helloworld_msg_def"))
 	msgStr = msgsAndContainers(1)
 	assert(msgStr.equalsIgnoreCase("system.helloworld_msg_def_2"))
 
+	logger.debug("Get the model config for " + cfgName)
+	var config = MdMgr.GetMdMgr.GetModelConfig((userid.get + "." + cfgName).toLowerCase)
+	assert(config != null)
+	logger.debug("config => " + config)
+	var modCfgJson = JsonSerializer.SerializeModelConfigToJson(cfgName,config)
+	logger.debug("modelConfig in json  " + modCfgJson)
+
+	// reload model config json string again
+	res = MetadataAPIImpl.UploadModelsConfig(modCfgJson,
+						 userid,   // userid
+						 null,   // objectList
+						 true   // isFromNotify
+					       )
+	res should include regex ("\"Status Code\" : 0")
+
+	And("Dump  modelConfig that was just added")
+	MdMgr.GetMdMgr.DumpModelConfigs
+	And("GetModelDependencies to fetch the modelConfig that was just added")
+
+
       })
     }
 
-    it("Add Scala Models") {
+    ignore("Add Scala Models") {
       And("Check whether MODEL_FILES_DIR defined as property")
       dirName = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("MODEL_FILES_DIR")
       assert(null != dirName)
@@ -558,7 +578,6 @@ class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter wi
 	res = MetadataAPIImpl.GetModelDef(nameSpace, objName, "XML", version, userid)
 	res should include regex ("\"Status Code\" : 0")
 
-	And("Check whether default outmsg has been created")
 	val msgName = objName + "_outputmsg"
 	version = "000000000000000001"
 	res = MetadataAPIImpl.GetMessageDef(nameSpace, msgName, "JSON", version, userid)
@@ -570,14 +589,12 @@ class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter wi
 	val models = modDefs.get.toArray
 	assert(models.length == 1)
 	
-	And("Validate contents of default outmsg")
 	var omsgs = models(0).outputMsgs
 	assert(omsgs.length == 1)
 	val msgFullName = nameSpace + "." + msgName
 	assert(omsgs(0) == msgFullName.toLowerCase)
 
 	// there should be two sets in this test
-	And("Validate contents of inputMsgSets")
 	var imsgs = models(0).inputMsgSets
 	assert(imsgs.length == 2)
 
@@ -593,31 +610,7 @@ class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter wi
 	msgAttr = msgAttrArrays(0)
 	assert(msgAttr != null)
 	assert(msgAttr.message.equalsIgnoreCase("system.helloworld_msg_def_2") || msgAttr.message.equalsIgnoreCase("system.helloworld_msg_def"))
-
-	And("Validate contents of inputMsgSets")
-	var cfgName = "HelloWorld2Model"
-
-	And("Validate the ModelDef.modelConfig")
-	modStr = models(0).modelConfig
-
-	And("Load the modelConfig again")
-	res = MetadataAPIImpl.UploadModelsConfig(modStr,
-						 userid,   // userid
-						 null,   // objectList
-						 true   // isFromNotify
-					       )
-	res should include regex ("\"Status Code\" : 0")
-
-	And("Validate dependencies and typeDependencies of modelConfig object")
-	var dependencies = MetadataAPIImpl.getModelDependencies(cfgName,userid)
-	assert(dependencies.length == 0) 
-
-	var msgsAndContainers = MetadataAPIImpl.getModelMessagesContainers(cfgName,userid)
-	assert(msgsAndContainers.length == 2)
-	var msgStr = msgsAndContainers(0)
-	assert(msgStr.equalsIgnoreCase("system.helloworld_msg_def"))
-	msgStr = msgsAndContainers(1)
-	assert(msgStr.equalsIgnoreCase("system.helloworld_msg_def_2"))
+	
       })
     }
   }
