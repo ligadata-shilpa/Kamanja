@@ -29,7 +29,8 @@ import scala.util.{ Success, Failure }
 import com.ligadata.MetadataAPI._
 
 object GetHeartbeatService {
-  case class Process(nodeIds:String)
+  case class Process(nodeIds:String) //default, returns all
+  case class ProcessWithLevel(ids : String, detailsLevel : String)
 }
 
 /**
@@ -45,19 +46,44 @@ class GetHeartbeatService(requestContext: RequestContext, userid:Option[String],
   
   def receive = {
     case Process(nodeId) =>
-      process(nodeId)
+      process(nodeId, "all")
+      context.stop(self)
+    case ProcessWithLevel(ids, detailsLevel) =>
+      process(ids, detailsLevel)
       context.stop(self)
   }
   
-  def process(nodeIds:String): Unit = {
+  def process(ids:String, detailsLevel : String): Unit = {
+    var apiResult : String = ""
+
     // NodeIds is a JSON array of nodeIds.
-    if (nodeIds == null || (nodeIds != null && nodeIds.length == 0))
+    if (ids == null || (ids != null && ids.length == 0))
       requestContext.complete(new ApiResult(ErrorCodeConstants.Failure, APIName, null, "Invalid BODY in a POST request.  Expecting either an array of nodeIds or an empty array for all").toString)  
   
     if (!MetadataAPIImpl.checkAuth(userid,password,cert, MetadataAPIImpl.getPrivilegeName("get","heartbeat"))) {
       requestContext.complete(new ApiResult(ErrorCodeConstants.Failure, APIName, null, "Error:Checking Heartbeat is not allowed for this user").toString )
     } else {
-      val apiResult = MetadataAPIImpl.getHealthCheck(nodeIds)  
+
+      detailsLevel.toLowerCase match {
+        case "all" => {
+          apiResult = MetadataAPIImpl.getHealthCheck(ids, userid)
+        }
+        case "nodesonly" => {
+          apiResult = MetadataAPIImpl.getHealthCheckNodesOnly(ids, userid)
+        }
+        case "componentnames" => {
+          apiResult = MetadataAPIImpl.getHealthCheckComponentNames(ids, userid)
+        }
+        case "specificcomponents" => {
+          apiResult = MetadataAPIImpl.getHealthCheckComponentDetailsByNames(ids, userid)
+        }
+
+        case _ => {
+          apiResult = ("Value (" + detailsLevel + ") is not supported ")
+          return new ApiResult(ErrorCodeConstants.Failure, APIName, null,  "Invalid URL:" + apiResult).toString
+        }
+      }
+
       requestContext.complete(apiResult)      
     }
   }  
