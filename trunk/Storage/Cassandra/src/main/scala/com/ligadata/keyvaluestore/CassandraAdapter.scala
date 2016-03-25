@@ -393,7 +393,7 @@ class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
         preparedStatementsMap.put(query, prepStmt)
       }
       var byteBuf = ByteBuffer.wrap(value.serializedInfo.toArray[Byte]);
-      session.execute(prepStmt.bind(value.schemaId, value.serializerType,
+      session.execute(prepStmt.bind(new java.lang.Integer(value.schemaId), value.serializerType,
 				    byteBuf,
 				    new java.lang.Long(key.timePartition),
 				    bucketKeyToString(key.bucketKey),
@@ -440,7 +440,7 @@ class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
           // whether updates are done in bulk or one at a time. By default we are doing this 
           // one at a time until we have a better solution.
           if (batchPuts.equalsIgnoreCase("YES")) {
-            batch.add(prepStmt.bind(value.schemaId, value.serializerType,
+            batch.add(prepStmt.bind(new java.lang.Integer(value.schemaId), value.serializerType,
 				    byteBuf,
 				    new java.lang.Long(key.timePartition),
 				    bucketKeyToString(key.bucketKey),
@@ -448,7 +448,7 @@ class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
 				    new java.lang.Integer(key.rowId)).
 		      setConsistencyLevel(consistencylevelWrite))
           } else {
-            session.execute(prepStmt.bind(value.schemaId, value.serializerType,
+            session.execute(prepStmt.bind(new java.lang.Integer(value.schemaId), value.serializerType,
 					  byteBuf,
 					  new java.lang.Long(key.timePartition),
 					  bucketKeyToString(key.bucketKey),

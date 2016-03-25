@@ -19,6 +19,7 @@ package com.ligadata.KamanjaManager
 
 import com.ligadata.KamanjaBase._
 import com.ligadata.InputOutputAdapterInfo.{ InputAdapter, OutputAdapter, PartitionUniqueRecordKey, PartitionUniqueRecordValue, StartProcPartInfo }
+import com.ligadata.Utils.ClusterStatus
 import com.ligadata.kamanja.metadata.{ BaseElem, MappedMsgTypeDef, BaseAttributeDef, StructTypeDef, EntityType, AttributeDef, ArrayBufTypeDef, MessageDef, ContainerDef, ModelDef }
 import com.ligadata.kamanja.metadata._
 import com.ligadata.kamanja.metadata.MdMgr._
@@ -310,6 +311,7 @@ object KamanjaLeader {
   }
 
   private def getValidateAdaptersInfo: scala.collection.immutable.Map[String, (String, Int, Int, Long)] = lock.synchronized {
+
     val savedValidatedAdaptInfo = envCtxt.GetValidateAdapterInformation
     val map = scala.collection.mutable.Map[String, String]()
 
@@ -409,24 +411,24 @@ object KamanjaLeader {
 
   private def UpdatePartitionsIfNeededOnLeader: Unit = lock.synchronized {
     val cs = GetClusterStatus
-    if (cs.isLeader == false || cs.leader != cs.nodeId) return // This is not leader, just return from here. This is same as (cs.leader != cs.nodeId)
+    if (cs.isLeader == false || cs.leaderNodeId != cs.nodeId) return // This is not leader, just return from here. This is same as (cs.leader != cs.nodeId)
 
-    LOG.warn("Distribution NodeId:%s, IsLeader:%s, Leader:%s, AllParticipents:{%s}".format(cs.nodeId, cs.isLeader.toString, cs.leader, cs.participants.mkString(",")))
+    LOG.warn("Distribution NodeId:%s, IsLeader:%s, Leader:%s, AllParticipents:{%s}".format(cs.nodeId, cs.isLeader.toString, cs.leaderNodeId, cs.participantsNodeIds.mkString(",")))
 
     // Clear Previous Distribution Map
     distributionMap.clear
     adapterMaxPartitions.clear
     nodesStatus.clear
     expectedNodesAction = ""
-    curParticipents = if (cs.participants != null) cs.participants.toSet else Set[String]()
+    curParticipents = if (cs.participantsNodeIds != null) cs.participantsNodeIds.toSet else Set[String]()
 
     try {
       var tmpDistMap = ArrayBuffer[(String, scala.collection.mutable.Map[String, ArrayBuffer[String]])]()
 
-      if (cs.participants != null) {
+      if (cs.participantsNodeIds != null) {
 
         // Create ArrayBuffer for each node participating at this moment
-        cs.participants.foreach(p => {
+        cs.participantsNodeIds.foreach(p => {
           tmpDistMap += ((p, scala.collection.mutable.Map[String, ArrayBuffer[String]]()))
         })
 
@@ -440,7 +442,7 @@ object KamanjaLeader {
         foundKeysInValidation = validateFndKeysAndVals
 
         // Update New partitions for all nodes and Set the text
-        val totalParticipents: Int = cs.participants.size
+        val totalParticipents: Int = cs.participantsNodeIds.size
         if (allPartitionUniqueRecordKeys != null && allPartitionUniqueRecordKeys.size > 0) {
           LOG.debug("allPartitionUniqueRecordKeys: %d".format(allPartitionUniqueRecordKeys.size))
           var cntr: Int = 0
@@ -497,11 +499,11 @@ object KamanjaLeader {
   }
 
   private def IsLeaderNode: Boolean = lock1.synchronized {
-    return (clusterStatus.isLeader && clusterStatus.leader == clusterStatus.nodeId)
+    return (clusterStatus.isLeader && clusterStatus.leaderNodeId == clusterStatus.nodeId)
   }
 
   private def IsLeaderNodeAndUpdatePartitionsFlagSet: Boolean = lock1.synchronized {
-    if (clusterStatus.isLeader && clusterStatus.leader == clusterStatus.nodeId)
+    if (clusterStatus.isLeader && clusterStatus.leaderNodeId == clusterStatus.nodeId)
       return updatePartitionsFlag
     else
       return false
@@ -526,7 +528,7 @@ object KamanjaLeader {
     LOG.debug("EventChangeCallback => Enter")
     KamanjaConfiguration.participentsChangedCntr += 1
     SetClusterStatus(cs)
-    LOG.warn("NodeId:%s, IsLeader:%s, Leader:%s, AllParticipents:{%s}".format(cs.nodeId, cs.isLeader.toString, cs.leader, cs.participants.mkString(",")))
+    LOG.warn("NodeId:%s, IsLeader:%s, Leader:%s, AllParticipents:{%s}".format(cs.nodeId, cs.isLeader.toString, cs.leaderNodeId, cs.participantsNodeIds.mkString(",")))
     LOG.debug("EventChangeCallback => Exit")
   }
 

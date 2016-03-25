@@ -39,7 +39,7 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
   var models = Array[(String, MdlInfo, Boolean, ModelInstance, Boolean)]()
   var validateMsgsForMdls = scala.collection.mutable.Set[String]() // Message Names for creating models instances
 
-  private def RunAllModels(transId: Long, inputData: Array[Byte], finalTopMsgOrContainer: MessageContainerBase, txnCtxt: TransactionContext, uk: String, uv: String, xformedMsgCntr: Int, totalXformedMsgs: Int): Array[SavedMdlResult] = {
+  private def RunAllModels(transId: Long, inputData: Array[Byte], finalTopMsgOrContainer: MessageContainerBase, txnCtxt: TransactionContext, uk: String, uv: String): Array[SavedMdlResult] = {
     var results: ArrayBuffer[SavedMdlResult] = new ArrayBuffer[SavedMdlResult]()
     if (LOG.isDebugEnabled)
       LOG.debug(s"Processing uniqueKey:$uk, uniqueVal:$uv, finalTopMsgOrContainer:$finalTopMsgOrContainer, previousModles:${models.size}")
@@ -165,7 +165,7 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
               if (curMd != null) {
                 val res = curMd.execute(txnCtxt, outputDefault)
                 if (res != null) {
-                  results += new SavedMdlResult().withMdlName(md.mdl.getModelName).withMdlVersion(md.mdl.getVersion).withUniqKey(uk).withUniqVal(uv).withTxnId(transId).withXformedMsgCntr(xformedMsgCntr).withTotalXformedMsgs(totalXformedMsgs).withMdlResult(res)
+                  results += new SavedMdlResult().withMdlName(md.mdl.getModelName).withMdlVersion(md.mdl.getVersion).withUniqKey(uk).withUniqVal(uv).withTxnId(transId).withMdlResult(res)
                 } else {
                   // Nothing to output
                 }
@@ -198,14 +198,16 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
     return results.toArray
   }
 
+/*
   private def GetTopMsgName(msgName: String): (String, Boolean, MsgContainerObjAndTransformInfo) = {
     val topMsgInfo = KamanjaMetadata.getMessgeInfo(msgName)
     if (topMsgInfo == null || topMsgInfo.parents.size == 0) return (msgName, false, null)
     (topMsgInfo.parents(0)._1, true, topMsgInfo)
   }
+*/
 
   // Returns Adapter/Queue Name, Partition Key & Output String
-  def execute(transId: Long, inputData: Array[Byte], msgType: String, msgInfo: MsgContainerObjAndTransformInfo, inputdata: InputData, txnCtxt: TransactionContext, readTmNs: Long, rdTmMs: Long, uk: String, uv: String, xformedMsgCntr: Int, totalXformedMsgs: Int, ignoreOutput: Boolean): Array[(String, String, String)] = {
+  def execute(transId: Long, inputData: Array[Byte], msgType: String, msgInfo: MsgContainerObjAndTransformInfo, inputdata: InputData, txnCtxt: TransactionContext, readTmNs: Long, rdTmMs: Long, uk: String, uv: String): Array[(String, String, String)] = {
     // LOG.debug("LE => " + msgData)
     LOG.debug("Processing uniqueKey:%s, uniqueVal:%s".format(uk, uv))
     val returnOutput = ArrayBuffer[(String, String, String)]() // Adapter/Queue name, PartitionKey & output message 
@@ -268,7 +270,7 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
           allMdlsResults = scala.collection.mutable.Map[String, SavedMdlResult]()
         // Run all models
         val mdlsStartTime = System.nanoTime
-        val results = RunAllModels(transId, inputData, msg, txnCtxt, uk, uv, xformedMsgCntr, totalXformedMsgs)
+        val results = RunAllModels(transId, inputData, msg, txnCtxt, uk, uv)
         LOG.info(ManagerUtils.getComponentElapsedTimeStr("Models", uv, readTmNs, mdlsStartTime))
 
         if (results.size > 0) {
