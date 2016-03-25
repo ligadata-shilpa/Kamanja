@@ -107,8 +107,8 @@ trait OutputAdapter extends AdaptersSerializeDeserializers with Monitorable {
   val inputConfig: AdapterConfiguration
 
   def send(tnxCtxt: TransactionContext, outputContainers: Array[MessageContainerBase]): Unit = {
-    val (outputContainers, serializedContainerData, serializerNames) = serialize(tnxCtxt, outputContainers)
-    send(tnxCtxt, outputContainers, serializedContainerData, serializerNames)
+    val (outContainers, serializedContainerData, serializerNames) = serialize(tnxCtxt, outputContainers)
+    send(tnxCtxt, outContainers, serializedContainerData, serializerNames)
   }
 
   // This is protected override method. After applying serialization, pass original messages, Serialized data & Serializer names

@@ -42,7 +42,7 @@ object KafkaSimpleConsumer extends InputAdapterFactory {
   val MONITOR_FREQUENCY = 10000 // Monitor Topic queues every 20 seconds
   val SLEEP_DURATION = 1000 // Allow 1 sec between unsucessful fetched
   var CURRENT_BROKER: String = _
-  val FETCHSIZE = 64 * 1024
+  val FETCHSIZE = 1024 * 1024 // 1MB by default
   val ZOOKEEPER_CONNECTION_TIMEOUT_MS = 3000
   val MAX_TIMEOUT = 60000
   val INIT_TIMEOUT = 250
@@ -222,13 +222,16 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj
     })
 
     val delimiters = new DataDelimiters()
-    delimiters.keyAndValueDelimiter = qc.keyAndValueDelimiter
-    delimiters.fieldDelimiter = qc.fieldDelimiter
-    delimiters.valueDelimiter = qc.valueDelimiter
+//    delimiters.keyAndValueDelimiter = qc.keyAndValueDelimiter
+//    delimiters.fieldDelimiter = qc.fieldDelimiter
+//    delimiters.valueDelimiter = qc.valueDelimiter
 
     // Enable the adapter to process
     isQuiesced = false
     LOG.debug("KAFKA-ADAPTER: Starting " + kvs.size + " threads to process partitions")
+
+    val fetchSz = qc.otherconfigs.getOrElse("fetchsize", KafkaSimpleConsumer.FETCHSIZE.toString).trim.toInt // FETCHSIZE
+    val zkConnTimeOut = qc.otherconfigs.getOrElse("zookeeper_connection_timeout_ms", KafkaSimpleConsumer.ZOOKEEPER_CONNECTION_TIMEOUT_MS.toString).trim.toInt // ZOOKEEPER_CONNECTION_TIMEOUT_MS
 
     // Schedule a task to perform a read from a give partition.
     kvs.foreach(kvsElement => {
@@ -288,7 +291,7 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj
 
           // Keep processing until you fail enough times.
           while (!isQuiesced) {
-            val fetchReq = new FetchRequestBuilder().clientId(clientName).addFetch(qc.topic, partitionId, readOffset, KafkaSimpleConsumer.FETCHSIZE).build()
+            val fetchReq = new FetchRequestBuilder().clientId(clientName).addFetch(qc.topic, partitionId, readOffset, fetchSz).build()
             var fetchResp: FetchResponse = null
             var isFetchError = false
             var isErrorRecorded = false
@@ -459,14 +462,17 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj
 
     LOG.debug("KAFKA-ADAPTER - Querying kafka for Topic " + qc.topic + " metadata(partitions)")
 
+    val fetchSz = qc.otherconfigs.getOrElse("fetchsize", KafkaSimpleConsumer.FETCHSIZE.toString).trim.toInt // FETCHSIZE
+    val zkConnTimeOut = qc.otherconfigs.getOrElse("zookeeper_connection_timeout_ms", KafkaSimpleConsumer.ZOOKEEPER_CONNECTION_TIMEOUT_MS.toString).trim.toInt // ZOOKEEPER_CONNECTION_TIMEOUT_MS
+
     qc.hosts.foreach(broker => {
       breakable {
         val brokerName = broker.split(":")
         var partConsumer: SimpleConsumer = null
         try {
           partConsumer = new SimpleConsumer(brokerName(0), brokerName(1).toInt,
-            KafkaSimpleConsumer.ZOOKEEPER_CONNECTION_TIMEOUT_MS,
-            KafkaSimpleConsumer.FETCHSIZE,
+            zkConnTimeOut,
+            fetchSz,
             KafkaSimpleConsumer.METADATA_REQUEST_TYPE)
         } catch {
           case e: Exception => {
@@ -593,6 +599,9 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj
   private def findLeader(brokers: Array[String], inPartition: Int): kafka.api.PartitionMetadata = lock.synchronized {
     var leaderMetadata: kafka.api.PartitionMetadata = null
 
+    val fetchSz = qc.otherconfigs.getOrElse("fetchsize", KafkaSimpleConsumer.FETCHSIZE.toString).trim.toInt // FETCHSIZE
+    val zkConnTimeOut = qc.otherconfigs.getOrElse("zookeeper_connection_timeout_ms", KafkaSimpleConsumer.ZOOKEEPER_CONNECTION_TIMEOUT_MS.toString).trim.toInt // ZOOKEEPER_CONNECTION_TIMEOUT_MS
+
     LOG.debug("KAFKA-ADAPTER: Looking for Kafka Topic Leader for partition " + inPartition)
     try {
       brokers.foreach(broker => {
@@ -602,8 +611,8 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj
             var llConsumer: SimpleConsumer = null
             try {
               llConsumer = new SimpleConsumer(brokerName(0), brokerName(1).toInt,
-                KafkaSimpleConsumer.ZOOKEEPER_CONNECTION_TIMEOUT_MS,
-                KafkaSimpleConsumer.FETCHSIZE,
+                zkConnTimeOut,
+                fetchSz,
                 KafkaSimpleConsumer.METADATA_REQUEST_TYPE)
             } catch {
 
@@ -674,12 +683,15 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj
   }
 
   private def createConsumer(bokerName: String, borkerPort: String): SimpleConsumer = {
+    val fetchSz = qc.otherconfigs.getOrElse("fetchsize", KafkaSimpleConsumer.FETCHSIZE.toString).trim.toInt // FETCHSIZE
+    val zkConnTimeOut = qc.otherconfigs.getOrElse("zookeeper_connection_timeout_ms", KafkaSimpleConsumer.ZOOKEEPER_CONNECTION_TIMEOUT_MS.toString).trim.toInt // ZOOKEEPER_CONNECTION_TIMEOUT_MS
+
     var consumer: SimpleConsumer = null
     while (consumer == null && !isQuiesced) {
       try {
         consumer = new SimpleConsumer(bokerName, borkerPort.toInt,
-          KafkaSimpleConsumer.ZOOKEEPER_CONNECTION_TIMEOUT_MS,
-          KafkaSimpleConsumer.FETCHSIZE,
+          zkConnTimeOut,
+          fetchSz,
           KafkaSimpleConsumer.METADATA_REQUEST_TYPE)
       } catch {
         case e: Exception => {
@@ -735,11 +747,14 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj
     var llConsumer: kafka.javaapi.consumer.SimpleConsumer = null
     val brokerName = leadBroker.split(":")
 
+    val fetchSz = qc.otherconfigs.getOrElse("fetchsize", KafkaSimpleConsumer.FETCHSIZE.toString).trim.toInt // FETCHSIZE
+    val zkConnTimeOut = qc.otherconfigs.getOrElse("zookeeper_connection_timeout_ms", KafkaSimpleConsumer.ZOOKEEPER_CONNECTION_TIMEOUT_MS.toString).trim.toInt // ZOOKEEPER_CONNECTION_TIMEOUT_MS
+
     try{
       llConsumer = new kafka.javaapi.consumer.SimpleConsumer(brokerName(0), brokerName(1).toInt,
-                                                               KafkaSimpleConsumer.ZOOKEEPER_CONNECTION_TIMEOUT_MS,
-                                                               KafkaSimpleConsumer.FETCHSIZE,
-                                                               KafkaSimpleConsumer.METADATA_REQUEST_TYPE)
+        zkConnTimeOut,
+        fetchSz,
+        KafkaSimpleConsumer.METADATA_REQUEST_TYPE)
     } catch {
       case e: Exception => throw FatalAdapterException("Unable to create connection to Kafka Server ", e)
     }

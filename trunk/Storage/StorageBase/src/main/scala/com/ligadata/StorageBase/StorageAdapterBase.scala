@@ -24,22 +24,24 @@ trait DataStoreOperations extends AdaptersSerializeDeserializers {
     // Call put methods with container name, key & values
   }
 
-  def put(tnxCtxt: TransactionContext, key: Key, container: MessageContainerBase): Unit = {
-    val (outputContainers, serializedContainerData, serializerNames) = serialize(tnxCtxt, Array(container))
-    // Call put methods with container name, key & values
-  }
-
-  def put(tnxCtxt: TransactionContext, keys: Array[Key], containers: Array[MessageContainerBase]): Unit = {
-    val (outputContainers, serializedContainerData, serializerNames) = serialize(tnxCtxt, containers)
-    // Call put methods with container name, key & values
-  }
-
-  def put(tnxCtxt: TransactionContext, key: Key, value: Any): Unit = {
+  // value could be MessageContainerBase or Array[Byte]
+  def put(tnxCtxt: TransactionContext, containerName: String, key: Key, value: Any): Unit = {
     // Check for value.isInstanceOf[MessageContainerBase]
+//    val (outputContainers, serializedContainerData, serializerNames) = serialize(tnxCtxt, Array(container))
     // Call put methods with container name, key & values
   }
 
-  def put(tnxCtxt: TransactionContext, keys: Array[Key], values: Array[Any]): Unit = {
+  // value could be MessageContainerBase or Array[Byte]
+  def put(tnxCtxt: TransactionContext, containerName: String, keys: Array[Key], values: Array[Any]): Unit = {
+    // Check for value.isInstanceOf[MessageContainerBase]
+//    val (outputContainers, serializedContainerData, serializerNames) = serialize(tnxCtxt, containers)
+    // Call put methods with container name, key & values
+  }
+
+  // data_list has List of container names, and each container has list of key & value as MessageContainerBase or Array[Byte]
+  def put(tnxCtxt: TransactionContext, data_list: Array[(String, Array[(Key, Any)])]): Unit = {
+    // Check for value.isInstanceOf[MessageContainerBase]
+    //    val (outputContainers, serializedContainerData, serializerNames) = serialize(tnxCtxt, containers)
     // Call put methods with container name, key & values
   }
 
@@ -53,71 +55,76 @@ trait DataStoreOperations extends AdaptersSerializeDeserializers {
   def del(containerName: String, time: TimeRange, keys: Array[Array[String]]): Unit // For the given multiple bucket key strings, delete the values with in given date range
 
   // get operations
-  def get(containerName: String, callbackFunction: (Key, Any) => Unit): Unit = {
+  // Returns Key, Either[MessageContainerBase, Array[Byte]], TypeName, Version
+  def get(containerName: String, callbackFunction: (Key, Any, String, Int) => Unit): Unit = {
     val getCallbackFn = (k: Key, v: Value) => {
       if (callbackFunction != null) {
-        if (v.serializerType != null && v.serializerType.size > 0) {
+        if (v.schemaId > 0 && v.serializerType != null && v.serializerType.size > 0) {
+          val typFromSchemaId = "" // schemaId
           val (cont, deserializerName) = deserialize(v.serializedInfo, v.serializerType)
-          callbackFunction(k, cont)
+          callbackFunction(k, cont, deserializerName, 0)
         } else {
-          callbackFunction(k, v.serializedInfo)
+          callbackFunction(k, v.serializedInfo, null, 0)
         }
       }
     }
     get(containerName, if (callbackFunction != null) getCallbackFn else null)
   }
 
-  def get(containerName: String, keys: Array[Key], callbackFunction: (Key, Any) => Unit): Unit = {
+  // Returns Key, Either[MessageContainerBase, Array[Byte]], TypeName, Version
+  def get(containerName: String, keys: Array[Key], callbackFunction: (Key, Any, String, Int) => Unit): Unit = {
     val getCallbackFn = (k: Key, v: Value) => {
       if (callbackFunction != null) {
-        if (v.serializerType != null && v.serializerType.size > 0) {
+        if (v.schemaId > 0 && v.serializerType != null && v.serializerType.size > 0) {
           val (cont, deserializerName) = deserialize(v.serializedInfo, v.serializerType)
-          callbackFunction(k, cont)
+          callbackFunction(k, cont, deserializerName, 0)
         } else {
-          callbackFunction(k, v.serializedInfo)
+          callbackFunction(k, v.serializedInfo, null, 0)
         }
       }
     }
     get(containerName, keys, getCallbackFn)
   }
 
-  // Range of dates
-  def get(containerName: String, timeRanges: Array[TimeRange], callbackFunction: (Key, Any) => Unit): Unit  = {
+  // Returns Key, Either[MessageContainerBase, Array[Byte]], TypeName, Version
+  def get(containerName: String, timeRanges: Array[TimeRange], callbackFunction: (Key, Any, String, Int) => Unit): Unit  = {
     val getCallbackFn = (k: Key, v: Value) => {
       if (callbackFunction != null) {
-        if (v.serializerType != null && v.serializerType.size > 0) {
+        if (v.schemaId > 0 && v.serializerType != null && v.serializerType.size > 0) {
           val (cont, deserializerName) = deserialize(v.serializedInfo, v.serializerType)
-          callbackFunction(k, cont)
+          callbackFunction(k, cont, deserializerName, 0)
         } else {
-          callbackFunction(k, v.serializedInfo)
+          callbackFunction(k, v.serializedInfo, null, 0)
         }
       }
     }
     get(containerName, timeRanges, getCallbackFn)
   }
 
-  def get(containerName: String, timeRanges: Array[TimeRange], bucketKeys: Array[Array[String]], callbackFunction: (Key, Any) => Unit): Unit  = {
+  // Returns Key, Either[MessageContainerBase, Array[Byte]], TypeName, Version
+  def get(containerName: String, timeRanges: Array[TimeRange], bucketKeys: Array[Array[String]], callbackFunction: (Key, Any, String, Int) => Unit): Unit  = {
     val getCallbackFn = (k: Key, v: Value) => {
       if (callbackFunction != null) {
-        if (v.serializerType != null && v.serializerType.size > 0) {
+        if (v.schemaId > 0 && v.serializerType != null && v.serializerType.size > 0) {
           val (cont, deserializerName) = deserialize(v.serializedInfo, v.serializerType)
-          callbackFunction(k, cont)
+          callbackFunction(k, cont, deserializerName, 0)
         } else {
-          callbackFunction(k, v.serializedInfo)
+          callbackFunction(k, v.serializedInfo, null, 0)
         }
       }
     }
     get(containerName, timeRanges, bucketKeys, getCallbackFn)
   }
 
-  def get(containerName: String, bucketKeys: Array[Array[String]], callbackFunction: (Key, Any) => Unit): Unit  = {
+  // Returns Key, Either[MessageContainerBase, Array[Byte]], TypeName, Version
+  def get(containerName: String, bucketKeys: Array[Array[String]], callbackFunction: (Key, Any, String, Int) => Unit): Unit  = {
     val getCallbackFn = (k: Key, v: Value) => {
       if (callbackFunction != null) {
-        if (v.serializerType != null && v.serializerType.size > 0) {
+        if (v.schemaId > 0 && v.serializerType != null && v.serializerType.size > 0) {
           val (cont, deserializerName) = deserialize(v.serializedInfo, v.serializerType)
-          callbackFunction(k, cont)
+          callbackFunction(k, cont, deserializerName, 0)
         } else {
-          callbackFunction(k, v.serializedInfo)
+          callbackFunction(k, v.serializedInfo, null, 0)
         }
       }
     }
