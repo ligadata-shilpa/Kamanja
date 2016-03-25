@@ -41,8 +41,8 @@ import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
 import com.ligadata.Utils.{ KamanjaLoaderInfo }
 
-import com.ligadata.KvBase.{ Key, Value, TimeRange }
-import com.ligadata.StorageBase.{ DataStore, Transaction, StorageAdapterObj }
+import com.ligadata.KvBase.{ Key, TimeRange }
+import com.ligadata.StorageBase.{ DataStore, Transaction, StorageAdapterFactory, Value }
 import java.util.{ Date, Calendar, TimeZone }
 import java.text.SimpleDateFormat
 import java.io.File
@@ -1364,6 +1364,6 @@ class CassandraAdapterTx(val parent: DataStore) extends Transaction {
 }
 
 // To create Cassandra Datastore instance
-object CassandraAdapter extends StorageAdapterObj {
+object CassandraAdapter extends StorageAdapterFactory {
   override def CreateStorageAdapter(kvManagerLoader: KamanjaLoaderInfo, datastoreConfig: String): DataStore = new CassandraAdapter(kvManagerLoader, datastoreConfig)
 }

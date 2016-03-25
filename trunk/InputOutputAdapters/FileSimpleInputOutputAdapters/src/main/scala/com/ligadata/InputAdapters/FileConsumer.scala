@@ -64,7 +64,7 @@ class FileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: ExecC
 
 
 
-  private def ProcessFile(sFileName: String, format: String, msg: String, st: Stats, ignorelines: Int, AddTS2MsgFlag: Boolean, isGz: Boolean): Unit = {
+  private def ProcessFile(sFileName: String, msg: String, st: Stats, ignorelines: Int, AddTS2MsgFlag: Boolean, isGz: Boolean): Unit = {
     var is: InputStream = null
 
     LOG.debug("FileConsumer Processing File:" + sFileName)
@@ -80,11 +80,6 @@ class FileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: ExecC
         throw e
         return
     }
-
-    val delimiters = new DataDelimiters()
-    delimiters.keyAndValueDelimiter = fc.keyAndValueDelimiter
-    delimiters.fieldDelimiter = fc.fieldDelimiter
-    delimiters.valueDelimiter = fc.valueDelimiter
 
     val uniqueVal = new FilePartitionUniqueRecordValue
     uniqueVal.FileFullPath = sFileName
@@ -124,7 +119,7 @@ class FileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: ExecC
                     try {
                       // Creating new string to convert from Byte Array to string
                       uniqueVal.Offset = 0 //BUGBUG:: yet to fill this information
-                      execThread.execute(sendmsg.getBytes, format, uniqueKey, uniqueVal, readTmNs, readTmMs, false, fc.associatedMsg, delimiters)
+                      execThread.execute(sendmsg.getBytes, uniqueKey, uniqueVal, readTmNs, readTmMs)
                     } catch {
                       case e: Exception => {
                         LOG.error("", e)
@@ -179,7 +174,7 @@ class FileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: ExecC
           try {
             // Creating new string to convert from Byte Array to string
             uniqueVal.Offset = 0 //BUGBUG:: yet to fill this information
-            execThread.execute(sendmsg.getBytes, format, uniqueKey, uniqueVal, readTmNs, readTmMs, false, fc.associatedMsg, delimiters)
+            execThread.execute(sendmsg.getBytes, uniqueKey, uniqueVal, readTmNs, readTmMs)
           } catch {
             case e: Exception => {
               LOG.error("", e)
@@ -243,7 +238,7 @@ class FileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: ExecC
         val isGz = (compString != null && compString.compareToIgnoreCase("gz") == 0)
         fc.Files.foreach(fl => {
           if (isTxt || isGz) {
-            tm = tm + elapsedTm(ProcessFile(fl, fc.formatName, fc.MessagePrefix, st, fc.IgnoreLines, fc.AddTS2MsgFlag, isGz))
+            tm = tm + elapsedTm(ProcessFile(fl, fc.MessagePrefix, st, fc.IgnoreLines, fc.AddTS2MsgFlag, isGz))
           } else {
             throw new Exception("Not yet handled other than text & GZ files")
           }

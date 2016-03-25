@@ -34,8 +34,8 @@ No schema setup
 
 package com.ligadata.keyvaluestore
 
-import com.ligadata.KvBase.{ Key, Value, TimeRange }
-import com.ligadata.StorageBase.{ DataStore, Transaction, StorageAdapterObj }
+import com.ligadata.KvBase.{ Key, TimeRange }
+import com.ligadata.StorageBase.{ DataStore, Transaction, StorageAdapterFactory, Value }
 
 import org.mapdb._
 import java.io._
@@ -880,6 +880,6 @@ class TreeMapAdapterTx(val parent: DataStore) extends Transaction {
 }
 
 // To create TreeMap Datastore instance
-object TreeMapAdapter extends StorageAdapterObj {
+object TreeMapAdapter extends StorageAdapterFactory {
   override def CreateStorageAdapter(kvManagerLoader: KamanjaLoaderInfo, datastoreConfig: String): DataStore = new TreeMapAdapter(kvManagerLoader, datastoreConfig)
 }

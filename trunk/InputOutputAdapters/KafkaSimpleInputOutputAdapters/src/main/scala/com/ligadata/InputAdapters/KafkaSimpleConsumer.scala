@@ -221,11 +221,6 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj
       kvs(quad._1.PartitionId) = quad
     })
 
-    val delimiters = new DataDelimiters()
-//    delimiters.keyAndValueDelimiter = qc.keyAndValueDelimiter
-//    delimiters.fieldDelimiter = qc.fieldDelimiter
-//    delimiters.valueDelimiter = qc.valueDelimiter
-
     // Enable the adapter to process
     isQuiesced = false
     LOG.debug("KAFKA-ADAPTER: Starting " + kvs.size + " threads to process partitions")
@@ -404,8 +399,8 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj
                 incrementCountForPartition(partitionId)
 
                 uniqueVal.Offset = msgBuffer.offset
-                val dontSendOutputToOutputAdap = uniqueVal.Offset <= uniqueRecordValue
-                execThread.execute(message, qc.formatName, uniqueKey, uniqueVal, readTmNs, readTmMs, dontSendOutputToOutputAdap, qc.associatedMsg, delimiters)
+//                val dontSendOutputToOutputAdap = uniqueVal.Offset <= uniqueRecordValue
+                execThread.execute(message, uniqueKey, uniqueVal, readTmNs, readTmMs)
 
                 // Kafka offsets are 0 based, so add 1
                 localReadOffsets(partitionId) = (uniqueVal.Offset + 1)

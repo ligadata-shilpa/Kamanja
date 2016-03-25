@@ -46,9 +46,9 @@ trait DataStoreOperations extends AdaptersSerializeDeserializers {
   }
 
   // update operations, add & update semantics are different for relational databases
-  protected def put(containerName: String, key: Key, value: Value): Unit
+  /* protected */ def put(containerName: String, key: Key, value: Value): Unit
   // def put(containerName: String, data_list: Array[(Key, Value)]): Unit
-  protected def put(data_list: Array[(String, Array[(Key, Value)])]): Unit // data_list has List of container names, and each container has list of key & value
+  /* protected */ def put(data_list: Array[(String, Array[(Key, Value)])]): Unit // data_list has List of container names, and each container has list of key & value
 
   // delete operations
   def del(containerName: String, keys: Array[Key]): Unit // For the given keys, delete the values
@@ -131,11 +131,11 @@ trait DataStoreOperations extends AdaptersSerializeDeserializers {
     get(containerName, bucketKeys, getCallbackFn)
   }
 
-  protected def get(containerName: String, callbackFunction: (Key, Value) => Unit): Unit
-  protected def get(containerName: String, keys: Array[Key], callbackFunction: (Key, Value) => Unit): Unit
-  protected def get(containerName: String, timeRanges: Array[TimeRange], callbackFunction: (Key, Value) => Unit): Unit // Range of dates
-  protected def get(containerName: String, timeRanges: Array[TimeRange], bucketKeys: Array[Array[String]], callbackFunction: (Key, Value) => Unit): Unit
-  protected def get(containerName: String, bucketKeys: Array[Array[String]], callbackFunction: (Key, Value) => Unit): Unit
+  /* protected */ def get(containerName: String, callbackFunction: (Key, Value) => Unit): Unit
+  /* protected */ def get(containerName: String, keys: Array[Key], callbackFunction: (Key, Value) => Unit): Unit
+  /* protected */ def get(containerName: String, timeRanges: Array[TimeRange], callbackFunction: (Key, Value) => Unit): Unit // Range of dates
+  /* protected */ def get(containerName: String, timeRanges: Array[TimeRange], bucketKeys: Array[Array[String]], callbackFunction: (Key, Value) => Unit): Unit
+  /* protected */ def get(containerName: String, bucketKeys: Array[Array[String]], callbackFunction: (Key, Value) => Unit): Unit
 
   /*
   // Passing filter to storage
@@ -185,6 +185,6 @@ trait Transaction extends DataStoreOperations {
 }
 
 // Storage Adapter Object to create storage adapter
-trait StorageAdapterObj {
+trait StorageAdapterFactory {
   def CreateStorageAdapter(kvManagerLoader: KamanjaLoaderInfo, datastoreConfig: String): DataStore
 }
