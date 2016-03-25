@@ -858,16 +858,16 @@ class AdapterInfo {
   var typeString: String = _
   var dataFormat: String = _ // valid only for Input or Validate types. Output and Status does not have this
   var className: String = _
-  var inputAdapterToValidate: String = _ // Valid only for Output Adapter.
-  var failedEventsAdapter: String = _ // Valid only for Input Adapter.
-  var delimiterString1: String = _ // Delimiter String for CSV
-  var associatedMsg: String = _ // Queue Associated Message
+//  var inputAdapterToValidate: String = _ // Valid only for Output Adapter.
+//  var failedEventsAdapter: String = _ // Valid only for Input Adapter.
+//  var delimiterString1: String = _ // Delimiter String for CSV
+//  var associatedMsg: String = _ // Queue Associated Message
   var jarName: String = _
   var dependencyJars: Array[String] = new Array[String](0)
   var adapterSpecificCfg: String = _
-  var keyAndValueDelimiter: String = _ // Delimiter String for keyAndValueDelimiter
-  var fieldDelimiter: String = _ // Delimiter String for fieldDelimiter
-  var valueDelimiter: String = _ // Delimiter String for valueDelimiter
+//  var keyAndValueDelimiter: String = _ // Delimiter String for keyAndValueDelimiter
+//  var fieldDelimiter: String = _ // Delimiter String for fieldDelimiter
+//  var valueDelimiter: String = _ // Delimiter String for valueDelimiter
 
   def Name: String = name
   def TypeString: String = typeString
@@ -876,14 +876,13 @@ class AdapterInfo {
   def JarName: String = jarName
   def DependencyJars: Array[String] = dependencyJars
   def AdapterSpecificCfg: String = adapterSpecificCfg
-  def InputAdapterToValidate: String = inputAdapterToValidate
-  def FailedEventsAdapter: String = failedEventsAdapter
-  def DelimiterString1: String = if (fieldDelimiter != null) fieldDelimiter else delimiterString1
-  def AssociatedMessage: String = associatedMsg
-  def KeyAndValueDelimiter: String = keyAndValueDelimiter
-  def FieldDelimiter: String = if (fieldDelimiter != null) fieldDelimiter else delimiterString1
-  def ValueDelimiter: String = valueDelimiter
-
+//  def InputAdapterToValidate: String = inputAdapterToValidate
+//  def FailedEventsAdapter: String = failedEventsAdapter
+//  def DelimiterString1: String = if (fieldDelimiter != null) fieldDelimiter else delimiterString1
+//  def AssociatedMessage: String = associatedMsg
+//  def KeyAndValueDelimiter: String = keyAndValueDelimiter
+//  def FieldDelimiter: String = if (fieldDelimiter != null) fieldDelimiter else delimiterString1
+//  def ValueDelimiter: String = valueDelimiter
 }
 
 class UserPropertiesInfo {

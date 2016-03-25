@@ -25,7 +25,7 @@ import com.ligadata.kamanja.metadata.MdMgr._
 import com.ligadata.kamanja.metadataload.MetadataLoad
 import scala.collection.mutable.TreeSet
 import scala.util.control.Breaks._
-import com.ligadata.KamanjaBase.{ BaseMsg, MessageContainerBase, MessageContainerObjBase, BaseMsgObj, BaseContainerObj, BaseContainer, ModelInstanceFactory, TransformMessage, EnvContext, MdBaseResolveInfo, FactoryOfModelInstanceFactory, NodeContext, TransactionContext }
+import com.ligadata.KamanjaBase.{ BaseMsg, MessageContainerBase, MessageContainerObjBase, BaseMsgObj, BaseContainerObj, BaseContainer, ModelInstanceFactory, EnvContext, MdBaseResolveInfo, FactoryOfModelInstanceFactory, NodeContext, TransactionContext }
 import scala.collection.mutable.HashMap
 import org.apache.logging.log4j._
 import scala.collection.mutable.ArrayBuffer
@@ -116,26 +116,6 @@ class KamanjaMetadata {
           val messageobj = objinst.asInstanceOf[BaseMsgObj]
           val msgName = msg.FullName.toLowerCase
           var tranformMsgFlds: TransformMsgFldsMap = null
-          if (messageobj.NeedToTransformData) {
-            val txfnMsg: TransformMessage = messageobj.TransformDataAttributes
-
-            val inputFieldsMap = txfnMsg.inputFields.map(f => f.trim.toLowerCase).view.zipWithIndex.toMap
-            val outputFldIdxs = txfnMsg.outputFields.map(f => {
-              val fld = inputFieldsMap.getOrElse(f.trim.toLowerCase, -1)
-              if (fld < 0) {
-                throw new Exception("Output Field \"" + f + "\" not found in input list of fields")
-              }
-              fld
-            })
-
-            val keyfldsIdxs = txfnMsg.outputKeys.map(f => {
-              val fld = inputFieldsMap.getOrElse(f.trim.toLowerCase, -1)
-              if (fld < 0)
-                throw new Exception("Key Field \"" + f + "\" not found in input list of fields")
-              fld
-            })
-            tranformMsgFlds = new TransformMsgFldsMap(keyfldsIdxs, outputFldIdxs)
-          }
           val mgsObj = new MsgContainerObjAndTransformInfo(tranformMsgFlds, messageobj)
           GetChildsFromEntity(msg.containerType, mgsObj.childs)
           messageObjects(msgName) = mgsObj
@@ -1005,7 +985,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
         reent_lock.writeLock().lock();
         try {
           KamanjaConfiguration.metadataLoader = new KamanjaLoaderInfo(KamanjaConfiguration.metadataLoader, true, true)
-          envCtxt.SetClassLoader(KamanjaConfiguration.metadataLoader.loader)
+          envCtxt.setClassLoader(KamanjaConfiguration.metadataLoader.loader)
         } catch {
           case e: Exception => { LOG.warn("", e)
           }

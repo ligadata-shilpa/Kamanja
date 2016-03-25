@@ -263,17 +263,6 @@ object ExtractData extends MdBaseResolveInfo {
     }
   }
 
-  private def deSerializeData(v: Value): MessageContainerBase = {
-    v.serializerType.toLowerCase match {
-      case "manual" => {
-        return SerializeDeserialize.Deserialize(v.serializedInfo, this, clsLoaderInfo.loader, true, "")
-      }
-      case _ => {
-        throw new Exception("Found un-handled Serializer Info: " + v.serializerType)
-      }
-    }
-  }
-
   private def extractData(startTm: Date, endTm: Date, compressionString: String, sFileName: String, partKey: List[String], primaryKey: List[String]): Unit = {
     val hasValidPrimaryKey = (partKey != null && primaryKey != null && partKey.size > 0 && primaryKey.size > 0)
 
@@ -293,8 +282,8 @@ object ExtractData extends MdBaseResolveInfo {
 
       val ln = "\n".getBytes("UTF8")
 
-      val getObjFn = (k: Key, v: Value) => {
-        val dta = deSerializeData(v)
+      val getObjFn = (k: Key, v: Any, serType: String, typ: String, ver:Int) => {
+        val dta = v.asInstanceOf[MessageContainerBase]
         if (dta != null) {
           if (hasValidPrimaryKey) {
             // Search for primary key match

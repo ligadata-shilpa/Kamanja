@@ -20,7 +20,7 @@ import java.util.Date
 import org.json4s.jackson.JsonMethods._
 import com.ligadata.KamanjaBase.{ InputData, DelimitedData, JsonData, XmlData }
 import java.io.{ DataInputStream, DataOutputStream }
-import com.ligadata.KamanjaBase.{ BaseMsg, BaseMsgObj, TransformMessage, BaseContainer, BaseContainerObj, MdBaseResolveInfo, RDDObject, RDD, JavaRDDObject, MessageContainerBase }
+import com.ligadata.KamanjaBase.{ BaseMsg, BaseMsgObj, BaseContainer, BaseContainerObj, MdBaseResolveInfo, RDDObject, RDD, JavaRDDObject, MessageContainerBase }
 
 object CustAlertHistory extends RDDObject[CustAlertHistory] with BaseContainerObj {
   type T = CustAlertHistory
@@ -258,7 +258,6 @@ class CustPreferences(var transactionId: Long, other: CustPreferences) extends B
 object CustTransaction extends RDDObject[CustTransaction] with BaseMsgObj {
   type T = CustTransaction
 
-  override def TransformDataAttributes: TransformMessage = null
   override def NeedToTransformData: Boolean = false
   override def FullName: String = "com.ligadata.samples.messages.CustTransaction"
   override def NameSpace: String = "com.ligadata.samples.messages"

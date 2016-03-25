@@ -122,8 +122,8 @@ class SaveContainerDataCompImpl extends LogTrait with MdBaseResolveInfo {
     }
   }
 
-  private def collectKeyAndValues(k: Key, v: Value, dataByBucketKeyPart: TreeMap[KeyWithBucketIdAndPrimaryKey, MessageContainerBaseWithModFlag], loadedKeys: java.util.TreeSet[LoadKeyWithBucketId]): Unit = {
-    val value = SerializeDeserialize.Deserialize(v.serializedInfo, this, _kamanjaLoader.loader, true, "")
+  private def collectKeyAndValues(k: Key, v: Any, dataByBucketKeyPart: TreeMap[KeyWithBucketIdAndPrimaryKey, MessageContainerBaseWithModFlag], loadedKeys: java.util.TreeSet[LoadKeyWithBucketId]): Unit = {
+    val value: MessageContainerBase = null // SerializeDeserialize.Deserialize(v.serializedInfo, this, _kamanjaLoader.loader, true, "")
     val primarykey = value.PrimaryKeyData
     val key = KeyWithBucketIdAndPrimaryKey(KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(k.bucketKey), k, primarykey != null && primarykey.size > 0, primarykey)
     dataByBucketKeyPart.put(key, MessageContainerBaseWithModFlag(false, value))
@@ -136,7 +136,7 @@ class SaveContainerDataCompImpl extends LogTrait with MdBaseResolveInfo {
   private def LoadDataIfNeeded(typ: String, loadKey: LoadKeyWithBucketId, loadedKeys: java.util.TreeSet[LoadKeyWithBucketId], dataByBucketKeyPart: TreeMap[KeyWithBucketIdAndPrimaryKey, MessageContainerBaseWithModFlag]): Unit = {
     if (loadedKeys.contains(loadKey))
       return
-    val buildOne = (k: Key, v: Value) => {
+    val buildOne = (k: Key, v: Any, serType: String, typ: String, ver:Int) => {
       collectKeyAndValues(k, v, dataByBucketKeyPart, loadedKeys)
     }
     try {
@@ -445,7 +445,7 @@ class SaveContainerDataCompImpl extends LogTrait with MdBaseResolveInfo {
       transId = GetNewTransactionId
 
     var rowNumber = 0
-    val storeObjsMap = collection.mutable.Map[String, ArrayBuffer[(Key, Value)]]()
+    val storeObjsMap = collection.mutable.Map[String, ArrayBuffer[(Key, String, Any)]]()
 
     typAndData.foreach(td => {
       val typ = td._1.toLowerCase
@@ -453,7 +453,7 @@ class SaveContainerDataCompImpl extends LogTrait with MdBaseResolveInfo {
 
       val tmpArrBuf = storeObjsMap.getOrElse(typ, null)
 
-      val arrBuf = if (tmpArrBuf != null) tmpArrBuf else ArrayBuffer[(Key, Value)]()
+      val arrBuf = if (tmpArrBuf != null) tmpArrBuf else ArrayBuffer[(Key, String, Any)]()
 
       data.foreach(d => {
         if (setNewRowNumber) {
@@ -467,8 +467,7 @@ class SaveContainerDataCompImpl extends LogTrait with MdBaseResolveInfo {
         val keyData = d.PartitionKeyData
         val timeVal = d.TimePartitionData
         val k = Key(timeVal, keyData, d.TransactionId, d.RowNumber)
-        val v = Value("manual", SerializeDeserialize.Serialize(d))
-        arrBuf += ((k, v))
+        arrBuf += ((k, "", d))
       })
 
       storeObjsMap(typ) = arrBuf
@@ -481,10 +480,10 @@ class SaveContainerDataCompImpl extends LogTrait with MdBaseResolveInfo {
         if (logger.isDebugEnabled()) {
           logger.debug("Going to save " + storeObjects.size + " objects")
           storeObjects.foreach(kv => {
-            logger.debug("ObjKey:(" + kv._1.timePartition + ":" + kv._1.bucketKey.mkString(",") + ":" + kv._1.transactionId + ") Value Size: " + kv._2.serializedInfo.size)
+            logger.debug("ObjKey:(" + kv._1.timePartition + ":" + kv._1.bucketKey.mkString(",") + ":" + kv._1.transactionId + ") ")
           })
         }
-        _dataStore.put(Array((typ, storeObjects)))
+        _dataStore.put(null, Array((typ, storeObjects)))
       } catch {
         case e: Exception => {
           logger.error("Failed to write data for type:" + typ, e)

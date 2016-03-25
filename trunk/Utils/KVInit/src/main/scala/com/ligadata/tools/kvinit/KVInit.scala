@@ -603,8 +603,8 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
     return null
   }
 
-  private def collectKeyAndValues(k: Key, v: Value, dataByBucketKeyPart: TreeMap[KeyWithBucketIdAndPrimaryKey, MessageContainerBaseWithModFlag], loadedKeys: java.util.TreeSet[LoadKeyWithBucketId]): Unit = {
-    val value = SerializeDeserialize.Deserialize(v.serializedInfo, this, kvInitLoader.loader, true, "")
+  private def collectKeyAndValues(k: Key, v: Any, dataByBucketKeyPart: TreeMap[KeyWithBucketIdAndPrimaryKey, MessageContainerBaseWithModFlag], loadedKeys: java.util.TreeSet[LoadKeyWithBucketId]): Unit = {
+    val value: MessageContainerBase = null // SerializeDeserialize.Deserialize(v.serializedInfo, this, kvInitLoader.loader, true, "")
     val primarykey = value.PrimaryKeyData
     val key = KeyWithBucketIdAndPrimaryKey(KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(k.bucketKey), k, primarykey != null && primarykey.size > 0, primarykey)
     dataByBucketKeyPart.put(key, MessageContainerBaseWithModFlag(false, value))
@@ -617,7 +617,7 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
   private def LoadDataIfNeeded(loadKey: LoadKeyWithBucketId, loadedKeys: java.util.TreeSet[LoadKeyWithBucketId], dataByBucketKeyPart: TreeMap[KeyWithBucketIdAndPrimaryKey, MessageContainerBaseWithModFlag], kvstore: DataStore): Unit = {
     if (loadedKeys.contains(loadKey))
       return
-    val buildOne = (k: Key, v: Value) => {
+    val buildOne = (k: Key, v: Any, serType: String, typ: String, ver:Int) => {
       collectKeyAndValues(k, v, dataByBucketKeyPart, loadedKeys)
     }
 
@@ -670,7 +670,7 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
   }
 
   private def commitData(transId: Long, kvstore: DataStore, dataByBucketKeyPart: TreeMap[KeyWithBucketIdAndPrimaryKey, MessageContainerBaseWithModFlag], commitBatchSize: Int, processedRows: Int): Unit = {
-    val storeObjects = new ArrayBuffer[(Key, Value)](dataByBucketKeyPart.size())
+    val storeObjects = new ArrayBuffer[(Key, String, Any)](dataByBucketKeyPart.size())
     var it1 = dataByBucketKeyPart.entrySet().iterator()
     while (it1.hasNext()) {
       val entry = it1.next();
@@ -680,8 +680,7 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
         val key = entry.getKey();
         try {
           val k = entry.getKey().key
-          val v = Value("manual", SerializeDeserialize.Serialize(value.value))
-          storeObjects += ((k, v))
+          storeObjects += ((k, "", value.value))
         } catch {
           case e: Exception => {
             logger.error("Failed to serialize/write data.", e)
@@ -697,7 +696,7 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
 
     while (!doneSave) {
       try {
-        kvstore.put(Array((objFullName, storeObjects.toArray)))
+        kvstore.put(null, Array((objFullName, storeObjects.toArray)))
         doneSave = true
       } catch {
         case e: FatalAdapterException => {
