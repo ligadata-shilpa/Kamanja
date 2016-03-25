@@ -150,6 +150,7 @@ trait MdBaseResolveInfo {
   def getMessgeOrContainerInstance(typName: String): MessageContainerBase
 }
 
+/*
 object SerializeDeserialize {
   val loggerName = this.getClass.getName
   val logger = LogManager.getLogger(loggerName)
@@ -235,6 +236,7 @@ object SerializeDeserialize {
     null
   }
 }
+*/
 
 trait BaseContainer extends MessageContainerBase {
   override def isMessage: Boolean = false
