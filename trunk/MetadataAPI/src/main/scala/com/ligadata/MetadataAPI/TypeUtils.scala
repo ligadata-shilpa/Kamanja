@@ -456,7 +456,7 @@ object TypeUtils {
       logger.debug("Fetch the object " + key + " from database ")
       val obj = PersistenceUtils.GetObject(key.toLowerCase, "types")
       logger.debug("Deserialize the object " + key)
-      val typ = serializer.DeserializeObjectFromByteArray(obj.serializedInfo)
+      val typ = serializer.DeserializeObjectFromByteArray(obj._2.asInstanceOf[Array[Byte]])
       if (typ != null) {
         logger.debug("Add the object " + key + " to the cache ")
         MetadataAPIImpl.AddObjectToCache(typ, MdMgr.GetMdMgr)

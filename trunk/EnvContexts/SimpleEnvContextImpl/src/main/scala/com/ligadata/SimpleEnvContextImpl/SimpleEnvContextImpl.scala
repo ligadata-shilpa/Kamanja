@@ -1577,8 +1577,8 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     val bos = new ByteArrayOutputStream(1024 * 1024)
     val dos = new DataOutputStream(bos)
 
-    val commiting_data = ArrayBuffer[(String, Array[(Key, Any)])]()
-    val dataForContainer = ArrayBuffer[(Key, Any)]()
+    val commiting_data = ArrayBuffer[(String, Array[(Key, String, Any)])]()
+    val dataForContainer = ArrayBuffer[(Key, String, Any)]()
 
     messagesOrContainers.foreach(v => {
       dataForContainer.clear
@@ -1592,7 +1592,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
           if (v.modified) {
             val k = entry.getKey()
             bos.reset
-            dataForContainer += ((k.key, v.value))
+            dataForContainer += ((k.key, "manual", v.value))
           }
         }
         // Make sure we lock it if we need to populate mc
@@ -1630,7 +1630,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
         ("Qs" -> v1._2._3.map(qsres => { qsres._1 })) ~
         ("Res" -> v1._2._3.map(qsres => { qsres._2 }))
       val compjson = compact(render(json))
-      dataForContainer += ((Key(KvBaseDefalts.defaultTime, Array(v1._1), 0, 0), compjson.getBytes("UTF8")))
+      dataForContainer += ((Key(KvBaseDefalts.defaultTime, Array(v1._1), 0, 0), "json", compjson.getBytes("UTF8")))
     })
     if (dataForContainer.size > 0)
       commiting_data += (("AdapterUniqKvData", dataForContainer.toArray))
@@ -2037,7 +2037,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   }
 
   override def setAdapterUniqKeyAndValues(keyAndValues: List[(String, String)]): Unit = {
-    val dataForContainer = ArrayBuffer[(Key, Any)]()
+    val dataForContainer = ArrayBuffer[(Key, String, Any)]()
     val emptyLst = List[(String, String, String)]()
     keyAndValues.foreach(v1 => {
       val bktIdx = getParallelBucketIdx(v1._1)
@@ -2058,14 +2058,14 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
         ("Qs" -> emptyLst.map(qsres => { qsres._1 })) ~
         ("Res" -> emptyLst.map(qsres => { qsres._2 }))
       val compjson = compact(render(json))
-      dataForContainer += ((Key(KvBaseDefalts.defaultTime, Array(v1._1), 0, 0), compjson.getBytes("UTF8")))
+      dataForContainer += ((Key(KvBaseDefalts.defaultTime, Array(v1._1), 0, 0), "json", compjson.getBytes("UTF8")))
     })
     if (dataForContainer.size > 0) {
       callSaveData(_defaultDataStore, Array(("AdapterUniqKvData", dataForContainer.toArray)))
     }
   }
 
-  private def callSaveData(dataStore: DataStoreOperations, data_list: Array[(String, Array[(Key, Any)])]): Unit = {
+  private def callSaveData(dataStore: DataStoreOperations, data_list: Array[(String, Array[(Key, String, Any)])]): Unit = {
     var failedWaitTime = 15000 // Wait time starts at 15 secs
     val maxFailedWaitTime = 60000 // Max Wait time 60 secs
     var doneSave = false
@@ -2113,7 +2113,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   }
 
   // BUGBUG:: We can make all gets as simple template for exceptions handling and call that.
-  private def callGetData(dataStore: DataStoreOperations, containerName: String, callbackFunction: (Key, Any, String, Int) => Unit): Unit = {
+  private def callGetData(dataStore: DataStoreOperations, containerName: String, callbackFunction: (Key, Any, String, String, Int) => Unit): Unit = {
     var failedWaitTime = 15000 // Wait time starts at 15 secs
     val maxFailedWaitTime = 60000 // Max Wait time 60 secs
     var doneGet = false
@@ -2162,7 +2162,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     }
   }
 
-  private def callGetData(dataStore: DataStoreOperations, containerName: String, keys: Array[Key], callbackFunction: (Key, Any, String, Int) => Unit): Unit = {
+  private def callGetData(dataStore: DataStoreOperations, containerName: String, keys: Array[Key], callbackFunction: (Key, Any, String, String, Int) => Unit): Unit = {
     var failedWaitTime = 15000 // Wait time starts at 15 secs
     val maxFailedWaitTime = 60000 // Max Wait time 60 secs
     var doneGet = false
@@ -2211,7 +2211,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     }
   }
 
-  private def callGetData(dataStore: DataStoreOperations, containerName: String, timeRanges: Array[TimeRange], callbackFunction: (Key, Any, String, Int) => Unit): Unit = {
+  private def callGetData(dataStore: DataStoreOperations, containerName: String, timeRanges: Array[TimeRange], callbackFunction: (Key, Any, String, String, Int) => Unit): Unit = {
     var failedWaitTime = 15000 // Wait time starts at 15 secs
     val maxFailedWaitTime = 60000 // Max Wait time 60 secs
     var doneGet = false
@@ -2260,7 +2260,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     }
   }
 
-  private def callGetData(dataStore: DataStoreOperations, containerName: String, timeRanges: Array[TimeRange], bucketKeys: Array[Array[String]], callbackFunction: (Key, Any, String, Int) => Unit): Unit = {
+  private def callGetData(dataStore: DataStoreOperations, containerName: String, timeRanges: Array[TimeRange], bucketKeys: Array[Array[String]], callbackFunction: (Key, Any, String, String, Int) => Unit): Unit = {
     var failedWaitTime = 15000 // Wait time starts at 15 secs
     val maxFailedWaitTime = 60000 // Max Wait time 60 secs
     var doneGet = false
@@ -2309,7 +2309,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     }
   }
 
-  private def callGetData(dataStore: DataStoreOperations, containerName: String, bucketKeys: Array[Array[String]], callbackFunction: (Key, Any, String, Int) => Unit): Unit = {
+  private def callGetData(dataStore: DataStoreOperations, containerName: String, bucketKeys: Array[Array[String]], callbackFunction: (Key, Any, String, String, Int) => Unit): Unit = {
     var failedWaitTime = 15000 // Wait time starts at 15 secs
     val maxFailedWaitTime = 60000 // Max Wait time 60 secs
     var doneGet = false

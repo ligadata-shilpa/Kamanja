@@ -1105,7 +1105,7 @@ object ConfigUtils {
     } else {
       MetadataAPIImpl.GetMetadataAPIConfig.setProperty("JAR_PATHS", jarPaths.mkString(","))
       logger.debug("JarPaths Based on node(%s) => %s".format(nodeId, jarPaths.mkString(",")))
-      val jarDir = compact(render(jarPaths(0))).replace("\"", "").trim
+      val jarDir = compact(render(jarPaths.head)).replace("\"", "").trim
 
       // If JAR_TARGET_DIR is unset.. set it ot the first value of the the JAR_PATH.. whatever it is... ????? I think we should error on start up.. this seems like wrong
       // user behaviour not to set a variable vital to MODEL compilation.
@@ -1467,7 +1467,7 @@ object ConfigUtils {
     try {
       var processed: Long = 0L
       val storeInfo = PersistenceUtils.GetTableStoreMap("config_objects")
-      storeInfo._2.get(storeInfo._1, { (k: Key, v: Any, typ: String, ver:Int) =>
+      storeInfo._2.get(storeInfo._1, { (k: Key, v: Any, serType: String, typ: String, ver:Int) =>
         {
           val strKey = k.bucketKey.mkString(".")
           val i = strKey.indexOf(".")
@@ -1476,23 +1476,23 @@ object ConfigUtils {
           processed += 1
           objType match {
             case "nodeinfo" => {
-              val ni: NodeInfo = null // serializer.DeserializeObjectFromByteArray(v.serializedInfo).asInstanceOf[NodeInfo]
+              val ni = serializer.DeserializeObjectFromByteArray(v.asInstanceOf[Array[Byte]]).asInstanceOf[NodeInfo]
               MdMgr.GetMdMgr.AddNode(ni)
             }
             case "adapterinfo" => {
-              val ai: AdapterInfo = null // serializer.DeserializeObjectFromByteArray(v.serializedInfo).asInstanceOf[AdapterInfo]
+              val ai = serializer.DeserializeObjectFromByteArray(v.asInstanceOf[Array[Byte]]).asInstanceOf[AdapterInfo]
               MdMgr.GetMdMgr.AddAdapter(ai)
             }
             case "clusterinfo" => {
-              val ci: ClusterInfo = null // serializer.DeserializeObjectFromByteArray(v.serializedInfo).asInstanceOf[ClusterInfo]
+              val ci = serializer.DeserializeObjectFromByteArray(v.asInstanceOf[Array[Byte]]).asInstanceOf[ClusterInfo]
               MdMgr.GetMdMgr.AddCluster(ci)
             }
             case "clustercfginfo" => {
-              val ci: ClusterCfgInfo = null // serializer.DeserializeObjectFromByteArray(v.serializedInfo).asInstanceOf[ClusterCfgInfo]
+              val ci = serializer.DeserializeObjectFromByteArray(v.asInstanceOf[Array[Byte]]).asInstanceOf[ClusterCfgInfo]
               MdMgr.GetMdMgr.AddClusterCfg(ci)
             }
             case "userproperties" => {
-              val up: UserPropertiesInfo = null // serializer.DeserializeObjectFromByteArray(v.serializedInfo).asInstanceOf[UserPropertiesInfo]
+              val up = serializer.DeserializeObjectFromByteArray(v.asInstanceOf[Array[Byte]]).asInstanceOf[UserPropertiesInfo]
               MdMgr.GetMdMgr.AddUserProperty(up)
             }
             case _ => {
@@ -1527,10 +1527,10 @@ object ConfigUtils {
 
     var processed: Long = 0L
     val storeInfo = PersistenceUtils.GetTableStoreMap("model_config_objects")
-    storeInfo._2.get(storeInfo._1, { (k: Key, v: Any, typ: String, ver:Int) =>
+    storeInfo._2.get(storeInfo._1, { (k: Key, v: Any, serType: String, typ: String, ver:Int) =>
       {
         processed += 1
-        val conf: Map[String, List[String]] = null // serializer.DeserializeObjectFromByteArray(v.serializedInfo).asInstanceOf[Map[String, List[String]]]
+        val conf = serializer.DeserializeObjectFromByteArray(v.asInstanceOf[Array[Byte]]).asInstanceOf[Map[String, List[String]]]
         MdMgr.GetMdMgr.AddModelConfig(k.bucketKey.mkString("."), conf)
       }
     })
