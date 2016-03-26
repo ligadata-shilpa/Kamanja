@@ -52,6 +52,8 @@ class JSONSerDes(val mgr : MdMgr
       *
       * @param v a ContainerInterface (describes a standard kamanja container)
       */
+    @throws(classOf[com.ligadata.Exceptions.ObjectNotFoundException])
+    @throws(classOf[com.ligadata.Exceptions.UnsupportedObjectException])
     def serialize(v : ContainerInterface) : Array[Byte] = {
         val bos: ByteArrayOutputStream = new ByteArrayOutputStream(8 * 1024)
         val dos = new DataOutputStream(bos)
@@ -74,35 +76,79 @@ class JSONSerDes(val mgr : MdMgr
         dos.writeUTF(containerVersionJson)
         dos.writeUTF(containerPhyNameJson)
 
-        val containerFieldsInOrder : Array[BaseTypeDef] = container.ElementTypes
+        val containerType : ContainerTypeDef = if (container != null) container.asInstanceOf[ContainerTypeDef] else null
+        if (containerType == null) {
+            throw new ObjectNotFoundException(s"type name $containerName is not a container type... serialize fails.",null)
+        }
+        val mappedMsgType : MappedMsgTypeDef = if (containerType.isInstanceOf[MappedMsgTypeDef]) containerType.asInstanceOf[MappedMsgTypeDef] else null
+        val fixedMsgType : StructTypeDef = if (containerType.isInstanceOf[StructTypeDef]) containerType.asInstanceOf[StructTypeDef] else null
+        if (mappedMsgType == null && fixedMsgType == null) {
+            throw new UnsupportedObjectException(s"type name $containerNameJson is not a fixed or mapped message container type... serialize fails.",null)
+        }
+
+        /**
+          * Note:
+          * The fields from the ContainerInstance are unordered, a java.util.HashMap.  Similarly the fields found in a
+          * a MappedMsg are unordered.
+          *
+          * On the other hand, the fields from a FixedMsg are ordered.
+          *
+          * The fields will be processed in the order of the StructTypeDef's memberDefs array for fixed messages. For
+          * the fixed ones, all of the ContainerInterface's fields will be emitted.
+          *
+          * The fields will be processed in the order of the MappedMsgTypeDef's attrMap map for mapped messages. For
+          * these mapped ones, only the ContainerInterface's fields that have values will be emitted.
+          *
+          */
+        val fieldsToConsider : Array[BaseAttributeDef] = if (mappedMsgType != null) {
+            mappedMsgType.attrMap.values.toArray
+        } else {
+            if (fixedMsgType != null) {
+                fixedMsgType.memberDefs
+            } else {
+                Array[BaseAttributeDef]()
+            }
+        }
+        if (fieldsToConsider.isEmpty) {
+            throw new ObjectNotFoundException(s"The container ${containerName} surprisingly has no fields...serialize fails", null)
+        }
+
         val fields : java.util.HashMap[String,com.ligadata.KamanjaBase.AttributeValue] = v.getAllAttributeValues
         var processCnt : Int = 0
         val fieldCnt : Int = fields.size()
-        containerFieldsInOrder.foreach(typedef => {
+        fieldsToConsider.foreach(fldname => {
             processCnt += 1
+            val attr : com.ligadata.KamanjaBase.AttributeValue = fields.getOrDefault(fldname,null)
+            if (attr != null) {
+                val valueType: String = attr.getValueType
+                val rawValue: Any = attr.getValue
+                val useComma: Boolean = if (processCnt < fieldCnt) withComma else withoutComma
 
-            val attr : com.ligadata.KamanjaBase.AttributeValue = fields.get(typedef.FullName)
-            val valueType : String = attr.getValueType
-            val rawValue : Any = attr.getValue
-            val typeName : String = typedef.FullName
-            val useComma : Boolean = if (fieldCnt < fieldCnt) withComma else withoutComma
-
-            val isContainerType : Boolean = isContainerTypeDef(typedef)
-            val fldRep : String = if (isContainerType) {
-                processContainerTypeAsJson(typedef.asInstanceOf[ContainerTypeDef]
-                                        , rawValue
-                                        , useComma)
+                val typedef: BaseTypeDef = mgr.ActiveType(valueType)
+                val typeName: String = typedef.FullName
+                val isContainerType: Boolean = isContainerTypeDef(typedef)
+                val fldRep: String = if (isContainerType) {
+                    processContainerTypeAsJson(typedef.asInstanceOf[ContainerTypeDef]
+                        , rawValue
+                        , useComma)
+                } else {
+                    val quoteValue: Boolean = useQuotesOnValue(typedef)
+                    nameValueAsJson(typeName, rawValue, quoteValue, useComma)
+                }
+                dos.writeBytes(fldRep)
             } else {
-                val quoteValue : Boolean = useQuotesOnValue(typedef)
-                nameValueAsJson(typeName, rawValue, quoteValue, useComma)
+                if (mappedMsgType == null) {
+                    /** is permissible that a mapped field has no value in the container. */
+                } else {
+                    /** blow it up when fixed msg field is missing */
+                    throw new ObjectNotFoundException(s"The fixed container $containerName field $fldname has no value",null)
+                }
             }
-
-            dos.writeBytes(fldRep)
         })
         dos.writeUTF(containerJsonTail)
 
         val strRep : String = dos.toString
-        logger.debug(s"attribute as JSON:\n$strRep")
+        logger.debug(s"container $containerName as JSON:\n$strRep")
 
         val byteArray : Array[Byte] = bos.toByteArray
         dos.close()
@@ -124,7 +170,7 @@ class JSONSerDes(val mgr : MdMgr
       * now just Array, ArrayBuffer, Map, and ImmutableMap
       *
       * @param aContainerType the ContainerTypeDef that describes the supplied instance.
-      * @param rawValue the actual container instance
+      * @param rawValue the actual container instance in raw form
       * @param withComma when true, a ',' is appended to the ContainerTypeDef Json representation
       * @return a Json String representation for the supplied ContainterTypeDef
       */
@@ -164,16 +210,59 @@ class JSONSerDes(val mgr : MdMgr
         stringRep
     }
 
-   private def isContainerTypeDef(aType : BaseTypeDef) : Boolean = {
+    /**
+      * Answer if the supplied BaseTypeDef is a ContainerTypeDef.
+      *
+      * @param aType a BaseTypeDef
+      * @return true if a ContainerTypeDef
+      */
+    private def isContainerTypeDef(aType : BaseTypeDef) : Boolean = {
         aType.isInstanceOf[ContainerTypeDef]
-   }
+    }
 
+    /**
+      * Answer if the supplied BaseTypeDef is a MappedMsgTypeDef.
+      *
+      * @param aType a BaseTypeDef
+      * @return true if a MappedMsgTypeDef
+      */
+    private def isMappedMsgTypeDef(aType : BaseTypeDef) : Boolean = {
+        aType.isInstanceOf[MappedMsgTypeDef]
+    }
+
+    /**
+      * Answer if the supplied BaseTypeDef is a StructTypeDef (used for fixed messages).
+      *
+      * @param aType a BaseTypeDef
+      * @return true if a StructTypeDef
+      */
+    private def isFixedMsgTypeDef(aType : BaseTypeDef) : Boolean = {
+        aType.isInstanceOf[StructTypeDef]
+    }
+
+    /**
+      * Answer a string consisting of "name" : "value" with/without comma suffix.  When quoteValue parameter is false
+      * the value is not quoted (for the scalars and boolean
+      *
+      * @param name json key
+      * @param value json value
+      * @param quoteValue when true value is quoted
+      * @param withComma when true suffix string with comma
+      * @return decorated map element string suitable for including in json map string
+      */
     private def nameValueAsJson(name : String, value : Any, quoteValue : Boolean, withComma : Boolean) : String = {
         val comma : String = if (withComma) "," else ""
         val quote : String = if (quoteValue) s"\\${'"'}" else ""
         s" {'\'}${'"'}$name{'\'}${'"'} : $quote$value$quote$comma"
     }
 
+
+    /**
+      * Ascertain if the supplied type is one that does not require quotes. The scalars and boolean do not.
+      *
+      * @param fieldTypeDef a BaseTypeDef
+      * @return true or false if quotes should be used on the json value
+      */
     private def useQuotesOnValue(fieldTypeDef : BaseTypeDef) : Boolean = {
         val usequotes : Boolean = if (fieldTypeDef == null) {
             true
@@ -181,6 +270,7 @@ class JSONSerDes(val mgr : MdMgr
             /** This does not account for user defined versions of the scalars */
             fieldTypeDef.Name.toLowerCase match {
                 case "int" | "integer" | "short" | "long" | "float" | "double" => false
+                case "boolean" => false
                 case _ => true
             }
         }
@@ -343,7 +433,7 @@ class JSONSerDes(val mgr : MdMgr
       * @param objRes an ObjectResolver
       */
     def setObjectResolver(objRes : ObjectResolver) : Unit = {
-        objResolver = objRes;
+        objResolver = objRes
     }
 
     /**
@@ -352,6 +442,7 @@ class JSONSerDes(val mgr : MdMgr
       * @param b the byte array containing the serialized ContainerInterface instance
       * @return a ContainerInterface
       */
+    @throws(classOf[com.ligadata.Exceptions.ObjectNotFoundException])
     def deserialize(b: Array[Byte]) : ContainerInterface = {
 
         val rawJsonContainerStr : String = new String(b)
@@ -365,7 +456,7 @@ class JSONSerDes(val mgr : MdMgr
         val containerVersionJson : String = containerInstanceMap.getOrElse(JsonContainerInterfaceKeys.version.toString, "").asInstanceOf[String]
         val containerPhyNameJson : String = containerInstanceMap.getOrElse(JsonContainerInterfaceKeys.physicalname.toString, "").asInstanceOf[String]
 
-        if (containerNameJson.size == 0) {
+        if (containerNameJson.isEmpty) {
             throw new MissingPropertyException("the supplied byte array to deserialize does not have a known container name.", null)
         }
 
@@ -381,25 +472,62 @@ class JSONSerDes(val mgr : MdMgr
         if (containerType == null) {
             throw new ObjectNotFoundException(s"type name $containerNameJson is not a container type... deserialize fails.",null)
         }
-        val fieldTypes : Array[BaseTypeDef] = containerType.ElementTypes
-        fieldTypes.foreach(fieldType => {
+        val mappedMsgType : MappedMsgTypeDef = if (containerType.isInstanceOf[MappedMsgTypeDef]) containerType.asInstanceOf[MappedMsgTypeDef] else null
+        val fixedMsgType : StructTypeDef = if (containerType.isInstanceOf[StructTypeDef]) containerType.asInstanceOf[StructTypeDef] else null
+        if (mappedMsgType == null && fixedMsgType == null) {
+            throw new UnsupportedObjectException(s"type name $containerNameJson is not a fixed or mapped message container type... deserialize fails.",null)
+        }
 
-            val fieldsJson : Any = containerInstanceMap.getOrElse(fieldType.FullName, null)
-            val isContainerType : Boolean = isContainerTypeDef(fieldType)
-            val fld : Any = if (isContainerType) {
-                val containerTypeInfo : ContainerTypeDef = fieldType.asInstanceOf[ContainerTypeDef]
-                createContainerType(containerTypeInfo, fieldsJson)
+        val fieldsToConsider : Array[BaseAttributeDef] = if (mappedMsgType != null) {
+            mappedMsgType.attrMap.values.toArray
+        } else {
+            if (fixedMsgType != null) {
+                fixedMsgType.memberDefs
             } else {
-                /** currently assumed to be one of the scalars or simple types supported by json/avro */
-                fieldsJson
+                Array[BaseAttributeDef]()
             }
-            ci.set(fieldType.FullName, fld)
+        }
+        if (fieldsToConsider.isEmpty) {
+            throw new ObjectNotFoundException(s"The container $containerNameJson surprisingly has no fields...deserialize fails", null)
+        }
+
+
+        /** The fields are considered in the order given in their mapped or fixed message type def collection (the values of the map for the
+          * mapped message and the array for the struct def type (fixed))
+          */
+        fieldsToConsider.foreach(attr => {
+
+            val fieldsJson : Any = containerInstanceMap.getOrElse(attr.FullName, null)
+            if (fieldsJson != null) {
+                val isContainerType: Boolean = (attr.typeDef != null && isContainerTypeDef(attr.typeDef))
+                val fld: Any = if (isContainerType) {
+                    val containerTypeInfo: ContainerTypeDef = attr.typeDef.asInstanceOf[ContainerTypeDef]
+                    createContainerType(containerTypeInfo, fieldsJson)
+                } else {
+                    /** currently assumed to be one of the scalars or simple types supported by json/avro */
+                    fieldsJson
+                }
+                ci.set(attr.FullName, fld)
+            } else {
+                if (mappedMsgType == null) {
+                    /** is permissible that a mapped field has no value in the container. */
+                } else {
+                    /** blow it up when fixed msg field is missing */
+                    throw new ObjectNotFoundException(s"The fixed container $containerNameJson field ${attr.typeDef} has no value.. deserialize abandoned",null)
+                }
+            }
         })
 
         val container : ContainerInterface = null
         container
     }
 
+    /**
+      * The current json describes one of the ContainerTypeDefs.  Decode the json building the correct container.
+      * @param containerTypeInfo a ContainerTypeDef (e.g., a StructTypeDef, MappedMsgTypeDef, ArrayTypeDef, et al)
+      * @param fieldsJson the json container (a map or array) that contains the content
+      * @return
+      */
     def createContainerType(containerTypeInfo : ContainerTypeDef, fieldsJson : Any) : Any = {
         /** ContainerInterface instance? */
         val isContainerInterface : Boolean = containerTypeInfo.isInstanceOf[MappedMsgTypeDef] || containerTypeInfo.isInstanceOf[StructTypeDef]

@@ -53,6 +53,7 @@ class CsvSerDeser(val mgr : MdMgr
       *
       * @param v a ContainerInterface (describes a standard kamanja container)
       */
+    @throws(classOf[com.ligadata.Exceptions.ObjectNotFoundException])
     def serialize(v : ContainerInterface) : Array[Byte] = {
         val bos: ByteArrayOutputStream = new ByteArrayOutputStream(8 * 1024)
         val dos = new DataOutputStream(bos)
@@ -63,33 +64,66 @@ class CsvSerDeser(val mgr : MdMgr
         val containerVersion :String = v.getTypeVersion
         val container : ContainerTypeDef = mgr.ActiveType(containerName).asInstanceOf[ContainerTypeDef]
         val className : String = container.PhysicalName
-        val containerFieldsInOrder : Array[BaseTypeDef] = container.ElementTypes
-
-        val fields : java.util.HashMap[String,com.ligadata.KamanjaBase.AttributeValue] = v.getAllAttributeValues
-        if (emitHeaderFirst) {
-            emitHeaderRecord(dos, containerFieldsInOrder)
-        }
 
 
-        /** write the first field */
+        /** write the first field with the appropriate field delimiter suffixed to it. */
         val containerNameCsv : String = csvTypeInfo(CsvContainerInterfaceKeys.typename.toString, serDeserConfig.fieldDelimiter)
         dos.writeUTF(containerNameCsv)
 
-        //val containerVersionCsv : String = nameValueAsJson(CsvContainerInterfaceKeys.version.toString, containerVersion,  true, withComma)
-        //val containerPhyNameCsv : String = nameValueAsJson(CsvContainerInterfaceKeys.physicalname.toString, className,  true, withComma)
+        val containerType : ContainerTypeDef = if (container != null) container.asInstanceOf[ContainerTypeDef] else null
+        if (containerType == null) {
+            throw new ObjectNotFoundException(s"type name $containerName is not a container type... serialize fails.",null)
+        }
+        val mappedMsgType : MappedMsgTypeDef = if (containerType.isInstanceOf[MappedMsgTypeDef]) containerType.asInstanceOf[MappedMsgTypeDef] else null
+        val fixedMsgType : StructTypeDef = if (containerType.isInstanceOf[StructTypeDef]) containerType.asInstanceOf[StructTypeDef] else null
+
+        /** The Csv implementation of the SerializeDeserialize interface will not support the mapped message type.  Instead there will be another
+          * implementation that supports the Kamanja Variable Comma Separated Value (VCSV) format.  That one deals with sparse data as does the
+          * JSON implementation.  Either of those should be chosen
+          */
+        if (mappedMsgType != null) {
+            throw new UnsupportedObjectException(s"type name $containerName is a mapped message container type... Csv emcodings of mapped messages are not currently supported...choose JSON or (when available) Kamanja VCSV serialize/deserialize... deserialize fails.",null)
+        }
+        if (fixedMsgType == null) {
+            throw new UnsupportedObjectException(s"type name $containerName is not a fixed message container type... serialize fails.",null)
+        }
+
+        /**
+          * Note:
+          * The fields from the ContainerInstance are unordered, a java.util.HashMap.  The fields from a FixedMsg are ordered.
+          *
+          * The fields will be processed in the order of the StructTypeDef's memberDefs array for fixed messages. For
+          * the fixed ones, all of the ContainerInterface's fields will be emitted.
+          *
+          */
+        val fieldsToConsider : Array[BaseAttributeDef] = if (fixedMsgType != null) {
+            fixedMsgType.memberDefs
+        } else {
+            Array[BaseAttributeDef]()
+        }
+
+        if (fieldsToConsider.isEmpty) {
+            throw new ObjectNotFoundException(s"The container ${containerName} surprisingly has no fields...serialize fails", null)
+        }
+
+        val fields : java.util.HashMap[String,com.ligadata.KamanjaBase.AttributeValue] = v.getAllAttributeValues
+        val fieldTypes : Array[BaseTypeDef] = fieldsToConsider.map(fld => fld.typeDef)
+        if (emitHeaderFirst) {
+            emitHeaderRecord(dos, fieldTypes)
+        }
 
         var processCnt : Int = 0
         val fieldCnt : Int = fields.size()
-        containerFieldsInOrder.foreach(typedef => {
+        fieldsToConsider.foreach(attr => {
 
             processCnt += 1
 
-            val attr : com.ligadata.KamanjaBase.AttributeValue = fields.getOrDefault(typedef.FullName, null)
-            if (attr != null) {
+            val fld : com.ligadata.KamanjaBase.AttributeValue = fields.getOrDefault(attr.FullName, null)
+            if (fld != null) {
                 val doTrailingComma : Boolean = processCnt < fieldCnt
-                emitField(dos, typedef, attr, doTrailingComma)
+                emitField(dos, attr.typeDef, fld, doTrailingComma)
             } else {
-                throw new ObjectNotFoundException(s"during serialize()...attribute ${typedef.FullName} could not be found in the container... mismatch", null)
+                throw new ObjectNotFoundException(s"during serialize()...attribute ${attr.FullName} could not be found in the container... mismatch", null)
             }
         })
 
@@ -250,6 +284,16 @@ class CsvSerDeser(val mgr : MdMgr
     }
 
     /**
+      * Answer if the supplied BaseTypeDef is a StructTypeDef (used for fixed messages).
+      *
+      * @param aType a BaseTypeDef
+      * @return true if a StructTypeDef
+      */
+    private def isFixedMsgTypeDef(aType : BaseTypeDef) : Boolean = {
+        aType.isInstanceOf[StructTypeDef]
+    }
+
+    /**
       * Set the object resolver to be used for this serializer
       *
       * @param objRes an ObjectResolver
@@ -297,19 +341,38 @@ class CsvSerDeser(val mgr : MdMgr
         if (containerType == null) {
             throw new ObjectNotFoundException(s"type name $containerNameCsv is not a container type... deserialize fails.",null)
         }
-        containerFldTypes.foreach(fieldType => {
+        val mappedMsgType : MappedMsgTypeDef = if (containerType.isInstanceOf[MappedMsgTypeDef]) containerType.asInstanceOf[MappedMsgTypeDef] else null
+        val fixedMsgType : StructTypeDef = if (containerType.isInstanceOf[StructTypeDef]) containerType.asInstanceOf[StructTypeDef] else null
+        if (mappedMsgType != null) {
+            throw new UnsupportedObjectException(s"type name $containerNameCsv has a mapped message container type...these are not supported in CSV... use either JSON or VCSV (when available) instead... deserialize fails.",null)
+        }
 
-            val fieldsCsv : Any = containerfFieldMap.getOrElse(fieldType.FullName, null)
-            val isContainerType : Boolean = isContainerTypeDef(fieldType)
+        val fieldsToConsider : Array[BaseAttributeDef] = if (fixedMsgType != null) {
+            fixedMsgType.memberDefs
+        } else {
+            Array[BaseAttributeDef]()
+        }
+        if (fieldsToConsider.isEmpty) {
+            throw new ObjectNotFoundException(s"The container $containerNameCsv surprisingly has no fields...deserialize fails", null)
+        }
+
+
+        /** get the fields information */
+        if (containerType == null) {
+            throw new ObjectNotFoundException(s"type name $containerNameCsv is not a container type... deserialize fails.",null)
+        }
+        fieldsToConsider.foreach(attr => {
+            val fieldsCsv : Any = containerfFieldMap.getOrElse(attr.typeDef.FullName, null)
+            val isContainerType : Boolean = isContainerTypeDef(attr.typeDef)
             val fld : Any = if (isContainerType) {
-                val containerTypeInfo : ContainerTypeDef = fieldType.asInstanceOf[ContainerTypeDef]
-                logger.error(s"field type name ${containerTypeInfo.FullName} is a container type... containers are not supported by the CSV deserializerat this time... deserializatin fails.")
-                throw new UnsupportedObjectException(s"field type name ${containerTypeInfo.FullName} is a container type... containers are not supported by the CSV deserializerat this time... deserializatin fails.",null)
+                val containerTypeInfo : ContainerTypeDef = attr.typeDef.asInstanceOf[ContainerTypeDef]
+                logger.error(s"field type name ${containerTypeInfo.FullName} is a container type... containers are not supported by the CSV deserializer at this time... deserialization fails.")
+                throw new UnsupportedObjectException(s"field type name ${containerTypeInfo.FullName} is a container type... containers are not supported by the CSV deserializer at this time... deserialization fails.",null)
             } else {
                 /** currently assumed to be one of the scalars or simple types supported by json/avro */
                 fieldsCsv
             }
-            ci.set(fieldType.FullName, fld)
+            ci.set(attr.typeDef.FullName, fld)
         })
 
         val container : ContainerInterface = null
@@ -322,8 +385,9 @@ class CsvSerDeser(val mgr : MdMgr
       * the metadata so that the BaseTypeDef instances that describe each field in the supplied csv record can be
       * determined.
       *
-      * @param configCsv
-      * @return Map[String, Any]
+      * @param configCsv string containing the raw csv data for the current record.
+      * @return (Map[String, Any], ContainerTypeDef, Array[BaseTypeDef]) corresponding to (raw data by field name,
+      *         the StructTypeDef of the fixed message that is to be built, corresponding field types)
       */
 
     @throws(classOf[com.ligadata.Exceptions.ObjectNotFoundException])
@@ -347,32 +411,37 @@ class CsvSerDeser(val mgr : MdMgr
             logger.error("The supplied CSV record's first field that describes the container type was not found in the metadata...abandoning processing")
             throw new ObjectNotFoundException("The supplied CSV record's first field that describes the container type was not found in the metadata...abandoning processing", null)
         }
-        if (! isContainerTypeDef(basetypedef)) {
-            logger.error("The supplied CSV record's first field is not a container type...abandoning processing")
-            throw new TypeParsingException("The supplied CSV record's first field is not a container type...abandoning processing", null)
+        if (! (isFixedMsgTypeDef(basetypedef))) {
+            logger.error("The supplied CSV record's first field is not a fixed message container type...abandoning processing.  Mapped messages should be formed with either the JSON or Kamanja VCSV formatter... abandoning deserialize processing")
+            throw new TypeParsingException("The supplied CSV record's first field is not a fixed message container type...abandoning processing.  Mapped messages should be formed with either the JSON or Kamanja VCSV formatter... abandoning deserialize processing", null)
         }
-        val containerTypeDef : ContainerTypeDef = basetypedef.asInstanceOf[ContainerTypeDef]
-        val fieldTypes : Array[BaseTypeDef] = containerTypeDef.ElementTypes
-        if (fieldTypes == null || (fieldTypes != null && fieldTypes.isEmpty)) {
+        val containerTypeDef : StructTypeDef = basetypedef.asInstanceOf[StructTypeDef]
+
+        val fieldAttrs : Array[BaseAttributeDef] = containerTypeDef.memberDefs
+        if (fieldAttrs == null || (fieldAttrs != null && fieldAttrs.isEmpty)) {
             logger.error("The supplied CSV record's container type is either not a container or has no fields...abandoning processing")
             throw new TypeParsingException("The supplied CSV record's container type is either not a container or has no fields...abandoning processing", null)
         }
 
-        // FIXME: this doesn't support mapped messages at the moment.  How should these be handled?  For example,
-        // FIXME: when there are 100 fields defined, but only 10 are to be serialized, we should be able to do that.
-        // FIXME: The type info for each field needs to be present in the csv stream.
-
-        /** Produce the Map[typename,descapedStringValue] */
+       /** Produce the Map[typename,descapedStringValue] */
         var idx : Int = -1
-        val containerCsvFieldMap : Map[String, Any] = fieldTypes.map(fld => {
+        val containerCsvFieldMap : Map[String, Any] = fieldAttrs.map(fld => {
             idx += 1
             val descapedString : String = containerCsvFields(idx)
             (fld.FullName,descapedString)
         }).toMap
 
+        val fieldTypes : Array[BaseTypeDef] = fieldAttrs.map(attr => attr.typeDef)
         (containerCsvFieldMap, containerTypeDef, fieldTypes)
-     }
+    }
 
+    /**
+      * Strip any escaped internal <doublequote><doublequote> that were used to protect the internal <doublequote> usage in the
+      * CSV string when it was encoded.
+      *
+      * @param str a CSV encoded string that may have been encoded at serialize time.
+      * @return the cleaned string
+      */
     private def stripEnclosedEscapedQuotesAsNeeded(str : String) : String = {
         val returnStr : String = if (str != null && str.size > 0 && str.contains(s"${'"'}")) {
             /** first deal with enclosed quotes */
