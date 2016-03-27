@@ -185,6 +185,7 @@ trait BaseElem {
     def Active: Unit // Make the element as Active
     def Deactive: Unit // Make the element as de-active
     def Deleted: Unit // Mark the element as deleted
+    def TenantId: String
 }
 
 class BaseElemDef extends BaseElem {
@@ -216,6 +217,7 @@ class BaseElemDef extends BaseElem {
     override def Active: Unit = active = true // Make the element as Active
     override def Deactive: Unit = active = false // Make the element as de-active
     override def Deleted: Unit = deleted = true // Mark the element as deleted
+    override def TenantId: String = tenantId
     def CheckAndGetDependencyJarNames: Array[String] = if (dependencyJarNames != null) dependencyJarNames else Array[String]()
 
     // Override in other places if required
@@ -245,6 +247,7 @@ class BaseElemDef extends BaseElem {
     var tranId: Long = 0
     var objectDefinition: String = _
     var objectFormat: ObjFormatType.FormatType = fJSON
+    var tenantId: String = _
 }
 
 // All these metadata elements should have specialized serialization and deserialization 
