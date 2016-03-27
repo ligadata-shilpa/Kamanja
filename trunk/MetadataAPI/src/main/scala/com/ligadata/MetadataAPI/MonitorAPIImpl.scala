@@ -167,8 +167,9 @@ object MonitorAPIImpl {
 
         if(componentsKey == nodeInfoKv._1){//this is Components
           val componentsAll = nodeInfoKv._2.asInstanceOf[List[Map[String, Any]]]
-          val componentsNeededInfo = scala.collection.mutable.Map[String,Any]()
+
           componentsAll.foreach(componentInfo => {
+            val componentsNeededInfo = scala.collection.mutable.Map[String,Any]()
             componentInfo.foreach(componentKv => {
               if(neededComponentKeyset.contains(componentKv._1.toLowerCase))
                 componentsNeededInfo.put(componentKv._1, componentKv._2)
@@ -194,7 +195,7 @@ object MonitorAPIImpl {
 
   def getHBComponentDetailsByNames(componentNames: List[String]) : String = {
     val componentsKey = "Components"
-    val componentNameKey = "Type"
+    val componentNameKey = "Name"
     var isFirst = true
     var resultJson = "["
     healthInfo.foreach(kv => {

@@ -802,5 +802,29 @@ trait MetadataAPI {
     *               method. If Security and/or Audit are configured, this value must be a value other than None.
     * @return status string
     */
-  def getHealthCheck(nodeId: String, userid: Option[String] = None): String 
+  def getHealthCheck(nodeId: String, userid: Option[String] = None): String
+
+  /**
+    *  getHealthCheckNodesOnly - will return node info from the health-check information for the nodeId specified.
+    *  @param nodeId a cluster node: String - if no parameter specified, return health-check for all nodes
+    *  @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    */
+  def getHealthCheckNodesOnly(nodeId: String = "", userid: Option[String] = None): String
+
+  /**
+    *  getHealthCheckComponentNames - will return partial components info from the health-check information for the nodeId specified.
+    *  @param nodeId a cluster node: String - if no parameter specified, return health-check for all nodes
+    *  @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    */
+  def getHealthCheckComponentNames(nodeId: String = "", userid: Option[String] = None): String
+
+  /**
+    *  getHealthCheckComponentDetailsByNames - will return specific components info from the health-check information for the nodeId specified.
+    *  @param componentNames names of components required
+    *  @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    */
+  def getHealthCheckComponentDetailsByNames(componentNames: String = "", userid: Option[String] = None): String
 }
