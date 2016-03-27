@@ -51,6 +51,7 @@ class MemoryDataCacheImp extends DataCache{
       return ele.getObjectValue
     }else{
       System.out.println("get data from SSD");
+      cache.load(key)
 
       return ""
     }

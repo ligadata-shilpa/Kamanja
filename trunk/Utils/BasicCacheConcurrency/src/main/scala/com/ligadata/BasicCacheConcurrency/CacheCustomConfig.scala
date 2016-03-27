@@ -110,6 +110,7 @@ class CacheCustomConfig(jsonString:String) extends CacheConfiguration{
     if(enableListener){
       cache.getCacheEventNotificationService.registerListener(new EventCacheListener)
     }
+    cache.getRegisteredCacheLoaders.add(new CacheLoaderFactory(cache))
   }
 
   def  getBootStrap() : BootstrapCacheLoader = {
