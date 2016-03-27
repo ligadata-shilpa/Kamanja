@@ -2,7 +2,6 @@ package com.ligadata.BasicCacheConcurrency
 
 import java.util.Properties
 
-import net.sf.ehcache.Cache
 import net.sf.ehcache.bootstrap.BootstrapCacheLoader
 import net.sf.ehcache.config.{MemoryUnit, FactoryConfiguration, Configuration, CacheConfiguration}
 import net.sf.ehcache.distribution.jgroups.{JGroupsBootstrapCacheLoaderFactory, JGroupsCacheReplicatorFactory, JGroupsCacheManagerPeerProviderFactory}
@@ -14,7 +13,6 @@ import net.sf.ehcache.event.CacheEventListener
   */
 
 object CacheCustomConfig{
-  val ENABLELISTENER:String = "enableListener"
   val REPLICATE_PUTS:String = "replicatePuts"
   val REPLICATE_UPDATES:String = "replicateUpdates"
   val REPLICATE_UPDATES_VIA_COPY:String = "replicateUpdatesViaCopy"
@@ -46,9 +44,7 @@ class CacheCustomConfig(jsonString:String) extends CacheConfiguration{
   private val json = org.json4s.jackson.JsonMethods.parse(jsonString)
   private val values = json.values.asInstanceOf[Map[String, String]]
 
-
   /*
-             enableListener="false"
              name="Node"
              maxBytesLocalHeap="10000"
              maxBytesLocalDisk="1000"
@@ -96,8 +92,6 @@ class CacheCustomConfig(jsonString:String) extends CacheConfiguration{
   //ADD BOOTSTRAP PROPERTIES
   propertiesBootStrap.setProperty(CacheCustomConfig.BOOTSTRAPASYNCHRONOUSLY,(values.getOrElse(CacheCustomConfig.BOOTSTRAPASYNCHRONOUSLY,"false")).toString)
 
-  private val enableListener = values.getOrElse(CacheCustomConfig.ENABLELISTENER,"false").toBoolean
-
   System.setProperty(CacheCustomConfig.PREFERIPV4STACK,"true")
   System.setProperty(CacheCustomConfig.SKIPUPDATECHECK, "true");
 
@@ -105,11 +99,8 @@ class CacheCustomConfig(jsonString:String) extends CacheConfiguration{
     return config
   }
 
-  def  addListeners(cache:Cache) : Unit = {
-    cache.getCacheEventNotificationService.registerListener((new JGroupsCacheReplicatorFactory).createCacheEventListener(properties))
-    if(enableListener){
-      cache.getCacheEventNotificationService.registerListener(new EventCacheListener)
-    }
+  def  getListener() : CacheEventListener = {
+    return (new JGroupsCacheReplicatorFactory).createCacheEventListener(properties)
   }
 
   def  getBootStrap() : BootstrapCacheLoader = {
