@@ -31,7 +31,7 @@ class MemoryDataCacheImp extends DataCache{
 
   override def start(): Unit = {
     cache = cm.getCache(cacheConfig.getName)
-    cache.getCacheEventNotificationService.registerListener(cacheConfig.getListener())
+    cacheConfig.addListeners(cache)
   }
 
   override def shutdown(): Unit = {
