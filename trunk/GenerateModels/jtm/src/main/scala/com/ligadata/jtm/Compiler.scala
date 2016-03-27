@@ -345,38 +345,65 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
   val columnSystem = Set("transactionId", "rowNumber", "timePartitionData")
 
   def ColumnNames(mgr: MdMgr, classname: String): Set[String] = {
-    val classinstance = md.Message(classname, 0, true)
-    if(classinstance.isEmpty) {
+    val classMd = md.Message(classname, 0, true)
+    if(classMd.isEmpty) {
       throw new Exception("Metadata: unable to find class %s".format(classname))
     }
-    val members = classinstance.get.containerType.asInstanceOf[StructTypeDef].memberDefs
-    members.map( e => columnNamePatchUp.getOrElse(e.Name, e.Name)).toSet
+    if(classMd.get.containerType.isInstanceOf[StructTypeDef]) {
+      val members = classMd.get.containerType.asInstanceOf[StructTypeDef].memberDefs
+      members.map(e => columnNamePatchUp.getOrElse(e.Name, e.Name)).toSet
+    } else if(classMd.get.containerType.isInstanceOf[MappedMsgTypeDef]) {
+      val members = classMd.get.containerType.asInstanceOf[MappedMsgTypeDef].attrMap
+      members.map(e => columnNamePatchUp.getOrElse(e._2.Name, e._2.Name)).toSet
+    } else {
+      throw new Exception("Unhandled type %s".format(classMd.get.containerType.getClass.getName))
+    }
   }
 
   def ResolveToVersionedClassname(mgr: MdMgr, classname: String): String = {
-    val classinstance = md.Message(classname, 0, true)
-    if(classinstance.isEmpty) {
+    val classMd = md.Message(classname, 0, true)
+    if(classMd.isEmpty) {
       throw new Exception("Metadata: unable to find class %s".format(classname))
     }
     // We convert to lower case
-    classinstance.get.physicalName.toLowerCase
+    classMd.get.physicalName.toLowerCase
   }
 
   /**
     *
     * @param argName arg name as string
-    * @param className class anme as string
+    * @param className class name as string
     * @param fieldName field name as string
-    * @param fieldType type anem as string
+    * @param fieldType type name as string
     */
   case class Element(argName: String, className: String, fieldName: String, fieldType: String)
+
   def ColumnNames(mgr: MdMgr, classList: Set[String]): Array[Element] = {
     classList.foldLeft(1, Array.empty[Element])( (r, classname) => {
       val classMd = md.Message(classname, 0, true)
-      val members = classMd.get.containerType.asInstanceOf[StructTypeDef].memberDefs
-      (r._1 + 1, r._2 ++ members.map( e => Element("msg%d".format( r._1), classname, columnNamePatchUp.getOrElse(e.Name, e.Name), e.typeString)))
+
+      if(classMd.get.containerType.isInstanceOf[StructTypeDef]) {
+        val members = classMd.get.containerType.asInstanceOf[StructTypeDef].memberDefs
+        (r._1 + 1, r._2 ++ members.map(e => Element("msg%d".format(r._1), classname, columnNamePatchUp.getOrElse(e.Name, e.Name), e.typeString)))
+      } else if(classMd.get.containerType.isInstanceOf[MappedMsgTypeDef]) {
+        val members = classMd.get.containerType.asInstanceOf[MappedMsgTypeDef].attrMap
+        (r._1 + 1, r._2 ++ members.map(e => Element("msg%d".format(r._1), classname, columnNamePatchUp.getOrElse(e._2.Name, e._2.Name), e._2.typeString)))
+      } else {
+        throw new Exception("Unhandled type %s".format(classMd.get.containerType.getClass.getName))
+      }
     })._2
   }
+
+  def CollectMapperMessages(mgr: MdMgr, classList: Set[String]): Set[String] = {
+    classList.filter( f => {
+        val classinstance = md.Message(f, 0, true)
+        if (classinstance.isEmpty) {
+          throw new Exception("Metadata: unable to find class %s".format(f))
+        }
+        classinstance.get.containerType.asInstanceOf[ContainerTypeDef].IsFixed
+    })
+  }
+
 
   def ResolveNames(names: Set[String], aliaseMessages: Map[String, String] ) : Map[String, String] =  {
     Expressions.ResolveNames(names, aliaseMessages)
@@ -401,7 +428,8 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
                grokExpressions: Map[String, (String, String, Set[String])],
                notUniqueInputs: Set[String],
                currentPath: String,
-               inputs: Array[Element]) : (Array[String], Array[String], Map[String, eval.Tracker], Set[String]) = {
+               inputs: Array[Element],
+               dictMessages: Set[String]): (Array[String], Array[String], Map[String, eval.Tracker], Set[String]) = {
 
     var collect: Array[String] = Array.empty[String]
     var methods: Array[String] = Array.empty[String]
@@ -447,6 +475,15 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
       })
     }
 
+    def AmbiguousCheck(rList : Map[String, String], f : String) = {
+      val ambiguous = rList.filter(f => notUniqueInputs.contains(f._2)).map(m => m._2)
+      if (ambiguous.nonEmpty) {
+        val a = ambiguous.mkString(", ")
+        logger.error("Found ambiguous variables %s in expression %s".format(a, f))
+        throw new Exception("Found ambiguous variables %s in expression %s".format(a, f))
+      }
+    }
+    
     // Abort this loop if nothing changes or we can satisfy all outputs
     //
     while (cnt1 != cnt2 && (output_in.isEmpty || outputSet.nonEmpty)) {
@@ -464,6 +501,8 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
             val rList = ResolveNames(list, aliaseMessages)
             val open = rList.filter(f => !innerMapping.contains(f._2))
             if (open.nonEmpty) logger.trace("{} not found {}", currentPath, open.mkString(", "))
+            if(open.isEmpty)
+              AmbiguousCheck(rList, f._2)
             open.isEmpty
           } else {
             innerMapping.contains(f._2)
@@ -505,6 +544,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
           val nameColumn = ResolveName(g._1, aliaseMessages)
 
+          AmbiguousCheck(Map(nameColumn->nameColumn), g._2)
           innerTracking += innerMapping.get(g._1).get.variableName
 
           // Get the expression
@@ -537,13 +577,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
         val list = Expressions.ExtractColumnNames(f)
         val rList = ResolveNames(list, aliaseMessages)
         val open = rList.filter(f => !innerMapping.contains(f._2))
-        val ambiguous = rList.filter(f => notUniqueInputs.contains(f._2)).map(m => m._2)
-        if (ambiguous.nonEmpty) {
-          val a = ambiguous.mkString(", ")
-          logger.error("Found ambiguous variables %s in expression %s".format(a, f))
-          throw new Exception("Found ambiguous variables %s in expression %s".format(a, f))
-        }
-
+        AmbiguousCheck(rList, f)
         if (open.isEmpty) {
 
           innerTracking ++= rList.map(m => innerMapping.get(m._2).get.variableName).toSet
@@ -567,24 +601,15 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           val list = Expressions.ExtractColumnNames(c._2.expression)
           val rList = ResolveNames(list, aliaseMessages)
           val open = rList.filter(f => !innerMapping.contains(f._2))
-          val ambiguous = rList.filter(f => notUniqueInputs.contains(f._2)).map(m => m._2)
-          if (ambiguous.nonEmpty) {
-            val a = ambiguous.mkString(", ")
-            logger.error("Found ambiguous variables %s in expression %s".format(a, c._2.expression))
-            throw new Exception("Found ambiguous variables %s in expression %s".format(a, c._2.expression))
-          }
+          AmbiguousCheck(rList, c._2.expression)
           (open, c._2.expression, rList)
         } else {
           val evaluate = c._2.expressions.map(expression => {
             val list = Expressions.ExtractColumnNames(expression)
             val rList = ResolveNames(list, aliaseMessages)
             val open = rList.filter(f => !innerMapping.contains(f._2))
-            val ambiguous = rList.filter(f => notUniqueInputs.contains(f._2)).map(m => m._2)
-            if (ambiguous.nonEmpty) {
-              val a = ambiguous.mkString(", ")
-              logger.error("Found ambiguous variables %s in expression %s".format(a, c._2.expression))
-              throw new Exception("Found ambiguous variables %s in expression %s".format(a, c._2.expression))
-            }
+            if (open.isEmpty)
+              AmbiguousCheck(rList, expression)
             (open, expression, rList)
           })
           evaluate.foldLeft(evaluate.head)((r, e) => {
@@ -810,6 +835,9 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           classString -> eval.Tracker(variableName, p.className, p.fieldType, true, p.fieldName)
         }).toMap
 
+        // Find all dictionary messages
+        val dictMessages = CollectMapperMessages(md, deps)
+
         // Common computes section
         //
         val (collectOuter, methodsOuter, outerMapping, outerTracking) = {
@@ -825,7 +853,8 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
             grokExpressions,
             notUniqueInputs,
             t.toString(),
-            Array.empty[Element])
+            Array.empty[Element],
+            dictMessages)
         }
 
         methods ++= methodsOuter
@@ -850,7 +879,8 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
               grokExpressions,
               notUniqueInputs,
               t.toString() + "@" + o._1,
-              inputs)
+              inputs,
+              dictMessages)
           }
 
           var collect = Array.empty[String]
