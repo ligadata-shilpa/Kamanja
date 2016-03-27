@@ -2892,8 +2892,8 @@ class MdMgr {
     *
     */
   def AddModelDef(nameSpace: String, name: String, physicalName: String, modelRep: ModelRepresentation.ModelRepresentation, inputMsgSets: Array[Array[MessageAndAttributes]], outputMsgs: Array[String],
-                  isReusable: Boolean, objectDefStr: String, miningModelType: MiningModelType.MiningModelType, tenantId: String, ver: Long = 1, jarNm: String = null, depJars: Array[String] = Array[String](), modelConfig: String = ""): Unit = {
-    AddModelDef(MakeModelDef(nameSpace, name, physicalName, tenantId, modelRep,  inputMsgSets, outputMsgs, isReusable, objectDefStr, miningModelType, ver, jarNm, depJars, false, false, modelConfig), false)
+                  isReusable: Boolean, objectDefStr: String, miningModelType: MiningModelType.MiningModelType, tenantId, ver: Long = 1, jarNm: String = null, depJars: Array[String] = Array[String](), modelConfig: String = ""): Unit = {
+    AddModelDef(MakeModelDef(nameSpace, name, physicalName, modelRep,  inputMsgSets, outputMsgs, isReusable, objectDefStr, miningModelType, ver, jarNm, depJars, false, false, modelConfig), false)
   }
 
   def AddModelDef(mdl: ModelDef, allowLatestVersion: Boolean): Unit = {
