@@ -18,12 +18,29 @@ package com.ligadata.jtm.eval
 import scala.util.matching.Regex
 
 // Track details of any used element
-case class Tracker(variableName: String, className: String="", typeName: String="", isInput: Boolean=false, accessor: String="")
+case class Tracker(variableName: String, className: String="", typeName: String="", isInput: Boolean=false, accessor: String="") {
+  def getAccessor(): String = {
+    if(accessor.isEmpty)
+      variableName
+    else
+    accessor
+  }
+}
 
 /**
   *
   */
 object Expressions {
+
+  /** Split a fully qualified object name into namspace and class
+    *
+    * @param name is a fully qualified class name
+    * @return tuple with namespace and class name
+    */
+  def splitNamespaceClass(name: String): (String, String) = {
+    val elements = name.split('.')
+    (elements.dropRight(1).mkString("."), elements.last)
+  }
 
   /** Find all logical column names that are encode in this expression $name
     *
@@ -52,7 +69,7 @@ object Expressions {
     * @param mapNameSource name to variable mapping
     * @return string with the result
     */
-  def FixupColumnNames(expression: String, mapNameSource: Map[String, Tracker], aliaseMessages: Map[String, String]): String = {
+  def FixupColumnNames(expression: String, mapNameSource: Map[String, Tracker], aliaseMessages: Map[String, String], dictMessages: Map[String, String]): String = {
 
     val regex1 = """\$([a-zA-Z0-9_]+)""".r
     val regex2 = """\$\{([a-zA-Z0-9_]+\.[a-zA-Z0-9_]+)\}""".r
@@ -64,7 +81,7 @@ object Expressions {
       while (m.find) {
         val name = m.group(1)
         val resolvedName = ResolveName(name, aliaseMessages)
-        m.appendReplacement(sb, mapNameSource.get(resolvedName).get.variableName)
+        m.appendReplacement(sb, mapNameSource.get(resolvedName).get.getAccessor)
         i = i + 1
       }
       m.appendTail(sb)
