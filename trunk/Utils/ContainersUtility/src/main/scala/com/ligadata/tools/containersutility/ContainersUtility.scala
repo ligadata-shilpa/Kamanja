@@ -54,7 +54,6 @@ Sample uses:
                 ("key" -> key) ~
                   ("value" -> data(key)))
           })
-        //println(compact(render(json)))
       new PrintWriter(filename) { write(pretty(render(json))); close }
     }
   }
@@ -80,10 +79,6 @@ Sample uses:
           nextOption(map ++ Map('keyfields -> value), tail)
         case "--outputpath" :: value :: tail =>
           nextOption(map ++ Map('outputpath -> value), tail)
-//        case "--keyid" :: value :: tail =>
-//          nextOption(map ++ Map('keyid -> value), tail)
-//        case "--timerange" :: value :: tail =>
-//          nextOption(map ++ Map('timerange -> value), tail)
         case "--filter " :: value :: tail =>
           nextOption(map ++ Map('filter  -> value), tail)
         case option :: tail =>
@@ -99,13 +94,11 @@ Sample uses:
     var operation = if (options.contains('operation)) options.apply('operation) else null // operation select/truncate/delete
     val tmpkeyfieldnames = if (options.contains('keyfields)) options.apply('keyfields) else null //key field name
     val output = if (options.contains('outputpath)) options.apply('outputpath) else null //output path for select operation
-//    val keyid = if (options.contains('keyid)) options.apply('keyid) else null
-//    val timerange = if (options.contains('timerange)) options.apply('timerange) else null
     val filter = if(options.contains('filter)) options.apply('filter) else null // include keyid and timeranges
     val filterFile = scala.io.Source.fromFile(filter).mkString // read filter file config (JSON file)
     val parsedKey = parse(filterFile)
-    val timeRangeArraybuf = scala.collection.mutable.ArrayBuffer.empty[TimeRange] //create an arrayBuffer to append data into it
-    val insiderKeyArraybuf = scala.collection.mutable.ArrayBuffer.empty[Array[String]] // create an ArrayBuffer to append data into it
+    var timeRangeList = scala.collection.immutable.List.empty[TimeRange] //create an arrayBuffer to append data into it
+    var insideKeyList = scala.collection.immutable.List.empty[Array[String]] // create an ArrayBuffer to append data into it
     if (parsedKey != null) {
       val values = parsedKey.values.asInstanceOf[Map[String, Any]]
       values.foreach(kv => {
@@ -113,7 +106,7 @@ Sample uses:
           val keyList = kv._2.asInstanceOf[List[List[Any]]]
           keyList.foreach(listitem => {
             if (listitem != null) {
-              insiderKeyArraybuf += listitem.map(item => item.toString).toArray
+              insideKeyList :+ listitem.map(item => item.toString).toArray
             }
           })
         } else if (kv._1.compareToIgnoreCase("timerange") == 0) {
@@ -121,7 +114,7 @@ Sample uses:
           list.foreach(listItem => {
             if (!listItem("begintime").equalsIgnoreCase(null) && !listItem("endtime").equalsIgnoreCase(null)) {
               var timeRangeObj = new TimeRange(listItem("begintime").toLong, listItem("endtime").toLong)
-              timeRangeArraybuf += timeRangeObj
+              timeRangeList :+ timeRangeObj
             }
           })
         }
@@ -130,8 +123,8 @@ Sample uses:
       logger.error("you should pass a filter file for select and delete operation")
     }
 
-    val timeRangeArray: Array[TimeRange] = timeRangeArraybuf.toArray // include a list list of TimeRange objects
-    val keysArray: Array[Array[String]] = insiderKeyArraybuf.toArray // include a list of bucketKey
+    val timeRangeArray: Array[TimeRange] = timeRangeList.toArray // include a list list of TimeRange objects
+    val keysArray: Array[Array[String]] = insideKeyList.toArray // include a list of bucketKey
 
     var valid: Boolean = (cfgfile != null && containerName != null)
 
@@ -154,7 +147,7 @@ Sample uses:
 
     containersUtilityConfiguration.configFile = cfgfile.toString
 
-    val utilmaker: UtilityForContainers = new UtilityForContainers(loadConfigs, containerName.toLowerCase/*, tmpkeyfieldnames, operation, keyid*/)
+    val utilmaker: UtilityForContainers = new UtilityForContainers(loadConfigs, containerName.toLowerCase)
 if (utilmaker.isOk) {
       try {
         val dstore = utilmaker.GetDataStoreHandle(containersUtilityConfiguration.jarPaths, utilmaker.dataDataStoreInfo)
@@ -164,28 +157,15 @@ if (utilmaker.isOk) {
               if (operation.equalsIgnoreCase("truncate")) {
                 utilmaker.TruncateContainer(containerName, dstore)
               } else if (operation.equalsIgnoreCase("delete")) {
-                if (keysArray.length > 0 && timeRangeArray.length == 0) {
-                  utilmaker.DeleteFromContainer(containerName,keysArray, dstore)
-                } else if (keysArray.length == 0 && timeRangeArray.length > 0) {
-                  utilmaker.DeleteFromContainer(containerName,timeRangeArray,dstore)
-                } else if (keysArray.length > 0 && timeRangeArray.length > 0) {
-                    utilmaker.DeleteFromContainer(containerName,keysArray, timeRangeArray, dstore)
-                } else /*if(keyid.equalsIgnoreCase(null) && timerange.equalsIgnoreCase(null))*/ {
+                if(keysArray.length == 0 && timeRangeArray.length == 0)
                   logger.error("Failed to delete data from %s container, at least one item (keyid, timerange) should not be null for delete operation".format(containerName))
-                }
+                else
+                  utilmaker.DeleteFromContainer(containerName,keysArray, timeRangeArray, dstore)
               } else if (operation.equalsIgnoreCase("select")) {
-                if (keysArray.length > 0 && timeRangeArray.length == 0) {
-                  writeToFile(utilmaker.GetFromContainer(containerName, keysArray, dstore), output, containerName)
-                 // utilmaker.GetFromContainer(containerName, keysArray, dstore)
-                } else if (keysArray.length == 0 && timeRangeArray.length > 0) {
-                  writeToFile(utilmaker.GetFromContainer(containerName, timeRangeArray, dstore), output, containerName)
-                  //utilmaker.GetFromContainer(containerName, timeRangeArray, dstore)
-                } else if (keysArray.length > 0 && timeRangeArray.length > 0) {
-                  writeToFile(utilmaker.GetFromContainer(containerName, keysArray, timeRangeArray, dstore),output, containerName)
-                  //utilmaker.GetFromContainer(containerName, keysArray, timeRangeArray, dstore)
-                } else {
+                if(keysArray.length == 0 && timeRangeArray.length == 0)
                   logger.error("Failed to select data from %s container,at least one item (keyid, timerange) should not be null for select operation".format(containerName))
-                }
+                else
+                  writeToFile(utilmaker.GetFromContainer(containerName, keysArray, timeRangeArray, dstore),output, containerName)
               }
             } else {
               logger.error("Unknown operation you should use one of these options: select, delete, truncate")

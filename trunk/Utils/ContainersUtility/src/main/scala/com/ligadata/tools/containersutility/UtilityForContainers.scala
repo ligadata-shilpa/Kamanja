@@ -24,7 +24,7 @@ import scala.collection.immutable.Map
 /**
   * Created by Yousef on 3/9/2016.
   */
-class UtilityForContainers(val loadConfigs: Properties, val typename: String/*,val keyfield: String, operation: String, keyid: String*/) extends LogTrait with MdBaseResolveInfo {
+class UtilityForContainers(val loadConfigs: Properties, val typename: String) extends LogTrait with MdBaseResolveInfo {
 
   var isOk: Boolean = true
   var zkcForSetData: CuratorFramework = null
@@ -289,49 +289,30 @@ class UtilityForContainers(val loadConfigs: Properties, val typename: String/*,v
   // this method used to dalete data from container for a specific keys in a specific time ranges
    def DeleteFromContainer(typename: String, keyids: Array[Array[String]], timeranges: Array[TimeRange], kvstore: DataStore): Unit ={
 //    logger.info("delete data from %s container for %s keys and timerange: %d-%d".format(typename,keyids,timeranges.beginTime,timeranges.endTime))
-    timeranges.foreach(timerange => {
-      kvstore.del(typename, timerange, keyids)
-    })
-  }
-  // this method used to delete data from container for a specific keys
-   def DeleteFromContainer(typename: String, keyArray: Array[Array[String]], kvstore: DataStore): Unit ={
-    //logger.info("delete from %s container for %s keys".format(typename,keyids))
-    val keyArraybuf = scala.collection.mutable.ArrayBuffer.empty[Key]
-    val deleteKey = (k: Key) => {
-      keyArraybuf.append(k)
-    }
-    kvstore.getKeys(typename, keyArray, deleteKey)
-    val keyArrays: Array[Key] = keyArraybuf.toArray
-    kvstore.del(typename, keyArrays)
+    if(keyids.length == 0)
+      timeranges.foreach(timerange => {
+        logger.info("delete from %s container for timerange: %d-%d".format(typename, timerange.beginTime,timerange.endTime))
+      kvstore.del(typename, timerange)
+      })
+    else  if (timeranges.length == 0) {
+      var keyList = scala.collection.immutable.List.empty[Key]
+      val keyArraybuf = scala.collection.mutable.ArrayBuffer.empty[Key]
+      val deleteKey = (k: Key) => {
+        keyList = keyList :+ k
+        //keyArraybuf.append(k)
+      }
+
+      kvstore.getKeys(typename, keyids, deleteKey)
+     // val keyArrays: Array[Key] = keyArraybuf.toArray
+      val keyArrays: Array[Key] = keyList.toArray
+      kvstore.del(typename, keyArrays)
+    } else
+      timeranges.foreach(timerange => {
+        logger.info("delete from %s container for keyid: %s and timerange: %d-%d".format(typename, keyids, timerange.beginTime, timerange.endTime))
+        kvstore.del(typename, timerange, keyids)
+      })
   }
 
-   def DeleteFromContainer (typename: String, timeranges: Array[TimeRange], kvstore: DataStore): Unit ={
-     timeranges.foreach(timerange => {
-    logger.info("delete from %s container for timerange: %d-%d".format(typename, timerange.beginTime,timerange.endTime))
-     kvstore.del(typename,timerange)
-     })
-  }
-  //this method used to get data from container for a specific key
-   def GetFromContainer(typename:String, keyArray: Array[Array[String]], kvstore: DataStore): Map[String,String] ={
-    //logger.info("select data from %s container for %s key".format(typename,keyids))
-  //  val keyArraybuf = scala.collection.mutable.ArrayBuffer.empty[Key]
-   var data : Map[String,String] = null
-  //  val saveKey = (k: Key) => {
- //     keyArraybuf.append(k)
-  //  }
-    val retriveData = (k: Key, v: Value)=>{
-      val value = SerializeDeserialize.Deserialize(v.serializedInfo, this, containerUtilityLoder.loader, true, "")
-      val primarykey = value.PrimaryKeyData
-      val key = KeyWithBucketIdAndPrimaryKey(KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(k.bucketKey), k, primarykey != null && primarykey.size > 0, primarykey)
-      val bucketId = KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(k.bucketKey)
-      val keyValue = value.get(k.toString)
-      data = data + (bucketId.toString -> keyValue.toString) // this includes key and value
-    }
-   // kvstore.getKeys(typename, keyArray, saveKey)
-   // val keyArrays: Array[Key] = keyArraybuf.toArray
-    kvstore.get(typename, keyArray, retriveData)
-    return data
-  }
   //this method used to get data from container for a specific key in a specific time ranges
    def GetFromContainer(typename: String, keyArray: Array[Array[String]], timeranges: Array[TimeRange], kvstore: DataStore): Map[String,String] ={
 
@@ -345,22 +326,12 @@ class UtilityForContainers(val loadConfigs: Properties, val typename: String/*,v
       data = data + (bucketId.toString -> keyValue.toString) // this includes key and value
     }
       //logger.info("select data from %s container for %s key and timerange: %d-%d".format(typename,timerange.beginTime,timerange.endTime))
+    if(keyArray.length == 0)
+      kvstore.get(typename, timeranges, retriveData)
+    else if (timeranges.length == 0)
+      kvstore.get(typename, keyArray, retriveData)
+    else
       kvstore.get(typename,timeranges,keyArray,retriveData)
     return data
-  }
-
-   def GetFromContainer(typename:String, timeranges: Array[TimeRange], kvstore: DataStore): Map[String,String] ={
-      //logger.info("select data from %s container for timerange: %d-%d".format((typename,timerange.beginTime,timerange.endTime)))
-      var data : Map[String,String] = null
-      val retriveData = (k: Key, v: Value)=>{
-        val value = SerializeDeserialize.Deserialize(v.serializedInfo, this, containerUtilityLoder.loader, true, "")
-        val primarykey = value.PrimaryKeyData
-        val key = KeyWithBucketIdAndPrimaryKey(KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(k.bucketKey), k, primarykey != null && primarykey.size > 0, primarykey)
-        val bucketId = KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(k.bucketKey)
-        val keyValue = value.get(k.toString)
-        data = data + (bucketId.toString -> keyValue.toString) // this includes key and value
-      }
-      kvstore.get(typename, timeranges, retriveData)
-     return data
   }
 }
