@@ -43,7 +43,7 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
         result.timePartitionData = msg1.timePartitionData
         result.out1 = msg1.in1
         result.transactionId = msg1.transactionId
-        result.set("out3", out3)
+        result.set("out3", t1)
         result.set("out4", msg1.get("in4"))
         Array(result)
       }

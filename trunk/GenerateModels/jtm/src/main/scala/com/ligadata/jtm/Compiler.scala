@@ -492,9 +492,9 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     // Grocks
     // Filters
     // Where
-    logger.trace("while: {}!={} output={}", cnt1.toString, cnt2.toString, (output_in.isEmpty || outputSet.nonEmpty).toString)
+    logger.trace("while: {}!={}", cnt1.toString, cnt2.toString)
 
-    while (cnt1 != cnt2 && (output_in.isEmpty || outputSet.nonEmpty)) {
+    while (cnt1 != cnt2) {
 
       cnt2 = cnt1
 
@@ -730,7 +730,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
       mapping = mapping1
       groks = groks1
 
-      logger.trace("while: {}!={} output={}", cnt1.toString, cnt2.toString, (output_in.isEmpty || outputSet.nonEmpty).toString)
+      logger.trace("while: {}!={}", cnt1.toString, cnt2.toString)
     }
 
     if (outputSet.nonEmpty) {
