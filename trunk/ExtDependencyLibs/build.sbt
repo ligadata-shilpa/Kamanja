@@ -133,10 +133,8 @@ libraryDependencies += "org.apache.hbase" % "hbase-common" % "1.0.2"
 libraryDependencies += "org.apache.hadoop" % "hadoop-common" % "2.7.1"
 libraryDependencies += "com.googlecode.json-simple" % "json-simple" % "1.1"
 libraryDependencies += "com.fasterxml.jackson.core" % "jackson-databind" % "2.6.3"
-libraryDependencies += "log4j" % "log4j" % "1.2.17"                                        // latest error
+libraryDependencies += "log4j" % "log4j" % "1.2.17" // latest error
 //scalacOptions += "-deprecation"
-
-
 
 
 ////////////////////// MetadataAPIService
@@ -162,8 +160,6 @@ libraryDependencies ++= {
 
 
 
-
-
 /////////////////////// PmmlTestTool
 // 1.2.9 is currently used in other engine... use same here
 libraryDependencies += "org.jpmml" % "pmml-evaluator" % "1.2.9"
@@ -176,6 +172,63 @@ libraryDependencies += "com.codahale.metrics" % "metrics-core" % "3.0.2"
 //crossPaths := false
 //// This forbids including Scala related libraries into the dependency
 //autoScalaLibrary := false
+
+
+////////////////////// Metadata
+//libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.0" % "test"
+libraryDependencies += "com.novocode" % "junit-interface" % "0.11-RC1" % "test"
+//testOptions += Tests.Argument(TestFrameworks.JUnit, "-q", "-v")
+
+
+////////////////////// KamanjaBase
+libraryDependencies += "com.google.code.findbugs" % "jsr305" % "1.3.9"
+
+
+////////////////////// Bootstrap
+//scalacOptions += "-deprecation"
+unmanagedSourceDirectories in Compile <+= (scalaVersion, sourceDirectory in Compile) {
+  case (v, dir) if v startsWith "2.10" => dir / "scala_2.10"
+  case (v, dir) if v startsWith "2.11" => dir / "scala_2.11"
+}
+
+
+////////////////////// Serialize
+libraryDependencies ++= Seq(
+  "com.twitter" %% "chill" % "0.5.0"
+)
+libraryDependencies += "com.google.protobuf" % "protobuf-java" % "2.6.0"
+//scalacOptions += "-deprecation"
+
+
+
+
+
+//////////////////////  InstallDriver
+//already available
+
+
+////////////////////// JsonDataGen
+//already available
+
+
+////////////////////// Controller
+//already available
+
+
+////////////////////// AuditAdapterBase / AuditAdapters
+//already available
+
+
+////////////////////// CustomUdfLib
+//already available
+
+
+////////////////////// ExtractData
+//already available
+
+
+//////////////////////InterfacesSamples
+//already available
 
 
 /////////////////////// ClusterInstallerDriver
@@ -212,59 +265,6 @@ libraryDependencies += "com.codahale.metrics" % "metrics-core" % "3.0.2"
 //    "org.scala-lang" % "scala-actors" % scalaVersion.value
 //  )
 //}
-
-
-////////////////////// Metadata
-//libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.0" % "test"
-libraryDependencies += "com.novocode" % "junit-interface" % "0.11-RC1" % "test"
-//testOptions += Tests.Argument(TestFrameworks.JUnit, "-q", "-v")
-
-
-////////////////////// KamanjaBase
-libraryDependencies += "com.google.code.findbugs" % "jsr305" % "1.3.9"
-
-
-////////////////////// Bootstrap
-//scalacOptions += "-deprecation"
-unmanagedSourceDirectories in Compile <+= (scalaVersion, sourceDirectory in Compile) {
-  case (v, dir) if v startsWith "2.10" => dir / "scala_2.10"
-  case (v, dir) if v startsWith "2.11" => dir / "scala_2.11"
-}
-
-
-
-
-////////////////////// Serialize
-libraryDependencies ++= Seq(
-  "com.twitter" %% "chill" % "0.5.0"
-)
-libraryDependencies += "com.google.protobuf" % "protobuf-java" % "2.6.0"
-//scalacOptions += "-deprecation"
-
-
-////////////////////// ZooKeeperListener
-libraryDependencies ++= Seq(
-  "org.apache.commons" % "commons-collections4" % "4.0",
-  "commons-configuration" % "commons-configuration" % "1.7",
-  "commons-logging" % "commons-logging" % "1.1.1",
-  "org.apache.curator" % "curator-client" % "2.6.0",
-  "org.apache.curator" % "curator-framework" % "2.6.0",
-  "org.apache.curator" % "curator-recipes" % "2.6.0"
-  //  "com.googlecode.json-simple" % "json-simple" % "1.1"
-)
-
-
-
-////////////////////// CleanUtil
-libraryDependencies ++= Seq(
-  "com.101tec" % "zkclient" % "0.6",
-  "org.apache.curator" % "curator-test" % "2.8.0"
-    exclude("javax.jms", "jms")
-    exclude("com.sun.jdmk", "jmxtools")
-    exclude("com.sun.jmx", "jmxri")
-)
-
-
 
 
 ////////////////////// KafkaSimpleInputOutputAdapters
@@ -309,10 +309,6 @@ libraryDependencies ++= Seq(
 
 ////////////////////// ZooKeeperClient
 //already available
-
-
-////////////////////// OutputMsgDef
-libraryDependencies ++= Seq("junit" % "junit" % "4.8.1" % "test")
 
 
 ////////////////////// SecurityAdapterBase
@@ -376,78 +372,6 @@ libraryDependencies ++= Seq("junit" % "junit" % "4.8.1" % "test")
 ////////////////////// MethodExtractor
 
 
-////////////////////// MetadataAPIServiceClient
-scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
-libraryDependencies ++= Seq(
-  //    "org.slf4j" % "slf4j-api" % "1.7.10",
-  "ch.qos.logback" % "logback-core" % "1.0.13",
-  "ch.qos.logback" % "logback-classic" % "1.0.13",
-  "uk.co.bigbeeconsultants" %% "bee-client" % "0.28.0",
-  "org.apache.httpcomponents" % "httpclient" % "4.1.2"
-)
-resolvers += "Big Bee Consultants" at "http://repo.bigbeeconsultants.co.uk/repo"
-
-
-
-
-
-////////////////////// JsonDataGen
-//already available
-
-
-////////////////////// Controller
-//already available
-
-
-////////////////////// AuditAdapterBase / AuditAdapters
-//already available
-
-
-////////////////////// CustomUdfLib
-//already available
-
-
-////////////////////// ExtractData
-//already available
-
-
-//////////////////////InterfacesSamples
-//already available
-
-
-////////////////////// Cassandra / StorageCassandra
-libraryDependencies += "com.datastax.cassandra" % "cassandra-driver-parent" % "2.1.2"
-libraryDependencies += "com.datastax.cassandra" % "cassandra-driver-core" % "2.1.2"
-libraryDependencies += "org.apache.cassandra" % "cassandra-thrift" % "2.0.3"
-libraryDependencies += "commons-dbcp" % "commons-dbcp" % "1.4"
-libraryDependencies += "org.apache.thrift" % "libthrift" % "0.9.2"
-
-
-
-
-////////////////////// HashMap
-libraryDependencies += "org.mapdb" % "mapdb" % "1.0.6"
-
-
-
-
-
-
-////////////////////// HBase
-//already available
-
-
-////////////////////// TreeMap
-//already available
-
-
-////////////////////// SqlServer
-libraryDependencies += "org.apache.commons" % "commons-dbcp2" % "2.1"
-
-
-
-
-
 ////////////////////// UtilityService
 //already available
 
@@ -468,27 +392,13 @@ libraryDependencies += "org.apache.commons" % "commons-dbcp2" % "2.1"
 //already available
 
 
-
 //////////////////////  InstallDriverBase
 //already available
 
 
-//////////////////////  PmmlTestTool
-libraryDependencies += "org.jpmml" % "pmml-evaluator" % "1.2.9"
-
-
-
-//////////////////////  InstallDriver
+////////////////////// HBase
 //already available
 
 
-
-//////////////////////  jtm
-libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.4" //% "test->default"
-libraryDependencies += "com.google.code.gson" % "gson" % "2.5"
-libraryDependencies += "org.rogach" %% "scallop" % "0.9.5"
-//libraryDependencies += "org.apache.commons" % "commons-io" % "1.3.2"        // use this instead ? "commons-io" % "commons-io" % "2.4"
-libraryDependencies += "org.skyscreamer" % "jsonassert" % "1.3.0" //% "test->default"
-libraryDependencies += "org.aicer.grok" % "grok" % "0.9.0"
-//libraryDependencies += "com.novocode" % "junit-interface" % "0.9" //% "test->default"
-//libraryDependencies += "junit" % "junit" % "4.11" % "test->default"
+////////////////////// TreeMap
+//already available
