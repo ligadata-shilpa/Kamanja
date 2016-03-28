@@ -29,8 +29,7 @@ import scala.util.{ Success, Failure }
 import com.ligadata.MetadataAPI._
 
 object GetHeartbeatService {
-  case class Process(nodeIds:String) //default, returns all
-  case class ProcessWithLevel(ids : String, detailsLevel : String)
+  case class Process(nodeIds:String, detailsLevel : DetailsLevel.DetailsLevel)
 }
 
 /**
@@ -45,15 +44,12 @@ class GetHeartbeatService(requestContext: RequestContext, userid:Option[String],
   val APIName = "GetHeartbeatService"
   
   def receive = {
-    case Process(nodeId) =>
-      process(nodeId, "all")
-      context.stop(self)
-    case ProcessWithLevel(ids, detailsLevel) =>
+    case Process(ids, detailsLevel) =>
       process(ids, detailsLevel)
       context.stop(self)
   }
   
-  def process(ids:String, detailsLevel : String): Unit = {
+  def process(ids:String, detailsLevel : DetailsLevel.DetailsLevel): Unit = {
     var apiResult : String = ""
 
     // NodeIds is a JSON array of nodeIds.
@@ -64,17 +60,17 @@ class GetHeartbeatService(requestContext: RequestContext, userid:Option[String],
       requestContext.complete(new ApiResult(ErrorCodeConstants.Failure, APIName, null, "Error:Checking Heartbeat is not allowed for this user").toString )
     } else {
 
-      detailsLevel.toLowerCase match {
-        case "all" => {
+      detailsLevel match {
+        case DetailsLevel.ALL => {
           apiResult = MetadataAPIImpl.getHealthCheck(ids, userid)
         }
-        case "nodesonly" => {
+        case DetailsLevel.NODESONLY => {
           apiResult = MetadataAPIImpl.getHealthCheckNodesOnly(ids, userid)
         }
-        case "componentnames" => {
+        case DetailsLevel.COMPONENTSNAMES => {
           apiResult = MetadataAPIImpl.getHealthCheckComponentNames(ids, userid)
         }
-        case "specificcomponents" => {
+        case DetailsLevel.SPECIFICCOMPONENTS => {
           apiResult = MetadataAPIImpl.getHealthCheckComponentDetailsByNames(ids, userid)
         }
 
@@ -88,4 +84,24 @@ class GetHeartbeatService(requestContext: RequestContext, userid:Option[String],
     }
   }  
   
+}
+
+object DetailsLevel extends Enumeration {
+  type DetailsLevel = Value
+  val ALL = Value("all")
+  val NODESONLY = Value("nodesonly")
+  val COMPONENTSNAMES = Value("componentnames")
+  val SPECIFICCOMPONENTS = Value("specificcomponents")
+  val UNKNOWN = Value("unknown")
+
+  def fromString(typstr : String) : DetailsLevel = {
+    val typ : DetailsLevel.Value = typstr.toLowerCase match {
+      case "all" => ALL
+      case "nodesonly" => NODESONLY
+      case "componentnames" => COMPONENTSNAMES
+      case "specificcomponents" => SPECIFICCOMPONENTS
+      case _ => UNKNOWN
+    }
+    typ
+  }
 }
