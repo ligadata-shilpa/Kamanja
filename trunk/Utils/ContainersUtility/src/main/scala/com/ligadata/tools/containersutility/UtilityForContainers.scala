@@ -317,8 +317,8 @@ class UtilityForContainers(val loadConfigs: Properties, val typename: String) ex
    def GetFromContainer(typename: String, keyArray: Array[Array[String]], timeranges: Array[TimeRange], kvstore: DataStore): Map[String,String] ={
 
     var data : Map[String,String] = null
-    val retriveData = (k: Key, v: Value)=>{
-      val value = SerializeDeserialize.Deserialize(v.serializedInfo, this, containerUtilityLoder.loader, true, "")
+    val retriveData = (k: Key, v: Any, serializerTyp: String, typeName: String, ver: Int)=>{
+      val value = v.asInstanceOf[MessageContainerBase]
       val primarykey = value.PrimaryKeyData
       val key = KeyWithBucketIdAndPrimaryKey(KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(k.bucketKey), k, primarykey != null && primarykey.size > 0, primarykey)
       val bucketId = KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(k.bucketKey)
