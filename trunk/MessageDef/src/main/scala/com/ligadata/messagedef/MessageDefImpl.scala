@@ -476,9 +476,9 @@ class MessageDefImpl {
         }
       }
       if (msg.PartitionKey != null)
-        containerDef = mdMgr.MakeMappedContainer(msg.NameSpace, msg.Name, msg.PhysicalName, argsList, MdMgr.ConvertVersionToLong(msg.Version), null, msg.jarset.toArray, null, null, msg.PartitionKey.toArray, defaultOwner, recompile, msg.Persist)
+        containerDef = mdMgr.MakeMappedContainer(msg.NameSpace, msg.Name, msg.PhysicalName, argsList, MdMgr.ConvertVersionToLong(msg.Version), null, msg.jarset.toArray, null, null, msg.PartitionKey.toArray, defaultOwner, 0, 0, recompile, msg.Persist)
       else
-        containerDef = mdMgr.MakeMappedContainer(msg.NameSpace, msg.Name, msg.PhysicalName, argsList, MdMgr.ConvertVersionToLong(msg.Version), null, msg.jarset.toArray, null, null, null, defaultOwner, recompile, msg.Persist)
+        containerDef = mdMgr.MakeMappedContainer(msg.NameSpace, msg.Name, msg.PhysicalName, argsList, MdMgr.ConvertVersionToLong(msg.Version), null, msg.jarset.toArray, null, null, null, defaultOwner, 0, 0, recompile, msg.Persist)
     } catch {
       case e: Exception => {
         log.debug("", e)
@@ -499,9 +499,9 @@ class MessageDefImpl {
       }
 
       if (msg.PartitionKey != null)
-        msgDef = mdMgr.MakeMappedMsg(msg.NameSpace, msg.Name, msg.PhysicalName, argsList, MdMgr.ConvertVersionToLong(msg.Version), null, msg.jarset.toArray, null, null, msg.PartitionKey.toArray, recompile, msg.Persist, defaultOwner)
+        msgDef = mdMgr.MakeMappedMsg(msg.NameSpace, msg.Name, msg.PhysicalName, argsList, MdMgr.ConvertVersionToLong(msg.Version), null, msg.jarset.toArray, null, null, msg.PartitionKey.toArray, recompile, msg.Persist, defaultOwner, 0, 0)
       else
-        msgDef = mdMgr.MakeMappedMsg(msg.NameSpace, msg.Name, msg.PhysicalName, argsList, MdMgr.ConvertVersionToLong(msg.Version), null, msg.jarset.toArray, null, null, null, recompile, msg.Persist, defaultOwner)
+        msgDef = mdMgr.MakeMappedMsg(msg.NameSpace, msg.Name, msg.PhysicalName, argsList, MdMgr.ConvertVersionToLong(msg.Version), null, msg.jarset.toArray, null, null, null, recompile, msg.Persist, defaultOwner, 0, 0)
     } catch {
       case e: Exception => {
         log.debug("", e)
@@ -521,9 +521,9 @@ class MessageDefImpl {
       }
 
       if (msg.PartitionKey != null)
-        containerDef = mdMgr.MakeFixedContainer(msg.NameSpace, msg.Name, msg.PhysicalName, argsList, defaultOwner, MdMgr.ConvertVersionToLong(msg.Version), null, msg.jarset.toArray, null, null, msg.PartitionKey.toArray, recompile, msg.Persist)
+        containerDef = mdMgr.MakeFixedContainer(msg.NameSpace, msg.Name, msg.PhysicalName, argsList, defaultOwner, 0, 0, MdMgr.ConvertVersionToLong(msg.Version), null, msg.jarset.toArray, null, null, msg.PartitionKey.toArray, recompile, msg.Persist)
       else
-        containerDef = mdMgr.MakeFixedContainer(msg.NameSpace, msg.Name, msg.PhysicalName, argsList, defaultOwner, MdMgr.ConvertVersionToLong(msg.Version), null, msg.jarset.toArray, null, null, null, recompile, msg.Persist)
+        containerDef = mdMgr.MakeFixedContainer(msg.NameSpace, msg.Name, msg.PhysicalName, argsList, defaultOwner, 0, 0, MdMgr.ConvertVersionToLong(msg.Version), null, msg.jarset.toArray, null, null, null, recompile, msg.Persist)
     } catch {
       case e: Exception => {
         log.debug("", e)
@@ -545,9 +545,9 @@ class MessageDefImpl {
       }
 
       if (msg.PartitionKey != null)
-        msgDef = mdMgr.MakeFixedMsg(msg.NameSpace, msg.Name, msg.PhysicalName, argsList, defaultOwner, version, null, msg.jarset.toArray, null, null, msg.PartitionKey.toArray, recompile, msg.Persist)
+        msgDef = mdMgr.MakeFixedMsg(msg.NameSpace, msg.Name, msg.PhysicalName, argsList, defaultOwner, 0, 0, version, null, msg.jarset.toArray, null, null, msg.PartitionKey.toArray, recompile, msg.Persist)
       else
-        msgDef = mdMgr.MakeFixedMsg(msg.NameSpace, msg.Name, msg.PhysicalName, argsList, defaultOwner, version, null, msg.jarset.toArray, null, null, null, recompile, msg.Persist)
+        msgDef = mdMgr.MakeFixedMsg(msg.NameSpace, msg.Name, msg.PhysicalName, argsList, defaultOwner, 0, 0, version, null, msg.jarset.toArray, null, null, null, recompile, msg.Persist)
     } catch {
       case e: Exception => {
         log.debug("", e)

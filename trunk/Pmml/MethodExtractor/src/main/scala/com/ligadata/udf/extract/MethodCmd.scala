@@ -315,7 +315,7 @@ class MethodCmd(  val mgr : MdMgr
 				val elem : BaseTypeDef = if (alreadyCataloged) {
 					mgr.ActiveType(nmspc, nm) 
 				} else {
-					mgr.AddList(nmspc, nm, itmnmspc, itmnm, initialVersion, ownerId, uniqueId, mdElementId)
+					mgr.AddList(nmspc, nm, itmnmspc, itmnm, initialVersion, ownerId, 0, 0)
 					mgr.ActiveType(nmspc, nm) 
 				}
 				elem.asInstanceOf[ListTypeDef]				
@@ -324,7 +324,7 @@ class MethodCmd(  val mgr : MdMgr
 				val elem : BaseTypeDef = if (alreadyCataloged) {
 					mgr.ActiveType(nmspc, nm) 
 				} else {
-					mgr.AddList(nmspc, nm, itmnmspc, itmnm, initialVersion, ownerId, uniqueId, mdElementId)
+					mgr.AddList(nmspc, nm, itmnmspc, itmnm, initialVersion, ownerId, 0, 0)
 					mgr.ActiveType(nmspc, nm) 
 				}
 				elem.asInstanceOf[ListTypeDef]				
@@ -359,7 +359,7 @@ class MethodCmd(  val mgr : MdMgr
 				val elem : BaseTypeDef = if (alreadyCataloged) {
 					mgr.ActiveType(nmspc, nm) 
 				} else {
-					mgr.AddQueue(nmspc, nm, itmnmspc, itmnm, initialVersion, ownerId, uniqueId, mdElementId)
+					mgr.AddQueue(nmspc, nm, itmnmspc, itmnm, initialVersion, ownerId, 0, 0)
 					mgr.ActiveType(nmspc, nm) 
 				}
 				elem.asInstanceOf[QueueTypeDef]
@@ -368,7 +368,7 @@ class MethodCmd(  val mgr : MdMgr
 				val elem : BaseTypeDef = if (alreadyCataloged) {
 					mgr.ActiveType(nmspc, nm) 
 				} else {
-					mgr.AddQueue(nmspc, nm, itmnmspc, itmnm, initialVersion, ownerId, uniqueId, mdElementId)
+					mgr.AddQueue(nmspc, nm, itmnmspc, itmnm, initialVersion, ownerId, 0, 0)
 					mgr.ActiveType(nmspc, nm) 
 				}
 				elem.asInstanceOf[QueueTypeDef]
@@ -400,7 +400,7 @@ class MethodCmd(  val mgr : MdMgr
 			val elem : BaseTypeDef = if (alreadyCataloged) {
 				mgr.ActiveType(nmspc, nm) 
 			} else {
-				mgr.AddArray(nmspc, nm, itmnmspc, itmnm, 1, initialVersion, ownerId, uniqueId, mdElementId)
+				mgr.AddArray(nmspc, nm, itmnmspc, itmnm, 1, initialVersion, ownerId, 0, 0)
 				mgr.ActiveType(nmspc, nm) 
 			}
 			typeMap(key) = elem
@@ -430,7 +430,7 @@ class MethodCmd(  val mgr : MdMgr
 			val elem : BaseTypeDef = if (alreadyCataloged) {
 				mgr.ActiveType(nmspc, nm) 
 			} else {
-				mgr.AddArrayBuffer(nmspc, nm, itmnmspc, itmnm, 1, initialVersion, ownerId, uniqueId, mdElementId)
+				mgr.AddArrayBuffer(nmspc, nm, itmnmspc, itmnm, 1, initialVersion, ownerId, 0, 0)
 				mgr.ActiveType(nmspc, nm) 
 			}
 			typeMap(key) = elem
@@ -462,7 +462,7 @@ class MethodCmd(  val mgr : MdMgr
 				val elem : BaseTypeDef = if (alreadyCataloged) {
 					mgr.ActiveType(nmspc, nm) 
 				} else {
-					mgr.AddImmutableMap(nmspc, nm, (keynmspc,keynm), (valnmspc,valnm), initialVersion, ownerId, uniqueId, mdElementId)
+					mgr.AddImmutableMap(nmspc, nm, (keynmspc,keynm), (valnmspc,valnm), initialVersion, ownerId, 0, 0)
 					mgr.ActiveType(nmspc, nm) 
 				}
 				elem.asInstanceOf[ContainerTypeDef]	
@@ -471,7 +471,7 @@ class MethodCmd(  val mgr : MdMgr
 				val elem : BaseTypeDef = if (alreadyCataloged) {
 					mgr.ActiveType(nmspc, nm) 
 				} else {
-					mgr.AddMap(nmspc, nm, (keynmspc,keynm), (valnmspc,valnm), initialVersion, ownerId, uniqueId, mdElementId)
+					mgr.AddMap(nmspc, nm, (keynmspc,keynm), (valnmspc,valnm), initialVersion, ownerId, 0, 0)
 					mgr.ActiveType(nmspc, nm) 
 				}
 				elem.asInstanceOf[ContainerTypeDef]	
@@ -507,7 +507,7 @@ class MethodCmd(  val mgr : MdMgr
 				val elem : BaseTypeDef = if (alreadyCataloged) {
 					mgr.ActiveType(nmspc, nm) 
 				} else {
-					mgr.AddHashMap(nmspc, nm, (keynmspc,keynm), (valnmspc,valnm), initialVersion, ownerId, uniqueId, mdElementId)
+					mgr.AddHashMap(nmspc, nm, (keynmspc,keynm), (valnmspc,valnm), initialVersion, ownerId, 0, 0)
 					mgr.ActiveType(nmspc, nm) 
 				}
 				elem.asInstanceOf[HashMapTypeDef]
@@ -516,7 +516,7 @@ class MethodCmd(  val mgr : MdMgr
 				val elem : BaseTypeDef = if (alreadyCataloged) {
 					mgr.ActiveType(nmspc, nm) 
 				} else {
-					mgr.AddHashMap(nmspc, nm, (keynmspc,keynm), (valnmspc,valnm), initialVersion, ownerId, uniqueId, mdElementId)
+					mgr.AddHashMap(nmspc, nm, (keynmspc,keynm), (valnmspc,valnm), initialVersion, ownerId, 0, 0)
 					mgr.ActiveType(nmspc, nm) 
 				}
 				elem.asInstanceOf[HashMapTypeDef]
@@ -549,7 +549,7 @@ class MethodCmd(  val mgr : MdMgr
 				val elem : BaseTypeDef = if (alreadyCataloged) {
 					mgr.ActiveType(nmspc, nm) 
 				} else {
-					mgr.AddImmutableSet(nmspc, nm, itmnmspc, itmnm, initialVersion, ownerId, uniqueId, mdElementId)
+					mgr.AddImmutableSet(nmspc, nm, itmnmspc, itmnm, initialVersion, ownerId, 0, 0)
 					mgr.ActiveType(nmspc, nm) 
 				}
 				elem.asInstanceOf[ContainerTypeDef]
@@ -558,7 +558,7 @@ class MethodCmd(  val mgr : MdMgr
 				val elem : BaseTypeDef = if (alreadyCataloged) {
 					mgr.ActiveType(nmspc, nm) 
 				} else {
-					mgr.AddSet(nmspc, nm, itmnmspc, itmnm, initialVersion, ownerId, uniqueId, mdElementId)
+					mgr.AddSet(nmspc, nm, itmnmspc, itmnm, initialVersion, ownerId, 0, 0)
 					mgr.ActiveType(nmspc, nm) 
 				}
 				elem.asInstanceOf[ContainerTypeDef]
@@ -593,7 +593,7 @@ class MethodCmd(  val mgr : MdMgr
 				val elem : BaseTypeDef = if (alreadyCataloged) {
 				  mgr.ActiveType(nmspc, nm) 
 				} else {
-				  mgr.AddTreeSet(nmspc, nm, itmnmspc, itmnm, initialVersion, ownerId, uniqueId, mdElementId)
+				  mgr.AddTreeSet(nmspc, nm, itmnmspc, itmnm, initialVersion, ownerId, 0, 0)
 				  mgr.ActiveType(nmspc, nm) 
 				}
 				elem.asInstanceOf[TreeSetTypeDef]
@@ -602,7 +602,7 @@ class MethodCmd(  val mgr : MdMgr
 				val elem : BaseTypeDef = if (alreadyCataloged) {
 					mgr.ActiveType(nmspc, nm) 
 				} else {
-					mgr.AddTreeSet(nmspc, nm, itmnmspc, itmnm, initialVersion, ownerId, uniqueId, mdElementId)
+					mgr.AddTreeSet(nmspc, nm, itmnmspc, itmnm, initialVersion, ownerId, 0, 0)
 					mgr.ActiveType(nmspc, nm) 
 				}
 				elem.asInstanceOf[TreeSetTypeDef]
@@ -637,7 +637,7 @@ class MethodCmd(  val mgr : MdMgr
 				val elem : BaseTypeDef = if (alreadyCataloged) {
 					mgr.ActiveType(nmspc, nm) 
 				} else {
-					mgr.AddSortedSet(nmspc, nm, itmnmspc, itmnm, initialVersion, ownerId, uniqueId, mdElementId)
+					mgr.AddSortedSet(nmspc, nm, itmnmspc, itmnm, initialVersion, ownerId, 0, 0)
 					mgr.ActiveType(nmspc, nm) 
 				}
 				elem.asInstanceOf[SortedSetTypeDef]
@@ -646,7 +646,7 @@ class MethodCmd(  val mgr : MdMgr
 				val elem : BaseTypeDef = if (alreadyCataloged) {
 					mgr.ActiveType(nmspc, nm) 
 				} else {
-					mgr.AddSortedSet(nmspc, nm, itmnmspc, itmnm, initialVersion, ownerId, uniqueId, mdElementId)
+					mgr.AddSortedSet(nmspc, nm, itmnmspc, itmnm, initialVersion, ownerId, 0, 0)
 					mgr.ActiveType(nmspc, nm) 
 				}
 				elem.asInstanceOf[SortedSetTypeDef]
@@ -689,7 +689,7 @@ class MethodCmd(  val mgr : MdMgr
 			val scalarElem : BaseTypeDef = if (alreadyCataloged) {
 				mgr.ActiveType(nmspc, coercedNm) 
 			} else {
-				mgr.AddScalar(nmspc, coercedNm, typ, ObjType.asString(typ), ownerId, uniqueId, mdElementId, initialVersion)
+				mgr.AddScalar(nmspc, coercedNm, typ, ObjType.asString(typ), ownerId, 0, 0, initialVersion)
 				mgr.ActiveType(nmspc, coercedNm) 
 			}
 			/** redo the key as it may have been coerced to "Any" */
@@ -743,7 +743,7 @@ class MethodCmd(  val mgr : MdMgr
 			val nmspcAndNm : Array[String] = key.split('.')
 			val (nmspc,nm) : (String, String) = (nmspcAndNm(0), nmspcAndNm(1))
 			/** Generate the tuples array ... NOTE:  The types from metadata can be prefixed with pkg qualifiers... eliminate the prefix portion */
-			mgr.AddTupleType(nmspc, nm, tups, initialVersion, ownerId, uniqueId, mdElementId)
+			mgr.AddTupleType(nmspc, nm, tups, initialVersion, ownerId, 0, 0)
 			val tupElem : BaseTypeDef = mgr.ActiveType(nmspc,nm)
 			typeMap(key) = tupElem
 			typeArray += tupElem			
@@ -804,7 +804,7 @@ class MethodCmd(  val mgr : MdMgr
 			/** Generate the tuples array ... NOTE:  The types from metadata can be prefixed with pkg qualifiers... eliminate the prefix portion */
 			val tuples : Array[(String,String)] = typesX.map( typ => ("System", typ.split('.').last.trim))
 			
-			mgr.AddTupleType(nmspc, nm, tuples, initialVersion, ownerId, uniqueId, mdElementId)
+			mgr.AddTupleType(nmspc, nm, tuples, initialVersion, ownerId, 0, 0)
 			val tupElem : BaseTypeDef = mgr.ActiveType(nmspc,nm)
 			typeMap(key) = tupElem
 			typeArray += tupElem			

@@ -242,7 +242,7 @@ object MethodExtract extends App with LogTrait {
         val notExcluded: Boolean = (excludeList.filter(exclnm => nm.contains(exclnm) || rt.contains(exclnm)).length == 0)
         if (notExcluded && !nm.contains("$")) {
 
-          val cmd: MethodCmd = new MethodCmd(mgr, versionNumber, namespace, typeMap, typeArray, nm, fnm, rt, ts, ownerId, uniqueId, mdElementId)
+          val cmd: MethodCmd = new MethodCmd(mgr, versionNumber, namespace, typeMap, typeArray, nm, fnm, rt, ts, ownerId, 0, 0)
           if (cmd != null) {
             val (funcInfo, cmdStr): (FuncDefArgs, String) = cmd.makeFuncDef
             if (funcInfo != null) {
@@ -294,7 +294,7 @@ object MethodExtract extends App with LogTrait {
       if (fArgs.hasIndefiniteArity) {
         features += FcnMacroAttr.HAS_INDEFINITE_ARITY
       }
-      mgr.MakeFunc(fArgs.namespace, fArgs.fcnName, fArgs.physicalName, (fArgs.returnNmSpc, fArgs.returnTypeName), fArgs.argTriples.toList, features, ownerId, uniqueId, mdElementId, fArgs.versionNo, jarName, deps)
+      mgr.MakeFunc(fArgs.namespace, fArgs.fcnName, fArgs.physicalName, (fArgs.returnNmSpc, fArgs.returnTypeName), fArgs.argTriples.toList, features, ownerId, 0, 0, fArgs.versionNo, jarName, deps)
     })
 
     /** Serialize and write json function definitions to file */
@@ -351,26 +351,26 @@ Usage: scala com.ligadata.udf.extract.MethodExtract --object <fully qualifed sca
     val mgr: MdMgr = MdMgr.GetMdMgr
 
     /** seed essential types */
-    mgr.AddScalar(MdMgr.sysNS, "Any", ObjType.tAny, "Any", ownerId, uniqueId, mdElementId, versionNumber, "basetypes_2.11-0.1.0.jar", Array("metadata_2.11-1.0.jar"), "com.ligadata.BaseTypes.AnyImpl")
-    mgr.AddScalar(MdMgr.sysNS, "String", ObjType.tString, "String", ownerId, uniqueId, mdElementId, versionNumber, "basetypes_2.11-0.1.0.jar", Array("metadata_2.11-1.0.jar"), "com.ligadata.BaseTypes.StringImpl")
-    mgr.AddScalar(MdMgr.sysNS, "Int", ObjType.tInt, "Int", ownerId, uniqueId, mdElementId, versionNumber, "basetypes_2.11-0.1.0.jar", Array("metadata_2.11-1.0.jar"), "com.ligadata.BaseTypes.IntImpl")
-    mgr.AddScalar(MdMgr.sysNS, "Integer", ObjType.tInt, "Int", ownerId, uniqueId, mdElementId, versionNumber, "basetypes_2.11-0.1.0.jar", Array("metadata_2.11-1.0.jar"), "com.ligadata.BaseTypes.IntImpl")
-    mgr.AddScalar(MdMgr.sysNS, "Long", ObjType.tLong, "Long", ownerId, uniqueId, mdElementId, versionNumber, "basetypes_2.11-0.1.0.jar", Array("metadata_2.11-1.0.jar"), "com.ligadata.BaseTypes.LongImpl")
-    mgr.AddScalar(MdMgr.sysNS, "Boolean", ObjType.tBoolean, "Boolean", ownerId, uniqueId, mdElementId, versionNumber, "basetypes_2.11-0.1.0.jar", Array("metadata_2.11-1.0.jar"), "com.ligadata.BaseTypes.BoolImpl")
-    mgr.AddScalar(MdMgr.sysNS, "Bool", ObjType.tBoolean, "Boolean", ownerId, uniqueId, mdElementId, versionNumber, "basetypes_2.11-0.1.0.jar", Array("metadata_2.11-1.0.jar"), "com.ligadata.BaseTypes.BoolImpl")
-    mgr.AddScalar(MdMgr.sysNS, "Double", ObjType.tDouble, "Double", ownerId, uniqueId, mdElementId, versionNumber, "basetypes_2.11-0.1.0.jar", Array("metadata_2.11-1.0.jar"), "com.ligadata.BaseTypes.DoubleImpl")
-    mgr.AddScalar(MdMgr.sysNS, "Float", ObjType.tFloat, "Float", ownerId, uniqueId, mdElementId, versionNumber, "basetypes_2.11-0.1.0.jar", Array("metadata_2.11-1.0.jar"), "com.ligadata.BaseTypes.FloatImpl")
-    mgr.AddScalar(MdMgr.sysNS, "Char", ObjType.tChar, "Char", ownerId, uniqueId, mdElementId, versionNumber, "basetypes_2.11-0.1.0.jar", Array("metadata_2.11-1.0.jar"), "com.ligadata.BaseTypes.CharImpl")
+    mgr.AddScalar(MdMgr.sysNS, "Any", ObjType.tAny, "Any", ownerId, 0, 0, versionNumber, "basetypes_2.11-0.1.0.jar", Array("metadata_2.11-1.0.jar"), "com.ligadata.BaseTypes.AnyImpl")
+    mgr.AddScalar(MdMgr.sysNS, "String", ObjType.tString, "String", ownerId, 0, 0, versionNumber, "basetypes_2.11-0.1.0.jar", Array("metadata_2.11-1.0.jar"), "com.ligadata.BaseTypes.StringImpl")
+    mgr.AddScalar(MdMgr.sysNS, "Int", ObjType.tInt, "Int", ownerId, 0, 0, versionNumber, "basetypes_2.11-0.1.0.jar", Array("metadata_2.11-1.0.jar"), "com.ligadata.BaseTypes.IntImpl")
+    mgr.AddScalar(MdMgr.sysNS, "Integer", ObjType.tInt, "Int", ownerId, 0, 0, versionNumber, "basetypes_2.11-0.1.0.jar", Array("metadata_2.11-1.0.jar"), "com.ligadata.BaseTypes.IntImpl")
+    mgr.AddScalar(MdMgr.sysNS, "Long", ObjType.tLong, "Long", ownerId, 0, 0, versionNumber, "basetypes_2.11-0.1.0.jar", Array("metadata_2.11-1.0.jar"), "com.ligadata.BaseTypes.LongImpl")
+    mgr.AddScalar(MdMgr.sysNS, "Boolean", ObjType.tBoolean, "Boolean", ownerId, 0, 0, versionNumber, "basetypes_2.11-0.1.0.jar", Array("metadata_2.11-1.0.jar"), "com.ligadata.BaseTypes.BoolImpl")
+    mgr.AddScalar(MdMgr.sysNS, "Bool", ObjType.tBoolean, "Boolean", ownerId, 0, 0, versionNumber, "basetypes_2.11-0.1.0.jar", Array("metadata_2.11-1.0.jar"), "com.ligadata.BaseTypes.BoolImpl")
+    mgr.AddScalar(MdMgr.sysNS, "Double", ObjType.tDouble, "Double", ownerId, 0, 0, versionNumber, "basetypes_2.11-0.1.0.jar", Array("metadata_2.11-1.0.jar"), "com.ligadata.BaseTypes.DoubleImpl")
+    mgr.AddScalar(MdMgr.sysNS, "Float", ObjType.tFloat, "Float", ownerId, 0, 0, versionNumber, "basetypes_2.11-0.1.0.jar", Array("metadata_2.11-1.0.jar"), "com.ligadata.BaseTypes.FloatImpl")
+    mgr.AddScalar(MdMgr.sysNS, "Char", ObjType.tChar, "Char", ownerId, 0, 0, versionNumber, "basetypes_2.11-0.1.0.jar", Array("metadata_2.11-1.0.jar"), "com.ligadata.BaseTypes.CharImpl")
 
-    mgr.AddFixedContainer(MdMgr.sysNS, "Context", "com.ligadata.pmml.runtime.Context", List(), ownerId, uniqueId, mdElementId)
+    mgr.AddFixedContainer(MdMgr.sysNS, "Context", "com.ligadata.pmml.runtime.Context", List(), ownerId, 0, 0)
 
-    mgr.AddFixedContainer(MdMgr.sysNS, "EnvContext", "com.ligadata.KamanjaBase.EnvContext", List(), ownerId, uniqueId, mdElementId)
+    mgr.AddFixedContainer(MdMgr.sysNS, "EnvContext", "com.ligadata.KamanjaBase.EnvContext", List(), ownerId, 0, 0)
 
-    mgr.AddFixedContainer(MdMgr.sysNS, "BaseMsg", "com.ligadata.KamanjaBase.BaseMsg", List(), ownerId, uniqueId, mdElementId)
+    mgr.AddFixedContainer(MdMgr.sysNS, "BaseMsg", "com.ligadata.KamanjaBase.BaseMsg", List(), ownerId, 0, 0)
 
-    mgr.AddFixedContainer(MdMgr.sysNS, "BaseContainer", "com.ligadata.KamanjaBase.BaseContainer", List(), ownerId, uniqueId, mdElementId)
+    mgr.AddFixedContainer(MdMgr.sysNS, "BaseContainer", "com.ligadata.KamanjaBase.BaseContainer", List(), ownerId, 0, 0)
 
-    mgr.AddFixedContainer(MdMgr.sysNS, "MessageContainerBase", "com.ligadata.KamanjaBase.MessageContainerBase", List(), ownerId, uniqueId, mdElementId)
+    mgr.AddFixedContainer(MdMgr.sysNS, "MessageContainerBase", "com.ligadata.KamanjaBase.MessageContainerBase", List(), ownerId, 0, 0)
 
     mgr
   }

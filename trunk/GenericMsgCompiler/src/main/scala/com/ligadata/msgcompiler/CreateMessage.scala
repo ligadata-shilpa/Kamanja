@@ -48,9 +48,9 @@ class CreateMessage {
         }
       }
       if (msg.PartitionKeys != null)
-        msgDef = mdMgr.MakeFixedMsg(msg.NameSpace, msg.Name, msg.PhysicalName, msg.ArgsList, defaultOwner, version, null, msg.Jarset.toArray, null, null, msg.PartitionKeys.toArray, recompile, msg.Persist)
+        msgDef = mdMgr.MakeFixedMsg(msg.NameSpace, msg.Name, msg.PhysicalName, msg.ArgsList, defaultOwner, 0, 0, version, null, msg.Jarset.toArray, null, null, msg.PartitionKeys.toArray, recompile, msg.Persist)
       else
-        msgDef = mdMgr.MakeFixedMsg(msg.NameSpace, msg.Name, msg.PhysicalName, msg.ArgsList, defaultOwner, version, null, msg.Jarset.toArray, null, null, null, recompile, msg.Persist)
+        msgDef = mdMgr.MakeFixedMsg(msg.NameSpace, msg.Name, msg.PhysicalName, msg.ArgsList, defaultOwner, 0, 0, version, null, msg.Jarset.toArray, null, null, null, recompile, msg.Persist)
 
       log.info(" msg.NameSpace   " + msg.NameSpace)
       log.info("msg.Name    " + msg.Name)
@@ -95,9 +95,9 @@ class CreateMessage {
       log.info("msg.Persist    " + msg.Persist)
 
       if (msg.PartitionKeys != null)
-        msgDef = mdMgr.MakeMappedMsg(msg.NameSpace, msg.Name, msg.PhysicalName, msg.ArgsList, MdMgr.ConvertVersionToLong(msg.Version), null, msg.Jarset.toArray, null, null, msg.PartitionKeys.toArray, recompile, msg.Persist, defaultOwner)
+        msgDef = mdMgr.MakeMappedMsg(msg.NameSpace, msg.Name, msg.PhysicalName, msg.ArgsList, MdMgr.ConvertVersionToLong(msg.Version), null, msg.Jarset.toArray, null, null, msg.PartitionKeys.toArray, recompile, msg.Persist, defaultOwner, 0, 0)
       else
-        msgDef = mdMgr.MakeMappedMsg(msg.NameSpace, msg.Name, msg.PhysicalName, msg.ArgsList, MdMgr.ConvertVersionToLong(msg.Version), null, msg.Jarset.toArray, null, null, null, recompile, msg.Persist, defaultOwner)
+        msgDef = mdMgr.MakeMappedMsg(msg.NameSpace, msg.Name, msg.PhysicalName, msg.ArgsList, MdMgr.ConvertVersionToLong(msg.Version), null, msg.Jarset.toArray, null, null, null, recompile, msg.Persist, defaultOwner, 0, 0)
     } catch {
       case e: Exception => {
         val stackTrace = StackTrace.ThrowableTraceString(e)
@@ -123,9 +123,9 @@ class CreateMessage {
         }
       }
       if (msg.PartitionKeys != null)
-        msgDef = mdMgr.MakeMappedMsg(msg.NameSpace, msg.Name, msg.PhysicalName, msg.ArgsList, MdMgr.ConvertVersionToLong(msg.Version), null, msg.Jarset.toArray, null, null, msg.PartitionKeys.toArray, recompile, msg.Persist, defaultOwner)
+        msgDef = mdMgr.MakeMappedMsg(msg.NameSpace, msg.Name, msg.PhysicalName, msg.ArgsList, MdMgr.ConvertVersionToLong(msg.Version), null, msg.Jarset.toArray, null, null, msg.PartitionKeys.toArray, recompile, msg.Persist, defaultOwner, 0, 0)
       else
-        msgDef = mdMgr.MakeMappedMsg(msg.NameSpace, msg.Name, msg.PhysicalName, msg.ArgsList, MdMgr.ConvertVersionToLong(msg.Version), null, msg.Jarset.toArray, null, null, null, recompile, msg.Persist, defaultOwner)
+        msgDef = mdMgr.MakeMappedMsg(msg.NameSpace, msg.Name, msg.PhysicalName, msg.ArgsList, MdMgr.ConvertVersionToLong(msg.Version), null, msg.Jarset.toArray, null, null, null, recompile, msg.Persist, defaultOwner, 0, 0)
 
       log.info(" msg.NameSpace   " + msg.NameSpace)
       log.info("msg.Name    " + msg.Name)
@@ -161,9 +161,9 @@ class CreateMessage {
         }
       }
       if (msg.PartitionKeys != null)
-        containerDef = mdMgr.MakeMappedContainer(msg.NameSpace, msg.Name, msg.PhysicalName, msg.ArgsList, MdMgr.ConvertVersionToLong(msg.Version), null, msg.Jarset.toArray, null, null, msg.PartitionKeys.toArray, defaultOwner, recompile, msg.Persist)
+        containerDef = mdMgr.MakeMappedContainer(msg.NameSpace, msg.Name, msg.PhysicalName, msg.ArgsList, MdMgr.ConvertVersionToLong(msg.Version), null, msg.Jarset.toArray, null, null, msg.PartitionKeys.toArray, defaultOwner, 0, 0, recompile, msg.Persist)
       else
-        containerDef = mdMgr.MakeMappedContainer(msg.NameSpace, msg.Name, msg.PhysicalName, msg.ArgsList, MdMgr.ConvertVersionToLong(msg.Version), null, msg.Jarset.toArray, null, null, null, defaultOwner, recompile, msg.Persist)
+        containerDef = mdMgr.MakeMappedContainer(msg.NameSpace, msg.Name, msg.PhysicalName, msg.ArgsList, MdMgr.ConvertVersionToLong(msg.Version), null, msg.Jarset.toArray, null, null, null, defaultOwner, 0, 0, recompile, msg.Persist)
 
       log.info(" msg.NameSpace   " + msg.NameSpace)
       log.info("msg.Name    " + msg.Name)
