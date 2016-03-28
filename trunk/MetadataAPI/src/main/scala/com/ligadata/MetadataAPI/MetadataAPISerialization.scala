@@ -295,7 +295,7 @@ object MetadataAPISerialization {
               ("ClassName" -> o.ClassName) ~
               ("JarName" -> o.JarName) ~
               ("DependencyJars" -> o.DependencyJars.toList) ~
-              ("AdapterSpecificCfg" -> o.AdapterSpecificCfg) ~
+              ("AdapterSpecificCfg" -> o.AdapterSpecificCfg)
 //              ("InputAdapterToValidate" -> o.InputAdapterToValidate) ~
 //              ("FailedEventsAdapter" -> o.FailedEventsAdapter) ~
 //              ("DelimiterString1" -> o.DelimiterString1) ~
