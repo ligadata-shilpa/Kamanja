@@ -21,4 +21,8 @@ resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/release
 
 // EclipseKeys.projectFlavor := EclipseProjectFlavor.Java
 
+coverageMinimum := 80
+
+coverageFailOnMinimum := false
+
 coverageExcludedPackages := "com.ligadata.MigrateBase.*"

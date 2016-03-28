@@ -77,4 +77,8 @@ libraryDependencies += "com.google.code.gson" % "gson" % "2.3.1"
 
 // EclipseKeys.projectFlavor := EclipseProjectFlavor.Java
 
+coverageMinimum := 80
+
+coverageFailOnMinimum := false
+
 coverageExcludedPackages := "com.ligadata.Migrate.*"

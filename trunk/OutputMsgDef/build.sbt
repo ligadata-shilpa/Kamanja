@@ -18,3 +18,6 @@ libraryDependencies ++= Seq("junit" % "junit" % "4.8.1" % "test")
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.0" % "test"
 
+coverageMinimum := 80
+
+coverageFailOnMinimum := false

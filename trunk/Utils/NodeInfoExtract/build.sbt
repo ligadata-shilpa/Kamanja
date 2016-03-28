@@ -65,4 +65,7 @@ libraryDependencies += "org.json4s" %% "json4s-jackson" % "3.2.9"
 
 net.virtualvoid.sbt.graph.Plugin.graphSettings
 
+coverageMinimum := 80
+
+coverageFailOnMinimum := false
 

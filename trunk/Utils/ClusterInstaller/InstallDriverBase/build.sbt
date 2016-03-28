@@ -19,4 +19,8 @@ resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/release
 
 // libraryDependencies += "org.apache.logging.log4j" % "log4j-core" % "2.4.1"
 
+coverageMinimum := 80
+
+coverageFailOnMinimum := false
+
 coverageExcludedPackages := "com.ligadata.InstallDriverBase.*"

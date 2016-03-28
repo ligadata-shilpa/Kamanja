@@ -18,6 +18,10 @@ coverageExcludedPackages in ThisBuild := "com.ligadata.Migrate.MdResolve;com.lig
 
 coverageEnabled in ThisBuild := true
 
+coverageMinimum := 80
+
+coverageFailOnMinimum := false
+
 libraryDependencies := {
   CrossVersion.partialVersion(scalaVersion.value) match {
     // if scala 2.11+ is used, quasiquotes are merged into scala-reflect
