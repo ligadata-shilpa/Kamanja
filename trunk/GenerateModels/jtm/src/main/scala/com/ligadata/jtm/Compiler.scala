@@ -471,7 +471,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           val i = inputs.find(f => f.fieldName == c)
           outputSet --= Set(c)
           val f = "%s.%s".format(i.get.argName, i.get.fieldName)
-          innerMapping ++= Map(c -> eval.Tracker(f, "", i.get.fieldType, false))
+          innerMapping ++= Map(c -> eval.Tracker(f, i.get.className, i.get.fieldType, false, i.get.fieldName, ""))
           innerTracking += f
         }
       })
@@ -512,7 +512,8 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
               val (c, v) = splitNamespaceClass(f._2)
               if(dictMessages.contains(c)) {
                 val expression = "%s.get(\"%s\")".format(dictMessages.get(c).get, v)
-                innerMapping ++= Map(f._2 -> eval.Tracker(v, c, "Any", true, expression))
+                val variableName = "%s.%s".format(dictMessages.get(c).get, v)
+                innerMapping ++= Map(f._2 -> eval.Tracker(variableName, c, "Any", true, v, expression))
                 false
               } else  {
                 true
@@ -533,7 +534,8 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
               val (c, v) = splitNamespaceClass(f._2)
               if(dictMessages.contains(c)) {
                 val expression = "%s.get(\"%s\")".format(dictMessages.get(c).get, v)
-                innerMapping ++= Map(f._2 -> eval.Tracker(v, c, "Any", true, expression))
+                val variableName = "%s.%s".format(dictMessages.get(c).get, v)
+                innerMapping ++= Map(f._2 -> eval.Tracker(variableName, c, "Any", true, v, expression))
                 true
               } else  {
                 false
@@ -550,7 +552,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           val list = Expressions.ExtractColumnNames(expression)
 
           val newExpression = if (list.nonEmpty) {
-            val newExpression = Expressions.FixupColumnNames(expression, innerMapping, aliaseMessages, dictMessages)
+            val newExpression = Expressions.FixupColumnNames(expression, innerMapping, aliaseMessages)
             val rList = ResolveNames(list, aliaseMessages)
             val open = rList.filter(f => !innerMapping.contains(f._2))
             logger.trace("Matched mapping expression {} ({})-> {}", f._1, f._2, newExpression)
@@ -563,7 +565,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
             mapped
           }
           outputSet --= Set(f._1)
-          innerMapping ++= Map(f._1 -> eval.Tracker(newExpression, "", "", false))
+          innerMapping ++= Map(f._1 -> eval.Tracker("", "", "", false, "", newExpression))
         })
         mapping.filterKeys(f => !found.contains(f))
       } else {
@@ -584,7 +586,8 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           val (c, v) = splitNamespaceClass(nameColumn)
           if(dictMessages.contains(c)) {
             val expression = "%s.get(\"%s\")".format(dictMessages.get(c).get, v)
-            innerMapping ++= Map(g._1 -> eval.Tracker(v, c, "Any", true, expression))
+            val variableName = "%s.%s".format(dictMessages.get(c).get, v)
+            innerMapping ++= Map(g._1 -> eval.Tracker(variableName, c, "Any", true, v, expression))
             false
           } else  {
             true
@@ -614,7 +617,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           // potentially we have to decorate it to avoid naming conflicts
           d._3.foreach( e => {
             val expr = "if(%s.containsKey(\"%s\")) %s.get(\"%s\") else \"\")".format(varName, e, varName, e)
-            innerMapping ++= Map(e -> eval.Tracker(expr, "", "", false))
+            innerMapping ++= Map(e -> eval.Tracker(varName, "", "", false, "", expr))
           })
           false
         } else {
@@ -630,7 +633,8 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           val (c, v) = splitNamespaceClass(f._2)
           if(dictMessages.contains(c)) {
             val expression = "%s.get(\"%s\")".format(dictMessages.get(c).get, v)
-            innerMapping ++= Map(f._2 -> eval.Tracker(v, c, "Any", true, expression))
+            val variableName = "%s.%s".format(dictMessages.get(c).get, v)
+            innerMapping ++= Map(f._2 -> eval.Tracker(variableName, c, "Any", true, v,expression))
             false
           } else  {
             true
@@ -643,7 +647,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           innerTracking ++= rList.map(m => innerMapping.get(m._2).get.variableName).toSet
 
           // Sub names to
-          val newExpression = Expressions.FixupColumnNames(f, innerMapping, aliaseMessages, dictMessages)
+          val newExpression = Expressions.FixupColumnNames(f, innerMapping, aliaseMessages)
           logger.trace("Matched where expression {}", newExpression)
           // Output the actual filter
           collect ++= Array("if (%s) return Array.empty[BaseMsg]\n".format(newExpression))
@@ -665,7 +669,8 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
             val (c, v) = splitNamespaceClass(f._2)
             if(dictMessages.contains(c)) {
               val expression = "%s.get(\"%s\")".format(dictMessages.get(c).get, v)
-              innerMapping ++= Map(f._2 -> eval.Tracker(v, c, "Any", true, expression))
+              val variableName = "%s.%s".format(dictMessages.get(c).get, v)
+              innerMapping ++= Map(f._2 -> eval.Tracker(variableName, c, "Any", true, v, expression))
               false
             } else  {
               true
@@ -681,7 +686,8 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
               val (c, v) = splitNamespaceClass(f._2)
               if(dictMessages.contains(c)) {
                 val expression = "%s.get(\"%s\")".format(dictMessages.get(c).get, v)
-                innerMapping ++= Map(f._2 -> eval.Tracker(v, c, "Any", true, expression))
+                val variableName = "%s.%s".format(dictMessages.get(c).get, v)
+                innerMapping ++= Map(f._2 -> eval.Tracker(variableName, c, "Any", true, v, expression))
                 false
               } else  {
                 true
@@ -705,7 +711,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
         if (open.isEmpty) {
           innerTracking ++= list.map(m => innerMapping.get(m._2).get.variableName).toSet
           // Sub names to
-          val newExpression = Expressions.FixupColumnNames(expression, innerMapping, aliaseMessages, dictMessages)
+          val newExpression = Expressions.FixupColumnNames(expression, innerMapping, aliaseMessages)
           logger.trace("Matched compute expression {} -> {}", newExpression, c._1)
           // Output the actual compute
           // To Do: multiple vals and type provided
@@ -716,7 +722,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
             collect ++= Array("val %s = %s\n".format(c._1, newExpression))
 
           outputSet --= Set(c._1)
-          innerMapping ++= Map(c._1 -> eval.Tracker(c._1, "", "", false))
+          innerMapping ++= Map(c._1 -> eval.Tracker(c._1, "", c._2.typename, false, "", c._1))
           false
         } else {
           true
@@ -905,7 +911,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           val u1 = u.map( e => inputs.find( c => c.fieldName == e).get)
           u1.map( p => {
             val variableName = "%s.%s".format(p.argName, p.fieldName)
-            p.fieldName -> eval.Tracker(variableName, p.className, p.fieldType, true, p.fieldName)
+            p.fieldName -> eval.Tracker(variableName, p.className, p.fieldType, true, p.fieldName, "")
           })
         }.toMap
 
@@ -916,7 +922,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
         val qualifiedInputs: Map[String, eval.Tracker]  = inputs.map( p => {
           val variableName = "%s.%s".format(p.argName, p.fieldName)
           val classString = "%s.%s".format(p.className, p.fieldName)
-          classString -> eval.Tracker(variableName, p.className, p.fieldType, true, p.fieldName)
+          classString -> eval.Tracker(variableName, p.className, p.fieldType, true, p.fieldName, "")
         }).toMap
 
         // Find all dictionary messages
@@ -987,7 +993,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
               if (m.isEmpty) {
                 throw new Exception("Output %s not found".format(e))
               }
-              "result.%s = %s".format(e, m.get.getAccessor())
+              "result.%s = %s".format(e, m.get.getExpression())
             })
 
             // If output is a dictionary, collect all mappings
@@ -998,7 +1004,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
                 if (m.isEmpty) {
                   throw new Exception("Output %s not found".format(e))
                 }
-                "result.set(\"%s\", %s)".format(e._1, m.get.getAccessor())
+                "result.set(\"%s\", %s)".format(e._1, m.get.getExpression())
               })
             } else {
               Array.empty[String]

@@ -42,12 +42,12 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
         if (!(msg2.in2 != -1 && msg2.in2 < 100)) return Array.empty[BaseMsg]
         val tmp8: String = somefunc2(msg2.in3)
         val result = new com.ligadata.kamanja.test.v1000000.msg2
-        result.timePartitionData = msg1.timePartitionData
-        result.out1 = msg2.in1
-        result.rowNumber = msg1.rowNumber
-        result.out4 = ipinfo.zipCode
         result.out2 = tmp8
+        result.rowNumber = msg1.rowNumber
         result.out3 = somefunc(zipcode, zipcode1)
+        result.timePartitionData = msg1.timePartitionData
+        result.out4 = ipinfo.zipCode
+        result.out1 = msg2.in1
         result.transactionId = msg1.transactionId
         Array(result)
       }
@@ -64,13 +64,13 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
         if (!(msg2.in2 != -1 && msg2.in2 < 100)) return Array.empty[BaseMsg]
         val tmp8: String = somefunc2(msg2.in3)
         val result = new com.ligadata.kamanja.test.v1000000.msg2
-        result.rowNumber = msg2.rowNumber
-        result.out1 = msg2.in1
-        result.out4 = ipinfo.zipCode
         result.out2 = tmp8
+        result.rowNumber = msg2.rowNumber
         result.out3 = somefunc(zipcode, zipcode1)
-        result.transactionId = msg2.transactionId
         result.timePartitionData = msg2.timePartitionData
+        result.out4 = ipinfo.zipCode
+        result.out1 = msg2.in1
+        result.transactionId = msg2.transactionId
         Array(result)
       }
       process_omsg2()
@@ -80,11 +80,11 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
         val result = new com.ligadata.kamanja.test.v1000000.msg4
         result.out2 = msg2.in1
         result.rowNumber = msg2.rowNumber
-        result.out1 = msg2.in1
-        result.out4 = msg2.in1
-        result.transactionId = msg2.transactionId
         result.out3 = msg2.in1
         result.timePartitionData = msg2.timePartitionData
+        result.out4 = msg2.in1
+        result.out1 = msg2.in1
+        result.transactionId = msg2.transactionId
         Array(result)
       }
       process_omsg3()
