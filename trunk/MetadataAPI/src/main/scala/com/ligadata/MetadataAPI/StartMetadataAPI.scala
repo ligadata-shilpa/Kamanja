@@ -68,7 +68,7 @@ object StartMetadataAPI {
     }
 
     /** FIXME: the user id should be discovered in the parse of the args array */
-    val userId: Option[String] = Some("metadataapi")
+    val userId: Option[String] = Some("Kamanja")
     try {
       var argsUntilParm = 2
 
@@ -471,7 +471,7 @@ object StartMetadataAPI {
 
                            ModelService.addModelPmml(ModelType.PMML
                                , pmmlPath
-                               , Some("metadataapi")
+                               , Some("Kamanja")
                                , modelName
                                , optModelVer
                                , msgName
@@ -529,7 +529,7 @@ object StartMetadataAPI {
                                /** modelnamespace.modelname expected for modelName value */
                                val modelName: String = optModelName.orNull
                                ModelService.updateModelPmml(pmmlPath
-                                   , Some("metadataapi")
+                                   , Some("Kamanja")
                                    , modelName
                                    , validatedNewVersion)
                                //, optOldVer)

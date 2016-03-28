@@ -34,7 +34,7 @@ import scala.io._
  */
 
 object ModelService {
-    private val userid: Option[String] = Some("metadataapi")
+    private val userid: Option[String] = Some("Kamanja")
     val loggerName = this.getClass.getName
     lazy val logger = LogManager.getLogger(loggerName)
 
@@ -52,7 +52,7 @@ object ModelService {
       */
     def addModelScala(input: String
                       , dep: String = ""
-                      , userid: Option[String] = Some("metadataapi")
+                      , userid: Option[String] = Some("Kamanja")
                      ): String = {
         var modelDefs= Array[String]()
         var modelConfig=""
@@ -145,7 +145,7 @@ object ModelService {
       * @return the result of the operation
       */
     def addModelJava(input: String, dep: String = ""
-                     , userid: Option[String] = Some("metadataapi")
+                     , userid: Option[String] = Some("Kamanja")
                     ): String = {
         var modelDefs= Array[String]()
         var modelConfig=""
@@ -252,7 +252,7 @@ object ModelService {
      */
     def addModelPmml(modelType: ModelType.ModelType
                     , input: String
-                    , optUserid: Option[String] = Some("metadataapi")
+                    , optUserid: Option[String] = Some("Kamanja")
                     , optModelName: Option[String] = None
                     , optVersion: Option[String] = None
                     , optMsgConsumed: Option[String] = None
@@ -291,7 +291,7 @@ object ModelService {
      * @return the result of the operation
      */
     def addModelKPmml(input: String
-                     , userid: Option[String] = Some("metadataapi")
+                     , userid: Option[String] = Some("Kamanja")
                         ): String = {
         var modelDef=""
         var modelConfig=""
@@ -349,7 +349,7 @@ object ModelService {
      */
      
     def updateModelKPmml(input: String
-                      , userid: Option[String] = Some("metadataapi")
+                      , userid: Option[String] = Some("Kamanja")
                       ): String = {
       var modelDef = ""
       var response: String = ""
@@ -451,7 +451,7 @@ object ModelService {
      * @return the result of the operation
      */
     def updateModeljava(input: String, dep: String = ""
-                      , userid: Option[String] = Some("metadataapi")
+                      , userid: Option[String] = Some("Kamanja")
                       ): String = {
         var modelDef=""
         var modelConfig=""
@@ -550,7 +550,7 @@ object ModelService {
      * @return the result of the operation
      */
     def updateModelscala(input: String, dep: String = ""
-                       , userid: Option[String] = Some("metadataapi")
+                       , userid: Option[String] = Some("Kamanja")
                        ): String = {
         var modelDef=""
         var modelConfig=""
@@ -644,7 +644,7 @@ object ModelService {
      * @return the result of the operation - a JSON string representation of the ModelDef
      */
     def getModel(param: String = ""
-               , userid: Option[String] = Some("metadataapi")
+               , userid: Option[String] = Some("Kamanja")
                ): String ={
         var response=""
         try {
@@ -694,7 +694,7 @@ object ModelService {
      * @param userid the optional userId. If security and auditing in place this parameter is required.
      * @return
      */
-    def getAllModels(userid: Option[String] = Some("metadataapi")) : String ={
+    def getAllModels(userid: Option[String] = Some("Kamanja")) : String ={
         var response=""
         val modelKeys = MetadataAPIImpl.GetAllModelsFromCache(true, userid)
         if (modelKeys.length == 0) {
@@ -717,7 +717,7 @@ object ModelService {
      * @return the result of the operation
      */
     def removeModel(modelId: String = ""
-                  , userid: Option[String] = Some("metadataapi")
+                  , userid: Option[String] = Some("Kamanja")
                   ): String ={
         val response : String = try {
           //  logger.setLevel(Level.TRACE); //check again
@@ -776,7 +776,7 @@ object ModelService {
      * @return the result of the operation
      */
     def activateModel(modelId: String = ""
-                    , userid: Option[String] = Some("metadataapi")
+                    , userid: Option[String] = Some("Kamanja")
                     ): String ={
         var response=""
         try {
@@ -831,7 +831,7 @@ object ModelService {
      * @return the result of the operation
      */
     def deactivateModel(modelId: String = ""
-                      , userid: Option[String] = Some("metadataapi")
+                      , userid: Option[String] = Some("Kamanja")
                       ):String={
         var response=""
         var progressReport: Int = 0
