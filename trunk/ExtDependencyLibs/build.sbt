@@ -48,6 +48,11 @@ assemblyMergeStrategy in assembly := {
   case x if x contains "com.fasterxml.jackson.core" => MergeStrategy.first
   case x if x contains "com/fasterxml/jackson/core" => MergeStrategy.first
   case x if x contains "com\\fasterxml\\jackson\\core" => MergeStrategy.first
+  // newly added
+  case x if x contains "StaticLoggerBinder.class" => MergeStrategy.first
+  case x if x contains "StaticMDCBinder.class" => MergeStrategy.first
+  case x if x contains "StaticMarkerBinder.class" => MergeStrategy.first
+  //
   case x if x contains "commons-logging" => MergeStrategy.first
   case "log4j.properties" => MergeStrategy.first
   case "unwanted.txt" => MergeStrategy.discard
@@ -135,10 +140,6 @@ libraryDependencies += "com.googlecode.json-simple" % "json-simple" % "1.1"
 libraryDependencies += "com.fasterxml.jackson.core" % "jackson-databind" % "2.6.3"
 libraryDependencies += "log4j" % "log4j" % "1.2.17" // latest error
 //scalacOptions += "-deprecation"
-
-
-
-
 
 
 /////////////////////// PmmlTestTool
