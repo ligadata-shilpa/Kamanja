@@ -1,16 +1,6 @@
 package com.ligadata.KamanjaBase
-
-;
-
-import org.json4s.jackson.JsonMethods._
-import org.json4s.DefaultFormats
-import org.json4s.Formats
-import scala.xml.XML
-import scala.xml.Elem
-import java.io.{DataInputStream, DataOutputStream, ByteArrayOutputStream}
+import java.io.{DataInputStream, DataOutputStream}
 import org.apache.logging.log4j.{Logger, LogManager}
-import java.util.Date
-import com.ligadata.KamanjaBase.{BaseMsg, BaseMsgObj, BaseContainer, MdBaseResolveInfo, MessageContainerBase, RDDObject, RDD, JavaRDDObject}
 
 object KamanjaExceptionEvent extends RDDObject[KamanjaExceptionEvent] with BaseMsgObj {
   override def NeedToTransformData: Boolean = false
@@ -260,4 +250,7 @@ class KamanjaExceptionEvent(var transactionId: Long, other: KamanjaExceptionEven
   override def Deserialize(dis: DataInputStream, mdResolver: MdBaseResolveInfo, loader: java.lang.ClassLoader, savedDataVersion: String): Unit = {}
 
   override def Serialize(dos: DataOutputStream): Unit = {}
+
+  override def populate(inputdata: InputData): Unit = {}
+
 }

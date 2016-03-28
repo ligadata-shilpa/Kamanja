@@ -1,19 +1,6 @@
 package com.ligadata.KamanjaBase
-
-;
-
-import org.json4s.jackson.JsonMethods._
-import org.json4s.DefaultFormats
-import org.json4s.Formats
-import scala.xml.XML
-
-//import scala.xml.ElemKamanjaStatusEvent.scala
-import com.ligadata.KamanjaBase.{InputData, DelimitedData, JsonData, XmlData, KvData}
-import com.ligadata.BaseTypes._
-import java.io.{DataInputStream, DataOutputStream, ByteArrayOutputStream}
+import java.io.{DataInputStream, DataOutputStream}
 import org.apache.logging.log4j.{Logger, LogManager}
-import java.util.Date
-import com.ligadata.KamanjaBase.{BaseMsg, BaseMsgObj, BaseContainer, MdBaseResolveInfo, MessageContainerBase, RDDObject, RDD, JavaRDDObject}
 
 object KamanjaStatusEvent extends RDDObject[KamanjaStatusEvent] with BaseMsgObj {
   override def NeedToTransformData: Boolean = false
@@ -256,4 +243,5 @@ class KamanjaStatusEvent(var transactionId: Long, other: KamanjaStatusEvent) ext
     KamanjaStatusEvent.hasTimeParitionInfo;
   }
 
+  override def populate(inputdata: InputData): Unit = {}
 }

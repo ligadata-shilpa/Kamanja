@@ -1,18 +1,7 @@
 package com.ligadata.KamanjaBase
 
-;
-
-import org.json4s.jackson.JsonMethods._
-import org.json4s.DefaultFormats
-import org.json4s.Formats
-import scala.xml.XML
-import scala.xml.Elem
-import com.ligadata.KamanjaBase.{InputData, DelimitedData, JsonData, XmlData, KvData}
-import com.ligadata.BaseTypes._
-import java.io.{DataInputStream, DataOutputStream, ByteArrayOutputStream}
+import java.io.{DataInputStream, DataOutputStream}
 import org.apache.logging.log4j.{Logger, LogManager}
-import java.util.Date
-import com.ligadata.KamanjaBase.{BaseMsg, BaseMsgObj, BaseContainer, MdBaseResolveInfo, MessageContainerBase, RDDObject, RDD, JavaRDDObject}
 
 object KamanjaModelEvent extends RDDObject[KamanjaModelEvent] with BaseMsgObj {
   override def NeedToTransformData: Boolean = false
@@ -278,4 +267,6 @@ class KamanjaModelEvent(var transactionId: Long, other: KamanjaModelEvent) exten
   override def Deserialize(dis: DataInputStream, mdResolver: MdBaseResolveInfo, loader: java.lang.ClassLoader, savedDataVersion: String): Unit = {}
 
   override def Serialize(dos: DataOutputStream): Unit = {}
+
+  override def populate(inputdata: InputData): Unit = {}
 }
