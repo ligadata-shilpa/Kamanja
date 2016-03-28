@@ -447,4 +447,26 @@ object TypeUtils {
       }
     }
   }
+    /**
+     * LoadTypeIntoCache
+     * @param key
+     */
+  def LoadTypeIntoCache(key: String) {
+    try {
+      logger.debug("Fetch the object " + key + " from database ")
+      val obj = PersistenceUtils.GetObject(key.toLowerCase, "types")
+      logger.debug("Deserialize the object " + key)
+      val typ = serializer.DeserializeObjectFromByteArray(obj.serializedInfo)
+      if (typ != null) {
+        logger.debug("Add the object " + key + " to the cache ")
+        MetadataAPIImpl.AddObjectToCache(typ, MdMgr.GetMdMgr)
+      }
+    } catch {
+      case e: Exception => {
+        
+        logger.warn("Unable to load the object " + key + " into cache ", e)
+      }
+    }
+  }
+
 }

@@ -523,4 +523,21 @@ object ConceptUtils {
       }
     }
   }
+    /**
+     * LoadAttributeIntoCache
+     * @param key
+     */
+  def LoadAttributeIntoCache(key: String) {
+    try {
+      val obj = PersistenceUtils.GetObject(key.toLowerCase, "concepts")
+      val cont = serializer.DeserializeObjectFromByteArray(obj.serializedInfo)
+      MetadataAPIImpl.AddObjectToCache(cont.asInstanceOf[AttributeDef], MdMgr.GetMdMgr)
+    } catch {
+      case e: Exception => {
+        
+        logger.debug("", e)
+      }
+    }
+  }
+
 }

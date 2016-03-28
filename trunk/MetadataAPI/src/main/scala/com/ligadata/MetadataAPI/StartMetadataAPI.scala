@@ -152,6 +152,7 @@ object StartMetadataAPI {
     }
     catch {
       case nosuchelement: NoSuchElementException => {
+        logger.error("", nosuchelement)
         /** preserve the original response ... */
         response = s"Invalid command action! action=$action"
 
@@ -167,7 +168,10 @@ object StartMetadataAPI {
           usage
         }
       }
-      case e: Throwable => e.getStackTrace.toString
+      case e: Throwable => {
+        logger.error("", e)
+        e.getStackTrace.toString
+      }
     } finally {
       MetadataAPIImpl.shutdown
     }

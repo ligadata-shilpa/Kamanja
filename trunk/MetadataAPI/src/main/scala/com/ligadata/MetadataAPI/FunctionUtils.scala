@@ -380,6 +380,74 @@ object FunctionUtils {
     GetFunctionDef(nameSpace, objectName, formatType, userid)
   }
 
+    /**
+     * GetAllFunctionsFromCache
+     * @param active
+     * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+     *               method. If Security and/or Audit are configured, this value must be a value other than None.
+     * @return
+     */
+  def GetAllFunctionsFromCache(active: Boolean, userid: Option[String] = None): Array[String] = {
+    var functionList: Array[String] = new Array[String](0)
+    MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.READ), AuditConstants.GETKEYS, AuditConstants.FUNCTION, AuditConstants.SUCCESS, "", AuditConstants.FUNCTION)
+    try {
+      val contDefs = MdMgr.GetMdMgr.Functions(active, true)
+      contDefs match {
+        case None =>
+          None
+          logger.debug("No Functions found ")
+          functionList
+        case Some(ms) =>
+          val msa = ms.toArray
+          val contCount = msa.length
+          functionList = new Array[String](contCount)
+          for (i <- 0 to contCount - 1) {
+            functionList(i) = msa(i).FullName + "." + MdMgr.Pad0s2Version(msa(i).Version)
+          }
+          functionList
+      }
+    } catch {
+      case e: Exception => {
+        
+        logger.debug("", e)
+        throw UnexpectedMetadataAPIException("Failed to fetch all the functions:" + e.toString, e)
+      }
+    }
+  }
+
+    /**
+     * GetLatestFunction
+     * @param fDef
+     * @return
+     */
+  def GetLatestFunction(fDef: FunctionDef): Option[FunctionDef] = {
+    try {
+      var key = fDef.nameSpace + "." + fDef.name + "." + fDef.ver
+      val dispkey = fDef.nameSpace + "." + fDef.name + "." + MdMgr.Pad0s2Version(fDef.ver)
+      val o = MdMgr.GetMdMgr.Messages(fDef.nameSpace.toLowerCase,
+        fDef.name.toLowerCase,
+        false,
+        true)
+      o match {
+        case None =>
+          None
+          logger.debug("message not in the cache => " + dispkey)
+          None
+        case Some(m) =>
+          // We can get called from the Add Message path, and M could be empty.
+          if (m.size == 0) return None
+          logger.debug("message found => " + m.head.asInstanceOf[MessageDef].FullName + "." + MdMgr.Pad0s2Version(m.head.asInstanceOf[MessageDef].ver))
+          Some(m.head.asInstanceOf[FunctionDef])
+      }
+    } catch {
+      case e: Exception => {
+        
+        logger.debug("", e)
+        throw UnexpectedMetadataAPIException(e.getMessage(), e)
+      }
+    }
+  }
+
   // Answer count and dump of all available functions(format JSON or XML) as a String
   def GetAllFunctionDefs(formatType: String, userid: Option[String]): (Int, String) = {
     try {
