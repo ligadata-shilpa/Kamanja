@@ -201,6 +201,8 @@ lazy val GetComponent = project.in(file("Utils/ClusterInstaller/GetComponent"))
 
 lazy val PmmlTestTool = project.in(file("Utils/PmmlTestTool")) dependsOn (KamanjaVersion)
 
+lazy val Dag = project.in(file("Utils/Dag")) dependsOn (KamanjaUtils, Exceptions)
+
 /*
 
 val commonSettings = Seq(
