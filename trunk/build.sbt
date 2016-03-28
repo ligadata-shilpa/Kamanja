@@ -105,7 +105,10 @@ lazy val KafkaSimpleInputOutputAdapters = project.in(file("InputOutputAdapters/K
   .settings(TestSettings.settings: _*)
   .dependsOn(InputOutputAdapterBase, Exceptions, DataDelimiters)
 
-lazy val SmartFileAdapter = project.in(file("InputOutputAdapters/SmartFileAdapter")) dependsOn(InputOutputAdapterBase, Exceptions, DataDelimiters, MetadataAPI)
+lazy val SmartFileAdapter = project.in(file("InputOutputAdapters/SmartFileAdapter"))
+  .configs(TestConfigs.all: _*)
+  .settings(TestSettings.settings: _*)
+  .dependsOn(InputOutputAdapterBase, Exceptions, DataDelimiters, MetadataAPI)
 
 lazy val FileSimpleInputOutputAdapters = project.in(file("InputOutputAdapters/FileSimpleInputOutputAdapters"))
   .configs(TestConfigs.all: _*)
@@ -195,7 +198,10 @@ lazy val KVInit = project.in(file("Utils/KVInit"))
   .settings(TestSettings.settings: _*)
   .dependsOn(Metadata, KamanjaBase, MetadataBootstrap, MetadataAPI, StorageManager, Exceptions, TransactionService)
 
-lazy val ContainersUtility = project.in(file("Utils/ContainersUtility")) dependsOn (Metadata, KamanjaBase, MetadataBootstrap, MetadataAPI, StorageManager, Exceptions, TransactionService)
+lazy val ContainersUtility = project.in(file("Utils/ContainersUtility"))
+  .configs(TestConfigs.all: _*)
+  .settings(TestSettings.settings: _*)
+  .dependsOn (Metadata, KamanjaBase, MetadataBootstrap, MetadataAPI, StorageManager, Exceptions, TransactionService)
 
 lazy val ZooKeeperLeaderLatch = project.in(file("Utils/ZooKeeper/CuratorLeaderLatch"))
   .configs(TestConfigs.all: _*)
@@ -207,7 +213,10 @@ lazy val JsonDataGen = project.in(file("Utils/JsonDataGen"))
   .settings(TestSettings.settings: _*)
   .dependsOn(Exceptions, KamanjaBase)
 
-lazy val JsonChecker = project.in(file("Utils/JsonChecker")) dependsOn(Exceptions)
+lazy val JsonChecker = project.in(file("Utils/JsonChecker"))
+  .configs(TestConfigs.all: _*)
+  .settings(TestSettings.settings: _*)
+  .dependsOn(Exceptions)
 
 lazy val NodeInfoExtract  = project.in(file("Utils/NodeInfoExtract"))
   .configs(TestConfigs.all: _*)
