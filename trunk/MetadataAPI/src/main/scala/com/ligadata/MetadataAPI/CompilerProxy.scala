@@ -66,7 +66,7 @@ class CompilerProxy {
     * to figure out the build dependencies.
     *
     */
-  def compileModelFromSource(sourceCode: String, modelConfigName: String, sourceLang: String = "scala"): ModelDef = {
+  def compileModelFromSource(sourceCode: String, modelConfigName: String, sourceLang: String, ownerId: String): ModelDef = {
     try {
       // Figure out the metadata information needed for 
       val additinalDeps = addDepsFromClassPath
@@ -77,7 +77,7 @@ class CompilerProxy {
         modelVersion, msgDefClassFilePath, elements, sourceCode,
         totalDeps,
         MetadataAPIImpl.getModelMessagesContainers(modelConfigName, None),
-        nonTypeDeps, false, inMsgSets, outMsgs)
+        nonTypeDeps, false, inMsgSets, outMsgs, ownerId)
     } catch {
       case e: Exception => {
         logger.error("COMPILER_PROXY: unable to determine model metadata information during AddModel.", e)
@@ -91,13 +91,13 @@ class CompilerProxy {
     * is available.. so just generate the new ModelDef
     *
     */
-  def recompileModelFromSource(sourceCode: String, pName: String, deps: List[String], typeDeps: List[String], inputMsgSets: List[List[String]], outputMsgs: List[String], sourceLang: String = "scala"): ModelDef = {
+  def recompileModelFromSource(sourceCode: String, pName: String, deps: List[String], typeDeps: List[String], inputMsgSets: List[List[String]], outputMsgs: List[String], sourceLang: String, ownerId: String): ModelDef = {
     try {
       val (classPath, elements, totalDeps, nonTypeDeps) = buildClassPath(deps, typeDeps)
       val msgDefClassFilePath = compiler_work_dir + "/tempCode." + sourceLang
       val ((modelNamespace, modelName, modelVersion, pname), repackagedCode, tempPackage) = parseSourceForMetadata(sourceCode, "tempCode", sourceLang, msgDefClassFilePath, classPath, elements)
       return generateModelDef(repackagedCode, sourceLang, pname, classPath, tempPackage, modelName,
-        modelVersion, msgDefClassFilePath, elements, sourceCode, totalDeps, typeDeps, nonTypeDeps, true, inputMsgSets, outputMsgs)
+        modelVersion, msgDefClassFilePath, elements, sourceCode, totalDeps, typeDeps, nonTypeDeps, true, inputMsgSets, outputMsgs, ownerId)
     } catch {
       case e: Exception => {
         logger.error("COMPILER_PROXY: unable to determine model metadata information during recompile.", e)
@@ -109,7 +109,7 @@ class CompilerProxy {
   /**
     *
     */
-  def compilePmml(pmmlStr: String, recompile: Boolean = false): (String, ModelDef) = {
+  def compilePmml(pmmlStr: String, ownerId: String, recompile: Boolean = false): (String, ModelDef) = {
     try {
       /** Ramana, if you set this to true, you will cause the generation of logger.info (...) stmts in generated model */
       var injectLoggingStmts: Boolean = false
@@ -130,6 +130,7 @@ class CompilerProxy {
         * issues, it may not be generated.
         */
       if (modDef != null) {
+        modDef.ownerId = ownerId
         var pmmlScalaFile = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("JAR_TARGET_DIR") + "/" + modDef.name + ".pmml"
         var classPath = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("CLASSPATH").trim
 
@@ -497,7 +498,7 @@ class CompilerProxy {
   private def generateModelDef(repackagedCode: String, sourceLang: String, pname: String, classPath: String, modelNamespace: String, modelName: String,
                                modelVersion: String, msgDefClassFilePath: String, elements: Set[BaseElemDef], originalSource: String,
                                deps: scala.collection.immutable.Set[String], typeDeps: List[String], notTypeDeps: scala.collection.immutable.Set[String], recompile: Boolean,
-                               inMsgSets: List[List[String]], outMsgs: List[String]): ModelDef = {
+                               inMsgSets: List[List[String]], outMsgs: List[String], ownerId: String): ModelDef = {
     try {
       // Now, we need to create a real jar file - Need to add an actual Package name with a real Napespace and Version numbers.
       val packageName = modelNamespace + ".V" + MdMgr.ConvertVersionToLong(MdMgr.FormatVersion(modelVersion))
@@ -580,6 +581,7 @@ class CompilerProxy {
       val modDef: ModelDef = MdMgr.GetMdMgr.MakeModelDef(modelNamespace
         , modelName
         , pName
+        , ownerId
         , ModelRepresentation.JAR
         , inpM
         , outM
@@ -930,7 +932,7 @@ class CompilerProxy {
             */
 
           val mdlDef = MdMgr.GetMdMgr.MakeModelDef("", ""
-            , clsName
+            , clsName, "Kamanja"
             , ModelRepresentation.JAR
             , Array[Array[MessageAndAttributes]]()
             , Array[String]()
