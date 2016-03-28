@@ -250,7 +250,10 @@ object FunctionUtils {
         var apiResult = new ApiResult(ErrorCodeConstants.Not_Implemented_Yet, "AddFunctions", functionsText, ErrorCodeConstants.Not_Implemented_Yet_Msg)
         apiResult.toString()
       } else {
-        var funcList= JsonSerializer.parseFunctionList(functionsText, "JSON")
+        val ownerId: String = if (userid == None) "Kamanja" else userid.get
+        val uniqueId = MetadataAPIImpl.GetUniqueId
+        val mdElementId = 0L //FIXME:- Not yet handled this
+        var funcList= JsonSerializer.parseFunctionList(functionsText, "JSON", ownerId, uniqueId, mdElementId)
         // Check for the Jars
         val missingJars = scala.collection.mutable.Set[String]()
         funcList.foreach(func => {
@@ -295,7 +298,10 @@ object FunctionUtils {
         var apiResult = new ApiResult(ErrorCodeConstants.Not_Implemented_Yet, "UpdateFunctions", null, ErrorCodeConstants.Not_Implemented_Yet_Msg + ":" + functionsText + ".Format not JSON.")
         apiResult.toString()
       } else {
-        var funcList = JsonSerializer.parseFunctionList(functionsText, "JSON")
+        val ownerId: String = if (userid == None) "Kamanja" else userid.get
+        val uniqueId = MetadataAPIImpl.GetUniqueId
+        val mdElementId = 0L //FIXME:- Not yet handled this
+        var funcList = JsonSerializer.parseFunctionList(functionsText, "JSON", ownerId, uniqueId, mdElementId)
         // Check for the Jars
         val missingJars = scala.collection.mutable.Set[String]()
         funcList.foreach(func => {

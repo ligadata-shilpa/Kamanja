@@ -351,7 +351,8 @@ object ModelUtils {
     try {
       var compProxy = new CompilerProxy
       compProxy.setSessionUserId(userid)
-      val modDef: ModelDef = compProxy.compileModelFromSource(sourceCode, modelName, sourceLang)
+      val ownerId: String = if (userid == None) "Kamanja" else userid.get
+      val modDef: ModelDef = compProxy.compileModelFromSource(sourceCode, modelName, sourceLang, ownerId)
       logger.info("Begin uploading dependent Jars, please wait.")
       PersistenceUtils.UploadJarsToDB(modDef)
       logger.info("Finished uploading dependent Jars.")
@@ -503,6 +504,7 @@ object ModelUtils {
       val msgName: String = msgNameNodes.last
       msgNameNodes.take(msgNameNodes.size - 1).addString(buffer, ".")
       val msgNamespace: String = buffer.toString
+      val ownerId: String = if (userid == None) "Kamanja" else userid.get
       val jpmmlSupport: JpmmlSupport = new JpmmlSupport(mdMgr
         , modelNmSpace
         , modelNm
@@ -510,7 +512,8 @@ object ModelUtils {
         , msgNamespace
         , msgName
         , msgVersion
-        , pmmlText)
+        , pmmlText
+        , ownerId)
       val recompile: Boolean = false
       val modDef: ModelDef = jpmmlSupport.CreateModel(recompile)
 
@@ -519,6 +522,9 @@ object ModelUtils {
       val isValid: Boolean = if (latestVersion.isDefined) MetadataAPIImpl.IsValidVersion(latestVersion.get, modDef) else true
 
       if (isValid && modDef != null) {
+        val existingModel = MdMgr.GetMdMgr.Model(modDef.NameSpace, modDef.Name, -1, false) // Any version is fine. No need of active
+        modDef.uniqueId = MetadataAPIImpl.GetUniqueId
+        modDef.mdElementId = if (existingModel == None) MetadataAPIImpl.GetMdElementId else existingModel.get.MdElementId
         MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.INSERTOBJECT, pmmlText, AuditConstants.SUCCESS, "", modDef.FullNameWithVer)
         // save the jar file first
         PersistenceUtils.UploadJarsToDB(modDef)
@@ -584,7 +590,8 @@ object ModelUtils {
     try {
       var compProxy = new CompilerProxy
       //compProxy.setLoggerLevel(Level.TRACE)
-      var (classStr, modDef) = compProxy.compilePmml(pmmlText)
+      val ownerId: String = if (userid == None) "Kamanja" else userid.get
+      var (classStr, modDef) = compProxy.compilePmml(pmmlText, ownerId)
 
       // ModelDef may be null if there were pmml compiler errors... act accordingly.  If modelDef present,
       // make sure the version of the model is greater than any of previous models with same FullName
@@ -662,7 +669,8 @@ object ModelUtils {
         // here.
         if (mod.objectFormat == ObjFormatType.fXML) {
           val pmmlText = mod.ObjectDefinition
-          val (classStrTemp, modDefTemp) = compProxy.compilePmml(pmmlText, true)
+          val ownerId: String = if (userid == None) "Kamanja" else userid.get
+          val (classStrTemp, modDefTemp) = compProxy.compilePmml(pmmlText, ownerId, true)
           modDefTemp
         } else {
           val saveModelParms = parse(mod.ObjectDefinition).values.asInstanceOf[Map[String, Any]]
@@ -692,12 +700,13 @@ object ModelUtils {
               outputMsgs = tmpOnputMsgs.asInstanceOf[Array[String]].toList
           }
 
+          val ownerId: String = if (userid == None) "Kamanja" else userid.get
           val custModDef: ModelDef = compProxy.recompileModelFromSource(
             saveModelParms.getOrElse(ModelCompilationConstants.SOURCECODE, "").asInstanceOf[String],
             saveModelParms.getOrElse(ModelCompilationConstants.PHYSICALNAME, "").asInstanceOf[String],
             saveModelParms.getOrElse(ModelCompilationConstants.DEPENDENCIES, List[String]()).asInstanceOf[List[String]],
             saveModelParms.getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, List[String]()).asInstanceOf[List[String]],
-            inputMsgSets, outputMsgs, ObjFormatType.asString(mod.objectFormat))
+            inputMsgSets, outputMsgs, ObjFormatType.asString(mod.objectFormat), ownerId)
           custModDef
         }
       } else {
@@ -727,6 +736,7 @@ object ModelUtils {
           val modelNmSpace: String = mod.NameSpace
           val modelName: String = mod.Name
           val modelVersion: String = MdMgr.ConvertLongVersionToString(mod.Version)
+          val ownerId: String = if (userid == None) "Kamanja" else userid.get
           val jpmmlSupport: JpmmlSupport = new JpmmlSupport(mdMgr
             , modelNmSpace
             , modelName
@@ -734,7 +744,8 @@ object ModelUtils {
             , msgNamespace
             , msgName
             , msgVersion
-            , mod.objectDefinition)
+            , mod.objectDefinition
+            , ownerId)
           val recompile: Boolean = true
           val model: ModelDef = jpmmlSupport.CreateModel(recompile)
           model
@@ -748,6 +759,10 @@ object ModelUtils {
       val latestVersion = if (modDef == null) None else GetLatestModel(modDef)
       val isValid: Boolean = (modDef != null)
       if (isValid) {
+        val existingModel = MdMgr.GetMdMgr.Model(modDef.NameSpace, modDef.Name, -1, false) // Any version is fine. No need of active
+        modDef.uniqueId = MetadataAPIImpl.GetUniqueId
+        modDef.mdElementId = if (existingModel == None) MetadataAPIImpl.GetMdElementId else existingModel.get.MdElementId
+
         val rmResult: String = RemoveModel(latestVersion.get.nameSpace, latestVersion.get.name, latestVersion.get.ver, None)
         PersistenceUtils.UploadJarsToDB(modDef)
         val addResult: String = AddModel(modDef, userid)
@@ -913,6 +928,7 @@ object ModelUtils {
         }
         val (currMsgNmSp, currMsgNm, currMsgVer): (String, String, String) = MdMgr.SplitFullNameWithVersion(currentMsg)
 
+        val ownerId: String = if (optUserid == None) "Kamanja" else optUserid.get
         val jpmmlSupport: JpmmlSupport = new JpmmlSupport(mdMgr
           , modelNmSpace
           , modelNm
@@ -920,7 +936,8 @@ object ModelUtils {
           , currMsgNmSp
           , currMsgNm
           , currMsgVer
-          , input)
+          , input
+          , ownerId)
 
         val modDef: ModelDef = jpmmlSupport.UpdateModel
 
@@ -948,6 +965,9 @@ object ModelUtils {
         val isValid: Boolean = if (optVersionUpdated.isDefined) MetadataAPIImpl.IsValidVersion(versionUpdated, modDef) else true
 
         if (isValid && modDef != null) {
+          val existingModel = MdMgr.GetMdMgr.Model(modDef.NameSpace, modDef.Name, -1, false) // Any version is fine. No need of active
+          modDef.uniqueId = MetadataAPIImpl.GetUniqueId
+          modDef.mdElementId = if (existingModel == None) MetadataAPIImpl.GetMdElementId else existingModel.get.MdElementId
           MetadataAPIImpl.logAuditRec(optUserid, Some(AuditConstants.WRITE), AuditConstants.INSERTOBJECT, input, AuditConstants.SUCCESS, "", modDef.FullNameWithVer)
 
           /*
@@ -1067,7 +1087,8 @@ object ModelUtils {
       val compProxy = new CompilerProxy
       compProxy.setSessionUserId(userid)
       val modelNm: String = modelName.orNull
-      val modDef: ModelDef = compProxy.compileModelFromSource(input, modelNm, sourceLang)
+      val ownerId: String = if (userid == None) "Kamanja" else userid.get
+      val modDef: ModelDef = compProxy.compileModelFromSource(input, modelNm, sourceLang, ownerId)
 
       /**
         * FIXME: The current strategy is that only the most recent version can be updated.
@@ -1154,7 +1175,8 @@ object ModelUtils {
     try {
       var compProxy = new CompilerProxy
       //compProxy.setLoggerLevel(Level.TRACE)
-      var (classStr, modDef) = compProxy.compilePmml(pmmlText)
+      val ownerId: String = if (optUserid == None) "Kamanja" else optUserid.get
+      var (classStr, modDef) = compProxy.compilePmml(pmmlText, ownerId)
       val optLatestVersion = if (modDef == null) None else GetLatestModel(modDef)
       val latestVersion: ModelDef = optLatestVersion.orNull
 

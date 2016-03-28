@@ -2170,7 +2170,7 @@ println("Getting Messages")
   def TestGenericProtobufSerializer = {
     val serializer = new ProtoBufSerializer
     // serializer.SetLoggerLevel(Level.TRACE)
-    val a = MdMgr.GetMdMgr.MakeConcept("System", "concept1", "System", "Int", 1, false)
+    val a = MdMgr.GetMdMgr.MakeConcept("System", "concept1", "System", "Int", "Kamanja", MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, 1, false)
     //val ba = serializer.SerializeObjectToByteArray1(a)
     //val o = serializer.DeserializeObjectFromByteArray1(ba)
     //assert(JsonSerializer.SerializeObjectToJson(a) == JsonSerializer.SerializeObjectToJson(o.asInstanceOf[AttributeDef]))

@@ -139,6 +139,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
   private[this] val lock = new Object
   var startup = false
 
+
     /**
      * CloseZKSession
      */
@@ -156,6 +157,9 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
     }
   }
+
+  def GetUniqueId: Long = 0
+  def GetMdElementId: Long = 0
 
   /**
    *  getHealthCheck - will return all the health-check information for the nodeId specified.
@@ -1728,7 +1732,10 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
         apiResult.toString()
       } else {
         val jarName = iFile.getName()
-        val jarObject = MdMgr.GetMdMgr.MakeJarDef(MetadataAPIImpl.sysNS, jarName, "100")
+        val ownerId: String = if (userid == None) "Kamanja" else userid.get
+        val uniqueId = MetadataAPIImpl.GetUniqueId
+        val mdElementId = 0L //FIXME:- Not yet handled this
+        val jarObject = MdMgr.GetMdMgr.MakeJarDef(MetadataAPIImpl.sysNS, jarName, "100", ownerId, uniqueId, mdElementId)
 
 
         logger.debug(" UploadJar  ==>>    ===>> " + jarPath )
@@ -2966,7 +2973,10 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       case "JarDef" => {
         zkMessage.Operation match {
           case "Add" => {
-            DownloadJarFromDB(MdMgr.GetMdMgr.MakeJarDef(zkMessage.NameSpace, zkMessage.Name, zkMessage.Version))
+            val ownerId: String = "Kamanja" //FIXME:- We need to have some user for this operation.
+            val uniqueId = MetadataAPIImpl.GetUniqueId
+            val mdElementId = 0L //FIXME:- Not yet handled this
+            DownloadJarFromDB(MdMgr.GetMdMgr.MakeJarDef(zkMessage.NameSpace, zkMessage.Name, zkMessage.Version, ownerId, uniqueId, mdElementId))
           }
           case _ => { logger.error("Unknown Operation " + zkMessage.Operation + " in zookeeper notification, notification is not processed ..") }
         }

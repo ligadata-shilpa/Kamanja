@@ -399,7 +399,25 @@ trait EnvContext extends Monitorable {
   def setDataToZNode(zNodePath: String, value: Array[Byte]): Unit
   def getDataFromZNode(zNodePath: String): Array[Byte]
 
+  def CreateZkPathListener(zkcConnectString: String, znodePath: String, ListenCallback: (String) => Unit, zkSessionTimeoutMs: Int = 30000, zkConnectionTimeoutMs: Int = 30000) : Unit
+  def CreateZkPathChildrenCacheListener(zkcConnectString: String, znodePath: String, getAllChildsData:Boolean, ListenCallback: (String, String,  Array[Byte], Array[(String, Array[Byte])]) => Unit, zkSessionTimeoutMs: Int = 30000, zkConnectionTimeoutMs: Int = 30000) : Unit
+
+  // /kamanja/notification/node1
+  def CreateListenerForCacheKey(listenPath: String, ListenCallback: (String, String, String) => Unit) : Unit
+
+  // Ex: If we start watching /kamanja/nodification/ all the following puts/updates/removes/etc will notify callback
+  // /kamanja/nodification/node1/1 or /kamanja/nodification/node1/2 or /kamanja/nodification/node1 or /kamanja/nodification/node2 or /kamanja/nodification/node3 or /kamanja/nodification/node4
+  def CreateListenerForCacheChildern(listenPath: String, ListenCallback: (String, String, String) => Unit) : Unit
+
   def getLeaderInfo(): ClusterStatus
+
+  // This will give either any node change or leader change
+  def registerNodesChangeNotification(EventChangeCallback: (ClusterStatus) => Unit): Unit
+  def unregisterNodesChangeNotification(EventChangeCallback: (ClusterStatus) => Unit): Unit
+
+  def getNodeId(): String
+  def getClusterId(): String
+  def getDefaultZookeeperInfo(): String
 
   // This post the message into where ever these messages are associated immediately
   // Later this will be posted to logical queue where it can execute on logical partition.
@@ -429,7 +447,10 @@ abstract class ModelBase(var modelContext: ModelContext, val factory: ModelBaseO
   final def Version() = factory.Version()
 
   // Tenant Id
-  final def TenantId() = null
+  final def TenantId() = OwnerId()
+
+  // OwnerId Id
+  final def OwnerId(): String = null
 
   final def TransId() = if (modelContext != null && modelContext.txnContext != null) modelContext.txnContext.getTransactionId() else null // transId
 

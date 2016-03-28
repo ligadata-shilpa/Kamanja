@@ -61,7 +61,8 @@ class JpmmlSupport(mgr: MdMgr
                    , val msgNamespace: String
                    , val msgName: String
                    , val msgVersion: String
-                   , val pmmlText: String) extends LogTrait {
+                   , val pmmlText: String
+                   , val ownerId: String) extends LogTrait {
 
   /** Answer a ModelDef based upon the arguments supplied to the class constructor.
     *
@@ -196,6 +197,7 @@ class JpmmlSupport(mgr: MdMgr
             val model: ModelDef = mgr.MakeModelDef(modelNamespace
               , modelName
               , phyName
+              , ownerId, 0, 0
               , ModelRepresentation.PMML
               , Array(inpMsgs)
               , Array[String]()

@@ -158,7 +158,8 @@ object DefaultMdElemStructVer {
 
 // common fields for all metadata elements
 trait BaseElem {
-    def UniqID: Long
+    def UniqId: Long // UniqueId is unque for each element. If we have different versions of any element it will have different ids.
+    def MdElementId: Long // MdElementId is unque for each element with different versions
     def FullName: String // Logical Name
     def FullNameWithVer: String
     def CreationTime: Long // Time in milliseconds from 1970-01-01T00:00:00
@@ -185,10 +186,12 @@ trait BaseElem {
     def Active: Unit // Make the element as Active
     def Deactive: Unit // Make the element as de-active
     def Deleted: Unit // Mark the element as deleted
+    def OwnerId: String
 }
 
 class BaseElemDef extends BaseElem {
-    override def UniqID: Long = uniqueId
+    override def UniqId: Long = uniqueId // UniqueId is unque for each element. If we have different versions of any element it will have different ids.
+    override def MdElementId: Long = mdElementId // MdElementId is unque for each element with different versions
     override def FullName: String = nameSpace + "." + name // Logical Name
     override def FullNameWithVer: String = nameSpace + "." + name + "." + Version
     override def CreationTime: Long = creationTime // Time in milliseconds from 1970-01-01T00:00:00
@@ -216,6 +219,7 @@ class BaseElemDef extends BaseElem {
     override def Active: Unit = active = true // Make the element as Active
     override def Deactive: Unit = active = false // Make the element as de-active
     override def Deleted: Unit = deleted = true // Mark the element as deleted
+    override def OwnerId: String = ownerId
     def CheckAndGetDependencyJarNames: Array[String] = if (dependencyJarNames != null) dependencyJarNames else Array[String]()
 
     // Override in other places if required
@@ -226,7 +230,8 @@ class BaseElemDef extends BaseElem {
       }
     }
 
-    var uniqueId: Long = 0
+    var uniqueId: Long = 0 // uniqueId is unque for each element. If we have different versions of any element it will have different ids.
+    var mdElementId: Long = 0 // mdElementId is unque for each element with different versions
     var creationTime: Long = _ // Time in milliseconds from 1970-01-01T00:00:00 (Mostly it is Local time. May be we need to get GMT)
     var modTime: Long = _ // Time in milliseconds from 1970-01-01T00:00:00 (Mostly it is Local time. May be we need to get GMT)
 
@@ -245,6 +250,7 @@ class BaseElemDef extends BaseElem {
     var tranId: Long = 0
     var objectDefinition: String = _
     var objectFormat: ObjFormatType.FormatType = fJSON
+    var ownerId: String = _
 }
 
 // All these metadata elements should have specialized serialization and deserialization 
