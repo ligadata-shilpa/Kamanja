@@ -347,23 +347,21 @@ object ModelUtils {
     *               method. If Security and/or Audit are configured, this value must be a value other than None.
     * @return
     */
-  private def AddModelFromSource(sourceCode: String, sourceLang: String, modelName: String, userid: Option[String] = None, optMsgProduced: Option[String] = None): String = {
+  private def AddModelFromSource(sourceCode: String, sourceLang: String, modelName: String, userid: Option[String], optMsgProduced: Option[String]): String = {
     try {
       var compProxy = new CompilerProxy
       compProxy.setSessionUserId(userid)
-      val modDef: ModelDef = compProxy.compileModelFromSource(sourceCode, modelName, sourceLang,userid)
+      val modDef = compProxy.compileModelFromSource(sourceCode, modelName, sourceLang, userid)
 
       // save the outMessage as well
-      if( optMsgProduced != None ){
-	modDef.outputMsgs = modDef.outputMsgs :+ optMsgProduced.get.toLowerCase
+      if (optMsgProduced != None) {
+        modDef.outputMsgs = modDef.outputMsgs :+ optMsgProduced.get.toLowerCase
       }
-      else{
-	val defaultMessage = MessageAndContainerUtils.createDefaultOutputMessage(modDef,userid)
-	modDef.outputMsgs = modDef.outputMsgs :+ defaultMessage
+      else {
+        val defaultMessage = MessageAndContainerUtils.createDefaultOutputMessage(modDef, userid)
+        modDef.outputMsgs = modDef.outputMsgs :+ defaultMessage
       }
 
-      val ownerId: String = if (userid == None) "Kamanja" else userid.get
-      val modDef: ModelDef = compProxy.compileModelFromSource(sourceCode, modelName, sourceLang, ownerId)
       logger.info("Begin uploading dependent Jars, please wait.")
       PersistenceUtils.UploadJarsToDB(modDef)
       logger.info("Finished uploading dependent Jars.")
@@ -431,29 +429,29 @@ object ModelUtils {
                , optMsgConsumed: Option[String] = None
                , optMsgVersion: Option[String] = Some("-1")
                , optMsgProduced: Option[String] = None
-	     ): String = {
+              ): String = {
 
-    if( optMsgProduced != None ){
+    if (optMsgProduced != None) {
       logger.info("Validating the output message type " + optMsgProduced.get.toLowerCase);
-      if( ! MessageAndContainerUtils.IsMessageExists(optMsgProduced.get.toLowerCase) ){
+      if (!MessageAndContainerUtils.IsMessageExists(optMsgProduced.get.toLowerCase)) {
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddModel", null, s"Unknown Outmessage ${optMsgProduced.get.toLowerCase} error = ${ErrorCodeConstants.Add_Model_Failed}")
         return apiResult.toString
       }
-      else{
-	logger.info("The message type " + optMsgProduced.get.toLowerCase + " is found in metadata");
+      else {
+        logger.info("The message type " + optMsgProduced.get.toLowerCase + " is found in metadata");
       }
     }
-    else{
+    else {
       logger.info("We will be creating a default output message ..")
     }
-      
+
     val modelResult: String = modelType match {
       case ModelType.KPMML => {
         AddKPMMLModel(input, optUserid, optMsgProduced)
       }
       case ModelType.JAVA | ModelType.SCALA => {
         val result: String = optModelName.fold(throw new RuntimeException("Model name should be provided for Java/Scala models"))(name => {
-          AddModelFromSource(input, modelType.toString, name, optUserid,optMsgProduced)
+          AddModelFromSource(input, modelType.toString, name, optUserid, optMsgProduced)
         })
         result
       }
@@ -469,7 +467,7 @@ object ModelUtils {
             , msgVer
             , input
             , optUserid
-	    , optMsgProduced)
+            , optMsgProduced)
           res
         } else {
           val inputRep: String = if (input != null && input.size > 200) input.substring(0, 199)
@@ -521,7 +519,7 @@ object ModelUtils {
                            , msgVersion: String
                            , pmmlText: String
                            , userid: Option[String]
-			   , optMsgProduced: Option[String]
+                           , optMsgProduced: Option[String]
                           ): String = {
     try {
       val buffer: StringBuilder = new StringBuilder
@@ -556,14 +554,14 @@ object ModelUtils {
         modDef.uniqueId = MetadataAPIImpl.GetUniqueId
         modDef.mdElementId = if (existingModel == None) MetadataAPIImpl.GetMdElementId else existingModel.get.MdElementId
         MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.INSERTOBJECT, pmmlText, AuditConstants.SUCCESS, "", modDef.FullNameWithVer)
-	// save the outMessage as well
-	if( optMsgProduced != None ){
-	  modDef.outputMsgs = modDef.outputMsgs :+ optMsgProduced.get.toLowerCase
-	}
-	else{
-	  val defaultMessage = MessageAndContainerUtils.createDefaultOutputMessage(modDef,userid)
-	  modDef.outputMsgs = modDef.outputMsgs :+ defaultMessage
-	}
+        // save the outMessage as well
+        if (optMsgProduced != None) {
+          modDef.outputMsgs = modDef.outputMsgs :+ optMsgProduced.get.toLowerCase
+        }
+        else {
+          val defaultMessage = MessageAndContainerUtils.createDefaultOutputMessage(modDef, userid)
+          modDef.outputMsgs = modDef.outputMsgs :+ defaultMessage
+        }
         // save the jar file first
         PersistenceUtils.UploadJarsToDB(modDef)
         val apiResult = AddModel(modDef, userid)
@@ -624,9 +622,9 @@ object ModelUtils {
     *               method. If Security and/or Audit are configured, this value must be a value other than None.
     * @return json string result
     */
-  private def AddKPMMLModel(pmmlText: String, 
-			    userid: Option[String],
-			    optMsgProduced: Option[String]): String = {
+  private def AddKPMMLModel(pmmlText: String,
+                            userid: Option[String],
+                            optMsgProduced: Option[String]): String = {
     try {
       var compProxy = new CompilerProxy
       //compProxy.setLoggerLevel(Level.TRACE)
@@ -640,14 +638,14 @@ object ModelUtils {
 
       if (isValid && modDef != null) {
         MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.INSERTOBJECT, pmmlText, AuditConstants.SUCCESS, "", modDef.FullNameWithVer)
-	// save the outMessage as well
-	if( optMsgProduced != None ){
-	  modDef.outputMsgs = modDef.outputMsgs :+ optMsgProduced.get.toLowerCase
-	}
-	else{
-	  val defaultMessage = MessageAndContainerUtils.createDefaultOutputMessage(modDef,userid)
-	  modDef.outputMsgs = modDef.outputMsgs :+ defaultMessage
-	}
+        // save the outMessage as well
+        if (optMsgProduced != None) {
+          modDef.outputMsgs = modDef.outputMsgs :+ optMsgProduced.get.toLowerCase
+        }
+        else {
+          val defaultMessage = MessageAndContainerUtils.createDefaultOutputMessage(modDef, userid)
+          modDef.outputMsgs = modDef.outputMsgs :+ defaultMessage
+        }
         // save the jar file first
         PersistenceUtils.UploadJarsToDB(modDef)
         val apiResult = AddModel(modDef, userid)
@@ -719,12 +717,12 @@ object ModelUtils {
           val pmmlText = mod.ObjectDefinition
           val ownerId: String = if (userid == None) "Kamanja" else userid.get
           val (classStrTemp, modDefTemp) = compProxy.compilePmml(pmmlText, ownerId, true)
-	  // copy outputMsgs
-	  if( mod.outputMsgs.length > 0 ){
-	    modDefTemp.outputMsgs.foreach(omsg => {
-	      modDefTemp.outputMsgs = modDefTemp.outputMsgs :+ omsg
-	    })
-	  }
+          // copy outputMsgs
+          if (mod.outputMsgs.length > 0) {
+            modDefTemp.outputMsgs.foreach(omsg => {
+              modDefTemp.outputMsgs = modDefTemp.outputMsgs :+ omsg
+            })
+          }
           modDefTemp
         } else {
           val saveModelParms = parse(mod.ObjectDefinition).values.asInstanceOf[Map[String, Any]]
@@ -759,7 +757,7 @@ object ModelUtils {
             saveModelParms.getOrElse(ModelCompilationConstants.PHYSICALNAME, "").asInstanceOf[String],
             saveModelParms.getOrElse(ModelCompilationConstants.DEPENDENCIES, List[String]()).asInstanceOf[List[String]],
             saveModelParms.getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, List[String]()).asInstanceOf[List[String]],
-            inputMsgSets, outputMsgs, ObjFormatType.asString(mod.objectFormat),userid)
+            inputMsgSets, outputMsgs, ObjFormatType.asString(mod.objectFormat), userid)
           custModDef
         }
       } else {
@@ -801,12 +799,12 @@ object ModelUtils {
             , ownerId)
           val recompile: Boolean = true
           val model: ModelDef = jpmmlSupport.CreateModel(recompile)
-	  // copy outputMsgs
-	  if( mod.outputMsgs.length > 0 ){
-	    model.outputMsgs.foreach(omsg => {
-	      model.outputMsgs = model.outputMsgs :+ omsg
-	    })
-	  }
+          // copy outputMsgs
+          if (mod.outputMsgs.length > 0) {
+            model.outputMsgs.foreach(omsg => {
+              model.outputMsgs = model.outputMsgs :+ omsg
+            })
+          }
           model
         } else {
           /** this means that the dependencies are incorrect.. message is not the PMML message of interest */
@@ -896,7 +894,7 @@ object ModelUtils {
                   , optModelName: Option[String] = None
                   , optVersion: Option[String] = None
                   , optVersionBeingUpdated: Option[String] = None
-		  , optMsgProduced: Option[String] = None): String = {
+                  , optMsgProduced: Option[String] = None): String = {
     /**
       * FIXME: The current strategy is that only the most recent version can be updated.
       * FIXME: This is not a satisfactory condition. It may be desirable to have 10 models all with
@@ -911,7 +909,7 @@ object ModelUtils {
 
     val modelResult: String = modelType match {
       case ModelType.KPMML => {
-        val result: String = UpdateKPMMLModel(modelType, input, optUserid, optModelName, optVersion,optMsgProduced)
+        val result: String = UpdateKPMMLModel(modelType, input, optUserid, optModelName, optVersion, optMsgProduced)
         result
       }
       case ModelType.JAVA | ModelType.SCALA => {
@@ -919,7 +917,7 @@ object ModelUtils {
         result
       }
       case ModelType.PMML => {
-        val result: String = UpdatePMMLModel(modelType, input, optUserid, optModelName, optVersion, optVersionBeingUpdated,optMsgProduced)
+        val result: String = UpdatePMMLModel(modelType, input, optUserid, optModelName, optVersion, optVersionBeingUpdated, optMsgProduced)
         result
       }
       case ModelType.BINARY =>
@@ -953,7 +951,7 @@ object ModelUtils {
                               , optModelName: Option[String] = None
                               , optModelVersion: Option[String] = None
                               , optVersionBeingUpdated: Option[String]
-			      , optMsgProduced: Option[String]): String = {
+                              , optMsgProduced: Option[String]): String = {
 
     val modelName: String = optModelName.orNull
     val version: String = optModelVersion.getOrElse("-1")
@@ -1001,10 +999,10 @@ object ModelUtils {
           , ownerId)
 
         val modDef: ModelDef = jpmmlSupport.UpdateModel
-	// copy optMsgProduced to outputMsgs
-	if( optMsgProduced != None ){
-	  modDef.outputMsgs = modDef.outputMsgs :+ optMsgProduced.get.toLowerCase
-	}
+        // copy optMsgProduced to outputMsgs
+        if (optMsgProduced != None) {
+          modDef.outputMsgs = modDef.outputMsgs :+ optMsgProduced.get.toLowerCase
+        }
 
         /**
           * FIXME: The current strategy is that only the most recent version can be updated.
@@ -1152,7 +1150,7 @@ object ModelUtils {
       val compProxy = new CompilerProxy
       compProxy.setSessionUserId(userid)
       val modelNm: String = modelName.orNull
-      val modDef: ModelDef = compProxy.compileModelFromSource(input, modelNm, sourceLang,userid)
+      val modDef: ModelDef = compProxy.compileModelFromSource(input, modelNm, sourceLang, userid)
 
       /**
         * FIXME: The current strategy is that only the most recent version can be updated.
@@ -1236,7 +1234,7 @@ object ModelUtils {
                                , optUserid: Option[String] = None
                                , optModelName: Option[String] = None
                                , optVersion: Option[String] = None
-			       , optMsgProduced: Option[String]): String = {
+                               , optMsgProduced: Option[String]): String = {
     try {
       var compProxy = new CompilerProxy
       //compProxy.setLoggerLevel(Level.TRACE)
@@ -1267,10 +1265,10 @@ object ModelUtils {
           RemoveModel(latestVersion.nameSpace, latestVersion.name, latestVersion.ver, None)
         }
 
-	// copy optMsgProduced to outputMsgs
-	if( optMsgProduced != None ){
-	  modDef.outputMsgs = modDef.outputMsgs :+ optMsgProduced.get.toLowerCase
-	}
+        // copy optMsgProduced to outputMsgs
+        if (optMsgProduced != None) {
+          modDef.outputMsgs = modDef.outputMsgs :+ optMsgProduced.get.toLowerCase
+        }
 
         PersistenceUtils.UploadJarsToDB(modDef)
         val result = AddModel(modDef, optUserid)
@@ -1628,7 +1626,7 @@ object ModelUtils {
 
     var processed: Long = 0L
     val storeInfo = PersistenceUtils.GetTableStoreMap("model_config_objects")
-    storeInfo._2.get(storeInfo._1, { (k: Key, v: Any, serType: String, typ: String, ver:Int) => {
+    storeInfo._2.get(storeInfo._1, { (k: Key, v: Any, serType: String, typ: String, ver: Int) => {
       processed += 1
       val conf = serializer.DeserializeObjectFromByteArray(v.asInstanceOf[Array[Byte]]).asInstanceOf[Map[String, List[String]]]
       MdMgr.GetMdMgr.AddModelConfig(k.bucketKey.mkString("."), conf)

@@ -67,15 +67,15 @@ class CompilerProxy {
     * to figure out the build dependencies.
     *
     */
-  def compileModelFromSource(sourceCode: String, modelConfigName: String, sourceLang: String = "scala",userid: Option[String] = None): ModelDef = {
+  def compileModelFromSource(sourceCode: String, modelConfigName: String, sourceLang: String, userid: Option[String]): ModelDef = {
     try {
       // Figure out the metadata information needed for 
       val additinalDeps = addDepsFromClassPath
       val (classPath, elements, totalDeps, nonTypeDeps, inMsgSets, outMsgs) = getClassPathFromModelConfig(modelConfigName, additinalDeps)
       val msgDefClassFilePath = compiler_work_dir + "/" + removeUserid(modelConfigName) + "." + sourceLang
-      val ((modelNamespace, modelName, modelVersion, pname,defaultInputMsgSets), repackagedCode, tempPackage) = parseSourceForMetadata(sourceCode, modelConfigName, sourceLang, msgDefClassFilePath, classPath, elements,userid)
-      var inputMsgSets = 
-	if( inMsgSets == null ) defaultInputMsgSets.map(lst => lst.toList).toList else inMsgSets
+      val ((modelNamespace, modelName, modelVersion, pname, defaultInputMsgSets), repackagedCode, tempPackage) = parseSourceForMetadata(sourceCode, modelConfigName, sourceLang, msgDefClassFilePath, classPath, elements, userid)
+      var inputMsgSets =
+        if (inMsgSets == null) defaultInputMsgSets.map(lst => lst.toList).toList else inMsgSets
 
       // Get Model info and decide the mdElementId
       val existingModel = MdMgr.GetMdMgr.Model(modelNamespace, modelName, -1, false) // Any version is fine. No need of active
@@ -86,7 +86,7 @@ class CompilerProxy {
         modelVersion, msgDefClassFilePath, elements, sourceCode,
         totalDeps,
         MetadataAPIImpl.getModelMessagesContainers(modelConfigName, userid),
-        nonTypeDeps, false, inputMsgSets, outMsgs,userid,modelConfigName, uniqueId, mdElementId)
+        nonTypeDeps, false, inputMsgSets, outMsgs, userid, modelConfigName, uniqueId, mdElementId)
     } catch {
       case e: Exception => {
         logger.error("COMPILER_PROXY: unable to determine model metadata information during AddModel.", e)
@@ -100,13 +100,13 @@ class CompilerProxy {
     * is available.. so just generate the new ModelDef
     *
     */
-  def recompileModelFromSource(sourceCode: String, pName: String, deps: List[String], typeDeps: List[String], inMsgSets: List[List[String]], outputMsgs: List[String], sourceLang: String = "scala",userid: Option[String] = None): ModelDef = {
+  def recompileModelFromSource(sourceCode: String, pName: String, deps: List[String], typeDeps: List[String], inMsgSets: List[List[String]], outputMsgs: List[String], sourceLang: String, userid: Option[String]): ModelDef = {
     try {
       val (classPath, elements, totalDeps, nonTypeDeps) = buildClassPath(deps, typeDeps)
       val msgDefClassFilePath = compiler_work_dir + "/tempCode." + sourceLang
-      val ((modelNamespace, modelName, modelVersion, pname,defaultInputMsgSets), repackagedCode, tempPackage) = parseSourceForMetadata(sourceCode, "tempCode", sourceLang, msgDefClassFilePath, classPath, elements,userid)
-      var inputMsgSets = 
-	if( inMsgSets == null ) defaultInputMsgSets.map(lst => lst.toList).toList else inMsgSets
+      val ((modelNamespace, modelName, modelVersion, pname, defaultInputMsgSets), repackagedCode, tempPackage) = parseSourceForMetadata(sourceCode, "tempCode", sourceLang, msgDefClassFilePath, classPath, elements, userid)
+      var inputMsgSets =
+        if (inMsgSets == null) defaultInputMsgSets.map(lst => lst.toList).toList else inMsgSets
 
       // Get Model info and decide the mdElementId
       val existingModel = MdMgr.GetMdMgr.Model(modelNamespace, modelName, -1, false) // Any version is fine. No need of active
@@ -114,7 +114,7 @@ class CompilerProxy {
       val mdElementId = if (existingModel == None) MetadataAPIImpl.GetMdElementId else existingModel.get.MdElementId
 
       return generateModelDef(repackagedCode, sourceLang, pname, classPath, tempPackage, modelName,
-        modelVersion, msgDefClassFilePath, elements, sourceCode, totalDeps, typeDeps, nonTypeDeps, true, inputMsgSets, outputMsgs,userid,null, uniqueId, mdElementId)
+        modelVersion, msgDefClassFilePath, elements, sourceCode, totalDeps, typeDeps, nonTypeDeps, true, inputMsgSets, outputMsgs, userid, null, uniqueId, mdElementId)
     } catch {
       case e: Exception => {
         logger.error("COMPILER_PROXY: unable to determine model metadata information during recompile.", e)
@@ -521,7 +521,7 @@ class CompilerProxy {
   private def generateModelDef(repackagedCode: String, sourceLang: String, pname: String, classPath: String, modelNamespace: String, modelName: String,
                                modelVersion: String, msgDefClassFilePath: String, elements: Set[BaseElemDef], originalSource: String,
                                deps: scala.collection.immutable.Set[String], typeDeps: List[String], notTypeDeps: scala.collection.immutable.Set[String], recompile: Boolean,
-                               inMsgSets: List[List[String]], outMsgs: List[String],userid: Option[String] = None,modelConfigName:String = null, uniqueId: Long, mdElementId: Long): ModelDef = {
+                               inMsgSets: List[List[String]], outMsgs: List[String], userid: Option[String], modelConfigName: String, uniqueId: Long, mdElementId: Long): ModelDef = {
     try {
       // Now, we need to create a real jar file - Need to add an actual Package name with a real Napespace and Version numbers.
       val packageName = modelNamespace + ".V" + MdMgr.ConvertVersionToLong(MdMgr.FormatVersion(modelVersion))
@@ -550,7 +550,7 @@ class CompilerProxy {
       val depJars = getJarsFromClassPath(classPath)
 
       // figure out the Physical Model Name
-      var (dummy1, dummy2, dummy3, pName,defaultInputMsgSets) = getModelMetadataFromJar(jarFileName, elements, depJars, sourceLang,userid,modelConfigName)
+      var (dummy1, dummy2, dummy3, pName, defaultInputMsgSets) = getModelMetadataFromJar(jarFileName, elements, depJars, sourceLang, userid, modelConfigName)
 
       /* Create the ModelDef object
 
@@ -572,8 +572,8 @@ class CompilerProxy {
       logger.debug("generateModelDef: defaultInputMsgSets contain " + defaultInputMsgSets.length + " objects ")
 
       val inpM =
-        if (inMsgSets != null && inMsgSets.length > 0 ) {
-	  logger.debug("generateModelDef:inMsgSets contain " + inMsgSets.length + " objects ")
+        if (inMsgSets != null && inMsgSets.length > 0) {
+          logger.debug("generateModelDef:inMsgSets contain " + inMsgSets.length + " objects ")
           val filterdSets = inMsgSets.filter(set => {
             if (set != null) {
               val filInnerSet = set.filter(m => (m != null && m.trim.nonEmpty))
@@ -591,16 +591,16 @@ class CompilerProxy {
             }).toArray
           }).toArray
         } else {
-	  val defaultInpSets = defaultInputMsgSets.map(set => {
-	      set.map(m => {
-		val t = new MessageAndAttributes
-		t.message = m
-		t.attributes = Array[String]()
-		t
-	      }).toArray
+          val defaultInpSets = defaultInputMsgSets.map(set => {
+            set.map(m => {
+              val t = new MessageAndAttributes
+              t.message = m
+              t.attributes = Array[String]()
+              t
             }).toArray
-	  logger.debug("generateModelDef:defaultInpSets contain " + defaultInpSets.length + " objects ")
-	  defaultInpSets
+          }).toArray
+          logger.debug("generateModelDef:defaultInpSets contain " + defaultInpSets.length + " objects ")
+          defaultInpSets
         }
 
       logger.debug("generateModelDef:InputMsgSets contain " + inpM.length + " objects ")
@@ -616,10 +616,11 @@ class CompilerProxy {
       // reconstruct modDef json string from modelConfig object
       logger.debug("generateModelDef: Get the model config for " + modelConfigName)
       var config = MdMgr.GetMdMgr.GetModelConfig((userid.get + "." + modelConfigName).toLowerCase)
-      var modCfgJson = JsonSerializer.SerializeModelConfigToJson(modelConfigName,config)
+      var modCfgJson = JsonSerializer.SerializeModelConfigToJson(modelConfigName, config)
       logger.debug("generateModelDef: modelConfig in json  " + modCfgJson)
-      
+
       val modelType: String = if (sourceLang.equalsIgnoreCase("scala")) "Scala" else "Java"
+      val ownerId: String = if (userid == None) "Kamanja" else userid.get
       val modDef: ModelDef = MdMgr.GetMdMgr.MakeModelDef(modelNamespace
         , modelName
         , pName
@@ -635,7 +636,7 @@ class CompilerProxy {
         , deps.toArray[String]
         , recompile
         , false
-	, modCfgJson)
+        , modCfgJson)
 
       // Need to set some values by hand here.
       modDef.jarName = jarFileName
@@ -694,7 +695,7 @@ class CompilerProxy {
                                      msgDefClassFilePath: String,
                                      classPath: String,
                                      elements: Set[BaseElemDef],
-				     userid: Option[String]): ((String, String, String, String, List[List[String]]), String, String) = {
+                                     userid: Option[String]): ((String, String, String, String, List[List[String]]), String, String) = {
 
     // We have to create a dummy jar file for this so that we can interrogate the generated Object for Modelname
     // and Model Version.  To do this, we create a dummy source with V0 in the package name.
@@ -771,7 +772,7 @@ class CompilerProxy {
 
     val depJars = getJarsFromClassPath(classPath)
 
-    (getModelMetadataFromJar(jarFileName, elements, depJars, sourceLang,userid,modelConfigName), finalSourceCode, packageName)
+    (getModelMetadataFromJar(jarFileName, elements, depJars, sourceLang, userid, modelConfigName), finalSourceCode, packageName)
 
   }
 
@@ -912,7 +913,7 @@ class CompilerProxy {
   }
 
 
-  def getMessageInst(msgName: String,loaderInfo: KamanjaLoaderInfo): com.ligadata.KamanjaBase.MessageContainerBase = {
+  def getMessageInst(msgName: String, loaderInfo: KamanjaLoaderInfo): com.ligadata.KamanjaBase.MessageContainerBase = {
     var isMsg = true
     var curClass: Class[_] = null
     var loader = loaderInfo.loader
@@ -921,13 +922,13 @@ class CompilerProxy {
     var messageObj: BaseMsg = null
     try {
       val o = MdMgr.GetMdMgr.Message(msgName, -1, true)
-      if( o == None ){
-	logger.debug("No messageDef object found for " + msgName)
-	return null
+      if (o == None) {
+        logger.debug("No messageDef object found for " + msgName)
+        return null
       }
 
       // PhysicalName contains class name
-      clsName = o.get.PhysicalName.trim	
+      clsName = o.get.PhysicalName.trim
 
       // Convert class name into a class
       var curClz = Class.forName(clsName, true, loaderInfo.loader)
@@ -935,11 +936,11 @@ class CompilerProxy {
       isMsg = false
 
       while (curClz != null && isMsg == false) {
-	logger.debug("getMessageInst: class name => " + curClz.getName())
+        logger.debug("getMessageInst: class name => " + curClz.getName())
         isMsg = Utils.isDerivedFrom(curClz, "com.ligadata.KamanjaBase.BaseMsg")
-        if (isMsg == false){
+        if (isMsg == false) {
           curClz = curClz.getSuperclass()
-	}
+        }
       }
     } catch {
       case e: Exception => {
@@ -958,7 +959,7 @@ class CompilerProxy {
           objInst = obj.instance
           if (objInst.isInstanceOf[BaseMsgObj]) {
             messageObj = objInst.asInstanceOf[BaseMsgObj].CreateNewMessage
-	  }
+          }
         } catch {
           case e: Exception => {
             // Trying Regular Object instantiation, applicable to java
@@ -967,8 +968,8 @@ class CompilerProxy {
           }
         }
         //objInst = curClass.newInstance
-	logger.debug("getMessageInst: return objInst for " + clsName)
-	return messageObj.asInstanceOf[com.ligadata.KamanjaBase.MessageContainerBase]
+        logger.debug("getMessageInst: return objInst for " + clsName)
+        return messageObj.asInstanceOf[com.ligadata.KamanjaBase.MessageContainerBase]
       } catch {
         case e: Exception => {
           logger.debug("Failed to instantiate message object:" + clsName, e)
@@ -976,13 +977,13 @@ class CompilerProxy {
         }
       }
     }
-    else{
+    else {
       logger.debug("getMessageInst: Not a message object:" + clsName)
       return null
     }
   }
 
-  private def getModelMetadataFromJar(jarFileName: String, elements: Set[BaseElemDef], depJars: List[String], sourceLang: String,userid: Option[String],modelConfigName:String): (String, String, String, String,List[List[String]]) = {
+  private def getModelMetadataFromJar(jarFileName: String, elements: Set[BaseElemDef], depJars: List[String], sourceLang: String, userid: Option[String], modelConfigName: String): (String, String, String, String, List[List[String]]) = {
 
     // Resolve ModelNames and Models versions - note, the jar file generated is still in the workDirectory.
     val loaderInfo = new KamanjaLoaderInfo()
@@ -1060,40 +1061,40 @@ class CompilerProxy {
             , false, false)
           val mdlFactory = PrepareModelFactory(loaderInfo, jarPaths0, mdlDef)
 
-	  var defaultInputMsgSets = List[List[String]]()
+          var defaultInputMsgSets = List[List[String]]()
           if (mdlFactory != null) {
-	    // create possible default input messages from model_config.Type_dependencies for java/scala models
+            // create possible default input messages from model_config.Type_dependencies for java/scala models
             var fullName = mdlFactory.getModelName.split('.')
-	    var modelName = fullName(fullName.length - 1)
-	    var key = "metadataapi" + "." + modelConfigName
-	    if( userid != None ){
-	      key = userid.get + "." + modelConfigName
-          }
-	    logger.debug("getModelMetadataFromJar: Get the model config for " + key)
-	    var config = MdMgr.GetMdMgr.GetModelConfig(key)
-	    logger.debug("getModelMetadataFromJar: Size of the model config map => " + config.keys.size);
-	    val typDeps = config.getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, null)
-	    if (typDeps != null) {
-	      var deps = typDeps.asInstanceOf[List[String]]
-	      deps.foreach( t => {
-		val inst  = getMessageInst(t,loaderInfo)
-		if( inst != null ){
-		  logger.debug("getModelMetadataFromJar: call mdlFactory.isValidMessage ")
-		  if( mdlFactory.isValidMessage(inst) ){
-		    logger.debug("getModelMetadataFromJar: mdlFactory.isValidMessage returned true")
-		    defaultInputMsgSets = List(t) :: defaultInputMsgSets
-		  }
-		  else{
-		    logger.debug("getModelMetadataFromJar: mdlFactory.isValidMessage returned false")
-		  }
-		}
-		else{
-		  logger.debug("getModelMetadataFromJar: message instance for type " + t + " is null")
-		}
-	      })
-	    }
-            return (fullName.dropRight(1).mkString("."), fullName(fullName.length - 1), 
-		    mdlFactory.getVersion, clsName, defaultInputMsgSets)
+            var modelName = fullName(fullName.length - 1)
+            var key = "Kamanja" + "." + modelConfigName
+            if (userid != None) {
+              key = userid.get + "." + modelConfigName
+            }
+            logger.debug("getModelMetadataFromJar: Get the model config for " + key)
+            var config = MdMgr.GetMdMgr.GetModelConfig(key)
+            logger.debug("getModelMetadataFromJar: Size of the model config map => " + config.keys.size);
+            val typDeps = config.getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, null)
+            if (typDeps != null) {
+              var deps = typDeps.asInstanceOf[List[String]]
+              deps.foreach(t => {
+                val inst = getMessageInst(t, loaderInfo)
+                if (inst != null) {
+                  logger.debug("getModelMetadataFromJar: call mdlFactory.isValidMessage ")
+                  if (mdlFactory.isValidMessage(inst)) {
+                    logger.debug("getModelMetadataFromJar: mdlFactory.isValidMessage returned true")
+                    defaultInputMsgSets = List(t) :: defaultInputMsgSets
+                  }
+                  else {
+                    logger.debug("getModelMetadataFromJar: mdlFactory.isValidMessage returned false")
+                  }
+                }
+                else {
+                  logger.debug("getModelMetadataFromJar: message instance for type " + t + " is null")
+                }
+              })
+            }
+            return (fullName.dropRight(1).mkString("."), fullName(fullName.length - 1),
+              mdlFactory.getVersion, clsName, defaultInputMsgSets)
           }
 
           logger.error("COMPILER_PROXY: Unable to resolve a class Object from " + jarName0)

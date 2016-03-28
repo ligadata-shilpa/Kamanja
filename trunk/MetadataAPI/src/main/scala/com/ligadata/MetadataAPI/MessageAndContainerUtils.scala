@@ -1632,7 +1632,7 @@ object MessageAndContainerUtils {
     // if userid is not supplied, it seem to defualt to "_"
     //val u = if( userid != None ) userid.get else "_"
     //var key = u + "." + modelConfigName
-    var key = "metadataapi" + "." + modelConfigName
+    var key = "Kamanja" + "." + modelConfigName
     if( userid != None ){
       key = userid.get + "." + modelConfigName
     }
