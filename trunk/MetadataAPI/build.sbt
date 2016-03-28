@@ -107,4 +107,8 @@ retrieveManaged := true
 
 parallelExecution := false
 
+coverageMinimum := 80
+
+coverageFailOnMinimum := false
+
 coverageExcludedPackages := "com.ligadata.MetadataAPI.SampleData;com.ligadata.MetadataAPI.TestMetadataAPI"
