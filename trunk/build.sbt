@@ -203,6 +203,8 @@ lazy val JsonDataGen = project.in(file("Utils/JsonDataGen"))
   .settings(TestSettings.settings: _*)
   .dependsOn(Exceptions, KamanjaBase)
 
+lazy val JsonChecker = project.in(file("Utils/JsonChecker")) dependsOn(Exceptions)
+
 lazy val NodeInfoExtract  = project.in(file("Utils/NodeInfoExtract"))
   .configs(TestConfigs.all: _*)
   .settings(TestSettings.settings: _*)
