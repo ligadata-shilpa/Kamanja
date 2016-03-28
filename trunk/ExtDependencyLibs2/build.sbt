@@ -47,6 +47,11 @@ assemblyMergeStrategy in assembly := {
   case x if x contains "org\\apache\\commons\\collections" => MergeStrategy.last
   case x if x contains "com.fasterxml.jackson.core" => MergeStrategy.first
   case x if x contains "com/fasterxml/jackson/core" => MergeStrategy.first
+  // newly added
+  case x if x contains "StaticLoggerBinder.class" => MergeStrategy.first
+  case x if x contains "StaticMDCBinder.class" => MergeStrategy.first
+  case x if x contains "StaticMarkerBinder.class" => MergeStrategy.first
+  //
   case x if x contains "com\\fasterxml\\jackson\\core" => MergeStrategy.first
   case x if x contains "commons-logging" => MergeStrategy.first
   case "log4j.properties" => MergeStrategy.first
@@ -65,7 +70,6 @@ excludedJars in assembly <<= (fullClasspath in assembly) map { cp =>
 //, "scala-reflect-2.11.0.jar", "akka-actor_2.11-2.3.2.jar", "scala-reflect-2.11.2.jar", "scalatest_2.11-2.2.4.jar", "joda-time-2.9.1-javadoc.jar", "voldemort-0.96.jar", "scala-compiler-2.11.0.jar", "guava-14.0.1.jar"
 //,"minlog-1.2.jar"
 //net.virtualvoid.sbt.graph.Plugin.graphSettings
-
 
 
 ////////////////////// ZooKeeperListener
@@ -126,7 +130,7 @@ libraryDependencies ++= {
     "io.spray" %% "spray-json" % "1.3.2",
     "com.typesafe.akka" %% "akka-actor" % akkaVersion,
     //  "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
-    "ch.qos.logback" % "logback-classic" % "1.0.12",
+    //    "ch.qos.logback" % "logback-classic" % "1.0.12",                       latest change
     "org.apache.camel" % "camel-core" % "2.9.2"
   )
 }
