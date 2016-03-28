@@ -110,6 +110,29 @@ resolvers += "Big Bee Consultants" at "http://repo.bigbeeconsultants.co.uk/repo"
 
 
 
+////////////////////// MetadataAPIService
+//scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
+resolvers ++= Seq(
+  "spray repo" at "http://repo.spray.io/"
+)
+libraryDependencies ++= {
+  val sprayVersion = "1.3.3"
+  val akkaVersion = "2.3.9"
+  Seq(
+    "io.spray" %% "spray-can" % sprayVersion,
+    "io.spray" %% "spray-routing" % sprayVersion,
+    "io.spray" %% "spray-testkit" % sprayVersion,
+    "io.spray" %% "spray-client" % sprayVersion,
+    "io.spray" %% "spray-json" % "1.3.2",
+    "com.typesafe.akka" %% "akka-actor" % akkaVersion,
+    //  "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
+    "ch.qos.logback" % "logback-classic" % "1.0.12",
+    "org.apache.camel" % "camel-core" % "2.9.2"
+  )
+}
+
+
+
 ////////////////////// Cassandra / StorageCassandra
 libraryDependencies += "com.datastax.cassandra" % "cassandra-driver-parent" % "2.1.2"
 libraryDependencies += "com.datastax.cassandra" % "cassandra-driver-core" % "2.1.2"
