@@ -593,6 +593,10 @@ class KamanjaManager extends Observer {
     if (initialize == false) {
       return Shutdown(1)
     }
+
+    // Jars loaded, create the status factory
+    val statusEventFactory = KamanjaMetadata.getMessgeInfo("system.KamanjaStatusEvent").contmsgobj.asInstanceOf[BaseMsgObj]
+
     val exceptionStatusAdaps = scala.collection.mutable.Set[String]()
     var curCntr = 0
     val maxFailureCnt = 30
@@ -602,6 +606,10 @@ class KamanjaManager extends Observer {
         val stats: scala.collection.immutable.Map[String, Long] = SimpleStats.copyMap
         val statsStr = stats.mkString("~")
         val dispStr = "PD,%d,%s,%s".format(KamanjaConfiguration.nodeId, Utils.GetCurDtTmStr, statsStr)
+        var statusMsg = statusEventFactory.CreateNewMessage.asInstanceOf[KamanjaStatusEvent]
+        statusMsg.nodeid = KamanjaConfiguration.nodeId.toString
+        statusMsg.statusstring = statsStr
+        //statusMsg.eventtime = Utils.GetCurDtTmStr
 
         if (statusAdapters != null) {
           curCntr += 1
