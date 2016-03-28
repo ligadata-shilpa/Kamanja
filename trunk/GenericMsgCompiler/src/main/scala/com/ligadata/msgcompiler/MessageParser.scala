@@ -22,12 +22,16 @@ import com.ligadata.kamanja.metadata.BaseAttributeDef;
 import com.ligadata.kamanja.metadata.ContainerDef;
 import com.ligadata.kamanja.metadata.ArrayTypeDef;
 import com.ligadata.kamanja.metadata.ArrayBufTypeDef;
+import java.text.SimpleDateFormat;
 
 class MessageParser {
 
   val logger = this.getClass.getName
   lazy val log = LogManager.getLogger(logger)
   var ParentMsgNameSpace: String = ""
+  val timePartitionTypeList: List[String] = List("yearly", "monthly", "daily") //"weekly", "30minutes", "60minutes", "15minutes", "5minutes", "1minute")
+  val timePartitionFormatList: List[String] = List("epochtimeinmillis", "epochtimeinseconds", "epochtime")
+  val timePartInfo: String = "TimePartitionInfo"
 
   /**
    * process the json map and return the message object
@@ -38,8 +42,8 @@ class MessageParser {
     var msgList: List[Message] = List[Message]()
     var jtype: String = null
 
-    val schema: String = json.replaceAllLiterally(" ", "").replaceAllLiterally("\"", "\\\"")
-
+    val schema: String = json.replaceAllLiterally("\t", "").trim().replaceAllLiterally(" ", "").trim().replaceAllLiterally("\"", "\\\"").trim();
+    log.info("Schema : " + schema)
     val mapOriginal = parse(json).values.asInstanceOf[scala.collection.immutable.Map[String, Any]]
 
     if (mapOriginal == null)
@@ -92,7 +96,7 @@ class MessageParser {
     var msgLevel: Int = 0
     try {
       if (map.contains(key)) {
-        if (map.get(key).get.isInstanceOf[messageMap]) {
+        if (map.get(key).get.isInstanceOf[scala.collection.immutable.Map[_, _]]) {
           val message = map.get(key).get.asInstanceOf[messageMap]
           log.info("message map" + message)
           val messageMap: scala.collection.mutable.Map[String, Any] = scala.collection.mutable.Map[String, Any]()
@@ -134,6 +138,8 @@ class MessageParser {
     var Name: String = ""
     var Description: String = ""
     var Fixed: String = ""
+    var fldList: Set[String] = Set[String]();
+    var timePartition: TimePartition = null;
 
     try {
       if (message != null) {
@@ -149,20 +155,17 @@ class MessageParser {
         if (message.getOrElse("version", null) == null)
           throw new Exception("Please provide the Version of the message definition ")
 
-        // if (message.getOrElse("fixed", null) == null)
-        //  throw new Exception("Please provide the type of the message definition (either Fixed or Mapped) ")
         if (message.getOrElse("fixed", null) == null)
-          Fixed = ""
-        else
-          Fixed = message.get("fixed").get.toString()
+          throw new Exception("Please provide the type of the message definition (either Fixed or Mapped) ")
+
+        Fixed = message.get("fixed").get.toString();
+        NameSpace = message.get("namespace").get.toString()
+        Name = message.get("name").get.toString()
 
         val persist = message.getOrElse("persist", "false").toString.toLowerCase
         if (MsgUtils.isTrue(MsgUtils.LowerCase(persist)))
           persistMsg = true
 
-        NameSpace = message.getOrElse("namespace", " ").toString
-        ParentMsgNameSpace = NameSpace
-        Name = message.getOrElse("name", " ").toString
         if (message.getOrElse("description", null) == null)
           Description = ""
         else
@@ -173,46 +176,16 @@ class MessageParser {
         msgVersion = MsgUtils.extractVersion(message)
 
         for (key: String <- message.keys) {
-
           if (key.equals("elements") || key.equals("fields")) {
             val (elmnts, msgs) = getElementsObj(message, key)
             elements = elmnts
-            // messages = msgs
-
-            //for child messages if the name space, version, persist and version are not defined in the message definition of child message use the values from the parent message
-            /*  log.info("-----------------------" +messages.size)
-            if (messages != null && messages.size > 0)
-              messages.foreach(m => {
-                
-                log.info("-----------------------" + m.Name)
-                log.info("-----------------------" + m.NameSpace)
-                log.info("-----------------------" + m.Version)
-                log.info("-----------------------" + m.Fixed)
-                log.info("-----------------------" + m.Persist)
-                
-                if (m.NameSpace == null || m.NameSpace.trim() == "")
-                  m.NameSpace = NameSpace
-
-                if (m.Version == null || m.Version.trim() == "")
-                  m.Version = msgVersion
-
-                if (m.Fixed == null || m.Fixed.trim() == "")
-                  m.Fixed = Fixed
-
-                
-
-              })
-              * */
-
           }
-
           if (mtype.equals("message") && message.contains(tkey)) {
             if (key.equals(tkey)) {
               tdataexists = true
               tdata = getTransformData(message, key)
             }
           }
-
           if (key.equals("partitionkey")) {
             var partitionKeys = message.getOrElse("partitionkey", null)
             if (partitionKeys != null) {
@@ -220,7 +193,6 @@ class MessageParser {
               partitionKeysList = partitionKeysList.map(p => MsgUtils.LowerCase(p))
             }
           }
-
           if (key.equals("primarykey")) {
             var primaryKeys = message.getOrElse("primarykey", null)
 
@@ -229,7 +201,6 @@ class MessageParser {
               primaryKeysList = primaryKeysList.map(p => MsgUtils.LowerCase(p))
             }
           }
-
           var fldList: Set[String] = Set[String]()
           if (elements != null && elements.size > 0) {
             elements.foreach(Fld => { fldList += Fld.Name })
@@ -237,12 +208,12 @@ class MessageParser {
             if (fldList != null && fldList.size > 0) {
               if (partitionKeysList != null && partitionKeysList.size > 0) {
                 if (!(partitionKeysList.toSet subsetOf fldList))
-                  throw new Exception("Partition Keys should be included in fields/elements of message/container definition " + message.get("Name").get.toString())
+                  throw new Exception("Partition Key Names should be included in fields/elements of message/container definition " + message.get("Name").get.toString())
               }
 
               if (primaryKeysList != null && primaryKeysList.size > 0) {
                 if (!(primaryKeysList.toSet subsetOf fldList))
-                  throw new Exception("Primary Keys should be included in fields/elements of message/container definition " + message.get("Name").get.toString())
+                  throw new Exception("Primary Key Names should be included in fields/elements of message/container definition " + message.get("Name").get.toString())
               }
             }
           }
@@ -251,12 +222,19 @@ class MessageParser {
         if (MsgUtils.isTrue(MsgUtils.LowerCase(Fixed)) && elements == null)
           throw new Exception("Either Fields or Elements or Concepts  do not exist in " + message.get("name").get.toString())
 
+        if (ele != null && ele.size > 0) {
+          ele.foreach(Fld => { fldList += Fld.Name })
+        }
+        if (message.getOrElse(timePartInfo, null) != null) {
+          timePartition = parseTimePartitionInfo(timePartInfo, message, fldList)
+        }
+
         /*
         if (elements != null)
           elements = elements :+ new Element("", "transactionId", "system.long", "", "Fields", null, -1, null, null)
         else
           elements = List(new Element("", "transactionId", "system.long", "", "Fields", null, -1, null, null))
-		*/
+				*/
 
         // ele.foreach(f => log.debug("====" + f.Name))
 
@@ -283,7 +261,7 @@ class MessageParser {
     val pkg = NameSpace + ".V" + MdMgr.ConvertVersionToLong(msgVersion).toString
     val physicalName: String = pkg + "." + Name
 
-    val msg: Message = new Message(mtype, NameSpace, Name, physicalName, msgVersion, "Description", Fixed, persistMsg, elements, tdataexists, tdata, null, pkg.trim(), null, null, null, partitionKeysList, primaryKeysList, cur_time, msgLevel, null, schema)
+    val msg: Message = new Message(mtype, NameSpace, Name, physicalName, msgVersion, "Description", Fixed, persistMsg, elements, tdataexists, tdata, null, pkg.trim(), null, null, null, partitionKeysList, primaryKeysList, cur_time, msgLevel, null, schema, timePartition)
 
     var msglist: List[Message] = List[Message]()
     if (messages != null && messages.size > 0)
@@ -370,7 +348,7 @@ class MessageParser {
       if (message.get(key).get == null || message.get(key).get == "None")
         throw new Exception("Elements list do not exist in message/container definition json")
 
-      if (message.get(key).get.isInstanceOf[messageList]) {
+      if (message.get(key).get.isInstanceOf[List[_]]) { //List[Map[String, Any]]]
 
         val eList = message.get(key).get.asInstanceOf[List[Map[String, Any]]]
         var count: Int = 0
@@ -404,7 +382,7 @@ class MessageParser {
               else if (eMap.contains("messages"))
                 key = "messages"
 
-              if (eMap.get(key).get.isInstanceOf[keyMap]) {
+              if (eMap.get(key).get.isInstanceOf[Map[_, _]]) {
                 val containerMap: Map[String, Any] = eMap.get(key).get.asInstanceOf[Map[String, Any]]
                 val map: scala.collection.mutable.Map[String, Any] = scala.collection.mutable.Map[String, Any]()
                 containerMap.foreach(kv => { map(kv._1) = kv._2 })
@@ -450,7 +428,7 @@ class MessageParser {
     try {
       for (eKey: String <- eMap.keys) {
         val fldMap = eMap.get(eKey).get
-        if (fldMap != null && fldMap != "None" && fldMap.isInstanceOf[keyMap]) {
+        if (fldMap != null && fldMap != "None" && fldMap.isInstanceOf[Map[_, _]]) {
           val fldMap1 = fldMap.asInstanceOf[scala.collection.immutable.Map[String, Any]]
           val mapElement: scala.collection.mutable.Map[String, Any] = scala.collection.mutable.Map[String, Any]()
           fldMap1.foreach(kv => { mapElement(kv._1.toLowerCase()) = kv._2 })
@@ -505,6 +483,10 @@ class MessageParser {
         if (fieldtype.isInstanceOf[string]) {
           val fieldstr = fieldtype.toString.split("\\.")
           if (fieldstr != null) {
+            
+            //FIXE ME: Add Field Type Validation....
+            
+            
             if (fieldstr.size == 1) {
               namespace = "system"
               ttype = namespace + "." + fieldtype.asInstanceOf[String].toLowerCase()
@@ -523,7 +505,7 @@ class MessageParser {
           }
           fld = new Element(namespace, name, ttype, collectionType, key, fldTypeVer, ordinal, null, null, null)
 
-        } else if (fieldtype.isInstanceOf[FieldMap]) {
+        } else if (fieldtype.isInstanceOf[Map[_, _]]) {
           //  log.info("Child Container ========== Start ==============  ")
 
           val childFld = fieldtype.asInstanceOf[Map[String, Any]]
@@ -603,7 +585,7 @@ class MessageParser {
     val primaryKeysList = null
     val physicalName: String = pkg + "." + Name
     val cur_time = System.currentTimeMillis
-    val msg = new Message(mtype, NameSpace, Name, physicalName, msgVersion, "Description", Fixed, persistMsg, lbuffer.toList, tdataexists, tdata, null, pkg.trim(), null, null, null, partitionKeysList, primaryKeysList, cur_time, msgLevel, null, null)
+    val msg = new Message(mtype, NameSpace, Name, physicalName, msgVersion, "Description", Fixed, persistMsg, lbuffer.toList, tdataexists, tdata, null, pkg.trim(), null, null, null, partitionKeysList, primaryKeysList, cur_time, msgLevel, null, null, null)
 
     /*log.info("child message level " + msg.MsgLvel)
     log.info("child message name " + msg.Name)
@@ -634,7 +616,7 @@ class MessageParser {
     var karr: Array[String] = null
     type tMap = Map[String, Any]
 
-    if (message.get(tkey).get.isInstanceOf[tMap]) {
+    if (message.get(tkey).get.isInstanceOf[Map[_, _]]) {
       val tmap: Map[String, Any] = message.get(tkey).get.asInstanceOf[Map[String, Any]]
       for (key <- tmap.keys) {
         if (key.equals("input"))
@@ -654,9 +636,88 @@ class MessageParser {
   private def gettData(tmap: Map[String, Any], key: String): Array[String] = {
     type tList = List[String]
     var tlist: List[String] = null
-    if (tmap.contains(key) && tmap.get(key).get.isInstanceOf[tList])
+    if (tmap.contains(key) && tmap.get(key).get.isInstanceOf[List[_]])
       tlist = tmap.get(key).get.asInstanceOf[List[String]]
     tlist.toArray
+  }
+
+  /*
+   * parse timepartitionInfo
+   */
+  private def parseTimePartitionInfo(key: String, message: scala.collection.mutable.Map[String, Any], fldList: Set[String]): TimePartition = {
+    var timePartitionKey: String = null
+    var timePartitionKeyFormat: String = null
+    var timePartitionType: String = null
+    type sMap = Map[String, String]
+    try {
+
+      if (message.getOrElse(key, null) != null && message.get(key).get.isInstanceOf[Map[_, _]]) {
+        val timePartitionMap: sMap = message.get(key).get.asInstanceOf[sMap]
+
+        if (timePartitionMap.contains("Key") && (timePartitionMap.get("Key").get.isInstanceOf[String])) {
+          timePartitionKey = timePartitionMap.get("Key").get.asInstanceOf[String].toLowerCase()
+
+          if (!fldList.contains(timePartitionKey))
+            throw new Exception("Time Partition Key " + timePartitionKey + " should be defined as one of the fields in the message definition");
+
+        } else throw new Exception("Time Partition Key should be defined in the message definition");
+
+        if (timePartitionMap.contains("Format") && (timePartitionMap.get("Format").get.isInstanceOf[String])) {
+          timePartitionKeyFormat = timePartitionMap.get("Format").get.asInstanceOf[String] //.toLowerCase()
+
+          if (!validateTimePartitionFormat(timePartitionKeyFormat))
+            throw new Exception("Time Parition format given in message definition " + timePartitionKeyFormat + " is not a valid format");
+        } else throw new Exception("Time Partition Format should be defined in the message definition");
+
+        if (timePartitionMap.contains("Type") && (timePartitionMap.get("Type").get.isInstanceOf[String])) {
+          timePartitionType = timePartitionMap.get("Type").get.asInstanceOf[String].toLowerCase()
+
+          if (!containsIgnoreCase(timePartitionTypeList, timePartitionType))
+            throw new Exception("Time Parition Type " + timePartitionType + " defined in the message definition is not a valid Type");
+        } else throw new Exception("Time Partition Type should be defined in the message definition");
+
+      }
+    } catch {
+      case e: Exception => {
+        log.debug("", e)
+        throw e
+      }
+    }
+
+    new TimePartition(timePartitionKey, timePartitionKeyFormat, timePartitionType);
+
+  }
+  //Validate the Time Partition format 
+  private def validateTimePartitionFormat(format: String): Boolean = {
+
+    if (containsIgnoreCase(timePartitionFormatList, format))
+      return true;
+    else return validateDateTimeFormat(format)
+
+    return false
+  }
+
+  //Validate if the date time format is valid SimpleDateFormat
+
+  private def validateDateTimeFormat(format: String): Boolean = {
+    try {
+      new SimpleDateFormat(format);
+      return true
+    } catch {
+      case e: Exception => {
+        log.debug("", e)
+        return false
+      }
+    }
+    return false
+  }
+  def containsIgnoreCase(list: List[String], s: String): Boolean = {
+
+    list.foreach(l => {
+      if (l.equalsIgnoreCase(s))
+        return true;
+    })
+    return false;
   }
 
 }

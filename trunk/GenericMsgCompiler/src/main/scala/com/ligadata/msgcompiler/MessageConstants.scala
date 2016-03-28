@@ -11,6 +11,8 @@ class MessageConstants {
   val newline: String = "\n";
   val pad1: String = "\t";
   val pad2: String = "\t\t";
+  val pad3: String = "\t\t\t";
+  val pad4: String = "\t\t\t\t";
   val closeBrace: String = "}";
   val True: String = "true";
   val False: String = "false";
@@ -18,40 +20,55 @@ class MessageConstants {
 
   val messageStr: String = "message";
   val containerStr: String = "container";
-  val baseMsgObj: String = "BaseMsgObj";
-  val baseMsg: String = "BaseMsg";
-  val baseContainerObj: String = "BaseContainerObj";
-  val baseContainer: String = "BaseContainer";
+  val baseMsgObj: String = "MessageFactoryInterface";
+  val baseMsg: String = "MessageInterface(factory)";
+  val baseContainerObj: String = "ContainerFactoryInterface";
+  val baseContainer: String = "ContainerInterface(factory)";
   val msgObjectStr: String = "object %s extends RDDObject[%s] with %s { %s";
-  val classStr: String = "class %s(var transactionId: Long, other: %s) extends %s { %s";
+  val classStr: String = "class %s(factory: %s, other: %s) extends %s { %s";
 
-  val template: String = "%s type T = %s ;%s";
+  val template: String = "%stype T = %s ;%s";
 
-  val fullName: String = "%s override def FullName: String = \"%s.%s\"; %s"; //com.ligadata.samples.messages.CustAlertHistory"
-  val namespace: String = "%s override def NameSpace: String = \"%s\"; %s"; //com.ligadata.samples.messages"
-  val name: String = "%s override def Name: String = \"%s\"; %s"; //CustAlertHistory"
-  val version: String = "%s override def Version: String = \"%s\"; %s"; //000000.000001.000000"
-  val createNewContainer = "%s override def CreateNewContainer: %s = new %s(); %s"; //BaseContainer = new CustAlertHistory()
-  val createNewMessage = "%s override def CreateNewMessage: %s = new %s(); %s"; //BaseContainer = new CustAlertHistory()
-  val isFixed: String = "%s override def IsFixed: Boolean = %s; %s"; //true;
-  val isKV: String = "%s override def IsKv: Boolean = %s; %s"; //false;
-  val canPersist: String = "%s override def CanPersist: Boolean = %s; %s"; //true;
-  val getFullName: String = "%s override def getFullName = FullName; %s";
-  val toJavaRDD: String = "%s override def toJavaRDDObject: JavaRDDObject[T] = JavaRDDObject.fromRDDObject[T](this); %s";
+  val fullName: String = "%soverride def getFullTypeName: String = \"%s.%s\"; %s"; //com.ligadata.samples.messages.CustAlertHistory"
+  val namespace: String = "%soverride def getTypeNameSpace: String = \"%s\"; %s"; //com.ligadata.samples.messages"
+  val name: String = "%soverride def getTypeName: String = \"%s\"; %s"; //CustAlertHistory"
+  val version: String = "%soverride def getTypeVersion: String = \"%s\"; %s"; //000000.000001.000000"
+  val createInstance = "%soverride def createInstance: %s = new %s(%s); %s"; //BaseContainer = new CustAlertHistory()
+  val containerInstanceType = "ContainerInterface";
+  val messageInstanceType = "MessageInterface";
+  val getContainerTypeMsg = "%soverride def getContainerType: ContainerFactoryInterface.ContainerType = ContainerFactoryInterface.ContainerType.MESSAGE";
+  val getContainerTypeContainer = "%soverride def getContainerType: ContainerFactoryInterface.ContainerType = ContainerFactoryInterface.ContainerType.CONTAINER";
 
-  val paritionKeyData: String = "override def PartitionKeyData: Array[String] = %s ";
-  val primaryKeyData: String = "override def PrimaryKeyData: Array[String] = %s ";
-  val partitionKeys: String = "%s val partitionKeys : Array[String] = Array%s; %s";
-  val primaryKeys: String = "%s val primaryKeys : Array[String] = Array%s; %s";
-  val partitionKeyVar: String = "%s var partitionKeysData: scala.collection.mutable.ArrayBuffer[String] = scala.collection.mutable.ArrayBuffer[String]();%s"
-  val primaryKeyVar: String = "%s var primaryKeysData: scala.collection.mutable.ArrayBuffer[String] = scala.collection.mutable.ArrayBuffer[String]();%s"
+  val createNewContainer = "%soverride def CreateNewContainer: %s = new %s(); %s"; //BaseContainer = new CustAlertHistory()
+  val createNewMessage = "%soverride def CreateNewMessage: %s = new %s(); %s"; //BaseContainer = new CustAlertHistory()
+  val isFixed: String = "%soverride def isFixed: Boolean = %s; %s"; //true;
+  val isKV: String = "%soverride def IsKv: Boolean = %s; %s"; //false;
+  val canPersist: String = "%soverride def CanPersist: Boolean = %s; %s"; //true;
+  val getFullName: String = "%soverride def getFullName = getFullTypeName; %s";
+  val toJavaRDD: String = "%soverride def toJavaRDDObject: JavaRDDObject[T] = JavaRDDObject.fromRDDObject[T](this); %s";
 
-  val rddFactoryClass: String = "public final class %sFactory { %s";
-  val rddObj: String = "public static JavaRDDObject<%s> rddObject = %s$.MODULE$.toJavaRDDObject(); %s";
-  val rddBaseContainerObj = "public static BaseContainerObj baseObj = (BaseContainerObj) %s$.MODULE$; %s";
-  val rddBaseMsgObj = "public static BaseMsgObj baseObj = (BaseMsgObj) %s$.MODULE$; %s";
-  val fieldsForMappedVar = "var fields: scala.collection.mutable.Map[String, (Int, Any)] = new scala.collection.mutable.HashMap[String, (Int, Any)];"
+  val paritionKeyData: String = "%soverride def getPartitionKey: Array[String] = %s ";
+  val primaryKeyData: String = "%soverride def getPrimaryKey: Array[String] = %s ";
+  val getPartitionKeyNames: String = "Array(%s); %s";
+  val getPrimaryKeyNames: String = "Array(%s); %s";
+  val partitionKeyVar: String = "%svar partitionKeys: scala.collection.mutable.ArrayBuffer[String] = scala.collection.mutable.ArrayBuffer[String]();%s"
+  val primaryKeyVar: String = "%svar primaryKeys: scala.collection.mutable.ArrayBuffer[String] = scala.collection.mutable.ArrayBuffer[String]();%s"
 
+  val rddFactoryClass: String = "%spublic final class %sFactory { %s";
+  val rddObj: String = "%spublic static JavaRDDObject<%s> rddObject = %s$.MODULE$.toJavaRDDObject(); %s";
+  val rddBaseContainerObj = "%spublic static BaseContainerObj baseObj = (BaseContainerObj) %s$.MODULE$; %s";
+  val rddBaseMsgObj = "%spublic static BaseMsgObj baseObj = (BaseMsgObj) %s$.MODULE$; %s";
+  val fieldsForMappedVar = "%svar fields: scala.collection.mutable.Map[String, (Int, Any)] = new scala.collection.mutable.HashMap[String, (Int, Any)];"
+
+  def catchStmt = {
+    """catch {
+          case e: Exception => {
+          log.debug("", e)
+          throw e
+        }
+      };
+      """
+  }
   def rddObjImportStmts() = {
     """
   import com.ligadata.KamanjaBase.JavaRDDObject;
@@ -65,57 +82,216 @@ class MessageConstants {
 import org.json4s.jackson.JsonMethods._
 import org.json4s.DefaultFormats
 import org.json4s.Formats
-import com.ligadata.KamanjaBase.{ InputData, DelimitedData, JsonData, XmlData, KvData }
+import com.ligadata.KamanjaBase.{ AttributeValue, ContainerFactoryInterface, ContainerInterface, MessageFactoryInterface, MessageInterface, TimePartitionInfo, ContainerOrConceptFactory, RDDObject, JavaRDDObject, ContainerOrConcept}
 import com.ligadata.BaseTypes._
-import com.ligadata.KamanjaBase.SerializeDeserialize
-import java.io.{ DataInputStream, DataOutputStream, ByteArrayOutputStream }
 import com.ligadata.Exceptions.StackTrace;
 import org.apache.logging.log4j.{ Logger, LogManager }
 import java.util.Date
-import com.ligadata.KamanjaBase.{ BaseMsg, BaseMsgObj, TransformMessage, BaseContainer, BaseContainerObj, MdBaseResolveInfo, MessageContainerBase, RDDObject, RDD, JavaRDDObject }
     
-    """
-  }
-
-  def msgObjectBuildStmts = {
-    """
-  def build = new T
-  def build(from: T) = new T(from)
-
-    """
-  }
-
-  def getByNameFuncForMapped = {
-    """
-  override def get(key: String): Any = {
-    fields.get(key) match {
-      case Some(f) => {
-        return f._2;
-      }
-      case None => {
-        return null;
-      }
-    }
-  }
-"""
-  }
-
-  def getOrElseFuncForMapped = {
-    """
-  override def getOrElse(key: String, default: Any): Any = {
-    fields.getOrElse(key, (-1, default))._2;
-  }  
-     
  """
   }
 
-  def setByNameFuncForMappedMsgs() = {
-    """
-  override def set(key: String, value: Any): Unit = {
-    if (key == null) throw new Exception(" key should not be null in set method")
-    fields.put(key, (-1, value))
-  }
+  def msgObjectBuildStmts = {
 """
+    def build = new T(this)
+    def build(from: T) = new T(from)
+"""
+  }
+  /*
+   * Get By Key method for Mapped Messages
+   */
+
+  private def getByNameFuncForMapped = {
+    """
+    override def get(key: String): AttributeValue = { // Return (value, type)
+      try {
+        return valuesMap.get(key.toLowerCase())
+      } catch {
+        case e: Exception => {
+          log.debug("", e)
+          throw e
+        }
+      }
+      return null;
+    }
+"""
+  }
+
+  /*
+   * GetOrElse method by Key for mapped messages
+   */
+  private def getOrElseFuncForMapped = {
+"""
+    override def getOrElse(key: String, defaultVal: Any): AttributeValue = { // Return (value, type)
+      var attributeValue: AttributeValue = new AttributeValue();
+      try {
+        val value = valuesMap.get(key.toLowerCase())
+        if (value == null) {
+          attributeValue.setValue(defaultVal);
+          attributeValue.setValueType("Any");
+          return attributeValue;
+          } else {
+          return value;
+        }
+      } catch {
+        case e: Exception => {
+          log.debug("", e)
+          throw e
+        }
+      }
+      return null;
+    }     
+ """
+  }
+
+  /*
+   * Get Attribute Names method for Mapped messages
+   */
+  private def getAttibuteNamesMapped = {
+    """
+    override def getAttributeNames(): Array[String] = {
+      var attributeNames: scala.collection.mutable.ArrayBuffer[String] = scala.collection.mutable.ArrayBuffer[String]();
+      try {
+        val iter = valuesMap.entrySet().iterator();
+        while (iter.hasNext()) {
+          val attributeName = iter.next().getKey;
+          if (attributeName != null && attributeName.trim() != "")
+            attributeNames += attributeName;
+        }
+      } catch {
+        case e: Exception => {
+          log.debug("", e)
+          throw e
+        }
+      }
+      return attributeNames.toArray;
+    }  
+"""
+  }
+
+  /*
+   * Get By Index method for Mapped Messages
+   */
+  private def getByIndexMapped = {
+    """
+    override def get(index: Int): AttributeValue = { // Return (value, type)
+      throw new Exception("Get By Index is not supported in mapped messages");
+    }
+
+    override def getOrElse(index: Int, defaultVal: Any): AttributeValue = { // Return (value,  type)
+      throw new Exception("Get By Index is not supported in mapped messages");
+    }  
+    """
+  }
+  /*
+   * Get all AttributeVlaues method for Mapped Messages
+   */
+
+  private def getAllAttributes = {
+    """
+    override def getAllAttributeValues(): java.util.HashMap[String, AttributeValue] = { // Has (name, value, type))
+      return valuesMap;
+    }  
+    """
+  }
+
+  /*
+   * Get Attribute Name and Value Iterator Method
+   */
+  private def getAttributeNameAndValueIteratorMapped = {
+    """
+     override def getAttributeNameAndValueIterator(): java.util.Iterator[java.util.Map.Entry[String, AttributeValue]] = {
+       valuesMap.entrySet().iterator();
+     }  
+   """
+  }
+
+  /*
+   * SetByKey method for Mapped Messages
+   */
+
+  private def setByNameFuncForMappedMsgs() = {
+    """
+    override def set(key: String, value: Any) = {
+      var attributeValue: AttributeValue = new AttributeValue();
+      try {
+        val keyName: String = key.toLowerCase();
+        val valType = keyTypes.getOrElse(keyName, "Any")
+        attributeValue.setValue(value)
+        attributeValue.setValueType(valType)
+        valuesMap.put(keyName, attributeValue)
+      } catch {
+        case e: Exception => {
+          log.debug("", e)
+          throw e
+        }
+      }
+    }
+"""
+  }
+
+  /*
+   * Set Value and ValueType By Key method for Mapped msgs
+   */
+  private def setValueAndValTypByKeyMapped = {
+    """
+    override def set(key: String, value: Any, valTyp: String) = {
+      var attributeValue: AttributeValue = new AttributeValue();
+      try {
+        attributeValue.setValue(value)
+        attributeValue.setValueType(valTyp)
+        valuesMap.put(key.toLowerCase(), attributeValue)
+      } catch {
+        case e: Exception => {
+          log.debug("", e)
+          throw e
+        }
+      }
+    }  
+    """
+  }
+
+  /*
+   * Set By Index method for mapped messages
+   */
+  private def setByIndex = {
+    """
+    override def set(index: Int, value: Any) = {
+      throw new Exception("Set By Index is not supported in mapped messages");
+    } 
+  """
+  }
+
+  def valuesMapMapped = {
+    """
+    private var valuesMap = new java.util.HashMap[String, AttributeValue]()
+ """
+  }
+
+  /*
+   * All Get Set methods for mapped messages
+   */
+
+  def getSetMethods: String = {
+    var getSetMapped = new StringBuilder(8 * 1024)
+    try {
+      getSetMapped.append(valuesMapMapped);
+      getSetMapped.append(getByNameFuncForMapped)
+      getSetMapped.append(getOrElseFuncForMapped)
+      getSetMapped.append(getAttibuteNamesMapped)
+      getSetMapped.append(getByIndexMapped)
+      getSetMapped.append(getAllAttributes)
+      getSetMapped.append(getAttributeNameAndValueIteratorMapped)
+      getSetMapped.append(setByNameFuncForMappedMsgs)
+      getSetMapped.append(setValueAndValTypByKeyMapped)
+      getSetMapped.append(setByIndex)
+    } catch {
+      case e: Exception => {
+        log.debug("", e)
+        throw e
+      }
+    }
+    getSetMapped.toString()
   }
 
   /*

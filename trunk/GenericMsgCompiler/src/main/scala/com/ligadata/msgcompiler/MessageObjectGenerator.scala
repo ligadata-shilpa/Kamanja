@@ -31,13 +31,13 @@ class MessageObjectGenerator {
     var msgObjeGenerator = new StringBuilder(8 * 1024)
     try {
 
-     // log.info("========== Message object Start==============")
+      // log.info("========== Message object Start==============")
       msgObjeGenerator = msgObjeGenerator.append(msgObject(message))
       msgObjeGenerator = msgObjeGenerator.append(msgObjVarsGeneration(message))
       msgObjeGenerator = msgObjeGenerator.append(msgConstants.msgObjectBuildStmts)
       msgObjeGenerator = msgObjeGenerator.append(keysCodeGeneration(message))
-      msgObjeGenerator = msgObjeGenerator.append(msgConstants.newline + msgConstants.closeBrace)
-     // log.info("========== Message object End==============")
+      msgObjeGenerator = msgObjeGenerator.append(msgConstants.closeBrace)
+      // log.info("========== Message object End==============")
 
     } catch {
       case e: Exception => {
@@ -65,8 +65,8 @@ class MessageObjectGenerator {
     else if (msgType.equalsIgnoreCase(msgConstants.containerStr))
       baseMsgType = msgConstants.baseContainerObj
 
-    log.info("1 ==============" + baseMsgType)
-    log.info("2 ==============" + msgConstants.msgObjectStr.format(message.Name, message.Name, baseMsgType, msgConstants.newline))
+    log.info("MsgType: " + baseMsgType)
+    log.info("ObjectStr: " + msgConstants.msgObjectStr.format(message.Name, message.Name, baseMsgType, msgConstants.newline))
 
     return msgConstants.msgObjectStr.format(message.Name, message.Name, baseMsgType, msgConstants.newline)
   }
@@ -74,24 +74,26 @@ class MessageObjectGenerator {
   private def msgObjVarsGeneration(message: Message): String = {
     var msgObjeGenerator = new StringBuilder(8 * 1024)
     try {
-      var createMsgType: String = ""
+      var interfaceType: String = "";
+      var getContainerType: String = "";
       val msgType = message.MsgType
       if (msgType == null || msgType.trim() == "")
         throw new Exception("Message Definition root element should be either Message or Container")
 
-      if (msgType.equalsIgnoreCase(msgConstants.messageStr))
-        createMsgType = msgConstants.createNewMessage
-      else if (msgType.equalsIgnoreCase(msgConstants.containerStr))
-        createMsgType = msgConstants.createNewContainer
+      if (msgType.equalsIgnoreCase(msgConstants.messageStr)) {
+        interfaceType = msgConstants.messageInstanceType
+        getContainerType = msgConstants.getContainerTypeMsg
+      } else if (msgType.equalsIgnoreCase(msgConstants.containerStr)) {
+        interfaceType = msgConstants.containerInstanceType
+        getContainerType = msgConstants.getContainerTypeContainer
+      }
 
       var isFixed: String = ""
       var isKV: String = ""
       if (message.Fixed.equalsIgnoreCase(msgConstants.True)) {
         isFixed = msgConstants.True
-        isKV = msgConstants.False
       } else if (message.Fixed.equalsIgnoreCase(msgConstants.False)) {
         isFixed = msgConstants.False
-        isKV = msgConstants.True
       }
 
       msgObjeGenerator.append(msgConstants.template.format(msgConstants.pad1, message.Name, msgConstants.newline))
@@ -99,10 +101,9 @@ class MessageObjectGenerator {
       msgObjeGenerator.append(msgConstants.namespace.format(msgConstants.pad1, message.NameSpace, msgConstants.newline))
       msgObjeGenerator.append(msgConstants.name.format(msgConstants.pad1, message.Name, msgConstants.newline))
       msgObjeGenerator.append(msgConstants.version.format(msgConstants.pad1, message.Version, msgConstants.newline))
-      msgObjeGenerator.append(createMsgType.format(msgConstants.pad1, message.Name, message.Name, msgConstants.newline))
+      msgObjeGenerator.append(msgConstants.createInstance.format(msgConstants.pad1, message.Name, message.Name, message.Name, msgConstants.newline))
       msgObjeGenerator.append(msgConstants.isFixed.format(msgConstants.pad1, isFixed, msgConstants.newline))
-      msgObjeGenerator.append(msgConstants.isKV.format(msgConstants.pad1, isKV, msgConstants.newline))
-      msgObjeGenerator.append(msgConstants.canPersist.format(msgConstants.pad1, message.Persist, msgConstants.newline))
+      msgObjeGenerator.append(getContainerType.format(msgConstants.pad1) + msgConstants.newline)
       msgObjeGenerator.append(msgConstants.getFullName.format(msgConstants.pad1, msgConstants.newline))
       msgObjeGenerator.append(msgConstants.toJavaRDD.format(msgConstants.pad1, msgConstants.newline))
 
@@ -121,39 +122,69 @@ class MessageObjectGenerator {
    */
 
   private def keysCodeGeneration(message: Message) = {
-    """
-    """ + getPartitionKeys(message) + """
-      """ + getPrimaryKeys(message) + """
    
-  //override def NeedToTransformData: Boolean = false // Filter & Rearrange input attributes if needed
-  //override def TransformDataAttributes: TransformMessage = null
-  override def PartitionKeyData(inputdata: InputData): Array[String] = Array[String]()
-  override def PrimaryKeyData(inputdata: InputData): Array[String] = Array[String]()
-  override def getTimePartitionInfo: (String, String, String) = (null, null, null) // FieldName, Format & Time Partition Types(Daily/Monthly/Yearly)
-  override def TimePartitionData(inputdata: InputData): Long = 0
+"""   """ + getPartitionKeyNames(message) + """
+  """ + getPrimaryKeyNames(message) + """   
+  """ + getTimeParitionInfo(message) + """   
+    override def hasPrimaryKey(): Boolean = {
+      val pKeys = getPrimaryKeyNames();
+      return (pKeys != null && pKeys.length > 0);
+    }
+
+    override def hasPartitionKey(): Boolean = {
+      val pKeys = getPartitionKeyNames();
+      return (pKeys != null && pKeys.length > 0);
+    }
+
+    override def hasTimePartitionInfo(): Boolean = {
+      val tmInfo = getTimePartitionInfo();
+      return (tmInfo != null && tmInfo.getTimePartitionType != TimePartitionInfo.TimePartitionType.NONE);
+    }
   
-  override def hasPrimaryKey(): Boolean = {
-	if(primaryKeys == null) return false;
-	(primaryKeys.size > 0);
-  }
-
-  override def hasPartitionKey(): Boolean = {
-	 if(partitionKeys == null) return false;
-    (partitionKeys.size > 0);
-  }
-
-  override def hasTimeParitionInfo(): Boolean = {
-    val tmPartInfo = getTimePartitionInfo
-    (tmPartInfo != null && tmPartInfo._1 != null && tmPartInfo._2 != null && tmPartInfo._3 != null);
-  }
-  """
+    override def getSchema: String = " """ + message.Schema + """";  
+"""
   }
 
   /*
-   * gete the primary keys and parition keys
+   * Get TimePartitionInfo -- set the field name, format and type in TimePartitionInfo
    */
 
-  private def getPartitionKeys(message: Message): String = {
+  private def getTimeParitionInfo(message: Message): String = {
+    var timePartType: String = "";
+
+    if (message.timePartition != null) {
+      if (message.timePartition.DType == null || message.timePartition.DType.trim() == "")
+        timePartType = "TimePartitionInfo.TimePartitionType.NONE";
+      if (message.timePartition.DType.equalsIgnoreCase("yearly"))
+        timePartType = "TimePartitionInfo.TimePartitionType.YEARLY";
+      if (message.timePartition.DType.equalsIgnoreCase("monthly"))
+        timePartType = "TimePartitionInfo.TimePartitionType.MONTHLY";
+      if (message.timePartition.DType.equalsIgnoreCase("daily"))
+        timePartType = "TimePartitionInfo.TimePartitionType.DAILY";
+
+      return """
+  def getTimePartitionInfo: TimePartitionInfo = {
+    var timePartitionInfo: TimePartitionInfo = new TimePartitionInfo();
+    timePartitionInfo.setFieldName("""" + message.timePartition.Key.toLowerCase() + """");
+    timePartitionInfo.setFormat("""" + message.timePartition.Format.toLowerCase() + """");
+    timePartitionInfo.setTimePartitionType("""" + timePartType + """");
+    return timePartitionInfo
+  }
+
+    """
+    } else {
+      return """
+  override def getTimePartitionInfo: TimePartitionInfo = { return null;}  // FieldName, Format & Time Partition Types(Daily/Monthly/Yearly)
+  
+    """
+    }
+  }
+
+  /*
+   * get the primary keys and parition keys
+   */
+
+  private def getPartitionKeyNames(message: Message): String = {
 
     var partitionInfo: String = ""
     var paritionKeys = new StringBuilder(8 * 1024)
@@ -161,18 +192,18 @@ class MessageObjectGenerator {
       message.PartitionKeys.foreach(key => {
         paritionKeys.append("\"" + key + "\", ")
       })
-      partitionInfo = msgConstants.partitionKeys.format(msgConstants.pad1, "(" + paritionKeys.toString.substring(0, paritionKeys.toString.length() - 2) + ")", msgConstants.newline)
+      partitionInfo = msgConstants.getPartitionKeyNames.format(paritionKeys.toString.substring(0, paritionKeys.toString.length() - 2), msgConstants.newline)
 
-    } else partitionInfo = msgConstants.partitionKeys.format(msgConstants.pad1, "[String]()", msgConstants.newline)
+    } else partitionInfo = msgConstants.getPartitionKeyNames.format(msgConstants.pad2, "[String]()", msgConstants.newline)
 
-    return partitionInfo
+  """override def getPartitionKeyNames: Array[String] = """ + partitionInfo 
   }
 
   /*
    * gete the primary keys and parition keys
    */
 
-  private def getPrimaryKeys(message: Message): String = {
+  private def getPrimaryKeyNames(message: Message): String = {
 
     var primaryInfo: String = ""
     var primaryKeys = new StringBuilder(8 * 1024)
@@ -180,11 +211,11 @@ class MessageObjectGenerator {
       message.PrimaryKeys.foreach(key => {
         primaryKeys.append("\"" + key + "\", ")
       })
-      primaryInfo = msgConstants.primaryKeys.format(msgConstants.pad1, "(" + primaryKeys.toString.substring(0, primaryKeys.toString.length() - 2) + ")", msgConstants.newline)
+      primaryInfo = msgConstants.getPrimaryKeyNames.format(primaryKeys.toString.substring(0, primaryKeys.toString.length()-2), msgConstants.newline)
 
-    } else primaryInfo = msgConstants.primaryKeys.format(msgConstants.pad1, "[String]()", msgConstants.newline)
+    } else primaryInfo = msgConstants.getPrimaryKeyNames.format("[String]()", msgConstants.newline)
 
-    return primaryInfo
+  """override def getPrimaryKeyNames: Array[String] = """ + primaryInfo 
   }
 
 }

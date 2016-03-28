@@ -23,41 +23,36 @@ class MessageFieldTypesHandler {
     var argsList: List[(String, String, String, String, Boolean, String)] = List[(String, String, String, String, Boolean, String)]()
     var jarset: Set[String] = Set[String]();
     message.Elements.foreach(field => {
-      //   log.info("fields name " + field.Name)
-      //  log.info("fields type " + field.Ttype)
-
       val typ = MdMgr.GetMdMgr.Type(field.Ttype, -1, true) // message.Version.toLong
 
       if (typ.getOrElse("None").equals("None"))
-        throw new Exception("Type not found in metadata for Name: " + field.Name + " , NameSpace: " + field.NameSpace + " , Version: " + message.Version + " , Type : " + field.Ttype)
+        throw new Exception("Type not found in metadata for " + field.Name + " given type is " + field.Ttype)
 
-      // to do - check null pointer if typ is not avaialble.....
+      // to do - check null pointer if type is not avaialble.....
       field.FldMetaataType = typ.get
 
-      /*   log.info("******************TYPES FROM METADATA START******************************")
-      log.info("type " + typ.get.tType.toString())
-      log.info("******************TYPES FROM METADATA START******************************")
-     
-      */
-    })
-
-    message.Elements.foreach(field => {
       val types = getMetadataTypesForMsgFields(field, mdMgr)
-
-      //get the fields args list for addding message in the metadata 
-      argsList = (field.NameSpace, field.Name, field.FldMetaataType.NameSpace, field.FldMetaataType.Name, false, null) :: argsList
+      field.FieldTypePhysicalName = types(0)
+      field.FieldTypeImplementationName = types(1)
 
       //get the fields jarset for adding msg in the metadata
       jarset = jarset ++ getDependencyJarSet(field.FldMetaataType)
 
-      field.FieldTypePhysicalName = types(0)
-      field.FieldTypeImplementationName = types(1)
+      //get the fields args list for addding message in the metadata 
+      argsList = (field.NameSpace, field.Name, field.FldMetaataType.NameSpace, field.FldMetaataType.Name, false, null) :: argsList
 
-      log.info("*************==================================== " + field.FieldTypeImplementationName);
+      log.info("******************TYPES FROM METADATA START******************************")
+      log.info("type " + typ.get.tType.toString())
+      log.info("fields name " + field.Name)
+      log.info("fields type " + field.Ttype)
+      log.info("******************TYPES FROM METADATA START******************************")
 
+    })
+
+    message.Elements.foreach(field => {
       /*
-       log.info("****************** TYPES FROM METADATA START  --- In Message******************************")
-       
+      log.info("*************==================================== " + field.FieldTypeImplementationName);      
+      log.info("****************** TYPES FROM METADATA START  --- In Message******************************")       
       log.info("=========mesage fld type " + field.Ttype)
       log.info("=========mesage fld metadata type " + field.FldMetaataType.tType.toString())
       log.info("=========mesage fld metadata tTypeType " + field.FldMetaataType.tTypeType.toString())
@@ -66,8 +61,7 @@ class MessageFieldTypesHandler {
       log.info("=========mesage fld 2 :  " + types(1))
       log.info("=========mesage fld  " + field.FieldTypePhysicalName)
       log.info("******************TYPES FROM METADATA End --- In Message ******************************")
-      * */
-
+* */
     })
 
     // set the field args list and jarset in message object to retrieve while adding mesage to metadata
@@ -76,6 +70,10 @@ class MessageFieldTypesHandler {
 
     return message
   }
+
+  /*
+   * Get the Dependecy Jar Set for each field
+   */
 
   private def getDependencyJarSet(fieldBaseType: BaseTypeDef): Set[String] = {
 
@@ -91,6 +89,10 @@ class MessageFieldTypesHandler {
     return jarset
 
   }
+
+  /*
+   * Get MetadataType based on the type of field
+   */
 
   private def getMetadataTypesForMsgFields(field: Element, mdMgr: MdMgr): Array[String] = {
 
