@@ -9087,3 +9087,5 @@ object Udfs extends LogTrait {
     if (args != null) args.toList.last else ""
   }
 }
+
+// $COVERAGE-ON$

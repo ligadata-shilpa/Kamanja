@@ -4,8 +4,6 @@ import Keys._
 
 shellPrompt := { state =>  "sbt (%s)> ".format(Project.extract(state).currentProject.id) }
 
-
-
 assemblyOption in assembly ~= { _.copy(prependShellScript = Some(defaultShellScript)) }
 
 assemblyJarName in assembly := { s"${name.value}-${version.value}" }
@@ -82,3 +80,5 @@ libraryDependencies += "com.google.code.gson" % "gson" % "2.3.1"
 coverageMinimum := 80
 
 coverageFailOnMinimum := false
+
+coverageExcludedPackages := "com.ligadata.Migrate.*"

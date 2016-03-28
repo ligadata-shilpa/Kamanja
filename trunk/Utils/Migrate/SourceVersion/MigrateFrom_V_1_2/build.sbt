@@ -21,3 +21,5 @@ EclipseKeys.relativizeLibs := false
 coverageMinimum := 80
 
 coverageFailOnMinimum := false
+
+coverageExcludedPackages := "com.ligadata.Migrate.MigrateFrom_V_1_2"

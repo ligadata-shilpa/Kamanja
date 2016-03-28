@@ -85,3 +85,4 @@ coverageMinimum := 80
 
 coverageFailOnMinimum := false
 
+coverageExcludedPackages := "com.ligadata.kamanja.CheckerComponent.*"

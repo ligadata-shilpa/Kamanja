@@ -17,3 +17,5 @@ libraryDependencies += "com.google.guava" % "guava" % "14.0.1"
 coverageMinimum := 80
 
 coverageFailOnMinimum := false
+
+coverageExcludedPackages := "com.ligadata.samples.messages.*;com.ligadata.samples.models.*"

@@ -22,3 +22,4 @@ coverageMinimum := 80
 
 coverageFailOnMinimum := false
 
+coverageExcludedPackages := "com.ligadata.Migrate.*"

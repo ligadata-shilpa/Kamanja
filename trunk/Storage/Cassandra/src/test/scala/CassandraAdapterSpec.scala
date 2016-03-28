@@ -42,7 +42,6 @@ import com.ligadata.Exceptions._
 
 case class Customer(name:String, address: String, homePhone: String)
 
-@Ignore
 class CassandraAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterAll with GivenWhenThen {
   var res : String = null;
   var statusCode: Int = -1;
@@ -409,30 +408,92 @@ class CassandraAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAft
 	adapter.getKeys(containerName,timeRanges,keyStringList,readKeyCallBack _)
       }
       
-      And("Test backup container")
-      ex2 = the [com.ligadata.Exceptions.StorageDMLException] thrownBy {
-      //noException should be thrownBy {
-	adapter.backupContainer(containerName)
+      var exists = adapter.isContainerExists(containerName)
+      assert(exists == true)
+
+      var srcContainerName = containerName
+      var destContainerName = containerName
+
+      And("Test copy container with src and dest are same ")
+      var ex3 = the [com.ligadata.Exceptions.StorageDDLException] thrownBy {
+	adapter.copyContainer(srcContainerName,destContainerName,false)
       }
       logger.info("", ex2)
 
-      And("Test restore container")
-      ex2 = the [com.ligadata.Exceptions.StorageDMLException] thrownBy {
-	//noException should be thrownBy {
-	adapter.restoreContainer(containerName)
+      srcContainerName = containerName
+      destContainerName = containerName + "_bak"
+
+      And("Test copy container")
+      noException should be thrownBy {
+	adapter.copyContainer(srcContainerName,destContainerName,true)
       }
       logger.info("", ex2)
+
+      exists = adapter.isContainerExists(destContainerName)
+      assert(exists == true)
+
+      And("Test copy container without force")
+      ex3 = the [com.ligadata.Exceptions.StorageDDLException] thrownBy {
+	adapter.copyContainer(srcContainerName,destContainerName,false)
+      }
+      logger.info("Exception => " + ex3.cause)
+
+      And("Test copy container with force")
+      noException should be thrownBy {
+	adapter.copyContainer(srcContainerName,destContainerName,true)
+      }
+
+      And("Test the existence of the source table")
+      var srcTableName = cassandraAdapter.getTableName(srcContainerName)
+      exists = adapter.isTableExists(srcTableName)
+      assert(exists == true)
+
+      And("Test the existence of the destination table")
+      var destTableName = cassandraAdapter.getTableName(destContainerName)
+      exists = adapter.isTableExists(destTableName)
+      assert(exists == true)
+
+      And("Copy source table to destination table using force option")
+      adapter.copyTable(srcTableName,destTableName,true)
+
+      And("get all tables")
+      var tbls = new Array[String](0)
+      noException should be thrownBy {
+	tbls = adapter.getAllTables
+      }
+      
+      And("drop all tables")
+      noException should be thrownBy {
+	adapter.dropTables(tbls)
+      }
+
+      And("Test the existence of the source table after dropTables")
+      exists = adapter.isTableExists(srcTableName)
+      assert(exists == false)
+
+      And("Test the existence of the destination table after dropTables")
+      exists = adapter.isTableExists(destTableName)
+      assert(exists == false)
 
       And("Test drop container again, cleanup")
       noException should be thrownBy {
 	var containers = new Array[String](0)
-	containers = containers :+ containerName
-	//adapter.DropContainer(containers)
+	containers = containers :+ srcContainerName
+	containers = containers :+ destContainerName
+	adapter.DropContainer(containers)
       }
 
+      And("Test the existence of the source container after DropContainer")
+      exists = adapter.isContainerExists(srcContainerName)
+      assert(exists == false)
+
+      And("Test the existence of the destination container after DropContainer")
+      exists = adapter.isContainerExists(destContainerName)
+      assert(exists == false)
+      
       And("Test drop keyspace")
       noException should be thrownBy {
-	//cassandraAdapter.DropKeySpace("unit_tests")
+	cassandraAdapter.DropKeySpace("unit_tests")
       }
 
       And("Shutdown cassandra session")
