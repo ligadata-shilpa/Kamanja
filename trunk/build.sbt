@@ -82,7 +82,7 @@ lazy val Exceptions = project.in(file("Exceptions"))
 lazy val KamanjaBase = project.in(file("KamanjaBase"))
   .configs(TestConfigs.all: _*)
   .settings(TestSettings.settings: _*)
-  .dependsOn(Metadata, Exceptions, KamanjaUtils, HeartBeat, KvBase, DataDelimiters)
+  .dependsOn(Metadata, Exceptions, KamanjaUtils, HeartBeat, KvBase, DataDelimiters, BaseTypes)
 
 lazy val DataDelimiters = project.in(file("DataDelimiters"))
   .configs(TestConfigs.all: _*)

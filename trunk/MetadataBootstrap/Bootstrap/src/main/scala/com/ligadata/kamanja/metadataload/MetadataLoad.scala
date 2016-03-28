@@ -56,6 +56,7 @@ object MetadataLoad {
 	val baseTypesVer : Long = 1000000 // Which is 00.01.000000
   val baseTypesUniqId : Long = 0
   val baseTypesElementId : Long = 0
+	val scalaVer = scala.util.Properties.versionNumberString.subSequence(0,4)
 	def BaseContainersInfo: Array[(String, String, String, List[(String, String, String, String, Boolean, String)])] = {
 		// nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)
 		return Array[(String, String, String, List[(String, String, String, String, Boolean, String)])](
@@ -65,6 +66,14 @@ object MetadataLoad {
 			(MdMgr.sysNS, "MessageContainerBase", "com.ligadata.KamanjaBase.MessageContainerBase", List()),
 			(MdMgr.sysNS, "Context", "com.ligadata.pmml.runtime.Context", List()))
 	}
+
+  def BaseMessagesInfo:  Array[(String, String, String, List[(String, String, String, String, Boolean, String)], Long, String)] = {
+    return Array[(String, String, String, List[(String, String, String, String, Boolean, String)], Long, String)](
+			(MdMgr.sysNS, "KamanjaStatusEvent", "com.ligadata.KamanjaBase.KamanjaStatusEvent", List(),1,"kamanjabase_" + scalaVer +"-1.0.jar"),
+      (MdMgr.sysNS, "KamanjaMessageEvent", "com.ligadata.KamanjaBase.KamanjaMessageEvent", List(),1,"kamanjabase_" + scalaVer +"-1.0.jar"),
+      (MdMgr.sysNS, "KamanjaModelEvent", "com.ligadata.KamanjaBase.KamanjaModelEvent", List(),1,"kamanjabase_" + scalaVer +"-1.0.jar"),
+		  (MdMgr.sysNS, "KamanjaExceptionEvent", "com.ligadata.KamanjaBase.KamanjaExceptionEvent", List(),1,"kamanjabase_" + scalaVer +"-1.0.jar"))
+}
 }
 
 class MetadataLoad (val mgr : MdMgr, val typesPath : String, val fcnPath : String, val attrPath : String, msgCtnPath : String) extends LogTrait {
@@ -76,6 +85,9 @@ class MetadataLoad (val mgr : MdMgr, val typesPath : String, val fcnPath : Strin
 
 		logger.debug("MetadataLoad...loading BaseContainers definitions")
 		InitBaseContainers
+	    
+    logger.debug("MetadataLoad...loading Metric Message definitions")
+    InitBaseMessages
 	    
 		logger.debug("MetadataLoad...loading Pmml types")
 		initTypesFor_com_ligadata_pmml_udfs_Udfs
@@ -97,6 +109,14 @@ class MetadataLoad (val mgr : MdMgr, val typesPath : String, val fcnPath : Strin
 		ScalaVersionDependentInit.initFactoryOfModelInstanceFactories(mgr)
 	}
 	
+  def  InitBaseMessages: Unit = {
+    val baseMessageInfo = MetadataLoad.BaseMessagesInfo
+    baseMessageInfo.foreach(bc => {
+      logger.debug("MetadataLoad...loading " + bc._2)
+      mgr.AddFixedMsg(bc._1, bc._2, bc._3, bc._4, bc._5, bc._6 )
+    })
+  }
+
 	// CMS messages + the dimensional data (treated as Containers)
 	def InitBaseContainers: Unit = {
 		val baseContainerInfo = MetadataLoad.BaseContainersInfo
