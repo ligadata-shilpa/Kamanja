@@ -34,18 +34,18 @@ import com.ligadata.AuditAdapterInfo.AuditRecord
 
 import java.util.Date
 
-case class TypeDef(MetadataType: String, NameSpace: String, Name: String, TypeTypeName: String, TypeNameSpace: String, TypeName: String, PhysicalName: String, var Version: String, JarName: String, DependencyJars: List[String], Implementation: String, OwnerId: String, Fixed: Option[Boolean], NumberOfDimensions: Option[Int], KeyTypeNameSpace: Option[String], KeyTypeName: Option[String], ValueTypeNameSpace: Option[String], ValueTypeName: Option[String], TupleDefinitions: Option[List[TypeDef]])
+case class TypeDef(MetadataType: String, NameSpace: String, Name: String, TypeTypeName: String, TypeNameSpace: String, TypeName: String, PhysicalName: String, var Version: String, JarName: String, DependencyJars: List[String], Implementation: String, OwnerId: String, UniqueId: Long, MdElementId: Long, Fixed: Option[Boolean], NumberOfDimensions: Option[Int], KeyTypeNameSpace: Option[String], KeyTypeName: Option[String], ValueTypeNameSpace: Option[String], ValueTypeName: Option[String], TupleDefinitions: Option[List[TypeDef]])
 
 case class TypeDefList(Types: List[TypeDef])
 
 case class Argument(ArgName: String, ArgTypeNameSpace: String, ArgTypeName: String)
 
-case class Function(NameSpace: String, Name: String, PhysicalName: String, ReturnTypeNameSpace: String, ReturnTypeName: String, Arguments: List[Argument], Features: List[String], Version: String, JarName: String, DependantJars: List[String], OwnerId: String)
+case class Function(NameSpace: String, Name: String, PhysicalName: String, ReturnTypeNameSpace: String, ReturnTypeName: String, Arguments: List[Argument], Features: List[String], Version: String, JarName: String, DependantJars: List[String], OwnerId: String, UniqueId: Long, MdElementId: Long)
 
 case class FunctionList(Functions: List[Function])
 
 //case class Concept(NameSpace: String,Name: String, TypeNameSpace: String, TypeName: String,Version: String,Description: String, Author: String, ActiveDate: String)
-case class Concept(NameSpace: String, Name: String, TypeNameSpace: String, TypeName: String, Version: String, OwnerId: String)
+case class Concept(NameSpace: String, Name: String, TypeNameSpace: String, TypeName: String, Version: String, OwnerId: String, UniqueId: Long, MdElementId: Long)
 
 case class ConceptList(Concepts: List[Concept])
 
@@ -53,7 +53,7 @@ case class Attr(NameSpace: String, Name: String, Version: Long, CollectionType: 
 
 case class DerivedConcept(FunctionDefinition: Function, Attributes: List[Attr])
 
-case class MessageStruct(NameSpace: String, Name: String, FullName: String, Version: Long, JarName: String, PhysicalName: String, DependencyJars: List[String], Attributes: List[Attr], OwnerId: String)
+case class MessageStruct(NameSpace: String, Name: String, FullName: String, Version: Long, JarName: String, PhysicalName: String, DependencyJars: List[String], Attributes: List[Attr], OwnerId: String, UniqueId: Long, MdElementId: Long)
 
 case class MessageDefinition(Message: MessageStruct)
 
@@ -68,6 +68,8 @@ case class ModelInfo(NameSpace: String
                      , Version: String
                      , PhysicalName: String
                      , OwnerId: String
+                     , UniqueId: Long
+                     , MdElementId: Long
                      , ModelRep: String
                      , ModelType: String
                      , InputMsgAndAttribsSets: List[List[InputMsgAndAttributes]] // Each set is List of MsgName & Full qualified MsgAttributes. And we have multiple sets
@@ -158,67 +160,67 @@ object JsonSerializer {
       typ.MetadataType match {
         case "ScalarTypeDef" => {
           typeDef = MdMgr.GetMdMgr.MakeScalar(typ.NameSpace, typ.Name, ObjType.fromString(typ.TypeName),
-            typ.PhysicalName, typ.OwnerId, typ.Version.toLong, typ.JarName,
+            typ.PhysicalName, typ.OwnerId, typ.UniqueId, typ.MdElementId, typ.Version.toLong, typ.JarName,
             typ.DependencyJars.toArray, typ.Implementation)
         }
         case "ArrayTypeDef" => {
           typeDef = MdMgr.GetMdMgr.MakeArray(typ.NameSpace, typ.Name, typ.TypeNameSpace,
-            typ.TypeName, typ.NumberOfDimensions.get, typ.OwnerId,
+            typ.TypeName, typ.NumberOfDimensions.get, typ.OwnerId, typ.UniqueId, typ.MdElementId,
             typ.Version.toLong)
         }
         case "ArrayBufTypeDef" => {
           typeDef = MdMgr.GetMdMgr.MakeArrayBuffer(typ.NameSpace, typ.Name, typ.TypeNameSpace,
-            typ.TypeName, typ.NumberOfDimensions.get, typ.OwnerId,
+            typ.TypeName, typ.NumberOfDimensions.get, typ.OwnerId, typ.UniqueId, typ.MdElementId,
             typ.Version.toLong)
         }
         case "ListTypeDef" => {
           typeDef = MdMgr.GetMdMgr.MakeList(typ.NameSpace, typ.Name, typ.TypeNameSpace,
-            typ.TypeName, typ.Version.toLong, typ.OwnerId)
+            typ.TypeName, typ.Version.toLong, typ.OwnerId, typ.UniqueId, typ.MdElementId)
         }
         case "QueueTypeDef" => {
           typeDef = MdMgr.GetMdMgr.MakeQueue(typ.NameSpace, typ.Name, typ.TypeNameSpace,
-            typ.TypeName, typ.Version.toLong, typ.OwnerId)
+            typ.TypeName, typ.Version.toLong, typ.OwnerId, typ.UniqueId, typ.MdElementId)
         }
         case "SetTypeDef" => {
           typeDef = MdMgr.GetMdMgr.MakeSet(typ.NameSpace, typ.Name, typ.TypeNameSpace,
-            typ.TypeName, typ.Version.toLong, typ.OwnerId)
+            typ.TypeName, typ.Version.toLong, typ.OwnerId, typ.UniqueId, typ.MdElementId)
         }
         case "ImmutableSetTypeDef" => {
           typeDef = MdMgr.GetMdMgr.MakeImmutableSet(typ.NameSpace, typ.Name, typ.TypeNameSpace,
-            typ.TypeName, typ.Version.toLong, typ.OwnerId)
+            typ.TypeName, typ.Version.toLong, typ.OwnerId, typ.UniqueId, typ.MdElementId)
         }
         case "TreeSetTypeDef" => {
           typeDef = MdMgr.GetMdMgr.MakeTreeSet(typ.NameSpace, typ.Name, typ.TypeNameSpace,
-            typ.TypeName, typ.Version.toLong, typ.OwnerId)
+            typ.TypeName, typ.Version.toLong, typ.OwnerId, typ.UniqueId, typ.MdElementId)
         }
         case "SortedSetTypeDef" => {
           typeDef = MdMgr.GetMdMgr.MakeSortedSet(typ.NameSpace, typ.Name, typ.TypeNameSpace,
-            typ.TypeName, typ.Version.toLong, typ.OwnerId)
+            typ.TypeName, typ.Version.toLong, typ.OwnerId, typ.UniqueId, typ.MdElementId)
         }
         case "MapTypeDef" => {
           val mapKeyType = (typ.KeyTypeNameSpace.get, typ.KeyTypeName.get)
           val mapValueType = (typ.ValueTypeNameSpace.get, typ.ValueTypeName.get)
-          typeDef = MdMgr.GetMdMgr.MakeMap(typ.NameSpace, typ.Name, mapKeyType, mapValueType, typ.Version.toLong, typ.OwnerId)
+          typeDef = MdMgr.GetMdMgr.MakeMap(typ.NameSpace, typ.Name, mapKeyType, mapValueType, typ.Version.toLong, typ.OwnerId, typ.UniqueId, typ.MdElementId)
         }
         case "ImmutableMapTypeDef" => {
           val mapKeyType = (typ.KeyTypeNameSpace.get, typ.KeyTypeName.get)
           val mapValueType = (typ.ValueTypeNameSpace.get, typ.ValueTypeName.get)
-          typeDef = MdMgr.GetMdMgr.MakeImmutableMap(typ.NameSpace, typ.Name, mapKeyType, mapValueType, typ.Version.toLong, typ.OwnerId)
+          typeDef = MdMgr.GetMdMgr.MakeImmutableMap(typ.NameSpace, typ.Name, mapKeyType, mapValueType, typ.Version.toLong, typ.OwnerId, typ.UniqueId, typ.MdElementId)
         }
         case "HashMapTypeDef" => {
           val mapKeyType = (typ.KeyTypeNameSpace.get, typ.KeyTypeName.get)
           val mapValueType = (typ.ValueTypeNameSpace.get, typ.ValueTypeName.get)
-          typeDef = MdMgr.GetMdMgr.MakeHashMap(typ.NameSpace, typ.Name, mapKeyType, mapValueType, typ.Version.toLong, typ.OwnerId)
+          typeDef = MdMgr.GetMdMgr.MakeHashMap(typ.NameSpace, typ.Name, mapKeyType, mapValueType, typ.Version.toLong, typ.OwnerId, typ.UniqueId, typ.MdElementId)
         }
         case "TupleTypeDef" => {
           val tuples = typ.TupleDefinitions.get.map(arg => (arg.NameSpace, arg.Name)).toArray
-          typeDef = MdMgr.GetMdMgr.MakeTupleType(typ.NameSpace, typ.Name, tuples, typ.Version.toLong, typ.OwnerId)
+          typeDef = MdMgr.GetMdMgr.MakeTupleType(typ.NameSpace, typ.Name, tuples, typ.Version.toLong, typ.OwnerId, typ.UniqueId, typ.MdElementId)
         }
         case "ContainerTypeDef" => {
           if (typ.TypeName == "Struct") {
             typeDef = MdMgr.GetMdMgr.MakeStructDef(typ.NameSpace, typ.Name, typ.PhysicalName,
               null, typ.Version.toLong, typ.JarName,
-              typ.DependencyJars.toArray, null, null, null, typ.OwnerId) //BUGBUG:: Handle Primary Key, Foreign Keys & Partition Key here
+              typ.DependencyJars.toArray, null, null, null, typ.OwnerId, typ.UniqueId, typ.MdElementId) //BUGBUG:: Handle Primary Key, Foreign Keys & Partition Key here
           }
         }
         case _ => {
@@ -305,7 +307,7 @@ object JsonSerializer {
             o.Name,
             o.TypeNameSpace,
             o.TypeName,
-            o.OwnerId,
+            o.OwnerId, o.UniqueId, o.MdElementId,
             o.Version.toLong,
             false)
           logger.debug("Created AttributeDef for " + o.NameSpace + "." + o.Name)
@@ -372,6 +374,8 @@ object JsonSerializer {
       concept.FunctionDefinition.Features.foreach(arg => featureSet += FcnMacroAttr.fromString(arg))
 
       val ownerId = "" //FIXME: Yet to fix this
+      val uniqueId = 0
+      val mdElementId = 0
 
       val func = MdMgr.GetMdMgr.MakeFunc(concept.FunctionDefinition.NameSpace,
         concept.FunctionDefinition.Name,
@@ -415,7 +419,7 @@ object JsonSerializer {
         ContDefInst.Container.Name,
         ContDefInst.Container.PhysicalName,
         attrList.toList,
-        ContDefInst.Container.OwnerId,
+        ContDefInst.Container.OwnerId, ContDefInst.Container.UniqueId, ContDefInst.Container.MdElementId,
         ContDefInst.Container.Version.toLong,
         ContDefInst.Container.JarName,
         ContDefInst.Container.DependencyJars.toArray)
@@ -473,7 +477,7 @@ object JsonSerializer {
         conceptInst.Name,
         conceptInst.TypeNameSpace,
         conceptInst.TypeName,
-        conceptInst.OwnerId,
+        conceptInst.OwnerId, conceptInst.UniqueId, conceptInst.MdElementId,
         conceptInst.Version.toLong,
         false)
       concept
@@ -511,7 +515,7 @@ object JsonSerializer {
         (functionInst.ReturnTypeNameSpace, functionInst.ReturnTypeName),
         argList,
         featureSet,
-        functionInst.OwnerId,
+        functionInst.OwnerId, functionInst.UniqueId, functionInst.MdElementId,
         functionInst.Version.toLong,
         functionInst.JarName,
         functionInst.DependantJars.toArray)
@@ -547,7 +551,7 @@ object JsonSerializer {
         MsgDefInst.Message.Name,
         MsgDefInst.Message.PhysicalName,
         attrList1.toList,
-        MsgDefInst.Message.OwnerId,
+        MsgDefInst.Message.OwnerId, MsgDefInst.Message.UniqueId, MsgDefInst.Message.MdElementId,
         MsgDefInst.Message.Version.toLong,
         MsgDefInst.Message.JarName,
         MsgDefInst.Message.DependencyJars.toArray)
@@ -621,7 +625,7 @@ object JsonSerializer {
       val modDef = MdMgr.GetMdMgr.MakeModelDef(ModDefInst.Model.NameSpace
         , ModDefInst.Model.Name
         , ModDefInst.Model.PhysicalName
-        , ModDefInst.Model.OwnerId
+        , ModDefInst.Model.OwnerId, ModDefInst.Model.UniqueId, ModDefInst.Model.MdElementId
         , ModelRepresentation.modelRep(ModDefInst.Model.ModelRep)
         , inputMsgsAndAttribs
         , outputMsgs
