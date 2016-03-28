@@ -66,13 +66,19 @@ class CompilerProxy {
     * to figure out the build dependencies.
     *
     */
-  def compileModelFromSource(sourceCode: String, modelConfigName: String, sourceLang: String, ownerId: String, uniqueId: Long, mdElementId: Long): ModelDef = {
+  def compileModelFromSource(sourceCode: String, modelConfigName: String, sourceLang: String, ownerId: String): ModelDef = {
     try {
       // Figure out the metadata information needed for 
       val additinalDeps = addDepsFromClassPath
       val (classPath, elements, totalDeps, nonTypeDeps, inMsgSets, outMsgs) = getClassPathFromModelConfig(modelConfigName, additinalDeps)
       val msgDefClassFilePath = compiler_work_dir + "/" + removeUserid(modelConfigName) + "." + sourceLang
       val ((modelNamespace, modelName, modelVersion, pname), repackagedCode, tempPackage) = parseSourceForMetadata(sourceCode, modelConfigName, sourceLang, msgDefClassFilePath, classPath, elements)
+
+      // Get Model info and decide the mdElementId
+      val existingModel = MdMgr.GetMdMgr.Model(modelNamespace, modelName, -1, false) // Any version is fine. No need of active
+      val uniqueId = MetadataAPIImpl.GetUniqueId
+      val mdElementId = if (existingModel == None) MetadataAPIImpl.GetMdElementId else existingModel.get.MdElementId
+
       return generateModelDef(repackagedCode, sourceLang, pname, classPath, tempPackage, modelName,
         modelVersion, msgDefClassFilePath, elements, sourceCode,
         totalDeps,
@@ -91,11 +97,17 @@ class CompilerProxy {
     * is available.. so just generate the new ModelDef
     *
     */
-  def recompileModelFromSource(sourceCode: String, pName: String, deps: List[String], typeDeps: List[String], inputMsgSets: List[List[String]], outputMsgs: List[String], sourceLang: String, ownerId: String, uniqueId: Long, mdElementId: Long): ModelDef = {
+  def recompileModelFromSource(sourceCode: String, pName: String, deps: List[String], typeDeps: List[String], inputMsgSets: List[List[String]], outputMsgs: List[String], sourceLang: String, ownerId: String): ModelDef = {
     try {
       val (classPath, elements, totalDeps, nonTypeDeps) = buildClassPath(deps, typeDeps)
       val msgDefClassFilePath = compiler_work_dir + "/tempCode." + sourceLang
       val ((modelNamespace, modelName, modelVersion, pname), repackagedCode, tempPackage) = parseSourceForMetadata(sourceCode, "tempCode", sourceLang, msgDefClassFilePath, classPath, elements)
+
+      // Get Model info and decide the mdElementId
+      val existingModel = MdMgr.GetMdMgr.Model(modelNamespace, modelName, -1, false) // Any version is fine. No need of active
+      val uniqueId = MetadataAPIImpl.GetUniqueId
+      val mdElementId = if (existingModel == None) MetadataAPIImpl.GetMdElementId else existingModel.get.MdElementId
+
       return generateModelDef(repackagedCode, sourceLang, pname, classPath, tempPackage, modelName,
         modelVersion, msgDefClassFilePath, elements, sourceCode, totalDeps, typeDeps, nonTypeDeps, true, inputMsgSets, outputMsgs, ownerId, uniqueId, mdElementId)
     } catch {
@@ -109,7 +121,7 @@ class CompilerProxy {
   /**
     *
     */
-  def compilePmml(pmmlStr: String, ownerId: String, uniqueId: Long, mdElementId: Long, recompile: Boolean = false): (String, ModelDef) = {
+  def compilePmml(pmmlStr: String, ownerId: String, recompile: Boolean = false): (String, ModelDef) = {
     try {
       /** Ramana, if you set this to true, you will cause the generation of logger.info (...) stmts in generated model */
       var injectLoggingStmts: Boolean = false
@@ -130,7 +142,13 @@ class CompilerProxy {
         * issues, it may not be generated.
         */
       if (modDef != null) {
+
+        // Get Model info and decide the mdElementId
+        val existingModel = MdMgr.GetMdMgr.Model(modDef.NameSpace, modDef.Name, -1, false) // Any version is fine. No need of active
+        modDef.uniqueId = MetadataAPIImpl.GetUniqueId
+        modDef.mdElementId = if (existingModel == None) MetadataAPIImpl.GetMdElementId else existingModel.get.MdElementId
         modDef.ownerId = ownerId
+
         var pmmlScalaFile = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("JAR_TARGET_DIR") + "/" + modDef.name + ".pmml"
         var classPath = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("CLASSPATH").trim
 
@@ -581,7 +599,7 @@ class CompilerProxy {
       val modDef: ModelDef = MdMgr.GetMdMgr.MakeModelDef(modelNamespace
         , modelName
         , pName
-        , ownerId
+        , ownerId, uniqueId, mdElementId
         , ModelRepresentation.JAR
         , inpM
         , outM
@@ -932,7 +950,7 @@ class CompilerProxy {
             */
 
           val mdlDef = MdMgr.GetMdMgr.MakeModelDef("", ""
-            , clsName, "Kamanja"
+            , clsName, "Kamanja", 0, 0
             , ModelRepresentation.JAR
             , Array[Array[MessageAndAttributes]]()
             , Array[String]()

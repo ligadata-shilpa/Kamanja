@@ -197,7 +197,7 @@ class JpmmlSupport(mgr: MdMgr
             val model: ModelDef = mgr.MakeModelDef(modelNamespace
               , modelName
               , phyName
-              , ownerId
+              , ownerId, 0, 0
               , ModelRepresentation.PMML
               , Array(inpMsgs)
               , Array[String]()
