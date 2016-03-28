@@ -479,43 +479,55 @@ object ConfigUtils {
      * @return
      */
   def UploadModelsConfig(cfgStr: String, userid: Option[String], objectList: String, isFromNotify: Boolean = false): String = {
-    var keyList = new Array[String](0)
-    var valueList = new Array[Array[Byte]](0)
-    val tranId = MetadataAPIImpl.GetNewTranId
-    cfgmap = parse(cfgStr).values.asInstanceOf[Map[String, Any]]
-    var i = 0
-    // var objectsAdded: scala.collection.mutable.MutableList[Map[String, List[String]]] = scala.collection.mutable.MutableList[Map[String, List[String]]]()
-    var baseElems: Array[BaseElemDef] = new Array[BaseElemDef](cfgmap.keys.size)
-    cfgmap.keys.foreach(key => {
-      var mdl = cfgmap(key).asInstanceOf[Map[String, List[String]]]
+    try{
+      var keyList = new Array[String](0)
+      var valueList = new Array[Array[Byte]](0)
+      val tranId = MetadataAPIImpl.GetNewTranId
+      logger.debug("Parsing ModelConfig : " + cfgStr)
+      cfgmap = parse(cfgStr).values.asInstanceOf[Map[String, Any]]
+      logger.debug("Count of objects in cfgmap : " + cfgmap.keys.size)
+      
+      var i = 0
+      // var objectsAdded: scala.collection.mutable.MutableList[Map[String, List[String]]] = scala.collection.mutable.MutableList[Map[String, List[String]]]()
+      var baseElems: Array[BaseElemDef] = new Array[BaseElemDef](cfgmap.keys.size)
+      cfgmap.keys.foreach(key => {
+	logger.debug("Model Config Key => " + key)
+	var mdl = cfgmap(key).asInstanceOf[Map[String, List[String]]]
 
-      // wrap the config objet in Element Def
-      var confElem: ConfigDef = new ConfigDef
-      confElem.tranId = tranId
-      confElem.nameSpace = userid.get
-      confElem.contents = JsonSerializer.SerializeMapToJsonString(mdl)
-      confElem.name = key
-      baseElems(i) = confElem
-      i = i + 1
+	// wrap the config objet in Element Def
+	var confElem: ConfigDef = new ConfigDef
+	confElem.tranId = tranId
+	confElem.nameSpace = if(userid != None) userid.get else null
+	confElem.contents = JsonSerializer.SerializeMapToJsonString(mdl)
+	confElem.name = key
+	baseElems(i) = confElem
+	i = i + 1
 
-      // Prepare KEY/VALUE for persistent insertion
-      var modelKey = userid.getOrElse("_") + "." + key
-      var value = serializer.SerializeObjectToByteArray(mdl)
-      keyList = keyList :+ modelKey.toLowerCase
-      valueList = valueList :+ value
-      // Save in memory
-      MetadataAPIImpl.AddConfigObjToCache(tranId, modelKey, mdl, MdMgr.GetMdMgr)
-    })
-    // Save in Database
-    MetadataAPIImpl.SaveObjectList(keyList, valueList, "model_config_objects", serializerType)
-    if (!isFromNotify) {
-      val operations = for (op <- baseElems) yield "Add"
-      MetadataAPIImpl.NotifyEngine(baseElems, operations)
+	// Prepare KEY/VALUE for persistent insertion
+	var modelKey = userid.getOrElse("_") + "." + key
+	var value = serializer.SerializeObjectToByteArray(mdl)
+	keyList = keyList :+ modelKey.toLowerCase
+	valueList = valueList :+ value
+	// Save in memory
+	MetadataAPIImpl.AddConfigObjToCache(tranId, modelKey, mdl, MdMgr.GetMdMgr)
+      })
+      // Save in Database
+      MetadataAPIImpl.SaveObjectList(keyList, valueList, "model_config_objects", serializerType)
+      if (!isFromNotify) {
+	val operations = for (op <- baseElems) yield "Add"
+	MetadataAPIImpl.NotifyEngine(baseElems, operations)
+      }
+
+      // return reuslts
+      val apiResult = new ApiResult(ErrorCodeConstants.Success, "UploadModelsConfig", null, "Upload of model config successful")
+      apiResult.toString()
+    } catch {
+      case e: Exception => {
+        logger.debug("", e)
+        val apiResult = new ApiResult(ErrorCodeConstants.Failure, "UploadModelsConfig", null, "Error :" + e.toString() + ErrorCodeConstants.Upload_Config_Failed + ":" + cfgStr)
+        apiResult.toString()
+      }
     }
-
-    // return reuslts
-    val apiResult = new ApiResult(ErrorCodeConstants.Success, "UploadModelsConfig", null, "Upload of model config successful")
-    apiResult.toString()
   }
 
     /**

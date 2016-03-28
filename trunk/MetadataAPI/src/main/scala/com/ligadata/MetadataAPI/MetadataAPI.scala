@@ -504,6 +504,7 @@ trait MetadataAPI {
               , version: Option[String] = None
               , msgConsumed: Option[String] = None
               , msgVer : Option[String] = Some("-1")
+	      , optMsgProduced: Option[String] = None
               ): String
 
   /** Update model given the supplied input.  Like the Add model, the ''modelType'' controls the processing and describes the
@@ -540,7 +541,8 @@ trait MetadataAPI {
                   , userid: Option[String] = None
                   , modelName: Option[String] = None
                   , version: Option[String] = None
-                  , optVersionBeingUpdated : Option[String] = None): String
+                  , optVersionBeingUpdated : Option[String] = None
+		  , optMsgProduced: Option[String] = None): String
 
   /** Remove model with the supplied ''modelName'' and ''version''.  If the SecurityAdapter and/or AuditAdapter have
     * been configured, the ''userid'' must also be supplied.

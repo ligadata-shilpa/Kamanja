@@ -44,14 +44,17 @@ object StartMetadataAPI {
   val REMOVE = "remove"
   val GET = "get"
   val ACTIVATE = "activate"
+  val OUTPUTMSG = "outputmsg"
   val DEACTIVATE = "deactivate"
   val UPDATE = "update"
   val MODELS = "models"
   val MESSAGES = "messages"
   val CONTAINERS = "containers"
   var expectDep = false
+  var expectOutputMsg = false
   var expectRemoveParm = false
   var depName: String = ""
+  var outputMsgName: String = ""
   var parmName: String = ""
   val MODELNAME = "MODELNAME"
   val MODELVERSION= "MODELVERSION"
@@ -93,8 +96,15 @@ object StartMetadataAPI {
             depName = arg
             expectDep = false
           }
+	  else if ( arg.equalsIgnoreCase(OUTPUTMSG) ){
+	    expectOutputMsg = true
+	  }
+	  else if(expectOutputMsg ){
+	    outputMsgName = arg
+	    logger.debug("Found output message definition " + outputMsgName + " in the command ")
+	    expectOutputMsg = false
+	  }
            else if ((action.equalsIgnoreCase(Action.ADDMODELPMML.toString) || action.equalsIgnoreCase(Action.UPDATEMODELPMML.toString)) && location.size > 0) {
-
             if(arg.equalsIgnoreCase(MODELNAME)){
               expectModelName=true
             }else if(arg.equalsIgnoreCase(MODELVERSION)){
@@ -145,7 +155,7 @@ object StartMetadataAPI {
       if (action == "")
         TestMetadataAPI.StartTest
       else {
-        response = route(Action.withName(action.trim), location, depName, args, userId ,extraCmdArgs.toMap)
+        response = route(Action.withName(action.trim), location, depName, outputMsgName, args, userId ,extraCmdArgs.toMap)
         println("Result: " + response)
       }
     }
@@ -180,8 +190,13 @@ object StartMetadataAPI {
       println(s"Usage:\n  kamanja <action> <optional input> \n e.g. kamanja add message ${'$'}HOME/msg.json" )
   }
 
-  def route(action: Action.Value, input: String, param: String = "", originalArgs: Array[String], userId: Option[String] ,extraCmdArgs:immutable.Map[String, String]): String = {
+  def route(action: Action.Value, input: String, param: String = "", outputMsgName: String = null, originalArgs: Array[String], userId: Option[String] ,extraCmdArgs:immutable.Map[String, String]): String = {
     var response = ""
+    var optMsgProduced:Option[String] = None	  
+    if( outputMsgName != null ){
+      logger.debug("The value of argument optMsgProduced will be " + outputMsgName)
+      optMsgProduced = Some(outputMsgName)
+    }
     try {
       action match {
         //message management
@@ -203,7 +218,7 @@ object StartMetadataAPI {
         }
 
         //model management
-        case Action.ADDMODELKPMML => response = ModelService.addModelKPmml(input, userId)
+        case Action.ADDMODELKPMML => response = ModelService.addModelKPmml(input, userId,optMsgProduced)
         case Action.ADDMODELPMML => {
           val modelName: Option[String] = extraCmdArgs.get(MODELNAME)
           val modelVer = extraCmdArgs.getOrElse(MODELVERSION, null)
@@ -211,28 +226,28 @@ object StartMetadataAPI {
           val validatedModelVersion = if (modelVer != null) MdMgr.FormatVersion(modelVer) else null
           val optModelVer =  Option(validatedModelVersion)
           val optMsgVer = Option(null)
-
           response = ModelService.addModelPmml(ModelType.PMML
                                             , input
                                             , userId
                                             , modelName
                                             , optModelVer
                                             , msgName
-                                            , optMsgVer)
+                                            , optMsgVer
+					    , optMsgProduced)
         }
 
         case Action.ADDMODELSCALA => {
           if (param.length == 0)
-            response = ModelService.addModelScala(input, "", userId)
+            response = ModelService.addModelScala(input, "", userId,optMsgProduced)
           else
-            response = ModelService.addModelScala(input, param, userId)
+            response = ModelService.addModelScala(input, param, userId,optMsgProduced)
         }
 
         case Action.ADDMODELJAVA => {
           if (param.length == 0)
-            response = ModelService.addModelJava(input, "", userId)
+            response = ModelService.addModelJava(input, "", userId,optMsgProduced)
           else
-            response = ModelService.addModelJava(input, param, userId)
+            response = ModelService.addModelJava(input, param, userId,optMsgProduced)
         }
 
         case Action.REMOVEMODEL => {
