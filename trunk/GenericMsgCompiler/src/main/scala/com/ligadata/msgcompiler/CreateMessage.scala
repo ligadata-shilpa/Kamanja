@@ -47,9 +47,9 @@ class CreateMessage {
         }
       }
       if (msg.PartitionKeys != null)
-        msgDef = mdMgr.MakeFixedMsg(msg.NameSpace, msg.Name, msg.PhysicalName, msg.ArgsList, version, null, msg.Jarset.toArray, null, null, msg.PartitionKeys.toArray, recompile, msg.Persist)
+        msgDef = mdMgr.MakeFixedMsg(msg.NameSpace, msg.Name, msg.PhysicalName, msg.ArgsList, "Kamanja", version, null, msg.Jarset.toArray, null, null, msg.PartitionKeys.toArray, recompile, msg.Persist)
       else
-        msgDef = mdMgr.MakeFixedMsg(msg.NameSpace, msg.Name, msg.PhysicalName, msg.ArgsList, version, null, msg.Jarset.toArray, null, null, null, recompile, msg.Persist)
+        msgDef = mdMgr.MakeFixedMsg(msg.NameSpace, msg.Name, msg.PhysicalName, msg.ArgsList, "Kamanja", version, null, msg.Jarset.toArray, null, null, null, recompile, msg.Persist)
 
       log.info(" msg.NameSpace   " + msg.NameSpace)
       log.info("msg.Name    " + msg.Name)

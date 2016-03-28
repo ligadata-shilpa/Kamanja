@@ -447,7 +447,7 @@ abstract class ModelBase(var modelContext: ModelContext, val factory: ModelBaseO
   final def Version() = factory.Version()
 
   // Tenant Id
-  final def TenantId() = null
+  final def OwnerId() = null
 
   final def TransId() = if (modelContext != null && modelContext.txnContext != null) modelContext.txnContext.getTransactionId() else null // transId
 
