@@ -35,8 +35,8 @@
          oob_thread_pool.rejection_policy="discard"/>
 
     <TCPPING async_discovery="true"
-             initial_hosts="${jgroups.tcpping.initial_hosts:192.168.1.129[7800],192.168.1.129[7800]}"
-             port_range="2"/>
+             initial_hosts="${jgroups.tcpping.initial_hosts}"
+             port_range="0"/>
     <MERGE3  min_interval="10000"
              max_interval="30000"/>
     <FD_SOCK/>

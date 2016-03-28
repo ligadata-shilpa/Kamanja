@@ -35,7 +35,7 @@ object CacheCustomConfig{
   val BOOTSTRAPASYNCHRONOUSLY:String="bootstrapAsynchronously"
   val PREFERIPV4STACK:String="java.net.preferIPv4Stack"
   val SKIPUPDATECHECK:String="net.sf.ehcache.skipUpdateCheck"
-
+  val INITIALHOSTS:String = "jgroups.tcpping.initial_hosts"
 }
 
 class CacheCustomConfig(jsonString:String) extends CacheConfiguration{
@@ -67,6 +67,7 @@ class CacheCustomConfig(jsonString:String) extends CacheConfiguration{
              replicateRemovals=true
              replicateAsynchronously=true
              bootstrapAsynchronously=false
+             jgroups.tcpping.initial_hosts=localhost[7800]
 
    */
 
@@ -99,7 +100,8 @@ class CacheCustomConfig(jsonString:String) extends CacheConfiguration{
   private val enableListener = values.getOrElse(CacheCustomConfig.ENABLELISTENER,"false").toBoolean
 
   System.setProperty(CacheCustomConfig.PREFERIPV4STACK,"true")
-  System.setProperty(CacheCustomConfig.SKIPUPDATECHECK, "true");
+  System.setProperty(CacheCustomConfig.SKIPUPDATECHECK, "true")
+  System.setProperty(CacheCustomConfig.INITIALHOSTS, values.getOrElse(CacheCustomConfig.INITIALHOSTS,"localhost[7800]"))
 
   def  getConfiguration() : Configuration = {
     return config
