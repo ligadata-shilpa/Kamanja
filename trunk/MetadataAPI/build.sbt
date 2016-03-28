@@ -106,3 +106,5 @@ scalacOptions += "-deprecation"
 retrieveManaged := true
 
 parallelExecution := false
+
+coverageExcludedPackages := "com.ligadata.MetadataAPI.SampleData;com.ligadata.MetadataAPI.TestMetadataAPI"
