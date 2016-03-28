@@ -67,12 +67,12 @@ object MetadataLoad {
 			(MdMgr.sysNS, "Context", "com.ligadata.pmml.runtime.Context", List()))
 	}
 
-  def BaseMessagesInfo:  Array[(String, String, String, List[(String, String, String, String, Boolean, String)], Long, String)] = {
-    return Array[(String, String, String, List[(String, String, String, String, Boolean, String)], Long, String)](
-			(MdMgr.sysNS, "KamanjaStatusEvent", "com.ligadata.KamanjaBase.KamanjaStatusEvent", List(),1,"kamanjabase_" + scalaVer +"-1.0.jar"),
-      (MdMgr.sysNS, "KamanjaMessageEvent", "com.ligadata.KamanjaBase.KamanjaMessageEvent", List(),1,"kamanjabase_" + scalaVer +"-1.0.jar"),
-      (MdMgr.sysNS, "KamanjaModelEvent", "com.ligadata.KamanjaBase.KamanjaModelEvent", List(),1,"kamanjabase_" + scalaVer +"-1.0.jar"),
-		  (MdMgr.sysNS, "KamanjaExceptionEvent", "com.ligadata.KamanjaBase.KamanjaExceptionEvent", List(),1,"kamanjabase_" + scalaVer +"-1.0.jar"))
+  def BaseMessagesInfo:  Array[(String, String, String, List[(String, String, String, String, Boolean, String)])] = {
+    return Array[(String, String, String, List[(String, String, String, String, Boolean, String)])](
+			(MdMgr.sysNS, "KamanjaStatusEvent", "com.ligadata.KamanjaBase.KamanjaStatusEvent", List()),
+      (MdMgr.sysNS, "KamanjaMessageEvent", "com.ligadata.KamanjaBase.KamanjaMessageEvent", List()),
+      (MdMgr.sysNS, "KamanjaModelEvent", "com.ligadata.KamanjaBase.KamanjaModelEvent", List()),
+		  (MdMgr.sysNS, "KamanjaExceptionEvent", "com.ligadata.KamanjaBase.KamanjaExceptionEvent", List()))
 }
 }
 
@@ -113,7 +113,7 @@ class MetadataLoad (val mgr : MdMgr, val typesPath : String, val fcnPath : Strin
     val baseMessageInfo = MetadataLoad.BaseMessagesInfo
     baseMessageInfo.foreach(bc => {
       logger.debug("MetadataLoad...loading " + bc._2)
-      mgr.AddFixedMsg(bc._1, bc._2, bc._3, bc._4, bc._5, bc._6 )
+      mgr.AddFixedMsg(bc._1, bc._2, bc._3, bc._4, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
     })
   }
 
