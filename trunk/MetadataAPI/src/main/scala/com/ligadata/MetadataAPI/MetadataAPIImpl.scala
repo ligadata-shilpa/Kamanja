@@ -188,6 +188,84 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
   }
 
   /**
+    *  getHealthCheckNodesOnly - will return node info from the health-check information for the nodeId specified.
+    *  @param nodeId a cluster node: String - if no parameter specified, return health-check for all nodes
+    *  @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    */
+  def getHealthCheckNodesOnly(nodeId: String = "", userid: Option[String] = None): String = {
+    try {
+      val ids = parse(nodeId).values.asInstanceOf[List[String]]
+      var apiResult = new ApiResultComplex(ErrorCodeConstants.Success, "GetHeartbeat", MonitorAPIImpl.getHBNodesOnly(ids), ErrorCodeConstants.GetHeartbeat_Success)
+      apiResult.toString
+    } catch {
+      case cce: java.lang.ClassCastException => {
+        logger.warn("Failure processing GET_HEALTH_CHECK(Nodes Only) - cannot parse the list of desired nodes.", cce)
+        val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetHealthCheck", "No data available", ErrorCodeConstants.GetHeartbeat_Failed + " Error:Parsing Error")
+        return apiResult.toString
+      }
+      case e: Exception => {
+        val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetHealthCheck", "No data available", ErrorCodeConstants.GetHeartbeat_Failed + " Error: Unknown - see Kamanja Logs")
+        logger.error("Failure processing GET_HEALTH_CHECK(Nodes Only) - unknown", e)
+        return apiResult.toString
+      }
+    }
+
+  }
+
+  /**
+    *  getHealthCheckComponentNames - will return partial components info from the health-check information for the nodeId specified.
+    *  @param nodeId a cluster node: String - if no parameter specified, return health-check for all nodes
+    *  @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    */
+  def getHealthCheckComponentNames(nodeId: String = "", userid: Option[String] = None): String = {
+    try {
+      val ids = parse(nodeId).values.asInstanceOf[List[String]]
+      var apiResult = new ApiResultComplex(ErrorCodeConstants.Success, "GetHeartbeat", MonitorAPIImpl.getHBComponentNames(ids), ErrorCodeConstants.GetHeartbeat_Success)
+      apiResult.toString
+    } catch {
+      case cce: java.lang.ClassCastException => {
+        logger.warn("Failure processing GET_HEALTH_CHECK(Component Names) - cannot parse the list of desired nodes.", cce)
+        val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetHealthCheck", "No data available", ErrorCodeConstants.GetHeartbeat_Failed + " Error:Parsing Error")
+        return apiResult.toString
+      }
+      case e: Exception => {
+        val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetHealthCheck", "No data available", ErrorCodeConstants.GetHeartbeat_Failed + " Error: Unknown - see Kamanja Logs")
+        logger.error("Failure processing GET_HEALTH_CHECK(Component Names) - unknown", e)
+        return apiResult.toString
+      }
+    }
+
+  }
+
+  /**
+    *  getHealthCheckComponentDetailsByNames - will return specific components info from the health-check information for the nodeId specified.
+    *  @param componentNames names of components required
+    *  @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    */
+  def getHealthCheckComponentDetailsByNames(componentNames: String = "", userid: Option[String] = None): String = {
+    try {
+      val components = parse(componentNames).values.asInstanceOf[List[String]]
+      var apiResult = new ApiResultComplex(ErrorCodeConstants.Success, "GetHeartbeat", MonitorAPIImpl.getHBComponentDetailsByNames(components), ErrorCodeConstants.GetHeartbeat_Success)
+      apiResult.toString
+    } catch {
+      case cce: java.lang.ClassCastException => {
+        logger.warn("Failure processing GET_HEALTH_CHECK(Specific Components) - cannot parse the list of desired nodes.", cce)
+        val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetHealthCheck", "No data available", ErrorCodeConstants.GetHeartbeat_Failed + " Error:Parsing Error")
+        return apiResult.toString
+      }
+      case e: Exception => {
+        val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetHealthCheck", "No data available", ErrorCodeConstants.GetHeartbeat_Failed + " Error: Unknown - see Kamanja Logs")
+        logger.error("Failure processing GET_HEALTH_CHECK(Specific Components) - unknown", e)
+        return apiResult.toString
+      }
+    }
+
+  }
+
+  /**
    * InitSecImpl  - 1. Create the Security Adapter class.  The class name and jar name containing
    *                the implementation of that class are specified in the CONFIG FILE.
    *                2. Create the Audit Adapter class, The class name and jar name containing

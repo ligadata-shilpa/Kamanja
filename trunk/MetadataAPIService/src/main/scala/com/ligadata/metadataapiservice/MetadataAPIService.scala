@@ -19,6 +19,7 @@ package com.ligadata.metadataapiservice
 import akka.actor._
 import akka.event.Logging
 import com.ligadata.MetadataAPI.MetadataAPI.ModelType
+import com.ligadata.metadataapiservice.DetailsLevel.DetailsLevel
 import com.ligadata.metadataapiservice._
 import spray.routing._
 import spray.http._
@@ -147,13 +148,21 @@ trait MetadataAPIService extends HttpService {
                   logger.debug("POST reqeust : api/" + str)
                   if (toknRoute.size == 1) {
                     if (toknRoute(0).equalsIgnoreCase(GET_HEALTH)) 
-                      requestContext => processHBRequest(reqBody, requestContext, user, password, role) 
+                      requestContext => processHBRequest(DetailsLevel.ALL, reqBody, requestContext, user, password, role)
                     else {
                       if (toknRoute(0).equalsIgnoreCase("model"))
                         logger.warn("MetadataAPI Http Service: URL of type https://hostname:port/api/model is deprecated")
                       entity(as[String]) { reqBody => { requestContext => processPostRequest(toknRoute(0), reqBody, requestContext, user, password, role, modelcofniginfo) } }
                     }
-                  } else if (toknRoute.size == 2 && toknRoute(0).equalsIgnoreCase("model")) {
+                  }
+                  else if (toknRoute.size == 2 && toknRoute(0).equalsIgnoreCase(GET_HEALTH)) {
+                    val detailsLevel = DetailsLevel.withName(toknRoute(1))
+
+                    requestContext => processHBRequest(detailsLevel, reqBody, requestContext, user, password, role)
+
+
+                  }
+                  else if (toknRoute.size == 2 && toknRoute(0).equalsIgnoreCase("model")) {
                     ModelType.withName(toknRoute(1).toString) match {
                       case ModelType.KPMML => {
                         val objectType = toknRoute(0) + toknRoute(1)
@@ -372,9 +381,9 @@ trait MetadataAPIService extends HttpService {
   /**
    * 
    */
-  private def processHBRequest(nodeIds: String, rContext: RequestContext, userid: Option[String], password: Option[String], role: Option[String]): Unit = {
+  private def processHBRequest(detailsLevel : DetailsLevel, nodeIds: String, rContext: RequestContext, userid: Option[String], password: Option[String], role: Option[String]): Unit = {
       val heartBeatSerivce = actorRefFactory.actorOf(Props(new GetHeartbeatService(rContext, userid, password, role)))
-      heartBeatSerivce ! GetHeartbeatService.Process(nodeIds)       
+      heartBeatSerivce ! GetHeartbeatService.Process(nodeIds, detailsLevel)
   }
   
   /**
