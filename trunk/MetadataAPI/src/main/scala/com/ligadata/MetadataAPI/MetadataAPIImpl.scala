@@ -7060,6 +7060,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
             var clusterDef: ClusterConfigDef = new ClusterConfigDef
             clusterDef.clusterId = ci.clusterId
             clusterDef.elementType = "clusterDef"
+            clusterDef.nameSpace = "cluster"
             clusterDef.name = ci.clusterId
             clusterDef.tranId = GetNewTranId
             clusterNotifications.append(clusterDef)
@@ -7376,6 +7377,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       // if cachedInfo is null, this a new apdater
       if (cachedInfo == null) {
         MdMgr.GetMdMgr.addConfigChange(elemType +"."+"add"+"."+storedInfo.name.toLowerCase)
+        MdMgr.GetMdMgr.AddAdapter(storedInfo)
+        return
       }
 
       if (!storedInfo.equals(cachedInfo)) {
@@ -7397,6 +7400,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       // if cachedInfo is null, this a new apdater
       if (cachedInfo == null) {
         MdMgr.GetMdMgr.addConfigChange(elemType +"."+"add"+"."+storedInfo.nodeId.toLowerCase)
+        MdMgr.GetMdMgr.AddNode(storedInfo)
+        return
       }
 
       if (!storedInfo.equals(cachedInfo)) {
@@ -7418,6 +7423,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       // if cachedInfo is null, this a new apdater
       if (cachedInfo == null) {
         MdMgr.GetMdMgr.addConfigChange(elemType +"."+"add"+"."+storedInfo.clusterId.toLowerCase)
+        MdMgr.GetMdMgr.AddClusterCfg(storedInfo)
+        return
       }
 
       if (!storedInfo.equals(cachedInfo)) {
@@ -7440,6 +7447,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       // if cachedInfo is null, this a new apdater
       if (cachedInfo == null) {
         MdMgr.GetMdMgr.addConfigChange(elemType +"."+"add"+"."+storedInfo.ClusterId.toLowerCase)
+        MdMgr.GetMdMgr.AddCluster(storedInfo)
+        return
       }
 
       if (!storedInfo.equals(cachedInfo)) {
@@ -7461,6 +7470,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       // if cachedInfo is null, this a new apdater
       if (cachedInfo == null) {
         MdMgr.GetMdMgr.addConfigChange(elemType +"."+"add"+"."+storedInfo.clusterId.toLowerCase)
+        MdMgr.GetMdMgr.AddUserProperty(storedInfo)
+        return
       }
 
       if (!storedInfo.equals(cachedInfo)) {
