@@ -105,6 +105,8 @@ lazy val KafkaSimpleInputOutputAdapters = project.in(file("InputOutputAdapters/K
   .settings(TestSettings.settings: _*)
   .dependsOn(InputOutputAdapterBase, Exceptions, DataDelimiters)
 
+lazy val SmartFileAdapter = project.in(file("InputOutputAdapters/SmartFileAdapter")) dependsOn(InputOutputAdapterBase, Exceptions, DataDelimiters, MetadataAPI)
+
 lazy val FileSimpleInputOutputAdapters = project.in(file("InputOutputAdapters/FileSimpleInputOutputAdapters"))
   .configs(TestConfigs.all: _*)
   .settings(TestSettings.settings: _*)
