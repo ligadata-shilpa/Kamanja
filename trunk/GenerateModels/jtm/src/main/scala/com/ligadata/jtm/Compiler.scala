@@ -344,6 +344,17 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
   val columnNamePatchUp = Map.empty[String, String]
   val columnSystem = Set("transactionId", "rowNumber", "timePartitionData")
 
+  def IsMappedMessage(mgr: MdMgr, classname: String): Boolean = {
+    val classMd = md.Message(classname, 0, true)
+    if(classMd.isEmpty) {
+      throw new Exception("Metadata: unable to find class %s".format(classname))
+    }
+    if(classMd.get.containerType.isInstanceOf[MappedMsgTypeDef])
+      true
+    else
+      false
+  }
+
   def ColumnNames(mgr: MdMgr, classname: String): Set[String] = {
     val classMd = md.Message(classname, 0, true)
     if(classMd.isEmpty) {
@@ -427,8 +438,10 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     var mapping = mapping_in
     var wheres = wheres_in
     var computes = computes_in
-    var cnt1 = wheres.length + computes.size + groks.size
+
+    var cnt1 = wheres.length + computes.size + groks.size + mapping.size
     var cnt2 = -1
+
     var (outputSet, outputtype) = if(output_in.nonEmpty) {
       val outputType1 = ResolveAlias(output_in, aliaseMessages)
       val outputType = ResolveToVersionedClassname(md, outputType1)
@@ -479,12 +492,15 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     // Grocks
     // Filters
     // Where
+    logger.trace("while: {}!={} output={}", cnt1.toString, cnt2.toString, (output_in.isEmpty || outputSet.nonEmpty).toString)
+
     while (cnt1 != cnt2 && (output_in.isEmpty || outputSet.nonEmpty)) {
 
       cnt2 = cnt1
 
       // Check Mapping
-      if (mapping.nonEmpty) {
+      val mapping1 = if (mapping.nonEmpty) {
+
         logger.trace("Mappings left {}", mapping.mkString(", "))
 
         val found = mapping.filter(f => {
@@ -549,9 +565,12 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           outputSet --= Set(f._1)
           innerMapping ++= Map(f._1 -> eval.Tracker(newExpression, "", "", false))
         })
-
-        mapping = mapping.filterKeys(f => !found.contains(f))
+        mapping.filterKeys(f => !found.contains(f))
+      } else {
+        mapping
       }
+
+      logger.trace("Mappings1 left {}", mapping1.mkString(", "))
 
       // Check grok matches
       //
@@ -705,10 +724,13 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
       })
 
       // Update state
-      cnt1 = wheres1.length + computes1.size + groks1.size
+      cnt1 = wheres1.length + computes1.size + groks1.size + mapping1.size
       wheres = wheres1
       computes = computes1
+      mapping = mapping1
       groks = groks1
+
+      logger.trace("while: {}!={} output={}", cnt1.toString, cnt2.toString, (output_in.isEmpty || outputSet.nonEmpty).toString)
     }
 
     if (outputSet.nonEmpty) {
@@ -970,13 +992,13 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
             // If output is a dictionary, collect all mappings
             //
-            val outputElements1 = if(dictMessages.contains(outputType1)) {
+            val outputElements1 = if(IsMappedMessage(md, outputType1)) {
               o._2.mapping.filter(f => !outputSet.contains(f._1)).toArray.map(e => {
                 val m = innerMapping.get(e._1)
                 if (m.isEmpty) {
                   throw new Exception("Output %s not found".format(e))
                 }
-                "result.set(\"%s\") = %s".format(e, m.get.getAccessor())
+                "result.set(\"%s\", %s)".format(e._1, m.get.getAccessor())
               })
             } else {
               Array.empty[String]

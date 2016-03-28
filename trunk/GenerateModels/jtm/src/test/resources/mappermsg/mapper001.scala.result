@@ -32,13 +32,19 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
     //
     //
     def exeGenerated_test1_1(msg1: com.ligadata.kamanja.test.v1000000.varin1): Array[BaseMsg] = {
+      // in scala, type could be optional
+      val out3: Int = msg1.get("in3") + 1000
       def process_o1(): Array[BaseMsg] = {
+        if (!(out3 != -1 && out3 < 100)) return Array.empty[BaseMsg]
+        val t1: String = "s:" + msg1.get("in3").toString()
         val result = new com.ligadata.kamanja.test.v1000000.varout1
-        result.timePartitionData = msg1.timePartitionData
-        result.rowNumber = msg1.rowNumber
         result.out2 = msg1.in2
+        result.rowNumber = msg1.rowNumber
+        result.timePartitionData = msg1.timePartitionData
         result.out1 = msg1.in1
         result.transactionId = msg1.transactionId
+        result.set("out3", out3)
+        result.set("out4", msg1.get("in4"))
         Array(result)
       }
       process_o1()
