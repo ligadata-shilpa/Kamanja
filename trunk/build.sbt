@@ -193,6 +193,8 @@ lazy val KVInit = project.in(file("Utils/KVInit"))
   .settings(TestSettings.settings: _*)
   .dependsOn(Metadata, KamanjaBase, MetadataBootstrap, MetadataAPI, StorageManager, Exceptions, TransactionService)
 
+lazy val ContainersUtility = project.in(file("Utils/ContainersUtility")) dependsOn (Metadata, KamanjaBase, MetadataBootstrap, MetadataAPI, StorageManager, Exceptions, TransactionService)
+
 lazy val ZooKeeperLeaderLatch = project.in(file("Utils/ZooKeeper/CuratorLeaderLatch"))
   .configs(TestConfigs.all: _*)
   .settings(TestSettings.settings: _*)
