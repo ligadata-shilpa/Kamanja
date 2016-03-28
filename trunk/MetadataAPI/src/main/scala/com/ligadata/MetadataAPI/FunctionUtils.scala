@@ -251,7 +251,7 @@ object FunctionUtils {
         apiResult.toString()
       } else {
         val ownerId: String = if (userid == None) "Kamanja" else userid.get
-        var funcList= JsonSerializer.parseFunctionList(functionsText, "JSON", ownerId)
+        var funcList= JsonSerializer.parseFunctionList(functionsText, "JSON", ownerId, uniqueId, mdElementId)
         // Check for the Jars
         val missingJars = scala.collection.mutable.Set[String]()
         funcList.foreach(func => {
@@ -297,7 +297,7 @@ object FunctionUtils {
         apiResult.toString()
       } else {
         val ownerId: String = if (userid == None) "Kamanja" else userid.get
-        var funcList = JsonSerializer.parseFunctionList(functionsText, "JSON", ownerId)
+        var funcList = JsonSerializer.parseFunctionList(functionsText, "JSON", ownerId, uniqueId, mdElementId)
         // Check for the Jars
         val missingJars = scala.collection.mutable.Set[String]()
         funcList.foreach(func => {
