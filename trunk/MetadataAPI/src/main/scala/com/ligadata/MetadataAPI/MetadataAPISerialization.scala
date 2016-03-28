@@ -37,8 +37,8 @@ object MetadataAPISerialization {
               ("NameSpace" -> o.nameSpace) ~
               ("ModelType" -> o.miningModelType.toString) ~
               ("DependencyJars" -> o.CheckAndGetDependencyJarNames.toList) ~
-              ("InputAttributes" -> o.inputVars.toList.map(m => ("NameSpace" -> m.NameSpace) ~ ("Name" -> m.Name) ~ ("Version" -> m.Version))) ~
-              ("OutputAttributes" -> o.outputVars.toList.map(m => ("NameSpace" -> m.NameSpace) ~ ("Name" -> m.Name) ~ ("Version" -> m.Version))) ~
+//              ("InputAttributes" -> o.inputVars.toList.map(m => ("NameSpace" -> m.NameSpace) ~ ("Name" -> m.Name) ~ ("Version" -> m.Version))) ~
+//              ("OutputAttributes" -> o.outputVars.toList.map(m => ("NameSpace" -> m.NameSpace) ~ ("Name" -> m.Name) ~ ("Version" -> m.Version))) ~
               ("ModelRep" -> o.modelRepresentation.toString) ~
               ("OrigDef" -> o.OrigDef) ~
               ("MsgConsumed" -> "") ~
@@ -47,7 +47,7 @@ object MetadataAPISerialization {
               ("ObjectFormat" -> ObjFormatType.asString(o.ObjectFormat)) ~
               ("Description" -> o.Description) ~
               ("Author" -> o.Author) ~
-              ("NumericTypes" -> ("Version" -> ver) ~ ("TransId" -> o.TranId) ~ ("UniqID" -> o.UniqID) ~ ("CreationTime" -> o.CreationTime) ~ ("ModTime" -> o.ModTime) ~ ("MdElemStructVer" -> o.MdElemStructVer)) ~
+              ("NumericTypes" -> ("Version" -> ver) ~ ("TransId" -> o.TranId) ~ ("UniqId" -> o.UniqId) ~ ("CreationTime" -> o.CreationTime) ~ ("ModTime" -> o.ModTime) ~ ("MdElemStructVer" -> o.MdElemStructVer)) ~
               ("BooleanTypes" -> ("IsActive" -> o.IsActive) ~ ("IsReusable" -> o.isReusable) ~ ("IsDeleted" -> o.IsDeleted) ~ ("Recompile" -> false) ~ ("SupportsInstanceSerialization" -> o.SupportsInstanceSerialization)
                 )
           ("ModelDef", compact(render(json)))
@@ -84,7 +84,7 @@ object MetadataAPISerialization {
               ("IsDeleted" -> o.IsDeleted) ~
               ("Recompile" -> false) ~
               ("Description" -> o.Description) ~
-              ("NumericTypes" -> ("Version" -> ver) ~ ("TransId" -> o.TranId) ~ ("UniqID" -> o.UniqID) ~ ("CreationTime" -> o.CreationTime) ~ ("ModTime" -> o.ModTime) ~ ("MdElemStructVer" -> o.MdElemStructVer)) ~
+              ("NumericTypes" -> ("Version" -> ver) ~ ("TransId" -> o.TranId) ~ ("UniqId" -> o.UniqId) ~ ("CreationTime" -> o.CreationTime) ~ ("ModTime" -> o.ModTime) ~ ("MdElemStructVer" -> o.MdElemStructVer)) ~
               ("PrimaryKeys" -> primaryKeys.map(m => ("constraintName" -> m._1) ~ ("key" -> m._2))) ~
               ("ForeignKeys" -> foreignKeys.map(m => ("constraintName" -> m._1) ~ ("key" -> m._2) ~ ("forignContainerName" -> m._3) ~ ("forignKey" -> m._4)))
           ("MessageDef", compact(render(json)))
@@ -120,7 +120,7 @@ object MetadataAPISerialization {
               ("IsDeleted" -> o.IsDeleted) ~
               ("Recompile" -> false) ~
               ("Description" -> o.Description) ~
-              ("NumericTypes" -> ("Version" -> ver) ~ ("TransId" -> o.TranId) ~ ("UniqID" -> o.UniqID) ~ ("CreationTime" -> o.CreationTime) ~ ("ModTime" -> o.ModTime) ~ ("MdElemStructVer" -> o.MdElemStructVer)) ~
+              ("NumericTypes" -> ("Version" -> ver) ~ ("TransId" -> o.TranId) ~ ("UniqId" -> o.UniqId) ~ ("CreationTime" -> o.CreationTime) ~ ("ModTime" -> o.ModTime) ~ ("MdElemStructVer" -> o.MdElemStructVer)) ~
               ("PrimaryKeys" -> primaryKeys.map(m => ("constraintName" -> m._1) ~ ("key" -> m._2))) ~
               ("ForeignKeys" -> foreignKeys.map(m => ("constraintName" -> m._1) ~ ("key" -> m._2) ~ ("forignContainerName" -> m._3) ~ ("forignKey" -> m._4)))
           ("ContainerDef", compact(render(json)))
@@ -144,7 +144,7 @@ object MetadataAPISerialization {
               ("ClassName" -> o.className) ~
               ("Recompile" -> false) ~
               ("Description" -> o.Description) ~
-              ("NumericTypes" -> ("Version" -> ver) ~ ("TransId" -> o.TranId) ~ ("UniqID" -> o.UniqID) ~ ("CreationTime" -> o.CreationTime) ~ ("ModTime" -> o.ModTime) ~ ("MdElemStructVer" -> o.MdElemStructVer)) ~
+              ("NumericTypes" -> ("Version" -> ver) ~ ("TransId" -> o.TranId) ~ ("UniqId" -> o.UniqId) ~ ("CreationTime" -> o.CreationTime) ~ ("ModTime" -> o.ModTime) ~ ("MdElemStructVer" -> o.MdElemStructVer)) ~
               ("IsActive" -> o.IsActive) ~
               ("IsDeleted" -> o.IsDeleted)
           ("FunctionDef", compact(render(json)))
@@ -170,7 +170,7 @@ object MetadataAPISerialization {
               ("Recompile" -> false) ~
               ("Persist" -> false) ~
               ("Description" -> o.Description) ~
-              ("NumericTypes" -> ("Version" -> ver) ~ ("TransId" -> o.TranId) ~ ("UniqID" -> o.UniqID) ~ ("CreationTime" -> o.CreationTime) ~ ("ModTime" -> o.ModTime) ~ ("MdElemStructVer" -> o.MdElemStructVer)) ~
+              ("NumericTypes" -> ("Version" -> ver) ~ ("TransId" -> o.TranId) ~ ("UniqId" -> o.UniqId) ~ ("CreationTime" -> o.CreationTime) ~ ("ModTime" -> o.ModTime) ~ ("MdElemStructVer" -> o.MdElemStructVer)) ~
               ("IsActive" -> o.IsActive) ~
               ("IsFixed" -> o.IsFixed) ~
               ("IsDeleted" -> o.IsDeleted)
@@ -197,7 +197,7 @@ object MetadataAPISerialization {
               ("Recompile" -> false) ~
               ("Persist" -> false) ~
               ("Description" -> o.Description) ~
-              ("NumericTypes" -> ("Version" -> ver) ~ ("TransId" -> o.TranId) ~ ("UniqID" -> o.UniqID) ~ ("CreationTime" -> o.CreationTime) ~ ("ModTime" -> o.ModTime) ~ ("MdElemStructVer" -> o.MdElemStructVer)) ~
+              ("NumericTypes" -> ("Version" -> ver) ~ ("TransId" -> o.TranId) ~ ("UniqId" -> o.UniqId) ~ ("CreationTime" -> o.CreationTime) ~ ("ModTime" -> o.ModTime) ~ ("MdElemStructVer" -> o.MdElemStructVer)) ~
               ("IsActive" -> o.IsActive) ~
               ("IsFixed" -> o.IsFixed) ~
               ("IsDeleted" -> o.IsDeleted)
@@ -217,7 +217,7 @@ object MetadataAPISerialization {
               ("PhysicalName" -> o.PhysicalName) ~
               ("JarName" -> getEmptyIfNull(o.jarName)) ~
               ("DependencyJars" -> o.CheckAndGetDependencyJarNames.toList) ~
-              ("NumericTypes" -> ("Version" -> ver) ~ ("TransId" -> o.TranId) ~ ("UniqID" -> o.UniqID) ~ ("CreationTime" -> o.CreationTime) ~ ("ModTime" -> o.ModTime) ~ ("MdElemStructVer" -> o.MdElemStructVer)) ~
+              ("NumericTypes" -> ("Version" -> ver) ~ ("TransId" -> o.TranId) ~ ("UniqId" -> o.UniqId) ~ ("CreationTime" -> o.CreationTime) ~ ("ModTime" -> o.ModTime) ~ ("MdElemStructVer" -> o.MdElemStructVer)) ~
               ("Description" -> o.description)
           ("JarDef", compact(render(json)))
         }
@@ -235,7 +235,7 @@ object MetadataAPISerialization {
               ("PhysicalName" -> o.PhysicalName) ~
               ("JarName" -> getEmptyIfNull(o.jarName)) ~
               ("DependencyJars" -> o.CheckAndGetDependencyJarNames.toList) ~
-              ("NumericTypes" -> ("Version" -> ver) ~ ("TransId" -> o.TranId) ~ ("UniqID" -> o.UniqID) ~ ("CreationTime" -> o.CreationTime) ~ ("ModTime" -> o.ModTime) ~ ("MdElemStructVer" -> o.MdElemStructVer)) ~
+              ("NumericTypes" -> ("Version" -> ver) ~ ("TransId" -> o.TranId) ~ ("UniqId" -> o.UniqId) ~ ("CreationTime" -> o.CreationTime) ~ ("ModTime" -> o.ModTime) ~ ("MdElemStructVer" -> o.MdElemStructVer)) ~
               ("Description" -> o.description)
           ("ConfigDef", compact(render(json)))
         }
@@ -296,13 +296,13 @@ object MetadataAPISerialization {
               ("JarName" -> o.JarName) ~
               ("DependencyJars" -> o.DependencyJars.toList) ~
               ("AdapterSpecificCfg" -> o.AdapterSpecificCfg) ~
-              ("InputAdapterToValidate" -> o.InputAdapterToValidate) ~
-              ("FailedEventsAdapter" -> o.FailedEventsAdapter) ~
-              ("DelimiterString1" -> o.DelimiterString1) ~
-              ("AssociatedMessage" -> o.AssociatedMessage) ~
-              ("KeyAndValueDelimiter" -> o.KeyAndValueDelimiter) ~
-              ("FieldDelimiter" -> o.FieldDelimiter) ~
-              ("ValueDelimiter" -> o.ValueDelimiter)
+//              ("InputAdapterToValidate" -> o.InputAdapterToValidate) ~
+//              ("FailedEventsAdapter" -> o.FailedEventsAdapter) ~
+//              ("DelimiterString1" -> o.DelimiterString1) ~
+//              ("AssociatedMessage" -> o.AssociatedMessage) ~
+//              ("KeyAndValueDelimiter" -> o.KeyAndValueDelimiter) ~
+//              ("FieldDelimiter" -> o.FieldDelimiter) ~
+//              ("ValueDelimiter" -> o.ValueDelimiter)
           ("AdapterInfo", compact(render(json)))
         }
         case o: UserPropertiesInfo => {
@@ -333,28 +333,23 @@ object MetadataAPISerialization {
 
       val ModDefInst = json.extract[ModelDefinition]
 
-      val inputAttrList = ModDefInst.Model.InputAttributes
-      var inputAttrList1 = List[(String, String, String, String, Boolean, String)]()
-      for (attr <- inputAttrList) {
-        inputAttrList1 ::=(attr.NameSpace, attr.Name, attr.Type.NameSpace, attr.Type.Name, false, attr.CollectionType.get)
-      }
-
-      val outputAttrList = ModDefInst.Model.OutputAttributes
-      var outputAttrList1 = List[(String, String, String)]()
-      for (attr <- outputAttrList) {
-        outputAttrList1 ::=(attr.Name, attr.Type.NameSpace, attr.Type.Name)
-      }
+      //FIXME: Serialize & Deserialize these values -- Begin
+      val ownerId: String = ""
+      val uniqueId: Long = 0
+      val mdElementId: Long = 0
+      val inputMsgSets: Array[Array[MessageAndAttributes]] = Array[Array[MessageAndAttributes]]()
+      val outputMsgs: Array[String] = Array[String]()
+      //FIXME: Serialize & Deserialize these values -- End
 
       val modDef = MdMgr.GetMdMgr.MakeModelDef(ModDefInst.Model.NameSpace
         , ModDefInst.Model.Name
         , ModDefInst.Model.PhysicalName
+        , ownerId, uniqueId, mdElementId
         , ModelRepresentation.modelRep(ModDefInst.Model.ModelRep)
+        , inputMsgSets, outputMsgs
         , ModDefInst.Model.BooleanTypes.IsReusable
-        , ModDefInst.Model.MsgConsumed
-        , ModDefInst.Model.JpmmlStr
+        , ModDefInst.Model.JpmmlStr //FIXME:- this should be ObjectDefinition, not JpmmlStr
         , MiningModelType.modelType(ModDefInst.Model.ModelType)
-        , inputAttrList1
-        , outputAttrList1
         , ModDefInst.Model.NumericTypes.Version
         , ModDefInst.Model.JarName
         , ModDefInst.Model.DependencyJars.toArray
@@ -418,11 +413,17 @@ object MetadataAPISerialization {
       })
 
 
+      //FIXME: Serialize & Deserialize these values -- Begin
+      val ownerId: String = ""
+      val uniqueId: Long = 0
+      val mdElementId: Long = 0
+      //FIXME: Serialize & Deserialize these values -- End
       val msgDef = MdMgr.GetMdMgr.MakeFixedMsg(
         MsgDefInst.Message.NameSpace,
         MsgDefInst.Message.Name,
         MsgDefInst.Message.PhysicalName,
         attrList1,
+        ownerId, uniqueId, mdElementId,
         MsgDefInst.Message.NumericTypes.Version,
         MsgDefInst.Message.JarName,
         MsgDefInst.Message.DependencyJars.toArray,
@@ -487,12 +488,18 @@ object MetadataAPISerialization {
         foreignKeys ::=(f.constraintName, f.key, f.forignContainerName, f.forignKey)
       })
 
+      //FIXME: Serialize & Deserialize these values -- Begin
+      val ownerId: String = ""
+      val uniqueId: Long = 0
+      val mdElementId: Long = 0
+      //FIXME: Serialize & Deserialize these values -- End
 
       val contDef = MdMgr.GetMdMgr.MakeFixedContainer(
         ContDefInst.Container.NameSpace,
         ContDefInst.Container.Name,
         ContDefInst.Container.PhysicalName,
         attrList1,
+        ownerId, uniqueId, mdElementId,
         ContDefInst.Container.NumericTypes.Version,
         ContDefInst.Container.JarName,
         ContDefInst.Container.DependencyJars.toArray,
@@ -544,12 +551,18 @@ object MetadataAPISerialization {
         functionInst.Function.Features.foreach(arg => featureSet += FcnMacroAttr.fromString(arg))
       }
 
+      //FIXME: Serialize & Deserialize these values -- Begin
+      val ownerId: String = ""
+      val uniqueId: Long = 0
+      val mdElementId: Long = 0
+      //FIXME: Serialize & Deserialize these values -- End
+
       val functionDef = MdMgr.GetMdMgr.MakeFunc(functionInst.Function.NameSpace,
         functionInst.Function.Name,
         functionInst.Function.PhysicalName,
         (functionInst.Function.ReturnTypeNameSpace, functionInst.Function.ReturnTypeName),
         argList,
-        featureSet,
+        featureSet, ownerId, uniqueId, mdElementId,
         functionInst.Function.NumericTypes.Version,
         functionInst.Function.JarName,
         functionInst.Function.DependencyJars.toArray)
@@ -593,11 +606,17 @@ object MetadataAPISerialization {
       val key = (mapTypeInst.MapType.KeyTypeNameSpace, mapTypeInst.MapType.KeyTypeName)
       val value = (mapTypeInst.MapType.ValueTypeNameSpace, mapTypeInst.MapType.ValueTypeName)
 
+      //FIXME: Serialize & Deserialize these values -- Begin
+      val ownerId: String = ""
+      val uniqueId: Long = 0
+      val mdElementId: Long = 0
+      //FIXME: Serialize & Deserialize these values -- End
+
       val mapTypeDef = MdMgr.GetMdMgr.MakeMap(mapTypeInst.MapType.NameSpace,
         mapTypeInst.MapType.Name,
         key,
         value,
-        mapTypeInst.MapType.NumericTypes.Version,
+        mapTypeInst.MapType.NumericTypes.Version, ownerId, uniqueId, mdElementId,
         mapTypeInst.MapType.Recompile,
         mapTypeInst.MapType.Persist)
 
@@ -642,11 +661,17 @@ object MetadataAPISerialization {
 
       val arrayTypeInst = json.extract[ArrayType]
 
+      //FIXME: Serialize & Deserialize these values -- Begin
+      val ownerId: String = ""
+      val uniqueId: Long = 0
+      val mdElementId: Long = 0
+      //FIXME: Serialize & Deserialize these values -- End
+
       val arrayTypeDef = MdMgr.GetMdMgr.MakeArray(arrayTypeInst.ArrayType.NameSpace,
         arrayTypeInst.ArrayType.Name,
         arrayTypeInst.ArrayType.TypeNameSpace,
         arrayTypeInst.ArrayType.TypeName,
-        arrayTypeInst.ArrayType.NumberOfDimensions,
+        arrayTypeInst.ArrayType.NumberOfDimensions, ownerId, uniqueId, mdElementId,
         arrayTypeInst.ArrayType.NumericTypes.Version,
         arrayTypeInst.ArrayType.Recompile,
         arrayTypeInst.ArrayType.Persist
@@ -693,10 +718,15 @@ object MetadataAPISerialization {
 
       val jarInst = json.extract[Jar]
 
+      //FIXME: Serialize & Deserialize these values -- Begin
+      val ownerId: String = ""
+      val uniqueId: Long = 0
+      val mdElementId: Long = 0
+      //FIXME: Serialize & Deserialize these values -- End
 
       val jarDef = MdMgr.GetMdMgr.MakeJarDef(jarInst.Jar.NameSpace,
         jarInst.Jar.Name,
-        jarInst.Jar.NumericTypes.Version.toString
+        jarInst.Jar.NumericTypes.Version.toString, ownerId, uniqueId, mdElementId
       )
 
       jarDef.origDef = jarInst.Jar.OrigDef
@@ -892,6 +922,11 @@ object MetadataAPISerialization {
 
       val adapterInst = json.extract[Adapter]
 
+      //FIXME: Serialize & Deserialize these values -- Begin
+      val ownerId: String = ""
+      val uniqueId: Long = 0
+      val mdElementId: Long = 0
+      //FIXME: Serialize & Deserialize these values -- End
       val adapterInfo = MdMgr.GetMdMgr.MakeAdapter(
         adapterInst.Adapter.Name,
         adapterInst.Adapter.TypeString,
@@ -899,13 +934,7 @@ object MetadataAPISerialization {
         adapterInst.Adapter.ClassName,
         adapterInst.Adapter.JarName,
         adapterInst.Adapter.DependencyJars,
-        adapterInst.Adapter.AdapterSpecificCfg,
-        adapterInst.Adapter.InputAdapterToValidate,
-        adapterInst.Adapter.KeyAndValueDelimiter,
-        adapterInst.Adapter.FieldDelimiter,
-        adapterInst.Adapter.ValueDelimiter,
-        adapterInst.Adapter.AssociatedMessage,
-        adapterInst.Adapter.FailedEventsAdapter
+        adapterInst.Adapter.AdapterSpecificCfg
       )
       //adapterInfo.DelimiterString1 = adapterInst.Adapter.DelimiterString1
       adapterInfo
@@ -1155,12 +1184,12 @@ case class ModelInfo(Name: String,
                      NameSpace: String,
                      ObjectFormat: String,
                      BooleanTypes: BooleanTypes,
-                     MsgConsumed: String,
+//                     MsgConsumed: String,
                      JpmmlStr: String,
                      ModelType: String,
                      DependencyJars: List[String],
-                     InputAttributes: List[Attr],
-                     OutputAttributes: List[Attr],
+//                     InputAttributes: List[Attr],
+//                     OutputAttributes: List[Attr],
                      ModelRep: String,
                      OrigDef: String,
                      ObjectDefinition: String,

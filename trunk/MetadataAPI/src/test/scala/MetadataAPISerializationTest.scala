@@ -18,7 +18,7 @@ class MetadataAPISerializationTest extends FlatSpec {
     val modelDef = getModlDef
     //expected
     val expected: String =
-      """{"Model":{"Name":"modelname","PhysicalName":"/opt/kamanja/model/modelname.json","JarName":"JarName","NameSpace":"com.ligadata.modeldef","ModelType":"SCALA","DependencyJars":["Jar1","Jar2"],"InputAttributes":[],"OutputAttributes":[],"ModelRep":"JAR","OrigDef":"OrigDef","MsgConsumed":"","JpmmlStr":"","ObjectDefinition":"ObjectDefinition","ObjectFormat":"Unknown","Description":"Description","Author":"Author","NumericTypes":{"Version":123456789,"TransId":123123123123,"UniqID":987654321,"CreationTime":2222222222,"ModTime":33333333333,"MdElemStructVer":1},"BooleanTypes":{"IsActive":true,"IsReusable":false,"IsDeleted":false,"Recompile":false,"SupportsInstanceSerialization":false}}}"""
+      """{"Model":{"Name":"modelname","PhysicalName":"/opt/kamanja/model/modelname.json","JarName":"JarName","NameSpace":"com.ligadata.modeldef","ModelType":"SCALA","DependencyJars":["Jar1","Jar2"],"InputAttributes":[],"OutputAttributes":[],"ModelRep":"JAR","OrigDef":"OrigDef","MsgConsumed":"","JpmmlStr":"","ObjectDefinition":"ObjectDefinition","ObjectFormat":"Unknown","Description":"Description","Author":"Author","NumericTypes":{"Version":123456789,"TransId":123123123123,"UniqId":987654321,"CreationTime":2222222222,"ModTime":33333333333,"MdElemStructVer":1},"BooleanTypes":{"IsActive":true,"IsReusable":false,"IsDeleted":false,"Recompile":false,"SupportsInstanceSerialization":false}}}"""
 
     //actual
     val serializedJson1 = MetadataAPISerialization.serializeObjectToJson(modelDef)
@@ -33,7 +33,7 @@ class MetadataAPISerializationTest extends FlatSpec {
     var mssgDef = getMsgDef
     //expected
     val expected: String =
-      """{"Message":{"Name":"msgname","PhysicalName":"/opt/kamanja/message/message.json","JarName":"JarName","NameSpace":"com.ligadata.messagedef","DependencyJars":["Jar1","Jar2"],"OrigDef":"OrigDef","ObjectDefinition":"ObjectDefinition","ObjectFormat":"Unknown","CreationTime":2222222222,"Author":"Author","PartitionKey":["key1","key2"],"Persist":true,"IsActive":true,"IsDeleted":false,"Recompile":false,"Description":"Description","NumericTypes":{"Version":123456789,"TransId":123123123123,"UniqID":987654321,"CreationTime":2222222222,"ModTime":33333333333,"MdElemStructVer":1},"PrimaryKeys":[{"constraintName":"prim","key":["key2","key1"]}],"ForeignKeys":[{"constraintName":"forign","key":["key2","key1"],"forignContainerName":"forr","forignKey":["key2","key1"]}]}}"""
+      """{"Message":{"Name":"msgname","PhysicalName":"/opt/kamanja/message/message.json","JarName":"JarName","NameSpace":"com.ligadata.messagedef","DependencyJars":["Jar1","Jar2"],"OrigDef":"OrigDef","ObjectDefinition":"ObjectDefinition","ObjectFormat":"Unknown","CreationTime":2222222222,"Author":"Author","PartitionKey":["key1","key2"],"Persist":true,"IsActive":true,"IsDeleted":false,"Recompile":false,"Description":"Description","NumericTypes":{"Version":123456789,"TransId":123123123123,"UniqId":987654321,"CreationTime":2222222222,"ModTime":33333333333,"MdElemStructVer":1},"PrimaryKeys":[{"constraintName":"prim","key":["key2","key1"]}],"ForeignKeys":[{"constraintName":"forign","key":["key2","key1"],"forignContainerName":"forr","forignKey":["key2","key1"]}]}}"""
 
     val serializedJson1 = MetadataAPISerialization.serializeObjectToJson(mssgDef)
 
@@ -48,7 +48,7 @@ class MetadataAPISerializationTest extends FlatSpec {
     var conDef = getContainerDef
     //expected
     val expected: String =
-      """{"Container":{"Name":"msgname","PhysicalName":"/opt/kamanja/Container/Container.json","JarName":"JarName","NameSpace":"com.ligadata.containerdef","DependencyJars":["Jar1","Jar2"],"OrigDef":"OrigDef","ObjectDefinition":"ObjectDefinition","ObjectFormat":"Unknown","CreationTime":2222222222,"Author":"Author","PartitionKey":["key1","key2"],"Persist":true,"IsActive":true,"IsDeleted":false,"Recompile":false,"Description":"Description","NumericTypes":{"Version":123456789,"TransId":123123123123,"UniqID":987654321,"CreationTime":2222222222,"ModTime":33333333333,"MdElemStructVer":1},"PrimaryKeys":[{"constraintName":"prim","key":["key2","key1"]}],"ForeignKeys":[{"constraintName":"forign","key":["key2","key1"],"forignContainerName":"forr","forignKey":["key2","key1"]}]}}"""
+      """{"Container":{"Name":"msgname","PhysicalName":"/opt/kamanja/Container/Container.json","JarName":"JarName","NameSpace":"com.ligadata.containerdef","DependencyJars":["Jar1","Jar2"],"OrigDef":"OrigDef","ObjectDefinition":"ObjectDefinition","ObjectFormat":"Unknown","CreationTime":2222222222,"Author":"Author","PartitionKey":["key1","key2"],"Persist":true,"IsActive":true,"IsDeleted":false,"Recompile":false,"Description":"Description","NumericTypes":{"Version":123456789,"TransId":123123123123,"UniqId":987654321,"CreationTime":2222222222,"ModTime":33333333333,"MdElemStructVer":1},"PrimaryKeys":[{"constraintName":"prim","key":["key2","key1"]}],"ForeignKeys":[{"constraintName":"forign","key":["key2","key1"],"forignContainerName":"forr","forignKey":["key2","key1"]}]}}"""
 
     val serializedJson1 = MetadataAPISerialization.serializeObjectToJson(conDef)
 
@@ -63,7 +63,7 @@ class MetadataAPISerializationTest extends FlatSpec {
     var funDef = getFunctionDef
     //expected
     val expected: String =
-      """{"Function":{"Name":"msgname","PhysicalName":"/opt/kamanja/Container/Container.json","JarName":"JarName","NameSpace":"com.ligadata.containerdef","DependencyJars":["Jar1","basetypes_2.10-0.1.0.jar","metadata_2.10-1.0.jar","Jar2"],"OrigDef":"OrigDef","ObjectDefinition":"ObjectDefinition","ObjectFormat":"Unknown","Author":"Author","Arguments":[{"ArgName":"type2","ArgTypeNameSpace":"system","ArgTypeName":"int"},{"ArgName":"type1","ArgTypeNameSpace":"system","ArgTypeName":"int"}],"Features":["CLASSUPDATE","HAS_INDEFINITE_ARITY"],"ReturnTypeNameSpace":"system","ReturnTypeName":"string","ClassName":"className","Recompile":false,"Description":"Description","NumericTypes":{"Version":1000000,"TransId":123123123123,"UniqID":987654321,"CreationTime":2222222222,"ModTime":33333333333,"MdElemStructVer":1},"IsActive":true,"IsDeleted":false}}"""
+      """{"Function":{"Name":"msgname","PhysicalName":"/opt/kamanja/Container/Container.json","JarName":"JarName","NameSpace":"com.ligadata.containerdef","DependencyJars":["Jar1","basetypes_2.10-0.1.0.jar","metadata_2.10-1.0.jar","Jar2"],"OrigDef":"OrigDef","ObjectDefinition":"ObjectDefinition","ObjectFormat":"Unknown","Author":"Author","Arguments":[{"ArgName":"type2","ArgTypeNameSpace":"system","ArgTypeName":"int"},{"ArgName":"type1","ArgTypeNameSpace":"system","ArgTypeName":"int"}],"Features":["CLASSUPDATE","HAS_INDEFINITE_ARITY"],"ReturnTypeNameSpace":"system","ReturnTypeName":"string","ClassName":"className","Recompile":false,"Description":"Description","NumericTypes":{"Version":1000000,"TransId":123123123123,"UniqId":987654321,"CreationTime":2222222222,"ModTime":33333333333,"MdElemStructVer":1},"IsActive":true,"IsDeleted":false}}"""
 
     //actual
     val serializedJson1 = MetadataAPISerialization.serializeObjectToJson(funDef)
@@ -78,7 +78,7 @@ class MetadataAPISerializationTest extends FlatSpec {
     var mapTypeDef = getMapTypeDef
     //expected
     val expected: String =
-      """{"MapType":{"Name":"maptypename","NameSpace":"com.ligadata.maptypedef","PhysicalName":"/opt/kamanja/type/MapType.json","TypeTypeName":"tContainer","JarName":"MapTypeJarName","ObjectFormat":"Unknown","DependencyJars":["Jar1","Jar2"],"Implementation":"implementationName","KeyTypeNameSpace":"system","KeyTypeName":"String","ValueTypeNameSpace":"system","ValueTypeName":"String","ObjectDefinition":"ObjectDefinition","OrigDef":"OrigDef","Author":"Author","Recompile":false,"Persist":false,"Description":"Description","NumericTypes":{"Version":1000000,"TransId":123123123123,"UniqID":987654321,"CreationTime":2222222222,"ModTime":33333333333,"MdElemStructVer":1},"IsActive":true,"IsFixed":false,"IsDeleted":false}}"""
+      """{"MapType":{"Name":"maptypename","NameSpace":"com.ligadata.maptypedef","PhysicalName":"/opt/kamanja/type/MapType.json","TypeTypeName":"tContainer","JarName":"MapTypeJarName","ObjectFormat":"Unknown","DependencyJars":["Jar1","Jar2"],"Implementation":"implementationName","KeyTypeNameSpace":"system","KeyTypeName":"String","ValueTypeNameSpace":"system","ValueTypeName":"String","ObjectDefinition":"ObjectDefinition","OrigDef":"OrigDef","Author":"Author","Recompile":false,"Persist":false,"Description":"Description","NumericTypes":{"Version":1000000,"TransId":123123123123,"UniqId":987654321,"CreationTime":2222222222,"ModTime":33333333333,"MdElemStructVer":1},"IsActive":true,"IsFixed":false,"IsDeleted":false}}"""
 
     val serializedJson1 = MetadataAPISerialization.serializeObjectToJson(mapTypeDef)
 
@@ -93,7 +93,7 @@ class MetadataAPISerializationTest extends FlatSpec {
     var arrayType = getArrayTypeDef
     //expected
     val expected: String =
-      """{"ArrayType":{"Name":"maptypename","NameSpace":"com.ligadata.arraytypedef","PhysicalName":"/opt/kamanja/type/ArrayTyp.json","TypeTypeName":"tScalar","TypeName":"Int","TypeNameSpace":"system","NumberOfDimensions":2,"JarName":"ArrayTypeJarName","ObjectFormat":"Unknown","DependencyJars":["Jar1","Jar2"],"Implementation":"implementationName","ObjectDefinition":"ObjectDefinition","OrigDef":"OrigDef","Author":"Author","Recompile":false,"Persist":false,"Description":"Description","NumericTypes":{"Version":1000000,"TransId":123123123123,"UniqID":987654321,"CreationTime":2222222222,"ModTime":33333333333,"MdElemStructVer":1},"IsActive":true,"IsFixed":false,"IsDeleted":false}}"""
+      """{"ArrayType":{"Name":"maptypename","NameSpace":"com.ligadata.arraytypedef","PhysicalName":"/opt/kamanja/type/ArrayTyp.json","TypeTypeName":"tScalar","TypeName":"Int","TypeNameSpace":"system","NumberOfDimensions":2,"JarName":"ArrayTypeJarName","ObjectFormat":"Unknown","DependencyJars":["Jar1","Jar2"],"Implementation":"implementationName","ObjectDefinition":"ObjectDefinition","OrigDef":"OrigDef","Author":"Author","Recompile":false,"Persist":false,"Description":"Description","NumericTypes":{"Version":1000000,"TransId":123123123123,"UniqId":987654321,"CreationTime":2222222222,"ModTime":33333333333,"MdElemStructVer":1},"IsActive":true,"IsFixed":false,"IsDeleted":false}}"""
 
     val serializedJson1 = MetadataAPISerialization.serializeObjectToJson(arrayType)
 
@@ -108,7 +108,7 @@ class MetadataAPISerializationTest extends FlatSpec {
     var jar = getJarDef
     //expected
     val expected: String =
-      """{"Jar":{"IsActive":true,"IsDeleted":false,"OrigDef":"OrigDef","ObjectDefinition":"ObjectDefinition","ObjectFormat":"Unknown","NameSpace":"com.ligadata.jardef","Name":"jarname","Author":"Author","PhysicalName":"/opt/kamanja/jar/Jar.jar","JarName":"Jar.jar","DependencyJars":["Jar1","Jar2"],"NumericTypes":{"Version":1000000,"TransId":123123123123,"UniqID":987654321,"CreationTime":2222222222,"ModTime":33333333333,"MdElemStructVer":1},"Description":"Description"}}"""
+      """{"Jar":{"IsActive":true,"IsDeleted":false,"OrigDef":"OrigDef","ObjectDefinition":"ObjectDefinition","ObjectFormat":"Unknown","NameSpace":"com.ligadata.jardef","Name":"jarname","Author":"Author","PhysicalName":"/opt/kamanja/jar/Jar.jar","JarName":"Jar.jar","DependencyJars":["Jar1","Jar2"],"NumericTypes":{"Version":1000000,"TransId":123123123123,"UniqId":987654321,"CreationTime":2222222222,"ModTime":33333333333,"MdElemStructVer":1},"Description":"Description"}}"""
 
     val serializedJson1 = MetadataAPISerialization.serializeObjectToJson(jar)
 
@@ -123,7 +123,7 @@ class MetadataAPISerializationTest extends FlatSpec {
     var config = getConfigDef
     //expected
     val expected: String =
-      """{"Config":{"IsActive":true,"IsDeleted":false,"OrigDef":"OrigDef","ObjectDefinition":"ObjectDefinition","ObjectFormat":"Unknown","NameSpace":"com.ligadata.ConfigDef","Contents":"Contents","Name":"ConfigName","Author":"Author","PhysicalName":"/opt/kamanja/Config/Config.json","JarName":"Config.jar","DependencyJars":["Jar1","Jar2"],"NumericTypes":{"Version":1000000,"TransId":123123123123,"UniqID":987654321,"CreationTime":2222222222,"ModTime":33333333333,"MdElemStructVer":1},"Description":"Description"}}"""
+      """{"Config":{"IsActive":true,"IsDeleted":false,"OrigDef":"OrigDef","ObjectDefinition":"ObjectDefinition","ObjectFormat":"Unknown","NameSpace":"com.ligadata.ConfigDef","Contents":"Contents","Name":"ConfigName","Author":"Author","PhysicalName":"/opt/kamanja/Config/Config.json","JarName":"Config.jar","DependencyJars":["Jar1","Jar2"],"NumericTypes":{"Version":1000000,"TransId":123123123123,"UniqId":987654321,"CreationTime":2222222222,"ModTime":33333333333,"MdElemStructVer":1},"Description":"Description"}}"""
 
     val serializedJson1 = MetadataAPISerialization.serializeObjectToJson(config)
 
