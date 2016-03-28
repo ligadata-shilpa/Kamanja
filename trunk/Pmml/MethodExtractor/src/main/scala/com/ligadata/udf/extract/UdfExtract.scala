@@ -242,7 +242,7 @@ object MethodExtract extends App with LogTrait {
         val notExcluded: Boolean = (excludeList.filter(exclnm => nm.contains(exclnm) || rt.contains(exclnm)).length == 0)
         if (notExcluded && !nm.contains("$")) {
 
-          val cmd: MethodCmd = new MethodCmd(mgr, versionNumber, namespace, typeMap, typeArray, nm, fnm, rt, ts, ownerId, 0, 0)
+          val cmd: MethodCmd = new MethodCmd(mgr, versionNumber, namespace, typeMap, typeArray, nm, fnm, rt, ts, ownerId)
           if (cmd != null) {
             val (funcInfo, cmdStr): (FuncDefArgs, String) = cmd.makeFuncDef
             if (funcInfo != null) {
