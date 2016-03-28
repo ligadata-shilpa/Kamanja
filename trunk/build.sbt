@@ -391,6 +391,8 @@ lazy val jtm = project.in(file("GenerateModels/jtm"))
   .settings(TestSettings.settings: _*)
   .dependsOn(Metadata, KamanjaBase, Exceptions, MetadataBootstrap, MessageDef)
 
+lazy val runtime = project.in(file("GenerateModels/Runtime")) dependsOn(Metadata, KamanjaBase, Exceptions, MetadataBootstrap, MessageDef)
+
 lazy val InstallDriverBase = project.in(file("Utils/ClusterInstaller/InstallDriverBase"))
   .configs(TestConfigs.all: _*)
   .settings(TestSettings.settings: _*)
@@ -413,6 +415,8 @@ lazy val PmmlTestTool = project.in(file("Utils/PmmlTestTool"))
   .configs(TestConfigs.all: _*)
   .settings(TestSettings.settings: _*)
   .dependsOn(KamanjaVersion)
+
+lazy val Dag = project.in(file("Utils/Dag")) dependsOn (KamanjaUtils, Exceptions)
 
 /*
 

@@ -736,13 +736,14 @@ object MiningModelType extends Enumeration {
 
 object ModelRepresentation extends Enumeration {
     type ModelRepresentation = Value
-    val JAR, PMML, PYTHON, UNKNOWN = Value
+    val JAR, PMML, PYTHON, JTM, UNKNOWN = Value
 
   def modelRep(mdlRep: String): ModelRepresentation = {
       val rep: ModelRepresentation = mdlRep.toUpperCase match {
           case "JAR" => JAR
           case "PMML" => PMML
           case "PYTHON" => PYTHON
+          case "JTM" => JTM
           case _ => UNKNOWN
       }
       rep

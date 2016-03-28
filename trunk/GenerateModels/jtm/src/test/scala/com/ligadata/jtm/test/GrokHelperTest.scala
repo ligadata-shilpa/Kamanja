@@ -18,33 +18,41 @@ package com.ligadata.jtm.test
 import java.io.File
 
 import com.ligadata.jtm._
+import com.ligadata.jtm.eval.GrokHelper
 import org.apache.commons.io.FileUtils
 import org.apache.logging.log4j.LogManager
-import com.ligadata.jtm.nodes._
-import org.skyscreamer.jsonassert._
+
 import org.scalatest.{BeforeAndAfter, FunSuite}
 
 /**
   *
   */
-class DeserializeTest  extends FunSuite with BeforeAndAfter {
+class GrokHelperTest extends FunSuite with BeforeAndAfter {
 
-  test("test01") {
-    val fileInput = getClass.getResource("/test002.jtm/test.jtm").getPath
-    val expected = FileUtils.readFileToString(new File(fileInput), null)
-    val t = Root.fromJsonString(expected)
-    assert(2 == t.transformations.size)
-    val actual = Root.toJson(t)
-    JSONAssert.assertEquals(expected, actual, false)
+  test("test1") {
+
+    val actual = GrokHelper.ExtractDictionaryKeys("{EMAIL: email}")
+    assert(actual == Set("email"))
+
   }
 
-  test("test02") {
-    val fileInput = getClass.getResource("/test003.jtm/test1.jtm").getPath
-    val expected = FileUtils.readFileToString(new File(fileInput), null)
-    val t = Root.fromJsonString(expected)
-    assert(2 == t.transformations.size)
-    val actual = Root.toJson(t)
-    JSONAssert.assertEquals(expected, actual, false)
+  test("test2") {
+
+    val actual = GrokHelper.ExtractDictionaryKeys("{EMAIL: email}{EMAIL: email1}")
+    assert(actual == Set("email", "email1"))
+
   }
 
+  test("test3") {
+
+    val actual = GrokHelper.ExtractDictionaryKeys("{ EMAIL : email} {EMAIL: email1}")
+    assert(actual == Set("email", "email1"))
+
+  }
+
+  test("test4") {
+
+    val actual = GrokHelper.ConvertToGrokPattern("{ EMAIL : email} {EMAIL: email1}")
+    assert(actual == "%{EMAIL:email} %{EMAIL:email1}")
+  }
 }

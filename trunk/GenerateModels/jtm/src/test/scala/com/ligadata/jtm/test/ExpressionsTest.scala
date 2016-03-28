@@ -27,24 +27,20 @@ import org.scalatest.{BeforeAndAfter, FunSuite}
 /**
   *
   */
-class DeserializeTest  extends FunSuite with BeforeAndAfter {
+class ExpressionsTest  extends FunSuite with BeforeAndAfter {
 
   test("test01") {
-    val fileInput = getClass.getResource("/test002.jtm/test.jtm").getPath
-    val expected = FileUtils.readFileToString(new File(fileInput), null)
-    val t = Root.fromJsonString(expected)
-    assert(2 == t.transformations.size)
-    val actual = Root.toJson(t)
-    JSONAssert.assertEquals(expected, actual, false)
+    val actual = eval.Expressions.ExtractColumnNames("")
+    assert(Set.empty[String] == actual)
   }
 
   test("test02") {
-    val fileInput = getClass.getResource("/test003.jtm/test1.jtm").getPath
-    val expected = FileUtils.readFileToString(new File(fileInput), null)
-    val t = Root.fromJsonString(expected)
-    assert(2 == t.transformations.size)
-    val actual = Root.toJson(t)
-    JSONAssert.assertEquals(expected, actual, false)
+    val actual = eval.Expressions.ExtractColumnNames("$na1_me")
+    assert(Set("na1_me") == actual)
   }
 
+  test("test03") {
+    val actual = eval.Expressions.ExtractColumnNames("${ns_3.na1_me}")
+    assert(Set("ns_3.na1_me") == actual)
+  }
 }

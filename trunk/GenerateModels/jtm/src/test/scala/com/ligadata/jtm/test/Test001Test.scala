@@ -29,7 +29,6 @@ class Test001Test  extends FunSuite with BeforeAndAfter {
 
   val logger = LogManager.getLogger(this.getClass.getName())
 
-
   // Simple jtm
   test("test1") {
 
@@ -45,12 +44,12 @@ class Test001Test  extends FunSuite with BeforeAndAfter {
       setMetadataLocation(metadataLocation).
       build()
 
-    val outputFile = compiler.Execute()
+    compiler.Execute()
 
     val expected = FileUtils.readFileToString(new File(fileExpected), null)
-    val actual = FileUtils.readFileToString(new File(outputFile), null)
-    logger.info("actual path={}", outputFile)
-    logger.info("expected path={}", outputFile)
+    val actual = FileUtils.readFileToString(new File(fileOutput), null)
+    logger.info("actual path={}", fileOutput)
+    logger.info("expected path={}", fileExpected)
 
     assert(actual == expected)
   }
@@ -70,15 +69,13 @@ class Test001Test  extends FunSuite with BeforeAndAfter {
       setMetadataLocation(metadataLocation).
       build()
 
-    val outputFile = compiler.Execute()
+    compiler.Execute()
 
     val expected = FileUtils.readFileToString(new File(fileExpected), null)
-    val actual = FileUtils.readFileToString(new File(outputFile), null)
-    logger.info("actual path={}", outputFile)
-    logger.info("expected path={}", outputFile)
+    val actual = FileUtils.readFileToString(new File(fileOutput), null)
+    logger.info("actual path={}", fileOutput)
+    logger.info("expected path={}", fileExpected)
 
     assert(actual == expected)
   }
-
-
 }

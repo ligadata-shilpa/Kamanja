@@ -56,15 +56,12 @@ object Parts {
 
   val model =
     """|class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
-       |  override def execute(txnCtxt: TransactionContext, outputDefault: Boolean): ModelResultBase = {
+       |  override def run(txnCtxt: TransactionContext, outputDefault: Boolean): Array[BaseMsg]  = {
+       |    //
+       |    {model.grok}
        |    //
        |    {model.methods}
-       |    //
-       |    // ToDo: we expect an array of messages
-       |    //
-       |    val msgs = Array(txnCtxt.getMessage()).map(m => m.FullName -> m).toMap
        |    // Evaluate messages
-       |    //
        |    {model.message}
        |    // Main dependency -> execution check
        |    //
