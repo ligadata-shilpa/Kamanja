@@ -23,7 +23,7 @@ class MessageServiceTests extends FlatSpec with Matchers with MetadataBeforeAndA
     val resultDesc = (response \ "APIResults" \ "Result Description").result.as[String]
     resultDesc should startWith regex "Message Added Successfully"
   }
-/*
+
   it should "produce Higer version present when same or lower version added" in {
 
     val msgDef = getClass.getResource("/Metadata/message/Message_Definition_HelloWorld.json").getPath
@@ -82,5 +82,5 @@ class MessageServiceTests extends FlatSpec with Matchers with MetadataBeforeAndA
     intercept[NoSuchElementException] {
     Set.empty.head
     }
-  }*/
+  }
 }
