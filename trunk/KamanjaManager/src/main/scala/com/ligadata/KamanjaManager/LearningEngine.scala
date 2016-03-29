@@ -52,7 +52,7 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
   var modelEventFactory: MessageFactoryInterface = null
   var exceptionEventFactory: MessageFactoryInterface = null
   var tempBlah = 3
-  private def RunAllModels(transId: Long, inputData: Array[Byte], finalTopMsgOrContainer: ContainerInterface, txnCtxt: TransactionContext, uk: String, uv: String, msgEvent: KamanjaMessageEvent): Array[SavedMdlResult] = {
+  private def RunAllModels(transId: Long, inputData: Array[Byte], finalTopMsgOrContainer: ContainerInterface, txnCtxt: TransactionContext, uk: String, uv: String, msgEvent: KamanjaMessageEvent): Unit = {
 //    var results: ArrayBuffer[SavedMdlResult] = new ArrayBuffer[SavedMdlResult]()
     var oMsgIds: ArrayBuffer[Long] = new ArrayBuffer[Long]()
 
@@ -61,7 +61,7 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
       LOG.debug(s"Processing uniqueKey:$uk, uniqueVal:$uv, finalTopMsgOrContainer:$finalTopMsgOrContainer, previousModles:${models.size}")
 
     if (finalTopMsgOrContainer != null) {
-      txnCtxt.setInitialMessage(finalTopMsgOrContainer)
+      // txnCtxt.setInitialMessage(finalTopMsgOrContainer)
       ThreadLocalStorage.txnContextInfo.set(txnCtxt)
       try {
         val mdlChngCntr = KamanjaMetadata.GetModelsChangedCounter
@@ -249,7 +249,7 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
       }
     }
     msgEvent.modelinfo = if (tempModelAB.isEmpty) new Array[KamanjaModelEvent](0) else tempModelAB.toArray[KamanjaModelEvent]
-    return results.toArray
+    // return results.toArray
   }
 
 /*
