@@ -600,7 +600,7 @@ class TransactionContext(val transId: Long, val nodeCtxt: NodeContext, val msgDa
   def getMessages(msgType: String): Array[ContainerInterface] = msgs.getOrElse(msgType.toLowerCase(), ArrayBuffer[ContainerInterface]()).toArray
 
   def addMessage(m: ContainerInterface): Unit = {
-    val msgNm = m.FullName.toLowerCase()
+    val msgNm = m.getFullTypeName.toLowerCase()
     val tmp = msgs.getOrElse(msgNm, ArrayBuffer[ContainerInterface]())
     tmp += m
     msgs(msgNm) = tmp
