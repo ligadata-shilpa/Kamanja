@@ -63,7 +63,7 @@ excludedJars in assembly <<= (fullClasspath in assembly) map { cp =>
 
 name := "FileDataConsumer"
 
-version := "0.1.0"
+version := "1.4.0"
 //libraryDependencies ++= {
 //  val sprayVersion = "1.3.3"
 //  val akkaVersion = "2.3.9"

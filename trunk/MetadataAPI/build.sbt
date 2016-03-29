@@ -65,7 +65,7 @@ test in assembly := {}
 
 name := "MetadataAPI"
 
-version := "1.0"
+version := "1.4.0"
 
 //libraryDependencies += "org.joda" % "joda-convert" % "1.6"
 //

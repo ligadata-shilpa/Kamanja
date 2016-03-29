@@ -3,7 +3,7 @@ import sbt._
 
 name := "CleanUtil"
 
-version := "1.0"
+version := "1.4.0"
 
 shellPrompt := { state => "sbt (%s)> ".format(Project.extract(state).currentProject.id) }
 

@@ -62,7 +62,7 @@ unmanagedJars in Compile <<= baseDirectory map { base => (base ** "*.jar").class
 
 name := "PmmlTestTool"
 
-version := "1.0"
+version := "1.4.0"
 
 // Enables publishing to maven repo
 // publishMavenStyle := true

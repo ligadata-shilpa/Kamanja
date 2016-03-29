@@ -62,7 +62,7 @@ excludedJars in assembly <<= (fullClasspath in assembly) map { cp =>
 
 name := "MetadataAPIService"
 
-version := "1.0"
+version := "1.4.0"
 
 scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
 
