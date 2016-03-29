@@ -34,8 +34,8 @@ No schema setup
 
 package com.ligadata.keyvaluestore
 
-import com.ligadata.KvBase.{ Key, Value, TimeRange }
-import com.ligadata.StorageBase.{ DataStore, Transaction, StorageAdapterObj }
+import com.ligadata.KvBase.{ Key, TimeRange }
+import com.ligadata.StorageBase.{ DataStore, Transaction, StorageAdapterFactory, Value }
 
 import org.mapdb._
 import java.io._
@@ -259,6 +259,8 @@ class HashMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
   private def ByteArrayToValue(byteArray: Array[Byte]): Value = {
     var in = new DataInputStream(new ByteArrayInputStream(byteArray));
 
+    var schemaId = in.readInt();
+
     var serializerTypeLength = in.readInt();
     var serializerType = new Array[Byte](serializerTypeLength);
     in.read(serializerType, 0, serializerTypeLength);
@@ -267,7 +269,7 @@ class HashMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
     var serializedInfo = new Array[Byte](serializedInfoLength);
     in.read(serializedInfo, 0, serializedInfoLength);
 
-    var v = new Value(new String(serializerType), serializedInfo)
+    var v = new Value(schemaId, new String(serializerType), serializedInfo)
     v
   }
 
@@ -395,6 +397,32 @@ class HashMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
       }
     }
   }
+
+  //Added by Yousef Abu Elbeh in 2016-03-13 from here
+  override def del(containerName: String, time: TimeRange): Unit = {
+    var tableName = ""
+    try {
+      CheckTableExists(containerName)
+      tableName = toFullTableName(containerName)
+      var map = tablesMap(tableName)
+      var iter = map.keySet().iterator()
+      while (iter.hasNext()) {
+        val kba = iter.next()
+        val k = new String(kba)
+        var keyArray = k.split('|')
+        var tp = keyArray(0).toLong
+        if (tp >= time.beginTime && tp <= time.endTime) {
+            map.remove(kba)
+        }
+      }
+      Commit(tableName)
+    } catch {
+      case e: Exception => {
+        throw CreateDMLException("Failed to delete object(s) from table " + tableName, e)
+      }
+    }
+  }
+  //to here
 
   // get operations
   def getRowCount(containerName: String): Long = {
@@ -868,6 +896,12 @@ class HashMapAdapterTx(val parent: DataStore) extends Transaction {
     parent.del(containerName, time, keys)
   }
 
+  //Added by Yousef Abu Elbeh in 2016-03-13 from here
+  override def del(containerName: String, time: TimeRange): Unit = {
+    parent.del(containerName, time)
+  }
+  //to here
+
   // get operations
   override def get(containerName: String, callbackFunction: (Key, Value) => Unit): Unit = {
     parent.get(containerName, callbackFunction)
@@ -956,6 +990,6 @@ class HashMapAdapterTx(val parent: DataStore) extends Transaction {
 }
 
 // To create HashMap Datastore instance
-object HashMapAdapter extends StorageAdapterObj {
+object HashMapAdapter extends StorageAdapterFactory {
   override def CreateStorageAdapter(kvManagerLoader: KamanjaLoaderInfo, datastoreConfig: String): DataStore = new HashMapAdapter(kvManagerLoader, datastoreConfig)
 }

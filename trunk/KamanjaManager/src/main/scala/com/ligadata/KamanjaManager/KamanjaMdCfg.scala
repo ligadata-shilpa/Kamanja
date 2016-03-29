@@ -21,23 +21,16 @@ import org.apache.logging.log4j.{ Logger, LogManager }
 import com.ligadata.kamanja.metadata._
 import com.ligadata.kamanja.metadata.MdMgr._
 import com.ligadata.KamanjaBase.{ EnvContext, NodeContext, ContainerNameAndDatastoreInfo }
-import com.ligadata.InputOutputAdapterInfo.{ ExecContext, InputAdapter, OutputAdapter, ExecContextObj, PartitionUniqueRecordKey, PartitionUniqueRecordValue, InputAdapterCallerContext }
+import com.ligadata.InputOutputAdapterInfo._
 import com.ligadata.Utils.{ Utils, KamanjaClassLoader, KamanjaLoaderInfo }
 import scala.collection.mutable.ArrayBuffer
 import com.ligadata.Serialize.{ JDataStore, JZKInfo, JEnvCtxtJsonStr }
-import com.ligadata.InputOutputAdapterInfo.{ ExecContext, InputAdapter, InputAdapterObj, OutputAdapter, OutputAdapterObj, ExecContextObj, PartitionUniqueRecordKey, PartitionUniqueRecordValue, AdapterConfiguration }
 
 import org.json4s._
 import org.json4s.JsonDSL._
 import org.json4s.native.JsonMethods._
 import java.io.{ File }
 import com.ligadata.Exceptions._
-
-class KamanjaInputAdapterCallerContext extends InputAdapterCallerContext {
-  var outputAdapters: Array[OutputAdapter] = _
-  var failedEventsAdapters: Array[OutputAdapter] = _
-  var gNodeContext: NodeContext = _
-}
 
 // This is shared by multiple threads to read (because we are not locking). We create this only once at this moment while starting the manager
 object KamanjaMdCfg {
@@ -246,18 +239,18 @@ object KamanjaMdCfg {
         val objinst = obj.instance
         if (objinst.isInstanceOf[EnvContext]) {
           val envCtxt = objinst.asInstanceOf[EnvContext]
-          envCtxt.SetClassLoader(KamanjaConfiguration.metadataLoader.loader) // Using Metadata Loader
-          envCtxt.SetMetadataResolveInfo(KamanjaMetadata)
+          envCtxt.setClassLoader(KamanjaConfiguration.metadataLoader.loader) // Using Metadata Loader
+          envCtxt.setMetadataResolveInfo(KamanjaMetadata)
           envCtxt.setMdMgr(KamanjaMetadata.getMdMgr)
           val containerNames = KamanjaMetadata.getAllContainers.map(container => container._1.toLowerCase).toList.sorted.toArray // Sort topics by names
           val topMessageNames = KamanjaMetadata.getAllMessges.filter(msg => msg._2.parents.size == 0).map(msg => msg._1.toLowerCase).toList.sorted.toArray // Sort topics by names
 
-          envCtxt.SetJarPaths(KamanjaConfiguration.jarPaths) // Jar paths for Datastores, etc
-          envCtxt.SetDefaultDatastore(KamanjaConfiguration.dataDataStoreInfo) // Default Datastore
+          envCtxt.setJarPaths(KamanjaConfiguration.jarPaths) // Jar paths for Datastores, etc
+          envCtxt.setDefaultDatastore(KamanjaConfiguration.dataDataStoreInfo) // Default Datastore
 
           val allMsgsContainers = topMessageNames ++ containerNames
           val containerInfos = allMsgsContainers.map(c => { ContainerNameAndDatastoreInfo(c, null) })
-          envCtxt.RegisterMessageOrContainers(containerInfos) // Messages & Containers
+//          envCtxt.RegisterMessageOrContainers(containerInfos) // Messages & Containers
 
           // Record EnvContext in the Heartbeat
          // envCtxt.RegisterHeartbeat(heartBeat)
@@ -303,22 +296,22 @@ object KamanjaMdCfg {
     val allAdapters = mdMgr.Adapters
 
     val inputAdaps = scala.collection.mutable.Map[String, AdapterInfo]()
-    val validateAdaps = scala.collection.mutable.Map[String, AdapterInfo]()
+//    val validateAdaps = scala.collection.mutable.Map[String, AdapterInfo]()
     val outputAdaps = scala.collection.mutable.Map[String, AdapterInfo]()
-    val statusAdaps = scala.collection.mutable.Map[String, AdapterInfo]()
-    val failedEventsAdaps = scala.collection.mutable.Map[String, AdapterInfo]()
+//    val statusAdaps = scala.collection.mutable.Map[String, AdapterInfo]()
+//    val failedEventsAdaps = scala.collection.mutable.Map[String, AdapterInfo]()
 
     allAdapters.foreach(a => {
       if (a._2.TypeString.compareToIgnoreCase("Input") == 0) {
         inputAdaps(a._1.toLowerCase) = a._2
-      } else if (a._2.TypeString.compareToIgnoreCase("Validate") == 0) {
-        validateAdaps(a._1.toLowerCase) = a._2
+//      } else if (a._2.TypeString.compareToIgnoreCase("Validate") == 0) {
+//        validateAdaps(a._1.toLowerCase) = a._2
       } else if (a._2.TypeString.compareToIgnoreCase("Output") == 0) {
         outputAdaps(a._1.toLowerCase) = a._2
-      } else if (a._2.TypeString.compareToIgnoreCase("Status") == 0) {
-        statusAdaps(a._1.toLowerCase) = a._2
-      } else if (a._2.TypeString.compareToIgnoreCase("FailedEvents") == 0) {
-        failedEventsAdaps(a._1.toLowerCase) = a._2
+//      } else if (a._2.TypeString.compareToIgnoreCase("Status") == 0) {
+//        statusAdaps(a._1.toLowerCase) = a._2
+//      } else if (a._2.TypeString.compareToIgnoreCase("FailedEvents") == 0) {
+//        failedEventsAdaps(a._1.toLowerCase) = a._2
       } else {
         LOG.error("Found unhandled adapter type %s for adapter %s".format(a._2.TypeString, a._2.Name))
         return false
@@ -326,33 +319,30 @@ object KamanjaMdCfg {
     })
 
     // Get status adapter
-    LOG.debug("Getting Status Adapter")
-
-    if (!LoadOutputAdapsForCfg(statusAdaps, statusAdapters, false))
-      return false
+//    LOG.debug("Getting Status Adapter")
+//    if (!LoadOutputAdapsForCfg(statusAdaps, statusAdapters, KamanjaMetadata.gNodeContext))
+//      return false
 
     // Get output adapter
     LOG.debug("Getting Output Adapters")
-
-    if (!LoadOutputAdapsForCfg(outputAdaps, outputAdapters, true))
+    if (!LoadOutputAdapsForCfg(outputAdaps, outputAdapters, KamanjaMetadata.gNodeContext))
       return false
 
     // Get output adapter
-    LOG.debug("Getting FailedEvents Adapters")
-    if (LoadOutputAdapsForCfg(failedEventsAdaps, failedEventsAdapters, true) == false)
-      return false
+//    LOG.debug("Getting FailedEvents Adapters")
+//    if (LoadOutputAdapsForCfg(failedEventsAdaps, failedEventsAdapters, KamanjaMetadata.gNodeContext) == false)
+//      return false
 
     // Get input adapter
     LOG.debug("Getting Input Adapters")
 
-    if (LoadInputAdapsForCfg(inputAdaps, inputAdapters, outputAdapters.toArray, KamanjaMetadata.gNodeContext, failedEventsAdapters.toArray) == false)
+    if (LoadInputAdapsForCfg(inputAdaps, inputAdapters, KamanjaMetadata.gNodeContext) == false)
       return false
 
     // Get input adapter
-    LOG.debug("Getting Validate Input Adapters")
-
-    if (!LoadValidateInputAdapsFromCfg(validateAdaps, validateInputAdapters, outputAdapters.toArray, KamanjaMetadata.gNodeContext))
-      return false
+//    LOG.debug("Getting Validate Input Adapters")
+//    if (!LoadValidateInputAdapsFromCfg(validateAdaps, validateInputAdapters, outputAdapters.toArray, KamanjaMetadata.gNodeContext))
+//      return false
 
     val totaltm = "TimeConsumed:%.02fms".format((System.nanoTime - s0) / 1000000.0);
     LOG.info("Loading Adapters done @ " + Utils.GetCurDtTmStr + totaltm)
@@ -360,7 +350,7 @@ object KamanjaMdCfg {
     true
   }
 
-  private def CreateOutputAdapterFromConfig(statusAdapterCfg: AdapterConfiguration): OutputAdapter = {
+  private def CreateOutputAdapterFromConfig(statusAdapterCfg: AdapterConfiguration, nodeContext: NodeContext): OutputAdapter = {
     if (statusAdapterCfg == null) return null
     var allJars: collection.immutable.Set[String] = null
     if (statusAdapterCfg.dependencyJars != null && statusAdapterCfg.jarName != null) {
@@ -413,9 +403,9 @@ object KamanjaMdCfg {
         val obj = KamanjaConfiguration.adaptersAndEnvCtxtLoader.mirror.reflectModule(module)
 
         val objinst = obj.instance
-        if (objinst.isInstanceOf[OutputAdapterObj]) {
-          val adapterObj = objinst.asInstanceOf[OutputAdapterObj]
-          val adapter = adapterObj.CreateOutputAdapter(statusAdapterCfg, SimpleStats)
+        if (objinst.isInstanceOf[OutputAdapterFactory]) {
+          val adapterObj = objinst.asInstanceOf[OutputAdapterFactory]
+          val adapter = adapterObj.CreateOutputAdapter(statusAdapterCfg, nodeContext)
           LOG.info("Created Output Adapter for Name:" + statusAdapterCfg.Name + ", Class:" + statusAdapterCfg.className)
           return adapter
         } else {
@@ -435,7 +425,7 @@ object KamanjaMdCfg {
     null
   }
 
-  private def LoadOutputAdapsForCfg(adaps: scala.collection.mutable.Map[String, AdapterInfo], outputAdapters: ArrayBuffer[OutputAdapter], hasInputAdapterName: Boolean): Boolean = {
+  private def LoadOutputAdapsForCfg(adaps: scala.collection.mutable.Map[String, AdapterInfo], outputAdapters: ArrayBuffer[OutputAdapter], nodeContext: NodeContext): Boolean = {
     // ConfigurationName
     adaps.foreach(ac => {
       //BUGBUG:: Not yet validating required fields 
@@ -444,19 +434,19 @@ object KamanjaMdCfg {
       val adap = ac._2
 
       conf.Name = adap.Name.toLowerCase
-      if (hasInputAdapterName)
-        conf.validateAdapterName = adap.InputAdapterToValidate
+//      if (hasInputAdapterName)
+//        conf.validateAdapterName = adap.InputAdapterToValidate
       conf.className = adap.ClassName
       conf.jarName = adap.JarName
-      conf.keyAndValueDelimiter = adap.KeyAndValueDelimiter
-      conf.fieldDelimiter = adap.FieldDelimiter
-      conf.valueDelimiter = adap.ValueDelimiter
-      conf.associatedMsg = adap.AssociatedMessage
+//      conf.keyAndValueDelimiter = adap.KeyAndValueDelimiter
+//      conf.fieldDelimiter = adap.FieldDelimiter
+//      conf.valueDelimiter = adap.ValueDelimiter
+//      conf.associatedMsg = adap.AssociatedMessage
       conf.dependencyJars = if (adap.DependencyJars != null) adap.DependencyJars.map(str => str.trim).filter(str => str.size > 0).toSet else null
       conf.adapterSpecificCfg = adap.AdapterSpecificCfg
 
       try {
-        val adapter = CreateOutputAdapterFromConfig(conf)
+        val adapter = CreateOutputAdapterFromConfig(conf, nodeContext)
         if (adapter == null) return false
         outputAdapters += adapter
       } catch {
@@ -473,7 +463,7 @@ object KamanjaMdCfg {
     return true
   }
 
-  private def CreateInputAdapterFromConfig(statusAdapterCfg: AdapterConfiguration, callerCtxt: InputAdapterCallerContext, execCtxtObj: ExecContextObj): InputAdapter = {
+  private def CreateInputAdapterFromConfig(statusAdapterCfg: AdapterConfiguration, execCtxtObj: ExecContextFactory, nodeContext: NodeContext): InputAdapter = {
     if (statusAdapterCfg == null) return null
     var allJars: collection.immutable.Set[String] = null
 
@@ -522,9 +512,9 @@ object KamanjaMdCfg {
         val obj = KamanjaConfiguration.adaptersAndEnvCtxtLoader.mirror.reflectModule(module)
 
         val objinst = obj.instance
-        if (objinst.isInstanceOf[InputAdapterObj]) {
-          val adapterObj = objinst.asInstanceOf[InputAdapterObj]
-          val adapter = adapterObj.CreateInputAdapter(statusAdapterCfg, callerCtxt, execCtxtObj, SimpleStats)
+        if (objinst.isInstanceOf[InputAdapterFactory]) {
+          val adapterObj = objinst.asInstanceOf[InputAdapterFactory]
+          val adapter = adapterObj.CreateInputAdapter(statusAdapterCfg, execCtxtObj, nodeContext)
           LOG.info("Created Input Adapter for Name:" + statusAdapterCfg.Name + ", Class:" + statusAdapterCfg.className)
           return adapter
         } else {
@@ -544,16 +534,11 @@ object KamanjaMdCfg {
     null
   }
 
-  private def PrepInputAdapsForCfg(adaps: scala.collection.mutable.Map[String, AdapterInfo], inputAdapters: ArrayBuffer[InputAdapter], outputAdapters: Array[OutputAdapter], gNodeContext: NodeContext, execCtxtObj: ExecContextObj, failedEventsAdapters: Array[OutputAdapter], hasOutputAdapterName: Boolean): Boolean = {
+  private def PrepInputAdapsForCfg(adaps: scala.collection.mutable.Map[String, AdapterInfo], inputAdapters: ArrayBuffer[InputAdapter], nodeContext: NodeContext, execCtxtObj: ExecContextFactory): Boolean = {
     // ConfigurationName
     if (adaps.size == 0) {
       return true
     }
-
-    val callerCtxt = new KamanjaInputAdapterCallerContext
-    callerCtxt.outputAdapters = outputAdapters
-    callerCtxt.failedEventsAdapters = failedEventsAdapters
-    callerCtxt.gNodeContext = gNodeContext
 
     adaps.foreach(ac => {
       //BUGBUG:: Not yet validating required fields 
@@ -562,20 +547,20 @@ object KamanjaMdCfg {
       val adap = ac._2
 
       conf.Name = adap.Name.toLowerCase
-      conf.formatName = adap.DataFormat
-      if (hasOutputAdapterName)
-        conf.failedEventsAdapterName = adap.failedEventsAdapter
+//      conf.formatName = adap.DataFormat
+//      if (hasOutputAdapterName)
+//        conf.failedEventsAdapterName = adap.failedEventsAdapter
       conf.className = adap.ClassName
       conf.jarName = adap.JarName
       conf.dependencyJars = if (adap.DependencyJars != null) adap.DependencyJars.map(str => str.trim).filter(str => str.size > 0).toSet else null
       conf.adapterSpecificCfg = adap.AdapterSpecificCfg
-      conf.keyAndValueDelimiter = adap.KeyAndValueDelimiter
-      conf.fieldDelimiter = adap.FieldDelimiter
-      conf.valueDelimiter = adap.ValueDelimiter
-      conf.associatedMsg = adap.AssociatedMessage
+//      conf.keyAndValueDelimiter = adap.KeyAndValueDelimiter
+//      conf.fieldDelimiter = adap.FieldDelimiter
+//      conf.valueDelimiter = adap.ValueDelimiter
+//      conf.associatedMsg = adap.AssociatedMessage
 
       try {
-        val adapter = CreateInputAdapterFromConfig(conf, callerCtxt, execCtxtObj)
+        val adapter = CreateInputAdapterFromConfig(conf, execCtxtObj, nodeContext)
         if (adapter == null) return false
         inputAdapters += adapter
       } catch {
@@ -588,10 +573,10 @@ object KamanjaMdCfg {
     return true
   }
 
-  private def LoadInputAdapsForCfg(adaps: scala.collection.mutable.Map[String, AdapterInfo], inputAdapters: ArrayBuffer[InputAdapter], outputAdapters: Array[OutputAdapter], gNodeContext: NodeContext, failedEventsAdapters: Array[OutputAdapter]): Boolean = {
-    return PrepInputAdapsForCfg(adaps, inputAdapters, outputAdapters, gNodeContext, ExecContextObjImpl, failedEventsAdapters, true)
+  private def LoadInputAdapsForCfg(adaps: scala.collection.mutable.Map[String, AdapterInfo], inputAdapters: ArrayBuffer[InputAdapter], gNodeContext: NodeContext): Boolean = {
+    return PrepInputAdapsForCfg(adaps, inputAdapters, gNodeContext, ExecContextFactoryImpl)
   }
-
+/*
   private def LoadValidateInputAdapsFromCfg(validate_adaps: scala.collection.mutable.Map[String, AdapterInfo], valInputAdapters: ArrayBuffer[InputAdapter], outputAdapters: Array[OutputAdapter], gNodeContext: NodeContext): Boolean = {
     val validateInputAdapters = scala.collection.mutable.Map[String, AdapterInfo]()
 
@@ -611,8 +596,8 @@ object KamanjaMdCfg {
     if (validateInputAdapters.size == 0)
       return true
 
-    return PrepInputAdapsForCfg(validateInputAdapters, valInputAdapters, outputAdapters, gNodeContext, ValidateExecContextObjImpl, null, false)
+    return PrepInputAdapsForCfg(validateInputAdapters, valInputAdapters, outputAdapters, gNodeContext, ValidateExecContextFactoryImpl, null, false)
   }
-
+*/
 }
 

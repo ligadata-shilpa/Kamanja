@@ -41,7 +41,7 @@ import com.ligadata.kamanja.metadataload.MetadataLoad
 // import com.ligadata.keyvaluestore._
 import com.ligadata.HeartBeat.{MonitoringContext, HeartBeatUtil}
 import com.ligadata.StorageBase.{ DataStore, Transaction }
-import com.ligadata.KvBase.{ Key, Value, TimeRange }
+import com.ligadata.KvBase.{ Key, TimeRange }
 
 import scala.util.parsing.json.JSON
 import scala.util.parsing.json.{ JSONObject, JSONArray }
@@ -51,7 +51,7 @@ import scala.collection.mutable.HashMap
 
 import com.google.common.base.Throwables
 
-import com.ligadata.messagedef._
+import com.ligadata.msgcompiler._
 import com.ligadata.Exceptions._
 
 import scala.xml.XML
@@ -80,17 +80,6 @@ import org.json4s.jackson.Serialization
 
 case class ParameterMap(RootDir: String, GitRootDir: String, MetadataStoreType: String, MetadataSchemaName: Option[String], /* MetadataAdapterSpecificConfig: Option[String], */ MetadataLocation: String, JarTargetDir: String, ScalaHome: String, JavaHome: String, ManifestPath: String, ClassPath: String, NotifyEngine: String, ZnodePath: String, ZooKeeperConnectString: String, MODEL_FILES_DIR: Option[String], TYPE_FILES_DIR: Option[String], FUNCTION_FILES_DIR: Option[String], CONCEPT_FILES_DIR: Option[String], MESSAGE_FILES_DIR: Option[String], CONTAINER_FILES_DIR: Option[String], COMPILER_WORK_DIR: Option[String], MODEL_EXEC_FLAG: Option[String], OUTPUTMESSAGE_FILES_DIR: Option[String])
 
-case class Argument(ArgName: String, ArgTypeNameSpace: String, ArgTypeName: String)
-
-// case class Attr(NameSpace: String, Name: String, Version: Long, Type: TypeDef)
-
-// case class MessageStruct(NameSpace: String, Name: String, FullName: String, Version: Long, JarName: String, PhysicalName: String, DependencyJars: List[String], Attributes: List[Attr])
-case class MessageDefinition(Message: MessageStruct)
-case class ContainerDefinition(Container: MessageStruct)
-
-case class ModelInfo(NameSpace: String, Name: String, Version: String, ModelType: String, JarName: String, PhysicalName: String, DependencyJars: List[String], InputAttributes: List[Attr], OutputAttributes: List[Attr])
-case class ModelDefinition(Model: ModelInfo)
-
 case class ZooKeeperInfo(ZooKeeperNodeBasePath: String, ZooKeeperConnectString: String, ZooKeeperSessionTimeoutMs: Option[String], ZooKeeperConnectionTimeoutMs: Option[String])
 
 case class MetadataAPIConfig(APIConfigParameters: ParameterMap)
@@ -111,7 +100,7 @@ trait LogTrait {
 object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
   lazy val sysNS = "System" // system name space
-  
+
   lazy val serializerType = "kryo"
   lazy val serializer = SerializerManager.GetSerializer(serializerType)
   lazy val metadataAPIConfig = new Properties()
@@ -139,6 +128,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
   private[this] val lock = new Object
   var startup = false
 
+
     /**
      * CloseZKSession
      */
@@ -156,6 +146,9 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
     }
   }
+
+  def GetUniqueId: Long = 0
+  def GetMdElementId: Long = 0
 
   /**
    *  getHealthCheck - will return all the health-check information for the nodeId specified.
@@ -177,6 +170,84 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       case e: Exception => {
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetHealthCheck", "No data available", ErrorCodeConstants.GetHeartbeat_Failed + " Error: Unknown - see Kamanja Logs")
         logger.error("Failure processing GET_HEALTH_CHECK - unknown", e)
+        return apiResult.toString
+      }
+    }
+
+  }
+
+  /**
+    *  getHealthCheckNodesOnly - will return node info from the health-check information for the nodeId specified.
+    *  @param nodeId a cluster node: String - if no parameter specified, return health-check for all nodes
+    *  @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    */
+  def getHealthCheckNodesOnly(nodeId: String = "", userid: Option[String] = None): String = {
+    try {
+      val ids = parse(nodeId).values.asInstanceOf[List[String]]
+      var apiResult = new ApiResultComplex(ErrorCodeConstants.Success, "GetHeartbeat", MonitorAPIImpl.getHBNodesOnly(ids), ErrorCodeConstants.GetHeartbeat_Success)
+      apiResult.toString
+    } catch {
+      case cce: java.lang.ClassCastException => {
+        logger.warn("Failure processing GET_HEALTH_CHECK(Nodes Only) - cannot parse the list of desired nodes.", cce)
+        val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetHealthCheck", "No data available", ErrorCodeConstants.GetHeartbeat_Failed + " Error:Parsing Error")
+        return apiResult.toString
+      }
+      case e: Exception => {
+        val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetHealthCheck", "No data available", ErrorCodeConstants.GetHeartbeat_Failed + " Error: Unknown - see Kamanja Logs")
+        logger.error("Failure processing GET_HEALTH_CHECK(Nodes Only) - unknown", e)
+        return apiResult.toString
+      }
+    }
+
+  }
+
+  /**
+    *  getHealthCheckComponentNames - will return partial components info from the health-check information for the nodeId specified.
+    *  @param nodeId a cluster node: String - if no parameter specified, return health-check for all nodes
+    *  @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    */
+  def getHealthCheckComponentNames(nodeId: String = "", userid: Option[String] = None): String = {
+    try {
+      val ids = parse(nodeId).values.asInstanceOf[List[String]]
+      var apiResult = new ApiResultComplex(ErrorCodeConstants.Success, "GetHeartbeat", MonitorAPIImpl.getHBComponentNames(ids), ErrorCodeConstants.GetHeartbeat_Success)
+      apiResult.toString
+    } catch {
+      case cce: java.lang.ClassCastException => {
+        logger.warn("Failure processing GET_HEALTH_CHECK(Component Names) - cannot parse the list of desired nodes.", cce)
+        val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetHealthCheck", "No data available", ErrorCodeConstants.GetHeartbeat_Failed + " Error:Parsing Error")
+        return apiResult.toString
+      }
+      case e: Exception => {
+        val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetHealthCheck", "No data available", ErrorCodeConstants.GetHeartbeat_Failed + " Error: Unknown - see Kamanja Logs")
+        logger.error("Failure processing GET_HEALTH_CHECK(Component Names) - unknown", e)
+        return apiResult.toString
+      }
+    }
+
+  }
+
+  /**
+    *  getHealthCheckComponentDetailsByNames - will return specific components info from the health-check information for the nodeId specified.
+    *  @param componentNames names of components required
+    *  @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    */
+  def getHealthCheckComponentDetailsByNames(componentNames: String = "", userid: Option[String] = None): String = {
+    try {
+      val components = parse(componentNames).values.asInstanceOf[List[String]]
+      var apiResult = new ApiResultComplex(ErrorCodeConstants.Success, "GetHeartbeat", MonitorAPIImpl.getHBComponentDetailsByNames(components), ErrorCodeConstants.GetHeartbeat_Success)
+      apiResult.toString
+    } catch {
+      case cce: java.lang.ClassCastException => {
+        logger.warn("Failure processing GET_HEALTH_CHECK(Specific Components) - cannot parse the list of desired nodes.", cce)
+        val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetHealthCheck", "No data available", ErrorCodeConstants.GetHeartbeat_Failed + " Error:Parsing Error")
+        return apiResult.toString
+      }
+      case e: Exception => {
+        val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetHealthCheck", "No data available", ErrorCodeConstants.GetHeartbeat_Failed + " Error: Unknown - see Kamanja Logs")
+        logger.error("Failure processing GET_HEALTH_CHECK(Specific Components) - unknown", e)
         return apiResult.toString
       }
     }
@@ -579,7 +650,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
   /**
    * InitZooKeeper - Establish a connection to zookeeper
-   */ 
+   */
   def InitZooKeeper: Unit = {
     logger.debug("Connect to zookeeper..")
     if (zkc != null) {
@@ -623,7 +694,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @param bucketKeyStr
      * @param typeName
      */
-  def GetObject(bucketKeyStr: String, typeName: String): Value = {
+  def GetObject(bucketKeyStr: String, typeName: String): (String, Any) = {
     PersistenceUtils.GetObject(bucketKeyStr,typeName)
   }
 
@@ -652,7 +723,6 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     /**
      * Remove all of the elements with the supplied keys in the list from the supplied DataStore
      * @param keyList
-     * @param store
      */
   def RemoveObjectList(keyList: Array[String], typeName: String) {
     PersistenceUtils.RemoveObjectList(keyList,typeName)
@@ -927,11 +997,6 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
           saveObjFn()
           mdMgr.AddContainerType(o)
         }
-        case o: OutputMsgDef => {
-          logger.trace("Adding the Output Message to the cache: name of the object =>  " + dispkey)
-          saveObjFn()
-          mdMgr.AddOutputMsg(o)
-        }
         case _ => {
           logger.error("SaveObject is not implemented for objects of type " + obj.getClass.getName)
         }
@@ -1037,10 +1102,6 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
         }
         case o: ContainerTypeDef => {
           logger.debug("Updating the Type in the DB: name of the object =>  " + dispkey)
-          updObjFn()
-        }
-        case o: OutputMsgDef => {
-          logger.debug("Updating the output message in the DB: name of the object =>  " + dispkey)
           updObjFn()
         }
         case _ => {
@@ -1185,7 +1246,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       if (f.exists()) {
         val key = jar
         val mObj = GetObject(key, "jar_store")
-        val ba = mObj.serializedInfo
+        val ba = mObj._2.asInstanceOf[Array[Byte]]
         val fs = f.length()
         if (fs != ba.length) {
           logger.debug("A jar file already exists, but it's size (" + fs + ") doesn't match with the size of the Jar (" +
@@ -1254,7 +1315,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
             if (b == true) {
               val key = jar
               val mObj = GetObject(key, "jar_store")
-              val ba = mObj.serializedInfo
+              val ba = mObj._2.asInstanceOf[Array[Byte]]
               val jarName = dirPath + "/" + jar
               PutArrayOfBytesToJar(ba, jarName)
             } else {
@@ -1280,7 +1341,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * UpdateObjectInCache
      * @param obj <description please>
      * @param operation depending upon object type, operations to add, remove, et al
-     * @param mdMgr the metadata manager receiver 
+     * @param mdMgr the metadata manager receiver
      * @return <description please>
      */
   def UpdateObjectInCache(obj: BaseElemDef, operation: String, mdMgr: MdMgr): BaseElemDef = {
@@ -1344,9 +1405,6 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
         }
         case o: ContainerTypeDef => {
           updatedObject = mdMgr.ModifyType(o.nameSpace, o.name, o.ver, operation)
-        }
-        case o: OutputMsgDef => {
-          updatedObject = mdMgr.ModifyOutputMsg(o.nameSpace, o.name, o.ver, operation)
         }
         case _ => {
           throw InternalErrorException("UpdateObjectInCache is not implemented for objects of type " + obj.getClass.getName, null)
@@ -1479,10 +1537,6 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
           logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
           mdMgr.AddContainerType(o)
         }
-        case o: OutputMsgDef => {
-          logger.trace("Adding the Output Msg to the cache: name of the object =>  " + key)
-          mdMgr.AddOutputMsg(o)
-        }
         case _ => {
           logger.error("SaveObject is not implemented for objects of type " + obj.getClass.getName)
         }
@@ -1519,7 +1573,6 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
     /**
      * DeleteObject
-     * @param key
      * @param typeName
      */
   def DeleteObject(bucketKeyStr: String, typeName: String) {
@@ -1746,7 +1799,10 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
         apiResult.toString()
       } else {
         val jarName = iFile.getName()
-        val jarObject = MdMgr.GetMdMgr.MakeJarDef(MetadataAPIImpl.sysNS, jarName, "100")
+        val ownerId: String = if (userid == None) "Kamanja" else userid.get
+        val uniqueId = MetadataAPIImpl.GetUniqueId
+        val mdElementId = 0L //FIXME:- Not yet handled this
+        val jarObject = MdMgr.GetMdMgr.MakeJarDef(MetadataAPIImpl.sysNS, jarName, "100", ownerId, uniqueId, mdElementId)
 
 
         logger.debug(" UploadJar  ==>>    ===>> " + jarPath )
@@ -2060,7 +2116,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @return
      */
   def RemoveContainer(nameSpace: String, name: String, version: Long, userid: Option[String], zkNotify: Boolean = true): String = {
-    MessageAndContainerUtils.RemoveContainer(nameSpace,name,version,userid,zkNotify)   
+    MessageAndContainerUtils.RemoveContainer(nameSpace,name,version,userid,zkNotify)
   }
 
     /**
@@ -2074,7 +2130,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @return
      */
   def RemoveMessage(nameSpace: String, name: String, version: Long, userid: Option[String], zkNotify: Boolean = true): String = {
-    MessageAndContainerUtils.RemoveMessage(nameSpace,name,version,userid,zkNotify)   
+    MessageAndContainerUtils.RemoveMessage(nameSpace,name,version,userid,zkNotify)
   }
 
     /**
@@ -2239,8 +2295,11 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
                            , optModelName: Option[String] = None
                            , optVersion: Option[String] = None
                            , optMsgConsumed: Option[String] = None
-                           , optMsgVersion: Option[String] = Some("-1") ): String  = {
-    ModelUtils.AddModel(modelType,input,optUserid,optModelName,optVersion,optMsgConsumed,optMsgVersion)
+                           , optMsgVersion: Option[String] = Some("-1") 
+			   , optMsgProduced: Option[String] = None
+		       ): String  = {
+    ModelUtils.AddModel(modelType,input,optUserid,optModelName,optVersion,optMsgConsumed,
+			optMsgVersion,optMsgProduced)
   }
 
 
@@ -2293,8 +2352,9 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
                             , optUserid: Option[String] = None
                             , optModelName: Option[String] = None
                             , optVersion: Option[String] = None
-                            , optVersionBeingUpdated : Option[String] = None): String = {
-      ModelUtils.UpdateModel(modelType,input,optUserid,optModelName,optVersion,optVersionBeingUpdated)
+                            , optVersionBeingUpdated : Option[String] = None
+			    , optMsgProduced: Option[String] = None): String = {
+      ModelUtils.UpdateModel(modelType,input,optUserid,optModelName,optVersion,optVersionBeingUpdated,optMsgProduced)
     }
 
     /**
@@ -2413,7 +2473,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
   // Specific models (format JSON or XML) as an array of strings using modelName(without version) as the key
     /**
-     * 
+     *
      * @param nameSpace namespace of the object
      * @param objectName name of the desired object, possibly namespace qualified
      * @param formatType format of the return value, either JSON or XML
@@ -2451,7 +2511,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
   // Specific models (format JSON or XML) as an array of strings using modelName(without version) as the key
     /**
-     * 
+     *
      * @param nameSpace namespace of the object
      * @param objectName name of the desired object, possibly namespace qualified
      * @param formatType format of the return value, either JSON or XML
@@ -2540,7 +2600,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
   // Get the latest message for a given FullName
     /**
-     * 
+     *
      * @param msgDef
      * @return
      */
@@ -2593,7 +2653,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @return
      */
     def IsMessageAlreadyExists(msgDef: MessageDef): Boolean = {
-      MessageAndContainerUtils.IsMessageAlreadyExists(msgDef)      
+      MessageAndContainerUtils.IsMessageAlreadyExists(msgDef)
     }
 
     /**
@@ -2738,7 +2798,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       keys.toArray
     } catch {
       case e: Exception => {
-        
+
         logger.debug("", e)
         throw InternalErrorException("Failed to get keys from persistent store", e)
       }
@@ -2757,7 +2817,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
         logger.debug("Assuming bootstrap... No config objects in persistent store")
       }
 
-      // Load All the Model Configs here... 
+      // Load All the Model Configs here...
       ConfigUtils.LoadAllModelConfigsIntoCache
       //LoadAllUserPopertiesIntoChache
       startup = true
@@ -2773,9 +2833,9 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
         val storeInfo = PersistenceUtils.GetTableStoreMap(typ)
         if (processedContainersSet(storeInfo._1) == false) {
           processedContainersSet += storeInfo._1
-          storeInfo._2.get(storeInfo._1, { (k: Key, v: Value) =>
+          storeInfo._2.get(storeInfo._1, { (k: Key, v: Any, serType: String, typ: String, ver:Int) =>
             {
-              val mObj = serializer.DeserializeObjectFromByteArray(v.serializedInfo).asInstanceOf[BaseElemDef]
+              val mObj = serializer.DeserializeObjectFromByteArray(v.asInstanceOf[Array[Byte]]).asInstanceOf[BaseElemDef]
               if (mObj != null) {
                 if (mObj.tranId <= maxTranId) {
                   AddObjectToCache(mObj, MdMgr.GetMdMgr)
@@ -2816,7 +2876,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       startup = false
     } catch {
       case e: Exception => {
-        
+
         logger.debug("", e)
       }
     }
@@ -2984,7 +3044,10 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       case "JarDef" => {
         zkMessage.Operation match {
           case "Add" => {
-            DownloadJarFromDB(MdMgr.GetMdMgr.MakeJarDef(zkMessage.NameSpace, zkMessage.Name, zkMessage.Version))
+            val ownerId: String = "Kamanja" //FIXME:- We need to have some user for this operation.
+            val uniqueId = MetadataAPIImpl.GetUniqueId
+            val mdElementId = 0L //FIXME:- Not yet handled this
+            DownloadJarFromDB(MdMgr.GetMdMgr.MakeJarDef(zkMessage.NameSpace, zkMessage.Name, zkMessage.Version, ownerId, uniqueId, mdElementId))
           }
           case _ => { logger.error("Unknown Operation " + zkMessage.Operation + " in zookeeper notification, notification is not processed ..") }
         }
@@ -3007,32 +3070,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
           case _ => { logger.error("Unknown Operation " + zkMessage.Operation + " in zookeeper notification, notification is not processed ..") }
         }
       }
-      case "OutputMsgDef" => {
-        zkMessage.Operation match {
-          case "Add" => {
-            LoadOutputMsgIntoCache(key)
-          }
-          case "Remove" | "Activate" | "Deactivate" => {
-            try {
-              MdMgr.GetMdMgr.ModifyOutputMsg(zkMessage.NameSpace, zkMessage.Name, zkMessage.Version.toLong, zkMessage.Operation)
-            } catch {
-              case e: ObjectNolongerExistsException => {
-                logger.error("The object " + key + " nolonger exists in metadata : It may have been removed already", e)
-              }
-            }
-          }
-        }
-      }
       case _ => { logger.error("Unknown objectType " + zkMessage.ObjectType + " in zookeeper notification, notification is not processed ..") }
     }
-  }
-
-    /**
-     * LoadOutputMsgIntoCache
-     * @param key
-     */
-  def LoadOutputMsgIntoCache(key: String) {
-    MessageAndContainerUtils.LoadOutputMsgIntoCache(key)
   }
 
     /**
@@ -3060,11 +3099,11 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       })
     } catch {
       case e: AlreadyExistsException => {
-        
+
         logger.warn("Failed to load the object(" + dispkey + ") into cache", e)
       }
       case e: Exception => {
-        
+
         logger.warn("Failed to load the object(" + dispkey + ") into cache", e)
       }
     }
@@ -3291,7 +3330,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
     /**
      * GetFunctionDef
-     * @param nameSpace namespace of the object 
+     * @param nameSpace namespace of the object
      * @param objectName name of the desired object, possibly namespace qualified
      * @param formatType format of the return value, either JSON or XML
      * @param version  Version of the object
@@ -3548,16 +3587,13 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @param jarName
      * @param dependencyJars
      * @param adapterSpecificCfg
-     * @param inputAdapterToVerify
-     * @param delimiterString
-     * @param associatedMsg
      * @return
      */
   def AddAdapter(name: String, typeString: String, dataFormat: String, className: String,
                  jarName: String, dependencyJars: List[String],
-                 adapterSpecificCfg: String, inputAdapterToVerify: String, keyAndValueDelimiter: String, fieldDelimiter: String, valueDelimiter: String, associatedMsg: String, failedEventsAdapter: String): String = {
+                 adapterSpecificCfg: String): String = {
     ConfigUtils.AddAdapter(name, typeString, dataFormat, className, jarName,
-        dependencyJars, adapterSpecificCfg, inputAdapterToVerify, keyAndValueDelimiter, fieldDelimiter, valueDelimiter, associatedMsg, failedEventsAdapter)
+        dependencyJars, adapterSpecificCfg)
   }
 
     /**
@@ -3569,15 +3605,12 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @param jarName
      * @param dependencyJars
      * @param adapterSpecificCfg
-     * @param inputAdapterToVerify
-     * @param delimiterString
-     * @param associatedMsg
      * @return
      */
   def UpdateAdapter(name: String, typeString: String, dataFormat: String, className: String,
                     jarName: String, dependencyJars: List[String],
-                    adapterSpecificCfg: String, inputAdapterToVerify: String, keyAndValueDelimiter: String, fieldDelimiter: String, valueDelimiter: String, associatedMsg: String, failedEventsAdapter: String): String = {
-    ConfigUtils.AddAdapter(name, typeString, dataFormat, className, jarName, dependencyJars, adapterSpecificCfg, inputAdapterToVerify, keyAndValueDelimiter, fieldDelimiter, valueDelimiter, associatedMsg, failedEventsAdapter)
+                    adapterSpecificCfg: String): String = {
+    ConfigUtils.AddAdapter(name, typeString, dataFormat, className, jarName, dependencyJars, adapterSpecificCfg)
   }
 
     /**
@@ -3679,8 +3712,15 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @return
      */
   def getModelDependencies(modelConfigName: String, userid: Option[String] = None): List[String] = {
-    var config: scala.collection.immutable.Map[String, List[String]] = MdMgr.GetMdMgr.GetModelConfig(modelConfigName)
-    config.getOrElse(ModelCompilationConstants.DEPENDENCIES, List[String]())
+      var config = MdMgr.GetMdMgr.GetModelConfig(modelConfigName.toLowerCase)
+      val typDeps = config.getOrElse(ModelCompilationConstants.DEPENDENCIES, null)
+      if (typDeps != null) {
+        if (typDeps.isInstanceOf[List[_]])
+          return typDeps.asInstanceOf[List[String]]
+        if (typDeps.isInstanceOf[Array[_]])
+          return typDeps.asInstanceOf[Array[String]].toList
+      }
+      List[String]()
   }
 
     /**
@@ -3694,7 +3734,15 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     MessageAndContainerUtils.getModelMessagesContainers(modelConfigName,userid)
   }
 
-    /**
+  def getModelInputTypesSets(modelConfigName: String, userid: Option[String] = None): List[List[String]] = {
+    MessageAndContainerUtils.getModelInputTypesSets(modelConfigName,userid)
+  }
+
+  def getModelOutputTypes(modelConfigName: String, userid: Option[String] = None): List[String] = {
+    MessageAndContainerUtils.getModelOutputTypes(modelConfigName,userid)
+  }
+
+  /**
      * Get the model config keys
      * @return
      */
@@ -3746,7 +3794,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * Answer nodes as an array.
      * @return
      */
-  def getNodeList1: Array[NodeInfo] = { 
+  def getNodeList1: Array[NodeInfo] = {
     ConfigUtils.getNodeList1
   }
   // All available nodes(format JSON) as a String
@@ -3829,7 +3877,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
     /**
      * Read metadata api configuration properties
-     * @param configFile the MetadataAPI configuration file 
+     * @param configFile the MetadataAPI configuration file
      */
   @throws(classOf[MissingPropertyException])
   @throws(classOf[InvalidPropertyException])
@@ -3850,8 +3898,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     /**
      * Initialize the metadata from the bootstrap, establish zookeeper listeners, load the cached information from
      * persistent storage, set up heartbeat and authorization implementations.
-     * 
-     * @param configFile the MetadataAPI configuration file 
+     *
+     * @param configFile the MetadataAPI configuration file
      * @param startHB
      */
   def InitMdMgr(configFile: String, startHB: Boolean) {
@@ -3879,7 +3927,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * persistent storage, set up heartbeat and authorization implementations.
      * FIXME: Is there a difference between this function and InitMdMgr?
      * @see InitMdMgr(String,Boolean)
-     * @param configFile the MetadataAPI configuration file 
+     * @param configFile the MetadataAPI configuration file
      * @param startHB
      */
   def InitMdMgrFromBootStrap(configFile: String, startHB: Boolean) {
@@ -3997,8 +4045,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     /**
      * UpdateMetadata - This is a callback function for the Zookeeper Listener.  It will get called when we detect Metadata being updated from
      *                  a different metadataImpl service.
-     * 
-     * @param receivedJsonStr message from another cluster node 
+     *
+     * @param receivedJsonStr message from another cluster node
      */
   def UpdateMetadata(receivedJsonStr: String): Unit = {
     logger.debug("Process ZooKeeper notification " + receivedJsonStr)

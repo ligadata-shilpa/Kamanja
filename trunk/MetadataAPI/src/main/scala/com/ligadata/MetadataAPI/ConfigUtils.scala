@@ -41,7 +41,7 @@ import com.ligadata.kamanja.metadataload.MetadataLoad
 // import com.ligadata.keyvaluestore._
 import com.ligadata.HeartBeat.{MonitoringContext, HeartBeatUtil}
 import com.ligadata.StorageBase.{ DataStore, Transaction }
-import com.ligadata.KvBase.{ Key, Value, TimeRange }
+import com.ligadata.KvBase.{ Key, TimeRange }
 
 import scala.util.parsing.json.JSON
 import scala.util.parsing.json.{ JSONObject, JSONArray }
@@ -51,7 +51,7 @@ import scala.collection.mutable.HashMap
 
 import com.google.common.base.Throwables
 
-import com.ligadata.messagedef._
+import com.ligadata.msgcompiler._
 import com.ligadata.Exceptions._
 
 import scala.xml.XML
@@ -194,18 +194,14 @@ object ConfigUtils {
      * @param jarName
      * @param dependencyJars
      * @param adapterSpecificCfg
-     * @param inputAdapterToVerify
-     * @param delimiterString
-     * @param associatedMsg
      * @return
      */
   def AddAdapter(name: String, typeString: String, dataFormat: String, className: String,
                  jarName: String, dependencyJars: List[String],
-                 adapterSpecificCfg: String, inputAdapterToVerify: String, keyAndValueDelimiter: String, fieldDelimiter: String, valueDelimiter: String, associatedMsg: String, failedEventsAdapter: String): String = {
+                 adapterSpecificCfg: String): String = {
     try {
       // save in memory
-      val ai = MdMgr.GetMdMgr.MakeAdapter(name, typeString, dataFormat, className, jarName,
-        dependencyJars, adapterSpecificCfg, inputAdapterToVerify, keyAndValueDelimiter, fieldDelimiter, valueDelimiter, associatedMsg, failedEventsAdapter)
+      val ai = MdMgr.GetMdMgr.MakeAdapter(name, typeString, dataFormat, className, jarName, dependencyJars, adapterSpecificCfg)
       MdMgr.GetMdMgr.AddAdapter(ai)
       // save in database
       val key = "AdapterInfo." + name
@@ -232,15 +228,12 @@ object ConfigUtils {
      * @param jarName
      * @param dependencyJars
      * @param adapterSpecificCfg
-     * @param inputAdapterToVerify
-     * @param delimiterString
-     * @param associatedMsg
      * @return
      */
   def UpdateAdapter(name: String, typeString: String, dataFormat: String, className: String,
                     jarName: String, dependencyJars: List[String],
-                    adapterSpecificCfg: String, inputAdapterToVerify: String, keyAndValueDelimiter: String, fieldDelimiter: String, valueDelimiter: String, associatedMsg: String, failedEventsAdapter: String): String = {
-    AddAdapter(name, typeString, dataFormat, className, jarName, dependencyJars, adapterSpecificCfg, inputAdapterToVerify, keyAndValueDelimiter, fieldDelimiter, valueDelimiter, associatedMsg, failedEventsAdapter)
+                    adapterSpecificCfg: String): String = {
+    AddAdapter(name, typeString, dataFormat, className, jarName, dependencyJars, adapterSpecificCfg)
   }
 
     /**
@@ -486,43 +479,55 @@ object ConfigUtils {
      * @return
      */
   def UploadModelsConfig(cfgStr: String, userid: Option[String], objectList: String, isFromNotify: Boolean = false): String = {
-    var keyList = new Array[String](0)
-    var valueList = new Array[Array[Byte]](0)
-    val tranId = MetadataAPIImpl.GetNewTranId
-    cfgmap = parse(cfgStr).values.asInstanceOf[Map[String, Any]]
-    var i = 0
-    // var objectsAdded: scala.collection.mutable.MutableList[Map[String, List[String]]] = scala.collection.mutable.MutableList[Map[String, List[String]]]()
-    var baseElems: Array[BaseElemDef] = new Array[BaseElemDef](cfgmap.keys.size)
-    cfgmap.keys.foreach(key => {
-      var mdl = cfgmap(key).asInstanceOf[Map[String, List[String]]]
+    try{
+      var keyList = new Array[String](0)
+      var valueList = new Array[Array[Byte]](0)
+      val tranId = MetadataAPIImpl.GetNewTranId
+      logger.debug("Parsing ModelConfig : " + cfgStr)
+      cfgmap = parse(cfgStr).values.asInstanceOf[Map[String, Any]]
+      logger.debug("Count of objects in cfgmap : " + cfgmap.keys.size)
+      
+      var i = 0
+      // var objectsAdded: scala.collection.mutable.MutableList[Map[String, List[String]]] = scala.collection.mutable.MutableList[Map[String, List[String]]]()
+      var baseElems: Array[BaseElemDef] = new Array[BaseElemDef](cfgmap.keys.size)
+      cfgmap.keys.foreach(key => {
+	logger.debug("Model Config Key => " + key)
+	var mdl = cfgmap(key).asInstanceOf[Map[String, List[String]]]
 
-      // wrap the config objet in Element Def
-      var confElem: ConfigDef = new ConfigDef
-      confElem.tranId = tranId
-      confElem.nameSpace = userid.get
-      confElem.contents = JsonSerializer.SerializeMapToJsonString(mdl)
-      confElem.name = key
-      baseElems(i) = confElem
-      i = i + 1
+	// wrap the config objet in Element Def
+	var confElem: ConfigDef = new ConfigDef
+	confElem.tranId = tranId
+	confElem.nameSpace = if(userid != None) userid.get else null
+	confElem.contents = JsonSerializer.SerializeMapToJsonString(mdl)
+	confElem.name = key
+	baseElems(i) = confElem
+	i = i + 1
 
-      // Prepare KEY/VALUE for persistent insertion
-      var modelKey = userid.getOrElse("_") + "." + key
-      var value = serializer.SerializeObjectToByteArray(mdl)
-      keyList = keyList :+ modelKey.toLowerCase
-      valueList = valueList :+ value
-      // Save in memory
-      MetadataAPIImpl.AddConfigObjToCache(tranId, modelKey, mdl, MdMgr.GetMdMgr)
-    })
-    // Save in Database
-    MetadataAPIImpl.SaveObjectList(keyList, valueList, "model_config_objects", serializerType)
-    if (!isFromNotify) {
-      val operations = for (op <- baseElems) yield "Add"
-      MetadataAPIImpl.NotifyEngine(baseElems, operations)
+	// Prepare KEY/VALUE for persistent insertion
+	var modelKey = userid.getOrElse("_") + "." + key
+	var value = serializer.SerializeObjectToByteArray(mdl)
+	keyList = keyList :+ modelKey.toLowerCase
+	valueList = valueList :+ value
+	// Save in memory
+	MetadataAPIImpl.AddConfigObjToCache(tranId, modelKey, mdl, MdMgr.GetMdMgr)
+      })
+      // Save in Database
+      MetadataAPIImpl.SaveObjectList(keyList, valueList, "model_config_objects", serializerType)
+      if (!isFromNotify) {
+	val operations = for (op <- baseElems) yield "Add"
+	MetadataAPIImpl.NotifyEngine(baseElems, operations)
+      }
+
+      // return reuslts
+      val apiResult = new ApiResult(ErrorCodeConstants.Success, "UploadModelsConfig", null, "Upload of model config successful")
+      apiResult.toString()
+    } catch {
+      case e: Exception => {
+        logger.debug("", e)
+        val apiResult = new ApiResult(ErrorCodeConstants.Failure, "UploadModelsConfig", null, "Error :" + e.toString() + ErrorCodeConstants.Upload_Config_Failed + ":" + cfgStr)
+        apiResult.toString()
+      }
     }
-
-    // return reuslts
-    val apiResult = new ApiResult(ErrorCodeConstants.Success, "UploadModelsConfig", null, "Upload of model config successful")
-    apiResult.toString()
   }
 
     /**
@@ -687,39 +692,12 @@ object ConfigUtils {
                 if (adap.contains("AdapterSpecificCfg")) {
                   ascfg = getStringFromJsonNode(adap.get("AdapterSpecificCfg"))
                 }
-                var inputAdapterToVerify: String = null
-                if (adap.contains("InputAdapterToVerify")) {
-                  inputAdapterToVerify = adap.get("InputAdapterToVerify").get.asInstanceOf[String]
-                }
-                var failedEventsAdapter: String = null
-                if (adap.contains("FailedEventsAdapter")) {
-                  failedEventsAdapter = adap.get("FailedEventsAdapter").get.asInstanceOf[String]
-                }
                 var dataFormat: String = null
                 if (adap.contains("DataFormat")) {
                   dataFormat = adap.get("DataFormat").get.asInstanceOf[String]
                 }
-                var keyAndValueDelimiter: String = null
-                var fieldDelimiter: String = null
-                var valueDelimiter: String = null
-                var associatedMsg: String = null
-
-                if (adap.contains("KeyAndValueDelimiter")) {
-                  keyAndValueDelimiter = adap.get("KeyAndValueDelimiter").get.asInstanceOf[String]
-                }
-                if (adap.contains("FieldDelimiter")) {
-                  fieldDelimiter = adap.get("FieldDelimiter").get.asInstanceOf[String]
-                } else if (adap.contains("DelimiterString")) { // If not found FieldDelimiter
-                  fieldDelimiter = adap.get("DelimiterString").get.asInstanceOf[String]
-                }
-                if (adap.contains("ValueDelimiter")) {
-                  valueDelimiter = adap.get("ValueDelimiter").get.asInstanceOf[String]
-                }
-                if (adap.contains("AssociatedMessage")) {
-                  associatedMsg = adap.get("AssociatedMessage").get.asInstanceOf[String]
-                }
                 // save in memory
-                val ai = MdMgr.GetMdMgr.MakeAdapter(nm, typStr, dataFormat, clsNm, jarnm, depJars, ascfg, inputAdapterToVerify, keyAndValueDelimiter, fieldDelimiter, valueDelimiter, associatedMsg, failedEventsAdapter)
+                val ai = MdMgr.GetMdMgr.MakeAdapter(nm, typStr, dataFormat, clsNm, jarnm, depJars, ascfg)
                 MdMgr.GetMdMgr.AddAdapter(ai)
                 val key = "AdapterInfo." + ai.name
                 val value = serializer.SerializeObjectToByteArray(ai)
@@ -1104,8 +1082,8 @@ object ConfigUtils {
       return false
     } else {
       MetadataAPIImpl.GetMetadataAPIConfig.setProperty("JAR_PATHS", jarPaths.mkString(","))
-      logger.debug("JarPaths Based on node(%s) => %s".format(nodeId, jarPaths))
-      val jarDir = compact(render(jarPaths(0))).replace("\"", "").trim
+      logger.debug("JarPaths Based on node(%s) => %s".format(nodeId, jarPaths.mkString(",")))
+      val jarDir = compact(render(jarPaths.head)).replace("\"", "").trim
 
       // If JAR_TARGET_DIR is unset.. set it ot the first value of the the JAR_PATH.. whatever it is... ????? I think we should error on start up.. this seems like wrong
       // user behaviour not to set a variable vital to MODEL compilation.
@@ -1467,7 +1445,7 @@ object ConfigUtils {
     try {
       var processed: Long = 0L
       val storeInfo = PersistenceUtils.GetTableStoreMap("config_objects")
-      storeInfo._2.get(storeInfo._1, { (k: Key, v: Value) =>
+      storeInfo._2.get(storeInfo._1, { (k: Key, v: Any, serType: String, typ: String, ver:Int) =>
         {
           val strKey = k.bucketKey.mkString(".")
           val i = strKey.indexOf(".")
@@ -1476,23 +1454,23 @@ object ConfigUtils {
           processed += 1
           objType match {
             case "nodeinfo" => {
-              val ni = serializer.DeserializeObjectFromByteArray(v.serializedInfo).asInstanceOf[NodeInfo]
+              val ni = serializer.DeserializeObjectFromByteArray(v.asInstanceOf[Array[Byte]]).asInstanceOf[NodeInfo]
               MdMgr.GetMdMgr.AddNode(ni)
             }
             case "adapterinfo" => {
-              val ai = serializer.DeserializeObjectFromByteArray(v.serializedInfo).asInstanceOf[AdapterInfo]
+              val ai = serializer.DeserializeObjectFromByteArray(v.asInstanceOf[Array[Byte]]).asInstanceOf[AdapterInfo]
               MdMgr.GetMdMgr.AddAdapter(ai)
             }
             case "clusterinfo" => {
-              val ci = serializer.DeserializeObjectFromByteArray(v.serializedInfo).asInstanceOf[ClusterInfo]
+              val ci = serializer.DeserializeObjectFromByteArray(v.asInstanceOf[Array[Byte]]).asInstanceOf[ClusterInfo]
               MdMgr.GetMdMgr.AddCluster(ci)
             }
             case "clustercfginfo" => {
-              val ci = serializer.DeserializeObjectFromByteArray(v.serializedInfo).asInstanceOf[ClusterCfgInfo]
+              val ci = serializer.DeserializeObjectFromByteArray(v.asInstanceOf[Array[Byte]]).asInstanceOf[ClusterCfgInfo]
               MdMgr.GetMdMgr.AddClusterCfg(ci)
             }
             case "userproperties" => {
-              val up = serializer.DeserializeObjectFromByteArray(v.serializedInfo).asInstanceOf[UserPropertiesInfo]
+              val up = serializer.DeserializeObjectFromByteArray(v.asInstanceOf[Array[Byte]]).asInstanceOf[UserPropertiesInfo]
               MdMgr.GetMdMgr.AddUserProperty(up)
             }
             case _ => {
@@ -1527,10 +1505,10 @@ object ConfigUtils {
 
     var processed: Long = 0L
     val storeInfo = PersistenceUtils.GetTableStoreMap("model_config_objects")
-    storeInfo._2.get(storeInfo._1, { (k: Key, v: Value) =>
+    storeInfo._2.get(storeInfo._1, { (k: Key, v: Any, serType: String, typ: String, ver:Int) =>
       {
         processed += 1
-        val conf = serializer.DeserializeObjectFromByteArray(v.serializedInfo).asInstanceOf[Map[String, List[String]]]
+        val conf = serializer.DeserializeObjectFromByteArray(v.asInstanceOf[Array[Byte]]).asInstanceOf[Map[String, List[String]]]
         MdMgr.GetMdMgr.AddModelConfig(k.bucketKey.mkString("."), conf)
       }
     })

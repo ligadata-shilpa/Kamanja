@@ -21,7 +21,7 @@ import com.ligadata.kamanja.metadata.ModelRepresentation
 import com.ligadata.kamanja.metadata._
 import com.ligadata.kamanja.metadata.ObjType._
 import com.ligadata.kamanja.metadata.MdMgr._
-import scala.collection.mutable.{ ArrayBuffer }
+import scala.collection.mutable.{ArrayBuffer}
 import org.apache.logging.log4j._
 
 import org.json4s._
@@ -33,55 +33,74 @@ import com.ligadata.Exceptions._
 import com.ligadata.AuditAdapterInfo.AuditRecord
 
 import java.util.Date
+import scala.collection.mutable.{HashMap}
 
-case class TypeDef(MetadataType: String, NameSpace: String, Name: String, TypeTypeName: String, TypeNameSpace: String, TypeName: String, PhysicalName: String, var Version: String, JarName: String, DependencyJars: List[String], Implementation: String, Fixed: Option[Boolean], NumberOfDimensions: Option[Int], KeyTypeNameSpace: Option[String], KeyTypeName: Option[String], ValueTypeNameSpace: Option[String], ValueTypeName: Option[String], TupleDefinitions: Option[List[TypeDef]])
+case class TypeDef(MetadataType: String, NameSpace: String, Name: String, TypeTypeName: String, TypeNameSpace: String, TypeName: String, PhysicalName: String, var Version: String, JarName: String, DependencyJars: List[String], Implementation: String, OwnerId: String, UniqueId: Long, MdElementId: Long, Fixed: Option[Boolean], NumberOfDimensions: Option[Int], KeyTypeNameSpace: Option[String], KeyTypeName: Option[String], ValueTypeNameSpace: Option[String], ValueTypeName: Option[String], TupleDefinitions: Option[List[TypeDef]])
+
 case class TypeDefList(Types: List[TypeDef])
 
 case class Argument(ArgName: String, ArgTypeNameSpace: String, ArgTypeName: String)
-case class Function(NameSpace: String, Name: String, PhysicalName: String, ReturnTypeNameSpace: String, ReturnTypeName: String, Arguments: List[Argument], Features: List[String], Version: String, JarName: String, DependantJars: List[String])
+
+case class Function(NameSpace: String, Name: String, PhysicalName: String, ReturnTypeNameSpace: String, ReturnTypeName: String, Arguments: List[Argument], Features: List[String], Version: String, JarName: String, DependantJars: List[String], OwnerId: String, UniqueId: Long, MdElementId: Long)
+
 case class FunctionList(Functions: List[Function])
 
 //case class Concept(NameSpace: String,Name: String, TypeNameSpace: String, TypeName: String,Version: String,Description: String, Author: String, ActiveDate: String)
-case class Concept(NameSpace: String, Name: String, TypeNameSpace: String, TypeName: String, Version: String)
+case class Concept(NameSpace: String, Name: String, TypeNameSpace: String, TypeName: String, Version: String, OwnerId: String, UniqueId: Long, MdElementId: Long)
+
 case class ConceptList(Concepts: List[Concept])
 
 case class Attr(NameSpace: String, Name: String, Version: Long, CollectionType: Option[String], Type: TypeDef)
+
 case class DerivedConcept(FunctionDefinition: Function, Attributes: List[Attr])
 
-case class MessageStruct(NameSpace: String, Name: String, FullName: String, Version: Long, JarName: String, PhysicalName: String, DependencyJars: List[String], Attributes: List[Attr])
+case class MessageStruct(NameSpace: String, Name: String, FullName: String, Version: Long, JarName: String, PhysicalName: String, DependencyJars: List[String], Attributes: List[Attr], OwnerId: String, UniqueId: Long, MdElementId: Long)
+
 case class MessageDefinition(Message: MessageStruct)
+
 case class ContainerDefinition(Container: MessageStruct)
 
 //case class ModelInfo(NameSpace: String, Name: String, Version: String, ModelType: String, JarName: String, PhysicalName: String, DependencyJars: List[String], InputAttributes: List[Attr], OutputAttributes: List[Attr])
+
+case class InputMsgAndAttributes(message: String, attributes: List[String])
 
 case class ModelInfo(NameSpace: String
                      , Name: String
                      , Version: String
                      , PhysicalName: String
-                     , ModelRep : String
+                     , OwnerId: String
+                     , UniqueId: Long
+                     , MdElementId: Long
+                     , ModelRep: String
                      , ModelType: String
-                     , IsReusable : Boolean
-                     , MsgConsumed : String
-                     , ObjectDefinition : String
-                     , ObjectFormat : String
+                     , InputMsgAndAttribsSets: List[List[InputMsgAndAttributes]] // Each set is List of MsgName & Full qualified MsgAttributes. And we have multiple sets
+                     , OutputMsgs: List[String]
+                     , IsReusable: Boolean
+                     , ObjectDefinition: String
+                     , ObjectFormat: String
                      , JarName: String
                      , DependencyJars: List[String]
-                     , InputAttributes: List[Attr]
-                     , OutputAttributes: List[Attr]
-                     , Recompile : Boolean
-                     , SupportsInstanceSerialization : Boolean)
+                     , Recompile: Boolean
+                     , SupportsInstanceSerialization: Boolean)
+
 case class ModelDefinition(Model: ModelInfo)
 
 case class ParameterMap(RootDir: String, GitRootDir: String, Database: String, DatabaseHost: String, JarTargetDir: String, ScalaHome: String, JavaHome: String, ManifestPath: String, ClassPath: String, NotifyEngine: String, ZooKeeperConnectString: String)
+
 case class MetadataApiConfig(ApiConfigParameters: ParameterMap)
 
 case class ZooKeeperNotification(ObjectType: String, Operation: String, NameSpace: String, Name: String, Version: String, PhysicalName: String, JarName: String, DependantJars: List[String], ConfigContnent: Option[String])
+
 case class ZooKeeperTransaction(Notifications: List[ZooKeeperNotification], transactionId: Option[String])
 
 case class JDataStore(StoreType: String, SchemaName: String, Location: String, AdapterSpecificConfig: Option[String])
+
 case class JZKInfo(ZooKeeperNodeBasePath: String, ZooKeeperConnectString: String, ZooKeeperSessionTimeoutMs: Option[String], ZooKeeperConnectionTimeoutMs: Option[String])
+
 case class JEnvCtxtJsonStr(classname: String, jarname: String, dependencyjars: Option[List[String]])
+
 case class MetadataApiArg(ObjectType: String, NameSpace: String, Name: String, Version: String, FormatType: String)
+
 case class MetadataApiArgList(ArgList: List[MetadataApiArg])
 
 // The implementation class
@@ -92,7 +111,7 @@ object JsonSerializer {
 
   @throws(classOf[Json4sParsingException])
   @throws(classOf[FunctionListParsingException])
-  def parseFunctionList(funcListJson: String, formatType: String): Array[FunctionDef] = {
+  def parseFunctionList(funcListJson: String, formatType: String, ownerId: String, uniqueId: Long, mdElementId: Long): Array[FunctionDef] = {
     try {
       implicit val jsonFormats: Formats = DefaultFormats
       val json = parse(funcListJson)
@@ -110,7 +129,7 @@ object JsonSerializer {
           }
           val func = MdMgr.GetMdMgr.MakeFunc(fn.NameSpace, fn.Name, fn.PhysicalName,
             (fn.ReturnTypeNameSpace, fn.ReturnTypeName),
-            argList, featureSet,
+            argList, featureSet, ownerId, uniqueId, mdElementId,
             fn.Version.toLong,
             fn.JarName,
             fn.DependantJars.toArray)
@@ -142,67 +161,67 @@ object JsonSerializer {
       typ.MetadataType match {
         case "ScalarTypeDef" => {
           typeDef = MdMgr.GetMdMgr.MakeScalar(typ.NameSpace, typ.Name, ObjType.fromString(typ.TypeName),
-            typ.PhysicalName, typ.Version.toLong, typ.JarName,
+            typ.PhysicalName, typ.OwnerId, typ.UniqueId, typ.MdElementId, typ.Version.toLong, typ.JarName,
             typ.DependencyJars.toArray, typ.Implementation)
         }
         case "ArrayTypeDef" => {
           typeDef = MdMgr.GetMdMgr.MakeArray(typ.NameSpace, typ.Name, typ.TypeNameSpace,
-            typ.TypeName, typ.NumberOfDimensions.get,
+            typ.TypeName, typ.NumberOfDimensions.get, typ.OwnerId, typ.UniqueId, typ.MdElementId,
             typ.Version.toLong)
         }
         case "ArrayBufTypeDef" => {
           typeDef = MdMgr.GetMdMgr.MakeArrayBuffer(typ.NameSpace, typ.Name, typ.TypeNameSpace,
-            typ.TypeName, typ.NumberOfDimensions.get,
+            typ.TypeName, typ.NumberOfDimensions.get, typ.OwnerId, typ.UniqueId, typ.MdElementId,
             typ.Version.toLong)
         }
         case "ListTypeDef" => {
           typeDef = MdMgr.GetMdMgr.MakeList(typ.NameSpace, typ.Name, typ.TypeNameSpace,
-            typ.TypeName, typ.Version.toLong)
+            typ.TypeName, typ.Version.toLong, typ.OwnerId, typ.UniqueId, typ.MdElementId)
         }
         case "QueueTypeDef" => {
           typeDef = MdMgr.GetMdMgr.MakeQueue(typ.NameSpace, typ.Name, typ.TypeNameSpace,
-            typ.TypeName, typ.Version.toLong)
+            typ.TypeName, typ.Version.toLong, typ.OwnerId, typ.UniqueId, typ.MdElementId)
         }
         case "SetTypeDef" => {
           typeDef = MdMgr.GetMdMgr.MakeSet(typ.NameSpace, typ.Name, typ.TypeNameSpace,
-            typ.TypeName, typ.Version.toLong)
+            typ.TypeName, typ.Version.toLong, typ.OwnerId, typ.UniqueId, typ.MdElementId)
         }
         case "ImmutableSetTypeDef" => {
           typeDef = MdMgr.GetMdMgr.MakeImmutableSet(typ.NameSpace, typ.Name, typ.TypeNameSpace,
-            typ.TypeName, typ.Version.toLong)
+            typ.TypeName, typ.Version.toLong, typ.OwnerId, typ.UniqueId, typ.MdElementId)
         }
         case "TreeSetTypeDef" => {
           typeDef = MdMgr.GetMdMgr.MakeTreeSet(typ.NameSpace, typ.Name, typ.TypeNameSpace,
-            typ.TypeName, typ.Version.toLong)
+            typ.TypeName, typ.Version.toLong, typ.OwnerId, typ.UniqueId, typ.MdElementId)
         }
         case "SortedSetTypeDef" => {
           typeDef = MdMgr.GetMdMgr.MakeSortedSet(typ.NameSpace, typ.Name, typ.TypeNameSpace,
-            typ.TypeName, typ.Version.toLong)
+            typ.TypeName, typ.Version.toLong, typ.OwnerId, typ.UniqueId, typ.MdElementId)
         }
         case "MapTypeDef" => {
           val mapKeyType = (typ.KeyTypeNameSpace.get, typ.KeyTypeName.get)
           val mapValueType = (typ.ValueTypeNameSpace.get, typ.ValueTypeName.get)
-          typeDef = MdMgr.GetMdMgr.MakeMap(typ.NameSpace, typ.Name, mapKeyType, mapValueType, typ.Version.toLong)
+          typeDef = MdMgr.GetMdMgr.MakeMap(typ.NameSpace, typ.Name, mapKeyType, mapValueType, typ.Version.toLong, typ.OwnerId, typ.UniqueId, typ.MdElementId)
         }
         case "ImmutableMapTypeDef" => {
           val mapKeyType = (typ.KeyTypeNameSpace.get, typ.KeyTypeName.get)
           val mapValueType = (typ.ValueTypeNameSpace.get, typ.ValueTypeName.get)
-          typeDef = MdMgr.GetMdMgr.MakeImmutableMap(typ.NameSpace, typ.Name, mapKeyType, mapValueType, typ.Version.toLong)
+          typeDef = MdMgr.GetMdMgr.MakeImmutableMap(typ.NameSpace, typ.Name, mapKeyType, mapValueType, typ.Version.toLong, typ.OwnerId, typ.UniqueId, typ.MdElementId)
         }
         case "HashMapTypeDef" => {
           val mapKeyType = (typ.KeyTypeNameSpace.get, typ.KeyTypeName.get)
           val mapValueType = (typ.ValueTypeNameSpace.get, typ.ValueTypeName.get)
-          typeDef = MdMgr.GetMdMgr.MakeHashMap(typ.NameSpace, typ.Name, mapKeyType, mapValueType, typ.Version.toLong)
+          typeDef = MdMgr.GetMdMgr.MakeHashMap(typ.NameSpace, typ.Name, mapKeyType, mapValueType, typ.Version.toLong, typ.OwnerId, typ.UniqueId, typ.MdElementId)
         }
         case "TupleTypeDef" => {
           val tuples = typ.TupleDefinitions.get.map(arg => (arg.NameSpace, arg.Name)).toArray
-          typeDef = MdMgr.GetMdMgr.MakeTupleType(typ.NameSpace, typ.Name, tuples, typ.Version.toLong)
+          typeDef = MdMgr.GetMdMgr.MakeTupleType(typ.NameSpace, typ.Name, tuples, typ.Version.toLong, typ.OwnerId, typ.UniqueId, typ.MdElementId)
         }
         case "ContainerTypeDef" => {
           if (typ.TypeName == "Struct") {
             typeDef = MdMgr.GetMdMgr.MakeStructDef(typ.NameSpace, typ.Name, typ.PhysicalName,
               null, typ.Version.toLong, typ.JarName,
-              typ.DependencyJars.toArray, null, null, null) //BUGBUG:: Handle Primary Key, Foreign Keys & Partition Key here
+              typ.DependencyJars.toArray, null, null, null, typ.OwnerId, typ.UniqueId, typ.MdElementId) //BUGBUG:: Handle Primary Key, Foreign Keys & Partition Key here
           }
         }
         case _ => {
@@ -289,6 +308,7 @@ object JsonSerializer {
             o.Name,
             o.TypeNameSpace,
             o.TypeName,
+            o.OwnerId, o.UniqueId, o.MdElementId,
             o.Version.toLong,
             false)
           logger.debug("Created AttributeDef for " + o.NameSpace + "." + o.Name)
@@ -354,13 +374,17 @@ object JsonSerializer {
       var featureSet: scala.collection.mutable.Set[FcnMacroAttr.Feature] = scala.collection.mutable.Set[FcnMacroAttr.Feature]()
       concept.FunctionDefinition.Features.foreach(arg => featureSet += FcnMacroAttr.fromString(arg))
 
+      val ownerId = "" //FIXME: Yet to fix this
+      val uniqueId = 0
+      val mdElementId = 0
+
       val func = MdMgr.GetMdMgr.MakeFunc(concept.FunctionDefinition.NameSpace,
         concept.FunctionDefinition.Name,
         concept.FunctionDefinition.PhysicalName,
         (concept.FunctionDefinition.ReturnTypeNameSpace,
           concept.FunctionDefinition.ReturnTypeName),
         argList,
-        featureSet,
+        featureSet, ownerId, uniqueId, mdElementId,
         concept.FunctionDefinition.Version.toLong,
         concept.FunctionDefinition.JarName,
         concept.FunctionDefinition.DependantJars.toArray)
@@ -396,6 +420,7 @@ object JsonSerializer {
         ContDefInst.Container.Name,
         ContDefInst.Container.PhysicalName,
         attrList.toList,
+        ContDefInst.Container.OwnerId, ContDefInst.Container.UniqueId, ContDefInst.Container.MdElementId,
         ContDefInst.Container.Version.toLong,
         ContDefInst.Container.JarName,
         ContDefInst.Container.DependencyJars.toArray)
@@ -453,6 +478,7 @@ object JsonSerializer {
         conceptInst.Name,
         conceptInst.TypeNameSpace,
         conceptInst.TypeName,
+        conceptInst.OwnerId, conceptInst.UniqueId, conceptInst.MdElementId,
         conceptInst.Version.toLong,
         false)
       concept
@@ -490,6 +516,7 @@ object JsonSerializer {
         (functionInst.ReturnTypeNameSpace, functionInst.ReturnTypeName),
         argList,
         featureSet,
+        functionInst.OwnerId, functionInst.UniqueId, functionInst.MdElementId,
         functionInst.Version.toLong,
         functionInst.JarName,
         functionInst.DependantJars.toArray)
@@ -519,12 +546,13 @@ object JsonSerializer {
       val attrList = MsgDefInst.Message.Attributes
       var attrList1 = List[(String, String, String, String, Boolean, String)]()
       for (attr <- attrList) {
-        attrList1 ::= (attr.NameSpace, attr.Name, attr.Type.TypeNameSpace, attr.Type.TypeName, false, attr.CollectionType.get)
+        attrList1 ::=(attr.NameSpace, attr.Name, attr.Type.TypeNameSpace, attr.Type.TypeName, false, attr.CollectionType.get)
       }
       val msgDef = MdMgr.GetMdMgr.MakeFixedMsg(MsgDefInst.Message.NameSpace,
         MsgDefInst.Message.Name,
         MsgDefInst.Message.PhysicalName,
         attrList1.toList,
+        MsgDefInst.Message.OwnerId, MsgDefInst.Message.UniqueId, MsgDefInst.Message.MdElementId,
         MsgDefInst.Message.Version.toLong,
         MsgDefInst.Message.JarName,
         MsgDefInst.Message.DependencyJars.toArray)
@@ -552,58 +580,67 @@ object JsonSerializer {
 
       val ModDefInst = json.extract[ModelDefinition]
 
-      val inputAttrList = ModDefInst.Model.InputAttributes
-      var inputAttrList1 = List[(String, String, String, String, Boolean, String)]()
-      for (attr <- inputAttrList) {
-        inputAttrList1 ::= (attr.NameSpace, attr.Name, attr.Type.NameSpace, attr.Type.Name, false, attr.CollectionType.get)
-      }
+/*
+      val inputMsgsAndAttribs =
+        if (ModDefInst.Model.InputMsgsInfo != null) {
+          ModDefInst.Model.InputMsgsInfo.map(i => i.map(m => {
+            val t = new MessageAndAttributes
+            t.message = m.message
+            t.attributes = if (m.attributes != null) m.attributes.toArray else Array[String]()
+            t
+          }).toArray).toArray
+        } else {
+          Array[Array[MessageAndAttributes]]()
+        }
+*/
+      val inputMsgsAndAttribs = Array[Array[MessageAndAttributes]]()
 
-      val outputAttrList = ModDefInst.Model.OutputAttributes
-      var outputAttrList1 = List[(String, String, String)]()
-      for (attr <- outputAttrList) {
-        outputAttrList1 ::= (attr.Name, attr.Type.NameSpace, attr.Type.Name)
-      }
+      val outputMsgs =
+        if (ModDefInst.Model.OutputMsgs != null) {
+          ModDefInst.Model.OutputMsgs.toArray
+        } else {
+          Array[String]()
+        }
 
       /**
-       *    Create a ModelDef from the extracted information found in the JSON string.
-       *
-       *
-       *case class ModelInfo(NameSpace: String
-                     , Name: String
-                     , Version: String
-                     , PhysicalName: String
-                     , ModelRep : String
-                     , ModelType: String
-                     , IsReusable : Boolean
-                     , MsgConsumed : String
-                     , ObjectDefinition : String
-                     , ObjectFormat : String
-                     , JarName: String
-                     , DependencyJars: List[String]
-                     , InputAttributes: List[Attr]
-                     , OutputAttributes: List[Attr]
-                     , Recompile : Boolean
-                     , SupportsInstanceSerialization : Boolean)
+        * Create a ModelDef from the extracted information found in the JSON string.
+        *
+        *
+        * case class ModelInfo(NameSpace: String
+        * , Name: String
+        * , Version: String
+        * , PhysicalName: String
+        * , ModelRep : String
+        * , ModelType: String
+        * , IsReusable : Boolean
+        * , ObjectDefinition : String
+        * , ObjectFormat : String
+        * , JarName: String
+        * , DependencyJars: List[String]
+        * , InputAttributes: List[Attr]
+        * , OutputAttributes: List[Attr]
+        * , Recompile : Boolean
+        * , SupportsInstanceSerialization : Boolean)
 
-       */
+        */
       val modDef = MdMgr.GetMdMgr.MakeModelDef(ModDefInst.Model.NameSpace
-                                              ,ModDefInst.Model.Name
-                                              ,ModDefInst.Model.PhysicalName
-                                              ,ModelRepresentation.modelRep(ModDefInst.Model.ModelRep)
-                                              ,ModDefInst.Model.IsReusable
-                                              ,ModDefInst.Model.MsgConsumed
-                                              ,ModDefInst.Model.ObjectDefinition
-                                              ,MiningModelType.modelType(ModDefInst.Model.ModelType)
-                                              ,inputAttrList1
-                                              ,outputAttrList1
-                                              ,ModDefInst.Model.Version.toLong
-                                              ,ModDefInst.Model.JarName
-                                              ,ModDefInst.Model.DependencyJars.toArray
-                                              ,ModDefInst.Model.Recompile
-                                              ,ModDefInst.Model.SupportsInstanceSerialization)
+        , ModDefInst.Model.Name
+        , ModDefInst.Model.PhysicalName
+        , ModDefInst.Model.OwnerId, ModDefInst.Model.UniqueId, ModDefInst.Model.MdElementId
+        , ModelRepresentation.modelRep(ModDefInst.Model.ModelRep)
+        , inputMsgsAndAttribs
+        , outputMsgs
+        , ModDefInst.Model.IsReusable
+        , ModDefInst.Model.ObjectDefinition
+        , MiningModelType.modelType(ModDefInst.Model.ModelType)
+        , ModDefInst.Model.Version.toLong
+        , ModDefInst.Model.JarName
+        , ModDefInst.Model.DependencyJars.toArray
+        , ModDefInst.Model.Recompile
+        , ModDefInst.Model.SupportsInstanceSerialization)
 
       modDef.ObjectDefinition(ModDefInst.Model.ObjectDefinition)
-      val objFmt : ObjFormatType.FormatType = ObjFormatType.fromString(ModDefInst.Model.ObjectFormat)
+      val objFmt: ObjFormatType.FormatType = ObjFormatType.fromString(ModDefInst.Model.ObjectFormat)
       modDef.ObjectFormat(objFmt)
 
       modDef
@@ -628,7 +665,7 @@ object JsonSerializer {
       logger.debug("Parsed the json : " + configJson)
 
       val fullmap = json.values.asInstanceOf[Map[String, Any]]
-      
+
       fullmap
     } catch {
       case e: MappingException => {
@@ -669,13 +706,13 @@ object JsonSerializer {
       val json = ("Notifications" -> o.Notifications.toList.map { n =>
         (
           ("ObjectType" -> n.ObjectType) ~
-          ("Operation" -> n.Operation) ~
-          ("NameSpace" -> n.NameSpace) ~
-          ("Name" -> n.Name) ~
-          ("Version" -> n.Version.toLong) ~
-          ("PhysicalName" -> n.PhysicalName) ~
-          ("JarName" -> n.JarName) ~
-          ("DependantJars" -> n.DependantJars.toList))
+            ("Operation" -> n.Operation) ~
+            ("NameSpace" -> n.NameSpace) ~
+            ("Name" -> n.Name) ~
+            ("Version" -> n.Version.toLong) ~
+            ("PhysicalName" -> n.PhysicalName) ~
+            ("JarName" -> n.JarName) ~
+            ("DependantJars" -> n.DependantJars.toList))
       })
       pretty(render(json))
     } catch {
@@ -689,9 +726,9 @@ object JsonSerializer {
   def zkSerializeObjectToJson(mdObj: BaseElemDef, operation: String): String = {
     try {
       mdObj match {
-          /**
-                Assuming that zookeeper transaction will be different based on type of object
-           */
+        /**
+          * Assuming that zookeeper transaction will be different based on type of object
+          */
         case o: ModelDef => {
           val json = (("ObjectType" -> "ModelDef") ~
             ("Operation" -> operation) ~
@@ -869,17 +906,6 @@ object JsonSerializer {
             ("DependantJars" -> o.CheckAndGetDependencyJarNames.toList))
           pretty(render(json))
         }
-        case o: OutputMsgDef => {
-          val json = (("ObjectType" -> "OutputMsgDef") ~
-            ("Operation" -> operation) ~
-            ("NameSpace" -> o.nameSpace) ~
-            ("Name" -> o.name) ~
-            ("Version" -> o.ver) ~
-            ("PhysicalName" -> o.physicalName) ~
-            ("JarName" -> "") ~
-            ("DependantJars" -> o.CheckAndGetDependencyJarNames.toList))
-          pretty(render(json))
-        }
         case o: ConfigDef => {
           val json = (("ObjectType" -> "ConfigDef") ~
             ("Operation" -> operation) ~
@@ -889,7 +915,7 @@ object JsonSerializer {
             ("PhysicalName" -> "") ~
             ("JarName" -> "") ~
             ("DependantJars" -> List[String]()) ~
-            ("ConfigContnent" -> o.contents))   
+            ("ConfigContnent" -> o.contents))
           pretty(render(json))
         }
         case _ => {
@@ -939,23 +965,13 @@ object JsonSerializer {
         pretty(render(json))
       }
       case o: AdapterInfo => {
-        
-        val inputAdapterToValidate = if (o.inputAdapterToValidate != null) o.inputAdapterToValidate else ""
-        val failedEventsAdapter = if (o.failedEventsAdapter != null) o.failedEventsAdapter else ""
-
         val json = (("Name" -> o.name) ~
           ("TypeString" -> o.typeString) ~
           ("DataFormat" -> o.dataFormat) ~
-          ("InputAdapterToVerify" -> inputAdapterToValidate) ~
-          ("FailedEventsAdapter" -> failedEventsAdapter) ~
           ("ClassName" -> o.className) ~
           ("JarName" -> o.jarName) ~
           ("DependencyJars" -> o.dependencyJars.toList) ~
-          ("AdapterSpecificCfg" -> o.adapterSpecificCfg) ~
-          ("KeyAndValueDelimiter" -> o.KeyAndValueDelimiter) ~
-          ("FieldDelimiter" -> o.FieldDelimiter) ~
-          ("ValueDelimiter" -> o.ValueDelimiter) ~
-          ("AssociatedMessage" -> o.associatedMsg))
+          ("AdapterSpecificCfg" -> o.adapterSpecificCfg))
         pretty(render(json))
       }
       case _ => {
@@ -977,8 +993,8 @@ object JsonSerializer {
           ("Arguments" -> o.args.toList.map { arg =>
             (
               ("ArgName" -> arg.name) ~
-              ("ArgTypeNameSpace" -> arg.Type.nameSpace) ~
-              ("ArgTypeName" -> arg.Type.name))
+                ("ArgTypeNameSpace" -> arg.Type.nameSpace) ~
+                ("ArgTypeName" -> arg.Type.name))
           }) ~
           ("Features" -> o.features.map(_.toString).toList) ~
           ("Version" -> MdMgr.Pad0s2Version(o.ver)) ~
@@ -992,16 +1008,17 @@ object JsonSerializer {
         // Assume o.containerType is checked for not being null
         val json = ("Message" ->
           ("NameSpace" -> o.nameSpace) ~
-          ("Name" -> o.name) ~
-          ("FullName" -> o.FullName) ~
-          ("Version" -> MdMgr.Pad0s2Version(o.ver)) ~
-          ("Persist" -> o.containerType.persist) ~
-          ("JarName" -> o.jarName) ~
-          ("PhysicalName" -> o.typeString) ~
-          ("ObjectDefinition" -> o.objectDefinition) ~
-          ("ObjectFormat" -> ObjFormatType.asString(o.objectFormat)) ~
-          ("DependencyJars" -> o.CheckAndGetDependencyJarNames.toList) ~
-          ("TransactionId" -> o.tranId))
+            ("Name" -> o.name) ~
+            ("FullName" -> o.FullName) ~
+            ("Version" -> MdMgr.Pad0s2Version(o.ver)) ~
+          ("ReportingId"-> o.uniqueId) ~
+            ("Persist" -> o.containerType.persist) ~
+            ("JarName" -> o.jarName) ~
+            ("PhysicalName" -> o.typeString) ~
+            ("ObjectDefinition" -> o.objectDefinition) ~
+            ("ObjectFormat" -> ObjFormatType.asString(o.objectFormat)) ~
+            ("DependencyJars" -> o.CheckAndGetDependencyJarNames.toList) ~
+            ("TransactionId" -> o.tranId))
         var jsonStr = pretty(render(json))
 
         o.containerType match {
@@ -1029,16 +1046,16 @@ object JsonSerializer {
       case o: ContainerDef => {
         val json = ("Container" ->
           ("NameSpace" -> o.nameSpace) ~
-          ("Name" -> o.name) ~
-          ("FullName" -> o.FullName) ~
-          ("Version" -> MdMgr.Pad0s2Version(o.ver)) ~
-          ("Persist" -> o.containerType.persist) ~
-          ("JarName" -> o.jarName) ~
-          ("PhysicalName" -> o.typeString) ~
-          ("ObjectDefinition" -> o.objectDefinition) ~
-          ("ObjectFormat" -> ObjFormatType.asString(o.objectFormat)) ~
-          ("DependencyJars" -> o.CheckAndGetDependencyJarNames.toList) ~
-          ("TransactionId" -> o.tranId))
+            ("Name" -> o.name) ~
+            ("FullName" -> o.FullName) ~
+            ("Version" -> MdMgr.Pad0s2Version(o.ver)) ~
+            ("Persist" -> o.containerType.persist) ~
+            ("JarName" -> o.jarName) ~
+            ("PhysicalName" -> o.typeString) ~
+            ("ObjectDefinition" -> o.objectDefinition) ~
+            ("ObjectFormat" -> ObjFormatType.asString(o.objectFormat)) ~
+            ("DependencyJars" -> o.CheckAndGetDependencyJarNames.toList) ~
+            ("TransactionId" -> o.tranId))
         var jsonStr = pretty(render(json))
 
         o.containerType match {
@@ -1063,50 +1080,48 @@ object JsonSerializer {
         }
       }
 
-      /*
-      case class ModelInfo(NameSpace: String
-                 , Name: String
-                 , Version: String
-                 , PhysicalName: String
-                 , ModelRep : String
-                 , ModelType: String
-                 , IsReusable : Boolean
-                 , MsgConsumed : String
-                 , ObjectDefinition : String
-                 , ObjectFormat : String
-                 , JarName: String
-                 , DependencyJars: List[String]
-                 , InputAttributes: List[Attr]
-                 , OutputAttributes: List[Attr]
-                 , Recompile : Boolean
-                 , Persist : Boolean)
-
-       */
       case o: ModelDef => {
+        val inputMsgAndAttribs :List[List[(String, List[String])]]  =
+          if (o.inputMsgSets != null) {
+            o.inputMsgSets.map(s => s.map(msgAndAttris =>
+              (if (msgAndAttris.message != null) msgAndAttris.message else "", if (msgAndAttris.attributes != null) msgAndAttris.attributes.toList else List[String]())).toList).toList
+          } else {
+            List[List[(String, List[String])]]()
+          }
+
+        val outputMsgs =
+          if (o.outputMsgs != null) {
+            o.outputMsgs.toList
+          } else {
+            List[String]()
+          }
+
+/*
+        val x = ("InputMsgAndAttribsSets" -> inputMsgAndAttribs.map {i =>
+          ("InputMsgAndAttribs" ->  i.map {s =>
+            (("message" -> s._1) ~
+              ("attributes" -> s._2))})
+        })
+*/
+
         val json = ("Model" ->
-                    ("NameSpace" -> o.nameSpace) ~
-                    ("Name" -> o.name) ~
-                    ("Version" -> MdMgr.Pad0s2Version(o.ver)) ~
-                    ("ModelRep" -> o.modelRepresentation.toString) ~
-                    ("ModelType" -> o.miningModelType.toString) ~
-                    ("JarName" -> o.jarName) ~
-                    ("PhysicalName" -> o.typeString) ~
-                    ("ObjectDefinition" -> o.objectDefinition) ~
-                    ("ObjectFormat" -> ObjFormatType.asString(o.objectFormat)) ~
-                    ("DependencyJars" -> o.CheckAndGetDependencyJarNames.toList) ~
-                    ("Deleted" -> o.deleted) ~
-                    ("Active" -> o.active) ~
-                    ("TransactionId" -> o.tranId))
+          ("NameSpace" -> o.nameSpace) ~
+            ("Name" -> o.name) ~
+            ("Version" -> MdMgr.Pad0s2Version(o.ver)) ~
+            ("IsReusable" -> o.isReusable.toString) ~
+            ("OutputMsgs" -> outputMsgs) ~
+            ("ModelRep" -> o.modelRepresentation.toString) ~
+            ("ModelType" -> o.miningModelType.toString) ~
+            ("JarName" -> o.jarName) ~
+            ("PhysicalName" -> o.typeString) ~
+            ("ObjectDefinition" -> o.objectDefinition) ~
+            ("ObjectFormat" -> ObjFormatType.asString(o.objectFormat)) ~
+            ("DependencyJars" -> o.CheckAndGetDependencyJarNames.toList) ~
+            ("Deleted" -> o.deleted) ~
+            ("Active" -> o.active) ~
+            ("TransactionId" -> o.tranId))
         var jsonStr = pretty(render(json))
         jsonStr = replaceLast(jsonStr, "}\n}", "").trim
-        jsonStr = jsonStr + ",\n\"InputAttributes\": "
-        var memberDefJson = SerializeObjectListToJson(o.inputVars)
-        jsonStr += memberDefJson
-
-        jsonStr = jsonStr + ",\n\"OutputAttributes\": "
-        memberDefJson = SerializeObjectListToJson(o.outputVars)
-        memberDefJson = memberDefJson + "}\n}"
-        jsonStr += memberDefJson
         jsonStr
       }
 
@@ -1407,16 +1422,6 @@ object JsonSerializer {
           ("TransactionId" -> o.tranId))
         pretty(render(json))
       }
-      case o: OutputMsgDef => {
-        val json = (("ObjectType" -> "OutputMsgDef") ~
-          ("NameSpace" -> o.nameSpace) ~
-          ("Name" -> o.name) ~
-          ("Version" -> o.ver) ~
-          ("PhysicalName" -> o.physicalName) ~
-          ("JarName" -> "") ~
-          ("DependantJars" -> o.CheckAndGetDependencyJarNames.toList))
-        pretty(render(json))
-      }
       case _ => {
         throw UnsupportedObjectException(s"SerializeObjectToJson doesn't support the objectType of " + mdObj.getClass().getName() + "  yet", null)
       }
@@ -1425,7 +1430,9 @@ object JsonSerializer {
 
   def SerializeObjectListToJson[T <: BaseElemDef](objList: Array[T]): String = {
     var json = "[ \n"
-    objList.toList.map(obj => { var objJson = SerializeObjectToJson(obj); json += objJson; json += ",\n" })
+    objList.toList.map(obj => {
+      var objJson = SerializeObjectToJson(obj); json += objJson; json += ",\n"
+    })
     json = json.stripSuffix(",\n")
     json += " ]\n"
     json
@@ -1433,7 +1440,9 @@ object JsonSerializer {
 
   def SerializeCfgObjectListToJson[T <: Object](objList: Array[T]): String = {
     var json = "[ \n"
-    objList.toList.map(obj => { var objJson = SerializeCfgObjectToJson(obj); json += objJson; json += ",\n" })
+    objList.toList.map(obj => {
+      var objJson = SerializeCfgObjectToJson(obj); json += objJson; json += ",\n"
+    })
     json = json.stripSuffix(",\n")
     json += " ]\n"
     json
@@ -1452,7 +1461,9 @@ object JsonSerializer {
   def zkSerializeObjectListToJson[T <: BaseElemDef](objList: Array[T], operations: Array[String]): String = {
     var json = "[ \n"
     var i = 0
-    objList.toList.map(obj => { var objJson = zkSerializeObjectToJson(obj, operations(i)); i = i + 1; json += objJson; json += ",\n" })
+    objList.toList.map(obj => {
+      var objJson = zkSerializeObjectToJson(obj, operations(i)); i = i + 1; json += objJson; json += ",\n"
+    })
     json = json.stripSuffix(",\n")
     json += " ]\n"
     json
@@ -1461,7 +1472,9 @@ object JsonSerializer {
   def zkSerializeObjectListToJson[T <: BaseElemDef](objType: String, objList: Array[T], operations: Array[String]): String = {
     // Insert the highest Transaction ID into the JSON Notification message.
     var max: Long = 0
-    objList.foreach(obj => { max = scala.math.max(obj.TranId, max) })
+    objList.foreach(obj => {
+      max = scala.math.max(obj.TranId, max)
+    })
 
     var json = "{\n" + "\"transactionId\":\"" + max + "\",\n" + "\"" + objType + "\" :" + zkSerializeObjectListToJson(objList, operations) + "\n}"
     json
@@ -1472,10 +1485,10 @@ object JsonSerializer {
       val json = ("ArgList" -> o.ArgList.map { n =>
         (
           ("ObjectType" -> n.ObjectType) ~
-          ("NameSpace" -> n.NameSpace) ~
-          ("Name" -> n.Name) ~
-          ("Version" -> n.Version) ~
-          ("FormatType" -> n.FormatType))
+            ("NameSpace" -> n.NameSpace) ~
+            ("Name" -> n.Name) ~
+            ("Version" -> n.Version) ~
+            ("FormatType" -> n.FormatType))
       })
       pretty(render(json))
     } catch {
@@ -1497,10 +1510,22 @@ object JsonSerializer {
       }
     }
   }
-  
-  def SerializeMapToJsonString (map: Map[String,Any]): String = {
-     implicit val formats = org.json4s.DefaultFormats
-     return Serialization.write(map)
+
+  def SerializeMapToJsonString(map: Map[String, Any]): String = {
+    implicit val formats = org.json4s.DefaultFormats
+    return Serialization.write(map)
   }
 
+  def SerializeModelConfigToJson(mcfgKey: String, config: scala.collection.immutable.Map[String, Any]): String = {
+    var jsonStr = ""
+    try{
+      jsonStr = jsonStr + SerializeMapToJsonString(Map(mcfgKey -> config))
+      jsonStr
+    } catch {
+      case e: Exception => {
+        logger.debug("", e)
+        throw Json4sSerializationException(e.getMessage(), e)
+      }
+    }
+  }
 }

@@ -3,7 +3,7 @@ package com.ligadata.KamanjaManager
 
 import com.ligadata.HeartBeat.MonitoringContext
 import com.ligadata.KamanjaBase._
-import com.ligadata.InputOutputAdapterInfo.{ ExecContext, InputAdapter, OutputAdapter, ExecContextObj, PartitionUniqueRecordKey, PartitionUniqueRecordValue }
+import com.ligadata.InputOutputAdapterInfo.{ ExecContext, InputAdapter, OutputAdapter, ExecContextFactory, PartitionUniqueRecordKey, PartitionUniqueRecordValue }
 import com.ligadata.ZooKeeper.CreateClient
 import org.json4s.jackson.JsonMethods._
 
@@ -467,7 +467,7 @@ class KamanjaManager extends Observer {
       if (retval) {
         LOG.debug("Initialize Metadata Manager")
         KamanjaMetadata.InitMdMgr(KamanjaConfiguration.zkConnectString, metadataUpdatesZkNodePath, KamanjaConfiguration.zkSessionTimeoutMs, KamanjaConfiguration.zkConnectionTimeoutMs)
-        KamanjaMetadata.envCtxt.CacheContainers(KamanjaConfiguration.clusterId) // Load data for Caching
+//        KamanjaMetadata.envCtxt.CacheContainers(KamanjaConfiguration.clusterId) // Load data for Caching
         LOG.debug("Initializing Leader")
 
         var txnCtxt: TransactionContext = null
@@ -593,15 +593,23 @@ class KamanjaManager extends Observer {
     if (initialize == false) {
       return Shutdown(1)
     }
+
+    // Jars loaded, create the status factory
+    val statusEventFactory = KamanjaMetadata.getMessgeInfo("system.KamanjaStatusEvent").contmsgobj.asInstanceOf[MessageFactoryInterface]
+
     val exceptionStatusAdaps = scala.collection.mutable.Set[String]()
     var curCntr = 0
     val maxFailureCnt = 30
-
+/*
     val statusPrint_PD = new Runnable {
       def run() {
         val stats: scala.collection.immutable.Map[String, Long] = SimpleStats.copyMap
         val statsStr = stats.mkString("~")
         val dispStr = "PD,%d,%s,%s".format(KamanjaConfiguration.nodeId, Utils.GetCurDtTmStr, statsStr)
+        var statusMsg = statusEventFactory.CreateNewMessage.asInstanceOf[KamanjaStatusEvent]
+        statusMsg.nodeid = KamanjaConfiguration.nodeId.toString
+        statusMsg.statusstring = statsStr
+        //statusMsg.eventtime = Utils.GetCurDtTmStr
 
         if (statusAdapters != null) {
           curCntr += 1
@@ -639,6 +647,7 @@ class KamanjaManager extends Observer {
         }
       }
     }
+*/
 
     val metricsCollector = new Runnable {
       def run(): Unit = {
@@ -654,7 +663,7 @@ class KamanjaManager extends Observer {
 
     val scheduledThreadPool = Executors.newScheduledThreadPool(3);
 
-    scheduledThreadPool.scheduleWithFixedDelay(statusPrint_PD, 0, 1000, TimeUnit.MILLISECONDS);
+    // scheduledThreadPool.scheduleWithFixedDelay(statusPrint_PD, 0, 1000, TimeUnit.MILLISECONDS);
 
     /**
      * print("=> ")
@@ -704,22 +713,22 @@ class KamanjaManager extends Observer {
         timeOutEndTime = 0
         participentsChangedCntr = KamanjaConfiguration.participentsChangedCntr
         val cs = KamanjaLeader.GetClusterStatus
-        if (cs.leader != null && cs.participants != null && cs.participants.size > 0) {
+        if (cs.leaderNodeId != null && cs.participantsNodeIds != null && cs.participantsNodeIds.size > 0) {
           if (dispWarn) {
-            LOG.warn("Got new participents. Trying to see whether the node still has duplicates participents. Previous Participents:{%s} Current Participents:{%s}".format(prevParticipents, cs.participants.mkString(",")))
+            LOG.warn("Got new participents. Trying to see whether the node still has duplicates participents. Previous Participents:{%s} Current Participents:{%s}".format(prevParticipents, cs.participantsNodeIds.mkString(",")))
           }
           prevParticipents = ""
-          val isNotLeader = (cs.isLeader == false || cs.leader != cs.nodeId)
+          val isNotLeader = (cs.isLeader == false || cs.leaderNodeId != cs.nodeId)
           if (isNotLeader) {
-            val sameNodeIds = cs.participants.filter(p => p == cs.nodeId)
+            val sameNodeIds = cs.participantsNodeIds.filter(p => p == cs.nodeId)
             if (sameNodeIds.size > 1) {
               lookingForDups = true
               var mxTm = if (KamanjaConfiguration.zkSessionTimeoutMs > KamanjaConfiguration.zkConnectionTimeoutMs) KamanjaConfiguration.zkSessionTimeoutMs else KamanjaConfiguration.zkConnectionTimeoutMs
               if (mxTm < 5000) // if the value is < 5secs, we are taking 5 secs
                 mxTm = 5000
               timeOutEndTime = System.currentTimeMillis + mxTm + 2000 // waiting another 2secs
-              LOG.error("Found more than one of NodeId:%s in Participents:{%s}. Waiting for %d milli seconds to check whether it is real duplicate or not.".format(cs.nodeId, cs.participants.mkString(","), mxTm))
-              prevParticipents = cs.participants.mkString(",")
+              LOG.error("Found more than one of NodeId:%s in Participents:{%s}. Waiting for %d milli seconds to check whether it is real duplicate or not.".format(cs.nodeId, cs.participantsNodeIds.mkString(","), mxTm))
+              prevParticipents = cs.participantsNodeIds.mkString(",")
             }
           }
         }
@@ -730,12 +739,12 @@ class KamanjaManager extends Observer {
           lookingForDups = false
           timeOutEndTime = 0
           val cs = KamanjaLeader.GetClusterStatus
-          if (cs.leader != null && cs.participants != null && cs.participants.size > 0) {
-            val isNotLeader = (cs.isLeader == false || cs.leader != cs.nodeId)
+          if (cs.leaderNodeId != null && cs.participantsNodeIds != null && cs.participantsNodeIds.size > 0) {
+            val isNotLeader = (cs.isLeader == false || cs.leaderNodeId != cs.nodeId)
             if (isNotLeader) {
-              val sameNodeIds = cs.participants.filter(p => p == cs.nodeId)
+              val sameNodeIds = cs.participantsNodeIds.filter(p => p == cs.nodeId)
               if (sameNodeIds.size > 1) {
-                LOG.error("Found more than one of NodeId:%s in Participents:{%s} for ever. Shutting down this node.".format(cs.nodeId, cs.participants.mkString(",")))
+                LOG.error("Found more than one of NodeId:%s in Participents:{%s} for ever. Shutting down this node.".format(cs.nodeId, cs.participantsNodeIds.mkString(",")))
                 KamanjaConfiguration.shutdown = true
               }
             }

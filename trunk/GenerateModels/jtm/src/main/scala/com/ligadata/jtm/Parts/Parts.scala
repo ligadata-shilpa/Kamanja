@@ -44,7 +44,7 @@ object Parts {
 
   val factory =
     """|class Factory(modelDef: ModelDef, nodeContext: NodeContext) extends ModelInstanceFactory(modelDef, nodeContext) {
-       |  override def isValidMessage(msg: MessageContainerBase): Boolean = {
+       |  override def isValidMessage(msg: ContainerInterface): Boolean = {
        |    {factory.isvalidmessage}
        |  }
        |  override def createModelInstance(): ModelInstance = return new Model(this)
@@ -56,15 +56,12 @@ object Parts {
 
   val model =
     """|class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
-       |  override def execute(txnCtxt: TransactionContext, outputDefault: Boolean): ModelResultBase = {
+       |  override def run(txnCtxt: TransactionContext, outputDefault: Boolean): Array[MessageInterface]  = {
+       |    //
+       |    {model.grok}
        |    //
        |    {model.methods}
-       |    //
-       |    // ToDo: we expect an array of messages
-       |    //
-       |    val msgs = Array(txnCtxt.getMessage()).map(m => m.FullName -> m).toMap
        |    // Evaluate messages
-       |    //
        |    {model.message}
        |    // Main dependency -> execution check
        |    //

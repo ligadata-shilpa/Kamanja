@@ -39,7 +39,7 @@ class DeserializeTest  extends FunSuite with BeforeAndAfter {
   }
 
   test("test02") {
-    val fileInput = getClass.getResource("/test003.jtm/test.jtm").getPath
+    val fileInput = getClass.getResource("/test003.jtm/test1.jtm").getPath
     val expected = FileUtils.readFileToString(new File(fileInput), null)
     val t = Root.fromJsonString(expected)
     assert(2 == t.transformations.size)

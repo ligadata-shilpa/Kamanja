@@ -34,7 +34,7 @@ import scala.io._
  */
 
 object ModelService {
-    private val userid: Option[String] = Some("metadataapi")
+    private val userid: Option[String] = Some("Kamanja")
     val loggerName = this.getClass.getName
     lazy val logger = LogManager.getLogger(loggerName)
 
@@ -52,7 +52,8 @@ object ModelService {
       */
     def addModelScala(input: String
                       , dep: String = ""
-                      , userid: Option[String] = Some("metadataapi")
+                      , userid: Option[String] = Some("Kamanja")
+		      , optMsgProduced: Option[String] = None
                      ): String = {
         var modelDefs= Array[String]()
         var modelConfig=""
@@ -99,7 +100,7 @@ object ModelService {
             for (modelDef <- modelDefs){
                 println("Adding the next model in the queue.")
                 if (dep.length > 0) {
-                    response+= MetadataAPIImpl.AddModel(ModelType.SCALA, modelDef, userid, Some(userid.get+"."+dep))
+                    response+= MetadataAPIImpl.AddModel(ModelType.SCALA, modelDef, userid, Some(userid.get+"."+dep),None,None,None,optMsgProduced)
                 } else {
                     //before adding a model, add its config file.
                     var configKeys = MetadataAPIImpl.getModelConfigNames
@@ -127,7 +128,7 @@ object ModelService {
                                 errorMsg
                             }
                         }
-                        response+= MetadataAPIImpl.AddModel(ModelType.SCALA, modelDef, userid, Some(modelConfig))
+                        response+= MetadataAPIImpl.AddModel(ModelType.SCALA, modelDef, userid, Some(modelConfig),None,None,None,optMsgProduced)
                     }
                 }
             }
@@ -145,7 +146,8 @@ object ModelService {
       * @return the result of the operation
       */
     def addModelJava(input: String, dep: String = ""
-                     , userid: Option[String] = Some("metadataapi")
+                     , userid: Option[String] = Some("Kamanja")
+		      , optMsgProduced: Option[String] = None
                     ): String = {
         var modelDefs= Array[String]()
         var modelConfig=""
@@ -194,7 +196,7 @@ object ModelService {
             for (modelDef <- modelDefs){
                 println("Adding the next model in the queue.")
                 if (dep.length > 0) {
-                    response+= MetadataAPIImpl.AddModel(ModelType.JAVA, modelDef, userid, Some(userid.get+"."+dep))
+                    response+= MetadataAPIImpl.AddModel(ModelType.JAVA, modelDef, userid, Some(userid.get+"."+dep),None,None,None,optMsgProduced)
                 } else {
                     var configKeys = MetadataAPIImpl.getModelConfigNames
                     println("--> got these many back "+configKeys.size)
@@ -222,7 +224,7 @@ object ModelService {
                                 errorMsg
                             }
                         }
-                        response+= MetadataAPIImpl.AddModel(ModelType.JAVA, modelDef, userid, Some(modelConfig))
+                        response+= MetadataAPIImpl.AddModel(ModelType.JAVA, modelDef, userid, Some(modelConfig),None,None,None,optMsgProduced)
                     }
                 }
             }
@@ -252,11 +254,12 @@ object ModelService {
      */
     def addModelPmml(modelType: ModelType.ModelType
                     , input: String
-                    , optUserid: Option[String] = Some("metadataapi")
+                    , optUserid: Option[String] = Some("Kamanja")
                     , optModelName: Option[String] = None
                     , optVersion: Option[String] = None
                     , optMsgConsumed: Option[String] = None
                     , optMsgVersion: Option[String] = Some("-1")
+		      , optMsgProduced: Option[String] = None
                     ): String = {
         val response : String = if (input == "") {
             val reply : String = "PMML models are only ingested with command line arguments.. default directory selection is deprecated"
@@ -266,7 +269,7 @@ object ModelService {
             val model = new File(input.toString)
             val resp : String = if(model.exists()){
                 val modelDef= Source.fromFile(model).mkString
-                MetadataAPIImpl.AddModel(ModelType.PMML, modelDef, optUserid, optModelName, optVersion, optMsgConsumed, optMsgVersion)
+                MetadataAPIImpl.AddModel(ModelType.PMML, modelDef, optUserid, optModelName, optVersion, optMsgConsumed, optMsgVersion,optMsgProduced)
             }else{
                 val userId : String = optUserid.getOrElse("no user id supplied")
                 val modelName : String = optModelName.getOrElse("no model name supplied")
@@ -291,7 +294,8 @@ object ModelService {
      * @return the result of the operation
      */
     def addModelKPmml(input: String
-                     , userid: Option[String] = Some("metadataapi")
+                     , userid: Option[String] = Some("Kamanja")
+		      , optMsgProduced: Option[String] = None
                         ): String = {
         var modelDef=""
         var modelConfig=""
@@ -317,7 +321,7 @@ object ModelService {
                             case option => {
                                 var  modelDefs=getUserInputFromMainMenu(models)
                                 for (modelDef <- modelDefs)
-                                    response += MetadataAPIImpl.AddModel(ModelType.KPMML, modelDef.toString, userid, None)
+                                    response += MetadataAPIImpl.AddModel(ModelType.KPMML, modelDef.toString, userid, None,None,None,None,optMsgProduced)
                             }
                         }
                     }
@@ -332,7 +336,7 @@ object ModelService {
             var model = new File(input.toString)
             if(model.exists()){
                 modelDef= Source.fromFile(model).mkString
-                response = MetadataAPIImpl.AddModel(ModelType.KPMML, modelDef.toString, userid, None)
+                response = MetadataAPIImpl.AddModel(ModelType.KPMML, modelDef.toString, userid, None,None,None,None,optMsgProduced)
             }else{
                 response="Model definition file does not exist"
             }
@@ -349,7 +353,8 @@ object ModelService {
      */
      
     def updateModelKPmml(input: String
-                      , userid: Option[String] = Some("metadataapi")
+                      , userid: Option[String] = Some("Kamanja")
+		      , optMsgProduced: Option[String] = None
                       ): String = {
       var modelDef = ""
       var response: String = ""
@@ -451,7 +456,7 @@ object ModelService {
      * @return the result of the operation
      */
     def updateModeljava(input: String, dep: String = ""
-                      , userid: Option[String] = Some("metadataapi")
+                      , userid: Option[String] = Some("Kamanja")
                       ): String = {
         var modelDef=""
         var modelConfig=""
@@ -550,7 +555,7 @@ object ModelService {
      * @return the result of the operation
      */
     def updateModelscala(input: String, dep: String = ""
-                       , userid: Option[String] = Some("metadataapi")
+                       , userid: Option[String] = Some("Kamanja")
                        ): String = {
         var modelDef=""
         var modelConfig=""
@@ -644,7 +649,7 @@ object ModelService {
      * @return the result of the operation - a JSON string representation of the ModelDef
      */
     def getModel(param: String = ""
-               , userid: Option[String] = Some("metadataapi")
+               , userid: Option[String] = Some("Kamanja")
                ): String ={
         var response=""
         try {
@@ -694,7 +699,7 @@ object ModelService {
      * @param userid the optional userId. If security and auditing in place this parameter is required.
      * @return
      */
-    def getAllModels(userid: Option[String] = Some("metadataapi")) : String ={
+    def getAllModels(userid: Option[String] = Some("Kamanja")) : String ={
         var response=""
         val modelKeys = MetadataAPIImpl.GetAllModelsFromCache(true, userid)
         if (modelKeys.length == 0) {
@@ -717,7 +722,7 @@ object ModelService {
      * @return the result of the operation
      */
     def removeModel(modelId: String = ""
-                  , userid: Option[String] = Some("metadataapi")
+                  , userid: Option[String] = Some("Kamanja")
                   ): String ={
         val response : String = try {
           //  logger.setLevel(Level.TRACE); //check again
@@ -776,7 +781,7 @@ object ModelService {
      * @return the result of the operation
      */
     def activateModel(modelId: String = ""
-                    , userid: Option[String] = Some("metadataapi")
+                    , userid: Option[String] = Some("Kamanja")
                     ): String ={
         var response=""
         try {
@@ -831,7 +836,7 @@ object ModelService {
      * @return the result of the operation
      */
     def deactivateModel(modelId: String = ""
-                      , userid: Option[String] = Some("metadataapi")
+                      , userid: Option[String] = Some("Kamanja")
                       ):String={
         var response=""
         var progressReport: Int = 0

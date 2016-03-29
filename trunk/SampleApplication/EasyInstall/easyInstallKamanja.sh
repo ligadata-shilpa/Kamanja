@@ -432,7 +432,6 @@ cp $ivyPath/cache/io.netty/netty/bundles/netty-3.9.0.Final.jar $systemlib
 # Might be only for 2.11
 #cp $ivyPath/cache/org.scalameta/tokens_2.11/jars/tokens_2.11-0.0.3.jar $systemlib
 cp $ivyPath/cache/org.slf4j/slf4j-log4j12/jars/slf4j-log4j12-1.7.10.jar $systemlib
-cp $srcPath/OutputMsgDef/target/scala-2.10/outputmsgdef*.jar $systemlib
 cp $ivyPath/cache/org.jpmml/pmml-model/jars/pmml-model-1.2.9.jar $systemlib
 cp $ivyPath/cache/org.apache.httpcomponents/httpcore/jars/httpcore-4.2.4.jar $systemlib
 cp $ivyPath/cache/commons-configuration/commons-configuration/jars/commons-configuration-1.6.jar $systemlib
@@ -449,7 +448,6 @@ cp $ivyPath/cache/org.apache.hbase/hbase-annotations/jars/hbase-annotations-1.0.
 cp $ivyPath/cache/com.google.protobuf/protobuf-java/bundles/protobuf-java-2.6.0.jar $systemlib
 cp $ivyPath/cache/org.tukaani/xz/jars/xz-1.0.jar $systemlib
 cp $ivyPath/cache/org.codehaus.jackson/jackson-jaxrs/jars/jackson-jaxrs-1.8.3.jar $systemlib
-cp $srcPath/SampleApplication/InterfacesSamples/target/scala-2.10/interfacessamples*.jar $systemlib
 cp $srcPath/lib_managed/jars/junit/junit/junit-4.12.jar $systemlib
 cp $ivyPath/cache/io.spray/spray-http_2.10/bundles/spray-http_2.10-1.3.3.jar $systemlib
 cp $ivyPath/cache/org.xerial.snappy/snappy-java/bundles/snappy-java-1.1.1.7.jar $systemlib
@@ -563,7 +561,6 @@ cp $srcPath/lib_managed/jars/commons-collections/commons-collections/commons-col
 cp $srcPath/lib_managed/jars/org.apache.commons/commons-pool2/commons-pool2-2.3.jar $systemlib
 cp $srcPath/lib_managed/jars/org.tukaani/xz/xz-1.0.jar $systemlib
 cp $ivyPath/cache/org.mortbay.jetty/jetty-sslengine/jars/jetty-sslengine-6.1.26.jar $systemlib
-cp $srcPath/MessageDef/target/scala-2.10/messagedef*.jar $systemlib
 cp $srcPath/lib_managed/jars/org.codehaus.jackson/jackson-jaxrs/jackson-jaxrs-1.8.3.jar $systemlib
 cp $ivyPath/cache/org.apache.commons/commons-pool2/jars/commons-pool2-2.3.jar $systemlib
 cp $ivyPath/cache/com.sleepycat/je/jars/je-4.0.92.jar $systemlib
@@ -633,7 +630,7 @@ cp $srcPath/Utils/Migrate/MigrateBase/target/migratebase-1.0.jar $systemlib
 cp $srcPath/Utils/Migrate/SourceVersion/MigrateFrom_V_1_1/target/scala-2.10/migratefrom_v_1_1_2.10-1.0.jar $systemlib
 cp $srcPath/Utils/Migrate/SourceVersion/MigrateFrom_V_1_2/target/scala-2.10/migratefrom_v_1_2_2.10-1.0.jar $systemlib
 cp $srcPath/Utils/Migrate/SourceVersion/MigrateFrom_V_1_3/target/scala-2.10/migratefrom_v_1_3_2.10-1.0.jar $systemlib
-cp $srcPath/Utils/Migrate/DestinationVersion/MigrateTo_V_1_3/target/scala-2.10/migrateto_v_1_3_2.10-1.0.jar $systemlib
+# cp $srcPath/Utils/Migrate/DestinationVersion/MigrateTo_V_1_3/target/scala-2.10/migrateto_v_1_3_2.10-1.0.jar $systemlib
 cp $srcPath/Utils/Migrate/DestinationVersion/MigrateTo_V_1_4/target/scala-2.10/migrateto_v_1_4_2.10-1.0.jar $systemlib
 
 cp $srcPath/Storage/Cassandra/target/scala-2.10/*.jar $systemlib
@@ -667,7 +664,7 @@ migration2_10libsCopiesFor2_11="true"
 
 
 # this should be changed?
-cp $srcPath/Utils/Migrate/DestinationVersion/MigrateTo_V_1_3/target/scala-2.10/migrateto_v_1_3_2.10-1.0.jar $kamanjainstallsystemlib
+# cp $srcPath/Utils/Migrate/DestinationVersion/MigrateTo_V_1_3/target/scala-2.10/migrateto_v_1_3_2.10-1.0.jar $kamanjainstallsystemlib
 cp $srcPath/Utils/Migrate/DestinationVersion/MigrateTo_V_1_4/target/scala-2.10/migrateto_v_1_4_2.10-1.0.jar $kamanjainstallsystemlib
 
 
@@ -1109,7 +1106,6 @@ cp $ivyPath/cache/org.apache.directory.server/apacheds-kerberos-codec/bundles/ap
 cp $ivyPath/cache/io.netty/netty/bundles/netty-3.9.0.Final.jar $systemlib
 cp $ivyPath/cache/org.scalameta/tokens_2.11/jars/tokens_2.11-0.0.3.jar $systemlib
 cp $ivyPath/cache/org.slf4j/slf4j-log4j12/jars/slf4j-log4j12-1.7.10.jar $systemlib
-cp $srcPath/OutputMsgDef/target/scala-2.11/outputmsgdef_2.11-1.0.jar $systemlib
 cp $ivyPath/cache/org.jpmml/pmml-model/jars/pmml-model-1.2.9.jar $systemlib
 cp $ivyPath/cache/org.apache.httpcomponents/httpcore/jars/httpcore-4.2.4.jar $systemlib
 cp $ivyPath/cache/commons-configuration/commons-configuration/jars/commons-configuration-1.6.jar $systemlib
@@ -1125,7 +1121,6 @@ cp $ivyPath/cache/org.apache.hbase/hbase-annotations/jars/hbase-annotations-1.0.
 cp $ivyPath/cache/com.google.protobuf/protobuf-java/bundles/protobuf-java-2.6.0.jar $systemlib
 cp $ivyPath/cache/org.tukaani/xz/jars/xz-1.0.jar $systemlib
 cp $ivyPath/cache/org.codehaus.jackson/jackson-jaxrs/jars/jackson-jaxrs-1.8.3.jar $systemlib
-cp $srcPath/SampleApplication/InterfacesSamples/target/scala-2.11/interfacessamples_2.11-1.0.jar $systemlib
 cp $srcPath/lib_managed/jars/junit/junit/junit-4.12.jar $systemlib
 cp $ivyPath/cache/io.spray/spray-http_2.11/bundles/spray-http_2.11-1.3.3.jar $systemlib
 cp $ivyPath/cache/org.xerial.snappy/snappy-java/bundles/snappy-java-1.1.1.7.jar $systemlib
@@ -1226,7 +1221,6 @@ cp $srcPath/lib_managed/bundles/org.scala-lang.modules/scala-xml_2.11/scala-xml_
 cp $srcPath/lib_managed/jars/org.apache.commons/commons-pool2/commons-pool2-2.3.jar $systemlib
 cp $srcPath/lib_managed/jars/org.tukaani/xz/xz-1.0.jar $systemlib
 cp $ivyPath/cache/org.mortbay.jetty/jetty-sslengine/jars/jetty-sslengine-6.1.26.jar $systemlib
-cp $srcPath/MessageDef/target/scala-2.11/messagedef_2.11-1.0.jar $systemlib
 cp $srcPath/lib_managed/jars/org.codehaus.jackson/jackson-jaxrs/jackson-jaxrs-1.8.3.jar $systemlib
 cp $ivyPath/cache/org.apache.commons/commons-pool2/jars/commons-pool2-2.3.jar $systemlib
 cp $ivyPath/cache/com.sleepycat/je/jars/je-4.0.92.jar $systemlib
@@ -1289,7 +1283,7 @@ cp $ivyPath/cache/org.json4s/json4s-ast_2.11/jars/json4s-ast_2.11-3.2.9.jar $sys
 cp $ivyPath/cache/io.spray/spray-testkit_2.11/jars/spray-testkit_2.11-1.3.3.jar $systemlib
 
 cp $srcPath/Utils/Migrate/MigrateBase/target/migratebase-1.0.jar $systemlib
-cp $srcPath/Utils/Migrate/DestinationVersion/MigrateTo_V_1_3/target/scala-2.11/migrateto_v_1_3_2.11-1.0.jar $systemlib
+# cp $srcPath/Utils/Migrate/DestinationVersion/MigrateTo_V_1_3/target/scala-2.11/migrateto_v_1_3_2.11-1.0.jar $systemlib
 cp $srcPath/Utils/Migrate/DestinationVersion/MigrateTo_V_1_4/target/scala-2.11/migrateto_v_1_4_2.11-1.0.jar $systemlib
 cp $srcPath/Utils/Migrate/SourceVersion/MigrateFrom_V_1_3/target/scala-2.11/migratefrom_v_1_3_2.11-1.0.jar $systemlib
 
@@ -1298,7 +1292,7 @@ cp $srcPath/Utils/Migrate/MigrateBase/target/migratebase-1.0.jar $kamanjainstall
 #cp $srcPath/Utils/Migrate/SourceVersion/MigrateFrom_V_1_1/target/scala-2.11/migratefrom_v_1_1_2.10-1.0.jar $kamanjainstallsystemlib
 #cp $srcPath/Utils/Migrate/SourceVersion/MigrateFrom_V_1_2/target/scala-2.11/migratefrom_v_1_2_2.10-1.0.jar $kamanjainstallsystemlib
 cp $srcPath/Utils/Migrate/SourceVersion/MigrateFrom_V_1_3/target/scala-2.11/migratefrom_v_1_3_2.11-1.0.jar $kamanjainstallsystemlib
-cp $srcPath/Utils/Migrate/DestinationVersion/MigrateTo_V_1_3/target/scala-2.11/migrateto_v_1_3_2.11-1.0.jar $kamanjainstallsystemlib
+# cp $srcPath/Utils/Migrate/DestinationVersion/MigrateTo_V_1_3/target/scala-2.11/migrateto_v_1_3_2.11-1.0.jar $kamanjainstallsystemlib
 cp $srcPath/Utils/Migrate/DestinationVersion/MigrateTo_V_1_4/target/scala-2.11/migrateto_v_1_4_2.11-1.0.jar $kamanjainstallsystemlib
 
 # copy 2.11 migrate libraries into 2.10 install directories, useful just in case of reverse migration
