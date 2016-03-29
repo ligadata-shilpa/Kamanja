@@ -172,21 +172,21 @@ sbt '++ 2.10.4 FileDataConsumer/assembly' '++ 2.10.4 CleanUtil/assembly' '++ 2.1
 echo "copy the fat jars to $installPath ..."
 
 cd $srcPath
-cp Utils/KVInit/target/scala-2.10/KVInit* $bin
-cp MetadataAPI/target/scala-2.10/MetadataAPI* $bin
-cp KamanjaManager/target/scala-2.10/KamanjaManager* $bin
+cp Utils/KVInit/target/scala-2.10/KVInit* $systemlib
+cp MetadataAPI/target/scala-2.10/MetadataAPI* $systemlib
+cp KamanjaManager/target/scala-2.10/KamanjaManager* $systemlib
 # cp Pmml/MethodExtractor/target/scala-2.10/MethodExtractor* $bin
-cp Utils/SimpleKafkaProducer/target/scala-2.10/SimpleKafkaProducer* $bin
+cp Utils/SimpleKafkaProducer/target/scala-2.10/SimpleKafkaProducer* $systemlib
 # cp Utils/ExtractData/target/scala-2.10/ExtractData* $bin
-cp Utils/JdbcDataCollector/target/scala-2.10/JdbcDataCollector* $bin
-cp MetadataAPIService/target/scala-2.10/MetadataAPIService* $bin
-cp FileDataConsumer/target/scala-2.10/FileDataConsumer* $bin
-cp Utils/CleanUtil/target/scala-2.10/CleanUtil* $bin
+cp Utils/JdbcDataCollector/target/scala-2.10/JdbcDataCollector* $systemlib
+cp MetadataAPIService/target/scala-2.10/MetadataAPIService* $systemlib
+cp FileDataConsumer/target/scala-2.10/FileDataConsumer* $systemlib
+cp Utils/CleanUtil/target/scala-2.10/CleanUtil* $systemlib
 cp Utils/ClusterInstaller/ClusterInstallerDriver/target/ClusterInstallerDriver* $kamanjainstallbin
 cp Utils/ClusterInstaller/InstallDriver/target/scala-2.10/InstallDriver* $kamanjainstallbin
 cp Utils/ClusterInstaller/GetComponent/target/scala-2.10/GetComponent* $kamanjainstallbin
 cp Utils/ClusterInstaller/InstallDriver/src/main/resources/GetComponentsVersions.sh $kamanjainstallbin
-cp Utils/PmmlTestTool/target/PmmlTestTool-1.0 $bin
+cp Utils/PmmlTestTool/target/PmmlTestTool* $systemlib
 # only for 2.11 ?
 cp Utils/Migrate/MigrateManager/target/MigrateManager* $bin
 
@@ -872,16 +872,16 @@ sbt '++ 2.11.7 FileDataConsumer/assembly' '++ 2.11.7 CleanUtil/assembly' '++ 2.1
 echo "copy the fat jars to $installPath ..."
 
 cd $srcPath
-cp Utils/KVInit/target/scala-2.11/KVInit* $bin
-cp MetadataAPI/target/scala-2.11/MetadataAPI* $bin
-cp KamanjaManager/target/scala-2.11/KamanjaManager* $bin
+cp Utils/KVInit/target/scala-2.11/KVInit* $systemlib
+cp MetadataAPI/target/scala-2.11/MetadataAPI* $systemlib
+cp KamanjaManager/target/scala-2.11/KamanjaManager* $systemlib
 # cp Pmml/MethodExtractor/target/scala-2.11/MethodExtractor* $bin
-cp Utils/SimpleKafkaProducer/target/scala-2.11/SimpleKafkaProducer* $bin
+cp Utils/SimpleKafkaProducer/target/scala-2.11/SimpleKafkaProducer* $systemlib
 # cp Utils/ExtractData/target/scala-2.11/ExtractData* $bin
-cp Utils/JdbcDataCollector/target/scala-2.11/JdbcDataCollector* $bin
-cp MetadataAPIService/target/scala-2.11/MetadataAPIService* $bin
-cp FileDataConsumer/target/scala-2.11/FileDataConsumer* $bin
-cp Utils/CleanUtil/target/scala-2.11/CleanUtil* $bin
+cp Utils/JdbcDataCollector/target/scala-2.11/JdbcDataCollector* $systemlib
+cp MetadataAPIService/target/scala-2.11/MetadataAPIService* $systemlib
+cp FileDataConsumer/target/scala-2.11/FileDataConsumer* $systemlib
+cp Utils/CleanUtil/target/scala-2.11/CleanUtil* $systemlib
 cp Utils/Migrate/MigrateManager/target/MigrateManager* $bin
 cp Utils/ClusterInstaller/ClusterInstallerDriver/target/ClusterInstallerDriver* $kamanjainstallbin
 cp Utils/ClusterInstaller/InstallDriver/target/scala-2.11/InstallDriver* $kamanjainstallbin
@@ -889,7 +889,7 @@ cp Utils/ClusterInstaller/GetComponent/target/scala-2.11/GetComponent* $kamanjai
 cp Utils/ClusterInstaller/InstallDriver/src/main/resources/GetComponentsVersions.sh $kamanjainstallbin
 cp Utils/Migrate/MigrateManager/target/MigrateManager* $kamanjainstallbin
 cp $srcPath/Utils/NodeInfoExtract/target/scala-2.11/NodeInfoExtract* $kamanjainstallbin
-cp Utils/PmmlTestTool/target/PmmlTestTool-1.0 $bin
+cp Utils/PmmlTestTool/target/PmmlTestTool* $systemlib
 
 # copy jars used to reduce package size
 cp ExtDependencyLibs/target/scala-2.11/ExtDependencyLibs_2.11-1.4.0.jar $systemlib

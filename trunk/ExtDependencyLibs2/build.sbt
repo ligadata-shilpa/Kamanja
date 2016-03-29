@@ -63,7 +63,7 @@ assemblyMergeStrategy in assembly := {
 }
 
 excludedJars in assembly <<= (fullClasspath in assembly) map { cp =>
-  val excludes = Set("commons-beanutils-1.7.0.jar", "google-collections-1.0.jar", "commons-collections4-4.0.jar", "log4j-1.2.17.jar")
+  val excludes = Set("commons-beanutils-1.7.0.jar", "google-collections-1.0.jar", "commons-collections4-4.0.jar", "log4j-1.2.17.jar", "commons-beanutils-1.8.3.jar")
   cp filter { jar => excludes(jar.data.getName) }
 }
 //"log4j-1.2.17.jar", "log4j-1.2.16.jar", "commons-collections-4-4.0.jar", "scalatest_2.11-2.2.0.jar"
@@ -141,7 +141,7 @@ libraryDependencies ++= {
 libraryDependencies += "com.datastax.cassandra" % "cassandra-driver-parent" % "2.1.2"
 libraryDependencies += "com.datastax.cassandra" % "cassandra-driver-core" % "2.1.2"
 libraryDependencies += "org.apache.cassandra" % "cassandra-thrift" % "2.0.3"
-libraryDependencies += "commons-dbcp" % "commons-dbcp" % "1.4"
+//libraryDependencies += "commons-dbcp" % "commons-dbcp" % "1.4"                                 //two
 libraryDependencies += "org.apache.thrift" % "libthrift" % "0.9.2"
 
 
@@ -151,8 +151,7 @@ libraryDependencies += "org.mapdb" % "mapdb" % "1.0.6"
 
 
 ////////////////////// SqlServer
-libraryDependencies += "org.apache.commons" % "commons-dbcp2" % "2.1"
-
+libraryDependencies += "org.apache.commons" % "commons-dbcp2" % "2.1" // one
 
 
 //////////////////////  jtm
