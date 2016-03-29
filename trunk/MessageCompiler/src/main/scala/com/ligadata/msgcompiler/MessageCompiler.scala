@@ -56,9 +56,10 @@ class MessageCompiler {
       if (msgDfType.equalsIgnoreCase("json")) {
         message = messageParser.processJson(jsonstr, mdMgr, recompile)
         handleMsgFieldTypes.handleFieldTypes(message, mdMgr)
-        log.info("Schema ==============" + message.Schema);
+        log.info("\n\nSchema ==============START" + message.Schema);
         message = schemaCompiler.generateAvroSchema(message, mdMgr);
-        log.info("Schema ==============" + message.Schema);
+        log.info(" message.Schema: " + message.Schema + "\n\n");
+        log.info("Schema ==============END\n\n")
 
         log.info("JARSET " + message.Jarset.toList);
         log.info("ArgsList Jars " + message.ArgsList);

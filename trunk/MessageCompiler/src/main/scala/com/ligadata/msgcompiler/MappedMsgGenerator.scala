@@ -23,22 +23,24 @@ class MappedMsgGenerator {
     try {
 
       fields.foreach(field => {
-        var addArraysStr: String = ""
-        val fieldBaseType: BaseTypeDef = field.FldMetaataType
-        val fieldType = fieldBaseType.tType.toString().toLowerCase()
-        val fieldTypeType = fieldBaseType.tTypeType.toString().toLowerCase()
-        fieldType match {
-          case "tarray" => {
-            addArraysStr = "\tfields(\"" + field.Name + "\") = (-1, new " + field.FieldTypePhysicalName + "(0));\n "
+        if (field != null) {
+          var addArraysStr: String = ""
+          val fieldBaseType: BaseTypeDef = field.FldMetaataType
+          val fieldType = fieldBaseType.tType.toString().toLowerCase()
+          val fieldTypeType = fieldBaseType.tTypeType.toString().toLowerCase()
+          fieldType match {
+            case "tarray" => {
+              addArraysStr = "\tfields(\"" + field.Name + "\") = (-1, new " + field.FieldTypePhysicalName + "(0));\n "
+            }
+            case "tarraybuf" => {
+              var arraybufType: ArrayBufTypeDef = null
+              arraybufType = fieldBaseType.asInstanceOf[ArrayBufTypeDef]
+              addArraysStr = "\tfields(\"" + field.Name + "\") = (-1, new " + field.FieldTypePhysicalName + "(0));\n "
+            }
+            case _ => { addArraysStr = "" }
           }
-          case "tarraybuf" => {
-            var arraybufType: ArrayBufTypeDef = null
-            arraybufType = fieldBaseType.asInstanceOf[ArrayBufTypeDef]
-            addArraysStr = "\tfields(\"" + field.Name + "\") = (-1, new " + field.FieldTypePhysicalName + "(0));\n "
-          }
-          case _ => { addArraysStr = "" }
+          addArrays = addArrays.append(addArraysStr.toString())
         }
-        addArrays = addArrays.append(addArraysStr.toString())
       })
     } catch {
       case e: Exception => {
@@ -89,8 +91,9 @@ class MappedMsgGenerator {
       })
       keysSet.foreach(key => {
         message.Elements.foreach(field => {
-          if (field.Name.equalsIgnoreCase(key))
-            primaryKeysStr = "\t var " + field.Name + ":" + field.FieldTypePhysicalName + "= _;\n";
+          if (field != null)
+            if (field.Name.equalsIgnoreCase(key))
+              primaryKeysStr = "\t var " + field.Name + ":" + field.FieldTypePhysicalName + "= _;\n";
         })
         primaryKeys = primaryKeys.append(primaryKeysStr)
       })
@@ -111,58 +114,60 @@ class MappedMsgGenerator {
 
     try {
       fields.foreach(field => {
-        var setmethodStr: String = ""
-        val fieldBaseType: BaseTypeDef = field.FldMetaataType
-        val fieldType = fieldBaseType.tType.toString().toLowerCase()
-        val fieldTypeType = fieldBaseType.tTypeType.toString().toLowerCase()
+        if (field != null) {
+          var setmethodStr: String = ""
+          val fieldBaseType: BaseTypeDef = field.FldMetaataType
+          val fieldType = fieldBaseType.tType.toString().toLowerCase()
+          val fieldTypeType = fieldBaseType.tTypeType.toString().toLowerCase()
 
-        // log.info("fieldTypeType " + fieldTypeType)
-        // log.info("fieldBaseType 1 " + fieldBaseType.tType)
-        //  log.info("fieldBaseType 2 " + fieldBaseType.typeString)
-        //  log.info("fieldBaseType 3" + fieldBaseType.tTypeType)
+          // log.info("fieldTypeType " + fieldTypeType)
+          // log.info("fieldBaseType 1 " + fieldBaseType.tType)
+          //  log.info("fieldBaseType 2 " + fieldBaseType.typeString)
+          //  log.info("fieldBaseType 3" + fieldBaseType.tTypeType)
 
-        //   log.info("fieldType " + fieldType)
+          //   log.info("fieldType " + fieldType)
 
-        fieldTypeType match {
+          fieldTypeType match {
 
-          case "tscalar" => {
-            setmethodStr = setMethodForScalarMapped(field, fldsMap)
-            //log.info("fieldBaseType.implementationName    " + fieldBaseType.implementationName)
+            case "tscalar" => {
+              setmethodStr = setMethodForScalarMapped(field, fldsMap)
+              //log.info("fieldBaseType.implementationName    " + fieldBaseType.implementationName)
 
-          }
-          case "tcontainer" => {
-            fieldType match {
-              case "tarray" => {
-                var arrayType: ArrayTypeDef = null
-                arrayType = fieldBaseType.asInstanceOf[ArrayTypeDef]
-                setmethodStr = setMethodForStructMapped(field)
-              }
-              case "tarraybuf" => {
-                var arraybufType: ArrayBufTypeDef = null
-                arraybufType = fieldBaseType.asInstanceOf[ArrayBufTypeDef]
-                setmethodStr = setMethodForStructMapped(field)
+            }
+            case "tcontainer" => {
+              fieldType match {
+                case "tarray" => {
+                  var arrayType: ArrayTypeDef = null
+                  arrayType = fieldBaseType.asInstanceOf[ArrayTypeDef]
+                  setmethodStr = setMethodForStructMapped(field)
+                }
+                case "tarraybuf" => {
+                  var arraybufType: ArrayBufTypeDef = null
+                  arraybufType = fieldBaseType.asInstanceOf[ArrayBufTypeDef]
+                  setmethodStr = setMethodForStructMapped(field)
 
-              }
-              case "tstruct" => {
-                var ctrDef: ContainerDef = mdMgr.Container(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
-                setmethodStr = setMethodForStructMapped(field)
-              }
-              case "tmap" => {
-                setmethodStr = setMethodForMap(field)
-              }
+                }
+                case "tstruct" => {
+                  var ctrDef: ContainerDef = mdMgr.Container(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
+                  setmethodStr = setMethodForStructMapped(field)
+                }
+                case "tmap" => {
+                  setmethodStr = setMethodForMap(field)
+                }
 
-              case _ => {
-                throw new Exception("This types is not handled at this time ") // BUGBUG - Need to handled other cases
+                case _ => {
+                  throw new Exception("This types is not handled at this time ") // BUGBUG - Need to handled other cases
+                }
               }
             }
+            case _ => {
+              throw new Exception("This types is not handled at this time ") // BUGBUG - Need to handled other cases
+            }
           }
-          case _ => {
-            throw new Exception("This types is not handled at this time ") // BUGBUG - Need to handled other cases
-          }
-        }
 
-        setMethod = setMethod.append(setmethodStr.toString())
-        // log.info("=========SET Methods ===============" + setMethod.toString());
+          setMethod = setMethod.append(setmethodStr.toString())
+          // log.info("=========SET Methods ===============" + setMethod.toString());
+        }
       })
     } catch {
       case e: Exception => {
@@ -376,71 +381,72 @@ class MappedMsgGenerator {
     var getmethodStr: String = ""
     try {
       fields.foreach(field => {
+        if (field != null) {
+          var getmethodStr: String = ""
+          val fieldBaseType: BaseTypeDef = field.FldMetaataType
+          val fieldType = fieldBaseType.tType.toString().toLowerCase()
+          val fieldTypeType = fieldBaseType.tTypeType.toString().toLowerCase()
 
-        var getmethodStr: String = ""
-        val fieldBaseType: BaseTypeDef = field.FldMetaataType
-        val fieldType = fieldBaseType.tType.toString().toLowerCase()
-        val fieldTypeType = fieldBaseType.tTypeType.toString().toLowerCase()
+          // log.info("fieldTypeType " + fieldTypeType)
+          // log.info("fieldBaseType 1 " + fieldBaseType.tType)
+          // log.info("fieldBaseType 2 " + fieldBaseType.typeString)
+          // log.info("fieldBaseType 3" + fieldBaseType.tTypeType)
 
-        // log.info("fieldTypeType " + fieldTypeType)
-        // log.info("fieldBaseType 1 " + fieldBaseType.tType)
-        // log.info("fieldBaseType 2 " + fieldBaseType.typeString)
-        // log.info("fieldBaseType 3" + fieldBaseType.tTypeType)
+          //  log.info("fieldType " + fieldType)
 
-        //  log.info("fieldType " + fieldType)
+          fieldTypeType match {
 
-        fieldTypeType match {
+            case "tscalar" => {
+              getmethodStr = getMethodForScalarMapped(field)
+              // log.info("fieldBaseType.implementationName    " + fieldBaseType.implementationName)
+            }
+            case "tcontainer" => {
+              fieldType match {
+                case "tarray" => {
+                  getmethodStr = getMethodArrayMapped(field)
+                }
+                case "tarraybuf" => {
+                  getmethodStr = getMethodArrayBufMapped(field)
+                }
+                case "tstruct" => {
+                  getmethodStr = getMethodForStructType(field, mdMgr)
+                }
+                case "tmap" => {
+                  val fieldBaseType: BaseTypeDef = field.FldMetaataType
+                  val fieldType = fieldBaseType.tType.toString().toLowerCase()
 
-          case "tscalar" => {
-            getmethodStr = getMethodForScalarMapped(field)
-            // log.info("fieldBaseType.implementationName    " + fieldBaseType.implementationName)
-          }
-          case "tcontainer" => {
-            fieldType match {
-              case "tarray" => {
-                getmethodStr = getMethodArrayMapped(field)
-              }
-              case "tarraybuf" => {
-                getmethodStr = getMethodArrayBufMapped(field)
-              }
-              case "tstruct" => {
-                getmethodStr = getMethodForStructType(field, mdMgr)
-              }
-              case "tmap" => {
-                val fieldBaseType: BaseTypeDef = field.FldMetaataType
-                val fieldType = fieldBaseType.tType.toString().toLowerCase()
+                  val fieldTypeType = fieldBaseType.tTypeType.toString().toLowerCase()
+                  var arrayType: ArrayTypeDef = null
+                  if (fieldBaseType.isInstanceOf[ArrayTypeDef])
+                    arrayType = fieldBaseType.asInstanceOf[ArrayTypeDef]
 
-                val fieldTypeType = fieldBaseType.tTypeType.toString().toLowerCase()
-                var arrayType: ArrayTypeDef = null
-                if (fieldBaseType.isInstanceOf[ArrayTypeDef])
-                  arrayType = fieldBaseType.asInstanceOf[ArrayTypeDef]
+                  log.info("fieldTypeType===== " + fieldTypeType)
+                  log.info("fieldBaseType 1===== " + fieldBaseType.tType)
+                  var maptypeDef: MapTypeDef = null;
 
-                log.info("fieldTypeType===== " + fieldTypeType)
-                log.info("fieldBaseType 1===== " + fieldBaseType.tType)
-                var maptypeDef: MapTypeDef = null;
+                  maptypeDef = fieldBaseType.asInstanceOf[MapTypeDef]
+                  log.info("field ElemType : " + maptypeDef.typeString)
+                  log.info("field ElemType : " + maptypeDef.keyDef.implementationName)
+                  log.info("field ElemType : " + maptypeDef.valDef.typeString)
+                  log.info("field ElemType : " + maptypeDef.valDef.tType)
+                  log.info("field ElemType : " + maptypeDef.valDef.tTypeType)
 
-                maptypeDef = fieldBaseType.asInstanceOf[MapTypeDef]
-                log.info("field ElemType : " + maptypeDef.typeString)
-                log.info("field ElemType : " + maptypeDef.keyDef.implementationName)
-                log.info("field ElemType : " + maptypeDef.valDef.typeString)
-                log.info("field ElemType : " + maptypeDef.valDef.tType)
-                log.info("field ElemType : " + maptypeDef.valDef.tTypeType)
+                  val keyValueType = maptypeDef.valDef.tTypeType.toString().toLowerCase()
+                  getmethodStr = getMethodForMapType(field, mdMgr, keyValueType)
 
-                val keyValueType = maptypeDef.valDef.tTypeType.toString().toLowerCase()
-                getmethodStr = getMethodForMapType(field, mdMgr, keyValueType)
+                }
 
-              }
-
-              case _ => {
-                throw new Exception("This types is not handled at this time ") // BUGBUG - Need to handled other cases
+                case _ => {
+                  throw new Exception("This types is not handled at this time ") // BUGBUG - Need to handled other cases
+                }
               }
             }
+            case _ => {
+              throw new Exception("This types is not handled at this time ") // BUGBUG - Need to handled other cases
+            }
           }
-          case _ => {
-            throw new Exception("This types is not handled at this time ") // BUGBUG - Need to handled other cases
-          }
+          getMethod = getMethod.append(getmethodStr.toString())
         }
-        getMethod = getMethod.append(getmethodStr.toString())
       })
     } catch {
       case e: Exception => {
@@ -486,13 +492,14 @@ class MappedMsgGenerator {
 
     mappedTypesABuf += stringType.get.implementationName
     fields.seq.foreach(field => {
-      var typstring = field.FieldTypePhysicalName
-      if (fieldIndexMap.contains(typstring)) {
-        baseTypId = fieldIndexMap(typstring)
-        log.info("typstring " + typstring + " basetypeId" + baseTypId)
+      if (field != null) {
+        var typstring = field.FieldTypePhysicalName
+        if (fieldIndexMap.contains(typstring)) {
+          baseTypId = fieldIndexMap(typstring)
+          log.info("typstring " + typstring + " basetypeId" + baseTypId)
+        }
+        keysStr.append("(\"" + field.Name + "\", " + baseTypId + "),")
       }
-      keysStr.append("(\"" + field.Name + "\", " + baseTypId + "),")
-
     })
 
     /*fields.seq.foreach(field => {

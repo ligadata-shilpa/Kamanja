@@ -22,37 +22,42 @@ class MessageFieldTypesHandler {
   def handleFieldTypes(message: Message, mdMgr: MdMgr): Message = {
     var argsList: List[(String, String, String, String, Boolean, String)] = List[(String, String, String, String, Boolean, String)]()
     var jarset: Set[String] = Set[String]();
-    message.Elements.foreach(field => {
-      log.info("field.Ttype =================" + field.Ttype);
+    if (message.Elements == null && message.Fixed.equalsIgnoreCase("true"))
+      throw new Exception("Please provide the fields in the message definition since fields are mandatory for Fixed Message");
+    if (message.Elements != null) {
+      message.Elements.foreach(field => {
+        if (field != null) {
+          log.info("field.Ttype =================" + field.Ttype);
 
-      val typ = MdMgr.GetMdMgr.Type(field.Ttype, -1, true) // message.Version.toLong
+          val typ = MdMgr.GetMdMgr.Type(field.Ttype, -1, true) // message.Version.toLong
 
-      if (typ.getOrElse("None").equals("None"))
-        throw new Exception("Type not found in metadata for " + field.Name + " given type is " + field.Ttype)
+          if (typ.getOrElse("None").equals("None"))
+            throw new Exception("Type not found in metadata for " + field.Name + " given type is " + field.Ttype)
 
-      // to do - check null pointer if type is not avaialble.....
-      field.FldMetaataType = typ.get
+          // to do - check null pointer if type is not avaialble.....
+          field.FldMetaataType = typ.get
 
-      val types = getMetadataTypesForMsgFields(field, mdMgr)
-      field.FieldTypePhysicalName = types(0)
-      field.FieldTypeImplementationName = types(1)
+          val types = getMetadataTypesForMsgFields(field, mdMgr)
+          field.FieldTypePhysicalName = types(0)
+          field.FieldTypeImplementationName = types(1)
 
-      //get the fields jarset for adding msg in the metadata
-      jarset = jarset ++ getDependencyJarSet(field.FldMetaataType)
+          //get the fields jarset for adding msg in the metadata
+          jarset = jarset ++ getDependencyJarSet(field.FldMetaataType)
 
-      //get the fields args list for addding message in the metadata 
-      argsList = (field.NameSpace, field.Name, field.FldMetaataType.NameSpace, field.FldMetaataType.Name, false, null) :: argsList
+          //get the fields args list for addding message in the metadata 
+          argsList = (field.NameSpace, field.Name, field.FldMetaataType.NameSpace, field.FldMetaataType.Name, false, null) :: argsList
 
-      log.info("******************TYPES FROM METADATA START******************************")
-      log.info("type " + typ.get.tType.toString())
-      log.info("fields name " + field.Name)
-      log.info("fields type " + field.Ttype)
-      log.info("******************TYPES FROM METADATA START******************************")
+          log.info("******************TYPES FROM METADATA START******************************")
+          log.info("type " + typ.get.tType.toString())
+          log.info("fields name " + field.Name)
+          log.info("fields type " + field.Ttype)
+          log.info("******************TYPES FROM METADATA START******************************")
+        }
+      })
+    }
 
-    })
-
-    message.Elements.foreach(field => {
-      /*
+    /*message.Elements.foreach(field => {
+      
       log.info("*************==================================== " + field.FieldTypeImplementationName);      
       log.info("****************** TYPES FROM METADATA START  --- In Message******************************")       
       log.info("=========mesage fld type " + field.Ttype)
@@ -63,9 +68,9 @@ class MessageFieldTypesHandler {
       log.info("=========mesage fld 2 :  " + types(1))
       log.info("=========mesage fld  " + field.FieldTypePhysicalName)
       log.info("******************TYPES FROM METADATA End --- In Message ******************************")
-* */
-    })
 
+    })
+*/
     // set the field args list and jarset in message object to retrieve while adding mesage to metadata
     message.ArgsList = argsList
     message.Jarset = jarset
