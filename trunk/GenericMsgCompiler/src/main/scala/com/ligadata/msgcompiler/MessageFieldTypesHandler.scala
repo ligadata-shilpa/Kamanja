@@ -23,6 +23,8 @@ class MessageFieldTypesHandler {
     var argsList: List[(String, String, String, String, Boolean, String)] = List[(String, String, String, String, Boolean, String)]()
     var jarset: Set[String] = Set[String]();
     message.Elements.foreach(field => {
+      log.info("field.Ttype =================" + field.Ttype);
+
       val typ = MdMgr.GetMdMgr.Type(field.Ttype, -1, true) // message.Version.toLong
 
       if (typ.getOrElse("None").equals("None"))
@@ -107,8 +109,8 @@ class MessageFieldTypesHandler {
 
     log.info("fieldTypeType " + fieldTypeType)
     log.info("fieldBaseType 1 " + fieldBaseType.tType)
-    // log.info("fieldBaseType 2 " + fieldBaseType.typeString)
-    // log.info("fieldBaseType 3" + fieldBaseType.tTypeType)
+    log.info("fieldBaseType 2 " + fieldBaseType.typeString)
+    log.info("fieldBaseType 3" + fieldBaseType.tTypeType)
 
     // log.info("fieldType " + fieldType)
 
@@ -134,22 +136,28 @@ class MessageFieldTypesHandler {
             arraybufType = fieldBaseType.asInstanceOf[ArrayBufTypeDef]
             types(0) = arraybufType.typeString
             types(1) = arraybufType.elemDef.implementationName
-            log.info("!!!!!!!!!!!!!!!!!!!!!!!!" + types(1) + ".......... " + types(0))
+            log.info(types(1) + ".......... " + types(0))
 
           }
           case "tstruct" => {
             var ctrDef: ContainerDef = mdMgr.Container(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
             types(0) = ctrDef.PhysicalName
-            types(1) = ""
-            log.info("#################################" + ctrDef.PhysicalName);
+            types(1) = ctrDef.FullName
+            log.info(ctrDef.objectDefinition);
+          }
+          case "tmsgmap" => {
+            var ctrDef: ContainerDef = mdMgr.Container(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
+            types(0) = ctrDef.PhysicalName
+            types(1) = ctrDef.FullName
+            log.info(ctrDef.objectDefinition);
           }
           case "tmap" => {
             var maptypeDef: MapTypeDef = null;
             maptypeDef = fieldBaseType.asInstanceOf[MapTypeDef]
             types(0) = maptypeDef.typeString
             types(1) = maptypeDef.keyDef.implementationName
-            log.info("!!!!!!!!!!!!!!!!!!!!!!!!" + types(1) + ".......... " + types(0))
-            log.info("!!!!!!!!!!!!!!!!!!!!!!!!" + maptypeDef.valDef.tType)
+            log.info(types(1) + ".......... " + types(0))
+            log.info(maptypeDef.valDef.tType)
           }
           case _ => {
             throw new Exception("This types is not handled at this time ") // BUGBUG - Need to handled other cases

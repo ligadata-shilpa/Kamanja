@@ -192,9 +192,10 @@ class MessageObjectGenerator {
       message.PartitionKeys.foreach(key => {
         paritionKeys.append("\"" + key + "\", ")
       })
-      partitionInfo = msgConstants.getPartitionKeyNames.format(paritionKeys.toString.substring(0, paritionKeys.toString.length() - 2), msgConstants.newline)
+      val partitionKys = "("+paritionKeys.toString.substring(0, paritionKeys.toString.length() - 2)+")";
+      partitionInfo = msgConstants.getPartitionKeyNames.format(partitionKys, msgConstants.newline)
 
-    } else partitionInfo = msgConstants.getPartitionKeyNames.format(msgConstants.pad2, "[String]()", msgConstants.newline)
+    } else partitionInfo = msgConstants.getPartitionKeyNames.format("[String]()", msgConstants.newline)
 
   """override def getPartitionKeyNames: Array[String] = """ + partitionInfo 
   }
@@ -211,7 +212,8 @@ class MessageObjectGenerator {
       message.PrimaryKeys.foreach(key => {
         primaryKeys.append("\"" + key + "\", ")
       })
-      primaryInfo = msgConstants.getPrimaryKeyNames.format(primaryKeys.toString.substring(0, primaryKeys.toString.length()-2), msgConstants.newline)
+      val primaryKys = "("+ primaryKeys.toString.substring(0, primaryKeys.toString.length()-2)+")";
+      primaryInfo = msgConstants.getPrimaryKeyNames.format(primaryKys, msgConstants.newline)
 
     } else primaryInfo = msgConstants.getPrimaryKeyNames.format("[String]()", msgConstants.newline)
 

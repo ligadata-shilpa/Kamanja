@@ -33,7 +33,6 @@ class MessageGenerator {
     var messageVerGenerator = new StringBuilder(8 * 1024)
     var messageNonVerGenerator = new StringBuilder(8 * 1024)
     var messageGenerator = new StringBuilder(8 * 1024)
-
     try {
       messageVerGenerator = messageVerGenerator.append(msgConstants.newline + msgConstants.packageStr.format(message.Pkg, msgConstants.newline));
       messageNonVerGenerator = messageNonVerGenerator.append(msgConstants.newline + msgConstants.packageStr.format(message.NameSpace, msgConstants.newline));
@@ -49,6 +48,7 @@ class MessageGenerator {
       if (message.Fixed.equalsIgnoreCase("true")) {
         messageGenerator = messageGenerator.append(msgConstants.newline + generatedMsgVariables(message));
         messageGenerator = messageGenerator.append(getSetMethodsFixed(message));
+        messageGenerator = messageGenerator.append(getFromFuncFixed(message, mdMgr));
       } else if (message.Fixed.equalsIgnoreCase("false")) {
         var fieldIndexMap: Map[String, Int] = msgConstants.getScalarFieldindex(message.Elements)
         messageGenerator = messageGenerator.append(msgConstants.getSetMethods);
@@ -331,10 +331,10 @@ class MessageGenerator {
 
     if (message.MsgType.equalsIgnoreCase("message")) {
       msgInterfaceType = "MessageFactoryInterface";
-    } else if (message.MsgType.equalsIgnoreCase("message")) {
+    } else if (message.MsgType.equalsIgnoreCase("container")) {
       msgInterfaceType = "ContainerFactoryInterface";
     }
-"""
+    """
     def this(factory:""" + msgInterfaceType + """) = {
       this(factory, null)
      }
@@ -349,7 +349,7 @@ class MessageGenerator {
    * message basic details in class
    */
   private def getMessgeBasicDetails(message: Message): String = {
-""" 
+    """ 
     val logger = this.getClass.getName
     lazy val log = LogManager.getLogger(logger)
 """
@@ -359,7 +359,7 @@ class MessageGenerator {
    * some overridable methods from BaseMsg
    */
   private def methodsFromBaseMsg(message: Message): String = {
-"""    
+    """    
     override def save: Unit = { """ + message.Name + """.saveOne(this) }
   
     def Clone(): ContainerOrConcept = { """ + message.Name + """.build(this) }
@@ -816,14 +816,217 @@ class MessageGenerator {
  """
   }
 
-  /*var typstring = field.ttyp.get.implementationName
-      
-      
-     
+  /*
+   * From Function for Fixed messages
+   */
+  private def getFromFuncFixed(message: Message, mdMgr: MdMgr): String = {
+    """
+    private def fromFunc(other: """ + message.Name + """): """ + message.Name + """ = {  
+   """ + getFromFuncStr(message, mdMgr) + """
+      //this.timePartitionData = com.ligadata.BaseTypes.LongImpl.Clone(other.timePartitionData);
+      return this;
+    }
+    
+"""
+  }
 
-        keysStr.append("(\"" + f.Name + "\", " + mappedTypesABuf.indexOf(typstring) + "),")
-        
-       */
+  /*
+   * generate FromFunc code for message fields 
+   */
+  private def getFromFuncStr(message: Message, mdMgr: MdMgr): String = {
+    var fromFuncBuf = new StringBuilder(8 * 1024)
+    try {
+      message.Elements.foreach(field => {
+        val fieldBaseType: BaseTypeDef = field.FldMetaataType
+        val fieldType = fieldBaseType.tType.toString().toLowerCase()
+        val fieldTypeType = fieldBaseType.tTypeType.toString().toLowerCase()
+        fieldTypeType match {
+          case "tscalar" => {
+            fromFuncBuf = fromFuncBuf.append(fromFuncForScalarFixed(field))
+            //log.info("fieldBaseType.implementationName    " + fieldBaseType.implementationName)
+          }
+          case "tcontainer" => {
+            fieldType match {
+              case "tarray" => {
+                var arrayType: ArrayTypeDef = null
+                arrayType = fieldBaseType.asInstanceOf[ArrayTypeDef]
+                fromFuncBuf = fromFuncBuf.append(fromFuncForArrayFixed(field))
+              }
+              case "tarraybuf" => {
+                var arraybufType: ArrayBufTypeDef = null
+                arraybufType = fieldBaseType.asInstanceOf[ArrayBufTypeDef]
+                fromFuncBuf = fromFuncBuf.append(fromFuncForArrayBufFixed(field))
+              }
+              case "tstruct" => {
+                var ctrDef: ContainerDef = mdMgr.Container(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
+                fromFuncBuf = fromFuncBuf.append(fromFuncForStructFixed(field))
+              }
+              case "tmap" => {
+                fromFuncBuf = fromFuncBuf.append(fromFuncForMapFixed(field))
+              }
+              case "tmsgmap" => {
+                var ctrDef: ContainerDef = mdMgr.Container(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
+                fromFuncBuf = fromFuncBuf.append(fromFuncForStructFixed(field))
+              }
+              case _ => {
+                throw new Exception("This types is not handled at this time ") // BUGBUG - Need to handled other cases
+              }
+            }
+          }
+          case _ => {
+            throw new Exception("This types is not handled at this time ") // BUGBUG - Need to handled other cases
+          }
+        }
+      })
+    } catch {
+      case e: Exception => {
+        log.debug("", e)
+        throw e
+      }
+    }
+
+    return fromFuncBuf.toString();
+  }
+
+  /*
+   * From Func - generate code for scala types
+   */
+  private def fromFuncForScalarFixed(field: Element): String = {
+    var fromFuncBuf = new StringBuilder(8 * 1024)
+    try {
+      val implClone = field.FieldTypeImplementationName + ".Clone";
+      if (implClone != null && implClone.trim() != "") {
+        fromFuncBuf = fromFuncBuf.append("%sthis.%s = %s(other.%s);%s".format(msgConstants.pad3, field.Name, implClone, field.Name, msgConstants.newline))
+      }
+    } catch {
+      case e: Exception => throw e
+    }
+    fromFuncBuf.toString
+  }
+
+  /*
+   * From Func - generate code for array
+   */
+  private def fromFuncForArrayFixed(field: Element): String = {
+    var fromFuncBuf = new StringBuilder(8 * 1024)
+    try {
+      val implName = field.FieldTypeImplementationName
+      var arrayType = field.FldMetaataType.asInstanceOf[ArrayTypeDef]
+      val typetype = arrayType.elemDef.tTypeType.toString().toLowerCase()
+
+      if (typetype.equals("tscalar")) {
+        if (implName != null && implName.trim() != "") {
+          fromFuncBuf.append(fromFuncForArrayScalarFixed(field));
+        }
+      } else if (typetype.equals("tcontainer")) {
+        log.info("111111111111111111111");
+        val fieldType = //arrayType.elemDef.tTypeType.toString().equalsIgnoreCase
+          ///  log.info("22222222222222222" + fieldType);
+          // if (fieldType.equalsIgnoreCase("tstruct") || (fieldType.equalsIgnoreCase("tmsgmap"))){
+          fromFuncBuf.append(fromFuncForArrayContainerFixed(field));
+        //  }
+
+      }
+    } catch {
+      case e: Exception => throw e
+    }
+    fromFuncBuf.toString
+  }
+
+  /*
+   * From Func for Array of Scalar
+   */
+  private def fromFuncForArrayScalarFixed(field: Element): String = {
+    var fromFuncBuf = new StringBuilder(8 * 1024)
+    try {
+      val implName = field.FieldTypeImplementationName
+      if (implName != null && implName.trim() != "") {
+        fromFuncBuf = fromFuncBuf.append("%s if (other.%s != null ) { %s".format(msgConstants.pad2, field.Name, msgConstants.newline))
+        fromFuncBuf = fromFuncBuf.append("%s %s = new %s(other.%s.length); %s".format(msgConstants.pad2, field.Name, field.FldMetaataType.typeString, field.Name, msgConstants.newline)) //typ.get.typeString
+        fromFuncBuf = fromFuncBuf.append("%s %s = other.%s.map(v => %s.Clone(v)); %s".format(msgConstants.pad2, field.Name, field.Name, implName, msgConstants.newline)) //arrayType.elemDef.implementationName
+        fromFuncBuf = fromFuncBuf.append("%s } %s".format(msgConstants.pad2, msgConstants.newline))
+        fromFuncBuf = fromFuncBuf.append("%s else this.%s = null; %s".format(msgConstants.pad2, field.Name, msgConstants.newline))
+      }
+
+    } catch {
+      case e: Exception => throw e
+    }
+    fromFuncBuf.toString
+  }
+  /*
+   * From Func for Array of Container
+   */
+  /*
+   * From Func for Array of Scalar
+   */
+  private def fromFuncForArrayContainerFixed(field: Element): String = {
+    var fromFuncBuf = new StringBuilder(8 * 1024)
+    try {
+      val implName = field.FieldTypeImplementationName
+      var arrayType = field.FldMetaataType.asInstanceOf[ArrayTypeDef]
+      var typeStr: String = ""
+      if (field.FldMetaataType.typeString.toString().split("\\[").size == 2) {
+        typeStr = field.FldMetaataType.typeString.toString().split("\\[")(1)
+      }
+      fromFuncBuf = fromFuncBuf.append("%s if (other.%s != null) { %s".format(msgConstants.pad2, field.Name, msgConstants.newline))
+      fromFuncBuf = fromFuncBuf.append("%s %s = new %s(other.%s.length) %s".format(msgConstants.pad2, field.Name, field.FldMetaataType.typeString, field.Name, msgConstants.newline))
+      fromFuncBuf = fromFuncBuf.append("%s %s = other.%s.map(f => f.Clone.asInstanceOf[%s ); %s".format(msgConstants.pad2, field.Name, field.Name, typeStr, msgConstants.newline))
+      fromFuncBuf = fromFuncBuf.append("%s } %s".format(msgConstants.pad2, msgConstants.newline))
+      fromFuncBuf = fromFuncBuf.append("%s else %s = null; %s".format(msgConstants.pad2, field.Name, msgConstants.newline))
+    } catch {
+      case e: Exception => throw e
+    }
+    fromFuncBuf.toString
+  }
+  /*
+   * From Func - Generate code for ArrayBuf
+   */
+
+  private def fromFuncForArrayBufFixed(field: Element): String = {
+    var fromFuncBuf = new StringBuilder(8 * 1024)
+    try {
+      val implName = field.FieldTypeImplementationName
+      if (implName != null && implName.trim() != "") {
+        fromFuncBuf = fromFuncBuf.append("%s if (other.%s != null ) { %s".format(msgConstants.pad2, field.Name, msgConstants.newline))
+        fromFuncBuf = fromFuncBuf.append("%s %s.clear;  %s".format(msgConstants.pad2, field.Name, msgConstants.newline))
+        fromFuncBuf = fromFuncBuf.append("%s other.%s.map(v =>{ %s :+= %s.Clone(v)}); %s".format(msgConstants.pad2, field.Name, field.Name, implName, msgConstants.newline))
+        fromFuncBuf = fromFuncBuf.append("%s } %s".format(msgConstants.pad2, msgConstants.newline))
+        fromFuncBuf = fromFuncBuf.append("%s else this.%s = null; %s".format(msgConstants.pad2, field.Name, msgConstants.newline))
+      }
+    } catch {
+      case e: Exception => throw e
+    }
+    fromFuncBuf.toString
+
+  }
+
+  /*
+   * From Func for Containertype as Message
+   */
+  private def fromFuncForStructFixed(field: Element): String = {
+    var fromFuncBuf = new StringBuilder(8 * 1024)
+    try {
+      val implName = field.FieldTypeImplementationName
+      if (implName != null && implName.trim() != "") {
+        fromFuncBuf = fromFuncBuf.append("%s if (other.%s != null) { %s".format(msgConstants.pad2, field.Name, msgConstants.newline))
+        fromFuncBuf = fromFuncBuf.append("%s %s = other.%s.Clone.asInstanceOf[%s] %s".format(msgConstants.pad2, field.Name, field.Name, field.FieldTypePhysicalName, msgConstants.newline))
+        fromFuncBuf = fromFuncBuf.append("%s } %s ".format(msgConstants.pad2, msgConstants.newline))
+        fromFuncBuf = fromFuncBuf.append("%s else %s = null; %s".format(msgConstants.pad2, field.Name, msgConstants.newline))
+      }
+    } catch {
+      case e: Exception => throw e
+    }
+    fromFuncBuf.toString
+
+  }
+
+  /*
+   * From Func for Containertype as Message
+   */
+  private def fromFuncForMapFixed(field: Element): String = {
+
+    return "";
+  }
 
   /*
     def getKeysStr(keysStr: String) = {

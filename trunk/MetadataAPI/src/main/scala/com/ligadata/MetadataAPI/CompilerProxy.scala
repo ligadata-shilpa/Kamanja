@@ -221,7 +221,8 @@ class CompilerProxy {
   def compileMessageDef(msgDefStr: String, recompile: Boolean = false): (String, ContainerDef, String) = {
     try {
       val mgr = MdMgr.GetMdMgr
-      val msg = new MessageDefImpl()
+      //val msg = new MessageDefImpl()
+      val msg = new MessageCompiler()
       logger.debug("Call Message Compiler ....")
       val ((classStrVer, classStrVerJava), msgDef, (classStrNoVer, classStrNoVerJava)) = msg.processMsgDef(msgDefStr, "JSON", mgr, recompile)
       logger.debug("Message Compilation done ...." + JsonSerializer.SerializeObjectToJson(msgDef))

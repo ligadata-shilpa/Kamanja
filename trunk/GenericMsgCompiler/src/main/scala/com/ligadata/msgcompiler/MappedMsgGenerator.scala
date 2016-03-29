@@ -244,8 +244,6 @@ class MappedMsgGenerator {
     arrayType = fieldBaseType.asInstanceOf[ArrayTypeDef]
     var returnStr: String = ""
 
-    log.info("11111111111111******************" + arrayType.tType + "-----" + arrayType.elemDef.tType + "------------" + arrayType.elemDef.tTypeType.toString())
-
     if (arrayType.elemDef.tTypeType.toString().equalsIgnoreCase("tscalar")) {
       val fname = arrayType.elemDef.implementationName + ".Input"
       returnStr = """    
