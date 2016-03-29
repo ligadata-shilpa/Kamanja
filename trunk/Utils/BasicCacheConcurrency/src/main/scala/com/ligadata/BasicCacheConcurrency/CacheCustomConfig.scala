@@ -36,6 +36,8 @@ object CacheCustomConfig{
   val PREFERIPV4STACK:String="java.net.preferIPv4Stack"
   val SKIPUPDATECHECK:String="net.sf.ehcache.skipUpdateCheck"
   val INITIALHOSTS:String = "jgroups.tcpping.initial_hosts"
+  val UDPADD:String = "jgroups.udp.add"
+  val PORT:String = "jgroups.port"
 }
 
 class CacheCustomConfig(jsonString:String) extends CacheConfiguration{
@@ -68,6 +70,7 @@ class CacheCustomConfig(jsonString:String) extends CacheConfiguration{
              replicateAsynchronously=true
              bootstrapAsynchronously=false
              jgroups.tcpping.initial_hosts=localhost[7800]
+             jgroups.port=45566
 
    */
 
@@ -102,6 +105,8 @@ class CacheCustomConfig(jsonString:String) extends CacheConfiguration{
   System.setProperty(CacheCustomConfig.PREFERIPV4STACK,"true")
   System.setProperty(CacheCustomConfig.SKIPUPDATECHECK, "true")
   System.setProperty(CacheCustomConfig.INITIALHOSTS, values.getOrElse(CacheCustomConfig.INITIALHOSTS,"localhost[7800]"))
+  System.setProperty(CacheCustomConfig.UDPADD, values.getOrElse(CacheCustomConfig.UDPADD,"231.12.21.132"))
+  System.setProperty(CacheCustomConfig.PORT, values.getOrElse(CacheCustomConfig.PORT,"45566"))
 
   def  getConfiguration() : Configuration = {
     return config
