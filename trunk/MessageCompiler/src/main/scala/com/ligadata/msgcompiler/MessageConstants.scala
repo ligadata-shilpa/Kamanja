@@ -92,7 +92,7 @@ import java.util.Date
   }
 
   def msgObjectBuildStmts = {
-"""
+    """
     def build = new T(this)
     def build(from: T) = new T(from)
 """
@@ -121,7 +121,7 @@ import java.util.Date
    * GetOrElse method by Key for mapped messages
    */
   private def getOrElseFuncForMapped = {
-"""
+    """
     override def getOrElse(key: String, defaultVal: Any): AttributeValue = { // Return (value, type)
       var attributeValue: AttributeValue = new AttributeValue();
       try {
@@ -302,8 +302,10 @@ import java.util.Date
     var setFields: Set[String] = Set[String]()
     var a = 0;
     var index: Int = 0
-    for (a <- fields) {
-      setFields = setFields + a.FieldTypePhysicalName
+    if (fields != null) {
+      for (a <- fields) {
+        setFields = setFields + a.FieldTypePhysicalName
+      }
     }
 
     var b = 0;

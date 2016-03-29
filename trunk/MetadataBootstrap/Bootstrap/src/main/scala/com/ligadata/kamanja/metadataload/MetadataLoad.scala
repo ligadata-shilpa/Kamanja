@@ -558,8 +558,7 @@ def initTypesFor_com_ligadata_pmml_udfs_Udfs {
 		mgr.AddArrayBuffer("System", "ArrayBufferOfTupleOfAny2", "System", "TupleOfAny2", 1, MetadataLoad.baseTypesVer, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
 
 		mgr.AddArray("System", "ArrayOfContainerInterface", "System", "ContainerInterface", 1, MetadataLoad.baseTypesVer, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
-		mgr.AddArray("System", "ArrayOfContainerInterface", "System", "ContainerInterface", 1, MetadataLoad.baseTypesVer, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
-	}
+		}
 
 
     /** Initialize the function decls for the core pmml udfs.  These are broken into a set of smaller functions so that

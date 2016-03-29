@@ -124,7 +124,9 @@ class MessageGenerator {
     var msgVariables = new StringBuilder(8 * 1024)
     try {
       message.Elements.foreach(field => {
-        msgVariables.append(" %svar %s: %s = _; %s".format(msgConstants.pad2, field.Name, field.FieldTypePhysicalName, msgConstants.newline))
+        if (field != null) {
+          msgVariables.append(" %svar %s: %s = _; %s".format(msgConstants.pad2, field.Name, field.FieldTypePhysicalName, msgConstants.newline))
+        }
       })
     } catch {
       case e: Exception => {
@@ -162,8 +164,10 @@ class MessageGenerator {
 
     try {
       message.Elements.foreach(element => {
-        msgConsStr.append("%s: %s, ".format(element.Name, element.FieldTypePhysicalName))
-        constructorStmts.append("%s this.%s = %s; %s ".format(msgConstants.pad2, element.Name, element.Name, msgConstants.newline))
+        if (element != null) {
+          msgConsStr.append("%s: %s, ".format(element.Name, element.FieldTypePhysicalName))
+          constructorStmts.append("%s this.%s = %s; %s ".format(msgConstants.pad2, element.Name, element.Name, msgConstants.newline))
+        }
       })
       val msgStr = msgConsStr.toString
       //log.info("constructor Generation ===================" + msgStr.substring(0, msgStr.length() - 1))
@@ -186,12 +190,14 @@ class MessageGenerator {
     var getmethodStr: String = ""
     try {
       fields.foreach(field => {
-        getmethodStr = """
+        if (field != null) {
+          getmethodStr = """
         def get""" + field.Name.capitalize + """: """ + field.FieldTypePhysicalName + """= {
         	return this.""" + field.Name + """;
         }          
         """
-        getMethod = getMethod.append(getmethodStr.toString())
+          getMethod = getMethod.append(getmethodStr.toString())
+        }
       })
     } catch {
       case e: Exception => {
@@ -227,12 +233,14 @@ class MessageGenerator {
     var getAttributeFixed: String = ""
     try {
       fields.foreach(field => {
-        getAttributeFixedStrBldr.append("%s{%s".format(msgConstants.pad3, msgConstants.newline));
-        getAttributeFixedStrBldr.append("%svar attributeVal = new AttributeValue(); %s".format(msgConstants.pad4, msgConstants.newline));
-        getAttributeFixedStrBldr.append("%sattributeVal.setValue(%s) %s".format(msgConstants.pad4, field.Name, msgConstants.newline));
-        getAttributeFixedStrBldr.append("%sattributeVal.setValueType(keyTypes(\"%s\")) %s".format(msgConstants.pad4, field.Name, msgConstants.newline));
-        getAttributeFixedStrBldr.append("%sattributeValsMap.put(\"%s\", attributeVal) %s".format(msgConstants.pad4, field.Name, msgConstants.newline));
-        getAttributeFixedStrBldr.append("%s};%s".format(msgConstants.pad3, msgConstants.newline));
+        if (field != null) {
+          getAttributeFixedStrBldr.append("%s{%s".format(msgConstants.pad3, msgConstants.newline));
+          getAttributeFixedStrBldr.append("%svar attributeVal = new AttributeValue(); %s".format(msgConstants.pad4, msgConstants.newline));
+          getAttributeFixedStrBldr.append("%sattributeVal.setValue(%s) %s".format(msgConstants.pad4, field.Name, msgConstants.newline));
+          getAttributeFixedStrBldr.append("%sattributeVal.setValueType(keyTypes(\"%s\")) %s".format(msgConstants.pad4, field.Name, msgConstants.newline));
+          getAttributeFixedStrBldr.append("%sattributeValsMap.put(\"%s\", attributeVal) %s".format(msgConstants.pad4, field.Name, msgConstants.newline));
+          getAttributeFixedStrBldr.append("%s};%s".format(msgConstants.pad3, msgConstants.newline));
+        }
       })
     } catch {
       case e: Exception => {
@@ -273,10 +281,12 @@ class MessageGenerator {
     var getByOffset = new StringBuilder(8 * 1024)
     try {
       fields.foreach(field => {
-        getByOffset.append("%scase %s => { %s".format(msgConstants.pad2, field.FieldOrdinal, msgConstants.newline))
-        getByOffset.append("%sattributeValue.setValue(this.%s); %s".format(msgConstants.pad3, field.Name, msgConstants.newline))
-        getByOffset.append("%sattributeValue.setValueType(keyTypes(\"%s\"));  %s".format(msgConstants.pad3, field.Name, msgConstants.newline))
-        getByOffset.append("%s } %s".format(msgConstants.pad2, msgConstants.newline))
+        if (field != null) {
+          getByOffset.append("%scase %s => { %s".format(msgConstants.pad2, field.FieldOrdinal, msgConstants.newline))
+          getByOffset.append("%sattributeValue.setValue(this.%s); %s".format(msgConstants.pad3, field.Name, msgConstants.newline))
+          getByOffset.append("%sattributeValue.setValueType(keyTypes(\"%s\"));  %s".format(msgConstants.pad3, field.Name, msgConstants.newline))
+          getByOffset.append("%s } %s".format(msgConstants.pad2, msgConstants.newline))
+        }
       })
     } catch {
       case e: Exception => {
@@ -314,7 +324,9 @@ class MessageGenerator {
     var setByOffset = new StringBuilder(8 * 1024)
     try {
       fields.foreach(field => {
-        setByOffset.append("%scase %s => {this.%s = value.asInstanceOf[%s];} %s".format(msgConstants.pad4, field.FieldOrdinal, field.Name, field.FieldTypePhysicalName, msgConstants.newline))
+        if (field != null) {
+          setByOffset.append("%scase %s => {this.%s = value.asInstanceOf[%s];} %s".format(msgConstants.pad4, field.FieldOrdinal, field.Name, field.FieldTypePhysicalName, msgConstants.newline))
+        }
       })
     } catch {
       case e: Exception => {
@@ -655,7 +667,9 @@ class MessageGenerator {
     var keysStr = new StringBuilder(8 * 1024)
     try {
       message.Elements.foreach(field => {
-        keysStr.append("%sif (key.equals(\"%s\")) { attributeValue.setValue(this.%s); }%s".format(msgConstants.pad3, field.Name, field.Name, msgConstants.newline));
+        if (field != null) {
+          keysStr.append("%sif (key.equals(\"%s\")) { attributeValue.setValue(this.%s); }%s".format(msgConstants.pad3, field.Name, field.Name, msgConstants.newline));
+        }
       })
     } catch {
       case e: Exception => {
@@ -722,7 +736,9 @@ class MessageGenerator {
     var keysStr = new StringBuilder(8 * 1024)
     try {
       message.Elements.foreach(field => {
-        keysStr.append("%sif (key.equals(\"%s\")) { this.%s = value.asInstanceOf[%s]; }%s".format(msgConstants.pad3, field.Name, field.Name, field.FieldTypePhysicalName, msgConstants.newline));
+        if (field != null) {
+          keysStr.append("%sif (key.equals(\"%s\")) { this.%s = value.asInstanceOf[%s]; }%s".format(msgConstants.pad3, field.Name, field.Name, field.FieldTypePhysicalName, msgConstants.newline));
+        }
       })
     } catch {
       case e: Exception => {
@@ -748,9 +764,13 @@ class MessageGenerator {
   private def keyTypesStr(fields: List[Element]): String = {
     var keysStr = new StringBuilder(8 * 1024)
     try {
-      fields.foreach(field => {
-        keysStr.append("\"" + field.Name + "\"-> \"" + field.FieldTypePhysicalName + "\",")
-      })
+      if (fields != null) {
+        fields.foreach(field => {
+          if (field != null) {
+            keysStr.append("\"" + field.Name + "\"-> \"" + field.FieldTypePhysicalName + "\",")
+          }
+        })
+      }
     } catch {
       case e: Exception => {
         log.debug("", e)
@@ -775,12 +795,14 @@ class MessageGenerator {
     var setmethodStr: String = ""
     try {
       fields.foreach(field => {
-        setmethodStr = """
+        if (field != null) {
+          setmethodStr = """
         def set""" + field.Name.capitalize + """(value: """ + field.FieldTypePhysicalName + """): Unit = {
         	this.""" + field.Name + """ = value;
         }
         """
-        setMethod = setMethod.append(setmethodStr.toString())
+          setMethod = setMethod.append(setmethodStr.toString())
+        }
       })
     } catch {
       case e: Exception => {

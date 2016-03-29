@@ -19,21 +19,23 @@ class MessageCompilerTestSuite extends FunSuite {
     val mdLoader: MetadataLoad = new MetadataLoad(MdMgr.GetMdMgr, "", "", "", "")
     mdLoader.initialize
     var msgDfType: String = "JSON"
-     val jsonstr: String = Source.fromFile("./GenericMsgCompiler/src/test/resources/fixedmsgs/product.json").getLines.mkString
-   // val jsonstr: String = Source.fromFile("src/test/resources/fixedmsgs/product.json").getLines.mkString
 
-    val ((verScalaMsg, verJavaMsg), containerDef, (nonVerScalaMsg, nonVerJavaMsg)) = MessageCompiler.processMsgDef(jsonstr, msgDfType, MdMgr.GetMdMgr, false)
+    var messageCompiler = new MessageCompiler;
+    val jsonstr: String = Source.fromFile("./GenericMsgCompiler/src/test/resources/fixedmsgs/product.json").getLines.mkString
+    // val jsonstr: String = Source.fromFile("src/test/resources/fixedmsgs/product.json").getLines.mkString
+
+    val ((verScalaMsg, verJavaMsg), containerDef, (nonVerScalaMsg, nonVerJavaMsg)) = messageCompiler.processMsgDef(jsonstr, msgDfType, MdMgr.GetMdMgr, false)
     createScalaFile(verScalaMsg, containerDef.Version.toString, containerDef.FullName, ".scala")
-   
+
     assert(verScalaMsg === verScalaMsg)
-     println("==========verScalaMsg  " )
+    println("==========verScalaMsg  ")
     assert(containerDef.Name === "product")
   }
 
   private def createScalaFile(scalaClass: String, version: String, className: String, clstype: String): Unit = {
     try {
       val writer = new PrintWriter(new File("./GenericMsgCompiler/src/test/resources/GeneratedMsgs/" + className + "_" + version + clstype))
-     // val writer = new PrintWriter(new File("src/test/resources/GeneratedMsgs/" + className + "_" + version + clstype))
+      // val writer = new PrintWriter(new File("src/test/resources/GeneratedMsgs/" + className + "_" + version + clstype))
       writer.write(scalaClass.toString)
       writer.close()
       println("Done")
