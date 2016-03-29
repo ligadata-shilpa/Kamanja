@@ -745,7 +745,7 @@ cp * $installPath/Kamanja-$ver210/input/SampleApplications/metadata/message
 cd $srcPath/SampleApplication/HelloWorld/model
 cp * $installPath/Kamanja-$ver210/input/SampleApplications/metadata/model
 
-cd $srcPath/SampleApplication/HelloWorld/template
+cd $srcPath/SampleApplication/HelloWorld/template/scala-2.10
 cp -rf * $installPath/Kamanja-$ver210/input/SampleApplications/template
 
 
@@ -793,7 +793,7 @@ cp * $installPath/Kamanja-$ver210/input/SampleApplications/metadata/message
 cd $srcPath/SampleApplication/Telecom/metadata/model
 cp *.* $installPath/Kamanja-$ver210/input/SampleApplications/metadata/model
 
-cd $srcPath/SampleApplication/Telecom/metadata/template
+cd $srcPath/SampleApplication/Telecom/metadata/template/scala-2.10
 cp -rf * $installPath/Kamanja-$ver210/input/SampleApplications/template
 
 cd $srcPath/SampleApplication/Telecom/metadata/config
@@ -1422,7 +1422,7 @@ cp * $installPath/Kamanja-$ver211/input/SampleApplications/metadata/message
 cd $srcPath/SampleApplication/HelloWorld/model
 cp * $installPath/Kamanja-$ver211/input/SampleApplications/metadata/model
 
-cd $srcPath/SampleApplication/HelloWorld/template
+cd $srcPath/SampleApplication/HelloWorld/template/scala-2.11
 cp -rf * $installPath/Kamanja-$ver211/input/SampleApplications/template
 
 
@@ -1470,7 +1470,7 @@ cp * $installPath/Kamanja-$ver211/input/SampleApplications/metadata/message
 cd $srcPath/SampleApplication/Telecom/metadata/model
 cp *.* $installPath/Kamanja-$ver211/input/SampleApplications/metadata/model
 
-cd $srcPath/SampleApplication/Telecom/metadata/template
+cd $srcPath/SampleApplication/Telecom/metadata/template/scala-2.11
 cp -rf * $installPath/Kamanja-$ver211/input/SampleApplications/template
 
 cd $srcPath/SampleApplication/Telecom/metadata/config
