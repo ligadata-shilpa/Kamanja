@@ -39,7 +39,7 @@ class MigrateFrom_V_1_1 extends MigratableFrom {
   case class AdapterUniqueValueDes(T: Long, V: String, Qs: Option[List[String]], Res: Option[List[String]]) // TransactionId, Value, Queues & Result Strings. Queues and Result Strings should be same size.  
 
   object MdResolve extends MdBaseResolveInfo {
-    val _messagesAndContainers = scala.collection.mutable.Map[String, ContainerFactoryInterface]()
+    val _messagesAndContainers = scala.collection.mutable.Map[String, MessageContainerObjBase]()
     val _kamanjaLoader = new KamanjaLoaderInfo
     val _kryoDataSer = SerializerManager.GetSerializer("kryo")
     if (_kryoDataSer != null) {

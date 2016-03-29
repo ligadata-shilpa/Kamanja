@@ -705,7 +705,7 @@ abstract class RDDObject[T: ClassTag] {
   final def getRecent: Option[T] = {
     val txnContext = getCurrentTransactionContext
     if (txnContext != null) {
-      val fndVal = txnContext.getNodeCtxt.getEnvCtxt.getRecent(txnContext.transId, getFullName, txnContext.getMessage.PartitionKeyData.toList, null, null)
+      val fndVal = txnContext.getNodeCtxt.getEnvCtxt.getRecent(txnContext.transId, getFullName, txnContext.getMessage.getPartitionKey.toList, null, null)
       if (fndVal != None)
         return Some(fndVal.get.asInstanceOf[T])
     }
@@ -763,7 +763,7 @@ abstract class RDDObject[T: ClassTag] {
   final def getOne(tmRange: TimeRange, f: ContainerInterface => Boolean): Option[T] = {
     val txnContext = getCurrentTransactionContext
     if (txnContext != null) {
-      val fndVal = txnContext.getNodeCtxt.getEnvCtxt.getRecent(txnContext.transId, getFullName, txnContext.getMessage.PartitionKeyData.toList, tmRange, f)
+      val fndVal = txnContext.getNodeCtxt.getEnvCtxt.getRecent(txnContext.transId, getFullName, txnContext.getMessage.getPartitionKey.toList, tmRange, f)
       if (fndVal != None)
         return Some(fndVal.get.asInstanceOf[T])
     }
@@ -825,7 +825,7 @@ abstract class RDDObject[T: ClassTag] {
     val txnContext = getCurrentTransactionContext
     var values: Array[T] = Array[T]()
     if (txnContext != null) {
-      val fndVal = txnContext.getNodeCtxt.getEnvCtxt.getRDD(txnContext.transId, getFullName, txnContext.getMessage.PartitionKeyData.toList, null, f)
+      val fndVal = txnContext.getNodeCtxt.getEnvCtxt.getRDD(txnContext.transId, getFullName, txnContext.getMessage.getPartitionKey.toList, null, f)
       if (fndVal != null)
         values = fndVal.map(v => v.asInstanceOf[T])
     }
@@ -842,7 +842,7 @@ abstract class RDDObject[T: ClassTag] {
     val txnContext = getCurrentTransactionContext
     var values: Array[T] = Array[T]()
     if (txnContext != null) {
-      val fndVal = txnContext.getNodeCtxt.getEnvCtxt.getRDD(txnContext.transId, getFullName, txnContext.getMessage.PartitionKeyData.toList, tmRange, null)
+      val fndVal = txnContext.getNodeCtxt.getEnvCtxt.getRDD(txnContext.transId, getFullName, txnContext.getMessage.getPartitionKey.toList, tmRange, null)
       if (fndVal != null)
         values = fndVal.map(v => v.asInstanceOf[T])
     }
@@ -860,7 +860,7 @@ abstract class RDDObject[T: ClassTag] {
     val txnContext = getCurrentTransactionContext
     var values: Array[T] = Array[T]()
     if (txnContext != null) {
-      val fndVal = txnContext.getNodeCtxt.getEnvCtxt.getRDD(txnContext.transId, getFullName, txnContext.getMessage.PartitionKeyData.toList, tmRange, f)
+      val fndVal = txnContext.getNodeCtxt.getEnvCtxt.getRDD(txnContext.transId, getFullName, txnContext.getMessage.getPartitionKey.toList, tmRange, f)
       if (fndVal != null)
         values = fndVal.map(v => v.asInstanceOf[T])
     }
@@ -889,7 +889,7 @@ abstract class RDDObject[T: ClassTag] {
    * Return a RDD- If the filtering parameters are not sufficiently strict, this method can return a very large amout of
    * RDDObjects, causing memory issues.
    *
-   * @param tmRangeTimeRange
+   * @param tmRange
    * @param f ContainerInterface => Boolean
    * @return RDD[T]
    */
@@ -908,7 +908,7 @@ abstract class RDDObject[T: ClassTag] {
    * Return a RDD - If the filtering parameters are not sufficiently strict, this method can return a very large amout of
    * RDDObjects, causing memory issues.
    *
-   * @param tmRangeTimeRange
+   * @param tmRange
    * @return RDD[T]
    */
   final def getRDD(tmRange: TimeRange): RDD[T] = {
@@ -982,7 +982,6 @@ abstract class RDDObject[T: ClassTag] {
    *
    * @param key Array[String]
    * @param tmRange TimeRange
-   * @param f ContainerInterface => Boolean
    * @return RDD[T]
    */
   final def getRDD(key: Array[String], tmRange: TimeRange): RDD[T] = {
@@ -1022,7 +1021,7 @@ abstract class RDDObject[T: ClassTag] {
     val txnContext = getCurrentTransactionContext
     if (txnContext != null) {
       val obj = inst.asInstanceOf[ContainerInterface]
-      txnContext.getNodeCtxt.getEnvCtxt.saveOne(txnContext.transId, getFullName, obj.PartitionKeyData.toList, obj)
+      txnContext.getNodeCtxt.getEnvCtxt.saveOne(txnContext.transId, getFullName, obj.getPartitionKey.toList, obj)
     }
   }
 
