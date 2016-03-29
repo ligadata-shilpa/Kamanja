@@ -345,6 +345,63 @@ object ModelService {
     }
 
     /**
+      * Add a new JTM (Json Transformation Model) model to the metadata.
+      *
+      * @param input the path of the jtm file to be added as a new model
+      * @param userid the optional userId. If security and auditing in place this parameter is required.
+      * @return the result of the operation
+      */
+    def addModelJTM(input: String
+                      , userid: Option[String] = Some("metadataapi")
+                     ): String = {
+        var modelDef=""
+        var modelConfig=""
+        var response: String = ""
+        var modelFileDir: String = ""
+        if (input == "") {
+            //get the messages location from the config file. If error get the location from github
+            modelFileDir = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("MODEL_FILES_DIR")
+            if (modelFileDir == null) {
+                response = "MODEL_FILES_DIR property missing in the metadata API configuration"
+            } else {
+                //verify the directory where messages can be present
+                IsValidDir(modelFileDir) match {
+                    case true => {
+                        //get all files with json extension
+                        val models: Array[File] = new java.io.File(modelFileDir).listFiles.filter(f => f.getName.endsWith(".jtm") || f.getName.endsWith(".json"))
+                        models.length match {
+                            case 0 => {
+                                val errorMsg = "Models not found at " + modelFileDir
+                                println(errorMsg)
+                                response = errorMsg
+                            }
+                            case option => {
+                                var  modelDefs=getUserInputFromMainMenu(models)
+                                for (modelDef <- modelDefs)
+                                    response += MetadataAPIImpl.AddModel(ModelType.JTM, modelDef.toString, userid, None)
+                            }
+                        }
+                    }
+                    case false => {
+                        response = "Model directory is invalid."
+                    }
+                }
+            }
+        } else {
+            //   println("Path provided. Added msg")
+            //process message
+            var model = new File(input.toString)
+            if(model.exists()){
+                modelDef= Source.fromFile(model).mkString
+                response = MetadataAPIImpl.AddModel(ModelType.JTM, modelDef.toString, userid, None)
+            }else{
+                response="Model definition file does not exist"
+            }
+        }
+        response
+    }
+
+    /**
      * Update a Kamanja Pmml model in the metadata with new pmml
      *
      * @param input the path of the Kamanja pmml model to be used for the update
@@ -403,6 +460,64 @@ object ModelService {
         //println("Response: " + response)
       }
 
+        response
+    }
+
+    /**
+      * Update a JTM (Json Transformation Model) model in the metadata with new transformation specification file
+      *
+      * @param input the path of the JTM model spec file to be used for the update
+      * @param userid the optional userId. If security and auditing in place this parameter is required.
+      * @return the result of the operation
+      */
+
+    def updateModelJTM(input: String
+                         , userid: Option[String] = Some("metadataapi")
+                        ): String = {
+        var modelDef = ""
+        var response: String = ""
+        var modelFileDir: String = ""
+        if (input == "") {
+            //get the messages location from the config file. If error get the location from github
+            modelFileDir = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("MODEL_FILES_DIR")
+            if (modelFileDir == null) {
+                response = "MODEL_FILES_DIR property missing in the metadata API configuration"
+            } else {
+                //verify the directory where messages can be present
+                IsValidDir(modelFileDir) match {
+                    case true => {
+                        //get all files with json extension
+                        val models: Array[File] = new java.io.File(modelFileDir).listFiles.filter(f => f.getName.endsWith(".jtm") || f.getName.endsWith(".json"))
+                        models.length match {
+                            case 0 => {
+                                val errorMsg = "Models not found at " + modelFileDir
+                                println(errorMsg)
+                                response = errorMsg
+                            }
+                            case option => {
+                                var modelDefs = getUserInputFromMainMenu(models)
+                                for (modelDef <- modelDefs)
+                                    response = MetadataAPIImpl.UpdateModel(ModelType.JTM, modelDef.toString, userid)
+                            }
+                        }
+
+                    }
+                    case false => {
+                        response = "Model directory is invalid."
+                    }
+                }
+            }
+        } else {
+            //   println("Path provided. Added msg")
+            //process message
+            var model = new File(input.toString)
+            if (model.exists()) {
+                modelDef = Source.fromFile(model).mkString
+                response = MetadataAPIImpl.UpdateModel(ModelType.JTM, modelDef, userid)
+            } else {
+                response = "File does not exist"
+            }
+        }
 
     response
   }

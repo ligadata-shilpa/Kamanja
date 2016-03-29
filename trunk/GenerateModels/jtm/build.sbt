@@ -22,7 +22,9 @@ libraryDependencies += {
 
 libraryDependencies += "com.google.code.gson" % "gson" % "2.5"
 
-libraryDependencies += "org.apache.commons" % "commons-io" % "1.3.2"
+libraryDependencies += "commons-io" % "commons-io" % "2.4"
+
+// libraryDependencies += "org.apache.commons" % "commons-io" % "1.3.2"
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.4" % "test->default"
 

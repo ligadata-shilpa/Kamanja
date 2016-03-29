@@ -172,7 +172,7 @@ lazy val MethodExtractor = project.in(file("Pmml/MethodExtractor"))
 lazy val MetadataAPI = project.in(file("MetadataAPI"))
   .configs(TestConfigs.all: _*)
   .settings(TestSettings.settings: _*)
-  .dependsOn(StorageManager,Metadata,MessageCompiler,PmmlCompiler,Serialize,ZooKeeperClient,ZooKeeperListener,Exceptions, SecurityAdapterBase, KamanjaUtils, HeartBeat, KamanjaBase, JpmmlFactoryOfModelInstanceFactory, SimpleApacheShiroAdapter % "test")
+  .dependsOn(StorageManager,Metadata,MessageCompiler,PmmlCompiler,Serialize,ZooKeeperClient,ZooKeeperListener,Exceptions, SecurityAdapterBase, KamanjaUtils, HeartBeat, KamanjaBase, JpmmlFactoryOfModelInstanceFactory, jtm, SimpleApacheShiroAdapter % "test")
 
 lazy val MetadataBootstrap = project.in(file("MetadataBootstrap/Bootstrap"))
   .configs(TestConfigs.all: _*)

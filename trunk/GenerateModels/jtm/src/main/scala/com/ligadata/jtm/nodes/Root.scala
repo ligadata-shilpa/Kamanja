@@ -117,7 +117,7 @@ object Root {
     * @return root of the processing instructions
     */
   def fromJson(file : String) : Root = {
-    val config = FileUtils.readFileToString(new File(file), null)
+    val config = FileUtils.readFileToString(new File(file), null:String)
     fromJsonString(config)
   }
 
