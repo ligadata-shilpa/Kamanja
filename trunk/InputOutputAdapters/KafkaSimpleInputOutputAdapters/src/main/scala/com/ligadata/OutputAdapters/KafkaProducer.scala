@@ -379,13 +379,13 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, val nodeContext: Node
       var partitionsMsgMap = scala.collection.mutable.Map[Int, ArrayBuffer[MsgDataRecievedCnt]]();
 
       for (i <- 0 until serializedContainerData.size) {
-        val partId = getPartition(outputContainers(i).PartitionKeyData.mkString(",").getBytes(), topicPartitionsCount)
+        val partId = getPartition(outputContainers(i).getPartitionKey.mkString(",").getBytes(), topicPartitionsCount)
         var ab = partitionsMsgMap.getOrElse(partId, null)
         if (ab == null) {
           ab = new ArrayBuffer[MsgDataRecievedCnt](256)
           partitionsMsgMap(partId) = ab
         }
-        val pr = new ProducerRecord(qc.topic, partId, outputContainers(i).PartitionKeyData.mkString(",").getBytes(), serializedContainerData(i))
+        val pr = new ProducerRecord(qc.topic, partId, outputContainers(i).getPartitionKey.mkString(",").getBytes(), serializedContainerData(i))
         ab += MsgDataRecievedCnt(msgInOrder.getAndIncrement, pr)
       }
 

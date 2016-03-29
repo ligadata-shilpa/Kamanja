@@ -196,7 +196,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
                 val entry = it1.next();
                 val value = entry.getValue();
                 if (primKeyAsArray != null) {
-                  if (primKeyAsArray.sameElements(value.value.PrimaryKeyData) && f(value.value)) {
+                  if (primKeyAsArray.sameElements(value.value.getPrimaryKey) && f(value.value)) {
                     return (value.value, true);
                   }
                 } else {
@@ -211,7 +211,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
                 while (it1.hasNext()) {
                   val entry = it1.next();
                   val value = entry.getValue();
-                  if (primKeyAsArray.sameElements(value.value.PrimaryKeyData))
+                  if (primKeyAsArray.sameElements(value.value.getPrimaryKey))
                     return (value.value, true);
                 }
               } else {
@@ -312,7 +312,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
                 val entry = it1.next();
                 val value = entry.getValue();
                 if (f(value.value)) {
-                  if (primKeyAsArray == null || IsSameKey(primKeyAsArray, value.value.PrimaryKeyData))
+                  if (primKeyAsArray == null || IsSameKey(primKeyAsArray, value.value.getPrimaryKey))
                     retResult += ((entry.getKey(), value.value))
                 }
               }
@@ -321,7 +321,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
               while (it1.hasNext()) {
                 val entry = it1.next();
                 val value = entry.getValue();
-                if (primKeyAsArray == null || IsSameKey(primKeyAsArray, value.value.PrimaryKeyData))
+                if (primKeyAsArray == null || IsSameKey(primKeyAsArray, value.value.getPrimaryKey))
                   retResult += ((entry.getKey(), value.value))
               }
             }
@@ -504,11 +504,11 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
               val t = tmValues(i)
               val v = values(i)
 
-              if (v.TransactionId == 0)
-                v.TransactionId(txnId) // Setting the current transactionid
+              if (v.getTransactionId == 0)
+                v.setTransactionId(txnId) // Setting the current transactionid
 
-              val primkey = v.PrimaryKeyData
-              val putkey = KeyWithBucketIdAndPrimaryKey(KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(bk), Key(t, bk, v.TransactionId, v.RowNumber), primkey != null && primkey.size > 0, primkey)
+              val primkey = v.getPrimaryKey
+              val putkey = KeyWithBucketIdAndPrimaryKey(KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(bk), Key(t, bk, v.getTransactionId, v.getRowNumber), primkey != null && primkey.size > 0, primkey)
               container.dataByBucketKey.put(putkey, ContainerInterfaceWithModFlag(true, v))
               container.dataByTmPart.put(putkey, ContainerInterfaceWithModFlag(true, v))
               /*
@@ -978,7 +978,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     if (v != null && v.isInstanceOf[ContainerInterface]) {
       logger.debug("Key:(%d, %s, %d, %d)".format(k.timePartition, k.bucketKey.mkString(","), k.transactionId, k.rowId))
       val value = v.asInstanceOf[ContainerInterface]
-      val primarykey = value.PrimaryKeyData
+      val primarykey = value.getPrimaryKey
       val key = KeyWithBucketIdAndPrimaryKey(KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(k.bucketKey), k, primarykey != null && primarykey.size > 0, primarykey)
       val v1 = ContainerInterfaceWithModFlag(false, value)
 
@@ -1384,18 +1384,18 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   private def Clone(vals: Array[ContainerInterface]): Array[ContainerInterface] = {
     if (vals == null) return null
     return vals.map(v => {
-      if (v == null) null else v.Clone()
+      if (v == null) null else v.Clone().asInstanceOf[ContainerInterface]
     })
   }
 
   private def Clone(v: ContainerInterface): ContainerInterface = {
     if (v == null) return null
-    return v.Clone()
+    return v.Clone().asInstanceOf[ContainerInterface]
   }
 
   private def Clone(ov: Option[ContainerInterface]): Option[ContainerInterface] = {
     if (ov == None) return ov
-    Some(ov.get.Clone())
+    Some(ov.get.Clone().asInstanceOf[ContainerInterface])
   }
 
   override def getAllObjects(transId: Long, containerName: String): Array[ContainerInterface] = {
@@ -1441,7 +1441,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   }
   override def setObject(transId: Long, containerName: String, partKey: List[String], value: ContainerInterface): Unit = {
     if (value != null && TxnContextCommonFunctions.IsEmptyKey(partKey) == false)
-      localSetObject(transId, containerName, Array(value.TimePartitionData), Array(partKey.toArray), Array(value))
+      localSetObject(transId, containerName, Array(value.getTimePartitionData), Array(partKey.toArray), Array(value))
   }
 
   override def setAdapterUniqueKeyValue(transId: Long, key: String, value: String, outputResults: List[(String, String, String)]): Unit = {
@@ -2013,7 +2013,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 
   override def saveOne(transId: Long, containerName: String, partKey: List[String], value: ContainerInterface): Unit = {
     if (value != null && TxnContextCommonFunctions.IsEmptyKey(partKey) == false) {
-      localSetObject(transId, containerName, Array(value.TimePartitionData), Array(partKey.toArray), Array(value))
+      localSetObject(transId, containerName, Array(value.getTimePartitionData), Array(partKey.toArray), Array(value))
     }
   }
 
@@ -2027,8 +2027,8 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 
     values.foreach(v => {
       if (v != null) {
-        tmValues += v.TimePartitionData
-        partKeyValues += v.PartitionKeyData
+        tmValues += v.getTimePartitionData
+        partKeyValues += v.getPartitionKey
         finalValues += v
       }
     })

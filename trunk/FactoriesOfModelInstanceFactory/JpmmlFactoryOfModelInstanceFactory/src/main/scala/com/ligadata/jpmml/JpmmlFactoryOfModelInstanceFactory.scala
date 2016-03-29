@@ -313,8 +313,8 @@ class JpmmlAdapterFactory(modelDef: ModelDef, nodeContext: NodeContext) extends 
       * @return true if this model can process the message.
       */
     override def isValidMessage(msg: ContainerInterface): Boolean = {
-        val msgFullName : String = msg.FullName
-        val msgVersionDots : String = msg.Version
+        val msgFullName : String = msg.getFullTypeName
+        val msgVersionDots : String = msg.getTypeVersion
         val msgVersion : String = msgVersionDots.filter(_ != '.').toString
         val msgNameKey : String = s"$msgFullName.$msgVersion".toLowerCase()
         val yum : Boolean = if (modelDef != null && modelDef.inputMsgSets != null) {

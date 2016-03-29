@@ -67,7 +67,7 @@ object Udfs extends LogTrait {
 
   def Version(msg : MessageInterface) : String = {
       val ver : String = if (msg != null) {
-          msg.Version
+          msg.getTypeVersion
       } else {
           "000000.000000.000000"
       }
@@ -82,7 +82,7 @@ object Udfs extends LogTrait {
 
   def Version(container : ContainerInterface) : String = {
       val ver : String = if (container != null) {
-          container.Version
+          container.getTypeVersion
       } else {
           "000000.000000.000000"
       }
@@ -547,8 +547,8 @@ object Udfs extends LogTrait {
       @return the partition key as a List[String]
    */
   def GetPartitionKey(msg : MessageInterface) : scala.collection.immutable.List[String] = {
-      val partitionKey : List[String] = if (msg.PartitionKeyData != null) {
-          msg.PartitionKeyData.toList
+      val partitionKey : List[String] = if (msg.hasPartitionKey) {
+          msg.getPartitionKey.toList
       } else {
           scala.collection.immutable.List[String]()
       }
@@ -561,8 +561,8 @@ object Udfs extends LogTrait {
       @return the partition key as a List[String]
    */
   def GetPartitionKey(msg : ContainerInterface) : scala.collection.immutable.List[String] = {
-      val partitionKey : List[String] = if (msg.PartitionKeyData != null) {
-          msg.PartitionKeyData.toList
+      val partitionKey : List[String] = if (msg.hasPartitionKey) {
+          msg.getPartitionKey.toList
       } else {
           scala.collection.immutable.List[String]()
       }
@@ -575,8 +575,8 @@ object Udfs extends LogTrait {
       @return the primary key as a List[String]
    */
   def GetPrimaryKey(msg : MessageInterface) : scala.collection.immutable.List[String] = {
-      val primaryKey : List[String] = if (msg.PrimaryKeyData != null) {
-          msg.PrimaryKeyData.toList
+      val primaryKey : List[String] = if (msg.hasPrimaryKey) {
+          msg.getPrimaryKey.toList
       } else {
           scala.collection.immutable.List[String]()
       }
@@ -589,8 +589,8 @@ object Udfs extends LogTrait {
       @return the primary key as a List[String]
    */
   def GetPrimaryKey(msg : ContainerInterface) : scala.collection.immutable.List[String] = {
-      val primaryKey : List[String] = if (msg.PrimaryKeyData != null) {
-          msg.PrimaryKeyData.toList
+      val primaryKey : List[String] = if (msg.hasPrimaryKey) {
+          msg.getPrimaryKey.toList
       } else {
           scala.collection.immutable.List[String]()
       }
@@ -5864,7 +5864,7 @@ object Udfs extends LogTrait {
 			  }
 		
 			  val itsThere : Boolean = if (msgOrContainer != null) {
-				  (msgOrContainer.IsFixed || (msgOrContainer.IsKv && (msgOrContainer.getOrElse(fieldName,null) != null)))
+				  (msgOrContainer.isFixed || (msgOrContainer.getOrElse(fieldName,null) != null))
 			  } else {
 				  false
 			  }

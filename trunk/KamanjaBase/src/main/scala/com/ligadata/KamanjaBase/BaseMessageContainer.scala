@@ -359,5 +359,4 @@ trait AdaptersSerializeDeserializers {
   }
 }
 
-// case class MessageContainerBaseWithModFlag(modified: Boolean, value: MessageContainerBase)
-
+case class ContainerInterfaceWithModFlag(modified: Boolean, value: ContainerInterface)
