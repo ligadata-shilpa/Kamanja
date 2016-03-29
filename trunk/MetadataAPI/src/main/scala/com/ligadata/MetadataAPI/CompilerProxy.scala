@@ -30,7 +30,7 @@ import java.io.PrintWriter
 import org.apache.logging.log4j._
 import com.ligadata.kamanja.metadata._
 import com.ligadata._
-import com.ligadata.messagedef._
+import com.ligadata.msgcompiler._
 import com.ligadata.pmml.compiler._
 import com.ligadata.kamanja.metadata.ObjFormatType._
 import com.ligadata.Serialize._

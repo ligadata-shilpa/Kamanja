@@ -33,7 +33,7 @@ class MetadataAPISerializationTest extends FlatSpec {
     var mssgDef = getMsgDef
     //expected
     val expected: String =
-      """{"Message":{"Name":"msgname","PhysicalName":"/opt/kamanja/message/message.json","JarName":"JarName","NameSpace":"com.ligadata.messagedef","DependencyJars":["Jar1","Jar2"],"OrigDef":"OrigDef","ObjectDefinition":"ObjectDefinition","ObjectFormat":"Unknown","CreationTime":2222222222,"Author":"Author","PartitionKey":["key1","key2"],"Persist":true,"IsActive":true,"IsDeleted":false,"Recompile":false,"Description":"Description","NumericTypes":{"Version":123456789,"TransId":123123123123,"UniqId":987654321,"CreationTime":2222222222,"ModTime":33333333333,"MdElemStructVer":1},"PrimaryKeys":[{"constraintName":"prim","key":["key2","key1"]}],"ForeignKeys":[{"constraintName":"forign","key":["key2","key1"],"forignContainerName":"forr","forignKey":["key2","key1"]}]}}"""
+      """{"Message":{"Name":"msgname","PhysicalName":"/opt/kamanja/message/message.json","JarName":"JarName","NameSpace":"com.ligadata.msgcompiler","DependencyJars":["Jar1","Jar2"],"OrigDef":"OrigDef","ObjectDefinition":"ObjectDefinition","ObjectFormat":"Unknown","CreationTime":2222222222,"Author":"Author","PartitionKey":["key1","key2"],"Persist":true,"IsActive":true,"IsDeleted":false,"Recompile":false,"Description":"Description","NumericTypes":{"Version":123456789,"TransId":123123123123,"UniqId":987654321,"CreationTime":2222222222,"ModTime":33333333333,"MdElemStructVer":1},"PrimaryKeys":[{"constraintName":"prim","key":["key2","key1"]}],"ForeignKeys":[{"constraintName":"forign","key":["key2","key1"],"forignContainerName":"forr","forignKey":["key2","key1"]}]}}"""
 
     val serializedJson1 = MetadataAPISerialization.serializeObjectToJson(mssgDef)
 

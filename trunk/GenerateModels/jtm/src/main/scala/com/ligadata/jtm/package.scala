@@ -21,7 +21,7 @@ import com.ligadata.jtm.eval.Types
 import com.ligadata.jtm.nodes.Root
 import com.ligadata.kamanja.metadata._
 import com.ligadata.kamanja.metadataload.MetadataLoad
-import com.ligadata.messagedef.MessageDefImpl
+import com.ligadata.msgcompiler._
 import org.apache.commons.io.FileUtils
 import org.json4s.jackson.JsonMethods._
 
@@ -60,7 +60,7 @@ package object jtm {
       files.map ( jsonFile => {
         val json = FileUtils.readFileToString(jsonFile, null)
         val map = parse(json).values.asInstanceOf[Map[String, Any]]
-        val msg = new MessageDefImpl()
+        val msg = new MessageCompiler()
         val ((classStrVer, classStrVerJava), msgDef, (classStrNoVer, classStrNoVerJava)) = msg.processMsgDef(json, "JSON", mgr, false)
         val msg1 = msgDef.asInstanceOf[com.ligadata.kamanja.metadata.MessageDef]
         mgr.AddMsg(msg1)

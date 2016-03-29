@@ -18,7 +18,7 @@ package com.ligadata.jtm
 import com.ligadata.jtm.eval.{Types => EvalTypes, Stamp, Expressions, GrokHelper}
 import com.ligadata.kamanja.metadata._
 import com.ligadata.kamanja.metadataload.MetadataLoad
-import com.ligadata.messagedef.MessageDefImpl
+import com.ligadata.msgcompiler._
 import org.aicer.grok.dictionary.GrokDictionary
 import org.apache.logging.log4j.{ Logger, LogManager }
 import org.json4s.jackson.JsonMethods._
