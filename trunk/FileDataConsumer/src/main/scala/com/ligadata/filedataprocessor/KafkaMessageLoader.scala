@@ -144,7 +144,8 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
           inputData = CreateKafkaInput(msgStr, SmartFileAdapterConstants.MESSAGE_NAME, delimiters)
           currentOffset += 1
 
-          val partitionKey = objInst.asInstanceOf[ContainerFactoryInterface].PartitionKeyData(inputData).mkString(",")
+          // FIXME:- FIX THIS
+          val partitionKey: String = "" // objInst.asInstanceOf[ContainerFactoryInterface].PartitionKeyData(inputData).mkString(",") // BUGBUG:- FIX THIS
 
           // By far the most common path..  just add the message
           if (msg.offsetInFile == FileProcessor.NOT_RECOVERY_SITUATION) {
