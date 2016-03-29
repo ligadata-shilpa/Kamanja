@@ -314,9 +314,9 @@ trait AdaptersSerializeDeserializers {
   }
 
   // Returns serialized msgs, serialized msgs data & serializers names applied on these messages.
-  final def serialize(tnxCtxt: TransactionContext, outputContainers: Array[MessageContainerBase]): (Array[MessageContainerBase], Array[Array[Byte]], Array[String]) = {
+  final def serialize(tnxCtxt: TransactionContext, outputContainers: Array[ContainerInterface]): (Array[ContainerInterface], Array[Array[Byte]], Array[String]) = {
 
-    val outputContainers = ArrayBuffer[MessageContainerBase]()
+    val outputContainers = ArrayBuffer[ContainerInterface]()
     val serializedContainerData = ArrayBuffer[Array[Byte]]()
     val usedSerializersNames = ArrayBuffer[String]()
 
@@ -326,9 +326,9 @@ trait AdaptersSerializeDeserializers {
   }
 
   // Returns serialized msgs, serialized msgs data & serializers names applied on these messages.
-  final def serialize(tnxCtxt: TransactionContext, outputContainers: Array[MessageContainerBase], serializersNames: Array[String]): (Array[MessageContainerBase], Array[Array[Byte]], Array[String]) = {
+  final def serialize(tnxCtxt: TransactionContext, outputContainers: Array[ContainerInterface], serializersNames: Array[String]): (Array[ContainerInterface], Array[Array[Byte]], Array[String]) = {
 
-    val outputContainers = ArrayBuffer[MessageContainerBase]()
+    val outputContainers = ArrayBuffer[ContainerInterface]()
     val serializedContainerData = ArrayBuffer[Array[Byte]]()
     val usedSerializersNames = ArrayBuffer[String]()
 
@@ -338,9 +338,9 @@ trait AdaptersSerializeDeserializers {
   }
 
   // Returns deserialized msg, deserialized msg data & deserializer name applied.
-  final def deserialize(data: Array[Byte]): (MessageContainerBase, String) = {
+  final def deserialize(data: Array[Byte]): (ContainerInterface, String) = {
 
-    var container: MessageContainerBase = null
+    var container: ContainerInterface = null
     var deserializerName: String = null
 
     //FIXME:- Convert incoming data into message using deserializer
@@ -349,17 +349,15 @@ trait AdaptersSerializeDeserializers {
   }
 
   // Returns deserialized msg, deserialized msg data & deserializer name applied.
-  final def deserialize(data: Array[Byte], deserializerName: String): (MessageContainerBase, String) = {
+  final def deserialize(data: Array[Byte], deserializerName: String): (ContainerInterface, String) = {
 
-    var container: MessageContainerBase = null
+    var container: ContainerInterface = null
 
     //FIXME:- Convert incoming data into message using deserializer
 
     (container, deserializerName)
   }
-
-
 }
 
-case class MessageContainerBaseWithModFlag(modified: Boolean, value: MessageContainerBase)
+// case class MessageContainerBaseWithModFlag(modified: Boolean, value: MessageContainerBase)
 
