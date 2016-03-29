@@ -406,6 +406,9 @@ class CsvSerDeser(val mgr : MdMgr
         val containerTypeName : String = rawCsvFields.head
         val containerCsvFields : Array[String] = rawCsvFields.tail
 
+        /** Fixme: were we to support more than the "current" type, the version key would be part of the column 1 serialization...
+          *  used to discern which type is to be deserialized */
+
         val basetypedef : BaseTypeDef = mdMgr.ActiveType(containerTypeName)
         if (basetypedef == null) {
             logger.error("The supplied CSV record's first field that describes the container type was not found in the metadata...abandoning processing")

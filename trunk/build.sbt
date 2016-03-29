@@ -203,7 +203,7 @@ lazy val JsonSerDeser = project.in(file("Utils/AdapterSerializers/JsonSerDeser")
 
 lazy val CsvSerDeser = project.in(file("Utils/AdapterSerializers/CsvSerDeser")) dependsOn(KamanjaVersion, KamanjaBase)
 
-lazy val KryoSerDeser = project.in(file("Utils/AdapterSerializers/KryoSerDeser")) dependsOn(KamanjaVersion, KamanjaBase)
+lazy val KBinarySerDeser = project.in(file("Utils/AdapterSerializers/KBinarySerDeser")) dependsOn(KamanjaVersion, KamanjaBase, BaseTypes)
 
 
 

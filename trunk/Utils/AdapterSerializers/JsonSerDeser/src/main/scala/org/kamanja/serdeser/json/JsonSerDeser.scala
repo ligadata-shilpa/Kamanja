@@ -86,6 +86,8 @@ class JSONSerDes(val mgr : MdMgr
             throw new UnsupportedObjectException(s"type name $containerNameJson is not a fixed or mapped message container type... serialize fails.",null)
         }
 
+        /** Fixme: were we to support more than the "current" type, the version key above would be used to discern which type is to be deserialized */
+
         /**
           * Note:
           * The fields from the ContainerInstance are unordered, a java.util.HashMap.  Similarly the fields found in a
@@ -460,6 +462,8 @@ class JSONSerDes(val mgr : MdMgr
             throw new MissingPropertyException("the supplied byte array to deserialize does not have a known container name.", null)
         }
 
+        /** Fixme: were we to support more than the "current" type, the version key above would be used to discern which type is to be deserialized */
+
         /** get an empty ContainerInterface instance for this type name from the objResolver */
         val ci : ContainerInterface = objResolver.getInstance(classLoader, containerNameJson)
         if (ci == null) {
@@ -669,7 +673,7 @@ class JSONSerDes(val mgr : MdMgr
       * @return
       */
     def jsonAsMutableMap(mapTypeInfo : ContainerTypeDef, collElements : Map[String,Any]) : scala.collection.mutable.Map[Any,Any] = {
-        val memberTypes : Array[BaseTypeDef] = mapTypeInfo.asInstanceOf[ImmutableMapTypeDef].ElementTypes
+        val memberTypes : Array[BaseTypeDef] = mapTypeInfo.asInstanceOf[MapTypeDef].ElementTypes
         val sanityChk : Boolean = memberTypes.length == 2
         val keyType : BaseTypeDef = memberTypes.head
         val valType : BaseTypeDef = memberTypes.last

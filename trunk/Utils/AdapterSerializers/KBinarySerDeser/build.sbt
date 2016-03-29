@@ -1,4 +1,4 @@
-name := "CsvSerDeser"
+name := "KBinarySerDeser"
 
 version := "1.0"
 

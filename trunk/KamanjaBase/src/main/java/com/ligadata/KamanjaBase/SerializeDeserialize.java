@@ -24,8 +24,8 @@ public interface SerializeDeserialize {
      */
     public byte[] serialize(ContainerInterface v);
     /**
-     * From the supplied byte array, resurrect an instance of type T.
-     * @param b the byte array containing the serialized instance of type T
+     * From the supplied byte array, resurrect a ContainerInterface instance.
+     * @param b the byte array containing the ContainerInterface instance
      * @return an instance of T
      */
     public ContainerInterface deserialize(byte[] b);
