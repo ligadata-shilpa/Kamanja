@@ -134,12 +134,9 @@ lazy val Metadata = project.in(file("Metadata"))
   .settings(TestSettings.settings: _*)
   .dependsOn(Exceptions)
 
-lazy val MessageDef = project.in(file("MessageDef"))
-  .configs(TestConfigs.all: _*)
-  .settings(TestSettings.settings: _*)
-  .dependsOn(Metadata, MetadataBootstrap, Exceptions)
+// lazy val MessageDef = project.in(file("MessageDef")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(Metadata, MetadataBootstrap, Exceptions)
 
-lazy val GenericMsgCompiler = project.in(file("GenericMsgCompiler"))
+lazy val MessageCompiler = project.in(file("MessageCompiler"))
   .configs(TestConfigs.all: _*)
   .settings(TestSettings.settings: _*)
   .dependsOn(Metadata, MetadataBootstrap, Exceptions)
@@ -175,7 +172,7 @@ lazy val MethodExtractor = project.in(file("Pmml/MethodExtractor"))
 lazy val MetadataAPI = project.in(file("MetadataAPI"))
   .configs(TestConfigs.all: _*)
   .settings(TestSettings.settings: _*)
-  .dependsOn(StorageManager,Metadata,MessageDef,PmmlCompiler,Serialize,ZooKeeperClient,ZooKeeperListener,Exceptions, SecurityAdapterBase, KamanjaUtils, HeartBeat, KamanjaBase, JpmmlFactoryOfModelInstanceFactory, SimpleApacheShiroAdapter % "test")
+  .dependsOn(StorageManager,Metadata,MessageCompiler,PmmlCompiler,Serialize,ZooKeeperClient,ZooKeeperListener,Exceptions, SecurityAdapterBase, KamanjaUtils, HeartBeat, KamanjaBase, JpmmlFactoryOfModelInstanceFactory, SimpleApacheShiroAdapter % "test")
 
 lazy val MetadataBootstrap = project.in(file("MetadataBootstrap/Bootstrap"))
   .configs(TestConfigs.all: _*)
@@ -393,9 +390,9 @@ lazy val MigrateFrom_V_1_3 = project.in(file("Utils/Migrate/SourceVersion/Migrat
 lazy val jtm = project.in(file("GenerateModels/jtm"))
   .configs(TestConfigs.all: _*)
   .settings(TestSettings.settings: _*)
-  .dependsOn(Metadata, KamanjaBase, Exceptions, MetadataBootstrap, MessageDef)
+  .dependsOn(Metadata, KamanjaBase, Exceptions, MetadataBootstrap, MessageCompiler)
 
-lazy val runtime = project.in(file("GenerateModels/Runtime")) dependsOn(Metadata, KamanjaBase, Exceptions, MetadataBootstrap, MessageDef)
+lazy val runtime = project.in(file("GenerateModels/Runtime")) dependsOn(Metadata, KamanjaBase, Exceptions, MetadataBootstrap, MessageCompiler)
 
 lazy val InstallDriverBase = project.in(file("Utils/ClusterInstaller/InstallDriverBase"))
   .configs(TestConfigs.all: _*)
@@ -436,6 +433,6 @@ val root = (project in file(".")).
     name := "KamanjaManager",
     unidocProjectFilter in (ScalaUnidoc, unidoc) := inAnyProject -- inProjects(MigrateFrom_V_1_1, MigrateFrom_V_1_2)
   ).
-  aggregate(BaseTypes, BaseFunctions, Serialize, ZooKeeperClient, ZooKeeperListener, Exceptions, KamanjaBase, DataDelimiters, KamanjaManager, InputOutputAdapterBase, KafkaSimpleInputOutputAdapters, FileSimpleInputOutputAdapters, SimpleEnvContextImpl, StorageBase, Metadata, MessageDef, PmmlRuntime, PmmlCompiler, PmmlUdfs, MethodExtractor, MetadataAPI, MetadataBootstrap, MetadataAPIService, MetadataAPIServiceClient, SimpleKafkaProducer, KVInit, ZooKeeperLeaderLatch, JsonDataGen, NodeInfoExtract, Controller, SimpleApacheShiroAdapter, AuditAdapters, CustomUdfLib, JdbcDataCollector, ExtractData, InterfacesSamples, StorageCassandra, StorageHashMap, StorageHBase, StorageTreeMap, StorageSqlServer, StorageManager, AuditAdapterBase, SecurityAdapterBase, KamanjaUtils, UtilityService, HeartBeat, TransactionService, KvBase, FileDataConsumer, CleanUtil, SaveContainerDataComponent, UtilsForModels, JarFactoryOfModelInstanceFactory, JpmmlFactoryOfModelInstanceFactory, MigrateBase, MigrateManager)
+  aggregate(BaseTypes, BaseFunctions, Serialize, ZooKeeperClient, ZooKeeperListener, Exceptions, KamanjaBase, DataDelimiters, KamanjaManager, InputOutputAdapterBase, KafkaSimpleInputOutputAdapters, FileSimpleInputOutputAdapters, SimpleEnvContextImpl, StorageBase, Metadata, MessageCompiler, PmmlRuntime, PmmlCompiler, PmmlUdfs, MethodExtractor, MetadataAPI, MetadataBootstrap, MetadataAPIService, MetadataAPIServiceClient, SimpleKafkaProducer, KVInit, ZooKeeperLeaderLatch, JsonDataGen, NodeInfoExtract, Controller, SimpleApacheShiroAdapter, AuditAdapters, CustomUdfLib, JdbcDataCollector, ExtractData, InterfacesSamples, StorageCassandra, StorageHashMap, StorageHBase, StorageTreeMap, StorageSqlServer, StorageManager, AuditAdapterBase, SecurityAdapterBase, KamanjaUtils, UtilityService, HeartBeat, TransactionService, KvBase, FileDataConsumer, CleanUtil, SaveContainerDataComponent, UtilsForModels, JarFactoryOfModelInstanceFactory, JpmmlFactoryOfModelInstanceFactory, MigrateBase, MigrateManager)
 
 */
