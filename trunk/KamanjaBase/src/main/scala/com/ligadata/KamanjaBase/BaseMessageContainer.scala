@@ -147,7 +147,7 @@ trait MessageContainerObjBase {
 }
 
 trait MdBaseResolveInfo {
-  def getMessgeOrContainerInstance(typName: String): MessageContainerBase
+  def getMessgeOrContainerInstance(typName: String): ContainerInterface
 }
 
 /*
