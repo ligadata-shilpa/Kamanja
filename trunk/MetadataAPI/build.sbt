@@ -4,8 +4,6 @@ import Keys._
 
 shellPrompt := { state =>  "sbt (%s)> ".format(Project.extract(state).currentProject.id) }
 
-
-
 mainClass in assembly := Some("com.ligadata.MetadataAPI.StartMetadataAPI")
 
 assemblyOption in assembly ~= { _.copy(prependShellScript = Some(defaultShellScript)) }
@@ -75,7 +73,7 @@ libraryDependencies += "org.apache.logging.log4j" % "log4j-core" % "2.4.1"
 
 libraryDependencies += "org.json4s" %% "json4s-native" % "3.2.9" 
 
-libraryDependencies += "org.json4s" %% "json4s-jackson" % "3.2.9" 
+libraryDependencies += "org.json4s" %% "json4s-jackson" % "3.2.9"
 
 libraryDependencies += "org.apache.zookeeper" % "zookeeper" % "3.4.6"
 
@@ -101,8 +99,21 @@ libraryDependencies ++= Seq(
  "org.apache.shiro" % "shiro-root" % "1.2.3"
 )
 
+libraryDependencies := {
+  CrossVersion.partialVersion(scalaVersion.value) match {
+    // if scala 2.11+ is used, add dependency on scala-xml module
+    case Some((2, scalaMajor)) if scalaMajor >= 11 =>
+      libraryDependencies.value ++ Seq("com.typesafe.play" % "play_2.11" % "2.5.0")
+    case _ =>
+      // or just libraryDependencies.value if you don't depend on scala-swing
+      libraryDependencies.value ++ Seq("com.typesafe.play" % "play_2.10" % "2.4.6")
+  }
+}
+
 scalacOptions += "-deprecation"
 
 retrieveManaged := true
 
 parallelExecution := false
+
+ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) }

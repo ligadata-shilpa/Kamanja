@@ -191,6 +191,8 @@ lazy val GetComponent = project.in(file("Utils/ClusterInstaller/GetComponent"))
 
 lazy val PmmlTestTool = project.in(file("Utils/PmmlTestTool")) dependsOn (KamanjaVersion)
 
+ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) }
+
 /*
 
 val commonSettings = Seq(
