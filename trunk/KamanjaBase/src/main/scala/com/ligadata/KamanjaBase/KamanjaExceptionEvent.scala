@@ -2,7 +2,7 @@ package com.ligadata.KamanjaBase
 import java.io.{DataInputStream, DataOutputStream}
 import org.apache.logging.log4j.{Logger, LogManager}
 
-object KamanjaExceptionEvent extends RDDObject[KamanjaExceptionEvent] with BaseMsgObj {
+object KamanjaExceptionEvent extends RDDObject[KamanjaExceptionEvent] with MessageFactoryInterface {
   override def NeedToTransformData: Boolean = false
 
   override def FullName: String = "com.ligadata.KamanjaBase.KamanjaExceptionEvent"
@@ -13,7 +13,7 @@ object KamanjaExceptionEvent extends RDDObject[KamanjaExceptionEvent] with BaseM
 
   override def Version: String = "000001.000002.000000"
 
-  override def CreateNewMessage: BaseMsg = new KamanjaExceptionEvent()
+  override def CreateNewMessage: MessageInterface = new KamanjaExceptionEvent()
 
   override def IsFixed: Boolean = true;
 
@@ -67,7 +67,7 @@ object KamanjaExceptionEvent extends RDDObject[KamanjaExceptionEvent] with BaseM
 
 }
 
-class KamanjaExceptionEvent(var transactionId: Long, other: KamanjaExceptionEvent) extends BaseMsg {
+class KamanjaExceptionEvent(var transactionId: Long, other: KamanjaExceptionEvent) extends MessageInterface {
   override def IsFixed: Boolean = KamanjaExceptionEvent.IsFixed;
 
   override def IsKv: Boolean = KamanjaExceptionEvent.IsKv;
@@ -142,10 +142,10 @@ class KamanjaExceptionEvent(var transactionId: Long, other: KamanjaExceptionEven
 
   private val LOG = LogManager.getLogger(getClass)
 
-  override def AddMessage(childPath: Array[(String, String)], msg: BaseMsg): Unit = {}
+  override def AddMessage(childPath: Array[(String, String)], msg: MessageInterface): Unit = {}
 
 
-  override def GetMessage(childPath: Array[(String, String)], primaryKey: Array[String]): com.ligadata.KamanjaBase.BaseMsg = {
+  override def GetMessage(childPath: Array[(String, String)], primaryKey: Array[String]): com.ligadata.KamanjaBase.MessageInterface = {
     return null
   }
 
@@ -230,7 +230,7 @@ class KamanjaExceptionEvent(var transactionId: Long, other: KamanjaExceptionEven
     this(0, null)
   }
 
-  override def Clone(): MessageContainerBase = {
+  override def Clone(): ContainerInterface = {
     KamanjaExceptionEvent.build(this)
   }
 

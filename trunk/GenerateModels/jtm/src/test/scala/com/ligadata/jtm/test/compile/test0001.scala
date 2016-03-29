@@ -19,7 +19,7 @@ import com.ligadata.KvBase.TimeRange
 import com.ligadata.kamanja.metadata.ModelDef
 import com.ligadata.Utils._
 class Factory(modelDef: ModelDef, nodeContext: NodeContext) extends ModelInstanceFactory(modelDef, nodeContext) {
-  override def isValidMessage(msg: MessageContainerBase): Boolean = {
+  override def isValidMessage(msg: ContainerInterface): Boolean = {
     msg.isInstanceOf[com.ligadata.kamanja.test001.v1000000.msg1]
   }
   override def createModelInstance(): ModelInstance = return new Model(this)

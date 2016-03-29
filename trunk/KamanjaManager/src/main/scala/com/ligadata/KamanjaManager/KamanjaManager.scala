@@ -595,7 +595,7 @@ class KamanjaManager extends Observer {
     }
 
     // Jars loaded, create the status factory
-    val statusEventFactory = KamanjaMetadata.getMessgeInfo("system.KamanjaStatusEvent").contmsgobj.asInstanceOf[BaseMsgObj]
+    val statusEventFactory = KamanjaMetadata.getMessgeInfo("system.KamanjaStatusEvent").contmsgobj.asInstanceOf[MessageFactoryInterface]
 
     val exceptionStatusAdaps = scala.collection.mutable.Set[String]()
     var curCntr = 0

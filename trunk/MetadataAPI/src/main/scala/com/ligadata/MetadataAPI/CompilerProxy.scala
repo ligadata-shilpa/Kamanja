@@ -914,13 +914,13 @@ class CompilerProxy {
   }
 
 
-  def getMessageInst(msgName: String, loaderInfo: KamanjaLoaderInfo): com.ligadata.KamanjaBase.MessageContainerBase = {
+  def getMessageInst(msgName: String, loaderInfo: KamanjaLoaderInfo): com.ligadata.KamanjaBase.ContainerInterface = {
     var isMsg = true
     var curClass: Class[_] = null
     var loader = loaderInfo.loader
     var objInst: Any = null
     var clsName: String = null
-    var messageObj: BaseMsg = null
+    var messageObj: MessageInterface = null
     try {
       val o = MdMgr.GetMdMgr.Message(msgName, -1, true)
       if (o == None) {
@@ -938,7 +938,7 @@ class CompilerProxy {
 
       while (curClz != null && isMsg == false) {
         logger.debug("getMessageInst: class name => " + curClz.getName())
-        isMsg = Utils.isDerivedFrom(curClz, "com.ligadata.KamanjaBase.BaseMsg")
+        isMsg = Utils.isDerivedFrom(curClz, "com.ligadata.KamanjaBase.MessageInterface")
         if (isMsg == false) {
           curClz = curClz.getSuperclass()
         }
@@ -958,19 +958,19 @@ class CompilerProxy {
           val module = loaderInfo.mirror.staticModule(clsName)
           val obj = loaderInfo.mirror.reflectModule(module)
           objInst = obj.instance
-          if (objInst.isInstanceOf[BaseMsgObj]) {
-            messageObj = objInst.asInstanceOf[BaseMsgObj].CreateNewMessage
+          if (objInst.isInstanceOf[MessageFactoryInterface]) {
+            messageObj = objInst.asInstanceOf[MessageFactoryInterface].CreateNewMessage
           }
         } catch {
           case e: Exception => {
             // Trying Regular Object instantiation, applicable to java
             logger.debug("", e)
-            messageObj = curClass.newInstance.asInstanceOf[BaseMsg]
+            messageObj = curClass.newInstance.asInstanceOf[MessageInterface]
           }
         }
         //objInst = curClass.newInstance
         logger.debug("getMessageInst: return objInst for " + clsName)
-        return messageObj.asInstanceOf[com.ligadata.KamanjaBase.MessageContainerBase]
+        return messageObj.asInstanceOf[com.ligadata.KamanjaBase.ContainerInterface]
       } catch {
         case e: Exception => {
           logger.debug("Failed to instantiate message object:" + clsName, e)

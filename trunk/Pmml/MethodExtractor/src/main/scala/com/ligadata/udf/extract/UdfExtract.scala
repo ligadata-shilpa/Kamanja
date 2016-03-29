@@ -366,11 +366,11 @@ Usage: scala com.ligadata.udf.extract.MethodExtract --object <fully qualifed sca
 
     mgr.AddFixedContainer(MdMgr.sysNS, "EnvContext", "com.ligadata.KamanjaBase.EnvContext", List(), ownerId, 0, 0)
 
-    mgr.AddFixedContainer(MdMgr.sysNS, "BaseMsg", "com.ligadata.KamanjaBase.BaseMsg", List(), ownerId, 0, 0)
+    mgr.AddFixedContainer(MdMgr.sysNS, "MessageInterface", "com.ligadata.KamanjaBase.MessageInterface", List(), ownerId, 0, 0)
 
-    mgr.AddFixedContainer(MdMgr.sysNS, "BaseContainer", "com.ligadata.KamanjaBase.BaseContainer", List(), ownerId, 0, 0)
+    mgr.AddFixedContainer(MdMgr.sysNS, "ContainerInterface", "com.ligadata.KamanjaBase.ContainerInterface", List(), ownerId, 0, 0)
 
-    mgr.AddFixedContainer(MdMgr.sysNS, "MessageContainerBase", "com.ligadata.KamanjaBase.MessageContainerBase", List(), ownerId, 0, 0)
+    mgr.AddFixedContainer(MdMgr.sysNS, "ContainerInterface", "com.ligadata.KamanjaBase.ContainerInterface", List(), ownerId, 0, 0)
 
     mgr
   }

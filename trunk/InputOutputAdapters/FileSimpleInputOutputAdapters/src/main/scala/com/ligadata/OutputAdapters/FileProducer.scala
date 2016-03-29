@@ -16,7 +16,7 @@
 
 package com.ligadata.OutputAdapters
 
-import com.ligadata.KamanjaBase.{MessageContainerBase, TransactionContext, NodeContext}
+import com.ligadata.KamanjaBase.{ContainerInterface, TransactionContext, NodeContext}
 import org.apache.logging.log4j.{ Logger, LogManager }
 import java.io._
 import java.util.zip.{ZipException, GZIPOutputStream}
@@ -92,7 +92,7 @@ class FileProducer(val inputConfig: AdapterConfiguration, val nodeContext: NodeC
 
   // Locking before we write into file
   // To send an array of messages. messages.size should be same as partKeys.size
-  protected override def send(tnxCtxt: TransactionContext, outputContainers: Array[MessageContainerBase], serializedContainerData: Array[Array[Byte]], serializerNames: Array[String]): Unit = _lock.synchronized {
+  protected override def send(tnxCtxt: TransactionContext, outputContainers: Array[ContainerInterface], serializedContainerData: Array[Array[Byte]], serializerNames: Array[String]): Unit = _lock.synchronized {
     if (outputContainers.size != serializedContainerData.size || outputContainers.size != serializerNames.size) {
       LOG.error("File input adapter " + fc.Name + ": Messages, messages serialized data & serializer names should has same number of elements. Messages:%d, Messages Serialized data:%d, serializerNames:%d".format(outputContainers.size, serializedContainerData.size, serializerNames.size))
       //TODO Need to record an error here... is this a job for the ERROR Q?

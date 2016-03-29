@@ -48,11 +48,11 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
   var models = Array[(String, MdlInfo, Boolean, ModelInstance, Boolean)]()
   var validateMsgsForMdls = scala.collection.mutable.Set[String]() // Message Names for creating models inst val results = RunAllModels(transId, iances
 
-  var messageEventFactory: BaseMsgObj = null
-  var modelEventFactory: BaseMsgObj = null
-  var exceptionEventFactory: BaseMsgObj = null
+  var messageEventFactory: MessageFactoryInterface = null
+  var modelEventFactory: MessageFactoryInterface = null
+  var exceptionEventFactory: MessageFactoryInterface = null
   var tempBlah = 3
-  private def RunAllModels(transId: Long, inputData: Array[Byte], finalTopMsgOrContainer: MessageContainerBase, txnCtxt: TransactionContext, uk: String, uv: String, msgEvent: KamanjaMessageEvent): Array[SavedMdlResult] = {
+  private def RunAllModels(transId: Long, inputData: Array[Byte], finalTopMsgOrContainer: ContainerInterface, txnCtxt: TransactionContext, uk: String, uv: String, msgEvent: KamanjaMessageEvent): Array[SavedMdlResult] = {
     var results: ArrayBuffer[SavedMdlResult] = new ArrayBuffer[SavedMdlResult]()
     var oMsgIds: ArrayBuffer[Long] = new ArrayBuffer[Long]()
 
@@ -279,16 +279,16 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
     val returnOutput = ArrayBuffer[(String, String, String)]() // Adapter/Queue name, PartitionKey & output message 
 
     var isValidMsg = false
-    var msg: BaseMsg = null
+    var msg: MessageInterface = null
     var createdNewMsg = false
     var isValidPartitionKey = false
     var partKeyDataList: List[String] = null
 
     // The first time throught this, init the Event Obj for metrics reporting
     if (messageEventFactory == null) {
-      messageEventFactory = KamanjaMetadata.getMessgeInfo("system.KamanjaMessageEvent").contmsgobj.asInstanceOf[BaseMsgObj]
-      modelEventFactory = KamanjaMetadata.getMessgeInfo("system.KamanjaModelEvent").contmsgobj.asInstanceOf[BaseMsgObj]
-      exceptionEventFactory = KamanjaMetadata.getMessgeInfo("system.KamanjaExceptionEvent").contmsgobj.asInstanceOf[BaseMsgObj]
+      messageEventFactory = KamanjaMetadata.getMessgeInfo("system.KamanjaMessageEvent").contmsgobj.asInstanceOf[MessageFactoryInterface]
+      modelEventFactory = KamanjaMetadata.getMessgeInfo("system.KamanjaModelEvent").contmsgobj.asInstanceOf[MessageFactoryInterface]
+      exceptionEventFactory = KamanjaMetadata.getMessgeInfo("system.KamanjaExceptionEvent").contmsgobj.asInstanceOf[MessageFactoryInterface]
     }
 
     // Initialize Event message
@@ -300,16 +300,16 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
 
     try {
       if (msgInfo != null && inputdata != null) {
-        val partKeyData = if (msgInfo.contmsgobj.asInstanceOf[BaseMsgObj].CanPersist) msgInfo.contmsgobj.asInstanceOf[BaseMsgObj].PartitionKeyData(inputdata) else null
+        val partKeyData = if (msgInfo.contmsgobj.asInstanceOf[MessageFactoryInterface].CanPersist) msgInfo.contmsgobj.asInstanceOf[MessageFactoryInterface].PartitionKeyData(inputdata) else null
         isValidPartitionKey = (partKeyData != null && partKeyData.size > 0)
         partKeyDataList = if (isValidPartitionKey) partKeyData.toList else null
-        val primaryKey = if (isValidPartitionKey) msgInfo.contmsgobj.asInstanceOf[BaseMsgObj].PrimaryKeyData(inputdata) else null
+        val primaryKey = if (isValidPartitionKey) msgInfo.contmsgobj.asInstanceOf[MessageFactoryInterface].PrimaryKeyData(inputdata) else null
         val primaryKeyList = if (primaryKey != null && primaryKey.size > 0) primaryKey.toList else null
         if (isValidPartitionKey && primaryKeyList != null) {
           try {
             val fndmsg = txnCtxt.getNodeCtxt.getEnvCtxt.getObject(transId, msgType, partKeyDataList, primaryKeyList)
             if (fndmsg != null) {
-              msg = fndmsg.asInstanceOf[BaseMsg]
+              msg = fndmsg.asInstanceOf[MessageInterface]
               LOG.debug("Found %s message for given partitionkey:%s, primarykey:%s. Msg partitionkey:%s, primarykey:%s".format(msgType, if (partKeyDataList != null) partKeyDataList.mkString(",") else "", if (primaryKeyList != null) primaryKeyList.mkString(",") else "", msg.PartitionKeyData.mkString(","), msg.PrimaryKeyData.mkString(",")))
             } else {
               LOG.debug("Not Found %s message for given partitionkey:%s, primarykey:%s.".format(msgType, if (partKeyDataList != null) partKeyDataList.mkString(",") else "", if (primaryKeyList != null) primaryKeyList.mkString(",") else ""))
@@ -334,7 +334,7 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
         }
         if (msg == null) {
           createdNewMsg = true
-          msg = msgInfo.contmsgobj.asInstanceOf[BaseMsgObj].CreateNewMessage
+          msg = msgInfo.contmsgobj.asInstanceOf[MessageFactoryInterface].CreateNewMessage
         }
         msg.populate(inputdata)
         isValidMsg = true

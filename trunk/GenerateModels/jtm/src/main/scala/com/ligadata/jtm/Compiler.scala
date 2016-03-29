@@ -552,7 +552,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           val newExpression = Expressions.FixupColumnNames(f, innerMapping, aliaseMessages)
           logger.trace("Matched where expression {}", newExpression)
           // Output the actual filter
-          collect ++= Array("if (%s) return Array.empty[BaseMsg]\n".format(newExpression))
+          collect ++= Array("if (%s) return Array.empty[MessageInterface]\n".format(newExpression))
           false
         } else {
           true
@@ -763,7 +763,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
       """|if(%s) {
          |%s
          |} else {
-         |  Array.empty[BaseMsg]
+         |  Array.empty[MessageInterface]
          |}
          |""".stripMargin('|').format(check, calls)
     })
@@ -782,7 +782,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
         val names = deps.map( m => { "msg%d: %s".format(incomingToMsgId.get(m).get, ResolveToVersionedClassname(md, m))}).mkString(", ")
 
         methods :+= transformation.Comment
-        methods :+= "def exeGenerated_%s_%d(%s): Array[BaseMsg] = {".format(t, depId, names)
+        methods :+= "def exeGenerated_%s_%d(%s): Array[MessageInterface] = {".format(t, depId, names)
 
         // Collect form metadata
         val inputs: Array[Element] = ColumnNames(md, deps).map( e => {
@@ -854,7 +854,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           }
 
           var collect = Array.empty[String]
-          collect ++= Array("\ndef process_%s(): Array[BaseMsg] = {\n".format(o._1))
+          collect ++= Array("\ndef process_%s(): Array[MessageInterface] = {\n".format(o._1))
           collect ++= collectInner
 
           {
@@ -916,7 +916,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
       })
     })
 
-    val resultVar = "val results: Array[BaseMsg] = \n"
+    val resultVar = "val results: Array[MessageInterface] = \n"
     val returnValue = "result"
     subtitutions.Add("model.grok", groks.mkString("\n"))
     subtitutions.Add("model.message", messages.mkString("\n"))

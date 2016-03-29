@@ -57,13 +57,13 @@ object MetadataLoad {
   val baseTypesUniqId : Long = 0
   val baseTypesElementId : Long = 0
 	val scalaVer = scala.util.Properties.versionNumberString.subSequence(0,4)
-	def BaseContainersInfo: Array[(String, String, String, List[(String, String, String, String, Boolean, String)])] = {
+	def ContainerInterfacesInfo: Array[(String, String, String, List[(String, String, String, String, Boolean, String)])] = {
 		// nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)
 		return Array[(String, String, String, List[(String, String, String, String, Boolean, String)])](
 			(MdMgr.sysNS, "EnvContext", "com.ligadata.KamanjaBase.EnvContext", List()),
-			(MdMgr.sysNS, "BaseMsg", "com.ligadata.KamanjaBase.BaseMsg", List()),
-			(MdMgr.sysNS, "BaseContainer", "com.ligadata.KamanjaBase.BaseContainer", List()),
-			(MdMgr.sysNS, "MessageContainerBase", "com.ligadata.KamanjaBase.MessageContainerBase", List()),
+			(MdMgr.sysNS, "MessageInterface", "com.ligadata.KamanjaBase.MessageInterface", List()),
+			(MdMgr.sysNS, "ContainerInterface", "com.ligadata.KamanjaBase.ContainerInterface", List()),
+			(MdMgr.sysNS, "ContainerInterface", "com.ligadata.KamanjaBase.ContainerInterface", List()),
 			(MdMgr.sysNS, "Context", "com.ligadata.pmml.runtime.Context", List()))
 	}
 
@@ -83,8 +83,8 @@ class MetadataLoad (val mgr : MdMgr, val typesPath : String, val fcnPath : Strin
 		logger.debug("MetadataLoad...loading typedefs")
 		InitTypeDefs
 
-		logger.debug("MetadataLoad...loading BaseContainers definitions")
-		InitBaseContainers
+		logger.debug("MetadataLoad...loading ContainerInterfaces definitions")
+		InitContainerInterfaces
 	    
     logger.debug("MetadataLoad...loading Metric Message definitions")
     InitBaseMessages
@@ -118,8 +118,8 @@ class MetadataLoad (val mgr : MdMgr, val typesPath : String, val fcnPath : Strin
   }
 
 	// CMS messages + the dimensional data (treated as Containers)
-	def InitBaseContainers: Unit = {
-		val baseContainerInfo = MetadataLoad.BaseContainersInfo
+	def InitContainerInterfaces: Unit = {
+		val baseContainerInfo = MetadataLoad.ContainerInterfacesInfo
 		baseContainerInfo.foreach(bc => {
 			logger.debug("MetadataLoad...loading " + bc._2)
 			mgr.AddFixedContainer(bc._1, bc._2, bc._3, bc._4, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
@@ -558,8 +558,8 @@ def initTypesFor_com_ligadata_pmml_udfs_Udfs {
 		mgr.AddSet(MdMgr.sysNS, "SetOfTupleOfAny2", MdMgr.sysNS, "TupleOfAny2", MetadataLoad.baseTypesVer, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
 		mgr.AddArrayBuffer("System", "ArrayBufferOfTupleOfAny2", "System", "TupleOfAny2", 1, MetadataLoad.baseTypesVer, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
 
-		mgr.AddArray("System", "ArrayOfBaseContainer", "System", "BaseContainer", 1, MetadataLoad.baseTypesVer, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
-		mgr.AddArray("System", "ArrayOfMessageContainerBase", "System", "MessageContainerBase", 1, MetadataLoad.baseTypesVer, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
+		mgr.AddArray("System", "ArrayOfContainerInterface", "System", "ContainerInterface", 1, MetadataLoad.baseTypesVer, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
+		mgr.AddArray("System", "ArrayOfContainerInterface", "System", "ContainerInterface", 1, MetadataLoad.baseTypesVer, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
 	}
 
 
@@ -1114,19 +1114,19 @@ def initTypesFor_com_ligadata_pmml_udfs_Udfs {
 		mgr.AddFunc("Pmml", "IntOr", "com.ligadata.pmml.udfs.Udfs.IntOr", ("System", "Boolean"), List(("boolexpr", "System", "Boolean")), scala.collection.mutable.Set[FcnMacroAttr.Feature](FcnMacroAttr.HAS_INDEFINITE_ARITY), MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
 		mgr.AddFunc("Pmml", "Or", "com.ligadata.pmml.udfs.Udfs.Or", ("System", "Boolean"), List(("boolexpr", "System", "Boolean")), scala.collection.mutable.Set[FcnMacroAttr.Feature](FcnMacroAttr.HAS_INDEFINITE_ARITY), MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
 		
-		mgr.AddFunc("Pmml", "Put", "com.ligadata.pmml.udfs.Udfs.Put", ("System", "Boolean"), List(("xId", "System", "Long"),("gCtx", "System", "EnvContext"),("containerId", "System", "String"),("partKey", "System", "ListOfString"),("value", "System", "BaseMsg")), null, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
-		mgr.AddFunc("Pmml", "Put", "com.ligadata.pmml.udfs.Udfs.Put", ("System", "Boolean"), List(("ctx", "System", "Context"),("containerId", "System", "String"),("partKey", "System", "ListOfString"),("value", "System", "BaseMsg")), null, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
-		mgr.AddFunc("Pmml", "Put", "com.ligadata.pmml.udfs.Udfs.Put", ("System", "Boolean"), List(("xId", "System", "Long"),("gCtx", "System", "EnvContext"),("containerId", "System", "String"),("partKey", "System", "ListOfString"),("value", "System", "BaseContainer")), null, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
-		mgr.AddFunc("Pmml", "Put", "com.ligadata.pmml.udfs.Udfs.Put", ("System", "Boolean"), List(("ctx", "System", "Context"),("containerId", "System", "String"),("partKey", "System", "ListOfString"),("value", "System", "BaseContainer")), null, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
+		mgr.AddFunc("Pmml", "Put", "com.ligadata.pmml.udfs.Udfs.Put", ("System", "Boolean"), List(("xId", "System", "Long"),("gCtx", "System", "EnvContext"),("containerId", "System", "String"),("partKey", "System", "ListOfString"),("value", "System", "MessageInterface")), null, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
+		mgr.AddFunc("Pmml", "Put", "com.ligadata.pmml.udfs.Udfs.Put", ("System", "Boolean"), List(("ctx", "System", "Context"),("containerId", "System", "String"),("partKey", "System", "ListOfString"),("value", "System", "MessageInterface")), null, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
+		mgr.AddFunc("Pmml", "Put", "com.ligadata.pmml.udfs.Udfs.Put", ("System", "Boolean"), List(("xId", "System", "Long"),("gCtx", "System", "EnvContext"),("containerId", "System", "String"),("partKey", "System", "ListOfString"),("value", "System", "ContainerInterface")), null, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
+		mgr.AddFunc("Pmml", "Put", "com.ligadata.pmml.udfs.Udfs.Put", ("System", "Boolean"), List(("ctx", "System", "Context"),("containerId", "System", "String"),("partKey", "System", "ListOfString"),("value", "System", "ContainerInterface")), null, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
 
 
-		mgr.AddFunc("Pmml", "GetArray", "com.ligadata.pmml.udfs.Udfs.GetArray", ("System", "ArrayOfMessageContainerBase"), List(("xId", "System", "Long"),("gCtx", "System", "EnvContext"),("containerId", "System", "String")), null, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
-		mgr.AddFunc("Pmml", "GetArray", "com.ligadata.pmml.udfs.Udfs.GetArray", ("System", "ArrayOfMessageContainerBase"), List(("ctx", "System", "Context"),("containerId", "System", "String")), null, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
-		mgr.AddFunc("Pmml", "GetHistory", "com.ligadata.pmml.udfs.Udfs.GetHistory", ("System", "ArrayOfMessageContainerBase"), List(("xId", "System", "Long"),("gCtx", "System", "EnvContext"),("containerId", "System", "String"),("partKey", "System", "ListOfString"),("appendCurrentChanges", "System", "Boolean")), null, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
-		mgr.AddFunc("Pmml", "GetHistory", "com.ligadata.pmml.udfs.Udfs.GetHistory", ("System", "ArrayOfMessageContainerBase"), List(("ctx", "System", "Context"),("containerId", "System", "String"),("partKey", "System", "ListOfString"),("appendCurrentChanges", "System", "Boolean")), null, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
+		mgr.AddFunc("Pmml", "GetArray", "com.ligadata.pmml.udfs.Udfs.GetArray", ("System", "ArrayOfContainerInterface"), List(("xId", "System", "Long"),("gCtx", "System", "EnvContext"),("containerId", "System", "String")), null, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
+		mgr.AddFunc("Pmml", "GetArray", "com.ligadata.pmml.udfs.Udfs.GetArray", ("System", "ArrayOfContainerInterface"), List(("ctx", "System", "Context"),("containerId", "System", "String")), null, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
+		mgr.AddFunc("Pmml", "GetHistory", "com.ligadata.pmml.udfs.Udfs.GetHistory", ("System", "ArrayOfContainerInterface"), List(("xId", "System", "Long"),("gCtx", "System", "EnvContext"),("containerId", "System", "String"),("partKey", "System", "ListOfString"),("appendCurrentChanges", "System", "Boolean")), null, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
+		mgr.AddFunc("Pmml", "GetHistory", "com.ligadata.pmml.udfs.Udfs.GetHistory", ("System", "ArrayOfContainerInterface"), List(("ctx", "System", "Context"),("containerId", "System", "String"),("partKey", "System", "ListOfString"),("appendCurrentChanges", "System", "Boolean")), null, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
 
-		mgr.AddFunc("Pmml", "Get", "com.ligadata.pmml.udfs.Udfs.Get", ("System", "MessageContainerBase"), List(("xId", "System", "Long"),("gCtx", "System", "EnvContext"),("containerId", "System", "String"),("partKey", "System", "ListOfString"),("primaryKey", "System", "ListOfString")), null, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
-		mgr.AddFunc("Pmml", "Get", "com.ligadata.pmml.udfs.Udfs.Get", ("System", "MessageContainerBase"), List(("ctx", "System", "Context"),("containerId", "System", "String"),("partKey", "System", "ListOfString"),("primaryKey", "System", "ListOfString")), null, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
+		mgr.AddFunc("Pmml", "Get", "com.ligadata.pmml.udfs.Udfs.Get", ("System", "ContainerInterface"), List(("xId", "System", "Long"),("gCtx", "System", "EnvContext"),("containerId", "System", "String"),("partKey", "System", "ListOfString"),("primaryKey", "System", "ListOfString")), null, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
+		mgr.AddFunc("Pmml", "Get", "com.ligadata.pmml.udfs.Udfs.Get", ("System", "ContainerInterface"), List(("ctx", "System", "Context"),("containerId", "System", "String"),("partKey", "System", "ListOfString"),("primaryKey", "System", "ListOfString")), null, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
 
 		mgr.AddFunc("Pmml", "Put", "com.ligadata.pmml.udfs.Udfs.Put", (MdMgr.sysNS, "Boolean"), List(("ctx", "System", "Context"),("variableName", MdMgr.sysNS, "String"), ("value", MdMgr.sysNS, "String")), null, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
 		mgr.AddFunc("Pmml", "Put", "com.ligadata.pmml.udfs.Udfs.Put", (MdMgr.sysNS, "Boolean"), List(("ctx", "System", "Context"),("variableName", MdMgr.sysNS, "String"), ("value", MdMgr.sysNS, "ArrayOfString")), null, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
@@ -1209,10 +1209,10 @@ def initTypesFor_com_ligadata_pmml_udfs_Udfs {
   		mgr.AddFunc("Pmml", "Add", "com.ligadata.pmml.udfs.Udfs.Add", ("System", "ImmutableSetOfAny"), List(("coll", "System", "ImmutableSetOfAny"), ("items", "System", "Any")), scala.collection.mutable.Set[FcnMacroAttr.Feature](FcnMacroAttr.HAS_INDEFINITE_ARITY), MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
   		mgr.AddFunc("Pmml", "Add", "com.ligadata.pmml.udfs.Udfs.Add", ("System", "SetOfAny"), List(("coll", "System", "SetOfAny"), ("items", "System", "Any")), scala.collection.mutable.Set[FcnMacroAttr.Feature](FcnMacroAttr.HAS_INDEFINITE_ARITY), MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
 
-  		mgr.AddFunc("Pmml", "GetPartitionKey", "com.ligadata.pmml.udfs.Udfs.GetPartitionKey", ("System", "ListOfString"), List(("msg", "System", "BaseMsg")), null, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
-  		mgr.AddFunc("Pmml", "GetPartitionKey", "com.ligadata.pmml.udfs.Udfs.GetPartitionKey", ("System", "ListOfString"), List(("msg", "System", "BaseContainer")), null, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
-  		mgr.AddFunc("Pmml", "GetPrimaryKey", "com.ligadata.pmml.udfs.Udfs.GetPrimaryKey", ("System", "ListOfString"), List(("msg", "System", "BaseMsg")), null, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
-  		mgr.AddFunc("Pmml", "GetPrimaryKey", "com.ligadata.pmml.udfs.Udfs.GetPrimaryKey", ("System", "ListOfString"), List(("msg", "System", "BaseContainer")), null, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
+  		mgr.AddFunc("Pmml", "GetPartitionKey", "com.ligadata.pmml.udfs.Udfs.GetPartitionKey", ("System", "ListOfString"), List(("msg", "System", "MessageInterface")), null, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
+  		mgr.AddFunc("Pmml", "GetPartitionKey", "com.ligadata.pmml.udfs.Udfs.GetPartitionKey", ("System", "ListOfString"), List(("msg", "System", "ContainerInterface")), null, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
+  		mgr.AddFunc("Pmml", "GetPrimaryKey", "com.ligadata.pmml.udfs.Udfs.GetPrimaryKey", ("System", "ListOfString"), List(("msg", "System", "MessageInterface")), null, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
+  		mgr.AddFunc("Pmml", "GetPrimaryKey", "com.ligadata.pmml.udfs.Udfs.GetPrimaryKey", ("System", "ListOfString"), List(("msg", "System", "ContainerInterface")), null, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
   		
   		mgr.AddFunc("Pmml", "getXid", "com.ligadata.pmml.udfs.Udfs.getXid", ("System", "Long"), List(("ctx", "System", "Context")), null, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
  	}
@@ -1559,14 +1559,14 @@ def initTypesFor_com_ligadata_pmml_udfs_Udfs {
         mgr.AddFunc("Pmml", "yearsBetween", "com.ligadata.pmml.udfs.Udfs.yearsBetween", ("System", "Long"), List(("time1", "System", "Long"),("time2", "System", "Long"),("inclusive", "System", "Boolean")), null, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
 
   
-		mgr.AddFunc("Pmml", "Version", "com.ligadata.pmml.udfs.Udfs.Version", ("System", "String"), List(("msg", "System", "BaseMsg")), null, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
-		mgr.AddFunc("Pmml", "Version", "com.ligadata.pmml.udfs.Udfs.Version", ("System", "String"), List(("msg", "System", "BaseContainer")), null, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
+		mgr.AddFunc("Pmml", "Version", "com.ligadata.pmml.udfs.Udfs.Version", ("System", "String"), List(("msg", "System", "MessageInterface")), null, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
+		mgr.AddFunc("Pmml", "Version", "com.ligadata.pmml.udfs.Udfs.Version", ("System", "String"), List(("msg", "System", "ContainerInterface")), null, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
 					
 		mgr.AddFunc("Pmml", "GetMsgContainerElseNew", "com.ligadata.pmml.udfs.Udfs.GetMsgContainerElseNew"
-				, ("System", "MessageContainerBase")
+				, ("System", "ContainerInterface")
 				, List(("xId", "System", "Long"),("gCtx", "System", "EnvContext"),("fqClassName", "System", "String"),("containerId", "System", "String"),("partKey", "System", "ListOfString"),("primaryKey", "System", "ListOfString")), null, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
 		mgr.AddFunc("Pmml", "GetMsgContainerElseNew", "com.ligadata.pmml.udfs.Udfs.GetMsgContainerElseNew"
-				, ("System", "MessageContainerBase")
+				, ("System", "ContainerInterface")
 				, List(("ctx", "System", "Context"),("fqClassName", "System", "String"),("containerId", "System", "String"),("partKey", "System", "ListOfString"),("primaryKey", "System", "ListOfString")), null, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
 
 		mgr.AddFunc("Pmml", "ToStringList", "com.ligadata.pmml.udfs.Udfs.ToStringList", ("System", "ListOfString"), List(("args", "System", "Any")), scala.collection.mutable.Set[FcnMacroAttr.Feature](FcnMacroAttr.HAS_INDEFINITE_ARITY), MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
@@ -2098,8 +2098,8 @@ def initTypesFor_com_ligadata_pmml_udfs_Udfs {
 	} """
 		
 		/**	EnvContext write access methods:
-		 * 	  def setObject(transId: Long, containerName: String, key: String, value: MessageContainerBase): Unit
-		 *	  def setObject(transId: Long, containerName: String, key: Any, value: MessageContainerBase): Unit
+		 * 	  def setObject(transId: Long, containerName: String, key: String, value: ContainerInterface): Unit
+		 *	  def setObject(transId: Long, containerName: String, key: Any, value: ContainerInterface): Unit
 		 
           * mgr.AddMacro(MdMgr.sysNS
           * , "Put"
@@ -2107,7 +2107,7 @@ def initTypesFor_com_ligadata_pmml_udfs_Udfs {
           * , List(("gCtx", MdMgr.sysNS, "EnvContext")
           * , ("containerName", MdMgr.sysNS, "String")
           * , ("key", MdMgr.sysNS, "ListOfString")
-          * , ("value", MdMgr.sysNS, "MessageContainerBase"))
+          * , ("value", MdMgr.sysNS, "ContainerInterface"))
           * , fcnMacrofeatures
           * , (putGlobalContainerFixedMacroTemplate,putGlobalContainerMappedMacroTemplate))
 		*/
@@ -2117,7 +2117,7 @@ def initTypesFor_com_ligadata_pmml_udfs_Udfs {
 					, List(("gCtx", MdMgr.sysNS, "EnvContext")
 						, ("containerName", MdMgr.sysNS, "String")
 						, ("key", MdMgr.sysNS, "ListOfString")
-						, ("value", MdMgr.sysNS, "BaseMsg"))
+						, ("value", MdMgr.sysNS, "MessageInterface"))
 					, fcnMacrofeatures
 					, (putGlobalContainerFixedMacroTemplate,putGlobalContainerMappedMacroTemplate), MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
 
@@ -2127,7 +2127,7 @@ def initTypesFor_com_ligadata_pmml_udfs_Udfs {
 					, List(("gCtx", MdMgr.sysNS, "EnvContext")
 						, ("containerName", MdMgr.sysNS, "String")
 						, ("key", MdMgr.sysNS, "ListOfString")
-						, ("value", MdMgr.sysNS, "BaseContainer"))
+						, ("value", MdMgr.sysNS, "ContainerInterface"))
 					, fcnMacrofeatures
 					, (putGlobalContainerFixedMacroTemplate,putGlobalContainerMappedMacroTemplate), MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
 
@@ -2638,7 +2638,7 @@ def initTypesFor_com_ligadata_pmml_udfs_Udfs {
 					,-1)	  
 
 		/** 
-          * DowncastArrayMbr Macro used to cast arrays of MessageContainerBase to arrays of some specified type
+          * DowncastArrayMbr Macro used to cast arrays of ContainerInterface to arrays of some specified type
 		 */			
 		val DowncastArrayMbrTemplate : String =   """%1%.map(itm => itm.asInstanceOf[%2%])"""
 					
@@ -2653,8 +2653,8 @@ def initTypesFor_com_ligadata_pmml_udfs_Udfs {
 		/** 
           * Catalog EnvContext read access macros.  Inject the transaction id as the first arg
 
-          * def getAllObjects(transId: Long, containerName: String): Array[MessageContainerBase]
-          * def getObject(transId: Long, containerName: String, key: String): MessageContainerBase
+          * def getAllObjects(transId: Long, containerName: String): Array[ContainerInterface]
+          * def getObject(transId: Long, containerName: String, key: String): ContainerInterface
 			
           * def contains(transId: Long, containerName: String, key: String): Boolean
           * def containsAny(transId: Long, containerName: String, keys: Array[String]): Boolean
@@ -2666,7 +2666,7 @@ def initTypesFor_com_ligadata_pmml_udfs_Udfs {
 		/** @deprecated("Use <Constant dataType="context">ctx</Constant> as the first arg and match function directly", "2015-Jun-08") */
 		mgr.AddMacro(MdMgr.sysNS
 					, "GetArray"
-					, (MdMgr.sysNS, "ArrayOfMessageContainerBase")
+					, (MdMgr.sysNS, "ArrayOfContainerInterface")
 					, List(("gCtx", MdMgr.sysNS, "EnvContext")
 					    , ("containerName", MdMgr.sysNS, "String"))
 					, fcnMacrofeatures
@@ -2678,7 +2678,7 @@ def initTypesFor_com_ligadata_pmml_udfs_Udfs {
 		/** @deprecated("Use <Constant dataType="context">ctx</Constant> as the first arg and match function directly", "2015-Jun-08") */
 		mgr.AddMacro(MdMgr.sysNS
 					, "GetHistory"
-					, (MdMgr.sysNS, "ArrayOfMessageContainerBase")
+					, (MdMgr.sysNS, "ArrayOfContainerInterface")
 					, List(("gCtx", MdMgr.sysNS, "EnvContext")
 					    , ("containerName", MdMgr.sysNS, "String")
 					    , ("partKey", MdMgr.sysNS, "ListOfString")
@@ -2692,7 +2692,7 @@ def initTypesFor_com_ligadata_pmml_udfs_Udfs {
 		/** @deprecated("Use <Constant dataType="context">ctx</Constant> as the first arg and match function directly", "2015-Jun-08") */
 		mgr.AddMacro(MdMgr.sysNS
 					, "Get"
-					, (MdMgr.sysNS, "MessageContainerBase")
+					, (MdMgr.sysNS, "ContainerInterface")
 					, List(("gCtx", MdMgr.sysNS, "EnvContext")
 					    , ("containerName", MdMgr.sysNS, "String")
 					    , ("partKey", MdMgr.sysNS, "ListOfString")
@@ -2707,7 +2707,7 @@ def initTypesFor_com_ligadata_pmml_udfs_Udfs {
 		/** @deprecated("Use <Constant dataType="context">ctx</Constant> as the first arg and match function directly", "2015-Jun-08") */
 		mgr.AddMacro(MdMgr.sysNS
 					, "GetMsgContainerElseNew"
-					, (MdMgr.sysNS, "MessageContainerBase")
+					, (MdMgr.sysNS, "ContainerInterface")
 					, List(("gCtx", MdMgr.sysNS, "EnvContext")
 					    , ("fqClassName", MdMgr.sysNS, "String")
 					    , ("containerName", MdMgr.sysNS, "String")

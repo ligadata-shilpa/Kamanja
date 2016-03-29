@@ -1134,7 +1134,7 @@ object NodePrinterHelpers extends com.ligadata.pmml.compiler.LogTrait {
 		
 		/** Add the isValidMessage function  */
 		objBuffer.append(s"    $valEvntArrayInstance\n")   
-		objBuffer.append(s"    override def isValidMessage(msg: MessageContainerBase): Boolean = { \n")
+		objBuffer.append(s"    override def isValidMessage(msg: ContainerInterface): Boolean = { \n")
 		objBuffer.append(s"        validMessages.filter( m => m == msg.getClass.getName).size > 0\n")
 		objBuffer.append(s"    }\n")  /** end of isValidMessage fcn  */		
 		objBuffer.append(s"\n")
@@ -1256,7 +1256,7 @@ object NodePrinterHelpers extends com.ligadata.pmml.compiler.LogTrait {
 			/** 
 			 *  Add the initialize function to the the class body 
 			 */
-			clsBuffer.append(s"    def initialize(tmpMsg: MessageContainerBase, gCtx: EnvContext) : $classname = {\n")
+			clsBuffer.append(s"    def initialize(tmpMsg: ContainerInterface, gCtx: EnvContext) : $classname = {\n")
 			clsBuffer.append(s"\n")
 			
 			clsBuffer.append(s"        /** Initialize the data and transformation dictionaries */\n")

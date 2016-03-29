@@ -25,7 +25,7 @@ import com.ligadata.kamanja.metadata.MdMgr._
 import com.ligadata.kamanja.metadataload.MetadataLoad
 import scala.collection.mutable.TreeSet
 import scala.util.control.Breaks._
-import com.ligadata.KamanjaBase.{ BaseMsg, MessageContainerBase, MessageContainerObjBase, BaseMsgObj, BaseContainerObj, BaseContainer, ModelInstanceFactory, EnvContext, MdBaseResolveInfo, FactoryOfModelInstanceFactory, NodeContext, TransactionContext }
+import com.ligadata.KamanjaBase.{ MessageInterface, ContainerInterface, ContainerFactoryInterface, MessageFactoryInterface, ContainerFactoryInterface, ContainerInterface, ModelInstanceFactory, EnvContext, MdBaseResolveInfo, FactoryOfModelInstanceFactory, NodeContext, TransactionContext }
 import scala.collection.mutable.HashMap
 import org.apache.logging.log4j._
 import scala.collection.mutable.ArrayBuffer
@@ -45,7 +45,7 @@ class TransformMsgFldsMap(var keyflds: Array[Int], var outputFlds: Array[Int]) {
 }
 
 // msgobj is null for Containers
-class MsgContainerObjAndTransformInfo(var tranformMsgFlds: TransformMsgFldsMap, var contmsgobj: MessageContainerObjBase) {
+class MsgContainerObjAndTransformInfo(var tranformMsgFlds: TransformMsgFldsMap, var contmsgobj: ContainerFactoryInterface) {
   var parents = new ArrayBuffer[(String, String)] // Immediate parent comes at the end, grand parent last but one, ... Messages/Containers. the format is Message/Container Type name and the variable in that.
   var childs = new ArrayBuffer[(String, String)] // Child Messages/Containers (Name & type). We fill this when we create message and populate parent later from this
 }
@@ -86,7 +86,7 @@ class KamanjaMetadata {
       isMsg = false
 
       while (curClz != null && isMsg == false) {
-        isMsg = Utils.isDerivedFrom(curClz, "com.ligadata.KamanjaBase.BaseMsgObj")
+        isMsg = Utils.isDerivedFrom(curClz, "com.ligadata.KamanjaBase.MessageFactoryInterface")
         if (isMsg == false)
           curClz = curClz.getSuperclass()
       }
@@ -112,8 +112,8 @@ class KamanjaMetadata {
             objinst = curClass.newInstance
           }
         }
-        if (objinst.isInstanceOf[BaseMsgObj]) {
-          val messageobj = objinst.asInstanceOf[BaseMsgObj]
+        if (objinst.isInstanceOf[MessageFactoryInterface]) {
+          val messageobj = objinst.asInstanceOf[MessageFactoryInterface]
           val msgName = msg.FullName.toLowerCase
           var tranformMsgFlds: TransformMsgFldsMap = null
           val mgsObj = new MsgContainerObjAndTransformInfo(tranformMsgFlds, messageobj)
@@ -170,7 +170,7 @@ class KamanjaMetadata {
       isContainer = false
 
       while (curClz != null && isContainer == false) {
-        isContainer = Utils.isDerivedFrom(curClz, "com.ligadata.KamanjaBase.BaseContainerObj")
+        isContainer = Utils.isDerivedFrom(curClz, "com.ligadata.KamanjaBase.ContainerFactoryInterface")
         if (isContainer == false)
           curClz = curClz.getSuperclass()
       }
@@ -197,8 +197,8 @@ class KamanjaMetadata {
           }
         }
 
-        if (objinst.isInstanceOf[BaseContainerObj]) {
-          val containerobj = objinst.asInstanceOf[BaseContainerObj]
+        if (objinst.isInstanceOf[ContainerFactoryInterface]) {
+          val containerobj = objinst.asInstanceOf[ContainerFactoryInterface]
           val contName = container.FullName.toLowerCase
           val contObj = new MsgContainerObjAndTransformInfo(null, containerobj)
           GetChildsFromEntity(container.containerType, contObj.childs)
@@ -389,7 +389,7 @@ class KamanjaMetadata {
     })
 
     val baseContainersPhyName = scala.collection.mutable.Set[String]()
-    val baseContainerInfo = MetadataLoad.BaseContainersInfo
+    val baseContainerInfo = MetadataLoad.ContainerInterfacesInfo
     baseContainerInfo.foreach(bc => {
       baseContainersPhyName += bc._3
     })
@@ -1113,14 +1113,14 @@ object KamanjaMetadata extends MdBaseResolveInfo {
     }
   }
 
-  override def getMessgeOrContainerInstance(MsgContainerType: String): MessageContainerBase = {
+  override def getMessgeOrContainerInstance(MsgContainerType: String): ContainerInterface = {
     var v: MsgContainerObjAndTransformInfo = null
 
     v = getMessageOrContainer(MsgContainerType)
-    if (v != null && v.contmsgobj != null && v.contmsgobj.isInstanceOf[BaseMsgObj]) {
-      return v.contmsgobj.asInstanceOf[BaseMsgObj].CreateNewMessage
-    } else if (v != null && v.contmsgobj != null && v.contmsgobj.isInstanceOf[BaseContainerObj]) { // NOTENOTE: Not considering Base containers here
-      return v.contmsgobj.asInstanceOf[BaseContainerObj].CreateNewContainer
+    if (v != null && v.contmsgobj != null && v.contmsgobj.isInstanceOf[MessageFactoryInterface]) {
+      return v.contmsgobj.asInstanceOf[MessageFactoryInterface].CreateNewMessage
+    } else if (v != null && v.contmsgobj != null && v.contmsgobj.isInstanceOf[ContainerFactoryInterface]) { // NOTENOTE: Not considering Base containers here
+      return v.contmsgobj.asInstanceOf[ContainerFactoryInterface].CreateNewContainer
     }
     return null
   }
@@ -1268,7 +1268,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
   private def localgetMessgeInfo(msgType: String): MsgContainerObjAndTransformInfo = {
     if (messageContainerObjects == null) return null
     val v = messageContainerObjects.getOrElse(msgType.toLowerCase, null)
-    if (v != null && v.contmsgobj != null && v.contmsgobj.isInstanceOf[BaseMsgObj])
+    if (v != null && v.contmsgobj != null && v.contmsgobj.isInstanceOf[MessageFactoryInterface])
       return v
     return null
   }
@@ -1282,7 +1282,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
     if (messageContainerObjects == null) return null
     val v = messageContainerObjects.getOrElse(containerName.toLowerCase, null)
     if ((v != null && v.contmsgobj == null) // Base containers 
-      || (v != null && v.contmsgobj != null && v.contmsgobj.isInstanceOf[BaseContainerObj]))
+      || (v != null && v.contmsgobj != null && v.contmsgobj.isInstanceOf[ContainerFactoryInterface]))
       return v
     return null
   }
@@ -1297,7 +1297,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
     if (messageContainerObjects == null) return null
     messageContainerObjects.filter(o => {
       val v = o._2
-      (v != null && v.contmsgobj != null && v.contmsgobj.isInstanceOf[BaseMsgObj])
+      (v != null && v.contmsgobj != null && v.contmsgobj.isInstanceOf[MessageFactoryInterface])
     }).toMap
   }
 
@@ -1310,7 +1310,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
     messageContainerObjects.filter(o => {
       val v = o._2
       ((v != null && v.contmsgobj == null) // Base containers 
-        || (v != null && v.contmsgobj != null && v.contmsgobj.isInstanceOf[BaseContainerObj]))
+        || (v != null && v.contmsgobj != null && v.contmsgobj.isInstanceOf[ContainerFactoryInterface]))
     }).toMap
   }
 

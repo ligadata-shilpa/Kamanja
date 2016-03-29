@@ -45,8 +45,8 @@ import com.ligadata.KamanjaVersion.KamanjaVersion
 object ExtractData extends MdBaseResolveInfo {
   private val LOG = LogManager.getLogger(getClass);
   private val clsLoaderInfo = new KamanjaLoaderInfo
-  private var _currentMessageObj: BaseMsgObj = null
-  private var _currentContainerObj: BaseContainerObj = null
+  private var _currentMessageObj: MessageFactoryInterface = null
+  private var _currentContainerObj: ContainerFactoryInterface = null
   private var _currentTypName: String = ""
   private var jarPaths: Set[String] = null
   private var _dataStore: DataStore = null
@@ -59,7 +59,7 @@ object ExtractData extends MdBaseResolveInfo {
     LOG.warn("    --version")
   }
 
-  override def getMessgeOrContainerInstance(MsgContainerType: String): MessageContainerBase = {
+  override def getMessgeOrContainerInstance(MsgContainerType: String): ContainerInterface = {
     if (MsgContainerType.compareToIgnoreCase(_currentTypName) == 0) {
       if (_currentMessageObj != null)
         return _currentMessageObj.CreateNewMessage
@@ -181,7 +181,7 @@ object ExtractData extends MdBaseResolveInfo {
         var curClz = Class.forName(clsName, true, clsLoaderInfo.loader)
 
         while (curClz != null && isContainer == false) {
-          isContainer = Utils.isDerivedFrom(curClz, "com.ligadata.KamanjaBase.BaseContainerObj")
+          isContainer = Utils.isDerivedFrom(curClz, "com.ligadata.KamanjaBase.ContainerFactoryInterface")
           if (isContainer == false)
             curClz = curClz.getSuperclass()
         }
@@ -209,7 +209,7 @@ object ExtractData extends MdBaseResolveInfo {
         var curClz = Class.forName(clsName, true, clsLoaderInfo.loader)
 
         while (curClz != null && isMsg == false) {
-          isMsg = Utils.isDerivedFrom(curClz, "com.ligadata.KamanjaBase.BaseMsgObj")
+          isMsg = Utils.isDerivedFrom(curClz, "com.ligadata.KamanjaBase.MessageFactoryInterface")
           if (isMsg == false)
             curClz = curClz.getSuperclass()
         }
@@ -227,12 +227,12 @@ object ExtractData extends MdBaseResolveInfo {
         val module = mirror.staticModule(clsName)
         val obj = mirror.reflectModule(module)
         val objinst = obj.instance
-        if (objinst.isInstanceOf[BaseMsgObj]) {
-          _currentMessageObj = objinst.asInstanceOf[BaseMsgObj]
+        if (objinst.isInstanceOf[MessageFactoryInterface]) {
+          _currentMessageObj = objinst.asInstanceOf[MessageFactoryInterface]
           _currentTypName = typName
           LOG.debug("Created Message Object")
-        } else if (objinst.isInstanceOf[BaseContainerObj]) {
-          _currentContainerObj = objinst.asInstanceOf[BaseContainerObj]
+        } else if (objinst.isInstanceOf[ContainerFactoryInterface]) {
+          _currentContainerObj = objinst.asInstanceOf[ContainerFactoryInterface]
           _currentTypName = typName
           LOG.debug("Created Container Object")
         } else {
@@ -283,7 +283,7 @@ object ExtractData extends MdBaseResolveInfo {
       val ln = "\n".getBytes("UTF8")
 
       val getObjFn = (k: Key, v: Any, serType: String, typ: String, ver:Int) => {
-        val dta = v.asInstanceOf[MessageContainerBase]
+        val dta = v.asInstanceOf[ContainerInterface]
         if (dta != null) {
           if (hasValidPrimaryKey) {
             // Search for primary key match

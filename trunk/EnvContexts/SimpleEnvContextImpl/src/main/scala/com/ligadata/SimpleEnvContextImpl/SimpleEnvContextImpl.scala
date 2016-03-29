@@ -28,7 +28,7 @@ import org.apache.logging.log4j.{ Logger, LogManager }
 import com.ligadata.KvBase.{ Key, TimeRange, KvBaseDefalts, KeyWithBucketIdAndPrimaryKey, KeyWithBucketIdAndPrimaryKeyCompHelper, LoadKeyWithBucketId }
 import com.ligadata.StorageBase.{ DataStore, Transaction, DataStoreOperations }
 import com.ligadata.KamanjaBase._
-// import com.ligadata.KamanjaBase.{ EnvContext, MessageContainerBase }
+// import com.ligadata.KamanjaBase.{ EnvContext, ContainerInterface }
 import com.ligadata.kamanja.metadata._
 import com.ligadata.Exceptions._
 import java.net.URLClassLoader
@@ -117,7 +117,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     ResolveEnableEachTransactionCommit
   }
 
-  override def NewMessageOrContainer(fqclassname: String): MessageContainerBase = {
+  override def NewMessageOrContainer(fqclassname: String): ContainerInterface = {
     var curClass: Class[_] = null
     try {
       if (_classLoader != null) {
@@ -131,7 +131,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
         throw e // Rethrow
       }
     }
-    val msgOrContainer: MessageContainerBase = curClass.newInstance().asInstanceOf[MessageContainerBase]
+    val msgOrContainer: ContainerInterface = curClass.newInstance().asInstanceOf[ContainerInterface]
     msgOrContainer
   }
 
@@ -142,9 +142,9 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 
   class MsgContainerInfo(createLock: Boolean) {
     var loadedKeys = new java.util.TreeSet[LoadKeyWithBucketId](KvBaseDefalts.defaultLoadKeyComp) // By BucketId, BucketKey, Time Range
-    //  val current_msg_cont_data = ArrayBuffer[MessageContainerBase]()
-    val dataByTmPart = new TreeMap[KeyWithBucketIdAndPrimaryKey, MessageContainerBaseWithModFlag](KvBaseDefalts.defualtTimePartComp) // By time, BucketKey, then PrimaryKey/{transactionid & rowid}. This is little cheaper if we are going to get exact match, because we compare time & then bucketid
-    val dataByBucketKey = new TreeMap[KeyWithBucketIdAndPrimaryKey, MessageContainerBaseWithModFlag](KvBaseDefalts.defualtBucketKeyComp) // By BucketKey, time, then PrimaryKey/{Transactionid & Rowid}
+    //  val current_msg_cont_data = ArrayBuffer[ContainerInterface]()
+    val dataByTmPart = new TreeMap[KeyWithBucketIdAndPrimaryKey, ContainerInterfaceWithModFlag](KvBaseDefalts.defualtTimePartComp) // By time, BucketKey, then PrimaryKey/{transactionid & rowid}. This is little cheaper if we are going to get exact match, because we compare time & then bucketid
+    val dataByBucketKey = new TreeMap[KeyWithBucketIdAndPrimaryKey, ContainerInterfaceWithModFlag](KvBaseDefalts.defualtBucketKeyComp) // By BucketKey, time, then PrimaryKey/{Transactionid & Rowid}
     var isContainer: Boolean = false
     val reent_lock: ReentrantReadWriteLock = if (createLock) new ReentrantReadWriteLock(true) else null
   }
@@ -171,7 +171,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     }
 
     //BUGBUG:: we are handling primaryKey only when partKey
-    def getRecent(container: MsgContainerInfo, partKey: List[String], tmRange: TimeRange, primaryKey: List[String], f: MessageContainerBase => Boolean): (MessageContainerBase, Boolean) = {
+    def getRecent(container: MsgContainerInfo, partKey: List[String], tmRange: TimeRange, primaryKey: List[String], f: ContainerInterface => Boolean): (ContainerInterface, Boolean) = {
       //BUGBUG:: Taking last record from the search. it may not be the most recent
       if (container != null) {
         TxnContextCommonFunctions.ReadLockContainer(container)
@@ -186,7 +186,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
             val primKeyAsArray = if (primaryKey != null && primaryKey.size > 0) primaryKey.toArray else null
             val fromKey = KeyWithBucketIdAndPrimaryKey(KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(partKeyAsArray), Key(tmRng.beginTime, partKeyAsArray, 0, 0), primKeyAsArray != null, primKeyAsArray)
             val toKey = KeyWithBucketIdAndPrimaryKey(KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(partKeyAsArray), Key(tmRng.endTime, partKeyAsArray, Long.MaxValue, Int.MaxValue), primKeyAsArray != null, primKeyAsArray)
-            val tmpDataByTmPart = new TreeMap[KeyWithBucketIdAndPrimaryKey, MessageContainerBaseWithModFlag](KvBaseDefalts.defualtTimePartComp) // By time, BucketKey, then PrimaryKey/{transactionid & rowid}. This is little cheaper if we are going to get exact match, because we compare time & then bucketid
+            val tmpDataByTmPart = new TreeMap[KeyWithBucketIdAndPrimaryKey, ContainerInterfaceWithModFlag](KvBaseDefalts.defualtTimePartComp) // By time, BucketKey, then PrimaryKey/{transactionid & rowid}. This is little cheaper if we are going to get exact match, because we compare time & then bucketid
             tmpDataByTmPart.putAll(container.dataByBucketKey.subMap(fromKey, true, toKey, true))
             val tmFilterMap = tmpDataByTmPart.subMap(fromKey, true, toKey, true)
 
@@ -287,8 +287,8 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
       return true
     }
 
-    def getRddData(container: MsgContainerInfo, partKey: List[String], tmRange: TimeRange, primaryKey: List[String], f: MessageContainerBase => Boolean): Array[(KeyWithBucketIdAndPrimaryKey, MessageContainerBase)] = {
-      val retResult = ArrayBuffer[(KeyWithBucketIdAndPrimaryKey, MessageContainerBase)]()
+    def getRddData(container: MsgContainerInfo, partKey: List[String], tmRange: TimeRange, primaryKey: List[String], f: ContainerInterface => Boolean): Array[(KeyWithBucketIdAndPrimaryKey, ContainerInterface)] = {
+      val retResult = ArrayBuffer[(KeyWithBucketIdAndPrimaryKey, ContainerInterface)]()
       if (container != null) {
         TxnContextCommonFunctions.ReadLockContainer(container)
         try {
@@ -302,7 +302,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
             val primKeyAsArray = if (primaryKey != null && primaryKey.size > 0) primaryKey.toArray else null
             val fromKey = KeyWithBucketIdAndPrimaryKey(KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(partKeyAsArray), Key(tmRng.beginTime, partKeyAsArray, 0, 0), false, null)
             val toKey = KeyWithBucketIdAndPrimaryKey(KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(partKeyAsArray), Key(tmRng.endTime, partKeyAsArray, Long.MaxValue, Int.MaxValue), false, null)
-            val tmpDataByTmPart = new TreeMap[KeyWithBucketIdAndPrimaryKey, MessageContainerBaseWithModFlag](KvBaseDefalts.defualtTimePartComp) // By time, BucketKey, then PrimaryKey/{transactionid & rowid}. This is little cheaper if we are going to get exact match, because we compare time & then bucketid
+            val tmpDataByTmPart = new TreeMap[KeyWithBucketIdAndPrimaryKey, ContainerInterfaceWithModFlag](KvBaseDefalts.defualtTimePartComp) // By time, BucketKey, then PrimaryKey/{transactionid & rowid}. This is little cheaper if we are going to get exact match, because we compare time & then bucketid
             tmpDataByTmPart.putAll(container.dataByBucketKey.subMap(fromKey, true, toKey, true))
             val tmFilterMap = tmpDataByTmPart.subMap(fromKey, true, toKey, true)
 
@@ -397,23 +397,23 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     }
 */
     /*
-    def getAllObjects(containerName: String): Array[MessageContainerBase] = {
+    def getAllObjects(containerName: String): Array[ContainerInterface] = {
       return TxnContextCommonFunctions.getRddData(getMsgContainer(containerName.toLowerCase, false), null, null, null, null).map(kv => kv._2)
     }
 
-    def getObject(containerName: String, partKey: List[String], primaryKey: List[String]): (MessageContainerBase, Boolean) = {
+    def getObject(containerName: String, partKey: List[String], primaryKey: List[String]): (ContainerInterface, Boolean) = {
       return TxnContextCommonFunctions.getRecent(getMsgContainer(containerName.toLowerCase, false), partKey, null, primaryKey, null)
     }
 */
 
     /*
-    def getObjects(containerName: String, partKey: List[String], appendCurrentChanges: Boolean): (Array[MessageContainerBase], Boolean) = {
+    def getObjects(containerName: String, partKey: List[String], appendCurrentChanges: Boolean): (Array[ContainerInterface], Boolean) = {
       val container = getMsgContainer(containerName.toLowerCase, false)
       if (container != null) {
         val kamanjaData = container.data.getOrElse(InMemoryKeyDataInJson(partKey), null)
         if (kamanjaData != null) {
           if (container.current_msg_cont_data.size > 0) {
-            val allData = ArrayBuffer[MessageContainerBase]()
+            val allData = ArrayBuffer[ContainerInterface]()
             if (appendCurrentChanges) {
               allData ++= kamanjaData._2.GetAllData
               allData --= container.current_msg_cont_data
@@ -428,7 +428,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
           }
         }
       }
-      (Array[MessageContainerBase](), false)
+      (Array[ContainerInterface](), false)
     }
 */
 
@@ -443,7 +443,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
             if (kamanjaData != null) {
               if (TxnContextCommonFunctions.IsEmptyKey(primaryKeys(i)) == false) {
                 // Search for primary key match
-                val fnd = kamanjaData._2.GetMessageContainerBase(primaryKeys(i).toArray, false)
+                val fnd = kamanjaData._2.GetContainerInterface(primaryKeys(i).toArray, false)
                 if (fnd != null)
                   return (true, Array[List[String]]())
               }
@@ -470,7 +470,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
           val kamanjaData = container.data.getOrElse(InMemoryKeyDataInJson(partKeys(i)), null)
           if (kamanjaData != null) {
             // Search for primary key match
-            val fnd = kamanjaData._2.GetMessageContainerBase(primaryKeys(i).toArray, false)
+            val fnd = kamanjaData._2.GetContainerInterface(primaryKeys(i).toArray, false)
             if (fnd != null) {
               matchedPartKeys += partKeys(i)
               matchedPrimaryKeys += primaryKeys(i)
@@ -488,7 +488,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     }
 */
 
-    def setObjects(containerName: String, tmValues: Array[Long], partKeys: Array[Array[String]], values: Array[MessageContainerBase]): Unit = {
+    def setObjects(containerName: String, tmValues: Array[Long], partKeys: Array[Array[String]], values: Array[ContainerInterface]): Unit = {
       if (tmValues.size != partKeys.size || partKeys.size != values.size) {
         logger.error("All time partition value, bucket keys & values should have the same count in arrays. tmValues.size(%d), partKeys.size(%d), values.size(%d)".format(tmValues.size, partKeys.size, values.size))
         return
@@ -509,8 +509,8 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 
               val primkey = v.PrimaryKeyData
               val putkey = KeyWithBucketIdAndPrimaryKey(KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(bk), Key(t, bk, v.TransactionId, v.RowNumber), primkey != null && primkey.size > 0, primkey)
-              container.dataByBucketKey.put(putkey, MessageContainerBaseWithModFlag(true, v))
-              container.dataByTmPart.put(putkey, MessageContainerBaseWithModFlag(true, v))
+              container.dataByBucketKey.put(putkey, ContainerInterfaceWithModFlag(true, v))
+              container.dataByTmPart.put(putkey, ContainerInterfaceWithModFlag(true, v))
               /*
               container.current_msg_cont_data -= value
               container.current_msg_cont_data += value // to get the value to end
@@ -553,12 +553,12 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 
     def getAllModelsResult = _modelsResult.toMap
 
-    def getRecent(containerName: String, partKey: List[String], tmRange: TimeRange, primaryKey: List[String], f: MessageContainerBase => Boolean): (MessageContainerBase, Boolean) = {
+    def getRecent(containerName: String, partKey: List[String], tmRange: TimeRange, primaryKey: List[String], f: ContainerInterface => Boolean): (ContainerInterface, Boolean) = {
       val (v, foundPartKey) = TxnContextCommonFunctions.getRecent(getMsgContainer(containerName.toLowerCase, false), partKey, tmRange, primaryKey, f)
       (v, foundPartKey)
     }
 
-    def getRddData(containerName: String, partKey: List[String], tmRange: TimeRange, primaryKey: List[String], f: MessageContainerBase => Boolean): Array[(KeyWithBucketIdAndPrimaryKey, MessageContainerBase)] = {
+    def getRddData(containerName: String, partKey: List[String], tmRange: TimeRange, primaryKey: List[String], f: ContainerInterface => Boolean): Array[(KeyWithBucketIdAndPrimaryKey, ContainerInterface)] = {
       return TxnContextCommonFunctions.getRddData(getMsgContainer(containerName.toLowerCase, false), partKey, tmRange, primaryKey, f)
     }
   }
@@ -620,7 +620,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   }
 
 /*
-  private def buildObject(k: Key, v: Value): MessageContainerBase = {
+  private def buildObject(k: Key, v: Value): ContainerInterface = {
     v.serializerType.toLowerCase match {
       case "kryo" => {
         if (_kryoSer == null) {
@@ -630,7 +630,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
           }
         }
         if (_kryoSer != null) {
-          return _kryoSer.DeserializeObjectFromByteArray(v.serializedInfo).asInstanceOf[MessageContainerBase]
+          return _kryoSer.DeserializeObjectFromByteArray(v.serializedInfo).asInstanceOf[ContainerInterface]
         }
       }
       case "manual" => {
@@ -724,14 +724,14 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   
   */
 
-  private def localGetObject(transId: Long, containerName: String, partKey: List[String], primaryKey: List[String]): MessageContainerBase = {
+  private def localGetObject(transId: Long, containerName: String, partKey: List[String], primaryKey: List[String]): ContainerInterface = {
     val txnCtxt = getTransactionContext(transId, true)
     if (txnCtxt != null) {
       // Try to load the key(s) if they exists in global storage.
       LoadDataIfNeeded(txnCtxt, transId, containerName, Array(null), if (partKey == null) Array(null) else Array(partKey.toArray))
     }
 
-    val retResult = ArrayBuffer[MessageContainerBase]()
+    val retResult = ArrayBuffer[ContainerInterface]()
     if (txnCtxt != null) {
       val res = txnCtxt.getRddData(containerName, partKey, null, primaryKey, null)
       if (res.size > 0) {
@@ -745,14 +745,14 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     null
   }
 
-  private def localHistoryObjects(transId: Long, containerName: String, partKey: List[String], appendCurrentChanges: Boolean): Array[MessageContainerBase] = {
+  private def localHistoryObjects(transId: Long, containerName: String, partKey: List[String], appendCurrentChanges: Boolean): Array[ContainerInterface] = {
     val txnCtxt = getTransactionContext(transId, true)
     if (txnCtxt != null) {
       // Try to load the key(s) if they exists in global storage.
       LoadDataIfNeeded(txnCtxt, transId, containerName, Array(null), if (partKey == null) Array(null) else Array(partKey.toArray))
     }
 
-    val retResult = ArrayBuffer[MessageContainerBase]()
+    val retResult = ArrayBuffer[ContainerInterface]()
     if (txnCtxt != null) {
       val res = txnCtxt.getRddData(containerName, partKey, null, null, null)
       if (res.size > 0) {
@@ -763,14 +763,14 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     retResult.toArray
   }
 
-  private def localGetAllObjects(transId: Long, containerName: String): Array[MessageContainerBase] = {
+  private def localGetAllObjects(transId: Long, containerName: String): Array[ContainerInterface] = {
     val txnCtxt = getTransactionContext(transId, true)
     if (txnCtxt != null) {
       // Try to load the key(s) if they exists in global storage.
       LoadDataIfNeeded(txnCtxt, transId, containerName, Array(null), Array(null))
     }
 
-    val retResult = ArrayBuffer[MessageContainerBase]()
+    val retResult = ArrayBuffer[ContainerInterface]()
     if (txnCtxt != null) {
       val res = txnCtxt.getRddData(containerName, null, null, null, null)
       if (res.size > 0) {
@@ -975,12 +975,12 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   }
 
   private def collectKeyAndValues(k: Key, v: Any, container: MsgContainerInfo): Unit = {
-    if (v != null && v.isInstanceOf[MessageContainerBase]) {
+    if (v != null && v.isInstanceOf[ContainerInterface]) {
       logger.debug("Key:(%d, %s, %d, %d)".format(k.timePartition, k.bucketKey.mkString(","), k.transactionId, k.rowId))
-      val value = v.asInstanceOf[MessageContainerBase]
+      val value = v.asInstanceOf[ContainerInterface]
       val primarykey = value.PrimaryKeyData
       val key = KeyWithBucketIdAndPrimaryKey(KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(k.bucketKey), k, primarykey != null && primarykey.size > 0, primarykey)
-      val v1 = MessageContainerBaseWithModFlag(false, value)
+      val v1 = ContainerInterfaceWithModFlag(false, value)
 
       TxnContextCommonFunctions.WriteLockContainer(container)
       try {
@@ -1035,7 +1035,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
                     TxnContextCommonFunctions.WriteLockContainer(container)
                     try {
                       fndValuesAndKeys.map(kv => {
-                        val v1 = MessageContainerBaseWithModFlag(false, kv._2)
+                        val v1 = ContainerInterfaceWithModFlag(false, kv._2)
                         container.dataByBucketKey.put(kv._1, v1)
                         container.dataByTmPart.put(kv._1, v1)
                       })
@@ -1093,7 +1093,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
                     TxnContextCommonFunctions.WriteLockContainer(container)
                     try {
                       fndValuesAndKeys.map(kv => {
-                        val v1 = MessageContainerBaseWithModFlag(false, kv._2)
+                        val v1 = ContainerInterfaceWithModFlag(false, kv._2)
                         container.dataByBucketKey.put(kv._1, v1)
                         container.dataByTmPart.put(kv._1, v1)
                       })
@@ -1148,7 +1148,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
                     TxnContextCommonFunctions.WriteLockContainer(container)
                     try {
                       fndValuesAndKeys.map(kv => {
-                        val v1 = MessageContainerBaseWithModFlag(false, kv._2)
+                        val v1 = ContainerInterfaceWithModFlag(false, kv._2)
                         container.dataByBucketKey.put(kv._1, v1)
                         container.dataByTmPart.put(kv._1, v1)
                       })
@@ -1197,7 +1197,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   }
 
   // tmValues, partKeys & values are kind of triplate. So, we should have same size for all those
-  private def localSetObject(transId: Long, containerName: String, tmValues: Array[Long], partKeys: Array[Array[String]], values: Array[MessageContainerBase]): Unit = {
+  private def localSetObject(transId: Long, containerName: String, tmValues: Array[Long], partKeys: Array[Array[String]], values: Array[ContainerInterface]): Unit = {
     val txnCtxt = getTransactionContext(transId, true)
     if (txnCtxt != null) {
       // Try to load the key(s) if they exists in global storage.
@@ -1381,34 +1381,34 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 //    }
 //  }
 
-  private def Clone(vals: Array[MessageContainerBase]): Array[MessageContainerBase] = {
+  private def Clone(vals: Array[ContainerInterface]): Array[ContainerInterface] = {
     if (vals == null) return null
     return vals.map(v => {
       if (v == null) null else v.Clone()
     })
   }
 
-  private def Clone(v: MessageContainerBase): MessageContainerBase = {
+  private def Clone(v: ContainerInterface): ContainerInterface = {
     if (v == null) return null
     return v.Clone()
   }
 
-  private def Clone(ov: Option[MessageContainerBase]): Option[MessageContainerBase] = {
+  private def Clone(ov: Option[ContainerInterface]): Option[ContainerInterface] = {
     if (ov == None) return ov
     Some(ov.get.Clone())
   }
 
-  override def getAllObjects(transId: Long, containerName: String): Array[MessageContainerBase] = {
+  override def getAllObjects(transId: Long, containerName: String): Array[ContainerInterface] = {
     // Clone(localGetAllObjects(transId, containerName))
     localGetAllObjects(transId, containerName)
   }
 
-  override def getObject(transId: Long, containerName: String, partKey: List[String], primaryKey: List[String]): MessageContainerBase = {
+  override def getObject(transId: Long, containerName: String, partKey: List[String], primaryKey: List[String]): ContainerInterface = {
     // Clone(localGetObject(transId, containerName, partKey, primaryKey))
     localGetObject(transId, containerName, partKey, primaryKey)
   }
 
-  override def getHistoryObjects(transId: Long, containerName: String, partKey: List[String], appendCurrentChanges: Boolean): Array[MessageContainerBase] = {
+  override def getHistoryObjects(transId: Long, containerName: String, partKey: List[String], appendCurrentChanges: Boolean): Array[ContainerInterface] = {
     // Clone(localHistoryObjects(transId, containerName, partKey, appendCurrentChanges))
     localHistoryObjects(transId, containerName, partKey, appendCurrentChanges)
   }
@@ -1439,7 +1439,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   override def containsAll(transId: Long, containerName: String, partKeys: Array[List[String]], primaryKeys: Array[List[String]]): Boolean = {
     localContainsAll(transId, containerName, partKeys, primaryKeys)
   }
-  override def setObject(transId: Long, containerName: String, partKey: List[String], value: MessageContainerBase): Unit = {
+  override def setObject(transId: Long, containerName: String, partKey: List[String], value: ContainerInterface): Unit = {
     if (value != null && TxnContextCommonFunctions.IsEmptyKey(partKey) == false)
       localSetObject(transId, containerName, Array(value.TimePartitionData), Array(partKey.toArray), Array(value))
   }
@@ -1522,7 +1522,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
               val v = entry.getValue()
               if (v.modified) {
                 val k = entry.getKey()
-                val v1 = MessageContainerBaseWithModFlag(false, v.value)
+                val v1 = ContainerInterfaceWithModFlag(false, v.value)
                 cacheContainer.dataByBucketKey.put(k, v1)
                 cacheContainer.dataByTmPart.put(k, v1)
               }
@@ -1857,7 +1857,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   }
 */
 
-  private def getLocalRecent(transId: Long, containerName: String, partKey: List[String], tmRange: TimeRange, f: MessageContainerBase => Boolean): Option[MessageContainerBase] = {
+  private def getLocalRecent(transId: Long, containerName: String, partKey: List[String], tmRange: TimeRange, f: ContainerInterface => Boolean): Option[ContainerInterface] = {
     if (TxnContextCommonFunctions.IsEmptyKey(partKey))
       return None
 
@@ -1892,7 +1892,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
       return Some(v)
 
     if (container != null) { // Loading for partition id
-      val readValues = ArrayBuffer[(Key, MessageContainerBase)]()
+      val readValues = ArrayBuffer[(Key, ContainerInterface)]()
       val buildOne = (k: Key, v: Value) => {
         collectKeyAndValues(k, v, readValues)
       }
@@ -1922,19 +1922,19 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     None
   }
 
-  override def getRecent(transId: Long, containerName: String, partKey: List[String], tmRange: TimeRange, f: MessageContainerBase => Boolean): Option[MessageContainerBase] = {
+  override def getRecent(transId: Long, containerName: String, partKey: List[String], tmRange: TimeRange, f: ContainerInterface => Boolean): Option[ContainerInterface] = {
     // Clone(getLocalRecent(transId, containerName, partKey, tmRange, f))
     getLocalRecent(transId, containerName, partKey, tmRange, f)
   }
 
-  override def getRDD(transId: Long, containerName: String, partKey: List[String], tmRange: TimeRange, f: MessageContainerBase => Boolean): Array[MessageContainerBase] = {
+  override def getRDD(transId: Long, containerName: String, partKey: List[String], tmRange: TimeRange, f: ContainerInterface => Boolean): Array[ContainerInterface] = {
     // Clone(getLocalRDD(transId, containerName, partKey, tmRange, f))
     getLocalRDD(transId, containerName, partKey, tmRange, f)
   }
 
-  private def getLocalRDD(transId: Long, containerName: String, partKey: List[String], tmRange: TimeRange, f: MessageContainerBase => Boolean): Array[MessageContainerBase] = {
+  private def getLocalRDD(transId: Long, containerName: String, partKey: List[String], tmRange: TimeRange, f: ContainerInterface => Boolean): Array[ContainerInterface] = {
     // if (TxnContextCommonFunctions.IsEmptyKey(partKey))
-    //  return Array[MessageContainerBase]()
+    //  return Array[ContainerInterface]()
 
     val txnCtxt = getTransactionContext(transId, true)
     if (txnCtxt != null) {
@@ -1942,7 +1942,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
       LoadDataIfNeeded(txnCtxt, transId, containerName, Array(tmRange), if (partKey != null) Array(partKey.toArray) else Array(null))
     }
 
-    val retResult = ArrayBuffer[MessageContainerBase]()
+    val retResult = ArrayBuffer[ContainerInterface]()
     if (txnCtxt != null) {
       val res = txnCtxt.getRddData(containerName, partKey, tmRange, null, f)
       if (res.size > 0) {
@@ -1978,9 +1978,9 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 
     if (container != null) {
       // Need to get all keys for this message/container and take all the data 
-      val all_keys = ArrayBuffer[MessageContainerBase]() // All keys for all tables for now
+      val all_keys = ArrayBuffer[ContainerInterface]() // All keys for all tables for now
 
-      val readValues = ArrayBuffer[(Key, MessageContainerBase)]()
+      val readValues = ArrayBuffer[(Key, ContainerInterface)]()
       val buildOne = (k: Key, v: Value) => {
         collectKeyAndValues(k, v, readValues)
       }
@@ -2011,19 +2011,19 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     return retResult.toArray
   }
 
-  override def saveOne(transId: Long, containerName: String, partKey: List[String], value: MessageContainerBase): Unit = {
+  override def saveOne(transId: Long, containerName: String, partKey: List[String], value: ContainerInterface): Unit = {
     if (value != null && TxnContextCommonFunctions.IsEmptyKey(partKey) == false) {
       localSetObject(transId, containerName, Array(value.TimePartitionData), Array(partKey.toArray), Array(value))
     }
   }
 
-  override def saveRDD(transId: Long, containerName: String, values: Array[MessageContainerBase]): Unit = {
+  override def saveRDD(transId: Long, containerName: String, values: Array[ContainerInterface]): Unit = {
     if (values == null)
       return
 
     val tmValues = ArrayBuffer[Long]()
     val partKeyValues = ArrayBuffer[Array[String]]()
-    val finalValues = ArrayBuffer[MessageContainerBase]()
+    val finalValues = ArrayBuffer[ContainerInterface]()
 
     values.foreach(v => {
       if (v != null) {
@@ -2434,6 +2434,6 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 
   // This post the message into where ever these messages are associated immediately
   // Later this will be posted to logical queue where it can execute on logical partition.
-  def postMessages(msgs: Array[MessageContainerBase]): Unit = {}
+  def postMessages(msgs: Array[ContainerInterface]): Unit = {}
 
 }

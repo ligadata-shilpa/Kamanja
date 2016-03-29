@@ -21,7 +21,7 @@ import scala.collection.mutable.{Map => MutableMap}
 
 import com.ligadata.kamanja.metadata.{MdMgr, ModelDef, BaseElem}
 import com.ligadata.KamanjaBase.{ FactoryOfModelInstanceFactory, ModelInstanceFactory, EnvContext, NodeContext }
-import com.ligadata.KamanjaBase.{ MappedModelResults, MessageContainerBase, ModelInstance, ModelResultBase, TransactionContext }
+import com.ligadata.KamanjaBase.{ MappedModelResults, ContainerInterface, ModelInstance, ModelResultBase, TransactionContext }
 import com.ligadata.Utils.{ Utils, KamanjaClassLoader, KamanjaLoaderInfo }
 
 import org.apache.logging.log4j.LogManager
@@ -193,7 +193,7 @@ class JpmmlAdapter(factory : ModelInstanceFactory, modelEvaluator: ModelEvaluato
       *            model's data dictionary.
       * @return
       */
-    private def evaluateModel(msg : MessageContainerBase): ModelResultBase = {
+    private def evaluateModel(msg : ContainerInterface): ModelResultBase = {
         val activeFields = modelEvaluator.getActiveFields
         val preparedFields = prepareFields(activeFields, msg, modelEvaluator)
         val evalResultRaw : MutableMap[FieldName, _] = modelEvaluator.evaluate(preparedFields.asJava).asScala
@@ -239,7 +239,7 @@ class JpmmlAdapter(factory : ModelInstanceFactory, modelEvaluator: ModelEvaluato
       * @return
       */
     private def prepareFields(activeFields: JList[FieldName]
-                              , msg: MessageContainerBase
+                              , msg: ContainerInterface
                               , evaluator: ModelEvaluator[_]) : Map[FieldName, FieldValue] = {
         activeFields.asScala.foldLeft(Map.empty[FieldName, FieldValue])((map, activeField) => {
             val key = activeField.getValue.toLowerCase
@@ -312,7 +312,7 @@ class JpmmlAdapterFactory(modelDef: ModelDef, nodeContext: NodeContext) extends 
       * @param msg  - the message instance that is currently being processed
       * @return true if this model can process the message.
       */
-    override def isValidMessage(msg: MessageContainerBase): Boolean = {
+    override def isValidMessage(msg: ContainerInterface): Boolean = {
         val msgFullName : String = msg.FullName
         val msgVersionDots : String = msg.Version
         val msgVersion : String = msgVersionDots.filter(_ != '.').toString

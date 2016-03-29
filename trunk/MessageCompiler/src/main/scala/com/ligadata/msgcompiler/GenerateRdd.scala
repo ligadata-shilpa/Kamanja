@@ -40,9 +40,9 @@ class GenerateRdd {
     var rddClass: StringBuffer = new StringBuffer(1024)
 
     if (message.MsgType.equalsIgnoreCase("container")) {
-      rddClass.append(msgConstants.rddFactoryClass.format(msgConstants.pad1, message.Name, msgConstants.newline) + msgConstants.pad1 + msgConstants.rddObj.format(msgConstants.pad1, message.Name, message.Name, msgConstants.newline) + msgConstants.pad1 + msgConstants.rddBaseContainerObj.format(msgConstants.pad1, message.Name, msgConstants.newline) + msgConstants.newline + msgConstants.closeBrace)
+      rddClass.append(msgConstants.rddFactoryClass.format(msgConstants.pad1, message.Name, msgConstants.newline) + msgConstants.pad1 + msgConstants.rddObj.format(msgConstants.pad1, message.Name, message.Name, msgConstants.newline) + msgConstants.pad1 + msgConstants.rddContainerFactoryInterface.format(msgConstants.pad1, message.Name, msgConstants.newline) + msgConstants.newline + msgConstants.closeBrace)
     } else if (message.MsgType.equalsIgnoreCase("message")) {
-      rddClass.append(msgConstants.rddFactoryClass.format(msgConstants.pad1, message.Name, msgConstants.newline) + msgConstants.pad1 + msgConstants.rddObj.format(msgConstants.pad1, message.Name, message.Name, msgConstants.newline) + msgConstants.pad1 + msgConstants.newline + msgConstants.rddBaseMsgObj.format(msgConstants.pad1, message.Name, msgConstants.newline) + msgConstants.newline + msgConstants.closeBrace)
+      rddClass.append(msgConstants.rddFactoryClass.format(msgConstants.pad1, message.Name, msgConstants.newline) + msgConstants.pad1 + msgConstants.rddObj.format(msgConstants.pad1, message.Name, message.Name, msgConstants.newline) + msgConstants.pad1 + msgConstants.newline + msgConstants.rddMessageFactoryInterface.format(msgConstants.pad1, message.Name, msgConstants.newline) + msgConstants.newline + msgConstants.closeBrace)
     }
     rddClass.toString()
 

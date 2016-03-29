@@ -11,16 +11,16 @@ import java.io.{ DataInputStream, DataOutputStream , ByteArrayOutputStream}
 import com.ligadata.Exceptions.StackTrace
 import org.apache.logging.log4j.{ Logger, LogManager }
 import java.util.Date
-import com.ligadata.KamanjaBase.{BaseMsg, BaseMsgObj, TransformMessage, BaseContainer, MdBaseResolveInfo, MessageContainerBase, RDDObject, RDD, JavaRDDObject}
+import com.ligadata.KamanjaBase.{MessageInterface, MessageFactoryInterface, TransformMessage, ContainerInterface, MdBaseResolveInfo, ContainerInterface, RDDObject, RDD, JavaRDDObject}
 
-object msg2 extends RDDObject[msg2] with BaseMsgObj {
+object msg2 extends RDDObject[msg2] with MessageFactoryInterface {
 	override def TransformDataAttributes: TransformMessage = null
 	override def NeedToTransformData: Boolean = false
 	override def FullName: String = "com.ligadata.kamanja.test001.msg2"
 	override def NameSpace: String = "com.ligadata.kamanja.test001"
 	override def Name: String = "msg2"
 	override def Version: String = "000000.000001.000000"
-	override def CreateNewMessage: BaseMsg  = new msg2()
+	override def CreateNewMessage: MessageInterface  = new msg2()
 	override def IsFixed:Boolean = true;
 	override def IsKv:Boolean = false;
 	 override def CanPersist: Boolean = false;
@@ -66,7 +66,7 @@ object msg2 extends RDDObject[msg2] with BaseMsgObj {
     
 }
 
-class msg2(var transactionId: Long, other: msg2) extends BaseMsg {
+class msg2(var transactionId: Long, other: msg2) extends MessageInterface {
 	override def IsFixed : Boolean = msg2.IsFixed;
 	override def IsKv : Boolean = msg2.IsKv;
 
@@ -134,10 +134,10 @@ class msg2(var transactionId: Long, other: msg2) extends BaseMsg {
     
     private val LOG = LogManager.getLogger(getClass)
     
-    override def AddMessage(childPath: Array[(String, String)], msg: BaseMsg): Unit = { }
+    override def AddMessage(childPath: Array[(String, String)], msg: MessageInterface): Unit = { }
      
      
-    override def GetMessage(childPath: Array[(String, String)], primaryKey:Array[String]): com.ligadata.KamanjaBase.BaseMsg = {
+    override def GetMessage(childPath: Array[(String, String)], primaryKey:Array[String]): com.ligadata.KamanjaBase.MessageInterface = {
        return null
     } 
      
@@ -408,7 +408,7 @@ class msg2(var transactionId: Long, other: msg2) extends BaseMsg {
   def this() = {
     this(0, null)
   }
-  override def Clone(): MessageContainerBase = {
+  override def Clone(): ContainerInterface = {
     msg2.build(this)
   }
   

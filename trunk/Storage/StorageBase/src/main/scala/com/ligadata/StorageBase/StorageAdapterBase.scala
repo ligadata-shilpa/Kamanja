@@ -6,7 +6,7 @@
  */
 package com.ligadata.StorageBase
 
-import com.ligadata.KamanjaBase.{AdaptersSerializeDeserializers, TransactionContext, MessageContainerBase}
+import com.ligadata.KamanjaBase.{AdaptersSerializeDeserializers, TransactionContext, ContainerInterface}
 import com.ligadata.KvBase.{ Key, TimeRange }
 import com.ligadata.Utils.{ KamanjaLoaderInfo }
 
@@ -14,33 +14,33 @@ case class Value(schemaId: Int, serializerType: String, serializedInfo: Array[By
 
 trait DataStoreOperations extends AdaptersSerializeDeserializers {
   // update operations, add & update semantics are different for relational databases
-  def put(tnxCtxt: TransactionContext, container: MessageContainerBase): Unit = {
+  def put(tnxCtxt: TransactionContext, container: ContainerInterface): Unit = {
     val (outputContainers, serializedContainerData, serializerNames) = serialize(tnxCtxt, Array(container))
     // Call put methods with container name, key & values
   }
 
-  def put(tnxCtxt: TransactionContext, containers: Array[MessageContainerBase]): Unit = {
+  def put(tnxCtxt: TransactionContext, containers: Array[ContainerInterface]): Unit = {
     val (outputContainers, serializedContainerData, serializerNames) = serialize(tnxCtxt, containers)
     // Call put methods with container name, key & values
   }
 
-  // value could be MessageContainerBase or Array[Byte]
+  // value could be ContainerInterface or Array[Byte]
   def put(tnxCtxt: TransactionContext, containerName: String, key: Key, serializerTyp: String, value: Any): Unit = {
-    // Check for value.isInstanceOf[MessageContainerBase]
+    // Check for value.isInstanceOf[ContainerInterface]
 //    val (outputContainers, serializedContainerData, serializerNames) = serialize(tnxCtxt, Array(container))
     // Call put methods with container name, key & values
   }
 
-  // value could be MessageContainerBase or Array[Byte]
+  // value could be ContainerInterface or Array[Byte]
   def put(tnxCtxt: TransactionContext, containerName: String, keys: Array[Key], serializerTyp: Array[String], values: Array[Any]): Unit = {
-    // Check for value.isInstanceOf[MessageContainerBase]
+    // Check for value.isInstanceOf[ContainerInterface]
 //    val (outputContainers, serializedContainerData, serializerNames) = serialize(tnxCtxt, containers)
     // Call put methods with container name, key & values
   }
 
-  // data_list has List of container names, and each container has list of key & value as MessageContainerBase or Array[Byte]
+  // data_list has List of container names, and each container has list of key & value as ContainerInterface or Array[Byte]
   def put(tnxCtxt: TransactionContext, data_list: Array[(String, Array[(Key, String, Any)])]): Unit = {
-    // Check for value.isInstanceOf[MessageContainerBase]
+    // Check for value.isInstanceOf[ContainerInterface]
     //    val (outputContainers, serializedContainerData, serializerNames) = serialize(tnxCtxt, containers)
     // Call put methods with container name, key & values
   }
@@ -55,7 +55,7 @@ trait DataStoreOperations extends AdaptersSerializeDeserializers {
   def del(containerName: String, time: TimeRange, keys: Array[Array[String]]): Unit // For the given multiple bucket key strings, delete the values with in given date range
   def del(containerName: String, time: TimeRange): Unit // For the given date range, delete the values /*Added by Yousef Abu Elbeh at 2016-03-13*/
   // get operations
-  // Returns Key, Either[MessageContainerBase, Array[Byte]], serializerTyp, TypeName, Version
+  // Returns Key, Either[ContainerInterface, Array[Byte]], serializerTyp, TypeName, Version
   def get(containerName: String, callbackFunction: (Key, Any, String, String, Int) => Unit): Unit = {
     val getCallbackFn = (k: Key, v: Value) => {
       if (callbackFunction != null) {
@@ -71,7 +71,7 @@ trait DataStoreOperations extends AdaptersSerializeDeserializers {
     get(containerName, if (callbackFunction != null) getCallbackFn else null)
   }
 
-  // Returns Key, Either[MessageContainerBase, Array[Byte]], serializerTyp, TypeName, Version
+  // Returns Key, Either[ContainerInterface, Array[Byte]], serializerTyp, TypeName, Version
   def get(containerName: String, keys: Array[Key], callbackFunction: (Key, Any, String, String, Int) => Unit): Unit = {
     val getCallbackFn = (k: Key, v: Value) => {
       if (callbackFunction != null) {
@@ -86,7 +86,7 @@ trait DataStoreOperations extends AdaptersSerializeDeserializers {
     get(containerName, keys, getCallbackFn)
   }
 
-  // Returns Key, Either[MessageContainerBase, Array[Byte]], serializerTyp, TypeName, Version
+  // Returns Key, Either[ContainerInterface, Array[Byte]], serializerTyp, TypeName, Version
   def get(containerName: String, timeRanges: Array[TimeRange], callbackFunction: (Key, Any, String, String, Int) => Unit): Unit  = {
     val getCallbackFn = (k: Key, v: Value) => {
       if (callbackFunction != null) {
@@ -101,7 +101,7 @@ trait DataStoreOperations extends AdaptersSerializeDeserializers {
     get(containerName, timeRanges, getCallbackFn)
   }
 
-  // Returns Key, Either[MessageContainerBase, Array[Byte]], serializerTyp, TypeName, Version
+  // Returns Key, Either[ContainerInterface, Array[Byte]], serializerTyp, TypeName, Version
   def get(containerName: String, timeRanges: Array[TimeRange], bucketKeys: Array[Array[String]], callbackFunction: (Key, Any, String, String, Int) => Unit): Unit  = {
     val getCallbackFn = (k: Key, v: Value) => {
       if (callbackFunction != null) {
@@ -116,7 +116,7 @@ trait DataStoreOperations extends AdaptersSerializeDeserializers {
     get(containerName, timeRanges, bucketKeys, getCallbackFn)
   }
 
-  // Returns Key, Either[MessageContainerBase, Array[Byte]], serializerTyp, TypeName, Version
+  // Returns Key, Either[ContainerInterface, Array[Byte]], serializerTyp, TypeName, Version
   def get(containerName: String, bucketKeys: Array[Array[String]], callbackFunction: (Key, Any, String, String, Int) => Unit): Unit  = {
     val getCallbackFn = (k: Key, v: Value) => {
       if (callbackFunction != null) {

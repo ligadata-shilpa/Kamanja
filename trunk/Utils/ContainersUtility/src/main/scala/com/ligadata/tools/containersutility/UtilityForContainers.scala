@@ -112,8 +112,8 @@ class UtilityForContainers(val loadConfigs: Properties, val typename: String) ex
 
   var typeNameCorrType: BaseTypeDef = _
   var kvTableName: String = _
-  var messageObj: BaseMsgObj = _
-  var containerObj: BaseContainerObj = _
+  var messageObj: MessageFactoryInterface = _
+  var containerObj: ContainerFactoryInterface = _
   var objFullName: String = _
 
   if (isOk) {
@@ -146,7 +146,7 @@ class UtilityForContainers(val loadConfigs: Properties, val typename: String) ex
         var curClz = Class.forName(clsName, true, containerUtilityLoder.loader)
 
         while (curClz != null && isContainer == false) {
-          isContainer = Utils.isDerivedFrom(curClz, "com.ligadata.KamanjaBase.BaseContainerObj")
+          isContainer = Utils.isDerivedFrom(curClz, "com.ligadata.KamanjaBase.ContainerFactoryInterface")
           if (isContainer == false)
             curClz = curClz.getSuperclass()
         }
@@ -165,7 +165,7 @@ class UtilityForContainers(val loadConfigs: Properties, val typename: String) ex
         var curClz = Class.forName(clsName, true, containerUtilityLoder.loader)
 
         while (curClz != null && isMsg == false) {
-          isMsg = Utils.isDerivedFrom(curClz, "com.ligadata.KamanjaBase.BaseMsgObj")
+          isMsg = Utils.isDerivedFrom(curClz, "com.ligadata.KamanjaBase.MessageFactoryInterface")
           if (isMsg == false)
             curClz = curClz.getSuperclass()
         }
@@ -181,11 +181,11 @@ class UtilityForContainers(val loadConfigs: Properties, val typename: String) ex
         val module = containerUtilityLoder.mirror.staticModule(clsName)
         val obj = containerUtilityLoder.mirror.reflectModule(module)
         val objinst = obj.instance
-        if (objinst.isInstanceOf[BaseMsgObj]) {
-          messageObj = objinst.asInstanceOf[BaseMsgObj]
+        if (objinst.isInstanceOf[MessageFactoryInterface]) {
+          messageObj = objinst.asInstanceOf[MessageFactoryInterface]
           logger.debug("Created Message Object")
-        } else if (objinst.isInstanceOf[BaseContainerObj]) {
-          containerObj = objinst.asInstanceOf[BaseContainerObj]
+        } else if (objinst.isInstanceOf[ContainerFactoryInterface]) {
+          containerObj = objinst.asInstanceOf[ContainerFactoryInterface]
           logger.debug("Created Container Object")
         } else {
           logger.error("Failed to instantiate message or conatiner object :" + clsName)
@@ -251,7 +251,7 @@ class UtilityForContainers(val loadConfigs: Properties, val typename: String) ex
     true
   }
 
-  override def getMessgeOrContainerInstance(MsgContainerType: String): MessageContainerBase = {
+  override def getMessgeOrContainerInstance(MsgContainerType: String): ContainerInterface = {
     if (MsgContainerType.compareToIgnoreCase(objFullName) != 0)
       return null
     // Simply creating new object and returning. Not checking for MsgContainerType. This is issue if the child level messages ask for the type
@@ -318,7 +318,7 @@ class UtilityForContainers(val loadConfigs: Properties, val typename: String) ex
 
     var data : Map[String,String] = null
     val retriveData = (k: Key, v: Any, serializerTyp: String, typeName: String, ver: Int)=>{
-      val value = v.asInstanceOf[MessageContainerBase]
+      val value = v.asInstanceOf[ContainerInterface]
       val primarykey = value.PrimaryKeyData
       val key = KeyWithBucketIdAndPrimaryKey(KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(k.bucketKey), k, primarykey != null && primarykey.size > 0, primarykey)
       val bucketId = KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(k.bucketKey)

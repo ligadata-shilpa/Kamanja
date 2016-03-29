@@ -274,25 +274,25 @@ trait EnvContext extends Monitorable {
 //  def RegisterMessageOrContainers(containersInfo: Array[ContainerNameAndDatastoreInfo]): Unit
 
   // RDD Ops
-  def getRecent(transId: Long, containerName: String, partKey: List[String], tmRange: TimeRange, f: MessageContainerBase => Boolean): Option[MessageContainerBase]
+  def getRecent(transId: Long, containerName: String, partKey: List[String], tmRange: TimeRange, f: ContainerInterface => Boolean): Option[ContainerInterface]
 
-  def getRDD(transId: Long, containerName: String, partKey: List[String], tmRange: TimeRange, f: MessageContainerBase => Boolean): Array[MessageContainerBase]
+  def getRDD(transId: Long, containerName: String, partKey: List[String], tmRange: TimeRange, f: ContainerInterface => Boolean): Array[ContainerInterface]
 
-  def saveOne(transId: Long, containerName: String, partKey: List[String], value: MessageContainerBase): Unit
+  def saveOne(transId: Long, containerName: String, partKey: List[String], value: ContainerInterface): Unit
 
-  def saveRDD(transId: Long, containerName: String, values: Array[MessageContainerBase]): Unit
+  def saveRDD(transId: Long, containerName: String, values: Array[ContainerInterface]): Unit
 
   // RDD Ops
   def Shutdown: Unit
 
-  def getAllObjects(transId: Long, containerName: String): Array[MessageContainerBase]
+  def getAllObjects(transId: Long, containerName: String): Array[ContainerInterface]
 
-  def getObject(transId: Long, containerName: String, partKey: List[String], primaryKey: List[String]): MessageContainerBase
+  def getObject(transId: Long, containerName: String, partKey: List[String], primaryKey: List[String]): ContainerInterface
 
   // if appendCurrentChanges is true return output includes the in memory changes (new or mods) at the end otherwise it ignore them.
-  def getHistoryObjects(transId: Long, containerName: String, partKey: List[String], appendCurrentChanges: Boolean): Array[MessageContainerBase]
+  def getHistoryObjects(transId: Long, containerName: String, partKey: List[String], appendCurrentChanges: Boolean): Array[ContainerInterface]
 
-  def setObject(transId: Long, containerName: String, partKey: List[String], value: MessageContainerBase): Unit
+  def setObject(transId: Long, containerName: String, partKey: List[String], value: ContainerInterface): Unit
 
   def contains(transId: Long, containerName: String, partKey: List[String], primaryKey: List[String]): Boolean
 
@@ -357,7 +357,7 @@ trait EnvContext extends Monitorable {
     * @param fqclassname : a full package qualified class name
     * @return a MesssageContainerBase of that ilk
     */
-  def NewMessageOrContainer(fqclassname: String): MessageContainerBase
+  def NewMessageOrContainer(fqclassname: String): ContainerInterface
 
   // Just get the cached container key and see what are the containers we need to cache
 //  def CacheContainers(clusterId: String): Unit
@@ -421,14 +421,14 @@ trait EnvContext extends Monitorable {
 
   // This post the message into where ever these messages are associated immediately
   // Later this will be posted to logical queue where it can execute on logical partition.
-  def postMessages(msgs: Array[MessageContainerBase]): Unit
+  def postMessages(msgs: Array[ContainerInterface]): Unit
 }
 
 // partitionKey is the one used for this message
-class ModelContext(val txnContext: TransactionContext, val msg: MessageContainerBase, val msgData: Array[Byte], val partitionKey: String) {
+class ModelContext(val txnContext: TransactionContext, val msg: ContainerInterface, val msgData: Array[Byte], val partitionKey: String) {
   def InputMessageData: Array[Byte] = msgData
 
-  def Message: MessageContainerBase = msg
+  def Message: ContainerInterface = msg
 
   def TransactionContext: TransactionContext = txnContext
 
@@ -469,7 +469,7 @@ abstract class ModelBase(var modelContext: ModelContext, val factory: ModelBaseO
 
 trait ModelBaseObj {
   // Check to fire the model
-  def IsValidMessage(msg: MessageContainerBase): Boolean
+  def IsValidMessage(msg: ContainerInterface): Boolean
 
   // Creating same type of object with given values
   def CreateNewModel(mdlCtxt: ModelContext): ModelBase
@@ -527,7 +527,7 @@ abstract class ModelInstance(val factory: ModelInstanceFactory) {
   //		outputDefault: If this is true, engine is expecting output always.
   //	Output:
   //		Derived messages are the return results expected.
-  def run(txnCtxt: TransactionContext, outputDefault: Boolean): Array[BaseMsg] = {
+  def run(txnCtxt: TransactionContext, outputDefault: Boolean): Array[MessageInterface] = {
     throw new NotImplementedFunctionException("Not implemented", null)
   }
 }
@@ -560,7 +560,7 @@ abstract class ModelInstanceFactory(val modelDef: ModelDef, val nodeContext: Nod
 
   // Checking whether the message is valid to execute this model instance or not.
   // Deprecated and no more supported in new versions from 1.4.0
-  def isValidMessage(msg: MessageContainerBase): Boolean = {
+  def isValidMessage(msg: ContainerInterface): Boolean = {
     throw new DeprecatedException("Deprecated", null)
   }
 
@@ -587,30 +587,30 @@ trait FactoryOfModelInstanceFactory {
 
 // FIXME: Need to have message creator (Model/InputMessage/Get(from db/cache))
 class TransactionContext(val transId: Long, val nodeCtxt: NodeContext, val msgData: Array[Byte], val partitionKey: String) {
-  private var orgInputMsg: MessageContainerBase = _
-  private val msgs = scala.collection.mutable.Map[String, ArrayBuffer[MessageContainerBase]]() // orgInputMsg is part in this also
+  private var orgInputMsg: ContainerInterface = _
+  private val msgs = scala.collection.mutable.Map[String, ArrayBuffer[ContainerInterface]]() // orgInputMsg is part in this also
   private val valuesMap = new java.util.HashMap[String, Any]()
 
   def getInputMessageData(): Array[Byte] = msgData
 
   def getPartitionKey(): String = partitionKey
 
-  def getMessage(): MessageContainerBase = orgInputMsg// Original messages
+  def getMessage(): ContainerInterface = orgInputMsg// Original messages
 
-  def getMessages(msgType: String): Array[MessageContainerBase] = msgs.getOrElse(msgType.toLowerCase(), ArrayBuffer[MessageContainerBase]()).toArray
+  def getMessages(msgType: String): Array[ContainerInterface] = msgs.getOrElse(msgType.toLowerCase(), ArrayBuffer[ContainerInterface]()).toArray
 
-  def addMessage(m: MessageContainerBase): Unit = {
+  def addMessage(m: ContainerInterface): Unit = {
     val msgNm = m.FullName.toLowerCase()
-    val tmp = msgs.getOrElse(msgNm, ArrayBuffer[MessageContainerBase]())
+    val tmp = msgs.getOrElse(msgNm, ArrayBuffer[ContainerInterface]())
     tmp += m
     msgs(msgNm) = tmp
   }
 
-  def addMessages(curMsgs: Array[MessageContainerBase]): Unit = {
+  def addMessages(curMsgs: Array[ContainerInterface]): Unit = {
     curMsgs.foreach(m => addMessage(m))
   }
 
-  def setInitialMessage(orgMsg: MessageContainerBase): Unit = {
+  def setInitialMessage(orgMsg: ContainerInterface): Unit = {
     orgInputMsg = orgMsg
     addMessage(orgMsg)
   }
@@ -685,7 +685,7 @@ class ModelBaseObjMdlInstanceFactory(modelDef: ModelDef, nodeContext: NodeContex
 
   override def getVersion() = mdlBaseObj.Version() // Model Version
 
-  override def isValidMessage(msg: MessageContainerBase): Boolean = mdlBaseObj.IsValidMessage(msg)
+  override def isValidMessage(msg: ContainerInterface): Boolean = mdlBaseObj.IsValidMessage(msg)
 
   override def createModelInstance() = new ModelBaseMdlInstance(this)
 

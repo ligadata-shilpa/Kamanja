@@ -33,14 +33,14 @@ class MessageConstants {
   val namespace: String = "%soverride def getTypeNameSpace: String = \"%s\"; %s"; //com.ligadata.samples.messages"
   val name: String = "%soverride def getTypeName: String = \"%s\"; %s"; //CustAlertHistory"
   val version: String = "%soverride def getTypeVersion: String = \"%s\"; %s"; //000000.000001.000000"
-  val createInstance = "%soverride def createInstance: %s = new %s(%s); %s"; //BaseContainer = new CustAlertHistory()
+  val createInstance = "%soverride def createInstance: %s = new %s(%s); %s"; //ContainerInterface = new CustAlertHistory()
   val containerInstanceType = "ContainerInterface";
   val messageInstanceType = "MessageInterface";
   val getContainerTypeMsg = "%soverride def getContainerType: ContainerFactoryInterface.ContainerType = ContainerFactoryInterface.ContainerType.MESSAGE";
   val getContainerTypeContainer = "%soverride def getContainerType: ContainerFactoryInterface.ContainerType = ContainerFactoryInterface.ContainerType.CONTAINER";
 
-  val createNewContainer = "%soverride def CreateNewContainer: %s = new %s(); %s"; //BaseContainer = new CustAlertHistory()
-  val createNewMessage = "%soverride def CreateNewMessage: %s = new %s(); %s"; //BaseContainer = new CustAlertHistory()
+  val createNewContainer = "%soverride def CreateNewContainer: %s = new %s(); %s"; //ContainerInterface = new CustAlertHistory()
+  val createNewMessage = "%soverride def CreateNewMessage: %s = new %s(); %s"; //ContainerInterface = new CustAlertHistory()
   val isFixed: String = "%soverride def isFixed: Boolean = %s; %s"; //true;
   val isKV: String = "%soverride def IsKv: Boolean = %s; %s"; //false;
   val canPersist: String = "%soverride def CanPersist: Boolean = %s; %s"; //true;
@@ -56,8 +56,8 @@ class MessageConstants {
 
   val rddFactoryClass: String = "%spublic final class %sFactory { %s";
   val rddObj: String = "%spublic static JavaRDDObject<%s> rddObject = %s$.MODULE$.toJavaRDDObject(); %s";
-  val rddBaseContainerObj = "%spublic static BaseContainerObj baseObj = (BaseContainerObj) %s$.MODULE$; %s";
-  val rddBaseMsgObj = "%spublic static BaseMsgObj baseObj = (BaseMsgObj) %s$.MODULE$; %s";
+  val rddContainerFactoryInterface = "%spublic static ContainerFactoryInterface baseObj = (ContainerFactoryInterface) %s$.MODULE$; %s";
+  val rddMessageFactoryInterface = "%spublic static MessageFactoryInterface baseObj = (MessageFactoryInterface) %s$.MODULE$; %s";
   val fieldsForMappedVar = "%svar fields: scala.collection.mutable.Map[String, (Int, Any)] = new scala.collection.mutable.HashMap[String, (Int, Any)];"
 
   def catchStmt = {
@@ -72,8 +72,8 @@ class MessageConstants {
   def rddObjImportStmts() = {
     """
   import com.ligadata.KamanjaBase.JavaRDDObject;
-	import com.ligadata.KamanjaBase.BaseMsgObj;
-	import com.ligadata.KamanjaBase.BaseContainerObj;
+	import com.ligadata.KamanjaBase.MessageFactoryInterface;
+	import com.ligadata.KamanjaBase.ContainerFactoryInterface;
     """
   }
 

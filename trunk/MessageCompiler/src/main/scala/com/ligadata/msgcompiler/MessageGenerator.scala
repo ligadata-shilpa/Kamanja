@@ -42,7 +42,7 @@ class MessageGenerator {
       messageGenerator = messageGenerator.append(classGen(message));
       messageGenerator = messageGenerator.append(getMessgeBasicDetails(message));
       messageGenerator = messageGenerator.append(msgConstants.newline + keyTypesMap(message.Elements));
-      messageGenerator = messageGenerator.append(methodsFromBaseMsg(message));
+      messageGenerator = messageGenerator.append(methodsFromMessageInterface(message));
       messageGenerator = messageGenerator.append(msgConstants.newline + generateParitionKeysData(message) + msgConstants.newline);
       messageGenerator = messageGenerator.append(msgConstants.newline + generatePrimaryKeysData(message) + msgConstants.newline);
       if (message.Fixed.equalsIgnoreCase("true")) {
@@ -85,7 +85,7 @@ class MessageGenerator {
       baseMsgType = msgConstants.baseContainer
       factoryStr = msgConstants.baseContainerObj
     }
-    // (var transactionId: Long, other: CustAlertHistory) extends BaseContainer {
+    // (var transactionId: Long, other: CustAlertHistory) extends ContainerInterface {
     return msgConstants.classStr.format(message.Name, factoryStr, message.Name, baseMsgType, msgConstants.newline)
 
   }
@@ -356,9 +356,9 @@ class MessageGenerator {
   }
 
   /*
-   * some overridable methods from BaseMsg
+   * some overridable methods from MessageInterface
    */
-  private def methodsFromBaseMsg(message: Message): String = {
+  private def methodsFromMessageInterface(message: Message): String = {
     """    
     override def save: Unit = { """ + message.Name + """.saveOne(this) }
   

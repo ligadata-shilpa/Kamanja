@@ -12,9 +12,9 @@ import java.io.{DataInputStream, DataOutputStream, ByteArrayOutputStream}
 import com.ligadata.Exceptions.StackTrace
 import org.apache.logging.log4j.{Logger, LogManager}
 import java.util.Date
-import com.ligadata.KamanjaBase.{BaseMsg, BaseMsgObj, TransformMessage, BaseContainer, MdBaseResolveInfo, MessageContainerBase, RDDObject, RDD, JavaRDDObject}
+import com.ligadata.KamanjaBase.{MessageInterface, MessageFactoryInterface, TransformMessage, ContainerInterface, MdBaseResolveInfo, ContainerInterface, RDDObject, RDD, JavaRDDObject}
 
-object msg1 extends RDDObject[msg1] with BaseMsgObj {
+object msg1 extends RDDObject[msg1] with MessageFactoryInterface {
   override def TransformDataAttributes: TransformMessage = null
 
   override def NeedToTransformData: Boolean = false
@@ -27,7 +27,7 @@ object msg1 extends RDDObject[msg1] with BaseMsgObj {
 
   override def Version: String = "000000.000001.000000"
 
-  override def CreateNewMessage: BaseMsg = new msg1()
+  override def CreateNewMessage: MessageInterface = new msg1()
 
   override def IsFixed: Boolean = true;
 
@@ -81,7 +81,7 @@ object msg1 extends RDDObject[msg1] with BaseMsgObj {
 
 }
 
-class msg1(var transactionId: Long, other: msg1) extends BaseMsg {
+class msg1(var transactionId: Long, other: msg1) extends MessageInterface {
   override def IsFixed: Boolean = msg1.IsFixed;
 
   override def IsKv: Boolean = msg1.IsKv;
@@ -156,10 +156,10 @@ class msg1(var transactionId: Long, other: msg1) extends BaseMsg {
 
   private val LOG = LogManager.getLogger(getClass)
 
-  override def AddMessage(childPath: Array[(String, String)], msg: BaseMsg): Unit = {}
+  override def AddMessage(childPath: Array[(String, String)], msg: MessageInterface): Unit = {}
 
 
-  override def GetMessage(childPath: Array[(String, String)], primaryKey: Array[String]): com.ligadata.KamanjaBase.BaseMsg = {
+  override def GetMessage(childPath: Array[(String, String)], primaryKey: Array[String]): com.ligadata.KamanjaBase.MessageInterface = {
     return null
   }
 
@@ -421,7 +421,7 @@ class msg1(var transactionId: Long, other: msg1) extends BaseMsg {
     this(0, null)
   }
 
-  override def Clone(): MessageContainerBase = {
+  override def Clone(): ContainerInterface = {
     msg1.build(this)
   }
 

@@ -357,8 +357,8 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
 
   var typeNameCorrType: BaseTypeDef = _
   var kvTableName: String = _
-  var messageObj: BaseMsgObj = _
-  var containerObj: BaseContainerObj = _
+  var messageObj: MessageFactoryInterface = _
+  var containerObj: ContainerFactoryInterface = _
   var objFullName: String = _
   // var kryoSer: com.ligadata.Serialize.Serializer = null
 
@@ -392,7 +392,7 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
         var curClz = Class.forName(clsName, true, kvInitLoader.loader)
 
         while (curClz != null && isContainer == false) {
-          isContainer = Utils.isDerivedFrom(curClz, "com.ligadata.KamanjaBase.BaseContainerObj")
+          isContainer = Utils.isDerivedFrom(curClz, "com.ligadata.KamanjaBase.ContainerFactoryInterface")
           if (isContainer == false)
             curClz = curClz.getSuperclass()
         }
@@ -411,7 +411,7 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
         var curClz = Class.forName(clsName, true, kvInitLoader.loader)
 
         while (curClz != null && isMsg == false) {
-          isMsg = Utils.isDerivedFrom(curClz, "com.ligadata.KamanjaBase.BaseMsgObj")
+          isMsg = Utils.isDerivedFrom(curClz, "com.ligadata.KamanjaBase.MessageFactoryInterface")
           if (isMsg == false)
             curClz = curClz.getSuperclass()
         }
@@ -427,11 +427,11 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
         val module = kvInitLoader.mirror.staticModule(clsName)
         val obj = kvInitLoader.mirror.reflectModule(module)
         val objinst = obj.instance
-        if (objinst.isInstanceOf[BaseMsgObj]) {
-          messageObj = objinst.asInstanceOf[BaseMsgObj]
+        if (objinst.isInstanceOf[MessageFactoryInterface]) {
+          messageObj = objinst.asInstanceOf[MessageFactoryInterface]
           logger.debug("Created Message Object")
-        } else if (objinst.isInstanceOf[BaseContainerObj]) {
-          containerObj = objinst.asInstanceOf[BaseContainerObj]
+        } else if (objinst.isInstanceOf[ContainerFactoryInterface]) {
+          containerObj = objinst.asInstanceOf[ContainerFactoryInterface]
           logger.debug("Created Container Object")
         } else {
           logger.error("Failed to instantiate message or conatiner object :" + clsName)
@@ -504,7 +504,7 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
     true
   }
 
-  override def getMessgeOrContainerInstance(MsgContainerType: String): MessageContainerBase = {
+  override def getMessgeOrContainerInstance(MsgContainerType: String): ContainerInterface = {
     if (MsgContainerType.compareToIgnoreCase(objFullName) != 0)
       return null
     // Simply creating new object and returning. Not checking for MsgContainerType. This is issue if the child level messages ask for the type 
@@ -603,18 +603,18 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
     return null
   }
 
-  private def collectKeyAndValues(k: Key, v: Any, dataByBucketKeyPart: TreeMap[KeyWithBucketIdAndPrimaryKey, MessageContainerBaseWithModFlag], loadedKeys: java.util.TreeSet[LoadKeyWithBucketId]): Unit = {
-    val value: MessageContainerBase = null // SerializeDeserialize.Deserialize(v.serializedInfo, this, kvInitLoader.loader, true, "")
+  private def collectKeyAndValues(k: Key, v: Any, dataByBucketKeyPart: TreeMap[KeyWithBucketIdAndPrimaryKey, ContainerInterfaceWithModFlag], loadedKeys: java.util.TreeSet[LoadKeyWithBucketId]): Unit = {
+    val value: ContainerInterface = null // SerializeDeserialize.Deserialize(v.serializedInfo, this, kvInitLoader.loader, true, "")
     val primarykey = value.PrimaryKeyData
     val key = KeyWithBucketIdAndPrimaryKey(KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(k.bucketKey), k, primarykey != null && primarykey.size > 0, primarykey)
-    dataByBucketKeyPart.put(key, MessageContainerBaseWithModFlag(false, value))
+    dataByBucketKeyPart.put(key, ContainerInterfaceWithModFlag(false, value))
 
     val bucketId = KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(k.bucketKey)
     val loadKey = LoadKeyWithBucketId(bucketId, TimeRange(k.timePartition, k.timePartition), k.bucketKey)
     loadedKeys.add(loadKey)
   }
 
-  private def LoadDataIfNeeded(loadKey: LoadKeyWithBucketId, loadedKeys: java.util.TreeSet[LoadKeyWithBucketId], dataByBucketKeyPart: TreeMap[KeyWithBucketIdAndPrimaryKey, MessageContainerBaseWithModFlag], kvstore: DataStore): Unit = {
+  private def LoadDataIfNeeded(loadKey: LoadKeyWithBucketId, loadedKeys: java.util.TreeSet[LoadKeyWithBucketId], dataByBucketKeyPart: TreeMap[KeyWithBucketIdAndPrimaryKey, ContainerInterfaceWithModFlag], kvstore: DataStore): Unit = {
     if (loadedKeys.contains(loadKey))
       return
     val buildOne = (k: Key, v: Any, serType: String, typ: String, ver:Int) => {
@@ -669,7 +669,7 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
     }
   }
 
-  private def commitData(transId: Long, kvstore: DataStore, dataByBucketKeyPart: TreeMap[KeyWithBucketIdAndPrimaryKey, MessageContainerBaseWithModFlag], commitBatchSize: Int, processedRows: Int): Unit = {
+  private def commitData(transId: Long, kvstore: DataStore, dataByBucketKeyPart: TreeMap[KeyWithBucketIdAndPrimaryKey, ContainerInterfaceWithModFlag], commitBatchSize: Int, processedRows: Int): Unit = {
     val storeObjects = new ArrayBuffer[(Key, String, Any)](dataByBucketKeyPart.size())
     var it1 = dataByBucketKeyPart.entrySet().iterator()
     while (it1.hasNext()) {
@@ -780,8 +780,8 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
 
     logger.debug("KeyFields:" + keyfieldnames.mkString(","))
 
-    // The value for this is Boolean & MessageContainerBase. Here Boolean represents it is changed in this transaction or loaded from previous file
-    var dataByBucketKeyPart = new TreeMap[KeyWithBucketIdAndPrimaryKey, MessageContainerBaseWithModFlag](KvBaseDefalts.defualtBucketKeyComp) // By time, BucketKey, then PrimaryKey/{transactionid & rowid}. This is little cheaper if we are going to get exact match, because we compare time & then bucketid
+    // The value for this is Boolean & ContainerInterface. Here Boolean represents it is changed in this transaction or loaded from previous file
+    var dataByBucketKeyPart = new TreeMap[KeyWithBucketIdAndPrimaryKey, ContainerInterfaceWithModFlag](KvBaseDefalts.defualtBucketKeyComp) // By time, BucketKey, then PrimaryKey/{transactionid & rowid}. This is little cheaper if we are going to get exact match, because we compare time & then bucketid
     var loadedKeys = new java.util.TreeSet[LoadKeyWithBucketId](KvBaseDefalts.defaultLoadKeyComp) // By BucketId, BucketKey, Time Range
 
     var hasPrimaryKey = false
@@ -821,7 +821,7 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
           val inputData = prepareInputData(inputStr)
 
           if (inputData != null) {
-            var messageOrContainer: MessageContainerBase = null
+            var messageOrContainer: ContainerInterface = null
 
             if (isMsg) {
               messageOrContainer = messageObj.CreateNewMessage
@@ -884,7 +884,7 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
                   LoadDataIfNeeded(loadKey, loadedKeys, dataByBucketKeyPart, kvstore)
                 }
 
-                dataByBucketKeyPart.put(k, MessageContainerBaseWithModFlag(true, messageOrContainer))
+                dataByBucketKeyPart.put(k, ContainerInterfaceWithModFlag(true, messageOrContainer))
                 processedRows += 1
                 if (processedRows % commitBatchSize == 0) {
                   logger.info("%s: Collected batch (%d) of values. About to insert".format(GetCurDtTmStr, commitBatchSize))

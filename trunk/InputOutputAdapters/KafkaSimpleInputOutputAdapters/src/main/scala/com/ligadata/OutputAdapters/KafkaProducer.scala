@@ -18,7 +18,7 @@
 package com.ligadata.OutputAdapters
 
 import java.util.{ Properties, Arrays }
-import com.ligadata.KamanjaBase.{MessageContainerBase, TransactionContext, NodeContext}
+import com.ligadata.KamanjaBase.{ContainerInterface, TransactionContext, NodeContext}
 import kafka.common.{ QueueFullException, FailedToSendMessageException }
 import org.apache.logging.log4j.{ Logger, LogManager }
 import com.ligadata.InputOutputAdapterInfo._
@@ -349,7 +349,7 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, val nodeContext: Node
     * @param serializedContainerData
     * @param serializerNames
    */
-  protected override def send(tnxCtxt: TransactionContext, outputContainers: Array[MessageContainerBase], serializedContainerData: Array[Array[Byte]], serializerNames: Array[String]): Unit = {
+  protected override def send(tnxCtxt: TransactionContext, outputContainers: Array[ContainerInterface], serializedContainerData: Array[Array[Byte]], serializerNames: Array[String]): Unit = {
 
     // Sanity checks
     if (isShutdown) {

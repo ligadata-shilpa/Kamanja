@@ -86,7 +86,7 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
     }
   */
 
-  def executeMessage(msg: MessageContainerBase, data: Array[Byte], uniqueKey: PartitionUniqueRecordKey, uniqueVal: PartitionUniqueRecordValue, readTmNanoSecs: Long, readTmMilliSecs: Long, deserializerName: String): Unit = {
+  def executeMessage(msg: ContainerInterface, data: Array[Byte], uniqueKey: PartitionUniqueRecordKey, uniqueVal: PartitionUniqueRecordValue, readTmNanoSecs: Long, readTmMilliSecs: Long, deserializerName: String): Unit = {
     try {
       val curLoader = KamanjaConfiguration.metadataLoader.loader // Protecting from changing it between below statements
       if (curLoader != null && previousLoader != curLoader) { // Checking for every messages and setting when changed. We can set for every message, but the problem is it tries to do SecurityManager check every time.

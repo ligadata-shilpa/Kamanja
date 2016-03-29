@@ -106,13 +106,13 @@ trait OutputAdapter extends AdaptersSerializeDeserializers with Monitorable {
   // Configuration
   val inputConfig: AdapterConfiguration
 
-  def send(tnxCtxt: TransactionContext, outputContainers: Array[MessageContainerBase]): Unit = {
+  def send(tnxCtxt: TransactionContext, outputContainers: Array[ContainerInterface]): Unit = {
     val (outContainers, serializedContainerData, serializerNames) = serialize(tnxCtxt, outputContainers)
     send(tnxCtxt, outContainers, serializedContainerData, serializerNames)
   }
 
   // This is protected override method. After applying serialization, pass original messages, Serialized data & Serializer names
-  protected def send(tnxCtxt: TransactionContext, outputContainers: Array[MessageContainerBase], serializedContainerData: Array[Array[Byte]], serializerNames: Array[String]): Unit
+  protected def send(tnxCtxt: TransactionContext, outputContainers: Array[ContainerInterface], serializedContainerData: Array[Array[Byte]], serializerNames: Array[String]): Unit
 
   def Shutdown: Unit
 
@@ -129,7 +129,7 @@ trait ExecContext extends AdaptersSerializeDeserializers {
     executeMessage(msg, data, uniqueKey, uniqueVal, readTmNanoSecs, readTmMilliSecs, deserializerName): Unit
   }
 
-  protected def executeMessage(msg: MessageContainerBase, data: Array[Byte], uniqueKey: PartitionUniqueRecordKey, uniqueVal: PartitionUniqueRecordValue, readTmNanoSecs: Long, readTmMilliSecs: Long, deserializerName: String): Unit
+  protected def executeMessage(msg: ContainerInterface, data: Array[Byte], uniqueKey: PartitionUniqueRecordKey, uniqueVal: PartitionUniqueRecordValue, readTmNanoSecs: Long, readTmMilliSecs: Long, deserializerName: String): Unit
 }
 
 trait ExecContextFactory {

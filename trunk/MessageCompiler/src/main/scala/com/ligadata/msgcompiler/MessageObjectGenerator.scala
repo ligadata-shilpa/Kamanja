@@ -10,11 +10,11 @@ class MessageObjectGenerator {
   lazy val log = LogManager.getLogger(logger)
   var msgConstants = new MessageConstants
 
-  //object CustAlertHistory extends RDDObject[CustAlertHistory] with BaseContainerObj {
+  //object CustAlertHistory extends RDDObject[CustAlertHistory] with ContainerFactoryInterface {
 
   /*
    *  Generate the message/container object
-   *  Message object line with RDDObject and BaseMsg
+   *  Message object line with RDDObject and MessageInterface
    *  Message object variable declaration - NAME, FULLNAME, NAMESPACE, VERSION, CreateNewMessage, IsFixed, CanPersist
    *  2 build methods - not sure whether we need it or not
    *  Paritiion keys stuff
@@ -50,7 +50,7 @@ class MessageObjectGenerator {
   }
 
   /*
-   * MessageObject with RDDObject and BaseMsg
+   * MessageObject with RDDObject and MessageInterface
    */
 
   private def msgObject(message: Message): String = {

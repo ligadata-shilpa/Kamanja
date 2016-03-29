@@ -2,7 +2,7 @@ package com.ligadata.KamanjaBase
 import java.io.{DataInputStream, DataOutputStream}
 import org.apache.logging.log4j.{Logger, LogManager}
 
-object KamanjaMessageEvent extends RDDObject[KamanjaMessageEvent] with BaseMsgObj {
+object KamanjaMessageEvent extends RDDObject[KamanjaMessageEvent] with MessageFactoryInterface {
 
   override def NeedToTransformData: Boolean = false
 
@@ -14,7 +14,7 @@ object KamanjaMessageEvent extends RDDObject[KamanjaMessageEvent] with BaseMsgOb
 
   override def Version: String = "000001.000005.000000"
 
-  override def CreateNewMessage: BaseMsg = new KamanjaMessageEvent()
+  override def CreateNewMessage: MessageInterface = new KamanjaMessageEvent()
 
   override def IsFixed: Boolean = true;
 
@@ -68,7 +68,7 @@ object KamanjaMessageEvent extends RDDObject[KamanjaMessageEvent] with BaseMsgOb
 
 }
 
-class KamanjaMessageEvent(var transactionId: Long, other: KamanjaMessageEvent) extends BaseMsg {
+class KamanjaMessageEvent(var transactionId: Long, other: KamanjaMessageEvent) extends MessageInterface {
   override def IsFixed: Boolean = KamanjaMessageEvent.IsFixed;
 
   override def IsKv: Boolean = KamanjaMessageEvent.IsKv;
@@ -147,10 +147,10 @@ class KamanjaMessageEvent(var transactionId: Long, other: KamanjaMessageEvent) e
 
   private val LOG = LogManager.getLogger(getClass)
 
-  override def AddMessage(childPath: Array[(String, String)], msg: BaseMsg): Unit = {}
+  override def AddMessage(childPath: Array[(String, String)], msg: MessageInterface): Unit = {}
 
 
-  override def GetMessage(childPath: Array[(String, String)], primaryKey: Array[String]): com.ligadata.KamanjaBase.BaseMsg = {
+  override def GetMessage(childPath: Array[(String, String)], primaryKey: Array[String]): com.ligadata.KamanjaBase.MessageInterface = {
     return null
   }
 
@@ -251,7 +251,7 @@ class KamanjaMessageEvent(var transactionId: Long, other: KamanjaMessageEvent) e
     this(0, null)
   }
 
-  override def Clone(): MessageContainerBase = {
+  override def Clone(): ContainerInterface = {
     KamanjaMessageEvent.build(this)
   }
 
