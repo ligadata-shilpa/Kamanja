@@ -959,7 +959,7 @@ class CompilerProxy {
           val obj = loaderInfo.mirror.reflectModule(module)
           objInst = obj.instance
           if (objInst.isInstanceOf[MessageFactoryInterface]) {
-            messageObj = objInst.asInstanceOf[MessageFactoryInterface].CreateNewMessage
+            messageObj = objInst.asInstanceOf[MessageFactoryInterface].createInstance.asInstanceOf[MessageInterface]
           }
         } catch {
           case e: Exception => {
