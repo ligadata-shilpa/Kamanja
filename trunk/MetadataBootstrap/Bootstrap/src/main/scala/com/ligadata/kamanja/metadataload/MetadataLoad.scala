@@ -63,7 +63,6 @@ object MetadataLoad {
 			(MdMgr.sysNS, "EnvContext", "com.ligadata.KamanjaBase.EnvContext", List()),
 			(MdMgr.sysNS, "MessageInterface", "com.ligadata.KamanjaBase.MessageInterface", List()),
 			(MdMgr.sysNS, "ContainerInterface", "com.ligadata.KamanjaBase.ContainerInterface", List()),
-			(MdMgr.sysNS, "ContainerInterface", "com.ligadata.KamanjaBase.ContainerInterface", List()),
 			(MdMgr.sysNS, "Context", "com.ligadata.pmml.runtime.Context", List()))
 	}
 

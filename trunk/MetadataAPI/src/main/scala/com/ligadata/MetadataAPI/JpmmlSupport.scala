@@ -180,6 +180,7 @@ class JpmmlSupport(mgr: MdMgr
             */
             val inpMsgs = if (inputMsg != null) {
               val t = new MessageAndAttributes
+              t.origin = "" //FIXME:- Fill this if looking for specific input
               t.message = inputMsg.FullName
               t.attributes = Array[String]()
               Array(t)

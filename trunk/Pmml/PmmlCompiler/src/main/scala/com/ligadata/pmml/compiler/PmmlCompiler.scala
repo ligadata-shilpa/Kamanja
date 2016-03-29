@@ -587,6 +587,7 @@ class PmmlCompiler(val mgr: MdMgr, val clientName: String, val logger: Logger, v
     val finalmsgs = msgs.map(each => {
       val (_, _, containerTypeDef, _) = each
       val msgAttr = new MessageAndAttributes
+      msgAttr.origin = "" //FIXME:- Fill this if looking for specific input
       msgAttr.message = containerTypeDef.FullName.trim
       msgAttr.attributes = Array[String]()
       msgAttr

@@ -685,6 +685,7 @@ class CompilerProxy {
           filterdSets.map(set => {
             set.map(m => {
               val t = new MessageAndAttributes
+              t.origin = "" //FIXME:- Fill this if looking for specific input
               t.message = m
               t.attributes = Array[String]()
               t
@@ -694,6 +695,7 @@ class CompilerProxy {
           val defaultInpSets = defaultInputMsgSets.map(set => {
             set.map(m => {
               val t = new MessageAndAttributes
+              t.origin = "" //FIXME:- Fill this if looking for specific input
               t.message = m
               t.attributes = Array[String]()
               t

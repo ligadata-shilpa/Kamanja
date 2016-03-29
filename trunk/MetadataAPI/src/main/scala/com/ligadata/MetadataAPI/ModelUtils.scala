@@ -767,7 +767,7 @@ object ModelUtils {
         * to compile despite this obstacle is warranted.
         */
       val isJpmml: Boolean = mod.modelRepresentation == ModelRepresentation.PMML
-      val isJtm: Boolean = mod.modelRepresentation == ModelRepresentation.JTM
+      val isJtm: Boolean = (mod.modelRepresentation == ModelRepresentation.JAR && mod.miningModelType == MiningModelType.JTM)
       val msgDef: MessageDef = optMsgDef.orNull
       val modDef: ModelDef = if (!isJpmml) {
 
