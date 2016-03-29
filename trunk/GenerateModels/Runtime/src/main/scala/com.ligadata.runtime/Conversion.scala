@@ -17,7 +17,6 @@ package com.ligadata.runtime
 
 import java.sql.Timestamp
 import java.util.Date
-
 import scala.math.Ordering.BigIntOrdering
 
 /*
@@ -35,7 +34,7 @@ b) id -> to map
 */
 class Conversion {
 
-  var errors : Map[Integer, String] = Map.empty[Integer, String]
+  //var errors : Map[Integer, String] = Map.empty[Integer, String]
 
   // Source -> Map[Target, Function]
   val builtin: Map[String, Map[String, String]] = Map(
@@ -99,10 +98,9 @@ class Conversion {
       case y: Int => y.toString
       case y: Double => y.toString
       case y: Boolean => y.toString
-      case y: Date => y.toString
-      case y: Timestamp => y.toString
+      //case y: Date => y.toString
+      //case y: Timestamp => y.toString
       case y: BigDecimal => y.toString
     }
   }
-
 }
