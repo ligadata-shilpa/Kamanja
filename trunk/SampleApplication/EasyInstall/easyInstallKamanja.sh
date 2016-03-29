@@ -228,7 +228,7 @@ cp $ivyPath/cache/org.apache.logging.log4j/log4j-api/jars/log4j-api-2.4.1.jar $s
 cp $ivyPath/cache/org.apache.logging.log4j/log4j-1.2-api/bundles/log4j-1.2-api-2.4.1.jar $systemlib
 cp $srcPath/lib_managed/jars/org.apache.hadoop/hadoop-auth/hadoop-auth-2.7.1.jar $systemlib
 cp $srcPath/lib_managed/jars/commons-lang/commons-lang/commons-lang-2.6.jar $systemlib
-cp $srcPath/lib_managed/jars/com.google.code.gson/gson/gson-2.2.4.jar $systemlib
+cp $srcPath/lib_managed/jars/com.google.code.gson/gson/gson-2.5.jar $systemlib
 cp $ivyPath/cache/org.jpmml/pmml-schema/jars/pmml-schema-1.2.9.jar $systemlib
 cp $ivyPath/cache/org.javassist/javassist/bundles/javassist-3.18.1-GA.jar $systemlib
 cp $srcPath/lib_managed/jars/org.apache.logging.log4j/log4j-api/log4j-api-2.4.1.jar $systemlib
@@ -573,7 +573,7 @@ cp $srcPath/lib_managed/jars/commons-codec/commons-codec/commons-codec-1.10.jar 
 cp $ivyPath/cache/com.thoughtworks.paranamer/paranamer/jars/paranamer-2.6.jar $systemlib
 cp $ivyPath/cache/javax.servlet/servlet-api/jars/servlet-api-2.5.jar $systemlib
 cp $srcPath/lib_managed/jars/org.json4s/json4s-core_2.10/json4s-core_2.10-3.2.9.jar $systemlib
-cp $ivyPath/cache/com.google.code.gson/gson/jars/gson-2.2.4.jar $systemlib
+cp $ivyPath/cache/com.google.code.gson/gson/jars/gson-2.5.jar $systemlib
 cp $srcPath/SecurityAdapters/SecurityAdapterBase/target/scala-2.10/securityadapterbase*.jar $systemlib
 cp $ivyPath/cache/org.ow2.asm/asm-commons/jars/asm-commons-4.0.jar $systemlib
 cp $srcPath/lib_managed/jars/com.twitter/chill-java/chill-java-0.5.0.jar $systemlib
@@ -917,7 +917,7 @@ cp $ivyPath/cache/org.apache.logging.log4j/log4j-api/jars/log4j-api-2.4.1.jar $s
 cp $ivyPath/cache/org.apache.logging.log4j/log4j-1.2-api/bundles/log4j-1.2-api-2.4.1.jar $systemlib
 cp $srcPath/lib_managed/jars/org.apache.hadoop/hadoop-auth/hadoop-auth-2.7.1.jar $systemlib
 cp $srcPath/lib_managed/jars/commons-lang/commons-lang/commons-lang-2.6.jar $systemlib
-cp $srcPath/lib_managed/jars/com.google.code.gson/gson/gson-2.2.4.jar $systemlib
+cp $srcPath/lib_managed/jars/com.google.code.gson/gson/gson-2.5.jar $systemlib
 cp $ivyPath/cache/org.jpmml/pmml-schema/jars/pmml-schema-1.2.9.jar $systemlib
 cp $ivyPath/cache/org.javassist/javassist/bundles/javassist-3.18.1-GA.jar $systemlib
 cp $srcPath/lib_managed/jars/org.apache.logging.log4j/log4j-api/log4j-api-2.4.1.jar $systemlib
@@ -1232,7 +1232,7 @@ cp $srcPath/lib_managed/jars/commons-codec/commons-codec/commons-codec-1.10.jar 
 cp $ivyPath/cache/com.thoughtworks.paranamer/paranamer/jars/paranamer-2.6.jar $systemlib
 cp $ivyPath/cache/javax.servlet/servlet-api/jars/servlet-api-2.5.jar $systemlib
 cp $srcPath/lib_managed/jars/org.json4s/json4s-core_2.11/json4s-core_2.11-3.2.9.jar $systemlib
-cp $ivyPath/cache/com.google.code.gson/gson/jars/gson-2.2.4.jar $systemlib
+cp $ivyPath/cache/com.google.code.gson/gson/jars/gson-2.5.jar $systemlib
 cp $srcPath/SecurityAdapters/SecurityAdapterBase/target/scala-2.11/securityadapterbase_2.11-1.0.jar $systemlib
 cp $ivyPath/cache/org.ow2.asm/asm-commons/jars/asm-commons-4.0.jar $systemlib
 cp $srcPath/lib_managed/jars/com.twitter/chill-java/chill-java-0.5.0.jar $systemlib

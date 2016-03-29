@@ -63,7 +63,6 @@ object MetadataLoad {
 			(MdMgr.sysNS, "EnvContext", "com.ligadata.KamanjaBase.EnvContext", List()),
 			(MdMgr.sysNS, "MessageInterface", "com.ligadata.KamanjaBase.MessageInterface", List()),
 			(MdMgr.sysNS, "ContainerInterface", "com.ligadata.KamanjaBase.ContainerInterface", List()),
-			(MdMgr.sysNS, "ContainerInterface", "com.ligadata.KamanjaBase.ContainerInterface", List()),
 			(MdMgr.sysNS, "Context", "com.ligadata.pmml.runtime.Context", List()))
 	}
 
@@ -558,7 +557,6 @@ def initTypesFor_com_ligadata_pmml_udfs_Udfs {
 		mgr.AddSet(MdMgr.sysNS, "SetOfTupleOfAny2", MdMgr.sysNS, "TupleOfAny2", MetadataLoad.baseTypesVer, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
 		mgr.AddArrayBuffer("System", "ArrayBufferOfTupleOfAny2", "System", "TupleOfAny2", 1, MetadataLoad.baseTypesVer, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
 
-		mgr.AddArray("System", "ArrayOfContainerInterface", "System", "ContainerInterface", 1, MetadataLoad.baseTypesVer, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
 		mgr.AddArray("System", "ArrayOfContainerInterface", "System", "ContainerInterface", 1, MetadataLoad.baseTypesVer, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
 	}
 

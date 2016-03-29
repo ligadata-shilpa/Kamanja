@@ -10,8 +10,8 @@ FAQ:
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="urn:org:jgroups http://www.jgroups.org/schema/JGroups-3.1.xsd">
     <UDP
-            mcast_addr="231.12.21.132"
-            mcast_port="45566"
+            mcast_addr="${jgroups.udp.add}"
+            mcast_port="${jgroups.port}"
             tos="8"
             ucast_recv_buf_size="20M"
             ucast_send_buf_size="640K"

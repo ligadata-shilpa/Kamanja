@@ -449,6 +449,9 @@ object ModelUtils {
       case ModelType.KPMML => {
         AddKPMMLModel(input, optUserid, optMsgProduced)
       }
+      case ModelType.JTM => {
+        AddJTMModel(input, optUserid)
+      }
       case ModelType.JAVA | ModelType.SCALA => {
         val result: String = optModelName.fold(throw new RuntimeException("Model name should be provided for Java/Scala models"))(name => {
           AddModelFromSource(input, modelType.toString, name, optUserid, optMsgProduced)
@@ -685,6 +688,65 @@ object ModelUtils {
   }
 
   /**
+    * Add Kamanja JTM Model (format json).  Kamanja JTM models obtain their name and version from the header in the JTM s file.
+    *
+    * @param jsonText
+    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @return json string result
+    */
+  private def AddJTMModel(jsonText: String, userid: Option[String]): String = {
+    try {
+      var compProxy = new CompilerProxy
+      //compProxy.setLoggerLevel(Level.TRACE)
+      var (classStr, modDef) = compProxy.compileJTM(jsonText)
+
+      // ModelDef may be null if there were pmml compiler errors... act accordingly.  If modelDef present,
+      // make sure the version of the model is greater than any of previous models with same FullName
+      val latestVersion = if (modDef == null) None else GetLatestModel(modDef)
+      val isValid: Boolean = if (latestVersion != None) MetadataAPIImpl.IsValidVersion(latestVersion.get, modDef) else true
+
+      if (isValid && modDef != null) {
+        MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.INSERTOBJECT, jsonText, AuditConstants.SUCCESS, "", modDef.FullNameWithVer)
+        // save the jar file first
+        PersistenceUtils.UploadJarsToDB(modDef)
+        val apiResult = AddModel(modDef, userid)
+        logger.debug("Model is added..")
+        var objectsAdded = new Array[BaseElemDef](0)
+        objectsAdded = objectsAdded :+ modDef
+        val operations = for (op <- objectsAdded) yield "Add"
+        logger.debug("Notify engine via zookeeper")
+        MetadataAPIImpl.NotifyEngine(objectsAdded, operations)
+        apiResult
+      } else {
+        val reasonForFailure: String = if (modDef != null) ErrorCodeConstants.Add_Model_Failed_Higher_Version_Required else ErrorCodeConstants.Add_Model_Failed
+        val modDefName: String = if (modDef != null) modDef.FullName else "(JTM compile failed)"
+        val modDefVer: String = if (modDef != null) MdMgr.Pad0s2Version(modDef.Version) else MdMgr.UnknownVersion
+        val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddJTMModel", null, reasonForFailure + ":" + modDefName + "." + modDefVer)
+        apiResult.toString()
+      }
+    } catch {
+      case e: ModelCompilationFailedException => {
+        logger.debug("", e)
+        val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddJTMModel", null, "Error :" + e.toString() + ErrorCodeConstants.Add_Model_Failed)
+        apiResult.toString()
+      }
+      case e: AlreadyExistsException => {
+
+        logger.debug("", e)
+        val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddJTMModel", null, "Error :" + e.toString() + ErrorCodeConstants.Add_Model_Failed)
+        apiResult.toString()
+      }
+      case e: Exception => {
+
+        logger.debug("", e)
+        val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddJTMModel", null, "Error :" + e.toString() + ErrorCodeConstants.Add_Model_Failed)
+        apiResult.toString()
+      }
+    }
+  }
+
+  /**
     * Recompile the supplied model. Optionally the message definition is supplied that was just built.
     *
     * @param mod       the model definition that possibly needs to be reconstructed.
@@ -705,60 +767,67 @@ object ModelUtils {
         * to compile despite this obstacle is warranted.
         */
       val isJpmml: Boolean = mod.modelRepresentation == ModelRepresentation.PMML
+      val isJtm: Boolean = (mod.modelRepresentation == ModelRepresentation.JAR && mod.miningModelType == MiningModelType.JTM)
       val msgDef: MessageDef = optMsgDef.orNull
       val modDef: ModelDef = if (!isJpmml) {
 
         val compProxy = new CompilerProxy
         //compProxy.setLoggerLevel(Level.TRACE)
 
-        // Recompile the model based upon its model type.Models can be either PMML or Custom Sourced.  See which one we are dealing with
+        // Recompile the model based upon its model type.Models can be either PMML, JSON or Custom Sourced.  See which one we are dealing with
         // here.
-        if (mod.objectFormat == ObjFormatType.fXML) {
-          val pmmlText = mod.ObjectDefinition
-          val ownerId: String = if (userid == None) "Kamanja" else userid.get
-          val (classStrTemp, modDefTemp) = compProxy.compilePmml(pmmlText, ownerId, true)
-          // copy outputMsgs
-          if (mod.outputMsgs.length > 0) {
-            modDefTemp.outputMsgs.foreach(omsg => {
-              modDefTemp.outputMsgs = modDefTemp.outputMsgs :+ omsg
-            })
-          }
+        if (isJtm && mod.objectFormat == ObjFormatType.fJSON) {
+          val jtmTxt = mod.ObjectDefinition
+          val (classStrTemp, modDefTemp) = compProxy.compileJTM(jtmTxt, true)
           modDefTemp
         } else {
-          val saveModelParms = parse(mod.ObjectDefinition).values.asInstanceOf[Map[String, Any]]
-
-          val tmpInputMsgSets = saveModelParms.getOrElse(ModelCompilationConstants.INPUT_TYPES_SETS, null)
-          var inputMsgSets = List[List[String]]()
-          if (tmpInputMsgSets != null) {
-            if (tmpInputMsgSets.isInstanceOf[List[Any]]) {
-              if (tmpInputMsgSets.isInstanceOf[List[List[Any]]])
-                inputMsgSets = tmpInputMsgSets.asInstanceOf[List[List[String]]]
-              if (tmpInputMsgSets.isInstanceOf[List[Array[Any]]])
-                inputMsgSets = tmpInputMsgSets.asInstanceOf[List[Array[String]]].map(lst => lst.toList)
-            } else if (tmpInputMsgSets.isInstanceOf[Array[Any]]) {
-              if (tmpInputMsgSets.isInstanceOf[Array[List[Any]]])
-                inputMsgSets = tmpInputMsgSets.asInstanceOf[Array[List[String]]].toList
-              if (tmpInputMsgSets.isInstanceOf[Array[Array[Any]]])
-                inputMsgSets = tmpInputMsgSets.asInstanceOf[Array[Array[String]]].map(lst => lst.toList).toList
+          if (mod.objectFormat == ObjFormatType.fXML) {
+            val pmmlText = mod.ObjectDefinition
+            val ownerId: String = if (userid == None) "Kamanja" else userid.get
+            val (classStrTemp, modDefTemp) = compProxy.compilePmml(pmmlText, ownerId, true)
+            // copy outputMsgs
+            if (mod.outputMsgs.length > 0) {
+              modDefTemp.outputMsgs.foreach(omsg => {
+                modDefTemp.outputMsgs = modDefTemp.outputMsgs :+ omsg
+              })
             }
-          }
+            modDefTemp
+          } else {
+            val saveModelParms = parse(mod.ObjectDefinition).values.asInstanceOf[Map[String, Any]]
 
-          var outputMsgs = List[String]()
-          val tmpOnputMsgs = saveModelParms.getOrElse(ModelCompilationConstants.OUTPUT_TYPES_SETS, null)
-          if (tmpOnputMsgs != null) {
-            if (tmpOnputMsgs.isInstanceOf[List[_]])
-              outputMsgs = tmpOnputMsgs.asInstanceOf[List[String]]
-            if (tmpOnputMsgs.isInstanceOf[Array[_]])
-              outputMsgs = tmpOnputMsgs.asInstanceOf[Array[String]].toList
-          }
+            val tmpInputMsgSets = saveModelParms.getOrElse(ModelCompilationConstants.INPUT_TYPES_SETS, null)
+            var inputMsgSets = List[List[String]]()
+            if (tmpInputMsgSets != null) {
+              if (tmpInputMsgSets.isInstanceOf[List[Any]]) {
+                if (tmpInputMsgSets.isInstanceOf[List[List[Any]]])
+                  inputMsgSets = tmpInputMsgSets.asInstanceOf[List[List[String]]]
+                if (tmpInputMsgSets.isInstanceOf[List[Array[Any]]])
+                  inputMsgSets = tmpInputMsgSets.asInstanceOf[List[Array[String]]].map(lst => lst.toList)
+              } else if (tmpInputMsgSets.isInstanceOf[Array[Any]]) {
+                if (tmpInputMsgSets.isInstanceOf[Array[List[Any]]])
+                  inputMsgSets = tmpInputMsgSets.asInstanceOf[Array[List[String]]].toList
+                if (tmpInputMsgSets.isInstanceOf[Array[Array[Any]]])
+                  inputMsgSets = tmpInputMsgSets.asInstanceOf[Array[Array[String]]].map(lst => lst.toList).toList
+              }
+            }
 
-          val custModDef: ModelDef = compProxy.recompileModelFromSource(
-            saveModelParms.getOrElse(ModelCompilationConstants.SOURCECODE, "").asInstanceOf[String],
-            saveModelParms.getOrElse(ModelCompilationConstants.PHYSICALNAME, "").asInstanceOf[String],
-            saveModelParms.getOrElse(ModelCompilationConstants.DEPENDENCIES, List[String]()).asInstanceOf[List[String]],
-            saveModelParms.getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, List[String]()).asInstanceOf[List[String]],
-            inputMsgSets, outputMsgs, ObjFormatType.asString(mod.objectFormat), userid)
-          custModDef
+            var outputMsgs = List[String]()
+            val tmpOnputMsgs = saveModelParms.getOrElse(ModelCompilationConstants.OUTPUT_TYPES_SETS, null)
+            if (tmpOnputMsgs != null) {
+              if (tmpOnputMsgs.isInstanceOf[List[_]])
+                outputMsgs = tmpOnputMsgs.asInstanceOf[List[String]]
+              if (tmpOnputMsgs.isInstanceOf[Array[_]])
+                outputMsgs = tmpOnputMsgs.asInstanceOf[Array[String]].toList
+            }
+
+            val custModDef: ModelDef = compProxy.recompileModelFromSource(
+              saveModelParms.getOrElse(ModelCompilationConstants.SOURCECODE, "").asInstanceOf[String],
+              saveModelParms.getOrElse(ModelCompilationConstants.PHYSICALNAME, "").asInstanceOf[String],
+              saveModelParms.getOrElse(ModelCompilationConstants.DEPENDENCIES, List[String]()).asInstanceOf[List[String]],
+              saveModelParms.getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, List[String]()).asInstanceOf[List[String]],
+              inputMsgSets, outputMsgs, ObjFormatType.asString(mod.objectFormat), userid)
+            custModDef
+          }
         }
       } else {
         /** the msgConsumed is namespace.name.version  ... drop the version so as to compare the "FullName" */
@@ -910,6 +979,10 @@ object ModelUtils {
     val modelResult: String = modelType match {
       case ModelType.KPMML => {
         val result: String = UpdateKPMMLModel(modelType, input, optUserid, optModelName, optVersion, optMsgProduced)
+        result
+      }
+      case ModelType.JTM => {
+        val result: String = UpdateJTMModel(modelType, input, optUserid, optModelName, optVersion)
         result
       }
       case ModelType.JAVA | ModelType.SCALA => {
@@ -1302,6 +1375,90 @@ object ModelUtils {
 
         logger.debug("", e)
         var apiResult = new ApiResult(ErrorCodeConstants.Failure, s"UpdateModel(type = KPMML)", null, "Error :" + e.toString() + ErrorCodeConstants.Update_Model_Failed)
+        apiResult.toString()
+      }
+    }
+  }
+
+  /**
+    * UpdateModel - Update a Json Transformation Model (JTM)
+    *
+    * Current semantics are that the source supplied in jtmText is compiled and a new model is reproduced.
+    *
+    * @param modelType    the type of the model submission... PMML in this case
+    * @param jtmText      the text element to be added dependent upon the modelType specified.
+    * @param optUserid    the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *                     method.
+    * @param optModelName the model's namespace.name (ignored in this implementation of the UpdatePmmlModel... only used in PMML updates)
+    * @param optVersion   the model's version (ignored in this implementation of the UpdatePmmlModel... only used in PMML updates)
+    * @return result string indicating success or failure of operation
+    */
+  private def UpdateJTMModel(modelType: ModelType.ModelType
+                             , jtmText: String
+                             , optUserid: Option[String] = None
+                             , optModelName: Option[String] = None
+                             , optVersion: Option[String] = None): String = {
+    try {
+      var compProxy = new CompilerProxy
+      //compProxy.setLoggerLevel(Level.TRACE)
+      var (classStr, modDef) = compProxy.compileJTM(jtmText)
+      val optLatestVersion = if (modDef == null) None else GetLatestModel(modDef)
+      val latestVersion: ModelDef = optLatestVersion.orNull
+
+      /**
+        * FIXME: The current strategy is that only the most recent version can be updated.
+        * FIXME: This is not a satisfactory condition. It may be desirable to have 10 PMML models all with
+        * FIXME: the same name but differing only in their version numbers. If someone wants to tune
+        * FIXME: #6 of the 10, that number six is not the latest.  It is just a unique model.
+        *
+        * For this reason, the version of the model that is to be changed should be supplied here and in the
+        * more generic interface implementation that calls here.
+        */
+
+      val isValid: Boolean = (modDef != null && latestVersion != null && latestVersion.Version < modDef.Version)
+
+      if (isValid && modDef != null) {
+        MetadataAPIImpl.logAuditRec(optUserid, Some(AuditConstants.WRITE), AuditConstants.UPDATEOBJECT, jtmText, AuditConstants.SUCCESS, "", modDef.FullNameWithVer)
+        val key = MdMgr.MkFullNameWithVersion(modDef.nameSpace, modDef.name, modDef.ver)
+
+        // when a version number changes, latestVersion  has different namespace making it unique
+        // latest version may not be found in the cache. So need to remove it
+        if (latestVersion != None) {
+          RemoveModel(latestVersion.nameSpace, latestVersion.name, latestVersion.ver, None)
+        }
+
+        PersistenceUtils.UploadJarsToDB(modDef)
+        val result = AddModel(modDef, optUserid)
+        var objectsUpdated = new Array[BaseElemDef](0)
+        var operations = new Array[String](0)
+
+        if (latestVersion != None) {
+          objectsUpdated = objectsUpdated :+ latestVersion
+          operations = operations :+ "Remove"
+        }
+
+        objectsUpdated = objectsUpdated :+ modDef
+        operations = operations :+ "Add"
+        MetadataAPIImpl.NotifyEngine(objectsUpdated, operations)
+        result
+
+      } else {
+        val reasonForFailure: String = if (modDef != null) ErrorCodeConstants.Update_Model_Failed_Invalid_Version else ErrorCodeConstants.Update_Model_Failed
+        val modDefName: String = if (modDef != null) modDef.FullName else "(jtm compile failed)"
+        val modDefVer: String = if (modDef != null) MdMgr.Pad0s2Version(modDef.Version) else MdMgr.UnknownVersion
+        var apiResult = new ApiResult(ErrorCodeConstants.Failure, s"UpdateModel(type = JTM)", null, reasonForFailure + ":" + modDefName + "." + modDefVer)
+        apiResult.toString()
+      }
+    } catch {
+      case e: ObjectNotFoundException => {
+        logger.debug("", e)
+        var apiResult = new ApiResult(ErrorCodeConstants.Failure, s"UpdateModel(type = JTM)", null, "Error :" + e.toString() + ErrorCodeConstants.Update_Model_Failed)
+        apiResult.toString()
+      }
+      case e: Exception => {
+
+        logger.debug("", e)
+        var apiResult = new ApiResult(ErrorCodeConstants.Failure, s"UpdateModel(type = JTM)", null, "Error :" + e.toString() + ErrorCodeConstants.Update_Model_Failed)
         apiResult.toString()
       }
     }

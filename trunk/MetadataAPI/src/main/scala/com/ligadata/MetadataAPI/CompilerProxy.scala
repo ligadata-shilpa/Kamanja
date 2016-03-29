@@ -154,7 +154,7 @@ class CompilerProxy {
         modDef.mdElementId = if (existingModel == None) MetadataAPIImpl.GetMdElementId else existingModel.get.MdElementId
         modDef.ownerId = ownerId
 
-        var pmmlScalaFile = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("JAR_TARGET_DIR") + "/" + modDef.name + ".pmml"
+        var pmmlScalaFile = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("JAR_TARGET_DIR") + "/" + modDef.name + ".scala"
         var classPath = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("CLASSPATH").trim
 
         if (classPath.size == 0)
@@ -215,6 +215,105 @@ class CompilerProxy {
   }
 
   /**
+      * Compile the supplied Json Transformation Model specification string into a scala source file.
+      * @param jsonStr the specification
+      * @recompile a flag that when true indicates the an existing model is to be updated.
+      * @return tuple (scala source produced from compilation, model definition produced for the source code)
+      */
+    def compileJTM(jsonStr: String, recompile: Boolean = false): (String, ModelDef) = {
+        try {
+
+            val model_exec_log : String = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("MODEL_EXEC_LOG")
+            val injectLoggingStmts : Boolean = if (model_exec_log != null) model_exec_log.equalsIgnoreCase("true") else false
+
+            /**  What the PmmlCompiler does to generate the (scalaSrc,modelDef) pair
+                val compiler = new PmmlCompiler(MdMgr.GetMdMgr, "ligadata", logger, injectLoggingStmts,
+                MetadataAPIImpl.GetMetadataAPIConfig.getProperty("JAR_PATHS").split(","))
+                val (classStr, modDef) = compiler.compile(pmmlStr, compiler_work_dir, recompile)
+            */
+
+            /** These two are expected ... your generated source file and the model definition instance.  Steal some
+              * code from the PmmlCompiler for the model def
+              */
+            /*
+                Fixme: Instantiate and call the JTM compiler here.
+
+                Fixme: Instantiate and call the JTM compiler here.
+
+                Fixme: Instantiate and call the JTM compiler here.
+            */
+            val (jtmScalaSrc, modelDef) : (String, ModelDef) = (null,null)
+
+            /**
+              * If errors were encountered... the model definition is not manufactured.
+              * Avoid Scala compilation of the broken src.  Src file MAY be available
+              * in classStr.  However, if there were simple syntactic issues or simple semantic
+              * issues, it may not be generated.
+              */
+            if (modelDef != null) {
+                val jtmScalaPath = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("JAR_TARGET_DIR") + "/" + modelDef.name + ".scala"
+                var classPath = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("CLASSPATH").trim
+
+                if (classPath.size == 0)
+                    classPath = "."
+
+                val jarPaths = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("JAR_PATHS").split(",").toSet
+
+                if (modelDef.DependencyJarNames != null) {
+                    val depJars = modelDef.DependencyJarNames.map(j => Utils.GetValidJarFile(jarPaths, j)).mkString(":")
+                    if (classPath != null && classPath.size > 0) {
+                        classPath = classPath + ":" + depJars
+                    } else {
+                        classPath = depJars
+                    }
+                }
+
+
+                val compiler = new PmmlCompiler(MdMgr.GetMdMgr, "ligadata", logger, injectLoggingStmts,
+                    MetadataAPIImpl.GetMetadataAPIConfig.getProperty("JAR_PATHS").split(","))
+                val skipJar : Boolean = false
+
+                var (jarFile, depJars) = compiler.createJar(jtmScalaSrc
+                    ,classPath
+                    ,jtmScalaPath
+                    ,MetadataAPIImpl.GetMetadataAPIConfig.getProperty("JAR_TARGET_DIR")
+                    ,MetadataAPIImpl.GetMetadataAPIConfig.getProperty("MANIFEST_PATH")
+                    ,MetadataAPIImpl.GetMetadataAPIConfig.getProperty("SCALA_HOME")
+                    ,MetadataAPIImpl.GetMetadataAPIConfig.getProperty("JAVA_HOME")
+                    ,skipJar
+                    ,compiler_work_dir)
+
+                /* The following check require cleanup at some point */
+                if (jarFile.compareToIgnoreCase("Not Set") == 0) {
+                    throw ModelCompilationFailedException(s"Failed to produce the jar file for jtm model ${modelDef.name}", null)
+                }
+
+                modelDef.jarName = jarFile
+                modelDef.dependencyJarNames = depJars.map(f => { (new java.io.File(f)).getName })
+                if (modelDef.ver == 0) {
+                    modelDef.ver = 1
+                }
+
+                modelDef.objectDefinition = jsonStr
+                modelDef.objectFormat = fJSON
+
+            }
+            /** end of (modDef != null) */
+            // Alles gut! return class and modelDef
+            (jtmScalaSrc, modelDef)
+        } catch {
+            case e: Exception => {
+                logger.error("Failed to compile the jtm model definition", e)
+                throw ModelCompilationFailedException(e.getMessage(), e)
+            }
+            case e: AlreadyExistsException => {
+                logger.error("Failed to compile the jtm model definition", e)
+                throw ModelCompilationFailedException(e.getMessage(), e)
+            }
+        }
+    }
+
+    /**
     * compileMessageDef - Compile Messages/Containers here
     */
   @throws(classOf[MsgCompilationFailedException])
@@ -586,6 +685,7 @@ class CompilerProxy {
           filterdSets.map(set => {
             set.map(m => {
               val t = new MessageAndAttributes
+              t.origin = "" //FIXME:- Fill this if looking for specific input
               t.message = m
               t.attributes = Array[String]()
               t
@@ -595,6 +695,7 @@ class CompilerProxy {
           val defaultInpSets = defaultInputMsgSets.map(set => {
             set.map(m => {
               val t = new MessageAndAttributes
+              t.origin = "" //FIXME:- Fill this if looking for specific input
               t.message = m
               t.attributes = Array[String]()
               t

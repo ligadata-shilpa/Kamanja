@@ -73,14 +73,12 @@ class GetHeartbeatService(requestContext: RequestContext, userid:Option[String],
         case DetailsLevel.SPECIFICCOMPONENTS => {
           apiResult = MetadataAPIImpl.getHealthCheckComponentDetailsByNames(ids, userid)
         }
-
         case _ => {
           apiResult = ("Value (" + detailsLevel + ") is not supported ")
-          return new ApiResult(ErrorCodeConstants.Failure, APIName, null,  "Invalid URL:" + apiResult).toString
+          apiResult = new ApiResult(ErrorCodeConstants.Failure, APIName, null,  "Invalid URL:" + apiResult).toString
         }
       }
-
-      requestContext.complete(apiResult)      
+      requestContext.complete(apiResult)
     }
   }  
   

@@ -702,7 +702,7 @@ class MacroDef extends FunctionDef {
 
 object MiningModelType extends Enumeration {
   type MiningModelType = Value
-  val BASELINEMODEL,ASSOCIATIONMODEL,CLUSTERINGMODEL,GENERALREGRESSIONMODEL,MININGMODEL,NAIVEBAYESMODEL,NEARESTNEIGHBORMODEL,NEURALNETWORK,REGRESSIONMODEL,RULESETMODEL,SEQUENCEMODEL,SCORECARD,SUPPORTVECTORMACHINEMODEL,TEXTMODEL,TIMESERIESMODEL,TREEMODEL, SCALA, JAVA, BINARY, PYTHON, UNKNOWN = Value
+  val BASELINEMODEL,ASSOCIATIONMODEL,CLUSTERINGMODEL,GENERALREGRESSIONMODEL,MININGMODEL,NAIVEBAYESMODEL,NEARESTNEIGHBORMODEL,NEURALNETWORK,REGRESSIONMODEL,RULESETMODEL,SEQUENCEMODEL,SCORECARD,SUPPORTVECTORMACHINEMODEL,TEXTMODEL,TIMESERIESMODEL,TREEMODEL, SCALA, JAVA, BINARY, PYTHON, JTM, UNKNOWN = Value
 
   def modelType(mdlType : String) : MiningModelType = {
     val typ : MiningModelType.MiningModelType = mdlType.trim.toLowerCase match {
@@ -729,6 +729,7 @@ object MiningModelType extends Enumeration {
         case "binary" => BINARY
         case "python" => PYTHON
         case _ => UNKNOWN
+        case "jtm" => JTM
     }
     typ
   }
@@ -753,6 +754,7 @@ object ModelRepresentation extends Enumeration {
 /**
 */
 class MessageAndAttributes {
+  var origin: String = "" // This could be Model (Can we handle InputAdapter/StorageAdapter also or only InputAdapter)
   var message: String = _ // Type of the message
   var attributes: Array[String] = _ // Attributes are full qualified names with respect to message.
 }

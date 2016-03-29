@@ -154,6 +154,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     val in: Array[Array[MessageAndAttributes]] = inmessages.map( s =>
           s.map( m => {
             val ma = new MessageAndAttributes
+            ma.origin = "" //FIXME:- Fill this if looking for specific input
             ma.message = m._1
             ma.attributes = m._2.toArray
             ma
@@ -169,7 +170,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
      val msgConsumed: String = ""
      val supportsInstanceSerialization : Boolean = false
      */
-    new ModelDef(ModelRepresentation.JAR, MiningModelType.UNKNOWN, in, out, isReusable, supportsInstanceSerialization)
+    new ModelDef(ModelRepresentation.JAR, MiningModelType.JTM, in, out, isReusable, supportsInstanceSerialization)
   }
 
   def Code() : String = {

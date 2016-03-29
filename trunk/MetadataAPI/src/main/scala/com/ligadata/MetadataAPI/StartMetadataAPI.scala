@@ -219,6 +219,7 @@ object StartMetadataAPI {
 
         //model management
         case Action.ADDMODELKPMML => response = ModelService.addModelKPmml(input, userId,optMsgProduced)
+        case Action.ADDMODELJTM => response = ModelService.addModelJTM(input, userId)
         case Action.ADDMODELPMML => {
           val modelName: Option[String] = extraCmdArgs.get(MODELNAME)
           val modelVer = extraCmdArgs.getOrElse(MODELVERSION, null)
@@ -272,6 +273,7 @@ object StartMetadataAPI {
             ModelService.deactivateModel(param, userId)
         }
         case Action.UPDATEMODELKPMML => response = ModelService.updateModelKPmml(input, userId)
+        case Action.UPDATEMODELJTM => response = ModelService.updateModelJTM(input, userId)
 
         case Action.UPDATEMODELPMML => {
           val modelName = extraCmdArgs.getOrElse(MODELNAME, "")
