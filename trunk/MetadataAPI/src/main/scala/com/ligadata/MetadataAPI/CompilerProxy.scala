@@ -42,7 +42,7 @@ import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
 import com.ligadata.Utils.{ Utils, KamanjaClassLoader, KamanjaLoaderInfo }
 import com.ligadata.KamanjaBase.{ ModelInstanceFactory, EnvContext, FactoryOfModelInstanceFactory }
-
+import com.ligadata.msgcompiler.MessageCompiler;
 
 // CompilerProxy has utility functions to:
 // Call MessageDefinitionCompiler, 
@@ -75,7 +75,7 @@ class CompilerProxy {
         modelVersion, msgDefClassFilePath, elements, sourceCode,
         totalDeps,
         MetadataAPIImpl.getModelMessagesContainers(modelConfigName, None),
-        nonTypeDeps,false)
+        nonTypeDeps, false)
     } catch {
       case e: Exception => {
         logger.error("COMPILER_PROXY: unable to determine model metadata information during AddModel.", e)
@@ -95,7 +95,7 @@ class CompilerProxy {
       val msgDefClassFilePath = compiler_work_dir + "/tempCode." + sourceLang
       val ((modelNamespace, modelName, modelVersion, pname), repackagedCode, tempPackage) = parseSourceForMetadata(sourceCode, "tempCode", sourceLang, msgDefClassFilePath, classPath, elements)
       return generateModelDef(repackagedCode, sourceLang, pname, classPath, tempPackage, modelName,
-        modelVersion, msgDefClassFilePath, elements, sourceCode, totalDeps, typeDeps, nonTypeDeps,true)
+        modelVersion, msgDefClassFilePath, elements, sourceCode, totalDeps, typeDeps, nonTypeDeps, true)
     } catch {
       case e: Exception => {
         logger.error("COMPILER_PROXY: unable to determine model metadata information during recompile.", e)
@@ -192,7 +192,8 @@ class CompilerProxy {
   def compileMessageDef(msgDefStr: String, recompile: Boolean = false): (String, ContainerDef, String) = {
     try {
       val mgr = MdMgr.GetMdMgr
-      val msg = new MessageDefImpl()
+      //val msg = new MessageDefImpl()
+      val msg = new MessageCompiler()
       logger.debug("Call Message Compiler ....")
       val ((classStrVer, classStrVerJava), msgDef, (classStrNoVer, classStrNoVerJava)) = msg.processMsgDef(msgDefStr, "JSON", mgr, recompile)
       logger.debug("Message Compilation done ...." + JsonSerializer.SerializeObjectToJson(msgDef))
@@ -336,15 +337,15 @@ class CompilerProxy {
       } else {
         //  The compiled scala class files are found in com/$client/pmml of the current folder.. mv them to $jarBuildDir.  We 
         //  use the -d option on the java compiler command...  so no need to move anything if java.
-	compileRc
-	/*
+        compileRc
+        /*
         if (sourceLanguage.equalsIgnoreCase("java")) {
           return compileRc
         }
 	*/
 
         /** get the top level package name */
-	/*
+        /*
         val packageLine: String = sourceCode.takeWhile(ch => ch != '\n')
         val pkgPattern = "package[ \t][ \t]*([A-Za-z0-9_.][A-Za-z0-9_.]+).*".r
         val pkgPattern(fullpkgName) = packageLine
@@ -490,8 +491,8 @@ class CompilerProxy {
   // MdMgr.MakeModelDef requires this information and function behaves differently depending on whether 
   // we are compiling first time or recompiling an existing model.
   private def generateModelDef(repackagedCode: String, sourceLang: String, pname: String, classPath: String, modelNamespace: String, modelName: String,
-    modelVersion: String, msgDefClassFilePath: String, elements: Set[BaseElemDef], originalSource: String,
-    deps: scala.collection.immutable.Set[String], typeDeps: List[String], notTypeDeps: scala.collection.immutable.Set[String], recompile: Boolean = false): ModelDef = {
+                               modelVersion: String, msgDefClassFilePath: String, elements: Set[BaseElemDef], originalSource: String,
+                               deps: scala.collection.immutable.Set[String], typeDeps: List[String], notTypeDeps: scala.collection.immutable.Set[String], recompile: Boolean = false): ModelDef = {
     try {
       // Now, we need to create a real jar file - Need to add an actual Package name with a real Napespace and Version numbers.
       val packageName = modelNamespace + ".V" + MdMgr.ConvertVersionToLong(MdMgr.FormatVersion(modelVersion))
@@ -518,7 +519,7 @@ class CompilerProxy {
       }
 
       val depJars = getJarsFromClassPath(classPath)
-      
+
       // figure out the Physical Model Name
       var (dummy1, dummy2, dummy3, pName) = getModelMetadataFromJar(jarFileName, elements, depJars, sourceLang)
 
@@ -537,18 +538,8 @@ class CompilerProxy {
                    , supportsInstanceSerialization: Boolean): ModelDef = {
 
        */
-      val modelType : String = if (sourceLang.equalsIgnoreCase("scala")) "Scala" else "Java"
-      val modDef: ModelDef = MdMgr.GetMdMgr.MakeModelDef(modelNamespace
-                                                        , modelName
-                                                        , pName
-                                                        , modelType
-                                                        , getInputVarsFromElements(elements)
-                                                        , List[(String, String, String)]()
-                                                        , MdMgr.ConvertVersionToLong(MdMgr.FormatVersion(modelVersion))
-                                                        , jarFileName
-                                                        , deps.toArray[String]
-                                                        , recompile
-                                                        , false)
+      val modelType: String = if (sourceLang.equalsIgnoreCase("scala")) "Scala" else "Java"
+      val modDef: ModelDef = MdMgr.GetMdMgr.MakeModelDef(modelNamespace, modelName, pName, modelType, getInputVarsFromElements(elements), List[(String, String, String)](), MdMgr.ConvertVersionToLong(MdMgr.FormatVersion(modelVersion)), jarFileName, deps.toArray[String], recompile, false)
 
       // Need to set some values by hand here.
       modDef.jarName = jarFileName
@@ -602,11 +593,11 @@ class CompilerProxy {
    *
    */
   private def parseSourceForMetadata(sourceCode: String,
-    modelConfigName: String,
-    sourceLang: String,
-    msgDefClassFilePath: String,
-    classPath: String,
-    elements: Set[BaseElemDef]): ((String, String, String, String), String, String) = {
+                                     modelConfigName: String,
+                                     sourceLang: String,
+                                     msgDefClassFilePath: String,
+                                     classPath: String,
+                                     elements: Set[BaseElemDef]): ((String, String, String, String), String, String) = {
 
     // We have to create a dummy jar file for this so that we can interrogate the generated Object for Modelname
     // and Model Version.  To do this, we create a dummy source with V0 in the package name.
@@ -680,7 +671,7 @@ class CompilerProxy {
       logger.error("COMPILER_PROXY: Error compiling model source. Unable to create Jar RC = " + status)
       throw MsgCompilationFailedException(modelConfigName, null)
     }
-    
+
     val depJars = getJarsFromClassPath(classPath)
 
     (getModelMetadataFromJar(jarFileName, elements, depJars, sourceLang), finalSourceCode, packageName)
@@ -764,7 +755,7 @@ class CompilerProxy {
     }
     return null
   }
-  
+
   private def ResolveAllFactoryOfMdlInstFactoriesObjects(loaderInfo: KamanjaLoaderInfo, jarPaths: collection.immutable.Set[String]): scala.collection.immutable.Map[String, FactoryOfModelInstanceFactory] = {
     val fDefsOptions = MdMgr.GetMdMgr.FactoryOfMdlInstFactories(true, true)
     val tmpFactoryOfMdlInstFactObjects = scala.collection.mutable.Map[String, FactoryOfModelInstanceFactory]()
@@ -773,7 +764,7 @@ class CompilerProxy {
       val fDefs = fDefsOptions.get
 
       logger.debug("Found %d FactoryOfModelInstanceFactory objects".format(fDefs.size))
-      
+
       fDefs.foreach(f => {
         val allJars = GetAllJarsFromElem(f, jarPaths)
         if (allJars.size > 0) {
@@ -810,19 +801,19 @@ class CompilerProxy {
   }
 
   def PrepareModelFactory(loaderInfo: KamanjaLoaderInfo, jarPaths: collection.immutable.Set[String], mdl: ModelDef): ModelInstanceFactory = {
-      // else Assuming we are already loaded all the required jars
-      val factoryOfMdlInstFactoryFqName = "com.ligadata.FactoryOfModelInstanceFactory.JarFactoryOfModelInstanceFactory" //BUGBUG:: We need to get the name from Model Def.
-      val factoryOfMdlInstFactory: FactoryOfModelInstanceFactory = GetFactoryOfMdlInstanceFactory(factoryOfMdlInstFactoryFqName, loaderInfo, jarPaths)
-      if (factoryOfMdlInstFactory == null) {
-        logger.error("FactoryOfModelInstanceFactory %s not found in metadata. Unable to create ModelInstanceFactory for %s".format(factoryOfMdlInstFactoryFqName, mdl.FullName))
-        return null
-      } else {
-        val factory = factoryOfMdlInstFactory.getModelInstanceFactory(mdl, null, loaderInfo, jarPaths)
-        return factory
-      }
+    // else Assuming we are already loaded all the required jars
+    val factoryOfMdlInstFactoryFqName = "com.ligadata.FactoryOfModelInstanceFactory.JarFactoryOfModelInstanceFactory" //BUGBUG:: We need to get the name from Model Def.
+    val factoryOfMdlInstFactory: FactoryOfModelInstanceFactory = GetFactoryOfMdlInstanceFactory(factoryOfMdlInstFactoryFqName, loaderInfo, jarPaths)
+    if (factoryOfMdlInstFactory == null) {
+      logger.error("FactoryOfModelInstanceFactory %s not found in metadata. Unable to create ModelInstanceFactory for %s".format(factoryOfMdlInstFactoryFqName, mdl.FullName))
+      return null
+    } else {
+      val factory = factoryOfMdlInstFactory.getModelInstanceFactory(mdl, null, loaderInfo, jarPaths)
+      return factory
+    }
   }
 
-  private def getModelMetadataFromJar(jarFileName: String, elements: Set[BaseElemDef], depJars: List[String], sourceLang : String): (String, String, String, String) = {
+  private def getModelMetadataFromJar(jarFileName: String, elements: Set[BaseElemDef], depJars: List[String], sourceLang: String): (String, String, String, String) = {
 
     // Resolve ModelNames and Models versions - note, the jar file generated is still in the workDirectory.
     val loaderInfo = new KamanjaLoaderInfo()
@@ -866,8 +857,8 @@ class CompilerProxy {
 
       var isModel = false
       while (curClz != null && isModel == false) {
-        isModel = Utils.isDerivedFrom(curClz, "com.ligadata.KamanjaBase.ModelInstanceFactory") || 
-		           Utils.isDerivedFrom(curClz, "com.ligadata.KamanjaBase.ModelBaseObj")
+        isModel = Utils.isDerivedFrom(curClz, "com.ligadata.KamanjaBase.ModelInstanceFactory") ||
+          Utils.isDerivedFrom(curClz, "com.ligadata.KamanjaBase.ModelBaseObj")
 
         if (isModel == false)
           curClz = curClz.getSuperclass()
@@ -875,32 +866,24 @@ class CompilerProxy {
       if (isModel) {
         try {
 
-            /**
-              * Manufacture a proxy of the model def.  There are some subtleties here.  For the java and scala native
-              * models, the fully qualified class path (i.e., the variable clsName in use here), is really the
-              * model namespace.name where the class name is the model name and the package prefix is the namespace.
-              *
-              * The thinking here is that if this mechanism changes, it will not be hard coded here in the proxy. It will
-              * exist in but one place, namely in the getModelInstanceFactory method found in the FactoryOfModelInstanceFactory.
-              * For this reason, the trouble of manufacturing a ModelDef is taken so it can turn around and just pull
-              * out the pkg prefix and class name from the 'clsName' variable.
-              */
+          /**
+           * Manufacture a proxy of the model def.  There are some subtleties here.  For the java and scala native
+           * models, the fully qualified class path (i.e., the variable clsName in use here), is really the
+           * model namespace.name where the class name is the model name and the package prefix is the namespace.
+           *
+           * The thinking here is that if this mechanism changes, it will not be hard coded here in the proxy. It will
+           * exist in but one place, namely in the getModelInstanceFactory method found in the FactoryOfModelInstanceFactory.
+           * For this reason, the trouble of manufacturing a ModelDef is taken so it can turn around and just pull
+           * out the pkg prefix and class name from the 'clsName' variable.
+           */
 
-              val mdlDef = MdMgr.GetMdMgr.MakeModelDef("", ""
-                  , clsName
-                  , sourceLang
-                  , List[(String, String, String, String, Boolean, String)]()
-                  , List[(String, String, String)]()
-                  , 1000000L
-                  , ""
-                  , Array[String]()
-                  , false, false)
-              val mdlFactory = PrepareModelFactory(loaderInfo, jarPaths0, mdlDef)
-  
-              if (mdlFactory != null) {
-                var fullName = mdlFactory.getModelName.split('.')
-                return (fullName.dropRight(1).mkString("."), fullName(fullName.length - 1), mdlFactory.getVersion, clsName)
-              }
+          val mdlDef = MdMgr.GetMdMgr.MakeModelDef("", "", clsName, sourceLang, List[(String, String, String, String, Boolean, String)](), List[(String, String, String)](), 1000000L, "", Array[String](), false, false)
+          val mdlFactory = PrepareModelFactory(loaderInfo, jarPaths0, mdlDef)
+
+          if (mdlFactory != null) {
+            var fullName = mdlFactory.getModelName.split('.')
+            return (fullName.dropRight(1).mkString("."), fullName(fullName.length - 1), mdlFactory.getVersion, clsName)
+          }
 
           logger.error("COMPILER_PROXY: Unable to resolve a class Object from " + jarName0)
           throw MsgCompilationFailedException(clsName, null)
@@ -911,8 +894,8 @@ class CompilerProxy {
             throw MsgCompilationFailedException(clsName, e)
           }
         }
-  
-/*      
+
+        /*      
         try {
           // If we are dealing with
           var objInst: Any = null
@@ -951,7 +934,7 @@ class CompilerProxy {
           }
         }
 */
-        
+
       }
     })
     logger.error("COMPILER_PROXY: No class/objects implementing com.ligadata.KamanjaBase.ModelInstanceFactory was found in the jarred source " + jarFileName)
@@ -1013,8 +996,8 @@ class CompilerProxy {
     depArray.foreach(dep => {
       // Check it is the file & the file exists
       val fl = new File(dep.trim)
-      if (fl.exists && fl.isFile /* && fl.canRead() */) {
-          returnList += fl.getName
+      if (fl.exists && fl.isFile /* && fl.canRead() */ ) {
+        returnList += fl.getName
       } else {
         var parsedJarpath = dep.split("/")
         var tempSanity = parsedJarpath(parsedJarpath.length - 1).split('.')
@@ -1024,7 +1007,7 @@ class CompilerProxy {
     })
     returnList.toList
   }
-  
+
   /**
    * addDepsFromClassPath - this is probably a temporary metho here for now.  THIS WILL CHANGE IN A FUTURE since we
    * dont want to allow developers using the classpath to pass in dependencies.
@@ -1065,7 +1048,7 @@ class CompilerProxy {
         if (elem == null)
           logger.warn("Unknown dependency " + dep)
         else {
-          elem.dependencyJarNames.foreach(aDep => {msgContDepSet = msgContDepSet + aDep})
+          elem.dependencyJarNames.foreach(aDep => { msgContDepSet = msgContDepSet + aDep })
           depElems += elem
           logger.info("Resolved dependency " + dep + " to " + elem.jarName)
           msgContDepSet = msgContDepSet + elem.jarName
@@ -1130,10 +1113,9 @@ class CompilerProxy {
    * getClassPath -
    *
    */
-  private def getClassPathFromModelConfig(modelName: String, cpDeps: List[String]): (String, Set[BaseElemDef], scala.collection.immutable.Set[String], scala.collection.immutable.Set[String])
-           = buildClassPath(MetadataAPIImpl.getModelDependencies(modelName, userId),
-                            MetadataAPIImpl.getModelMessagesContainers(modelName, userId),
-                            cpDeps)
+  private def getClassPathFromModelConfig(modelName: String, cpDeps: List[String]): (String, Set[BaseElemDef], scala.collection.immutable.Set[String], scala.collection.immutable.Set[String]) = buildClassPath(MetadataAPIImpl.getModelDependencies(modelName, userId),
+    MetadataAPIImpl.getModelMessagesContainers(modelName, userId),
+    cpDeps)
 
   /**
    * createSavedSourceCode - use this to create a string that a recompile model can use for recompile when a dependent type

@@ -49,8 +49,8 @@ class MessageConstants {
 
   val paritionKeyData: String = "%soverride def getPartitionKey: Array[String] = %s ";
   val primaryKeyData: String = "%soverride def getPrimaryKey: Array[String] = %s ";
-  val getPartitionKeyNames: String = "Array(%s); %s";
-  val getPrimaryKeyNames: String = "Array(%s); %s";
+  val getPartitionKeyNames: String = "Array%s; %s";
+  val getPrimaryKeyNames: String = "Array%s; %s";
   val partitionKeyVar: String = "%svar partitionKeys: scala.collection.mutable.ArrayBuffer[String] = scala.collection.mutable.ArrayBuffer[String]();%s"
   val primaryKeyVar: String = "%svar primaryKeys: scala.collection.mutable.ArrayBuffer[String] = scala.collection.mutable.ArrayBuffer[String]();%s"
 

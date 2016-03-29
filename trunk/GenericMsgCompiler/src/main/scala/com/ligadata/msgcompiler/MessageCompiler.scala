@@ -19,14 +19,14 @@ import com.ligadata.kamanja.metadata._;
 import com.ligadata.Exceptions._;
 
 class Messages(var messages: List[Message])
-class Message(var MsgType: String, var NameSpace: String, var Name: String, var PhysicalName: String, var Version: String, var Description: String, var Fixed: String, var Persist: Boolean, var Elements: List[Element], var TDataExists: Boolean, var TrfrmData: TransformData, var Jarset: Set[String], var Pkg: String, var Ctype: String, var CCollectiontype: String, var Containers: List[String], var PartitionKeys: List[String], var PrimaryKeys: List[String], var ClsNbr: Long, var MsgLvel: Int, var ArgsList: List[(String, String, String, String, Boolean, String)], var Schema: String, var timePartition: TimePartition)
+class Message(var MsgType: String, var NameSpace: String, var Name: String, var PhysicalName: String, var Version: String, var Description: String, var Fixed: String, var Persist: Boolean, var Elements: List[Element], var TDataExists: Boolean, var TrfrmData: TransformData, var Jarset: Set[String], var Pkg: String, var Ctype: String, var CCollectiontype: String, var Containers: List[String], var PartitionKeys: List[String], var PrimaryKeys: List[String], var ClsNbr: Long, var MsgLvel: Int, var ArgsList: List[(String, String, String, String, Boolean, String)], var Schema: String, var Definition: String, var timePartition: TimePartition)
 class TransformData(var input: Array[String], var output: Array[String], var keys: Array[String])
-class Field(var NameSpace: String, var Name: String, var Ttype: String, var CollectionType: String, var Fieldtype: String, var FieldtypeVer: String)
-class Element(var NameSpace: String, var Name: String, var Ttype: String, var CollectionType: String, var ElemType: String, var FieldtypeVer: String, var FieldOrdinal: Int, var FldMetaataType: BaseTypeDef, var FieldTypePhysicalName: String, var FieldTypeImplementationName: String)
+//class Field(var NameSpace: String, var Name: String, var Ttype: String, var CollectionType: String, var Fieldtype: String, var FieldtypeVer: String)
+class Element(var NameSpace: String, var Name: String, var Ttype: String, var CollectionType: String, var ElemType: String, var FieldtypeVer: String, var FieldOrdinal: Int, var FldMetaataType: BaseTypeDef, var FieldTypePhysicalName: String, var FieldTypeImplementationName: String, var FieldObjectDefinition: String)
 class MessageGenObj(var verScalaClassStr: String, var verJavaClassStr: String, var containerDef: ContainerDef, var noVerScalaClassStr: String, var noVerJavaClassStr: String, var argsList: List[(String, String, String, String, Boolean, String)])
 class TimePartition(var Key: String, var Format: String, var DType: String)
 
-object MessageCompiler {
+class MessageCompiler {
 
   val logger = this.getClass.getName
   lazy val log = LogManager.getLogger(logger)
@@ -34,6 +34,7 @@ object MessageCompiler {
   var handleMsgFieldTypes: MessageFieldTypesHandler = new MessageFieldTypesHandler
   var createMsg: CreateMessage = new CreateMessage
   var generatedRdd = new GenerateRdd
+  var schemaCompiler = new SchemaCompiler
 
   /*
    * parse the message definition json,  add messages to metadata and create the Fixed and Mapped Mesages
@@ -55,6 +56,12 @@ object MessageCompiler {
       if (msgDfType.equalsIgnoreCase("json")) {
         message = messageParser.processJson(jsonstr, mdMgr, recompile)
         handleMsgFieldTypes.handleFieldTypes(message, mdMgr)
+        log.info("Schema ==============" + message.Schema);
+        message = schemaCompiler.generateAvroSchema(message, mdMgr);
+        log.info("Schema ==============" + message.Schema);
+
+        log.info("JARSET " + message.Jarset.toList);
+        log.info("ArgsList Jars " + message.ArgsList);
         val (genVersionedMsg, genNonVersionedMsg) = msgGen.generateMessage(message, mdMgr)
         generatedNonVersionedMsg = genNonVersionedMsg
         generatedVersionedMsg = genVersionedMsg
@@ -73,8 +80,10 @@ object MessageCompiler {
     }
     return ((generatedVersionedMsg, generatedVersionedJavaRdd), containerDef, (generatedNonVersionedMsg, generatedNonVersionedJavaRdd))
   }
-
 }
+
+ 
+  
 
  /*
            log.info("***********************versionedRddClass*******************")
