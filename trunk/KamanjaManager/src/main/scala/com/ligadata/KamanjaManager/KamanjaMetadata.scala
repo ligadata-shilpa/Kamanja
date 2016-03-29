@@ -1118,9 +1118,9 @@ object KamanjaMetadata extends MdBaseResolveInfo {
 
     v = getMessageOrContainer(MsgContainerType)
     if (v != null && v.contmsgobj != null && v.contmsgobj.isInstanceOf[MessageFactoryInterface]) {
-      return v.contmsgobj.asInstanceOf[MessageFactoryInterface].CreateNewMessage
+      return v.contmsgobj.createInstance.asInstanceOf[ContainerInterface]
     } else if (v != null && v.contmsgobj != null && v.contmsgobj.isInstanceOf[ContainerFactoryInterface]) { // NOTENOTE: Not considering Base containers here
-      return v.contmsgobj.asInstanceOf[ContainerFactoryInterface].CreateNewContainer
+      return v.contmsgobj.createInstance.asInstanceOf[ContainerInterface]
     }
     return null
   }

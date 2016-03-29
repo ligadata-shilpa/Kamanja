@@ -62,9 +62,9 @@ object ExtractData extends MdBaseResolveInfo {
   override def getMessgeOrContainerInstance(MsgContainerType: String): ContainerInterface = {
     if (MsgContainerType.compareToIgnoreCase(_currentTypName) == 0) {
       if (_currentMessageObj != null)
-        return _currentMessageObj.CreateNewMessage
+        return _currentMessageObj.createInstance.asInstanceOf[ContainerInterface]
       if (_currentContainerObj != null)
-        return _currentContainerObj.CreateNewContainer
+        return _currentContainerObj.createInstance.asInstanceOf[ContainerInterface]
     }
     return null
   }
@@ -287,7 +287,7 @@ object ExtractData extends MdBaseResolveInfo {
         if (dta != null) {
           if (hasValidPrimaryKey) {
             // Search for primary key match
-            if (primaryKey.sameElements(dta.PrimaryKeyData)) {
+            if (primaryKey.sameElements(dta.getPrimaryKey)) {
               LOG.debug("Primarykey found")
               os.write(gson.toJson(dta).getBytes("UTF8"));
               os.write(ln);

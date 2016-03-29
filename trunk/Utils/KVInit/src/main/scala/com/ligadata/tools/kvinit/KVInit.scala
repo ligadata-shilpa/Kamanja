@@ -509,9 +509,9 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
       return null
     // Simply creating new object and returning. Not checking for MsgContainerType. This is issue if the child level messages ask for the type 
     if (isMsg)
-      return messageObj.CreateNewMessage
+      return messageObj.createInstance.asInstanceOf[ContainerInterface]
     if (isContainer)
-      return containerObj.CreateNewContainer
+      return containerObj.createInstance.asInstanceOf[ContainerInterface]
     return null
   }
 
@@ -605,7 +605,7 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
 
   private def collectKeyAndValues(k: Key, v: Any, dataByBucketKeyPart: TreeMap[KeyWithBucketIdAndPrimaryKey, ContainerInterfaceWithModFlag], loadedKeys: java.util.TreeSet[LoadKeyWithBucketId]): Unit = {
     val value: ContainerInterface = null // SerializeDeserialize.Deserialize(v.serializedInfo, this, kvInitLoader.loader, true, "")
-    val primarykey = value.PrimaryKeyData
+    val primarykey = value.getPrimaryKey
     val key = KeyWithBucketIdAndPrimaryKey(KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(k.bucketKey), k, primarykey != null && primarykey.size > 0, primarykey)
     dataByBucketKeyPart.put(key, ContainerInterfaceWithModFlag(false, value))
 
@@ -824,19 +824,20 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
             var messageOrContainer: ContainerInterface = null
 
             if (isMsg) {
-              messageOrContainer = messageObj.CreateNewMessage
+              messageOrContainer = messageObj.createInstance.asInstanceOf[ContainerInterface]
             } else if (isContainer) {
-              messageOrContainer = containerObj.CreateNewContainer
+              messageOrContainer = containerObj.createInstance.asInstanceOf[ContainerInterface]
             } else { // This should not happen
               throw new Exception("Handling only message or container")
             }
 
             if (messageOrContainer != null) {
               try {
-                messageOrContainer.TransactionId(transId)
-                messageOrContainer.populate(inputData)
+                messageOrContainer.setTransactionId(transId)
+                // FIXME:- FIX THIS
+                // messageOrContainer.populate(inputData) // BUGBUG: FIX THIS
                 if (triedForPrimaryKey == false) {
-                  val primaryKey = messageOrContainer.PrimaryKeyData
+                  val primaryKey = messageOrContainer.getPrimaryKey
                   hasPrimaryKey = primaryKey != null && primaryKey.size > 0 // Checking for the first record
                 }
                 triedForPrimaryKey = true
@@ -870,14 +871,14 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
                     value
                   })
                   else {
-                    messageOrContainer.PartitionKeyData
+                    messageOrContainer.getPartitionKey
                   }
 
-                val timeVal = messageOrContainer.TimePartitionData
-                messageOrContainer.RowNumber(processedRows)
+                val timeVal = messageOrContainer.getTimePartitionData
+                messageOrContainer.setRowNumber(processedRows)
 
                 val bucketId = KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(keyData)
-                val k = KeyWithBucketIdAndPrimaryKey(bucketId, Key(timeVal, keyData, transId, processedRows), hasPrimaryKey, if (hasPrimaryKey) messageOrContainer.PrimaryKeyData else null)
+                val k = KeyWithBucketIdAndPrimaryKey(bucketId, Key(timeVal, keyData, transId, processedRows), hasPrimaryKey, if (hasPrimaryKey) messageOrContainer.getPrimaryKey else null)
                 if (hasPrimaryKey) {
                   // Get the record(s) for this partition key, time value & primary key
                   val loadKey = LoadKeyWithBucketId(bucketId, TimeRange(timeVal, timeVal), keyData)

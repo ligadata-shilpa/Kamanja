@@ -256,9 +256,9 @@ class UtilityForContainers(val loadConfigs: Properties, val typename: String) ex
       return null
     // Simply creating new object and returning. Not checking for MsgContainerType. This is issue if the child level messages ask for the type
     if (isMsg)
-      return messageObj.CreateNewMessage
+      return messageObj.createInstance.asInstanceOf[ContainerInterface]
     if (isContainer)
-      return containerObj.CreateNewContainer
+      return containerObj.createInstance.asInstanceOf[ContainerInterface]
     return null
   }
 
@@ -319,7 +319,7 @@ class UtilityForContainers(val loadConfigs: Properties, val typename: String) ex
     var data : Map[String,String] = null
     val retriveData = (k: Key, v: Any, serializerTyp: String, typeName: String, ver: Int)=>{
       val value = v.asInstanceOf[ContainerInterface]
-      val primarykey = value.PrimaryKeyData
+      val primarykey = value.getPrimaryKey
       val key = KeyWithBucketIdAndPrimaryKey(KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(k.bucketKey), k, primarykey != null && primarykey.size > 0, primarykey)
       val bucketId = KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(k.bucketKey)
       val keyValue = value.get(k.toString)

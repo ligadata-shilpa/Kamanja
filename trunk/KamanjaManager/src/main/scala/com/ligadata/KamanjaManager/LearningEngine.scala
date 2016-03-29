@@ -65,7 +65,7 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
       ThreadLocalStorage.txnContextInfo.set(txnCtxt)
       try {
         val mdlChngCntr = KamanjaMetadata.GetModelsChangedCounter
-        val msgFullName = finalTopMsgOrContainer.FullName.toLowerCase()
+        val msgFullName = finalTopMsgOrContainer.getFullTypeName.toLowerCase()
         if (mdlChngCntr != mdlsChangedCntr) {
           LOG.info("Refreshing models for Partition:%s from %d to %d".format(uk, mdlsChangedCntr, mdlChngCntr))
           val (tmpMdls, tMdlsChangedCntr) = KamanjaMetadata.getAllModels
@@ -181,7 +181,7 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
                 tInst
               }
               if (curMd != null) {
-                var modelEvent: KamanjaModelEvent = modelEventFactory.CreateNewMessage.asInstanceOf[KamanjaModelEvent]
+                var modelEvent: KamanjaModelEvent = modelEventFactory.createInstance.asInstanceOf[KamanjaModelEvent]
                 val modelStartTime = System.nanoTime
                 curMd.getModelName()
                 val res = curMd.execute(txnCtxt, outputDefault)
@@ -263,7 +263,7 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
 
   private def createExceptionEvent(errorType: String, compName: String, errorString: String): KamanjaExceptionEvent = {
     // ExceptionEventFactory is guaranteed to be here....
-    var exceptionEvent = exceptionEventFactory.CreateNewMessage.asInstanceOf[KamanjaExceptionEvent]
+    var exceptionEvent = exceptionEventFactory.createInstance.asInstanceOf[KamanjaExceptionEvent]
     exceptionEvent.errortype = errorType
     exceptionEvent.timeoferrorepochms = System.currentTimeMillis
     exceptionEvent.componentname = compName
@@ -292,15 +292,16 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
     }
 
     // Initialize Event message
-    var msgEvent: KamanjaMessageEvent = messageEventFactory.CreateNewMessage.asInstanceOf[KamanjaMessageEvent]
+    var msgEvent: KamanjaMessageEvent = messageEventFactory.createInstance.asInstanceOf[KamanjaMessageEvent]
     msgEvent.elapsedtimeinms = -1
     msgEvent.messagekey = uk
     msgEvent.messagevalue = uv
 
 
     try {
+/*
       if (msgInfo != null && inputdata != null) {
-        val partKeyData = if (msgInfo.contmsgobj.asInstanceOf[MessageFactoryInterface].CanPersist) msgInfo.contmsgobj.asInstanceOf[MessageFactoryInterface].PartitionKeyData(inputdata) else null
+        val partKeyData = msgInfo.contmsgobj.asInstanceOf[MessageFactoryInterface].PartitionKeyData(inputdata) else null
         isValidPartitionKey = (partKeyData != null && partKeyData.size > 0)
         partKeyDataList = if (isValidPartitionKey) partKeyData.toList else null
         val primaryKey = if (isValidPartitionKey) msgInfo.contmsgobj.asInstanceOf[MessageFactoryInterface].PrimaryKeyData(inputdata) else null
@@ -344,6 +345,7 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
         LOG.error("Recieved null message object for input:" + inputdata.dataInput)
         // TODO:  Do something with these eEvents
       }
+*/
     } catch {
       case e: Exception => {
         var kEx =  MessagePopulationException("Failed to Populate message", e)

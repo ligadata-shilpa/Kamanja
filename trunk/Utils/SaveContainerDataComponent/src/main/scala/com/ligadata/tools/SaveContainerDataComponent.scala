@@ -124,7 +124,7 @@ class SaveContainerDataCompImpl extends LogTrait with MdBaseResolveInfo {
 
   private def collectKeyAndValues(k: Key, v: Any, dataByBucketKeyPart: TreeMap[KeyWithBucketIdAndPrimaryKey, ContainerInterfaceWithModFlag], loadedKeys: java.util.TreeSet[LoadKeyWithBucketId]): Unit = {
     val value: ContainerInterface = null // SerializeDeserialize.Deserialize(v.serializedInfo, this, _kamanjaLoader.loader, true, "")
-    val primarykey = value.PrimaryKeyData
+    val primarykey = value.getPrimaryKey
     val key = KeyWithBucketIdAndPrimaryKey(KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(k.bucketKey), k, primarykey != null && primarykey.size > 0, primarykey)
     dataByBucketKeyPart.put(key, ContainerInterfaceWithModFlag(false, value))
 
@@ -297,9 +297,9 @@ class SaveContainerDataCompImpl extends LogTrait with MdBaseResolveInfo {
 
     // If we have cached obj, just create from it
     if (cachedObj != null) {
-      if (cachedObj.isMessage)
-        return cachedObj.asInstanceOf[MessageFactoryInterface].CreateNewMessage
-      return cachedObj.asInstanceOf[ContainerFactoryInterface].CreateNewContainer
+      if (cachedObj.getContainerType == ContainerFactoryInterface.ContainerType.MESSAGE)
+        return cachedObj.createInstance.asInstanceOf[ContainerInterface]
+      return cachedObj.createInstance.asInstanceOf[ContainerInterface]
     }
 
     val typeNameCorrType = mdMgr.ActiveType(typeName)
@@ -375,12 +375,12 @@ class SaveContainerDataCompImpl extends LogTrait with MdBaseResolveInfo {
           val messageObj = objinst.asInstanceOf[MessageFactoryInterface]
           logger.debug("Created Message Object for type:%s (class:%s)".format(typ, clsName))
           _baseObjs(typeName) = messageObj
-          return messageObj.CreateNewMessage
+          return messageObj.createInstance.asInstanceOf[ContainerInterface]
         } else if (objinst.isInstanceOf[ContainerFactoryInterface]) {
           val containerObj = objinst.asInstanceOf[ContainerFactoryInterface]
           logger.debug("Created Container Object for type:%s (class:%s)".format(typ, clsName))
           _baseObjs(typeName) = containerObj
-          return containerObj.CreateNewContainer
+          return containerObj.createInstance.asInstanceOf[ContainerInterface]
         } else {
           val msgStr = "Failed to instantiate message or conatiner. type:%s (class:%s)".format(typ, clsName)
           logger.error(msgStr)
@@ -458,15 +458,15 @@ class SaveContainerDataCompImpl extends LogTrait with MdBaseResolveInfo {
       data.foreach(d => {
         if (setNewRowNumber) {
           rowNumber += 1
-          d.RowNumber(rowNumber)
+          d.setRowNumber(rowNumber)
         }
 
         if (setNewTransactionId)
-          d.TransactionId(transId)
+          d.setTransactionId(transId)
 
-        val keyData = d.PartitionKeyData
-        val timeVal = d.TimePartitionData
-        val k = Key(timeVal, keyData, d.TransactionId, d.RowNumber)
+        val keyData = d.getPartitionKey
+        val timeVal = d.getTimePartitionData
+        val k = Key(timeVal, keyData, d.getTransactionId, d.getRowNumber)
         arrBuf += ((k, "", d))
       })
 
