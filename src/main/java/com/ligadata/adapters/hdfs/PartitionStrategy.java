@@ -5,6 +5,9 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.apache.avro.generic.GenericData.Record;
 
 public class PartitionStrategy {
@@ -24,6 +27,7 @@ public class PartitionStrategy {
 	}
 	
 	private ArrayList<PartitionKey> keys = null;
+	private String partitionString = null;
 	private SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd");
 	
 	public PartitionStrategy() {
@@ -34,8 +38,13 @@ public class PartitionStrategy {
 			return;
 		
 		keys = new ArrayList<PartitionKey>();
-		
-		for(String token: format.split(",")) {
+				
+		// extract parameters between ${..}
+		Matcher matcher = Pattern.compile("\\$\\{([^\\}]+)").matcher(format);
+		int pos = -1;
+		while (matcher.find(pos + 1)) {
+			pos = matcher.start();
+			String token = matcher.group(1);
 			String[] attr = token.split(":");
 			PartitionKey key;
 			if(attr.length > 1) 
@@ -45,6 +54,19 @@ public class PartitionStrategy {
 			
 			keys.add(key);
 		}
+
+		partitionString = format.replaceAll("\\$\\{[^\\}]+\\}", "%s");
+
+//		for(String token: format.split(",")) {
+//			String[] attr = token.split(":");
+//			PartitionKey key;
+//			if(attr.length > 1) 
+//				key = new PartitionKey(attr[0], attr[1]);
+//			else
+//				key= new PartitionKey(attr[0]);
+//			
+//			keys.add(key);
+//		}
 		
 		inputFormat = new SimpleDateFormat(inputDateFormat);
 	}
@@ -52,7 +74,9 @@ public class PartitionStrategy {
 	public String getPartition(Record rec) {
 		String partition = "";
 		if(keys != null) {
-			for (PartitionKey key : keys) {
+			Object[] values = new Object[keys.size()];
+			for (int i = 0; i < keys.size(); i++) {
+				PartitionKey key = keys.get(i);
 				String value = "";
 				if(key.format == null)
 					value = rec.get(key.attribute).toString();
@@ -63,10 +87,10 @@ public class PartitionStrategy {
 					} catch (ParseException e) {
 					}
 				}
-				if(value != null)
-					partition = partition + "/" + value;
+				values[i] = (value == null) ? "" : value;
 			}
-			partition = partition.substring(1);
+			//partition = partition.substring(1);
+			partition = String.format(partitionString, values);
 		}
 		
 		return partition;
