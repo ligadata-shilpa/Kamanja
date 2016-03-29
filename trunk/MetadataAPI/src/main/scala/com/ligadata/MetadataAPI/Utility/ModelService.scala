@@ -352,7 +352,7 @@ object ModelService {
       * @return the result of the operation
       */
     def addModelJTM(input: String
-                      , userid: Option[String] = Some("metadataapi")
+                      , userid: Option[String] = Some("Kamanja")
                      ): String = {
         var modelDef=""
         var modelConfig=""
@@ -472,7 +472,7 @@ object ModelService {
       */
 
     def updateModelJTM(input: String
-                         , userid: Option[String] = Some("metadataapi")
+                         , userid: Option[String] = Some("Kamanja")
                         ): String = {
         var modelDef = ""
         var response: String = ""
