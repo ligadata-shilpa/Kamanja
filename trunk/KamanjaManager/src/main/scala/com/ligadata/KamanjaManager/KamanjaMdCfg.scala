@@ -20,7 +20,7 @@ package com.ligadata.KamanjaManager
 import org.apache.logging.log4j.{ Logger, LogManager }
 import com.ligadata.kamanja.metadata._
 import com.ligadata.kamanja.metadata.MdMgr._
-import com.ligadata.KamanjaBase.{ EnvContext, NodeContext, ContainerNameAndDatastoreInfo }
+import com.ligadata.KamanjaBase.{ EnvContext, NodeContext }
 import com.ligadata.InputOutputAdapterInfo._
 import com.ligadata.Utils.{ Utils, KamanjaClassLoader, KamanjaLoaderInfo }
 import scala.collection.mutable.ArrayBuffer
@@ -249,7 +249,7 @@ object KamanjaMdCfg {
           envCtxt.setDefaultDatastore(KamanjaConfiguration.dataDataStoreInfo) // Default Datastore
 
           val allMsgsContainers = topMessageNames ++ containerNames
-          val containerInfos = allMsgsContainers.map(c => { ContainerNameAndDatastoreInfo(c, null) })
+//          val containerInfos = allMsgsContainers.map(c => { ContainerNameAndDatastoreInfo(c, null) })
 //          envCtxt.RegisterMessageOrContainers(containerInfos) // Messages & Containers
 
           // Record EnvContext in the Heartbeat
