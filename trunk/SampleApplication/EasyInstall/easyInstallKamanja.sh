@@ -448,7 +448,6 @@ cp $ivyPath/cache/org.apache.hbase/hbase-annotations/jars/hbase-annotations-1.0.
 cp $ivyPath/cache/com.google.protobuf/protobuf-java/bundles/protobuf-java-2.6.0.jar $systemlib
 cp $ivyPath/cache/org.tukaani/xz/jars/xz-1.0.jar $systemlib
 cp $ivyPath/cache/org.codehaus.jackson/jackson-jaxrs/jars/jackson-jaxrs-1.8.3.jar $systemlib
-cp $srcPath/SampleApplication/InterfacesSamples/target/scala-2.10/interfacessamples*.jar $systemlib
 cp $srcPath/lib_managed/jars/junit/junit/junit-4.12.jar $systemlib
 cp $ivyPath/cache/io.spray/spray-http_2.10/bundles/spray-http_2.10-1.3.3.jar $systemlib
 cp $ivyPath/cache/org.xerial.snappy/snappy-java/bundles/snappy-java-1.1.1.7.jar $systemlib
@@ -562,7 +561,6 @@ cp $srcPath/lib_managed/jars/commons-collections/commons-collections/commons-col
 cp $srcPath/lib_managed/jars/org.apache.commons/commons-pool2/commons-pool2-2.3.jar $systemlib
 cp $srcPath/lib_managed/jars/org.tukaani/xz/xz-1.0.jar $systemlib
 cp $ivyPath/cache/org.mortbay.jetty/jetty-sslengine/jars/jetty-sslengine-6.1.26.jar $systemlib
-cp $srcPath/MessageDef/target/scala-2.10/messagedef*.jar $systemlib
 cp $srcPath/lib_managed/jars/org.codehaus.jackson/jackson-jaxrs/jackson-jaxrs-1.8.3.jar $systemlib
 cp $ivyPath/cache/org.apache.commons/commons-pool2/jars/commons-pool2-2.3.jar $systemlib
 cp $ivyPath/cache/com.sleepycat/je/jars/je-4.0.92.jar $systemlib
@@ -1123,7 +1121,6 @@ cp $ivyPath/cache/org.apache.hbase/hbase-annotations/jars/hbase-annotations-1.0.
 cp $ivyPath/cache/com.google.protobuf/protobuf-java/bundles/protobuf-java-2.6.0.jar $systemlib
 cp $ivyPath/cache/org.tukaani/xz/jars/xz-1.0.jar $systemlib
 cp $ivyPath/cache/org.codehaus.jackson/jackson-jaxrs/jars/jackson-jaxrs-1.8.3.jar $systemlib
-cp $srcPath/SampleApplication/InterfacesSamples/target/scala-2.11/interfacessamples_2.11-1.0.jar $systemlib
 cp $srcPath/lib_managed/jars/junit/junit/junit-4.12.jar $systemlib
 cp $ivyPath/cache/io.spray/spray-http_2.11/bundles/spray-http_2.11-1.3.3.jar $systemlib
 cp $ivyPath/cache/org.xerial.snappy/snappy-java/bundles/snappy-java-1.1.1.7.jar $systemlib
@@ -1224,7 +1221,6 @@ cp $srcPath/lib_managed/bundles/org.scala-lang.modules/scala-xml_2.11/scala-xml_
 cp $srcPath/lib_managed/jars/org.apache.commons/commons-pool2/commons-pool2-2.3.jar $systemlib
 cp $srcPath/lib_managed/jars/org.tukaani/xz/xz-1.0.jar $systemlib
 cp $ivyPath/cache/org.mortbay.jetty/jetty-sslengine/jars/jetty-sslengine-6.1.26.jar $systemlib
-cp $srcPath/MessageDef/target/scala-2.11/messagedef_2.11-1.0.jar $systemlib
 cp $srcPath/lib_managed/jars/org.codehaus.jackson/jackson-jaxrs/jackson-jaxrs-1.8.3.jar $systemlib
 cp $ivyPath/cache/org.apache.commons/commons-pool2/jars/commons-pool2-2.3.jar $systemlib
 cp $ivyPath/cache/com.sleepycat/je/jars/je-4.0.92.jar $systemlib
