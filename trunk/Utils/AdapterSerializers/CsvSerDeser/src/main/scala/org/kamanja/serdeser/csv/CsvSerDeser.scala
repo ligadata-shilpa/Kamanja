@@ -1,7 +1,7 @@
 package org.kamanja.serdeser.csv
 
 
-import scala.collection.mutable.{ArrayBuffer }
+import scala.collection.mutable.{Map, ArrayBuffer}
 import scala.collection.JavaConverters._
 
 import java.io.{DataInputStream, ByteArrayInputStream, DataOutputStream, ByteArrayOutputStream}
@@ -33,20 +33,39 @@ object CsvContainerInterfaceKeys extends Enumeration {
   * CsvSerDeser instance can serialize a ContainerInterface to a byte array and deserialize a byte array to form
   * an instance of the ContainerInterface encoded in its bytes.
   *
-  * @param mgr a MdMgr instance that contains the relevant types, messages, containers in it to perform serialize/
-  *            deserialize operations.
-  * @param serDeserConfig the SerializeDeserializeConfig that describes/generally configures this instance
-  * @param emitHeaderFirst used usually on first message to be emitted (if at all), the header names are emitted when true
-  * @param objResolver is an object that can fabricate an empty ContainerInterface
-  * @param classLoader is an object that can generally instantiate class instances that are in the classpath of the loader
+  * Pre-condition: The JSONSerDes must be initialized with the metadata manager, object resolver and class loader
+  * before it can be used.
   *
+  * Pre-condition: The configuration object is an important part of the behavior of the CsvSerDeser.  It must have values for
+  * "fieldDelimiter" (e.g., ','), "alwaysQuoteField" (e.g., false), and "lineDelimiter" (e.g., "\r\n")
+  *
+  * Csv also supports emitting a "header" record.  To generate one, use the emitHeaderOnce method just before calling
+  * the serialize(container) method.  The behavior is to emit the header and then immediately turn the state off.  That is, the
+  * behavior is "one-shot".
   */
 
-class CsvSerDeser(val mgr : MdMgr
-                 , val serDeserConfig : SerializeDeserializeConfig
-                 , var emitHeaderFirst : Boolean
-                 , var objResolver : ObjectResolver
-                 , var classLoader : java.lang.ClassLoader) extends SerializeDeserialize with LogTrait {
+class CsvSerDeser() extends SerializeDeserialize with LogTrait {
+
+    var _mgr : MdMgr = null
+    var _objResolver : ObjectResolver = null
+    var _classLoader : java.lang.ClassLoader = null
+    var _isReady : Boolean = false
+    var _config : SerializeDeserializeConfig = null
+    var _emitHeaderFirst : Boolean = false
+
+    /**
+      * Csv supports an initial header record in a stream of csv records.  Call this function
+      * whenever the next serialize should first emit this header record before serializing itself
+      * to the ContainerInterface to the stream.
+      *
+      * It is a "one-shot" function. State immediately resets to not issuing headers after the requested header
+      * has been emitted _once_.  *Note that this is not thread safe.*
+      *
+      * Fixme: Should we pass an options map to the serialize and deserialize instead of this "one-shot" hack?  All of the other
+      * serialize/deserialize implementations to date don't use any options (their SerializeDeserializeConfig maps are empty
+      * or at least not used.
+      */
+    def emitHeaderOnce : Unit = { _emitHeaderFirst = true }
 
     /**
       * Serialize the supplied container to a byte array using these CSV rules:
@@ -62,12 +81,13 @@ class CsvSerDeser(val mgr : MdMgr
         val withoutComma :Boolean = false
         val containerName : String = v.getFullTypeName
         val containerVersion :String = v.getTypeVersion
-        val container : ContainerTypeDef = mgr.ActiveType(containerName).asInstanceOf[ContainerTypeDef]
+        val container : ContainerTypeDef = _mgr.ActiveType(containerName).asInstanceOf[ContainerTypeDef]
         val className : String = container.PhysicalName
 
 
         /** write the first field with the appropriate field delimiter suffixed to it. */
-        val containerNameCsv : String = csvTypeInfo(CsvContainerInterfaceKeys.typename.toString, serDeserConfig.fieldDelimiter)
+        val fieldDelimiter : String = _config.configProperties.getOrElse("fieldDelimiter", null)
+        val containerNameCsv : String = csvTypeInfo(CsvContainerInterfaceKeys.typename.toString, fieldDelimiter)
         dos.writeUTF(containerNameCsv)
 
         val containerType : ContainerTypeDef = if (container != null) container.asInstanceOf[ContainerTypeDef] else null
@@ -108,8 +128,10 @@ class CsvSerDeser(val mgr : MdMgr
 
         val fields : java.util.HashMap[String,com.ligadata.KamanjaBase.AttributeValue] = v.getAllAttributeValues
         val fieldTypes : Array[BaseTypeDef] = fieldsToConsider.map(fld => fld.typeDef)
-        if (emitHeaderFirst) {
+
+        if (_emitHeaderFirst) {
             emitHeaderRecord(dos, fieldTypes)
+            _emitHeaderFirst = false
         }
 
         var processCnt : Int = 0
@@ -150,7 +172,7 @@ class CsvSerDeser(val mgr : MdMgr
 
 
     /**
-      * Write the field data type names to the supplied stream.  This is called whenever the emitHeaderFirst instance
+      * Write the field data type names to the supplied stream.  This is called whenever the _emitHeaderFirst instance
       * variable is true... usually just once in a given stream creation.
       *
       * @param dos
@@ -160,9 +182,11 @@ class CsvSerDeser(val mgr : MdMgr
         val quote : String = s"${'"'}"
         val fieldCnt : Int = containerFieldsInOrder.length
         var cnt : Int = 0
+        val fieldDelimiter : String = _config.configProperties.getOrElse("produceHeader", null)
+
         containerFieldsInOrder.foreach(typedef => {
             cnt += 1
-            val delim : String = if (cnt < fieldCnt) serDeserConfig.fieldDelimiter else ""
+            val delim : String = if (cnt < fieldCnt) fieldDelimiter else ""
             val value : String = s"$quote${typedef.FullName}$quote"
             dos.writeUTF(s"$value$delim")
         })
@@ -214,11 +238,14 @@ class CsvSerDeser(val mgr : MdMgr
         val containsNewLines : Boolean = valueStr != null &&
             (valueStr.indexOf('\n') >= 0 || valueStr.indexOf('\r') >= 0)
         /** Rule 7 */
-        val hasFieldDelims : Boolean = valueStr.contains(serDeserConfig.fieldDelimiter)
+        val fieldDelimiter : String = _config.configProperties.getOrElse("fieldDelimiter", null)
+        val hasFieldDelims : Boolean = valueStr.contains(fieldDelimiter)
         /** Rule 9 */
         val containsQuotes : Boolean = valueStr != null && valueStr.contains(s"${'"'}")
 
-        val enclosingDblQuote : String = if (containsNewLines || hasFieldDelims || containsQuotes || serDeserConfig.alwaysQuoteField) s"${'"'}" else ""
+        val alwaysQuoteField : String = _config.configProperties.getOrElse("alwaysQuoteField", null)
+        val shouldAlwaysQuote : Boolean = alwaysQuoteField != null && alwaysQuoteField.toLowerCase.startsWith("t") //rue
+        val enclosingDblQuote : String = if (containsNewLines || hasFieldDelims || containsQuotes || shouldAlwaysQuote) s"${'"'}" else ""
 
         /** Rule 9 escape the embedded quotes */
         val valueStrAdjusted : String = if (containsQuotes) {
@@ -228,6 +255,8 @@ class CsvSerDeser(val mgr : MdMgr
         }
         logger.debug(s"emit field $typeName with value possibly quoted and escaped = $valueStrAdjusted")
         dos.writeUTF(valueStrAdjusted)
+        val lineDelimiter : String = _config.configProperties.getOrElse("lineDelimiter", null)
+        dos.writeUTF(lineDelimiter)
     }
 
     /**
@@ -262,18 +291,6 @@ class CsvSerDeser(val mgr : MdMgr
     }
 
     /**
-      *
-      * serDeserConfig
-      * class SerializeDeserializeConfig ( var serDeserType : SerializeDeserializeType.SerDeserType
-      * , var jar : String
-      * , var lineDelimiter : String = "\r\n"
-      * , var fieldDelimiter : String = ","
-      * , var produceHeader : Boolean = false
-      * , var alwaysQuoteField : Boolean = false) extends BaseElemDef {}
-      */
-
-
-    /**
       * Discern if the supplied BaseTypeDef is a ContainerTypeDef.  ContainerTypeDefs are used to describe
       * messages, containers, and the collection types.
       * @param aType a metadata base type
@@ -299,7 +316,26 @@ class CsvSerDeser(val mgr : MdMgr
       * @param objRes an ObjectResolver
       */
     def setObjectResolver(objRes : ObjectResolver) : Unit = {
-        objResolver = objRes;
+        _objResolver = objRes;
+    }
+
+    /**
+      * Configure the SerializeDeserialize adapter.  This must be done before the adapter implementation can be used.
+      *
+      * @param mgr         SerializeDeserialize implementations must be supplied a reference to the cluster MdMgr
+      * @param objResolver the ObjectResolver instance that can instantiate ContainerInterface instances
+      * @param classLoader the class loader that has access to the classes needed to build fields.
+      * @param config the SerializeDeserializeConfig properties that may be used to tune execution of the
+      *               SerializeDeserialize implementation
+      */
+    def configure(mgr: MdMgr, objResolver: ObjectResolver, classLoader: ClassLoader, config : SerializeDeserializeConfig): Unit = {
+        _mgr  = mgr
+        _objResolver = objResolver
+        _classLoader  = classLoader
+        _config = config
+        _isReady = (_mgr != null && _objResolver != null && _classLoader != null && config != null &&
+            config.configProperties.contains("fieldDelimiter") && config.configProperties.contains("alwaysQuoteField") &&
+            config.configProperties.contains("lineDelimiter"))
     }
 
     /**
@@ -317,7 +353,8 @@ class CsvSerDeser(val mgr : MdMgr
 
         val rawCsvContainerStr : String = new String(b)
         val (containerfFieldMap, containerType, containerFldTypes)
-                : (Map[String, Any], ContainerTypeDef, Array[BaseTypeDef]) = dataMapAndTypesForCsvString(rawCsvContainerStr)
+                : (scala.collection.immutable.Map[String, Any], ContainerTypeDef, Array[BaseTypeDef])
+                    = dataMapAndTypesForCsvString(rawCsvContainerStr)
 
         /** Decode the map to produce an instance of ContainerInterface */
 
@@ -331,8 +368,8 @@ class CsvSerDeser(val mgr : MdMgr
             throw new MissingPropertyException("the supplied byte array to deserialize does not have a known container name.", null)
         }
 
-        /** get an empty ContainerInterface instance for this type name from the objResolver */
-        val ci : ContainerInterface = objResolver.getInstance(classLoader, containerNameCsv)
+        /** get an empty ContainerInterface instance for this type name from the _objResolver */
+        val ci : ContainerInterface = _objResolver.getInstance(_classLoader, containerNameCsv)
         if (ci == null) {
             throw new ObjectNotFoundException(s"type name $containerNameCsv could not be resolved and built for deserialize",null)
         }
@@ -392,9 +429,11 @@ class CsvSerDeser(val mgr : MdMgr
 
     @throws(classOf[com.ligadata.Exceptions.ObjectNotFoundException])
     @throws(classOf[com.ligadata.Exceptions.TypeParsingException])
-    def dataMapAndTypesForCsvString(configCsv: String): (Map[String, Any], ContainerTypeDef, Array[BaseTypeDef]) = {
+    def dataMapAndTypesForCsvString(configCsv: String)
+                : (scala.collection.immutable.Map[String, Any], ContainerTypeDef, Array[BaseTypeDef]) = {
         val rawCsvFields : Array[String] = if (configCsv != null) {
-            configCsv.split(serDeserConfig.fieldDelimiter)
+            val fieldDelimiter : String = _config.configProperties.getOrElse("fieldDelimiter", null)
+            configCsv.split(fieldDelimiter)
         } else {
             Array[String]()
         }
@@ -428,7 +467,7 @@ class CsvSerDeser(val mgr : MdMgr
 
        /** Produce the Map[typename,descapedStringValue] */
         var idx : Int = -1
-        val containerCsvFieldMap : Map[String, Any] = fieldAttrs.map(fld => {
+        val containerCsvFieldMap : scala.collection.immutable.Map[String, Any] = fieldAttrs.map(fld => {
             idx += 1
             val descapedString : String = containerCsvFields(idx)
             (fld.FullName,descapedString)

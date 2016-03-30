@@ -84,6 +84,7 @@ class MdMgr {
   private var modelConfigs = new HashMap[String, scala.collection.immutable.Map[String, Any]]
   private var configurations = new HashMap[String, UserPropertiesInfo]
   private var msgdefSystemCols = List("transactionid", "timepartitiondata", "rownumber")
+  private var serializers = new HashMap[String, SerializeDeserializeConfig]
 
   def truncate {
     typeDefs.clear
@@ -3015,7 +3016,131 @@ class MdMgr {
     return ""
   }
 
-  def MakeCluster(clusterId: String, description: String, privilges: String): ClusterInfo = {
+    /**
+      * Construct a SerializeDeserializeConfig instance and add it to the metadata.
+      * @param nameSpace the namespace for this SerializeDeserializeConfig
+      * @param name its serializer name
+      * @param version its serializer version
+      * @param serializerType the serializer type
+      * @param physicalName the fqClassname that contains the behavior (found in the jarNm)
+      * @param ownerId the perpetrator of this serializer
+      * @param uniqueId a unique identifier that uniquely describes this object (reserved)
+      * @param mdElementId another unique identifer (reserved)
+      * @param jarNm the simple jar that is to be loaded in order to use the described SerializeDeserialize implementation
+      *              this config describes
+      * @param depJars the array of jars that are to be loaded so the SerializeDeserialize implementation this config
+      *                describes can function
+      * @param configProperties SerializeDeserialize implementation's configuration properties.  This is supplied
+      *                         to the instance's configure method after it has been realized.
+      * @return Unit
+      */
+    @throws(classOf[AlreadyExistsException])
+    def AddSerializer(nameSpace: String
+                      , name: String
+                      , version: Long = 1
+                      , serializerType: SerializeDeserializeType.SerDeserType
+                      , physicalName: String
+                      , ownerId: String
+                      , uniqueId: Long
+                      , mdElementId: Long
+                      , jarNm: String = null
+                      , depJars: Array[String] = null
+                      , configProperties : Map[String,String] = Map[String,String]()): Unit = {
+        AddSerializer(MakeSerializer(nameSpace
+                    , name
+                    , version
+                    , serializerType
+                    , physicalName
+                    , ownerId
+                    , uniqueId
+                    , mdElementId
+                    , jarNm
+                    , depJars
+                    , configProperties))
+    }
+
+    /**
+      * Add a SerializeDeserializeConfig instance to the map designated to hold them.
+      * @param config the prepared SerializeDeserializeConfig object
+      * @return true if the object was added to the map (exception is thrown if one exists with this name)
+      */
+    @throws(classOf[AlreadyExistsException])
+    def AddSerializer(config : SerializeDeserializeConfig) : Boolean = {
+        val added : Boolean = if (serializers.contains(config.FullName.toLowerCase)) {
+            throw new AlreadyExistsException(s"a SerializeDeserializeConfig already exists with the name ${config.FullName}.", null)
+        } else {
+            serializers(config.FullName.toLowerCase) = config
+            true
+        }
+        added
+    }
+
+    /**
+      * Construct a SerializeDeserializeConfig from the supplied arguments.
+      * @param nameSpace the namespace for this SerializeDeserializeConfig
+      * @param name its serializer name
+      * @param version its serializer version
+      * @param serializerType the serializer type
+      * @param physicalName the fqClassname that contains the behavior (found in the jarNm)
+      * @param ownerId the perpetrator of this serializer
+      * @param uniqueId a unique identifier that uniquely describes this object (reserved)
+      * @param mdElementId another unique identifer (reserved)
+      * @param jarNm the simple jar that is to be loaded in order to use the described SerializeDeserialize implementation
+      *              this config describes
+      * @param depJars the array of jars that are to be loaded so the SerializeDeserialize implementation this config
+      *                describes can function
+      * @param configProperties SerializeDeserialize implementation's configuration properties.  This is supplied
+      *                         to the instance's configure method after it has been realized.
+      * @return a SerializeDeserializeConfig
+      */
+    def MakeSerializer(nameSpace: String
+                    , name: String
+                    , version: Long = 1
+                    , serializerType: SerializeDeserializeType.SerDeserType
+                    , physicalName: String
+                    , ownerId: String
+                    , uniqueId: Long
+                    , mdElementId: Long
+                    , jarNm: String = null
+                    , depJars: Array[String] = null
+                    , configProperties : Map[String,String] = Map[String,String]()): SerializeDeserializeConfig = {
+
+        val depJarSet = scala.collection.mutable.Set[String]()
+
+        /** Instantiate the model definition.  Update the base element with basic id information */
+        val key : String = s"$nameSpace.$name".toLowerCase
+        val cfg: SerializeDeserializeConfig = new SerializeDeserializeConfig(serializerType, key, configProperties)
+
+        if (depJars != null) depJarSet ++= depJars
+        val dJars : Array[String] = if (depJarSet.nonEmpty) depJarSet.toArray else null
+
+        cfg.PhysicalName(physicalName)
+        SetBaseElem(cfg, nameSpace, name, version, jarNm, dJars, ownerId, uniqueId, mdElementId)
+
+        cfg
+    }
+
+
+    /** Retrieve the SerializeDeserializerConfig with the supplied namespace.name
+      *
+      * @param fullName the serializer sought
+      * @return the corresponding SerializeDeserializeConfig or null if not found
+      */
+    def GetSerializer(fullName : String) : SerializeDeserializeConfig = {
+        serializers.getOrElse(fullName,null)
+    }
+
+    /**
+      * Answer an array of the known SerializeDeserializeConfig
+      *
+      * @return an Array[SerializeDeserializeConfig]
+      */
+    def GetAllSerializers : Array[SerializeDeserializeConfig] = {
+        serializers.values.toArray
+    }
+
+
+    def MakeCluster(clusterId: String, description: String, privilges: String): ClusterInfo = {
     val ci = new ClusterInfo
     ci.clusterId = clusterId
     ci.description = description

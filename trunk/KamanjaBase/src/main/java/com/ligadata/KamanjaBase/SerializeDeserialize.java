@@ -16,6 +16,9 @@ package com.ligadata.KamanjaBase;
  * limitations under the License.
  */
 
+import com.ligadata.kamanja.metadata.MdMgr;
+import com.ligadata.kamanja.metadata.SerializeDeserializeConfig;
+
 public interface SerializeDeserialize {
     /**
      * Serialize the supplied object, v.
@@ -35,4 +38,17 @@ public interface SerializeDeserialize {
      * @param objRes
      */
     public void setObjectResolver(ObjectResolver objRes);
+
+    /**
+     * Configure the SerializeDeserialize adapter
+     * @param mgr SerializeDeserialize implementations must be supplied a reference to the cluster MdMgr
+     * @param objResolver the ObjectResolver instance that can instantiate ContainerInterface instances
+     * @param classLoader the class loader that has access to the classes needed to build fields.
+     * @param config the SerializeDeserializeConfig properties that may be used to tune execution of the
+     *               SerializeDeserialize implementation
+     */
+    public void configure(MdMgr mgr
+                        , ObjectResolver objResolver
+                        , java.lang.ClassLoader classLoader
+                        , SerializeDeserializeConfig config);
 }

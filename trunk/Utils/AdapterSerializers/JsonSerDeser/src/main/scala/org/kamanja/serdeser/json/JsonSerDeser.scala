@@ -36,16 +36,17 @@ object JsonContainerInterfaceKeys extends Enumeration {
   * JSONSerDeser instance can serialize a ContainerInterface to a byte array and deserialize a byte array to form
   * an instance of the ContainerInterface encoded in its bytes.
   *
-  * @param mgr a MdMgr instance that contains the relevant types, messages, containers in it to perform serialize/
-  *            deserialize operations.
-  * @param objResolver is an object that can fabricate an empty ContainerInterface
-  * @param classLoader is an object that can generally instantiate class instances that are in the classpath of the loader
-  *
+  * Pre-condition: The JSONSerDes must be initialized with the metadata manager, object resolver and class loader
+  * before it can be used.
   */
 
-class JSONSerDes(val mgr : MdMgr
-                 , var objResolver : ObjectResolver
-                 , var classLoader : java.lang.ClassLoader) extends SerializeDeserialize with LogTrait {
+class JSONSerDes() extends SerializeDeserialize with LogTrait {
+
+    var _mgr : MdMgr = null
+    var _objResolver : ObjectResolver = null
+    var _classLoader : java.lang.ClassLoader = null
+    var _config : SerializeDeserializeConfig = null
+    var _isReady : Boolean = false
 
     /**
       * Serialize the supplied container to a byte array
@@ -62,7 +63,7 @@ class JSONSerDes(val mgr : MdMgr
         val withoutComma :Boolean = false
         val containerName : String = v.getFullTypeName
         val containerVersion :String = v.getTypeVersion
-        val container : ContainerTypeDef = mgr.ActiveType(containerName).asInstanceOf[ContainerTypeDef]
+        val container : ContainerTypeDef = _mgr.ActiveType(containerName).asInstanceOf[ContainerTypeDef]
         val className : String = container.PhysicalName
 
         val containerJsonHead : String = "{ "
@@ -126,7 +127,7 @@ class JSONSerDes(val mgr : MdMgr
                 val rawValue: Any = attr.getValue
                 val useComma: Boolean = if (processCnt < fieldCnt) withComma else withoutComma
 
-                val typedef: BaseTypeDef = mgr.ActiveType(valueType)
+                val typedef: BaseTypeDef = _mgr.ActiveType(valueType)
                 val typeName: String = typedef.FullName
                 val isContainerType: Boolean = isContainerTypeDef(typedef)
                 val fldRep: String = if (isContainerType) {
@@ -435,7 +436,24 @@ class JSONSerDes(val mgr : MdMgr
       * @param objRes an ObjectResolver
       */
     def setObjectResolver(objRes : ObjectResolver) : Unit = {
-        objResolver = objRes
+        _objResolver = objRes
+    }
+
+    /**
+      * Configure the SerializeDeserialize adapter.  This must be done before the adapter implementation can be used.
+      *
+      * @param mgr         SerializeDeserialize implementations must be supplied a reference to the cluster MdMgr
+      * @param objResolver the ObjectResolver instance that can instantiate ContainerInterface instances
+      * @param classLoader the class loader that has access to the classes needed to build fields.
+      * @param config the SerializeDeserializeConfig properties that may be used to tune execution of the
+      *               SerializeDeserialize implementation
+      */
+    def configure(mgr: MdMgr, objResolver: ObjectResolver, classLoader: ClassLoader, config : SerializeDeserializeConfig): Unit = {
+        _mgr  = mgr
+        _objResolver = objResolver
+        _classLoader  = classLoader
+        _config = config
+        _isReady = _mgr != null && _objResolver != null && _classLoader != null && _config != null
     }
 
     /**
@@ -464,14 +482,14 @@ class JSONSerDes(val mgr : MdMgr
 
         /** Fixme: were we to support more than the "current" type, the version key above would be used to discern which type is to be deserialized */
 
-        /** get an empty ContainerInterface instance for this type name from the objResolver */
-        val ci : ContainerInterface = objResolver.getInstance(classLoader, containerNameJson)
+        /** get an empty ContainerInterface instance for this type name from the _objResolver */
+        val ci : ContainerInterface = _objResolver.getInstance(_classLoader, containerNameJson)
         if (ci == null) {
             throw new ObjectNotFoundException(s"type name $containerNameJson could not be resolved and built for deserialize",null)
         }
 
         /** get the fields information */
-        val containerBaseType : BaseTypeDef = mgr.ActiveType(containerNameJson)
+        val containerBaseType : BaseTypeDef = _mgr.ActiveType(containerNameJson)
         val containerType : ContainerTypeDef = if (containerBaseType != null) containerBaseType.asInstanceOf[ContainerTypeDef] else null
         if (containerType == null) {
             throw new ObjectNotFoundException(s"type name $containerNameJson is not a container type... deserialize fails.",null)
@@ -528,6 +546,7 @@ class JSONSerDes(val mgr : MdMgr
 
     /**
       * The current json describes one of the ContainerTypeDefs.  Decode the json building the correct container.
+      *
       * @param containerTypeInfo a ContainerTypeDef (e.g., a StructTypeDef, MappedMsgTypeDef, ArrayTypeDef, et al)
       * @param fieldsJson the json container (a map or array) that contains the content
       * @return

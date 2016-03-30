@@ -728,8 +728,8 @@ object MiningModelType extends Enumeration {
         case "java" => JAVA
         case "binary" => BINARY
         case "python" => PYTHON
-        case _ => UNKNOWN
         case "jtm" => JTM
+        case _ => UNKNOWN
     }
     typ
   }
@@ -917,22 +917,20 @@ object SerializeDeserializeType extends Enumeration {
 }
 
 /**
-  * The SerializeDeserializeConfig describes the behavior
-  * @param jar the jar name that has been submitted that contains the SerializeDeserialize
-  * @param lineDelimiter (FOR CSV) the line terminator... any {\n, \r\n}
-  * @param fieldDelimiter (FOR CSV) the field delimiter (a single character for now)... e.g., ',', ';', ':', '\t'
-  * @param produceHeader (FOR CSV) when true, the column names of the container instance are added as the first line of a series
-  *                      of serializations.  This instance variable only indicates the configuration intention.  The
-  *                      SerializeDeserialize implementation should only respond with the header before the first
-  *                      message/container serialization.
-  * @param alwaysQuoteField (FOR CSV) when true, all of the fields will be individually enclosed in double quotes
+  * Elementary SerializeDeserializeConfig object that is supplied to SerializeDesrerialize implementations.
+  * If the implementation has configuration capabilities, an instance of the appropriate derived class should
+  * be supplied instead.
+  *
+  * @param serDeserType a SerializeDeserializeType...the sort of serializer it is
+  * @param configProperties a Map of arbitrary string properties that are meaningful to a particular impelementation
+  *                         of the SerializeDeserialize interface.
   */
-class SerializeDeserializeConfig ( var serDeserType : SerializeDeserializeType.SerDeserType
-                                 , var jar : String
-                                 , var lineDelimiter : String = "\r\n"
-                                 , var fieldDelimiter : String = ","
-                                 , var produceHeader : Boolean = false
-                                 , var alwaysQuoteField : Boolean = false) extends BaseElemDef {}
+class SerializeDeserializeConfig(val serDeserType : SerializeDeserializeType.SerDeserType
+                                ,val fullName : String
+                                ,val configProperties : Map[String,String]) extends BaseElemDef {}
+
+
+
 
 object ModelCompilationConstants {
   val DEPENDENCIES: String = "Dependencies"
