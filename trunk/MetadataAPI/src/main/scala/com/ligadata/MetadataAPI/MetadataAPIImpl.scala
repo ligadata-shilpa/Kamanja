@@ -147,9 +147,12 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     }
   }
 
-  def GetSchemaId: Int = 0 // This should start atleast from 2,000,001
-  def GetUniqueId: Long = 0
-  def GetMdElementId: Long = 0
+
+
+
+  def GetSchemaId: Int = GetMetadataId("schemaid", true, 2000001).toInt // This should start atleast from 2,000,001. because 1 - 1,000,000 is reserved for System Containers & 1,000,001 - 2,000,000 is reserved for System Messages
+  def GetUniqueId: Long = GetMetadataId("uniqueid", true, 1) // This starts from 1
+  def GetMdElementId: Long = GetMetadataId("mdelementid", true, 1) // This starts from 1
 
   /**
    *  getHealthCheck - will return all the health-check information for the nodeId specified.
@@ -860,6 +863,14 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
         throw InternalErrorException("Failed to notify a zookeeper message from the objectList", e)
       }
     }
+  }
+
+  def GetMetadataId(key: String, incrementInDb: Boolean, defaultId: Long = 1): Long = {
+    PersistenceUtils.GetMetadataId(key, incrementInDb, defaultId)
+  }
+
+  def PutMetadataId(key: String, id: Long) = {
+    PersistenceUtils.PutMetadataId(key, id)
   }
 
     /**
