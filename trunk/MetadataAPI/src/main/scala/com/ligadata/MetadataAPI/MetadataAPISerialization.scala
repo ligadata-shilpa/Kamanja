@@ -415,13 +415,15 @@ object MetadataAPISerialization {
       val ownerId: String = ""
       val uniqueId: Long = 0
       val mdElementId: Long = 0
+      val schemaId: Int = 0
+      val avroSchema: String = ""
       //FIXME: Serialize & Deserialize these values -- End
       val msgDef = MdMgr.GetMdMgr.MakeFixedMsg(
         MsgDefInst.Message.NameSpace,
         MsgDefInst.Message.Name,
         MsgDefInst.Message.PhysicalName,
         attrList1,
-        ownerId, uniqueId, mdElementId,
+        ownerId, uniqueId, mdElementId, schemaId, avroSchema,
         MsgDefInst.Message.NumericTypes.Version,
         MsgDefInst.Message.JarName,
         MsgDefInst.Message.DependencyJars.toArray,
@@ -489,6 +491,8 @@ object MetadataAPISerialization {
       val ownerId: String = ""
       val uniqueId: Long = 0
       val mdElementId: Long = 0
+      val schemaId: Int = 0
+      val avroSchema: String = ""
       //FIXME: Serialize & Deserialize these values -- End
 
       val contDef = MdMgr.GetMdMgr.MakeFixedContainer(
@@ -496,7 +500,7 @@ object MetadataAPISerialization {
         ContDefInst.Container.Name,
         ContDefInst.Container.PhysicalName,
         attrList1,
-        ownerId, uniqueId, mdElementId,
+        ownerId, uniqueId, mdElementId,schemaId,avroSchema,
         ContDefInst.Container.NumericTypes.Version,
         ContDefInst.Container.JarName,
         ContDefInst.Container.DependencyJars.toArray,

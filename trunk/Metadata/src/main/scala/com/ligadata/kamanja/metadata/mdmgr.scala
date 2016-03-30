@@ -69,7 +69,8 @@ class MdMgr {
   private var attrbDefs = new HashMap[String, Set[BaseAttributeDef]] with MultiMap[String, BaseAttributeDef]
   private var modelDefs = new HashMap[String, Set[ModelDef]] with MultiMap[String, ModelDef]
   private var factoryOfMdlInstFactories = new HashMap[String, Set[FactoryOfModelInstanceFactoryDef]] with MultiMap[String, FactoryOfModelInstanceFactoryDef]
-  private var schemaIdMap = new HashMap[Long, ContainerDef]
+  private var schemaIdMap = new HashMap[Int, ContainerDef] // For now we consider ContainerDef & MessageDef
+  private var elementIdMap = new HashMap[Long, BaseElem] // For now we consider ContainerDef, MessageDef & ModelDef
 
   // FunctionDefs keyed by function signature nmspc.name(argtyp1,argtyp2,...) map 
   private var compilerFuncDefs = scala.collection.mutable.Map[String, FunctionDef]()
@@ -103,6 +104,7 @@ class MdMgr {
     modelConfigs.clear
     factoryOfMdlInstFactories.clear
     schemaIdMap.clear
+    elementIdMap.clear
   }
 
   def truncate(objectType: String) {
@@ -153,6 +155,9 @@ class MdMgr {
       }
       case "SchemaId" => {
         schemaIdMap.clear
+      }
+      case "ElementId" => {
+        elementIdMap.clear
       }
       case _ => {
         logger.error("Unknown object type " + objectType + " in truncate function")
@@ -205,6 +210,9 @@ class MdMgr {
     })
     schemaIdMap.foreach(obj => {
       logger.trace("SchemaId:%d => Container:%s Version:%d".format(obj._1, obj._2.FullName, obj._2.Version))
+    })
+    elementIdMap.foreach(obj => {
+      logger.trace("ElementId:%d => ElementName:%s Version:%d, ElementType:%s".format(obj._1, obj._2.FullName, obj._2.Version, obj._2.MdElementCategory))
     })
   }
 
@@ -783,6 +791,11 @@ class MdMgr {
   def ContainerForSchemaId(schemaId:Int): Option[ContainerDef] = {
     val cont = schemaIdMap.getOrElse(schemaId, null)
     if (cont != null) Some(cont) else None
+  }
+
+  def ContainerForElementId(elemId:Int): Option[BaseElem] = {
+    val elem = elementIdMap.getOrElse(elemId, null)
+    if (elem != null) Some(elem) else None
   }
 
   /** Get All Versions of FactoryOfModelInstanceFactoryDef */
@@ -2805,6 +2818,7 @@ class MdMgr {
       schemaIdMap(msg.containerType.schemaId) = msg
     else
       logger.error("SchemaId not found for Container:%s with Version:%d".format(msg.FullName, msg.Version))
+    elementIdMap(msg.MdElementId) = msg
   }
 
   /**
@@ -2870,6 +2884,7 @@ class MdMgr {
       schemaIdMap(container.containerType.schemaId) = container
     else
       logger.error("SchemaId not found for Container:%s with Version:%d".format(container.FullName, container.Version))
+    elementIdMap(container.MdElementId) = container
   }
 
   @throws(classOf[AlreadyExistsException])
@@ -2936,6 +2951,7 @@ class MdMgr {
     //    throw AlreadyExistsException(s"Model ${mdl.FullName} already exists.")
     // }
     modelDefs.addBinding(mdl.FullName, mdl)
+    elementIdMap(mdl.MdElementId) = mdl
   }
 
   def MakeJarDef(nameSpace: String, name: String, version: String, ownerId: String, uniqueId: Long, mdElementId: Long): JarDef = {

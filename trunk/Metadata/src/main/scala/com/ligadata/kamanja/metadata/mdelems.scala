@@ -187,6 +187,7 @@ trait BaseElem {
     def Deactive: Unit // Make the element as de-active
     def Deleted: Unit // Mark the element as deleted
     def OwnerId: String
+    def MdElementCategory: String
 }
 
 class BaseElemDef extends BaseElem {
@@ -220,6 +221,7 @@ class BaseElemDef extends BaseElem {
     override def Deactive: Unit = active = false // Make the element as de-active
     override def Deleted: Unit = deleted = true // Mark the element as deleted
     override def OwnerId: String = ownerId
+    override def MdElementCategory: String = ""
     def CheckAndGetDependencyJarNames: Array[String] = if (dependencyJarNames != null) dependencyJarNames else Array[String]()
 
     // Override in other places if required
@@ -270,6 +272,7 @@ trait TypeImplementation[T] {
 }
 
 abstract class BaseTypeDef extends BaseElemDef with TypeDefInfo {
+  override def MdElementCategory: String = "Type"
   def typeString: String = PhysicalName // default PhysicalName
 
   def implementationName: String = implementationNm // Singleton object name/Static Class name of TypeImplementation
@@ -563,6 +566,7 @@ class StructTypeDef extends ContainerTypeDef with EntityType {
 
 // attribute/concept definition
 abstract class BaseAttributeDef extends BaseElemDef {
+  override def MdElementCategory: String = "Attribute"
   def parent: BaseAttributeDef
   def typeDef: BaseTypeDef //BaseElemDef
 
@@ -605,6 +609,7 @@ class DerivedAttributeDef extends AttributeDef {
 }
 
 class ContainerDef extends BaseElemDef {
+  override def MdElementCategory: String = "Container"
   def cType = containerType
 
   var containerType: EntityType = _ // container structure type -
@@ -613,6 +618,7 @@ class ContainerDef extends BaseElemDef {
 }
 
 class MessageDef extends ContainerDef {
+  override def MdElementCategory: String = "Message"
 }
 
 class ArgDef {
@@ -638,6 +644,7 @@ class FactoryOfModelInstanceFactoryDef(val modelRepSupported : ModelRepresentati
 }
 
 class FunctionDef extends BaseElemDef {
+  override def MdElementCategory: String = "Function"
   var retType: BaseTypeDef = _ // return type of this function - could be simple scalar or array or complex type such as map or set
   var args: Array[ArgDef] = _ // list of arguments definitions
   var className: String = _ // class name that has this function?
@@ -786,15 +793,18 @@ class ModelDef( val modelRepresentation: ModelRepresentation = ModelRepresentati
                 , var isReusable: Boolean = false
                 , var supportsInstanceSerialization: Boolean = false
                 , var modelConfig: String = "") extends BaseElemDef {
+    override def MdElementCategory: String = "Model"
     def typeString: String = PhysicalName
     def SupportsInstanceSerialization : Boolean = supportsInstanceSerialization
 }
 
 class ConfigDef extends BaseElemDef {
+  override def MdElementCategory: String = "ModelConfig"
   var contents: String = _
 }
 
 class JarDef extends BaseElemDef {
+  override def MdElementCategory: String = "Jar"
   def typeString: String = PhysicalName
 }
 
