@@ -52,8 +52,8 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
   var modelEventFactory: MessageFactoryInterface = null
   var exceptionEventFactory: MessageFactoryInterface = null
   var tempBlah = 3
-  private def RunAllModels(transId: Long, inputData: Array[Byte], finalTopMsgOrContainer: ContainerInterface, txnCtxt: TransactionContext, uk: String, uv: String, msgEvent: KamanjaMessageEvent): Array[SavedMdlResult] = {
-    var results: ArrayBuffer[SavedMdlResult] = new ArrayBuffer[SavedMdlResult]()
+  private def RunAllModels(transId: Long, inputData: Array[Byte], finalTopMsgOrContainer: ContainerInterface, txnCtxt: TransactionContext, uk: String, uv: String, msgEvent: KamanjaMessageEvent): Unit = {
+//    var results: ArrayBuffer[SavedMdlResult] = new ArrayBuffer[SavedMdlResult]()
     var oMsgIds: ArrayBuffer[Long] = new ArrayBuffer[Long]()
 
     var tempModelAB: ArrayBuffer[KamanjaModelEvent] = ArrayBuffer[KamanjaModelEvent]()
@@ -61,7 +61,7 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
       LOG.debug(s"Processing uniqueKey:$uk, uniqueVal:$uv, finalTopMsgOrContainer:$finalTopMsgOrContainer, previousModles:${models.size}")
 
     if (finalTopMsgOrContainer != null) {
-      txnCtxt.setInitialMessage(finalTopMsgOrContainer)
+      // txnCtxt.setInitialMessage(finalTopMsgOrContainer)
       ThreadLocalStorage.txnContextInfo.set(txnCtxt)
       try {
         val mdlChngCntr = KamanjaMetadata.GetModelsChangedCounter
@@ -190,8 +190,7 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
                 if (res != null) {
                   modelEvent.isresultproduced = true
                   oMsgIds.append(0L)
-
-                  results += new SavedMdlResult().withMdlName(md.mdl.getModelName).withMdlVersion(md.mdl.getVersion).withUniqKey(uk).withUniqVal(uv).withTxnId(transId).withMdlResult(res)
+//                  results += new SavedMdlResult().withMdlName(md.mdl.getModelName).withMdlVersion(md.mdl.getVersion).withUniqKey(uk).withUniqVal(uv).withTxnId(transId).withMdlResult(res)
                 } else {
                   modelEvent.isresultproduced = false
                   // Nothing to output
@@ -250,7 +249,7 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
       }
     }
     msgEvent.modelinfo = if (tempModelAB.isEmpty) new Array[KamanjaModelEvent](0) else tempModelAB.toArray[KamanjaModelEvent]
-    return results.toArray
+    // return results.toArray
   }
 
 /*
@@ -381,47 +380,47 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
     }
 
     try {
-      if (isValidMsg) {
-        var allMdlsResults: scala.collection.mutable.Map[String, SavedMdlResult] = null
-        if (allMdlsResults == null)
-          allMdlsResults = scala.collection.mutable.Map[String, SavedMdlResult]()
-        // Run all models
-        val mdlsStartTime = System.nanoTime
-        val results = RunAllModels(transId, inputData, msg, txnCtxt, uk, uv, msgEvent)
-        LOG.info(ManagerUtils.getComponentElapsedTimeStr("Models", uv, readTmNs, mdlsStartTime))
-        msgEvent.elapsedtimeinms = ((System.nanoTime - mdlsStartTime)/ 1000000.0).toFloat
-        if (results.size > 0) {
-          var elapseTmFromRead = (System.nanoTime - readTmNs) / 1000
-
-          if (elapseTmFromRead < 0)
-            elapseTmFromRead = 1
-
-          try {
-            // Prepare final output and update the models persistance map
-            results.foreach(res => {
-              allMdlsResults(res.mdlName) = res
-            })
-          } catch {
-            case e: Exception => {
-              LOG.error("Failed to get Model results.", e)
-              val st = StackTrace.ThrowableTraceString(e)
-              var eEvent = createExceptionEvent(LeanringEngine.invalidResult, LeanringEngine.engineComponent, st)
-              // TODO: Do something with these events
-            }
-          }
-          val resMap = scala.collection.mutable.Map[String, Array[(String, Any)]]()
-
-          results.map(res => {
-            resMap(res.mdlName) = res.mdlRes.asKeyValuesMap.map(r => {
-              (r._1, r._2)
-            }).toArray
-          })
-
-          val json = ("ModelsResult" -> results.toList.map(res => res.toJson))
-          // returnOutput ++= allOutputQueueNames.map(adapNm => (adapNm, cntr.toString, compact(render(json)))) // Sending the same result to all queues
-          // cntr += 1
-        }
-      }
+//      if (isValidMsg) {
+//        var allMdlsResults: scala.collection.mutable.Map[String, SavedMdlResult] = null
+//        if (allMdlsResults == null)
+//          allMdlsResults = scala.collection.mutable.Map[String, SavedMdlResult]()
+//        // Run all models
+//        val mdlsStartTime = System.nanoTime
+//        val results = RunAllModels(transId, inputData, msg, txnCtxt, uk, uv, msgEvent)
+//        LOG.info(ManagerUtils.getComponentElapsedTimeStr("Models", uv, readTmNs, mdlsStartTime))
+//        msgEvent.elapsedtimeinms = ((System.nanoTime - mdlsStartTime)/ 1000000.0).toFloat
+//        if (results.size > 0) {
+//          var elapseTmFromRead = (System.nanoTime - readTmNs) / 1000
+//
+//          if (elapseTmFromRead < 0)
+//            elapseTmFromRead = 1
+//
+//          try {
+//            // Prepare final output and update the models persistance map
+//            results.foreach(res => {
+//              allMdlsResults(res.mdlName) = res
+//            })
+//          } catch {
+//            case e: Exception => {
+//              LOG.error("Failed to get Model results.", e)
+//              val st = StackTrace.ThrowableTraceString(e)
+//              var eEvent = createExceptionEvent(LeanringEngine.invalidResult, LeanringEngine.engineComponent, st)
+//              // TODO: Do something with these events
+//            }
+//          }
+//          val resMap = scala.collection.mutable.Map[String, Array[(String, Any)]]()
+//
+//          results.map(res => {
+//            resMap(res.mdlName) = res.mdlRes.asKeyValuesMap.map(r => {
+//              (r._1, r._2)
+//            }).toArray
+//          })
+//
+//          val json = ("ModelsResult" -> results.toList.map(res => res.toJson))
+//          // returnOutput ++= allOutputQueueNames.map(adapNm => (adapNm, cntr.toString, compact(render(json)))) // Sending the same result to all queues
+//          // cntr += 1
+//        }
+//      }
       return returnOutput.toArray
     } catch {
       case e: Exception => {

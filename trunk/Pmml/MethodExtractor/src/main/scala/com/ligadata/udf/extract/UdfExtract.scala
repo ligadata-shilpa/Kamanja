@@ -138,7 +138,7 @@ object MethodExtract extends App with LogTrait {
       null
     }
     val excludeListStr = if (options.contains('excludeList)) options.apply('excludeList) else null
-    val ownerId = (if (options.contains('ownerId)) options.apply('ownerId) else "Kamanja").trim
+    val ownerId = (if (options.contains('ownerId)) options.apply('ownerId) else "kamanja").trim
     var excludeList: Array[String] = null
     val versionNumberStr = if (options.contains('versionNumber)) options.apply('versionNumber) else null
     var versionNumber: Long = 1000000
@@ -347,7 +347,7 @@ Usage: scala com.ligadata.udf.extract.MethodExtract --object <fully qualifed sca
    */
   def InitializeMdMgr: MdMgr = {
     val versionNumber: Long = 1
-    val ownerId: String = "Kamanja"
+    val ownerId: String = "kamanja"
     val mgr: MdMgr = MdMgr.GetMdMgr
 
     /** seed essential types */
@@ -362,15 +362,13 @@ Usage: scala com.ligadata.udf.extract.MethodExtract --object <fully qualifed sca
     mgr.AddScalar(MdMgr.sysNS, "Float", ObjType.tFloat, "Float", ownerId, 0, 0, versionNumber, "basetypes_2.11-0.1.0.jar", Array("metadata_2.11-1.0.jar"), "com.ligadata.BaseTypes.FloatImpl")
     mgr.AddScalar(MdMgr.sysNS, "Char", ObjType.tChar, "Char", ownerId, 0, 0, versionNumber, "basetypes_2.11-0.1.0.jar", Array("metadata_2.11-1.0.jar"), "com.ligadata.BaseTypes.CharImpl")
 
-    mgr.AddFixedContainer(MdMgr.sysNS, "Context", "com.ligadata.pmml.runtime.Context", List(), ownerId, 0, 0)
+    mgr.AddFixedContainer(MdMgr.sysNS, "Context", "com.ligadata.pmml.runtime.Context", List(), ownerId, 0, 0, 1, "")
 
-    mgr.AddFixedContainer(MdMgr.sysNS, "EnvContext", "com.ligadata.KamanjaBase.EnvContext", List(), ownerId, 0, 0)
+    mgr.AddFixedContainer(MdMgr.sysNS, "EnvContext", "com.ligadata.KamanjaBase.EnvContext", List(), ownerId, 0, 0, 2, "")
 
-    mgr.AddFixedContainer(MdMgr.sysNS, "MessageInterface", "com.ligadata.KamanjaBase.MessageInterface", List(), ownerId, 0, 0)
+    mgr.AddFixedContainer(MdMgr.sysNS, "MessageInterface", "com.ligadata.KamanjaBase.MessageInterface", List(), ownerId, 0, 0, 3, "")
 
-    mgr.AddFixedContainer(MdMgr.sysNS, "ContainerInterface", "com.ligadata.KamanjaBase.ContainerInterface", List(), ownerId, 0, 0)
-
-    mgr.AddFixedContainer(MdMgr.sysNS, "ContainerInterface", "com.ligadata.KamanjaBase.ContainerInterface", List(), ownerId, 0, 0)
+    mgr.AddFixedContainer(MdMgr.sysNS, "ContainerInterface", "com.ligadata.KamanjaBase.ContainerInterface", List(), ownerId, 0, 0, 4, "")
 
     mgr
   }

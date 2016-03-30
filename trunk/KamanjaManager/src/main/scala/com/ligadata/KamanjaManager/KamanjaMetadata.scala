@@ -34,7 +34,7 @@ import com.ligadata.ZooKeeper._
 import com.ligadata.MetadataAPI.MetadataAPIImpl
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import com.ligadata.Utils.{ Utils, KamanjaClassLoader, KamanjaLoaderInfo }
-import com.ligadata.KamanjaBase.{ EnvContext, ContainerNameAndDatastoreInfo }
+import com.ligadata.KamanjaBase.{ EnvContext }
 import scala.actors.threadpool.{ ExecutorService, Executors }
 import com.ligadata.KamanjaBase.ThreadLocalStorage
 

@@ -32,6 +32,8 @@ object KamanjaExceptionEvent extends RDDObject[KamanjaExceptionEvent] with Messa
 
   override def getTypeVersion: String = ""
 
+  override def getSchemaId: Int = 100
+
   type T = KamanjaExceptionEvent
 
   override def build  = new KamanjaExceptionEvent(this)

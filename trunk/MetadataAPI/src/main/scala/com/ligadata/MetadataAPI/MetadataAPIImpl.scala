@@ -147,8 +147,12 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     }
   }
 
-  def GetUniqueId: Long = 0
-  def GetMdElementId: Long = 0
+
+
+
+  def GetSchemaId: Int = GetMetadataId("schemaid", true, 2000001).toInt // This should start atleast from 2,000,001. because 1 - 1,000,000 is reserved for System Containers & 1,000,001 - 2,000,000 is reserved for System Messages
+  def GetUniqueId: Long = GetMetadataId("uniqueid", true, 1) // This starts from 1
+  def GetMdElementId: Long = GetMetadataId("mdelementid", true, 1) // This starts from 1
 
   /**
    *  getHealthCheck - will return all the health-check information for the nodeId specified.
@@ -859,6 +863,14 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
         throw InternalErrorException("Failed to notify a zookeeper message from the objectList", e)
       }
     }
+  }
+
+  def GetMetadataId(key: String, incrementInDb: Boolean, defaultId: Long = 1): Long = {
+    PersistenceUtils.GetMetadataId(key, incrementInDb, defaultId)
+  }
+
+  def PutMetadataId(key: String, id: Long) = {
+    PersistenceUtils.PutMetadataId(key, id)
   }
 
     /**
@@ -1799,7 +1811,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
         apiResult.toString()
       } else {
         val jarName = iFile.getName()
-        val ownerId: String = if (userid == None) "Kamanja" else userid.get
+        val ownerId: String = if (userid == None) "kamanja" else userid.get
         val uniqueId = MetadataAPIImpl.GetUniqueId
         val mdElementId = 0L //FIXME:- Not yet handled this
         val jarObject = MdMgr.GetMdMgr.MakeJarDef(MetadataAPIImpl.sysNS, jarName, "100", ownerId, uniqueId, mdElementId)
@@ -2739,7 +2751,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       val processedContainersSet = Set[String]()
 
       reqTypes.foreach(typ => {
-        val storeInfo = PersistenceUtils.GetTableStoreMap(typ)
+        val storeInfo = PersistenceUtils.GetContainerNameAndDataStore(typ)
 
         if (processedContainersSet(storeInfo._1) == false) {
           processedContainersSet += storeInfo._1
@@ -2831,7 +2843,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       var processed: Long = 0L
 
       reqTypes.foreach(typ => {
-        val storeInfo = PersistenceUtils.GetTableStoreMap(typ)
+        val storeInfo = PersistenceUtils.GetContainerNameAndDataStore(typ)
         if (processedContainersSet(storeInfo._1) == false) {
           processedContainersSet += storeInfo._1
           storeInfo._2.get(storeInfo._1, { (k: Key, v: Any, serType: String, typ: String, ver:Int) =>
@@ -3045,7 +3057,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       case "JarDef" => {
         zkMessage.Operation match {
           case "Add" => {
-            val ownerId: String = "Kamanja" //FIXME:- We need to have some user for this operation.
+            val ownerId: String = "kamanja" //FIXME:- We need to have some user for this operation.
             val uniqueId = MetadataAPIImpl.GetUniqueId
             val mdElementId = 0L //FIXME:- Not yet handled this
             DownloadJarFromDB(MdMgr.GetMdMgr.MakeJarDef(zkMessage.NameSpace, zkMessage.Name, zkMessage.Version, ownerId, uniqueId, mdElementId))

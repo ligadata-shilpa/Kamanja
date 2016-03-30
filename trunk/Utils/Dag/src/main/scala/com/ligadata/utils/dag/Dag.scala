@@ -54,12 +54,15 @@ case class ReadyNode(nodeId: Long, iesPos: Int)
 
 // High level public class to create a dag. This should be used in conjunction with a DagRuntime instance to process messages.
 // A single Dag instance could be shared across all DagRuntime instances as once created, it should not be updated.
-class Dag {
+// mdVersion - version of underlying metadata that used to create this dag instance.
+//           - there should be only one instance of this dag per version of metadata
+class Dag(mdTimeStamp: String) {
   // check if node id already exists - if exist, it is error condition
   // if not, make a new node with the given information and put that node in node map
   // and populate input edge map with the input edges from that node.
   def AddNode(nodeId : Long, inputs: Array[Array[EdgeId]], outputs: Array[Long]): Unit = dagImpl.AddNode(nodeId, inputs, outputs)
-  
+  def toJSON: String = "{}"
+
   private[dag] val dagImpl = DagRT.DagImpl()
 }
 
@@ -80,7 +83,9 @@ class DagRuntime {
   //  for each input edge, turn on the flag in the edge set runtime that corresponds to the input edge's position in the set
   //  if all dependencies for edge set are satisfied, put the node id and edge set position corresponding to the edge set into ready list
   //  return the ready node list
-  def FireEdge(eid: EdgeId) : Array[ReadyNode] = drImpl.FireEdge(eid)
+  def FireEdge(eid: EdgeId) : Array[ReadyNode] = drImpl.FireEdges(Array(eid))
+  def FireEdges(eids: Array[EdgeId]) : Array[ReadyNode] = drImpl.FireEdges(eids)
+  def toJSON (dagAlso: Boolean, f: (Long, Int) => String) : String = "{}"
 }
 
 // ====================================================================================================
@@ -143,7 +148,8 @@ object DagRT {
     private[this] val iesList = ArrayBuffer[InputEdgeSet]()
     private[this] val edgeTypeList = ArrayBuffer[EdgeType]()
   
-    private def AddEdgeType(eti: Long) : EdgeType = {
+    private 
+    def AddEdgeType(eti: Long) : EdgeType = {
       if(! edgeTypeMap.contains(eti)) {
         Info("DagImpl:AddEdgeType, adding new edge type; pre numEdgeTypes: %d, eti: %d\n".format(numEdgeTypes, eti))
         val et = EdgeType(eti, numEdgeTypes)
@@ -155,7 +161,8 @@ object DagRT {
       edgeTypeMap(eti)
     }
     
-    private def AddInputEdge(eid : EdgeId, edgeIdxInSet: Int) : InputEdge = {
+    private 
+    def AddInputEdge(eid : EdgeId, edgeIdxInSet: Int) : InputEdge = {
       val eti = eid.edgeTypeId
       val et = AddEdgeType(eti)
       val ie = InputEdge(eid, et, edgeIdxInSet)
@@ -163,7 +170,8 @@ object DagRT {
       ie
     }
     
-    private def AddInputEdgeSet(nodeId: Long, idxSetInNode:Int, edgeIdSet: Array[EdgeId]) : InputEdgeSet = {
+    private 
+    def AddInputEdgeSet(nodeId: Long, idxSetInNode:Int, edgeIdSet: Array[EdgeId]) : InputEdgeSet = {
       var edgeIdxInSet = -1
       val ies = InputEdgeSet(nodeId, idxSetInNode, numEdgeSets, edgeIdSet.map(eid => { edgeIdxInSet += 1; AddInputEdge(eid, edgeIdxInSet) }))
       ies.LinkEdges
@@ -175,7 +183,8 @@ object DagRT {
   
     // make a node out of inputs from add node -
     //  translate input array of array of edgeid into array of InputEdgeSets
-    private def MakeNode(nodeId : Long, inputs: Array[Array[EdgeId]], outputs: Array[Long]) = {
+    private 
+    def MakeNode(nodeId : Long, inputs: Array[Array[EdgeId]], outputs: Array[Long]) = {
       var idxSetInNode = -1;
       val node = DagNode(nodeId, numNodes, inputs.map(edgeIds => { idxSetInNode += 1; AddInputEdgeSet(nodeId, idxSetInNode, edgeIds)}), outputs)
       nodesMap(nodeId) = node
@@ -186,7 +195,10 @@ object DagRT {
   
   case class IesRTElem(ies: InputEdgeSet) {
     def Reset() = { curCnt = 0;  for (i <- 0 to iesCnt) flagsFired(i) = false }
-    def SetFired(idx : Int) = {
+    def IsSatisfied = (curCnt == iesCnt) // flagsFired.foldLeft(false){(result, flag) => (result && flag) }
+    
+    // Return true if all edges are in fired/satisfied state otherwise false
+    def SetEdgeAsFired(idx : Int) : Boolean = {
       if(idx > iesCnt) {
         // throw exception with appropriate message - must be bug as the idx never exceed iesCnt
       }
@@ -195,8 +207,9 @@ object DagRT {
       }
       flagsFired(idx) = true
       curCnt += 1
+      IsSatisfied
     }
-    def IsSatisfied = (curCnt == iesCnt) // flagsFired.foldLeft(false){(result, flag) => (result && flag) }
+    def toJSON : String = ""
   
     val iesCnt : Int = ies.inputEdges.length
     private var curCnt = 0
@@ -228,27 +241,28 @@ object DagRT {
     //  for each input edge, turn on the flag in the edge set runtime that corresponds to the input edge's position in the set
     //  if all dependencies for edge set are satisfied, put the node id and edge set position corresponding to the edge set into ready list
     //  return the ready node list
-    def FireEdge(eid: EdgeId) : Array[ReadyNode] = {
+    def FireEdges(eids: Array[EdgeId]) : Array[ReadyNode] = {
       val result = new ArrayBuffer[ReadyNode]()
-      
-      val eti = eid.edgeTypeId
-      val etOpt = dag.getEdgeType(eti)
-      if(etOpt.isEmpty)
-        throw InvalidArgumentException("DagRuntime::FireEdge - eid.edgeTypeId does not exist in Dag, eid.NodeId: %d, eid.edgeTypeId: %d".format(eid.nodeId, eid.edgeTypeId), null)
-      val et = etOpt.get
+
+      def ProcessEid(eid: EdgeId) = {
+        val eti = eid.edgeTypeId
+        val etOpt = dag.getEdgeType(eti)
+        if(etOpt.isEmpty)
+          throw InvalidArgumentException("DagRuntime::FireEdge - eid.edgeTypeId does not exist in Dag, eid.NodeId: %d, eid.edgeTypeId: %d".format(eid.nodeId, eid.edgeTypeId), null)
+        val et = etOpt.get
+        et.inputEdges.foreach(ie => if(ie.IsMatch(eid)) ProcessMatch(ie))
+      }
       
       def ProcessMatch(ie : InputEdge) = {
         val ies = ie.iesOwner
         val idxIES = ies.idxIES
         val idxInSet = ie.idxInSet
         
-        val iesRTElem = iesRT(idxIES)
-        iesRTElem.SetFired(idxInSet)
-        if(iesRTElem.IsSatisfied) {
+        if(iesRT(idxIES).SetEdgeAsFired(idxInSet)) {
           result.append(ReadyNode(ies.nodeId, ies.idxIESInNode))
         }
       }
-      et.inputEdges.foreach(ie => if(ie.IsMatch(eid)) ProcessMatch(ie))
+      eids.foreach(eid => ProcessEid(eid))
       result.toArray
     }
   }

@@ -323,7 +323,8 @@ class CompilerProxy {
       //val msg = new MessageDefImpl()
       val msg = new MessageCompiler()
       logger.debug("Call Message Compiler ....")
-      val ((classStrVer, classStrVerJava), msgDef, (classStrNoVer, classStrNoVerJava)) = msg.processMsgDef(msgDefStr, "JSON", mgr, recompile)
+      val schemaId = MetadataAPIImpl.GetSchemaId
+      val ((classStrVer, classStrVerJava), msgDef, (classStrNoVer, classStrNoVerJava)) = msg.processMsgDef(msgDefStr, "JSON", mgr, schemaId, recompile)
       logger.debug("Message Compilation done ...." + JsonSerializer.SerializeObjectToJson(msgDef))
 
       val nameArray = msgDef.PhysicalName.split('.')
@@ -416,6 +417,8 @@ class CompilerProxy {
 
       msgDef.objectDefinition = msgDefStr
       msgDef.objectFormat = fJSON
+      msgDef.mdElementId = MetadataAPIImpl.GetMdElementId
+      msgDef.uniqueId = MetadataAPIImpl.GetUniqueId
 
       (classStrVer, msgDef, classStrNoVer)
     } catch {
@@ -717,12 +720,13 @@ class CompilerProxy {
 
       // reconstruct modDef json string from modelConfig object
       logger.debug("generateModelDef: Get the model config for " + modelConfigName)
-      var config = MdMgr.GetMdMgr.GetModelConfig((userid.get + "." + modelConfigName).toLowerCase)
+      //var config = MdMgr.GetMdMgr.GetModelConfig((userid.get + "." + modelConfigName).toLowerCase)
+      var config = MdMgr.GetMdMgr.GetModelConfig(modelConfigName.toLowerCase)
       var modCfgJson = JsonSerializer.SerializeModelConfigToJson(modelConfigName, config)
       logger.debug("generateModelDef: modelConfig in json  " + modCfgJson)
 
       val modelType: String = if (sourceLang.equalsIgnoreCase("scala")) "Scala" else "Java"
-      val ownerId: String = if (userid == None) "Kamanja" else userid.get
+      val ownerId: String = if (userid == None) "kamanja" else userid.get
       val modDef: ModelDef = MdMgr.GetMdMgr.MakeModelDef(modelNamespace
         , modelName
         , pName
@@ -1150,7 +1154,7 @@ class CompilerProxy {
             */
 
           val mdlDef = MdMgr.GetMdMgr.MakeModelDef("", ""
-            , clsName, "Kamanja", 0, 0
+            , clsName, "kamanja", 0, 0
             , ModelRepresentation.JAR
             , Array[Array[MessageAndAttributes]]()
             , Array[String]()
@@ -1168,7 +1172,7 @@ class CompilerProxy {
             // create possible default input messages from model_config.Type_dependencies for java/scala models
             var fullName = mdlFactory.getModelName.split('.')
             var modelName = fullName(fullName.length - 1)
-            var key = "Kamanja" + "." + modelConfigName
+            var key = "kamanja" + "." + modelConfigName
             if (userid != None) {
               key = userid.get + "." + modelConfigName
             }

@@ -79,7 +79,6 @@ object MetadataAPISerialization {
               ("CreationTime" -> o.CreationTime) ~
               ("Author" -> o.Author) ~
               ("PartitionKey" -> o.cType.PartitionKey.toList) ~
-              ("Persist" -> o.cType.Persist) ~
               ("IsActive" -> o.IsActive) ~
               ("IsDeleted" -> o.IsDeleted) ~
               ("Recompile" -> false) ~
@@ -115,7 +114,6 @@ object MetadataAPISerialization {
               ("CreationTime" -> o.CreationTime) ~
               ("Author" -> o.Author) ~
               ("PartitionKey" -> o.cType.PartitionKey.toList) ~
-              ("Persist" -> o.cType.Persist) ~
               ("IsActive" -> o.IsActive) ~
               ("IsDeleted" -> o.IsDeleted) ~
               ("Recompile" -> false) ~
@@ -417,21 +415,22 @@ object MetadataAPISerialization {
       val ownerId: String = ""
       val uniqueId: Long = 0
       val mdElementId: Long = 0
+      val schemaId: Int = 0
+      val avroSchema: String = ""
       //FIXME: Serialize & Deserialize these values -- End
       val msgDef = MdMgr.GetMdMgr.MakeFixedMsg(
         MsgDefInst.Message.NameSpace,
         MsgDefInst.Message.Name,
         MsgDefInst.Message.PhysicalName,
         attrList1,
-        ownerId, uniqueId, mdElementId,
+        ownerId, uniqueId, mdElementId, schemaId, avroSchema,
         MsgDefInst.Message.NumericTypes.Version,
         MsgDefInst.Message.JarName,
         MsgDefInst.Message.DependencyJars.toArray,
         primaryKeys,
         foreignKeys,
         MsgDefInst.Message.PartitionKey.toArray,
-        MsgDefInst.Message.Recompile,
-        MsgDefInst.Message.Persist
+        MsgDefInst.Message.Recompile
       )
 
       msgDef.tranId = MsgDefInst.Message.NumericTypes.TransId
@@ -492,6 +491,8 @@ object MetadataAPISerialization {
       val ownerId: String = ""
       val uniqueId: Long = 0
       val mdElementId: Long = 0
+      val schemaId: Int = 0
+      val avroSchema: String = ""
       //FIXME: Serialize & Deserialize these values -- End
 
       val contDef = MdMgr.GetMdMgr.MakeFixedContainer(
@@ -499,15 +500,14 @@ object MetadataAPISerialization {
         ContDefInst.Container.Name,
         ContDefInst.Container.PhysicalName,
         attrList1,
-        ownerId, uniqueId, mdElementId,
+        ownerId, uniqueId, mdElementId,schemaId,avroSchema,
         ContDefInst.Container.NumericTypes.Version,
         ContDefInst.Container.JarName,
         ContDefInst.Container.DependencyJars.toArray,
         primaryKeys,
         foreignKeys,
         ContDefInst.Container.PartitionKey.toArray,
-        ContDefInst.Container.Recompile,
-        ContDefInst.Container.Persist
+        ContDefInst.Container.Recompile
       )
 
       contDef.tranId = ContDefInst.Container.NumericTypes.TransId
@@ -617,8 +617,7 @@ object MetadataAPISerialization {
         key,
         value,
         mapTypeInst.MapType.NumericTypes.Version, ownerId, uniqueId, mdElementId,
-        mapTypeInst.MapType.Recompile,
-        mapTypeInst.MapType.Persist)
+        mapTypeInst.MapType.Recompile)
 
       mapTypeDef.origDef = mapTypeInst.MapType.OrigDef
       val objFmt: ObjFormatType.FormatType = ObjFormatType.fromString(mapTypeInst.MapType.ObjectFormat)
@@ -673,8 +672,7 @@ object MetadataAPISerialization {
         arrayTypeInst.ArrayType.TypeName,
         arrayTypeInst.ArrayType.NumberOfDimensions, ownerId, uniqueId, mdElementId,
         arrayTypeInst.ArrayType.NumericTypes.Version,
-        arrayTypeInst.ArrayType.Recompile,
-        arrayTypeInst.ArrayType.Persist
+        arrayTypeInst.ArrayType.Recompile
       )
 
       arrayTypeDef.origDef = arrayTypeInst.ArrayType.OrigDef
