@@ -250,6 +250,7 @@ class HashMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
   }
 
   private def ValueToByteArray(value: Value, out: DataOutputStream): Unit = {
+    out.writeInt(value.schemaId)
     out.writeInt(value.serializerType.length);
     out.write(value.serializerType.getBytes());
     out.writeInt(value.serializedInfo.length);
@@ -258,7 +259,6 @@ class HashMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
 
   private def ByteArrayToValue(byteArray: Array[Byte]): Value = {
     var in = new DataInputStream(new ByteArrayInputStream(byteArray));
-
     var schemaId = in.readInt();
 
     var serializerTypeLength = in.readInt();
