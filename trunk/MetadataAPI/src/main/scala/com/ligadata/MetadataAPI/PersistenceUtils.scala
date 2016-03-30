@@ -94,8 +94,6 @@ object PersistenceUtils {
 
   def GetMainDS: DataStore = mainDS
 
-//  def GetTableStoreMap: Map[String, (String, DataStore)] = tableStoreMap
-
   def GetContainerNameAndDataStore(typeName: String): (String, DataStore) = {
     val info = tableStoreMap.getOrElse(typeName, null)
     if (info != null)

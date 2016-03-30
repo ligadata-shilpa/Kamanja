@@ -1782,7 +1782,7 @@ object ModelUtils {
     logger.debug("Max Transaction Id => " + maxTranId)
 
     var processed: Long = 0L
-    val storeInfo = PersistenceUtils.GetTableStoreMap("model_config_objects")
+    val storeInfo = PersistenceUtils.GetContainerNameAndDataStore("model_config_objects")
     storeInfo._2.get(storeInfo._1, { (k: Key, v: Any, serType: String, typ: String, ver: Int) => {
       processed += 1
       val conf = serializer.DeserializeObjectFromByteArray(v.asInstanceOf[Array[Byte]]).asInstanceOf[Map[String, List[String]]]

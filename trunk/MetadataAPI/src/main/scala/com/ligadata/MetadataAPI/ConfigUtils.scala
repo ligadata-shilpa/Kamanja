@@ -1444,7 +1444,7 @@ object ConfigUtils {
   def LoadAllConfigObjectsIntoCache: Boolean = {
     try {
       var processed: Long = 0L
-      val storeInfo = PersistenceUtils.GetTableStoreMap("config_objects")
+      val storeInfo = PersistenceUtils.GetContainerNameAndDataStore("config_objects")
       storeInfo._2.get(storeInfo._1, { (k: Key, v: Any, serType: String, typ: String, ver:Int) =>
         {
           val strKey = k.bucketKey.mkString(".")
@@ -1504,7 +1504,7 @@ object ConfigUtils {
     logger.debug("Max Transaction Id => " + maxTranId)
 
     var processed: Long = 0L
-    val storeInfo = PersistenceUtils.GetTableStoreMap("model_config_objects")
+    val storeInfo = PersistenceUtils.GetContainerNameAndDataStore("model_config_objects")
     storeInfo._2.get(storeInfo._1, { (k: Key, v: Any, serType: String, typ: String, ver:Int) =>
       {
         processed += 1

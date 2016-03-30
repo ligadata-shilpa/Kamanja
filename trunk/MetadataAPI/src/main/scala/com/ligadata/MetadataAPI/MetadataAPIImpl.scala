@@ -2751,7 +2751,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       val processedContainersSet = Set[String]()
 
       reqTypes.foreach(typ => {
-        val storeInfo = PersistenceUtils.GetTableStoreMap(typ)
+        val storeInfo = PersistenceUtils.GetContainerNameAndDataStore(typ)
 
         if (processedContainersSet(storeInfo._1) == false) {
           processedContainersSet += storeInfo._1
@@ -2843,7 +2843,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       var processed: Long = 0L
 
       reqTypes.foreach(typ => {
-        val storeInfo = PersistenceUtils.GetTableStoreMap(typ)
+        val storeInfo = PersistenceUtils.GetContainerNameAndDataStore(typ)
         if (processedContainersSet(storeInfo._1) == false) {
           processedContainersSet += storeInfo._1
           storeInfo._2.get(storeInfo._1, { (k: Key, v: Any, serType: String, typ: String, ver:Int) =>
