@@ -19,7 +19,7 @@ import com.ligadata.KvBase.TimeRange
 import com.ligadata.kamanja.metadata.ModelDef
 import com.ligadata.Utils._
 class Factory(modelDef: ModelDef, nodeContext: NodeContext) extends ModelInstanceFactory(modelDef, nodeContext) {
-  override def isValidMessage(msg: MessageContainerBase): Boolean = {
+  override def isValidMessage(msg: ContainerInterface): Boolean = {
     msg.isInstanceOf[com.ligadata.kamanja.test.v1000000.varin1]
   }
   override def createModelInstance(): ModelInstance = return new Model(this)
@@ -28,21 +28,19 @@ class Factory(modelDef: ModelDef, nodeContext: NodeContext) extends ModelInstanc
   override def createResultObject(): ModelResultBase = new MappedModelResults()
 }
 class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
-  override def run(txnCtxt: TransactionContext, outputDefault: Boolean): Array[BaseMsg]  = {
+  override def execute(txnCtxt: TransactionContext, execMsgsSet: Array[ContainerOrConcept], triggerdSetIndex: Int, outputDefault: Boolean): Array[ContainerOrConcept] = {
+    val messagefactoryinterface = execMsgsSet(0).asInstanceOf[MessageFactoryInterface]
     //
     //
-    def exeGenerated_test1_1(msg1: com.ligadata.kamanja.test.v1000000.varin1): Array[BaseMsg] = {
+    def exeGenerated_test1_1(msg1: com.ligadata.kamanja.test.v1000000.varin1): Array[MessageInterface] = {
       // in scala, type could be optional
       val out3: Int = msg1.get("in3") + 1000
-      def process_o1(): Array[BaseMsg] = {
-        if (!(out3 != -1 && out3 < 100)) return Array.empty[BaseMsg]
+      def process_o1(): Array[MessageInterface] = {
+        if (!(out3 != -1 && out3 < 100)) return Array.empty[MessageInterface]
         val t1: String = "s:" + msg1.get("in3").toString()
-        val result = new com.ligadata.kamanja.test.v1000000.varout1
-        result.out2 = msg1.in2
-        result.rowNumber = msg1.rowNumber
-        result.timePartitionData = msg1.timePartitionData
+        val result = new com.ligadata.kamanja.test.v1000000.varout1(messagefactoryinterface)
         result.out1 = msg1.in1
-        result.transactionId = msg1.transactionId
+        result.out2 = msg1.in2
         result.set("out3", t1)
         result.set("out4", msg1.get("in4"))
         Array(result)
@@ -50,15 +48,16 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
       process_o1()
     }
     // Evaluate messages
-    val msg1 = txnCtxt.getMessages("com.ligadata.kamanja.test.varin1").headOption.getOrElse(null).asInstanceOf[com.ligadata.kamanja.test.v1000000.varin1]
+    val msgs = execMsgsSet.map(m => m.getFullTypeName -> m).toMap
+    val msg1 = msgs.get("com.ligadata.kamanja.test.varin1").getOrElse(null).asInstanceOf[com.ligadata.kamanja.test.v1000000.varin1]
     // Main dependency -> execution check
     //
-    val results: Array[BaseMsg] =
+    val results: Array[MessageInterface] =
     if(msg1!=null) {
       exeGenerated_test1_1(msg1)
     } else {
-      Array.empty[BaseMsg]
+      Array.empty[MessageInterface]
     }
-    result
+    results.asInstanceOf[Array[ContainerOrConcept]]
   }
 }

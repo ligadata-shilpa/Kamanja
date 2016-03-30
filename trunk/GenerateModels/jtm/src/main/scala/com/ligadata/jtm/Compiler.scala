@@ -864,8 +864,9 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
     // Generate variables
     //
+    messages :+= "val msgs = execMsgsSet.map(m => m.getFullTypeName -> m).toMap"
     incomingToMsgId.foreach( e => {
-      messages :+= "val msg%d = txnCtxt.getMessages(\"%s\").headOption.getOrElse(null).asInstanceOf[%s]".format(e._2, e._1, ResolveToVersionedClassname(md, e._1))
+      messages :+= "val msg%d = msgs.get(\"%s\").getOrElse(null).asInstanceOf[%s]".format(e._2, e._1, ResolveToVersionedClassname(md, e._1))
     })
 
     // Compute the highlevel handler that match dependencies
@@ -1012,7 +1013,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
             }
 
             // To Construct the final output
-            val outputResult = "val result = new %s\n%s\n%s\nArray(result)".format(outputType,
+            val outputResult = "val result = new %s(messagefactoryinterface)\n%s\n%s\nArray(result)".format(outputType,
                                     outputElements.mkString("\n"), outputElements1.mkString("\n"))
             collect ++= Array(outputResult)
             collect ++= Array("}\n")
