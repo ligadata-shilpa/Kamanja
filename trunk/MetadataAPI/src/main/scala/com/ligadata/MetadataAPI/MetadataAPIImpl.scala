@@ -147,6 +147,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     }
   }
 
+  def GetSchemaId: Int = 0 // This should start atleast from 2,000,001
   def GetUniqueId: Long = 0
   def GetMdElementId: Long = 0
 

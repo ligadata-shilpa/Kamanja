@@ -33,6 +33,8 @@ object KamanjaModelEvent extends RDDObject[KamanjaModelEvent] with MessageFactor
 
   override def getTypeVersion: String = ""
 
+  override def getSchemaId: Int = 102
+
   override def build  = new KamanjaModelEvent(this)
 
   override def build(from: T)  = new KamanjaModelEvent(this)

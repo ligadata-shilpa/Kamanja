@@ -54,7 +54,7 @@ case class Attr(NameSpace: String, Name: String, Version: Long, CollectionType: 
 
 case class DerivedConcept(FunctionDefinition: Function, Attributes: List[Attr])
 
-case class MessageStruct(NameSpace: String, Name: String, FullName: String, Version: Long, JarName: String, PhysicalName: String, DependencyJars: List[String], Attributes: List[Attr], OwnerId: String, UniqueId: Long, MdElementId: Long)
+case class MessageStruct(NameSpace: String, Name: String, FullName: String, Version: Long, JarName: String, PhysicalName: String, DependencyJars: List[String], Attributes: List[Attr], OwnerId: String, UniqueId: Long, MdElementId: Long, SchemaId: Int, AvroSchema:String)
 
 case class MessageDefinition(Message: MessageStruct)
 
@@ -221,7 +221,7 @@ object JsonSerializer {
           if (typ.TypeName == "Struct") {
             typeDef = MdMgr.GetMdMgr.MakeStructDef(typ.NameSpace, typ.Name, typ.PhysicalName,
               null, typ.Version.toLong, typ.JarName,
-              typ.DependencyJars.toArray, null, null, null, typ.OwnerId, typ.UniqueId, typ.MdElementId) //BUGBUG:: Handle Primary Key, Foreign Keys & Partition Key here
+              typ.DependencyJars.toArray, null, null, null, typ.OwnerId, typ.UniqueId, typ.MdElementId, 0, "") //BUGBUG:: Handle Primary Key, Foreign Keys & Partition Key here and also SchemaId, AvroSchema
           }
         }
         case _ => {
@@ -420,7 +420,7 @@ object JsonSerializer {
         ContDefInst.Container.Name,
         ContDefInst.Container.PhysicalName,
         attrList.toList,
-        ContDefInst.Container.OwnerId, ContDefInst.Container.UniqueId, ContDefInst.Container.MdElementId,
+        ContDefInst.Container.OwnerId, ContDefInst.Container.UniqueId, ContDefInst.Container.MdElementId, ContDefInst.Container.SchemaId, ContDefInst.Container.AvroSchema,
         ContDefInst.Container.Version.toLong,
         ContDefInst.Container.JarName,
         ContDefInst.Container.DependencyJars.toArray)
@@ -552,7 +552,7 @@ object JsonSerializer {
         MsgDefInst.Message.Name,
         MsgDefInst.Message.PhysicalName,
         attrList1.toList,
-        MsgDefInst.Message.OwnerId, MsgDefInst.Message.UniqueId, MsgDefInst.Message.MdElementId,
+        MsgDefInst.Message.OwnerId, MsgDefInst.Message.UniqueId, MsgDefInst.Message.MdElementId, MsgDefInst.Message.SchemaId, MsgDefInst.Message.AvroSchema,
         MsgDefInst.Message.Version.toLong,
         MsgDefInst.Message.JarName,
         MsgDefInst.Message.DependencyJars.toArray)
@@ -1012,7 +1012,8 @@ object JsonSerializer {
             ("FullName" -> o.FullName) ~
             ("Version" -> MdMgr.Pad0s2Version(o.ver)) ~
           ("ReportingId"-> o.uniqueId) ~
-            ("Persist" -> o.containerType.persist) ~
+            ("SchemaId" -> o.containerType.schemaId) ~
+            ("AvroSchema" -> o.containerType.avroSchema) ~
             ("JarName" -> o.jarName) ~
             ("PhysicalName" -> o.typeString) ~
             ("ObjectDefinition" -> o.objectDefinition) ~
@@ -1049,7 +1050,8 @@ object JsonSerializer {
             ("Name" -> o.name) ~
             ("FullName" -> o.FullName) ~
             ("Version" -> MdMgr.Pad0s2Version(o.ver)) ~
-            ("Persist" -> o.containerType.persist) ~
+            ("SchemaId" -> o.containerType.schemaId) ~
+            ("AvroSchema" -> o.containerType.avroSchema) ~
             ("JarName" -> o.jarName) ~
             ("PhysicalName" -> o.typeString) ~
             ("ObjectDefinition" -> o.objectDefinition) ~

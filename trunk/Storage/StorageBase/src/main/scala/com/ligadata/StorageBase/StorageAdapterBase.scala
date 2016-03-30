@@ -59,7 +59,7 @@ trait DataStoreOperations extends AdaptersSerializeDeserializers {
   def get(containerName: String, callbackFunction: (Key, Any, String, String, Int) => Unit): Unit = {
     val getCallbackFn = (k: Key, v: Value) => {
       if (callbackFunction != null) {
-        if (v.schemaId > 0 && v.serializerType != null && v.serializerType.size > 0) {
+        if (v.schemaId > 0 /* && v.serializerType != null && v.serializerType.size > 0 */) {
           val typFromSchemaId = "" // schemaId
           val (cont, deserializerName) = deserialize(v.serializedInfo, v.serializerType)
           callbackFunction(k, cont, v.serializerType, deserializerName, 0)
@@ -75,7 +75,7 @@ trait DataStoreOperations extends AdaptersSerializeDeserializers {
   def get(containerName: String, keys: Array[Key], callbackFunction: (Key, Any, String, String, Int) => Unit): Unit = {
     val getCallbackFn = (k: Key, v: Value) => {
       if (callbackFunction != null) {
-        if (v.schemaId > 0 && v.serializerType != null && v.serializerType.size > 0) {
+        if (v.schemaId > 0 /* && v.serializerType != null && v.serializerType.size > 0 */) {
           val (cont, deserializerName) = deserialize(v.serializedInfo, v.serializerType)
           callbackFunction(k, cont, v.serializerType, deserializerName, 0)
         } else {
@@ -90,7 +90,7 @@ trait DataStoreOperations extends AdaptersSerializeDeserializers {
   def get(containerName: String, timeRanges: Array[TimeRange], callbackFunction: (Key, Any, String, String, Int) => Unit): Unit  = {
     val getCallbackFn = (k: Key, v: Value) => {
       if (callbackFunction != null) {
-        if (v.schemaId > 0 && v.serializerType != null && v.serializerType.size > 0) {
+        if (v.schemaId > 0 /* && v.serializerType != null && v.serializerType.size > 0 */) {
           val (cont, deserializerName) = deserialize(v.serializedInfo, v.serializerType)
           callbackFunction(k, cont, v.serializerType, deserializerName, 0)
         } else {
@@ -105,7 +105,7 @@ trait DataStoreOperations extends AdaptersSerializeDeserializers {
   def get(containerName: String, timeRanges: Array[TimeRange], bucketKeys: Array[Array[String]], callbackFunction: (Key, Any, String, String, Int) => Unit): Unit  = {
     val getCallbackFn = (k: Key, v: Value) => {
       if (callbackFunction != null) {
-        if (v.schemaId > 0 && v.serializerType != null && v.serializerType.size > 0) {
+        if (v.schemaId > 0 /* && v.serializerType != null && v.serializerType.size > 0 */) {
           val (cont, deserializerName) = deserialize(v.serializedInfo, v.serializerType)
           callbackFunction(k, cont, v.serializerType, deserializerName, 0)
         } else {
@@ -120,7 +120,7 @@ trait DataStoreOperations extends AdaptersSerializeDeserializers {
   def get(containerName: String, bucketKeys: Array[Array[String]], callbackFunction: (Key, Any, String, String, Int) => Unit): Unit  = {
     val getCallbackFn = (k: Key, v: Value) => {
       if (callbackFunction != null) {
-        if (v.schemaId > 0 && v.serializerType != null && v.serializerType.size > 0) {
+        if (v.schemaId > 0 /* && v.serializerType != null && v.serializerType.size > 0 */) {
           val (cont, deserializerName) = deserialize(v.serializedInfo, v.serializerType)
           callbackFunction(k, cont, v.serializerType, deserializerName, 0)
         } else {
