@@ -10,5 +10,6 @@ libraryDependencies += "org.json4s" %% "json4s-native" % "3.2.9"
 libraryDependencies += "org.slf4j" % "slf4j-api" % "1.7.12"
 libraryDependencies += "org.slf4j" % "slf4j-log4j12" % "1.7.12"
 libraryDependencies += "org.slf4j" % "slf4j-nop" % "1.7.12"
+libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.0"
 
 

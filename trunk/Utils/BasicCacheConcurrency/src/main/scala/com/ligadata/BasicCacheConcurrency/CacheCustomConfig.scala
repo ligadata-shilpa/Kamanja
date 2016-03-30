@@ -4,7 +4,8 @@ import java.util.Properties
 
 import net.sf.ehcache.Cache
 import net.sf.ehcache.bootstrap.BootstrapCacheLoader
-import net.sf.ehcache.config.{MemoryUnit, FactoryConfiguration, Configuration, CacheConfiguration}
+import net.sf.ehcache.config.PersistenceConfiguration.Strategy
+import net.sf.ehcache.config._
 import net.sf.ehcache.distribution.jgroups.{JGroupsBootstrapCacheLoaderFactory, JGroupsCacheReplicatorFactory, JGroupsCacheManagerPeerProviderFactory}
 import net.sf.ehcache.event.CacheEventListener
 
@@ -22,7 +23,6 @@ object CacheCustomConfig{
   val REPLICATE_ASYNCHRONOUSLY:String = "replicateAsynchronously"
   val NAME:String="name"
   val MAXBYTESLOCALHEAP:String="maxBytesLocalHeap"
-  val MAXBYTESLOCALDISK:String="maxBytesLocalDisk"
   val ETERNAL:String="eternal"
   val DISKSPOOLBUFFERSIZEMB:String="diskSpoolBufferSizeMB"
   val TIMETOIDLESECONDS:String="timeToIdleSeconds"
@@ -53,7 +53,6 @@ class CacheCustomConfig(jsonString:String) extends CacheConfiguration{
              enableListener="false"
              name="Node"
              maxBytesLocalHeap="10000"
-             maxBytesLocalDisk="1000"
              eternal="false"
              diskSpoolBufferSizeMB="20"
              timeToIdleSeconds="300"
@@ -62,7 +61,7 @@ class CacheCustomConfig(jsonString:String) extends CacheConfiguration{
              transactionalMode="off"
              class="net.sf.ehcache.distribution.jgroups.JGroupsCacheManagerPeerProviderFactory"
              separator="::"
-             peerconfig="channelName=EH_CACHE::file=jgroups_upd.xml"
+             peerconfig="channelName=EH_CACHE::file=jgroups_udp.xml"
              replicatePuts=true
              replicateUpdates=true
              replicateUpdatesViaCopy=false
@@ -76,8 +75,8 @@ class CacheCustomConfig(jsonString:String) extends CacheConfiguration{
 
   this.name(values.getOrElse(CacheCustomConfig.NAME,"Node"))
     .eternal(values.getOrElse(CacheCustomConfig.ETERNAL,"false").toBoolean)
+    .persistence(new PersistenceConfiguration().strategy(Strategy.NONE))
     .maxBytesLocalHeap(values.getOrElse(CacheCustomConfig.MAXBYTESLOCALHEAP,"10000").toLong,MemoryUnit.BYTES)
-    .maxBytesLocalDisk(values.getOrElse(CacheCustomConfig.MAXBYTESLOCALDISK,"1000").toLong,MemoryUnit.BYTES)
     .diskSpoolBufferSizeMB(values.getOrElse(CacheCustomConfig.DISKSPOOLBUFFERSIZEMB,"20").toInt)
     .timeToLiveSeconds(values.getOrElse(CacheCustomConfig.TIMETOLIVESECONDS,"600").toInt)
     .timeToIdleSeconds(values.getOrElse(CacheCustomConfig.TIMETOIDLESECONDS,"300").toInt)
@@ -87,7 +86,7 @@ class CacheCustomConfig(jsonString:String) extends CacheConfiguration{
   //ADD A PROVIDER DEFUALT JGROUPS
   factory.setClass(values.getOrElse(CacheCustomConfig.CLASS,"net.sf.ehcache.distribution.jgroups.JGroupsCacheManagerPeerProviderFactory"))
   factory.setPropertySeparator(values.getOrElse(CacheCustomConfig.SEPARATOR,"::"))
-  factory.setProperties(values.getOrElse(CacheCustomConfig.PEERCONFIG,"channelName=EH_CACHE::file=jgroups_upd.xml"));
+  factory.setProperties(values.getOrElse(CacheCustomConfig.PEERCONFIG,"channelName=EH_CACHE::file=jgroups_udp.xml"));
   config.addCacheManagerPeerProviderFactory(factory)
 
   //LISTENER PROPERTIES

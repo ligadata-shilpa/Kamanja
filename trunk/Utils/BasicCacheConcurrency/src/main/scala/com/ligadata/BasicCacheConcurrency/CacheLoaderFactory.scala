@@ -19,7 +19,9 @@ class CacheLoaderFactory(cache: Ehcache) extends CacheLoader {
 
   override def getStatus: Status = ???
 
-  override def dispose(): Unit = ???
+  override def dispose(): Unit = {
+    System.out.println("///////////////////////////dispose")
+  }
 
   override def clone(cache: Ehcache): CacheLoader = {
     new CacheLoaderFactory(cache)
