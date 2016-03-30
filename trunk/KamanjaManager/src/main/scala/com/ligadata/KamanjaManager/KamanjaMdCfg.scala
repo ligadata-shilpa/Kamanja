@@ -20,7 +20,7 @@ package com.ligadata.KamanjaManager
 import org.apache.logging.log4j.{ Logger, LogManager }
 import com.ligadata.kamanja.metadata._
 import com.ligadata.kamanja.metadata.MdMgr._
-import com.ligadata.KamanjaBase.{ EnvContext, NodeContext, ContainerNameAndDatastoreInfo }
+import com.ligadata.KamanjaBase.{ EnvContext, NodeContext }
 import com.ligadata.InputOutputAdapterInfo._
 import com.ligadata.Utils.{ Utils, KamanjaClassLoader, KamanjaLoaderInfo }
 import scala.collection.mutable.ArrayBuffer
@@ -249,7 +249,7 @@ object KamanjaMdCfg {
           envCtxt.setDefaultDatastore(KamanjaConfiguration.dataDataStoreInfo) // Default Datastore
 
           val allMsgsContainers = topMessageNames ++ containerNames
-          val containerInfos = allMsgsContainers.map(c => { ContainerNameAndDatastoreInfo(c, null) })
+//          val containerInfos = allMsgsContainers.map(c => { ContainerNameAndDatastoreInfo(c, null) })
 //          envCtxt.RegisterMessageOrContainers(containerInfos) // Messages & Containers
 
           // Record EnvContext in the Heartbeat
@@ -392,7 +392,7 @@ object KamanjaMdCfg {
     var curClz = clz
 
     while (clz != null && isOutputAdapter == false) {
-      isOutputAdapter = Utils.isDerivedFrom(curClz, "com.ligadata.InputOutputAdapterInfo.OutputAdapterObj")
+      isOutputAdapter = Utils.isDerivedFrom(curClz, "com.ligadata.InputOutputAdapterInfo.OutputAdapterFactory")
       if (isOutputAdapter == false)
         curClz = curClz.getSuperclass()
     }
@@ -501,7 +501,7 @@ object KamanjaMdCfg {
     var curClz = clz
 
     while (clz != null && isInputAdapter == false) {
-      isInputAdapter = Utils.isDerivedFrom(curClz, "com.ligadata.InputOutputAdapterInfo.InputAdapterObj")
+      isInputAdapter = Utils.isDerivedFrom(curClz, "com.ligadata.InputOutputAdapterInfo.InputAdapterFactory")
       if (isInputAdapter == false)
         curClz = curClz.getSuperclass()
     }

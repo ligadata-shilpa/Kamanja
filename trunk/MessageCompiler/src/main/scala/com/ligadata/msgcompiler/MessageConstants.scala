@@ -33,6 +33,7 @@ class MessageConstants {
   val namespace: String = "%soverride def getTypeNameSpace: String = \"%s\"; %s"; //com.ligadata.samples.messages"
   val name: String = "%soverride def getTypeName: String = \"%s\"; %s"; //CustAlertHistory"
   val version: String = "%soverride def getTypeVersion: String = \"%s\"; %s"; //000000.000001.000000"
+  val schemaId: String = "%soverride def getSchemaId: Int = %s; %s"; //10
   val createInstance = "%soverride def createInstance: %s = new %s(%s); %s"; //ContainerInterface = new CustAlertHistory()
   val containerInstanceType = "ContainerInterface";
   val messageInstanceType = "MessageInterface";
@@ -92,7 +93,7 @@ import java.util.Date
   }
 
   def msgObjectBuildStmts = {
-"""
+    """
     def build = new T(this)
     def build(from: T) = new T(from)
 """
@@ -121,7 +122,7 @@ import java.util.Date
    * GetOrElse method by Key for mapped messages
    */
   private def getOrElseFuncForMapped = {
-"""
+    """
     override def getOrElse(key: String, defaultVal: Any): AttributeValue = { // Return (value, type)
       var attributeValue: AttributeValue = new AttributeValue();
       try {
@@ -302,8 +303,10 @@ import java.util.Date
     var setFields: Set[String] = Set[String]()
     var a = 0;
     var index: Int = 0
-    for (a <- fields) {
-      setFields = setFields + a.FieldTypePhysicalName
+    if (fields != null) {
+      for (a <- fields) {
+        setFields = setFields + a.FieldTypePhysicalName
+      }
     }
 
     var b = 0;

@@ -244,7 +244,7 @@ object MessageAndContainerUtils {
       //compProxy.setLoggerLevel(Level.TRACE)
       val (classStrVer, cntOrMsgDef, classStrNoVer) = compProxy.compileMessageDef(contOrMsgText, recompile)
       if (cntOrMsgDef != null)
-        cntOrMsgDef.ownerId = if (userid == None) "Kamanja" else userid.get
+        cntOrMsgDef.ownerId = if (userid == None) "kamanja" else userid.get
       logger.debug("Message/Container Compiler returned an object of type " + cntOrMsgDef.getClass().getName())
       cntOrMsgDef match {
         case msg: MessageDef => {
@@ -409,7 +409,7 @@ object MessageAndContainerUtils {
       //compProxy.setLoggerLevel(Level.TRACE)
       val (classStrVer, msgDef, classStrNoVer) = compProxy.compileMessageDef(messageText)
       if (msgDef != null)
-        msgDef.ownerId = if (userid == None) "Kamanja" else userid.get
+        msgDef.ownerId = if (userid == None) "kamanja" else userid.get
       val key = msgDef.FullNameWithVer
       msgDef match {
         case msg: MessageDef => {
@@ -1632,13 +1632,13 @@ object MessageAndContainerUtils {
     // if userid is not supplied, it seem to defualt to "_"
     //val u = if( userid != None ) userid.get else "_"
     //var key = u + "." + modelConfigName
-    var key = "Kamanja" + "." + modelConfigName
-    if( userid != None ){
-      key = userid.get + "." + modelConfigName
-    }
-    logger.debug("Get the model config for " + key)
-    var config = MdMgr.GetMdMgr.GetModelConfig(key)
-    logger.debug("Size of the model config map => " + config.keys.size);
+    var key = modelConfigName
+    //if( userid != None ){
+    //  key = userid.get + "." + modelConfigName
+    //}
+    logger.debug("MessageAndContainerUtils: Get the model config for " + key)
+    var config = MdMgr.GetMdMgr.GetModelConfig(key.toLowerCase)
+    logger.debug("MessageAndContainerUtils: Size of the model config map => " + config.keys.size);
     val typDeps = config.getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, null)
     if (typDeps != null) {
       if (typDeps.isInstanceOf[List[_]])

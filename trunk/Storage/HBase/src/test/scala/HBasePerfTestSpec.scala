@@ -195,7 +195,7 @@ class HBasePerfTestSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterA
             var custNumber = "4256667777" + batch * i
             var obj = new Customer(custName, custAddress, custNumber)
             var v = serializer.SerializeObjectToByteArray(obj)
-            var value = new Value("kryo", v)
+            var value = new Value(1,"kryo",v)
             keyValueList = keyValueList :+ (key, value)
           }
           var dataList = new Array[(String, Array[(Key, Value)])](0)

@@ -860,7 +860,7 @@ class ComponentInfo {
   var metrics: collection.mutable.Map[String, Any] = null
 }
 
-object OleService {
+object KamanjaManager {
   private val LOG = LogManager.getLogger(getClass);
   def main(args: Array[String]): Unit = {
     val mgr = new KamanjaManager

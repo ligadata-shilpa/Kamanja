@@ -25,7 +25,7 @@ class MessageBuilderGenerator {
         builderGenerator = builderGenerator.append(getFuncGeneration(message.Elements))
         builderGenerator = builderGenerator.append(setFuncGeneration(message.Elements))
       } else if (message.Fixed.equalsIgnoreCase("false")) {
-       var fieldIndexMap: Map[String, Int] = msgConstants.getScalarFieldindex(message.Elements)
+        var fieldIndexMap: Map[String, Int] = msgConstants.getScalarFieldindex(message.Elements)
         builderGenerator = builderGenerator.append(msgConstants.newline + msgConstants.pad1 + msgConstants.fieldsForMappedVar)
         builderGenerator = builderGenerator.append(mappedMsgGenerator.getFuncGenerationForMapped(message.Elements, mdMgr))
         builderGenerator = builderGenerator.append(setFuncGenerationForMapped(message.Elements, fieldIndexMap))
@@ -58,7 +58,9 @@ class MessageBuilderGenerator {
     var msgVariables = new StringBuilder(8 * 1024)
     try {
       message.Elements.foreach(field => {
-        msgVariables.append(" %s private var %s: %s = _; %s".format(pad1, field.Name, field.FieldTypePhysicalName, newline))
+        if (field != null) {
+          msgVariables.append(" %s private var %s: %s = _; %s".format(pad1, field.Name, field.FieldTypePhysicalName, newline))
+        }
       })
     } catch {
       case e: Exception => {
@@ -78,12 +80,14 @@ class MessageBuilderGenerator {
     var getmethodStr: String = ""
     try {
       fields.foreach(field => {
-        getmethodStr = """
+        if (field != null) {
+          getmethodStr = """
         def get""" + field.Name.capitalize + """: """ + field.FieldTypePhysicalName + """= {
         	return this.""" + field.Name + """;
         }          
         """
-        getMethod = getMethod.append(getmethodStr.toString())
+          getMethod = getMethod.append(getmethodStr.toString())
+        }
       })
     } catch {
       case e: Exception => {
@@ -103,13 +107,15 @@ class MessageBuilderGenerator {
     var setmethodStr: String = ""
     try {
       fields.foreach(field => {
-        setmethodStr = """
+        if (field != null) {
+          setmethodStr = """
         def set""" + field.Name.capitalize + """(value: """ + field.FieldTypePhysicalName + """): Builder = {
         	this.""" + field.Name + """ = value;
         	return this;
         }
         """
-        setMethod = setMethod.append(setmethodStr.toString())
+          setMethod = setMethod.append(setmethodStr.toString())
+        }
       })
     } catch {
       case e: Exception => {
@@ -125,7 +131,7 @@ class MessageBuilderGenerator {
    * build method for  Messages
    */
   private def build(message: Message): String = {
-     var buildMethod: String = ""
+    var buildMethod: String = ""
     val msgFullName = message.Pkg + "." + message.Name + " = { " + newline
     val vardeclrtion: String = "%s var message = new %s %s".format(pad2, message.Name, newline)
     val build: String = "def build() : "
@@ -150,7 +156,9 @@ class MessageBuilderGenerator {
     try {
 
       fields.foreach(field => {
-        buildMethodSB = buildMethodSB.append(buldstr.format(pad2, field.Name.capitalize, field.Name, newline))
+        if (field != null) {
+          buildMethodSB = buildMethodSB.append(buldstr.format(pad2, field.Name.capitalize, field.Name, newline))
+        }
       })
     } catch {
       case e: Exception => {
@@ -181,12 +189,14 @@ class MessageBuilderGenerator {
     var getmethodStr: String = ""
     try {
       fields.foreach(field => {
-        getmethodStr = """
+        if (field != null) {
+          getmethodStr = """
         def get""" + field.Name.capitalize + """: """ + field.FieldTypePhysicalName + """= {
-        	return """+ field.FieldTypeImplementationName  + """.Input(fields("""" + field.Name + """")._2.toString);
+        	return """ + field.FieldTypeImplementationName + """.Input(fields("""" + field.Name + """")._2.toString);
         }          
         """
-        getMethod = getMethod.append(getmethodStr.toString())
+          getMethod = getMethod.append(getmethodStr.toString())
+        }
       })
     } catch {
       case e: Exception => {
@@ -206,13 +216,15 @@ class MessageBuilderGenerator {
     var setmethodStr: String = ""
     try {
       fields.foreach(field => {
-        setmethodStr = """
+        if (field != null) {
+          setmethodStr = """
         def set""" + field.Name.capitalize + """(value: """ + field.FieldTypePhysicalName + """): Builder = {
         	this.fields("""" + field.Name + """") = (""" + fldsMap(field.FieldTypePhysicalName) + """, value);
         	return this;
         }
         """
-        setMethod = setMethod.append(setmethodStr.toString())
+          setMethod = setMethod.append(setmethodStr.toString())
+        }
       })
     } catch {
       case e: Exception => {

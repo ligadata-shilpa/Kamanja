@@ -262,7 +262,7 @@ class MessageParser {
     val pkg = NameSpace + ".V" + MdMgr.ConvertVersionToLong(msgVersion).toString
     val physicalName: String = pkg + "." + Name
 
-    val msg: Message = new Message(mtype, NameSpace, Name, physicalName, msgVersion, "Description", Fixed, persistMsg, elements, tdataexists, tdata, null, pkg.trim(), null, null, null, partitionKeysList, primaryKeysList, cur_time, msgLevel, null, null, definition, timePartition)
+    val msg: Message = new Message(mtype, NameSpace, Name, physicalName, msgVersion, "Description", Fixed, persistMsg, elements, tdataexists, tdata, null, pkg.trim(), null, null, null, partitionKeysList, primaryKeysList, cur_time, msgLevel, null, null, definition, timePartition, 0)
 
     var msglist: List[Message] = List[Message]()
     if (messages != null && messages.size > 0)
@@ -586,7 +586,7 @@ class MessageParser {
     val primaryKeysList = null
     val physicalName: String = pkg + "." + Name
     val cur_time = System.currentTimeMillis
-    val msg = new Message(mtype, NameSpace, Name, physicalName, msgVersion, "Description", Fixed, persistMsg, lbuffer.toList, tdataexists, tdata, null, pkg.trim(), null, null, null, partitionKeysList, primaryKeysList, cur_time, msgLevel, null, null, null, null)
+    val msg = new Message(mtype, NameSpace, Name, physicalName, msgVersion, "Description", Fixed, persistMsg, lbuffer.toList, tdataexists, tdata, null, pkg.trim(), null, null, null, partitionKeysList, primaryKeysList, cur_time, msgLevel, null, null, null, null, 0)
 
     /*log.info("child message level " + msg.MsgLvel)
     log.info("child message name " + msg.Name)

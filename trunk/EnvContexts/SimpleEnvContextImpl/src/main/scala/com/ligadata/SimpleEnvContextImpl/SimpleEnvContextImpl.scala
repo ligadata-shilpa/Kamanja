@@ -377,7 +377,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   class TransactionContext(var txnId: Long) {
     private[this] val _messagesOrContainers = scala.collection.mutable.Map[String, MsgContainerInfo]()
     private[this] val _adapterUniqKeyValData = scala.collection.mutable.Map[String, (Long, String, List[(String, String, String)])]()
-    private[this] val _modelsResult = scala.collection.mutable.Map[Key, scala.collection.mutable.Map[String, SavedMdlResult]]()
+//    private[this] val _modelsResult = scala.collection.mutable.Map[Key, scala.collection.mutable.Map[String, SavedMdlResult]]()
 
     def getMsgContainer(containerName: String, addIfMissing: Boolean): MsgContainerInfo = {
       var fnd = _messagesOrContainers.getOrElse(containerName.toLowerCase, null)
@@ -539,19 +539,19 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     }
 
     // Model Results Saving & retrieving. Don't return null, always return empty, if we don't find
-    def saveModelsResult(key: List[String], value: scala.collection.mutable.Map[String, SavedMdlResult]): Unit = {
-      _modelsResult(Key(KvBaseDefalts.defaultTime, key.toArray, 0L, 0)) = value
-    }
-
-    def getModelsResult(k: Key): scala.collection.mutable.Map[String, SavedMdlResult] = {
-      _modelsResult.getOrElse(k, null)
-    }
+//    def saveModelsResult(key: List[String], value: scala.collection.mutable.Map[String, SavedMdlResult]): Unit = {
+//      _modelsResult(Key(KvBaseDefalts.defaultTime, key.toArray, 0L, 0)) = value
+//    }
+//
+//    def getModelsResult(k: Key): scala.collection.mutable.Map[String, SavedMdlResult] = {
+//      _modelsResult.getOrElse(k, null)
+//    }
 
     def getAllMessagesAndContainers = _messagesOrContainers.toMap
 
     def getAllAdapterUniqKeyValData = _adapterUniqKeyValData.toMap
 
-    def getAllModelsResult = _modelsResult.toMap
+//    def getAllModelsResult = _modelsResult.toMap
 
     def getRecent(containerName: String, partKey: List[String], tmRange: TimeRange, primaryKey: List[String], f: ContainerInterface => Boolean): (ContainerInterface, Boolean) = {
       val (v, foundPartKey) = TxnContextCommonFunctions.getRecent(getMsgContainer(containerName.toLowerCase, false), partKey, tmRange, primaryKey, f)
@@ -573,15 +573,15 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   private[this] val _containersNames = scala.collection.mutable.Set[String]()
   private[this] val _txnContexts = new Array[scala.collection.mutable.Map[Long, TransactionContext]](_buckets)
 
-  private[this] val _modelsRsltBuckets = new Array[scala.collection.mutable.Map[String, scala.collection.mutable.Map[String, SavedMdlResult]]](_parallelBuciets)
-  private[this] val _modelsRsltBktlocks = new Array[ReentrantReadWriteLock](_parallelBuciets)
+//  private[this] val _modelsRsltBuckets = new Array[scala.collection.mutable.Map[String, scala.collection.mutable.Map[String, SavedMdlResult]]](_parallelBuciets)
+//  private[this] val _modelsRsltBktlocks = new Array[ReentrantReadWriteLock](_parallelBuciets)
 
   private[this] val _adapterUniqKeyValBuckets = new Array[scala.collection.mutable.Map[String, (Long, String, List[(String, String, String)])]](_parallelBuciets)
   private[this] val _adapterUniqKeyValBktlocks = new Array[ReentrantReadWriteLock](_parallelBuciets)
 
   for (i <- 0 until _parallelBuciets) {
-    _modelsRsltBuckets(i) = scala.collection.mutable.Map[String, scala.collection.mutable.Map[String, SavedMdlResult]]()
-    _modelsRsltBktlocks(i) = new ReentrantReadWriteLock(true);
+//    _modelsRsltBuckets(i) = scala.collection.mutable.Map[String, scala.collection.mutable.Map[String, SavedMdlResult]]()
+//    _modelsRsltBktlocks(i) = new ReentrantReadWriteLock(true);
     _adapterUniqKeyValBuckets(i) = scala.collection.mutable.Map[String, (Long, String, List[(String, String, String)])]()
     _adapterUniqKeyValBktlocks(i) = new ReentrantReadWriteLock(true);
   }
@@ -835,57 +835,57 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     return null
   }
 
-  private def localGetModelsResult(transId: Long, key: List[String]): scala.collection.mutable.Map[String, SavedMdlResult] = {
-/*
-    val k = Key(KvBaseDefalts.defaultTime, key.toArray, 0L, 0)
-    val txnCtxt = getTransactionContext(transId, false)
-    if (txnCtxt != null) {
-      val v = txnCtxt.getModelsResult(k)
-      if (v != null) return v
-    }
-
-    val keystr = key.mkString(",")
-    val bktIdx = getParallelBucketIdx(keystr)
-    var v: scala.collection.mutable.Map[String, SavedMdlResult] = null
-
-    _modelsRsltBktlocks(bktIdx).readLock().lock()
-    try {
-      v = _modelsRsltBuckets(bktIdx).getOrElse(keystr, null)
-    } catch {
-      case e: Exception => {
-        throw e
+  /*
+    private def localGetModelsResult(transId: Long, key: List[String]): scala.collection.mutable.Map[String, SavedMdlResult] = {
+      val k = Key(KvBaseDefalts.defaultTime, key.toArray, 0L, 0)
+      val txnCtxt = getTransactionContext(transId, false)
+      if (txnCtxt != null) {
+        val v = txnCtxt.getModelsResult(k)
+        if (v != null) return v
       }
-    } finally {
-      _modelsRsltBktlocks(bktIdx).readLock().unlock()
-    }
 
-    if (v != null) return v
+      val keystr = key.mkString(",")
+      val bktIdx = getParallelBucketIdx(keystr)
+      var v: scala.collection.mutable.Map[String, SavedMdlResult] = null
 
-    var objs = new Array[(Key, scala.collection.mutable.Map[String, SavedMdlResult])](1)
-    val buildMdlOne = (k: Key, v: Value) => { buildModelsResult(k, v, objs) }
-    try {
-      callGetData(_defaultDataStore, "ModelResults", Array(TimeRange(KvBaseDefalts.defaultTime, KvBaseDefalts.defaultTime)), Array(key.toArray), buildMdlOne)
-    } catch {
-      case e: Exception => {
-        logger.debug("Data not found for key:" + key.mkString(","), e)
-      }
-    }
-    if (objs(0) != null) {
-      _modelsRsltBktlocks(bktIdx).writeLock().lock()
+      _modelsRsltBktlocks(bktIdx).readLock().lock()
       try {
-        _modelsRsltBuckets(bktIdx)(keystr) = objs(0)._2
+        v = _modelsRsltBuckets(bktIdx).getOrElse(keystr, null)
       } catch {
         case e: Exception => {
           throw e
         }
       } finally {
-        _modelsRsltBktlocks(bktIdx).writeLock().unlock()
+        _modelsRsltBktlocks(bktIdx).readLock().unlock()
       }
-      return objs(0)._2
+
+      if (v != null) return v
+
+      var objs = new Array[(Key, scala.collection.mutable.Map[String, SavedMdlResult])](1)
+      val buildMdlOne = (k: Key, v: Value) => { buildModelsResult(k, v, objs) }
+      try {
+        callGetData(_defaultDataStore, "ModelResults", Array(TimeRange(KvBaseDefalts.defaultTime, KvBaseDefalts.defaultTime)), Array(key.toArray), buildMdlOne)
+      } catch {
+        case e: Exception => {
+          logger.debug("Data not found for key:" + key.mkString(","), e)
+        }
+      }
+      if (objs(0) != null) {
+        _modelsRsltBktlocks(bktIdx).writeLock().lock()
+        try {
+          _modelsRsltBuckets(bktIdx)(keystr) = objs(0)._2
+        } catch {
+          case e: Exception => {
+            throw e
+          }
+        } finally {
+          _modelsRsltBktlocks(bktIdx).writeLock().unlock()
+        }
+        return objs(0)._2
+      }
+      return scala.collection.mutable.Map[String, SavedMdlResult]()
     }
-*/
-    return scala.collection.mutable.Map[String, SavedMdlResult]()
-  }
+  */
 
   /**
    * Does at least one of the supplied keys exist in a container with the supplied name?
@@ -1213,12 +1213,12 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     }
   }
 
-  private def localSaveModelsResult(transId: Long, key: List[String], value: scala.collection.mutable.Map[String, SavedMdlResult]): Unit = {
-    var txnCtxt = getTransactionContext(transId, true)
-    if (txnCtxt != null) {
-      txnCtxt.saveModelsResult(key, value)
-    }
-  }
+//  private def localSaveModelsResult(transId: Long, key: List[String], value: scala.collection.mutable.Map[String, SavedMdlResult]): Unit = {
+//    var txnCtxt = getTransactionContext(transId, true)
+//    if (txnCtxt != null) {
+//      txnCtxt.saveModelsResult(key, value)
+//    }
+//  }
   /*
   private def collectKey(key: Key, keys: ArrayBuffer[KamanjaDataKey]): Unit = {
     implicit val jsonFormats: Formats = DefaultFormats
@@ -1243,21 +1243,21 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 
     isShutdown = true
 
-    if (_modelsRsltBuckets != null) {
-      for (i <- 0 until _parallelBuciets) {
-        _modelsRsltBktlocks(i).writeLock().lock()
-        try {
-          _modelsRsltBuckets(i).clear()
-        } catch {
-          case e: Exception => {
-            logger.warn("", e)
-            // throw e
-          }
-        } finally {
-          _modelsRsltBktlocks(i).writeLock().unlock()
-        }
-      }
-    }
+//    if (_modelsRsltBuckets != null) {
+//      for (i <- 0 until _parallelBuciets) {
+//        _modelsRsltBktlocks(i).writeLock().lock()
+//        try {
+//          _modelsRsltBuckets(i).clear()
+//        } catch {
+//          case e: Exception => {
+//            logger.warn("", e)
+//            // throw e
+//          }
+//        } finally {
+//          _modelsRsltBktlocks(i).writeLock().unlock()
+//        }
+//      }
+//    }
 
     if (_adapterUniqKeyValBuckets != null) {
       for (i <- 0 until _parallelBuciets) {
@@ -1565,7 +1565,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
       localValues(key) = (transId, value, outputResults)
 
     val adapterUniqKeyValData = if (localValues.size > 0) localValues.toMap else if (txnCtxt != null) txnCtxt.getAllAdapterUniqKeyValData else Map[String, (Long, String, List[(String, String, String)])]()
-    val modelsResult = /* if (txnCtxt != null) txnCtxt.getAllModelsResult else */ Map[Key, scala.collection.mutable.Map[String, SavedMdlResult]]()
+//    val modelsResult = /* if (txnCtxt != null) txnCtxt.getAllModelsResult else */ Map[Key, scala.collection.mutable.Map[String, SavedMdlResult]]()
 
     if (_kryoSer == null) {
       _kryoSer = SerializerManager.GetSerializer("kryo")

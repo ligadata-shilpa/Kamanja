@@ -8,4 +8,6 @@ public interface ContainerOrConceptFactory {
     public abstract String getTypeName();
 
     public abstract String getTypeVersion();
+
+    public abstract int getSchemaId();
 }

@@ -52,26 +52,34 @@ trait LogTrait {
  */
 
 object MetadataLoad {
-	val baseTypesOwnerId = "Kamanja"
-	val baseTypesVer : Long = 1000000 // Which is 00.01.000000
+	val baseTypesOwnerId = "kamanja"
+  val baseTypesVer: Long = 1000000
+  // Which is 00.01.000000
   val baseTypesUniqId : Long = 0
   val baseTypesElementId : Long = 0
-	val scalaVer = scala.util.Properties.versionNumberString.subSequence(0,4)
-	def ContainerInterfacesInfo: Array[(String, String, String, List[(String, String, String, String, Boolean, String)])] = {
+
+  //NOTE NOTE:-       1-1000000 SchemaIds are reserved for Standard Containers
+  //NOTE NOTE:- 1000001-2000000 SchemaIds are reserved for Standard Messages
+
+	def ContainerInterfacesInfo: Array[(String, String, String, List[(String, String, String, String, Boolean, String)], Int, String)] = {
 		// nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)
-		return Array[(String, String, String, List[(String, String, String, String, Boolean, String)])](
-			(MdMgr.sysNS, "EnvContext", "com.ligadata.KamanjaBase.EnvContext", List()),
-			(MdMgr.sysNS, "MessageInterface", "com.ligadata.KamanjaBase.MessageInterface", List()),
-			(MdMgr.sysNS, "ContainerInterface", "com.ligadata.KamanjaBase.ContainerInterface", List()),
-			(MdMgr.sysNS, "Context", "com.ligadata.pmml.runtime.Context", List()))
+		return Array[(String, String, String, List[(String, String, String, String, Boolean, String)], Int, String)](
+			(MdMgr.sysNS, "EnvContext", "com.ligadata.KamanjaBase.EnvContext", List(), 1, ""), // Assigned SchemaId as 1. Never change this for this container
+			(MdMgr.sysNS, "MessageInterface", "com.ligadata.KamanjaBase.MessageInterface", List(), 2, ""), // Assigned SchemaId as 2. Never change this for this container
+			(MdMgr.sysNS, "ContainerInterface", "com.ligadata.KamanjaBase.ContainerInterface", List(), 3, ""), // Assigned SchemaId as 3. Never change this for this container
+			(MdMgr.sysNS, "Context", "com.ligadata.pmml.runtime.Context", List(), 4, "") // Assigned SchemaId as 4. Never change this for this container
+      // NOTE NOTE:- Next SchemaId should start from 5
+    )
 	}
 
-  def BaseMessagesInfo:  Array[(String, String, String, List[(String, String, String, String, Boolean, String)])] = {
-    return Array[(String, String, String, List[(String, String, String, String, Boolean, String)])](
-			(MdMgr.sysNS, "KamanjaStatusEvent", "com.ligadata.KamanjaBase.KamanjaStatusEvent", List()),
-      (MdMgr.sysNS, "KamanjaMessageEvent", "com.ligadata.KamanjaBase.KamanjaMessageEvent", List()),
-      (MdMgr.sysNS, "KamanjaModelEvent", "com.ligadata.KamanjaBase.KamanjaModelEvent", List()),
-		  (MdMgr.sysNS, "KamanjaExceptionEvent", "com.ligadata.KamanjaBase.KamanjaExceptionEvent", List()))
+  def BaseMessagesInfo:  Array[(String, String, String, List[(String, String, String, String, Boolean, String)], Int, String)] = {
+    return Array[(String, String, String, List[(String, String, String, String, Boolean, String)], Int, String)](
+			(MdMgr.sysNS, "KamanjaStatusEvent", "com.ligadata.KamanjaBase.KamanjaStatusEvent", List(), 1000001, ""), // Assigned SchemaId as 1000001. Never change this for this message
+      (MdMgr.sysNS, "KamanjaMessageEvent", "com.ligadata.KamanjaBase.KamanjaMessageEvent", List(), 1000002, ""), // Assigned SchemaId as 1000002. Never change this for this message
+      (MdMgr.sysNS, "KamanjaModelEvent", "com.ligadata.KamanjaBase.KamanjaModelEvent", List(), 1000003, ""), // Assigned SchemaId as 1000003. Never change this for this message
+		  (MdMgr.sysNS, "KamanjaExceptionEvent", "com.ligadata.KamanjaBase.KamanjaExceptionEvent", List(), 1000004, "") // Assigned SchemaId as 1000004. Never change this for this message
+      // NOTE NOTE:- Next SchemaId should start from 1000005
+    )
 }
 }
 
@@ -112,7 +120,7 @@ class MetadataLoad (val mgr : MdMgr, val typesPath : String, val fcnPath : Strin
     val baseMessageInfo = MetadataLoad.BaseMessagesInfo
     baseMessageInfo.foreach(bc => {
       logger.debug("MetadataLoad...loading " + bc._2)
-      mgr.AddFixedMsg(bc._1, bc._2, bc._3, bc._4, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
+      mgr.AddFixedMsg(bc._1, bc._2, bc._3, bc._4, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId, bc._5, bc._6)
     })
   }
 
@@ -121,7 +129,7 @@ class MetadataLoad (val mgr : MdMgr, val typesPath : String, val fcnPath : Strin
 		val baseContainerInfo = MetadataLoad.ContainerInterfacesInfo
 		baseContainerInfo.foreach(bc => {
 			logger.debug("MetadataLoad...loading " + bc._2)
-			mgr.AddFixedContainer(bc._1, bc._2, bc._3, bc._4, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
+			mgr.AddFixedContainer(bc._1, bc._2, bc._3, bc._4, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId, bc._5, bc._6)
 		})
 	}
 
@@ -1754,7 +1762,6 @@ def initTypesFor_com_ligadata_pmml_udfs_Udfs {
 					, fcnMacrofeatures, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)	  
 					
 		
-	  
 	}
 	
     /** Initialize the macro definitions used by the pmml compiler.  The private functions called are utilized to
@@ -1770,7 +1777,6 @@ def initTypesFor_com_ligadata_pmml_udfs_Udfs {
     private def initMacroDefs1 {
 
 
-		
 		/** ************************************************************
 		 *  
 		 *  NOTE: For the Builds portion of the Builds/Does macros that 
@@ -1802,13 +1808,15 @@ def initTypesFor_com_ligadata_pmml_udfs_Udfs {
           * </Apply>
 	  		
 		 */
-		val SetFieldMacroStringFixed : String =  """
+    val SetFieldMacroStringFixed: String =
+      """
 	class %1%_%2%_%3%_setField(val ctx : Context, var %1% : %1_type%, val %3% : %3_type%)
 	{
 	  	def setField  : Boolean = { %1%.%2% = %3%.asInstanceOf[%2_type%]; true }
 	} """
 		
-		val SetFieldMacroStringMapped : String =  """
+    val SetFieldMacroStringMapped: String =
+      """
 	class %1%_%2%_%3%_setField(val ctx : Context, var %1% : %1_type%, val %3% : %3_type%)
 	{
 	  	def setField  : Boolean = { %1%.set("%2%", %3%.asInstanceOf[%2_type%]); true }
@@ -1962,13 +1970,15 @@ def initTypesFor_com_ligadata_pmml_udfs_Udfs {
 					, fcnMacrofeatures
 					, (SetFieldMacroStringFixed,SetFieldMacroStringMapped), MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
 
-		val SetFieldNullMacroStringFixed : String =  """
+    val SetFieldNullMacroStringFixed: String =
+      """
 	class %1%_%2%_setFieldNull(val ctx : Context, var %1% : %1_type%)
 	{
 	  	def setFieldNull  : Boolean = { %1%.%2% = null.asInstanceOf[%2_type%]; true }
 	} """
 		
-		val SetFieldNullMacroStringMapped : String =  """
+    val SetFieldNullMacroStringMapped: String =
+      """
 	class %1%_%2%_setFieldNull(val ctx : Context, var %1% : %1_type%)
 	{
 	  	def setFieldNull  : Boolean = { %1%.set("%2%", null.asInstanceOf[%2_type%]); true }
@@ -1982,13 +1992,15 @@ def initTypesFor_com_ligadata_pmml_udfs_Udfs {
 					, (SetFieldNullMacroStringFixed,SetFieldNullMacroStringMapped), MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
 
 
-		val SetFieldMacroContainerStringFixed : String =  """
+    val SetFieldMacroContainerStringFixed: String =
+      """
 	class %1%_%2%_%3%_%4%_setField(val ctx : Context, var %1% : %1_type%, val %3% : %3_type%)
 	{
 	  	def setField  : Boolean = { %1%.%2% = %3%.%4%; true }
 	} """
 		
-		val SetFieldMacroContainerStringMapped : String =  """
+    val SetFieldMacroContainerStringMapped: String =
+      """
 	class %1%_%2%_%3%_%4%_setField(val ctx : Context, var %1% : %1_type%, val %3% : %3_type%)
 	{
 	  	def setField  : Boolean = { %1%.set("%2%", %3%.get("%4%").asInstanceOf[%4_type%]); true }
@@ -2042,13 +2054,15 @@ def initTypesFor_com_ligadata_pmml_udfs_Udfs {
           * </Apply>
 	  		
 		 */
-		val incrementByMacroStringFixed : String =  """
+    val incrementByMacroStringFixed: String =
+      """
 	class %1%_%2%_%3%_incrementBy(val ctx : Context, var %1% : %1_type%, val %3% : %3_type%)
 	{
 	  	def incrementBy  : Boolean = { %1%.%2% += %3%; true }
 	} """
 		
-		val incrementByMacroStringMapped : String =  """
+    val incrementByMacroStringMapped: String =
+      """
 	class %1%_%2%_%3%_incrementBy(val ctx : Context, var %1% : %1_type%, val %3% : %3_type%)
 	{
 	  	def incrementBy  : Boolean = { %1%.set("%2%", (%1%.get("%2%").asInstanceOf[%2_type%] + %3%)); true }
@@ -2083,13 +2097,15 @@ def initTypesFor_com_ligadata_pmml_udfs_Udfs {
 
 		/** **************************************************************************************************************/
 					
-		val putGlobalContainerFixedMacroTemplate : String =  """
+    val putGlobalContainerFixedMacroTemplate: String =
+      """
 	class %1%_%2%_%3%_%4%_Put(val ctx : Context, var %1% : %1_type%, val %2% : %2_type%, val %3% : %3_type%, val %4% : %4_type%)
 	{
 	  	def Put  : Boolean = { %1%.setObject(ctx.xId, %2%, %3%, %4%); true }
 	} """
 		
-		val putGlobalContainerMappedMacroTemplate : String =  """
+    val putGlobalContainerMappedMacroTemplate: String =
+      """
 	class %1%_%2%_%3%_%4%_Put(val ctx : Context, var %1% : %1_type%, val %2% : %2_type%, val %3% : %3_type%, val %4% : %4_type%)
 	{
 	  	def Put  : Boolean = { %1%.setObject(ctx.xId, %2%, %3%, %4%); true }
@@ -2169,7 +2185,8 @@ def initTypesFor_com_ligadata_pmml_udfs_Udfs {
           * (e.g., inside the 'execute(ctx : Context)' function of a derived field)
 		 */
 		
-		val putVariableMacroPmmlDict : String =   """Put(ctx, %1%, %2%)"""
+    val putVariableMacroPmmlDict: String =
+      """Put(ctx, %1%, %2%)"""
 
 		/** @deprecated("Use <Constant dataType="context">ctx</Constant> as the first arg and match function directly", "2015-Jun-08") */
 		mgr.AddMacro(MdMgr.sysNS
@@ -2599,7 +2616,8 @@ def initTypesFor_com_ligadata_pmml_udfs_Udfs {
 		 *  isMissing and isNotMissing macros
 		 *  no special macro needed for mapped ... 
 		 */
-		val isMissingMacro : String =   """IsMissing(ctx, %1%)"""
+    val isMissingMacro: String =
+      """IsMissing(ctx, %1%)"""
 		val isNotMissingMacro : String =   """IsNotMissing(ctx, %1%)"""
 
 		/** @deprecated("Use <Constant dataType="context">ctx</Constant> as the first arg and match function directly", "2015-Jun-08") */
@@ -2624,7 +2642,8 @@ def initTypesFor_com_ligadata_pmml_udfs_Udfs {
 		 *  Transaction id access
 		 *  no special macro needed for mapped ... 
 		 */
-		val getXidMacro : String =   """ctx.xId"""
+    val getXidMacro: String =
+      """ctx.xId"""
 
 		/** @deprecated("Use <Constant dataType="context">ctx</Constant> as the first arg and match function directly", "2015-Jun-08") */
 		mgr.AddMacro(MdMgr.sysNS
@@ -2638,7 +2657,8 @@ def initTypesFor_com_ligadata_pmml_udfs_Udfs {
 		/** 
           * DowncastArrayMbr Macro used to cast arrays of ContainerInterface to arrays of some specified type
 		 */			
-		val DowncastArrayMbrTemplate : String =   """%1%.map(itm => itm.asInstanceOf[%2%])"""
+    val DowncastArrayMbrTemplate: String =
+      """%1%.map(itm => itm.asInstanceOf[%2%])"""
 					
 		mgr.AddMacro(MdMgr.sysNS
 					, "DownCastArrayMembers"
@@ -2659,7 +2679,8 @@ def initTypesFor_com_ligadata_pmml_udfs_Udfs {
           * def containsAll(transId: Long, containerName: String, keys: Array[String]): Boolean
 		*/
 
-		val getAllObjectsMacroTemplate : String =   """GetArray(ctx.xId, %1%, %2%)"""
+    val getAllObjectsMacroTemplate: String =
+      """GetArray(ctx.xId, %1%, %2%)"""
 
 		/** @deprecated("Use <Constant dataType="context">ctx</Constant> as the first arg and match function directly", "2015-Jun-08") */
 		mgr.AddMacro(MdMgr.sysNS

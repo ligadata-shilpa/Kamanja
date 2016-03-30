@@ -61,7 +61,7 @@ package object jtm {
         val json = FileUtils.readFileToString(jsonFile, null:String)
         val map = parse(json).values.asInstanceOf[Map[String, Any]]
         val msg = new MessageCompiler()
-        val ((classStrVer, classStrVerJava), msgDef, (classStrNoVer, classStrNoVerJava)) = msg.processMsgDef(json, "JSON", mgr, false)
+        val ((classStrVer, classStrVerJava), msgDef, (classStrNoVer, classStrNoVerJava), rawMsgStr) = msg.processMsgDef(json, "JSON", mgr, 0, false)
         val msg1 = msgDef.asInstanceOf[com.ligadata.kamanja.metadata.MessageDef]
         mgr.AddMsg(msg1)
       })

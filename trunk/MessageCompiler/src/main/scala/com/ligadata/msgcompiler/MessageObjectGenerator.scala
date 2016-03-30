@@ -97,10 +97,11 @@ class MessageObjectGenerator {
       }
 
       msgObjeGenerator.append(msgConstants.template.format(msgConstants.pad1, message.Name, msgConstants.newline))
-      msgObjeGenerator.append(msgConstants.fullName.format(msgConstants.pad1, message.Pkg, message.Name, msgConstants.newline))
+      msgObjeGenerator.append(msgConstants.fullName.format(msgConstants.pad1, message.NameSpace, message.Name, msgConstants.newline))
       msgObjeGenerator.append(msgConstants.namespace.format(msgConstants.pad1, message.NameSpace, msgConstants.newline))
       msgObjeGenerator.append(msgConstants.name.format(msgConstants.pad1, message.Name, msgConstants.newline))
       msgObjeGenerator.append(msgConstants.version.format(msgConstants.pad1, message.Version, msgConstants.newline))
+      msgObjeGenerator.append(msgConstants.schemaId.format(msgConstants.pad1, message.schemaId, msgConstants.newline))
       msgObjeGenerator.append(msgConstants.createInstance.format(msgConstants.pad1, message.Name, message.Name, message.Name, msgConstants.newline))
       msgObjeGenerator.append(msgConstants.isFixed.format(msgConstants.pad1, isFixed, msgConstants.newline))
       msgObjeGenerator.append(getContainerType.format(msgConstants.pad1) + msgConstants.newline)

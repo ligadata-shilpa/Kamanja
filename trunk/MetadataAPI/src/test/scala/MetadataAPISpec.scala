@@ -40,6 +40,7 @@ import com.ligadata.Serialize._
 
 import com.ligadata.kamanja.metadataload.MetadataLoad
 
+@Ignore
 class MetadataAPISpec extends FunSpec with LocalTestFixtures with BeforeAndAfter with BeforeAndAfterAll with GivenWhenThen {
 	var res: String = null;
 	var statusCode: Int = -1;
@@ -1058,10 +1059,10 @@ class MetadataAPISpec extends FunSpec with LocalTestFixtures with BeforeAndAfter
 			TestUtils.deleteFile(file)
 		}
 
-    file = new java.io.File("lib_managed")
-    if(file.exists()){
-      TestUtils.deleteFile(file)
-    }
+	  //file = new java.io.File("lib_managed")
+	  //if(file.exists()){
+	  //TestUtils.deleteFile(file)
+	  //}
 
 		val db = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("DATABASE")
 		assert(null != db)
