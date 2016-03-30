@@ -4008,12 +4008,10 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
   private def updateClusterConfigForKey(elemType: String, key: String, clusterId: String): Unit = {
 
-    //HOOOYA
-
     if (elemType.equalsIgnoreCase("adapterDef")) {
-      val obj = GetObject("adapterinfo."+key.toLowerCase, "config_objects")
-      val storedInfo = serializer.DeserializeObjectFromByteArray(obj.serializedInfo).asInstanceOf[AdapterInfo]
-      var cachedInfo = MdMgr.GetMdMgr.GetAdapter(key.toLowerCase)
+      //val obj = GetObject("adapterinfo."+key.toLowerCase, "config_objects")
+      val storedInfo = serializer.DeserializeObjectFromByteArray(GetObject("adapterinfo."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]]).asInstanceOf[AdapterInfo]
+      val cachedInfo = MdMgr.GetMdMgr.GetAdapter(key.toLowerCase)
 
       // If storedInfo is null, that means that the adapter has been removed... maybe
       if (storedInfo == null) {
@@ -4034,9 +4032,9 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     }
 
     if (elemType.equalsIgnoreCase("nodeDef")) {
-      val obj = GetObject("nodeinfo."+key.toLowerCase, "config_objects")
-      val storedInfo = serializer.DeserializeObjectFromByteArray(obj.serializedInfo).asInstanceOf[NodeInfo]
-      var cachedInfo = MdMgr.GetMdMgr.GetNode(key.toLowerCase)
+     // val obj = GetObject("nodeinfo."+key.toLowerCase, "config_objects")
+      val storedInfo = serializer.DeserializeObjectFromByteArray(GetObject("nodeinfo."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]]).asInstanceOf[NodeInfo]
+      val cachedInfo = MdMgr.GetMdMgr.GetNode(key.toLowerCase)
 
       // If storedInfo is null, that means that the adapter has been removed... maybe
       if (storedInfo == null) {
@@ -4057,9 +4055,9 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     }
 
     if (elemType.equalsIgnoreCase("clusterInfoDef")) {
-      val obj = GetObject("clustercfginfo."+key.toLowerCase, "config_objects")
-      val storedInfo = serializer.DeserializeObjectFromByteArray(obj.serializedInfo).asInstanceOf[ClusterCfgInfo]
-      var cachedInfo = MdMgr.GetMdMgr.GetClusterCfg(key.toLowerCase)
+      //val obj = GetObject("clustercfginfo."+key.toLowerCase, "config_objects")
+      val storedInfo = serializer.DeserializeObjectFromByteArray(GetObject("clustercfginfo."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]]).asInstanceOf[ClusterCfgInfo]
+      val cachedInfo = MdMgr.GetMdMgr.GetClusterCfg(key.toLowerCase)
 
       // If storedInfo is null, that means that the adapter has been removed... maybe
       if (storedInfo == null) {
@@ -4081,9 +4079,9 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
 
     if (elemType.equalsIgnoreCase("clusterDef")) {
-      val obj = GetObject("clusterinfo."+key.toLowerCase, "config_objects")
-      val storedInfo = serializer.DeserializeObjectFromByteArray(obj.serializedInfo).asInstanceOf[ClusterInfo]
-      var cachedInfo = MdMgr.GetMdMgr.GetCluster(key.toLowerCase)
+      //val obj = GetObject("clusterinfo."+key.toLowerCase, "config_objects")
+      val storedInfo = serializer.DeserializeObjectFromByteArray(GetObject("clusterinfo."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]]).asInstanceOf[ClusterInfo]
+      val cachedInfo = MdMgr.GetMdMgr.GetCluster(key.toLowerCase)
 
       // If storedInfo is null, that means that the adapter has been removed... maybe
       if (storedInfo == null) {
@@ -4104,9 +4102,9 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     }
 
     if (elemType.equalsIgnoreCase("upDef")) {
-      val obj = GetObject("userproperties."+key.toLowerCase, "config_objects")
-      val storedInfo = serializer.DeserializeObjectFromByteArray(obj.serializedInfo).asInstanceOf[UserPropertiesInfo]
-      var cachedInfo = MdMgr.GetMdMgr.GetUserProperty(clusterId, key.toLowerCase)
+      //val obj = GetObject("userproperties."+key.toLowerCase, "config_objects")
+      val storedInfo = serializer.DeserializeObjectFromByteArray(GetObject("userproperties."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]]).asInstanceOf[UserPropertiesInfo]
+      val cachedInfo = MdMgr.GetMdMgr.GetUserProperty(clusterId, key.toLowerCase)
 
       // If storedInfo is null, that means that the adapter has been removed... maybe
       if (storedInfo == null) {
