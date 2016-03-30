@@ -13,16 +13,15 @@ trait MetadataBeforeAndAfterEach extends BeforeAndAfterEach { this: Suite =>
     if (file.isDirectory)
       Option(file.listFiles).map(_.toList).getOrElse(Nil).foreach(delete(_))
       file.delete
-
   }
 
   def cleanDir(location: String): Unit ={
     val temp=new File(location)
     if(temp.exists()){
       delete(temp)
-      new File(location).mkdir()
-      println("Directory purged")
     }
+    new File(location).mkdir()
+    println("Directory purged")
 
 }
   override def beforeEach() {

@@ -99,17 +99,6 @@ libraryDependencies ++= Seq(
  "org.apache.shiro" % "shiro-root" % "1.2.3"
 )
 
-libraryDependencies := {
-  CrossVersion.partialVersion(scalaVersion.value) match {
-    // if scala 2.11+ is used, add dependency on scala-xml module
-    case Some((2, scalaMajor)) if scalaMajor >= 11 =>
-      libraryDependencies.value ++ Seq("com.typesafe.play" % "play_2.11" % "2.5.0")
-    case _ =>
-      // or just libraryDependencies.value if you don't depend on scala-swing
-      libraryDependencies.value ++ Seq("com.typesafe.play" % "play_2.10" % "2.4.6")
-  }
-}
-
 scalacOptions += "-deprecation"
 
 retrieveManaged := true
