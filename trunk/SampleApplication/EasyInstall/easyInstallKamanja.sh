@@ -735,6 +735,8 @@ cp $srcPath/Utils/ClusterInstaller/ClusterInstallerDriver/src/main/resources/log
 # copy models, messages, containers, config, scripts, types  messages data prep
 # *******************************
 
+mkdir $installPath/Kamanja-$ver210/input/SampleApplications/template/script
+
 #HelloWorld
 cd $srcPath/SampleApplication/HelloWorld/data
 cp * $installPath/Kamanja-$ver210/input/SampleApplications/data
@@ -1417,6 +1419,8 @@ cp $srcPath/Utils/ClusterInstaller/ClusterInstallerDriver/src/main/resources/log
 # *******************************
 # copy models, messages, containers, config, scripts, types  messages data prep
 # *******************************
+
+mkdir $installPath/Kamanja-$ver211/input/SampleApplications/template/script
 
 #HelloWorld
 cd $srcPath/SampleApplication/HelloWorld/data
