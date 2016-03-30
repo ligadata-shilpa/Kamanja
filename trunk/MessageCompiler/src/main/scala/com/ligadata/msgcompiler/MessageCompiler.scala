@@ -35,11 +35,12 @@ class MessageCompiler {
   var createMsg: CreateMessage = new CreateMessage
   var generatedRdd = new GenerateRdd
   var schemaCompiler = new SchemaCompiler
+  var rawMsgGenerator = new RawMsgGenerator
 
   /*
    * parse the message definition json,  add messages to metadata and create the Fixed and Mapped Mesages
    */
-  def processMsgDef(jsonstr: String, msgDfType: String, mdMgr: MdMgr, schemaId:Int, recompile: Boolean = false): ((String, String), ContainerDef, (String, String)) = {
+  def processMsgDef(jsonstr: String, msgDfType: String, mdMgr: MdMgr, schemaId: Int, recompile: Boolean = false): ((String, String), ContainerDef, (String, String), String) = {
 
     var messageParser = new MessageParser
     var messages: Messages = null
@@ -49,6 +50,7 @@ class MessageCompiler {
     var generatedNonVersionedJavaRdd: String = ""
     var generatedVersionedJavaRdd: String = ""
     var containerDef: ContainerDef = null
+    var generateRawMessage: String = null;
 
     try {
       if (mdMgr == null)
@@ -61,15 +63,19 @@ class MessageCompiler {
         message = schemaCompiler.generateAvroSchema(message, mdMgr);
         log.info(" message.Schema: " + message.Schema + "\n\n");
         log.info("Schema ==============END\n\n")
-
         log.info("JARSET " + message.Jarset.toList);
         log.info("ArgsList Jars " + message.ArgsList);
+
         val (genVersionedMsg, genNonVersionedMsg) = msgGen.generateMessage(message, mdMgr)
         generatedNonVersionedMsg = genNonVersionedMsg
         generatedVersionedMsg = genVersionedMsg
+
         val (versionedRddClass, nonVersionedRddClass) = generatedRdd.generateRdd(message)
         generatedNonVersionedJavaRdd = nonVersionedRddClass
         generatedVersionedJavaRdd = versionedRddClass
+
+        generateRawMessage = rawMsgGenerator.generateRawMessage(message, mdMgr);
+
         containerDef = createMsg.createMessage(message, mdMgr, recompile)
       } else throw new Exception("MsgDef Type JSON is only supported")
 
@@ -80,7 +86,7 @@ class MessageCompiler {
         throw e
       }
     }
-    return ((generatedVersionedMsg, generatedVersionedJavaRdd), containerDef, (generatedNonVersionedMsg, generatedNonVersionedJavaRdd))
+    return ((generatedVersionedMsg, generatedVersionedJavaRdd), containerDef, (generatedNonVersionedMsg, generatedNonVersionedJavaRdd), generateRawMessage)
   }
 }
 
