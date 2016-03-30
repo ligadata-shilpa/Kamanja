@@ -1,4 +1,4 @@
-package org.kamanja.serdeser.json
+package org.kamanja.serdeser.kbinary
 
 import com.ligadata.BaseTypes._
 
