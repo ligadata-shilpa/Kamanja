@@ -12,6 +12,16 @@ class TestCompressionUtils extends  FunSpec with BeforeAndAfter with ShouldMatch
 
   describe("getFileType test of a file") {
 
+    it("should detect file type of msg_test5_not_compressed as (text/plain)") {
+      val plainFilePath = getResourceFullPath("/msg_test5_not_compressed")
+      println("textFilePath=" + plainFilePath)
+      val handler = SmartFileHandlerFactory.createSmartFileHandler(createDefaultAdapterConfig, plainFilePath)
+      println("handler created successfully for file " + handler.getFullPath)
+
+      val fileType = CompressionUtil.getFileType(handler, null)
+      fileType shouldEqual "text/plain"
+    }
+    
     it("should detect file type of msg_test5_gzip as (application/gzip)") {
       val gzipFilePath = getResourceFullPath("/msg_test5_gzip")
       //println("textFilePath="+gzipFilePath)
