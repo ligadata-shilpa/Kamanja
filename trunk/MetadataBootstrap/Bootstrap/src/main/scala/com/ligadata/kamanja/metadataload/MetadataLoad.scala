@@ -67,7 +67,9 @@ object MetadataLoad {
 			(MdMgr.sysNS, "EnvContext", "com.ligadata.KamanjaBase.EnvContext", List(), 1, ""), // Assigned SchemaId as 1. Never change this for this container
 			(MdMgr.sysNS, "MessageInterface", "com.ligadata.KamanjaBase.MessageInterface", List(), 2, ""), // Assigned SchemaId as 2. Never change this for this container
 			(MdMgr.sysNS, "ContainerInterface", "com.ligadata.KamanjaBase.ContainerInterface", List(), 3, ""), // Assigned SchemaId as 3. Never change this for this container
-			(MdMgr.sysNS, "Context", "com.ligadata.pmml.runtime.Context", List(), 4, "")) // Assigned SchemaId as 4. Never change this for this container
+			(MdMgr.sysNS, "Context", "com.ligadata.pmml.runtime.Context", List(), 4, "") // Assigned SchemaId as 4. Never change this for this container
+      // NOTE NOTE:- Next SchemaId should start from 5
+    )
 	}
 
   def BaseMessagesInfo:  Array[(String, String, String, List[(String, String, String, String, Boolean, String)], Int, String)] = {
@@ -76,6 +78,7 @@ object MetadataLoad {
       (MdMgr.sysNS, "KamanjaMessageEvent", "com.ligadata.KamanjaBase.KamanjaMessageEvent", List(), 1000002, ""), // Assigned SchemaId as 1000002. Never change this for this message
       (MdMgr.sysNS, "KamanjaModelEvent", "com.ligadata.KamanjaBase.KamanjaModelEvent", List(), 1000003, ""), // Assigned SchemaId as 1000003. Never change this for this message
 		  (MdMgr.sysNS, "KamanjaExceptionEvent", "com.ligadata.KamanjaBase.KamanjaExceptionEvent", List(), 1000004, "") // Assigned SchemaId as 1000004. Never change this for this message
+      // NOTE NOTE:- Next SchemaId should start from 1000005
     )
 }
 }

@@ -52,6 +52,10 @@ public abstract class ContainerInterface implements ContainerOrConcept {
         return factory.getTypeVersion();
     }
 
+    final public String getSchemaId() {
+        return factory.getSchemaId();
+    }
+
     final public ContainerFactoryInterface.ContainerType getContainerType() {
         return factory.getContainerType();
     }

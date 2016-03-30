@@ -323,7 +323,8 @@ class CompilerProxy {
       //val msg = new MessageDefImpl()
       val msg = new MessageCompiler()
       logger.debug("Call Message Compiler ....")
-      val ((classStrVer, classStrVerJava), msgDef, (classStrNoVer, classStrNoVerJava)) = msg.processMsgDef(msgDefStr, "JSON", mgr, recompile)
+      val schemaId = MetadataAPIImpl.GetSchemaId
+      val ((classStrVer, classStrVerJava), msgDef, (classStrNoVer, classStrNoVerJava)) = msg.processMsgDef(msgDefStr, "JSON", mgr, schemaId, recompile)
       logger.debug("Message Compilation done ...." + JsonSerializer.SerializeObjectToJson(msgDef))
 
       val nameArray = msgDef.PhysicalName.split('.')
@@ -416,6 +417,8 @@ class CompilerProxy {
 
       msgDef.objectDefinition = msgDefStr
       msgDef.objectFormat = fJSON
+      msgDef.mdElementId = MetadataAPIImpl.GetMdElementId
+      msgDef.uniqueId = MetadataAPIImpl.GetUniqueId
 
       (classStrVer, msgDef, classStrNoVer)
     } catch {

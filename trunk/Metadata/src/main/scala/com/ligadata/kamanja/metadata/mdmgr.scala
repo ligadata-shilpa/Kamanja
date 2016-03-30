@@ -69,6 +69,7 @@ class MdMgr {
   private var attrbDefs = new HashMap[String, Set[BaseAttributeDef]] with MultiMap[String, BaseAttributeDef]
   private var modelDefs = new HashMap[String, Set[ModelDef]] with MultiMap[String, ModelDef]
   private var factoryOfMdlInstFactories = new HashMap[String, Set[FactoryOfModelInstanceFactoryDef]] with MultiMap[String, FactoryOfModelInstanceFactoryDef]
+  private var schemaIdMap = new HashMap[Long, ContainerDef]
 
   // FunctionDefs keyed by function signature nmspc.name(argtyp1,argtyp2,...) map 
   private var compilerFuncDefs = scala.collection.mutable.Map[String, FunctionDef]()
@@ -101,6 +102,7 @@ class MdMgr {
     adapters.clear
     modelConfigs.clear
     factoryOfMdlInstFactories.clear
+    schemaIdMap.clear
   }
 
   def truncate(objectType: String) {
@@ -148,6 +150,9 @@ class MdMgr {
       }
       case "ModelConfigs" => {
         modelConfigs.clear
+      }
+      case "SchemaId" => {
+        schemaIdMap.clear
       }
       case _ => {
         logger.error("Unknown object type " + objectType + " in truncate function")
@@ -197,6 +202,9 @@ class MdMgr {
     })
     factoryOfMdlInstFactories.foreach(obj => {
       logger.trace("factoryOfMdlInstFactoryDef Key = " + obj._1)
+    })
+    schemaIdMap.foreach(obj => {
+      logger.trace("SchemaId:%d => Container:%s Version:%d".format(obj._1, obj._2.FullName, obj._2.Version))
     })
   }
 
@@ -770,6 +778,11 @@ class MdMgr {
       case _ => null
     }
     attr
+  }
+
+  def ContainerForSchemaId(schemaId:Int): Option[ContainerDef] = {
+    val cont = schemaIdMap.getOrElse(schemaId, null)
+    if (cont != null) Some(cont) else None
   }
 
   /** Get All Versions of FactoryOfModelInstanceFactoryDef */
@@ -2787,7 +2800,11 @@ class MdMgr {
     }
     val typ = msg.containerType.asInstanceOf[ContainerTypeDef]
     typeDefs.addBinding(typ.FullName, typ)
-    msgDefs.addBinding(msg.FullName, msg)
+      msgDefs.addBinding(msg.FullName, msg)
+    if (msg.containerType != null && msg.containerType.schemaId > 0)
+      schemaIdMap(msg.containerType.schemaId) = msg
+    else
+      logger.error("SchemaId not found for Container:%s with Version:%d".format(msg.FullName, msg.Version))
   }
 
   /**
@@ -2849,6 +2866,10 @@ class MdMgr {
     val typ = container.containerType.asInstanceOf[ContainerTypeDef]
     typeDefs.addBinding(typ.FullName, typ)
     containerDefs.addBinding(container.FullName, container)
+    if (container.containerType != null && container.containerType.schemaId > 0)
+      schemaIdMap(container.containerType.schemaId) = container
+    else
+      logger.error("SchemaId not found for Container:%s with Version:%d".format(container.FullName, container.Version))
   }
 
   @throws(classOf[AlreadyExistsException])
