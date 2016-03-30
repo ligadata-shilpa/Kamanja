@@ -87,4 +87,17 @@ class ModelServiceTests extends FlatSpec with Matchers with MetadataBeforeAndAft
     val result = ModelService.updateModeljava(modelDef,"helloworldmodel")
     result should include regex ("\"Result Description\" : \"Model Added Successfully")
   }
+
+  "is valid dir" should " validate if the directory is present" in {
+    val msgDef = getClass.getResource("/Metadata/message").getPath
+    val result=MessageService.IsValidDir(msgDef)
+    assert(result==true)
+  }
+
+  it should " invalidate a wrong directory path" in {
+    val msgDef = getClass.getResource("/Metadata/message/Message_Definition_HelloWorld.json").getPath+"Invalid"
+    val result=MessageService.IsValidDir(msgDef)
+    assert(result==false)
+  }
+
 }

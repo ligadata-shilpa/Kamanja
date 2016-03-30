@@ -45,5 +45,17 @@ Github issue #1005 raised.
    val result=FunctionService.loadFunctionsFromAFile(fnDef)
    result should include regex ("Function Added Successfully")
  }
+
+  "is valid dir" should " validate if the directory is present" in {
+    val msgDef = getClass.getResource("/Metadata/message").getPath
+    val result=FunctionService.IsValidDir(msgDef)
+    assert(result==true)
+  }
+
+  it should " invalidate a wrong directory path" in {
+    val msgDef = getClass.getResource("/Metadata/message/Message_Definition_HelloWorld.json").getPath+"Invalid"
+    val result=FunctionService.IsValidDir(msgDef)
+    assert(result==false)
+  }
 }
 
