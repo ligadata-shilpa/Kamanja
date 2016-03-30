@@ -1,5 +1,7 @@
 
 package com.ligadata.MetadataAPI.utility.test
+
+import java.io.{File, ByteArrayInputStream}
 import org.scalatest._
 import com.ligadata.kamanja.metadata._
 import com.ligadata.MetadataAPI._
@@ -98,5 +100,34 @@ class MessageServiceTests extends FlatSpec with Matchers with MetadataBeforeAndA
     assert(result==false)
   }
 
+  "add Message by user input" should " upload the message definition to metadata based on the user input" in {
+    Console.setIn(new ByteArrayInputStream("1".getBytes))
+    MessageService.addMessage("") should include regex ("\"Result Description\" : \"Message Added Successfully")
+  }
+
+  "update message by user input " should "update the message definition to metadata based on the user input" in {
+    Console.setIn(new ByteArrayInputStream("1".getBytes))
+    MessageService.addMessage("")
+    Console.setIn(new ByteArrayInputStream("2".getBytes))
+    MessageService.updateMessage("") should include regex "Message Added Successfully"
+  }
+
+  "delete message by user input" should "delete the requested message definition from the metadata" in {
+    Console.setIn(new ByteArrayInputStream("1".getBytes))
+    MessageService.addMessage(getClass.getResource("/Metadata/message/Message_Definition_HelloWorld.json").getPath)
+    MessageService.removeMessage("") should include regex ("\"Result Description\" : \"Deleted Message Successfully")
+  }
+
+  "get message by user input" should " retrieve the requested message definition" in {
+    Console.setIn(new ByteArrayInputStream("1".getBytes))
+    MessageService.addMessage(getClass.getResource("/Metadata/message/Message_Definition_HelloWorld.json").getPath)
+    MessageService.getMessage("") should include regex ("\"Result Description\" : \"Successfully fetched message from cache")
+  }
+
+  "user input " should "get the user input and perform requested operation on it" in {
+    Console.setIn(new ByteArrayInputStream("1".getBytes))
+    val messages: Array[File] = new java.io.File(getClass.getResource("/Metadata/inputMessage").getPath).listFiles.filter(_.getName.endsWith(".json"))
+    MessageService.getUserInputFromMainMenu(messages).size > 0
+  }
 }
 
