@@ -30,7 +30,7 @@ References
     $element or ${element} - references something in the current name space like a alias or a generated variable. There referenced element must be unique
     ${alias.element} - references something in the current alias name space
 
-
+    Mapper messages always need to be in the form of ${alias.element}
 
 ### The 5 main sections
 

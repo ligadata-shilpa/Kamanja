@@ -22,19 +22,20 @@ import org.apache.commons.io.FileUtils
 import org.apache.logging.log4j.LogManager
 
 import org.scalatest.{BeforeAndAfter, FunSuite}
+
 /**
   *
   */
-class Test001Test  extends FunSuite with BeforeAndAfter {
+class MapperTest extends FunSuite with BeforeAndAfter {
 
   val logger = LogManager.getLogger(this.getClass.getName())
 
   // Simple jtm
   test("test1") {
 
-    val fileInput = getClass.getResource("/test001.jtm/test.jtm").getPath
-    val fileOutput = getClass.getResource("/test001.jtm/test.scala.result").getPath
-    val fileExpected = getClass.getResource("/test001.jtm/test.scala.expected").getPath
+    val fileInput = getClass.getResource("/mappermsg/mapper001.jtm").getPath
+    val fileOutput = getClass.getResource("/mappermsg/mapper001.scala.result").getPath
+    val fileExpected = getClass.getResource("/mappermsg/mapper001.scala.expected").getPath
     val metadataLocation = getClass.getResource("/metadata").getPath
 
     val compiler = CompilerBuilder.create().
@@ -54,28 +55,4 @@ class Test001Test  extends FunSuite with BeforeAndAfter {
     assert(actual == expected)
   }
 
-  // Multiple input messages with vals in compute
-  test("test2") {
-
-    val fileInput = getClass.getResource("/test001.jtm/test2.jtm").getPath
-    val fileOutput = getClass.getResource("/test001.jtm/test2.scala.result").getPath
-    val fileExpected = getClass.getResource("/test001.jtm/test2.scala.expected").getPath
-    val metadataLocation = getClass.getResource("/metadata").getPath
-
-    val compiler = CompilerBuilder.create().
-      setSuppressTimestamps().
-      setInputFile(fileInput).
-      setOutputFile(fileOutput).
-      setMetadataLocation(metadataLocation).
-      build()
-
-    compiler.Execute()
-
-    val expected = FileUtils.readFileToString(new File(fileExpected))
-    val actual = FileUtils.readFileToString(new File(fileOutput))
-    logger.info("actual path={}", fileOutput)
-    logger.info("expected path={}", fileExpected)
-
-    assert(actual == expected)
-  }
 }

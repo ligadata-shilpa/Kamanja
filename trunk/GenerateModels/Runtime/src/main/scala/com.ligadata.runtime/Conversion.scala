@@ -15,18 +15,18 @@
  */
 package com.ligadata.runtime
 
+import java.sql.Timestamp
 import java.util.Date
-
 import scala.math.Ordering.BigIntOrdering
 
 /*
- jtm loctions
+ jtm locations
 
  // Each step can cause an error
  // track back to the originating instruction
  transformation -> grok instance
- transfomation -> [dependency set] -> compute
- transfomation -> [dependency set] -> output -> compute|where|mapping
+ transformation -> [dependency set] -> compute
+ transformation -> [dependency set] -> output -> compute|where|mapping
 
 a) string
 b) id -> to map
@@ -34,7 +34,7 @@ b) id -> to map
 */
 class Conversion {
 
-  var errors : Map[Integer, String] = Map.empty[Integer, String]
+  //var errors : Map[Integer, String] = Map.empty[Integer, String]
 
   // Source -> Map[Target, Function]
   val builtin: Map[String, Map[String, String]] = Map(
@@ -50,24 +50,57 @@ class Conversion {
                     "BigDecimal" -> "ToBigDecimal")
   )
 
-  def ToString(context: Integer, v: BigInt): String = {
-    null
+  def ToInt(v: Any): Int = {
+    v match {
+      case y :String => y.toInt
+      case y: Int => y
+    }
   }
 
-  def ToDate(context: Integer, s: String): Date = {
-    null
-  }
-  def ToInteger(context: Integer, s: String): Integer = {
-    null
-  }
-  def ToBigInt(context: Integer, s: String): BigInt = {
-    null
-  }
-  def ToDecimal(context: Integer, s: String): BigDecimal = {
-    null
-  }
-  def ToDouble(context: Integer, s: String): Double = {
-    0.0
+  def ToDouble(v: Any): Double = {
+    v match {
+      case y :String => y.toDouble
+      case y: Double => y
+    }
   }
 
+  def ToBoolean(v: Any): Boolean = {
+    v match {
+      case y :String => y.toBoolean
+      case y: Boolean => y
+    }
+  }
+
+  def ToDate(v: Any): Date = {
+    v match {
+      // case y :String => y.toBoolean
+      case y: Date => y
+    }
+  }
+
+  def ToTimestamp(v: Any): Timestamp = {
+    v match {
+      // case y :String => y.toBoolean
+      case y: Timestamp => y
+    }
+  }
+
+  def ToBigDecimal(v: Any): BigDecimal = {
+    v match {
+      // case y :String => y.toBoolean
+      case y: BigDecimal => y
+    }
+  }
+
+  def ToString(v: Any): String = {
+    v match {
+      case y: String => y
+      case y: Int => y.toString
+      case y: Double => y.toString
+      case y: Boolean => y.toString
+      //case y: Date => y.toString
+      //case y: Timestamp => y.toString
+      case y: BigDecimal => y.toString
+    }
+  }
 }
