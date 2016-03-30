@@ -475,6 +475,8 @@ class MdMgr {
 
     AddRelationKeys(st, primaryKeys, foreignKeys)
 
+    st.schemaId = schemaId
+    st.avroSchema = avroSchema
     st.partitionKey = partitionKey
     st
   }
@@ -515,6 +517,8 @@ class MdMgr {
 
     AddRelationKeys(sd, primaryKeys, foreignKeys)
 
+    sd.schemaId = schemaId
+    sd.avroSchema = avroSchema
     sd.partitionKey = partitionKey
     sd
   }
