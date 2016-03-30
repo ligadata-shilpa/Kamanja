@@ -15,10 +15,9 @@
       },
       "EnvironmentContext": {
         "classname": "com.ligadata.SimpleEnvContextImpl.SimpleEnvContextImpl$",
-        "jarname": "simpleenvcontextimpl_2.11-1.0.jar",
+        "jarname": "KamanjaInternalDeps_2.11-1.4.0.jar",
         "dependencyjars": [
           "ExtDependencyLibs_2.11-1.4.0.jar",
-          "KamanjaInternalDeps_2.11-1.4.0.jar",
           "ExtDependencyLibs2_2.11-1.4.0.jar"
         ]
       },
@@ -46,16 +45,11 @@
           "TypeString": "Input",
           "DataFormat": "CSV",
           "ClassName": "com.ligadata.InputAdapters.KafkaSimpleConsumer$",
-          "JarName": "kafkasimpleinputoutputadapters_2.11-1.0.jar",
+          "JarName": "KamanjaInternalDeps_2.11-1.4.0.jar",
           "FailedEventsAdapter": "TestFailedEvents_1",
           "DependencyJars": [
-            "jopt-simple-3.2.jar",
-            "kafka_2.11-0.8.2.2.jar",
-            "kafka-clients-0.8.2.2.jar",
-            "metrics-core-2.2.0.jar",
-            "zkclient-0.3.jar",
-            "kamanjabase_2.11-1.0.jar",
-            "kvbase_2.11-0.1.0.jar"
+            "ExtDependencyLibs_2.11-1.4.0.jar",
+            "ExtDependencyLibs2_2.11-1.4.0.jar"
           ],
           "AdapterSpecificCfg": {
             "HostList": "localhost:9092",
@@ -67,15 +61,10 @@
           "TypeString": "Validate",
           "DataFormat": "JSON",
           "ClassName": "com.ligadata.InputAdapters.KafkaSimpleConsumer$",
-          "JarName": "kafkasimpleinputoutputadapters_2.11-1.0.jar",
+          "JarName": "KamanjaInternalDeps_2.11-1.4.0.jar",
           "DependencyJars": [
-            "jopt-simple-3.2.jar",
-            "kafka_2.11-0.8.2.2.jar",
-            "kafka-clients-0.8.2.2.jar",
-            "metrics-core-2.2.0.jar",
-            "zkclient-0.3.jar",
-            "kamanjabase_2.11-1.0.jar",
-            "kvbase_2.11-0.1.0.jar"
+            "ExtDependencyLibs_2.11-1.4.0.jar",
+            "ExtDependencyLibs2_2.11-1.4.0.jar"
           ],
           "AdapterSpecificCfg": {
             "HostList": "localhost:9092",
@@ -87,15 +76,10 @@
           "TypeString": "Output",
           "InputAdapterToVerify": "TestOut_In_1",
           "ClassName": "com.ligadata.OutputAdapters.KafkaProducer$",
-          "JarName": "kafkasimpleinputoutputadapters_2.11-1.0.jar",
+          "JarName": "KamanjaInternalDeps_2.11-1.4.0.jar",
           "DependencyJars": [
-            "jopt-simple-3.2.jar",
-            "kafka_2.11-0.8.2.2.jar",
-            "kafka-clients-0.8.2.2.jar",
-            "metrics-core-2.2.0.jar",
-            "zkclient-0.3.jar",
-            "kamanjabase_2.11-1.0.jar",
-            "kvbase_2.11-0.1.0.jar"
+            "ExtDependencyLibs_2.11-1.4.0.jar",
+            "ExtDependencyLibs2_2.11-1.4.0.jar"
           ],
           "AdapterSpecificCfg": {
             "HostList": "localhost:9092",
@@ -106,15 +90,10 @@
           "Name": "TestStatus_1",
           "TypeString": "Status",
           "ClassName": "com.ligadata.OutputAdapters.KafkaProducer$",
-          "JarName": "kafkasimpleinputoutputadapters_2.11-1.0.jar",
+          "JarName": "KamanjaInternalDeps_2.11-1.4.0.jar",
           "DependencyJars": [
-            "jopt-simple-3.2.jar",
-            "kafka_2.11-0.8.2.2.jar",
-            "kafka-clients-0.8.2.2.jar",
-            "metrics-core-2.2.0.jar",
-            "zkclient-0.3.jar",
-            "kamanjabase_2.11-1.0.jar",
-            "kvbase_2.11-0.1.0.jar"
+            "ExtDependencyLibs_2.11-1.4.0.jar",
+            "ExtDependencyLibs2_2.11-1.4.0.jar"
           ],
           "AdapterSpecificCfg": {
             "HostList": "localhost:9092",
@@ -125,15 +104,10 @@
           "Name": "TestFailedEvents_1",
           "TypeString": "FailedEvents",
           "ClassName": "com.ligadata.OutputAdapters.KafkaProducer$",
-          "JarName": "kafkasimpleinputoutputadapters_2.11-1.0.jar",
+          "JarName": "KamanjaInternalDeps_2.11-1.4.0.jar",
           "DependencyJars": [
-            "jopt-simple-3.2.jar",
-            "kafka_2.11-0.8.2.2.jar",
-            "kafka-clients-0.8.2.2.jar",
-            "metrics-core-2.2.0.jar",
-            "zkclient-0.3.jar",
-            "kamanjabase_2.11-1.0.jar",
-            "kvbase_2.11-0.1.0.jar"
+            "ExtDependencyLibs_2.11-1.4.0.jar",
+            "ExtDependencyLibs2_2.11-1.4.0.jar"
           ],
           "AdapterSpecificCfg": {
             "HostList": "localhost:9092",
