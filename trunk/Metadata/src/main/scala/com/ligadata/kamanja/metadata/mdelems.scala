@@ -732,8 +732,8 @@ object MiningModelType extends Enumeration {
         case "java" => JAVA
         case "binary" => BINARY
         case "python" => PYTHON
-        case _ => UNKNOWN
         case "jtm" => JTM
+        case _ => UNKNOWN
     }
     typ
   }

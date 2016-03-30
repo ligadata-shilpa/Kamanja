@@ -58,22 +58,25 @@ object MetadataLoad {
   val baseTypesUniqId : Long = 0
   val baseTypesElementId : Long = 0
 
-	def ContainerInterfacesInfo: Array[(String, String, String, List[(String, String, String, String, Boolean, String)])] = {
+  //NOTE NOTE:-       1-1000000 SchemaIds are reserved for Standard Containers
+  //NOTE NOTE:- 1000001-2000000 SchemaIds are reserved for Standard Messages
+
+	def ContainerInterfacesInfo: Array[(String, String, String, List[(String, String, String, String, Boolean, String)], Int, String)] = {
 		// nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)
-		return Array[(String, String, String, List[(String, String, String, String, Boolean, String)])](
-			(MdMgr.sysNS, "EnvContext", "com.ligadata.KamanjaBase.EnvContext", List()),
-			(MdMgr.sysNS, "MessageInterface", "com.ligadata.KamanjaBase.MessageInterface", List()),
-			(MdMgr.sysNS, "ContainerInterface", "com.ligadata.KamanjaBase.ContainerInterface", List()),
-			(MdMgr.sysNS, "Context", "com.ligadata.pmml.runtime.Context", List()))
+		return Array[(String, String, String, List[(String, String, String, String, Boolean, String)], Int, String)](
+			(MdMgr.sysNS, "EnvContext", "com.ligadata.KamanjaBase.EnvContext", List(), 1, ""), // Assigned SchemaId as 1. Never change this for this container
+			(MdMgr.sysNS, "MessageInterface", "com.ligadata.KamanjaBase.MessageInterface", List(), 2, ""), // Assigned SchemaId as 2. Never change this for this container
+			(MdMgr.sysNS, "ContainerInterface", "com.ligadata.KamanjaBase.ContainerInterface", List(), 3, ""), // Assigned SchemaId as 3. Never change this for this container
+			(MdMgr.sysNS, "Context", "com.ligadata.pmml.runtime.Context", List(), 4, "")) // Assigned SchemaId as 4. Never change this for this container
 	}
 
-  def BaseMessagesInfo:  Array[(String, String, String, List[(String, String, String, String, Boolean, String)])] = {
-    return Array[(String, String, String, List[(String, String, String, String, Boolean, String)])](
-			(MdMgr.sysNS, "KamanjaStatusEvent", "com.ligadata.KamanjaBase.KamanjaStatusEvent", List()),
-      (MdMgr.sysNS, "KamanjaMessageEvent" +
-        "", "com.ligadata.KamanjaBase.KamanjaMessageEvent", List()),
-      (MdMgr.sysNS, "KamanjaModelEvent", "com.ligadata.KamanjaBase.KamanjaModelEvent", List()),
-		  (MdMgr.sysNS, "KamanjaExceptionEvent", "com.ligadata.KamanjaBase.KamanjaExceptionEvent", List()))
+  def BaseMessagesInfo:  Array[(String, String, String, List[(String, String, String, String, Boolean, String)], Int, String)] = {
+    return Array[(String, String, String, List[(String, String, String, String, Boolean, String)], Int, String)](
+			(MdMgr.sysNS, "KamanjaStatusEvent", "com.ligadata.KamanjaBase.KamanjaStatusEvent", List(), 1000001, ""), // Assigned SchemaId as 1000001. Never change this for this message
+      (MdMgr.sysNS, "KamanjaMessageEvent", "com.ligadata.KamanjaBase.KamanjaMessageEvent", List(), 1000002, ""), // Assigned SchemaId as 1000002. Never change this for this message
+      (MdMgr.sysNS, "KamanjaModelEvent", "com.ligadata.KamanjaBase.KamanjaModelEvent", List(), 1000003, ""), // Assigned SchemaId as 1000003. Never change this for this message
+		  (MdMgr.sysNS, "KamanjaExceptionEvent", "com.ligadata.KamanjaBase.KamanjaExceptionEvent", List(), 1000004, "") // Assigned SchemaId as 1000004. Never change this for this message
+    )
 }
 }
 
@@ -114,7 +117,7 @@ class MetadataLoad (val mgr : MdMgr, val typesPath : String, val fcnPath : Strin
     val baseMessageInfo = MetadataLoad.BaseMessagesInfo
     baseMessageInfo.foreach(bc => {
       logger.debug("MetadataLoad...loading " + bc._2)
-      mgr.AddFixedMsg(bc._1, bc._2, bc._3, bc._4, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
+      mgr.AddFixedMsg(bc._1, bc._2, bc._3, bc._4, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId, bc._5, bc._6)
     })
   }
 
@@ -123,7 +126,7 @@ class MetadataLoad (val mgr : MdMgr, val typesPath : String, val fcnPath : Strin
 		val baseContainerInfo = MetadataLoad.ContainerInterfacesInfo
 		baseContainerInfo.foreach(bc => {
 			logger.debug("MetadataLoad...loading " + bc._2)
-			mgr.AddFixedContainer(bc._1, bc._2, bc._3, bc._4, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
+			mgr.AddFixedContainer(bc._1, bc._2, bc._3, bc._4, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId, bc._5, bc._6)
 		})
 	}
 
