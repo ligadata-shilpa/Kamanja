@@ -65,12 +65,12 @@ trait DataStoreOperations extends AdaptersSerializeDeserializers {
 
     val putData = data_list.map(oneContainerData => {
       val containerName = oneContainerData._1
-      val containerData = oneContainerData._2.map(row => {
+      val containerData: Array[(com.ligadata.KvBase.Key, com.ligadata.StorageBase.Value)] = oneContainerData._2.map(row => {
         if (row._3.isInstanceOf[ContainerInterface]) {
           throw new NotImplementedFunctionException("Not yet implemented serializing ContainerInterface", null)
           val cont = row._3.asInstanceOf[ContainerInterface]
           // Value(schemaId: Int, serializerType: String, serializedInfo: Array[Byte])
-          // (row._1, Value(cont.getSchemaId, "", Array[Byte]))
+          (row._1, Value(cont.getSchemaId, "", Array[Byte]()))
         } else {
           (row._1, Value(0, row._2, row._3.asInstanceOf[Array[Byte]]))
         }
