@@ -9,5 +9,5 @@ public interface ContainerOrConceptFactory {
 
     public abstract String getTypeVersion();
 
-    public abstract String getSchemaId();
+    public abstract int getSchemaId();
 }

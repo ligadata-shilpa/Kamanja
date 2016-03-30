@@ -52,7 +52,7 @@ public abstract class ContainerInterface implements ContainerOrConcept {
         return factory.getTypeVersion();
     }
 
-    final public String getSchemaId() {
+    final public int getSchemaId() {
         return factory.getSchemaId();
     }
 

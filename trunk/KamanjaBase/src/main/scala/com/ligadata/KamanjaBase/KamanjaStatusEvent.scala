@@ -32,6 +32,8 @@ object KamanjaStatusEvent extends RDDObject[KamanjaStatusEvent] with MessageFact
 
   override def getTypeVersion: String = ""
 
+  override def getSchemaId: Int = 103
+
   override def build  = new KamanjaStatusEvent(this)
 
   override def build(from: T)  = new KamanjaStatusEvent(this)
