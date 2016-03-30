@@ -30,6 +30,8 @@ case class ConceptParsingException(msg: String, cause: Throwable) extends Kamanj
 case class MessageDefParsingException(msg: String, cause: Throwable) extends KamanjaException(msg, cause)
 case class ContainerDefParsingException(msg: String, cause: Throwable) extends KamanjaException(msg, cause)
 case class ModelDefParsingException(msg: String, cause: Throwable) extends KamanjaException(msg, cause)
+case class JarDefParsingException(msg: String, cause: Throwable) extends KamanjaException(msg, cause)
+
 case class ApiResultParsingException(msg: String, cause: Throwable) extends KamanjaException(msg, cause)
 case class UnexpectedMetadataAPIException(msg: String, cause: Throwable) extends KamanjaException(msg, cause)
 case class ObjectNotFoundException(msg: String, cause: Throwable) extends KamanjaException(msg, cause)
@@ -78,3 +80,6 @@ case class StorageDDLException(msg: String, cause: Throwable) extends KamanjaExc
 
 case class MessagePopulationException(msg: String, cause: Throwable) extends KamanjaException(msg, cause)
 
+case class NotImplementedFunctionException(msg: String, cause: Throwable) extends KamanjaException(msg, cause)
+
+case class DeprecatedException(msg: String, cause: Throwable) extends KamanjaException(msg, cause)

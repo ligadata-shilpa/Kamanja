@@ -158,7 +158,8 @@ object DefaultMdElemStructVer {
 
 // common fields for all metadata elements
 trait BaseElem {
-    def UniqID: Long
+    def UniqId: Long // UniqueId is unque for each element. If we have different versions of any element it will have different ids.
+    def MdElementId: Long // MdElementId is unque for each element with different versions
     def FullName: String // Logical Name
     def FullNameWithVer: String
     def CreationTime: Long // Time in milliseconds from 1970-01-01T00:00:00
@@ -185,10 +186,13 @@ trait BaseElem {
     def Active: Unit // Make the element as Active
     def Deactive: Unit // Make the element as de-active
     def Deleted: Unit // Mark the element as deleted
+    def OwnerId: String
+    def MdElementCategory: String
 }
 
 class BaseElemDef extends BaseElem {
-    override def UniqID: Long = uniqueId
+    override def UniqId: Long = uniqueId // UniqueId is unque for each element. If we have different versions of any element it will have different ids.
+    override def MdElementId: Long = mdElementId // MdElementId is unque for each element with different versions
     override def FullName: String = nameSpace + "." + name // Logical Name
     override def FullNameWithVer: String = nameSpace + "." + name + "." + Version
     override def CreationTime: Long = creationTime // Time in milliseconds from 1970-01-01T00:00:00
@@ -216,6 +220,8 @@ class BaseElemDef extends BaseElem {
     override def Active: Unit = active = true // Make the element as Active
     override def Deactive: Unit = active = false // Make the element as de-active
     override def Deleted: Unit = deleted = true // Mark the element as deleted
+    override def OwnerId: String = ownerId
+    override def MdElementCategory: String = ""
     def CheckAndGetDependencyJarNames: Array[String] = if (dependencyJarNames != null) dependencyJarNames else Array[String]()
 
     // Override in other places if required
@@ -226,7 +232,8 @@ class BaseElemDef extends BaseElem {
       }
     }
 
-    var uniqueId: Long = 0
+    var uniqueId: Long = 0 // uniqueId is unque for each element. If we have different versions of any element it will have different ids.
+    var mdElementId: Long = 0 // mdElementId is unque for each element with different versions
     var creationTime: Long = _ // Time in milliseconds from 1970-01-01T00:00:00 (Mostly it is Local time. May be we need to get GMT)
     var modTime: Long = _ // Time in milliseconds from 1970-01-01T00:00:00 (Mostly it is Local time. May be we need to get GMT)
 
@@ -245,6 +252,7 @@ class BaseElemDef extends BaseElem {
     var tranId: Long = 0
     var objectDefinition: String = _
     var objectFormat: ObjFormatType.FormatType = fJSON
+    var ownerId: String = _
 }
 
 // All these metadata elements should have specialized serialization and deserialization 
@@ -264,6 +272,7 @@ trait TypeImplementation[T] {
 }
 
 abstract class BaseTypeDef extends BaseElemDef with TypeDefInfo {
+  override def MdElementCategory: String = "Type"
   def typeString: String = PhysicalName // default PhysicalName
 
   def implementationName: String = implementationNm // Singleton object name/Static Class name of TypeImplementation
@@ -508,10 +517,14 @@ trait EntityType {
   var keys: Array[RelationKeyBase] = _ // Keys (primary & foreign keys) for this container. For now we are consider them for MAP based and STRUCT based containers.
   var partitionKey: Array[String] = _ // Partition Key (attribute names)
   var persist: Boolean = false
+  var schemaId:Int = 0
+  var avroSchema:String = ""
   def NumMems
   def Keys = keys
   def PartitionKey = partitionKey
   def Persist = persist
+  def SchemaId = schemaId
+  def AvroSchema = avroSchema
 }
 
 class MappedMsgTypeDef extends ContainerTypeDef with EntityType {
@@ -553,6 +566,7 @@ class StructTypeDef extends ContainerTypeDef with EntityType {
 
 // attribute/concept definition
 abstract class BaseAttributeDef extends BaseElemDef {
+  override def MdElementCategory: String = "Attribute"
   def parent: BaseAttributeDef
   def typeDef: BaseTypeDef //BaseElemDef
 
@@ -595,6 +609,7 @@ class DerivedAttributeDef extends AttributeDef {
 }
 
 class ContainerDef extends BaseElemDef {
+  override def MdElementCategory: String = "Container"
   def cType = containerType
 
   var containerType: EntityType = _ // container structure type -
@@ -603,6 +618,7 @@ class ContainerDef extends BaseElemDef {
 }
 
 class MessageDef extends ContainerDef {
+  override def MdElementCategory: String = "Message"
 }
 
 class ArgDef {
@@ -628,6 +644,7 @@ class FactoryOfModelInstanceFactoryDef(val modelRepSupported : ModelRepresentati
 }
 
 class FunctionDef extends BaseElemDef {
+  override def MdElementCategory: String = "Function"
   var retType: BaseTypeDef = _ // return type of this function - could be simple scalar or array or complex type such as map or set
   var args: Array[ArgDef] = _ // list of arguments definitions
   var className: String = _ // class name that has this function?
@@ -696,7 +713,7 @@ class MacroDef extends FunctionDef {
 
 object MiningModelType extends Enumeration {
   type MiningModelType = Value
-  val BASELINEMODEL,ASSOCIATIONMODEL,CLUSTERINGMODEL,GENERALREGRESSIONMODEL,MININGMODEL,NAIVEBAYESMODEL,NEARESTNEIGHBORMODEL,NEURALNETWORK,REGRESSIONMODEL,RULESETMODEL,SEQUENCEMODEL,SCORECARD,SUPPORTVECTORMACHINEMODEL,TEXTMODEL,TIMESERIESMODEL,TREEMODEL, SCALA, JAVA, BINARY, PYTHON, UNKNOWN = Value
+  val BASELINEMODEL,ASSOCIATIONMODEL,CLUSTERINGMODEL,GENERALREGRESSIONMODEL,MININGMODEL,NAIVEBAYESMODEL,NEARESTNEIGHBORMODEL,NEURALNETWORK,REGRESSIONMODEL,RULESETMODEL,SEQUENCEMODEL,SCORECARD,SUPPORTVECTORMACHINEMODEL,TEXTMODEL,TIMESERIESMODEL,TREEMODEL, SCALA, JAVA, BINARY, PYTHON, JTM, UNKNOWN = Value
 
   def modelType(mdlType : String) : MiningModelType = {
     val typ : MiningModelType.MiningModelType = mdlType.trim.toLowerCase match {
@@ -722,6 +739,7 @@ object MiningModelType extends Enumeration {
         case "java" => JAVA
         case "binary" => BINARY
         case "python" => PYTHON
+        case "jtm" => JTM
         case _ => UNKNOWN
     }
     typ
@@ -744,6 +762,14 @@ object ModelRepresentation extends Enumeration {
 }
 
 /**
+*/
+class MessageAndAttributes {
+  var origin: String = "" // This could be Model (Can we handle InputAdapter/StorageAdapter also or only InputAdapter)
+  var message: String = _ // Type of the message
+  var attributes: Array[String] = _ // Attributes are full qualified names with respect to message.
+}
+
+/**
  * The ModelDef provides meta data for all models in the system.  The model's input type can currently be either a jar or
  * a pmml text string (used by PMML type models).  The mining model type is any of the dmg.org's model types as defined in their xsd or
  * one of our own special types (CustomScala, CustomJava, or Unknown when the caller does not supply one).
@@ -751,11 +777,9 @@ object ModelRepresentation extends Enumeration {
  * Models, when marked with isReusable, can be cached (are considered idempotent)
  * @param modelRepresentation The form of model to be cataloged - JAR, PMML etc.
  * @param miningModelType a MininingModelType default = "Unknown"
- * @param inputVars an array of the input variables that are consumed by this model (used for dag construction)
- * @param outputVars an array of the output variables published by this model (also used for dag construction)
+ * @param inputMsgSets Sets of Messages it depends on (attributes referred in this model). Each set must met (all messages should available) to trigger this model
+ * @param outputMsgs All possible output messages produced by this model
  * @param isReusable Whether the model execution is referentially transparent
- * @param msgConsumed Namespace.name.ver of message consumed by this model...for now only one messages is consumed by
- *                    any given model
  * @param supportsInstanceSerialization when true, ModelDef instances are serialized and cached for retrieval by
  *                                      the engine and other consumers of ModelDefs.  This mechanism is useful
  *                                      for PMML and other models that are relatively expensive to initialize. The
@@ -764,18 +788,18 @@ object ModelRepresentation extends Enumeration {
  */
 class ModelDef( val modelRepresentation: ModelRepresentation = ModelRepresentation.JAR
                 , val miningModelType : MiningModelType = MiningModelType.UNKNOWN
-                , val inputVars : Array[BaseAttributeDef] = null
-                , val outputVars: Array[BaseAttributeDef] = null
-                , val isReusable: Boolean = false
-                , val msgConsumed: String = ""
-                , val supportsInstanceSerialization : Boolean = false) extends BaseElemDef {
-
+                , var inputMsgSets : Array[Array[MessageAndAttributes]] = Array[Array[MessageAndAttributes]]()
+                , var outputMsgs: Array[String] = Array[String]()
+                , var isReusable: Boolean = false
+                , var supportsInstanceSerialization: Boolean = false
+                , var modelConfig: String = "") extends BaseElemDef {
+    override def MdElementCategory: String = "Model"
     def typeString: String = PhysicalName
-    def jpmmlText : String = ObjectDefinition
     def SupportsInstanceSerialization : Boolean = supportsInstanceSerialization
 }
 
 class ConfigDef extends BaseElemDef {
+  override def MdElementCategory: String = "ModelConfig"
   var contents: String = _
 }
 
@@ -785,6 +809,7 @@ class ClusterConfigDef extends BaseElemDef {
 }
 
 class JarDef extends BaseElemDef {
+  override def MdElementCategory: String = "Jar"
   def typeString: String = PhysicalName
 }
 
@@ -990,16 +1015,16 @@ class AdapterInfo {
   var typeString: String = _
   var dataFormat: String = _ // valid only for Input or Validate types. Output and Status does not have this
   var className: String = _
-  var inputAdapterToValidate: String = _ // Valid only for Output Adapter.
-  var failedEventsAdapter: String = _ // Valid only for Input Adapter.
-  var delimiterString1: String = _ // Delimiter String for CSV
-  var associatedMsg: String = _ // Queue Associated Message
+//  var inputAdapterToValidate: String = _ // Valid only for Output Adapter.
+//  var failedEventsAdapter: String = _ // Valid only for Input Adapter.
+//  var delimiterString1: String = _ // Delimiter String for CSV
+//  var associatedMsg: String = _ // Queue Associated Message
   var jarName: String = _
   var dependencyJars: Array[String] = new Array[String](0)
   var adapterSpecificCfg: String = _
-  var keyAndValueDelimiter: String = _ // Delimiter String for keyAndValueDelimiter
-  var fieldDelimiter: String = _ // Delimiter String for fieldDelimiter
-  var valueDelimiter: String = _ // Delimiter String for valueDelimiter
+//  var keyAndValueDelimiter: String = _ // Delimiter String for keyAndValueDelimiter
+//  var fieldDelimiter: String = _ // Delimiter String for fieldDelimiter
+//  var valueDelimiter: String = _ // Delimiter String for valueDelimiter
 
   def Name: String = name
   def TypeString: String = typeString
@@ -1008,13 +1033,14 @@ class AdapterInfo {
   def JarName: String = jarName
   def DependencyJars: Array[String] = dependencyJars
   def AdapterSpecificCfg: String = adapterSpecificCfg
-  def InputAdapterToValidate: String = inputAdapterToValidate
-  def FailedEventsAdapter: String = failedEventsAdapter
-  def DelimiterString1: String = if (fieldDelimiter != null) fieldDelimiter else delimiterString1
-  def AssociatedMessage: String = associatedMsg
-  def KeyAndValueDelimiter: String = keyAndValueDelimiter
-  def FieldDelimiter: String = if (fieldDelimiter != null) fieldDelimiter else delimiterString1
-  def ValueDelimiter: String = valueDelimiter
+
+ // def InputAdapterToValidate: String = inputAdapterToValidate
+ // def FailedEventsAdapter: String = failedEventsAdapter
+ // def DelimiterString1: String = if (fieldDelimiter != null) fieldDelimiter else delimiterString1
+ // def AssociatedMessage: String = associatedMsg
+//  def KeyAndValueDelimiter: String = keyAndValueDelimiter
+  //def FieldDelimiter: String = if (fieldDelimiter != null) fieldDelimiter else delimiterString1
+  //def ValueDelimiter: String = valueDelimiter
 
   def equals(aInfo: AdapterInfo): Boolean = {
 
@@ -1037,13 +1063,13 @@ class AdapterInfo {
       return false
     }
     // Check inputAdapterToValidate
-    if ((inputAdapterToValidate != null && aInfo.inputAdapterToValidate != null)) {
-      if(!inputAdapterToValidate.equals(aInfo.inputAdapterToValidate)) return false
-    } else if(!(inputAdapterToValidate == null && aInfo.inputAdapterToValidate == null)) {
-      return false
-    }
+  //  if ((inputAdapterToValidate != null && aInfo.inputAdapterToValidate != null)) {
+ //     if(!inputAdapterToValidate.equals(aInfo.inputAdapterToValidate)) return false
+ //   } else if(!(inputAdapterToValidate == null && aInfo.inputAdapterToValidate == null)) {
+  //    return false
+  //  }
     // Check failedEventsAdapter
-    if ((failedEventsAdapter != null && aInfo.failedEventsAdapter != null)) {
+    /*if ((failedEventsAdapter != null && aInfo.failedEventsAdapter != null)) {
       if(!failedEventsAdapter.equals(aInfo.failedEventsAdapter)) return false
     } else if(!(failedEventsAdapter == null && aInfo.failedEventsAdapter == null)) {
       return false
@@ -1059,7 +1085,7 @@ class AdapterInfo {
       if(!associatedMsg.equals(aInfo.associatedMsg)) return false
     } else if(!(associatedMsg == null && aInfo.associatedMsg == null)) {
       return false
-    }
+    } */
     // Check jarName
     if ((jarName != null && aInfo.jarName != null)) {
       if(!jarName.equals(aInfo.jarName)) return false
@@ -1079,7 +1105,7 @@ class AdapterInfo {
       return false
     }
     // Check keyAndValueDelimiter
-    if ((keyAndValueDelimiter != null && aInfo.keyAndValueDelimiter != null)) {
+  /*   if ((keyAndValueDelimiter != null && aInfo.keyAndValueDelimiter != null)) {
       if(!keyAndValueDelimiter.equals(aInfo.keyAndValueDelimiter)) return false
     } else if(!(keyAndValueDelimiter == null && aInfo.keyAndValueDelimiter == null)) {
       return false
@@ -1095,7 +1121,7 @@ class AdapterInfo {
       if(!valueDelimiter.equals(aInfo.valueDelimiter)) return false
     } else if(!(valueDelimiter == null && aInfo.valueDelimiter == null)) {
       return false
-    }
+    }*/
 
 
     true
@@ -1126,21 +1152,13 @@ class UserPropertiesInfo {
   }
 }
 
-class OutputMsgDef extends BaseElemDef {
-  var Queue: String = _
-  var ParitionKeys: Array[(String, Array[(String, String, String, String)], String, String)] = _ // Output Partition Key. Message/Model Full Qualified Name as first value in tuple, Rest of the field name as second value in tuple (filed name, field type, tType string, tTypeType string) and "Mdl" Or "Msg" String as the third value in tuple.
-  var DataDeclaration: Map[String, String] = _
-  var Defaults: Map[String, String] = _ // Local Variables. So, we are not expecting qualified names here.
-  var Fields: Map[(String, String), Set[(Array[(String, String, String, String)], String)]] = _ // Fields from Message/Model. Map Key is Message/Model Full Qualified Name as first value in key tuple(filed name, field type, tType string, tTypeType string) and "Mdl" Or "Msg" String as the second value in key tuple. Value is Set of fields & corresponding Default Value (if not present NULL)
-  var OutputFormat: String = _ // Format String
-  var FormatSplittedArray: Array[(String, String)] = _ // OutputFormat split to substitute like (constant & substitute variable) tuples 
-}
-
 object ModelCompilationConstants {
   val DEPENDENCIES: String = "Dependencies"
   val TYPES_DEPENDENCIES: String = "MessageAndContainers"
   val SOURCECODE: String = "source"
   val PHYSICALNAME: String = "pName"
+  val INPUT_TYPES_SETS: String = "InputTypesSets"
+  val OUTPUT_TYPES_SETS: String = "OutputTypes"
 }
 
 // These case classes define the monitoring structures that will appear in the zookeepr.

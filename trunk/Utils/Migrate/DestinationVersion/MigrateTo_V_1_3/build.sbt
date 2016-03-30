@@ -17,3 +17,9 @@ libraryDependencies += "org.json4s" %% "json4s-jackson" % "3.2.9"
 libraryDependencies += "com.google.code.gson" % "gson" % "2.3.1"
 
 EclipseKeys.relativizeLibs := false
+
+coverageMinimum := 80
+
+coverageFailOnMinimum := false
+
+coverageExcludedPackages := "com.ligadata.Migrate.MigrateTo_V_1_3"

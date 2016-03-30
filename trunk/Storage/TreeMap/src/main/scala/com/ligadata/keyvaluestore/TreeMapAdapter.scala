@@ -34,8 +34,8 @@ No schema setup
 
 package com.ligadata.keyvaluestore
 
-import com.ligadata.KvBase.{ Key, Value, TimeRange }
-import com.ligadata.StorageBase.{ DataStore, Transaction, StorageAdapterObj }
+import com.ligadata.KvBase.{ Key, TimeRange }
+import com.ligadata.StorageBase.{ DataStore, Transaction, StorageAdapterFactory, Value }
 
 import org.mapdb._
 import java.io._
@@ -224,6 +224,8 @@ class TreeMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
   private def ByteArrayToValue(byteArray: Array[Byte]): Value = {
     var in = new DataInputStream(new ByteArrayInputStream(byteArray));
 
+    val schemaId = in.readInt();
+
     var serializerTypeLength = in.readInt();
     var serializerType = new Array[Byte](serializerTypeLength);
     in.read(serializerType, 0, serializerTypeLength);
@@ -232,7 +234,7 @@ class TreeMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
     var serializedInfo = new Array[Byte](serializedInfoLength);
     in.read(serializedInfo, 0, serializedInfoLength);
 
-    var v = new Value(new String(serializerType), serializedInfo)
+    var v = new Value(schemaId, new String(serializerType), serializedInfo)
     v
   }
 
@@ -338,6 +340,30 @@ class TreeMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
     }
   }
 
+  //Added by Yousef Abu Elbeh at 2016-03-13 from here
+  override def del(containerName: String, time: TimeRange): Unit = {
+    try {
+      CheckTableExists(containerName)
+      var tableName = toFullTableName(containerName)
+      var map = tablesMap(tableName)
+      var iter = map.keySet().iterator()
+      while (iter.hasNext()) {
+        val kba = iter.next()
+        val k = new String(kba)
+        var keyArray = k.split('|')
+        var tp = keyArray(0).toLong
+        if (tp >= time.beginTime && tp <= time.endTime) {
+            map.remove(kba)
+        }
+      }
+      Commit
+    } catch {
+      case e: Exception => {
+        logger.error("", e)
+      }
+    }
+  }
+  // to here
   // get operations
   def getRowCount(containerName: String): Long = {
     var tableName = toFullTableName(containerName)
@@ -796,7 +822,11 @@ class TreeMapAdapterTx(val parent: DataStore) extends Transaction {
   override def del(containerName: String, time: TimeRange, keys: Array[Array[String]]): Unit = {
     parent.del(containerName, time, keys)
   }
-
+  //Added by Yousef Abu Elbeh in 2016-03-13 from here
+  override def del(containerName: String, time: TimeRange): Unit = {
+    parent.del(containerName, time)
+  }
+  //to here
   // get operations
   override def get(containerName: String, callbackFunction: (Key, Value) => Unit): Unit = {
     parent.get(containerName, callbackFunction)
@@ -880,6 +910,6 @@ class TreeMapAdapterTx(val parent: DataStore) extends Transaction {
 }
 
 // To create TreeMap Datastore instance
-object TreeMapAdapter extends StorageAdapterObj {
+object TreeMapAdapter extends StorageAdapterFactory {
   override def CreateStorageAdapter(kvManagerLoader: KamanjaLoaderInfo, datastoreConfig: String): DataStore = new TreeMapAdapter(kvManagerLoader, datastoreConfig)
 }

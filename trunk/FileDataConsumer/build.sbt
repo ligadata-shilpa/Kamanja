@@ -66,3 +66,7 @@ libraryDependencies ++= {
     "org.scala-lang" % "scala-actors" % scalaVersion.value
   )
 }
+
+coverageMinimum := 80
+
+coverageFailOnMinimum := false

@@ -42,12 +42,10 @@ object ConfigDefaults {
   private val appLibDir = RootDir + "/jars/lib/application"
   private val workDir = RootDir + "/jars/lib/workingdir"
 
-  private def copyFile(sourceFile:File, destFile:File)  {
-    
-    if(!destFile.exists()) {
-        destFile.createNewFile();
-    }
+  private val IgnoreDir = "MetadataAPI/target"
 
+  private def copyFile(sourceFile:File, destFile:File)  {
+    try{
     var source:FileChannel = null;
     var destination:FileChannel = null;
 
@@ -57,17 +55,22 @@ object ConfigDefaults {
     source.close()
     destination.close()
   }
+    catch {
+      case e: Exception => throw new Exception("Failed to copy file: " + sourceFile.getName(),e)
+    }
+  }
 
   private def createDirectory(dirName:String){
     var dir = new File(dirName)
     if( ! dir.exists() ){
-      dir.mkdir()
+      dir.mkdirs()
     }
   }
 
   private def copy(path: File): Unit = {
     if(path.isDirectory ){
-      if( path.getPath.contains(targetLibDir) ){
+      if( path.getPath.contains(IgnoreDir) ){
+	//logger.debug("We don't copy any files from directory that contains " + IgnoreDir)
 	return
       }
       Option(path.listFiles).map(_.toList).getOrElse(Nil).foreach(f => {
@@ -76,8 +79,12 @@ object ConfigDefaults {
 	}
         else if (f.getPath.endsWith(".jar")) {
           try {
-	    logger.info("Copying " + f + "," + "(file size => " + f.length() + ") to " + targetLibDir + "/" + f.getName)
-	    copyFile(f,new File(targetLibDir + "/" + f.getName))
+	    logger.debug("Copying " + f + "," + "(file size => " + f.length() + ") to " + targetLibDir + "/" + f.getName)
+	    val d = new File(targetLibDir + "/" + f.getName)
+	    if( ! d.exists() ){
+	      d.createNewFile()
+          }
+	    copyFile(f,d)
           }
           catch {
             case e: Exception => throw new Exception("Failed to copy file: " + f,e)

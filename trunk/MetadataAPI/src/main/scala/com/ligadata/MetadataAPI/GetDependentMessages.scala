@@ -33,7 +33,7 @@ import scala.collection.mutable.Map
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.ArrayBuffer
 
-import com.ligadata.messagedef._
+import com.ligadata.msgcompiler._
 import util.control.Breaks._
 
 import scala.xml.XML

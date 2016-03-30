@@ -31,13 +31,9 @@ object Action extends Enumeration {
   val GETALLMESSAGES=Value("getallmessages")
   val REMOVEMESSAGE=Value("removemessage")
   val GETMESSAGE=Value("getmessage")
-  //output message management
-  val ADDOUTPUTMESSAGE=Value("addoutputmessage")
-  val UPDATEOUTPUTMESSAGE=Value("updateoutputmessage")
-  val REMOVEOUTPUTMESSAGE=Value("removeoutputmessage")
-  val GETALLOUTPUTMESSAGES=Value("getalloutputmessages")
   //model management
   val ADDMODELKPMML=Value("addmodelkpmml")
+  val ADDMODELJTM=Value("addmodeljtm")
   val ADDMODELPMML=Value("addmodelpmml")
   val ADDMODELSCALA=Value("addmodelscala")
   val ADDMODELJAVA=Value("addmodeljava")
@@ -45,6 +41,7 @@ object Action extends Enumeration {
   val ACTIVATEMODEL=Value("activatemodel")
   val DEACTIVATEMODEL=Value("deactivatemodel")
   val UPDATEMODELKPMML=Value("updatemodelkpmml")
+  val UPDATEMODELJTM=Value("updatemodeljtm")
   val UPDATEMODELPMML=Value("updatemodelpmml")
   val UPDATEMODELSCALA=Value("updatemodelscala")
   val UPDATEMODELJAVA=Value("updatemodeljava")
@@ -88,5 +85,4 @@ object Action extends Enumeration {
   val DUMPALLCLUSTERS=Value("dumpallclusters")
   val DUMPALLCLUSTERCFGS=Value("dumpallclustercfgs")
   val DUMPALLADAPTERS=Value("dumpalladapters")
-  val GETOUTPUTMESSAGE=Value("getoutputmessage")
 }

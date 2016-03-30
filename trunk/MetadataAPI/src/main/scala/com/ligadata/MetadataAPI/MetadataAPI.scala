@@ -33,7 +33,7 @@ class ApiResult(var statusCode:Int, var functionName: String, var resultData: St
  */
   override def toString: String = {
     
-    var json = ("APIResults" -> ("Status Code" -> statusCode) ~ 
+    val json = ("APIResults" -> ("Status Code" -> statusCode) ~
                                 ("Function Name" -> functionName) ~ 
                                 ("Result Data"  -> resultData) ~ 
                                 ("Result Description" -> description))    
@@ -50,6 +50,7 @@ object MetadataAPI {
       val SCALA = Value("scala")
       val KPMML = Value("kpmml")
       val PMML = Value("pmml")
+      val JTM = Value("jtm")
       val BINARY = Value("binary")
       val UNKNOWN = Value("unknown")
 
@@ -59,6 +60,7 @@ object MetadataAPI {
               case "scala" => SCALA
               case "pmml" => PMML
               case "kpmml" => KPMML
+              case "jtm" => JTM
               case "binary" => BINARY
               case _ => UNKNOWN
           }
@@ -504,6 +506,7 @@ trait MetadataAPI {
               , version: Option[String] = None
               , msgConsumed: Option[String] = None
               , msgVer : Option[String] = Some("-1")
+	      , optMsgProduced: Option[String] = None
               ): String
 
   /** Update model given the supplied input.  Like the Add model, the ''modelType'' controls the processing and describes the
@@ -540,7 +543,8 @@ trait MetadataAPI {
                   , userid: Option[String] = None
                   , modelName: Option[String] = None
                   , version: Option[String] = None
-                  , optVersionBeingUpdated : Option[String] = None): String
+                  , optVersionBeingUpdated : Option[String] = None
+		  , optMsgProduced: Option[String] = None): String
 
   /** Remove model with the supplied ''modelName'' and ''version''.  If the SecurityAdapter and/or AuditAdapter have
     * been configured, the ''userid'' must also be supplied.
@@ -802,5 +806,29 @@ trait MetadataAPI {
     *               method. If Security and/or Audit are configured, this value must be a value other than None.
     * @return status string
     */
-  def getHealthCheck(nodeId: String, userid: Option[String] = None): String 
+  def getHealthCheck(nodeId: String, userid: Option[String] = None): String
+
+  /**
+    *  getHealthCheckNodesOnly - will return node info from the health-check information for the nodeId specified.
+    *  @param nodeId a cluster node: String - if no parameter specified, return health-check for all nodes
+    *  @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    */
+  def getHealthCheckNodesOnly(nodeId: String = "", userid: Option[String] = None): String
+
+  /**
+    *  getHealthCheckComponentNames - will return partial components info from the health-check information for the nodeId specified.
+    *  @param nodeId a cluster node: String - if no parameter specified, return health-check for all nodes
+    *  @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    */
+  def getHealthCheckComponentNames(nodeId: String = "", userid: Option[String] = None): String
+
+  /**
+    *  getHealthCheckComponentDetailsByNames - will return specific components info from the health-check information for the nodeId specified.
+    *  @param componentNames names of components required
+    *  @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    */
+  def getHealthCheckComponentDetailsByNames(componentNames: String = "", userid: Option[String] = None): String
 }

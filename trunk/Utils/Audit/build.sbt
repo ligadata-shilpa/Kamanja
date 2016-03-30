@@ -45,3 +45,7 @@ libraryDependencies += "org.apache.hadoop" % "hadoop-common" % "2.7.1"
 libraryDependencies += "org.mapdb" % "mapdb" % "1.0.6"
 
 libraryDependencies ++= Seq("net.debasishg" %% "redisclient" % "2.13")
+
+coverageMinimum := 80
+
+coverageFailOnMinimum := false
