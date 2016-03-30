@@ -138,7 +138,7 @@ object MethodExtract extends App with LogTrait {
       null
     }
     val excludeListStr = if (options.contains('excludeList)) options.apply('excludeList) else null
-    val ownerId = (if (options.contains('ownerId)) options.apply('ownerId) else "Kamanja").trim
+    val ownerId = (if (options.contains('ownerId)) options.apply('ownerId) else "kamanja").trim
     var excludeList: Array[String] = null
     val versionNumberStr = if (options.contains('versionNumber)) options.apply('versionNumber) else null
     var versionNumber: Long = 1000000
@@ -347,7 +347,7 @@ Usage: scala com.ligadata.udf.extract.MethodExtract --object <fully qualifed sca
    */
   def InitializeMdMgr: MdMgr = {
     val versionNumber: Long = 1
-    val ownerId: String = "Kamanja"
+    val ownerId: String = "kamanja"
     val mgr: MdMgr = MdMgr.GetMdMgr
 
     /** seed essential types */

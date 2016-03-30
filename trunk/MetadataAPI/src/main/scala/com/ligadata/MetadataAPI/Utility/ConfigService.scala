@@ -29,7 +29,7 @@ import scala.io._
  * Created by dhaval on 8/13/15.
  */
 object ConfigService {
-  private val userid: Option[String] = Some("Kamanja")
+  private val userid: Option[String] = Some("kamanja")
   val loggerName = this.getClass.getName
   lazy val logger = LogManager.getLogger(loggerName)
 
