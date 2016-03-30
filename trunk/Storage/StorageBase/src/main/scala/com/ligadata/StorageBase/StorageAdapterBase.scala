@@ -6,43 +6,79 @@
  */
 package com.ligadata.StorageBase
 
+import com.ligadata.Exceptions.{NotImplementedFunctionException, InvalidArgumentException}
 import com.ligadata.KamanjaBase.{AdaptersSerializeDeserializers, TransactionContext, ContainerInterface}
 import com.ligadata.KvBase.{ Key, TimeRange }
 import com.ligadata.Utils.{ KamanjaLoaderInfo }
+
+import scala.collection.mutable.ArrayBuffer
 
 case class Value(schemaId: Int, serializerType: String, serializedInfo: Array[Byte])
 
 trait DataStoreOperations extends AdaptersSerializeDeserializers {
   // update operations, add & update semantics are different for relational databases
   def put(tnxCtxt: TransactionContext, container: ContainerInterface): Unit = {
-    val (outputContainers, serializedContainerData, serializerNames) = serialize(tnxCtxt, Array(container))
+    if (container == null)
+      throw new InvalidArgumentException("container should not be null", null)
+    // put(tnxCtxt, Array((container.getFullTypeName.toLowerCase(), Array((key, serializerTyp, value)))))
+    // val (outputContainers, serializedContainerData, serializerNames) = serialize(tnxCtxt, Array(container))
     // Call put methods with container name, key & values
+    throw new NotImplementedFunctionException("Not yet implemented", null)
   }
 
   def put(tnxCtxt: TransactionContext, containers: Array[ContainerInterface]): Unit = {
-    val (outputContainers, serializedContainerData, serializerNames) = serialize(tnxCtxt, containers)
+    if (containers == null)
+      throw new InvalidArgumentException("containers should not be null", null)
+    // put(tnxCtxt, Array((containerName, Array((key, serializerTyp, value)))))
+    // val (outputContainers, serializedContainerData, serializerNames) = serialize(tnxCtxt, containers)
     // Call put methods with container name, key & values
+    throw new NotImplementedFunctionException("Not yet implemented", null)
   }
 
   // value could be ContainerInterface or Array[Byte]
   def put(tnxCtxt: TransactionContext, containerName: String, key: Key, serializerTyp: String, value: Any): Unit = {
-    // Check for value.isInstanceOf[ContainerInterface]
-//    val (outputContainers, serializedContainerData, serializerNames) = serialize(tnxCtxt, Array(container))
-    // Call put methods with container name, key & values
+    if (containerName == null || key == null || serializerTyp == null || value == null)
+      throw new InvalidArgumentException("ContainerName, Keys, SerializerTyps and Values should not be null", null)
+    put(tnxCtxt, Array((containerName, Array((key, serializerTyp, value)))))
   }
 
   // value could be ContainerInterface or Array[Byte]
-  def put(tnxCtxt: TransactionContext, containerName: String, keys: Array[Key], serializerTyp: Array[String], values: Array[Any]): Unit = {
-    // Check for value.isInstanceOf[ContainerInterface]
-//    val (outputContainers, serializedContainerData, serializerNames) = serialize(tnxCtxt, containers)
-    // Call put methods with container name, key & values
+  def put(tnxCtxt: TransactionContext, containerName: String, keys: Array[Key], serializerTyps: Array[String], values: Array[Any]): Unit = {
+    if (containerName == null || keys == null || serializerTyps == null || values == null)
+      throw new InvalidArgumentException("Keys, SerializerTyps and Values should not be null", null)
+
+    if (keys.size != serializerTyps.size || serializerTyps.size != values.size)
+      throw new InvalidArgumentException("Keys:%d, SerializerTyps:%d and Values:%d should have same size".format(keys.size, serializerTyps.size, values.size), null)
+
+    val data = ArrayBuffer[(Key, String, Any)]()
+
+    for (i <- 0 until keys.size) {
+      data += ((keys(i), serializerTyps(i), values(i)))
+    }
+    put(tnxCtxt, Array((containerName, data.toArray)))
   }
 
   // data_list has List of container names, and each container has list of key & value as ContainerInterface or Array[Byte]
   def put(tnxCtxt: TransactionContext, data_list: Array[(String, Array[(Key, String, Any)])]): Unit = {
-    // Check for value.isInstanceOf[ContainerInterface]
-    //    val (outputContainers, serializedContainerData, serializerNames) = serialize(tnxCtxt, containers)
-    // Call put methods with container name, key & values
+    if (data_list == null)
+      throw new InvalidArgumentException("Data should not be null", null)
+
+    val putData = data_list.map(oneContainerData => {
+      val containerName = oneContainerData._1
+      val containerData = oneContainerData._2.map(row => {
+        if (row._3.isInstanceOf[ContainerInterface]) {
+          throw new NotImplementedFunctionException("Not yet implemented serializing ContainerInterface", null)
+          val cont = row._3.asInstanceOf[ContainerInterface]
+          // Value(schemaId: Int, serializerType: String, serializedInfo: Array[Byte])
+          // (row._1, Value(cont.getSchemaId, "", Array[Byte]))
+        } else {
+          (row._1, Value(0, row._2, row._3.asInstanceOf[Array[Byte]]))
+        }
+      })
+      (containerName, containerData)
+    })
+
+    put(putData)
   }
 
   // update operations, add & update semantics are different for relational databases
