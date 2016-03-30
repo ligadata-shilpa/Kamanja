@@ -37,7 +37,7 @@ class HelloWorldModel(factory: ModelInstanceFactory) extends ModelInstance(facto
           return null;
      
      var actualResults: Array[Result] = Array[Result](new Result("Id",helloWorld.id),
-                                                        new Result("Name",helloWorld.Name),
+                                                        new Result("Name",helloWorld.name),
                                                         new Result("Score",helloWorld.score))
      return factory.createResultObject().asInstanceOf[MappedModelResults].withResults(actualResults)
    }
