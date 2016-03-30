@@ -56,7 +56,7 @@ object Parts {
 
   val model =
     """|class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
-       |  override def run(txnCtxt: TransactionContext, outputDefault: Boolean): Array[MessageInterface]  = {
+       |  override def execute(txnCtxt: TransactionContext, execMsgsSet: Array[ContainerOrConcept], triggerdSetIndex: Int, outputDefault: Boolean): Array[ContainerOrConcept] = {
        |    //
        |    {model.grok}
        |    //

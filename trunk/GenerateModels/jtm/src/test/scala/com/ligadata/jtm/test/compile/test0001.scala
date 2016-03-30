@@ -19,47 +19,43 @@ import com.ligadata.KvBase.TimeRange
 import com.ligadata.kamanja.metadata.ModelDef
 import com.ligadata.Utils._
 class Factory(modelDef: ModelDef, nodeContext: NodeContext) extends ModelInstanceFactory(modelDef, nodeContext) {
-  //override def isValidMessage(msg: MessageContainerBase): Boolean = {
-  //  msg.isInstanceOf[com.ligadata.kamanja.test.V1000000.msg1]
-  //}
+  override def isValidMessage(msg: ContainerInterface): Boolean = {
+    msg.isInstanceOf[com.ligadata.kamanja.test.v1000000.msg1]
+  }
   override def createModelInstance(): ModelInstance = return new Model(this)
   override def getModelName: String = "com.ligadata.jtm.test.filter"
   override def getVersion: String = "0.0.1"
   override def createResultObject(): ModelResultBase = new MappedModelResults()
 }
 class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
-  /*override*/ def run(txnCtxt: TransactionContext, outputDefault: Boolean): Array[BaseMsg]  = {
+  override def execute(txnCtxt: TransactionContext, execMsgsSet: Array[ContainerOrConcept], triggerdSetIndex: Int, outputDefault: Boolean): Array[ContainerOrConcept] = {
     //
     //
-    def exeGenerated_test1_1(msg1: com.ligadata.kamanja.test.V1000000.msg1): Array[BaseMsg] = {
+    def exeGenerated_test1_1(msg1: com.ligadata.kamanja.test.v1000000.msg1): Array[MessageInterface] = {
       // in scala, type could be optional
       val out3: Int = msg1.in1 + 1000
-      def process_o1(): Array[BaseMsg] = {
-        if (!(msg1.in2 != -1 && msg1.in2 < 100)) return Array.empty[BaseMsg]
+      def process_o1(): Array[MessageInterface] = {
+        if (!(msg1.in2 != -1 && msg1.in2 < 100)) return Array.empty[MessageInterface]
         val t1: String = "s:" + msg1.in2.toString()
-        val result : com.ligadata.kamanja.test.V1000000.msg2 = null //new com.ligadata.kamanja.test.V1000000.msg2
-        result.out2 = t1
-        //result.rowNumber = msg1.rowNumber
-        result.out3 = msg1.in2
-        //result.timePartitionData = msg1.timePartitionData
+        val result = new com.ligadata.kamanja.test.v1000000.msg2
         result.out4 = msg1.in3
+        result.out3 = msg1.in2
+        result.out2 = t1
         result.out1 = msg1.in1
-        //result.transactionId = msg1.transactionId
-        Array(result.asInstanceOf[BaseMsg])
+        Array(result)
       }
       process_o1()
     }
     // Evaluate messages
-    //val msg1 = txnCtxt.getMessages("com.ligadata.kamanja.test.msg1").headOption.getOrElse(null).asInstanceOf[com.ligadata.kamanja.test.V1000000.msg1]
-    val msg1: com.ligadata.kamanja.test.V1000000.msg1 = null
+    val msg1 = txnCtxt.getMessages("com.ligadata.kamanja.test.msg1").headOption.getOrElse(null).asInstanceOf[com.ligadata.kamanja.test.v1000000.msg1]
     // Main dependency -> execution check
     //
-    val results: Array[BaseMsg] =
+    val results: Array[MessageInterface] =
       if(msg1!=null) {
         exeGenerated_test1_1(msg1)
       } else {
-        Array.empty[BaseMsg]
+        Array.empty[MessageInterface]
       }
-    results
+    results.asInstanceOf[Array[ContainerOrConcept]]
   }
 }

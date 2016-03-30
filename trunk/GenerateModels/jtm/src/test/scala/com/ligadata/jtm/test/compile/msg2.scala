@@ -1,4 +1,4 @@
-package com.ligadata.kamanja.test.V1000000;
+package com.ligadata.kamanja.test.v1000000;
 
 import org.json4s.jackson.JsonMethods._
 import org.json4s.DefaultFormats

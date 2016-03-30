@@ -1057,7 +1057,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     })
 
     val resultVar = "val results: Array[MessageInterface] = \n"
-    val returnValue = "result"
+    val returnValue = "results.asInstanceOf[Array[ContainerOrConcept]]"
     subtitutions.Add("model.grok", groks.mkString("\n"))
     subtitutions.Add("model.message", messages.mkString("\n"))
     subtitutions.Add("model.methods", methods.mkString("\n"))
