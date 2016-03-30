@@ -250,7 +250,7 @@ object FunctionUtils {
         var apiResult = new ApiResult(ErrorCodeConstants.Not_Implemented_Yet, "AddFunctions", functionsText, ErrorCodeConstants.Not_Implemented_Yet_Msg)
         apiResult.toString()
       } else {
-        val ownerId: String = if (userid == None) "Kamanja" else userid.get
+        val ownerId: String = if (userid == None) "kamanja" else userid.get
         val uniqueId = MetadataAPIImpl.GetUniqueId
         val mdElementId = 0L //FIXME:- Not yet handled this
         var funcList= JsonSerializer.parseFunctionList(functionsText, "JSON", ownerId, uniqueId, mdElementId)
@@ -298,7 +298,7 @@ object FunctionUtils {
         var apiResult = new ApiResult(ErrorCodeConstants.Not_Implemented_Yet, "UpdateFunctions", null, ErrorCodeConstants.Not_Implemented_Yet_Msg + ":" + functionsText + ".Format not JSON.")
         apiResult.toString()
       } else {
-        val ownerId: String = if (userid == None) "Kamanja" else userid.get
+        val ownerId: String = if (userid == None) "kamanja" else userid.get
         val uniqueId = MetadataAPIImpl.GetUniqueId
         val mdElementId = 0L //FIXME:- Not yet handled this
         var funcList = JsonSerializer.parseFunctionList(functionsText, "JSON", ownerId, uniqueId, mdElementId)

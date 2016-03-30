@@ -52,7 +52,7 @@ trait LogTrait {
  */
 
 object MetadataLoad {
-	val baseTypesOwnerId = "Kamanja"
+	val baseTypesOwnerId = "kamanja"
   val baseTypesVer: Long = 1000000
   // Which is 00.01.000000
   val baseTypesUniqId : Long = 0
