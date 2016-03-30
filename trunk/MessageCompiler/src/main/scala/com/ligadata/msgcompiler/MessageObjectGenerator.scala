@@ -97,7 +97,7 @@ class MessageObjectGenerator {
       }
 
       msgObjeGenerator.append(msgConstants.template.format(msgConstants.pad1, message.Name, msgConstants.newline))
-      msgObjeGenerator.append(msgConstants.fullName.format(msgConstants.pad1, message.Pkg, message.Name, msgConstants.newline))
+      msgObjeGenerator.append(msgConstants.fullName.format(msgConstants.pad1, message.NameSpace, message.Name, msgConstants.newline))
       msgObjeGenerator.append(msgConstants.namespace.format(msgConstants.pad1, message.NameSpace, msgConstants.newline))
       msgObjeGenerator.append(msgConstants.name.format(msgConstants.pad1, message.Name, msgConstants.newline))
       msgObjeGenerator.append(msgConstants.version.format(msgConstants.pad1, message.Version, msgConstants.newline))
