@@ -392,7 +392,7 @@ object KamanjaMdCfg {
     var curClz = clz
 
     while (clz != null && isOutputAdapter == false) {
-      isOutputAdapter = Utils.isDerivedFrom(curClz, "com.ligadata.InputOutputAdapterInfo.OutputAdapterObj")
+      isOutputAdapter = Utils.isDerivedFrom(curClz, "com.ligadata.InputOutputAdapterInfo.OutputAdapterFactory")
       if (isOutputAdapter == false)
         curClz = curClz.getSuperclass()
     }
@@ -501,7 +501,7 @@ object KamanjaMdCfg {
     var curClz = clz
 
     while (clz != null && isInputAdapter == false) {
-      isInputAdapter = Utils.isDerivedFrom(curClz, "com.ligadata.InputOutputAdapterInfo.InputAdapterObj")
+      isInputAdapter = Utils.isDerivedFrom(curClz, "com.ligadata.InputOutputAdapterInfo.InputAdapterFactory")
       if (isInputAdapter == false)
         curClz = curClz.getSuperclass()
     }
