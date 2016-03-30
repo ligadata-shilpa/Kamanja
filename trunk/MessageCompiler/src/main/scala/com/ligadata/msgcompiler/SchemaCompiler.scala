@@ -30,8 +30,8 @@ class SchemaCompiler {
       val fldsStr = getAvroFldTypes(message, mdMgr: MdMgr);
 
       strBuf = strBuf.append(openBrace + recordType)
-      strBuf = strBuf.append(generateNameSpace(message.NameSpace) + comma)
-      strBuf = strBuf.append(generateName(message.Name) + comma)
+      strBuf = strBuf.append(generateNameSpace(message.NameSpace.toLowerCase()) + comma)
+      strBuf = strBuf.append(generateName(message.Name.toLowerCase()) + comma)
       strBuf = strBuf.append(fieldsConstant + openSqBrace)
       strBuf = strBuf.append(fldsStr)
       strBuf = strBuf.append(closeSqBrace)
