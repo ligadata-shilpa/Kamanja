@@ -180,8 +180,8 @@ object CompressionUtil {
         val manuallyDetectedType = detectCompressionTypeByMagicNumbers(is)
         is.close()
 
-        //if tika detected type is plain, and manual detected got unknown, keep the value plain. else get manually detected value
-        if(contentType == PLAIN || manuallyDetectedType != UNKNOWN)
+        //if manual detected got unknown, keep the value plain. else get manually detected value
+        if(manuallyDetectedType != UNKNOWN)
           contentType = manuallyDetectedType
       }
       catch{
