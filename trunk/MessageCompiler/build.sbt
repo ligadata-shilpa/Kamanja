@@ -1,4 +1,4 @@
-name := "GenericMsgCompiler"
+name := "MessageCompiler"
 
 version := "1.0"
 

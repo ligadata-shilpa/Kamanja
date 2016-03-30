@@ -21,7 +21,7 @@ class MessageCompilerTestSuite extends FunSuite {
     var msgDfType: String = "JSON"
 
     var messageCompiler = new MessageCompiler;
-    val jsonstr: String = Source.fromFile("./GenericMsgCompiler/src/test/resources/fixedmsgs/product.json").getLines.mkString
+    val jsonstr: String = Source.fromFile("./MessageCompiler/src/test/resources/fixedmsgs/product.json").getLines.mkString
     // val jsonstr: String = Source.fromFile("src/test/resources/fixedmsgs/product.json").getLines.mkString
 
     val ((verScalaMsg, verJavaMsg), containerDef, (nonVerScalaMsg, nonVerJavaMsg), rawMsg) = messageCompiler.processMsgDef(jsonstr, msgDfType, MdMgr.GetMdMgr, 0)
@@ -34,7 +34,7 @@ class MessageCompilerTestSuite extends FunSuite {
 
   private def createScalaFile(scalaClass: String, version: String, className: String, clstype: String): Unit = {
     try {
-      val writer = new PrintWriter(new File("./GenericMsgCompiler/src/test/resources/GeneratedMsgs/" + className + "_" + version + clstype))
+      val writer = new PrintWriter(new File("./MessageCompiler/src/test/resources/GeneratedMsgs/" + className + "_" + version + clstype))
       // val writer = new PrintWriter(new File("src/test/resources/GeneratedMsgs/" + className + "_" + version + clstype))
       writer.write(scalaClass.toString)
       writer.close()
