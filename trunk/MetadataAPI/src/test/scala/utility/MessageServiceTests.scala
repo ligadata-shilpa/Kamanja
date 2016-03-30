@@ -1,3 +1,4 @@
+
 package com.ligadata.MetadataAPI.utility.test
 import org.scalatest._
 import com.ligadata.kamanja.metadata._
@@ -98,3 +99,4 @@ class MessageServiceTests extends FlatSpec with Matchers with MetadataBeforeAndA
   }
 
 }
+
