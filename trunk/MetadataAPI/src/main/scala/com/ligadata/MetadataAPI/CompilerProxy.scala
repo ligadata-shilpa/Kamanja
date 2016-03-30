@@ -720,7 +720,8 @@ class CompilerProxy {
 
       // reconstruct modDef json string from modelConfig object
       logger.debug("generateModelDef: Get the model config for " + modelConfigName)
-      var config = MdMgr.GetMdMgr.GetModelConfig((userid.get + "." + modelConfigName).toLowerCase)
+      //var config = MdMgr.GetMdMgr.GetModelConfig((userid.get + "." + modelConfigName).toLowerCase)
+      var config = MdMgr.GetMdMgr.GetModelConfig(modelConfigName.toLowerCase)
       var modCfgJson = JsonSerializer.SerializeModelConfigToJson(modelConfigName, config)
       logger.debug("generateModelDef: modelConfig in json  " + modCfgJson)
 

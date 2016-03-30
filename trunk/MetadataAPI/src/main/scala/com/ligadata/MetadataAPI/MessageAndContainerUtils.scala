@@ -1632,13 +1632,13 @@ object MessageAndContainerUtils {
     // if userid is not supplied, it seem to defualt to "_"
     //val u = if( userid != None ) userid.get else "_"
     //var key = u + "." + modelConfigName
-    var key = "Kamanja" + "." + modelConfigName
-    if( userid != None ){
-      key = userid.get + "." + modelConfigName
-    }
-    logger.debug("Get the model config for " + key)
-    var config = MdMgr.GetMdMgr.GetModelConfig(key)
-    logger.debug("Size of the model config map => " + config.keys.size);
+    var key = modelConfigName
+    //if( userid != None ){
+    //  key = userid.get + "." + modelConfigName
+    //}
+    logger.debug("MessageAndContainerUtils: Get the model config for " + key)
+    var config = MdMgr.GetMdMgr.GetModelConfig(key.toLowerCase)
+    logger.debug("MessageAndContainerUtils: Size of the model config map => " + config.keys.size);
     val typDeps = config.getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, null)
     if (typDeps != null) {
       if (typDeps.isInstanceOf[List[_]])
