@@ -62,7 +62,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
   private var _jarPaths: collection.immutable.Set[String] = collection.immutable.Set[String]()
   private var _bInit = false
   private var _flCurMigrationSummary: PrintWriter = _
-  private val defaultUserId: Option[String] = Some("Kamanja")
+  private val defaultUserId: Option[String] = Some("kamanja")
   private var _parallelDegree = 0
   private var _mergeContainerAndMessages = true
 

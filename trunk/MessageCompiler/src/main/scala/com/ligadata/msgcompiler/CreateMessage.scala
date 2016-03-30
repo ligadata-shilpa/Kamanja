@@ -6,7 +6,7 @@ import com.ligadata.Exceptions._;
 
 class CreateMessage {
 
-  var defaultOwner = "Kamanja"
+  var defaultOwner = "kamanja"
   val logger = this.getClass.getName
   lazy val log = LogManager.getLogger(logger)
 

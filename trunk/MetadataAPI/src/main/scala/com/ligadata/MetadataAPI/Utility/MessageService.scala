@@ -30,7 +30,7 @@ import scala.io._
  * Created by dhaval on 8/7/15.
  */
 object MessageService {
-  private val userid: Option[String] = Some("Kamanja")
+  private val userid: Option[String] = Some("kamanja")
   val loggerName = this.getClass.getName
   lazy val logger = LogManager.getLogger(loggerName)
 
