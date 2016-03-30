@@ -535,7 +535,7 @@ object ModelUtils {
       val msgName: String = msgNameNodes.last
       msgNameNodes.take(msgNameNodes.size - 1).addString(buffer, ".")
       val msgNamespace: String = buffer.toString
-      val ownerId: String = if (userid == None) "Kamanja" else userid.get
+      val ownerId: String = if (userid == None) "kamanja" else userid.get
       val jpmmlSupport: JpmmlSupport = new JpmmlSupport(mdMgr
         , modelNmSpace
         , modelNm
@@ -631,7 +631,7 @@ object ModelUtils {
     try {
       var compProxy = new CompilerProxy
       //compProxy.setLoggerLevel(Level.TRACE)
-      val ownerId: String = if (userid == None) "Kamanja" else userid.get
+      val ownerId: String = if (userid == None) "kamanja" else userid.get
       var (classStr, modDef) = compProxy.compilePmml(pmmlText, ownerId)
 
       // ModelDef may be null if there were pmml compiler errors... act accordingly.  If modelDef present,
@@ -783,7 +783,7 @@ object ModelUtils {
         } else {
           if (mod.objectFormat == ObjFormatType.fXML) {
             val pmmlText = mod.ObjectDefinition
-            val ownerId: String = if (userid == None) "Kamanja" else userid.get
+            val ownerId: String = if (userid == None) "kamanja" else userid.get
             val (classStrTemp, modDefTemp) = compProxy.compilePmml(pmmlText, ownerId, true)
             // copy outputMsgs
             if (mod.outputMsgs.length > 0) {
@@ -856,7 +856,7 @@ object ModelUtils {
           val modelNmSpace: String = mod.NameSpace
           val modelName: String = mod.Name
           val modelVersion: String = MdMgr.ConvertLongVersionToString(mod.Version)
-          val ownerId: String = if (userid == None) "Kamanja" else userid.get
+          val ownerId: String = if (userid == None) "kamanja" else userid.get
           val jpmmlSupport: JpmmlSupport = new JpmmlSupport(mdMgr
             , modelNmSpace
             , modelName
@@ -1060,7 +1060,7 @@ object ModelUtils {
         }
         val (currMsgNmSp, currMsgNm, currMsgVer): (String, String, String) = MdMgr.SplitFullNameWithVersion(currentMsg)
 
-        val ownerId: String = if (optUserid == None) "Kamanja" else optUserid.get
+        val ownerId: String = if (optUserid == None) "kamanja" else optUserid.get
         val jpmmlSupport: JpmmlSupport = new JpmmlSupport(mdMgr
           , modelNmSpace
           , modelNm
@@ -1311,7 +1311,7 @@ object ModelUtils {
     try {
       var compProxy = new CompilerProxy
       //compProxy.setLoggerLevel(Level.TRACE)
-      val ownerId: String = if (optUserid == None) "Kamanja" else optUserid.get
+      val ownerId: String = if (optUserid == None) "kamanja" else optUserid.get
       var (classStr, modDef) = compProxy.compilePmml(pmmlText, ownerId)
       val optLatestVersion = if (modDef == null) None else GetLatestModel(modDef)
       val latestVersion: ModelDef = optLatestVersion.orNull

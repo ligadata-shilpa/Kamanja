@@ -725,7 +725,7 @@ class CompilerProxy {
       logger.debug("generateModelDef: modelConfig in json  " + modCfgJson)
 
       val modelType: String = if (sourceLang.equalsIgnoreCase("scala")) "Scala" else "Java"
-      val ownerId: String = if (userid == None) "Kamanja" else userid.get
+      val ownerId: String = if (userid == None) "kamanja" else userid.get
       val modDef: ModelDef = MdMgr.GetMdMgr.MakeModelDef(modelNamespace
         , modelName
         , pName
@@ -1153,7 +1153,7 @@ class CompilerProxy {
             */
 
           val mdlDef = MdMgr.GetMdMgr.MakeModelDef("", ""
-            , clsName, "Kamanja", 0, 0
+            , clsName, "kamanja", 0, 0
             , ModelRepresentation.JAR
             , Array[Array[MessageAndAttributes]]()
             , Array[String]()
@@ -1171,7 +1171,7 @@ class CompilerProxy {
             // create possible default input messages from model_config.Type_dependencies for java/scala models
             var fullName = mdlFactory.getModelName.split('.')
             var modelName = fullName(fullName.length - 1)
-            var key = "Kamanja" + "." + modelConfigName
+            var key = "kamanja" + "." + modelConfigName
             if (userid != None) {
               key = userid.get + "." + modelConfigName
             }

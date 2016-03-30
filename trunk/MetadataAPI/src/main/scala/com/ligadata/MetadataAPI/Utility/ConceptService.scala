@@ -31,7 +31,7 @@ import scala.io._
  */
 object ConceptService {
 
-  private val userid: Option[String] = Some("Kamanja")
+  private val userid: Option[String] = Some("kamanja")
   val loggerName = this.getClass.getName
   lazy val logger = LogManager.getLogger(loggerName)
 
