@@ -363,9 +363,9 @@ object PersistenceUtils {
   def GetMetadataId(key: String, incrementInDb: Boolean, defaultId: Long = 1): Long = {
     var id: Long = defaultId
     try {
-      val (serTyp, obj) = GetObject(key.toLowerCase(), "MetadataCounters")
+      val (serTyp, obj) = GetObject(key.toLowerCase(), "metadatacounters")
       val idStr = new String(obj.asInstanceOf[Array[Byte]])
-      idStr.toLong
+      id = idStr.toLong
     } catch {
       case e: ObjectNotFoundException => {
         // first time
@@ -386,7 +386,7 @@ object PersistenceUtils {
 
   def PutMetadataId(key: String, id: Long) = {
     try {
-      SaveObject(key.toLowerCase(), id.toString.getBytes, "MetadataCounters", "")
+      SaveObject(key.toLowerCase(), id.toString.getBytes, "metadatacounters", "")
     } catch {
       case e: Exception => {
         logger.error("", e)
