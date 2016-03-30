@@ -94,10 +94,18 @@ object PersistenceUtils {
 
   def GetMainDS: DataStore = mainDS
 
-  def GetTableStoreMap: Map[String, (String, DataStore)] = tableStoreMap
+//  def GetTableStoreMap: Map[String, (String, DataStore)] = tableStoreMap
+
+  def GetContainerNameAndDataStore(typeName: String): (String, DataStore) = {
+    val info = tableStoreMap.getOrElse(typeName, null)
+    if (info != null)
+      info
+    else
+      (typeName.toLowerCase(), mainDS)
+  }
 
   def GetObject(bucketKeyStr: String, typeName: String): (String, Any) = {
-    val (containerName, store) = tableStoreMap(typeName)
+    val (containerName, store) = GetContainerNameAndDataStore(typeName)
     var objs = new Array[(String, Any)](1)
     val getObjFn = (k: Key, v: Any, serType: String, typ: String, ver: Int) => {
       objs(0) = (serType, v)
@@ -122,7 +130,7 @@ object PersistenceUtils {
   }
 
   def SaveObject(bucketKeyStr: String, value: Array[Byte], typeName: String, serializerTyp: String) {
-    val (containerName, store) = tableStoreMap(typeName)
+    val (containerName, store) = GetContainerNameAndDataStore(typeName)
     val k = Key(storageDefaultTime, Array(bucketKeyStr), storageDefaultTxnId, 0)
 
     try {
@@ -144,7 +152,7 @@ object PersistenceUtils {
     * @param serializerTyp
     */
   def SaveObjectList(keyList: Array[String], valueList: Array[Array[Byte]], typeName: String, serializerTyp: String) {
-    val (containerName, store) = tableStoreMap(typeName)
+    val (containerName, store) = GetContainerNameAndDataStore(typeName)
     var i = 0
     var storeObjects = new Array[(Key, String, Any)](keyList.length)
     i = 0
@@ -169,7 +177,7 @@ object PersistenceUtils {
     * Remove all of the elements with the supplied keys in the list from the supplied DataStore
     */
   def RemoveObjectList(keyList: Array[String], typeName: String) {
-    val (containerName, store) = tableStoreMap(typeName)
+    val (containerName, store) = GetContainerNameAndDataStore(typeName)
     var i = 0
     var delKeys = new Array[(Key)](keyList.length)
     i = 0
@@ -308,7 +316,7 @@ object PersistenceUtils {
       var storeData = scala.collection.mutable.Map[String, (DataStore, ArrayBuffer[(String, Array[(Key, String, Any)])])]()
 
       saveDataMap.foreach(elemTypData => {
-        val storeInfo = tableStoreMap(elemTypData._1)
+        val storeInfo = GetContainerNameAndDataStore(elemTypData._1)
         val oneStoreData = storeData.getOrElse(storeInfo._1, null)
         if (oneStoreData != null) {
           oneStoreData._2 += ((elemTypData._1, elemTypData._2.toArray))
@@ -688,7 +696,7 @@ object PersistenceUtils {
     * DeleteObject
     */
   def DeleteObject(bucketKeyStr: String, typeName: String) {
-    val (containerName, store) = tableStoreMap(typeName)
+    val (containerName, store) = GetContainerNameAndDataStore(typeName)
     store.del(containerName, Array(Key(storageDefaultTime, Array(bucketKeyStr), storageDefaultTxnId, 0)))
   }
 
