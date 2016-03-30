@@ -514,10 +514,14 @@ trait EntityType {
   var keys: Array[RelationKeyBase] = _ // Keys (primary & foreign keys) for this container. For now we are consider them for MAP based and STRUCT based containers.
   var partitionKey: Array[String] = _ // Partition Key (attribute names)
   var persist: Boolean = false
+  var schemaId:Int = 0
+  var avroSchema:String = ""
   def NumMems
   def Keys = keys
   def PartitionKey = partitionKey
   def Persist = persist
+  def SchemaId = schemaId
+  def AvroSchema = avroSchema
 }
 
 class MappedMsgTypeDef extends ContainerTypeDef with EntityType {
