@@ -274,7 +274,7 @@ cp KamanjaInternalDeps/target/scala-2.10/KamanjaInternalDeps_2.10-1.4.0.jar $sys
 #cp $srcPath/lib_managed/bundles/com.sun.jersey/jersey-server/jersey-server-1.9.jar $systemlib
 #cp $srcPath/lib_managed/jars/org.json4s/json4s-native_2.10/json4s-native_2.10-3.2.9.jar $systemlib
 #cp $ivyPath/cache/org.apache.directory.server/apacheds-i18n/bundles/apacheds-i18n-2.0.0-M15.jar $systemlib
-#cp $srcPath/FactoriesOfModelInstanceFactory/JarFactoryOfModelInstanceFactory/target/scala-2.10/jarfactoryofmodelinstancefactory*.jar $systemlib
+cp $srcPath/FactoriesOfModelInstanceFactory/JarFactoryOfModelInstanceFactory/target/scala-2.10/jarfactoryofmodelinstancefactory*.jar $systemlib
 #cp $ivyPath/cache/org.jpmml/pmml-evaluator/jars/pmml-evaluator-1.2.9.jar $systemlib
 #cp $ivyPath/cache/commons-httpclient/commons-httpclient/jars/commons-httpclient-3.1.jar $systemlib
 #cp $srcPath/TransactionService/target/scala-2.10/transactionservice*.jar $systemlib
@@ -778,10 +778,10 @@ cp *.* $installPath/Kamanja-$ver210/input/SampleApplications/metadata/model
 cd $srcPath/SampleApplication/Medical/Types
 cp * $installPath/Kamanja-$ver210/input/SampleApplications/metadata/type
 
-cd $srcPath/SampleApplication/Medical/template
+cd $srcPath/SampleApplication/Medical/metadata/template/script/scala-2.10
 cp -rf * $installPath/Kamanja-$ver210/input/SampleApplications/template
 
-cd $srcPath/SampleApplication/Medical/Configs
+cd $srcPath/SampleApplication/Medical/metadata/config
 cp -rf * $installPath/Kamanja-$ver210/config
 #Medical
 
@@ -799,10 +799,10 @@ cd $srcPath/SampleApplication/Telecom/metadata/model
 cp *.* $installPath/Kamanja-$ver210/input/SampleApplications/metadata/model
 
 cd $srcPath/SampleApplication/Telecom/metadata/template
-cp -rf conf* $installPath/Kamanja-$ver211/input/SampleApplications/template
+cp -rf conf* $installPath/Kamanja-$ver210/input/SampleApplications/template
 
 cd $srcPath/SampleApplication/Telecom/metadata/template/script/scala-2.10
-cp -rf * $installPath/Kamanja-$ver211/input/SampleApplications/template
+cp -rf * $installPath/Kamanja-$ver210/input/SampleApplications/template
 
 cd $srcPath/SampleApplication/Telecom/metadata/config
 cp -rf * $installPath/Kamanja-$ver210/config
@@ -999,7 +999,7 @@ echo "copy all Kamanja jars and the jars upon which they depend to the $systemli
 #cp $srcPath/lib_managed/bundles/com.sun.jersey/jersey-server/jersey-server-1.9.jar $systemlib
 #cp $srcPath/lib_managed/jars/org.json4s/json4s-native_2.11/json4s-native_2.11-3.2.9.jar $systemlib
 #cp $ivyPath/cache/org.apache.directory.server/apacheds-i18n/bundles/apacheds-i18n-2.0.0-M15.jar $systemlib
-#cp $srcPath/FactoriesOfModelInstanceFactory/JarFactoryOfModelInstanceFactory/target/scala-2.11/jarfactoryofmodelinstancefactory_2.11-1.0.jar $systemlib
+cp $srcPath/FactoriesOfModelInstanceFactory/JarFactoryOfModelInstanceFactory/target/scala-2.11/jarfactoryofmodelinstancefactory_2.11-1.0.jar $systemlib
 #cp $ivyPath/cache/org.jpmml/pmml-evaluator/jars/pmml-evaluator-1.2.9.jar $systemlib
 #cp $ivyPath/cache/commons-httpclient/commons-httpclient/jars/commons-httpclient-3.1.jar $systemlib
 #cp $srcPath/TransactionService/target/scala-2.11/transactionservice_2.11-0.1.0.jar $systemlib
@@ -1462,10 +1462,10 @@ cp *.* $installPath/Kamanja-$ver211/input/SampleApplications/metadata/model
 cd $srcPath/SampleApplication/Medical/Types
 cp * $installPath/Kamanja-$ver211/input/SampleApplications/metadata/type
 
-cd $srcPath/SampleApplication/Medical/template
+cd $srcPath/SampleApplication/Medical/metadata/template/script/scala-2.11
 cp -rf * $installPath/Kamanja-$ver211/input/SampleApplications/template
 
-cd $srcPath/SampleApplication/Medical/Configs
+cd $srcPath/SampleApplication/Medical/metadata/config
 cp -rf * $installPath/Kamanja-$ver211/config
 #Medical
 
