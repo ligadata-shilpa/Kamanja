@@ -87,7 +87,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   private val _nodeCacheMap = collection.mutable.Map[String, Any]()
   private val _nodeCache_reent_lock = new ReentrantReadWriteLock(true)
 
-  case class LeaderListenerCallback (val EventChangeCallback: (ClusterStatus) => Unit)
+  case class LeaderListenerCallback(val EventChangeCallback: (ClusterStatus) => Unit)
 
   private def hasZkConnectionString: Boolean = (_zkConnectString != null && _zkConnectString.size > 0 && _zkleaderNodePath != null && _zkleaderNodePath.size > 0)
 
@@ -1351,7 +1351,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
       })
       _zkListeners.clear()
     } catch {
-      case e: Throwable => { }
+      case e: Throwable => {}
     } finally {
       WriteUnlock(_zkListeners_reent_lock)
     }
@@ -1363,7 +1363,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
       _zkLeaderLatch = null
       _zkLeaderListeners.clear()
     } catch {
-      case e: Throwable => { }
+      case e: Throwable => {}
     } finally {
       WriteUnlock(_zkLeader_reent_lock)
     }
@@ -2483,42 +2483,43 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     }
     metrics(SimpleEnvContextImpl.STORAGE_WRITE_COUNT) = curr + 1
   }
-//
-//  // Lock functions
-//  def lockKeyInCluster(key: String): Unit = {
-//    if (!hasZkConnectionString)
-//      throw new KamanjaException("Zookeeper information is not yet set", null)
-//
-//    try {
-//      val lock = new InterProcessMutex(zkcForGetRange, key);
-//      try {
-//        lock.acquire();
-//
-//
-//      } catch {
-//        case e: Exception => throw e
-//      } finally {
-//        if (lock != null)
-//          lock.release();
-//      }
-//
-//    } catch {
-//      case e: Exception => throw e
-//    } finally {
-//    }
-//
-//  }
-//
-//  def lockKeyInNode(key: String): Unit = {}
-//
-//  // Unlock functions
-//  def unlockKeyInCluster(key: String): Unit = {}
-//
-//  def unlockKeyInNode(key: String): Unit = {}
 
-//  def getAllClusterLocks(): Array[String] = null
-//
-//  def getAllNodeLocks(nodeId: String): Array[String] = null
+  //
+  //  // Lock functions
+  //  def lockKeyInCluster(key: String): Unit = {
+  //    if (!hasZkConnectionString)
+  //      throw new KamanjaException("Zookeeper information is not yet set", null)
+  //
+  //    try {
+  //      val lock = new InterProcessMutex(zkcForGetRange, key);
+  //      try {
+  //        lock.acquire();
+  //
+  //
+  //      } catch {
+  //        case e: Exception => throw e
+  //      } finally {
+  //        if (lock != null)
+  //          lock.release();
+  //      }
+  //
+  //    } catch {
+  //      case e: Exception => throw e
+  //    } finally {
+  //    }
+  //
+  //  }
+  //
+  //  def lockKeyInNode(key: String): Unit = {}
+  //
+  //  // Unlock functions
+  //  def unlockKeyInCluster(key: String): Unit = {}
+  //
+  //  def unlockKeyInNode(key: String): Unit = {}
+
+  //  def getAllClusterLocks(): Array[String] = null
+  //
+  //  def getAllNodeLocks(nodeId: String): Array[String] = null
 
   // Saving & getting temporary objects in cache
   def saveObjectInClusterCache(key: String, value: Any): Unit = {}
@@ -2540,7 +2541,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   def getObjectFromClusterCache(key: String): Any = null
 
   override def getObjectFromNodeCache(key: String): Any = {
-    var retVal:Any = null
+    var retVal: Any = null
     ReadLock(_nodeCache_reent_lock)
     try {
       retVal = _nodeCacheMap.getOrElse(key, null)
@@ -2595,9 +2596,19 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   }
 
   // Saving & getting data
-  def saveData(containerName: String, key: String, value: Array[Byte]): Unit = {}
+  override def saveDataInPersistentStore(containerName: String, key: String, serializerType: String, value: Array[Byte]): Unit = {
+    val oneContData = Array((containerName, Array((Key(0, Array(key), 0, 0), serializerType, value.asInstanceOf[Any]))))
+    callSaveData(_defaultDataStore, oneContData)
+  }
 
-  def getData(containerName: String, key: String): Array[Byte] = null
+  override def getDataInPersistentStore(containerName: String, key: String): SerializerTypeValuePair = {
+    var retVal = SerializerTypeValuePair(null, null)
+    val buildOne = (k: Key, v: Any, serType: String, typ: String, ver: Int) => {
+      retVal = SerializerTypeValuePair(serType, v.asInstanceOf[Array[Byte]])
+    }
+    callGetData(_defaultDataStore, containerName, Array(Key(0, Array(key), 0, 0)), buildOne)
+    retVal
+  }
 
   // Zookeeper functions
   private def CloseSetDataZkc: Unit = {
@@ -2792,7 +2803,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     try {
       _clusterStatusInfo = cs
     } catch {
-      case e: Throwable => { }
+      case e: Throwable => {}
     } finally {
       WriteUnlock(_zkLeader_reent_lock)
     }
@@ -2807,7 +2818,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
         }
       })
     } catch {
-      case e: Throwable => { }
+      case e: Throwable => {}
     } finally {
       ReadUnlock(_zkLeader_reent_lock)
     }
@@ -2838,7 +2849,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     }
   }
 
-//  def unregisterNodesChangeNotification(EventChangeCallback: (ClusterStatus) => Unit): Unit = {}
+  //  def unregisterNodesChangeNotification(EventChangeCallback: (ClusterStatus) => Unit): Unit = {}
 
   override def getNodeId(): String = _nodeId
 

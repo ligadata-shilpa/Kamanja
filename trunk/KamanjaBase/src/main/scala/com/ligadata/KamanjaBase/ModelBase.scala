@@ -254,6 +254,7 @@ class MappedModelResults extends ModelResultBase {
 // case class ContainerNameAndDatastoreInfo(containerName: String, dataDataStoreInfo: String)
 
 case class KeyValuePair(key: String, value: Any);
+case class SerializerTypeValuePair(serializerType: String, value: Array[Byte]);
 
 trait EnvContext extends Monitorable {
   // Metadata Ops
@@ -404,9 +405,9 @@ trait EnvContext extends Monitorable {
   def getAllObjectsFromNodeCache(): Array[KeyValuePair]
 
   // Saving & getting data (from cache or disk)
-  def saveData(containerName: String, key: String, value: Array[Byte]): Unit
+  def saveDataInPersistentStore(containerName: String, key: String, serializerType: String, value: Array[Byte]): Unit
 
-  def getData(containerName: String, key: String): Array[Byte]
+  def getDataInPersistentStore(containerName: String, key: String): SerializerTypeValuePair
 
   // Zookeeper functions
   def setDataToZNode(zNodePath: String, value: Array[Byte]): Unit
