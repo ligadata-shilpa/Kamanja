@@ -238,7 +238,7 @@ trait LogTrait {
   val logger = PmmlCompilerGlobalLogger.logger
 }
 
-object PmmlCompiler extends /* App with */ LogTrait {
+object PmmlCompiler extends App with LogTrait {
 
   def usage: String = {
     """
