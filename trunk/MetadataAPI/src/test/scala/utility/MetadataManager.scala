@@ -48,6 +48,8 @@ class MetadataManager {
     val jarPathApp: String = getClass.getResource("/jars/lib/application").getPath
     val mdDataStore = new MetadataDataStore(config.database, config.databaseSchema,config.databaseHost)
 
+    md.metadataAPIConfig.setProperty("MODEL_FILES_DIR", getClass.getResource("/Metadata/inputModel").getPath)
+    md.metadataAPIConfig.setProperty("MESSAGE_FILES_DIR", getClass.getResource("/Metadata/inputMessage").getPath)
     md.metadataAPIConfig.setProperty("ROOT_DIR", "")
     md.metadataAPIConfig.setProperty("GIT_ROOT", "")
     md.metadataAPIConfig.setProperty("METADATA_DATASTORE", mdDataStore.toString)

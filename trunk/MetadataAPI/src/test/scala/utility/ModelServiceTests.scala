@@ -1,6 +1,8 @@
 
 package com.ligadata.MetadataAPI.utility.test
 
+import java.io.ByteArrayInputStream
+
 import org.scalatest._
 import com.ligadata.kamanja.metadata._
 import com.ligadata.MetadataAPI._
@@ -13,91 +15,84 @@ import com.ligadata.MetadataAPI.MetadataAPI.ModelType
  */
 class ModelServiceTests extends FlatSpec with Matchers with MetadataBeforeAndAfterEach {
   "add model scala" should "produce error when invalid path to model def is provided" in {
-    val modelDef = getClass.getResource("/Metadata/model/HelloWorld.scala").getPath + "Invalid"
-    val result = ModelService.addModelScala(modelDef,"helloworldmodel")
-    assert(result == "File does not exist")
+    assert(ModelService.addModelScala(getClass.getResource("/Metadata/model/HelloWorld.scala").getPath + "Invalid","helloworldmodel") == "File does not exist")
   }
 
   it should "add the scala model to the metadata" in {
-    val msgDef = getClass.getResource("/Metadata/message/Message_Definition_HelloWorld.json").getPath
-    val msg=MessageService.addMessage(msgDef)
-    println("Msg added "+msg)
-    val modelConfig=getClass.getResource("/Metadata/config/Model_Config_HelloWorld.json").getPath
-    val compileConfig=ConfigService.uploadCompileConfig(modelConfig)
-    println("compile config added: "+compileConfig)
-    val modelDef = getClass.getResource("/Metadata/model/HelloWorld.scala").getPath
-    val result = ModelService.addModelScala(modelDef,"helloworldmodel")
-    result should include regex ("\"Result Description\" : \"Model Added Successfully")
+    MessageService.addMessage(getClass.getResource("/Metadata/message/Message_Definition_HelloWorld.json").getPath)
+    ConfigService.uploadCompileConfig(getClass.getResource("/Metadata/config/Model_Config_HelloWorld.json").getPath)
+    ModelService.addModelScala(getClass.getResource("/Metadata/model/HelloWorld.scala").getPath,"helloworldmodel") should include regex ("\"Result Description\" : \"Model Added Successfully")
+  }
+
+  it should "add the scala model to the metadata based on user input" in {
+   Console.setIn(new ByteArrayInputStream("1".getBytes))
+     Console.setIn(new ByteArrayInputStream("1".getBytes))
+    MessageService.addMessage(getClass.getResource("/Metadata/message/Message_Definition_HelloWorld.json").getPath)
+    ConfigService.uploadCompileConfig(getClass.getResource("/Metadata/config/Model_Config_HelloWorld.json").getPath)
+    ModelService.addModelScala("","helloworldmodel") should include regex ("\"Result Description\" : \"Model Added Successfully")
   }
 
   it should "give model configuration missing alert" in {
-    val modelDef = getClass.getResource("/Metadata/model/HelloWorld.scala").getPath
-    val result = ModelService.addModelScala(modelDef,"")
-    result should include regex ("No model configuration loaded in the metadata")
+    ModelService.addModelScala(getClass.getResource("/Metadata/model/HelloWorld.scala").getPath,"") should include regex ("No model configuration loaded in the metadata")
   }
 
   "update model scala" should " successfully update a valid model" in {
-    val msgDef = getClass.getResource("/Metadata/message/Message_Definition_HelloWorld.json").getPath
-    val msg=MessageService.addMessage(msgDef)
-    println("Msg added "+msg)
-    val modelConfig=getClass.getResource("/Metadata/config/Model_Config_HelloWorld.json").getPath
-    val compileConfig=ConfigService.uploadCompileConfig(modelConfig)
-    println("compile config added: "+compileConfig)
-    var modelDef = getClass.getResource("/Metadata/model/HelloWorld.scala").getPath
-    ModelService.addModelScala(modelDef,"helloworldmodel")
-    modelDef = getClass.getResource("/Metadata/model/HelloWorldV2.scala").getPath
-    val result = ModelService.updateModelscala(modelDef,"helloworldmodel")
-    result should include regex ("\"Result Description\" : \"Model Added Successfully")
+    MessageService.addMessage(getClass.getResource("/Metadata/message/Message_Definition_HelloWorld.json").getPath)
+    ConfigService.uploadCompileConfig(getClass.getResource("/Metadata/config/Model_Config_HelloWorld.json").getPath)
+    ModelService.addModelScala(getClass.getResource("/Metadata/model/HelloWorld.scala").getPath,"helloworldmodel")
+    ModelService.updateModelscala(getClass.getResource("/Metadata/model/HelloWorldV2.scala").getPath,"helloworldmodel") should include regex ("\"Result Description\" : \"Model Added Successfully")
+  }
+
+  it should " successfully update a valid model based on the user input" in {
+    Console.setIn(new ByteArrayInputStream("2".getBytes))
+    MessageService.addMessage(getClass.getResource("/Metadata/message/Message_Definition_HelloWorld.json").getPath)
+    ConfigService.uploadCompileConfig(getClass.getResource("/Metadata/config/Model_Config_HelloWorld.json").getPath)
+    ModelService.addModelScala(getClass.getResource("/Metadata/model/HelloWorld.scala").getPath,"helloworldmodel")
+    ModelService.updateModelscala("","helloworldmodel") should include regex ("\"Result Description\" : \"Model Added Successfully")
   }
 
   "Add java model" should "add the java model to the metadata" in {
-    val msgDef = getClass.getResource("/Metadata/message/Message_Definition_HelloWorld.json").getPath
-    val msg=MessageService.addMessage(msgDef)
-    println("Msg added "+msg)
-    val modelConfig=getClass.getResource("/Metadata/config/Model_Config_HelloWorld.json").getPath
-    val compileConfig=ConfigService.uploadCompileConfig(modelConfig)
-    println("compile config added: "+compileConfig)
-    val modelDef = getClass.getResource("/Metadata/model/HelloWorld.java").getPath
-    val result = ModelService.addModelJava(modelDef,"helloworldmodel")
-    result should include regex ("\"Result Description\" : \"Model Added Successfully")
+    MessageService.addMessage(getClass.getResource("/Metadata/message/Message_Definition_HelloWorld.json").getPath)
+    ConfigService.uploadCompileConfig(getClass.getResource("/Metadata/config/Model_Config_HelloWorld.json").getPath)
+    ModelService.addModelJava(getClass.getResource("/Metadata/model/HelloWorld.java").getPath,"helloworldmodel") should include regex ("\"Result Description\" : \"Model Added Successfully")
+  }
+
+  it should "add the java model to the metadata based on user input" in {
+    Console.setIn(new ByteArrayInputStream("1".getBytes))
+    MessageService.addMessage(getClass.getResource("/Metadata/message/Message_Definition_HelloWorld.json").getPath)
+    ConfigService.uploadCompileConfig(getClass.getResource("/Metadata/config/Model_Config_HelloWorld.json").getPath)
+    ModelService.addModelJava("","helloworldmodel") should include regex ("\"Result Description\" : \"Model Added Successfully")
   }
 
   it should "give model configuration missing alert" in {
-    val modelDef = getClass.getResource("/Metadata/model/HelloWorld.java").getPath
-    val result = ModelService.addModelJava(modelDef,"")
-    result should include regex ("No model configuration loaded in the metadata")
+    ModelService.addModelJava(getClass.getResource("/Metadata/model/HelloWorld.java").getPath,"") should include regex ("No model configuration loaded in the metadata")
   }
 
   it should "give incorrect file" in {
-    val modelDef = getClass.getResource("/Metadata/model/HelloWorld.java").getPath+" Invalid"
-    val result = ModelService.addModelJava(modelDef,"")
-    result should include regex ("File does not exist")
+    ModelService.addModelJava(getClass.getResource("/Metadata/model/HelloWorld.java").getPath+" Invalid","") should include regex ("File does not exist")
   }
 
   "update model java" should " successfully update a valid model" in {
-    val msgDef = getClass.getResource("/Metadata/message/Message_Definition_HelloWorld.json").getPath
-    val msg=MessageService.addMessage(msgDef)
-    println("Msg added "+msg)
-    val modelConfig=getClass.getResource("/Metadata/config/Model_Config_HelloWorld.json").getPath
-    val compileConfig=ConfigService.uploadCompileConfig(modelConfig)
-    println("compile config added: "+compileConfig)
-    var modelDef = getClass.getResource("/Metadata/model/HelloWorld.java").getPath
-    ModelService.addModelJava(modelDef,"helloworldmodel")
-    modelDef = getClass.getResource("/Metadata/model/HelloWorldV2.java").getPath
-    val result = ModelService.updateModeljava(modelDef,"helloworldmodel")
-    result should include regex ("\"Result Description\" : \"Model Added Successfully")
+    MessageService.addMessage(getClass.getResource("/Metadata/message/Message_Definition_HelloWorld.json").getPath)
+    ConfigService.uploadCompileConfig(getClass.getResource("/Metadata/config/Model_Config_HelloWorld.json").getPath)
+    ModelService.addModelJava(getClass.getResource("/Metadata/model/HelloWorld.java").getPath,"helloworldmodel")
+    ModelService.updateModeljava(getClass.getResource("/Metadata/model/HelloWorldV2.java").getPath,"helloworldmodel") should include regex ("\"Result Description\" : \"Model Added Successfully")
+  }
+
+  it should "update the java model to the metadata based on user input" in {
+    Console.setIn(new ByteArrayInputStream("2".getBytes))
+    MessageService.addMessage(getClass.getResource("/Metadata/message/Message_Definition_HelloWorld.json").getPath)
+    ConfigService.uploadCompileConfig(getClass.getResource("/Metadata/config/Model_Config_HelloWorld.json").getPath)
+    ModelService.addModelJava(getClass.getResource("/Metadata/model/HelloWorld.java").getPath,"helloworldmodel")
+    ModelService.updateModeljava("","helloworldmodel") should include regex ("\"Result Description\" : \"Model Added Successfully")
   }
 
   "is valid dir" should " validate if the directory is present" in {
-    val msgDef = getClass.getResource("/Metadata/message").getPath
-    val result=MessageService.IsValidDir(msgDef)
-    assert(result==true)
+    assert(MessageService.IsValidDir(getClass.getResource("/Metadata/message").getPath)==true)
   }
 
   it should " invalidate a wrong directory path" in {
-    val msgDef = getClass.getResource("/Metadata/message/Message_Definition_HelloWorld.json").getPath+"Invalid"
-    val result=MessageService.IsValidDir(msgDef)
-    assert(result==false)
+    assert(MessageService.IsValidDir(getClass.getResource("/Metadata/message/Message_Definition_HelloWorld.json").getPath+"Invalid")==false)
   }
 
 }
