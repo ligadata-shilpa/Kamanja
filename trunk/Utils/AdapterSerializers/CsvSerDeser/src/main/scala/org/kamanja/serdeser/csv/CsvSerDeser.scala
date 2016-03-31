@@ -140,7 +140,7 @@ class CsvSerDeser() extends SerializeDeserialize with LogTrait {
 
             processCnt += 1
 
-            val fld : com.ligadata.KamanjaBase.AttributeValue = fields.getOrDefault(attr.FullName, null)
+            val fld : com.ligadata.KamanjaBase.AttributeValue = fields.get(attr.FullName)
             if (fld != null) {
                 val doTrailingComma : Boolean = processCnt < fieldCnt
                 emitField(dos, attr.typeDef, fld, doTrailingComma)
