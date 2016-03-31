@@ -4,7 +4,7 @@ import org.json4s.jackson.JsonMethods._
 import org.json4s.{MappingException, DefaultFormats, Formats}
 import scala.reflect.runtime.{universe => ru}
 
-import scala.collection.mutable.{ArrayBuffer }
+import scala.collection.mutable.{ArrayBuffer, Map }
 import scala.collection.JavaConverters._
 
 import java.io.{DataInputStream, ByteArrayInputStream, DataOutputStream, ByteArrayOutputStream}
@@ -45,7 +45,7 @@ class JSONSerDes() extends SerializeDeserialize with LogTrait {
     var _mgr : MdMgr = null
     var _objResolver : ObjectResolver = null
     var _classLoader : java.lang.ClassLoader = null
-    var _config : SerializeDeserializeConfig = null
+    var _config : Map[String, String] = Map[String,String]()
     var _isReady : Boolean = false
 
     /**
@@ -445,14 +445,14 @@ class JSONSerDes() extends SerializeDeserialize with LogTrait {
       * @param mgr         SerializeDeserialize implementations must be supplied a reference to the cluster MdMgr
       * @param objResolver the ObjectResolver instance that can instantiate ContainerInterface instances
       * @param classLoader the class loader that has access to the classes needed to build fields.
-      * @param config the SerializeDeserializeConfig properties that may be used to tune execution of the
-      *               SerializeDeserialize implementation
+      * @param config a map of options that might be used to configure the execution of this SerializeDeserialize instance. This may
+      *               be null if it is not necessary for the SerializeDeserialize implementation
       */
-    def configure(mgr: MdMgr, objResolver: ObjectResolver, classLoader: ClassLoader, config : SerializeDeserializeConfig): Unit = {
+    def configure(mgr: MdMgr, objResolver: ObjectResolver, classLoader: ClassLoader, config : java.util.Map[String,String]): Unit = {
         _mgr  = mgr
         _objResolver = objResolver
         _classLoader  = classLoader
-        _config = config
+        _config = if (config != null) config.asScala else Map[String,String]()
         _isReady = _mgr != null && _objResolver != null && _classLoader != null && _config != null
     }
 

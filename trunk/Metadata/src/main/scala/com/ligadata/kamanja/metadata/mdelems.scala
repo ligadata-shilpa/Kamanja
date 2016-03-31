@@ -936,12 +936,8 @@ object SerializeDeserializeType extends Enumeration {
   * be supplied instead.
   *
   * @param serDeserType a SerializeDeserializeType...the sort of serializer it is
-  * @param configProperties a Map of arbitrary string properties that are meaningful to a particular impelementation
-  *                         of the SerializeDeserialize interface.
   */
-class SerializeDeserializeConfig(val serDeserType : SerializeDeserializeType.SerDeserType
-                                ,val fullName : String
-                                ,val configProperties : Map[String,String]) extends BaseElemDef {}
+class SerializeDeserializeConfig(val serDeserType : SerializeDeserializeType.SerDeserType) extends BaseElemDef {}
 
 
 

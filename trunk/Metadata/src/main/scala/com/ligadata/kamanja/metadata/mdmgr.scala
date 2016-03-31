@@ -3063,8 +3063,6 @@ class MdMgr {
       *              this config describes
       * @param depJars the array of jars that are to be loaded so the SerializeDeserialize implementation this config
       *                describes can function
-      * @param configProperties SerializeDeserialize implementation's configuration properties.  This is supplied
-      *                         to the instance's configure method after it has been realized.
       * @return Unit
       */
     @throws(classOf[AlreadyExistsException])
@@ -3077,8 +3075,7 @@ class MdMgr {
                       , uniqueId: Long
                       , mdElementId: Long
                       , jarNm: String = null
-                      , depJars: Array[String] = null
-                      , configProperties : Map[String,String] = Map[String,String]()): Unit = {
+                      , depJars: Array[String] = null): Unit = {
         AddSerializer(MakeSerializer(nameSpace
                     , name
                     , version
@@ -3088,8 +3085,7 @@ class MdMgr {
                     , uniqueId
                     , mdElementId
                     , jarNm
-                    , depJars
-                    , configProperties))
+                    , depJars))
     }
 
     /**
@@ -3122,8 +3118,6 @@ class MdMgr {
       *              this config describes
       * @param depJars the array of jars that are to be loaded so the SerializeDeserialize implementation this config
       *                describes can function
-      * @param configProperties SerializeDeserialize implementation's configuration properties.  This is supplied
-      *                         to the instance's configure method after it has been realized.
       * @return a SerializeDeserializeConfig
       */
     def MakeSerializer(nameSpace: String
@@ -3135,14 +3129,12 @@ class MdMgr {
                     , uniqueId: Long
                     , mdElementId: Long
                     , jarNm: String = null
-                    , depJars: Array[String] = null
-                    , configProperties : Map[String,String] = Map[String,String]()): SerializeDeserializeConfig = {
+                    , depJars: Array[String] = null): SerializeDeserializeConfig = {
 
         val depJarSet = scala.collection.mutable.Set[String]()
 
         /** Instantiate the model definition.  Update the base element with basic id information */
-        val key : String = s"$nameSpace.$name".toLowerCase
-        val cfg: SerializeDeserializeConfig = new SerializeDeserializeConfig(serializerType, key, configProperties)
+        val cfg: SerializeDeserializeConfig = new SerializeDeserializeConfig(serializerType)
 
         if (depJars != null) depJarSet ++= depJars
         val dJars : Array[String] = if (depJarSet.nonEmpty) depJarSet.toArray else null

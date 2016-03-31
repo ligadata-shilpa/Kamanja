@@ -44,11 +44,10 @@ public interface SerializeDeserialize {
      * @param mgr SerializeDeserialize implementations must be supplied a reference to the cluster MdMgr
      * @param objResolver the ObjectResolver instance that can instantiate ContainerInterface instances
      * @param classLoader the class loader that has access to the classes needed to build fields.
-     * @param config the SerializeDeserializeConfig properties that may be used to tune execution of the
-     *               SerializeDeserialize implementation
+     * @param config a map of options that might be used to configure the execution of the SerializeDeserialize instance.
      */
     public void configure(MdMgr mgr
                         , ObjectResolver objResolver
                         , java.lang.ClassLoader classLoader
-                        , SerializeDeserializeConfig config);
+                        , java.util.Map<String, String>  config);
 }

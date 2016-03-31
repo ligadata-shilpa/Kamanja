@@ -50,7 +50,7 @@ class CsvSerDeser() extends SerializeDeserialize with LogTrait {
     var _objResolver : ObjectResolver = null
     var _classLoader : java.lang.ClassLoader = null
     var _isReady : Boolean = false
-    var _config : SerializeDeserializeConfig = null
+    var _config : Map[String,String] = Map[String,String]()
     var _emitHeaderFirst : Boolean = false
 
     /**
@@ -86,7 +86,7 @@ class CsvSerDeser() extends SerializeDeserialize with LogTrait {
 
 
         /** write the first field with the appropriate field delimiter suffixed to it. */
-        val fieldDelimiter : String = _config.configProperties.getOrElse("fieldDelimiter", null)
+        val fieldDelimiter : String = _config.getOrElse("fieldDelimiter", null)
         val containerNameCsv : String = csvTypeInfo(CsvContainerInterfaceKeys.typename.toString, fieldDelimiter)
         dos.writeUTF(containerNameCsv)
 
@@ -182,7 +182,7 @@ class CsvSerDeser() extends SerializeDeserialize with LogTrait {
         val quote : String = s"${'"'}"
         val fieldCnt : Int = containerFieldsInOrder.length
         var cnt : Int = 0
-        val fieldDelimiter : String = _config.configProperties.getOrElse("produceHeader", null)
+        val fieldDelimiter : String = _config.getOrElse("produceHeader", null)
 
         containerFieldsInOrder.foreach(typedef => {
             cnt += 1
@@ -238,12 +238,12 @@ class CsvSerDeser() extends SerializeDeserialize with LogTrait {
         val containsNewLines : Boolean = valueStr != null &&
             (valueStr.indexOf('\n') >= 0 || valueStr.indexOf('\r') >= 0)
         /** Rule 7 */
-        val fieldDelimiter : String = _config.configProperties.getOrElse("fieldDelimiter", null)
+        val fieldDelimiter : String = _config.getOrElse("fieldDelimiter", null)
         val hasFieldDelims : Boolean = valueStr.contains(fieldDelimiter)
         /** Rule 9 */
         val containsQuotes : Boolean = valueStr != null && valueStr.contains(s"${'"'}")
 
-        val alwaysQuoteField : String = _config.configProperties.getOrElse("alwaysQuoteField", null)
+        val alwaysQuoteField : String = _config.getOrElse("alwaysQuoteField", null)
         val shouldAlwaysQuote : Boolean = alwaysQuoteField != null && alwaysQuoteField.toLowerCase.startsWith("t") //rue
         val enclosingDblQuote : String = if (containsNewLines || hasFieldDelims || containsQuotes || shouldAlwaysQuote) s"${'"'}" else ""
 
@@ -255,7 +255,7 @@ class CsvSerDeser() extends SerializeDeserialize with LogTrait {
         }
         logger.debug(s"emit field $typeName with value possibly quoted and escaped = $valueStrAdjusted")
         dos.writeUTF(valueStrAdjusted)
-        val lineDelimiter : String = _config.configProperties.getOrElse("lineDelimiter", null)
+        val lineDelimiter : String = _config.getOrElse("lineDelimiter", null)
         dos.writeUTF(lineDelimiter)
     }
 
@@ -325,17 +325,19 @@ class CsvSerDeser() extends SerializeDeserialize with LogTrait {
       * @param mgr         SerializeDeserialize implementations must be supplied a reference to the cluster MdMgr
       * @param objResolver the ObjectResolver instance that can instantiate ContainerInterface instances
       * @param classLoader the class loader that has access to the classes needed to build fields.
-      * @param config the SerializeDeserializeConfig properties that may be used to tune execution of the
-      *               SerializeDeserialize implementation
+      * @param configProperties a map of options that might be used to configure the execution of the CsvSerDeser instance.
       */
-    def configure(mgr: MdMgr, objResolver: ObjectResolver, classLoader: ClassLoader, config : SerializeDeserializeConfig): Unit = {
+    def configure(mgr: MdMgr
+                  , objResolver: ObjectResolver
+                  , classLoader: ClassLoader
+                  , configProperties : java.util.Map[String,String]): Unit = {
         _mgr  = mgr
         _objResolver = objResolver
         _classLoader  = classLoader
-        _config = config
-        _isReady = (_mgr != null && _objResolver != null && _classLoader != null && config != null &&
-            config.configProperties.contains("fieldDelimiter") && config.configProperties.contains("alwaysQuoteField") &&
-            config.configProperties.contains("lineDelimiter"))
+        _config = configProperties.asScala
+        _isReady = (_mgr != null && _objResolver != null && _classLoader != null && _config != null &&
+            _config.contains("fieldDelimiter") && _config.contains("alwaysQuoteField") &&
+            _config.contains("lineDelimiter"))
     }
 
     /**
@@ -432,7 +434,7 @@ class CsvSerDeser() extends SerializeDeserialize with LogTrait {
     def dataMapAndTypesForCsvString(configCsv: String)
                 : (scala.collection.immutable.Map[String, Any], ContainerTypeDef, Array[BaseTypeDef]) = {
         val rawCsvFields : Array[String] = if (configCsv != null) {
-            val fieldDelimiter : String = _config.configProperties.getOrElse("fieldDelimiter", null)
+            val fieldDelimiter : String = _config.getOrElse("fieldDelimiter", null)
             configCsv.split(fieldDelimiter)
         } else {
             Array[String]()
