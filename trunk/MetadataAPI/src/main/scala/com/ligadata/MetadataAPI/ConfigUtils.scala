@@ -574,6 +574,9 @@ object ConfigUtils {
     var keyList = new Array[String](0)
     var valueList = new Array[Array[Byte]](0)
 
+    //TODO: BOOOYA
+    var clusterNotifications: ArrayBuffer[BaseElemDef] = new ArrayBuffer[BaseElemDef]
+
     MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.INSERTCONFIG, cfgStr, AuditConstants.SUCCESS, "", objectList)
 
     try {
@@ -595,10 +598,20 @@ object ConfigUtils {
             // save in memory
             var ci = MdMgr.GetMdMgr.MakeCluster(ClusterId, null, null)
             MdMgr.GetMdMgr.AddCluster(ci)
+
+            var clusterDef: ClusterConfigDef = new ClusterConfigDef
+            clusterDef.clusterId = ci.clusterId
+            clusterDef.elementType = "clusterDef"
+            clusterDef.nameSpace = "cluster"
+            clusterDef.name = ci.clusterId
+            clusterDef.tranId = MetadataAPIImpl.GetNewTranId
+            clusterNotifications.append(clusterDef)
+
             var key = "ClusterInfo." + ci.clusterId
             var value = serializer.SerializeObjectToByteArray(ci)
             keyList = keyList :+ key.toLowerCase
             valueList = valueList :+ value
+
             // gather config name-value pairs
             val cfgMap = new scala.collection.mutable.HashMap[String, String]
             if (cluster.contains("DataStore"))
@@ -622,6 +635,15 @@ object ConfigUtils {
             MdMgr.GetMdMgr.AddClusterCfg(cic)
             key = "ClusterCfgInfo." + cic.clusterId
             value = serializer.SerializeObjectToByteArray(cic)
+
+            var clusterInfoDef: ClusterConfigDef = new ClusterConfigDef
+            clusterInfoDef.clusterId = cic.clusterId
+            clusterInfoDef.elementType = "clusterInfoDef"
+            clusterInfoDef.name = cic.clusterId
+            clusterInfoDef.nameSpace = "clusterInfo"
+            clusterInfoDef.tranId = MetadataAPIImpl.GetNewTranId
+            clusterNotifications.append(clusterInfoDef)
+
             keyList = keyList :+ key.toLowerCase
             valueList = valueList :+ value
 
@@ -657,6 +679,15 @@ object ConfigUtils {
                 val ni = MdMgr.GetMdMgr.MakeNode(nodeId, nodePort, nodeIpAddr, jarPaths,
                   scala_home, java_home, classpath, ClusterId, 0, foundRoles.toArray, null)
                 MdMgr.GetMdMgr.AddNode(ni)
+
+                var nodeDef: ClusterConfigDef = new ClusterConfigDef
+                nodeDef.name = ni.nodeId
+                nodeDef.tranId = MetadataAPIImpl.GetNewTranId
+                nodeDef.nameSpace = "nodeIds"
+                nodeDef.clusterId = ci.clusterId
+                nodeDef.elementType = "nodeDef"
+                clusterNotifications.append(nodeDef)
+
                 val key = "NodeInfo." + ni.nodeId
                 val value = serializer.SerializeObjectToByteArray(ni)
                 keyList = keyList :+ key.toLowerCase
@@ -683,6 +714,14 @@ object ConfigUtils {
                 val jarnm = adap.getOrElse("JarName", "").toString.trim
                 val typStr = adap.getOrElse("TypeString", "").toString.trim
                 val clsNm = adap.getOrElse("ClassName", "").toString.trim
+
+                var adapterDef: ClusterConfigDef = new ClusterConfigDef
+                adapterDef.name = nm
+                adapterDef.nameSpace = typStr
+                adapterDef.tranId = MetadataAPIImpl.GetNewTranId
+                adapterDef.clusterId = ClusterId
+                adapterDef.elementType = "adapterDef"
+                clusterNotifications.append(adapterDef)
 
                 var depJars: List[String] = null
                 if (adap.contains("DependencyJars")) {
@@ -716,12 +755,20 @@ object ConfigUtils {
               userDefinedProps.keys.foreach(key => {
                 upProps.Props(key) = userDefinedProps(key).toString
               })
+
+              var upDef: ClusterConfigDef = new ClusterConfigDef
+              upDef.name = upProps.clusterId
+              upDef.nameSpace = "userProperties"
+              upDef.tranId = MetadataAPIImpl.GetNewTranId
+              upDef.clusterId = ClusterId
+              upDef.elementType = "upDef"
+              clusterNotifications.append(upDef)
+
               MdMgr.GetMdMgr.AddUserProperty(upProps)
               val upKey = "userProperties." + upProps.clusterId
               val upValue = serializer.SerializeObjectToByteArray(upProps)
               keyList = keyList :+ upKey.toLowerCase
               valueList = valueList :+ upValue
-
             }
           })
 
@@ -730,12 +777,13 @@ object ConfigUtils {
         }
 
         MetadataAPIImpl.SaveObjectList(keyList, valueList, "config_objects", serializerType)
+        val operations = for (op <- clusterNotifications) yield "Add"
+        MetadataAPIImpl.NotifyEngine(clusterNotifications.toArray, operations.toArray)
         var apiResult = new ApiResult(ErrorCodeConstants.Success, "UploadConfig", cfgStr, ErrorCodeConstants.Upload_Config_Successful)
         apiResult.toString()
       }
     } catch {
       case e: Exception => {
-        
         logger.debug("", e)
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "UploadConfig", cfgStr, "Error :" + e.toString() + ErrorCodeConstants.Upload_Config_Failed)
         apiResult.toString()

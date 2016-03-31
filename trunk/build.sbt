@@ -416,6 +416,14 @@ lazy val PmmlTestTool = project.in(file("Utils/PmmlTestTool"))
 
 lazy val Dag = project.in(file("Utils/Dag")) dependsOn (KamanjaUtils, Exceptions)
 
+lazy val JsonSerDeser = project.in(file("Utils/AdapterSerializers/JsonSerDeser")) dependsOn(KamanjaVersion, KamanjaBase)
+
+lazy val CsvSerDeser = project.in(file("Utils/AdapterSerializers/CsvSerDeser")) dependsOn(KamanjaVersion, KamanjaBase)
+
+lazy val KBinarySerDeser = project.in(file("Utils/AdapterSerializers/KBinarySerDeser")) dependsOn(KamanjaVersion, KamanjaBase, BaseTypes)
+
+
+
 /*
 
 val commonSettings = Seq(

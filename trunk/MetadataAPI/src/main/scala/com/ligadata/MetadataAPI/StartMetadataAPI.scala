@@ -54,7 +54,7 @@ object StartMetadataAPI {
   var expectOutputMsg = false
   var expectRemoveParm = false
   var depName: String = ""
-  var outputMsgName: String = ""
+  var outputMsgName: String = null
   var parmName: String = ""
   val MODELNAME = "MODELNAME"
   val MODELVERSION= "MODELVERSION"

@@ -72,13 +72,14 @@ public class SubscriberUsageAlert extends ModelInstance {
 
 	  //aggregate account uasage
 	  long actMonthlyUsage = actAggrUsage.thismonthusage() + rcntTxn.usage();
-	  actAggrUsage.withthismonthusage(actMonthlyUsage).Save();
+	  actAggrUsage.set("thismonthusage",actMonthlyUsage);
+	  actAggrUsage.save();
 
 	   // aggregate the usage
 	   // aggregate individual subscriber usage
 	  long subMonthlyUsage = subAggrUsage.thismonthusage() + rcntTxn.usage();
-	  subAggrUsage.withthismonthusage(subMonthlyUsage).Save();
-
+	  subAggrUsage.set("thismonthusage",subMonthlyUsage);
+	  subAggrUsage.save();
 
 	  long curTmInMs = curDtTmInMs.getDateTimeInMs();
 

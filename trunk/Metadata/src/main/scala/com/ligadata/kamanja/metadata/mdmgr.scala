@@ -86,6 +86,10 @@ class MdMgr {
   private var modelConfigs = new HashMap[String, scala.collection.immutable.Map[String, Any]]
   private var configurations = new HashMap[String, UserPropertiesInfo]
   private var msgdefSystemCols = List("transactionid", "timepartitiondata", "rownumber")
+  private var serializers = new HashMap[String, SerializeDeserializeConfig]
+
+  private var propertyChanged: scala.collection.mutable.ArrayBuffer[String] = scala.collection.mutable.ArrayBuffer[String]()
+  private val lock: Object = new Object
 
   def truncate {
     typeDefs.clear
@@ -475,6 +479,8 @@ class MdMgr {
 
     AddRelationKeys(st, primaryKeys, foreignKeys)
 
+    st.schemaId = schemaId
+    st.avroSchema = avroSchema
     st.partitionKey = partitionKey
     st
   }
@@ -515,6 +521,8 @@ class MdMgr {
 
     AddRelationKeys(sd, primaryKeys, foreignKeys)
 
+    sd.schemaId = schemaId
+    sd.avroSchema = avroSchema
     sd.partitionKey = partitionKey
     sd
   }
@@ -2994,6 +3002,10 @@ class MdMgr {
     nodes(ni.nodeId.toLowerCase) = ni
   }
 
+  def GetNode(nodeId: String): NodeInfo = {
+    return nodes.getOrElse(nodeId,null)
+  }
+
   def RemoveNode(nodeId: String): Unit = {
     val ni = nodes.getOrElse(nodeId, null)
     if (ni != null) {
@@ -3044,16 +3056,151 @@ class MdMgr {
     return ""
   }
 
-  def MakeCluster(clusterId: String, description: String, privilges: String): ClusterInfo = {
+    /**
+      * Construct a SerializeDeserializeConfig instance and add it to the metadata.
+      * @param nameSpace the namespace for this SerializeDeserializeConfig
+      * @param name its serializer name
+      * @param version its serializer version
+      * @param serializerType the serializer type
+      * @param physicalName the fqClassname that contains the behavior (found in the jarNm)
+      * @param ownerId the perpetrator of this serializer
+      * @param uniqueId a unique identifier that uniquely describes this object (reserved)
+      * @param mdElementId another unique identifer (reserved)
+      * @param jarNm the simple jar that is to be loaded in order to use the described SerializeDeserialize implementation
+      *              this config describes
+      * @param depJars the array of jars that are to be loaded so the SerializeDeserialize implementation this config
+      *                describes can function
+      * @return Unit
+      */
+    @throws(classOf[AlreadyExistsException])
+    def AddSerializer(nameSpace: String
+                      , name: String
+                      , version: Long = 1
+                      , serializerType: SerializeDeserializeType.SerDeserType
+                      , physicalName: String
+                      , ownerId: String
+                      , uniqueId: Long
+                      , mdElementId: Long
+                      , jarNm: String = null
+                      , depJars: Array[String] = null): Unit = {
+        AddSerializer(MakeSerializer(nameSpace
+                    , name
+                    , version
+                    , serializerType
+                    , physicalName
+                    , ownerId
+                    , uniqueId
+                    , mdElementId
+                    , jarNm
+                    , depJars))
+    }
+
+    /**
+      * Add a SerializeDeserializeConfig instance to the map designated to hold them.
+      * @param config the prepared SerializeDeserializeConfig object
+      * @return true if the object was added to the map (exception is thrown if one exists with this name)
+      */
+    @throws(classOf[AlreadyExistsException])
+    def AddSerializer(config : SerializeDeserializeConfig) : Boolean = {
+        val added : Boolean = if (serializers.contains(config.FullName.toLowerCase)) {
+            throw new AlreadyExistsException(s"a SerializeDeserializeConfig already exists with the name ${config.FullName}.", null)
+        } else {
+            serializers(config.FullName.toLowerCase) = config
+            true
+        }
+        added
+    }
+
+    /**
+      * Construct a SerializeDeserializeConfig from the supplied arguments.
+      * @param nameSpace the namespace for this SerializeDeserializeConfig
+      * @param name its serializer name
+      * @param version its serializer version
+      * @param serializerType the serializer type
+      * @param physicalName the fqClassname that contains the behavior (found in the jarNm)
+      * @param ownerId the perpetrator of this serializer
+      * @param uniqueId a unique identifier that uniquely describes this object (reserved)
+      * @param mdElementId another unique identifer (reserved)
+      * @param jarNm the simple jar that is to be loaded in order to use the described SerializeDeserialize implementation
+      *              this config describes
+      * @param depJars the array of jars that are to be loaded so the SerializeDeserialize implementation this config
+      *                describes can function
+      * @return a SerializeDeserializeConfig
+      */
+    def MakeSerializer(nameSpace: String
+                    , name: String
+                    , version: Long = 1
+                    , serializerType: SerializeDeserializeType.SerDeserType
+                    , physicalName: String
+                    , ownerId: String
+                    , uniqueId: Long
+                    , mdElementId: Long
+                    , jarNm: String = null
+                    , depJars: Array[String] = null): SerializeDeserializeConfig = {
+
+        val depJarSet = scala.collection.mutable.Set[String]()
+
+        /** Instantiate the model definition.  Update the base element with basic id information */
+        val cfg: SerializeDeserializeConfig = new SerializeDeserializeConfig(serializerType)
+
+        if (depJars != null) depJarSet ++= depJars
+        val dJars : Array[String] = if (depJarSet.nonEmpty) depJarSet.toArray else null
+
+        cfg.PhysicalName(physicalName)
+        SetBaseElem(cfg, nameSpace, name, version, jarNm, dJars, ownerId, uniqueId, mdElementId)
+
+        cfg
+    }
+
+
+    /** Retrieve the SerializeDeserializerConfig with the supplied namespace.name
+      *
+      * @param fullName the serializer sought
+      * @return the corresponding SerializeDeserializeConfig or null if not found
+      */
+    def GetSerializer(fullName : String) : SerializeDeserializeConfig = {
+        serializers.getOrElse(fullName,null)
+    }
+
+    /**
+      * Answer an array of the known SerializeDeserializeConfig
+      *
+      * @return an Array[SerializeDeserializeConfig]
+      */
+    def GetAllSerializers : Array[SerializeDeserializeConfig] = {
+        serializers.values.toArray
+    }
+
+
+  /**
+    * GetUserProperty - return a String value of a User Property
+    * @param key: String
+    */
+  def GetUserProperty(key: String): UserPropertiesInfo = {
+    configurations.getOrElse(key.toLowerCase(),null)
+  }
+
+  def MakeUPProps(clusterId: String): UserPropertiesInfo = {
+    var upi = new UserPropertiesInfo
+    upi.clusterId = clusterId
+    upi.props = new scala.collection.mutable.HashMap[String, String]
+    upi
+  }
+
+  def MakeCluster(clusterId: String, description: String, privileges: String): ClusterInfo = {
     val ci = new ClusterInfo
     ci.clusterId = clusterId
     ci.description = description
-    ci.privileges = privilges
+    ci.privileges = privileges
     ci
   }
 
   def AddCluster(ci: ClusterInfo): Unit = {
     clusters(ci.clusterId.toLowerCase) = ci
+  }
+
+  def GetCluster(clusterId: String): ClusterInfo ={
+    return clusters.getOrElse(clusterId.toLowerCase,null)
   }
 
   def RemoveCluster(clusterId: String): Unit = {
@@ -3073,15 +3220,12 @@ class MdMgr {
     ci
   }
 
-  def MakeUPProps(clusterId: String): UserPropertiesInfo = {
-    var upi = new UserPropertiesInfo
-    upi.clusterId = clusterId
-    upi.props = new scala.collection.mutable.HashMap[String, String]
-    upi
-  }
-
   def AddClusterCfg(ci: ClusterCfgInfo): Unit = {
     clusterCfgs(ci.clusterId.toLowerCase) = ci
+  }
+
+  def GetClusterCfg(key: String): ClusterCfgInfo = {
+    return clusterCfgs.getOrElse(key, null)
   }
 
   def RemoveClusterCfg(clusterCfgId: String): Unit = {
@@ -3110,10 +3254,30 @@ class MdMgr {
     adapters(ai.name.toLowerCase) = ai
   }
 
+  def GetAdapter(adapterName: String): AdapterInfo = {
+    if (adapters.contains(adapterName)) return adapters(adapterName)
+    null
+  }
+
   def RemoveAdapter(name: String): Unit = {
     val ni = adapters.getOrElse(name, null)
     if (ni != null) {
       adapters -= name
+    }
+  }
+
+  def getConfigChanges: Array[String] = {
+    lock.synchronized {
+      if (propertyChanged.isEmpty) return new Array[String](0)
+      var changes =  propertyChanged.toArray
+      propertyChanged.clear
+      return changes
+    }
+  }
+
+  def addConfigChange (in: String) = {
+    lock.synchronized {
+      propertyChanged += in
     }
   }
 

@@ -152,6 +152,7 @@ trait MdBaseResolveInfo {
 
 /*
 object SerializeDeserialize {
+
   val loggerName = this.getClass.getName
   val logger = LogManager.getLogger(loggerName)
   def Serialize(inst: MessageContainerBase): Array[Byte] = {
