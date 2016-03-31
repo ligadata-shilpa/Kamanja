@@ -182,7 +182,7 @@ class CsvSerDeser() extends SerializeDeserialize with LogTrait {
         val quote : String = s"${'"'}"
         val fieldCnt : Int = containerFieldsInOrder.length
         var cnt : Int = 0
-        val fieldDelimiter : String = _config.getOrElse("produceHeader", null)
+        val fieldDelimiter : String = _config.getOrElse("fieldDelimiter", null)
 
         containerFieldsInOrder.foreach(typedef => {
             cnt += 1
