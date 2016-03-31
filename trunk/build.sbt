@@ -49,6 +49,10 @@ coverageEnabled in ThisBuild := true
 
 val Organization = "com.ligadata"
 
+lazy val Cache = project.in(file("Utils/Cache"))
+
+lazy val CacheImp = project.in(file("Utils/CacheImp")) dependsOn(Cache)
+
 lazy val BaseTypes = project.in(file("BaseTypes"))
   .configs(TestConfigs.all: _*)
   .settings(TestSettings.settings: _*)

@@ -1,4 +1,4 @@
-name := "BasicCacheConcurrency"
+name := "CacheImp"
 
 version := "1.0"
 
