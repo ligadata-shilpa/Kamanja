@@ -854,12 +854,14 @@ class NodeInfo {
     } else if(!(nodeId == null && in.nodeId == null)) {
       return false
     }
+
     // Check nodePort
-    if ((nodePort != null && in.nodePort != null)) {
-      if(!nodePort.equals(in.nodePort)) return false
-    } else if(!(nodePort == null && in.nodePort == null)) {
-      return false
-    }
+//    if ((nodePort != null && in.nodePort != null)) {
+//      if(!nodePort.equals(in.nodePort)) return false
+//    } else if(!(nodePort == null && in.nodePort == null)) {
+//      return false
+//    }
+
     // Check nodeIpAddr
     if ((nodeIpAddr != null && in.nodeIpAddr != null)) {
       if(!nodeIpAddr.equals(in.nodeIpAddr)) return false
@@ -896,12 +898,14 @@ class NodeInfo {
     } else if(!(clusterId == null && in.clusterId == null)) {
       return false
     }
+
     // Check description
-    if ((power != null && in.power != null)) {
-      if (power != in.power) return false
-    } else if(!(power == null && in.power == null)) {
-      return false
-    }
+//    if ((power != null && in.power != null)) {
+//      if (power != in.power) return false
+//    } else if(!(power == null && in.power == null)) {
+//      return false
+//    }
+
     // Check description
     if ((roles != null && in.roles != null)) {
       if((roles.size !=  in.roles.size) || (Roles.deep != in.Roles.deep)) return false

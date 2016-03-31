@@ -79,7 +79,7 @@ trait LogTrait {
   val logger = UdfExtractGlobalLogger.logger
 }
 
-object MethodExtract extends App with LogTrait {
+object MethodExtract extends /* App with */ LogTrait {
 
   override def main(args: Array[String]) {
 
