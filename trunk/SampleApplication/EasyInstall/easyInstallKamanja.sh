@@ -1487,8 +1487,8 @@ cp -rf conf* $installPath/Kamanja-$ver211/input/SampleApplications/template
 cd $srcPath/SampleApplication/Telecom/metadata/template/script/scala-2.11
 cp -rf * $installPath/Kamanja-$ver211/input/SampleApplications/template/script
 
-#cd $srcPath/SampleApplication/Telecom/metadata/config
-#cp -rf * $installPath/Kamanja-$ver211/config
+cd $srcPath/SampleApplication/Telecom/metadata/config
+cp -rf * $installPath/Kamanja-$ver211/config
 #Telecom
 
 #Finance
