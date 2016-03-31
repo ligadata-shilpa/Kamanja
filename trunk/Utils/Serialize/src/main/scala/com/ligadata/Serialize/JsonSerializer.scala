@@ -92,6 +92,7 @@ case class MetadataApiConfig(ApiConfigParameters: ParameterMap)
 case class ZooKeeperNotification(ObjectType: String, Operation: String, NameSpace: String, Name: String, Version: String, PhysicalName: String, JarName: String, DependantJars: List[String], ConfigContnent: Option[String])
 
 case class ZooKeeperTransaction(Notifications: List[ZooKeeperNotification], transactionId: Option[String])
+//case class ZooKeeperConfigTransaction()
 
 case class JDataStore(StoreType: String, SchemaName: String, Location: String, AdapterSpecificConfig: Option[String])
 
@@ -613,6 +614,7 @@ object JsonSerializer {
         * , ModelRep : String
         * , ModelType: String
         * , IsReusable : Boolean
+        * , MsgConsumed : String
         * , ObjectDefinition : String
         * , ObjectFormat : String
         * , JarName: String
@@ -621,7 +623,6 @@ object JsonSerializer {
         * , OutputAttributes: List[Attr]
         * , Recompile : Boolean
         * , SupportsInstanceSerialization : Boolean)
-
         */
       val modDef = MdMgr.GetMdMgr.MakeModelDef(ModDefInst.Model.NameSpace
         , ModDefInst.Model.Name
@@ -916,6 +917,19 @@ object JsonSerializer {
             ("JarName" -> "") ~
             ("DependantJars" -> List[String]()) ~
             ("ConfigContnent" -> o.contents))
+          pretty(render(json))
+        }
+        case o: ClusterConfigDef => {
+          val json = (("ObjectType" ->  o.elementType) ~
+            ("Operation" -> operation) ~
+            ("NameSpace" -> o.NameSpace) ~
+            ("Name" -> o.name) ~
+            ("Version" -> "0") ~
+            ("PhysicalName" -> "") ~
+            ("JarName" -> "") ~
+            ("DependantJars" -> List[String]()) ~
+            ("ElementType" -> o.elementType) ~
+            ("ClusterId" -> o.clusterId))
           pretty(render(json))
         }
         case _ => {
@@ -1479,6 +1493,11 @@ object JsonSerializer {
     })
 
     var json = "{\n" + "\"transactionId\":\"" + max + "\",\n" + "\"" + objType + "\" :" + zkSerializeObjectListToJson(objList, operations) + "\n}"
+    json
+  }
+
+  def zkSerializeConfigToJson[T <: Map[String,Any]](tid: Long, objType: String, config: T, operations: Array[String]): String = {
+    val json = "{\n" + "\"transactionId\":\"" + tid + "\",\n" + "\"" + objType + "\" :" + SerializeMapToJsonString(config) + "\n}"
     json
   }
 

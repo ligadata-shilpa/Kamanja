@@ -364,24 +364,26 @@ trait EnvContext extends Monitorable {
     */
   def NewMessageOrContainer(fqclassname: String): ContainerInterface
 
+  def getContainerInstance(containerName: String): ContainerInterface
+
   // Just get the cached container key and see what are the containers we need to cache
   //  def CacheContainers(clusterId: String): Unit
 
   //  def EnableEachTransactionCommit: Boolean
 
   // Lock functions
-  def lockKeyInCluster(key: String): Unit
+//  def lockKeyInCluster(key: String): Unit
+//
+//  def lockKeyInNode(key: String): Unit
+//
+//  // Unlock functions
+//  def unlockKeyInCluster(key: String): Unit
+//
+//  def unlockKeyInNode(key: String): Unit
 
-  def lockKeyInNode(nodeId: String, key: String): Unit
-
-  // Unlock functions
-  def unlockKeyInCluster(key: String): Unit
-
-  def unlockKeyInNode(nodeId: String, key: String): Unit
-
-  def getAllClusterLocks(): Array[String]
-
-  def getAllNodeLocks(nodeId: String): Array[String]
+//  def getAllClusterLocks(): Array[String]
+//
+//  def getAllNodeLocks(nodeId: String): Array[String]
 
   // Saving & getting temporary objects in cache
   // value should be Array[Byte]
@@ -401,12 +403,8 @@ trait EnvContext extends Monitorable {
 
   def getAllObjectsFromNodeCache(nodeId: String): Array[KeyValuePair]
 
-  // Saving & getting data
-  def saveData(key: String, value: Array[Byte]): Unit
-
+  // Saving & getting data (from cache or disk)
   def saveData(containerName: String, key: String, value: Array[Byte]): Unit
-
-  def getData(key: String): Array[Byte]
 
   def getData(containerName: String, key: String): Array[Byte]
 
@@ -415,29 +413,36 @@ trait EnvContext extends Monitorable {
 
   def getDataFromZNode(zNodePath: String): Array[Byte]
 
-  def CreateZkPathListener(zkcConnectString: String, znodePath: String, ListenCallback: (String) => Unit, zkSessionTimeoutMs: Int = 30000, zkConnectionTimeoutMs: Int = 30000): Unit
+  def setZookeeperInfo(zkConnectString: String, zkleaderNodePath: String, zkSessionTimeoutMs: Int, zkConnectionTimeoutMs: Int): Unit
 
-  def CreateZkPathChildrenCacheListener(zkcConnectString: String, znodePath: String, getAllChildsData: Boolean, ListenCallback: (String, String, Array[Byte], Array[(String, Array[Byte])]) => Unit, zkSessionTimeoutMs: Int = 30000, zkConnectionTimeoutMs: Int = 30000): Unit
+  def getZookeeperInfo(): (String, String, Int, Int)
+
+  def createZkPathListener(znodePath: String, ListenCallback: (String) => Unit): Unit
+
+  def createZkPathChildrenCacheListener(znodePath: String, getAllChildsData: Boolean, ListenCallback: (String, String, Array[Byte], Array[(String, Array[Byte])]) => Unit): Unit
+
+  // Cache Listeners
+  def setListenerCacheKey(key: String, value: Array[Byte]): Unit
 
   // /kamanja/notification/node1
-  def CreateListenerForCacheKey(listenPath: String, ListenCallback: (String, String, String) => Unit): Unit
+  def createListenerForCacheKey(listenPath: String, ListenCallback: (String, String, String) => Unit): Unit
 
   // Ex: If we start watching /kamanja/nodification/ all the following puts/updates/removes/etc will notify callback
   // /kamanja/nodification/node1/1 or /kamanja/nodification/node1/2 or /kamanja/nodification/node1 or /kamanja/nodification/node2 or /kamanja/nodification/node3 or /kamanja/nodification/node4
-  def CreateListenerForCacheChildern(listenPath: String, ListenCallback: (String, String, String) => Unit): Unit
+  def createListenerForCacheChildern(listenPath: String, ListenCallback: (String, String, String) => Unit): Unit
 
-  def getLeaderInfo(): ClusterStatus
+  // Leader Information
+  def getClusterInfo(): ClusterStatus
 
   // This will give either any node change or leader change
   def registerNodesChangeNotification(EventChangeCallback: (ClusterStatus) => Unit): Unit
 
-  def unregisterNodesChangeNotification(EventChangeCallback: (ClusterStatus) => Unit): Unit
+//  def unregisterNodesChangeNotification(EventChangeCallback: (ClusterStatus) => Unit): Unit
 
   def getNodeId(): String
-
   def getClusterId(): String
 
-  def getDefaultZookeeperInfo(): String
+  def setNodeInfo(nodeId: String, clusterId: String): Unit
 
   // This post the message into where ever these messages are associated immediately
   // Later this will be posted to logical queue where it can execute on logical partition.
@@ -547,7 +552,32 @@ abstract class ModelInstance(val factory: ModelInstanceFactory) {
   //		outputDefault: If this is true, engine is expecting output always.
   //	Output:
   //		Derived messages are the return results expected.
-  def run(txnCtxt: TransactionContext, execMsgsSet: Array[ContainerInterface], triggerdSetIndex: Int, outputDefault: Boolean): Array[MessageInterface] = {
+  def execute(txnCtxt: TransactionContext, execMsgsSet: Array[ContainerInterface], triggerdSetIndex: Int, outputDefault: Boolean): Array[MessageInterface] = {
+    // Default implementation to invoke old model
+    if (execMsgsSet.size == 1 && triggerdSetIndex == 0 && factory.getModelDef().inputMsgSets.size == 1 && factory.getModelDef().inputMsgSets(0).size == 1 &&
+      execMsgsSet(0).isInstanceOf[ContainerInterface] && factory.getModelDef().outputMsgs.size == 1) {
+      // This could be calling old model
+      // Holding current transaction information original message and set the new information. Because the model will pull the message from transaction context
+      val (origin, orgInputMsg) = txnCtxt.getInitialMessage
+      var returnValues = Array[MessageInterface]()
+      try {
+        txnCtxt.setInitialMessage("", execMsgsSet(0).asInstanceOf[ContainerInterface], false)
+        val mdlResults = execute(txnCtxt, outputDefault)
+        if (mdlResults != null) {
+          val outContainer = getEnvContext().getContainerInstance(factory.getModelDef().outputMsgs(0)).asInstanceOf[MessageInterface]
+          val resMap = mdlResults.asKeyValuesMap
+          resMap.foreach(kv => {
+            outContainer.set(kv._1, kv._2)
+          })
+          returnValues = Array[MessageInterface](outContainer)
+        }
+      } catch {
+        case e: Exception => throw e
+      } finally {
+        txnCtxt.setInitialMessage(origin, orgInputMsg, false)
+      }
+      returnValues
+    }
     throw new NotImplementedFunctionException("Not implemented", null)
   }
 }
@@ -605,10 +635,11 @@ trait FactoryOfModelInstanceFactory {
   def prepareModel(nodeContext: NodeContext, modelDefStr: String, inpMsgName: String, outMsgName: String, loaderInfo: KamanjaLoaderInfo, jarPaths: collection.immutable.Set[String]): ModelDef
 }
 
-case class ContaienrWithOriginAndPartKey(origin: String, container: ContainerInterface, partKey: List[String])
-
 // FIXME: Need to have message creator (Model/InputMessage/Get(from db/cache))
 class TransactionContext(val transId: Long, val nodeCtxt: NodeContext, val msgData: Array[Byte], val partitionKey: String) {
+
+  case class ContaienrWithOriginAndPartKey(origin: String, container: ContainerInterface, partKey: List[String])
+
   private var orgInputMsg = ContaienrWithOriginAndPartKey(null, null, null)
   private val msgs = scala.collection.mutable.Map[String, ArrayBuffer[ContaienrWithOriginAndPartKey]]()
   // orgInputMsg is part in this also
@@ -640,9 +671,14 @@ class TransactionContext(val transId: Long, val nodeCtxt: NodeContext, val msgDa
     curMsgs.foreach(m => addMessage(origin, m, null))
   }
 
-  final def setInitialMessage(origin: String, orgMsg: ContainerInterface): Unit = {
+  final def setInitialMessage(origin: String, orgMsg: ContainerInterface, addToAllMsgs: Boolean = true): Unit = {
     orgInputMsg = ContaienrWithOriginAndPartKey(origin, orgMsg, null)
-    addMessage(origin, orgMsg, null)
+    if (addToAllMsgs)
+      addMessage(origin, orgMsg, null)
+  }
+
+  final def getInitialMessage: (String, ContainerInterface) = {
+    (orgInputMsg.origin, orgInputMsg.container)
   }
 
   final def getTransactionId() = transId
@@ -776,10 +812,10 @@ class TransactionContext(val transId: Long, val nodeCtxt: NodeContext, val msgDa
     val currentList = getMessagesList(containerName, partKey, tmRange, f)
     val finalList =
       if (currentList.size > 0 && tmpList.size > 0) {
-          //BUGBUG:: Yet to fix -- Same timeRange, Partition Key & PrimaryKeys need to be updated with new ones
-          //FIXME:- Fix this -- Same timeRange, Partition Key & PrimaryKeys need to be updated with new ones
-          // May be we can create the map of current list and loop thru the list we got tmpList
-          tmpList
+        //BUGBUG:: Yet to fix -- Same timeRange, Partition Key & PrimaryKeys need to be updated with new ones
+        //FIXME:- Fix this -- Same timeRange, Partition Key & PrimaryKeys need to be updated with new ones
+        // May be we can create the map of current list and loop thru the list we got tmpList
+        tmpList
       } else if (currentList.size > 0) {
         currentList.map(m => m._2)
       } else {

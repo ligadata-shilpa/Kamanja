@@ -87,6 +87,9 @@ class MdMgr {
   private var configurations = new HashMap[String, UserPropertiesInfo]
   private var msgdefSystemCols = List("transactionid", "timepartitiondata", "rownumber")
 
+  private var propertyChanged: scala.collection.mutable.ArrayBuffer[String] = scala.collection.mutable.ArrayBuffer[String]()
+  private val lock: Object = new Object
+
   def truncate {
     typeDefs.clear
     funcDefs.clear
@@ -2998,6 +3001,10 @@ class MdMgr {
     nodes(ni.nodeId.toLowerCase) = ni
   }
 
+  def GetNode(nodeId: String): NodeInfo = {
+    return nodes.getOrElse(nodeId,null)
+  }
+
   def RemoveNode(nodeId: String): Unit = {
     val ni = nodes.getOrElse(nodeId, null)
     if (ni != null) {
@@ -3048,6 +3055,21 @@ class MdMgr {
     return ""
   }
 
+  /**
+    * GetUserProperty - return a String value of a User Property
+    * @param key: String
+    */
+  def GetUserProperty(key: String): UserPropertiesInfo = {
+    configurations.getOrElse(key.toLowerCase(),null)
+  }
+
+  def MakeUPProps(clusterId: String): UserPropertiesInfo = {
+    var upi = new UserPropertiesInfo
+    upi.clusterId = clusterId
+    upi.props = new scala.collection.mutable.HashMap[String, String]
+    upi
+  }
+
   def MakeCluster(clusterId: String, description: String, privilges: String): ClusterInfo = {
     val ci = new ClusterInfo
     ci.clusterId = clusterId
@@ -3058,6 +3080,10 @@ class MdMgr {
 
   def AddCluster(ci: ClusterInfo): Unit = {
     clusters(ci.clusterId.toLowerCase) = ci
+  }
+
+  def GetCluster(clusterId: String): ClusterInfo ={
+    return clusters.getOrElse(clusterId.toLowerCase,null)
   }
 
   def RemoveCluster(clusterId: String): Unit = {
@@ -3077,15 +3103,12 @@ class MdMgr {
     ci
   }
 
-  def MakeUPProps(clusterId: String): UserPropertiesInfo = {
-    var upi = new UserPropertiesInfo
-    upi.clusterId = clusterId
-    upi.props = new scala.collection.mutable.HashMap[String, String]
-    upi
-  }
-
   def AddClusterCfg(ci: ClusterCfgInfo): Unit = {
     clusterCfgs(ci.clusterId.toLowerCase) = ci
+  }
+
+  def GetClusterCfg(key: String): ClusterCfgInfo = {
+    return clusterCfgs.getOrElse(key, null)
   }
 
   def RemoveClusterCfg(clusterCfgId: String): Unit = {
@@ -3114,10 +3137,30 @@ class MdMgr {
     adapters(ai.name.toLowerCase) = ai
   }
 
+  def GetAdapter(adapterName: String): AdapterInfo = {
+    if (adapters.contains(adapterName)) return adapters(adapterName)
+    null
+  }
+
   def RemoveAdapter(name: String): Unit = {
     val ni = adapters.getOrElse(name, null)
     if (ni != null) {
       adapters -= name
+    }
+  }
+
+  def getConfigChanges: Array[String] = {
+    lock.synchronized {
+      if (propertyChanged.isEmpty) return new Array[String](0)
+      var changes =  propertyChanged.toArray
+      propertyChanged.clear
+      return changes
+    }
+  }
+
+  def addConfigChange (in: String) = {
+    lock.synchronized {
+      propertyChanged += in
     }
   }
 
