@@ -84,6 +84,8 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   private var _zkLeaderLatch: ZkLeaderLatch = _
   private val _zkLeaderListeners = ArrayBuffer[LeaderListenerCallback]()
   private var _clusterStatusInfo: ClusterStatus = _
+  private val _nodeCacheMap = collection.mutable.Map[String, Any]()
+  private val _nodeCache_reent_lock = new ReentrantReadWriteLock(true)
 
   case class LeaderListenerCallback (val EventChangeCallback: (ClusterStatus) => Unit)
 
@@ -2521,26 +2523,79 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   // Saving & getting temporary objects in cache
   def saveObjectInClusterCache(key: String, value: Any): Unit = {}
 
-  def saveObjectInNodeCache(nodeId: String, key: String, value: Any): Unit = {}
+  override def saveObjectInNodeCache(key: String, value: Any): Unit = {
+    WriteLock(_nodeCache_reent_lock)
+    try {
+      _nodeCacheMap(key) = value;
+    } catch {
+      case e: Throwable => {
+        throw e
+      }
+    }
+    finally {
+      WriteUnlock(_nodeCache_reent_lock)
+    }
+  }
 
   def getObjectFromClusterCache(key: String): Any = null
 
-  def getObjectFromNodeCache(nodeId: String, key: String): Any = null
+  override def getObjectFromNodeCache(key: String): Any = {
+    var retVal:Any = null
+    ReadLock(_nodeCache_reent_lock)
+    try {
+      retVal = _nodeCacheMap.getOrElse(key, null)
+    } catch {
+      case e: Throwable => {
+        throw e
+      }
+    }
+    finally {
+      ReadUnlock(_nodeCache_reent_lock)
+    }
+
+    retVal
+  }
 
   def getAllKeysFromClusterCache(): Array[String] = null
 
-  def getAllKeysFromNodeCache(nodeId: String): Array[String] = null
+  override def getAllKeysFromNodeCache(): Array[String] = {
+    var retVal = Array[String]()
+    ReadLock(_nodeCache_reent_lock)
+    try {
+      retVal = _nodeCacheMap.keySet.toArray
+    } catch {
+      case e: Throwable => {
+        throw e
+      }
+    }
+    finally {
+      ReadUnlock(_nodeCache_reent_lock)
+    }
+
+    retVal
+  }
 
   def getAllObjectsFromClusterCache(): Array[KeyValuePair] = null
 
-  def getAllObjectsFromNodeCache(nodeId: String): Array[KeyValuePair] = null
+  override def getAllObjectsFromNodeCache(): Array[KeyValuePair] = {
+    var retVal = Array[KeyValuePair]()
+    ReadLock(_nodeCache_reent_lock)
+    try {
+      retVal = _nodeCacheMap.map(kv => KeyValuePair(kv._1, kv._2)).toArray
+    } catch {
+      case e: Throwable => {
+        throw e
+      }
+    }
+    finally {
+      ReadUnlock(_nodeCache_reent_lock)
+    }
+
+    retVal
+  }
 
   // Saving & getting data
-  def saveData(key: String, value: Array[Byte]): Unit = {}
-
   def saveData(containerName: String, key: String, value: Array[Byte]): Unit = {}
-
-  def getData(key: String): Array[Byte] = null
 
   def getData(containerName: String, key: String): Array[Byte] = null
 
