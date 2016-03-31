@@ -456,6 +456,8 @@ class KamanjaManager extends Observer {
       if (KamanjaMetadata.envCtxt == null)
         return false
 
+      KamanjaMetadata.envCtxt.setNodeInfo(KamanjaConfiguration.nodeId.toString, KamanjaConfiguration.clusterId)
+
 
       KamanjaMetadata.gNodeContext = new NodeContext(KamanjaMetadata.envCtxt)
 
