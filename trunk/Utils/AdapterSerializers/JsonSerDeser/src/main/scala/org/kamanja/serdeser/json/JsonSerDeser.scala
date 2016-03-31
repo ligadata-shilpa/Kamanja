@@ -121,7 +121,7 @@ class JSONSerDes() extends SerializeDeserialize with LogTrait {
         val fieldCnt : Int = fields.size()
         fieldsToConsider.foreach(fldname => {
             processCnt += 1
-            val attr : com.ligadata.KamanjaBase.AttributeValue = fields.getOrDefault(fldname,null)
+            val attr : com.ligadata.KamanjaBase.AttributeValue = fields.get(fldname)
             if (attr != null) {
                 val valueType: String = attr.getValueType
                 val rawValue: Any = attr.getValue
