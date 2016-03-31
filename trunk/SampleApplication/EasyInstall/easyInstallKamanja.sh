@@ -778,7 +778,7 @@ cp *.* $installPath/Kamanja-$ver210/input/SampleApplications/metadata/model
 cd $srcPath/SampleApplication/Medical/Types
 cp * $installPath/Kamanja-$ver210/input/SampleApplications/metadata/type
 
-cd $srcPath/SampleApplication/Medical/metadata/template/script/scala-2.10
+cd $srcPath/SampleApplication/Medical/template/script/scala-2.10
 cp -rf * $installPath/Kamanja-$ver210/input/SampleApplications/template
 
 cd $srcPath/SampleApplication/Medical/metadata/config
@@ -1462,7 +1462,7 @@ cp *.* $installPath/Kamanja-$ver211/input/SampleApplications/metadata/model
 cd $srcPath/SampleApplication/Medical/Types
 cp * $installPath/Kamanja-$ver211/input/SampleApplications/metadata/type
 
-cd $srcPath/SampleApplication/Medical/metadata/template/script/scala-2.11
+cd $srcPath/SampleApplication/Medical/template/script/scala-2.11
 cp -rf * $installPath/Kamanja-$ver211/input/SampleApplications/template
 
 cd $srcPath/SampleApplication/Medical/metadata/config
