@@ -530,7 +530,7 @@ object ConceptUtils {
   def LoadAttributeIntoCache(key: String) {
     try {
       val obj = PersistenceUtils.GetObject(key.toLowerCase, "concepts")
-      val cont:BaseElem = null // serializer.DeserializeObjectFromByteArray(obj.serializedInfo)
+      val cont:BaseElem = serializer.DeserializeObjectFromByteArray(obj._2.asInstanceOf[Array[Byte]]).asInstanceOf[BaseElem]
       MetadataAPIImpl.AddObjectToCache(cont.asInstanceOf[AttributeDef], MdMgr.GetMdMgr)
     } catch {
       case e: Exception => {
