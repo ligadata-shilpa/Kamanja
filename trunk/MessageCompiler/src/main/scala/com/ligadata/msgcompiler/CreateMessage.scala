@@ -112,7 +112,7 @@ class CreateMessage {
    * create the Fixed Container in metadata
    */
   private def createFixedContainerDef(msg: Message, mdMgr: MdMgr, recompile: Boolean = false): ContainerDef = {
-    var msgDef: MessageDef = null;
+    var containerDef: ContainerDef = null;
 
     try {
       var version = MdMgr.ConvertVersionToLong(msg.Version)
@@ -123,9 +123,9 @@ class CreateMessage {
         }
       }
       if (msg.PartitionKeys != null)
-        msgDef = mdMgr.MakeMappedMsg(msg.NameSpace, msg.Name, msg.PhysicalName, msg.ArgsList, MdMgr.ConvertVersionToLong(msg.Version), null, msg.Jarset.toArray, null, null, msg.PartitionKeys.toArray, recompile, defaultOwner, 0, 0, msg.schemaId, msg.Schema)
+        containerDef = mdMgr.MakeMappedMsg(msg.NameSpace, msg.Name, msg.PhysicalName, msg.ArgsList, MdMgr.ConvertVersionToLong(msg.Version), null, msg.Jarset.toArray, null, null, msg.PartitionKeys.toArray, recompile, defaultOwner, 0, 0, msg.schemaId, msg.Schema)
       else
-        msgDef = mdMgr.MakeMappedMsg(msg.NameSpace, msg.Name, msg.PhysicalName, msg.ArgsList, MdMgr.ConvertVersionToLong(msg.Version), null, msg.Jarset.toArray, null, null, null, recompile, defaultOwner, 0, 0, msg.schemaId, msg.Schema)
+        containerDef = mdMgr.MakeMappedMsg(msg.NameSpace, msg.Name, msg.PhysicalName, msg.ArgsList, MdMgr.ConvertVersionToLong(msg.Version), null, msg.Jarset.toArray, null, null, null, recompile, defaultOwner, 0, 0, msg.schemaId, msg.Schema)
 
       log.info(" msg.NameSpace   " + msg.NameSpace)
       log.info("msg.Name    " + msg.Name)
@@ -143,7 +143,7 @@ class CreateMessage {
         throw e
       }
     }
-    msgDef
+    containerDef
   }
 
   /*
