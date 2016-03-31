@@ -654,7 +654,7 @@ class KamanjaManager extends Observer {
     val metricsCollector = new Runnable {
       def run(): Unit = {
         try {
-          externalizeMetrics
+          validateAndExternalizeMetrics
         } catch {
           case e: Throwable => {
             LOG.warn("KamanjaManager " + KamanjaConfiguration.nodeId.toString + " unable to externalize statistics due to internal error. Check ZK connection", e)
@@ -781,13 +781,20 @@ class KamanjaManager extends Observer {
   /**
    *
    */
-  private def externalizeMetrics: Unit = {
+  private def validateAndExternalizeMetrics: Unit = {
     val zkNodeBasePath = KamanjaConfiguration.zkNodeBasePath.stripSuffix("/").trim
     val zkHeartBeatNodePath = zkNodeBasePath + "/monitor/engine/" + KamanjaConfiguration.nodeId.toString
     val isLogDebugEnabled = LOG.isDebugEnabled
 
     if (isLogDebugEnabled)
       LOG.debug("KamanjaManager " + KamanjaConfiguration.nodeId.toString + " is externalizing metrics to " + zkNodeBasePath)
+
+    // As part of the metrics externaization, look for changes to the configuration that can be affected
+    // while the manager is running
+    var changes = KamanjaMetadata.getConfigChanges
+    if (!changes.isEmpty) {
+      changes.foreach(x=>{ LOG.debug("KamanjaManger config update: " + x)})
+    }
 
     if (thisEngineInfo == null) {
       thisEngineInfo = new MainInfo

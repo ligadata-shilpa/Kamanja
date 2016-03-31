@@ -214,6 +214,7 @@ class TreeMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
   private def ValueToByteArray(value: Value): Array[Byte] = {
     var byteOs = new ByteArrayOutputStream();
     var out = new DataOutputStream(byteOs);
+    out.writeInt(value.schemaId)
     out.writeInt(value.serializerType.length);
     out.write(value.serializerType.getBytes());
     out.writeInt(value.serializedInfo.length);

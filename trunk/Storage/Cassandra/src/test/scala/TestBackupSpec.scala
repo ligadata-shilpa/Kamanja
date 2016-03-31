@@ -193,7 +193,7 @@ class TestBackupSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterAll 
 	var custNumber = "425666777" + i
 	var obj = new Customer(custName,custAddress,custNumber)
 	var v = serializer.SerializeObjectToByteArray(obj)
-	var value = new Value("kryo",v)
+	var value = new Value(1,"kryo",v)
 	noException should be thrownBy {
 	  adapter.put(containerName,key,value)
 	}
