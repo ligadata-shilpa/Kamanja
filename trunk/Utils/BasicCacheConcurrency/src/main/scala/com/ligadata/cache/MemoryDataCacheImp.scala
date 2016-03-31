@@ -1,4 +1,4 @@
-package com.ligadata.BasicCacheConcurrency
+package com.ligadata.cache
 
 
 import net.sf.ehcache.bootstrap.{BootstrapCacheLoader, BootstrapCacheLoaderFactory}

@@ -1,4 +1,4 @@
-import com.ligadata.BasicCacheConcurrency.DataCache
+import com.ligadata.cache.DataCache
 
 /**
   * Created by Saleh on 3/23/2016.
