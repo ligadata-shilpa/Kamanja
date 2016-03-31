@@ -748,11 +748,10 @@ cd $srcPath/SampleApplication/HelloWorld/model
 cp * $installPath/Kamanja-$ver210/input/SampleApplications/metadata/model
 
 cd $srcPath/SampleApplication/HelloWorld/template
-cp -rf conf* $installPath/Kamanja-$ver211/input/SampleApplications/template
+cp -rf conf* $installPath/Kamanja-$ver210/input/SampleApplications/template
 
 cd $srcPath/SampleApplication/HelloWorld/template/script/scala-2.10
-cp -rf * $installPath/Kamanja-$ver211/input/SampleApplications/template
-
+cp -rf * $installPath/Kamanja-$ver210/input/SampleApplications/template/script
 
 cd $srcPath/SampleApplication/HelloWorld/config
 cp -rf * $installPath/Kamanja-$ver210/config
@@ -779,10 +778,10 @@ cd $srcPath/SampleApplication/Medical/Types
 cp * $installPath/Kamanja-$ver210/input/SampleApplications/metadata/type
 
 cd $srcPath/SampleApplication/Medical/template/script/scala-2.10
-cp -rf * $installPath/Kamanja-$ver210/input/SampleApplications/template
+cp -rf * $installPath/Kamanja-$ver210/input/SampleApplications/template/script
 
-cd $srcPath/SampleApplication/Medical/template/config
-cp -rf * $installPath/Kamanja-$ver210/config
+#cd $srcPath/SampleApplication/Medical/template/config
+#cp -rf * $installPath/Kamanja-$ver210/config
 #Medical
 
 #Telecom
@@ -802,7 +801,7 @@ cd $srcPath/SampleApplication/Telecom/metadata/template
 cp -rf conf* $installPath/Kamanja-$ver210/input/SampleApplications/template
 
 cd $srcPath/SampleApplication/Telecom/metadata/template/script/scala-2.10
-cp -rf * $installPath/Kamanja-$ver210/input/SampleApplications/template
+cp -rf * $installPath/Kamanja-$ver210/input/SampleApplications/template/script
 
 cd $srcPath/SampleApplication/Telecom/metadata/config
 cp -rf * $installPath/Kamanja-$ver210/config
@@ -1463,10 +1462,10 @@ cd $srcPath/SampleApplication/Medical/Types
 cp * $installPath/Kamanja-$ver211/input/SampleApplications/metadata/type
 
 cd $srcPath/SampleApplication/Medical/template/script/scala-2.11
-cp -rf * $installPath/Kamanja-$ver211/input/SampleApplications/template
+cp -rf * $installPath/Kamanja-$ver211/input/SampleApplications/template/script
 
-cd $srcPath/SampleApplication/Medical/template/config
-cp -rf * $installPath/Kamanja-$ver211/config
+#cd $srcPath/SampleApplication/Medical/template/config
+#cp -rf * $installPath/Kamanja-$ver211/config
 #Medical
 
 #Telecom
@@ -1488,8 +1487,8 @@ cp -rf conf* $installPath/Kamanja-$ver211/input/SampleApplications/template
 cd $srcPath/SampleApplication/Telecom/metadata/template/script/scala-2.11
 cp -rf * $installPath/Kamanja-$ver211/input/SampleApplications/template/script
 
-cd $srcPath/SampleApplication/Telecom/metadata/config
-cp -rf * $installPath/Kamanja-$ver211/config
+#cd $srcPath/SampleApplication/Telecom/metadata/config
+#cp -rf * $installPath/Kamanja-$ver211/config
 #Telecom
 
 #Finance
