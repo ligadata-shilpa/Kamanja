@@ -21,7 +21,7 @@ class MemoryDataCacheImp extends DataCache{
 
   override def init(jsonString:String): Unit = {
 
-    cacheConfig = new CacheCustomConfig(jsonString)
+    cacheConfig = new CacheCustomConfig(new Config(jsonString))
     cm = CacheManager.create(cacheConfig.getConfiguration())
     val cache = new Cache(cacheConfig)
     cache.setBootstrapCacheLoader(cacheConfig.getBootStrap())

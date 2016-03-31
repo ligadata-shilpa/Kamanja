@@ -16,12 +16,6 @@ import net.sf.ehcache.event.CacheEventListener
 
 object CacheCustomConfig{
   val ENABLELISTENER:String = "enableListener"
-  val REPLICATE_PUTS:String = "replicatePuts"
-  val REPLICATE_UPDATES:String = "replicateUpdates"
-  val REPLICATE_UPDATES_VIA_COPY:String = "replicateUpdatesViaCopy"
-  val REPLICATE_REMOVALS:String = "replicateRemovals"
-  val REPLICATE_ASYNCHRONOUSLY:String = "replicateAsynchronously"
-  val NAME:String="name"
   val MAXBYTESLOCALHEAP:String="maxBytesLocalHeap"
   val ETERNAL:String="eternal"
   val DISKSPOOLBUFFERSIZEMB:String="diskSpoolBufferSizeMB"
@@ -35,45 +29,18 @@ object CacheCustomConfig{
   val BOOTSTRAPASYNCHRONOUSLY:String="bootstrapAsynchronously"
   val PREFERIPV4STACK:String="java.net.preferIPv4Stack"
   val SKIPUPDATECHECK:String="net.sf.ehcache.skipUpdateCheck"
-  val INITIALHOSTS:String = "jgroups.tcpping.initial_hosts"
-  val UDPADD:String = "jgroups.udp.add"
-  val PORT:String = "jgroups.port"
 }
 
-class CacheCustomConfig(jsonString:String) extends CacheConfiguration{
+class CacheCustomConfig(jsonconfig:Config) extends CacheConfiguration{
   private val config:Configuration = new Configuration
   private val factory:FactoryConfiguration[Nothing] = new FactoryConfiguration
   private val properties:Properties = new Properties
   private val propertiesBootStrap:Properties = new Properties
-  private val json = org.json4s.jackson.JsonMethods.parse(jsonString)
-  private val values = json.values.asInstanceOf[Map[String, String]]
+  private val some = jsonconfig.getvalue(Config.CACHECONFIG)
+  private val values = some.get.asInstanceOf[Map[String, String]]
 
 
-  /*
-             enableListener="false"
-             name="Node"
-             maxBytesLocalHeap="10000"
-             eternal="false"
-             diskSpoolBufferSizeMB="20"
-             timeToIdleSeconds="300"
-             timeToLiveSeconds="600"
-             memoryStoreEvictionPolicy="LFU"
-             transactionalMode="off"
-             class="net.sf.ehcache.distribution.jgroups.JGroupsCacheManagerPeerProviderFactory"
-             separator="::"
-             peerconfig="channelName=EH_CACHE::file=jgroups_udp.xml"
-             replicatePuts=true
-             replicateUpdates=true
-             replicateUpdatesViaCopy=false
-             replicateRemovals=true
-             replicateAsynchronously=true
-             bootstrapAsynchronously=false
-             jgroups.tcpping.initial_hosts=localhost[7800]
-             jgroups.port=45566
-
-   */
-
-  this.name(values.getOrElse(CacheCustomConfig.NAME,"Node"))
+  this.name(jsonconfig.getvalue(Config.NAME).getOrElse("Ligadata").toString)
     .eternal(values.getOrElse(CacheCustomConfig.ETERNAL,"false").toBoolean)
     .persistence(new PersistenceConfiguration().strategy(Strategy.NONE))
     .maxBytesLocalHeap(values.getOrElse(CacheCustomConfig.MAXBYTESLOCALHEAP,"10000").toLong,MemoryUnit.BYTES)
@@ -90,11 +57,11 @@ class CacheCustomConfig(jsonString:String) extends CacheConfiguration{
   config.addCacheManagerPeerProviderFactory(factory)
 
   //LISTENER PROPERTIES
-  properties.setProperty(CacheCustomConfig.REPLICATE_PUTS,(values.getOrElse(CacheCustomConfig.REPLICATE_PUTS,"true")).toString)
-  properties.setProperty(CacheCustomConfig.REPLICATE_UPDATES,(values.getOrElse(CacheCustomConfig.REPLICATE_UPDATES,"true")).toString)
-  properties.setProperty(CacheCustomConfig.REPLICATE_UPDATES_VIA_COPY,(values.getOrElse(CacheCustomConfig.REPLICATE_UPDATES_VIA_COPY,"false")).toString)
-  properties.setProperty(CacheCustomConfig.REPLICATE_REMOVALS,(values.getOrElse(CacheCustomConfig.REPLICATE_REMOVALS,"true")).toString)
-  properties.setProperty(CacheCustomConfig.REPLICATE_ASYNCHRONOUSLY,(values.getOrElse(CacheCustomConfig.REPLICATE_ASYNCHRONOUSLY,"true")).toString)
+  properties.setProperty(Config.REPLICATE_PUTS,(jsonconfig.getvalue(Config.REPLICATE_PUTS).getOrElse("false")).toString)
+  properties.setProperty(Config.REPLICATE_UPDATES,(jsonconfig.getvalue(Config.REPLICATE_UPDATES).getOrElse("false")).toString)
+  properties.setProperty(Config.REPLICATE_UPDATES_VIA_COPY,(jsonconfig.getvalue(Config.REPLICATE_UPDATES_VIA_COPY).getOrElse("false")).toString)
+  properties.setProperty(Config.REPLICATE_REMOVALS,(jsonconfig.getvalue(Config.REPLICATE_REMOVALS).getOrElse("false")).toString)
+  properties.setProperty(Config.REPLICATE_ASYNCHRONOUSLY,(jsonconfig.getvalue(Config.REPLICATE_ASYNCHRONOUSLY).getOrElse("false")).toString)
 
   //ADD BOOTSTRAP PROPERTIES
   propertiesBootStrap.setProperty(CacheCustomConfig.BOOTSTRAPASYNCHRONOUSLY,(values.getOrElse(CacheCustomConfig.BOOTSTRAPASYNCHRONOUSLY,"false")).toString)
@@ -103,9 +70,9 @@ class CacheCustomConfig(jsonString:String) extends CacheConfiguration{
 
   System.setProperty(CacheCustomConfig.PREFERIPV4STACK,"true")
   System.setProperty(CacheCustomConfig.SKIPUPDATECHECK, "true")
-  System.setProperty(CacheCustomConfig.INITIALHOSTS, values.getOrElse(CacheCustomConfig.INITIALHOSTS,"localhost[7800]"))
-  System.setProperty(CacheCustomConfig.UDPADD, values.getOrElse(CacheCustomConfig.UDPADD,"231.12.21.132"))
-  System.setProperty(CacheCustomConfig.PORT, values.getOrElse(CacheCustomConfig.PORT,"45566"))
+  System.setProperty(Config.INITIALHOSTS, jsonconfig.getvalue(Config.INITIALHOSTS).get.toString)
+//  System.setProperty(CacheCustomConfig.UDPADD, values.getOrElse(CacheCustomConfig.UDPADD,"231.12.21.132"))
+  System.setProperty(Config.PORT, jsonconfig.getvalue(Config.PORT).getOrElse("7800").toString)
 
   def  getConfiguration() : Configuration = {
     return config
