@@ -1,27 +1,28 @@
 package com.ligadata.KamanjaBase;
 
-public abstract class ContainerInterface implements ContainerOrConcept {
-
+public abstract class ContainerInterface extends ContainerOrConcept {
     long transactionId = 0;
     long timePartitionData = 0;
     int rowNumber = 0;
 
-    ContainerFactoryInterface factory = null;
-
     public ContainerInterface(ContainerFactoryInterface factory) {
-        this.factory = factory;
+        super(factory);
+    }
+
+    final ContainerFactoryInterface getContainerFactory() {
+        return ((ContainerFactoryInterface)getFactory());
     }
 
     final public boolean hasPrimaryKey() {
-        return factory.hasPrimaryKey();
+        return getContainerFactory().hasPrimaryKey();
     }
 
     final public boolean hasPartitionKey() {
-        return factory.hasPartitionKey();
+        return getContainerFactory().hasPartitionKey();
     }
 
     final public boolean hasTimePartitionInfo() {
-        return factory.hasTimePartitionInfo();
+        return getContainerFactory().hasTimePartitionInfo();
     }
 
     final public long getTransactionId() {
@@ -36,52 +37,32 @@ public abstract class ContainerInterface implements ContainerOrConcept {
         return rowNumber;
     }
 
-    final public String getFullTypeName() {
-        return factory.getFullTypeName();
-    }
-
-    final public String getTypeNameSpace() {
-        return factory.getTypeNameSpace();
-    }
-
-    final public String getTypeName() {
-        return factory.getTypeName();
-    }
-
-    final public String getTypeVersion() {
-        return factory.getTypeVersion();
-    }
-
     final public int getSchemaId() {
-        return factory.getSchemaId();
+        return getContainerFactory().getSchemaId();
     }
 
     final public ContainerFactoryInterface.ContainerType getContainerType() {
-        return factory.getContainerType();
+        return getContainerFactory().getContainerType();
     }
 
     final public boolean isFixed() {
-        return factory.isFixed();
+        return getContainerFactory().isFixed();
     }
 
     final public String getSchema() {
-        return factory.getSchema();
+        return getContainerFactory().getSchema();
     }
 
     final public String[] getPrimaryKeyNames() {
-        return factory.getPrimaryKeyNames();
+        return getContainerFactory().getPrimaryKeyNames();
     }
 
     final public String[] getPartitionKeyNames() {
-        return factory.getPartitionKeyNames();
+        return getContainerFactory().getPartitionKeyNames();
     }
 
     final public TimePartitionInfo getTimePartitionInfo() {
-        return factory.getTimePartitionInfo();
-    }
-
-    final public ContainerFactoryInterface getFactory() {
-        return this.factory;
+        return getContainerFactory().getTimePartitionInfo();
     }
 
     final public void setTransactionId(long transId) {

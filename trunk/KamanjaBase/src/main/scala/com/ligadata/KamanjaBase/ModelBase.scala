@@ -552,24 +552,24 @@ abstract class ModelInstance(val factory: ModelInstanceFactory) {
   //		outputDefault: If this is true, engine is expecting output always.
   //	Output:
   //		Derived messages are the return results expected.
-  def execute(txnCtxt: TransactionContext, execMsgsSet: Array[ContainerInterface], triggerdSetIndex: Int, outputDefault: Boolean): Array[MessageInterface] = {
+  def execute(txnCtxt: TransactionContext, execMsgsSet: Array[ContainerOrConcept], triggerdSetIndex: Int, outputDefault: Boolean): Array[ContainerOrConcept] = {
     // Default implementation to invoke old model
     if (execMsgsSet.size == 1 && triggerdSetIndex == 0 && factory.getModelDef().inputMsgSets.size == 1 && factory.getModelDef().inputMsgSets(0).size == 1 &&
       execMsgsSet(0).isInstanceOf[ContainerInterface] && factory.getModelDef().outputMsgs.size == 1) {
       // This could be calling old model
       // Holding current transaction information original message and set the new information. Because the model will pull the message from transaction context
       val (origin, orgInputMsg) = txnCtxt.getInitialMessage
-      var returnValues = Array[MessageInterface]()
+      var returnValues = Array[ContainerOrConcept]()
       try {
         txnCtxt.setInitialMessage("", execMsgsSet(0).asInstanceOf[ContainerInterface], false)
         val mdlResults = execute(txnCtxt, outputDefault)
         if (mdlResults != null) {
-          val outContainer = getEnvContext().getContainerInstance(factory.getModelDef().outputMsgs(0)).asInstanceOf[MessageInterface]
+          val outContainer = getEnvContext().getContainerInstance(factory.getModelDef().outputMsgs(0))
           val resMap = mdlResults.asKeyValuesMap
           resMap.foreach(kv => {
             outContainer.set(kv._1, kv._2)
           })
-          returnValues = Array[MessageInterface](outContainer)
+          returnValues = Array[ContainerOrConcept](outContainer)
         }
       } catch {
         case e: Exception => throw e
@@ -637,8 +637,7 @@ trait FactoryOfModelInstanceFactory {
 
 // FIXME: Need to have message creator (Model/InputMessage/Get(from db/cache))
 class TransactionContext(val transId: Long, val nodeCtxt: NodeContext, val msgData: Array[Byte], val partitionKey: String) {
-
-  case class ContaienrWithOriginAndPartKey(origin: String, container: ContainerInterface, partKey: List[String])
+  case class ContaienrWithOriginAndPartKey(origin: String, container: ContainerOrConcept, partKey: List[String])
 
   private var orgInputMsg = ContaienrWithOriginAndPartKey(null, null, null)
   private val msgs = scala.collection.mutable.Map[String, ArrayBuffer[ContaienrWithOriginAndPartKey]]()
@@ -649,35 +648,39 @@ class TransactionContext(val transId: Long, val nodeCtxt: NodeContext, val msgDa
 
   final def getPartitionKey(): String = partitionKey
 
-  final def getMessage(): ContainerInterface = orgInputMsg.container // Original messages
+  final def getMessage(): ContainerInterface = orgInputMsg.container.asInstanceOf[ContainerInterface] // Original messages
 
   // Need to lock if we are going to run models parallel
-  final def getMessages(msgType: String): Array[(String, ContainerInterface)] = msgs.getOrElse(msgType.toLowerCase(), ArrayBuffer[ContaienrWithOriginAndPartKey]()).map(v => (v.origin, v.container)).toArray
+  final def getContainersOrConcepts(typeName: String): Array[(String, ContainerOrConcept)] = msgs.getOrElse(typeName.toLowerCase(), ArrayBuffer[ContaienrWithOriginAndPartKey]()).map(v => (v.origin, v.container)).toArray
 
   // Need to lock if we are going to run models parallel
-  final def getMessages(origin: String, msgType: String): Array[(String, ContainerInterface)] = {
-    msgs.getOrElse(msgType.toLowerCase(), ArrayBuffer[ContaienrWithOriginAndPartKey]()).filter(m => m.origin.equalsIgnoreCase(origin)).map(v => (v.origin, v.container)).toArray
+  final def getContainersOrConcepts(origin: String, typeName: String): Array[(String, ContainerOrConcept)] = {
+    msgs.getOrElse(typeName.toLowerCase(), ArrayBuffer[ContaienrWithOriginAndPartKey]()).filter(m => m.origin.equalsIgnoreCase(origin)).map(v => (v.origin, v.container)).toArray
   }
 
   // Need to lock if we are going to run models parallel
-  final def addMessage(origin: String, m: ContainerInterface, partKey: List[String]): Unit = {
+  final def addContainerOrConcept(origin: String, m: ContainerOrConcept, partKey: List[String]): Unit = {
     val msgNm = m.getFullTypeName.toLowerCase()
     val tmp = msgs.getOrElse(msgNm, ArrayBuffer[ContaienrWithOriginAndPartKey]())
     tmp += ContaienrWithOriginAndPartKey(origin, m, partKey)
     msgs(msgNm) = tmp
   }
 
-  final def addMessages(origin: String, curMsgs: Array[ContainerInterface]): Unit = {
-    curMsgs.foreach(m => addMessage(origin, m, null))
+  final def addContainerOrConcepts(origin: String, curMsgs: Array[ContainerOrConcept]): Unit = {
+    curMsgs.foreach(m => addContainerOrConcept(origin, m, null))
   }
 
-  final def setInitialMessage(origin: String, orgMsg: ContainerInterface, addToAllMsgs: Boolean = true): Unit = {
+  final def addContainerOrConcepts(origin: String, curMsgs: Array[ContainerInterface]): Unit = {
+    curMsgs.foreach(m => addContainerOrConcept(origin, m, null))
+  }
+
+  final def setInitialMessage(origin: String, orgMsg: ContainerOrConcept, addToAllMsgs: Boolean = true): Unit = {
     orgInputMsg = ContaienrWithOriginAndPartKey(origin, orgMsg, null)
     if (addToAllMsgs)
-      addMessage(origin, orgMsg, null)
+      addContainerOrConcept(origin, orgMsg, null)
   }
 
-  final def getInitialMessage: (String, ContainerInterface) = {
+  final def getInitialMessage: (String, ContainerOrConcept) = {
     (orgInputMsg.origin, orgInputMsg.container)
   }
 
@@ -742,7 +745,7 @@ class TransactionContext(val transId: Long, val nodeCtxt: NodeContext, val msgDa
   }
 
   // containerName is full name of the message
-  private def getMessagesList(containerName: String, partKey: List[String], tmRange: TimeRange, f: ContainerInterface => Boolean): Array[(String, ContainerInterface)] = {
+  private def getContainersList(containerName: String, partKey: List[String], tmRange: TimeRange, f: ContainerInterface => Boolean): Array[(String, ContainerInterface)] = {
     var tmpMsgs = Array[ContaienrWithOriginAndPartKey]()
 
     // Try to get from local cache
@@ -756,43 +759,72 @@ class TransactionContext(val transId: Long, val nodeCtxt: NodeContext, val msgDa
       val partKeyAsArray = partKey.toArray
       if (f != null) {
         tmpMsgs = msgs.getOrElse(containerName.toLowerCase(), ArrayBuffer[ContaienrWithOriginAndPartKey]()).filter(m => {
-          val tmData = m.container.getTimePartitionData
-          tmData >= tmRange.beginTime && tmData <= tmRange.endTime && IsSameKey(partKeyAsArray, m.container.getPartitionKey) && f(m.container) // Comparing time & Key & function call
+          val retVal = if (m.container.isInstanceOf[ContainerInterface]) {
+            val container = m.container.asInstanceOf[ContainerInterface]
+            val tmData = container.getTimePartitionData
+            tmData >= tmRange.beginTime && tmData <= tmRange.endTime && IsSameKey(partKeyAsArray, container.getPartitionKey) && f(container) // Comparing time & Key & function call
+          } else {
+            false
+          }
+          retVal
         }).toArray
       } else {
         tmpMsgs = msgs.getOrElse(containerName.toLowerCase(), ArrayBuffer[ContaienrWithOriginAndPartKey]()).filter(m => {
-          val tmData = m.container.getTimePartitionData
-          tmData >= tmRange.beginTime && tmData <= tmRange.endTime && IsSameKey(partKeyAsArray, m.container.getPartitionKey) // Comparing time & Key
+          val retVal = if (m.container.isInstanceOf[ContainerInterface]) {
+            val container = m.container.asInstanceOf[ContainerInterface]
+            val tmData = container.getTimePartitionData
+            tmData >= tmRange.beginTime && tmData <= tmRange.endTime && IsSameKey(partKeyAsArray, container.getPartitionKey) // Comparing time & Key
+          } else {
+            false
+          }
+          retVal
         }).toArray
       }
     } else if (tmRange != null) {
       if (f != null) {
         tmpMsgs = msgs.getOrElse(containerName.toLowerCase(), ArrayBuffer[ContaienrWithOriginAndPartKey]()).filter(m => {
-          val tmData = m.container.getTimePartitionData
-          tmData >= tmRange.beginTime && tmData <= tmRange.endTime && f(m.container) // Comparing time & function call
+          val retVal = if (m.container.isInstanceOf[ContainerInterface]) {
+            val container = m.container.asInstanceOf[ContainerInterface]
+            val tmData = container.getTimePartitionData
+            tmData >= tmRange.beginTime && tmData <= tmRange.endTime && f(container) // Comparing time & function call
+          } else {
+            false
+          }
+          retVal
         }).toArray
       } else {
         tmpMsgs = msgs.getOrElse(containerName.toLowerCase(), ArrayBuffer[ContaienrWithOriginAndPartKey]()).filter(m => {
-          val tmData = m.container.getTimePartitionData
-          tmData >= tmRange.beginTime && tmData <= tmRange.endTime // Comparing time
+          val retVal = if (m.container.isInstanceOf[ContainerInterface]) {
+            val container = m.container.asInstanceOf[ContainerInterface]
+            val tmData = container.getTimePartitionData
+            tmData >= tmRange.beginTime && tmData <= tmRange.endTime // Comparing time
+          } else {
+            false
+          }
+          retVal
         }).toArray
       }
     } else {
       if (f != null) {
         tmpMsgs = msgs.getOrElse(containerName.toLowerCase(), ArrayBuffer[ContaienrWithOriginAndPartKey]()).filter(m => {
-          f(m.container) // Comparing function call
+          val retVal = if (m.container.isInstanceOf[ContainerInterface]) {
+            f(m.container.asInstanceOf[ContainerInterface]) // Comparing function call
+          } else {
+            false
+          }
+          retVal
         }).toArray
       } else {
-        tmpMsgs = msgs.getOrElse(containerName.toLowerCase(), ArrayBuffer[ContaienrWithOriginAndPartKey]()).toArray
+        tmpMsgs = msgs.getOrElse(containerName.toLowerCase(), ArrayBuffer[ContaienrWithOriginAndPartKey]()).filter(m => m.container.isInstanceOf[ContainerInterface]).toArray
       }
     }
 
-    return tmpMsgs.map(v => (v.origin, v.container))
+    return tmpMsgs.map(v => (v.origin, v.container.asInstanceOf[ContainerInterface]))
   }
 
   // containerName is full name of the message
   final def getRecent(containerName: String, partKey: List[String], tmRange: TimeRange, f: ContainerInterface => Boolean): Option[ContainerInterface] = {
-    var tmpMsgs = getMessagesList(containerName, partKey, tmRange, f)
+    var tmpMsgs = getContainersList(containerName, partKey, tmRange, f)
     if (tmpMsgs.size > 0)
       return Some(tmpMsgs(tmpMsgs.size - 1)._2) // Take the last one
 
@@ -809,7 +841,7 @@ class TransactionContext(val transId: Long, val nodeCtxt: NodeContext, val msgDa
         Array[ContainerInterface]()
 
     // Now override the current transactionids list on top of this
-    val currentList = getMessagesList(containerName, partKey, tmRange, f)
+    val currentList = getContainersList(containerName, partKey, tmRange, f)
     val finalList =
       if (currentList.size > 0 && tmpList.size > 0) {
         //BUGBUG:: Yet to fix -- Same timeRange, Partition Key & PrimaryKeys need to be updated with new ones
@@ -826,15 +858,15 @@ class TransactionContext(val transId: Long, val nodeCtxt: NodeContext, val msgDa
   }
 
   final def saveOne(value: ContainerInterface): Unit = {
-    addMessage("", value, null)
+    addContainerOrConcept("", value, null)
   }
 
   final def saveOne(partKey: List[String], value: ContainerInterface): Unit = {
-    addMessage("", value, partKey)
+    addContainerOrConcept("", value, partKey)
   }
 
   final def saveRDD(values: Array[ContainerInterface]): Unit = {
-    addMessages("", values)
+    addContainerOrConcepts("", values)
   }
 }
 

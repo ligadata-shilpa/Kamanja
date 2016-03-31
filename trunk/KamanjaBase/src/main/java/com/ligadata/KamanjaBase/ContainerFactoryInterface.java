@@ -1,7 +1,6 @@
 package com.ligadata.KamanjaBase;
 
 public interface ContainerFactoryInterface extends ContainerOrConceptFactory {
-
 	enum ContainerType {
 		MESSAGE, CONTAINER;
 	}
@@ -26,4 +25,5 @@ public interface ContainerFactoryInterface extends ContainerOrConceptFactory {
 
 	public abstract ContainerInterface createInstance();
 
+	public abstract int getSchemaId();
 }
