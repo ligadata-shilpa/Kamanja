@@ -110,8 +110,55 @@ class MetadataLoad (val mgr : MdMgr, val typesPath : String, val fcnPath : Strin
 
 		logger.debug("MetadataLoad...loading FactoryOfModelInstanceFactories definitions")
 		initFactoryOfModelInstanceFactories
+
+        logger.debug("MetadataLoad...loading SerializeDeserializeConfig instances for kbinary, csv, and json")
+        initSerializeDeserializeConfigs
+
 	}
-	
+
+    /**
+      * **HACK ALERT**
+      *
+      * The serializer/deserializer registration bootstrapped so others can begin activating the adapters.
+      *
+      * Remove once the md api ingestion is complete........
+      */
+    private def initSerializeDeserializeConfigs : Unit = {
+        mgr.AddSerializer("org.kamanja.serializer.csv" // namespace
+            , "csvserdeser" //name: String
+            , 1 //version: Long = 1
+            , SerializeDeserializeType.CSV //serializerType: SerializeDeserializeType.SerDeserType
+            , "org.kamanja.serdeser.csv.CsvSerDeser" //physicalName: String
+            , "kamanja" //ownerId: String
+            , 1 //uniqueId: Long
+            , 1 //mdElementId: Long
+            , "csvserdeser_2.11-1.0.jar" //jarNm: String = null
+            , Array("csvserdeser_2.11-1.0.jar", "kamanjaversion-1.0.jar", "kamanjabase_2.11-1.0.jar", "metadata_2.11-1.0.jar", "exceptions_2.11-1.0.jar", "kamanjautils_2.11-1.0.jar", "heartbeat_2.11-0.1.0.jar", "zookeeperlistener_2.11-1.0.jar", "zookeeperclient_2.11-1.0.jar", "serialize_2.11-1.0.jar", "auditadapterbase_2.11-1.0.jar", "zookeeperleaderlatch_2.11-1.0.jar", "kvbase_2.11-0.1.0.jar", "datadelimiters_2.11-1.0.jar", "basetypes_2.11-0.1.0.jar", "zookeeperleaderlatch_2.11-1.0.jar", "scala-library-2.11.7.jar", "log4j-1.2-api-2.4.1.jar", "log4j-api-2.4.1.jar", "log4j-core-2.4.1.jar", "joda-convert-1.6.jar", "joda-time-2.8.2.jar", "json4s-native_2.11-3.2.9.jar", "json4s-core_2.11-3.2.9.jar", "json4s-ast_2.11-3.2.9.jar", "paranamer-2.6.jar", "scalap-2.11.0.jar", "scala-compiler-2.11.0.jar", "scala-xml_2.11-1.0.1.jar", "scala-parser-combinators_2.11-1.0.1.jar", "json4s-jackson_2.11-3.2.9.jar", "jackson-databind-2.3.1.jar", "jackson-annotations-2.3.0.jar", "jackson-core-2.3.1.jar", "scalatest_2.11-2.2.0.jar", "scala-reflect-2.11.1.jar", "chill_2.11-0.5.0.jar", "chill-java-0.5.0.jar", "kryo-2.21.jar", "reflectasm-1.07-shaded.jar", "asm-4.0.jar", "minlog-1.2.jar", "objenesis-1.2.jar", "protobuf-java-2.6.0.jar", "commons-collections4-4.0.jar", "commons-configuration-1.7.jar", "commons-collections-3.2.1.jar", "commons-lang-2.6.jar", "commons-logging-1.1.1.jar", "commons-digester-1.8.1.jar", "commons-beanutils-1.8.3.jar", "curator-client-2.6.0.jar", "slf4j-api-1.7.6.jar", "zookeeper-3.4.6.jar", "log4j-1.2.16.jar", "jline-0.9.94.jar", "netty-3.7.0.Final.jar", "guava-16.0.1.jar", "curator-framework-2.6.0.jar", "curator-recipes-2.6.0.jar", "json-simple-1.1.jar", "scala-actors-2.11.7.jar", "jsr305-1.3.9.jar", "scalac-scoverage-runtime_2.11-1.1.1.jar", "scalac-scoverage-plugin_2.11-1.1.1.jar") //depJars: Array[String] = null)
+        )
+        mgr.AddSerializer("org.kamanja.serializer.json" // namespace
+            , "jsonserdeser" //name: String
+            , 1 //version: Long = 1
+            , SerializeDeserializeType.JSON //serializerType: SerializeDeserializeType.SerDeserType
+            , "org.kamanja.serdeser.json.JsonSerDeser" //physicalName: String
+            , "kamanja" //ownerId: String
+            , 2 //uniqueId: Long
+            , 2 //mdElementId: Long
+            , "jsonserdeser_2.11-1.0.jar" //jarNm: String = null
+            , Array("jsonserdeser_2.11-1.0.jar", "kamanjaversion-1.0.jar", "kamanjabase_2.11-1.0.jar", "metadata_2.11-1.0.jar", "exceptions_2.11-1.0.jar", "kamanjautils_2.11-1.0.jar", "heartbeat_2.11-0.1.0.jar", "zookeeperlistener_2.11-1.0.jar", "zookeeperclient_2.11-1.0.jar", "serialize_2.11-1.0.jar", "auditadapterbase_2.11-1.0.jar", "zookeeperleaderlatch_2.11-1.0.jar", "kvbase_2.11-0.1.0.jar", "datadelimiters_2.11-1.0.jar", "basetypes_2.11-0.1.0.jar", "zookeeperleaderlatch_2.11-1.0.jar", "scala-library-2.11.7.jar", "log4j-1.2-api-2.4.1.jar", "log4j-api-2.4.1.jar", "log4j-core-2.4.1.jar", "joda-convert-1.6.jar", "joda-time-2.8.2.jar", "json4s-native_2.11-3.2.9.jar", "json4s-core_2.11-3.2.9.jar", "json4s-ast_2.11-3.2.9.jar", "paranamer-2.6.jar", "scalap-2.11.0.jar", "scala-compiler-2.11.0.jar", "scala-xml_2.11-1.0.1.jar", "scala-parser-combinators_2.11-1.0.1.jar", "json4s-jackson_2.11-3.2.9.jar", "jackson-databind-2.3.1.jar", "jackson-annotations-2.3.0.jar", "jackson-core-2.3.1.jar", "scalatest_2.11-2.2.0.jar", "scala-reflect-2.11.1.jar", "chill_2.11-0.5.0.jar", "chill-java-0.5.0.jar", "kryo-2.21.jar", "reflectasm-1.07-shaded.jar", "asm-4.0.jar", "minlog-1.2.jar", "objenesis-1.2.jar", "protobuf-java-2.6.0.jar", "commons-collections4-4.0.jar", "commons-configuration-1.7.jar", "commons-collections-3.2.1.jar", "commons-lang-2.6.jar", "commons-logging-1.1.1.jar", "commons-digester-1.8.1.jar", "commons-beanutils-1.8.3.jar", "curator-client-2.6.0.jar", "slf4j-api-1.7.6.jar", "zookeeper-3.4.6.jar", "log4j-1.2.16.jar", "jline-0.9.94.jar", "netty-3.7.0.Final.jar", "guava-16.0.1.jar", "curator-framework-2.6.0.jar", "curator-recipes-2.6.0.jar", "json-simple-1.1.jar", "scala-actors-2.11.7.jar", "jsr305-1.3.9.jar", "scalac-scoverage-runtime_2.11-1.1.1.jar", "scalac-scoverage-plugin_2.11-1.1.1.jar") //depJars: Array[String] = null)
+        )
+        mgr.AddSerializer("org.kamanja.serializer.kbinary" // namespace
+            , "kbinaryserdeser" //name: String
+            , 1 //version: Long = 1
+            , SerializeDeserializeType.KBinary //serializerType: SerializeDeserializeType.SerDeserType
+            , "org.kamanja.serdeser.kbinary.KBinarySerDeser" //physicalName: String
+            , "kamanja" //ownerId: String
+            , 3 //uniqueId: Long
+            , 3 //mdElementId: Long
+            , "kbinaryserdeser_2.11-1.0.jar" //jarNm: String = null
+            , Array("kbinaryserdeser_2.11-1.0.jar", "kamanjaversion-1.0.jar", "kamanjabase_2.11-1.0.jar", "metadata_2.11-1.0.jar", "exceptions_2.11-1.0.jar", "kamanjautils_2.11-1.0.jar", "heartbeat_2.11-0.1.0.jar", "zookeeperlistener_2.11-1.0.jar", "zookeeperclient_2.11-1.0.jar", "serialize_2.11-1.0.jar", "auditadapterbase_2.11-1.0.jar", "zookeeperleaderlatch_2.11-1.0.jar", "kvbase_2.11-0.1.0.jar", "datadelimiters_2.11-1.0.jar", "basetypes_2.11-0.1.0.jar", "zookeeperleaderlatch_2.11-1.0.jar", "scala-library-2.11.7.jar", "log4j-1.2-api-2.4.1.jar", "log4j-api-2.4.1.jar", "log4j-core-2.4.1.jar", "joda-convert-1.6.jar", "joda-time-2.8.2.jar", "json4s-native_2.11-3.2.9.jar", "json4s-core_2.11-3.2.9.jar", "json4s-ast_2.11-3.2.9.jar", "paranamer-2.6.jar", "scalap-2.11.0.jar", "scala-compiler-2.11.0.jar", "scala-xml_2.11-1.0.1.jar", "scala-parser-combinators_2.11-1.0.1.jar", "json4s-jackson_2.11-3.2.9.jar", "jackson-databind-2.3.1.jar", "jackson-annotations-2.3.0.jar", "jackson-core-2.3.1.jar", "scalatest_2.11-2.2.0.jar", "scala-reflect-2.11.1.jar", "chill_2.11-0.5.0.jar", "chill-java-0.5.0.jar", "kryo-2.21.jar", "reflectasm-1.07-shaded.jar", "asm-4.0.jar", "minlog-1.2.jar", "objenesis-1.2.jar", "protobuf-java-2.6.0.jar", "commons-collections4-4.0.jar", "commons-configuration-1.7.jar", "commons-collections-3.2.1.jar", "commons-lang-2.6.jar", "commons-logging-1.1.1.jar", "commons-digester-1.8.1.jar", "commons-beanutils-1.8.3.jar", "curator-client-2.6.0.jar", "slf4j-api-1.7.6.jar", "zookeeper-3.4.6.jar", "log4j-1.2.16.jar", "jline-0.9.94.jar", "netty-3.7.0.Final.jar", "guava-16.0.1.jar", "curator-framework-2.6.0.jar", "curator-recipes-2.6.0.jar", "json-simple-1.1.jar", "scala-actors-2.11.7.jar", "jsr305-1.3.9.jar", "scalac-scoverage-runtime_2.11-1.1.1.jar", "scalac-scoverage-plugin_2.11-1.1.1.jar") //depJars: Array[String] = null)
+        )
+    }
+
 	private def initFactoryOfModelInstanceFactories: Unit = {
 		ScalaVersionDependentInit.initFactoryOfModelInstanceFactories(mgr)
 	}
