@@ -738,7 +738,7 @@ object KamanjaLeader {
 
             if (distributionExecutor.isShutdown == false) {
               // Save the state and Clear the maps
-              ProcessedAdaptersInfo.CommitAdapterValues
+//              ProcessedAdaptersInfo.CommitAdapterValues
               ProcessedAdaptersInfo.clearInstances
               // envCtxt.PersistLocalNodeStateEntries
 //              envCtxt.clearIntermediateResults
