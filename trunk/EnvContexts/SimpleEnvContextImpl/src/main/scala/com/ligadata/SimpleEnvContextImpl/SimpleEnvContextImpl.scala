@@ -1776,13 +1776,14 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     bos.close()
 
     try {
-      logger.debug("Going to commit data into datastore.")
-      commiting_data.foreach(cd => {
-        cd._2.foreach(kv => {
-          logger.debug("ObjKey:(%d, %s, %d, %d)".format(kv._1.timePartition, kv._1.bucketKey.mkString(","), kv._1.transactionId, kv._1.rowId))
+      if (logger.isDebugEnabled) {
+        logger.debug("Going to commit data into datastore.")
+        commiting_data.foreach(cd => {
+          cd._3.foreach(kv => {
+            logger.debug("ObjKey:(%d, %s, %d, %d)".format(kv._1.timePartition, kv._1.bucketKey.mkString(","), kv._1.transactionId, kv._1.rowId))
+          })
         })
-      })
-
+      }
       callSaveData(_defaultDataStore, commiting_data.toArray)
 
     } catch {
@@ -2156,7 +2157,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
       dataForContainer += ((Key(KvBaseDefalts.defaultTime, Array(v1._1), 0, 0), "json", compjson.getBytes("UTF8")))
     })
     if (dataForContainer.size > 0) {
-      callSaveData(_defaultDataStore, Array(("AdapterUniqKvData", dataForContainer.toArray)))
+      callSaveData(_defaultDataStore, Array(("AdapterUniqKvData", true, dataForContainer.toArray)))
     }
   }
 
@@ -2597,7 +2598,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 
   // Saving & getting data
   override def saveDataInPersistentStore(containerName: String, key: String, serializerType: String, value: Array[Byte]): Unit = {
-    val oneContData = Array((containerName, Array((Key(0, Array(key), 0, 0), serializerType, value.asInstanceOf[Any]))))
+    val oneContData = Array((containerName, true, Array((Key(0, Array(key), 0, 0), serializerType, value.asInstanceOf[Any]))))
     callSaveData(_defaultDataStore, oneContData)
   }
 
