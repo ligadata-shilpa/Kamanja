@@ -243,7 +243,7 @@ trait ExecContext extends AdaptersSerializeDeserializers {
 
   }
 
-  protected def executeMessage(txnCtxtL: TransactionContext, deserializerName: String): Unit
+  protected def executeMessage(txnCtxt: TransactionContext, deserializerName: String): Unit
 }
 
 trait ExecContextFactory {
