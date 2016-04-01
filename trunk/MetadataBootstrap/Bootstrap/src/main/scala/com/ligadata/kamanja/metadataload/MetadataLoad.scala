@@ -77,22 +77,24 @@ object MetadataLoad {
 			(MdMgr.sysNS, "KamanjaStatusEvent", "com.ligadata.KamanjaBase.KamanjaStatusEvent", List(), 1000001, ""), // Assigned SchemaId as 1000001. Never change this for this message
       (MdMgr.sysNS, "KamanjaMessageEvent", "com.ligadata.KamanjaBase.KamanjaMessageEvent", List(), 1000002, ""), // Assigned SchemaId as 1000002. Never change this for this message
       (MdMgr.sysNS, "KamanjaModelEvent", "com.ligadata.KamanjaBase.KamanjaModelEvent", List(), 1000003, ""), // Assigned SchemaId as 1000003. Never change this for this message
-		  (MdMgr.sysNS, "KamanjaExceptionEvent", "com.ligadata.KamanjaBase.KamanjaExceptionEvent", List(), 1000004, "") // Assigned SchemaId as 1000004. Never change this for this message
-      // NOTE NOTE:- Next SchemaId should start from 1000005
+		  (MdMgr.sysNS, "KamanjaExceptionEvent", "com.ligadata.KamanjaBase.KamanjaExceptionEvent", List(), 1000004, ""), // Assigned SchemaId as 1000004. Never change this for this message
+			(MdMgr.sysNS, "KamanjaExecutionFailureEvent", "com.ligadata.KamanjaBase.KamanjaExecutionFailureEvent", List(), 1000005, ""), // Assigned SchemaId as 1000005. Never change this for this message
+			(MdMgr.sysNS, "KamanjaStatisticsEvent", "com.ligadata.KamanjaBase.KamanjaStatisticsEvent", List(), 1000006, "") // Assigned SchemaId as 1000005. Never change this for this message
+      // NOTE NOTE:- Next SchemaId should start from 1000007
     )
 }
 }
 
 class MetadataLoad (val mgr : MdMgr, val typesPath : String, val fcnPath : String, val attrPath : String, msgCtnPath : String) extends LogTrait {
 	/** construct the loader and call this to complete the cache initialization */
-	def initialize { 
+	def initialize {
 
 		logger.debug("MetadataLoad...loading typedefs")
 		InitTypeDefs
 
 		logger.debug("MetadataLoad...loading ContainerInterfaces definitions")
 		InitContainerInterfaces
-	    
+
     logger.debug("MetadataLoad...loading Metric Message definitions")
     InitBaseMessages
 	    
@@ -111,8 +113,8 @@ class MetadataLoad (val mgr : MdMgr, val typesPath : String, val fcnPath : Strin
 		logger.debug("MetadataLoad...loading FactoryOfModelInstanceFactories definitions")
 		initFactoryOfModelInstanceFactories
 
-        logger.debug("MetadataLoad...loading SerializeDeserializeConfig instances for kbinary, csv, and json")
-        initSerializeDeserializeConfigs
+    logger.debug("MetadataLoad...loading SerializeDeserializeConfig instances for kbinary, csv, and json")
+    initSerializeDeserializeConfigs
 
 	}
 
@@ -405,7 +407,7 @@ class MetadataLoad (val mgr : MdMgr, val typesPath : String, val fcnPath : Strin
 	    caused by excessively large functions.
 	  
 	 */
-def initTypesFor_com_ligadata_pmml_udfs_Udfs {
+   def initTypesFor_com_ligadata_pmml_udfs_Udfs {
         initTypes_com_ligadata_pmml_udfs_Udfs1
         initTypes_com_ligadata_pmml_udfs_Udfs2
         initTypes_com_ligadata_pmml_udfs_Udfs3

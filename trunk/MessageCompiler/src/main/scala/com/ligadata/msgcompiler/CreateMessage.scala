@@ -122,10 +122,11 @@ class CreateMessage {
           throw new Exception("Please provide parition keys in the MessageDefinition since the Message will be Persisted based on Partition Keys")
         }
       }
+
       if (msg.PartitionKeys != null)
-        containerDef = mdMgr.MakeMappedMsg(msg.NameSpace, msg.Name, msg.PhysicalName, msg.ArgsList, MdMgr.ConvertVersionToLong(msg.Version), null, msg.Jarset.toArray, null, null, msg.PartitionKeys.toArray, recompile, defaultOwner, 0, 0, msg.schemaId, msg.Schema)
+        containerDef = mdMgr.MakeFixedContainer(msg.NameSpace, msg.Name, msg.PhysicalName, msg.ArgsList, defaultOwner, 0, 0, msg.schemaId, msg.Schema, MdMgr.ConvertVersionToLong(msg.Version), null, msg.Jarset.toArray, null, null, msg.PartitionKeys.toArray, recompile)
       else
-        containerDef = mdMgr.MakeMappedMsg(msg.NameSpace, msg.Name, msg.PhysicalName, msg.ArgsList, MdMgr.ConvertVersionToLong(msg.Version), null, msg.Jarset.toArray, null, null, null, recompile, defaultOwner, 0, 0, msg.schemaId, msg.Schema)
+        containerDef = mdMgr.MakeFixedContainer(msg.NameSpace, msg.Name, msg.PhysicalName, msg.ArgsList, defaultOwner, 0, 0, msg.schemaId, msg.Schema, MdMgr.ConvertVersionToLong(msg.Version), null, msg.Jarset.toArray, null, null, null, recompile)
 
       log.info(" msg.NameSpace   " + msg.NameSpace)
       log.info("msg.Name    " + msg.Name)

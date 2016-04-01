@@ -375,7 +375,6 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj
               val message: Array[Byte] = new Array[Byte](bufferPayload.limit)
               readOffset = msgBuffer.nextOffset
               breakable {
-                val readTmNs = System.nanoTime
                 val readTmMs = System.currentTimeMillis
                 messagesProcessed = messagesProcessed + 1
 
@@ -400,7 +399,7 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj
 
                 uniqueVal.Offset = msgBuffer.offset
 //                val dontSendOutputToOutputAdap = uniqueVal.Offset <= uniqueRecordValue
-                execThread.execute(message, uniqueKey, uniqueVal, readTmNs, readTmMs)
+                execThread.execute(message, uniqueKey, uniqueVal, readTmMs)
 
                 // Kafka offsets are 0 based, so add 1
                 localReadOffsets(partitionId) = (uniqueVal.Offset + 1)

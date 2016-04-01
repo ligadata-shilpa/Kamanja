@@ -568,15 +568,18 @@ class MigrateTo_V_1_4 extends MigratableTo {
 
               logger.info("Adding model:" + dispkey + ", ModelType:" + mdlType + ", ObjectFormat:" + objFormat)
 
-              if (_sourceVersion.equalsIgnoreCase("1.1") || _sourceVersion.equalsIgnoreCase("1.2")) {
+              if (_sourceVersion.equalsIgnoreCase("1.1") || 
+		  _sourceVersion.equalsIgnoreCase("1.2") || 
+		  _sourceVersion.equalsIgnoreCase("1.3")) {
                 if ((objFormat.equalsIgnoreCase("JAVA")) || (objFormat.equalsIgnoreCase("scala"))) {
                   val mdlInfo = parse(mdlDefStr).values.asInstanceOf[Map[String, Any]]
                   val defStr = mdlInfo.getOrElse(ModelCompilationConstants.SOURCECODE, "").asInstanceOf[String]
                   // val phyName = mdlInfo.getOrElse(ModelCompilationConstants.PHYSICALNAME, "").asInstanceOf[String]
                   val deps = DepJars(mdlInfo.getOrElse(ModelCompilationConstants.DEPENDENCIES, List[String]()).asInstanceOf[List[String]])
                   val typs = mdlInfo.getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, List[String]()).asInstanceOf[List[String]]
-
-                  val cfgnm = "migrationmodelconfig_from_" + _sourceVersion.replace('.', '_') + "_to_1_3";
+		  //returns current time as a unique number
+                  val uniqueId = System.currentTimeMillis();
+                  val cfgnm = "migrationmodelconfig_from_" + _sourceVersion.replace('.', '_') + "_to_1_4_" + uniqueId.toString;
 
                   val mdlConfig = (cfgnm ->
                     ("Dependencies" -> deps) ~
@@ -1076,7 +1079,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
     return addedMessagesContainers
   }
 
-  private def callSaveData(dataStore: DataStoreOperations, data_list: Array[(String, Array[(Key, String, Any)])]): Unit = {
+  private def callSaveData(dataStore: DataStoreOperations, data_list: Array[(String, Boolean, Array[(Key, String, Any)])]): Unit = {
     var failedWaitTime = 15000 // Wait time starts at 15 secs
     val maxFailedWaitTime = 60000 // Max Wait time 60 secs
     var doneSave = false
@@ -1180,7 +1183,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
     val containersData = data.groupBy(_.containerName.toLowerCase)
-    val data_list = containersData.map(kv => (kv._1, kv._2.map(d => (Key(d.timePartition, d.bucketKey, d.transactionid, d.rowid), d.serializername, d.data.asInstanceOf[Any])).toArray)).toArray
+    val data_list = containersData.map(kv => (kv._1, false, kv._2.map(d => (Key(d.timePartition, d.bucketKey, d.transactionid, d.rowid), d.serializername, d.data.asInstanceOf[Any])).toArray)).toArray
 
     callSaveData(_dataStoreDb, data_list);
   }
@@ -1223,7 +1226,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
     if (_dataStoreDb == null)
       throw new Exception("Not found valid Datastore DB connection")
 
-    callSaveData(_dataStoreDb, Array(("MigrateStatusInformation", Array((Key(KvBaseDefalts.defaultTime, Array(key.toLowerCase), 0, 0), "txt", value.getBytes().asInstanceOf[Any])))))
+    callSaveData(_dataStoreDb, Array(("MigrateStatusInformation", true, Array((Key(KvBaseDefalts.defaultTime, Array(key.toLowerCase), 0, 0), "txt", value.getBytes().asInstanceOf[Any])))))
   }
 }
 

@@ -28,7 +28,7 @@ import org.apache.logging.log4j.{ Logger, LogManager }
 import scala.io.Source
 import org.json4s.jackson.JsonMethods._
 import scala.sys.process.{ ProcessIO, Process }
-import com.ligadata.KamanjaBase.{ContainerInterface, NodeContext, DataDelimiters}
+import com.ligadata.KamanjaBase.{TransactionContext, ContainerInterface, NodeContext, DataDelimiters}
 import com.ligadata.KamanjaVersion.KamanjaVersion
 
 object KamanjaMonitorConfig {
@@ -64,7 +64,7 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
 
   }
 
-  protected override def executeMessage(msg: ContainerInterface, data: Array[Byte], uniqueKey: PartitionUniqueRecordKey, uniqueVal: PartitionUniqueRecordValue, readTmNanoSecs: Long, readTmMilliSecs: Long, deserializerName: String): Unit = {
+  protected override def executeMessage(txnCtxt: TransactionContext, deserializerName: String): Unit = {
 //    if (format.equalsIgnoreCase("json")) {
 //      //if (data.charAt(0).toString.equals("{")) {
 //      agg.processJsonMessage(parse(new String(data)).values.asInstanceOf[Map[String, Any]])
