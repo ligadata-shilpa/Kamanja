@@ -431,10 +431,11 @@ trait EnvContext /* extends Monitorable */  {
   def setListenerCacheKey(key: String, value: String): Unit
 
   // listenPath is the Path where it has to listen. Ex: /kamanja/notification/node1
-  // ListenCallback is the call back called when there is any change in listenPath. The return value is has 2 components. 1 st is eventType, 2 is eventPathData
+  // ListenCallback is the call back called when there is any change in listenPath. The return value is has 3 components. 1 st is eventType, 2 is eventPath and 3rd is eventPathData
   // eventType is PUT, UPDATE, REMOVE etc
+  // eventPath is the Path where it changed the data
   // eventPathData is the data of that path
-  def createListenerForCacheKey(listenPath: String, ListenCallback: (String, String) => Unit): Unit
+  def createListenerForCacheKey(listenPath: String, ListenCallback: (String, String, String) => Unit): Unit
 
   // listenPath is the Path where it has to listen and its children
   //    Ex: If we start watching /kamanja/nodification/ all the following puts/updates/removes/etc will notify callback
