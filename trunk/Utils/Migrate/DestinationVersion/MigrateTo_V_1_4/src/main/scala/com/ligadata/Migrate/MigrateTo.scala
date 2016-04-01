@@ -568,15 +568,18 @@ class MigrateTo_V_1_4 extends MigratableTo {
 
               logger.info("Adding model:" + dispkey + ", ModelType:" + mdlType + ", ObjectFormat:" + objFormat)
 
-              if (_sourceVersion.equalsIgnoreCase("1.1") || _sourceVersion.equalsIgnoreCase("1.2")) {
+              if (_sourceVersion.equalsIgnoreCase("1.1") || 
+		  _sourceVersion.equalsIgnoreCase("1.2") || 
+		  _sourceVersion.equalsIgnoreCase("1.3")) {
                 if ((objFormat.equalsIgnoreCase("JAVA")) || (objFormat.equalsIgnoreCase("scala"))) {
                   val mdlInfo = parse(mdlDefStr).values.asInstanceOf[Map[String, Any]]
                   val defStr = mdlInfo.getOrElse(ModelCompilationConstants.SOURCECODE, "").asInstanceOf[String]
                   // val phyName = mdlInfo.getOrElse(ModelCompilationConstants.PHYSICALNAME, "").asInstanceOf[String]
                   val deps = DepJars(mdlInfo.getOrElse(ModelCompilationConstants.DEPENDENCIES, List[String]()).asInstanceOf[List[String]])
                   val typs = mdlInfo.getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, List[String]()).asInstanceOf[List[String]]
-
-                  val cfgnm = "migrationmodelconfig_from_" + _sourceVersion.replace('.', '_') + "_to_1_3";
+		  //returns current time as a unique number
+                  val uniqueId = System.currentTimeMillis();
+                  val cfgnm = "migrationmodelconfig_from_" + _sourceVersion.replace('.', '_') + "_to_1_4_" + uniqueId.toString;
 
                   val mdlConfig = (cfgnm ->
                     ("Dependencies" -> deps) ~

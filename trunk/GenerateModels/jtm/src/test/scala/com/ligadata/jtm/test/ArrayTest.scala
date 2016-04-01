@@ -17,37 +17,42 @@ package com.ligadata.jtm.test
 
 import java.io.File
 
-import com.ligadata.jtm
-import com.ligadata.jtm.CompilerBuilder
-import com.ligadata.jtm.nodes.Root
-import com.ligadata.kamanja.metadata.{MiningModelType, ModelRepresentation, ModelDef}
+import com.ligadata.jtm._
 import org.apache.commons.io.FileUtils
+import org.apache.logging.log4j.LogManager
+
 import org.scalatest.{BeforeAndAfter, FunSuite}
-import org.skyscreamer.jsonassert.JSONAssert
 
 /**
-  * Created by joerg on 3/9/16.
+  *
   */
-class ModelDefTest  extends FunSuite with BeforeAndAfter {
+class ArrayTest extends FunSuite with BeforeAndAfter {
 
-  test("test01") {
-    val fileInput = getClass.getResource("/test002.jtm/test.jtm").getPath
+  val logger = LogManager.getLogger(this.getClass.getName())
 
-    val fileOutput = getClass.getResource("/test001.jtm/test.scala.result").getPath
-    val fileExpected = getClass.getResource("/test001.jtm/test.scala.expected").getPath
+  // Simple jtm
+  test("test1") {
+
+    val fileInput = getClass.getResource("/arraymsg/array001.jtm").getPath
+    val fileOutput = getClass.getResource("/arraymsg/array001.scala.result").getPath
+    val fileExpected = getClass.getResource("/arraymsg/array001.scala.expected").getPath
     val metadataLocation = getClass.getResource("/metadata").getPath
 
     val compiler = CompilerBuilder.create().
       setSuppressTimestamps().
       setInputFile(fileInput).
+      setOutputFile(fileOutput).
       setMetadataLocation(metadataLocation).
       build()
 
     compiler.Execute()
-    val md: ModelDef =  compiler.MakeModelDef()
 
-    //assert("com.ligadata.kamanja.test.msg1,com.ligadata.kamanja.test.msg3" == md.msgConsumed)
-    assert(ModelRepresentation.JAR == md.modelRepresentation)
-    assert(MiningModelType.JTM == md.miningModelType)
+    val expected = FileUtils.readFileToString(new File(fileExpected))
+    val actual = FileUtils.readFileToString(new File(fileOutput))
+    logger.info("actual path={}", fileOutput)
+    logger.info("expected path={}", fileExpected)
+
+    assert(actual == expected)
   }
+
 }

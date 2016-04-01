@@ -1,5 +1,4 @@
-package com.ligadata.kamanja.test.v1000000;
-
+package com.ligadata.KamanjaBase;
 import org.json4s.jackson.JsonMethods._
 import org.json4s.DefaultFormats
 import org.json4s.Formats
@@ -10,14 +9,14 @@ import org.apache.logging.log4j.{ Logger, LogManager }
 import java.util.Date
 
 
-object msg1 extends RDDObject[msg1] with MessageFactoryInterface {
-  type T = msg1 ;
-  override def getFullTypeName: String = "com.ligadata.kamanja.test.msg1";
-  override def getTypeNameSpace: String = "com.ligadata.kamanja.test";
-  override def getTypeName: String = "msg1";
-  override def getTypeVersion: String = "000000.000001.000000";
-  override def getSchemaId: Int = 0;
-  override def createInstance: msg1 = new msg1(msg1);
+object KamanjaExecutionFailureEvent extends RDDObject[KamanjaExecutionFailureEvent] with MessageFactoryInterface {
+  type T = KamanjaExecutionFailureEvent ;
+  override def getFullTypeName: String = "com.ligadata.KamanjaBase.KamanjaExecutionFailureEvent";
+  override def getTypeNameSpace: String = "com.ligadata.KamanjaBase";
+  override def getTypeName: String = "KamanjaExecutionFailureEvent";
+  override def getTypeVersion: String = "000001.000002.000000";
+  override def getSchemaId: Int = 2000021;
+  override def createInstance: KamanjaExecutionFailureEvent = new KamanjaExecutionFailureEvent(KamanjaExecutionFailureEvent);
   override def isFixed: Boolean = true;
   override def getContainerType: ContainerFactoryInterface.ContainerType = ContainerFactoryInterface.ContainerType.MESSAGE
   override def getFullName = getFullTypeName;
@@ -48,34 +47,35 @@ object msg1 extends RDDObject[msg1] with MessageFactoryInterface {
     return (tmInfo != null && tmInfo.getTimePartitionType != TimePartitionInfo.TimePartitionType.NONE);
   }
 
-  override def getSchema: String = " {\"type\": \"record\", \"namespace\" : \"com.ligadata.kamanja.test\",\"name\" : \"msg1\",\"fields\":[{\"name\" : \"in1\",\"type\" : \"int\"},{\"name\" : \"in2\",\"type\" : \"int\"},{\"name\" : \"in3\",\"type\" : \"int\"}]}";
+  override def getSchema: String = " {\"type\": \"record\", \"namespace\" : \"com.ligadata.kamanjabase\",\"name\" : \"kamanjaexecutionfailureevent\",\"fields\":[{\"name\" : \"msgid\",\"type\" : \"long\"},{\"name\" : \"timeoferrorepochms\",\"type\" : \"long\"},{\"name\" : \"msgcontent\",\"type\" : \"string\"},{\"name\" : \"errordetail\",\"type\" : \"string\"}]}";
 }
 
-class msg1(factory: MessageFactoryInterface, other: msg1) extends MessageInterface(factory) {
+class KamanjaExecutionFailureEvent(factory: MessageFactoryInterface, other: KamanjaExecutionFailureEvent) extends MessageInterface(factory) {
 
   val logger = this.getClass.getName
   lazy val log = LogManager.getLogger(logger)
 
-  private var keyTypes = Map("in1"-> "Int","in2"-> "Int","in3"-> "Int");
+  private var keyTypes = Map("msgid"-> "Long","timeoferrorepochms"-> "Long","msgcontent"-> "String","errordetail"-> "String");
 
-  override def save: Unit = { msg1.saveOne(this) }
+  override def save: Unit = { KamanjaExecutionFailureEvent.saveOne(this) }
 
-  def Clone(): ContainerOrConcept = { msg1.build(this) }
+  def Clone(): ContainerOrConcept = { KamanjaExecutionFailureEvent.build(this) }
 
   override def getPartitionKey: Array[String] = Array[String]()
 
   override def getPrimaryKey: Array[String] = Array[String]()
 
-  var in1: Int = _;
-  var in2: Int = _;
-  var in3: Int = _;
+  var msgid: Long = _;
+  var timeoferrorepochms: Long = _;
+  var msgcontent: String = _;
+  var errordetail: String = _;
 
   private def getWithReflection(key: String): AttributeValue = {
     var attributeValue = new AttributeValue();
     val ru = scala.reflect.runtime.universe
     val m = ru.runtimeMirror(getClass.getClassLoader)
     val im = m.reflect(this)
-    val fieldX = ru.typeOf[msg1].declaration(ru.newTermName(key)).asTerm.accessed.asTerm
+    val fieldX = ru.typeOf[KamanjaExecutionFailureEvent].declaration(ru.newTermName(key)).asTerm.accessed.asTerm
     val fmX = im.reflectField(fieldX)
     attributeValue.setValue(fmX.get);
     attributeValue.setValueType(keyTypes(key))
@@ -100,9 +100,10 @@ class msg1(factory: MessageFactoryInterface, other: msg1) extends MessageInterfa
     try {
       if (!keyTypes.contains(key)) throw new Exception("Key does not exists");
       var attributeValue = new AttributeValue();
-      if (key.equals("in1")) { attributeValue.setValue(this.in1); }
-      if (key.equals("in2")) { attributeValue.setValue(this.in2); }
-      if (key.equals("in3")) { attributeValue.setValue(this.in3); }
+      if (key.equals("msgid")) { attributeValue.setValue(this.msgid); }
+      if (key.equals("timeoferrorepochms")) { attributeValue.setValue(this.timeoferrorepochms); }
+      if (key.equals("msgcontent")) { attributeValue.setValue(this.msgcontent); }
+      if (key.equals("errordetail")) { attributeValue.setValue(this.errordetail); }
 
 
       attributeValue.setValueType(keyTypes(key.toLowerCase()));
@@ -178,21 +179,27 @@ class msg1(factory: MessageFactoryInterface, other: msg1) extends MessageInterfa
     try{
       {
         var attributeVal = new AttributeValue();
-        attributeVal.setValue(in1)
-        attributeVal.setValueType(keyTypes("in1"))
-        attributeValsMap.put("in1", attributeVal)
+        attributeVal.setValue(msgid)
+        attributeVal.setValueType(keyTypes("msgid"))
+        attributeValsMap.put("msgid", attributeVal)
       };
       {
         var attributeVal = new AttributeValue();
-        attributeVal.setValue(in2)
-        attributeVal.setValueType(keyTypes("in2"))
-        attributeValsMap.put("in2", attributeVal)
+        attributeVal.setValue(timeoferrorepochms)
+        attributeVal.setValueType(keyTypes("timeoferrorepochms"))
+        attributeValsMap.put("timeoferrorepochms", attributeVal)
       };
       {
         var attributeVal = new AttributeValue();
-        attributeVal.setValue(in3)
-        attributeVal.setValueType(keyTypes("in3"))
-        attributeValsMap.put("in3", attributeVal)
+        attributeVal.setValue(msgcontent)
+        attributeVal.setValueType(keyTypes("msgcontent"))
+        attributeValsMap.put("msgcontent", attributeVal)
+      };
+      {
+        var attributeVal = new AttributeValue();
+        attributeVal.setValue(errordetail)
+        attributeVal.setValueType(keyTypes("errordetail"))
+        attributeValsMap.put("errordetail", attributeVal)
       };
 
     }catch {
@@ -215,16 +222,20 @@ class msg1(factory: MessageFactoryInterface, other: msg1) extends MessageInterfa
     try{
       index match {
         case 0 => {
-          attributeValue.setValue(this.in1);
-          attributeValue.setValueType(keyTypes("in1"));
+          attributeValue.setValue(this.msgid);
+          attributeValue.setValueType(keyTypes("msgid"));
         }
         case 1 => {
-          attributeValue.setValue(this.in2);
-          attributeValue.setValueType(keyTypes("in2"));
+          attributeValue.setValue(this.timeoferrorepochms);
+          attributeValue.setValueType(keyTypes("timeoferrorepochms"));
         }
         case 2 => {
-          attributeValue.setValue(this.in3);
-          attributeValue.setValueType(keyTypes("in3"));
+          attributeValue.setValue(this.msgcontent);
+          attributeValue.setValueType(keyTypes("msgcontent"));
+        }
+        case 3 => {
+          attributeValue.setValue(this.errordetail);
+          attributeValue.setValueType(keyTypes("errordetail"));
         }
 
         case _ => throw new Exception("Bad index");
@@ -242,9 +253,10 @@ class msg1(factory: MessageFactoryInterface, other: msg1) extends MessageInterfa
   override def set(key: String, value: Any) = {
     try {
 
-      if (key.equals("in1")) { this.in1 = value.asInstanceOf[Int]; }
-      if (key.equals("in2")) { this.in2 = value.asInstanceOf[Int]; }
-      if (key.equals("in3")) { this.in3 = value.asInstanceOf[Int]; }
+      if (key.equals("msgid")) { this.msgid = value.asInstanceOf[Long]; }
+      if (key.equals("timeoferrorepochms")) { this.timeoferrorepochms = value.asInstanceOf[Long]; }
+      if (key.equals("msgcontent")) { this.msgcontent = value.asInstanceOf[String]; }
+      if (key.equals("errordetail")) { this.errordetail = value.asInstanceOf[String]; }
 
     }catch {
       case e: Exception => {
@@ -259,9 +271,10 @@ class msg1(factory: MessageFactoryInterface, other: msg1) extends MessageInterfa
   def set(index : Int, value :Any): Unit = {
     try{
       index match {
-        case 0 => {this.in1 = value.asInstanceOf[Int];}
-        case 1 => {this.in2 = value.asInstanceOf[Int];}
-        case 2 => {this.in3 = value.asInstanceOf[Int];}
+        case 0 => {this.msgid = value.asInstanceOf[Long];}
+        case 1 => {this.timeoferrorepochms = value.asInstanceOf[Long];}
+        case 2 => {this.msgcontent = value.asInstanceOf[String];}
+        case 3 => {this.errordetail = value.asInstanceOf[String];}
 
         case _ => throw new Exception("Bad index");
       }
@@ -278,10 +291,11 @@ class msg1(factory: MessageFactoryInterface, other: msg1) extends MessageInterfa
     throw new Exception ("Set Func for Value and ValueType By Key is not supported for Fixed Messages" )
   }
 
-  private def fromFunc(other: msg1): msg1 = {
-    this.in1 = com.ligadata.BaseTypes.IntImpl.Clone(other.in1);
-    this.in2 = com.ligadata.BaseTypes.IntImpl.Clone(other.in2);
-    this.in3 = com.ligadata.BaseTypes.IntImpl.Clone(other.in3);
+  private def fromFunc(other: KamanjaExecutionFailureEvent): KamanjaExecutionFailureEvent = {
+    this.msgid = com.ligadata.BaseTypes.LongImpl.Clone(other.msgid);
+    this.timeoferrorepochms = com.ligadata.BaseTypes.LongImpl.Clone(other.timeoferrorepochms);
+    this.msgcontent = com.ligadata.BaseTypes.StringImpl.Clone(other.msgcontent);
+    this.errordetail = com.ligadata.BaseTypes.StringImpl.Clone(other.errordetail);
 
     //this.timePartitionData = com.ligadata.BaseTypes.LongImpl.Clone(other.timePartitionData);
     return this;
@@ -292,7 +306,7 @@ class msg1(factory: MessageFactoryInterface, other: msg1) extends MessageInterfa
     this(factory, null)
   }
 
-  def this(other: msg1) = {
+  def this(other: KamanjaExecutionFailureEvent) = {
     this(other.getFactory.asInstanceOf[MessageFactoryInterface], other)
   }
 
