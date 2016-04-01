@@ -57,7 +57,7 @@ object hl7 extends RDDObject[hl7] with ContainerFactoryInterface {
   override def getTypeName: String = "HL7"
   override def getTypeVersion: String = "000000.000001.000000"
   override def toJavaRDDObject: JavaRDDObject[T] = JavaRDDObject.fromRDDObject[T](this);
-
+  override def getSchemaId = 0;
   override def getFullName: String = ""
   override def build: T = null
   override def build(from: T): T = null

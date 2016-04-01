@@ -40,7 +40,7 @@ object hl7Fixed extends RDDObject[hl7Fixed] with ContainerFactoryInterface {
   override def getContainerType: ContainerFactoryInterface.ContainerType = ContainerFactoryInterface.ContainerType.MESSAGE
   override def isFixed: Boolean = true
   override def getSchema: String = ""
-
+  override def getSchemaId = 0;
   override def getPrimaryKeyNames: Array[String] = {
     var primaryKeyNames: Array[String] = Array("desynpuf_id", "clm_id");
     return primaryKeyNames;
