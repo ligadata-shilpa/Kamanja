@@ -1675,7 +1675,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     val bos = new ByteArrayOutputStream(1024 * 1024)
     val dos = new DataOutputStream(bos)
 
-    val commiting_data = ArrayBuffer[(String, Array[(Key, String, Any)])]()
+    val commiting_data = ArrayBuffer[(String, Boolean, Array[(Key, String, Any)])]()
     val dataForContainer = ArrayBuffer[(Key, String, Any)]()
 
     messagesOrContainers.foreach(v => {
@@ -1707,7 +1707,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
       }
 
       if (dataForContainer.size > 0)
-        commiting_data += ((v._1, dataForContainer.toArray))
+        commiting_data += ((v._1, false, dataForContainer.toArray))
     })
 
     dataForContainer.clear
@@ -1735,7 +1735,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
       dataForContainer += ((Key(KvBaseDefalts.defaultTime, Array(v1._1), 0, 0), "json", compjson.getBytes("UTF8")))
     })
     if (dataForContainer.size > 0)
-      commiting_data += (("AdapterUniqKvData", dataForContainer.toArray))
+      commiting_data += (("AdapterUniqKvData", true, dataForContainer.toArray))
 
     dataForContainer.clear
     /*
@@ -1757,7 +1757,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     */
 
     //    if (dataForContainer.size > 0)
-    //      commiting_data += (("ModelResults", dataForContainer.toArray))
+    //      commiting_data += (("ModelResults", false, dataForContainer.toArray))
 
     /*
     dataForContainer.clear
@@ -1779,7 +1779,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
           dataForContainer += ((Key(KvBaseDefalts.defaultTime, Array(v1._1), 0, 0), Value("json", compjson.getBytes("UTF8"))))
         }
       })
-      commiting_data += (("UK", dataForContainer.toArray))
+      commiting_data += (("UK", true, dataForContainer.toArray))
     }
 */
 
@@ -1787,13 +1787,14 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     bos.close()
 
     try {
-      logger.debug("Going to commit data into datastore.")
-      commiting_data.foreach(cd => {
-        cd._2.foreach(kv => {
-          logger.debug("ObjKey:(%d, %s, %d, %d)".format(kv._1.timePartition, kv._1.bucketKey.mkString(","), kv._1.transactionId, kv._1.rowId))
+      if (logger.isDebugEnabled) {
+        logger.debug("Going to commit data into datastore.")
+        commiting_data.foreach(cd => {
+          cd._3.foreach(kv => {
+            logger.debug("ObjKey:(%d, %s, %d, %d)".format(kv._1.timePartition, kv._1.bucketKey.mkString(","), kv._1.transactionId, kv._1.rowId))
+          })
         })
-      })
-
+      }
       callSaveData(_defaultDataStore, commiting_data.toArray)
 
     } catch {
@@ -2167,11 +2168,11 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
       dataForContainer += ((Key(KvBaseDefalts.defaultTime, Array(v1._1), 0, 0), "json", compjson.getBytes("UTF8")))
     })
     if (dataForContainer.size > 0) {
-      callSaveData(_defaultDataStore, Array(("AdapterUniqKvData", dataForContainer.toArray)))
+      callSaveData(_defaultDataStore, Array(("AdapterUniqKvData", true, dataForContainer.toArray)))
     }
   }
 
-  private def callSaveData(dataStore: DataStoreOperations, data_list: Array[(String, Array[(Key, String, Any)])]): Unit = {
+  private def callSaveData(dataStore: DataStoreOperations, data_list: Array[(String, Boolean, Array[(Key, String, Any)])]): Unit = {
     var failedWaitTime = 15000 // Wait time starts at 15 secs
     val maxFailedWaitTime = 60000 // Max Wait time 60 secs
     var doneSave = false
@@ -2608,7 +2609,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 
   // Saving & getting data
   override def saveDataInPersistentStore(containerName: String, key: String, serializerType: String, value: Array[Byte]): Unit = {
-    val oneContData = Array((containerName, Array((Key(0, Array(key), 0, 0), serializerType, value.asInstanceOf[Any]))))
+    val oneContData = Array((containerName, true, Array((Key(0, Array(key), 0, 0), serializerType, value.asInstanceOf[Any]))))
     callSaveData(_defaultDataStore, oneContData)
   }
 

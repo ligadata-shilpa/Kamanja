@@ -574,7 +574,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     return null
   }
 
-  override def put(containerName: String, key: Key, value: Value): Unit = {
+  override def put(containerName: String, isMetadataContainer: Boolean, key: Key, value: Value): Unit = {
     var tableName = toFullTableName(containerName)
     var tableHBase: Table = null
     try {
@@ -598,7 +598,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     }
   }
 
-  override def put(data_list: Array[(String, Array[(Key, Value)])]): Unit = {
+  override def put(data_list: Array[(String, Boolean, Array[(Key, Value)])]): Unit = {
     var tableHBase: Table = null
     try {
       relogin
@@ -607,7 +607,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
         CheckTableExists(containerName)
         var tableName = toFullTableName(containerName)
         tableHBase = getTableFromConnection(tableName);
-        var keyValuePairs = li._2
+        var keyValuePairs = li._3
         var puts = new Array[Put](0)
         keyValuePairs.foreach(keyValuePair => {
           var key = keyValuePair._1
@@ -1533,11 +1533,11 @@ class HBaseAdapterTx(val parent: DataStore) extends Transaction {
   val loggerName = this.getClass.getName
   val logger = LogManager.getLogger(loggerName)
 
-  override def put(containerName: String, key: Key, value: Value): Unit = {
-    parent.put(containerName, key, value)
+  override def put(containerName: String, isMetadataContainer: Boolean, key: Key, value: Value): Unit = {
+    parent.put(containerName, isMetadataContainer, key, value)
   }
 
-  override def put(data_list: Array[(String, Array[(Key, Value)])]): Unit = {
+  override def put(data_list: Array[(String, Boolean, Array[(Key, Value)])]): Unit = {
     parent.put(data_list)
   }
 
