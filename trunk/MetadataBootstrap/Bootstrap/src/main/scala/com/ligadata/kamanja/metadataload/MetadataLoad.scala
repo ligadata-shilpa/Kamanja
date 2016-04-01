@@ -132,7 +132,8 @@ class MetadataLoad (val mgr : MdMgr, val typesPath : String, val fcnPath : Strin
             , 1 //version: Long = 1
             , SerializeDeserializeType.CSV //serializerType: SerializeDeserializeType.SerDeserType
             , "org.kamanja.serdeser.csv.CsvSerDeser" //physicalName: String
-            , "kamanja" //ownerId: String
+            , MetadataLoad.baseTypesOwnerId //ownerId: String
+            , MetadataLoad.baseTypesTenantId //tenantId: String
             , 1 //uniqueId: Long
             , 1 //mdElementId: Long
             , "csvserdeser_2.11-1.0.jar" //jarNm: String = null
@@ -143,7 +144,8 @@ class MetadataLoad (val mgr : MdMgr, val typesPath : String, val fcnPath : Strin
             , 1 //version: Long = 1
             , SerializeDeserializeType.JSON //serializerType: SerializeDeserializeType.SerDeserType
             , "org.kamanja.serdeser.json.JsonSerDeser" //physicalName: String
-            , "kamanja" //ownerId: String
+            , MetadataLoad.baseTypesOwnerId //ownerId: String
+            , MetadataLoad.baseTypesTenantId //tenantId: String
             , 2 //uniqueId: Long
             , 2 //mdElementId: Long
             , "jsonserdeser_2.11-1.0.jar" //jarNm: String = null
@@ -154,7 +156,8 @@ class MetadataLoad (val mgr : MdMgr, val typesPath : String, val fcnPath : Strin
             , 1 //version: Long = 1
             , SerializeDeserializeType.KBinary //serializerType: SerializeDeserializeType.SerDeserType
             , "org.kamanja.serdeser.kbinary.KBinarySerDeser" //physicalName: String
-            , "kamanja" //ownerId: String
+            , MetadataLoad.baseTypesOwnerId //ownerId: String
+            , MetadataLoad.baseTypesTenantId //tenantId: String
             , 3 //uniqueId: Long
             , 3 //mdElementId: Long
             , "kbinaryserdeser_2.11-1.0.jar" //jarNm: String = null

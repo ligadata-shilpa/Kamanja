@@ -245,7 +245,7 @@ object MethodExtract extends App with LogTrait {
         val notExcluded: Boolean = (excludeList.filter(exclnm => nm.contains(exclnm) || rt.contains(exclnm)).length == 0)
         if (notExcluded && !nm.contains("$")) {
 
-          val cmd: MethodCmd = new MethodCmd(mgr, versionNumber, namespace, typeMap, typeArray, nm, fnm, rt, ts, ownerId)
+          val cmd: MethodCmd = new MethodCmd(mgr, versionNumber, namespace, typeMap, typeArray, nm, fnm, rt, ts, ownerId, tenantId)
           if (cmd != null) {
             val (funcInfo, cmdStr): (FuncDefArgs, String) = cmd.makeFuncDef
             if (funcInfo != null) {
@@ -351,6 +351,7 @@ Usage: scala com.ligadata.udf.extract.MethodExtract --object <fully qualifed sca
   def InitializeMdMgr: MdMgr = {
     val versionNumber: Long = 1
     val ownerId: String = "kamanja"
+    val tenantId: String = ""
     val mgr: MdMgr = MdMgr.GetMdMgr
 
     /** seed essential types */
