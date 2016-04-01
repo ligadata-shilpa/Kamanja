@@ -38,14 +38,14 @@ trait DataStoreOperations extends AdaptersSerializeDeserializers {
   }
 
   // value could be ContainerInterface or Array[Byte]
-  def put(tnxCtxt: TransactionContext, containerName: String, key: Key, serializerTyp: String, value: Any, isMetadataContainer: Boolean = false): Unit = {
+  def put(tnxCtxt: TransactionContext, containerName: String, key: Key, serializerTyp: String, value: Any, isMetadataContainer: Boolean): Unit = {
     if (containerName == null || key == null || serializerTyp == null || value == null)
       throw new InvalidArgumentException("ContainerName, Keys, SerializerTyps and Values should not be null", null)
     put(tnxCtxt, Array((containerName, Array((key, serializerTyp, value)))))
   }
 
   // value could be ContainerInterface or Array[Byte]
-  def put(tnxCtxt: TransactionContext, containerName: String, keys: Array[Key], serializerTyps: Array[String], values: Array[Any], isMetadataContainer: Boolean = false): Unit = {
+  def put(tnxCtxt: TransactionContext, containerName: String, keys: Array[Key], serializerTyps: Array[String], values: Array[Any], isMetadataContainer: Boolean): Unit = {
     if (containerName == null || keys == null || serializerTyps == null || values == null)
       throw new InvalidArgumentException("Keys, SerializerTyps and Values should not be null", null)
 

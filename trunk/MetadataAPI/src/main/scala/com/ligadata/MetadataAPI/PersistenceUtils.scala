@@ -132,7 +132,7 @@ object PersistenceUtils {
     val k = Key(storageDefaultTime, Array(bucketKeyStr), storageDefaultTxnId, 0)
 
     try {
-      store.put(null, containerName, k, serializerTyp, value)
+      store.put(null, containerName, k, serializerTyp, value, true)
     } catch {
       case e: Exception => {
         logger.error("Failed to insert/update object for : " + bucketKeyStr, e)
