@@ -205,14 +205,16 @@ object KamanjaMdCfg {
       allJars = collection.immutable.Set(jarName)
     }
 
+    val adaptersAndEnvCtxtLoader = new KamanjaLoaderInfo(KamanjaConfiguration.baseLoader, true, true)
+
     if (allJars != null) {
-      if (Utils.LoadJars(allJars.map(j => Utils.GetValidJarFile(initConfigs.jarPaths, j)).toArray, KamanjaConfiguration.adaptersAndEnvCtxtLoader.loadedJars, KamanjaConfiguration.adaptersAndEnvCtxtLoader.loader) == false)
+      if (Utils.LoadJars(allJars.map(j => Utils.GetValidJarFile(initConfigs.jarPaths, j)).toArray, adaptersAndEnvCtxtLoader.loadedJars, adaptersAndEnvCtxtLoader.loader) == false)
         throw new Exception("Failed to add Jars")
     }
 
     // Try for errors before we do real loading & processing
     try {
-      Class.forName(className, true, KamanjaConfiguration.adaptersAndEnvCtxtLoader.loader)
+      Class.forName(className, true, adaptersAndEnvCtxtLoader.loader)
     } catch {
       case e: Exception => {
         LOG.error("Failed to load EnvironmentContext class %s".format(className), e)
@@ -221,7 +223,7 @@ object KamanjaMdCfg {
     }
 
     // Convert class name into a class
-    val clz = Class.forName(className, true, KamanjaConfiguration.adaptersAndEnvCtxtLoader.loader)
+    val clz = Class.forName(className, true, adaptersAndEnvCtxtLoader.loader)
 
     var isEntCtxt = false
     var curClz = clz
@@ -234,13 +236,17 @@ object KamanjaMdCfg {
 
     if (isEntCtxt) {
       try {
-        val module = KamanjaConfiguration.adaptersAndEnvCtxtLoader.mirror.staticModule(className)
-        val obj = KamanjaConfiguration.adaptersAndEnvCtxtLoader.mirror.reflectModule(module)
+        val module = adaptersAndEnvCtxtLoader.mirror.staticModule(className)
+        val obj = adaptersAndEnvCtxtLoader.mirror.reflectModule(module)
 
         val objinst = obj.instance
         if (objinst.isInstanceOf[EnvContext]) {
           val envCtxt = objinst.asInstanceOf[EnvContext]
-          envCtxt.setClassLoader(KamanjaConfiguration.metadataLoader.loader) // Using Metadata Loader
+          // First time creating metadata loader here
+          val metadataLoader = new KamanjaLoaderInfo(KamanjaConfiguration.baseLoader, true, true)
+          envCtxt.setMetadataLoader(metadataLoader)
+          envCtxt.setMetadataLoader(adaptersAndEnvCtxtLoader)
+          // envCtxt.setClassLoader(KamanjaConfiguration.metadataLoader.loader) // Using Metadata Loader
           envCtxt.setMetadataResolveInfo(KamanjaMetadata)
           envCtxt.setMdMgr(KamanjaMetadata.getMdMgr)
           val containerNames = KamanjaMetadata.getAllContainers.map(container => container._1.toLowerCase).toList.sorted.toArray // Sort topics by names
@@ -363,8 +369,11 @@ object KamanjaMdCfg {
       allJars = collection.immutable.Set(statusAdapterCfg.jarName)
     }
 
+    val envContext = nodeContext.getEnvCtxt()
+    val adaptersAndEnvCtxtLoader = envContext.getAdaptersAndEnvCtxtLoader
+
     if (allJars != null) {
-      if (Utils.LoadJars(allJars.map(j => Utils.GetValidJarFile(nodeContext.getEnvCtxt().getJarPaths(), j)).toArray, KamanjaConfiguration.adaptersAndEnvCtxtLoader.loadedJars, KamanjaConfiguration.adaptersAndEnvCtxtLoader.loader) == false) {
+      if (Utils.LoadJars(allJars.map(j => Utils.GetValidJarFile(envContext.getJarPaths(), j)).toArray, adaptersAndEnvCtxtLoader.loadedJars, adaptersAndEnvCtxtLoader.loader) == false) {
         val szErrMsg = "Failed to load Jars:" + allJars.mkString(",")
         LOG.error(szErrMsg)
         throw new Exception(szErrMsg)
@@ -373,7 +382,7 @@ object KamanjaMdCfg {
 
     // Try for errors before we do real loading & processing
     try {
-      Class.forName(statusAdapterCfg.className, true, KamanjaConfiguration.adaptersAndEnvCtxtLoader.loader)
+      Class.forName(statusAdapterCfg.className, true, adaptersAndEnvCtxtLoader.loader)
     } catch {
       case e: Exception => {
         val szErrMsg = "Failed to load Status/Output Adapter %s with class %s".format(statusAdapterCfg.Name, statusAdapterCfg.className)
@@ -388,7 +397,7 @@ object KamanjaMdCfg {
     }
 
     // Convert class name into a class
-    val clz = Class.forName(statusAdapterCfg.className, true, KamanjaConfiguration.adaptersAndEnvCtxtLoader.loader)
+    val clz = Class.forName(statusAdapterCfg.className, true, adaptersAndEnvCtxtLoader.loader)
 
     var isOutputAdapter = false
     var curClz = clz
@@ -401,8 +410,8 @@ object KamanjaMdCfg {
 
     if (isOutputAdapter) {
       try {
-        val module = KamanjaConfiguration.adaptersAndEnvCtxtLoader.mirror.staticModule(statusAdapterCfg.className)
-        val obj = KamanjaConfiguration.adaptersAndEnvCtxtLoader.mirror.reflectModule(module)
+        val module = adaptersAndEnvCtxtLoader.mirror.staticModule(statusAdapterCfg.className)
+        val obj = adaptersAndEnvCtxtLoader.mirror.reflectModule(module)
 
         val objinst = obj.instance
         if (objinst.isInstanceOf[OutputAdapterFactory]) {
@@ -477,14 +486,17 @@ object KamanjaMdCfg {
       allJars = collection.immutable.Set(statusAdapterCfg.jarName)
     }
 
+    val envContext = nodeContext.getEnvCtxt()
+    val adaptersAndEnvCtxtLoader = envContext.getAdaptersAndEnvCtxtLoader
+
     if (allJars != null) {
-      if (Utils.LoadJars(allJars.map(j => Utils.GetValidJarFile(nodeContext.getEnvCtxt().getJarPaths(), j)).toArray, KamanjaConfiguration.adaptersAndEnvCtxtLoader.loadedJars, KamanjaConfiguration.adaptersAndEnvCtxtLoader.loader) == false)
+      if (Utils.LoadJars(allJars.map(j => Utils.GetValidJarFile(nodeContext.getEnvCtxt().getJarPaths(), j)).toArray, adaptersAndEnvCtxtLoader.loadedJars, adaptersAndEnvCtxtLoader.loader) == false)
         throw new Exception("Failed to add Jars")
     }
 
     // Try for errors before we do real loading & processing
     try {
-      Class.forName(statusAdapterCfg.className, true, KamanjaConfiguration.adaptersAndEnvCtxtLoader.loader)
+      Class.forName(statusAdapterCfg.className, true, adaptersAndEnvCtxtLoader.loader)
     } catch {
       case e: Exception => {
         LOG.error("Failed to load Validate/Input Adapter %s with class %s".format(statusAdapterCfg.Name, statusAdapterCfg.className), e)
@@ -497,7 +509,7 @@ object KamanjaMdCfg {
     }
 
     // Convert class name into a class
-    val clz = Class.forName(statusAdapterCfg.className, true, KamanjaConfiguration.adaptersAndEnvCtxtLoader.loader)
+    val clz = Class.forName(statusAdapterCfg.className, true, adaptersAndEnvCtxtLoader.loader)
 
     var isInputAdapter = false
     var curClz = clz
@@ -510,8 +522,8 @@ object KamanjaMdCfg {
 
     if (isInputAdapter) {
       try {
-        val module = KamanjaConfiguration.adaptersAndEnvCtxtLoader.mirror.staticModule(statusAdapterCfg.className)
-        val obj = KamanjaConfiguration.adaptersAndEnvCtxtLoader.mirror.reflectModule(module)
+        val module = adaptersAndEnvCtxtLoader.mirror.staticModule(statusAdapterCfg.className)
+        val obj = adaptersAndEnvCtxtLoader.mirror.reflectModule(module)
 
         val objinst = obj.instance
         if (objinst.isInstanceOf[InputAdapterFactory]) {

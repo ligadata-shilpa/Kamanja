@@ -264,9 +264,16 @@ trait EnvContext /* extends Monitorable */  {
 
   def getPropertyValue(clusterId: String, key: String): String
 
-  def setClassLoader(cl: java.lang.ClassLoader): Unit
+//  def setClassLoader(cl: java.lang.ClassLoader): Unit
+//  def getClassLoader: java.lang.ClassLoader
 
-  def getClassLoader: java.lang.ClassLoader
+  def setMetadataLoader(metadataLoader: KamanjaLoaderInfo): Unit
+
+  def getMetadataLoader: KamanjaLoaderInfo
+
+  def setAdaptersAndEnvCtxtLoader(adaptersAndEnvCtxtLoader: KamanjaLoaderInfo): Unit
+
+  def getAdaptersAndEnvCtxtLoader: KamanjaLoaderInfo
 
   def setMetadataResolveInfo(mdres: MdBaseResolveInfo): Unit
 
@@ -281,13 +288,13 @@ trait EnvContext /* extends Monitorable */  {
   //  def RegisterMessageOrContainers(containersInfo: Array[ContainerNameAndDatastoreInfo]): Unit
 
   // RDD Ops
-  def getRecent(transId: Long, containerName: String, partKey: List[String], tmRange: TimeRange, f: ContainerInterface => Boolean): Option[ContainerInterface]
+  def getRecent(containerName: String, partKey: List[String], tmRange: TimeRange, f: ContainerInterface => Boolean): Option[ContainerInterface]
 
-  def getRDD(transId: Long, containerName: String, partKey: List[String], tmRange: TimeRange, f: ContainerInterface => Boolean): Array[ContainerInterface]
+  def getRDD(containerName: String, partKey: List[String], tmRange: TimeRange, f: ContainerInterface => Boolean): Array[ContainerInterface]
 
-  def saveOne(transId: Long, containerName: String, partKey: List[String], value: ContainerInterface): Unit
-
-  def saveRDD(transId: Long, containerName: String, values: Array[ContainerInterface]): Unit
+//  def saveOne(transId: Long, containerName: String, partKey: List[String], value: ContainerInterface): Unit
+//
+//  def saveRDD(transId: Long, containerName: String, values: Array[ContainerInterface]): Unit
 
   // RDD Ops
   def Shutdown: Unit
@@ -309,11 +316,11 @@ trait EnvContext /* extends Monitorable */  {
   def containsAll(transId: Long, containerName: String, partKeys: Array[List[String]], primaryKeys: Array[List[String]]): Boolean //partKeys.size should be same as primaryKeys.size
 
   // Adapters Keys & values
-  def setAdapterUniqueKeyValue(transId: Long, key: String, value: String, outputResults: List[(String, String, String)]): Unit
+//  def setAdapterUniqueKeyValue(transId: Long, key: String, value: String, outputResults: List[(String, String, String)]): Unit
 
-  def getAdapterUniqueKeyValue(transId: Long, key: String): (Long, String, List[(String, String, String)])
+//  def getAdapterUniqueKeyValue(transId: Long, key: String): (Long, String, List[(String, String, String)])
 
-  def setAdapterUniqKeyAndValues(keyAndValues: List[(String, String)]): Unit
+//  def setAdapterUniqKeyAndValues(keyAndValues: List[(String, String)]): Unit
 
   def getAllAdapterUniqKvDataInfo(keys: Array[String]): Array[(String, (Long, String, List[(String, String, String)]))] // Get Status information from Final table. No Transaction required here.
 
@@ -331,7 +338,7 @@ trait EnvContext /* extends Monitorable */  {
 
   // Final Commit for the given transaction
   // outputResults has AdapterName, PartitionKey & Message
-  def commitData(transId: Long, key: String, value: String, outputResults: List[(String, String, String)], forceCommit: Boolean): Unit
+  def commitData(transId: Long, forceCommit: Boolean): Unit
 
   def rollbackData(transId: Long): Unit
 
@@ -857,14 +864,14 @@ class TransactionContext(val transId: Long, val nodeCtxt: NodeContext, val msgDa
       return Some(tmpMsgs(tmpMsgs.size - 1)._2) // Take the last one
 
     if (getNodeCtxt != null && getNodeCtxt.getEnvCtxt != null)
-      return getNodeCtxt.getEnvCtxt.getRecent(transId, containerName, partKey, tmRange, f)
+      return getNodeCtxt.getEnvCtxt.getRecent(containerName, partKey, tmRange, f)
     None
   }
 
   final def getRDD(containerName: String, partKey: List[String], tmRange: TimeRange, f: ContainerInterface => Boolean): Array[ContainerInterface] = {
     val tmpList =
       if (getNodeCtxt != null && getNodeCtxt.getEnvCtxt != null)
-        getNodeCtxt.getEnvCtxt.getRDD(transId, containerName, partKey, tmRange, f)
+        getNodeCtxt.getEnvCtxt.getRDD(containerName, partKey, tmRange, f)
       else
         Array[ContainerInterface]()
 

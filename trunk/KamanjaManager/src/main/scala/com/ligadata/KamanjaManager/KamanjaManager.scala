@@ -110,8 +110,8 @@ object KamanjaConfiguration {
   var shutdown = false
   var participentsChangedCntr: Long = 0
   var baseLoader = new KamanjaLoaderInfo
-  var adaptersAndEnvCtxtLoader = new KamanjaLoaderInfo(baseLoader, true, true)
-  var metadataLoader = new KamanjaLoaderInfo(baseLoader, true, true)
+//  var adaptersAndEnvCtxtLoader = new KamanjaLoaderInfo(baseLoader, true, true)
+//  var metadataLoader = new KamanjaLoaderInfo(baseLoader, true, true)
 
   var adapterInfoCommitTime = 5000 // Default 5 secs
 
