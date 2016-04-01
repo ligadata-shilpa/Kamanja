@@ -162,7 +162,7 @@ object PersistenceUtils {
     })
 
     try {
-      store.put(null, Array((containerName, storeObjects)))
+      store.put(null, Array((containerName, false, storeObjects)))
     } catch {
       case e: Exception => {
         logger.error("Failed to insert/update objects for : " + keyList.mkString(","), e)
@@ -311,7 +311,7 @@ object PersistenceUtils {
         i = i + 1
       })
 
-      var storeData = scala.collection.mutable.Map[String, (DataStore, ArrayBuffer[(String, Array[(Key, String, Any)])])]()
+      var storeData = scala.collection.mutable.Map[String, (DataStore, ArrayBuffer[(String, Boolean, Array[(Key, String, Any)])])]()
 
       saveDataMap.foreach(elemTypData => {
         val storeInfo = GetContainerNameAndDataStore(elemTypData._1)
@@ -322,7 +322,7 @@ object PersistenceUtils {
         } else {
           val ab = ArrayBuffer[(String, Array[(Key, String, Any)])]()
           ab += ((elemTypData._1, elemTypData._2.toArray))
-          storeData(storeInfo._1) = ((storeInfo._2, ab))
+          storeData(storeInfo._1) = ((storeInfo._2, false, ab))
         }
       })
 

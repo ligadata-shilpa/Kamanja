@@ -1664,7 +1664,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     val bos = new ByteArrayOutputStream(1024 * 1024)
     val dos = new DataOutputStream(bos)
 
-    val commiting_data = ArrayBuffer[(String, Array[(Key, String, Any)])]()
+    val commiting_data = ArrayBuffer[(String, Boolean, Array[(Key, String, Any)])]()
     val dataForContainer = ArrayBuffer[(Key, String, Any)]()
 
     messagesOrContainers.foreach(v => {
@@ -1696,7 +1696,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
       }
 
       if (dataForContainer.size > 0)
-        commiting_data += ((v._1, dataForContainer.toArray))
+        commiting_data += ((v._1, false, dataForContainer.toArray))
     })
 
     dataForContainer.clear
@@ -1724,7 +1724,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
       dataForContainer += ((Key(KvBaseDefalts.defaultTime, Array(v1._1), 0, 0), "json", compjson.getBytes("UTF8")))
     })
     if (dataForContainer.size > 0)
-      commiting_data += (("AdapterUniqKvData", dataForContainer.toArray))
+      commiting_data += (("AdapterUniqKvData", false, dataForContainer.toArray))
 
     dataForContainer.clear
     /*
@@ -1746,7 +1746,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     */
 
     //    if (dataForContainer.size > 0)
-    //      commiting_data += (("ModelResults", dataForContainer.toArray))
+    //      commiting_data += (("ModelResults", false, dataForContainer.toArray))
 
     /*
     dataForContainer.clear
@@ -1768,7 +1768,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
           dataForContainer += ((Key(KvBaseDefalts.defaultTime, Array(v1._1), 0, 0), Value("json", compjson.getBytes("UTF8"))))
         }
       })
-      commiting_data += (("UK", dataForContainer.toArray))
+      commiting_data += (("UK", false, dataForContainer.toArray))
     }
 */
 
@@ -2160,7 +2160,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     }
   }
 
-  private def callSaveData(dataStore: DataStoreOperations, data_list: Array[(String, Array[(Key, String, Any)])]): Unit = {
+  private def callSaveData(dataStore: DataStoreOperations, data_list: Array[(String, Boolean, Array[(Key, String, Any)])]): Unit = {
     var failedWaitTime = 15000 // Wait time starts at 15 secs
     val maxFailedWaitTime = 60000 // Max Wait time 60 secs
     var doneSave = false
