@@ -1872,7 +1872,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
         val ownerId: String = if (userid == None) "kamanja" else userid.get
         val uniqueId = MetadataAPIImpl.GetUniqueId
         val mdElementId = 0L //FIXME:- Not yet handled this
-        val jarObject = MdMgr.GetMdMgr.MakeJarDef(MetadataAPIImpl.sysNS, jarName, "100", ownerId, uniqueId, mdElementId)
+        val jarObject = MdMgr.GetMdMgr.MakeJarDef(MetadataAPIImpl.sysNS, jarName, "100", ownerId, tenantId, uniqueId, mdElementId)
 
 
         logger.debug(" UploadJar  ==>>    ===>> " + jarPath )
@@ -3185,7 +3185,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
             val ownerId: String = "kamanja" //FIXME:- We need to have some user for this operation.
             val uniqueId = MetadataAPIImpl.GetUniqueId
             val mdElementId = 0L //FIXME:- Not yet handled this
-            DownloadJarFromDB(MdMgr.GetMdMgr.MakeJarDef(zkMessage.NameSpace, zkMessage.Name, zkMessage.Version, ownerId, uniqueId, mdElementId))
+            DownloadJarFromDB(MdMgr.GetMdMgr.MakeJarDef(zkMessage.NameSpace, zkMessage.Name, zkMessage.Version, ownerId, tenantId, uniqueId, mdElementId))
           }
           case _ => { logger.error("Unknown Operation " + zkMessage.Operation + " in zookeeper notification, notification is not processed ..") }
         }

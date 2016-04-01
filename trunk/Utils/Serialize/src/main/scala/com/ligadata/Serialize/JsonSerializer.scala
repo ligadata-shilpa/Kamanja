@@ -112,7 +112,7 @@ object JsonSerializer {
 
   @throws(classOf[Json4sParsingException])
   @throws(classOf[FunctionListParsingException])
-  def parseFunctionList(funcListJson: String, formatType: String, ownerId: String, uniqueId: Long, mdElementId: Long): Array[FunctionDef] = {
+  def parseFunctionList(funcListJson: String, formatType: String, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long): Array[FunctionDef] = {
     try {
       implicit val jsonFormats: Formats = DefaultFormats
       val json = parse(funcListJson)
@@ -130,7 +130,7 @@ object JsonSerializer {
           }
           val func = MdMgr.GetMdMgr.MakeFunc(fn.NameSpace, fn.Name, fn.PhysicalName,
             (fn.ReturnTypeNameSpace, fn.ReturnTypeName),
-            argList, featureSet, ownerId, uniqueId, mdElementId,
+            argList, featureSet, ownerId, tenantId, uniqueId, mdElementId,
             fn.Version.toLong,
             fn.JarName,
             fn.DependantJars.toArray)
@@ -385,7 +385,7 @@ object JsonSerializer {
         (concept.FunctionDefinition.ReturnTypeNameSpace,
           concept.FunctionDefinition.ReturnTypeName),
         argList,
-        featureSet, ownerId, uniqueId, mdElementId,
+        featureSet, ownerId, tenantId, uniqueId, mdElementId,
         concept.FunctionDefinition.Version.toLong,
         concept.FunctionDefinition.JarName,
         concept.FunctionDefinition.DependantJars.toArray)

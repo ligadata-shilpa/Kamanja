@@ -342,7 +342,7 @@ object MetadataAPISerialization {
       val modDef = MdMgr.GetMdMgr.MakeModelDef(ModDefInst.Model.NameSpace
         , ModDefInst.Model.Name
         , ModDefInst.Model.PhysicalName
-        , ownerId, uniqueId, mdElementId
+        , ownerId, tenantId, uniqueId, mdElementId
         , ModelRepresentation.modelRep(ModDefInst.Model.ModelRep)
         , inputMsgSets, outputMsgs
         , ModDefInst.Model.BooleanTypes.IsReusable
@@ -562,7 +562,7 @@ object MetadataAPISerialization {
         functionInst.Function.PhysicalName,
         (functionInst.Function.ReturnTypeNameSpace, functionInst.Function.ReturnTypeName),
         argList,
-        featureSet, ownerId, uniqueId, mdElementId,
+        featureSet, ownerId, tenantId, uniqueId, mdElementId,
         functionInst.Function.NumericTypes.Version,
         functionInst.Function.JarName,
         functionInst.Function.DependencyJars.toArray)
@@ -616,7 +616,7 @@ object MetadataAPISerialization {
         mapTypeInst.MapType.Name,
         key,
         value,
-        mapTypeInst.MapType.NumericTypes.Version, ownerId, uniqueId, mdElementId,
+        mapTypeInst.MapType.NumericTypes.Version, ownerId, tenantId, uniqueId, mdElementId,
         mapTypeInst.MapType.Recompile)
 
       mapTypeDef.origDef = mapTypeInst.MapType.OrigDef
@@ -670,7 +670,7 @@ object MetadataAPISerialization {
         arrayTypeInst.ArrayType.Name,
         arrayTypeInst.ArrayType.TypeNameSpace,
         arrayTypeInst.ArrayType.TypeName,
-        arrayTypeInst.ArrayType.NumberOfDimensions, ownerId, uniqueId, mdElementId,
+        arrayTypeInst.ArrayType.NumberOfDimensions, ownerId, tenantId, uniqueId, mdElementId,
         arrayTypeInst.ArrayType.NumericTypes.Version,
         arrayTypeInst.ArrayType.Recompile
       )
@@ -724,7 +724,7 @@ object MetadataAPISerialization {
 
       val jarDef = MdMgr.GetMdMgr.MakeJarDef(jarInst.Jar.NameSpace,
         jarInst.Jar.Name,
-        jarInst.Jar.NumericTypes.Version.toString, ownerId, uniqueId, mdElementId
+        jarInst.Jar.NumericTypes.Version.toString, ownerId, tenantId, uniqueId, mdElementId
       )
 
       jarDef.origDef = jarInst.Jar.OrigDef

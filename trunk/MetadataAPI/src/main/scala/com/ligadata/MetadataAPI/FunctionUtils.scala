@@ -253,7 +253,7 @@ object FunctionUtils {
         val ownerId: String = if (userid == None) "kamanja" else userid.get
         val uniqueId = MetadataAPIImpl.GetUniqueId
         val mdElementId = 0L //FIXME:- Not yet handled this
-        var funcList= JsonSerializer.parseFunctionList(functionsText, "JSON", ownerId, uniqueId, mdElementId)
+        var funcList= JsonSerializer.parseFunctionList(functionsText, "JSON", ownerId, tenantId, uniqueId, mdElementId)
         // Check for the Jars
         val missingJars = scala.collection.mutable.Set[String]()
         funcList.foreach(func => {
@@ -301,7 +301,7 @@ object FunctionUtils {
         val ownerId: String = if (userid == None) "kamanja" else userid.get
         val uniqueId = MetadataAPIImpl.GetUniqueId
         val mdElementId = 0L //FIXME:- Not yet handled this
-        var funcList = JsonSerializer.parseFunctionList(functionsText, "JSON", ownerId, uniqueId, mdElementId)
+        var funcList = JsonSerializer.parseFunctionList(functionsText, "JSON", ownerId, tenantId, uniqueId, mdElementId)
         // Check for the Jars
         val missingJars = scala.collection.mutable.Set[String]()
         funcList.foreach(func => {

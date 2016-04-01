@@ -126,7 +126,7 @@ class CompilerProxy {
   /**
     *
     */
-  def compilePmml(pmmlStr: String, ownerId: String, recompile: Boolean = false): (String, ModelDef) = {
+  def compilePmml(pmmlStr: String, ownerId: String, tenantId: String, recompile: Boolean = false): (String, ModelDef) = {
     try {
       /** if you set this to true, you will cause the generation of logger.info (...) stmts in generated model */
       var injectLoggingStmts: Boolean = false
@@ -730,7 +730,7 @@ class CompilerProxy {
       val modDef: ModelDef = MdMgr.GetMdMgr.MakeModelDef(modelNamespace
         , modelName
         , pName
-        , ownerId, uniqueId, mdElementId
+        , ownerId, tenantId, uniqueId, mdElementId
         , ModelRepresentation.JAR
         , inpM
         , outM

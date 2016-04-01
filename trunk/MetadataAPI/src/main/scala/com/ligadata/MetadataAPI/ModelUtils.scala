@@ -784,7 +784,7 @@ object ModelUtils {
           if (mod.objectFormat == ObjFormatType.fXML) {
             val pmmlText = mod.ObjectDefinition
             val ownerId: String = if (userid == None) "kamanja" else userid.get
-            val (classStrTemp, modDefTemp) = compProxy.compilePmml(pmmlText, ownerId, true)
+            val (classStrTemp, modDefTemp) = compProxy.compilePmml(pmmlText, ownerId, tenantId, true)
             // copy outputMsgs
             if (mod.outputMsgs.length > 0) {
               modDefTemp.outputMsgs.foreach(omsg => {
