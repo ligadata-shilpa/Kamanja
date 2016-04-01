@@ -1724,7 +1724,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
       dataForContainer += ((Key(KvBaseDefalts.defaultTime, Array(v1._1), 0, 0), "json", compjson.getBytes("UTF8")))
     })
     if (dataForContainer.size > 0)
-      commiting_data += (("AdapterUniqKvData", false, dataForContainer.toArray))
+      commiting_data += (("AdapterUniqKvData", true, dataForContainer.toArray))
 
     dataForContainer.clear
     /*
@@ -1768,7 +1768,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
           dataForContainer += ((Key(KvBaseDefalts.defaultTime, Array(v1._1), 0, 0), Value("json", compjson.getBytes("UTF8"))))
         }
       })
-      commiting_data += (("UK", false, dataForContainer.toArray))
+      commiting_data += (("UK", true, dataForContainer.toArray))
     }
 */
 

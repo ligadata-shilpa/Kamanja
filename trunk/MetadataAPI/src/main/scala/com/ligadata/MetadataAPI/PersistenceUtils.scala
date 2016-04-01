@@ -162,7 +162,7 @@ object PersistenceUtils {
     })
 
     try {
-      store.put(null, Array((containerName, false, storeObjects)))
+      store.put(null, Array((containerName, true, storeObjects)))
     } catch {
       case e: Exception => {
         logger.error("Failed to insert/update objects for : " + keyList.mkString(","), e)
