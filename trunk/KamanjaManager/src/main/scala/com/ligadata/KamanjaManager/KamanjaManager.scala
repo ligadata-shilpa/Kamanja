@@ -597,18 +597,28 @@ class KamanjaManager extends Observer {
     }
 
     // Jars loaded, create the status factory
-    val statusEventFactory = KamanjaMetadata.getMessgeInfo("system.KamanjaStatusEvent").contmsgobj.asInstanceOf[MessageFactoryInterface]
+    //val statusEventFactory =  KamanjaMetadata.envCtxt.getContainerInstance("system.KamanjaStatusEvent") //KamanjaMetadata.getMessgeInfo("system.KamanjaStatusEvent").contmsgobj.asInstanceOf[MessageFactoryInterface]
 
     val exceptionStatusAdaps = scala.collection.mutable.Set[String]()
     var curCntr = 0
     val maxFailureCnt = 30
-/*
+
     val statusPrint_PD = new Runnable {
-      def run() {
-        val stats: scala.collection.immutable.Map[String, Long] = SimpleStats.copyMap
+      def run(): Unit = {
+        val stats: scala.collection.immutable.Map[String, Long] = Map[String,Long]() // SimpleStats.copyMap
         val statsStr = stats.mkString("~")
         val dispStr = "PD,%d,%s,%s".format(KamanjaConfiguration.nodeId, Utils.GetCurDtTmStr, statsStr)
-        var statusMsg = statusEventFactory.CreateNewMessage.asInstanceOf[KamanjaStatusEvent]
+        val statusMsg: com.ligadata.KamanjaBase.KamanjaStatusEvent = KamanjaMetadata.envCtxt.getContainerInstance("system.KamanjaStatusEvent").asInstanceOf[KamanjaStatusEvent]
+        statusMsg.nodeid = KamanjaConfiguration.nodeId.toString
+        statusMsg.statusstring = statsStr
+        statusMsg.eventtime = Utils.GetCurDtTmStr
+        KamanjaMetadata.envCtxt.postMessages(Array[ContainerInterface](statusMsg))
+      }
+    }
+  /*      val stats: scala.collection.immutable.Map[String, Long] = SimpleStats.copyMap
+        val statsStr = stats.mkString("~")
+        val dispStr = "PD,%d,%s,%s".format(KamanjaConfiguration.nodeId, Utils.GetCurDtTmStr, statsStr)
+        var statusMsg = KamanjaMetadata.envCtxt.getContainerInstance("system.KamanjaStatusEvent")
         statusMsg.nodeid = KamanjaConfiguration.nodeId.toString
         statusMsg.statusstring = statsStr
         //statusMsg.eventtime = Utils.GetCurDtTmStr
@@ -646,10 +656,8 @@ class KamanjaManager extends Observer {
             curCntr = 0
         } else {
           LOG.info(dispStr)
-        }
-      }
-    }
-*/
+        } */
+
 
     val metricsCollector = new Runnable {
       def run(): Unit = {
