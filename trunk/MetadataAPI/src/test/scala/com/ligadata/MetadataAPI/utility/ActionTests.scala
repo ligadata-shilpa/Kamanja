@@ -1,13 +1,13 @@
-package com.ligadata.MetadataAPI.utility.test
+package com.ligadata.MetadataAPI.utility
 import org.scalatest._
 import com.ligadata.kamanja.metadata._
 import com.ligadata.MetadataAPI._
 import com.ligadata.MetadataAPI.Utility.Action.Value
 import com.ligadata.MetadataAPI.Utility.Action
-
 /**
  * Created by dhavalkolapkar on 3/21/16.
  */
+
 class ActionTests extends FlatSpec with Matchers {
 
   "ADDMESSAGE" should "return the corresponding value" in {

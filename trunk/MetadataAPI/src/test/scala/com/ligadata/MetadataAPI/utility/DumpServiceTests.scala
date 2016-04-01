@@ -1,12 +1,14 @@
-package com.ligadata.MetadataAPI.utility.test
+package com.ligadata.MetadataAPI.utility
 import org.scalatest._
 import com.ligadata.kamanja.metadata._
 import com.ligadata.MetadataAPI._
 import com.ligadata.MetadataAPI.Utility.DumpService
 import com.ligadata.MetadataAPI.Utility.ConfigService
+
 /**
  * Created by dhavalkolapkar on 3/21/16.
  */
+
 class DumpServiceTests extends FlatSpec with Matchers with MetadataBeforeAndAfterEach {
 
   "Dump metadata" should "display the metadata" in {

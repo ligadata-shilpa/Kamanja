@@ -1,12 +1,13 @@
-package com.ligadata.MetadataAPI.utility.test
+package com.ligadata.MetadataAPI.utility
+import java.io.File
+import java.io._
+import org.scalatest._
+import com.ligadata.MetadataAPI.MetadataAPIImpl
 
 /**
  * Created by dhavalkolapkar on 3/23/16.
  */
 import java.io.File
-import java.io._
-import org.scalatest._
-import com.ligadata.MetadataAPI.MetadataAPIImpl
 
 trait MetadataBeforeAndAfterEach extends BeforeAndAfterEach { this: Suite =>
   def delete(file: File) {

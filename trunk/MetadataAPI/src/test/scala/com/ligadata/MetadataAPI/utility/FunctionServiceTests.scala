@@ -1,15 +1,16 @@
-package com.ligadata.MetadataAPI.utility.test
-
+package com.ligadata.MetadataAPI.utility
 import java.io.{File, ByteArrayInputStream}
-
 import org.scalatest._
 import com.ligadata.kamanja.metadata._
 import com.ligadata.MetadataAPI._
 import com.ligadata.MetadataAPI.Utility.FunctionService
-
 /**
  * Created by dhavalkolapkar on 3/21/16.
  */
+
+import org.scalatest._
+import Matchers._
+
 class FunctionServiceTests extends FlatSpec with Matchers with MetadataBeforeAndAfterEach {
 
   "add function" should "produce error when invalid path to msg def is provided" in {

@@ -1,12 +1,12 @@
-package com.ligadata.MetadataAPI.utility.test
+package com.ligadata.MetadataAPI.utility
 
 /**
  * Created by will on 6/8/15.
  */
 object MetadataDefaults {
 
-  //val scalaVersionFull = scala.util.Properties.versionNumberString
-  val scalaVersionFull="2.11.7"
+  val scalaVersionFull = scala.util.Properties.versionNumberString
+  //val scalaVersionFull="2.11.7"
   val scalaVersion = scalaVersionFull.substring(0, scalaVersionFull.lastIndexOf('.'))
   println("scala version: "+scalaVersionFull)
   def jarResourceDir = getClass.getResource("/jars/lib/system").getPath

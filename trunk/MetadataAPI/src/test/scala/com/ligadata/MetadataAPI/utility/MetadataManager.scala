@@ -1,10 +1,10 @@
-package com.ligadata.MetadataAPI.utility.test
-
+package com.ligadata.MetadataAPI.utility
 import java.io.File
 import org.apache.commons.io.FileUtils
 import com.ligadata.MetadataAPI.{MetadataAPIImpl => md}
 import com.ligadata.Exceptions.AlreadyExistsException
 import com.ligadata.kamanja.metadata.MdMgr
+
 /**
  * Created by dhavalkolapkar on 3/23/16.
  */

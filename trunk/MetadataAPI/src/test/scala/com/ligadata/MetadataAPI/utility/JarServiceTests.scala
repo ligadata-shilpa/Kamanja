@@ -1,5 +1,4 @@
-package com.ligadata.MetadataAPI.utility.test
-
+package com.ligadata.MetadataAPI.utility
 import java.io.ByteArrayInputStream
 
 import org.scalatest._
@@ -7,10 +6,10 @@ import com.ligadata.kamanja.metadata._
 import com.ligadata.MetadataAPI._
 import com.ligadata.MetadataAPI.Utility.JarService
 import java.io.File
-
 /**
  * Created by dhavalkolapkar on 3/21/16.
  */
+
 class JarServiceTests extends FlatSpec with Matchers with MetadataBeforeAndAfterEach {
 
   "uploadJar" should "upload the valid jar" in {

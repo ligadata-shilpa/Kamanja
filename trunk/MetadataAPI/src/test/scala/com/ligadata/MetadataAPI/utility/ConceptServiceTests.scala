@@ -1,7 +1,6 @@
-package com.ligadata.MetadataAPI.utility.test
+package com.ligadata.MetadataAPI.utility
 
 import java.io.{File, ByteArrayInputStream}
-
 import org.scalatest._
 import com.ligadata.kamanja.metadata._
 import com.ligadata.MetadataAPI._
