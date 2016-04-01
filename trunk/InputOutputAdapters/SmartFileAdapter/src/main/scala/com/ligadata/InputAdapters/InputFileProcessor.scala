@@ -667,8 +667,7 @@ class FileProcessor(val partitionId: Int) extends Runnable {
 
   private var envContext : EnvContext = null
   private var clusterStatus : ClusterStatus = null
-  private var fileRequestQ: scala.collection.mutable.Queue[String] = scala.collection.mutable.Queue[String]()
-  private var fileProcessingQ: scala.collection.mutable.Queue[Map[String, String]] = scala.collection.mutable.Queue[Map[String, String]]()
+  private var participantExecutor : ExecutorService = null
   private var filesParallelism : Int = 1
 
   private def initializeNode(nodeContext: NodeContext): Unit ={
@@ -689,59 +688,86 @@ class FileProcessor(val partitionId: Int) extends Runnable {
 
       //set parallelism
       filesParallelism = (monitoringConf.consumersCount.toDouble / newClusterStatus.participantsNodeIds.size).round.toInt
-      envContext.setListenerCacheKey(filesParallelismPath, filesParallelism.toString.getBytes)
+      envContext.setListenerCacheKey(filesParallelismPath, filesParallelism.toString)
     }
 
     //action for participant nodes:
     val nodeId = newClusterStatus.nodeId
-    envContext.createListenerForCacheChildern(filesParallelismPath, filesParallelismCallback)
-    val fileProcessingAssignementKeyPath = smartFileFromLeaderPath + "/" + nodeId //listen to this SmartFileCommunication/FromLeader/<NodeId>
-    //listen to file assignment from leader
-    envContext.createListenerForCacheChildern(fileProcessingAssignementKeyPath, fileAssignmentFromLeaderCallback) //e.g.   SmartFileCommunication/ToLeader/RequestFile/<nodeid>
-    val fileRequestKeyPath = smartFileToLeaderPath + "/" + nodeId
-    envContext.setListenerCacheKey(fileRequestKeyPath, fileProcessingAssignementKeyPath.getBytes)
+    envContext.createListenerForCacheKey(filesParallelismPath, filesParallelismCallback)
+
 
     clusterStatus = newClusterStatus
   }
 
   //what a leader should do when recieving file processing request
-  def requestFileLeaderCallback (key : String, value : String,  p3 : String) : Unit = {
-    val keyTokens = key.split("/")
-    val requestingNodeId = keyTokens(keyTokens.length - 1)
-    val fileToProcessKeyPath = value //from leader
+  def requestFileLeaderCallback (eventType: String, eventPath: String, eventPathData: String) : Unit = {
+    if(eventType.equalsIgnoreCase("put") || eventType.equalsIgnoreCase("update")) {
+      val keyTokens = eventPath.split("/")
+      val requestingNodeId = keyTokens(keyTokens.length - 2)
+      val requestingThreadId = keyTokens(keyTokens.length - 1)
+      val fileToProcessKeyPath = eventPathData //from leader
 
-    val fileToProcessFullPath = ""//TODO : get next file to process
-    if(fileToProcessFullPath != null)
-      envContext.setListenerCacheKey(fileToProcessKeyPath, fileToProcessFullPath.getBytes)
+      val fileToProcessFullPath = "" //TODO : get next file to process
+      if (fileToProcessFullPath != null)
+        envContext.setListenerCacheKey(fileToProcessKeyPath, fileToProcessFullPath)
+    }
+    //should do anything for remove?
   }
 
   //what a leader should do when recieving file processing status update
-  def fileProcessingLeaderCallback (key : String, value : String,  p3 : String) : Unit = {
-    val keyTokens = key.split("/")
-    val processingNodeId = keyTokens(keyTokens.length - 1)
-    //value for file processing has the format <file-name>|<status>
-    val valueTokens = value.split("\\|")
-    val processingFilePath = valueTokens(0)
-    val status = valueTokens(1)
-    if(status == File_Processing_Status_Finished){
-      val correspondingRequestFileKeyPath = requestFilePath + "/" + processingNodeId //e.g. SmartFileCommunication/ToLeader/ProcessedFile/<nodeid>
-      //TODO: remove the file
+  def fileProcessingLeaderCallback (eventType: String, eventPath: String, eventPathData: String) : Unit = {
+    if(eventType.equalsIgnoreCase("put") || eventType.equalsIgnoreCase("update")) {
+      val keyTokens = eventPath.split("/")
+      val processingThreadId = keyTokens(keyTokens.length - 1)
+      val processingNodeId = keyTokens(keyTokens.length - 2)
+      //value for file processing has the format <file-name>|<status>
+      val valueTokens = eventPathData.split("\\|")
+      val processingFilePath = valueTokens(0)
+      val status = valueTokens(1)
+      if(status == File_Processing_Status_Finished){
+        val correspondingRequestFileKeyPath = requestFilePath + "/" + processingNodeId //e.g. SmartFileCommunication/ToLeader/ProcessedFile/<nodeid>
+        //TODO: remove the file
+      }
+
     }
+    //should do anything for remove?
   }
 
   //what a participant should do when receiving file to process (from leader)
-  def fileAssignmentFromLeaderCallback (key : String, value : String,  p3 : String) : Unit = {
-    val fileToProcessName = value
+  def fileAssignmentFromLeaderCallback (eventType: String, eventPath: String, eventPathData: String) : Unit = {
+    val fileToProcessName = eventPathData
 
     //TODO : start processing the file
   }
 
   //what a participant should do parallelism value changes
-  def filesParallelismCallback (key : String, value : String,  p3 : String) : Unit = {
-    val newFilesParallelism = value.toInt
+  def filesParallelismCallback (eventType: String, eventPath: String, eventPathData: String) : Unit = {
+    val newFilesParallelism = eventPathData.toInt
+    filesParallelism = newFilesParallelism
 
-    //TODO : consider if there were already running threads
-    //TODO : create corresponding threads
+    val nodeId = clusterStatus.nodeId
+
+    //TODO : consider if there were already running threads, and parallelism changed
+
+    participantExecutor = Executors.newFixedThreadPool(filesParallelism)
+    for(threadId <- 1 to filesParallelism) {
+
+      val executorThread = new Runnable() {
+        private var threadId: Int = _
+        def init(id: Int) = threadId = id
+
+        override def run(): Unit = {
+          val fileProcessingAssignementKeyPath = smartFileFromLeaderPath + "/" + nodeId + "/" + threadId //listen to this SmartFileCommunication/FromLeader/<NodeId>/<thread id>
+          //listen to file assignment from leader
+          envContext.createListenerForCacheKey(fileProcessingAssignementKeyPath, fileAssignmentFromLeaderCallback) //e.g.   SmartFileCommunication/FromLeader/RequestFile/<nodeid>/<thread id>
+          val fileRequestKeyPath = smartFileToLeaderPath + "/" + nodeId+ "/" + threadId
+          envContext.setListenerCacheKey(fileRequestKeyPath, fileProcessingAssignementKeyPath)
+        }
+      }
+      executorThread.init(threadId)
+      participantExecutor.execute(executorThread)
+    }
+
   }
 
   val communicationBasePath = ""
