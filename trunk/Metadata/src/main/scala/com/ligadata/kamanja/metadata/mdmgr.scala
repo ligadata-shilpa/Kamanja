@@ -3089,6 +3089,7 @@ class MdMgr {
                     , serializerType
                     , physicalName
                     , ownerId
+                    , tenantId
                     , uniqueId
                     , mdElementId
                     , jarNm
