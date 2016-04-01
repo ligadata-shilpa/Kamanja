@@ -21,8 +21,8 @@
     "test1": {
       "dependsOn": [ ["m1"] ],
       "computes": {
-        "lookup": { "type": "LookupService", "val": "new DatabaseReader.Builder(new File(\"/srv/location/GeoLiteCity.dat\").build()", "comment": "Create lookup object" },
-        "locationServices": { "type": "Location", "val": "lookup.getLocation(Util.intToInet($in))", "comment": "Lookup IP" }
+        "lookup": { "type": "DatabaseReader", "val": "new DatabaseReader.Builder(new File(\"/srv/location/GeoLiteCity.dat\").build()", "comment": "Create lookup object" },
+        "locationServices": { "type": "Location", "val": "$lookup.getLocation(Util.intToInet($in))", "comment": "Lookup IP" }
       },
 
       "outputs": {
