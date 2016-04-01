@@ -843,6 +843,8 @@ class KamanjaManager extends Observer {
             ("StartTime" -> mci.startTime) ~
             ("Metrics" -> mci.metricsJsonString)))
 
+    val statEvent: com.ligadata.KamanjaBase.KamanjaStatisticsEvent = KamanjaMetadata.envCtxt.getContainerInstance("system.KamanjaStatisticsEvent").asInstanceOf[KamanjaStatisticsEvent]
+    statEvent.statistics = compact(render(allMetrics))
     // get the envContext.
     KamanjaLeader.SetNewDataToZkc(zkHeartBeatNodePath, compact(render(allMetrics)).getBytes)
     if (isLogDebugEnabled)
