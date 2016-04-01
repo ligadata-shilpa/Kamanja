@@ -113,7 +113,7 @@ object KamanjaConfiguration {
 //  var adaptersAndEnvCtxtLoader = new KamanjaLoaderInfo(baseLoader, true, true)
 //  var metadataLoader = new KamanjaLoaderInfo(baseLoader, true, true)
 
-  var adapterInfoCommitTime = 5000 // Default 5 secs
+//  var adapterInfoCommitTime = 5000 // Default 5 secs
 
   def Reset: Unit = {
     configFile = null
@@ -178,43 +178,43 @@ object ProcessedAdaptersInfo {
     }
   }
 
-  def CommitAdapterValues: Boolean = {
-    LOG.debug("CommitAdapterValues. AdapterCommitTime: " + KamanjaConfiguration.adapterInfoCommitTime)
-    var committed = false
-    if (KamanjaMetadata.envCtxt != null) {
-      // Try to commit now
-      var changedValues: List[(String, String)] = null
-      val newValues = getAllValues
-      if (prevAdapterCommittedValues.size == 0) {
-        changedValues = newValues.toList
-      } else {
-        var changedArr = ArrayBuffer[(String, String)]()
-        newValues.foreach(v1 => {
-          val oldVal = prevAdapterCommittedValues.getOrElse(v1._1, null)
-          if (oldVal == null || v1._2.equals(oldVal) == false) { // It is not found or changed, simple take it
-            changedArr += v1
-          }
-        })
-        changedValues = changedArr.toList
-      }
-      // Commit here
-      try {
-        if (changedValues.size > 0)
-          KamanjaMetadata.envCtxt.setAdapterUniqKeyAndValues(changedValues)
-        prevAdapterCommittedValues = newValues
-        committed = true
-      } catch {
-        case e: Exception => {
-          LOG.error("Failed to commit adapter changes. if we can not save this we will reprocess the information when service restarts.", e)
-        }
-        case e: Throwable => {
-          LOG.error("Failed to commit adapter changes. if we can not save this we will reprocess the information when service restarts.", e)
-        }
-      }
-
-    }
-    committed
-  }
+//  def CommitAdapterValues: Boolean = {
+//    LOG.debug("CommitAdapterValues. AdapterCommitTime: " + KamanjaConfiguration.adapterInfoCommitTime)
+//    var committed = false
+//    if (KamanjaMetadata.envCtxt != null) {
+//      // Try to commit now
+//      var changedValues: List[(String, String)] = null
+//      val newValues = getAllValues
+//      if (prevAdapterCommittedValues.size == 0) {
+//        changedValues = newValues.toList
+//      } else {
+//        var changedArr = ArrayBuffer[(String, String)]()
+//        newValues.foreach(v1 => {
+//          val oldVal = prevAdapterCommittedValues.getOrElse(v1._1, null)
+//          if (oldVal == null || v1._2.equals(oldVal) == false) { // It is not found or changed, simple take it
+//            changedArr += v1
+//          }
+//        })
+//        changedValues = changedArr.toList
+//      }
+//      // Commit here
+//      try {
+//        if (changedValues.size > 0)
+//          KamanjaMetadata.envCtxt.setAdapterUniqKeyAndValues(changedValues)
+//        prevAdapterCommittedValues = newValues
+//        committed = true
+//      } catch {
+//        case e: Exception => {
+//          LOG.error("Failed to commit adapter changes. if we can not save this we will reprocess the information when service restarts.", e)
+//        }
+//        case e: Throwable => {
+//          LOG.error("Failed to commit adapter changes. if we can not save this we will reprocess the information when service restarts.", e)
+//        }
+//      }
+//
+//    }
+//    committed
+//  }
 }
 
 class KamanjaManager extends Observer {
@@ -407,14 +407,14 @@ class KamanjaManager extends Observer {
         return false
       }
 
-      try {
-        val adapterCommitTime = loadConfigs.getProperty("AdapterCommitTime".toLowerCase, "0").replace("\"", "").trim.toInt
-        if (adapterCommitTime > 0) {
-          KamanjaConfiguration.adapterInfoCommitTime = adapterCommitTime
-        }
-      } catch {
-        case e: Exception => { LOG.warn("", e) }
-      }
+//      try {
+//        val adapterCommitTime = loadConfigs.getProperty("AdapterCommitTime".toLowerCase, "0").replace("\"", "").trim.toInt
+//        if (adapterCommitTime > 0) {
+//          KamanjaConfiguration.adapterInfoCommitTime = adapterCommitTime
+//        }
+//      } catch {
+//        case e: Exception => { LOG.warn("", e) }
+//      }
 
       try {
         KamanjaConfiguration.waitProcessingTime = loadConfigs.getProperty("waitProcessingTime".toLowerCase, "0").replace("\"", "").trim.toInt
@@ -717,14 +717,14 @@ class KamanjaManager extends Observer {
       }
     }
 
-    var nextAdapterValuesCommit = System.currentTimeMillis + KamanjaConfiguration.adapterInfoCommitTime
+//    var nextAdapterValuesCommit = System.currentTimeMillis + KamanjaConfiguration.adapterInfoCommitTime
 
     LOG.warn("KamanjaManager is running now. Waiting for user to terminate with SIGTERM, SIGINT or SIGABRT signals")
     while (KamanjaConfiguration.shutdown == false) { // Infinite wait for now
-      if (KamanjaMetadata.envCtxt != null && nextAdapterValuesCommit < System.currentTimeMillis) {
-        if (ProcessedAdaptersInfo.CommitAdapterValues)
-          nextAdapterValuesCommit = System.currentTimeMillis + KamanjaConfiguration.adapterInfoCommitTime
-      }
+//      if (KamanjaMetadata.envCtxt != null && nextAdapterValuesCommit < System.currentTimeMillis) {
+//        if (ProcessedAdaptersInfo.CommitAdapterValues)
+//          nextAdapterValuesCommit = System.currentTimeMillis + KamanjaConfiguration.adapterInfoCommitTime
+//      }
       cntr = cntr + 1
       if (participentsChangedCntr != KamanjaConfiguration.participentsChangedCntr) {
         val dispWarn = (lookingForDups && timeOutEndTime > 0)
