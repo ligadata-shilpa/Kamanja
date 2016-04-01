@@ -699,6 +699,37 @@ class FileProcessor(val partitionId: Int) extends Runnable {
     clusterStatus = newClusterStatus
   }
 
+
+  val File_Requests_Cache_Key = "Smart_File_Adapter/" + adapterConfig.Name + "/" + "FileRequests"
+  val File_Processing_Cache_Key = "Smart_File_Adapter/" + adapterConfig.Name + "/" + "FileProcessing"
+
+  //value in cache has the format <node1>/<thread1>|<node2>/<thread1>
+  def getFileRequestsQueue : List[String] = {
+    val cacheData = new String(envContext.getConfigFromClusterCache(File_Requests_Cache_Key))
+    val tokens = cacheData.split("\\|")
+    tokens.toList
+  }
+  def saveFileRequestsQueue(requestQueue : List[String]) : Unit = {
+    val cacheData = requestQueue.mkString("|")
+    envContext.saveConfigInClusterCache(File_Requests_Cache_Key, cacheData.getBytes)
+  }
+
+  //value in cache has the format <node1>/<thread1>/<filename>|<node2>/<thread1>/<filename>
+  def getFileProcessingQueue : List[String] = {
+    val cacheData = envContext.getConfigFromClusterCache(File_Processing_Cache_Key)
+    if(cacheData != null) {
+      val tokens = new String(cacheData).split("\\|")
+      tokens.toList
+    }
+    else{
+      List()
+    }
+  }
+  def saveFileProcessingQueue(requestQueue : List[String]) : Unit = {
+    val cacheData = requestQueue.mkString("|")
+    envContext.saveConfigInClusterCache(File_Processing_Cache_Key, cacheData.getBytes)
+  }
+
   //what a leader should do when recieving file processing request
   def requestFileLeaderCallback (eventType: String, eventPath: String, eventPathData: String) : Unit = {
     if(eventType.equalsIgnoreCase("put") || eventType.equalsIgnoreCase("update")) {
@@ -707,9 +738,17 @@ class FileProcessor(val partitionId: Int) extends Runnable {
       val requestingThreadId = keyTokens(keyTokens.length - 1)
       val fileToProcessKeyPath = eventPathData //from leader
 
-      val fileToProcessFullPath = "" //TODO : get next file to process
-      if (fileToProcessFullPath != null)
-        envContext.setListenerCacheKey(fileToProcessKeyPath, fileToProcessFullPath)
+
+      var processingQueue = getFileProcessingQueue
+      //check if it is allowed to process one more file
+      if(processingQueue.length < monitoringConf.consumersCount) {
+        val fileToProcessFullPath = "" //TODO : get next file to process
+        if (fileToProcessFullPath != null) {
+          envContext.setListenerCacheKey(fileToProcessKeyPath, fileToProcessFullPath)
+          processingQueue = processingQueue:::List(requestingNodeId + "/" + requestingThreadId + "/" + fileToProcessFullPath)
+          saveFileProcessingQueue(processingQueue)
+        }
+      }
     }
     //should do anything for remove?
   }
@@ -726,7 +765,13 @@ class FileProcessor(val partitionId: Int) extends Runnable {
       val status = valueTokens(1)
       if(status == File_Processing_Status_Finished){
         val correspondingRequestFileKeyPath = requestFilePath + "/" + processingNodeId //e.g. SmartFileCommunication/ToLeader/ProcessedFile/<nodeid>
-        //TODO: remove the file
+
+        //remove the file from processing queue
+        var processingQueue = getFileProcessingQueue
+        val valueInProcessingQueue = processingNodeId + "/" + processingThreadId + "/" + processingFilePath
+        processingQueue = processingQueue diff List(valueInProcessingQueue)
+
+        //TODO: move/remove the file itself
       }
 
     }
