@@ -75,6 +75,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   private val _setZk_reent_lock = new ReentrantReadWriteLock(true)
   private var _setZkData: CuratorFramework = _
   private var _zkConnectString = ""
+  private var _zkBasePath = ""
   private var _zkleaderNodePath = ""
   private var _zkSessionTimeoutMs = 30000
   private var _zkConnectionTimeoutMs = 30000
@@ -86,10 +87,16 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   private var _clusterStatusInfo: ClusterStatus = _
   private val _nodeCacheMap = collection.mutable.Map[String, Any]()
   private val _nodeCache_reent_lock = new ReentrantReadWriteLock(true)
+  private var txnIdsRangeForNode: Int = 100000 // Each time get txnIdsRange of transaction ids for each Node
+  private var txnIdsRangeForPartition: Int = 10000 // Each time get txnIdsRange of transaction ids for each partition
+  private var _sysCatelogDatastore: String = _
+  private val _defaultDatastoresForTenants = scala.collection.mutable.Map[String, String]()
 
   case class LeaderListenerCallback(val EventChangeCallback: (ClusterStatus) => Unit)
 
-  private def hasZkConnectionString: Boolean = (_zkConnectString != null && _zkConnectString.size > 0 && _zkleaderNodePath != null && _zkleaderNodePath.size > 0)
+  override def hasZkConnectionString: Boolean = (_zkConnectString != null && _zkConnectString.size > 0 && _zkBasePath != null && _zkBasePath.size > 0)
+
+  override def getTransactionRanges(): (Int, Int) = (txnIdsRangeForPartition, txnIdsRangeForNode)
 
   def ReadLock(reent_lock: ReentrantReadWriteLock): Unit = {
     if (reent_lock != null)
@@ -132,10 +139,12 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     }
   })
 
+/*
   override def getComponentStatusAndMetrics: com.ligadata.HeartBeat.MonitorComponentInfo = {
     implicit val formats = org.json4s.DefaultFormats
     return new com.ligadata.HeartBeat.MonitorComponentInfo("STORAGE_ADAPTER", "SimpleEnvContext", "v1.3", startTime, lastSeen, Serialization.write(metrics).toString)
   }
+*/
 
   private def ResolveEnableEachTransactionCommit: Unit = {
     if (_mgr != null) {
@@ -1386,6 +1395,8 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     }
     _jarPaths = jarPaths
   }
+
+  override def getJarPaths(): collection.immutable.Set[String] = _jarPaths
 
   override def setDefaultDatastore(dataDataStoreInfo: String): Unit = {
     if (dataDataStoreInfo != null)
@@ -2741,9 +2752,10 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     return readVal
   }
 
-  override def setZookeeperInfo(zkConnectString: String, zkleaderNodePath: String, zkSessionTimeoutMs: Int, zkConnectionTimeoutMs: Int): Unit = {
+  override def setZookeeperInfo(zkConnectString: String, zkBasePath: String, zkSessionTimeoutMs: Int, zkConnectionTimeoutMs: Int): Unit = {
     _zkConnectString = zkConnectString
-    _zkleaderNodePath = zkleaderNodePath
+    _zkBasePath = zkBasePath
+    _zkleaderNodePath = zkBasePath + "/envctxtleader"
     _zkSessionTimeoutMs = zkSessionTimeoutMs
     _zkConnectionTimeoutMs = zkConnectionTimeoutMs
   }
@@ -2787,7 +2799,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   }
 
   // Cache Listeners
-  def setListenerCacheKey(key: String, value: Array[Byte]): Unit = {}
+  def setListenerCacheKey(key: String, value: String): Unit = {}
 
   // /kamanja/notification/node1
   def createListenerForCacheKey(listenPath: String, ListenCallback: (String, String, String) => Unit): Unit = {}
@@ -2871,4 +2883,15 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
       null
   }
 
+  override def setDefaultDatastoresForTenants(defaultDatastores: scala.collection.immutable.Map[String, String]): Unit = {
+    _defaultDatastoresForTenants ++= defaultDatastores
+  }
+
+  override def getDefaultDatastoreForTenantId(tenantId: String): String = _defaultDatastoresForTenants.getOrElse(tenantId, null)
+
+  override def setSystemCatelogDatastore(sysCatelog: String): Unit = {
+    _sysCatelogDatastore = sysCatelog
+  }
+
+  override def getSystemCatelogDatastore(): String = _sysCatelogDatastore
 }

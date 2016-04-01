@@ -256,7 +256,7 @@ class MappedModelResults extends ModelResultBase {
 case class KeyValuePair(key: String, value: Any);
 case class SerializerTypeValuePair(serializerType: String, value: Array[Byte]);
 
-trait EnvContext extends Monitorable {
+trait EnvContext /* extends Monitorable */  {
   // Metadata Ops
   var _mgr: MdMgr = _
 
@@ -272,6 +272,7 @@ trait EnvContext extends Monitorable {
 
   // Setting JarPaths
   def setJarPaths(jarPaths: collection.immutable.Set[String]): Unit
+  def getJarPaths(): collection.immutable.Set[String]
 
   // Datastores
   def setDefaultDatastore(dataDataStoreInfo: String): Unit
@@ -414,7 +415,11 @@ trait EnvContext extends Monitorable {
 
   def getDataFromZNode(zNodePath: String): Array[Byte]
 
-  def setZookeeperInfo(zkConnectString: String, zkleaderNodePath: String, zkSessionTimeoutMs: Int, zkConnectionTimeoutMs: Int): Unit
+  def getTransactionRanges(): (Int, Int)
+
+  def hasZkConnectionString(): Boolean
+
+  def setZookeeperInfo(zkConnectString: String, zkBasePath: String, zkSessionTimeoutMs: Int, zkConnectionTimeoutMs: Int): Unit
 
   def getZookeeperInfo(): (String, String, Int, Int)
 
@@ -423,7 +428,7 @@ trait EnvContext extends Monitorable {
   def createZkPathChildrenCacheListener(znodePath: String, getAllChildsData: Boolean, ListenCallback: (String, String, Array[Byte], Array[(String, Array[Byte])]) => Unit): Unit
 
   // Cache Listeners
-  def setListenerCacheKey(key: String, value: Array[Byte]): Unit
+  def setListenerCacheKey(key: String, value: String): Unit
 
   // /kamanja/notification/node1
   def createListenerForCacheKey(listenPath: String, ListenCallback: (String, String, String) => Unit): Unit
@@ -448,6 +453,12 @@ trait EnvContext extends Monitorable {
   // This post the message into where ever these messages are associated immediately
   // Later this will be posted to logical queue where it can execute on logical partition.
   def postMessages(msgs: Array[ContainerInterface]): Unit
+
+  def setDefaultDatastoresForTenants(defaultDatastores: scala.collection.immutable.Map[String, String]): Unit
+  def getDefaultDatastoreForTenantId(tenantId: String): String
+
+  def setSystemCatelogDatastore(sysCatelog: String): Unit
+  def getSystemCatelogDatastore(): String
 }
 
 // partitionKey is the one used for this message
@@ -636,18 +647,24 @@ trait FactoryOfModelInstanceFactory {
   def prepareModel(nodeContext: NodeContext, modelDefStr: String, inpMsgName: String, outMsgName: String, loaderInfo: KamanjaLoaderInfo, jarPaths: collection.immutable.Set[String]): ModelDef
 }
 
+case class EventOriginInfo(val key: String, val value: String)
+
 // FIXME: Need to have message creator (Model/InputMessage/Get(from db/cache))
-class TransactionContext(val transId: Long, val nodeCtxt: NodeContext, val msgData: Array[Byte], val partitionKey: String) {
+class TransactionContext(val transId: Long, val nodeCtxt: NodeContext, val msgData: Array[Byte], val origin: EventOriginInfo, val eventEpochStartTimeInMs: Long, val msgEvent: ContainerInterface) {
   case class ContaienrWithOriginAndPartKey(origin: String, container: ContainerOrConcept, partKey: List[String])
 
   private var orgInputMsg = ContaienrWithOriginAndPartKey(null, null, null)
   private val containerOrConceptsMap = scala.collection.mutable.Map[String, ArrayBuffer[ContaienrWithOriginAndPartKey]]()
-  // orgInputMsg is part in this also
+  // orgInputMsg & msgEvent is part in this also
   private val valuesMap = new java.util.HashMap[String, Any]()
+
+  addContainerOrConcept("", msgEvent, null);
+
+  final def getMessageEvent: ContainerInterface = msgEvent
 
   final def getInputMessageData(): Array[Byte] = msgData
 
-  final def getPartitionKey(): String = partitionKey
+  final def getPartitionKey(): String = origin.key
 
   final def getMessage(): ContainerInterface = orgInputMsg.container.asInstanceOf[ContainerInterface] // Original messages
 

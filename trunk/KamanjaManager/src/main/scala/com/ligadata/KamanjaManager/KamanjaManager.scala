@@ -87,17 +87,17 @@ object KamanjaConfiguration {
   var allConfigs: Properties = _
   //  var metadataDataStoreInfo: String = _
   var dataDataStoreInfo: String = _
-  var jarPaths: collection.immutable.Set[String] = _
+//  var jarPaths: collection.immutable.Set[String] = _
   var nodeId: Int = _
   var clusterId: String = _
   var nodePort: Int = _
-  var zkConnectString: String = _
-  var zkNodeBasePath: String = _
-  var zkSessionTimeoutMs: Int = _
-  var zkConnectionTimeoutMs: Int = _
+//  var zkConnectString: String = _
+//  var zkNodeBasePath: String = _
+//  var zkSessionTimeoutMs: Int = _
+//  var zkConnectionTimeoutMs: Int = _
 
-  var txnIdsRangeForNode: Int = 100000 // Each time get txnIdsRange of transaction ids for each Node
-  var txnIdsRangeForPartition: Int = 10000 // Each time get txnIdsRange of transaction ids for each partition
+//  var txnIdsRangeForNode: Int = 100000 // Each time get txnIdsRange of transaction ids for each Node
+//  var txnIdsRangeForPartition: Int = 10000 // Each time get txnIdsRange of transaction ids for each partition
 
   // Debugging info configs -- Begin
   var waitProcessingSteps = collection.immutable.Set[Int]()
@@ -117,14 +117,14 @@ object KamanjaConfiguration {
     allConfigs = null
     //    metadataDataStoreInfo = null
     dataDataStoreInfo = null
-    jarPaths = null
+//    jarPaths = null
     nodeId = 0
     clusterId = null
     nodePort = 0
-    zkConnectString = null
-    zkNodeBasePath = null
-    zkSessionTimeoutMs = 0
-    zkConnectionTimeoutMs = 0
+//    zkConnectString = null
+//    zkNodeBasePath = null
+//    zkSessionTimeoutMs = 0
+//    zkConnectionTimeoutMs = 0
 
     // Debugging info configs -- Begin
     waitProcessingSteps = collection.immutable.Set[Int]()
@@ -279,7 +279,7 @@ class KamanjaManager extends Observer {
     if (dynamicjars != null && dynamicjars.length() > 0) {
       val jars = dynamicjars.split(",").map(_.trim).filter(_.length() > 0)
       if (jars.length > 0) {
-        val qualJars = jars.map(j => Utils.GetValidJarFile(KamanjaConfiguration.jarPaths, j))
+        val qualJars = jars.map(j => Utils.GetValidJarFile(KamanjaMetadata.envCtxt.getJarPaths(), j))
         val nonExistsJars = Utils.CheckForNonExistanceJars(qualJars.toSet)
         if (nonExistsJars.size > 0) {
           LOG.error("Not found jars in given Dynamic Jars List : {" + nonExistsJars.mkString(", ") + "}")
@@ -437,17 +437,6 @@ class KamanjaManager extends Observer {
       var dataChangeZkNodePath = ""
       var zkHeartBeatNodePath = ""
 
-      if (KamanjaConfiguration.zkNodeBasePath.size > 0) {
-        val zkNodeBasePath = KamanjaConfiguration.zkNodeBasePath.stripSuffix("/").trim
-        KamanjaConfiguration.zkNodeBasePath = zkNodeBasePath
-        engineLeaderZkNodePath = zkNodeBasePath + "/engineleader"
-        engineDistributionZkNodePath = zkNodeBasePath + "/enginedistribution"
-        metadataUpdatesZkNodePath = zkNodeBasePath + "/metadataupdate"
-        adaptersStatusPath = zkNodeBasePath + "/adaptersstatus"
-        dataChangeZkNodePath = zkNodeBasePath + "/datachange"
-        zkHeartBeatNodePath = zkNodeBasePath + "/monitor/engine/" + KamanjaConfiguration.nodeId.toString
-      }
-
       LOG.debug("Validating required jars")
       KamanjaMdCfg.ValidateAllRequiredJars
       LOG.debug("Load Environment Context")
@@ -455,6 +444,17 @@ class KamanjaManager extends Observer {
       KamanjaMetadata.envCtxt = KamanjaMdCfg.LoadEnvCtxt()
       if (KamanjaMetadata.envCtxt == null)
         return false
+
+      val (zkConnectString, zkNodeBasePath, zkSessionTimeoutMs, zkConnectionTimeoutMs)  = KamanjaMetadata.envCtxt.getZookeeperInfo
+
+      if (zkNodeBasePath.size > 0) {
+        engineLeaderZkNodePath = zkNodeBasePath + "/engineleader"
+        engineDistributionZkNodePath = zkNodeBasePath + "/enginedistribution"
+        metadataUpdatesZkNodePath = zkNodeBasePath + "/metadataupdate"
+        adaptersStatusPath = zkNodeBasePath + "/adaptersstatus"
+        dataChangeZkNodePath = zkNodeBasePath + "/datachange"
+        zkHeartBeatNodePath = zkNodeBasePath + "/monitor/engine/" + KamanjaConfiguration.nodeId.toString
+      }
 
       KamanjaMetadata.envCtxt.setNodeInfo(KamanjaConfiguration.nodeId.toString, KamanjaConfiguration.clusterId)
 
@@ -468,7 +468,7 @@ class KamanjaManager extends Observer {
 
       if (retval) {
         LOG.debug("Initialize Metadata Manager")
-        KamanjaMetadata.InitMdMgr(KamanjaConfiguration.zkConnectString, metadataUpdatesZkNodePath, KamanjaConfiguration.zkSessionTimeoutMs, KamanjaConfiguration.zkConnectionTimeoutMs)
+        KamanjaMetadata.InitMdMgr(zkConnectString, metadataUpdatesZkNodePath, zkSessionTimeoutMs, zkConnectionTimeoutMs)
 //        KamanjaMetadata.envCtxt.CacheContainers(KamanjaConfiguration.clusterId) // Load data for Caching
         LOG.debug("Initializing Leader")
 
@@ -478,7 +478,7 @@ class KamanjaManager extends Observer {
           txnId = -1 * txnId
         // Finally we are taking -ve txnid for this
         try {
-          txnCtxt = new TransactionContext(txnId, KamanjaMetadata.gNodeContext, Array[Byte](), "")
+          txnCtxt = new TransactionContext(txnId, KamanjaMetadata.gNodeContext, Array[Byte](), "", EventOriginInfo(null, null), 0, null)
           ThreadLocalStorage.txnContextInfo.set(txnCtxt)
 
           val (tmpMdls, tMdlsChangedCntr) = KamanjaMetadata.getAllModels
@@ -497,7 +497,7 @@ class KamanjaManager extends Observer {
           }
         }
 
-        KamanjaLeader.Init(KamanjaConfiguration.nodeId.toString, KamanjaConfiguration.zkConnectString, engineLeaderZkNodePath, engineDistributionZkNodePath, adaptersStatusPath, inputAdapters, outputAdapters, statusAdapters, validateInputAdapters, failedEventsAdapters, KamanjaMetadata.envCtxt, KamanjaConfiguration.zkSessionTimeoutMs, KamanjaConfiguration.zkConnectionTimeoutMs, dataChangeZkNodePath)
+        KamanjaLeader.Init(KamanjaConfiguration.nodeId.toString, zkConnectString, engineLeaderZkNodePath, engineDistributionZkNodePath, adaptersStatusPath, inputAdapters, outputAdapters, statusAdapters, validateInputAdapters, failedEventsAdapters, KamanjaMetadata.envCtxt, zkSessionTimeoutMs, zkConnectionTimeoutMs, dataChangeZkNodePath)
       }
 
       /*
@@ -817,7 +817,7 @@ class KamanjaManager extends Observer {
     statusAdapters.foreach(ad => { adapterMetricInfo += ad.getComponentStatusAndMetrics })
     failedEventsAdapters.foreach(ad => { adapterMetricInfo += ad.getComponentStatusAndMetrics })
     validateInputAdapters.foreach(ad => { adapterMetricInfo += ad.getComponentStatusAndMetrics })
-    adapterMetricInfo += KamanjaMetadata.envCtxt.getComponentStatusAndMetrics
+//    adapterMetricInfo += KamanjaMetadata.envCtxt.getComponentStatusAndMetrics
 
     // Combine all the junk into a single JSON String
     import org.json4s.JsonDSL._

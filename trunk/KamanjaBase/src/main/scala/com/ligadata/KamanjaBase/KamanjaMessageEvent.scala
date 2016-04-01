@@ -41,8 +41,6 @@ object KamanjaMessageEvent extends RDDObject[KamanjaMessageEvent] with MessageFa
   type T = KamanjaMessageEvent
 
   override def toJavaRDDObject: JavaRDDObject[T] = JavaRDDObject.fromRDDObject[T](this)
-
-
 }
 
 class KamanjaMessageEvent(factory: MessageFactoryInterface) extends MessageInterface(factory) {
