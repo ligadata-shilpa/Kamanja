@@ -60,4 +60,3 @@ class ConceptServiceTests extends FlatSpec with Matchers with MetadataBeforeAndA
     ConceptService.getUserInputFromMainMenu(messages).size > 0
   }
 }
-

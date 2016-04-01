@@ -87,6 +87,94 @@ class ModelServiceTests extends FlatSpec with Matchers with MetadataBeforeAndAft
     ModelService.updateModeljava("","helloworldmodel") should include regex ("\"Result Description\" : \"Model Added Successfully")
   }
 
+  //kpmml
+  /* Github issue #1011 raised
+  "add model kpmml" should "produce error when invalid path to model def is provided" in {
+    assert(ModelService.addModelKPmml(getClass.getResource("/Metadata/model/KPMML_Model_HelloWorld.xml").getPath + "Invalid") == "File does not exist")
+  }*/
+
+  it should "add the kpmml model to the metadata" in {
+    MessageService.addMessage(getClass.getResource("/Metadata/message/Message_Definition_HelloWorld.json").getPath)
+    ModelService.addModelKPmml(getClass.getResource("/Metadata/model/KPMML_Model_HelloWorld.xml").getPath) should include regex ("\"Result Description\" : \"Model Added Successfully")
+  }
+
+  it should "add the kpmml model to the metadata based on user input" in {
+    Console.setIn(new ByteArrayInputStream("1".getBytes))
+    MessageService.addMessage(getClass.getResource("/Metadata/message/Message_Definition_HelloWorld.json").getPath)
+    ModelService.addModelKPmml("") should include regex ("\"Result Description\" : \"Model Added Successfully")
+  }
+
+  "update model kpmml" should " successfully update a valid model" in {
+    MessageService.addMessage(getClass.getResource("/Metadata/message/Message_Definition_HelloWorld.json").getPath)
+    ModelService.addModelKPmml(getClass.getResource("/Metadata/model/KPMML_Model_HelloWorld.xml").getPath)
+    ModelService.updateModelKPmml(getClass.getResource("/Metadata/inputModel/2_KPMML_Model_HelloWorld.xml").getPath) should include regex ("\"Result Description\" : \"Model Added Successfully")
+  }
+
+  it should " successfully update a valid model based on the user input" in {
+    Console.setIn(new ByteArrayInputStream("2".getBytes))
+    MessageService.addMessage(getClass.getResource("/Metadata/message/Message_Definition_HelloWorld.json").getPath)
+    ModelService.addModelKPmml(getClass.getResource("/Metadata/model/KPMML_Model_HelloWorld.xml").getPath)
+    ModelService.updateModelKPmml("") should include regex ("\"Result Description\" : \"Model Added Successfully")
+  }
+
+  "getModel" should "retrieve the user requested model " in {
+    Console.setIn(new ByteArrayInputStream("1".getBytes))
+    MessageService.addMessage(getClass.getResource("/Metadata/message/Message_Definition_HelloWorld.json").getPath)
+    ModelService.addModelKPmml(getClass.getResource("/Metadata/model/KPMML_Model_HelloWorld.xml").getPath)
+    ModelService.getModel("") should include regex "Successfully fetched Model from Cache"
+  }
+  it should "retrieve the valid model " in {
+    MessageService.addMessage(getClass.getResource("/Metadata/message/Message_Definition_HelloWorld.json").getPath)
+    ModelService.addModelKPmml(getClass.getResource("/Metadata/model/KPMML_Model_HelloWorld.xml").getPath)
+    ModelService.getModel("system.helloworld.000000000001000000") should include regex "Successfully fetched Model from Cache"
+  }
+
+  "getAllModels" should "return a list of all the models in the metadata" in {
+    MessageService.addMessage(getClass.getResource("/Metadata/message/Message_Definition_HelloWorld.json").getPath)
+    ModelService.addModelKPmml(getClass.getResource("/Metadata/model/KPMML_Model_HelloWorld.xml").getPath)
+    ModelService.getAllModels(Some("metadataapi")) should include regex "[1]"
+  }
+  "removeModel" should "remove the user selected model from the metadata" in {
+    Console.setIn(new ByteArrayInputStream("1".getBytes))
+    MessageService.addMessage(getClass.getResource("/Metadata/message/Message_Definition_HelloWorld.json").getPath)
+    ModelService.addModelKPmml(getClass.getResource("/Metadata/model/KPMML_Model_HelloWorld.xml").getPath)
+    ModelService.removeModel("") should include regex "Deleted Model Successfully"
+  }
+
+  it should "remove the valid model from the metadata" in {
+    MessageService.addMessage(getClass.getResource("/Metadata/message/Message_Definition_HelloWorld.json").getPath)
+    ModelService.addModelKPmml(getClass.getResource("/Metadata/model/KPMML_Model_HelloWorld.xml").getPath)
+    ModelService.removeModel("system.helloworld.000000000001000000") should include regex "Deleted Model Successfully"
+  }
+
+  "deactivateModel" should "deactivate the user selected model from the metadata" in {
+    Console.setIn(new ByteArrayInputStream("1".getBytes))
+    MessageService.addMessage(getClass.getResource("/Metadata/message/Message_Definition_HelloWorld.json").getPath)
+    ModelService.addModelKPmml(getClass.getResource("/Metadata/model/KPMML_Model_HelloWorld.xml").getPath)
+    ModelService.deactivateModel("") should include regex "Deactivated Model Successfully"
+  }
+
+  it should "deactivate the valid model from the metadata" in {
+    MessageService.addMessage(getClass.getResource("/Metadata/message/Message_Definition_HelloWorld.json").getPath)
+    ModelService.addModelKPmml(getClass.getResource("/Metadata/model/KPMML_Model_HelloWorld.xml").getPath)
+    ModelService.deactivateModel("system.helloworld.000000000001000000") should include regex "Deactivated Model Successfully"
+  }
+
+  "activateModel" should "activate the user selected model from the metadata" in {
+    Console.setIn(new ByteArrayInputStream("1".getBytes))
+    MessageService.addMessage(getClass.getResource("/Metadata/message/Message_Definition_HelloWorld.json").getPath)
+    ModelService.addModelKPmml(getClass.getResource("/Metadata/model/KPMML_Model_HelloWorld.xml").getPath)
+    ModelService.deactivateModel("system.helloworld.000000000001000000")
+    ModelService.activateModel("") should include regex "Activated Model Successfully"
+  }
+
+  it should "activate the valid model from the metadata" in {
+    MessageService.addMessage(getClass.getResource("/Metadata/message/Message_Definition_HelloWorld.json").getPath)
+    ModelService.addModelKPmml(getClass.getResource("/Metadata/model/KPMML_Model_HelloWorld.xml").getPath)
+    ModelService.deactivateModel("system.helloworld.000000000001000000")
+    ModelService.activateModel("system.helloworld.000000000001000000") should include regex "Activated Model Successfully"
+  }
+
   "is valid dir" should " validate if the directory is present" in {
     assert(MessageService.IsValidDir(getClass.getResource("/Metadata/message").getPath)==true)
   }
