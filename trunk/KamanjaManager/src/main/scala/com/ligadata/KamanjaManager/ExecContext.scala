@@ -36,11 +36,11 @@ import com.ligadata.transactions._
 class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUniqueRecordKey, val nodeContext: NodeContext) extends ExecContext {
   private val LOG = LogManager.getLogger(getClass);
 
-  NodeLevelTransService.init(KamanjaConfiguration.zkConnectString, KamanjaConfiguration.zkSessionTimeoutMs, KamanjaConfiguration.zkConnectionTimeoutMs, KamanjaConfiguration.zkNodeBasePath, KamanjaConfiguration.txnIdsRangeForNode, KamanjaConfiguration.dataDataStoreInfo, KamanjaConfiguration.jarPaths)
-
-  private val transService = new SimpleTransService
-  transService.init(KamanjaConfiguration.txnIdsRangeForPartition)
-
+//  NodeLevelTransService.init(KamanjaConfiguration.zkConnectString, KamanjaConfiguration.zkSessionTimeoutMs, KamanjaConfiguration.zkConnectionTimeoutMs, KamanjaConfiguration.zkNodeBasePath, KamanjaConfiguration.txnIdsRangeForNode, KamanjaConfiguration.dataDataStoreInfo, KamanjaConfiguration.jarPaths)
+//
+//  private val transService = new SimpleTransService
+//  transService.init(KamanjaConfiguration.txnIdsRangeForPartition)
+//
   private val xform = new TransformMessageData
   private val engine = new LearningEngine(input, curPartitionKey)
   private var previousLoader: com.ligadata.Utils.KamanjaClassLoader = null
@@ -86,7 +86,7 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
     }
   */
 
-  def executeMessage(msg: ContainerInterface, data: Array[Byte], uniqueKey: PartitionUniqueRecordKey, uniqueVal: PartitionUniqueRecordValue, readTmNanoSecs: Long, readTmMilliSecs: Long, deserializerName: String): Unit = {
+  def executeMessage(txnCtxt: TransactionContext, deserializerName: String): Unit = {
     try {
       val curLoader = KamanjaConfiguration.metadataLoader.loader // Protecting from changing it between below statements
       if (curLoader != null && previousLoader != curLoader) { // Checking for every messages and setting when changed. We can set for every message, but the problem is it tries to do SecurityManager check every time.
@@ -100,11 +100,9 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
     }
 
     try {
-      val uk = uniqueKey.Serialize
-      val uv = uniqueVal.Serialize
-      val transId = transService.getNextTransId
-      val txnCtxt = new TransactionContext(transId, nodeContext, data, uk)
-      LOG.debug("Processing uniqueKey:%s, uniqueVal:%s, Datasize:%d".format(uk, uv, data.size))
+//      val transId = transService.getNextTransId
+//      val txnCtxt = new TransactionContext(transId, nodeContext, data, uk)
+//      txnCtxt.setInitialMessage("", msg)
 
 //      var outputResults = ArrayBuffer[(String, String, String)]() // Adapter/Queue name, Partition Key & output message
 
@@ -259,7 +257,7 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
         }
 
         // kamanjaCallerCtxt.envCtxt.removeCommittedKey(transId, uk)
-        LOG.info(ManagerUtils.getComponentElapsedTimeStr("SendResults", uv, readTmNanoSecs, sendOutStartTime))
+        // LOG.info(ManagerUtils.getComponentElapsedTimeStr("SendResults", uv, readTmNanoSecs, sendOutStartTime))
 
 //        if (containerData != null && containerData.size > 0) {
 //          val datachangedata = ("txnid" -> transId.toString) ~

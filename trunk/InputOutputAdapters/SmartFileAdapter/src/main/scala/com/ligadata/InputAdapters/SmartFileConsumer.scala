@@ -260,7 +260,6 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
     uniqueKey.Name = adapterConfig.Name
     uniqueKey.PartitionId = partitionId
 
-    val readTmNs = System.nanoTime
     val readTmMs = System.currentTimeMillis
 
 
@@ -280,7 +279,7 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
     uniqueVal.FileName = fileName
     val dontSendOutputToOutputAdap = uniqueVal.Offset <= uniqueRecordValue
 
-    execThread.execute(message, uniqueKey, uniqueVal, readTmNs, readTmMs)
+    execThread.execute(message, uniqueKey, uniqueVal, readTmMs)
 
   }
 

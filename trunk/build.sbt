@@ -104,7 +104,7 @@ lazy val KamanjaManager = project.in(file("KamanjaManager"))
 lazy val InputOutputAdapterBase = project.in(file("InputOutputAdapters/InputOutputAdapterBase"))
   .configs(TestConfigs.all: _*)
   .settings(TestSettings.settings: _*)
-  .dependsOn(Exceptions, DataDelimiters, HeartBeat, KamanjaBase)
+  .dependsOn(Exceptions, DataDelimiters, HeartBeat, KamanjaBase, ZooKeeperClient, StorageBase, StorageManager, TransactionService)
 
 // lazy val IbmMqSimpleInputOutputAdapters = project.in(file("InputOutputAdapters/IbmMqSimpleInputOutputAdapters")) dependsOn(InputOutputAdapterBase, Exceptions, DataDelimiters)
 

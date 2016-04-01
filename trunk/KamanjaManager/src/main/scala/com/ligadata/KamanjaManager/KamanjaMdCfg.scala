@@ -37,11 +37,11 @@ object KamanjaMdCfg {
   private[this] val LOG = LogManager.getLogger(getClass);
   private[this] val mdMgr = GetMdMgr
 
-  def InitConfigInfo: Boolean = {
+  def InitConfigInfo: InitConfigs = {
     val nd = mdMgr.Nodes.getOrElse(KamanjaConfiguration.nodeId.toString, null)
     if (nd == null) {
       LOG.error("Node %d not found in metadata".format(KamanjaConfiguration.nodeId))
-      return false
+      throw new KamanjaException("Node %d not found in metadata".format(KamanjaConfiguration.nodeId), null)
     }
 
     KamanjaConfiguration.clusterId = nd.ClusterId
@@ -49,19 +49,19 @@ object KamanjaMdCfg {
     val cluster = mdMgr.ClusterCfgs.getOrElse(nd.ClusterId, null)
     if (cluster == null) {
       LOG.error("Cluster not found for Node %d  & ClusterId : %s".format(KamanjaConfiguration.nodeId, nd.ClusterId))
-      return false
+      throw new KamanjaException("Cluster not found for Node %d  & ClusterId : %s".format(KamanjaConfiguration.nodeId, nd.ClusterId), null)
     }
 
     val dataStore = cluster.cfgMap.getOrElse("DataStore", null)
     if (dataStore == null) {
       LOG.error("DataStore not found for Node %d  & ClusterId : %s".format(KamanjaConfiguration.nodeId, nd.ClusterId))
-      return false
+      throw new KamanjaException("DataStore not found for Node %d  & ClusterId : %s".format(KamanjaConfiguration.nodeId, nd.ClusterId), null)
     }
 
     val zooKeeperInfo = cluster.cfgMap.getOrElse("ZooKeeperInfo", null)
     if (zooKeeperInfo == null) {
       LOG.error("ZooKeeperInfo not found for Node %d  & ClusterId : %s".format(KamanjaConfiguration.nodeId, nd.ClusterId))
-      return false
+      throw new KamanjaException("ZooKeeperInfo not found for Node %d  & ClusterId : %s".format(KamanjaConfiguration.nodeId, nd.ClusterId), null)
     }
 
     val adapterCommitTime = mdMgr.GetUserProperty(nd.ClusterId, "AdapterCommitTime")
@@ -76,36 +76,37 @@ object KamanjaMdCfg {
       }
     }
 
-    KamanjaConfiguration.jarPaths = if (nd.JarPaths == null) Set[String]() else nd.JarPaths.map(str => str.replace("\"", "").trim).filter(str => str.size > 0).toSet
-    if (KamanjaConfiguration.jarPaths.size == 0) {
+    val jarPaths = if (nd.JarPaths == null) Set[String]() else nd.JarPaths.map(str => str.replace("\"", "").trim).filter(str => str.size > 0).toSet
+    if (jarPaths.size == 0) {
       LOG.error("Not found valid JarPaths.")
-      return false
+      throw new KamanjaException("Not found valid JarPaths.", null)
     }
 
     KamanjaConfiguration.nodePort = nd.NodePort
     if (KamanjaConfiguration.nodePort <= 0) {
       LOG.error("Not found valid nodePort. It should be greater than 0")
-      return false
+      throw new KamanjaException("Not found valid nodePort. It should be greater than 0", null)
     }
 
-    KamanjaConfiguration.dataDataStoreInfo = dataStore
+//    KamanjaConfiguration.dataDataStoreInfo = dataStore
 
     implicit val jsonFormats: Formats = DefaultFormats
     val zKInfo = parse(zooKeeperInfo).extract[JZKInfo]
 
-    KamanjaConfiguration.zkConnectString = zKInfo.ZooKeeperConnectString.replace("\"", "").trim
-    KamanjaConfiguration.zkNodeBasePath = zKInfo.ZooKeeperNodeBasePath.replace("\"", "").trim
-    KamanjaConfiguration.zkSessionTimeoutMs = if (zKInfo.ZooKeeperSessionTimeoutMs == None || zKInfo.ZooKeeperSessionTimeoutMs == null) 0 else zKInfo.ZooKeeperSessionTimeoutMs.get.toString.toInt
-    KamanjaConfiguration.zkConnectionTimeoutMs = if (zKInfo.ZooKeeperConnectionTimeoutMs == None || zKInfo.ZooKeeperConnectionTimeoutMs == null) 0 else zKInfo.ZooKeeperConnectionTimeoutMs.get.toString.toInt
+    val zkConnectString = zKInfo.ZooKeeperConnectString.replace("\"", "").trim
+    val zkNodeBasePath = zKInfo.ZooKeeperNodeBasePath.replace("\"", "").trim.stripSuffix("/").trim
+    var zkSessionTimeoutMs = if (zKInfo.ZooKeeperSessionTimeoutMs == None || zKInfo.ZooKeeperSessionTimeoutMs == null) 0 else zKInfo.ZooKeeperSessionTimeoutMs.get.toString.toInt
+    var zkConnectionTimeoutMs = if (zKInfo.ZooKeeperConnectionTimeoutMs == None || zKInfo.ZooKeeperConnectionTimeoutMs == null) 0 else zKInfo.ZooKeeperConnectionTimeoutMs.get.toString.toInt
 
     // Taking minimum values in case if needed
-    KamanjaConfiguration.zkSessionTimeoutMs = if (KamanjaConfiguration.zkSessionTimeoutMs <= 0) 30000 else KamanjaConfiguration.zkSessionTimeoutMs
-    KamanjaConfiguration.zkConnectionTimeoutMs = if (KamanjaConfiguration.zkConnectionTimeoutMs <= 0) 30000 else KamanjaConfiguration.zkConnectionTimeoutMs
+    zkSessionTimeoutMs = if (zkSessionTimeoutMs <= 0) 30000 else zkSessionTimeoutMs
+    zkConnectionTimeoutMs = if (zkConnectionTimeoutMs <= 0) 30000 else zkConnectionTimeoutMs
 
-    return true
+
+    InitConfigs(dataStore, jarPaths, zkConnectString, zkNodeBasePath, zkSessionTimeoutMs, zkConnectionTimeoutMs)
   }
 
-  def ValidateAllRequiredJars: Boolean = {
+  def ValidateAllRequiredJars(jarPaths: Set[String]) : Boolean = {
     val allJarsToBeValidated = scala.collection.mutable.Set[String]();
 
     // EnvContext Jars
@@ -137,7 +138,7 @@ object KamanjaMdCfg {
     }
 
     if (allJars != null) {
-      allJarsToBeValidated ++= allJars.map(j => Utils.GetValidJarFile(KamanjaConfiguration.jarPaths, j))
+      allJarsToBeValidated ++= allJars.map(j => Utils.GetValidJarFile(jarPaths, j))
     }
 
     // All Adapters
@@ -153,10 +154,10 @@ object KamanjaMdCfg {
         val depJars = if (a._2.DependencyJars != null) a._2.DependencyJars.map(str => str.trim).filter(str => str.size > 0).toSet else null
 
         if (jar != null && jar.size > 0) {
-          allJarsToBeValidated += Utils.GetValidJarFile(KamanjaConfiguration.jarPaths, jar)
+          allJarsToBeValidated += Utils.GetValidJarFile(jarPaths, jar)
         }
         if (depJars != null && depJars.size > 0) {
-          allJarsToBeValidated ++= depJars.map(j => Utils.GetValidJarFile(KamanjaConfiguration.jarPaths, j))
+          allJarsToBeValidated ++= depJars.map(j => Utils.GetValidJarFile(jarPaths, j))
         }
       } else {
         LOG.error("Found unhandled adapter type %s for adapter %s".format(a._2.TypeString, a._2.Name))
@@ -173,7 +174,7 @@ object KamanjaMdCfg {
     true
   }
 
-  def LoadEnvCtxt(): EnvContext = {
+  def LoadEnvCtxt(initConfigs: InitConfigs): EnvContext = {
     val cluster = mdMgr.ClusterCfgs.getOrElse(KamanjaConfiguration.clusterId, null)
     if (cluster == null) {
       LOG.error("Cluster not found for Node %d  & ClusterId : %s".format(KamanjaConfiguration.nodeId, KamanjaConfiguration.clusterId))
@@ -205,7 +206,7 @@ object KamanjaMdCfg {
     }
 
     if (allJars != null) {
-      if (Utils.LoadJars(allJars.map(j => Utils.GetValidJarFile(KamanjaConfiguration.jarPaths, j)).toArray, KamanjaConfiguration.adaptersAndEnvCtxtLoader.loadedJars, KamanjaConfiguration.adaptersAndEnvCtxtLoader.loader) == false)
+      if (Utils.LoadJars(allJars.map(j => Utils.GetValidJarFile(initConfigs.jarPaths, j)).toArray, KamanjaConfiguration.adaptersAndEnvCtxtLoader.loadedJars, KamanjaConfiguration.adaptersAndEnvCtxtLoader.loader) == false)
         throw new Exception("Failed to add Jars")
     }
 
@@ -245,8 +246,9 @@ object KamanjaMdCfg {
           val containerNames = KamanjaMetadata.getAllContainers.map(container => container._1.toLowerCase).toList.sorted.toArray // Sort topics by names
           val topMessageNames = KamanjaMetadata.getAllMessges.filter(msg => msg._2.parents.size == 0).map(msg => msg._1.toLowerCase).toList.sorted.toArray // Sort topics by names
 
-          envCtxt.setJarPaths(KamanjaConfiguration.jarPaths) // Jar paths for Datastores, etc
-          envCtxt.setDefaultDatastore(KamanjaConfiguration.dataDataStoreInfo) // Default Datastore
+          envCtxt.setJarPaths(initConfigs.jarPaths) // Jar paths for Datastores, etc
+          envCtxt.setDefaultDatastore(initConfigs.dataDataStoreInfo) // Default Datastore
+          envCtxt.setZookeeperInfo(initConfigs.zkConnectString, initConfigs.zkNodeBasePath, initConfigs.zkSessionTimeoutMs, initConfigs.zkConnectionTimeoutMs)
 
           val allMsgsContainers = topMessageNames ++ containerNames
 //          val containerInfos = allMsgsContainers.map(c => { ContainerNameAndDatastoreInfo(c, null) })
@@ -362,7 +364,7 @@ object KamanjaMdCfg {
     }
 
     if (allJars != null) {
-      if (Utils.LoadJars(allJars.map(j => Utils.GetValidJarFile(KamanjaConfiguration.jarPaths, j)).toArray, KamanjaConfiguration.adaptersAndEnvCtxtLoader.loadedJars, KamanjaConfiguration.adaptersAndEnvCtxtLoader.loader) == false) {
+      if (Utils.LoadJars(allJars.map(j => Utils.GetValidJarFile(nodeContext.getEnvCtxt().getJarPaths(), j)).toArray, KamanjaConfiguration.adaptersAndEnvCtxtLoader.loadedJars, KamanjaConfiguration.adaptersAndEnvCtxtLoader.loader) == false) {
         val szErrMsg = "Failed to load Jars:" + allJars.mkString(",")
         LOG.error(szErrMsg)
         throw new Exception(szErrMsg)
@@ -476,7 +478,7 @@ object KamanjaMdCfg {
     }
 
     if (allJars != null) {
-      if (Utils.LoadJars(allJars.map(j => Utils.GetValidJarFile(KamanjaConfiguration.jarPaths, j)).toArray, KamanjaConfiguration.adaptersAndEnvCtxtLoader.loadedJars, KamanjaConfiguration.adaptersAndEnvCtxtLoader.loader) == false)
+      if (Utils.LoadJars(allJars.map(j => Utils.GetValidJarFile(nodeContext.getEnvCtxt().getJarPaths(), j)).toArray, KamanjaConfiguration.adaptersAndEnvCtxtLoader.loadedJars, KamanjaConfiguration.adaptersAndEnvCtxtLoader.loader) == false)
         throw new Exception("Failed to add Jars")
     }
 

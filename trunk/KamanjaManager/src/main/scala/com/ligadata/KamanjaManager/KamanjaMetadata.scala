@@ -25,7 +25,7 @@ import com.ligadata.kamanja.metadata.MdMgr._
 import com.ligadata.kamanja.metadataload.MetadataLoad
 import scala.collection.mutable.TreeSet
 import scala.util.control.Breaks._
-import com.ligadata.KamanjaBase.{ MessageInterface, ContainerInterface, ContainerFactoryInterface, MessageFactoryInterface, ModelInstanceFactory, EnvContext, MdBaseResolveInfo, FactoryOfModelInstanceFactory, NodeContext, TransactionContext }
+import com.ligadata.KamanjaBase._
 import scala.collection.mutable.HashMap
 import org.apache.logging.log4j._
 import scala.collection.mutable.ArrayBuffer
@@ -34,9 +34,7 @@ import com.ligadata.ZooKeeper._
 import com.ligadata.MetadataAPI.MetadataAPIImpl
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import com.ligadata.Utils.{ Utils, KamanjaClassLoader, KamanjaLoaderInfo }
-import com.ligadata.KamanjaBase.{ EnvContext }
 import scala.actors.threadpool.{ ExecutorService, Executors }
-import com.ligadata.KamanjaBase.ThreadLocalStorage
 
 class MdlInfo(val mdl: ModelInstanceFactory, val jarPath: String, val dependencyJarNames: Array[String]) {
 }
@@ -264,6 +262,7 @@ class KamanjaMetadata {
     /**
       * With the supplied ModelRepresentation from a ModelDef, look up its corresponding FactoryOfModelInstanceFactory
       * that knows what kind of ModelInstanceFactory is needed for that model representation.
+      *
       * @param modelRepSupported a ModelDef's ModelRepresentation.ModelRepresentation value is used to determine the key
       *                          to lookup the FactoryOfModelInstanceFactory needed to instantiate an appropriate
       *                          ModelInstanceFactory
@@ -316,7 +315,7 @@ class KamanjaMetadata {
             LOG.error("FactoryOfModelInstanceFactory %s not found in metadata. Unable to create ModelInstanceFactory for %s".format(factoryOfMdlInstFactoryFqName, mdl.FullName))
         } else {
             try {
-                val factory: ModelInstanceFactory = factoryOfMdlInstFactory.getModelInstanceFactory(mdl, KamanjaMetadata.gNodeContext, KamanjaConfiguration.metadataLoader, KamanjaConfiguration.jarPaths)
+                val factory: ModelInstanceFactory = factoryOfMdlInstFactory.getModelInstanceFactory(mdl, KamanjaMetadata.gNodeContext, KamanjaConfiguration.metadataLoader, txnCtxt.getNodeCtxt().getEnvCtxt().getJarPaths())
                 if (factory != null) {
                     if (txnCtxt != null) // We are expecting txnCtxt is null only for first time initialization
                         factory.init(txnCtxt)
@@ -458,7 +457,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
       return Set[String]()
     }
 
-    return allJars.map(j => Utils.GetValidJarFile(KamanjaConfiguration.jarPaths, j)).toSet
+    return allJars.map(j => Utils.GetValidJarFile(envCtxt.getJarPaths(), j)).toSet
   }
 
   def LoadJarIfNeeded(elem: BaseElem): Boolean = {
@@ -873,7 +872,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
         txnId = -1 * txnId
       // Finally we are taking -ve txnid for this
       try {
-        txnCtxt = new TransactionContext(txnId, KamanjaMetadata.gNodeContext, Array[Byte](), "")
+        txnCtxt = new TransactionContext(txnId, KamanjaMetadata.gNodeContext, Array[Byte](), EventOriginInfo(null, null), 0, null)
         ThreadLocalStorage.txnContextInfo.set(txnCtxt)
         run1(txnCtxt)
       } catch {

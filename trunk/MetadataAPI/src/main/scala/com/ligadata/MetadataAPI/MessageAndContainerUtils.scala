@@ -1352,7 +1352,7 @@ object MessageAndContainerUtils {
     * and there is no need to use this function in main code flow
     * This is just a utility function being during these initial phases
     *
-    * @param msgDef
+    * @param objectName
     * @return
     */
   def IsMessageExists(objectName: String): Boolean = {
