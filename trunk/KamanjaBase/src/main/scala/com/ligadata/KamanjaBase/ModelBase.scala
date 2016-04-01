@@ -940,7 +940,7 @@ class ModelBaseObjMdlInstanceFactory(modelDef: ModelDef, nodeContext: NodeContex
 
   override def isModelInstanceReusable(): Boolean = {
     // Temporary Transaction context & model contexts
-    val tmpTxnCtxt = new TransactionContext(0, nodeContext, Array[Byte](), "")
+    val tmpTxnCtxt = new TransactionContext(0, nodeContext, Array[Byte](), EventOriginInfo(null, null), 0, null)
     val modelContext = new ModelContext(tmpTxnCtxt, null, tmpTxnCtxt.getInputMessageData(), tmpTxnCtxt.getPartitionKey())
     mdlBaseObj.CreateNewModel(modelContext).isModelInstanceReusable()
   }
