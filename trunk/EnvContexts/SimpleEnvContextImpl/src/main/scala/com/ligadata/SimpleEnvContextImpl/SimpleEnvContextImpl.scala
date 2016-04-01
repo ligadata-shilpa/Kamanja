@@ -2534,7 +2534,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   //  def getAllNodeLocks(nodeId: String): Array[String] = null
 
   // Saving & getting temporary objects in cache
-  def saveObjectInClusterCache(key: String, value: Any): Unit = {}
+  def saveConfigInClusterCache(key: String, value: Array[Byte]): Unit = {}
 
   override def saveObjectInNodeCache(key: String, value: Any): Unit = {
     WriteLock(_nodeCache_reent_lock)
@@ -2550,7 +2550,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     }
   }
 
-  def getObjectFromClusterCache(key: String): Any = null
+  def getConfigFromClusterCache(key: String): Array[Byte] = null
 
   override def getObjectFromNodeCache(key: String): Any = {
     var retVal: Any = null
@@ -2588,7 +2588,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     retVal
   }
 
-  def getAllObjectsFromClusterCache(): Array[KeyValuePair] = null
+  def getAllConfigFromClusterCache(): Array[KeyValuePair] = null
 
   override def getAllObjectsFromNodeCache(): Array[KeyValuePair] = {
     var retVal = Array[KeyValuePair]()
@@ -2802,11 +2802,20 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   // Cache Listeners
   def setListenerCacheKey(key: String, value: String): Unit = {}
 
-  // /kamanja/notification/node1
-  def createListenerForCacheKey(listenPath: String, ListenCallback: (String, String, String) => Unit): Unit = {}
+  // listenPath is the Path where it has to listen. Ex: /kamanja/notification/node1
+  // ListenCallback is the call back called when there is any change in listenPath. The return value is has 2 components. 1 st is eventType, 2 is eventPathData
+  // eventType is PUT, UPDATE, REMOVE etc
+  // eventPathData is the data of that path
+  def createListenerForCacheKey(listenPath: String, ListenCallback: (String, String) => Unit): Unit = {}
 
-  // Ex: If we start watching /kamanja/nodification/ all the following puts/updates/removes/etc will notify callback
-  // /kamanja/nodification/node1/1 or /kamanja/nodification/node1/2 or /kamanja/nodification/node1 or /kamanja/nodification/node2 or /kamanja/nodification/node3 or /kamanja/nodification/node4
+  // listenPath is the Path where it has to listen and its children
+  //    Ex: If we start watching /kamanja/nodification/ all the following puts/updates/removes/etc will notify callback
+  //    /kamanja/nodification/node1/1 or /kamanja/nodification/node1/2 or /kamanja/nodification/node1 or /kamanja/nodification/node2 or /kamanja/nodification/node3 or /kamanja/nodification/node4
+  // ListenCallback is the call back called when there is any change in listenPath and or its children. The return value is has 3 components. 1 st is eventType, 2 is eventPath and 3rd is eventPathData
+  // eventType is PUT, UPDATE, REMOVE etc
+  // eventPath is the Path where it changed the data
+  // eventPathData is the data of that path
+  // eventType: String, eventPath: String, eventPathData: Array[Byte]
   def createListenerForCacheChildern(listenPath: String, ListenCallback: (String, String, String) => Unit): Unit = {}
 
   override def getClusterInfo(): ClusterStatus = _clusterStatusInfo
