@@ -41,7 +41,7 @@ trait DataStoreOperations extends AdaptersSerializeDeserializers {
   def put(tnxCtxt: TransactionContext, containerName: String, key: Key, serializerTyp: String, value: Any, isMetadataContainer: Boolean): Unit = {
     if (containerName == null || key == null || serializerTyp == null || value == null)
       throw new InvalidArgumentException("ContainerName, Keys, SerializerTyps and Values should not be null", null)
-    put(tnxCtxt, Array((containerName, Array((key, serializerTyp, value)))))
+    put(tnxCtxt, Array((containerName, isMetadataContainer, Array((key, serializerTyp, value)))))
   }
 
   // value could be ContainerInterface or Array[Byte]
@@ -57,7 +57,7 @@ trait DataStoreOperations extends AdaptersSerializeDeserializers {
     for (i <- 0 until keys.size) {
       data += ((keys(i), serializerTyps(i), values(i)))
     }
-    put(tnxCtxt, Array((containerName, data.toArray)))
+    put(tnxCtxt, Array((containerName, isMetadataContainer, data.toArray)))
   }
 
   // data_list has List of container names, and each container has list of key & value as ContainerInterface or Array[Byte]
