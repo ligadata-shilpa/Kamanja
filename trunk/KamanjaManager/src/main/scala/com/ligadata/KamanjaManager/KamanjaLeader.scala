@@ -1202,7 +1202,8 @@ object KamanjaLeader {
                   }
 
                   if (allNodesUp == false) { // If all nodes are not up then wait for long time
-                    mxTm = if (KamanjaConfiguration.zkSessionTimeoutMs > KamanjaConfiguration.zkConnectionTimeoutMs) KamanjaConfiguration.zkSessionTimeoutMs else KamanjaConfiguration.zkConnectionTimeoutMs
+                    envCtxt.getZookeeperInfo()
+                    mxTm = if (zkSessionTimeoutMs > zkConnectionTimeoutMs) zkSessionTimeoutMs else zkConnectionTimeoutMs
                     if (mxTm < 5000) // if the value is < 5secs, we are taking 5 secs
                       mxTm = 5000
                     LOG.warn("Got Redistribution request. Participents are {%s}. Looks like all nodes are not yet up. Waiting for %d milli seconds to see whether there are any more changes in participents".format(cs.participantsNodeIds.mkString(","), mxTm))
