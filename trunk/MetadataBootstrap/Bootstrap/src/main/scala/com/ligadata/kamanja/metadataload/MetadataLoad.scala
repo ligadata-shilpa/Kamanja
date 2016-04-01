@@ -79,7 +79,7 @@ object MetadataLoad {
       (MdMgr.sysNS, "KamanjaModelEvent", "com.ligadata.KamanjaBase.KamanjaModelEvent", List(), 1000003, ""), // Assigned SchemaId as 1000003. Never change this for this message
 		  (MdMgr.sysNS, "KamanjaExceptionEvent", "com.ligadata.KamanjaBase.KamanjaExceptionEvent", List(), 1000004, ""), // Assigned SchemaId as 1000004. Never change this for this message
 			(MdMgr.sysNS, "KamanjaExecutionFailureEvent", "com.ligadata.KamanjaBase.KamanjaExecutionFailureEvent", List(), 1000005, ""), // Assigned SchemaId as 1000005. Never change this for this message
-			(MdMgr.sysNS, "KamanjaExecutionFailureEvent", "com.ligadata.KamanjaBase.KamanjaStatisticsEvent", List(), 1000006, "") // Assigned SchemaId as 1000005. Never change this for this message
+			(MdMgr.sysNS, "KamanjaStatisticsEvent", "com.ligadata.KamanjaBase.KamanjaStatisticsEvent", List(), 1000006, "") // Assigned SchemaId as 1000005. Never change this for this message
       // NOTE NOTE:- Next SchemaId should start from 1000007
     )
 }
