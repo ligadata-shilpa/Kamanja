@@ -1,0 +1,9 @@
+{
+    "HelloWorldModel": {
+        "Dependencies": [
+        ],
+        "MessageAndContainers": [
+            "com.ligadata.kamanja.samples.messages.msg1"
+        ]
+    }
+}
