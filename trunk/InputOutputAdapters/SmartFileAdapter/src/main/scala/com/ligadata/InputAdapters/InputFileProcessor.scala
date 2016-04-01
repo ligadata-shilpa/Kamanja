@@ -3,7 +3,9 @@ package com.ligadata.InputAdapters
 import java.util.zip.{ZipException, GZIPInputStream}
 import com.ligadata.AdaptersConfiguration.{SmartFileAdapterConfiguration, FileAdapterMonitoringConfig, FileAdapterConnectionConfig}
 import com.ligadata.Exceptions.{ MissingPropertyException }
+import com.ligadata.KamanjaBase.{EnvContext, NodeContext}
 import com.ligadata.MetadataAPI.MetadataAPIImpl
+import com.ligadata.Utils.ClusterStatus
 import com.ligadata.ZooKeeper.CreateClient
 import com.ligadata.kamanja.metadata.MessageDef
 import org.apache.curator.framework.CuratorFramework
@@ -650,10 +652,10 @@ class FileProcessor(val partitionId: Int) extends Runnable {
       logger.info("SMART_FILE_CONSUMER partition Initialization complete  Monitoring specified directory for new files")
       // Begin the listening process, TAKE()
 
-      //instead of calling processExistingFiles repeatedly, use the monitor
+      /*//instead of calling processExistingFiles repeatedly, use the monitor
       smartFileMonitor = SmartFileMonitorFactory.createSmartFileMonitor(adapterConfig.Name, adapterConfig._type, processFile)
       smartFileMonitor.init(adapterConfig.adapterSpecificCfg)
-      smartFileMonitor.monitor()
+      smartFileMonitor.monitor()*/
 
     }  catch {
       case ie: InterruptedException => logger.error("InterruptedException: " + ie)
@@ -662,15 +664,110 @@ class FileProcessor(val partitionId: Int) extends Runnable {
     }
   }
 
+
+  private var envContext : EnvContext = null
+  private var clusterStatus : ClusterStatus = null
+  private var fileRequestQ: scala.collection.mutable.Queue[String] = scala.collection.mutable.Queue[String]()
+  private var fileProcessingQ: scala.collection.mutable.Queue[Map[String, String]] = scala.collection.mutable.Queue[Map[String, String]]()
+  private var filesParallelism : Int = 1
+
+  private def initializeNode(nodeContext: NodeContext): Unit ={
+    envContext = nodeContext.gCtx
+    envContext.registerNodesChangeNotification(nodeChangeCallback)
+  }
+
+  def nodeChangeCallback (newClusterStatus : ClusterStatus) : Unit = {
+
+    if(newClusterStatus.isLeader){
+      //action for the leader node
+      val smartFileMonitor = SmartFileMonitorFactory.createSmartFileMonitor(adapterConfig.Name, adapterConfig._type, fileDetectedCallback)
+      smartFileMonitor.init(adapterConfig.adapterSpecificCfg)
+      smartFileMonitor.monitor()
+
+      envContext.createListenerForCacheChildern(requestFilePath, requestFileLeaderCallback) // listen to file requests
+      envContext.createListenerForCacheChildern(fileProcessingPath, fileProcessingLeaderCallback)// listen to file processing status
+
+      //set parallelism
+      filesParallelism = (monitoringConf.consumersCount.toDouble / newClusterStatus.participantsNodeIds.size).round.toInt
+      envContext.setListenerCacheKey(filesParallelismPath, filesParallelism.toString.getBytes)
+    }
+
+    //action for participant nodes:
+    val nodeId = newClusterStatus.nodeId
+    envContext.createListenerForCacheChildern(filesParallelismPath, filesParallelismCallback)
+    val fileProcessingAssignementKeyPath = smartFileFromLeaderPath + "/" + nodeId //listen to this SmartFileCommunication/FromLeader/<NodeId>
+    //listen to file assignment from leader
+    envContext.createListenerForCacheChildern(fileProcessingAssignementKeyPath, fileAssignmentFromLeaderCallback) //e.g.   SmartFileCommunication/ToLeader/RequestFile/<nodeid>
+    val fileRequestKeyPath = smartFileToLeaderPath + "/" + nodeId
+    envContext.setListenerCacheKey(fileRequestKeyPath, fileProcessingAssignementKeyPath.getBytes)
+
+    clusterStatus = newClusterStatus
+  }
+
+  //what a leader should do when recieving file processing request
+  def requestFileLeaderCallback (key : String, value : String,  p3 : String) : Unit = {
+    val keyTokens = key.split("/")
+    val requestingNodeId = keyTokens(keyTokens.length - 1)
+    val fileToProcessKeyPath = value //from leader
+
+    val fileToProcessFullPath = ""//TODO : get next file to process
+    if(fileToProcessFullPath != null)
+      envContext.setListenerCacheKey(fileToProcessKeyPath, fileToProcessFullPath.getBytes)
+  }
+
+  //what a leader should do when recieving file processing status update
+  def fileProcessingLeaderCallback (key : String, value : String,  p3 : String) : Unit = {
+    val keyTokens = key.split("/")
+    val processingNodeId = keyTokens(keyTokens.length - 1)
+    //value for file processing has the format <file-name>|<status>
+    val valueTokens = value.split("\\|")
+    val processingFilePath = valueTokens(0)
+    val status = valueTokens(1)
+    if(status == File_Processing_Status_Finished){
+      val correspondingRequestFileKeyPath = requestFilePath + "/" + processingNodeId //e.g. SmartFileCommunication/ToLeader/ProcessedFile/<nodeid>
+      //TODO: remove the file
+    }
+  }
+
+  //what a participant should do when receiving file to process (from leader)
+  def fileAssignmentFromLeaderCallback (key : String, value : String,  p3 : String) : Unit = {
+    val fileToProcessName = value
+
+    //TODO : start processing the file
+  }
+
+  //what a participant should do parallelism value changes
+  def filesParallelismCallback (key : String, value : String,  p3 : String) : Unit = {
+    val newFilesParallelism = value.toInt
+
+    //TODO : consider if there were already running threads
+    //TODO : create corresponding threads
+  }
+
+  val communicationBasePath = ""
+  val smartFileCommunicationPath = if(communicationBasePath.length > 0 ) communicationBasePath + "/" + "SmartFileCommunication"
+  val smartFileFromLeaderPath = smartFileCommunicationPath + "/FromLeader"
+  val smartFileToLeaderPath = smartFileCommunicationPath + "/ToLeader"
+  val requestFilePath = smartFileToLeaderPath + "/RequestFile"
+  val fileProcessingPath = smartFileToLeaderPath + "/FileProcessing"
+  val File_Processing_Status_Finished = "finished"
+  val filesParallelismPath = smartFileCommunicationPath + "/FilesParallelism"
+
+
   /**
     * this method is used as callback to be passed to monitor
     * it basically does what method processExistingFiles used to do in file consumer tool
     * @param fileHandler
     */
-  def processFile (fileHandler : SmartFileHandler) : Unit = {
+  def fileDetectedCallback (fileHandler : SmartFileHandler) : Unit = {
     if (MonitorUtils.isValidFile(fileHandler))
       enQBufferedFile(fileHandler)
   }
+
+
+
+
+
 
   /*private def resetWatcher: Unit = {
     watchService.close()
