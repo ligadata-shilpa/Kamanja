@@ -317,12 +317,12 @@ object PersistenceUtils {
         val storeInfo = GetContainerNameAndDataStore(elemTypData._1)
         val oneStoreData = storeData.getOrElse(storeInfo._1, null)
         if (oneStoreData != null) {
-          oneStoreData._2 += ((elemTypData._1, elemTypData._2.toArray))
+          oneStoreData._2 += ((elemTypData._1, true, elemTypData._2.toArray))
           storeData(storeInfo._1) = ((oneStoreData._1, oneStoreData._2))
         } else {
-          val ab = ArrayBuffer[(String, Array[(Key, String, Any)])]()
-          ab += ((elemTypData._1, elemTypData._2.toArray))
-          storeData(storeInfo._1) = ((storeInfo._2, false, ab))
+          val ab = ArrayBuffer[(String, Boolean, Array[(Key, String, Any)])]()
+          ab += ((elemTypData._1, true, elemTypData._2.toArray))
+          storeData(storeInfo._1) = ((storeInfo._2, ab))
         }
       })
 
