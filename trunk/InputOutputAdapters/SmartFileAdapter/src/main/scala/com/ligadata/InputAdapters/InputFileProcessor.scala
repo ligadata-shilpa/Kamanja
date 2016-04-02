@@ -732,25 +732,50 @@ class FileProcessor(val partitionId: Int) extends Runnable {
 
   //what a leader should do when recieving file processing request
   def requestFileLeaderCallback (eventType: String, eventPath: String, eventPathData: String) : Unit = {
+    var addRequestToQueue =false
     if(eventType.equalsIgnoreCase("put") || eventType.equalsIgnoreCase("update")) {
       val keyTokens = eventPath.split("/")
       val requestingNodeId = keyTokens(keyTokens.length - 2)
       val requestingThreadId = keyTokens(keyTokens.length - 1)
       val fileToProcessKeyPath = eventPathData //from leader
 
+      //just add to request queue
+      var requestQueue = getFileRequestsQueue
+      requestQueue = requestQueue:::List(requestingNodeId + "/" + requestingThreadId)
+      saveFileRequestsQueue(requestQueue)
 
-      var processingQueue = getFileProcessingQueue
+      assignFileProcessingIfPossible()
+    }
+    //should do anything for remove?
+  }
+
+  //this is to be called whenever we have some changes in requests/new files
+  //checks if there is a request ready, if parallelism degree allows new processing
+  //   and if there is file needs processing
+  //if all conditions met then assign a file to first request in the queue
+  private def assignFileProcessingIfPossible(): Unit ={
+    var processingQueue = getFileProcessingQueue
+    var requestQueue = getFileRequestsQueue
+
+    if(requestQueue.length > 0) {//there are ndoes/threads ready to process
+      val request = requestQueue.head //take first request
+      saveFileRequestsQueue(requestQueue.tail)
+      val requestTokens = request.split("/")
+      val requestingNodeId = request(requestTokens.length - 2)
+      val requestingThreadId = request(requestTokens.length - 1)
+
       //check if it is allowed to process one more file
-      if(processingQueue.length < monitoringConf.consumersCount) {
+      if (processingQueue.length < monitoringConf.consumersCount) {
         val fileToProcessFullPath = "" //TODO : get next file to process
         if (fileToProcessFullPath != null) {
+          //there are files that need to process
+          val fileToProcessKeyPath = smartFileFromLeaderPath + "/" + fileToProcessKeyPath + "/" + requestingThreadId
           envContext.setListenerCacheKey(fileToProcessKeyPath, fileToProcessFullPath)
-          processingQueue = processingQueue:::List(requestingNodeId + "/" + requestingThreadId + "/" + fileToProcessFullPath)
+          processingQueue = processingQueue ::: List(requestingNodeId + "/" + requestingThreadId + "/" + fileToProcessFullPath)
           saveFileProcessingQueue(processingQueue)
         }
       }
     }
-    //should do anything for remove?
   }
 
   //what a leader should do when recieving file processing status update
@@ -771,7 +796,13 @@ class FileProcessor(val partitionId: Int) extends Runnable {
         val valueInProcessingQueue = processingNodeId + "/" + processingThreadId + "/" + processingFilePath
         processingQueue = processingQueue diff List(valueInProcessingQueue)
 
+        //since a file just got finished, a new one can be processed
+        assignFileProcessingIfPossible()
+
         //TODO: move/remove the file itself
+      }
+      else{//if processign status is NOT finished
+
       }
 
     }
