@@ -52,14 +52,12 @@ class AddModelService(requestContext: RequestContext, userid:Option[String], pas
 
   def receive = {
     case Process(pmmlStr) =>
-      process(pmmlStr)
+      val tenantId: String = "" // FIXME: DAN FIX THIS TenantID
+      process(pmmlStr, tenantId)
       context.stop(self)
   }
   
-  def process(pmmlStr:String) = {
-
-    val tenantId: String = "" // FIXME: DAN FIX THIS TenantID
-    
+  def process(pmmlStr:String, tenantId: String) = {
     logger.debug("Requesting AddModel: " + pmmlStr.substring(0,500))
 
     var nameVal = APIService.extractNameFromPMML(pmmlStr) 
