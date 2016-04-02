@@ -99,7 +99,7 @@ lazy val DataDelimiters = project.in(file("DataDelimiters"))
 lazy val KamanjaManager = project.in(file("KamanjaManager"))
   .configs(TestConfigs.all: _*)
   .settings(TestSettings.settings: _*)
-  .dependsOn(Metadata, KamanjaBase, MetadataBootstrap, MetadataAPI, Serialize, ZooKeeperListener, ZooKeeperLeaderLatch, Exceptions, KamanjaUtils, TransactionService, DataDelimiters, InputOutputAdapterBase)
+  .dependsOn(Metadata, KamanjaBase, MetadataBootstrap, MetadataAPI, Serialize, ZooKeeperListener, ZooKeeperLeaderLatch, Exceptions, KamanjaUtils, TransactionService, DataDelimiters, InputOutputAdapterBase, Dag)
 
 lazy val InputOutputAdapterBase = project.in(file("InputOutputAdapters/InputOutputAdapterBase"))
   .configs(TestConfigs.all: _*)
