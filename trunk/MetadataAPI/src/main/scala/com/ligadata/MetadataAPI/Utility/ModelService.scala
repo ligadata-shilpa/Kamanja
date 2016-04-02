@@ -52,7 +52,7 @@ object ModelService {
       */
     def addModelScala(input: String
                       , dep: String = ""
-                      , userid: Option[String] = Some("kamanja")
+                      , userid: Option[String] = Some("kamanja"), tenantId: String = ""
 		      , optMsgProduced: Option[String] = None
                      ): String = {
         var modelDefs= Array[String]()
@@ -100,7 +100,7 @@ object ModelService {
             for (modelDef <- modelDefs){
                 println("Adding the next model in the queue.")
                 if (dep.length > 0) {
-                    response+= MetadataAPIImpl.AddModel(ModelType.SCALA, modelDef, userid, Some(userid.get+"."+dep),None,None,None,optMsgProduced)
+                    response+= MetadataAPIImpl.AddModel(ModelType.SCALA, modelDef, userid, tenantId, Some(userid.get+"."+dep),None,None,None,optMsgProduced)
                 } else {
                     //before adding a model, add its config file.
                     var configKeys = MetadataAPIImpl.getModelConfigNames
@@ -128,7 +128,7 @@ object ModelService {
                                 errorMsg
                             }
                         }
-                        response+= MetadataAPIImpl.AddModel(ModelType.SCALA, modelDef, userid, Some(modelConfig),None,None,None,optMsgProduced)
+                        response+= MetadataAPIImpl.AddModel(ModelType.SCALA, modelDef, userid, tenantId, Some(modelConfig),None,None,None,optMsgProduced)
                     }
                 }
             }
@@ -146,7 +146,7 @@ object ModelService {
       * @return the result of the operation
       */
     def addModelJava(input: String, dep: String = ""
-                     , userid: Option[String] = Some("kamanja")
+                     , userid: Option[String] = Some("kamanja"), tenantId: String = ""
 		      , optMsgProduced: Option[String] = None
                     ): String = {
         var modelDefs= Array[String]()
@@ -196,7 +196,7 @@ object ModelService {
             for (modelDef <- modelDefs){
                 println("Adding the next model in the queue.")
                 if (dep.length > 0) {
-                    response+= MetadataAPIImpl.AddModel(ModelType.JAVA, modelDef, userid, Some(userid.get+"."+dep),None,None,None,optMsgProduced)
+                    response+= MetadataAPIImpl.AddModel(ModelType.JAVA, modelDef, userid, tenantId, Some(userid.get+"."+dep),None,None,None,optMsgProduced)
                 } else {
                     var configKeys = MetadataAPIImpl.getModelConfigNames
                     println("--> got these many back "+configKeys.size)
@@ -224,7 +224,7 @@ object ModelService {
                                 errorMsg
                             }
                         }
-                        response+= MetadataAPIImpl.AddModel(ModelType.JAVA, modelDef, userid, Some(modelConfig),None,None,None,optMsgProduced)
+                        response+= MetadataAPIImpl.AddModel(ModelType.JAVA, modelDef, userid, tenantId, Some(modelConfig),None,None,None,optMsgProduced)
                     }
                 }
             }
@@ -254,7 +254,7 @@ object ModelService {
      */
     def addModelPmml(modelType: ModelType.ModelType
                     , input: String
-                    , optUserid: Option[String] = Some("kamanja")
+                    , optUserid: Option[String] = Some("kamanja"), tenantId: String = ""
                     , optModelName: Option[String] = None
                     , optVersion: Option[String] = None
                     , optMsgConsumed: Option[String] = None
@@ -269,7 +269,7 @@ object ModelService {
             val model = new File(input.toString)
             val resp : String = if(model.exists()){
                 val modelDef= Source.fromFile(model).mkString
-                MetadataAPIImpl.AddModel(ModelType.PMML, modelDef, optUserid, optModelName, optVersion, optMsgConsumed, optMsgVersion,optMsgProduced)
+                MetadataAPIImpl.AddModel(ModelType.PMML, modelDef, optUserid, tenantId, optModelName, optVersion, optMsgConsumed, optMsgVersion,optMsgProduced)
             }else{
                 val userId : String = optUserid.getOrElse("no user id supplied")
                 val modelName : String = optModelName.getOrElse("no model name supplied")
@@ -294,7 +294,7 @@ object ModelService {
      * @return the result of the operation
      */
     def addModelKPmml(input: String
-                     , userid: Option[String] = Some("kamanja")
+                     , userid: Option[String] = Some("kamanja"), tenantId: String = ""
 		      , optMsgProduced: Option[String] = None
                         ): String = {
         var modelDef=""
@@ -321,7 +321,7 @@ object ModelService {
                             case option => {
                                 var  modelDefs=getUserInputFromMainMenu(models)
                                 for (modelDef <- modelDefs)
-                                    response += MetadataAPIImpl.AddModel(ModelType.KPMML, modelDef.toString, userid, None,None,None,None,optMsgProduced)
+                                    response += MetadataAPIImpl.AddModel(ModelType.KPMML, modelDef.toString, userid, tenantId, None,None,None,None,optMsgProduced)
                             }
                         }
                     }
@@ -336,7 +336,7 @@ object ModelService {
             var model = new File(input.toString)
             if(model.exists()){
                 modelDef= Source.fromFile(model).mkString
-                response = MetadataAPIImpl.AddModel(ModelType.KPMML, modelDef.toString, userid, None,None,None,None,optMsgProduced)
+                response = MetadataAPIImpl.AddModel(ModelType.KPMML, modelDef.toString, userid, tenantId, None,None,None,None,optMsgProduced)
             }else{
                 response="Model definition file does not exist"
             }
@@ -352,7 +352,7 @@ object ModelService {
       * @return the result of the operation
       */
     def addModelJTM(input: String
-                      , userid: Option[String] = Some("kamanja")
+                      , userid: Option[String] = Some("kamanja"), tenantId: String = ""
                      ): String = {
         var modelDef=""
         var modelConfig=""
@@ -378,7 +378,7 @@ object ModelService {
                             case option => {
                                 var  modelDefs=getUserInputFromMainMenu(models)
                                 for (modelDef <- modelDefs)
-                                    response += MetadataAPIImpl.AddModel(ModelType.JTM, modelDef.toString, userid, None)
+                                    response += MetadataAPIImpl.AddModel(ModelType.JTM, modelDef.toString, userid, tenantId, None)
                             }
                         }
                     }
@@ -393,7 +393,7 @@ object ModelService {
             var model = new File(input.toString)
             if(model.exists()){
                 modelDef= Source.fromFile(model).mkString
-                response = MetadataAPIImpl.AddModel(ModelType.JTM, modelDef.toString, userid, None)
+                response = MetadataAPIImpl.AddModel(ModelType.JTM, modelDef.toString, userid, tenantId, None)
             }else{
                 response="Model definition file does not exist"
             }
@@ -534,7 +534,7 @@ object ModelService {
       * @return result string
       */
   def updateModelPmml(pmmlPath : String
-                      ,userid : Option[String]
+                      ,userid : Option[String], tenantId: String
                       ,modelNamespaceName : String
                       ,newVersion : String) : String = {
 
@@ -544,7 +544,7 @@ object ModelService {
 
               MetadataAPIImpl.UpdateModel(ModelType.PMML
                               , pmmlText
-                              , userid
+                              , userid, tenantId
                               , Some(modelNamespaceName)
                               , Some(newVersion))
       } catch {
@@ -571,7 +571,7 @@ object ModelService {
      * @return the result of the operation
      */
     def updateModeljava(input: String, dep: String = ""
-                      , userid: Option[String] = Some("kamanja")
+                      , userid: Option[String] = Some("kamanja"), tenantId: String = ""
                       ): String = {
         var modelDef=""
         var modelConfig=""
@@ -622,7 +622,7 @@ object ModelService {
           for (modelDef <- modelDefs){
             println("Adding the next model in the queue.")
             if (dep.length > 0) {
-              response+= MetadataAPIImpl.UpdateModel( ModelType.JAVA, modelDef, userid, Some(userid.get+"."+dep))
+              response+= MetadataAPIImpl.UpdateModel( ModelType.JAVA, modelDef, userid, tenantId, Some(userid.get+"."+dep))
             } else {
               //before adding a model, add its config file.
               var configKeys = MetadataAPIImpl.getModelConfigNames
@@ -651,7 +651,7 @@ object ModelService {
                     errorMsg
                   }
                 }
-                response+= MetadataAPIImpl.UpdateModel(ModelType.JAVA, modelDef, userid, Some(modelConfig))
+                response+= MetadataAPIImpl.UpdateModel(ModelType.JAVA, modelDef, userid, tenantId, Some(modelConfig))
               }
             }
           }
@@ -670,7 +670,7 @@ object ModelService {
      * @return the result of the operation
      */
     def updateModelscala(input: String, dep: String = ""
-                       , userid: Option[String] = Some("kamanja")
+                       , userid: Option[String] = Some("kamanja"), tenantId: String = ""
                        ): String = {
         var modelDef=""
         var modelConfig=""
@@ -720,7 +720,7 @@ object ModelService {
             for (modelDef <- modelDefs){
               println("Adding the next model in the queue.")
               if (dep.length > 0) {
-                response+= MetadataAPIImpl.UpdateModel(ModelType.SCALA, modelDef, userid, Some(userid.get+"."+dep))
+                response+= MetadataAPIImpl.UpdateModel(ModelType.SCALA, modelDef, userid, tenantId, Some(userid.get+"."+dep))
               } else {
                 //before adding a model, add its config file.
                 var configKeys = MetadataAPIImpl.getModelConfigNames
@@ -748,7 +748,7 @@ object ModelService {
                       errorMsg
                     }
                   }
-                  response+= MetadataAPIImpl.UpdateModel(ModelType.SCALA, modelDef, userid, Some(modelConfig))
+                  response+= MetadataAPIImpl.UpdateModel(ModelType.SCALA, modelDef, userid, tenantId, Some(modelConfig))
                 }
               }
             }
