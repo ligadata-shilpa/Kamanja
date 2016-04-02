@@ -388,12 +388,12 @@ lazy val MigrateFrom_V_1_3 = project.in(file("Utils/Migrate/SourceVersion/Migrat
   .settings(TestSettings.settings: _*)
   .dependsOn(MigrateBase)
 
+lazy val runtime = project.in(file("GenerateModels/Runtime")) dependsOn(Metadata, KamanjaBase, Exceptions, MetadataBootstrap, MessageCompiler)
+
 lazy val jtm = project.in(file("GenerateModels/jtm"))
   .configs(TestConfigs.all: _*)
   .settings(TestSettings.settings: _*)
-  .dependsOn(Metadata, KamanjaBase, Exceptions, MetadataBootstrap, MessageCompiler)
-
-lazy val runtime = project.in(file("GenerateModels/Runtime")) dependsOn(Metadata, KamanjaBase, Exceptions, MetadataBootstrap, MessageCompiler)
+  .dependsOn(Metadata, KamanjaBase, Exceptions, MetadataBootstrap, MessageCompiler, runtime)
 
 lazy val InstallDriverBase = project.in(file("Utils/ClusterInstaller/InstallDriverBase"))
   .configs(TestConfigs.all: _*)

@@ -132,8 +132,8 @@ class Conversion {
       case y: Int => y.toString
       case y: Double => y.toString
       case y: Boolean => y.toString
-      case y: Date => formatDate.format(y)
       case y: Timestamp => formatTs.format(y)
+      case y: Date => formatDate.format(y)
       case y: BigDecimal => y.toString
     }
   }
