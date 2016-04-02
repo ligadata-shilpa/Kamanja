@@ -135,8 +135,20 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
   /**
     * Collect information needed for modeldef
     */
-  private var inmessages = Array.empty[Map[String, Set[String]]] // Records all sets of incoming classes and attributes accessed
-  private var outmessages = Set.empty[String] //Records all outgoing classes
+  private var inmessages: Array[Map[String, Set[String]]] = null // Records all sets of incoming classes and attributes accessed
+  private var outmessages: Set[String] = null //Records all outgoing classes
+
+  def Imports(): Array[String] = {
+    val imports = if (root.grok.nonEmpty) {
+      root.imports.packages :+ "org.aicer.grok.dictionary.GrokDictionary"
+    } else {
+      root.imports.packages
+    }
+
+    val imports1 = imports :+ "com.ligadata.runtime.Conversion"
+
+    imports1.distinct
+  }
 
   /** Returns the modeldef after compiler completed
     *
@@ -170,7 +182,10 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
      val msgConsumed: String = ""
      val supportsInstanceSerialization : Boolean = false
      */
-    new ModelDef(ModelRepresentation.JAR, MiningModelType.JTM, in, out, isReusable, supportsInstanceSerialization)
+    var model = new ModelDef(ModelRepresentation.JAR, MiningModelType.JTM, in, out, isReusable, supportsInstanceSerialization)
+    // Imports to Jar
+    //model.dependencyJarNames = Imports()
+    model
   }
 
   def Code() : String = {
@@ -756,6 +771,10 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
   // Controls the code generation
   def Execute(): String = {
 
+    // Reset any state
+    inmessages = Array.empty[Map[String, Set[String]]]
+    outmessages = Set.empty[String]
+
     // Validate model
     Validate(root)
 
@@ -788,11 +807,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
     // Process additional imports like grok
     //
-    val imports = if(root.grok.nonEmpty) {
-                    root.imports.packages :+ "org.aicer.grok.dictionary.GrokDictionary"
-                  } else {
-                    root.imports.packages
-                  }
+    val imports = Imports()
 
     // Emit grok initialization
     val grokExpressions = if(root.grok.nonEmpty) {
@@ -806,7 +821,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
     // Append the packages needed
     //
-    result ++= imports.distinct.map( i => "import %s".format(i) )
+    result ++= imports.map( i => "import %s".format(i) )
 
     // Add message so we can actual compile
     // Check how to reconcile during add/compilation
