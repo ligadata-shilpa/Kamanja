@@ -39,6 +39,7 @@ object MetadataAPISerialization {
               ("ModelRep" -> o.modelRepresentation.toString) ~
               ("OrigDef" -> o.OrigDef) ~
               ("OwnerId" -> o.OwnerId) ~
+              ("TenantId" -> o.TenantId) ~
               ("ObjectDefinition" -> o.ObjectDefinition) ~
               ("ObjectFormat" -> ObjFormatType.asString(o.ObjectFormat)) ~
               ("Description" -> o.Description) ~
@@ -47,7 +48,7 @@ object MetadataAPISerialization {
               ("inputMsgSets" -> o.inputMsgSets.toList.map(m => m.toList.map(f => ("Origin" -> f.origin) ~ ("Message" -> f.message) ~ ("Attributes" -> f.attributes.toList)))) ~
               ("OutputMsgs" -> o.outputMsgs.toList) ~
               ("NumericTypes" -> ("Version" -> o.Version) ~ ("TransId" -> o.TranId) ~ ("UniqId" -> o.UniqId) ~ ("CreationTime" -> o.CreationTime) ~ ("ModTime" -> o.ModTime) ~ ("MdElemStructVer" -> o.MdElemStructVer) ~ ("MdElementId" -> o.MdElementId)) ~
-              ("BooleanTypes" -> ("IsActive" -> o.IsActive) ~ ("IsReusable" -> o.isReusable) ~ ("IsDeleted" -> o.IsDeleted) ~ ("Recompile" -> false) ~ ("SupportsInstanceSerialization" -> o.SupportsInstanceSerialization)
+              ("BooleanTypes" -> ("IsActive" -> o.IsActive) ~ ("IsReusable" -> o.isReusable) ~ ("IsDeleted" -> o.IsDeleted) ~ ("SupportsInstanceSerialization" -> o.SupportsInstanceSerialization)
                 )
           compact(render(json))
         }
@@ -78,12 +79,12 @@ object MetadataAPISerialization {
               ("CreationTime" -> o.CreationTime) ~
               ("Author" -> o.Author) ~
               ("OwnerId" -> o.OwnerId) ~
+              ("TenantId" -> o.TenantId) ~
               ("SchemaId" -> o.cType.schemaId) ~
               ("AvroSchema" -> o.cType.avroSchema) ~
               ("PartitionKey" -> o.cType.PartitionKey.toList) ~
               ("IsActive" -> o.IsActive) ~
               ("IsDeleted" -> o.IsDeleted) ~
-              ("Recompile" -> false) ~
               ("Persist" -> o.cType.Persist) ~
               ("Description" -> o.Description) ~
               ("NumericTypes" -> ("Version" -> o.Version) ~ ("TransId" -> o.TranId) ~ ("UniqId" -> o.UniqId) ~ ("CreationTime" -> o.CreationTime) ~ ("ModTime" -> o.ModTime) ~ ("MdElemStructVer" -> o.MdElemStructVer) ~ ("MdElementId" -> o.MdElementId)) ~
@@ -117,13 +118,13 @@ object MetadataAPISerialization {
               ("CreationTime" -> o.CreationTime) ~
               ("Author" -> o.Author) ~
               ("OwnerId" -> o.OwnerId) ~
+              ("TenantId" -> o.TenantId) ~
               ("SchemaId" -> o.cType.schemaId) ~
               ("AvroSchema" -> o.cType.avroSchema) ~
               ("Persist" -> o.cType.Persist) ~
               ("PartitionKey" -> o.cType.PartitionKey.toList) ~
               ("IsActive" -> o.IsActive) ~
               ("IsDeleted" -> o.IsDeleted) ~
-              ("Recompile" -> false) ~
               ("Description" -> o.Description) ~
               ("NumericTypes" -> ("Version" -> o.Version) ~ ("TransId" -> o.TranId) ~ ("UniqId" -> o.UniqId) ~ ("CreationTime" -> o.CreationTime) ~ ("ModTime" -> o.ModTime) ~ ("MdElemStructVer" -> o.MdElemStructVer) ~ ("MdElementId" -> o.MdElementId)) ~
               ("PrimaryKeys" -> primaryKeys.map(m => ("constraintName" -> m._1) ~ ("key" -> m._2))) ~
@@ -143,12 +144,12 @@ object MetadataAPISerialization {
               ("ObjectFormat" -> ObjFormatType.asString(o.ObjectFormat)) ~
               ("Author" -> o.Author) ~
               ("OwnerId" -> o.OwnerId) ~
+              ("TenantId" -> o.TenantId) ~
               ("Arguments" -> o.args.toList.map { arg => (("ArgName" -> arg.name) ~ ("ArgTypeNameSpace" -> arg.Type.nameSpace) ~ ("ArgTypeName" -> arg.Type.name)) }) ~
               ("Features" -> o.features.toList.map(m => m.toString)) ~
               ("ReturnTypeNameSpace" -> o.retType.nameSpace) ~
               ("ReturnTypeName" -> o.retType.name) ~
               ("ClassName" -> o.className) ~
-              ("Recompile" -> false) ~
               ("Description" -> o.Description) ~
               ("NumericTypes" -> ("Version" -> o.Version) ~ ("TransId" -> o.TranId) ~ ("UniqId" -> o.UniqId) ~ ("CreationTime" -> o.CreationTime) ~ ("ModTime" -> o.ModTime) ~ ("MdElemStructVer" -> o.MdElemStructVer) ~ ("MdElementId" -> o.MdElementId)) ~
               ("IsActive" -> o.IsActive) ~
@@ -173,8 +174,8 @@ object MetadataAPISerialization {
               ("ObjectDefinition" -> o.ObjectDefinition) ~
               ("OrigDef" -> o.OrigDef) ~
               ("Author" -> o.Author) ~
-              ("Recompile" -> false) ~
               ("OwnerId" -> o.OwnerId) ~
+              ("TenantId" -> o.TenantId) ~
               ("Description" -> o.Description) ~
               ("NumericTypes" -> ("Version" -> o.Version) ~ ("TransId" -> o.TranId) ~ ("UniqId" -> o.UniqId) ~ ("CreationTime" -> o.CreationTime) ~ ("ModTime" -> o.ModTime) ~ ("MdElemStructVer" -> o.MdElemStructVer) ~ ("MdElementId" -> o.MdElementId)) ~
               ("IsActive" -> o.IsActive) ~
@@ -200,8 +201,8 @@ object MetadataAPISerialization {
               ("ObjectDefinition" -> o.ObjectDefinition) ~
               ("OrigDef" -> o.OrigDef) ~
               ("OwnerId" -> o.OwnerId) ~
+              ("TenantId" -> o.TenantId) ~
               ("Author" -> o.Author) ~
-              ("Recompile" -> false) ~
               ("Description" -> o.Description) ~
               ("NumericTypes" -> ("Version" -> o.Version) ~ ("TransId" -> o.TranId) ~ ("UniqId" -> o.UniqId) ~ ("CreationTime" -> o.CreationTime) ~ ("ModTime" -> o.ModTime) ~ ("MdElemStructVer" -> o.MdElemStructVer) ~ ("MdElementId" -> o.MdElementId)) ~
               ("IsActive" -> o.IsActive) ~
@@ -221,6 +222,7 @@ object MetadataAPISerialization {
               ("Name" -> o.Name) ~
               ("Author" -> o.Author) ~
               ("OwnerId" -> o.OwnerId) ~
+              ("TenantId" -> o.TenantId) ~
               ("PhysicalName" -> o.PhysicalName) ~
               ("JarName" -> getEmptyIfNull(o.jarName)) ~
               ("DependencyJars" -> o.CheckAndGetDependencyJarNames.toList) ~
@@ -238,6 +240,7 @@ object MetadataAPISerialization {
               ("NameSpace" -> o.NameSpace) ~
               ("Contents" -> o.contents) ~
               ("OwnerId" -> o.OwnerId) ~
+              ("TenantId" -> o.TenantId) ~
               ("Name" -> o.Name) ~
               ("Author" -> o.Author) ~
               ("PhysicalName" -> o.PhysicalName) ~
@@ -349,7 +352,6 @@ object MetadataAPISerialization {
 
       val ModDefInst = modDefJson.extract[ModelDefinition]
 
-      //val tenantId: String = "" // FIXME: AHMED FIX THIS TenantID
       val inputMsgSets = ModDefInst.Model.inputMsgSets.map(m => m.map(k => {
         val msgAndAttrib = new MessageAndAttributes()
         msgAndAttrib.message = k.Message
@@ -363,7 +365,7 @@ object MetadataAPISerialization {
         , ModDefInst.Model.Name
         , ModDefInst.Model.PhysicalName
         , ModDefInst.Model.OwnerId
-         //tenantId
+        , ModDefInst.Model.TenantId
         , ModDefInst.Model.NumericTypes.UniqId
         , ModDefInst.Model.NumericTypes.MdElementId
         , ModelRepresentation.modelRep(ModDefInst.Model.ModelRep)
@@ -375,7 +377,7 @@ object MetadataAPISerialization {
         , ModDefInst.Model.NumericTypes.Version
         , ModDefInst.Model.JarName
         , ModDefInst.Model.DependencyJars.toArray
-        , ModDefInst.Model.BooleanTypes.Recompile
+        , false
         , ModDefInst.Model.BooleanTypes.SupportsInstanceSerialization,
         ModDefInst.Model.ModelConfig)
 
@@ -429,14 +431,13 @@ object MetadataAPISerialization {
       fr.foreach(f => {
         foreignKeys ::=(f.constraintName, f.key, f.forignContainerName, f.forignKey)
       })
-
-     // val tenantId: String = "" // FIXME: AHMED FIX THIS TenantID
       val msgDef = MdMgr.GetMdMgr.MakeFixedMsg(
         MsgDefInst.Message.NameSpace,
         MsgDefInst.Message.Name,
         MsgDefInst.Message.PhysicalName,
         attrList1,
         MsgDefInst.Message.OwnerId,
+        MsgDefInst.Message.TenantId,
         MsgDefInst.Message.NumericTypes.UniqId,
         MsgDefInst.Message.NumericTypes.MdElementId,
         MsgDefInst.Message.SchemaId,
@@ -447,7 +448,7 @@ object MetadataAPISerialization {
         primaryKeys,
         foreignKeys,
         MsgDefInst.Message.PartitionKey.toArray,
-        MsgDefInst.Message.Recompile
+        false
       )
 
       msgDef.tranId = MsgDefInst.Message.NumericTypes.TransId
@@ -508,6 +509,7 @@ object MetadataAPISerialization {
         ContDefInst.Container.PhysicalName,
         attrList1,
         ContDefInst.Container.OwnerId,
+        ContDefInst.Container.TenantId,
         ContDefInst.Container.NumericTypes.UniqId,
         ContDefInst.Container.NumericTypes.MdElementId,
         ContDefInst.Container.SchemaId,
@@ -518,7 +520,7 @@ object MetadataAPISerialization {
         primaryKeys,
         foreignKeys,
         ContDefInst.Container.PartitionKey.toArray,
-        ContDefInst.Container.Recompile
+        false
       )
 
       contDef.tranId = ContDefInst.Container.NumericTypes.TransId
@@ -566,6 +568,7 @@ object MetadataAPISerialization {
         argList,
         featureSet,
         functionInst.Function.OwnerId,
+        functionInst.Function.TenantId,
         functionInst.Function.NumericTypes.UniqId,
         functionInst.Function.NumericTypes.MdElementId,
         functionInst.Function.NumericTypes.Version,
@@ -614,9 +617,11 @@ object MetadataAPISerialization {
         value,
         mapTypeInst.MapType.NumericTypes.Version,
         mapTypeInst.MapType.OwnerId,
+        mapTypeInst.MapType.TenantId,
         mapTypeInst.MapType.NumericTypes.UniqId,
         mapTypeInst.MapType.NumericTypes.MdElementId,
-        mapTypeInst.MapType.Recompile)
+        false
+      )
 
       mapTypeDef.origDef = mapTypeInst.MapType.OrigDef
       val objFmt: ObjFormatType.FormatType = ObjFormatType.fromString(mapTypeInst.MapType.ObjectFormat)
@@ -662,10 +667,11 @@ object MetadataAPISerialization {
         arrayTypeInst.ArrayType.TypeName,
         arrayTypeInst.ArrayType.NumberOfDimensions,
         arrayTypeInst.ArrayType.OwnerId,
+        arrayTypeInst.ArrayType.TenantId,
         arrayTypeInst.ArrayType.NumericTypes.UniqId,
         arrayTypeInst.ArrayType.NumericTypes.MdElementId,
         arrayTypeInst.ArrayType.NumericTypes.Version,
-        arrayTypeInst.ArrayType.Recompile
+        false
       )
 
       arrayTypeDef.origDef = arrayTypeInst.ArrayType.OrigDef
@@ -709,6 +715,7 @@ object MetadataAPISerialization {
         jarInst.Jar.Name,
         jarInst.Jar.NumericTypes.Version.toString,
         jarInst.Jar.OwnerId,
+        jarInst.Jar.TenantId,
         jarInst.Jar.NumericTypes.UniqId,
         jarInst.Jar.NumericTypes.MdElementId
       )
@@ -767,6 +774,7 @@ object MetadataAPISerialization {
       configDef.active = configInst.Config.IsActive
       configDef.deleted = configInst.Config.IsDeleted
       configDef.ownerId = configInst.Config.OwnerId
+      configDef.tenantId= configInst.Config.TenantId
       configDef.mdElementId = configInst.Config.NumericTypes.MdElementId
       configDef.dependencyJarNames = configInst.Config.DependencyJars.toArray
       configDef.jarName = configInst.Config.JarName
@@ -976,29 +984,29 @@ case class Node(Node: NodeInformation)
 
 case class Argument(ArgName: String, ArgTypeNameSpace: String, ArgTypeName: String)
 
-case class ConfigInfo(Name: String, PhysicalName: String, JarName: String, NameSpace: String, ObjectDefinition: String, DependencyJars: List[String], OrigDef: String, ObjectFormat: String, Author: String, OwnerId: String, IsActive: Boolean, IsDeleted: Boolean, Description: String, Contents: String, NumericTypes: NumericTypes)
+case class ConfigInfo(Name: String, PhysicalName: String, JarName: String, NameSpace: String, ObjectDefinition: String, DependencyJars: List[String], OrigDef: String, ObjectFormat: String, Author: String, OwnerId: String, IsActive: Boolean, IsDeleted: Boolean, Description: String, Contents: String, NumericTypes: NumericTypes, TenantId: String)
 
 case class Config(Config: ConfigInfo)
 
-case class JarInfo(Name: String, PhysicalName: String, JarName: String, NameSpace: String, ObjectDefinition: String, DependencyJars: List[String], OrigDef: String, ObjectFormat: String, Author: String, OwnerId: String, IsActive: Boolean, IsDeleted: Boolean, Description: String, NumericTypes: NumericTypes)
+case class JarInfo(Name: String, PhysicalName: String, JarName: String, NameSpace: String, ObjectDefinition: String, DependencyJars: List[String], OrigDef: String, ObjectFormat: String, Author: String, OwnerId: String, IsActive: Boolean, IsDeleted: Boolean, Description: String, NumericTypes: NumericTypes, TenantId: String)
 
 case class Jar(Jar: JarInfo)
 
-case class ArrayTypeInfo(Name: String, PhysicalName: String, JarName: String, NameSpace: String, TypeTypeName: String, Implementation: String, NumberOfDimensions: Int, TypeName: String, TypeNameSpace: String, ObjectDefinition: String, DependencyJars: List[String], OrigDef: String, ObjectFormat: String, Author: String, OwnerId: String, Recompile: Boolean, IsActive: Boolean, IsDeleted: Boolean, IsFixed: Boolean, Description: String, NumericTypes: NumericTypes)
+case class ArrayTypeInfo(Name: String, PhysicalName: String, JarName: String, NameSpace: String, TypeTypeName: String, Implementation: String, NumberOfDimensions: Int, TypeName: String, TypeNameSpace: String, ObjectDefinition: String, DependencyJars: List[String], OrigDef: String, ObjectFormat: String, Author: String, OwnerId: String, IsActive: Boolean, IsDeleted: Boolean, IsFixed: Boolean, Description: String, NumericTypes: NumericTypes, TenantId: String)
 
 case class ArrayType(ArrayType: ArrayTypeInfo)
 
-case class MapTypeInfo(Name: String, PhysicalName: String, JarName: String, NameSpace: String, TypeTypeName: String, Implementation: String, KeyTypeNameSpace: String, KeyTypeName: String, ValueTypeNameSpace: String, ValueTypeName: String, ObjectDefinition: String, DependencyJars: List[String], OrigDef: String, ObjectFormat: String, Author: String, OwnerId: String, Recompile: Boolean, IsActive: Boolean, IsDeleted: Boolean, IsFixed: Boolean, Description: String, NumericTypes: NumericTypes)
+case class MapTypeInfo(Name: String, PhysicalName: String, JarName: String, NameSpace: String, TypeTypeName: String, Implementation: String, KeyTypeNameSpace: String, KeyTypeName: String, ValueTypeNameSpace: String, ValueTypeName: String, ObjectDefinition: String, DependencyJars: List[String], OrigDef: String, ObjectFormat: String, Author: String, OwnerId: String, IsActive: Boolean, IsDeleted: Boolean, IsFixed: Boolean, Description: String, NumericTypes: NumericTypes, TenantId: String)
 
 case class MapType(MapType: MapTypeInfo)
 
-case class FunctionInfo(Name: String, PhysicalName: String, JarName: String, NameSpace: String, DependencyJars: List[String], OrigDef: String, ObjectFormat: String, Author: String, Arguments: List[Argument], Features: List[String], ReturnTypeNameSpace: String, ObjectDefinition: String, ReturnTypeName: String, ClassName: String, OwnerId: String, Recompile: Boolean, IsActive: Boolean, IsDeleted: Boolean, Description: String, NumericTypes: NumericTypes)
+case class FunctionInfo(Name: String, PhysicalName: String, JarName: String, NameSpace: String, DependencyJars: List[String], OrigDef: String, ObjectFormat: String, Author: String, Arguments: List[Argument], Features: List[String], ReturnTypeNameSpace: String, ObjectDefinition: String, ReturnTypeName: String, ClassName: String, OwnerId: String, IsActive: Boolean, IsDeleted: Boolean, Description: String, NumericTypes: NumericTypes, TenantId: String)
 
 case class Function(Function: FunctionInfo)
 
 case class Attr(NameSpace: String, Name: String, Version: Long, CollectionType: Option[String], Type: TypeDef)
 
-case class MessageInfo(NameSpace: String, Name: String, JarName: String, PhysicalName: String, DependencyJars: List[String], Attributes: List[Attr], OrigDef: String, ObjectDefinition: String, ObjectFormat: String, Description: String, OwnerId: String, Author: String, PartitionKey: List[String], Persist: Boolean, IsActive: Boolean, IsDeleted: Boolean, Recompile: Boolean, SchemaId: Int, AvroSchema: String, PrimaryKeys: List[PrimaryKeys], ForeignKeys: List[ForeignKeys], NumericTypes: NumericTypes)
+case class MessageInfo(NameSpace: String, Name: String, JarName: String, PhysicalName: String, DependencyJars: List[String], Attributes: List[Attr], OrigDef: String, ObjectDefinition: String, ObjectFormat: String, Description: String, OwnerId: String, Author: String, PartitionKey: List[String], Persist: Boolean, IsActive: Boolean, IsDeleted: Boolean, SchemaId: Int, AvroSchema: String, PrimaryKeys: List[PrimaryKeys], ForeignKeys: List[ForeignKeys], NumericTypes: NumericTypes, TenantId: String)
 
 case class PrimaryKeys(constraintName: String, key: List[String])
 
@@ -1012,8 +1020,8 @@ case class ModelDefinition(Model: ModelInfo)
 
 case class MsgAndAttrib(Origin: String, Message: String, Attributes: List[String])
 
-case class ModelInfo(Name: String, PhysicalName: String, JarName: String, NameSpace: String, ObjectFormat: String, BooleanTypes: BooleanTypes, OwnerId: String, OutputMsgs: List[String], ModelType: String, DependencyJars: List[String], ModelRep: String, OrigDef: String, ObjectDefinition: String, NumericTypes: NumericTypes, Description: String, Author: String, ModelConfig: String, inputMsgSets: List[List[MsgAndAttrib]])
+case class ModelInfo(Name: String, PhysicalName: String, JarName: String, NameSpace: String, ObjectFormat: String, BooleanTypes: BooleanTypes, OwnerId: String, OutputMsgs: List[String], ModelType: String, DependencyJars: List[String], ModelRep: String, OrigDef: String, ObjectDefinition: String, NumericTypes: NumericTypes, Description: String, Author: String, ModelConfig: String, inputMsgSets: List[List[MsgAndAttrib]], TenantId: String)
 
 case class NumericTypes(Version: Long, TransId: Long, UniqId: Long, CreationTime: Long, ModTime: Long, MdElemStructVer: Int, MdElementId: Long)
 
-case class BooleanTypes(IsReusable: Boolean, IsActive: Boolean, SupportsInstanceSerialization: Boolean, IsDeleted: Boolean, Recompile: Boolean)
+case class BooleanTypes(IsReusable: Boolean, IsActive: Boolean, SupportsInstanceSerialization: Boolean, IsDeleted: Boolean)
