@@ -1861,7 +1861,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       * @param jarPath where the jars are
      * @return
      */
-  def UploadJar(jarPath: String, userid: Option[String], tenantId: String): String = {
+  def UploadJar(jarPath: String, userid: Option[String] = None): String = {
     try {
       val iFile = new File(jarPath)
       if (!iFile.exists) {
@@ -1872,7 +1872,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
         val ownerId: String = if (userid == None) "kamanja" else userid.get
         val uniqueId = MetadataAPIImpl.GetUniqueId
         val mdElementId = 0L //FIXME:- Not yet handled this
-        val jarObject = MdMgr.GetMdMgr.MakeJarDef(MetadataAPIImpl.sysNS, jarName, "100", ownerId, tenantId, uniqueId, mdElementId)
+        val jarObject = MdMgr.GetMdMgr.MakeJarDef(MetadataAPIImpl.sysNS, jarName, "100", ownerId, "" /* For now Jars Tenant is empty */, uniqueId, mdElementId)
 
 
         logger.debug(" UploadJar  ==>>    ===>> " + jarPath )
