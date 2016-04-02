@@ -71,6 +71,7 @@ class JpmmlSupport(mgr: MdMgr
     * @return a ModelDef
     */
   def CreateModel(recompile: Boolean = false): ModelDef = {
+    val tenantId: String = "" // FIXME: DAN FIX THIS TenantID
     val reasonable: Boolean = (
       mgr != null &&
         modelNamespace != null && modelNamespace.nonEmpty &&

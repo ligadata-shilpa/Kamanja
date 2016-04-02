@@ -355,6 +355,7 @@ class MdMgr {
     be.jarName = jarNm
     be.dependencyJarNames = depJars
     be.ownerId = ownerId
+    be.tenantId = tenantId
     be.uniqueId = uniqueId
     be.mdElementId = mdElementId
   }

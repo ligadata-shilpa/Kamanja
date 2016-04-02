@@ -337,6 +337,7 @@ object MetadataAPISerialization {
       val mdElementId: Long = 0
       val inputMsgSets: Array[Array[MessageAndAttributes]] = Array[Array[MessageAndAttributes]]()
       val outputMsgs: Array[String] = Array[String]()
+      val tenantId: String = "" // FIXME: AHMED FIX THIS TenantID
       //FIXME: Serialize & Deserialize these values -- End
 
       val modDef = MdMgr.GetMdMgr.MakeModelDef(ModDefInst.Model.NameSpace
@@ -417,13 +418,14 @@ object MetadataAPISerialization {
       val mdElementId: Long = 0
       val schemaId: Int = 0
       val avroSchema: String = ""
+      val tenantId: String = "" // FIXME: AHMED FIX THIS TenantID
       //FIXME: Serialize & Deserialize these values -- End
       val msgDef = MdMgr.GetMdMgr.MakeFixedMsg(
         MsgDefInst.Message.NameSpace,
         MsgDefInst.Message.Name,
         MsgDefInst.Message.PhysicalName,
         attrList1,
-        ownerId, uniqueId, mdElementId, schemaId, avroSchema,
+        ownerId, tenantId, uniqueId, mdElementId, schemaId, avroSchema,
         MsgDefInst.Message.NumericTypes.Version,
         MsgDefInst.Message.JarName,
         MsgDefInst.Message.DependencyJars.toArray,
@@ -493,6 +495,7 @@ object MetadataAPISerialization {
       val mdElementId: Long = 0
       val schemaId: Int = 0
       val avroSchema: String = ""
+      val tenantId: String = "" // FIXME: AHMED FIX THIS TenantID
       //FIXME: Serialize & Deserialize these values -- End
 
       val contDef = MdMgr.GetMdMgr.MakeFixedContainer(
@@ -500,7 +503,7 @@ object MetadataAPISerialization {
         ContDefInst.Container.Name,
         ContDefInst.Container.PhysicalName,
         attrList1,
-        ownerId, uniqueId, mdElementId,schemaId,avroSchema,
+        ownerId, tenantId, uniqueId, mdElementId,schemaId,avroSchema,
         ContDefInst.Container.NumericTypes.Version,
         ContDefInst.Container.JarName,
         ContDefInst.Container.DependencyJars.toArray,
@@ -555,6 +558,7 @@ object MetadataAPISerialization {
       val ownerId: String = ""
       val uniqueId: Long = 0
       val mdElementId: Long = 0
+      val tenantId: String = "" // FIXME: AHMED FIX THIS TenantID
       //FIXME: Serialize & Deserialize these values -- End
 
       val functionDef = MdMgr.GetMdMgr.MakeFunc(functionInst.Function.NameSpace,
@@ -610,6 +614,7 @@ object MetadataAPISerialization {
       val ownerId: String = ""
       val uniqueId: Long = 0
       val mdElementId: Long = 0
+      val tenantId: String = "" // FIXME: AHMED FIX THIS TenantID
       //FIXME: Serialize & Deserialize these values -- End
 
       val mapTypeDef = MdMgr.GetMdMgr.MakeMap(mapTypeInst.MapType.NameSpace,
@@ -664,6 +669,7 @@ object MetadataAPISerialization {
       val ownerId: String = ""
       val uniqueId: Long = 0
       val mdElementId: Long = 0
+      val tenantId: String = "" // FIXME: AHMED FIX THIS TenantID
       //FIXME: Serialize & Deserialize these values -- End
 
       val arrayTypeDef = MdMgr.GetMdMgr.MakeArray(arrayTypeInst.ArrayType.NameSpace,
@@ -720,6 +726,7 @@ object MetadataAPISerialization {
       val ownerId: String = ""
       val uniqueId: Long = 0
       val mdElementId: Long = 0
+      val tenantId: String = "" // FIXME: AHMED FIX THIS TenantID
       //FIXME: Serialize & Deserialize these values -- End
 
       val jarDef = MdMgr.GetMdMgr.MakeJarDef(jarInst.Jar.NameSpace,

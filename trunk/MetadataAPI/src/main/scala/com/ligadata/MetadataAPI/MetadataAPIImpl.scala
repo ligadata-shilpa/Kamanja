@@ -1861,7 +1861,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       * @param jarPath where the jars are
      * @return
      */
-  def UploadJar(jarPath: String, userid: Option[String] = None): String = {
+  def UploadJar(jarPath: String, userid: Option[String], tenantId: String): String = {
     try {
       val iFile = new File(jarPath)
       if (!iFile.exists) {
@@ -2067,8 +2067,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @param recompile a
      * @return <description please>
      */
-  private def AddContainerOrMessage(contOrMsgText: String, format: String, userid: Option[String], recompile: Boolean = false): String = {
-    MessageAndContainerUtils.AddContainerOrMessage(contOrMsgText,format,userid,recompile)
+  private def AddContainerOrMessage(contOrMsgText: String, format: String, userid: Option[String], tenantId: String, recompile: Boolean = false): String = {
+    MessageAndContainerUtils.AddContainerOrMessage(contOrMsgText,format,userid, tenantId,recompile)
   }
 
     /**
@@ -2090,8 +2090,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      *          println("Result as Json String => \n" + result._2)
      *          }}}
      */
-  override def AddMessage(messageText: String, format: String, userid: Option[String] = None): String = {
-    AddContainerOrMessage(messageText, format, userid)
+  override def AddMessage(messageText: String, format: String, userid: Option[String] = None, tenantId: String = ""): String = {
+    AddContainerOrMessage(messageText, format, userid, tenantId)
   }
 
     /**
@@ -2113,8 +2113,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     *          println("Result as Json String => \n" + result._2)
     *          }}}
     */
-  def AddContainer(containerText: String, format: String, userid: Option[String] = None): String = {
-    AddContainerOrMessage(containerText, format, userid)
+  override def AddContainer(containerText: String, format: String, userid: Option[String] = None, tenantId: String = ""): String = {
+    AddContainerOrMessage(containerText, format, userid, tenantId)
   }
 
     /**
@@ -2125,8 +2125,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      *               method. If Security and/or Audit are configured, this value must be a value other than None.
      * @return
      */
-  def AddContainer(containerText: String, userid: Option[String]): String = {
-    AddContainer(containerText, "JSON", userid)
+  def AddContainer(containerText: String, userid: Option[String], tenantId: String): String = {
+    AddContainer(containerText, "JSON", userid, tenantId: String)
   }
 
     /**
@@ -2391,13 +2391,14 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
   override def AddModel( modelType: ModelType.ModelType
                            , input: String
                            , optUserid: Option[String] = None
+                           , tenantId: String = ""
                            , optModelName: Option[String] = None
                            , optVersion: Option[String] = None
                            , optMsgConsumed: Option[String] = None
                            , optMsgVersion: Option[String] = Some("-1")
 			                     , optMsgProduced: Option[String] = None
 		       ): String  = {
-    ModelUtils.AddModel(modelType,input,optUserid,optModelName,optVersion,optMsgConsumed, optMsgVersion,optMsgProduced)
+    ModelUtils.AddModel(modelType,input,optUserid, tenantId,optModelName,optVersion,optMsgConsumed, optMsgVersion,optMsgProduced)
   }
 
     /**
@@ -2411,7 +2412,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @return the result string reflecting what happened with this operation.
      */
     def RecompileModel(mod: ModelDef, userid : Option[String], optMsgDef : Option[MessageDef]): String = {
-      ModelUtils.RecompileModel(mod,userid,optMsgDef)
+      ModelUtils.RecompileModel(mod,userid, optMsgDef)
     }
 
     /**
@@ -2446,11 +2447,12 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     override def UpdateModel(modelType: ModelType.ModelType
                             , input: String
                             , optUserid: Option[String] = None
+                             , tenantId: String = ""
                             , optModelName: Option[String] = None
                             , optVersion: Option[String] = None
                             , optVersionBeingUpdated : Option[String] = None
 			    , optMsgProduced: Option[String] = None): String = {
-      ModelUtils.UpdateModel(modelType,input,optUserid,optModelName,optVersion,optVersionBeingUpdated,optMsgProduced)
+      ModelUtils.UpdateModel(modelType,input,optUserid,tenantId, optModelName,optVersion,optVersionBeingUpdated,optMsgProduced)
     }
 
     /**
@@ -3185,7 +3187,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
             val ownerId: String = "kamanja" //FIXME:- We need to have some user for this operation.
             val uniqueId = MetadataAPIImpl.GetUniqueId
             val mdElementId = 0L //FIXME:- Not yet handled this
-            DownloadJarFromDB(MdMgr.GetMdMgr.MakeJarDef(zkMessage.NameSpace, zkMessage.Name, zkMessage.Version, ownerId, tenantId, uniqueId, mdElementId))
+            DownloadJarFromDB(MdMgr.GetMdMgr.MakeJarDef(zkMessage.NameSpace, zkMessage.Name, zkMessage.Version, ownerId, "" /* tenantId as empty */, uniqueId, mdElementId))
           }
           case _ => { logger.error("Unknown Operation " + zkMessage.Operation + " in zookeeper notification, notification is not processed ..") }
         }

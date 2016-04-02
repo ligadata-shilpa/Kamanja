@@ -156,6 +156,7 @@ object MessageAndContainerUtils {
   def AddMessageTypes(msgDef: BaseElemDef, mdMgr: MdMgr, recompile: Boolean = false): Array[BaseElemDef] = {
     logger.debug("The class name => " + msgDef.getClass().getName())
     try {
+      val tenantId = "" // Use empty for types for now
       var types = new Array[BaseElemDef](0)
       val msgType = MetadataAPIImpl.getObjectType(msgDef)
       val depJars = if (msgDef.DependencyJarNames != null)
@@ -164,52 +165,52 @@ object MessageAndContainerUtils {
       msgType match {
         case "MessageDef" | "ContainerDef" => {
           // ArrayOf<TypeName>
-          var obj: BaseElemDef = mdMgr.MakeArray(msgDef.nameSpace, "arrayof" + msgDef.name, msgDef.nameSpace, msgDef.name, 1, msgDef.OwnerId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, msgDef.ver, recompile)
+          var obj: BaseElemDef = mdMgr.MakeArray(msgDef.nameSpace, "arrayof" + msgDef.name, msgDef.nameSpace, msgDef.name, 1, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, msgDef.ver, recompile)
           obj.dependencyJarNames = depJars
           MetadataAPIImpl.AddObjectToCache(obj, mdMgr)
           types = types :+ obj
           // ArrayBufferOf<TypeName>
-          obj = mdMgr.MakeArrayBuffer(msgDef.nameSpace, "arraybufferof" + msgDef.name, msgDef.nameSpace, msgDef.name, 1, msgDef.OwnerId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, msgDef.ver, recompile)
+          obj = mdMgr.MakeArrayBuffer(msgDef.nameSpace, "arraybufferof" + msgDef.name, msgDef.nameSpace, msgDef.name, 1, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, msgDef.ver, recompile)
           obj.dependencyJarNames = depJars
           MetadataAPIImpl.AddObjectToCache(obj, mdMgr)
           types = types :+ obj
           // SortedSetOf<TypeName>
-          obj = mdMgr.MakeSortedSet(msgDef.nameSpace, "sortedsetof" + msgDef.name, msgDef.nameSpace, msgDef.name, msgDef.ver, msgDef.OwnerId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, recompile)
+          obj = mdMgr.MakeSortedSet(msgDef.nameSpace, "sortedsetof" + msgDef.name, msgDef.nameSpace, msgDef.name, msgDef.ver, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, recompile)
           obj.dependencyJarNames = depJars
           MetadataAPIImpl.AddObjectToCache(obj, mdMgr)
           types = types :+ obj
           // ImmutableMapOfIntArrayOf<TypeName>
-          obj = mdMgr.MakeImmutableMap(msgDef.nameSpace, "immutablemapofintarrayof" + msgDef.name, (sysNS, "Int"), (msgDef.nameSpace, "arrayof" + msgDef.name), msgDef.ver, msgDef.OwnerId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, recompile)
+          obj = mdMgr.MakeImmutableMap(msgDef.nameSpace, "immutablemapofintarrayof" + msgDef.name, (sysNS, "Int"), (msgDef.nameSpace, "arrayof" + msgDef.name), msgDef.ver, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, recompile)
           obj.dependencyJarNames = depJars
           MetadataAPIImpl.AddObjectToCache(obj, mdMgr)
           types = types :+ obj
           // ImmutableMapOfString<TypeName>
-          obj = mdMgr.MakeImmutableMap(msgDef.nameSpace, "immutablemapofstringarrayof" + msgDef.name, (sysNS, "String"), (msgDef.nameSpace, "arrayof" + msgDef.name), msgDef.ver, msgDef.OwnerId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, recompile)
+          obj = mdMgr.MakeImmutableMap(msgDef.nameSpace, "immutablemapofstringarrayof" + msgDef.name, (sysNS, "String"), (msgDef.nameSpace, "arrayof" + msgDef.name), msgDef.ver, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, recompile)
           obj.dependencyJarNames = depJars
           MetadataAPIImpl.AddObjectToCache(obj, mdMgr)
           types = types :+ obj
           // ArrayOfArrayOf<TypeName>
-          obj = mdMgr.MakeArray(msgDef.nameSpace, "arrayofarrayof" + msgDef.name, msgDef.nameSpace, "arrayof" + msgDef.name, 1, msgDef.OwnerId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, msgDef.ver, recompile)
+          obj = mdMgr.MakeArray(msgDef.nameSpace, "arrayofarrayof" + msgDef.name, msgDef.nameSpace, "arrayof" + msgDef.name, 1, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, msgDef.ver, recompile)
           obj.dependencyJarNames = depJars
           MetadataAPIImpl.AddObjectToCache(obj, mdMgr)
           types = types :+ obj
           // MapOfStringArrayOf<TypeName>
-          obj = mdMgr.MakeMap(msgDef.nameSpace, "mapofstringarrayof" + msgDef.name, (sysNS, "String"), (msgDef.nameSpace, "arrayof" + msgDef.name), msgDef.ver, msgDef.OwnerId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, recompile)
+          obj = mdMgr.MakeMap(msgDef.nameSpace, "mapofstringarrayof" + msgDef.name, (sysNS, "String"), (msgDef.nameSpace, "arrayof" + msgDef.name), msgDef.ver, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, recompile)
           obj.dependencyJarNames = depJars
           MetadataAPIImpl.AddObjectToCache(obj, mdMgr)
           types = types :+ obj
           // MapOfIntArrayOf<TypeName>
-          obj = mdMgr.MakeMap(msgDef.nameSpace, "mapofintarrayof" + msgDef.name, (sysNS, "Int"), (msgDef.nameSpace, "arrayof" + msgDef.name), msgDef.ver, msgDef.OwnerId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, recompile)
+          obj = mdMgr.MakeMap(msgDef.nameSpace, "mapofintarrayof" + msgDef.name, (sysNS, "Int"), (msgDef.nameSpace, "arrayof" + msgDef.name), msgDef.ver, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, recompile)
           obj.dependencyJarNames = depJars
           MetadataAPIImpl.AddObjectToCache(obj, mdMgr)
           types = types :+ obj
           // SetOf<TypeName>
-          obj = mdMgr.MakeSet(msgDef.nameSpace, "setof" + msgDef.name, msgDef.nameSpace, msgDef.name, msgDef.ver, msgDef.OwnerId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, recompile)
+          obj = mdMgr.MakeSet(msgDef.nameSpace, "setof" + msgDef.name, msgDef.nameSpace, msgDef.name, msgDef.ver, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, recompile)
           obj.dependencyJarNames = depJars
           MetadataAPIImpl.AddObjectToCache(obj, mdMgr)
           types = types :+ obj
           // TreeSetOf<TypeName>
-          obj = mdMgr.MakeTreeSet(msgDef.nameSpace, "treesetof" + msgDef.name, msgDef.nameSpace, msgDef.name, msgDef.ver, msgDef.OwnerId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, recompile)
+          obj = mdMgr.MakeTreeSet(msgDef.nameSpace, "treesetof" + msgDef.name, msgDef.nameSpace, msgDef.name, msgDef.ver, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, recompile)
           obj.dependencyJarNames = depJars
           MetadataAPIImpl.AddObjectToCache(obj, mdMgr)
           types = types :+ obj
@@ -237,7 +238,7 @@ object MessageAndContainerUtils {
     * @param recompile     a
     * @return <description please>
     */
-  def AddContainerOrMessage(contOrMsgText: String, format: String, userid: Option[String], recompile: Boolean = false): String = {
+  def AddContainerOrMessage(contOrMsgText: String, format: String, userid: Option[String], tenantId: String, recompile: Boolean = false): String = {
     var resultStr: String = ""
     try {
       var compProxy = new CompilerProxy
@@ -335,8 +336,8 @@ object MessageAndContainerUtils {
     }
   }
 
-  def AddContainer(containerText: String, format: String, userid: Option[String] = None): String = {
-    AddContainerOrMessage(containerText, format, userid)
+  def AddContainer(containerText: String, format: String, userid: Option[String], tenantId: String): String = {
+    AddContainerOrMessage(containerText, format, userid, tenantId)
   }
 
   /**
@@ -347,8 +348,8 @@ object MessageAndContainerUtils {
     *               method. If Security and/or Audit are configured, this value must be a value other than None.
     * @return
     */
-  def AddContainer(containerText: String, userid: Option[String]): String = {
-    AddContainer(containerText, "JSON", userid)
+  def AddContainer(containerText: String, userid: Option[String], tenantId: String): String = {
+    AddContainer(containerText, "JSON", userid, tenantId)
   }
 
   /**
@@ -358,6 +359,7 @@ object MessageAndContainerUtils {
     * @return
     */
   def RecompileMessage(msgFullName: String): String = {
+    val tenantId: String = "" // FIXME: DAN FIX THIS TenantID
     var resultStr: String = ""
     try {
       var messageText: String = null
@@ -374,7 +376,7 @@ object MessageAndContainerUtils {
       } else {
         messageText = latestMsgDef.get.objectDefinition
       }
-      resultStr = AddContainerOrMessage(messageText, "JSON", None, true)
+      resultStr = AddContainerOrMessage(messageText, "JSON", None, tenantId, true)
       resultStr
 
     } catch {
@@ -1409,7 +1411,7 @@ object MessageAndContainerUtils {
         ",\"Fixed\":\"false\"" +
 	"}}"
 	logger.info("The default output message string => " + msgJson)
-	val resultStr = AddContainerOrMessage(msgJson,"JSON",optUserId,false)
+	val resultStr = AddContainerOrMessage(msgJson,"JSON",optUserId,modDef.TenantId, false)
 	return msgFullName
       } 
     }catch {

@@ -245,6 +245,7 @@ object FunctionUtils {
   def AddFunctions(functionsText: String, format: String, userid: Option[String]): String = {
     logger.debug("Started AddFunctions => ")
     var aggFailures: String = ""
+    val tenantId = "" // For functions we will take empty for now
     try {
       if (format != "JSON") {
         var apiResult = new ApiResult(ErrorCodeConstants.Not_Implemented_Yet, "AddFunctions", functionsText, ErrorCodeConstants.Not_Implemented_Yet_Msg)
@@ -293,6 +294,7 @@ object FunctionUtils {
 
   def UpdateFunctions(functionsText: String, format: String, userid: Option[String]): String = {
     logger.debug("Started UpdateFunctions => ")
+    val tenantId = "" // For functions we will take empty for now
     try {
       if (format != "JSON") {
         var apiResult = new ApiResult(ErrorCodeConstants.Not_Implemented_Yet, "UpdateFunctions", null, ErrorCodeConstants.Not_Implemented_Yet_Msg + ":" + functionsText + ".Format not JSON.")
