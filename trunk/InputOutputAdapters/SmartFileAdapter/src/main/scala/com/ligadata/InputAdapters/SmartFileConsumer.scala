@@ -1,9 +1,13 @@
 package com.ligadata.InputAdapters
 
+import java.io.IOException
+import java.util.zip.ZipException
+
 import com.ligadata.HeartBeat.MonitorComponentInfo
 import com.ligadata.InputOutputAdapterInfo._
 import com.ligadata.AdaptersConfiguration._
-import com.ligadata.KamanjaBase.{NodeContext, DataDelimiters}
+import com.ligadata.KamanjaBase.{EnvContext, NodeContext, DataDelimiters}
+import com.ligadata.Utils.ClusterStatus
 import org.apache.logging.log4j.LogManager
 import org.json4s.jackson.Serialization
 
@@ -54,6 +58,202 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
   private var lastSeen: String = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
 
   val delimiters : DataDelimiters = new DataDelimiters()
+
+  //******************************************************************************************************
+  //***************************node sync related code**********
+  val communicationBasePath = ""
+  val smartFileCommunicationPath = if(communicationBasePath.length > 0 ) communicationBasePath + "/" + "SmartFileCommunication"
+  val smartFileFromLeaderPath = smartFileCommunicationPath + "/FromLeader"
+  val smartFileToLeaderPath = smartFileCommunicationPath + "/ToLeader"
+  val requestFilePath = smartFileToLeaderPath + "/RequestFile"
+  val fileProcessingPath = smartFileToLeaderPath + "/FileProcessing"
+  val File_Processing_Status_Finished = "finished"
+  val filesParallelismPath = smartFileCommunicationPath + "/FilesParallelism"
+
+  private var envContext : EnvContext = null
+  private var clusterStatus : ClusterStatus = null
+  private var participantExecutor : ExecutorService = null
+  private var filesParallelism : Int = 1
+  private var monitorController : MonitorController = null
+
+  //add the node callback
+  private def initializeNode(nodeContext: NodeContext): Unit ={
+    envContext = nodeContext.gCtx
+    envContext.registerNodesChangeNotification(nodeChangeCallback)
+  }
+
+  def nodeChangeCallback (newClusterStatus : ClusterStatus) : Unit = {
+
+    if(newClusterStatus.isLeader){
+      //action for the leader node
+      monitorController = new MonitorController(adapterConfig)
+      monitorController.startMonitoring()
+
+      envContext.createListenerForCacheChildern(requestFilePath, requestFileLeaderCallback) // listen to file requests
+      envContext.createListenerForCacheChildern(fileProcessingPath, fileProcessingLeaderCallback)// listen to file processing status
+
+      //set parallelism
+      filesParallelism = (adapterConfig.monitoringConfig.consumersCount.toDouble / newClusterStatus.participantsNodeIds.size).round.toInt
+      envContext.setListenerCacheKey(filesParallelismPath, filesParallelism.toString)
+    }
+
+    //action for participant nodes:
+    val nodeId = newClusterStatus.nodeId
+    envContext.createListenerForCacheKey(filesParallelismPath, filesParallelismCallback)
+
+
+    clusterStatus = newClusterStatus
+  }
+
+
+  val File_Requests_Cache_Key = "Smart_File_Adapter/" + adapterConfig.Name + "/" + "FileRequests"
+  val File_Processing_Cache_Key = "Smart_File_Adapter/" + adapterConfig.Name + "/" + "FileProcessing"
+
+  //value in cache has the format <node1>/<thread1>|<node2>/<thread1>
+  def getFileRequestsQueue : List[String] = {
+    val cacheData = new String(envContext.getConfigFromClusterCache(File_Requests_Cache_Key))
+    val tokens = cacheData.split("\\|")
+    tokens.toList
+  }
+  def saveFileRequestsQueue(requestQueue : List[String]) : Unit = {
+    val cacheData = requestQueue.mkString("|")
+    envContext.saveConfigInClusterCache(File_Requests_Cache_Key, cacheData.getBytes)
+  }
+
+  //value in cache has the format <node1>/<thread1>/<filename>|<node2>/<thread1>/<filename>
+  def getFileProcessingQueue : List[String] = {
+    val cacheData = envContext.getConfigFromClusterCache(File_Processing_Cache_Key)
+    if(cacheData != null) {
+      val tokens = new String(cacheData).split("\\|")
+      tokens.toList
+    }
+    else{
+      List()
+    }
+  }
+  def saveFileProcessingQueue(requestQueue : List[String]) : Unit = {
+    val cacheData = requestQueue.mkString("|")
+    envContext.saveConfigInClusterCache(File_Processing_Cache_Key, cacheData.getBytes)
+  }
+
+  //what a leader should do when recieving file processing request
+  def requestFileLeaderCallback (eventType: String, eventPath: String, eventPathData: String) : Unit = {
+    var addRequestToQueue =false
+    if(eventType.equalsIgnoreCase("put") || eventType.equalsIgnoreCase("update")) {
+      val keyTokens = eventPath.split("/")
+      val requestingNodeId = keyTokens(keyTokens.length - 2)
+      val requestingThreadId = keyTokens(keyTokens.length - 1)
+      val fileToProcessKeyPath = eventPathData //from leader
+
+      //just add to request queue
+      var requestQueue = getFileRequestsQueue
+      requestQueue = requestQueue:::List(requestingNodeId + "/" + requestingThreadId)
+      saveFileRequestsQueue(requestQueue)
+
+      assignFileProcessingIfPossible()
+    }
+    //should do anything for remove?
+  }
+
+  //this is to be called whenever we have some changes in requests/new files
+  //checks if there is a request ready, if parallelism degree allows new processing
+  //   and if there is file needs processing
+  //if all conditions met then assign a file to first request in the queue
+  private def assignFileProcessingIfPossible(): Unit ={
+    var processingQueue = getFileProcessingQueue
+    var requestQueue = getFileRequestsQueue
+
+    if(requestQueue.length > 0) {//there are ndoes/threads ready to process
+    val request = requestQueue.head //take first request
+      saveFileRequestsQueue(requestQueue.tail)
+      val requestTokens = request.split("/")
+      val requestingNodeId = request(requestTokens.length - 2)
+      val requestingThreadId = request(requestTokens.length - 1)
+
+      //check if it is allowed to process one more file
+      if (processingQueue.length < adapterConfig.monitoringConfig.consumersCount) {
+        val fileToProcessFullPath = "" //TODO : get next file to process
+        if (fileToProcessFullPath != null) {
+          //there are files that need to process
+          val fileToProcessKeyPath = smartFileFromLeaderPath + "/" + fileToProcessKeyPath + "/" + requestingThreadId
+          envContext.setListenerCacheKey(fileToProcessKeyPath, fileToProcessFullPath)
+          processingQueue = processingQueue ::: List(requestingNodeId + "/" + requestingThreadId + "/" + fileToProcessFullPath)
+          saveFileProcessingQueue(processingQueue)
+        }
+      }
+    }
+  }
+
+  //what a leader should do when recieving file processing status update
+  def fileProcessingLeaderCallback (eventType: String, eventPath: String, eventPathData: String) : Unit = {
+    if(eventType.equalsIgnoreCase("put") || eventType.equalsIgnoreCase("update")) {
+      val keyTokens = eventPath.split("/")
+      val processingThreadId = keyTokens(keyTokens.length - 1)
+      val processingNodeId = keyTokens(keyTokens.length - 2)
+      //value for file processing has the format <file-name>|<status>
+      val valueTokens = eventPathData.split("\\|")
+      val processingFilePath = valueTokens(0)
+      val status = valueTokens(1)
+      if(status == File_Processing_Status_Finished){
+        val correspondingRequestFileKeyPath = requestFilePath + "/" + processingNodeId //e.g. SmartFileCommunication/ToLeader/ProcessedFile/<nodeid>
+
+        //remove the file from processing queue
+        var processingQueue = getFileProcessingQueue
+        val valueInProcessingQueue = processingNodeId + "/" + processingThreadId + "/" + processingFilePath
+        processingQueue = processingQueue diff List(valueInProcessingQueue)
+
+        //since a file just got finished, a new one can be processed
+        assignFileProcessingIfPossible()
+
+        //TODO: move/remove the file itself
+      }
+      else{//if processign status is NOT finished
+
+      }
+
+    }
+    //should do anything for remove?
+  }
+
+  //what a participant should do when receiving file to process (from leader)
+  def fileAssignmentFromLeaderCallback (eventType: String, eventPath: String, eventPathData: String) : Unit = {
+    val fileToProcessName = eventPathData
+
+    //TODO : start processing the file
+  }
+
+  //what a participant should do parallelism value changes
+  def filesParallelismCallback (eventType: String, eventPath: String, eventPathData: String) : Unit = {
+    val newFilesParallelism = eventPathData.toInt
+    filesParallelism = newFilesParallelism
+
+    val nodeId = clusterStatus.nodeId
+
+    //TODO : consider if there were already running threads, and parallelism changed
+
+    participantExecutor = Executors.newFixedThreadPool(filesParallelism)
+    for(threadId <- 1 to filesParallelism) {
+
+      val executorThread = new Runnable() {
+        private var threadId: Int = _
+        def init(id: Int) = threadId = id
+
+        override def run(): Unit = {
+          val fileProcessingAssignementKeyPath = smartFileFromLeaderPath + "/" + nodeId + "/" + threadId //listen to this SmartFileCommunication/FromLeader/<NodeId>/<thread id>
+          //listen to file assignment from leader
+          envContext.createListenerForCacheKey(fileProcessingAssignementKeyPath, fileAssignmentFromLeaderCallback) //e.g.   SmartFileCommunication/FromLeader/RequestFile/<nodeid>/<thread id>
+          val fileRequestKeyPath = smartFileToLeaderPath + "/" + nodeId+ "/" + threadId
+          envContext.setListenerCacheKey(fileRequestKeyPath, fileProcessingAssignementKeyPath)
+        }
+      }
+      executorThread.init(threadId)
+      participantExecutor.execute(executorThread)
+    }
+
+  }
+  
+
+  //******************************************************************************************************
 
   override def Shutdown: Unit = lock.synchronized {
     StopProcessing
@@ -186,16 +386,16 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
       val partitionId = kvsElement._1
       val partition = kvsElement._2
 
-      var processor = new FileProcessor(kvsElement._1)
-
       val context = new SmartFileConsumerContext()
       context.partitionId = partitionId
       context.ignoreFirstMsg = ignoreFirstMsg
 
+      /*
+      var processor = new FileProcessor(kvsElement._1)
       //initialize the file processor and start it. whenever it gets a new message, it will call sendSmartFileMessage()
       processor.init(adapterConfig, context, sendSmartFileMessage)
       readExecutor.execute(processor)
-
+*/
 
 
       /*
@@ -285,6 +485,7 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
 
   override def StopProcessing: Unit = {
     isShutdown = true
+    monitorController.stopMonitoring
     terminateReaderTasks
   }
 
