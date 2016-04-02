@@ -349,6 +349,7 @@ object MetadataAPISerialization {
 
       val ModDefInst = modDefJson.extract[ModelDefinition]
 
+      //val tenantId: String = "" // FIXME: AHMED FIX THIS TenantID
       val inputMsgSets = ModDefInst.Model.inputMsgSets.map(m => m.map(k => {
         val msgAndAttrib = new MessageAndAttributes()
         msgAndAttrib.message = k.Message
@@ -362,6 +363,7 @@ object MetadataAPISerialization {
         , ModDefInst.Model.Name
         , ModDefInst.Model.PhysicalName
         , ModDefInst.Model.OwnerId
+         //tenantId
         , ModDefInst.Model.NumericTypes.UniqId
         , ModDefInst.Model.NumericTypes.MdElementId
         , ModelRepresentation.modelRep(ModDefInst.Model.ModelRep)
@@ -428,6 +430,7 @@ object MetadataAPISerialization {
         foreignKeys ::=(f.constraintName, f.key, f.forignContainerName, f.forignKey)
       })
 
+     // val tenantId: String = "" // FIXME: AHMED FIX THIS TenantID
       val msgDef = MdMgr.GetMdMgr.MakeFixedMsg(
         MsgDefInst.Message.NameSpace,
         MsgDefInst.Message.Name,

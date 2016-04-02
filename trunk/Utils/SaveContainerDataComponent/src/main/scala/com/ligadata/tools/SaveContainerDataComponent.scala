@@ -483,7 +483,7 @@ class SaveContainerDataCompImpl extends LogTrait with MdBaseResolveInfo {
             logger.debug("ObjKey:(" + kv._1.timePartition + ":" + kv._1.bucketKey.mkString(",") + ":" + kv._1.transactionId + ") ")
           })
         }
-        _dataStore.put(null, Array((typ, storeObjects)))
+        _dataStore.put(null, Array((typ, false, storeObjects)))
       } catch {
         case e: Exception => {
           logger.error("Failed to write data for type:" + typ, e)

@@ -17,6 +17,7 @@ case class Value(schemaId: Int, serializerType: String, serializedInfo: Array[By
 
 trait DataStoreOperations extends AdaptersSerializeDeserializers {
   // update operations, add & update semantics are different for relational databases
+  // isMetadataContainer is false for data containers/messages
   def put(tnxCtxt: TransactionContext, container: ContainerInterface): Unit = {
     if (container == null)
       throw new InvalidArgumentException("container should not be null", null)
@@ -26,6 +27,7 @@ trait DataStoreOperations extends AdaptersSerializeDeserializers {
     throw new NotImplementedFunctionException("Not yet implemented", null)
   }
 
+  // isMetadataContainer is false for data containers/messages
   def put(tnxCtxt: TransactionContext, containers: Array[ContainerInterface]): Unit = {
     if (containers == null)
       throw new InvalidArgumentException("containers should not be null", null)
@@ -36,14 +38,14 @@ trait DataStoreOperations extends AdaptersSerializeDeserializers {
   }
 
   // value could be ContainerInterface or Array[Byte]
-  def put(tnxCtxt: TransactionContext, containerName: String, key: Key, serializerTyp: String, value: Any): Unit = {
+  def put(tnxCtxt: TransactionContext, containerName: String, key: Key, serializerTyp: String, value: Any, isMetadataContainer: Boolean): Unit = {
     if (containerName == null || key == null || serializerTyp == null || value == null)
       throw new InvalidArgumentException("ContainerName, Keys, SerializerTyps and Values should not be null", null)
-    put(tnxCtxt, Array((containerName, Array((key, serializerTyp, value)))))
+    put(tnxCtxt, Array((containerName, isMetadataContainer, Array((key, serializerTyp, value)))))
   }
 
   // value could be ContainerInterface or Array[Byte]
-  def put(tnxCtxt: TransactionContext, containerName: String, keys: Array[Key], serializerTyps: Array[String], values: Array[Any]): Unit = {
+  def put(tnxCtxt: TransactionContext, containerName: String, keys: Array[Key], serializerTyps: Array[String], values: Array[Any], isMetadataContainer: Boolean): Unit = {
     if (containerName == null || keys == null || serializerTyps == null || values == null)
       throw new InvalidArgumentException("Keys, SerializerTyps and Values should not be null", null)
 
@@ -55,36 +57,44 @@ trait DataStoreOperations extends AdaptersSerializeDeserializers {
     for (i <- 0 until keys.size) {
       data += ((keys(i), serializerTyps(i), values(i)))
     }
-    put(tnxCtxt, Array((containerName, data.toArray)))
+    put(tnxCtxt, Array((containerName, isMetadataContainer, data.toArray)))
+  }
+
+  // data_list has List of container names, and each container has list of key & value as ContainerInterface or Array[Byte]
+  def put(tnxCtxt: TransactionContext, data_list: Array[(String, Boolean, Array[(Key, String, Any)])]): Unit = {
+    if (data_list == null)
+      throw new InvalidArgumentException("Data should not be null", null)
+
+    val putData = data_list.map(oneContainerData => {
+      var isMetadataContainer = oneContainerData._2
+      val containerData: Array[(com.ligadata.KvBase.Key, com.ligadata.StorageBase.Value)] = oneContainerData._3.map(row => {
+        if (row._3.isInstanceOf[ContainerInterface]) {
+          throw new NotImplementedFunctionException("Not yet implemented serializing ContainerInterface", null)
+          val cont = row._3.asInstanceOf[ContainerInterface]
+          // Value(schemaId: Int, serializerType: String, serializedInfo: Array[Byte])
+          isMetadataContainer = false
+          (row._1, Value(cont.getSchemaId, "", Array[Byte]()))
+        } else {
+          (row._1, Value(0, row._2, row._3.asInstanceOf[Array[Byte]]))
+        }
+      })
+      (oneContainerData._1, isMetadataContainer, containerData)
+    })
+
+    put(putData)
   }
 
   // data_list has List of container names, and each container has list of key & value as ContainerInterface or Array[Byte]
   def put(tnxCtxt: TransactionContext, data_list: Array[(String, Array[(Key, String, Any)])]): Unit = {
     if (data_list == null)
       throw new InvalidArgumentException("Data should not be null", null)
-
-    val putData = data_list.map(oneContainerData => {
-      val containerName = oneContainerData._1
-      val containerData: Array[(com.ligadata.KvBase.Key, com.ligadata.StorageBase.Value)] = oneContainerData._2.map(row => {
-        if (row._3.isInstanceOf[ContainerInterface]) {
-          throw new NotImplementedFunctionException("Not yet implemented serializing ContainerInterface", null)
-          val cont = row._3.asInstanceOf[ContainerInterface]
-          // Value(schemaId: Int, serializerType: String, serializedInfo: Array[Byte])
-          (row._1, Value(cont.getSchemaId, "", Array[Byte]()))
-        } else {
-          (row._1, Value(0, row._2, row._3.asInstanceOf[Array[Byte]]))
-        }
-      })
-      (containerName, containerData)
-    })
-
-    put(putData)
+    put(tnxCtxt, data_list.map(cData => ((cData._1, false, cData._2))))
   }
 
   // update operations, add & update semantics are different for relational databases
-  /* protected */ def put(containerName: String, key: Key, value: Value): Unit
+  /* protected */ def put(containerName: String, isMetadataContainer: Boolean, key: Key, value: Value): Unit
   // def put(containerName: String, data_list: Array[(Key, Value)]): Unit
-  /* protected */ def put(data_list: Array[(String, Array[(Key, Value)])]): Unit // data_list has List of container names, and each container has list of key & value
+  /* protected */ def put(data_list: Array[(String, Boolean, Array[(Key, Value)])]): Unit // data_list has List of container names, and each container has list of key & value
 
   // delete operations
   def del(containerName: String, keys: Array[Key]): Unit // For the given keys, delete the values

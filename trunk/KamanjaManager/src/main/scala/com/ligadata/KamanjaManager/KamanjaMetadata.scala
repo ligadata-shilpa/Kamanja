@@ -25,7 +25,7 @@ import com.ligadata.kamanja.metadata.MdMgr._
 import com.ligadata.kamanja.metadataload.MetadataLoad
 import scala.collection.mutable.TreeSet
 import scala.util.control.Breaks._
-import com.ligadata.KamanjaBase.{ MessageInterface, ContainerInterface, ContainerFactoryInterface, MessageFactoryInterface, ModelInstanceFactory, EnvContext, MdBaseResolveInfo, FactoryOfModelInstanceFactory, NodeContext, TransactionContext }
+import com.ligadata.KamanjaBase._
 import scala.collection.mutable.HashMap
 import org.apache.logging.log4j._
 import scala.collection.mutable.ArrayBuffer
@@ -34,9 +34,7 @@ import com.ligadata.ZooKeeper._
 import com.ligadata.MetadataAPI.MetadataAPIImpl
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import com.ligadata.Utils.{ Utils, KamanjaClassLoader, KamanjaLoaderInfo }
-import com.ligadata.KamanjaBase.{ EnvContext }
 import scala.actors.threadpool.{ ExecutorService, Executors }
-import com.ligadata.KamanjaBase.ThreadLocalStorage
 
 class MdlInfo(val mdl: ModelInstanceFactory, val jarPath: String, val dependencyJarNames: Array[String]) {
 }
@@ -51,7 +49,7 @@ class MsgContainerObjAndTransformInfo(var tranformMsgFlds: TransformMsgFldsMap, 
 }
 
 // This is shared by multiple threads to read (because we are not locking). We create this only once at this moment while starting the manager
-class KamanjaMetadata {
+class KamanjaMetadata(var envCtxt: EnvContext) {
   val LOG = LogManager.getLogger(getClass);
 
   // LOG.setLevel(Level.TRACE)
@@ -80,7 +78,7 @@ class KamanjaMetadata {
     try {
       // If required we need to enable this test
       // Convert class name into a class
-      var curClz = Class.forName(clsName, true, KamanjaConfiguration.metadataLoader.loader)
+      var curClz = Class.forName(clsName, true, envCtxt.getMetadataLoader.loader)
       curClass = curClz
 
       isMsg = false
@@ -102,8 +100,8 @@ class KamanjaMetadata {
         var objinst: Any = null
         try {
           // Trying Singleton Object
-          val module = KamanjaConfiguration.metadataLoader.mirror.staticModule(clsName)
-          val obj = KamanjaConfiguration.metadataLoader.mirror.reflectModule(module)
+          val module = envCtxt.getMetadataLoader.mirror.staticModule(clsName)
+          val obj = envCtxt.getMetadataLoader.mirror.reflectModule(module)
           objinst = obj.instance
         } catch {
           case e: Exception => {
@@ -164,7 +162,7 @@ class KamanjaMetadata {
     try {
       // If required we need to enable this test
       // Convert class name into a class
-      var curClz = Class.forName(clsName, true, KamanjaConfiguration.metadataLoader.loader)
+      var curClz = Class.forName(clsName, true, envCtxt.getMetadataLoader.loader)
       curClass = curClz
 
       isContainer = false
@@ -186,8 +184,8 @@ class KamanjaMetadata {
         var objinst: Any = null
         try {
           // Trying Singleton Object
-          val module = KamanjaConfiguration.metadataLoader.mirror.staticModule(clsName)
-          val obj = KamanjaConfiguration.metadataLoader.mirror.reflectModule(module)
+          val module = envCtxt.getMetadataLoader.mirror.staticModule(clsName)
+          val obj = envCtxt.getMetadataLoader.mirror.reflectModule(module)
           objinst = obj.instance
         } catch {
           case e: Exception => {
@@ -264,6 +262,7 @@ class KamanjaMetadata {
     /**
       * With the supplied ModelRepresentation from a ModelDef, look up its corresponding FactoryOfModelInstanceFactory
       * that knows what kind of ModelInstanceFactory is needed for that model representation.
+      *
       * @param modelRepSupported a ModelDef's ModelRepresentation.ModelRepresentation value is used to determine the key
       *                          to lookup the FactoryOfModelInstanceFactory needed to instantiate an appropriate
       *                          ModelInstanceFactory
@@ -316,7 +315,7 @@ class KamanjaMetadata {
             LOG.error("FactoryOfModelInstanceFactory %s not found in metadata. Unable to create ModelInstanceFactory for %s".format(factoryOfMdlInstFactoryFqName, mdl.FullName))
         } else {
             try {
-                val factory: ModelInstanceFactory = factoryOfMdlInstFactory.getModelInstanceFactory(mdl, KamanjaMetadata.gNodeContext, KamanjaConfiguration.metadataLoader, KamanjaConfiguration.jarPaths)
+                val factory: ModelInstanceFactory = factoryOfMdlInstFactory.getModelInstanceFactory(mdl, KamanjaMetadata.gNodeContext, envCtxt.getMetadataLoader, txnCtxt.getNodeCtxt().getEnvCtxt().getJarPaths())
                 if (factory != null) {
                     if (txnCtxt != null) // We are expecting txnCtxt is null only for first time initialization
                         factory.init(txnCtxt)
@@ -458,13 +457,13 @@ object KamanjaMetadata extends MdBaseResolveInfo {
       return Set[String]()
     }
 
-    return allJars.map(j => Utils.GetValidJarFile(KamanjaConfiguration.jarPaths, j)).toSet
+    return allJars.map(j => Utils.GetValidJarFile(envCtxt.getJarPaths(), j)).toSet
   }
 
   def LoadJarIfNeeded(elem: BaseElem): Boolean = {
     val allJars = GetAllJarsFromElem(elem)
     if (allJars.size > 0) {
-      return Utils.LoadJars(allJars.toArray, KamanjaConfiguration.metadataLoader.loadedJars, KamanjaConfiguration.metadataLoader.loader)
+      return Utils.LoadJars(allJars.toArray, envCtxt.getMetadataLoader.loadedJars, envCtxt.getMetadataLoader.loader)
     } else {
       return true
     }
@@ -514,7 +513,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
     try {
       // If required we need to enable this test
       // Convert class name into a class
-      var curClz = Class.forName(clsName, true, KamanjaConfiguration.metadataLoader.loader)
+      var curClz = Class.forName(clsName, true, envCtxt.getMetadataLoader.loader)
       curClass = curClz
 
       isValid = false
@@ -536,8 +535,8 @@ object KamanjaMetadata extends MdBaseResolveInfo {
         var objinst: Any = null
         try {
           // Trying Singleton Object
-          val module = KamanjaConfiguration.metadataLoader.mirror.staticModule(clsName)
-          val obj = KamanjaConfiguration.metadataLoader.mirror.reflectModule(module)
+          val module = envCtxt.getMetadataLoader.mirror.staticModule(clsName)
+          val obj = envCtxt.getMetadataLoader.mirror.reflectModule(module)
           // curClz.newInstance
           objinst = obj.instance
         } catch {
@@ -806,7 +805,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
     val tmpContainerDefs = mdMgr.Containers(true, true)
     val tmpModelDefs = mdMgr.Models(true, true)
 
-    val obj = new KamanjaMetadata
+    val obj = new KamanjaMetadata(envCtxt)
 
     try {
       if (initializedFactOfMdlInstFactObjs == false) {
@@ -873,7 +872,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
         txnId = -1 * txnId
       // Finally we are taking -ve txnid for this
       try {
-        txnCtxt = new TransactionContext(txnId, KamanjaMetadata.gNodeContext, Array[Byte](), "")
+        txnCtxt = new TransactionContext(txnId, KamanjaMetadata.gNodeContext, Array[Byte](), EventOriginInfo(null, null), 0, null)
         ThreadLocalStorage.txnContextInfo.set(txnCtxt)
         run1(txnCtxt)
       } catch {
@@ -906,7 +905,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
       if (updMetadataExecutor.isShutdown)
         return
 
-      val obj = new KamanjaMetadata
+      val obj = new KamanjaMetadata(envCtxt)
 
       // BUGBUG:: Not expecting added element & Removed element will happen in same transaction at this moment
       // First we are adding what ever we need to add, then we are removing. So, we are locking before we append to global array and remove what ever is gone.
@@ -991,8 +990,8 @@ object KamanjaMetadata extends MdBaseResolveInfo {
       if (removedValues > 0) {
         reent_lock.writeLock().lock();
         try {
-          KamanjaConfiguration.metadataLoader = new KamanjaLoaderInfo(KamanjaConfiguration.metadataLoader, true, true)
-          envCtxt.setClassLoader(KamanjaConfiguration.metadataLoader.loader)
+          val metadataLoader = new KamanjaLoaderInfo(envCtxt.getMetadataLoader, true, true)
+          envCtxt.setMetadataLoader(metadataLoader)
         } catch {
           case e: Exception => { LOG.warn("", e)
           }

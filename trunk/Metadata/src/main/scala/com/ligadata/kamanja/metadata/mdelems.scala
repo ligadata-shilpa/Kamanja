@@ -187,6 +187,7 @@ trait BaseElem {
     def Deactive: Unit // Make the element as de-active
     def Deleted: Unit // Mark the element as deleted
     def OwnerId: String
+    def TenantId: String
     def MdElementCategory: String
 }
 
@@ -221,6 +222,7 @@ class BaseElemDef extends BaseElem {
     override def Deactive: Unit = active = false // Make the element as de-active
     override def Deleted: Unit = deleted = true // Mark the element as deleted
     override def OwnerId: String = ownerId
+    override def TenantId: String = tenantId
     override def MdElementCategory: String = ""
     def CheckAndGetDependencyJarNames: Array[String] = if (dependencyJarNames != null) dependencyJarNames else Array[String]()
 
@@ -253,6 +255,7 @@ class BaseElemDef extends BaseElem {
     var objectDefinition: String = _
     var objectFormat: ObjFormatType.FormatType = fJSON
     var ownerId: String = _
+    var tenantId: String = _
 }
 
 // All these metadata elements should have specialized serialization and deserialization 
@@ -748,13 +751,14 @@ object MiningModelType extends Enumeration {
 
 object ModelRepresentation extends Enumeration {
     type ModelRepresentation = Value
-    val JAR, PMML, PYTHON, UNKNOWN = Value
+    val JAR, PMML, PYTHON, JTM, UNKNOWN = Value
 
   def modelRep(mdlRep: String): ModelRepresentation = {
       val rep: ModelRepresentation = mdlRep.toUpperCase match {
           case "JAR" => JAR
           case "PMML" => PMML
           case "PYTHON" => PYTHON
+          case "JTM" => JTM
           case _ => UNKNOWN
       }
       rep
@@ -1155,6 +1159,32 @@ class UserPropertiesInfo {
     true
   }
 }
+
+/**
+  * Current Serialization Types supported
+  * <ul>
+  *     <li>CSV - serialize to csv format</li>
+  *     <li>JSON - serialize to json string </li>
+  *     <li>KBinary - a binary format used internally in Kamanja</li>
+  *     <li>Custom - an unknown format </li>
+  * </ul>
+  */
+object SerializeDeserializeType extends Enumeration {
+    type SerDeserType = Value
+    val CSV, JSON, KBinary, Custom = Value
+}
+
+/**
+  * Elementary SerializeDeserializeConfig object that is supplied to SerializeDesrerialize implementations.
+  * If the implementation has configuration capabilities, an instance of the appropriate derived class should
+  * be supplied instead.
+  *
+  * @param serDeserType a SerializeDeserializeType...the sort of serializer it is
+  */
+class SerializeDeserializeConfig(val serDeserType : SerializeDeserializeType.SerDeserType) extends BaseElemDef {}
+
+
+
 
 object ModelCompilationConstants {
   val DEPENDENCIES: String = "Dependencies"

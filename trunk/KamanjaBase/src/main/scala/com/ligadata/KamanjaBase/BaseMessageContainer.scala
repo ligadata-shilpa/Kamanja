@@ -148,10 +148,14 @@ trait MessageContainerObjBase {
 
 trait MdBaseResolveInfo {
   def getMessgeOrContainerInstance(typName: String): ContainerInterface
+  // Get Latest SchemaId For Type
+  // getMessgeOrContainerInstance for SchemaId
+  // Convert to LatestVersion (Take any object and tries to covert to new version)
 }
 
 /*
 object SerializeDeserialize {
+
   val loggerName = this.getClass.getName
   val logger = LogManager.getLogger(loggerName)
   def Serialize(inst: MessageContainerBase): Array[Byte] = {
