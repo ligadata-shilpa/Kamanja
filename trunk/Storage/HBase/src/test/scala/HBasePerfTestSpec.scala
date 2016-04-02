@@ -198,8 +198,8 @@ class HBasePerfTestSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterA
             var value = new Value(1,"kryo",v)
             keyValueList = keyValueList :+ (key, value)
           }
-          var dataList = new Array[(String, Array[(Key, Value)])](0)
-          dataList = dataList :+ (containerName, keyValueList)
+          var dataList = new Array[(String, Boolean, Array[(Key, Value)])](0)
+          dataList = dataList :+ (containerName, false, keyValueList)
 	  try{
 	    adapter.put(dataList)
             logger.info(GetCurDtTmStr + ": Loaded " + batch * 1000 + " objects ")

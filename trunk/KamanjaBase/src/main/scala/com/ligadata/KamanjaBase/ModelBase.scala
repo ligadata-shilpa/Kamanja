@@ -671,7 +671,8 @@ class TransactionContext(val transId: Long, val nodeCtxt: NodeContext, val msgDa
   case class ContaienrWithOriginAndPartKey(origin: String, container: ContainerOrConcept, partKey: List[String])
 
   private var orgInputMsg = ContaienrWithOriginAndPartKey(null, null, null)
-  private val containerOrConceptsMap = scala.collection.mutable.Map[String, ArrayBuffer[ContaienrWithOriginAndPartKey]]()
+  private val containerOrConceptsMapByName = scala.collection.mutable.Map[String, ArrayBuffer[ContaienrWithOriginAndPartKey]]() // Saving by Name
+  // private val containerOrConceptsMapByElementId = scala.collection.mutable.Map[Long, ArrayBuffer[ContaienrWithOriginAndPartKey]]() // Saving by ElementId
   // orgInputMsg & msgEvent is part in this also
   private val valuesMap = new java.util.HashMap[String, Any]()
 
@@ -686,19 +687,20 @@ class TransactionContext(val transId: Long, val nodeCtxt: NodeContext, val msgDa
   final def getMessage(): ContainerInterface = orgInputMsg.container.asInstanceOf[ContainerInterface] // Original messages
 
   // Need to lock if we are going to run models parallel
-  final def getContainersOrConcepts(typeName: String): Array[(String, ContainerOrConcept)] = containerOrConceptsMap.getOrElse(typeName.toLowerCase(), ArrayBuffer[ContaienrWithOriginAndPartKey]()).map(v => (v.origin, v.container)).toArray
+  final def getContainersOrConcepts(typeName: String): Array[(String, ContainerOrConcept)] = containerOrConceptsMapByName.getOrElse(typeName.toLowerCase(), ArrayBuffer[ContaienrWithOriginAndPartKey]()).map(v => (v.origin, v.container)).toArray
 
   // Need to lock if we are going to run models parallel
   final def getContainersOrConcepts(origin: String, typeName: String): Array[(String, ContainerOrConcept)] = {
-    containerOrConceptsMap.getOrElse(typeName.toLowerCase(), ArrayBuffer[ContaienrWithOriginAndPartKey]()).filter(m => m.origin.equalsIgnoreCase(origin)).map(v => (v.origin, v.container)).toArray
+    containerOrConceptsMapByName.getOrElse(typeName.toLowerCase(), ArrayBuffer[ContaienrWithOriginAndPartKey]()).filter(m => m.origin.equalsIgnoreCase(origin)).map(v => (v.origin, v.container)).toArray
   }
 
   // Need to lock if we are going to run models parallel
   final def addContainerOrConcept(origin: String, m: ContainerOrConcept, partKey: List[String]): Unit = {
+    if (m == null) return
     val msgNm = m.getFullTypeName.toLowerCase()
-    val tmp = containerOrConceptsMap.getOrElse(msgNm, ArrayBuffer[ContaienrWithOriginAndPartKey]())
+    val tmp = containerOrConceptsMapByName.getOrElse(msgNm, ArrayBuffer[ContaienrWithOriginAndPartKey]())
     tmp += ContaienrWithOriginAndPartKey(origin, m, partKey)
-    containerOrConceptsMap(msgNm) = tmp
+    containerOrConceptsMapByName(msgNm) = tmp
   }
 
   final def addContainerOrConcepts(origin: String, curMsgs: Array[ContainerOrConcept]): Unit = {
@@ -793,7 +795,7 @@ class TransactionContext(val transId: Long, val nodeCtxt: NodeContext, val msgDa
 
       val partKeyAsArray = partKey.toArray
       if (f != null) {
-        tmpMsgs = containerOrConceptsMap.getOrElse(containerName.toLowerCase(), ArrayBuffer[ContaienrWithOriginAndPartKey]()).filter(m => {
+        tmpMsgs = containerOrConceptsMapByName.getOrElse(containerName.toLowerCase(), ArrayBuffer[ContaienrWithOriginAndPartKey]()).filter(m => {
           val retVal = if (m.container.isInstanceOf[ContainerInterface]) {
             val container = m.container.asInstanceOf[ContainerInterface]
             val tmData = container.getTimePartitionData
@@ -804,7 +806,7 @@ class TransactionContext(val transId: Long, val nodeCtxt: NodeContext, val msgDa
           retVal
         }).toArray
       } else {
-        tmpMsgs = containerOrConceptsMap.getOrElse(containerName.toLowerCase(), ArrayBuffer[ContaienrWithOriginAndPartKey]()).filter(m => {
+        tmpMsgs = containerOrConceptsMapByName.getOrElse(containerName.toLowerCase(), ArrayBuffer[ContaienrWithOriginAndPartKey]()).filter(m => {
           val retVal = if (m.container.isInstanceOf[ContainerInterface]) {
             val container = m.container.asInstanceOf[ContainerInterface]
             val tmData = container.getTimePartitionData
@@ -817,7 +819,7 @@ class TransactionContext(val transId: Long, val nodeCtxt: NodeContext, val msgDa
       }
     } else if (tmRange != null) {
       if (f != null) {
-        tmpMsgs = containerOrConceptsMap.getOrElse(containerName.toLowerCase(), ArrayBuffer[ContaienrWithOriginAndPartKey]()).filter(m => {
+        tmpMsgs = containerOrConceptsMapByName.getOrElse(containerName.toLowerCase(), ArrayBuffer[ContaienrWithOriginAndPartKey]()).filter(m => {
           val retVal = if (m.container.isInstanceOf[ContainerInterface]) {
             val container = m.container.asInstanceOf[ContainerInterface]
             val tmData = container.getTimePartitionData
@@ -828,7 +830,7 @@ class TransactionContext(val transId: Long, val nodeCtxt: NodeContext, val msgDa
           retVal
         }).toArray
       } else {
-        tmpMsgs = containerOrConceptsMap.getOrElse(containerName.toLowerCase(), ArrayBuffer[ContaienrWithOriginAndPartKey]()).filter(m => {
+        tmpMsgs = containerOrConceptsMapByName.getOrElse(containerName.toLowerCase(), ArrayBuffer[ContaienrWithOriginAndPartKey]()).filter(m => {
           val retVal = if (m.container.isInstanceOf[ContainerInterface]) {
             val container = m.container.asInstanceOf[ContainerInterface]
             val tmData = container.getTimePartitionData
@@ -841,7 +843,7 @@ class TransactionContext(val transId: Long, val nodeCtxt: NodeContext, val msgDa
       }
     } else {
       if (f != null) {
-        tmpMsgs = containerOrConceptsMap.getOrElse(containerName.toLowerCase(), ArrayBuffer[ContaienrWithOriginAndPartKey]()).filter(m => {
+        tmpMsgs = containerOrConceptsMapByName.getOrElse(containerName.toLowerCase(), ArrayBuffer[ContaienrWithOriginAndPartKey]()).filter(m => {
           val retVal = if (m.container.isInstanceOf[ContainerInterface]) {
             f(m.container.asInstanceOf[ContainerInterface]) // Comparing function call
           } else {
@@ -850,7 +852,7 @@ class TransactionContext(val transId: Long, val nodeCtxt: NodeContext, val msgDa
           retVal
         }).toArray
       } else {
-        tmpMsgs = containerOrConceptsMap.getOrElse(containerName.toLowerCase(), ArrayBuffer[ContaienrWithOriginAndPartKey]()).filter(m => m.container.isInstanceOf[ContainerInterface]).toArray
+        tmpMsgs = containerOrConceptsMapByName.getOrElse(containerName.toLowerCase(), ArrayBuffer[ContaienrWithOriginAndPartKey]()).filter(m => m.container.isInstanceOf[ContainerInterface]).toArray
       }
     }
 

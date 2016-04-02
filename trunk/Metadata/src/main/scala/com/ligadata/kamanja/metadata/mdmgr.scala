@@ -70,6 +70,7 @@ class MdMgr {
   private var modelDefs = new HashMap[String, Set[ModelDef]] with MultiMap[String, ModelDef]
   private var factoryOfMdlInstFactories = new HashMap[String, Set[FactoryOfModelInstanceFactoryDef]] with MultiMap[String, FactoryOfModelInstanceFactoryDef]
   private var schemaIdMap = new HashMap[Int, ContainerDef] // For now we consider ContainerDef & MessageDef
+  private var schemaIdToElemntIdMap = new HashMap[Int, Long] // For now we consider ContainerDef & MessageDef
   private var elementIdMap = new HashMap[Long, BaseElem] // For now we consider ContainerDef, MessageDef & ModelDef
 
   // FunctionDefs keyed by function signature nmspc.name(argtyp1,argtyp2,...) map 
@@ -87,6 +88,7 @@ class MdMgr {
   private var configurations = new HashMap[String, UserPropertiesInfo]
   private var msgdefSystemCols = List("transactionid", "timepartitiondata", "rownumber")
   private var serializers = new HashMap[String, SerializeDeserializeConfig]
+  private var tenantIdMap = new HashMap[String, TenantInfo]
 
   private var propertyChanged: scala.collection.mutable.ArrayBuffer[String] = scala.collection.mutable.ArrayBuffer[String]()
   private val lock: Object = new Object
@@ -108,6 +110,7 @@ class MdMgr {
     modelConfigs.clear
     factoryOfMdlInstFactories.clear
     schemaIdMap.clear
+    schemaIdToElemntIdMap.clear
     elementIdMap.clear
   }
 
@@ -160,8 +163,14 @@ class MdMgr {
       case "SchemaId" => {
         schemaIdMap.clear
       }
+      case "SchemaIdElementId" => {
+        schemaIdToElemntIdMap.clear
+      }
       case "ElementId" => {
         elementIdMap.clear
+      }
+      case "Tenants" => {
+        tenantIdMap.clear
       }
       case _ => {
         logger.error("Unknown object type " + objectType + " in truncate function")
@@ -215,8 +224,14 @@ class MdMgr {
     schemaIdMap.foreach(obj => {
       logger.trace("SchemaId:%d => Container:%s Version:%d".format(obj._1, obj._2.FullName, obj._2.Version))
     })
+    schemaIdToElemntIdMap.foreach(obj => {
+      logger.trace("SchemaId:%d => ElementId:%d".format(obj._1, obj._2))
+    })
     elementIdMap.foreach(obj => {
       logger.trace("ElementId:%d => ElementName:%s Version:%d, ElementType:%s".format(obj._1, obj._2.FullName, obj._2.Version, obj._2.MdElementCategory))
+    })
+    tenantIdMap.foreach(obj => {
+      logger.trace("TenantId:" + obj._1)
     })
   }
 
@@ -458,7 +473,7 @@ class MdMgr {
     */
 
   @throws(classOf[NoSuchElementException])
-  private def MakeContainerTypeMap(nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)], ver: Long, jarNm: String, depJars: Array[String], primaryKeys: List[(String, List[String])], foreignKeys: List[(String, List[String], String, List[String])], partitionKey: Array[String], ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema:String): MappedMsgTypeDef = {
+  private def MakeContainerTypeMap(nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)], ver: Long, jarNm: String, depJars: Array[String], primaryKeys: List[(String, List[String])], foreignKeys: List[(String, List[String], String, List[String])], partitionKey: Array[String], ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema:String, persist: Boolean /* = false */): MappedMsgTypeDef = {
     val st = new MappedMsgTypeDef
     val depJarSet = scala.collection.mutable.Set[String]()
 
@@ -483,6 +498,7 @@ class MdMgr {
     st.schemaId = schemaId
     st.avroSchema = avroSchema
     st.partitionKey = partitionKey
+    st.persist = persist
     st
   }
 
@@ -498,7 +514,7 @@ class MdMgr {
     * @return the constructed StructTypeDef
     */
 
-  def MakeStructDef(nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)], ver: Long, jarNm: String, depJars: Array[String], primaryKeys: List[(String, List[String])], foreignKeys: List[(String, List[String], String, List[String])], partitionKey: Array[String], ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema:String): StructTypeDef = {
+  def MakeStructDef(nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)], ver: Long, jarNm: String, depJars: Array[String], primaryKeys: List[(String, List[String])], foreignKeys: List[(String, List[String], String, List[String])], partitionKey: Array[String], ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema:String, persist: Boolean /* = false */): StructTypeDef = {
     var sd = new StructTypeDef
 
     val msgNm = MdMgr.MkFullName(nameSpace, name)
@@ -525,6 +541,7 @@ class MdMgr {
     sd.schemaId = schemaId
     sd.avroSchema = avroSchema
     sd.partitionKey = partitionKey
+    sd.persist = persist
     sd
   }
 
@@ -802,7 +819,11 @@ class MdMgr {
     if (cont != null) Some(cont) else None
   }
 
-  def ContainerForElementId(elemId:Int): Option[BaseElem] = {
+  def ElementIdForSchemaId(schemaId:Int): Long = {
+    schemaIdToElemntIdMap.getOrElse(schemaId, 0)
+  }
+
+  def ContainerForElementId(elemId:Long): Option[BaseElem] = {
     val elem = elementIdMap.getOrElse(elemId, null)
     if (elem != null) Some(elem) else None
   }
@@ -1172,7 +1193,7 @@ class MdMgr {
   // We should not have physicalName. This container type has type inside, which has PhysicalName
   @throws(classOf[AlreadyExistsException])
   @throws(classOf[NoSuchElementException])
-  def MakeArray(nameSpace: String, name: String, tpNameSp: String, tpName: String, numDims: Int, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, ver: Long, recompile: Boolean = false, persist: Boolean = false): ArrayTypeDef = {
+  def MakeArray(nameSpace: String, name: String, tpNameSp: String, tpName: String, numDims: Int, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, ver: Long, recompile: Boolean = false/* , persist: Boolean = false */): ArrayTypeDef = {
     val typ = Type(nameSpace, name, -1, false)
     if (typ != None) {
       if (recompile) {
@@ -1220,7 +1241,7 @@ class MdMgr {
   // We should not have physicalName. This container type has type inside, which has PhysicalName
   @throws(classOf[AlreadyExistsException])
   @throws(classOf[NoSuchElementException])
-  def MakeArrayBuffer(nameSpace: String, name: String, tpNameSp: String, tpName: String, numDims: Int, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, ver: Long, recompile: Boolean = false, persist: Boolean = false): ArrayBufTypeDef = {
+  def MakeArrayBuffer(nameSpace: String, name: String, tpNameSp: String, tpName: String, numDims: Int, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, ver: Long, recompile: Boolean = false/* , persist: Boolean = false */): ArrayBufTypeDef = {
     val typ = Type(nameSpace, name, -1, false)
     if (typ != None) {
       if (recompile) {
@@ -1342,7 +1363,7 @@ class MdMgr {
   // We should not have physicalName. This container type has type inside, which has PhysicalName
   @throws(classOf[AlreadyExistsException])
   @throws(classOf[NoSuchElementException])
-  def MakeSet(nameSpace: String, name: String, tpNameSp: String, tpName: String, ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, recompile: Boolean = false, persist: Boolean = false): SetTypeDef = {
+  def MakeSet(nameSpace: String, name: String, tpNameSp: String, tpName: String, ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, recompile: Boolean = false/* , persist: Boolean = false */): SetTypeDef = {
     val typ = Type(nameSpace, name, -1, false)
     if (typ != None) {
       if (recompile) {
@@ -1429,7 +1450,7 @@ class MdMgr {
   // We should not have physicalName. This container type has type inside, which has PhysicalName
   @throws(classOf[AlreadyExistsException])
   @throws(classOf[NoSuchElementException])
-  def MakeTreeSet(nameSpace: String, name: String, tpNameSp: String, tpName: String, ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, recompile: Boolean = false, persist: Boolean = false): TreeSetTypeDef = {
+  def MakeTreeSet(nameSpace: String, name: String, tpNameSp: String, tpName: String, ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, recompile: Boolean = false/* , persist: Boolean = false */): TreeSetTypeDef = {
 
     val typ = Type(nameSpace, name, -1, false)
     if (typ != None) {
@@ -1477,7 +1498,7 @@ class MdMgr {
   // We should not have physicalName. This container type has type inside, which has PhysicalName
   @throws(classOf[AlreadyExistsException])
   @throws(classOf[NoSuchElementException])
-  def MakeSortedSet(nameSpace: String, name: String, tpNameSp: String, tpName: String, ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, recompile: Boolean = false, persist: Boolean = false): SortedSetTypeDef = {
+  def MakeSortedSet(nameSpace: String, name: String, tpNameSp: String, tpName: String, ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, recompile: Boolean = false/* , persist: Boolean = false */): SortedSetTypeDef = {
     val typ = Type(nameSpace, name, -1, false)
     if (typ != None) {
       if (recompile) {
@@ -1525,7 +1546,7 @@ class MdMgr {
   // We should not have physicalName. This container type has type inside, which has PhysicalName
   @throws(classOf[AlreadyExistsException])
   @throws(classOf[NoSuchElementException])
-  def MakeMap(nameSpace: String, name: String, key: (String, String), value: (String, String), ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, recompile: Boolean = false, persist: Boolean = false): MapTypeDef = {
+  def MakeMap(nameSpace: String, name: String, key: (String, String), value: (String, String), ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, recompile: Boolean = false/* , persist: Boolean = false */): MapTypeDef = {
     val typ = Type(nameSpace, name, -1, false)
     if (typ != None) {
       if (recompile) {
@@ -1582,7 +1603,7 @@ class MdMgr {
   // We should not have physicalName. This container type has type inside, which has PhysicalName
   @throws(classOf[AlreadyExistsException])
   @throws(classOf[NoSuchElementException])
-  def MakeImmutableMap(nameSpace: String, name: String, key: (String, String), value: (String, String), ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, recompile: Boolean = false, persist: Boolean = false): ImmutableMapTypeDef = {
+  def MakeImmutableMap(nameSpace: String, name: String, key: (String, String), value: (String, String), ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, recompile: Boolean = false/* , persist: Boolean = false */): ImmutableMapTypeDef = {
     val typ = Type(nameSpace, name, -1, false)
     if (typ != None) {
       if (recompile) {
@@ -1892,7 +1913,7 @@ class MdMgr {
 
   @throws(classOf[AlreadyExistsException])
   @throws(classOf[NoSuchElementException])
-  def MakeFixedMsg(nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)], ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema:String, ver: Long = 1, jarNm: String = null, depJars: Array[String] = null, primaryKeys: List[(String, List[String])] = null, foreignKeys: List[(String, List[String], String, List[String])] = null, partitionKey: Array[String] = null, recompile: Boolean = false): MessageDef = {
+  def MakeFixedMsg(nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)], ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema:String, ver: Long = 1, jarNm: String = null, depJars: Array[String] = null, primaryKeys: List[(String, List[String])] = null, foreignKeys: List[(String, List[String], String, List[String])] = null, partitionKey: Array[String] = null, recompile: Boolean = false, persist: Boolean /* = false */): MessageDef = {
 
     val latestActiveMessage = Message(nameSpace, name, -1, false)
     if (latestActiveMessage != None) {
@@ -1910,7 +1931,7 @@ class MdMgr {
     }
 
     var msg: MessageDef = new MessageDef
-    msg.containerType = MakeStructDef(nameSpace, name, physicalName, args, ver, jarNm, depJars, primaryKeys, foreignKeys, partitionKey, ownerId, tenantId, uniqueId, mdElementId, schemaId, avroSchema)
+    msg.containerType = MakeStructDef(nameSpace, name, physicalName, args, ver, jarNm, depJars, primaryKeys, foreignKeys, partitionKey, ownerId, tenantId, uniqueId, mdElementId, schemaId, avroSchema, persist)
 
     var dJars: Array[String] = depJars
     if (msg.containerType.isInstanceOf[ContainerTypeDef]) // This should match
@@ -1940,7 +1961,7 @@ class MdMgr {
 
   @throws(classOf[AlreadyExistsException])
   @throws(classOf[NoSuchElementException])
-  def MakeFixedContainer(nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)], ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema:String, ver: Long = 1, jarNm: String = null, depJars: Array[String] = null, primaryKeys: List[(String, List[String])] = null, foreignKeys: List[(String, List[String], String, List[String])] = null, partitionKey: Array[String] = null, recompile: Boolean = false): ContainerDef = {
+  def MakeFixedContainer(nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)], ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema:String, ver: Long = 1, jarNm: String = null, depJars: Array[String] = null, primaryKeys: List[(String, List[String])] = null, foreignKeys: List[(String, List[String], String, List[String])] = null, partitionKey: Array[String] = null, recompile: Boolean = false, persist: Boolean /* = false */): ContainerDef = {
 
     val latestActiveContainer = Container(nameSpace, name, -1, false)
     if (latestActiveContainer != None) {
@@ -1958,7 +1979,7 @@ class MdMgr {
     }
 
     var container = new ContainerDef
-    container.containerType = MakeStructDef(nameSpace, name, physicalName, args, ver, jarNm, depJars, primaryKeys, foreignKeys, partitionKey, ownerId, tenantId, uniqueId, mdElementId, schemaId, avroSchema)
+    container.containerType = MakeStructDef(nameSpace, name, physicalName, args, ver, jarNm, depJars, primaryKeys, foreignKeys, partitionKey, ownerId, tenantId, uniqueId, mdElementId, schemaId, avroSchema, persist)
 
     var dJars: Array[String] = depJars
     if (container.containerType.isInstanceOf[ContainerTypeDef]) {
@@ -1991,7 +2012,7 @@ class MdMgr {
 
   @throws(classOf[AlreadyExistsException])
   @throws(classOf[NoSuchElementException])
-  def MakeMappedMsg(nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)], ver: Long, jarNm: String, depJars: Array[String], primaryKeys: List[(String, List[String])], foreignKeys: List[(String, List[String], String, List[String])], partitionKey: Array[String], recompile: Boolean, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema:String): MessageDef = {
+  def MakeMappedMsg(nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)], ver: Long, jarNm: String, depJars: Array[String], primaryKeys: List[(String, List[String])], foreignKeys: List[(String, List[String], String, List[String])], partitionKey: Array[String], recompile: Boolean, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema:String, persist: Boolean): MessageDef = {
     val latestActiveMessage = Message(nameSpace, name, -1, false)
     if (latestActiveMessage != None) {
       if (recompile) {
@@ -2007,7 +2028,7 @@ class MdMgr {
     }
 
     var msg: MessageDef = new MessageDef
-    msg.containerType = MakeContainerTypeMap(nameSpace, name, physicalName, args, ver, jarNm, depJars, primaryKeys, foreignKeys, partitionKey, ownerId, tenantId, uniqueId, mdElementId, schemaId, avroSchema)
+    msg.containerType = MakeContainerTypeMap(nameSpace, name, physicalName, args, ver, jarNm, depJars, primaryKeys, foreignKeys, partitionKey, ownerId, tenantId, uniqueId, mdElementId, schemaId, avroSchema, persist)
 
     var dJars: Array[String] = depJars
     if (msg.containerType.isInstanceOf[ContainerTypeDef]) // This should match
@@ -2037,7 +2058,7 @@ class MdMgr {
 
   @throws(classOf[AlreadyExistsException])
   @throws(classOf[NoSuchElementException])
-  def MakeMappedContainer(nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)], ver: Long, jarNm: String, depJars: Array[String], primaryKeys: List[(String, List[String])], foreignKeys: List[(String, List[String], String, List[String])], partitionKey: Array[String], ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema:String, recompile: Boolean = false): ContainerDef = {
+  def MakeMappedContainer(nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)], ver: Long, jarNm: String, depJars: Array[String], primaryKeys: List[(String, List[String])], foreignKeys: List[(String, List[String], String, List[String])], partitionKey: Array[String], ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema:String, recompile: Boolean = false, persist: Boolean /* = false */): ContainerDef = {
 
     val latestActiveContainer = Container(nameSpace, name, -1, false)
     if (latestActiveContainer != None) {
@@ -2055,7 +2076,7 @@ class MdMgr {
     }
 
     var container = new ContainerDef
-    container.containerType = MakeContainerTypeMap(nameSpace, name, physicalName, args, ver, jarNm, depJars, primaryKeys, foreignKeys, partitionKey, ownerId, tenantId, uniqueId, mdElementId, schemaId, avroSchema)
+    container.containerType = MakeContainerTypeMap(nameSpace, name, physicalName, args, ver, jarNm, depJars, primaryKeys, foreignKeys, partitionKey, ownerId, tenantId, uniqueId, mdElementId, schemaId, avroSchema, persist)
 
     var dJars: Array[String] = depJars
     if (container.containerType.isInstanceOf[ContainerTypeDef]) // This should match
@@ -2086,7 +2107,7 @@ class MdMgr {
     */
   @throws(classOf[AlreadyExistsException])
   @throws(classOf[NoSuchElementException])
-  def MakeMappedMsg(nameSpace: String, name: String, physicalName: String, argTypNmSpName: (String, String), argNames: List[String], ver: Long, jarNm: String, depJars: Array[String], primaryKeys: List[(String, List[String])], foreignKeys: List[(String, List[String], String, List[String])], partitionKey: Array[String], recompile: Boolean, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema:String): MessageDef = {
+  def MakeMappedMsg(nameSpace: String, name: String, physicalName: String, argTypNmSpName: (String, String), argNames: List[String], ver: Long, jarNm: String, depJars: Array[String], primaryKeys: List[(String, List[String])], foreignKeys: List[(String, List[String], String, List[String])], partitionKey: Array[String], recompile: Boolean, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema:String, persist: Boolean): MessageDef = {
 
     val latestActiveMessage = Message(nameSpace, name, -1, false)
     if (latestActiveMessage != None) {
@@ -2108,7 +2129,7 @@ class MdMgr {
     val args = argNames.map(elem => (msgNm, elem, typeNmSp, typeName, false, null)) //BUGBUG::Making all local Attributes and Collection Types does not handled
 
     var msg: MessageDef = new MessageDef
-    msg.containerType = MakeContainerTypeMap(nameSpace, name, physicalName, args, ver, jarNm, depJars, primaryKeys, foreignKeys, partitionKey, ownerId, tenantId, uniqueId, mdElementId, schemaId, avroSchema)
+    msg.containerType = MakeContainerTypeMap(nameSpace, name, physicalName, args, ver, jarNm, depJars, primaryKeys, foreignKeys, partitionKey, ownerId, tenantId, uniqueId, mdElementId, schemaId, avroSchema, persist)
 
     var dJars: Array[String] = depJars
     if (msg.containerType.isInstanceOf[ContainerTypeDef]) // This should match
@@ -2763,7 +2784,7 @@ class MdMgr {
   @throws(classOf[AlreadyExistsException])
   @throws(classOf[NoSuchElementException])
   def AddFixedMsg(nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)], ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema:String, ver: Long = 1, jarNm: String = null, depJars: Array[String] = Array[String](), primaryKeys: List[(String, List[String])] = null, foreignKeys: List[(String, List[String], String, List[String])] = null, partitionKey: Array[String] = null): Unit = {
-    AddMsg(MakeFixedMsg(nameSpace, name, physicalName, args, ownerId, tenantId, uniqueId, mdElementId, schemaId, avroSchema, ver, jarNm, depJars, primaryKeys, foreignKeys, partitionKey))
+    AddMsg(MakeFixedMsg(nameSpace, name, physicalName, args, ownerId, tenantId, uniqueId, mdElementId, schemaId, avroSchema, ver, jarNm, depJars, primaryKeys, foreignKeys, partitionKey, false, false))
   }
 
   /**
@@ -2784,7 +2805,7 @@ class MdMgr {
   @throws(classOf[AlreadyExistsException])
   @throws(classOf[NoSuchElementException])
   def AddMappedMsg(nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)], ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema:String, ver: Long = 1, jarNm: String = null, depJars: Array[String] = Array[String](), primaryKeys: List[(String, List[String])] = null, foreignKeys: List[(String, List[String], String, List[String])] = null, partitionKey: Array[String] = null): Unit = {
-    AddMsg(MakeMappedMsg(nameSpace, name, physicalName, args, ver, jarNm, depJars, primaryKeys, foreignKeys, partitionKey, false, ownerId, tenantId, uniqueId, mdElementId, schemaId, avroSchema))
+    AddMsg(MakeMappedMsg(nameSpace, name, physicalName, args, ver, jarNm, depJars, primaryKeys, foreignKeys, partitionKey, false, ownerId, tenantId, uniqueId, mdElementId, schemaId, avroSchema, false))
   }
 
   /**
@@ -2805,7 +2826,7 @@ class MdMgr {
   @throws(classOf[AlreadyExistsException])
   @throws(classOf[NoSuchElementException])
   def AddMappedMsg(nameSpace: String, name: String, physicalName: String, argTypNmSpName: (String, String), argNames: List[String], ver: Long, jarNm: String, depJars: Array[String], primaryKeys: List[(String, List[String])], foreignKeys: List[(String, List[String], String, List[String])], partitionKey: Array[String], ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema:String): Unit = {
-    AddMsg(MakeMappedMsg(nameSpace, name, physicalName, argTypNmSpName, argNames, ver, jarNm, depJars, primaryKeys, foreignKeys, partitionKey, false, ownerId, tenantId, uniqueId, mdElementId, schemaId, avroSchema))
+    AddMsg(MakeMappedMsg(nameSpace, name, physicalName, argTypNmSpName, argNames, ver, jarNm, depJars, primaryKeys, foreignKeys, partitionKey, false, ownerId, tenantId, uniqueId, mdElementId, schemaId, avroSchema, false))
   }
 
   @throws(classOf[AlreadyExistsException])
@@ -2823,8 +2844,10 @@ class MdMgr {
     val typ = msg.containerType.asInstanceOf[ContainerTypeDef]
     typeDefs.addBinding(typ.FullName, typ)
       msgDefs.addBinding(msg.FullName, msg)
-    if (msg.containerType != null && msg.containerType.schemaId > 0)
+    if (msg.containerType != null && msg.containerType.schemaId > 0) {
+      schemaIdToElemntIdMap(msg.containerType.schemaId) = msg.MdElementId
       schemaIdMap(msg.containerType.schemaId) = msg
+    }
     else
       logger.error("SchemaId not found for Container:%s with Version:%d".format(msg.FullName, msg.Version))
     elementIdMap(msg.MdElementId) = msg
@@ -2850,7 +2873,7 @@ class MdMgr {
   @throws(classOf[AlreadyExistsException])
   @throws(classOf[NoSuchElementException])
   def AddFixedContainer(nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)], ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema:String, ver: Long = 1, jarNm: String = null, depJars: Array[String] = Array[String](), primaryKeys: List[(String, List[String])] = null, foreignKeys: List[(String, List[String], String, List[String])] = null, partitionKey: Array[String] = null): Unit = {
-    AddContainer(MakeFixedContainer(nameSpace, name, physicalName, args, ownerId, tenantId, uniqueId, mdElementId, schemaId, avroSchema, ver, jarNm, depJars, primaryKeys, foreignKeys, partitionKey))
+    AddContainer(MakeFixedContainer(nameSpace, name, physicalName, args, ownerId, tenantId, uniqueId, mdElementId, schemaId, avroSchema, ver, jarNm, depJars, primaryKeys, foreignKeys, partitionKey, false, false))
   }
 
   /**
@@ -2871,7 +2894,7 @@ class MdMgr {
   @throws(classOf[AlreadyExistsException])
   @throws(classOf[NoSuchElementException])
   def AddMappedContainer(nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)], ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema:String, ver: Long = 1, jarNm: String = null, depJars: Array[String] = Array[String](), primaryKeys: List[(String, List[String])] = null, foreignKeys: List[(String, List[String], String, List[String])] = null, partitionKey: Array[String] = null): Unit = {
-    AddContainer(MakeMappedContainer(nameSpace, name, physicalName, args, ver, jarNm, depJars, primaryKeys, foreignKeys, partitionKey, ownerId, tenantId, uniqueId, mdElementId, schemaId, avroSchema))
+    AddContainer(MakeMappedContainer(nameSpace, name, physicalName, args, ver, jarNm, depJars, primaryKeys, foreignKeys, partitionKey, ownerId, tenantId, uniqueId, mdElementId, schemaId, avroSchema, false, false))
   }
 
   @throws(classOf[AlreadyExistsException])
@@ -2889,8 +2912,10 @@ class MdMgr {
     val typ = container.containerType.asInstanceOf[ContainerTypeDef]
     typeDefs.addBinding(typ.FullName, typ)
     containerDefs.addBinding(container.FullName, container)
-    if (container.containerType != null && container.containerType.schemaId > 0)
+    if (container.containerType != null && container.containerType.schemaId > 0) {
       schemaIdMap(container.containerType.schemaId) = container
+      schemaIdToElemntIdMap(container.containerType.schemaId) = container.MdElementId
+    }
     else
       logger.error("SchemaId not found for Container:%s with Version:%d".format(container.FullName, container.Version))
     elementIdMap(container.MdElementId) = container
@@ -3057,7 +3082,45 @@ class MdMgr {
     return ""
   }
 
-    /**
+  /* TenantId functions */
+  def AddTenantInfo(tenantId: String, description: String, primaryDataStore: String, cacheConfig: String): Unit = {
+    AddTenantInfo(MakeTenantInfo(tenantId, description, primaryDataStore, cacheConfig))
+  }
+
+  def AddTenantInfo(tenant : TenantInfo) : Boolean = {
+    if (tenantIdMap.contains(tenant.tenantId.trim.toLowerCase))
+      throw new AlreadyExistsException(s"Tenant ${tenant.tenantId} already exists.", null)
+    tenantIdMap(tenant.tenantId.trim.toLowerCase) = tenant
+    true
+  }
+
+  def UpdateTenantInfo(tenant : TenantInfo) : Boolean = {
+    if (tenant.tenantId.trim.equalsIgnoreCase("System") && tenantIdMap.contains("System".toLowerCase)) {
+      throw new AlreadyExistsException(s"System is system tenant. you can not repalce it.", null)
+    }
+    tenantIdMap(tenant.tenantId.toLowerCase) = tenant // Not really checking for existance
+    true
+  }
+
+  def MakeTenantInfo(tenantId: String, description: String, primaryDataStore: String, cacheConfig: String): TenantInfo = {
+    new TenantInfo(tenantId.trim, description, primaryDataStore, cacheConfig)
+  }
+
+  def GetTenantInfo(tenantId: String) : TenantInfo = {
+    tenantIdMap.getOrElse(tenantId.trim.toLowerCase, null)
+  }
+
+  def GetAllTenantInfos : Array[TenantInfo] = {
+    tenantIdMap.values.toArray
+  }
+
+  def RemoveTenantInfo(tenantId: String): Unit = {
+    if (tenantIdMap.contains(tenantId.trim.toLowerCase())) {
+      tenantIdMap -= tenantId.trim.toLowerCase()
+    }
+  }
+
+  /**
       * Construct a SerializeDeserializeConfig instance and add it to the metadata.
       * @param nameSpace the namespace for this SerializeDeserializeConfig
       * @param name its serializer name
@@ -3237,14 +3300,13 @@ class MdMgr {
     }
   }
 
-  def MakeAdapter(name: String, typeString: String, dataFormat: String, className: String,
-                  jarName: String, dependencyJars: List[String], adapterSpecificCfg: String): AdapterInfo = {
+  def MakeAdapter(name: String, typeString: String, className: String, jarName: String, dependencyJars: List[String], adapterSpecificCfg: String, tenantId: String): AdapterInfo = {
     val ai = new AdapterInfo
     ai.name = name
     ai.typeString = typeString
-    ai.dataFormat = dataFormat
     ai.className = className
     ai.jarName = jarName
+    ai.tenantId = tenantId
     if (dependencyJars != null) {
       ai.dependencyJars = dependencyJars.toArray
     }

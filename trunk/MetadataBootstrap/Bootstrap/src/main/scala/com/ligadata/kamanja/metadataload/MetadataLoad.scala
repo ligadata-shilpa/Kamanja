@@ -91,6 +91,9 @@ class MetadataLoad (val mgr : MdMgr, val typesPath : String, val fcnPath : Strin
 	def initialize {
 
 		logger.debug("MetadataLoad...loading typedefs")
+		InitSystemTenantId
+
+		logger.debug("MetadataLoad...loading typedefs")
 		InitTypeDefs
 
 		logger.debug("MetadataLoad...loading ContainerInterfaces definitions")
@@ -117,6 +120,15 @@ class MetadataLoad (val mgr : MdMgr, val typesPath : String, val fcnPath : Strin
     logger.debug("MetadataLoad...loading SerializeDeserializeConfig instances for kbinary, csv, and json")
     initSerializeDeserializeConfigs
 
+	}
+
+
+	private def InitSystemTenantId: Unit = {
+		mgr.AddTenantInfo("System" // TenantId
+			, "System TenantId" // Description
+			, null // no primary database
+			, null // no cache config
+		)
 	}
 
     /**
