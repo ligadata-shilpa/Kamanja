@@ -4,8 +4,6 @@ import Keys._
 
 shellPrompt := { state =>  "sbt (%s)> ".format(Project.extract(state).currentProject.id) }
 
-
-
 assemblyOption in assembly ~= { _.copy(prependShellScript = Some(defaultShellScript)) }
 
 assemblyJarName in assembly := { s"${name.value}-${version.value}" }
@@ -42,7 +40,6 @@ assemblyMergeStrategy in assembly := {
     case x =>
         val oldStrategy = (assemblyMergeStrategy in assembly).value
         oldStrategy(x)
-
 }
 
 excludedJars in assembly <<= (fullClasspath in assembly) map { cp =>

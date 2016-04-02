@@ -47,10 +47,9 @@ assemblyMergeStrategy in assembly := {
         case x =>
 	        val oldStrategy = (assemblyMergeStrategy in assembly).value
 	        oldStrategy(x)
-
 }
 
-excludedJars in assembly <<= (fullClasspath in assembly) map { cp => 
+excludedJars in assembly <<= (fullClasspath in assembly) map { cp =>
   val excludes = Set("commons-beanutils-1.7.0.jar", "google-collections-1.0.jar", "commons-collections4-4.0.jar", "log4j-1.2.17.jar", "log4j-1.2.16.jar" )
   cp filter { jar => excludes(jar.data.getName) }
 }

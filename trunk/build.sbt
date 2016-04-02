@@ -13,12 +13,12 @@ crossScalaVersions := Seq("2.11.7", "2.10.4")
 shellPrompt := { state =>  "sbt (%s)> ".format(Project.extract(state).currentProject.id) }
 
 net.virtualvoid.sbt.graph.Plugin.graphSettings
-
+/*
 initialize := {
   val required = "1.7"
   val current  = sys.props("java.specification.version")
   assert(current == required, s"Unsupported JDK: java.specification.version $current != $required")
-}
+}*/
 
 libraryDependencies := {
     CrossVersion.partialVersion(scalaVersion.value) match {
@@ -93,7 +93,7 @@ lazy val MessageDef = project.in(file("MessageDef")) dependsOn(Metadata, Metadat
 
 // lazy val Loadtest = project.in(file("Tools/Loadtest")) dependsOn(StorageManager, Exceptions)
 
-lazy val PmmlRuntime = project.in(file("Pmml/PmmlRuntime")) dependsOn(Metadata, KamanjaBase, Exceptions) 
+lazy val PmmlRuntime = project.in(file("Pmml/PmmlRuntime")) dependsOn(Metadata, KamanjaBase, Exceptions)
 
 lazy val PmmlCompiler = project.in(file("Pmml/PmmlCompiler")) dependsOn(PmmlRuntime, PmmlUdfs, Metadata, KamanjaBase, MetadataBootstrap, Exceptions)
 
@@ -196,24 +196,3 @@ lazy val ClusterInstallerDriver = project.in(file("Utils/ClusterInstaller/Cluste
 lazy val GetComponent = project.in(file("Utils/ClusterInstaller/GetComponent"))
 
 lazy val PmmlTestTool = project.in(file("Utils/PmmlTestTool")) dependsOn (KamanjaVersion)
-
-ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) }
-
-/*
-
-val commonSettings = Seq(
-    scalaVersion := "2.11.7",
-    autoAPIMappings := true
-  )
-
-val root = (project in file(".")).
-  settings(commonSettings: _*).
-  settings(unidocSettings: _*).
-  settings(
-    name := "KamanjaManager",
-    unidocProjectFilter in (ScalaUnidoc, unidoc) := inAnyProject -- inProjects(MigrateFrom_V_1_1, MigrateFrom_V_1_2)
-  ).
-  aggregate(BaseTypes, BaseFunctions, Serialize, ZooKeeperClient, ZooKeeperListener, Exceptions, KamanjaBase, DataDelimiters, KamanjaManager, InputOutputAdapterBase, KafkaSimpleInputOutputAdapters, FileSimpleInputOutputAdapters, SimpleEnvContextImpl, StorageBase, Metadata, OutputMsgDef, MessageDef, PmmlRuntime, PmmlCompiler, PmmlUdfs, MethodExtractor, MetadataAPI, MetadataBootstrap, MetadataAPIService, MetadataAPIServiceClient, SimpleKafkaProducer, KVInit, ZooKeeperLeaderLatch, JsonDataGen, NodeInfoExtract, Controller, SimpleApacheShiroAdapter, AuditAdapters, CustomUdfLib, JdbcDataCollector, ExtractData, InterfacesSamples, StorageCassandra, StorageHashMap, StorageHBase, StorageTreeMap, StorageSqlServer, StorageManager, AuditAdapterBase, SecurityAdapterBase, KamanjaUtils, UtilityService, HeartBeat, TransactionService, KvBase, FileDataConsumer, CleanUtil, SaveContainerDataComponent, UtilsForModels, JarFactoryOfModelInstanceFactory, JpmmlFactoryOfModelInstanceFactory, MigrateBase, MigrateManager)
-
-*/
-

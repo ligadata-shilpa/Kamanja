@@ -63,7 +63,6 @@ case PathList("META-INF", "maven","jline","jline", ps) if ps.startsWith("pom") =
           case x =>
   	        val oldStrategy = (assemblyMergeStrategy in assembly).value
   	        oldStrategy(x)
-
 }
 
 excludedJars in assembly <<= (fullClasspath in assembly) map { cp =>
