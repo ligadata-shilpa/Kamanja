@@ -36,18 +36,18 @@ object Conversion {
 
   // Source -> Map[Target, Function]
   val builtin: Map[String, Map[String, String]] = Map(
-    "Integer" -> Map("String" -> "ToString"),
+    "Int" -> Map("String" -> "ToString"),
     "Double" -> Map("String" -> "ToString"),
     "Boolean" -> Map("String" -> "ToString"),
     "Date" -> Map("String" -> "ToString"),
     "BigDecimal" -> Map("String" -> "ToString"),
-    "String" -> Map("Integer" -> "ToInteger",
+    "String" -> Map("Int" -> "ToInteger",
                     "Double" -> "ToDouble",
                     "Boolean" -> "ToBoolean",
                     "Date" -> "ToDate",
                     "Timestamp" -> "ToTimestamp",
                     "BigDecimal" -> "ToBigDecimal"),
-    "Any" -> Map("Integer" -> "ToInteger",
+    "Any" -> Map("Int" -> "ToInteger",
                  "Double" -> "ToDouble",
                  "Boolean" -> "ToBoolean",
                  "Date" -> "ToDate",
@@ -84,7 +84,7 @@ class Conversion {
       "BigDecimal" -> "ToBigDecimal")
   )
 
-  def ToInt(v: Any): Int = {
+  def ToInteger(v: Any): Int = {
     v match {
       case y: String => y.toInt
       case y: Int => y

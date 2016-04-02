@@ -25,7 +25,7 @@ import org.json4s.jackson.JsonMethods._
 import org.rogach.scallop._
 import org.apache.commons.io.FileUtils
 import java.io.{StringReader, File}
-
+import com.ligadata.runtime.Conversion
 import com.ligadata.jtm.nodes._
 
 // Laundry list
@@ -725,18 +725,44 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
         }
 
         if (open.isEmpty) {
+
           innerTracking ++= list.map(m => innerMapping.get(m._2).get.variableName).toSet
+
           // Sub names to
           val newExpression = Expressions.FixupColumnNames(expression, innerMapping, aliaseMessages)
           logger.trace("Matched compute expression {} -> {}", newExpression, c._1)
-          // Output the actual compute
-          // To Do: multiple vals and type provided
-          collect :+= c._2.Comment
-          if (c._2.typename.length > 0)
-            collect ++= Array("val %s: %s = %s\n".format(c._1, c._2.typename, newExpression))
-          else
-            collect ++= Array("val %s = %s\n".format(c._1, newExpression))
 
+
+          collect :+= c._2.Comment
+          if (c._2.typename.length > 0) {
+
+            // Check if we track the type or need a type coersion
+            val isVariable = Expressions.IsExpressionVariable(expression, innerMapping)
+            if(isVariable) {
+              val cols = Expressions.ExtractColumnNames(expression)
+              val rt = innerMapping.get(cols.head).get
+              if(rt.typeName!=c._2.typename && rt.typeName.nonEmpty) {
+                // Find the conversion and wrap the call
+                if(Conversion.builtin.contains(rt.typeName) && Conversion.builtin.get(rt.typeName).get.contains(c._2.typename))
+                {
+                  val conversionExpr = Conversion.builtin.get(rt.typeName).get.get(c._2.typename).get
+                  collect ++= Array("val %s: %s = conversion.%s(%s)\n".format(c._1, c._2.typename, conversionExpr, newExpression))
+                }
+                else
+                {
+                  collect ++= Array("val %s: %s = %s\n".format(c._1, c._2.typename, newExpression))
+                }
+              } else {
+                collect ++= Array("val %s: %s = %s\n".format(c._1, c._2.typename, newExpression))
+              }
+
+            }
+            else {
+              collect ++= Array("val %s: %s = %s\n".format(c._1, c._2.typename, newExpression))
+            }
+          } else {
+            collect ++= Array("val %s = %s\n".format(c._1, newExpression))
+          }
           outputSet --= Set(c._1)
           innerMapping ++= Map(c._1 -> eval.Tracker(c._1, "", c._2.typename, false, "", c._1))
           false
