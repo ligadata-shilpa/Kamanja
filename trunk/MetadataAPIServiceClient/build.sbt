@@ -23,3 +23,8 @@ scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
 //libraryDependencies += "org.json4s" %% "json4s-jackson" % "3.2.9"
 //
 //resolvers += "Big Bee Consultants" at "http://repo.bigbeeconsultants.co.uk/repo"
+
+coverageMinimum := 80
+
+coverageFailOnMinimum := false
+

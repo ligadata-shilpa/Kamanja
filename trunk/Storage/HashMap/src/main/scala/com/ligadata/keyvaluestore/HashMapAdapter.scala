@@ -34,8 +34,8 @@ No schema setup
 
 package com.ligadata.keyvaluestore
 
-import com.ligadata.KvBase.{ Key, Value, TimeRange }
-import com.ligadata.StorageBase.{ DataStore, Transaction, StorageAdapterObj }
+import com.ligadata.KvBase.{ Key, TimeRange }
+import com.ligadata.StorageBase.{ DataStore, Transaction, StorageAdapterFactory, Value }
 
 import org.mapdb._
 import java.io._
@@ -250,6 +250,7 @@ class HashMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
   }
 
   private def ValueToByteArray(value: Value, out: DataOutputStream): Unit = {
+    out.writeInt(value.schemaId)
     out.writeInt(value.serializerType.length);
     out.write(value.serializerType.getBytes());
     out.writeInt(value.serializedInfo.length);
@@ -258,6 +259,7 @@ class HashMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
 
   private def ByteArrayToValue(byteArray: Array[Byte]): Value = {
     var in = new DataInputStream(new ByteArrayInputStream(byteArray));
+    var schemaId = in.readInt();
 
     var serializerTypeLength = in.readInt();
     var serializerType = new Array[Byte](serializerTypeLength);
@@ -267,7 +269,7 @@ class HashMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
     var serializedInfo = new Array[Byte](serializedInfoLength);
     in.read(serializedInfo, 0, serializedInfoLength);
 
-    var v = new Value(new String(serializerType), serializedInfo)
+    var v = new Value(schemaId, new String(serializerType), serializedInfo)
     v
   }
 
@@ -287,7 +289,7 @@ class HashMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
     }
   }
 
-  override def put(containerName: String, key: Key, value: Value): Unit = {
+  override def put(containerName: String, isMetadataContainer: Boolean, key: Key, value: Value): Unit = {
     var tableName = toFullTableName(containerName)
     var byteOs = new ByteArrayOutputStream(1024 * 1024);
     var out = new DataOutputStream(byteOs);
@@ -311,7 +313,7 @@ class HashMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
     byteOs.close()
   }
 
-  override def put(data_list: Array[(String, Array[(Key, Value)])]): Unit = {
+  override def put(data_list: Array[(String, Boolean, Array[(Key, Value)])]): Unit = {
     var byteOs = new ByteArrayOutputStream(1024 * 1024);
     var out = new DataOutputStream(byteOs);
     var tableName = ""
@@ -321,7 +323,7 @@ class HashMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
         CheckTableExists(containerName)
         tableName = toFullTableName(containerName)
         var map = tablesMap(tableName)
-        var keyValuePairs = li._2
+        var keyValuePairs = li._3
         keyValuePairs.foreach(keyValuePair => {
           val kba = MakeCompositeKey(keyValuePair._1)
           byteOs.reset()
@@ -395,6 +397,32 @@ class HashMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
       }
     }
   }
+
+  //Added by Yousef Abu Elbeh in 2016-03-13 from here
+  override def del(containerName: String, time: TimeRange): Unit = {
+    var tableName = ""
+    try {
+      CheckTableExists(containerName)
+      tableName = toFullTableName(containerName)
+      var map = tablesMap(tableName)
+      var iter = map.keySet().iterator()
+      while (iter.hasNext()) {
+        val kba = iter.next()
+        val k = new String(kba)
+        var keyArray = k.split('|')
+        var tp = keyArray(0).toLong
+        if (tp >= time.beginTime && tp <= time.endTime) {
+            map.remove(kba)
+        }
+      }
+      Commit(tableName)
+    } catch {
+      case e: Exception => {
+        throw CreateDMLException("Failed to delete object(s) from table " + tableName, e)
+      }
+    }
+  }
+  //to here
 
   // get operations
   def getRowCount(containerName: String): Long = {
@@ -851,11 +879,11 @@ class HashMapAdapterTx(val parent: DataStore) extends Transaction {
   val loggerName = this.getClass.getName
   val logger = LogManager.getLogger(loggerName)
 
-  override def put(containerName: String, key: Key, value: Value): Unit = {
-    parent.put(containerName, key, value)
+  override def put(containerName: String, isMetadataContainer: Boolean, key: Key, value: Value): Unit = {
+    parent.put(containerName, isMetadataContainer, key, value)
   }
 
-  override def put(data_list: Array[(String, Array[(Key, Value)])]): Unit = {
+  override def put(data_list: Array[(String, Boolean, Array[(Key, Value)])]): Unit = {
     parent.put(data_list)
   }
 
@@ -867,6 +895,12 @@ class HashMapAdapterTx(val parent: DataStore) extends Transaction {
   override def del(containerName: String, time: TimeRange, keys: Array[Array[String]]): Unit = {
     parent.del(containerName, time, keys)
   }
+
+  //Added by Yousef Abu Elbeh in 2016-03-13 from here
+  override def del(containerName: String, time: TimeRange): Unit = {
+    parent.del(containerName, time)
+  }
+  //to here
 
   // get operations
   override def get(containerName: String, callbackFunction: (Key, Value) => Unit): Unit = {
@@ -956,6 +990,6 @@ class HashMapAdapterTx(val parent: DataStore) extends Transaction {
 }
 
 // To create HashMap Datastore instance
-object HashMapAdapter extends StorageAdapterObj {
+object HashMapAdapter extends StorageAdapterFactory {
   override def CreateStorageAdapter(kvManagerLoader: KamanjaLoaderInfo, datastoreConfig: String): DataStore = new HashMapAdapter(kvManagerLoader, datastoreConfig)
 }

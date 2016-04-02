@@ -45,6 +45,7 @@ excludedJars in assembly <<= (fullClasspath in assembly) map { cp =>
 
 name := "SimpleKafkaProducer"
 
+
 version := "1.4.0"
 
 //resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
@@ -69,3 +70,6 @@ version := "1.4.0"
 //
 //libraryDependencies += "org.json4s" %% "json4s-jackson" % "3.2.9"
 
+coverageMinimum := 80
+
+coverageFailOnMinimum := false

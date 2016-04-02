@@ -65,6 +65,7 @@ libraryDependencies += "org.json4s" %% "json4s-jackson" % "3.2.9"
 
 net.virtualvoid.sbt.graph.Plugin.graphSettings
 
+
 // new add
 libraryDependencies += "org.apache.logging.log4j" % "log4j-1.2-api" % "2.4.1"
 libraryDependencies += "org.apache.logging.log4j" % "log4j-api" % "2.4.1"
@@ -75,3 +76,7 @@ libraryDependencies ++= Seq(
     "org.apache.curator" % "curator-framework" % "2.6.0",
     "org.apache.curator" % "curator-recipes" % "2.6.0"
 )
+coverageMinimum := 80
+
+coverageFailOnMinimum := false
+

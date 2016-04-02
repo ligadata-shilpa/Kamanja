@@ -21,3 +21,7 @@ version := "1.0"
 //libraryDependencies += "com.google.protobuf" % "protobuf-java" % "2.6.0"
 
 scalacOptions += "-deprecation"
+
+coverageMinimum := 80
+
+coverageFailOnMinimum := false

@@ -72,3 +72,6 @@ version := "1.0"
 //
 //libraryDependencies += "com.google.code.gson" % "gson" % "2.3.1"
 
+coverageMinimum := 80
+
+coverageFailOnMinimum := false

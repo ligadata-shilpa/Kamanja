@@ -25,3 +25,8 @@ version := "0.1.0"
 //libraryDependencies += "commons-dbcp" % "commons-dbcp" % "1.4"
 //
 //libraryDependencies += "org.apache.thrift" % "libthrift" % "0.9.2"
+
+coverageMinimum := 80
+
+coverageFailOnMinimum := false
+

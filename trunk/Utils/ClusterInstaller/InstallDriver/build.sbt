@@ -78,3 +78,9 @@ version := "1.0"
 //libraryDependencies += "org.json4s" %% "json4s-jackson" % "3.2.9"
 
 scalacOptions += "-deprecation"
+
+coverageMinimum := 80
+
+coverageFailOnMinimum := false
+
+coverageExcludedPackages := "com.ligadata.InstallDriver.*"

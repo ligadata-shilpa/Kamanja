@@ -72,3 +72,7 @@ version := "1.4.0"
 //    "org.scala-lang" % "scala-actors" % scalaVersion.value
 //  )
 //}
+
+coverageMinimum := 80
+
+coverageFailOnMinimum := false

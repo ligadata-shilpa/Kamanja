@@ -75,4 +75,8 @@ autoScalaLibrary := false
 
 // EclipseKeys.projectFlavor := EclipseProjectFlavor.Java
 
+coverageMinimum := 80
 
+coverageFailOnMinimum := false
+
+coverageExcludedPackages := "com.ligadata.ClusterInstallerDriver.*"

@@ -46,8 +46,8 @@ import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
 import com.ligadata.Exceptions._
 import com.ligadata.Utils.{ KamanjaLoaderInfo }
-import com.ligadata.KvBase.{ Key, Value, TimeRange }
-import com.ligadata.StorageBase.{ DataStore, Transaction, StorageAdapterObj }
+import com.ligadata.KvBase.{ Key, TimeRange }
+import com.ligadata.StorageBase.{ DataStore, Transaction, StorageAdapterFactory, Value }
 import java.util.{ Date, Calendar, TimeZone }
 import java.text.SimpleDateFormat
 
@@ -65,6 +65,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
 
   private val stStrBytes = "serializerType".getBytes()
   private val siStrBytes = "serializedInfo".getBytes()
+  private val schemaIdStrBytes = "schemaId".getBytes()
   private val baseStrBytes = "base".getBytes()
 
   private def CreateConnectionException(msg: String, ie: Exception): StorageConnectionException = {
@@ -277,9 +278,11 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
         val colDesc1 = new HColumnDescriptor("key".getBytes())
         val colDesc2 = new HColumnDescriptor(stStrBytes)
         val colDesc3 = new HColumnDescriptor(siStrBytes)
+        val colDesc4 = new HColumnDescriptor(schemaIdStrBytes)
         tableDesc.addFamily(colDesc1)
         tableDesc.addFamily(colDesc2)
         tableDesc.addFamily(colDesc3)
+        tableDesc.addFamily(colDesc4)
         createTableFromDescriptor(tableDesc)
       }
     } catch {
@@ -571,7 +574,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     return null
   }
 
-  override def put(containerName: String, key: Key, value: Value): Unit = {
+  override def put(containerName: String, isMetadataContainer: Boolean, key: Key, value: Value): Unit = {
     var tableName = toFullTableName(containerName)
     var tableHBase: Table = null
     try {
@@ -582,6 +585,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       var p = new Put(kba)
       p.addColumn(stStrBytes, baseStrBytes, Bytes.toBytes(value.serializerType))
       p.addColumn(siStrBytes, baseStrBytes, value.serializedInfo)
+      p.addColumn(schemaIdStrBytes, baseStrBytes, Bytes.toBytes(value.schemaId))
       tableHBase.put(p)
     } catch {
       case e: Exception => {
@@ -594,7 +598,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     }
   }
 
-  override def put(data_list: Array[(String, Array[(Key, Value)])]): Unit = {
+  override def put(data_list: Array[(String, Boolean, Array[(Key, Value)])]): Unit = {
     var tableHBase: Table = null
     try {
       relogin
@@ -603,7 +607,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
         CheckTableExists(containerName)
         var tableName = toFullTableName(containerName)
         tableHBase = getTableFromConnection(tableName);
-        var keyValuePairs = li._2
+        var keyValuePairs = li._3
         var puts = new Array[Put](0)
         keyValuePairs.foreach(keyValuePair => {
           var key = keyValuePair._1
@@ -612,6 +616,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
           var p = new Put(kba)
           p.addColumn(stStrBytes, baseStrBytes, Bytes.toBytes(value.serializerType))
           p.addColumn(siStrBytes, baseStrBytes, value.serializedInfo)
+          p.addColumn(schemaIdStrBytes, baseStrBytes, Bytes.toBytes(value.schemaId))
           puts = puts :+ p
         })
         try {
@@ -775,6 +780,51 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     }
   }
 
+  //Added by Yousef Abu Elbeh in 2016-03-13 from here
+  override def del(containerName: String, time: TimeRange): Unit = {
+    var tableName = toFullTableName(containerName)
+    var tableHBase: Table = null
+    try {
+      relogin
+      CheckTableExists(containerName)
+      tableHBase = getTableFromConnection(tableName);
+      val bucketKeySet = new java.util.TreeSet[Array[String]](arrOfStrsComp)
+
+      // try scan with beginRow and endRow
+      logger.info("beginTime => " + time.beginTime)
+      logger.info("endTime => " + time.endTime)
+
+      var dels = new ArrayBuffer[Delete]()
+
+      val tmRanges = getUnsignedTimeRanges(Array(time))
+      tmRanges.foreach(tr => {
+          var scan = new Scan()
+        scan.setTimeRange(tr.beginTime,tr.endTime)
+          val rs = tableHBase.getScanner(scan);
+          val it = rs.iterator()
+          while (it.hasNext()) {
+            val r = it.next()
+            logger.info("searching for data in timerange: " + tr.beginTime +"-"+ tr.endTime)
+              dels += new Delete(r.getRow())
+            }
+          })
+      if (dels.length > 0) {
+        tableHBase.delete(new java.util.ArrayList(dels.toList)) // callling tableHBase.delete(dels.toList) results java.lang.UnsupportedOperationException
+      } else {
+        logger.info("No rows found for the delete operation")
+      }
+    } catch {
+      case e: Exception => {
+        throw CreateDMLException("Failed to delete object(s) from table " + tableName, e)
+      }
+    } finally {
+      if (tableHBase != null) {
+        tableHBase.close()
+      }
+    }
+  }
+  // to here
+
   // get operations
   def getRowCount(containerName: String): Long = {
     var tableHBase: Table = null
@@ -805,11 +855,11 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     }
   }
 
-  private def processRow(k: Array[Byte], st: String, si: Array[Byte], callbackFunction: (Key, Value) => Unit) {
+  private def processRow(k: Array[Byte], schemaId: Int, st: String, si: Array[Byte], callbackFunction: (Key, Value) => Unit) {
     try {
       var key = GetKeyFromCompositeKey(k)
       // format the data to create Key/Value
-      var value = new Value(st, si)
+      var value = new Value(schemaId, st, si)
       if (callbackFunction != null)
         (callbackFunction)(key, value)
     } catch {
@@ -819,9 +869,9 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     }
   }
 
-  private def processRow(key: Key, st: String, si: Array[Byte], callbackFunction: (Key, Value) => Unit) {
+  private def processRow(key: Key, schemaId: Int, st: String, si: Array[Byte], callbackFunction: (Key, Value) => Unit) {
     try {
-      var value = new Value(st, si)
+      var value = new Value(schemaId, st, si)
       if (callbackFunction != null)
         (callbackFunction)(key, value)
     } catch {
@@ -869,7 +919,8 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
         val r = it.next()
         val st = Bytes.toString(r.getValue(stStrBytes, baseStrBytes))
         val si = r.getValue(siStrBytes, baseStrBytes)
-        processRow(r.getRow(), st, si, callbackFunction)
+        val schemaId = Bytes.toInt(r.getValue(schemaIdStrBytes, baseStrBytes))
+        processRow(r.getRow(), schemaId, st, si, callbackFunction)
       }
     } catch {
       case e: Exception => {
@@ -967,7 +1018,8 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
         val r = it.next()
         val st = Bytes.toString(r.getValue(stStrBytes, baseStrBytes))
         val si = r.getValue(siStrBytes, baseStrBytes)
-        processRow(r.getRow(), st, si, callbackFunction)
+        val schemaId = Bytes.toInt(r.getValue(schemaIdStrBytes, baseStrBytes))
+        processRow(r.getRow(), schemaId, st, si, callbackFunction)
       }
     } catch {
       case e: Exception => {
@@ -1000,7 +1052,8 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
           val r = it.next()
           val st = Bytes.toString(r.getValue(stStrBytes, baseStrBytes))
           val si = r.getValue(siStrBytes, baseStrBytes)
-          processRow(r.getRow(), st, si, callbackFunction)
+          val schemaId = Bytes.toInt(r.getValue(schemaIdStrBytes, baseStrBytes))
+          processRow(r.getRow(), schemaId, st, si, callbackFunction)
         }
       })
     } catch {
@@ -1073,7 +1126,8 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
             if (bucketKeySet.contains(key.bucketKey)) {
               val st = Bytes.toString(r.getValue(stStrBytes, baseStrBytes))
               val si = r.getValue(siStrBytes, baseStrBytes)
-              processRow(key, st, si, callbackFunction)
+              val schemaId = Bytes.toInt(r.getValue(schemaIdStrBytes, baseStrBytes))
+              processRow(key, schemaId, st, si, callbackFunction)
             }
           }
         })
@@ -1155,7 +1209,8 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
         if (bucketKeySet.contains(key.bucketKey)) {
           val st = Bytes.toString(r.getValue(stStrBytes, baseStrBytes))
           val si = r.getValue(siStrBytes, baseStrBytes)
-          processRow(key, st, si, callbackFunction)
+          val schemaId = Bytes.toInt(r.getValue(schemaIdStrBytes, baseStrBytes))
+          processRow(key, schemaId, st, si, callbackFunction)
         }
       }
     } catch {
@@ -1478,11 +1533,11 @@ class HBaseAdapterTx(val parent: DataStore) extends Transaction {
   val loggerName = this.getClass.getName
   val logger = LogManager.getLogger(loggerName)
 
-  override def put(containerName: String, key: Key, value: Value): Unit = {
-    parent.put(containerName, key, value)
+  override def put(containerName: String, isMetadataContainer: Boolean, key: Key, value: Value): Unit = {
+    parent.put(containerName, isMetadataContainer, key, value)
   }
 
-  override def put(data_list: Array[(String, Array[(Key, Value)])]): Unit = {
+  override def put(data_list: Array[(String, Boolean, Array[(Key, Value)])]): Unit = {
     parent.put(data_list)
   }
 
@@ -1494,6 +1549,11 @@ class HBaseAdapterTx(val parent: DataStore) extends Transaction {
   override def del(containerName: String, time: TimeRange, keys: Array[Array[String]]): Unit = {
     parent.del(containerName, time, keys)
   }
+  //Added by Yousef Abu Elbeh in 2016-03-13 from here
+  override def del(containerName: String, time: TimeRange): Unit = {
+    parent.del(containerName, time)
+  }
+  // to here
 
   // get operations
   override def get(containerName: String, callbackFunction: (Key, Value) => Unit): Unit = {
@@ -1583,6 +1643,6 @@ class HBaseAdapterTx(val parent: DataStore) extends Transaction {
 }
 
 // To create HBase Datastore instance
-object HBaseAdapter extends StorageAdapterObj {
+object HBaseAdapter extends StorageAdapterFactory {
   override def CreateStorageAdapter(kvManagerLoader: KamanjaLoaderInfo, datastoreConfig: String): DataStore = new HBaseAdapter(kvManagerLoader, datastoreConfig)
 }

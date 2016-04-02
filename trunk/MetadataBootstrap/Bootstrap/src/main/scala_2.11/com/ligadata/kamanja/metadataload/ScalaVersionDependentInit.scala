@@ -49,7 +49,6 @@ object ScalaVersionDependentInit {
     }
   */
 
-
   def initFactoryOfModelInstanceFactories(mgr: MdMgr): Unit = {
     mgr.AddFactoryOfModelInstanceFactory("com.ligadata.FactoryOfModelInstanceFactory", "JarFactoryOfModelInstanceFactory", ModelRepresentation.JAR, "com.ligadata.FactoryOfModelInstanceFactory.JarFactoryOfModelInstanceFactory$", MetadataLoad.baseTypesVer, null, Array[String]())
     mgr.AddFactoryOfModelInstanceFactory("com.ligadata.jpmml", "JpmmlFactoryOfModelInstanceFactory", ModelRepresentation.PMML, "com.ligadata.jpmml.JpmmlFactoryOfModelInstanceFactory$", MetadataLoad.baseTypesVer, null, Array[String]())
@@ -71,7 +70,6 @@ object ScalaVersionDependentInit {
     mgr.AddScalar(MdMgr.sysNS, "dateTime", tLong, "Long", MetadataLoad.baseTypesVer, null, Array[String](), "com.ligadata.BaseTypes.LongImpl")
     mgr.AddScalar(MdMgr.sysNS, "time", tLong, "Long", MetadataLoad.baseTypesVer, null, Array[String](), "com.ligadata.BaseTypes.LongImpl")
   }
-
 
 }
 

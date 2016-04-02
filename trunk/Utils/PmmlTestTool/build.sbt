@@ -95,3 +95,7 @@ resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/release
 //libraryDependencies += "com.codahale.metrics" % "metrics-core" % "3.0.2"
 //
 //libraryDependencies += "org.glassfish.jaxb" % "jaxb-runtime" % "2.2.11"
+
+coverageMinimum := 80
+
+coverageFailOnMinimum := false

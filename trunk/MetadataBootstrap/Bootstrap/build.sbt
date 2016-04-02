@@ -9,3 +9,6 @@ unmanagedSourceDirectories in Compile <+= (scalaVersion, sourceDirectory in Comp
   case (v, dir) if v startsWith "2.11" => dir / "scala_2.11"
 }
 
+coverageMinimum := 80
+
+coverageFailOnMinimum := false

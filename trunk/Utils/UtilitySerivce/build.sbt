@@ -84,3 +84,8 @@ scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
 //  "org.apache.camel" % "camel-core" % "2.9.2"
 //  )
 //}
+
+coverageMinimum := 80
+
+coverageFailOnMinimum := false
+

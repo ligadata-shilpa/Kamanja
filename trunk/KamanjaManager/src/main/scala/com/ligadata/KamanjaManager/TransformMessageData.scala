@@ -17,7 +17,7 @@
 
 package com.ligadata.KamanjaManager
 
-import com.ligadata.KamanjaBase.{ BaseMsg, DataDelimiters, InputData, DelimitedData, JsonData, XmlData, KvData, EnvContext }
+import com.ligadata.KamanjaBase.{ MessageInterface, DataDelimiters, InputData, DelimitedData, JsonData, XmlData, KvData, EnvContext }
 import com.ligadata.Utils.Utils
 import org.json4s._
 import org.json4s.JsonDSL._

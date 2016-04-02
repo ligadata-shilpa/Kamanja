@@ -14,3 +14,6 @@ version := "1.0"
 //
 //libraryDependencies += "com.google.guava" % "guava" % "14.0.1"
 
+coverageMinimum := 80
+
+coverageFailOnMinimum := false

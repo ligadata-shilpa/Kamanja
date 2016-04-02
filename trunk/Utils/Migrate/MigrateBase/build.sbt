@@ -20,3 +20,9 @@ autoScalaLibrary := false
 // libraryDependencies += "org.apache.logging.log4j" % "log4j-core" % "2.4.1"
 
 // EclipseKeys.projectFlavor := EclipseProjectFlavor.Java
+
+coverageMinimum := 80
+
+coverageFailOnMinimum := false
+
+coverageExcludedPackages := "com.ligadata.MigrateBase.*"
