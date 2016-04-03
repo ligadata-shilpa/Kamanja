@@ -1,15 +1,26 @@
 package com.ligadata.InputAdapters
 
 import java.io.IOException
+import com.ligadata.AdaptersConfiguration.SmartFileAdapterConfiguration
 import org.apache.logging.log4j.LogManager
 
 import scala.actors.threadpool.Executors
 
-class FileMessageExtractor(fileHandler: SmartFileHandler,
+/**
+  *
+  *
+  * @param fileHandler file to read messages from
+  * @param consumerContext has required params
+  * @param messageFoundCallback to call for every read message
+  * @param finishCallback call when finished reading
+  */
+class FileMessageExtractor(adapterConfig : SmartFileAdapterConfiguration,
+                            fileHandler: SmartFileHandler,
                             consumerContext : SmartFileConsumerContext,
-                           messageFoundCallback : (SmartFileMessage, SmartFileConsumerContext) => Unit) {
+                           messageFoundCallback : (SmartFileMessage, SmartFileConsumerContext) => Unit,
+                           finishCallback : (SmartFileHandler, SmartFileConsumerContext) => Unit ) {
 
-  private var maxlen: Int = 1024 * 1024 //ToDO : maybe better to make it configurable
+  private val maxlen: Int = adapterConfig.monitoringConfig.workerBufferSize * 1024 * 1024 //in MB
   private var message_separator : Char = 10 //ToDO : make it configurable
 
   lazy val loggerName = this.getClass.getName

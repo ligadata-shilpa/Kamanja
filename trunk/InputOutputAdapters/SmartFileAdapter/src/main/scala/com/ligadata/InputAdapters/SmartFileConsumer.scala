@@ -18,6 +18,8 @@ import scala.collection.mutable.ArrayBuffer
 class SmartFileConsumerContext{
   var partitionId: Int = _
   var ignoreFirstMsg: Boolean = _
+  var nodeId : String = _
+  var threadId : Int  = _
 }
 
 /**
@@ -207,7 +209,7 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
         //since a file just got finished, a new one can be processed
         assignFileProcessingIfPossible()
 
-        //TODO: move the file itself
+        moveFile(processingFilePath)
       }
       else{//if processing status is NOT finished
 
@@ -238,10 +240,23 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
     val context = new SmartFileConsumerContext()
     context.partitionId = getPartitionNum(processingNodeId, processingThreadId.toInt)
     context.ignoreFirstMsg = _ignoreFirstMsg
+    context.threadId = processingThreadId.toInt
+    context.nodeId = processingNodeId
 
     val fileHandler = SmartFileHandlerFactory.createSmartFileHandler(adapterConfig, fileToProcessName)
-    val fileMessageExtractor = new FileMessageExtractor(fileHandler, context, sendSmartFileMessageToEngin)
+    //now read the file and call sendSmartFileMessageToEngin for each message, and when finished call fileMessagesExtractionFinished_Callback to update status
+    val fileMessageExtractor = new FileMessageExtractor(adapterConfig, fileHandler, context, sendSmartFileMessageToEngin, fileMessagesExtractionFinished_Callback)
     fileMessageExtractor.extractMessages()
+  }
+
+  //key: SmartFileCommunication/FileProcessing/<node>/<threadId>
+  //val: file|status
+  def fileMessagesExtractionFinished_Callback(fileHandler: SmartFileHandler, context : SmartFileConsumerContext) : Unit = {
+
+    //set file status as finished
+    val pathKey = fileProcessingPath + "/" + context.nodeId + "/" + context.threadId
+    val data = fileHandler.getFullPath + "|" + File_Processing_Status_Finished
+    envContext.setListenerCacheKey(pathKey, data)
   }
 
   //what a participant should do parallelism value changes
@@ -273,8 +288,25 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
     }
 
   }
-  
 
+  //after a file is changed, move it into targetMoveDir
+  private def moveFile(originalFilePath : String): Unit = {
+    val targetMoveDir = adapterConfig.monitoringConfig.targetMoveDir
+    val fileStruct = originalFilePath.split("/")
+    try {
+      val fileHandler = SmartFileHandlerFactory.createSmartFileHandler(adapterConfig, originalFilePath)
+      LOG.info("SMART FILE CONSUMER Moving File" + originalFilePath + " to " + targetMoveDir)
+      if (fileHandler.exists()) {
+        fileHandler.moveTo(targetMoveDir + "/" + fileStruct(fileStruct.size - 1))
+        //fileCacheRemove(fileHandler.getFullPath)
+      } else {
+        LOG.warn("SMART FILE CONSUMER File has been deleted" + originalFilePath);
+      }
+    }
+    catch{
+      case e : Exception => LOG.error(s"SMART FILE CONSUMER - Failed to move file ($originalFilePath) into directory ($targetMoveDir)")
+    }
+  }
   //******************************************************************************************************
 
   override def Shutdown: Unit = lock.synchronized {
