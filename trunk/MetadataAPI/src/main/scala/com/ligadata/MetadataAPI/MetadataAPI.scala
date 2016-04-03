@@ -401,7 +401,7 @@ trait MetadataAPI {
     * println("Result as Json String => \n" + result._2)
     * }}}
     */
-  def AddMessage(messageText:String, formatType:String, userid: Option[String] = None): String
+  def AddMessage(messageText:String, formatType:String, userid: Option[String] = None, tenantId: String = ""): String
 
   /** Update message given messageText
     *
@@ -445,7 +445,7 @@ trait MetadataAPI {
     * println("Result as Json String => \n" + result._2)
     * }}}
     */
-  def AddContainer(containerText:String, formatType:String, userid: Option[String] = None): String 
+  def AddContainer(containerText:String, formatType:String, userid: Option[String] = None, tenantId: String = ""): String
 
   /** Update container given containerText
     *
@@ -502,6 +502,7 @@ trait MetadataAPI {
   def AddModel( modelType: ModelType
               , input: String
               , userid: Option[String] = None
+              , tenantId: String = ""
               , modelName: Option[String] = None
               , version: Option[String] = None
               , msgConsumed: Option[String] = None
@@ -541,6 +542,7 @@ trait MetadataAPI {
   def UpdateModel(modelType: ModelType
                   , input: String
                   , userid: Option[String] = None
+                  , tenantId: String = ""
                   , modelName: Option[String] = None
                   , version: Option[String] = None
                   , optVersionBeingUpdated : Option[String] = None

@@ -34,7 +34,7 @@ object ContainerService {
   val loggerName = this.getClass.getName
   lazy val logger = LogManager.getLogger(loggerName)
 
-  def addContainer(input: String): String ={
+  def addContainer(input: String, tenantId: String): String ={
     var response = ""
     var containerFileDir: String = ""
     //val gitMsgFile = "https://raw.githubusercontent.com/ligadata-dhaval/Kamanja/master/HelloWorld_Msg_Def.json"
@@ -55,7 +55,7 @@ object ContainerService {
               case option => {
                 val containerDefs = getUserInputFromMainMenu(containers)
                 for (containerDef <- containerDefs) {
-                  response += MetadataAPIImpl.AddContainer(containerDef.toString, "JSON", userid)
+                  response += MetadataAPIImpl.AddContainer(containerDef.toString, "JSON", userid, tenantId)
                 }
               }
             }
@@ -71,7 +71,7 @@ object ContainerService {
       var container = new File(input.toString)
       if( container.exists()){
         val containerDef = Source.fromFile(container).mkString
-        response = MetadataAPIImpl.AddContainer(containerDef, "JSON", userid)
+        response = MetadataAPIImpl.AddContainer(containerDef, "JSON", userid, tenantId)
       }else{
         response = "Input container file does not exist"
       }

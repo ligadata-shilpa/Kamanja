@@ -45,8 +45,8 @@ class Test003Test  extends FunSuite with BeforeAndAfter {
 
     compiler.Execute()
 
-    val expected = FileUtils.readFileToString(new File(fileExpected), null)
-    val actual = FileUtils.readFileToString(new File(fileOutput), null)
+    val expected = FileUtils.readFileToString(new File(fileExpected))
+    val actual = FileUtils.readFileToString(new File(fileOutput))
     logger.info("actual path={}", fileOutput)
     logger.info("expected path={}", fileExpected)
 
