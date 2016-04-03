@@ -32,12 +32,12 @@
             "custid": "ToLong($arrayData(1))",
             "branchid": "ToInteger($arrayData(2))",
             "accno": "ToLong($arrayData(3))",
-            "amount": "ToDouble($arrayData(3))",
-            "balance": "ToDouble($arrayData(4))",
-            "date": "ToInteger($arrayData(5))",
-            "time": "ToInteger($arrayData(6))",
-            "locationid": "ToInteger($arrayData(7))",
-            "transtype": "ToString($arrayData(8))"
+            "amount": "ToDouble($arrayData(4))",
+            "balance": "ToDouble($arrayData(5))",
+            "date": "ToInteger($arrayData(6))",
+            "time": "ToInteger($arrayData(7))",
+            "locationid": "ToInteger($arrayData(8))",
+            "transtype": "$arrayData(9)"
           }
         }
       }
