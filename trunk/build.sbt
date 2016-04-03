@@ -106,17 +106,11 @@ lazy val KamanjaBase = project.in(file("KamanjaBase")).configs(TestConfigs.all: 
 lazy val DataDelimiters = project.in(file("DataDelimiters")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(ExtDependencyLibs % "provided", ExtDependencyLibs2 % "provided")
 
 
-lazy val SmartFileAdapter = project.in(file("InputOutputAdapters/SmartFileAdapter"))
-  .configs(TestConfigs.all: _*)
-  .settings(TestSettings.settings: _*)
-  .dependsOn(InputOutputAdapterBase, Exceptions, DataDelimiters, MetadataAPI)
+lazy val SmartFileAdapter = project.in(file("InputOutputAdapters/SmartFileAdapter")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(ExtDependencyLibs % "provided", ExtDependencyLibs2 % "provided",InputOutputAdapterBase, Exceptions, DataDelimiters, MetadataAPI)
 
 // lazy val MessageDef = project.in(file("MessageDef")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(Metadata, MetadataBootstrap, Exceptions)
 
-lazy val MessageCompiler = project.in(file("MessageCompiler"))
-  .configs(TestConfigs.all: _*)
-  .settings(TestSettings.settings: _*)
-  .dependsOn(Metadata, MetadataBootstrap, Exceptions).dependsOn(ExtDependencyLibs % "provided", ExtDependencyLibs2 % "provided")
+lazy val MessageCompiler = project.in(file("MessageCompiler")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(Metadata, MetadataBootstrap, Exceptions).dependsOn(ExtDependencyLibs % "provided", ExtDependencyLibs2 % "provided")
 
 
 lazy val KamanjaManager = project.in(file("KamanjaManager")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(ExtDependencyLibs % "provided", ExtDependencyLibs2 % "provided", Metadata, KamanjaBase, MetadataBootstrap, MetadataAPI, Serialize, ZooKeeperListener, ZooKeeperLeaderLatch, Exceptions, KamanjaUtils, TransactionService, DataDelimiters, InputOutputAdapterBase)
@@ -169,16 +163,10 @@ lazy val MetadataAPIService = project.in(file("MetadataAPIService")).configs(Tes
 
 lazy val MetadataAPIServiceClient = project.in(file("MetadataAPIServiceClient")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(ExtDependencyLibs % "provided", ExtDependencyLibs2 % "provided", Serialize, Exceptions, KamanjaBase)
 
-lazy val ContainersUtility = project.in(file("Utils/ContainersUtility"))
-  .configs(TestConfigs.all: _*)
-  .settings(TestSettings.settings: _*)
-  .dependsOn(Metadata, KamanjaBase, MetadataBootstrap, MetadataAPI, StorageManager, Exceptions, TransactionService)
+lazy val ContainersUtility = project.in(file("Utils/ContainersUtility")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(ExtDependencyLibs % "provided", ExtDependencyLibs2 % "provided", Metadata, KamanjaBase, MetadataBootstrap, MetadataAPI, StorageManager, Exceptions, TransactionService)
 
 
-lazy val JsonChecker = project.in(file("Utils/JsonChecker"))
-  .configs(TestConfigs.all: _*)
-  .settings(TestSettings.settings: _*)
-  .dependsOn(Exceptions)
+lazy val JsonChecker = project.in(file("Utils/JsonChecker")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(ExtDependencyLibs % "provided", ExtDependencyLibs2 % "provided", Exceptions)
 
 // lazy val InterfacesSamples = project.in(file("SampleApplication/InterfacesSamples")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(Metadata, KamanjaBase, MetadataBootstrap, MetadataAPI, StorageBase, Exceptions)
 

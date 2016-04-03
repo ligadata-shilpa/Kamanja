@@ -167,3 +167,12 @@ libraryDependencies += "org.aicer.grok" % "grok" % "0.9.0"
 
 //////////////////////  PmmlTestTool
 libraryDependencies += "org.jpmml" % "pmml-evaluator" % "1.2.9"
+
+
+
+//////////////////////  SmartFileAdapter
+libraryDependencies += "org.apache.hadoop" % "hadoop-client" % "2.7.1"
+libraryDependencies += "org.apache.hadoop" % "hadoop-hdfs" % "2.7.1"
+libraryDependencies += "org.apache.commons" % "commons-vfs2" % "2.0"
+libraryDependencies += "org.apache.commons" % "commons-compress" % "1.5"
+libraryDependencies += "org.anarres.lzo" % "lzo-core" % "1.0.0"
