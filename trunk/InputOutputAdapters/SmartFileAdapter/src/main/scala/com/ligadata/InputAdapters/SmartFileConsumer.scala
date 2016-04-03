@@ -76,6 +76,8 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
   private var filesParallelism : Int = 1
   private var monitorController : MonitorController = null
 
+  private var _ignoreFirstMsg : Boolean = _
+
   //add the node callback
   private def initializeNode(nodeContext: NodeContext): Unit ={
     envContext = nodeContext.gCtx
@@ -172,10 +174,10 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
 
       //check if it is allowed to process one more file
       if (processingQueue.length < adapterConfig.monitoringConfig.consumersCount) {
-        val fileToProcessFullPath = "" //TODO : get next file to process
+        val fileToProcessFullPath = monitorController.getNextFileToProcess
         if (fileToProcessFullPath != null) {
           //there are files that need to process
-          val fileToProcessKeyPath = smartFileFromLeaderPath + "/" + fileToProcessKeyPath + "/" + requestingThreadId
+          val fileToProcessKeyPath = smartFileFromLeaderPath + "/" + requestingNodeId + "/" + requestingThreadId
           envContext.setListenerCacheKey(fileToProcessKeyPath, fileToProcessFullPath)
           processingQueue = processingQueue ::: List(requestingNodeId + "/" + requestingThreadId + "/" + fileToProcessFullPath)
           saveFileProcessingQueue(processingQueue)
@@ -205,9 +207,9 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
         //since a file just got finished, a new one can be processed
         assignFileProcessingIfPossible()
 
-        //TODO: move/remove the file itself
+        //TODO: move the file itself
       }
-      else{//if processign status is NOT finished
+      else{//if processing status is NOT finished
 
       }
 
@@ -215,11 +217,31 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
     //should do anything for remove?
   }
 
+  //according to node order and threads on the node, give a number unique per threads
+  def getPartitionNum(nodeId : String, threadNum : Int) : Int = {
+
+    val currentNodeId = clusterStatus.nodeId
+    val nodeOrder = clusterStatus.participantsNodeIds.toArray.indexWhere(id => id == currentNodeId) //0 base clearly
+    val threadsPerNode = filesParallelism //assuming this is 1 based, result is 1 based
+
+    nodeOrder * threadsPerNode + threadNum
+  }
+
   //what a participant should do when receiving file to process (from leader)
   def fileAssignmentFromLeaderCallback (eventType: String, eventPath: String, eventPathData: String) : Unit = {
     val fileToProcessName = eventPathData
+    val keyTokens = eventPath.split("/")
+    val processingThreadId = keyTokens(keyTokens.length - 1)
+    val processingNodeId = keyTokens(keyTokens.length - 2)
 
-    //TODO : start processing the file
+    //start processing the file
+    val context = new SmartFileConsumerContext()
+    context.partitionId = getPartitionNum(processingNodeId, processingThreadId.toInt)
+    context.ignoreFirstMsg = _ignoreFirstMsg
+
+    val fileHandler = SmartFileHandlerFactory.createSmartFileHandler(adapterConfig, fileToProcessName)
+    val fileMessageExtractor = new FileMessageExtractor(fileHandler, context, sendSmartFileMessageToEngin)
+    fileMessageExtractor.extractMessages()
   }
 
   //what a participant should do parallelism value changes
@@ -335,6 +357,7 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
   }
 
   override def StartProcessing(partitionIds: Array[StartProcPartInfo], ignoreFirstMsg: Boolean): Unit = {
+    _ignoreFirstMsg = ignoreFirstMsg
     var lastHb: Long = 0
     startHeartBeat = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
 
@@ -364,14 +387,6 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
       return
     }
 
-    val threadsCount =
-      if (partitionInfoArray.size == 0)
-        1
-      else
-        partitionInfoArray.size
-
-    readExecutor = Executors.newFixedThreadPool(threadsCount)
-
     partitionKVs.clear
     partitionInfoArray.foreach(partitionInfo => {
       partitionKVs(partitionInfo._1.PartitionId) = partitionInfo
@@ -386,60 +401,14 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
       val partitionId = kvsElement._1
       val partition = kvsElement._2
 
-      val context = new SmartFileConsumerContext()
-      context.partitionId = partitionId
-      context.ignoreFirstMsg = ignoreFirstMsg
 
-      /*
-      var processor = new FileProcessor(kvsElement._1)
-      //initialize the file processor and start it. whenever it gets a new message, it will call sendSmartFileMessage()
-      processor.init(adapterConfig, context, sendSmartFileMessage)
-      readExecutor.execute(processor)
-*/
-
-
-      /*
-
-      // if the offset is -1, then the server wants to start from the begining, else, it means that the server
-      // knows what its doing and we start from that offset.
-      var readOffset: Long = -1
-      val uniqueRecordValue = if (ignoreFirstMsg) partition._3.Offset else partition._3.Offset - 1
-
-
-      var execThread: ExecContext = null
-      val uniqueKey = new SmartFilePartitionUniqueRecordKey
-      val uniqueVal = new SmartFilePartitionUniqueRecordValue
-
-      uniqueKey.Name = adapterConfig.Name
-      uniqueKey.PartitionId = partitionId
-
-      val readTmNs = System.nanoTime
-      val readTmMs = System.currentTimeMillis
-
-      //TODO : when finding a message, must get these values
-      val fileName = ""
-      val offset = -1
-      val message = Array[Byte]()
-
-
-      // Create a new EngineMessage and call the engine.
-      if (execThread == null) {
-        execThread = execCtxtObj.CreateExecContext(input, uniqueKey, callerCtxt)
-      }
-
-      incrementCountForPartition(partitionId)
-
-      uniqueVal.Offset = offset
-      uniqueVal.FileName = fileName
-      val dontSendOutputToOutputAdap = uniqueVal.Offset <= uniqueRecordValue
-
-      execThread.execute(message, adapterConfig.formatName, uniqueKey, uniqueVal, readTmNs, readTmMs, dontSendOutputToOutputAdap, adapterConfig.associatedMsg, delimiters)
-*/
     })
+
+    initializeNode(nodeContext)//register the callbacks
 
   }
 
-  private def sendSmartFileMessage(smartMessage : SmartFileMessage,
+  private def sendSmartFileMessageToEngin(smartMessage : SmartFileMessage,
                                    smartFileConsumerContext: SmartFileConsumerContext): Unit ={
 
     val partitionId = smartFileConsumerContext.partitionId
