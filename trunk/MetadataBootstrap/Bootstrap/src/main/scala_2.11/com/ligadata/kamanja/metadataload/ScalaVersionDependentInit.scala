@@ -58,7 +58,7 @@ object ScalaVersionDependentInit {
 
   def InitTypeDefs(mgr: MdMgr): Unit = {
     mgr.AddScalar(MdMgr.sysNS, "Any", tAny, "Any", MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesTenantId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId, MetadataLoad.baseTypesVer, null, Array[String](), "com.ligadata.BaseTypes.AnyImpl")
-    mgr.AddScalar(MdMgr.sysNS, "String", tString, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesTenantId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId, "String", MetadataLoad.baseTypesVer, null, Array[String](), "com.ligadata.BaseTypes.StringImpl")
+    mgr.AddScalar(MdMgr.sysNS, "String", tString,"String", MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesTenantId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId, MetadataLoad.baseTypesVer, null, Array[String](), "com.ligadata.BaseTypes.StringImpl")
     mgr.AddScalar(MdMgr.sysNS, "Int", tInt, "Int", MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesTenantId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId, MetadataLoad.baseTypesVer, null, Array[String](), "com.ligadata.BaseTypes.IntImpl")
     mgr.AddScalar(MdMgr.sysNS, "Integer", tInt, "Int", MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesTenantId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId, MetadataLoad.baseTypesVer, null, Array[String](), "com.ligadata.BaseTypes.IntImpl")
     mgr.AddScalar(MdMgr.sysNS, "Long", tLong, "Long", MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesTenantId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId, MetadataLoad.baseTypesVer, null, Array[String](), "com.ligadata.BaseTypes.LongImpl")
