@@ -27,9 +27,4 @@ class Imports {
     */
   val packages: Array[String] = Array.empty[String]
 
-  /** List with jar's needed
-    *
-    */
-  @SerializedName("dependency jars")
-  val dependencyjars: Array[String] = Array.empty[String]
 }

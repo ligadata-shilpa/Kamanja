@@ -150,15 +150,6 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     imports1.distinct
   }
 
-  /** Collect information about dependency jars
-    *
-    * @return List with dependency jars
-    */
-  def DependencyJars(): Array[String] = {
-
-    root.imports.dependencyjars.distinct
-  }
-
   def ModelName(): String = {
     if(root.header.name.isEmpty)
       "Model"
@@ -199,7 +190,6 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     var model = new ModelDef(ModelRepresentation.JAR, MiningModelType.JTM, in, out, isReusable, supportsInstanceSerialization)
 
     // Append addtional attributes
-    model.dependencyJarNames = DependencyJars()
     model.nameSpace = root.header.namespace
     model.name = if(root.header.name.isEmpty) "Model" else root.header.name
     model.description = root.header.description

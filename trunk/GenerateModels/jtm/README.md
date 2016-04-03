@@ -50,8 +50,7 @@ Imports - specify  additional packages/libraries to be used
 
 ```javascript
   "imports": {
-    "packages": [ "com.ligadata.Utils._", "com.ligadata.runtime._" ],
-    "dependency jars": [ "addjar1.jar", "addJar2.jar" ]
+    "packages": [ "com.ligadata.Utils._", "com.ligadata.runtime._" ]
   }
 ```
 
