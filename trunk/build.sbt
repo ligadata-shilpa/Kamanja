@@ -101,7 +101,7 @@ lazy val KamanjaVersion = project.in(file("KamanjaVersion")).configs(TestConfigs
 
 lazy val Exceptions = project.in(file("Exceptions")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(ExtDependencyLibs % "provided", ExtDependencyLibs2 % "provided", KamanjaVersion)
 
-lazy val KamanjaBase = project.in(file("KamanjaBase")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(ExtDependencyLibs % "provided", ExtDependencyLibs2 % "provided", Metadata, Exceptions, KamanjaUtils, HeartBeat, KvBase, DataDelimiters)
+lazy val KamanjaBase = project.in(file("KamanjaBase")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(ExtDependencyLibs % "provided", ExtDependencyLibs2 % "provided", Metadata, Exceptions, KamanjaUtils, HeartBeat, KvBase, DataDelimiters, BaseTypes)
 
 lazy val DataDelimiters = project.in(file("DataDelimiters")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(ExtDependencyLibs % "provided", ExtDependencyLibs2 % "provided")
 
@@ -241,10 +241,10 @@ lazy val HeartBeat = project.in(file("HeartBeat")).configs(TestConfigs.all: _*).
 lazy val TransactionService = project.in(file("TransactionService")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(ExtDependencyLibs % "provided", ExtDependencyLibs2 % "provided", Exceptions, KamanjaBase, ZooKeeperClient, StorageBase, StorageManager)
 
 
-lazy val jtm = project.in(file("GenerateModels/jtm"))
-  .configs(TestConfigs.all: _*)
-  .settings(TestSettings.settings: _*)
-  .dependsOn(Metadata, KamanjaBase, Exceptions, MetadataBootstrap, MessageCompiler)
+//lazy val jtm = project.in(file("GenerateModels/jtm"))
+//  .configs(TestConfigs.all: _*)
+//  .settings(TestSettings.settings: _*)
+//  .dependsOn(Metadata, KamanjaBase, Exceptions, MetadataBootstrap, MessageCompiler)
 
 lazy val runtime = project.in(file("GenerateModels/Runtime")) dependsOn(Metadata, KamanjaBase, Exceptions, MetadataBootstrap, MessageCompiler)
 
