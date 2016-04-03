@@ -51,6 +51,8 @@ assemblyMergeStrategy in assembly := {
   case x if x contains "StaticLoggerBinder.class" => MergeStrategy.first
   case x if x contains "StaticMDCBinder.class" => MergeStrategy.first
   case x if x contains "StaticMarkerBinder.class" => MergeStrategy.first
+  case x if x contains "package-info.class" => MergeStrategy.first
+  case x if x contains "HTMLDOMImplementation.class" => MergeStrategy.first
   //
   case x if x contains "com\\fasterxml\\jackson\\core" => MergeStrategy.first
   case x if x contains "commons-logging" => MergeStrategy.first
