@@ -775,6 +775,25 @@ object PersistenceUtils {
   }
 
   /**
+    * CreateMetadataTables
+    */
+  def CreateMetadataTables: Unit = lock.synchronized {
+    try {
+      logger.debug("Creating MetadataTables")
+      if (mainDS != null) {
+	val metadataTables = Array("metadata_objects","jar_store","config_objects","model_config_objects","transaction_id","metadata_counters")
+        mainDS.CreateMetadataContainer(metadataTables)
+        logger.debug("Created Metadata Tables")
+      }
+    } catch {
+      case e: Exception => {
+        logger.error("", e)
+        throw e;
+      }
+    }
+  }
+
+  /**
     * CloseDbStore
     */
   def CloseDbStore: Unit = lock.synchronized {

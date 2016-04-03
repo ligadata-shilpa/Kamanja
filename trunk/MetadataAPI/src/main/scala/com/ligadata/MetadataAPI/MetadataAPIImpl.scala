@@ -1734,6 +1734,14 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     PersistenceUtils.OpenDbStore(jarPaths,dataStoreInfo)
   }
 
+  /**
+     * CreateMetadataTables
+     *
+     */
+  def CreateMetadataTables: Unit = {
+    PersistenceUtils.CreateMetadataTables
+  }
+
     /**
      * CloseDbStore
      */
@@ -4220,6 +4228,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     val tmpJarPaths = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("JAR_PATHS")
     val jarPaths = if (tmpJarPaths != null) tmpJarPaths.split(",").toSet else scala.collection.immutable.Set[String]()
     MetadataAPIImpl.OpenDbStore(jarPaths, GetMetadataAPIConfig.getProperty("METADATA_DATASTORE"))
+    MetadataAPIImpl.CreateMetadataTables
     MetadataAPIImpl.LoadAllObjectsIntoCache
     MetadataAPIImpl.CloseDbStore
     MetadataAPIImpl.InitSecImpl
@@ -4250,6 +4259,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     val tmpJarPaths = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("JAR_PATHS")
     val jarPaths = if (tmpJarPaths != null) tmpJarPaths.split(",").toSet else scala.collection.immutable.Set[String]()
     MetadataAPIImpl.OpenDbStore(jarPaths, GetMetadataAPIConfig.getProperty("METADATA_DATASTORE"))
+    MetadataAPIImpl.CreateMetadataTables
     MetadataAPIImpl.LoadAllObjectsIntoCache
     MetadataAPIImpl.InitSecImpl
     if (startHB) InitHearbeat
@@ -4383,6 +4393,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     val tmpJarPaths = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("JAR_PATHS")
     val jarPaths = if (tmpJarPaths != null) tmpJarPaths.split(",").toSet else scala.collection.immutable.Set[String]()
     MetadataAPIImpl.OpenDbStore(jarPaths, GetMetadataAPIConfig.getProperty("METADATA_DATASTORE"))
+    MetadataAPIImpl.CreateMetadataTables
     MetadataAPIImpl.LoadAllObjectsIntoCache
   }
 }
