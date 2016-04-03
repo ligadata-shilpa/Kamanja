@@ -30,11 +30,6 @@ class Imports {
   /** List with jar's needed
     *
     */
+  @SerializedName("dependency jars")
   val dependencyjars: Array[String] = Array.empty[String]
-
-  /** List with files to load that contain grok
-    * patterns compiler
-    */
-  @SerializedName("grok patterns")
-  val grokpatterns: Array[String] = Array.empty[String]
 }

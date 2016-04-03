@@ -9,7 +9,7 @@
 
   "imports": {
     "packages": [ "com.ligadata.Utils._"],
-    "dependencyjars" : ["org.aicer.grok.dictionary", "com.ligadata.runtime.jar"]
+    "dependency jars" : ["org.aicer.grok.dictionary", "com.ligadata.runtime.jar"]
   },
 
   "aliases": {
