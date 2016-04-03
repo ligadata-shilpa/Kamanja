@@ -4,7 +4,8 @@
     "version": "0.0.1",
     "language" : "scala",
     "minVersion" : "2.11",
-    "description": "Description Test"
+    "description": "Description Test",
+    "name": "MDName"
   },
 
   "imports": {

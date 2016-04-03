@@ -46,6 +46,7 @@ class ModelDefTest  extends FunSuite with BeforeAndAfter {
     //assert("com.ligadata.kamanja.test.msg1,com.ligadata.kamanja.test.msg3" == md.msgConsumed)
     assert(ModelRepresentation.JAR == md.modelRepresentation)
     assert(MiningModelType.JTM == md.miningModelType)
+    assert("MDName" == md.Name)
     assert("Description Test" == md.Description)
     assert("com.ligadata.jtm.test.modeldeftest"==md.NameSpace)
     assert( Array("org.aicer.grok.dictionary", "com.ligadata.runtime.jar").deep == md.dependencyJarNames.deep)

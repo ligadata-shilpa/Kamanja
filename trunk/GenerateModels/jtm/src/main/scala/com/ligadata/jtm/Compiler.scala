@@ -159,6 +159,20 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     root.imports.dependencyjars.distinct
   }
 
+  def ModelName(): String = {
+    if(root.header.name.isEmpty)
+      "Model"
+    else
+      root.header.name
+  }
+
+  def FactoryName(): String = {
+    if(root.header.name.isEmpty)
+      "ModelFactory"
+    else
+      "%sFactory".format(root.header.name)
+  }
+
   /** Returns the modeldef after compiler completed
     *
     */
@@ -187,6 +201,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     // Append addtional attributes
     model.dependencyJarNames = DependencyJars()
     model.nameSpace = root.header.namespace
+    model.name = if(root.header.name.isEmpty) "Model" else root.header.name
     model.description = root.header.description
     model
   }
@@ -832,6 +847,9 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     var subtitutions = new Substitution
     subtitutions.Add("model.name", root.header.namespace)
     subtitutions.Add("model.version", root.header.version)
+    subtitutions.Add("factoryclass.name", FactoryName)
+    subtitutions.Add("modelclass.name", ModelName)
+
     result :+= subtitutions.Run(Parts.imports)
 
     // Process additional imports like grok
