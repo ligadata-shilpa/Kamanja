@@ -70,6 +70,7 @@ class MdMgr {
   private var modelDefs = new HashMap[String, Set[ModelDef]] with MultiMap[String, ModelDef]
   private var factoryOfMdlInstFactories = new HashMap[String, Set[FactoryOfModelInstanceFactoryDef]] with MultiMap[String, FactoryOfModelInstanceFactoryDef]
   private var schemaIdMap = new HashMap[Int, ContainerDef] // For now we consider ContainerDef & MessageDef
+  private var schemaIdToElemntIdMap = new HashMap[Int, Long] // For now we consider ContainerDef & MessageDef
   private var elementIdMap = new HashMap[Long, BaseElem] // For now we consider ContainerDef, MessageDef & ModelDef
 
   // FunctionDefs keyed by function signature nmspc.name(argtyp1,argtyp2,...) map 
@@ -108,6 +109,7 @@ class MdMgr {
     modelConfigs.clear
     factoryOfMdlInstFactories.clear
     schemaIdMap.clear
+    schemaIdToElemntIdMap.clear
     elementIdMap.clear
   }
 
@@ -159,6 +161,9 @@ class MdMgr {
       }
       case "SchemaId" => {
         schemaIdMap.clear
+      }
+      case "SchemaIdElementId" => {
+        schemaIdToElemntIdMap.clear
       }
       case "ElementId" => {
         elementIdMap.clear
@@ -214,6 +219,9 @@ class MdMgr {
     })
     schemaIdMap.foreach(obj => {
       logger.trace("SchemaId:%d => Container:%s Version:%d".format(obj._1, obj._2.FullName, obj._2.Version))
+    })
+    schemaIdToElemntIdMap.foreach(obj => {
+      logger.trace("SchemaId:%d => ElementId:%d".format(obj._1, obj._2))
     })
     elementIdMap.foreach(obj => {
       logger.trace("ElementId:%d => ElementName:%s Version:%d, ElementType:%s".format(obj._1, obj._2.FullName, obj._2.Version, obj._2.MdElementCategory))
@@ -802,7 +810,11 @@ class MdMgr {
     if (cont != null) Some(cont) else None
   }
 
-  def ContainerForElementId(elemId:Int): Option[BaseElem] = {
+  def ElementIdForSchemaId(schemaId:Int): Long = {
+    schemaIdToElemntIdMap.getOrElse(schemaId, 0)
+  }
+
+  def ContainerForElementId(elemId:Long): Option[BaseElem] = {
     val elem = elementIdMap.getOrElse(elemId, null)
     if (elem != null) Some(elem) else None
   }
@@ -2823,8 +2835,10 @@ class MdMgr {
     val typ = msg.containerType.asInstanceOf[ContainerTypeDef]
     typeDefs.addBinding(typ.FullName, typ)
       msgDefs.addBinding(msg.FullName, msg)
-    if (msg.containerType != null && msg.containerType.schemaId > 0)
+    if (msg.containerType != null && msg.containerType.schemaId > 0) {
+      schemaIdToElemntIdMap(msg.containerType.schemaId) = msg.MdElementId
       schemaIdMap(msg.containerType.schemaId) = msg
+    }
     else
       logger.error("SchemaId not found for Container:%s with Version:%d".format(msg.FullName, msg.Version))
     elementIdMap(msg.MdElementId) = msg
@@ -2889,8 +2903,10 @@ class MdMgr {
     val typ = container.containerType.asInstanceOf[ContainerTypeDef]
     typeDefs.addBinding(typ.FullName, typ)
     containerDefs.addBinding(container.FullName, container)
-    if (container.containerType != null && container.containerType.schemaId > 0)
+    if (container.containerType != null && container.containerType.schemaId > 0) {
       schemaIdMap(container.containerType.schemaId) = container
+      schemaIdToElemntIdMap(container.containerType.schemaId) = container.MdElementId
+    }
     else
       logger.error("SchemaId not found for Container:%s with Version:%d".format(container.FullName, container.Version))
     elementIdMap(container.MdElementId) = container

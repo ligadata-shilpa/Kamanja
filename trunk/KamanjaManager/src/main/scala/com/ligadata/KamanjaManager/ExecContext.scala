@@ -95,9 +95,16 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
         previousLoader = curLoader
       }
     } catch {
-      case e: Exception => {
+      case e: Throwable => {
         LOG.error("Failed to setContextClassLoader.", e)
+        throw e
       }
+    }
+
+    try {
+      engine.execute(txnCtxt, deserializerName)
+    } catch {
+      case e: Throwable => throw e
     }
   }
 

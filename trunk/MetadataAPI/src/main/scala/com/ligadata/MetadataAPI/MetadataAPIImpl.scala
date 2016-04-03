@@ -147,12 +147,9 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     }
   }
 
-
-
-
   def GetSchemaId: Int = GetMetadataId("schemaid", true, 2000001).toInt // This should start atleast from 2,000,001. because 1 - 1,000,000 is reserved for System Containers & 1,000,001 - 2,000,000 is reserved for System Messages
-  def GetUniqueId: Long = GetMetadataId("uniqueid", true, 1) // This starts from 1
-  def GetMdElementId: Long = GetMetadataId("mdelementid", true, 1) // This starts from 1
+  def GetUniqueId: Long = GetMetadataId("uniqueid", true, 100000) // This starts from 100000
+  def GetMdElementId: Long = GetMetadataId("mdelementid", true, 100000) // This starts from 100000
 
   /**
    *  getHealthCheck - will return all the health-check information for the nodeId specified.

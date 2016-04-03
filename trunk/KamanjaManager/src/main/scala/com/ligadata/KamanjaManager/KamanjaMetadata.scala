@@ -477,6 +477,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
   private[this] val updMetadataExecutor = Executors.newFixedThreadPool(1)
   private[this] var updatedClusterConfig: Map[String,Any] = null
   private[this] var masterDag: Dag = new Dag("0")
+  private[this] var nodeIdModlsObj = scala.collection.mutable.Map[Long, MdlInfo]()
 
   def getConfigChanges: Array[String] = {
     return GetMdMgr.getConfigChanges
@@ -834,15 +835,18 @@ object KamanjaMetadata extends MdBaseResolveInfo {
 
       // create DAG node here
       val dag = new Dag(mdlsChangedCntr.toString)
+      val tmpNodeIdModlsObj = scala.collection.mutable.Map[Long, MdlInfo]()
 
       if (modelObjs != null) {
         modelObjs.foreach(mdl => {
           val mdlInfo = mdl._2
           dag.AddNode(mdlInfo.nodeId, mdlInfo.inputs, mdlInfo.outputs)
+          tmpNodeIdModlsObj(mdlInfo.nodeId) = mdlInfo
         })
       }
 
       masterDag = dag
+      nodeIdModlsObj = tmpNodeIdModlsObj
     }
 
     LOG.debug("mdlsChanged:" + mdlsChanged.toString)
@@ -1295,9 +1299,11 @@ object KamanjaMetadata extends MdBaseResolveInfo {
   def getAllModels: (Array[(String, MdlInfo)], Long) = {
     var exp: Exception = null
     var v: Array[(String, MdlInfo)] = null
+    var cntr: Long = 0
 
     reent_lock.readLock().lock();
     try {
+      cntr = mdlsChangedCntr
       v = localgetAllModels
     } catch {
       case e: Exception => {
@@ -1309,12 +1315,12 @@ object KamanjaMetadata extends MdBaseResolveInfo {
     }
     if (exp != null)
       throw exp
-    (v, mdlsChangedCntr)
+    (v, cntr)
   }
 
-  def getExecutionDag: Dag = {
+  def getExecutionDag: (Dag, Map[Long, MdlInfo], Long) = {
     var exp: Exception = null
-    var v: Dag = null
+    var v: (Dag, Map[Long, MdlInfo], Long) = null
 
     reent_lock.readLock().lock();
     try {
@@ -1417,8 +1423,8 @@ object KamanjaMetadata extends MdBaseResolveInfo {
 
   def GetModelsChangedCounter = mdlsChangedCntr
 
-  private def localgetDag: Dag = {
-    masterDag
+  private def localgetDag: (Dag, Map[Long, MdlInfo], Long) = {
+    (masterDag, nodeIdModlsObj.toMap, mdlsChangedCntr)
   }
 
 }
