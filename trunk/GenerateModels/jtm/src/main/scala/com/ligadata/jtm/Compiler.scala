@@ -150,6 +150,15 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     imports1.distinct
   }
 
+  /** Collect information about dependency jars
+    *
+    * @return List with dependency jars
+    */
+  def DependencyJars(): Array[String] = {
+
+    root.imports.dependencyjars.distinct
+  }
+
   /** Returns the modeldef after compiler completed
     *
     */
@@ -173,18 +182,12 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           }).toArray
     )
 
-    /*
-     val modelRepresentation: ModelRepresentation = ModelRepresentation.JAR
-     val miningModelType : MiningModelType = MiningModelType.UNKNOWN
-     val inputVars : Array[BaseAttributeDef] = null
-     val outputVars: Array[BaseAttributeDef] = null
-     val isReusable: Boolean = false
-     val msgConsumed: String = ""
-     val supportsInstanceSerialization : Boolean = false
-     */
     var model = new ModelDef(ModelRepresentation.JAR, MiningModelType.JTM, in, out, isReusable, supportsInstanceSerialization)
-    // Imports to Jar
-    //model.dependencyJarNames = Imports()
+
+    // Append addtional attributes
+    model.dependencyJarNames = DependencyJars()
+    model.nameSpace = root.header.namespace
+    model.description = root.header.description
     model
   }
 

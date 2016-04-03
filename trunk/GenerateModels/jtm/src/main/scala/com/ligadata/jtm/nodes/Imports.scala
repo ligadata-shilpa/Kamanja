@@ -27,8 +27,13 @@ class Imports {
     */
   val packages: Array[String] = Array.empty[String]
 
+  /** List with jar's needed
+    *
+    */
+  val dependencyjars: Array[String] = Array.empty[String]
+
   /** List with files to load that contain grok
-    * patterns
+    * patterns compiler
     */
   @SerializedName("grok patterns")
   val grokpatterns: Array[String] = Array.empty[String]

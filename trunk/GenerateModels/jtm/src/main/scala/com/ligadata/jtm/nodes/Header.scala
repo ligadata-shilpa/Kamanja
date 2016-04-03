@@ -39,4 +39,9 @@ class Header {
     *
     */
   val minVersion: String = ""
+
+  /** Add description here
+    *
+    */
+  val description: String = ""
 }
