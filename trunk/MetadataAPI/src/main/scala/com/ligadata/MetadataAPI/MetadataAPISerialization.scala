@@ -448,7 +448,7 @@ object MetadataAPISerialization {
         primaryKeys,
         foreignKeys,
         MsgDefInst.Message.PartitionKey.toArray,
-        false
+        false, MsgDefInst.Message.Persist
       )
 
       msgDef.tranId = MsgDefInst.Message.NumericTypes.TransId
@@ -520,7 +520,7 @@ object MetadataAPISerialization {
         primaryKeys,
         foreignKeys,
         ContDefInst.Container.PartitionKey.toArray,
-        false
+        false, ContDefInst.Container.Persist
       )
 
       contDef.tranId = ContDefInst.Container.NumericTypes.TransId
