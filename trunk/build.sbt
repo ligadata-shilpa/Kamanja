@@ -212,3 +212,6 @@ val root = (project in file(".")).
 
 */
 
+scalacOptions += "-target:jvm-1.7"
+
+javacOptions += "-target:jvm-1.7"
