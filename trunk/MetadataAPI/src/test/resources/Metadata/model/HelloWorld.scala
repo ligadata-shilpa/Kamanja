@@ -23,7 +23,7 @@ class HelloWorldModelFactory(modelDef: ModelDef, nodeContext: NodeContext) exten
   override def isValidMessage(msg: MessageContainerBase): Boolean = return msg.isInstanceOf[msg1]
   override def createModelInstance(): ModelInstance = return new HelloWorldModel(this)
   override def getModelName: String = "HelloWorldModel" 
-  override def getVersion: String = "0.0.2"
+  override def getVersion: String = "0.0.1"
   override def createResultObject(): ModelResultBase = new MappedModelResults()
 }
 
