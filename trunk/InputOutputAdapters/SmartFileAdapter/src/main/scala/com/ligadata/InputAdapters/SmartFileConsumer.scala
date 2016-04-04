@@ -519,20 +519,20 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
   }
 
   private def terminateReaderTasks(): Unit = {
-    if (readExecutor == null) return
+    if (participantExecutor == null) return
 
     // Tell all thread to stop processing on the next interval, and shutdown the Excecutor.
     quiesce
 
     // Give the threads to gracefully stop their reading cycles, and then execute them with extreme prejudice.
     Thread.sleep(adapterConfig.monitoringConfig.waitingTimeMS)
-    readExecutor.shutdownNow
-    while (readExecutor.isTerminated == false) {
+    participantExecutor.shutdownNow
+    while (!participantExecutor.isTerminated) {
       Thread.sleep(100)
     }
 
     LOG.debug("Smart File Adapter - Shutdown Complete")
-    readExecutor = null
+    participantExecutor = null
     startTime = 0
   }
 
