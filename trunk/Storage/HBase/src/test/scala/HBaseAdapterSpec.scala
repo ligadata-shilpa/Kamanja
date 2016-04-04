@@ -201,7 +201,7 @@ class HBaseAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterAl
         var obj = new Customer(custName, custAddress, custNumber)
         var v = serializer.SerializeObjectToByteArray(obj)
         var value = new Value(1,"kryo",v)
-        adapter.put("&&", key, value)
+        adapter.put("&&", false, key, value)
       }
       logger.info("", ex2)
 
@@ -221,7 +221,7 @@ class HBaseAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterAl
         var v = serializer.SerializeObjectToByteArray(obj)
         var value = new Value(1,"kryo",v)
         noException should be thrownBy {
-          adapter.put(containerName, key, value)
+          adapter.put(containerName, false, key, value)
         }
       }
 
@@ -265,7 +265,7 @@ class HBaseAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterAl
         var v = serializer.SerializeObjectToByteArray(obj)
         var value = new Value(1,"kryo",v)
         noException should be thrownBy {
-          adapter.put(containerName, key, value)
+          adapter.put(containerName, false, key, value)
         }
       }
 
@@ -298,7 +298,7 @@ class HBaseAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterAl
         var v = serializer.SerializeObjectToByteArray(obj)
         var value = new Value(1,"kryo",v)
         noException should be thrownBy {
-          adapter.put(containerName, key, value)
+          adapter.put(containerName, false, key, value)
         }
       }
 
@@ -338,8 +338,8 @@ class HBaseAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterAl
         var value = new Value(1,"kryo",v)
         keyValueList = keyValueList :+(key, value)
       }
-      var dataList = new Array[(String, Array[(Key, Value)])](0)
-      dataList = dataList :+(containerName, keyValueList)
+      var dataList = new Array[(String, Boolean, Array[(Key, Value)])](0)
+      dataList = dataList :+ (containerName, false, keyValueList)
       noException should be thrownBy {
         adapter.put(dataList)
       }
