@@ -235,10 +235,11 @@ trait ExecContext extends AdaptersSerializeDeserializers {
       executeMessage(txnCtxt, deserializerName): Unit
     } catch {
       case e: Throwable => {
+        LOG.error("Failed to serialize PartitionUniqueRecordKey and/or PartitionUniqueRecordValue", e)
       }
     } finally {
       // Commit. Writing into OutputAdapters & Storage Adapters
-
+      // nodeContext.getEnvCtxt().CommitData();
     }
 
   }

@@ -49,7 +49,7 @@ class MsgContainerObjAndTransformInfo(var tranformMsgFlds: TransformMsgFldsMap, 
 }
 
 // This is shared by multiple threads to read (because we are not locking). We create this only once at this moment while starting the manager
-class KamanjaMetadata {
+class KamanjaMetadata(var envCtxt: EnvContext) {
   val LOG = LogManager.getLogger(getClass);
 
   // LOG.setLevel(Level.TRACE)
@@ -78,7 +78,7 @@ class KamanjaMetadata {
     try {
       // If required we need to enable this test
       // Convert class name into a class
-      var curClz = Class.forName(clsName, true, KamanjaConfiguration.metadataLoader.loader)
+      var curClz = Class.forName(clsName, true, envCtxt.getMetadataLoader.loader)
       curClass = curClz
 
       isMsg = false
@@ -100,8 +100,8 @@ class KamanjaMetadata {
         var objinst: Any = null
         try {
           // Trying Singleton Object
-          val module = KamanjaConfiguration.metadataLoader.mirror.staticModule(clsName)
-          val obj = KamanjaConfiguration.metadataLoader.mirror.reflectModule(module)
+          val module = envCtxt.getMetadataLoader.mirror.staticModule(clsName)
+          val obj = envCtxt.getMetadataLoader.mirror.reflectModule(module)
           objinst = obj.instance
         } catch {
           case e: Exception => {
@@ -162,7 +162,7 @@ class KamanjaMetadata {
     try {
       // If required we need to enable this test
       // Convert class name into a class
-      var curClz = Class.forName(clsName, true, KamanjaConfiguration.metadataLoader.loader)
+      var curClz = Class.forName(clsName, true, envCtxt.getMetadataLoader.loader)
       curClass = curClz
 
       isContainer = false
@@ -184,8 +184,8 @@ class KamanjaMetadata {
         var objinst: Any = null
         try {
           // Trying Singleton Object
-          val module = KamanjaConfiguration.metadataLoader.mirror.staticModule(clsName)
-          val obj = KamanjaConfiguration.metadataLoader.mirror.reflectModule(module)
+          val module = envCtxt.getMetadataLoader.mirror.staticModule(clsName)
+          val obj = envCtxt.getMetadataLoader.mirror.reflectModule(module)
           objinst = obj.instance
         } catch {
           case e: Exception => {
@@ -315,7 +315,7 @@ class KamanjaMetadata {
             LOG.error("FactoryOfModelInstanceFactory %s not found in metadata. Unable to create ModelInstanceFactory for %s".format(factoryOfMdlInstFactoryFqName, mdl.FullName))
         } else {
             try {
-                val factory: ModelInstanceFactory = factoryOfMdlInstFactory.getModelInstanceFactory(mdl, KamanjaMetadata.gNodeContext, KamanjaConfiguration.metadataLoader, txnCtxt.getNodeCtxt().getEnvCtxt().getJarPaths())
+                val factory: ModelInstanceFactory = factoryOfMdlInstFactory.getModelInstanceFactory(mdl, KamanjaMetadata.gNodeContext, envCtxt.getMetadataLoader, txnCtxt.getNodeCtxt().getEnvCtxt().getJarPaths())
                 if (factory != null) {
                     if (txnCtxt != null) // We are expecting txnCtxt is null only for first time initialization
                         factory.init(txnCtxt)
@@ -463,7 +463,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
   def LoadJarIfNeeded(elem: BaseElem): Boolean = {
     val allJars = GetAllJarsFromElem(elem)
     if (allJars.size > 0) {
-      return Utils.LoadJars(allJars.toArray, KamanjaConfiguration.metadataLoader.loadedJars, KamanjaConfiguration.metadataLoader.loader)
+      return Utils.LoadJars(allJars.toArray, envCtxt.getMetadataLoader.loadedJars, envCtxt.getMetadataLoader.loader)
     } else {
       return true
     }
@@ -513,7 +513,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
     try {
       // If required we need to enable this test
       // Convert class name into a class
-      var curClz = Class.forName(clsName, true, KamanjaConfiguration.metadataLoader.loader)
+      var curClz = Class.forName(clsName, true, envCtxt.getMetadataLoader.loader)
       curClass = curClz
 
       isValid = false
@@ -535,8 +535,8 @@ object KamanjaMetadata extends MdBaseResolveInfo {
         var objinst: Any = null
         try {
           // Trying Singleton Object
-          val module = KamanjaConfiguration.metadataLoader.mirror.staticModule(clsName)
-          val obj = KamanjaConfiguration.metadataLoader.mirror.reflectModule(module)
+          val module = envCtxt.getMetadataLoader.mirror.staticModule(clsName)
+          val obj = envCtxt.getMetadataLoader.mirror.reflectModule(module)
           // curClz.newInstance
           objinst = obj.instance
         } catch {
@@ -805,7 +805,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
     val tmpContainerDefs = mdMgr.Containers(true, true)
     val tmpModelDefs = mdMgr.Models(true, true)
 
-    val obj = new KamanjaMetadata
+    val obj = new KamanjaMetadata(envCtxt)
 
     try {
       if (initializedFactOfMdlInstFactObjs == false) {
@@ -905,7 +905,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
       if (updMetadataExecutor.isShutdown)
         return
 
-      val obj = new KamanjaMetadata
+      val obj = new KamanjaMetadata(envCtxt)
 
       // BUGBUG:: Not expecting added element & Removed element will happen in same transaction at this moment
       // First we are adding what ever we need to add, then we are removing. So, we are locking before we append to global array and remove what ever is gone.
@@ -990,8 +990,8 @@ object KamanjaMetadata extends MdBaseResolveInfo {
       if (removedValues > 0) {
         reent_lock.writeLock().lock();
         try {
-          KamanjaConfiguration.metadataLoader = new KamanjaLoaderInfo(KamanjaConfiguration.metadataLoader, true, true)
-          envCtxt.setClassLoader(KamanjaConfiguration.metadataLoader.loader)
+          val metadataLoader = new KamanjaLoaderInfo(envCtxt.getMetadataLoader, true, true)
+          envCtxt.setMetadataLoader(metadataLoader)
         } catch {
           case e: Exception => { LOG.warn("", e)
           }

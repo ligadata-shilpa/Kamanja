@@ -245,6 +245,7 @@ object FunctionUtils {
   def AddFunctions(functionsText: String, format: String, userid: Option[String]): String = {
     logger.debug("Started AddFunctions => ")
     var aggFailures: String = ""
+    val tenantId = "" // For functions we will take empty for now
     try {
       if (format != "JSON") {
         var apiResult = new ApiResult(ErrorCodeConstants.Not_Implemented_Yet, "AddFunctions", functionsText, ErrorCodeConstants.Not_Implemented_Yet_Msg)
@@ -253,7 +254,7 @@ object FunctionUtils {
         val ownerId: String = if (userid == None) "kamanja" else userid.get
         val uniqueId = MetadataAPIImpl.GetUniqueId
         val mdElementId = 0L //FIXME:- Not yet handled this
-        var funcList= JsonSerializer.parseFunctionList(functionsText, "JSON", ownerId, uniqueId, mdElementId)
+        var funcList= JsonSerializer.parseFunctionList(functionsText, "JSON", ownerId, tenantId, uniqueId, mdElementId)
         // Check for the Jars
         val missingJars = scala.collection.mutable.Set[String]()
         funcList.foreach(func => {
@@ -293,6 +294,7 @@ object FunctionUtils {
 
   def UpdateFunctions(functionsText: String, format: String, userid: Option[String]): String = {
     logger.debug("Started UpdateFunctions => ")
+    val tenantId = "" // For functions we will take empty for now
     try {
       if (format != "JSON") {
         var apiResult = new ApiResult(ErrorCodeConstants.Not_Implemented_Yet, "UpdateFunctions", null, ErrorCodeConstants.Not_Implemented_Yet_Msg + ":" + functionsText + ".Format not JSON.")
@@ -301,7 +303,7 @@ object FunctionUtils {
         val ownerId: String = if (userid == None) "kamanja" else userid.get
         val uniqueId = MetadataAPIImpl.GetUniqueId
         val mdElementId = 0L //FIXME:- Not yet handled this
-        var funcList = JsonSerializer.parseFunctionList(functionsText, "JSON", ownerId, uniqueId, mdElementId)
+        var funcList = JsonSerializer.parseFunctionList(functionsText, "JSON", ownerId, tenantId, uniqueId, mdElementId)
         // Check for the Jars
         val missingJars = scala.collection.mutable.Set[String]()
         funcList.foreach(func => {
