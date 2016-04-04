@@ -59,7 +59,7 @@ name := "InstallDriver"
 
 //scalaVersion := "2.11.7"
 
-version := "1.0"
+version := "1.4.0"
 
 //resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
 //
