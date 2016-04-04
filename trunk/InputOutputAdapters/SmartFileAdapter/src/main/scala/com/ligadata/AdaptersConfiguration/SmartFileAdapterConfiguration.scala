@@ -32,16 +32,16 @@ class FileAdapterMonitoringConfig {
   var locations : Array[String] = Array.empty[String] //folders to monitor
 
   var fileBufferingTimeout = 300 // in seconds
-  var metadataConfigFile = "" // will check if needed
   var targetMoveDir = ""
   var consumersCount : Int = _
   var workerBufferSize : Int = 16 //buffer size in MB to read messages from files
+  var messageSeparator : Char = 10
 }
 
 object SmartFileAdapterConfiguration{
 
   val defaultWaitingTimeMS = 1000
-  val defaultConsumerCount = 1000
+  val defaultConsumerCount = 2
 
   def getAdapterConfig(inputConfig: AdapterConfiguration): SmartFileAdapterConfiguration = {
 
@@ -144,6 +144,9 @@ object SmartFileAdapterConfiguration{
       }
       else if (kv._1.compareToIgnoreCase("WorkerBufferSize") == 0) {
         monitoringConfig.workerBufferSize = kv._2.trim.toInt
+      }
+      else if (kv._1.compareToIgnoreCase("MessageSeparator") == 0) {
+        monitoringConfig.messageSeparator = kv._2.trim.toInt.toChar
       }
     })
 

@@ -9,19 +9,22 @@ import scala.actors.threadpool.Executors
 /**
   *
   *
+  * @param adapterConfig
   * @param fileHandler file to read messages from
+  * @param startOffset offset in the file to start with
   * @param consumerContext has required params
   * @param messageFoundCallback to call for every read message
   * @param finishCallback call when finished reading
   */
 class FileMessageExtractor(adapterConfig : SmartFileAdapterConfiguration,
-                            fileHandler: SmartFileHandler,
-                            consumerContext : SmartFileConsumerContext,
+                           fileHandler: SmartFileHandler,
+                           startOffset : Int,
+                           consumerContext : SmartFileConsumerContext,
                            messageFoundCallback : (SmartFileMessage, SmartFileConsumerContext) => Unit,
                            finishCallback : (SmartFileHandler, SmartFileConsumerContext) => Unit ) {
 
   private val maxlen: Int = adapterConfig.monitoringConfig.workerBufferSize * 1024 * 1024 //in MB
-  private var message_separator : Char = 10 //ToDO : make it configurable
+  private var message_separator : Char = adapterConfig.monitoringConfig.messageSeparator
 
   lazy val loggerName = this.getClass.getName
   lazy val logger = LogManager.getLogger(loggerName)
@@ -149,9 +152,17 @@ class FileMessageExtractor(adapterConfig : SmartFileAdapterConfiguration,
       else{
         msgNum += 1
         //println(s"*************** last message ($msgNum): " + new String(lastMsg))
-        val msgOffset = globalOffset // offset of the message in the file
-        val smartFileMessage = new SmartFileMessage(lastMsg, msgOffset, false, false, fileHandler, null, msgOffset)
-        messageFoundCallback(smartFileMessage, consumerContext)
+        if(globalOffset >= startOffset) {
+          val msgOffset = globalOffset // offset of the message in the file
+          val smartFileMessage = new SmartFileMessage(lastMsg, msgOffset, false, false, fileHandler, null, msgOffset)
+          messageFoundCallback(smartFileMessage, consumerContext)
+        }
+
+        //a message is extracted to passed to engine, update offset in cache
+        globalOffset = globalOffset + lastMsg.length
+        consumerContext.envContext.saveConfigInClusterCache(consumerContext.fileOffsetCacheKey, globalOffset.toString.getBytes)
+        //TODO : must remove the key here since file is finished
+
       }
     }
 
@@ -181,9 +192,14 @@ class FileMessageExtractor(adapterConfig : SmartFileAdapterConfiguration,
         if(newMsg.length > 0) {
           msgNum += 1
           //println(s"*************** new message ($msgNum): " + new String(newMsg))
-          val msgOffset = globalOffset // offset of the message in the file
-          val smartFileMessage = new SmartFileMessage(newMsg, msgOffset, false, false, fileHandler, null, msgOffset)
-          messageFoundCallback(smartFileMessage, consumerContext)
+          if(globalOffset >= startOffset) {//send messages that are only after startOffset
+            val msgOffset = globalOffset // offset of the message in the file
+            val smartFileMessage = new SmartFileMessage(newMsg, msgOffset, false, false, fileHandler, null, msgOffset)
+            messageFoundCallback(smartFileMessage, consumerContext)
+
+            //a message is extracted to passed to engine, update offset in cache
+            consumerContext.envContext.saveConfigInClusterCache(consumerContext.fileOffsetCacheKey, globalOffset.toString.getBytes)
+          }
           prevIndx = indx + 1
           globalOffset = globalOffset + newMsg.length + 1 //(1 for separator length)
         }

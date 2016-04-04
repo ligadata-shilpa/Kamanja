@@ -20,6 +20,8 @@ class SmartFileConsumerContext{
   var ignoreFirstMsg: Boolean = _
   var nodeId : String = _
   var threadId : Int  = _
+  var envContext : EnvContext = null
+  var fileOffsetCacheKey : String = _
 }
 
 /**
@@ -111,7 +113,19 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
 
 
   val File_Requests_Cache_Key = "Smart_File_Adapter/" + adapterConfig.Name + "/" + "FileRequests"
+
+  //maintained by leader, stores only files being processed (as list under one key). so that if leader changes, new leader can get the processing status
   val File_Processing_Cache_Key = "Smart_File_Adapter/" + adapterConfig.Name + "/" + "FileProcessing"
+
+  val File_Offset_Cache_Key_Prefix = "Smart_File_Adapter/" + adapterConfig.Name + "/" + "Offsets/"//participants sets the value, to be read by leader, stores offset for each file (one key per file)
+  def getFileOffsetCacheKey(fileName : String) = File_Offset_Cache_Key_Prefix + fileName
+  def getFileOffsetFromCache(fileName : String) : Int = {
+    val data = envContext.getConfigFromClusterCache(getFileOffsetCacheKey(fileName))
+    if(data == null)
+      0 //file is not processed yet, set offset to zero
+    else
+      (new String(data).toInt)
+  }
 
   //value in cache has the format <node1>/<thread1>|<node2>/<thread1>
   def getFileRequestsQueue : List[String] = {
@@ -178,9 +192,12 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
       if (processingQueue.length < adapterConfig.monitoringConfig.consumersCount) {
         val fileToProcessFullPath = monitorController.getNextFileToProcess
         if (fileToProcessFullPath != null) {
+          val offset = getFileOffsetFromCache(fileToProcessFullPath)
+          val data = fileToProcessFullPath + "|" + offset
+
           //there are files that need to process
           val fileToProcessKeyPath = smartFileFromLeaderPath + "/" + requestingNodeId + "/" + requestingThreadId
-          envContext.setListenerCacheKey(fileToProcessKeyPath, fileToProcessFullPath)
+          envContext.setListenerCacheKey(fileToProcessKeyPath, data)
           processingQueue = processingQueue ::: List(requestingNodeId + "/" + requestingThreadId + "/" + fileToProcessFullPath)
           saveFileProcessingQueue(processingQueue)
         }
@@ -231,7 +248,11 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
 
   //what a participant should do when receiving file to process (from leader)
   def fileAssignmentFromLeaderCallback (eventType: String, eventPath: String, eventPathData: String) : Unit = {
-    val fileToProcessName = eventPathData
+    //data has format <file name>|offset
+    val dataTokens = eventPathData.split("\\|")
+    val fileToProcessName = dataTokens(0)
+    val offset = dataTokens(1).toInt
+
     val keyTokens = eventPath.split("/")
     val processingThreadId = keyTokens(keyTokens.length - 1)
     val processingNodeId = keyTokens(keyTokens.length - 2)
@@ -242,10 +263,12 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
     context.ignoreFirstMsg = _ignoreFirstMsg
     context.threadId = processingThreadId.toInt
     context.nodeId = processingNodeId
+    context.envContext = envContext
+    context.fileOffsetCacheKey = getFileOffsetCacheKey(fileToProcessName)
 
     val fileHandler = SmartFileHandlerFactory.createSmartFileHandler(adapterConfig, fileToProcessName)
     //now read the file and call sendSmartFileMessageToEngin for each message, and when finished call fileMessagesExtractionFinished_Callback to update status
-    val fileMessageExtractor = new FileMessageExtractor(adapterConfig, fileHandler, context, sendSmartFileMessageToEngin, fileMessagesExtractionFinished_Callback)
+    val fileMessageExtractor = new FileMessageExtractor(adapterConfig, fileHandler, offset, context, sendSmartFileMessageToEngin, fileMessagesExtractionFinished_Callback)
     fileMessageExtractor.extractMessages()
   }
 
