@@ -35,7 +35,7 @@ import com.ligadata.AuditAdapterInfo.AuditRecord
 import java.util.Date
 import scala.collection.mutable.{HashMap}
 
-case class TypeDef(MetadataType: String, NameSpace: String, Name: String, TypeTypeName: String, TypeNameSpace: String, TypeName: String, PhysicalName: String, var Version: String, JarName: String, DependencyJars: List[String], Implementation: String, OwnerId: String, TenantId: String, UniqueId: Long, MdElementId: Long, Fixed: Option[Boolean], NumberOfDimensions: Option[Int], KeyTypeNameSpace: Option[String], KeyTypeName: Option[String], ValueTypeNameSpace: Option[String], ValueTypeName: Option[String], TupleDefinitions: Option[List[TypeDef]], Persist: Option[Boolean])
+case class TypeDef(MetadataType: String, NameSpace: String, Name: String, TypeTypeName: String, TypeNameSpace: String, TypeName: String, PhysicalName: String, var Version: String, JarName: String, DependencyJars: List[String], Implementation: String, OwnerId: String, TenantId: String, UniqueId: Long, MdElementId: Long, Fixed: Option[Boolean], NumberOfDimensions: Option[Int], KeyTypeNameSpace: Option[String], KeyTypeName: Option[String], ValueTypeNameSpace: Option[String], ValueTypeName: Option[String], TupleDefinitions: Option[List[TypeDef]])
 
 case class TypeDefList(Types: List[TypeDef])
 
@@ -222,7 +222,7 @@ object JsonSerializer {
           if (typ.TypeName == "Struct") {
             typeDef = MdMgr.GetMdMgr.MakeStructDef(typ.NameSpace, typ.Name, typ.PhysicalName,
               null, typ.Version.toLong, typ.JarName,
-              typ.DependencyJars.toArray, null, null, null, typ.OwnerId, typ.TenantId, typ.UniqueId, typ.MdElementId, 0, "", typ.Persist.get) //BUGBUG:: Handle Primary Key, Foreign Keys & Partition Key here and also SchemaId, AvroSchema
+              typ.DependencyJars.toArray, null, null, null, typ.OwnerId, typ.TenantId, typ.UniqueId, typ.MdElementId, 0, "", false) //BUGBUG:: Handle Primary Key, Foreign Keys & Partition Key here and also SchemaId, AvroSchema
           }
         }
         case _ => {
