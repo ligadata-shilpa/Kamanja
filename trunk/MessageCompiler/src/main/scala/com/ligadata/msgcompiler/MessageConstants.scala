@@ -61,6 +61,19 @@ class MessageConstants {
   val rddMessageFactoryInterface = "%spublic static MessageFactoryInterface baseObj = (MessageFactoryInterface) %s$.MODULE$; %s";
   val fieldsForMappedVar = "%svar fields: scala.collection.mutable.Map[String, (Int, Any)] = new scala.collection.mutable.HashMap[String, (Int, Any)];"
 
+  def isFixedFunc(message: Message): Boolean = {
+    if (message.Fixed.equalsIgnoreCase("true"))
+      return true;
+    else return false;
+  }
+  
+  def isMessageFunc(message: Message): Boolean = {
+    if (message.MsgType.equalsIgnoreCase("message"))
+      return true;
+    else return false;
+  }
+
+
   def catchStmt = {
     """catch {
           case e: Exception => {
@@ -265,7 +278,7 @@ import java.util.Date
 
   def valuesMapMapped = {
     """
-    private var valuesMap = new java.util.HashMap[String, AttributeValue]()
+    var valuesMap = new java.util.HashMap[String, AttributeValue]()
  """
   }
 

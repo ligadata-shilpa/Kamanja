@@ -42,7 +42,6 @@ class MessageParser {
     var msgList: List[Message] = List[Message]()
     var jtype: String = null
 
-    
     val definition: String = json.replaceAllLiterally("\t", "").trim().replaceAllLiterally(" ", "").trim().replaceAllLiterally("\"", "\\\"").trim();
     log.info("Definition : " + definition)
     val mapOriginal = parse(json).values.asInstanceOf[scala.collection.immutable.Map[String, Any]]
@@ -51,12 +50,12 @@ class MessageParser {
       throw new Exception("Invalid json data")
 
     val map: scala.collection.mutable.Map[String, Any] = scala.collection.mutable.Map[String, Any]()
-    mapOriginal.foreach(kv => { map(kv._1.toLowerCase()) = kv._2 })
+    mapOriginal.foreach(kv => { map(kv._1.trim().toLowerCase()) = kv._2 })
 
     var key: String = ""
     try {
       jtype = geJsonType(map)
-      // log.info("map : " + map)
+      if (jtype == null || jtype.trim() == "") throw new Exception("The root element of message definition should be wither Message or Container");
       message = processJsonMap(jtype, map, mdMgr, recompile, definition)
     } catch {
       case e: Exception => {
@@ -101,7 +100,7 @@ class MessageParser {
           val message = map.get(key).get.asInstanceOf[messageMap]
           log.info("message map" + message)
           val messageMap: scala.collection.mutable.Map[String, Any] = scala.collection.mutable.Map[String, Any]()
-          message.foreach(kv => { messageMap(kv._1.toLowerCase()) = kv._2 })
+          message.foreach(kv => { messageMap(kv._1.trim().toLowerCase()) = kv._2 })
 
           msg = getMsgorCntrObj(messageMap, key, mdMgr, recompile, msgLevel, definition)
         }
@@ -159,7 +158,11 @@ class MessageParser {
         if (message.getOrElse("fixed", null) == null)
           throw new Exception("Please provide the type of the message definition (either Fixed or Mapped) ")
 
-        Fixed = message.get("fixed").get.toString();
+        Fixed = message.get("fixed").get.toString().trim();
+
+        if (!(Fixed.equalsIgnoreCase("true") || Fixed.equalsIgnoreCase("false")))
+          throw new Exception("The message type key \"Fixed\" should be either true or false but not " + Fixed)
+
         NameSpace = message.get("namespace").get.toString()
         Name = message.get("name").get.toString()
 
@@ -171,8 +174,6 @@ class MessageParser {
           Description = ""
         else
           Description = message.get("description").get.toString()
-
-        log.info("Name========================" + Name)
 
         msgVersion = MsgUtils.extractVersion(message)
 
@@ -359,7 +360,7 @@ class MessageParser {
             val eMap1: scala.collection.immutable.Map[String, Any] = l.asInstanceOf[scala.collection.immutable.Map[String, Any]]
 
             val eMap: scala.collection.mutable.Map[String, Any] = scala.collection.mutable.Map[String, Any]()
-            eMap1.foreach(kv => { eMap(kv._1.toLowerCase()) = kv._2 })
+            eMap1.foreach(kv => { eMap(kv._1.trim().toLowerCase()) = kv._2 })
             if (eMap.contains("field")) {
               val (elmnt, msg) = getElement(eMap, count, msgLevel)
               lbuffer += elmnt
@@ -432,7 +433,7 @@ class MessageParser {
         if (fldMap != null && fldMap != "None" && fldMap.isInstanceOf[Map[_, _]]) {
           val fldMap1 = fldMap.asInstanceOf[scala.collection.immutable.Map[String, Any]]
           val mapElement: scala.collection.mutable.Map[String, Any] = scala.collection.mutable.Map[String, Any]()
-          fldMap1.foreach(kv => { mapElement(kv._1.toLowerCase()) = kv._2 })
+          fldMap1.foreach(kv => { mapElement(kv._1.trim().toLowerCase()) = kv._2 })
           val (field, msg) = getElementData(mapElement, eKey, ordinal, msgLevel)
           fld = field
           //  message = msg
@@ -470,7 +471,7 @@ class MessageParser {
     //  log.info("key ===================== " + key)
     try {
       val field: scala.collection.mutable.Map[String, Any] = scala.collection.mutable.Map[String, Any]()
-      fieldMap.foreach(kv => { field(kv._1.toLowerCase()) = kv._2 })
+      fieldMap.foreach(kv => { field(kv._1.trim().toLowerCase()) = kv._2 })
 
       if (field.contains("namespace") && (field.get("namespace").get.isInstanceOf[string]))
         namespace = field.get("namespace").get.asInstanceOf[String]
@@ -484,10 +485,9 @@ class MessageParser {
         if (fieldtype.isInstanceOf[string]) {
           val fieldstr = fieldtype.toString.split("\\.")
           if (fieldstr != null) {
-            
+
             //FIXE ME: Add Field Type Validation....
-            
-            
+
             if (fieldstr.size == 1) {
               namespace = "system"
               ttype = namespace + "." + fieldtype.asInstanceOf[String].toLowerCase()

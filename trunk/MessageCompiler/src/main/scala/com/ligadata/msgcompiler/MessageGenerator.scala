@@ -11,6 +11,8 @@ class MessageGenerator {
   var msgObjectGenerator = new MessageObjectGenerator
   var mappedMsgGen = new MappedMsgGenerator
   var msgConstants = new MessageConstants
+  var convFuncGenerator = new ConversionFuncGenerator
+
   val logger = this.getClass.getName
   lazy val log = LogManager.getLogger(logger)
 
@@ -48,11 +50,13 @@ class MessageGenerator {
       if (message.Fixed.equalsIgnoreCase("true")) {
         messageGenerator = messageGenerator.append(msgConstants.newline + generatedMsgVariables(message));
         messageGenerator = messageGenerator.append(getSetMethodsFixed(message));
-        messageGenerator = messageGenerator.append(getFromFuncFixed(message, mdMgr));
+      //  messageGenerator = messageGenerator.append(getFromFuncFixed(message, mdMgr));
       } else if (message.Fixed.equalsIgnoreCase("false")) {
         var fieldIndexMap: Map[String, Int] = msgConstants.getScalarFieldindex(message.Elements)
         messageGenerator = messageGenerator.append(msgConstants.getSetMethods);
+      //  messageGenerator = messageGenerator.append(mappedMsgGen.getFromFuncFixed(message, mdMgr))
       }
+     // messageGenerator = messageGenerator.append(convFuncGenerator.getPrevVersionMsg(message, mdMgr))
       messageGenerator = messageGenerator.append(messageContructor(message))
       messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.closeBrace);
       messageVerGenerator = messageVerGenerator.append(messageGenerator.toString())
@@ -372,6 +376,11 @@ class MessageGenerator {
    */
   private def methodsFromMessageInterface(message: Message): String = {
     """    
+     if (other != null && other != this) {
+      // call copying fields from other to local variables
+      fromFunc(other)
+    }
+    
     override def save: Unit = { """ + message.Name + """.saveOne(this) }
   
     def Clone(): ContainerOrConcept = { """ + message.Name + """.build(this) }

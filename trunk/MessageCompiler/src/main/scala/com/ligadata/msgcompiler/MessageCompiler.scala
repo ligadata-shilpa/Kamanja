@@ -36,7 +36,6 @@ class MessageCompiler {
   var generatedRdd = new GenerateRdd
   var schemaCompiler = new SchemaCompiler
   var rawMsgGenerator = new RawMsgGenerator
-
   /*
    * parse the message definition json,  add messages to metadata and create the Fixed and Mapped Mesages
    */
@@ -74,9 +73,10 @@ class MessageCompiler {
         generatedNonVersionedJavaRdd = nonVersionedRddClass
         generatedVersionedJavaRdd = versionedRddClass
 
+        containerDef = createMsg.createMessage(message, mdMgr, recompile)
+
         generateRawMessage = rawMsgGenerator.generateRawMessage(message, mdMgr);
 
-        containerDef = createMsg.createMessage(message, mdMgr, recompile)
       } else throw new Exception("MsgDef Type JSON is only supported")
 
     } catch {
