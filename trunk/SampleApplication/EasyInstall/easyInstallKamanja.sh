@@ -159,7 +159,8 @@ echo "clean, package and assemble $srcPath ..."
 cd $srcPath/
 
 sbt clean '++ 2.10.4 package' '++ 2.10.4 ExtDependencyLibs/assembly' '++ 2.10.4 ExtDependencyLibs2/assembly' '++ 2.10.4 KamanjaInternalDeps/assembly'
-sbt '++ 2.10.4 MigrateManager/assembly' '++ 2.10.4 ClusterInstallerDriver/assembly' '++ 2.10.4 InstallDriver/assembly' '++ 2.10.4 GetComponent/assembly' '++ 2.10.4 NodeInfoExtract/assembly'
+sbt '++ 2.10.4 MigrateManager/assembly'
+# '++ 2.10.4 ClusterInstallerDriver/assembly' '++ 2.10.4 InstallDriver/assembly' '++ 2.10.4 GetComponent/assembly' '++ 2.10.4 NodeInfoExtract/assembly'
 
 #sbt clean '++ 2.10.4 package' '++ 2.10.4 KamanjaManager/assembly' '++ 2.10.4 MetadataAPI/assembly' '++ 2.10.4 KVInit/assembly' '++ 2.10.4 SimpleKafkaProducer/assembly'
 #sbt '++ 2.10.4 NodeInfoExtract/assembly' '++ 2.10.4 MetadataAPIService/assembly' '++ 2.10.4 JdbcDataCollector/assembly'
@@ -185,17 +186,19 @@ cp Utils/JdbcDataCollector/target/scala-2.10/jdbcdatacollector* $systemlib
 cp MetadataAPIService/target/scala-2.10/metadataapiservice* $systemlib
 cp FileDataConsumer/target/scala-2.10/filedataconsumer* $systemlib
 cp Utils/CleanUtil/target/scala-2.10/cleanutil* $systemlib
-cp Utils/ClusterInstaller/ClusterInstallerDriver/target/ClusterInstallerDriver* $kamanjainstallbin
-cp Utils/ClusterInstaller/InstallDriver/target/scala-2.10/InstallDriver* $kamanjainstallbin
-cp Utils/ClusterInstaller/GetComponent/target/scala-2.10/GetComponent* $kamanjainstallbin
+cp Utils/ClusterInstaller/ClusterInstallerDriver/target/clusterinstallerdriver* $kamanjainstallsystemlib
+cp Utils/ClusterInstaller/InstallDriver/target/scala-2.10/installdriver* $kamanjainstallsystemlib
+cp Utils/ClusterInstaller/GetComponent/target/scala-2.10/getcomponent* $kamanjainstallsystemlib
 cp Utils/ClusterInstaller/InstallDriver/src/main/resources/GetComponentsVersions.sh $kamanjainstallbin
 cp Utils/PmmlTestTool/target/pmmltesttool* $systemlib
-# only for 2.11 ?
 cp Utils/Migrate/MigrateManager/target/MigrateManager* $bin
 
 # copy fat jars to KamanjaInstall
 cp Utils/Migrate/MigrateManager/target/MigrateManager* $kamanjainstallbin
-cp $srcPath/Utils/NodeInfoExtract/target/scala-2.10/NodeInfoExtract* $kamanjainstallbin
+cp $srcPath/Utils/NodeInfoExtract/target/scala-2.10/nodeinfoextract* $kamanjainstallsystemlib
+cp ExtDependencyLibs/target/scala-2.10/ExtDependencyLibs_2.10-1.4.0.jar $kamanjainstallsystemlib
+cp ExtDependencyLibs2/target/scala-2.10/ExtDependencyLibs2_2.10-1.4.0.jar $kamanjainstallsystemlib
+cp KamanjaInternalDeps/target/scala-2.10/KamanjaInternalDeps_2.10-1.4.0.jar $kamanjainstallsystemlib
 
 # copy jars used to reduce package size
 cp ExtDependencyLibs/target/scala-2.10/ExtDependencyLibs_2.10-1.4.0.jar $systemlib
@@ -213,6 +216,8 @@ cp KamanjaInternalDeps/target/scala-2.10/KamanjaInternalDeps_2.10-1.4.0.jar $sys
 ## -------------------- generated cp commands --------------------
 #
 cp $srcPath/FactoriesOfModelInstanceFactory/JarFactoryOfModelInstanceFactory/target/scala-2.10/jarfactoryofmodelinstancefactory*.jar $systemlib
+cp $srcPath/FactoriesOfModelInstanceFactory/JarFactoryOfModelInstanceFactory/target/scala-2.10/jarfactoryofmodelinstancefactory*.jar $kamanjainstallsystemlib
+
 # -------------------- end of generated cp commands --------------------
 
 
@@ -438,7 +443,9 @@ fi
 
 #Now do full build of 2.11
 sbt clean '++ 2.11.7 package' '++ 2.11.7 ExtDependencyLibs/assembly' '++ 2.11.7 ExtDependencyLibs2/assembly' '++ 2.11.7 KamanjaInternalDeps/assembly'
-sbt '++ 2.11.7 MigrateManager/assembly' '++ 2.11.7 ClusterInstallerDriver/assembly' '++ 2.11.7 InstallDriver/assembly' '++ 2.11.7 GetComponent/assembly' '++ 2.11.7 NodeInfoExtract/assembly'
+sbt '++ 2.11.7 MigrateManager/assembly'
+# '++ 2.11.7 ClusterInstallerDriver/assembly' '++ 2.11.7 InstallDriver/assembly' '++ 2.11.7 GetComponent/assembly' '++ 2.11.7 NodeInfoExtract/assembly'
+
 #sbt clean '++ 2.11.7 package' '++ 2.11.7 KamanjaManager/assembly' '++ 2.11.7 MetadataAPI/assembly' '++ 2.11.7 KVInit/assembly' '++ 2.11.7 SimpleKafkaProducer/assembly'
 #sbt '++ 2.11.7 NodeInfoExtract/assembly' '++ 2.11.7 MetadataAPIService/assembly' '++ 2.11.7 JdbcDataCollector/assembly'
 #sbt '++ 2.11.7 FileDataConsumer/assembly' '++ 2.11.7 CleanUtil/assembly' '++ 2.11.7 MigrateManager/assembly' '++ 2.11.7 ClusterInstallerDriver/assembly' '++ 2.11.7 InstallDriver/assembly' '++ 2.11.7 GetComponent/assembly' '++ 2.11.7 PmmlTestTool/assembly' '++ 2.11.7 ExtDependencyLibs/assembly' '++ 2.11.7 ExtDependencyLibs2/assembly' '++ 2.11.7 KamanjaInternalDeps/assembly'
@@ -464,31 +471,16 @@ cp MetadataAPIService/target/scala-2.11/metadataapiservice* $systemlib
 cp FileDataConsumer/target/scala-2.11/filedataconsumer* $systemlib
 cp Utils/CleanUtil/target/scala-2.11/cleanutil* $systemlib
 cp Utils/Migrate/MigrateManager/target/MigrateManager* $bin
-cp Utils/ClusterInstaller/ClusterInstallerDriver/target/ClusterInstallerDriver* $kamanjainstallbin
-cp Utils/ClusterInstaller/InstallDriver/target/scala-2.11/InstallDriver* $kamanjainstallbin
-cp Utils/ClusterInstaller/GetComponent/target/scala-2.11/GetComponent* $kamanjainstallbin
+cp Utils/ClusterInstaller/ClusterInstallerDriver/target/clusterinstallerdriver* $kamanjainstallsystemlib
+cp Utils/ClusterInstaller/InstallDriver/target/scala-2.11/installdriver* $kamanjainstallsystemlib
+cp Utils/ClusterInstaller/GetComponent/target/scala-2.11/getcomponent* $kamanjainstallsystemlib
 cp Utils/ClusterInstaller/InstallDriver/src/main/resources/GetComponentsVersions.sh $kamanjainstallbin
 cp Utils/Migrate/MigrateManager/target/MigrateManager* $kamanjainstallbin
-cp $srcPath/Utils/NodeInfoExtract/target/scala-2.11/NodeInfoExtract* $kamanjainstallbin
+cp $srcPath/Utils/NodeInfoExtract/target/scala-2.11/nodeinfoextract* $kamanjainstallsystemlib
+cp ExtDependencyLibs/target/scala-2.11/ExtDependencyLibs_2.11-1.4.0.jar $kamanjainstallsystemlib
+cp ExtDependencyLibs2/target/scala-2.11/ExtDependencyLibs2_2.11-1.4.0.jar $kamanjainstallsystemlib
+cp KamanjaInternalDeps/target/scala-2.11/KamanjaInternalDeps_2.11-1.4.0.jar $kamanjainstallsystemlib
 cp Utils/PmmlTestTool/target/pmmltesttool* $systemlib
-#cp Utils/KVInit/target/scala-2.11/KVInit* $systemlib
-#cp MetadataAPI/target/scala-2.11/MetadataAPI* $systemlib
-#cp KamanjaManager/target/scala-2.11/KamanjaManager* $systemlib
-## cp Pmml/MethodExtractor/target/scala-2.11/MethodExtractor* $bin
-#cp Utils/SimpleKafkaProducer/target/scala-2.11/SimpleKafkaProducer* $systemlib
-## cp Utils/ExtractData/target/scala-2.11/ExtractData* $bin
-#cp Utils/JdbcDataCollector/target/scala-2.11/JdbcDataCollector* $systemlib
-#cp MetadataAPIService/target/scala-2.11/MetadataAPIService* $systemlib
-#cp FileDataConsumer/target/scala-2.11/FileDataConsumer* $systemlib
-#cp Utils/CleanUtil/target/scala-2.11/CleanUtil* $systemlib
-#cp Utils/Migrate/MigrateManager/target/MigrateManager* $bin
-#cp Utils/ClusterInstaller/ClusterInstallerDriver/target/ClusterInstallerDriver* $kamanjainstallbin
-#cp Utils/ClusterInstaller/InstallDriver/target/scala-2.11/InstallDriver* $kamanjainstallbin
-#cp Utils/ClusterInstaller/GetComponent/target/scala-2.11/GetComponent* $kamanjainstallbin
-#cp Utils/ClusterInstaller/InstallDriver/src/main/resources/GetComponentsVersions.sh $kamanjainstallbin
-#cp Utils/Migrate/MigrateManager/target/MigrateManager* $kamanjainstallbin
-#cp $srcPath/Utils/NodeInfoExtract/target/scala-2.11/NodeInfoExtract* $kamanjainstallbin
-#cp Utils/PmmlTestTool/target/PmmlTestTool* $systemlib
 
 # copy jars used to reduce package size
 cp ExtDependencyLibs/target/scala-2.11/ExtDependencyLibs_2.11-1.4.0.jar $systemlib
@@ -505,6 +497,7 @@ echo "copy all Kamanja jars and the jars upon which they depend to the $systemli
 # -------------------- generated cp commands --------------------
 
 cp $srcPath/FactoriesOfModelInstanceFactory/JarFactoryOfModelInstanceFactory/target/scala-2.11/jarfactoryofmodelinstancefactory_2.11-1.0.jar $systemlib
+cp $srcPath/FactoriesOfModelInstanceFactory/JarFactoryOfModelInstanceFactory/target/scala-2.11/jarfactoryofmodelinstancefactory_2.11-1.0.jar $kamanjainstallsystemlib
 # -------------------- end of generated cp commands --------------------
 
 
