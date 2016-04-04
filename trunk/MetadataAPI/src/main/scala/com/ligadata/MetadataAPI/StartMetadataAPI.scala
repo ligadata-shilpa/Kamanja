@@ -59,10 +59,12 @@ object StartMetadataAPI {
   val MODELNAME = "MODELNAME"
   val MODELVERSION= "MODELVERSION"
   val MESSAGENAME="MESSAGENAME"
-  val extraCmdArgs = mutable.Map[String, String]()
+
   var expectModelName = false
   var expectModelVer = false
   var expectMessageName = false
+
+  val extraCmdArgs = mutable.Map[String, String]()
 
   def main(args: Array[String]) {
     if (args.length > 0 && args(0).equalsIgnoreCase("--version")) {
@@ -77,73 +79,67 @@ object StartMetadataAPI {
 
       args.foreach(arg =>
         if (arg.equalsIgnoreCase(UPDATE) || arg.equalsIgnoreCase(MODELS) || arg.equalsIgnoreCase(MESSAGES) || arg.equalsIgnoreCase(CONTAINERS)) {
-          argsUntilParm = 3
+            argsUntilParm = 3
         }
       )
       args.foreach(arg => {
 
         if (arg.endsWith(".json") || arg.endsWith(".xml") || arg.endsWith(".pmml") || arg.endsWith(".scala") || arg.endsWith(".java") || arg.endsWith(".jar")) {
-          location = arg
+            location = arg
 
         } else if (arg.endsWith(".properties")) {
-          config = arg
+            config = arg
 
         } else {
-          if (arg.equalsIgnoreCase(WITHDEP)) {
-            expectDep = true
-          }
-          else if (expectDep) {
-            depName = arg
-            expectDep = false
-          }
-	  else if ( arg.equalsIgnoreCase(OUTPUTMSG) ){
-	    expectOutputMsg = true
-	  }
-	  else if(expectOutputMsg ){
-	    outputMsgName = arg
-	    logger.debug("Found output message definition " + outputMsgName + " in the command ")
-	    expectOutputMsg = false
-	  }
-           else if ((action.equalsIgnoreCase(Action.ADDMODELPMML.toString) || action.equalsIgnoreCase(Action.UPDATEMODELPMML.toString)) && location.size > 0) {
-            if(arg.equalsIgnoreCase(MODELNAME)){
-              expectModelName=true
-            }else if(arg.equalsIgnoreCase(MODELVERSION)){
-              expectModelVer=true
-            }else if(arg.equalsIgnoreCase(MESSAGENAME)){
-              expectMessageName=true
+                if (arg.equalsIgnoreCase(WITHDEP)) {
+                expectDep = true
             }
-            else if (expectModelName) {
-              extraCmdArgs(MODELNAME) = arg
-              expectModelName = false
+            else if (expectDep) {
+                depName = arg
+                expectDep = false
             }
-            else if (expectModelVer) {
-              extraCmdArgs(MODELVERSION) = arg
-              expectModelVer = false
+                else if ( arg.equalsIgnoreCase(OUTPUTMSG) ){
+                expectOutputMsg = true
             }
-            else if (expectMessageName) {
-              extraCmdArgs(MESSAGENAME) = arg
-              expectMessageName = false
+            else if(expectOutputMsg ){
+                outputMsgName = arg
+                logger.debug("Found output message definition " + outputMsgName + " in the command ")
+                expectOutputMsg = false
+            } else if ((action.equalsIgnoreCase(Action.ADDMODELPMML.toString) || action.equalsIgnoreCase(Action.UPDATEMODELPMML.toString)) && location.size > 0) {
+                if(arg.equalsIgnoreCase(MODELNAME)){
+                  expectModelName=true
+                } else if(arg.equalsIgnoreCase(MODELVERSION)){
+                    expectModelVer=true
+                } else if(arg.equalsIgnoreCase(MESSAGENAME)){
+                    expectMessageName=true
+                } else if (expectModelName) {
+                    extraCmdArgs(MODELNAME) = arg
+                    expectModelName = false
+                } else if (expectModelVer) {
+                    extraCmdArgs(MODELVERSION) = arg
+                    expectModelVer = false
+                } else if (expectMessageName) {
+                    extraCmdArgs(MESSAGENAME) = arg
+                    expectMessageName = false
+                }
+            } else {
+                if ((arg.equalsIgnoreCase(REMOVE)) || (arg.equalsIgnoreCase(GET)) || (arg.equalsIgnoreCase(ACTIVATE)) || (arg.equalsIgnoreCase(DEACTIVATE)) || (arg.equalsIgnoreCase(UPDATE))) {
+                  expectRemoveParm = true
+                }
+                if (expectRemoveParm) {
+                  argsUntilParm = argsUntilParm - 1
+                }
 
-           }
-          }
-          else {
-            if ((arg.equalsIgnoreCase(REMOVE)) || (arg.equalsIgnoreCase(GET)) || (arg.equalsIgnoreCase(ACTIVATE)) || (arg.equalsIgnoreCase(DEACTIVATE)) || (arg.equalsIgnoreCase(UPDATE))) {
-              expectRemoveParm = true
+                if (argsUntilParm < 0) {
+                  depName = arg
+                }
+                else if (arg != "debug")
+                  /** ignore the debug tag */ {
+                  /** concatenate the args together to form the action string... "add model pmml" becomes "addmodelpmmml" */
+                  action += arg
+                }
+              }
             }
-            if (expectRemoveParm) {
-              argsUntilParm = argsUntilParm - 1
-            }
-
-            if (argsUntilParm < 0) {
-              depName = arg
-            }
-            else if (arg != "debug")
-            /** ignore the debug tag */ {
-              /** concatenate the args together to form the action string... "add model pmml" becomes "addmodelpmmml" */
-              action += arg
-            }
-          }
-        }
       })
       //add configuration
       if (config == "") {
@@ -372,6 +368,11 @@ object StartMetadataAPI {
         case Action.UPLOADCOMPILECONFIG => response = ConfigService.uploadCompileConfig(input)
         case Action.DUMPALLCFGOBJECTS => response = ConfigService.dumpAllCfgObjects
         case Action.REMOVEENGINECONFIG => response = ConfigService.removeEngineConfig
+
+        // adapter message binding
+        case Action.ADDADAPTERMESSAGEBINDING => response = AdapterMessageBindingService.addAdapterMessageBinding(input, userId)
+        case Action.UPDATEADAPTERMESSAGEBINDING => response = AdapterMessageBindingService.updateAdapterMessageBinding(input, userId)
+        case Action.REMOVEADAPTERMESSAGEBINDING => response = AdapterMessageBindingService.removeAdapterMessageBinding(input, userId)
 
         //concept
         case Action.ADDCONCEPT => response = ConceptService.addConcept(input)

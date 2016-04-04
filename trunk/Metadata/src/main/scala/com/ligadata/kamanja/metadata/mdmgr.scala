@@ -3152,6 +3152,106 @@ class MdMgr {
         cfg
     }
 
+    /**
+      * Construct a SerializeDeserializeConfig instance and add it to the metadata.
+      * @param nameSpace the namespace for this SerializeDeserializeConfig
+      * @param name its serializer name
+      * @param version its serializer version
+      * @param serializerType the serializer type
+      * @param physicalName the fqClassname that contains the behavior (found in the jarNm)
+      * @param ownerId the perpetrator of this serializer
+      * @param uniqueId a unique identifier that uniquely describes this object (reserved)
+      * @param mdElementId another unique identifer (reserved)
+      * @param jarNm the simple jar that is to be loaded in order to use the described SerializeDeserialize implementation
+      *              this config describes
+      * @param depJars the array of jars that are to be loaded so the SerializeDeserialize implementation this config
+      *                describes can function
+      * @return Unit
+      */
+    @throws(classOf[AlreadyExistsException])
+    def AddAdapterMessageBinding(nameSpace: String
+                      , name: String
+                      , version: Long = 1
+                      , namespaceMsgName : String
+                      , namespaceSerializerName: String
+                      , serializerOptions : Map[String,String] = Map[String,String]()
+                      , ownerId: String = "System"
+                      , uniqueId: Long = 0L
+                      , mdElementId: Long = 0L
+                      , physicalName: String = null
+                      , jarNm: String = null
+                      , depJars: Array[String] = null): Unit = {
+        /*
+        AddSerializer(MakeAdapterMessageBinding(nameSpace
+            , name
+            , version
+            , serializerType
+            , physicalName
+            , ownerId
+            , uniqueId
+            , mdElementId
+            , jarNm
+            , depJars)) */
+    }
+
+    /**
+      * Add a SerializeDeserializeConfig instance to the map designated to hold them.
+      * @param config the prepared SerializeDeserializeConfig object
+      * @return true if the object was added to the map (exception is thrown if one exists with this name)
+      */
+    /*
+    @throws(classOf[AlreadyExistsException])
+    def AddAdapterMessageBinding(config : SerializeDeserializeConfig) : Boolean = {
+        val added : Boolean = if (serializers.contains(config.FullName.toLowerCase)) {
+            throw new AlreadyExistsException(s"a SerializeDeserializeConfig already exists with the name ${config.FullName}.", null)
+        } else {
+            serializers(config.FullName.toLowerCase) = config
+            true
+        }
+        added
+    } */
+
+    /**
+      * Construct a SerializeDeserializeConfig from the supplied arguments.
+      * @param nameSpace the namespace for this SerializeDeserializeConfig
+      * @param name its serializer name
+      * @param version its serializer version
+      * @param serializerType the serializer type
+      * @param physicalName the fqClassname that contains the behavior (found in the jarNm)
+      * @param ownerId the perpetrator of this serializer
+      * @param uniqueId a unique identifier that uniquely describes this object (reserved)
+      * @param mdElementId another unique identifer (reserved)
+      * @param jarNm the simple jar that is to be loaded in order to use the described SerializeDeserialize implementation
+      *              this config describes
+      * @param depJars the array of jars that are to be loaded so the SerializeDeserialize implementation this config
+      *                describes can function
+      * @return a SerializeDeserializeConfig
+      */
+    /*
+    def MakeAdapterMessageBinding(nameSpace: String
+                       , name: String
+                       , version: Long = 1
+                       , serializerType: SerializeDeserializeType.SerDeserType
+                       , physicalName: String
+                       , ownerId: String
+                       , uniqueId: Long
+                       , mdElementId: Long
+                       , jarNm: String = null
+                       , depJars: Array[String] = null): SerializeDeserializeConfig = {
+
+        val depJarSet = scala.collection.mutable.Set[String]()
+
+        /** Instantiate the model definition.  Update the base element with basic id information */
+        val cfg: SerializeDeserializeConfig = new SerializeDeserializeConfig(serializerType)
+
+        if (depJars != null) depJarSet ++= depJars
+        val dJars : Array[String] = if (depJarSet.nonEmpty) depJarSet.toArray else null
+
+        cfg.PhysicalName(physicalName)
+        SetBaseElem(cfg, nameSpace, name, version, jarNm, dJars, ownerId, uniqueId, mdElementId)
+
+        cfg
+    } */
 
     /** Retrieve the SerializeDeserializerConfig with the supplied namespace.name
       *
