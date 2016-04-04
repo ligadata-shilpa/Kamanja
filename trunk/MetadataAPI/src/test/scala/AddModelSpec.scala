@@ -400,6 +400,7 @@ class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter wi
 	res = MetadataAPIImpl.AddModel(ModelType.KPMML, // modelType
 				       modStr, // input
 				       userid,   // optUserid
+				       "testTenantId",  // tenantId
 				       None,   // optModelName
 				       None,   // optVersion
 				       None,   // optMsgConsumed
@@ -539,6 +540,7 @@ class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter wi
 	res = MetadataAPIImpl.AddModel(ModelType.SCALA, // modelType
 				       modStr, // input
 				       userid,   // optUserid
+				       "testTenantId",  // tenantId
 				       Some("HelloWorld2Model"),   // optModelName
 				       None,   // optVersion
 				       None,   // optMsgConsumed

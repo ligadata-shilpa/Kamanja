@@ -527,7 +527,7 @@ class MetadataAPISerializationTest extends FlatSpec with BeforeAndAfterAll {
     val msgDef = MdMgr.GetMdMgr.MakeFixedMsg(
       nameSpace, name, physicalNameString, attrList1.toList, ownerId, tenantId,
       uniqID, mdElementId, schemaId, avroSchema,
-      version, jarName, dependencyJar, primaryKeys, foreignKeys, partitionKey, false)
+      version, jarName, dependencyJar, primaryKeys, foreignKeys, partitionKey, false,false)
 
     msgDef.tranId = transId
     msgDef.origDef = origDef
@@ -557,7 +557,7 @@ class MetadataAPISerializationTest extends FlatSpec with BeforeAndAfterAll {
     val schemaId = 2
     val avroSchema = "avroSchema"
     val contDef = MdMgr.GetMdMgr.MakeFixedContainer(nameSpace, name, physicalNameString, attrList1.toList, ownerId, tenantId,
-      uniqID, mdElementId, schemaId, avroSchema, version, jarName, dependencyJar, primaryKeys, foreignKeys, partitionKey, false)
+      uniqID, mdElementId, schemaId, avroSchema, version, jarName, dependencyJar, primaryKeys, foreignKeys, partitionKey, false,false)
 
     contDef.tranId = transId
     contDef.origDef = origDef

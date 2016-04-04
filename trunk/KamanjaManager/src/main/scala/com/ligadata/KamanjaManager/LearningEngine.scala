@@ -18,16 +18,17 @@
 package com.ligadata.KamanjaManager
 
 import com.ligadata.KamanjaBase._
-import com.ligadata.Utils.Utils
-import java.util.Map
+// import com.ligadata.Utils.Utils
+// import java.util.Map
+import com.ligadata.utils.dag.{ReadyNode, EdgeId, DagRuntime}
 import org.apache.logging.log4j.{Logger, LogManager}
-import java.io.{PrintWriter, File}
-import scala.xml.XML
-import scala.xml.Elem
+//import java.io.{PrintWriter, File}
+//import scala.xml.XML
+//import scala.xml.Elem
 import scala.collection.mutable.ArrayBuffer
-import org.json4s._
-import org.json4s.JsonDSL._
-import org.json4s.jackson.JsonMethods._
+//import org.json4s._
+//import org.json4s.JsonDSL._
+//import org.json4s.jackson.JsonMethods._
 import com.ligadata.InputOutputAdapterInfo.{ExecContext, InputAdapter, PartitionUniqueRecordKey, PartitionUniqueRecordValue}
 import com.ligadata.Exceptions.{KamanjaException, StackTrace, MessagePopulationException}
 
@@ -44,6 +45,7 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
   val LOG = LogManager.getLogger(getClass);
   var cntr: Long = 0
   var mdlsChangedCntr: Long = -1
+  var nodeIdModlsObj = Map[Long, MdlInfo]()
   // ModelName, ModelInfo, IsModelInstanceReusable, Global ModelInstance if the model is IsModelInstanceReusable == true. The last boolean is to check whether we tested message type or not (thi is to check Reusable flag)
   var models = Array[(String, MdlInfo, Boolean, ModelInstance, Boolean)]()
   var validateMsgsForMdls = scala.collection.mutable.Set[String]() // Message Names for creating models inst val results = RunAllModels(transId, iances
@@ -52,6 +54,123 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
   var modelEventFactory: MessageFactoryInterface = null
   var exceptionEventFactory: MessageFactoryInterface = null
   var tempBlah = 3
+
+  var dagRuntime = new DagRuntime()
+
+
+  def execute(txnCtxt: TransactionContext, deserializerName: String): Unit = {
+    try {
+      val mdlChngCntr = KamanjaMetadata.GetModelsChangedCounter
+      if (mdlChngCntr != mdlsChangedCntr) {
+        val (newDag, tmpNodeIdModlsObj, tMdlsChangedCntr) = KamanjaMetadata.getExecutionDag
+        dagRuntime.SetDag(newDag)
+        mdlsChangedCntr = tMdlsChangedCntr
+        nodeIdModlsObj = tmpNodeIdModlsObj
+      }
+
+      dagRuntime.ReInit()
+
+      val outputDefault: Boolean = false;
+      val (origin, orgMsg) = txnCtxt.getInitialMessage
+      val elemId = KamanjaMetadata.getMdMgr.ElementIdForSchemaId(orgMsg.asInstanceOf[ContainerInterface].getSchemaId)
+      val readyNodes = dagRuntime.FireEdge(EdgeId(0, elemId))
+
+      val exeQueue = ArrayBuffer[ReadyNode]()
+      var execPos = 0
+
+      exeQueue ++= readyNodes
+
+      while (execPos < exeQueue.size) {
+        val execNode = exeQueue(execPos)
+        execPos += 1
+
+        val execMdl = nodeIdModlsObj.getOrElse(execNode.nodeId, null)
+        if (execMdl != null) {
+
+          //FIXME:- We should not re initialize if the instance is reusable
+          // BUGBUG:: Handle Reusable flag
+
+          val curMd =  {
+            val tInst = execMdl.mdl.createModelInstance()
+            tInst.init(txnCtxt.origin.key)
+            tInst
+          }
+
+          if (curMd != null) {
+            var modelEvent: KamanjaModelEvent = modelEventFactory.createInstance.asInstanceOf[KamanjaModelEvent]
+            val modelStartTime = System.nanoTime
+
+            val execMsgsSet: Array[ContainerOrConcept] = execMdl.inputs(execNode.iesPos).map(eid => {
+              val origin =
+                if (eid.nodeId > 0) {
+                  val mdlObj = nodeIdModlsObj.getOrElse(eid.nodeId, null)
+                  if (mdlObj != null) mdlObj.mdl.getModelName() else ""
+                } else {
+                  ""
+                }
+
+              val tmpElem = KamanjaMetadata.getMdMgr.ContainerForElementId(eid.edgeTypeId)
+
+              val finalEntry =
+                if (tmpElem != None) {
+                  val lst = txnCtxt.getContainersOrConcepts(origin, tmpElem.get.FullName)
+                  if (lst != null && lst.size > 0) lst(0)._2 else null
+                } else {
+                  null
+                }
+              finalEntry
+            })
+
+            val res = curMd.execute(txnCtxt, execMsgsSet, execNode.iesPos, outputDefault)
+
+            if (res != null && res.size > 0) {
+              txnCtxt.addContainerOrConcepts(execMdl.mdl.getModelName(), res)
+              val newEges = res.map(msg => EdgeId(execMdl.nodeId, KamanjaMetadata.getMdMgr.ElementIdForSchemaId(msg.asInstanceOf[ContainerInterface].getSchemaId)))
+              val readyNodes = dagRuntime.FireEdges(newEges)
+              exeQueue ++= readyNodes
+            }
+
+
+            /*
+                      // TODO: Add the results to the model Event
+                      if (res != null && res.size > 0) {
+                        modelEvent.isresultproduced = true
+                        oMsgIds.append(0L)
+                        //                  results += new SavedMdlResult().withMdlName(md.mdl.getModelName).withMdlVersion(md.mdl.getVersion).withUniqKey(uk).withUniqVal(uv).withTxnId(transId).withMdlResult(res)
+                      } else {
+                        modelEvent.isresultproduced = false
+                        // Nothing to output
+                      }
+                      modelEvent.producedmessages = oMsgIds.toArray[Long]
+                      modelEvent.elapsedtimeinms = ((System.nanoTime - modelStartTime)/1000000.0).toFloat
+                      var mdlId: Long = -1
+                      // Get the modelId for reporing purposes
+                      var mdlDefs = KamanjaMetadata.getMdMgr.Models(md.mdl.getModelDef().FullName,true, false).getOrElse(null)
+                      if (mdlDefs != null)
+                        mdlId = mdlDefs.head.uniqueId
+
+                      modelEvent.modelid = mdlId
+                      modelEvent.eventepochtime = System.currentTimeMillis()
+                      tempModelAB.append(modelEvent)
+
+            */
+          } else {
+            LOG.error("Failed to create model " + execMdl.mdl.getModelName())
+            throw new KamanjaException("Failed to create model " + execMdl.mdl.getModelName(), null)
+          }
+        }
+      }
+
+
+    } catch {
+      case e: Exception => {
+
+      }
+    }
+
+  }
+
+
   private def RunAllModels(transId: Long, inputData: Array[Byte], finalTopMsgOrContainer: ContainerInterface, txnCtxt: TransactionContext, uk: String, uv: String, msgEvent: KamanjaMessageEvent): Unit = {
 //    var results: ArrayBuffer[SavedMdlResult] = new ArrayBuffer[SavedMdlResult]()
     var oMsgIds: ArrayBuffer[Long] = new ArrayBuffer[Long]()

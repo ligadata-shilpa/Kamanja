@@ -147,12 +147,9 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     }
   }
 
-
-
-
   def GetSchemaId: Int = GetMetadataId("schemaid", true, 2000001).toInt // This should start atleast from 2,000,001. because 1 - 1,000,000 is reserved for System Containers & 1,000,001 - 2,000,000 is reserved for System Messages
-  def GetUniqueId: Long = GetMetadataId("uniqueid", true, 1) // This starts from 1
-  def GetMdElementId: Long = GetMetadataId("mdelementid", true, 1) // This starts from 1
+  def GetUniqueId: Long = GetMetadataId("uniqueid", true, 100000) // This starts from 100000
+  def GetMdElementId: Long = GetMetadataId("mdelementid", true, 100000) // This starts from 100000
 
   /**
    *  getHealthCheck - will return all the health-check information for the nodeId specified.
@@ -1732,6 +1729,14 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      */
   def OpenDbStore(jarPaths: collection.immutable.Set[String], dataStoreInfo: String) {
     PersistenceUtils.OpenDbStore(jarPaths,dataStoreInfo)
+  }
+
+  /**
+     * CreateMetadataTables
+     *
+     */
+  def CreateMetadataTables: Unit = {
+    PersistenceUtils.CreateMetadataTables
   }
 
     /**
@@ -4222,6 +4227,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     val tmpJarPaths = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("JAR_PATHS")
     val jarPaths = if (tmpJarPaths != null) tmpJarPaths.split(",").toSet else scala.collection.immutable.Set[String]()
     MetadataAPIImpl.OpenDbStore(jarPaths, GetMetadataAPIConfig.getProperty("METADATA_DATASTORE"))
+    MetadataAPIImpl.CreateMetadataTables
     MetadataAPIImpl.LoadAllObjectsIntoCache
     MetadataAPIImpl.CloseDbStore
     MetadataAPIImpl.InitSecImpl
@@ -4252,6 +4258,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     val tmpJarPaths = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("JAR_PATHS")
     val jarPaths = if (tmpJarPaths != null) tmpJarPaths.split(",").toSet else scala.collection.immutable.Set[String]()
     MetadataAPIImpl.OpenDbStore(jarPaths, GetMetadataAPIConfig.getProperty("METADATA_DATASTORE"))
+    MetadataAPIImpl.CreateMetadataTables
     MetadataAPIImpl.LoadAllObjectsIntoCache
     MetadataAPIImpl.InitSecImpl
     if (startHB) InitHearbeat
@@ -4385,6 +4392,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     val tmpJarPaths = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("JAR_PATHS")
     val jarPaths = if (tmpJarPaths != null) tmpJarPaths.split(",").toSet else scala.collection.immutable.Set[String]()
     MetadataAPIImpl.OpenDbStore(jarPaths, GetMetadataAPIConfig.getProperty("METADATA_DATASTORE"))
+    MetadataAPIImpl.CreateMetadataTables
     MetadataAPIImpl.LoadAllObjectsIntoCache
   }
 }

@@ -76,7 +76,10 @@ lazy val KamanjaInternalDeps = project.in(file("KamanjaInternalDeps")).configs(T
 
 //lazy val BaseTypes = project.in(file("BaseTypes")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(ExtDependencyLibs % "provided",ExtDependencyLibs2 % "provided", Metadata, Exceptions)
 
-lazy val BaseTypes = project.in(file("BaseTypes")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(ExtDependencyLibs % "provided", ExtDependencyLibs2 % "provided", Metadata, Exceptions)
+lazy val KamanjaManager = project.in(file("KamanjaManager"))
+  .configs(TestConfigs.all: _*)
+  .settings(TestSettings.settings: _*)
+  .dependsOn(Metadata, KamanjaBase, MetadataBootstrap, MetadataAPI, Serialize, ZooKeeperListener, ZooKeeperLeaderLatch, Exceptions, KamanjaUtils, TransactionService, DataDelimiters, InputOutputAdapterBase, Dag)
 
 lazy val Cache = project.in(file("Utils/Cache"))
 
