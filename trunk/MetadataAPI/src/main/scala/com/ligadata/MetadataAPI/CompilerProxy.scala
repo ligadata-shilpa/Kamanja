@@ -1366,9 +1366,10 @@ class CompilerProxy {
         if (elem == null)
           logger.warn("Unknown dependency " + dep)
         else {
+          if (elem.dependencyJarNames != null)
           elem.dependencyJarNames.foreach(aDep => {
-            msgContDepSet = msgContDepSet + aDep
-          })
+		    msgContDepSet = msgContDepSet + aDep
+		  })
           depElems += elem
           logger.info("Resolved dependency " + dep + " to " + elem.jarName)
           msgContDepSet = msgContDepSet + elem.jarName

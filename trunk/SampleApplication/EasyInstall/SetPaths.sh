@@ -112,5 +112,6 @@ else
 fi
 
 chmod 777 $install_dir/bin/*.*
+chmod 777 $install_dir/bin/kamanja
 
 cd $pwdnm
