@@ -8,9 +8,12 @@ import org.apache.logging.log4j.LogManager
 import scala.actors.threadpool.{Executors, ExecutorService}
 
 /**
-  * Created by Yasser on 4/2/2016.
+  *
+  * @param adapterConfig
+  * @param newFileDetectedCallback callback to notify leader whenever a file is detected
   */
-class MonitorController(adapterConfig : SmartFileAdapterConfiguration) {
+class MonitorController(adapterConfig : SmartFileAdapterConfiguration,
+                        newFileDetectedCallback :(String) => Unit) {
 
   private val bufferingQ_map: scala.collection.mutable.Map[SmartFileHandler, (Long, Long, Int)] = scala.collection.mutable.Map[SmartFileHandler, (Long, Long, Int)]()
   private val bufferingQLock = new Object
@@ -180,6 +183,10 @@ class MonitorController(adapterConfig : SmartFileAdapterConfiguration) {
       logger.info("SMART FILE CONSUMER (global):  enq file " + fileHandler.getFullPath + " with priority " + createDate+" --- curretnly " + fileQ.size + " files on a QUEUE")
       fileQ += new EnqueuedFileHandler(fileHandler, offset, createDate, partMap)
     }
+
+    //notify leader about the new file
+    if(newFileDetectedCallback != null)
+      newFileDetectedCallback(fileHandler.getFullPath)
   }
 
   private def deQFile: EnqueuedFileHandler = {

@@ -92,7 +92,7 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
 
     if(newClusterStatus.isLeader){
       //action for the leader node
-      monitorController = new MonitorController(adapterConfig)
+      monitorController = new MonitorController(adapterConfig, newFileDetectedCallback)
       monitorController.startMonitoring()
 
       envContext.createListenerForCacheChildern(requestFilePath, requestFileLeaderCallback) // listen to file requests
@@ -109,6 +109,11 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
 
 
     clusterStatus = newClusterStatus
+  }
+
+  //will be useful when leader has requests from all nodes but no more files are available. then leader should be notified when new files are detected
+  private def newFileDetectedCallback(fileName : String): Unit ={
+    assignFileProcessingIfPossible()
   }
 
 
@@ -179,7 +184,7 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
   //if all conditions met then assign a file to first request in the queue
   private def assignFileProcessingIfPossible(): Unit ={
     var processingQueue = getFileProcessingQueue
-    var requestQueue = getFileRequestsQueue
+    val requestQueue = getFileRequestsQueue
 
     if(requestQueue.length > 0) {//there are ndoes/threads ready to process
     val request = requestQueue.head //take first request
