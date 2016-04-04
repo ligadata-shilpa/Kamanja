@@ -35,7 +35,7 @@ import com.ligadata.AuditAdapterInfo.AuditRecord
 import java.util.Date
 import scala.collection.mutable.{HashMap}
 
-case class TypeDef(MetadataType: String, NameSpace: String, Name: String, TypeTypeName: String, TypeNameSpace: String, TypeName: String, PhysicalName: String, var Version: String, JarName: String, DependencyJars: List[String], Implementation: String, OwnerId: String, TenantId: String, UniqueId: Long, MdElementId: Long, Fixed: Option[Boolean], NumberOfDimensions: Option[Int], KeyTypeNameSpace: Option[String], KeyTypeName: Option[String], ValueTypeNameSpace: Option[String], ValueTypeName: Option[String], TupleDefinitions: Option[List[TypeDef]])
+case class TypeDef(MetadataType: String, NameSpace: String, Name: String, TypeTypeName: String, TypeNameSpace: String, TypeName: String, PhysicalName: String, var Version: String, JarName: String, DependencyJars: List[String], Implementation: String, OwnerId: String, TenantId: String, UniqueId: Long, MdElementId: Long, Fixed: Option[Boolean], NumberOfDimensions: Option[Int], KeyTypeNameSpace: Option[String], KeyTypeName: Option[String], ValueTypeNameSpace: Option[String], ValueTypeName: Option[String], TupleDefinitions: Option[List[TypeDef]], Persist: Option[Boolean])
 
 case class TypeDefList(Types: List[TypeDef])
 
@@ -222,7 +222,7 @@ object JsonSerializer {
           if (typ.TypeName == "Struct") {
             typeDef = MdMgr.GetMdMgr.MakeStructDef(typ.NameSpace, typ.Name, typ.PhysicalName,
               null, typ.Version.toLong, typ.JarName,
-              typ.DependencyJars.toArray, null, null, null, typ.OwnerId, typ.TenantId, typ.UniqueId, typ.MdElementId, 0, "") //BUGBUG:: Handle Primary Key, Foreign Keys & Partition Key here and also SchemaId, AvroSchema
+              typ.DependencyJars.toArray, null, null, null, typ.OwnerId, typ.TenantId, typ.UniqueId, typ.MdElementId, 0, "", typ.Persist.get) //BUGBUG:: Handle Primary Key, Foreign Keys & Partition Key here and also SchemaId, AvroSchema
           }
         }
         case _ => {
@@ -425,7 +425,7 @@ object JsonSerializer {
         ContDefInst.Container.OwnerId, ContDefInst.Container.TenantId, ContDefInst.Container.UniqueId, ContDefInst.Container.MdElementId, ContDefInst.Container.SchemaId, ContDefInst.Container.AvroSchema,
         ContDefInst.Container.Version.toLong,
         ContDefInst.Container.JarName,
-        ContDefInst.Container.DependencyJars.toArray)
+        ContDefInst.Container.DependencyJars.toArray, null, null, null, false, false)
       contDef
     } catch {
       case e: MappingException => {
@@ -557,7 +557,7 @@ object JsonSerializer {
         MsgDefInst.Message.OwnerId, MsgDefInst.Message.TenantId, MsgDefInst.Message.UniqueId, MsgDefInst.Message.MdElementId, MsgDefInst.Message.SchemaId, MsgDefInst.Message.AvroSchema,
         MsgDefInst.Message.Version.toLong,
         MsgDefInst.Message.JarName,
-        MsgDefInst.Message.DependencyJars.toArray)
+        MsgDefInst.Message.DependencyJars.toArray, null, null, null, false, false)
       msgDef
     } catch {
       case e: MappingException => {
