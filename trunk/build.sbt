@@ -14,11 +14,6 @@ shellPrompt := { state =>  "sbt (%s)> ".format(Project.extract(state).currentPro
 
 net.virtualvoid.sbt.graph.Plugin.graphSettings
 
-initialize := {
-  val required = "1.7"
-  val current  = sys.props("java.specification.version")
-  assert(current == required, s"Unsupported JDK: java.specification.version $current != $required")
-}
 
 libraryDependencies := {
     CrossVersion.partialVersion(scalaVersion.value) match {
