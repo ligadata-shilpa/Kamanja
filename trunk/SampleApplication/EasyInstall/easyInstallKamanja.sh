@@ -159,8 +159,8 @@ echo "clean, package and assemble $srcPath ..."
 cd $srcPath/
 
 sbt clean '++ 2.10.4 package' '++ 2.10.4 ExtDependencyLibs/assembly' '++ 2.10.4 ExtDependencyLibs2/assembly' '++ 2.10.4 KamanjaInternalDeps/assembly'
-sbt '++ 2.10.4 MigrateManager/assembly'
-# '++ 2.10.4 ClusterInstallerDriver/assembly' '++ 2.10.4 InstallDriver/assembly' '++ 2.10.4 GetComponent/assembly' '++ 2.10.4 NodeInfoExtract/assembly'
+sbt '++ 2.10.4 ClusterInstallerDriver/assembly' '++ 2.10.4 GetComponent/assembly' '++ 2.10.4 InstallDriver/assembly'
+#   '++ 2.10.4 NodeInfoExtract/assembly' '++ 2.10.4 MigrateManager/assembly'
 
 #sbt clean '++ 2.10.4 package' '++ 2.10.4 KamanjaManager/assembly' '++ 2.10.4 MetadataAPI/assembly' '++ 2.10.4 KVInit/assembly' '++ 2.10.4 SimpleKafkaProducer/assembly'
 #sbt '++ 2.10.4 NodeInfoExtract/assembly' '++ 2.10.4 MetadataAPIService/assembly' '++ 2.10.4 JdbcDataCollector/assembly'
@@ -186,15 +186,15 @@ cp Utils/JdbcDataCollector/target/scala-2.10/jdbcdatacollector* $systemlib
 cp MetadataAPIService/target/scala-2.10/metadataapiservice* $systemlib
 cp FileDataConsumer/target/scala-2.10/filedataconsumer* $systemlib
 cp Utils/CleanUtil/target/scala-2.10/cleanutil* $systemlib
-cp Utils/ClusterInstaller/ClusterInstallerDriver/target/clusterinstallerdriver* $kamanjainstallsystemlib
-cp Utils/ClusterInstaller/InstallDriver/target/scala-2.10/installdriver* $kamanjainstallsystemlib
-cp Utils/ClusterInstaller/GetComponent/target/scala-2.10/getcomponent* $kamanjainstallsystemlib
+cp Utils/ClusterInstaller/ClusterInstallerDriver/target/ClusterInstallerDriver* $kamanjainstallbin
+cp Utils/ClusterInstaller/InstallDriver/target/scala-2.10/InstallDriver* $kamanjainstallbin
+cp Utils/ClusterInstaller/GetComponent/target/scala-2.10/GetComponent* $kamanjainstallbin
 cp Utils/ClusterInstaller/InstallDriver/src/main/resources/GetComponentsVersions.sh $kamanjainstallbin
 cp Utils/PmmlTestTool/target/pmmltesttool* $systemlib
-cp Utils/Migrate/MigrateManager/target/MigrateManager* $bin
+#cp Utils/Migrate/MigrateManager/target/MigrateManager* $bin
 
 # copy fat jars to KamanjaInstall
-cp Utils/Migrate/MigrateManager/target/MigrateManager* $kamanjainstallbin
+#cp Utils/Migrate/MigrateManager/target/MigrateManager* $kamanjainstallbin
 cp $srcPath/Utils/NodeInfoExtract/target/scala-2.10/nodeinfoextract* $kamanjainstallsystemlib
 cp ExtDependencyLibs/target/scala-2.10/ExtDependencyLibs_2.10-1.4.0.jar $kamanjainstallsystemlib
 cp ExtDependencyLibs2/target/scala-2.10/ExtDependencyLibs2_2.10-1.4.0.jar $kamanjainstallsystemlib
@@ -443,8 +443,8 @@ fi
 
 #Now do full build of 2.11
 sbt clean '++ 2.11.7 package' '++ 2.11.7 ExtDependencyLibs/assembly' '++ 2.11.7 ExtDependencyLibs2/assembly' '++ 2.11.7 KamanjaInternalDeps/assembly'
-sbt '++ 2.11.7 MigrateManager/assembly'
-# '++ 2.11.7 ClusterInstallerDriver/assembly' '++ 2.11.7 InstallDriver/assembly' '++ 2.11.7 GetComponent/assembly' '++ 2.11.7 NodeInfoExtract/assembly'
+sbt '++ 2.11.7 ClusterInstallerDriver/assembly' '++ 2.11.7 GetComponent/assembly' '++ 2.11.7 InstallDriver/assembly'
+#'++ 2.11.7 NodeInfoExtract/assembly' '++ 2.11.7 MigrateManager/assembly'
 
 #sbt clean '++ 2.11.7 package' '++ 2.11.7 KamanjaManager/assembly' '++ 2.11.7 MetadataAPI/assembly' '++ 2.11.7 KVInit/assembly' '++ 2.11.7 SimpleKafkaProducer/assembly'
 #sbt '++ 2.11.7 NodeInfoExtract/assembly' '++ 2.11.7 MetadataAPIService/assembly' '++ 2.11.7 JdbcDataCollector/assembly'
@@ -470,12 +470,12 @@ cp Utils/JdbcDataCollector/target/scala-2.11/jdbcdatacollector* $systemlib
 cp MetadataAPIService/target/scala-2.11/metadataapiservice* $systemlib
 cp FileDataConsumer/target/scala-2.11/filedataconsumer* $systemlib
 cp Utils/CleanUtil/target/scala-2.11/cleanutil* $systemlib
-cp Utils/Migrate/MigrateManager/target/MigrateManager* $bin
-cp Utils/ClusterInstaller/ClusterInstallerDriver/target/clusterinstallerdriver* $kamanjainstallsystemlib
-cp Utils/ClusterInstaller/InstallDriver/target/scala-2.11/installdriver* $kamanjainstallsystemlib
-cp Utils/ClusterInstaller/GetComponent/target/scala-2.11/getcomponent* $kamanjainstallsystemlib
+#cp Utils/Migrate/MigrateManager/target/MigrateManager* $bin
+cp Utils/ClusterInstaller/ClusterInstallerDriver/target/ClusterInstallerDriver* $kamanjainstallbin
+cp Utils/ClusterInstaller/InstallDriver/target/scala-2.11/InstallDriver* $kamanjainstallbin
+cp Utils/ClusterInstaller/GetComponent/target/scala-2.11/GetComponent* $kamanjainstallbin
 cp Utils/ClusterInstaller/InstallDriver/src/main/resources/GetComponentsVersions.sh $kamanjainstallbin
-cp Utils/Migrate/MigrateManager/target/MigrateManager* $kamanjainstallbin
+#cp Utils/Migrate/MigrateManager/target/MigrateManager* $kamanjainstallbin
 cp $srcPath/Utils/NodeInfoExtract/target/scala-2.11/nodeinfoextract* $kamanjainstallsystemlib
 cp ExtDependencyLibs/target/scala-2.11/ExtDependencyLibs_2.11-1.4.0.jar $kamanjainstallsystemlib
 cp ExtDependencyLibs2/target/scala-2.11/ExtDependencyLibs2_2.11-1.4.0.jar $kamanjainstallsystemlib
