@@ -20,7 +20,6 @@ import java.io.File
 import com.ligadata.jtm._
 import org.apache.commons.io.FileUtils
 import org.apache.logging.log4j.LogManager
-
 import org.scalatest.{BeforeAndAfter, FunSuite}
 /**
   *

@@ -400,8 +400,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     if(classMd.isEmpty) {
       throw new Exception("Metadata: unable to find class %s".format(classname))
     }
-    // We convert to lower case
-    classMd.get.physicalName.toLowerCase
+    classMd.get.physicalName
   }
 
   /**

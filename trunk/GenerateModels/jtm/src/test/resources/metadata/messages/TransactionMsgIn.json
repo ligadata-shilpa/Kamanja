@@ -3,12 +3,13 @@
     "NameSpace" : "com.ligadata.kamanja.samples.messages",
     "Name" : "TransactionMsgIn",
     "Version" : "00.01.00",
-    "Description" : "Test message com.ligadata.kamanja.test.arrin1",
+    "Description" : "Test message com.ligadata.kamanja.samples.messages.TransactionMsgIn",
     "Fixed" : "true",
+    "SchemaId": 1,
     "Fields": [
       {
         "Name": "data",
-        "Type": "System.ArrayOfString"
+        "Type": "System.String"
       }
     ]
   }
