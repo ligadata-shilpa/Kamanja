@@ -506,7 +506,8 @@ trait MetadataAPI {
               , version: Option[String] = None
               , msgConsumed: Option[String] = None
               , msgVer : Option[String] = Some("-1")
-	      , optMsgProduced: Option[String] = None
+	            , optMsgProduced: Option[String] = None
+              , tenantid: String
               ): String
 
   /** Update model given the supplied input.  Like the Add model, the ''modelType'' controls the processing and describes the

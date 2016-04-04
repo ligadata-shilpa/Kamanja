@@ -34,7 +34,7 @@ object ContainerService {
   val loggerName = this.getClass.getName
   lazy val logger = LogManager.getLogger(loggerName)
 
-  def addContainer(input: String): String ={
+  def addContainer(input: String, tid: String): String ={
     var response = ""
     var containerFileDir: String = ""
     //val gitMsgFile = "https://raw.githubusercontent.com/ligadata-dhaval/Kamanja/master/HelloWorld_Msg_Def.json"
@@ -80,7 +80,7 @@ object ContainerService {
     response
   }
 
-  def updateContainer(input: String): String ={
+  def updateContainer(input: String, tid: String): String ={
     var response = ""
     var containerFileDir: String = ""
     //val gitMsgFile = "https://raw.githubusercontent.com/ligadata-dhaval/Kamanja/master/HelloWorld_Msg_Def.json"

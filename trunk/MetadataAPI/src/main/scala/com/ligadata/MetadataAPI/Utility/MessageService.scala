@@ -34,7 +34,7 @@ object MessageService {
   val loggerName = this.getClass.getName
   lazy val logger = LogManager.getLogger(loggerName)
 
-  def addMessage(input: String): String = {
+  def addMessage(input: String, tid: String): String = {
     var response = ""
     var msgFileDir: String = ""
     //val gitMsgFile = "https://raw.githubusercontent.com/ligadata-dhaval/Kamanja/master/HelloWorld_Msg_Def.json"
@@ -102,7 +102,7 @@ object MessageService {
     response
   }
 
-  def updateMessage(input: String): String = {
+  def updateMessage(input: String, tid: String): String = {
     var response = ""
     //val gitMsgFile = "https://raw.githubusercontent.com/ligadata-dhaval/Kamanja/master/HelloWorld_Msg_Def.json"
     if (input == "") {

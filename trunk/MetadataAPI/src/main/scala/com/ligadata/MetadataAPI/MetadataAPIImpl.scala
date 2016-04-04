@@ -2396,6 +2396,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
                            , optMsgConsumed: Option[String] = None
                            , optMsgVersion: Option[String] = Some("-1")
 			                     , optMsgProduced: Option[String] = None
+                           , tenantid: String
 		       ): String  = {
     ModelUtils.AddModel(modelType,input,optUserid,optModelName,optVersion,optMsgConsumed, optMsgVersion,optMsgProduced)
   }
@@ -2449,7 +2450,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
                             , optModelName: Option[String] = None
                             , optVersion: Option[String] = None
                             , optVersionBeingUpdated : Option[String] = None
-			    , optMsgProduced: Option[String] = None): String = {
+			                      , optMsgProduced: Option[String] = None
+                            , tenantid: String): String = {
       ModelUtils.UpdateModel(modelType,input,optUserid,optModelName,optVersion,optVersionBeingUpdated,optMsgProduced)
     }
 
