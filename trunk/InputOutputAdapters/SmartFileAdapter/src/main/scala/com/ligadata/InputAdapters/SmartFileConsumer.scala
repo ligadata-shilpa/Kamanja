@@ -101,7 +101,7 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
 
         envContext.createListenerForCacheChildern(requestFilePath, requestFileLeaderCallback) // listen to file requests
         envContext.createListenerForCacheChildern(fileProcessingPath, fileProcessingLeaderCallback)// listen to file processing status
-        
+
       }
       else{//node was already leader
 
@@ -177,6 +177,8 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
       val requestingThreadId = keyTokens(keyTokens.length - 1)
       val fileToProcessKeyPath = eventPathData //from leader
 
+      LOG.info("Smart File Consumer - Leader has received a request from Node {}, Thread {}", requestingNodeId, requestingThreadId)
+
       //just add to request queue
       var requestQueue = getFileRequestsQueue
       requestQueue = requestQueue:::List(requestingNodeId + "/" + requestingThreadId)
@@ -202,10 +204,18 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
       val requestingNodeId = request(requestTokens.length - 2)
       val requestingThreadId = request(requestTokens.length - 1)
 
+      LOG.info("Smart File Consumer - currently " + processingQueue.length + " Files are being processed")
+      LOG.info("Smart File Consumer - Maximum processing ops is " + adapterConfig.monitoringConfig.consumersCount)
+
       //check if it is allowed to process one more file
       if (processingQueue.length < adapterConfig.monitoringConfig.consumersCount) {
+
         val fileToProcessFullPath = monitorController.getNextFileToProcess
         if (fileToProcessFullPath != null) {
+
+          LOG.debug("Smart File Consumer - Adding a file processing assignment of file + " + fileToProcessFullPath +
+            " to Node " + requestingNodeId + ", thread Id=" + requestingThreadId
+
           val offset = getFileOffsetFromCache(fileToProcessFullPath)
           val data = fileToProcessFullPath + "|" + offset
 
@@ -215,6 +225,12 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
           processingQueue = processingQueue ::: List(requestingNodeId + "/" + requestingThreadId + ":" + fileToProcessFullPath)
           saveFileProcessingQueue(processingQueue)
         }
+        else{
+          LOG.info("Smart File Consumer - No more files currently to process")
+        }
+      }
+      else{
+        LOG.info("Smart File Consumer - Cannot assign anymore files to process")
       }
     }
   }
@@ -230,6 +246,8 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
       val processingFilePath = valueTokens(0)
       val status = valueTokens(1)
       if(status == File_Processing_Status_Finished){
+        LOG.info("Smart File Consumer - File ({}) processing finished", processingFilePath)
+
         val correspondingRequestFileKeyPath = requestFilePath + "/" + processingNodeId //e.g. SmartFileCommunication/ToLeader/ProcessedFile/<nodeid>
 
         //remove the file from processing queue
@@ -271,6 +289,9 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
     val processingThreadId = keyTokens(keyTokens.length - 1)
     val processingNodeId = keyTokens(keyTokens.length - 2)
 
+    LOG.info("Smart File Consumer - Node Id = {}, Thread Id = {}, File ({}) was assigned to node {}",
+      fileToProcessName,clusterStatus.nodeId)
+
     //start processing the file
     val context = new SmartFileConsumerContext()
     context.partitionId = getPartitionNum(processingNodeId, processingThreadId.toInt)
@@ -300,6 +321,11 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
   def filesParallelismCallback (eventType: String, eventPath: String, eventPathData: String) : Unit = {
     val newFilesParallelism = eventPathData.toInt
 
+    val nodeId = clusterStatus.nodeId
+
+    LOG.info("Smart File Consumer - Node Id = {}, New File Parallelism (maximum threads per node) is {}", nodeId, newFilesParallelism)
+    LOG.info("Smart File Consumer - Old File Parallelism is {}", filesParallelism)
+
     var parallelismStatus = ""
     if(filesParallelism == -1)
       parallelismStatus = "Uninitialized"
@@ -318,7 +344,6 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
     }
     filesParallelism = newFilesParallelism
 
-    val nodeId = clusterStatus.nodeId
 
     //create the threads only if no threads created yet or number of threads changed
     if(parallelismStatus == "Uninitialized" || parallelismStatus == "Changed"){
