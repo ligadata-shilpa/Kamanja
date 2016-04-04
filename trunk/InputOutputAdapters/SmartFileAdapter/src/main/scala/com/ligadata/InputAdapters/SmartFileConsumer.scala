@@ -143,7 +143,7 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
     envContext.saveConfigInClusterCache(File_Requests_Cache_Key, cacheData.getBytes)
   }
 
-  //value in cache has the format <node1>/<thread1>/<filename>|<node2>/<thread1>/<filename>
+  //value for file processing queue in cache has the format <node1>/<thread1>:<filename>|<node2>/<thread1>:<filename>
   def getFileProcessingQueue : List[String] = {
     val cacheData = envContext.getConfigFromClusterCache(File_Processing_Cache_Key)
     if(cacheData != null) {
@@ -203,7 +203,7 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
           //there are files that need to process
           val fileToProcessKeyPath = smartFileFromLeaderPath + "/" + requestingNodeId + "/" + requestingThreadId
           envContext.setListenerCacheKey(fileToProcessKeyPath, data)
-          processingQueue = processingQueue ::: List(requestingNodeId + "/" + requestingThreadId + "/" + fileToProcessFullPath)
+          processingQueue = processingQueue ::: List(requestingNodeId + "/" + requestingThreadId + ":" + fileToProcessFullPath)
           saveFileProcessingQueue(processingQueue)
         }
       }
@@ -225,7 +225,7 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
 
         //remove the file from processing queue
         var processingQueue = getFileProcessingQueue
-        val valueInProcessingQueue = processingNodeId + "/" + processingThreadId + "/" + processingFilePath
+        val valueInProcessingQueue = processingNodeId + "/" + processingThreadId + ":" + processingFilePath
         processingQueue = processingQueue diff List(valueInProcessingQueue)
 
         //since a file just got finished, a new one can be processed
