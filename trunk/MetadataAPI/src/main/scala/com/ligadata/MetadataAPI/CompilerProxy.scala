@@ -1434,6 +1434,7 @@ class CompilerProxy {
     *
     */
   private def getClassPathFromModelConfig(modelName: String, cpDeps: List[String]): (String, Set[BaseElemDef], scala.collection.immutable.Set[String], scala.collection.immutable.Set[String], List[List[String]], List[String]) = {
+    logger.debug("Model Config => " + modelName)
     val inMsgSets = MetadataAPIImpl.getModelInputTypesSets(modelName, userId)
     val outMsgs = MetadataAPIImpl.getModelOutputTypes(modelName, userId)
     val inMC = MetadataAPIImpl.getModelMessagesContainers(modelName, userId)
