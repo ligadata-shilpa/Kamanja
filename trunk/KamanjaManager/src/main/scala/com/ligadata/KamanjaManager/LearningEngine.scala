@@ -281,8 +281,6 @@ class LearningEngine(val input: InputAdapter, val curPartitionKey: PartitionUniq
         }
 
         val outputDefault: Boolean = false;
-        tempBlah = tempBlah - 1
-        if (tempBlah > 0) throw new KamanjaException("FUCK YOU EXCEPTION",null)
 
         // Execute all modes here
         models.foreach(q => {
