@@ -1,6 +1,7 @@
 package com.ligadata.InputAdapters
 
 import java.io.IOException
+import scala.actors.threadpool.TimeUnit
 import java.util.zip.ZipException
 
 import com.ligadata.HeartBeat.MonitorComponentInfo
@@ -77,7 +78,7 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
   private var envContext : EnvContext = null
   private var clusterStatus : ClusterStatus = null
   private var participantExecutor : ExecutorService = null
-  private var filesParallelism : Int = 1
+  private var filesParallelism : Int = -1
   private var monitorController : MonitorController = null
 
   private var _ignoreFirstMsg : Boolean = _
@@ -92,11 +93,19 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
 
     if(newClusterStatus.isLeader){
       //action for the leader node
-      monitorController = new MonitorController(adapterConfig, newFileDetectedCallback)
-      monitorController.startMonitoring()
 
-      envContext.createListenerForCacheChildern(requestFilePath, requestFileLeaderCallback) // listen to file requests
-      envContext.createListenerForCacheChildern(fileProcessingPath, fileProcessingLeaderCallback)// listen to file processing status
+      //node wasn't a leader before
+      if(!clusterStatus.isLeader){
+        monitorController = new MonitorController(adapterConfig, newFileDetectedCallback)
+        monitorController.startMonitoring()
+
+        envContext.createListenerForCacheChildern(requestFilePath, requestFileLeaderCallback) // listen to file requests
+        envContext.createListenerForCacheChildern(fileProcessingPath, fileProcessingLeaderCallback)// listen to file processing status
+        
+      }
+      else{//node was already leader
+
+      }
 
       //set parallelism
       filesParallelism = (adapterConfig.monitoringConfig.consumersCount.toDouble / newClusterStatus.participantsNodeIds.size).round.toInt
@@ -290,29 +299,47 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
   //what a participant should do parallelism value changes
   def filesParallelismCallback (eventType: String, eventPath: String, eventPathData: String) : Unit = {
     val newFilesParallelism = eventPathData.toInt
+
+    var parallelismStatus = ""
+    if(filesParallelism == -1)
+      parallelismStatus = "Uninitialized"
+    else if (newFilesParallelism == filesParallelism)
+      parallelismStatus = "Intact"
+    else parallelismStatus = "Changed"
+
+    //filesParallelism changed
+    //wait until current threads finish then re-initialize threads
+    if(parallelismStatus == "Changed"){
+      if(participantExecutor != null) {
+        participantExecutor.shutdown() //tell the executor service to shutdown after threads finish tasks in hand
+        //if(!participantExecutor.awaitTermination(5, TimeUnit.MINUTES))
+          //participantExecutor.shutdownNow()
+      }
+    }
     filesParallelism = newFilesParallelism
 
     val nodeId = clusterStatus.nodeId
 
-    //TODO : consider if there were already running threads, and parallelism changed
+    //create the threads only if no threads created yet or number of threads changed
+    if(parallelismStatus == "Uninitialized" || parallelismStatus == "Changed"){
+      participantExecutor = Executors.newFixedThreadPool(filesParallelism)
+      for(threadId <- 1 to filesParallelism) {
 
-    participantExecutor = Executors.newFixedThreadPool(filesParallelism)
-    for(threadId <- 1 to filesParallelism) {
+        val executorThread = new Runnable() {
+          private var threadId: Int = _
+          def init(id: Int) = threadId = id
 
-      val executorThread = new Runnable() {
-        private var threadId: Int = _
-        def init(id: Int) = threadId = id
-
-        override def run(): Unit = {
-          val fileProcessingAssignementKeyPath = smartFileFromLeaderPath + "/" + nodeId + "/" + threadId //listen to this SmartFileCommunication/FromLeader/<NodeId>/<thread id>
-          //listen to file assignment from leader
-          envContext.createListenerForCacheKey(fileProcessingAssignementKeyPath, fileAssignmentFromLeaderCallback) //e.g.   SmartFileCommunication/FromLeader/RequestFile/<nodeid>/<thread id>
-          val fileRequestKeyPath = smartFileToLeaderPath + "/" + nodeId+ "/" + threadId
-          envContext.setListenerCacheKey(fileRequestKeyPath, fileProcessingAssignementKeyPath)
+          override def run(): Unit = {
+            val fileProcessingAssignementKeyPath = smartFileFromLeaderPath + "/" + nodeId + "/" + threadId //listen to this SmartFileCommunication/FromLeader/<NodeId>/<thread id>
+            //listen to file assignment from leader
+            envContext.createListenerForCacheKey(fileProcessingAssignementKeyPath, fileAssignmentFromLeaderCallback) //e.g.   SmartFileCommunication/FromLeader/RequestFile/<nodeid>/<thread id>
+            val fileRequestKeyPath = smartFileToLeaderPath + "/" + nodeId+ "/" + threadId
+            envContext.setListenerCacheKey(fileRequestKeyPath, fileProcessingAssignementKeyPath)
+          }
         }
+        executorThread.init(threadId)
+        participantExecutor.execute(executorThread)
       }
-      executorThread.init(threadId)
-      participantExecutor.execute(executorThread)
     }
 
   }
