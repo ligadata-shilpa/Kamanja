@@ -3752,6 +3752,19 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     ConfigUtils.RemoveNode(nodeId)
   }
 
+  def AddTenant(tenantId: String, description: String, primaryDataStore: String, cacheConfig: String): String = {
+    ConfigUtils.AddTenant(tenantId, description, primaryDataStore, cacheConfig)
+  }
+
+  def UpdateTenant(tenantId: String, description: String, primaryDataStore: String, cacheConfig: String): String = {
+    ConfigUtils.UpdateTenant(tenantId, description, primaryDataStore, cacheConfig)
+  }
+
+  def RemoveTenant(tenantId: String): String = {
+    ConfigUtils.RemoveTenant(tenantId)
+  }
+
+
     /**
      * AddAdapter
       *
@@ -3766,9 +3779,9 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      */
   def AddAdapter(name: String, typeString: String, dataFormat: String, className: String,
                  jarName: String, dependencyJars: List[String],
-                 adapterSpecificCfg: String): String = {
+                 adapterSpecificCfg: String, tenantId: String): String = {
     ConfigUtils.AddAdapter(name, typeString, dataFormat, className, jarName,
-        dependencyJars, adapterSpecificCfg)
+        dependencyJars, adapterSpecificCfg, tenantId)
   }
 
     /**
@@ -3785,8 +3798,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      */
   def UpdateAdapter(name: String, typeString: String, dataFormat: String, className: String,
                     jarName: String, dependencyJars: List[String],
-                    adapterSpecificCfg: String): String = {
-    ConfigUtils.AddAdapter(name, typeString, dataFormat, className, jarName, dependencyJars, adapterSpecificCfg)
+                    adapterSpecificCfg: String, tenantId: String): String = {
+    ConfigUtils.AddAdapter(name, typeString, dataFormat, className, jarName, dependencyJars, adapterSpecificCfg, tenantId)
   }
 
     /**

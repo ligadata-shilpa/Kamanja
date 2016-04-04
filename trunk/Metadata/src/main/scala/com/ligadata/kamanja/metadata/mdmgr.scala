@@ -88,6 +88,7 @@ class MdMgr {
   private var configurations = new HashMap[String, UserPropertiesInfo]
   private var msgdefSystemCols = List("transactionid", "timepartitiondata", "rownumber")
   private var serializers = new HashMap[String, SerializeDeserializeConfig]
+  private var tenantIdMap = new HashMap[String, TenantInfo]
 
   private var propertyChanged: scala.collection.mutable.ArrayBuffer[String] = scala.collection.mutable.ArrayBuffer[String]()
   private val lock: Object = new Object
@@ -168,6 +169,9 @@ class MdMgr {
       case "ElementId" => {
         elementIdMap.clear
       }
+      case "Tenants" => {
+        tenantIdMap.clear
+      }
       case _ => {
         logger.error("Unknown object type " + objectType + " in truncate function")
       }
@@ -225,6 +229,9 @@ class MdMgr {
     })
     elementIdMap.foreach(obj => {
       logger.trace("ElementId:%d => ElementName:%s Version:%d, ElementType:%s".format(obj._1, obj._2.FullName, obj._2.Version, obj._2.MdElementCategory))
+    })
+    tenantIdMap.foreach(obj => {
+      logger.trace("TenantId:" + obj._1)
     })
   }
 
@@ -3075,7 +3082,45 @@ class MdMgr {
     return ""
   }
 
-    /**
+  /* TenantId functions */
+  def AddTenantInfo(tenantId: String, description: String, primaryDataStore: String, cacheConfig: String): Unit = {
+    AddTenantInfo(MakeTenantInfo(tenantId, description, primaryDataStore, cacheConfig))
+  }
+
+  def AddTenantInfo(tenant : TenantInfo) : Boolean = {
+    if (tenantIdMap.contains(tenant.tenantId.trim.toLowerCase))
+      throw new AlreadyExistsException(s"Tenant ${tenant.tenantId} already exists.", null)
+    tenantIdMap(tenant.tenantId.trim.toLowerCase) = tenant
+    true
+  }
+
+  def UpdateTenantInfo(tenant : TenantInfo) : Boolean = {
+    if (tenant.tenantId.trim.equalsIgnoreCase("System") && tenantIdMap.contains("System".toLowerCase)) {
+      throw new AlreadyExistsException(s"System is system tenant. you can not repalce it.", null)
+    }
+    tenantIdMap(tenant.tenantId.toLowerCase) = tenant // Not really checking for existance
+    true
+  }
+
+  def MakeTenantInfo(tenantId: String, description: String, primaryDataStore: String, cacheConfig: String): TenantInfo = {
+    new TenantInfo(tenantId.trim, description, primaryDataStore, cacheConfig)
+  }
+
+  def GetTenantInfo(tenantId: String) : TenantInfo = {
+    tenantIdMap.getOrElse(tenantId.trim.toLowerCase, null)
+  }
+
+  def GetAllTenantInfos : Array[TenantInfo] = {
+    tenantIdMap.values.toArray
+  }
+
+  def RemoveTenantInfo(tenantId: String): Unit = {
+    if (tenantIdMap.contains(tenantId.trim.toLowerCase())) {
+      tenantIdMap -= tenantId.trim.toLowerCase()
+    }
+  }
+
+  /**
       * Construct a SerializeDeserializeConfig instance and add it to the metadata.
       * @param nameSpace the namespace for this SerializeDeserializeConfig
       * @param name its serializer name
@@ -3256,13 +3301,14 @@ class MdMgr {
   }
 
   def MakeAdapter(name: String, typeString: String, dataFormat: String, className: String,
-                  jarName: String, dependencyJars: List[String], adapterSpecificCfg: String): AdapterInfo = {
+                  jarName: String, dependencyJars: List[String], adapterSpecificCfg: String, tenantId: String): AdapterInfo = {
     val ai = new AdapterInfo
     ai.name = name
     ai.typeString = typeString
     ai.dataFormat = dataFormat
     ai.className = className
     ai.jarName = jarName
+    ai.tenantId = tenantId
     if (dependencyJars != null) {
       ai.dependencyJars = dependencyJars.toArray
     }

@@ -1030,6 +1030,7 @@ class AdapterInfo {
   var jarName: String = _
   var dependencyJars: Array[String] = new Array[String](0)
   var adapterSpecificCfg: String = _
+  var tenantId: String = _
 //  var keyAndValueDelimiter: String = _ // Delimiter String for keyAndValueDelimiter
 //  var fieldDelimiter: String = _ // Delimiter String for fieldDelimiter
 //  var valueDelimiter: String = _ // Delimiter String for valueDelimiter
@@ -1041,6 +1042,7 @@ class AdapterInfo {
   def JarName: String = jarName
   def DependencyJars: Array[String] = dependencyJars
   def AdapterSpecificCfg: String = adapterSpecificCfg
+  def TenantId: String = tenantId
 
  // def InputAdapterToValidate: String = inputAdapterToValidate
  // def FailedEventsAdapter: String = failedEventsAdapter
@@ -1131,6 +1133,11 @@ class AdapterInfo {
       return false
     }*/
 
+    if ((tenantId != null && aInfo.tenantId != null)) {
+      if(!tenantId.equals(aInfo.tenantId)) return false
+    } else if(!(tenantId == null && aInfo.tenantId == null)) {
+      return false
+    }
 
     true
   }
@@ -1183,8 +1190,7 @@ object SerializeDeserializeType extends Enumeration {
   */
 class SerializeDeserializeConfig(val serDeserType : SerializeDeserializeType.SerDeserType) extends BaseElemDef {}
 
-
-
+class TenantInfo(val tenantId: String, val description: String, val primaryDataStore: String, val cacheConfig: String) {}
 
 object ModelCompilationConstants {
   val DEPENDENCIES: String = "Dependencies"

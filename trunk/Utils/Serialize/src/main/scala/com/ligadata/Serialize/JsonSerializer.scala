@@ -986,7 +986,8 @@ object JsonSerializer {
           ("ClassName" -> o.className) ~
           ("JarName" -> o.jarName) ~
           ("DependencyJars" -> o.dependencyJars.toList) ~
-          ("AdapterSpecificCfg" -> o.adapterSpecificCfg))
+          ("AdapterSpecificCfg" -> o.adapterSpecificCfg) ~
+          ("TenantId" -> o.TenantId))
         pretty(render(json))
       }
       case _ => {

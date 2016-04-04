@@ -185,7 +185,53 @@ object ConfigUtils {
     }
   }
 
-    /**
+  def AddTenant(tenantId: String, description: String, primaryDataStore: String, cacheConfig: String): String = {
+    try {
+      // save in memory
+      val ti = MdMgr.GetMdMgr.MakeTenantInfo(tenantId, description, primaryDataStore, cacheConfig)
+      MdMgr.GetMdMgr.AddTenantInfo(ti)
+      // save in database
+      val key = "TenantInfo." + tenantId.trim.toLowerCase()
+      val value = serializer.SerializeObjectToByteArray(ti)
+      MetadataAPIImpl.SaveObject(key.toLowerCase, value, "config_objects", serializerType)
+      var apiResult = new ApiResult(ErrorCodeConstants.Success, "AddTenant", null, ErrorCodeConstants.Add_Tenant_Successful + ":" + tenantId)
+      apiResult.toString()
+    } catch {
+      case e: Exception => {
+
+        logger.debug("", e)
+        val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddTenant", null, "Error :" + e.toString() + ErrorCodeConstants.Add_Tenant_Failed + ":" + tenantId)
+        apiResult.toString()
+      }
+    }
+  }
+
+  def UpdateTenant(tenantId: String, description: String, primaryDataStore: String, cacheConfig: String): String = {
+    AddTenant(tenantId, description, primaryDataStore, cacheConfig)
+  }
+
+  /**
+    * RemoveNode
+    * @param tenantId a cluster node
+    * @return
+    */
+  def RemoveTenant(tenantId: String): String = {
+    try {
+      MdMgr.GetMdMgr.RemoveTenantInfo(tenantId)
+      val key = "TenantInfo." + tenantId.trim.toLowerCase()
+      MetadataAPIImpl.DeleteObject(key.toLowerCase, "config_objects")
+      var apiResult = new ApiResult(ErrorCodeConstants.Success, "RemoveNode", null, ErrorCodeConstants.Remove_Tenant_Successful + ":" + tenantId)
+      apiResult.toString()
+    } catch {
+      case e: Exception => {
+        logger.debug("", e)
+        val apiResult = new ApiResult(ErrorCodeConstants.Failure, "RemoveNode", null, "Error :" + e.toString() + ErrorCodeConstants.Remove_Tenant_Failed + ":" + tenantId)
+        apiResult.toString()
+      }
+    }
+  }
+
+  /**
      * AddAdapter
      * @param name
      * @param typeString
@@ -198,10 +244,10 @@ object ConfigUtils {
      */
   def AddAdapter(name: String, typeString: String, dataFormat: String, className: String,
                  jarName: String, dependencyJars: List[String],
-                 adapterSpecificCfg: String): String = {
+                 adapterSpecificCfg: String, tenantId: String): String = {
     try {
       // save in memory
-      val ai = MdMgr.GetMdMgr.MakeAdapter(name, typeString, dataFormat, className, jarName, dependencyJars, adapterSpecificCfg)
+      val ai = MdMgr.GetMdMgr.MakeAdapter(name, typeString, dataFormat, className, jarName, dependencyJars, adapterSpecificCfg, tenantId)
       MdMgr.GetMdMgr.AddAdapter(ai)
       // save in database
       val key = "AdapterInfo." + name
@@ -232,8 +278,8 @@ object ConfigUtils {
      */
   def UpdateAdapter(name: String, typeString: String, dataFormat: String, className: String,
                     jarName: String, dependencyJars: List[String],
-                    adapterSpecificCfg: String): String = {
-    AddAdapter(name, typeString, dataFormat, className, jarName, dependencyJars, adapterSpecificCfg)
+                    adapterSpecificCfg: String, tenantId: String): String = {
+    AddAdapter(name, typeString, dataFormat, className, jarName, dependencyJars, adapterSpecificCfg, tenantId)
   }
 
     /**
@@ -426,6 +472,22 @@ object ConfigUtils {
                 MdMgr.GetMdMgr.RemoveNode(nodeId.toLowerCase)
                 key = "NodeInfo." + nodeId
                 keyList = keyList :+ key.toLowerCase
+              }
+            })
+          }
+
+          if (cluster.contains("Tenants")) {
+            val tenants = cluster.get("Tenants").get.asInstanceOf[List[_]]
+            tenants.foreach(t => {
+              val tenant = t.asInstanceOf[Map[String, Any]]
+              val tenantId = tenant.getOrElse("TenantId", "").toString.trim
+              if (tenantId.trim.size > 0) {
+                MdMgr.GetMdMgr.RemoveTenantInfo(tenantId)
+                key = "TenantInfo." + tenantId.trim.toLowerCase()
+                keyList = keyList :+ key.toLowerCase
+
+                //BUGBUG:: Need to report to Engine and others
+                // FIXME:: Need to report to Engine and others
               }
             })
           }
@@ -695,6 +757,33 @@ object ConfigUtils {
               })
             }
 
+            if (cluster.contains("Tenants")) {
+              val tenants = cluster.get("Tenants").get.asInstanceOf[List[_]]
+              tenants.foreach(t => {
+                val tenant = t.asInstanceOf[Map[String, Any]]
+                val tenantId = tenant.getOrElse("TenantId", "").toString.trim
+                val description = tenant.getOrElse("Description", "").toString.trim
+                var primaryDataStore = getStringFromJsonNode(tenant.getOrElse("PrimaryDataStore", null))
+                var cacheConfig = getStringFromJsonNode(tenant.getOrElse("CacheConfig", null))
+
+                val ti = MdMgr.GetMdMgr.MakeTenantInfo(tenantId, description, primaryDataStore, cacheConfig)
+                MdMgr.GetMdMgr.AddTenantInfo(ti)
+
+                var tenantDef: ClusterConfigDef = new ClusterConfigDef
+                tenantDef.name = ti.tenantId.trim.toLowerCase()
+                tenantDef.tranId = MetadataAPIImpl.GetNewTranId
+                tenantDef.nameSpace = "Tenants"
+                tenantDef.clusterId = ci.clusterId
+                tenantDef.elementType = "TenantDef"
+                clusterNotifications.append(tenantDef)
+
+                val key = "TenantInfo." + ti.tenantId.trim.toLowerCase()
+                val value = serializer.SerializeObjectToByteArray(ti)
+                keyList = keyList :+ key.toLowerCase
+                valueList = valueList :+ value
+              })
+            }
+
             if (cluster.contains("Adapters") || (globalAdaptersCollected == false && map.contains("Adapters"))) {
               val adapters = if (cluster.contains("Adapters") && (globalAdaptersCollected == false && map.contains("Adapters"))) {
                 map.get("Adapters").get.asInstanceOf[List[_]] ++ cluster.get("Adapters").get.asInstanceOf[List[_]]
@@ -714,6 +803,7 @@ object ConfigUtils {
                 val jarnm = adap.getOrElse("JarName", "").toString.trim
                 val typStr = adap.getOrElse("TypeString", "").toString.trim
                 val clsNm = adap.getOrElse("ClassName", "").toString.trim
+                val tenantId = adap.getOrElse("TenantId", "").toString.trim
 
                 var adapterDef: ClusterConfigDef = new ClusterConfigDef
                 adapterDef.name = nm
@@ -736,7 +826,7 @@ object ConfigUtils {
                   dataFormat = adap.get("DataFormat").get.asInstanceOf[String]
                 }
                 // save in memory
-                val ai = MdMgr.GetMdMgr.MakeAdapter(nm, typStr, dataFormat, clsNm, jarnm, depJars, ascfg)
+                val ai = MdMgr.GetMdMgr.MakeAdapter(nm, typStr, dataFormat, clsNm, jarnm, depJars, ascfg, tenantId)
                 MdMgr.GetMdMgr.AddAdapter(ai)
                 val key = "AdapterInfo." + ai.name
                 val value = serializer.SerializeObjectToByteArray(ai)

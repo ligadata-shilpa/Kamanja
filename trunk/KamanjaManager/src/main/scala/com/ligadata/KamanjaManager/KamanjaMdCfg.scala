@@ -455,6 +455,7 @@ object KamanjaMdCfg {
 //      conf.associatedMsg = adap.AssociatedMessage
       conf.dependencyJars = if (adap.DependencyJars != null) adap.DependencyJars.map(str => str.trim).filter(str => str.size > 0).toSet else null
       conf.adapterSpecificCfg = adap.AdapterSpecificCfg
+      conf.tenantId = adap.TenantId
 
       try {
         val adapter = CreateOutputAdapterFromConfig(conf, nodeContext)
@@ -568,6 +569,7 @@ object KamanjaMdCfg {
       conf.jarName = adap.JarName
       conf.dependencyJars = if (adap.DependencyJars != null) adap.DependencyJars.map(str => str.trim).filter(str => str.size > 0).toSet else null
       conf.adapterSpecificCfg = adap.AdapterSpecificCfg
+      conf.tenantId = adap.TenantId
 //      conf.keyAndValueDelimiter = adap.KeyAndValueDelimiter
 //      conf.fieldDelimiter = adap.FieldDelimiter
 //      conf.valueDelimiter = adap.ValueDelimiter
