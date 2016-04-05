@@ -20,6 +20,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.InputStreamReader
 import javax.xml.parsers.SAXParserFactory
+import com.ligadata.jtm.CompilerBuilder
 import org.xml.sax.InputSource
 import org.xml.sax.XMLReader
 import scala.collection.mutable._
@@ -216,7 +217,8 @@ class CompilerProxy {
 
   /**
       * Compile the supplied Json Transformation Model specification string into a scala source file.
-      * @param jsonStr the specification
+    *
+    * @param jsonStr the specification
       * @return tuple (scala source produced from compilation, model definition produced for the source code)
       */
     def compileJTM(jsonStr: String, recompile: Boolean = false): (String, ModelDef) = {
@@ -226,22 +228,21 @@ class CompilerProxy {
             val injectLoggingStmts : Boolean = if (model_exec_log != null) model_exec_log.equalsIgnoreCase("true") else false
 
             /**  What the PmmlCompiler does to generate the (scalaSrc,modelDef) pair
-                val compiler = new PmmlCompiler(MdMgr.GetMdMgr, "ligadata", logger, injectLoggingStmts,
-                MetadataAPIImpl.GetMetadataAPIConfig.getProperty("JAR_PATHS").split(","))
-                val (classStr, modDef) = compiler.compile(pmmlStr, compiler_work_dir, recompile)
+              * val compiler = new PmmlCompiler(MdMgr.GetMdMgr, "ligadata", logger, injectLoggingStmts,
+              * MetadataAPIImpl.GetMetadataAPIConfig.getProperty("JAR_PATHS").split(","))
+              * val (classStr, modDef) = compiler.compile(pmmlStr, compiler_work_dir, recompile)
             */
 
             /** These two are expected ... your generated source file and the model definition instance.  Steal some
               * code from the PmmlCompiler for the model def
               */
-            /*
-                Fixme: Instantiate and call the JTM compiler here.
+            val compiler = CompilerBuilder.create().
+//              setSuppressTimestamps().
+              setInputFile(jsonStr).
+              build()
 
-                Fixme: Instantiate and call the JTM compiler here.
-
-                Fixme: Instantiate and call the JTM compiler here.
-            */
-            val (jtmScalaSrc, modelDef) : (String, ModelDef) = (null,null)
+            val jtmScalaSrc = compiler.Execute()
+            val modelDef = compiler.MakeModelDef
 
             /**
               * If errors were encountered... the model definition is not manufactured.
@@ -1170,11 +1171,12 @@ class CompilerProxy {
           if (mdlFactory != null) {
             // create possible default input messages from model_config.Type_dependencies for java/scala models
             var fullName = mdlFactory.getModelName.split('.')
-            var modelName = fullName(fullName.length - 1)
-            var key = "kamanja" + "." + modelConfigName
-            if (userid != None) {
-              key = userid.get + "." + modelConfigName
-            }
+            //var modelName = fullName(fullName.length - 1)
+            //var key = "kamanja" + "." + modelConfigName
+            //if (userid != None) {
+            //  key = userid.get + "." + modelConfigName
+            //}
+	    var key = modelConfigName
             logger.debug("getModelMetadataFromJar: Get the model config for " + key)
             var config = MdMgr.GetMdMgr.GetModelConfig(key)
             logger.debug("getModelMetadataFromJar: Size of the model config map => " + config.keys.size);
@@ -1434,6 +1436,7 @@ class CompilerProxy {
     *
     */
   private def getClassPathFromModelConfig(modelName: String, cpDeps: List[String]): (String, Set[BaseElemDef], scala.collection.immutable.Set[String], scala.collection.immutable.Set[String], List[List[String]], List[String]) = {
+    logger.debug("Model Config => " + modelName)
     val inMsgSets = MetadataAPIImpl.getModelInputTypesSets(modelName, userId)
     val outMsgs = MetadataAPIImpl.getModelOutputTypes(modelName, userId)
     val inMC = MetadataAPIImpl.getModelMessagesContainers(modelName, userId)

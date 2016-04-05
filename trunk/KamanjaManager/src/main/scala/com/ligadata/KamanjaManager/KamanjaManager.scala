@@ -487,7 +487,7 @@ class KamanjaManager extends Observer {
           txnId = -1 * txnId
         // Finally we are taking -ve txnid for this
         try {
-          txnCtxt = new TransactionContext(txnId, KamanjaMetadata.gNodeContext, Array[Byte](), EventOriginInfo(null, null), 0, null)
+          txnCtxt = new TransactionContext(txnId, KamanjaMetadata.gNodeContext, Array[Byte](), EventOriginInfo("", ""), 0, null)
           ThreadLocalStorage.txnContextInfo.set(txnCtxt)
 
           val (tmpMdls, tMdlsChangedCntr) = KamanjaMetadata.getAllModels

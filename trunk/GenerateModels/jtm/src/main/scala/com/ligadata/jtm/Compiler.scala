@@ -25,7 +25,7 @@ import org.json4s.jackson.JsonMethods._
 import org.rogach.scallop._
 import org.apache.commons.io.FileUtils
 import java.io.{StringReader, File}
-
+import com.ligadata.runtime.Conversion
 import com.ligadata.jtm.nodes._
 
 // Laundry list
@@ -135,8 +135,20 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
   /**
     * Collect information needed for modeldef
     */
-  private var inmessages = Array.empty[Map[String, Set[String]]] // Records all sets of incoming classes and attributes accessed
-  private var outmessages = Set.empty[String] //Records all outgoing classes
+  private var inmessages: Array[Map[String, Set[String]]] = null // Records all sets of incoming classes and attributes accessed
+  private var outmessages: Set[String] = null //Records all outgoing classes
+
+  def Imports(): Array[String] = {
+    val imports = if (root.grok.nonEmpty) {
+      root.imports.packages :+ "org.aicer.grok.dictionary.GrokDictionary"
+    } else {
+      root.imports.packages
+    }
+
+    val imports1 = imports :+ "com.ligadata.runtime.Conversion"
+
+    imports1.distinct
+  }
 
   /** Returns the modeldef after compiler completed
     *
@@ -170,7 +182,10 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
      val msgConsumed: String = ""
      val supportsInstanceSerialization : Boolean = false
      */
-    new ModelDef(ModelRepresentation.JAR, MiningModelType.JTM, in, out, isReusable, supportsInstanceSerialization)
+    var model = new ModelDef(ModelRepresentation.JAR, MiningModelType.JTM, in, out, isReusable, supportsInstanceSerialization)
+    // Imports to Jar
+    //model.dependencyJarNames = Imports()
+    model
   }
 
   def Code() : String = {
@@ -710,18 +725,44 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
         }
 
         if (open.isEmpty) {
+
           innerTracking ++= list.map(m => innerMapping.get(m._2).get.variableName).toSet
+
           // Sub names to
           val newExpression = Expressions.FixupColumnNames(expression, innerMapping, aliaseMessages)
           logger.trace("Matched compute expression {} -> {}", newExpression, c._1)
-          // Output the actual compute
-          // To Do: multiple vals and type provided
-          collect :+= c._2.Comment
-          if (c._2.typename.length > 0)
-            collect ++= Array("val %s: %s = %s\n".format(c._1, c._2.typename, newExpression))
-          else
-            collect ++= Array("val %s = %s\n".format(c._1, newExpression))
 
+
+          collect :+= c._2.Comment
+          if (c._2.typename.length > 0) {
+
+            // Check if we track the type or need a type coersion
+            val isVariable = Expressions.IsExpressionVariable(expression, innerMapping)
+            if(isVariable) {
+              val cols = Expressions.ExtractColumnNames(expression)
+              val rt = innerMapping.get(cols.head).get
+              if(rt.typeName!=c._2.typename && rt.typeName.nonEmpty) {
+                // Find the conversion and wrap the call
+                if(Conversion.builtin.contains(rt.typeName) && Conversion.builtin.get(rt.typeName).get.contains(c._2.typename))
+                {
+                  val conversionExpr = Conversion.builtin.get(rt.typeName).get.get(c._2.typename).get
+                  collect ++= Array("val %s: %s = conversion.%s(%s)\n".format(c._1, c._2.typename, conversionExpr, newExpression))
+                }
+                else
+                {
+                  collect ++= Array("val %s: %s = %s\n".format(c._1, c._2.typename, newExpression))
+                }
+              } else {
+                collect ++= Array("val %s: %s = %s\n".format(c._1, c._2.typename, newExpression))
+              }
+
+            }
+            else {
+              collect ++= Array("val %s: %s = %s\n".format(c._1, c._2.typename, newExpression))
+            }
+          } else {
+            collect ++= Array("val %s = %s\n".format(c._1, newExpression))
+          }
           outputSet --= Set(c._1)
           innerMapping ++= Map(c._1 -> eval.Tracker(c._1, "", c._2.typename, false, "", c._1))
           false
@@ -756,6 +797,10 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
   // Controls the code generation
   def Execute(): String = {
 
+    // Reset any state
+    inmessages = Array.empty[Map[String, Set[String]]]
+    outmessages = Set.empty[String]
+
     // Validate model
     Validate(root)
 
@@ -788,11 +833,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
     // Process additional imports like grok
     //
-    val imports = if(root.grok.nonEmpty) {
-                    root.imports.packages :+ "org.aicer.grok.dictionary.GrokDictionary"
-                  } else {
-                    root.imports.packages
-                  }
+    val imports = Imports()
 
     // Emit grok initialization
     val grokExpressions = if(root.grok.nonEmpty) {
@@ -806,7 +847,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
     // Append the packages needed
     //
-    result ++= imports.distinct.map( i => "import %s".format(i) )
+    result ++= imports.map( i => "import %s".format(i) )
 
     // Add message so we can actual compile
     // Check how to reconcile during add/compilation

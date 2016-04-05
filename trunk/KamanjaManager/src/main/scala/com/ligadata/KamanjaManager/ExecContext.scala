@@ -41,13 +41,13 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
 //  private val transService = new SimpleTransService
 //  transService.init(KamanjaConfiguration.txnIdsRangeForPartition)
 //
-  private val xform = new TransformMessageData
+//  private val xform = new TransformMessageData
   private val engine = new LearningEngine(input, curPartitionKey)
   private var previousLoader: com.ligadata.Utils.KamanjaClassLoader = null
 
-  private val failedEventDtFormat = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
+//  private val failedEventDtFormat = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
 
-  private val adapterInfoMap = ProcessedAdaptersInfo.getOneInstance(this.hashCode(), true)
+//  private val adapterInfoMap = ProcessedAdaptersInfo.getOneInstance(this.hashCode(), true)
 
   /*
     private def SendFailedEvent(data: Array[Byte], format: String, associatedMsg: String, uk: String, uv: String, e: Throwable): Unit = {
@@ -95,9 +95,16 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
         previousLoader = curLoader
       }
     } catch {
-      case e: Exception => {
+      case e: Throwable => {
         LOG.error("Failed to setContextClassLoader.", e)
+        throw e
       }
+    }
+
+    try {
+      engine.execute(txnCtxt, deserializerName)
+    } catch {
+      case e: Throwable => throw e
     }
   }
 

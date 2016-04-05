@@ -19,6 +19,7 @@ import com.ligadata.KvBase.TimeRange
 import com.ligadata.kamanja.metadata.ModelDef
 import com.ligadata.Utils._
 import org.aicer.grok.dictionary.GrokDictionary
+import com.ligadata.runtime.Conversion
 class Factory(modelDef: ModelDef, nodeContext: NodeContext) extends ModelInstanceFactory(modelDef, nodeContext) {
   override def isValidMessage(msg: ContainerInterface): Boolean = {
     msg.isInstanceOf[com.ligadata.kamanja.test.v1000000.msg5]
@@ -29,6 +30,7 @@ class Factory(modelDef: ModelDef, nodeContext: NodeContext) extends ModelInstanc
   override def createResultObject(): ModelResultBase = new MappedModelResults()
 }
 class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
+  val conversion = new com.ligadata.runtime.Conversion
   override def execute(txnCtxt: TransactionContext, execMsgsSet: Array[ContainerOrConcept], triggerdSetIndex: Int, outputDefault: Boolean): Array[ContainerOrConcept] = {
     val messagefactoryinterface = execMsgsSet(0).asInstanceOf[MessageFactoryInterface]
     //
