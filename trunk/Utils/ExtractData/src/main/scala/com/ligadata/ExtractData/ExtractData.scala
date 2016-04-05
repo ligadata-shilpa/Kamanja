@@ -27,6 +27,9 @@ import scala.reflect.runtime.{ universe => ru }
 import scala.collection.mutable.TreeSet
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import com.google.gson.ExclusionStrategy
+import com.google.gson.FieldAttributes
+import java.lang.reflect.Modifier
 import com.ligadata.Serialize._
 import com.ligadata.MetadataAPI.MetadataAPIImpl
 import com.ligadata.kamanja.metadata.MdMgr._
@@ -41,6 +44,17 @@ import com.ligadata.StorageBase.{ DataStore, Transaction }
 import com.ligadata.Exceptions.StackTrace
 import java.util.Date
 import java.text.SimpleDateFormat
+
+class ExcludeLogger extends ExclusionStrategy {
+  override def shouldSkipField(f: FieldAttributes): Boolean = {
+    val exclude = f.getName().endsWith("LOG")
+    //println(f.getName() + " exclude " + exclude)
+    return exclude
+  }
+  override def shouldSkipClass(c: Class[_]): Boolean = {
+    return false
+  }
+}
 
 object ExtractData extends MdBaseResolveInfo {
   private val LOG = Logger.getLogger(getClass);
@@ -276,7 +290,8 @@ object ExtractData extends MdBaseResolveInfo {
     val hasValidPrimaryKey = (partKey != null && primaryKey != null && partKey.size > 0 && primaryKey.size > 0)
 
     var os: OutputStream = null
-    val gson = new Gson();
+    //val gson = new Gson();
+    val gson = new GsonBuilder().setExclusionStrategies(new ExcludeLogger()).create()
 
     try {
       val compString = if (compressionString == null) null else compressionString.trim
@@ -292,8 +307,13 @@ object ExtractData extends MdBaseResolveInfo {
       val ln = "\n".getBytes("UTF8")
 
       val getObjFn = (k: Key, v: Value) => {
+
         val dta = deSerializeData(v)
         if (dta != null) {
+          //val aa = dta.getNativeKeyValues
+          //aa.keys.foreach{ i => print(aa(i))}
+          //println("")
+
           if (hasValidPrimaryKey) {
             // Search for primary key match
             if (primaryKey.sameElements(dta.PrimaryKeyData)) {
@@ -445,4 +465,3 @@ object ExtractData extends MdBaseResolveInfo {
     sys.exit(exitCode)
   }
 }
-
