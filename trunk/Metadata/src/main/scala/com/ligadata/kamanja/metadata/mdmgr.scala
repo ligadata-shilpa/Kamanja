@@ -88,6 +88,7 @@ class MdMgr {
   private var configurations = new HashMap[String, UserPropertiesInfo]
   private var msgdefSystemCols = List("transactionid", "timepartitiondata", "rownumber")
   private var serializers = new HashMap[String, SerializeDeserializeConfig]
+  private var adapterMessageBindings = new HashMap[String, AdapterMessageBinding]
 
   private var propertyChanged: scala.collection.mutable.ArrayBuffer[String] = scala.collection.mutable.ArrayBuffer[String]()
   private val lock: Object = new Object
@@ -3173,105 +3174,71 @@ class MdMgr {
     }
 
     /**
-      * Construct a SerializeDeserializeConfig instance and add it to the metadata.
-      * @param nameSpace the namespace for this SerializeDeserializeConfig
-      * @param name its serializer name
-      * @param version its serializer version
-      * @param serializerType the serializer type
-      * @param physicalName the fqClassname that contains the behavior (found in the jarNm)
-      * @param ownerId the perpetrator of this serializer
-      * @param uniqueId a unique identifier that uniquely describes this object (reserved)
-      * @param mdElementId another unique identifer (reserved)
-      * @param jarNm the simple jar that is to be loaded in order to use the described SerializeDeserialize implementation
-      *              this config describes
-      * @param depJars the array of jars that are to be loaded so the SerializeDeserialize implementation this config
-      *                describes can function
-      * @return Unit
+      * Add an adapter message binding to the metadata.  An AdapterMessageBinding describes a triple: the adapter,
+      * a message it either consumes or produces, and a serializer that can interpret a stream represention of an
+      * instance of this message or produce a serialized representation of same.
+      *
+      * @param adapterName the name of the adapter that will have this message binding
+      * @param namespaceMsgName the message that can be consumed by the specified serializer
+      * @param namespaceSerializerName the serializer that can deserialize and serialize the message
+      * @param serializerOptions (optional) options used by the serializer to configure itself
       */
     @throws(classOf[AlreadyExistsException])
-    def AddAdapterMessageBinding(nameSpace: String
-                      , name: String
-                      , version: Long = 1
+    def AddAdapterMessageBinding(adapterName: String
                       , namespaceMsgName : String
                       , namespaceSerializerName: String
-                      , serializerOptions : Map[String,String] = Map[String,String]()
-                      , ownerId: String = "System"
-                      , uniqueId: Long = 0L
-                      , mdElementId: Long = 0L
-                      , physicalName: String = null
-                      , jarNm: String = null
-                      , depJars: Array[String] = null): Unit = {
-        /*
-        AddSerializer(MakeAdapterMessageBinding(nameSpace
-            , name
-            , version
-            , serializerType
-            , physicalName
-            , ownerId
-            , uniqueId
-            , mdElementId
-            , jarNm
-            , depJars)) */
+                      , serializerOptions : Map[String,String] = Map[String,String]()): Unit = {
+
+        AddAdapterMessageBinding(MakeAdapterMessageBinding(adapterName
+                                                        , namespaceMsgName
+                                                        , namespaceSerializerName
+                                                        , serializerOptions))
     }
 
     /**
-      * Add a SerializeDeserializeConfig instance to the map designated to hold them.
-      * @param config the prepared SerializeDeserializeConfig object
+      * Add a AdapterMessageBinding instance to the map designated to hold them.  The map key is constructed from
+      * the triple:
+      *
+      *     binding.adapterName.binding.messageName.binding.serializer
+      *
+      * folded to lower case.
+      *
+      * @param binding the prepared SerializeDeserializeConfig object
       * @return true if the object was added to the map (exception is thrown if one exists with this name)
       */
-    /*
+
     @throws(classOf[AlreadyExistsException])
-    def AddAdapterMessageBinding(config : SerializeDeserializeConfig) : Boolean = {
-        val added : Boolean = if (serializers.contains(config.FullName.toLowerCase)) {
-            throw new AlreadyExistsException(s"a SerializeDeserializeConfig already exists with the name ${config.FullName}.", null)
+    def AddAdapterMessageBinding(binding : AdapterMessageBinding) : Boolean = {
+        val key : String = s"${binding.adapterName}.${binding.messageName}.${binding.serializer}".toLowerCase
+        val added : Boolean = if (adapterMessageBindings.contains(key)) {
+            throw AlreadyExistsException(s"an AdapterMessageBinding with key $key already exists... binding could not be added.", null)
         } else {
-            serializers(config.FullName.toLowerCase) = config
+            adapterMessageBindings(key) = binding
             true
         }
         added
-    } */
+    }
 
     /**
-      * Construct a SerializeDeserializeConfig from the supplied arguments.
-      * @param nameSpace the namespace for this SerializeDeserializeConfig
-      * @param name its serializer name
-      * @param version its serializer version
-      * @param serializerType the serializer type
-      * @param physicalName the fqClassname that contains the behavior (found in the jarNm)
-      * @param ownerId the perpetrator of this serializer
-      * @param uniqueId a unique identifier that uniquely describes this object (reserved)
-      * @param mdElementId another unique identifer (reserved)
-      * @param jarNm the simple jar that is to be loaded in order to use the described SerializeDeserialize implementation
-      *              this config describes
-      * @param depJars the array of jars that are to be loaded so the SerializeDeserialize implementation this config
-      *                describes can function
-      * @return a SerializeDeserializeConfig
+      * Make an AdapterMessageBinding instance
+      * @param adapterName the adapter's name
+      * @param namespaceMsgName the message that can be consumed by the specified serializer
+      * @param namespaceSerializerName the serializer that can deserialize and serialize the message
+      * @param serializerOptions (optional) options that should be used by the serializer to configure itself
+      * @return AdapterMessageBinding instance
       */
-    /*
-    def MakeAdapterMessageBinding(nameSpace: String
-                       , name: String
-                       , version: Long = 1
-                       , serializerType: SerializeDeserializeType.SerDeserType
-                       , physicalName: String
-                       , ownerId: String
-                       , uniqueId: Long
-                       , mdElementId: Long
-                       , jarNm: String = null
-                       , depJars: Array[String] = null): SerializeDeserializeConfig = {
+    def MakeAdapterMessageBinding(  adapterName: String
+                                  , namespaceMsgName : String
+                                  , namespaceSerializerName: String
+                                  , serializerOptions : Map[String,String] = Map[String,String]()): AdapterMessageBinding = {
 
-        val depJarSet = scala.collection.mutable.Set[String]()
-
-        /** Instantiate the model definition.  Update the base element with basic id information */
-        val cfg: SerializeDeserializeConfig = new SerializeDeserializeConfig(serializerType)
-
-        if (depJars != null) depJarSet ++= depJars
-        val dJars : Array[String] = if (depJarSet.nonEmpty) depJarSet.toArray else null
-
-        cfg.PhysicalName(physicalName)
-        SetBaseElem(cfg, nameSpace, name, version, jarNm, dJars, ownerId, uniqueId, mdElementId)
-
-        cfg
-    } */
+        /** Instantiate the AdapterMessageBinding.  Update its base element with basic id information */
+        val binding: AdapterMessageBinding = new AdapterMessageBinding(  adapterName
+                                                                       , namespaceMsgName
+                                                                       , namespaceSerializerName
+                                                                       , serializerOptions)
+        binding
+    }
 
     /** Retrieve the SerializeDeserializerConfig with the supplied namespace.name
       *
@@ -3640,6 +3607,7 @@ object MdMgr extends LogTrait {
     val modelNmSpace: String = buffer.toString
     (modelNmSpace, modelNm)
   }
+
 }
 
 

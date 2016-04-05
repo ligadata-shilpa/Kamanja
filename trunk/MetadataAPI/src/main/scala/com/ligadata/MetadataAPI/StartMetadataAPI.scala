@@ -371,7 +371,7 @@ object StartMetadataAPI {
         case Action.DUMPALLCFGOBJECTS => response = ConfigService.dumpAllCfgObjects
         case Action.REMOVEENGINECONFIG => response = ConfigService.removeEngineConfig
 
-        // adapter message binding
+        // adapter message bindings
         case Action.ADDADAPTERMESSAGEBINDING => response = AdapterMessageBindingService.addAdapterMessageBinding(input, userId)
         case Action.UPDATEADAPTERMESSAGEBINDING => response = AdapterMessageBindingService.updateAdapterMessageBinding(input, userId)
         case Action.REMOVEADAPTERMESSAGEBINDING => response = AdapterMessageBindingService.removeAdapterMessageBinding(input, userId)

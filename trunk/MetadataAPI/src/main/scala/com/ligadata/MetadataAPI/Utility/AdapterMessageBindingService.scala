@@ -39,13 +39,14 @@ object AdapterMessageBindingService {
       * @param userId
       * @return
       */
+    @throws(classOf[com.ligadata.Exceptions.InvalidArgumentException])
     def addAdapterMessageBindingFromJson(input: String, userId : Option[String]) : String = {
         val isMap : Boolean = (input != null && input.trim.startsWith("{"))
         val isList : Boolean = (input != null && input.trim.startsWith("["))
 
         val reasonable : Boolean = isMap || isList
         if (! reasonable) {
-            throw new IllegalArgumentException("the adapter string specified must be either a json map or json array.")
+            throw InvalidArgumentException("the adapter string specified must be either a json map or json array.", null)
         }
         val result : String = if (isMap) {
             val bindingSpec : Map[String,Any] = jsonStringAsColl(input).asInstanceOf[Map[String,Any]]
