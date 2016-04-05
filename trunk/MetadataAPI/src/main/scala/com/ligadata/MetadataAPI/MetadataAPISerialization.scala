@@ -285,21 +285,11 @@ object MetadataAPISerialization {
           val json = "Adapter" ->
             ("Name" -> o.Name) ~
               ("TypeString" -> o.TypeString) ~
+              ("DataFormat" -> o.DataFormat) ~
               ("ClassName" -> o.ClassName) ~
               ("JarName" -> o.JarName) ~
               ("DependencyJars" -> o.DependencyJars.toList) ~
-              ("AdapterSpecificCfg" -> o.AdapterSpecificCfg)~
-              ("TenantId" -> o.TenantId)
-          compact(render(json))
-        }
-        case o: TenantInfo => {
-          val primaryDataStore = if (o.primaryDataStore == null) "" else o.primaryDataStore
-          val cacheConfig = if (o.cacheConfig == null) "" else o.cacheConfig
-          val json = "Tenant" ->
-            ("TenantId" -> o.tenantId) ~
-              ("Description" -> o.description) ~
-              ("PrimaryDataStore" -> primaryDataStore) ~
-              ("CacheConfig" -> cacheConfig)
+              ("AdapterSpecificCfg" -> o.AdapterSpecificCfg)
           compact(render(json))
         }
         case o: UserPropertiesInfo => {
@@ -344,7 +334,6 @@ object MetadataAPISerialization {
         case "Cluster" => parseClusterInfo(json)
         case "ClusterCfg" => parseClusterCfgInfo(json)
         case "Adapter" => parseAdapterInfo(json)
-        case "Tenant" => parseTenantInfo(json)
         case "UserProperties" => parseUserPropertiesInfo(json)
         case _ => throw new Exception("deserializeMetadata doesn't support the objects of type objectType of " + key + " yet.")
       }
@@ -459,7 +448,7 @@ object MetadataAPISerialization {
         primaryKeys,
         foreignKeys,
         MsgDefInst.Message.PartitionKey.toArray,
-        false, MsgDefInst.Message.Persist
+        false
       )
 
       msgDef.tranId = MsgDefInst.Message.NumericTypes.TransId
@@ -531,7 +520,7 @@ object MetadataAPISerialization {
         primaryKeys,
         foreignKeys,
         ContDefInst.Container.PartitionKey.toArray,
-        false, ContDefInst.Container.Persist
+        false
       )
 
       contDef.tranId = ContDefInst.Container.NumericTypes.TransId
@@ -903,45 +892,25 @@ object MetadataAPISerialization {
     }
   }
 
-  private def parseTenantInfo(tenantInfoJson: JValue): TenantInfo = {
-    try {
-      logger.debug("Parsed the json : " + tenantInfoJson)
-
-      val tenantInst = tenantInfoJson.extract[Tenant]
-
-      val tenantInfo = MdMgr.GetMdMgr.MakeTenantInfo(
-        tenantInst.Tenant.TenantId,
-        tenantInst.Tenant.Description,
-        tenantInst.Tenant.PrimaryDataStore,
-        tenantInst.Tenant.CacheConfig
-      )
-      tenantInfo
-    } catch {
-      case e: MappingException => {
-        logger.debug("", e)
-        throw Json4sParsingException(e.getMessage(), e)
-      }
-      case e: Exception => {
-        logger.error("Failed to parse JSON" + tenantInfoJson, e)
-        throw e
-      }
-    }
-  }
-
   private def parseAdapterInfo(adapterInfoJson: JValue): AdapterInfo = {
     try {
       logger.debug("Parsed the json : " + adapterInfoJson)
 
       val adapterInst = adapterInfoJson.extract[Adapter]
 
+      //FIXME: Serialize & Deserialize these values -- Begin
+      val ownerId: String = ""
+      val uniqueId: Long = 0
+      val mdElementId: Long = 0
+      //FIXME: Serialize & Deserialize these values -- End
       val adapterInfo = MdMgr.GetMdMgr.MakeAdapter(
         adapterInst.Adapter.Name,
         adapterInst.Adapter.TypeString,
+        adapterInst.Adapter.DataFormat,
         adapterInst.Adapter.ClassName,
         adapterInst.Adapter.JarName,
         adapterInst.Adapter.DependencyJars,
-        adapterInst.Adapter.AdapterSpecificCfg,
-        adapterInst.Adapter.TenantId
+        adapterInst.Adapter.AdapterSpecificCfg
       )
       adapterInfo
 
@@ -995,13 +964,9 @@ case class UserPropertiesInformation(ClusterId: String, Props: List[KeyVale])
 
 case class UserProperties(UserProperties: UserPropertiesInformation)
 
-case class AdapterInformation(Name: String, TypeString: String, ClassName: String, JarName: String, DependencyJars: List[String], AdapterSpecificCfg: String, TenantId: String)
+case class AdapterInformation(Name: String, TypeString: String, DataFormat: String, ClassName: String, JarName: String, DependencyJars: List[String], AdapterSpecificCfg: String)
 
 case class Adapter(Adapter: AdapterInformation)
-
-case class TenantInformation(TenantId: String, Description: String, PrimaryDataStore: String, CacheConfig: String)
-
-case class Tenant(Tenant: TenantInformation)
 
 case class KeyVale(Key: String, Value: String)
 

@@ -222,7 +222,7 @@ object JsonSerializer {
           if (typ.TypeName == "Struct") {
             typeDef = MdMgr.GetMdMgr.MakeStructDef(typ.NameSpace, typ.Name, typ.PhysicalName,
               null, typ.Version.toLong, typ.JarName,
-              typ.DependencyJars.toArray, null, null, null, typ.OwnerId, typ.TenantId, typ.UniqueId, typ.MdElementId, 0, "", false) //BUGBUG:: Handle Primary Key, Foreign Keys & Partition Key here and also SchemaId, AvroSchema
+              typ.DependencyJars.toArray, null, null, null, typ.OwnerId, typ.TenantId, typ.UniqueId, typ.MdElementId, 0, "") //BUGBUG:: Handle Primary Key, Foreign Keys & Partition Key here and also SchemaId, AvroSchema
           }
         }
         case _ => {
@@ -425,7 +425,7 @@ object JsonSerializer {
         ContDefInst.Container.OwnerId, ContDefInst.Container.TenantId, ContDefInst.Container.UniqueId, ContDefInst.Container.MdElementId, ContDefInst.Container.SchemaId, ContDefInst.Container.AvroSchema,
         ContDefInst.Container.Version.toLong,
         ContDefInst.Container.JarName,
-        ContDefInst.Container.DependencyJars.toArray, null, null, null, false, false)
+        ContDefInst.Container.DependencyJars.toArray)
       contDef
     } catch {
       case e: MappingException => {
@@ -557,7 +557,7 @@ object JsonSerializer {
         MsgDefInst.Message.OwnerId, MsgDefInst.Message.TenantId, MsgDefInst.Message.UniqueId, MsgDefInst.Message.MdElementId, MsgDefInst.Message.SchemaId, MsgDefInst.Message.AvroSchema,
         MsgDefInst.Message.Version.toLong,
         MsgDefInst.Message.JarName,
-        MsgDefInst.Message.DependencyJars.toArray, null, null, null, false, false)
+        MsgDefInst.Message.DependencyJars.toArray)
       msgDef
     } catch {
       case e: MappingException => {
@@ -982,11 +982,11 @@ object JsonSerializer {
       case o: AdapterInfo => {
         val json = (("Name" -> o.name) ~
           ("TypeString" -> o.typeString) ~
+          ("DataFormat" -> o.dataFormat) ~
           ("ClassName" -> o.className) ~
           ("JarName" -> o.jarName) ~
           ("DependencyJars" -> o.dependencyJars.toList) ~
-          ("AdapterSpecificCfg" -> o.adapterSpecificCfg) ~
-          ("TenantId" -> o.TenantId))
+          ("AdapterSpecificCfg" -> o.adapterSpecificCfg))
         pretty(render(json))
       }
       case _ => {

@@ -56,7 +56,7 @@ lazy val KamanjaInternalDeps = project.in(file("KamanjaInternalDeps")).configs(T
   Serialize, ZooKeeperListener, ZooKeeperLeaderLatch, KamanjaUtils, TransactionService, StorageManager, PmmlCompiler, ZooKeeperClient, OutputMsgDef, SecurityAdapterBase, HeartBeat,
   JpmmlFactoryOfModelInstanceFactory, KamanjaVersion, InstallDriverBase, BaseFunctions, KafkaSimpleInputOutputAdapters, FileSimpleInputOutputAdapters, SimpleEnvContextImpl,
   GenericMsgCompiler, MethodExtractor, MetadataAPIServiceClient, JsonDataGen, Controller, AuditAdapters, CustomUdfLib, ExtractData, UtilityService,
-  UtilsForModels, MessageCompiler, jtm, Dag)
+  UtilsForModels, NodeInfoExtract)
 
 
 //lazy val KamanjaInternalDeps = project.in(file("KamanjaInternalDeps")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(ExtDependencyLibs % "provided",ExtDependencyLibs2 % "provided", InputOutputAdapterBase, Exceptions, DataDelimiters, Metadata, KamanjaBase, MetadataBootstrap,
@@ -74,7 +74,7 @@ lazy val KamanjaInternalDeps = project.in(file("KamanjaInternalDeps")).configs(T
 
 ////////////////////////
 
-lazy val BaseTypes = project.in(file("BaseTypes")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(ExtDependencyLibs % "provided",ExtDependencyLibs2 % "provided", Metadata, Exceptions)
+lazy val BaseTypes = project.in(file("BaseTypes")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(ExtDependencyLibs % "provided", ExtDependencyLibs2 % "provided", Metadata, Exceptions)
 
 //lazy val KamanjaManager = project.in(file("KamanjaManager"))
 //  .configs(TestConfigs.all: _*)
@@ -114,7 +114,7 @@ lazy val SmartFileAdapter = project.in(file("InputOutputAdapters/SmartFileAdapte
 lazy val MessageCompiler = project.in(file("MessageCompiler")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(Metadata, MetadataBootstrap, Exceptions).dependsOn(ExtDependencyLibs % "provided", ExtDependencyLibs2 % "provided")
 
 
-lazy val KamanjaManager = project.in(file("KamanjaManager")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(ExtDependencyLibs % "provided", ExtDependencyLibs2 % "provided", Metadata, KamanjaBase, MetadataBootstrap, MetadataAPI, Serialize, ZooKeeperListener, ZooKeeperLeaderLatch, Exceptions, KamanjaUtils, TransactionService, DataDelimiters, InputOutputAdapterBase, Dag)
+lazy val KamanjaManager = project.in(file("KamanjaManager")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(ExtDependencyLibs % "provided", ExtDependencyLibs2 % "provided", Metadata, KamanjaBase, MetadataBootstrap, MetadataAPI, Serialize, ZooKeeperListener, ZooKeeperLeaderLatch, Exceptions, KamanjaUtils, TransactionService, DataDelimiters, InputOutputAdapterBase)
 
 lazy val InputOutputAdapterBase = project.in(file("InputOutputAdapters/InputOutputAdapterBase")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(ExtDependencyLibs % "provided", ExtDependencyLibs2 % "provided", Exceptions, DataDelimiters, HeartBeat, KamanjaBase, ZooKeeperClient, StorageBase, StorageManager, TransactionService)
 
@@ -233,9 +233,10 @@ lazy val HeartBeat = project.in(file("HeartBeat")).configs(TestConfigs.all: _*).
 
 lazy val TransactionService = project.in(file("TransactionService")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(ExtDependencyLibs % "provided", ExtDependencyLibs2 % "provided", Exceptions, KamanjaBase, ZooKeeperClient, StorageBase, StorageManager)
 
-lazy val runtime = project.in(file("GenerateModels/Runtime")) dependsOn(ExtDependencyLibs % "provided", ExtDependencyLibs2 % "provided", Metadata, KamanjaBase, Exceptions, MetadataBootstrap, MessageCompiler)
 
-lazy val jtm = project.in(file("GenerateModels/jtm")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(ExtDependencyLibs % "provided", ExtDependencyLibs2 % "provided", Metadata, KamanjaBase, Exceptions, MetadataBootstrap, MessageCompiler, runtime)
+lazy val jtm = project.in(file("GenerateModels/jtm")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(ExtDependencyLibs % "provided", ExtDependencyLibs2 % "provided", Metadata, KamanjaBase, Exceptions, MetadataBootstrap, MessageCompiler)
+
+lazy val runtime = project.in(file("GenerateModels/Runtime")) dependsOn(ExtDependencyLibs % "provided", ExtDependencyLibs2 % "provided", Metadata, KamanjaBase, Exceptions, MetadataBootstrap, MessageCompiler)
 
 lazy val Dag = project.in(file("Utils/Dag")) dependsOn(ExtDependencyLibs % "provided", ExtDependencyLibs2 % "provided", KamanjaUtils, Exceptions)
 
@@ -280,11 +281,11 @@ lazy val MigrateFrom_V_1_3 = project.in(file("Utils/Migrate/SourceVersion/Migrat
 
 lazy val InstallDriverBase = project.in(file("Utils/ClusterInstaller/InstallDriverBase")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(ExtDependencyLibs % "provided", ExtDependencyLibs2 % "provided")
 
-lazy val InstallDriver = project.in(file("Utils/ClusterInstaller/InstallDriver")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(ExtDependencyLibs % "provided", ExtDependencyLibs2 % "provided", InstallDriverBase, Serialize, KamanjaUtils)
+lazy val InstallDriver = project.in(file("Utils/ClusterInstaller/InstallDriver")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(InstallDriverBase, Serialize, KamanjaUtils)
 
-lazy val ClusterInstallerDriver = project.in(file("Utils/ClusterInstaller/ClusterInstallerDriver")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(ExtDependencyLibs % "provided", ExtDependencyLibs2 % "provided", InstallDriverBase, MigrateBase, MigrateManager)
+lazy val ClusterInstallerDriver = project.in(file("Utils/ClusterInstaller/ClusterInstallerDriver")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(InstallDriverBase, MigrateBase, MigrateManager)
 
-lazy val GetComponent = project.in(file("Utils/ClusterInstaller/GetComponent")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(ExtDependencyLibs % "provided", ExtDependencyLibs2 % "provided")
+lazy val GetComponent = project.in(file("Utils/ClusterInstaller/GetComponent")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*) //.dependsOn(ExtDependencyLibs % "provided", ExtDependencyLibs2 % "provided")
 
 lazy val PmmlTestTool = project.in(file("Utils/PmmlTestTool")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(ExtDependencyLibs % "provided", ExtDependencyLibs2 % "provided", KamanjaVersion)
 

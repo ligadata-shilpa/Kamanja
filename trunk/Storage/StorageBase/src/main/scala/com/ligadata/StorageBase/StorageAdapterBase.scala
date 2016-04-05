@@ -224,7 +224,6 @@ trait DataStore extends DataStoreOperations {
   def TruncateContainer(containerNames: Array[String]): Unit
   def DropContainer(containerNames: Array[String]): Unit
   def CreateContainer(containerNames: Array[String]): Unit
-  def CreateMetadataContainer(containerNames: Array[String]): Unit
 }
 
 trait Transaction extends DataStoreOperations {

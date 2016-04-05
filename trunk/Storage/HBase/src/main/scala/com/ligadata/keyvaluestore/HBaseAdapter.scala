@@ -61,15 +61,12 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
   val logger = LogManager.getLogger(loggerName)
   private[this] val lock = new Object
   private var containerList: scala.collection.mutable.Set[String] = scala.collection.mutable.Set[String]()
-  private var isMetadataMap: scala.collection.mutable.Map[String, Boolean] = new scala.collection.mutable.HashMap()
   private var msg: String = ""
 
   private val stStrBytes = "serializerType".getBytes()
   private val siStrBytes = "serializedInfo".getBytes()
   private val schemaIdStrBytes = "schemaId".getBytes()
   private val baseStrBytes = "base".getBytes()
-  private val isMetadataTableStrBytes = "isMetadataTable".getBytes()
-  private val isMetadataTableName = "isMetadata"
 
   private def CreateConnectionException(msg: String, ie: Exception): StorageConnectionException = {
     logger.error(msg, ie)
@@ -263,77 +260,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     }
   }
 
-  private def createIsMetadataTable: Unit = {
-    var tableName = toFullTableName(isMetadataTableName) // prepend namespace
-    try {
-      relogin
-      if (!admin.tableExists(tableName)) {
-        val tableDesc = new HTableDescriptor(TableName.valueOf(tableName));
-        val colDesc1 = new HColumnDescriptor("key".getBytes())
-        val colDesc2 = new HColumnDescriptor(isMetadataTableStrBytes)
-        tableDesc.addFamily(colDesc1)
-        tableDesc.addFamily(colDesc2)
-        createTableFromDescriptor(tableDesc)
-      }
-    } catch {
-      case e: Exception => {
-        throw CreateDDLException("Failed to create table " + tableName, e)
-      }
-    }
-  }
-
-  private def putIsMetadataFlag(containerName: String, isMetadataContainer: Boolean): Unit = {
-    var tableName = toFullTableName(isMetadataTableName) // prepend namespace
-    var tableHBase: Table = null
-    try {
-      relogin
-      tableHBase = getTableFromConnection(tableName);
-      var kba = containerName.getBytes()
-      var p = new Put(kba)
-      var yesOrNo = if ( isMetadataContainer ) "yes" else "no"
-      p.addColumn(isMetadataTableStrBytes, baseStrBytes, Bytes.toBytes(yesOrNo))
-      tableHBase.put(p)
-    } catch {
-      case e: Exception => {
-        throw CreateDMLException("Failed to save an object in table " + tableName, e)
-      }
-    } finally {
-      if (tableHBase != null) {
-        tableHBase.close()
-      }
-    }
-  }
-
-  private def getIsMetadataFlag(containerName: String): Boolean = {
-    var tableName = toFullTableName(isMetadataTableName) // prepend namespace
-    var tableHBase: Table = null
-    try {
-      relogin
-      tableHBase = getTableFromConnection(tableName);
-      val g = new Get(containerName.getBytes())
-      val r = tableHBase.get(g);
-      //val kv : r.raw()
-      if( r.isEmpty() ){
-	return false
-      }
-      else{
-	val v = r.getValue(isMetadataTableStrBytes,baseStrBytes)
-	val b = if (Bytes.toString(v).equalsIgnoreCase("yes")) true else false
-	b
-      }
-    } catch {
-      case e: Exception => {
-        throw CreateDMLException("Failed to get an object from the table " + tableName, e)
-      }
-    } finally {
-      if (tableHBase != null) {
-        tableHBase.close()
-      }
-    }
-  }
-
-
-  private def createTable(containerName:String, tableName: String, isMetadata: Boolean, apiType: String): Unit = {
+  private def createTable(tableName: String, apiType: String): Unit = {
     try {
       relogin
       if (!admin.tableExists(tableName)) {
@@ -347,11 +274,6 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
             }
           }
         }
-	// save the flag isMetadata first
-	if( isMetadata ){
-          createIsMetadataTable
-	  putIsMetadataFlag(containerName,isMetadata)
-	}
         val tableDesc = new HTableDescriptor(TableName.valueOf(tableName));
         val colDesc1 = new HColumnDescriptor("key".getBytes())
         val colDesc2 = new HColumnDescriptor(stStrBytes)
@@ -362,9 +284,6 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
         tableDesc.addFamily(colDesc3)
         tableDesc.addFamily(colDesc4)
         createTableFromDescriptor(tableDesc)
-	// update local cache
-        containerList.add(containerName)
-	isMetadataMap(containerName) = isMetadata
       }
     } catch {
       case e: Exception => {
@@ -389,15 +308,13 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     }
   }
 
-  private def CheckTableExists(containerName: String, apiType: String = "dml"): Boolean = {
+  private def CheckTableExists(containerName: String, apiType: String = "dml"): Unit = {
     try {
       if (containerList.contains(containerName)) {
-        return isMetadataMap(containerName)
+        return
       } else {
-        val isMetadata = getIsMetadataFlag(containerName)
+        CreateContainer(containerName, apiType)
         containerList.add(containerName)
-	isMetadataMap(containerName) = isMetadata
-	isMetadata
       }
     } catch {
       case e: Exception => {
@@ -447,11 +364,11 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     toTableName(containerName)
   }
 
-  private def CreateContainer(containerName: String,isMetadata: Boolean, apiType: String): Unit = lock.synchronized {
+  private def CreateContainer(containerName: String, apiType: String): Unit = lock.synchronized {
     var tableName = toTableName(containerName)
     var fullTableName = toFullTableName(containerName)
     try {
-      createTable(containerName,fullTableName,isMetadata,apiType)
+      createTable(fullTableName, apiType)
     } catch {
       case e: Exception => {
         throw e
@@ -463,15 +380,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     logger.info("create the container tables")
     containerNames.foreach(cont => {
       logger.info("create the container " + cont)
-      CreateContainer(cont,false,"ddl")
-    })
-  }
-
-  override def CreateMetadataContainer(containerNames: Array[String]): Unit = {
-    logger.info("create the container tables")
-    containerNames.foreach(cont => {
-      logger.info("create the container " + cont)
-      CreateContainer(cont,true,"ddl")
+      CreateContainer(cont, "ddl")
     })
   }
 
@@ -539,116 +448,118 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     ab.toArray
   }
 
-  private def MakeCompositeKey(key: Key,isMetadataContainer: Boolean): Array[Byte] = {
-    if( isMetadataContainer ){
-      key.bucketKey(0).getBytes
-    }
-    else{
-      val ab = new ArrayBuffer[Byte](256)
-      ab += (((key.timePartition >>> 56) & 0xFF).toByte)
-      ab += (((key.timePartition >>> 48) & 0xFF).toByte)
-      ab += (((key.timePartition >>> 40) & 0xFF).toByte)
-      ab += (((key.timePartition >>> 32) & 0xFF).toByte)
-      ab += (((key.timePartition >>> 24) & 0xFF).toByte)
-      ab += (((key.timePartition >>> 16) & 0xFF).toByte)
-      ab += (((key.timePartition >>> 8) & 0xFF).toByte)
-      ab += (((key.timePartition >>> 0) & 0xFF).toByte)
+  private def MakeCompositeKey(key: Key): Array[Byte] = {
+    val ab = new ArrayBuffer[Byte](256)
+    ab += (((key.timePartition >>> 56) & 0xFF).toByte)
+    ab += (((key.timePartition >>> 48) & 0xFF).toByte)
+    ab += (((key.timePartition >>> 40) & 0xFF).toByte)
+    ab += (((key.timePartition >>> 32) & 0xFF).toByte)
+    ab += (((key.timePartition >>> 24) & 0xFF).toByte)
+    ab += (((key.timePartition >>> 16) & 0xFF).toByte)
+    ab += (((key.timePartition >>> 8) & 0xFF).toByte)
+    ab += (((key.timePartition >>> 0) & 0xFF).toByte)
 
-      AddBucketKeyToArrayBuffer(key.bucketKey, ab)
+    AddBucketKeyToArrayBuffer(key.bucketKey, ab)
 
-      ab += (((key.transactionId >>> 56) & 0xFF).toByte)
-      ab += (((key.transactionId >>> 48) & 0xFF).toByte)
-      ab += (((key.transactionId >>> 40) & 0xFF).toByte)
-      ab += (((key.transactionId >>> 32) & 0xFF).toByte)
-      ab += (((key.transactionId >>> 24) & 0xFF).toByte)
-      ab += (((key.transactionId >>> 16) & 0xFF).toByte)
-      ab += (((key.transactionId >>> 8) & 0xFF).toByte)
-      ab += (((key.transactionId >>> 0) & 0xFF).toByte)
+    ab += (((key.transactionId >>> 56) & 0xFF).toByte)
+    ab += (((key.transactionId >>> 48) & 0xFF).toByte)
+    ab += (((key.transactionId >>> 40) & 0xFF).toByte)
+    ab += (((key.transactionId >>> 32) & 0xFF).toByte)
+    ab += (((key.transactionId >>> 24) & 0xFF).toByte)
+    ab += (((key.transactionId >>> 16) & 0xFF).toByte)
+    ab += (((key.transactionId >>> 8) & 0xFF).toByte)
+    ab += (((key.transactionId >>> 0) & 0xFF).toByte)
 
-      ab += (((key.rowId >>> 24) & 0xFF).toByte)
-      ab += (((key.rowId >>> 16) & 0xFF).toByte)
-      ab += (((key.rowId >>> 8) & 0xFF).toByte)
-      ab += (((key.rowId >>> 0) & 0xFF).toByte)
+    ab += (((key.rowId >>> 24) & 0xFF).toByte)
+    ab += (((key.rowId >>> 16) & 0xFF).toByte)
+    ab += (((key.rowId >>> 8) & 0xFF).toByte)
+    ab += (((key.rowId >>> 0) & 0xFF).toByte)
 
-      ab.toArray
-    }
+    ab.toArray
   }
 
-  private def GetKeyFromCompositeKey(compKey: Array[Byte], isMetadataContainer: Boolean): Key = {
-    if( isMetadataContainer ){
-      var cntr = 0
-      val k = new String(compKey)
-      val bucketKey = new Array[String](1)
-      bucketKey(0) = k
-      new Key(0, bucketKey, 0, 0)
-    }
-    else{
-      var cntr = 0
-      val tp_b1 = compKey(cntr)
-      cntr += 1
-      val tp_b2 = compKey(cntr)
-      cntr += 1
-      val tp_b3 = compKey(cntr)
-      cntr += 1
-      val tp_b4 = compKey(cntr)
-      cntr += 1
-      val tp_b5 = compKey(cntr)
-      cntr += 1
-      val tp_b6 = compKey(cntr)
-      cntr += 1
-      val tp_b7 = compKey(cntr)
-      cntr += 1
-      val tp_b8 = compKey(cntr)
-      cntr += 1
+  private def GetKeyFromCompositeKey(compKey: Array[Byte]): Key = {
+    var cntr = 0
+    val tp_b1 = compKey(cntr)
+    cntr += 1
+    val tp_b2 = compKey(cntr)
+    cntr += 1
+    val tp_b3 = compKey(cntr)
+    cntr += 1
+    val tp_b4 = compKey(cntr)
+    cntr += 1
+    val tp_b5 = compKey(cntr)
+    cntr += 1
+    val tp_b6 = compKey(cntr)
+    cntr += 1
+    val tp_b7 = compKey(cntr)
+    cntr += 1
+    val tp_b8 = compKey(cntr)
+    cntr += 1
 
-      val timePartition =
+    val timePartition =
       (((0xff & tp_b1.asInstanceOf[Long]) << 56) + ((0xff & tp_b2.asInstanceOf[Long]) << 48) +
-       ((0xff & tp_b3.asInstanceOf[Long]) << 40) + ((0xff & tp_b4.asInstanceOf[Long]) << 32) +
-       ((0xff & tp_b5.asInstanceOf[Long]) << 24) + ((0xff & tp_b6.asInstanceOf[Long]) << 16) +
-       ((0xff & tp_b7.asInstanceOf[Long]) << 8) + ((0xff & tp_b8.asInstanceOf[Long]) << 0))
+        ((0xff & tp_b3.asInstanceOf[Long]) << 40) + ((0xff & tp_b4.asInstanceOf[Long]) << 32) +
+        ((0xff & tp_b5.asInstanceOf[Long]) << 24) + ((0xff & tp_b6.asInstanceOf[Long]) << 16) +
+        ((0xff & tp_b7.asInstanceOf[Long]) << 8) + ((0xff & tp_b8.asInstanceOf[Long]) << 0))
 
-      val (bucketKey, consumedBytes) = MakeBucketKeyFromByteArr(compKey, cntr)
-      cntr += consumedBytes
+    val (bucketKey, consumedBytes) = MakeBucketKeyFromByteArr(compKey, cntr)
+    cntr += consumedBytes
 
-      val tx_b1 = compKey(cntr)
-      cntr += 1
-      val tx_b2 = compKey(cntr)
-      cntr += 1
-      val tx_b3 = compKey(cntr)
-      cntr += 1
-      val tx_b4 = compKey(cntr)
-      cntr += 1
-      val tx_b5 = compKey(cntr)
-      cntr += 1
-      val tx_b6 = compKey(cntr)
-      cntr += 1
-      val tx_b7 = compKey(cntr)
-      cntr += 1
-      val tx_b8 = compKey(cntr)
-      cntr += 1
+    val tx_b1 = compKey(cntr)
+    cntr += 1
+    val tx_b2 = compKey(cntr)
+    cntr += 1
+    val tx_b3 = compKey(cntr)
+    cntr += 1
+    val tx_b4 = compKey(cntr)
+    cntr += 1
+    val tx_b5 = compKey(cntr)
+    cntr += 1
+    val tx_b6 = compKey(cntr)
+    cntr += 1
+    val tx_b7 = compKey(cntr)
+    cntr += 1
+    val tx_b8 = compKey(cntr)
+    cntr += 1
 
-      val transactionId =
+    val transactionId =
       (((0xff & tx_b1.asInstanceOf[Long]) << 56) + ((0xff & tx_b2.asInstanceOf[Long]) << 48) +
-       ((0xff & tx_b3.asInstanceOf[Long]) << 40) + ((0xff & tx_b4.asInstanceOf[Long]) << 32) +
-       ((0xff & tx_b5.asInstanceOf[Long]) << 24) + ((0xff & tx_b6.asInstanceOf[Long]) << 16) +
-       ((0xff & tx_b7.asInstanceOf[Long]) << 8) + ((0xff & tx_b8.asInstanceOf[Long]) << 0))
+        ((0xff & tx_b3.asInstanceOf[Long]) << 40) + ((0xff & tx_b4.asInstanceOf[Long]) << 32) +
+        ((0xff & tx_b5.asInstanceOf[Long]) << 24) + ((0xff & tx_b6.asInstanceOf[Long]) << 16) +
+        ((0xff & tx_b7.asInstanceOf[Long]) << 8) + ((0xff & tx_b8.asInstanceOf[Long]) << 0))
 
-      val rowid_b1 = compKey(cntr)
-      cntr += 1
-      val rowid_b2 = compKey(cntr)
-      cntr += 1
-      val rowid_b3 = compKey(cntr)
-      cntr += 1
-      val rowid_b4 = compKey(cntr)
-      cntr += 1
+    val rowid_b1 = compKey(cntr)
+    cntr += 1
+    val rowid_b2 = compKey(cntr)
+    cntr += 1
+    val rowid_b3 = compKey(cntr)
+    cntr += 1
+    val rowid_b4 = compKey(cntr)
+    cntr += 1
 
-      val rowId =
+    val rowId =
       (((0xff & rowid_b1.asInstanceOf[Int]) << 24) + ((0xff & rowid_b2.asInstanceOf[Int]) << 16) +
-       ((0xff & rowid_b3.asInstanceOf[Int]) << 8) + ((0xff & rowid_b4.asInstanceOf[Int]) << 0))
+        ((0xff & rowid_b3.asInstanceOf[Int]) << 8) + ((0xff & rowid_b4.asInstanceOf[Int]) << 0))
 
-      new Key(timePartition, bucketKey, transactionId, rowId)
-    }
+    new Key(timePartition, bucketKey, transactionId, rowId)
   }
+
+  /*
+  private def GetTupleFromCompositeKey(compKey: String): (String, String, String, String) = {
+    var keyArray = compKey.split('|').toArray
+    (keyArray(0), keyArray(1), keyArray(2), keyArray(3))
+  }
+
+  private def GetKeyFromTuple(tpStr: String, keyStr: String, tIdStr: String, rIdStr: String): Key = {
+    var timePartition = tpStr.toLong
+    var tId = tIdStr.toLong
+    var rId = rIdStr.toInt
+    // format the data to create Key/Value
+    val bucketKey = MakeBucketKeyFromStr(keyStr)
+    new Key(timePartition, bucketKey, tId, rId)
+  }
+*/
 
   private def getTableFromConnection(tableName: String): Table = {
     try {
@@ -668,9 +579,9 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     var tableHBase: Table = null
     try {
       relogin
-      val isMetadata = CheckTableExists(containerName)
+      CheckTableExists(containerName)
       tableHBase = getTableFromConnection(tableName);
-      var kba = MakeCompositeKey(key,isMetadata)
+      var kba = MakeCompositeKey(key)
       var p = new Put(kba)
       p.addColumn(stStrBytes, baseStrBytes, Bytes.toBytes(value.serializerType))
       p.addColumn(siStrBytes, baseStrBytes, value.serializedInfo)
@@ -693,7 +604,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       relogin
       data_list.foreach(li => {
         var containerName = li._1
-        val isMetadata = CheckTableExists(containerName)
+        CheckTableExists(containerName)
         var tableName = toFullTableName(containerName)
         tableHBase = getTableFromConnection(tableName);
         var keyValuePairs = li._3
@@ -701,7 +612,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
         keyValuePairs.foreach(keyValuePair => {
           var key = keyValuePair._1
           var value = keyValuePair._2
-          var kba = MakeCompositeKey(key,isMetadata)
+          var kba = MakeCompositeKey(key)
           var p = new Put(kba)
           p.addColumn(stStrBytes, baseStrBytes, Bytes.toBytes(value.serializerType))
           p.addColumn(siStrBytes, baseStrBytes, value.serializedInfo)
@@ -735,12 +646,12 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     var tableHBase: Table = null
     try {
       relogin
-      val isMetadata = CheckTableExists(containerName)
+      CheckTableExists(containerName)
       tableHBase = getTableFromConnection(tableName);
       var dels = new ArrayBuffer[Delete]()
 
       keys.foreach(key => {
-        var kba = MakeCompositeKey(key,isMetadata)
+        var kba = MakeCompositeKey(key)
         dels += new Delete(kba)
       })
 
@@ -822,7 +733,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     var tableHBase: Table = null
     try {
       relogin
-      val isMetadata = CheckTableExists(containerName)
+      CheckTableExists(containerName)
       tableHBase = getTableFromConnection(tableName);
       val bucketKeySet = new java.util.TreeSet[Array[String]](arrOfStrsComp)
       bucketKeys.foreach(bucketKey => {
@@ -839,13 +750,13 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       tmRanges.foreach(tr => {
         bucketKeys.foreach(bucketKey => {
           var scan = new Scan()
-          scan.setStartRow(MakeCompositeKey(new Key(tr.beginTime, bucketKey, 0, 0),isMetadata))
-          scan.setStopRow(MakeCompositeKey(new Key(tr.endTime, bucketKey, Long.MaxValue, Int.MaxValue),isMetadata))
+          scan.setStartRow(MakeCompositeKey(new Key(tr.beginTime, bucketKey, 0, 0)))
+          scan.setStopRow(MakeCompositeKey(new Key(tr.endTime, bucketKey, Long.MaxValue, Int.MaxValue)))
           val rs = tableHBase.getScanner(scan);
           val it = rs.iterator()
           while (it.hasNext()) {
             val r = it.next()
-            var key = GetKeyFromCompositeKey(r.getRow(),isMetadata)
+            var key = GetKeyFromCompositeKey(r.getRow())
             logger.info("searching for " + key.bucketKey.mkString(","))
             if (bucketKeySet.contains(key.bucketKey)) {
               dels += new Delete(r.getRow())
@@ -875,7 +786,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     var tableHBase: Table = null
     try {
       relogin
-      val isMetadata = CheckTableExists(containerName)
+      CheckTableExists(containerName)
       tableHBase = getTableFromConnection(tableName);
       val bucketKeySet = new java.util.TreeSet[Array[String]](arrOfStrsComp)
 
@@ -920,7 +831,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     try {
       relogin
       var tableName = toFullTableName(containerName)
-      val isMetadata = CheckTableExists(containerName)
+      CheckTableExists(containerName)
       tableHBase = getTableFromConnection(tableName);
 
       var scan = new Scan();
@@ -944,9 +855,9 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     }
   }
 
-  private def processRow(k: Array[Byte], isMetadata: Boolean, schemaId: Int, st: String, si: Array[Byte], callbackFunction: (Key, Value) => Unit) {
+  private def processRow(k: Array[Byte], schemaId: Int, st: String, si: Array[Byte], callbackFunction: (Key, Value) => Unit) {
     try {
-      var key = GetKeyFromCompositeKey(k,isMetadata)
+      var key = GetKeyFromCompositeKey(k)
       // format the data to create Key/Value
       var value = new Value(schemaId, st, si)
       if (callbackFunction != null)
@@ -970,9 +881,9 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     }
   }
 
-  private def processKey(k: Array[Byte], isMetadata: Boolean, callbackFunction: (Key) => Unit) {
+  private def processKey(k: Array[Byte], callbackFunction: (Key) => Unit) {
     try {
-      var key = GetKeyFromCompositeKey(k,isMetadata)
+      var key = GetKeyFromCompositeKey(k)
       if (callbackFunction != null)
         (callbackFunction)(key)
     } catch {
@@ -998,7 +909,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     var tableHBase: Table = null
     try {
       relogin
-      val isMetadata = CheckTableExists(containerName)
+      CheckTableExists(containerName)
       tableHBase = getTableFromConnection(tableName);
       var scan = new Scan();
       var rs = tableHBase.getScanner(scan);
@@ -1009,7 +920,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
         val st = Bytes.toString(r.getValue(stStrBytes, baseStrBytes))
         val si = r.getValue(siStrBytes, baseStrBytes)
         val schemaId = Bytes.toInt(r.getValue(schemaIdStrBytes, baseStrBytes))
-        processRow(r.getRow(), isMetadata, schemaId, st, si, callbackFunction)
+        processRow(r.getRow(), schemaId, st, si, callbackFunction)
       }
     } catch {
       case e: Exception => {
@@ -1027,7 +938,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     var tableHBase: Table = null
     try {
       relogin
-      val isMetadata = CheckTableExists(containerName)
+      CheckTableExists(containerName)
       tableHBase = getTableFromConnection(tableName);
       var scan = new Scan();
       scan.setFilter(new FirstKeyOnlyFilter());
@@ -1035,7 +946,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       val it = rs.iterator()
       while (it.hasNext()) {
         val r = it.next()
-        processKey(r.getRow(), isMetadata, callbackFunction)
+        processKey(r.getRow(), callbackFunction)
       }
     } catch {
       case e: Exception => {
@@ -1053,12 +964,12 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     var tableHBase: Table = null
     try {
       relogin
-      val isMetadata = CheckTableExists(containerName)
+      CheckTableExists(containerName)
       tableHBase = getTableFromConnection(tableName);
 
       val filters = new java.util.ArrayList[Filter]()
       keys.foreach(key => {
-        var kba = MakeCompositeKey(key,isMetadata)
+        var kba = MakeCompositeKey(key)
         val f = new SingleColumnValueFilter(Bytes.toBytes("key"), baseStrBytes,
           CompareOp.EQUAL, kba)
         filters.add(f);
@@ -1070,7 +981,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       val it = rs.iterator()
       while (it.hasNext()) {
         val r = it.next()
-        processKey(r.getRow(),isMetadata, callbackFunction)
+        processKey(r.getRow(), callbackFunction)
       }
     } catch {
       case e: Exception => {
@@ -1088,12 +999,12 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     var tableHBase: Table = null
     try {
       relogin
-      val isMetadata = CheckTableExists(containerName)
+      CheckTableExists(containerName)
       tableHBase = getTableFromConnection(tableName);
 
       val filters = new java.util.ArrayList[Filter]()
       keys.foreach(key => {
-        var kba = MakeCompositeKey(key,isMetadata)
+        var kba = MakeCompositeKey(key)
         val f = new SingleColumnValueFilter(Bytes.toBytes("key"), baseStrBytes,
           CompareOp.EQUAL, kba)
         filters.add(f);
@@ -1108,7 +1019,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
         val st = Bytes.toString(r.getValue(stStrBytes, baseStrBytes))
         val si = r.getValue(siStrBytes, baseStrBytes)
         val schemaId = Bytes.toInt(r.getValue(schemaIdStrBytes, baseStrBytes))
-        processRow(r.getRow(),isMetadata, schemaId, st, si, callbackFunction)
+        processRow(r.getRow(), schemaId, st, si, callbackFunction)
       }
     } catch {
       case e: Exception => {
@@ -1126,7 +1037,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     var tableHBase: Table = null
     try {
       relogin
-      val isMetadata = CheckTableExists(containerName)
+      CheckTableExists(containerName)
       tableHBase = getTableFromConnection(tableName);
 
       val tmRanges = getUnsignedTimeRanges(time_ranges)
@@ -1142,7 +1053,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
           val st = Bytes.toString(r.getValue(stStrBytes, baseStrBytes))
           val si = r.getValue(siStrBytes, baseStrBytes)
           val schemaId = Bytes.toInt(r.getValue(schemaIdStrBytes, baseStrBytes))
-          processRow(r.getRow(), isMetadata, schemaId, st, si, callbackFunction)
+          processRow(r.getRow(), schemaId, st, si, callbackFunction)
         }
       })
     } catch {
@@ -1161,7 +1072,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     var tableHBase: Table = null
     try {
       relogin
-      val isMetadata = CheckTableExists(containerName)
+      CheckTableExists(containerName)
       tableHBase = getTableFromConnection(tableName);
 
       val tmRanges = getUnsignedTimeRanges(time_ranges)
@@ -1174,7 +1085,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
         val it = rs.iterator()
         while (it.hasNext()) {
           val r = it.next()
-          processKey(r.getRow(),isMetadata, callbackFunction)
+          processKey(r.getRow(), callbackFunction)
         }
       })
     } catch {
@@ -1194,7 +1105,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     var tableHBase: Table = null
     try {
       relogin
-      val isMetadata = CheckTableExists(containerName)
+      CheckTableExists(containerName)
       tableHBase = getTableFromConnection(tableName);
       var bucketKeySet = new java.util.TreeSet[Array[String]](arrOfStrsComp)
       bucketKeys.foreach(bucketKey => {
@@ -1205,13 +1116,13 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
         // try scan with beginRow and endRow
         bucketKeys.foreach(bucketKey => {
           var scan = new Scan()
-          scan.setStartRow(MakeCompositeKey(new Key(time_range.beginTime, bucketKey, 0, 0),isMetadata))
-          scan.setStopRow(MakeCompositeKey(new Key(time_range.endTime, bucketKey, Long.MaxValue, Int.MaxValue),isMetadata))
+          scan.setStartRow(MakeCompositeKey(new Key(time_range.beginTime, bucketKey, 0, 0)))
+          scan.setStopRow(MakeCompositeKey(new Key(time_range.endTime, bucketKey, Long.MaxValue, Int.MaxValue)))
           val rs = tableHBase.getScanner(scan);
           val it = rs.iterator()
           while (it.hasNext()) {
             val r = it.next()
-            var key = GetKeyFromCompositeKey(r.getRow(),false)
+            var key = GetKeyFromCompositeKey(r.getRow())
             if (bucketKeySet.contains(key.bucketKey)) {
               val st = Bytes.toString(r.getValue(stStrBytes, baseStrBytes))
               val si = r.getValue(siStrBytes, baseStrBytes)
@@ -1238,7 +1149,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     var tableHBase: Table = null
     try {
       relogin
-      val isMetadata = CheckTableExists(containerName)
+      CheckTableExists(containerName)
       tableHBase = getTableFromConnection(tableName);
 
       var bucketKeySet = new java.util.TreeSet[Array[String]](arrOfStrsComp)
@@ -1251,13 +1162,13 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
         // try scan with beginRow and endRow
         bucketKeys.foreach(bucketKey => {
           var scan = new Scan()
-          scan.setStartRow(MakeCompositeKey(new Key(time_range.beginTime, bucketKey, 0, 0),isMetadata))
-          scan.setStopRow(MakeCompositeKey(new Key(time_range.endTime, bucketKey, Long.MaxValue, Int.MaxValue),isMetadata))
+          scan.setStartRow(MakeCompositeKey(new Key(time_range.beginTime, bucketKey, 0, 0)))
+          scan.setStopRow(MakeCompositeKey(new Key(time_range.endTime, bucketKey, Long.MaxValue, Int.MaxValue)))
           val rs = tableHBase.getScanner(scan);
           val it = rs.iterator()
           while (it.hasNext()) {
             val r = it.next()
-            var key = GetKeyFromCompositeKey(r.getRow(),false)
+            var key = GetKeyFromCompositeKey(r.getRow())
             if (bucketKeySet.contains(key.bucketKey)) {
               processKey(key, callbackFunction)
             }
@@ -1280,7 +1191,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     var tableHBase: Table = null
     try {
       relogin
-      val isMetadata = CheckTableExists(containerName)
+      CheckTableExists(containerName)
       tableHBase = getTableFromConnection(tableName);
       var bucketKeySet = new java.util.TreeSet[Array[String]](arrOfStrsComp)
       bucketKeys.foreach(bucketKey => {
@@ -1294,7 +1205,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       var dels = new Array[Delete](0)
       while (it.hasNext()) {
         val r = it.next()
-        var key = GetKeyFromCompositeKey(r.getRow(),false)
+        var key = GetKeyFromCompositeKey(r.getRow())
         if (bucketKeySet.contains(key.bucketKey)) {
           val st = Bytes.toString(r.getValue(stStrBytes, baseStrBytes))
           val si = r.getValue(siStrBytes, baseStrBytes)
@@ -1318,7 +1229,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     var tableHBase: Table = null
     try {
       relogin
-      val isMetadata = CheckTableExists(containerName)
+      CheckTableExists(containerName)
       tableHBase = getTableFromConnection(tableName);
       var bucketKeySet = new java.util.TreeSet[Array[String]](arrOfStrsComp)
       bucketKeys.foreach(bucketKey => {
@@ -1330,7 +1241,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       val it = rs.iterator()
       while (it.hasNext()) {
         val r = it.next()
-        var key = GetKeyFromCompositeKey(r.getRow(),false)
+        var key = GetKeyFromCompositeKey(r.getRow())
         if (bucketKeySet.contains(key.bucketKey)) {
           processKey(key, callbackFunction)
         }
@@ -1369,7 +1280,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     var tableHBase: Table = null
     try {
       relogin
-      val isMetadata = CheckTableExists(containerName)
+      CheckTableExists(containerName)
       tableHBase = getTableFromConnection(tableName);
       var dels = new ArrayBuffer[Delete]()
       var scan = new Scan()
@@ -1490,6 +1401,16 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
         }
         mutator.mutate(p)
       }
+
+      /*
+      // snapshot name can't contain ':'
+      val snapshotName = srcTableName.toLowerCase.replace(':', '_') + "_snap"
+      admin.disableTable(srcTableName);
+      admin.snapshot(snapshotName, srcTableName);
+      admin.cloneSnapshot(snapshotName, destTableName);
+      admin.deleteSnapshot(snapshotName);
+      admin.enableTable(srcTableName);
+*/
 
     } catch {
       case e: Exception => {

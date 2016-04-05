@@ -56,7 +56,6 @@ class CmdLineAPISpec extends FunSpec with LocalTestFixtures with BeforeAndAfter 
   var fileList: List[String] = null
   var newVersion: String = null
   val userid: Option[String] = Some("test")
-  val tenantId = "testTenantId"
 
   private val loggerName = this.getClass.getName
   private val logger = LogManager.getLogger(loggerName)
@@ -302,13 +301,13 @@ class CmdLineAPISpec extends FunSpec with LocalTestFixtures with BeforeAndAfter 
 
 	And("AddContainer first time from " + file.getPath)
 	var a:Action.Value = Action.ADDCONTAINER
-	res = StartMetadataAPI.route(a,file.getPath,"",null,Array("add","container",f1),userid,tenantId,null)
+	res = StartMetadataAPI.route(a,file.getPath,"",null,Array("add","container",f1),userid,null)
 	res should include regex ("\"Status Code\" : 0")
 
 	And("GetContainerDef API to fetch the container that was just added")
 	a = Action.GETCONTAINER
 	var objName = "system" + "." + f1.stripSuffix(".json").toLowerCase + "." + "0000000000001000000"
-	res = StartMetadataAPI.route(a,null,objName,null,Array("get","container",objName),userid,tenantId,null)
+	res = StartMetadataAPI.route(a,null,objName,null,Array("get","container",objName),userid,null)
 	res should include regex ("\"Status Code\" : 0")
       })
     }
@@ -351,13 +350,13 @@ class CmdLineAPISpec extends FunSpec with LocalTestFixtures with BeforeAndAfter 
 
 	And("AddMessage first time from " + file.getPath)
 	var a:Action.Value = Action.ADDMESSAGE
-	res = StartMetadataAPI.route(a,file.getPath,"",null,Array("add","message",f1),userid,tenantId,null)
+	res = StartMetadataAPI.route(a,file.getPath,"",null,Array("add","message",f1),userid,null)
 	res should include regex ("\"Status Code\" : 0")
 
 	And("GetMessageDef API to fetch the message that was just added")
 	a = Action.GETMESSAGE
 	var objName = "system" + "." + f1.stripSuffix(".json").toLowerCase + "." + "0000000000001000000"
-	res = StartMetadataAPI.route(a,null,objName,null,Array("get","message",objName),userid,tenantId,null)
+	res = StartMetadataAPI.route(a,null,objName,null,Array("get","message",objName),userid,null)
 	res should include regex ("\"Status Code\" : 0")
 
       })
@@ -400,7 +399,7 @@ class CmdLineAPISpec extends FunSpec with LocalTestFixtures with BeforeAndAfter 
 
 	And("AddMessage first time from " + file.getPath)
 	var a:Action.Value = Action.ADDMODELKPMML
-	res = StartMetadataAPI.route(a,file.getPath,"",null,Array("add","model","kpmml",f1),userid,tenantId,null)
+	res = StartMetadataAPI.route(a,file.getPath,"",null,Array("add","model","kpmml",f1),userid,null)
 	res should include regex ("\"Status Code\" : 0")
 
 	And("GetMessageDef API to fetch the message that was just added")
@@ -411,13 +410,13 @@ class CmdLineAPISpec extends FunSpec with LocalTestFixtures with BeforeAndAfter 
 	logger.info("ModelName => " + modelName)
 	assert(modelName != "unknownModel")
 	var objName = nameSpace + "." + modelName + "." + "0000000000001000000"
-	res = StartMetadataAPI.route(a,null,objName,null,Array("get","message",objName),userid,tenantId,null)
+	res = StartMetadataAPI.route(a,null,objName,null,Array("get","message",objName),userid,null)
 	res should include regex ("\"Status Code\" : 0")
 
 	a = Action.GETMESSAGE
 	var outputMsgName = modelName + "_outputmsg"
 	val msgFullNameWithVersion = nameSpace + "." + outputMsgName + "." + "000000000000000001"
-	res = StartMetadataAPI.route(a,null,msgFullNameWithVersion,null,Array("get","message",msgFullNameWithVersion),userid,tenantId,null)
+	res = StartMetadataAPI.route(a,null,msgFullNameWithVersion,null,Array("get","message",msgFullNameWithVersion),userid,null)
 	res should include regex ("\"Status Code\" : 0")
 
 	val modDefs = MdMgr.GetMdMgr.Models(nameSpace, modelName, true, true)

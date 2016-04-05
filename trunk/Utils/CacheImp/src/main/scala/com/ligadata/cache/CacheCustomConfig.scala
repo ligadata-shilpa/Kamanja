@@ -70,9 +70,9 @@ class CacheCustomConfig(jsonconfig:Config) extends CacheConfiguration{
 
   System.setProperty(CacheCustomConfig.PREFERIPV4STACK,"true")
   System.setProperty(CacheCustomConfig.SKIPUPDATECHECK, "true")
-  System.setProperty(Config.INITIALHOSTS, jsonconfig.getvalue(Config.INITIALHOSTS).getOrElse("localhost[7800]").toString)
-  System.setProperty(Config.UDPADD, jsonconfig.getvalue(Config.UDPADD).getOrElse("231.12.21.132").toString)
-  System.setProperty(Config.PORT, jsonconfig.getvalue(Config.PORT).getOrElse("45566").toString)
+  System.setProperty(Config.INITIALHOSTS, jsonconfig.getvalue(Config.INITIALHOSTS).get.toString)
+//  System.setProperty(CacheCustomConfig.UDPADD, values.getOrElse(CacheCustomConfig.UDPADD,"231.12.21.132"))
+  System.setProperty(Config.PORT, jsonconfig.getvalue(Config.PORT).getOrElse("7800").toString)
 
   def  getConfiguration() : Configuration = {
     return config

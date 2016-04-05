@@ -42,12 +42,6 @@ object Expressions {
     (elements.dropRight(1).mkString("."), elements.last)
   }
 
-  def IsExpressionVariable(expr: String, mapNameSource: Map[String, Tracker]): Boolean = {
-    val regex1 = """^\$([a-zA-Z0-9_]+)$""".r
-    val regex2 = """^\$\{([a-zA-Z0-9_]+\.[a-zA-Z0-9_]+)\}$""".r
-    regex1.findFirstMatchIn(expr).isDefined || regex1.findFirstMatchIn(expr).isDefined
-  }
-
   /** Find all logical column names that are encode in this expression $name
     *
     * $var

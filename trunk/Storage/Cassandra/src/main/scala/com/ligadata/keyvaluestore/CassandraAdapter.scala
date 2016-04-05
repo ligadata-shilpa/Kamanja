@@ -344,10 +344,6 @@ class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
     })
   }
 
-  override def CreateMetadataContainer(containerNames: Array[String]): Unit = {
-    CreateContainer(containerNames)
-  }
-
   private def toTableName(containerName: String): String = {
     // we need to check for other restrictions as well
     // such as length of the table, special characters etc

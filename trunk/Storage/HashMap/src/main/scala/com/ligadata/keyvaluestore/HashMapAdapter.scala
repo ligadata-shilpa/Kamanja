@@ -243,10 +243,6 @@ class HashMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
     })
   }
 
-  override def CreateMetadataContainer(containerNames: Array[String]): Unit = {
-    CreateContainer(containerNames)
-  }
-
   private def MakeCompositeKey(key: Key): Array[Byte] = {
     var compKey = key.timePartition.toString + "|" + key.bucketKey.mkString(".") +
       "|" + key.transactionId.toString + "|" + key.rowId.toString

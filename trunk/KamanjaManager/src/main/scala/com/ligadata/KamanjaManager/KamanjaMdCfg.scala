@@ -245,7 +245,7 @@ object KamanjaMdCfg {
           // First time creating metadata loader here
           val metadataLoader = new KamanjaLoaderInfo(KamanjaConfiguration.baseLoader, true, true)
           envCtxt.setMetadataLoader(metadataLoader)
-          envCtxt.setAdaptersAndEnvCtxtLoader(adaptersAndEnvCtxtLoader)
+          envCtxt.setMetadataLoader(adaptersAndEnvCtxtLoader)
           // envCtxt.setClassLoader(KamanjaConfiguration.metadataLoader.loader) // Using Metadata Loader
           envCtxt.setMetadataResolveInfo(KamanjaMetadata)
           envCtxt.setMdMgr(KamanjaMetadata.getMdMgr)
@@ -262,6 +262,8 @@ object KamanjaMdCfg {
 
           // Record EnvContext in the Heartbeat
          // envCtxt.RegisterHeartbeat(heartBeat)
+
+
           LOG.info("Created EnvironmentContext for Class:" + className)
           return envCtxt
         } else {
@@ -453,7 +455,6 @@ object KamanjaMdCfg {
 //      conf.associatedMsg = adap.AssociatedMessage
       conf.dependencyJars = if (adap.DependencyJars != null) adap.DependencyJars.map(str => str.trim).filter(str => str.size > 0).toSet else null
       conf.adapterSpecificCfg = adap.AdapterSpecificCfg
-      conf.tenantId = adap.TenantId
 
       try {
         val adapter = CreateOutputAdapterFromConfig(conf, nodeContext)
@@ -567,7 +568,6 @@ object KamanjaMdCfg {
       conf.jarName = adap.JarName
       conf.dependencyJars = if (adap.DependencyJars != null) adap.DependencyJars.map(str => str.trim).filter(str => str.size > 0).toSet else null
       conf.adapterSpecificCfg = adap.AdapterSpecificCfg
-      conf.tenantId = adap.TenantId
 //      conf.keyAndValueDelimiter = adap.KeyAndValueDelimiter
 //      conf.fieldDelimiter = adap.FieldDelimiter
 //      conf.valueDelimiter = adap.ValueDelimiter

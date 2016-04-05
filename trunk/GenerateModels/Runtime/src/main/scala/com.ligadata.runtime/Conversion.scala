@@ -32,35 +32,8 @@ a) string
 b) id -> to map
 
 */
-object Conversion {
-
-  // Source -> Map[Target, Function]
-  val builtin: Map[String, Map[String, String]] = Map(
-    "Int" -> Map("String" -> "ToString"),
-    "Double" -> Map("String" -> "ToString"),
-    "Boolean" -> Map("String" -> "ToString"),
-    "Date" -> Map("String" -> "ToString"),
-    "BigDecimal" -> Map("String" -> "ToString"),
-    "String" -> Map("Int" -> "ToInteger",
-                    "Double" -> "ToDouble",
-                    "Boolean" -> "ToBoolean",
-                    "Date" -> "ToDate",
-                    "Timestamp" -> "ToTimestamp",
-                    "BigDecimal" -> "ToBigDecimal"),
-    "Any" -> Map("Int" -> "ToInteger",
-                 "Double" -> "ToDouble",
-                 "Boolean" -> "ToBoolean",
-                 "Date" -> "ToDate",
-                 "Timestamp" -> "ToTimestamp",
-                 "BigDecimal" -> "ToBigDecimal")
-
-  )
-}
-
 class Conversion {
 
-  val formatDate = new java.text.SimpleDateFormat("yyyy-MM-dd")
-  val formatTs = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
   //var errors : Map[Integer, String] = Map.empty[Integer, String]
 
   // Source -> Map[Target, Function]
@@ -71,57 +44,50 @@ class Conversion {
     "Date" -> Map("String" -> "ToString"),
     "BigDecimal" -> Map("String" -> "ToString"),
     "String" -> Map("Integer" -> "ToInteger",
-      "Double" -> "ToDouble",
-      "Boolean" -> "ToBoolean",
-      "Date" -> "ToDate",
-      "Timestamp" -> "ToTimestamp",
-      "BigDecimal" -> "ToBigDecimal"),
-    "Any" -> Map("Integer" -> "ToInteger",
-      "Double" -> "ToDouble",
-      "Boolean" -> "ToBoolean",
-      "Date" -> "ToDate",
-      "Timestamp" -> "ToTimestamp",
-      "BigDecimal" -> "ToBigDecimal")
+                    "Double" -> "ToDouble",
+                    "Boolean" -> "ToBoolean",
+                    "Date" -> "ToDate",
+                    "BigDecimal" -> "ToBigDecimal")
   )
 
-  def ToInteger(v: Any): Int = {
+  def ToInt(v: Any): Int = {
     v match {
-      case y: String => y.toInt
+      case y :String => y.toInt
       case y: Int => y
     }
   }
 
   def ToDouble(v: Any): Double = {
     v match {
-      case y: String => y.toDouble
+      case y :String => y.toDouble
       case y: Double => y
     }
   }
 
   def ToBoolean(v: Any): Boolean = {
     v match {
-      case y: String => y.toBoolean
+      case y :String => y.toBoolean
       case y: Boolean => y
     }
   }
 
   def ToDate(v: Any): Date = {
     v match {
-      case y: String => formatDate.parse(y)
+      // case y :String => y.toBoolean
       case y: Date => y
     }
   }
 
   def ToTimestamp(v: Any): Timestamp = {
     v match {
-      case y: String => new Timestamp(formatTs.parse(y).getTime)
+      // case y :String => y.toBoolean
       case y: Timestamp => y
     }
   }
 
   def ToBigDecimal(v: Any): BigDecimal = {
     v match {
-      case y: String => BigDecimal.apply(y)
+      // case y :String => y.toBoolean
       case y: BigDecimal => y
     }
   }
@@ -132,8 +98,8 @@ class Conversion {
       case y: Int => y.toString
       case y: Double => y.toString
       case y: Boolean => y.toString
-      case y: Timestamp => formatTs.format(y)
-      case y: Date => formatDate.format(y)
+      //case y: Date => y.toString
+      //case y: Timestamp => y.toString
       case y: BigDecimal => y.toString
     }
   }
