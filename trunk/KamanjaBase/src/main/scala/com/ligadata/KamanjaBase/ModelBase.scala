@@ -696,6 +696,7 @@ class TransactionContext(val transId: Long, val nodeCtxt: NodeContext, val msgDa
 
   // Need to lock if we are going to run models parallel
   final def addContainerOrConcept(origin: String, m: ContainerOrConcept, partKey: List[String]): Unit = {
+    if (m == null) return
     val msgNm = m.getFullTypeName.toLowerCase()
     val tmp = containerOrConceptsMapByName.getOrElse(msgNm, ArrayBuffer[ContaienrWithOriginAndPartKey]())
     tmp += ContaienrWithOriginAndPartKey(origin, m, partKey)

@@ -245,7 +245,7 @@ object KamanjaMdCfg {
           // First time creating metadata loader here
           val metadataLoader = new KamanjaLoaderInfo(KamanjaConfiguration.baseLoader, true, true)
           envCtxt.setMetadataLoader(metadataLoader)
-          envCtxt.setMetadataLoader(adaptersAndEnvCtxtLoader)
+          envCtxt.setAdaptersAndEnvCtxtLoader(adaptersAndEnvCtxtLoader)
           // envCtxt.setClassLoader(KamanjaConfiguration.metadataLoader.loader) // Using Metadata Loader
           envCtxt.setMetadataResolveInfo(KamanjaMetadata)
           envCtxt.setMdMgr(KamanjaMetadata.getMdMgr)
@@ -262,8 +262,6 @@ object KamanjaMdCfg {
 
           // Record EnvContext in the Heartbeat
          // envCtxt.RegisterHeartbeat(heartBeat)
-
-
           LOG.info("Created EnvironmentContext for Class:" + className)
           return envCtxt
         } else {
