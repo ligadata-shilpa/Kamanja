@@ -66,22 +66,22 @@ trait LogTrait {
 object KVInit extends App with LogTrait {
 
   def usage: String = {
-    """ 
-Usage: scala com.ligadata.kvinit.KVInit 
+    """
+Usage: scala com.ligadata.kvinit.KVInit
     --config <config file while has jarpaths, metadata store information & data store information>
-    --typename <full package qualified name of a Container or Message> 
-    --datafiles <input to load> 
+    --typename <full package qualified name of a Container or Message>
+    --datafiles <input to load>
     --keyfieldname  <name of one of the fields in the first line of the datafiles file>
 
 Nothing fancy here.  Mapdb kv store is created from arguments... style is hash map. Support
-for other styles of input (e.g., JSON, XML) are not supported.  
-      
+for other styles of input (e.g., JSON, XML) are not supported.
+
 The name of the kvstore will be the classname(without it path).
 
 It is expected that the first row of the csv file will be the column names.  One of the names
 must be specified as the key field name.  Failure to find this name causes termination and
 no kv store creation.
-      
+
 Sample uses:
       java -jar /tmp/KamanjaInstall/KVInit-1.0 --typename System.TestContainer --config /tmp/KamanjaInstall/EngineConfig.cfg --datafiles /tmp/KamanjaInstall/sampledata/TestContainer.csv --keyfieldname Id
 
@@ -507,7 +507,7 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
   override def getMessgeOrContainerInstance(MsgContainerType: String): MessageContainerBase = {
     if (MsgContainerType.compareToIgnoreCase(objFullName) != 0)
       return null
-    // Simply creating new object and returning. Not checking for MsgContainerType. This is issue if the child level messages ask for the type 
+    // Simply creating new object and returning. Not checking for MsgContainerType. This is issue if the child level messages ask for the type
     if (isMsg)
       return messageObj.CreateNewMessage
     if (isContainer)
@@ -890,11 +890,11 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
 
                 val bucketId = KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(keyData)
                 val k = KeyWithBucketIdAndPrimaryKey(bucketId, Key(timeVal, keyData, transId, processedRows), hasPrimaryKey, if (hasPrimaryKey) messageOrContainer.PrimaryKeyData else null)
-                if (hasPrimaryKey) {
+                //if (hasPrimaryKey) {
                   // Get the record(s) for this partition key, time value & primary key
-                  val loadKey = LoadKeyWithBucketId(bucketId, TimeRange(timeVal, timeVal), keyData)
-                  LoadDataIfNeeded(loadKey, loadedKeys, dataByBucketKeyPart, kvstore)
-                }
+                //  val loadKey = LoadKeyWithBucketId(bucketId, TimeRange(timeVal, timeVal), keyData)
+                //  LoadDataIfNeeded(loadKey, loadedKeys, dataByBucketKeyPart, kvstore)
+                //}
 
                 dataByBucketKeyPart.put(k, MessageContainerBaseWithModFlag(true, messageOrContainer))
                 processedRows += 1
@@ -1072,5 +1072,3 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
     SimpDateFmtTimeFromMs(System.currentTimeMillis)
   }
 }
-
-

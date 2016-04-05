@@ -323,7 +323,7 @@ class SqlServerAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
       }
     }
   }
-    
+
   private def IsSchemaExists(schemaName: String): Boolean = {
     var con: Connection = null
     var pstmt: PreparedStatement = null
@@ -347,7 +347,7 @@ class SqlServerAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
     } catch {
       case e: StorageConnectionException => {
         throw e
-      } 
+      }
       case e: Exception => {
         throw new Exception("Failed to verify schema existence for the schema " + schemaName + ":" + "query => " + query + ":" + e.getMessage())
       }
@@ -452,7 +452,7 @@ class SqlServerAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
     try {
       CheckTableExists(containerName)
       con = getConnection
-      con.setAutoCommit(false)
+      con.setAutoCommit(true)
       // put is sematically an upsert. An upsert is implemented using a merge
       // statement in sqlserver
       // Ideally a merge should be implemented as stored procedure
@@ -516,35 +516,35 @@ class SqlServerAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
       logger.debug("Get a new connection...")
       con = getConnection
       // we need to commit entire batch
-      con.setAutoCommit(false)
+      con.setAutoCommit(true)
       data_list.foreach(li => {
         var containerName = li._1
         CheckTableExists(containerName)
         var tableName = toFullTableName(containerName)
-        sql = "delete from " + tableName + " where timePartition = ? and bucketKey = ? and transactionid = ? and rowId = ? "
-        logger.debug("sql => " + sql)
-        pstmt = con.prepareStatement(sql)
+        //sql = "delete from " + tableName + " where timePartition = ? and bucketKey = ? and transactionid = ? and rowId = ? "
+        //logger.debug("sql => " + sql)
+        //pstmt = con.prepareStatement(sql)
         var keyValuePairs = li._2
-        keyValuePairs.foreach(keyValuePair => {
-          var key = keyValuePair._1
-          pstmt.setLong(1, key.timePartition)
-          pstmt.setString(2, key.bucketKey.mkString(","))
-          pstmt.setLong(3, key.transactionId)
-          pstmt.setInt(4, key.rowId)
+        //keyValuePairs.foreach(keyValuePair => {
+        //  var key = keyValuePair._1
+        //  pstmt.setLong(1, key.timePartition)
+        //  pstmt.setString(2, key.bucketKey.mkString(","))
+        //  pstmt.setLong(3, key.transactionId)
+        //  pstmt.setInt(4, key.rowId)
           // Add it to the batch
-          pstmt.addBatch()
-        })
-        logger.debug("Executing bulk Delete...")
-        var deleteCount = pstmt.executeBatch();
-        deleteCount.foreach(cnt => { totalRowsDeleted += cnt });
-        if (pstmt != null) {
-          pstmt.close
-        }
-        logger.debug("Deleted " + totalRowsDeleted + " rows from " + tableName)
-        // insert rows 
+        //  pstmt.addBatch()
+        //})
+        //logger.debug("Executing bulk Delete...")
+        //var deleteCount = pstmt.executeBatch();
+        //deleteCount.foreach(cnt => { totalRowsDeleted += cnt });
+        //if (pstmt != null) {
+        //  pstmt.close
+        //}
+        //logger.debug("Deleted " + totalRowsDeleted + " rows from " + tableName)
+        // insert rows
         sql = "insert into " + tableName + "(timePartition,bucketKey,transactionId,rowId,serializerType,serializedInfo) values(?,?,?,?,?,?)"
         pstmt = con.prepareStatement(sql)
-        // 
+        //
         // we could have potential memory issue if number of records are huge
         // use a batch size between executions executeBatch
         keyValuePairs.foreach(keyValuePair => {
@@ -608,7 +608,7 @@ class SqlServerAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
       sql = "delete from " + tableName + " where timePartition = ? and bucketKey = ? and transactionid = ? and rowId = ?"
       pstmt = con.prepareStatement(sql)
       // we need to commit entire batch
-      con.setAutoCommit(false)
+      con.setAutoCommit(true)
       keys.foreach(key => {
         pstmt.setLong(1, key.timePartition)
         pstmt.setString(2, key.bucketKey.mkString(","))
@@ -664,7 +664,7 @@ class SqlServerAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
 
       con = getConnection
       // we need to commit entire batch
-      con.setAutoCommit(false)
+      con.setAutoCommit(true)
       sql = "delete from " + tableName + " where timePartition >= ?  and timePartition <= ? and bucketKey = ?"
       pstmt = con.prepareStatement(sql)
       keys.foreach(keyList => {
