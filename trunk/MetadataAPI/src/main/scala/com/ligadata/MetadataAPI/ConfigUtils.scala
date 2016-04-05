@@ -235,19 +235,18 @@ object ConfigUtils {
      * AddAdapter
      * @param name
      * @param typeString
-     * @param dataFormat
      * @param className
      * @param jarName
      * @param dependencyJars
      * @param adapterSpecificCfg
      * @return
      */
-  def AddAdapter(name: String, typeString: String, dataFormat: String, className: String,
+  def AddAdapter(name: String, typeString: String, className: String,
                  jarName: String, dependencyJars: List[String],
                  adapterSpecificCfg: String, tenantId: String): String = {
     try {
       // save in memory
-      val ai = MdMgr.GetMdMgr.MakeAdapter(name, typeString, dataFormat, className, jarName, dependencyJars, adapterSpecificCfg, tenantId)
+      val ai = MdMgr.GetMdMgr.MakeAdapter(name, typeString, className, jarName, dependencyJars, adapterSpecificCfg, tenantId)
       MdMgr.GetMdMgr.AddAdapter(ai)
       // save in database
       val key = "AdapterInfo." + name
@@ -269,17 +268,16 @@ object ConfigUtils {
      * RemoveAdapter
      * @param name
      * @param typeString
-     * @param dataFormat
      * @param className
      * @param jarName
      * @param dependencyJars
      * @param adapterSpecificCfg
      * @return
      */
-  def UpdateAdapter(name: String, typeString: String, dataFormat: String, className: String,
+  def UpdateAdapter(name: String, typeString: String, className: String,
                     jarName: String, dependencyJars: List[String],
                     adapterSpecificCfg: String, tenantId: String): String = {
-    AddAdapter(name, typeString, dataFormat, className, jarName, dependencyJars, adapterSpecificCfg, tenantId)
+    AddAdapter(name, typeString, className, jarName, dependencyJars, adapterSpecificCfg, tenantId)
   }
 
     /**
@@ -800,10 +798,10 @@ object ConfigUtils {
               adapters.foreach(a => {
                 val adap = a.asInstanceOf[Map[String, Any]]
                 val nm = adap.getOrElse("Name", "").toString.trim
-                val jarnm = adap.getOrElse("JarName", "").toString.trim
                 val typStr = adap.getOrElse("TypeString", "").toString.trim
-                val clsNm = adap.getOrElse("ClassName", "").toString.trim
                 val tenantId = adap.getOrElse("TenantId", "").toString.trim
+                val clsNm = adap.getOrElse("ClassName", "").toString.trim
+                val jarnm = adap.getOrElse("JarName", "").toString.trim
 
                 var adapterDef: ClusterConfigDef = new ClusterConfigDef
                 adapterDef.name = nm
@@ -821,12 +819,8 @@ object ConfigUtils {
                 if (adap.contains("AdapterSpecificCfg")) {
                   ascfg = getStringFromJsonNode(adap.get("AdapterSpecificCfg"))
                 }
-                var dataFormat: String = null
-                if (adap.contains("DataFormat")) {
-                  dataFormat = adap.get("DataFormat").get.asInstanceOf[String]
-                }
                 // save in memory
-                val ai = MdMgr.GetMdMgr.MakeAdapter(nm, typStr, dataFormat, clsNm, jarnm, depJars, ascfg, tenantId)
+                val ai = MdMgr.GetMdMgr.MakeAdapter(nm, typStr, clsNm, jarnm, depJars, ascfg, tenantId)
                 MdMgr.GetMdMgr.AddAdapter(ai)
                 val key = "AdapterInfo." + ai.name
                 val value = serializer.SerializeObjectToByteArray(ai)

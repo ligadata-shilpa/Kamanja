@@ -3770,17 +3770,16 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       *
       * @param name
      * @param typeString
-     * @param dataFormat
      * @param className
      * @param jarName
      * @param dependencyJars
      * @param adapterSpecificCfg
      * @return
      */
-  def AddAdapter(name: String, typeString: String, dataFormat: String, className: String,
+  def AddAdapter(name: String, typeString: String, className: String,
                  jarName: String, dependencyJars: List[String],
                  adapterSpecificCfg: String, tenantId: String): String = {
-    ConfigUtils.AddAdapter(name, typeString, dataFormat, className, jarName,
+    ConfigUtils.AddAdapter(name, typeString, className, jarName,
         dependencyJars, adapterSpecificCfg, tenantId)
   }
 
@@ -3789,17 +3788,16 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       *
       * @param name
      * @param typeString
-     * @param dataFormat
      * @param className
      * @param jarName
      * @param dependencyJars
      * @param adapterSpecificCfg
      * @return
      */
-  def UpdateAdapter(name: String, typeString: String, dataFormat: String, className: String,
+  def UpdateAdapter(name: String, typeString: String, className: String,
                     jarName: String, dependencyJars: List[String],
                     adapterSpecificCfg: String, tenantId: String): String = {
-    ConfigUtils.AddAdapter(name, typeString, dataFormat, className, jarName, dependencyJars, adapterSpecificCfg, tenantId)
+    ConfigUtils.AddAdapter(name, typeString, className, jarName, dependencyJars, adapterSpecificCfg, tenantId)
   }
 
     /**

@@ -1021,7 +1021,7 @@ class AdapterInfo {
    */
   var name: String = _
   var typeString: String = _
-  var dataFormat: String = _ // valid only for Input or Validate types. Output and Status does not have this
+//  var dataFormat: String = _ // valid only for Input or Validate types. Output and Status does not have this
   var className: String = _
 //  var inputAdapterToValidate: String = _ // Valid only for Output Adapter.
 //  var failedEventsAdapter: String = _ // Valid only for Input Adapter.
@@ -1037,7 +1037,6 @@ class AdapterInfo {
 
   def Name: String = name
   def TypeString: String = typeString
-  def DataFormat: String = dataFormat
   def ClassName: String = className
   def JarName: String = jarName
   def DependencyJars: Array[String] = dependencyJars
@@ -1061,11 +1060,11 @@ class AdapterInfo {
       return false
     }
     // Check dataFormat
-    if ((dataFormat != null && aInfo.dataFormat != null)) {
-      if(!dataFormat.equals(aInfo.dataFormat)) return false
-    } else if(!(dataFormat == null && aInfo.dataFormat == null)) {
-      return false
-    }
+//    if ((dataFormat != null && aInfo.dataFormat != null)) {
+//      if(!dataFormat.equals(aInfo.dataFormat)) return false
+//    } else if(!(dataFormat == null && aInfo.dataFormat == null)) {
+//      return false
+//    }
     // Check className
     if ((className != null && aInfo.className != null)) {
       if(!className.equals(aInfo.className)) return false

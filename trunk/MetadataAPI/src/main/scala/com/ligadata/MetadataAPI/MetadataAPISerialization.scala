@@ -285,7 +285,6 @@ object MetadataAPISerialization {
           val json = "Adapter" ->
             ("Name" -> o.Name) ~
               ("TypeString" -> o.TypeString) ~
-              ("DataFormat" -> o.DataFormat) ~
               ("ClassName" -> o.ClassName) ~
               ("JarName" -> o.JarName) ~
               ("DependencyJars" -> o.DependencyJars.toList) ~
@@ -938,7 +937,6 @@ object MetadataAPISerialization {
       val adapterInfo = MdMgr.GetMdMgr.MakeAdapter(
         adapterInst.Adapter.Name,
         adapterInst.Adapter.TypeString,
-        adapterInst.Adapter.DataFormat,
         adapterInst.Adapter.ClassName,
         adapterInst.Adapter.JarName,
         adapterInst.Adapter.DependencyJars,
@@ -997,7 +995,7 @@ case class UserPropertiesInformation(ClusterId: String, Props: List[KeyVale])
 
 case class UserProperties(UserProperties: UserPropertiesInformation)
 
-case class AdapterInformation(Name: String, TypeString: String, DataFormat: String, ClassName: String, JarName: String, DependencyJars: List[String], AdapterSpecificCfg: String, TenantId: String)
+case class AdapterInformation(Name: String, TypeString: String, ClassName: String, JarName: String, DependencyJars: List[String], AdapterSpecificCfg: String, TenantId: String)
 
 case class Adapter(Adapter: AdapterInformation)
 
