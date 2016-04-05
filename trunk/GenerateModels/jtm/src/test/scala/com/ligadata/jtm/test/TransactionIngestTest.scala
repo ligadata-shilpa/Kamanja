@@ -52,4 +52,51 @@ class TransactionIngestTest  extends FunSuite with BeforeAndAfter {
     assert(actual == expected)
   }
 
+  test("test1") {
+
+    val fileInput = getClass.getResource("/samples/finance/transactioningest1.jtm").getPath
+    val fileOutput = getClass.getResource("/samples/finance/transactioningest1.scala.result").getPath
+    val fileExpected = getClass.getResource("/samples/finance/transactioningest1.scala.expected").getPath
+    val metadataLocation = getClass.getResource("/metadata").getPath
+
+    val compiler = CompilerBuilder.create().
+      setSuppressTimestamps().
+      setInputFile(fileInput).
+      setOutputFile(fileOutput).
+      setMetadataLocation(metadataLocation).
+      build()
+
+    compiler.Execute()
+
+    val expected = FileUtils.readFileToString(new File(fileExpected))
+    val actual = FileUtils.readFileToString(new File(fileOutput))
+    logger.info("actual path={}", fileOutput)
+    logger.info("expected path={}", fileExpected)
+
+    assert(actual == expected)
+  }
+
+  test("test2") {
+
+    val fileInput = getClass.getResource("/samples/finance/transactioningest2.jtm").getPath
+    val fileOutput = getClass.getResource("/samples/finance/transactioningest2.scala.result").getPath
+    val fileExpected = getClass.getResource("/samples/finance/transactioningest2.scala.expected").getPath
+    val metadataLocation = getClass.getResource("/metadata").getPath
+
+    val compiler = CompilerBuilder.create().
+      setSuppressTimestamps().
+      setInputFile(fileInput).
+      setOutputFile(fileOutput).
+      setMetadataLocation(metadataLocation).
+      build()
+
+    compiler.Execute()
+
+    val expected = FileUtils.readFileToString(new File(fileExpected))
+    val actual = FileUtils.readFileToString(new File(fileOutput))
+    logger.info("actual path={}", fileOutput)
+    logger.info("expected path={}", fileExpected)
+
+    assert(actual == expected)
+  }
 }
