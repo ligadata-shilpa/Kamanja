@@ -3300,7 +3300,7 @@ class MdMgr {
     }
   }
 
-  def MakeAdapter(name: String, typeString: String, className: String, jarName: String, dependencyJars: List[String], adapterSpecificCfg: String, tenantId: String): AdapterInfo = {
+  def MakeAdapter(name: String, typeString: String, className: String, jarName: String, dependencyJars: List[String], adapterSpecificCfg: String, tenantId: String, fullAdapterConfig: String): AdapterInfo = {
     val ai = new AdapterInfo
     ai.name = name
     ai.typeString = typeString
@@ -3311,6 +3311,7 @@ class MdMgr {
       ai.dependencyJars = dependencyJars.toArray
     }
     ai.adapterSpecificCfg = adapterSpecificCfg
+    ai.fullAdapterConfig = fullAdapterConfig
     ai
   }
 

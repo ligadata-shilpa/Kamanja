@@ -807,6 +807,7 @@ class MetadataAPISerializationTest extends FlatSpec with BeforeAndAfterAll {
     val className = "ClassName"
     val adapterSpecificCfg = "AdapterSpecificCfg"
     val tenantId = "System"
+    val fullAdapterConfig = ""
 
     val adapterInfo = MdMgr.GetMdMgr.MakeAdapter(
       name,
@@ -815,7 +816,7 @@ class MetadataAPISerializationTest extends FlatSpec with BeforeAndAfterAll {
       jarName,
       dependencyJar.toList,
       adapterSpecificCfg,
-      tenantId
+      tenantId, fullAdapterConfig
     )
     adapterInfo
   }
