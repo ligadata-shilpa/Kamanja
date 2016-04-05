@@ -1627,7 +1627,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 
   override def rollbackData(transId: Long): Unit = {
 //    removeTransactionContext(transId)
-    throw new KamanjaException("Function call is not implemented", null)
+   // throw new KamanjaException("Function call is not implemented", null)
   }
 
   override def commitData(transId: Long, forceCommit: Boolean): Unit = {
