@@ -696,7 +696,7 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
 
     while (!doneSave) {
       try {
-        kvstore.put(null, Array((objFullName, storeObjects.toArray)))
+        kvstore.put(null, Array((objFullName, false, storeObjects.toArray)))
         doneSave = true
       } catch {
         case e: FatalAdapterException => {

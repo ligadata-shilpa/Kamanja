@@ -624,7 +624,7 @@ class PmmlCompiler(val mgr: MdMgr, val clientName: String, val logger: Logger, v
     val modelDef: ModelDef = mgr.MakeModelDef(modelNamespace
         , className
         , fqClassName
-        , "kamanja", 0, 0
+        , "kamanja", "", 0, 0
         , modelRep
         , Array(finalmsgs)
         , Array[String]()

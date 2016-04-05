@@ -80,6 +80,8 @@ object StartMetadataAPI {
       return
     }
 
+    val tenantId: String = "" // FIXME: DAN FIX THIS TenantID
+
     /** FIXME: the user id should be discovered in the parse of the args array */
     val userId: Option[String] = Some("kamanja")
     try {
@@ -166,7 +168,7 @@ object StartMetadataAPI {
         response = s"Invalid command action! action=$action"
 
         /** one more try ... going the alternate route */  // do we still need this ??
-        val altResponse: String = AltRoute(args)
+        val altResponse: String = AltRoute(args, tenantId)
         if (altResponse != null) {
           //response = altResponse
           println(response)
@@ -189,6 +191,7 @@ object StartMetadataAPI {
   def usage : Unit = {
       println(s"Usage:\n  kamanja <action> <optional input> \n e.g. kamanja add message ${'$'}HOME/msg.json" )
   }
+
 
   def route(action: Action.Value, input: String, param: String = "", tenantid: String, originalArgs: Array[String], userId: Option[String] ,extraCmdArgs:immutable.Map[String, String]): String = {
     var response = ""
@@ -229,7 +232,7 @@ object StartMetadataAPI {
           val optMsgVer = Option(null)
           response = ModelService.addModelPmml(ModelType.PMML
                                             , input
-                                            , userId
+                                            , userId, tenantId
                                             , modelName
                                             , optModelVer
                                             , msgName
@@ -411,7 +414,7 @@ object StartMetadataAPI {
           *
           * ''Do we still need this ?'' Let's keep it for now.
           */
-        val altResponse: String = AltRoute(originalArgs)
+        val altResponse: String = AltRoute(originalArgs, tenantId)
         if (altResponse != null) {
             //response = altResponse  ... typically a parse error that is only meaningful for AltRoute processing
             println(response)
@@ -439,7 +442,7 @@ object StartMetadataAPI {
     *         complaint is returned to the caller.
     *
     */
-  def AltRoute(origArgs : Array[String]) : String = {
+  def AltRoute(origArgs : Array[String], tenantId: String) : String = {
 
        /** trim off the config argument and if debugging the "debug" argument as well */
        val argsSansConfig : Array[String] = if (origArgs != null && origArgs.size > 0 && origArgs(0).toLowerCase == "debug") {
@@ -489,7 +492,7 @@ object StartMetadataAPI {
 
                            ModelService.addModelPmml(ModelType.PMML
                                , pmmlPath
-                               , Some("kamanja")
+                               , Some("kamanja"), tenantId
                                , modelName
                                , optModelVer
                                , msgName
@@ -549,7 +552,7 @@ object StartMetadataAPI {
                                val modelName: String = optModelName.orNull
                                var tid: Option[String] =   if (argMap.contains("tenantid")) Some(argMap("tenantid")) else None
                                ModelService.updateModelPmml(pmmlPath
-                                   , Some("kamanja")
+                                   , Some("kamanja"), tenantId
                                    , modelName
                                    , validatedNewVersion
                                    , tid)

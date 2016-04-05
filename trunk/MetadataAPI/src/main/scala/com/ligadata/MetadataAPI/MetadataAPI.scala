@@ -445,7 +445,7 @@ trait MetadataAPI {
     * println("Result as Json String => \n" + result._2)
     * }}}
     */
-  def AddContainer(containerText:String, formatType:String, userid: Option[String] = None): String 
+  def AddContainer(containerText:String, formatType:String, userid: Option[String] = None, tenantId: String = ""): String
 
   /** Update container given containerText
     *

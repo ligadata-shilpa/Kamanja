@@ -18,12 +18,35 @@ package com.ligadata.jtm.eval
 import scala.util.matching.Regex
 
 // Track details of any used element
-case class Tracker(variableName: String, className: String="", typeName: String="", isInput: Boolean=false, accessor: String="")
+case class Tracker(variableName: String, className: String, typeName: String, isInput: Boolean, accessor: String, expression: String) {
+  def getExpression(): String = {
+    if(expression.isEmpty)
+      variableName
+    else
+      expression
+  }
+}
 
 /**
   *
   */
 object Expressions {
+
+  /** Split a fully qualified object name into namspace and class
+    *
+    * @param name is a fully qualified class name
+    * @return tuple with namespace and class name
+    */
+  def splitNamespaceClass(name: String): (String, String) = {
+    val elements = name.split('.')
+    (elements.dropRight(1).mkString("."), elements.last)
+  }
+
+  def IsExpressionVariable(expr: String, mapNameSource: Map[String, Tracker]): Boolean = {
+    val regex1 = """^\$([a-zA-Z0-9_]+)$""".r
+    val regex2 = """^\$\{([a-zA-Z0-9_]+\.[a-zA-Z0-9_]+)\}$""".r
+    regex1.findFirstMatchIn(expr).isDefined || regex1.findFirstMatchIn(expr).isDefined
+  }
 
   /** Find all logical column names that are encode in this expression $name
     *
@@ -64,7 +87,7 @@ object Expressions {
       while (m.find) {
         val name = m.group(1)
         val resolvedName = ResolveName(name, aliaseMessages)
-        m.appendReplacement(sb, mapNameSource.get(resolvedName).get.variableName)
+        m.appendReplacement(sb, mapNameSource.get(resolvedName).get.getExpression)
         i = i + 1
       }
       m.appendTail(sb)

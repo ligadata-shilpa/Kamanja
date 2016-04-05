@@ -344,6 +344,10 @@ class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
     })
   }
 
+  override def CreateMetadataContainer(containerNames: Array[String]): Unit = {
+    CreateContainer(containerNames)
+  }
+
   private def toTableName(containerName: String): String = {
     // we need to check for other restrictions as well
     // such as length of the table, special characters etc
@@ -381,7 +385,7 @@ class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
     if (keyStr != null) keyStr.split(",").toArray else new Array[String](0)
   }
 
-  override def put(containerName: String, key: Key, value: Value): Unit = {
+  override def put(containerName: String, isMetadataContainer: Boolean, key: Key, value: Value): Unit = {
     var tableName = ""
     try {
       CheckTableExists(containerName)
@@ -407,7 +411,7 @@ class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
     }
   }
 
-  override def put(data_list: Array[(String, Array[(Key, Value)])]): Unit = {
+  override def put(data_list: Array[(String, Boolean, Array[(Key, Value)])]): Unit = {
     var tableName = ""
     try {
       val batch = new BatchStatement
@@ -421,7 +425,7 @@ class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
           prepStmt = session.prepare(query)
           preparedStatementsMap.put(query, prepStmt)
         }
-        var keyValuePairs = li._2
+        var keyValuePairs = li._3
         keyValuePairs.foreach(keyValuePair => {
           var key = keyValuePair._1
           var value = keyValuePair._2
@@ -1293,11 +1297,11 @@ class CassandraAdapterTx(val parent: DataStore) extends Transaction {
   val loggerName = this.getClass.getName
   val logger = LogManager.getLogger(loggerName)
 
-  override def put(containerName: String, key: Key, value: Value): Unit = {
-    parent.put(containerName, key, value)
+  override def put(containerName: String, isMetadataContainer: Boolean, key: Key, value: Value): Unit = {
+    parent.put(containerName, isMetadataContainer, key, value)
   }
 
-  override def put(data_list: Array[(String, Array[(Key, Value)])]): Unit = {
+  override def put(data_list: Array[(String, Boolean, Array[(Key, Value)])]): Unit = {
     parent.put(data_list)
   }
 

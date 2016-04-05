@@ -48,6 +48,6 @@ class ModelDefTest  extends FunSuite with BeforeAndAfter {
 
     //assert("com.ligadata.kamanja.test.msg1,com.ligadata.kamanja.test.msg3" == md.msgConsumed)
     assert(ModelRepresentation.JAR == md.modelRepresentation)
-    assert(MiningModelType.UNKNOWN == md.miningModelType)
+    assert(MiningModelType.JTM == md.miningModelType)
   }
 }

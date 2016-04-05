@@ -72,7 +72,7 @@ object MessageService {
       var message = new File(input.toString)
       if(message.exists()){
         val messageDef = Source.fromFile(message).mkString
-        response = MetadataAPIImpl.AddMessage(messageDef, "JSON", userid)
+        response = MetadataAPIImpl.AddMessage(messageDef, "JSON", userid, tenantId)
       }else{
         response="Message defintion file does not exist"
       }

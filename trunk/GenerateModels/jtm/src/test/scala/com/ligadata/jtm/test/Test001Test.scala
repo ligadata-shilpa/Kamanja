@@ -46,8 +46,8 @@ class Test001Test  extends FunSuite with BeforeAndAfter {
 
     compiler.Execute()
 
-    val expected = FileUtils.readFileToString(new File(fileExpected), null:String)
-    val actual = FileUtils.readFileToString(new File(fileOutput), null:String)
+    val expected = FileUtils.readFileToString(new File(fileExpected))
+    val actual = FileUtils.readFileToString(new File(fileOutput))
     logger.info("actual path={}", fileOutput)
     logger.info("expected path={}", fileExpected)
 
@@ -71,11 +71,37 @@ class Test001Test  extends FunSuite with BeforeAndAfter {
 
     compiler.Execute()
 
-    val expected = FileUtils.readFileToString(new File(fileExpected), null:String)
-    val actual = FileUtils.readFileToString(new File(fileOutput), null:String)
+    val expected = FileUtils.readFileToString(new File(fileExpected))
+    val actual = FileUtils.readFileToString(new File(fileOutput))
     logger.info("actual path={}", fileOutput)
     logger.info("expected path={}", fileExpected)
 
     assert(actual == expected)
   }
+
+  // Test conversion pickup
+//  test("test3") {
+//
+//    val fileInput = getClass.getResource("/test001.jtm/test3.jtm").getPath
+//    val fileOutput = getClass.getResource("/test001.jtm/test3.scala.result").getPath
+//    val fileExpected = getClass.getResource("/test001.jtm/test3.scala.expected").getPath
+//    val metadataLocation = getClass.getResource("/metadata").getPath
+//
+//    val compiler = CompilerBuilder.create().
+//      setSuppressTimestamps().
+//      setInputFile(fileInput).
+//      setOutputFile(fileOutput).
+//      setMetadataLocation(metadataLocation).
+//      build()
+//
+//    compiler.Execute()
+//
+//    val expected = FileUtils.readFileToString(new File(fileExpected))
+//    val actual = FileUtils.readFileToString(new File(fileOutput))
+//    logger.info("actual path={}", fileOutput)
+//    logger.info("expected path={}", fileExpected)
+//
+//    assert(actual == expected)
+//  }
+
 }
