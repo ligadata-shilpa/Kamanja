@@ -400,6 +400,7 @@ class TestModelConfigToJsonSpec extends FunSpec with LocalTestFixtures with Befo
 	res = MetadataAPIImpl.AddModel(ModelType.KPMML, // modelType
 				       modStr, // input
 				       userid,   // optUserid
+				       "testTenantId",
 				       None,   // optModelName
 				       None,   // optVersion
 				       None,   // optMsgConsumed
@@ -559,6 +560,7 @@ class TestModelConfigToJsonSpec extends FunSpec with LocalTestFixtures with Befo
 	res = MetadataAPIImpl.AddModel(ModelType.SCALA, // modelType
 				       modStr, // input
 				       userid,   // optUserid
+				       "testTenantId",
 				       Some("HelloWorld2Model"),   // optModelName
 				       None,   // optVersion
 				       None,   // optMsgConsumed

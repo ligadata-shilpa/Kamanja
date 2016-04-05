@@ -458,7 +458,7 @@ class SqlServerAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
     toTableName(containerName)
   }
 
-  override def put(containerName: String, key: Key, value: Value): Unit = {
+  override def put(containerName: String, isMetadataContainer: Boolean, key: Key, value: Value): Unit = {
     var con: Connection = null
     var pstmt: PreparedStatement = null
     var tableName = toFullTableName(containerName)
@@ -523,16 +523,16 @@ class SqlServerAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
     }
   }
 
-  private def IsSingleRowPut(data_list: Array[(String, Array[(Key, Value)])]): Boolean = {
+  private def IsSingleRowPut(data_list: Array[(String, Boolean, Array[(Key, Value)])]): Boolean = {
     if (data_list.length == 1) {
-      if (data_list(0)._2.length == 1) {
+      if (data_list(0)._3.length == 1) {
         return true
       }
     }
     return false
   }
 
-  override def put(data_list: Array[(String, Array[(Key, Value)])]): Unit = {
+  override def put(data_list: Array[(String, Boolean, Array[(Key, Value)])]): Unit = {
     var con: Connection = null
     var pstmt: PreparedStatement = null
     var sql: String = null
@@ -540,10 +540,11 @@ class SqlServerAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
     try {
       if (IsSingleRowPut(data_list)) {
         var containerName = data_list(0)._1
-        var keyValuePairs = data_list(0)._2
+        var isMetadataContainer = data_list(0)._2
+        var keyValuePairs = data_list(0)._3
         var key = keyValuePairs(0)._1
         var value = keyValuePairs(0)._2
-        put(containerName, key, value)
+        put(containerName, isMetadataContainer, key, value)
       } else {
         logger.debug("Get a new connection...")
         con = getConnection
@@ -553,7 +554,7 @@ class SqlServerAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
           var containerName = li._1
           CheckTableExists(containerName)
           var tableName = toFullTableName(containerName)
-          var keyValuePairs = li._2
+          var keyValuePairs = li._3
           logger.info("Input row count for the table " + tableName + " => " + keyValuePairs.length)
           sql = "if ( not exists(select 1 from " + tableName +
             " where timePartition = ? and bucketKey = ?  and transactionId = ?  and rowId = ? ) ) " +
@@ -1391,6 +1392,10 @@ class SqlServerAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
     })
   }
 
+  override def CreateMetadataContainer(containerNames: Array[String]): Unit = {
+    CreateContainer(containerNames)
+  }
+
   override def isTableExists(tableName: String): Boolean = {
     // check whether corresponding table exists
     var con: Connection = null
@@ -1559,11 +1564,11 @@ class SqlServerAdapterTx(val parent: DataStore) extends Transaction {
   val loggerName = this.getClass.getName
   val logger = LogManager.getLogger(loggerName)
 
-  override def put(containerName: String, key: Key, value: Value): Unit = {
-    parent.put(containerName, key, value)
+  override def put(containerName: String, isMetadataContainer: Boolean, key: Key, value: Value): Unit = {
+    parent.put(containerName, isMetadataContainer, key, value)
   }
 
-  override def put(data_list: Array[(String, Array[(Key, Value)])]): Unit = {
+  override def put(data_list: Array[(String, Boolean, Array[(Key, Value)])]): Unit = {
     parent.put(data_list)
   }
 

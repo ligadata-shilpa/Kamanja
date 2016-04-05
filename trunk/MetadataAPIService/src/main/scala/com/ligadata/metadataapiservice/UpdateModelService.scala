@@ -48,11 +48,12 @@ class UpdateModelService(requestContext: RequestContext, userid:Option[String], 
   
   def receive = {
     case Process(pmmlStr) =>
-      process(pmmlStr)
+      val tenantId: String = "" // FIXME: DAN FIX THIS TenantID
+      process(pmmlStr, tenantId)
       context.stop(self)
   }
   
-  def process(pmmlStr:String) = {
+  def process(pmmlStr:String, tenantId: String) = {
     
     log.debug("Requesting UpdateModel {}",pmmlStr)
 
@@ -83,10 +84,10 @@ class UpdateModelService(requestContext: RequestContext, userid:Option[String], 
 
         // if an optional parm is passed, pass it, else only pass in 2 parms
         if (compileConfigTokens.size == 2) {
-          val apiResult = MetadataAPIImpl.UpdateModel(ModelType.PMML, pmmlStr, userid, Some(compileConfigTokens(0)), Some(compileConfigTokens(1)))
+          val apiResult = MetadataAPIImpl.UpdateModel(ModelType.PMML, pmmlStr, userid, tenantId, Some(compileConfigTokens(0)), Some(compileConfigTokens(1)))
           requestContext.complete(apiResult)
         } else {
-          val apiResult = MetadataAPIImpl.UpdateModel(ModelType.PMML, pmmlStr, userid, Some(compileConfigTokens(0)), Some(compileConfigTokens(1)), Some(compileConfigTokens(2)) )
+          val apiResult = MetadataAPIImpl.UpdateModel(ModelType.PMML, pmmlStr, userid, tenantId, Some(compileConfigTokens(0)), Some(compileConfigTokens(1)), Some(compileConfigTokens(2)) )
           requestContext.complete(apiResult)
         }
       }

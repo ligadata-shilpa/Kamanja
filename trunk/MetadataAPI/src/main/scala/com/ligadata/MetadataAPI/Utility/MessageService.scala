@@ -34,7 +34,7 @@ object MessageService {
   val loggerName = this.getClass.getName
   lazy val logger = LogManager.getLogger(loggerName)
 
-  def addMessage(input: String): String = {
+  def addMessage(input: String, tenantId: String): String = {
     var response = ""
     var msgFileDir: String = ""
     //val gitMsgFile = "https://raw.githubusercontent.com/ligadata-dhaval/Kamanja/master/HelloWorld_Msg_Def.json"
@@ -56,7 +56,7 @@ object MessageService {
               case option => {
                 val messageDefs = getUserInputFromMainMenu(messages)
                 for (messageDef <- messageDefs) {
-                  response += MetadataAPIImpl.AddMessage(messageDef.toString, "JSON", userid)
+                  response += MetadataAPIImpl.AddMessage(messageDef.toString, "JSON", userid, tenantId)
                 }
               }
             }
@@ -72,7 +72,7 @@ object MessageService {
       var message = new File(input.toString)
       if(message.exists()){
         val messageDef = Source.fromFile(message).mkString
-        response = MetadataAPIImpl.AddMessage(messageDef, "JSON", userid)
+        response = MetadataAPIImpl.AddMessage(messageDef, "JSON", userid, tenantId)
       }else{
         response="Message defintion file does not exist"
       }

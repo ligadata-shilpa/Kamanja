@@ -205,6 +205,10 @@ class TreeMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
     })
   }
 
+  override def CreateMetadataContainer(containerNames: Array[String]): Unit = {
+    CreateContainer(containerNames)
+  }
+
   private def MakeCompositeKey(key: Key): Array[Byte] = {
     var compKey = key.timePartition.toString + "|" + key.bucketKey.mkString(".") +
       "|" + key.transactionId.toString + "|" + key.rowId.toString
@@ -248,7 +252,7 @@ class TreeMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
     //db.commit() //persist changes into disk
   }
 
-  override def put(containerName: String, key: Key, value: Value): Unit = {
+  override def put(containerName: String, isMetadataContainer: Boolean, key: Key, value: Value): Unit = {
     var tableName = toFullTableName(containerName)
     try {
       CheckTableExists(containerName)
@@ -265,14 +269,14 @@ class TreeMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
     }
   }
 
-  override def put(data_list: Array[(String, Array[(Key, Value)])]): Unit = {
+  override def put(data_list: Array[(String, Boolean, Array[(Key, Value)])]): Unit = {
     try {
       data_list.foreach(li => {
         var containerName = li._1
         CheckTableExists(containerName)
         var tableName = toFullTableName(containerName)
         var map = tablesMap(tableName)
-        var keyValuePairs = li._2
+        var keyValuePairs = li._3
         keyValuePairs.foreach(keyValuePair => {
           var key = keyValuePair._1
           var value = keyValuePair._2
@@ -807,11 +811,11 @@ class TreeMapAdapterTx(val parent: DataStore) extends Transaction {
   val loggerName = this.getClass.getName
   val logger = LogManager.getLogger(loggerName)
 
-  override def put(containerName: String, key: Key, value: Value): Unit = {
-    parent.put(containerName, key, value)
+  override def put(containerName: String, isMetadataContainer: Boolean, key: Key, value: Value): Unit = {
+    parent.put(containerName, isMetadataContainer, key, value)
   }
 
-  override def put(data_list: Array[(String, Array[(Key, Value)])]): Unit = {
+  override def put(data_list: Array[(String, Boolean, Array[(Key, Value)])]): Unit = {
     parent.put(data_list)
   }
 
