@@ -34,7 +34,7 @@ object MessageService {
   val loggerName = this.getClass.getName
   lazy val logger = LogManager.getLogger(loggerName)
 
-  def addMessage(input: String, tid: String): String = {
+  def addMessage(input: String, tid: Option[String]): String = {
     var response = ""
     var msgFileDir: String = ""
     //val gitMsgFile = "https://raw.githubusercontent.com/ligadata-dhaval/Kamanja/master/HelloWorld_Msg_Def.json"
@@ -56,7 +56,7 @@ object MessageService {
               case option => {
                 val messageDefs = getUserInputFromMainMenu(messages)
                 for (messageDef <- messageDefs) {
-                  response += MetadataAPIImpl.AddMessage(messageDef.toString, "JSON", userid)
+                  response += MetadataAPIImpl.AddMessage(messageDef.toString, "JSON", userid, tid)
                 }
               }
             }
@@ -102,7 +102,7 @@ object MessageService {
     response
   }
 
-  def updateMessage(input: String, tid: String): String = {
+  def updateMessage(input: String, tid: Option[String]): String = {
     var response = ""
     //val gitMsgFile = "https://raw.githubusercontent.com/ligadata-dhaval/Kamanja/master/HelloWorld_Msg_Def.json"
     if (input == "") {
@@ -123,7 +123,7 @@ object MessageService {
               case option => {
                 val messageDefs = getUserInputFromMainMenu(messages)
                 for (messageDef <- messageDefs) {
-                  response += MetadataAPIImpl.UpdateMessage(messageDef.toString, "JSON", userid)
+                  response += MetadataAPIImpl.UpdateMessage(messageDef.toString, "JSON", userid, tid)
                 }
               }
             }

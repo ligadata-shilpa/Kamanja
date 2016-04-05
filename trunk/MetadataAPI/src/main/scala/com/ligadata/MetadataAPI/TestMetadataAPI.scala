@@ -1302,7 +1302,7 @@ println("Getting Messages")
       println(pmmlStr)
       // Save the model
       //    MetadataAPIImpl.SetLoggerLevel(Level.TRACE)
-      println("Results as json string => \n" + MetadataAPIImpl.UpdateModel(ModelType.KPMML, pmmlStr, userid))
+      println("Results as json string => \n" + MetadataAPIImpl.UpdateModel(ModelType.KPMML, pmmlStr, userid, Some("tenantid")))
     } catch {
       case e: Exception => {
         
@@ -1422,12 +1422,11 @@ println("Getting Messages")
       println("CHOSE " + (choice2-1) + "  "+modelConfigName)
       
       if( op.equalsIgnoreCase("add") ){
-            println("Results as json string => \n" +
-                MetadataAPIImpl.AddModel(ModelType.JAVA, sourceStr, userid, Some(modelConfigName)))
+            println("Results as json string => \n") //+
+              //  MetadataAPIImpl.AddModel(ModelType.JAVA, sourceStr, userid, Some(modelConfigName), "testTenant"))
       }
       else{
-	println("Results as json string => \n" + 
-		MetadataAPIImpl.UpdateModel(ModelType.JAVA, sourceStr, userid, Some(modelConfigName)))
+	println("Results as json string => \n" + MetadataAPIImpl.UpdateModel(ModelType.JAVA, sourceStr, userid, Some("tenantid"), Some(modelConfigName)))
       }
     } catch {
       case e: AlreadyExistsException => {
@@ -1512,11 +1511,10 @@ println("Getting Messages")
      
       if( op.equalsIgnoreCase("add") ){
 	       println("Results as json string => \n" +
-	         MetadataAPIImpl.AddModel(ModelType.SCALA, sourceStr, userid, Some(modelConfigName)))
+	         MetadataAPIImpl.AddModel(ModelType.SCALA, sourceStr, userid, Some("tenantid"),Some(modelConfigName)))
       }
       else {
-	       println("Results as json string => \n" +
-	         MetadataAPIImpl.UpdateModel( ModelType.SCALA, sourceStr, userid, Some(modelConfigName)))
+	       println("Results as json string => \n" + MetadataAPIImpl.UpdateModel( ModelType.SCALA, sourceStr, userid, Some("tenantid"), Some(modelConfigName)))
       }
 	
     } catch {
@@ -1570,7 +1568,7 @@ println("Getting Messages")
       // Save the model
       // MetadataAPIImpl.SetLoggerLevel(Level.TRACE)
 
-      println("Results as json string => \n" + MetadataAPIImpl.AddModel(ModelType.KPMML, pmmlStr, userid, None))
+      println("Results as json string => \n" + MetadataAPIImpl.AddModel(ModelType.KPMML, pmmlStr, userid, Some("tenantid")))
     } catch {
       case e: AlreadyExistsException => {
         logger.error("Model Already in the metadata....", e)

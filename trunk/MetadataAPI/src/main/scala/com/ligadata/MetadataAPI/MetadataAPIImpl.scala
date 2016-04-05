@@ -2090,7 +2090,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      *          println("Result as Json String => \n" + result._2)
      *          }}}
      */
-  override def AddMessage(messageText: String, format: String, userid: Option[String] = None): String = {
+  override def AddMessage(messageText: String, format: String, userid: Option[String] = None, tid: Option[String] = None): String = {
     AddContainerOrMessage(messageText, format, userid)
   }
 
@@ -2150,7 +2150,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      *         indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
      *         ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure
      */
-  def UpdateMessage(messageText: String, format: String, userid: Option[String] = None): String = {
+  def UpdateMessage(messageText: String, format: String, userid: Option[String] = None, tid: Option[String] = None): String = {
     MessageAndContainerUtils.UpdateMessage(messageText,format,userid)
   }
 
@@ -2391,12 +2391,12 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
   override def AddModel( modelType: ModelType.ModelType
                            , input: String
                            , optUserid: Option[String] = None
+                           , optTenantid: Option[String] = None
                            , optModelName: Option[String] = None
                            , optVersion: Option[String] = None
                            , optMsgConsumed: Option[String] = None
                            , optMsgVersion: Option[String] = Some("-1")
 			                     , optMsgProduced: Option[String] = None
-                           , tenantid: String
 		       ): String  = {
     ModelUtils.AddModel(modelType,input,optUserid,optModelName,optVersion,optMsgConsumed, optMsgVersion,optMsgProduced)
   }
@@ -2447,11 +2447,11 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     override def UpdateModel(modelType: ModelType.ModelType
                             , input: String
                             , optUserid: Option[String] = None
+                            , tenantid:  Option[String] = None
                             , optModelName: Option[String] = None
                             , optVersion: Option[String] = None
                             , optVersionBeingUpdated : Option[String] = None
-			                      , optMsgProduced: Option[String] = None
-                            , tenantid: String): String = {
+			                      , optMsgProduced: Option[String] = None): String = {
       ModelUtils.UpdateModel(modelType,input,optUserid,optModelName,optVersion,optVersionBeingUpdated,optMsgProduced)
     }
 
