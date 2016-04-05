@@ -243,10 +243,10 @@ object ConfigUtils {
      */
   def AddAdapter(name: String, typeString: String, className: String,
                  jarName: String, dependencyJars: List[String],
-                 adapterSpecificCfg: String, tenantId: String): String = {
+                 adapterSpecificCfg: String, tenantId: String, fullAdapterConfig: String): String = {
     try {
       // save in memory
-      val ai = MdMgr.GetMdMgr.MakeAdapter(name, typeString, className, jarName, dependencyJars, adapterSpecificCfg, tenantId)
+      val ai = MdMgr.GetMdMgr.MakeAdapter(name, typeString, className, jarName, dependencyJars, adapterSpecificCfg, tenantId, fullAdapterConfig)
       MdMgr.GetMdMgr.AddAdapter(ai)
       // save in database
       val key = "AdapterInfo." + name
@@ -276,8 +276,8 @@ object ConfigUtils {
      */
   def UpdateAdapter(name: String, typeString: String, className: String,
                     jarName: String, dependencyJars: List[String],
-                    adapterSpecificCfg: String, tenantId: String): String = {
-    AddAdapter(name, typeString, className, jarName, dependencyJars, adapterSpecificCfg, tenantId)
+                    adapterSpecificCfg: String, tenantId: String, fullAdapterConfig: String): String = {
+    AddAdapter(name, typeString, className, jarName, dependencyJars, adapterSpecificCfg, tenantId, fullAdapterConfig)
   }
 
     /**
@@ -819,8 +819,9 @@ object ConfigUtils {
                 if (adap.contains("AdapterSpecificCfg")) {
                   ascfg = getStringFromJsonNode(adap.get("AdapterSpecificCfg"))
                 }
+                val fullAdapterConfig= getStringFromJsonNode(adap) // Saving the full config here in case if we want to use it later. In case of storage we use it
                 // save in memory
-                val ai = MdMgr.GetMdMgr.MakeAdapter(nm, typStr, clsNm, jarnm, depJars, ascfg, tenantId)
+                val ai = MdMgr.GetMdMgr.MakeAdapter(nm, typStr, clsNm, jarnm, depJars, ascfg, tenantId, fullAdapterConfig)
                 MdMgr.GetMdMgr.AddAdapter(ai)
                 val key = "AdapterInfo." + ai.name
                 val value = serializer.SerializeObjectToByteArray(ai)

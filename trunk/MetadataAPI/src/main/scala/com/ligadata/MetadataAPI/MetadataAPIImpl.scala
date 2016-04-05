@@ -3778,9 +3778,9 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      */
   def AddAdapter(name: String, typeString: String, className: String,
                  jarName: String, dependencyJars: List[String],
-                 adapterSpecificCfg: String, tenantId: String): String = {
+                 adapterSpecificCfg: String, tenantId: String, fullAdapterConfig: String): String = {
     ConfigUtils.AddAdapter(name, typeString, className, jarName,
-        dependencyJars, adapterSpecificCfg, tenantId)
+        dependencyJars, adapterSpecificCfg, tenantId, fullAdapterConfig)
   }
 
     /**
@@ -3796,8 +3796,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      */
   def UpdateAdapter(name: String, typeString: String, className: String,
                     jarName: String, dependencyJars: List[String],
-                    adapterSpecificCfg: String, tenantId: String): String = {
-    ConfigUtils.AddAdapter(name, typeString, className, jarName, dependencyJars, adapterSpecificCfg, tenantId)
+                    adapterSpecificCfg: String, tenantId: String, fullAdapterConfig: String): String = {
+    ConfigUtils.AddAdapter(name, typeString, className, jarName, dependencyJars, adapterSpecificCfg, tenantId, fullAdapterConfig)
   }
 
     /**

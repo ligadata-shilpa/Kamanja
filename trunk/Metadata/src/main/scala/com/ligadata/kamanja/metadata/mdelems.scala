@@ -1031,6 +1031,7 @@ class AdapterInfo {
   var dependencyJars: Array[String] = new Array[String](0)
   var adapterSpecificCfg: String = _
   var tenantId: String = _
+  var fullAdapterConfig: String = _
 //  var keyAndValueDelimiter: String = _ // Delimiter String for keyAndValueDelimiter
 //  var fieldDelimiter: String = _ // Delimiter String for fieldDelimiter
 //  var valueDelimiter: String = _ // Delimiter String for valueDelimiter
@@ -1042,6 +1043,7 @@ class AdapterInfo {
   def DependencyJars: Array[String] = dependencyJars
   def AdapterSpecificCfg: String = adapterSpecificCfg
   def TenantId: String = tenantId
+  def FullAdapterConfig: String = fullAdapterConfig
 
  // def InputAdapterToValidate: String = inputAdapterToValidate
  // def FailedEventsAdapter: String = failedEventsAdapter

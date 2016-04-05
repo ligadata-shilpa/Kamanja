@@ -289,7 +289,8 @@ object MetadataAPISerialization {
               ("JarName" -> o.JarName) ~
               ("DependencyJars" -> o.DependencyJars.toList) ~
               ("AdapterSpecificCfg" -> o.AdapterSpecificCfg)~
-              ("TenantId" -> o.TenantId)
+              ("TenantId" -> o.TenantId) ~
+              ("FullAdapterConfig" -> o.FullAdapterConfig)
           compact(render(json))
         }
         case o: TenantInfo => {
@@ -941,7 +942,8 @@ object MetadataAPISerialization {
         adapterInst.Adapter.JarName,
         adapterInst.Adapter.DependencyJars,
         adapterInst.Adapter.AdapterSpecificCfg,
-        adapterInst.Adapter.TenantId
+        adapterInst.Adapter.TenantId,
+        adapterInst.Adapter.FullAdapterConfig
       )
       adapterInfo
 
@@ -995,7 +997,7 @@ case class UserPropertiesInformation(ClusterId: String, Props: List[KeyVale])
 
 case class UserProperties(UserProperties: UserPropertiesInformation)
 
-case class AdapterInformation(Name: String, TypeString: String, ClassName: String, JarName: String, DependencyJars: List[String], AdapterSpecificCfg: String, TenantId: String)
+case class AdapterInformation(Name: String, TypeString: String, ClassName: String, JarName: String, DependencyJars: List[String], AdapterSpecificCfg: String, TenantId: String, FullAdapterConfig: String)
 
 case class Adapter(Adapter: AdapterInformation)
 
