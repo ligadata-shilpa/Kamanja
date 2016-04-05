@@ -534,9 +534,9 @@ object KamanjaLeader {
     LOG.debug("EventChangeCallback => Exit")
   }
 
-  private def GetUniqueKeyValue(uk: String): (Long, String, List[(String, String, String)]) = {
-    envCtxt.getAdapterUniqueKeyValue(0, uk)
-  }
+//  private def GetUniqueKeyValue(uk: String): (Long, String, List[(String, String, String)]) = {
+//    envCtxt.getAdapterUniqueKeyValue(0, uk)
+//  }
 
   private def StartNodeKeysMap(nodeKeysMap: scala.collection.immutable.Map[String, Array[String]], receivedJsonStr: String, adapMaxPartsMap: Map[String, Int], foundKeysInVald: Map[String, (String, Int, Int, Long)]): Boolean = {
     if (nodeKeysMap == null || nodeKeysMap.size == 0) {
@@ -553,35 +553,35 @@ object KamanjaLeader {
       remainingInpAdapters.foreach(ia => {
         val name = ia.UniqueName
         try {
-          val uAK = nodeKeysMap.getOrElse(name, null)
-          if (uAK != null) {
-            val uKV = uAK.map(uk => { GetUniqueKeyValue(uk) })
-            val maxParts = adapMaxPartsMap.getOrElse(name, 0)
-            LOG.info("On Node %s for Adapter %s with Max Partitions %d UniqueKeys %s, UniqueValues %s".format(nodeId, name, maxParts, uAK.mkString(","), uKV.mkString(",")))
-
-            LOG.debug("Deserializing Keys")
-            val keys = uAK.map(k => ia.DeserializeKey(k))
-
-            LOG.debug("Deserializing Values")
-            val vals = uKV.map(v => ia.DeserializeValue(if (v != null) v._2 else null))
-
-            LOG.debug("Deserializing Keys & Values done")
-
-            val quads = new ArrayBuffer[StartProcPartInfo](keys.size)
-
-            for (i <- 0 until keys.size) {
-              val key = keys(i)
-
-              val info = new StartProcPartInfo
-              info._key = key
-              info._val = vals(i)
-              info._validateInfoVal = vals(i)
-              quads += info
-            }
-
-            LOG.info(ia.UniqueName + " ==> Processing Keys & values: " + quads.map(q => { (q._key.Serialize, q._val.Serialize, q._validateInfoVal.Serialize) }).mkString(","))
-            ia.StartProcessing(quads.toArray, true)
-          }
+//          val uAK = nodeKeysMap.getOrElse(name, null)
+//          if (uAK != null) {
+//            val uKV = uAK.map(uk => { GetUniqueKeyValue(uk) })
+//            val maxParts = adapMaxPartsMap.getOrElse(name, 0)
+//            LOG.info("On Node %s for Adapter %s with Max Partitions %d UniqueKeys %s, UniqueValues %s".format(nodeId, name, maxParts, uAK.mkString(","), uKV.mkString(",")))
+//
+//            LOG.debug("Deserializing Keys")
+//            val keys = uAK.map(k => ia.DeserializeKey(k))
+//
+//            LOG.debug("Deserializing Values")
+//            val vals = uKV.map(v => ia.DeserializeValue(if (v != null) v._2 else null))
+//
+//            LOG.debug("Deserializing Keys & Values done")
+//
+//            val quads = new ArrayBuffer[StartProcPartInfo](keys.size)
+//
+//            for (i <- 0 until keys.size) {
+//              val key = keys(i)
+//
+//              val info = new StartProcPartInfo
+//              info._key = key
+//              info._val = vals(i)
+//              info._validateInfoVal = vals(i)
+//              quads += info
+//            }
+//
+//            LOG.info(ia.UniqueName + " ==> Processing Keys & values: " + quads.map(q => { (q._key.Serialize, q._val.Serialize, q._validateInfoVal.Serialize) }).mkString(","))
+//            ia.StartProcessing(quads.toArray, true)
+//          }
         } catch {
           case fae: FatalAdapterException => {
             LOG.error("Failed to start processing input adapter:" + name, fae)
@@ -738,7 +738,7 @@ object KamanjaLeader {
 
             if (distributionExecutor.isShutdown == false) {
               // Save the state and Clear the maps
-              ProcessedAdaptersInfo.CommitAdapterValues
+//              ProcessedAdaptersInfo.CommitAdapterValues
               ProcessedAdaptersInfo.clearInstances
               // envCtxt.PersistLocalNodeStateEntries
 //              envCtxt.clearIntermediateResults
@@ -1202,7 +1202,8 @@ object KamanjaLeader {
                   }
 
                   if (allNodesUp == false) { // If all nodes are not up then wait for long time
-                    mxTm = if (KamanjaConfiguration.zkSessionTimeoutMs > KamanjaConfiguration.zkConnectionTimeoutMs) KamanjaConfiguration.zkSessionTimeoutMs else KamanjaConfiguration.zkConnectionTimeoutMs
+                    envCtxt.getZookeeperInfo()
+                    mxTm = if (zkSessionTimeoutMs > zkConnectionTimeoutMs) zkSessionTimeoutMs else zkConnectionTimeoutMs
                     if (mxTm < 5000) // if the value is < 5secs, we are taking 5 secs
                       mxTm = 5000
                     LOG.warn("Got Redistribution request. Participents are {%s}. Looks like all nodes are not yet up. Waiting for %d milli seconds to see whether there are any more changes in participents".format(cs.participantsNodeIds.mkString(","), mxTm))

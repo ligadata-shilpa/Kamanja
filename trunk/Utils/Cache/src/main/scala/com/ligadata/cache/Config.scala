@@ -13,6 +13,7 @@ object Config {
   val DISKSPOOLBUFFERSIZEMB:String="diskSpoolBufferSizeMB"
   val CACHECONFIG:String = "CacheConfig"
   val INITIALHOSTS:String = "jgroups.tcpping.initial_hosts"
+  val UDPADD:String = "jgroups.udp.add"
   val PORT:String = "jgroups.port"
 }
 

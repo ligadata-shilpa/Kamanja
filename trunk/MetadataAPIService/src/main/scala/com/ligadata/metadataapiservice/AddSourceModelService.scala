@@ -53,17 +53,19 @@ class AddSourceModelService(requestContext: RequestContext, userid:Option[String
 
   def receive = {
     case ProcessJava(sourceCode) =>{
-      processJava(sourceCode)
+      val tenantId: String = "" // FIXME: DAN FIX THIS TenantID
+      processJava(sourceCode, tenantId)
       context.stop(self)
     }
     case ProcessScala(sourceCode) =>{
-      processScala(sourceCode)
+      val tenantId: String = "" // FIXME: DAN FIX THIS TenantID
+      processScala(sourceCode, tenantId)
       context.stop(self)
     }
 
   }
 
-  def processJava(sourceCode:String) = {
+  def processJava(sourceCode:String, tenantId: String) = {
     logger.debug("Requesting AddSourceModel JAVA.")
     val usersModelName=userid.getOrElse("")+"."+modelname.getOrElse("")
     logger.debug("user model name is: "+usersModelName)
@@ -74,12 +76,12 @@ class AddSourceModelService(requestContext: RequestContext, userid:Option[String
       requestContext.complete(new ApiResult(ErrorCodeConstants.Failure, APIName, null,  "Failed to add model. No model configuration name supplied. Please specify in the header the model configuration name where the key is 'modelname' and the value is the name of the configuration.").toString )
     }
     else {
-      val apiResult = MetadataAPIImpl.AddModel(ModelType.JAVA, sourceCode, userid, Some(usersModelName))
+      val apiResult = MetadataAPIImpl.AddModel(ModelType.JAVA, sourceCode, userid, tenantId, Some(usersModelName))
       requestContext.complete(apiResult)
     }
   }
 
-  def processScala(sourceCode:String) = {
+  def processScala(sourceCode:String, tenantId: String) = {
 
     logger.debug("Requesting AddSourceModel SCALA.")
     /*var modelName=""
@@ -102,7 +104,7 @@ class AddSourceModelService(requestContext: RequestContext, userid:Option[String
     }
     else {
       //def AddModelFromSource(sourceCode: String, sourceLang: String, modelName: String, userid: Option[String]): String = {
-      val apiResult = MetadataAPIImpl.AddModel(ModelType.SCALA, sourceCode, userid, Some(usersModelName))
+      val apiResult = MetadataAPIImpl.AddModel(ModelType.SCALA, sourceCode, userid, tenantId, Some(usersModelName))
       requestContext.complete(apiResult)
     }
   }

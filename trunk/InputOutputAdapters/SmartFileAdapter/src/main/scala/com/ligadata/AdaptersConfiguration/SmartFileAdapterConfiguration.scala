@@ -32,15 +32,16 @@ class FileAdapterMonitoringConfig {
   var locations : Array[String] = Array.empty[String] //folders to monitor
 
   var fileBufferingTimeout = 300 // in seconds
-  var metadataConfigFile = "" // will check if needed
   var targetMoveDir = ""
   var consumersCount : Int = _
+  var workerBufferSize : Int = 16 //buffer size in MB to read messages from files
+  var messageSeparator : Char = 10
 }
 
 object SmartFileAdapterConfiguration{
 
   val defaultWaitingTimeMS = 1000
-  val defaultConsumerCount = 1000
+  val defaultConsumerCount = 2
 
   def getAdapterConfig(inputConfig: AdapterConfiguration): SmartFileAdapterConfiguration = {
 
@@ -138,10 +139,24 @@ object SmartFileAdapterConfiguration{
       else  if (kv._1.compareToIgnoreCase("Locations") == 0) {
         monitoringConfig.locations = kv._2.split(",").map(str => str.trim).filter(str => str.size > 0)
       }
+      else  if (kv._1.compareToIgnoreCase("TargetMoveDir") == 0) {
+        monitoringConfig.targetMoveDir = kv._2.trim
+      }
+      else if (kv._1.compareToIgnoreCase("WorkerBufferSize") == 0) {
+        monitoringConfig.workerBufferSize = kv._2.trim.toInt
+      }
+      else if (kv._1.compareToIgnoreCase("MessageSeparator") == 0) {
+        monitoringConfig.messageSeparator = kv._2.trim.toInt.toChar
+      }
     })
 
     if(monitoringConfig.locations == null || monitoringConfig.locations.length == 0) {
       val err = "Not found Locations for Smart File Adapter Config:" + adapterName
+      throw new KamanjaException(err, null)
+    }
+
+    if(monitoringConfig.targetMoveDir == null || monitoringConfig.targetMoveDir.length == 0) {
+      val err = "Not found targetMoveDir for Smart File Adapter Config:" + adapterName
       throw new KamanjaException(err, null)
     }
 

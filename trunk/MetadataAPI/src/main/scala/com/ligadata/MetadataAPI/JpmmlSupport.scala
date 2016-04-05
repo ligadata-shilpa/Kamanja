@@ -71,6 +71,7 @@ class JpmmlSupport(mgr: MdMgr
     * @return a ModelDef
     */
   def CreateModel(recompile: Boolean = false): ModelDef = {
+    val tenantId: String = "" // FIXME: DAN FIX THIS TenantID
     val reasonable: Boolean = (
       mgr != null &&
         modelNamespace != null && modelNamespace.nonEmpty &&
@@ -198,7 +199,7 @@ class JpmmlSupport(mgr: MdMgr
             val model: ModelDef = mgr.MakeModelDef(modelNamespace
               , modelName
               , phyName
-              , ownerId, 0, 0
+              , ownerId, tenantId, 0, 0
               , ModelRepresentation.PMML
               , Array(inpMsgs)
               , Array[String]()

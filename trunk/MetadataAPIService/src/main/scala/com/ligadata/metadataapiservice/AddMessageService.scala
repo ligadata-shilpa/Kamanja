@@ -45,11 +45,12 @@ class AddMessageService(requestContext: RequestContext, userid:Option[String], p
   
   def receive = {
     case Process(messageJson) =>
-      process(messageJson)
+      val tenantId: String = "" // FIXME: DAN FIX THIS TenantID
+      process(messageJson, tenantId)
       context.stop(self)
   }
   
-  def process(messageJson:String) = {
+  def process(messageJson:String, tenantId: String) = {
     
     log.debug("Requesting AddMessage {}",messageJson)
 
@@ -59,7 +60,7 @@ class AddMessageService(requestContext: RequestContext, userid:Option[String], p
       MetadataAPIImpl.logAuditRec(userid,Some(AuditConstants.WRITE),AuditConstants.INSERTOBJECT,messageJson,AuditConstants.FAIL,"",nameVal)   
       requestContext.complete(new ApiResult(ErrorCodeConstants.Failure, APIName, null,  "Error:UPDATE not allowed for this user").toString )      
     } else {
-      val apiResult = MetadataAPIImpl.AddMessage(messageJson,"JSON", userid)
+      val apiResult = MetadataAPIImpl.AddMessage(messageJson,"JSON", userid, tenantId)
       requestContext.complete(apiResult)
     }
   }
