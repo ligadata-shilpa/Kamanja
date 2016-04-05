@@ -21,14 +21,17 @@ import com.ligadata.AdaptersConfiguration.{ KafkaPartitionUniqueRecordKey, Kafka
 import com.ligadata.InputOutputAdapterInfo._
 import kafka.api._
 import kafka.common.TopicAndPartition
+import org.json4s.jackson.Serialization
 import scala.actors.threadpool.{ TimeUnit, ExecutorService, Executors }
 import scala.util.control.Breaks._
 import kafka.consumer.{ SimpleConsumer }
 import java.net.{ InetAddress }
 import org.apache.log4j.Logger
 import scala.collection.mutable.Map
-import com.ligadata.Exceptions.{FatalAdapterException, StackTrace}
+import com.ligadata.Exceptions.{ FatalAdapterException}
 import com.ligadata.KamanjaBase.DataDelimiters
+
+case class ExceptionInfo (Last_Failure: String, Last_Recovery: String)
 
 object KafkaSimpleConsumer extends InputAdapterObj {
   val METADATA_REQUEST_CORR_ID = 2
@@ -38,10 +41,17 @@ object KafkaSimpleConsumer extends InputAdapterObj {
   val MONITOR_FREQUENCY = 10000 // Monitor Topic queues every 20 seconds
   val SLEEP_DURATION = 1000 // Allow 1 sec between unsucessful fetched
   var CURRENT_BROKER: String = _
-  val FETCHSIZE = 64 * 1024
+  val FETCHSIZE = 1024 * 1024
   val ZOOKEEPER_CONNECTION_TIMEOUT_MS = 3000
   val MAX_TIMEOUT = 60000
   val INIT_TIMEOUT = 250
+  val HB_PERIOD = 5000
+
+  // Statistics Keys
+  val ADAPTER_DESCRIPTION = "Kafka 0.8.2.2 Client"
+  val PARTITION_COUNT_KEYS = "Partition Counts"
+  val PARTITION_DEPTH_KEYS = "Partition Depths"
+  val EXCEPTION_SUMMARY = "Exception Summary"
 
   def CreateInputAdapter(inputConfig: AdapterConfiguration, callerCtxt: InputAdapterCallerContext, execCtxtObj: ExecContextObj, cntrAdapter: CountersAdapter): InputAdapter = new KafkaSimpleConsumer(inputConfig, callerCtxt, execCtxtObj, cntrAdapter)
 }
@@ -52,6 +62,20 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
   private val LOG = Logger.getLogger(getClass)
   private var isQuiesced = false
   private var startTime: Long = 0
+  private var isShutdown = false
+
+  private var metrics: collection.mutable.Map[String,Any] = collection.mutable.Map[String,Any]()
+  private var partitonCounts: collection.mutable.Map[String,Long] = collection.mutable.Map[String,Long]()
+  private var partitonDepths: collection.mutable.Map[String,Long] = collection.mutable.Map[String,Long]()
+  private var partitionExceptions: collection.mutable.Map[String,ExceptionInfo] = collection.mutable.Map[String,ExceptionInfo]()
+  private var msgInQ: Long = 0
+  private var startHeartBeat: String = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
+  private var lastSeen: String = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
+  metrics(KafkaSimpleConsumer.PARTITION_COUNT_KEYS) = partitonCounts
+  metrics(KafkaSimpleConsumer.EXCEPTION_SUMMARY) = partitionExceptions
+  metrics(KafkaSimpleConsumer.PARTITION_DEPTH_KEYS) = partitonDepths
+
+  var localReadOffsets: collection.mutable.Map[Int,Long] = collection.mutable.Map[Int,Long]()
 
   private val qc = KafkaQueueAdapterConfiguration.GetAdapterConfig(inputConfig)
 
@@ -66,7 +90,7 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
   // Heartbeat monitor related variables.
   private var hbRunning: Boolean = false
   private var hbTopicPartitionNumber = -1
-  private val hbExecutor = Executors.newFixedThreadPool(qc.hosts.size)
+  private val hbExecutor2 = Executors.newFixedThreadPool(1)
 
   private var timeoutTimer = KafkaSimpleConsumer.INIT_TIMEOUT
 
@@ -81,8 +105,8 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
    * Will stop all the running read threads only - a call to StartProcessing will restart the reading process
    */
   def StopProcessing(): Unit = {
+    isShutdown = true
     terminateReaderTasks
-    terminateHBTasks
   }
 
   private def getTimeoutTimer: Long = {
@@ -107,6 +131,9 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
    * @param partitionIds Array[(PartitionUniqueRecordKey, PartitionUniqueRecordValue, Long, PartitionUniqueRecordValue)] - an Array of partition ids
    */
   def StartProcessing(partitionIds: Array[StartProcPartInfo], ignoreFirstMsg: Boolean): Unit = lock.synchronized {
+
+    var lastHb: Long = 0
+    startHeartBeat = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
 
     LOG.info("START_PROCESSING CALLED")
     // Check to see if this already started
@@ -170,12 +197,16 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
           val partitionId = kvsElement._1
           val partition = kvsElement._2
 
+          // Initialize the monitoring status
+          partitonCounts(partitionId.toString) = 0
+          partitonDepths(partitionId.toString) = 0
+          partitionExceptions(partitionId.toString) = new ExceptionInfo("n/a","n/a")
+
           // if the offset is -1, then the server wants to start from the begining, else, it means that the server
           // knows what its doing and we start from that offset.
           var readOffset: Long = -1
           val uniqueRecordValue = if (ignoreFirstMsg) partition._3.Offset else partition._3.Offset - 1
 
-          var sleepDuration = KafkaSimpleConsumer.SLEEP_DURATION
           var messagesProcessed: Long = 0
           var execThread: ExecContext = null
           val uniqueKey = new KafkaPartitionUniqueRecordKey
@@ -187,13 +218,16 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
           uniqueKey.PartitionId = partitionId
 
           // Figure out which of the hosts is the leader for the given partition
-          val leadBroker: String = getKafkaConfigId(findLeader(qc.hosts, partitionId))
+          var leadBroker: String = getKafkaConfigId(findLeader(qc.hosts, partitionId))
 
           // Start processing from either a beginning or a number specified by the KamanjaMananger
           readOffset = getKeyValueForPartition(leadBroker, partitionId, kafka.api.OffsetRequest.EarliestTime)
           if (partition._2.Offset > readOffset) {
             readOffset = partition._2.Offset
           }
+
+          // So, initialize local offsets here.
+          localReadOffsets(partitionId) = readOffset
 
           // See if we can determine the right offset, bail if we can't
           if (readOffset == -1) {
@@ -205,49 +239,88 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
 
           // If we are forced to retry in case of a failure, get the new Leader.
           //val consumer = brokerConfiguration(leadBroker)
-          val brokerId = convertIp(leadBroker)
-          val brokerName = brokerId.split(":")
-          var consumer: SimpleConsumer = null
-          while (consumer == null && !isQuiesced) {
-            try {
-              consumer = new SimpleConsumer(brokerName(0), brokerName(1).toInt,
-                                            KafkaSimpleConsumer.ZOOKEEPER_CONNECTION_TIMEOUT_MS,
-                                            KafkaSimpleConsumer.FETCHSIZE,
-                                            KafkaSimpleConsumer.METADATA_REQUEST_TYPE)
-            } catch {
-              case e: Exception => {
-                LOG.error("KAFKA ADAPTER: Failure connecting to Kafka server, retrying", e)
-                Thread.sleep(getTimeoutTimer)
-              }
-            }
-          }
+          var brokerId = convertIp(leadBroker)
+          var brokerName = brokerId.split(":")
+          var consumer: SimpleConsumer = createConsumer(brokerName(0), brokerName(1))
 
           resetTimeoutTimer
+
           // Keep processing until you fail enough times.
           while (!isQuiesced) {
             val fetchReq = new FetchRequestBuilder().clientId(clientName).addFetch(qc.topic, partitionId, readOffset, KafkaSimpleConsumer.FETCHSIZE).build()
             var fetchResp: FetchResponse = null
             var isFetchError = false
-
+            var isErrorRecorded = false
             // Call the broker and get a response.
             while ((fetchResp == null || isFetchError) && !isQuiesced) {
               try {
                 fetchResp = consumer.fetch(fetchReq)
                 isFetchError = false
                 if (fetchResp.hasError) {
+                  if(!isErrorRecorded) {
+                    partitionExceptions(partitionId.toString) = new ExceptionInfo(new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis)),"n/a")
+                    isErrorRecorded = true
+                  }
                   isFetchError = true
                   LOG.warn("KAFKA ADAPTER: Error fetching topic " + qc.topic + ", partition " + partitionId + ", retrying due to an error " + fetchResp.errorCode(qc.topic, partitionId))
+                  LOG.warn("KAFKA ADAPTER: Error fetching topic " + qc.topic + ", partition " + partitionId + ", recreating kafka leader for this partition")
+                  consumer.close
+                  consumer = null
+                  leadBroker = getKafkaConfigId(findLeader(qc.hosts, partitionId))
+
+                  LOG.warn("KAFKA ADAPTER: Error fetching topic " + qc.topic + ", partition " + partitionId + ", failing over to the new leader " + leadBroker)
+                  brokerId = convertIp(leadBroker)
+                  brokerName = brokerId.split(":")
+                  consumer = createConsumer(brokerName(0), brokerName(1))
+
                   Thread.sleep(getTimeoutTimer)
                 } else {
                   resetTimeoutTimer
                 }
               } catch {
+                case e: InterruptedException => {
+                  LOG.error(qc.Name + " KAFKA ADAPTER: Read retry interrupted", e)
+                  Shutdown()
+                  return
+                }
                 case e: Exception => {
-                  LOG.error("KAFKA ADAPTER: Failure fetching topic "+qc.topic+", partition " + partitionId + ", retrying", e)
+                  if(!isErrorRecorded) {
+                    partitionExceptions(partitionId.toString) = new ExceptionInfo(new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis)),"n/a")
+                    isErrorRecorded = true
+                  }
+                  LOG.error("KAFKA ADAPTER: Failure fetching topic "+qc.topic+", partition " + partitionId + ", retrying")
+                  LOG.warn("KAFKA ADAPTER: Error fetching topic " + qc.topic + ", partition " + partitionId + ", recreating kafka leader for this partition")
+                  consumer.close
+                  consumer = null
+                  leadBroker = null
+                  while (leadBroker == null) {
+                    try {
+                      Thread.sleep(getTimeoutTimer)
+                      leadBroker = getKafkaConfigId(findLeader(qc.hosts, partitionId))
+                    } catch {
+                      case e: java.lang.InterruptedException =>
+                      {
+                        LOG.debug("KAFKA ADAPTER: Forcing down the Consumer Reader thread", e)
+                        Shutdown()
+                      }
+                      case e: Exception =>  LOG.warn("KAFKA ADAPTER: Failover target for " + qc.topic + ", partition " + partitionId + ", does not exist - retrying")
+                    }
+                  }
+                  LOG.warn("KAFKA ADAPTER: Recovered from error fetching " + qc.topic + ", partition " + partitionId + ", failing over to the new leader " + leadBroker)
+                  brokerId = convertIp(leadBroker)
+                  brokerName = brokerId.split(":")
+                  consumer = createConsumer(brokerName(0), brokerName(1))
                   Thread.sleep(getTimeoutTimer)
                 }
               }
             }
+
+            // Record in metrics if we encountered a problem but it was resolved
+            if (isErrorRecorded) {
+              var new_exeption_info = new ExceptionInfo(partitionExceptions(partitionId.toString).Last_Failure, new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis)) )
+              partitionExceptions(partitionId.toString) = new_exeption_info
+            }
+
 
             // If we are here under shutdown conditions.. cleanup and bail
             if (isQuiesced) {
@@ -283,10 +356,14 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
                   execThread = execCtxtObj.CreateExecContext(input, uniqueKey, callerCtxt)
                 }
 
+                incrementCountForPartition(partitionId)
+
                 uniqueVal.Offset = msgBuffer.offset
                 val dontSendOutputToOutputAdap = uniqueVal.Offset <= uniqueRecordValue
                 execThread.execute(message, qc.formatOrInputAdapterName, uniqueKey, uniqueVal, readTmNs, readTmMs, dontSendOutputToOutputAdap, qc.associatedMsg, delimiters)
 
+                // Kafka offsets are 0 based, so add 1
+                localReadOffsets(partitionId) = (uniqueVal.Offset + 1)
                 val key = Category + "/" + qc.Name + "/evtCnt"
                 cntrAdapter.addCntr(key, 1) // for now adding each row
               }
@@ -300,11 +377,22 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
               }
               messagesProcessed = 0
 
+              // If it has been more then 5 seconds since the last message, externalize the statistics.
+              // This loop waits at least qc.noDataSleepTimeInMs seconds between checking kafka for new
+              // input data, so this may not be exactly 5 second interval.  The adapter architecture is due
+              // for an overhaul, so this weill probably change.
+              val thisHb = System.currentTimeMillis
+              if ((thisHb - lastHb) > KafkaSimpleConsumer.HB_PERIOD) {
+                LOG.debug("KAFKA-ADAPTER: Broker: " + leadBroker + " is marked alive,")
+                lastHb = thisHb
+                lastSeen = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
+              }
+
             } catch {
               case e: java.lang.InterruptedException =>
                 {
-                  val stackTrace = StackTrace.ThrowableTraceString(e)
-                  LOG.debug("KAFKA ADAPTER: Forcing down the Consumer Reader thread" + "\nStackTrace:" + stackTrace)
+                  LOG.info("KAFKA ADAPTER: shutting down thread for " + qc.topic + " partition: " + partitionId )
+                  Shutdown()
                 }
             }
           }
@@ -330,53 +418,62 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
     LOG.debug("KAFKA-ADAPTER - Querying kafka for Topic " + qc.topic + " metadata(partitions)")
 
     qc.hosts.foreach(broker => {
-      val brokerName = broker.split(":")
-      var partConsumer: SimpleConsumer = null
-      try {
-        partConsumer = new SimpleConsumer(brokerName(0), brokerName(1).toInt,
-                                          KafkaSimpleConsumer.ZOOKEEPER_CONNECTION_TIMEOUT_MS,
-                                          KafkaSimpleConsumer.FETCHSIZE,
-                                          KafkaSimpleConsumer.METADATA_REQUEST_TYPE)
-      } catch {
-        case e: Exception => throw new FatalAdapterException("Unable to create connection to Kafka Server ", e)
-      }
-
-      try {
-
-        // Keep retrying to connect until MAX number of tries is reached.
-        var retryCount = 0
-        var result = doSend(partConsumer,metaDataReq)
-        while(result._1 == null && !isQuiesced) {
-          if (retryCount > KafkaSimpleConsumer.MAX_FAILURES)
-            throw new FatalAdapterException("Failed to retrieve Topic Metadata for defined partitions", result._2)
-          retryCount += 1
-          Thread.sleep(1000)
-          result = doSend(partConsumer,metaDataReq)
+      breakable {
+        val brokerName = broker.split(":")
+        var partConsumer: SimpleConsumer = null
+        try {
+          partConsumer = new SimpleConsumer(brokerName(0), brokerName(1).toInt,
+            KafkaSimpleConsumer.ZOOKEEPER_CONNECTION_TIMEOUT_MS,
+            KafkaSimpleConsumer.FETCHSIZE,
+            KafkaSimpleConsumer.METADATA_REQUEST_TYPE)
+        } catch {
+          case e: Exception => {
+            LOG.warn("KAFKA-ADAPTER: unable to connect to broker " + broker, e)
+            break
+          }
         }
 
-        val metaData = result._1.topicsMetadata
-        metaData.foreach(topicMeta => {
-          topicMeta.partitionsMetadata.foreach(partitionMeta => {
-            val uniqueKey = new KafkaPartitionUniqueRecordKey
-            uniqueKey.PartitionId = partitionMeta.partitionId
-            uniqueKey.Name = qc.Name
-            uniqueKey.TopicName = qc.topic
-            if (!partitionRecord.contains(qc.topic + partitionMeta.partitionId.toString)) {
-              partitionNames = uniqueKey :: partitionNames
-              partitionRecord = partitionRecord + (qc.topic + partitionMeta.partitionId.toString)
+        try {
+          // Keep retrying to connect until MAX number of tries is reached.
+          var retryCount = 0
+          var result = doSend(partConsumer,metaDataReq)
+          while(result._1 == null && !isQuiesced) {
+            if (retryCount > KafkaSimpleConsumer.MAX_FAILURES) {
+              LOG.warn("KAFKA-ADAPTER: unable to send request to broker " + broker)
+              break
             }
+            retryCount += 1
+            Thread.sleep(1000)
+            result = doSend(partConsumer,metaDataReq)
+          }
+
+          val metaData = result._1.topicsMetadata
+          metaData.foreach(topicMeta => {
+            topicMeta.partitionsMetadata.foreach(partitionMeta => {
+              val uniqueKey = new KafkaPartitionUniqueRecordKey
+              uniqueKey.PartitionId = partitionMeta.partitionId
+              uniqueKey.Name = qc.Name
+              uniqueKey.TopicName = qc.topic
+              if (!partitionRecord.contains(qc.topic +":"+ partitionMeta.partitionId.toString)) {
+                partitionNames = uniqueKey :: partitionNames
+                partitionRecord = partitionRecord + (qc.topic +":"+ partitionMeta.partitionId.toString)
+              }
+            })
           })
-        })
-      } catch {
-        case fae: FatalAdapterException => throw fae
-        case npe: NullPointerException => {
-          if (isQuiesced) LOG.warn("Kafka Simple Consumer is shutting down during kafka call for partition information - ignoring the call")
+        } catch {
+          case fae: FatalAdapterException => throw fae
+          case npe: NullPointerException => {
+            if (isQuiesced) LOG.warn("Kafka Simple Consumer exception during kafka call for partition information -  " +qc.topic , npe)
+          }
+          case e: Exception => throw FatalAdapterException("failed to SEND MetadataRequest to Kafka Server ", e)
+        } finally {
+          if (partConsumer != null) { partConsumer.close }
         }
-        case e: Exception => throw new FatalAdapterException("failed to SEND MetadataRequest to Kafka Server ", e)
-      } finally {
-        if (partConsumer != null) { partConsumer.close }
+        if (partitionNames.size > 0) return partitionNames.toArray
       }
     })
+
+    if (partitionNames.size == 0) throw FatalAdapterException("Failed to retrieve Topic Metadata for defined partitions", null)
     return partitionNames.toArray
   }
 
@@ -421,7 +518,7 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
       key.Deserialize(k)
     } catch {
       case e: Exception => {
-        LOG.error("Failed to deserialize Key:%s. Reason:%s Message:%s".format(k, e.getCause, e.getMessage))
+        LOG.error("Failed to deserialize Key:%s.".format(k), e)
         throw e
       }
     }
@@ -436,7 +533,7 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
         vl.Deserialize(v)
       } catch {
         case e: Exception => {
-          LOG.error("Failed to deserialize Value:%s. Reason:%s Message:%s".format(v, e.getCause, e.getMessage))
+          LOG.error("Failed to deserialize Value:%s.".format(v), e)
           throw e
         }
       }
@@ -452,75 +549,101 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
 
     LOG.debug("KAFKA-ADAPTER: Looking for Kafka Topic Leader for partition " + inPartition)
     try {
-      breakable {
-        brokers.foreach(broker => {
-          // Create a connection to this broker to obtain the metadata for this broker.
-          val brokerName = broker.split(":")
-          var llConsumer: SimpleConsumer = null
-          try {
-            llConsumer = new SimpleConsumer(brokerName(0), brokerName(1).toInt,
-                                            KafkaSimpleConsumer.ZOOKEEPER_CONNECTION_TIMEOUT_MS,
-                                            KafkaSimpleConsumer.FETCHSIZE,
-                                            KafkaSimpleConsumer.METADATA_REQUEST_TYPE)
-          } catch {
-            case e: Exception => throw new FatalAdapterException("Unable to create connection to Kafka Server ", e)
-          }
-          val topics: Array[String] = Array(qc.topic)
-          val llReq = new TopicMetadataRequest(topics, KafkaSimpleConsumer.METADATA_REQUEST_CORR_ID)
+      brokers.foreach(broker => {
+        breakable {
+            // Create a connection to this broker to obtain the metadata for this broker.
+            val brokerName = broker.split(":")
+            var llConsumer: SimpleConsumer = null
+            try {
+              llConsumer = new SimpleConsumer(brokerName(0), brokerName(1).toInt,
+                KafkaSimpleConsumer.ZOOKEEPER_CONNECTION_TIMEOUT_MS,
+                KafkaSimpleConsumer.FETCHSIZE,
+                KafkaSimpleConsumer.METADATA_REQUEST_TYPE)
+            } catch {
 
-          // get the metadata on the llConsumer
-          try {
-         //   val llResp: kafka.api.TopicMetadataResponse = llConsumer.send(llReq)
+              case e: Exception => {
+                LOG.warn("KAFKA-ADAPTER: Unable to create a leader consumer")
+                break
+              }
 
-            // Keep retrying to connect until MAX number of tries is reached.
-            var retryCount = 0
-            var result = doSend(llConsumer,llReq)
-            while(result._1 == null && !isQuiesced) {
-              if (retryCount > KafkaSimpleConsumer.MAX_FAILURES)
-                throw new FatalAdapterException("Failed to retrieve Topic Metadata while searching for LEADER node", result._2)
-              retryCount += 1
-              Thread.sleep(1000)
-              result = doSend(llConsumer,llReq)
             }
+            val topics: Array[String] = Array(qc.topic)
+            val llReq = new TopicMetadataRequest(topics, KafkaSimpleConsumer.METADATA_REQUEST_CORR_ID)
 
-            val metaData = result._1.topicsMetadata
-
-            // look at each piece of metadata, and analyze its partitions
-            metaData.foreach(metaDatum => {
-              val partitionMetadata = metaDatum.partitionsMetadata
-              partitionMetadata.foreach(partitionMetadatum => {
-                // If we found the partitionmetadatum for the desired partition then this must be the leader.
-                if (partitionMetadatum.partitionId == inPartition) {
-                  // Create a list of replicas to be used in case of a fetch failure here.
-                  replicaBrokers.empty
-                  partitionMetadatum.replicas.foreach(replica => {
-                    replicaBrokers = replicaBrokers + (replica.host)
-                  })
-                  leaderMetadata = partitionMetadatum
+            // get the metadata on the llConsumer
+            try {
+              // Keep retrying to connect until MAX number of tries is reached.
+              var retryCount = 0
+              var result = doSend(llConsumer,llReq)
+              while(result._1 == null && !isQuiesced) {
+                if (retryCount > KafkaSimpleConsumer.MAX_FAILURES) {
+                  LOG.warn("KAFKA-ADAPTER: Unable to contact " + broker)
+                  break
                 }
+                // throw FatalAdapterException("Failed to retrieve Topic Metadata while searching for LEADER node", result._2)
+
+                retryCount += 1
+                Thread.sleep(1000)
+                result = doSend(llConsumer,llReq)
+              }
+
+              val metaData = result._1.topicsMetadata
+
+              // look at each piece of metadata, and analyze its partitions
+              metaData.foreach(metaDatum => {
+                val partitionMetadata = metaDatum.partitionsMetadata
+                partitionMetadata.foreach(partitionMetadatum => {
+                  // If we found the partitionmetadatum for the desired partition then this must be the leader.
+                  if (partitionMetadatum.partitionId == inPartition) {
+                    // Create a list of replicas to be used in case of a fetch failure here.
+                    replicaBrokers.empty
+                    partitionMetadatum.replicas.foreach(replica => {
+                      replicaBrokers = replicaBrokers + ((replica.host)+":"+replica.port )
+                    })
+                    if (partitionMetadatum.leader.getOrElse(null) != null)
+                      leaderMetadata = partitionMetadatum
+                  }
+                })
               })
-            })
-          } catch {
-            case fae: FatalAdapterException => throw fae
-            case npe: NullPointerException => {
-              if (isQuiesced) LOG.warn("Kafka Simple Consumer is shutting down during kafka call looking for leader - ignoring the call")
+            } catch {
+              case fae: FatalAdapterException => throw fae
+              case npe: NullPointerException => {
+                if (isQuiesced) LOG.warn("KAFKA ADAPTER - unable to find leader (shutdown detected), leader for this partition may be temporarily unavailable. partition ID: " + inPartition, npe)
+                else  LOG.warn("KAFKA ADAPTER - unable to find leader, leader for this partition may be temporarily unavailable. partition ID: " + inPartition, npe)
+              }
+              case e: Exception => throw FatalAdapterException("failed to SEND MetadataRequest to Kafka Server ", e)
+            } finally {
+              if (llConsumer != null) llConsumer.close()
             }
-            case e: Exception => throw new FatalAdapterException("failed to SEND MetadataRequest to Kafka Server ", e)
-          } finally {
-            if (llConsumer != null) llConsumer.close()
-          }
-        })
-      }
+        }
+      })
 
     } catch {
       case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        LOG.debug("KAFKA ADAPTER - Fatal Error for FindLeader for partition " + inPartition + "\nStackTrace:" + stackTrace)
+        LOG.error("KAFKA ADAPTER - Fatal Error for FindLeader for partition " + inPartition, e)
       }
     }
+    if (leaderMetadata == null) throw FatalAdapterException("Failed to find a LEADER node, Topic "+qc.topic+ ", partition " + inPartition,null)
     return leaderMetadata;
   }
 
+  private def createConsumer(bokerName: String, borkerPort: String): SimpleConsumer = {
+    var consumer: SimpleConsumer = null
+    while (consumer == null && !isQuiesced) {
+      try {
+        consumer = new SimpleConsumer(bokerName, borkerPort.toInt,
+          KafkaSimpleConsumer.ZOOKEEPER_CONNECTION_TIMEOUT_MS,
+          KafkaSimpleConsumer.FETCHSIZE,
+          KafkaSimpleConsumer.METADATA_REQUEST_TYPE)
+      } catch {
+        case e: Exception => {
+          LOG.error("KAFKA ADAPTER: Failure connecting to Kafka server, retrying", e)
+          Thread.sleep(getTimeoutTimer)
+        }
+      }
+    }
+    return consumer
+  }
   /*
 * getKeyValues - get the values from the OffsetMetadata call and combine them into an array
  */
@@ -532,14 +655,24 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
 
     // Now that we know for sure we have a partition list.. process them
     partitionList.foreach(partitionId => {
-      val offset = getKeyValueForPartition(getKafkaConfigId(findLeader(qc.hosts, partitionId)), partitionId, time)
-      val rKey = new KafkaPartitionUniqueRecordKey
-      val rValue = new KafkaPartitionUniqueRecordValue
-      rKey.PartitionId = partitionId
-      rKey.Name = qc.Name
-      rKey.TopicName = qc.topic
-      rValue.Offset = offset
-      infoList = (rKey, rValue) :: infoList
+      var offset: Long = 0
+      breakable {
+        try {
+          offset = getKeyValueForPartition(getKafkaConfigId(findLeader(qc.hosts, partitionId)), partitionId, time)
+        } catch {
+          case e2: Exception => {
+            LOG.error("KAFKA ADAPTER: Unknown exception... Could  not determine a leader for partition " + partitionId, e2)
+            break
+          }
+        }
+        val rKey = new KafkaPartitionUniqueRecordKey
+        val rValue = new KafkaPartitionUniqueRecordValue
+        rKey.PartitionId = partitionId
+        rKey.Name = qc.Name
+        rKey.TopicName = qc.topic
+        rValue.Offset = offset
+        infoList = (rKey, rValue) :: infoList
+      }
     })
     return infoList.toArray
   }
@@ -558,7 +691,7 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
                                                                KafkaSimpleConsumer.FETCHSIZE,
                                                                KafkaSimpleConsumer.METADATA_REQUEST_TYPE)
     } catch {
-      case e: Exception => throw new FatalAdapterException("Unable to create connection to Kafka Server ", e)
+      case e: Exception => throw FatalAdapterException("Unable to create connection to Kafka Server ", e)
     }
 
     try {
@@ -574,7 +707,7 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
       var result = doSendJavaConsumer(llConsumer,offsetRequest)
       while(result._1 == null && !isQuiesced) {
         if (retryCount > KafkaSimpleConsumer.MAX_FAILURES)
-          throw new FatalAdapterException("Failed to retrieve Topic Metadata while searching for LEADER node", result._2)
+          throw FatalAdapterException("Failed to retrieve Topic Metadata while searching for LEADER node", result._2)
         retryCount += 1
         Thread.sleep(1000)
         result = doSendJavaConsumer(llConsumer,offsetRequest)
@@ -590,10 +723,10 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
     } catch {
       case fae: FatalAdapterException => throw fae
       case npe: NullPointerException => {
-        if (isQuiesced) LOG.warn("Kafka Simple Consumer is shutting down during kafka call looking for offsets - ignoring the call")
+        if (isQuiesced) LOG.warn("Kafka Simple Consumer is shutting down during kafka call looking for offsets - ignoring the call", npe)
       }
       case e: java.lang.Exception => {
-        LOG.error("KAFKA ADAPTER: Exception during offset inquiry request for partiotion {" + partitionId + "}")
+        LOG.error("KAFKA ADAPTER: Exception during offset inquiry request for partiotion {" + partitionId + "}", e)
       }
     } finally {
       if (llConsumer != null) { llConsumer.close }
@@ -616,123 +749,6 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
       case e: Exception => return (null,e)
     }
   }
-  /**
-   *  Previous request failed, need to find a new leader
-   */
-  private def findNewLeader(oldBroker: String, partitionId: Int): kafka.api.PartitionMetadata = {
-    // There are moving parts in Kafka under the failure condtions, we may not have an immediately availabe new
-    // leader, so lets try 3 times to get the new leader before bailing
-    for (i <- 0 until 3) {
-      try {
-        val leaderMetaData = findLeader(replicaBrokers.toArray[String], partitionId)
-        // Either new metadata leader is not available or the the new broker has not been updated in kafka
-        if (leaderMetaData == null || leaderMetaData.leader == null ||
-          (leaderMetaData.leader.get.host.equalsIgnoreCase(oldBroker) && i == 0)) {
-          Thread.sleep(KafkaSimpleConsumer.SLEEP_DURATION)
-        } else {
-          return leaderMetaData
-        }
-      } catch {
-        case fae: FatalAdapterException => throw fae
-        case e: InterruptedException => {
-          val stackTrace = StackTrace.ThrowableTraceString(e)
-          LOG.error("Adapter terminated during findNewLeader" + "\nStackTrace:" + stackTrace)
-        }
-      }
-    }
-    return null
-  }
-
-  /**
-   * beginHeartbeat - This adapter will begin monitoring the partitions for the specified topic
-   */
-  def beginHeartbeat(): Unit = lock.synchronized {
-    LOG.debug("Starting monitor for Kafka QUEUE: " + qc.topic)
-    startHeartBeat()
-  }
-
-  /**
-   *  stopHeartbeat - signal this adapter to shut down the monitor thread
-   */
-  def stopHearbeat(): Unit = lock.synchronized {
-    try {
-      hbRunning = false
-      hbExecutor.shutdownNow()
-    } catch {
-      case e: java.lang.InterruptedException => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        LOG.debug("Heartbeat terminated" + "\nStackTrace:" + stackTrace)
-      }
-    }
-  }
-
-  /**
-   * Private method to start a heartbeat task, and the code that the heartbeat task will execute.....
-   * NOT USED YET
-   */
-  private def startHeartBeat(): Unit = {
-    // only start 1 heartbeat
-    if (hbRunning) return
-
-    // Block any more heartbeats from being spawned
-    hbRunning = true
-
-    // start new heartbeat here.
-    hbExecutor.execute(new Runnable() {
-      override def run() {
-        // Get a connection to each server
-        val hbConsumers: Map[String, SimpleConsumer] = Map()
-        qc.hosts.foreach(host => {
-          val brokerName = host.split(":")
-          hbConsumers(host) = new SimpleConsumer(brokerName(0), brokerName(1).toInt,
-            KafkaSimpleConsumer.ZOOKEEPER_CONNECTION_TIMEOUT_MS,
-            KafkaSimpleConsumer.FETCHSIZE,
-            KafkaSimpleConsumer.METADATA_REQUEST_TYPE)
-        })
-
-        val topics = Array[String](qc.topic)
-        // Get the metadata for each monitored Topic and see if it changed.  If so, notify the engine
-
-        try {
-          while (hbRunning) {
-            LOG.debug("Heartbeat checking status of " + hbConsumers.size + " broker(s)")
-            hbConsumers.foreach {
-              case (key, consumer) => {
-                val req = new TopicMetadataRequest(topics, KafkaSimpleConsumer.METADATA_REQUEST_CORR_ID)
-                val resp: kafka.api.TopicMetadataResponse = consumer.send(req)
-                resp.topicsMetadata.foreach(metaTopic => {
-                  if (metaTopic.partitionsMetadata.size != hbTopicPartitionNumber) {
-                    // TODO: Need to know how to call back to the Engine
-                    // first time through the heartbeat
-                    if (hbTopicPartitionNumber != -1) {
-                      LOG.debug("Partitions changed for TOPIC - " + qc.topic + " on broker " + key + ", it is now" + metaTopic.partitionsMetadata.size)
-                    }
-                    hbTopicPartitionNumber = metaTopic.partitionsMetadata.size
-                  }
-                })
-              }
-            }
-            try {
-              Thread.sleep(KafkaSimpleConsumer.MONITOR_FREQUENCY)
-            } catch {
-              case e: java.lang.InterruptedException =>
-                val stackTrace = StackTrace.ThrowableTraceString(e)
-                LOG.debug("Shutting down the Monitor heartbeat" + "\nStackTrace:" + stackTrace)
-                hbRunning = false
-            }
-          }
-        } catch {
-          case e: java.lang.Exception => {
-            LOG.error("Heartbeat forced down due to exception + ")
-          }
-        } finally {
-          hbConsumers.foreach({ case (key, consumer) => { consumer.close } })
-          hbRunning = false
-          LOG.debug("Monitor is down")
-        }
-      }
-    })
-  }
 
   /**
    *  Convert the "localhost:XXXX" into an actual IP address.
@@ -751,17 +767,6 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
    */
   private def getKafkaConfigId(metadata: kafka.api.PartitionMetadata): String = {
     return metadata.leader.get.host + ":" + metadata.leader.get.port;
-  }
-
-  /**
-   * terminateHBTasks - Just what it says
-   */
-  private def terminateHBTasks(): Unit = {
-    if (hbExecutor == null) return
-    hbExecutor.shutdownNow
-    while (hbExecutor.isTerminated == false) {
-      Thread.sleep(100) // sleep 100ms and then check
-    }
   }
 
   /**
@@ -792,5 +797,14 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val callerCtxt:
     isQuiesced = true
   }
 
-}
+  private def setMetricValue(key: String, value: Any): Unit = {
+    metrics(key) = value.toString
+  }
 
+  private def incrementCountForPartition(pid: Int): Unit = {
+    var cVal: Long = partitonCounts.getOrElse(pid.toString, 0)
+    partitonCounts(pid.toString) = cVal + 1
+  }
+
+
+}
