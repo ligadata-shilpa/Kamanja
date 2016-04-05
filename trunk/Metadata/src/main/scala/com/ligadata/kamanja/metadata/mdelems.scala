@@ -1021,7 +1021,7 @@ class AdapterInfo {
    */
   var name: String = _
   var typeString: String = _
-  var dataFormat: String = _ // valid only for Input or Validate types. Output and Status does not have this
+//  var dataFormat: String = _ // valid only for Input or Validate types. Output and Status does not have this
   var className: String = _
 //  var inputAdapterToValidate: String = _ // Valid only for Output Adapter.
 //  var failedEventsAdapter: String = _ // Valid only for Input Adapter.
@@ -1030,17 +1030,18 @@ class AdapterInfo {
   var jarName: String = _
   var dependencyJars: Array[String] = new Array[String](0)
   var adapterSpecificCfg: String = _
+  var tenantId: String = _
 //  var keyAndValueDelimiter: String = _ // Delimiter String for keyAndValueDelimiter
 //  var fieldDelimiter: String = _ // Delimiter String for fieldDelimiter
 //  var valueDelimiter: String = _ // Delimiter String for valueDelimiter
 
   def Name: String = name
   def TypeString: String = typeString
-  def DataFormat: String = dataFormat
   def ClassName: String = className
   def JarName: String = jarName
   def DependencyJars: Array[String] = dependencyJars
   def AdapterSpecificCfg: String = adapterSpecificCfg
+  def TenantId: String = tenantId
 
  // def InputAdapterToValidate: String = inputAdapterToValidate
  // def FailedEventsAdapter: String = failedEventsAdapter
@@ -1059,11 +1060,11 @@ class AdapterInfo {
       return false
     }
     // Check dataFormat
-    if ((dataFormat != null && aInfo.dataFormat != null)) {
-      if(!dataFormat.equals(aInfo.dataFormat)) return false
-    } else if(!(dataFormat == null && aInfo.dataFormat == null)) {
-      return false
-    }
+//    if ((dataFormat != null && aInfo.dataFormat != null)) {
+//      if(!dataFormat.equals(aInfo.dataFormat)) return false
+//    } else if(!(dataFormat == null && aInfo.dataFormat == null)) {
+//      return false
+//    }
     // Check className
     if ((className != null && aInfo.className != null)) {
       if(!className.equals(aInfo.className)) return false
@@ -1131,6 +1132,11 @@ class AdapterInfo {
       return false
     }*/
 
+    if ((tenantId != null && aInfo.tenantId != null)) {
+      if(!tenantId.equals(aInfo.tenantId)) return false
+    } else if(!(tenantId == null && aInfo.tenantId == null)) {
+      return false
+    }
 
     true
   }
@@ -1183,8 +1189,7 @@ object SerializeDeserializeType extends Enumeration {
   */
 class SerializeDeserializeConfig(val serDeserType : SerializeDeserializeType.SerDeserType) extends BaseElemDef {}
 
-
-
+class TenantInfo(val tenantId: String, val description: String, val primaryDataStore: String, val cacheConfig: String) {}
 
 object ModelCompilationConstants {
   val DEPENDENCIES: String = "Dependencies"

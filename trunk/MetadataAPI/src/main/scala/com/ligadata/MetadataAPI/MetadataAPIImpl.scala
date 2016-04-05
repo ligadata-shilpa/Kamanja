@@ -3752,23 +3752,35 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     ConfigUtils.RemoveNode(nodeId)
   }
 
+  def AddTenant(tenantId: String, description: String, primaryDataStore: String, cacheConfig: String): String = {
+    ConfigUtils.AddTenant(tenantId, description, primaryDataStore, cacheConfig)
+  }
+
+  def UpdateTenant(tenantId: String, description: String, primaryDataStore: String, cacheConfig: String): String = {
+    ConfigUtils.UpdateTenant(tenantId, description, primaryDataStore, cacheConfig)
+  }
+
+  def RemoveTenant(tenantId: String): String = {
+    ConfigUtils.RemoveTenant(tenantId)
+  }
+
+
     /**
      * AddAdapter
       *
       * @param name
      * @param typeString
-     * @param dataFormat
      * @param className
      * @param jarName
      * @param dependencyJars
      * @param adapterSpecificCfg
      * @return
      */
-  def AddAdapter(name: String, typeString: String, dataFormat: String, className: String,
+  def AddAdapter(name: String, typeString: String, className: String,
                  jarName: String, dependencyJars: List[String],
-                 adapterSpecificCfg: String): String = {
-    ConfigUtils.AddAdapter(name, typeString, dataFormat, className, jarName,
-        dependencyJars, adapterSpecificCfg)
+                 adapterSpecificCfg: String, tenantId: String): String = {
+    ConfigUtils.AddAdapter(name, typeString, className, jarName,
+        dependencyJars, adapterSpecificCfg, tenantId)
   }
 
     /**
@@ -3776,17 +3788,16 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       *
       * @param name
      * @param typeString
-     * @param dataFormat
      * @param className
      * @param jarName
      * @param dependencyJars
      * @param adapterSpecificCfg
      * @return
      */
-  def UpdateAdapter(name: String, typeString: String, dataFormat: String, className: String,
+  def UpdateAdapter(name: String, typeString: String, className: String,
                     jarName: String, dependencyJars: List[String],
-                    adapterSpecificCfg: String): String = {
-    ConfigUtils.AddAdapter(name, typeString, dataFormat, className, jarName, dependencyJars, adapterSpecificCfg)
+                    adapterSpecificCfg: String, tenantId: String): String = {
+    ConfigUtils.AddAdapter(name, typeString, className, jarName, dependencyJars, adapterSpecificCfg, tenantId)
   }
 
     /**
