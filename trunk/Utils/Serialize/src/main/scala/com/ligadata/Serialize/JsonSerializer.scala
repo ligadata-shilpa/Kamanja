@@ -982,7 +982,6 @@ object JsonSerializer {
       case o: AdapterInfo => {
         val json = (("Name" -> o.name) ~
           ("TypeString" -> o.typeString) ~
-          ("DataFormat" -> o.dataFormat) ~
           ("ClassName" -> o.className) ~
           ("JarName" -> o.jarName) ~
           ("DependencyJars" -> o.dependencyJars.toList) ~
