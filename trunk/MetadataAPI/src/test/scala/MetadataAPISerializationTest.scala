@@ -449,7 +449,7 @@ class MetadataAPISerializationTest extends FlatSpec with BeforeAndAfterAll {
 
     //input
     val input: String =
-      """{"Adapter":{"Name":"name","TypeString":"typeString","DataFormat":"dataformat","ClassName":"ClassName","JarName":"JarName","DependencyJars":["Jar1","Jar2"],"AdapterSpecificCfg":"AdapterSpecificCfg"}}"""
+      """{"Adapter":{"Name":"name","TypeString":"typeString","DataFormat":"dataformat","ClassName":"ClassName","JarName":"JarName","DependencyJars":["Jar1","Jar2"],"AdapterSpecificCfg":"AdapterSpecificCfg","TenantId":"System"}}"""
     //expected
     val expected = getAdapterInfo
     //actual
@@ -459,6 +459,8 @@ class MetadataAPISerializationTest extends FlatSpec with BeforeAndAfterAll {
     assert(expected.DataFormat === actual.DataFormat)
     assert(expected.ClassName === actual.ClassName)
     assert(expected.AdapterSpecificCfg === actual.AdapterSpecificCfg)
+    assert(expected.TenantId === actual.TenantId)
+
   }
   "It" should "return serialized UserPropertiesInfo" in {
 
@@ -802,18 +804,18 @@ class MetadataAPISerializationTest extends FlatSpec with BeforeAndAfterAll {
 
   private def getAdapterInfo: AdapterInfo = {
     val typeString = "typeString"
-    val dataFormat = "dataformat"
     val className = "ClassName"
     val adapterSpecificCfg = "AdapterSpecificCfg"
+    val tenantId = "System"
 
     val adapterInfo = MdMgr.GetMdMgr.MakeAdapter(
       name,
       typeString,
-      dataFormat,
       className,
       jarName,
       dependencyJar.toList,
-      adapterSpecificCfg
+      adapterSpecificCfg,
+      tenantId
     )
     adapterInfo
   }
