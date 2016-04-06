@@ -341,7 +341,7 @@ class SftpChangesMonitor (adapterName : String, modifiedFileCallback:(SmartFileH
     val parentfolderHashed = hashPath(parentfolder)//used for logging since path contains user and password
     logger.info("checking folder with full path: " + parentfolderHashed)
 
-    val directChildren = getRemoteFolderContents(parentfolder, manager)
+    val directChildren = getRemoteFolderContents(parentfolder, manager).sortWith(_.getContent.getLastModifiedTime < _.getContent.getLastModifiedTime)
     var changeType : FileChangeType = null //new, modified
 
     //process each file reported by FS cache.

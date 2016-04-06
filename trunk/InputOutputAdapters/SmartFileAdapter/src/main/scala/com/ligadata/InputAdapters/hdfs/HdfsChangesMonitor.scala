@@ -327,7 +327,7 @@ class HdfsChangesMonitor (adapterName : String, modifiedFileCallback:(SmartFileH
                                           modifiedDirs : ArrayBuffer[String], modifiedFiles : Map[SmartFileHandler, FileChangeType], isFirstCheck : Boolean){
     logger.info("checking folder with full path: " + parentfolder)
 
-    val directChildren = getFolderContents(parentfolder, hdFileSystem)
+    val directChildren = getFolderContents(parentfolder, hdFileSystem).sortWith(_.getModificationTime < _.getModificationTime)
     var changeType : FileChangeType = null //new, modified
 
     //process each file reported by FS cache.
