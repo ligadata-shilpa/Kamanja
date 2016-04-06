@@ -293,7 +293,7 @@ class HashMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
     }
   }
 
-  override def put(containerName: String, isMetadataContainer: Boolean, key: Key, value: Value): Unit = {
+  override def put(containerName: String, key: Key, value: Value): Unit = {
     var tableName = toFullTableName(containerName)
     var byteOs = new ByteArrayOutputStream(1024 * 1024);
     var out = new DataOutputStream(byteOs);
@@ -317,7 +317,7 @@ class HashMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
     byteOs.close()
   }
 
-  override def put(data_list: Array[(String, Boolean, Array[(Key, Value)])]): Unit = {
+  override def put(data_list: Array[(String, Array[(Key, Value)])]): Unit = {
     var byteOs = new ByteArrayOutputStream(1024 * 1024);
     var out = new DataOutputStream(byteOs);
     var tableName = ""
@@ -327,7 +327,7 @@ class HashMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
         CheckTableExists(containerName)
         tableName = toFullTableName(containerName)
         var map = tablesMap(tableName)
-        var keyValuePairs = li._3
+        var keyValuePairs = li._2
         keyValuePairs.foreach(keyValuePair => {
           val kba = MakeCompositeKey(keyValuePair._1)
           byteOs.reset()
@@ -883,11 +883,11 @@ class HashMapAdapterTx(val parent: DataStore) extends Transaction {
   val loggerName = this.getClass.getName
   val logger = LogManager.getLogger(loggerName)
 
-  override def put(containerName: String, isMetadataContainer: Boolean, key: Key, value: Value): Unit = {
-    parent.put(containerName, isMetadataContainer, key, value)
+  override def put(containerName: String, key: Key, value: Value): Unit = {
+    parent.put(containerName, key, value)
   }
 
-  override def put(data_list: Array[(String, Boolean, Array[(Key, Value)])]): Unit = {
+  override def put(data_list: Array[(String, Array[(Key, Value)])]): Unit = {
     parent.put(data_list)
   }
 

@@ -132,7 +132,7 @@ object PersistenceUtils {
     val k = Key(storageDefaultTime, Array(bucketKeyStr), storageDefaultTxnId, 0)
 
     try {
-      store.put(null, containerName, k, serializerTyp, value, true)
+      store.put(null, containerName, k, serializerTyp, value)
     } catch {
       case e: Exception => {
         logger.error("Failed to insert/update object for : " + bucketKeyStr, e)
@@ -162,7 +162,7 @@ object PersistenceUtils {
     })
 
     try {
-      store.put(null, Array((containerName, true, storeObjects)))
+      store.put(null, Array((containerName, storeObjects)))
     } catch {
       case e: Exception => {
         logger.error("Failed to insert/update objects for : " + keyList.mkString(","), e)
@@ -311,17 +311,17 @@ object PersistenceUtils {
         i = i + 1
       })
 
-      var storeData = scala.collection.mutable.Map[String, (DataStore, ArrayBuffer[(String, Boolean, Array[(Key, String, Any)])])]()
+      var storeData = scala.collection.mutable.Map[String, (DataStore, ArrayBuffer[(String, Array[(Key, String, Any)])])]()
 
       saveDataMap.foreach(elemTypData => {
         val storeInfo = GetContainerNameAndDataStore(elemTypData._1)
         val oneStoreData = storeData.getOrElse(storeInfo._1, null)
         if (oneStoreData != null) {
-          oneStoreData._2 += ((elemTypData._1, true, elemTypData._2.toArray))
+          oneStoreData._2 += ((elemTypData._1, elemTypData._2.toArray))
           storeData(storeInfo._1) = ((oneStoreData._1, oneStoreData._2))
         } else {
-          val ab = ArrayBuffer[(String, Boolean, Array[(Key, String, Any)])]()
-          ab += ((elemTypData._1, true, elemTypData._2.toArray))
+          val ab = ArrayBuffer[(String, Array[(Key, String, Any)])]()
+          ab += ((elemTypData._1, elemTypData._2.toArray))
           storeData(storeInfo._1) = ((storeInfo._2, ab))
         }
       })
