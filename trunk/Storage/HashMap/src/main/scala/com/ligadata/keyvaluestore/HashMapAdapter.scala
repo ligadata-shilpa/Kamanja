@@ -208,6 +208,15 @@ class HashMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
     }
   }
 
+  private def CheckTablesExists(containerNames: Array[String]): Unit = {
+    logger.debug("CheckTableExists: " + containerNames.mkString(",") + ",this => " + this)
+    lock.synchronized {
+      val nonExistingContainers = containerNames.filter(containerName => !containerList.contains(containerName))
+      CreateContainer(nonExistingContainers)
+      containerList ++= nonExistingContainers
+    }
+  }
+
   private def toTableName(containerName: String): String = {
     // we need to check for other restrictions as well
     // such as length of the table, special characters etc
@@ -244,7 +253,7 @@ class HashMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
   }
 
   override def CreateMetadataContainer(containerNames: Array[String]): Unit = {
-    CreateContainer(containerNames)
+    CheckTablesExists(containerNames)
   }
 
   private def MakeCompositeKey(key: Key): Array[Byte] = {
