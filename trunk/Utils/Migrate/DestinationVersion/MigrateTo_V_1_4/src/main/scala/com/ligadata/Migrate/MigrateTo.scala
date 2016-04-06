@@ -1081,7 +1081,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
     return addedMessagesContainers
   }
 
-  private def callSaveData(dataStore: DataStoreOperations, data_list: Array[(String, Boolean, Array[(Key, String, Any)])]): Unit = {
+  private def callSaveData(dataStore: DataStoreOperations, data_list: Array[(String, Array[(Key, String, Any)])]): Unit = {
     var failedWaitTime = 15000 // Wait time starts at 15 secs
     val maxFailedWaitTime = 60000 // Max Wait time 60 secs
     var doneSave = false
@@ -1185,7 +1185,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
     val containersData = data.groupBy(_.containerName.toLowerCase)
-    val data_list = containersData.map(kv => (kv._1, false, kv._2.map(d => (Key(d.timePartition, d.bucketKey, d.transactionid, d.rowid), d.serializername, d.data.asInstanceOf[Any])).toArray)).toArray
+    val data_list = containersData.map(kv => (kv._1, kv._2.map(d => (Key(d.timePartition, d.bucketKey, d.transactionid, d.rowid), d.serializername, d.data.asInstanceOf[Any])).toArray)).toArray
 
     callSaveData(_dataStoreDb, data_list);
   }
@@ -1228,7 +1228,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
     if (_dataStoreDb == null)
       throw new Exception("Not found valid Datastore DB connection")
 
-    callSaveData(_dataStoreDb, Array(("MigrateStatusInformation", true, Array((Key(KvBaseDefalts.defaultTime, Array(key.toLowerCase), 0, 0), "txt", value.getBytes().asInstanceOf[Any])))))
+    callSaveData(_dataStoreDb, Array(("MigrateStatusInformation", Array((Key(KvBaseDefalts.defaultTime, Array(key.toLowerCase), 0, 0), "txt", value.getBytes().asInstanceOf[Any])))))
   }
 }
 

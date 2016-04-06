@@ -2215,7 +2215,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 //    }
 //  }
 
-  private def callSaveData(dataStore: DataStoreOperations, data_list: Array[(String, Boolean, Array[(Key, String, Any)])]): Unit = {
+  private def callSaveData(dataStore: DataStoreOperations, data_list: Array[(String, Array[(Key, String, Any)])]): Unit = {
     var failedWaitTime = 15000 // Wait time starts at 15 secs
     val maxFailedWaitTime = 60000 // Max Wait time 60 secs
     var doneSave = false
@@ -2652,7 +2652,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 
   // Saving & getting data
   override def saveDataInPersistentStore(containerName: String, key: String, serializerType: String, value: Array[Byte]): Unit = {
-    val oneContData = Array((containerName, true, Array((Key(0, Array(key), 0, 0), serializerType, value.asInstanceOf[Any]))))
+    val oneContData = Array((containerName, Array((Key(0, Array(key), 0, 0), serializerType, value.asInstanceOf[Any]))))
     callSaveData(_defaultDataStore, oneContData)
   }
 
