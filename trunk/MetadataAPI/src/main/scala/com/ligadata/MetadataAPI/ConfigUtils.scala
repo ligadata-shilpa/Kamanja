@@ -1606,6 +1606,10 @@ object ConfigUtils {
               val up = serializer.DeserializeObjectFromByteArray(v.asInstanceOf[Array[Byte]]).asInstanceOf[UserPropertiesInfo]
               MdMgr.GetMdMgr.AddUserProperty(up)
             }
+            case "tenantinfo" => {
+              val up = serializer.DeserializeObjectFromByteArray(v.asInstanceOf[Array[Byte]]).asInstanceOf[TenantInfo]
+              MdMgr.GetMdMgr.AddTenantInfo(up)
+            }
             case _ => {
               throw InternalErrorException("LoadAllConfigObjectsIntoCache: Unknown objectType " + objType, null)
             }
