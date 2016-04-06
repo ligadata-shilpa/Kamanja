@@ -381,7 +381,7 @@ class MapTypeDef extends ContainerTypeDef {
 
   override def IsFixed: Boolean = false
   override def typeString: String = {
-    "scala.collection.immutable.Map[" + String + "," + valDef.typeString + "]"
+    "scala.collection.immutable.Map[String," + valDef.typeString + "]"
   }
   override def ElementTypes: Array[BaseTypeDef] = {
     Array(valDef)
