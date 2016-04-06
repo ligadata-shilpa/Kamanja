@@ -988,55 +988,10 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
           saveObjFn()
           mdMgr.AddArray(o)
         }
-        case o: ArrayBufTypeDef => {
-          logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
-          saveObjFn()
-          mdMgr.AddArrayBuffer(o)
-        }
-        case o: ListTypeDef => {
-          logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
-          saveObjFn()
-          mdMgr.AddList(o)
-        }
-        case o: QueueTypeDef => {
-          logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
-          saveObjFn()
-          mdMgr.AddQueue(o)
-        }
-        case o: SetTypeDef => {
-          logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
-          saveObjFn()
-          mdMgr.AddSet(o)
-        }
-        case o: TreeSetTypeDef => {
-          logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
-          saveObjFn()
-          mdMgr.AddTreeSet(o)
-        }
-        case o: SortedSetTypeDef => {
-          logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
-          saveObjFn()
-          mdMgr.AddSortedSet(o)
-        }
         case o: MapTypeDef => {
           logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
           saveObjFn()
           mdMgr.AddMap(o)
-        }
-        case o: ImmutableMapTypeDef => {
-          logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
-          saveObjFn()
-          mdMgr.AddImmutableMap(o)
-        }
-        case o: HashMapTypeDef => {
-          logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
-          saveObjFn()
-          mdMgr.AddHashMap(o)
-        }
-        case o: TupleTypeDef => {
-          logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
-          saveObjFn()
-          mdMgr.AddTupleType(o)
         }
         case o: ContainerTypeDef => {
           logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
@@ -1107,43 +1062,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
           logger.debug("Updating the Type in the DB: name of the object =>  " + dispkey)
           updObjFn()
         }
-        case o: ArrayBufTypeDef => {
-          logger.debug("Updating the Type in the DB: name of the object =>  " + dispkey)
-          updObjFn()
-        }
-        case o: ListTypeDef => {
-          logger.debug("Updating the Type in the DB: name of the object =>  " + dispkey)
-          updObjFn()
-        }
-        case o: QueueTypeDef => {
-          logger.debug("Updating the Type in the DB: name of the object =>  " + dispkey)
-          updObjFn()
-        }
-        case o: SetTypeDef => {
-          logger.debug("Updating the Type in the DB: name of the object =>  " + dispkey)
-          updObjFn()
-        }
-        case o: TreeSetTypeDef => {
-          logger.debug("Updating the Type in the DB: name of the object =>  " + dispkey)
-          updObjFn()
-        }
-        case o: SortedSetTypeDef => {
-          logger.debug("Updating the Type in the DB: name of the object =>  " + dispkey)
-          updObjFn()
-        }
         case o: MapTypeDef => {
-          logger.debug("Updating the Type in the DB: name of the object =>  " + dispkey)
-          updObjFn()
-        }
-        case o: ImmutableMapTypeDef => {
-          logger.debug("Updating the Type in the DB: name of the object =>  " + dispkey)
-          updObjFn()
-        }
-        case o: HashMapTypeDef => {
-          logger.debug("Updating the Type in the DB: name of the object =>  " + dispkey)
-          updObjFn()
-        }
-        case o: TupleTypeDef => {
           logger.debug("Updating the Type in the DB: name of the object =>  " + dispkey)
           updObjFn()
         }
@@ -1425,34 +1344,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
         case o: ArrayTypeDef => {
           updatedObject = mdMgr.ModifyType(o.nameSpace, o.name, o.ver, operation)
         }
-        case o: ArrayBufTypeDef => {
-          updatedObject = mdMgr.ModifyType(o.nameSpace, o.name, o.ver, operation)
-        }
-        case o: ListTypeDef => {
-          updatedObject = mdMgr.ModifyType(o.nameSpace, o.name, o.ver, operation)
-        }
-        case o: QueueTypeDef => {
-          updatedObject = mdMgr.ModifyType(o.nameSpace, o.name, o.ver, operation)
-        }
-        case o: SetTypeDef => {
-          updatedObject = mdMgr.ModifyType(o.nameSpace, o.name, o.ver, operation)
-        }
-        case o: TreeSetTypeDef => {
-          updatedObject = mdMgr.ModifyType(o.nameSpace, o.name, o.ver, operation)
-        }
-        case o: SortedSetTypeDef => {
-          updatedObject = mdMgr.ModifyType(o.nameSpace, o.name, o.ver, operation)
-        }
         case o: MapTypeDef => {
-          updatedObject = mdMgr.ModifyType(o.nameSpace, o.name, o.ver, operation)
-        }
-        case o: ImmutableMapTypeDef => {
-          updatedObject = mdMgr.ModifyType(o.nameSpace, o.name, o.ver, operation)
-        }
-        case o: HashMapTypeDef => {
-          updatedObject = mdMgr.ModifyType(o.nameSpace, o.name, o.ver, operation)
-        }
-        case o: TupleTypeDef => {
           updatedObject = mdMgr.ModifyType(o.nameSpace, o.name, o.ver, operation)
         }
         case o: ContainerTypeDef => {
@@ -1547,45 +1439,9 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
           logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
           mdMgr.AddArray(o)
         }
-        case o: ArrayBufTypeDef => {
-          logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
-          mdMgr.AddArrayBuffer(o)
-        }
-        case o: ListTypeDef => {
-          logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
-          mdMgr.AddList(o)
-        }
-        case o: QueueTypeDef => {
-          logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
-          mdMgr.AddQueue(o)
-        }
-        case o: SetTypeDef => {
-          logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
-          mdMgr.AddSet(o)
-        }
-        case o: TreeSetTypeDef => {
-          logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
-          mdMgr.AddTreeSet(o)
-        }
-        case o: SortedSetTypeDef => {
-          logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
-          mdMgr.AddSortedSet(o)
-        }
         case o: MapTypeDef => {
           logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
           mdMgr.AddMap(o)
-        }
-        case o: ImmutableMapTypeDef => {
-          logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
-          mdMgr.AddImmutableMap(o)
-        }
-        case o: HashMapTypeDef => {
-          logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
-          mdMgr.AddHashMap(o)
-        }
-        case o: TupleTypeDef => {
-          logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
-          mdMgr.AddTupleType(o)
         }
         case o: ContainerTypeDef => {
           logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
