@@ -337,6 +337,21 @@ object ModelUtils {
     }
   }
 
+  private def AddOutMsgToModelDef(modDef: ModelDef, modelType: ModelType.ModelType, optMsgProduced: Option[String], userid: Option[String]): Unit = {
+    // save the outMessage if any
+    if (optMsgProduced != None) {
+      modDef.outputMsgs = modDef.outputMsgs :+ optMsgProduced.get.toLowerCase
+    }
+    else {
+      // no need to create a default output message if modelconfig defines an output message as well
+      if( modDef.outputMsgs.length == 0 ){
+        val defaultMessage = MessageAndContainerUtils.createDefaultOutputMessage(modDef, userid)
+        modDef.outputMsgs = modDef.outputMsgs :+ defaultMessage
+      }
+    }
+  }
+    
+
   /**
     * AddModelFromSource - compiles and catalogs a custom Scala or Java model from source.
     *
@@ -353,14 +368,8 @@ object ModelUtils {
       compProxy.setSessionUserId(userid)
       val modDef = compProxy.compileModelFromSource(sourceCode, modelName, sourceLang, userid, tenantId)
 
-      // save the outMessage as well
-      if (optMsgProduced != None) {
-        modDef.outputMsgs = modDef.outputMsgs :+ optMsgProduced.get.toLowerCase
-      }
-      else {
-        val defaultMessage = MessageAndContainerUtils.createDefaultOutputMessage(modDef, userid)
-        modDef.outputMsgs = modDef.outputMsgs :+ defaultMessage
-      }
+      // save the outMessage
+      AddOutMsgToModelDef(modDef,ModelType.fromString(sourceLang),optMsgProduced,userid)
 
       logger.info("Begin uploading dependent Jars, please wait.")
       PersistenceUtils.UploadJarsToDB(modDef)
@@ -439,16 +448,24 @@ object ModelUtils {
 
     if (optMsgProduced != None) {
       logger.info("Validating the output message type " + optMsgProduced.get.toLowerCase);
-      if (!MessageAndContainerUtils.IsMessageExists(optMsgProduced.get.toLowerCase)) {
+      val msg = MessageAndContainerUtils.IsMessageExists(optMsgProduced.get.toLowerCase)
+      if ( msg == null ) {
+	logger.info("Unknown outputmsg " + optMsgProduced.get.toLowerCase);
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddModel", null, s"Unknown Outmessage ${optMsgProduced.get.toLowerCase} error = ${ErrorCodeConstants.Add_Model_Failed}")
         return apiResult.toString
       }
       else {
-        logger.info("The message type " + optMsgProduced.get.toLowerCase + " is found in metadata");
+	if ( modelType == ModelType.KPMML  && ! MessageAndContainerUtils.IsMappedMessage(msg)) {
+	  logger.info("outputmsg " + optMsgProduced.get.toLowerCase + " not a mapped message ");
+
+          val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddModel", null, s"Outmessage ${optMsgProduced.get.toLowerCase} must be a mapped message for KPPML Models, error = ${ErrorCodeConstants.Add_Model_Failed}")
+          return apiResult.toString
+	}
       }
+      logger.info("A valid message type " + optMsgProduced.get.toLowerCase + " is already found in metadata");
     }
     else {
-      logger.info("We will be creating a default output message ..")
+      logger.debug("We may create a default output message depending on whether they are supplied in ModelConfig object ..")
     }
 
     val modelResult: String = modelType match {
@@ -566,14 +583,10 @@ object ModelUtils {
         modDef.uniqueId = MetadataAPIImpl.GetUniqueId
         modDef.mdElementId = if (existingModel == None) MetadataAPIImpl.GetMdElementId else existingModel.get.MdElementId
         MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.INSERTOBJECT, pmmlText, AuditConstants.SUCCESS, "", modDef.FullNameWithVer)
-        // save the outMessage as well
-        if (optMsgProduced != None) {
-          modDef.outputMsgs = modDef.outputMsgs :+ optMsgProduced.get.toLowerCase
-        }
-        else {
-          val defaultMessage = MessageAndContainerUtils.createDefaultOutputMessage(modDef, userid)
-          modDef.outputMsgs = modDef.outputMsgs :+ defaultMessage
-        }
+
+	// save the outMessage
+	AddOutMsgToModelDef(modDef,ModelType.PMML,optMsgProduced,userid)
+
         // save the jar file first
         PersistenceUtils.UploadJarsToDB(modDef)
         val apiResult = AddModel(modDef, userid)
@@ -650,14 +663,10 @@ object ModelUtils {
 
       if (isValid && modDef != null) {
         MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.INSERTOBJECT, pmmlText, AuditConstants.SUCCESS, "", modDef.FullNameWithVer)
-        // save the outMessage as well
-        if (optMsgProduced != None) {
-          modDef.outputMsgs = modDef.outputMsgs :+ optMsgProduced.get.toLowerCase
-        }
-        else {
-          val defaultMessage = MessageAndContainerUtils.createDefaultOutputMessage(modDef, userid)
-          modDef.outputMsgs = modDef.outputMsgs :+ defaultMessage
-        }
+
+	// save the outMessage
+	AddOutMsgToModelDef(modDef,ModelType.KPMML,optMsgProduced,userid)
+
         // save the jar file first
         PersistenceUtils.UploadJarsToDB(modDef)
         val apiResult = AddModel(modDef, userid)
@@ -1167,6 +1176,9 @@ object ModelUtils {
         val isValid: Boolean = if (optVersionUpdated.isDefined) MetadataAPIImpl.IsValidVersion(versionUpdated, modDef) else true
 
         if (isValid && modDef != null) {
+	  // save the outMessage
+	  AddOutMsgToModelDef(modDef,ModelType.PMML,optMsgProduced,optUserid)
+
           val existingModel = MdMgr.GetMdMgr.Model(modDef.NameSpace, modDef.Name, -1, false) // Any version is fine. No need of active
           modDef.uniqueId = MetadataAPIImpl.GetUniqueId
           modDef.mdElementId = if (existingModel == None) MetadataAPIImpl.GetMdElementId else existingModel.get.MdElementId
@@ -1411,11 +1423,6 @@ object ModelUtils {
             return (new ApiResult(ErrorCodeConstants.Failure, "UpdateModel", null, s"Tenant ID is different from the one in the existing object.")).toString
           }
           RemoveModel(latestVersion.nameSpace, latestVersion.name, latestVersion.ver, None)
-        }
-
-        // copy optMsgProduced to outputMsgs
-        if (optMsgProduced != None) {
-          modDef.outputMsgs = modDef.outputMsgs :+ optMsgProduced.get.toLowerCase
         }
 
         PersistenceUtils.UploadJarsToDB(modDef)

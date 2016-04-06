@@ -61,7 +61,7 @@ public class HelloWorldModel extends ModelInstance {
 		if(helloWorld.score()!=1)
 			return null;
 		ContainerInterface[] returnArr = new ContainerInterface[1];
-		returnArr(0) = helloWorld
+		returnArr[0] = helloWorld;
         return returnArr;
   }
 
@@ -76,11 +76,11 @@ public class HelloWorldModel extends ModelInstance {
 		public HelloWorldModelFactory(ModelDef modelDef, NodeContext nodeContext) {
 			super(modelDef, nodeContext);
 		}
-/*
+
 		public boolean isValidMessage(ContainerInterface msg) {
-			return (msg instanceof msg1);
+			return false /* (msg instanceof msg1) */;
 		}
-*/
+
 		public ModelInstance createModelInstance() {
 			return new HelloWorldModel(this);
 		}
