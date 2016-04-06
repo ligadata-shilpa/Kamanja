@@ -1,6 +1,7 @@
 package com.ligadata.MetadataAPI.Utility
 
 import com.ligadata.Exceptions.{InvalidArgumentException, EngineConfigParsingException, Json4sParsingException}
+import com.ligadata.MetadataAPI.AdapterMessageBindingUtils
 import org.apache.logging.log4j.LogManager
 import org.json4s.jackson.JsonMethods._
 import org.json4s.{MappingException, DefaultFormats, Formats}
@@ -15,16 +16,28 @@ object AdapterMessageBindingService {
     /**
       * Add an adapter message binding to the metadata
       *
-      * @param input the binding specification, either in the form of a JSON string specifying the binding
+      * @param input the binding specification, either in the form of a JSON string specifying the binding(s)
       *              or
       *              a path specification of a file that contains the binding(s).
       * @param userId the user that is performing the add (currently optional)
       * @return a JSON message result
       */
     def addAdapterMessageBinding(input: String, userId : Option[String]) : String = {
-        val isInlineSpec : Boolean = (input != null && (input.trim.startsWith("{") || input.trim.startsWith("[")))
+
+        val userIdentifier : String = userId.getOrElse(null)
+        if (userIdentifier != null) {
+            /** FIXME: discern (when implemented) if this user is authorized to execute this command */
+        } else {
+            /** FIXME: complain that there is no user id when that day comes that the user must be specified */
+        }
+
+        val inputTrimmed : String = if (input != null) input.trim else null
+        if (input == null) {
+            throw InvalidArgumentException("attempting to add adapter message binding with bogus input text", null)
+        }
+        val isInlineSpec : Boolean = (inputTrimmed.startsWith("{") || inputTrimmed.startsWith("["))
         val result : String = if (isInlineSpec) {
-            addAdapterMessageBindingFromJson(input.trim, userId)
+            addAdapterMessageBindingFromJson(inputTrimmed, userId)
         } else {
             val jsonText: String = Source.fromFile(input).mkString
             addAdapterMessageBindingFromJson(jsonText, userId)
@@ -33,16 +46,18 @@ object AdapterMessageBindingService {
     }
 
     /**
-      * Process the supplied json string.  One (starts with '{') or more (starts with ']') adapters may be present
+      * Process the supplied json string.  One (starts with '{') or more (starts with '[') adapters may be present
       *
-      * @param input
-      * @param userId
+      * @param input a Json string ... either a  { k:v, k:v,...} or [ { k:v, k:v,...}, { k:v, k:v,...}, ...]
+      * @param userId the user requesting this operation
       * @return
       */
     @throws(classOf[com.ligadata.Exceptions.InvalidArgumentException])
-    def addAdapterMessageBindingFromJson(input: String, userId : Option[String]) : String = {
-        val isMap : Boolean = (input != null && input.trim.startsWith("{"))
-        val isList : Boolean = (input != null && input.trim.startsWith("["))
+    private def addAdapterMessageBindingFromJson(input: String, userId : Option[String]) : String = {
+
+        val trimmedInput : String = input.trim
+        val isMap : Boolean = trimmedInput.startsWith("{")
+        val isList : Boolean = trimmedInput.startsWith("[")
 
         val reasonable : Boolean = isMap || isList
         if (! reasonable) {
@@ -50,45 +65,12 @@ object AdapterMessageBindingService {
         }
         val result : String = if (isMap) {
             val bindingSpec : Map[String,Any] = jsonStringAsColl(input).asInstanceOf[Map[String,Any]]
-
-            ""
+            AdapterMessageBindingUtils.AddAdapterMessageBinding(bindingSpec, userId)
         } else {
             val bindingSpecList : List[Map[String,Any]] = jsonStringAsColl(input).asInstanceOf[List[Map[String,Any]]]
-
-            ""
+            AdapterMessageBindingUtils.AddAdapterMessageBinding(bindingSpecList, userId)
         }
-
         result
-    }
-
-    /**
-      * Translate the supplied json string to a Map[String, Any]
-      *
-      * @param configJson
-      * @return Map[String, Any]
-      */
-
-    @throws(classOf[com.ligadata.Exceptions.Json4sParsingException])
-    @throws(classOf[com.ligadata.Exceptions.InvalidArgumentException])
-    def jsonStringAsMap(configJson: String): Map[String, Any] = {
-        try {
-            implicit val jsonFormats: Formats = DefaultFormats
-            val json = parse(configJson)
-            logger.debug("Parsed the json : " + configJson)
-
-            val fullmap = json.values.asInstanceOf[Map[String, Any]]
-
-            fullmap
-        } catch {
-            case e: MappingException => {
-                logger.debug("", e)
-                throw Json4sParsingException(e.getMessage, e)
-            }
-            case e: Exception => {
-                logger.debug("", e)
-                throw InvalidArgumentException(e.getMessage, e)
-            }
-        }
     }
 
     /**
@@ -105,7 +87,6 @@ object AdapterMessageBindingService {
             implicit val jsonFormats: Formats = DefaultFormats
             val json = parse(configJson)
             logger.debug("Parsed the json : " + configJson)
-
             json
         } catch {
             case e: MappingException => {
