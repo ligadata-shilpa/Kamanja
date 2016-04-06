@@ -207,7 +207,7 @@ class MetadataLoad(val mgr: MdMgr, val typesPath: String, val fcnPath: String, v
   private def InitTypeDefs1 = {
     ScalaVersionDependentInit.InitTypeDefs(mgr)
 
-    //		mgr.AddArray(MdMgr.sysNS, "ArrayOfAny", MdMgr.sysNS, "Any", 1, MetadataLoad.baseTypesVer, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesTenantId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
+    mgr.AddArray(MdMgr.sysNS, "ArrayOfAny", MdMgr.sysNS, "Any", 1, MetadataLoad.baseTypesVer, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesTenantId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
     mgr.AddArray(MdMgr.sysNS, "ArrayOfString", MdMgr.sysNS, "String", 1, MetadataLoad.baseTypesVer, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesTenantId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
     mgr.AddArray(MdMgr.sysNS, "ArrayOfInt", MdMgr.sysNS, "Int", 1, MetadataLoad.baseTypesVer, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesTenantId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
     mgr.AddArray(MdMgr.sysNS, "ArrayOfLong", MdMgr.sysNS, "Long", 1, MetadataLoad.baseTypesVer, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesTenantId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
@@ -225,7 +225,7 @@ class MetadataLoad(val mgr: MdMgr, val typesPath: String, val fcnPath: String, v
   }
 
   private def InitTypeDefs2 = {
-    //		mgr.AddMap(MdMgr.sysNS, "MapOfAny", MdMgr.sysNS, "Any", MetadataLoad.baseTypesVer, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesTenantId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
+    mgr.AddMap(MdMgr.sysNS, "MapOfAny", MdMgr.sysNS, "Any", MetadataLoad.baseTypesVer, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesTenantId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
     mgr.AddMap(MdMgr.sysNS, "MapOfFloat", MdMgr.sysNS, "Float", MetadataLoad.baseTypesVer, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesTenantId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
     mgr.AddMap(MdMgr.sysNS, "MapOfDouble", MdMgr.sysNS, "Double", MetadataLoad.baseTypesVer, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesTenantId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
     mgr.AddMap(MdMgr.sysNS, "MapOfInt", MdMgr.sysNS, "Int", MetadataLoad.baseTypesVer, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesTenantId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
@@ -252,6 +252,7 @@ class MetadataLoad(val mgr: MdMgr, val typesPath: String, val fcnPath: String, v
 
 
   private def init_com_ligadata_pmml_udfs_Udfs0 {
+    mgr.AddArray(MdMgr.sysNS, "ArrayOfContainerInterface", MdMgr.sysNS, "ContainerInterface", 1, MetadataLoad.baseTypesVer, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesTenantId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
     mgr.AddFunc("Pmml", "idGen", "com.ligadata.pmml.udfs.Udfs.idGen", ("System", "String"), List(), null, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesTenantId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
     mgr.AddFunc("Pmml", "concat", "com.ligadata.pmml.udfs.Udfs.concat", ("System", "String"), List(("args", "System", "Any")), scala.collection.mutable.Set[FcnMacroAttr.Feature](FcnMacroAttr.HAS_INDEFINITE_ARITY), MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesTenantId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
     mgr.AddFunc("Pmml", "replace", "com.ligadata.pmml.udfs.Udfs.replace", ("System", "String"), List(("replacewithin", "System", "Any"), ("inWord", "System", "Any"), ("replacewith", "System", "Any")), null, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesTenantId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
@@ -734,13 +735,6 @@ class MetadataLoad(val mgr: MdMgr, val typesPath: String, val fcnPath: String, v
       , List(("containerId", MdMgr.sysNS, "ArrayOfAny"))
       , fcnMacrofeatures, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesTenantId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
 
-    mgr.AddFunc(MdMgr.sysNS
-      , "ContainerFilter"
-      , "com.ligadata.pmml.udfs.Udfs.ContainerFilter"
-      , (MdMgr.sysNS, "MapOfAnyAny")
-      , List(("containerId", MdMgr.sysNS, "MapOfAnyAny"))
-      , fcnMacrofeatures, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesTenantId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
-
     logger.debug("MetadataLoad...loading container map functions")
     mgr.AddFunc(MdMgr.sysNS
       , "ContainerMap"
@@ -749,26 +743,12 @@ class MetadataLoad(val mgr: MdMgr, val typesPath: String, val fcnPath: String, v
       , List(("containerId", MdMgr.sysNS, "ArrayOfAny"))
       , fcnMacrofeatures, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesTenantId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
 
-    mgr.AddFunc(MdMgr.sysNS
-      , "ContainerMap"
-      , "com.ligadata.pmml.udfs.Udfs.ContainerMap"
-      , (MdMgr.sysNS, "MapOfAnyAny")
-      , List(("containerId", MdMgr.sysNS, "MapOfAnyAny"))
-      , fcnMacrofeatures, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesTenantId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
-
     logger.debug("MetadataLoad...loading container groupBy functions")
     mgr.AddFunc(MdMgr.sysNS
       , "GroupBy"
       , "com.ligadata.pmml.udfs.Udfs.GroupBy"
       , (MdMgr.sysNS, "ArrayOfAny")
       , List(("containerId", MdMgr.sysNS, "ArrayOfAny"))
-      , fcnMacrofeatures, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesTenantId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
-
-    mgr.AddFunc(MdMgr.sysNS
-      , "GroupBy"
-      , "com.ligadata.pmml.udfs.Udfs.GroupBy"
-      , (MdMgr.sysNS, "MapOfAnyAny")
-      , List(("containerId", MdMgr.sysNS, "MapOfAnyAny"))
       , fcnMacrofeatures, MetadataLoad.baseTypesOwnerId, MetadataLoad.baseTypesTenantId, MetadataLoad.baseTypesUniqId, MetadataLoad.baseTypesElementId)
   }
 
