@@ -308,7 +308,7 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
     isOk = false
   }
 
-  val dataStore = if (isOk) cluster.cfgMap.getOrElse("DataStore", null) else null
+  val dataStore = if (isOk) cluster.cfgMap.getOrElse("SystemCatalog", null) else null
   if (isOk && dataStore == null) {
     logger.error("DataStore not found for Node %d  & ClusterId : %s".format(KvInitConfiguration.nodeId, nodeInfo.ClusterId))
     isOk = false

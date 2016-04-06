@@ -145,8 +145,8 @@ class MigrateTo_V_1_4 extends MigratableTo {
             val cluster = clustny.asInstanceOf[Map[String, Any]]
             val ClusterId = cluster.getOrElse("ClusterId", "").toString.trim.toLowerCase
             logger.debug("Processing the cluster => " + ClusterId)
-            if (ClusterId.size > 0 && cluster.contains("DataStore"))
-              dsStr = getStringFromJsonNode(cluster.getOrElse("DataStore", null))
+            if (ClusterId.size > 0 && cluster.contains("SystemCatalog"))
+              dsStr = getStringFromJsonNode(cluster.getOrElse("SystemCatalog", null))
           }
           if (ssStr == null || ssStr.size == 0) {
             val cluster = clustny.asInstanceOf[Map[String, Any]]

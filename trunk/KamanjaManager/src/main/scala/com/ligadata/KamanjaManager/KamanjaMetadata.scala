@@ -475,6 +475,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
   private[this] var initializedFactOfMdlInstFactObjs = false
   private[this] val reent_lock = new ReentrantReadWriteLock(true);
   private[this] val updMetadataExecutor = Executors.newFixedThreadPool(1)
+  private[this] var previousProcessedTxn: Long = -1 // Just having snapshot in case if multiple threads are updating metadta (MetadataImpl) in same JVM
   private[this] var updatedClusterConfig: Map[String,Any] = null
   private[this] var masterDag: Dag = new Dag("0")
   private[this] var nodeIdModlsObj = scala.collection.mutable.Map[Long, MdlInfo]()
@@ -917,7 +918,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
       return
     }
 
-    if (zkTransaction.transactionId.getOrElse("0").toLong <= MetadataAPIImpl.getCurrentTranLevel) return
+    if (zkTransaction.transactionId.getOrElse("0").toLong <= previousProcessedTxn) return
 
     updMetadataExecutor.execute(new MetadataUpdate(zkTransaction))
   }
@@ -960,6 +961,8 @@ object KamanjaMetadata extends MdBaseResolveInfo {
       }
 
       MetadataAPIImpl.UpdateMdMgr(zkTransaction)
+      val zkTxnId = zkTransaction.transactionId.getOrElse("0").toLong
+      previousProcessedTxn = if (zkTxnId != 0) zkTxnId else MetadataAPIImpl.getCurrentTranLevel
 
       if (updMetadataExecutor.isShutdown)
         return

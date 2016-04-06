@@ -169,51 +169,58 @@ object MessageAndContainerUtils {
           obj.dependencyJarNames = depJars
           MetadataAPIImpl.AddObjectToCache(obj, mdMgr)
           types = types :+ obj
+
+          // MapOf<TypeName>
+          obj = mdMgr.MakeMap(msgDef.nameSpace, "mapof" + msgDef.name, msgDef.nameSpace, msgDef.name, msgDef.ver, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, recompile)
+          obj.dependencyJarNames = depJars
+          MetadataAPIImpl.AddObjectToCache(obj, mdMgr)
+          types = types :+ obj
+
           // ArrayBufferOf<TypeName>
-          obj = mdMgr.MakeArrayBuffer(msgDef.nameSpace, "arraybufferof" + msgDef.name, msgDef.nameSpace, msgDef.name, 1, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, msgDef.ver, recompile)
-          obj.dependencyJarNames = depJars
-          MetadataAPIImpl.AddObjectToCache(obj, mdMgr)
-          types = types :+ obj
-          // SortedSetOf<TypeName>
-          obj = mdMgr.MakeSortedSet(msgDef.nameSpace, "sortedsetof" + msgDef.name, msgDef.nameSpace, msgDef.name, msgDef.ver, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, recompile)
-          obj.dependencyJarNames = depJars
-          MetadataAPIImpl.AddObjectToCache(obj, mdMgr)
-          types = types :+ obj
-          // ImmutableMapOfIntArrayOf<TypeName>
-          obj = mdMgr.MakeImmutableMap(msgDef.nameSpace, "immutablemapofintarrayof" + msgDef.name, (sysNS, "Int"), (msgDef.nameSpace, "arrayof" + msgDef.name), msgDef.ver, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, recompile)
-          obj.dependencyJarNames = depJars
-          MetadataAPIImpl.AddObjectToCache(obj, mdMgr)
-          types = types :+ obj
-          // ImmutableMapOfString<TypeName>
-          obj = mdMgr.MakeImmutableMap(msgDef.nameSpace, "immutablemapofstringarrayof" + msgDef.name, (sysNS, "String"), (msgDef.nameSpace, "arrayof" + msgDef.name), msgDef.ver, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, recompile)
-          obj.dependencyJarNames = depJars
-          MetadataAPIImpl.AddObjectToCache(obj, mdMgr)
-          types = types :+ obj
-          // ArrayOfArrayOf<TypeName>
-          obj = mdMgr.MakeArray(msgDef.nameSpace, "arrayofarrayof" + msgDef.name, msgDef.nameSpace, "arrayof" + msgDef.name, 1, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, msgDef.ver, recompile)
-          obj.dependencyJarNames = depJars
-          MetadataAPIImpl.AddObjectToCache(obj, mdMgr)
-          types = types :+ obj
-          // MapOfStringArrayOf<TypeName>
-          obj = mdMgr.MakeMap(msgDef.nameSpace, "mapofstringarrayof" + msgDef.name, (sysNS, "String"), (msgDef.nameSpace, "arrayof" + msgDef.name), msgDef.ver, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, recompile)
-          obj.dependencyJarNames = depJars
-          MetadataAPIImpl.AddObjectToCache(obj, mdMgr)
-          types = types :+ obj
-          // MapOfIntArrayOf<TypeName>
-          obj = mdMgr.MakeMap(msgDef.nameSpace, "mapofintarrayof" + msgDef.name, (sysNS, "Int"), (msgDef.nameSpace, "arrayof" + msgDef.name), msgDef.ver, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, recompile)
-          obj.dependencyJarNames = depJars
-          MetadataAPIImpl.AddObjectToCache(obj, mdMgr)
-          types = types :+ obj
-          // SetOf<TypeName>
-          obj = mdMgr.MakeSet(msgDef.nameSpace, "setof" + msgDef.name, msgDef.nameSpace, msgDef.name, msgDef.ver, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, recompile)
-          obj.dependencyJarNames = depJars
-          MetadataAPIImpl.AddObjectToCache(obj, mdMgr)
-          types = types :+ obj
-          // TreeSetOf<TypeName>
-          obj = mdMgr.MakeTreeSet(msgDef.nameSpace, "treesetof" + msgDef.name, msgDef.nameSpace, msgDef.name, msgDef.ver, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, recompile)
-          obj.dependencyJarNames = depJars
-          MetadataAPIImpl.AddObjectToCache(obj, mdMgr)
-          types = types :+ obj
+//          obj = mdMgr.MakeArrayBuffer(msgDef.nameSpace, "arraybufferof" + msgDef.name, msgDef.nameSpace, msgDef.name, 1, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, msgDef.ver, recompile)
+//          obj.dependencyJarNames = depJars
+//          MetadataAPIImpl.AddObjectToCache(obj, mdMgr)
+//          types = types :+ obj
+//          // SortedSetOf<TypeName>
+//          obj = mdMgr.MakeSortedSet(msgDef.nameSpace, "sortedsetof" + msgDef.name, msgDef.nameSpace, msgDef.name, msgDef.ver, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, recompile)
+//          obj.dependencyJarNames = depJars
+//          MetadataAPIImpl.AddObjectToCache(obj, mdMgr)
+//          types = types :+ obj
+//          // ImmutableMapOfIntArrayOf<TypeName>
+//          obj = mdMgr.MakeImmutableMap(msgDef.nameSpace, "immutablemapofintarrayof" + msgDef.name, (sysNS, "Int"), (msgDef.nameSpace, "arrayof" + msgDef.name), msgDef.ver, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, recompile)
+//          obj.dependencyJarNames = depJars
+//          MetadataAPIImpl.AddObjectToCache(obj, mdMgr)
+//          types = types :+ obj
+//          // ImmutableMapOfString<TypeName>
+//          obj = mdMgr.MakeImmutableMap(msgDef.nameSpace, "immutablemapofstringarrayof" + msgDef.name, (sysNS, "String"), (msgDef.nameSpace, "arrayof" + msgDef.name), msgDef.ver, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, recompile)
+//          obj.dependencyJarNames = depJars
+//          MetadataAPIImpl.AddObjectToCache(obj, mdMgr)
+//          types = types :+ obj
+//          // ArrayOfArrayOf<TypeName>
+//          obj = mdMgr.MakeArray(msgDef.nameSpace, "arrayofarrayof" + msgDef.name, msgDef.nameSpace, "arrayof" + msgDef.name, 1, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, msgDef.ver, recompile)
+//          obj.dependencyJarNames = depJars
+//          MetadataAPIImpl.AddObjectToCache(obj, mdMgr)
+//          types = types :+ obj
+//          // MapOfStringArrayOf<TypeName>
+//          obj = mdMgr.MakeMap(msgDef.nameSpace, "mapofstringarrayof" + msgDef.name, (sysNS, "String"), (msgDef.nameSpace, "arrayof" + msgDef.name), msgDef.ver, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, recompile)
+//          obj.dependencyJarNames = depJars
+//          MetadataAPIImpl.AddObjectToCache(obj, mdMgr)
+//          types = types :+ obj
+//          // MapOfIntArrayOf<TypeName>
+//          obj = mdMgr.MakeMap(msgDef.nameSpace, "mapofintarrayof" + msgDef.name, (sysNS, "Int"), (msgDef.nameSpace, "arrayof" + msgDef.name), msgDef.ver, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, recompile)
+//          obj.dependencyJarNames = depJars
+//          MetadataAPIImpl.AddObjectToCache(obj, mdMgr)
+//          types = types :+ obj
+//          // SetOf<TypeName>
+//          obj = mdMgr.MakeSet(msgDef.nameSpace, "setof" + msgDef.name, msgDef.nameSpace, msgDef.name, msgDef.ver, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, recompile)
+//          obj.dependencyJarNames = depJars
+//          MetadataAPIImpl.AddObjectToCache(obj, mdMgr)
+//          types = types :+ obj
+//          // TreeSetOf<TypeName>
+//          obj = mdMgr.MakeTreeSet(msgDef.nameSpace, "treesetof" + msgDef.name, msgDef.nameSpace, msgDef.name, msgDef.ver, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, recompile)
+//          obj.dependencyJarNames = depJars
+//          MetadataAPIImpl.AddObjectToCache(obj, mdMgr)
+//          types = types :+ obj
           types
         }
         case _ => {
@@ -878,41 +885,41 @@ object MessageAndContainerUtils {
   private def getBaseType(typ: BaseTypeDef): BaseTypeDef = {
     // Just return the "typ" if "typ" is not supported yet
     if (typ.tType == tMap) {
-      logger.debug("MapTypeDef/ImmutableMapTypeDef is not yet handled")
-      return typ
-    }
-    if (typ.tType == tHashMap) {
-      logger.debug("HashMapTypeDef is not yet handled")
-      return typ
-    }
-    if (typ.tType == tSet) {
-      val typ1 = typ.asInstanceOf[SetTypeDef].keyDef
+      val typ1 = typ.asInstanceOf[MapTypeDef].valDef
       return getBaseType(typ1)
     }
-    if (typ.tType == tTreeSet) {
-      val typ1 = typ.asInstanceOf[TreeSetTypeDef].keyDef
-      return getBaseType(typ1)
-    }
-    if (typ.tType == tSortedSet) {
-      val typ1 = typ.asInstanceOf[SortedSetTypeDef].keyDef
-      return getBaseType(typ1)
-    }
-    if (typ.tType == tList) {
-      val typ1 = typ.asInstanceOf[ListTypeDef].valDef
-      return getBaseType(typ1)
-    }
-    if (typ.tType == tQueue) {
-      val typ1 = typ.asInstanceOf[QueueTypeDef].valDef
-      return getBaseType(typ1)
-    }
+//    if (typ.tType == tHashMap) {
+//      logger.debug("HashMapTypeDef is not yet handled")
+//      return typ
+//    }
+//    if (typ.tType == tSet) {
+//      val typ1 = typ.asInstanceOf[SetTypeDef].keyDef
+//      return getBaseType(typ1)
+//    }
+//    if (typ.tType == tTreeSet) {
+//      val typ1 = typ.asInstanceOf[TreeSetTypeDef].keyDef
+//      return getBaseType(typ1)
+//    }
+//    if (typ.tType == tSortedSet) {
+//      val typ1 = typ.asInstanceOf[SortedSetTypeDef].keyDef
+//      return getBaseType(typ1)
+//    }
+//    if (typ.tType == tList) {
+//      val typ1 = typ.asInstanceOf[ListTypeDef].valDef
+//      return getBaseType(typ1)
+//    }
+//    if (typ.tType == tQueue) {
+//      val typ1 = typ.asInstanceOf[QueueTypeDef].valDef
+//      return getBaseType(typ1)
+//    }
     if (typ.tType == tArray) {
       val typ1 = typ.asInstanceOf[ArrayTypeDef].elemDef
       return getBaseType(typ1)
     }
-    if (typ.tType == tArrayBuf) {
-      val typ1 = typ.asInstanceOf[ArrayBufTypeDef].elemDef
-      return getBaseType(typ1)
-    }
+//    if (typ.tType == tArrayBuf) {
+//      val typ1 = typ.asInstanceOf[ArrayBufTypeDef].elemDef
+//      return getBaseType(typ1)
+//    }
     return typ
   }
 
