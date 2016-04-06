@@ -68,7 +68,7 @@ class MetadataAPISerializationTest extends FlatSpec with BeforeAndAfterAll {
 
     assert(expected === actual)
   }
-/*
+
   "It" should "return serialized containerDefJson" in {
     //input
     val conDef = getContainerDef
@@ -115,7 +115,7 @@ class MetadataAPISerializationTest extends FlatSpec with BeforeAndAfterAll {
     val actual = MetadataAPISerialization.serializeObjectToJson(arrayType)
     assert(expected === actual)
   }
-
+/*
   "It" should "return serialized ArrayBufTypeDefJson" in {
     //input
     val arraybufType = getArrayBufTypeDef
@@ -227,7 +227,7 @@ class MetadataAPISerializationTest extends FlatSpec with BeforeAndAfterAll {
     val actual = MetadataAPISerialization.serializeObjectToJson(tupleType)
     assert(expected === actual)
   }
-
+*/
   "It" should "return serialized JarDefJson" in {
     //input
     val jar = getJarDef
@@ -473,7 +473,7 @@ class MetadataAPISerializationTest extends FlatSpec with BeforeAndAfterAll {
     assert(expected.IsDeleted === actual.IsDeleted)
     assert(expected.IsFixed === actual.IsFixed)
   }
-
+/*
   "It" should "return serialized ArrayBufTypeDef" in {
 
     //input
@@ -720,7 +720,7 @@ class MetadataAPISerializationTest extends FlatSpec with BeforeAndAfterAll {
     assert(expected.IsDeleted === actual.IsDeleted)
     assert(expected.IsFixed === actual.IsFixed)
   }
-
+*/
   "It" should "return serialized JarDef" in {
 
     //input
@@ -843,7 +843,7 @@ class MetadataAPISerializationTest extends FlatSpec with BeforeAndAfterAll {
     assert(expected.ClusterId === actual.ClusterId)
   }
 
-  */
+
   private def getModlDef: ModelDef = {
     val modelType = "SCALA"
     val objectFormat = "SCALA"
@@ -1038,7 +1038,7 @@ class MetadataAPISerializationTest extends FlatSpec with BeforeAndAfterAll {
 
     arrayType
   }
-
+/*
   private def getArrayBufTypeDef: ArrayBufTypeDef = {
 
     val objectFormat = "JSON"
@@ -1336,7 +1336,7 @@ class MetadataAPISerializationTest extends FlatSpec with BeforeAndAfterAll {
 
     tupleType
   }
-
+*/
   private def getJarDef: JarDef = {
 
     val objectFormat = "JSON"
