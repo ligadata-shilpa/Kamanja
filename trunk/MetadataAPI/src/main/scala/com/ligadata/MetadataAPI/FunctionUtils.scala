@@ -79,7 +79,7 @@ object FunctionUtils {
   // system name space
   lazy val loggerName = this.getClass.getName
   lazy val logger = LogManager.getLogger(loggerName)
-  lazy val serializer = SerializerManager.GetSerializer("kryo")
+  //lazy val serializer = SerializerManager.GetSerializer("kryo")
   
   def AddFunction(functionDef: FunctionDef): String = {
     val key = functionDef.FullNameWithVer
@@ -346,7 +346,7 @@ object FunctionUtils {
   def LoadFunctionIntoCache(key: String) {
     try {
       val obj = MetadataAPIImpl.GetObject(key.toLowerCase, "functions")
-      val cont: FunctionDef = serializer.DeserializeObjectFromByteArray(obj._2.asInstanceOf[Array[Byte]]).asInstanceOf[FunctionDef]
+      val cont: FunctionDef = MetadataAPISerialization.deserializeMetadata(new String(obj._2.asInstanceOf[Array[Byte]])).asInstanceOf[FunctionDef]//serializer.DeserializeObjectFromByteArray(obj._2.asInstanceOf[Array[Byte]]).asInstanceOf[FunctionDef]
       MetadataAPIImpl.AddObjectToCache(cont.asInstanceOf[FunctionDef], MdMgr.GetMdMgr)
     } catch {
       case e: Exception => {

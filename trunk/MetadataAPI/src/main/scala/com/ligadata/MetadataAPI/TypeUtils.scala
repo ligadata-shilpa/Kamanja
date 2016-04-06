@@ -81,7 +81,7 @@ object TypeUtils {
   // system name space
   lazy val loggerName = this.getClass.getName
   lazy val logger = LogManager.getLogger(loggerName)
-  lazy val serializer = SerializerManager.GetSerializer("kryo")
+  //lazy val serializer = SerializerManager.GetSerializer("kryo")
 
   def AddType(typeText: String, format: String): String = {
     try {
@@ -454,9 +454,9 @@ object TypeUtils {
   def LoadTypeIntoCache(key: String) {
     try {
       logger.debug("Fetch the object " + key + " from database ")
-      val obj = PersistenceUtils.GetObject(key.toLowerCase, "types")
+      val obj: (String, Any) = PersistenceUtils.GetObject(key.toLowerCase, "types")
       logger.debug("Deserialize the object " + key)
-      val typ = serializer.DeserializeObjectFromByteArray(obj._2.asInstanceOf[Array[Byte]])
+      val typ = MetadataAPISerialization.deserializeMetadata(new String(obj._2.asInstanceOf[Array[Byte]])).asInstanceOf[ArrayTypeDef]//serializer.DeserializeObjectFromByteArray(obj._2.asInstanceOf[Array[Byte]])
       if (typ != null) {
         logger.debug("Add the object " + key + " to the cache ")
         MetadataAPIImpl.AddObjectToCache(typ, MdMgr.GetMdMgr)

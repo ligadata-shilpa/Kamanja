@@ -68,7 +68,7 @@ class MetadataAPISerializationTest extends FlatSpec with BeforeAndAfterAll {
 
     assert(expected === actual)
   }
-
+/*
   "It" should "return serialized containerDefJson" in {
     //input
     val conDef = getContainerDef
@@ -113,6 +113,118 @@ class MetadataAPISerializationTest extends FlatSpec with BeforeAndAfterAll {
       """{"ArrayType":{"Name":"name","NameSpace":"com.ligadata.namespace","PhysicalName":"/opt/kamanja/obj","TypeTypeName":"tScalar","TypeName":"Int","TypeNameSpace":"system","NumberOfDimensions":2,"JarName":"JarName","ObjectFormat":"JSON","DependencyJars":["Jar1","Jar2"],"Implementation":"implementationName","ObjectDefinition":"ObjectDefinition","OrigDef":"OrigDef","OwnerId":"ownerId","TenantId":"tenantId","Author":"Author","Description":"Description","NumericTypes":{"Version":123456789,"TransId":123123123123,"UniqId":987654321,"CreationTime":2222222222,"ModTime":33333333333,"MdElemStructVer":1,"MdElementId":1},"IsActive":true,"IsFixed":false,"IsDeleted":false}}"""
     //actual
     val actual = MetadataAPISerialization.serializeObjectToJson(arrayType)
+    assert(expected === actual)
+  }
+
+  "It" should "return serialized ArrayBufTypeDefJson" in {
+    //input
+    val arraybufType = getArrayBufTypeDef
+    //expected
+    val expected: String =
+      """{"ArrayBufType":{"Name":"name","NameSpace":"com.ligadata.namespace","PhysicalName":"/opt/kamanja/obj","TypeTypeName":"tScalar","TypeName":"Int","TypeNameSpace":"system","NumberOfDimensions":2,"JarName":"JarName","ObjectFormat":"JSON","DependencyJars":["Jar1","Jar2"],"Implementation":"implementationName","ObjectDefinition":"ObjectDefinition","OrigDef":"OrigDef","OwnerId":"ownerId","TenantId":"tenantId","Author":"Author","Description":"Description","NumericTypes":{"Version":123456789,"TransId":123123123123,"UniqId":987654321,"CreationTime":2222222222,"ModTime":33333333333,"MdElemStructVer":1,"MdElementId":1},"IsActive":true,"IsFixed":false,"IsDeleted":false}}"""
+    //actual
+    val actual = MetadataAPISerialization.serializeObjectToJson(arraybufType)
+    assert(expected === actual)
+  }
+
+  "It" should "return serialized SetTypeDefJson" in {
+    //input
+    val setType = getSetTypeDef
+    //expected
+    val expected: String =
+      """{"SetType":{"Name":"name","NameSpace":"com.ligadata.namespace","PhysicalName":"/opt/kamanja/obj","TypeTypeName":"tScalar","TypeName":"Int","TypeNameSpace":"system","JarName":"JarName","ObjectFormat":"JSON","DependencyJars":["Jar1","Jar2"],"Implementation":"implementationName","ObjectDefinition":"ObjectDefinition","OrigDef":"OrigDef","OwnerId":"ownerId","TenantId":"tenantId","Author":"Author","Description":"Description","NumericTypes":{"Version":123456789,"TransId":123123123123,"UniqId":987654321,"CreationTime":2222222222,"ModTime":33333333333,"MdElemStructVer":1,"MdElementId":1},"IsActive":true,"IsFixed":false,"IsDeleted":false}}"""
+    //actual
+    val actual = MetadataAPISerialization.serializeObjectToJson(setType)
+    assert(expected === actual)
+  }
+
+  "It" should "return serialized ImmutableSetTypeDefJson" in {
+    //input
+    val immutableSetTypeDef = getImmutableSetTypeDef
+    //expected
+    val expected: String =
+      """{"ImmutableSetType":{"Name":"name","NameSpace":"com.ligadata.namespace","PhysicalName":"/opt/kamanja/obj","TypeTypeName":"tScalar","TypeName":"Int","TypeNameSpace":"system","JarName":"JarName","ObjectFormat":"JSON","DependencyJars":["Jar1","Jar2"],"Implementation":"implementationName","ObjectDefinition":"ObjectDefinition","OrigDef":"OrigDef","OwnerId":"ownerId","TenantId":"tenantId","Author":"Author","Description":"Description","NumericTypes":{"Version":123456789,"TransId":123123123123,"UniqId":987654321,"CreationTime":2222222222,"ModTime":33333333333,"MdElemStructVer":1,"MdElementId":1},"IsActive":true,"IsFixed":false,"IsDeleted":false}}"""
+
+    //actual
+    val actual = MetadataAPISerialization.serializeObjectToJson(immutableSetTypeDef)
+    assert(expected === actual)
+  }
+
+  "It" should "return serialized TreeSetTypeDefJson" in {
+    //input
+    val treeSetType = getTreeSetTypeDef
+    //expected
+    val expected: String =
+      """{"TreeSetType":{"Name":"name","NameSpace":"com.ligadata.namespace","PhysicalName":"/opt/kamanja/obj","TypeTypeName":"tScalar","TypeName":"Int","TypeNameSpace":"system","JarName":"JarName","ObjectFormat":"JSON","DependencyJars":["Jar1","Jar2"],"Implementation":"implementationName","ObjectDefinition":"ObjectDefinition","OrigDef":"OrigDef","OwnerId":"ownerId","TenantId":"tenantId","Author":"Author","Description":"Description","NumericTypes":{"Version":123456789,"TransId":123123123123,"UniqId":987654321,"CreationTime":2222222222,"ModTime":33333333333,"MdElemStructVer":1,"MdElementId":1},"IsActive":true,"IsFixed":false,"IsDeleted":false}}"""
+    //actual
+    val actual = MetadataAPISerialization.serializeObjectToJson(treeSetType)
+    assert(expected === actual)
+  }
+
+  "It" should "return serialized SortedSetTypeDefJson" in {
+    //input
+    val sortedSetType = getSortedSetTypeDef
+    //expected
+    val expected: String =
+      """{"SortedSetType":{"Name":"name","NameSpace":"com.ligadata.namespace","PhysicalName":"/opt/kamanja/obj","TypeTypeName":"tScalar","TypeName":"Int","TypeNameSpace":"system","JarName":"JarName","ObjectFormat":"JSON","DependencyJars":["Jar1","Jar2"],"Implementation":"implementationName","ObjectDefinition":"ObjectDefinition","OrigDef":"OrigDef","OwnerId":"ownerId","TenantId":"tenantId","Author":"Author","Description":"Description","NumericTypes":{"Version":123456789,"TransId":123123123123,"UniqId":987654321,"CreationTime":2222222222,"ModTime":33333333333,"MdElemStructVer":1,"MdElementId":1},"IsActive":true,"IsFixed":false,"IsDeleted":false}}"""
+    //actual
+    val actual = MetadataAPISerialization.serializeObjectToJson(sortedSetType)
+    assert(expected === actual)
+  }
+
+  "It" should "return serialized ImmutableMapTypeDefJson" in {
+    //input
+    val immutableMapType = getImmutableMapTypeDef
+    //expected
+    val expected: String =
+      """{"ImmutableMapType":{"Name":"name","NameSpace":"com.ligadata.namespace","PhysicalName":"/opt/kamanja/obj","TypeTypeName":"tContainer","JarName":"JarName","ObjectFormat":"JSON","DependencyJars":["Jar1","Jar2"],"Implementation":"implementationName","KeyTypeNameSpace":"system","KeyTypeName":"String","ValueTypeNameSpace":"system","ValueTypeName":"String","ObjectDefinition":"ObjectDefinition","OrigDef":"OrigDef","Author":"Author","OwnerId":"ownerId","TenantId":"tenantId","Description":"Description","NumericTypes":{"Version":123456789,"TransId":123123123123,"UniqId":987654321,"CreationTime":2222222222,"ModTime":33333333333,"MdElemStructVer":1,"MdElementId":1},"IsActive":true,"IsFixed":false,"IsDeleted":false}}"""
+    //actual
+    val actual = MetadataAPISerialization.serializeObjectToJson(immutableMapType)
+    assert(expected === actual)
+  }
+
+  "It" should "return serialized HashMapTypeDefJson" in {
+    //input
+    val hashMapType = getHashMapTypeDef
+    //expected
+    val expected: String =
+      """{"HashMapType":{"Name":"name","NameSpace":"com.ligadata.namespace","PhysicalName":"/opt/kamanja/obj","TypeTypeName":"tContainer","JarName":"JarName","ObjectFormat":"JSON","DependencyJars":["Jar1","Jar2"],"Implementation":"implementationName","KeyTypeNameSpace":"system","KeyTypeName":"String","ValueTypeNameSpace":"system","ValueTypeName":"String","ObjectDefinition":"ObjectDefinition","OrigDef":"OrigDef","Author":"Author","OwnerId":"ownerId","TenantId":"tenantId","Description":"Description","NumericTypes":{"Version":123456789,"TransId":123123123123,"UniqId":987654321,"CreationTime":2222222222,"ModTime":33333333333,"MdElemStructVer":1,"MdElementId":1},"IsActive":true,"IsFixed":false,"IsDeleted":false}}"""
+
+    //actual
+    val actual = MetadataAPISerialization.serializeObjectToJson(hashMapType)
+    assert(expected === actual)
+  }
+
+  "It" should "return serialized ListTypeDefJson" in {
+    //input
+    val listType = getListTypeDef
+    //expected
+    val expected: String =
+      """{"ListType":{"Name":"name","NameSpace":"com.ligadata.namespace","PhysicalName":"/opt/kamanja/obj","TypeTypeName":"tScalar","TypeName":"Int","TypeNameSpace":"system","JarName":"JarName","ObjectFormat":"JSON","DependencyJars":["Jar1","Jar2"],"Implementation":"implementationName","ObjectDefinition":"ObjectDefinition","OrigDef":"OrigDef","OwnerId":"ownerId","TenantId":"tenantId","Author":"Author","Description":"Description","NumericTypes":{"Version":123456789,"TransId":123123123123,"UniqId":987654321,"CreationTime":2222222222,"ModTime":33333333333,"MdElemStructVer":1,"MdElementId":1},"IsActive":true,"IsFixed":false,"IsDeleted":false}}"""
+    //actual
+    val actual = MetadataAPISerialization.serializeObjectToJson(listType)
+    assert(expected === actual)
+  }
+
+  "It" should "return serialized QueueTypeDefJson" in {
+    //input
+    val queueType = getQueueTypeDef
+    //expected
+    val expected: String =
+      """{"QueueType":{"Name":"name","NameSpace":"com.ligadata.namespace","PhysicalName":"/opt/kamanja/obj","TypeTypeName":"tScalar","TypeName":"Int","TypeNameSpace":"system","JarName":"JarName","ObjectFormat":"JSON","DependencyJars":["Jar1","Jar2"],"Implementation":"implementationName","ObjectDefinition":"ObjectDefinition","OrigDef":"OrigDef","OwnerId":"ownerId","TenantId":"tenantId","Author":"Author","Description":"Description","NumericTypes":{"Version":123456789,"TransId":123123123123,"UniqId":987654321,"CreationTime":2222222222,"ModTime":33333333333,"MdElemStructVer":1,"MdElementId":1},"IsActive":true,"IsFixed":false,"IsDeleted":false}}"""
+    //actual
+    val actual = MetadataAPISerialization.serializeObjectToJson(queueType)
+    assert(expected === actual)
+  }
+
+  "It" should "return serialized TupleTypeDefJson" in {
+    //input
+    val tupleType = getTupleTypeDef
+    //expected
+    val expected: String =
+      """{"TupleType":{"Name":"name","NameSpace":"com.ligadata.namespace","PhysicalName":"/opt/kamanja/obj","TupleInfo":[{"TypeNameSpace":"system","TypeName":"int"}],"JarName":"JarName","ObjectFormat":"JSON","DependencyJars":["Jar1","Jar2"],"Implementation":"implementationName","ObjectDefinition":"ObjectDefinition","OrigDef":"OrigDef","OwnerId":"ownerId","TenantId":"tenantId","Author":"Author","Description":"Description","NumericTypes":{"Version":123456789,"TransId":123123123123,"UniqId":987654321,"CreationTime":2222222222,"ModTime":33333333333,"MdElemStructVer":1,"MdElementId":1},"IsActive":true,"IsFixed":false,"IsDeleted":false}}"""
+    //actual
+    val actual = MetadataAPISerialization.serializeObjectToJson(tupleType)
     assert(expected === actual)
   }
 
@@ -182,11 +294,10 @@ class MetadataAPISerializationTest extends FlatSpec with BeforeAndAfterAll {
     val adapterInfo = getAdapterInfo
     //expected
     val expected: String =
-      """{"Adapter":{"Name":"name","TypeString":"typeString","DataFormat":"dataformat","ClassName":"ClassName","JarName":"JarName","DependencyJars":["Jar1","Jar2"],"AdapterSpecificCfg":"AdapterSpecificCfg"}}"""
+      """{"Adapter":{"Name":"name","TypeString":"typeString","ClassName":"ClassName","JarName":"JarName","DependencyJars":["Jar1","Jar2"],"AdapterSpecificCfg":"AdapterSpecificCfg","TenantId":"tenantId","FullAdapterConfig":"FullConfig"}}"""
 
     //actual
     val actual = MetadataAPISerialization.serializeObjectToJson(adapterInfo)
-
     assert(expected === actual)
   }
 
@@ -231,6 +342,7 @@ class MetadataAPISerializationTest extends FlatSpec with BeforeAndAfterAll {
     assert(expected.outputMsgs.sameElements(actual.outputMsgs))
     assert(expected.dependencyJarNames.sameElements(actual.dependencyJarNames))
   }
+
   "It" should "return serialized MessageDef" in {
 
     //input
@@ -258,6 +370,7 @@ class MetadataAPISerializationTest extends FlatSpec with BeforeAndAfterAll {
     assert(expected.dependencyJarNames.sameElements(actual.dependencyJarNames))
 
   }
+
   "It" should "return serialized ContainerDef" in {
 
     //input
@@ -281,6 +394,7 @@ class MetadataAPISerializationTest extends FlatSpec with BeforeAndAfterAll {
     assert(expected.IsDeleted === actual.IsDeleted)
     assert(expected.cType.avroSchema === actual.cType.avroSchema)
   }
+
   "It" should "return serialized FunctionDef" in {
 
     //input
@@ -307,6 +421,7 @@ class MetadataAPISerializationTest extends FlatSpec with BeforeAndAfterAll {
     assert(expected.IsDeleted === actual.IsDeleted)
 
   }
+
   "It" should "return serialized MapTypeDef" in {
 
     //input
@@ -333,6 +448,7 @@ class MetadataAPISerializationTest extends FlatSpec with BeforeAndAfterAll {
     assert(expected.IsDeleted === actual.IsDeleted)
 
   }
+
   "It" should "return serialized ArrayTypeDef" in {
 
     //input
@@ -357,6 +473,254 @@ class MetadataAPISerializationTest extends FlatSpec with BeforeAndAfterAll {
     assert(expected.IsDeleted === actual.IsDeleted)
     assert(expected.IsFixed === actual.IsFixed)
   }
+
+  "It" should "return serialized ArrayBufTypeDef" in {
+
+    //input
+    val input: String =
+      """{"ArrayBufType":{"Name":"name","NameSpace":"com.ligadata.namespace","PhysicalName":"/opt/kamanja/obj","TypeTypeName":"tScalar","TypeName":"Int","TypeNameSpace":"system","NumberOfDimensions":2,"JarName":"JarName","ObjectFormat":"JSON","DependencyJars":["Jar1","Jar2"],"Implementation":"implementationName","ObjectDefinition":"ObjectDefinition","OrigDef":"OrigDef","OwnerId":"ownerId","TenantId":"tenantId","Author":"Author","Description":"Description","NumericTypes":{"Version":123456789,"TransId":123123123123,"UniqId":987654321,"CreationTime":2222222222,"ModTime":33333333333,"MdElemStructVer":1,"MdElementId":1},"IsActive":true,"IsFixed":false,"IsDeleted":false}}"""
+    //expected
+    val expected = getArrayBufTypeDef
+    //actual
+    val actual = MetadataAPISerialization.deserializeMetadata(input).asInstanceOf[ArrayBufTypeDef]
+    assert(expected.Name === actual.Name)
+    assert(expected.PhysicalName === actual.PhysicalName)
+    assert(expected.NameSpace === actual.NameSpace)
+    assert(expected.PhysicalName === actual.PhysicalName)
+    assert(expected.arrayDims === actual.arrayDims)
+    assert(expected.implementationName === actual.implementationName)
+    assert(expected.OrigDef === actual.OrigDef)
+    assert(expected.OwnerId === actual.OwnerId)
+    assert(expected.TenantId === actual.TenantId)
+    assert(expected.Author === actual.Author)
+    assert(expected.UniqId === actual.UniqId)
+    assert(expected.MdElementId === actual.MdElementId)
+    assert(expected.IsDeleted === actual.IsDeleted)
+    assert(expected.IsFixed === actual.IsFixed)
+  }
+
+  "It" should "return serialized SetTypeDef" in {
+
+    //input
+    val input: String =
+      """{"SetType":{"Name":"name","NameSpace":"com.ligadata.namespace","PhysicalName":"/opt/kamanja/obj","TypeTypeName":"tScalar","TypeName":"Int","TypeNameSpace":"system","JarName":"JarName","ObjectFormat":"JSON","DependencyJars":["Jar1","Jar2"],"Implementation":"implementationName","ObjectDefinition":"ObjectDefinition","OrigDef":"OrigDef","OwnerId":"ownerId","TenantId":"tenantId","Author":"Author","Description":"Description","NumericTypes":{"Version":123456789,"TransId":123123123123,"UniqId":987654321,"CreationTime":2222222222,"ModTime":33333333333,"MdElemStructVer":1,"MdElementId":1},"IsActive":true,"IsFixed":false,"IsDeleted":false}}"""
+
+    //expected
+    val expected = getSetTypeDef
+    //actual
+    val actual = MetadataAPISerialization.deserializeMetadata(input).asInstanceOf[SetTypeDef]
+    assert(expected.Name === actual.Name)
+    assert(expected.PhysicalName === actual.PhysicalName)
+    assert(expected.NameSpace === actual.NameSpace)
+    assert(expected.PhysicalName === actual.PhysicalName)
+    assert(expected.implementationName === actual.implementationName)
+    assert(expected.OrigDef === actual.OrigDef)
+    assert(expected.OwnerId === actual.OwnerId)
+    assert(expected.TenantId === actual.TenantId)
+    assert(expected.Author === actual.Author)
+    assert(expected.UniqId === actual.UniqId)
+    assert(expected.MdElementId === actual.MdElementId)
+    assert(expected.IsDeleted === actual.IsDeleted)
+    assert(expected.IsFixed === actual.IsFixed)
+  }
+
+  "It" should "return serialized ImmutableSetTypeDef" in {
+
+    //input
+    val input: String =
+      """{"ImmutableSetType":{"Name":"name","NameSpace":"com.ligadata.namespace","PhysicalName":"/opt/kamanja/obj","TypeTypeName":"tScalar","TypeName":"Int","TypeNameSpace":"system","JarName":"JarName","ObjectFormat":"JSON","DependencyJars":["Jar1","Jar2"],"Implementation":"implementationName","ObjectDefinition":"ObjectDefinition","OrigDef":"OrigDef","OwnerId":"ownerId","TenantId":"tenantId","Author":"Author","Description":"Description","NumericTypes":{"Version":123456789,"TransId":123123123123,"UniqId":987654321,"CreationTime":2222222222,"ModTime":33333333333,"MdElemStructVer":1,"MdElementId":1},"IsActive":true,"IsFixed":false,"IsDeleted":false}}"""
+    //expected
+    val expected = getImmutableSetTypeDef
+    //actual
+    val actual = MetadataAPISerialization.deserializeMetadata(input).asInstanceOf[ImmutableSetTypeDef]
+    assert(expected.Name === actual.Name)
+    assert(expected.PhysicalName === actual.PhysicalName)
+    assert(expected.NameSpace === actual.NameSpace)
+    assert(expected.PhysicalName === actual.PhysicalName)
+    assert(expected.implementationName === actual.implementationName)
+    assert(expected.OrigDef === actual.OrigDef)
+    assert(expected.OwnerId === actual.OwnerId)
+    assert(expected.TenantId === actual.TenantId)
+    assert(expected.Author === actual.Author)
+    assert(expected.UniqId === actual.UniqId)
+    assert(expected.MdElementId === actual.MdElementId)
+    assert(expected.IsDeleted === actual.IsDeleted)
+    assert(expected.IsFixed === actual.IsFixed)
+  }
+
+  "It" should "return serialized TreeSetTypeDef" in {
+
+    //input
+    val input: String =
+      """{"TreeSetType":{"Name":"name","NameSpace":"com.ligadata.namespace","PhysicalName":"/opt/kamanja/obj","TypeTypeName":"tScalar","TypeName":"Int","TypeNameSpace":"system","JarName":"JarName","ObjectFormat":"JSON","DependencyJars":["Jar1","Jar2"],"Implementation":"implementationName","ObjectDefinition":"ObjectDefinition","OrigDef":"OrigDef","OwnerId":"ownerId","TenantId":"tenantId","Author":"Author","Description":"Description","NumericTypes":{"Version":123456789,"TransId":123123123123,"UniqId":987654321,"CreationTime":2222222222,"ModTime":33333333333,"MdElemStructVer":1,"MdElementId":1},"IsActive":true,"IsFixed":false,"IsDeleted":false}}"""
+    //expected
+    val expected = getTreeSetTypeDef
+    //actual
+    val actual = MetadataAPISerialization.deserializeMetadata(input).asInstanceOf[TreeSetTypeDef]
+    assert(expected.Name === actual.Name)
+    assert(expected.PhysicalName === actual.PhysicalName)
+    assert(expected.NameSpace === actual.NameSpace)
+    assert(expected.PhysicalName === actual.PhysicalName)
+    assert(expected.implementationName === actual.implementationName)
+    assert(expected.OrigDef === actual.OrigDef)
+    assert(expected.OwnerId === actual.OwnerId)
+    assert(expected.TenantId === actual.TenantId)
+    assert(expected.Author === actual.Author)
+    assert(expected.UniqId === actual.UniqId)
+    assert(expected.MdElementId === actual.MdElementId)
+    assert(expected.IsDeleted === actual.IsDeleted)
+    assert(expected.IsFixed === actual.IsFixed)
+  }
+
+  "It" should "return serialized SortedSetTypeDef" in {
+
+    //input
+    val input: String =
+      """{"SortedSetType":{"Name":"name","NameSpace":"com.ligadata.namespace","PhysicalName":"/opt/kamanja/obj","TypeTypeName":"tScalar","TypeName":"Int","TypeNameSpace":"system","JarName":"JarName","ObjectFormat":"JSON","DependencyJars":["Jar1","Jar2"],"Implementation":"implementationName","ObjectDefinition":"ObjectDefinition","OrigDef":"OrigDef","OwnerId":"ownerId","TenantId":"tenantId","Author":"Author","Description":"Description","NumericTypes":{"Version":123456789,"TransId":123123123123,"UniqId":987654321,"CreationTime":2222222222,"ModTime":33333333333,"MdElemStructVer":1,"MdElementId":1},"IsActive":true,"IsFixed":false,"IsDeleted":false}}"""
+    //expected
+    val expected = getSortedSetTypeDef
+    //actual
+    val actual = MetadataAPISerialization.deserializeMetadata(input).asInstanceOf[SortedSetTypeDef]
+    assert(expected.Name === actual.Name)
+    assert(expected.PhysicalName === actual.PhysicalName)
+    assert(expected.NameSpace === actual.NameSpace)
+    assert(expected.PhysicalName === actual.PhysicalName)
+    assert(expected.implementationName === actual.implementationName)
+    assert(expected.OrigDef === actual.OrigDef)
+    assert(expected.OwnerId === actual.OwnerId)
+    assert(expected.TenantId === actual.TenantId)
+    assert(expected.Author === actual.Author)
+    assert(expected.UniqId === actual.UniqId)
+    assert(expected.MdElementId === actual.MdElementId)
+    assert(expected.IsDeleted === actual.IsDeleted)
+    assert(expected.IsFixed === actual.IsFixed)
+  }
+
+  "It" should "return serialized ImmutableMapTypeDef" in {
+
+    //input
+    val input: String =
+      """{"ImmutableMapType":{"Name":"name","NameSpace":"com.ligadata.namespace","PhysicalName":"/opt/kamanja/obj","TypeTypeName":"tContainer","JarName":"JarName","ObjectFormat":"JSON","DependencyJars":["Jar1","Jar2"],"Implementation":"implementationName","KeyTypeNameSpace":"system","KeyTypeName":"String","ValueTypeNameSpace":"system","ValueTypeName":"String","ObjectDefinition":"ObjectDefinition","OrigDef":"OrigDef","Author":"Author","OwnerId":"ownerId","TenantId":"tenantId","Description":"Description","NumericTypes":{"Version":123456789,"TransId":123123123123,"UniqId":987654321,"CreationTime":2222222222,"ModTime":33333333333,"MdElemStructVer":1,"MdElementId":1},"IsActive":true,"IsFixed":false,"IsDeleted":false}}"""
+
+    //expected
+    val expected = getImmutableMapTypeDef
+    //actual
+    val actual = MetadataAPISerialization.deserializeMetadata(input).asInstanceOf[ImmutableMapTypeDef]
+    assert(expected.Name === actual.Name)
+    assert(expected.PhysicalName === actual.PhysicalName)
+    assert(expected.NameSpace === actual.NameSpace)
+    assert(expected.PhysicalName === actual.PhysicalName)
+    assert(expected.implementationName === actual.implementationName)
+    assert(expected.keyDef.nameSpace === actual.keyDef.nameSpace)
+    assert(expected.OrigDef === actual.OrigDef)
+    assert(expected.OwnerId === actual.OwnerId)
+    assert(expected.TenantId === actual.TenantId)
+    assert(expected.Author === actual.Author)
+    assert(expected.UniqId === actual.UniqId)
+    assert(expected.MdElementId === actual.MdElementId)
+    assert(expected.IsDeleted === actual.IsDeleted)
+    assert(expected.valDef.nameSpace === actual.valDef.nameSpace)
+    assert(expected.IsDeleted === actual.IsDeleted)
+  }
+
+  "It" should "return serialized HashMapTypeDef" in {
+
+    //input
+    val input: String =
+      """{"HashMapType":{"Name":"name","NameSpace":"com.ligadata.namespace","PhysicalName":"/opt/kamanja/obj","TypeTypeName":"tContainer","JarName":"JarName","ObjectFormat":"JSON","DependencyJars":["Jar1","Jar2"],"Implementation":"implementationName","KeyTypeNameSpace":"system","KeyTypeName":"String","ValueTypeNameSpace":"system","ValueTypeName":"String","ObjectDefinition":"ObjectDefinition","OrigDef":"OrigDef","Author":"Author","OwnerId":"ownerId","TenantId":"tenantId","Description":"Description","NumericTypes":{"Version":123456789,"TransId":123123123123,"UniqId":987654321,"CreationTime":2222222222,"ModTime":33333333333,"MdElemStructVer":1,"MdElementId":1},"IsActive":true,"IsFixed":false,"IsDeleted":false}}"""
+    //expected
+    val expected = getHashMapTypeDef
+    //actual
+    val actual = MetadataAPISerialization.deserializeMetadata(input).asInstanceOf[HashMapTypeDef]
+    assert(expected.Name === actual.Name)
+    assert(expected.PhysicalName === actual.PhysicalName)
+    assert(expected.NameSpace === actual.NameSpace)
+    assert(expected.PhysicalName === actual.PhysicalName)
+    assert(expected.implementationName === actual.implementationName)
+    assert(expected.keyDef.nameSpace === actual.keyDef.nameSpace)
+    assert(expected.OrigDef === actual.OrigDef)
+    assert(expected.OwnerId === actual.OwnerId)
+    assert(expected.TenantId === actual.TenantId)
+    assert(expected.Author === actual.Author)
+    assert(expected.UniqId === actual.UniqId)
+    assert(expected.MdElementId === actual.MdElementId)
+    assert(expected.IsDeleted === actual.IsDeleted)
+    assert(expected.valDef.nameSpace === actual.valDef.nameSpace)
+    assert(expected.IsDeleted === actual.IsDeleted)
+  }
+
+  "It" should "return serialized ListTypeDef" in {
+
+    //input
+    val input: String =
+      """{"ListType":{"Name":"name","NameSpace":"com.ligadata.namespace","PhysicalName":"/opt/kamanja/obj","TypeTypeName":"tScalar","TypeName":"Int","TypeNameSpace":"system","JarName":"JarName","ObjectFormat":"JSON","DependencyJars":["Jar1","Jar2"],"Implementation":"implementationName","ObjectDefinition":"ObjectDefinition","OrigDef":"OrigDef","OwnerId":"ownerId","TenantId":"tenantId","Author":"Author","Description":"Description","NumericTypes":{"Version":123456789,"TransId":123123123123,"UniqId":987654321,"CreationTime":2222222222,"ModTime":33333333333,"MdElemStructVer":1,"MdElementId":1},"IsActive":true,"IsFixed":false,"IsDeleted":false}}"""
+    //expected
+    val expected = getListTypeDef
+    //actual
+    val actual = MetadataAPISerialization.deserializeMetadata(input).asInstanceOf[ListTypeDef]
+    assert(expected.Name === actual.Name)
+    assert(expected.PhysicalName === actual.PhysicalName)
+    assert(expected.NameSpace === actual.NameSpace)
+    assert(expected.PhysicalName === actual.PhysicalName)
+    assert(expected.implementationName === actual.implementationName)
+    assert(expected.OrigDef === actual.OrigDef)
+    assert(expected.OwnerId === actual.OwnerId)
+    assert(expected.TenantId === actual.TenantId)
+    assert(expected.Author === actual.Author)
+    assert(expected.UniqId === actual.UniqId)
+    assert(expected.MdElementId === actual.MdElementId)
+    assert(expected.IsDeleted === actual.IsDeleted)
+    assert(expected.IsFixed === actual.IsFixed)
+  }
+
+  "It" should "return serialized QueueTypeDef" in {
+
+    //input
+    val input: String =
+      """{"QueueType":{"Name":"name","NameSpace":"com.ligadata.namespace","PhysicalName":"/opt/kamanja/obj","TypeTypeName":"tScalar","TypeName":"Int","TypeNameSpace":"system","JarName":"JarName","ObjectFormat":"JSON","DependencyJars":["Jar1","Jar2"],"Implementation":"implementationName","ObjectDefinition":"ObjectDefinition","OrigDef":"OrigDef","OwnerId":"ownerId","TenantId":"tenantId","Author":"Author","Description":"Description","NumericTypes":{"Version":123456789,"TransId":123123123123,"UniqId":987654321,"CreationTime":2222222222,"ModTime":33333333333,"MdElemStructVer":1,"MdElementId":1},"IsActive":true,"IsFixed":false,"IsDeleted":false}}"""
+    //expected
+    val expected = getQueueTypeDef
+    //actual
+    val actual = MetadataAPISerialization.deserializeMetadata(input).asInstanceOf[QueueTypeDef]
+    assert(expected.Name === actual.Name)
+    assert(expected.PhysicalName === actual.PhysicalName)
+    assert(expected.NameSpace === actual.NameSpace)
+    assert(expected.PhysicalName === actual.PhysicalName)
+    assert(expected.implementationName === actual.implementationName)
+    assert(expected.OrigDef === actual.OrigDef)
+    assert(expected.OwnerId === actual.OwnerId)
+    assert(expected.TenantId === actual.TenantId)
+    assert(expected.Author === actual.Author)
+    assert(expected.UniqId === actual.UniqId)
+    assert(expected.MdElementId === actual.MdElementId)
+    assert(expected.IsDeleted === actual.IsDeleted)
+    assert(expected.IsFixed === actual.IsFixed)
+  }
+
+  "It" should "return serialized TupleTypeDef" in {
+
+    //input
+    val input: String =
+      """{"TupleType":{"Name":"name","NameSpace":"com.ligadata.namespace","PhysicalName":"/opt/kamanja/obj","TupleInfo":[{"TypeNameSpace":"system","TypeName":"int"}],"JarName":"JarName","ObjectFormat":"JSON","DependencyJars":["Jar1","Jar2"],"Implementation":"implementationName","ObjectDefinition":"ObjectDefinition","OrigDef":"OrigDef","OwnerId":"ownerId","TenantId":"tenantId","Author":"Author","Description":"Description","NumericTypes":{"Version":123456789,"TransId":123123123123,"UniqId":987654321,"CreationTime":2222222222,"ModTime":33333333333,"MdElemStructVer":1,"MdElementId":1},"IsActive":true,"IsFixed":false,"IsDeleted":false}}"""
+    //expected
+    val expected = getTupleTypeDef
+    //actual
+    val actual = MetadataAPISerialization.deserializeMetadata(input).asInstanceOf[TupleTypeDef]
+    assert(expected.Name === actual.Name)
+    assert(expected.PhysicalName === actual.PhysicalName)
+    assert(expected.NameSpace === actual.NameSpace)
+    assert(expected.PhysicalName === actual.PhysicalName)
+    assert(expected.implementationName === actual.implementationName)
+    assert(expected.OrigDef === actual.OrigDef)
+    assert(expected.OwnerId === actual.OwnerId)
+    assert(expected.TenantId === actual.TenantId)
+    assert(expected.Author === actual.Author)
+    assert(expected.UniqId === actual.UniqId)
+    assert(expected.MdElementId === actual.MdElementId)
+    assert(expected.IsDeleted === actual.IsDeleted)
+    assert(expected.IsFixed === actual.IsFixed)
+  }
+
   "It" should "return serialized JarDef" in {
 
     //input
@@ -378,6 +742,7 @@ class MetadataAPISerializationTest extends FlatSpec with BeforeAndAfterAll {
     assert(expected.MdElementId === actual.MdElementId)
     assert(expected.IsDeleted === actual.IsDeleted)
   }
+
   "It" should "return serialized ConfigDef" in {
 
     //input
@@ -399,6 +764,7 @@ class MetadataAPISerializationTest extends FlatSpec with BeforeAndAfterAll {
     assert(expected.MdElementId === actual.MdElementId)
     assert(expected.IsDeleted === actual.IsDeleted)
   }
+
   "It" should "return serialized NodeInfo" in {
 
     //input
@@ -419,6 +785,7 @@ class MetadataAPISerializationTest extends FlatSpec with BeforeAndAfterAll {
     assert(expected.Description === actual.Description)
 
   }
+
   "It" should "return serialized ClusterInfo" in {
 
     //input
@@ -432,6 +799,7 @@ class MetadataAPISerializationTest extends FlatSpec with BeforeAndAfterAll {
     assert(expected.Description === actual.Description)
     assert(expected.Privileges === actual.Privileges)
   }
+
   "It" should "return serialized ClusterCfgInfo" in {
 
     //input
@@ -445,23 +813,24 @@ class MetadataAPISerializationTest extends FlatSpec with BeforeAndAfterAll {
     assert(expected.ModifiedTime.getTime === actual.ModifiedTime.getTime)
     assert(expected.CreatedTime.getTime === actual.CreatedTime.getTime)
   }
+
   "It" should "return serialized AdapterInfo" in {
 
     //input
     val input: String =
-      """{"Adapter":{"Name":"name","TypeString":"typeString","DataFormat":"dataformat","ClassName":"ClassName","JarName":"JarName","DependencyJars":["Jar1","Jar2"],"AdapterSpecificCfg":"AdapterSpecificCfg","TenantId":"System"}}"""
+      """{"Adapter":{"Name":"name","TypeString":"typeString","ClassName":"ClassName","JarName":"JarName","DependencyJars":["Jar1","Jar2"],"AdapterSpecificCfg":"AdapterSpecificCfg","TenantId":"tenantId","FullAdapterConfig":"FullConfig"}}"""
     //expected
     val expected = getAdapterInfo
     //actual
     val actual = MetadataAPISerialization.deserializeMetadata(input).asInstanceOf[AdapterInfo]
     assert(expected.Name === actual.Name)
     assert(expected.TypeString === actual.TypeString)
-    assert(expected.DataFormat === actual.DataFormat)
     assert(expected.ClassName === actual.ClassName)
     assert(expected.AdapterSpecificCfg === actual.AdapterSpecificCfg)
     assert(expected.TenantId === actual.TenantId)
 
   }
+
   "It" should "return serialized UserPropertiesInfo" in {
 
     //input
@@ -474,7 +843,7 @@ class MetadataAPISerializationTest extends FlatSpec with BeforeAndAfterAll {
     assert(expected.ClusterId === actual.ClusterId)
   }
 
-
+  */
   private def getModlDef: ModelDef = {
     val modelType = "SCALA"
     val objectFormat = "SCALA"
@@ -529,7 +898,7 @@ class MetadataAPISerializationTest extends FlatSpec with BeforeAndAfterAll {
     val msgDef = MdMgr.GetMdMgr.MakeFixedMsg(
       nameSpace, name, physicalNameString, attrList1.toList, ownerId, tenantId,
       uniqID, mdElementId, schemaId, avroSchema,
-      version, jarName, dependencyJar, primaryKeys, foreignKeys, partitionKey, false,false)
+      version, jarName, dependencyJar, primaryKeys, foreignKeys, partitionKey, false, false)
 
     msgDef.tranId = transId
     msgDef.origDef = origDef
@@ -559,7 +928,7 @@ class MetadataAPISerializationTest extends FlatSpec with BeforeAndAfterAll {
     val schemaId = 2
     val avroSchema = "avroSchema"
     val contDef = MdMgr.GetMdMgr.MakeFixedContainer(nameSpace, name, physicalNameString, attrList1.toList, ownerId, tenantId,
-      uniqID, mdElementId, schemaId, avroSchema, version, jarName, dependencyJar, primaryKeys, foreignKeys, partitionKey, false,false)
+      uniqID, mdElementId, schemaId, avroSchema, version, jarName, dependencyJar, primaryKeys, foreignKeys, partitionKey, false, false)
 
     contDef.tranId = transId
     contDef.origDef = origDef
@@ -668,6 +1037,304 @@ class MetadataAPISerializationTest extends FlatSpec with BeforeAndAfterAll {
     arrayType.physicalName = physicalNameString
 
     arrayType
+  }
+
+  private def getArrayBufTypeDef: ArrayBufTypeDef = {
+
+    val objectFormat = "JSON"
+    val implementationName = "implementationName"
+    val numberOfDimention = 2
+    val typeNameSpace = "system"
+    val typeName = "int"
+    val arrayBufType = MdMgr.GetMdMgr.MakeArrayBuffer(nameSpace, name, typeNameSpace, typeName, numberOfDimention, ownerId, tenantId, uniqID, mdElementId, version, false)
+
+    arrayBufType.tranId = transId
+    arrayBufType.origDef = origDef
+    arrayBufType.ObjectDefinition(objectDefinition)
+    val objFmt: ObjFormatType.FormatType = ObjFormatType.fromString(objectFormat)
+    arrayBufType.ObjectFormat(objFmt)
+    arrayBufType.uniqueId = uniqID
+    arrayBufType.creationTime = creationTime
+    arrayBufType.modTime = modTime
+    arrayBufType.description = description
+    arrayBufType.author = author
+    arrayBufType.mdElemStructVer = mdElemStructVer
+    arrayBufType.implementationName(implementationName)
+    arrayBufType.active = isActive
+    arrayBufType.deleted = isDeleted
+    arrayBufType.dependencyJarNames = dependencyJar
+    arrayBufType.jarName = jarName
+    arrayBufType.physicalName = physicalNameString
+
+    arrayBufType
+  }
+
+  private def getSetTypeDef: SetTypeDef = {
+
+    val objectFormat = "JSON"
+    val implementationName = "implementationName"
+    val numberOfDimention = 2
+    val typeNameSpace = "system"
+    val typeName = "int"
+    val setType = MdMgr.GetMdMgr.MakeSet(nameSpace, name, typeNameSpace, typeName, version, ownerId, tenantId, uniqID, mdElementId)
+
+    setType.tranId = transId
+    setType.origDef = origDef
+    setType.ObjectDefinition(objectDefinition)
+    val objFmt: ObjFormatType.FormatType = ObjFormatType.fromString(objectFormat)
+    setType.ObjectFormat(objFmt)
+    setType.uniqueId = uniqID
+    setType.creationTime = creationTime
+    setType.modTime = modTime
+    setType.description = description
+    setType.author = author
+    setType.mdElemStructVer = mdElemStructVer
+    setType.implementationName(implementationName)
+    setType.active = isActive
+    setType.deleted = isDeleted
+    setType.dependencyJarNames = dependencyJar
+    setType.jarName = jarName
+    setType.physicalName = physicalNameString
+
+    setType
+  }
+
+  private def getImmutableSetTypeDef: ImmutableSetTypeDef = {
+
+    val objectFormat = "JSON"
+    val implementationName = "implementationName"
+    val typeNameSpace = "system"
+    val typeName = "int"
+    val immutableSetType = MdMgr.GetMdMgr.MakeImmutableSet(nameSpace, name, typeNameSpace, typeName, version, ownerId, tenantId, uniqID, mdElementId)
+
+    immutableSetType.tranId = transId
+    immutableSetType.origDef = origDef
+    immutableSetType.ObjectDefinition(objectDefinition)
+    val objFmt: ObjFormatType.FormatType = ObjFormatType.fromString(objectFormat)
+    immutableSetType.ObjectFormat(objFmt)
+    immutableSetType.uniqueId = uniqID
+    immutableSetType.creationTime = creationTime
+    immutableSetType.modTime = modTime
+    immutableSetType.description = description
+    immutableSetType.author = author
+    immutableSetType.mdElemStructVer = mdElemStructVer
+    immutableSetType.implementationName(implementationName)
+    immutableSetType.active = isActive
+    immutableSetType.deleted = isDeleted
+    immutableSetType.dependencyJarNames = dependencyJar
+    immutableSetType.jarName = jarName
+    immutableSetType.physicalName = physicalNameString
+
+    immutableSetType
+  }
+
+  private def getTreeSetTypeDef: TreeSetTypeDef = {
+
+    val objectFormat = "JSON"
+    val implementationName = "implementationName"
+    val typeNameSpace = "system"
+    val typeName = "int"
+    val treeSetTypedef = MdMgr.GetMdMgr.MakeTreeSet(nameSpace, name, typeNameSpace, typeName, version, ownerId, tenantId, uniqID, mdElementId, false)
+
+    treeSetTypedef.tranId = transId
+    treeSetTypedef.origDef = origDef
+    treeSetTypedef.ObjectDefinition(objectDefinition)
+    val objFmt: ObjFormatType.FormatType = ObjFormatType.fromString(objectFormat)
+    treeSetTypedef.ObjectFormat(objFmt)
+    treeSetTypedef.uniqueId = uniqID
+    treeSetTypedef.creationTime = creationTime
+    treeSetTypedef.modTime = modTime
+    treeSetTypedef.description = description
+    treeSetTypedef.author = author
+    treeSetTypedef.mdElemStructVer = mdElemStructVer
+    treeSetTypedef.implementationName(implementationName)
+    treeSetTypedef.active = isActive
+    treeSetTypedef.deleted = isDeleted
+    treeSetTypedef.dependencyJarNames = dependencyJar
+    treeSetTypedef.jarName = jarName
+    treeSetTypedef.physicalName = physicalNameString
+
+    treeSetTypedef
+  }
+
+  private def getSortedSetTypeDef: SortedSetTypeDef = {
+
+    val objectFormat = "JSON"
+    val implementationName = "implementationName"
+    val typeNameSpace = "system"
+    val typeName = "int"
+    val sortedSetType = MdMgr.GetMdMgr.MakeSortedSet(nameSpace, name, typeNameSpace, typeName, version, ownerId, tenantId, uniqID, mdElementId, false)
+
+    sortedSetType.tranId = transId
+    sortedSetType.origDef = origDef
+    sortedSetType.ObjectDefinition(objectDefinition)
+    val objFmt: ObjFormatType.FormatType = ObjFormatType.fromString(objectFormat)
+    sortedSetType.ObjectFormat(objFmt)
+    sortedSetType.uniqueId = uniqID
+    sortedSetType.creationTime = creationTime
+    sortedSetType.modTime = modTime
+    sortedSetType.description = description
+    sortedSetType.author = author
+    sortedSetType.mdElemStructVer = mdElemStructVer
+    sortedSetType.implementationName(implementationName)
+    sortedSetType.active = isActive
+    sortedSetType.deleted = isDeleted
+    sortedSetType.dependencyJarNames = dependencyJar
+    sortedSetType.jarName = jarName
+    sortedSetType.physicalName = physicalNameString
+
+    sortedSetType
+  }
+
+  private def getImmutableMapTypeDef: ImmutableMapTypeDef = {
+
+    val objectFormat = "JSON"
+    val implementationName = "implementationName"
+    val key = ("system", "string")
+    val value = ("system", "string")
+
+    val immutableMapTypeDef = MdMgr.GetMdMgr.MakeImmutableMap(nameSpace, name, key, value, version, ownerId, tenantId, uniqID, mdElementId, false)
+
+    immutableMapTypeDef.tranId = transId
+    immutableMapTypeDef.origDef = origDef
+    immutableMapTypeDef.ObjectDefinition(objectDefinition)
+    val objFmt: ObjFormatType.FormatType = ObjFormatType.fromString(objectFormat)
+    immutableMapTypeDef.ObjectFormat(objFmt)
+    immutableMapTypeDef.uniqueId = uniqID
+    immutableMapTypeDef.creationTime = creationTime
+    immutableMapTypeDef.modTime = modTime
+    immutableMapTypeDef.description = description
+    immutableMapTypeDef.author = author
+    immutableMapTypeDef.mdElemStructVer = mdElemStructVer
+    immutableMapTypeDef.implementationName(implementationName)
+    immutableMapTypeDef.active = isActive
+    immutableMapTypeDef.deleted = isDeleted
+    immutableMapTypeDef.dependencyJarNames = dependencyJar
+    immutableMapTypeDef.jarName = jarName
+    immutableMapTypeDef.physicalName = physicalNameString
+
+    immutableMapTypeDef
+  }
+
+  private def getHashMapTypeDef: HashMapTypeDef = {
+
+    val objectFormat = "JSON"
+    val implementationName = "implementationName"
+    val key = ("system", "string")
+    val value = ("system", "string")
+
+    val hashMapTypeDef = MdMgr.GetMdMgr.MakeHashMap(nameSpace, name, key, value, version, ownerId, tenantId, uniqID, mdElementId)
+
+    hashMapTypeDef.tranId = transId
+    hashMapTypeDef.origDef = origDef
+    hashMapTypeDef.ObjectDefinition(objectDefinition)
+    val objFmt: ObjFormatType.FormatType = ObjFormatType.fromString(objectFormat)
+    hashMapTypeDef.ObjectFormat(objFmt)
+    hashMapTypeDef.uniqueId = uniqID
+    hashMapTypeDef.creationTime = creationTime
+    hashMapTypeDef.modTime = modTime
+    hashMapTypeDef.description = description
+    hashMapTypeDef.author = author
+    hashMapTypeDef.mdElemStructVer = mdElemStructVer
+    hashMapTypeDef.implementationName(implementationName)
+    hashMapTypeDef.active = isActive
+    hashMapTypeDef.deleted = isDeleted
+    hashMapTypeDef.dependencyJarNames = dependencyJar
+    hashMapTypeDef.jarName = jarName
+    hashMapTypeDef.physicalName = physicalNameString
+
+    hashMapTypeDef
+  }
+
+  private def getListTypeDef: ListTypeDef = {
+
+    val objectFormat = "JSON"
+    val implementationName = "implementationName"
+    val typeNameSpace = "system"
+    val typeName = "int"
+    val listType = MdMgr.GetMdMgr.MakeList(nameSpace, name, typeNameSpace, typeName, version, ownerId, tenantId, uniqID, mdElementId)
+
+    listType.tranId = transId
+    listType.origDef = origDef
+    listType.ObjectDefinition(objectDefinition)
+    val objFmt: ObjFormatType.FormatType = ObjFormatType.fromString(objectFormat)
+    listType.ObjectFormat(objFmt)
+    listType.uniqueId = uniqID
+    listType.creationTime = creationTime
+    listType.modTime = modTime
+    listType.description = description
+    listType.author = author
+    listType.mdElemStructVer = mdElemStructVer
+    listType.implementationName(implementationName)
+    listType.active = isActive
+    listType.deleted = isDeleted
+    listType.dependencyJarNames = dependencyJar
+    listType.jarName = jarName
+    listType.physicalName = physicalNameString
+
+    listType
+  }
+
+  private def getQueueTypeDef: QueueTypeDef = {
+
+    val objectFormat = "JSON"
+    val implementationName = "implementationName"
+
+    val typeNameSpace = "system"
+    val typeName = "int"
+    val queueType = MdMgr.GetMdMgr.MakeQueue(nameSpace, name, typeNameSpace, typeName, version, ownerId, tenantId, uniqID, mdElementId)
+
+    queueType.tranId = transId
+    queueType.origDef = origDef
+    queueType.ObjectDefinition(objectDefinition)
+    val objFmt: ObjFormatType.FormatType = ObjFormatType.fromString(objectFormat)
+    queueType.ObjectFormat(objFmt)
+    queueType.uniqueId = uniqID
+    queueType.creationTime = creationTime
+    queueType.modTime = modTime
+    queueType.description = description
+    queueType.author = author
+    queueType.mdElemStructVer = mdElemStructVer
+    queueType.implementationName(implementationName)
+    queueType.active = isActive
+    queueType.deleted = isDeleted
+    queueType.dependencyJarNames = dependencyJar
+    queueType.jarName = jarName
+    queueType.physicalName = physicalNameString
+
+    queueType
+  }
+
+  private def getTupleTypeDef: TupleTypeDef = {
+
+    val objectFormat = "JSON"
+    val implementationName = "implementationName"
+
+    val typeNameSpace = "system"
+    val typeName = "Int"
+    val tuples = Array((typeNameSpace, typeName))
+
+    val tupleType = MdMgr.GetMdMgr.MakeTupleType(nameSpace, name, tuples, version, ownerId, tenantId, uniqID, mdElementId)
+
+    tupleType.tranId = transId
+    tupleType.origDef = origDef
+    tupleType.ObjectDefinition(objectDefinition)
+    val objFmt: ObjFormatType.FormatType = ObjFormatType.fromString(objectFormat)
+    tupleType.ObjectFormat(objFmt)
+    tupleType.uniqueId = uniqID
+    tupleType.creationTime = creationTime
+    tupleType.modTime = modTime
+    tupleType.description = description
+    tupleType.author = author
+    tupleType.mdElemStructVer = mdElemStructVer
+    tupleType.implementationName(implementationName)
+    tupleType.active = isActive
+    tupleType.deleted = isDeleted
+    tupleType.dependencyJarNames = dependencyJar
+    tupleType.jarName = jarName
+    tupleType.physicalName = physicalNameString
+
+    tupleType
   }
 
   private def getJarDef: JarDef = {
@@ -806,8 +1473,7 @@ class MetadataAPISerializationTest extends FlatSpec with BeforeAndAfterAll {
     val typeString = "typeString"
     val className = "ClassName"
     val adapterSpecificCfg = "AdapterSpecificCfg"
-    val tenantId = "System"
-    val fullAdapterConfig = ""
+    val fullAdapterConfig = "FullConfig"
 
     val adapterInfo = MdMgr.GetMdMgr.MakeAdapter(
       name,

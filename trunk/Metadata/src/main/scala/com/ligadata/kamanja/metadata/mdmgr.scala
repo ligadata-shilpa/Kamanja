@@ -69,8 +69,10 @@ class MdMgr {
   private var attrbDefs = new HashMap[String, Set[BaseAttributeDef]] with MultiMap[String, BaseAttributeDef]
   private var modelDefs = new HashMap[String, Set[ModelDef]] with MultiMap[String, ModelDef]
   private var factoryOfMdlInstFactories = new HashMap[String, Set[FactoryOfModelInstanceFactoryDef]] with MultiMap[String, FactoryOfModelInstanceFactoryDef]
-  private var schemaIdMap = new HashMap[Int, ContainerDef] // For now we consider ContainerDef & MessageDef
-  private var schemaIdToElemntIdMap = new HashMap[Int, Long] // For now we consider ContainerDef & MessageDef
+  private var schemaIdMap = new HashMap[Int, ContainerDef]
+  // For now we consider ContainerDef & MessageDef
+  private var schemaIdToElemntIdMap = new HashMap[Int, Long]
+  // For now we consider ContainerDef & MessageDef
   private var elementIdMap = new HashMap[Long, BaseElem] // For now we consider ContainerDef, MessageDef & ModelDef
 
   // FunctionDefs keyed by function signature nmspc.name(argtyp1,argtyp2,...) map 
@@ -473,7 +475,7 @@ class MdMgr {
     */
 
   @throws(classOf[NoSuchElementException])
-  private def MakeContainerTypeMap(nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)], ver: Long, jarNm: String, depJars: Array[String], primaryKeys: List[(String, List[String])], foreignKeys: List[(String, List[String], String, List[String])], partitionKey: Array[String], ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema:String, persist: Boolean /* = false */): MappedMsgTypeDef = {
+  private def MakeContainerTypeMap(nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)], ver: Long, jarNm: String, depJars: Array[String], primaryKeys: List[(String, List[String])], foreignKeys: List[(String, List[String], String, List[String])], partitionKey: Array[String], ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema: String, persist: Boolean /* = false */): MappedMsgTypeDef = {
     val st = new MappedMsgTypeDef
     val depJarSet = scala.collection.mutable.Set[String]()
 
@@ -514,7 +516,7 @@ class MdMgr {
     * @return the constructed StructTypeDef
     */
 
-  def MakeStructDef(nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)], ver: Long, jarNm: String, depJars: Array[String], primaryKeys: List[(String, List[String])], foreignKeys: List[(String, List[String], String, List[String])], partitionKey: Array[String], ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema:String, persist: Boolean /* = false */): StructTypeDef = {
+  def MakeStructDef(nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)], ver: Long, jarNm: String, depJars: Array[String], primaryKeys: List[(String, List[String])], foreignKeys: List[(String, List[String], String, List[String])], partitionKey: Array[String], ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema: String, persist: Boolean /* = false */): StructTypeDef = {
     var sd = new StructTypeDef
 
     val msgNm = MdMgr.MkFullName(nameSpace, name)
@@ -814,16 +816,16 @@ class MdMgr {
     attr
   }
 
-  def ContainerForSchemaId(schemaId:Int): Option[ContainerDef] = {
+  def ContainerForSchemaId(schemaId: Int): Option[ContainerDef] = {
     val cont = schemaIdMap.getOrElse(schemaId, null)
     if (cont != null) Some(cont) else None
   }
 
-  def ElementIdForSchemaId(schemaId:Int): Long = {
+  def ElementIdForSchemaId(schemaId: Int): Long = {
     schemaIdToElemntIdMap.getOrElse(schemaId, 0)
   }
 
-  def ContainerForElementId(elemId:Long): Option[BaseElem] = {
+  def ContainerForElementId(elemId: Long): Option[BaseElem] = {
     val elem = elementIdMap.getOrElse(elemId, null)
     if (elem != null) Some(elem) else None
   }
@@ -1193,7 +1195,7 @@ class MdMgr {
   // We should not have physicalName. This container type has type inside, which has PhysicalName
   @throws(classOf[AlreadyExistsException])
   @throws(classOf[NoSuchElementException])
-  def MakeArray(nameSpace: String, name: String, tpNameSp: String, tpName: String, numDims: Int, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, ver: Long, recompile: Boolean = false/* , persist: Boolean = false */): ArrayTypeDef = {
+  def MakeArray(nameSpace: String, name: String, tpNameSp: String, tpName: String, numDims: Int, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, ver: Long, recompile: Boolean = false /* , persist: Boolean = false */): ArrayTypeDef = {
     val typ = Type(nameSpace, name, -1, false)
     if (typ != None) {
       if (recompile) {
@@ -1241,7 +1243,7 @@ class MdMgr {
   // We should not have physicalName. This container type has type inside, which has PhysicalName
   @throws(classOf[AlreadyExistsException])
   @throws(classOf[NoSuchElementException])
-  def MakeArrayBuffer(nameSpace: String, name: String, tpNameSp: String, tpName: String, numDims: Int, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, ver: Long, recompile: Boolean = false/* , persist: Boolean = false */): ArrayBufTypeDef = {
+  def MakeArrayBuffer(nameSpace: String, name: String, tpNameSp: String, tpName: String, numDims: Int, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, ver: Long, recompile: Boolean = false /* , persist: Boolean = false */): ArrayBufTypeDef = {
     val typ = Type(nameSpace, name, -1, false)
     if (typ != None) {
       if (recompile) {
@@ -1273,6 +1275,7 @@ class MdMgr {
     val st = new ArrayBufTypeDef
     SetBaseElem(st, nameSpace, name, ver, null, depJars, ownerId, tenantId, uniqueId, mdElementId)
     st.elemDef = elemDef
+    st.arrayDims = numDims
     st
   }
 
@@ -1363,7 +1366,7 @@ class MdMgr {
   // We should not have physicalName. This container type has type inside, which has PhysicalName
   @throws(classOf[AlreadyExistsException])
   @throws(classOf[NoSuchElementException])
-  def MakeSet(nameSpace: String, name: String, tpNameSp: String, tpName: String, ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, recompile: Boolean = false/* , persist: Boolean = false */): SetTypeDef = {
+  def MakeSet(nameSpace: String, name: String, tpNameSp: String, tpName: String, ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, recompile: Boolean = false /* , persist: Boolean = false */): SetTypeDef = {
     val typ = Type(nameSpace, name, -1, false)
     if (typ != None) {
       if (recompile) {
@@ -1450,7 +1453,7 @@ class MdMgr {
   // We should not have physicalName. This container type has type inside, which has PhysicalName
   @throws(classOf[AlreadyExistsException])
   @throws(classOf[NoSuchElementException])
-  def MakeTreeSet(nameSpace: String, name: String, tpNameSp: String, tpName: String, ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, recompile: Boolean = false/* , persist: Boolean = false */): TreeSetTypeDef = {
+  def MakeTreeSet(nameSpace: String, name: String, tpNameSp: String, tpName: String, ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, recompile: Boolean = false /* , persist: Boolean = false */): TreeSetTypeDef = {
 
     val typ = Type(nameSpace, name, -1, false)
     if (typ != None) {
@@ -1498,7 +1501,7 @@ class MdMgr {
   // We should not have physicalName. This container type has type inside, which has PhysicalName
   @throws(classOf[AlreadyExistsException])
   @throws(classOf[NoSuchElementException])
-  def MakeSortedSet(nameSpace: String, name: String, tpNameSp: String, tpName: String, ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, recompile: Boolean = false/* , persist: Boolean = false */): SortedSetTypeDef = {
+  def MakeSortedSet(nameSpace: String, name: String, tpNameSp: String, tpName: String, ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, recompile: Boolean = false /* , persist: Boolean = false */): SortedSetTypeDef = {
     val typ = Type(nameSpace, name, -1, false)
     if (typ != None) {
       if (recompile) {
@@ -1546,7 +1549,7 @@ class MdMgr {
   // We should not have physicalName. This container type has type inside, which has PhysicalName
   @throws(classOf[AlreadyExistsException])
   @throws(classOf[NoSuchElementException])
-  def MakeMap(nameSpace: String, name: String, key: (String, String), value: (String, String), ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, recompile: Boolean = false/* , persist: Boolean = false */): MapTypeDef = {
+  def MakeMap(nameSpace: String, name: String, key: (String, String), value: (String, String), ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, recompile: Boolean = false /* , persist: Boolean = false */): MapTypeDef = {
     val typ = Type(nameSpace, name, -1, false)
     if (typ != None) {
       if (recompile) {
@@ -1603,7 +1606,7 @@ class MdMgr {
   // We should not have physicalName. This container type has type inside, which has PhysicalName
   @throws(classOf[AlreadyExistsException])
   @throws(classOf[NoSuchElementException])
-  def MakeImmutableMap(nameSpace: String, name: String, key: (String, String), value: (String, String), ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, recompile: Boolean = false/* , persist: Boolean = false */): ImmutableMapTypeDef = {
+  def MakeImmutableMap(nameSpace: String, name: String, key: (String, String), value: (String, String), ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, recompile: Boolean = false /* , persist: Boolean = false */): ImmutableMapTypeDef = {
     val typ = Type(nameSpace, name, -1, false)
     if (typ != None) {
       if (recompile) {
@@ -1913,7 +1916,7 @@ class MdMgr {
 
   @throws(classOf[AlreadyExistsException])
   @throws(classOf[NoSuchElementException])
-  def MakeFixedMsg(nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)], ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema:String, ver: Long = 1, jarNm: String = null, depJars: Array[String] = null, primaryKeys: List[(String, List[String])] = null, foreignKeys: List[(String, List[String], String, List[String])] = null, partitionKey: Array[String] = null, recompile: Boolean = false, persist: Boolean /* = false */): MessageDef = {
+  def MakeFixedMsg(nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)], ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema: String, ver: Long = 1, jarNm: String = null, depJars: Array[String] = null, primaryKeys: List[(String, List[String])] = null, foreignKeys: List[(String, List[String], String, List[String])] = null, partitionKey: Array[String] = null, recompile: Boolean = false, persist: Boolean /* = false */): MessageDef = {
 
     val latestActiveMessage = Message(nameSpace, name, -1, false)
     if (latestActiveMessage != None) {
@@ -1961,7 +1964,7 @@ class MdMgr {
 
   @throws(classOf[AlreadyExistsException])
   @throws(classOf[NoSuchElementException])
-  def MakeFixedContainer(nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)], ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema:String, ver: Long = 1, jarNm: String = null, depJars: Array[String] = null, primaryKeys: List[(String, List[String])] = null, foreignKeys: List[(String, List[String], String, List[String])] = null, partitionKey: Array[String] = null, recompile: Boolean = false, persist: Boolean /* = false */): ContainerDef = {
+  def MakeFixedContainer(nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)], ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema: String, ver: Long = 1, jarNm: String = null, depJars: Array[String] = null, primaryKeys: List[(String, List[String])] = null, foreignKeys: List[(String, List[String], String, List[String])] = null, partitionKey: Array[String] = null, recompile: Boolean = false, persist: Boolean /* = false */): ContainerDef = {
 
     val latestActiveContainer = Container(nameSpace, name, -1, false)
     if (latestActiveContainer != None) {
@@ -2012,7 +2015,7 @@ class MdMgr {
 
   @throws(classOf[AlreadyExistsException])
   @throws(classOf[NoSuchElementException])
-  def MakeMappedMsg(nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)], ver: Long, jarNm: String, depJars: Array[String], primaryKeys: List[(String, List[String])], foreignKeys: List[(String, List[String], String, List[String])], partitionKey: Array[String], recompile: Boolean, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema:String, persist: Boolean): MessageDef = {
+  def MakeMappedMsg(nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)], ver: Long, jarNm: String, depJars: Array[String], primaryKeys: List[(String, List[String])], foreignKeys: List[(String, List[String], String, List[String])], partitionKey: Array[String], recompile: Boolean, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema: String, persist: Boolean): MessageDef = {
     val latestActiveMessage = Message(nameSpace, name, -1, false)
     if (latestActiveMessage != None) {
       if (recompile) {
@@ -2058,7 +2061,7 @@ class MdMgr {
 
   @throws(classOf[AlreadyExistsException])
   @throws(classOf[NoSuchElementException])
-  def MakeMappedContainer(nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)], ver: Long, jarNm: String, depJars: Array[String], primaryKeys: List[(String, List[String])], foreignKeys: List[(String, List[String], String, List[String])], partitionKey: Array[String], ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema:String, recompile: Boolean = false, persist: Boolean /* = false */): ContainerDef = {
+  def MakeMappedContainer(nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)], ver: Long, jarNm: String, depJars: Array[String], primaryKeys: List[(String, List[String])], foreignKeys: List[(String, List[String], String, List[String])], partitionKey: Array[String], ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema: String, recompile: Boolean = false, persist: Boolean /* = false */): ContainerDef = {
 
     val latestActiveContainer = Container(nameSpace, name, -1, false)
     if (latestActiveContainer != None) {
@@ -2107,7 +2110,7 @@ class MdMgr {
     */
   @throws(classOf[AlreadyExistsException])
   @throws(classOf[NoSuchElementException])
-  def MakeMappedMsg(nameSpace: String, name: String, physicalName: String, argTypNmSpName: (String, String), argNames: List[String], ver: Long, jarNm: String, depJars: Array[String], primaryKeys: List[(String, List[String])], foreignKeys: List[(String, List[String], String, List[String])], partitionKey: Array[String], recompile: Boolean, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema:String, persist: Boolean): MessageDef = {
+  def MakeMappedMsg(nameSpace: String, name: String, physicalName: String, argTypNmSpName: (String, String), argNames: List[String], ver: Long, jarNm: String, depJars: Array[String], primaryKeys: List[(String, List[String])], foreignKeys: List[(String, List[String], String, List[String])], partitionKey: Array[String], recompile: Boolean, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema: String, persist: Boolean): MessageDef = {
 
     val latestActiveMessage = Message(nameSpace, name, -1, false)
     if (latestActiveMessage != None) {
@@ -2783,7 +2786,7 @@ class MdMgr {
 
   @throws(classOf[AlreadyExistsException])
   @throws(classOf[NoSuchElementException])
-  def AddFixedMsg(nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)], ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema:String, ver: Long = 1, jarNm: String = null, depJars: Array[String] = Array[String](), primaryKeys: List[(String, List[String])] = null, foreignKeys: List[(String, List[String], String, List[String])] = null, partitionKey: Array[String] = null): Unit = {
+  def AddFixedMsg(nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)], ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema: String, ver: Long = 1, jarNm: String = null, depJars: Array[String] = Array[String](), primaryKeys: List[(String, List[String])] = null, foreignKeys: List[(String, List[String], String, List[String])] = null, partitionKey: Array[String] = null): Unit = {
     AddMsg(MakeFixedMsg(nameSpace, name, physicalName, args, ownerId, tenantId, uniqueId, mdElementId, schemaId, avroSchema, ver, jarNm, depJars, primaryKeys, foreignKeys, partitionKey, false, false))
   }
 
@@ -2804,7 +2807,7 @@ class MdMgr {
 
   @throws(classOf[AlreadyExistsException])
   @throws(classOf[NoSuchElementException])
-  def AddMappedMsg(nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)], ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema:String, ver: Long = 1, jarNm: String = null, depJars: Array[String] = Array[String](), primaryKeys: List[(String, List[String])] = null, foreignKeys: List[(String, List[String], String, List[String])] = null, partitionKey: Array[String] = null): Unit = {
+  def AddMappedMsg(nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)], ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema: String, ver: Long = 1, jarNm: String = null, depJars: Array[String] = Array[String](), primaryKeys: List[(String, List[String])] = null, foreignKeys: List[(String, List[String], String, List[String])] = null, partitionKey: Array[String] = null): Unit = {
     AddMsg(MakeMappedMsg(nameSpace, name, physicalName, args, ver, jarNm, depJars, primaryKeys, foreignKeys, partitionKey, false, ownerId, tenantId, uniqueId, mdElementId, schemaId, avroSchema, false))
   }
 
@@ -2825,7 +2828,7 @@ class MdMgr {
     */
   @throws(classOf[AlreadyExistsException])
   @throws(classOf[NoSuchElementException])
-  def AddMappedMsg(nameSpace: String, name: String, physicalName: String, argTypNmSpName: (String, String), argNames: List[String], ver: Long, jarNm: String, depJars: Array[String], primaryKeys: List[(String, List[String])], foreignKeys: List[(String, List[String], String, List[String])], partitionKey: Array[String], ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema:String): Unit = {
+  def AddMappedMsg(nameSpace: String, name: String, physicalName: String, argTypNmSpName: (String, String), argNames: List[String], ver: Long, jarNm: String, depJars: Array[String], primaryKeys: List[(String, List[String])], foreignKeys: List[(String, List[String], String, List[String])], partitionKey: Array[String], ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema: String): Unit = {
     AddMsg(MakeMappedMsg(nameSpace, name, physicalName, argTypNmSpName, argNames, ver, jarNm, depJars, primaryKeys, foreignKeys, partitionKey, false, ownerId, tenantId, uniqueId, mdElementId, schemaId, avroSchema, false))
   }
 
@@ -2843,7 +2846,7 @@ class MdMgr {
     }
     val typ = msg.containerType.asInstanceOf[ContainerTypeDef]
     typeDefs.addBinding(typ.FullName, typ)
-      msgDefs.addBinding(msg.FullName, msg)
+    msgDefs.addBinding(msg.FullName, msg)
     if (msg.containerType != null && msg.containerType.schemaId > 0) {
       schemaIdToElemntIdMap(msg.containerType.schemaId) = msg.MdElementId
       schemaIdMap(msg.containerType.schemaId) = msg
@@ -2872,7 +2875,7 @@ class MdMgr {
 
   @throws(classOf[AlreadyExistsException])
   @throws(classOf[NoSuchElementException])
-  def AddFixedContainer(nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)], ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema:String, ver: Long = 1, jarNm: String = null, depJars: Array[String] = Array[String](), primaryKeys: List[(String, List[String])] = null, foreignKeys: List[(String, List[String], String, List[String])] = null, partitionKey: Array[String] = null): Unit = {
+  def AddFixedContainer(nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)], ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema: String, ver: Long = 1, jarNm: String = null, depJars: Array[String] = Array[String](), primaryKeys: List[(String, List[String])] = null, foreignKeys: List[(String, List[String], String, List[String])] = null, partitionKey: Array[String] = null): Unit = {
     AddContainer(MakeFixedContainer(nameSpace, name, physicalName, args, ownerId, tenantId, uniqueId, mdElementId, schemaId, avroSchema, ver, jarNm, depJars, primaryKeys, foreignKeys, partitionKey, false, false))
   }
 
@@ -2893,7 +2896,7 @@ class MdMgr {
 
   @throws(classOf[AlreadyExistsException])
   @throws(classOf[NoSuchElementException])
-  def AddMappedContainer(nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)], ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema:String, ver: Long = 1, jarNm: String = null, depJars: Array[String] = Array[String](), primaryKeys: List[(String, List[String])] = null, foreignKeys: List[(String, List[String], String, List[String])] = null, partitionKey: Array[String] = null): Unit = {
+  def AddMappedContainer(nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)], ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema: String, ver: Long = 1, jarNm: String = null, depJars: Array[String] = Array[String](), primaryKeys: List[(String, List[String])] = null, foreignKeys: List[(String, List[String], String, List[String])] = null, partitionKey: Array[String] = null): Unit = {
     AddContainer(MakeMappedContainer(nameSpace, name, physicalName, args, ver, jarNm, depJars, primaryKeys, foreignKeys, partitionKey, ownerId, tenantId, uniqueId, mdElementId, schemaId, avroSchema, false, false))
   }
 
@@ -2936,28 +2939,28 @@ class MdMgr {
     * variables used/generated by the model.  The input and output information is used by the online learning engine
     * manager to generate the necessary order execution between the scheduled model working set.
     *
-    * @param nameSpace                     - the namespace in which this model should be cataloged
-    * @param name                          - the name of the model.
-    * @param physicalName                  - the fully qualified className for the compiled model.
-    * @param modelRep                      - the sort of model input this is (e.g., a Jar, a PMML src string, et al)
-    * @param inputMsgSets                  - Sets of Messages it depends on (attributes referred in this model). Each set must met (all messages should available) to trigger this model
-    * @param outputMsgs                    - All possible output messages produced by this model
-    * @param isReusable                    - can instances of this model be cached by the engine and reused on subsequent calls for same type?
-    * @param objectDefStr                  - model definition String
-    * @param miningModelType               :  a visual identifier that can be queried for and/or displayed. Values
-    *                                      for this currently include any of the dmg.org model types or our own types... any {BaselineModel, ClusteringModel,
-    *                                      GeneralRegressionModel, MiningModel, NaiveBayesModel, NearestNeighborModel, NeuralNetwork, RegressionModel,
-    *                                      RuleSetModel, SequenceModel, Scorecard, SupportVectorMachineModel, TextModel, TimeSeriesModel, TreeModel,
-    *                                      CustomScala, CustomJava, Unknown}
-    * @param ver                           - a long... the version number assigned to this model ... by default '1'
-    * @param jarNm                         - the name of the jar sans path.  The path is prescribed by the engine configuration
-    * @param depJars                       - the jars upon which the jarNm depends in order to execute
+    * @param nameSpace       - the namespace in which this model should be cataloged
+    * @param name            - the name of the model.
+    * @param physicalName    - the fully qualified className for the compiled model.
+    * @param modelRep        - the sort of model input this is (e.g., a Jar, a PMML src string, et al)
+    * @param inputMsgSets    - Sets of Messages it depends on (attributes referred in this model). Each set must met (all messages should available) to trigger this model
+    * @param outputMsgs      - All possible output messages produced by this model
+    * @param isReusable      - can instances of this model be cached by the engine and reused on subsequent calls for same type?
+    * @param objectDefStr    - model definition String
+    * @param miningModelType :  a visual identifier that can be queried for and/or displayed. Values
+    *                        for this currently include any of the dmg.org model types or our own types... any {BaselineModel, ClusteringModel,
+    *                        GeneralRegressionModel, MiningModel, NaiveBayesModel, NearestNeighborModel, NeuralNetwork, RegressionModel,
+    *                        RuleSetModel, SequenceModel, Scorecard, SupportVectorMachineModel, TextModel, TimeSeriesModel, TreeModel,
+    *                        CustomScala, CustomJava, Unknown}
+    * @param ver             - a long... the version number assigned to this model ... by default '1'
+    * @param jarNm           - the name of the jar sans path.  The path is prescribed by the engine configuration
+    * @param depJars         - the jars upon which the jarNm depends in order to execute
     * @return the ModelDef instance as a measure of convenience
     *
     */
   def AddModelDef(nameSpace: String, name: String, physicalName: String, modelRep: ModelRepresentation.ModelRepresentation, inputMsgSets: Array[Array[MessageAndAttributes]], outputMsgs: Array[String],
                   isReusable: Boolean, objectDefStr: String, miningModelType: MiningModelType.MiningModelType, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, ver: Long = 1, jarNm: String = null, depJars: Array[String] = Array[String](), modelConfig: String = ""): Unit = {
-    AddModelDef(MakeModelDef(nameSpace, name, physicalName, ownerId, tenantId, uniqueId, mdElementId, modelRep,  inputMsgSets, outputMsgs, isReusable, objectDefStr, miningModelType, ver, jarNm, depJars, false, false, modelConfig), false)
+    AddModelDef(MakeModelDef(nameSpace, name, physicalName, ownerId, tenantId, uniqueId, mdElementId, modelRep, inputMsgSets, outputMsgs, isReusable, objectDefStr, miningModelType, ver, jarNm, depJars, false, false, modelConfig), false)
   }
 
   def AddModelDef(mdl: ModelDef, allowLatestVersion: Boolean): Unit = {
@@ -3029,7 +3032,7 @@ class MdMgr {
   }
 
   def GetNode(nodeId: String): NodeInfo = {
-    return nodes.getOrElse(nodeId,null)
+    return nodes.getOrElse(nodeId, null)
   }
 
   def RemoveNode(nodeId: String): Unit = {
@@ -3087,14 +3090,14 @@ class MdMgr {
     AddTenantInfo(MakeTenantInfo(tenantId, description, primaryDataStore, cacheConfig))
   }
 
-  def AddTenantInfo(tenant : TenantInfo) : Boolean = {
+  def AddTenantInfo(tenant: TenantInfo): Boolean = {
     if (tenantIdMap.contains(tenant.tenantId.trim.toLowerCase))
       throw new AlreadyExistsException(s"Tenant ${tenant.tenantId} already exists.", null)
     tenantIdMap(tenant.tenantId.trim.toLowerCase) = tenant
     true
   }
 
-  def UpdateTenantInfo(tenant : TenantInfo) : Boolean = {
+  def UpdateTenantInfo(tenant: TenantInfo): Boolean = {
     if (tenant.tenantId.trim.equalsIgnoreCase("System") && tenantIdMap.contains("System".toLowerCase)) {
       throw new AlreadyExistsException(s"System is system tenant. you can not repalce it.", null)
     }
@@ -3106,11 +3109,11 @@ class MdMgr {
     new TenantInfo(tenantId.trim, description, primaryDataStore, cacheConfig)
   }
 
-  def GetTenantInfo(tenantId: String) : TenantInfo = {
+  def GetTenantInfo(tenantId: String): TenantInfo = {
     tenantIdMap.getOrElse(tenantId.trim.toLowerCase, null)
   }
 
-  def GetAllTenantInfos : Array[TenantInfo] = {
+  def GetAllTenantInfos: Array[TenantInfo] = {
     tenantIdMap.values.toArray
   }
 
@@ -3121,78 +3124,24 @@ class MdMgr {
   }
 
   /**
-      * Construct a SerializeDeserializeConfig instance and add it to the metadata.
-      * @param nameSpace the namespace for this SerializeDeserializeConfig
-      * @param name its serializer name
-      * @param version its serializer version
-      * @param serializerType the serializer type
-      * @param physicalName the fqClassname that contains the behavior (found in the jarNm)
-      * @param ownerId the perpetrator of this serializer
-      * @param uniqueId a unique identifier that uniquely describes this object (reserved)
-      * @param mdElementId another unique identifer (reserved)
-      * @param jarNm the simple jar that is to be loaded in order to use the described SerializeDeserialize implementation
-      *              this config describes
-      * @param depJars the array of jars that are to be loaded so the SerializeDeserialize implementation this config
-      *                describes can function
-      * @return Unit
-      */
-    @throws(classOf[AlreadyExistsException])
-    def AddSerializer(nameSpace: String
-                      , name: String
-                      , version: Long = 1
-                      , serializerType: SerializeDeserializeType.SerDeserType
-                      , physicalName: String
-                      , ownerId: String, tenantId: String
-                      , uniqueId: Long
-                      , mdElementId: Long
-                      , jarNm: String = null
-                      , depJars: Array[String] = null): Unit = {
-        AddSerializer(MakeSerializer(nameSpace
-                    , name
-                    , version
-                    , serializerType
-                    , physicalName
-                    , ownerId
-                    , tenantId
-                    , uniqueId
-                    , mdElementId
-                    , jarNm
-                    , depJars))
-    }
-
-    /**
-      * Add a SerializeDeserializeConfig instance to the map designated to hold them.
-      * @param config the prepared SerializeDeserializeConfig object
-      * @return true if the object was added to the map (exception is thrown if one exists with this name)
-      */
-    @throws(classOf[AlreadyExistsException])
-    def AddSerializer(config : SerializeDeserializeConfig) : Boolean = {
-        val added : Boolean = if (serializers.contains(config.FullName.toLowerCase)) {
-            throw new AlreadyExistsException(s"a SerializeDeserializeConfig already exists with the name ${config.FullName}.", null)
-        } else {
-            serializers(config.FullName.toLowerCase) = config
-            true
-        }
-        added
-    }
-
-    /**
-      * Construct a SerializeDeserializeConfig from the supplied arguments.
-      * @param nameSpace the namespace for this SerializeDeserializeConfig
-      * @param name its serializer name
-      * @param version its serializer version
-      * @param serializerType the serializer type
-      * @param physicalName the fqClassname that contains the behavior (found in the jarNm)
-      * @param ownerId the perpetrator of this serializer
-      * @param uniqueId a unique identifier that uniquely describes this object (reserved)
-      * @param mdElementId another unique identifer (reserved)
-      * @param jarNm the simple jar that is to be loaded in order to use the described SerializeDeserialize implementation
-      *              this config describes
-      * @param depJars the array of jars that are to be loaded so the SerializeDeserialize implementation this config
-      *                describes can function
-      * @return a SerializeDeserializeConfig
-      */
-    def MakeSerializer(nameSpace: String
+    * Construct a SerializeDeserializeConfig instance and add it to the metadata.
+    *
+    * @param nameSpace      the namespace for this SerializeDeserializeConfig
+    * @param name           its serializer name
+    * @param version        its serializer version
+    * @param serializerType the serializer type
+    * @param physicalName   the fqClassname that contains the behavior (found in the jarNm)
+    * @param ownerId        the perpetrator of this serializer
+    * @param uniqueId       a unique identifier that uniquely describes this object (reserved)
+    * @param mdElementId    another unique identifer (reserved)
+    * @param jarNm          the simple jar that is to be loaded in order to use the described SerializeDeserialize implementation
+    *                       this config describes
+    * @param depJars        the array of jars that are to be loaded so the SerializeDeserialize implementation this config
+    *                       describes can function
+    * @return Unit
+    */
+  @throws(classOf[AlreadyExistsException])
+  def AddSerializer(nameSpace: String
                     , name: String
                     , version: Long = 1
                     , serializerType: SerializeDeserializeType.SerDeserType
@@ -3201,48 +3150,106 @@ class MdMgr {
                     , uniqueId: Long
                     , mdElementId: Long
                     , jarNm: String = null
-                    , depJars: Array[String] = null): SerializeDeserializeConfig = {
+                    , depJars: Array[String] = null): Unit = {
+    AddSerializer(MakeSerializer(nameSpace
+      , name
+      , version
+      , serializerType
+      , physicalName
+      , ownerId
+      , tenantId
+      , uniqueId
+      , mdElementId
+      , jarNm
+      , depJars))
+  }
 
-        val depJarSet = scala.collection.mutable.Set[String]()
-
-        /** Instantiate the model definition.  Update the base element with basic id information */
-        val cfg: SerializeDeserializeConfig = new SerializeDeserializeConfig(serializerType)
-
-        if (depJars != null) depJarSet ++= depJars
-        val dJars : Array[String] = if (depJarSet.nonEmpty) depJarSet.toArray else null
-
-        cfg.PhysicalName(physicalName)
-        SetBaseElem(cfg, nameSpace, name, version, jarNm, dJars, ownerId, tenantId, uniqueId, mdElementId)
-
-        cfg
+  /**
+    * Add a SerializeDeserializeConfig instance to the map designated to hold them.
+    *
+    * @param config the prepared SerializeDeserializeConfig object
+    * @return true if the object was added to the map (exception is thrown if one exists with this name)
+    */
+  @throws(classOf[AlreadyExistsException])
+  def AddSerializer(config: SerializeDeserializeConfig): Boolean = {
+    val added: Boolean = if (serializers.contains(config.FullName.toLowerCase)) {
+      throw new AlreadyExistsException(s"a SerializeDeserializeConfig already exists with the name ${config.FullName}.", null)
+    } else {
+      serializers(config.FullName.toLowerCase) = config
+      true
     }
+    added
+  }
+
+  /**
+    * Construct a SerializeDeserializeConfig from the supplied arguments.
+    *
+    * @param nameSpace      the namespace for this SerializeDeserializeConfig
+    * @param name           its serializer name
+    * @param version        its serializer version
+    * @param serializerType the serializer type
+    * @param physicalName   the fqClassname that contains the behavior (found in the jarNm)
+    * @param ownerId        the perpetrator of this serializer
+    * @param uniqueId       a unique identifier that uniquely describes this object (reserved)
+    * @param mdElementId    another unique identifer (reserved)
+    * @param jarNm          the simple jar that is to be loaded in order to use the described SerializeDeserialize implementation
+    *                       this config describes
+    * @param depJars        the array of jars that are to be loaded so the SerializeDeserialize implementation this config
+    *                       describes can function
+    * @return a SerializeDeserializeConfig
+    */
+  def MakeSerializer(nameSpace: String
+                     , name: String
+                     , version: Long = 1
+                     , serializerType: SerializeDeserializeType.SerDeserType
+                     , physicalName: String
+                     , ownerId: String, tenantId: String
+                     , uniqueId: Long
+                     , mdElementId: Long
+                     , jarNm: String = null
+                     , depJars: Array[String] = null): SerializeDeserializeConfig = {
+
+    val depJarSet = scala.collection.mutable.Set[String]()
+
+    /** Instantiate the model definition.  Update the base element with basic id information */
+    val cfg: SerializeDeserializeConfig = new SerializeDeserializeConfig(serializerType)
+
+    if (depJars != null) depJarSet ++= depJars
+    val dJars: Array[String] = if (depJarSet.nonEmpty) depJarSet.toArray else null
+
+    cfg.PhysicalName(physicalName)
+    SetBaseElem(cfg, nameSpace, name, version, jarNm, dJars, ownerId, tenantId, uniqueId, mdElementId)
+
+    cfg
+  }
 
 
-    /** Retrieve the SerializeDeserializerConfig with the supplied namespace.name
-      *
-      * @param fullName the serializer sought
-      * @return the corresponding SerializeDeserializeConfig or null if not found
-      */
-    def GetSerializer(fullName : String) : SerializeDeserializeConfig = {
-        serializers.getOrElse(fullName,null)
-    }
+  /** Retrieve the SerializeDeserializerConfig with the supplied namespace.name
+    *
+    * @param fullName the serializer sought
+    * @return the corresponding SerializeDeserializeConfig or null if not found
+    */
+  def GetSerializer(fullName: String): SerializeDeserializeConfig = {
+    serializers.getOrElse(fullName, null)
+  }
 
-    /**
-      * Answer an array of the known SerializeDeserializeConfig
-      *
-      * @return an Array[SerializeDeserializeConfig]
-      */
-    def GetAllSerializers : Array[SerializeDeserializeConfig] = {
-        serializers.values.toArray
-    }
+  /**
+    * Answer an array of the known SerializeDeserializeConfig
+    *
+    * @return an Array[SerializeDeserializeConfig]
+    */
+  def GetAllSerializers: Array[SerializeDeserializeConfig] = {
+    serializers.values.toArray
+  }
 
 
   /**
     * GetUserProperty - return a String value of a User Property
-    * @param key: String
+    *
+    * @param key : String
     */
   def GetUserProperty(key: String): UserPropertiesInfo = {
-    configurations.getOrElse(key.toLowerCase(),null)
+    configurations.getOrElse(key.toLowerCase(), null)
   }
 
   def MakeUPProps(clusterId: String): UserPropertiesInfo = {
@@ -3264,8 +3271,8 @@ class MdMgr {
     clusters(ci.clusterId.toLowerCase) = ci
   }
 
-  def GetCluster(clusterId: String): ClusterInfo ={
-    return clusters.getOrElse(clusterId.toLowerCase,null)
+  def GetCluster(clusterId: String): ClusterInfo = {
+    return clusters.getOrElse(clusterId.toLowerCase, null)
   }
 
   def RemoveCluster(clusterId: String): Unit = {
@@ -3334,13 +3341,13 @@ class MdMgr {
   def getConfigChanges: Array[String] = {
     lock.synchronized {
       if (propertyChanged.isEmpty) return new Array[String](0)
-      var changes =  propertyChanged.toArray
+      var changes = propertyChanged.toArray
       propertyChanged.clear
       return changes
     }
   }
 
-  def addConfigChange (in: String) = {
+  def addConfigChange(in: String) = {
     lock.synchronized {
       propertyChanged += in
     }
@@ -3375,6 +3382,7 @@ class MdMgr {
   def ClusterCfgs: scala.collection.immutable.Map[String, ClusterCfgInfo] = {
     clusterCfgs.toMap
   }
+
   // External Functions -- End
 
 }
