@@ -91,12 +91,12 @@ class PosixFileHandler extends SmartFileHandler{
       return false
     }
     try {
-      logger.info(s"PosixFileHandler - Moving file ${fileObject.toString} to ${newFilePath}")
+      logger.debug(s"PosixFileHandler - Moving file ${fileObject.toString} to ${newFilePath}")
       val destFileObj = new File(newFilePath)
 
       if (fileObject.exists()) {
         fileObject.renameTo(destFileObj)
-        logger.info("Move remote file success")
+        logger.debug("Moved remote file success")
         fileFullPath = newFilePath
         return true
       }
@@ -114,10 +114,10 @@ class PosixFileHandler extends SmartFileHandler{
 
   @throws(classOf[KamanjaException])
   def delete() : Boolean = {
-    logger.info(s"Deleting file ($getFullPath)")
+    logger.debug(s"Deleting file ($getFullPath)")
     try {
       fileObject.delete
-      logger.info("Successfully deleted")
+      logger.debug("Successfully deleted")
       return true
     }
     catch {

@@ -95,7 +95,7 @@ class SftpFileHandler extends SmartFileHandler{
 
   @throws(classOf[KamanjaException])
   def openForRead(): InputStream = {
-    logger.info(s"Opening SFTP file ($getFullPath) to read")
+    logger.debug(s"Opening SFTP file ($getFullPath) to read")
 
     try {
       manager = new StandardFileSystemManager()
@@ -119,7 +119,7 @@ class SftpFileHandler extends SmartFileHandler{
         logger.warn(s"Trying to read from SFTP file ($getFullPath) but input stream is null")
         return -1
       }
-      logger.info(s"Reading from SFTP file ($getFullPath)")
+      logger.debug(s"Reading from SFTP file ($getFullPath)")
       in.read(buf, 0, length)
     }
     catch{
@@ -142,7 +142,7 @@ class SftpFileHandler extends SmartFileHandler{
 
       if (remoteSrcFile.exists()) {
         remoteSrcFile.moveTo(remoteDestFile)
-        logger.info("Move remote file success")
+        logger.debug("Moved remote file success")
         remoteFullPath = remoteNewFilePath
         return true
       }
@@ -164,14 +164,14 @@ class SftpFileHandler extends SmartFileHandler{
 
   @throws(classOf[KamanjaException])
   def delete() : Boolean = {
-    logger.info(s"Deleting file ($getFullPath)")
+    logger.debug(s"Deleting file ($getFullPath)")
     try {
       manager  = new StandardFileSystemManager()
       manager.init()
 
       val remoteFile = manager.resolveFile(createConnectionString(connectionConfig, getFullPath), createDefaultOptions(connectionConfig))
       remoteFile.delete()
-      logger.info("Successfully deleted")
+      logger.debug("Successfully deleted")
       return true
     }
     catch {
@@ -188,7 +188,7 @@ class SftpFileHandler extends SmartFileHandler{
 
   @throws(classOf[KamanjaException])
   def close(): Unit = {
-    logger.info(s"closing SFTP file ($getFullPath)")
+    logger.debug(s"closing SFTP file ($getFullPath)")
     /*if(bufferedReader != null)
       bufferedReader.close()*/
     if(in != null)
