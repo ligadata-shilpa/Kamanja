@@ -1814,7 +1814,7 @@ object ModelUtils {
       logger.debug("Fetch the object " + key + " from database ")
       val obj = PersistenceUtils.GetObject(key.toLowerCase, "models")
       logger.debug("Deserialize the object " + key)
-      val model = serializer.DeserializeObjectFromByteArray(obj._2.asInstanceOf[Array[Byte]])
+      val model = MetadataAPISerialization.deserializeMetadata(new String(obj._2.asInstanceOf[Array[Byte]]))//serializer.DeserializeObjectFromByteArray(obj._2.asInstanceOf[Array[Byte]])
       logger.debug("Get the jar from database ")
       val modDef = model.asInstanceOf[ModelDef]
       MetadataAPIImpl.DownloadJarFromDB(modDef)

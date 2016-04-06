@@ -943,7 +943,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       val dispkey = (getObjectType(obj) + "." + obj.FullName + "." + MdMgr.Pad0s2Version(obj.Version)).toLowerCase
       obj.tranId = GetNewTranId
 
-      //val value = JsonSerializer.SerializeObjectToJson(obj)
+
       logger.debug("Serialize the object: name of the object => " + dispkey)
       var value =MetadataAPISerialization.serializeObjectToJson(obj).getBytes //serializer.SerializeObjectToByteArray(obj)
 
