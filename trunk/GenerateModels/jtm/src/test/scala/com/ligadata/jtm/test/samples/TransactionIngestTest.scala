@@ -17,36 +17,40 @@ package com.ligadata.jtm.test
 
 import java.io.File
 
-import com.ligadata.jtm
-import com.ligadata.jtm.CompilerBuilder
-import com.ligadata.jtm.nodes.Root
-import com.ligadata.kamanja.metadata.{MiningModelType, ModelRepresentation, ModelDef}
+import com.ligadata.jtm._
 import org.apache.commons.io.FileUtils
+import org.apache.logging.log4j.LogManager
+
 import org.scalatest.{BeforeAndAfter, FunSuite}
-import org.skyscreamer.jsonassert.JSONAssert
-
 /**
-  * Created by joerg on 3/9/16.
+  *
   */
-class ModelDefTest  extends FunSuite with BeforeAndAfter {
+class TransactionIngestTest  extends FunSuite with BeforeAndAfter {
 
-  test("test01") {
-    val fileInput = getClass.getResource("/modeldeftest/test.jtm").getPath
+  val logger = LogManager.getLogger(this.getClass.getName)
+
+  test("test") {
+
+    val fileInput = getClass.getResource("/samples/finance/transactioningest.jtm").getPath
+    val fileOutput = getClass.getResource("/samples/finance/transactioningest.scala.result").getPath
+    val fileExpected = getClass.getResource("/samples/finance/transactioningest.scala.expected").getPath
     val metadataLocation = getClass.getResource("/metadata").getPath
 
     val compiler = CompilerBuilder.create().
       setSuppressTimestamps().
       setInputFile(fileInput).
+      setOutputFile(fileOutput).
       setMetadataLocation(metadataLocation).
       build()
 
     compiler.Execute()
-    val md: ModelDef =  compiler.MakeModelDef()
 
-    assert(ModelRepresentation.JAR == md.modelRepresentation)
-    assert(MiningModelType.JTM == md.miningModelType)
-    assert("MDName" == md.Name)
-    assert("Description Test" == md.Description)
-    assert("com.ligadata.jtm.test.modeldeftest"==md.NameSpace)
+    val expected = FileUtils.readFileToString(new File(fileExpected))
+    val actual = FileUtils.readFileToString(new File(fileOutput))
+    logger.info("actual path={}", fileOutput)
+    logger.info("expected path={}", fileExpected)
+
+    assert(actual == expected)
   }
+
 }

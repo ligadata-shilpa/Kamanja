@@ -34,7 +34,7 @@ class FileAdapterMonitoringConfig {
   var fileBufferingTimeout = 300 // in seconds
   var targetMoveDir = ""
   var consumersCount : Int = _
-  var workerBufferSize : Int = 16 //buffer size in MB to read messages from files
+  var workerBufferSize : Int = 4 //buffer size in MB to read messages from files
   var messageSeparator : Char = 10
 }
 

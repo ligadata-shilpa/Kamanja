@@ -43,7 +43,7 @@ object Parts {
        |import com.ligadata.kamanja.metadata.ModelDef""".stripMargin
 
   val factory =
-    """|class Factory(modelDef: ModelDef, nodeContext: NodeContext) extends ModelInstanceFactory(modelDef, nodeContext) {
+    """|class {factoryclass.name}(modelDef: ModelDef, nodeContext: NodeContext) extends ModelInstanceFactory(modelDef, nodeContext) {
        |  override def isValidMessage(msg: ContainerInterface): Boolean = {
        |    {factory.isvalidmessage}
        |  }
@@ -55,7 +55,7 @@ object Parts {
        |}""".stripMargin
 
   val model =
-    """|class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
+    """|class {modelclass.name}(factory: ModelInstanceFactory) extends ModelInstance(factory) {
        |  val conversion = new com.ligadata.runtime.Conversion
        |  override def execute(txnCtxt: TransactionContext, execMsgsSet: Array[ContainerOrConcept], triggerdSetIndex: Int, outputDefault: Boolean): Array[ContainerOrConcept] = {
        |
