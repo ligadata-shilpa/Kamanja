@@ -170,53 +170,10 @@ object JsonSerializer {
             typ.TypeName, typ.NumberOfDimensions.get, typ.OwnerId, typ.TenantId, typ.UniqueId, typ.MdElementId,
             typ.Version.toLong)
         }
-        case "ArrayBufTypeDef" => {
-          typeDef = MdMgr.GetMdMgr.MakeArrayBuffer(typ.NameSpace, typ.Name, typ.TypeNameSpace,
-            typ.TypeName, typ.NumberOfDimensions.get, typ.OwnerId, typ.TenantId, typ.UniqueId, typ.MdElementId,
-            typ.Version.toLong)
-        }
-        case "ListTypeDef" => {
-          typeDef = MdMgr.GetMdMgr.MakeList(typ.NameSpace, typ.Name, typ.TypeNameSpace,
-            typ.TypeName, typ.Version.toLong, typ.OwnerId, typ.TenantId, typ.UniqueId, typ.MdElementId)
-        }
-        case "QueueTypeDef" => {
-          typeDef = MdMgr.GetMdMgr.MakeQueue(typ.NameSpace, typ.Name, typ.TypeNameSpace,
-            typ.TypeName, typ.Version.toLong, typ.OwnerId, typ.TenantId, typ.UniqueId, typ.MdElementId)
-        }
-        case "SetTypeDef" => {
-          typeDef = MdMgr.GetMdMgr.MakeSet(typ.NameSpace, typ.Name, typ.TypeNameSpace,
-            typ.TypeName, typ.Version.toLong, typ.OwnerId, typ.TenantId, typ.UniqueId, typ.MdElementId)
-        }
-        case "ImmutableSetTypeDef" => {
-          typeDef = MdMgr.GetMdMgr.MakeImmutableSet(typ.NameSpace, typ.Name, typ.TypeNameSpace,
-            typ.TypeName, typ.Version.toLong, typ.OwnerId, typ.TenantId, typ.UniqueId, typ.MdElementId)
-        }
-        case "TreeSetTypeDef" => {
-          typeDef = MdMgr.GetMdMgr.MakeTreeSet(typ.NameSpace, typ.Name, typ.TypeNameSpace,
-            typ.TypeName, typ.Version.toLong, typ.OwnerId, typ.TenantId, typ.UniqueId, typ.MdElementId)
-        }
-        case "SortedSetTypeDef" => {
-          typeDef = MdMgr.GetMdMgr.MakeSortedSet(typ.NameSpace, typ.Name, typ.TypeNameSpace,
-            typ.TypeName, typ.Version.toLong, typ.OwnerId, typ.TenantId, typ.UniqueId, typ.MdElementId)
-        }
         case "MapTypeDef" => {
           val mapKeyType = (typ.KeyTypeNameSpace.get, typ.KeyTypeName.get)
           val mapValueType = (typ.ValueTypeNameSpace.get, typ.ValueTypeName.get)
-          typeDef = MdMgr.GetMdMgr.MakeMap(typ.NameSpace, typ.Name, mapKeyType, mapValueType, typ.Version.toLong, typ.OwnerId, typ.TenantId, typ.UniqueId, typ.MdElementId)
-        }
-        case "ImmutableMapTypeDef" => {
-          val mapKeyType = (typ.KeyTypeNameSpace.get, typ.KeyTypeName.get)
-          val mapValueType = (typ.ValueTypeNameSpace.get, typ.ValueTypeName.get)
-          typeDef = MdMgr.GetMdMgr.MakeImmutableMap(typ.NameSpace, typ.Name, mapKeyType, mapValueType, typ.Version.toLong, typ.OwnerId, typ.TenantId, typ.UniqueId, typ.MdElementId)
-        }
-        case "HashMapTypeDef" => {
-          val mapKeyType = (typ.KeyTypeNameSpace.get, typ.KeyTypeName.get)
-          val mapValueType = (typ.ValueTypeNameSpace.get, typ.ValueTypeName.get)
-          typeDef = MdMgr.GetMdMgr.MakeHashMap(typ.NameSpace, typ.Name, mapKeyType, mapValueType, typ.Version.toLong, typ.OwnerId, typ.TenantId, typ.UniqueId, typ.MdElementId)
-        }
-        case "TupleTypeDef" => {
-          val tuples = typ.TupleDefinitions.get.map(arg => (arg.NameSpace, arg.Name)).toArray
-          typeDef = MdMgr.GetMdMgr.MakeTupleType(typ.NameSpace, typ.Name, tuples, typ.Version.toLong, typ.OwnerId, typ.TenantId, typ.UniqueId, typ.MdElementId)
+          typeDef = MdMgr.GetMdMgr.MakeMap(typ.NameSpace, typ.Name, mapValueType._1, mapValueType._2, typ.Version.toLong, typ.OwnerId, typ.TenantId, typ.UniqueId, typ.MdElementId)
         }
         case "ContainerTypeDef" => {
           if (typ.TypeName == "Struct") {
@@ -809,85 +766,8 @@ object JsonSerializer {
             ("DependantJars" -> o.CheckAndGetDependencyJarNames.toList))
           pretty(render(json))
         }
-        case o: ArrayBufTypeDef => {
-          val json = (("ObjectType" -> "ArrayBufTypeDef") ~
-            ("Operation" -> operation) ~
-            ("NameSpace" -> o.nameSpace) ~
-            ("Name" -> o.name) ~
-            ("Version" -> o.ver) ~
-            ("PhysicalName" -> o.physicalName) ~
-            ("JarName" -> o.jarName) ~
-            ("DependantJars" -> o.CheckAndGetDependencyJarNames.toList))
-          pretty(render(json))
-        }
-        case o: SortedSetTypeDef => {
-          val json = (("ObjectType" -> "SortedSetTypeDef") ~
-            ("Operation" -> operation) ~
-            ("NameSpace" -> o.nameSpace) ~
-            ("Name" -> o.name) ~
-            ("Version" -> o.ver) ~
-            ("PhysicalName" -> o.physicalName) ~
-            ("JarName" -> o.jarName) ~
-            ("DependantJars" -> o.CheckAndGetDependencyJarNames.toList))
-          pretty(render(json))
-        }
-        case o: ImmutableMapTypeDef => {
-          val json = (("ObjectType" -> "ImmutableMapTypeDef") ~
-            ("Operation" -> operation) ~
-            ("NameSpace" -> o.nameSpace) ~
-            ("Name" -> o.name) ~
-            ("Version" -> o.ver) ~
-            ("PhysicalName" -> o.physicalName) ~
-            ("JarName" -> o.jarName) ~
-            ("DependantJars" -> o.CheckAndGetDependencyJarNames.toList))
-          pretty(render(json))
-        }
         case o: MapTypeDef => {
           val json = (("ObjectType" -> "MapTypeDef") ~
-            ("Operation" -> operation) ~
-            ("NameSpace" -> o.nameSpace) ~
-            ("Name" -> o.name) ~
-            ("Version" -> o.ver) ~
-            ("PhysicalName" -> o.physicalName) ~
-            ("JarName" -> o.jarName) ~
-            ("DependantJars" -> o.CheckAndGetDependencyJarNames.toList))
-          pretty(render(json))
-        }
-        case o: HashMapTypeDef => {
-          val json = (("ObjectType" -> "HashMapTypeDef") ~
-            ("Operation" -> operation) ~
-            ("NameSpace" -> o.nameSpace) ~
-            ("Name" -> o.name) ~
-            ("Version" -> o.ver) ~
-            ("PhysicalName" -> o.physicalName) ~
-            ("JarName" -> o.jarName) ~
-            ("DependantJars" -> o.CheckAndGetDependencyJarNames.toList))
-          pretty(render(json))
-        }
-        case o: SetTypeDef => {
-          val json = (("ObjectType" -> "SetTypeDef") ~
-            ("Operation" -> operation) ~
-            ("NameSpace" -> o.nameSpace) ~
-            ("Name" -> o.name) ~
-            ("Version" -> o.ver) ~
-            ("PhysicalName" -> o.physicalName) ~
-            ("JarName" -> o.jarName) ~
-            ("DependantJars" -> o.CheckAndGetDependencyJarNames.toList))
-          pretty(render(json))
-        }
-        case o: ImmutableSetTypeDef => {
-          val json = (("ObjectType" -> "ImmutableSetTypeDef") ~
-            ("Operation" -> operation) ~
-            ("NameSpace" -> o.nameSpace) ~
-            ("Name" -> o.name) ~
-            ("Version" -> o.ver) ~
-            ("PhysicalName" -> o.physicalName) ~
-            ("JarName" -> o.jarName) ~
-            ("DependantJars" -> o.CheckAndGetDependencyJarNames.toList))
-          pretty(render(json))
-        }
-        case o: TreeSetTypeDef => {
-          val json = (("ObjectType" -> "TreeSetTypeDef") ~
             ("Operation" -> operation) ~
             ("NameSpace" -> o.nameSpace) ~
             ("Name" -> o.name) ~
@@ -1171,160 +1051,8 @@ object JsonSerializer {
           ("TransactionId" -> o.tranId))
         pretty(render(json))
       }
-      case o: SetTypeDef => {
-        val json = (("MetadataType" -> "SetTypeDef") ~
-          ("NameSpace" -> o.nameSpace) ~
-          ("Name" -> o.name) ~
-          ("TypeTypeName" -> ObjTypeType.asString(o.tTypeType)) ~
-          ("TypeNameSpace" -> o.nameSpace) ~
-          ("TypeName" -> o.name) ~
-          ("PhysicalName" -> o.physicalName) ~
-          ("Version" -> MdMgr.Pad0s2Version(o.ver)) ~
-          ("JarName" -> o.jarName) ~
-          ("DependencyJars" -> o.CheckAndGetDependencyJarNames.toList) ~
-          ("Implementation" -> o.implementationName) ~
-          ("Fixed" -> o.IsFixed) ~
-          ("KeyTypeNameSpace" -> o.keyDef.nameSpace) ~
-          ("KeyTypeName" -> ObjType.asString(o.keyDef.tType)) ~
-          ("TransactionId" -> o.tranId))
-
-        pretty(render(json))
-      }
-      case o: ImmutableSetTypeDef => {
-        val json = (("MetadataType" -> "ImmutableSetTypeDef") ~
-          ("NameSpace" -> o.nameSpace) ~
-          ("Name" -> o.name) ~
-          ("TypeTypeName" -> ObjTypeType.asString(o.tTypeType)) ~
-          ("TypeNameSpace" -> o.nameSpace) ~
-          ("TypeName" -> o.name) ~
-          ("PhysicalName" -> o.physicalName) ~
-          ("Version" -> MdMgr.Pad0s2Version(o.ver)) ~
-          ("JarName" -> o.jarName) ~
-          ("DependencyJars" -> o.CheckAndGetDependencyJarNames.toList) ~
-          ("Implementation" -> o.implementationName) ~
-          ("Fixed" -> o.IsFixed) ~
-          ("KeyTypeNameSpace" -> o.keyDef.nameSpace) ~
-          ("KeyTypeName" -> ObjType.asString(o.keyDef.tType)) ~
-          ("TransactionId" -> o.tranId))
-
-        pretty(render(json))
-      }
-      case o: TreeSetTypeDef => {
-        val json = (("MetadataType" -> "TreeSetTypeDef") ~
-          ("NameSpace" -> o.nameSpace) ~
-          ("Name" -> o.name) ~
-          ("TypeTypeName" -> ObjTypeType.asString(o.tTypeType)) ~
-          ("TypeNameSpace" -> o.nameSpace) ~
-          ("TypeName" -> o.name) ~
-          ("PhysicalName" -> o.physicalName) ~
-          ("Version" -> MdMgr.Pad0s2Version(o.ver)) ~
-          ("JarName" -> o.jarName) ~
-          ("DependencyJars" -> o.CheckAndGetDependencyJarNames.toList) ~
-          ("Implementation" -> o.implementationName) ~
-          ("Fixed" -> o.IsFixed) ~
-          ("KeyTypeNameSpace" -> o.keyDef.nameSpace) ~
-          ("KeyTypeName" -> ObjType.asString(o.keyDef.tType)) ~
-          ("TransactionId" -> o.tranId))
-        pretty(render(json))
-      }
-      case o: SortedSetTypeDef => {
-        val json = (("MetadataType" -> "SortedSetTypeDef") ~
-          ("NameSpace" -> o.nameSpace) ~
-          ("Name" -> o.name) ~
-          ("TypeTypeName" -> ObjTypeType.asString(o.tTypeType)) ~
-          ("TypeNameSpace" -> o.nameSpace) ~
-          ("TypeName" -> o.name) ~
-          ("PhysicalName" -> o.physicalName) ~
-          ("Version" -> MdMgr.Pad0s2Version(o.ver)) ~
-          ("JarName" -> o.jarName) ~
-          ("DependencyJars" -> o.CheckAndGetDependencyJarNames.toList) ~
-          ("Implementation" -> o.implementationName) ~
-          ("Fixed" -> o.IsFixed) ~
-          ("KeyTypeNameSpace" -> o.keyDef.nameSpace) ~
-          ("KeyTypeName" -> ObjType.asString(o.keyDef.tType)) ~
-          ("TransactionId" -> o.tranId))
-        pretty(render(json))
-      }
       case o: MapTypeDef => {
         val json = (("MetadataType" -> "MapTypeDef") ~
-          ("NameSpace" -> o.nameSpace) ~
-          ("Name" -> o.name) ~
-          ("TypeTypeName" -> ObjTypeType.asString(o.tTypeType)) ~
-          ("TypeNameSpace" -> o.nameSpace) ~
-          ("TypeName" -> o.name) ~
-          ("PhysicalName" -> o.physicalName) ~
-          ("Version" -> MdMgr.Pad0s2Version(o.ver)) ~
-          ("JarName" -> o.jarName) ~
-          ("DependencyJars" -> o.CheckAndGetDependencyJarNames.toList) ~
-          ("Implementation" -> o.implementationName) ~
-          ("Fixed" -> o.IsFixed) ~
-          ("KeyTypeNameSpace" -> o.keyDef.nameSpace) ~
-          ("KeyTypeName" -> ObjType.asString(o.keyDef.tType)) ~
-          ("ValueTypeNameSpace" -> o.valDef.nameSpace) ~
-          ("ValueTypeName" -> ObjType.asString(o.valDef.tType)) ~
-          ("TransactionId" -> o.tranId))
-        pretty(render(json))
-      }
-      case o: ImmutableMapTypeDef => {
-        val json = (("MetadataType" -> "ImmutableMapTypeDef") ~
-          ("NameSpace" -> o.nameSpace) ~
-          ("Name" -> o.name) ~
-          ("TypeTypeName" -> ObjTypeType.asString(o.tTypeType)) ~
-          ("TypeNameSpace" -> o.nameSpace) ~
-          ("TypeName" -> o.name) ~
-          ("PhysicalName" -> o.physicalName) ~
-          ("Version" -> MdMgr.Pad0s2Version(o.ver)) ~
-          ("JarName" -> o.jarName) ~
-          ("DependencyJars" -> o.CheckAndGetDependencyJarNames.toList) ~
-          ("Implementation" -> o.implementationName) ~
-          ("Fixed" -> o.IsFixed) ~
-          ("KeyTypeNameSpace" -> o.keyDef.nameSpace) ~
-          ("KeyTypeName" -> ObjType.asString(o.keyDef.tType)) ~
-          ("ValueTypeNameSpace" -> o.valDef.nameSpace) ~
-          ("ValueTypeName" -> ObjType.asString(o.valDef.tType)) ~
-          ("TransactionId" -> o.tranId))
-        pretty(render(json))
-      }
-      case o: HashMapTypeDef => {
-        val json = (("MetadataType" -> "HashMapTypeDef") ~
-          ("NameSpace" -> o.nameSpace) ~
-          ("Name" -> o.name) ~
-          ("TypeTypeName" -> ObjTypeType.asString(o.tTypeType)) ~
-          ("TypeNameSpace" -> o.nameSpace) ~
-          ("TypeName" -> o.name) ~
-          ("PhysicalName" -> o.physicalName) ~
-          ("Version" -> MdMgr.Pad0s2Version(o.ver)) ~
-          ("JarName" -> o.jarName) ~
-          ("DependencyJars" -> o.CheckAndGetDependencyJarNames.toList) ~
-          ("Implementation" -> o.implementationName) ~
-          ("Fixed" -> o.IsFixed) ~
-          ("KeyTypeNameSpace" -> o.keyDef.nameSpace) ~
-          ("KeyTypeName" -> ObjType.asString(o.keyDef.tType)) ~
-          ("ValueTypeNameSpace" -> o.valDef.nameSpace) ~
-          ("ValueTypeName" -> ObjType.asString(o.valDef.tType)) ~
-          ("TransactionId" -> o.tranId))
-        pretty(render(json))
-      }
-      case o: ListTypeDef => {
-        val json = (("MetadataType" -> "ListTypeDef") ~
-          ("NameSpace" -> o.nameSpace) ~
-          ("Name" -> o.name) ~
-          ("TypeTypeName" -> ObjTypeType.asString(o.tTypeType)) ~
-          ("TypeNameSpace" -> o.nameSpace) ~
-          ("TypeName" -> o.name) ~
-          ("PhysicalName" -> o.physicalName) ~
-          ("Version" -> MdMgr.Pad0s2Version(o.ver)) ~
-          ("JarName" -> o.jarName) ~
-          ("DependencyJars" -> o.CheckAndGetDependencyJarNames.toList) ~
-          ("Implementation" -> o.implementationName) ~
-          ("Fixed" -> o.IsFixed) ~
-          ("ValueTypeNameSpace" -> o.valDef.nameSpace) ~
-          ("ValueTypeName" -> ObjType.asString(o.valDef.tType)) ~
-          ("TransactionId" -> o.tranId))
-        pretty(render(json))
-      }
-      case o: QueueTypeDef => {
-        val json = (("MetadataType" -> "QueueTypeDef") ~
           ("NameSpace" -> o.nameSpace) ~
           ("Name" -> o.name) ~
           ("TypeTypeName" -> ObjTypeType.asString(o.tTypeType)) ~
@@ -1356,43 +1084,6 @@ object JsonSerializer {
           ("NumberOfDimensions" -> o.arrayDims) ~
           ("TransactionId" -> o.tranId))
         pretty(render(json))
-      }
-      case o: ArrayBufTypeDef => {
-        val json = (("MetadataType" -> "ArrayBufTypeDef") ~
-          ("NameSpace" -> o.nameSpace) ~
-          ("Name" -> o.name) ~
-          ("TypeTypeName" -> ObjTypeType.asString(o.elemDef.tTypeType)) ~
-          ("TypeNameSpace" -> o.elemDef.nameSpace) ~
-          ("TypeName" -> ObjType.asString(o.elemDef.tType)) ~
-          ("PhysicalName" -> o.physicalName) ~
-          ("Version" -> MdMgr.Pad0s2Version(o.ver)) ~
-          ("JarName" -> o.jarName) ~
-          ("DependencyJars" -> o.CheckAndGetDependencyJarNames.toList) ~
-          ("Implementation" -> o.implementationName) ~
-          ("NumberOfDimensions" -> o.arrayDims) ~
-          ("TransactionId" -> o.tranId))
-        pretty(render(json))
-      }
-      case o: TupleTypeDef => {
-        var json = (("MetadataType" -> "TupleTypeDef") ~
-          ("NameSpace" -> o.nameSpace) ~
-          ("Name" -> o.name) ~
-          ("TypeTypeName" -> ObjTypeType.asString(o.tTypeType)) ~
-          ("TypeNameSpace" -> MdMgr.sysNS) ~
-          ("TypeName" -> o.name) ~
-          ("PhysicalName" -> o.physicalName) ~
-          ("Version" -> MdMgr.Pad0s2Version(o.ver)) ~
-          ("JarName" -> o.jarName) ~
-          ("DependencyJars" -> o.CheckAndGetDependencyJarNames.toList) ~
-          ("Implementation" -> o.implementationName) ~
-          ("TransactionId" -> o.tranId))
-        var jsonStr = pretty(render(json))
-        val idxLastCloseParen: Int = jsonStr.lastIndexOf("\n}")
-        jsonStr = jsonStr.slice(0, idxLastCloseParen).toString + ",\n  \"TupleDefinitions\": "
-        var tupleDefJson = SerializeObjectListToJson(o.tupleDefs)
-        tupleDefJson = tupleDefJson + "}"
-        jsonStr += tupleDefJson
-        jsonStr
       }
       case o: StructTypeDef => {
         val json = (("MetadataType" -> "StructTypeDef") ~
