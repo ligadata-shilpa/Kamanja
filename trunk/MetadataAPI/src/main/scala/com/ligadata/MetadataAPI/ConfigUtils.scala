@@ -96,7 +96,7 @@ object ConfigUtils {
 
 
   // This is used to exclude all non-engine related configs from Uplodad Config method 
-  private val excludeList: Set[String] = Set[String]("ClusterId", "Nodes", "Config", "Adapters", "DataStore", "ZooKeeperInfo", "EnvironmentContext")
+  private val excludeList: Set[String] = Set[String]("ClusterId", "Nodes", "Config", "Adapters", "SystemCatalog", "ZooKeeperInfo", "EnvironmentContext")
 
     /**
      * AddNode
@@ -674,16 +674,16 @@ object ConfigUtils {
 
             // gather config name-value pairs
             val cfgMap = new scala.collection.mutable.HashMap[String, String]
-            if (cluster.contains("DataStore"))
-              cfgMap("DataStore") = getStringFromJsonNode(cluster.getOrElse("DataStore", null))
+            if (cluster.contains("SystemCatalog"))
+              cfgMap("SystemCatalog") = getStringFromJsonNode(cluster.getOrElse("SystemCatalog", null))
             if (cluster.contains("ZooKeeperInfo"))
               cfgMap("ZooKeeperInfo") = getStringFromJsonNode(cluster.getOrElse("ZooKeeperInfo", null))
             if (cluster.contains("EnvironmentContext"))
               cfgMap("EnvironmentContext") = getStringFromJsonNode(cluster.getOrElse("EnvironmentContext", null))
             if (cluster.contains("Config")) {
               val config = cluster.get("Config").get.asInstanceOf[Map[String, Any]] //BUGBUG:: Do we need to check the type before converting
-              if (config.contains("DataStore"))
-                cfgMap("DataStore") = getStringFromJsonNode(config.get("DataStore"))
+              if (config.contains("SystemCatalog"))
+                cfgMap("SystemCatalog") = getStringFromJsonNode(config.get("SystemCatalog"))
               if (config.contains("ZooKeeperInfo"))
                 cfgMap("ZooKeeperInfo") = getStringFromJsonNode(config.get("ZooKeeperInfo"))
               if (config.contains("EnvironmentContext"))
@@ -1606,6 +1606,10 @@ object ConfigUtils {
             case "userproperties" => {
               val up = MetadataAPISerialization.deserializeMetadata(new String(v.asInstanceOf[Array[Byte]])).asInstanceOf[UserPropertiesInfo]//serializer.DeserializeObjectFromByteArray(v.asInstanceOf[Array[Byte]]).asInstanceOf[UserPropertiesInfo]
               MdMgr.GetMdMgr.AddUserProperty(up)
+            }
+            case "tenantinfo" => {
+              val up = MetadataAPISerialization.deserializeMetadata(new String(v.asInstanceOf[Array[Byte]])).asInstanceOf[TenantInfo] //serializer.DeserializeObjectFromByteArray(v.asInstanceOf[Array[Byte]]).asInstanceOf[TenantInfo]
+              MdMgr.GetMdMgr.AddTenantInfo(up)
             }
             case _ => {
               throw InternalErrorException("LoadAllConfigObjectsIntoCache: Unknown objectType " + objType, null)

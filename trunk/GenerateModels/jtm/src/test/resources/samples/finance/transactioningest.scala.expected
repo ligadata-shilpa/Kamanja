@@ -13,48 +13,55 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package com.ligadata.jtm.test.filter
+package com.ligadata.models.samples.finance
 import com.ligadata.KamanjaBase._
 import com.ligadata.KvBase.TimeRange
 import com.ligadata.kamanja.metadata.ModelDef
-import com.ligadata.Utils._
 import com.ligadata.runtime.Conversion
-class ModelFactory(modelDef: ModelDef, nodeContext: NodeContext) extends ModelInstanceFactory(modelDef, nodeContext) {
+class TransactionIngestFactory(modelDef: ModelDef, nodeContext: NodeContext) extends ModelInstanceFactory(modelDef, nodeContext) {
   override def isValidMessage(msg: ContainerInterface): Boolean = {
-    msg.isInstanceOf[com.ligadata.kamanja.test.v1000000.arrin1]
+    msg.isInstanceOf[com.ligadata.kamanja.samples.messages.v1000000.transactionmsgin]
   }
   override def createModelInstance(): ModelInstance = return new Model(this)
-  override def getModelName: String = "com.ligadata.jtm.test.filter"
+  override def getModelName: String = "com.ligadata.models.samples.finance"
   override def getVersion: String = "0.0.1"
   override def createResultObject(): ModelResultBase = new MappedModelResults()
 }
-class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
+class TransactionIngest(factory: ModelInstanceFactory) extends ModelInstance(factory) {
   val conversion = new com.ligadata.runtime.Conversion
   override def execute(txnCtxt: TransactionContext, execMsgsSet: Array[ContainerOrConcept], triggerdSetIndex: Int, outputDefault: Boolean): Array[ContainerOrConcept] = {
     val messagefactoryinterface = execMsgsSet(0).asInstanceOf[MessageFactoryInterface]
     //
     //
-    def exeGenerated_test1_1(msg1: com.ligadata.kamanja.test.v1000000.arrin1): Array[MessageInterface] = {
-      val elements: Array[String] = msg1.mydata
+    def exeGenerated_transactionmsg_1(msg1: com.ligadata.kamanja.samples.messages.v1000000.transactionmsgin): Array[MessageInterface] = {
+      // Split the incomming data
+      val arrayData: System.ArrayOfString = msg1.data.split(",")
       def process_o1(): Array[MessageInterface] = {
-        if (!(msg1.ext_type_id != "j10")) return Array.empty[MessageInterface]
-        val t1: String = "s:" + elements(1).toString()
-        val t2: String = "arryout"
-        val result = new com.ligadata.kamanja.test.v1000000.arrout1(messagefactoryinterface)
-        result.mydata = Array(elements(0) t1, elements(2), elements(3))
-        result.out_ext_type_id = t2
+        // extract the type
+        val type: String = arrayData(0)
+        if ("com.ligadata.kamanja.samples.messages.TransactionMsg" == type) return Array.empty[MessageInterface]
+        val result = new com.ligadata.kamanja.samples.messages.v1000000.transactionmsg(messagefactoryinterface)
+        result.branchid = ToInteger(arrayData(2))
+        result.custid = ToLong(arrayData(1))
+        result.locationid = ToInteger(arrayData(8))
+        result.balance = ToDouble(arrayData(5))
+        result.amount = ToDouble(arrayData(4))
+        result.transtype = arrayData(9)
+        result.accno = ToLong(arrayData(3))
+        result.date = ToInteger(arrayData(6))
+        result.time = ToInteger(arrayData(7))
         Array(result)
       }
       process_o1()
     }
     // Evaluate messages
     val msgs = execMsgsSet.map(m => m.getFullTypeName -> m).toMap
-    val msg1 = msgs.get("com.ligadata.kamanja.test.arrin1").getOrElse(null).asInstanceOf[com.ligadata.kamanja.test.v1000000.arrin1]
+    val msg1 = msgs.get("com.ligadata.kamanja.samples.messages.TransactionMsgIn").getOrElse(null).asInstanceOf[com.ligadata.kamanja.samples.messages.v1000000.transactionmsgin]
     // Main dependency -> execution check
     //
     val results: Array[MessageInterface] =
     if(msg1!=null) {
-      exeGenerated_test1_1(msg1)
+      exeGenerated_transactionmsg_1(msg1)
     } else {
       Array.empty[MessageInterface]
     }

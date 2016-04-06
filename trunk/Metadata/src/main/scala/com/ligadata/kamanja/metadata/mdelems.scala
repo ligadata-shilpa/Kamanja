@@ -322,128 +322,127 @@ abstract class ContainerTypeDef extends BaseTypeDef {
   def ElementTypes: Array[BaseTypeDef] = Array[BaseTypeDef]()
 }
 
-class SetTypeDef extends ContainerTypeDef {
-  def tType : ObjType.Value = tSet
-  var keyDef: BaseTypeDef = _
-
-  override def IsFixed: Boolean = false
-  override def typeString: String = {
-    "scala.collection.mutable.Set[" + keyDef.typeString + "]"
-  }
-  override def ElementTypes: Array[BaseTypeDef] = {
-    Array(keyDef)
-  }
-}
-
-class ImmutableSetTypeDef extends ContainerTypeDef {
-  def tType : ObjType.Value = tSet
-  var keyDef: BaseTypeDef = _
-
-  override def IsFixed: Boolean = false
-  override def typeString: String = {
-    "scala.collection.immutable.Set[" + keyDef.typeString + "]"
-  }
-  override def ElementTypes: Array[BaseTypeDef] = {
-    Array(keyDef)
-  }
-}
-
-class TreeSetTypeDef extends ContainerTypeDef {
-  def tType : ObjType.Value = tTreeSet
-  var keyDef: BaseTypeDef = _
-
-  override def IsFixed: Boolean = false
-  override def typeString: String = {
-    "scala.collection.mutable.TreeSet[" + keyDef.typeString + "]"
-  }
-  override def ElementTypes: Array[BaseTypeDef] = {
-    Array(keyDef)
-  }
-}
-
-class SortedSetTypeDef extends ContainerTypeDef {
-  def tType : ObjType.Value = tSortedSet
-  var keyDef: BaseTypeDef = _
-
-  override def IsFixed: Boolean = false
-  override def typeString: String = {
-    "scala.collection.mutable.SortedSet[" + keyDef.typeString + "]"
-  }
-  override def ElementTypes: Array[BaseTypeDef] = {
-    Array(keyDef)
-  }
-}
+//class SetTypeDef extends ContainerTypeDef {
+//  def tType : ObjType.Value = tSet
+//  var keyDef: BaseTypeDef = _
+//
+//  override def IsFixed: Boolean = false
+//  override def typeString: String = {
+//    "scala.collection.mutable.Set[" + keyDef.typeString + "]"
+//  }
+//  override def ElementTypes: Array[BaseTypeDef] = {
+//    Array(keyDef)
+//  }
+//}
+//
+//class ImmutableSetTypeDef extends ContainerTypeDef {
+//  def tType : ObjType.Value = tSet
+//  var keyDef: BaseTypeDef = _
+//
+//  override def IsFixed: Boolean = false
+//  override def typeString: String = {
+//    "scala.collection.immutable.Set[" + keyDef.typeString + "]"
+//  }
+//  override def ElementTypes: Array[BaseTypeDef] = {
+//    Array(keyDef)
+//  }
+//}
+//
+//class TreeSetTypeDef extends ContainerTypeDef {
+//  def tType : ObjType.Value = tTreeSet
+//  var keyDef: BaseTypeDef = _
+//
+//  override def IsFixed: Boolean = false
+//  override def typeString: String = {
+//    "scala.collection.mutable.TreeSet[" + keyDef.typeString + "]"
+//  }
+//  override def ElementTypes: Array[BaseTypeDef] = {
+//    Array(keyDef)
+//  }
+//}
+//
+//class SortedSetTypeDef extends ContainerTypeDef {
+//  def tType : ObjType.Value = tSortedSet
+//  var keyDef: BaseTypeDef = _
+//
+//  override def IsFixed: Boolean = false
+//  override def typeString: String = {
+//    "scala.collection.mutable.SortedSet[" + keyDef.typeString + "]"
+//  }
+//  override def ElementTypes: Array[BaseTypeDef] = {
+//    Array(keyDef)
+//  }
+//}
 
 class MapTypeDef extends ContainerTypeDef {
   def tType : ObjType.Value = tMap
 
-  var keyDef: BaseTypeDef = _
   var valDef: BaseTypeDef = _
 
   override def IsFixed: Boolean = false
   override def typeString: String = {
-    "scala.collection.mutable.Map[" + keyDef.typeString + "," + valDef.typeString + "]"
-  }
-  override def ElementTypes: Array[BaseTypeDef] = {
-    Array(keyDef, valDef)
-  }
-}
-
-class ImmutableMapTypeDef extends ContainerTypeDef {
-  def tType : ObjType.Value = tMap
-
-  var keyDef: BaseTypeDef = _
-  var valDef: BaseTypeDef = _
-
-  override def IsFixed: Boolean = false
-  override def typeString: String = {
-    "scala.collection.immutable.Map[" + keyDef.typeString + "," + valDef.typeString + "]"
-  }
-  override def ElementTypes: Array[BaseTypeDef] = {
-    Array(keyDef, valDef)
-  }
-}
-
-class HashMapTypeDef extends ContainerTypeDef {
-  def tType : ObjType.Value = tHashMap
-
-  var keyDef: BaseTypeDef = _
-  var valDef: BaseTypeDef = _
-
-  override def IsFixed: Boolean = false
-  override def typeString: String = {
-    "scala.collection.mutable.HashMap[" + keyDef.typeString + "," + valDef.typeString + "]"
-  }
-  override def ElementTypes: Array[BaseTypeDef] = {
-    Array(keyDef, valDef)
-  }
-}
-
-class ListTypeDef extends ContainerTypeDef {
-  def tType : ObjType.Value = tList
-  var valDef: BaseTypeDef = _
-
-  override def IsFixed: Boolean = false
-  override def typeString: String = {
-    "scala.collection.immutable.List[" + valDef.typeString + "]"
+    "scala.collection.immutable.Map[String," + valDef.typeString + "]"
   }
   override def ElementTypes: Array[BaseTypeDef] = {
     Array(valDef)
   }
 }
-
-class QueueTypeDef extends ContainerTypeDef {
-  def tType : ObjType.Value = tQueue
-  var valDef: BaseTypeDef = _
-
-  override def IsFixed: Boolean = false
-  override def typeString: String = {
-    "scala.collection.mutable.Queue[" + valDef.typeString + "]"
-  }
-  override def ElementTypes: Array[BaseTypeDef] = {
-    Array(valDef)
-  }
-}
+//
+//class ImmutableMapTypeDef extends ContainerTypeDef {
+//  def tType : ObjType.Value = tMap
+//
+//  var keyDef: BaseTypeDef = _
+//  var valDef: BaseTypeDef = _
+//
+//  override def IsFixed: Boolean = false
+//  override def typeString: String = {
+//    "scala.collection.immutable.Map[" + keyDef.typeString + "," + valDef.typeString + "]"
+//  }
+//  override def ElementTypes: Array[BaseTypeDef] = {
+//    Array(keyDef, valDef)
+//  }
+//}
+//
+//class HashMapTypeDef extends ContainerTypeDef {
+//  def tType : ObjType.Value = tHashMap
+//
+//  var keyDef: BaseTypeDef = _
+//  var valDef: BaseTypeDef = _
+//
+//  override def IsFixed: Boolean = false
+//  override def typeString: String = {
+//    "scala.collection.mutable.HashMap[" + keyDef.typeString + "," + valDef.typeString + "]"
+//  }
+//  override def ElementTypes: Array[BaseTypeDef] = {
+//    Array(keyDef, valDef)
+//  }
+//}
+//
+//class ListTypeDef extends ContainerTypeDef {
+//  def tType : ObjType.Value = tList
+//  var valDef: BaseTypeDef = _
+//
+//  override def IsFixed: Boolean = false
+//  override def typeString: String = {
+//    "scala.collection.immutable.List[" + valDef.typeString + "]"
+//  }
+//  override def ElementTypes: Array[BaseTypeDef] = {
+//    Array(valDef)
+//  }
+//}
+//
+//class QueueTypeDef extends ContainerTypeDef {
+//  def tType : ObjType.Value = tQueue
+//  var valDef: BaseTypeDef = _
+//
+//  override def IsFixed: Boolean = false
+//  override def typeString: String = {
+//    "scala.collection.mutable.Queue[" + valDef.typeString + "]"
+//  }
+//  override def ElementTypes: Array[BaseTypeDef] = {
+//    Array(valDef)
+//  }
+//}
 
 class ArrayTypeDef extends ContainerTypeDef {
   def tType : ObjType.Value = tArray
@@ -459,37 +458,37 @@ class ArrayTypeDef extends ContainerTypeDef {
     Array(elemDef)
   }
 }
-
-class ArrayBufTypeDef extends ContainerTypeDef {
-  def tType : ObjType.Value = tArrayBuf
-
-  var arrayDims: Int = 0 // 0 is invalid; 1..N - dimensions - indicate array of that many dimensions
-  var elemDef: BaseTypeDef = _
-
-  override def IsFixed: Boolean = false
-  override def typeString: String = {
-    "scala.collection.mutable.ArrayBuffer[" + elemDef.typeString + "]"
-  }
-  override def ElementTypes: Array[BaseTypeDef] = {
-    Array(elemDef)
-  }
-}
-
-class TupleTypeDef extends ContainerTypeDef {
-  override def tTypeType = tTupleN
-  def tType : ObjType.Value = ObjType.tAny
-
-  var tupleDefs: Array[BaseTypeDef] = Array[BaseTypeDef]()
-
-  override def IsFixed: Boolean = false
-  override def typeString: String = {
-    val sz: Int = tupleDefs.size
-    s"scala.Tuple$sz[" + tupleDefs.map(tup => tup.typeString).mkString(",") + "]"
-  }
-  override def ElementTypes: Array[BaseTypeDef] = {
-    tupleDefs
-  }
-}
+//
+//class ArrayBufTypeDef extends ContainerTypeDef {
+//  def tType : ObjType.Value = tArrayBuf
+//
+//  var arrayDims: Int = 0 // 0 is invalid; 1..N - dimensions - indicate array of that many dimensions
+//  var elemDef: BaseTypeDef = _
+//
+//  override def IsFixed: Boolean = false
+//  override def typeString: String = {
+//    "scala.collection.mutable.ArrayBuffer[" + elemDef.typeString + "]"
+//  }
+//  override def ElementTypes: Array[BaseTypeDef] = {
+//    Array(elemDef)
+//  }
+//}
+//
+//class TupleTypeDef extends ContainerTypeDef {
+//  override def tTypeType = tTupleN
+//  def tType : ObjType.Value = ObjType.tAny
+//
+//  var tupleDefs: Array[BaseTypeDef] = Array[BaseTypeDef]()
+//
+//  override def IsFixed: Boolean = false
+//  override def typeString: String = {
+//    val sz: Int = tupleDefs.size
+//    s"scala.Tuple$sz[" + tupleDefs.map(tup => tup.typeString).mkString(",") + "]"
+//  }
+//  override def ElementTypes: Array[BaseTypeDef] = {
+//    tupleDefs
+//  }
+//}
 
 object RelationKeyType extends Enumeration {
   type RelationKeyType = Value

@@ -436,7 +436,6 @@ class MetadataAPISerializationTest extends FlatSpec with BeforeAndAfterAll {
     assert(expected.NameSpace === actual.NameSpace)
     assert(expected.PhysicalName === actual.PhysicalName)
     assert(expected.implementationName === actual.implementationName)
-    assert(expected.keyDef.nameSpace === actual.keyDef.nameSpace)
     assert(expected.OrigDef === actual.OrigDef)
     assert(expected.OwnerId === actual.OwnerId)
     assert(expected.TenantId === actual.TenantId)

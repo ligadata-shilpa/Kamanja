@@ -170,8 +170,6 @@ object MetadataAPISerialization {
               ("ObjectFormat" -> ObjFormatType.asString(o.ObjectFormat)) ~
               ("DependencyJars" -> o.CheckAndGetDependencyJarNames.toList) ~
               ("Implementation" -> o.implementationName) ~
-              ("KeyTypeNameSpace" -> o.keyDef.nameSpace) ~
-              ("KeyTypeName" -> ObjType.asString(o.keyDef.tType)) ~
               ("ValueTypeNameSpace" -> o.valDef.nameSpace) ~
               ("ValueTypeName" -> ObjType.asString(o.valDef.tType)) ~
               ("ObjectDefinition" -> o.ObjectDefinition) ~
@@ -908,13 +906,9 @@ object MetadataAPISerialization {
 
       val mapTypeInst = mapTypeDefJson.extract[MapType]
 
-      val key = (mapTypeInst.MapType.KeyTypeNameSpace, mapTypeInst.MapType.KeyTypeName)
-      val value = (mapTypeInst.MapType.ValueTypeNameSpace, mapTypeInst.MapType.ValueTypeName)
-
       val mapTypeDef = MdMgr.GetMdMgr.MakeMap(mapTypeInst.MapType.NameSpace,
         mapTypeInst.MapType.Name,
-        key,
-        value,
+        mapTypeInst.MapType.ValueTypeNameSpace, mapTypeInst.MapType.ValueTypeName,
         mapTypeInst.MapType.NumericTypes.Version,
         mapTypeInst.MapType.OwnerId,
         mapTypeInst.MapType.TenantId,
@@ -1872,7 +1866,7 @@ case class HashMapType(HashMapType: MapTypeInfo)
 
 case class ArrayType(ArrayType: ArrayTypeInfo)
 
-case class MapTypeInfo(Name: String, PhysicalName: String, JarName: String, NameSpace: String, TypeTypeName: String, Implementation: String, KeyTypeNameSpace: String, KeyTypeName: String, ValueTypeNameSpace: String, ValueTypeName: String, ObjectDefinition: String, DependencyJars: List[String], OrigDef: String, ObjectFormat: String, Author: String, OwnerId: String, IsActive: Boolean, IsDeleted: Boolean, IsFixed: Boolean, Description: String, NumericTypes: NumericTypes, TenantId: String)
+case class MapTypeInfo(Name: String, PhysicalName: String, JarName: String, NameSpace: String, TypeTypeName: String, Implementation: String, ValueTypeNameSpace: String, ValueTypeName: String, ObjectDefinition: String, DependencyJars: List[String], OrigDef: String, ObjectFormat: String, Author: String, OwnerId: String, IsActive: Boolean, IsDeleted: Boolean, IsFixed: Boolean, Description: String, NumericTypes: NumericTypes, TenantId: String)
 
 case class MapType(MapType: MapTypeInfo)
 

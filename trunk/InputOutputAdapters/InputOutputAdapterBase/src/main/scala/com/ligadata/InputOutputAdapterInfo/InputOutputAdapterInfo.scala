@@ -232,16 +232,16 @@ trait ExecContext extends AdaptersSerializeDeserializers {
       val msgEvent = nodeContext.getEnvCtxt().getContainerInstance("System.KamanjaMessageEvent")
       val txnCtxt = new TransactionContext(transId, nodeContext, data, EventOriginInfo(uk, uv), readTmMilliSecs, msgEvent)
       LOG.debug("Processing uniqueKey:%s, uniqueVal:%s, Datasize:%d".format(uk, uv, data.size))
+      txnCtxt.setInitialMessage("", msg)
       executeMessage(txnCtxt, deserializerName): Unit
     } catch {
       case e: Throwable => {
-        LOG.error("Failed to serialize PartitionUniqueRecordKey and/or PartitionUniqueRecordValue", e)
+        LOG.error("Failed to execute message : " + msg.getFullTypeName, e)
       }
     } finally {
       // Commit. Writing into OutputAdapters & Storage Adapters
-      // nodeContext.getEnvCtxt().CommitData();
+      // nodeContext.getEnvCtxt().CommitData(txnCtxt);
     }
-
   }
 
   protected def executeMessage(txnCtxt: TransactionContext, deserializerName: String): Unit

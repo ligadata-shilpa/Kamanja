@@ -150,6 +150,20 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     imports1.distinct
   }
 
+  def ModelName(): String = {
+    if(root.header.name.isEmpty)
+      "Model"
+    else
+      root.header.name
+  }
+
+  def FactoryName(): String = {
+    if(root.header.name.isEmpty)
+      "ModelFactory"
+    else
+      "%sFactory".format(root.header.name)
+  }
+
   /** Returns the modeldef after compiler completed
     *
     */
@@ -173,18 +187,12 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           }).toArray
     )
 
-    /*
-     val modelRepresentation: ModelRepresentation = ModelRepresentation.JAR
-     val miningModelType : MiningModelType = MiningModelType.UNKNOWN
-     val inputVars : Array[BaseAttributeDef] = null
-     val outputVars: Array[BaseAttributeDef] = null
-     val isReusable: Boolean = false
-     val msgConsumed: String = ""
-     val supportsInstanceSerialization : Boolean = false
-     */
     var model = new ModelDef(ModelRepresentation.JAR, MiningModelType.JTM, in, out, isReusable, supportsInstanceSerialization)
-    // Imports to Jar
-    //model.dependencyJarNames = Imports()
+
+    // Append addtional attributes
+    model.nameSpace = root.header.namespace
+    model.name = if(root.header.name.isEmpty) "Model" else root.header.name
+    model.description = root.header.description
     model
   }
 
@@ -829,6 +837,9 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     var subtitutions = new Substitution
     subtitutions.Add("model.name", root.header.namespace)
     subtitutions.Add("model.version", root.header.version)
+    subtitutions.Add("factoryclass.name", FactoryName)
+    subtitutions.Add("modelclass.name", ModelName)
+
     result :+= subtitutions.Run(Parts.imports)
 
     // Process additional imports like grok
