@@ -85,13 +85,13 @@ class hl7Fixed(factory: ContainerFactoryInterface) extends ContainerInterface(fa
 
   private def getAttributeTypes(): Array[AttributeTypeInfo] = {
     var attributeTypes = new Array[AttributeTypeInfo](7)
-    attributeTypes :+ new AttributeTypeInfo("desynpuf_id", 0, 1, 0, 0, "string")
-    attributeTypes :+ new AttributeTypeInfo("clm_id", 1, 1, 0, 0, "long")
-    attributeTypes :+ new AttributeTypeInfo("clm_from_dt", 2, 1, 0, 0, "int")
-    attributeTypes :+ new AttributeTypeInfo("clm_thru_dt", 3, 1, 0, 0, "int")
-    attributeTypes :+ new AttributeTypeInfo("bene_birth_dt", 4, 1, 0, 0, "int")
-    attributeTypes :+ new AttributeTypeInfo("bene_death_dt", 5, 1, 0, 0, "int")
-    attributeTypes :+ new AttributeTypeInfo("bene_sex_ident_cd", 6, 1, 0, 0, "int")
+    attributeTypes :+ new AttributeTypeInfo("desynpuf_id", 0, AttributeTypeInfo.TypeCategory.STRING, 0, 0, 0)
+    attributeTypes :+ new AttributeTypeInfo("clm_id", 1, AttributeTypeInfo.TypeCategory.LONG, 0, 0, 0)
+    attributeTypes :+ new AttributeTypeInfo("clm_from_dt", 2, AttributeTypeInfo.TypeCategory.INT, 0, 0, 0)
+    attributeTypes :+ new AttributeTypeInfo("clm_thru_dt", 3, AttributeTypeInfo.TypeCategory.INT, 0, 0, 0)
+    attributeTypes :+ new AttributeTypeInfo("bene_birth_dt", 4,AttributeTypeInfo.TypeCategory.INT, 0, 0, 0)
+    attributeTypes :+ new AttributeTypeInfo("bene_death_dt", 5, AttributeTypeInfo.TypeCategory.INT, 0, 0, 0)
+    attributeTypes :+ new AttributeTypeInfo("bene_sex_ident_cd", 6, AttributeTypeInfo.TypeCategory.INT, 0, 0,0)
     return attributeTypes
   }
 
@@ -145,13 +145,13 @@ class hl7Fixed(factory: ContainerFactoryInterface) extends ContainerInterface(fa
   override def get(key: String): Any = {
     try {
       // Try with reflection
-      return getWithReflection(key.toLowerCase())
+      return getByName(key.toLowerCase()) 
     } catch {
       case e: Exception => {
         val stackTrace = StackTrace.ThrowableTraceString(e)
         log.debug("StackTrace:" + stackTrace)
         // Call By Name
-        return getByName(key.toLowerCase())
+        return getWithReflection(key.toLowerCase())
       }
     }
   }
@@ -222,13 +222,13 @@ class hl7Fixed(factory: ContainerFactoryInterface) extends ContainerInterface(fa
 
   override def getAllAttributeValues(): Array[AttributeValue] = { // Has (name, value, type))
     var attributeVals = new Array[AttributeValue](7);
-    attributeVals :+ new AttributeValue("desynpuf_id", this.desynpuf_id, keyTypes("desynpuf_id"))
-    attributeVals :+ new AttributeValue("clm_id", this.desynpuf_id, keyTypes("clm_id"))
-    attributeVals :+ new AttributeValue("clm_from_dt", this.desynpuf_id, keyTypes("clm_from_dt"))
-    attributeVals :+ new AttributeValue("clm_thru_dt", this.desynpuf_id, keyTypes("clm_thru_dt"))
-    attributeVals :+ new AttributeValue("bene_birth_dt", this.desynpuf_id, keyTypes("bene_birth_dt"))
-    attributeVals :+ new AttributeValue("bene_death_dt", this.desynpuf_id, keyTypes("bene_death_dt"))
-    attributeVals :+ new AttributeValue("bene_sex_ident_cd", this.desynpuf_id, keyTypes("bene_sex_ident_cd"))
+    attributeVals :+ new AttributeValue(this.desynpuf_id, keyTypes("desynpuf_id"))
+    attributeVals :+ new AttributeValue(this.desynpuf_id, keyTypes("clm_id"))
+    attributeVals :+ new AttributeValue(this.desynpuf_id, keyTypes("clm_from_dt"))
+    attributeVals :+ new AttributeValue(this.desynpuf_id, keyTypes("clm_thru_dt"))
+    attributeVals :+ new AttributeValue(this.desynpuf_id, keyTypes("bene_birth_dt"))
+    attributeVals :+ new AttributeValue(this.desynpuf_id, keyTypes("bene_death_dt"))
+    attributeVals :+ new AttributeValue(this.desynpuf_id, keyTypes("bene_sex_ident_cd"))
     return attributeVals;
   }
 

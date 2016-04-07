@@ -1,4 +1,4 @@
-package com.ligadata.KamanjaBase;
+/*package com.ligadata.KamanjaBase;
 import org.json4s.jackson.JsonMethods._
 import org.json4s.DefaultFormats
 import org.json4s.Formats
@@ -295,4 +295,4 @@ class KamanjaStatusEvent(factory: MessageFactoryInterface, other: KamanjaStatusE
     this(other.getFactory.asInstanceOf[MessageFactoryInterface], other)
   }
 
-}
+}*/

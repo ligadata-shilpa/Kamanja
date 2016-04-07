@@ -49,8 +49,8 @@ public abstract class ContainerInterface extends ContainerOrConcept {
 		return getContainerFactory().isFixed();
 	}
 
-	final public String getSchema() {
-		return getContainerFactory().getSchema();
+	final public String getAvroSchema() {
+		return getContainerFactory().getAvroSchema();
 	}
 
 	final public String[] getPrimaryKeyNames() {

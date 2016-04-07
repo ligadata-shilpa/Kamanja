@@ -38,8 +38,9 @@ class MessageFieldTypesHandler {
           field.FldMetaataType = typ.get
 
           val types = getMetadataTypesForMsgFields(field, mdMgr)
-          field.FieldTypePhysicalName = types(0)
-          field.FieldTypeImplementationName = types(1)
+          field.FieldTypePhysicalName = types(0).asInstanceOf[String]
+          field.FieldTypeImplementationName = types(1).asInstanceOf[String]
+          field.AttributeTypeInfo = types(2).asInstanceOf[ArrtibuteInfo]
 
           //get the fields jarset for adding msg in the metadata
           jarset = jarset ++ getDependencyJarSet(field.FldMetaataType)
@@ -47,7 +48,7 @@ class MessageFieldTypesHandler {
           //get the fields args list for addding message in the metadata 
           argsList = (field.NameSpace, field.Name, field.FldMetaataType.NameSpace, field.FldMetaataType.Name, false, null) :: argsList
 
-        /*  log.info("******************TYPES FROM METADATA START******************************")
+          /*  log.info("******************TYPES FROM METADATA START******************************")
           log.info("type " + typ.get.tType.toString())
           log.info("fields name " + field.Name)
           log.info("fields type " + field.Ttype)
@@ -56,7 +57,7 @@ class MessageFieldTypesHandler {
       })
     }
 
-   /* message.Elements.foreach(field => {
+    /* message.Elements.foreach(field => {
 
       log.info("*************==================================== " + field.FieldTypeImplementationName);
       log.info("****************** TYPES FROM METADATA START  --- In Message******************************")
@@ -102,17 +103,17 @@ class MessageFieldTypesHandler {
    * Get MetadataType based on the type of field
    */
 
-  private def getMetadataTypesForMsgFields(field: Element, mdMgr: MdMgr): Array[String] = {
+  private def getMetadataTypesForMsgFields(field: Element, mdMgr: MdMgr): Array[Any] = {
 
     val fieldBaseType: BaseTypeDef = field.FldMetaataType
-    var types: Array[String] = new Array[String](2);
+    var types: Array[Any] = new Array[Any](3);
     val fieldType = fieldBaseType.tType.toString().toLowerCase()
 
     val fieldTypeType = fieldBaseType.tTypeType.toString().toLowerCase()
     var arrayType: ArrayTypeDef = null
     if (fieldBaseType.isInstanceOf[ArrayTypeDef])
       arrayType = fieldBaseType.asInstanceOf[ArrayTypeDef]
-/*
+    /*
     log.info("fieldTypeType " + fieldTypeType)
     log.info("fieldBaseType 1 " + fieldBaseType.tType)
     log.info("fieldBaseType 2 " + fieldBaseType.typeString)
@@ -124,6 +125,7 @@ class MessageFieldTypesHandler {
       case "tscalar" => {
         types(0) = fieldBaseType.PhysicalName
         types(1) = fieldBaseType.implementationName
+        types(2) = new ArrtibuteInfo(1, 0, 0, fieldBaseType.implementationName.toLowerCase())
         //  log.info("fieldBaseType.implementationName    " + fieldBaseType.implementationName)
 
       }
@@ -133,7 +135,9 @@ class MessageFieldTypesHandler {
             var arrayType: ArrayTypeDef = null
             arrayType = fieldBaseType.asInstanceOf[ArrayTypeDef]
             types(0) = arrayType.typeString
-            types(1) = arrayType.elemDef.implementationName          
+            types(1) = arrayType.elemDef.implementationName
+            types(2) = new ArrtibuteInfo(1, 0, 0, fieldBaseType.implementationName.toLowerCase())
+            
           }
           case "tstruct" => {
             var ctrDef: ContainerDef = mdMgr.Container(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version

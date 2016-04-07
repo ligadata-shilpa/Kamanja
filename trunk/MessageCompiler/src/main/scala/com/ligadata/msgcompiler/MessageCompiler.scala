@@ -24,6 +24,12 @@ class TransformData(var input: Array[String], var output: Array[String], var key
 class Element(var NameSpace: String, var Name: String, var Ttype: String, var CollectionType: String, var ElemType: String, var FieldtypeVer: String, var FieldOrdinal: Int, var FldMetaataType: BaseTypeDef, var FieldTypePhysicalName: String, var FieldTypeImplementationName: String, var FieldObjectDefinition: String, var AttributeTypeInfo: ArrtibuteInfo)
 class MessageGenObj(var verScalaClassStr: String, var verJavaClassStr: String, var containerDef: ContainerDef, var noVerScalaClassStr: String, var noVerJavaClassStr: String, var argsList: List[(String, String, String, String, Boolean, String)])
 class TimePartition(var Key: String, var Format: String, var DType: String)
+
+// typeCategary ==> 1 - standard type ( typeId: 1..N represent standard avro compatible types, 1001 - container/msg.., 1002 - map of fixed types, 1003 - map of fixed typed key and any base elem)
+// valSchemaId ==>      If value is of type container, this represent schema id denoting the definition of contaner; for avro schema this information embedded in schema but for internal/non avro purposes, we want to use more efficient representation
+// valTypeId ==> 
+// keyTypeId ==> type id for key type if the map is of fixed types; for avro compatible maps, only string as key type is allowed
+
 class ArrtibuteInfo(var typeCategary: Int, var valTypeId: Int,	var valSchemaId: Long, var keyTypeId: String)
     
     

@@ -4,20 +4,42 @@ public class AttributeTypeInfo {
 
 	String name;
 	int Index;
-	short typeCategary;
-	short valTypeId;
+	TypeCategory typeCategory; // from TypeCategory
+	byte valTypeId;
+	byte keyTypeId;
 	long valSchemaId;
-	String keyTypeId;
 
-	public AttributeTypeInfo(String name, int Index, short typeCategary, short valTypeId,
-			long valSchemaId, String keyTypeId) {
+	public AttributeTypeInfo(String name, int Index,  TypeCategory typeCategory,
+			byte valTypeId, byte keyTypeId, long valSchemaId) {
 		this.name = name;
 		this.Index = Index;
-		this.typeCategary = typeCategary;
+		this.typeCategory = typeCategory;
 		this.valTypeId = valTypeId;
 		this.valSchemaId = valSchemaId;
 		this.keyTypeId = keyTypeId;
 	}
+	
+	public enum TypeCategory {
+		INT(0),
+		STRING(1),
+		FLOAT(2),
+		DOUBLE(3),
+		LONG(4),
+		BYTE(5),
+		CHAR(6),
+		CONTAINER(1001),
+		MAP(1002),
+		ARRAY(1003);
+		private int value;
+		private TypeCategory(int value) { this.value = value; }	
+		
+	}
+
+	public boolean IsContainer() {
+		  return ( typeCategory == TypeCategory.CONTAINER);
+	  }
+	
+		  
 
 	public String getName() {
 		return name;
@@ -35,20 +57,28 @@ public class AttributeTypeInfo {
 		Index = index;
 	}
 
-	public short getTypeCategary() {
-		return typeCategary;
+	public TypeCategory getTypeCategary() {
+		return (TypeCategory) typeCategory;
 	}
 
-	public void setTypeCategary(short typeCategary) {
-		this.typeCategary = typeCategary;
+	public void setTypeCategary(TypeCategory typeCategory) {
+		this.typeCategory = typeCategory;
 	}
 
-	public short getValTypeId() {
+	public byte getValTypeId() {
 		return valTypeId;
 	}
 
-	public void setValTypeId(short valTypeId) {
+	public void setValTypeId(byte valTypeId) {
 		this.valTypeId = valTypeId;
+	}
+
+	public byte getKeyTypeId() {
+		return keyTypeId;
+	}
+
+	public void setKeyTypeId(byte keyTypeId) {
+		this.keyTypeId = keyTypeId;
 	}
 
 	public long getValSchemaId() {
@@ -57,14 +87,6 @@ public class AttributeTypeInfo {
 
 	public void setValSchemaId(long valSchemaId) {
 		this.valSchemaId = valSchemaId;
-	}
-
-	public String getKeyTypeId() {
-		return keyTypeId;
-	}
-
-	public void setKeyTypeId(String keyTypeId) {
-		this.keyTypeId = keyTypeId;
 	}
 
 }

@@ -16,7 +16,7 @@ class SchemaCompiler {
   val openBrace = "{";
   val closeBrace = "}";
   val integer = "integer";
-  val primitiveTypes = Array("null", "int", "long", "float", "double", "bytes", "string");
+  val primitiveTypes = Array("null", "int", "long", "float", "double", "bytes", "string", "char");
   val int = "int";
 
   val logger = this.getClass.getName
