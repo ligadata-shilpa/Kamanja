@@ -67,9 +67,35 @@ assemblyMergeStrategy in assembly := {
 excludeFilter in unmanagedJars := s"${name.value}_${scalaBinaryVersion.value}-${kamanjaVersion}.jar"
 
 excludedJars in assembly <<= (fullClasspath in assembly) map { cp =>
-  val excludes = Set("commons-beanutils-1.7.0.jar", "google-collections-1.0.jar", "commons-collections4-4.0.jar", "log4j-1.2.17.jar", "commons-beanutils-1.8.3.jar", s"ExtDependencyLibs2_2.10-${kamanjaVersion}.jar", s"ExtDependencyLibs2_2.11-${kamanjaVersion}.jar")
+  val excludes = Set("commons-beanutils-1.7.0.jar", "google-collections-1.0.jar", "commons-collections4-4.0.jar", "log4j-1.2.17.jar", "commons-beanutils-1.8.3.jar", "log4j-1.2.16.jar")
   cp filter { jar => excludes(jar.data.getName) }
 }
+
+/////////////////////////////////// from /trunk/build.sbt
+libraryDependencies := {
+  CrossVersion.partialVersion(scalaVersion.value) match {
+    // if scala 2.11+ is used, quasiquotes are merged into scala-reflect
+    case Some((2, scalaMajor)) if scalaMajor >= 11 =>
+      libraryDependencies.value ++ Seq("org.scalameta" %% "scalameta" % "0.0.3")
+    // libraryDependencies.value
+    // in Scala 2.10, quasiquotes are provided by macro paradise
+    case Some((2, 10)) =>
+      libraryDependencies.value ++ Seq("org.scalamacros" %% "quasiquotes" % "2.1.0")
+    //libraryDependencies.value ++ Seq(
+    //compilerPlugin("org.scalamacros" % "paradise" % "2.0.0" cross CrossVersion.full),
+    //"org.scalamacros" %% "quasiquotes" % "2.1.0" cross CrossVersion.binary)
+  }
+}
+
+
+/////////////////////// GetComponent
+libraryDependencies += "org.apache.hbase" % "hbase-client" % "1.0.2"
+libraryDependencies += "org.apache.hbase" % "hbase-common" % "1.0.2"
+libraryDependencies += "org.apache.hadoop" % "hadoop-common" % "2.7.1"
+libraryDependencies += "com.googlecode.json-simple" % "json-simple" % "1.1"
+libraryDependencies += "com.fasterxml.jackson.core" % "jackson-databind" % "2.6.3"
+libraryDependencies += "log4j" % "log4j" % "1.2.17"
+
 
 ////////////////////// ZooKeeperListener
 libraryDependencies ++= Seq(
@@ -112,29 +138,6 @@ resolvers += "Big Bee Consultants" at "http://repo.bigbeeconsultants.co.uk/repo"
 
 
 
-////////////////////// MetadataAPIService
-//scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
-resolvers ++= Seq(
-  "spray repo" at "http://repo.spray.io/"
-)
-libraryDependencies ++= {
-  val sprayVersion = "1.3.3"
-  val akkaVersion = "2.3.9"
-  Seq(
-    "io.spray" %% "spray-can" % sprayVersion,
-    "io.spray" %% "spray-routing" % sprayVersion,
-    "io.spray" %% "spray-testkit" % sprayVersion,
-    "io.spray" %% "spray-client" % sprayVersion,
-    "io.spray" %% "spray-json" % "1.3.2",
-    "com.typesafe.akka" %% "akka-actor" % akkaVersion,
-    //  "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
-    //    "ch.qos.logback" % "logback-classic" % "1.0.12",                       latest change
-    "org.apache.camel" % "camel-core" % "2.9.2"
-  )
-}
-
-
-
 ////////////////////// Cassandra / StorageCassandra
 libraryDependencies += "com.datastax.cassandra" % "cassandra-driver-parent" % "2.1.2"
 libraryDependencies += "com.datastax.cassandra" % "cassandra-driver-core" % "2.1.2"
@@ -150,22 +153,6 @@ libraryDependencies += "org.mapdb" % "mapdb" % "1.0.6"
 
 ////////////////////// SqlServer
 libraryDependencies += "org.apache.commons" % "commons-dbcp2" % "2.1" // one
-
-
-//////////////////////  jtm
-libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.4" //% "test->default"
-libraryDependencies += "com.google.code.gson" % "gson" % "2.5"
-libraryDependencies += "org.rogach" %% "scallop" % "0.9.5"
-//libraryDependencies += "org.apache.commons" % "commons-io" % "1.3.2"        // use this instead ? "commons-io" % "commons-io" % "2.4"
-libraryDependencies += "org.skyscreamer" % "jsonassert" % "1.3.0" //% "test->default"
-libraryDependencies += "org.aicer.grok" % "grok" % "0.9.0"
-//libraryDependencies += "com.novocode" % "junit-interface" % "0.9" //% "test->default"
-//libraryDependencies += "junit" % "junit" % "4.11" % "test->default"
-
-
-//////////////////////  PmmlTestTool
-libraryDependencies += "org.jpmml" % "pmml-evaluator" % "1.2.9"
-
 
 
 //////////////////////  SmartFileAdapter

@@ -346,10 +346,9 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, val nodeContext: Node
    *
    * @param tnxCtxt
    * @param outputContainers
-    * @param serializedContainerData
-    * @param serializerNames
    */
-  protected override def send(tnxCtxt: TransactionContext, outputContainers: Array[ContainerInterface], serializedContainerData: Array[Array[Byte]], serializerNames: Array[String]): Unit = {
+  override def send(tnxCtxt: TransactionContext, outputContainers: Array[ContainerInterface]): Unit = {
+    if (outputContainers.size == 0) return
 
     // Sanity checks
     if (isShutdown) {
@@ -357,6 +356,8 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, val nodeContext: Node
       LOG.error(szMsg)
       throw new Exception(szMsg)
     }
+
+    val (outContainers, serializedContainerData, serializerNames) = serialize(tnxCtxt, outputContainers)
 
     if (outputContainers.size != serializedContainerData.size || outputContainers.size != serializerNames.size) {
       val szMsg = qc.Name + " KAFKA PRODUCER: Messages, messages serialized data & serializer names should has same number of elements. Messages:%d, Messages Serialized data:%d, serializerNames:%d".format(outputContainers.size, serializedContainerData.size, serializerNames.size)
