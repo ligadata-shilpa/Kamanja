@@ -53,12 +53,10 @@ object MetadataAPISerialization {
           outputJson = compact(render(json))
         }
         case o: MessageDef => {
-
           var primaryKeys = List[(String, List[String])]()
           var foreignKeys = List[(String, List[String], String, List[String])]()
-
-          if (o.cType.Keys != null) {
-            o.cType.Keys.toList.foreach(m => {
+          if (o.cType.Keys != null && o.cType.Keys.size != 0) {
+            o.cType.Keys.foreach(m => {
               if (m.KeyType == RelationKeyType.tPrimary) {
                 val pr = m.asInstanceOf[PrimaryKey]
                 primaryKeys ::=(pr.constraintName, pr.key.toList)
@@ -95,18 +93,19 @@ object MetadataAPISerialization {
           outputJson = compact(render(json))
         }
         case o: ContainerDef => {
-
           var primaryKeys = List[(String, List[String])]()
           var foreignKeys = List[(String, List[String], String, List[String])]()
-          o.cType.Keys.toList.foreach(m => {
-            if (m.KeyType == RelationKeyType.tPrimary) {
-              val pr = m.asInstanceOf[PrimaryKey]
-              primaryKeys ::=(pr.constraintName, pr.key.toList)
-            } else {
-              val fr = m.asInstanceOf[ForeignKey]
-              foreignKeys ::=(fr.constraintName, fr.key.toList, fr.forignContainerName, fr.forignKey.toList)
-            }
-          })
+          if (o.cType.Keys != null && o.cType.Keys.size != 0) {
+            o.cType.Keys.foreach(m => {
+              if (m.KeyType == RelationKeyType.tPrimary) {
+                val pr = m.asInstanceOf[PrimaryKey]
+                primaryKeys ::=(pr.constraintName, pr.key.toList)
+              } else {
+                val fr = m.asInstanceOf[ForeignKey]
+                foreignKeys ::=(fr.constraintName, fr.key.toList, fr.forignContainerName, fr.forignKey.toList)
+              }
+            })
+          }
 
           val json = "Container" ->
             ("Name" -> o.name) ~
