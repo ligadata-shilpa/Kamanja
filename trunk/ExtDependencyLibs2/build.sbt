@@ -74,6 +74,32 @@ excludedJars in assembly <<= (fullClasspath in assembly) map { cp =>
 //net.virtualvoid.sbt.graph.Plugin.graphSettings
 
 
+/////////////////////////////////// from /trunk/build.sbt
+libraryDependencies := {
+  CrossVersion.partialVersion(scalaVersion.value) match {
+    // if scala 2.11+ is used, quasiquotes are merged into scala-reflect
+    case Some((2, scalaMajor)) if scalaMajor >= 11 =>
+      libraryDependencies.value ++ Seq("org.scalameta" %% "scalameta" % "0.0.3")
+    // libraryDependencies.value
+    // in Scala 2.10, quasiquotes are provided by macro paradise
+    case Some((2, 10)) =>
+      libraryDependencies.value ++ Seq("org.scalamacros" %% "quasiquotes" % "2.1.0")
+    //libraryDependencies.value ++ Seq(
+    //compilerPlugin("org.scalamacros" % "paradise" % "2.0.0" cross CrossVersion.full),
+    //"org.scalamacros" %% "quasiquotes" % "2.1.0" cross CrossVersion.binary)
+  }
+}
+
+
+/////////////////////// GetComponent
+libraryDependencies += "org.apache.hbase" % "hbase-client" % "1.0.2"
+libraryDependencies += "org.apache.hbase" % "hbase-common" % "1.0.2"
+libraryDependencies += "org.apache.hadoop" % "hadoop-common" % "2.7.1"
+libraryDependencies += "com.googlecode.json-simple" % "json-simple" % "1.1"
+libraryDependencies += "com.fasterxml.jackson.core" % "jackson-databind" % "2.6.3"
+libraryDependencies += "log4j" % "log4j" % "1.2.17" // latest error
+
+
 ////////////////////// ZooKeeperListener
 libraryDependencies ++= Seq(
   "org.apache.commons" % "commons-collections4" % "4.0",
@@ -156,7 +182,6 @@ libraryDependencies += "org.apache.commons" % "commons-dbcp2" % "2.1" // one
 
 
 //////////////////////  jtm
-libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.4" //% "test->default"
 libraryDependencies += "com.google.code.gson" % "gson" % "2.5"
 libraryDependencies += "org.rogach" %% "scallop" % "0.9.5"
 //libraryDependencies += "org.apache.commons" % "commons-io" % "1.3.2"        // use this instead ? "commons-io" % "commons-io" % "2.4"
