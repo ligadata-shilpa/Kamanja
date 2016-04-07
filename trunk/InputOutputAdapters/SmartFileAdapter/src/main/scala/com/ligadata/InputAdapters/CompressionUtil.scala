@@ -101,7 +101,7 @@ object CompressionUtil {
     val loggerName = this.getClass.getName
     val logger = LogManager.getLogger(loggerName)
 
-    //Sniff only text/plain and application/gzip for now
+
     val detector = new DefaultDetector()
     val tika = new Tika(detector)
     var is : InputStream = null

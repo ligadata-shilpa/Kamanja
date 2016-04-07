@@ -96,6 +96,7 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
 
       //node wasn't a leader before
       if(!clusterStatus.isLeader){
+        LOG.debug("Smart File Consumer - Leader is running on node " + newClusterStatus.nodeId)
         monitorController = new MonitorController(adapterConfig, newFileDetectedCallback)
         monitorController.startMonitoring()
 
@@ -113,6 +114,7 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
     }
 
     //action for participant nodes:
+    LOG.debug("Smart File Consumer - Participant is running on node " + newClusterStatus.nodeId)
     val nodeId = newClusterStatus.nodeId
     envContext.createListenerForCacheKey(filesParallelismPath, filesParallelismCallback)
 
@@ -143,9 +145,18 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
 
   //value in cache has the format <node1>/<thread1>:<path to receive files>|<node2>/<thread1>:<path to receive files>
   def getFileRequestsQueue : List[String] = {
-    val cacheData = new String(envContext.getConfigFromClusterCache(File_Requests_Cache_Key))
-    val tokens = cacheData.split("\\|")
-    tokens.toList
+    val cacheData = envContext.getConfigFromClusterCache(File_Requests_Cache_Key)
+    if(cacheData != null){
+      val cacheDataStr = new String(cacheData)
+      LOG.debug("Smart File Consumer - file processing queue from cache is ", cacheDataStr)
+      val tokens = cacheDataStr.split("\\|")
+      tokens.toList
+    }
+    else{
+      LOG.debug("Smart File Consumer - file request queue from cache is null")
+      List()
+    }
+
   }
   def saveFileRequestsQueue(requestQueue : List[String]) : Unit = {
     val cacheData = requestQueue.mkString("|")
@@ -155,11 +166,15 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
   //value for file processing queue in cache has the format <node1>/<thread1>:<filename>|<node2>/<thread1>:<filename>
   def getFileProcessingQueue : List[String] = {
     val cacheData = envContext.getConfigFromClusterCache(File_Processing_Cache_Key)
+
     if(cacheData != null) {
-      val tokens = new String(cacheData).split("\\|")
+      val cacheDataStr =  new String(cacheData)
+      LOG.debug("Smart File Consumer - file processing queue from cache is ", cacheDataStr)
+      val tokens = cacheDataStr.split("\\|")
       tokens.toList
     }
     else{
+      LOG.debug("Smart File Consumer - file processing queue from cache is null")
       List()
     }
   }
@@ -485,7 +500,7 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
     startTime = System.nanoTime
 
     if (partitionIds == null || partitionIds.size == 0) {
-      LOG.error("SMART_FILE_ADAPTER: Cannot process the kafka queue request, invalid parameters - number")
+      LOG.error("SMART_FILE_ADAPTER: Cannot process the file adapter request, invalid parameters - number")
       return
     }
 
@@ -499,7 +514,7 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
 
     // Make sure the data passed was valid.
     if (partitionInfoArray == null) {
-      LOG.error("SMART_FILE_ADAPTER: Cannot process the kafka queue request, invalid parameters - partition instance list")
+      LOG.error("SMART_FILE_ADAPTER: Cannot process the file adapter request, invalid parameters - partition instance list")
       return
     }
 

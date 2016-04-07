@@ -8,7 +8,6 @@ sbtPlugin := true
 //lazy val kamanjaVersion = settingKey[String]("kamanjaVersion")
 // kamanjaVersion := "1.4.0"
 
-
 //scalaVersion := "2.11.7"
 
 //kamanjaVersion in ThisBuild := "1.4.0"
@@ -18,21 +17,6 @@ crossScalaVersions := Seq("2.11.7", "2.10.4")
 shellPrompt := { state => "sbt (%s)> ".format(Project.extract(state).currentProject.id) }
 
 net.virtualvoid.sbt.graph.Plugin.graphSettings
-
-//libraryDependencies := {
-//  CrossVersion.partialVersion(scalaVersion.value) match {
-//    // if scala 2.11+ is used, quasiquotes are merged into scala-reflect
-//    case Some((2, scalaMajor)) if scalaMajor >= 11 =>
-//      libraryDependencies.value ++ Seq("org.scalameta" %% "scalameta" % "0.0.3")
-//    // libraryDependencies.value
-//    // in Scala 2.10, quasiquotes are provided by macro paradise
-//    case Some((2, 10)) =>
-//      libraryDependencies.value ++ Seq("org.scalamacros" %% "quasiquotes" % "2.1.0")
-//    //libraryDependencies.value ++ Seq(
-//    //compilerPlugin("org.scalamacros" % "paradise" % "2.0.0" cross CrossVersion.full),
-//    //"org.scalamacros" %% "quasiquotes" % "2.1.0" cross CrossVersion.binary)
-//  }
-//}
 
 libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value
 
@@ -56,39 +40,15 @@ lazy val KamanjaInternalDeps = project.in(file("KamanjaInternalDeps")).configs(T
   Serialize, ZooKeeperListener, ZooKeeperLeaderLatch, KamanjaUtils, TransactionService, StorageManager, PmmlCompiler, ZooKeeperClient, OutputMsgDef, SecurityAdapterBase, HeartBeat,
   JpmmlFactoryOfModelInstanceFactory, KamanjaVersion, InstallDriverBase, BaseFunctions, KafkaSimpleInputOutputAdapters, FileSimpleInputOutputAdapters, SimpleEnvContextImpl,
   GenericMsgCompiler, MethodExtractor, MetadataAPIServiceClient, JsonDataGen, Controller, AuditAdapters, CustomUdfLib, ExtractData, UtilityService,
-  UtilsForModels)
-
-
-//lazy val KamanjaInternalDeps = project.in(file("KamanjaInternalDeps")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(ExtDependencyLibs % "provided",ExtDependencyLibs2 % "provided", InputOutputAdapterBase, Exceptions, DataDelimiters, Metadata, KamanjaBase, MetadataBootstrap,
-//  Serialize, ZooKeeperListener, ZooKeeperLeaderLatch, KamanjaUtils, TransactionService, StorageManager, MessageDef, PmmlCompiler, ZooKeeperClient, OutputMsgDef, SecurityAdapterBase, HeartBeat,
-//  JpmmlFactoryOfModelInstanceFactory, KamanjaVersion, InstallDriverBase, BaseFunctions, KafkaSimpleInputOutputAdapters, FileSimpleInputOutputAdapters, SimpleEnvContextImpl,
-//  GenericMsgCompiler, MethodExtractor, JsonDataGen, Controller, AuditAdapters, CustomUdfLib, ExtractData, InterfacesSamples, UtilityService, SaveContainerDataComponent,
-//  UtilsForModels, JarFactoryOfModelInstanceFactory)
-
-
-//lazy val KamanjaInternalDeps = project.in(file("KamanjaInternalDeps")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(ExtDependencyLibs % "provided",ExtDependencyLibs2 % "provided", InputOutputAdapterBase, Exceptions, DataDelimiters, Metadata, KamanjaBase, MetadataBootstrap, Serialize, ZooKeeperListener,
-//  ZooKeeperLeaderLatch, KamanjaUtils, TransactionService, StorageManager, MessageDef, PmmlCompiler, ZooKeeperClient, OutputMsgDef, SecurityAdapterBase, HeartBeat, JpmmlFactoryOfModelInstanceFactory,
-//  SimpleApacheShiroAdapter, KamanjaVersion, InstallDriverBase)
-
-//lazy val KamanjaDependencyLibs = project.in(file("KamanjaDependencyLibs")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(KamanjaManager, MetadataAPI, KVInit, NodeInfoExtract, MetadataAPIService, JdbcDataCollector, FileDataConsumer, CleanUtil, InstallDriver, GetComponent, SimpleKafkaProducer)
+  UtilsForModels, MessageCompiler, jtm, Dag)
 
 ////////////////////////
 
 lazy val BaseTypes = project.in(file("BaseTypes")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(ExtDependencyLibs % "provided",ExtDependencyLibs2 % "provided", Metadata, Exceptions)
 
-//lazy val KamanjaManager = project.in(file("KamanjaManager"))
-//  .configs(TestConfigs.all: _*)
-//  .settings(TestSettings.settings: _*)
-//  .dependsOn(Metadata, KamanjaBase, MetadataBootstrap, MetadataAPI, Serialize, ZooKeeperListener, ZooKeeperLeaderLatch, Exceptions, KamanjaUtils, TransactionService, DataDelimiters, InputOutputAdapterBase, Dag)
-
 lazy val Cache = project.in(file("Utils/Cache"))
 
 lazy val CacheImp = project.in(file("Utils/CacheImp")) dependsOn (Cache)
-
-//lazy val InputOutputAdapterBase = project.in(file("InputOutputAdapters/InputOutputAdapterBase"))
-//  .configs(TestConfigs.all: _*)
-//  .settings(TestSettings.settings: _*)
-//  .dependsOn(Exceptions, DataDelimiters, HeartBeat, KamanjaBase, ZooKeeperClient, StorageBase, StorageManager, TransactionService)
 
 lazy val BaseFunctions = project.in(file("BaseFunctions")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(ExtDependencyLibs % "provided", ExtDependencyLibs2 % "provided", Metadata, Exceptions) // has only resolvers , no dependencies
 
@@ -233,10 +193,9 @@ lazy val HeartBeat = project.in(file("HeartBeat")).configs(TestConfigs.all: _*).
 
 lazy val TransactionService = project.in(file("TransactionService")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(ExtDependencyLibs % "provided", ExtDependencyLibs2 % "provided", Exceptions, KamanjaBase, ZooKeeperClient, StorageBase, StorageManager)
 
-
-lazy val jtm = project.in(file("GenerateModels/jtm")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(ExtDependencyLibs % "provided", ExtDependencyLibs2 % "provided", Metadata, KamanjaBase, Exceptions, MetadataBootstrap, MessageCompiler)
-
 lazy val runtime = project.in(file("GenerateModels/Runtime")) dependsOn(ExtDependencyLibs % "provided", ExtDependencyLibs2 % "provided", Metadata, KamanjaBase, Exceptions, MetadataBootstrap, MessageCompiler)
+
+lazy val jtm = project.in(file("GenerateModels/jtm")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(ExtDependencyLibs % "provided", ExtDependencyLibs2 % "provided", Metadata, KamanjaBase, Exceptions, MetadataBootstrap, MessageCompiler, runtime)
 
 lazy val Dag = project.in(file("Utils/Dag")) dependsOn(ExtDependencyLibs % "provided", ExtDependencyLibs2 % "provided", KamanjaUtils, Exceptions)
 

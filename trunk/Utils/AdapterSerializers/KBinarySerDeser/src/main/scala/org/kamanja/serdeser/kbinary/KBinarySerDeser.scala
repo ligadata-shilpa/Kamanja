@@ -172,16 +172,8 @@ class KBinarySerDeser() extends SerializeDeserialize with LogTrait {
                         val array: Array[Any] = rawValue.asInstanceOf[Array[Any]]
                         arrayAsBinary(dos, aContainerType, array)
                     }
-                    case ab: ArrayBufTypeDef => {
-                        val array: ArrayBuffer[Any] = rawValue.asInstanceOf[ArrayBuffer[Any]]
-                        arrayAsBinary(dos, aContainerType, array)
-                    }
                     case m: MapTypeDef => {
                         val map: scala.collection.immutable.Map[Any, Any] = rawValue.asInstanceOf[scala.collection.immutable.Map[Any, Any]]
-                        mapAsBinary(dos, aContainerType, map)
-                    }
-                    case im: ImmutableMapTypeDef => {
-                        val map: scala.collection.mutable.Map[Any, Any] = rawValue.asInstanceOf[scala.collection.mutable.Map[Any, Any]]
                         mapAsBinary(dos, aContainerType, map)
                     }
                     case _ => throw new UnsupportedObjectException(s"container type ${aContainerType.typeString} not currently serializable", null)
@@ -290,8 +282,7 @@ class KBinarySerDeser() extends SerializeDeserialize with LogTrait {
       */
     @throws(classOf[IOException])
     private def mapAsBinary(dos : DataOutputStream, aContainerType : ContainerTypeDef, map : scala.collection.immutable.Map[Any,Any]) : Unit = {
-
-        val memberTypes : Array[BaseTypeDef] = aContainerType.asInstanceOf[ImmutableMapTypeDef].ElementTypes
+        val memberTypes : Array[BaseTypeDef] = aContainerType.asInstanceOf[MapTypeDef].ElementTypes
         val keyType : BaseTypeDef = memberTypes.head
         val valType : BaseTypeDef = memberTypes.last
 
@@ -315,41 +306,6 @@ class KBinarySerDeser() extends SerializeDeserialize with LogTrait {
      }
 
     /**
-      * Create a Json string from the supplied mutable map.  Note that either/both map elements can in turn be
-      * containers.  As a pre-condition, the map cannot be null and can have zero to N key/value pairs.
-      *
-      * @param dos the output stream to receive the value
-      * @param aContainerType The container type def for the supplied map
-      * @param map the map instance
-      * @return Unit
-      */
-    @throws(classOf[IOException])
-    private def mapAsBinary(dos : DataOutputStream, aContainerType : ContainerTypeDef, map : scala.collection.mutable.Map[Any,Any]) : Unit = {
-
-        val memberTypes : Array[BaseTypeDef] = aContainerType.asInstanceOf[MapTypeDef].ElementTypes
-        val keyType : BaseTypeDef = memberTypes.head
-        val valType : BaseTypeDef = memberTypes.last
-
-        val memberCnt : Int = map.size
-        dos.write(memberCnt) /** write the count of the map elements before writing the elements */
-
-        map.foreach(pair => {
-            val (keyData, valData): (Any, Any) = pair
-            if (keyType.isInstanceOf[ContainerTypeDef]) {
-                streamOutContainerBinary(dos, keyType.asInstanceOf[ContainerTypeDef], keyData)
-            } else {
-                streamOutSimpleBinary(dos, keyType.FullName, valData)
-            }
-
-            if (valType.isInstanceOf[ContainerTypeDef]) {
-                streamOutContainerBinary(dos, valType.asInstanceOf[ContainerTypeDef], valData)
-            } else {
-                streamOutSimpleBinary(dos, valType.FullName, valData)
-            }
-        })
-    }
-
-    /**
       * Create a Json string from the supplied array.  Note that the array elements can themselves
       * be containers.  As a pre-condition, the array cannot be null and can have zero to N items.
       *
@@ -360,7 +316,7 @@ class KBinarySerDeser() extends SerializeDeserialize with LogTrait {
       */
     @throws(classOf[IOException])
     private def arrayAsBinary(dos : DataOutputStream, aContainerType : ContainerTypeDef, array : Array[Any]) : Unit = {
-        val memberTypes : Array[BaseTypeDef] = aContainerType.asInstanceOf[ImmutableMapTypeDef].ElementTypes
+        val memberTypes : Array[BaseTypeDef] = aContainerType.asInstanceOf[MapTypeDef].ElementTypes
         val itmType : BaseTypeDef = memberTypes.last
 
         val memberCnt : Int = array.size
@@ -374,32 +330,6 @@ class KBinarySerDeser() extends SerializeDeserialize with LogTrait {
             }
         })
 
-    }
-
-    /**
-      * Create a Json string from the supplied array buffer.  Note that the array buffer elements can themselves
-      * be containers.
-      *
-      * @param dos the output stream to receive the value
-      * @param aContainerType The container type def for the supplied array buffer
-      * @param array the array instance
-      * @return Unit
-      */
-    @throws(classOf[IOException])
-    private def arrayAsBinary(dos : DataOutputStream, aContainerType : ContainerTypeDef, array : ArrayBuffer[Any]) : Unit = {
-        val memberTypes : Array[BaseTypeDef] = aContainerType.asInstanceOf[ImmutableMapTypeDef].ElementTypes
-        val itmType : BaseTypeDef = memberTypes.last
-
-        val memberCnt : Int = array.size
-        dos.write(memberCnt) /** write the count of the array elements before writing the elements */
-
-        array.foreach(itm => {
-            if (itmType.isInstanceOf[ContainerTypeDef]) {
-                streamOutContainerBinary(dos, itmType.asInstanceOf[ContainerTypeDef], itm)
-            } else {
-                streamOutSimpleBinary(dos, itmType.FullName, itm)
-            }
-        })
     }
 
     /**
@@ -553,14 +483,8 @@ class KBinarySerDeser() extends SerializeDeserialize with LogTrait {
                 case a : ArrayTypeDef =>  {
                     collectArrayFromInputStream(dis, containerTypeInfo)
                 }
-                case ab : ArrayBufTypeDef => {
-                    collectArrayBufferFromInputStream(dis, containerTypeInfo)
-                }
                 case m : MapTypeDef => {
                     collectMutableMapFromInputStream(dis, containerTypeInfo)
-                }
-                case im : ImmutableMapTypeDef =>  {
-                    collectImmutableMapFromInputStream(dis, containerTypeInfo)
                 }
                 case _ => throw new UnsupportedObjectException(s"container type ${containerTypeInfo.typeString} not currently serializable",null)
             }
@@ -585,7 +509,7 @@ class KBinarySerDeser() extends SerializeDeserialize with LogTrait {
           * moment only arrays of homogeneous types are supported.
           */
 
-        val memberTypes : Array[BaseTypeDef] = arrayTypeInfo.asInstanceOf[ImmutableMapTypeDef].ElementTypes
+        val memberTypes : Array[BaseTypeDef] = arrayTypeInfo.asInstanceOf[MapTypeDef].ElementTypes
         val itmType : BaseTypeDef = memberTypes.last
         val arrayMbrTypeIsContainer : Boolean = itmType.isInstanceOf[ContainerTypeDef]
 
@@ -604,85 +528,6 @@ class KBinarySerDeser() extends SerializeDeserialize with LogTrait {
         }
         val array : Array[Any] = wrArray.toArray
         array
-    }
-
-    /**
-      * Coerce the list of mapped elements to an array buffer of the mapped elements' values
-      *
-      * @param dis the DataInputStream that contains the container type content
-      * @param arrayTypeInfo the metadata that describes the array buffer
-      * @return an array buffer instance
-      */
-    @throws(classOf[IOException])
-    def collectArrayBufferFromInputStream(dis : DataInputStream, arrayTypeInfo : ContainerTypeDef) : ArrayBuffer[Any] = {
-
-        /**
-          * FIXME: if we intend to support arrays of hetergeneous items (i.e, Array[Any]), this has to change.  At the
-          * moment only arrays of homogeneous types are supported.
-          */
-
-        val memberTypes : Array[BaseTypeDef] = arrayTypeInfo.asInstanceOf[ImmutableMapTypeDef].ElementTypes
-        val itmType : BaseTypeDef = memberTypes.last
-        val arrayMbrTypeIsContainer : Boolean = itmType.isInstanceOf[ContainerTypeDef]
-
-        val itmCnt : Int = dis.readInt()
-        val wrArray : ArrayBuffer[Any] = ArrayBuffer[Any]()
-        if (itmCnt > 0) {
-            for (idx <- 0 to itmCnt - 1) {
-                if (arrayMbrTypeIsContainer) {
-                    val container : Any = streamInContainerBinary(dis, itmType.asInstanceOf[ContainerTypeDef])
-                    wrArray += container
-                } else {
-                    val itm : Any = streamInSimpleBinary(dis, itmType)
-                    wrArray += itm
-                }
-            }
-        }
-        wrArray
-
-    }
-
-    /**
-      * Coerce the list of mapped elements to an immutable map of the mapped elements' values
-      *
-      * @param dis the DataInputStream that contains the container type content
-      * @param mapTypeInfo the type def for the supplied map
-      * @return an immutable map containing the resurrected key/value pairs from the data input stream
-      */
-    @throws(classOf[IOException])
-    def collectImmutableMapFromInputStream(dis : DataInputStream, mapTypeInfo : ContainerTypeDef) : scala.collection.immutable.Map[Any,Any] = {
-        val memberTypes : Array[BaseTypeDef] = mapTypeInfo.asInstanceOf[ImmutableMapTypeDef].ElementTypes
-        val sanityChk : Boolean = memberTypes.length == 2
-        val keyType : BaseTypeDef = memberTypes.head
-        val valType : BaseTypeDef = memberTypes.last
-
-        val itmCnt : Int = dis.readInt()
-        val wrKeyArray : ArrayBuffer[Any] = ArrayBuffer[Any]()
-        val wrValArray : ArrayBuffer[Any] = ArrayBuffer[Any]()
-
-        val map : scala.collection.immutable.Map[Any,Any] = if (itmCnt > 0) {
-            for (idx <- 0 to itmCnt - 1) {
-                if (keyType.isInstanceOf[ContainerTypeDef]) {
-                    val container : Any = streamInContainerBinary(dis, keyType.asInstanceOf[ContainerTypeDef])
-                    wrKeyArray += container
-                } else {
-                    val itm : Any = streamInSimpleBinary(dis, keyType)
-                    wrKeyArray += itm
-                }
-                if (valType.isInstanceOf[ContainerTypeDef]) {
-                    val container : Any = streamInContainerBinary(dis, valType.asInstanceOf[ContainerTypeDef])
-                    wrValArray += container
-                } else {
-                    val itm : Any = streamInSimpleBinary(dis, valType)
-                    wrValArray += itm
-                }
-            }
-            wrKeyArray.zip(wrValArray).toMap
-        } else {
-            scala.collection.immutable.Map[Any,Any]()
-        }
-
-        map
     }
 
     /**

@@ -53,6 +53,9 @@ class FileMessageExtractor(adapterConfig : SmartFileAdapterConfiguration,
     var chunkNumber = 0
 
     val fileName = fileHandler.getFullPath
+
+    logger.info("Smart File Consumer - Starting reading messages from file " + fileName)
+
     //val offset = file.offset
     //val partMap = file.partMap
     //val fileHandler = file.fileHandler

@@ -212,7 +212,7 @@ class SaveContainerDataCompImpl extends LogTrait with MdBaseResolveInfo {
       throw new Exception(msgStr)
     }
 
-    val dataStore = cluster.cfgMap.getOrElse("DataStore", null)
+    val dataStore = cluster.cfgMap.getOrElse("SystemCatalog", null)
     if (dataStore == null) {
       val msgStr = "DataStore not found for Node %d  & ClusterId : %s".format(nodeId, nodeInfo.ClusterId)
       logger.error(msgStr)
@@ -483,7 +483,7 @@ class SaveContainerDataCompImpl extends LogTrait with MdBaseResolveInfo {
             logger.debug("ObjKey:(" + kv._1.timePartition + ":" + kv._1.bucketKey.mkString(",") + ":" + kv._1.transactionId + ") ")
           })
         }
-        _dataStore.put(null, Array((typ, false, storeObjects)))
+        _dataStore.put(null, Array((typ, storeObjects)))
       } catch {
         case e: Exception => {
           logger.error("Failed to write data for type:" + typ, e)

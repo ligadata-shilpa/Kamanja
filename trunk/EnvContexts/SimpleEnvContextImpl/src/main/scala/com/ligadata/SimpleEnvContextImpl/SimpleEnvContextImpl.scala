@@ -89,10 +89,13 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   private val _nodeCache_reent_lock = new ReentrantReadWriteLock(true)
   private var txnIdsRangeForNode: Int = 100000 // Each time get txnIdsRange of transaction ids for each Node
   private var txnIdsRangeForPartition: Int = 10000 // Each time get txnIdsRange of transaction ids for each partition
-  private var _sysCatelogDatastore: String = _
+  private var _sysCatalogDatastore: String = _
   private val _defaultDatastoresForTenants = scala.collection.mutable.Map[String, String]()
+  private var _postMsgListenerCallback: (Array[ContainerInterface]) => Unit = null
 
   case class LeaderListenerCallback(val EventChangeCallback: (ClusterStatus) => Unit)
+
+//  case class PostMessageListenerCallback(val callback: (Array[ContainerInterface]) => Unit)
 
   override def hasZkConnectionString: Boolean = (_zkConnectString != null && _zkConnectString.size > 0 && _zkBasePath != null && _zkBasePath.size > 0)
 
@@ -1627,7 +1630,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 
   override def rollbackData(transId: Long): Unit = {
 //    removeTransactionContext(transId)
-    throw new KamanjaException("Function call is not implemented", null)
+   // throw new KamanjaException("Function call is not implemented", null)
   }
 
   override def commitData(transId: Long, forceCommit: Boolean): Unit = {
@@ -2212,7 +2215,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 //    }
 //  }
 
-  private def callSaveData(dataStore: DataStoreOperations, data_list: Array[(String, Boolean, Array[(Key, String, Any)])]): Unit = {
+  private def callSaveData(dataStore: DataStoreOperations, data_list: Array[(String, Array[(Key, String, Any)])]): Unit = {
     var failedWaitTime = 15000 // Wait time starts at 15 secs
     val maxFailedWaitTime = 60000 // Max Wait time 60 secs
     var doneSave = false
@@ -2649,7 +2652,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 
   // Saving & getting data
   override def saveDataInPersistentStore(containerName: String, key: String, serializerType: String, value: Array[Byte]): Unit = {
-    val oneContData = Array((containerName, true, Array((Key(0, Array(key), 0, 0), serializerType, value.asInstanceOf[Any]))))
+    val oneContData = Array((containerName, Array((Key(0, Array(key), 0, 0), serializerType, value.asInstanceOf[Any]))))
     callSaveData(_defaultDataStore, oneContData)
   }
 
@@ -2925,7 +2928,14 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 
   // This post the message into where ever these messages are associated immediately
   // Later this will be posted to logical queue where it can execute on logical partition.
-  def postMessages(msgs: Array[ContainerInterface]): Unit = {}
+  override def postMessages(msgs: Array[ContainerInterface]): Unit = {
+    if (_postMsgListenerCallback != null)
+      _postMsgListenerCallback(msgs)
+  }
+
+  override def postMessagesListener(postMsgListenerCallback: (Array[ContainerInterface]) => Unit): Unit = {
+    _postMsgListenerCallback = postMsgListenerCallback
+  }
 
   override def getContainerInstance(containerName: String): ContainerInterface = {
     if (_mdres != null)
@@ -2940,9 +2950,9 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 
   override def getDefaultDatastoreForTenantId(tenantId: String): String = _defaultDatastoresForTenants.getOrElse(tenantId, null)
 
-  override def setSystemCatelogDatastore(sysCatelog: String): Unit = {
-    _sysCatelogDatastore = sysCatelog
+  override def setSystemCatalogDatastore(sysCatalog: String): Unit = {
+    _sysCatalogDatastore = sysCatalog
   }
 
-  override def getSystemCatelogDatastore(): String = _sysCatelogDatastore
+  override def getSystemCatalogDatastore(): String = _sysCatalogDatastore
 }
