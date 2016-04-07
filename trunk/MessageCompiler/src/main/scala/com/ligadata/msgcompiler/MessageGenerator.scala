@@ -50,13 +50,13 @@ class MessageGenerator {
       if (message.Fixed.equalsIgnoreCase("true")) {
         messageGenerator = messageGenerator.append(msgConstants.newline + generatedMsgVariables(message));
         messageGenerator = messageGenerator.append(getSetMethodsFixed(message));
-      //  messageGenerator = messageGenerator.append(getFromFuncFixed(message, mdMgr));
+        messageGenerator = messageGenerator.append(getFromFuncFixed(message, mdMgr));
       } else if (message.Fixed.equalsIgnoreCase("false")) {
         var fieldIndexMap: Map[String, Int] = msgConstants.getScalarFieldindex(message.Elements)
         messageGenerator = messageGenerator.append(msgConstants.getSetMethods);
-      //  messageGenerator = messageGenerator.append(mappedMsgGen.getFromFuncFixed(message, mdMgr))
+        messageGenerator = messageGenerator.append(mappedMsgGen.getFromFuncFixed(message, mdMgr))
       }
-     // messageGenerator = messageGenerator.append(convFuncGenerator.getPrevVersionMsg(message, mdMgr))
+      //messageGenerator = messageGenerator.append(convFuncGenerator.getPrevVersionMsg(message, mdMgr))
       messageGenerator = messageGenerator.append(messageContructor(message))
       messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.closeBrace);
       messageVerGenerator = messageVerGenerator.append(messageGenerator.toString())

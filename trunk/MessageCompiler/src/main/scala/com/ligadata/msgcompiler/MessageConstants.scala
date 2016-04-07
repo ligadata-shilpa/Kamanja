@@ -66,13 +66,12 @@ class MessageConstants {
       return true;
     else return false;
   }
-  
+
   def isMessageFunc(message: Message): Boolean = {
     if (message.MsgType.equalsIgnoreCase("message"))
       return true;
     else return false;
   }
-
 
   def catchStmt = {
     """catch {
@@ -355,6 +354,30 @@ import java.util.Date
     throw new Exception("Unhandled Collection")
   }
   """
+  }
+  /*
+   * type conversion
+   */
+  def typeConversion = {
+    """
+    private def typeConv(valueType: String, value: Any): AttributeValue = {
+      var attributeValue: AttributeValue = new AttributeValue();
+      attributeValue.setValueType(valueType)
+
+      valueType match {
+        case "string" => { attributeValue.setValue(com.ligadata.BaseTypes.StringImpl.Input(value.asInstanceOf[String])) }
+        case "int" => { attributeValue.setValue(com.ligadata.BaseTypes.IntImpl.Input(value.asInstanceOf[String])) }
+        case "float" => { attributeValue.setValue(com.ligadata.BaseTypes.FloatImpl.Input(value.asInstanceOf[String])) }
+        case "double" => { attributeValue.setValue(com.ligadata.BaseTypes.DoubleImpl.Input(value.asInstanceOf[String])) }
+        case "boolean" => { attributeValue.setValue(com.ligadata.BaseTypes.BoolImpl.Input(value.asInstanceOf[String])) }
+        case "long" => { attributeValue.setValue(com.ligadata.BaseTypes.LongImpl.Input(value.asInstanceOf[String])) }
+        case "char" => { attributeValue.setValue(com.ligadata.BaseTypes.CharImpl.Input(value.asInstanceOf[String])) }
+        case "any" => { attributeValue.setValue(com.ligadata.BaseTypes.StringImpl.Input(value.asInstanceOf[String])) }
+        case _ => {} // do nothhing
+      }
+      attributeValue
+    }  
+    """
   }
 
 }

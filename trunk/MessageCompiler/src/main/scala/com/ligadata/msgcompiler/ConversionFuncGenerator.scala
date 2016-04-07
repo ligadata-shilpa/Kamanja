@@ -12,42 +12,62 @@ class ConversionFuncGenerator {
   val messageStr = "message";
   val containerStr = "container";
   var msgConstants = new MessageConstants
+  val prevVerTypMatchKeys = "prevVerTypMatchKeys";
+  val prevVerTypesNotMatch = "prevVerTypsNotMatchKeys";
 
   /*
    * Get Previous version msg
    */
   def getPrevVersionMsg(message: Message, mdMgr: MdMgr): String = {
     var prevVerMsgObjstr: String = ""
-    log.info("Case Stmts****************************** ");
-
+    var prevMsgConvCase: String = ""
     var prevVerMsgBaseTypesIdxArry = new ArrayBuffer[String]
     val Fixed = msgConstants.isFixedFunc(message);
     val isMsg = msgConstants.isMessageFunc(message);
     val msgdefArray = getPrevVersionMsgContainers(message, mdMgr);
-    if (msgdefArray == null) return null;
+    var prevVerCaseStmts = new StringBuilder(8 * 1024)
+    var prevVerConvFuncs = new StringBuilder(8 * 1024)
 
+    if (msgdefArray == null) return null;
+    prevVerCaseStmts.append(generatePrevVerCaseStmts(message.PhysicalName, message.VersionLong.toString()))
     msgdefArray.foreach(msgdef => {
       //call the function which generates the complete conversion function and also another string with case stmt and append to string buffer 
       if (msgdef != null) {
-        val (caseStmt, convertFunc) = getconversionFunc(msgdef, isMsg, Fixed)
+        val (caseStmt, convertFunc) = getconversionFunc(msgdef, isMsg, Fixed, message, mdMgr)
+        // get the case stmsts and put it in array of case stmsnts        
+        prevVerCaseStmts.append(caseStmt)
+        prevVerConvFuncs.append(convertFunc)
       }
     })
-    return " "
+
+    //put array of case stmts in fucnction  and generate main conversion func
+    val ConversionStr = ConversionFunc(message, prevVerCaseStmts.toString())
+    var conversion: String = ""
+    if (Fixed)
+      conversion = ConversionStr + generateConvToCurrentVer(message) + prevVerConvFuncs.toString
+    else conversion = ConversionStr + generateConvToCurrentVer(message) + prevVerConvFuncs.toString + msgConstants.typeConversion;
+
+    //append the prev conversion funcs to this string buffer and return string 
+    return conversion
   }
+
   /*
    * Get Conversion Func for each prev version 
    */
-  private def getconversionFunc(msgdef: ContainerDef, isMsg: Boolean, fixed: Boolean): (String, String) = {
+  private def getconversionFunc(msgdef: ContainerDef, isMsg: Boolean, fixedMsg: Boolean, message: Message, mdMgr: MdMgr): (String, String) = {
     var attributes: Map[String, Any] = Map[String, Any]()
     var caseStmt: String = "";
     var conversionFunc: String = "";
     try {
       if (msgdef != null) {
-        val childAttrs = getPrevVerMsgAttributes(msgdef, isMsg, fixed)
+        val childAttrs = getPrevVerMsgAttributes(msgdef, isMsg, fixedMsg)
         attributes = childAttrs
-        attributes.foreach(a => println(a._1 + "========" + a._2.asInstanceOf[AttributeDef].aType.implementationName))
-        caseStmt = generateCaseStmts(msgdef)
-        log.info("Case Stmts******************************  : " + caseStmt);
+        // attributes.foreach(a => println(a._1 + "========" + a._2.asInstanceOf[AttributeDef].aType.implementationName))
+        // generate the previous version match keys and prevVer keys do not match 
+        conversionFunc = generateConvToPrevObjsFunc(message, mdMgr, attributes, fixedMsg, msgdef)
+        caseStmt = generatePrevVerCaseStmts(msgdef.PhysicalName, msgdef.Version.toString())
+
+        //generate the whole functtion
 
         /* if ((msgdef.dependencyJarNames != null) && (msgdef.JarName != null))
           message.Jarset = message.Jarset + pMsgdef.JarName ++ pMsgdef.dependencyJarNames
@@ -90,12 +110,8 @@ class ConversionFuncGenerator {
         throw new Exception("Proper Version do not exists in message/container definition")
 
       if (messagetype != null && messagetype.trim() != "") {
-        log.info("Case Stmts 1 ****************************** ");
-
         if (messagetype.equalsIgnoreCase(messageStr)) {
           msgdefobjs = mdMgr.Messages(namespace, name, false, false)
-          log.info("Case Stmts 2 ****************************** ");
-
           val isMsg = true
         } else if (messagetype.equalsIgnoreCase(containerStr)) {
           msgdefobjs = mdMgr.Containers(namespace, name, false, false)
@@ -104,14 +120,10 @@ class ConversionFuncGenerator {
         if (msgdefobjs != null) {
           msgdefobjs match {
             case None => {
-              log.info("Case Stmts 5 ****************************** ");
-
               return null
             }
             case Some(m) =>
               {
-                log.info("Case Stmts 6 ****************************** ");
-
                 if (isMsg)
                   m.foreach(msgdef => msgdefArray += msgdef.asInstanceOf[MessageDef])
                 else
@@ -162,14 +174,14 @@ class ConversionFuncGenerator {
   /*
    * Generating Conversion Function for all fields
    */
-  private def ConversionFunc(message: Message, prevMsgDef: ContainerDef) = {
-    val msgName = message.Pkg + "." + message.Name
+  private def ConversionFunc(message: Message, prevMsgConvCase: String) = {
+    val msgName = message.PhysicalName
 
     """
     def convertPrevVersionToCurVersion(oldVerobj: Any): """ + msgName + """ = {
       try {
         oldVerobj match {
-          """ + generateCaseStmts(prevMsgDef) + """
+          """ + prevMsgConvCase + """
           case _ => {
             throw new Exception("Unhandled Version Found");
           }
@@ -186,54 +198,206 @@ class ConversionFuncGenerator {
   }
 
   /*
+   *generate the case stmt for current vrsion 
+   */
+  private def generateConvToCurrentVer(message: Message) = {
+    val version = message.VersionLong.toString()
+    """
+    private def convertToVer""" + version + """(oldVerobj: """ + message.PhysicalName + """): """ + message.PhysicalName + """= {
+      return oldVerobj
+    }
+  
+    """
+  }
+
+  /*
    * Generate the case Stmts for prevobjects conversion
    */
-  private def generateCaseStmts(msgdef: ContainerDef): String = {
+  private def generatePrevVerCaseStmts(msgPhyicalName: String, version: String): String = {
     """
-          case oldVerobj: """ + msgdef.PhysicalName + """ => { //matches current version
-            return oldVerobj;
-     }
+      case oldVerobj: """ + msgPhyicalName + """ => { return  convertToVer""" + version + """(oldVerobj); } """
+  }
+
+  /*
+   * generate conversion Func
+   */
+  private def generateConvToPrevObjsFunc(message: Message, mdMgr: MdMgr, attributes: Map[String, Any], fixedMsg: Boolean, prevMsgdef: ContainerDef): String = {
+    var convStmtArray = Array[String]();
+    var genPrevVerTypMatchKeys: String = ""
+    var genPrevVerTypNotMatchKeys: String = ""
+    var conversionFunc: String = ""
+    try {
+      convStmtArray = CheckFieldsWithPrevObjs(message, mdMgr, attributes, fixedMsg)
+      //generate prevtyper match keys variable and generate prevTypeNotmatchKeys Variable
+      if (fixedMsg) {
+        conversionFunc = ConvertToPreVersionFixedFunc(convStmtArray(2), message, prevMsgdef)
+      } else {
+        genPrevVerTypMatchKeys = getMappedMsgPrevVerKeys(convStmtArray(0), prevVerTypMatchKeys)
+        genPrevVerTypNotMatchKeys = getMappedMsgPrevVerKeys(convStmtArray(1), prevVerTypesNotMatch)
+        conversionFunc = convStmtArray(2)
+       // log.info("genPrevVerTypMatchKeys " + genPrevVerTypMatchKeys)
+       // log.info("genPrevVerTypNotMatchKeys " + genPrevVerTypNotMatchKeys)
+
+        conversionFunc = ConvertToPreVersionMappedFunc(genPrevVerTypMatchKeys, genPrevVerTypNotMatchKeys, message, prevMsgdef, conversionFunc)
+      }
+    } catch {
+      case e: Exception => {
+        log.debug("", e)
+        throw e
+      }
+    }
+    return conversionFunc;
+
+  }
+
+  private def ConvertToPreVersionFixedFunc(convFuncStr: String, message: Message, prevMsgdef: ContainerDef): String = {
+    val currentMsgPhysicalName: String = message.PhysicalName
+    val prevVerMsgPhysicalName: String = prevMsgdef.PhysicalName
+    val prevVersion = prevMsgdef.Version.toString()
+
     """
+      private def convertToVer""" + prevVersion + """(oldVerobj: """ + prevVerMsgPhysicalName + """): """ + currentMsgPhysicalName + """= {
+        var newVerObj = new """ + currentMsgPhysicalName + """(factory)
+    """ + convFuncStr + """  
+      return newVerObj
+      }
+      
+   """
+  }
+
+  /*
+   * Conversion function in mapped mag
+   */
+  private def ConvertToPreVersionMappedFunc(genPrevVerTypMatchKeys: String, genPrevVerTypNotMatchKeys: String, message: Message, prevMsgdef: ContainerDef, genConvForMsgsAndCntrs: String): String = {
+    val currentMsgPhysicalName: String = message.PhysicalName
+    val prevVerMsgPhysicalName: String = prevMsgdef.PhysicalName
+    val prevVersion = prevMsgdef.Version.toString()
+    //   val genConvForMsgsAndCntrs = ""
+    """
+    private def convertToVer""" + prevVersion + """(oldVerobj: """ + prevVerMsgPhysicalName + """): """ + currentMsgPhysicalName + """= {
+      var newVerObj = new """ + currentMsgPhysicalName + """(factory)
+       """ + genPrevVerTypMatchKeys + genPrevVerTypNotMatchKeys + """
+      val iter = oldVerobj.valuesMap.entrySet().iterator();
+      val primitives = Array("string", "int", "float", "double", "long", "char", "any");
+
+      while (iter.hasNext()) {
+        //Name and Base Types Match
+        val key = iter.next().getKey.toLowerCase
+        val valueType = iter.next().getValue.getValueType.toLowerCase
+        val value = iter.next().getValue.getValue
+        val attributeVal = iter.next().getValue
+
+        if (prevVerTypMatchKeys.contains(key)) {
+          if (primitives.contains(valueType)) {
+            newVerObj.valuesMap.put(key, attributeVal);
+          } else {
+            //   handle the other types here
+            key match {
+              """ + genConvForMsgsAndCntrs + """
+
+              case _ => { newVerObj.valuesMap.put(key, attributeVal); }
+            }
+          }
+        } else if (prevVerTypsNotMatchKeys.contains(key)) { //Name Match and Base Types Not Match
+
+          val attributeVal = typeConv(keyTypes(key), iter.next().getValue.getValue)
+          newVerObj.valuesMap.put(key, attributeVal);
+          // handle for complex types
+
+        } else if (!(prevVerTypMatchKeys.contains(key) && prevVerTypsNotMatchKeys.contains(key))) { //////Extra Fields in Prev Ver Obj
+
+          if (primitives.contains(valueType)) {
+            val attributeVal = typeConv(valueType, value)
+            newVerObj.valuesMap.put(key, attributeVal);
+
+          } else { // if extra fields are not primitives
+            var attributeValue: AttributeValue = new AttributeValue();
+            attributeValue.setValueType("string")
+            attributeValue.setValue(com.ligadata.BaseTypes.StringImpl.Input(value.asInstanceOf[String]))
+            newVerObj.valuesMap.put(key, attributeValue);
+          }
+        }
+      }
+      return newVerObj;
+    }
+      
+  """
+  }
+
+  /*
+   * Generate Prevversion match or not match keys variable
+   */
+  def getMappedMsgPrevVerKeys(matchKeys: String, prevMatchStr: String): String = {
+
+    if (matchKeys != null && matchKeys.trim != "")
+      "val " + prevMatchStr + "= Array(" + matchKeys.toString.substring(0, matchKeys.toString.length - 1) + ") \n "
+    else
+      "val " + prevMatchStr + " = Array(\"\") \n "
   }
 
   /*
    * generate FromFunc code for message fields 
    */
-  private def getConversionFuncStr(message: Message, mdMgr: MdMgr): String = {
+  private def CheckFieldsWithPrevObjs(message: Message, mdMgr: MdMgr, attributes: Map[String, Any], fixedMsg: Boolean): Array[String] = {
     var conversionFuncBuf = new StringBuilder(8 * 1024)
+    var returnStmts = new ArrayBuffer[String]
+    var mappedPrevVerMatchkeys = new StringBuilder(8 * 1024)
+    var mappedPrevTypNotMatchkeys = new StringBuilder(8 * 1024)
+    var convFuncStr = new StringBuilder(8 * 1024)
     try {
       if (message.Elements != null) {
         message.Elements.foreach(field => {
           if (field != null) {
+
             val fieldBaseType: BaseTypeDef = field.FldMetaataType
+            if (fieldBaseType == null)
+              throw new Exception("Type not found in metadata for Name: " + field.Name + " , NameSpace: " + field.NameSpace + " , Type : " + field.Ttype)
+            if (field.Name == null || field.Name.trim() == "")
+              throw new Exception("Field name do not exists")
+            if (fieldBaseType.FullName == null || fieldBaseType.FullName.trim() == "")
+              throw new Exception("Full name of Type " + field.Ttype + " do not exists in metadata ")
+
             val fieldType = fieldBaseType.tType.toString().toLowerCase()
             val fieldTypeType = fieldBaseType.tTypeType.toString().toLowerCase()
             fieldTypeType match {
               case "tscalar" => {
-                // do nothing already added 
+                val conversionFunc = ConversionFuncForScalar(field, attributes, fixedMsg, fieldBaseType) // do nothing already added 
+                mappedPrevVerMatchkeys = mappedPrevVerMatchkeys.append(conversionFunc(0))
+                mappedPrevTypNotMatchkeys = mappedPrevTypNotMatchkeys.append(conversionFunc(1))
+                convFuncStr = convFuncStr.append(conversionFunc(2))
               }
               case "tcontainer" => {
                 fieldType match {
                   case "tarray" => {
                     var arrayType: ArrayTypeDef = null
                     arrayType = fieldBaseType.asInstanceOf[ArrayTypeDef]
-                    conversionFuncBuf = conversionFuncBuf.append(ConversionFuncForArray(field, true))
-                  }
-                  case "tarraybuf" => {
-                    var arraybufType: ArrayBufTypeDef = null
-                    arraybufType = fieldBaseType.asInstanceOf[ArrayBufTypeDef]
-                    conversionFuncBuf = conversionFuncBuf.append(ConversionFuncForArray(field, false)) //fromFuncForArrayBufMapped(field))
+                    val conversionFunc = ConversionFuncForArray(field, attributes, fixedMsg, arrayType)
+                    conversionFuncBuf = conversionFuncBuf.append()
+                    mappedPrevVerMatchkeys = mappedPrevVerMatchkeys.append(conversionFunc(0))
+                    mappedPrevTypNotMatchkeys = mappedPrevTypNotMatchkeys.append(conversionFunc(1))
+                    convFuncStr = convFuncStr.append(conversionFunc(2))
                   }
                   case "tstruct" => {
                     var ctrDef: ContainerDef = mdMgr.Container(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
-                    conversionFuncBuf = conversionFuncBuf.append(ConversionFuncForStruct(field, ctrDef))
+                    if (ctrDef != null) {
+                      val conversionFunc = ConversionFuncForStruct(field, ctrDef, fixedMsg, attributes)
+                      mappedPrevVerMatchkeys = mappedPrevVerMatchkeys.append(conversionFunc(0))
+                      mappedPrevTypNotMatchkeys = mappedPrevTypNotMatchkeys.append(conversionFunc(1))
+                      convFuncStr = convFuncStr.append(conversionFunc(2))
+                    }
                   }
                   case "tmap" => {
                     conversionFuncBuf = conversionFuncBuf.append(ConversionFuncForMap(field))
+
                   }
                   case "tmsgmap" => {
                     var ctrDef: ContainerDef = mdMgr.Container(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
-                    conversionFuncBuf = conversionFuncBuf.append(ConversionFuncForStruct(field, ctrDef))
+                    if (ctrDef != null) {
+                      val conversionFunc = ConversionFuncForStruct(field, ctrDef, fixedMsg, attributes)
+                      mappedPrevVerMatchkeys = mappedPrevVerMatchkeys.append(conversionFunc(0))
+                      mappedPrevTypNotMatchkeys = mappedPrevTypNotMatchkeys.append(conversionFunc(1))
+                      convFuncStr = convFuncStr.append(conversionFunc(2))
+                    }
                   }
                   case _ => {
                     throw new Exception("This types is not handled at this time ") // BUGBUG - Need to handled other cases
@@ -247,100 +411,106 @@ class ConversionFuncGenerator {
           }
         })
       }
+      //log.info("convFuncStr " + convFuncStr.toString())
+      returnStmts += mappedPrevVerMatchkeys.toString()
+      returnStmts += mappedPrevTypNotMatchkeys.toString()
+      returnStmts += convFuncStr.toString()
     } catch {
       case e: Exception => {
         log.debug("", e)
         throw e
       }
     }
-    return conversionFuncBuf.toString();
+    return returnStmts.toArray
   }
 
   /*
    * Handlie Array
    */
-  private def ConversionFuncForArray(field: Element, isArray: Boolean): String = {
+  private def ConversionFuncForArray(field: Element, attributes: Map[String, Any], fixedMsg: Boolean, arrayTypDef: ArrayTypeDef): String = {
     return null
   }
 
-  private def ConversionFuncForStruct(field: Element, ctrDef: ContainerDef): String = {
+  private def ConversionFuncForStruct(field: Element, ctrDef: ContainerDef, fixedMsg: Boolean, attributes: Map[String, Any]): Array[String] = {
+    var convPrevVerStr = new StringBuilder(8 * 1024)
+    var mappedConvPrevVerStr = new StringBuilder(8 * 1024)
+    var mappedPrevVerMatchkeys = new StringBuilder(8 * 1024)
+    var mappedPrevTypNotrMatchkeys = new StringBuilder(8 * 1024)
+    var returnStmts = new ArrayBuffer[String]
 
-    return null
+    try {
+      val childCtrFullame = ctrDef.FullName
+      val childCtrPhysicalName = ctrDef.PhysicalName
+      val (mbrExists, sameTyp, mbrMatchTypNotMatch) = AtrributesTypeMatchCheck(attributes, field.Name, childCtrFullame, true, childCtrPhysicalName)
+      var memberExists = mbrExists
+      var sameType = sameTyp
+      var membrMatchTypeNotMatch = mbrMatchTypNotMatch
+      if (memberExists) {
+        if (fixedMsg) {
+          convPrevVerStr = convPrevVerStr.append("%s{%s%sval curVerObj = new %s()%s".format(msgConstants.pad3, msgConstants.newline, msgConstants.pad3, ctrDef.typeString, msgConstants.newline))
+          convPrevVerStr = convPrevVerStr.append("%scurVerObj.convertPrevVersionToCurVersion(oldVerobj.%s)%s".format(msgConstants.pad3, field.Name, msgConstants.newline))
+          convPrevVerStr = convPrevVerStr.append("%sthis.%s = curVerObj}%s".format(msgConstants.pad3, field.Name, msgConstants.newline))
+        } else {
+          mappedPrevVerMatchkeys.append("\"" + field.Name + "\",")
+          convPrevVerStr = convPrevVerStr.append("%s case \"%s\" => { %s".format(msgConstants.pad2, field.Name, msgConstants.newline))
+          convPrevVerStr = convPrevVerStr.append("%s  newVerObj.valuesMap(\"%s\") =  oldVerobj.valuesMap(\"%s\")  }}%s".format(msgConstants.pad2, field.Name, msgConstants.newline))
+          if (sameType) {
+
+          } else {
+            convPrevVerStr = convPrevVerStr.append("%s{%s%sval curVerObj = new %s()%s".format(msgConstants.pad2, msgConstants.newline, msgConstants.pad2, ctrDef.typeString, msgConstants.newline))
+            convPrevVerStr = convPrevVerStr.append("%scurVerObj.convertPrevVersionToCurVersion(prevObjfield._2._2)%s".format(msgConstants.pad2, field.Name, msgConstants.newline))
+            convPrevVerStr = convPrevVerStr.append("%s fields(\"%s\") = (prevObjfield._2._1,curVerObj) }%s".format(msgConstants.pad2, field.Name, msgConstants.newline))
+          }
+        }
+      }
+      if (membrMatchTypeNotMatch) {
+        mappedPrevTypNotrMatchkeys.append("\"" + field.Name + "\",")
+      }
+
+      returnStmts += mappedPrevVerMatchkeys.toString()
+      returnStmts += mappedPrevTypNotrMatchkeys.toString()
+      returnStmts += convPrevVerStr.toString()
+
+    } catch {
+      case e: Exception => {
+        log.debug("", e)
+        throw e
+      }
+    }
+    return returnStmts.toArray
   }
 
   private def ConversionFuncForMap(field: Element): String = {
     return null
   }
 
-  private def ConversionFuncForScalar(field: Element, attributes: Map[String, Any], fixed: Boolean): String = {
-    var prevObjDeserializedBuf = new StringBuilder(8 * 1024)
-    var convertOldObjtoNewObjBuf = new StringBuilder(8 * 1024)
+  private def ConversionFuncForScalar(field: Element, attributes: Map[String, Any], fixedMsg: Boolean, fieldBaseType: BaseTypeDef): Array[String] = {
     var mappedPrevVerMatchkeys = new StringBuilder(8 * 1024)
     var mappedPrevTypNotrMatchkeys = new StringBuilder(8 * 1024)
-    var prevObjTypNotMatchDeserializedBuf = new StringBuilder(8 * 1024)
+    var filedStrBuf = new StringBuilder(8 * 1024)
+    var convPrevVerStr = new StringBuilder(8 * 1024)
+    var returnStmts = new ArrayBuffer[String]
 
     try {
-      val typ = field.FldMetaataType;
-      if (typ == null)
-        throw new Exception("Type not found in metadata for Name: " + field.Name + " , NameSpace: " + field.NameSpace + " , Type : " + field.Ttype)
-      if (field.Name == null || field.Name.trim() == "")
-        throw new Exception("Field name do not exists")
-      if (typ.FullName == null || typ.FullName.trim() == "")
-        throw new Exception("Full name of Type " + field.Ttype + " do not exists in metadata ")
 
-      var memberExists: Boolean = false
-      var membrMatchTypeNotMatch = false // for mapped messages to handle if prev ver obj and current version obj member types do not match...
-      var childTypeImplName: String = ""
-      var childtypeName: String = ""
-      var childtypePhysicalName: String = ""
+      val (mbrExists, sameTyp, mbrMatchTypNotMatch) = AtrributesTypeMatchCheck(attributes, field.Name, fieldBaseType.FullName, false, null)
+      var memberExists = mbrExists
+      var sameType = sameTyp
+      var membrMatchTypeNotMatch = mbrMatchTypNotMatch
+      if (memberExists) {
+        if (fixedMsg) {
+          //add fixed stuff
+          convPrevVerStr = convPrevVerStr.append("%snewVerObj.%s = oldVerobj.%s; %s".format(msgConstants.pad3, field.Name, field.Name, msgConstants.newline))
 
-      var sameType: Boolean = false
-      if (attributes != null) {
-        if (attributes.contains(field.Name)) {
-          var child = attributes.getOrElse(field.Name, null)
-          if (child != null) {
-            val typefullname = child.asInstanceOf[AttributeDef].aType.FullName
-            childtypeName = child.asInstanceOf[AttributeDef].aType.tTypeType.toString
-            childtypePhysicalName = child.asInstanceOf[AttributeDef].aType.physicalName
-            if (typefullname != null && typefullname.trim() != "" && typefullname.equals(typ.FullName)) {
-              memberExists = true
-            } else {
-              membrMatchTypeNotMatch = true
-              childTypeImplName = child.asInstanceOf[AttributeDef].aType.implementationName
-            }
-          }
-        }
-      }
-      /*if (memberExists) {
-        if (fixed) {
-
-          prevObjDeserializedBuf = prevObjDeserializedBuf.append("%s%s = prevVerObj.%s;%s".format(msgConstants.pad1, field.Name, field.Name, msgConstants.newline))
-          convertOldObjtoNewObjBuf = convertOldObjtoNewObjBuf.append("%s%s = oldObj.%s;%s".format(msgConstants.pad2, field.Name, field.Name, msgConstants.newline))
-        } else if (!fixed) {
+        } else {
           mappedPrevVerMatchkeys.append("\"" + field.Name + "\",")
-          //if (baseTypIdx != -1)
-          //prevObjDeserializedBuf = prevObjDeserializedBuf.append("%s case %s => fields(key) = (typIdx, prevObjfield._2._2);)%s".format(pad2, baseTypIdx, newline))
-
-          //prevObjDeserializedBuf = prevObjDeserializedBuf.append("%sset(\"%s\", prevVerObj.getOrElse(\"%s\", null))%s".format(pad1, f.Name, f.Name, newline))
-          // convertOldObjtoNewObjBuf = convertOldObjtoNewObjBuf.append("%sset(\"%s\", oldObj.getOrElse(\"%s\", null))%s".format(pad2, f.Name, f.Name, newline))
         }
       }
       if (membrMatchTypeNotMatch) {
-        if (!fixed) {
-
-          if (childtypeName.toLowerCase().equals("tscalar")) {
-
-            val implName = typ.get.implementationName + ".Input"
-
-            //  => data = com.ligadata.BaseTypes.StringImpl.toString(prevObjfield._2._2.asInstanceOf[String];
-            mappedPrevTypNotrMatchkeys = mappedPrevTypNotrMatchkeys.append("\"" + f.Name + "\",")
-            if (!prevVerMsgBaseTypesIdxArry.contains(childTypeImplName)) {
-              prevVerMsgBaseTypesIdxArry += childTypeImplName
-              prevObjTypNotMatchDeserializedBuf = prevObjTypNotMatchDeserializedBuf.append("%s case \"%s\" => data = %s.toString(value.asInstanceOf[%s]); %s".format(pad2, childTypeImplName, childTypeImplName, childtypePhysicalName, newline))
-            }
-          }
+        if (!fixedMsg) {
+          mappedPrevTypNotrMatchkeys = mappedPrevTypNotrMatchkeys.append("\"" + field.Name + "\",")
         }
-      }*/
+      }
 
     } catch {
       case e: Exception => {
@@ -348,7 +518,46 @@ class ConversionFuncGenerator {
         throw e
       }
     }
-    return null
+    returnStmts += mappedPrevVerMatchkeys.toString()
+    returnStmts += mappedPrevTypNotrMatchkeys.toString()
+    returnStmts += convPrevVerStr.toString()
+    return returnStmts.toArray
+  }
+
+  /*
+   * Check for attributes type match
+   */
+  private def AtrributesTypeMatchCheck(attributes: Map[String, Any], fieldName: String, fieldTypeFullName: String, isMsgorCtr: Boolean, curObjtype: String): (Boolean, Boolean, Boolean) = {
+    var memberExists: Boolean = false
+    var membrMatchTypeNotMatch = false // for mapped messages to handle if prev ver obj and current version obj member types do not match...
+    var childTypeImplName: String = ""
+    var childtypeName: String = ""
+    var childtypePhysicalName: String = ""
+    var sameType: Boolean = false // same type check valid only container as child msg
+
+    if (attributes != null) {
+      if (attributes.contains(fieldName)) {
+        var child = attributes.getOrElse(fieldName, null)
+        if (child != null) {
+          val typefullname = child.asInstanceOf[AttributeDef].aType.FullName
+          childtypeName = child.asInstanceOf[AttributeDef].aType.tTypeType.toString
+          childtypePhysicalName = child.asInstanceOf[AttributeDef].aType.physicalName
+          if (typefullname != null && typefullname.trim() != "" && typefullname.equals(fieldTypeFullName)) {
+            memberExists = true
+            if (isMsgorCtr) {
+              val childPhysicalName = child.asInstanceOf[AttributeDef].aType.typeString
+              if (childPhysicalName != null && childPhysicalName.trim() != "") {
+                if (curObjtype != null && curObjtype.trim() != "" && childPhysicalName.equals(curObjtype))
+                  sameType = true
+              }
+            }
+          } else {
+            membrMatchTypeNotMatch = true
+          }
+        }
+      }
+    }
+    return (memberExists, sameType, membrMatchTypeNotMatch)
   }
 
 }

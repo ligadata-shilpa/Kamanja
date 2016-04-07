@@ -98,7 +98,7 @@ class MessageParser {
       if (map.contains(key)) {
         if (map.get(key).get.isInstanceOf[scala.collection.immutable.Map[_, _]]) {
           val message = map.get(key).get.asInstanceOf[messageMap]
-          log.info("message map" + message)
+          //log.info("message map" + message)
           val messageMap: scala.collection.mutable.Map[String, Any] = scala.collection.mutable.Map[String, Any]()
           message.foreach(kv => { messageMap(kv._1.trim().toLowerCase()) = kv._2 })
 
@@ -133,6 +133,7 @@ class MessageParser {
     var primaryKeysList: List[String] = null
     var conceptsList: List[String] = null
     var msgVersion: String = ""
+    var msgVersionLong: Long = 0
     var persistMsg: Boolean = false
     var NameSpace: String = ""
     var Name: String = ""
@@ -176,6 +177,7 @@ class MessageParser {
           Description = message.get("description").get.toString()
 
         msgVersion = MsgUtils.extractVersion(message)
+        msgVersionLong = MdMgr.ConvertVersionToLong(msgVersion)
 
         for (key: String <- message.keys) {
           if (key.equals("elements") || key.equals("fields")) {
@@ -263,7 +265,7 @@ class MessageParser {
     val pkg = NameSpace + ".V" + MdMgr.ConvertVersionToLong(msgVersion).toString
     val physicalName: String = pkg + "." + Name
 
-    val msg: Message = new Message(mtype, NameSpace, Name, physicalName, msgVersion, "Description", Fixed, persistMsg, elements, tdataexists, tdata, null, pkg.trim(), null, null, null, partitionKeysList, primaryKeysList, cur_time, msgLevel, null, null, definition, timePartition, 0)
+    val msg: Message = new Message(mtype, NameSpace, Name, physicalName, msgVersion, msgVersionLong, "Description", Fixed, persistMsg, elements, tdataexists, tdata, null, pkg.trim(), null, null, null, partitionKeysList, primaryKeysList, cur_time, msgLevel, null, null, definition, timePartition, 0)
 
     var msglist: List[Message] = List[Message]()
     if (messages != null && messages.size > 0)
@@ -276,14 +278,6 @@ class MessageParser {
 
         if (m.Fixed == null || m.Fixed.trim() == "")
           m.Fixed = Fixed
-        /*
-        log.info("!!!!!!!!!!!!!!!!!!" + m.Name)
-        log.info("!!!!!!!!!!!!!!!!!!" + m.NameSpace)
-        log.info("!!!!!!!!!!!!!!!!!!" + m.Version)
-        log.info("!!!!!!!!!!!!!!!!!!" + m.Fixed)
-        log.info("!!!!!!!!!!!!!!!!!!" + m.Persist)
-        * 
-        */
 
       })
 
@@ -291,12 +285,6 @@ class MessageParser {
       msglist = messages :+ msg
     else
       msglist = msglist :+ msg
-
-    //log.info("%%%%%%%%%%%%%%%%%  " + msglist.size)
-    msglist.foreach(m => {
-      // log.info("======================  " + m.Name)
-
-    })
 
     msg
   }
@@ -447,7 +435,6 @@ class MessageParser {
       }
     }
 
-    // log.info("^^^^^^^^^^^^^^^^^^^^^^^ " + message.Name)
     (fld, message)
   }
 
@@ -494,6 +481,7 @@ class MessageParser {
             } else if (fieldstr.size == 2) {
               namespace = fieldstr(0).toLowerCase()
               ttype = fieldtype.asInstanceOf[String].toLowerCase()
+
             } else
               ttype = fieldtype.asInstanceOf[String].toLowerCase()
           }
@@ -519,10 +507,8 @@ class MessageParser {
           childMessage = childMsg
           // msgBuffer += message
 
-          log.info("^^^^^^^^^^^^^^^^^^^^ childMsgType   " + childMsgType)
           fld = new Element(namespace, name, childMsgType, collectionType, key, fldTypeVer, ordinal, null, null, null, null)
 
-          log.info("Child Container ==========  End  ============== ")
         }
       } else {
         throw new Exception("Field Type do not exist in " + key)
@@ -535,9 +521,6 @@ class MessageParser {
         throw e
       }
     }
-    if (childMessage != null)
-      log.info("%%%%%%%%%%%%%%%%% childMessage   " + childMessage.Name)
-    // log.info("^^^^^^^^^^^^^^^^^^^^ ttype   " + ttype)
 
     (fld, childMessage)
   }
@@ -586,7 +569,7 @@ class MessageParser {
     val primaryKeysList = null
     val physicalName: String = pkg + "." + Name
     val cur_time = System.currentTimeMillis
-    val msg = new Message(mtype, NameSpace, Name, physicalName, msgVersion, "Description", Fixed, persistMsg, lbuffer.toList, tdataexists, tdata, null, pkg.trim(), null, null, null, partitionKeysList, primaryKeysList, cur_time, msgLevel, null, null, null, null, 0)
+    val msg = new Message(mtype, NameSpace, Name, physicalName, msgVersion, 0, "Description", Fixed, persistMsg, lbuffer.toList, tdataexists, tdata, null, pkg.trim(), null, null, null, partitionKeysList, primaryKeysList, cur_time, msgLevel, null, null, null, null, 0)
 
     /*log.info("child message level " + msg.MsgLvel)
     log.info("child message name " + msg.Name)

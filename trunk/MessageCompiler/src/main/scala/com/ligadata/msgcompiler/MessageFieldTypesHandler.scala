@@ -27,7 +27,7 @@ class MessageFieldTypesHandler {
     if (message.Elements != null) {
       message.Elements.foreach(field => {
         if (field != null) {
-          log.info("field.Ttype =================" + field.Ttype);
+          //log.info("field.Ttype =================" + field.Ttype);
 
           val typ = MdMgr.GetMdMgr.Type(field.Ttype, -1, true) // message.Version.toLong
 
@@ -47,25 +47,26 @@ class MessageFieldTypesHandler {
           //get the fields args list for addding message in the metadata 
           argsList = (field.NameSpace, field.Name, field.FldMetaataType.NameSpace, field.FldMetaataType.Name, false, null) :: argsList
 
-          log.info("******************TYPES FROM METADATA START******************************")
+        /*  log.info("******************TYPES FROM METADATA START******************************")
           log.info("type " + typ.get.tType.toString())
           log.info("fields name " + field.Name)
           log.info("fields type " + field.Ttype)
-          log.info("******************TYPES FROM METADATA START******************************")
+          log.info("******************TYPES FROM METADATA START******************************")*/
         }
       })
     }
 
-    /*message.Elements.foreach(field => {
-      
-      log.info("*************==================================== " + field.FieldTypeImplementationName);      
-      log.info("****************** TYPES FROM METADATA START  --- In Message******************************")       
+   /* message.Elements.foreach(field => {
+
+      log.info("*************==================================== " + field.FieldTypeImplementationName);
+      log.info("****************** TYPES FROM METADATA START  --- In Message******************************")
+      log.info("=========mesage fld type " + field.Name)
       log.info("=========mesage fld type " + field.Ttype)
       log.info("=========mesage fld metadata type " + field.FldMetaataType.tType.toString())
       log.info("=========mesage fld metadata tTypeType " + field.FldMetaataType.tTypeType.toString())
       log.info("=========mesage fld metadata implementationName " + field.FldMetaataType.implementationName)
-      log.info("=========mesage fld size " + types.size)
-      log.info("=========mesage fld 2 :  " + types(1))
+      //log.info("=========mesage fld size " + types.size)
+      //log.info("=========mesage fld 2 :  " + types(1))
       log.info("=========mesage fld  " + field.FieldTypePhysicalName)
       log.info("******************TYPES FROM METADATA End --- In Message ******************************")
 
@@ -111,12 +112,12 @@ class MessageFieldTypesHandler {
     var arrayType: ArrayTypeDef = null
     if (fieldBaseType.isInstanceOf[ArrayTypeDef])
       arrayType = fieldBaseType.asInstanceOf[ArrayTypeDef]
-
+/*
     log.info("fieldTypeType " + fieldTypeType)
     log.info("fieldBaseType 1 " + fieldBaseType.tType)
     log.info("fieldBaseType 2 " + fieldBaseType.typeString)
     log.info("fieldBaseType 3" + fieldBaseType.tTypeType)
-
+*/
     // log.info("fieldType " + fieldType)
 
     fieldTypeType match {
@@ -132,37 +133,29 @@ class MessageFieldTypesHandler {
             var arrayType: ArrayTypeDef = null
             arrayType = fieldBaseType.asInstanceOf[ArrayTypeDef]
             types(0) = arrayType.typeString
-            types(1) = arrayType.elemDef.implementationName
-            log.info("!!!!!!!!!!!!!!!!!!!!!!!!" + types(1) + "........ " + types(0) + "...... " + arrayType.elemDef.PhysicalName)
-
+            types(1) = arrayType.elemDef.implementationName          
           }
           case "tarraybuf" => {
             var arraybufType: ArrayBufTypeDef = null
             arraybufType = fieldBaseType.asInstanceOf[ArrayBufTypeDef]
             types(0) = arraybufType.typeString
-            types(1) = arraybufType.elemDef.implementationName
-            log.info(types(1) + ".......... " + types(0))
-
+            types(1) = arraybufType.elemDef.implementationName          
           }
           case "tstruct" => {
             var ctrDef: ContainerDef = mdMgr.Container(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
             types(0) = ctrDef.PhysicalName
             types(1) = ctrDef.FullName
-            log.info(ctrDef.objectDefinition);
           }
           case "tmsgmap" => {
             var ctrDef: ContainerDef = mdMgr.Container(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
             types(0) = ctrDef.PhysicalName
             types(1) = ctrDef.FullName
-            log.info(ctrDef.objectDefinition);
           }
           case "tmap" => {
             var maptypeDef: MapTypeDef = null;
             maptypeDef = fieldBaseType.asInstanceOf[MapTypeDef]
             types(0) = maptypeDef.typeString
             types(1) = maptypeDef.keyDef.implementationName
-            log.info(types(1) + ".......... " + types(0))
-            log.info(maptypeDef.valDef.tType)
           }
           case _ => {
             throw new Exception("This types is not handled at this time ") // BUGBUG - Need to handled other cases
