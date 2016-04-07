@@ -187,6 +187,29 @@ class MessageGenerator {
   }
 
   /*
+   * generateAttributeTypes 
+   */
+  private def getAttributeTypes(message: Message): String = {
+    val getAttributeTypes = genGetAttributeTypes(message)
+    """
+      var attributeTypes = getAttributeTypes """ + getAttributeTypes
+
+  }
+
+  private def genGetAttributeTypes(message: Message): String = {
+    if (message.Elements != null) {
+      message.Elements.foreach(field => {
+  // check in primitives for second part of field
+   // check array of in primitives otherwise container
+   //     check
+      })
+
+    }
+
+    return null
+  }
+
+  /*
    * Get Method generation function for Fixed Messages
    */
   private def getFuncGeneration(fields: List[Element]): String = {

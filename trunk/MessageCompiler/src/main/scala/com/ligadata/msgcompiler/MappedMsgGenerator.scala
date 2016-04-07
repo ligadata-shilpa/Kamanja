@@ -502,11 +502,6 @@ class MappedMsgGenerator {
                     arrayType = fieldBaseType.asInstanceOf[ArrayTypeDef]
                     fromFuncBuf = fromFuncBuf.append(fromFuncForArrayMapped(field, true))
                   }
-                  case "tarraybuf" => {
-                    var arraybufType: ArrayBufTypeDef = null
-                    arraybufType = fieldBaseType.asInstanceOf[ArrayBufTypeDef]
-                    fromFuncBuf = fromFuncBuf.append(fromFuncForArrayMapped(field, false)) //fromFuncForArrayBufMapped(field))
-                  }
                   case "tstruct" => {
                     var ctrDef: ContainerDef = mdMgr.Container(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
                     fromFuncBuf = fromFuncBuf.append(fromFuncForStructMapped(field, ctrDef))
@@ -554,13 +549,6 @@ class MappedMsgGenerator {
         log.info("2222222222222 " + field.Ttype);
 
         var arrayType = field.FldMetaataType.asInstanceOf[ArrayTypeDef]
-        typetype = arrayType.elemDef.tTypeType.toString().toLowerCase()
-        if (field.FldMetaataType.typeString.toString().split("\\[").size == 2) {
-          typeStr = field.FldMetaataType.typeString.toString().split("\\[")(1)
-        }
-      } else if (field.Ttype.contains("arraybufferof")) {
-        val implName = field.FieldTypeImplementationName
-        var arrayType = field.FldMetaataType.asInstanceOf[ArrayBufTypeDef]
         typetype = arrayType.elemDef.tTypeType.toString().toLowerCase()
         if (field.FldMetaataType.typeString.toString().split("\\[").size == 2) {
           typeStr = field.FldMetaataType.typeString.toString().split("\\[")(1)

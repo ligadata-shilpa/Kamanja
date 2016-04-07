@@ -341,7 +341,7 @@ class MessageParser {
 
         val eList = message.get(key).get.asInstanceOf[List[Map[String, Any]]]
         var count: Int = 0
-        for (l <- eList) {
+        for (l <- eList.seq) {
           if (l.isInstanceOf[keyMap]) {
 
             val eMap1: scala.collection.immutable.Map[String, Any] = l.asInstanceOf[scala.collection.immutable.Map[String, Any]]
@@ -491,7 +491,7 @@ class MessageParser {
           if (field.contains("version") && (field.get("version").get.isInstanceOf[string])) {
             fldTypeVer = field.get("version").get.asInstanceOf[String].toLowerCase()
           }
-          fld = new Element(namespace, name, ttype, collectionType, key, fldTypeVer, ordinal, null, null, null, null)
+          fld = new Element(namespace, name, ttype, collectionType, key, fldTypeVer, ordinal, null, null, null, null, null)
 
         } else if (fieldtype.isInstanceOf[Map[_, _]]) {
           //  log.info("Child Container ========== Start ==============  ")
@@ -506,7 +506,7 @@ class MessageParser {
           childMessage = childMsg
           // msgBuffer += message
 
-          fld = new Element(namespace, name, childMsgType, collectionType, key, fldTypeVer, ordinal, null, null, null, null)
+          fld = new Element(namespace, name, childMsgType, collectionType, key, fldTypeVer, ordinal, null, null, null, null, null)
 
         }
       } else {

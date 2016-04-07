@@ -21,11 +21,12 @@ import com.ligadata.Exceptions._;
 class Messages(var messages: List[Message])
 class Message(var MsgType: String, var NameSpace: String, var Name: String, var PhysicalName: String, var Version: String, var VersionLong : Long, var Description: String, var Fixed: String, var Persist: Boolean, var Elements: List[Element], var TDataExists: Boolean, var TrfrmData: TransformData, var Jarset: Set[String], var Pkg: String, var Ctype: String, var CCollectiontype: String, var Containers: List[String], var PartitionKeys: List[String], var PrimaryKeys: List[String], var ClsNbr: Long, var MsgLvel: Int, var ArgsList: List[(String, String, String, String, Boolean, String)], var Schema: String, var Definition: String, var timePartition: TimePartition, var schemaId: Int)
 class TransformData(var input: Array[String], var output: Array[String], var keys: Array[String])
-//class Field(var NameSpace: String, var Name: String, var Ttype: String, var CollectionType: String, var Fieldtype: String, var FieldtypeVer: String)
-class Element(var NameSpace: String, var Name: String, var Ttype: String, var CollectionType: String, var ElemType: String, var FieldtypeVer: String, var FieldOrdinal: Int, var FldMetaataType: BaseTypeDef, var FieldTypePhysicalName: String, var FieldTypeImplementationName: String, var FieldObjectDefinition: String)
+class Element(var NameSpace: String, var Name: String, var Ttype: String, var CollectionType: String, var ElemType: String, var FieldtypeVer: String, var FieldOrdinal: Int, var FldMetaataType: BaseTypeDef, var FieldTypePhysicalName: String, var FieldTypeImplementationName: String, var FieldObjectDefinition: String, var AttributeTypeInfo: ArrtibuteInfo)
 class MessageGenObj(var verScalaClassStr: String, var verJavaClassStr: String, var containerDef: ContainerDef, var noVerScalaClassStr: String, var noVerJavaClassStr: String, var argsList: List[(String, String, String, String, Boolean, String)])
 class TimePartition(var Key: String, var Format: String, var DType: String)
-
+class ArrtibuteInfo(var typeCategary: Int, var valTypeId: Int,	var valSchemaId: Long, var keyTypeId: String)
+    
+    
 class MessageCompiler {
 
   val logger = this.getClass.getName
