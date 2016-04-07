@@ -40,10 +40,7 @@ import com.ligadata.Serialize._
 
 import com.ligadata.kamanja.metadataload.MetadataLoad
 
-import com.ligadata.MetadataAPI.Utility._
-
-@Ignore
-class CmdLineAPISpec extends FunSpec with LocalTestFixtures with BeforeAndAfter with BeforeAndAfterAll with GivenWhenThen {
+class MigrateAdapterSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter with BeforeAndAfterAll with GivenWhenThen {
   var res: String = null;
   var statusCode: Int = -1;
   var apiResKey: String = "\"Status Code\" : 0"
@@ -56,7 +53,6 @@ class CmdLineAPISpec extends FunSpec with LocalTestFixtures with BeforeAndAfter 
   var fileList: List[String] = null
   var newVersion: String = null
   val userid: Option[String] = Some("test")
-  val tenantId = "testTenantId"
 
   private val loggerName = this.getClass.getName
   private val logger = LogManager.getLogger(loggerName)
@@ -156,24 +152,8 @@ class CmdLineAPISpec extends FunSpec with LocalTestFixtures with BeforeAndAfter 
     }
   }
 
-  /**
-   * extractNameFromPMML - pull the Application name="xxx" from the PMML doc and construct
-   * a name  string from it, cloned from APIService.scala
-   */
-  def extractNameFromPMML(pmmlObj: String): String = {
-    var firstOccurence: String = "unknownModel"
-    val pattern = """Application[ ]*name="([^ ]*)"""".r
-    val allMatches = pattern.findAllMatchIn(pmmlObj)
-    allMatches.foreach(m => {
-      if (firstOccurence.equalsIgnoreCase("unknownModel")) {
-	firstOccurence = (m.group(1))
-      }
-    })
-    return firstOccurence
-  }
 
-  describe("Unit Tests for all MetadataAPI operations") {
-
+  describe("Unit Tests for Migration of Adapter objects to 1.4") {
     // validate property setup
     it("Validate properties for MetadataAPI") {
       And("MetadataAPIImpl.GetMetadataAPIConfig should have been initialized")
@@ -265,10 +245,11 @@ class CmdLineAPISpec extends FunSpec with LocalTestFixtures with BeforeAndAfter 
       assert(null != sc)
     }
 
-    // CRUD operations on container objects
-    it("Container Tests") {
-      And("Check whether CONTAINER_FILES_DIR defined as property")
-      dirName = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("CONTAINER_FILES_DIR")
+
+    it("Load Cluster Config ") {
+
+      And("Check whether CONFIG_FILES_DIR defined as property")
+      dirName = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("CONFIG_FILES_DIR")
       assert(null != dirName)
 
       And("Check Directory Path")
@@ -278,19 +259,18 @@ class CmdLineAPISpec extends FunSpec with LocalTestFixtures with BeforeAndAfter 
       And("Check whether " + dirName + " is a directory ")
       assert(true == iFile.isDirectory)
 
-      And("Make sure there are few JSON container files in " + dirName);
-      val contFiles = new java.io.File(dirName).listFiles.filter(_.getName.endsWith(".json"))
-      assert(0 != contFiles.length)
+      And("Make sure there are few JSON config files in " + dirName);
+      val cfgFiles = new java.io.File(dirName).listFiles.filter(_.getName.endsWith(".json"))
+      assert(0 != cfgFiles.length)
 
-      //fileList = List("CoughCodes.json","EnvCodes.json","DyspnoeaCodes.json","SmokeCodes.json","SputumCodes.json")
-      fileList = List("EnvCodes.json")
+      fileList = List("ClusterConfig.json")
       fileList.foreach(f1 => {
-	And("Add the Container From " + f1)
+	And("Add the Config From " + f1)
 	And("Make Sure " + f1 + " exist")
 	var exists = false
 	var file: java.io.File = null
 	breakable {
-	  contFiles.foreach(f2 => {
+	  cfgFiles.foreach(f2 => {
 	    if (f2.getName() == f1) {
 	      exists = true
 	      file = f2
@@ -300,136 +280,18 @@ class CmdLineAPISpec extends FunSpec with LocalTestFixtures with BeforeAndAfter 
 	}
 	assert(true == exists)
 
-	And("AddContainer first time from " + file.getPath)
-	var a:Action.Value = Action.ADDCONTAINER
-	res = StartMetadataAPI.route(a,file.getPath,"",tenantId,Array("add","container",f1),userid,null)
+	And("AddConfig  from " + file.getPath)
+	var cfgStr = Source.fromFile(file).mkString
+	res = MetadataAPIImpl.UploadConfig(cfgStr, None, "testConfig")
 	res should include regex ("\"Status Code\" : 0")
 
-	And("GetContainerDef API to fetch the container that was just added")
-	a = Action.GETCONTAINER
-	var objName = "system" + "." + f1.stripSuffix(".json").toLowerCase + "." + "0000000000001000000"
-	res = StartMetadataAPI.route(a,null,objName,tenantId,Array("get","container",objName),userid,null)
-	res should include regex ("\"Status Code\" : 0")
-      })
-    }
+	And("Check number of the adapters")
+	var adapters = MdMgr.GetMdMgr.Adapters
+	assert(adapters.size == 4)
 
-    // CRUD operations on message objects
-    it("Message Tests") {
-      And("Check whether MESSAGE_FILES_DIR defined as property")
-      dirName = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("MESSAGE_FILES_DIR")
-      assert(null != dirName)
-
-      And("Check Directory Path")
-      iFile = new File(dirName)
-      assert(true == iFile.exists)
-
-      And("Check whether " + dirName + " is a directory ")
-      assert(true == iFile.isDirectory)
-
-      And("Make sure there are few JSON message files in " + dirName);
-      val msgFiles = new java.io.File(dirName).listFiles.filter(_.getName.endsWith(".json"))
-      assert(0 != msgFiles.length)
-
-      //fileList = List("outpatientclaim.json","inpatientclaim.json","hl7.json","beneficiary.json")
-      //fileList = List("HelloWorld_Msg_Def.json","HelloWorld_Msg_Output_Def.json")
-      fileList = List("HelloWorld_Msg_Def.json")
-      fileList.foreach(f1 => {
-	And("Add the Message From " + f1)
-	And("Make Sure " + f1 + " exist")
-	var exists = false
-	var file: java.io.File = null
-	breakable {
-	  msgFiles.foreach(f2 => {
-	    if (f2.getName() == f1) {
-	      exists = true
-	      file = f2
-	      break
-	    }
-	  })
-	}
-	assert(true == exists)
-
-	And("AddMessage first time from " + file.getPath)
-	var a:Action.Value = Action.ADDMESSAGE
-	res = StartMetadataAPI.route(a,file.getPath,"",tenantId,Array("add","message",f1),userid,null)
-	res should include regex ("\"Status Code\" : 0")
-
-	And("GetMessageDef API to fetch the message that was just added")
-	a = Action.GETMESSAGE
-	var objName = "system" + "." + f1.stripSuffix(".json").toLowerCase + "." + "0000000000001000000"
-	res = StartMetadataAPI.route(a,null,objName,tenantId,Array("get","message",objName),userid,null)
-	res should include regex ("\"Status Code\" : 0")
-
-      })
-    }
-
-    // CRUD operations on Model objects
-    it("Add KPPML Models") {
-      And("Check whether MODEL_FILES_DIR defined as property")
-      dirName = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("MODEL_FILES_DIR")
-      assert(null != dirName)
-
-      And("Check Directory Path")
-      iFile = new File(dirName)
-      assert(true == iFile.exists)
-
-      And("Check whether " + dirName + " is a directory ")
-      assert(true == iFile.isDirectory)
-
-      And("Make sure there are few pmml model files in " + dirName);
-      val modFiles = new java.io.File(dirName).listFiles.filter(_.getName.endsWith(".xml"))
-      assert(0 != modFiles.length)
-
-      // KPMML Models
-      fileList = List("PMML_Model_HelloWorld.xml")
-      fileList.foreach(f1 => {
-	And("Add the Model From " + f1)
-	And("Make Sure " + f1 + " exist")
-	var exists = false
-	var file: java.io.File = null
-	breakable {
-	  modFiles.foreach(f2 => {
-	    if (f2.getName() == f1) {
-	      exists = true
-	      file = f2
-	      break
-	    }
-	  })
-	}
-	assert(true == exists)
-
-	And("AddMessage first time from " + file.getPath)
-	var a:Action.Value = Action.ADDMODELKPMML
-	res = StartMetadataAPI.route(a,file.getPath,"",tenantId,Array("add","model","kpmml",f1),userid,null)
-	res should include regex ("\"Status Code\" : 0")
-
-	And("GetMessageDef API to fetch the message that was just added")
-	a = Action.GETMODEL
-	var nameSpace  = "system"
-	var modStr = Source.fromFile(file).mkString
-	var modelName = extractNameFromPMML(modStr).toLowerCase
-	logger.info("ModelName => " + modelName)
-	assert(modelName != "unknownModel")
-	var objName = nameSpace + "." + modelName + "." + "0000000000001000000"
-	res = StartMetadataAPI.route(a,null,objName,tenantId,Array("get","message",objName),userid,null)
-	res should include regex ("\"Status Code\" : 0")
-
-	a = Action.GETMESSAGE
-	var outputMsgName = modelName + "_outputmsg"
-	val msgFullNameWithVersion = nameSpace + "." + outputMsgName + "." + "000000000000000001"
-	res = StartMetadataAPI.route(a,null,msgFullNameWithVersion,tenantId,Array("get","message",msgFullNameWithVersion),userid,null)
-	res should include regex ("\"Status Code\" : 0")
-
-	val modDefs = MdMgr.GetMdMgr.Models(nameSpace, modelName, true, true)
-	assert(modDefs != None)
-	
-	val models = modDefs.get.toArray
-	assert(models.length == 1)
-	
-	var omsgs = models(0).outputMsgs
-	assert(omsgs.length == 1)
-	val msgFullName = nameSpace + "." + outputMsgName
-	assert(omsgs(0) == msgFullName)
+	And("Convert map adapters to json")
+	val jsonStr = JsonSerializer.SerializeCfgObjectListToJson("Adapters",adapters.toArray.map(x => x._2))
+	logger.info(jsonStr)
       })
     }
   }
@@ -443,7 +305,7 @@ class CmdLineAPISpec extends FunSpec with LocalTestFixtures with BeforeAndAfter 
 
     //file = new java.io.File("lib_managed")
     //if(file.exists()){
-    //  TestUtils.deleteFile(file)
+    //TestUtils.deleteFile(file)
     //}
 
     val db = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("DATABASE")
