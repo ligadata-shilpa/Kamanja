@@ -169,8 +169,9 @@ object MetadataAPISerialization {
               ("ObjectFormat" -> ObjFormatType.asString(o.ObjectFormat)) ~
               ("DependencyJars" -> o.CheckAndGetDependencyJarNames.toList) ~
               ("Implementation" -> o.implementationName) ~
-              ("ValueTypeNameSpace" -> o.valDef.nameSpace) ~
-              ("ValueTypeName" -> ObjType.asString(o.valDef.tType)) ~
+              ("ValueTypeNameSpace" -> o.valDef.NameSpace) ~
+              ("ValueTypeName" -> o.valDef.Name) ~
+              ("ValueTypeTType" -> ObjType.asString(o.valDef.tType)) ~
               ("ObjectDefinition" -> o.ObjectDefinition) ~
               ("OrigDef" -> o.OrigDef) ~
               ("Author" -> o.Author) ~
@@ -192,8 +193,9 @@ object MetadataAPISerialization {
               ("NameSpace" -> o.NameSpace) ~
               ("PhysicalName" -> o.PhysicalName) ~
               ("TypeTypeName" -> ObjTypeType.asString(o.elemDef.tTypeType)) ~
-              ("TypeName" -> ObjType.asString(o.elemDef.tType)) ~
-              ("TypeNameSpace" -> o.elemDef.nameSpace) ~
+              ("TypeName" -> o.elemDef.Name) ~
+              ("TypeNameSpace" -> o.elemDef.NameSpace) ~
+              ("TypeTType" -> ObjType.asString(o.elemDef.tType)) ~
               ("NumberOfDimensions" -> o.arrayDims) ~
               ("JarName" -> getEmptyIfNull(o.JarName)) ~
               ("ObjectFormat" -> ObjFormatType.asString(o.ObjectFormat)) ~
