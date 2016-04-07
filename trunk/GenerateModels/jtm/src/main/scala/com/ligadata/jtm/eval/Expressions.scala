@@ -15,6 +15,9 @@
  */
 package com.ligadata.jtm.eval
 
+import com.ligadata.jtm.{Datatypes, eval}
+import com.ligadata.runtime.Conversion
+
 import scala.util.matching.Regex
 
 // Track details of any used element
@@ -48,6 +51,83 @@ object Expressions {
     regex1.findFirstMatchIn(expr).isDefined || regex1.findFirstMatchIn(expr).isDefined
   }
 
+  /** Evaluates if a expression is a variable
+    *
+    * @param expr
+    * @param mapNameSource
+    * @return
+    */
+  def isVariable(expr: String, mapNameSource: Map[String, Tracker], dictMessages: Map[String, String], aliaseMessages: Map[String, String]): (eval.Tracker) = {
+
+    val Element = """([a-zA-Z][a-zA-Z0-9_]+)"""
+    val Index = """(\([0-9]+\))"""
+    val Begin = """^"""
+    val End = """$"""
+    val Open = """\{"""
+    val Close = """\}"""
+    val Marker = """\$"""
+    val Separator = """\."""
+
+    // name or ${name} -> points to a variable
+    {
+      val regex = s"$Begin$Element$End|$Begin$Marker$Open$Element$Close$End".r
+      val elements = regex.findFirstMatchIn(expr)
+      if (elements.isDefined) {
+        val m1 = elements.get.group(1)
+        if (mapNameSource.contains(m1)) {
+          return mapNameSource.get(m1).get
+        }
+        return null
+      }
+    }
+
+    // name.accessor or ${name.accessor} or {name.key} or name.key or $name.key
+    {
+      //      val regex = s"$Begin$Element$Separator$Element$End|$Begin$Marker$Open$Element$Separator$Element$Close$End|$Begin$Marker$Element$Separator$Element$End".r
+      val regex = s"$Begin$Marker$Element$Separator$Element$End".r
+      expr match {
+        case regex(m1, m2) =>
+          if (mapNameSource.contains(s"$m1.$m2")) {
+            val t = mapNameSource.get(s"$m1.$m2").get
+            return null
+          } else if (dictMessages.contains(m1)) {
+            val expression = "%s.get(\"%s\")".format(dictMessages.get(m1).get, m2)
+            val variableName = "%s.%s".format(dictMessages.get(m1).get, m2)
+            return eval.Tracker(variableName, m1, "Any", true, m2, expression)
+          } else if (mapNameSource.contains(m1)) {
+            val t = mapNameSource.get(m1).get
+            if (Datatypes.isStringDictionary(t.typeName)) {
+              val expression = "%s.get(\"%s\")".format(t.getExpression, m2)
+              val variableName = "%s.%s".format(t.getExpression, m2)
+              return eval.Tracker(variableName, m1, "String", true, m2, expression)
+            } else {
+              return null
+            }
+          }
+        case _ => ;
+      }
+    }
+
+    // name(<number>) or ${name}(<number>) or ${name(<number>)}
+    {
+      // val regex = s"$Begin$Element$Index$End|$Begin$Marker$Open$Element$Index$Close$End|$Begin$Marker$Open$Element$Close$Index$End".r
+      val regex = s"$Begin$Marker$Element$Index$End".r
+      expr match {
+        case regex(m1, m2) =>
+          if (mapNameSource.contains(m1)) {
+            val t = mapNameSource.get(m1).get
+            if (Datatypes.isStringArray(t.typeName)) {
+              val expression = "%s%s".format(m1, m2)
+              val variableName = "%s%s".format(m1, m2)
+              return eval.Tracker(variableName, m1, "String", true, "", expression)
+            }
+          }
+        case _ => ;
+      }
+    }
+
+    null
+  }
   /** Find all logical column names that are encode in this expression $name
     *
     * $var
@@ -154,4 +234,20 @@ object Expressions {
       ( elements.head, elements.slice(1, elements.length).mkString(".") )
   }
 
+  def Coerce(outType: String, inType: String, expr: String): String = {
+    if(outType!=inType && outType.nonEmpty) {
+      // Find the conversion and wrap the call
+      if(Conversion.builtin.contains(inType) && Conversion.builtin.get(inType).get.contains(outType))
+      {
+        val conversionExpr = Conversion.builtin.get(inType).get.get(outType).get
+        "conversion.%s(%s)\n".format(conversionExpr, expr)
+      }
+      else
+      {
+        expr
+      }
+    } else {
+      expr
+    }
+  }
 }
