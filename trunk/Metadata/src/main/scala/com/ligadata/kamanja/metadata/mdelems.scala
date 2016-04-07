@@ -187,6 +187,7 @@ trait BaseElem {
     def Deactive: Unit // Make the element as de-active
     def Deleted: Unit // Mark the element as deleted
     def OwnerId: String
+    def TenantId: String
     def MdElementCategory: String
 }
 
@@ -221,6 +222,7 @@ class BaseElemDef extends BaseElem {
     override def Deactive: Unit = active = false // Make the element as de-active
     override def Deleted: Unit = deleted = true // Mark the element as deleted
     override def OwnerId: String = ownerId
+    override def TenantId: String = tenantId
     override def MdElementCategory: String = ""
     def CheckAndGetDependencyJarNames: Array[String] = if (dependencyJarNames != null) dependencyJarNames else Array[String]()
 
@@ -253,6 +255,7 @@ class BaseElemDef extends BaseElem {
     var objectDefinition: String = _
     var objectFormat: ObjFormatType.FormatType = fJSON
     var ownerId: String = _
+    var tenantId: String = _
 }
 
 // All these metadata elements should have specialized serialization and deserialization 
@@ -319,128 +322,127 @@ abstract class ContainerTypeDef extends BaseTypeDef {
   def ElementTypes: Array[BaseTypeDef] = Array[BaseTypeDef]()
 }
 
-class SetTypeDef extends ContainerTypeDef {
-  def tType : ObjType.Value = tSet
-  var keyDef: BaseTypeDef = _
-
-  override def IsFixed: Boolean = false
-  override def typeString: String = {
-    "scala.collection.mutable.Set[" + keyDef.typeString + "]"
-  }
-  override def ElementTypes: Array[BaseTypeDef] = {
-    Array(keyDef)
-  }
-}
-
-class ImmutableSetTypeDef extends ContainerTypeDef {
-  def tType : ObjType.Value = tSet
-  var keyDef: BaseTypeDef = _
-
-  override def IsFixed: Boolean = false
-  override def typeString: String = {
-    "scala.collection.immutable.Set[" + keyDef.typeString + "]"
-  }
-  override def ElementTypes: Array[BaseTypeDef] = {
-    Array(keyDef)
-  }
-}
-
-class TreeSetTypeDef extends ContainerTypeDef {
-  def tType : ObjType.Value = tTreeSet
-  var keyDef: BaseTypeDef = _
-
-  override def IsFixed: Boolean = false
-  override def typeString: String = {
-    "scala.collection.mutable.TreeSet[" + keyDef.typeString + "]"
-  }
-  override def ElementTypes: Array[BaseTypeDef] = {
-    Array(keyDef)
-  }
-}
-
-class SortedSetTypeDef extends ContainerTypeDef {
-  def tType : ObjType.Value = tSortedSet
-  var keyDef: BaseTypeDef = _
-
-  override def IsFixed: Boolean = false
-  override def typeString: String = {
-    "scala.collection.mutable.SortedSet[" + keyDef.typeString + "]"
-  }
-  override def ElementTypes: Array[BaseTypeDef] = {
-    Array(keyDef)
-  }
-}
+//class SetTypeDef extends ContainerTypeDef {
+//  def tType : ObjType.Value = tSet
+//  var keyDef: BaseTypeDef = _
+//
+//  override def IsFixed: Boolean = false
+//  override def typeString: String = {
+//    "scala.collection.mutable.Set[" + keyDef.typeString + "]"
+//  }
+//  override def ElementTypes: Array[BaseTypeDef] = {
+//    Array(keyDef)
+//  }
+//}
+//
+//class ImmutableSetTypeDef extends ContainerTypeDef {
+//  def tType : ObjType.Value = tSet
+//  var keyDef: BaseTypeDef = _
+//
+//  override def IsFixed: Boolean = false
+//  override def typeString: String = {
+//    "scala.collection.immutable.Set[" + keyDef.typeString + "]"
+//  }
+//  override def ElementTypes: Array[BaseTypeDef] = {
+//    Array(keyDef)
+//  }
+//}
+//
+//class TreeSetTypeDef extends ContainerTypeDef {
+//  def tType : ObjType.Value = tTreeSet
+//  var keyDef: BaseTypeDef = _
+//
+//  override def IsFixed: Boolean = false
+//  override def typeString: String = {
+//    "scala.collection.mutable.TreeSet[" + keyDef.typeString + "]"
+//  }
+//  override def ElementTypes: Array[BaseTypeDef] = {
+//    Array(keyDef)
+//  }
+//}
+//
+//class SortedSetTypeDef extends ContainerTypeDef {
+//  def tType : ObjType.Value = tSortedSet
+//  var keyDef: BaseTypeDef = _
+//
+//  override def IsFixed: Boolean = false
+//  override def typeString: String = {
+//    "scala.collection.mutable.SortedSet[" + keyDef.typeString + "]"
+//  }
+//  override def ElementTypes: Array[BaseTypeDef] = {
+//    Array(keyDef)
+//  }
+//}
 
 class MapTypeDef extends ContainerTypeDef {
   def tType : ObjType.Value = tMap
 
-  var keyDef: BaseTypeDef = _
   var valDef: BaseTypeDef = _
 
   override def IsFixed: Boolean = false
   override def typeString: String = {
-    "scala.collection.mutable.Map[" + keyDef.typeString + "," + valDef.typeString + "]"
-  }
-  override def ElementTypes: Array[BaseTypeDef] = {
-    Array(keyDef, valDef)
-  }
-}
-
-class ImmutableMapTypeDef extends ContainerTypeDef {
-  def tType : ObjType.Value = tMap
-
-  var keyDef: BaseTypeDef = _
-  var valDef: BaseTypeDef = _
-
-  override def IsFixed: Boolean = false
-  override def typeString: String = {
-    "scala.collection.immutable.Map[" + keyDef.typeString + "," + valDef.typeString + "]"
-  }
-  override def ElementTypes: Array[BaseTypeDef] = {
-    Array(keyDef, valDef)
-  }
-}
-
-class HashMapTypeDef extends ContainerTypeDef {
-  def tType : ObjType.Value = tHashMap
-
-  var keyDef: BaseTypeDef = _
-  var valDef: BaseTypeDef = _
-
-  override def IsFixed: Boolean = false
-  override def typeString: String = {
-    "scala.collection.mutable.HashMap[" + keyDef.typeString + "," + valDef.typeString + "]"
-  }
-  override def ElementTypes: Array[BaseTypeDef] = {
-    Array(keyDef, valDef)
-  }
-}
-
-class ListTypeDef extends ContainerTypeDef {
-  def tType : ObjType.Value = tList
-  var valDef: BaseTypeDef = _
-
-  override def IsFixed: Boolean = false
-  override def typeString: String = {
-    "scala.collection.immutable.List[" + valDef.typeString + "]"
+    "scala.collection.immutable.Map[String," + valDef.typeString + "]"
   }
   override def ElementTypes: Array[BaseTypeDef] = {
     Array(valDef)
   }
 }
-
-class QueueTypeDef extends ContainerTypeDef {
-  def tType : ObjType.Value = tQueue
-  var valDef: BaseTypeDef = _
-
-  override def IsFixed: Boolean = false
-  override def typeString: String = {
-    "scala.collection.mutable.Queue[" + valDef.typeString + "]"
-  }
-  override def ElementTypes: Array[BaseTypeDef] = {
-    Array(valDef)
-  }
-}
+//
+//class ImmutableMapTypeDef extends ContainerTypeDef {
+//  def tType : ObjType.Value = tMap
+//
+//  var keyDef: BaseTypeDef = _
+//  var valDef: BaseTypeDef = _
+//
+//  override def IsFixed: Boolean = false
+//  override def typeString: String = {
+//    "scala.collection.immutable.Map[" + keyDef.typeString + "," + valDef.typeString + "]"
+//  }
+//  override def ElementTypes: Array[BaseTypeDef] = {
+//    Array(keyDef, valDef)
+//  }
+//}
+//
+//class HashMapTypeDef extends ContainerTypeDef {
+//  def tType : ObjType.Value = tHashMap
+//
+//  var keyDef: BaseTypeDef = _
+//  var valDef: BaseTypeDef = _
+//
+//  override def IsFixed: Boolean = false
+//  override def typeString: String = {
+//    "scala.collection.mutable.HashMap[" + keyDef.typeString + "," + valDef.typeString + "]"
+//  }
+//  override def ElementTypes: Array[BaseTypeDef] = {
+//    Array(keyDef, valDef)
+//  }
+//}
+//
+//class ListTypeDef extends ContainerTypeDef {
+//  def tType : ObjType.Value = tList
+//  var valDef: BaseTypeDef = _
+//
+//  override def IsFixed: Boolean = false
+//  override def typeString: String = {
+//    "scala.collection.immutable.List[" + valDef.typeString + "]"
+//  }
+//  override def ElementTypes: Array[BaseTypeDef] = {
+//    Array(valDef)
+//  }
+//}
+//
+//class QueueTypeDef extends ContainerTypeDef {
+//  def tType : ObjType.Value = tQueue
+//  var valDef: BaseTypeDef = _
+//
+//  override def IsFixed: Boolean = false
+//  override def typeString: String = {
+//    "scala.collection.mutable.Queue[" + valDef.typeString + "]"
+//  }
+//  override def ElementTypes: Array[BaseTypeDef] = {
+//    Array(valDef)
+//  }
+//}
 
 class ArrayTypeDef extends ContainerTypeDef {
   def tType : ObjType.Value = tArray
@@ -456,37 +458,37 @@ class ArrayTypeDef extends ContainerTypeDef {
     Array(elemDef)
   }
 }
-
-class ArrayBufTypeDef extends ContainerTypeDef {
-  def tType : ObjType.Value = tArrayBuf
-
-  var arrayDims: Int = 0 // 0 is invalid; 1..N - dimensions - indicate array of that many dimensions
-  var elemDef: BaseTypeDef = _
-
-  override def IsFixed: Boolean = false
-  override def typeString: String = {
-    "scala.collection.mutable.ArrayBuffer[" + elemDef.typeString + "]"
-  }
-  override def ElementTypes: Array[BaseTypeDef] = {
-    Array(elemDef)
-  }
-}
-
-class TupleTypeDef extends ContainerTypeDef {
-  override def tTypeType = tTupleN
-  def tType : ObjType.Value = ObjType.tAny
-
-  var tupleDefs: Array[BaseTypeDef] = Array[BaseTypeDef]()
-
-  override def IsFixed: Boolean = false
-  override def typeString: String = {
-    val sz: Int = tupleDefs.size
-    s"scala.Tuple$sz[" + tupleDefs.map(tup => tup.typeString).mkString(",") + "]"
-  }
-  override def ElementTypes: Array[BaseTypeDef] = {
-    tupleDefs
-  }
-}
+//
+//class ArrayBufTypeDef extends ContainerTypeDef {
+//  def tType : ObjType.Value = tArrayBuf
+//
+//  var arrayDims: Int = 0 // 0 is invalid; 1..N - dimensions - indicate array of that many dimensions
+//  var elemDef: BaseTypeDef = _
+//
+//  override def IsFixed: Boolean = false
+//  override def typeString: String = {
+//    "scala.collection.mutable.ArrayBuffer[" + elemDef.typeString + "]"
+//  }
+//  override def ElementTypes: Array[BaseTypeDef] = {
+//    Array(elemDef)
+//  }
+//}
+//
+//class TupleTypeDef extends ContainerTypeDef {
+//  override def tTypeType = tTupleN
+//  def tType : ObjType.Value = ObjType.tAny
+//
+//  var tupleDefs: Array[BaseTypeDef] = Array[BaseTypeDef]()
+//
+//  override def IsFixed: Boolean = false
+//  override def typeString: String = {
+//    val sz: Int = tupleDefs.size
+//    s"scala.Tuple$sz[" + tupleDefs.map(tup => tup.typeString).mkString(",") + "]"
+//  }
+//  override def ElementTypes: Array[BaseTypeDef] = {
+//    tupleDefs
+//  }
+//}
 
 object RelationKeyType extends Enumeration {
   type RelationKeyType = Value
@@ -1018,7 +1020,7 @@ class AdapterInfo {
    */
   var name: String = _
   var typeString: String = _
-  var dataFormat: String = _ // valid only for Input or Validate types. Output and Status does not have this
+//  var dataFormat: String = _ // valid only for Input or Validate types. Output and Status does not have this
   var className: String = _
 //  var inputAdapterToValidate: String = _ // Valid only for Output Adapter.
 //  var failedEventsAdapter: String = _ // Valid only for Input Adapter.
@@ -1027,17 +1029,20 @@ class AdapterInfo {
   var jarName: String = _
   var dependencyJars: Array[String] = new Array[String](0)
   var adapterSpecificCfg: String = _
+  var tenantId: String = _
+  var fullAdapterConfig: String = _
 //  var keyAndValueDelimiter: String = _ // Delimiter String for keyAndValueDelimiter
 //  var fieldDelimiter: String = _ // Delimiter String for fieldDelimiter
 //  var valueDelimiter: String = _ // Delimiter String for valueDelimiter
 
   def Name: String = name
   def TypeString: String = typeString
-  def DataFormat: String = dataFormat
   def ClassName: String = className
   def JarName: String = jarName
   def DependencyJars: Array[String] = dependencyJars
   def AdapterSpecificCfg: String = adapterSpecificCfg
+  def TenantId: String = tenantId
+  def FullAdapterConfig: String = fullAdapterConfig
 
  // def InputAdapterToValidate: String = inputAdapterToValidate
  // def FailedEventsAdapter: String = failedEventsAdapter
@@ -1056,11 +1061,11 @@ class AdapterInfo {
       return false
     }
     // Check dataFormat
-    if ((dataFormat != null && aInfo.dataFormat != null)) {
-      if(!dataFormat.equals(aInfo.dataFormat)) return false
-    } else if(!(dataFormat == null && aInfo.dataFormat == null)) {
-      return false
-    }
+//    if ((dataFormat != null && aInfo.dataFormat != null)) {
+//      if(!dataFormat.equals(aInfo.dataFormat)) return false
+//    } else if(!(dataFormat == null && aInfo.dataFormat == null)) {
+//      return false
+//    }
     // Check className
     if ((className != null && aInfo.className != null)) {
       if(!className.equals(aInfo.className)) return false
@@ -1128,6 +1133,11 @@ class AdapterInfo {
       return false
     }*/
 
+    if ((tenantId != null && aInfo.tenantId != null)) {
+      if(!tenantId.equals(aInfo.tenantId)) return false
+    } else if(!(tenantId == null && aInfo.tenantId == null)) {
+      return false
+    }
 
     true
   }
@@ -1180,8 +1190,7 @@ object SerializeDeserializeType extends Enumeration {
   */
 class SerializeDeserializeConfig(val serDeserType : SerializeDeserializeType.SerDeserType) extends BaseElemDef {}
 
-
-
+class TenantInfo(val tenantId: String, val description: String, val primaryDataStore: String, val cacheConfig: String) {}
 
 object ModelCompilationConstants {
   val DEPENDENCIES: String = "Dependencies"

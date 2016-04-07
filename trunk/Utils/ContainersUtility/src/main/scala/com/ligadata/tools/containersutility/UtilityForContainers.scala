@@ -64,7 +64,7 @@ class UtilityForContainers(val loadConfigs: Properties, val typename: String) ex
     isOk = false
   }
 
-  val dataStore = if (isOk) cluster.cfgMap.getOrElse("DataStore", null) else null
+  val dataStore = if (isOk) cluster.cfgMap.getOrElse("SystemCatalog", null) else null
   if (isOk && dataStore == null) {
     logger.error("DataStore not found for Node %d  & ClusterId : %s".format(containersUtilityConfiguration.nodeId, nodeInfo.ClusterId))
     isOk = false

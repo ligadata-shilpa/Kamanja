@@ -381,7 +381,7 @@ class MessageGenerator {
       fromFunc(other)
     }
     
-    override def save: Unit = { """ + message.Name + """.saveOne(this) }
+    override def save: Unit = { /* """ + message.Name + """.saveOne(this) */}
   
     def Clone(): ContainerOrConcept = { """ + message.Name + """.build(this) }
 """
@@ -883,11 +883,6 @@ class MessageGenerator {
                 arrayType = fieldBaseType.asInstanceOf[ArrayTypeDef]
                 fromFuncBuf = fromFuncBuf.append(fromFuncForArrayFixed(field))
               }
-              case "tarraybuf" => {
-                var arraybufType: ArrayBufTypeDef = null
-                arraybufType = fieldBaseType.asInstanceOf[ArrayBufTypeDef]
-                fromFuncBuf = fromFuncBuf.append(fromFuncForArrayBufFixed(field))
-              }
               case "tstruct" => {
                 var ctrDef: ContainerDef = mdMgr.Container(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
                 fromFuncBuf = fromFuncBuf.append(fromFuncForStructFixed(field))
@@ -1012,7 +1007,7 @@ class MessageGenerator {
   /*
    * From Func - Generate code for ArrayBuf
    */
-
+/*
   private def fromFuncForArrayBufFixed(field: Element): String = {
     var fromFuncBuf = new StringBuilder(8 * 1024)
     try {
@@ -1030,6 +1025,7 @@ class MessageGenerator {
     fromFuncBuf.toString
 
   }
+*/
 
   /*
    * From Func for Containertype as Message

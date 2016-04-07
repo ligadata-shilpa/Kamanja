@@ -65,6 +65,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
   private val defaultUserId: Option[String] = Some("kamanja")
   private var _parallelDegree = 0
   private var _mergeContainerAndMessages = true
+  private var _tenantId: Option[String] = None
 
   private val globalExceptions = ArrayBuffer[(String, Throwable)]()
 
@@ -144,8 +145,8 @@ class MigrateTo_V_1_4 extends MigratableTo {
             val cluster = clustny.asInstanceOf[Map[String, Any]]
             val ClusterId = cluster.getOrElse("ClusterId", "").toString.trim.toLowerCase
             logger.debug("Processing the cluster => " + ClusterId)
-            if (ClusterId.size > 0 && cluster.contains("DataStore"))
-              dsStr = getStringFromJsonNode(cluster.getOrElse("DataStore", null))
+            if (ClusterId.size > 0 && cluster.contains("SystemCatalog"))
+              dsStr = getStringFromJsonNode(cluster.getOrElse("SystemCatalog", null))
           }
           if (ssStr == null || ssStr.size == 0) {
             val cluster = clustny.asInstanceOf[Map[String, Any]]
@@ -178,7 +179,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
     }
   }
 
-  override def init(destInstallPath: String, apiConfigFile: String, clusterConfigFile: String, sourceVersion: String, unhandledMetadataDumpDir: String, curMigrationSummaryFlPath: String, parallelDegree: Int, mergeContainerAndMessages: Boolean, fromScalaVersion: String, toScalaVersion: String): Unit = {
+  override def init(destInstallPath: String, apiConfigFile: String, clusterConfigFile: String, sourceVersion: String, unhandledMetadataDumpDir: String, curMigrationSummaryFlPath: String, parallelDegree: Int, mergeContainerAndMessages: Boolean, fromScalaVersion: String, toScalaVersion: String, tenantId: String): Unit = {
     isValidPath(apiConfigFile, false, true, "apiConfigFile")
     isValidPath(clusterConfigFile, false, true, "clusterConfigFile")
 
@@ -240,6 +241,9 @@ class MigrateTo_V_1_4 extends MigratableTo {
 
     _parallelDegree = if (parallelDegree <= 1) 1 else parallelDegree
     _mergeContainerAndMessages = mergeContainerAndMessages
+
+    if (tenantId != null && tenantId.size > 0)
+      _tenantId = Some(tenantId)
 
     _bInit = true
   }
@@ -594,7 +598,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
                     failed = isFailedStatus(retRes)
 
                     if (failed == false) {
-                      val retRes1 = MetadataAPIImpl.AddModel(MetadataAPI.ModelType.fromString(objFormat), defStr, defaultUserId, Some((defaultUserId.get + "." + cfgnm).toLowerCase), Some(ver))
+                      val retRes1 = MetadataAPIImpl.AddModel(MetadataAPI.ModelType.fromString(objFormat), defStr, defaultUserId, _tenantId, Some((defaultUserId.get + "." + cfgnm).toLowerCase), Some(ver))
                       failed = isFailedStatus(retRes1)
                     }
                   } catch {
@@ -632,7 +636,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
                   var failed = false
 
                   try {
-                    val retRes = MetadataAPIImpl.AddModel(MetadataAPI.ModelType.fromString("kpmml"), mdlDefStr, defaultUserId, Some(dispkey), Some(ver))
+                    val retRes = MetadataAPIImpl.AddModel(MetadataAPI.ModelType.fromString("kpmml"), mdlDefStr, defaultUserId, _tenantId, Some(dispkey), Some(ver))
                     failed = isFailedStatus(retRes)
                   } catch {
                     case e: Exception => {
@@ -661,7 +665,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
                 var failed = false
 
                 try {
-                  val retRes = MetadataAPIImpl.AddMessage(msgDefStr, "JSON", defaultUserId)
+                  val retRes = MetadataAPIImpl.AddMessage(msgDefStr, "JSON", defaultUserId, _tenantId)
                   failed = isFailedStatus(retRes)
                 } catch {
                   case e: Exception => {
@@ -691,7 +695,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
                 var failed = false
 
                 try {
-                  val retRes = MetadataAPIImpl.AddContainer(contDefStr, "JSON", defaultUserId)
+                  val retRes = MetadataAPIImpl.AddContainer(contDefStr, "JSON", defaultUserId, _tenantId)
                   failed = isFailedStatus(retRes)
                 } catch {
                   case e: Exception => {

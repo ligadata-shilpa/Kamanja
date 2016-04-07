@@ -17,6 +17,7 @@ case class Value(schemaId: Int, serializerType: String, serializedInfo: Array[By
 
 trait DataStoreOperations extends AdaptersSerializeDeserializers {
   // update operations, add & update semantics are different for relational databases
+
   def put(tnxCtxt: TransactionContext, container: ContainerInterface): Unit = {
     if (container == null)
       throw new InvalidArgumentException("container should not be null", null)
@@ -64,7 +65,6 @@ trait DataStoreOperations extends AdaptersSerializeDeserializers {
       throw new InvalidArgumentException("Data should not be null", null)
 
     val putData = data_list.map(oneContainerData => {
-      val containerName = oneContainerData._1
       val containerData: Array[(com.ligadata.KvBase.Key, com.ligadata.StorageBase.Value)] = oneContainerData._2.map(row => {
         if (row._3.isInstanceOf[ContainerInterface]) {
           throw new NotImplementedFunctionException("Not yet implemented serializing ContainerInterface", null)
@@ -75,7 +75,7 @@ trait DataStoreOperations extends AdaptersSerializeDeserializers {
           (row._1, Value(0, row._2, row._3.asInstanceOf[Array[Byte]]))
         }
       })
-      (containerName, containerData)
+      (oneContainerData._1, containerData)
     })
 
     put(putData)
@@ -214,6 +214,7 @@ trait DataStore extends DataStoreOperations {
   def TruncateContainer(containerNames: Array[String]): Unit
   def DropContainer(containerNames: Array[String]): Unit
   def CreateContainer(containerNames: Array[String]): Unit
+  def CreateMetadataContainer(containerNames: Array[String]): Unit
 }
 
 trait Transaction extends DataStoreOperations {

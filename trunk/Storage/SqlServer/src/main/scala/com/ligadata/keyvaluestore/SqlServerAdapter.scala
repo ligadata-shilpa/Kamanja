@@ -540,10 +540,11 @@ class SqlServerAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
     try {
       if (IsSingleRowPut(data_list)) {
         var containerName = data_list(0)._1
+        var isMetadataContainer = data_list(0)._2
         var keyValuePairs = data_list(0)._2
         var key = keyValuePairs(0)._1
         var value = keyValuePairs(0)._2
-        put(containerName, key, value)
+        put(containerName,  key, value)
       } else {
         logger.debug("Get a new connection...")
         con = getConnection
@@ -1391,6 +1392,10 @@ class SqlServerAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
     })
   }
 
+  override def CreateMetadataContainer(containerNames: Array[String]): Unit = {
+    CreateContainer(containerNames)
+  }
+
   override def isTableExists(tableName: String): Boolean = {
     // check whether corresponding table exists
     var con: Connection = null
@@ -1560,7 +1565,7 @@ class SqlServerAdapterTx(val parent: DataStore) extends Transaction {
   val logger = LogManager.getLogger(loggerName)
 
   override def put(containerName: String, key: Key, value: Value): Unit = {
-    parent.put(containerName, key, value)
+    parent.put(containerName,  key, value)
   }
 
   override def put(data_list: Array[(String, Array[(Key, Value)])]): Unit = {

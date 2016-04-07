@@ -89,8 +89,8 @@ object PersistenceUtils {
   private var tableStoreMap: Map[String, (String, DataStore)] = Map()
   private val storageDefaultTime = 0L
   private val storageDefaultTxnId = 0L
-  lazy val serializerType = "kryo"
-  lazy val serializer = SerializerManager.GetSerializer(serializerType)
+  lazy val serializerType = "json4s"//"kryo"
+  //lazy val serializer = SerializerManager.GetSerializer(serializerType)
 
   def GetMainDS: DataStore = mainDS
 
@@ -261,7 +261,7 @@ object PersistenceUtils {
       objList.foreach(obj => {
         obj.tranId = tranId
         val key = (getObjectType(obj) + "." + obj.FullNameWithVer).toLowerCase
-        var value = serializer.SerializeObjectToByteArray(obj)
+        var value = MetadataAPISerialization.serializeObjectToJson(obj).getBytes //serializer.SerializeObjectToByteArray(obj)
         keyList(i) = key
         valueList(i) = value
         i = i + 1
@@ -294,7 +294,7 @@ object PersistenceUtils {
       objList.foreach(obj => {
         obj.tranId = tranId
         val key = (getObjectType(obj) + "." + obj.FullNameWithVer).toLowerCase
-        var value = serializer.SerializeObjectToByteArray(obj)
+        var value = MetadataAPISerialization.serializeObjectToJson(obj).getBytes//serializer.SerializeObjectToByteArray(obj)
         val elemTyp = getMdElemTypeName(obj)
 
         val k = Key(storageDefaultTime, Array(key), storageDefaultTxnId, 0)
@@ -770,6 +770,25 @@ object PersistenceUtils {
       case e: Throwable => {
         logger.error("Failed to connect to Datastore", e)
         throw CreateStoreFailedException(e.getMessage(), e)
+      }
+    }
+  }
+
+  /**
+    * CreateMetadataTables
+    */
+  def CreateMetadataTables: Unit = lock.synchronized {
+    try {
+      logger.debug("Creating MetadataTables")
+      if (mainDS != null) {
+	val metadataTables = Array("metadata_objects","jar_store","config_objects","model_config_objects","transaction_id","metadata_counters")
+        mainDS.CreateMetadataContainer(metadataTables)
+        logger.debug("Created Metadata Tables")
+      }
+    } catch {
+      case e: Exception => {
+        logger.error("", e)
+        throw e;
       }
     }
   }

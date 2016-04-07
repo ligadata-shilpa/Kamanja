@@ -261,20 +261,6 @@ class SchemaCompiler {
               }
               //  fromFuncBuf = fromFuncBuf.append(fromFuncForArrayFixed(field))
             }
-            case "tarraybuf" => {
-              var arraybufType = fieldBaseType.asInstanceOf[ArrayBufTypeDef]
-              if (arraybufType != null) {
-                var ctrDef: ContainerDef = mdMgr.Container(arraybufType.elemDef.FullName, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
-                msgdefStr = ctrDef.objectDefinition
-                message = messageParser.processJson(msgdefStr, mdMgr, false)
-                message = generateAvroSchema(message, mdMgr)
-                val typeStr = """"type": {"type": "array", "items": """
-                containerTypeStr.append(typeStr + message.Schema + closeBrace)
-                //log.info("tarray *************************************************" + typeStr);
-                //log.info("tarraybuf *************************************************" + typeStr);
-
-              }
-            }
             case "tstruct" => {
               var ctrDef: ContainerDef = mdMgr.Container(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
               if (ctrDef != null) {

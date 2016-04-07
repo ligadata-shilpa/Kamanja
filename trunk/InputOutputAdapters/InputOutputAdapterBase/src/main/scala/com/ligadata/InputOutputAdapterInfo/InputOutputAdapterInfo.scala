@@ -16,8 +16,15 @@
 
 package com.ligadata.InputOutputAdapterInfo
 
+import com.ligadata.Exceptions.{KamanjaException, StackTrace}
 import com.ligadata.KamanjaBase._
 import com.ligadata.HeartBeat._
+import com.ligadata.transactions.{NodeLevelTransService, SimpleTransService}
+
+//import org.json4s._
+//import org.json4s.JsonDSL._
+//import org.json4s.jackson.JsonMethods._
+import org.apache.logging.log4j.{ Logger, LogManager }
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -45,6 +52,7 @@ class AdapterConfiguration {
   var dependencyJars: Set[String] = _
   // adapter specific (mostly json) string
   var adapterSpecificCfg: String = _
+  var tenantId: String = _
 //  // Delimiter String for keyAndValueDelimiter
 //  var keyAndValueDelimiter: String = _
 //  // Delimiter String for fieldDelimiter
@@ -124,12 +132,119 @@ trait ExecContext extends AdaptersSerializeDeserializers {
   val curPartitionKey: PartitionUniqueRecordKey
   val nodeContext: NodeContext
 
-  def execute(data: Array[Byte], uniqueKey: PartitionUniqueRecordKey, uniqueVal: PartitionUniqueRecordValue, readTmNanoSecs: Long, readTmMilliSecs: Long): Unit = {
-    val (msg, deserializerName) = deserialize(data)
-    executeMessage(msg, data, uniqueKey, uniqueVal, readTmNanoSecs, readTmMilliSecs, deserializerName): Unit
+  private val LOG = LogManager.getLogger(getClass);
+  private val failedEventDtFormat = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
+
+  if (nodeContext != null && nodeContext.getEnvCtxt() != null) {
+    if (! nodeContext.getEnvCtxt().hasZkConnectionString)
+      throw new KamanjaException("Zookeeper information is not yet set", null)
+  } else {
+    throw new KamanjaException("Not found NodeContext or EnvContext", null)
   }
 
-  protected def executeMessage(msg: ContainerInterface, data: Array[Byte], uniqueKey: PartitionUniqueRecordKey, uniqueVal: PartitionUniqueRecordValue, readTmNanoSecs: Long, readTmMilliSecs: Long, deserializerName: String): Unit
+  val (zkConnectString, zkNodeBasePath, zkSessionTimeoutMs, zkConnectionTimeoutMs)  = nodeContext.getEnvCtxt().getZookeeperInfo
+  val (txnIdsRangeForPartition, txnIdsRangeForNode)  = nodeContext.getEnvCtxt().getTransactionRanges
+
+  NodeLevelTransService.init(zkConnectString, zkSessionTimeoutMs, zkConnectionTimeoutMs, zkNodeBasePath, txnIdsRangeForNode,
+    nodeContext.getEnvCtxt().getDefaultDatastoreForTenantId(input.inputConfig.tenantId), nodeContext.getEnvCtxt().getJarPaths())
+  private val transService = new SimpleTransService
+  transService.init(txnIdsRangeForPartition)
+
+  private def SendFailedEvent(data: Array[Byte], deserializer: String, failedMsg: String, uk: String, uv: String, e: Throwable): Unit = {
+    val failedTm = failedEventDtFormat.format(new java.util.Date(System.currentTimeMillis))
+    val evntData = new String(data)
+
+    val failMsg = if (e != null) e.getMessage else ""
+    val stackTrace = if (e != null) StackTrace.ThrowableTraceString(e) else ""
+
+    if (nodeContext != null && nodeContext.getEnvCtxt() != null) {
+      // getInstance of Failed Event
+      val msgType = "System.FailedEvents"
+      val failEventPartInfo = "System.FailedEventsPartitionKeyValue"
+      val failEventFailure = "System.FailedEventsMessageInfo"
+      try {
+        val failureInfo = nodeContext.getEnvCtxt().getContainerInstance(failEventFailure)
+        val partInfo = nodeContext.getEnvCtxt().getContainerInstance(failEventPartInfo)
+        val msg = nodeContext.getEnvCtxt().getContainerInstance(msgType)
+        if (msg != null) {
+          try {
+            partInfo.set("Key", uk)
+            partInfo.set("Value", uv)
+
+            failureInfo.set("Message", failMsg)
+            failureInfo.set("StackTrace", stackTrace)
+
+            msg.set("MessageType", failedMsg)
+            msg.set("Deserializer", deserializer)
+            msg.set("SourceAdapter", input.inputConfig.Name)
+            msg.set("FailedAt", failedTm)
+            msg.set("EventData", evntData)
+            msg.set("Partition", partInfo)
+            msg.set("Failure", failureInfo)
+
+            nodeContext.getEnvCtxt().postMessages(Array(msg))
+          } catch {
+            case e: Throwable => {
+              LOG.error("ailed to post message of type:" + msgType, e)
+            }
+          }
+        }
+      } catch {
+        case e: Throwable => {
+          LOG.error("Failed to create message for type:" + msgType, e)
+        }
+      }
+    }
+  }
+
+  final def execute(data: Array[Byte], uniqueKey: PartitionUniqueRecordKey, uniqueVal: PartitionUniqueRecordValue, readTmMilliSecs: Long): Unit = {
+    var msg: ContainerInterface = null
+    var deserializerName: String = ""
+
+    var uk = ""
+    var uv = ""
+
+    try {
+      uk = if (uniqueKey != null) uniqueKey.Serialize else ""
+      uv = if (uniqueVal != null) uniqueVal.Serialize else ""
+    } catch {
+      case e: Throwable => {
+        LOG.error("Failed to serialize PartitionUniqueRecordKey and/or PartitionUniqueRecordValue", e)
+      }
+    }
+
+    try {
+      val (tMsg, tDeserializerName) = deserialize(data)
+      msg = tMsg
+      deserializerName = tDeserializerName
+    } catch {
+      case e: Throwable => {
+        //FIXME:- Need to populate deserializer & failedMsg -- Begin
+        val deserializer = ""
+        val failedMsg = ""
+        //FIXME:- Need to populate deserializer & failedMsg -- End
+        SendFailedEvent(data, deserializer, failedMsg, uk, uv, e)
+      }
+    }
+
+    try {
+      val transId = transService.getNextTransId
+      val msgEvent = nodeContext.getEnvCtxt().getContainerInstance("System.KamanjaMessageEvent")
+      val txnCtxt = new TransactionContext(transId, nodeContext, data, EventOriginInfo(uk, uv), readTmMilliSecs, msgEvent)
+      LOG.debug("Processing uniqueKey:%s, uniqueVal:%s, Datasize:%d".format(uk, uv, data.size))
+      txnCtxt.setInitialMessage("", msg)
+      executeMessage(txnCtxt, deserializerName): Unit
+    } catch {
+      case e: Throwable => {
+        LOG.error("Failed to execute message : " + msg.getFullTypeName, e)
+      }
+    } finally {
+      // Commit. Writing into OutputAdapters & Storage Adapters
+      // nodeContext.getEnvCtxt().CommitData(txnCtxt);
+    }
+  }
+
+  protected def executeMessage(txnCtxt: TransactionContext, deserializerName: String): Unit
 }
 
 trait ExecContextFactory {

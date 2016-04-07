@@ -43,6 +43,7 @@ object TestMetadataAPI {
 
   private type OptionMap = Map[Symbol, Any]
   private val userid: Option[String] = Some("someUser")
+  val tenantId: Option[String] = Some("someTenant")
 
   val loggerName = this.getClass.getName
   lazy val logger = LogManager.getLogger(loggerName)
@@ -1302,7 +1303,7 @@ println("Getting Messages")
       println(pmmlStr)
       // Save the model
       //    MetadataAPIImpl.SetLoggerLevel(Level.TRACE)
-      println("Results as json string => \n" + MetadataAPIImpl.UpdateModel(ModelType.KPMML, pmmlStr, userid))
+      println("Results as json string => \n" + MetadataAPIImpl.UpdateModel(ModelType.KPMML, pmmlStr, userid, Some("tenantid")))
     } catch {
       case e: Exception => {
         
@@ -1422,12 +1423,10 @@ println("Getting Messages")
       println("CHOSE " + (choice2-1) + "  "+modelConfigName)
       
       if( op.equalsIgnoreCase("add") ){
-            println("Results as json string => \n" +
-                MetadataAPIImpl.AddModel(ModelType.JAVA, sourceStr, userid, Some(modelConfigName)))
+        println("Results as json string => \n" + MetadataAPIImpl.AddModel(ModelType.JAVA, sourceStr, userid, Some("tenantid"), Some(modelConfigName)))
       }
       else{
-	println("Results as json string => \n" + 
-		MetadataAPIImpl.UpdateModel(ModelType.JAVA, sourceStr, userid, Some(modelConfigName)))
+	      println("Results as json string => \n" + MetadataAPIImpl.UpdateModel(ModelType.JAVA, sourceStr, userid, Some("tenantid"), Some(modelConfigName)))
       }
     } catch {
       case e: AlreadyExistsException => {
@@ -1512,11 +1511,10 @@ println("Getting Messages")
      
       if( op.equalsIgnoreCase("add") ){
 	       println("Results as json string => \n" +
-	         MetadataAPIImpl.AddModel(ModelType.SCALA, sourceStr, userid, Some(modelConfigName)))
+	         MetadataAPIImpl.AddModel(ModelType.SCALA, sourceStr, userid, Some("tenantid"),Some(modelConfigName)))
       }
       else {
-	       println("Results as json string => \n" +
-	         MetadataAPIImpl.UpdateModel( ModelType.SCALA, sourceStr, userid, Some(modelConfigName)))
+	       println("Results as json string => \n" + MetadataAPIImpl.UpdateModel( ModelType.SCALA, sourceStr, userid, Some("tenantid"), Some(modelConfigName)))
       }
 	
     } catch {
@@ -1569,8 +1567,7 @@ println("Getting Messages")
       val pmmlStr = Source.fromFile(pmmlFilePath).mkString
       // Save the model
       // MetadataAPIImpl.SetLoggerLevel(Level.TRACE)
-
-      println("Results as json string => \n" + MetadataAPIImpl.AddModel(ModelType.KPMML, pmmlStr, userid, None))
+      println("Results as json string => \n" + MetadataAPIImpl.AddModel(ModelType.KPMML, pmmlStr, userid, Some("tenantid")))
     } catch {
       case e: AlreadyExistsException => {
         logger.error("Model Already in the metadata....", e)
@@ -2170,7 +2167,7 @@ println("Getting Messages")
   def TestGenericProtobufSerializer = {
     val serializer = new ProtoBufSerializer
     // serializer.SetLoggerLevel(Level.TRACE)
-    val a = MdMgr.GetMdMgr.MakeConcept("System", "concept1", "System", "Int", "kamanja", MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, 1, false)
+    //val a = MdMgr.GetMdMgr.MakeConcept("System", "concept1", "System", "Int", "kamanja", tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, 1, false)
     //val ba = serializer.SerializeObjectToByteArray1(a)
     //val o = serializer.DeserializeObjectFromByteArray1(ba)
     //assert(JsonSerializer.SerializeObjectToJson(a) == JsonSerializer.SerializeObjectToJson(o.asInstanceOf[AttributeDef]))

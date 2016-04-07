@@ -212,7 +212,7 @@ class SaveContainerDataCompImpl extends LogTrait with MdBaseResolveInfo {
       throw new Exception(msgStr)
     }
 
-    val dataStore = cluster.cfgMap.getOrElse("DataStore", null)
+    val dataStore = cluster.cfgMap.getOrElse("SystemCatalog", null)
     if (dataStore == null) {
       val msgStr = "DataStore not found for Node %d  & ClusterId : %s".format(nodeId, nodeInfo.ClusterId)
       logger.error(msgStr)

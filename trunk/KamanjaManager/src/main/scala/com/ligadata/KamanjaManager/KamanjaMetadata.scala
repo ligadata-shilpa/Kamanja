@@ -18,14 +18,15 @@
 package com.ligadata.KamanjaManager
 
 import com.ligadata.jpmml.JpmmlAdapter
-import com.ligadata.kamanja.metadata.{ BaseElem, MappedMsgTypeDef, BaseAttributeDef, StructTypeDef, EntityType, AttributeDef, ArrayBufTypeDef, MessageDef, ContainerDef, ModelDef }
+import com.ligadata.kamanja.metadata.{ BaseElem, MappedMsgTypeDef, BaseAttributeDef, StructTypeDef, EntityType, AttributeDef, MessageDef, ContainerDef, ModelDef }
 import com.ligadata.kamanja.metadata._
 import com.ligadata.kamanja.metadata.MdMgr._
 
 import com.ligadata.kamanja.metadataload.MetadataLoad
+import com.ligadata.utils.dag.{EdgeId, Dag}
 import scala.collection.mutable.TreeSet
 import scala.util.control.Breaks._
-import com.ligadata.KamanjaBase.{ MessageInterface, ContainerInterface, ContainerFactoryInterface, MessageFactoryInterface, ModelInstanceFactory, EnvContext, MdBaseResolveInfo, FactoryOfModelInstanceFactory, NodeContext, TransactionContext }
+import com.ligadata.KamanjaBase._
 import scala.collection.mutable.HashMap
 import org.apache.logging.log4j._
 import scala.collection.mutable.ArrayBuffer
@@ -34,11 +35,10 @@ import com.ligadata.ZooKeeper._
 import com.ligadata.MetadataAPI.MetadataAPIImpl
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import com.ligadata.Utils.{ Utils, KamanjaClassLoader, KamanjaLoaderInfo }
-import com.ligadata.KamanjaBase.{ EnvContext }
 import scala.actors.threadpool.{ ExecutorService, Executors }
-import com.ligadata.KamanjaBase.ThreadLocalStorage
 
-class MdlInfo(val mdl: ModelInstanceFactory, val jarPath: String, val dependencyJarNames: Array[String]) {
+
+class MdlInfo(val mdl: ModelInstanceFactory, val jarPath: String, val dependencyJarNames: Array[String], val nodeId : Long, val inputs: Array[Array[EdgeId]], val outputs: Array[Long]) {
 }
 
 class TransformMsgFldsMap(var keyflds: Array[Int], var outputFlds: Array[Int]) {
@@ -51,7 +51,7 @@ class MsgContainerObjAndTransformInfo(var tranformMsgFlds: TransformMsgFldsMap, 
 }
 
 // This is shared by multiple threads to read (because we are not locking). We create this only once at this moment while starting the manager
-class KamanjaMetadata {
+class KamanjaMetadata(var envCtxt: EnvContext) {
   val LOG = LogManager.getLogger(getClass);
 
   // LOG.setLevel(Level.TRACE)
@@ -80,7 +80,7 @@ class KamanjaMetadata {
     try {
       // If required we need to enable this test
       // Convert class name into a class
-      var curClz = Class.forName(clsName, true, KamanjaConfiguration.metadataLoader.loader)
+      var curClz = Class.forName(clsName, true, envCtxt.getMetadataLoader.loader)
       curClass = curClz
 
       isMsg = false
@@ -102,8 +102,8 @@ class KamanjaMetadata {
         var objinst: Any = null
         try {
           // Trying Singleton Object
-          val module = KamanjaConfiguration.metadataLoader.mirror.staticModule(clsName)
-          val obj = KamanjaConfiguration.metadataLoader.mirror.reflectModule(module)
+          val module = envCtxt.getMetadataLoader.mirror.staticModule(clsName)
+          val obj = envCtxt.getMetadataLoader.mirror.reflectModule(module)
           objinst = obj.instance
         } catch {
           case e: Exception => {
@@ -164,7 +164,7 @@ class KamanjaMetadata {
     try {
       // If required we need to enable this test
       // Convert class name into a class
-      var curClz = Class.forName(clsName, true, KamanjaConfiguration.metadataLoader.loader)
+      var curClz = Class.forName(clsName, true, envCtxt.getMetadataLoader.loader)
       curClass = curClz
 
       isContainer = false
@@ -186,8 +186,8 @@ class KamanjaMetadata {
         var objinst: Any = null
         try {
           // Trying Singleton Object
-          val module = KamanjaConfiguration.metadataLoader.mirror.staticModule(clsName)
-          val obj = KamanjaConfiguration.metadataLoader.mirror.reflectModule(module)
+          val module = envCtxt.getMetadataLoader.mirror.staticModule(clsName)
+          val obj = envCtxt.getMetadataLoader.mirror.reflectModule(module)
           objinst = obj.instance
         } catch {
           case e: Exception => {
@@ -264,6 +264,7 @@ class KamanjaMetadata {
     /**
       * With the supplied ModelRepresentation from a ModelDef, look up its corresponding FactoryOfModelInstanceFactory
       * that knows what kind of ModelInstanceFactory is needed for that model representation.
+      *
       * @param modelRepSupported a ModelDef's ModelRepresentation.ModelRepresentation value is used to determine the key
       *                          to lookup the FactoryOfModelInstanceFactory needed to instantiate an appropriate
       *                          ModelInstanceFactory
@@ -316,12 +317,53 @@ class KamanjaMetadata {
             LOG.error("FactoryOfModelInstanceFactory %s not found in metadata. Unable to create ModelInstanceFactory for %s".format(factoryOfMdlInstFactoryFqName, mdl.FullName))
         } else {
             try {
-                val factory: ModelInstanceFactory = factoryOfMdlInstFactory.getModelInstanceFactory(mdl, KamanjaMetadata.gNodeContext, KamanjaConfiguration.metadataLoader, KamanjaConfiguration.jarPaths)
+                val factory: ModelInstanceFactory = factoryOfMdlInstFactory.getModelInstanceFactory(mdl, KamanjaMetadata.gNodeContext, envCtxt.getMetadataLoader, txnCtxt.getNodeCtxt().getEnvCtxt().getJarPaths())
                 if (factory != null) {
                     if (txnCtxt != null) // We are expecting txnCtxt is null only for first time initialization
                         factory.init(txnCtxt)
                     val mdlName = (mdl.NameSpace.trim + "." + mdl.Name.trim).toLowerCase
-                    modelObjsMap(mdlName) = new MdlInfo(factory, mdl.jarName, mdl.dependencyJarNames)
+
+                  val mgr = txnCtxt.getNodeCtxt().getEnvCtxt()._mgr
+
+                  // Not expecting we will have mdl.inputMsgSets null
+                  val inputs = mdl.inputMsgSets.map(set => {
+                    set.map(msg => {
+                      var nodeId: Long = 0
+                      var edgeTypeId: Long = 0
+                      if (msg.origin == null || msg.origin.trim.size == 0) {
+                        val orgMdl = mgr.Model(msg.origin, -1, true)
+                        if (orgMdl != None) {
+                          nodeId = orgMdl.get.MdElementId
+                        }
+                      }
+                      if (msg.message == null || msg.message.trim.size == 0) {
+                        val msgDef = mgr.Message(msg.message, -1, true)
+                        if (msgDef != None) {
+                          edgeTypeId = msgDef.get.MdElementId
+                        } else {
+                          val contDef = mgr.Container(msg.message, -1, true)
+                          if (contDef != None)
+                            edgeTypeId = contDef.get.MdElementId
+                        }
+                      }
+                      // BUGBUG:: Not really checking whether it has valid edgeTypeId or not. nodeId can be 0 if it is not valid model
+                      EdgeId(nodeId, edgeTypeId)
+                    })
+                  })
+
+                  val outputs = mdl.outputMsgs.map(msg => {
+                    var outTypeId: Long = 0
+                    val msgDef = mgr.Message(msg, -1, true)
+                    if (msgDef != None) {
+                      outTypeId = msgDef.get.MdElementId
+                    } else {
+                      val contDef = mgr.Container(msg, -1, true)
+                      if (contDef != None)
+                        outTypeId = contDef.get.MdElementId
+                    }
+                    outTypeId
+                  })
+                  modelObjsMap(mdlName) = new MdlInfo(factory, mdl.jarName, mdl.dependencyJarNames, mdl.MdElementId, inputs, outputs)
                 } else {
                     LOG.debug("Failed to get ModelInstanceFactory for " + mdl.FullName)
                 }
@@ -345,7 +387,7 @@ class KamanjaMetadata {
       if (attrMap != null) {
         childs ++= attrMap.filter(a => (a._2.isInstanceOf[AttributeDef] && (a._2.asInstanceOf[AttributeDef].aType.isInstanceOf[MappedMsgTypeDef] || a._2.asInstanceOf[AttributeDef].aType.isInstanceOf[StructTypeDef]))).map(a => (a._2.Name, a._2.asInstanceOf[AttributeDef].aType.FullName))
         // If the attribute is an arraybuffer (not yet handling others)
-        childs ++= attrMap.filter(a => (a._2.isInstanceOf[AttributeDef] && a._2.asInstanceOf[AttributeDef].aType.isInstanceOf[ArrayBufTypeDef] && (a._2.asInstanceOf[AttributeDef].aType.asInstanceOf[ArrayBufTypeDef].elemDef.isInstanceOf[MappedMsgTypeDef] || a._2.asInstanceOf[AttributeDef].aType.asInstanceOf[ArrayBufTypeDef].elemDef.isInstanceOf[StructTypeDef]))).map(a => (a._2.Name, a._2.asInstanceOf[AttributeDef].aType.asInstanceOf[ArrayBufTypeDef].elemDef.FullName))
+        childs ++= attrMap.filter(a => (a._2.isInstanceOf[AttributeDef] && a._2.asInstanceOf[AttributeDef].aType.isInstanceOf[ArrayTypeDef] && (a._2.asInstanceOf[AttributeDef].aType.asInstanceOf[ArrayTypeDef].elemDef.isInstanceOf[MappedMsgTypeDef] || a._2.asInstanceOf[AttributeDef].aType.asInstanceOf[ArrayTypeDef].elemDef.isInstanceOf[StructTypeDef]))).map(a => (a._2.Name, a._2.asInstanceOf[AttributeDef].aType.asInstanceOf[ArrayTypeDef].elemDef.FullName))
       }
     } else if (entity.isInstanceOf[StructTypeDef]) {
       var memberDefs = entity.asInstanceOf[StructTypeDef].memberDefs
@@ -353,7 +395,7 @@ class KamanjaMetadata {
       if (memberDefs != null) {
         childs ++= memberDefs.filter(a => (a.isInstanceOf[AttributeDef] && (a.asInstanceOf[AttributeDef].aType.isInstanceOf[MappedMsgTypeDef] || a.asInstanceOf[AttributeDef].aType.isInstanceOf[StructTypeDef]))).map(a => (a.Name, a.asInstanceOf[AttributeDef].aType.FullName))
         // If the attribute is an arraybuffer (not yet handling others)
-        childs ++= memberDefs.filter(a => (a.isInstanceOf[AttributeDef] && a.asInstanceOf[AttributeDef].aType.isInstanceOf[ArrayBufTypeDef] && (a.asInstanceOf[AttributeDef].aType.asInstanceOf[ArrayBufTypeDef].elemDef.isInstanceOf[MappedMsgTypeDef] || a.asInstanceOf[AttributeDef].aType.asInstanceOf[ArrayBufTypeDef].elemDef.isInstanceOf[StructTypeDef]))).map(a => (a.Name, a.asInstanceOf[AttributeDef].aType.asInstanceOf[ArrayBufTypeDef].elemDef.FullName))
+        childs ++= memberDefs.filter(a => (a.isInstanceOf[AttributeDef] && a.asInstanceOf[AttributeDef].aType.isInstanceOf[ArrayTypeDef] && (a.asInstanceOf[AttributeDef].aType.asInstanceOf[ArrayTypeDef].elemDef.isInstanceOf[MappedMsgTypeDef] || a.asInstanceOf[AttributeDef].aType.asInstanceOf[ArrayTypeDef].elemDef.isInstanceOf[StructTypeDef]))).map(a => (a.Name, a.asInstanceOf[AttributeDef].aType.asInstanceOf[ArrayTypeDef].elemDef.FullName))
       }
     } else {
       // Nothing to do at this moment
@@ -425,16 +467,18 @@ object KamanjaMetadata extends MdBaseResolveInfo {
   private[this] val mdMgr = GetMdMgr
   private[this] var messageContainerObjects = new HashMap[String, MsgContainerObjAndTransformInfo]
   private[this] var modelObjs = new HashMap[String, MdlInfo]
-  private[this] var modelExecOrderedObjects = Array[(String, MdlInfo)]()
+//  private[this] var modelExecOrderedObjects = Array[(String, MdlInfo)]()
   private[this] var factoryOfMdlInstFactoriesObjects = scala.collection.immutable.Map[String, FactoryOfModelInstanceFactory]()
   private[this] var modelRepFacFacKeys : scala.collection.immutable.Map[String,String] = scala.collection.immutable.Map[String,String]()
   private[this] var zkListener: ZooKeeperListener = _
-  private[this] var mdlsChangedCntr: Long = 0
+  private[this] var mdlsChangedCntr: Long = 1
   private[this] var initializedFactOfMdlInstFactObjs = false
   private[this] val reent_lock = new ReentrantReadWriteLock(true);
   private[this] val updMetadataExecutor = Executors.newFixedThreadPool(1)
-  private var updatedClusterConfig: Map[String,Any] = null
-
+  private[this] var previousProcessedTxn: Long = -1 // Just having snapshot in case if multiple threads are updating metadta (MetadataImpl) in same JVM
+  private[this] var updatedClusterConfig: Map[String,Any] = null
+  private[this] var masterDag: Dag = new Dag("0")
+  private[this] var nodeIdModlsObj = scala.collection.mutable.Map[Long, MdlInfo]()
 
   def getConfigChanges: Array[String] = {
     return GetMdMgr.getConfigChanges
@@ -458,13 +502,13 @@ object KamanjaMetadata extends MdBaseResolveInfo {
       return Set[String]()
     }
 
-    return allJars.map(j => Utils.GetValidJarFile(KamanjaConfiguration.jarPaths, j)).toSet
+    return allJars.map(j => Utils.GetValidJarFile(envCtxt.getJarPaths(), j)).toSet
   }
 
   def LoadJarIfNeeded(elem: BaseElem): Boolean = {
     val allJars = GetAllJarsFromElem(elem)
     if (allJars.size > 0) {
-      return Utils.LoadJars(allJars.toArray, KamanjaConfiguration.metadataLoader.loadedJars, KamanjaConfiguration.metadataLoader.loader)
+      return Utils.LoadJars(allJars.toArray, envCtxt.getMetadataLoader.loadedJars, envCtxt.getMetadataLoader.loader)
     } else {
       return true
     }
@@ -514,7 +558,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
     try {
       // If required we need to enable this test
       // Convert class name into a class
-      var curClz = Class.forName(clsName, true, KamanjaConfiguration.metadataLoader.loader)
+      var curClz = Class.forName(clsName, true, envCtxt.getMetadataLoader.loader)
       curClass = curClz
 
       isValid = false
@@ -536,8 +580,8 @@ object KamanjaMetadata extends MdBaseResolveInfo {
         var objinst: Any = null
         try {
           // Trying Singleton Object
-          val module = KamanjaConfiguration.metadataLoader.mirror.staticModule(clsName)
-          val obj = KamanjaConfiguration.metadataLoader.mirror.reflectModule(module)
+          val module = envCtxt.getMetadataLoader.mirror.staticModule(clsName)
+          val obj = envCtxt.getMetadataLoader.mirror.reflectModule(module)
           // curClz.newInstance
           objinst = obj.instance
         } catch {
@@ -759,36 +803,51 @@ object KamanjaMetadata extends MdBaseResolveInfo {
     // Order Models (if property is given) if we added any
     if ((removedModels != null && removedModels.size > 0) || (mdlObjects != null && mdlObjects.size > 0)) {
       // Re-arrange only if there are any changes in models (add/remove)
-      if (modelObjs != null && modelObjs.size > 0) {
-        // Order Models Execution
-        val tmpExecOrderStr = mdMgr.GetUserProperty(KamanjaConfiguration.clusterId, "modelsexecutionorder")
-        val ExecOrderStr = if (tmpExecOrderStr != null) tmpExecOrderStr.trim.toLowerCase.split(",").map(s => s.trim).filter(s => s.size > 0) else Array[String]()
+//      if (modelObjs != null && modelObjs.size > 0) {
+//        // Order Models Execution
+//        val tmpExecOrderStr = mdMgr.GetUserProperty(KamanjaConfiguration.clusterId, "modelsexecutionorder")
+//        val ExecOrderStr = if (tmpExecOrderStr != null) tmpExecOrderStr.trim.toLowerCase.split(",").map(s => s.trim).filter(s => s.size > 0) else Array[String]()
+//
+//        if (ExecOrderStr.size > 0 && modelObjs != null) {
+//          var mdlsOrder = ArrayBuffer[(String, MdlInfo)]()
+//          ExecOrderStr.foreach(mdlNm => {
+//            val m = modelObjs.getOrElse(mdlNm, null)
+//            if (m != null)
+//              mdlsOrder += ((mdlNm, m))
+//          })
+//
+//          var orderedMdlsSet = ExecOrderStr.toSet
+//          modelObjs.foreach(kv => {
+//            val mdlNm = kv._1.toLowerCase()
+//            if (orderedMdlsSet.contains(mdlNm) == false)
+//              mdlsOrder += ((mdlNm, kv._2))
+//          })
+//
+//          LOG.warn("Models Order changed from %s to %s".format(modelObjs.map(kv => kv._1).mkString(","), mdlsOrder.map(kv => kv._1).mkString(",")))
+//          modelExecOrderedObjects = mdlsOrder.toArray
+//        } else {
+//          modelExecOrderedObjects = if (modelObjs != null) modelObjs.toArray else Array[(String, MdlInfo)]()
+//        }
+//
+//        mdlsChanged = true
+//      } else {
+//        modelExecOrderedObjects = Array[(String, MdlInfo)]()
+//      }
 
-        if (ExecOrderStr.size > 0 && modelObjs != null) {
-          var mdlsOrder = ArrayBuffer[(String, MdlInfo)]()
-          ExecOrderStr.foreach(mdlNm => {
-            val m = modelObjs.getOrElse(mdlNm, null)
-            if (m != null)
-              mdlsOrder += ((mdlNm, m))
-          })
+      // create DAG node here
+      val dag = new Dag(mdlsChangedCntr.toString)
+      val tmpNodeIdModlsObj = scala.collection.mutable.Map[Long, MdlInfo]()
 
-          var orderedMdlsSet = ExecOrderStr.toSet
-          modelObjs.foreach(kv => {
-            val mdlNm = kv._1.toLowerCase()
-            if (orderedMdlsSet.contains(mdlNm) == false)
-              mdlsOrder += ((mdlNm, kv._2))
-          })
-
-          LOG.warn("Models Order changed from %s to %s".format(modelObjs.map(kv => kv._1).mkString(","), mdlsOrder.map(kv => kv._1).mkString(",")))
-          modelExecOrderedObjects = mdlsOrder.toArray
-        } else {
-          modelExecOrderedObjects = if (modelObjs != null) modelObjs.toArray else Array[(String, MdlInfo)]()
-        }
-
-        mdlsChanged = true
-      } else {
-        modelExecOrderedObjects = Array[(String, MdlInfo)]()
+      if (modelObjs != null) {
+        modelObjs.foreach(mdl => {
+          val mdlInfo = mdl._2
+          dag.AddNode(mdlInfo.nodeId, mdlInfo.inputs, mdlInfo.outputs)
+          tmpNodeIdModlsObj(mdlInfo.nodeId) = mdlInfo
+        })
       }
+
+      masterDag = dag
+      nodeIdModlsObj = tmpNodeIdModlsObj
     }
 
     LOG.debug("mdlsChanged:" + mdlsChanged.toString)
@@ -806,7 +865,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
     val tmpContainerDefs = mdMgr.Containers(true, true)
     val tmpModelDefs = mdMgr.Models(true, true)
 
-    val obj = new KamanjaMetadata
+    val obj = new KamanjaMetadata(envCtxt)
 
     try {
       if (initializedFactOfMdlInstFactObjs == false) {
@@ -859,7 +918,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
       return
     }
 
-    if (zkTransaction.transactionId.getOrElse("0").toLong <= MetadataAPIImpl.getCurrentTranLevel) return
+    if (zkTransaction.transactionId.getOrElse("0").toLong <= previousProcessedTxn) return
 
     updMetadataExecutor.execute(new MetadataUpdate(zkTransaction))
   }
@@ -873,7 +932,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
         txnId = -1 * txnId
       // Finally we are taking -ve txnid for this
       try {
-        txnCtxt = new TransactionContext(txnId, KamanjaMetadata.gNodeContext, Array[Byte](), "")
+        txnCtxt = new TransactionContext(txnId, KamanjaMetadata.gNodeContext, Array[Byte](), EventOriginInfo(null, null), 0, null)
         ThreadLocalStorage.txnContextInfo.set(txnCtxt)
         run1(txnCtxt)
       } catch {
@@ -902,11 +961,13 @@ object KamanjaMetadata extends MdBaseResolveInfo {
       }
 
       MetadataAPIImpl.UpdateMdMgr(zkTransaction)
+      val zkTxnId = zkTransaction.transactionId.getOrElse("0").toLong
+      previousProcessedTxn = if (zkTxnId != 0) zkTxnId else MetadataAPIImpl.getCurrentTranLevel
 
       if (updMetadataExecutor.isShutdown)
         return
 
-      val obj = new KamanjaMetadata
+      val obj = new KamanjaMetadata(envCtxt)
 
       // BUGBUG:: Not expecting added element & Removed element will happen in same transaction at this moment
       // First we are adding what ever we need to add, then we are removing. So, we are locking before we append to global array and remove what ever is gone.
@@ -991,8 +1052,8 @@ object KamanjaMetadata extends MdBaseResolveInfo {
       if (removedValues > 0) {
         reent_lock.writeLock().lock();
         try {
-          KamanjaConfiguration.metadataLoader = new KamanjaLoaderInfo(KamanjaConfiguration.metadataLoader, true, true)
-          envCtxt.setClassLoader(KamanjaConfiguration.metadataLoader.loader)
+          val metadataLoader = new KamanjaLoaderInfo(envCtxt.getMetadataLoader, true, true)
+          envCtxt.setMetadataLoader(metadataLoader)
         } catch {
           case e: Exception => { LOG.warn("", e)
           }
@@ -1241,9 +1302,11 @@ object KamanjaMetadata extends MdBaseResolveInfo {
   def getAllModels: (Array[(String, MdlInfo)], Long) = {
     var exp: Exception = null
     var v: Array[(String, MdlInfo)] = null
+    var cntr: Long = 0
 
     reent_lock.readLock().lock();
     try {
+      cntr = mdlsChangedCntr
       v = localgetAllModels
     } catch {
       case e: Exception => {
@@ -1255,7 +1318,27 @@ object KamanjaMetadata extends MdBaseResolveInfo {
     }
     if (exp != null)
       throw exp
-    (v, mdlsChangedCntr)
+    (v, cntr)
+  }
+
+  def getExecutionDag: (Dag, Map[Long, MdlInfo], Long) = {
+    var exp: Exception = null
+    var v: (Dag, Map[Long, MdlInfo], Long) = null
+
+    reent_lock.readLock().lock();
+    try {
+      v = localgetDag
+    } catch {
+      case e: Exception => {
+        LOG.debug("", e)
+        exp = e
+      }
+    } finally {
+      reent_lock.readLock().unlock();
+    }
+    if (exp != null)
+      throw exp
+    v
   }
 
   def getAllContainers: Map[String, MsgContainerObjAndTransformInfo] = {
@@ -1315,7 +1398,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
   }
 
   private def localgetAllModels: Array[(String, MdlInfo)] = {
-    modelExecOrderedObjects
+    modelObjs.toArray
   }
 
   private def localgetAllContainers: Map[String, MsgContainerObjAndTransformInfo] = {
@@ -1342,5 +1425,10 @@ object KamanjaMetadata extends MdBaseResolveInfo {
   }
 
   def GetModelsChangedCounter = mdlsChangedCntr
+
+  private def localgetDag: (Dag, Map[Long, MdlInfo], Long) = {
+    (masterDag, nodeIdModlsObj.toMap, mdlsChangedCntr)
+  }
+
 }
 

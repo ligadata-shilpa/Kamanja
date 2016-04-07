@@ -110,7 +110,6 @@ class FileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: ExecC
                   ignoredlines += 1
                 } else {
                   if (strlen > 0) {
-                    var readTmNs = System.nanoTime
                     var readTmMs = System.currentTimeMillis
 
                     val ln = new String(buffer, startidx, idx - startidx)
@@ -119,7 +118,7 @@ class FileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: ExecC
                     try {
                       // Creating new string to convert from Byte Array to string
                       uniqueVal.Offset = 0 //BUGBUG:: yet to fill this information
-                      execThread.execute(sendmsg.getBytes, uniqueKey, uniqueVal, readTmNs, readTmMs)
+                      execThread.execute(sendmsg.getBytes, uniqueKey, uniqueVal, readTmMs)
                     } catch {
                       case e: Exception => {
                         LOG.error("", e)
@@ -165,7 +164,6 @@ class FileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: ExecC
         } while (readlen > 0)
 
         if (len > 0 && ignoredlines >= ignorelines) {
-          var readTmNs = System.nanoTime
           var readTmMs = System.currentTimeMillis
 
           val ln = new String(buffer, 0, len)
@@ -174,7 +172,7 @@ class FileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: ExecC
           try {
             // Creating new string to convert from Byte Array to string
             uniqueVal.Offset = 0 //BUGBUG:: yet to fill this information
-            execThread.execute(sendmsg.getBytes, uniqueKey, uniqueVal, readTmNs, readTmMs)
+            execThread.execute(sendmsg.getBytes, uniqueKey, uniqueVal, readTmMs)
           } catch {
             case e: Exception => {
               LOG.error("", e)

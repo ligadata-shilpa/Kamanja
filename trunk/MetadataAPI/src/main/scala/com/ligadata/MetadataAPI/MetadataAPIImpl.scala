@@ -101,8 +101,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
   lazy val sysNS = "System" // system name space
 
-  lazy val serializerType = "kryo"
-  lazy val serializer = SerializerManager.GetSerializer(serializerType)
+  lazy val serializerType = "json4s"//"kryo"
+  //lazy val serializer = SerializerManager.GetSerializer(serializerType)
   lazy val metadataAPIConfig = new Properties()
   var zkc: CuratorFramework = null
   private var authObj: SecurityAdapter = null
@@ -147,12 +147,9 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     }
   }
 
-
-
-
   def GetSchemaId: Int = GetMetadataId("schemaid", true, 2000001).toInt // This should start atleast from 2,000,001. because 1 - 1,000,000 is reserved for System Containers & 1,000,001 - 2,000,000 is reserved for System Messages
-  def GetUniqueId: Long = GetMetadataId("uniqueid", true, 1) // This starts from 1
-  def GetMdElementId: Long = GetMetadataId("mdelementid", true, 1) // This starts from 1
+  def GetUniqueId: Long = GetMetadataId("uniqueid", true, 100000) // This starts from 100000
+  def GetMdElementId: Long = GetMetadataId("mdelementid", true, 100000) // This starts from 100000
 
   /**
    *  getHealthCheck - will return all the health-check information for the nodeId specified.
@@ -946,9 +943,9 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       val dispkey = (getObjectType(obj) + "." + obj.FullName + "." + MdMgr.Pad0s2Version(obj.Version)).toLowerCase
       obj.tranId = GetNewTranId
 
-      //val value = JsonSerializer.SerializeObjectToJson(obj)
+
       logger.debug("Serialize the object: name of the object => " + dispkey)
-      var value = serializer.SerializeObjectToByteArray(obj)
+      var value =MetadataAPISerialization.serializeObjectToJson(obj).getBytes //serializer.SerializeObjectToByteArray(obj)
 
       val saveObjFn = () => {
         PersistenceUtils.SaveObject(key, value, getMdElemTypeName(obj), serializerType) // Make sure getMdElemTypeName is success full all types we handle here
@@ -991,55 +988,10 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
           saveObjFn()
           mdMgr.AddArray(o)
         }
-        case o: ArrayBufTypeDef => {
-          logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
-          saveObjFn()
-          mdMgr.AddArrayBuffer(o)
-        }
-        case o: ListTypeDef => {
-          logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
-          saveObjFn()
-          mdMgr.AddList(o)
-        }
-        case o: QueueTypeDef => {
-          logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
-          saveObjFn()
-          mdMgr.AddQueue(o)
-        }
-        case o: SetTypeDef => {
-          logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
-          saveObjFn()
-          mdMgr.AddSet(o)
-        }
-        case o: TreeSetTypeDef => {
-          logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
-          saveObjFn()
-          mdMgr.AddTreeSet(o)
-        }
-        case o: SortedSetTypeDef => {
-          logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
-          saveObjFn()
-          mdMgr.AddSortedSet(o)
-        }
         case o: MapTypeDef => {
           logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
           saveObjFn()
           mdMgr.AddMap(o)
-        }
-        case o: ImmutableMapTypeDef => {
-          logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
-          saveObjFn()
-          mdMgr.AddImmutableMap(o)
-        }
-        case o: HashMapTypeDef => {
-          logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
-          saveObjFn()
-          mdMgr.AddHashMap(o)
-        }
-        case o: TupleTypeDef => {
-          logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
-          saveObjFn()
-          mdMgr.AddTupleType(o)
         }
         case o: ContainerTypeDef => {
           logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
@@ -1074,7 +1026,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       val dispkey = (getObjectType(obj) + "." + obj.FullName + "." + MdMgr.Pad0s2Version(obj.Version)).toLowerCase
 
       logger.debug("Serialize the object: name of the object => " + dispkey)
-      var value = serializer.SerializeObjectToByteArray(obj)
+      var value = MetadataAPISerialization.serializeObjectToJson(obj).getBytes//serializer.SerializeObjectToByteArray(obj)
 
       val updObjFn = () => {
         PersistenceUtils.UpdateObject(key, value, getMdElemTypeName(obj), serializerType) // Make sure getMdElemTypeName is success full all types we handle here
@@ -1110,43 +1062,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
           logger.debug("Updating the Type in the DB: name of the object =>  " + dispkey)
           updObjFn()
         }
-        case o: ArrayBufTypeDef => {
-          logger.debug("Updating the Type in the DB: name of the object =>  " + dispkey)
-          updObjFn()
-        }
-        case o: ListTypeDef => {
-          logger.debug("Updating the Type in the DB: name of the object =>  " + dispkey)
-          updObjFn()
-        }
-        case o: QueueTypeDef => {
-          logger.debug("Updating the Type in the DB: name of the object =>  " + dispkey)
-          updObjFn()
-        }
-        case o: SetTypeDef => {
-          logger.debug("Updating the Type in the DB: name of the object =>  " + dispkey)
-          updObjFn()
-        }
-        case o: TreeSetTypeDef => {
-          logger.debug("Updating the Type in the DB: name of the object =>  " + dispkey)
-          updObjFn()
-        }
-        case o: SortedSetTypeDef => {
-          logger.debug("Updating the Type in the DB: name of the object =>  " + dispkey)
-          updObjFn()
-        }
         case o: MapTypeDef => {
-          logger.debug("Updating the Type in the DB: name of the object =>  " + dispkey)
-          updObjFn()
-        }
-        case o: ImmutableMapTypeDef => {
-          logger.debug("Updating the Type in the DB: name of the object =>  " + dispkey)
-          updObjFn()
-        }
-        case o: HashMapTypeDef => {
-          logger.debug("Updating the Type in the DB: name of the object =>  " + dispkey)
-          updObjFn()
-        }
-        case o: TupleTypeDef => {
           logger.debug("Updating the Type in the DB: name of the object =>  " + dispkey)
           updObjFn()
         }
@@ -1428,34 +1344,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
         case o: ArrayTypeDef => {
           updatedObject = mdMgr.ModifyType(o.nameSpace, o.name, o.ver, operation)
         }
-        case o: ArrayBufTypeDef => {
-          updatedObject = mdMgr.ModifyType(o.nameSpace, o.name, o.ver, operation)
-        }
-        case o: ListTypeDef => {
-          updatedObject = mdMgr.ModifyType(o.nameSpace, o.name, o.ver, operation)
-        }
-        case o: QueueTypeDef => {
-          updatedObject = mdMgr.ModifyType(o.nameSpace, o.name, o.ver, operation)
-        }
-        case o: SetTypeDef => {
-          updatedObject = mdMgr.ModifyType(o.nameSpace, o.name, o.ver, operation)
-        }
-        case o: TreeSetTypeDef => {
-          updatedObject = mdMgr.ModifyType(o.nameSpace, o.name, o.ver, operation)
-        }
-        case o: SortedSetTypeDef => {
-          updatedObject = mdMgr.ModifyType(o.nameSpace, o.name, o.ver, operation)
-        }
         case o: MapTypeDef => {
-          updatedObject = mdMgr.ModifyType(o.nameSpace, o.name, o.ver, operation)
-        }
-        case o: ImmutableMapTypeDef => {
-          updatedObject = mdMgr.ModifyType(o.nameSpace, o.name, o.ver, operation)
-        }
-        case o: HashMapTypeDef => {
-          updatedObject = mdMgr.ModifyType(o.nameSpace, o.name, o.ver, operation)
-        }
-        case o: TupleTypeDef => {
           updatedObject = mdMgr.ModifyType(o.nameSpace, o.name, o.ver, operation)
         }
         case o: ContainerTypeDef => {
@@ -1550,45 +1439,9 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
           logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
           mdMgr.AddArray(o)
         }
-        case o: ArrayBufTypeDef => {
-          logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
-          mdMgr.AddArrayBuffer(o)
-        }
-        case o: ListTypeDef => {
-          logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
-          mdMgr.AddList(o)
-        }
-        case o: QueueTypeDef => {
-          logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
-          mdMgr.AddQueue(o)
-        }
-        case o: SetTypeDef => {
-          logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
-          mdMgr.AddSet(o)
-        }
-        case o: TreeSetTypeDef => {
-          logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
-          mdMgr.AddTreeSet(o)
-        }
-        case o: SortedSetTypeDef => {
-          logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
-          mdMgr.AddSortedSet(o)
-        }
         case o: MapTypeDef => {
           logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
           mdMgr.AddMap(o)
-        }
-        case o: ImmutableMapTypeDef => {
-          logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
-          mdMgr.AddImmutableMap(o)
-        }
-        case o: HashMapTypeDef => {
-          logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
-          mdMgr.AddHashMap(o)
-        }
-        case o: TupleTypeDef => {
-          logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
-          mdMgr.AddTupleType(o)
         }
         case o: ContainerTypeDef => {
           logger.debug("Adding the Type to the cache: name of the object =>  " + dispkey)
@@ -1734,6 +1587,14 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     PersistenceUtils.OpenDbStore(jarPaths,dataStoreInfo)
   }
 
+  /**
+     * CreateMetadataTables
+     *
+     */
+  def CreateMetadataTables: Unit = {
+    PersistenceUtils.CreateMetadataTables
+  }
+
     /**
      * CloseDbStore
      */
@@ -1872,7 +1733,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
         val ownerId: String = if (userid == None) "kamanja" else userid.get
         val uniqueId = MetadataAPIImpl.GetUniqueId
         val mdElementId = 0L //FIXME:- Not yet handled this
-        val jarObject = MdMgr.GetMdMgr.MakeJarDef(MetadataAPIImpl.sysNS, jarName, "100", ownerId, uniqueId, mdElementId)
+        val jarObject = MdMgr.GetMdMgr.MakeJarDef(MetadataAPIImpl.sysNS, jarName, "100", ownerId, "" /* For now Jars Tenant is empty */, uniqueId, mdElementId)
 
 
         logger.debug(" UploadJar  ==>>    ===>> " + jarPath )
@@ -2067,8 +1928,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @param recompile a
      * @return <description please>
      */
-  private def AddContainerOrMessage(contOrMsgText: String, format: String, userid: Option[String], recompile: Boolean = false): String = {
-    MessageAndContainerUtils.AddContainerOrMessage(contOrMsgText,format,userid,recompile)
+  private def AddContainerOrMessage(contOrMsgText: String, format: String, userid: Option[String], tenantId: Option[String] = None, recompile: Boolean = false): String = {
+    MessageAndContainerUtils.AddContainerOrMessage(contOrMsgText,format,userid, tenantId, recompile)
   }
 
     /**
@@ -2090,8 +1951,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      *          println("Result as Json String => \n" + result._2)
      *          }}}
      */
-  override def AddMessage(messageText: String, format: String, userid: Option[String] = None): String = {
-    AddContainerOrMessage(messageText, format, userid)
+  override def AddMessage(messageText: String, format: String, userid: Option[String] = None, tid: Option[String] = None): String = {
+    AddContainerOrMessage(messageText, format, userid, tid)
   }
 
     /**
@@ -2113,8 +1974,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     *          println("Result as Json String => \n" + result._2)
     *          }}}
     */
-  def AddContainer(containerText: String, format: String, userid: Option[String] = None): String = {
-    AddContainerOrMessage(containerText, format, userid)
+  override def AddContainer(containerText: String, format: String, userid: Option[String] = None, tenantId: Option[String] = None): String = {
+    AddContainerOrMessage(containerText, format, userid, tenantId)
   }
 
     /**
@@ -2125,9 +1986,9 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      *               method. If Security and/or Audit are configured, this value must be a value other than None.
      * @return
      */
-  def AddContainer(containerText: String, userid: Option[String]): String = {
-    AddContainer(containerText, "JSON", userid)
-  }
+ // def AddContainer(containerText: String, userid: Option[String], tenantId: Option[String] = None): String = {
+ //   AddContainer(containerText, "JSON", userid, tenantId)
+ // }
 
     /**
      * RecompileMessage
@@ -2150,8 +2011,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      *         indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
      *         ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure
      */
-  def UpdateMessage(messageText: String, format: String, userid: Option[String] = None): String = {
-    MessageAndContainerUtils.UpdateMessage(messageText,format,userid)
+  override def UpdateMessage(messageText: String, format: String, userid: Option[String] = None, tid: Option[String] = None): String = {
+    MessageAndContainerUtils.UpdateMessage(messageText,format,userid, tid)
   }
 
     /**
@@ -2165,7 +2026,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      *         indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
      *         ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure
      */
-  def UpdateContainer(messageText: String, format: String, userid: Option[String] = None): String = {
+  override def UpdateContainer(messageText: String, format: String, userid: Option[String] = None, tid: Option[String] = None): String = {
     UpdateMessage(messageText, format, userid)
   }
 
@@ -2177,9 +2038,9 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      *               method. If Security and/or Audit are configured, this value must be a value other than None.
      * @return
      */
-  def UpdateContainer(messageText: String, userid: Option[String]): String = {
-    UpdateMessage(messageText, "JSON", userid)
-  }
+ // def UpdateContainer(messageText: String, userid: Option[String]): String = {
+ //   UpdateMessage(messageText, "JSON", userid)
+ // }
 
     /**
      * UpdateMessage
@@ -2189,9 +2050,9 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      *               method. If Security and/or Audit are configured, this value must be a value other than None.
      * @return
      */
-  def UpdateMessage(messageText: String, userid: Option[String]): String = {
-    UpdateMessage(messageText, "JSON", userid)
-  }
+  //def UpdateMessage(messageText: String, userid: Option[String]): String = {
+  //  UpdateMessage(messageText, "JSON", userid)
+ // }
 
     /**
      * Remove container with Container Name and Version Number
@@ -2391,13 +2252,14 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
   override def AddModel( modelType: ModelType.ModelType
                            , input: String
                            , optUserid: Option[String] = None
+                           , optTenantid: Option[String] = None
                            , optModelName: Option[String] = None
                            , optVersion: Option[String] = None
                            , optMsgConsumed: Option[String] = None
                            , optMsgVersion: Option[String] = Some("-1")
 			                     , optMsgProduced: Option[String] = None
 		       ): String  = {
-    ModelUtils.AddModel(modelType,input,optUserid,optModelName,optVersion,optMsgConsumed, optMsgVersion,optMsgProduced)
+    ModelUtils.AddModel(modelType, input, optUserid, optTenantid, optModelName, optVersion, optMsgConsumed, optMsgVersion, optMsgProduced)
   }
 
     /**
@@ -2411,7 +2273,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @return the result string reflecting what happened with this operation.
      */
     def RecompileModel(mod: ModelDef, userid : Option[String], optMsgDef : Option[MessageDef]): String = {
-      ModelUtils.RecompileModel(mod,userid,optMsgDef)
+      ModelUtils.RecompileModel(mod,userid, optMsgDef)
     }
 
     /**
@@ -2446,11 +2308,12 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     override def UpdateModel(modelType: ModelType.ModelType
                             , input: String
                             , optUserid: Option[String] = None
+                            , tenantid:  Option[String] = None
                             , optModelName: Option[String] = None
                             , optVersion: Option[String] = None
                             , optVersionBeingUpdated : Option[String] = None
-			    , optMsgProduced: Option[String] = None): String = {
-      ModelUtils.UpdateModel(modelType,input,optUserid,optModelName,optVersion,optVersionBeingUpdated,optMsgProduced)
+			                      , optMsgProduced: Option[String] = None): String = {
+      ModelUtils.UpdateModel(modelType, input, optUserid, tenantid, optModelName, optVersion, optVersionBeingUpdated, optMsgProduced)
     }
 
     /**
@@ -2960,7 +2823,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
           processedContainersSet += storeInfo._1
           storeInfo._2.get(storeInfo._1, { (k: Key, v: Any, serType: String, typ: String, ver:Int) =>
             {
-              val mObj = serializer.DeserializeObjectFromByteArray(v.asInstanceOf[Array[Byte]]).asInstanceOf[BaseElemDef]
+              val mObj= MetadataAPISerialization.deserializeMetadata(new String(v.asInstanceOf[Array[Byte]])).asInstanceOf[BaseElemDef] // serializer.DeserializeObjectFromByteArray(v.asInstanceOf[Array[Byte]]).asInstanceOf[BaseElemDef]
               if (mObj != null) {
                 if (mObj.tranId <= maxTranId) {
                   AddObjectToCache(mObj, MdMgr.GetMdMgr)
@@ -3185,7 +3048,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
             val ownerId: String = "kamanja" //FIXME:- We need to have some user for this operation.
             val uniqueId = MetadataAPIImpl.GetUniqueId
             val mdElementId = 0L //FIXME:- Not yet handled this
-            DownloadJarFromDB(MdMgr.GetMdMgr.MakeJarDef(zkMessage.NameSpace, zkMessage.Name, zkMessage.Version, ownerId, uniqueId, mdElementId))
+            DownloadJarFromDB(MdMgr.GetMdMgr.MakeJarDef(zkMessage.NameSpace, zkMessage.Name, zkMessage.Version, ownerId, "" /* tenantId as empty */, uniqueId, mdElementId))
           }
           case _ => { logger.error("Unknown Operation " + zkMessage.Operation + " in zookeeper notification, notification is not processed ..") }
         }
@@ -3745,23 +3608,35 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     ConfigUtils.RemoveNode(nodeId)
   }
 
+  def AddTenant(tenantId: String, description: String, primaryDataStore: String, cacheConfig: String): String = {
+    ConfigUtils.AddTenant(tenantId, description, primaryDataStore, cacheConfig)
+  }
+
+  def UpdateTenant(tenantId: String, description: String, primaryDataStore: String, cacheConfig: String): String = {
+    ConfigUtils.UpdateTenant(tenantId, description, primaryDataStore, cacheConfig)
+  }
+
+  def RemoveTenant(tenantId: String): String = {
+    ConfigUtils.RemoveTenant(tenantId)
+  }
+
+
     /**
      * AddAdapter
       *
       * @param name
      * @param typeString
-     * @param dataFormat
      * @param className
      * @param jarName
      * @param dependencyJars
      * @param adapterSpecificCfg
      * @return
      */
-  def AddAdapter(name: String, typeString: String, dataFormat: String, className: String,
+  def AddAdapter(name: String, typeString: String, className: String,
                  jarName: String, dependencyJars: List[String],
-                 adapterSpecificCfg: String): String = {
-    ConfigUtils.AddAdapter(name, typeString, dataFormat, className, jarName,
-        dependencyJars, adapterSpecificCfg)
+                 adapterSpecificCfg: String, tenantId: String, fullAdapterConfig: String): String = {
+    ConfigUtils.AddAdapter(name, typeString, className, jarName,
+        dependencyJars, adapterSpecificCfg, tenantId, fullAdapterConfig)
   }
 
     /**
@@ -3769,17 +3644,16 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       *
       * @param name
      * @param typeString
-     * @param dataFormat
      * @param className
      * @param jarName
      * @param dependencyJars
      * @param adapterSpecificCfg
      * @return
      */
-  def UpdateAdapter(name: String, typeString: String, dataFormat: String, className: String,
+  def UpdateAdapter(name: String, typeString: String, className: String,
                     jarName: String, dependencyJars: List[String],
-                    adapterSpecificCfg: String): String = {
-    ConfigUtils.AddAdapter(name, typeString, dataFormat, className, jarName, dependencyJars, adapterSpecificCfg)
+                    adapterSpecificCfg: String, tenantId: String, fullAdapterConfig: String): String = {
+    ConfigUtils.AddAdapter(name, typeString, className, jarName, dependencyJars, adapterSpecificCfg, tenantId, fullAdapterConfig)
   }
 
     /**
@@ -4010,7 +3884,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
     if (elemType.equalsIgnoreCase("adapterDef")) {
       //val obj = GetObject("adapterinfo."+key.toLowerCase, "config_objects")
-      val storedInfo = serializer.DeserializeObjectFromByteArray(GetObject("adapterinfo."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]]).asInstanceOf[AdapterInfo]
+      val storedInfo: AdapterInfo = MetadataAPISerialization.deserializeMetadata(new String(GetObject("adapterinfo."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]])).asInstanceOf[AdapterInfo]
+      //serializer.DeserializeObjectFromByteArray(GetObject("adapterinfo."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]]).asInstanceOf[AdapterInfo]
       val cachedInfo = MdMgr.GetMdMgr.GetAdapter(key.toLowerCase)
 
       // If storedInfo is null, that means that the adapter has been removed... maybe
@@ -4033,7 +3908,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
     if (elemType.equalsIgnoreCase("nodeDef")) {
      // val obj = GetObject("nodeinfo."+key.toLowerCase, "config_objects")
-      val storedInfo = serializer.DeserializeObjectFromByteArray(GetObject("nodeinfo."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]]).asInstanceOf[NodeInfo]
+      val storedInfo = MetadataAPISerialization.deserializeMetadata(new String(GetObject("nodeinfo."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]])).asInstanceOf[NodeInfo]
+      //serializer.DeserializeObjectFromByteArray(GetObject("nodeinfo."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]]).asInstanceOf[NodeInfo]
       val cachedInfo = MdMgr.GetMdMgr.GetNode(key.toLowerCase)
 
       // If storedInfo is null, that means that the adapter has been removed... maybe
@@ -4056,7 +3932,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
     if (elemType.equalsIgnoreCase("clusterInfoDef")) {
       //val obj = GetObject("clustercfginfo."+key.toLowerCase, "config_objects")
-      val storedInfo = serializer.DeserializeObjectFromByteArray(GetObject("clustercfginfo."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]]).asInstanceOf[ClusterCfgInfo]
+      val storedInfo = MetadataAPISerialization.deserializeMetadata(new String(GetObject("clustercfginfo."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]])).asInstanceOf[ClusterCfgInfo]
+      //serializer.DeserializeObjectFromByteArray(GetObject("clustercfginfo."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]]).asInstanceOf[ClusterCfgInfo]
       val cachedInfo = MdMgr.GetMdMgr.GetClusterCfg(key.toLowerCase)
 
       // If storedInfo is null, that means that the adapter has been removed... maybe
@@ -4080,7 +3957,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
     if (elemType.equalsIgnoreCase("clusterDef")) {
       //val obj = GetObject("clusterinfo."+key.toLowerCase, "config_objects")
-      val storedInfo = serializer.DeserializeObjectFromByteArray(GetObject("clusterinfo."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]]).asInstanceOf[ClusterInfo]
+      val storedInfo = MetadataAPISerialization.deserializeMetadata(new String(GetObject("clusterinfo."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]])).asInstanceOf[ClusterInfo]
+      //serializer.DeserializeObjectFromByteArray(GetObject("clusterinfo."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]]).asInstanceOf[ClusterInfo]
       val cachedInfo = MdMgr.GetMdMgr.GetCluster(key.toLowerCase)
 
       // If storedInfo is null, that means that the adapter has been removed... maybe
@@ -4103,7 +3981,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
     if (elemType.equalsIgnoreCase("upDef")) {
       //val obj = GetObject("userproperties."+key.toLowerCase, "config_objects")
-      val storedInfo = serializer.DeserializeObjectFromByteArray(GetObject("userproperties."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]]).asInstanceOf[UserPropertiesInfo]
+      val storedInfo = MetadataAPISerialization.deserializeMetadata(new String(GetObject("userproperties."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]])).asInstanceOf[UserPropertiesInfo]
+        //serializer.DeserializeObjectFromByteArray(GetObject("userproperties."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]]).asInstanceOf[UserPropertiesInfo]
       val cachedInfo = MdMgr.GetMdMgr.GetUserProperty(clusterId, key.toLowerCase)
 
       // If storedInfo is null, that means that the adapter has been removed... maybe
@@ -4220,6 +4099,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     val tmpJarPaths = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("JAR_PATHS")
     val jarPaths = if (tmpJarPaths != null) tmpJarPaths.split(",").toSet else scala.collection.immutable.Set[String]()
     MetadataAPIImpl.OpenDbStore(jarPaths, GetMetadataAPIConfig.getProperty("METADATA_DATASTORE"))
+    MetadataAPIImpl.CreateMetadataTables
     MetadataAPIImpl.LoadAllObjectsIntoCache
     MetadataAPIImpl.CloseDbStore
     MetadataAPIImpl.InitSecImpl
@@ -4250,6 +4130,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     val tmpJarPaths = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("JAR_PATHS")
     val jarPaths = if (tmpJarPaths != null) tmpJarPaths.split(",").toSet else scala.collection.immutable.Set[String]()
     MetadataAPIImpl.OpenDbStore(jarPaths, GetMetadataAPIConfig.getProperty("METADATA_DATASTORE"))
+    MetadataAPIImpl.CreateMetadataTables
     MetadataAPIImpl.LoadAllObjectsIntoCache
     MetadataAPIImpl.InitSecImpl
     if (startHB) InitHearbeat
@@ -4383,6 +4264,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     val tmpJarPaths = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("JAR_PATHS")
     val jarPaths = if (tmpJarPaths != null) tmpJarPaths.split(",").toSet else scala.collection.immutable.Set[String]()
     MetadataAPIImpl.OpenDbStore(jarPaths, GetMetadataAPIConfig.getProperty("METADATA_DATASTORE"))
+    MetadataAPIImpl.CreateMetadataTables
     MetadataAPIImpl.LoadAllObjectsIntoCache
   }
 }

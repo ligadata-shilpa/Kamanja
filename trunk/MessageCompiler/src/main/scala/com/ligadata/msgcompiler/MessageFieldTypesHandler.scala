@@ -135,12 +135,6 @@ class MessageFieldTypesHandler {
             types(0) = arrayType.typeString
             types(1) = arrayType.elemDef.implementationName          
           }
-          case "tarraybuf" => {
-            var arraybufType: ArrayBufTypeDef = null
-            arraybufType = fieldBaseType.asInstanceOf[ArrayBufTypeDef]
-            types(0) = arraybufType.typeString
-            types(1) = arraybufType.elemDef.implementationName          
-          }
           case "tstruct" => {
             var ctrDef: ContainerDef = mdMgr.Container(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
             types(0) = ctrDef.PhysicalName
@@ -155,7 +149,7 @@ class MessageFieldTypesHandler {
             var maptypeDef: MapTypeDef = null;
             maptypeDef = fieldBaseType.asInstanceOf[MapTypeDef]
             types(0) = maptypeDef.typeString
-            types(1) = maptypeDef.keyDef.implementationName
+            types(1) = maptypeDef.valDef.implementationName
           }
           case _ => {
             throw new Exception("This types is not handled at this time ") // BUGBUG - Need to handled other cases

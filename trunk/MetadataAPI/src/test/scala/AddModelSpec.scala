@@ -40,7 +40,6 @@ import com.ligadata.Serialize._
 
 import com.ligadata.kamanja.metadataload.MetadataLoad
 
-@Ignore
 class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter with BeforeAndAfterAll with GivenWhenThen {
   var res: String = null;
   var statusCode: Int = -1;
@@ -53,7 +52,7 @@ class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter wi
   var iFile: File = null
   var fileList: List[String] = null
   var newVersion: String = null
-  val userid: Option[String] = Some("test")
+  val userid: Option[String] = Some("kamanja")
 
   private val loggerName = this.getClass.getName
   private val logger = LogManager.getLogger(loggerName)
@@ -400,6 +399,7 @@ class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter wi
 	res = MetadataAPIImpl.AddModel(ModelType.KPMML, // modelType
 				       modStr, // input
 				       userid,   // optUserid
+				       "testTenantId",  // tenantId
 				       None,   // optModelName
 				       None,   // optVersion
 				       None,   // optMsgConsumed
@@ -487,10 +487,10 @@ class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter wi
 	And("GetModelDependencies to fetch the modelConfig that was just added")
 
 	var cfgName = "HelloWorld2Model"
-	var dependencies = MetadataAPIImpl.getModelDependencies(cfgName,userid)
+	var dependencies = MetadataAPIImpl.getModelDependencies(userid.get + "." + cfgName,userid)
 	assert(dependencies.length == 0) // empty in our helloworld example
 
-	var msgsAndContainers = MetadataAPIImpl.getModelMessagesContainers(cfgName,userid)
+	var msgsAndContainers = MetadataAPIImpl.getModelMessagesContainers(userid.get + "." + cfgName,userid)
 	assert(msgsAndContainers.length == 2) 
 	var msgStr = msgsAndContainers(0)
 	assert(msgStr.equalsIgnoreCase("system.helloworld_msg_def"))
@@ -539,7 +539,8 @@ class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter wi
 	res = MetadataAPIImpl.AddModel(ModelType.SCALA, // modelType
 				       modStr, // input
 				       userid,   // optUserid
-				       Some("HelloWorld2Model"),   // optModelName
+				       "testTenantId",  // tenantId
+				       Some("kamanja.HelloWorld2Model"),   // optModelName
 				       None,   // optVersion
 				       None,   // optMsgConsumed
 				       None,   // optMsgVersion
@@ -609,10 +610,10 @@ class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter wi
 	res should include regex ("\"Status Code\" : 0")
 
 	And("Validate dependencies and typeDependencies of modelConfig object")
-	var dependencies = MetadataAPIImpl.getModelDependencies(cfgName,userid)
+	var dependencies = MetadataAPIImpl.getModelDependencies(userid.get + "." + cfgName,userid)
 	assert(dependencies.length == 0) 
 
-	var msgsAndContainers = MetadataAPIImpl.getModelMessagesContainers(cfgName,userid)
+	var msgsAndContainers = MetadataAPIImpl.getModelMessagesContainers(userid.get + "." + cfgName,userid)
 	assert(msgsAndContainers.length == 2)
 	var msgStr = msgsAndContainers(0)
 	assert(msgStr.equalsIgnoreCase("system.helloworld_msg_def"))

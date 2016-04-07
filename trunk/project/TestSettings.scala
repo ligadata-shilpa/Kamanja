@@ -20,6 +20,7 @@ object TestSettings
       parallelExecution in EndToEndTest := false,
       scalaSource in EndToEndTest := baseDirectory.value / "src/e2e/scala")
 
+
   lazy val settings = itSettings ++ e2eSettings ++ Seq(
     testAll <<= (test in EndToEndTest).dependsOn((test in TestConfigs.IntegrationTest).dependsOn(test in Test)))
 

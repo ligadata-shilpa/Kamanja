@@ -20,7 +20,7 @@ package com.ligadata.KamanjaManager
 import com.ligadata.KamanjaBase._
 import com.ligadata.InputOutputAdapterInfo.{ InputAdapter, OutputAdapter, PartitionUniqueRecordKey, PartitionUniqueRecordValue, StartProcPartInfo }
 import com.ligadata.Utils.ClusterStatus
-import com.ligadata.kamanja.metadata.{ BaseElem, MappedMsgTypeDef, BaseAttributeDef, StructTypeDef, EntityType, AttributeDef, ArrayBufTypeDef, MessageDef, ContainerDef, ModelDef }
+import com.ligadata.kamanja.metadata.{ BaseElem, MappedMsgTypeDef, BaseAttributeDef, StructTypeDef, EntityType, AttributeDef, MessageDef, ContainerDef, ModelDef }
 import com.ligadata.kamanja.metadata._
 import com.ligadata.kamanja.metadata.MdMgr._
 
@@ -77,9 +77,6 @@ object KamanjaLeader {
   private[this] var canRedistribute = false
   private[this] var inputAdapters: ArrayBuffer[InputAdapter] = _
   private[this] var outputAdapters: ArrayBuffer[OutputAdapter] = _
-  private[this] var statusAdapters: ArrayBuffer[OutputAdapter] = _
-  private[this] var validateInputAdapters: ArrayBuffer[InputAdapter] = _
-  private[this] var failedEventsAdapters: ArrayBuffer[OutputAdapter] = _
   private[this] var envCtxt: EnvContext = _
   private[this] var updatePartitionsFlag = false
   private[this] var distributionExecutor = Executors.newFixedThreadPool(1)
@@ -111,9 +108,6 @@ object KamanjaLeader {
     canRedistribute = false
     inputAdapters = null
     outputAdapters = null
-    statusAdapters = null
-    validateInputAdapters = null
-    failedEventsAdapters = null
     envCtxt = null
     updatePartitionsFlag = false
     distributionExecutor = Executors.newFixedThreadPool(1)
@@ -534,9 +528,9 @@ object KamanjaLeader {
     LOG.debug("EventChangeCallback => Exit")
   }
 
-  private def GetUniqueKeyValue(uk: String): (Long, String, List[(String, String, String)]) = {
-    envCtxt.getAdapterUniqueKeyValue(0, uk)
-  }
+//  private def GetUniqueKeyValue(uk: String): (Long, String, List[(String, String, String)]) = {
+//    envCtxt.getAdapterUniqueKeyValue(0, uk)
+//  }
 
   private def StartNodeKeysMap(nodeKeysMap: scala.collection.immutable.Map[String, Array[String]], receivedJsonStr: String, adapMaxPartsMap: Map[String, Int], foundKeysInVald: Map[String, (String, Int, Int, Long)]): Boolean = {
     if (nodeKeysMap == null || nodeKeysMap.size == 0) {
@@ -553,35 +547,35 @@ object KamanjaLeader {
       remainingInpAdapters.foreach(ia => {
         val name = ia.UniqueName
         try {
-          val uAK = nodeKeysMap.getOrElse(name, null)
-          if (uAK != null) {
-            val uKV = uAK.map(uk => { GetUniqueKeyValue(uk) })
-            val maxParts = adapMaxPartsMap.getOrElse(name, 0)
-            LOG.info("On Node %s for Adapter %s with Max Partitions %d UniqueKeys %s, UniqueValues %s".format(nodeId, name, maxParts, uAK.mkString(","), uKV.mkString(",")))
-
-            LOG.debug("Deserializing Keys")
-            val keys = uAK.map(k => ia.DeserializeKey(k))
-
-            LOG.debug("Deserializing Values")
-            val vals = uKV.map(v => ia.DeserializeValue(if (v != null) v._2 else null))
-
-            LOG.debug("Deserializing Keys & Values done")
-
-            val quads = new ArrayBuffer[StartProcPartInfo](keys.size)
-
-            for (i <- 0 until keys.size) {
-              val key = keys(i)
-
-              val info = new StartProcPartInfo
-              info._key = key
-              info._val = vals(i)
-              info._validateInfoVal = vals(i)
-              quads += info
-            }
-
-            LOG.info(ia.UniqueName + " ==> Processing Keys & values: " + quads.map(q => { (q._key.Serialize, q._val.Serialize, q._validateInfoVal.Serialize) }).mkString(","))
-            ia.StartProcessing(quads.toArray, true)
-          }
+//          val uAK = nodeKeysMap.getOrElse(name, null)
+//          if (uAK != null) {
+//            val uKV = uAK.map(uk => { GetUniqueKeyValue(uk) })
+//            val maxParts = adapMaxPartsMap.getOrElse(name, 0)
+//            LOG.info("On Node %s for Adapter %s with Max Partitions %d UniqueKeys %s, UniqueValues %s".format(nodeId, name, maxParts, uAK.mkString(","), uKV.mkString(",")))
+//
+//            LOG.debug("Deserializing Keys")
+//            val keys = uAK.map(k => ia.DeserializeKey(k))
+//
+//            LOG.debug("Deserializing Values")
+//            val vals = uKV.map(v => ia.DeserializeValue(if (v != null) v._2 else null))
+//
+//            LOG.debug("Deserializing Keys & Values done")
+//
+//            val quads = new ArrayBuffer[StartProcPartInfo](keys.size)
+//
+//            for (i <- 0 until keys.size) {
+//              val key = keys(i)
+//
+//              val info = new StartProcPartInfo
+//              info._key = key
+//              info._val = vals(i)
+//              info._validateInfoVal = vals(i)
+//              quads += info
+//            }
+//
+//            LOG.info(ia.UniqueName + " ==> Processing Keys & values: " + quads.map(q => { (q._key.Serialize, q._val.Serialize, q._validateInfoVal.Serialize) }).mkString(","))
+//            ia.StartProcessing(quads.toArray, true)
+//          }
         } catch {
           case fae: FatalAdapterException => {
             LOG.error("Failed to start processing input adapter:" + name, fae)
@@ -738,7 +732,7 @@ object KamanjaLeader {
 
             if (distributionExecutor.isShutdown == false) {
               // Save the state and Clear the maps
-              ProcessedAdaptersInfo.CommitAdapterValues
+//              ProcessedAdaptersInfo.CommitAdapterValues
               ProcessedAdaptersInfo.clearInstances
               // envCtxt.PersistLocalNodeStateEntries
 //              envCtxt.clearIntermediateResults
@@ -1106,7 +1100,8 @@ object KamanjaLeader {
   }
   */
 
-  def Init(nodeId1: String, zkConnectString1: String, engineLeaderZkNodePath1: String, engineDistributionZkNodePath1: String, adaptersStatusPath1: String, inputAdap: ArrayBuffer[InputAdapter], outputAdap: ArrayBuffer[OutputAdapter], statusAdap: ArrayBuffer[OutputAdapter], validateInputAdap: ArrayBuffer[InputAdapter], failedEvntsAdap: ArrayBuffer[OutputAdapter], enviCxt: EnvContext, zkSessionTimeoutMs1: Int, zkConnectionTimeoutMs1: Int, dataChangeZkNodePath1: String): Unit = {
+  def Init(nodeId1: String, zkConnectString1: String, engineLeaderZkNodePath1: String, engineDistributionZkNodePath1: String, adaptersStatusPath1: String, inputAdap: ArrayBuffer[InputAdapter], outputAdap: ArrayBuffer[OutputAdapter],
+           enviCxt: EnvContext, zkSessionTimeoutMs1: Int, zkConnectionTimeoutMs1: Int, dataChangeZkNodePath1: String): Unit = {
     nodeId = nodeId1.toLowerCase
     zkConnectString = zkConnectString1
     engineLeaderZkNodePath = engineLeaderZkNodePath1
@@ -1117,9 +1112,6 @@ object KamanjaLeader {
     zkConnectionTimeoutMs = zkConnectionTimeoutMs1
     inputAdapters = inputAdap
     outputAdapters = outputAdap
-    statusAdapters = statusAdap
-    validateInputAdapters = validateInputAdap
-    failedEventsAdapters = failedEvntsAdap
     envCtxt = enviCxt
 
     if (zkConnectString != null && zkConnectString.isEmpty() == false && engineLeaderZkNodePath != null && engineLeaderZkNodePath.isEmpty() == false && engineDistributionZkNodePath != null && engineDistributionZkNodePath.isEmpty() == false && dataChangeZkNodePath != null && dataChangeZkNodePath.isEmpty() == false) {
@@ -1202,7 +1194,8 @@ object KamanjaLeader {
                   }
 
                   if (allNodesUp == false) { // If all nodes are not up then wait for long time
-                    mxTm = if (KamanjaConfiguration.zkSessionTimeoutMs > KamanjaConfiguration.zkConnectionTimeoutMs) KamanjaConfiguration.zkSessionTimeoutMs else KamanjaConfiguration.zkConnectionTimeoutMs
+                    envCtxt.getZookeeperInfo()
+                    mxTm = if (zkSessionTimeoutMs > zkConnectionTimeoutMs) zkSessionTimeoutMs else zkConnectionTimeoutMs
                     if (mxTm < 5000) // if the value is < 5secs, we are taking 5 secs
                       mxTm = 5000
                     LOG.warn("Got Redistribution request. Participents are {%s}. Looks like all nodes are not yet up. Waiting for %d milli seconds to see whether there are any more changes in participents".format(cs.participantsNodeIds.mkString(","), mxTm))
