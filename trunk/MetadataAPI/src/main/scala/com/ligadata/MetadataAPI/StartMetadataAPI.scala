@@ -87,7 +87,7 @@ object StartMetadataAPI {
       args.foreach(arg => {
 
         // anything with a .json .xml .pmml .scala .java. or .jar is the location paramter.
-        if (arg.endsWith(".json") || arg.endsWith(".xml") || arg.endsWith(".pmml") || arg.endsWith(".scala") || arg.endsWith(".java") || arg.endsWith(".jar")) {
+        if (arg.endsWith(".json") || arg.endsWith(".jtm") || arg.endsWith(".xml") || arg.endsWith(".pmml") || arg.endsWith(".scala") || arg.endsWith(".java") || arg.endsWith(".jar")) {
           extraCmdArgs(INPUTLOC) = arg
         } else if (arg.endsWith(".properties")) {
           // Looks like .properties by defaul the cofniguration file to use in metadata
@@ -222,7 +222,7 @@ object StartMetadataAPI {
 
         //model management
         case Action.ADDMODELKPMML => response = ModelService.addModelKPmml(input, userId, optMsgProduced, tid)
-        case Action.ADDMODELJTM => response = ModelService.addModelJTM(input, userId, tid)
+        case Action.ADDMODELJTM => response = ModelService.addModelJTM(input, userId, tid, if (param == null || param.trim.size == 0) None else Some(param.trim))
         case Action.ADDMODELPMML => {
           val modelName: Option[String] = extraCmdArgs.get(MODELNAME)
           val modelVer = extraCmdArgs.getOrElse(MODELVERSION, null)
@@ -276,7 +276,7 @@ object StartMetadataAPI {
             ModelService.deactivateModel(param, userId)
         }
         case Action.UPDATEMODELKPMML => response = ModelService.updateModelKPmml(input, userId, tid)
-        case Action.UPDATEMODELJTM => response = ModelService.updateModelJTM(input, userId, tid)
+        case Action.UPDATEMODELJTM => response = ModelService.updateModelJTM(input, userId, tid, if (param == null || param.trim.size == 0) None else Some(param.trim))
 
         case Action.UPDATEMODELPMML => {
           val modelName = extraCmdArgs.getOrElse(MODELNAME, "")
