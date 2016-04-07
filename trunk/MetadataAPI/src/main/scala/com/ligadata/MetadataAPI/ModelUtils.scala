@@ -454,7 +454,7 @@ object ModelUtils {
         AddKPMMLModel(input, optUserid, tenantId.get, optMsgProduced)
       }
       case ModelType.JTM => {
-        AddJTMModel(input, optUserid, tenantId.get)
+        AddJTMModel(input, optUserid, tenantId.get, optModelName)
       }
       case ModelType.JAVA | ModelType.SCALA => {
         val result: String = optModelName.fold(throw new RuntimeException("Model name should be provided for Java/Scala models"))(name => {
@@ -702,7 +702,7 @@ object ModelUtils {
     *               method. If Security and/or Audit are configured, this value must be a value other than None.
     * @return json string result
     */
-  private def AddJTMModel(jsonText: String, userid: Option[String], tenantId: String): String = {
+  private def AddJTMModel(jsonText: String, userid: Option[String], tenantId: String, optModelName: Option[String]): String = {
     try {
       var compProxy = new CompilerProxy
       //compProxy.setLoggerLevel(Level.TRACE)
