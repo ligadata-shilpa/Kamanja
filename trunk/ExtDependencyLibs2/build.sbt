@@ -65,7 +65,7 @@ assemblyMergeStrategy in assembly := {
 }
 
 excludedJars in assembly <<= (fullClasspath in assembly) map { cp =>
-  val excludes = Set("commons-beanutils-1.7.0.jar", "google-collections-1.0.jar", "commons-collections4-4.0.jar", "log4j-1.2.17.jar", "commons-beanutils-1.8.3.jar")
+  val excludes = Set("commons-beanutils-1.7.0.jar", "google-collections-1.0.jar", "commons-collections4-4.0.jar", "log4j-1.2.17.jar", "commons-beanutils-1.8.3.jar", "log4j-1.2.16.jar")
   cp filter { jar => excludes(jar.data.getName) }
 }
 //"log4j-1.2.17.jar", "log4j-1.2.16.jar", "commons-collections-4-4.0.jar", "scalatest_2.11-2.2.0.jar"
@@ -92,12 +92,12 @@ libraryDependencies := {
 
 
 /////////////////////// GetComponent
-libraryDependencies += "org.apache.hbase" % "hbase-client" % "1.0.2"
-libraryDependencies += "org.apache.hbase" % "hbase-common" % "1.0.2"
-libraryDependencies += "org.apache.hadoop" % "hadoop-common" % "2.7.1"
-libraryDependencies += "com.googlecode.json-simple" % "json-simple" % "1.1"
-libraryDependencies += "com.fasterxml.jackson.core" % "jackson-databind" % "2.6.3"
-libraryDependencies += "log4j" % "log4j" % "1.2.17" // latest error
+//libraryDependencies += "org.apache.hbase" % "hbase-client" % "1.0.2"
+//libraryDependencies += "org.apache.hbase" % "hbase-common" % "1.0.2"
+//libraryDependencies += "org.apache.hadoop" % "hadoop-common" % "2.7.1"
+//libraryDependencies += "com.googlecode.json-simple" % "json-simple" % "1.1"
+//libraryDependencies += "com.fasterxml.jackson.core" % "jackson-databind" % "2.6.3"
+////libraryDependencies += "log4j" % "log4j" % "1.2.17"
 
 
 ////////////////////// ZooKeeperListener
