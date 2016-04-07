@@ -2234,6 +2234,7 @@ class MdMgr {
       mdl.ObjectFormat(ObjFormatType.fPMML)
     }
     mdl.PhysicalName(physicalName)
+    mdl.tenantId = tenantId
     SetBaseElem(mdl, nameSpace, name, ver, jarNm, dJars, ownerId, tenantId, uniqueId, mdElementId)
 
     mdl

@@ -65,7 +65,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
   private val defaultUserId: Option[String] = Some("kamanja")
   private var _parallelDegree = 0
   private var _mergeContainerAndMessages = true
-  private var _tenantId: String = ""
+  private var _tenantId: Option[String] = None
 
   private val globalExceptions = ArrayBuffer[(String, Throwable)]()
 
@@ -241,7 +241,9 @@ class MigrateTo_V_1_4 extends MigratableTo {
 
     _parallelDegree = if (parallelDegree <= 1) 1 else parallelDegree
     _mergeContainerAndMessages = mergeContainerAndMessages
-    _tenantId = tenantId
+
+    if (tenantId != null && tenantId.size > 0)
+      _tenantId = Some(tenantId)
 
     _bInit = true
   }
