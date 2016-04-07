@@ -20,9 +20,9 @@ import com.ligadata.kamanja.metadata.ModelDef
 import com.ligadata.runtime.Conversion
 class TransactionIngestFactory(modelDef: ModelDef, nodeContext: NodeContext) extends ModelInstanceFactory(modelDef, nodeContext) {
   override def isValidMessage(msg: ContainerInterface): Boolean = {
-    msg.isInstanceOf[com.ligadata.kamanja.samples.messages.v1000000.transactionmsgin]
+    msg.isInstanceOf[com.ligadata.kamanja.samples.messages.V1000000.TransactionMsgIn]
   }
-  override def createModelInstance(): ModelInstance = return new Model(this)
+  override def createModelInstance(): ModelInstance = return new TransactionIngest(this)
   override def getModelName: String = "com.ligadata.models.samples.finance"
   override def getVersion: String = "0.0.1"
   override def createResultObject(): ModelResultBase = new MappedModelResults()
@@ -33,30 +33,30 @@ class TransactionIngest(factory: ModelInstanceFactory) extends ModelInstance(fac
     val messagefactoryinterface = execMsgsSet(0).asInstanceOf[MessageFactoryInterface]
     //
     //
-    def exeGenerated_transactionmsg_1(msg1: com.ligadata.kamanja.samples.messages.v1000000.transactionmsgin): Array[MessageInterface] = {
-      // Split the incomming data
-      val arrayData: System.ArrayOfString = msg1.data.split(",")
+    def exeGenerated_transactionmsg_1(msg1: com.ligadata.kamanja.samples.messages.V1000000.TransactionMsgIn): Array[MessageInterface] = {
+      // Split the incoming data
+      val arrayData: Array[String] = msg1.data.split(",")
       def process_o1(): Array[MessageInterface] = {
         // extract the type
-        val type: String = arrayData(0)
-        if ("com.ligadata.kamanja.samples.messages.TransactionMsg" == type) return Array.empty[MessageInterface]
-        val result = new com.ligadata.kamanja.samples.messages.v1000000.transactionmsg(messagefactoryinterface)
-        result.branchid = ToInteger(arrayData(2))
-        result.custid = ToLong(arrayData(1))
-        result.locationid = ToInteger(arrayData(8))
-        result.balance = ToDouble(arrayData(5))
-        result.amount = ToDouble(arrayData(4))
+        val typeName: String = arrayData(0)
+        if ("com.ligadata.kamanja.samples.messages.TransactionMsg" == typeName) return Array.empty[MessageInterface]
+        val result = new com.ligadata.kamanja.samples.messages.V1000000.TransactionMsg(messagefactoryinterface)
+        result.branchid = conversion.ToInteger(arrayData(2))
+        result.custid = conversion.ToLong(arrayData(1))
+        result.locationid = conversion.ToInteger(arrayData(8))
+        result.balance = conversion.ToDouble(arrayData(5))
+        result.amount = conversion.ToDouble(arrayData(4))
         result.transtype = arrayData(9)
-        result.accno = ToLong(arrayData(3))
-        result.date = ToInteger(arrayData(6))
-        result.time = ToInteger(arrayData(7))
+        result.accno = conversion.ToLong(arrayData(3))
+        result.date = conversion.ToInteger(arrayData(6))
+        result.time = conversion.ToInteger(arrayData(7))
         Array(result)
       }
       process_o1()
     }
     // Evaluate messages
     val msgs = execMsgsSet.map(m => m.getFullTypeName -> m).toMap
-    val msg1 = msgs.get("com.ligadata.kamanja.samples.messages.TransactionMsgIn").getOrElse(null).asInstanceOf[com.ligadata.kamanja.samples.messages.v1000000.transactionmsgin]
+    val msg1 = msgs.get("com.ligadata.kamanja.samples.messages.TransactionMsgIn").getOrElse(null).asInstanceOf[com.ligadata.kamanja.samples.messages.V1000000.TransactionMsgIn]
     // Main dependency -> execution check
     //
     val results: Array[MessageInterface] =

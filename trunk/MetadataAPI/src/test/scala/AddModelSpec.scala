@@ -103,6 +103,7 @@ class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter wi
       val mdLoader = new MetadataLoad(MdMgr.mdMgr, "", "", "", "")
       mdLoader.initialize
 
+      logger.info("Startup embedded zooKeeper ")
       val zkServer = EmbeddedZookeeper
       zkServer.instance.startup
 
@@ -399,7 +400,7 @@ class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter wi
 	res = MetadataAPIImpl.AddModel(ModelType.KPMML, // modelType
 				       modStr, // input
 				       userid,   // optUserid
-				       "testTenantId",  // tenantId
+				       Some("testTenantId"),  // tenantId
 				       None,   // optModelName
 				       None,   // optVersion
 				       None,   // optMsgConsumed
@@ -539,7 +540,7 @@ class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter wi
 	res = MetadataAPIImpl.AddModel(ModelType.SCALA, // modelType
 				       modStr, // input
 				       userid,   // optUserid
-				       "testTenantId",  // tenantId
+				       Some("testTenantId"),  // tenantId
 				       Some("kamanja.HelloWorld2Model"),   // optModelName
 				       None,   // optVersion
 				       None,   // optMsgConsumed

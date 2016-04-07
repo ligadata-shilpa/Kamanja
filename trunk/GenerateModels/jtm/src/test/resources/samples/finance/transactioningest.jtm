@@ -20,23 +20,23 @@
     "transactionmsg": {
       "dependsOn": [ ["m1"] ],
       "computes": {
-        "arrayData":{ "type": "System.ArrayOfString", "val": "$data.split(\",\")", "comment": "Split the incomming data" }
+        "arrayData":{ "type": "Array[String]", "val": "$data.split(\",\")", "comment": "Split the incoming data" }
       },
       "outputs": {
         "o1": {
           "computes": {
-            "type": { "type": "String", "val": "arrayData(0)", "comment": "extract the type" }
+            "typeName": { "type": "String", "val": "arrayData(0)", "comment": "extract the type" }
           },
-          "where": "\"com.ligadata.kamanja.samples.messages.TransactionMsg\" == $type",
+          "where": "\"com.ligadata.kamanja.samples.messages.TransactionMsg\" == $typeName",
           "mapping": {
-            "custid": "ToLong($arrayData(1))",
-            "branchid": "ToInteger($arrayData(2))",
-            "accno": "ToLong($arrayData(3))",
-            "amount": "ToDouble($arrayData(4))",
-            "balance": "ToDouble($arrayData(5))",
-            "date": "ToInteger($arrayData(6))",
-            "time": "ToInteger($arrayData(7))",
-            "locationid": "ToInteger($arrayData(8))",
+            "custid": "conversion.ToLong($arrayData(1))",
+            "branchid": "conversion.ToInteger($arrayData(2))",
+            "accno": "conversion.ToLong($arrayData(3))",
+            "amount": "conversion.ToDouble($arrayData(4))",
+            "balance": "conversion.ToDouble($arrayData(5))",
+            "date": "conversion.ToInteger($arrayData(6))",
+            "time": "conversion.ToInteger($arrayData(7))",
+            "locationid": "conversion.ToInteger($arrayData(8))",
             "transtype": "$arrayData(9)"
           }
         }

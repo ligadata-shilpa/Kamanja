@@ -1176,7 +1176,7 @@ class CompilerProxy {
             //if (userid != None) {
             //  key = userid.get + "." + modelConfigName
             //}
-	    var key = modelConfigName
+            var key = modelConfigName
             logger.debug("getModelMetadataFromJar: Get the model config for " + key)
             var config = MdMgr.GetMdMgr.GetModelConfig(key)
             logger.debug("getModelMetadataFromJar: Size of the model config map => " + config.keys.size);

@@ -34,26 +34,28 @@ b) id -> to map
 */
 object Conversion {
 
-  // Source -> Map[Target, Function]
+  // Source -> Map[Target, Function]  // Source -> Map[Target, Function]
   val builtin: Map[String, Map[String, String]] = Map(
     "Int" -> Map("String" -> "ToString"),
     "Double" -> Map("String" -> "ToString"),
     "Boolean" -> Map("String" -> "ToString"),
     "Date" -> Map("String" -> "ToString"),
     "BigDecimal" -> Map("String" -> "ToString"),
+    "Long" -> Map("String" -> "ToString"),
     "String" -> Map("Int" -> "ToInteger",
-                    "Double" -> "ToDouble",
-                    "Boolean" -> "ToBoolean",
-                    "Date" -> "ToDate",
-                    "Timestamp" -> "ToTimestamp",
-                    "BigDecimal" -> "ToBigDecimal"),
+      "Double" -> "ToDouble",
+      "Boolean" -> "ToBoolean",
+      "Date" -> "ToDate",
+      "Timestamp" -> "ToTimestamp",
+      "BigDecimal" -> "ToBigDecimal",
+      "Long" -> "ToLong"),
     "Any" -> Map("Int" -> "ToInteger",
-                 "Double" -> "ToDouble",
-                 "Boolean" -> "ToBoolean",
-                 "Date" -> "ToDate",
-                 "Timestamp" -> "ToTimestamp",
-                 "BigDecimal" -> "ToBigDecimal")
-
+      "Double" -> "ToDouble",
+      "Boolean" -> "ToBoolean",
+      "Date" -> "ToDate",
+      "Timestamp" -> "ToTimestamp",
+      "BigDecimal" -> "ToBigDecimal",
+      "Long" -> "ToBLong")
   )
 }
 
@@ -62,27 +64,6 @@ class Conversion {
   val formatDate = new java.text.SimpleDateFormat("yyyy-MM-dd")
   val formatTs = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
   //var errors : Map[Integer, String] = Map.empty[Integer, String]
-
-  // Source -> Map[Target, Function]
-  val builtin: Map[String, Map[String, String]] = Map(
-    "Integer" -> Map("String" -> "ToString"),
-    "Double" -> Map("String" -> "ToString"),
-    "Boolean" -> Map("String" -> "ToString"),
-    "Date" -> Map("String" -> "ToString"),
-    "BigDecimal" -> Map("String" -> "ToString"),
-    "String" -> Map("Integer" -> "ToInteger",
-      "Double" -> "ToDouble",
-      "Boolean" -> "ToBoolean",
-      "Date" -> "ToDate",
-      "Timestamp" -> "ToTimestamp",
-      "BigDecimal" -> "ToBigDecimal"),
-    "Any" -> Map("Integer" -> "ToInteger",
-      "Double" -> "ToDouble",
-      "Boolean" -> "ToBoolean",
-      "Date" -> "ToDate",
-      "Timestamp" -> "ToTimestamp",
-      "BigDecimal" -> "ToBigDecimal")
-  )
 
   def ToInteger(v: Any): Int = {
     v match {
@@ -126,6 +107,13 @@ class Conversion {
     }
   }
 
+  def ToLong(v: Any): Long = {
+    v match {
+      case y: String => y.toLong
+      case y: Long => y
+    }
+  }
+
   def ToString(v: Any): String = {
     v match {
       case y: String => y
@@ -135,6 +123,7 @@ class Conversion {
       case y: Timestamp => formatTs.format(y)
       case y: Date => formatDate.format(y)
       case y: BigDecimal => y.toString
+      case y: Long => y.toString
     }
   }
 }

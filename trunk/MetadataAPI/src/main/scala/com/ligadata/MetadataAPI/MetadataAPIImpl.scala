@@ -180,6 +180,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
   /**
     *  getHealthCheckNodesOnly - will return node info from the health-check information for the nodeId specified.
+    *
     *  @param nodeId a cluster node: String - if no parameter specified, return health-check for all nodes
     *  @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
     *               method. If Security and/or Audit are configured, this value must be a value other than None.
@@ -206,6 +207,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
   /**
     *  getHealthCheckComponentNames - will return partial components info from the health-check information for the nodeId specified.
+    *
     *  @param nodeId a cluster node: String - if no parameter specified, return health-check for all nodes
     *  @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
     *               method. If Security and/or Audit are configured, this value must be a value other than None.
@@ -232,6 +234,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
   /**
     *  getHealthCheckComponentDetailsByNames - will return specific components info from the health-check information for the nodeId specified.
+    *
     *  @param componentNames names of components required
     *  @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
     *               method. If Security and/or Audit are configured, this value must be a value other than None.
@@ -705,7 +708,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
     /**
      * GetObject
-     * @param bucketKeyStr
+      *
+      * @param bucketKeyStr
      * @param typeName
      */
   def GetObject(bucketKeyStr: String, typeName: String): (String, Any) = {
@@ -714,7 +718,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
     /**
      * SaveObject
-     * @param bucketKeyStr
+      *
+      * @param bucketKeyStr
      * @param value
      * @param typeName
      * @param serializerTyp
@@ -737,6 +742,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
   /**
     * Remove all of the elements with the supplied keys in the list from the supplied DataStore
+    *
     * @param keyList
     * @param typeName
     */
@@ -1174,7 +1180,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
     /**
      * GetDependantJars of some base element (e.g., model, type, message, container, etc)
-     * @param obj <description please>
+      *
+      * @param obj <description please>
      * @return <description please>
      */
   def GetDependantJars(obj: BaseElemDef): Array[String] = {
@@ -1200,7 +1207,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
     /**
      * IsDownloadNeeded
-     * @param jar <description please>
+      *
+      * @param jar <description please>
      * @param obj <description please>
      * @return <description please>
      */
@@ -1278,23 +1286,25 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
         }
 
         allJars.foreach(jar => {
-          curJar = jar
-          try {
-            // download only if it doesn't already exists
-            val b = IsDownloadNeeded(jar, obj)
-            if (b == true) {
-              val key = jar
-              val mObj = GetObject(key, "jar_store")
-              val ba = mObj._2.asInstanceOf[Array[Byte]]
-              val jarName = dirPath + "/" + jar
-              PutArrayOfBytesToJar(ba, jarName)
-            } else {
-              logger.debug("The jar " + curJar + " was already downloaded... ")
-            }
-          } catch {
-            case e: Exception => {
-              logger.error("Failed to download the Jar of the object(" + obj.FullName + "." + MdMgr.Pad0s2Version(obj.Version) + "'s dep jar " + curJar + ")", e)
+          if (jar != null && jar.trim.size > 0) {
+            curJar = jar
+            try {
+              // download only if it doesn't already exists
+              val b = IsDownloadNeeded(jar, obj)
+              if (b == true) {
+                val key = jar
+                val mObj = GetObject(key, "jar_store")
+                val ba = mObj._2.asInstanceOf[Array[Byte]]
+                val jarName = dirPath + "/" + jar
+                PutArrayOfBytesToJar(ba, jarName)
+              } else {
+                logger.debug("The jar " + curJar + " was already downloaded... ")
+              }
+            } catch {
+              case e: Exception => {
+                logger.error("Failed to download the Jar of the object(" + obj.FullName + "." + MdMgr.Pad0s2Version(obj.Version) + "'s dep jar " + curJar + ")", e)
 
+              }
             }
           }
         })
@@ -2793,6 +2803,33 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     }
   }
 
+  private def DeserializeAndAddObject(k: Key, data: Array[Byte], objectsChanged: ArrayBuffer[BaseElemDef], operations: ArrayBuffer[String], maxTranId: Long): Unit = {
+    val mObj= MetadataAPISerialization.deserializeMetadata(new String(data)).asInstanceOf[BaseElemDef] // serializer.DeserializeObjectFromByteArray(v.asInstanceOf[Array[Byte]]).asInstanceOf[BaseElemDef]
+    if (mObj != null) {
+      if (mObj.tranId <= maxTranId) {
+        AddObjectToCache(mObj, MdMgr.GetMdMgr)
+        DownloadJarFromDB(mObj)
+      } else {
+        if (mObj.isInstanceOf[FunctionDef]) {
+          // BUGBUG:: Not notifying functions at this moment. This may cause inconsistance between different instances of the metadata.
+        } else {
+          logger.debug("The transaction id of the object => " + mObj.tranId)
+          AddObjectToCache(mObj, MdMgr.GetMdMgr)
+          DownloadJarFromDB(mObj)
+          logger.error("Transaction is incomplete with the object " + k.bucketKey.mkString(",") + ",we may not have notified engine, attempt to do it now...")
+          objectsChanged += mObj
+          if (mObj.IsActive) {
+            operations += "Add"
+          } else {
+            operations += "Remove"
+          }
+        }
+      }
+    } else {
+      throw InternalErrorException("serializer.Deserialize returned a null object", null)
+    }
+  }
+
     /**
      * LoadAllObjectsIntoCache
      */
@@ -2810,42 +2847,63 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       //LoadAllUserPopertiesIntoChache
       startup = true
       val maxTranId = currentTranLevel
-      var objectsChanged = new Array[BaseElemDef](0)
-      var operations = new Array[String](0)
+      var objectsChanged = ArrayBuffer[BaseElemDef]()
+      var operations = ArrayBuffer[String]()
 
       val reqTypes = Array("types", "functions", "messages", "containers", "concepts", "models")
       val processedContainersSet = Set[String]()
       var processed: Long = 0L
 
+      var typesYetToProcess = ArrayBuffer[(Key, Array[Byte])]()
+      var functionsYetToProcess = ArrayBuffer[(Key, Array[Byte])]()
+
       reqTypes.foreach(typ => {
+        if (typesYetToProcess.size > 0) {
+          val unHandledTypes = ArrayBuffer[(Key, Array[Byte])]()
+          typesYetToProcess.foreach(typ1 => {
+            try {
+              DeserializeAndAddObject(typ1._1, typ1._2, objectsChanged, operations, maxTranId)
+            } catch {
+              case e: Throwable => {
+                unHandledTypes += typ1
+              }
+            }
+          })
+          typesYetToProcess = unHandledTypes
+        }
+
+        if (functionsYetToProcess.size > 0) {
+          val unHandledFunctions = ArrayBuffer[(Key, Array[Byte])]()
+          functionsYetToProcess.foreach(fun => {
+            try {
+              DeserializeAndAddObject(fun._1, fun._2, objectsChanged, operations, maxTranId)
+            } catch {
+              case e: Throwable => {
+                unHandledFunctions += fun
+              }
+            }
+          })
+          functionsYetToProcess = unHandledFunctions
+        }
+
         val storeInfo = PersistenceUtils.GetContainerNameAndDataStore(typ)
         if (processedContainersSet(storeInfo._1) == false) {
           processedContainersSet += storeInfo._1
-          storeInfo._2.get(storeInfo._1, { (k: Key, v: Any, serType: String, typ: String, ver:Int) =>
+          storeInfo._2.get(storeInfo._1, { (k: Key, v: Any, serType: String, typ2: String, ver:Int) =>
             {
-              val mObj= MetadataAPISerialization.deserializeMetadata(new String(v.asInstanceOf[Array[Byte]])).asInstanceOf[BaseElemDef] // serializer.DeserializeObjectFromByteArray(v.asInstanceOf[Array[Byte]]).asInstanceOf[BaseElemDef]
-              if (mObj != null) {
-                if (mObj.tranId <= maxTranId) {
-                  AddObjectToCache(mObj, MdMgr.GetMdMgr)
-                  DownloadJarFromDB(mObj)
-                } else {
-                  if (mObj.isInstanceOf[FunctionDef]) {
-                    // BUGBUG:: Not notifying functions at this moment. This may cause inconsistance between different instances of the metadata.
+              val data = v.asInstanceOf[Array[Byte]]
+              try {
+                DeserializeAndAddObject(k, data, objectsChanged, operations, maxTranId)
+              } catch {
+                case e: Throwable => {
+                  if (typ.equalsIgnoreCase("types")) {
+                    typesYetToProcess += ((k, data))
+                  } else  if (typ.equalsIgnoreCase("functions")) {
+                    functionsYetToProcess += ((k, data))
                   } else {
-                    logger.debug("The transaction id of the object => " + mObj.tranId)
-                    AddObjectToCache(mObj, MdMgr.GetMdMgr)
-                    DownloadJarFromDB(mObj)
-                    logger.error("Transaction is incomplete with the object " + k.bucketKey.mkString(",") + ",we may not have notified engine, attempt to do it now...")
-                    objectsChanged = objectsChanged :+ mObj
-                    if (mObj.IsActive) {
-                      operations = for (op <- objectsChanged) yield "Add"
-                    } else {
-                      operations = for (op <- objectsChanged) yield "Remove"
-                    }
+                    throw e
                   }
                 }
-              } else {
-                throw InternalErrorException("serializer.Deserialize returned a null object", null)
               }
             }
             processed += 1
@@ -2853,13 +2911,44 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
         }
       })
 
+      var firstException: Throwable = null
+
+      if (typesYetToProcess.size > 0) {
+        typesYetToProcess.foreach(typ => {
+          try {
+            DeserializeAndAddObject(typ._1, typ._2, objectsChanged, operations, maxTranId)
+          } catch {
+            case e: Throwable => {
+              if (firstException != null)
+                firstException = e
+              logger.debug("Failed to handle type. Key:" + typ._1.bucketKey.mkString(","), e)
+            }
+          }
+        })
+      }
+
+      functionsYetToProcess.foreach(fun => {
+        try {
+          DeserializeAndAddObject(fun._1, fun._2, objectsChanged, operations, maxTranId)
+        } catch {
+          case e: Throwable => {
+            if (firstException != null)
+              firstException = e
+            logger.debug("Failed to handle function. Key:" + fun._1.bucketKey.mkString(","), e)
+          }
+        }
+      })
+
+      if (firstException != null)
+        throw firstException
+
       if (processed == 0) {
         logger.debug("No metadata objects available in the Database")
         return
       }
 
       if (objectsChanged.length > 0) {
-        NotifyEngine(objectsChanged, operations)
+        NotifyEngine(objectsChanged.toArray, operations.toArray)
       }
       startup = false
     } catch {
@@ -3343,7 +3432,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
   /**
      * GetFunctionDef
-     * @param nameSpace namespace of the object
+    *
+    * @param nameSpace namespace of the object
      * @param objectName name of the desired object, possibly namespace qualified
      * @param formatType format of the return value, either JSON or XML
      * @param version  Version of the object
@@ -3742,7 +3832,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
   /**
      * Remove a cluster configuration
-     * @param cfgStr
+    *
+    * @param cfgStr
      * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
      *               method. If Security and/or Audit are configured, this value must be a value other than None.
      * @param cobjects
@@ -4061,6 +4152,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
   /**
     * Read metadata api configuration properties
+    *
     * @param configFile the MetadataAPI configuration file
     */
   @throws(classOf[MissingPropertyException])
@@ -4071,7 +4163,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
     /**
      * Read the default configuration property values from json config file.
-     * @param cfgFile
+      *
+      * @param cfgFile
      */
   @throws(classOf[MissingPropertyException])
   @throws(classOf[LoadAPIConfigException])
@@ -4111,6 +4204,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     * Initialize the metadata from the bootstrap, establish zookeeper listeners, load the cached information from
     * persistent storage, set up heartbeat and authorization implementations.
     * FIXME: Is there a difference between this function and InitMdMgr?
+    *
     * @see InitMdMgr(String,Boolean)
     * @param configFile the MetadataAPI configuration file
     * @param startHB

@@ -60,11 +60,11 @@ class TransactionIngest(factory: ModelInstanceFactory) extends ModelInstance(fac
     // Main dependency -> execution check
     //
     val results: Array[MessageInterface] =
-    if(msg1!=null) {
-      exeGenerated_transactionmsg_1(msg1)
-    } else {
-      Array.empty[MessageInterface]
-    }
+      if(msg1!=null) {
+        exeGenerated_transactionmsg_1(msg1)
+      } else {
+        Array.empty[MessageInterface]
+      }
     results.asInstanceOf[Array[ContainerOrConcept]]
   }
 }

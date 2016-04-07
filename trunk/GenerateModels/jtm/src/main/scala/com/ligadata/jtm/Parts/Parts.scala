@@ -47,7 +47,7 @@ object Parts {
        |  override def isValidMessage(msg: ContainerInterface): Boolean = {
        |    {factory.isvalidmessage}
        |  }
-       |  override def createModelInstance(): ModelInstance = return new Model(this)
+       |  override def createModelInstance(): ModelInstance = return new {modelclass.name}(this)
        |  override def getModelName: String = "{model.name}"
        |  override def getVersion: String = "{model.version}"
        |
