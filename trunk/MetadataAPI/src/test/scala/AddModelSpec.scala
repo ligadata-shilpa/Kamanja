@@ -103,6 +103,7 @@ class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter wi
       val mdLoader = new MetadataLoad(MdMgr.mdMgr, "", "", "", "")
       mdLoader.initialize
 
+      logger.info("Startup embedded zooKeeper ")
       val zkServer = EmbeddedZookeeper
       zkServer.instance.startup
 

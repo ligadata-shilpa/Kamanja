@@ -982,8 +982,9 @@ class MetadataAPISerializationTest extends FlatSpec with BeforeAndAfterAll {
 
     val objectFormat = "JSON"
     val implementationName = "implementationName"
-    val key = ("system", "string")
-    val value = ("system", "string")
+    val key = "system"
+    val value =  "string"
+    //val value = ("system", "string")
 
     val mapType = MdMgr.GetMdMgr.MakeMap(nameSpace, name, key, value, version, ownerId, tenantId, uniqID, mdElementId, false)
 
