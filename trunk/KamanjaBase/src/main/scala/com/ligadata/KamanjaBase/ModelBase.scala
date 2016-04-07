@@ -471,11 +471,14 @@ trait EnvContext /* extends Monitorable */  {
   // Later this will be posted to logical queue where it can execute on logical partition.
   def postMessages(msgs: Array[ContainerInterface]): Unit
 
+  // We are handling only one listener at this moment
+  def postMessagesListener(postMsgListenerCallback: (Array[ContainerInterface]) => Unit): Unit
+
   def setDefaultDatastoresForTenants(defaultDatastores: scala.collection.immutable.Map[String, String]): Unit
   def getDefaultDatastoreForTenantId(tenantId: String): String
 
-  def setSystemCatelogDatastore(sysCatelog: String): Unit
-  def getSystemCatelogDatastore(): String
+  def setSystemCatalogDatastore(sysCatalog: String): Unit
+  def getSystemCatalogDatastore(): String
 }
 
 // partitionKey is the one used for this message
@@ -696,6 +699,7 @@ class TransactionContext(val transId: Long, val nodeCtxt: NodeContext, val msgDa
 
   // Need to lock if we are going to run models parallel
   final def addContainerOrConcept(origin: String, m: ContainerOrConcept, partKey: List[String]): Unit = {
+    if (m == null) return
     val msgNm = m.getFullTypeName.toLowerCase()
     val tmp = containerOrConceptsMapByName.getOrElse(msgNm, ArrayBuffer[ContaienrWithOriginAndPartKey]())
     tmp += ContaienrWithOriginAndPartKey(origin, m, partKey)

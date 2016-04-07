@@ -34,7 +34,7 @@ object AddContainerService {
   case class Process(containerJson:String)
 }
 
-class AddContainerService(requestContext: RequestContext, userid:Option[String], password:Option[String], cert:Option[String]) extends Actor {
+class AddContainerService(requestContext: RequestContext, userid:Option[String], password:Option[String], cert:Option[String], tenantId: Option[String]) extends Actor {
 
   import AddContainerService._
   
@@ -45,12 +45,11 @@ class AddContainerService(requestContext: RequestContext, userid:Option[String],
   
   def receive = {
     case Process(containerJson) =>
-      val tenantId: String = "" // FIXME: DAN FIX THIS TenantID
-      process(containerJson, tenantId)
+      process(containerJson)
       context.stop(self)
   }
   
-  def process(containerJson:String, tenantId: String) = {
+  def process(containerJson:String) = {
     log.debug("Requesting AddContainer {}",containerJson)
 
     var nameVal = APIService.extractNameFromJson(containerJson,AuditConstants.CONTAINER) 

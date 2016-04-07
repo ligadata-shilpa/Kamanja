@@ -18,9 +18,10 @@ import com.ligadata.KamanjaBase._
 import com.ligadata.KvBase.TimeRange
 import com.ligadata.kamanja.metadata.ModelDef
 import com.ligadata.Utils._
-class Factory(modelDef: ModelDef, nodeContext: NodeContext) extends ModelInstanceFactory(modelDef, nodeContext) {
+import com.ligadata.runtime.Conversion
+class ModelFactory(modelDef: ModelDef, nodeContext: NodeContext) extends ModelInstanceFactory(modelDef, nodeContext) {
   override def isValidMessage(msg: ContainerInterface): Boolean = {
-    msg.isInstanceOf[com.ligadata.kamanja.test.v1000000.msg1]||msg.isInstanceOf[com.ligadata.kamanja.test.v1000000.msg3]||msg.isInstanceOf[com.ligadata.kamanja.test.v1000000.msg5]||msg.isInstanceOf[com.ligadata.kamanja.test.v1000000.msg6]
+    msg.isInstanceOf[com.ligadata.kamanja.test.V1000000.msg1]||msg.isInstanceOf[com.ligadata.kamanja.test.V1000000.msg3]||msg.isInstanceOf[com.ligadata.kamanja.test.V1000000.msg5]||msg.isInstanceOf[com.ligadata.kamanja.test.V1000000.msg6]
   }
   override def createModelInstance(): ModelInstance = return new Model(this)
   override def getModelName: String = "com.ligadata.jtm.test.filter"
@@ -28,12 +29,13 @@ class Factory(modelDef: ModelDef, nodeContext: NodeContext) extends ModelInstanc
   override def createResultObject(): ModelResultBase = new MappedModelResults()
 }
 class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
+  val conversion = new com.ligadata.runtime.Conversion
   override def execute(txnCtxt: TransactionContext, execMsgsSet: Array[ContainerOrConcept], triggerdSetIndex: Int, outputDefault: Boolean): Array[ContainerOrConcept] = {
     val messagefactoryinterface = execMsgsSet(0).asInstanceOf[MessageFactoryInterface]
     //
     //
     // msg2 is part of com.ligadata.jtm.test.filter
-    def exeGenerated_test1_1(msg1: com.ligadata.kamanja.test.v1000000.msg1, msg2: com.ligadata.kamanja.test.v1000000.msg3, msg3: com.ligadata.kamanja.test.v1000000.msg5): Array[MessageInterface] = {
+    def exeGenerated_test1_1(msg1: com.ligadata.kamanja.test.V1000000.msg1, msg2: com.ligadata.kamanja.test.V1000000.msg3, msg3: com.ligadata.kamanja.test.V1000000.msg5): Array[MessageInterface] = {
       // in scala, type could be optional
       val zipcode: Int = iplookup(msg2.in1).zipcode
       val zipcode1: Int = iplookup(msg1.in1).zipcode
@@ -42,7 +44,7 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
       def process_omsg2(): Array[MessageInterface] = {
         if (!(msg2.in2 != -1 && msg2.in2 < 100)) return Array.empty[MessageInterface]
         val tmp8: String = somefunc2(msg2.in3)
-        val result = new com.ligadata.kamanja.test.v1000000.msg2(messagefactoryinterface)
+        val result = new com.ligadata.kamanja.test.V1000000.msg2(messagefactoryinterface)
         result.out4 = ipinfo.zipCode
         result.out3 = somefunc(zipcode, zipcode1)
         result.out2 = tmp8
@@ -52,7 +54,7 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
       process_omsg2()
     }
     // msg2 is part of com.ligadata.jtm.test.filter
-    def exeGenerated_test1_2(msg2: com.ligadata.kamanja.test.v1000000.msg3, msg3: com.ligadata.kamanja.test.v1000000.msg5, msg4: com.ligadata.kamanja.test.v1000000.msg6): Array[MessageInterface] = {
+    def exeGenerated_test1_2(msg2: com.ligadata.kamanja.test.V1000000.msg3, msg3: com.ligadata.kamanja.test.V1000000.msg5, msg4: com.ligadata.kamanja.test.V1000000.msg6): Array[MessageInterface] = {
       // in scala, type could be optional
       val zipcode: Int = iplookup(msg2.in1).zipcode
       val zipcode1: Int = iplookup(msg2.in1.zipcode
@@ -61,7 +63,7 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
       def process_omsg2(): Array[MessageInterface] = {
         if (!(msg2.in2 != -1 && msg2.in2 < 100)) return Array.empty[MessageInterface]
         val tmp8: String = somefunc2(msg2.in3)
-        val result = new com.ligadata.kamanja.test.v1000000.msg2(messagefactoryinterface)
+        val result = new com.ligadata.kamanja.test.V1000000.msg2(messagefactoryinterface)
         result.out4 = ipinfo.zipCode
         result.out3 = somefunc(zipcode, zipcode1)
         result.out2 = tmp8
@@ -70,9 +72,9 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
       }
       process_omsg2()
     }
-    def exeGenerated_test2_3(msg2: com.ligadata.kamanja.test.v1000000.msg3): Array[MessageInterface] = {
+    def exeGenerated_test2_3(msg2: com.ligadata.kamanja.test.V1000000.msg3): Array[MessageInterface] = {
       def process_omsg3(): Array[MessageInterface] = {
-        val result = new com.ligadata.kamanja.test.v1000000.msg4(messagefactoryinterface)
+        val result = new com.ligadata.kamanja.test.V1000000.msg4(messagefactoryinterface)
         result.out4 = msg2.in1
         result.out3 = msg2.in1
         result.out2 = msg2.in1
@@ -83,10 +85,10 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
     }
     // Evaluate messages
     val msgs = execMsgsSet.map(m => m.getFullTypeName -> m).toMap
-    val msg1 = msgs.get("com.ligadata.kamanja.test.msg1").getOrElse(null).asInstanceOf[com.ligadata.kamanja.test.v1000000.msg1]
-    val msg2 = msgs.get("com.ligadata.kamanja.test.msg3").getOrElse(null).asInstanceOf[com.ligadata.kamanja.test.v1000000.msg3]
-    val msg3 = msgs.get("com.ligadata.kamanja.test.msg5").getOrElse(null).asInstanceOf[com.ligadata.kamanja.test.v1000000.msg5]
-    val msg4 = msgs.get("com.ligadata.kamanja.test.msg6").getOrElse(null).asInstanceOf[com.ligadata.kamanja.test.v1000000.msg6]
+    val msg1 = msgs.get("com.ligadata.kamanja.test.msg1").getOrElse(null).asInstanceOf[com.ligadata.kamanja.test.V1000000.msg1]
+    val msg2 = msgs.get("com.ligadata.kamanja.test.msg3").getOrElse(null).asInstanceOf[com.ligadata.kamanja.test.V1000000.msg3]
+    val msg3 = msgs.get("com.ligadata.kamanja.test.msg5").getOrElse(null).asInstanceOf[com.ligadata.kamanja.test.V1000000.msg5]
+    val msg4 = msgs.get("com.ligadata.kamanja.test.msg6").getOrElse(null).asInstanceOf[com.ligadata.kamanja.test.V1000000.msg6]
     // Main dependency -> execution check
     //
     val results: Array[MessageInterface] =

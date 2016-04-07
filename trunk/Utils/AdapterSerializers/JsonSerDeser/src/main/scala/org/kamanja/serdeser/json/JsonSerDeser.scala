@@ -180,7 +180,6 @@ class JSONSerDes() extends SerializeDeserialize with LogTrait {
     private def processContainerTypeAsJson(aContainerType : ContainerTypeDef
                                          , rawValue : Any
                                          , withComma : Boolean) : String = {
-
         /** ContainerInterface instance? */
         val isContainerInterface : Boolean = rawValue.isInstanceOf[ContainerInterface]
         val stringRep : String = if (isContainerInterface) {
@@ -193,16 +192,8 @@ class JSONSerDes() extends SerializeDeserialize with LogTrait {
                     val array : Array[Any] = rawValue.asInstanceOf[Array[Any]]
                     arrayAsJson(aContainerType, array)
                 }
-                case ab : ArrayBufTypeDef => {
-                        val array : ArrayBuffer[Any] = rawValue.asInstanceOf[ArrayBuffer[Any]]
-                        arrayAsJson(aContainerType, array)
-                }
                 case m : MapTypeDef => {
                     val map : scala.collection.immutable.Map[Any,Any] = rawValue.asInstanceOf[scala.collection.immutable.Map[Any,Any]]
-                    mapAsJson(aContainerType, map)
-                }
-                case im : ImmutableMapTypeDef =>  {
-                    val map : scala.collection.mutable.Map[Any,Any] = rawValue.asInstanceOf[scala.collection.mutable.Map[Any,Any]]
                     mapAsJson(aContainerType, map)
                 }
                 case _ => throw new UnsupportedObjectException(s"container type ${aContainerType.typeString} not currently serializable",null)
@@ -289,7 +280,7 @@ class JSONSerDes() extends SerializeDeserialize with LogTrait {
       * @return a Json string representation
       */
     private def mapAsJson(aContainerType : ContainerTypeDef, map : scala.collection.immutable.Map[Any,Any]) : String = {
-        val memberTypes : Array[BaseTypeDef] = aContainerType.asInstanceOf[ImmutableMapTypeDef].ElementTypes
+        val memberTypes : Array[BaseTypeDef] = aContainerType.asInstanceOf[MapTypeDef].ElementTypes
         val keyType : BaseTypeDef = memberTypes.head
         val valType : BaseTypeDef = memberTypes.last
         val itemAtATime : Boolean = (keyType.isInstanceOf[ContainerTypeDef] || valType.isInstanceOf[ContainerTypeDef])
@@ -313,48 +304,6 @@ class JSONSerDes() extends SerializeDeserialize with LogTrait {
                 }
                 buffer.append(s"$keyRep : $valRep")
             })
-            buffer.toString
-        } else {
-            new ObjectMapper().writeValueAsString(map)
-        }
-        mapAsJsonStr
-    }
-
-    /**
-      * Create a Json string from the supplied mutable map.  Note that either/both map elements can in turn be
-      * containers.
-      *
-      * @param aContainerType The container type def for the supplied map
-      * @param map the map instance
-      * @return a Json string representation
-      */
-    private def mapAsJson(aContainerType : ContainerTypeDef, map : scala.collection.mutable.Map[Any,Any]) : String = {
-        val memberTypes : Array[BaseTypeDef] = aContainerType.asInstanceOf[ImmutableMapTypeDef].ElementTypes
-        val keyType : BaseTypeDef = memberTypes.head
-        val valType : BaseTypeDef = memberTypes.last
-        val itemAtATime : Boolean = (keyType.isInstanceOf[ContainerTypeDef] || valType.isInstanceOf[ContainerTypeDef])
-        val mapAsJsonStr : String = if (itemAtATime) {
-            val buffer : StringBuilder = new StringBuilder
-            val lastVal : Any  = map.values.last
-            val noComma : Boolean = false
-            buffer.append("{ ")
-            map.foreach(pair => {
-                val keyRep : String =  if (keyType.isInstanceOf[ContainerTypeDef]) {
-                    processContainerTypeAsJson(keyType.asInstanceOf[ContainerTypeDef], pair._1, noComma)
-                } else {
-                    val quoteValue : Boolean = true
-                    nameValueAsJson(keyType.FullName, pair._1, quoteValue, noComma)
-                }
-                val printComma : Boolean = lastVal != pair._2
-                val valRep : String =  if (valType.isInstanceOf[ContainerTypeDef]) {
-                    processContainerTypeAsJson(valType.asInstanceOf[ContainerTypeDef], pair._2, printComma)
-                } else {
-                    val quoteValue : Boolean = useQuotesOnValue(valType)
-                    nameValueAsJson(valType.FullName, pair._2, quoteValue, printComma)
-                 }
-                buffer.append(s"$keyRep : $valRep")
-            })
-            buffer.append(" }")
             buffer.toString
         } else {
             new ObjectMapper().writeValueAsString(map)
@@ -396,39 +345,6 @@ class JSONSerDes() extends SerializeDeserialize with LogTrait {
         arrAsJsonStr
     }
 
-    /**
-      * Create a Json string from the supplied array buffer.  Note that the array buffer elements can themselves
-      * be containers.
-      *
-      * @param aContainerType The container type def for the supplied array buffer
-      * @param array the array instance
-      * @return a Json string representation
-      */
-    private def arrayAsJson(aContainerType : ContainerTypeDef, array : ArrayBuffer[Any]) : String = {
-        val memberTypes : Array[BaseTypeDef] = aContainerType.asInstanceOf[ArrayBufTypeDef].ElementTypes
-        val itmType : BaseTypeDef = memberTypes.last
-        val itemAtATime : Boolean = itmType.isInstanceOf[ContainerTypeDef]
-        val arrAsJsonStr : String = if (itemAtATime) {
-            val buffer : StringBuilder = new StringBuilder
-            val lastItm : Any  = array.last
-            buffer.append("[ ")
-            array.foreach(itm => {
-                val printComma : Boolean = lastItm != itm
-                val itmRep : String =  if (itmType.isInstanceOf[ContainerTypeDef]) {
-                    processContainerTypeAsJson(itmType.asInstanceOf[ContainerTypeDef], itm, printComma)
-                } else {
-                    val quoteValue : Boolean = useQuotesOnValue(itmType)
-                    nameValueAsJson(itmType.FullName, itm, quoteValue, printComma)
-                }
-                buffer.append(s"$itm")
-            })
-            buffer.append(" ]")
-            buffer.toString
-        } else {
-            new ObjectMapper().writeValueAsString(array)
-        }
-        arrAsJsonStr
-    }
 
     /**
       * Set the object resolver to be used for this serializer
@@ -566,17 +482,9 @@ class JSONSerDes() extends SerializeDeserialize with LogTrait {
                     val collElements : List[Map[String, Any]] = fieldsJson.asInstanceOf[List[Map[String, Any]]]
                     jsonAsArray(containerTypeInfo, collElements)
                 }
-                case ab : ArrayBufTypeDef => {
-                    val collElements : List[Map[String, Any]] = fieldsJson.asInstanceOf[List[Map[String, Any]]]
-                    jsonAsArrayBuffer(containerTypeInfo, collElements)
-                }
                 case m : MapTypeDef => {
                     val collElements : Map[String, Any] = fieldsJson.asInstanceOf[Map[String, Any]]
                     jsonAsMap(containerTypeInfo, collElements)
-                }
-                case im : ImmutableMapTypeDef =>  {
-                    val collElements : Map[String, Any] = fieldsJson.asInstanceOf[Map[String, Any]]
-                    jsonAsMutableMap(containerTypeInfo, collElements)
                 }
                 case _ => throw new UnsupportedObjectException(s"container type ${containerTypeInfo.typeString} not currently serializable",null)
             }
@@ -600,7 +508,7 @@ class JSONSerDes() extends SerializeDeserialize with LogTrait {
          * moment only arrays of homogeneous types are supported.
          */
 
-        val memberTypes : Array[BaseTypeDef] = arrayTypeInfo.asInstanceOf[ImmutableMapTypeDef].ElementTypes
+        val memberTypes : Array[BaseTypeDef] = arrayTypeInfo.asInstanceOf[MapTypeDef].ElementTypes
         val itmType : BaseTypeDef = memberTypes.last
         val arrayMbrTypeIsContainer : Boolean = itmType.isInstanceOf[ContainerTypeDef]
         val array : Array[Any] = if (collElements.size > 0) {
@@ -620,37 +528,6 @@ class JSONSerDes() extends SerializeDeserialize with LogTrait {
     }
 
     /**
-      * Coerce the list of mapped elements to an array buffer of the mapped elements' values
-      *
-      * @param arrayTypeInfo the metadata that describes the array buffer
-      * @param collElements the list of json elements for the array buffer
-      * @return an array buffer instance
-      */
-    def jsonAsArrayBuffer(arrayTypeInfo : ContainerTypeDef, collElements : List[Map[String,Any]]) : ArrayBuffer[Any] = {
-
-        /**
-         * FIXME: if we intend to support arrays of hetergeneous items (i.e, Array[Any]), this has to change.  At the
-         * moment only arrays of homogeneous types are supported.
-         */
-
-        val memberTypes : Array[BaseTypeDef] = arrayTypeInfo.asInstanceOf[ImmutableMapTypeDef].ElementTypes
-        val itmType : BaseTypeDef = memberTypes.last
-        val arrayMbrTypeIsContainer : Boolean = itmType.isInstanceOf[ContainerTypeDef]
-        val arraybuffer : ArrayBuffer[Any] = ArrayBuffer[Any]()
-        collElements.foreach(itm => {
-            if (arrayMbrTypeIsContainer) {
-                val itmType : ContainerTypeDef = itm.asInstanceOf[ContainerTypeDef]
-                val arrbItm : Any = createContainerType(itmType, itm)
-                arraybuffer += arrbItm
-            } else {
-                arraybuffer += itm
-            }
-        })
-        arraybuffer
-
-    }
-
-    /**
       * Coerce the list of mapped elements to an immutable map of the mapped elements' values
       *
       * @param mapTypeInfo
@@ -658,7 +535,7 @@ class JSONSerDes() extends SerializeDeserialize with LogTrait {
       * @return
       */
     def jsonAsMap(mapTypeInfo : ContainerTypeDef, collElements : Map[String,Any]) : scala.collection.immutable.Map[Any,Any] = {
-        val memberTypes : Array[BaseTypeDef] = mapTypeInfo.asInstanceOf[ImmutableMapTypeDef].ElementTypes
+        val memberTypes : Array[BaseTypeDef] = mapTypeInfo.asInstanceOf[MapTypeDef].ElementTypes
         val sanityChk : Boolean = memberTypes.length == 2
         val keyType : BaseTypeDef = memberTypes.head
         val valType : BaseTypeDef = memberTypes.last
@@ -680,41 +557,6 @@ class JSONSerDes() extends SerializeDeserialize with LogTrait {
             }
             (keyRep,valRep)
         }).toMap
-
-        map
-    }
-
-    /**
-      * Coerce the list of mapped elements to an mutable map of the mapped elements' values
-      *
-      * @param mapTypeInfo
-      * @param collElements
-      * @return
-      */
-    def jsonAsMutableMap(mapTypeInfo : ContainerTypeDef, collElements : Map[String,Any]) : scala.collection.mutable.Map[Any,Any] = {
-        val memberTypes : Array[BaseTypeDef] = mapTypeInfo.asInstanceOf[MapTypeDef].ElementTypes
-        val sanityChk : Boolean = memberTypes.length == 2
-        val keyType : BaseTypeDef = memberTypes.head
-        val valType : BaseTypeDef = memberTypes.last
-        val map : scala.collection.mutable.Map[Any,Any] = scala.collection.mutable.Map[Any,Any]()
-        collElements.foreach(pair => {
-            val key : String = pair._1
-            val value : Any = pair._2
-            val keyRep : Any =  if (keyType.isInstanceOf[ContainerTypeDef]) {
-                val itmType : ContainerTypeDef = key.asInstanceOf[ContainerTypeDef]
-                createContainerType(itmType, key)
-            } else {
-                key
-            }
-
-            val valRep : Any =  if (valType.isInstanceOf[ContainerTypeDef]) {
-                val itmType : ContainerTypeDef = value.asInstanceOf[ContainerTypeDef]
-                createContainerType(itmType, value)
-            } else {
-                value
-            }
-            map(keyRep) = valRep
-        })
 
         map
     }

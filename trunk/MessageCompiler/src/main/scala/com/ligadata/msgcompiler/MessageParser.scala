@@ -21,7 +21,6 @@ import com.ligadata.kamanja.metadata.MessageDef;
 import com.ligadata.kamanja.metadata.BaseAttributeDef;
 import com.ligadata.kamanja.metadata.ContainerDef;
 import com.ligadata.kamanja.metadata.ArrayTypeDef;
-import com.ligadata.kamanja.metadata.ArrayBufTypeDef;
 import java.text.SimpleDateFormat;
 
 class MessageParser {

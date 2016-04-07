@@ -52,7 +52,7 @@ object KamanjaMdCfg {
       throw new KamanjaException("Cluster not found for Node %d  & ClusterId : %s".format(KamanjaConfiguration.nodeId, nd.ClusterId), null)
     }
 
-    val dataStore = cluster.cfgMap.getOrElse("DataStore", null)
+    val dataStore = cluster.cfgMap.getOrElse("SystemCatalog", null)
     if (dataStore == null) {
       LOG.error("DataStore not found for Node %d  & ClusterId : %s".format(KamanjaConfiguration.nodeId, nd.ClusterId))
       throw new KamanjaException("DataStore not found for Node %d  & ClusterId : %s".format(KamanjaConfiguration.nodeId, nd.ClusterId), null)
@@ -245,7 +245,7 @@ object KamanjaMdCfg {
           // First time creating metadata loader here
           val metadataLoader = new KamanjaLoaderInfo(KamanjaConfiguration.baseLoader, true, true)
           envCtxt.setMetadataLoader(metadataLoader)
-          envCtxt.setMetadataLoader(adaptersAndEnvCtxtLoader)
+          envCtxt.setAdaptersAndEnvCtxtLoader(adaptersAndEnvCtxtLoader)
           // envCtxt.setClassLoader(KamanjaConfiguration.metadataLoader.loader) // Using Metadata Loader
           envCtxt.setMetadataResolveInfo(KamanjaMetadata)
           envCtxt.setMdMgr(KamanjaMetadata.getMdMgr)
@@ -262,8 +262,6 @@ object KamanjaMdCfg {
 
           // Record EnvContext in the Heartbeat
          // envCtxt.RegisterHeartbeat(heartBeat)
-
-
           LOG.info("Created EnvironmentContext for Class:" + className)
           return envCtxt
         } else {
@@ -298,7 +296,7 @@ object KamanjaMdCfg {
     null
   }
 
-  def LoadAdapters(inputAdapters: ArrayBuffer[InputAdapter], outputAdapters: ArrayBuffer[OutputAdapter], statusAdapters: ArrayBuffer[OutputAdapter], validateInputAdapters: ArrayBuffer[InputAdapter], failedEventsAdapters: ArrayBuffer[OutputAdapter]): Boolean = {
+  def LoadAdapters(inputAdapters: ArrayBuffer[InputAdapter], outputAdapters: ArrayBuffer[OutputAdapter]): Boolean = {
     LOG.info("Loading Adapters started @ " + Utils.GetCurDtTmStr)
     val s0 = System.nanoTime
     val allAdapters = mdMgr.Adapters
@@ -455,6 +453,7 @@ object KamanjaMdCfg {
 //      conf.associatedMsg = adap.AssociatedMessage
       conf.dependencyJars = if (adap.DependencyJars != null) adap.DependencyJars.map(str => str.trim).filter(str => str.size > 0).toSet else null
       conf.adapterSpecificCfg = adap.AdapterSpecificCfg
+      conf.tenantId = adap.TenantId
 
       try {
         val adapter = CreateOutputAdapterFromConfig(conf, nodeContext)
@@ -568,6 +567,7 @@ object KamanjaMdCfg {
       conf.jarName = adap.JarName
       conf.dependencyJars = if (adap.DependencyJars != null) adap.DependencyJars.map(str => str.trim).filter(str => str.size > 0).toSet else null
       conf.adapterSpecificCfg = adap.AdapterSpecificCfg
+      conf.tenantId = adap.TenantId
 //      conf.keyAndValueDelimiter = adap.KeyAndValueDelimiter
 //      conf.fieldDelimiter = adap.FieldDelimiter
 //      conf.valueDelimiter = adap.ValueDelimiter

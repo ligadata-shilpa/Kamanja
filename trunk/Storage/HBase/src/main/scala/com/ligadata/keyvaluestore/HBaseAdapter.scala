@@ -309,17 +309,22 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     var tableHBase: Table = null
     try {
       relogin
-      tableHBase = getTableFromConnection(tableName);
-      val g = new Get(containerName.getBytes())
-      val r = tableHBase.get(g);
-      //val kv : r.raw()
-      if( r.isEmpty() ){
-	return false
+      if (admin.tableExists(tableName)) {
+	tableHBase = getTableFromConnection(tableName);
+	val g = new Get(containerName.getBytes())
+	val r = tableHBase.get(g);
+	//val kv : r.raw()
+	if( r.isEmpty() ){
+	  return false
+	}
+	else{
+	  val v = r.getValue(isMetadataTableStrBytes,baseStrBytes)
+	  val b = if (Bytes.toString(v).equalsIgnoreCase("yes")) true else false
+	  b
+	}
       }
       else{
-	val v = r.getValue(isMetadataTableStrBytes,baseStrBytes)
-	val b = if (Bytes.toString(v).equalsIgnoreCase("yes")) true else false
-	b
+	return false
       }
     } catch {
       case e: Exception => {
@@ -331,7 +336,6 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       }
     }
   }
-
 
   private def createTable(containerName:String, tableName: String, isMetadata: Boolean, apiType: String): Unit = {
     try {
@@ -347,11 +351,8 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
             }
           }
         }
-	// save the flag isMetadata first
-	if( isMetadata ){
-          createIsMetadataTable
-	  putIsMetadataFlag(containerName,isMetadata)
-	}
+        createIsMetadataTable
+	putIsMetadataFlag(containerName,isMetadata)
         val tableDesc = new HTableDescriptor(TableName.valueOf(tableName));
         val colDesc1 = new HColumnDescriptor("key".getBytes())
         val colDesc2 = new HColumnDescriptor(stStrBytes)
@@ -395,6 +396,10 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
         return isMetadataMap(containerName)
       } else {
         val isMetadata = getIsMetadataFlag(containerName)
+	var fullTableName = toFullTableName(containerName)
+	if ( ! admin.tableExists(fullTableName)) {
+	  createTable(containerName,fullTableName,isMetadata,apiType)
+	}
         containerList.add(containerName)
 	isMetadataMap(containerName) = isMetadata
 	isMetadata
@@ -663,7 +668,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     return null
   }
 
-  override def put(containerName: String, isMetadataContainer: Boolean, key: Key, value: Value): Unit = {
+  override def put(containerName: String, key: Key, value: Value): Unit = {
     var tableName = toFullTableName(containerName)
     var tableHBase: Table = null
     try {
@@ -687,7 +692,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     }
   }
 
-  override def put(data_list: Array[(String, Boolean, Array[(Key, Value)])]): Unit = {
+  override def put(data_list: Array[(String, Array[(Key, Value)])]): Unit = {
     var tableHBase: Table = null
     try {
       relogin
@@ -696,7 +701,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
         val isMetadata = CheckTableExists(containerName)
         var tableName = toFullTableName(containerName)
         tableHBase = getTableFromConnection(tableName);
-        var keyValuePairs = li._3
+        var keyValuePairs = li._2
         var puts = new Array[Put](0)
         keyValuePairs.foreach(keyValuePair => {
           var key = keyValuePair._1
@@ -1612,11 +1617,11 @@ class HBaseAdapterTx(val parent: DataStore) extends Transaction {
   val loggerName = this.getClass.getName
   val logger = LogManager.getLogger(loggerName)
 
-  override def put(containerName: String, isMetadataContainer: Boolean, key: Key, value: Value): Unit = {
-    parent.put(containerName, isMetadataContainer, key, value)
+  override def put(containerName: String, key: Key, value: Value): Unit = {
+    parent.put(containerName, key, value)
   }
 
-  override def put(data_list: Array[(String, Boolean, Array[(Key, Value)])]): Unit = {
+  override def put(data_list: Array[(String, Array[(Key, Value)])]): Unit = {
     parent.put(data_list)
   }
 

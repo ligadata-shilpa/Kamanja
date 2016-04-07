@@ -181,7 +181,7 @@ class HBaseTestMetadataFlagSpec extends FunSpec with BeforeAndAfter with BeforeA
         var v = serializer.SerializeObjectToByteArray(obj)
         var value = new Value(1,"kryo",v)
         noException should be thrownBy {
-          adapter.put(containerName, true, key, value)
+          adapter.put(containerName, key, value)
         }
       }
 
@@ -228,7 +228,7 @@ class HBaseTestMetadataFlagSpec extends FunSpec with BeforeAndAfter with BeforeA
         var v = serializer.SerializeObjectToByteArray(obj)
         var value = new Value(1,"kryo",v)
         noException should be thrownBy {
-          adapter.put(metadataContainerName, true, key, value)
+          adapter.put(metadataContainerName, key, value)
         }
       }
 

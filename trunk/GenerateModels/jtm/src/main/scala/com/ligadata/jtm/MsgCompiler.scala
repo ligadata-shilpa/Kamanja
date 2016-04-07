@@ -33,6 +33,8 @@ class ConfMsgCompiler (arguments: Seq[String] ) extends ScallopConf (arguments) 
 /*
 run --in /home/joerg/Kamanja/trunk/GenerateModels/jtm/src/test/resources/metadata/messages/msg1.json   --out ~/msg1.json
 run --in /home/joerg/Kamanja/trunk/GenerateModels/jtm/src/test/resources/metadata/messages/msg2.json   --out ~/msg2.json
+run --in /home/joerg/Kamanja/trunk/GenerateModels/jtm/src/test/resources/metadata/messages/TransactionMsg.json   --out ~/MsgOut.json
+run --in /home/joerg/Kamanja/trunk/GenerateModels/jtm/src/test/resources/metadata/messages/TransactionMsgIn.json   --out ~/MsgIn.json
  */
 object MsgCompiler extends App with LogTrait {
 
@@ -48,20 +50,24 @@ object MsgCompiler extends App with LogTrait {
       try {
         val mdLoader = new MetadataLoad(mgr, "", "", "", "")
         mdLoader.initialize
-
-        val json = FileUtils.readFileToString(new File(cmdconf.in.get.get))
-        val map = parse(json).values.asInstanceOf[Map[String, Any]]
-        val msg = new MessageCompiler
-        val ((classStrVer, classStrVerJava), msgDef, (classStrNoVer, classStrNoVerJava), rawMsgStr) = msg.processMsgDef(json, "JSON", mgr, 0, false)
-        val msg1 = msgDef.asInstanceOf[com.ligadata.kamanja.metadata.MessageDef]
-        mgr.AddMsg(msg1)
-        FileUtils.writeStringToFile(new File(cmdconf.out.get.get), classStrVer)
       } catch {
         case _ : Throwable => ;
       }
+
+      val json = FileUtils.readFileToString(new File(cmdconf.in.get.get))
+      val map = parse(json).values.asInstanceOf[Map[String, Any]]
+      val msg = new MessageCompiler
+      val ((classStrVer, classStrVerJava), msgDef, (classStrNoVer, classStrNoVerJava), rawMsgStr) = msg.processMsgDef(json, "JSON", mgr, 0, false)
+      val msg1 = msgDef.asInstanceOf[com.ligadata.kamanja.metadata.MessageDef]
+      mgr.AddMsg(msg1)
+      FileUtils.writeStringToFile(new File(cmdconf.out.get.get), classStrVer)
+
     }
     catch {
-      case e: Exception => System.exit(1)
+      case e: Exception => {
+        logger.error("Exception {}", e.getMessage)
+        System.exit(1)
+      }
     }
   }
 }

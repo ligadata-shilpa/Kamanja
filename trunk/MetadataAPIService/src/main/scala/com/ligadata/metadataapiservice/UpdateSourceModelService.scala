@@ -36,7 +36,7 @@ object UpdateSourceModelService {
 }
 
 
-class UpdateSourceModelService(requestContext: RequestContext, userid:Option[String], password:Option[String], cert:Option[String], modelname: Option[String]) extends Actor {
+class UpdateSourceModelService(requestContext: RequestContext, userid:Option[String], password:Option[String], cert:Option[String], modelname: Option[String], tid: Option[String]) extends Actor {
 
   import UpdateSourceModelService._
 
@@ -51,19 +51,17 @@ class UpdateSourceModelService(requestContext: RequestContext, userid:Option[Str
   def receive = {
     case UpdateJava(sourceCode) => {
       log.debug("Updating java model")
-      val tenantId: String = "" // FIXME: DAN FIX THIS TenantID
-      updateJava(sourceCode, tenantId)
+      updateJava(sourceCode)
       context.stop(self)
     }
     case UpdateScala(sourceCode) => {
       log.debug("Updating scala model")
-      val tenantId: String = "" // FIXME: DAN FIX THIS TenantID
-      updateScala(sourceCode, tenantId)
+      updateScala(sourceCode)
    context.stop(self)
     }
   }
 
-  def updateScala(pmmlStr:String, tenantId: String) = {
+  def updateScala(pmmlStr:String) = {
     log.debug("Requesting UpdateSourceModel {}",pmmlStr)
     val usersModelName=userid.getOrElse("")+"."+modelname.getOrElse("")
     logger.debug("user model name is: "+usersModelName)
@@ -76,12 +74,12 @@ class UpdateSourceModelService(requestContext: RequestContext, userid:Option[Str
     }
     else {
 
-      val apiResult = MetadataAPIImpl.UpdateModel(ModelType.SCALA, pmmlStr, userid, tenantId, Some(usersModelName))
+      val apiResult = MetadataAPIImpl.UpdateModel(ModelType.SCALA, pmmlStr, userid, tid, Some(usersModelName))
       requestContext.complete(apiResult)
     }
   }
 
-  def updateJava(pmmlStr:String, tenantId: String) = {
+  def updateJava(pmmlStr:String) = {
 
     log.debug("Requesting UpdateSourceModel {}",pmmlStr)
     val usersModelName=userid.getOrElse("")+"."+modelname.getOrElse("")
@@ -94,7 +92,7 @@ class UpdateSourceModelService(requestContext: RequestContext, userid:Option[Str
       requestContext.complete(new ApiResult(ErrorCodeConstants.Failure, APIName, null,  "Failed to add model. No model configuration name supplied. Please specify in the header the model configuration name where the key is 'modelname' and the value is the name of the configuration.").toString )
     }
     else {
-      val apiResult = MetadataAPIImpl.UpdateModel(ModelType.JAVA, pmmlStr,userid, tenantId, Some(usersModelName))
+      val apiResult = MetadataAPIImpl.UpdateModel(ModelType.JAVA, pmmlStr,userid, tid, Some(usersModelName))
       requestContext.complete(apiResult)
     }
   }

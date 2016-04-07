@@ -40,15 +40,17 @@ Header - specifies the "target" language, version and the namespace. Those three
   "header": {
     "namespace": "com.ligadata.jtm.test.filter",
     "version": "0.0.1",
-    "language" : "scala",
-    "minVersion" : "2.11"
+    "language": "scala",
+    "minVersion": "2.11",
+    "description": "Add a short description here"
+    "name": "className"
   }
 ``
 Imports - specify  additional packages/libraries to be used
 
 ```javascript
   "imports": {
-    "packages": [ "com.ligadata.Utils._", "com.ligadata.Utils._" ]
+    "packages": [ "com.ligadata.Utils._", "com.ligadata.runtime._" ]
   }
 ```
 

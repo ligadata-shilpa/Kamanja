@@ -104,7 +104,7 @@ object NodeLevelTransService {
       val nextTxnStart = endTxnIdx + 1
 
       val k = Key(KvBaseDefalts.defaultTime, bucket_key, 0L, 0)
-      txnsDataStore.put(null, containerName, k, "", nextTxnStart.toString.getBytes(), true)
+      txnsDataStore.put(null, containerName, k, "", nextTxnStart.toString.getBytes())
     } catch {
       case e: Exception => {
         LOG.debug(s"getNextTransactionRange() -- Unable to get Next Transaction Range", e)

@@ -18,7 +18,7 @@
 package com.ligadata.KamanjaManager
 
 import com.ligadata.jpmml.JpmmlAdapter
-import com.ligadata.kamanja.metadata.{ BaseElem, MappedMsgTypeDef, BaseAttributeDef, StructTypeDef, EntityType, AttributeDef, ArrayBufTypeDef, MessageDef, ContainerDef, ModelDef }
+import com.ligadata.kamanja.metadata.{ BaseElem, MappedMsgTypeDef, BaseAttributeDef, StructTypeDef, EntityType, AttributeDef, MessageDef, ContainerDef, ModelDef }
 import com.ligadata.kamanja.metadata._
 import com.ligadata.kamanja.metadata.MdMgr._
 
@@ -387,7 +387,7 @@ class KamanjaMetadata(var envCtxt: EnvContext) {
       if (attrMap != null) {
         childs ++= attrMap.filter(a => (a._2.isInstanceOf[AttributeDef] && (a._2.asInstanceOf[AttributeDef].aType.isInstanceOf[MappedMsgTypeDef] || a._2.asInstanceOf[AttributeDef].aType.isInstanceOf[StructTypeDef]))).map(a => (a._2.Name, a._2.asInstanceOf[AttributeDef].aType.FullName))
         // If the attribute is an arraybuffer (not yet handling others)
-        childs ++= attrMap.filter(a => (a._2.isInstanceOf[AttributeDef] && a._2.asInstanceOf[AttributeDef].aType.isInstanceOf[ArrayBufTypeDef] && (a._2.asInstanceOf[AttributeDef].aType.asInstanceOf[ArrayBufTypeDef].elemDef.isInstanceOf[MappedMsgTypeDef] || a._2.asInstanceOf[AttributeDef].aType.asInstanceOf[ArrayBufTypeDef].elemDef.isInstanceOf[StructTypeDef]))).map(a => (a._2.Name, a._2.asInstanceOf[AttributeDef].aType.asInstanceOf[ArrayBufTypeDef].elemDef.FullName))
+        childs ++= attrMap.filter(a => (a._2.isInstanceOf[AttributeDef] && a._2.asInstanceOf[AttributeDef].aType.isInstanceOf[ArrayTypeDef] && (a._2.asInstanceOf[AttributeDef].aType.asInstanceOf[ArrayTypeDef].elemDef.isInstanceOf[MappedMsgTypeDef] || a._2.asInstanceOf[AttributeDef].aType.asInstanceOf[ArrayTypeDef].elemDef.isInstanceOf[StructTypeDef]))).map(a => (a._2.Name, a._2.asInstanceOf[AttributeDef].aType.asInstanceOf[ArrayTypeDef].elemDef.FullName))
       }
     } else if (entity.isInstanceOf[StructTypeDef]) {
       var memberDefs = entity.asInstanceOf[StructTypeDef].memberDefs
@@ -395,7 +395,7 @@ class KamanjaMetadata(var envCtxt: EnvContext) {
       if (memberDefs != null) {
         childs ++= memberDefs.filter(a => (a.isInstanceOf[AttributeDef] && (a.asInstanceOf[AttributeDef].aType.isInstanceOf[MappedMsgTypeDef] || a.asInstanceOf[AttributeDef].aType.isInstanceOf[StructTypeDef]))).map(a => (a.Name, a.asInstanceOf[AttributeDef].aType.FullName))
         // If the attribute is an arraybuffer (not yet handling others)
-        childs ++= memberDefs.filter(a => (a.isInstanceOf[AttributeDef] && a.asInstanceOf[AttributeDef].aType.isInstanceOf[ArrayBufTypeDef] && (a.asInstanceOf[AttributeDef].aType.asInstanceOf[ArrayBufTypeDef].elemDef.isInstanceOf[MappedMsgTypeDef] || a.asInstanceOf[AttributeDef].aType.asInstanceOf[ArrayBufTypeDef].elemDef.isInstanceOf[StructTypeDef]))).map(a => (a.Name, a.asInstanceOf[AttributeDef].aType.asInstanceOf[ArrayBufTypeDef].elemDef.FullName))
+        childs ++= memberDefs.filter(a => (a.isInstanceOf[AttributeDef] && a.asInstanceOf[AttributeDef].aType.isInstanceOf[ArrayTypeDef] && (a.asInstanceOf[AttributeDef].aType.asInstanceOf[ArrayTypeDef].elemDef.isInstanceOf[MappedMsgTypeDef] || a.asInstanceOf[AttributeDef].aType.asInstanceOf[ArrayTypeDef].elemDef.isInstanceOf[StructTypeDef]))).map(a => (a.Name, a.asInstanceOf[AttributeDef].aType.asInstanceOf[ArrayTypeDef].elemDef.FullName))
       }
     } else {
       // Nothing to do at this moment
@@ -475,6 +475,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
   private[this] var initializedFactOfMdlInstFactObjs = false
   private[this] val reent_lock = new ReentrantReadWriteLock(true);
   private[this] val updMetadataExecutor = Executors.newFixedThreadPool(1)
+  private[this] var previousProcessedTxn: Long = -1 // Just having snapshot in case if multiple threads are updating metadta (MetadataImpl) in same JVM
   private[this] var updatedClusterConfig: Map[String,Any] = null
   private[this] var masterDag: Dag = new Dag("0")
   private[this] var nodeIdModlsObj = scala.collection.mutable.Map[Long, MdlInfo]()
@@ -917,7 +918,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
       return
     }
 
-    if (zkTransaction.transactionId.getOrElse("0").toLong <= MetadataAPIImpl.getCurrentTranLevel) return
+    if (zkTransaction.transactionId.getOrElse("0").toLong <= previousProcessedTxn) return
 
     updMetadataExecutor.execute(new MetadataUpdate(zkTransaction))
   }
@@ -960,6 +961,8 @@ object KamanjaMetadata extends MdBaseResolveInfo {
       }
 
       MetadataAPIImpl.UpdateMdMgr(zkTransaction)
+      val zkTxnId = zkTransaction.transactionId.getOrElse("0").toLong
+      previousProcessedTxn = if (zkTxnId != 0) zkTxnId else MetadataAPIImpl.getCurrentTranLevel
 
       if (updMetadataExecutor.isShutdown)
         return

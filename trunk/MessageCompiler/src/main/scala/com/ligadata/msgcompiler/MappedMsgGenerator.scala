@@ -32,11 +32,6 @@ class MappedMsgGenerator {
             case "tarray" => {
               addArraysStr = "\tfields(\"" + field.Name + "\") = (-1, new " + field.FieldTypePhysicalName + "(0));\n "
             }
-            case "tarraybuf" => {
-              var arraybufType: ArrayBufTypeDef = null
-              arraybufType = fieldBaseType.asInstanceOf[ArrayBufTypeDef]
-              addArraysStr = "\tfields(\"" + field.Name + "\") = (-1, new " + field.FieldTypePhysicalName + "(0));\n "
-            }
             case _ => { addArraysStr = "" }
           }
           addArrays = addArrays.append(addArraysStr.toString())
@@ -140,12 +135,6 @@ class MappedMsgGenerator {
                   var arrayType: ArrayTypeDef = null
                   arrayType = fieldBaseType.asInstanceOf[ArrayTypeDef]
                   setmethodStr = setMethodForStructMapped(field)
-                }
-                case "tarraybuf" => {
-                  var arraybufType: ArrayBufTypeDef = null
-                  arraybufType = fieldBaseType.asInstanceOf[ArrayBufTypeDef]
-                  setmethodStr = setMethodForStructMapped(field)
-
                 }
                 case "tstruct" => {
                   var ctrDef: ContainerDef = mdMgr.Container(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
@@ -285,49 +274,6 @@ class MappedMsgGenerator {
     return returnStr
 
   }
-  /*
-   * Get method of Array Buffer types for Mapped messages
-   */
-
-  private def getMethodArrayBufMapped(field: Element): String = {
-    val fieldBaseType: BaseTypeDef = field.FldMetaataType
-    var arrayBufType: ArrayBufTypeDef = null
-    arrayBufType = fieldBaseType.asInstanceOf[ArrayBufTypeDef]
-    var returnStr: String = ""
-    if (arrayBufType.elemDef.tTypeType.toString().equalsIgnoreCase("tscalar")) {
-      val fname = arrayBufType.elemDef.implementationName + ".Input"
-
-      returnStr = """    
-    def get""" + field.Name.capitalize + """: """ + field.FieldTypePhysicalName + """ = {
-      var ret: """ + field.FieldTypePhysicalName + """ =  new """ + field.FieldTypePhysicalName + """
-      if (fields.contains("""" + field.Name + """")) {
-        val arr = fields.getOrElse("""" + field.Name + """", null)._2.asInstanceOf[""" + field.FieldTypePhysicalName + """]
-        if (arr != null) {
-          val arrFld = arr.toArray
-          arrFld.map(v => { ret :+=""" + fname + """(v.toString) }).toArray
-        }
-      }
-      return ret
-    }     
-    """
-    } else if (arrayBufType.elemDef.tTypeType.toString().equalsIgnoreCase("tcontainer")) {
-      val fname = arrayBufType.elemDef.PhysicalName
-      returnStr = """    
-  def get""" + field.Name.capitalize + """: """ + field.FieldTypePhysicalName + """ = {
-    var ret: """ + field.FieldTypePhysicalName + """ =  new """ + field.FieldTypePhysicalName + """
-    if (fields.contains("""" + field.Name + """")) {
-      val arr = fields.getOrElse("""" + field.Name + """", null)._2.asInstanceOf[""" + field.FieldTypePhysicalName + """]
-      if (arr != null) {
-        val arrFld = arr.toArray
-        arrFld.map(v => { ret :+= v.asInstanceOf[""" + fname + """]}).toArray
-      }
-    }
-    return ret
-  }     
-    """
-    }
-    return returnStr
-  }
 
   /**
    * Get Method for the message/container type
@@ -405,9 +351,6 @@ class MappedMsgGenerator {
                 case "tarray" => {
                   getmethodStr = getMethodArrayMapped(field)
                 }
-                case "tarraybuf" => {
-                  getmethodStr = getMethodArrayBufMapped(field)
-                }
                 case "tstruct" => {
                   getmethodStr = getMethodForStructType(field, mdMgr)
                 }
@@ -426,7 +369,6 @@ class MappedMsgGenerator {
 
                   maptypeDef = fieldBaseType.asInstanceOf[MapTypeDef]
                   log.info("field ElemType : " + maptypeDef.typeString)
-                  log.info("field ElemType : " + maptypeDef.keyDef.implementationName)
                   log.info("field ElemType : " + maptypeDef.valDef.typeString)
                   log.info("field ElemType : " + maptypeDef.valDef.tType)
                   log.info("field ElemType : " + maptypeDef.valDef.tTypeType)

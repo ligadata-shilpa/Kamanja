@@ -37,7 +37,7 @@ object AddModelService {
   case class Process(pmmlStr:String)
 }
 
-class AddModelService(requestContext: RequestContext, userid:Option[String], password:Option[String], cert:Option[String], modelCompileInfo: Option[String]) extends Actor {
+class AddModelService(requestContext: RequestContext, userid:Option[String], password:Option[String], cert:Option[String], modelCompileInfo: Option[String],tenantId: Option[String]) extends Actor {
 
   import AddModelService._
   
@@ -52,12 +52,11 @@ class AddModelService(requestContext: RequestContext, userid:Option[String], pas
 
   def receive = {
     case Process(pmmlStr) =>
-      val tenantId: String = "" // FIXME: DAN FIX THIS TenantID
-      process(pmmlStr, tenantId)
+      process(pmmlStr)
       context.stop(self)
   }
   
-  def process(pmmlStr:String, tenantId: String) = {
+  def process(pmmlStr:String) = {
     logger.debug("Requesting AddModel: " + pmmlStr.substring(0,500))
 
     var nameVal = APIService.extractNameFromPMML(pmmlStr) 
@@ -83,8 +82,6 @@ class AddModelService(requestContext: RequestContext, userid:Option[String], pas
         if (compileConfigTokens.size < 3  ||
             compileConfigTokens.size > 4)
           requestContext.complete(new ApiResult(ErrorCodeConstants.Failure, APIName, null, "Error: Invalid compile config paramters specified for PMML, Needs at least ModelName, ModelVersion, MessageConsumed.").toString)
-
-        val tenantId: String = "" // FIXME: DAN FIX THIS TenantID
 
         if (compileConfigTokens.size == 3) {
           val apiResult = MetadataAPIImpl.AddModel(ModelType.PMML, pmmlStr, userid, tenantId, Some(compileConfigTokens(0)), Some(compileConfigTokens(1)), Some(compileConfigTokens(2)))

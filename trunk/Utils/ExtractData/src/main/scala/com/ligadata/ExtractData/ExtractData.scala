@@ -390,7 +390,7 @@ object ExtractData extends MdBaseResolveInfo {
         sys.exit(1)
       }
 
-      val dataStore = cluster.cfgMap.getOrElse("DataStore", null)
+      val dataStore = cluster.cfgMap.getOrElse("SystemCatalog", null)
       if (dataStore == null) {
         LOG.error("DataStore not found for Node %d  & ClusterId : %s".format(nodeId, nodeInfo.ClusterId))
         sys.exit(1)

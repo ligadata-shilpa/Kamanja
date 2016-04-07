@@ -153,7 +153,7 @@ public class SubscriberUsageAlert extends ModelInstance {
 			public SubscriberUsageAlertFactory(ModelDef modelDef, NodeContext nodeContext) {
 				super(modelDef, nodeContext);
 			}
-			public boolean isValidMessage(MessageContainerBase msg) {
+			public boolean isValidMessage(ContainerInterface msg) {
 				return (msg instanceof SubscriberUsage);
 			}
 

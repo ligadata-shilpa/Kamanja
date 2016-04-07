@@ -17,3 +17,5 @@ version := "1.0"
 coverageMinimum := 80
 
 coverageFailOnMinimum := false
+
+libraryDependencies += "org.scalamock" %% "scalamock-scalatest-support" % "3.2.2" % "test"
