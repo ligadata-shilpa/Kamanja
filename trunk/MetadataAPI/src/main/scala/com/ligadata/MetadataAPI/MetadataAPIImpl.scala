@@ -180,6 +180,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
   /**
     *  getHealthCheckNodesOnly - will return node info from the health-check information for the nodeId specified.
+    *
     *  @param nodeId a cluster node: String - if no parameter specified, return health-check for all nodes
     *  @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
     *               method. If Security and/or Audit are configured, this value must be a value other than None.
@@ -206,6 +207,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
   /**
     *  getHealthCheckComponentNames - will return partial components info from the health-check information for the nodeId specified.
+    *
     *  @param nodeId a cluster node: String - if no parameter specified, return health-check for all nodes
     *  @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
     *               method. If Security and/or Audit are configured, this value must be a value other than None.
@@ -232,6 +234,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
   /**
     *  getHealthCheckComponentDetailsByNames - will return specific components info from the health-check information for the nodeId specified.
+    *
     *  @param componentNames names of components required
     *  @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
     *               method. If Security and/or Audit are configured, this value must be a value other than None.
@@ -705,7 +708,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
     /**
      * GetObject
-     * @param bucketKeyStr
+      *
+      * @param bucketKeyStr
      * @param typeName
      */
   def GetObject(bucketKeyStr: String, typeName: String): (String, Any) = {
@@ -714,7 +718,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
     /**
      * SaveObject
-     * @param bucketKeyStr
+      *
+      * @param bucketKeyStr
      * @param value
      * @param typeName
      * @param serializerTyp
@@ -737,6 +742,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
   /**
     * Remove all of the elements with the supplied keys in the list from the supplied DataStore
+    *
     * @param keyList
     * @param typeName
     */
@@ -1174,7 +1180,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
     /**
      * GetDependantJars of some base element (e.g., model, type, message, container, etc)
-     * @param obj <description please>
+      *
+      * @param obj <description please>
      * @return <description please>
      */
   def GetDependantJars(obj: BaseElemDef): Array[String] = {
@@ -1200,7 +1207,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
     /**
      * IsDownloadNeeded
-     * @param jar <description please>
+      *
+      * @param jar <description please>
      * @param obj <description please>
      * @return <description please>
      */
@@ -2795,7 +2803,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     }
   }
 
-  private def DeserializeAndAddObject(data: Array[Byte], objectsChanged: ArrayBuffer[BaseElemDef], operations: ArrayBuffer[String], maxTranId: Long): Unit = {
+  private def DeserializeAndAddObject(k: Key, data: Array[Byte], objectsChanged: ArrayBuffer[BaseElemDef], operations: ArrayBuffer[String], maxTranId: Long): Unit = {
     val mObj= MetadataAPISerialization.deserializeMetadata(new String(data)).asInstanceOf[BaseElemDef] // serializer.DeserializeObjectFromByteArray(v.asInstanceOf[Array[Byte]]).asInstanceOf[BaseElemDef]
     if (mObj != null) {
       if (mObj.tranId <= maxTranId) {
@@ -2846,15 +2854,15 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       val processedContainersSet = Set[String]()
       var processed: Long = 0L
 
-      var typesYetToProcess = ArrayBuffer[Array[Byte]]()
-      var functionsYetToProcess = ArrayBuffer[Array[Byte]]()
+      var typesYetToProcess = ArrayBuffer[(Key, Array[Byte])]()
+      var functionsYetToProcess = ArrayBuffer[(Key, Array[Byte])]()
 
       reqTypes.foreach(typ => {
         if (typesYetToProcess.size > 0) {
-          val unHandledTypes = ArrayBuffer[Array[Byte]]()
+          val unHandledTypes = ArrayBuffer[(Key, Array[Byte])]()
           typesYetToProcess.foreach(typ => {
             try {
-              DeserializeAndAddObject(typ, objectsChanged, operations, maxTranId)
+              DeserializeAndAddObject(typ._1, typ._2, objectsChanged, operations, maxTranId)
             } catch {
               case e: Throwable => {
                 unHandledTypes += typ
@@ -2865,10 +2873,10 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
         }
 
         if (functionsYetToProcess.size > 0) {
-          val unHandledFunctions = ArrayBuffer[Array[Byte]]()
+          val unHandledFunctions = ArrayBuffer[(Key, Array[Byte])]()
           functionsYetToProcess.foreach(fun => {
             try {
-              DeserializeAndAddObject(fun, objectsChanged, operations, maxTranId)
+              DeserializeAndAddObject(fun._1, fun._2, objectsChanged, operations, maxTranId)
             } catch {
               case e: Throwable => {
                 unHandledFunctions += fun
@@ -2885,13 +2893,13 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
             {
               val data = v.asInstanceOf[Array[Byte]]
               try {
-                DeserializeAndAddObject(data, objectsChanged, operations, maxTranId)
+                DeserializeAndAddObject(k, data, objectsChanged, operations, maxTranId)
               } catch {
                 case e: Throwable => {
                   if (typ.equalsIgnoreCase("types")) {
-                    typesYetToProcess += data
+                    typesYetToProcess += ((k, data))
                   } else  if (typ.equalsIgnoreCase("functions")) {
-                    functionsYetToProcess += data
+                    functionsYetToProcess += ((k, data))
                   } else {
                     throw e
                   }
@@ -2908,12 +2916,12 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       if (typesYetToProcess.size > 0) {
         typesYetToProcess.foreach(typ => {
           try {
-            DeserializeAndAddObject(typ, objectsChanged, operations, maxTranId)
+            DeserializeAndAddObject(typ._1, typ._2, objectsChanged, operations, maxTranId)
           } catch {
             case e: Throwable => {
               if (firstException != null)
                 firstException = e
-              logger.debug("Failed to handle type", e)
+              logger.debug("Failed to handle type. Key:" + typ._1.bucketKey.mkString(","), e)
             }
           }
         })
@@ -2921,12 +2929,12 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
       functionsYetToProcess.foreach(fun => {
         try {
-          DeserializeAndAddObject(fun, objectsChanged, operations, maxTranId)
+          DeserializeAndAddObject(fun._1, fun._2, objectsChanged, operations, maxTranId)
         } catch {
           case e: Throwable => {
             if (firstException != null)
               firstException = e
-            logger.debug("Failed to handle function", e)
+            logger.debug("Failed to handle function. Key:" + fun._1.bucketKey.mkString(","), e)
           }
         }
       })
@@ -3424,7 +3432,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
   /**
      * GetFunctionDef
-     * @param nameSpace namespace of the object
+    *
+    * @param nameSpace namespace of the object
      * @param objectName name of the desired object, possibly namespace qualified
      * @param formatType format of the return value, either JSON or XML
      * @param version  Version of the object
@@ -3823,7 +3832,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
   /**
      * Remove a cluster configuration
-     * @param cfgStr
+    *
+    * @param cfgStr
      * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
      *               method. If Security and/or Audit are configured, this value must be a value other than None.
      * @param cobjects
@@ -4142,6 +4152,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
   /**
     * Read metadata api configuration properties
+    *
     * @param configFile the MetadataAPI configuration file
     */
   @throws(classOf[MissingPropertyException])
@@ -4152,7 +4163,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
     /**
      * Read the default configuration property values from json config file.
-     * @param cfgFile
+      *
+      * @param cfgFile
      */
   @throws(classOf[MissingPropertyException])
   @throws(classOf[LoadAPIConfigException])
@@ -4192,6 +4204,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     * Initialize the metadata from the bootstrap, establish zookeeper listeners, load the cached information from
     * persistent storage, set up heartbeat and authorization implementations.
     * FIXME: Is there a difference between this function and InitMdMgr?
+    *
     * @see InitMdMgr(String,Boolean)
     * @param configFile the MetadataAPI configuration file
     * @param startHB
