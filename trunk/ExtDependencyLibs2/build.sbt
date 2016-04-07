@@ -181,21 +181,6 @@ libraryDependencies += "org.mapdb" % "mapdb" % "1.0.6"
 libraryDependencies += "org.apache.commons" % "commons-dbcp2" % "2.1" // one
 
 
-//////////////////////  jtm
-libraryDependencies += "com.google.code.gson" % "gson" % "2.5"
-libraryDependencies += "org.rogach" %% "scallop" % "0.9.5"
-//libraryDependencies += "org.apache.commons" % "commons-io" % "1.3.2"        // use this instead ? "commons-io" % "commons-io" % "2.4"
-libraryDependencies += "org.skyscreamer" % "jsonassert" % "1.3.0" //% "test->default"
-libraryDependencies += "org.aicer.grok" % "grok" % "0.9.0"
-//libraryDependencies += "com.novocode" % "junit-interface" % "0.9" //% "test->default"
-//libraryDependencies += "junit" % "junit" % "4.11" % "test->default"
-
-
-//////////////////////  PmmlTestTool
-libraryDependencies += "org.jpmml" % "pmml-evaluator" % "1.2.9"
-
-
-
 //////////////////////  SmartFileAdapter
 libraryDependencies ++= {
   val sprayVersion = "1.3.3"
