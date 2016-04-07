@@ -254,7 +254,7 @@ object ModelService {
      */
     def addModelPmml(modelType: ModelType.ModelType
                     , input: String
-                    , optUserid: Option[String] = Some("kamanja"), tenantId: String = ""
+                    , optUserid: Option[String] = Some("kamanja")
                     , optModelName: Option[String] = None
                     , optVersion: Option[String] = None
                     , optMsgConsumed: Option[String] = None
@@ -532,7 +532,7 @@ object ModelService {
       * @return result string
       */
   def updateModelPmml(pmmlPath : String
-                      ,userid : Option[String], tenantId: String
+                      ,userid : Option[String]
                       ,modelNamespaceName : String
                       ,newVersion : String
                       ,tid: Option[String] = None ) : String = {

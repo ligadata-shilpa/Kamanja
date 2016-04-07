@@ -2072,8 +2072,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @param recompile a
      * @return <description please>
      */
-  private def AddContainerOrMessage(contOrMsgText: String, format: String, userid: Option[String], tenantId: String, recompile: Boolean = false): String = {
-    MessageAndContainerUtils.AddContainerOrMessage(contOrMsgText,format,userid, tenantId,recompile)
+  private def AddContainerOrMessage(contOrMsgText: String, format: String, userid: Option[String], tenantId: Option[String] = None, recompile: Boolean = false): String = {
+    MessageAndContainerUtils.AddContainerOrMessage(contOrMsgText,format,userid, tenantId, recompile)
   }
 
     /**
@@ -2096,7 +2096,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      *          }}}
      */
   override def AddMessage(messageText: String, format: String, userid: Option[String] = None, tid: Option[String] = None): String = {
-    AddContainerOrMessage(messageText, format, userid)
+    AddContainerOrMessage(messageText, format, userid, tid)
   }
 
     /**
@@ -2118,7 +2118,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     *          println("Result as Json String => \n" + result._2)
     *          }}}
     */
-  override def AddContainer(containerText: String, format: String, userid: Option[String] = None, tenantId: String = ""): String = {
+  override def AddContainer(containerText: String, format: String, userid: Option[String] = None, tenantId: Option[String] = None): String = {
     AddContainerOrMessage(containerText, format, userid, tenantId)
   }
 
@@ -2130,9 +2130,9 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      *               method. If Security and/or Audit are configured, this value must be a value other than None.
      * @return
      */
-  def AddContainer(containerText: String, userid: Option[String], tenantId: String): String = {
-    AddContainer(containerText, "JSON", userid, tenantId: String)
-  }
+ // def AddContainer(containerText: String, userid: Option[String], tenantId: Option[String] = None): String = {
+ //   AddContainer(containerText, "JSON", userid, tenantId)
+ // }
 
     /**
      * RecompileMessage
@@ -2155,8 +2155,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      *         indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
      *         ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure
      */
-  def UpdateMessage(messageText: String, format: String, userid: Option[String] = None, tid: Option[String] = None): String = {
-    MessageAndContainerUtils.UpdateMessage(messageText,format,userid)
+  override def UpdateMessage(messageText: String, format: String, userid: Option[String] = None, tid: Option[String] = None): String = {
+    MessageAndContainerUtils.UpdateMessage(messageText,format,userid, tid)
   }
 
     /**
@@ -2170,7 +2170,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      *         indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
      *         ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure
      */
-  def UpdateContainer(messageText: String, format: String, userid: Option[String] = None): String = {
+  override def UpdateContainer(messageText: String, format: String, userid: Option[String] = None, tid: Option[String] = None): String = {
     UpdateMessage(messageText, format, userid)
   }
 
@@ -2182,9 +2182,9 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      *               method. If Security and/or Audit are configured, this value must be a value other than None.
      * @return
      */
-  def UpdateContainer(messageText: String, userid: Option[String]): String = {
-    UpdateMessage(messageText, "JSON", userid)
-  }
+ // def UpdateContainer(messageText: String, userid: Option[String]): String = {
+ //   UpdateMessage(messageText, "JSON", userid)
+ // }
 
     /**
      * UpdateMessage
@@ -2194,9 +2194,9 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      *               method. If Security and/or Audit are configured, this value must be a value other than None.
      * @return
      */
-  def UpdateMessage(messageText: String, userid: Option[String]): String = {
-    UpdateMessage(messageText, "JSON", userid)
-  }
+  //def UpdateMessage(messageText: String, userid: Option[String]): String = {
+  //  UpdateMessage(messageText, "JSON", userid)
+ // }
 
     /**
      * Remove container with Container Name and Version Number
@@ -2403,7 +2403,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
                            , optMsgVersion: Option[String] = Some("-1")
 			                     , optMsgProduced: Option[String] = None
 		       ): String  = {
-    ModelUtils.AddModel(modelType,input,optUserid, tenantId,optModelName,optVersion,optMsgConsumed, optMsgVersion,optMsgProduced)
+    ModelUtils.AddModel(modelType, input, optUserid, optTenantid, optModelName, optVersion, optMsgConsumed, optMsgVersion, optMsgProduced)
   }
 
     /**
@@ -2457,7 +2457,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
                             , optVersion: Option[String] = None
                             , optVersionBeingUpdated : Option[String] = None
 			                      , optMsgProduced: Option[String] = None): String = {
-      ModelUtils.UpdateModel(modelType,input,optUserid,optModelName,optVersion,optVersionBeingUpdated,optMsgProduced)
+      ModelUtils.UpdateModel(modelType, input, optUserid, tenantid, optModelName, optVersion, optVersionBeingUpdated, optMsgProduced)
     }
 
     /**

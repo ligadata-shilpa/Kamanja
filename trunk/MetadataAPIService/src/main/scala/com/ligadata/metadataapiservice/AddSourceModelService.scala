@@ -38,7 +38,7 @@ object AddSourceModelService {
   case class ProcessScala(sourceCode:String)
 }
 
-class AddSourceModelService(requestContext: RequestContext, userid:Option[String], password:Option[String], cert:Option[String], modelname: Option[String]) extends Actor {
+class AddSourceModelService(requestContext: RequestContext, userid:Option[String], password:Option[String], cert:Option[String], modelname: Option[String], tenantId: Option[String]) extends Actor {
 
   import AddSourceModelService._
 
@@ -53,19 +53,17 @@ class AddSourceModelService(requestContext: RequestContext, userid:Option[String
 
   def receive = {
     case ProcessJava(sourceCode) =>{
-      val tenantId: String = "" // FIXME: DAN FIX THIS TenantID
-      processJava(sourceCode, tenantId)
+      processJava(sourceCode)
       context.stop(self)
     }
     case ProcessScala(sourceCode) =>{
-      val tenantId: String = "" // FIXME: DAN FIX THIS TenantID
-      processScala(sourceCode, tenantId)
+      processScala(sourceCode)
       context.stop(self)
     }
 
   }
 
-  def processJava(sourceCode:String, tenantId: String) = {
+  def processJava(sourceCode:String) = {
     logger.debug("Requesting AddSourceModel JAVA.")
     val usersModelName=userid.getOrElse("")+"."+modelname.getOrElse("")
     logger.debug("user model name is: "+usersModelName)
@@ -81,7 +79,7 @@ class AddSourceModelService(requestContext: RequestContext, userid:Option[String
     }
   }
 
-  def processScala(sourceCode:String, tenantId: String) = {
+  def processScala(sourceCode:String) = {
 
     logger.debug("Requesting AddSourceModel SCALA.")
     /*var modelName=""

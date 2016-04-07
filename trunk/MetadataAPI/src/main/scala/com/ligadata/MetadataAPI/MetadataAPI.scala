@@ -445,7 +445,7 @@ trait MetadataAPI {
     * println("Result as Json String => \n" + result._2)
     * }}}
     */
-  def AddContainer(containerText:String, formatType:String, userid: Option[String] = None, tenantId: String = ""): String
+  def AddContainer(containerText:String, formatType:String, userid: Option[String] = None, tenantId: Option[String] = None): String
 
   /** Update container given containerText
     *
@@ -457,7 +457,7 @@ trait MetadataAPI {
     * indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
     * ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure
     */
-  def UpdateContainer(containerText:String, formatType:String, userid: Option[String] = None): String
+  def UpdateContainer(containerText:String, formatType:String, userid: Option[String] = None, tenantid: Option[String] = None): String
 
   /** Remove container with ContainerName and Vesion Number
     *

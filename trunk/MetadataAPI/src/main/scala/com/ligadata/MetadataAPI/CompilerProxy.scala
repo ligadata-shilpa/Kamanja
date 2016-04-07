@@ -154,6 +154,7 @@ class CompilerProxy {
         modDef.uniqueId = MetadataAPIImpl.GetUniqueId
         modDef.mdElementId = if (existingModel == None) MetadataAPIImpl.GetMdElementId else existingModel.get.MdElementId
         modDef.ownerId = ownerId
+        modDef.tenantId = tenantId
 
         var pmmlScalaFile = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("JAR_TARGET_DIR") + "/" + modDef.name + ".scala"
         var classPath = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("CLASSPATH").trim
@@ -221,7 +222,7 @@ class CompilerProxy {
     * @param jsonStr the specification
       * @return tuple (scala source produced from compilation, model definition produced for the source code)
       */
-    def compileJTM(jsonStr: String, recompile: Boolean = false): (String, ModelDef) = {
+    def compileJTM(jsonStr: String, tenantId: String, recompile: Boolean = false): (String, ModelDef) = {
         try {
 
             val model_exec_log : String = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("MODEL_EXEC_LOG")
@@ -238,8 +239,7 @@ class CompilerProxy {
               */
             val compiler = CompilerBuilder.create().
 //              setSuppressTimestamps().
-              setInputFile(jsonStr).
-              build()
+              setInputFile(jsonStr).build()
 
             val jtmScalaSrc = compiler.Execute()
             val modelDef = compiler.MakeModelDef
@@ -273,7 +273,7 @@ class CompilerProxy {
                     MetadataAPIImpl.GetMetadataAPIConfig.getProperty("JAR_PATHS").split(","))
                 val skipJar : Boolean = false
 
-                var (jarFile, depJars) = compiler.createJar(jtmScalaSrc
+                val (jarFile, depJars) = compiler.createJar(jtmScalaSrc
                     ,classPath
                     ,jtmScalaPath
                     ,MetadataAPIImpl.GetMetadataAPIConfig.getProperty("JAR_TARGET_DIR")

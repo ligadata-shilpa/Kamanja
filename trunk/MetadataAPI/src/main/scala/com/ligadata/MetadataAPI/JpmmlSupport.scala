@@ -62,7 +62,8 @@ class JpmmlSupport(mgr: MdMgr
                    , val msgName: String
                    , val msgVersion: String
                    , val pmmlText: String
-                   , val ownerId: String) extends LogTrait {
+                   , val ownerId: String
+                   , val tenantId: String) extends LogTrait {
 
   /** Answer a ModelDef based upon the arguments supplied to the class constructor.
     *
@@ -71,7 +72,6 @@ class JpmmlSupport(mgr: MdMgr
     * @return a ModelDef
     */
   def CreateModel(recompile: Boolean = false): ModelDef = {
-    val tenantId: String = "" // FIXME: DAN FIX THIS TenantID
     val reasonable: Boolean = (
       mgr != null &&
         modelNamespace != null && modelNamespace.nonEmpty &&

@@ -424,13 +424,16 @@ object ModelUtils {
   def AddModel(modelType: ModelType.ModelType
                , input: String
                , optUserid: Option[String] = None
-               , tenantId: String = ""
+               , tenantId: Option[String] = None
                , optModelName: Option[String] = None
                , optVersion: Option[String] = None
                , optMsgConsumed: Option[String] = None
                , optMsgVersion: Option[String] = Some("-1")
                , optMsgProduced: Option[String] = None
               ): String = {
+
+    // No Add Model is allowed without Tenant Id
+    if (tenantId == None) throw new KamanjaException("Tenant Id rquired to Add Model", null)
 
     if (optMsgProduced != None) {
       logger.info("Validating the output message type " + optMsgProduced.get.toLowerCase);
@@ -448,14 +451,14 @@ object ModelUtils {
 
     val modelResult: String = modelType match {
       case ModelType.KPMML => {
-        AddKPMMLModel(input, optUserid, tenantId, optMsgProduced)
+        AddKPMMLModel(input, optUserid, tenantId.get, optMsgProduced)
       }
       case ModelType.JTM => {
-        AddJTMModel(input, optUserid)
+        AddJTMModel(input, optUserid, tenantId.get)
       }
       case ModelType.JAVA | ModelType.SCALA => {
         val result: String = optModelName.fold(throw new RuntimeException("Model name should be provided for Java/Scala models"))(name => {
-          AddModelFromSource(input, modelType.toString, name, optUserid, tenantId, optMsgProduced)
+          AddModelFromSource(input, modelType.toString, name, optUserid, tenantId.get, optMsgProduced)
         })
         result
       }
@@ -471,6 +474,7 @@ object ModelUtils {
             , msgVer
             , input
             , optUserid
+            , tenantId.get
             , optMsgProduced)
           res
         } else {
@@ -523,6 +527,7 @@ object ModelUtils {
                            , msgVersion: String
                            , pmmlText: String
                            , userid: Option[String]
+                           , tenantId: String
                            , optMsgProduced: Option[String]
                           ): String = {
     try {
@@ -545,7 +550,8 @@ object ModelUtils {
         , msgName
         , msgVersion
         , pmmlText
-        , ownerId)
+        , ownerId
+        ,tenantId)
       val recompile: Boolean = false
       var modDef: ModelDef = jpmmlSupport.CreateModel(recompile)
 
@@ -696,11 +702,11 @@ object ModelUtils {
     *               method. If Security and/or Audit are configured, this value must be a value other than None.
     * @return json string result
     */
-  private def AddJTMModel(jsonText: String, userid: Option[String]): String = {
+  private def AddJTMModel(jsonText: String, userid: Option[String], tenantId: String): String = {
     try {
       var compProxy = new CompilerProxy
       //compProxy.setLoggerLevel(Level.TRACE)
-      var (classStr, modDef) = compProxy.compileJTM(jsonText)
+      var (classStr, modDef) = compProxy.compileJTM(jsonText, tenantId)
 
       // ModelDef may be null if there were pmml compiler errors... act accordingly.  If modelDef present,
       // make sure the version of the model is greater than any of previous models with same FullName
@@ -779,7 +785,7 @@ object ModelUtils {
         // here.
         if (isJtm && mod.objectFormat == ObjFormatType.fJSON) {
           val jtmTxt = mod.ObjectDefinition
-          val (classStrTemp, modDefTemp) = compProxy.compileJTM(jtmTxt, true)
+          val (classStrTemp, modDefTemp) = compProxy.compileJTM(jtmTxt, mod.TenantId, true)
           modDefTemp
         } else {
           if (mod.objectFormat == ObjFormatType.fXML) {
@@ -866,7 +872,8 @@ object ModelUtils {
             , msgName
             , msgVersion
             , mod.objectDefinition
-            , ownerId)
+            , ownerId
+            , mod.TenantId)
           val recompile: Boolean = true
           val model: ModelDef = jpmmlSupport.CreateModel(recompile)
           // copy outputMsgs
@@ -961,7 +968,7 @@ object ModelUtils {
   def UpdateModel(modelType: ModelType.ModelType
                   , input: String
                   , optUserid: Option[String] = None
-                  , tenantId: String = ""
+                  , tenantId: Option[String] = None
                   , optModelName: Option[String] = None
                   , optVersion: Option[String] = None
                   , optVersionBeingUpdated: Option[String] = None
@@ -978,21 +985,23 @@ object ModelUtils {
       * must be properly handled to remove the one with the version supplied.
       */
 
+    if (tenantId == None) throw new KamanjaException("TenantId must be present to perform Update Model operation", null)
+
     val modelResult: String = modelType match {
       case ModelType.KPMML => {
-        val result: String = UpdateKPMMLModel(modelType, input, optUserid, tenantId, optModelName, optVersion, optMsgProduced)
+        val result: String = UpdateKPMMLModel(modelType, input, optUserid, tenantId.get, optModelName, optVersion, optMsgProduced)
         result
       }
       case ModelType.JTM => {
-        val result: String = UpdateJTMModel(modelType, input, optUserid, tenantId, optModelName, optVersion)
+        val result: String = UpdateJTMModel(modelType, input, optUserid, tenantId.get, optModelName, optVersion)
         result
       }
       case ModelType.JAVA | ModelType.SCALA => {
-        val result: String = UpdateCustomModel(modelType, input, optUserid, tenantId, optModelName, optVersion)
+        val result: String = UpdateCustomModel(modelType, input, optUserid, tenantId.get, optModelName, optVersion)
         result
       }
       case ModelType.PMML => {
-        val result: String = UpdatePMMLModel(modelType, input, optUserid, tenantId, optModelName, optVersion, optVersionBeingUpdated, optMsgProduced)
+        val result: String = UpdatePMMLModel(modelType, input, optUserid, tenantId.get, optModelName, optVersion, optVersionBeingUpdated, optMsgProduced)
         result
       }
       case ModelType.BINARY =>
@@ -1072,7 +1081,8 @@ object ModelUtils {
           , currMsgNm
           , currMsgVer
           , input
-          , ownerId)
+          , ownerId
+          , tenantId)
 
         val modDef: ModelDef = jpmmlSupport.UpdateModel
         // copy optMsgProduced to outputMsgs
@@ -1407,7 +1417,7 @@ object ModelUtils {
     try {
       var compProxy = new CompilerProxy
       //compProxy.setLoggerLevel(Level.TRACE)
-      var (classStr, modDef) = compProxy.compileJTM(jtmText)
+      var (classStr, modDef) = compProxy.compileJTM(jtmText, tenantId)
       val optLatestVersion = if (modDef == null) None else GetLatestModel(modDef)
       val latestVersion: ModelDef = optLatestVersion.orNull
 

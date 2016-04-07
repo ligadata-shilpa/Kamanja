@@ -80,8 +80,6 @@ object StartMetadataAPI {
       return
     }
 
-    val tenantId: String = "" // FIXME: DAN FIX THIS TenantID
-
     /** FIXME: the user id should be discovered in the parse of the args array */
     val userId: Option[String] = Some("kamanja")
     try {
@@ -168,7 +166,7 @@ object StartMetadataAPI {
         response = s"Invalid command action! action=$action"
 
         /** one more try ... going the alternate route */  // do we still need this ??
-        val altResponse: String = AltRoute(args, tenantId)
+        val altResponse: String = AltRoute(args)
         if (altResponse != null) {
           //response = altResponse
           println(response)
@@ -195,7 +193,9 @@ object StartMetadataAPI {
 
   def route(action: Action.Value, input: String, param: String = "", tenantid: String, originalArgs: Array[String], userId: Option[String] ,extraCmdArgs:immutable.Map[String, String]): String = {
     var response = ""
-    var optMsgProduced:Option[String] = None	  
+    var optMsgProduced:Option[String] = None
+    var tid = if (tenantid.size > 0) Some(tenantid) else None
+
     if( outputMsgName != null ){
       logger.debug("The value of argument optMsgProduced will be " + outputMsgName)
       optMsgProduced = Some(outputMsgName)
@@ -203,8 +203,8 @@ object StartMetadataAPI {
     try {
       action match {
         //message management
-        case Action.ADDMESSAGE => response = MessageService.addMessage(input, Some(tenantid))
-        case Action.UPDATEMESSAGE => response = MessageService.updateMessage(input, Some(tenantid))
+        case Action.ADDMESSAGE => response = MessageService.addMessage(input, tid)
+        case Action.UPDATEMESSAGE => response = MessageService.updateMessage(input, tid)
         case Action.REMOVEMESSAGE => {
           if (param.length == 0)
             response = MessageService.removeMessage()
@@ -221,8 +221,8 @@ object StartMetadataAPI {
         }
 
         //model management
-        case Action.ADDMODELKPMML => response = ModelService.addModelKPmml(input, userId, optMsgProduced, Some(tenantid))
-        case Action.ADDMODELJTM => response = ModelService.addModelJTM(input, userId, Some(tenantid))
+        case Action.ADDMODELKPMML => response = ModelService.addModelKPmml(input, userId, optMsgProduced, tid)
+        case Action.ADDMODELJTM => response = ModelService.addModelJTM(input, userId, tid)
         case Action.ADDMODELPMML => {
           val modelName: Option[String] = extraCmdArgs.get(MODELNAME)
           val modelVer = extraCmdArgs.getOrElse(MODELVERSION, null)
@@ -232,26 +232,26 @@ object StartMetadataAPI {
           val optMsgVer = Option(null)
           response = ModelService.addModelPmml(ModelType.PMML
                                             , input
-                                            , userId, tenantId
+                                            , userId
                                             , modelName
                                             , optModelVer
                                             , msgName
                                             , optMsgVer
-                                            , Some(tenantid))
+                                            , tid)
         }
 
         case Action.ADDMODELSCALA => {
           if (param.length == 0)
-            response = ModelService.addModelScala(input, "", userId,optMsgProduced, Some(tenantid))
+            response = ModelService.addModelScala(input, "", userId,optMsgProduced, tid)
           else
-            response = ModelService.addModelScala(input, param, userId,optMsgProduced, Some(tenantid))
+            response = ModelService.addModelScala(input, param, userId,optMsgProduced, tid)
         }
 
         case Action.ADDMODELJAVA => {
           if (param.length == 0)
-            response = ModelService.addModelJava(input, "", userId,optMsgProduced, Some(tenantid))
+            response = ModelService.addModelJava(input, "", userId,optMsgProduced, tid)
           else
-            response = ModelService.addModelJava(input, param, userId,optMsgProduced, Some(tenantid))
+            response = ModelService.addModelJava(input, param, userId,optMsgProduced, tid)
         }
 
         case Action.REMOVEMODEL => {
@@ -275,31 +275,28 @@ object StartMetadataAPI {
           else
             ModelService.deactivateModel(param, userId)
         }
-        case Action.UPDATEMODELKPMML => response = ModelService.updateModelKPmml(input, userId, Some(tenantid))
-        case Action.UPDATEMODELJTM => response = ModelService.updateModelJTM(input, userId, Some(tenantid))
+        case Action.UPDATEMODELKPMML => response = ModelService.updateModelKPmml(input, userId, tid)
+        case Action.UPDATEMODELJTM => response = ModelService.updateModelJTM(input, userId, tid)
 
         case Action.UPDATEMODELPMML => {
           val modelName = extraCmdArgs.getOrElse(MODELNAME, "")
           val modelVer = extraCmdArgs.getOrElse(MODELVERSION, null)
           var validatedNewVersion: String = if (modelVer != null) MdMgr.FormatVersion(modelVer) else null
-          response = ModelService.updateModelPmml(input, userId, modelName, validatedNewVersion, Some(tenantid))
+          response = ModelService.updateModelPmml(input, userId, modelName, validatedNewVersion,tid)
         }
-
-        //case Action.UPDATEMODELSCALA => response = ModelService.updateModelscala(input)
-        //case Action.UPDATEMODELJAVA => response = ModelService.updateModeljava(input)
 
         case Action.UPDATEMODELSCALA => {
           if (param.length == 0)
-            response = ModelService.updateModelscala(input, "", userId, Some(tenantid))
+            response = ModelService.updateModelscala(input, "", userId, tid)
           else
-            response = ModelService.updateModelscala(input, param, userId, Some(tenantid))
+            response = ModelService.updateModelscala(input, param, userId, tid)
         }
 
         case Action.UPDATEMODELJAVA => {
           if (param.length == 0)
-            response = ModelService.updateModeljava(input, "", userId, Some(tenantid))
+            response = ModelService.updateModeljava(input, "", userId, tid)
           else
-            response = ModelService.updateModeljava(input, param, userId, Some(tenantid))
+            response = ModelService.updateModeljava(input, param, userId,tid)
         }
 
         case Action.GETALLMODELS => response = ModelService.getAllModels(userId)
@@ -312,8 +309,8 @@ object StartMetadataAPI {
 
 
         //container management
-        case Action.ADDCONTAINER => response = ContainerService.addContainer(input, Some(tenantid))
-        case Action.UPDATECONTAINER => response = ContainerService.updateContainer(input, Some(tenantid))
+        case Action.ADDCONTAINER => response = ContainerService.addContainer(input, tid)
+        case Action.UPDATECONTAINER => response = ContainerService.updateContainer(input, tid)
         case Action.GETCONTAINER => response = {
           if (param.length == 0)
             ContainerService.getContainer()
@@ -414,7 +411,7 @@ object StartMetadataAPI {
           *
           * ''Do we still need this ?'' Let's keep it for now.
           */
-        val altResponse: String = AltRoute(originalArgs, tenantId)
+        val altResponse: String = AltRoute(originalArgs)
         if (altResponse != null) {
             //response = altResponse  ... typically a parse error that is only meaningful for AltRoute processing
             println(response)
@@ -442,7 +439,8 @@ object StartMetadataAPI {
     *         complaint is returned to the caller.
     *
     */
-  def AltRoute(origArgs : Array[String], tenantId: String) : String = {
+  def AltRoute(origArgs : Array[String]) : String = {
+
 
        /** trim off the config argument and if debugging the "debug" argument as well */
        val argsSansConfig : Array[String] = if (origArgs != null && origArgs.size > 0 && origArgs(0).toLowerCase == "debug") {
@@ -492,7 +490,7 @@ object StartMetadataAPI {
 
                            ModelService.addModelPmml(ModelType.PMML
                                , pmmlPath
-                               , Some("kamanja"), tenantId
+                               , Some("kamanja")
                                , modelName
                                , optModelVer
                                , msgName
@@ -552,7 +550,7 @@ object StartMetadataAPI {
                                val modelName: String = optModelName.orNull
                                var tid: Option[String] =   if (argMap.contains("tenantid")) Some(argMap("tenantid")) else None
                                ModelService.updateModelPmml(pmmlPath
-                                   , Some("kamanja"), tenantId
+                                   , Some("kamanja")
                                    , modelName
                                    , validatedNewVersion
                                    , tid)

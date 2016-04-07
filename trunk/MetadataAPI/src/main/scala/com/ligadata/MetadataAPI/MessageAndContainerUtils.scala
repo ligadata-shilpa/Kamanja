@@ -238,14 +238,20 @@ object MessageAndContainerUtils {
     * @param recompile     a
     * @return <description please>
     */
-  def AddContainerOrMessage(contOrMsgText: String, format: String, userid: Option[String], tenantId: String, recompile: Boolean = false): String = {
+  def AddContainerOrMessage(contOrMsgText: String, format: String, userid: Option[String], tenantId: Option[String] = None, recompile: Boolean = false): String = {
     var resultStr: String = ""
+
+    if (tenantId == None) throw new KamanjaException("Unable to perform operation Add Message or Add Container without a Tenant Id",null)
+
     try {
       var compProxy = new CompilerProxy
       //compProxy.setLoggerLevel(Level.TRACE)
       val (classStrVer, cntOrMsgDef, classStrNoVer) = compProxy.compileMessageDef(contOrMsgText, recompile)
-      if (cntOrMsgDef != null)
+      if (cntOrMsgDef != null) {
         cntOrMsgDef.ownerId = if (userid == None) "kamanja" else userid.get
+        cntOrMsgDef.tenantId = tenantId.get
+      }
+
       logger.debug("Message/Container Compiler returned an object of type " + cntOrMsgDef.getClass().getName())
       cntOrMsgDef match {
         case msg: MessageDef => {
@@ -336,7 +342,7 @@ object MessageAndContainerUtils {
     }
   }
 
-  def AddContainer(containerText: String, format: String, userid: Option[String], tenantId: String): String = {
+  def AddContainer(containerText: String, format: String, userid: Option[String], tenantId: Option[String] = None): String = {
     AddContainerOrMessage(containerText, format, userid, tenantId)
   }
 
@@ -348,7 +354,7 @@ object MessageAndContainerUtils {
     *               method. If Security and/or Audit are configured, this value must be a value other than None.
     * @return
     */
-  def AddContainer(containerText: String, userid: Option[String], tenantId: String): String = {
+  def AddContainer(containerText: String, userid: Option[String], tenantId: Option[String]): String = {
     AddContainer(containerText, "JSON", userid, tenantId)
   }
 
@@ -359,7 +365,7 @@ object MessageAndContainerUtils {
     * @return
     */
   def RecompileMessage(msgFullName: String): String = {
-    val tenantId: String = "" // FIXME: DAN FIX THIS TenantID
+    var tenantId: String = ""
     var resultStr: String = ""
     try {
       var messageText: String = null
@@ -371,12 +377,14 @@ object MessageAndContainerUtils {
           val apiResult = new ApiResult(ErrorCodeConstants.Failure, "RecompileMessage", null, ErrorCodeConstants.Recompile_Message_Failed + ":" + msgFullName + " Error:No message or container named ")
           return apiResult.toString()
         } else {
+          tenantId = latestMsgDef.get.TenantId
           messageText = latestContDef.get.objectDefinition
         }
       } else {
+        tenantId = latestMsgDef.get.TenantId
         messageText = latestMsgDef.get.objectDefinition
       }
-      resultStr = AddContainerOrMessage(messageText, "JSON", None, tenantId, true)
+      resultStr = AddContainerOrMessage(messageText, "JSON", None, Some(tenantId), true)
       resultStr
 
     } catch {
@@ -404,14 +412,20 @@ object MessageAndContainerUtils {
     *         indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
     *         ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure
     */
-  def UpdateMessage(messageText: String, format: String, userid: Option[String] = None): String = {
+  def UpdateMessage(messageText: String, format: String, userid: Option[String] = None, tenantId: Option[String]): String = {
     var resultStr: String = ""
     try {
+
+      if (tenantId == None) throw new KamanjaException("Unable to complete Update Message operation, Tenant Id is required", null)
+
       var compProxy = new CompilerProxy
       //compProxy.setLoggerLevel(Level.TRACE)
       val (classStrVer, msgDef, classStrNoVer) = compProxy.compileMessageDef(messageText)
-      if (msgDef != null)
+      if (msgDef != null) {
         msgDef.ownerId = if (userid == None) "kamanja" else userid.get
+        msgDef.tenantId = tenantId.get
+      }
+
       val key = msgDef.FullNameWithVer
       msgDef match {
         case msg: MessageDef => {
@@ -513,9 +527,9 @@ object MessageAndContainerUtils {
     *         indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
     *         ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure
     */
-  def UpdateContainer(messageText: String, format: String, userid: Option[String] = None): String = {
-    UpdateMessage(messageText, format, userid)
-  }
+  //def UpdateContainer(messageText: String, format: String, userid: Option[String] = None): String = {
+  //  UpdateMessage(messageText, format, userid)
+ // }
 
   /**
     * UpdateContainer
@@ -525,9 +539,9 @@ object MessageAndContainerUtils {
     *               method. If Security and/or Audit are configured, this value must be a value other than None.
     * @return
     */
-  def UpdateContainer(messageText: String, userid: Option[String]): String = {
-    UpdateMessage(messageText, "JSON", userid)
-  }
+ // def UpdateContainer(messageText: String, userid: Option[String]): String = {
+ //   UpdateMessage(messageText, "JSON", userid)
+ // }
 
   /**
     * UpdateMessage
@@ -537,9 +551,9 @@ object MessageAndContainerUtils {
     *               method. If Security and/or Audit are configured, this value must be a value other than None.
     * @return
     */
-  def UpdateMessage(messageText: String, userid: Option[String]): String = {
-    UpdateMessage(messageText, "JSON", userid)
-  }
+ // def UpdateMessage(messageText: String, userid: Option[String]): String = {
+ //   UpdateMessage(messageText, "JSON", userid)
+ // }
 
   /**
     * Remove container with Container Name and Version Number
@@ -1411,7 +1425,7 @@ object MessageAndContainerUtils {
         ",\"Fixed\":\"false\"" +
 	"}}"
 	logger.info("The default output message string => " + msgJson)
-	val resultStr = AddContainerOrMessage(msgJson,"JSON",optUserId,modDef.TenantId, false)
+	val resultStr = AddContainerOrMessage(msgJson,"JSON",optUserId, Some(modDef.TenantId), false)
 	return msgFullName
       } 
     }catch {
