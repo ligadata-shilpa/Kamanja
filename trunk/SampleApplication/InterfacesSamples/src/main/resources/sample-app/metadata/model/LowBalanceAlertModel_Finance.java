@@ -91,7 +91,7 @@ public class LowBalanceAlertModel extends ModelInstance {
 		public LowBalanceAlertFactory(ModelDef modelDef, NodeContext nodeContext) {
 			super(modelDef, nodeContext);
 		}
-		public boolean isValidMessage(MessageContainerBase msg) {
+		public boolean isValidMessage(ContainerInterface msg) {
 			return (msg instanceof TransactionMsg);
 		}
 
