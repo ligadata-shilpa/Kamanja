@@ -60,6 +60,11 @@ object StartMetadataAPI {
   val MODELVERSION= "MODELVERSION"
   val MESSAGENAME="MESSAGENAME"
 
+  val JSONBegin="<json>"
+  val JSONEnd="</json>"
+  val JSONKey="___json___"
+  var inJsonBlk : Boolean = false
+
   var expectModelName = false
   var expectModelVer = false
   var expectMessageName = false
@@ -77,6 +82,7 @@ object StartMetadataAPI {
     /** FIXME: the user id should be discovered in the parse of the args array */
     val userId: Option[String] = Some("kamanja")
     try {
+      val jsonBuffer : StringBuilder = new StringBuilder
       var argsUntilParm = 2
 
       args.foreach(arg =>
@@ -86,13 +92,26 @@ object StartMetadataAPI {
       )
       args.foreach(arg => {
 
-        if (arg.endsWith(".json") || arg.endsWith(".xml") || arg.endsWith(".pmml") || arg.endsWith(".scala") || arg.endsWith(".java") || arg.endsWith(".jar")) {
-            location = arg
+          if (arg.endsWith(".json")
+              || arg.endsWith(".xml")
+              || arg.endsWith(".pmml")
+              || arg.endsWith(".scala")
+              || arg.endsWith(".java")
+              || arg.endsWith(".jar")) {
+              location = arg
 
-        } else if (arg.endsWith(".properties")) {
-            config = arg
+          } else if (arg.endsWith(".properties")) {
+              config = arg
 
-        } else {
+          } else if (arg.toLowerCase == JSONBegin) { /** start of json config blk */
+              inJsonBlk = true
+          } else if (arg.toLowerCase == JSONEnd) { /** end of json config blk */
+              inJsonBlk = false
+              val jsonConfig : String = jsonBuffer.toString
+              extraCmdArgs(JSONKey) = jsonConfig
+          } else if (inJsonBlk && arg.toLowerCase != JSONEnd) { /** in json config blk .., append */
+              jsonBuffer.append(arg)
+          }else {
                 if (arg.equalsIgnoreCase(WITHDEP)) {
                 expectDep = true
             }
@@ -135,8 +154,8 @@ object StartMetadataAPI {
                 if (argsUntilParm < 0) {
                   depName = arg
                 }
-                else if (arg != "debug")
-                  /** ignore the debug tag */ {
+                else if (arg != "debug" && arg != JSONBegin && arg != JSONEnd)
+                  /** ignore the debug tag and the Json inline config blk delimiters*/ {
                   /** concatenate the args together to form the action string... "add model pmml" becomes "addmodelpmmml" */
                   action += arg
                 }
@@ -372,7 +391,7 @@ object StartMetadataAPI {
         case Action.REMOVEENGINECONFIG => response = ConfigService.removeEngineConfig
 
         // adapter message bindings
-        case Action.ADDADAPTERMESSAGEBINDING => response = AdapterMessageBindingService.addAdapterMessageBinding(input, userId)
+        case Action.ADDADAPTERMESSAGEBINDING => response = AdapterMessageBindingService.addAdapterMessageBinding(extraCmdArgs.getOrElse(JSONKey,input), userId)
         case Action.UPDATEADAPTERMESSAGEBINDING => response = AdapterMessageBindingService.updateAdapterMessageBinding(input, userId)
         case Action.REMOVEADAPTERMESSAGEBINDING => response = AdapterMessageBindingService.removeAdapterMessageBinding(input, userId)
 

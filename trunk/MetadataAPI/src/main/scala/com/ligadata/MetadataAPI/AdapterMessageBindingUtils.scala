@@ -11,16 +11,55 @@ object AdapterMessageBindingUtils {
     lazy val serializer = SerializerManager.GetSerializer(serializerType)
 
 
-    val AdapterNameKey : String =  "AdapterName".toLowerCase
-    val MessageNameKey : String =  "MessageName".toLowerCase
-    val MessageNamesKey : String =  "MessageNames".toLowerCase
-    val SerializerKey : String =  "Serializer".toLowerCase
-    val OptionsKey : String =  "Options".toLowerCase
+    val AdapterNameKey : String =  "AdapterName"
+    val MessageNameKey : String =  "MessageName"
+    val MessageNamesKey : String =  "MessageNames"
+    val SerializerKey : String =  "Serializer"
+    val OptionsKey : String =  "Options"
 
     val mdMgr : MdMgr = MdMgr.GetMdMgr
 
     /**
-      * Add an AdapterMessageBinding to the metadata for the supplied values in the map.
+      * Add an AdapterMessageBinding to the metadata for the supplied values.
+      * @param adapterName the adapter's name
+      * @param messageName the namespace.name of the message
+      * @param serializerName the serializer's namespace.name to use
+      * @param options serializer options
+      * @param userId the user making this request
+      * @return a result string as to whether it succeeded or not
+      */
+    def AddAdapterMessageBinding(adapterName : String
+                                 , messageName : String
+                                 , serializerName : String
+                                 , options : scala.collection.immutable.Map[String,String]
+                                 , userId : Option[String]) : String = {
+        val (acceptableBinding, errorMsgs) : (Boolean, String) = SemanticChecks(adapterName, messageName, serializerName, options)
+        val result : String = if (acceptableBinding) {
+            /** Create an AdapterMessageBinding from the supplied map values and catalog it to mdmgr */
+            val binding: AdapterMessageBinding = mdMgr.MakeAdapterMessageBinding(adapterName
+                                                                                , messageName
+                                                                                , serializerName
+                                                                                , options)
+            mdMgr.AddAdapterMessageBinding(binding)
+
+            /** persist the binding for next session */
+            val key: String = s"$adapterName.$messageName.$serializerName"
+            val value = serializer.SerializeObjectToByteArray(binding)
+            MetadataAPIImpl.SaveObject(key.toLowerCase, value, "adapter_message_bindings", serializerType)
+
+            /** format a json string for return result */
+            val res: ApiResult = new ApiResult(0, "AddAdapterMessageBinding", "success!", "binding for $key was successfully added; ")
+            res.toString
+        } else {
+            val res: ApiResult = new ApiResult(-1, "AddAdapterMessageBinding", "failure!", s"$errorMsgs; ")
+            res.toString
+        }
+        result
+    }
+
+    /**
+      * Add AdapterMessageBinding(s) to the metadata for the supplied values in the map.  More than one may be added if
+      * multiple messages were supplied in a MessageNames array (vs. simple MessageName value),
       *
       * @param bindingMap binding values for adapter name, message name, serializer name, and optionally serializer options.
       * @param userId the user requesting this operation
@@ -31,37 +70,26 @@ object AdapterMessageBindingUtils {
         val result : String = if (bindingMap != null) {
             val adapterName: String = bindingMap.getOrElse(AdapterNameKey, "**invalid adapter name**").asInstanceOf[String].trim
             val messageName: String = bindingMap.getOrElse(MessageNameKey, "**invalid message name**").asInstanceOf[String].trim
+            val messageNames: List[String] = bindingMap.getOrElse(MessageNamesKey, List[String]()).asInstanceOf[List[String]]
             val serializerName: String = bindingMap.getOrElse(SerializerKey, "**invalid serializer name**").asInstanceOf[String].trim
-            val options: Map[String, String] = if (bindingMap.contains(OptionsKey)) {
-                bindingMap(OptionsKey).asInstanceOf[Map[String, String]]
+            val options: scala.collection.immutable.Map[String, String] = if (bindingMap.contains(OptionsKey)) {
+                bindingMap(OptionsKey).asInstanceOf[scala.collection.immutable.Map[String, String]]
             } else {
-                Map[String, String]()
+                scala.collection.immutable.Map[String, String]()
             }
 
-            val (acceptableBinding, errorMsgs) : (Boolean, String) = SemanticChecks(adapterName, messageName, serializerName, options)
-            if (acceptableBinding) {
-
-                /** Create an AdapterMessageBinding from the supplied map values and catalog it to mdmgr */
-                val binding: AdapterMessageBinding = mdMgr.MakeAdapterMessageBinding(adapterName
-                                                                                    , messageName
-                                                                                    , serializerName
-                                                                                    , options)
-                mdMgr.AddAdapterMessageBinding(binding)
-
-                /** persist the binding for next session */
-                val key: String = s"$adapterName.$messageName.$serializerName"
-                val value = serializer.SerializeObjectToByteArray(binding)
-                MetadataAPIImpl.SaveObject(key.toLowerCase, value, "adapter_message_bindings", serializerType)
-
-                /** format a json string for return result */
-                val res: ApiResult = new ApiResult(0, "AddAdapterMessageBinding", "success!", "binding for $key was successfully added.\n")
-                res.toString
+            val multipleMessages : Boolean = messageNames.length > 0
+            val rslt : String = if (multipleMessages) {
+                val results : List[String] = messageNames.map(msg => {
+                    AddAdapterMessageBinding(adapterName, msg, serializerName, options, userId)
+                })
+                results.mkString("; ")
             } else {
-                val res: ApiResult = new ApiResult(-1, "AddAdapterMessageBinding", "failure!", s"$errorMsgs\n")
-                res.toString
+                AddAdapterMessageBinding(adapterName, messageName, serializerName, options, userId)
             }
+            rslt
         } else {
-            new ApiResult(-1, "AddAdapterMessageBinding", "failed!", "json map was null.").toString
+            new ApiResult(-1, "AddAdapterMessageBinding", "failed!", "json map was null; ").toString
         }
         result
     }
@@ -83,7 +111,10 @@ object AdapterMessageBindingUtils {
       * @return (boolean, string) If true returned, arguments are acceptable.  If false, the operation will be abandoned
       *         and the returned string contains the issues found.
       */
-    private def SemanticChecks(adapterName: String, messageName: String, serializerName: String, options: Map[String,String]) : (Boolean, String) = {
+    private def SemanticChecks(adapterName: String
+                               , messageName: String
+                               , serializerName: String
+                               , options: scala.collection.immutable.Map[String,String]) : (Boolean, String) = {
         val buffer : StringBuilder = new StringBuilder
 
         /** 1) if the names start with "**" it means that the name was not supplied ... issue name error */
@@ -91,25 +122,25 @@ object AdapterMessageBindingUtils {
         val messageStartsWithAstsk : Boolean = (messageName != null && messageName.startsWith("**"))
         val serializerStartsWithAstsk : Boolean = (serializerName != null && serializerName.startsWith("**"))
         if (adapterStartsWithAstsk) {
-            buffer.append(s"the adapter name was not supplied ... $adapterName...\n")
+            buffer.append(s"the adapter name was not supplied ... $adapterName...; ")
         }
         if (messageStartsWithAstsk) {
-            buffer.append(s"the message name was not supplied ... $messageName...\n")
+            buffer.append(s"the message name was not supplied ... $messageName...; ")
         }
         if (serializerStartsWithAstsk) {
-            buffer.append(s"the serlializer name was not supplied ... $serializerName...\n")
+            buffer.append(s"the serlializer name was not supplied ... $serializerName...; ")
         }
 
         /** 2) the message and serializerName are checked for namespace.name form */
         val messageNameHasDots : Boolean = (! messageStartsWithAstsk && messageName.size > 2 && messageName.contains('.'))
         val serializerNameHasDots : Boolean = (! serializerStartsWithAstsk && serializerName.size > 2 && serializerName.contains('.'))
         if (! (messageNameHasDots && serializerNameHasDots)) {
-            buffer.append(s"$messageName and/or $serializerName do not conform to namespace.name form...\n")
+            buffer.append(s"$messageName and/or $serializerName do not conform to namespace.name form...; ")
         }
         /** 3) the adapter name should exist in MdMgr's adapters map */
         val adapterPresent : Boolean = mdMgr.GetAdapter(adapterName) != null
         if (! adapterPresent) {
-            buffer.append(s"the adapter $adapterName cannot be found in the metadata...\n")
+            buffer.append(s"the adapter $adapterName cannot be found in the metadata...; ")
         }
         if (messageNameHasDots) {
             /** 4) the message should exist in the MdMgr's message map */
@@ -117,17 +148,16 @@ object AdapterMessageBindingUtils {
             val msgName : String = messageName.split('.').last
             val adapterPresent: Boolean = mdMgr.ActiveMessage(msgNamespace, msgName) != null
             if (! adapterPresent) {
-                buffer.append(s"the message $messageName cannot be found in the metadata...\n")
+                buffer.append(s"the message $messageName cannot be found in the metadata...; ")
             }
         }
         if (serializerNameHasDots) {
             /** 5) he serializer should exist in the MdMgr's serializers map */
             val adapterPresent: Boolean = mdMgr.GetSerializer(messageName) != null
             if (! adapterPresent) {
-                buffer.append(s"the message $messageName cannot be found in the metadata...\n")
+                buffer.append(s"the message $messageName cannot be found in the metadata...; ")
             }
         }
-
 
         val ok = buffer.isEmpty
         val errorMsgs : String = buffer.toString

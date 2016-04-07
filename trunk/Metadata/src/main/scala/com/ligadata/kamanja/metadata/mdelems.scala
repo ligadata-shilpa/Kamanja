@@ -1194,7 +1194,9 @@ class SerializeDeserializeConfig(val serDeserType : SerializeDeserializeType.Ser
 class AdapterMessageBinding(  val adapterName : String
                             , val messageName : String
                             , val serializer : String
-                            , val options : Map[String,String] = Map[String,String]()) extends BaseElemDef {}
+                            , val options : scala.collection.immutable.Map[String,String]
+                                    = scala.collection.immutable.Map[String,String]())
+        extends BaseElemDef {}
 
 
 object ModelCompilationConstants {

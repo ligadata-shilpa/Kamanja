@@ -64,11 +64,18 @@ object AdapterMessageBindingService {
             throw InvalidArgumentException("the adapter string specified must be either a json map or json array.", null)
         }
         val result : String = if (isMap) {
-            val bindingSpec : Map[String,Any] = jsonStringAsColl(input).asInstanceOf[Map[String,Any]]
-            AdapterMessageBindingUtils.AddAdapterMessageBinding(bindingSpec, userId)
+            val bindingSpec : scala.collection.immutable.Map[String,Any] = jsonStringAsColl(input).asInstanceOf[scala.collection.immutable.Map[String,Any]]
+            val mutableBindingSpec : Map[String,Any] = Map[String,Any]()
+            bindingSpec.foreach(pair => mutableBindingSpec(pair._1) = pair._2)
+            AdapterMessageBindingUtils.AddAdapterMessageBinding(mutableBindingSpec, userId)
         } else {
-            val bindingSpecList : List[Map[String,Any]] = jsonStringAsColl(input).asInstanceOf[List[Map[String,Any]]]
-            AdapterMessageBindingUtils.AddAdapterMessageBinding(bindingSpecList, userId)
+            val bindingSpecList : List[scala.collection.immutable.Map[String,Any]] = jsonStringAsColl(input).asInstanceOf[List[scala.collection.immutable.Map[String,Any]]]
+            val mutableMapsList : List[Map[String,Any]] = bindingSpecList.map(aMap => {
+                val mutableBindingSpec : Map[String,Any] = Map[String,Any]()
+                aMap.foreach(pair => mutableBindingSpec(pair._1) = pair._2)
+                mutableBindingSpec
+            })
+            AdapterMessageBindingUtils.AddAdapterMessageBinding(mutableMapsList, userId)
         }
         result
     }
@@ -87,7 +94,7 @@ object AdapterMessageBindingService {
             implicit val jsonFormats: Formats = DefaultFormats
             val json = parse(configJson)
             logger.debug("Parsed the json : " + configJson)
-            json
+            json.values
         } catch {
             case e: MappingException => {
                 logger.debug("", e)

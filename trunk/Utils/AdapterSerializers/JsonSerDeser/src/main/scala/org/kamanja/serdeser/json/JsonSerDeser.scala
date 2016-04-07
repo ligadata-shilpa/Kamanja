@@ -371,7 +371,7 @@ class JSONSerDes() extends SerializeDeserialize with LogTrait {
       * @return a Json string representation
       */
     private def arrayAsJson(aContainerType : ContainerTypeDef, array : Array[Any]) : String = {
-        val memberTypes : Array[BaseTypeDef] = aContainerType.asInstanceOf[ImmutableMapTypeDef].ElementTypes
+        val memberTypes : Array[BaseTypeDef] = aContainerType.asInstanceOf[ArrayTypeDef].ElementTypes
         val itmType : BaseTypeDef = memberTypes.last
         val itemAtATime : Boolean = itmType.isInstanceOf[ContainerTypeDef]
         val arrAsJsonStr : String = if (itemAtATime) {
@@ -405,7 +405,7 @@ class JSONSerDes() extends SerializeDeserialize with LogTrait {
       * @return a Json string representation
       */
     private def arrayAsJson(aContainerType : ContainerTypeDef, array : ArrayBuffer[Any]) : String = {
-        val memberTypes : Array[BaseTypeDef] = aContainerType.asInstanceOf[ImmutableMapTypeDef].ElementTypes
+        val memberTypes : Array[BaseTypeDef] = aContainerType.asInstanceOf[ArrayBufTypeDef].ElementTypes
         val itmType : BaseTypeDef = memberTypes.last
         val itemAtATime : Boolean = itmType.isInstanceOf[ContainerTypeDef]
         val arrAsJsonStr : String = if (itemAtATime) {
