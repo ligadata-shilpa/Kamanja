@@ -2860,12 +2860,12 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       reqTypes.foreach(typ => {
         if (typesYetToProcess.size > 0) {
           val unHandledTypes = ArrayBuffer[(Key, Array[Byte])]()
-          typesYetToProcess.foreach(typ => {
+          typesYetToProcess.foreach(typ1 => {
             try {
-              DeserializeAndAddObject(typ._1, typ._2, objectsChanged, operations, maxTranId)
+              DeserializeAndAddObject(typ1._1, typ1._2, objectsChanged, operations, maxTranId)
             } catch {
               case e: Throwable => {
-                unHandledTypes += typ
+                unHandledTypes += typ1
               }
             }
           })
@@ -2889,7 +2889,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
         val storeInfo = PersistenceUtils.GetContainerNameAndDataStore(typ)
         if (processedContainersSet(storeInfo._1) == false) {
           processedContainersSet += storeInfo._1
-          storeInfo._2.get(storeInfo._1, { (k: Key, v: Any, serType: String, typ: String, ver:Int) =>
+          storeInfo._2.get(storeInfo._1, { (k: Key, v: Any, serType: String, typ2: String, ver:Int) =>
             {
               val data = v.asInstanceOf[Array[Byte]]
               try {
