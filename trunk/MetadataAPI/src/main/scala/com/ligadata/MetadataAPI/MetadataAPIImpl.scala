@@ -1278,23 +1278,25 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
         }
 
         allJars.foreach(jar => {
-          curJar = jar
-          try {
-            // download only if it doesn't already exists
-            val b = IsDownloadNeeded(jar, obj)
-            if (b == true) {
-              val key = jar
-              val mObj = GetObject(key, "jar_store")
-              val ba = mObj._2.asInstanceOf[Array[Byte]]
-              val jarName = dirPath + "/" + jar
-              PutArrayOfBytesToJar(ba, jarName)
-            } else {
-              logger.debug("The jar " + curJar + " was already downloaded... ")
-            }
-          } catch {
-            case e: Exception => {
-              logger.error("Failed to download the Jar of the object(" + obj.FullName + "." + MdMgr.Pad0s2Version(obj.Version) + "'s dep jar " + curJar + ")", e)
+          if (jar != null && jar.trim.size > 0) {
+            curJar = jar
+            try {
+              // download only if it doesn't already exists
+              val b = IsDownloadNeeded(jar, obj)
+              if (b == true) {
+                val key = jar
+                val mObj = GetObject(key, "jar_store")
+                val ba = mObj._2.asInstanceOf[Array[Byte]]
+                val jarName = dirPath + "/" + jar
+                PutArrayOfBytesToJar(ba, jarName)
+              } else {
+                logger.debug("The jar " + curJar + " was already downloaded... ")
+              }
+            } catch {
+              case e: Exception => {
+                logger.error("Failed to download the Jar of the object(" + obj.FullName + "." + MdMgr.Pad0s2Version(obj.Version) + "'s dep jar " + curJar + ")", e)
 
+              }
             }
           }
         })
@@ -2793,6 +2795,33 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     }
   }
 
+  private def DeserializeAndAddObject(data: Array[Byte], objectsChanged: ArrayBuffer[BaseElemDef], operations: ArrayBuffer[String], maxTranId: Long): Unit = {
+    val mObj= MetadataAPISerialization.deserializeMetadata(new String(data)).asInstanceOf[BaseElemDef] // serializer.DeserializeObjectFromByteArray(v.asInstanceOf[Array[Byte]]).asInstanceOf[BaseElemDef]
+    if (mObj != null) {
+      if (mObj.tranId <= maxTranId) {
+        AddObjectToCache(mObj, MdMgr.GetMdMgr)
+        DownloadJarFromDB(mObj)
+      } else {
+        if (mObj.isInstanceOf[FunctionDef]) {
+          // BUGBUG:: Not notifying functions at this moment. This may cause inconsistance between different instances of the metadata.
+        } else {
+          logger.debug("The transaction id of the object => " + mObj.tranId)
+          AddObjectToCache(mObj, MdMgr.GetMdMgr)
+          DownloadJarFromDB(mObj)
+          logger.error("Transaction is incomplete with the object " + k.bucketKey.mkString(",") + ",we may not have notified engine, attempt to do it now...")
+          objectsChanged += mObj
+          if (mObj.IsActive) {
+            operations += "Add"
+          } else {
+            operations += "Remove"
+          }
+        }
+      }
+    } else {
+      throw InternalErrorException("serializer.Deserialize returned a null object", null)
+    }
+  }
+
     /**
      * LoadAllObjectsIntoCache
      */
@@ -2810,42 +2839,63 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       //LoadAllUserPopertiesIntoChache
       startup = true
       val maxTranId = currentTranLevel
-      var objectsChanged = new Array[BaseElemDef](0)
-      var operations = new Array[String](0)
+      var objectsChanged = ArrayBuffer[BaseElemDef]()
+      var operations = ArrayBuffer[String]()
 
       val reqTypes = Array("types", "functions", "messages", "containers", "concepts", "models")
       val processedContainersSet = Set[String]()
       var processed: Long = 0L
 
+      var typesYetToProcess = ArrayBuffer[Array[Byte]]()
+      var functionsYetToProcess = ArrayBuffer[Array[Byte]]()
+
       reqTypes.foreach(typ => {
+        if (typesYetToProcess.size > 0) {
+          val unHandledTypes = ArrayBuffer[Array[Byte]]()
+          typesYetToProcess.foreach(typ => {
+            try {
+              DeserializeAndAddObject(typ, objectsChanged, operations, maxTranId)
+            } catch {
+              case e: Throwable => {
+                unHandledTypes += typ
+              }
+            }
+          })
+          typesYetToProcess = unHandledTypes
+        }
+
+        if (functionsYetToProcess.size > 0) {
+          val unHandledFunctions = ArrayBuffer[Array[Byte]]()
+          functionsYetToProcess.foreach(fun => {
+            try {
+              DeserializeAndAddObject(fun, objectsChanged, operations, maxTranId)
+            } catch {
+              case e: Throwable => {
+                unHandledFunctions += fun
+              }
+            }
+          })
+          functionsYetToProcess = unHandledFunctions
+        }
+
         val storeInfo = PersistenceUtils.GetContainerNameAndDataStore(typ)
         if (processedContainersSet(storeInfo._1) == false) {
           processedContainersSet += storeInfo._1
           storeInfo._2.get(storeInfo._1, { (k: Key, v: Any, serType: String, typ: String, ver:Int) =>
             {
-              val mObj= MetadataAPISerialization.deserializeMetadata(new String(v.asInstanceOf[Array[Byte]])).asInstanceOf[BaseElemDef] // serializer.DeserializeObjectFromByteArray(v.asInstanceOf[Array[Byte]]).asInstanceOf[BaseElemDef]
-              if (mObj != null) {
-                if (mObj.tranId <= maxTranId) {
-                  AddObjectToCache(mObj, MdMgr.GetMdMgr)
-                  DownloadJarFromDB(mObj)
-                } else {
-                  if (mObj.isInstanceOf[FunctionDef]) {
-                    // BUGBUG:: Not notifying functions at this moment. This may cause inconsistance between different instances of the metadata.
+              val data = v.asInstanceOf[Array[Byte]]
+              try {
+                DeserializeAndAddObject(data, objectsChanged, operations, maxTranId)
+              } catch {
+                case e: Throwable => {
+                  if (typ.equalsIgnoreCase("types")) {
+                    typesYetToProcess += data
+                  } else  if (typ.equalsIgnoreCase("functions")) {
+                    functionsYetToProcess += data
                   } else {
-                    logger.debug("The transaction id of the object => " + mObj.tranId)
-                    AddObjectToCache(mObj, MdMgr.GetMdMgr)
-                    DownloadJarFromDB(mObj)
-                    logger.error("Transaction is incomplete with the object " + k.bucketKey.mkString(",") + ",we may not have notified engine, attempt to do it now...")
-                    objectsChanged = objectsChanged :+ mObj
-                    if (mObj.IsActive) {
-                      operations = for (op <- objectsChanged) yield "Add"
-                    } else {
-                      operations = for (op <- objectsChanged) yield "Remove"
-                    }
+                    throw e
                   }
                 }
-              } else {
-                throw InternalErrorException("serializer.Deserialize returned a null object", null)
               }
             }
             processed += 1
@@ -2853,13 +2903,44 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
         }
       })
 
+      var firstException: Throwable = null
+
+      if (typesYetToProcess.size > 0) {
+        typesYetToProcess.foreach(typ => {
+          try {
+            DeserializeAndAddObject(typ, objectsChanged, operations, maxTranId)
+          } catch {
+            case e: Throwable => {
+              if (firstException != null)
+                firstException = e
+              logger.debug("Failed to handle type", e)
+            }
+          }
+        })
+      }
+
+      functionsYetToProcess.foreach(fun => {
+        try {
+          DeserializeAndAddObject(fun, objectsChanged, operations, maxTranId)
+        } catch {
+          case e: Throwable => {
+            if (firstException != null)
+              firstException = e
+            logger.debug("Failed to handle function", e)
+          }
+        }
+      })
+
+      if (firstException != null)
+        throw firstException
+
       if (processed == 0) {
         logger.debug("No metadata objects available in the Database")
         return
       }
 
       if (objectsChanged.length > 0) {
-        NotifyEngine(objectsChanged, operations)
+        NotifyEngine(objectsChanged.toArray, operations.toArray)
       }
       startup = false
     } catch {
