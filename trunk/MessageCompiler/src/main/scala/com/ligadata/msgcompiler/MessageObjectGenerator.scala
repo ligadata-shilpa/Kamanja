@@ -142,7 +142,7 @@ class MessageObjectGenerator {
       return (tmInfo != null && tmInfo.getTimePartitionType != TimePartitionInfo.TimePartitionType.NONE);
     }
   
-    override def getSchema: String = """ + "\"\"\"" + message.Schema + "\"\"\"" + """;  
+    override def getAvroSchema: String = """ + "\"\"\"" + message.Schema + "\"\"\"" + """;  
 """
   }
 

@@ -108,9 +108,9 @@ class MessageGenerator {
       getSetFixed = getSetFixed.append(getAttributeNamesFixed);
       getSetFixed = getSetFixed.append(getAllAttributeValuesFixed(message));
       getSetFixed = getSetFixed.append(getAttributeNameAndValueIterator);
-      getSetFixed = getSetFixed.append(getFuncByOffset(message.Elements));
+      getSetFixed = getSetFixed.append(getFuncByOffset(message.Elements, message.Name));
       getSetFixed = getSetFixed.append(setByKeyFunc(message));
-      getSetFixed = getSetFixed.append(setFuncByOffset(message.Elements));
+      getSetFixed = getSetFixed.append(setFuncByOffset(message.Elements, message.Name));
       getSetFixed = getSetFixed.append(setValueAndValueTypeByKeyFunc);
     } catch {
       case e: Exception => {
@@ -218,13 +218,14 @@ class MessageGenerator {
    */
 
   private def getAllAttributeValuesFixed(message: Message): String = {
+    val arraysize = message.Elements.size
     """
-    override def getAllAttributeValues(): java.util.HashMap[String, AttributeValue] = { // Has (name, value, type))
-      var attributeValsMap = new java.util.HashMap[String, AttributeValue];
+    override def getAllAttributeValues(): Array[AttributeValue] = { // Has ( value, attributetypeinfo))
+      var attributeVals = new Array[AttributeValue](""" + arraysize + """);
       try{
  """ + getAttributeFixed(message.Elements) + """       
       }""" + msgConstants.catchStmt + """
-      return attributeValsMap;
+      return attributeVals;
     }      
     """
   }
@@ -238,12 +239,7 @@ class MessageGenerator {
     try {
       fields.foreach(field => {
         if (field != null) {
-          getAttributeFixedStrBldr.append("%s{%s".format(msgConstants.pad3, msgConstants.newline));
-          getAttributeFixedStrBldr.append("%svar attributeVal = new AttributeValue(); %s".format(msgConstants.pad4, msgConstants.newline));
-          getAttributeFixedStrBldr.append("%sattributeVal.setValue(%s) %s".format(msgConstants.pad4, field.Name, msgConstants.newline));
-          getAttributeFixedStrBldr.append("%sattributeVal.setValueType(keyTypes(\"%s\")) %s".format(msgConstants.pad4, field.Name, msgConstants.newline));
-          getAttributeFixedStrBldr.append("%sattributeValsMap.put(\"%s\", attributeVal) %s".format(msgConstants.pad4, field.Name, msgConstants.newline));
-          getAttributeFixedStrBldr.append("%s};%s".format(msgConstants.pad3, msgConstants.newline));
+          getAttributeFixedStrBldr.append("%sattributeVals :+ new AttributeValue(\"%s\", this.%s, keyTypes(\"%s\")) %s".format(msgConstants.pad4, field.Name, field.Name, field.Name, msgConstants.newline));
         }
       })
     } catch {
@@ -260,18 +256,16 @@ class MessageGenerator {
   /*
    * Get By Ordinal Function generation
    */
-  private def getFuncByOffset(fields: List[Element]): String = {
+  private def getFuncByOffset(fields: List[Element], msgName: String): String = {
     var getFuncByOffset: String = ""
     getFuncByOffset = """
       
-    def get(index : Int) : AttributeValue = { // Return (value, type)
-      var attributeValue = new AttributeValue();
+    def get(index : Int) : Any = { // Return (value, type)
       try{
         index match {
    """ + getByOffset(fields) + """
-      	 case _ => throw new Exception("Bad index");
-    	  }
-        return attributeValue;
+      	 case _ => throw new Exception(s"$index is a bad index for message """ + msgName + """);
+    	  }       
       }""" + msgConstants.catchStmt + """
     }      
     """
@@ -286,10 +280,7 @@ class MessageGenerator {
     try {
       fields.foreach(field => {
         if (field != null) {
-          getByOffset.append("%scase %s => { %s".format(msgConstants.pad2, field.FieldOrdinal, msgConstants.newline))
-          getByOffset.append("%sattributeValue.setValue(this.%s); %s".format(msgConstants.pad3, field.Name, msgConstants.newline))
-          getByOffset.append("%sattributeValue.setValueType(keyTypes(\"%s\"));  %s".format(msgConstants.pad3, field.Name, msgConstants.newline))
-          getByOffset.append("%s } %s".format(msgConstants.pad2, msgConstants.newline))
+          getByOffset.append("%scase %s => return this.%s; %s".format(msgConstants.pad2, field.FieldOrdinal, field.Name, msgConstants.newline))
         }
       })
     } catch {
@@ -305,11 +296,12 @@ class MessageGenerator {
   /*
    * Set By Ordinal Function generation
    */
-  private def setFuncByOffset(fields: List[Element]): String = {
+  private def setFuncByOffset(fields: List[Element], msgName: String): String = {
     var getFuncByOffset: String = ""
     getFuncByOffset = """
       
     def set(index : Int, value :Any): Unit = {
+      if (value == null) throw new Exception(s"Value is null for index $index in message """ + msgName + """)
       try{
         index match {
  """ + setByOffset(fields) + """
@@ -329,7 +321,10 @@ class MessageGenerator {
     try {
       fields.foreach(field => {
         if (field != null) {
-          setByOffset.append("%scase %s => {this.%s = value.asInstanceOf[%s];} %s".format(msgConstants.pad4, field.FieldOrdinal, field.Name, field.FieldTypePhysicalName, msgConstants.newline))
+          setByOffset.append("%scase %s => { %s".format(msgConstants.pad4, field.FieldOrdinal, msgConstants.newline))
+          setByOffset.append("%sif(value.isInstanceOf[%s] %s".format(msgConstants.pad4, field.FieldTypePhysicalName, msgConstants.newline))
+          setByOffset.append("%sthis.%s = value.asInstanceOf[%s]; %s".format(msgConstants.pad4, field.Name, field.FieldTypePhysicalName, msgConstants.newline))
+          setByOffset.append("%s} %s".format(msgConstants.pad4, msgConstants.newline))
         }
       })
     } catch {
@@ -392,19 +387,12 @@ class MessageGenerator {
    */
   private def getOrElseFunc(): String = {
     """
-    override def getOrElse(key: String, defaultVal: Any): AttributeValue = { // Return (value, type)
-      var attributeValue: AttributeValue = new AttributeValue();
+    override def getOrElse(key: String, defaultVal: Any): Any = { // Return (value, type)
       try {
         val value = get(key.toLowerCase())
-        if (value == null) {
-          attributeValue.setValue(defaultVal);
-          attributeValue.setValueType("Any");
-          return attributeValue;
-          } else {
-          return value;
-         }
-        } catch {
-          case e: Exception => {
+        if (value == null) return defaultVal; else return value;
+      } catch {
+        case e: Exception => {
           log.debug("", e)
           throw e
         }
@@ -419,25 +407,18 @@ class MessageGenerator {
    */
   private def getOrElseByIndexFunc = {
     """
-    override def getOrElse(index: Int, defaultVal: Any): AttributeValue = { // Return (value,  type)
-      var attributeValue: AttributeValue = new AttributeValue();
+    override def getOrElse(index: Int, defaultVal: Any): Any = { // Return (value,  type)
       try {
         val value = get(index)
-        if (value == null) {
-          attributeValue.setValue(defaultVal);
-          attributeValue.setValueType("Any");
-          return attributeValue;
-        } else {
-          return value;
-        }
+        if (value == null) return defaultVal; else return value;
       } catch {
         case e: Exception => {
           log.debug("", e)
           throw e
         }
       }
-      return null; ;
-    }  
+      return null;
+    }
   """
   }
   /*
@@ -519,48 +500,6 @@ class MessageGenerator {
 
   }
 
-  /*
-   * Generate the schema String of the input message/container
-   */
-  private def generateSchema(message: Message): String = {
-
-    return "val schema: String = \" " + message.Schema + " \" ;"
-
-  }
-
-  /* 
- * SetByName for the mapped messages
- */
-  private def setByNameFuncForMappedMsgs(): String = {
-
-    return ""
-  }
-
-  /*
-   * SetByName for the Fixed Messages
-   */
-  private def setByNameFuncForFixedMsgs(): String = {
-
-    return ""
-  }
-
-  /*
-   * GetByName for mapped Messages
-   */
-  private def getByNameFuncForMapped(): String = {
-
-    return ""
-  }
-
-  /*
-   * GetByName merthod for Fixed Messages
-   */
-  private def getByNameFuncForFixed: String = {
-
-    return ""
-
-  }
-
   private def partitionKeys(message: Message): String = {
 
     var paritionKeysStr: String = ""
@@ -633,16 +572,16 @@ class MessageGenerator {
 
   private def getByStringhFixed(message: Message): String = {
     """
-    override def get(key: String): AttributeValue = {
+    override def get(key: String): Any = {
     try {
       // Try with reflection
-      return getWithReflection(key.toLowerCase())
+      return getByName(key.toLowerCase())
     } catch {
       case e: Exception => {
         val stackTrace = StackTrace.ThrowableTraceString(e)
         log.debug("StackTrace:" + stackTrace)
         // Call By Name
-        return getByName(key.toLowerCase())
+        return getWithReflection(key.toLowerCase())
         }
       }
     }      
@@ -654,40 +593,11 @@ class MessageGenerator {
    */
   private def getByName(message: Message): String = {
     """
-    private def getByName(key: String): AttributeValue = {
-    try {
-      if (!keyTypes.contains(key)) throw new Exception("Key does not exists");
-      var attributeValue = new AttributeValue();
-  """ + getByNameStr(message) + """
-     
-      attributeValue.setValueType(keyTypes(key.toLowerCase()));
-      return attributeValue;
-    } """ + msgConstants.catchStmt + """
-  }       
-  """
+    private def getByName(key: String): Any = {
+      if (!keyTypes.contains(key)) throw new Exception(s"Key $key does not exists in message/container hl7Fixed ");
+      return get(keyTypes(key).getIndex)
   }
-
-  /*
-   * GetByName Str - For Fixed Messages
-   */
-  private def getByNameStr(message: Message): String = {
-    if (message.Elements == null)
-      return "";
-    var keysStr = new StringBuilder(8 * 1024)
-    try {
-      message.Elements.foreach(field => {
-        if (field != null) {
-          keysStr.append("%sif (key.equals(\"%s\")) { attributeValue.setValue(this.%s); }%s".format(msgConstants.pad3, field.Name, field.Name, msgConstants.newline));
-        }
-      })
-    } catch {
-      case e: Exception => {
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        log.debug("StackTrace:" + stackTrace)
-        throw e
-      }
-    }
-    keysStr.toString()
+  """
   }
 
   /*
@@ -695,16 +605,13 @@ class MessageGenerator {
    */
   private def getWithReflection(msg: Message): String = {
     """
-    private def getWithReflection(key: String): AttributeValue = {
-      var attributeValue = new AttributeValue();
+    private def getWithReflection(key: String): Any = {
       val ru = scala.reflect.runtime.universe
       val m = ru.runtimeMirror(getClass.getClassLoader)
       val im = m.reflect(this)
       val fieldX = ru.typeOf[""" + msg.Name + """].declaration(ru.newTermName(key)).asTerm.accessed.asTerm
       val fmX = im.reflectField(fieldX)
-      attributeValue.setValue(fmX.get);
-      attributeValue.setValueType(keyTypes(key))
-      attributeValue
+      return fmX.get;      
     } 
    """
   }
@@ -739,6 +646,7 @@ class MessageGenerator {
   /*
    * SetBy KeynameFunc - Generation
    */
+
   private def setByKeyFuncStr(message: Message): String = {
     if (message.Elements == null)
       return "";
@@ -746,7 +654,8 @@ class MessageGenerator {
     try {
       message.Elements.foreach(field => {
         if (field != null) {
-          keysStr.append("%sif (key.equals(\"%s\")) { this.%s = value.asInstanceOf[%s]; }%s".format(msgConstants.pad3, field.Name, field.Name, field.FieldTypePhysicalName, msgConstants.newline));
+          keysStr.append("%s if (!keyTypes.contains(key)) throw new Exception(s\"Key $key does not exists in message %s\"%s".format(msgConstants.pad3, field.Name, field.Name, message.Name, msgConstants.newline));
+          keysStr.append("%s set(keyTypes(key).getIndex, value); %s".format(msgConstants.pad3, field.Name, field.Name, field.FieldTypePhysicalName, msgConstants.newline));
         }
       })
     } catch {
@@ -770,30 +679,11 @@ class MessageGenerator {
   """
   }
 
-  private def keyTypesStr(fields: List[Element]): String = {
-    var keysStr = new StringBuilder(8 * 1024)
-    try {
-      if (fields != null) {
-        fields.foreach(field => {
-          if (field != null) {
-            keysStr.append("\"" + field.Name + "\"-> \"" + field.FieldTypePhysicalName + "\",")
-          }
-        })
-      }
-    } catch {
-      case e: Exception => {
-        log.debug("", e)
-        throw e
-      }
-    }
-    keysStr.toString()
-  }
-
   private def keyTypesMap(fields: List[Element]): String = {
-    val keysStr = keyTypesStr(fields);
-    if (keysStr == null || keysStr.trim == "" || keysStr.length() < 2)
-      return "%sprivate var keyTypes = Map[String, String]();%s".format(msgConstants.pad2, msgConstants.newline)
-    return "%sprivate var keyTypes = Map(%s);%s".format(msgConstants.pad2, keysStr.substring(0, keysStr.length() - 1), msgConstants.newline);
+    //val keysStr = keyTypesStr(fields);
+    //if (keysStr == null || keysStr.trim == "" || keysStr.length() < 2)
+    return "%s var keyTypes = Map[String, AttributeTypeInfo]() = attributeTypes.map { a => (a.getName, a) }.toMap;%s".format(msgConstants.pad2, msgConstants.newline)
+    //return "%sprivate var keyTypes = Map(%s);%s".format(msgConstants.pad2, keysStr.substring(0, keysStr.length() - 1), msgConstants.newline);
   }
 
   /*
@@ -829,7 +719,6 @@ class MessageGenerator {
   private def getAttributeNamesFixed = {
     """
     override def getAttributeNames(): Array[String] = {
-      var attributeNames: scala.collection.mutable.ArrayBuffer[String] = scala.collection.mutable.ArrayBuffer[String]();
       try {
         if (keyTypes.isEmpty) {
           return null;
@@ -1007,7 +896,7 @@ class MessageGenerator {
   /*
    * From Func - Generate code for ArrayBuf
    */
-/*
+  /*
   private def fromFuncForArrayBufFixed(field: Element): String = {
     var fromFuncBuf = new StringBuilder(8 * 1024)
     try {
@@ -1073,4 +962,87 @@ class MessageGenerator {
     }
   }
     */
+
+  /*
+   * GetByName Str - For Fixed Messages
+   */
+  private def getByNameStr(message: Message): String = {
+    if (message.Elements == null)
+      return "";
+    var keysStr = new StringBuilder(8 * 1024)
+    try {
+      message.Elements.foreach(field => {
+        if (field != null) {
+          keysStr.append("%sif (key.equals(\"%s\")) { attributeValue.setValue(this.%s); }%s".format(msgConstants.pad3, field.Name, field.Name, msgConstants.newline));
+        }
+      })
+    } catch {
+      case e: Exception => {
+        val stackTrace = StackTrace.ThrowableTraceString(e)
+        log.debug("StackTrace:" + stackTrace)
+        throw e
+      }
+    }
+    keysStr.toString()
+  }
+  /*
+   * Generate the schema String of the input message/container
+   */
+  private def generateSchema(message: Message): String = {
+
+    return "val schema: String = \" " + message.Schema + " \" ;"
+
+  }
+
+  /* 
+ * SetByName for the mapped messages
+ */
+  private def setByNameFuncForMappedMsgs(): String = {
+
+    return ""
+  }
+
+  /*
+   * SetByName for the Fixed Messages
+   */
+  private def setByNameFuncForFixedMsgs(): String = {
+
+    return ""
+  }
+
+  /*
+   * GetByName for mapped Messages
+   */
+  private def getByNameFuncForMapped(): String = {
+
+    return ""
+  }
+
+  /*
+   * GetByName merthod for Fixed Messages
+   */
+  private def getByNameFuncForFixed: String = {
+
+    return ""
+
+  }
+  private def keyTypesStr(fields: List[Element]): String = {
+    var keysStr = new StringBuilder(8 * 1024)
+    try {
+      if (fields != null) {
+        fields.foreach(field => {
+          if (field != null) {
+            keysStr.append("\"" + field.Name + "\"-> \"" + field.FieldTypePhysicalName + "\",")
+          }
+        })
+      }
+    } catch {
+      case e: Exception => {
+        log.debug("", e)
+        throw e
+      }
+    }
+    keysStr.toString()
+  }
+
 }
