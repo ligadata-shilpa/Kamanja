@@ -44,7 +44,7 @@ object StartMetadataAPI {
   val REMOVE = "remove"
   val GET = "get"
   val ACTIVATE = "activate"
-  val OUTPUTMSG = "outputmsg"
+  val OUTPUTMSG = "outmessage"
   val DEACTIVATE = "deactivate"
   val UPDATE = "update"
   val MODELS = "models"
@@ -56,7 +56,6 @@ object StartMetadataAPI {
   var expectOutputMsg = false
   var expectRemoveParm = false
   var depName: String = ""
-  var outputMsgName: String = null
   var parmName: String = ""
   val MODELNAME = "MODELNAME"
   val MODELVERSION= "MODELVERSION"
@@ -107,6 +106,8 @@ object StartMetadataAPI {
                 expectModelVer = true
               } else if (arg.equalsIgnoreCase(MESSAGENAME)) {
                 expectMessageName = true
+              } else if ( arg.equalsIgnoreCase(OUTPUTMSG) ){
+                expectOutputMsg = true
               }
 
               else {
@@ -121,7 +122,12 @@ object StartMetadataAPI {
                   expectDep = false
                   argVar = "" // Make sure we dont add to the routing command
                 }
-                if (expectTid) {
+                else if(expectOutputMsg ){
+                  extraCmdArgs(OUTPUTMSG) = arg
+                  logger.debug("Found output message definition " + arg + " in the command ")
+                  expectOutputMsg = false
+                }
+                if (expectModelName) {
                   extraCmdArgs(MODELNAME) = arg
                   expectModelName = false
                   argVar = ""  // Make sure we dont add to the routing command
@@ -131,12 +137,11 @@ object StartMetadataAPI {
                   expectModelVer = false
                   argVar = "" // Make sure we dont add to the routing command
                 }
-                if (expectTid) {
+                if (expectMessageName) {
                   extraCmdArgs(MESSAGENAME) = arg
                   expectMessageName = false
                   argVar = ""  // Make sure we dont add to the routing command
                 }
-
 
                 action += argVar
               }
@@ -190,11 +195,12 @@ object StartMetadataAPI {
       println(s"Usage:\n  kamanja <action> <optional input> \n e.g. kamanja add message ${'$'}HOME/msg.json" )
   }
 
-
   def route(action: Action.Value, input: String, param: String = "", tenantid: String, originalArgs: Array[String], userId: Option[String] ,extraCmdArgs:immutable.Map[String, String]): String = {
     var response = ""
     var optMsgProduced:Option[String] = None
     var tid = if (tenantid.size > 0) Some(tenantid) else None
+
+    val outputMsgName = extraCmdArgs.getOrElse(OUTPUTMSG, null)
 
     if( outputMsgName != null ){
       logger.debug("The value of argument optMsgProduced will be " + outputMsgName)
