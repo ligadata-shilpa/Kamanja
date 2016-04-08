@@ -100,6 +100,7 @@ class MessageGenerator {
   private def getSetMethodsFixed(message: Message): String = {
     var getSetFixed = new StringBuilder(8 * 1024)
     try {
+      getSetFixed = getSetFixed.append(getAttributeTypes(message));
       getSetFixed = getSetFixed.append(getWithReflection(message));
       getSetFixed = getSetFixed.append(getByStringhFixed(message));
       getSetFixed = getSetFixed.append(getByName(message));
@@ -190,23 +191,41 @@ class MessageGenerator {
    * generateAttributeTypes 
    */
   private def getAttributeTypes(message: Message): String = {
-    val getAttributeTypes = genGetAttributeTypes(message)
+    val getAttributeTypes = genGetAttributeMethod(message)
     """
-      var attributeTypes = getAttributeTypes """ + getAttributeTypes
+      var attributeTypes = getAttributeTypes;
+      """ + getAttributeTypes
+
+  }
+
+  /*
+   * generate getAttributeTypes method
+   */
+
+  private def genGetAttributeMethod(message: Message): String = {
+    var arrsize = message.Elements.size
+    """
+    private def getAttributeTypes(): Array[AttributeTypeInfo] = {
+      var attributeTypes = new Array[AttributeTypeInfo](""" + arrsize + """);
+   """ + genGetAttributeTypes(message) + """
+     
+      return attributeTypes
+    } 
+    """
 
   }
 
   private def genGetAttributeTypes(message: Message): String = {
+    var getAttributeTypes = new StringBuilder(8 * 1024)
+
     if (message.Elements != null) {
       message.Elements.foreach(field => {
-  // check in primitives for second part of field
-   // check array of in primitives otherwise container
-   //     check
+         getAttributeTypes.append("%s attributeTypes :+ new AttributeTypeInfo(\"%s\", %s, AttributeTypeInfo.TypeCategory.%s, %s, %s, %s)%s".format(msgConstants.pad2, field.Name, field.FieldOrdinal, field.AttributeTypeInfo.typeCategaryName, field.AttributeTypeInfo.valTypeId, field.AttributeTypeInfo.keyTypeId, field.AttributeTypeInfo.valSchemaId, msgConstants.newline))
       })
 
     }
 
-    return null
+    return getAttributeTypes.toString()
   }
 
   /*
@@ -262,7 +281,7 @@ class MessageGenerator {
     try {
       fields.foreach(field => {
         if (field != null) {
-          getAttributeFixedStrBldr.append("%sattributeVals :+ new AttributeValue(\"%s\", this.%s, keyTypes(\"%s\")) %s".format(msgConstants.pad4, field.Name, field.Name, field.Name, msgConstants.newline));
+          getAttributeFixedStrBldr.append("%sattributeVals :+ new AttributeValue(this.%s, keyTypes(\"%s\")) %s".format(msgConstants.pad4, field.Name, field.Name, msgConstants.newline));
         }
       })
     } catch {
@@ -287,9 +306,9 @@ class MessageGenerator {
       try{
         index match {
    """ + getByOffset(fields) + """
-      	 case _ => throw new Exception(s"$index is a bad index for message """ + msgName + """);
+      	 case _ => throw new Exception(s"$index is a bad index for message """ + msgName + """");
     	  }       
-      }""" + msgConstants.catchStmt + """
+     }""" + msgConstants.catchStmt + """
     }      
     """
     return getFuncByOffset
@@ -324,11 +343,11 @@ class MessageGenerator {
     getFuncByOffset = """
       
     def set(index : Int, value :Any): Unit = {
-      if (value == null) throw new Exception(s"Value is null for index $index in message """ + msgName + """)
+      if (value == null) throw new Exception(s"Value is null for index $index in message """ + msgName + """ ")
       try{
         index match {
- """ + setByOffset(fields) + """
-        case _ => throw new Exception("Bad index");
+ """ + setByOffset(fields, msgName) + """
+        case _ => throw new Exception(s"$index is a bad index for message """ + msgName + """");
         }
     	}""" + msgConstants.catchStmt + """
     }      
@@ -339,14 +358,15 @@ class MessageGenerator {
   /*
    * Set By Ordinal Function generation
    */
-  private def setByOffset(fields: List[Element]): String = {
+  private def setByOffset(fields: List[Element], msgName: String): String = {
     var setByOffset = new StringBuilder(8 * 1024)
     try {
       fields.foreach(field => {
         if (field != null) {
           setByOffset.append("%scase %s => { %s".format(msgConstants.pad4, field.FieldOrdinal, msgConstants.newline))
-          setByOffset.append("%sif(value.isInstanceOf[%s] %s".format(msgConstants.pad4, field.FieldTypePhysicalName, msgConstants.newline))
-          setByOffset.append("%sthis.%s = value.asInstanceOf[%s]; %s".format(msgConstants.pad4, field.Name, field.FieldTypePhysicalName, msgConstants.newline))
+          setByOffset.append("%sif(value.isInstanceOf[%s]) %s".format(msgConstants.pad4, field.FieldTypePhysicalName, msgConstants.newline))
+          setByOffset.append("%s  this.%s = value.asInstanceOf[%s]; %s".format(msgConstants.pad4, field.Name, field.FieldTypePhysicalName, msgConstants.newline))
+          setByOffset.append("%s else throw new Exception(s\"Value is the not the correct type for index $index in message %s\") %s".format(msgConstants.pad4, msgName, msgConstants.newline))
           setByOffset.append("%s} %s".format(msgConstants.pad4, msgConstants.newline))
         }
       })
@@ -645,8 +665,10 @@ class MessageGenerator {
 
   private def getAttributeNameAndValueIterator = {
     """
-    override def getAttributeNameAndValueIterator(): java.util.Iterator[java.util.Map.Entry[String, AttributeValue]] = {
-      getAllAttributeValues.entrySet().iterator();
+    override def getAttributeNameAndValueIterator(): java.util.Iterator[AttributeValue] = {
+      //getAllAttributeValues.iterator.asInstanceOf[java.util.Iterator[AttributeValue]];
+    return null; // Fix - need to test to make sure the above iterator works properly
+  
     }
     """
   }
@@ -675,12 +697,9 @@ class MessageGenerator {
       return "";
     var keysStr = new StringBuilder(8 * 1024)
     try {
-      message.Elements.foreach(field => {
-        if (field != null) {
-          keysStr.append("%s if (!keyTypes.contains(key)) throw new Exception(s\"Key $key does not exists in message %s\"%s".format(msgConstants.pad3, field.Name, field.Name, message.Name, msgConstants.newline));
-          keysStr.append("%s set(keyTypes(key).getIndex, value); %s".format(msgConstants.pad3, field.Name, field.Name, field.FieldTypePhysicalName, msgConstants.newline));
-        }
-      })
+      keysStr.append("%s if (!keyTypes.contains(key)) throw new Exception(s\"Key $key does not exists in message %s\")%s".format(msgConstants.pad3, message.Name, msgConstants.newline));
+      keysStr.append("%s set(keyTypes(key).getIndex, value); %s".format(msgConstants.pad3, msgConstants.newline));
+
     } catch {
       case e: Exception => {
         val stackTrace = StackTrace.ThrowableTraceString(e)
@@ -705,7 +724,7 @@ class MessageGenerator {
   private def keyTypesMap(fields: List[Element]): String = {
     //val keysStr = keyTypesStr(fields);
     //if (keysStr == null || keysStr.trim == "" || keysStr.length() < 2)
-    return "%s var keyTypes = Map[String, AttributeTypeInfo]() = attributeTypes.map { a => (a.getName, a) }.toMap;%s".format(msgConstants.pad2, msgConstants.newline)
+    return "%s var keyTypes: Map[String, AttributeTypeInfo] = attributeTypes.map { a => (a.getName, a) }.toMap;%s".format(msgConstants.pad2, msgConstants.newline)
     //return "%sprivate var keyTypes = Map(%s);%s".format(msgConstants.pad2, keysStr.substring(0, keysStr.length() - 1), msgConstants.newline);
   }
 

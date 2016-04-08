@@ -30,7 +30,7 @@ class TimePartition(var Key: String, var Format: String, var DType: String)
 // valTypeId ==> 
 // keyTypeId ==> type id for key type if the map is of fixed types; for avro compatible maps, only string as key type is allowed
 
-class ArrtibuteInfo(var typeCategary: Int, var valTypeId: Int,	var valSchemaId: Long, var keyTypeId: String)
+class ArrtibuteInfo(var typeCategaryName: String, var valTypeId: Int, var keyTypeId: Int, var valSchemaId: Long)
     
     
 class MessageCompiler {

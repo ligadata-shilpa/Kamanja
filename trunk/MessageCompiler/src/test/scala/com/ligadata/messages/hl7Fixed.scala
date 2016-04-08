@@ -89,9 +89,9 @@ class hl7Fixed(factory: ContainerFactoryInterface) extends ContainerInterface(fa
     attributeTypes :+ new AttributeTypeInfo("clm_id", 1, AttributeTypeInfo.TypeCategory.LONG, 0, 0, 0)
     attributeTypes :+ new AttributeTypeInfo("clm_from_dt", 2, AttributeTypeInfo.TypeCategory.INT, 0, 0, 0)
     attributeTypes :+ new AttributeTypeInfo("clm_thru_dt", 3, AttributeTypeInfo.TypeCategory.INT, 0, 0, 0)
-    attributeTypes :+ new AttributeTypeInfo("bene_birth_dt", 4,AttributeTypeInfo.TypeCategory.INT, 0, 0, 0)
+    attributeTypes :+ new AttributeTypeInfo("bene_birth_dt", 4, AttributeTypeInfo.TypeCategory.INT, 0, 0, 0)
     attributeTypes :+ new AttributeTypeInfo("bene_death_dt", 5, AttributeTypeInfo.TypeCategory.INT, 0, 0, 0)
-    attributeTypes :+ new AttributeTypeInfo("bene_sex_ident_cd", 6, AttributeTypeInfo.TypeCategory.INT, 0, 0,0)
+    attributeTypes :+ new AttributeTypeInfo("bene_sex_ident_cd", 6, AttributeTypeInfo.TypeCategory.INT, 0, 0, 0)
     return attributeTypes
   }
 
@@ -145,7 +145,7 @@ class hl7Fixed(factory: ContainerFactoryInterface) extends ContainerInterface(fa
   override def get(key: String): Any = {
     try {
       // Try with reflection
-      return getByName(key.toLowerCase()) 
+      return getByName(key.toLowerCase())
     } catch {
       case e: Exception => {
         val stackTrace = StackTrace.ThrowableTraceString(e)

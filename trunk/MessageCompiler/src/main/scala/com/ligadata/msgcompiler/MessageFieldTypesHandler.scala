@@ -3,6 +3,7 @@ package com.ligadata.msgcompiler
 import org.apache.logging.log4j.{ Logger, LogManager }
 import com.ligadata.kamanja.metadata._;
 import com.ligadata.Exceptions._;
+import com.ligadata.KamanjaBase._
 
 class MessageFieldTypesHandler {
   val logger = this.getClass.getName
@@ -41,6 +42,8 @@ class MessageFieldTypesHandler {
           field.FieldTypePhysicalName = types(0).asInstanceOf[String]
           field.FieldTypeImplementationName = types(1).asInstanceOf[String]
           field.AttributeTypeInfo = types(2).asInstanceOf[ArrtibuteInfo]
+
+          log.info("field.AttributeTypeInfo ====" + field.AttributeTypeInfo.keyTypeId);
 
           //get the fields jarset for adding msg in the metadata
           jarset = jarset ++ getDependencyJarSet(field.FldMetaataType)
@@ -125,8 +128,10 @@ class MessageFieldTypesHandler {
       case "tscalar" => {
         types(0) = fieldBaseType.PhysicalName
         types(1) = fieldBaseType.implementationName
-        types(2) = new ArrtibuteInfo(1, 0, 0, fieldBaseType.implementationName.toLowerCase())
-        //  log.info("fieldBaseType.implementationName    " + fieldBaseType.implementationName)
+        log.info("fieldBaseType.implementationName====" + fieldBaseType.PhysicalName);
+        val valTypeId = getAttributeValTypeId(fieldBaseType.PhysicalName.toLowerCase());
+        val keyTypeId = getAttributeValTypeId(fieldBaseType.PhysicalName.toLowerCase());
+        types(2) = new ArrtibuteInfo(fieldBaseType.PhysicalName.toUpperCase(), valTypeId, keyTypeId, 0)
 
       }
       case "tcontainer" => {
@@ -136,8 +141,8 @@ class MessageFieldTypesHandler {
             arrayType = fieldBaseType.asInstanceOf[ArrayTypeDef]
             types(0) = arrayType.typeString
             types(1) = arrayType.elemDef.implementationName
-            types(2) = new ArrtibuteInfo(1, 0, 0, fieldBaseType.implementationName.toLowerCase())
-            
+            //  types(2) = new ArrtibuteInfo(1, 0, 0, fieldBaseType.implementationName.toLowerCase())
+
           }
           case "tstruct" => {
             var ctrDef: ContainerDef = mdMgr.Container(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
@@ -168,7 +173,31 @@ class MessageFieldTypesHandler {
   }
 
   /*
-   * Get the arguments list of all fields for the message
+   * get the AttributeValTypeId
    */
+  private def getAttributeValTypeId(implName: String): Int = {
+    implName match {
+      case "string"    => return AttributeTypeInfo.TypeCategory.STRING.getValue;
+      case "int"       => return AttributeTypeInfo.TypeCategory.INT.getValue;
+      case "float"     => return AttributeTypeInfo.TypeCategory.FLOAT.getValue;
+      case "double"    => return AttributeTypeInfo.TypeCategory.DOUBLE.getValue;
+      case "long"      => return AttributeTypeInfo.TypeCategory.LONG.getValue;
+      case "byte"      => return AttributeTypeInfo.TypeCategory.BYTE.getValue;
+      case "char"      => return AttributeTypeInfo.TypeCategory.CHAR.getValue;
+      case "container" => return AttributeTypeInfo.TypeCategory.CONTAINER.getValue;
+      case "map"       => return AttributeTypeInfo.TypeCategory.MAP.getValue;
+      case "array"     => return AttributeTypeInfo.TypeCategory.ARRAY.getValue;
+
+    }
+
+    return -1
+  }
+
+  /*
+   * get the AttributeKeyTypeId
+   */
+  private def getAttributeKeyTypeId(implName: String): Int = {
+    return 0
+  }
 
 }

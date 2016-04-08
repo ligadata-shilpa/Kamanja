@@ -9,7 +9,7 @@ public class AttributeTypeInfo {
 	byte keyTypeId;
 	long valSchemaId;
 
-	public AttributeTypeInfo(String name, int Index,  TypeCategory typeCategory,
+	public AttributeTypeInfo(String name, int Index, TypeCategory typeCategory,
 			byte valTypeId, byte keyTypeId, long valSchemaId) {
 		this.name = name;
 		this.Index = Index;
@@ -18,28 +18,24 @@ public class AttributeTypeInfo {
 		this.valSchemaId = valSchemaId;
 		this.keyTypeId = keyTypeId;
 	}
-	
+
 	public enum TypeCategory {
-		INT(0),
-		STRING(1),
-		FLOAT(2),
-		DOUBLE(3),
-		LONG(4),
-		BYTE(5),
-		CHAR(6),
-		CONTAINER(1001),
-		MAP(1002),
-		ARRAY(1003);
+		INT(0), STRING(1), FLOAT(2), DOUBLE(3), LONG(4), BYTE(5), CHAR(6), CONTAINER(
+				1001), MAP(1002), ARRAY(1003);
 		private int value;
-		private TypeCategory(int value) { this.value = value; }	
-		
+
+		private TypeCategory(int value) {
+			this.value = value;
+		}
+
+		public int getValue(){
+			return this.value;
+		}
 	}
 
 	public boolean IsContainer() {
-		  return ( typeCategory == TypeCategory.CONTAINER);
-	  }
-	
-		  
+		return (typeCategory == TypeCategory.CONTAINER);
+	}
 
 	public String getName() {
 		return name;
