@@ -60,7 +60,11 @@ object StartMetadataAPI {
   val MODELNAME = "MODELNAME"
   val MODELVERSION= "MODELVERSION"
   val MESSAGENAME="MESSAGENAME"
-  val extraCmdArgs = mutable.Map[String, String]()
+
+  val JSONBegin="<json>"
+  val JSONEnd="</json>"
+  val JSONKey="___json___"
+  var inJsonBlk : Boolean = false
 
   var expectModelName = false
   var expectModelVer = false
@@ -73,6 +77,8 @@ object StartMetadataAPI {
   var expectTid: Boolean = false
   var expectMDep: Boolean = false
 
+  val extraCmdArgs = mutable.Map[String, String]()
+
   def main(args: Array[String]) {
     if (args.length > 0 && args(0).equalsIgnoreCase("--version")) {
       KamanjaVersion.print
@@ -82,15 +88,30 @@ object StartMetadataAPI {
     /** FIXME: the user id should be discovered in the parse of the args array */
     val userId: Option[String] = Some("kamanja")
     try {
+      val jsonBuffer : StringBuilder = new StringBuilder
 
       args.foreach(arg => {
 
-        // anything with a .json .xml .pmml .scala .java. or .jar is the location paramter.
-        if (arg.endsWith(".json") || arg.endsWith(".jtm") || arg.endsWith(".xml") || arg.endsWith(".pmml") || arg.endsWith(".scala") || arg.endsWith(".java") || arg.endsWith(".jar")) {
+          if (arg.endsWith(".json")
+              || arg.endsWith(".jtm")
+              || arg.endsWith(".xml")
+              || arg.endsWith(".pmml")
+              || arg.endsWith(".scala")
+              || arg.endsWith(".java")
+              || arg.endsWith(".jar")) {
           extraCmdArgs(INPUTLOC) = arg
-        } else if (arg.endsWith(".properties")) {
-          // Looks like .properties by defaul the cofniguration file to use in metadata
-          config = arg
+
+          } else if (arg.endsWith(".properties")) {
+              config = arg
+
+          } else if (arg.toLowerCase == JSONBegin) { /** start of json config blk */
+              inJsonBlk = true
+          } else if (arg.toLowerCase == JSONEnd) { /** end of json config blk */
+              inJsonBlk = false
+              val jsonConfig : String = jsonBuffer.toString
+              extraCmdArgs(JSONKey) = jsonConfig
+          } else if (inJsonBlk && arg.toLowerCase != JSONEnd) { /** in json config blk .., append */
+              jsonBuffer.append(arg)
         } else {
             if (arg != "debug") {
               /** ignore the debug tag */
@@ -378,6 +399,11 @@ object StartMetadataAPI {
         case Action.UPLOADCOMPILECONFIG => response = ConfigService.uploadCompileConfig(input)
         case Action.DUMPALLCFGOBJECTS => response = ConfigService.dumpAllCfgObjects
         case Action.REMOVEENGINECONFIG => response = ConfigService.removeEngineConfig
+
+        // adapter message bindings
+        case Action.ADDADAPTERMESSAGEBINDING => response = AdapterMessageBindingService.addAdapterMessageBinding(extraCmdArgs.getOrElse(JSONKey,input), userId)
+        case Action.UPDATEADAPTERMESSAGEBINDING => response = AdapterMessageBindingService.updateAdapterMessageBinding(input, userId)
+        case Action.REMOVEADAPTERMESSAGEBINDING => response = AdapterMessageBindingService.removeAdapterMessageBinding(input, userId)
 
         //concept
         case Action.ADDCONCEPT => response = ConceptService.addConcept(input)

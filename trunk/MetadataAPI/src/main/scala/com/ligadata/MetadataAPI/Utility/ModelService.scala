@@ -100,7 +100,7 @@ object ModelService {
             for (modelDef <- modelDefs){
                 println("Adding the next model in the queue.")
                 if (dep.length > 0) {
-                    response+= MetadataAPIImpl.AddModel(ModelType.SCALA, modelDef, userid, Some(userid.get+"."+dep), tid ,None,None,None,optMsgProduced)
+                    response+= MetadataAPIImpl.AddModel(ModelType.SCALA, modelDef, userid, tid, Some(userid.get+"."+dep),None,None,None,optMsgProduced)
                 } else {
                     //before adding a model, add its config file.
                     var configKeys = MetadataAPIImpl.getModelConfigNames
@@ -128,7 +128,7 @@ object ModelService {
                                 errorMsg
                             }
                         }
-                        response+= MetadataAPIImpl.AddModel(ModelType.SCALA, modelDef, userid, Some(modelConfig),tid, None,None,None,optMsgProduced)
+                        response+= MetadataAPIImpl.AddModel(ModelType.SCALA, modelDef, userid,tid, Some(modelConfig), None, None, None, optMsgProduced)
                     }
                 }
             }
@@ -196,7 +196,7 @@ object ModelService {
             for (modelDef <- modelDefs){
                 println("Adding the next model in the queue.")
                 if (dep.length > 0) {
-                    response+= MetadataAPIImpl.AddModel(ModelType.JAVA, modelDef, userid, Some(userid.get+"."+dep),tid ,None,None,None,optMsgProduced)
+                    response+= MetadataAPIImpl.AddModel(ModelType.JAVA, modelDef, userid, tid, Some(userid.get+"."+dep), None,None,None,optMsgProduced)
                 } else {
                     var configKeys = MetadataAPIImpl.getModelConfigNames
                     println("--> got these many back "+configKeys.size)
@@ -224,7 +224,7 @@ object ModelService {
                                 errorMsg
                             }
                         }
-                        response+= MetadataAPIImpl.AddModel(ModelType.JAVA, modelDef, userid, Some(modelConfig),tid, None,None,None,optMsgProduced)
+                        response+= MetadataAPIImpl.AddModel(ModelType.JAVA, modelDef, userid, tid,Some(modelConfig), None,None,None,optMsgProduced)
                     }
                 }
             }

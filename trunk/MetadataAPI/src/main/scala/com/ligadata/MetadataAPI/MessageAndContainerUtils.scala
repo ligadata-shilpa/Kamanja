@@ -248,7 +248,7 @@ object MessageAndContainerUtils {
   def AddContainerOrMessage(contOrMsgText: String, format: String, userid: Option[String], tenantId: Option[String] = None, recompile: Boolean = false): String = {
     var resultStr: String = ""
 
-    if (tenantId == None) throw new KamanjaException("Unable to perform operation Add Message or Add Container without a Tenant Id",null)
+    if (tenantId == None)    return (new ApiResult(ErrorCodeConstants.Failure, "AddContainer/AddMessage", null, s"Tenant ID is required to perform an ADD CONTAINER or an ADD MESSAGE operation")).toString
 
     try {
       var compProxy = new CompilerProxy
@@ -423,7 +423,7 @@ object MessageAndContainerUtils {
     var resultStr: String = ""
     try {
 
-      if (tenantId == None) throw new KamanjaException("Unable to complete Update Message operation, Tenant Id is required", null)
+      if (tenantId == None)    return (new ApiResult(ErrorCodeConstants.Failure, "UpdateMessage/UpdateContainer", null, s"Tenant ID is required to perform an UPDATE MESSAGE or an UPDATE CONTAINER operation")).toString
 
       var compProxy = new CompilerProxy
       //compProxy.setLoggerLevel(Level.TRACE)

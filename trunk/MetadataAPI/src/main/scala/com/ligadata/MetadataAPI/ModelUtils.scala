@@ -433,7 +433,9 @@ object ModelUtils {
               ): String = {
 
     // No Add Model is allowed without Tenant Id
-    if (tenantId == None) throw new KamanjaException("Tenant Id rquired to Add Model", null)
+    if (tenantId == None) {
+      return (new ApiResult(ErrorCodeConstants.Failure, "AddModel", null, s"Tenant ID is required to perform a ADD MODEL operation")).toString
+    }
 
     if (optMsgProduced != None) {
       logger.info("Validating the output message type " + optMsgProduced.get.toLowerCase);
@@ -456,7 +458,7 @@ object ModelUtils {
       case ModelType.JTM => {
         AddJTMModel(input, optUserid, tenantId.get, optModelName)
       }
-      case ModelType.JAVA | ModelType.SCALA => {
+      case ModelType.JAVA | ModelType.SCALA => {  //ModelUtils.AddModel(modelType, input, optUserid, optTenantid, optModelName, optVersion, optMsgConsumed, optMsgVersion, optMsgProduced)
         val result: String = optModelName.fold(throw new RuntimeException("Model name should be provided for Java/Scala models"))(name => {
           AddModelFromSource(input, modelType.toString, name, optUserid, tenantId.get, optMsgProduced)
         })
@@ -1030,7 +1032,7 @@ object ModelUtils {
       * must be properly handled to remove the one with the version supplied.
       */
 
-    if (tenantId == None) throw new KamanjaException("TenantId must be present to perform Update Model operation", null)
+    if (tenantId == None) return (new ApiResult(ErrorCodeConstants.Failure, "UpdateModel", null, s"Tenant ID is required to perform a UPDATE MODEL operation")).toString
 
     val modelResult: String = modelType match {
       case ModelType.KPMML => {
