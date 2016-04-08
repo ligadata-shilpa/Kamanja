@@ -223,12 +223,12 @@ class hl7Fixed(factory: ContainerFactoryInterface) extends ContainerInterface(fa
   override def getAllAttributeValues(): Array[AttributeValue] = { // Has (name, value, type))
     var attributeVals = new Array[AttributeValue](7);
     attributeVals :+ new AttributeValue(this.desynpuf_id, keyTypes("desynpuf_id"))
-    attributeVals :+ new AttributeValue(this.desynpuf_id, keyTypes("clm_id"))
-    attributeVals :+ new AttributeValue(this.desynpuf_id, keyTypes("clm_from_dt"))
-    attributeVals :+ new AttributeValue(this.desynpuf_id, keyTypes("clm_thru_dt"))
-    attributeVals :+ new AttributeValue(this.desynpuf_id, keyTypes("bene_birth_dt"))
-    attributeVals :+ new AttributeValue(this.desynpuf_id, keyTypes("bene_death_dt"))
-    attributeVals :+ new AttributeValue(this.desynpuf_id, keyTypes("bene_sex_ident_cd"))
+    attributeVals :+ new AttributeValue(this.clm_id, keyTypes("clm_id"))
+    attributeVals :+ new AttributeValue(this.clm_from_dt, keyTypes("clm_from_dt"))
+    attributeVals :+ new AttributeValue(this.clm_thru_dt, keyTypes("clm_thru_dt"))
+    attributeVals :+ new AttributeValue(this.bene_birth_dt, keyTypes("bene_birth_dt"))
+    attributeVals :+ new AttributeValue(this.bene_death_dt, keyTypes("bene_death_dt"))
+    attributeVals :+ new AttributeValue(this.bene_sex_ident_cd, keyTypes("bene_sex_ident_cd"))
     return attributeVals;
   }
 
