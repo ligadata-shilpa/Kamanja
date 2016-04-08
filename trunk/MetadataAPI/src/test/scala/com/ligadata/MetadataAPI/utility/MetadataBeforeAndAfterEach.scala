@@ -22,14 +22,11 @@ trait MetadataBeforeAndAfterEach extends BeforeAndAfterEach { this: Suite =>
       delete(temp)
     }
     new File(location).mkdir()
-    println("Directory purged")
-
 }
   override def beforeEach() {
     val loc=getClass.getResource("/storage").getPath
     val mdMan: MetadataManager = new MetadataManager()
     val metaProp=new MetadataAPIProperties
-    print("Location: "+loc )
     cleanDir(loc)
     mdMan.initMetadataCfg(metaProp)
 

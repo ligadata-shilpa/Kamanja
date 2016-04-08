@@ -31,7 +31,6 @@ class MetadataManager {
   }
   /// Init is kept separate rather than as a part of the construction of the class in order to prevent execution of certain operations too soon.
   def initMetadataCfg(config: MetadataAPIProperties): Unit = {
-    //println(config.classPath)
     if(scalaHome != null)
       md.GetMetadataAPIConfig.setProperty("SCALA_HOME", scalaHome)
     else {

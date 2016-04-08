@@ -6,9 +6,7 @@ package com.ligadata.MetadataAPI.utility
 object MetadataDefaults {
 
   val scalaVersionFull = scala.util.Properties.versionNumberString
-  //val scalaVersionFull="2.11.7"
   val scalaVersion = scalaVersionFull.substring(0, scalaVersionFull.lastIndexOf('.'))
-  println("scala version: "+scalaVersionFull)
   def jarResourceDir = getClass.getResource("/jars/lib/system").getPath
 
   def nodeClassPath: String = ".:" + jarResourceDir + "/metadata_2.11-1.0.jar:" + jarResourceDir + "/basefunctions_2.11-0.1.0.jar:" + jarResourceDir + "/messagedef_2.11-1.0.jar:" + jarResourceDir + "/methodextractor_2.11-1.0.jar:" + jarResourceDir + "/pmmlcompiler_2.11-1.0.jar:" + jarResourceDir + "/kamanjabase_2.11-1.0.jar:" + jarResourceDir + "/bootstrap_2.11-1.0.jar:" + jarResourceDir + "/joda-time-2.9.1.jar:" + jarResourceDir + "/joda-convert-1.6.jar:" + jarResourceDir + "/basetypes_2.11-0.1.0.jar:" + jarResourceDir + "/pmmludfs_2.11-1.0.jar:" + jarResourceDir + "/pmmlruntime_2.11-1.0.jar:" + jarResourceDir + "/json4s-native_2.11-3.2.9.jar:" + jarResourceDir + "/json4s-core_2.11-3.2.9.jar:" + jarResourceDir + "/json4s-ast_2.11-3.2.9.jar:" + jarResourceDir + "/jackson-databind-2.3.1.jar:" + jarResourceDir + "/jackson-annotations-2.3.0.jar:" + jarResourceDir + "/json4s-jackson_2.11-3.2.9.jar:" + jarResourceDir + "/jackson-core-2.3.1.jar:" + jarResourceDir + "/log4j-api-2.4.1.jar:" + jarResourceDir + "/log4j-core-2.4.1.jar"

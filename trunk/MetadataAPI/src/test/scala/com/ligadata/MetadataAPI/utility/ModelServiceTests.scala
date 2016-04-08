@@ -20,7 +20,7 @@ class ModelServiceTests extends FlatSpec with Matchers with MetadataBeforeAndAft
     ConfigService.uploadCompileConfig(getClass.getResource("/Metadata/config/Model_Config_HelloWorld.json").getPath)
     ModelService.addModelScala(getClass.getResource("/Metadata/model/HelloWorld.scala").getPath,"helloworldmodel") should include regex ("\"Result Description\" : \"Model Added Successfully")
   }
-
+/*
   it should "add the scala model to the metadata based on user input" in {
    Console.setIn(new ByteArrayInputStream("1".getBytes))
      Console.setIn(new ByteArrayInputStream("1".getBytes))
@@ -179,5 +179,5 @@ class ModelServiceTests extends FlatSpec with Matchers with MetadataBeforeAndAft
   it should " invalidate a wrong directory path" in {
     assert(MessageService.IsValidDir(getClass.getResource("/Metadata/message/Message_Definition_HelloWorld.json").getPath+"Invalid")==false)
   }
-
+*/
 }
