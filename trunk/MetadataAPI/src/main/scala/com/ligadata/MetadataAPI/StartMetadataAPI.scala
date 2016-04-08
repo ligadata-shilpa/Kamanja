@@ -89,6 +89,7 @@ object StartMetadataAPI {
     /** FIXME: the user id should be discovered in the parse of the args array */
     val userId: Option[String] = Some("kamanja")
     try {
+      val jsonBuffer : StringBuilder = new StringBuilder
 
       args.foreach(arg => {
 
