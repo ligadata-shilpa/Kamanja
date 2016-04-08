@@ -25,6 +25,10 @@ import com.ligadata.MetadataAPI.Utility.Action.Value
  */
 object Action extends Enumeration {
   type Action = Value
+  // adapter message binding
+  val ADDADAPTERMESSAGEBINDING=Value("addadaptermessagebinding")
+  val UPDATEADAPTERMESSAGEBINDING=Value("updateadaptermessagebinding")
+  val REMOVEADAPTERMESSAGEBINDING=Value("removeadaptermessagebinding")
   //message manangemen
   val ADDMESSAGE=Value("addmessage")
   val UPDATEMESSAGE=Value("updatemessage")

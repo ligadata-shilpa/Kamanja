@@ -44,7 +44,7 @@ object StartMetadataAPI {
   val REMOVE = "remove"
   val GET = "get"
   val ACTIVATE = "activate"
-  val OUTPUTMSG = "outputmsg"
+  val OUTPUTMSG = "outmessage"
   val DEACTIVATE = "deactivate"
   val UPDATE = "update"
   val MODELS = "models"
@@ -56,12 +56,15 @@ object StartMetadataAPI {
   var expectOutputMsg = false
   var expectRemoveParm = false
   var depName: String = ""
-  var outputMsgName: String = null
   var parmName: String = ""
   val MODELNAME = "MODELNAME"
   val MODELVERSION= "MODELVERSION"
   val MESSAGENAME="MESSAGENAME"
-  val extraCmdArgs = mutable.Map[String, String]()
+
+  val JSONBegin="<json>"
+  val JSONEnd="</json>"
+  val JSONKey="___json___"
+  var inJsonBlk : Boolean = false
 
   var expectModelName = false
   var expectModelVer = false
@@ -74,6 +77,8 @@ object StartMetadataAPI {
   var expectTid: Boolean = false
   var expectMDep: Boolean = false
 
+  val extraCmdArgs = mutable.Map[String, String]()
+
   def main(args: Array[String]) {
     if (args.length > 0 && args(0).equalsIgnoreCase("--version")) {
       KamanjaVersion.print
@@ -83,20 +88,35 @@ object StartMetadataAPI {
     /** FIXME: the user id should be discovered in the parse of the args array */
     val userId: Option[String] = Some("kamanja")
     try {
+      val jsonBuffer : StringBuilder = new StringBuilder
 
       args.foreach(arg => {
 
-        // anything with a .json .xml .pmml .scala .java. or .jar is the location paramter.
-        if (arg.endsWith(".json") || arg.endsWith(".xml") || arg.endsWith(".pmml") || arg.endsWith(".scala") || arg.endsWith(".java") || arg.endsWith(".jar")) {
+          if (arg.endsWith(".json")
+              || arg.endsWith(".jtm")
+              || arg.endsWith(".xml")
+              || arg.endsWith(".pmml")
+              || arg.endsWith(".scala")
+              || arg.endsWith(".java")
+              || arg.endsWith(".jar")) {
           extraCmdArgs(INPUTLOC) = arg
-        } else if (arg.endsWith(".properties")) {
-          // Looks like .properties by defaul the cofniguration file to use in metadata
-          config = arg
-        } else {
+
+          } else if (arg.endsWith(".properties")) {
+              config = arg
+
+          } else if (arg.toLowerCase == JSONBegin) { /** start of json config blk */
+              inJsonBlk = true
+          } else if (arg.toLowerCase == JSONEnd) { /** end of json config blk */
+              inJsonBlk = false
+              val jsonConfig : String = jsonBuffer.toString
+              extraCmdArgs(JSONKey) = jsonConfig
+          } else if (inJsonBlk && arg.toLowerCase != JSONEnd) { /** in json config blk .., append */
+              jsonBuffer.append(arg)
+          } else {
             if (arg != "debug") {
               /** ignore the debug tag */
               if (arg.equalsIgnoreCase(TENANTID)) {
-                expectTid = true
+                  expectTid = true
                 extraCmdArgs(TENANTID) = ""
               } else if(arg.equalsIgnoreCase(WITHDEP)) {
                 expectDep = true
@@ -107,6 +127,8 @@ object StartMetadataAPI {
                 expectModelVer = true
               } else if (arg.equalsIgnoreCase(MESSAGENAME)) {
                 expectMessageName = true
+              } else if ( arg.equalsIgnoreCase(OUTPUTMSG) ){
+                expectOutputMsg = true
               }
 
               else {
@@ -116,27 +138,32 @@ object StartMetadataAPI {
                   expectTid = false
                   argVar = ""  // Make sure we dont add to the routing command
                 }
-                if (expectMDep) {
+                if (expectDep) {
                   extraCmdArgs(WITHDEP) = arg
                   expectDep = false
                   argVar = "" // Make sure we dont add to the routing command
                 }
-                if (expectTid) {
+                if (expectModelName) {
                   extraCmdArgs(MODELNAME) = arg
                   expectModelName = false
                   argVar = ""  // Make sure we dont add to the routing command
                 }
-                if (expectMDep) {
+                if (expectModelVer) {
                   extraCmdArgs(MODELVERSION) = arg
                   expectModelVer = false
                   argVar = "" // Make sure we dont add to the routing command
                 }
-                if (expectTid) {
+                if (expectMessageName) {
                   extraCmdArgs(MESSAGENAME) = arg
                   expectMessageName = false
                   argVar = ""  // Make sure we dont add to the routing command
                 }
-
+                if(expectOutputMsg ){
+                  extraCmdArgs(OUTPUTMSG) = arg
+                  logger.debug("Found output message definition " + arg + " in the command ")
+                  expectOutputMsg = false
+                  argVar = ""  // Make sure we dont add to the routing command
+                }
 
                 action += argVar
               }
@@ -190,11 +217,12 @@ object StartMetadataAPI {
       println(s"Usage:\n  kamanja <action> <optional input> \n e.g. kamanja add message ${'$'}HOME/msg.json" )
   }
 
-
   def route(action: Action.Value, input: String, param: String = "", tenantid: String, originalArgs: Array[String], userId: Option[String] ,extraCmdArgs:immutable.Map[String, String]): String = {
     var response = ""
     var optMsgProduced:Option[String] = None
     var tid = if (tenantid.size > 0) Some(tenantid) else None
+
+    val outputMsgName = extraCmdArgs.getOrElse(OUTPUTMSG, null)
 
     if( outputMsgName != null ){
       logger.debug("The value of argument optMsgProduced will be " + outputMsgName)
@@ -222,7 +250,7 @@ object StartMetadataAPI {
 
         //model management
         case Action.ADDMODELKPMML => response = ModelService.addModelKPmml(input, userId, optMsgProduced, tid)
-        case Action.ADDMODELJTM => response = ModelService.addModelJTM(input, userId, tid)
+        case Action.ADDMODELJTM => response = ModelService.addModelJTM(input, userId, tid, if (param == null || param.trim.size == 0) None else Some(param.trim))
         case Action.ADDMODELPMML => {
           val modelName: Option[String] = extraCmdArgs.get(MODELNAME)
           val modelVer = extraCmdArgs.getOrElse(MODELVERSION, null)
@@ -276,7 +304,7 @@ object StartMetadataAPI {
             ModelService.deactivateModel(param, userId)
         }
         case Action.UPDATEMODELKPMML => response = ModelService.updateModelKPmml(input, userId, tid)
-        case Action.UPDATEMODELJTM => response = ModelService.updateModelJTM(input, userId, tid)
+        case Action.UPDATEMODELJTM => response = ModelService.updateModelJTM(input, userId, tid, if (param == null || param.trim.size == 0) None else Some(param.trim))
 
         case Action.UPDATEMODELPMML => {
           val modelName = extraCmdArgs.getOrElse(MODELNAME, "")
@@ -372,6 +400,11 @@ object StartMetadataAPI {
         case Action.UPLOADCOMPILECONFIG => response = ConfigService.uploadCompileConfig(input)
         case Action.DUMPALLCFGOBJECTS => response = ConfigService.dumpAllCfgObjects
         case Action.REMOVEENGINECONFIG => response = ConfigService.removeEngineConfig
+
+        // adapter message bindings
+        case Action.ADDADAPTERMESSAGEBINDING => response = AdapterMessageBindingService.addAdapterMessageBinding(extraCmdArgs.getOrElse(JSONKey,input), userId)
+        case Action.UPDATEADAPTERMESSAGEBINDING => response = AdapterMessageBindingService.updateAdapterMessageBinding(input, userId)
+        case Action.REMOVEADAPTERMESSAGEBINDING => response = AdapterMessageBindingService.removeAdapterMessageBinding(input, userId)
 
         //concept
         case Action.ADDCONCEPT => response = ConceptService.addConcept(input)

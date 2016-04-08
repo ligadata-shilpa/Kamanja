@@ -222,7 +222,7 @@ class CompilerProxy {
     * @param jsonStr the specification
       * @return tuple (scala source produced from compilation, model definition produced for the source code)
       */
-    def compileJTM(jsonStr: String, tenantId: String, recompile: Boolean = false): (String, ModelDef) = {
+    def compileJTM(jsonStr: String, tenantId: String, extDepJars: List[String], recompile: Boolean = false): (String, ModelDef) = {
         try {
 
             val model_exec_log : String = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("MODEL_EXEC_LOG")
@@ -243,6 +243,15 @@ class CompilerProxy {
 
             val jtmScalaSrc = compiler.Execute()
             val modelDef = compiler.MakeModelDef
+
+            // Updating dependency jars if needed
+            if (extDepJars != null && extDepJars.size > 0) {
+              if (modelDef.DependencyJarNames != null) {
+                modelDef.dependencyJarNames = (modelDef.DependencyJarNames ++ extDepJars).toSet.toArray
+              } else {
+                modelDef.dependencyJarNames = extDepJars.toSet.toArray
+              }
+            }
 
             /**
               * If errors were encountered... the model definition is not manufactured.
@@ -1171,14 +1180,8 @@ class CompilerProxy {
           if (mdlFactory != null) {
             // create possible default input messages from model_config.Type_dependencies for java/scala models
             var fullName = mdlFactory.getModelName.split('.')
-            //var modelName = fullName(fullName.length - 1)
-            //var key = "kamanja" + "." + modelConfigName
-            //if (userid != None) {
-            //  key = userid.get + "." + modelConfigName
-            //}
-            var key = modelConfigName
-            logger.debug("getModelMetadataFromJar: Get the model config for " + key)
-            var config = MdMgr.GetMdMgr.GetModelConfig(key)
+            logger.debug("getModelMetadataFromJar: Get the model config for " + modelConfigName)
+            var config = MdMgr.GetMdMgr.GetModelConfig(modelConfigName)
             logger.debug("getModelMetadataFromJar: Size of the model config map => " + config.keys.size);
             val typDeps = config.getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, null)
             if (typDeps != null) {
