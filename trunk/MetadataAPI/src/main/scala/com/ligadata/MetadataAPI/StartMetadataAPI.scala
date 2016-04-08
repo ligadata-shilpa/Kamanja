@@ -116,22 +116,22 @@ object StartMetadataAPI {
                   expectTid = false
                   argVar = ""  // Make sure we dont add to the routing command
                 }
-                if (expectMDep) {
+                if (expectDep) {
                   extraCmdArgs(WITHDEP) = arg
                   expectDep = false
                   argVar = "" // Make sure we dont add to the routing command
                 }
-                if (expectTid) {
+                if (expectModelName) {
                   extraCmdArgs(MODELNAME) = arg
                   expectModelName = false
                   argVar = ""  // Make sure we dont add to the routing command
                 }
-                if (expectMDep) {
+                if (expectModelVer) {
                   extraCmdArgs(MODELVERSION) = arg
                   expectModelVer = false
                   argVar = "" // Make sure we dont add to the routing command
                 }
-                if (expectTid) {
+                if (expectMessageName) {
                   extraCmdArgs(MESSAGENAME) = arg
                   expectMessageName = false
                   argVar = ""  // Make sure we dont add to the routing command
