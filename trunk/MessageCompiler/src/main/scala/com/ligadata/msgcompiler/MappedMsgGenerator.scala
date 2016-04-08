@@ -468,10 +468,9 @@ class MappedMsgGenerator {
   /*
    * From Function for Mappped messages
    */
-  def getFromFuncFixed(message: Message, mdMgr: MdMgr): String = {
+  def getFromFuncFixed(message: Message, mdMgr: MdMgr): String = {  //""" + fromFuncScalarMapped + getFromFuncStr(message, mdMgr) + """   
     """
     private def fromFunc(other: """ + message.Name + """): """ + message.Name + """ = {  
-   """ + fromFuncScalarMapped + getFromFuncStr(message, mdMgr) + """
       //this.timePartitionData = com.ligadata.BaseTypes.LongImpl.Clone(other.timePartitionData);
       return this;
     }

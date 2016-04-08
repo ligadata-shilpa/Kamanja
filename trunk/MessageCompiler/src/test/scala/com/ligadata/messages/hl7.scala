@@ -65,11 +65,11 @@ object hl7 extends RDDObject[hl7] with ContainerFactoryInterface {
 class hl7(factory: ContainerFactoryInterface) extends ContainerInterface(factory) {
   private val log = LogManager.getLogger(getClass)
 
-  var valuesMap = Map[String, AttributeValue]()
+  var valuesMap = scala.collection.mutable.Map[String, AttributeValue]()
 
   var attributeTypes = getAttributeTypes
 
-  private val keyTypes: Map[String, AttributeTypeInfo] = attributeTypes.map { a => (a.getName, a) }.toMap
+  val keyTypes: Map[String, AttributeTypeInfo] = attributeTypes.map { a => (a.getName, a) }.toMap
 
   private def getAttributeTypes(): Array[AttributeTypeInfo] = {
     var attributeTypes = new Array[AttributeTypeInfo](7)
@@ -167,9 +167,9 @@ class hl7(factory: ContainerFactoryInterface) extends ContainerInterface(factory
     try {
       val keyName: String = key.toLowerCase();
       if (keyTypes.contains(key)) {
-        valuesMap = valuesMap + (key -> new AttributeValue(value, keyTypes(keyName)))
+        valuesMap(key) = new AttributeValue(value, keyTypes(keyName))
       } else {
-        valuesMap = valuesMap + (key -> new AttributeValue(ValueToString(value), new AttributeTypeInfo(key, -1, AttributeTypeInfo.TypeCategory.STRING, 0, 0, 0)))
+        valuesMap(key) = new AttributeValue(ValueToString(value), new AttributeTypeInfo(key, -1, AttributeTypeInfo.TypeCategory.STRING, 0, 0, 0))
       }
 
     } catch {
@@ -189,7 +189,7 @@ class hl7(factory: ContainerFactoryInterface) extends ContainerInterface(factory
         val typeCategory = AttributeTypeInfo.TypeCategory.valueOf(valTyp.toUpperCase())
         val keytypeId = typeCategory.getValue.toShort
         val valtypeId = typeCategory.getValue.toShort
-        valuesMap = valuesMap + (key -> new AttributeValue(value, new AttributeTypeInfo(key, -1, typeCategory, valtypeId, keytypeId, 0)))
+        valuesMap(key) = new AttributeValue(value, new AttributeTypeInfo(key, -1, typeCategory, valtypeId, keytypeId, 0))
       }
 
     } catch {

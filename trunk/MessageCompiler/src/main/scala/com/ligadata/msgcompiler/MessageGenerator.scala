@@ -47,13 +47,14 @@ class MessageGenerator {
       messageGenerator = messageGenerator.append(methodsFromMessageInterface(message));
       messageGenerator = messageGenerator.append(msgConstants.newline + generateParitionKeysData(message) + msgConstants.newline);
       messageGenerator = messageGenerator.append(msgConstants.newline + generatePrimaryKeysData(message) + msgConstants.newline);
+      messageGenerator = messageGenerator.append(getAttributeTypes(message));
       if (message.Fixed.equalsIgnoreCase("true")) {
         messageGenerator = messageGenerator.append(msgConstants.newline + generatedMsgVariables(message));
-        messageGenerator = messageGenerator.append(getSetMethodsFixed(message));
+        messageGenerator = messageGenerator.append(getGetSetMethodsFixed(message));
         messageGenerator = messageGenerator.append(getFromFuncFixed(message, mdMgr));
       } else if (message.Fixed.equalsIgnoreCase("false")) {
         var fieldIndexMap: Map[String, Int] = msgConstants.getScalarFieldindex(message.Elements)
-        messageGenerator = messageGenerator.append(msgConstants.getSetMethods);
+        messageGenerator = messageGenerator.append(msgConstants.getGetSetMethods);
         messageGenerator = messageGenerator.append(mappedMsgGen.getFromFuncFixed(message, mdMgr))
       }
       //messageGenerator = messageGenerator.append(convFuncGenerator.getPrevVersionMsg(message, mdMgr))
@@ -97,10 +98,9 @@ class MessageGenerator {
   /*
    * getSet methods for Fixed Message
    */
-  private def getSetMethodsFixed(message: Message): String = {
+  private def getGetSetMethodsFixed(message: Message): String = {
     var getSetFixed = new StringBuilder(8 * 1024)
     try {
-      getSetFixed = getSetFixed.append(getAttributeTypes(message));
       getSetFixed = getSetFixed.append(getWithReflection(message));
       getSetFixed = getSetFixed.append(getByStringhFixed(message));
       getSetFixed = getSetFixed.append(getByName(message));
@@ -220,8 +220,8 @@ class MessageGenerator {
 
     if (message.Elements != null) {
       message.Elements.foreach(field => {
-        if(field.AttributeTypeInfo != null)
-         getAttributeTypes.append("%s attributeTypes :+ new AttributeTypeInfo(\"%s\", %s, AttributeTypeInfo.TypeCategory.%s, %s, %s, %s)%s".format(msgConstants.pad2, field.Name, field.FieldOrdinal, field.AttributeTypeInfo.typeCategaryName, field.AttributeTypeInfo.valTypeId, field.AttributeTypeInfo.keyTypeId, field.AttributeTypeInfo.valSchemaId, msgConstants.newline))
+        if (field.AttributeTypeInfo != null)
+          getAttributeTypes.append("%s attributeTypes :+ new AttributeTypeInfo(\"%s\", %s, AttributeTypeInfo.TypeCategory.%s, %s, %s, %s)%s".format(msgConstants.pad2, field.Name, field.FieldOrdinal, field.AttributeTypeInfo.typeCategaryName, field.AttributeTypeInfo.valTypeId, field.AttributeTypeInfo.keyTypeId, field.AttributeTypeInfo.valSchemaId, msgConstants.newline))
       })
 
     }

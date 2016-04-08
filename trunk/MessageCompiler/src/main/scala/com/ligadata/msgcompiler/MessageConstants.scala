@@ -116,16 +116,16 @@ import java.util.Date
 
   private def getByNameFuncForMapped = {
     """
-    override def get(key: String): AttributeValue = { // Return (value, type)
+    override def get(key: String): Any = { // Return (value, type)
       try {
-        return valuesMap.get(key.toLowerCase())
-      } catch {
+        val value = valuesMap(key).getValue
+        if (value == null) return null; else return value;  
+       } catch {
         case e: Exception => {
           log.debug("", e)
           throw e
         }
-      }
-      return null;
+      }      
     }
 """
   }
@@ -135,24 +135,18 @@ import java.util.Date
    */
   private def getOrElseFuncForMapped = {
     """
-    override def getOrElse(key: String, defaultVal: Any): AttributeValue = { // Return (value, type)
+    override def getOrElse(key: String, defaultVal: Any): Any = { // Return (value, type)
       var attributeValue: AttributeValue = new AttributeValue();
       try {
-        val value = valuesMap.get(key.toLowerCase())
-        if (value == null) {
-          attributeValue.setValue(defaultVal);
-          attributeValue.setValueType("Any");
-          return attributeValue;
-          } else {
-          return value;
-        }
+        val value = valuesMap(key).getValue
+        if (value == null) return defaultVal;
+        return value;   
       } catch {
         case e: Exception => {
           log.debug("", e)
           throw e
         }
-      }
-      return null;
+      }      
     }     
  """
   }
@@ -163,13 +157,11 @@ import java.util.Date
   private def getAttibuteNamesMapped = {
     """
     override def getAttributeNames(): Array[String] = {
-      var attributeNames: scala.collection.mutable.ArrayBuffer[String] = scala.collection.mutable.ArrayBuffer[String]();
       try {
-        val iter = valuesMap.entrySet().iterator();
-        while (iter.hasNext()) {
-          val attributeName = iter.next().getKey;
-          if (attributeName != null && attributeName.trim() != "")
-            attributeNames += attributeName;
+        if (valuesMap.isEmpty) {
+          return null;
+        } else {
+          return valuesMap.keySet.toArray;
         }
       } catch {
         case e: Exception => {
@@ -177,7 +169,6 @@ import java.util.Date
           throw e
         }
       }
-      return attributeNames.toArray;
     }  
 """
   }
@@ -187,11 +178,11 @@ import java.util.Date
    */
   private def getByIndexMapped = {
     """
-    override def get(index: Int): AttributeValue = { // Return (value, type)
+    override def get(index: Int): Any = { // Return (value, type)
       throw new Exception("Get By Index is not supported in mapped messages");
     }
 
-    override def getOrElse(index: Int, defaultVal: Any): AttributeValue = { // Return (value,  type)
+    override def getOrElse(index: Int, defaultVal: Any): Any = { // Return (value,  type)
       throw new Exception("Get By Index is not supported in mapped messages");
     }  
     """
@@ -202,8 +193,8 @@ import java.util.Date
 
   private def getAllAttributes = {
     """
-    override def getAllAttributeValues(): java.util.HashMap[String, AttributeValue] = { // Has (name, value, type))
-      return valuesMap;
+    override def getAllAttributeValues(): Array[AttributeValue] = { // Has (name, value, type))
+      return valuesMap.map(f => f._2).toArray;
     }  
     """
   }
@@ -213,9 +204,10 @@ import java.util.Date
    */
   private def getAttributeNameAndValueIteratorMapped = {
     """
-     override def getAttributeNameAndValueIterator(): java.util.Iterator[java.util.Map.Entry[String, AttributeValue]] = {
-       valuesMap.entrySet().iterator();
-     }  
+    override def getAttributeNameAndValueIterator(): java.util.Iterator[AttributeValue] = {
+      //valuesMap.iterator.asInstanceOf[java.util.Iterator[AttributeValue]];
+      return null;
+    }  
    """
   }
 
@@ -226,13 +218,13 @@ import java.util.Date
   private def setByNameFuncForMappedMsgs() = {
     """
     override def set(key: String, value: Any) = {
-      var attributeValue: AttributeValue = new AttributeValue();
       try {
-        val keyName: String = key.toLowerCase();
-        val valType = keyTypes.getOrElse(keyName, "Any")
-        attributeValue.setValue(value)
-        attributeValue.setValueType(valType)
-        valuesMap.put(keyName, attributeValue)
+       val keyName: String = key.toLowerCase();
+        if (keyTypes.contains(key)) {
+          valuesMap(key) = new AttributeValue(value, keyTypes(keyName))
+        } else {
+          valuesMap(key) = new AttributeValue(ValueToString(value), new AttributeTypeInfo(key, -1, AttributeTypeInfo.TypeCategory.STRING, 0, 0, 0))
+        }
       } catch {
         case e: Exception => {
           log.debug("", e)
@@ -249,18 +241,23 @@ import java.util.Date
   private def setValueAndValTypByKeyMapped = {
     """
     override def set(key: String, value: Any, valTyp: String) = {
-      var attributeValue: AttributeValue = new AttributeValue();
-      try {
-        attributeValue.setValue(value)
-        attributeValue.setValueType(valTyp)
-        valuesMap.put(key.toLowerCase(), attributeValue)
-      } catch {
-        case e: Exception => {
-          log.debug("", e)
-          throw e
+       try{
+         val keyName: String = key.toLowerCase();
+         if (keyTypes.contains(key)) {
+           valuesMap(key) = new AttributeValue(value, keyTypes(keyName))
+         } else {
+           val typeCategory = AttributeTypeInfo.TypeCategory.valueOf(valTyp.toUpperCase())
+           val keytypeId = typeCategory.getValue.toShort
+           val valtypeId = typeCategory.getValue.toShort
+           valuesMap(key) = new AttributeValue(value, new AttributeTypeInfo(key, -1, typeCategory, valtypeId, keytypeId, 0))
+          }
+        } catch {
+          case e: Exception => {
+            log.debug("", e)
+            throw e
+          }
         }
-      }
-    }  
+      }  
     """
   }
 
@@ -277,15 +274,35 @@ import java.util.Date
 
   def valuesMapMapped = {
     """
-    var valuesMap = new java.util.HashMap[String, AttributeValue]()
+    var valuesMap = scala.collection.mutable.Map[String, AttributeValue]()
  """
+  }
+
+  /*
+   * ValueToString method for mapped messages
+   */
+  private def ValueToString = {
+    """
+    private def ValueToString(v: Any): String = {
+      if (v.isInstanceOf[Set[_]]) {
+        return v.asInstanceOf[Set[_]].mkString(",")
+      }
+      if (v.isInstanceOf[List[_]]) {
+        return v.asInstanceOf[List[_]].mkString(",")
+      }
+      if (v.isInstanceOf[Array[_]]) {
+        return v.asInstanceOf[Array[_]].mkString(",")
+      }
+      v.toString
+    }  
+    """
   }
 
   /*
    * All Get Set methods for mapped messages
    */
 
-  def getSetMethods: String = {
+  def getGetSetMethods: String = {
     var getSetMapped = new StringBuilder(8 * 1024)
     try {
       getSetMapped.append(valuesMapMapped);
@@ -298,6 +315,7 @@ import java.util.Date
       getSetMapped.append(setByNameFuncForMappedMsgs)
       getSetMapped.append(setValueAndValTypByKeyMapped)
       getSetMapped.append(setByIndex)
+      getSetMapped.append(ValueToString)
     } catch {
       case e: Exception => {
         log.debug("", e)
