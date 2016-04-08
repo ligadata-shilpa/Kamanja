@@ -89,23 +89,17 @@ object StartMetadataAPI {
     /** FIXME: the user id should be discovered in the parse of the args array */
     val userId: Option[String] = Some("kamanja")
     try {
-      val jsonBuffer : StringBuilder = new StringBuilder
-      var argsUntilParm = 2
 
-      args.foreach(arg =>
-        if (arg.equalsIgnoreCase(UPDATE) || arg.equalsIgnoreCase(MODELS) || arg.equalsIgnoreCase(MESSAGES) || arg.equalsIgnoreCase(CONTAINERS)) {
-            argsUntilParm = 3
-        }
-      )
       args.foreach(arg => {
 
           if (arg.endsWith(".json")
+              || arg.endsWith(".jtm")
               || arg.endsWith(".xml")
               || arg.endsWith(".pmml")
               || arg.endsWith(".scala")
               || arg.endsWith(".java")
               || arg.endsWith(".jar")) {
-              location = arg
+          extraCmdArgs(INPUTLOC) = arg
 
           } else if (arg.endsWith(".properties")) {
               config = arg
@@ -118,56 +112,57 @@ object StartMetadataAPI {
               extraCmdArgs(JSONKey) = jsonConfig
           } else if (inJsonBlk && arg.toLowerCase != JSONEnd) { /** in json config blk .., append */
               jsonBuffer.append(arg)
-          }else {
-                if (arg.equalsIgnoreCase(WITHDEP)) {
+        } else {
+            if (arg != "debug") {
+              /** ignore the debug tag */
+              if (arg.equalsIgnoreCase(TENANTID)) {
+                expectTid = true
+                extraCmdArgs(TENANTID) = ""
+              } else if(arg.equalsIgnoreCase(WITHDEP)) {
                 expectDep = true
-            }
-            else if (expectDep) {
-                depName = arg
-                expectDep = false
-            }
-                else if ( arg.equalsIgnoreCase(OUTPUTMSG) ){
-                expectOutputMsg = true
-            }
-            else if(expectOutputMsg ){
-                outputMsgName = arg
-                logger.debug("Found output message definition " + outputMsgName + " in the command ")
-                expectOutputMsg = false
-            } else if ((action.equalsIgnoreCase(Action.ADDMODELPMML.toString) || action.equalsIgnoreCase(Action.UPDATEMODELPMML.toString)) && location.size > 0) {
-                if(arg.equalsIgnoreCase(MODELNAME)){
-                  expectModelName=true
-                } else if(arg.equalsIgnoreCase(MODELVERSION)){
-                    expectModelVer=true
-                } else if(arg.equalsIgnoreCase(MESSAGENAME)){
-                    expectMessageName=true
-                } else if (expectModelName) {
-                    extraCmdArgs(MODELNAME) = arg
-                    expectModelName = false
-                } else if (expectModelVer) {
-                    extraCmdArgs(MODELVERSION) = arg
-                    expectModelVer = false
-                } else if (expectMessageName) {
-                    extraCmdArgs(MESSAGENAME) = arg
-                    expectMessageName = false
+                extraCmdArgs(WITHDEP) = ""
+              } else if (arg.equalsIgnoreCase(MODELNAME)) {
+                expectModelName = true
+              } else if (arg.equalsIgnoreCase(MODELVERSION)) {
+                expectModelVer = true
+              } else if (arg.equalsIgnoreCase(MESSAGENAME)) {
+                expectMessageName = true
+              }
+
+              else {
+                var argVar = arg
+                if (expectTid) {
+                  extraCmdArgs(TENANTID) = arg
+                  expectTid = false
+                  argVar = ""  // Make sure we dont add to the routing command
                 }
-            } else {
-                if ((arg.equalsIgnoreCase(REMOVE)) || (arg.equalsIgnoreCase(GET)) || (arg.equalsIgnoreCase(ACTIVATE)) || (arg.equalsIgnoreCase(DEACTIVATE)) || (arg.equalsIgnoreCase(UPDATE))) {
-                  expectRemoveParm = true
+                if (expectMDep) {
+                  extraCmdArgs(WITHDEP) = arg
+                  expectDep = false
+                  argVar = "" // Make sure we dont add to the routing command
                 }
-                if (expectRemoveParm) {
-                  argsUntilParm = argsUntilParm - 1
+                if (expectTid) {
+                  extraCmdArgs(MODELNAME) = arg
+                  expectModelName = false
+                  argVar = ""  // Make sure we dont add to the routing command
+                }
+                if (expectMDep) {
+                  extraCmdArgs(MODELVERSION) = arg
+                  expectModelVer = false
+                  argVar = "" // Make sure we dont add to the routing command
+                }
+                if (expectTid) {
+                  extraCmdArgs(MESSAGENAME) = arg
+                  expectMessageName = false
+                  argVar = ""  // Make sure we dont add to the routing command
                 }
 
-                if (argsUntilParm < 0) {
-                  depName = arg
-                }
-                else if (arg != "debug" && arg != JSONBegin && arg != JSONEnd)
-                  /** ignore the debug tag and the Json inline config blk delimiters*/ {
-                  /** concatenate the args together to form the action string... "add model pmml" becomes "addmodelpmmml" */
-                  action += arg
-                }
+
+                action += argVar
               }
             }
+          }
+
       })
       //add configuration
       if (config == "") {
