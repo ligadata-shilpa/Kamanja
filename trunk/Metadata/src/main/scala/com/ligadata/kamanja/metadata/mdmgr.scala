@@ -88,6 +88,8 @@ class MdMgr {
   private var configurations = new HashMap[String, UserPropertiesInfo]
   private var msgdefSystemCols = List("transactionid", "timepartitiondata", "rownumber")
   private var serializers = new HashMap[String, SerializeDeserializeConfig]
+  private var adapterMessageBindings = new HashMap[String, AdapterMessageBinding]
+
   private var tenantIdMap = new HashMap[String, TenantInfo]
 
   private var propertyChanged: scala.collection.mutable.ArrayBuffer[String] = scala.collection.mutable.ArrayBuffer[String]()
@@ -3209,6 +3211,75 @@ class MdMgr {
         cfg
     }
 
+    /**
+      * Add an adapter message binding to the metadata.  An AdapterMessageBinding describes a triple: the adapter,
+      * a message it either consumes or produces, and a serializer that can interpret a stream represention of an
+      * instance of this message or produce a serialized representation of same.
+      *
+      * @param adapterName the name of the adapter that will have this message binding
+      * @param namespaceMsgName the message that can be consumed by the specified serializer
+      * @param namespaceSerializerName the serializer that can deserialize and serialize the message
+      * @param serializerOptions (optional) options used by the serializer to configure itself
+      */
+    @throws(classOf[AlreadyExistsException])
+    def AddAdapterMessageBinding(adapterName: String
+                      , namespaceMsgName : String
+                      , namespaceSerializerName: String
+                      , serializerOptions : scala.collection.immutable.Map[String,String]
+                                 = scala.collection.immutable.Map[String,String]()): Unit = {
+
+        AddAdapterMessageBinding(MakeAdapterMessageBinding(adapterName
+                                                        , namespaceMsgName
+                                                        , namespaceSerializerName
+                                                        , serializerOptions))
+    }
+
+    /**
+      * Add a AdapterMessageBinding instance to the map designated to hold them.  The map key is constructed from
+      * the triple:
+      *
+      *     binding.adapterName.binding.messageName.binding.serializer
+      *
+      * folded to lower case.
+      *
+      * @param binding the prepared SerializeDeserializeConfig object
+      * @return true if the object was added to the map (exception is thrown if one exists with this name)
+      */
+
+    @throws(classOf[AlreadyExistsException])
+    def AddAdapterMessageBinding(binding : AdapterMessageBinding) : Boolean = {
+        val key : String = s"${binding.adapterName}.${binding.messageName}.${binding.serializer}".toLowerCase
+        val added : Boolean = if (adapterMessageBindings.contains(key)) {
+            throw AlreadyExistsException(s"an AdapterMessageBinding with key $key already exists... binding could not be added.", null)
+        } else {
+            adapterMessageBindings(key) = binding
+            true
+        }
+        added
+    }
+
+    /**
+      * Make an AdapterMessageBinding instance
+      * @param adapterName the adapter's name
+      * @param namespaceMsgName the message that can be consumed by the specified serializer
+      * @param namespaceSerializerName the serializer that can deserialize and serialize the message
+      * @param serializerOptions (optional) options that should be used by the serializer to configure itself
+      * @return AdapterMessageBinding instance
+      */
+    def MakeAdapterMessageBinding(  adapterName: String
+                                  , namespaceMsgName : String
+                                  , namespaceSerializerName: String
+                                  , serializerOptions : scala.collection.immutable.Map[String,String]
+                                        = scala.collection.immutable.Map[String,String]())
+                : AdapterMessageBinding = {
+
+        /** Instantiate the AdapterMessageBinding.  Update its base element with basic id information */
+        val binding: AdapterMessageBinding = new AdapterMessageBinding(  adapterName
+                                                                       , namespaceMsgName
+                                                                       , namespaceSerializerName
+                                                                       , serializerOptions)
+        binding
+    }
 
     /** Retrieve the SerializeDeserializerConfig with the supplied namespace.name
       *
@@ -3577,6 +3648,7 @@ object MdMgr extends LogTrait {
     val modelNmSpace: String = buffer.toString
     (modelNmSpace, modelNm)
   }
+
 }
 
 

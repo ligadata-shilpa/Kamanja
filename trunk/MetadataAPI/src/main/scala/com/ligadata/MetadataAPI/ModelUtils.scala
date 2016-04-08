@@ -707,8 +707,17 @@ object ModelUtils {
   private def AddJTMModel(jsonText: String, userid: Option[String], tenantId: String, optModelName: Option[String]): String = {
     try {
       var compProxy = new CompilerProxy
+
+      // Getting external dependency jars
+      val extDepJars =
+        if (optModelName != None) {
+          MetadataAPIImpl.getModelDependencies(optModelName.get, userid)
+        } else {
+          List[String]()
+        }
+
       //compProxy.setLoggerLevel(Level.TRACE)
-      var (classStr, modDef) = compProxy.compileJTM(jsonText, tenantId)
+      var (classStr, modDef) = compProxy.compileJTM(jsonText, tenantId, extDepJars)
 
       // ModelDef may be null if there were pmml compiler errors... act accordingly.  If modelDef present,
       // make sure the version of the model is greater than any of previous models with same FullName
@@ -716,6 +725,11 @@ object ModelUtils {
       val isValid: Boolean = if (latestVersion != None) MetadataAPIImpl.IsValidVersion(latestVersion.get, modDef) else true
 
       if (isValid && modDef != null) {
+        if (optModelName != None) {
+          val configMap = MdMgr.GetMdMgr.GetModelConfig(optModelName.get.toLowerCase)
+          modDef.modelConfig = if (configMap != null) JsonSerializer.SerializeMapToJsonString(configMap) else ""
+        }
+
         MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.INSERTOBJECT, jsonText, AuditConstants.SUCCESS, "", modDef.FullNameWithVer)
         // save the jar file first
         PersistenceUtils.UploadJarsToDB(modDef)
@@ -787,7 +801,38 @@ object ModelUtils {
         // here.
         if (isJtm && mod.objectFormat == ObjFormatType.fJSON) {
           val jtmTxt = mod.ObjectDefinition
-          val (classStrTemp, modDefTemp) = compProxy.compileJTM(jtmTxt, mod.TenantId, true)
+
+          // Getting external dependency jars
+          val extDepJars =
+            if (mod.modelConfig != null) {
+              val trimmedMdlCfg = mod.modelConfig.trim
+              if (trimmedMdlCfg.size > 0) {
+                var deps = List[String]()
+                try {
+                  val modelParms = parse(mod.modelConfig).values.asInstanceOf[Map[String, Any]]
+                  val typDeps = modelParms.getOrElse(ModelCompilationConstants.DEPENDENCIES, null)
+                  if (typDeps != null) {
+                    if (typDeps.isInstanceOf[List[_]])
+                      deps = typDeps.asInstanceOf[List[String]]
+                    if (typDeps.isInstanceOf[Array[_]])
+                      deps = typDeps.asInstanceOf[Array[String]].toList
+                  }
+                }
+                catch {
+                  case e: Throwable => {
+                    logger.error("Failed to parse model config.", e)
+                  }
+                }
+                deps
+              } else {
+                List[String]()
+              }
+            } else {
+              List[String]()
+            }
+
+          val (classStrTemp, modDefTemp) = compProxy.compileJTM(jtmTxt, mod.TenantId, extDepJars, true)
+          modDefTemp.modelConfig = mod.modelConfig
           modDefTemp
         } else {
           if (mod.objectFormat == ObjFormatType.fXML) {
@@ -1432,7 +1477,16 @@ object ModelUtils {
     try {
       var compProxy = new CompilerProxy
       //compProxy.setLoggerLevel(Level.TRACE)
-      var (classStr, modDef) = compProxy.compileJTM(jtmText, tenantId)
+
+      // Getting external dependency jars
+      val extDepJars =
+        if (optModelName != None) {
+          MetadataAPIImpl.getModelDependencies(optModelName.get, optUserid)
+        } else {
+          List[String]()
+        }
+
+      var (classStr, modDef) = compProxy.compileJTM(jtmText, tenantId, extDepJars)
       val optLatestVersion = if (modDef == null) None else GetLatestModel(modDef)
       val latestVersion: ModelDef = optLatestVersion.orNull
 
@@ -1449,6 +1503,11 @@ object ModelUtils {
       val isValid: Boolean = (modDef != null && latestVersion != null && latestVersion.Version < modDef.Version)
 
       if (isValid && modDef != null) {
+        if (optModelName != None) {
+          val configMap = MdMgr.GetMdMgr.GetModelConfig(optModelName.get.toLowerCase)
+          modDef.modelConfig = if (configMap != null) JsonSerializer.SerializeMapToJsonString(configMap) else ""
+        }
+
         MetadataAPIImpl.logAuditRec(optUserid, Some(AuditConstants.WRITE), AuditConstants.UPDATEOBJECT, jtmText, AuditConstants.SUCCESS, "", modDef.FullNameWithVer)
         val key = MdMgr.MkFullNameWithVersion(modDef.nameSpace, modDef.name, modDef.ver)
 

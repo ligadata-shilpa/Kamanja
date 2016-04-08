@@ -180,7 +180,6 @@ class JSONSerDes() extends SerializeDeserialize with LogTrait {
     private def processContainerTypeAsJson(aContainerType : ContainerTypeDef
                                          , rawValue : Any
                                          , withComma : Boolean) : String = {
-
         /** ContainerInterface instance? */
         val isContainerInterface : Boolean = rawValue.isInstanceOf[ContainerInterface]
         val stringRep : String = if (isContainerInterface) {
@@ -321,7 +320,7 @@ class JSONSerDes() extends SerializeDeserialize with LogTrait {
       * @return a Json string representation
       */
     private def arrayAsJson(aContainerType : ContainerTypeDef, array : Array[Any]) : String = {
-        val memberTypes : Array[BaseTypeDef] = aContainerType.asInstanceOf[MapTypeDef].ElementTypes
+        val memberTypes : Array[BaseTypeDef] = aContainerType.asInstanceOf[ArrayTypeDef].ElementTypes
         val itmType : BaseTypeDef = memberTypes.last
         val itemAtATime : Boolean = itmType.isInstanceOf[ContainerTypeDef]
         val arrAsJsonStr : String = if (itemAtATime) {
@@ -345,6 +344,7 @@ class JSONSerDes() extends SerializeDeserialize with LogTrait {
         }
         arrAsJsonStr
     }
+
 
     /**
       * Set the object resolver to be used for this serializer
