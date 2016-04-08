@@ -53,6 +53,7 @@ class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter wi
   var fileList: List[String] = null
   var newVersion: String = null
   val userid: Option[String] = Some("kamanja")
+  val tenantId: Option[String] = Some("kamanja")
 
   private val loggerName = this.getClass.getName
   private val logger = LogManager.getLogger(loggerName)
@@ -299,7 +300,7 @@ class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter wi
 
 	And("AddContainer first time from " + file.getPath)
 	contStr = Source.fromFile(file).mkString
-	res = MetadataAPIImpl.AddContainer(contStr, "JSON", None)
+	res = MetadataAPIImpl.AddContainer(contStr, "JSON", None, tenantId)
 	res should include regex ("\"Status Code\" : 0")
 
 	And("GetContainerDef API to fetch the container that was just added")
@@ -349,7 +350,7 @@ class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter wi
 
 	And("AddMessage first time from " + file.getPath)
 	var msgStr = Source.fromFile(file).mkString
-	res = MetadataAPIImpl.AddMessage(msgStr, "JSON", None)
+	res = MetadataAPIImpl.AddMessage(msgStr, "JSON", None,tenantId)
 	res should include regex ("\"Status Code\" : 0")
 
 	And("GetMessageDef API to fetch the message that was just added")
@@ -361,7 +362,7 @@ class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter wi
     }
 
     // CRUD operations on Model objects
-    ignore("Add KPPML Models") {
+    it("Add KPPML Models") {
       And("Check whether MODEL_FILES_DIR defined as property")
       dirName = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("MODEL_FILES_DIR")
       assert(null != dirName)
@@ -395,7 +396,7 @@ class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter wi
 	}
 	assert(true == exists)
 
-	And("Call AddModel MetadataAPI Function to add Model from " + file.getPath)
+	And("AddModel  to add KPMML Model with a wrong output message from " + file.getPath)
 	var modStr = Source.fromFile(file).mkString
 	res = MetadataAPIImpl.AddModel(ModelType.KPMML, // modelType
 				       modStr, // input
@@ -405,10 +406,25 @@ class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter wi
 				       None,   // optVersion
 				       None,   // optMsgConsumed
 				       None,   // optMsgVersion
-				       //Some("system.helloworld_msg_output_def") // optMsgProduced
-				       None
+				       Some("system.helloworld_msg_def_2") // optMsgProduced
+				     )
+	logger.info(res)
+	res should include regex ("\"Status Code\" : -1")
+
+
+	And("AddModel  to add KPMML Model without a output message from " + file.getPath)
+	res = MetadataAPIImpl.AddModel(ModelType.KPMML, // modelType
+				       modStr, // input
+				       userid,   // optUserid
+				       Some("testTenantId"),  // tenantId
+				       None,   // optModelName
+				       None,   // optVersion
+				       None,   // optMsgConsumed
+				       None,   // optMsgVersion
+				       None // optMsgProduced
 				     )
 	res should include regex ("\"Status Code\" : 0")
+
 
 	And("GetModelDef API to fetch the model that was just added")
 	// Unable to use fileName to identify the name of the object

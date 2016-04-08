@@ -1378,6 +1378,15 @@ object MessageAndContainerUtils {
     }
   }
 
+    /**
+      * Answer if the supplied MessageDef contains is a MappedMsgTypeDef.
+      *
+      * @param aType a MessageDef
+      * @return true if a MappedMsgTypeDef
+      */
+    def IsMappedMessage(msg : MessageDef) : Boolean = {
+        msg.containerType.isInstanceOf[MappedMsgTypeDef]
+    }
 
   /**
     * Check whether message already exists in metadata manager. Ideally,
@@ -1386,9 +1395,9 @@ object MessageAndContainerUtils {
     * This is just a utility function being during these initial phases
     *
     * @param objectName
-    * @return
+    * @return MessageDef
     */
-  def IsMessageExists(objectName: String): Boolean = {
+  def IsMessageExists(objectName: String): MessageDef = {
     try {
       val nameNodes: Array[String] = if (objectName != null && 
 					 objectName.contains('.')) objectName.split('.') 
@@ -1406,11 +1415,11 @@ object MessageAndContainerUtils {
         case None =>
           None
           logger.debug("message not in the cache => " + objectName)
-          return false;
+          return null;
         case Some(m) =>
           logger.debug("message found => " + m.asInstanceOf[MessageDef].FullName + "." + 
 		       MdMgr.Pad0s2Version(m.asInstanceOf[MessageDef].ver))
-          return true
+          return m.asInstanceOf[MessageDef]
       }
     } catch {
       case e: Exception => {
@@ -1429,7 +1438,7 @@ object MessageAndContainerUtils {
       val msgName = name + "_outputmsg"
       val msgFullName = nameSpace + "." + msgName
 
-      if( IsMessageExists(msgFullName) ){
+      if( IsMessageExists(msgFullName) != null ){
 	logger.info("The message " + msgFullName + " already exist, not recreating it...")
 	return msgFullName
       }

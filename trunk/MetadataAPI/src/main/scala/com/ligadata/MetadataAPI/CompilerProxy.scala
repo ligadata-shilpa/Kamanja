@@ -1180,14 +1180,8 @@ class CompilerProxy {
           if (mdlFactory != null) {
             // create possible default input messages from model_config.Type_dependencies for java/scala models
             var fullName = mdlFactory.getModelName.split('.')
-            //var modelName = fullName(fullName.length - 1)
-            //var key = "kamanja" + "." + modelConfigName
-            //if (userid != None) {
-            //  key = userid.get + "." + modelConfigName
-            //}
-            var key = modelConfigName
-            logger.debug("getModelMetadataFromJar: Get the model config for " + key)
-            var config = MdMgr.GetMdMgr.GetModelConfig(key)
+            logger.debug("getModelMetadataFromJar: Get the model config for " + modelConfigName)
+            var config = MdMgr.GetMdMgr.GetModelConfig(modelConfigName)
             logger.debug("getModelMetadataFromJar: Size of the model config map => " + config.keys.size);
             val typDeps = config.getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, null)
             if (typDeps != null) {
