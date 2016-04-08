@@ -439,13 +439,21 @@ object ModelUtils {
 
     if (optMsgProduced != None) {
       logger.info("Validating the output message type " + optMsgProduced.get.toLowerCase);
-      if (!MessageAndContainerUtils.IsMessageExists(optMsgProduced.get.toLowerCase)) {
+      val msg = MessageAndContainerUtils.IsMessageExists(optMsgProduced.get.toLowerCase)
+      if ( msg == null ) {
+	logger.info("Unknown outputmsg " + optMsgProduced.get.toLowerCase);
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddModel", null, s"Unknown Outmessage ${optMsgProduced.get.toLowerCase} error = ${ErrorCodeConstants.Add_Model_Failed}")
         return apiResult.toString
       }
       else {
-        logger.info("The message type " + optMsgProduced.get.toLowerCase + " is found in metadata");
+	if ( modelType == ModelType.KPMML  && ! MessageAndContainerUtils.IsMappedMessage(msg)) {
+	  logger.info("outputmsg " + optMsgProduced.get.toLowerCase + " not a mapped message ");
+
+          val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddModel", null, s"Outmessage ${optMsgProduced.get.toLowerCase} must be a mapped message for KPPML Models, error = ${ErrorCodeConstants.Add_Model_Failed}")
+          return apiResult.toString
+	}
       }
+      logger.info("A valid message type " + optMsgProduced.get.toLowerCase + " is already found in metadata");
     }
     else {
       logger.info("We will be creating a default output message ..")
