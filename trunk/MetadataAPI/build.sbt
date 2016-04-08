@@ -4,6 +4,8 @@ import Keys._
 
 shellPrompt := { state => "sbt (%s)> ".format(Project.extract(state).currentProject.id) }
 
+
+
 mainClass in assembly := Some("com.ligadata.MetadataAPI.StartMetadataAPI")
 
 assemblyOption in assembly ~= {
@@ -63,50 +65,6 @@ test in assembly := {}
 
 name := "MetadataAPI"
 
-<<<<<<< HEAD
-version := "1.0"
-
-libraryDependencies += "org.joda" % "joda-convert" % "1.6"
-
-libraryDependencies += "joda-time" % "joda-time" % "2.8.2"
-
-libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.0"
-
-libraryDependencies += "org.apache.logging.log4j" % "log4j-1.2-api" % "2.4.1"
-
-libraryDependencies += "org.apache.logging.log4j" % "log4j-api" % "2.4.1"
-
-libraryDependencies += "org.apache.logging.log4j" % "log4j-core" % "2.4.1"
-
-libraryDependencies += "org.json4s" %% "json4s-native" % "3.2.9" 
-
-libraryDependencies += "org.json4s" %% "json4s-jackson" % "3.2.9"
-
-libraryDependencies += "org.apache.zookeeper" % "zookeeper" % "3.4.6"
-
-libraryDependencies += "org.apache.curator" % "apache-curator" % "2.0.0-incubating"
-
-libraryDependencies += "com.google.guava" % "guava" % "14.0.1" 
-
-libraryDependencies += "org.jpmml" % "pmml-evaluator" % "1.2.4"
-
-libraryDependencies += "org.jpmml" % "pmml-model" % "1.2.5"
-
-libraryDependencies += "org.jpmml" % "pmml-schema" % "1.2.5"
-
-dependencyOverrides += "com.google.guava" % "guava" % "14.0.1" 
-
-libraryDependencies += "commons-codec" % "commons-codec" % "1.10"
-
-libraryDependencies += "commons-io" % "commons-io" % "2.4"
-
-libraryDependencies ++= Seq(
-"com.twitter" %% "chill" % "0.5.0",
- "org.apache.shiro" % "shiro-core" % "1.2.3",
- "org.apache.shiro" % "shiro-root" % "1.2.3"
-)
-
-=======
 version := "1.4.0"
 
 //libraryDependencies += "org.joda" % "joda-convert" % "1.6"
