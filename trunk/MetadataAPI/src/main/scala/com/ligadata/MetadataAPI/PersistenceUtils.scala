@@ -94,8 +94,8 @@ object PersistenceUtils {
   //lazy val serializer = SerializerManager.GetSerializer(serializerType)
 
   lazy val versionStr = s"${KamanjaVersion.getMajorVersion}.${KamanjaVersion.getMinorVersion}.${KamanjaVersion.getMicroVersion}"
-  lazy val excludeSystemJars = Set("ExtDependencyLibs_2.11-${versionStr}.jar", "ExtDependencyLibs2_2.11-${versionStr}.jar", "KamanjaInternalDeps_2.11-${versionStr}.jar",
-                                      "ExtDependencyLibs_2.10-${versionStr}.jar", "ExtDependencyLibs2_2.10-${versionStr}.jar", "KamanjaInternalDeps_2.10-${versionStr}.jar")
+  lazy val excludeSystemJars = Set(s"ExtDependencyLibs_2.11-${versionStr}.jar", s"ExtDependencyLibs2_2.11-${versionStr}.jar", s"KamanjaInternalDeps_2.11-${versionStr}.jar",
+                                      s"ExtDependencyLibs_2.10-${versionStr}.jar", s"ExtDependencyLibs2_2.10-${versionStr}.jar", s"KamanjaInternalDeps_2.10-${versionStr}.jar")
 
   def GetMainDS: DataStore = mainDS
 
