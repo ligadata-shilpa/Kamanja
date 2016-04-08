@@ -61,7 +61,7 @@ public class HelloWorldModel extends ModelInstance {
 		if(helloWorld.score()!=1)
 			return null;
 		ContainerInterface[] returnArr = new ContainerInterface[1];
-		returnArr(0) = helloWorld
+		returnArr[0] = helloWorld;
         return returnArr;
   }
 
