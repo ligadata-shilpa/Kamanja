@@ -3,7 +3,7 @@
         "Dependencies": [
         ],
         "MessageAndContainers": [
-            "com.ligadata.kamanja.samples.messages.msg1"
+            "system.helloworld_msg_def"
         ]
     }
 }

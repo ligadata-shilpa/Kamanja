@@ -18,7 +18,7 @@ package com.ligadata.MetadataAPI.Utility
 
 import java.io.File
 
-import com.ligadata.MetadataAPI.{MetadataAPIOutputMsg, MetadataAPIImpl,ApiResult,ErrorCodeConstants}
+import com.ligadata.MetadataAPI.{MetadataAPIImpl,ApiResult,ErrorCodeConstants}
 
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
@@ -30,11 +30,11 @@ import scala.io._
  * Created by dhaval on 8/7/15.
  */
 object MessageService {
-  private val userid: Option[String] = Some("metadataapi")
+  private val userid: Option[String] = Some("kamanja")
   val loggerName = this.getClass.getName
   lazy val logger = LogManager.getLogger(loggerName)
 
-  def addMessage(input: String): String = {
+  def addMessage(input: String, tid: Option[String]): String = {
     var response = ""
     var msgFileDir: String = ""
     //val gitMsgFile = "https://raw.githubusercontent.com/ligadata-dhaval/Kamanja/master/HelloWorld_Msg_Def.json"
@@ -56,7 +56,7 @@ object MessageService {
               case option => {
                 val messageDefs = getUserInputFromMainMenu(messages)
                 for (messageDef <- messageDefs) {
-                  response += MetadataAPIImpl.AddMessage(messageDef.toString, "JSON", userid)
+                  response += MetadataAPIImpl.AddMessage(messageDef.toString, "JSON", userid, tid)
                 }
               }
             }
@@ -72,7 +72,7 @@ object MessageService {
       var message = new File(input.toString)
       if(message.exists()){
         val messageDef = Source.fromFile(message).mkString
-        response = MetadataAPIImpl.AddMessage(messageDef, "JSON", userid)
+        response = MetadataAPIImpl.AddMessage(messageDef, "JSON", userid, tid)
       }else{
         response="Message defintion file does not exist"
       }
@@ -102,7 +102,7 @@ object MessageService {
     response
   }
 
-  def updateMessage(input: String): String = {
+  def updateMessage(input: String, tid: Option[String]): String = {
     var response = ""
     //val gitMsgFile = "https://raw.githubusercontent.com/ligadata-dhaval/Kamanja/master/HelloWorld_Msg_Def.json"
     if (input == "") {
@@ -123,7 +123,7 @@ object MessageService {
               case option => {
                 val messageDefs = getUserInputFromMainMenu(messages)
                 for (messageDef <- messageDefs) {
-                  response += MetadataAPIImpl.UpdateMessage(messageDef.toString, "JSON", userid)
+                  response += MetadataAPIImpl.UpdateMessage(messageDef.toString, "JSON", userid, tid)
                 }
               }
             }

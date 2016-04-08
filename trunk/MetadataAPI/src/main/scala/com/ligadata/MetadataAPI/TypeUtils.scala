@@ -38,7 +38,7 @@ import com.ligadata.kamanja.metadataload.MetadataLoad
 // import com.ligadata.keyvaluestore._
 import com.ligadata.HeartBeat.HeartBeatUtil
 import com.ligadata.StorageBase.{ DataStore, Transaction }
-import com.ligadata.KvBase.{ Key, Value, TimeRange }
+import com.ligadata.KvBase.{ Key, TimeRange }
 
 import scala.util.parsing.json.JSON
 import scala.util.parsing.json.{ JSONObject, JSONArray }
@@ -48,7 +48,7 @@ import scala.collection.mutable.HashMap
 
 import com.google.common.base.Throwables
 
-import com.ligadata.messagedef._
+import com.ligadata.msgcompiler._
 import com.ligadata.Exceptions._
 
 import scala.xml.XML
@@ -81,7 +81,7 @@ object TypeUtils {
   // system name space
   lazy val loggerName = this.getClass.getName
   lazy val logger = LogManager.getLogger(loggerName)
-  lazy val serializer = SerializerManager.GetSerializer("kryo")
+  //lazy val serializer = SerializerManager.GetSerializer("kryo")
 
   def AddType(typeText: String, format: String): String = {
     try {
@@ -447,4 +447,26 @@ object TypeUtils {
       }
     }
   }
+    /**
+     * LoadTypeIntoCache
+     * @param key
+     */
+  def LoadTypeIntoCache(key: String) {
+    try {
+      logger.debug("Fetch the object " + key + " from database ")
+      val obj: (String, Any) = PersistenceUtils.GetObject(key.toLowerCase, "types")
+      logger.debug("Deserialize the object " + key)
+      val typ = MetadataAPISerialization.deserializeMetadata(new String(obj._2.asInstanceOf[Array[Byte]])).asInstanceOf[ArrayTypeDef]//serializer.DeserializeObjectFromByteArray(obj._2.asInstanceOf[Array[Byte]])
+      if (typ != null) {
+        logger.debug("Add the object " + key + " to the cache ")
+        MetadataAPIImpl.AddObjectToCache(typ, MdMgr.GetMdMgr)
+      }
+    } catch {
+      case e: Exception => {
+        
+        logger.warn("Unable to load the object " + key + " into cache ", e)
+      }
+    }
+  }
+
 }

@@ -20,7 +20,7 @@ import com.ligadata.KamanjaBase._
 import com.ligadata.kamanja.metadata.ModelDef;
 
 class HelloWorldModelFactory(modelDef: ModelDef, nodeContext: NodeContext) extends ModelInstanceFactory(modelDef, nodeContext) {
-  override def isValidMessage(msg: MessageContainerBase): Boolean = return msg.isInstanceOf[msg1]
+  override def isValidMessage(msg: ContainerInterface): Boolean = return msg.isInstanceOf[helloworld_msg_def]
   override def createModelInstance(): ModelInstance = return new HelloWorldModel(this)
   override def getModelName: String = "HelloWorldModel" 
   override def getVersion: String = "0.0.1"
@@ -31,16 +31,14 @@ class HelloWorldModel(factory: ModelInstanceFactory) extends ModelInstance(facto
   
    override def execute(txnCtxt: TransactionContext, outputDefault: Boolean):ModelResultBase = {
      
-     var helloWorld : msg1 =  txnCtxt.getMessage().asInstanceOf[msg1]
-     
+     var helloWorld : helloworld_msg_def =  txnCtxt.getMessage().asInstanceOf[helloworld_msg_def]
+
         if(helloWorld.score!=1)
           return null;
      
      var actualResults: Array[Result] = Array[Result](new Result("Id",helloWorld.id),
-                                                        new Result("Name",helloWorld.Name),
+                                                        new Result("Name",helloWorld.name),
                                                         new Result("Score",helloWorld.score))
      return factory.createResultObject().asInstanceOf[MappedModelResults].withResults(actualResults)
    }
-   
-  
 }

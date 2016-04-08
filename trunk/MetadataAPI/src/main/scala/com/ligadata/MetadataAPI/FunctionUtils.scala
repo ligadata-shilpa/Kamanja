@@ -38,7 +38,7 @@ import com.ligadata.kamanja.metadataload.MetadataLoad
 // import com.ligadata.keyvaluestore._
 import com.ligadata.HeartBeat.HeartBeatUtil
 import com.ligadata.StorageBase.{ DataStore, Transaction }
-import com.ligadata.KvBase.{ Key, Value, TimeRange }
+import com.ligadata.KvBase.{ Key, TimeRange }
 
 import scala.util.parsing.json.JSON
 import scala.util.parsing.json.{ JSONObject, JSONArray }
@@ -48,7 +48,7 @@ import scala.collection.mutable.HashMap
 
 import com.google.common.base.Throwables
 
-import com.ligadata.messagedef._
+import com.ligadata.msgcompiler._
 import com.ligadata.Exceptions._
 
 import scala.xml.XML
@@ -79,7 +79,7 @@ object FunctionUtils {
   // system name space
   lazy val loggerName = this.getClass.getName
   lazy val logger = LogManager.getLogger(loggerName)
-  lazy val serializer = SerializerManager.GetSerializer("kryo")
+  //lazy val serializer = SerializerManager.GetSerializer("kryo")
   
   def AddFunction(functionDef: FunctionDef): String = {
     val key = functionDef.FullNameWithVer
@@ -245,12 +245,16 @@ object FunctionUtils {
   def AddFunctions(functionsText: String, format: String, userid: Option[String]): String = {
     logger.debug("Started AddFunctions => ")
     var aggFailures: String = ""
+    val tenantId = "" // For functions we will take empty for now
     try {
       if (format != "JSON") {
         var apiResult = new ApiResult(ErrorCodeConstants.Not_Implemented_Yet, "AddFunctions", functionsText, ErrorCodeConstants.Not_Implemented_Yet_Msg)
         apiResult.toString()
       } else {
-        var funcList= JsonSerializer.parseFunctionList(functionsText, "JSON")
+        val ownerId: String = if (userid == None) "kamanja" else userid.get
+        val uniqueId = MetadataAPIImpl.GetUniqueId
+        val mdElementId = 0L //FIXME:- Not yet handled this
+        var funcList= JsonSerializer.parseFunctionList(functionsText, "JSON", ownerId, tenantId, uniqueId, mdElementId)
         // Check for the Jars
         val missingJars = scala.collection.mutable.Set[String]()
         funcList.foreach(func => {
@@ -290,12 +294,16 @@ object FunctionUtils {
 
   def UpdateFunctions(functionsText: String, format: String, userid: Option[String]): String = {
     logger.debug("Started UpdateFunctions => ")
+    val tenantId = "" // For functions we will take empty for now
     try {
       if (format != "JSON") {
         var apiResult = new ApiResult(ErrorCodeConstants.Not_Implemented_Yet, "UpdateFunctions", null, ErrorCodeConstants.Not_Implemented_Yet_Msg + ":" + functionsText + ".Format not JSON.")
         apiResult.toString()
       } else {
-        var funcList = JsonSerializer.parseFunctionList(functionsText, "JSON")
+        val ownerId: String = if (userid == None) "kamanja" else userid.get
+        val uniqueId = MetadataAPIImpl.GetUniqueId
+        val mdElementId = 0L //FIXME:- Not yet handled this
+        var funcList = JsonSerializer.parseFunctionList(functionsText, "JSON", ownerId, tenantId, uniqueId, mdElementId)
         // Check for the Jars
         val missingJars = scala.collection.mutable.Set[String]()
         funcList.foreach(func => {
@@ -338,7 +346,7 @@ object FunctionUtils {
   def LoadFunctionIntoCache(key: String) {
     try {
       val obj = MetadataAPIImpl.GetObject(key.toLowerCase, "functions")
-      val cont = serializer.DeserializeObjectFromByteArray(obj.serializedInfo)
+      val cont: FunctionDef = MetadataAPISerialization.deserializeMetadata(new String(obj._2.asInstanceOf[Array[Byte]])).asInstanceOf[FunctionDef]//serializer.DeserializeObjectFromByteArray(obj._2.asInstanceOf[Array[Byte]]).asInstanceOf[FunctionDef]
       MetadataAPIImpl.AddObjectToCache(cont.asInstanceOf[FunctionDef], MdMgr.GetMdMgr)
     } catch {
       case e: Exception => {
@@ -378,6 +386,74 @@ object FunctionUtils {
   def GetFunctionDef(objectName: String, formatType: String, userid: Option[String]): String = {
     val nameSpace = MdMgr.sysNS
     GetFunctionDef(nameSpace, objectName, formatType, userid)
+  }
+
+    /**
+     * GetAllFunctionsFromCache
+     * @param active
+     * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+     *               method. If Security and/or Audit are configured, this value must be a value other than None.
+     * @return
+     */
+  def GetAllFunctionsFromCache(active: Boolean, userid: Option[String] = None): Array[String] = {
+    var functionList: Array[String] = new Array[String](0)
+    MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.READ), AuditConstants.GETKEYS, AuditConstants.FUNCTION, AuditConstants.SUCCESS, "", AuditConstants.FUNCTION)
+    try {
+      val contDefs = MdMgr.GetMdMgr.Functions(active, true)
+      contDefs match {
+        case None =>
+          None
+          logger.debug("No Functions found ")
+          functionList
+        case Some(ms) =>
+          val msa = ms.toArray
+          val contCount = msa.length
+          functionList = new Array[String](contCount)
+          for (i <- 0 to contCount - 1) {
+            functionList(i) = msa(i).FullName + "." + MdMgr.Pad0s2Version(msa(i).Version)
+          }
+          functionList
+      }
+    } catch {
+      case e: Exception => {
+        
+        logger.debug("", e)
+        throw UnexpectedMetadataAPIException("Failed to fetch all the functions:" + e.toString, e)
+      }
+    }
+  }
+
+    /**
+     * GetLatestFunction
+     * @param fDef
+     * @return
+     */
+  def GetLatestFunction(fDef: FunctionDef): Option[FunctionDef] = {
+    try {
+      var key = fDef.nameSpace + "." + fDef.name + "." + fDef.ver
+      val dispkey = fDef.nameSpace + "." + fDef.name + "." + MdMgr.Pad0s2Version(fDef.ver)
+      val o = MdMgr.GetMdMgr.Messages(fDef.nameSpace.toLowerCase,
+        fDef.name.toLowerCase,
+        false,
+        true)
+      o match {
+        case None =>
+          None
+          logger.debug("message not in the cache => " + dispkey)
+          None
+        case Some(m) =>
+          // We can get called from the Add Message path, and M could be empty.
+          if (m.size == 0) return None
+          logger.debug("message found => " + m.head.asInstanceOf[MessageDef].FullName + "." + MdMgr.Pad0s2Version(m.head.asInstanceOf[MessageDef].ver))
+          Some(m.head.asInstanceOf[FunctionDef])
+      }
+    } catch {
+      case e: Exception => {
+        
+        logger.debug("", e)
+        throw UnexpectedMetadataAPIException(e.getMessage(), e)
+      }
+    }
   }
 
   // Answer count and dump of all available functions(format JSON or XML) as a String

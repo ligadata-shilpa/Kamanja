@@ -166,7 +166,7 @@ Usage:
             building their respective objects. If the requested version has not been installed on the cluster nodes in question,
             the installation will fail.
 
-        [--fromKamanja] optional for install but required for upgrade..."N.N" where "N.N" can be either "1.1" or "1.2"
+        [--fromKamanja] optional for install but required for upgrade..."N.N" where "N.N" can be either "1.1" or "1.2" or "1.3"
         [--fromScala "2.10"] an optional parameter that, for the 1.3 InstallDriver, simply documents the version of Scala that
             the current 1.1. or 1.2 is using.  The value "2.10" is the only possible value for this release.
 
@@ -373,7 +373,7 @@ Usage:
     val preRequisitesCheckOnly: Boolean = if (options.contains('preRequisitesCheckOnly)) options.apply('preRequisitesCheckOnly) == "true" else false
     val externalJarsDir_opt: String = if (options.contains('externalJarsDir)) options.apply('externalJarsDir) else null
 
-    val toKamanja: String = "1.3"
+    val toKamanja: String = "1.4"
 
     // Check whether logDir is valid or not
     if (!isFileExists(logDir, false, true)) {
@@ -428,8 +428,8 @@ Try again.
     val apiConfigPathOk: Boolean = apiConfigPath != null && apiConfigPath.nonEmpty
     val nodeConfigPathOk: Boolean = apiConfigPath != null && apiConfigPath.nonEmpty
     val tarballPathOk: Boolean = tarballPath != null && tarballPath.nonEmpty
-    val fromKamanjaOk: Boolean = install || (upgrade && fromKamanja != null && fromKamanja.nonEmpty && (fromKamanja == "1.1" || fromKamanja == "1.2"))
-    val fromScalaOk: Boolean = install || (upgrade && fromScala != null && fromScala.nonEmpty && (fromScala == "2.10" || fromKamanja == "2.11"))
+    val fromKamanjaOk: Boolean = install || (upgrade && fromKamanja != null && fromKamanja.nonEmpty && (fromKamanja == "1.1" || fromKamanja == "1.2") || fromKamanja == "1.3" )
+    val fromScalaOk: Boolean = install || (upgrade && fromScala != null && fromScala.nonEmpty && (fromScala == "2.10" || fromScala == "2.11"))
     val toScalaOk: Boolean = (toScala != null && toScala.nonEmpty && (toScala == "2.10" || toScala == "2.11"))
     val workingDirOk: Boolean = workingDir != null && workingDir.nonEmpty
     val logDirOk: Boolean = logDir != null && logDir.nonEmpty
@@ -532,9 +532,13 @@ Try again.
       }
 
       // Validate all arguments
-      val migrationToBeDone: String = if (fromKamanja == "1.1") "1.1=>1.3" else if (fromKamanja == "1.2") "1.2=>1.3" else "hmmm"
-      if (migrationToBeDone == "hmmm") {
-        printAndLogError(s"The fromKamanja ($fromKamanja) is not valid with this release... the value must be 1.1 or 1.2", log)
+      var validMigrationPaths : scala.collection.mutable.Set[String] = scala.collection.mutable.Set[String]()
+      validMigrationPaths.add("1.1 => 1.4") 
+      validMigrationPaths.add("1.2 => 1.4") 
+      validMigrationPaths.add("1.3 => 1.4") 
+
+      if ( ! validMigrationPaths.contains(fromKamanja + " => " + toKamanja) ) {
+        printAndLogError(s"The upgrade path ($fromKamanja => $toKamanja) is not valid with this release... ", log)
         cnt += 1
       }
     }
@@ -740,7 +744,7 @@ Try again.
               , newInstallDirName
               , physicalRootDir
               , rootDirPath)
-            printAndLogDebug("Migration preparation " + (if (migratePreparationOk) "Succeed" else "Failed"), log)
+            printAndLogDebug("Migration preparation " + (if (migratePreparationOk) "Succeeded" else "Failed"), log)
             if (!migratePreparationOk) {
               printAndLogError(s"Some thing failed to prepare migration configuration. The parameters for the migration may be incorrect... aborting installation", log)
               printAndLogDebug(usage, log)
@@ -1506,14 +1510,14 @@ Try again.
                           , physicalRootDir: String
                           , rootDirPath: String): Boolean = {
 
-    val migrationToBeDone: String = if (fromKamanja == "1.1") "1.1=>1.3" else if (fromKamanja == "1.2") "1.2=>1.3" else "hmmm"
+    val migrationToBeDone: String = if (fromKamanja == "1.1") "1.1=>1.4" else if (fromKamanja == "1.2") "1.2=>1.4" else if (fromKamanja == "1.3") "1.3=>1.4" else "hmmm"
 
     // We should use these insted of below ones
     // val kamanjaFromVersion: String = fromKamanja
     // val kamanjaFromVersionWithUnderscore: String = fromKamanja.replace('.', '_')
 
     val migratePreparationOk: Boolean = migrationToBeDone match {
-      case "1.1=>1.3" => {
+      case "1.1=>1.4" => {
         val kamanjaFromVersion: String = "1.1"
         val kamanjaFromVersionWithUnderscore: String = "1_1"
         val migrateConfigJSON: String = createMigrationConfig(log
@@ -1544,7 +1548,7 @@ Try again.
         */
         true
       }
-      case "1.2=>1.3" => {
+      case "1.2=>1.4" => {
         val kamanjaFromVersion: String = "1.2"
         val kamanjaFromVersionWithUnderscore: String = "1_2"
         val migrateConfigJSON: String = createMigrationConfig(log
@@ -1565,16 +1569,33 @@ Try again.
         migratePending = true
         migrateConfig = migrateConfigJSON
         printAndLogDebug("Pending migrate %s with config %s".format(migrationToBeDone, migrateConfigJSON))
-        /*
-                val migrateObj: Migrate = new Migrate()
-                migrateObj.registerStatusCallback(log)
-                val rc: Int = migrateObj.runFromJsonConfigString(migrateConfigJSON)
-                (rc == 0)
-                */
+        true
+      }
+      case "1.3=>1.4" => {
+        val kamanjaFromVersion: String = "1.3"
+        val kamanjaFromVersionWithUnderscore: String = "1_3"
+        val migrateConfigJSON: String = createMigrationConfig(log
+          , migrateConfigFilePath
+          , nodeConfigPath
+          , apiConfigFile
+          , kamanjaFromVersion
+          , kamanjaFromVersionWithUnderscore
+          , newInstallDirName
+          , priorInstallDirName
+          , fromScala
+          , toScala
+          , unhandledMetadataDumpDir
+          , parentPath
+          , physicalRootDir
+          , rootDirPath
+        )
+        migratePending = true
+        migrateConfig = migrateConfigJSON
+        printAndLogDebug("Pending migrate %s with config %s".format(migrationToBeDone, migrateConfigJSON))
         true
       }
       case _ => {
-        printAndLogError("The 'fromKamanja' parameter is incorrect... this needs to be fixed.  The value can only be '1.1' or '1.2' for the '1.3' upgrade", log)
+        printAndLogError("The 'fromKamanja' parameter is incorrect... this needs to be fixed.  The value can only be '1.1' or '1.2' or '1.3' for the '1.4' upgrade", log)
         false
       }
     }
@@ -1823,8 +1844,8 @@ class ClusterConfigMap(cfgStr: String, var clusterIdOfInterest: String) {
   }
 
   private def getDataStore: Map[String, Any] = {
-    val dataStoreMap: Map[String, Any] = if (clusterMap.size > 0 && clusterMap.contains("DataStore")) {
-      clusterMap("DataStore").asInstanceOf[Map[String, Any]]
+    val dataStoreMap: Map[String, Any] = if (clusterMap.size > 0 && clusterMap.contains("SystemCatalog")) {
+      clusterMap("SystemCatalog").asInstanceOf[Map[String, Any]]
     } else {
       Map[String, Any]()
     }
