@@ -1002,7 +1002,7 @@ object ModelUtils {
         val result: String = UpdateCustomModel(modelType, input, optUserid, tenantId.get, optModelName, optVersion)
         result
       }
-      case ModelType.PMML => {
+      case ModelType.PMML => { //1.1.3
         val result: String = UpdatePMMLModel(modelType, input, optUserid, tenantId.get, optModelName, optVersion, optVersionBeingUpdated, optMsgProduced)
         result
       }
@@ -1054,6 +1054,12 @@ object ModelUtils {
         val onlyActive: Boolean = false /** allow active or inactive models to be updated */
         val optCurrent: Option[ModelDef] = mdMgr.Model(modelNmSpace, modelNm, currentVer, onlyActive)
         val currentModel: ModelDef = optCurrent.orNull
+
+        // See if we get the same tenant Id
+        if (!tenantId.equalsIgnoreCase(currentModel.tenantId)) {
+          return (new ApiResult(ErrorCodeConstants.Failure, "UpdateModel", null, s"Tenant ID is different from the one in the existing object.")).toString
+        }
+
         val currentMsg: String = if (currentModel != null) {
           //FIXME: Getting only the first one for now
           var msgConsumed: String = null
@@ -1258,6 +1264,9 @@ object ModelUtils {
         MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.UPDATEOBJECT, input, AuditConstants.SUCCESS, "", modDef.FullNameWithVer)
         val key = MdMgr.MkFullNameWithVersion(modDef.nameSpace, modDef.name, modDef.ver)
         if (latestVersion != None) {
+          if (!tenantId.equalsIgnoreCase(latestVersion.get.tenantId)) {
+            return (new ApiResult(ErrorCodeConstants.Failure, "UpdateModel", null, s"Tenant ID is different from the one in the existing object.")).toString
+          }
           RemoveModel(latestVersion.get.nameSpace, latestVersion.get.name, latestVersion.get.ver, None)
         }
         logger.info("Begin uploading dependent Jars, please wait...")
@@ -1352,6 +1361,10 @@ object ModelUtils {
         // when a version number changes, latestVersion  has different namespace making it unique
         // latest version may not be found in the cache. So need to remove it
         if (latestVersion != None) {
+          // Make sure the TenantIds didn't change
+          if (!tenantId.equalsIgnoreCase(latestVersion.tenantId)) {
+            return (new ApiResult(ErrorCodeConstants.Failure, "UpdateModel", null, s"Tenant ID is different from the one in the existing object.")).toString
+          }
           RemoveModel(latestVersion.nameSpace, latestVersion.name, latestVersion.ver, None)
         }
 
@@ -1442,6 +1455,9 @@ object ModelUtils {
         // when a version number changes, latestVersion  has different namespace making it unique
         // latest version may not be found in the cache. So need to remove it
         if (latestVersion != None) {
+          if (!tenantId.equalsIgnoreCase(latestVersion.tenantId)) {
+            return (new ApiResult(ErrorCodeConstants.Failure, "UpdateModel", null, s"Tenant ID is different from the one in the existing object.")).toString
+          }
           RemoveModel(latestVersion.nameSpace, latestVersion.name, latestVersion.ver, None)
         }
 
