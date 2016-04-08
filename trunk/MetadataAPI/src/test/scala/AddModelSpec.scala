@@ -331,7 +331,7 @@ class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter wi
 
       //fileList = List("outpatientclaim.json","inpatientclaim.json","hl7.json","beneficiary.json")
       //fileList = List("HelloWorld_Msg_Def.json","HelloWorld_Msg_Output_Def.json")
-      fileList = List("HelloWorld_Msg_Def.json","HelloWorld_Msg_Def_2.json")
+      fileList = List("HelloWorld_Msg_Def.json","HelloWorld_Msg_Def_2.json","HelloWorld_Msg_Def_3.json","HelloWorld_Out_Msg_Def_1.json")
       fileList.foreach(f1 => {
 	And("Add the Message From " + f1)
 	And("Make Sure " + f1 + " exist")
@@ -362,7 +362,7 @@ class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter wi
     }
 
     // CRUD operations on Model objects
-    it("Add KPPML Models") {
+    ignore("Add KPPML Models") {
       And("Check whether MODEL_FILES_DIR defined as property")
       dirName = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("MODEL_FILES_DIR")
       assert(null != dirName)
@@ -576,11 +576,11 @@ class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter wi
 	res = MetadataAPIImpl.GetModelDef(nameSpace, objName, "XML", version, userid)
 	res should include regex ("\"Status Code\" : 0")
 
-	And("Check whether default outmsg has been created")
-	val msgName = objName + "_outputmsg"
-	version = "000000000000000001"
-	res = MetadataAPIImpl.GetMessageDef(nameSpace, msgName, "JSON", version, userid)
-	res should include regex ("\"Status Code\" : 0")
+	//And("Check whether default outmsg has been created")
+	//val msgName = objName + "_outputmsg"
+	//version = "000000000000000001"
+	//res = MetadataAPIImpl.GetMessageDef(nameSpace, msgName, "JSON", version, userid)
+	//res should include regex ("\"Status Code\" : 0")
 
 	val modDefs = MdMgr.GetMdMgr.Models(nameSpace, objName, true, true)
 	assert(modDefs != None)
@@ -588,11 +588,11 @@ class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter wi
 	val models = modDefs.get.toArray
 	assert(models.length == 1)
 	
-	And("Validate contents of default outmsg")
-	var omsgs = models(0).outputMsgs
-	assert(omsgs.length == 1)
-	val msgFullName = nameSpace + "." + msgName
-	assert(omsgs(0) == msgFullName.toLowerCase)
+	//And("Validate contents of default outmsg")
+	//var omsgs = models(0).outputMsgs
+	//assert(omsgs.length == 1)
+	//val msgFullName = nameSpace + "." + msgName
+	//assert(omsgs(0) == msgFullName.toLowerCase)
 
 	// there should be two sets in this test
 	And("Validate contents of inputMsgSets")
@@ -604,16 +604,23 @@ class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter wi
 	assert(msgAttrArrays.length == 1 )
 	var msgAttr = msgAttrArrays(0)
 	assert(msgAttr != null)
-	assert(msgAttr.message.equalsIgnoreCase("system.helloworld_msg_def") || msgAttr.message.equalsIgnoreCase("system.helloworld_msg_def_2"))
+	assert(msgAttr.message.equalsIgnoreCase("system.helloworld_msg_def") || msgAttr.message.equalsIgnoreCase("system.helloworld_msg_def_2") || msgAttr.message.equalsIgnoreCase("system.helloworld_msg_def_3"))
 
 	msgAttrArrays = imsgs(1)
-	assert(msgAttrArrays.length == 1 )
+	assert(msgAttrArrays.length == 2 )
 	msgAttr = msgAttrArrays(0)
 	assert(msgAttr != null)
-	assert(msgAttr.message.equalsIgnoreCase("system.helloworld_msg_def_2") || msgAttr.message.equalsIgnoreCase("system.helloworld_msg_def"))
+	assert(msgAttr.message.equalsIgnoreCase("system.helloworld_msg_def_2") || msgAttr.message.equalsIgnoreCase("system.helloworld_msg_def_3"))
 
-	And("Validate contents of inputMsgSets")
 	var cfgName = "HelloWorld2Model"
+
+	And("Validate contents of outputMsgSets")
+	var omsgs = models(0).outputMsgs
+	assert(omsgs.length == 1)
+
+	var omsg = omsgs(0)
+	assert(omsg != null)
+	assert(omsg.equalsIgnoreCase("system.helloworld_out_msg_def_1"))
 
 	And("Validate the ModelDef.modelConfig")
 	modStr = models(0).modelConfig
