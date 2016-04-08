@@ -362,7 +362,7 @@ class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter wi
     }
 
     // CRUD operations on Model objects
-    it("Add KPPML Models") {
+    ignore("Add KPPML Models") {
       And("Check whether MODEL_FILES_DIR defined as property")
       dirName = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("MODEL_FILES_DIR")
       assert(null != dirName)

@@ -2,6 +2,9 @@
     "HelloWorld2Model": {
         "Dependencies": [
         ],
+        "InputTypesSets": [
+            ["system.helloworld_msg_def"],["system.helloworld_msg_def_2"]
+        ],
         "MessageAndContainers": [
             "system.helloworld_msg_def",
             "system.helloworld_msg_def_2"
