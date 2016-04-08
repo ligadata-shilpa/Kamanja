@@ -723,6 +723,11 @@ object ModelUtils {
       val isValid: Boolean = if (latestVersion != None) MetadataAPIImpl.IsValidVersion(latestVersion.get, modDef) else true
 
       if (isValid && modDef != null) {
+        if (optModelName != None) {
+          val configMap = MdMgr.GetMdMgr.GetModelConfig(optModelName.get.toLowerCase)
+          modDef.modelConfig = if (configMap != null) JsonSerializer.SerializeMapToJsonString(configMap) else ""
+        }
+
         MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.INSERTOBJECT, jsonText, AuditConstants.SUCCESS, "", modDef.FullNameWithVer)
         // save the jar file first
         PersistenceUtils.UploadJarsToDB(modDef)
@@ -825,6 +830,7 @@ object ModelUtils {
             }
 
           val (classStrTemp, modDefTemp) = compProxy.compileJTM(jtmTxt, mod.TenantId, extDepJars, true)
+          modDefTemp.modelConfig = mod.modelConfig
           modDefTemp
         } else {
           if (mod.objectFormat == ObjFormatType.fXML) {
@@ -1482,6 +1488,11 @@ object ModelUtils {
       val isValid: Boolean = (modDef != null && latestVersion != null && latestVersion.Version < modDef.Version)
 
       if (isValid && modDef != null) {
+        if (optModelName != None) {
+          val configMap = MdMgr.GetMdMgr.GetModelConfig(optModelName.get.toLowerCase)
+          modDef.modelConfig = if (configMap != null) JsonSerializer.SerializeMapToJsonString(configMap) else ""
+        }
+
         MetadataAPIImpl.logAuditRec(optUserid, Some(AuditConstants.WRITE), AuditConstants.UPDATEOBJECT, jtmText, AuditConstants.SUCCESS, "", modDef.FullNameWithVer)
         val key = MdMgr.MkFullNameWithVersion(modDef.nameSpace, modDef.name, modDef.ver)
 
