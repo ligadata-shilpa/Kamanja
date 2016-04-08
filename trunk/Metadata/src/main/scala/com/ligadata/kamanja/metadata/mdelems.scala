@@ -1190,6 +1190,21 @@ object SerializeDeserializeType extends Enumeration {
   */
 class SerializeDeserializeConfig(val serDeserType : SerializeDeserializeType.SerDeserType) extends BaseElemDef {}
 
+/**
+  * An AdapterMessageBinding describes a triple: the adapter, a message it either consumes or produces, and a serializer
+  * that can interpret a stream represention of an instance of this message or produce a serialized representation of same.
+  * @param adapterName the name of the adapter (input/output/storage)
+  * @param messageName the namespace.name of the message that is consumed.
+  * @param serializer the SerializeDeserializeConfig namespace.name that can resurrect and serialize the associated message
+  * @param options (optional) serializer options that configure the serializer in some fashion
+  */
+class AdapterMessageBinding(  val adapterName : String
+                            , val messageName : String
+                            , val serializer : String
+                            , val options : scala.collection.immutable.Map[String,String]
+                                    = scala.collection.immutable.Map[String,String]())
+        extends BaseElemDef {}
+
 class TenantInfo(val tenantId: String, val description: String, val primaryDataStore: String, val cacheConfig: String) {}
 
 object ModelCompilationConstants {

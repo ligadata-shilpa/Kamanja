@@ -423,7 +423,7 @@ object MessageAndContainerUtils {
     var resultStr: String = ""
     try {
 
-      if (tenantId == None)    return (new ApiResult(ErrorCodeConstants.Failure, "UpdateMessage/UpdateContainer", null, s"Tenant ID is required to perform an UPDATE MESSAGE or an UPDATE CONTAINER operation")).toString
+      if (tenantId == None)  return (new ApiResult(ErrorCodeConstants.Failure, "UpdateMessage/UpdateContainer", null, s"Tenant ID is required to perform an UPDATE MESSAGE or an UPDATE CONTAINER operation")).toString
 
       var compProxy = new CompilerProxy
       //compProxy.setLoggerLevel(Level.TRACE)
@@ -448,6 +448,11 @@ object MessageAndContainerUtils {
             isValid = IsValidVersion(latestVersion.get, msg)
           }
           if (isValid) {
+            // Check to make sure the TenantId is the same
+            if (!tenantId.get.equalsIgnoreCase(latestVersion.get.tenantId)) {
+              return (new ApiResult(ErrorCodeConstants.Failure, "UpdateMessage", null, s"Tenant ID is different from the one in the existing objects.")).toString
+            }
+
             RemoveMessage(latestVersion.get.nameSpace, latestVersion.get.name, latestVersion.get.ver, None)
             resultStr = AddMessageDef(msg)
 
@@ -480,6 +485,11 @@ object MessageAndContainerUtils {
             isValid = IsValidVersion(latestVersion.get, msg)
           }
           if (isValid) {
+            // Check to make sure the TenantId is the same
+            if (!tenantId.get.equalsIgnoreCase(latestVersion.get.tenantId)) {
+              return (new ApiResult(ErrorCodeConstants.Failure, "UpdateContainer", null, s"Tenant ID is different from the one in the existing objects.")).toString
+            }
+
             RemoveContainer(latestVersion.get.nameSpace, latestVersion.get.name, latestVersion.get.ver, None)
             resultStr = AddContainerDef(msg)
 
