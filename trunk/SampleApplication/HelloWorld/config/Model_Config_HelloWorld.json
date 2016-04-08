@@ -1,9 +1,17 @@
 {
-    "HelloWorldModel": {
-        "Dependencies": [
-        ],
-        "MessageAndContainers": [
-            "com.ligadata.kamanja.samples.messages.msg1"
-        ]
-    }
+  "HelloWorldModel": {
+    "Dependencies": [],
+    "MessageAndContainers": [
+      "com.ligadata.kamanja.samples.messages.msg1"
+    ],
+    "InputTypesSets": [
+      [
+        "com.ligadata.kamanja.samples.messages.msg1"
+      ]
+    ],
+    "OutputTypes": [
+      "com.ligadata.kamanja.samples.messages.msg1"
+    ]
+  }
 }
+
