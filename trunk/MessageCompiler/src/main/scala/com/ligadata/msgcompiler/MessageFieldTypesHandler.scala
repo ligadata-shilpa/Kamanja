@@ -43,19 +43,17 @@ class MessageFieldTypesHandler {
           field.FieldTypeImplementationName = types(1).asInstanceOf[String]
           field.AttributeTypeInfo = types(2).asInstanceOf[ArrtibuteInfo]
 
-          log.info("field.AttributeTypeInfo ====" + field.AttributeTypeInfo.keyTypeId);
-
+          if (field.AttributeTypeInfo != null) {
+            log.info("field.AttributeTypeInfo keyTypeId====" + field.AttributeTypeInfo.keyTypeId);
+            log.info("field.AttributeTypeInfo valSchemaId====" + field.AttributeTypeInfo.valSchemaId);
+            log.info("field.AttributeTypeInfo valTypeId====" + field.AttributeTypeInfo.valTypeId);
+            log.info("field.AttributeTypeInfo typeCategaryName====" + field.AttributeTypeInfo.typeCategaryName);
+          }
           //get the fields jarset for adding msg in the metadata
           jarset = jarset ++ getDependencyJarSet(field.FldMetaataType)
 
           //get the fields args list for addding message in the metadata 
           argsList = (field.NameSpace, field.Name, field.FldMetaataType.NameSpace, field.FldMetaataType.Name, false, null) :: argsList
-
-          /*  log.info("******************TYPES FROM METADATA START******************************")
-          log.info("type " + typ.get.tType.toString())
-          log.info("fields name " + field.Name)
-          log.info("fields type " + field.Ttype)
-          log.info("******************TYPES FROM METADATA START******************************")*/
         }
       })
     }
@@ -116,13 +114,6 @@ class MessageFieldTypesHandler {
     var arrayType: ArrayTypeDef = null
     if (fieldBaseType.isInstanceOf[ArrayTypeDef])
       arrayType = fieldBaseType.asInstanceOf[ArrayTypeDef]
-    /*
-    log.info("fieldTypeType " + fieldTypeType)
-    log.info("fieldBaseType 1 " + fieldBaseType.tType)
-    log.info("fieldBaseType 2 " + fieldBaseType.typeString)
-    log.info("fieldBaseType 3" + fieldBaseType.tTypeType)
-*/
-    // log.info("fieldType " + fieldType)
 
     fieldTypeType match {
       case "tscalar" => {
@@ -141,24 +132,34 @@ class MessageFieldTypesHandler {
             arrayType = fieldBaseType.asInstanceOf[ArrayTypeDef]
             types(0) = arrayType.typeString
             types(1) = arrayType.elemDef.implementationName
-            //  types(2) = new ArrtibuteInfo(1, 0, 0, fieldBaseType.implementationName.toLowerCase())
+            types(2) = getAttributeTypeInfo(arrayType.elemDef.tTypeType.toString().toLowerCase(), arrayType.elemDef, mdMgr)
 
           }
           case "tstruct" => {
-            var ctrDef: ContainerDef = mdMgr.Container(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
-            types(0) = ctrDef.PhysicalName
-            types(1) = ctrDef.FullName
+            var msgDef: MessageDef = mdMgr.Message(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
+            types(0) = msgDef.PhysicalName
+            types(1) = msgDef.FullName
+            val valTypeId = -1
+            val keyTypeId = -1
+            types(2) = new ArrtibuteInfo("MESSAGE", valTypeId, keyTypeId, msgDef.containerType.SchemaId)
           }
           case "tmsgmap" => {
             var ctrDef: ContainerDef = mdMgr.Container(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
             types(0) = ctrDef.PhysicalName
             types(1) = ctrDef.FullName
+            val valTypeId = -1
+            val keyTypeId = -1
+            types(2) = new ArrtibuteInfo("CONTAINER", valTypeId, keyTypeId, ctrDef.containerType.SchemaId)
           }
           case "tmap" => {
             var maptypeDef: MapTypeDef = null;
             maptypeDef = fieldBaseType.asInstanceOf[MapTypeDef]
             types(0) = maptypeDef.typeString
             types(1) = maptypeDef.valDef.implementationName
+
+            val valTypeIdInfo = getAttributeTypeInfo(maptypeDef.valDef.tTypeType.toString().toLowerCase(), maptypeDef.valDef, mdMgr)
+            val keyTypeId = AttributeTypeInfo.TypeCategory.STRING.getValue;
+            types(2) = new ArrtibuteInfo("MAP", valTypeIdInfo.valTypeId, keyTypeId, 0)
           }
           case _ => {
             throw new Exception("This types is not handled at this time ") // BUGBUG - Need to handled other cases
@@ -193,6 +194,42 @@ class MessageFieldTypesHandler {
     return -1
   }
 
+  private def getAttributeTypeInfo(typeInfo: String, typtytpe: BaseTypeDef, mdMgr: MdMgr): ArrtibuteInfo = {
+
+    var typetyprStr: String = typtytpe.tType.toString().toLowerCase()
+    typeInfo match {
+      case "tscalar" => {
+        val valTypeId = getAttributeValTypeId(typtytpe.PhysicalName.toLowerCase());
+        val keyTypeId = AttributeTypeInfo.TypeCategory.ARRAY.getValue
+        return new ArrtibuteInfo("ARRAY", valTypeId, keyTypeId, 0)
+      }
+      case "tcontainer" => {
+        typetyprStr match {
+          case "tarray" => { throw new Exception("Not supporting array of array"); }
+          case "tstruct" => {
+            var msgDef: MessageDef = mdMgr.Message(typtytpe.FullName, -1, true).getOrElse(null)
+            val valTypeId = -1
+            val keyTypeId = -1
+            return new ArrtibuteInfo("MESSAGE", valTypeId, keyTypeId, msgDef.containerType.SchemaId)
+          }
+          case "tmsgmap" => {
+            var ctrDef: ContainerDef = mdMgr.Container(typtytpe.FullName, -1, true).getOrElse(null)
+            val valTypeId = -1
+            val keyTypeId = -1
+            return new ArrtibuteInfo("CONTAINER", valTypeId, keyTypeId, ctrDef.containerType.SchemaId)
+          }
+          case "tmap" => {}
+          case _ => {
+            throw new Exception("This types is not handled at this time ") // BUGBUG - Need to handled other cases
+          }
+        }
+      }
+      case _ => {
+        throw new Exception("This types is not handled at this time ") // BUGBUG - Need to handled other cases
+      }
+    }
+    return null
+  }
   /*
    * get the AttributeKeyTypeId
    */

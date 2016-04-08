@@ -5,12 +5,12 @@ public class AttributeTypeInfo {
 	String name;
 	int Index;
 	TypeCategory typeCategory; // from TypeCategory
-	byte valTypeId;
-	byte keyTypeId;
+	short valTypeId;
+	short keyTypeId;
 	long valSchemaId;
 
 	public AttributeTypeInfo(String name, int Index, TypeCategory typeCategory,
-			byte valTypeId, byte keyTypeId, long valSchemaId) {
+			short valTypeId, short keyTypeId, long valSchemaId) {
 		this.name = name;
 		this.Index = Index;
 		this.typeCategory = typeCategory;
@@ -21,7 +21,7 @@ public class AttributeTypeInfo {
 
 	public enum TypeCategory {
 		INT(0), STRING(1), FLOAT(2), DOUBLE(3), LONG(4), BYTE(5), CHAR(6), CONTAINER(
-				1001), MAP(1002), ARRAY(1003);
+				1001), MESSAGE(1001), MAP(1002), ARRAY(1003), NONE(-1);
 		private int value;
 
 		private TypeCategory(int value) {
@@ -61,15 +61,15 @@ public class AttributeTypeInfo {
 		this.typeCategory = typeCategory;
 	}
 
-	public byte getValTypeId() {
+	public short getValTypeId() {
 		return valTypeId;
 	}
 
-	public void setValTypeId(byte valTypeId) {
+	public void setValTypeId(short valTypeId) {
 		this.valTypeId = valTypeId;
 	}
 
-	public byte getKeyTypeId() {
+	public short getKeyTypeId() {
 		return keyTypeId;
 	}
 

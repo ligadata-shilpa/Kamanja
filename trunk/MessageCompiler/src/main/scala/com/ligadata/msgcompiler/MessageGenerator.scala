@@ -220,6 +220,7 @@ class MessageGenerator {
 
     if (message.Elements != null) {
       message.Elements.foreach(field => {
+        if(field.AttributeTypeInfo != null)
          getAttributeTypes.append("%s attributeTypes :+ new AttributeTypeInfo(\"%s\", %s, AttributeTypeInfo.TypeCategory.%s, %s, %s, %s)%s".format(msgConstants.pad2, field.Name, field.FieldOrdinal, field.AttributeTypeInfo.typeCategaryName, field.AttributeTypeInfo.valTypeId, field.AttributeTypeInfo.keyTypeId, field.AttributeTypeInfo.valSchemaId, msgConstants.newline))
       })
 
