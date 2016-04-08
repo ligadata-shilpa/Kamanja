@@ -116,7 +116,7 @@ object StartMetadataAPI {
             if (arg != "debug") {
               /** ignore the debug tag */
               if (arg.equalsIgnoreCase(TENANTID)) {
-                expectTid = true
+                  expectTid = true
                 extraCmdArgs(TENANTID) = ""
               } else if(arg.equalsIgnoreCase(WITHDEP)) {
                 expectDep = true
@@ -127,6 +127,8 @@ object StartMetadataAPI {
                 expectModelVer = true
               } else if (arg.equalsIgnoreCase(MESSAGENAME)) {
                 expectMessageName = true
+              } else if ( arg.equalsIgnoreCase(OUTPUTMSG) ){
+                expectOutputMsg = true
               }
 
               else {
@@ -154,6 +156,12 @@ object StartMetadataAPI {
                 if (expectMessageName) {
                   extraCmdArgs(MESSAGENAME) = arg
                   expectMessageName = false
+                  argVar = ""  // Make sure we dont add to the routing command
+                }
+                if(expectOutputMsg ){
+                  extraCmdArgs(OUTPUTMSG) = arg
+                  logger.debug("Found output message definition " + arg + " in the command ")
+                  expectOutputMsg = false
                   argVar = ""  // Make sure we dont add to the routing command
                 }
 
