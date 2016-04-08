@@ -63,14 +63,25 @@ object hl7 extends RDDObject[hl7] with ContainerFactoryInterface {
 }
 
 class hl7(factory: ContainerFactoryInterface) extends ContainerInterface(factory) {
-  val logger = this.getClass.getName
-  lazy val log = LogManager.getLogger(logger)
+  private val log = LogManager.getLogger(getClass)
 
-  var valuesMap = Array[AttributeValue]()
+  var valuesMap = Map[String, AttributeValue]()
 
-  val attributeTypes = Array(new AttributeTypeInfo(0, 1, 0, 0, "string"), new AttributeTypeInfo(1, 1, 0, 0, "long"), new AttributeTypeInfo(2, 1, 0, 0, "int"), new AttributeTypeInfo(3, 1, 0, 0, "int"), new AttributeTypeInfo(4, 1, 0, 0, "int"), new AttributeTypeInfo(5, 1, 0, 0, "int"), new AttributeTypeInfo(6, 1, 0, 0, "int"), new AttributeTypeInfo(7, 1, 0, 0, "int"));
+  var attributeTypes = getAttributeTypes
 
-  val keyTypes: Map[String, AttributeTypeInfo] = Map("desynpuf_id" -> attributeTypes(0), "clm_id" -> attributeTypes(1), "clm_from_dt" -> attributeTypes(2), "clm_thru_dt" -> attributeTypes(3), "bene_birth_dt" -> attributeTypes(4), "bene_death_dt" -> attributeTypes(4), "bene_sex_ident_cd" -> attributeTypes(5), "bene_race_cd" -> attributeTypes(6))
+  private val keyTypes: Map[String, AttributeTypeInfo] = attributeTypes.map { a => (a.getName, a) }.toMap
+
+  private def getAttributeTypes(): Array[AttributeTypeInfo] = {
+    var attributeTypes = new Array[AttributeTypeInfo](7)
+    attributeTypes :+ new AttributeTypeInfo("desynpuf_id", 0, AttributeTypeInfo.TypeCategory.STRING, 0, 0, 0)
+    attributeTypes :+ new AttributeTypeInfo("clm_id", 1, AttributeTypeInfo.TypeCategory.LONG, 0, 0, 0)
+    attributeTypes :+ new AttributeTypeInfo("clm_from_dt", 2, AttributeTypeInfo.TypeCategory.INT, 0, 0, 0)
+    attributeTypes :+ new AttributeTypeInfo("clm_thru_dt", 3, AttributeTypeInfo.TypeCategory.INT, 0, 0, 0)
+    attributeTypes :+ new AttributeTypeInfo("bene_birth_dt", 4, AttributeTypeInfo.TypeCategory.INT, 0, 0, 0)
+    attributeTypes :+ new AttributeTypeInfo("bene_death_dt", 5, AttributeTypeInfo.TypeCategory.INT, 0, 0, 0)
+    attributeTypes :+ new AttributeTypeInfo("bene_sex_ident_cd", 6, AttributeTypeInfo.TypeCategory.INT, 0, 0, 0)
+    return attributeTypes
+  }
 
   override def getPrimaryKey(): Array[String] = {
     var primaryKeys: scala.collection.mutable.ArrayBuffer[String] = scala.collection.mutable.ArrayBuffer[String]();
@@ -103,13 +114,11 @@ class hl7(factory: ContainerFactoryInterface) extends ContainerInterface(factory
   override def Clone(): ContainerOrConcept = { hl7.build(this) }
 
   override def getAttributeNames(): Array[String] = {
-    var attributeNames: scala.collection.mutable.ArrayBuffer[String] = scala.collection.mutable.ArrayBuffer[String]();
     try {
-      val iter = valuesMap.iterator;
-      while (iter.hasNext) {
-        val attributeName = iter.next().getName;
-        if (attributeName != null && attributeName.trim() != "")
-          attributeNames += attributeName;
+      if (valuesMap.isEmpty) {
+        return null;
+      } else {
+        return valuesMap.keySet.toArray;
       }
     } catch {
       case e: Exception => {
@@ -117,16 +126,16 @@ class hl7(factory: ContainerFactoryInterface) extends ContainerInterface(factory
         throw e
       }
     }
-    return attributeNames.toArray;
   }
 
   override def get(key: String): Any = { // Return (value, type)
-    return valuesMap(valuesMap.indexOf(key)).getValue
+    val value = valuesMap(key).getValue
+    if (value == null) return null; else return value;
   }
 
   override def getOrElse(key: String, defaultVal: Any): Any = { // Return (value, type)
     try {
-      val value = valuesMap(valuesMap.indexOf(key)).getValue
+      val value = valuesMap(key).getValue
       if (value == null) return defaultVal;
       return value;
     } catch {
@@ -146,7 +155,7 @@ class hl7(factory: ContainerFactoryInterface) extends ContainerInterface(factory
   }
 
   override def getAllAttributeValues(): Array[AttributeValue] = { // Has (name, value, type))
-    return valuesMap;
+    return valuesMap.map(f => f._2).toArray;
   }
 
   override def getAttributeNameAndValueIterator(): java.util.Iterator[AttributeValue] = {
@@ -158,11 +167,9 @@ class hl7(factory: ContainerFactoryInterface) extends ContainerInterface(factory
     try {
       val keyName: String = key.toLowerCase();
       if (keyTypes.contains(key)) {
-        val valType = keyTypes.get(keyName)
-        valuesMap :+ new AttributeValue(key, value, keyTypes(keyName))
+        valuesMap = valuesMap + (key -> new AttributeValue(value, keyTypes(keyName)))
       } else {
-        // valuesMap :+ new AttributeValue(key, value, keyTypes(keyName))   -- Set the AttrubutesTypeInfo
-
+        valuesMap = valuesMap + (key -> new AttributeValue(ValueToString(value), new AttributeTypeInfo(key, -1, AttributeTypeInfo.TypeCategory.STRING, 0, 0, 0)))
       }
 
     } catch {
@@ -175,7 +182,16 @@ class hl7(factory: ContainerFactoryInterface) extends ContainerInterface(factory
 
   override def set(key: String, value: Any, valTyp: String) = {
     try {
-    //  valuesMap :+ new AttributeValue(key, value, keyTypes(key))  ... Need to get more details...
+      val keyName: String = key.toLowerCase();
+      if (keyTypes.contains(key)) {
+        valuesMap = valuesMap + (key -> new AttributeValue(value, keyTypes(keyName)))
+      } else {
+        val typeCategory = AttributeTypeInfo.TypeCategory.valueOf(valTyp.toUpperCase())
+        val keytypeId = typeCategory.getValue.toShort
+        val valtypeId = typeCategory.getValue.toShort
+        valuesMap = valuesMap + (key -> new AttributeValue(value, new AttributeTypeInfo(key, -1, typeCategory, valtypeId, keytypeId, 0)))
+      }
+
     } catch {
       case e: Exception => {
         log.debug("", e)
@@ -186,6 +202,19 @@ class hl7(factory: ContainerFactoryInterface) extends ContainerInterface(factory
 
   override def set(index: Int, value: Any) = {
     throw new Exception("Set By Index is not supported in mapped messages");
+  }
+
+  private def ValueToString(v: Any): String = {
+    if (v.isInstanceOf[Set[_]]) {
+      return v.asInstanceOf[Set[_]].mkString(",")
+    }
+    if (v.isInstanceOf[List[_]]) {
+      return v.asInstanceOf[List[_]].mkString(",")
+    }
+    if (v.isInstanceOf[Array[_]]) {
+      return v.asInstanceOf[Array[_]].mkString(",")
+    }
+    v.toString
   }
 }
 

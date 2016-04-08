@@ -405,8 +405,7 @@ class MessageGenerator {
    */
   private def getMessgeBasicDetails(message: Message): String = {
     """ 
-    val logger = this.getClass.getName
-    lazy val log = LogManager.getLogger(logger)
+    private val log = LogManager.getLogger(getClass)
 """
   }
 

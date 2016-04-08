@@ -93,7 +93,7 @@ class SchemaCompiler {
               retFldStr = generateFieldType(fldStr, bslash, quote)
             } else if (fieldTypestr.size == 2) {
               log.info("fieldTypestr(1).substring(7) " + fieldTypestr(1));
-              if (primitiveTypes.contains(fieldTypestr(1)) || primitiveTypes.contains(fieldTypestr(1).substring(7))) {
+              if (primitiveTypes.contains(fieldTypestr(1)) || primitiveTypes.contains(fieldTypestr(1).substring(7)) || primitiveTypes.contains(fieldTypestr(1).substring(5))) {
                 retFldStr = parseFldStr(fieldTypestr) //handling array of primitive types (scalar types)
               } else {
                 retFldStr = parseContainer(field, mdMgr) //handling array of containers if the container if the namespace is one word
