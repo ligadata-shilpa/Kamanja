@@ -22,6 +22,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.text.ParseException
+import com.ligadata.KamanjaVersion.KamanjaVersion
 import com.ligadata.MetadataAPI.MetadataAPI.ModelType
 import com.ligadata.MetadataAPI.MetadataAPI.ModelType.ModelType
 
@@ -91,6 +92,10 @@ object PersistenceUtils {
   private val storageDefaultTxnId = 0L
   lazy val serializerType = "json4s"//"kryo"
   //lazy val serializer = SerializerManager.GetSerializer(serializerType)
+
+  lazy val versionStr = s"${KamanjaVersion.getMajorVersion}.${KamanjaVersion.getMinorVersion}.${KamanjaVersion.getMicroVersion}"
+  lazy val excludeSystemJars = Set("ExtDependencyLibs_2.11-${versionStr}.jar", "ExtDependencyLibs2_2.11-${versionStr}.jar", "KamanjaInternalDeps_2.11-${versionStr}.jar",
+                                      "ExtDependencyLibs_2.10-${versionStr}.jar", "ExtDependencyLibs2_2.10-${versionStr}.jar", "KamanjaInternalDeps_2.10-${versionStr}.jar")
 
   def GetMainDS: DataStore = mainDS
 
@@ -525,7 +530,7 @@ object PersistenceUtils {
       if (obj.DependencyJarNames != null) {
         obj.DependencyJarNames.foreach(j => {
           // do not upload if it already exist & just uploaded/checked in db, minor optimization
-          if (j.endsWith(".jar") && checkedJars.contains(j) == false) {
+          if (j.endsWith(".jar") && checkedJars.contains(j) == false && excludeSystemJars.contains(j) == false) {
             var loadObject = false
             val jarName = com.ligadata.Utils.Utils.GetValidJarFile(jarPaths, j)
             val value = MetadataAPIImpl.GetJarAsArrayOfBytes(jarName)
