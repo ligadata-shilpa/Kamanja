@@ -226,7 +226,7 @@ class CsvSerDeser() extends SerializeDeserialize with LogTrait {
                           ,typedef : BaseTypeDef
                           ,attr : com.ligadata.KamanjaBase.AttributeValue
                           ,doTrailingComma : Boolean) = {
-        val valueType : String = attr.getValueType
+        val valueType : String = "" // attr.getValueType // BUGBUG:: FIXME FIX THIS
         val rawValue : Any = attr.getValue
         val typeName : String = typedef.FullName
         logger.debug(s"emit field $typeName with original value = ${rawValue.toString}")
