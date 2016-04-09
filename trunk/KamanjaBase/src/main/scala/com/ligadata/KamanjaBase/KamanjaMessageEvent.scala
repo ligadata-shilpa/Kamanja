@@ -83,7 +83,7 @@ class KamanjaMessageEvent(factory: MessageFactoryInterface, other: KamanjaMessag
   }
 
   var messageid: Long = _;
-  var modelinfo: scala.Array[com.ligadata.KamanjaBase.V1000003000000.KamanjaModelEvent] = _;
+  var modelinfo: scala.Array[com.ligadata.KamanjaBase.KamanjaModelEvent] = _;
   var elapsedtimeinms: Float = _;
   var messagekey: String = _;
   var messagevalue: String = _;
@@ -236,8 +236,8 @@ class KamanjaMessageEvent(factory: MessageFactoryInterface, other: KamanjaMessag
           else throw new Exception(s"Value is the not the correct type for index $index in message KamanjaMessageEvent")
         }
         case 1 => {
-          if (value.isInstanceOf[scala.Array[com.ligadata.KamanjaBase.V1000003000000.KamanjaModelEvent]])
-            this.modelinfo = value.asInstanceOf[scala.Array[com.ligadata.KamanjaBase.V1000003000000.KamanjaModelEvent]];
+          if (value.isInstanceOf[scala.Array[com.ligadata.KamanjaBase.KamanjaModelEvent]])
+            this.modelinfo = value.asInstanceOf[scala.Array[com.ligadata.KamanjaBase.KamanjaModelEvent]];
           else throw new Exception(s"Value is the not the correct type for index $index in message KamanjaMessageEvent")
         }
         case 2 => {
@@ -279,8 +279,8 @@ class KamanjaMessageEvent(factory: MessageFactoryInterface, other: KamanjaMessag
   private def fromFunc(other: KamanjaMessageEvent): KamanjaMessageEvent = {
     this.messageid = com.ligadata.BaseTypes.LongImpl.Clone(other.messageid);
     if (other.modelinfo != null) {
-      modelinfo = new scala.Array[com.ligadata.KamanjaBase.V1000003000000.KamanjaModelEvent](other.modelinfo.length)
-      modelinfo = other.modelinfo.map(f => f.Clone.asInstanceOf[com.ligadata.KamanjaBase.V1000003000000.KamanjaModelEvent]);
+      modelinfo = new scala.Array[com.ligadata.KamanjaBase.KamanjaModelEvent](other.modelinfo.length)
+      modelinfo = other.modelinfo.map(f => f.Clone.asInstanceOf[com.ligadata.KamanjaBase.KamanjaModelEvent]);
     } else modelinfo = null;
     this.elapsedtimeinms = com.ligadata.BaseTypes.FloatImpl.Clone(other.elapsedtimeinms);
     this.messagekey = com.ligadata.BaseTypes.StringImpl.Clone(other.messagekey);
