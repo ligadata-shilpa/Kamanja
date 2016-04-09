@@ -1,5 +1,5 @@
 
-package com.ligadata.KamanjaBase.V1000003000000;
+package com.ligadata.KamanjaBase;
 
 import org.json4s.jackson.JsonMethods._
 import org.json4s.DefaultFormats
