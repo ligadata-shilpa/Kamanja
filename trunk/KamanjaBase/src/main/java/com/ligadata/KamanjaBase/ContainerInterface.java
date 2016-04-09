@@ -87,6 +87,8 @@ public abstract class ContainerInterface extends ContainerOrConcept {
 
 	public abstract String[] getAttributeNames();
 
+	public abstract AttributeTypeInfo[] getAttributeTypes();
+
 	public abstract Object get(String key); // Return (value, type)
 
 	public abstract Object get(int index); // Return (value, type)
