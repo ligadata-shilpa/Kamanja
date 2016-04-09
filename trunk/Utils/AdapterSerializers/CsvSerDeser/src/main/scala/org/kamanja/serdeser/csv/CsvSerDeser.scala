@@ -126,7 +126,7 @@ class CsvSerDeser() extends SerializeDeserialize with LogTrait {
             throw new ObjectNotFoundException(s"The container ${containerName} surprisingly has no fields...serialize fails", null)
         }
 
-        val fields : java.util.HashMap[String,com.ligadata.KamanjaBase.AttributeValue] = v.getAllAttributeValues
+      /*  val fields : java.util.HashMap[String,com.ligadata.KamanjaBase.AttributeValue] = v.getAllAttributeValues
         val fieldTypes : Array[BaseTypeDef] = fieldsToConsider.map(fld => fld.typeDef)
 
         if (_emitHeaderFirst) {
@@ -148,7 +148,7 @@ class CsvSerDeser() extends SerializeDeserialize with LogTrait {
                 throw new ObjectNotFoundException(s"during serialize()...attribute ${attr.FullName} could not be found in the container... mismatch", null)
             }
         })
-
+*/
         val strRep : String = dos.toString
         logger.debug(s"attribute as JSON:\n$strRep")
 

@@ -68,9 +68,9 @@ class KamanjaStatusEvent(factory: MessageFactoryInterface, other: KamanjaStatusE
 
   override def getPrimaryKey: Array[String] = Array[String]()
 
-  var attributeTypes = getAttributeTypes;
+  var attributeTypes = generateAttributeTypes;
 
-  private def getAttributeTypes(): Array[AttributeTypeInfo] = {
+  private def generateAttributeTypes(): Array[AttributeTypeInfo] = {
     var attributeTypes = new Array[AttributeTypeInfo](3);
     attributeTypes :+ new AttributeTypeInfo("nodeid", 0, AttributeTypeInfo.TypeCategory.STRING, 1, 1, 0)
     attributeTypes :+ new AttributeTypeInfo("eventtime", 1, AttributeTypeInfo.TypeCategory.LONG, 4, 4, 0)
@@ -79,20 +79,25 @@ class KamanjaStatusEvent(factory: MessageFactoryInterface, other: KamanjaStatusE
     return attributeTypes
   }
 
+  override def getAttributeTypes(): Array[AttributeTypeInfo] = {
+    if (attributeTypes == null) return null;
+    return attributeTypes
+  }
+
   var nodeid: String = _;
   var eventtime: Long = _;
   var statusstring: String = _;
 
-  private def getWithReflection(key: String): Any = {
+  private def getWithReflection(key: String): AnyRef = {
     val ru = scala.reflect.runtime.universe
     val m = ru.runtimeMirror(getClass.getClassLoader)
     val im = m.reflect(this)
     val fieldX = ru.typeOf[KamanjaStatusEvent].declaration(ru.newTermName(key)).asTerm.accessed.asTerm
     val fmX = im.reflectField(fieldX)
-    return fmX.get;
+    return fmX.get.asInstanceOf[AnyRef];
   }
 
-  override def get(key: String): Any = {
+  override def get(key: String): AnyRef = {
     try {
       // Try with reflection
       return getByName(key.toLowerCase())
@@ -106,15 +111,15 @@ class KamanjaStatusEvent(factory: MessageFactoryInterface, other: KamanjaStatusE
     }
   }
 
-  private def getByName(key: String): Any = {
+  private def getByName(key: String): AnyRef = {
     if (!keyTypes.contains(key)) throw new Exception(s"Key $key does not exists in message/container hl7Fixed ");
     return get(keyTypes(key).getIndex)
   }
 
-  override def getOrElse(key: String, defaultVal: Any): Any = { // Return (value, type)
+  override def getOrElse(key: String, defaultVal: Any): AnyRef = { // Return (value, type)
     try {
       val value = get(key.toLowerCase())
-      if (value == null) return defaultVal; else return value;
+      if (value == null) return defaultVal.asInstanceOf[AnyRef]; else return value;
     } catch {
       case e: Exception => {
         log.debug("", e)
@@ -124,10 +129,10 @@ class KamanjaStatusEvent(factory: MessageFactoryInterface, other: KamanjaStatusE
     return null;
   }
 
-  override def getOrElse(index: Int, defaultVal: Any): Any = { // Return (value,  type)
+  override def getOrElse(index: Int, defaultVal: Any): AnyRef = { // Return (value,  type)
     try {
       val value = get(index)
-      if (value == null) return defaultVal; else return value;
+      if (value == null) return defaultVal.asInstanceOf[AnyRef]; else return value;
     } catch {
       case e: Exception => {
         log.debug("", e)
@@ -176,12 +181,12 @@ class KamanjaStatusEvent(factory: MessageFactoryInterface, other: KamanjaStatusE
 
   }
 
-  def get(index: Int): Any = { // Return (value, type)
+  def get(index: Int): AnyRef = { // Return (value, type)
     try {
       index match {
-        case 0 => return this.nodeid;
-        case 1 => return this.eventtime;
-        case 2 => return this.statusstring;
+        case 0 => return this.nodeid.asInstanceOf[AnyRef];
+        case 1 => return this.eventtime.asInstanceOf[AnyRef];
+        case 2 => return this.statusstring.asInstanceOf[AnyRef];
 
         case _ => throw new Exception(s"$index is a bad index for message KamanjaStatusEvent");
       }

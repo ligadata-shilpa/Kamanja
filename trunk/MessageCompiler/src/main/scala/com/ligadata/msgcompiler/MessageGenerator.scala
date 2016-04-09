@@ -101,6 +101,7 @@ class MessageGenerator {
   private def getGetSetMethodsFixed(message: Message): String = {
     var getSetFixed = new StringBuilder(8 * 1024)
     try {
+      getSetFixed = getSetFixed.append(msgConstants.getAttributeTypesMethodFixed)
       getSetFixed = getSetFixed.append(getWithReflection(message));
       getSetFixed = getSetFixed.append(getByStringhFixed(message));
       getSetFixed = getSetFixed.append(getByName(message));
@@ -193,7 +194,7 @@ class MessageGenerator {
   private def getAttributeTypes(message: Message): String = {
     val getAttributeTypes = genGetAttributeMethod(message)
     """
-      var attributeTypes = getAttributeTypes;
+      var attributeTypes = generateAttributeTypes;
       """ + getAttributeTypes
 
   }
@@ -205,7 +206,7 @@ class MessageGenerator {
   private def genGetAttributeMethod(message: Message): String = {
     var arrsize = message.Elements.size
     """
-    private def getAttributeTypes(): Array[AttributeTypeInfo] = {
+    private def generateAttributeTypes(): Array[AttributeTypeInfo] = {
       var attributeTypes = new Array[AttributeTypeInfo](""" + arrsize + """);
    """ + genGetAttributeTypes(message) + """
      

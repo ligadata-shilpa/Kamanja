@@ -306,6 +306,7 @@ import java.util.Date
     var getSetMapped = new StringBuilder(8 * 1024)
     try {
       getSetMapped.append(valuesMapMapped);
+      getSetMapped.append(getAttributeTypesMethodMapped)
       getSetMapped.append(getByNameFuncForMapped)
       getSetMapped.append(getOrElseFuncForMapped)
       getSetMapped.append(getAttibuteNamesMapped)
@@ -396,6 +397,25 @@ import java.util.Date
       attributeValue
     }  
     """
+  }
+
+  def getAttributeTypesMethodFixed = {
+
+    """
+    override def getAttributeTypes(): Array[AttributeTypeInfo] = {
+      if (attributeTypes == null) return null;
+      return attributeTypes
+    }
+    """
+  }
+
+  def getAttributeTypesMethodMapped = {
+    """
+    override def getAttributeTypes(): Array[AttributeTypeInfo] = {
+      val attributeTyps = valuesMap.map(f => f._2.getValueType).toArray;
+      if (attributeTyps == null) return null else return attributeTyps
+    }   
+ """
   }
 
 }

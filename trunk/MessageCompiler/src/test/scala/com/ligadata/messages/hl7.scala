@@ -67,11 +67,11 @@ class hl7(factory: ContainerFactoryInterface) extends ContainerInterface(factory
 
   var valuesMap = scala.collection.mutable.Map[String, AttributeValue]()
 
-  var attributeTypes = getAttributeTypes
+  var attributeTypes = generateAttributeTypes
 
   val keyTypes: Map[String, AttributeTypeInfo] = attributeTypes.map { a => (a.getName, a) }.toMap
 
-  private def getAttributeTypes(): Array[AttributeTypeInfo] = {
+  private def generateAttributeTypes(): Array[AttributeTypeInfo] = {
     var attributeTypes = new Array[AttributeTypeInfo](7)
     attributeTypes :+ new AttributeTypeInfo("desynpuf_id", 0, AttributeTypeInfo.TypeCategory.STRING, 0, 0, 0)
     attributeTypes :+ new AttributeTypeInfo("clm_id", 1, AttributeTypeInfo.TypeCategory.LONG, 0, 0, 0)
@@ -81,6 +81,11 @@ class hl7(factory: ContainerFactoryInterface) extends ContainerInterface(factory
     attributeTypes :+ new AttributeTypeInfo("bene_death_dt", 5, AttributeTypeInfo.TypeCategory.INT, 0, 0, 0)
     attributeTypes :+ new AttributeTypeInfo("bene_sex_ident_cd", 6, AttributeTypeInfo.TypeCategory.INT, 0, 0, 0)
     return attributeTypes
+  }
+  
+  override def getAttributeTypes(): Array[AttributeTypeInfo] = {
+    val attributeTyps = valuesMap.map(f => f._2.getValueType).toArray;
+    if (attributeTyps == null) return null else return attributeTyps
   }
 
   override def getPrimaryKey(): Array[String] = {

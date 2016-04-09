@@ -8,7 +8,8 @@ import com.ligadata.KamanjaBase.{ AttributeTypeInfo, AttributeValue, ContainerFa
 import com.ligadata.BaseTypes._
 import com.ligadata.Exceptions.StackTrace;
 import org.apache.logging.log4j.{ Logger, LogManager }
-import java.util.Date
+import java.util.Date;
+import scala.collection.JavaConversions._
 
 object KamanjaExecutionFailureEvent extends RDDObject[KamanjaExecutionFailureEvent] with MessageFactoryInterface {
   type T = KamanjaExecutionFailureEvent;
@@ -68,9 +69,9 @@ class KamanjaExecutionFailureEvent(factory: MessageFactoryInterface, other: Kama
 
   override def getPrimaryKey: Array[String] = Array[String]()
 
-  var attributeTypes = getAttributeTypes;
+  var attributeTypes = generateAttributeTypes;
 
-  private def getAttributeTypes(): Array[AttributeTypeInfo] = {
+  private def generateAttributeTypes(): Array[AttributeTypeInfo] = {
     var attributeTypes = new Array[AttributeTypeInfo](4);
     attributeTypes :+ new AttributeTypeInfo("msgid", 0, AttributeTypeInfo.TypeCategory.LONG, 4, 4, 0)
     attributeTypes :+ new AttributeTypeInfo("timeoferrorepochms", 1, AttributeTypeInfo.TypeCategory.LONG, 4, 4, 0)
@@ -85,16 +86,21 @@ class KamanjaExecutionFailureEvent(factory: MessageFactoryInterface, other: Kama
   var msgcontent: String = _;
   var errordetail: String = _;
 
-  private def getWithReflection(key: String): Any = {
+  override def getAttributeTypes(): Array[AttributeTypeInfo] = {
+    if (attributeTypes == null) return null;
+    return attributeTypes
+  }
+  
+  private def getWithReflection(key: String): AnyRef = {
     val ru = scala.reflect.runtime.universe
     val m = ru.runtimeMirror(getClass.getClassLoader)
     val im = m.reflect(this)
     val fieldX = ru.typeOf[KamanjaExecutionFailureEvent].declaration(ru.newTermName(key)).asTerm.accessed.asTerm
     val fmX = im.reflectField(fieldX)
-    return fmX.get;
+    return fmX.get.asInstanceOf[AnyRef];
   }
 
-  override def get(key: String): Any = {
+  override def get(key: String): AnyRef = {
     try {
       // Try with reflection
       return getByName(key.toLowerCase())
@@ -108,15 +114,15 @@ class KamanjaExecutionFailureEvent(factory: MessageFactoryInterface, other: Kama
     }
   }
 
-  private def getByName(key: String): Any = {
+  private def getByName(key: String): AnyRef = {
     if (!keyTypes.contains(key)) throw new Exception(s"Key $key does not exists in message/container hl7Fixed ");
     return get(keyTypes(key).getIndex)
   }
 
-  override def getOrElse(key: String, defaultVal: Any): Any = { // Return (value, type)
+  override def getOrElse(key: String, defaultVal: Any): AnyRef = { // Return (value, type)
     try {
       val value = get(key.toLowerCase())
-      if (value == null) return defaultVal; else return value;
+      if (value == null) return defaultVal.asInstanceOf[AnyRef]; else return value;
     } catch {
       case e: Exception => {
         log.debug("", e)
@@ -126,10 +132,10 @@ class KamanjaExecutionFailureEvent(factory: MessageFactoryInterface, other: Kama
     return null;
   }
 
-  override def getOrElse(index: Int, defaultVal: Any): Any = { // Return (value,  type)
+  override def getOrElse(index: Int, defaultVal: Any): AnyRef = { // Return (value,  type)
     try {
       val value = get(index)
-      if (value == null) return defaultVal; else return value;
+      if (value == null) return defaultVal.asInstanceOf[AnyRef]; else return value;
     } catch {
       case e: Exception => {
         log.debug("", e)
@@ -179,13 +185,13 @@ class KamanjaExecutionFailureEvent(factory: MessageFactoryInterface, other: Kama
 
   }
 
-  def get(index: Int): Any = { // Return (value, type)
+  override def get(index: Int): AnyRef = { // Return (value, type)
     try {
       index match {
-        case 0 => return this.msgid;
-        case 1 => return this.timeoferrorepochms;
-        case 2 => return this.msgcontent;
-        case 3 => return this.errordetail;
+        case 0 => return this.msgid.asInstanceOf[AnyRef];
+        case 1 => return this.timeoferrorepochms.asInstanceOf[AnyRef];
+        case 2 => return this.msgcontent.asInstanceOf[AnyRef];
+        case 3 => return this.errordetail.asInstanceOf[AnyRef];
 
         case _ => throw new Exception(s"$index is a bad index for message KamanjaExecutionFailureEvent");
       }

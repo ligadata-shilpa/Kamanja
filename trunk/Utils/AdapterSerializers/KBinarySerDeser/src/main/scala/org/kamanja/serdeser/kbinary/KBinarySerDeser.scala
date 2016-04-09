@@ -101,7 +101,7 @@ class KBinarySerDeser() extends SerializeDeserialize with LogTrait {
             throw new ObjectNotFoundException(s"The container ${containerTypeName} surprisingly has no fields...serialize fails", null)
         }
 
-        val fields : java.util.HashMap[String,com.ligadata.KamanjaBase.AttributeValue] = v.getAllAttributeValues
+       /* val fields : java.util.HashMap[String,com.ligadata.KamanjaBase.AttributeValue] = v.getAllAttributeValues
         var processCnt : Int = 0
         val fieldCnt : Int = fields.size()
         fieldsToConsider.foreach(fldname => {
@@ -121,13 +121,13 @@ class KBinarySerDeser() extends SerializeDeserialize with LogTrait {
                 }
             } else {
                 if (mappedMsgType == null) {
-                    /** is permissible that a mapped field has no value in the container. */
+                    *//** is permissible that a mapped field has no value in the container. *//*
                 } else {
-                    /** blow it up when fixed msg field is missing */
+                    *//** blow it up when fixed msg field is missing *//*
                     throw new ObjectNotFoundException(s"The fixed container $containerTypeName field $fldname has no value",null)
                 }
             }
-        })
+        })*/
 
         val strRep : String = dos.toString
         logger.debug(s"container $containerTypeName as JSON:\n$strRep")
