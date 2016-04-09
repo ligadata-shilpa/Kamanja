@@ -22,6 +22,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.text.ParseException
+import com.ligadata.KamanjaVersion.KamanjaVersion
 import com.ligadata.MetadataAPI.MetadataAPI.ModelType
 import com.ligadata.MetadataAPI.MetadataAPI.ModelType.ModelType
 
@@ -91,6 +92,10 @@ object PersistenceUtils {
   private val storageDefaultTxnId = 0L
   lazy val serializerType = "json4s"//"kryo"
   //lazy val serializer = SerializerManager.GetSerializer(serializerType)
+
+  lazy val versionStr = s"${KamanjaVersion.getMajorVersion}.${KamanjaVersion.getMinorVersion}.${KamanjaVersion.getMicroVersion}"
+  lazy val excludeSystemJars = Set(s"ExtDependencyLibs_2.11-${versionStr}.jar", s"ExtDependencyLibs2_2.11-${versionStr}.jar", s"KamanjaInternalDeps_2.11-${versionStr}.jar",
+                                      s"ExtDependencyLibs_2.10-${versionStr}.jar", s"ExtDependencyLibs2_2.10-${versionStr}.jar", s"KamanjaInternalDeps_2.10-${versionStr}.jar")
 
   def GetMainDS: DataStore = mainDS
 
@@ -344,6 +349,34 @@ object PersistenceUtils {
     }
   }
 
+  def SaveSchemaInformation(schemaId: Int, nameSpace: String, name: String, version: Long, physicalName: String, avroSchema: String, containerType: String): Unit = {
+    val (containerName, store) = GetContainerNameAndDataStore("AvroSchemaInfo")
+
+    val json = "AvroSchemaInfo" ->
+      ("SchemaId" -> schemaId) ~
+        ("NameSpace" -> nameSpace) ~
+        ("Name" -> name) ~
+        ("Version" -> version) ~
+        ("PhysicalName" -> physicalName) ~
+        ("AvroSchema" -> avroSchema) ~
+        ("ContainerType" -> containerType)
+
+    val outputJson = compact(render(json))
+
+    var storeObjects = new Array[(Key, String, Any)](1)
+    val k = Key(storageDefaultTime, Array(schemaId.toString), storageDefaultTxnId, 0)
+    storeObjects(0) = (k, "JSON", outputJson.getBytes())
+
+    try {
+      store.put(null, Array((containerName, storeObjects)))
+    } catch {
+      case e: Exception => {
+        logger.error("Failed to insert/update object for schemaid: " + schemaId, e)
+        throw UpdateStoreFailedException("Failed to insert/update object for schemaid: " + schemaId, e)
+      }
+    }
+  }
+
   /**
     * UpdateObject
     *
@@ -525,7 +558,7 @@ object PersistenceUtils {
       if (obj.DependencyJarNames != null) {
         obj.DependencyJarNames.foreach(j => {
           // do not upload if it already exist & just uploaded/checked in db, minor optimization
-          if (j.endsWith(".jar") && checkedJars.contains(j) == false) {
+          if (j.endsWith(".jar") && checkedJars.contains(j) == false && excludeSystemJars.contains(j) == false) {
             var loadObject = false
             val jarName = com.ligadata.Utils.Utils.GetValidJarFile(jarPaths, j)
             val value = MetadataAPIImpl.GetJarAsArrayOfBytes(jarName)

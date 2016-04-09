@@ -418,12 +418,12 @@ class MdMgr {
       ad.collectionType = tNone
     } else {
       val ctype = collectionType.trim
-      if (ctype.isEmpty())
+      if (ctype.isEmpty() || ctype.compareToIgnoreCase("none") == 0)
         ad.collectionType = tNone
       else if (ctype.compareToIgnoreCase("array") == 0)
         ad.collectionType = tArray
-      else if (ctype.compareToIgnoreCase("arraybuffer") == 0)
-        ad.collectionType = tArrayBuf
+      else if (ctype.compareToIgnoreCase("map") == 0)
+        ad.collectionType = tMap
       else
         throw new Throwable(s"Not yet handled collection Type $ctype")
     }

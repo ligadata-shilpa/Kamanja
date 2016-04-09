@@ -76,7 +76,7 @@ import ObjScalarType._
 
 object ObjType extends Enumeration {
   type Type = Value
-  val tNone, tAny, tInt, tLong, tFloat, tDouble, tString, tBoolean, tChar, tArray, tArrayBuf, tSet, tTreeSet, tSortedSet, tMap, tHashMap, tMsgMap, tList, tQueue, tStruct, tAttr = Value
+  val tNone, tAny, tInt, tLong, tFloat, tDouble, tString, tBoolean, tChar, tArray, tMap, tMsgMap, tStruct, tAttr = Value
 
   def asString(typ: Type): String = {
     val str = typ.toString match {
@@ -117,14 +117,8 @@ object ObjType extends Enumeration {
       case "boolean" => tBoolean
       case "char" => tChar
       case "array" => tArray
-      case "set" => tSet
-      case "sortedset" => tSortedSet
-      case "treeset" => tTreeSet
       case "map" => tMap
-      case "hashmap" => tHashMap
       case "msgmap" => tMap
-      case "list" => tList
-      case "queue" => tQueue
       case "struct" => tStruct
       case "attr" => tAttr
       case _ => tNone
@@ -571,6 +565,7 @@ abstract class BaseAttributeDef extends BaseElemDef {
   override def MdElementCategory: String = "Attribute"
   def parent: BaseAttributeDef
   def typeDef: BaseTypeDef //BaseElemDef
+  def CollectionType: ObjType.Type
 
   def typeString: String
 }
@@ -580,6 +575,7 @@ class AttributeDef extends BaseAttributeDef {
   def tTypeType = tContainer
   def parent = inherited
   override def typeDef: BaseTypeDef = aType
+  override def CollectionType: ObjType.Type = collectionType
 
   var aType: BaseTypeDef = _
   var inherited: AttributeDef = _ // attributes could be inherited from others - in that case aType would be same as parent one
@@ -592,8 +588,8 @@ class AttributeDef extends BaseAttributeDef {
     } else {
       if (collectionType == tArray) {
         "Array[" + baseTypStr + "]"
-      } else if (collectionType == tArrayBuf) {
-        "scala.collection.mutable.ArrayBuffer[" + baseTypStr + "]"
+      } else if (collectionType == tMap) {
+        "scala.collection.immutable.Map[String, " + baseTypStr + "]"
       } else {
         throw new Throwable(s"Not yet handled collection Type $collectionType")
       }

@@ -337,6 +337,21 @@ object ModelUtils {
     }
   }
 
+  private def AddOutMsgToModelDef(modDef: ModelDef, modelType: ModelType.ModelType, optMsgProduced: Option[String], userid: Option[String]): Unit = {
+    // save the outMessage if any
+    if (optMsgProduced != None) {
+      modDef.outputMsgs = modDef.outputMsgs :+ optMsgProduced.get.toLowerCase
+    }
+    else {
+      // no need to create a default output message if modelconfig defines an output message as well
+      if( modDef.outputMsgs.length == 0 ){
+        val defaultMessage = MessageAndContainerUtils.createDefaultOutputMessage(modDef, userid)
+        modDef.outputMsgs = modDef.outputMsgs :+ defaultMessage
+      }
+    }
+  }
+    
+
   /**
     * AddModelFromSource - compiles and catalogs a custom Scala or Java model from source.
     *
@@ -353,14 +368,8 @@ object ModelUtils {
       compProxy.setSessionUserId(userid)
       val modDef = compProxy.compileModelFromSource(sourceCode, modelName, sourceLang, userid, tenantId)
 
-      // save the outMessage as well
-      if (optMsgProduced != None) {
-        modDef.outputMsgs = modDef.outputMsgs :+ optMsgProduced.get.toLowerCase
-      }
-      else {
-        val defaultMessage = MessageAndContainerUtils.createDefaultOutputMessage(modDef, userid)
-        modDef.outputMsgs = modDef.outputMsgs :+ defaultMessage
-      }
+      // save the outMessage
+      AddOutMsgToModelDef(modDef,ModelType.fromString(sourceLang),optMsgProduced,userid)
 
       logger.info("Begin uploading dependent Jars, please wait.")
       PersistenceUtils.UploadJarsToDB(modDef)
@@ -433,20 +442,30 @@ object ModelUtils {
               ): String = {
 
     // No Add Model is allowed without Tenant Id
-    if (tenantId == None) throw new KamanjaException("Tenant Id rquired to Add Model", null)
+    if (tenantId == None) {
+      return (new ApiResult(ErrorCodeConstants.Failure, "AddModel", null, s"Tenant ID is required to perform a ADD MODEL operation")).toString
+    }
 
     if (optMsgProduced != None) {
       logger.info("Validating the output message type " + optMsgProduced.get.toLowerCase);
-      if (!MessageAndContainerUtils.IsMessageExists(optMsgProduced.get.toLowerCase)) {
+      val msg = MessageAndContainerUtils.IsMessageExists(optMsgProduced.get.toLowerCase)
+      if ( msg == null ) {
+	logger.info("Unknown outputmsg " + optMsgProduced.get.toLowerCase);
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddModel", null, s"Unknown Outmessage ${optMsgProduced.get.toLowerCase} error = ${ErrorCodeConstants.Add_Model_Failed}")
         return apiResult.toString
       }
       else {
-        logger.info("The message type " + optMsgProduced.get.toLowerCase + " is found in metadata");
+	if ( modelType == ModelType.KPMML  && ! MessageAndContainerUtils.IsMappedMessage(msg)) {
+	  logger.info("outputmsg " + optMsgProduced.get.toLowerCase + " not a mapped message ");
+
+          val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddModel", null, s"Outmessage ${optMsgProduced.get.toLowerCase} must be a mapped message for KPPML Models, error = ${ErrorCodeConstants.Add_Model_Failed}")
+          return apiResult.toString
+	}
       }
+      logger.info("A valid message type " + optMsgProduced.get.toLowerCase + " is already found in metadata");
     }
     else {
-      logger.info("We will be creating a default output message ..")
+      logger.debug("We may create a default output message depending on whether they are supplied in ModelConfig object ..")
     }
 
     val modelResult: String = modelType match {
@@ -456,7 +475,7 @@ object ModelUtils {
       case ModelType.JTM => {
         AddJTMModel(input, optUserid, tenantId.get, optModelName)
       }
-      case ModelType.JAVA | ModelType.SCALA => {
+      case ModelType.JAVA | ModelType.SCALA => {  //ModelUtils.AddModel(modelType, input, optUserid, optTenantid, optModelName, optVersion, optMsgConsumed, optMsgVersion, optMsgProduced)
         val result: String = optModelName.fold(throw new RuntimeException("Model name should be provided for Java/Scala models"))(name => {
           AddModelFromSource(input, modelType.toString, name, optUserid, tenantId.get, optMsgProduced)
         })
@@ -564,14 +583,10 @@ object ModelUtils {
         modDef.uniqueId = MetadataAPIImpl.GetUniqueId
         modDef.mdElementId = if (existingModel == None) MetadataAPIImpl.GetMdElementId else existingModel.get.MdElementId
         MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.INSERTOBJECT, pmmlText, AuditConstants.SUCCESS, "", modDef.FullNameWithVer)
-        // save the outMessage as well
-        if (optMsgProduced != None) {
-          modDef.outputMsgs = modDef.outputMsgs :+ optMsgProduced.get.toLowerCase
-        }
-        else {
-          val defaultMessage = MessageAndContainerUtils.createDefaultOutputMessage(modDef, userid)
-          modDef.outputMsgs = modDef.outputMsgs :+ defaultMessage
-        }
+
+	// save the outMessage
+	AddOutMsgToModelDef(modDef,ModelType.PMML,optMsgProduced,userid)
+
         // save the jar file first
         PersistenceUtils.UploadJarsToDB(modDef)
         val apiResult = AddModel(modDef, userid)
@@ -648,14 +663,10 @@ object ModelUtils {
 
       if (isValid && modDef != null) {
         MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.INSERTOBJECT, pmmlText, AuditConstants.SUCCESS, "", modDef.FullNameWithVer)
-        // save the outMessage as well
-        if (optMsgProduced != None) {
-          modDef.outputMsgs = modDef.outputMsgs :+ optMsgProduced.get.toLowerCase
-        }
-        else {
-          val defaultMessage = MessageAndContainerUtils.createDefaultOutputMessage(modDef, userid)
-          modDef.outputMsgs = modDef.outputMsgs :+ defaultMessage
-        }
+
+	// save the outMessage
+	AddOutMsgToModelDef(modDef,ModelType.KPMML,optMsgProduced,userid)
+
         // save the jar file first
         PersistenceUtils.UploadJarsToDB(modDef)
         val apiResult = AddModel(modDef, userid)
@@ -705,8 +716,17 @@ object ModelUtils {
   private def AddJTMModel(jsonText: String, userid: Option[String], tenantId: String, optModelName: Option[String]): String = {
     try {
       var compProxy = new CompilerProxy
+
+      // Getting external dependency jars
+      val extDepJars =
+        if (optModelName != None) {
+          MetadataAPIImpl.getModelDependencies(optModelName.get, userid)
+        } else {
+          List[String]()
+        }
+
       //compProxy.setLoggerLevel(Level.TRACE)
-      var (classStr, modDef) = compProxy.compileJTM(jsonText, tenantId)
+      var (classStr, modDef) = compProxy.compileJTM(jsonText, tenantId, extDepJars)
 
       // ModelDef may be null if there were pmml compiler errors... act accordingly.  If modelDef present,
       // make sure the version of the model is greater than any of previous models with same FullName
@@ -714,6 +734,11 @@ object ModelUtils {
       val isValid: Boolean = if (latestVersion != None) MetadataAPIImpl.IsValidVersion(latestVersion.get, modDef) else true
 
       if (isValid && modDef != null) {
+        if (optModelName != None) {
+          val configMap = MdMgr.GetMdMgr.GetModelConfig(optModelName.get.toLowerCase)
+          modDef.modelConfig = if (configMap != null) JsonSerializer.SerializeMapToJsonString(configMap) else ""
+        }
+
         MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.INSERTOBJECT, jsonText, AuditConstants.SUCCESS, "", modDef.FullNameWithVer)
         // save the jar file first
         PersistenceUtils.UploadJarsToDB(modDef)
@@ -785,7 +810,38 @@ object ModelUtils {
         // here.
         if (isJtm && mod.objectFormat == ObjFormatType.fJSON) {
           val jtmTxt = mod.ObjectDefinition
-          val (classStrTemp, modDefTemp) = compProxy.compileJTM(jtmTxt, mod.TenantId, true)
+
+          // Getting external dependency jars
+          val extDepJars =
+            if (mod.modelConfig != null) {
+              val trimmedMdlCfg = mod.modelConfig.trim
+              if (trimmedMdlCfg.size > 0) {
+                var deps = List[String]()
+                try {
+                  val modelParms = parse(mod.modelConfig).values.asInstanceOf[Map[String, Any]]
+                  val typDeps = modelParms.getOrElse(ModelCompilationConstants.DEPENDENCIES, null)
+                  if (typDeps != null) {
+                    if (typDeps.isInstanceOf[List[_]])
+                      deps = typDeps.asInstanceOf[List[String]]
+                    if (typDeps.isInstanceOf[Array[_]])
+                      deps = typDeps.asInstanceOf[Array[String]].toList
+                  }
+                }
+                catch {
+                  case e: Throwable => {
+                    logger.error("Failed to parse model config.", e)
+                  }
+                }
+                deps
+              } else {
+                List[String]()
+              }
+            } else {
+              List[String]()
+            }
+
+          val (classStrTemp, modDefTemp) = compProxy.compileJTM(jtmTxt, mod.TenantId, extDepJars, true)
+          modDefTemp.modelConfig = mod.modelConfig
           modDefTemp
         } else {
           if (mod.objectFormat == ObjFormatType.fXML) {
@@ -985,7 +1041,7 @@ object ModelUtils {
       * must be properly handled to remove the one with the version supplied.
       */
 
-    if (tenantId == None) throw new KamanjaException("TenantId must be present to perform Update Model operation", null)
+    if (tenantId == None) return (new ApiResult(ErrorCodeConstants.Failure, "UpdateModel", null, s"Tenant ID is required to perform a UPDATE MODEL operation")).toString
 
     val modelResult: String = modelType match {
       case ModelType.KPMML => {
@@ -1000,7 +1056,7 @@ object ModelUtils {
         val result: String = UpdateCustomModel(modelType, input, optUserid, tenantId.get, optModelName, optVersion)
         result
       }
-      case ModelType.PMML => {
+      case ModelType.PMML => { //1.1.3
         val result: String = UpdatePMMLModel(modelType, input, optUserid, tenantId.get, optModelName, optVersion, optVersionBeingUpdated, optMsgProduced)
         result
       }
@@ -1052,6 +1108,12 @@ object ModelUtils {
         val onlyActive: Boolean = false /** allow active or inactive models to be updated */
         val optCurrent: Option[ModelDef] = mdMgr.Model(modelNmSpace, modelNm, currentVer, onlyActive)
         val currentModel: ModelDef = optCurrent.orNull
+
+        // See if we get the same tenant Id
+        if (!tenantId.equalsIgnoreCase(currentModel.tenantId)) {
+          return (new ApiResult(ErrorCodeConstants.Failure, "UpdateModel", null, s"Tenant ID is different from the one in the existing object.")).toString
+        }
+
         val currentMsg: String = if (currentModel != null) {
           //FIXME: Getting only the first one for now
           var msgConsumed: String = null
@@ -1114,6 +1176,9 @@ object ModelUtils {
         val isValid: Boolean = if (optVersionUpdated.isDefined) MetadataAPIImpl.IsValidVersion(versionUpdated, modDef) else true
 
         if (isValid && modDef != null) {
+	  // save the outMessage
+	  AddOutMsgToModelDef(modDef,ModelType.PMML,optMsgProduced,optUserid)
+
           val existingModel = MdMgr.GetMdMgr.Model(modDef.NameSpace, modDef.Name, -1, false) // Any version is fine. No need of active
           modDef.uniqueId = MetadataAPIImpl.GetUniqueId
           modDef.mdElementId = if (existingModel == None) MetadataAPIImpl.GetMdElementId else existingModel.get.MdElementId
@@ -1256,6 +1321,9 @@ object ModelUtils {
         MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.UPDATEOBJECT, input, AuditConstants.SUCCESS, "", modDef.FullNameWithVer)
         val key = MdMgr.MkFullNameWithVersion(modDef.nameSpace, modDef.name, modDef.ver)
         if (latestVersion != None) {
+          if (!tenantId.equalsIgnoreCase(latestVersion.get.tenantId)) {
+            return (new ApiResult(ErrorCodeConstants.Failure, "UpdateModel", null, s"Tenant ID is different from the one in the existing object.")).toString
+          }
           RemoveModel(latestVersion.get.nameSpace, latestVersion.get.name, latestVersion.get.ver, None)
         }
         logger.info("Begin uploading dependent Jars, please wait...")
@@ -1350,12 +1418,11 @@ object ModelUtils {
         // when a version number changes, latestVersion  has different namespace making it unique
         // latest version may not be found in the cache. So need to remove it
         if (latestVersion != None) {
+          // Make sure the TenantIds didn't change
+          if (!tenantId.equalsIgnoreCase(latestVersion.tenantId)) {
+            return (new ApiResult(ErrorCodeConstants.Failure, "UpdateModel", null, s"Tenant ID is different from the one in the existing object.")).toString
+          }
           RemoveModel(latestVersion.nameSpace, latestVersion.name, latestVersion.ver, None)
-        }
-
-        // copy optMsgProduced to outputMsgs
-        if (optMsgProduced != None) {
-          modDef.outputMsgs = modDef.outputMsgs :+ optMsgProduced.get.toLowerCase
         }
 
         PersistenceUtils.UploadJarsToDB(modDef)
@@ -1417,7 +1484,16 @@ object ModelUtils {
     try {
       var compProxy = new CompilerProxy
       //compProxy.setLoggerLevel(Level.TRACE)
-      var (classStr, modDef) = compProxy.compileJTM(jtmText, tenantId)
+
+      // Getting external dependency jars
+      val extDepJars =
+        if (optModelName != None) {
+          MetadataAPIImpl.getModelDependencies(optModelName.get, optUserid)
+        } else {
+          List[String]()
+        }
+
+      var (classStr, modDef) = compProxy.compileJTM(jtmText, tenantId, extDepJars)
       val optLatestVersion = if (modDef == null) None else GetLatestModel(modDef)
       val latestVersion: ModelDef = optLatestVersion.orNull
 
@@ -1434,12 +1510,20 @@ object ModelUtils {
       val isValid: Boolean = (modDef != null && latestVersion != null && latestVersion.Version < modDef.Version)
 
       if (isValid && modDef != null) {
+        if (optModelName != None) {
+          val configMap = MdMgr.GetMdMgr.GetModelConfig(optModelName.get.toLowerCase)
+          modDef.modelConfig = if (configMap != null) JsonSerializer.SerializeMapToJsonString(configMap) else ""
+        }
+
         MetadataAPIImpl.logAuditRec(optUserid, Some(AuditConstants.WRITE), AuditConstants.UPDATEOBJECT, jtmText, AuditConstants.SUCCESS, "", modDef.FullNameWithVer)
         val key = MdMgr.MkFullNameWithVersion(modDef.nameSpace, modDef.name, modDef.ver)
 
         // when a version number changes, latestVersion  has different namespace making it unique
         // latest version may not be found in the cache. So need to remove it
         if (latestVersion != None) {
+          if (!tenantId.equalsIgnoreCase(latestVersion.tenantId)) {
+            return (new ApiResult(ErrorCodeConstants.Failure, "UpdateModel", null, s"Tenant ID is different from the one in the existing object.")).toString
+          }
           RemoveModel(latestVersion.nameSpace, latestVersion.name, latestVersion.ver, None)
         }
 

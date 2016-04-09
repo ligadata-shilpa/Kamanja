@@ -103,6 +103,7 @@ object MessageAndContainerUtils {
       MetadataAPIImpl.UploadJarsToDB(contDef)
       var objectsAdded = AddMessageTypes(contDef, MdMgr.GetMdMgr, recompile)
       objectsAdded = objectsAdded :+ contDef
+      PersistenceUtils.SaveSchemaInformation(contDef.cType.SchemaId, contDef.NameSpace, contDef.Name, contDef.Version, contDef.PhysicalName, contDef.cType.AvroSchema, "Container")
       MetadataAPIImpl.SaveObjectList(objectsAdded, "containers")
       val operations = for (op <- objectsAdded) yield "Add"
       MetadataAPIImpl.NotifyEngine(objectsAdded, operations)
@@ -131,6 +132,7 @@ object MessageAndContainerUtils {
       MetadataAPIImpl.UploadJarsToDB(msgDef)
       var objectsAdded = AddMessageTypes(msgDef, MdMgr.GetMdMgr, recompile)
       objectsAdded = objectsAdded :+ msgDef
+      PersistenceUtils.SaveSchemaInformation(msgDef.cType.SchemaId, msgDef.NameSpace, msgDef.Name, msgDef.Version, msgDef.PhysicalName, msgDef.cType.AvroSchema, "Message")
       MetadataAPIImpl.SaveObjectList(objectsAdded, "messages")
       val operations = for (op <- objectsAdded) yield "Add"
       MetadataAPIImpl.NotifyEngine(objectsAdded, operations)
@@ -248,7 +250,7 @@ object MessageAndContainerUtils {
   def AddContainerOrMessage(contOrMsgText: String, format: String, userid: Option[String], tenantId: Option[String] = None, recompile: Boolean = false): String = {
     var resultStr: String = ""
 
-    if (tenantId == None) throw new KamanjaException("Unable to perform operation Add Message or Add Container without a Tenant Id",null)
+    if (tenantId == None)    return (new ApiResult(ErrorCodeConstants.Failure, "AddContainer/AddMessage", null, s"Tenant ID is required to perform an ADD CONTAINER or an ADD MESSAGE operation")).toString
 
     try {
       var compProxy = new CompilerProxy
@@ -423,7 +425,7 @@ object MessageAndContainerUtils {
     var resultStr: String = ""
     try {
 
-      if (tenantId == None) throw new KamanjaException("Unable to complete Update Message operation, Tenant Id is required", null)
+      if (tenantId == None)  return (new ApiResult(ErrorCodeConstants.Failure, "UpdateMessage/UpdateContainer", null, s"Tenant ID is required to perform an UPDATE MESSAGE or an UPDATE CONTAINER operation")).toString
 
       var compProxy = new CompilerProxy
       //compProxy.setLoggerLevel(Level.TRACE)
@@ -448,6 +450,11 @@ object MessageAndContainerUtils {
             isValid = IsValidVersion(latestVersion.get, msg)
           }
           if (isValid) {
+            // Check to make sure the TenantId is the same
+            if (!tenantId.get.equalsIgnoreCase(latestVersion.get.tenantId)) {
+              return (new ApiResult(ErrorCodeConstants.Failure, "UpdateMessage", null, s"Tenant ID is different from the one in the existing objects.")).toString
+            }
+
             RemoveMessage(latestVersion.get.nameSpace, latestVersion.get.name, latestVersion.get.ver, None)
             resultStr = AddMessageDef(msg)
 
@@ -480,6 +487,11 @@ object MessageAndContainerUtils {
             isValid = IsValidVersion(latestVersion.get, msg)
           }
           if (isValid) {
+            // Check to make sure the TenantId is the same
+            if (!tenantId.get.equalsIgnoreCase(latestVersion.get.tenantId)) {
+              return (new ApiResult(ErrorCodeConstants.Failure, "UpdateContainer", null, s"Tenant ID is different from the one in the existing objects.")).toString
+            }
+
             RemoveContainer(latestVersion.get.nameSpace, latestVersion.get.name, latestVersion.get.ver, None)
             resultStr = AddContainerDef(msg)
 
@@ -1368,6 +1380,15 @@ object MessageAndContainerUtils {
     }
   }
 
+    /**
+      * Answer if the supplied MessageDef contains is a MappedMsgTypeDef.
+      *
+      * @param aType a MessageDef
+      * @return true if a MappedMsgTypeDef
+      */
+    def IsMappedMessage(msg : MessageDef) : Boolean = {
+        msg.containerType.isInstanceOf[MappedMsgTypeDef]
+    }
 
   /**
     * Check whether message already exists in metadata manager. Ideally,
@@ -1376,9 +1397,9 @@ object MessageAndContainerUtils {
     * This is just a utility function being during these initial phases
     *
     * @param objectName
-    * @return
+    * @return MessageDef
     */
-  def IsMessageExists(objectName: String): Boolean = {
+  def IsMessageExists(objectName: String): MessageDef = {
     try {
       val nameNodes: Array[String] = if (objectName != null && 
 					 objectName.contains('.')) objectName.split('.') 
@@ -1396,11 +1417,11 @@ object MessageAndContainerUtils {
         case None =>
           None
           logger.debug("message not in the cache => " + objectName)
-          return false;
+          return null;
         case Some(m) =>
           logger.debug("message found => " + m.asInstanceOf[MessageDef].FullName + "." + 
 		       MdMgr.Pad0s2Version(m.asInstanceOf[MessageDef].ver))
-          return true
+          return m.asInstanceOf[MessageDef]
       }
     } catch {
       case e: Exception => {
@@ -1419,7 +1440,7 @@ object MessageAndContainerUtils {
       val msgName = name + "_outputmsg"
       val msgFullName = nameSpace + "." + msgName
 
-      if( IsMessageExists(msgFullName) ){
+      if( IsMessageExists(msgFullName) != null ){
 	logger.info("The message " + msgFullName + " already exist, not recreating it...")
 	return msgFullName
       }

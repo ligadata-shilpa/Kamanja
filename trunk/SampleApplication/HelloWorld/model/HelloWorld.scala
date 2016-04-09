@@ -20,7 +20,7 @@ import com.ligadata.KamanjaBase._
 import com.ligadata.kamanja.metadata.ModelDef;
 
 class HelloWorldModelFactory(modelDef: ModelDef, nodeContext: NodeContext) extends ModelInstanceFactory(modelDef, nodeContext) {
-//  override def isValidMessage(msg: ContainerInterface): Boolean = return msg.isInstanceOf[msg1]
+  override def isValidMessage(msg: ContainerInterface): Boolean = return false // msg.isInstanceOf[msg1]
   override def createModelInstance(): ModelInstance = return new HelloWorldModel(this)
   override def getModelName: String = "HelloWorldModel" 
   override def getVersion: String = "0.0.1"
@@ -28,13 +28,10 @@ class HelloWorldModelFactory(modelDef: ModelDef, nodeContext: NodeContext) exten
 }
 
 class HelloWorldModel(factory: ModelInstanceFactory) extends ModelInstance(factory) {
-   override def run(txnCtxt: TransactionContext, execMsgsSet: Array[ContainerInterface], matchedInputSetIndex: Int, outputDefault: Boolean):ModelResultBase = {
+   override def execute(txnCtxt: TransactionContext, execMsgsSet: Array[ContainerOrConcept], triggerdSetIndex: Int, outputDefault: Boolean): Array[ContainerOrConcept] = {
      var helloWorld : msg1 =  execMsgsSet(0).asInstanceOf[msg1] // This run should trigger when we have only msg1
         if(helloWorld.score!=1)
           return null;
-     var actualResults: Array[Result] = Array[Result](new Result("Id",helloWorld.id),
-                                                        new Result("Name",helloWorld.name),
-                                                        new Result("Score",helloWorld.score))
-     return factory.createResultObject().asInstanceOf[MappedModelResults].withResults(actualResults)
+        return Array(helloWorld);
    }
 }
