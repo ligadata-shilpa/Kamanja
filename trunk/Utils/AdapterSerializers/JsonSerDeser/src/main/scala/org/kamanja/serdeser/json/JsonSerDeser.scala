@@ -116,9 +116,9 @@ class JSONSerDes() extends SerializeDeserialize with LogTrait {
             throw new ObjectNotFoundException(s"The container ${containerName} surprisingly has no fields...serialize fails", null)
         }
 
-        val fields : java.util.HashMap[String,com.ligadata.KamanjaBase.AttributeValue] = v.getAllAttributeValues
+        val fields = v.getAllAttributeValues
         var processCnt : Int = 0
-        val fieldCnt : Int = fields.size()
+        val fieldCnt : Int = fields.length
         fieldsToConsider.foreach(fldname => {
             processCnt += 1
             val attr : com.ligadata.KamanjaBase.AttributeValue = fields.get(fldname)
@@ -379,7 +379,7 @@ class JSONSerDes() extends SerializeDeserialize with LogTrait {
       * @return a ContainerInterface
       */
     @throws(classOf[com.ligadata.Exceptions.ObjectNotFoundException])
-    def deserialize(b: Array[Byte]) : ContainerInterface = {
+    def deserialize(b: Array[Byte], containerName: String) : ContainerInterface = {
 
         val rawJsonContainerStr : String = new String(b)
         val containerInstanceMap : Map[String, Any] = jsonStringAsMap(rawJsonContainerStr)
@@ -387,7 +387,9 @@ class JSONSerDes() extends SerializeDeserialize with LogTrait {
         /** Decode the map to produce an instance of ContainerInterface */
 
         /** get the container key information.. the top level object must be a ContainerInterface... if these
-          * are not present, nothing good will come of it */
+          * are not present, nothing good will come of it
+          * */
+        // @TODO: These should be optional as the containerName is given in the deserializer
         val containerNameJson : String = containerInstanceMap.getOrElse(JsonContainerInterfaceKeys.typename.toString, "").asInstanceOf[String]
         val containerVersionJson : String = containerInstanceMap.getOrElse(JsonContainerInterfaceKeys.version.toString, "").asInstanceOf[String]
         val containerPhyNameJson : String = containerInstanceMap.getOrElse(JsonContainerInterfaceKeys.physicalname.toString, "").asInstanceOf[String]
@@ -473,7 +475,8 @@ class JSONSerDes() extends SerializeDeserialize with LogTrait {
         val containerInst : Any = if (isContainerInterface) {
             /** recurse to obtain the subcontainer */
             val containerBytes : Array[Byte] = fieldsJson.toString.toCharArray.map(_.toByte)
-            val container : ContainerInterface = deserialize(containerBytes)
+            //@bugbug: is physicalName correct to pass?
+            val container : ContainerInterface = deserialize(containerBytes, containerTypeInfo.physicalName)
             container
         } else { /** Check for collection that is currently supported */
 
