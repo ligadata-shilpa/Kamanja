@@ -20,7 +20,7 @@ public class AttributeTypeInfo {
 	}
 
 	public enum TypeCategory {
-		INT(0), STRING(1), FLOAT(2), DOUBLE(3), LONG(4), BYTE(5), CHAR(6), CONTAINER(
+		INT(0), STRING(1), FLOAT(2), DOUBLE(3), LONG(4), BYTE(5), CHAR(6), BOOLEAN(7), CONTAINER(
 				1001), MESSAGE(1001), MAP(1002), ARRAY(1003), NONE(-1);
 		private int value;
 

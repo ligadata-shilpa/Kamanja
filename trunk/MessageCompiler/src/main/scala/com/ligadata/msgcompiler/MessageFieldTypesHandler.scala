@@ -185,6 +185,7 @@ class MessageFieldTypesHandler {
       case "long"      => return AttributeTypeInfo.TypeCategory.LONG.getValue;
       case "byte"      => return AttributeTypeInfo.TypeCategory.BYTE.getValue;
       case "char"      => return AttributeTypeInfo.TypeCategory.CHAR.getValue;
+      case "boolean"      => return AttributeTypeInfo.TypeCategory.BOOLEAN.getValue;
       case "container" => return AttributeTypeInfo.TypeCategory.CONTAINER.getValue;
       case "map"       => return AttributeTypeInfo.TypeCategory.MAP.getValue;
       case "array"     => return AttributeTypeInfo.TypeCategory.ARRAY.getValue;
@@ -208,15 +209,18 @@ class MessageFieldTypesHandler {
           case "tarray" => { throw new Exception("Not supporting array of array"); }
           case "tstruct" => {
             var msgDef: MessageDef = mdMgr.Message(typtytpe.FullName, -1, true).getOrElse(null)
+            //println("msgDef"+msgDef.Name)
             val valTypeId = -1
             val keyTypeId = -1
-            return new ArrtibuteInfo("MESSAGE", valTypeId, keyTypeId, msgDef.containerType.SchemaId)
+            val SchemaId = msgDef.containerType.SchemaId            
+            return new ArrtibuteInfo("MESSAGE", valTypeId, keyTypeId, SchemaId)
           }
           case "tmsgmap" => {
             var ctrDef: ContainerDef = mdMgr.Container(typtytpe.FullName, -1, true).getOrElse(null)
             val valTypeId = -1
             val keyTypeId = -1
-            return new ArrtibuteInfo("CONTAINER", valTypeId, keyTypeId, ctrDef.containerType.SchemaId)
+            val SchemaId = ctrDef.containerType.SchemaId
+            return new ArrtibuteInfo("CONTAINER", valTypeId, keyTypeId, SchemaId)
           }
           case "tmap" => {}
           case _ => {

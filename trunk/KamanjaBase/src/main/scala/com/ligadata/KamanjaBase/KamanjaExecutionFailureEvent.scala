@@ -1,21 +1,22 @@
-/*package com.ligadata.KamanjaBase;
+
+package com.ligadata.KamanjaBase.V1000002000000;
+
 import org.json4s.jackson.JsonMethods._
 import org.json4s.DefaultFormats
 import org.json4s.Formats
-import com.ligadata.KamanjaBase.{ AttributeValue, ContainerFactoryInterface, ContainerInterface, MessageFactoryInterface, MessageInterface, TimePartitionInfo, ContainerOrConceptFactory, RDDObject, JavaRDDObject, ContainerOrConcept}
+import com.ligadata.KamanjaBase.{ AttributeTypeInfo, AttributeValue, ContainerFactoryInterface, ContainerInterface, MessageFactoryInterface, MessageInterface, TimePartitionInfo, ContainerOrConceptFactory, RDDObject, JavaRDDObject, ContainerOrConcept }
 import com.ligadata.BaseTypes._
 import com.ligadata.Exceptions.StackTrace;
 import org.apache.logging.log4j.{ Logger, LogManager }
 import java.util.Date
 
-
 object KamanjaExecutionFailureEvent extends RDDObject[KamanjaExecutionFailureEvent] with MessageFactoryInterface {
-  type T = KamanjaExecutionFailureEvent ;
+  type T = KamanjaExecutionFailureEvent;
   override def getFullTypeName: String = "com.ligadata.KamanjaBase.KamanjaExecutionFailureEvent";
   override def getTypeNameSpace: String = "com.ligadata.KamanjaBase";
   override def getTypeName: String = "KamanjaExecutionFailureEvent";
   override def getTypeVersion: String = "000001.000002.000000";
-  override def getSchemaId: Int = 2000021;
+  override def getSchemaId: Int = 1000005;
   override def createInstance: KamanjaExecutionFailureEvent = new KamanjaExecutionFailureEvent(KamanjaExecutionFailureEvent);
   override def isFixed: Boolean = true;
   override def getContainerType: ContainerFactoryInterface.ContainerType = ContainerFactoryInterface.ContainerType.MESSAGE
@@ -28,9 +29,7 @@ object KamanjaExecutionFailureEvent extends RDDObject[KamanjaExecutionFailureEve
 
   override def getPrimaryKeyNames: Array[String] = Array[String]();
 
-
-  override def getTimePartitionInfo: TimePartitionInfo = { return null;}  // FieldName, Format & Time Partition Types(Daily/Monthly/Yearly)
-
+  override def getTimePartitionInfo: TimePartitionInfo = { return null; } // FieldName, Format & Time Partition Types(Daily/Monthly/Yearly)
 
   override def hasPrimaryKey(): Boolean = {
     val pKeys = getPrimaryKeyNames();
@@ -47,17 +46,21 @@ object KamanjaExecutionFailureEvent extends RDDObject[KamanjaExecutionFailureEve
     return (tmInfo != null && tmInfo.getTimePartitionType != TimePartitionInfo.TimePartitionType.NONE);
   }
 
-  override def getSchema: String = " {\"type\": \"record\", \"namespace\" : \"com.ligadata.kamanjabase\",\"name\" : \"kamanjaexecutionfailureevent\",\"fields\":[{\"name\" : \"msgid\",\"type\" : \"long\"},{\"name\" : \"timeoferrorepochms\",\"type\" : \"long\"},{\"name\" : \"msgcontent\",\"type\" : \"string\"},{\"name\" : \"errordetail\",\"type\" : \"string\"}]}";
+  override def getAvroSchema: String = """{ "type": "record",  "namespace" : "com.ligadata.kamanjabase" , "name" : "kamanjaexecutionfailureevent" , "fields":[{ "name" : "msgid" , "type" : "long"},{ "name" : "timeoferrorepochms" , "type" : "long"},{ "name" : "msgcontent" , "type" : "string"},{ "name" : "errordetail" , "type" : "string"}]}""";
 }
 
 class KamanjaExecutionFailureEvent(factory: MessageFactoryInterface, other: KamanjaExecutionFailureEvent) extends MessageInterface(factory) {
 
-  val logger = this.getClass.getName
-  lazy val log = LogManager.getLogger(logger)
+  private val log = LogManager.getLogger(getClass)
 
-  private var keyTypes = Map("msgid"-> "Long","timeoferrorepochms"-> "Long","msgcontent"-> "String","errordetail"-> "String");
+  var keyTypes: Map[String, AttributeTypeInfo] = attributeTypes.map { a => (a.getName, a) }.toMap;
 
-  override def save: Unit = { KamanjaExecutionFailureEvent.saveOne(this) }
+  if (other != null && other != this) {
+    // call copying fields from other to local variables
+    fromFunc(other)
+  }
+
+  override def save: Unit = { /* KamanjaExecutionFailureEvent.saveOne(this) */ }
 
   def Clone(): ContainerOrConcept = { KamanjaExecutionFailureEvent.build(this) }
 
@@ -65,69 +68,55 @@ class KamanjaExecutionFailureEvent(factory: MessageFactoryInterface, other: Kama
 
   override def getPrimaryKey: Array[String] = Array[String]()
 
+  var attributeTypes = getAttributeTypes;
+
+  private def getAttributeTypes(): Array[AttributeTypeInfo] = {
+    var attributeTypes = new Array[AttributeTypeInfo](4);
+    attributeTypes :+ new AttributeTypeInfo("msgid", 0, AttributeTypeInfo.TypeCategory.LONG, 4, 4, 0)
+    attributeTypes :+ new AttributeTypeInfo("timeoferrorepochms", 1, AttributeTypeInfo.TypeCategory.LONG, 4, 4, 0)
+    attributeTypes :+ new AttributeTypeInfo("msgcontent", 2, AttributeTypeInfo.TypeCategory.STRING, 1, 1, 0)
+    attributeTypes :+ new AttributeTypeInfo("errordetail", 3, AttributeTypeInfo.TypeCategory.STRING, 1, 1, 0)
+
+    return attributeTypes
+  }
+
   var msgid: Long = _;
   var timeoferrorepochms: Long = _;
   var msgcontent: String = _;
   var errordetail: String = _;
 
-  private def getWithReflection(key: String): AttributeValue = {
-    var attributeValue = new AttributeValue();
+  private def getWithReflection(key: String): Any = {
     val ru = scala.reflect.runtime.universe
     val m = ru.runtimeMirror(getClass.getClassLoader)
     val im = m.reflect(this)
     val fieldX = ru.typeOf[KamanjaExecutionFailureEvent].declaration(ru.newTermName(key)).asTerm.accessed.asTerm
     val fmX = im.reflectField(fieldX)
-    attributeValue.setValue(fmX.get);
-    attributeValue.setValueType(keyTypes(key))
-    attributeValue
+    return fmX.get;
   }
 
-  override def get(key: String): AttributeValue = {
+  override def get(key: String): Any = {
     try {
       // Try with reflection
-      return getWithReflection(key.toLowerCase())
+      return getByName(key.toLowerCase())
     } catch {
       case e: Exception => {
         val stackTrace = StackTrace.ThrowableTraceString(e)
         log.debug("StackTrace:" + stackTrace)
         // Call By Name
-        return getByName(key.toLowerCase())
+        return getWithReflection(key.toLowerCase())
       }
     }
   }
 
-  private def getByName(key: String): AttributeValue = {
-    try {
-      if (!keyTypes.contains(key)) throw new Exception("Key does not exists");
-      var attributeValue = new AttributeValue();
-      if (key.equals("msgid")) { attributeValue.setValue(this.msgid); }
-      if (key.equals("timeoferrorepochms")) { attributeValue.setValue(this.timeoferrorepochms); }
-      if (key.equals("msgcontent")) { attributeValue.setValue(this.msgcontent); }
-      if (key.equals("errordetail")) { attributeValue.setValue(this.errordetail); }
-
-
-      attributeValue.setValueType(keyTypes(key.toLowerCase()));
-      return attributeValue;
-    } catch {
-      case e: Exception => {
-        log.debug("", e)
-        throw e
-      }
-    };
-
+  private def getByName(key: String): Any = {
+    if (!keyTypes.contains(key)) throw new Exception(s"Key $key does not exists in message/container hl7Fixed ");
+    return get(keyTypes(key).getIndex)
   }
 
-  override def getOrElse(key: String, defaultVal: Any): AttributeValue = { // Return (value, type)
-  var attributeValue: AttributeValue = new AttributeValue();
+  override def getOrElse(key: String, defaultVal: Any): Any = { // Return (value, type)
     try {
       val value = get(key.toLowerCase())
-      if (value == null) {
-        attributeValue.setValue(defaultVal);
-        attributeValue.setValueType("Any");
-        return attributeValue;
-      } else {
-        return value;
-      }
+      if (value == null) return defaultVal; else return value;
     } catch {
       case e: Exception => {
         log.debug("", e)
@@ -137,28 +126,20 @@ class KamanjaExecutionFailureEvent(factory: MessageFactoryInterface, other: Kama
     return null;
   }
 
-  override def getOrElse(index: Int, defaultVal: Any): AttributeValue = { // Return (value,  type)
-  var attributeValue: AttributeValue = new AttributeValue();
+  override def getOrElse(index: Int, defaultVal: Any): Any = { // Return (value,  type)
     try {
       val value = get(index)
-      if (value == null) {
-        attributeValue.setValue(defaultVal);
-        attributeValue.setValueType("Any");
-        return attributeValue;
-      } else {
-        return value;
-      }
+      if (value == null) return defaultVal; else return value;
     } catch {
       case e: Exception => {
         log.debug("", e)
         throw e
       }
     }
-    return null; ;
+    return null;
   }
 
   override def getAttributeNames(): Array[String] = {
-    var attributeNames: scala.collection.mutable.ArrayBuffer[String] = scala.collection.mutable.ArrayBuffer[String]();
     try {
       if (keyTypes.isEmpty) {
         return null;
@@ -174,74 +155,41 @@ class KamanjaExecutionFailureEvent(factory: MessageFactoryInterface, other: Kama
     return null;
   }
 
-  override def getAllAttributeValues(): java.util.HashMap[String, AttributeValue] = { // Has (name, value, type))
-  var attributeValsMap = new java.util.HashMap[String, AttributeValue];
-    try{
-      {
-        var attributeVal = new AttributeValue();
-        attributeVal.setValue(msgid)
-        attributeVal.setValueType(keyTypes("msgid"))
-        attributeValsMap.put("msgid", attributeVal)
-      };
-      {
-        var attributeVal = new AttributeValue();
-        attributeVal.setValue(timeoferrorepochms)
-        attributeVal.setValueType(keyTypes("timeoferrorepochms"))
-        attributeValsMap.put("timeoferrorepochms", attributeVal)
-      };
-      {
-        var attributeVal = new AttributeValue();
-        attributeVal.setValue(msgcontent)
-        attributeVal.setValueType(keyTypes("msgcontent"))
-        attributeValsMap.put("msgcontent", attributeVal)
-      };
-      {
-        var attributeVal = new AttributeValue();
-        attributeVal.setValue(errordetail)
-        attributeVal.setValueType(keyTypes("errordetail"))
-        attributeValsMap.put("errordetail", attributeVal)
-      };
+  override def getAllAttributeValues(): Array[AttributeValue] = { // Has ( value, attributetypeinfo))
+    var attributeVals = new Array[AttributeValue](4);
+    try {
+      attributeVals :+ new AttributeValue(this.msgid, keyTypes("msgid"))
+      attributeVals :+ new AttributeValue(this.timeoferrorepochms, keyTypes("timeoferrorepochms"))
+      attributeVals :+ new AttributeValue(this.msgcontent, keyTypes("msgcontent"))
+      attributeVals :+ new AttributeValue(this.errordetail, keyTypes("errordetail"))
 
-    }catch {
+    } catch {
       case e: Exception => {
         log.debug("", e)
         throw e
       }
     };
 
-    return attributeValsMap;
+    return attributeVals;
   }
 
-  override def getAttributeNameAndValueIterator(): java.util.Iterator[java.util.Map.Entry[String, AttributeValue]] = {
-    getAllAttributeValues.entrySet().iterator();
+  override def getAttributeNameAndValueIterator(): java.util.Iterator[AttributeValue] = {
+    //getAllAttributeValues.iterator.asInstanceOf[java.util.Iterator[AttributeValue]];
+    return null; // Fix - need to test to make sure the above iterator works properly
+
   }
 
-
-  def get(index : Int) : AttributeValue = { // Return (value, type)
-  var attributeValue = new AttributeValue();
-    try{
+  def get(index: Int): Any = { // Return (value, type)
+    try {
       index match {
-        case 0 => {
-          attributeValue.setValue(this.msgid);
-          attributeValue.setValueType(keyTypes("msgid"));
-        }
-        case 1 => {
-          attributeValue.setValue(this.timeoferrorepochms);
-          attributeValue.setValueType(keyTypes("timeoferrorepochms"));
-        }
-        case 2 => {
-          attributeValue.setValue(this.msgcontent);
-          attributeValue.setValueType(keyTypes("msgcontent"));
-        }
-        case 3 => {
-          attributeValue.setValue(this.errordetail);
-          attributeValue.setValueType(keyTypes("errordetail"));
-        }
+        case 0 => return this.msgid;
+        case 1 => return this.timeoferrorepochms;
+        case 2 => return this.msgcontent;
+        case 3 => return this.errordetail;
 
-        case _ => throw new Exception("Bad index");
+        case _ => throw new Exception(s"$index is a bad index for message KamanjaExecutionFailureEvent");
       }
-      return attributeValue;
-    }catch {
+    } catch {
       case e: Exception => {
         log.debug("", e)
         throw e
@@ -253,12 +201,10 @@ class KamanjaExecutionFailureEvent(factory: MessageFactoryInterface, other: Kama
   override def set(key: String, value: Any) = {
     try {
 
-      if (key.equals("msgid")) { this.msgid = value.asInstanceOf[Long]; }
-      if (key.equals("timeoferrorepochms")) { this.timeoferrorepochms = value.asInstanceOf[Long]; }
-      if (key.equals("msgcontent")) { this.msgcontent = value.asInstanceOf[String]; }
-      if (key.equals("errordetail")) { this.errordetail = value.asInstanceOf[String]; }
+      if (!keyTypes.contains(key)) throw new Exception(s"Key $key does not exists in message KamanjaExecutionFailureEvent")
+      set(keyTypes(key).getIndex, value);
 
-    }catch {
+    } catch {
       case e: Exception => {
         log.debug("", e)
         throw e
@@ -267,18 +213,34 @@ class KamanjaExecutionFailureEvent(factory: MessageFactoryInterface, other: Kama
 
   }
 
-
-  def set(index : Int, value :Any): Unit = {
-    try{
+  def set(index: Int, value: Any): Unit = {
+    if (value == null) throw new Exception(s"Value is null for index $index in message KamanjaExecutionFailureEvent ")
+    try {
       index match {
-        case 0 => {this.msgid = value.asInstanceOf[Long];}
-        case 1 => {this.timeoferrorepochms = value.asInstanceOf[Long];}
-        case 2 => {this.msgcontent = value.asInstanceOf[String];}
-        case 3 => {this.errordetail = value.asInstanceOf[String];}
+        case 0 => {
+          if (value.isInstanceOf[Long])
+            this.msgid = value.asInstanceOf[Long];
+          else throw new Exception(s"Value is the not the correct type for index $index in message KamanjaExecutionFailureEvent")
+        }
+        case 1 => {
+          if (value.isInstanceOf[Long])
+            this.timeoferrorepochms = value.asInstanceOf[Long];
+          else throw new Exception(s"Value is the not the correct type for index $index in message KamanjaExecutionFailureEvent")
+        }
+        case 2 => {
+          if (value.isInstanceOf[String])
+            this.msgcontent = value.asInstanceOf[String];
+          else throw new Exception(s"Value is the not the correct type for index $index in message KamanjaExecutionFailureEvent")
+        }
+        case 3 => {
+          if (value.isInstanceOf[String])
+            this.errordetail = value.asInstanceOf[String];
+          else throw new Exception(s"Value is the not the correct type for index $index in message KamanjaExecutionFailureEvent")
+        }
 
-        case _ => throw new Exception("Bad index");
+        case _ => throw new Exception(s"$index is a bad index for message KamanjaExecutionFailureEvent");
       }
-    }catch {
+    } catch {
       case e: Exception => {
         log.debug("", e)
         throw e
@@ -288,7 +250,7 @@ class KamanjaExecutionFailureEvent(factory: MessageFactoryInterface, other: Kama
   }
 
   override def set(key: String, value: Any, valTyp: String) = {
-    throw new Exception ("Set Func for Value and ValueType By Key is not supported for Fixed Messages" )
+    throw new Exception("Set Func for Value and ValueType By Key is not supported for Fixed Messages")
   }
 
   private def fromFunc(other: KamanjaExecutionFailureEvent): KamanjaExecutionFailureEvent = {
@@ -301,8 +263,7 @@ class KamanjaExecutionFailureEvent(factory: MessageFactoryInterface, other: Kama
     return this;
   }
 
-
-  def this(factory:MessageFactoryInterface) = {
+  def this(factory: MessageFactoryInterface) = {
     this(factory, null)
   }
 
@@ -311,4 +272,3 @@ class KamanjaExecutionFailureEvent(factory: MessageFactoryInterface, other: Kama
   }
 
 }
-*/

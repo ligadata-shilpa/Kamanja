@@ -251,34 +251,38 @@ class SchemaCompiler {
             case "tarray" => {
               var arrayType: ArrayTypeDef = fieldBaseType.asInstanceOf[ArrayTypeDef]
               if (arrayType != null) {
-                var ctrDef: ContainerDef = mdMgr.Container(arrayType.elemDef.FullName, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
-                msgdefStr = ctrDef.objectDefinition
-                message = messageParser.processJson(msgdefStr, mdMgr, false)
-                message = generateAvroSchema(message, mdMgr)
+                var ctrDef: ContainerDef = null;
+                ctrDef = mdMgr.Container(arrayType.elemDef.FullName, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
+                if (ctrDef == null)
+                  ctrDef = mdMgr.Message(arrayType.elemDef.FullName, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
+
+                msgdefStr = ctrDef.containerType.AvroSchema
+                // message = messageParser.processJson(msgdefStr, mdMgr, false)
+                // message = generateAvroSchema(message, mdMgr)
                 val typeStr = """"type": {"type": "array", "items": """
-                containerTypeStr.append(typeStr + message.Schema + closeBrace)
+                containerTypeStr.append(typeStr + msgdefStr + closeBrace)
 
               }
               //  fromFuncBuf = fromFuncBuf.append(fromFuncForArrayFixed(field))
             }
             case "tstruct" => {
-              var ctrDef: ContainerDef = mdMgr.Container(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
-              if (ctrDef != null) {
-                msgdefStr = ctrDef.objectDefinition
-                message = messageParser.processJson(msgdefStr, mdMgr, false)
-                message = generateAvroSchema(message, mdMgr)
+              var msgDef: MessageDef = mdMgr.Message(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
+              if (msgDef != null) {
+                msgdefStr = msgDef.containerType.AvroSchema
+                //message = messageParser.processJson(msgdefStr, mdMgr, false)
+                //message = generateAvroSchema(message, mdMgr)
 
-                containerTypeStr.append(""" "type": """ + message.Schema)
+                containerTypeStr.append(""" "type": """ + msgdefStr)
               }
             }
             case "tmsgmap" => {
               var ctrDef: ContainerDef = mdMgr.Container(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
               if (ctrDef != null) {
-                msgdefStr = ctrDef.objectDefinition
-                message = messageParser.processJson(msgdefStr, mdMgr, false)
-                message = generateAvroSchema(message, mdMgr)
+                msgdefStr = ctrDef.containerType.AvroSchema
+                // message = messageParser.processJson(msgdefStr, mdMgr, false)
+                //message = generateAvroSchema(message, mdMgr)
 
-                containerTypeStr.append(""""type" : """ + message.Schema)
+                containerTypeStr.append(""""type" : """ + msgdefStr)
                 //log.info(" tmsgmap *************************************************" + containerTypeStr.toString());
 
               }
@@ -287,12 +291,16 @@ class SchemaCompiler {
             case "tmap" => {
               var maptypeDef = fieldBaseType.asInstanceOf[MapTypeDef]
               if (maptypeDef != null) {
-                var ctrDef: ContainerDef = mdMgr.Container(maptypeDef.valDef.FullName, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
-                msgdefStr = ctrDef.objectDefinition
-                message = messageParser.processJson(msgdefStr, mdMgr, false)
-                message = generateAvroSchema(message, mdMgr)
+                var ctrDef: ContainerDef = null;
+                ctrDef = mdMgr.Container(maptypeDef.valDef.FullName, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
+                if (ctrDef == null)
+                  ctrDef = mdMgr.Message(maptypeDef.valDef.FullName, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
+
+                msgdefStr = ctrDef.containerType.AvroSchema
+                //message = messageParser.processJson(msgdefStr, mdMgr, false)
+                //message = generateAvroSchema(message, mdMgr)
                 val typeStr = """ "type" : "map", "values" : """
-                containerTypeStr.append(typeStr + message.Schema)
+                containerTypeStr.append(typeStr + msgdefStr)
                 //log.info("tmap******************************" + maptypeDef.valDef.tType)
               }
             }
