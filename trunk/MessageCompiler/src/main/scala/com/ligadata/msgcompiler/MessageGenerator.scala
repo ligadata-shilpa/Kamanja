@@ -304,7 +304,7 @@ class MessageGenerator {
     var getFuncByOffset: String = ""
     getFuncByOffset = """
       
-    def get(index : Int) : AnyRef = { // Return (value, type)
+    override def get(index : Int) : AnyRef = { // Return (value, type)
       try{
         index match {
    """ + getByOffset(fields) + """

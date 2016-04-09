@@ -133,15 +133,15 @@ class hl7(factory: ContainerFactoryInterface) extends ContainerInterface(factory
     }
   }
 
-  override def get(key: String): Any = { // Return (value, type)
+  override def get(key: String): AnyRef = { // Return (value, type)
     val value = valuesMap(key).getValue
     if (value == null) return null; else return value;
   }
 
-  override def getOrElse(key: String, defaultVal: Any): Any = { // Return (value, type)
+  override def getOrElse(key: String, defaultVal: Any): AnyRef = { // Return (value, type)
     try {
       val value = valuesMap(key).getValue
-      if (value == null) return defaultVal;
+      if (value == null) return defaultVal.asInstanceOf[AnyRef];
       return value;
     } catch {
       case e: Exception => {
@@ -151,11 +151,11 @@ class hl7(factory: ContainerFactoryInterface) extends ContainerInterface(factory
     }
   }
 
-  override def get(index: Int): Any = { // Return (value, type)
+  override def get(index: Int): AnyRef = { // Return (value, type)
     throw new Exception("Get By Index is not supported in mapped messages");
   }
 
-  override def getOrElse(index: Int, defaultVal: Any): Any = { // Return (value,  type)
+  override def getOrElse(index: Int, defaultVal: Any): AnyRef = { // Return (value,  type)
     throw new Exception("Get By Index is not supported in mapped messages");
   }
 

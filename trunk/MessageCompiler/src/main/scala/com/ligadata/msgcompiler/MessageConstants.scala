@@ -116,10 +116,10 @@ import java.util.Date
 
   private def getByNameFuncForMapped = {
     """
-    override def get(key: String): Any = { // Return (value, type)
+    override def get(key: String): AnyRef = { // Return (value, type)
       try {
         val value = valuesMap(key).getValue
-        if (value == null) return null; else return value;  
+        if (value == null) return null; else return value.asInstanceOf[AnyRef];  
        } catch {
         case e: Exception => {
           log.debug("", e)
@@ -135,12 +135,12 @@ import java.util.Date
    */
   private def getOrElseFuncForMapped = {
     """
-    override def getOrElse(key: String, defaultVal: Any): Any = { // Return (value, type)
+    override def getOrElse(key: String, defaultVal: Any): AnyRef = { // Return (value, type)
       var attributeValue: AttributeValue = new AttributeValue();
       try {
         val value = valuesMap(key).getValue
-        if (value == null) return defaultVal;
-        return value;   
+        if (value == null) return defaultVal.asInstanceOf[AnyRef];
+        return value.asInstanceOf[AnyRef];   
       } catch {
         case e: Exception => {
           log.debug("", e)
@@ -178,11 +178,11 @@ import java.util.Date
    */
   private def getByIndexMapped = {
     """
-    override def get(index: Int): Any = { // Return (value, type)
+    override def get(index: Int): AnyRef = { // Return (value, type)
       throw new Exception("Get By Index is not supported in mapped messages");
     }
 
-    override def getOrElse(index: Int, defaultVal: Any): Any = { // Return (value,  type)
+    override def getOrElse(index: Int, defaultVal: Any): AnyRef = { // Return (value,  type)
       throw new Exception("Get By Index is not supported in mapped messages");
     }  
     """
