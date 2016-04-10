@@ -11,14 +11,15 @@ import com.ligadata.MetadataAPI.MetadataAPI.ModelType
  * Created by dhavalkolapkar on 3/22/16.
  */
 class ModelServiceTests extends FlatSpec with Matchers with MetadataBeforeAndAfterEach {
+  val tid=Some("tenant1")
   "add model scala" should "produce error when invalid path to model def is provided" in {
     assert(ModelService.addModelScala(getClass.getResource("/Metadata/model/HelloWorld.scala").getPath + "Invalid","helloworldmodel") == "File does not exist")
   }
 
   it should "add the scala model to the metadata" in {
-    MessageService.addMessage(getClass.getResource("/Metadata/message/Message_Definition_HelloWorld.json").getPath)
+    MessageService.addMessage(getClass.getResource("/Metadata/message/Message_Definition_HelloWorld.json").getPath,tid)
     ConfigService.uploadCompileConfig(getClass.getResource("/Metadata/config/Model_Config_HelloWorld.json").getPath)
-    ModelService.addModelScala(getClass.getResource("/Metadata/model/HelloWorld.scala").getPath,"helloworldmodel") should include regex ("\"Result Description\" : \"Model Added Successfully")
+    ModelService.addModelScala(getClass.getResource("/Metadata/model/HelloWorld.scala").getPath,"helloworldmodel",tid) should include regex ("\"Result Description\" : \"Model Added Successfully")
   }
 /*
   it should "add the scala model to the metadata based on user input" in {

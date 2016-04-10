@@ -11,32 +11,31 @@ import com.ligadata.MetadataAPI.Utility.MessageService
  */
 
 class MessageServiceTests extends FlatSpec with Matchers with MetadataBeforeAndAfterEach {
-
+val tid=Some("tenant1")
   "addMessage" should "produce error when invalid path to msg def is provided" in {
-    val msgDef = getClass.getResource("/Metadata/message/Message_Definition_HelloWorld.json").getPath +" Invalid"
-    val result = MessageService.addMessage(msgDef)
+    val msgDef,tenant1 = getClass.getResource("/Metadata/message/Message_Definition_HelloWorld.json").getPath +" Invalid"
+    val result = MessageService.addMessage(msgDef,tid)
     result should include regex ("Message defintion file does not exist")
   }
 
   it should "produce  message def" in {
-
     val msgDef = getClass.getResource("/Metadata/message/Message_Definition_HelloWorld.json").getPath
-    val result = MessageService.addMessage(msgDef)
+    val result = MessageService.addMessage(msgDef,tid)
     result should include regex ("\"Result Description\" : \"Message Added Successfully")
   }
 
   it should "produce Higer version present when same or lower version added" in {
 
     val msgDef = getClass.getResource("/Metadata/message/Message_Definition_HelloWorld.json").getPath
-    var result = MessageService.addMessage(msgDef)
-    result = MessageService.addMessage(msgDef)
+    var result = MessageService.addMessage(msgDef,tid)
+    result = MessageService.addMessage(msgDef,tid)
     result should include regex ("\"Result Description\" : \"Error: com.ligadata.Exceptions.MsgCompilationFailedException: Higher active version of Message")
   }
 
 
   "delete message" should "delete the requested message definition from the metadata" in {
     val msgDef = getClass.getResource("/Metadata/message/Message_Definition_HelloWorld.json").getPath
-    MessageService.addMessage(msgDef)
+    MessageService.addMessage(msgDef,tid)
     val result =MessageService.removeMessage("com.ligadata.kamanja.samples.messages.msg1.000000000001000000")
     result should include regex ("\"Result Description\" : \"Deleted Message Successfully")
   }
@@ -49,7 +48,7 @@ class MessageServiceTests extends FlatSpec with Matchers with MetadataBeforeAndA
 
   "get message " should " retrieve the requested message definition" in {
     val msgDef = getClass.getResource("/Metadata/message/Message_Definition_HelloWorld.json").getPath
-    MessageService.addMessage(msgDef)
+    MessageService.addMessage(msgDef,tid)
     val result= MessageService.getMessage("com.ligadata.kamanja.samples.messages.msg1.000000000001000000")
     result should include regex ("\"Result Description\" : \"Successfully fetched message from cache")
   }
@@ -61,23 +60,23 @@ class MessageServiceTests extends FlatSpec with Matchers with MetadataBeforeAndA
 
   "update message " should "update a valid message definition " in {
     var msgDef = getClass.getResource("/Metadata/message/Message_Definition_HelloWorld.json").getPath
-    MessageService.addMessage(msgDef)
+    MessageService.addMessage(msgDef,tid)
     msgDef= getClass.getResource("/Metadata/message/Message_Definition_HelloWorld_v2.json").getPath
-    val result = MessageService.updateMessage(msgDef)
+    val result = MessageService.updateMessage(msgDef,tid)
       result should include regex ("\"Result Description\" : \"Message Added Successfully")
   }
 
   it should "produce Higer version present when same or lower version added" in {
     var msgDef = getClass.getResource("/Metadata/message/Message_Definition_HelloWorld.json").getPath
-    MessageService.addMessage(msgDef)
+    MessageService.addMessage(msgDef,tid)
     msgDef= getClass.getResource("/Metadata/message/Message_Definition_HelloWorld.json").getPath
-    val result = MessageService.updateMessage(msgDef)
+    val result = MessageService.updateMessage(msgDef,tid)
     result should include regex ("\"Status Code\" : -1")
   }
 
   "get all messages" should " return the list of messages in the metadata" in {
     val msgDef = getClass.getResource("/Metadata/message/Message_Definition_HelloWorld.json").getPath
-    MessageService.addMessage(msgDef)
+    MessageService.addMessage(msgDef,tid)
     val result= MessageService.getAllMessages
     result should include regex ("\"Result Description\" : \"Successfully retrieved all the messages")
   }
@@ -102,25 +101,25 @@ class MessageServiceTests extends FlatSpec with Matchers with MetadataBeforeAndA
 
   "add Message by user input" should " upload the message definition to metadata based on the user input" in {
     Console.setIn(new ByteArrayInputStream("1".getBytes))
-    MessageService.addMessage("") should include regex ("\"Result Description\" : \"Message Added Successfully")
+    MessageService.addMessage("",tid) should include regex ("\"Result Description\" : \"Message Added Successfully")
   }
 
   "update message by user input " should "update the message definition to metadata based on the user input" in {
     Console.setIn(new ByteArrayInputStream("1".getBytes))
-    MessageService.addMessage("")
+    MessageService.addMessage("",tid)
     Console.setIn(new ByteArrayInputStream("2".getBytes))
-    MessageService.updateMessage("") should include regex "Message Added Successfully"
+    MessageService.updateMessage("",tid) should include regex "Message Added Successfully"
   }
 
   "delete message by user input" should "delete the requested message definition from the metadata" in {
     Console.setIn(new ByteArrayInputStream("1".getBytes))
-    MessageService.addMessage(getClass.getResource("/Metadata/message/Message_Definition_HelloWorld.json").getPath)
+    MessageService.addMessage(getClass.getResource("/Metadata/message/Message_Definition_HelloWorld.json").getPath,tid)
     MessageService.removeMessage("") should include regex ("\"Result Description\" : \"Deleted Message Successfully")
   }
 
   "get message by user input" should " retrieve the requested message definition" in {
     Console.setIn(new ByteArrayInputStream("1".getBytes))
-    MessageService.addMessage(getClass.getResource("/Metadata/message/Message_Definition_HelloWorld.json").getPath)
+    MessageService.addMessage(getClass.getResource("/Metadata/message/Message_Definition_HelloWorld.json").getPath,tid)
     MessageService.getMessage("") should include regex ("\"Result Description\" : \"Successfully fetched message from cache")
   }
 

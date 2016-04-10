@@ -70,6 +70,5 @@ class ActionTests extends FlatSpec with Matchers {
   "DUMPALLCLUSTERS" should "return the corresponding value"  in {Action.DUMPALLCLUSTERS.toString should include regex ("dumpallclusters")}
   "DUMPALLCLUSTERCFGS" should "return the corresponding value"  in {Action.DUMPALLCLUSTERCFGS.toString should include regex ("dumpallclustercfgs")}
   "DUMPALLADAPTERS" should "return the corresponding value"  in {Action.DUMPALLADAPTERS.toString should include regex ("dumpalladapters")}
-  "GETOUTPUTMESSAGE" should "return the corresponding value"  in {Action.GETOUTPUTMESSAGE.toString should include regex ("getoutputmessage")}
 }
 
