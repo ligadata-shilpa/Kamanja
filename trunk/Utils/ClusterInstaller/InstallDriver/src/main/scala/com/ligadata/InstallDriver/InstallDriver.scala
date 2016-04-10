@@ -467,8 +467,8 @@ Try again.
     }
 
     var majorVer = KamanjaVersion.getMajorVersion
-    var minVer = KamanjaVersion.getMajorVersion
-    var microVer = KamanjaVersion.getMajorVersion
+    var minVer = KamanjaVersion.getMinorVersion
+    var microVer = KamanjaVersion.getMicroVersion
 
     val componentVersionScriptAbsolutePath = s"$clusterInstallerDriversLocation/GetComponentsVersions.sh"
     val componentVersionJarAbsolutePath = s"$clusterInstallerDriversLocation/GetComponent-${majorVer}.${minVer}.${microVer}"
