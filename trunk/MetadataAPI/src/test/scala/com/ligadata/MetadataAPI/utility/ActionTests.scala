@@ -18,11 +18,6 @@ class ActionTests extends FlatSpec with Matchers {
   "GETALLMESSAGES" should "return the corresponding value"  in {Action.GETALLMESSAGES.toString should include regex ("getallmessages")}
   "REMOVEMESSAGE" should "return the corresponding value" in {Action.REMOVEMESSAGE.toString should include regex ("removemessage")}
   "GETMESSAGE" should "return the corresponding value"  in {Action.GETMESSAGE.toString should include regex ("getmessage")}
-  //output message management
-  "ADDOUTPUTMESSAGE" should "return the corresponding value"  in {Action.ADDOUTPUTMESSAGE.toString should include regex ("addoutputmessage")}
-  "UPDATEOUTPUTMESSAGE" should "return the corresponding value"  in {Action.UPDATEOUTPUTMESSAGE.toString should include regex ("updateoutputmessage")}
-  "REMOVEOUTPUTMESSAGE" should "return the corresponding value"  in {Action.REMOVEOUTPUTMESSAGE.toString should include regex ("removeoutputmessage")}
-  "GETALLOUTPUTMESSAGES" should "return the corresponding value"  in {Action.GETALLOUTPUTMESSAGES.toString should include regex ("getalloutputmessages")}
   //model management
   "ADDMODELKPMML" should "return the corresponding value" in {Action.ADDMODELKPMML.toString should include regex ("addmodelkpmml")}
   "ADDMODELPMML" should "return the corresponding value"  in {Action.ADDMODELPMML.toString should include regex ("addmodelpmml")}
