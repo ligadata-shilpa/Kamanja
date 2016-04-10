@@ -19,6 +19,7 @@ class TestConfigs extends FunSpec with BeforeAndAfter with ShouldMatchers with B
       |  },
       |  "MonitoringConfig": {
       |  "Locations": "/data/input,/tmp/input",
+      |  "TargetMoveDir": "/data/processed",
       |    "MaxTimeWait": "5000"
       |  }
       |}
@@ -35,13 +36,14 @@ class TestConfigs extends FunSpec with BeforeAndAfter with ShouldMatchers with B
     |    },
     |    "MonitoringConfig": {
     |	  "Locations": "/data/input,/tmp/input",
+    |   "TargetMoveDir": "/data/processed",
     |      "MaxTimeWait": "5000"
     |    }
     |}""".stripMargin
 
-  describe("Unit Test for smart file adapter adapterSpecificCfg json parsing") {
+  describe("Test smart file adapter adapterSpecificCfg json parsing") {
 
-    it("Make sure json parsing of adapter specific config is correct") {
+    it("should get right values for attributes (type, userid, password, hostslist, location and waitingTimeMS)") {
 
       val inputConfig = new AdapterConfiguration()
       inputConfig.Name = "TestInput_2"
@@ -62,9 +64,9 @@ class TestConfigs extends FunSpec with BeforeAndAfter with ShouldMatchers with B
   }
 
 
-  describe("Unit Test for smart file adapter adapterSpecificCfg json parsing with kerberos auth") {
+  describe("Test smart file adapter adapterSpecificCfg json parsing with kerberos auth") {
 
-    it("Make sure json parsing of adapter specific config is correct") {
+    it("should get right values for attributes (type, principal, password, keytab, location and waitingTimeMS") {
 
       val inputConfig = new AdapterConfiguration()
       inputConfig.Name = "TestInput_2"
