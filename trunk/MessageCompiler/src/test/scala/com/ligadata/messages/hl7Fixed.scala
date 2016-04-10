@@ -77,13 +77,13 @@ class hl7Fixed(factory: ContainerFactoryInterface) extends ContainerInterface(fa
 
   //AttributeTypeInfo -- 0 -> index, 1 -> typeCategary (standard), 0 -> valueTypeId (since scalar type field), 0 - SchemaId (since not message/container type element), "string" -> keyTypeId
 
-  var attributeTypes = getAttributeTypes
+  var attributeTypes = generateAttributeTypes
 
   //(new AttributeTypeInfo(0, 1, 0, 0, "string"), new AttributeTypeInfo(1, 1, 0, 0, "long"), new AttributeTypeInfo(2, 1, 0, 0, "int"), new AttributeTypeInfo(3, 1, 0, 0, "int"), new AttributeTypeInfo(4, 1, 0, 0, "int"), new AttributeTypeInfo(5, 1, 0, 0, "int"), new AttributeTypeInfo(6, 1, 0, 0, "int"), new AttributeTypeInfo(7, 1, 0, 0, "int"));
 
   private val keyTypes: Map[String, AttributeTypeInfo] = attributeTypes.map { a => (a.getName, a) }.toMap
 
-  private def getAttributeTypes(): Array[AttributeTypeInfo] = {
+  private def generateAttributeTypes(): Array[AttributeTypeInfo] = {
     var attributeTypes = new Array[AttributeTypeInfo](7)
     attributeTypes :+ new AttributeTypeInfo("desynpuf_id", 0, AttributeTypeInfo.TypeCategory.STRING, 0, 0, 0)
     attributeTypes :+ new AttributeTypeInfo("clm_id", 1, AttributeTypeInfo.TypeCategory.LONG, 0, 0, 0)
@@ -92,6 +92,11 @@ class hl7Fixed(factory: ContainerFactoryInterface) extends ContainerInterface(fa
     attributeTypes :+ new AttributeTypeInfo("bene_birth_dt", 4, AttributeTypeInfo.TypeCategory.INT, 0, 0, 0)
     attributeTypes :+ new AttributeTypeInfo("bene_death_dt", 5, AttributeTypeInfo.TypeCategory.INT, 0, 0, 0)
     attributeTypes :+ new AttributeTypeInfo("bene_sex_ident_cd", 6, AttributeTypeInfo.TypeCategory.INT, 0, 0, 0)
+    return attributeTypes
+  }
+
+  override def getAttributeTypes(): Array[AttributeTypeInfo] = {
+    if (attributeTypes == null) return null;
     return attributeTypes
   }
 
@@ -142,7 +147,7 @@ class hl7Fixed(factory: ContainerFactoryInterface) extends ContainerInterface(fa
     return null;
   }
 
-  override def get(key: String): Any = {
+  override def get(key: String): AnyRef = {
     try {
       // Try with reflection
       return getByName(key.toLowerCase())
@@ -155,16 +160,16 @@ class hl7Fixed(factory: ContainerFactoryInterface) extends ContainerInterface(fa
       }
     }
   }
-  override def get(index: Int): Any = { // Return (value, type)
+  override def get(index: Int): AnyRef = { // Return (value, type)
     try {
       index match {
-        case 0 => return this.desynpuf_id;
-        case 1 => return this.clm_id;
-        case 2 => return this.clm_from_dt
-        case 3 => return this.clm_thru_dt
-        case 4 => return this.bene_birth_dt
-        case 5 => return this.bene_death_dt
-        case 6 => return this.bene_sex_ident_cd
+        case 0 => return this.desynpuf_id.asInstanceOf[AnyRef];
+        case 1 => return this.clm_id.asInstanceOf[AnyRef];
+        case 2 => return this.clm_from_dt.asInstanceOf[AnyRef]
+        case 3 => return this.clm_thru_dt.asInstanceOf[AnyRef]
+        case 4 => return this.bene_birth_dt.asInstanceOf[AnyRef]
+        case 5 => return this.bene_death_dt.asInstanceOf[AnyRef]
+        case 6 => return this.bene_sex_ident_cd.asInstanceOf[AnyRef]
         case _ => throw new Exception("Bad index");
       }
     } catch {
@@ -176,10 +181,10 @@ class hl7Fixed(factory: ContainerFactoryInterface) extends ContainerInterface(fa
     }
   }
 
-  override def getOrElse(key: String, defaultVal: Any): Any = { // Return value
+  override def getOrElse(key: String, defaultVal: Any): AnyRef = { // Return value
     try {
       val value = get(key.toLowerCase())
-      if (value == null) return defaultVal; else return value;
+      if (value == null) return defaultVal.asInstanceOf[AnyRef]; else return value;
 
     } catch {
       case e: Exception => {
@@ -190,10 +195,10 @@ class hl7Fixed(factory: ContainerFactoryInterface) extends ContainerInterface(fa
     return null;
   }
 
-  override def getOrElse(index: Int, defaultVal: Any): Any = { // Return (value,  type)
+  override def getOrElse(index: Int, defaultVal: Any): AnyRef = { // Return (value,  type)
     try {
       val value = get(index)
-      if (value == null) return defaultVal; else return value;
+      if (value == null) return defaultVal.asInstanceOf[AnyRef]; else return value;
 
     } catch {
       case e: Exception => {
@@ -204,17 +209,17 @@ class hl7Fixed(factory: ContainerFactoryInterface) extends ContainerInterface(fa
     return null;
   }
 
-  private def getWithReflection(key: String): Any = {
+  private def getWithReflection(key: String): AnyRef = {
     val ru = scala.reflect.runtime.universe
     val m = ru.runtimeMirror(getClass.getClassLoader)
     val im = m.reflect(this)
     val fieldX = ru.typeOf[hl7Fixed].declaration(ru.newTermName(key)).asTerm.accessed.asTerm
     val fmX = im.reflectField(fieldX)
-    return fmX.get
+    return fmX.get.asInstanceOf[AnyRef]
 
   }
 
-  private def getByName(key: String): Any = {
+  private def getByName(key: String): AnyRef = {
     if (!keyTypes.contains(key)) throw new Exception(s"Key $key does not exists in message/container hl7Fixed ");
     return get(keyTypes(key).getIndex)
 

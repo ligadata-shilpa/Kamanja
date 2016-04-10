@@ -106,11 +106,11 @@ class MessageGenerator {
       getSetFixed = getSetFixed.append(getByStringhFixed(message));
       getSetFixed = getSetFixed.append(getByName(message));
       getSetFixed = getSetFixed.append(getOrElseFunc());
+      getSetFixed = getSetFixed.append(getFuncByOffset(message.Elements, message.Name));
       getSetFixed = getSetFixed.append(getOrElseByIndexFunc);
       getSetFixed = getSetFixed.append(getAttributeNamesFixed);
       getSetFixed = getSetFixed.append(getAllAttributeValuesFixed(message));
       getSetFixed = getSetFixed.append(getAttributeNameAndValueIterator);
-      getSetFixed = getSetFixed.append(getFuncByOffset(message.Elements, message.Name));
       getSetFixed = getSetFixed.append(setByKeyFunc(message));
       getSetFixed = getSetFixed.append(setFuncByOffset(message.Elements, message.Name));
       getSetFixed = getSetFixed.append(setValueAndValueTypeByKeyFunc);
@@ -304,7 +304,7 @@ class MessageGenerator {
     var getFuncByOffset: String = ""
     getFuncByOffset = """
       
-    def get(index : Int) : Any = { // Return (value, type)
+    override def get(index : Int) : AnyRef = { // Return (value, type)
       try{
         index match {
    """ + getByOffset(fields) + """
@@ -324,7 +324,7 @@ class MessageGenerator {
     try {
       fields.foreach(field => {
         if (field != null) {
-          getByOffset.append("%scase %s => return this.%s; %s".format(msgConstants.pad2, field.FieldOrdinal, field.Name, msgConstants.newline))
+          getByOffset.append("%scase %s => return this.%s.asInstanceOf[AnyRef]; %s".format(msgConstants.pad2, field.FieldOrdinal, field.Name, msgConstants.newline))
         }
       })
     } catch {
@@ -431,10 +431,10 @@ class MessageGenerator {
    */
   private def getOrElseFunc(): String = {
     """
-    override def getOrElse(key: String, defaultVal: Any): Any = { // Return (value, type)
+    override def getOrElse(key: String, defaultVal: Any): AnyRef = { // Return (value, type)
       try {
         val value = get(key.toLowerCase())
-        if (value == null) return defaultVal; else return value;
+        if (value == null) return defaultVal.asInstanceOf[AnyRef]; else return value;
       } catch {
         case e: Exception => {
           log.debug("", e)
@@ -451,10 +451,10 @@ class MessageGenerator {
    */
   private def getOrElseByIndexFunc = {
     """
-    override def getOrElse(index: Int, defaultVal: Any): Any = { // Return (value,  type)
+    override def getOrElse(index: Int, defaultVal: Any): AnyRef = { // Return (value,  type)
       try {
         val value = get(index)
-        if (value == null) return defaultVal; else return value;
+        if (value == null) return defaultVal.asInstanceOf[AnyRef]; else return value;
       } catch {
         case e: Exception => {
           log.debug("", e)
@@ -616,7 +616,7 @@ class MessageGenerator {
 
   private def getByStringhFixed(message: Message): String = {
     """
-    override def get(key: String): Any = {
+    override def get(key: String): AnyRef = {
     try {
       // Try with reflection
       return getByName(key.toLowerCase())
@@ -637,7 +637,7 @@ class MessageGenerator {
    */
   private def getByName(message: Message): String = {
     """
-    private def getByName(key: String): Any = {
+    private def getByName(key: String): AnyRef = {
       if (!keyTypes.contains(key)) throw new Exception(s"Key $key does not exists in message/container hl7Fixed ");
       return get(keyTypes(key).getIndex)
   }
@@ -649,13 +649,13 @@ class MessageGenerator {
    */
   private def getWithReflection(msg: Message): String = {
     """
-    private def getWithReflection(key: String): Any = {
+    private def getWithReflection(key: String): AnyRef = {
       val ru = scala.reflect.runtime.universe
       val m = ru.runtimeMirror(getClass.getClassLoader)
       val im = m.reflect(this)
       val fieldX = ru.typeOf[""" + msg.Name + """].declaration(ru.newTermName(key)).asTerm.accessed.asTerm
       val fmX = im.reflectField(fieldX)
-      return fmX.get;      
+      return fmX.get.asInstanceOf[AnyRef];      
     } 
    """
   }
