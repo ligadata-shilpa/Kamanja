@@ -73,8 +73,8 @@ public class ClusterInstallerDriver implements StatusCallback {
         URLClassLoader installDriverLoader = null;
 
         int majorVer = KamanjaVersion.getMajorVersion();
-        int minVer = KamanjaVersion.getMajorVersion();
-        int microVer = KamanjaVersion.getMajorVersion();
+        int minVer = KamanjaVersion.getMinorVersion();
+        int microVer = KamanjaVersion.getMicroVersion();
         String installDriverPath = clusterInstallerDriversLocation + "/InstallDriver-" + majorVer + "." + minVer + "." + microVer;
 
         if (!isValidPath(installDriverPath, false, true)) {
