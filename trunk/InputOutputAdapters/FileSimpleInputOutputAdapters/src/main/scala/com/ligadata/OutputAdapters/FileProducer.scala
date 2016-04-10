@@ -92,7 +92,11 @@ class FileProducer(val inputConfig: AdapterConfiguration, val nodeContext: NodeC
 
   // Locking before we write into file
   // To send an array of messages. messages.size should be same as partKeys.size
-  protected override def send(tnxCtxt: TransactionContext, outputContainers: Array[ContainerInterface], serializedContainerData: Array[Array[Byte]], serializerNames: Array[String]): Unit = _lock.synchronized {
+  override def send(tnxCtxt: TransactionContext, outputContainers: Array[ContainerInterface]): Unit = _lock.synchronized {
+    if (outputContainers.size == 0) return
+
+    val (outContainers, serializedContainerData, serializerNames) = serialize(tnxCtxt, outputContainers)
+
     if (outputContainers.size != serializedContainerData.size || outputContainers.size != serializerNames.size) {
       LOG.error("File input adapter " + fc.Name + ": Messages, messages serialized data & serializer names should has same number of elements. Messages:%d, Messages Serialized data:%d, serializerNames:%d".format(outputContainers.size, serializedContainerData.size, serializerNames.size))
       //TODO Need to record an error here... is this a job for the ERROR Q?
