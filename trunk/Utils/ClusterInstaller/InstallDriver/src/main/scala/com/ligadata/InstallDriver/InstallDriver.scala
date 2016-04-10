@@ -466,8 +466,12 @@ Try again.
       sys.exit(1)
     }
 
+    var majorVer = KamanjaVersion.getMajorVersion
+    var minVer = KamanjaVersion.getMajorVersion
+    var microVer = KamanjaVersion.getMajorVersion
+
     val componentVersionScriptAbsolutePath = s"$clusterInstallerDriversLocation/GetComponentsVersions.sh"
-    val componentVersionJarAbsolutePath = s"$clusterInstallerDriversLocation/GetComponent-1.0"
+    val componentVersionJarAbsolutePath = s"$clusterInstallerDriversLocation/GetComponent-${majorVer}.${minVer}.${microVer}"
     val kamanjaClusterInstallPath = s"$clusterInstallerDriversLocation/KamanjaClusterInstall.sh"
 
     var cnt: Int = 0
