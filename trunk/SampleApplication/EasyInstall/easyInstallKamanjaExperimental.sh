@@ -59,9 +59,6 @@ if [ "$ignoreMigrationLibsOption" == "yes" ]; then
         buildMigrationLibs="no"
 fi
 
-
-
-
 echo "building 2.10 = $build210 ... building 2.11 = $build211 ... buildOption was $buildOption. cleanOption is $cleanOption and cleanBuild is $cleanBuild"
 
 migration2_10libsCopiesFor2_11="false"
@@ -73,7 +70,12 @@ ivyPath=$(echo $ivyPath | sed 's/[\/]*$//')
 # *******************************
 # Clean out prior installation
 # *******************************
-rm -Rf $installPath
+if [ "$cleanBuild" == "yes" ]; then
+   echo "Removing $installPath"
+   rm -Rf $installPath
+else
+   echo "Keeping $installPath as it is and copying new binaries into that"
+fi
 
 # *******************************
 # Make the directories as needed for version-2.10
@@ -482,7 +484,7 @@ if [ "$buildMigrationLibs" == "yes" ]; then
 	cp $srcPath/Utils/Migrate/SourceVersion/MigrateFrom_V_1_1/target/scala-2.10/migratefrom_v_1_1_2.10-1.0.jar $kamanjainstallsystemlib
 	cp $srcPath/Utils/Migrate/SourceVersion/MigrateFrom_V_1_2/target/scala-2.10/migratefrom_v_1_2_2.10-1.0.jar $kamanjainstallsystemlib
 	cp $srcPath/Utils/Migrate/SourceVersion/MigrateFrom_V_1_3/target/scala-2.10/migratefrom_v_1_3_2.10-1.0.jar $kamanjainstallsystemlib
-	cp $srcPath/Utils/Migrate/DestnationVersion/MigrateTo_V_1_4/target/scala-2.10/migrateto_v_1_4_2.10-1.0.jar $kamanjainstallsystemlib
+	cp $srcPath/Utils/Migrate/DestinationVersion/MigrateTo_V_1_4/target/scala-2.10/migrateto_v_1_4_2.10-1.0.jar $kamanjainstallsystemlib
 fi
 fi
 
