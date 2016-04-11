@@ -13,7 +13,7 @@ import org.apache.logging.log4j.LogManager
 import org.json4s.jackson.Serialization
 
 import scala.actors.threadpool.{Executors, ExecutorService}
-import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.{MultiMap, HashMap, ArrayBuffer}
 
 
 class SmartFileConsumerContext{
@@ -73,53 +73,105 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
   val requestFilePath = smartFileToLeaderPath + "/RequestFile"
   val fileProcessingPath = smartFileToLeaderPath + "/FileProcessing"
   val File_Processing_Status_Finished = "finished"
-  val filesParallelismPath = smartFileCommunicationPath + "/FilesParallelism"
+  val filesParallelismParentPath = smartFileCommunicationPath + "/FilesParallelism"
+  val sendStartInfoToLeaderParentPath = smartFileToLeaderPath + "/StartInfo"
 
-  private var envContext : EnvContext = null
+  private var envContext : EnvContext = nodeContext.getEnvCtxt()
   private var clusterStatus : ClusterStatus = null
   private var participantExecutor : ExecutorService = null
   private var filesParallelism : Int = -1
   private var monitorController : MonitorController = null
+  private var initialized = false
+  private var prevRegLeader = ""
+
+  private var prevRegParticipantPartitions : List[Int] = List()
 
   private var _ignoreFirstMsg : Boolean = _
 
+  private var allNodesStartInfo = scala.collection.mutable.Map[String, List[(Int, String, Int, Boolean)]]()
+
+  envContext.registerNodesChangeNotification(nodeChangeCallback)
+
   //add the node callback
-  private def initializeNode(nodeContext: NodeContext): Unit ={
-    envContext = nodeContext.gCtx
-    envContext.registerNodesChangeNotification(nodeChangeCallback)
-  }
+  private def initializeNode: Unit ={
+    if (initialized == false)
+      envContext.createListenerForCacheKey(filesParallelismParentPath + "/" + envContext.getClusterInfo().nodeId, filesParallelismCallback)
 
-  def nodeChangeCallback (newClusterStatus : ClusterStatus) : Unit = {
+    if(clusterStatus.isLeader && clusterStatus.leaderNodeId.equals(clusterStatus.nodeId)){
+      val newfilesParallelism = (adapterConfig.monitoringConfig.consumersCount.toDouble / clusterStatus.participantsNodeIds.size).ceil.toInt
+      if (filesParallelism != -1) {
+        // BUGBUG:: FIXME:- Unregister stuff
+        // It is already distributes. Need to Re-Register stuff????
+      }
 
-    if(newClusterStatus.isLeader){
       //action for the leader node
 
       //node wasn't a leader before
-      if(!clusterStatus.isLeader){
-        LOG.debug("Smart File Consumer - Leader is running on node " + newClusterStatus.nodeId)
-        monitorController = new MonitorController(adapterConfig, newFileDetectedCallback)
-        monitorController.startMonitoring()
+      if(initialized == false || ! clusterStatus.leaderNodeId.equals(prevRegLeader)){
+        LOG.debug("Smart File Consumer - Leader is running on node " + clusterStatus.nodeId)
 
+        allNodesStartInfo.clear()
+        envContext.createListenerForCacheChildern(sendStartInfoToLeaderParentPath, collectStartInfo)// listen to start info
+
+        //Thread.sleep(10000) need to keep track of Partitions we got from nodes (whether we got all the participants we sent to engine or not)
+        val maximumTrials = 10
+        var trialCounter = 1
+        while(trialCounter <= maximumTrials && allNodesStartInfo.size < clusterStatus.participantsNodeIds.size){
+          Thread.sleep(1000)
+          trialCounter += 1
+        }
+
+        //send to each node what partitions to handle (as received from engine)
+        allNodesStartInfo.foreach(nodeStartInfo =>  {
+          val path = filesParallelismParentPath + "/" + nodeStartInfo._1
+          val data = nodeStartInfo._2.map(nodePartitionInfo => nodePartitionInfo._1).mkString(",")
+          envContext.setListenerCacheKey(path, data)
+        })
+
+        //now since we have start info for all participants
+        //collect file names and offsets
+        val initialFilesToProcess = ArrayBuffer[(String, Int, String, Int)]()
+        allNodesStartInfo.foreach(nodeStartInfo => nodeStartInfo._2.foreach(nodePartitionInfo => {
+          if(nodePartitionInfo._2.trim.length > 0)
+            initialFilesToProcess.append((nodeStartInfo._1,nodePartitionInfo._1, nodePartitionInfo._2, nodePartitionInfo._3))
+          //(node, partitionId, file name, offset)
+        }))
+
+        // (First we need to process what ever files we get here), if we have file names
+        if(initialFilesToProcess.size > 0)
+          assignInitialFiles(initialFilesToProcess.toArray)
+
+
+        //now register listeners for new requests (other than initial ones)
         envContext.createListenerForCacheChildern(requestFilePath, requestFileLeaderCallback) // listen to file requests
         envContext.createListenerForCacheChildern(fileProcessingPath, fileProcessingLeaderCallback)// listen to file processing status
 
+        //now run the monitor
+        monitorController = new MonitorController(adapterConfig, newFileDetectedCallback, initialFilesToProcess.toArray)
+        monitorController.startMonitoring()
       }
       else{//node was already leader
 
       }
 
+      prevRegLeader = clusterStatus.leaderNodeId
+
+      //FIXME : recalculate partitions for each node and send partition ids to nodes ???
       //set parallelism
-      filesParallelism = (adapterConfig.monitoringConfig.consumersCount.toDouble / newClusterStatus.participantsNodeIds.size).round.toInt
-      envContext.setListenerCacheKey(filesParallelismPath, filesParallelism.toString)
+      filesParallelism = newfilesParallelism
+      //envContext.setListenerCacheKey(filesParallelismPath, filesParallelism.toString)
     }
 
+    initialized = true
+  }
+
+  def nodeChangeCallback (newClusterStatus : ClusterStatus) : Unit = {
     //action for participant nodes:
-    LOG.debug("Smart File Consumer - Participant is running on node " + newClusterStatus.nodeId)
-    val nodeId = newClusterStatus.nodeId
-    envContext.createListenerForCacheKey(filesParallelismPath, filesParallelismCallback)
-
-
     clusterStatus = newClusterStatus
+
+    if (initialized)
+      initializeNode // Immediately Changing if participents change. Do we need to wait for engine to do it?
+
   }
 
   //will be useful when leader has requests from all nodes but no more files are available. then leader should be notified when new files are detected
@@ -254,6 +306,72 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
     }
   }
 
+  //used to assign files to participants right after calling start processing, if the engine has files to be processed
+  //initialFilesToProcess: list of (node, partitionId, file name, offset)
+  private def assignInitialFiles(initialFilesToProcess : Array[(String, Int, String, Int)]): Unit ={
+    if(initialFilesToProcess == null || initialFilesToProcess.length == 0)
+      return
+    var processingQueue = getFileProcessingQueue
+    var requestQueue = getFileRequestsQueue
+
+    //wait to get requests from all threads
+    val maxTrials = 5
+    var trialsCounter = 1
+    while(trialsCounter <= maxTrials && requestQueue.size < adapterConfig.monitoringConfig.consumersCount){
+      Thread.sleep(1000)
+      requestQueue = getFileRequestsQueue
+      trialsCounter += 1
+    }
+
+    //<node1>/<thread1>:<path to receive files>|<node2>/<thread1>:<path to receive files>
+    requestQueue.foreach(requestStr => {
+      val reqTokens = requestStr.split(":")
+      val fileAssignmentKeyPath = reqTokens(1)
+      val participantPathTokens = reqTokens(0).split("/")
+      val nodeId = participantPathTokens(0)
+      val partitionId = participantPathTokens(1).toInt
+      initialFilesToProcess.find(fileInfo => fileInfo._1.equals(nodeId) && fileInfo._2 == partitionId) match{
+        case None =>{}
+        case Some(fileInfo) => {
+          saveFileRequestsQueue(getFileRequestsQueue diff List(requestStr))//remove the current request
+
+          val fileToProcessFullPath = fileInfo._3
+          LOG.debug("Smart File Consumer - Adding a file processing assignment of file + " + fileToProcessFullPath +
+            " to Node " + nodeId + ", partition Id=" + partitionId)
+
+          val offset = fileInfo._4
+          val data = fileToProcessFullPath + "|" + offset
+
+          //there are files that need to process
+
+          envContext.setListenerCacheKey(fileAssignmentKeyPath, data)
+          processingQueue = processingQueue ::: List(nodeId + "/" + partitionId + ":" + fileToProcessFullPath)
+          saveFileProcessingQueue(processingQueue)//add to processing queue
+        }
+      }
+    })
+
+
+  }
+
+  //leader
+  def collectStartInfo(eventType: String, eventPath: String, eventPathData: String) : Unit = {
+
+    val pathTokens = eventPath.split("/")
+    val sendingNodeId = pathTokens(pathTokens.length - 1)
+
+    //(1,file1,0,true)~(2,file2,0,true)~(3,file3,1000,true)
+    val dataAr = eventPathData.split("~")
+    val sendingNodeStartInfo = dataAr.map(dataItem => {
+      val trimmedItem = dataItem.substring(1,dataItem.length-1) // remove parenthesis
+      val itemTokens = trimmedItem.split(",")
+      (itemTokens(0).toInt, itemTokens(1), itemTokens(2).toInt, itemTokens(3).toBoolean)
+    }).toList
+
+    allNodesStartInfo.put(sendingNodeId, sendingNodeStartInfo)
+
+  }
+
   //what a leader should do when recieving file processing status update
   def fileProcessingLeaderCallback (eventType: String, eventPath: String, eventPathData: String) : Unit = {
     if(eventType.equalsIgnoreCase("put") || eventType.equalsIgnoreCase("update")) {
@@ -297,6 +415,21 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
     nodeOrder * threadsPerNode + threadNum
   }
 
+  private def shufflePartitionsToNodes(nodes : List[String], partitionsCount : Int):  HashMap[String, scala.collection.mutable.Set[Int]] with MultiMap[String, Int] ={
+    val nodesPartitionsMap = new HashMap[String, scala.collection.mutable.Set[Int]] with MultiMap[String, Int]
+    var counter = 0
+    for(partition <- 1 to partitionsCount){
+      val mod = partition % nodes.size
+      val correspondingNodeIndex = if(mod == 0) nodes.size - 1 else mod - 1
+
+      nodesPartitionsMap.addBinding(nodes(correspondingNodeIndex),partition )
+
+      counter += 1
+    }
+
+    nodesPartitionsMap
+  }
+
   //what a participant should do when receiving file to process (from leader)
   def fileAssignmentFromLeaderCallback (eventType: String, eventPath: String, eventPathData: String) : Unit = {
     //data has format <file name>|offset
@@ -338,17 +471,21 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
 
   //what a participant should do parallelism value changes
   def filesParallelismCallback (eventType: String, eventPath: String, eventPathData: String) : Unit = {
-    val newFilesParallelism = eventPathData.toInt
+
+    //data is comma separated partition ids
+    val currentNodePartitions = eventPathData.split(",").map(idStr => idStr.toInt).toList
+
+    //val newFilesParallelism = eventPathData.toInt
 
     val nodeId = clusterStatus.nodeId
 
-    LOG.info("Smart File Consumer - Node Id = {}, New File Parallelism (maximum threads per node) is {}", nodeId, newFilesParallelism.toString)
+    LOG.info("Smart File Consumer - Node Id = {}, partitions to handle are {}", nodeId, eventPathData)
     LOG.info("Smart File Consumer - Old File Parallelism is {}", filesParallelism.toString)
 
     var parallelismStatus = ""
     if(filesParallelism == -1)
       parallelismStatus = "Uninitialized"
-    else if (newFilesParallelism == filesParallelism)
+    else if (currentNodePartitions.size == prevRegParticipantPartitions.size)
       parallelismStatus = "Intact"
     else parallelismStatus = "Changed"
 
@@ -358,32 +495,32 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
       if(participantExecutor != null) {
         participantExecutor.shutdown() //tell the executor service to shutdown after threads finish tasks in hand
         //if(!participantExecutor.awaitTermination(5, TimeUnit.MINUTES))
-          //participantExecutor.shutdownNow()
+        //participantExecutor.shutdownNow()
       }
     }
-    filesParallelism = newFilesParallelism
+    prevRegParticipantPartitions = currentNodePartitions
 
 
     //create the threads only if no threads created yet or number of threads changed
     if(parallelismStatus == "Uninitialized" || parallelismStatus == "Changed"){
       participantExecutor = Executors.newFixedThreadPool(filesParallelism)
-      for(threadId <- 1 to filesParallelism) {
+      currentNodePartitions.foreach(partitionId =>{
 
         val executorThread = new Runnable() {
-          private var threadId: Int = _
-          def init(id: Int) = threadId = id
+          private var partitionId: Int = _
+          def init(id: Int) = partitionId = id
 
           override def run(): Unit = {
-            val fileProcessingAssignementKeyPath = smartFileFromLeaderPath + "/" + nodeId + "/" + threadId //listen to this SmartFileCommunication/FromLeader/<NodeId>/<thread id>
+            val fileProcessingAssignementKeyPath = smartFileFromLeaderPath + "/" + nodeId + "/" + partitionId //listen to this SmartFileCommunication/FromLeader/<NodeId>/<partitionId id>
             //listen to file assignment from leader
-            envContext.createListenerForCacheKey(fileProcessingAssignementKeyPath, fileAssignmentFromLeaderCallback) //e.g.   SmartFileCommunication/FromLeader/RequestFile/<nodeid>/<thread id>
-            val fileRequestKeyPath = smartFileToLeaderPath + "/" + nodeId+ "/" + threadId
+            envContext.createListenerForCacheKey(fileProcessingAssignementKeyPath, fileAssignmentFromLeaderCallback) //e.g.   SmartFileCommunication/FromLeader/RequestFile/<nodeid>/<partitionId id>
+            val fileRequestKeyPath = smartFileToLeaderPath + "/" + nodeId+ "/" + partitionId
             envContext.setListenerCacheKey(fileRequestKeyPath, fileProcessingAssignementKeyPath)
           }
         }
-        executorThread.init(threadId)
+        executorThread.init(partitionId)
         participantExecutor.execute(executorThread)
-      }
+      })
     }
 
   }
@@ -487,60 +624,70 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
     infoBuffer.toArray
   }
 
+
   override def StartProcessing(partitionIds: Array[StartProcPartInfo], ignoreFirstMsg: Boolean): Unit = {
     _ignoreFirstMsg = ignoreFirstMsg
     var lastHb: Long = 0
     startHeartBeat = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
 
     LOG.info("START_PROCESSING CALLED")
-    // Check to see if this already started
-    if (startTime > 0) {
-      LOG.error("SMART_FILE_ADAPTER: already started, or in the process of shutting down")
-    }
-    startTime = System.nanoTime
 
-    if (partitionIds == null || partitionIds.size == 0) {
-      LOG.error("SMART_FILE_ADAPTER: Cannot process the file adapter request, invalid parameters - number")
-      return
-    }
+        // Check to see if this already started
+        if (startTime > 0) {
+          LOG.error("SMART_FILE_ADAPTER: already started, or in the process of shutting down")
+        }
+        startTime = System.nanoTime
 
-    val partitionInfoArray = partitionIds.map(quad => {
-      (quad._key.asInstanceOf[SmartFilePartitionUniqueRecordKey],
-        quad._val.asInstanceOf[SmartFilePartitionUniqueRecordValue],
-        quad._validateInfoVal.asInstanceOf[SmartFilePartitionUniqueRecordValue])
-    })
+        if (partitionIds == null || partitionIds.size == 0) {
+          LOG.error("SMART_FILE_ADAPTER: Cannot process the file adapter request, invalid parameters - number")
+          return
+        }
+    /*
+            val partitionInfoArray = partitionIds.map(quad => {
+              (quad._key.asInstanceOf[SmartFilePartitionUniqueRecordKey],
+                quad._val.asInstanceOf[SmartFilePartitionUniqueRecordValue],
+                quad._validateInfoVal.asInstanceOf[SmartFilePartitionUniqueRecordValue])
+            })
 
-    //qc.instancePartitions = partitionInfo.map(partQuad => { partQuad._1.PartitionId }).toSet
+            //qc.instancePartitions = partitionInfo.map(partQuad => { partQuad._1.PartitionId }).toSet
 
-    // Make sure the data passed was valid.
-    if (partitionInfoArray == null) {
-      LOG.error("SMART_FILE_ADAPTER: Cannot process the file adapter request, invalid parameters - partition instance list")
-      return
-    }
+            // Make sure the data passed was valid.
+            if (partitionInfoArray == null) {
+              LOG.error("SMART_FILE_ADAPTER: Cannot process the file adapter request, invalid parameters - partition instance list")
+              return
+            }
 
-    partitionKVs.clear
-    partitionInfoArray.foreach(partitionInfo => {
-      partitionKVs(partitionInfo._1.PartitionId) = partitionInfo
-    })
+            partitionKVs.clear
+            partitionInfoArray.foreach(partitionInfo => {
+              partitionKVs(partitionInfo._1.PartitionId) = partitionInfo
+            })
 
-    // Enable the adapter to process
-    isQuiesced = false
-    LOG.debug("SMART_FILE_ADAPTER: Starting " + partitionKVs.size + " threads to process partitions")
+            // Enable the adapter to process
+            isQuiesced = false
+            LOG.debug("SMART_FILE_ADAPTER: Starting " + partitionKVs.size + " threads to process partitions")
 
-    // Schedule a task to perform a read from a give partition.
-    partitionKVs.foreach(kvsElement => {
-      val partitionId = kvsElement._1
-      val partition = kvsElement._2
+            // Schedule a task to perform a read from a give partition.
+            partitionKVs.foreach(kvsElement => {
+              val partitionId = kvsElement._1
+              val partition = kvsElement._2
 
 
-    })
+            })
+        */
+    initializeNode//register the callbacks
 
-    initializeNode(nodeContext)//register the callbacks
 
+    //(1,file1,0,true)~(2,file2,0,true)~(3,file3,1000,true)
+    val myPartitionInfo = partitionIds.map(pid => (pid._key.asInstanceOf[SmartFilePartitionUniqueRecordKey].PartitionId,
+      pid._val.asInstanceOf[SmartFilePartitionUniqueRecordValue].FileName,
+      pid._val.asInstanceOf[SmartFilePartitionUniqueRecordValue].Offset, ignoreFirstMsg)).mkString("~")
+
+    val SendStartInfoToLeaderPath = sendStartInfoToLeaderParentPath + "/" + clusterStatus.nodeId  // Should be different for each Nodes
+    envContext.setListenerCacheKey(SendStartInfoToLeaderPath, myPartitionInfo) // => Goes to Leader
   }
 
   private def sendSmartFileMessageToEngin(smartMessage : SmartFileMessage,
-                                   smartFileConsumerContext: SmartFileConsumerContext): Unit ={
+                                          smartFileConsumerContext: SmartFileConsumerContext): Unit ={
 
     val partitionId = smartFileConsumerContext.partitionId
     val partition = partitionKVs(partitionId)
@@ -584,6 +731,8 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
   }
 
   override def StopProcessing: Unit = {
+    //BUGBUG:: FIXME:- Clear listeners & queues all stuff related to leader or non-leader. So, Next SartProcessing should start the whole stuff again.
+    initialized = false
     isShutdown = true
     monitorController.stopMonitoring
     terminateReaderTasks

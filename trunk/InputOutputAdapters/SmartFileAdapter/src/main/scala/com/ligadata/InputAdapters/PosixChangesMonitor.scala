@@ -233,7 +233,7 @@ class PosixChangesMonitor(adapterName : String, modifiedFileCallback:(SmartFileH
     isMonitoring = false
   }
 
-  //hdfs and sftp monitors are checking for subfolders actually
+
   private def checkExistingFiles(d: File): Unit = {
     // Process all the existing files in the directory that are not marked complete.
     if (d.exists && d.isDirectory) {
