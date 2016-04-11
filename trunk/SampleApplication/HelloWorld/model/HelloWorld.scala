@@ -20,7 +20,6 @@ import com.ligadata.KamanjaBase._
 import com.ligadata.kamanja.metadata.ModelDef;
 
 class HelloWorldModelFactory(modelDef: ModelDef, nodeContext: NodeContext) extends ModelInstanceFactory(modelDef, nodeContext) {
-  // override def isValidMessage(msg: ContainerInterface): Boolean = return false // msg.isInstanceOf[msg1]
   override def createModelInstance(): ModelInstance = return new HelloWorldModel(this)
   override def getModelName: String = "HelloWorldModel" 
   override def getVersion: String = "0.0.1"
@@ -32,7 +31,7 @@ class HelloWorldModel(factory: ModelInstanceFactory) extends ModelInstance(facto
      var helloWorld : msg1 =  execMsgsSet(0).asInstanceOf[msg1] // This run should trigger when we have only msg1
         if(helloWorld.score!=1)
           return null;
-		val output = outmsg1Factory.createInstance().asInstanceOf[outmsg1];
+		val output = outmsg1.createInstance().asInstanceOf[outmsg1];
 		output.id = helloWorld.id;
 		output.name = helloWorld.name;
         return Array(output);
