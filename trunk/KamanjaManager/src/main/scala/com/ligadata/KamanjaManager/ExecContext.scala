@@ -87,7 +87,7 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
     }
   */
 
-  def executeMessage(txnCtxt: TransactionContext, deserializerName: String): Unit = {
+  def executeMessage(txnCtxt: TransactionContext): Unit = {
     try {
       val curLoader = txnCtxt.getNodeCtxt().getEnvCtxt().getMetadataLoader.loader // Protecting from changing it between below statements
       if (curLoader != null && previousLoader != curLoader) {

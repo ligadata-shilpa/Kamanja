@@ -1628,12 +1628,12 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     }
   */
 
-  override def rollbackData(transId: Long): Unit = {
+  override def rollbackData(): Unit = {
 //    removeTransactionContext(transId)
    // throw new KamanjaException("Function call is not implemented", null)
   }
 
-  override def commitData(transId: Long, forceCommit: Boolean): Unit = {
+  override def commitData(txnCtxt: TransactionContext): Unit = {
 
   }
 

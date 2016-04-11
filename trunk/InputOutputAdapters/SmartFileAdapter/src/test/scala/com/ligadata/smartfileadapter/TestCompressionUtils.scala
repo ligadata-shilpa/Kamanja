@@ -12,7 +12,8 @@ class TestCompressionUtils extends  FunSpec with BeforeAndAfter with ShouldMatch
 
   describe("getFileType test of a file") {
 
-    it("should detect file type of msg_test5_not_compressed as (text/plain)") {
+    //comment for now, used library(magic mime) is causing too many log messages on debug level for some file types
+    /*it("should detect file type of msg_test5_not_compressed as (text/plain)") {
       val plainFilePath = getResourceFullPath("/msg_test5_not_compressed")
       println("textFilePath=" + plainFilePath)
       val handler = SmartFileHandlerFactory.createSmartFileHandler(createDefaultAdapterConfig, plainFilePath)
@@ -20,7 +21,7 @@ class TestCompressionUtils extends  FunSpec with BeforeAndAfter with ShouldMatch
 
       val fileType = CompressionUtil.getFileType(handler, null)
       fileType shouldEqual "text/plain"
-    }
+    }*/
 
     it("should detect file type of msg_test5_gzip as (application/gzip)") {
       val gzipFilePath = getResourceFullPath("/msg_test5_gzip")
@@ -31,7 +32,7 @@ class TestCompressionUtils extends  FunSpec with BeforeAndAfter with ShouldMatch
       fileType shouldEqual "application/gzip"
     }
 
-    it("should detect file type of msg_test5_bz2 as (application/gzip)") {
+    it("should detect file type of msg_test5_bz2 as (application/x-bzip2)") {
       val bz2FilePath = getResourceFullPath("/msg_test5_bz2")
       //println("textFilePath="+bz2FilePath)
       val handler = SmartFileHandlerFactory.createSmartFileHandler(createDefaultAdapterConfig, bz2FilePath)
@@ -40,7 +41,8 @@ class TestCompressionUtils extends  FunSpec with BeforeAndAfter with ShouldMatch
       fileType shouldEqual "application/x-bzip2"
     }
 
-    it("should detect file type of msg_test5_1x_lzop as (application/x-lzop)") {
+    //comment for now, used library(magic mime) is causing too many log messages on debug level for some file types
+    /*it("should detect file type of msg_test5_1x_lzop as (application/x-lzop)") {
       val lzopFilePath = getResourceFullPath("/msg_test5_1x_lzop")
       println("textFilePath="+lzopFilePath)
       val handler = SmartFileHandlerFactory.createSmartFileHandler(createDefaultAdapterConfig, lzopFilePath)
@@ -48,7 +50,7 @@ class TestCompressionUtils extends  FunSpec with BeforeAndAfter with ShouldMatch
 
       val fileType = CompressionUtil.getFileType(handler, null)
       fileType shouldEqual "application/x-lzop"
-    }
+    }*/
 
   }
 
@@ -80,6 +82,7 @@ class TestCompressionUtils extends  FunSpec with BeforeAndAfter with ShouldMatch
       |  },
       |  "MonitoringConfig": {
       |     "Locations": "/data/input",
+      |      "TargetMoveDir": "/data/processed",
       |    "MaxTimeWait": "5000"
       |  }
       |}

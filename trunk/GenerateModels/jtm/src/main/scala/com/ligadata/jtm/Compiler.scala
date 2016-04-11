@@ -379,17 +379,17 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
       false
   }
 
-  def ColumnNames(mgr: MdMgr, classname: String): Set[String] = {
+  def ColumnNames(mgr: MdMgr, classname: String): Map[String, String] = {
     val classMd = md.Message(classname, 0, true)
     if(classMd.isEmpty) {
       throw new Exception("Metadata: unable to find class %s".format(classname))
     }
     if(classMd.get.containerType.isInstanceOf[StructTypeDef]) {
       val members = classMd.get.containerType.asInstanceOf[StructTypeDef].memberDefs
-      members.map(e => columnNamePatchUp.getOrElse(e.Name, e.Name)).toSet
+      members.map(e => columnNamePatchUp.getOrElse(e.Name, e.Name) -> e.typeString).toMap
     } else if(classMd.get.containerType.isInstanceOf[MappedMsgTypeDef]) {
       val members = classMd.get.containerType.asInstanceOf[MappedMsgTypeDef].attrMap
-      members.map(e => columnNamePatchUp.getOrElse(e._2.Name, e._2.Name)).toSet
+      members.map(e => columnNamePatchUp.getOrElse(e._2.Name, e._2.Name)-> e._2.typeString).toMap
     } else {
       throw new Exception("Unhandled type %s".format(classMd.get.containerType.getClass.getName))
     }
@@ -468,7 +468,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     var (outputSet, outputtype) = if(output_in.nonEmpty) {
       val outputType1 = ResolveAlias(output_in, aliaseMessages)
       val outputType = ResolveToVersionedClassname(md, outputType1)
-      (ColumnNames(md, outputType1), outputType)
+      (ColumnNames(md, outputType1).map(m=> m._1).toSet, outputType)
     } else {
       (Set.empty[String], "")
     }
@@ -521,46 +521,67 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
       cnt2 = cnt1
 
-      // Check Mapping
-      val mapping1 = if (mapping.nonEmpty) {
+      logger.trace("Mappings left {}", mapping.mkString(", "))
 
-        logger.trace("Mappings left {}", mapping.mkString(", "))
+      // Process mappings that are variables, those are stuffed in the tracker
+      // so they can be assigned to outputs directly
+      val mapping2 = if (mapping.nonEmpty) {
+        mapping.filter(f => {
+          val tracker = Expressions.isVariable(f._2, innerMapping, dictMessages, aliaseMessages)
+          if (tracker != null) {
+            logger.trace("Matched mapping variable {} -> {}", f._1, tracker.toString)
+            outputSet --= Set(f._1)
+            innerMapping ++= Map(f._1 -> tracker)
+            false
+          } else {
+            true
+          }
+        })
+      } else {
+        mapping
+      }
 
-        val found = mapping.filter(f => {
+      logger.trace("Mappings2 left {}", mapping2.mkString(", "))
+
+      // Check Mapping with expressions
+      val mapping1 = if (mapping2.nonEmpty) {
+
+        val found = mapping2.filter(f => {
+
           // Try to extract variables, than it is an expression
           val list = Expressions.ExtractColumnNames(f._2)
           if (list.nonEmpty) {
             val rList = ResolveNames(list, aliaseMessages)
             val open = rList.filter(f => !innerMapping.contains(f._2)).filter(f => {
               val (c, v) = splitNamespaceClass(f._2)
-              if(dictMessages.contains(c)) {
+              if (dictMessages.contains(c)) {
                 val expression = "%s.get(\"%s\")".format(dictMessages.get(c).get, v)
                 val variableName = "%s.%s".format(dictMessages.get(c).get, v)
                 innerMapping ++= Map(f._2 -> eval.Tracker(variableName, c, "Any", true, v, expression))
                 false
-              } else  {
+              } else {
                 true
               }
             })
 
-            if(open.isEmpty)
+            if (open.isEmpty)
               AmbiguousCheck(rList, f._2)
             else
               logger.trace("{} not found {}", currentPath, open.mkString(", "))
 
             open.isEmpty
-
           } else {
-            if(innerMapping.contains(f._2))
+
+            if (innerMapping.contains(f._2))
               true
-            else  {
+            else {
               val (c, v) = splitNamespaceClass(f._2)
-              if(dictMessages.contains(c)) {
+              if (dictMessages.contains(c)) {
                 val expression = "%s.get(\"%s\")".format(dictMessages.get(c).get, v)
                 val variableName = "%s.%s".format(dictMessages.get(c).get, v)
                 innerMapping ++= Map(f._2 -> eval.Tracker(variableName, c, "Any", true, v, expression))
                 true
-              } else  {
+              } else {
                 false
               }
             }
@@ -590,9 +611,9 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           outputSet --= Set(f._1)
           innerMapping ++= Map(f._1 -> eval.Tracker("", "", "", false, "", newExpression))
         })
-        mapping.filterKeys(f => !found.contains(f))
+        mapping2.filterKeys(f => !found.contains(f))
       } else {
-        mapping
+        mapping2
       }
 
       logger.trace("Mappings1 left {}", mapping1.mkString(", "))
@@ -646,6 +667,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
         } else {
           true
         }
+
       })
 
       // filters
@@ -1038,15 +1060,19 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
             // Translate outputs to the values
             val outputType1 = ResolveAlias(o._1, aliaseMessages)
             val outputType = ResolveToVersionedClassname(md, outputType1)
-            val outputSet: Set[String] = ColumnNames(md, outputType1)
+            val outputSet: Map[String, String] = ColumnNames(md, outputType1)
 
             val outputElements = outputSet.toArray.map(e => {
               // e.name -> from input, from mapping, from variable
-              val m = innerMapping.get(e)
+              val m = innerMapping.get(e._1)
               if (m.isEmpty) {
                 throw new Exception("Output %s not found".format(e))
               }
-              "result.%s = %s".format(e, m.get.getExpression())
+
+              // Coerce type
+              val newExpression = Expressions.Coerce(e._2, m.get.typeName, m.get.getExpression())
+
+              "result.%s = %s".format(e._1, newExpression)
             })
 
             // If output is a dictionary, collect all mappings

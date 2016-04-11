@@ -13,7 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package com.ligadata.jtm.test.filter1
+package com.ligadata.jtm.test.filter3
 import com.ligadata.KamanjaBase._
 import com.ligadata.KvBase.TimeRange
 import com.ligadata.kamanja.metadata.ModelDef

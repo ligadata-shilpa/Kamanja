@@ -505,7 +505,7 @@ class KamanjaManager extends Observer {
         } finally {
           ThreadLocalStorage.txnContextInfo.remove
           if (txnCtxt != null) {
-            KamanjaMetadata.gNodeContext.getEnvCtxt.rollbackData(txnId)
+            KamanjaMetadata.gNodeContext.getEnvCtxt.rollbackData()
           }
         }
 

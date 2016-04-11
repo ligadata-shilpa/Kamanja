@@ -3470,7 +3470,7 @@ trait LogTrait {
 object MdMgr extends LogTrait {
 
   /** Static variables */
-  val mdMgr = new MdMgr;
+  var mdMgr = new MdMgr;
   val sysNS = "System"
   // system name space
   var IdCntr = 0;
@@ -3483,6 +3483,13 @@ object MdMgr extends LogTrait {
     * @return mdMgr
     */
   def GetMdMgr = mdMgr
+
+  // Reset MdMgr -- Create new MdMgr
+  // NOTE NOTE:: All previous hold mdmgr will not update any more
+  // Mainly used for test suite
+  def ResetMdMgr: Unit = {
+    mdMgr = new MdMgr;
+  }
 
   def SysNS = sysNS
 

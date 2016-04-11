@@ -47,9 +47,9 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
       lazy val grok_instance_1_0_in1 = grok_instance_1_0.extractNamedGroups(in1)
       def process_o1(): Array[MessageInterface] = {
         val result = new com.ligadata.kamanja.test.V1000000.msg2(messagefactoryinterface)
-        result.out4 = grok_instance_1_0_in1
-        result.out3 = grok_instance_1_0_in1
-        result.out2 = grok_instance_1_0_in1
+        result.out4 = if(grok_instance_1_0_in1.containsKey("user")) grok_instance_1_0_in1.get("user") else "")
+        result.out3 = if(grok_instance_1_0_in1.containsKey("domain")) grok_instance_1_0_in1.get("domain") else "")
+        result.out2 = if(grok_instance_1_0_in1.containsKey("email")) grok_instance_1_0_in1.get("email") else "")
         result.out1 = msg1.in3
         Array(result)
       }
