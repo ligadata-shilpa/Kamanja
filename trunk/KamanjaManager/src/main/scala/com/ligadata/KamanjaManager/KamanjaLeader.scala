@@ -550,7 +550,8 @@ object KamanjaLeader {
           val uAK = nodeKeysMap.getOrElse(name, null)
           if (uAK != null) {
             // val uKV = uAK.map(uk => { GetUniqueKeyValue(uk) }) // FIXME:: get save Values for the keys
-            val uKV = uAK.map(uk => null)
+            val empty:(Long, String, List[(String, String, String)]) = null
+            val uKV = uAK.map(uk => empty)
             val maxParts = adapMaxPartsMap.getOrElse(name, 0)
             LOG.info("On Node %s for Adapter %s with Max Partitions %d UniqueKeys %s, UniqueValues %s".format(nodeId, name, maxParts, uAK.mkString(","), uKV.mkString(",")))
 
