@@ -31,16 +31,33 @@ class FileMessageExtractor(adapterConfig : SmartFileAdapterConfiguration,
   private var msgNum = 0
   private var globalOffset = 0
 
-  private val executor = Executors.newFixedThreadPool(1)
+  private val executor = Executors.newFixedThreadPool(2)
+
+  private var finished = false
+
+
 
   def extractMessages() : Unit = {
     //just run it in a separate thread
-    val executorThread = new Runnable() {
+    val extractorThread = new Runnable() {
       override def run(): Unit = {
         readBytesChunksFromFile()
       }
     }
-    executor.execute(executorThread)
+    executor.execute(extractorThread)
+
+    //keep updating status so leader knows participant is working fine
+    val statusUpdateThread = new Runnable() {
+      override def run(): Unit = {
+        while(!finished){
+          Thread.sleep(consumerContext.statusUpdateInterval)
+          //put filename~offset~timestamp
+          val data = fileHandler.getFullPath + "~" + globalOffset + "~" + System.nanoTime
+          consumerContext.envContext.saveConfigInClusterCache(consumerContext.statusUpdateCacheKey, data.getBytes)
+        }
+      }
+    }
+    executor.execute(statusUpdateThread)
   }
 
   private def readBytesChunksFromFile(): Unit = {
@@ -163,7 +180,7 @@ class FileMessageExtractor(adapterConfig : SmartFileAdapterConfiguration,
 
         //a message is extracted to passed to engine, update offset in cache
         globalOffset = globalOffset + lastMsg.length
-        consumerContext.envContext.saveConfigInClusterCache(consumerContext.fileOffsetCacheKey, globalOffset.toString.getBytes)
+        //consumerContext.envContext.saveConfigInClusterCache(consumerContext.fileOffsetCacheKey, globalOffset.toString.getBytes)
         //TODO : must remove the key here since file is finished
 
       }
@@ -172,6 +189,7 @@ class FileMessageExtractor(adapterConfig : SmartFileAdapterConfiguration,
     // Done with this file... mark is as closed
     try {
       // markFileAsFinished(fileName)
+      finished = true
       executor.shutdown()
       if (fileHandler != null) fileHandler.close
       //bis = null
@@ -201,7 +219,7 @@ class FileMessageExtractor(adapterConfig : SmartFileAdapterConfiguration,
             messageFoundCallback(smartFileMessage, consumerContext)
 
             //a message is extracted to passed to engine, update offset in cache
-            consumerContext.envContext.saveConfigInClusterCache(consumerContext.fileOffsetCacheKey, globalOffset.toString.getBytes)
+            //consumerContext.envContext.saveConfigInClusterCache(consumerContext.fileOffsetCacheKey, globalOffset.toString.getBytes)
           }
           prevIndx = indx + 1
           globalOffset = globalOffset + newMsg.length + 1 //(1 for separator length)
