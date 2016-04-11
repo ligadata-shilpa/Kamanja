@@ -472,7 +472,7 @@ echo $bin
 
 cd $srcPath
 #Build and copy 2.10 for both MigrateFrom_V_1_1 & MigrateFrom_V_1_2, if they are not copied from 2.10.4 build
-if [ "$migration2_10libsCopiesFor2_11" == "false" and "$ignoreMigrationLibsOption" == "no" ]; then
+if [ "$migration2_10libsCopiesFor2_11" == "false" ]; then
 if [ "$buildMigrationLibs" == "yes" ]; then
 	sbt clean '++ 2.10.4 MigrateFrom_V_1_1/package' '++ 2.10.4 MigrateFrom_V_1_2/package' '++ 2.10.4 MigrateFrom_V_1_3/package' '++ 2.10.4 MigrateTo_V_1_4/package'
 	cp $srcPath/Utils/Migrate/SourceVersion/MigrateFrom_V_1_1/target/scala-2.10/migratefrom_v_1_1_2.10-1.0.jar $systemlib
