@@ -28,8 +28,6 @@ import java.lang.reflect.Constructor;
 import java.net.URL;
 import java.net.URLClassLoader;
 
-import com.ligadata.KamanjaVersion.KamanjaVersion;
-
 public class ClusterInstallerDriver implements StatusCallback {
     String loggerName = this.getClass().getName();
     Logger logger = LogManager.getLogger(loggerName);
@@ -72,17 +70,14 @@ public class ClusterInstallerDriver implements StatusCallback {
 
         URLClassLoader installDriverLoader = null;
 
-        int majorVer = KamanjaVersion.getMajorVersion();
-        int minVer = KamanjaVersion.getMinorVersion();
-        int microVer = KamanjaVersion.getMicroVersion();
-        String installDriverPath = clusterInstallerDriversLocation + "/InstallDriver-" + majorVer + "." + minVer + "." + microVer;
+        String installDriverPath = clusterInstallerDriversLocation + "/InstallDriver-1.0";
 
-        if (!isValidPath(installDriverPath, false, true)) {
+        if (! isValidPath(installDriverPath, false, true)) {
             String msg = String.format("InstallDriver-1.0 not found at " + installDriverPath);
             logger.error(msg);
             System.out.println(msg);
             System.exit(1);
-        }
+		}
 
         try {
             URL[] instDriverLoaderUrls = new URL[1];

@@ -1392,6 +1392,10 @@ class SqlServerAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
     })
   }
 
+  override def CreateMetadataContainer(containerNames: Array[String]): Unit = {
+    CreateContainer(containerNames)
+  }
+
   override def isTableExists(tableName: String): Boolean = {
     // check whether corresponding table exists
     var con: Connection = null

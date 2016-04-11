@@ -56,6 +56,7 @@ object Parts {
 
   val model =
     """|class {modelclass.name}(factory: ModelInstanceFactory) extends ModelInstance(factory) {
+       |  val conversion = new com.ligadata.runtime.Conversion
        |  override def execute(txnCtxt: TransactionContext, execMsgsSet: Array[ContainerOrConcept], triggerdSetIndex: Int, outputDefault: Boolean): Array[ContainerOrConcept] = {
        |
        |    val messagefactoryinterface = execMsgsSet(0).asInstanceOf[MessageFactoryInterface]
