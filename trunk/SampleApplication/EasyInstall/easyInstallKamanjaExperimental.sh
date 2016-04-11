@@ -53,7 +53,7 @@ if [ "$cleanOption" == "no" ]; then
         cleanBuild="no"
 fi
 
-echo "building 2.10 = $build210 ... building 2.11 = $build211 ... buildOption was $buildOption"
+echo "building 2.10 = $build210 ... building 2.11 = $build211 ... buildOption was $buildOption. cleanOption is $cleanOption and cleanBuild is $cleanBuild"
 
 migration2_10libsCopiesFor2_11="false"
 
