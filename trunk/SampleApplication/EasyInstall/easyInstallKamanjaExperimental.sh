@@ -8,6 +8,7 @@ ivyPath=$3
 KafkaRootDir=$4
 buildOption=$5
 cleanOption=$6
+ignoreMigrationLibsOption=$7
 ver210=1.4.0_2.10
 ver211=1.4.0_2.11
 
@@ -39,6 +40,8 @@ fi
 build211=
 build210=
 cleanBuild="yes"
+buildMigrationLibs="yes"
+
 if [ "$buildOption" == "" ]; then
         build211=1
         build210=1
@@ -52,6 +55,12 @@ fi
 if [ "$cleanOption" == "no" ]; then
         cleanBuild="no"
 fi
+if [ "$ignoreMigrationLibsOption" == "yes" ]; then
+        buildMigrationLibs="no"
+fi
+
+
+
 
 echo "building 2.10 = $build210 ... building 2.11 = $build211 ... buildOption was $buildOption. cleanOption is $cleanOption and cleanBuild is $cleanBuild"
 
@@ -463,7 +472,8 @@ echo $bin
 
 cd $srcPath
 #Build and copy 2.10 for both MigrateFrom_V_1_1 & MigrateFrom_V_1_2, if they are not copied from 2.10.4 build
-if [ "$migration2_10libsCopiesFor2_11" == "false" ]; then
+if [ "$migration2_10libsCopiesFor2_11" == "false" and "$ignoreMigrationLibsOption" == "no" ]; then
+if [ "$buildMigrationLibs" == "yes" ]; then
 	sbt clean '++ 2.10.4 MigrateFrom_V_1_1/package' '++ 2.10.4 MigrateFrom_V_1_2/package' '++ 2.10.4 MigrateFrom_V_1_3/package' '++ 2.10.4 MigrateTo_V_1_4/package'
 	cp $srcPath/Utils/Migrate/SourceVersion/MigrateFrom_V_1_1/target/scala-2.10/migratefrom_v_1_1_2.10-1.0.jar $systemlib
 	cp $srcPath/Utils/Migrate/SourceVersion/MigrateFrom_V_1_2/target/scala-2.10/migratefrom_v_1_2_2.10-1.0.jar $systemlib
@@ -473,6 +483,7 @@ if [ "$migration2_10libsCopiesFor2_11" == "false" ]; then
 	cp $srcPath/Utils/Migrate/SourceVersion/MigrateFrom_V_1_2/target/scala-2.10/migratefrom_v_1_2_2.10-1.0.jar $kamanjainstallsystemlib
 	cp $srcPath/Utils/Migrate/SourceVersion/MigrateFrom_V_1_3/target/scala-2.10/migratefrom_v_1_3_2.10-1.0.jar $kamanjainstallsystemlib
 	cp $srcPath/Utils/Migrate/DestnationVersion/MigrateTo_V_1_4/target/scala-2.10/migrateto_v_1_4_2.10-1.0.jar $kamanjainstallsystemlib
+fi
 fi
 
 #Now do full build of 2.11
