@@ -61,8 +61,8 @@ public class HelloWorldModel extends ModelInstance {
 		if(helloWorld.score()!=1)
 			return null;
 		outmsg1 output = (outmsg1) outmsg1.createInstance();
-		output.id = helloWorld.id;
-		output.name = helloWorld.name;
+		output.set(0, helloWorld.id());
+		output.set(1, helloWorld.name());
 		ContainerInterface[] returnArr = new ContainerInterface[1];
 		returnArr[0] = output;
         return returnArr;
