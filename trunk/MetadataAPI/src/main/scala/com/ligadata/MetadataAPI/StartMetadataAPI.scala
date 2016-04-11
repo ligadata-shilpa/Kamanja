@@ -44,25 +44,40 @@ object StartMetadataAPI {
   val REMOVE = "remove"
   val GET = "get"
   val ACTIVATE = "activate"
-  val OUTPUTMSG = "outputmsg"
+  val OUTPUTMSG = "outmessage"
   val DEACTIVATE = "deactivate"
   val UPDATE = "update"
   val MODELS = "models"
   val MESSAGES = "messages"
   val CONTAINERS = "containers"
+  val TENANTID = "tenantid"
+  val INPUTLOC = "inputlocation"
   var expectDep = false
   var expectOutputMsg = false
   var expectRemoveParm = false
   var depName: String = ""
-  var outputMsgName: String = null
   var parmName: String = ""
   val MODELNAME = "MODELNAME"
   val MODELVERSION= "MODELVERSION"
   val MESSAGENAME="MESSAGENAME"
-  val extraCmdArgs = mutable.Map[String, String]()
+
+  val JSONBegin="<json>"
+  val JSONEnd="</json>"
+  val JSONKey="___json___"
+  var inJsonBlk : Boolean = false
+
   var expectModelName = false
   var expectModelVer = false
   var expectMessageName = false
+  var foundModelName = false
+  var foundModelVer = false
+  var foundMessageName = false
+
+  var varmap: scala.collection.mutable.Map[String,String] = scala.collection.mutable.Map[String,String]()
+  var expectTid: Boolean = false
+  var expectMDep: Boolean = false
+
+  val extraCmdArgs = mutable.Map[String, String]()
 
   def main(args: Array[String]) {
     if (args.length > 0 && args(0).equalsIgnoreCase("--version")) {
@@ -70,82 +85,91 @@ object StartMetadataAPI {
       return
     }
 
-    val tenantId: String = "" // FIXME: DAN FIX THIS TenantID
-
     /** FIXME: the user id should be discovered in the parse of the args array */
     val userId: Option[String] = Some("kamanja")
     try {
-      var argsUntilParm = 2
+      val jsonBuffer : StringBuilder = new StringBuilder
 
-      args.foreach(arg =>
-        if (arg.equalsIgnoreCase(UPDATE) || arg.equalsIgnoreCase(MODELS) || arg.equalsIgnoreCase(MESSAGES) || arg.equalsIgnoreCase(CONTAINERS)) {
-          argsUntilParm = 3
-        }
-      )
       args.foreach(arg => {
 
-        if (arg.endsWith(".json") || arg.endsWith(".xml") || arg.endsWith(".pmml") || arg.endsWith(".scala") || arg.endsWith(".java") || arg.endsWith(".jar")) {
-          location = arg
+          if (arg.endsWith(".json")
+              || arg.endsWith(".jtm")
+              || arg.endsWith(".xml")
+              || arg.endsWith(".pmml")
+              || arg.endsWith(".scala")
+              || arg.endsWith(".java")
+              || arg.endsWith(".jar")) {
+          extraCmdArgs(INPUTLOC) = arg
 
-        } else if (arg.endsWith(".properties")) {
-          config = arg
+          } else if (arg.endsWith(".properties")) {
+              config = arg
 
-        } else {
-          if (arg.equalsIgnoreCase(WITHDEP)) {
-            expectDep = true
-          }
-          else if (expectDep) {
-            depName = arg
-            expectDep = false
-          }
-	  else if ( arg.equalsIgnoreCase(OUTPUTMSG) ){
-	    expectOutputMsg = true
-	  }
-	  else if(expectOutputMsg ){
-	    outputMsgName = arg
-	    logger.debug("Found output message definition " + outputMsgName + " in the command ")
-	    expectOutputMsg = false
-	  }
-           else if ((action.equalsIgnoreCase(Action.ADDMODELPMML.toString) || action.equalsIgnoreCase(Action.UPDATEMODELPMML.toString)) && location.size > 0) {
-            if(arg.equalsIgnoreCase(MODELNAME)){
-              expectModelName=true
-            }else if(arg.equalsIgnoreCase(MODELVERSION)){
-              expectModelVer=true
-            }else if(arg.equalsIgnoreCase(MESSAGENAME)){
-              expectMessageName=true
-            }
-            else if (expectModelName) {
-              extraCmdArgs(MODELNAME) = arg
-              expectModelName = false
-            }
-            else if (expectModelVer) {
-              extraCmdArgs(MODELVERSION) = arg
-              expectModelVer = false
-            }
-            else if (expectMessageName) {
-              extraCmdArgs(MESSAGENAME) = arg
-              expectMessageName = false
+          } else if (arg.toLowerCase == JSONBegin) { /** start of json config blk */
+              inJsonBlk = true
+          } else if (arg.toLowerCase == JSONEnd) { /** end of json config blk */
+              inJsonBlk = false
+              val jsonConfig : String = jsonBuffer.toString
+              extraCmdArgs(JSONKey) = jsonConfig
+          } else if (inJsonBlk && arg.toLowerCase != JSONEnd) { /** in json config blk .., append */
+              jsonBuffer.append(arg)
+          } else {
+            if (arg != "debug") {
+              /** ignore the debug tag */
+              if (arg.equalsIgnoreCase(TENANTID)) {
+                  expectTid = true
+                extraCmdArgs(TENANTID) = ""
+              } else if(arg.equalsIgnoreCase(WITHDEP)) {
+                expectDep = true
+                extraCmdArgs(WITHDEP) = ""
+              } else if (arg.equalsIgnoreCase(MODELNAME)) {
+                expectModelName = true
+              } else if (arg.equalsIgnoreCase(MODELVERSION)) {
+                expectModelVer = true
+              } else if (arg.equalsIgnoreCase(MESSAGENAME)) {
+                expectMessageName = true
+              } else if ( arg.equalsIgnoreCase(OUTPUTMSG) ){
+                expectOutputMsg = true
+              }
 
-           }
-          }
-          else {
-            if ((arg.equalsIgnoreCase(REMOVE)) || (arg.equalsIgnoreCase(GET)) || (arg.equalsIgnoreCase(ACTIVATE)) || (arg.equalsIgnoreCase(DEACTIVATE)) || (arg.equalsIgnoreCase(UPDATE))) {
-              expectRemoveParm = true
-            }
-            if (expectRemoveParm) {
-              argsUntilParm = argsUntilParm - 1
-            }
+              else {
+                var argVar = arg
+                if (expectTid) {
+                  extraCmdArgs(TENANTID) = arg
+                  expectTid = false
+                  argVar = ""  // Make sure we dont add to the routing command
+                }
+                if (expectDep) {
+                  extraCmdArgs(WITHDEP) = arg
+                  expectDep = false
+                  argVar = "" // Make sure we dont add to the routing command
+                }
+                if (expectModelName) {
+                  extraCmdArgs(MODELNAME) = arg
+                  expectModelName = false
+                  argVar = ""  // Make sure we dont add to the routing command
+                }
+                if (expectModelVer) {
+                  extraCmdArgs(MODELVERSION) = arg
+                  expectModelVer = false
+                  argVar = "" // Make sure we dont add to the routing command
+                }
+                if (expectMessageName) {
+                  extraCmdArgs(MESSAGENAME) = arg
+                  expectMessageName = false
+                  argVar = ""  // Make sure we dont add to the routing command
+                }
+                if(expectOutputMsg ){
+                  extraCmdArgs(OUTPUTMSG) = arg
+                  logger.debug("Found output message definition " + arg + " in the command ")
+                  expectOutputMsg = false
+                  argVar = ""  // Make sure we dont add to the routing command
+                }
 
-            if (argsUntilParm < 0) {
-              depName = arg
-            }
-            else if (arg != "debug")
-            /** ignore the debug tag */ {
-              /** concatenate the args together to form the action string... "add model pmml" becomes "addmodelpmmml" */
-              action += arg
+                action += argVar
+              }
             }
           }
-        }
+
       })
       //add configuration
       if (config == "") {
@@ -157,7 +181,8 @@ object StartMetadataAPI {
       if (action == "")
         TestMetadataAPI.StartTest
       else {
-        response = route(Action.withName(action.trim), location, depName, outputMsgName, args, userId, tenantId, extraCmdArgs.toMap)
+        response = route(Action.withName(action.trim),  extraCmdArgs.getOrElse(INPUTLOC,""),
+          extraCmdArgs.getOrElse(WITHDEP,""), extraCmdArgs.getOrElse(TENANTID,""), args, userId ,extraCmdArgs.toMap)
         println("Result: " + response)
       }
     }
@@ -168,7 +193,7 @@ object StartMetadataAPI {
         response = s"Invalid command action! action=$action"
 
         /** one more try ... going the alternate route */  // do we still need this ??
-        val altResponse: String = AltRoute(args, tenantId)
+        val altResponse: String = AltRoute(args)
         if (altResponse != null) {
           //response = altResponse
           println(response)
@@ -192,9 +217,13 @@ object StartMetadataAPI {
       println(s"Usage:\n  kamanja <action> <optional input> \n e.g. kamanja add message ${'$'}HOME/msg.json" )
   }
 
-  def route(action: Action.Value, input: String, param: String = "", outputMsgName: String = null, originalArgs: Array[String], userId: Option[String], tenantId: String, extraCmdArgs:immutable.Map[String, String]): String = {
+  def route(action: Action.Value, input: String, param: String = "", tenantid: String, originalArgs: Array[String], userId: Option[String] ,extraCmdArgs:immutable.Map[String, String]): String = {
     var response = ""
-    var optMsgProduced:Option[String] = None	  
+    var optMsgProduced:Option[String] = None
+    var tid = if (tenantid.size > 0) Some(tenantid) else None
+
+    val outputMsgName = extraCmdArgs.getOrElse(OUTPUTMSG, null)
+
     if( outputMsgName != null ){
       logger.debug("The value of argument optMsgProduced will be " + outputMsgName)
       optMsgProduced = Some(outputMsgName)
@@ -202,8 +231,8 @@ object StartMetadataAPI {
     try {
       action match {
         //message management
-        case Action.ADDMESSAGE => response = MessageService.addMessage(input, tenantId)
-        case Action.UPDATEMESSAGE => response = MessageService.updateMessage(input)
+        case Action.ADDMESSAGE => response = MessageService.addMessage(input, tid)
+        case Action.UPDATEMESSAGE => response = MessageService.updateMessage(input, tid)
         case Action.REMOVEMESSAGE => {
           if (param.length == 0)
             response = MessageService.removeMessage()
@@ -220,8 +249,8 @@ object StartMetadataAPI {
         }
 
         //model management
-        case Action.ADDMODELKPMML => response = ModelService.addModelKPmml(input, userId, tenantId,optMsgProduced)
-        case Action.ADDMODELJTM => response = ModelService.addModelJTM(input, userId, tenantId)
+        case Action.ADDMODELKPMML => response = ModelService.addModelKPmml(input, userId, optMsgProduced, tid)
+        case Action.ADDMODELJTM => response = ModelService.addModelJTM(input, userId, tid, if (param == null || param.trim.size == 0) None else Some(param.trim))
         case Action.ADDMODELPMML => {
           val modelName: Option[String] = extraCmdArgs.get(MODELNAME)
           val modelVer = extraCmdArgs.getOrElse(MODELVERSION, null)
@@ -231,26 +260,26 @@ object StartMetadataAPI {
           val optMsgVer = Option(null)
           response = ModelService.addModelPmml(ModelType.PMML
                                             , input
-                                            , userId, tenantId
+                                            , userId
                                             , modelName
                                             , optModelVer
                                             , msgName
                                             , optMsgVer
-					    , optMsgProduced)
+                                            , tid)
         }
 
         case Action.ADDMODELSCALA => {
           if (param.length == 0)
-            response = ModelService.addModelScala(input, "", userId, tenantId,optMsgProduced)
+            response = ModelService.addModelScala(input, "", userId,optMsgProduced, tid)
           else
-            response = ModelService.addModelScala(input, param, userId, tenantId,optMsgProduced)
+            response = ModelService.addModelScala(input, param, userId,optMsgProduced, tid)
         }
 
         case Action.ADDMODELJAVA => {
           if (param.length == 0)
-            response = ModelService.addModelJava(input, "", userId, tenantId,optMsgProduced)
+            response = ModelService.addModelJava(input, "", userId,optMsgProduced, tid)
           else
-            response = ModelService.addModelJava(input, param, userId, tenantId,optMsgProduced)
+            response = ModelService.addModelJava(input, param, userId,optMsgProduced, tid)
         }
 
         case Action.REMOVEMODEL => {
@@ -274,31 +303,28 @@ object StartMetadataAPI {
           else
             ModelService.deactivateModel(param, userId)
         }
-        case Action.UPDATEMODELKPMML => response = ModelService.updateModelKPmml(input, userId)
-        case Action.UPDATEMODELJTM => response = ModelService.updateModelJTM(input, userId)
+        case Action.UPDATEMODELKPMML => response = ModelService.updateModelKPmml(input, userId, tid)
+        case Action.UPDATEMODELJTM => response = ModelService.updateModelJTM(input, userId, tid, if (param == null || param.trim.size == 0) None else Some(param.trim))
 
         case Action.UPDATEMODELPMML => {
           val modelName = extraCmdArgs.getOrElse(MODELNAME, "")
           val modelVer = extraCmdArgs.getOrElse(MODELVERSION, null)
           var validatedNewVersion: String = if (modelVer != null) MdMgr.FormatVersion(modelVer) else null
-          response = ModelService.updateModelPmml(input, userId, tenantId, modelName, validatedNewVersion )
-          }
-
-        //case Action.UPDATEMODELSCALA => response = ModelService.updateModelscala(input)
-        //case Action.UPDATEMODELJAVA => response = ModelService.updateModeljava(input)
+          response = ModelService.updateModelPmml(input, userId, modelName, validatedNewVersion,tid)
+        }
 
         case Action.UPDATEMODELSCALA => {
           if (param.length == 0)
-            response = ModelService.updateModelscala(input, "", userId, tenantId)
+            response = ModelService.updateModelscala(input, "", userId, tid)
           else
-            response = ModelService.updateModelscala(input, param, userId, tenantId)
+            response = ModelService.updateModelscala(input, param, userId, tid)
         }
 
         case Action.UPDATEMODELJAVA => {
           if (param.length == 0)
-            response = ModelService.updateModeljava(input, "", userId, tenantId)
+            response = ModelService.updateModeljava(input, "", userId, tid)
           else
-            response = ModelService.updateModeljava(input, param, userId, tenantId)
+            response = ModelService.updateModeljava(input, param, userId,tid)
         }
 
         case Action.GETALLMODELS => response = ModelService.getAllModels(userId)
@@ -311,8 +337,8 @@ object StartMetadataAPI {
 
 
         //container management
-        case Action.ADDCONTAINER => response = ContainerService.addContainer(input, tenantId)
-        case Action.UPDATECONTAINER => response = ContainerService.updateContainer(input)
+        case Action.ADDCONTAINER => response = ContainerService.addContainer(input, tid)
+        case Action.UPDATECONTAINER => response = ContainerService.updateContainer(input, tid)
         case Action.GETCONTAINER => response = {
           if (param.length == 0)
             ContainerService.getContainer()
@@ -375,6 +401,11 @@ object StartMetadataAPI {
         case Action.DUMPALLCFGOBJECTS => response = ConfigService.dumpAllCfgObjects
         case Action.REMOVEENGINECONFIG => response = ConfigService.removeEngineConfig
 
+        // adapter message bindings
+        case Action.ADDADAPTERMESSAGEBINDING => response = AdapterMessageBindingService.addAdapterMessageBinding(extraCmdArgs.getOrElse(JSONKey,input), userId)
+        case Action.UPDATEADAPTERMESSAGEBINDING => response = AdapterMessageBindingService.updateAdapterMessageBinding(input, userId)
+        case Action.REMOVEADAPTERMESSAGEBINDING => response = AdapterMessageBindingService.removeAdapterMessageBinding(input, userId)
+
         //concept
         case Action.ADDCONCEPT => response = ConceptService.addConcept(input)
         case Action.REMOVECONCEPT => response = {
@@ -413,7 +444,7 @@ object StartMetadataAPI {
           *
           * ''Do we still need this ?'' Let's keep it for now.
           */
-        val altResponse: String = AltRoute(originalArgs, tenantId)
+        val altResponse: String = AltRoute(originalArgs)
         if (altResponse != null) {
             //response = altResponse  ... typically a parse error that is only meaningful for AltRoute processing
             println(response)
@@ -441,7 +472,8 @@ object StartMetadataAPI {
     *         complaint is returned to the caller.
     *
     */
-  def AltRoute(origArgs : Array[String], tenantId: String) : String = {
+  def AltRoute(origArgs : Array[String]) : String = {
+
 
        /** trim off the config argument and if debugging the "debug" argument as well */
        val argsSansConfig : Array[String] = if (origArgs != null && origArgs.size > 0 && origArgs(0).toLowerCase == "debug") {
@@ -476,6 +508,7 @@ object StartMetadataAPI {
                            val msgVer: String = if (argMap.contains("messageversion")) argMap("messageversion") else MdMgr.LatestVersion
                            val pmmlSrc: Option[String] = if (argMap.contains("pmml")) Some(argMap("pmml")) else None
                            val pmmlPath: String = pmmlSrc.orNull
+                           val tid: Option[String] =   if (argMap.contains("tenantid")) Some(argMap("tenantid")) else None
 
                            var validatedModelVersion: String = null
                            var validatedMsgVersion: String = null
@@ -490,11 +523,12 @@ object StartMetadataAPI {
 
                            ModelService.addModelPmml(ModelType.PMML
                                , pmmlPath
-                               , Some("kamanja"), tenantId
+                               , Some("kamanja")
                                , modelName
                                , optModelVer
                                , msgName
-                               , optMsgVer)
+                               , optMsgVer
+                               , tid)
 
                        } else {
                            null
@@ -547,11 +581,12 @@ object StartMetadataAPI {
 
                                /** modelnamespace.modelname expected for modelName value */
                                val modelName: String = optModelName.orNull
+                               var tid: Option[String] =   if (argMap.contains("tenantid")) Some(argMap("tenantid")) else None
                                ModelService.updateModelPmml(pmmlPath
-                                   , Some("kamanja"), tenantId
+                                   , Some("kamanja")
                                    , modelName
-                                   , validatedNewVersion)
-                               //, optOldVer)
+                                   , validatedNewVersion
+                                   , tid)
                            }
                        } else {
                            null

@@ -225,12 +225,12 @@ class KamanjaManager extends Observer {
 
   private val inputAdapters = new ArrayBuffer[InputAdapter]
   private val outputAdapters = new ArrayBuffer[OutputAdapter]
-  private val statusAdapters = new ArrayBuffer[OutputAdapter]
-  private val validateInputAdapters = new ArrayBuffer[InputAdapter]
+//  private val statusAdapters = new ArrayBuffer[OutputAdapter]
+//  private val validateInputAdapters = new ArrayBuffer[InputAdapter]
 
   private var thisEngineInfo: MainInfo = null
   private var adapterMetricInfo: scala.collection.mutable.MutableList[com.ligadata.HeartBeat.MonitorComponentInfo] = null
-  private val failedEventsAdapters = new ArrayBuffer[OutputAdapter]
+//  private val failedEventsAdapters = new ArrayBuffer[OutputAdapter]
 
   private var metricsService: ExecutorService = scala.actors.threadpool.Executors.newFixedThreadPool(1)
   private var isTimerRunning = false
@@ -253,6 +253,7 @@ class KamanjaManager extends Observer {
     KamanjaLeader.Shutdown
     KamanjaMetadata.Shutdown
     ShutdownAdapters
+    PostMessageExecutionQueue.shutdown
     if (KamanjaMetadata.envCtxt != null)
       KamanjaMetadata.envCtxt.Shutdown
     if (serviceObj != null)
@@ -298,24 +299,24 @@ class KamanjaManager extends Observer {
   private def ShutdownAdapters: Boolean = {
     LOG.debug("Shutdown Adapters started @ " + Utils.GetCurDtTmStr)
     val s0 = System.nanoTime
-
-    validateInputAdapters.foreach(ia => {
-      try {
-        ia.Shutdown
-      } catch {
-        case fae: FatalAdapterException => {
-          LOG.error("Validate adapter " + ia.UniqueName + "failed to shutdown", fae)
-        }
-        case e: Exception => {
-          LOG.error("Validate adapter " + ia.UniqueName + "failed to shutdown", e)
-        }
-        case e: Throwable => {
-          LOG.error("Validate adapter " + ia.UniqueName + "failed to shutdown", e)
-        }
-      }
-    })
-
-    validateInputAdapters.clear
+//
+//    validateInputAdapters.foreach(ia => {
+//      try {
+//        ia.Shutdown
+//      } catch {
+//        case fae: FatalAdapterException => {
+//          LOG.error("Validate adapter " + ia.UniqueName + "failed to shutdown", fae)
+//        }
+//        case e: Exception => {
+//          LOG.error("Validate adapter " + ia.UniqueName + "failed to shutdown", e)
+//        }
+//        case e: Throwable => {
+//          LOG.error("Validate adapter " + ia.UniqueName + "failed to shutdown", e)
+//        }
+//      }
+//    })
+//
+//    validateInputAdapters.clear
 
     inputAdapters.foreach(ia => {
       try {
@@ -352,42 +353,42 @@ class KamanjaManager extends Observer {
     })
 
     outputAdapters.clear
-
-    statusAdapters.foreach(oa => {
-      try {
-        oa.Shutdown
-      } catch {
-        case fae: FatalAdapterException => {
-          LOG.error("Status adapter failed to shutdown", fae)
-        }
-        case e: Exception => {
-          LOG.error("Status adapter failed to shutdown", e)
-        }
-        case e: Throwable => {
-          LOG.error("Status adapter failed to shutdown", e)
-        }
-      }
-    })
-
-    statusAdapters.clear
-
-    failedEventsAdapters.foreach(oa => {
-      try {
-        oa.Shutdown
-      } catch {
-        case fae: FatalAdapterException => {
-          LOG.error("FailedEvents adapter failed to shutdown, cause", fae)
-        }
-        case e: Exception => {
-          LOG.error("FailedEvents adapter failed to shutdown, cause", e)
-        }
-        case e: Throwable => {
-          LOG.error("FailedEvents adapter failed to shutdown", e)
-        }
-      }
-    })
-
-    failedEventsAdapters.clear
+//
+//    statusAdapters.foreach(oa => {
+//      try {
+//        oa.Shutdown
+//      } catch {
+//        case fae: FatalAdapterException => {
+//          LOG.error("Status adapter failed to shutdown", fae)
+//        }
+//        case e: Exception => {
+//          LOG.error("Status adapter failed to shutdown", e)
+//        }
+//        case e: Throwable => {
+//          LOG.error("Status adapter failed to shutdown", e)
+//        }
+//      }
+//    })
+//
+//    statusAdapters.clear
+//
+//    failedEventsAdapters.foreach(oa => {
+//      try {
+//        oa.Shutdown
+//      } catch {
+//        case fae: FatalAdapterException => {
+//          LOG.error("FailedEvents adapter failed to shutdown, cause", fae)
+//        }
+//        case e: Exception => {
+//          LOG.error("FailedEvents adapter failed to shutdown, cause", e)
+//        }
+//        case e: Throwable => {
+//          LOG.error("FailedEvents adapter failed to shutdown", e)
+//        }
+//      }
+//    })
+//
+//    failedEventsAdapters.clear
 
     val totaltm = "TimeConsumed:%.02fms".format((System.nanoTime - s0) / 1000000.0);
     LOG.debug("Shutdown Adapters done @ " + Utils.GetCurDtTmStr + ". " + totaltm)
@@ -470,10 +471,12 @@ class KamanjaManager extends Observer {
 
       KamanjaMetadata.gNodeContext = new NodeContext(KamanjaMetadata.envCtxt)
 
+      PostMessageExecutionQueue.init(KamanjaMetadata.gNodeContext)
+
       LOG.debug("Loading Adapters")
       // Loading Adapters (Do this after loading metadata manager & models & Dimensions (if we are loading them into memory))
 
-      retval = KamanjaMdCfg.LoadAdapters(inputAdapters, outputAdapters, statusAdapters, validateInputAdapters, failedEventsAdapters)
+      retval = KamanjaMdCfg.LoadAdapters(inputAdapters, outputAdapters)
 
       if (retval) {
         LOG.debug("Initialize Metadata Manager")
@@ -502,11 +505,11 @@ class KamanjaManager extends Observer {
         } finally {
           ThreadLocalStorage.txnContextInfo.remove
           if (txnCtxt != null) {
-            KamanjaMetadata.gNodeContext.getEnvCtxt.rollbackData(txnId)
+            KamanjaMetadata.gNodeContext.getEnvCtxt.rollbackData()
           }
         }
 
-        KamanjaLeader.Init(KamanjaConfiguration.nodeId.toString, zkConnectString, engineLeaderZkNodePath, engineDistributionZkNodePath, adaptersStatusPath, inputAdapters, outputAdapters, statusAdapters, validateInputAdapters, failedEventsAdapters, KamanjaMetadata.envCtxt, zkSessionTimeoutMs, zkConnectionTimeoutMs, dataChangeZkNodePath)
+        KamanjaLeader.Init(KamanjaConfiguration.nodeId.toString, zkConnectString, engineLeaderZkNodePath, engineDistributionZkNodePath, adaptersStatusPath, inputAdapters, outputAdapters, KamanjaMetadata.envCtxt, zkSessionTimeoutMs, zkConnectionTimeoutMs, dataChangeZkNodePath)
       }
 
       /*
@@ -832,9 +835,9 @@ class KamanjaManager extends Observer {
 
     inputAdapters.foreach(ad => { adapterMetricInfo += ad.getComponentStatusAndMetrics })
     outputAdapters.foreach(ad => { adapterMetricInfo += ad.getComponentStatusAndMetrics })
-    statusAdapters.foreach(ad => { adapterMetricInfo += ad.getComponentStatusAndMetrics })
-    failedEventsAdapters.foreach(ad => { adapterMetricInfo += ad.getComponentStatusAndMetrics })
-    validateInputAdapters.foreach(ad => { adapterMetricInfo += ad.getComponentStatusAndMetrics })
+//    statusAdapters.foreach(ad => { adapterMetricInfo += ad.getComponentStatusAndMetrics })
+//    failedEventsAdapters.foreach(ad => { adapterMetricInfo += ad.getComponentStatusAndMetrics })
+//    validateInputAdapters.foreach(ad => { adapterMetricInfo += ad.getComponentStatusAndMetrics })
 //    adapterMetricInfo += KamanjaMetadata.envCtxt.getComponentStatusAndMetrics
 
     // Combine all the junk into a single JSON String

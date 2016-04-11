@@ -31,6 +31,7 @@ import com.ligadata.Exceptions.{ FatalAdapterException, MessagePopulationExcepti
 import com.ligadata.transactions._
 
 import com.ligadata.transactions._
+import scala.actors.threadpool.{ ExecutorService }
 
 // There are no locks at this moment. Make sure we don't call this with multiple threads for same object
 class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUniqueRecordKey, val nodeContext: NodeContext) extends ExecContext {
@@ -41,13 +42,13 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
 //  private val transService = new SimpleTransService
 //  transService.init(KamanjaConfiguration.txnIdsRangeForPartition)
 //
-  private val xform = new TransformMessageData
-  private val engine = new LearningEngine(input, curPartitionKey)
+//  private val xform = new TransformMessageData
+  private val engine = new LearningEngine
   private var previousLoader: com.ligadata.Utils.KamanjaClassLoader = null
 
-  private val failedEventDtFormat = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
+//  private val failedEventDtFormat = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
 
-  private val adapterInfoMap = ProcessedAdaptersInfo.getOneInstance(this.hashCode(), true)
+//  private val adapterInfoMap = ProcessedAdaptersInfo.getOneInstance(this.hashCode(), true)
 
   /*
     private def SendFailedEvent(data: Array[Byte], format: String, associatedMsg: String, uk: String, uv: String, e: Throwable): Unit = {
@@ -86,7 +87,7 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
     }
   */
 
-  def executeMessage(txnCtxt: TransactionContext, deserializerName: String): Unit = {
+  def executeMessage(txnCtxt: TransactionContext): Unit = {
     try {
       val curLoader = txnCtxt.getNodeCtxt().getEnvCtxt().getMetadataLoader.loader // Protecting from changing it between below statements
       if (curLoader != null && previousLoader != curLoader) {
@@ -95,9 +96,16 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
         previousLoader = curLoader
       }
     } catch {
-      case e: Exception => {
+      case e: Throwable => {
         LOG.error("Failed to setContextClassLoader.", e)
+        throw e
       }
+    }
+
+    try {
+      engine.execute(txnCtxt)
+    } catch {
+      case e: Throwable => throw e
     }
   }
 
@@ -444,3 +452,132 @@ object ValidateExecContextFactoryImpl extends ExecContextFactory {
 }
 */
 
+
+object PostMessageExecutionQueue {
+  private val LOG = LogManager.getLogger(getClass);
+  private val engine = new LearningEngine
+  private var previousLoader: com.ligadata.Utils.KamanjaClassLoader = null
+  private var nodeContext: NodeContext = _
+  private var transService: SimpleTransService = _
+  private var isInit = false
+  private val msgsQueue = scala.collection.mutable.Queue[ContainerInterface]()
+  private val msgQLock = new Object()
+  private val processMsgs: ExecutorService = scala.actors.threadpool.Executors.newFixedThreadPool(1)
+
+  // Passing empty values
+  private val emptyData = Array[Byte]()
+  private val uk = ""
+  private val uv = ""
+
+  private def enQMsg(msg: ContainerInterface): Unit = {
+    msgQLock.synchronized {
+      msgsQueue += msg
+    }
+  }
+
+  private def enQMsg(msg: Array[ContainerInterface]): Unit = {
+    msgQLock.synchronized {
+      msgsQueue ++= msg
+    }
+  }
+
+  private def deQMsg: ContainerInterface = {
+    if (msgsQueue.isEmpty) {
+      return null
+    }
+    msgQLock.synchronized {
+      if (msgsQueue.isEmpty) {
+        return null
+      }
+      return msgsQueue.dequeue
+    }
+  }
+
+  def init(nodeCtxt: NodeContext): Unit = {
+    nodeContext = nodeCtxt
+    val (zkConnectString, zkNodeBasePath, zkSessionTimeoutMs, zkConnectionTimeoutMs)  = nodeContext.getEnvCtxt().getZookeeperInfo
+    val (txnIdsRangeForPartition, txnIdsRangeForNode)  = nodeContext.getEnvCtxt().getTransactionRanges
+
+    NodeLevelTransService.init(zkConnectString, zkSessionTimeoutMs, zkConnectionTimeoutMs, zkNodeBasePath, txnIdsRangeForNode,
+      nodeContext.getEnvCtxt().getSystemCatalogDatastore, nodeContext.getEnvCtxt().getJarPaths())
+    val tmpTransService = new SimpleTransService
+    tmpTransService.init(txnIdsRangeForPartition)
+    transService  = tmpTransService
+
+    processMsgs.execute(new Runnable() {
+      override def run() = {
+        while (processMsgs.isShutdown == false) {
+          val msg = deQMsg
+          if (msg != null) {
+            processMessage(msg)
+          }
+          else {
+            // If no messages found in the queue, simply sleep for sometime
+            try {
+              Thread.sleep(100) // Sleeping for 100ms
+            } catch {
+              case e: Throwable => {
+                // Not yet handled this
+              }
+            }
+          }
+        }
+      }
+    })
+
+    nodeContext.getEnvCtxt().postMessagesListener(postMsgListenerCallback)
+
+    isInit = true
+  }
+
+  def postMsgListenerCallback(msgs: Array[ContainerInterface]): Unit = {
+    if (msgs == null || msgs.size == 0) return
+    if (isInit == false) {
+      throw new Exception("PostMessageExecutionQueue is not yet initialized")
+    }
+    enQMsg(msgs)
+  }
+
+  def shutdown(): Unit = {
+    processMsgs.shutdownNow()
+    //BUGBUG:: Instead of stutdown now we can call shutdown and wait for termination to shutdown the thread(s)
+    //FIXME:: Instead of stutdown now we can call shutdown and wait for termination to shutdown the thread(s)
+  }
+
+  private def processMessage(msg: ContainerInterface): Unit = {
+    if (msg == null) return
+    if (isInit == false) {
+      throw new Exception("PostMessageExecutionQueue is not yet initialized")
+    }
+
+    try {
+      val curLoader = nodeContext.getEnvCtxt().getMetadataLoader.loader // Protecting from changing it between below statements
+      if (curLoader != null && previousLoader != curLoader) {
+        // Checking for every messages and setting when changed. We can set for every message, but the problem is it tries to do SecurityManager check every time.
+        Thread.currentThread().setContextClassLoader(curLoader);
+        previousLoader = curLoader
+      }
+    } catch {
+      case e: Throwable => {
+        LOG.error("Failed to setContextClassLoader.", e)
+        throw e
+      }
+    }
+
+    try {
+      val transId = transService.getNextTransId
+      val msgEvent = nodeContext.getEnvCtxt().getContainerInstance("System.KamanjaMessageEvent")
+      val txnCtxt = new TransactionContext(transId, nodeContext, emptyData, EventOriginInfo(uk, uv), System.currentTimeMillis, msgEvent)
+      LOG.debug("Processing posted message:" + msg.getFullTypeName)
+      txnCtxt.setInitialMessage("", msg)
+      engine.execute(txnCtxt)
+    } catch {
+      case e: Throwable => {
+        LOG.error("Failed to execute message : " + msg.getFullTypeName, e)
+      }
+    } finally {
+      // Commit. Writing into OutputAdapters & Storage Adapters
+      // nodeContext.getEnvCtxt().CommitData(txnCtxt);
+    }
+  }
+}

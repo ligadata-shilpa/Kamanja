@@ -338,9 +338,9 @@ trait EnvContext /* extends Monitorable */  {
 
   // Final Commit for the given transaction
   // outputResults has AdapterName, PartitionKey & Message
-  def commitData(transId: Long, forceCommit: Boolean): Unit
+  def commitData(txnCtxt: TransactionContext): Unit
 
-  def rollbackData(transId: Long): Unit
+  def rollbackData(): Unit
 
   // Save State Entries on local node & on Leader
   // def PersistLocalNodeStateEntries: Unit
@@ -471,11 +471,14 @@ trait EnvContext /* extends Monitorable */  {
   // Later this will be posted to logical queue where it can execute on logical partition.
   def postMessages(msgs: Array[ContainerInterface]): Unit
 
+  // We are handling only one listener at this moment
+  def postMessagesListener(postMsgListenerCallback: (Array[ContainerInterface]) => Unit): Unit
+
   def setDefaultDatastoresForTenants(defaultDatastores: scala.collection.immutable.Map[String, String]): Unit
   def getDefaultDatastoreForTenantId(tenantId: String): String
 
-  def setSystemCatelogDatastore(sysCatelog: String): Unit
-  def getSystemCatelogDatastore(): String
+  def setSystemCatalogDatastore(sysCatalog: String): Unit
+  def getSystemCatalogDatastore(): String
 }
 
 // partitionKey is the one used for this message

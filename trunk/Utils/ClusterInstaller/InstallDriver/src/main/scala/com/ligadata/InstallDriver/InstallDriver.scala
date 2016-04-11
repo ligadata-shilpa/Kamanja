@@ -1848,8 +1848,8 @@ class ClusterConfigMap(cfgStr: String, var clusterIdOfInterest: String) {
   }
 
   private def getDataStore: Map[String, Any] = {
-    val dataStoreMap: Map[String, Any] = if (clusterMap.size > 0 && clusterMap.contains("DataStore")) {
-      clusterMap("DataStore").asInstanceOf[Map[String, Any]]
+    val dataStoreMap: Map[String, Any] = if (clusterMap.size > 0 && clusterMap.contains("SystemCatalog")) {
+      clusterMap("SystemCatalog").asInstanceOf[Map[String, Any]]
     } else {
       Map[String, Any]()
     }

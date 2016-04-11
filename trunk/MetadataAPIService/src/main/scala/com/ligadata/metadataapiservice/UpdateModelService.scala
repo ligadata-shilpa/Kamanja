@@ -34,7 +34,7 @@ object UpdateModelService {
   case class Process(pmmlStr:String)
 }
 
-class UpdateModelService(requestContext: RequestContext, userid:Option[String], password:Option[String], cert:Option[String], modelCompileInfo: Option[String]) extends Actor {
+class UpdateModelService(requestContext: RequestContext, userid:Option[String], password:Option[String], cert:Option[String], modelCompileInfo: Option[String], tenantId: Option[String]) extends Actor {
 
   import UpdateModelService._
   
@@ -48,12 +48,11 @@ class UpdateModelService(requestContext: RequestContext, userid:Option[String], 
   
   def receive = {
     case Process(pmmlStr) =>
-      val tenantId: String = "" // FIXME: DAN FIX THIS TenantID
-      process(pmmlStr, tenantId)
+      process(pmmlStr)
       context.stop(self)
   }
   
-  def process(pmmlStr:String, tenantId: String) = {
+  def process(pmmlStr:String) = {
     
     log.debug("Requesting UpdateModel {}",pmmlStr)
 

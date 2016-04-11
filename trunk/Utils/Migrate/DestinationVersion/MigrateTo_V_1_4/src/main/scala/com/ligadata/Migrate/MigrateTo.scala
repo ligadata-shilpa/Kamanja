@@ -65,7 +65,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
   private val defaultUserId: Option[String] = Some("kamanja")
   private var _parallelDegree = 0
   private var _mergeContainerAndMessages = true
-  private var _tenantId: String = ""
+  private var _tenantId: Option[String] = None
 
   private val globalExceptions = ArrayBuffer[(String, Throwable)]()
 
@@ -145,8 +145,8 @@ class MigrateTo_V_1_4 extends MigratableTo {
             val cluster = clustny.asInstanceOf[Map[String, Any]]
             val ClusterId = cluster.getOrElse("ClusterId", "").toString.trim.toLowerCase
             logger.debug("Processing the cluster => " + ClusterId)
-            if (ClusterId.size > 0 && cluster.contains("DataStore"))
-              dsStr = getStringFromJsonNode(cluster.getOrElse("DataStore", null))
+            if (ClusterId.size > 0 && cluster.contains("SystemCatalog"))
+              dsStr = getStringFromJsonNode(cluster.getOrElse("SystemCatalog", null))
           }
           if (ssStr == null || ssStr.size == 0) {
             val cluster = clustny.asInstanceOf[Map[String, Any]]
@@ -241,7 +241,9 @@ class MigrateTo_V_1_4 extends MigratableTo {
 
     _parallelDegree = if (parallelDegree <= 1) 1 else parallelDegree
     _mergeContainerAndMessages = mergeContainerAndMessages
-    _tenantId = tenantId
+
+    if (tenantId != null && tenantId.size > 0)
+      _tenantId = Some(tenantId)
 
     _bInit = true
   }
@@ -1081,7 +1083,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
     return addedMessagesContainers
   }
 
-  private def callSaveData(dataStore: DataStoreOperations, data_list: Array[(String, Boolean, Array[(Key, String, Any)])]): Unit = {
+  private def callSaveData(dataStore: DataStoreOperations, data_list: Array[(String, Array[(Key, String, Any)])]): Unit = {
     var failedWaitTime = 15000 // Wait time starts at 15 secs
     val maxFailedWaitTime = 60000 // Max Wait time 60 secs
     var doneSave = false
@@ -1185,7 +1187,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
     val containersData = data.groupBy(_.containerName.toLowerCase)
-    val data_list = containersData.map(kv => (kv._1, false, kv._2.map(d => (Key(d.timePartition, d.bucketKey, d.transactionid, d.rowid), d.serializername, d.data.asInstanceOf[Any])).toArray)).toArray
+    val data_list = containersData.map(kv => (kv._1, kv._2.map(d => (Key(d.timePartition, d.bucketKey, d.transactionid, d.rowid), d.serializername, d.data.asInstanceOf[Any])).toArray)).toArray
 
     callSaveData(_dataStoreDb, data_list);
   }
@@ -1228,7 +1230,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
     if (_dataStoreDb == null)
       throw new Exception("Not found valid Datastore DB connection")
 
-    callSaveData(_dataStoreDb, Array(("MigrateStatusInformation", true, Array((Key(KvBaseDefalts.defaultTime, Array(key.toLowerCase), 0, 0), "txt", value.getBytes().asInstanceOf[Any])))))
+    callSaveData(_dataStoreDb, Array(("MigrateStatusInformation", Array((Key(KvBaseDefalts.defaultTime, Array(key.toLowerCase), 0, 0), "txt", value.getBytes().asInstanceOf[Any])))))
   }
 }
 

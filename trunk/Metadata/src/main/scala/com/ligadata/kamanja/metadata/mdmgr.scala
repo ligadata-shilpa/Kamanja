@@ -70,6 +70,7 @@ class MdMgr {
   private var modelDefs = new HashMap[String, Set[ModelDef]] with MultiMap[String, ModelDef]
   private var factoryOfMdlInstFactories = new HashMap[String, Set[FactoryOfModelInstanceFactoryDef]] with MultiMap[String, FactoryOfModelInstanceFactoryDef]
   private var schemaIdMap = new HashMap[Int, ContainerDef] // For now we consider ContainerDef & MessageDef
+  private var schemaIdToElemntIdMap = new HashMap[Int, Long] // For now we consider ContainerDef & MessageDef
   private var elementIdMap = new HashMap[Long, BaseElem] // For now we consider ContainerDef, MessageDef & ModelDef
 
   // FunctionDefs keyed by function signature nmspc.name(argtyp1,argtyp2,...) map 
@@ -87,6 +88,9 @@ class MdMgr {
   private var configurations = new HashMap[String, UserPropertiesInfo]
   private var msgdefSystemCols = List("transactionid", "timepartitiondata", "rownumber")
   private var serializers = new HashMap[String, SerializeDeserializeConfig]
+  private var adapterMessageBindings = new HashMap[String, AdapterMessageBinding]
+
+  private var tenantIdMap = new HashMap[String, TenantInfo]
 
   private var propertyChanged: scala.collection.mutable.ArrayBuffer[String] = scala.collection.mutable.ArrayBuffer[String]()
   private val lock: Object = new Object
@@ -108,6 +112,7 @@ class MdMgr {
     modelConfigs.clear
     factoryOfMdlInstFactories.clear
     schemaIdMap.clear
+    schemaIdToElemntIdMap.clear
     elementIdMap.clear
   }
 
@@ -160,8 +165,14 @@ class MdMgr {
       case "SchemaId" => {
         schemaIdMap.clear
       }
+      case "SchemaIdElementId" => {
+        schemaIdToElemntIdMap.clear
+      }
       case "ElementId" => {
         elementIdMap.clear
+      }
+      case "Tenants" => {
+        tenantIdMap.clear
       }
       case _ => {
         logger.error("Unknown object type " + objectType + " in truncate function")
@@ -215,8 +226,14 @@ class MdMgr {
     schemaIdMap.foreach(obj => {
       logger.trace("SchemaId:%d => Container:%s Version:%d".format(obj._1, obj._2.FullName, obj._2.Version))
     })
+    schemaIdToElemntIdMap.foreach(obj => {
+      logger.trace("SchemaId:%d => ElementId:%d".format(obj._1, obj._2))
+    })
     elementIdMap.foreach(obj => {
       logger.trace("ElementId:%d => ElementName:%s Version:%d, ElementType:%s".format(obj._1, obj._2.FullName, obj._2.Version, obj._2.MdElementCategory))
+    })
+    tenantIdMap.foreach(obj => {
+      logger.trace("TenantId:" + obj._1)
     })
   }
 
@@ -401,12 +418,12 @@ class MdMgr {
       ad.collectionType = tNone
     } else {
       val ctype = collectionType.trim
-      if (ctype.isEmpty())
+      if (ctype.isEmpty() || ctype.compareToIgnoreCase("none") == 0)
         ad.collectionType = tNone
       else if (ctype.compareToIgnoreCase("array") == 0)
         ad.collectionType = tArray
-      else if (ctype.compareToIgnoreCase("arraybuffer") == 0)
-        ad.collectionType = tArrayBuf
+      else if (ctype.compareToIgnoreCase("map") == 0)
+        ad.collectionType = tMap
       else
         throw new Throwable(s"Not yet handled collection Type $ctype")
     }
@@ -458,7 +475,7 @@ class MdMgr {
     */
 
   @throws(classOf[NoSuchElementException])
-  private def MakeContainerTypeMap(nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)], ver: Long, jarNm: String, depJars: Array[String], primaryKeys: List[(String, List[String])], foreignKeys: List[(String, List[String], String, List[String])], partitionKey: Array[String], ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema:String): MappedMsgTypeDef = {
+  private def MakeContainerTypeMap(nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)], ver: Long, jarNm: String, depJars: Array[String], primaryKeys: List[(String, List[String])], foreignKeys: List[(String, List[String], String, List[String])], partitionKey: Array[String], ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema:String, persist: Boolean /* = false */): MappedMsgTypeDef = {
     val st = new MappedMsgTypeDef
     val depJarSet = scala.collection.mutable.Set[String]()
 
@@ -483,6 +500,7 @@ class MdMgr {
     st.schemaId = schemaId
     st.avroSchema = avroSchema
     st.partitionKey = partitionKey
+    st.persist = persist
     st
   }
 
@@ -498,7 +516,7 @@ class MdMgr {
     * @return the constructed StructTypeDef
     */
 
-  def MakeStructDef(nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)], ver: Long, jarNm: String, depJars: Array[String], primaryKeys: List[(String, List[String])], foreignKeys: List[(String, List[String], String, List[String])], partitionKey: Array[String], ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema:String): StructTypeDef = {
+  def MakeStructDef(nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)], ver: Long, jarNm: String, depJars: Array[String], primaryKeys: List[(String, List[String])], foreignKeys: List[(String, List[String], String, List[String])], partitionKey: Array[String], ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema:String, persist: Boolean /* = false */): StructTypeDef = {
     var sd = new StructTypeDef
 
     val msgNm = MdMgr.MkFullName(nameSpace, name)
@@ -525,6 +543,7 @@ class MdMgr {
     sd.schemaId = schemaId
     sd.avroSchema = avroSchema
     sd.partitionKey = partitionKey
+    sd.persist = persist
     sd
   }
 
@@ -802,7 +821,11 @@ class MdMgr {
     if (cont != null) Some(cont) else None
   }
 
-  def ContainerForElementId(elemId:Int): Option[BaseElem] = {
+  def ElementIdForSchemaId(schemaId:Int): Long = {
+    schemaIdToElemntIdMap.getOrElse(schemaId, 0)
+  }
+
+  def ContainerForElementId(elemId:Long): Option[BaseElem] = {
     val elem = elementIdMap.getOrElse(elemId, null)
     if (elem != null) Some(elem) else None
   }
@@ -1172,7 +1195,7 @@ class MdMgr {
   // We should not have physicalName. This container type has type inside, which has PhysicalName
   @throws(classOf[AlreadyExistsException])
   @throws(classOf[NoSuchElementException])
-  def MakeArray(nameSpace: String, name: String, tpNameSp: String, tpName: String, numDims: Int, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, ver: Long, recompile: Boolean = false, persist: Boolean = false): ArrayTypeDef = {
+  def MakeArray(nameSpace: String, name: String, tpNameSp: String, tpName: String, numDims: Int, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, ver: Long, recompile: Boolean = false/* , persist: Boolean = false */): ArrayTypeDef = {
     val typ = Type(nameSpace, name, -1, false)
     if (typ != None) {
       if (recompile) {
@@ -1205,327 +1228,325 @@ class MdMgr {
     st.arrayDims = numDims
     st
   }
-
-  /**
-    * MakeArrayBuffer catalogs an ArrayBuffer based type in the metadata manager's global typedefs map
-    *
-    * @param nameSpace - the array type name space
-    * @param name      - the array name.
-    * @param tpNameSp  - the name space of the array element type
-    * @param tpName    - the name for the element's type
-    * @param numDims   - (not currently used) the number of dimensions for this array type
-    * @param ver       - the version info
-    *
-    */
-  // We should not have physicalName. This container type has type inside, which has PhysicalName
-  @throws(classOf[AlreadyExistsException])
-  @throws(classOf[NoSuchElementException])
-  def MakeArrayBuffer(nameSpace: String, name: String, tpNameSp: String, tpName: String, numDims: Int, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, ver: Long, recompile: Boolean = false, persist: Boolean = false): ArrayBufTypeDef = {
-    val typ = Type(nameSpace, name, -1, false)
-    if (typ != None) {
-      if (recompile) {
-        //Only make a message if the version is greater then the last known version already in the system.
-        if (typ.get.ver > ver) {
-          throw AlreadyExistsException(s"Higher active version of ArrayBuffer $nameSpace.$name already exists.", null)
-        }
-      } else {
-        //Only make a message if the version is greater or equal then the last known version already in the system.
-        if (typ.get.ver >= ver) {
-          throw AlreadyExistsException(s"Higher active version of ArrayBuffer $nameSpace.$name already exists.", null)
-        }
-      }
-    }
-
-    /*if (Type(nameSpace, name, -1, false) != None) {
-      throw AlreadyExistsException(s"ArrayBuffer $nameSpace.$name already exists.")
-    }
-    * 
-    */
-    val elemDef = GetElem(Type(tpNameSp, tpName, -1, false), s"The array buffer's item type $tpNameSp.$tpName does not exist")
-    if (elemDef == null) {
-      throw new NoSuchElementException(s"The array buffer's item type $tpNameSp.$tpName does not exist")
-    }
-    val depJarSet = scala.collection.mutable.Set[String]()
-    if (elemDef.JarName != null) depJarSet += elemDef.JarName
-    if (elemDef.DependencyJarNames != null) depJarSet ++= elemDef.DependencyJarNames
-    val depJars = if (depJarSet.size > 0) depJarSet.toArray else null
-    val st = new ArrayBufTypeDef
-    SetBaseElem(st, nameSpace, name, ver, null, depJars, ownerId, tenantId, uniqueId, mdElementId)
-    st.elemDef = elemDef
-    st
-  }
-
-  /**
-    * MakeList catalogs an List based type in the metadata manager's global typedefs map
-    *
-    * @param nameSpace - the list's type namespace
-    * @param name      - the list name.
-    * @param tpNameSp  - the name space of the list item type
-    * @param tpName    - the name for the element's type
-    * @param ver       - the version info
-    *
-    */
-  // We should not have physicalName. This container type has type inside, which has PhysicalName
-  @throws(classOf[AlreadyExistsException])
-  @throws(classOf[NoSuchElementException])
-  def MakeList(nameSpace: String, name: String, tpNameSp: String, tpName: String, ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long): ListTypeDef = {
-    val typ = Type(nameSpace, name, -1, false)
-    if (typ != None) {
-      if (typ.get.ver >= ver)
-        throw AlreadyExistsException(s"List $nameSpace.$name already exists.", null)
-    }
-    /*if (Type(nameSpace, name, -1, false) != None) {
-      throw AlreadyExistsException(s"List $nameSpace.$name already exists.")
-    }
-    * 
-    */
-    val valDef = GetElem(Type(tpNameSp, tpName, -1, false), s"The list's item type $tpNameSp.$tpName does not exist")
-    if (valDef == null) {
-      throw new NoSuchElementException(s"The list's item type $tpNameSp.$tpName does not exist")
-    }
-    val depJarSet = scala.collection.mutable.Set[String]()
-    if (valDef.JarName != null) depJarSet += valDef.JarName
-    if (valDef.DependencyJarNames != null) depJarSet ++= valDef.DependencyJarNames
-    val depJars = if (depJarSet.size > 0) depJarSet.toArray else null
-    val st = new ListTypeDef
-    SetBaseElem(st, nameSpace, name, ver, null, depJars, ownerId, tenantId, uniqueId, mdElementId)
-    st.valDef = valDef
-    st
-  }
-
-  /**
-    * MakeQueue catalogs an Queue based type in the metadata manager's global typedefs map
-    *
-    * @param nameSpace - the list's type namespace
-    * @param name      - the queue name.
-    * @param tpNameSp  - the name space of the queue item type
-    * @param tpName    - the name for the element's type
-    * @param ver       - version info
-    */
-
-  @throws(classOf[NoSuchElementException])
-  def MakeQueue(nameSpace: String, name: String, tpNameSp: String, tpName: String, ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long) = {
-    val typ = Type(nameSpace, name, -1, false)
-    if (typ != None) {
-      if (typ.get.ver >= ver)
-        throw AlreadyExistsException(s"List $nameSpace.$name already exists.", null)
-    }
-    /* if (Type(nameSpace, name, -1, false) != None) {
-      throw AlreadyExistsException(s"List $nameSpace.$name already exists.")
-    }
-    * 
-    */
-    val valDef = GetElem(Type(tpNameSp, tpName, -1, false), s"The queue's item type $tpNameSp.$tpName does not exist")
-    if (valDef == null) {
-      throw new NoSuchElementException(s"The queue's item type $tpNameSp.$tpName does not exist")
-    }
-    val depJarSet = scala.collection.mutable.Set[String]()
-    if (valDef.JarName != null) depJarSet += valDef.JarName
-    if (valDef.DependencyJarNames != null) depJarSet ++= valDef.DependencyJarNames
-    val depJars = if (depJarSet.size > 0) depJarSet.toArray else null
-    val st = new QueueTypeDef
-    SetBaseElem(st, nameSpace, name, ver, null, depJars, ownerId, tenantId, uniqueId, mdElementId)
-    st.valDef = valDef
-    st
-  }
-
-  /**
-    * MakeSet catalogs an Set based type in the metadata manager's global typedefs map
-    *
-    * @param nameSpace - the set's type namespace
-    * @param name      - the set name.
-    * @param tpNameSp  - the namespace of the set's key element type
-    * @param tpName    - the name for the element's type
-    * @param ver       - the version info
-    *
-    */
-  // We should not have physicalName. This container type has type inside, which has PhysicalName
-  @throws(classOf[AlreadyExistsException])
-  @throws(classOf[NoSuchElementException])
-  def MakeSet(nameSpace: String, name: String, tpNameSp: String, tpName: String, ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, recompile: Boolean = false, persist: Boolean = false): SetTypeDef = {
-    val typ = Type(nameSpace, name, -1, false)
-    if (typ != None) {
-      if (recompile) {
-        //Only make a message if the version is greater then the last known version already in the system.
-        if (typ.get.ver > ver) {
-          throw AlreadyExistsException(s"Higher active version of Set $nameSpace.$name already exists.", null)
-        }
-      } else {
-        //Only make a message if the version is greater or equal then the last known version already in the system.
-        if (typ.get.ver >= ver) {
-          throw AlreadyExistsException(s"Higher active version of Set $nameSpace.$name already exists.", null)
-        }
-      }
-    }
-
-    /* if (Type(nameSpace, name, -1, false) != None) {
-      throw AlreadyExistsException(s"Set $nameSpace.$name already exists.")
-    }
-    * 
-    */
-    val keyDef = GetElem(Type(tpNameSp, tpName, -1, false), s"The set's key type $tpNameSp.$tpName does not exist")
-    if (keyDef == null) {
-      throw new NoSuchElementException(s"The set's key type $tpNameSp.$tpName does not exist")
-    }
-    val depJarSet = scala.collection.mutable.Set[String]()
-    if (keyDef.JarName != null) depJarSet += keyDef.JarName
-    if (keyDef.DependencyJarNames != null) depJarSet ++= keyDef.DependencyJarNames
-    val depJars = if (depJarSet.size > 0) depJarSet.toArray else null
-    val st = new SetTypeDef
-    SetBaseElem(st, nameSpace, name, ver, null, depJars, ownerId, tenantId, uniqueId, mdElementId)
-    st.keyDef = keyDef
-    st
-  }
-
-  /**
-    * MakeSet catalogs an Set based type in the metadata manager's global typedefs map
-    *
-    * @param nameSpace - the set's type namespace
-    * @param name      - the set name.
-    * @param tpNameSp  - the namespace of the set's key element type
-    * @param tpName    - the name for the element's type
-    * @param ver       - the version info
-    *
-    */
-  // We should not have physicalName. This container type has type inside, which has PhysicalName
-  @throws(classOf[AlreadyExistsException])
-  @throws(classOf[NoSuchElementException])
-  def MakeImmutableSet(nameSpace: String, name: String, tpNameSp: String, tpName: String, ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long): ImmutableSetTypeDef = {
-    val typ = Type(nameSpace, name, -1, false)
-    if (typ != None) {
-      if (typ.get.ver >= ver)
-        throw AlreadyExistsException(s"Set $nameSpace.$name already exists.", null)
-    }
-
-    /* if (Type(nameSpace, name, -1, false) != None) {
-      throw AlreadyExistsException(s"Set $nameSpace.$name already exists.")
-    }
-    * 
-    */
-    val keyDef = GetElem(Type(tpNameSp, tpName, -1, false), s"The set's key type $tpNameSp.$tpName does not exist")
-    if (keyDef == null) {
-      throw new NoSuchElementException(s"The set's key type $tpNameSp.$tpName does not exist")
-    }
-    val depJarSet = scala.collection.mutable.Set[String]()
-    if (keyDef.JarName != null) depJarSet += keyDef.JarName
-    if (keyDef.DependencyJarNames != null) depJarSet ++= keyDef.DependencyJarNames
-    val depJars = if (depJarSet.size > 0) depJarSet.toArray else null
-    val st = new ImmutableSetTypeDef
-    SetBaseElem(st, nameSpace, name, ver, null, depJars, ownerId, tenantId, uniqueId, mdElementId)
-    st.keyDef = keyDef
-    st
-  }
-
-  /**
-    * MakeTreeSet catalogs an TreeSet based type in the metadata manager's global typedefs map
-    *
-    * @param nameSpace - the set's type namespace
-    * @param name      - the set name.
-    * @param tpNameSp  - the namespace of the set's key element type
-    * @param tpName    - the name for the element's type
-    * @param ver       - the version info
-    *
-    */
-  // We should not have physicalName. This container type has type inside, which has PhysicalName
-  @throws(classOf[AlreadyExistsException])
-  @throws(classOf[NoSuchElementException])
-  def MakeTreeSet(nameSpace: String, name: String, tpNameSp: String, tpName: String, ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, recompile: Boolean = false, persist: Boolean = false): TreeSetTypeDef = {
-
-    val typ = Type(nameSpace, name, -1, false)
-    if (typ != None) {
-      if (recompile) {
-        //Only make a message if the version is greater then the last known version already in the system.
-        if (typ.get.ver > ver) {
-          throw AlreadyExistsException(s"Higher active version of TreeSet $nameSpace.$name already exists.", null)
-        }
-      } else {
-        //Only make a message if the version is greater or equal then the last known version already in the system.
-        if (typ.get.ver >= ver) {
-          throw AlreadyExistsException(s"Higher active version of TreeSet $nameSpace.$name already exists.", null)
-        }
-      }
-    }
-
-    /* if (Type(nameSpace, name, -1, false) != None) {
-      throw AlreadyExistsException(s"TreeSet $nameSpace.$name already exists.")
-    }
-    * 
-    */
-    val keyDef = GetElem(Type(tpNameSp, tpName, -1, false), s"The tree set's key type $tpNameSp.$tpName does not exist")
-    if (keyDef == null) {
-      throw new NoSuchElementException(s"The tree set's key type $tpNameSp.$tpName does not exist")
-    }
-    val depJarSet = scala.collection.mutable.Set[String]()
-    if (keyDef.JarName != null) depJarSet += keyDef.JarName
-    if (keyDef.DependencyJarNames != null) depJarSet ++= keyDef.DependencyJarNames
-    val depJars = if (depJarSet.size > 0) depJarSet.toArray else null
-    val st = new TreeSetTypeDef
-    SetBaseElem(st, nameSpace, name, ver, null, depJars, ownerId, tenantId, uniqueId, mdElementId)
-    st.keyDef = keyDef
-    st
-  }
-
-  /**
-    * MakeSortedSet catalogs an SortedSet based type in the metadata manager's global typedefs map
-    *
-    * @param nameSpace - the set's type namespace
-    * @param name      - the set name.
-    * @param tpNameSp  - the namespace of the set's key element type
-    * @param tpName    - the name for the element's type
-    * @param ver       - the type's version
-    */
-  // We should not have physicalName. This container type has type inside, which has PhysicalName
-  @throws(classOf[AlreadyExistsException])
-  @throws(classOf[NoSuchElementException])
-  def MakeSortedSet(nameSpace: String, name: String, tpNameSp: String, tpName: String, ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, recompile: Boolean = false, persist: Boolean = false): SortedSetTypeDef = {
-    val typ = Type(nameSpace, name, -1, false)
-    if (typ != None) {
-      if (recompile) {
-        //Only make a message if the version is greater then the last known version already in the system.
-        if (typ.get.ver > ver) {
-          throw AlreadyExistsException(s"Higher active version of Type $nameSpace.$name already exists... unable to add SortedSet with this name.", null)
-        }
-      } else {
-        //Only make a message if the version is greater or equal then the last known version already in the system.
-        if (typ.get.ver >= ver) {
-          throw AlreadyExistsException(s"Higher active version of Type $nameSpace.$name already exists... unable to add SortedSet with this name.", null)
-        }
-      }
-    }
-
-    /*if (Type(nameSpace, name, -1, false) != None) {
-      throw AlreadyExistsException(s"Type $nameSpace.$name already exists... unable to add SortedSet with this name.")
-    }
-    * 
-    */
-    val keyDef = GetElem(Type(tpNameSp, tpName, -1, false), s"The tree set's key type $tpNameSp.$tpName does not exist")
-    if (keyDef == null) {
-      throw new NoSuchElementException(s"The tree set's key type $tpNameSp.$tpName does not exist")
-    }
-    val depJarSet = scala.collection.mutable.Set[String]()
-    if (keyDef.JarName != null) depJarSet += keyDef.JarName
-    if (keyDef.DependencyJarNames != null) depJarSet ++= keyDef.DependencyJarNames
-    val depJars = if (depJarSet.size > 0) depJarSet.toArray else null
-    val st = new SortedSetTypeDef
-    SetBaseElem(st, nameSpace, name, ver, null, depJars, ownerId, tenantId, uniqueId, mdElementId)
-    st.keyDef = keyDef
-    st
-  }
+//
+//  /**
+//    * MakeArrayBuffer catalogs an ArrayBuffer based type in the metadata manager's global typedefs map
+//    *
+//    * @param nameSpace - the array type name space
+//    * @param name      - the array name.
+//    * @param tpNameSp  - the name space of the array element type
+//    * @param tpName    - the name for the element's type
+//    * @param numDims   - (not currently used) the number of dimensions for this array type
+//    * @param ver       - the version info
+//    *
+//    */
+//  // We should not have physicalName. This container type has type inside, which has PhysicalName
+//  @throws(classOf[AlreadyExistsException])
+//  @throws(classOf[NoSuchElementException])
+//  def MakeArrayBuffer(nameSpace: String, name: String, tpNameSp: String, tpName: String, numDims: Int, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, ver: Long, recompile: Boolean = false/* , persist: Boolean = false */): ArrayBufTypeDef = {
+//    val typ = Type(nameSpace, name, -1, false)
+//    if (typ != None) {
+//      if (recompile) {
+//        //Only make a message if the version is greater then the last known version already in the system.
+//        if (typ.get.ver > ver) {
+//          throw AlreadyExistsException(s"Higher active version of ArrayBuffer $nameSpace.$name already exists.", null)
+//        }
+//      } else {
+//        //Only make a message if the version is greater or equal then the last known version already in the system.
+//        if (typ.get.ver >= ver) {
+//          throw AlreadyExistsException(s"Higher active version of ArrayBuffer $nameSpace.$name already exists.", null)
+//        }
+//      }
+//    }
+//
+//    /*if (Type(nameSpace, name, -1, false) != None) {
+//      throw AlreadyExistsException(s"ArrayBuffer $nameSpace.$name already exists.")
+//    }
+//    *
+//    */
+//    val elemDef = GetElem(Type(tpNameSp, tpName, -1, false), s"The array buffer's item type $tpNameSp.$tpName does not exist")
+//    if (elemDef == null) {
+//      throw new NoSuchElementException(s"The array buffer's item type $tpNameSp.$tpName does not exist")
+//    }
+//    val depJarSet = scala.collection.mutable.Set[String]()
+//    if (elemDef.JarName != null) depJarSet += elemDef.JarName
+//    if (elemDef.DependencyJarNames != null) depJarSet ++= elemDef.DependencyJarNames
+//    val depJars = if (depJarSet.size > 0) depJarSet.toArray else null
+//    val st = new ArrayBufTypeDef
+//    SetBaseElem(st, nameSpace, name, ver, null, depJars, ownerId, tenantId, uniqueId, mdElementId)
+//    st.elemDef = elemDef
+//    st
+//  }
+//
+//  /**
+//    * MakeList catalogs an List based type in the metadata manager's global typedefs map
+//    *
+//    * @param nameSpace - the list's type namespace
+//    * @param name      - the list name.
+//    * @param tpNameSp  - the name space of the list item type
+//    * @param tpName    - the name for the element's type
+//    * @param ver       - the version info
+//    *
+//    */
+//  // We should not have physicalName. This container type has type inside, which has PhysicalName
+//  @throws(classOf[AlreadyExistsException])
+//  @throws(classOf[NoSuchElementException])
+//  def MakeList(nameSpace: String, name: String, tpNameSp: String, tpName: String, ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long): ListTypeDef = {
+//    val typ = Type(nameSpace, name, -1, false)
+//    if (typ != None) {
+//      if (typ.get.ver >= ver)
+//        throw AlreadyExistsException(s"List $nameSpace.$name already exists.", null)
+//    }
+//    /*if (Type(nameSpace, name, -1, false) != None) {
+//      throw AlreadyExistsException(s"List $nameSpace.$name already exists.")
+//    }
+//    *
+//    */
+//    val valDef = GetElem(Type(tpNameSp, tpName, -1, false), s"The list's item type $tpNameSp.$tpName does not exist")
+//    if (valDef == null) {
+//      throw new NoSuchElementException(s"The list's item type $tpNameSp.$tpName does not exist")
+//    }
+//    val depJarSet = scala.collection.mutable.Set[String]()
+//    if (valDef.JarName != null) depJarSet += valDef.JarName
+//    if (valDef.DependencyJarNames != null) depJarSet ++= valDef.DependencyJarNames
+//    val depJars = if (depJarSet.size > 0) depJarSet.toArray else null
+//    val st = new ListTypeDef
+//    SetBaseElem(st, nameSpace, name, ver, null, depJars, ownerId, tenantId, uniqueId, mdElementId)
+//    st.valDef = valDef
+//    st
+//  }
+//
+//  /**
+//    * MakeQueue catalogs an Queue based type in the metadata manager's global typedefs map
+//    *
+//    * @param nameSpace - the list's type namespace
+//    * @param name      - the queue name.
+//    * @param tpNameSp  - the name space of the queue item type
+//    * @param tpName    - the name for the element's type
+//    * @param ver       - version info
+//    */
+//
+//  @throws(classOf[NoSuchElementException])
+//  def MakeQueue(nameSpace: String, name: String, tpNameSp: String, tpName: String, ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long) = {
+//    val typ = Type(nameSpace, name, -1, false)
+//    if (typ != None) {
+//      if (typ.get.ver >= ver)
+//        throw AlreadyExistsException(s"List $nameSpace.$name already exists.", null)
+//    }
+//    /* if (Type(nameSpace, name, -1, false) != None) {
+//      throw AlreadyExistsException(s"List $nameSpace.$name already exists.")
+//    }
+//    *
+//    */
+//    val valDef = GetElem(Type(tpNameSp, tpName, -1, false), s"The queue's item type $tpNameSp.$tpName does not exist")
+//    if (valDef == null) {
+//      throw new NoSuchElementException(s"The queue's item type $tpNameSp.$tpName does not exist")
+//    }
+//    val depJarSet = scala.collection.mutable.Set[String]()
+//    if (valDef.JarName != null) depJarSet += valDef.JarName
+//    if (valDef.DependencyJarNames != null) depJarSet ++= valDef.DependencyJarNames
+//    val depJars = if (depJarSet.size > 0) depJarSet.toArray else null
+//    val st = new QueueTypeDef
+//    SetBaseElem(st, nameSpace, name, ver, null, depJars, ownerId, tenantId, uniqueId, mdElementId)
+//    st.valDef = valDef
+//    st
+//  }
+//
+//  /**
+//    * MakeSet catalogs an Set based type in the metadata manager's global typedefs map
+//    *
+//    * @param nameSpace - the set's type namespace
+//    * @param name      - the set name.
+//    * @param tpNameSp  - the namespace of the set's key element type
+//    * @param tpName    - the name for the element's type
+//    * @param ver       - the version info
+//    *
+//    */
+//  // We should not have physicalName. This container type has type inside, which has PhysicalName
+//  @throws(classOf[AlreadyExistsException])
+//  @throws(classOf[NoSuchElementException])
+//  def MakeSet(nameSpace: String, name: String, tpNameSp: String, tpName: String, ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, recompile: Boolean = false/* , persist: Boolean = false */): SetTypeDef = {
+//    val typ = Type(nameSpace, name, -1, false)
+//    if (typ != None) {
+//      if (recompile) {
+//        //Only make a message if the version is greater then the last known version already in the system.
+//        if (typ.get.ver > ver) {
+//          throw AlreadyExistsException(s"Higher active version of Set $nameSpace.$name already exists.", null)
+//        }
+//      } else {
+//        //Only make a message if the version is greater or equal then the last known version already in the system.
+//        if (typ.get.ver >= ver) {
+//          throw AlreadyExistsException(s"Higher active version of Set $nameSpace.$name already exists.", null)
+//        }
+//      }
+//    }
+//
+//    /* if (Type(nameSpace, name, -1, false) != None) {
+//      throw AlreadyExistsException(s"Set $nameSpace.$name already exists.")
+//    }
+//    *
+//    */
+//    val keyDef = GetElem(Type(tpNameSp, tpName, -1, false), s"The set's key type $tpNameSp.$tpName does not exist")
+//    if (keyDef == null) {
+//      throw new NoSuchElementException(s"The set's key type $tpNameSp.$tpName does not exist")
+//    }
+//    val depJarSet = scala.collection.mutable.Set[String]()
+//    if (keyDef.JarName != null) depJarSet += keyDef.JarName
+//    if (keyDef.DependencyJarNames != null) depJarSet ++= keyDef.DependencyJarNames
+//    val depJars = if (depJarSet.size > 0) depJarSet.toArray else null
+//    val st = new SetTypeDef
+//    SetBaseElem(st, nameSpace, name, ver, null, depJars, ownerId, tenantId, uniqueId, mdElementId)
+//    st.keyDef = keyDef
+//    st
+//  }
+//
+//  /**
+//    * MakeSet catalogs an Set based type in the metadata manager's global typedefs map
+//    *
+//    * @param nameSpace - the set's type namespace
+//    * @param name      - the set name.
+//    * @param tpNameSp  - the namespace of the set's key element type
+//    * @param tpName    - the name for the element's type
+//    * @param ver       - the version info
+//    *
+//    */
+//  // We should not have physicalName. This container type has type inside, which has PhysicalName
+//  @throws(classOf[AlreadyExistsException])
+//  @throws(classOf[NoSuchElementException])
+//  def MakeImmutableSet(nameSpace: String, name: String, tpNameSp: String, tpName: String, ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long): ImmutableSetTypeDef = {
+//    val typ = Type(nameSpace, name, -1, false)
+//    if (typ != None) {
+//      if (typ.get.ver >= ver)
+//        throw AlreadyExistsException(s"Set $nameSpace.$name already exists.", null)
+//    }
+//
+//    /* if (Type(nameSpace, name, -1, false) != None) {
+//      throw AlreadyExistsException(s"Set $nameSpace.$name already exists.")
+//    }
+//    *
+//    */
+//    val keyDef = GetElem(Type(tpNameSp, tpName, -1, false), s"The set's key type $tpNameSp.$tpName does not exist")
+//    if (keyDef == null) {
+//      throw new NoSuchElementException(s"The set's key type $tpNameSp.$tpName does not exist")
+//    }
+//    val depJarSet = scala.collection.mutable.Set[String]()
+//    if (keyDef.JarName != null) depJarSet += keyDef.JarName
+//    if (keyDef.DependencyJarNames != null) depJarSet ++= keyDef.DependencyJarNames
+//    val depJars = if (depJarSet.size > 0) depJarSet.toArray else null
+//    val st = new ImmutableSetTypeDef
+//    SetBaseElem(st, nameSpace, name, ver, null, depJars, ownerId, tenantId, uniqueId, mdElementId)
+//    st.keyDef = keyDef
+//    st
+//  }
+//
+//  /**
+//    * MakeTreeSet catalogs an TreeSet based type in the metadata manager's global typedefs map
+//    *
+//    * @param nameSpace - the set's type namespace
+//    * @param name      - the set name.
+//    * @param tpNameSp  - the namespace of the set's key element type
+//    * @param tpName    - the name for the element's type
+//    * @param ver       - the version info
+//    *
+//    */
+//  // We should not have physicalName. This container type has type inside, which has PhysicalName
+//  @throws(classOf[AlreadyExistsException])
+//  @throws(classOf[NoSuchElementException])
+//  def MakeTreeSet(nameSpace: String, name: String, tpNameSp: String, tpName: String, ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, recompile: Boolean = false/* , persist: Boolean = false */): TreeSetTypeDef = {
+//
+//    val typ = Type(nameSpace, name, -1, false)
+//    if (typ != None) {
+//      if (recompile) {
+//        //Only make a message if the version is greater then the last known version already in the system.
+//        if (typ.get.ver > ver) {
+//          throw AlreadyExistsException(s"Higher active version of TreeSet $nameSpace.$name already exists.", null)
+//        }
+//      } else {
+//        //Only make a message if the version is greater or equal then the last known version already in the system.
+//        if (typ.get.ver >= ver) {
+//          throw AlreadyExistsException(s"Higher active version of TreeSet $nameSpace.$name already exists.", null)
+//        }
+//      }
+//    }
+//
+//    /* if (Type(nameSpace, name, -1, false) != None) {
+//      throw AlreadyExistsException(s"TreeSet $nameSpace.$name already exists.")
+//    }
+//    *
+//    */
+//    val keyDef = GetElem(Type(tpNameSp, tpName, -1, false), s"The tree set's key type $tpNameSp.$tpName does not exist")
+//    if (keyDef == null) {
+//      throw new NoSuchElementException(s"The tree set's key type $tpNameSp.$tpName does not exist")
+//    }
+//    val depJarSet = scala.collection.mutable.Set[String]()
+//    if (keyDef.JarName != null) depJarSet += keyDef.JarName
+//    if (keyDef.DependencyJarNames != null) depJarSet ++= keyDef.DependencyJarNames
+//    val depJars = if (depJarSet.size > 0) depJarSet.toArray else null
+//    val st = new TreeSetTypeDef
+//    SetBaseElem(st, nameSpace, name, ver, null, depJars, ownerId, tenantId, uniqueId, mdElementId)
+//    st.keyDef = keyDef
+//    st
+//  }
+//
+//  /**
+//    * MakeSortedSet catalogs an SortedSet based type in the metadata manager's global typedefs map
+//    *
+//    * @param nameSpace - the set's type namespace
+//    * @param name      - the set name.
+//    * @param tpNameSp  - the namespace of the set's key element type
+//    * @param tpName    - the name for the element's type
+//    * @param ver       - the type's version
+//    */
+//  // We should not have physicalName. This container type has type inside, which has PhysicalName
+//  @throws(classOf[AlreadyExistsException])
+//  @throws(classOf[NoSuchElementException])
+//  def MakeSortedSet(nameSpace: String, name: String, tpNameSp: String, tpName: String, ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, recompile: Boolean = false/* , persist: Boolean = false */): SortedSetTypeDef = {
+//    val typ = Type(nameSpace, name, -1, false)
+//    if (typ != None) {
+//      if (recompile) {
+//        //Only make a message if the version is greater then the last known version already in the system.
+//        if (typ.get.ver > ver) {
+//          throw AlreadyExistsException(s"Higher active version of Type $nameSpace.$name already exists... unable to add SortedSet with this name.", null)
+//        }
+//      } else {
+//        //Only make a message if the version is greater or equal then the last known version already in the system.
+//        if (typ.get.ver >= ver) {
+//          throw AlreadyExistsException(s"Higher active version of Type $nameSpace.$name already exists... unable to add SortedSet with this name.", null)
+//        }
+//      }
+//    }
+//
+//    /*if (Type(nameSpace, name, -1, false) != None) {
+//      throw AlreadyExistsException(s"Type $nameSpace.$name already exists... unable to add SortedSet with this name.")
+//    }
+//    *
+//    */
+//    val keyDef = GetElem(Type(tpNameSp, tpName, -1, false), s"The tree set's key type $tpNameSp.$tpName does not exist")
+//    if (keyDef == null) {
+//      throw new NoSuchElementException(s"The tree set's key type $tpNameSp.$tpName does not exist")
+//    }
+//    val depJarSet = scala.collection.mutable.Set[String]()
+//    if (keyDef.JarName != null) depJarSet += keyDef.JarName
+//    if (keyDef.DependencyJarNames != null) depJarSet ++= keyDef.DependencyJarNames
+//    val depJars = if (depJarSet.size > 0) depJarSet.toArray else null
+//    val st = new SortedSetTypeDef
+//    SetBaseElem(st, nameSpace, name, ver, null, depJars, ownerId, tenantId, uniqueId, mdElementId)
+//    st.keyDef = keyDef
+//    st
+//  }
 
   /**
     * MakeMap catalogs a scala.collection.mutable.Map based type in the metadata manager's global typedefs map
     *
     * @param nameSpace - the map type's namespace
     * @param name      - the map name.
-    * @param key       - the namespace and name for the map's key
-    * @param value     - the namespace and name for the map's value
     * @param ver       - the version info
     *
     */
   // We should not have physicalName. This container type has type inside, which has PhysicalName
   @throws(classOf[AlreadyExistsException])
   @throws(classOf[NoSuchElementException])
-  def MakeMap(nameSpace: String, name: String, key: (String, String), value: (String, String), ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, recompile: Boolean = false, persist: Boolean = false): MapTypeDef = {
+  def MakeMap(nameSpace: String, name: String, valueNsp: String, valueName: String, ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, recompile: Boolean = false/* , persist: Boolean = false */): MapTypeDef = {
     val typ = Type(nameSpace, name, -1, false)
     if (typ != None) {
       if (recompile) {
@@ -1547,174 +1568,169 @@ class MdMgr {
     * 
     */
 
-    val (keyNmSp, keyTypeNm) = key
-    val (valNmSp, valTypeNm) = value
-    val keyDef = GetElem(Type(keyNmSp, keyTypeNm, -1, false), s"Key type $keyNmSp.$keyTypeNm does not exist")
-    val valDef = GetElem(Type(valNmSp, valTypeNm, -1, false), s"Value type $valNmSp.$valTypeNm does not exist")
-    if (keyDef == null || valDef == null) {
-      throw new NoSuchElementException(s"Either key type ($keyNmSp.$keyTypeNm) and/or value type ($valNmSp.$valTypeNm) does not exist")
+    val valDef = GetElem(Type(valueNsp, valueName, -1, false), s"Value type $valueNsp.$valueName does not exist")
+    if (valDef == null) {
+      throw new NoSuchElementException(s"Value type ($valueNsp.$valueName) does not exist")
     }
 
     val depJarSet = scala.collection.mutable.Set[String]()
-    if (keyDef.JarName != null) depJarSet += keyDef.JarName
-    if (keyDef.DependencyJarNames != null) depJarSet ++= keyDef.DependencyJarNames
     if (valDef.JarName != null) depJarSet += valDef.JarName
     if (valDef.DependencyJarNames != null) depJarSet ++= valDef.DependencyJarNames
     val depJars = if (depJarSet.size > 0) depJarSet.toArray else null
 
     val st = new MapTypeDef
     SetBaseElem(st, nameSpace, name, ver, null, depJars, ownerId, tenantId, uniqueId, mdElementId)
-    st.keyDef = keyDef
     st.valDef = valDef
     st
   }
 
-  /**
-    * MakeImmutableMap catalogs an scala.collection.immutable.Map based type in the metadata manager's global typedefs map
-    *
-    * @param nameSpace - the map type's namespace
-    * @param name      - the map name.
-    * @param key       - the namespace and name for the map's key
-    * @param value     - the namespace and name for the map's value
-    * @param ver       - the version info
-    *
-    */
-  // We should not have physicalName. This container type has type inside, which has PhysicalName
-  @throws(classOf[AlreadyExistsException])
-  @throws(classOf[NoSuchElementException])
-  def MakeImmutableMap(nameSpace: String, name: String, key: (String, String), value: (String, String), ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, recompile: Boolean = false, persist: Boolean = false): ImmutableMapTypeDef = {
-    val typ = Type(nameSpace, name, -1, false)
-    if (typ != None) {
-      if (recompile) {
-        //Only make a message if the version is greater then the last known version already in the system.
-        if (typ.get.ver > ver) {
-          throw AlreadyExistsException(s"Higher active version of Map $nameSpace.$name already exists in the system", null)
-        }
-      } else {
-        //Only make a message if the version is greater or equal then the last known version already in the system.
-        if (typ.get.ver >= ver) {
-          throw AlreadyExistsException(s"Higher active version of Map $nameSpace.$name already exists in the system", null)
-        }
-      }
-    }
-
-    /* if (Type(nameSpace, name, -1, false) != None) {
-      throw AlreadyExistsException(s"Map $nameSpace.$name already exists.")
-    }*/
-    val (keyNmSp, keyTypeNm) = key
-    val (valNmSp, valTypeNm) = value
-    val keyDef = GetElem(Type(keyNmSp, keyTypeNm, -1, false), s"Key type $keyNmSp.$keyTypeNm does not exist")
-    val valDef = GetElem(Type(valNmSp, valTypeNm, -1, false), s"Value type $valNmSp.$valTypeNm does not exist")
-    if (keyDef == null || valDef == null) {
-      throw new NoSuchElementException(s"Either key type ($keyNmSp.$keyTypeNm) and/or value type ($valNmSp.$valTypeNm) does not exist")
-    }
-    val depJarSet = scala.collection.mutable.Set[String]()
-    if (keyDef.JarName != null) depJarSet += keyDef.JarName
-    if (keyDef.DependencyJarNames != null) depJarSet ++= keyDef.DependencyJarNames
-    if (valDef.JarName != null) depJarSet += valDef.JarName
-    if (valDef.DependencyJarNames != null) depJarSet ++= valDef.DependencyJarNames
-    val depJars = if (depJarSet.size > 0) depJarSet.toArray else null
-    val st = new ImmutableMapTypeDef
-    SetBaseElem(st, nameSpace, name, ver, null, depJars, ownerId, tenantId, uniqueId, mdElementId)
-    st.keyDef = keyDef
-    st.valDef = valDef
-    st
-  }
-
-  /**
-    * MakeHashMap catalogs a HashMap based type in the metadata manager's global typedefs map
-    *
-    * @param nameSpace - the map type's namespace
-    * @param name      - the map name.
-    * @param key       - the namespace and name for the map's key
-    * @param value     - the namespace and name for the map's value
-    * @param ver       - the version info
-    *
-    */
-  // We should not have physicalName. This container type has type inside, which has PhysicalName
-  @throws(classOf[AlreadyExistsException])
-  @throws(classOf[NoSuchElementException])
-  def MakeHashMap(nameSpace: String, name: String, key: (String, String), value: (String, String), ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long): HashMapTypeDef = {
-
-    val typ = Type(nameSpace, name, -1, false)
-    if (typ != None) {
-      if (typ.get.ver >= ver)
-        throw AlreadyExistsException(s"HashMap $nameSpace.$name already exists.", null)
-    }
-    /*if (Type(nameSpace, name, -1, false) != None) {
-      throw AlreadyExistsException(s"HashMap $nameSpace.$name already exists.")
-    }
-    * 
-    */
-
-    val (keyNmSp, keyTypeNm) = key
-    val (valNmSp, valTypeNm) = value
-    val keyDef = GetElem(Type(keyNmSp, keyTypeNm, -1, false), s"Key type $keyNmSp.$keyTypeNm does not exist")
-    val valDef = GetElem(Type(valNmSp, valTypeNm, -1, false), s"Value type $valNmSp.$valTypeNm does not exist")
-    if (keyDef == null || valDef == null) {
-      throw new NoSuchElementException(s"Either key type ($keyNmSp.$keyTypeNm) and/or value type ($valNmSp.$valTypeNm) does not exist")
-    }
-
-    val depJarSet = scala.collection.mutable.Set[String]()
-    if (keyDef.JarName != null) depJarSet += keyDef.JarName
-    if (keyDef.DependencyJarNames != null) depJarSet ++= keyDef.DependencyJarNames
-    if (valDef.JarName != null) depJarSet += valDef.JarName
-    if (valDef.DependencyJarNames != null) depJarSet ++= valDef.DependencyJarNames
-    val depJars = if (depJarSet.size > 0) depJarSet.toArray else null
-
-    val st = new HashMapTypeDef
-    SetBaseElem(st, nameSpace, name, ver, null, depJars, ownerId, tenantId, uniqueId, mdElementId)
-    st.keyDef = keyDef
-    st.valDef = valDef
-    st
-  }
-
-  /**
-    * MakeTupleType catalogs a Tuple based type in the metadata manager's global typedefs map
-    *
-    * @param nameSpace - the map type's namespace
-    * @param name      - the map name.
-    * @param tuples    - an array of (namespace,typename) pairs that correspond to each tuple element
-    * @param ver       - the version info
-    *
-    *                  Note: Between one and twenty-two elements may be specified in the tuples array.
-    *
-    */
-  // We should not have physicalName. This container type has type inside, which has PhysicalName
-  @throws(classOf[AlreadyExistsException])
-  @throws(classOf[NoSuchElementException])
-  def MakeTupleType(nameSpace: String, name: String, tuples: Array[(String, String)], ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long): TupleTypeDef = {
-    val typ = Type(nameSpace, name, -1, false)
-    if (typ != None) {
-      if (typ.get.ver >= ver)
-        throw AlreadyExistsException(s"Tuple $nameSpace.$name already exists.", null)
-    }
-    /*if (Type(nameSpace, name, -1, false) != None) {
-      throw AlreadyExistsException(s"Typle $nameSpace.$name already exists.")
-    }
-    * 
-    */
-
-    val depJarSet = scala.collection.mutable.Set[String]()
-
-    var tupleDefs: ArrayBuffer[BaseTypeDef] = new ArrayBuffer[BaseTypeDef]()
-    tuples.foreach(tup => {
-      val (nmspc, nm): (String, String) = tup
-      val tupType: BaseTypeDef = GetElem(Type(nmspc, nm, -1, false), s"Tuple element type $nmspc.$nm does not exist")
-      if (tupType == null) {
-        throw new NoSuchElementException(s"Tuple element type $nmspc.$nm does not exist")
-      }
-      if (tupType.JarName != null) depJarSet += tupType.JarName
-      if (tupType.DependencyJarNames != null) depJarSet ++= tupType.DependencyJarNames
-      tupleDefs += tupType
-    })
-
-    val depJars = if (depJarSet.size > 0) depJarSet.toArray else null
-    val tt: TupleTypeDef = new TupleTypeDef
-    tt.tupleDefs = tupleDefs.toArray
-    SetBaseElem(tt, nameSpace, name, ver, null, depJars, ownerId, tenantId, uniqueId, mdElementId)
-    tt
-  }
+//
+//  /**
+//    * MakeImmutableMap catalogs an scala.collection.immutable.Map based type in the metadata manager's global typedefs map
+//    *
+//    * @param nameSpace - the map type's namespace
+//    * @param name      - the map name.
+//    * @param key       - the namespace and name for the map's key
+//    * @param value     - the namespace and name for the map's value
+//    * @param ver       - the version info
+//    *
+//    */
+//  // We should not have physicalName. This container type has type inside, which has PhysicalName
+//  @throws(classOf[AlreadyExistsException])
+//  @throws(classOf[NoSuchElementException])
+//  def MakeImmutableMap(nameSpace: String, name: String, key: (String, String), value: (String, String), ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, recompile: Boolean = false/* , persist: Boolean = false */): ImmutableMapTypeDef = {
+//    val typ = Type(nameSpace, name, -1, false)
+//    if (typ != None) {
+//      if (recompile) {
+//        //Only make a message if the version is greater then the last known version already in the system.
+//        if (typ.get.ver > ver) {
+//          throw AlreadyExistsException(s"Higher active version of Map $nameSpace.$name already exists in the system", null)
+//        }
+//      } else {
+//        //Only make a message if the version is greater or equal then the last known version already in the system.
+//        if (typ.get.ver >= ver) {
+//          throw AlreadyExistsException(s"Higher active version of Map $nameSpace.$name already exists in the system", null)
+//        }
+//      }
+//    }
+//
+//    /* if (Type(nameSpace, name, -1, false) != None) {
+//      throw AlreadyExistsException(s"Map $nameSpace.$name already exists.")
+//    }*/
+//    val (keyNmSp, keyTypeNm) = key
+//    val (valNmSp, valTypeNm) = value
+//    val keyDef = GetElem(Type(keyNmSp, keyTypeNm, -1, false), s"Key type $keyNmSp.$keyTypeNm does not exist")
+//    val valDef = GetElem(Type(valNmSp, valTypeNm, -1, false), s"Value type $valNmSp.$valTypeNm does not exist")
+//    if (keyDef == null || valDef == null) {
+//      throw new NoSuchElementException(s"Either key type ($keyNmSp.$keyTypeNm) and/or value type ($valNmSp.$valTypeNm) does not exist")
+//    }
+//    val depJarSet = scala.collection.mutable.Set[String]()
+//    if (keyDef.JarName != null) depJarSet += keyDef.JarName
+//    if (keyDef.DependencyJarNames != null) depJarSet ++= keyDef.DependencyJarNames
+//    if (valDef.JarName != null) depJarSet += valDef.JarName
+//    if (valDef.DependencyJarNames != null) depJarSet ++= valDef.DependencyJarNames
+//    val depJars = if (depJarSet.size > 0) depJarSet.toArray else null
+//    val st = new ImmutableMapTypeDef
+//    SetBaseElem(st, nameSpace, name, ver, null, depJars, ownerId, tenantId, uniqueId, mdElementId)
+//    st.keyDef = keyDef
+//    st.valDef = valDef
+//    st
+//  }
+//
+//  /**
+//    * MakeHashMap catalogs a HashMap based type in the metadata manager's global typedefs map
+//    *
+//    * @param nameSpace - the map type's namespace
+//    * @param name      - the map name.
+//    * @param key       - the namespace and name for the map's key
+//    * @param value     - the namespace and name for the map's value
+//    * @param ver       - the version info
+//    *
+//    */
+//  // We should not have physicalName. This container type has type inside, which has PhysicalName
+//  @throws(classOf[AlreadyExistsException])
+//  @throws(classOf[NoSuchElementException])
+//  def MakeHashMap(nameSpace: String, name: String, key: (String, String), value: (String, String), ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long): HashMapTypeDef = {
+//
+//    val typ = Type(nameSpace, name, -1, false)
+//    if (typ != None) {
+//      if (typ.get.ver >= ver)
+//        throw AlreadyExistsException(s"HashMap $nameSpace.$name already exists.", null)
+//    }
+//    /*if (Type(nameSpace, name, -1, false) != None) {
+//      throw AlreadyExistsException(s"HashMap $nameSpace.$name already exists.")
+//    }
+//    *
+//    */
+//
+//    val (keyNmSp, keyTypeNm) = key
+//    val (valNmSp, valTypeNm) = value
+//    val keyDef = GetElem(Type(keyNmSp, keyTypeNm, -1, false), s"Key type $keyNmSp.$keyTypeNm does not exist")
+//    val valDef = GetElem(Type(valNmSp, valTypeNm, -1, false), s"Value type $valNmSp.$valTypeNm does not exist")
+//    if (keyDef == null || valDef == null) {
+//      throw new NoSuchElementException(s"Either key type ($keyNmSp.$keyTypeNm) and/or value type ($valNmSp.$valTypeNm) does not exist")
+//    }
+//
+//    val depJarSet = scala.collection.mutable.Set[String]()
+//    if (keyDef.JarName != null) depJarSet += keyDef.JarName
+//    if (keyDef.DependencyJarNames != null) depJarSet ++= keyDef.DependencyJarNames
+//    if (valDef.JarName != null) depJarSet += valDef.JarName
+//    if (valDef.DependencyJarNames != null) depJarSet ++= valDef.DependencyJarNames
+//    val depJars = if (depJarSet.size > 0) depJarSet.toArray else null
+//
+//    val st = new HashMapTypeDef
+//    SetBaseElem(st, nameSpace, name, ver, null, depJars, ownerId, tenantId, uniqueId, mdElementId)
+//    st.keyDef = keyDef
+//    st.valDef = valDef
+//    st
+//  }
+//
+//  /**
+//    * MakeTupleType catalogs a Tuple based type in the metadata manager's global typedefs map
+//    *
+//    * @param nameSpace - the map type's namespace
+//    * @param name      - the map name.
+//    * @param tuples    - an array of (namespace,typename) pairs that correspond to each tuple element
+//    * @param ver       - the version info
+//    *
+//    *                  Note: Between one and twenty-two elements may be specified in the tuples array.
+//    *
+//    */
+//  // We should not have physicalName. This container type has type inside, which has PhysicalName
+//  @throws(classOf[AlreadyExistsException])
+//  @throws(classOf[NoSuchElementException])
+//  def MakeTupleType(nameSpace: String, name: String, tuples: Array[(String, String)], ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long): TupleTypeDef = {
+//    val typ = Type(nameSpace, name, -1, false)
+//    if (typ != None) {
+//      if (typ.get.ver >= ver)
+//        throw AlreadyExistsException(s"Tuple $nameSpace.$name already exists.", null)
+//    }
+//    /*if (Type(nameSpace, name, -1, false) != None) {
+//      throw AlreadyExistsException(s"Typle $nameSpace.$name already exists.")
+//    }
+//    *
+//    */
+//
+//    val depJarSet = scala.collection.mutable.Set[String]()
+//
+//    var tupleDefs: ArrayBuffer[BaseTypeDef] = new ArrayBuffer[BaseTypeDef]()
+//    tuples.foreach(tup => {
+//      val (nmspc, nm): (String, String) = tup
+//      val tupType: BaseTypeDef = GetElem(Type(nmspc, nm, -1, false), s"Tuple element type $nmspc.$nm does not exist")
+//      if (tupType == null) {
+//        throw new NoSuchElementException(s"Tuple element type $nmspc.$nm does not exist")
+//      }
+//      if (tupType.JarName != null) depJarSet += tupType.JarName
+//      if (tupType.DependencyJarNames != null) depJarSet ++= tupType.DependencyJarNames
+//      tupleDefs += tupType
+//    })
+//
+//    val depJars = if (depJarSet.size > 0) depJarSet.toArray else null
+//    val tt: TupleTypeDef = new TupleTypeDef
+//    tt.tupleDefs = tupleDefs.toArray
+//    SetBaseElem(tt, nameSpace, name, ver, null, depJars, ownerId, tenantId, uniqueId, mdElementId)
+//    tt
+//  }
 
   /**
     * Construct a FunctionDef from the supplied arguments.
@@ -1892,7 +1908,7 @@ class MdMgr {
 
   @throws(classOf[AlreadyExistsException])
   @throws(classOf[NoSuchElementException])
-  def MakeFixedMsg(nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)], ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema:String, ver: Long = 1, jarNm: String = null, depJars: Array[String] = null, primaryKeys: List[(String, List[String])] = null, foreignKeys: List[(String, List[String], String, List[String])] = null, partitionKey: Array[String] = null, recompile: Boolean = false): MessageDef = {
+  def MakeFixedMsg(nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)], ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema:String, ver: Long = 1, jarNm: String = null, depJars: Array[String] = null, primaryKeys: List[(String, List[String])] = null, foreignKeys: List[(String, List[String], String, List[String])] = null, partitionKey: Array[String] = null, recompile: Boolean = false, persist: Boolean /* = false */): MessageDef = {
 
     val latestActiveMessage = Message(nameSpace, name, -1, false)
     if (latestActiveMessage != None) {
@@ -1910,7 +1926,7 @@ class MdMgr {
     }
 
     var msg: MessageDef = new MessageDef
-    msg.containerType = MakeStructDef(nameSpace, name, physicalName, args, ver, jarNm, depJars, primaryKeys, foreignKeys, partitionKey, ownerId, tenantId, uniqueId, mdElementId, schemaId, avroSchema)
+    msg.containerType = MakeStructDef(nameSpace, name, physicalName, args, ver, jarNm, depJars, primaryKeys, foreignKeys, partitionKey, ownerId, tenantId, uniqueId, mdElementId, schemaId, avroSchema, persist)
 
     var dJars: Array[String] = depJars
     if (msg.containerType.isInstanceOf[ContainerTypeDef]) // This should match
@@ -1940,7 +1956,7 @@ class MdMgr {
 
   @throws(classOf[AlreadyExistsException])
   @throws(classOf[NoSuchElementException])
-  def MakeFixedContainer(nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)], ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema:String, ver: Long = 1, jarNm: String = null, depJars: Array[String] = null, primaryKeys: List[(String, List[String])] = null, foreignKeys: List[(String, List[String], String, List[String])] = null, partitionKey: Array[String] = null, recompile: Boolean = false): ContainerDef = {
+  def MakeFixedContainer(nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)], ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema:String, ver: Long = 1, jarNm: String = null, depJars: Array[String] = null, primaryKeys: List[(String, List[String])] = null, foreignKeys: List[(String, List[String], String, List[String])] = null, partitionKey: Array[String] = null, recompile: Boolean = false, persist: Boolean /* = false */): ContainerDef = {
 
     val latestActiveContainer = Container(nameSpace, name, -1, false)
     if (latestActiveContainer != None) {
@@ -1958,7 +1974,7 @@ class MdMgr {
     }
 
     var container = new ContainerDef
-    container.containerType = MakeStructDef(nameSpace, name, physicalName, args, ver, jarNm, depJars, primaryKeys, foreignKeys, partitionKey, ownerId, tenantId, uniqueId, mdElementId, schemaId, avroSchema)
+    container.containerType = MakeStructDef(nameSpace, name, physicalName, args, ver, jarNm, depJars, primaryKeys, foreignKeys, partitionKey, ownerId, tenantId, uniqueId, mdElementId, schemaId, avroSchema, persist)
 
     var dJars: Array[String] = depJars
     if (container.containerType.isInstanceOf[ContainerTypeDef]) {
@@ -1991,7 +2007,7 @@ class MdMgr {
 
   @throws(classOf[AlreadyExistsException])
   @throws(classOf[NoSuchElementException])
-  def MakeMappedMsg(nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)], ver: Long, jarNm: String, depJars: Array[String], primaryKeys: List[(String, List[String])], foreignKeys: List[(String, List[String], String, List[String])], partitionKey: Array[String], recompile: Boolean, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema:String): MessageDef = {
+  def MakeMappedMsg(nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)], ver: Long, jarNm: String, depJars: Array[String], primaryKeys: List[(String, List[String])], foreignKeys: List[(String, List[String], String, List[String])], partitionKey: Array[String], recompile: Boolean, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema:String, persist: Boolean): MessageDef = {
     val latestActiveMessage = Message(nameSpace, name, -1, false)
     if (latestActiveMessage != None) {
       if (recompile) {
@@ -2007,7 +2023,7 @@ class MdMgr {
     }
 
     var msg: MessageDef = new MessageDef
-    msg.containerType = MakeContainerTypeMap(nameSpace, name, physicalName, args, ver, jarNm, depJars, primaryKeys, foreignKeys, partitionKey, ownerId, tenantId, uniqueId, mdElementId, schemaId, avroSchema)
+    msg.containerType = MakeContainerTypeMap(nameSpace, name, physicalName, args, ver, jarNm, depJars, primaryKeys, foreignKeys, partitionKey, ownerId, tenantId, uniqueId, mdElementId, schemaId, avroSchema, persist)
 
     var dJars: Array[String] = depJars
     if (msg.containerType.isInstanceOf[ContainerTypeDef]) // This should match
@@ -2037,7 +2053,7 @@ class MdMgr {
 
   @throws(classOf[AlreadyExistsException])
   @throws(classOf[NoSuchElementException])
-  def MakeMappedContainer(nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)], ver: Long, jarNm: String, depJars: Array[String], primaryKeys: List[(String, List[String])], foreignKeys: List[(String, List[String], String, List[String])], partitionKey: Array[String], ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema:String, recompile: Boolean = false): ContainerDef = {
+  def MakeMappedContainer(nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)], ver: Long, jarNm: String, depJars: Array[String], primaryKeys: List[(String, List[String])], foreignKeys: List[(String, List[String], String, List[String])], partitionKey: Array[String], ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema:String, recompile: Boolean = false, persist: Boolean /* = false */): ContainerDef = {
 
     val latestActiveContainer = Container(nameSpace, name, -1, false)
     if (latestActiveContainer != None) {
@@ -2055,7 +2071,7 @@ class MdMgr {
     }
 
     var container = new ContainerDef
-    container.containerType = MakeContainerTypeMap(nameSpace, name, physicalName, args, ver, jarNm, depJars, primaryKeys, foreignKeys, partitionKey, ownerId, tenantId, uniqueId, mdElementId, schemaId, avroSchema)
+    container.containerType = MakeContainerTypeMap(nameSpace, name, physicalName, args, ver, jarNm, depJars, primaryKeys, foreignKeys, partitionKey, ownerId, tenantId, uniqueId, mdElementId, schemaId, avroSchema, persist)
 
     var dJars: Array[String] = depJars
     if (container.containerType.isInstanceOf[ContainerTypeDef]) // This should match
@@ -2086,7 +2102,7 @@ class MdMgr {
     */
   @throws(classOf[AlreadyExistsException])
   @throws(classOf[NoSuchElementException])
-  def MakeMappedMsg(nameSpace: String, name: String, physicalName: String, argTypNmSpName: (String, String), argNames: List[String], ver: Long, jarNm: String, depJars: Array[String], primaryKeys: List[(String, List[String])], foreignKeys: List[(String, List[String], String, List[String])], partitionKey: Array[String], recompile: Boolean, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema:String): MessageDef = {
+  def MakeMappedMsg(nameSpace: String, name: String, physicalName: String, argTypNmSpName: (String, String), argNames: List[String], ver: Long, jarNm: String, depJars: Array[String], primaryKeys: List[(String, List[String])], foreignKeys: List[(String, List[String], String, List[String])], partitionKey: Array[String], recompile: Boolean, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema:String, persist: Boolean): MessageDef = {
 
     val latestActiveMessage = Message(nameSpace, name, -1, false)
     if (latestActiveMessage != None) {
@@ -2108,7 +2124,7 @@ class MdMgr {
     val args = argNames.map(elem => (msgNm, elem, typeNmSp, typeName, false, null)) //BUGBUG::Making all local Attributes and Collection Types does not handled
 
     var msg: MessageDef = new MessageDef
-    msg.containerType = MakeContainerTypeMap(nameSpace, name, physicalName, args, ver, jarNm, depJars, primaryKeys, foreignKeys, partitionKey, ownerId, tenantId, uniqueId, mdElementId, schemaId, avroSchema)
+    msg.containerType = MakeContainerTypeMap(nameSpace, name, physicalName, args, ver, jarNm, depJars, primaryKeys, foreignKeys, partitionKey, ownerId, tenantId, uniqueId, mdElementId, schemaId, avroSchema, persist)
 
     var dJars: Array[String] = depJars
     if (msg.containerType.isInstanceOf[ContainerTypeDef]) // This should match
@@ -2220,6 +2236,7 @@ class MdMgr {
       mdl.ObjectFormat(ObjFormatType.fPMML)
     }
     mdl.PhysicalName(physicalName)
+    mdl.tenantId = tenantId
     SetBaseElem(mdl, nameSpace, name, ver, jarNm, dJars, ownerId, tenantId, uniqueId, mdElementId)
 
     mdl
@@ -2290,197 +2307,195 @@ class MdMgr {
     typeDefs.addBinding(at.FullName, at)
   }
 
-  /**
-    * AddArrayBuffer catalogs an ArrayBuffer based type in the metadata manager's global typedefs map
-    *
-    * @param nameSpace - the array type name space
-    * @param name      - the array name.
-    * @param tpNameSp  - the name space of the array element type
-    * @param tpName    - the name for the element's type
-    * @param numDims   - (not currently used) the number of dimensions for this array type
-    * @param ver       - version info
-    *
-    */
-  // We should not have physicalName. This container type has type inside, which has PhysicalName
-  @throws(classOf[AlreadyExistsException])
-  @throws(classOf[NoSuchElementException])
-  def AddArrayBuffer(nameSpace: String, name: String, tpNameSp: String, tpName: String, numDims: Int, ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long): Unit = {
-    AddArrayBuffer(MakeArrayBuffer(nameSpace, name, tpNameSp, tpName, numDims, ownerId, tenantId, uniqueId, mdElementId, ver))
-  }
-
-  @throws(classOf[AlreadyExistsException])
-  def AddArrayBuffer(abt: ArrayBufTypeDef): Unit = {
-    if (Type(abt.FullName, -1, false) != None) {
-      throw AlreadyExistsException(s"ArrayBuffer ${abt.FullName} already exists.", null)
-    }
-    typeDefs.addBinding(abt.FullName, abt)
-  }
-
-  /**
-    * AddList catalogs an List based type in the metadata manager's global typedefs map
-    *
-    * @param nameSpace - the list's type namespace
-    * @param name      - the list name.
-    * @param tpNameSp  - the name space of the list item type
-    * @param tpName    - the name for the element's type
-    * @param ver       - version info
-    *
-    */
-  // We should not have physicalName. This container type has type inside, which has PhysicalName
-  @throws(classOf[AlreadyExistsException])
-  @throws(classOf[NoSuchElementException])
-  def AddList(nameSpace: String, name: String, tpNameSp: String, tpName: String, ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long): Unit = {
-    AddList(MakeList(nameSpace, name, tpNameSp, tpName, ver, ownerId, tenantId, uniqueId, mdElementId))
-  }
-
-  @throws(classOf[AlreadyExistsException])
-  def AddList(lst: ListTypeDef): Unit = {
-    if (Type(lst.FullName, -1, false) != None) {
-      throw AlreadyExistsException(s"List ${lst.FullName} already exists.", null)
-    }
-    typeDefs.addBinding(lst.FullName, lst)
-  }
-
-  /**
-    * AddQueue catalogs an Queue based type in the metadata manager's global typedefs map
-    *
-    * @param nameSpace - the list's type namespace
-    * @param name      - the list name.
-    * @param tpNameSp  - the name space of the list item type
-    * @param tpName    - the name for the element's type
-    * @param ver       - version info
-    *
-    */
-  // We should not have physicalName. This container type has type inside, which has PhysicalName
-  @throws(classOf[AlreadyExistsException])
-  @throws(classOf[NoSuchElementException])
-  def AddQueue(nameSpace: String, name: String, tpNameSp: String, tpName: String, ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long): Unit = {
-    AddQueue(MakeQueue(nameSpace, name, tpNameSp, tpName, ver, ownerId, tenantId, uniqueId, mdElementId))
-  }
-
-  @throws(classOf[AlreadyExistsException])
-  def AddQueue(queue: QueueTypeDef): Unit = {
-    if (Type(queue.FullName, -1, false) != None) {
-      throw AlreadyExistsException(s"A type with queue's name ${queue.FullName} already exists.", null)
-    }
-    typeDefs.addBinding(queue.FullName, queue)
-  }
-
-  /**
-    * AddSet catalogs an Set based type in the metadata manager's global typedefs map
-    *
-    * @param nameSpace - the set's type namespace
-    * @param name      - the set name.
-    * @param tpNameSp  - the namespace of the set's key element type
-    * @param tpName    - the name for the element's type
-    * @param ver       - version info
-    *
-    */
-  // We should not have physicalName. This container type has type inside, which has PhysicalName
-  @throws(classOf[AlreadyExistsException])
-  @throws(classOf[NoSuchElementException])
-  def AddSet(nameSpace: String, name: String, tpNameSp: String, tpName: String, ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long): Unit = {
-    AddSet(MakeSet(nameSpace, name, tpNameSp, tpName, ver, ownerId, tenantId, uniqueId, mdElementId))
-  }
-
-  @throws(classOf[AlreadyExistsException])
-  def AddSet(set: SetTypeDef): Unit = {
-    if (Type(set.FullName, -1, false) != None) {
-      throw AlreadyExistsException(s"Set ${set.FullName} already exists.", null)
-    }
-    typeDefs.addBinding(set.FullName, set)
-  }
-
-  /**
-    * AddImmutableSet catalogs an immutable Set based type in the metadata manager's global typedefs map
-    *
-    * @param nameSpace - the set's type namespace
-    * @param name      - the set name.
-    * @param tpNameSp  - the namespace of the set's key element type
-    * @param tpName    - the name for the element's type
-    * @param ver       - version info
-    *
-    */
-  // We should not have physicalName. This container type has type inside, which has PhysicalName
-  @throws(classOf[AlreadyExistsException])
-  @throws(classOf[NoSuchElementException])
-  def AddImmutableSet(nameSpace: String, name: String, tpNameSp: String, tpName: String, ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long): Unit = {
-    AddImmutableSet(MakeImmutableSet(nameSpace, name, tpNameSp, tpName, ver, ownerId, tenantId, uniqueId, mdElementId))
-  }
-
-  @throws(classOf[AlreadyExistsException])
-  def AddImmutableSet(set: ImmutableSetTypeDef): Unit = {
-    if (Type(set.FullName, -1, false) != None) {
-      throw AlreadyExistsException(s"Set ${set.FullName} already exists.", null)
-    }
-    typeDefs.addBinding(set.FullName, set)
-  }
-
-  /**
-    * MakeTreeSet catalogs an TreeSet based type in the metadata manager's global typedefs map
-    *
-    * @param nameSpace - the set's type namespace
-    * @param name      - the set name.
-    * @param tpNameSp  - the namespace of the set's key element type
-    * @param tpName    - the name for the element's type
-    * @param ver       - version info
-    *
-    */
-  // We should not have physicalName. This container type has type inside, which has PhysicalName
-  @throws(classOf[AlreadyExistsException])
-  @throws(classOf[NoSuchElementException])
-  def AddTreeSet(nameSpace: String, name: String, tpNameSp: String, tpName: String, ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long): Unit = {
-    AddTreeSet(MakeTreeSet(nameSpace, name, tpNameSp, tpName, ver, ownerId, tenantId, uniqueId, mdElementId))
-  }
-
-  @throws(classOf[AlreadyExistsException])
-  def AddTreeSet(tree: TreeSetTypeDef): Unit = {
-    if (Type(tree.FullName, -1, false) != None) {
-      throw AlreadyExistsException(s"TreeSet ${tree.FullName} already exists.", null)
-    }
-    typeDefs.addBinding(tree.FullName, tree)
-  }
-
-  /**
-    * AddSortedSet catalogs an SortedSetTypeDef based upon the supplied parameters.
-    *
-    * @param nameSpace - the set's type namespace
-    * @param name      - the set name.
-    * @param tpNameSp  - the namespace of the set's key element type
-    * @param tpName    - the name for the element's type
-    * @param ver       - version info
-    *
-    */
-  // We should not have physicalName. This container type has type inside, which has PhysicalName
-  @throws(classOf[AlreadyExistsException])
-  @throws(classOf[NoSuchElementException])
-  def AddSortedSet(nameSpace: String, name: String, tpNameSp: String, tpName: String, ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long): Unit = {
-    AddSortedSet(MakeSortedSet(nameSpace, name, tpNameSp, tpName, ver, ownerId, tenantId, uniqueId, mdElementId))
-  }
-
-  @throws(classOf[AlreadyExistsException])
-  def AddSortedSet(set: SortedSetTypeDef): Unit = {
-    if (Type(set.FullName, -1, false) != None) {
-      throw AlreadyExistsException(s"SortedSet ${set.FullName} cannot be created... a type by that name already exists.", null)
-    }
-    typeDefs.addBinding(set.FullName, set)
-  }
+//  /**
+//    * AddArrayBuffer catalogs an ArrayBuffer based type in the metadata manager's global typedefs map
+//    *
+//    * @param nameSpace - the array type name space
+//    * @param name      - the array name.
+//    * @param tpNameSp  - the name space of the array element type
+//    * @param tpName    - the name for the element's type
+//    * @param numDims   - (not currently used) the number of dimensions for this array type
+//    * @param ver       - version info
+//    *
+//    */
+//  // We should not have physicalName. This container type has type inside, which has PhysicalName
+//  @throws(classOf[AlreadyExistsException])
+//  @throws(classOf[NoSuchElementException])
+//  def AddArrayBuffer(nameSpace: String, name: String, tpNameSp: String, tpName: String, numDims: Int, ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long): Unit = {
+//    AddArrayBuffer(MakeArrayBuffer(nameSpace, name, tpNameSp, tpName, numDims, ownerId, tenantId, uniqueId, mdElementId, ver))
+//  }
+//
+//  @throws(classOf[AlreadyExistsException])
+//  def AddArrayBuffer(abt: ArrayBufTypeDef): Unit = {
+//    if (Type(abt.FullName, -1, false) != None) {
+//      throw AlreadyExistsException(s"ArrayBuffer ${abt.FullName} already exists.", null)
+//    }
+//    typeDefs.addBinding(abt.FullName, abt)
+//  }
+//
+//  /**
+//    * AddList catalogs an List based type in the metadata manager's global typedefs map
+//    *
+//    * @param nameSpace - the list's type namespace
+//    * @param name      - the list name.
+//    * @param tpNameSp  - the name space of the list item type
+//    * @param tpName    - the name for the element's type
+//    * @param ver       - version info
+//    *
+//    */
+//  // We should not have physicalName. This container type has type inside, which has PhysicalName
+//  @throws(classOf[AlreadyExistsException])
+//  @throws(classOf[NoSuchElementException])
+//  def AddList(nameSpace: String, name: String, tpNameSp: String, tpName: String, ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long): Unit = {
+//    AddList(MakeList(nameSpace, name, tpNameSp, tpName, ver, ownerId, tenantId, uniqueId, mdElementId))
+//  }
+//
+//  @throws(classOf[AlreadyExistsException])
+//  def AddList(lst: ListTypeDef): Unit = {
+//    if (Type(lst.FullName, -1, false) != None) {
+//      throw AlreadyExistsException(s"List ${lst.FullName} already exists.", null)
+//    }
+//    typeDefs.addBinding(lst.FullName, lst)
+//  }
+//
+//  /**
+//    * AddQueue catalogs an Queue based type in the metadata manager's global typedefs map
+//    *
+//    * @param nameSpace - the list's type namespace
+//    * @param name      - the list name.
+//    * @param tpNameSp  - the name space of the list item type
+//    * @param tpName    - the name for the element's type
+//    * @param ver       - version info
+//    *
+//    */
+//  // We should not have physicalName. This container type has type inside, which has PhysicalName
+//  @throws(classOf[AlreadyExistsException])
+//  @throws(classOf[NoSuchElementException])
+//  def AddQueue(nameSpace: String, name: String, tpNameSp: String, tpName: String, ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long): Unit = {
+//    AddQueue(MakeQueue(nameSpace, name, tpNameSp, tpName, ver, ownerId, tenantId, uniqueId, mdElementId))
+//  }
+//
+//  @throws(classOf[AlreadyExistsException])
+//  def AddQueue(queue: QueueTypeDef): Unit = {
+//    if (Type(queue.FullName, -1, false) != None) {
+//      throw AlreadyExistsException(s"A type with queue's name ${queue.FullName} already exists.", null)
+//    }
+//    typeDefs.addBinding(queue.FullName, queue)
+//  }
+//
+//  /**
+//    * AddSet catalogs an Set based type in the metadata manager's global typedefs map
+//    *
+//    * @param nameSpace - the set's type namespace
+//    * @param name      - the set name.
+//    * @param tpNameSp  - the namespace of the set's key element type
+//    * @param tpName    - the name for the element's type
+//    * @param ver       - version info
+//    *
+//    */
+//  // We should not have physicalName. This container type has type inside, which has PhysicalName
+//  @throws(classOf[AlreadyExistsException])
+//  @throws(classOf[NoSuchElementException])
+//  def AddSet(nameSpace: String, name: String, tpNameSp: String, tpName: String, ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long): Unit = {
+//    AddSet(MakeSet(nameSpace, name, tpNameSp, tpName, ver, ownerId, tenantId, uniqueId, mdElementId))
+//  }
+//
+//  @throws(classOf[AlreadyExistsException])
+//  def AddSet(set: SetTypeDef): Unit = {
+//    if (Type(set.FullName, -1, false) != None) {
+//      throw AlreadyExistsException(s"Set ${set.FullName} already exists.", null)
+//    }
+//    typeDefs.addBinding(set.FullName, set)
+//  }
+//
+//  /**
+//    * AddImmutableSet catalogs an immutable Set based type in the metadata manager's global typedefs map
+//    *
+//    * @param nameSpace - the set's type namespace
+//    * @param name      - the set name.
+//    * @param tpNameSp  - the namespace of the set's key element type
+//    * @param tpName    - the name for the element's type
+//    * @param ver       - version info
+//    *
+//    */
+//  // We should not have physicalName. This container type has type inside, which has PhysicalName
+//  @throws(classOf[AlreadyExistsException])
+//  @throws(classOf[NoSuchElementException])
+//  def AddImmutableSet(nameSpace: String, name: String, tpNameSp: String, tpName: String, ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long): Unit = {
+//    AddImmutableSet(MakeImmutableSet(nameSpace, name, tpNameSp, tpName, ver, ownerId, tenantId, uniqueId, mdElementId))
+//  }
+//
+//  @throws(classOf[AlreadyExistsException])
+//  def AddImmutableSet(set: ImmutableSetTypeDef): Unit = {
+//    if (Type(set.FullName, -1, false) != None) {
+//      throw AlreadyExistsException(s"Set ${set.FullName} already exists.", null)
+//    }
+//    typeDefs.addBinding(set.FullName, set)
+//  }
+//
+//  /**
+//    * MakeTreeSet catalogs an TreeSet based type in the metadata manager's global typedefs map
+//    *
+//    * @param nameSpace - the set's type namespace
+//    * @param name      - the set name.
+//    * @param tpNameSp  - the namespace of the set's key element type
+//    * @param tpName    - the name for the element's type
+//    * @param ver       - version info
+//    *
+//    */
+//  // We should not have physicalName. This container type has type inside, which has PhysicalName
+//  @throws(classOf[AlreadyExistsException])
+//  @throws(classOf[NoSuchElementException])
+//  def AddTreeSet(nameSpace: String, name: String, tpNameSp: String, tpName: String, ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long): Unit = {
+//    AddTreeSet(MakeTreeSet(nameSpace, name, tpNameSp, tpName, ver, ownerId, tenantId, uniqueId, mdElementId))
+//  }
+//
+//  @throws(classOf[AlreadyExistsException])
+//  def AddTreeSet(tree: TreeSetTypeDef): Unit = {
+//    if (Type(tree.FullName, -1, false) != None) {
+//      throw AlreadyExistsException(s"TreeSet ${tree.FullName} already exists.", null)
+//    }
+//    typeDefs.addBinding(tree.FullName, tree)
+//  }
+//
+//  /**
+//    * AddSortedSet catalogs an SortedSetTypeDef based upon the supplied parameters.
+//    *
+//    * @param nameSpace - the set's type namespace
+//    * @param name      - the set name.
+//    * @param tpNameSp  - the namespace of the set's key element type
+//    * @param tpName    - the name for the element's type
+//    * @param ver       - version info
+//    *
+//    */
+//  // We should not have physicalName. This container type has type inside, which has PhysicalName
+//  @throws(classOf[AlreadyExistsException])
+//  @throws(classOf[NoSuchElementException])
+//  def AddSortedSet(nameSpace: String, name: String, tpNameSp: String, tpName: String, ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long): Unit = {
+//    AddSortedSet(MakeSortedSet(nameSpace, name, tpNameSp, tpName, ver, ownerId, tenantId, uniqueId, mdElementId))
+//  }
+//
+//  @throws(classOf[AlreadyExistsException])
+//  def AddSortedSet(set: SortedSetTypeDef): Unit = {
+//    if (Type(set.FullName, -1, false) != None) {
+//      throw AlreadyExistsException(s"SortedSet ${set.FullName} cannot be created... a type by that name already exists.", null)
+//    }
+//    typeDefs.addBinding(set.FullName, set)
+//  }
 
   /**
     * AddMap catalogs a scala.collection.mutable.Map based type in the metadata manager's global typedefs map
     *
     * @param nameSpace - the map type's namespace
     * @param name      - the map name.
-    * @param key       - the namespace and name for the map's key
-    * @param value     - the namespace and name for the map's value
     * @param ver       - version info
     *
     */
   // We should not have physicalName. This container type has type inside, which has PhysicalName
   @throws(classOf[AlreadyExistsException])
   @throws(classOf[NoSuchElementException])
-  def AddMap(nameSpace: String, name: String, key: (String, String), value: (String, String), ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long): Unit = {
-    AddMap(MakeMap(nameSpace, name, key, value, ver, ownerId, tenantId, uniqueId, mdElementId))
+  def AddMap(nameSpace: String, name: String, valueNsp: String, valueName: String, ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long): Unit = {
+    AddMap(MakeMap(nameSpace, name, valueNsp, valueName, ver, ownerId, tenantId, uniqueId, mdElementId))
   }
 
   @throws(classOf[AlreadyExistsException])
@@ -2491,81 +2506,81 @@ class MdMgr {
     typeDefs.addBinding(map.FullName, map)
   }
 
-  /**
-    * AddImmutableMap catalogs a scala.collection.immutable.Map based type in the metadata manager's global typedefs map
-    *
-    * @param nameSpace - the map type's namespace
-    * @param name      - the map name.
-    * @param key       - the namespace and name for the map's key
-    * @param value     - the namespace and name for the map's value
-    * @param ver       - version info
-    *
-    */
-  // We should not have physicalName. This container type has type inside, which has PhysicalName
-  @throws(classOf[AlreadyExistsException])
-  @throws(classOf[NoSuchElementException])
-  def AddImmutableMap(nameSpace: String, name: String, key: (String, String), value: (String, String), ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long): Unit = {
-    AddImmutableMap(MakeImmutableMap(nameSpace, name, key, value, ver, ownerId, tenantId, uniqueId, mdElementId))
-  }
-
-  @throws(classOf[AlreadyExistsException])
-  def AddImmutableMap(map: ImmutableMapTypeDef): Unit = {
-    if (Type(map.FullName, -1, false) != None) {
-      throw AlreadyExistsException(s"Map ${map.FullName} already exists.", null)
-    }
-    typeDefs.addBinding(map.FullName, map)
-  }
-
-  /**
-    * MakeHashMap catalogs a HashMap based type in the metadata manager's global typedefs map
-    *
-    * @param nameSpace - the map type's namespace
-    * @param name      - the map name.
-    * @param key       - the namespace and name for the map's key
-    * @param value     - the namespace and name for the map's value
-    * @param ver       - version info
-    *
-    */
-  // We should not have physicalName. This container type has type inside, which has PhysicalName
-  @throws(classOf[AlreadyExistsException])
-  @throws(classOf[NoSuchElementException])
-  def AddHashMap(nameSpace: String, name: String, key: (String, String), value: (String, String), ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long): Unit = {
-    AddHashMap(MakeHashMap(nameSpace, name, key, value, ver, ownerId, tenantId, uniqueId, mdElementId))
-  }
-
-  @throws(classOf[AlreadyExistsException])
-  def AddHashMap(hmap: HashMapTypeDef): Unit = {
-    if (Type(hmap.FullName, -1, false) != None) {
-      throw AlreadyExistsException(s"HashMap ${hmap.FullName} already exists.", null)
-    }
-    typeDefs.addBinding(hmap.FullName, hmap)
-  }
-
-  /**
-    * MakeTupleType catalogs a Tuple based type in the metadata manager's global typedefs map
-    *
-    * @param nameSpace - the map type's namespace
-    * @param name      - the map name.
-    * @param tuples    - an array of (namespace,typename) pairs that correspond to each tuple element
-    * @param ver       - version info
-    *
-    *                  Note: Between one and twenty-two elements may be specified in the tuples array.
-    *
-    */
-  // We should not have physicalName. This container type has type inside, which has PhysicalName
-  @throws(classOf[AlreadyExistsException])
-  @throws(classOf[NoSuchElementException])
-  def AddTupleType(nameSpace: String, name: String, tuples: Array[(String, String)], ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long): Unit = {
-    AddTupleType(MakeTupleType(nameSpace, name, tuples, ver, ownerId, tenantId, uniqueId, mdElementId))
-  }
-
-  @throws(classOf[AlreadyExistsException])
-  def AddTupleType(tt: TupleTypeDef): Unit = {
-    if (Type(tt.FullName, -1, false) != None) {
-      throw AlreadyExistsException(s"Typle ${tt.FullName} already exists.", null)
-    }
-    typeDefs.addBinding(tt.FullName, tt)
-  }
+//  /**
+//    * AddImmutableMap catalogs a scala.collection.immutable.Map based type in the metadata manager's global typedefs map
+//    *
+//    * @param nameSpace - the map type's namespace
+//    * @param name      - the map name.
+//    * @param key       - the namespace and name for the map's key
+//    * @param value     - the namespace and name for the map's value
+//    * @param ver       - version info
+//    *
+//    */
+//  // We should not have physicalName. This container type has type inside, which has PhysicalName
+//  @throws(classOf[AlreadyExistsException])
+//  @throws(classOf[NoSuchElementException])
+//  def AddImmutableMap(nameSpace: String, name: String, key: (String, String), value: (String, String), ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long): Unit = {
+//    AddImmutableMap(MakeImmutableMap(nameSpace, name, key, value, ver, ownerId, tenantId, uniqueId, mdElementId))
+//  }
+//
+//  @throws(classOf[AlreadyExistsException])
+//  def AddImmutableMap(map: ImmutableMapTypeDef): Unit = {
+//    if (Type(map.FullName, -1, false) != None) {
+//      throw AlreadyExistsException(s"Map ${map.FullName} already exists.", null)
+//    }
+//    typeDefs.addBinding(map.FullName, map)
+//  }
+//
+//  /**
+//    * MakeHashMap catalogs a HashMap based type in the metadata manager's global typedefs map
+//    *
+//    * @param nameSpace - the map type's namespace
+//    * @param name      - the map name.
+//    * @param key       - the namespace and name for the map's key
+//    * @param value     - the namespace and name for the map's value
+//    * @param ver       - version info
+//    *
+//    */
+//  // We should not have physicalName. This container type has type inside, which has PhysicalName
+//  @throws(classOf[AlreadyExistsException])
+//  @throws(classOf[NoSuchElementException])
+//  def AddHashMap(nameSpace: String, name: String, key: (String, String), value: (String, String), ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long): Unit = {
+//    AddHashMap(MakeHashMap(nameSpace, name, key, value, ver, ownerId, tenantId, uniqueId, mdElementId))
+//  }
+//
+//  @throws(classOf[AlreadyExistsException])
+//  def AddHashMap(hmap: HashMapTypeDef): Unit = {
+//    if (Type(hmap.FullName, -1, false) != None) {
+//      throw AlreadyExistsException(s"HashMap ${hmap.FullName} already exists.", null)
+//    }
+//    typeDefs.addBinding(hmap.FullName, hmap)
+//  }
+//
+//  /**
+//    * MakeTupleType catalogs a Tuple based type in the metadata manager's global typedefs map
+//    *
+//    * @param nameSpace - the map type's namespace
+//    * @param name      - the map name.
+//    * @param tuples    - an array of (namespace,typename) pairs that correspond to each tuple element
+//    * @param ver       - version info
+//    *
+//    *                  Note: Between one and twenty-two elements may be specified in the tuples array.
+//    *
+//    */
+//  // We should not have physicalName. This container type has type inside, which has PhysicalName
+//  @throws(classOf[AlreadyExistsException])
+//  @throws(classOf[NoSuchElementException])
+//  def AddTupleType(nameSpace: String, name: String, tuples: Array[(String, String)], ver: Long, ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long): Unit = {
+//    AddTupleType(MakeTupleType(nameSpace, name, tuples, ver, ownerId, tenantId, uniqueId, mdElementId))
+//  }
+//
+//  @throws(classOf[AlreadyExistsException])
+//  def AddTupleType(tt: TupleTypeDef): Unit = {
+//    if (Type(tt.FullName, -1, false) != None) {
+//      throw AlreadyExistsException(s"Typle ${tt.FullName} already exists.", null)
+//    }
+//    typeDefs.addBinding(tt.FullName, tt)
+//  }
 
   /**
     * Construct a FunctionDef from the supplied arguments and add it to this MdMgr instance
@@ -2763,7 +2778,7 @@ class MdMgr {
   @throws(classOf[AlreadyExistsException])
   @throws(classOf[NoSuchElementException])
   def AddFixedMsg(nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)], ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema:String, ver: Long = 1, jarNm: String = null, depJars: Array[String] = Array[String](), primaryKeys: List[(String, List[String])] = null, foreignKeys: List[(String, List[String], String, List[String])] = null, partitionKey: Array[String] = null): Unit = {
-    AddMsg(MakeFixedMsg(nameSpace, name, physicalName, args, ownerId, tenantId, uniqueId, mdElementId, schemaId, avroSchema, ver, jarNm, depJars, primaryKeys, foreignKeys, partitionKey))
+    AddMsg(MakeFixedMsg(nameSpace, name, physicalName, args, ownerId, tenantId, uniqueId, mdElementId, schemaId, avroSchema, ver, jarNm, depJars, primaryKeys, foreignKeys, partitionKey, false, false))
   }
 
   /**
@@ -2784,7 +2799,7 @@ class MdMgr {
   @throws(classOf[AlreadyExistsException])
   @throws(classOf[NoSuchElementException])
   def AddMappedMsg(nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)], ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema:String, ver: Long = 1, jarNm: String = null, depJars: Array[String] = Array[String](), primaryKeys: List[(String, List[String])] = null, foreignKeys: List[(String, List[String], String, List[String])] = null, partitionKey: Array[String] = null): Unit = {
-    AddMsg(MakeMappedMsg(nameSpace, name, physicalName, args, ver, jarNm, depJars, primaryKeys, foreignKeys, partitionKey, false, ownerId, tenantId, uniqueId, mdElementId, schemaId, avroSchema))
+    AddMsg(MakeMappedMsg(nameSpace, name, physicalName, args, ver, jarNm, depJars, primaryKeys, foreignKeys, partitionKey, false, ownerId, tenantId, uniqueId, mdElementId, schemaId, avroSchema, false))
   }
 
   /**
@@ -2805,7 +2820,7 @@ class MdMgr {
   @throws(classOf[AlreadyExistsException])
   @throws(classOf[NoSuchElementException])
   def AddMappedMsg(nameSpace: String, name: String, physicalName: String, argTypNmSpName: (String, String), argNames: List[String], ver: Long, jarNm: String, depJars: Array[String], primaryKeys: List[(String, List[String])], foreignKeys: List[(String, List[String], String, List[String])], partitionKey: Array[String], ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema:String): Unit = {
-    AddMsg(MakeMappedMsg(nameSpace, name, physicalName, argTypNmSpName, argNames, ver, jarNm, depJars, primaryKeys, foreignKeys, partitionKey, false, ownerId, tenantId, uniqueId, mdElementId, schemaId, avroSchema))
+    AddMsg(MakeMappedMsg(nameSpace, name, physicalName, argTypNmSpName, argNames, ver, jarNm, depJars, primaryKeys, foreignKeys, partitionKey, false, ownerId, tenantId, uniqueId, mdElementId, schemaId, avroSchema, false))
   }
 
   @throws(classOf[AlreadyExistsException])
@@ -2823,8 +2838,10 @@ class MdMgr {
     val typ = msg.containerType.asInstanceOf[ContainerTypeDef]
     typeDefs.addBinding(typ.FullName, typ)
       msgDefs.addBinding(msg.FullName, msg)
-    if (msg.containerType != null && msg.containerType.schemaId > 0)
+    if (msg.containerType != null && msg.containerType.schemaId > 0) {
+      schemaIdToElemntIdMap(msg.containerType.schemaId) = msg.MdElementId
       schemaIdMap(msg.containerType.schemaId) = msg
+    }
     else
       logger.error("SchemaId not found for Container:%s with Version:%d".format(msg.FullName, msg.Version))
     elementIdMap(msg.MdElementId) = msg
@@ -2850,7 +2867,7 @@ class MdMgr {
   @throws(classOf[AlreadyExistsException])
   @throws(classOf[NoSuchElementException])
   def AddFixedContainer(nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)], ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema:String, ver: Long = 1, jarNm: String = null, depJars: Array[String] = Array[String](), primaryKeys: List[(String, List[String])] = null, foreignKeys: List[(String, List[String], String, List[String])] = null, partitionKey: Array[String] = null): Unit = {
-    AddContainer(MakeFixedContainer(nameSpace, name, physicalName, args, ownerId, tenantId, uniqueId, mdElementId, schemaId, avroSchema, ver, jarNm, depJars, primaryKeys, foreignKeys, partitionKey))
+    AddContainer(MakeFixedContainer(nameSpace, name, physicalName, args, ownerId, tenantId, uniqueId, mdElementId, schemaId, avroSchema, ver, jarNm, depJars, primaryKeys, foreignKeys, partitionKey, false, false))
   }
 
   /**
@@ -2871,7 +2888,7 @@ class MdMgr {
   @throws(classOf[AlreadyExistsException])
   @throws(classOf[NoSuchElementException])
   def AddMappedContainer(nameSpace: String, name: String, physicalName: String, args: List[(String, String, String, String, Boolean, String)], ownerId: String, tenantId: String, uniqueId: Long, mdElementId: Long, schemaId: Int, avroSchema:String, ver: Long = 1, jarNm: String = null, depJars: Array[String] = Array[String](), primaryKeys: List[(String, List[String])] = null, foreignKeys: List[(String, List[String], String, List[String])] = null, partitionKey: Array[String] = null): Unit = {
-    AddContainer(MakeMappedContainer(nameSpace, name, physicalName, args, ver, jarNm, depJars, primaryKeys, foreignKeys, partitionKey, ownerId, tenantId, uniqueId, mdElementId, schemaId, avroSchema))
+    AddContainer(MakeMappedContainer(nameSpace, name, physicalName, args, ver, jarNm, depJars, primaryKeys, foreignKeys, partitionKey, ownerId, tenantId, uniqueId, mdElementId, schemaId, avroSchema, false, false))
   }
 
   @throws(classOf[AlreadyExistsException])
@@ -2889,8 +2906,10 @@ class MdMgr {
     val typ = container.containerType.asInstanceOf[ContainerTypeDef]
     typeDefs.addBinding(typ.FullName, typ)
     containerDefs.addBinding(container.FullName, container)
-    if (container.containerType != null && container.containerType.schemaId > 0)
+    if (container.containerType != null && container.containerType.schemaId > 0) {
       schemaIdMap(container.containerType.schemaId) = container
+      schemaIdToElemntIdMap(container.containerType.schemaId) = container.MdElementId
+    }
     else
       logger.error("SchemaId not found for Container:%s with Version:%d".format(container.FullName, container.Version))
     elementIdMap(container.MdElementId) = container
@@ -3057,7 +3076,45 @@ class MdMgr {
     return ""
   }
 
-    /**
+  /* TenantId functions */
+  def AddTenantInfo(tenantId: String, description: String, primaryDataStore: String, cacheConfig: String): Unit = {
+    AddTenantInfo(MakeTenantInfo(tenantId, description, primaryDataStore, cacheConfig))
+  }
+
+  def AddTenantInfo(tenant : TenantInfo) : Boolean = {
+    if (tenantIdMap.contains(tenant.tenantId.trim.toLowerCase))
+      throw new AlreadyExistsException(s"Tenant ${tenant.tenantId} already exists.", null)
+    tenantIdMap(tenant.tenantId.trim.toLowerCase) = tenant
+    true
+  }
+
+  def UpdateTenantInfo(tenant : TenantInfo) : Boolean = {
+    if (tenant.tenantId.trim.equalsIgnoreCase("System") && tenantIdMap.contains("System".toLowerCase)) {
+      throw new AlreadyExistsException(s"System is system tenant. you can not repalce it.", null)
+    }
+    tenantIdMap(tenant.tenantId.toLowerCase) = tenant // Not really checking for existance
+    true
+  }
+
+  def MakeTenantInfo(tenantId: String, description: String, primaryDataStore: String, cacheConfig: String): TenantInfo = {
+    new TenantInfo(tenantId.trim, description, primaryDataStore, cacheConfig)
+  }
+
+  def GetTenantInfo(tenantId: String) : TenantInfo = {
+    tenantIdMap.getOrElse(tenantId.trim.toLowerCase, null)
+  }
+
+  def GetAllTenantInfos : Array[TenantInfo] = {
+    tenantIdMap.values.toArray
+  }
+
+  def RemoveTenantInfo(tenantId: String): Unit = {
+    if (tenantIdMap.contains(tenantId.trim.toLowerCase())) {
+      tenantIdMap -= tenantId.trim.toLowerCase()
+    }
+  }
+
+  /**
       * Construct a SerializeDeserializeConfig instance and add it to the metadata.
       * @param nameSpace the namespace for this SerializeDeserializeConfig
       * @param name its serializer name
@@ -3154,6 +3211,75 @@ class MdMgr {
         cfg
     }
 
+    /**
+      * Add an adapter message binding to the metadata.  An AdapterMessageBinding describes a triple: the adapter,
+      * a message it either consumes or produces, and a serializer that can interpret a stream represention of an
+      * instance of this message or produce a serialized representation of same.
+      *
+      * @param adapterName the name of the adapter that will have this message binding
+      * @param namespaceMsgName the message that can be consumed by the specified serializer
+      * @param namespaceSerializerName the serializer that can deserialize and serialize the message
+      * @param serializerOptions (optional) options used by the serializer to configure itself
+      */
+    @throws(classOf[AlreadyExistsException])
+    def AddAdapterMessageBinding(adapterName: String
+                      , namespaceMsgName : String
+                      , namespaceSerializerName: String
+                      , serializerOptions : scala.collection.immutable.Map[String,String]
+                                 = scala.collection.immutable.Map[String,String]()): Unit = {
+
+        AddAdapterMessageBinding(MakeAdapterMessageBinding(adapterName
+                                                        , namespaceMsgName
+                                                        , namespaceSerializerName
+                                                        , serializerOptions))
+    }
+
+    /**
+      * Add a AdapterMessageBinding instance to the map designated to hold them.  The map key is constructed from
+      * the triple:
+      *
+      *     binding.adapterName.binding.messageName.binding.serializer
+      *
+      * folded to lower case.
+      *
+      * @param binding the prepared SerializeDeserializeConfig object
+      * @return true if the object was added to the map (exception is thrown if one exists with this name)
+      */
+
+    @throws(classOf[AlreadyExistsException])
+    def AddAdapterMessageBinding(binding : AdapterMessageBinding) : Boolean = {
+        val key : String = s"${binding.adapterName}.${binding.messageName}.${binding.serializer}".toLowerCase
+        val added : Boolean = if (adapterMessageBindings.contains(key)) {
+            throw AlreadyExistsException(s"an AdapterMessageBinding with key $key already exists... binding could not be added.", null)
+        } else {
+            adapterMessageBindings(key) = binding
+            true
+        }
+        added
+    }
+
+    /**
+      * Make an AdapterMessageBinding instance
+      * @param adapterName the adapter's name
+      * @param namespaceMsgName the message that can be consumed by the specified serializer
+      * @param namespaceSerializerName the serializer that can deserialize and serialize the message
+      * @param serializerOptions (optional) options that should be used by the serializer to configure itself
+      * @return AdapterMessageBinding instance
+      */
+    def MakeAdapterMessageBinding(  adapterName: String
+                                  , namespaceMsgName : String
+                                  , namespaceSerializerName: String
+                                  , serializerOptions : scala.collection.immutable.Map[String,String]
+                                        = scala.collection.immutable.Map[String,String]())
+                : AdapterMessageBinding = {
+
+        /** Instantiate the AdapterMessageBinding.  Update its base element with basic id information */
+        val binding: AdapterMessageBinding = new AdapterMessageBinding(  adapterName
+                                                                       , namespaceMsgName
+                                                                       , namespaceSerializerName
+                                                                       , serializerOptions)
+        binding
+    }
 
     /** Retrieve the SerializeDeserializerConfig with the supplied namespace.name
       *
@@ -3237,18 +3363,18 @@ class MdMgr {
     }
   }
 
-  def MakeAdapter(name: String, typeString: String, dataFormat: String, className: String,
-                  jarName: String, dependencyJars: List[String], adapterSpecificCfg: String): AdapterInfo = {
+  def MakeAdapter(name: String, typeString: String, className: String, jarName: String, dependencyJars: List[String], adapterSpecificCfg: String, tenantId: String, fullAdapterConfig: String): AdapterInfo = {
     val ai = new AdapterInfo
     ai.name = name
     ai.typeString = typeString
-    ai.dataFormat = dataFormat
     ai.className = className
     ai.jarName = jarName
+    ai.tenantId = tenantId
     if (dependencyJars != null) {
       ai.dependencyJars = dependencyJars.toArray
     }
     ai.adapterSpecificCfg = adapterSpecificCfg
+    ai.fullAdapterConfig = fullAdapterConfig
     ai
   }
 
@@ -3343,7 +3469,7 @@ trait LogTrait {
 object MdMgr extends LogTrait {
 
   /** Static variables */
-  val mdMgr = new MdMgr;
+  var mdMgr = new MdMgr;
   val sysNS = "System"
   // system name space
   var IdCntr = 0;
@@ -3356,6 +3482,13 @@ object MdMgr extends LogTrait {
     * @return mdMgr
     */
   def GetMdMgr = mdMgr
+
+  // Reset MdMgr -- Create new MdMgr
+  // NOTE NOTE:: All previous hold mdmgr will not update any more
+  // Mainly used for test suite
+  def ResetMdMgr: Unit = {
+    mdMgr = new MdMgr;
+  }
 
   def SysNS = sysNS
 
@@ -3522,6 +3655,7 @@ object MdMgr extends LogTrait {
     val modelNmSpace: String = buffer.toString
     (modelNmSpace, modelNm)
   }
+
 }
 
 

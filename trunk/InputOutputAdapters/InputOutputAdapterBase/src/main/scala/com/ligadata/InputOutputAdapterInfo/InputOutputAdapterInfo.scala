@@ -114,13 +114,7 @@ trait OutputAdapter extends AdaptersSerializeDeserializers with Monitorable {
   // Configuration
   val inputConfig: AdapterConfiguration
 
-  def send(tnxCtxt: TransactionContext, outputContainers: Array[ContainerInterface]): Unit = {
-    val (outContainers, serializedContainerData, serializerNames) = serialize(tnxCtxt, outputContainers)
-    send(tnxCtxt, outContainers, serializedContainerData, serializerNames)
-  }
-
-  // This is protected override method. After applying serialization, pass original messages, Serialized data & Serializer names
-  protected def send(tnxCtxt: TransactionContext, outputContainers: Array[ContainerInterface], serializedContainerData: Array[Array[Byte]], serializerNames: Array[String]): Unit
+  def send(tnxCtxt: TransactionContext, outputContainers: Array[ContainerInterface]): Unit
 
   def Shutdown: Unit
 
@@ -150,7 +144,7 @@ trait ExecContext extends AdaptersSerializeDeserializers {
   private val transService = new SimpleTransService
   transService.init(txnIdsRangeForPartition)
 
-  private def SendFailedEvent(data: Array[Byte], deserializer: String, failedMsg: String, uk: String, uv: String, e: Throwable): Unit = {
+  final def SendFailedEvent(data: Array[Byte], deserializer: String, failedMsg: String, uk: String, uv: String, e: Throwable): Unit = {
     val failedTm = failedEventDtFormat.format(new java.util.Date(System.currentTimeMillis))
     val evntData = new String(data)
 
@@ -159,9 +153,9 @@ trait ExecContext extends AdaptersSerializeDeserializers {
 
     if (nodeContext != null && nodeContext.getEnvCtxt() != null) {
       // getInstance of Failed Event
-      val msgType = "System.FailedEvents"
-      val failEventPartInfo = "System.FailedEventsPartitionKeyValue"
-      val failEventFailure = "System.FailedEventsMessageInfo"
+      val msgType = "com.ligadata.KamanjaBase.FailedEvents"
+      val failEventPartInfo = "com.ligadata.KamanjaBase.FailedEventsPartitionKeyValue"
+      val failEventFailure = "com.ligadata.KamanjaBase.FailedEventsMessageInfo"
       try {
         val failureInfo = nodeContext.getEnvCtxt().getContainerInstance(failEventFailure)
         val partInfo = nodeContext.getEnvCtxt().getContainerInstance(failEventPartInfo)
@@ -197,10 +191,7 @@ trait ExecContext extends AdaptersSerializeDeserializers {
     }
   }
 
-  final def execute(data: Array[Byte], uniqueKey: PartitionUniqueRecordKey, uniqueVal: PartitionUniqueRecordValue, readTmMilliSecs: Long): Unit = {
-    var msg: ContainerInterface = null
-    var deserializerName: String = ""
-
+  final def execute(msg: ContainerInterface, data: Array[Byte], uniqueKey: PartitionUniqueRecordKey, uniqueVal: PartitionUniqueRecordValue, readTmMilliSecs: Long): Unit = {
     var uk = ""
     var uv = ""
 
@@ -213,38 +204,60 @@ trait ExecContext extends AdaptersSerializeDeserializers {
       }
     }
 
+    var txnCtxt: TransactionContext = null
+    try {
+      val transId = transService.getNextTransId
+      val msgEvent = nodeContext.getEnvCtxt().getContainerInstance("System.KamanjaMessageEvent")
+      txnCtxt = new TransactionContext(transId, nodeContext, data, EventOriginInfo(uk, uv), readTmMilliSecs, msgEvent)
+      LOG.debug("Processing uniqueKey:%s, uniqueVal:%s, Datasize:%d".format(uk, uv, data.size))
+      txnCtxt.setInitialMessage("", msg)
+      executeMessage(txnCtxt): Unit
+    } catch {
+      case e: Throwable => {
+        LOG.error("Failed to execute message : " + msg.getFullTypeName, e)
+      }
+    } finally {
+      // Commit. Writing into OutputAdapters & Storage Adapters
+      nodeContext.getEnvCtxt().commitData(txnCtxt);
+    }
+  }
+
+  // Raw data deserialized and send to another send method which takes msg
+  final def execute(data: Array[Byte], uniqueKey: PartitionUniqueRecordKey, uniqueVal: PartitionUniqueRecordValue, readTmMilliSecs: Long): Unit = {
+    var msg: ContainerInterface = null
+    var deserializerName: String = ""
+
+
     try {
       val (tMsg, tDeserializerName) = deserialize(data)
       msg = tMsg
       deserializerName = tDeserializerName
+      execute(msg, data, uniqueKey, uniqueVal, readTmMilliSecs)
     } catch {
       case e: Throwable => {
         //FIXME:- Need to populate deserializer & failedMsg -- Begin
         val deserializer = ""
         val failedMsg = ""
         //FIXME:- Need to populate deserializer & failedMsg -- End
+
+        var uk = ""
+        var uv = ""
+
+        try {
+          uk = if (uniqueKey != null) uniqueKey.Serialize else ""
+          uv = if (uniqueVal != null) uniqueVal.Serialize else ""
+        } catch {
+          case e: Throwable => {
+            LOG.error("Failed to serialize PartitionUniqueRecordKey and/or PartitionUniqueRecordValue", e)
+          }
+        }
+
         SendFailedEvent(data, deserializer, failedMsg, uk, uv, e)
       }
     }
-
-    try {
-      val transId = transService.getNextTransId
-      val msgEvent = nodeContext.getEnvCtxt().getContainerInstance("System.KamanjaMessageEvent")
-      val txnCtxt = new TransactionContext(transId, nodeContext, data, EventOriginInfo(uk, uv), readTmMilliSecs, msgEvent)
-      LOG.debug("Processing uniqueKey:%s, uniqueVal:%s, Datasize:%d".format(uk, uv, data.size))
-      executeMessage(txnCtxt, deserializerName): Unit
-    } catch {
-      case e: Throwable => {
-        LOG.error("Failed to serialize PartitionUniqueRecordKey and/or PartitionUniqueRecordValue", e)
-      }
-    } finally {
-      // Commit. Writing into OutputAdapters & Storage Adapters
-      // nodeContext.getEnvCtxt().CommitData();
-    }
-
   }
 
-  protected def executeMessage(txnCtxt: TransactionContext, deserializerName: String): Unit
+  protected def executeMessage(txnCtxt: TransactionContext): Unit
 }
 
 trait ExecContextFactory {

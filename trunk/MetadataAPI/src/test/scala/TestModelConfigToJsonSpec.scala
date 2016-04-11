@@ -54,6 +54,7 @@ class TestModelConfigToJsonSpec extends FunSpec with LocalTestFixtures with Befo
   var fileList: List[String] = null
   var newVersion: String = null
   val userid: Option[String] = Some("test")
+  val tenantId: Option[String] = Some("testTenantId")
 
   private val loggerName = this.getClass.getName
   private val logger = LogManager.getLogger(loggerName)
@@ -400,6 +401,7 @@ class TestModelConfigToJsonSpec extends FunSpec with LocalTestFixtures with Befo
 	res = MetadataAPIImpl.AddModel(ModelType.KPMML, // modelType
 				       modStr, // input
 				       userid,   // optUserid
+				       tenantId,
 				       None,   // optModelName
 				       None,   // optVersion
 				       None,   // optMsgConsumed
@@ -559,6 +561,7 @@ class TestModelConfigToJsonSpec extends FunSpec with LocalTestFixtures with Befo
 	res = MetadataAPIImpl.AddModel(ModelType.SCALA, // modelType
 				       modStr, // input
 				       userid,   // optUserid
+				       tenantId,
 				       Some("HelloWorld2Model"),   // optModelName
 				       None,   // optVersion
 				       None,   // optMsgConsumed

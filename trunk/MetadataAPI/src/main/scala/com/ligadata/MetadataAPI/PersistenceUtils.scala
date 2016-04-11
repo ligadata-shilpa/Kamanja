@@ -22,6 +22,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.text.ParseException
+import com.ligadata.KamanjaVersion.KamanjaVersion
 import com.ligadata.MetadataAPI.MetadataAPI.ModelType
 import com.ligadata.MetadataAPI.MetadataAPI.ModelType.ModelType
 
@@ -89,8 +90,12 @@ object PersistenceUtils {
   private var tableStoreMap: Map[String, (String, DataStore)] = Map()
   private val storageDefaultTime = 0L
   private val storageDefaultTxnId = 0L
-  lazy val serializerType = "kryo"
-  lazy val serializer = SerializerManager.GetSerializer(serializerType)
+  lazy val serializerType = "json4s"//"kryo"
+  //lazy val serializer = SerializerManager.GetSerializer(serializerType)
+
+  lazy val versionStr = s"${KamanjaVersion.getMajorVersion}.${KamanjaVersion.getMinorVersion}.${KamanjaVersion.getMicroVersion}"
+  lazy val excludeSystemJars = Set(s"ExtDependencyLibs_2.11-${versionStr}.jar", s"ExtDependencyLibs2_2.11-${versionStr}.jar", s"KamanjaInternalDeps_2.11-${versionStr}.jar",
+                                      s"ExtDependencyLibs_2.10-${versionStr}.jar", s"ExtDependencyLibs2_2.10-${versionStr}.jar", s"KamanjaInternalDeps_2.10-${versionStr}.jar")
 
   def GetMainDS: DataStore = mainDS
 
@@ -132,7 +137,7 @@ object PersistenceUtils {
     val k = Key(storageDefaultTime, Array(bucketKeyStr), storageDefaultTxnId, 0)
 
     try {
-      store.put(null, containerName, k, serializerTyp, value, true)
+      store.put(null, containerName, k, serializerTyp, value)
     } catch {
       case e: Exception => {
         logger.error("Failed to insert/update object for : " + bucketKeyStr, e)
@@ -162,7 +167,7 @@ object PersistenceUtils {
     })
 
     try {
-      store.put(null, Array((containerName, true, storeObjects)))
+      store.put(null, Array((containerName, storeObjects)))
     } catch {
       case e: Exception => {
         logger.error("Failed to insert/update objects for : " + keyList.mkString(","), e)
@@ -261,7 +266,7 @@ object PersistenceUtils {
       objList.foreach(obj => {
         obj.tranId = tranId
         val key = (getObjectType(obj) + "." + obj.FullNameWithVer).toLowerCase
-        var value = serializer.SerializeObjectToByteArray(obj)
+        var value = MetadataAPISerialization.serializeObjectToJson(obj).getBytes //serializer.SerializeObjectToByteArray(obj)
         keyList(i) = key
         valueList(i) = value
         i = i + 1
@@ -294,7 +299,7 @@ object PersistenceUtils {
       objList.foreach(obj => {
         obj.tranId = tranId
         val key = (getObjectType(obj) + "." + obj.FullNameWithVer).toLowerCase
-        var value = serializer.SerializeObjectToByteArray(obj)
+        var value = MetadataAPISerialization.serializeObjectToJson(obj).getBytes//serializer.SerializeObjectToByteArray(obj)
         val elemTyp = getMdElemTypeName(obj)
 
         val k = Key(storageDefaultTime, Array(key), storageDefaultTxnId, 0)
@@ -311,17 +316,17 @@ object PersistenceUtils {
         i = i + 1
       })
 
-      var storeData = scala.collection.mutable.Map[String, (DataStore, ArrayBuffer[(String, Boolean, Array[(Key, String, Any)])])]()
+      var storeData = scala.collection.mutable.Map[String, (DataStore, ArrayBuffer[(String, Array[(Key, String, Any)])])]()
 
       saveDataMap.foreach(elemTypData => {
         val storeInfo = GetContainerNameAndDataStore(elemTypData._1)
         val oneStoreData = storeData.getOrElse(storeInfo._1, null)
         if (oneStoreData != null) {
-          oneStoreData._2 += ((elemTypData._1, true, elemTypData._2.toArray))
+          oneStoreData._2 += ((elemTypData._1, elemTypData._2.toArray))
           storeData(storeInfo._1) = ((oneStoreData._1, oneStoreData._2))
         } else {
-          val ab = ArrayBuffer[(String, Boolean, Array[(Key, String, Any)])]()
-          ab += ((elemTypData._1, true, elemTypData._2.toArray))
+          val ab = ArrayBuffer[(String, Array[(Key, String, Any)])]()
+          ab += ((elemTypData._1, elemTypData._2.toArray))
           storeData(storeInfo._1) = ((storeInfo._2, ab))
         }
       })
@@ -340,6 +345,34 @@ object PersistenceUtils {
       case e: Exception => {
         logger.error("Failed to insert/update objects", e)
         throw UpdateStoreFailedException("Failed to insert/update objects", e)
+      }
+    }
+  }
+
+  def SaveSchemaInformation(schemaId: Int, nameSpace: String, name: String, version: Long, physicalName: String, avroSchema: String, containerType: String): Unit = {
+    val (containerName, store) = GetContainerNameAndDataStore("AvroSchemaInfo")
+
+    val json = "AvroSchemaInfo" ->
+      ("SchemaId" -> schemaId) ~
+        ("NameSpace" -> nameSpace) ~
+        ("Name" -> name) ~
+        ("Version" -> version) ~
+        ("PhysicalName" -> physicalName) ~
+        ("AvroSchema" -> avroSchema) ~
+        ("ContainerType" -> containerType)
+
+    val outputJson = compact(render(json))
+
+    var storeObjects = new Array[(Key, String, Any)](1)
+    val k = Key(storageDefaultTime, Array(schemaId.toString), storageDefaultTxnId, 0)
+    storeObjects(0) = (k, "JSON", outputJson.getBytes())
+
+    try {
+      store.put(null, Array((containerName, storeObjects)))
+    } catch {
+      case e: Exception => {
+        logger.error("Failed to insert/update object for schemaid: " + schemaId, e)
+        throw UpdateStoreFailedException("Failed to insert/update object for schemaid: " + schemaId, e)
       }
     }
   }
@@ -525,7 +558,7 @@ object PersistenceUtils {
       if (obj.DependencyJarNames != null) {
         obj.DependencyJarNames.foreach(j => {
           // do not upload if it already exist & just uploaded/checked in db, minor optimization
-          if (j.endsWith(".jar") && checkedJars.contains(j) == false) {
+          if (j.endsWith(".jar") && checkedJars.contains(j) == false && excludeSystemJars.contains(j) == false) {
             var loadObject = false
             val jarName = com.ligadata.Utils.Utils.GetValidJarFile(jarPaths, j)
             val value = MetadataAPIImpl.GetJarAsArrayOfBytes(jarName)

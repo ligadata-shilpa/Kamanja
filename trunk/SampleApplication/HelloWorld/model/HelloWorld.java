@@ -25,7 +25,7 @@ public class HelloWorldModel extends ModelInstance {
     	super(factory);
     }
 
-	public ModelResultBase run(TransactionContext txnCtxt, ContainerInterface[] execMsgsSet, int matchedInputSetIndex, boolean outputDefault) {
+	public ContainerOrConcept[] execute(TransactionContext txnCtxt, ContainerInterface[] execMsgsSet, int matchedInputSetIndex, boolean outputDefault) {
     	/*
 		System.out.println("inside model");
     	GlobalPreferences gPref = GlobalPreferencesFactory.rddObject.getRecentOrNew(new String[]{"PrefType"});  //(new String[]{"Type1"});
@@ -60,9 +60,12 @@ public class HelloWorldModel extends ModelInstance {
 		msg1 helloWorld = (msg1) execMsgsSet[0];  // This run should trigger when we have only msg1
 		if(helloWorld.score()!=1)
 			return null;
-
-        Result[] actualResult = {new Result("Id",helloWorld.id()) , new Result("Name",helloWorld.name()), new Result("Score",helloWorld.score())};
-        return new MappedModelResults().withResults(actualResult);
+		outmsg1 output = (outmsg1) outmsg1Factory.createInstance();
+		output.id = helloWorld.id;
+		output.name = helloWorld.name;
+		ContainerInterface[] returnArr = new ContainerInterface[1];
+		returnArr[0] = output;
+        return returnArr;
   }
 
     /**
@@ -77,10 +80,11 @@ public class HelloWorldModel extends ModelInstance {
 			super(modelDef, nodeContext);
 		}
 /*
-		public boolean isValidMessage(MessageContainerBase msg) {
-			return (msg instanceof msg1);
+		public boolean isValidMessage(ContainerInterface msg) {
+			return false /* (msg instanceof msg1) */;
 		}
 */
+
 		public ModelInstance createModelInstance() {
 			return new HelloWorldModel(this);
 		}

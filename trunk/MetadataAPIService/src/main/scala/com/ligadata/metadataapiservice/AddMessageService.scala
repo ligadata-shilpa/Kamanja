@@ -34,7 +34,7 @@ object AddMessageService {
   case class Process(messageJson:String)
 }
 
-class AddMessageService(requestContext: RequestContext, userid:Option[String], password:Option[String], cert:Option[String]) extends Actor {
+class AddMessageService(requestContext: RequestContext, userid:Option[String], password:Option[String], cert:Option[String], tenantId: Option[String]) extends Actor {
 
   import AddMessageService._
   
@@ -45,12 +45,11 @@ class AddMessageService(requestContext: RequestContext, userid:Option[String], p
   
   def receive = {
     case Process(messageJson) =>
-      val tenantId: String = "" // FIXME: DAN FIX THIS TenantID
-      process(messageJson, tenantId)
+      process(messageJson)
       context.stop(self)
   }
   
-  def process(messageJson:String, tenantId: String) = {
+  def process(messageJson:String) = {
     
     log.debug("Requesting AddMessage {}",messageJson)
 

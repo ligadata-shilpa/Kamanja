@@ -31,10 +31,7 @@ import org.skyscreamer.jsonassert.JSONAssert
 class ModelDefTest  extends FunSuite with BeforeAndAfter {
 
   test("test01") {
-    val fileInput = getClass.getResource("/test002.jtm/test.jtm").getPath
-
-    val fileOutput = getClass.getResource("/test001.jtm/test.scala.result").getPath
-    val fileExpected = getClass.getResource("/test001.jtm/test.scala.expected").getPath
+    val fileInput = getClass.getResource("/modeldeftest/test.jtm").getPath
     val metadataLocation = getClass.getResource("/metadata").getPath
 
     val compiler = CompilerBuilder.create().
@@ -46,8 +43,10 @@ class ModelDefTest  extends FunSuite with BeforeAndAfter {
     compiler.Execute()
     val md: ModelDef =  compiler.MakeModelDef()
 
-    //assert("com.ligadata.kamanja.test.msg1,com.ligadata.kamanja.test.msg3" == md.msgConsumed)
     assert(ModelRepresentation.JAR == md.modelRepresentation)
     assert(MiningModelType.JTM == md.miningModelType)
+    assert("MDName" == md.Name)
+    assert("Description Test" == md.Description)
+    assert("com.ligadata.jtm.test.modeldeftest"==md.NameSpace)
   }
 }

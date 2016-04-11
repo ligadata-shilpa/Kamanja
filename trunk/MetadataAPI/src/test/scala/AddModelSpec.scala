@@ -40,7 +40,6 @@ import com.ligadata.Serialize._
 
 import com.ligadata.kamanja.metadataload.MetadataLoad
 
-@Ignore
 class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter with BeforeAndAfterAll with GivenWhenThen {
   var res: String = null;
   var statusCode: Int = -1;
@@ -53,7 +52,8 @@ class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter wi
   var iFile: File = null
   var fileList: List[String] = null
   var newVersion: String = null
-  val userid: Option[String] = Some("test")
+  val userid: Option[String] = Some("kamanja")
+  val tenantId: Option[String] = Some("kamanja")
 
   private val loggerName = this.getClass.getName
   private val logger = LogManager.getLogger(loggerName)
@@ -104,6 +104,7 @@ class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter wi
       val mdLoader = new MetadataLoad(MdMgr.mdMgr, "", "", "", "")
       mdLoader.initialize
 
+      logger.info("Startup embedded zooKeeper ")
       val zkServer = EmbeddedZookeeper
       zkServer.instance.startup
 
@@ -299,7 +300,7 @@ class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter wi
 
 	And("AddContainer first time from " + file.getPath)
 	contStr = Source.fromFile(file).mkString
-	res = MetadataAPIImpl.AddContainer(contStr, "JSON", None)
+	res = MetadataAPIImpl.AddContainer(contStr, "JSON", None, tenantId)
 	res should include regex ("\"Status Code\" : 0")
 
 	And("GetContainerDef API to fetch the container that was just added")
@@ -330,7 +331,7 @@ class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter wi
 
       //fileList = List("outpatientclaim.json","inpatientclaim.json","hl7.json","beneficiary.json")
       //fileList = List("HelloWorld_Msg_Def.json","HelloWorld_Msg_Output_Def.json")
-      fileList = List("HelloWorld_Msg_Def.json","HelloWorld_Msg_Def_2.json")
+      fileList = List("HelloWorld_Msg_Def.json","HelloWorld_Msg_Def_2.json","HelloWorld_Msg_Def_3.json","HelloWorld_Out_Msg_Def_1.json")
       fileList.foreach(f1 => {
 	And("Add the Message From " + f1)
 	And("Make Sure " + f1 + " exist")
@@ -349,7 +350,7 @@ class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter wi
 
 	And("AddMessage first time from " + file.getPath)
 	var msgStr = Source.fromFile(file).mkString
-	res = MetadataAPIImpl.AddMessage(msgStr, "JSON", None)
+	res = MetadataAPIImpl.AddMessage(msgStr, "JSON", None,tenantId)
 	res should include regex ("\"Status Code\" : 0")
 
 	And("GetMessageDef API to fetch the message that was just added")
@@ -395,19 +396,35 @@ class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter wi
 	}
 	assert(true == exists)
 
-	And("Call AddModel MetadataAPI Function to add Model from " + file.getPath)
+	And("AddModel  to add KPMML Model with a wrong output message from " + file.getPath)
 	var modStr = Source.fromFile(file).mkString
 	res = MetadataAPIImpl.AddModel(ModelType.KPMML, // modelType
 				       modStr, // input
 				       userid,   // optUserid
+				       Some("testTenantId"),  // tenantId
 				       None,   // optModelName
 				       None,   // optVersion
 				       None,   // optMsgConsumed
 				       None,   // optMsgVersion
-				       //Some("system.helloworld_msg_output_def") // optMsgProduced
-				       None
+				       Some("system.helloworld_msg_def_2") // optMsgProduced
+				     )
+	logger.info(res)
+	res should include regex ("\"Status Code\" : -1")
+
+
+	And("AddModel  to add KPMML Model without a output message from " + file.getPath)
+	res = MetadataAPIImpl.AddModel(ModelType.KPMML, // modelType
+				       modStr, // input
+				       userid,   // optUserid
+				       Some("testTenantId"),  // tenantId
+				       None,   // optModelName
+				       None,   // optVersion
+				       None,   // optMsgConsumed
+				       None,   // optMsgVersion
+				       None // optMsgProduced
 				     )
 	res should include regex ("\"Status Code\" : 0")
+
 
 	And("GetModelDef API to fetch the model that was just added")
 	// Unable to use fileName to identify the name of the object
@@ -487,10 +504,10 @@ class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter wi
 	And("GetModelDependencies to fetch the modelConfig that was just added")
 
 	var cfgName = "HelloWorld2Model"
-	var dependencies = MetadataAPIImpl.getModelDependencies(cfgName,userid)
+	var dependencies = MetadataAPIImpl.getModelDependencies(userid.get + "." + cfgName,userid)
 	assert(dependencies.length == 0) // empty in our helloworld example
 
-	var msgsAndContainers = MetadataAPIImpl.getModelMessagesContainers(cfgName,userid)
+	var msgsAndContainers = MetadataAPIImpl.getModelMessagesContainers(userid.get + "." + cfgName,userid)
 	assert(msgsAndContainers.length == 2) 
 	var msgStr = msgsAndContainers(0)
 	assert(msgStr.equalsIgnoreCase("system.helloworld_msg_def"))
@@ -539,7 +556,8 @@ class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter wi
 	res = MetadataAPIImpl.AddModel(ModelType.SCALA, // modelType
 				       modStr, // input
 				       userid,   // optUserid
-				       Some("HelloWorld2Model"),   // optModelName
+				       Some("testTenantId"),  // tenantId
+				       Some("kamanja.HelloWorld2Model"),   // optModelName
 				       None,   // optVersion
 				       None,   // optMsgConsumed
 				       None,   // optMsgVersion
@@ -558,11 +576,11 @@ class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter wi
 	res = MetadataAPIImpl.GetModelDef(nameSpace, objName, "XML", version, userid)
 	res should include regex ("\"Status Code\" : 0")
 
-	And("Check whether default outmsg has been created")
-	val msgName = objName + "_outputmsg"
-	version = "000000000000000001"
-	res = MetadataAPIImpl.GetMessageDef(nameSpace, msgName, "JSON", version, userid)
-	res should include regex ("\"Status Code\" : 0")
+	//And("Check whether default outmsg has been created")
+	//val msgName = objName + "_outputmsg"
+	//version = "000000000000000001"
+	//res = MetadataAPIImpl.GetMessageDef(nameSpace, msgName, "JSON", version, userid)
+	//res should include regex ("\"Status Code\" : 0")
 
 	val modDefs = MdMgr.GetMdMgr.Models(nameSpace, objName, true, true)
 	assert(modDefs != None)
@@ -570,11 +588,11 @@ class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter wi
 	val models = modDefs.get.toArray
 	assert(models.length == 1)
 	
-	And("Validate contents of default outmsg")
-	var omsgs = models(0).outputMsgs
-	assert(omsgs.length == 1)
-	val msgFullName = nameSpace + "." + msgName
-	assert(omsgs(0) == msgFullName.toLowerCase)
+	//And("Validate contents of default outmsg")
+	//var omsgs = models(0).outputMsgs
+	//assert(omsgs.length == 1)
+	//val msgFullName = nameSpace + "." + msgName
+	//assert(omsgs(0) == msgFullName.toLowerCase)
 
 	// there should be two sets in this test
 	And("Validate contents of inputMsgSets")
@@ -586,16 +604,23 @@ class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter wi
 	assert(msgAttrArrays.length == 1 )
 	var msgAttr = msgAttrArrays(0)
 	assert(msgAttr != null)
-	assert(msgAttr.message.equalsIgnoreCase("system.helloworld_msg_def") || msgAttr.message.equalsIgnoreCase("system.helloworld_msg_def_2"))
+	assert(msgAttr.message.equalsIgnoreCase("system.helloworld_msg_def") || msgAttr.message.equalsIgnoreCase("system.helloworld_msg_def_2") || msgAttr.message.equalsIgnoreCase("system.helloworld_msg_def_3"))
 
 	msgAttrArrays = imsgs(1)
-	assert(msgAttrArrays.length == 1 )
+	assert(msgAttrArrays.length == 2 )
 	msgAttr = msgAttrArrays(0)
 	assert(msgAttr != null)
-	assert(msgAttr.message.equalsIgnoreCase("system.helloworld_msg_def_2") || msgAttr.message.equalsIgnoreCase("system.helloworld_msg_def"))
+	assert(msgAttr.message.equalsIgnoreCase("system.helloworld_msg_def_2") || msgAttr.message.equalsIgnoreCase("system.helloworld_msg_def_3"))
 
-	And("Validate contents of inputMsgSets")
 	var cfgName = "HelloWorld2Model"
+
+	And("Validate contents of outputMsgSets")
+	var omsgs = models(0).outputMsgs
+	assert(omsgs.length == 1)
+
+	var omsg = omsgs(0)
+	assert(omsg != null)
+	assert(omsg.equalsIgnoreCase("system.helloworld_out_msg_def_1"))
 
 	And("Validate the ModelDef.modelConfig")
 	modStr = models(0).modelConfig
@@ -609,10 +634,10 @@ class AddModelSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter wi
 	res should include regex ("\"Status Code\" : 0")
 
 	And("Validate dependencies and typeDependencies of modelConfig object")
-	var dependencies = MetadataAPIImpl.getModelDependencies(cfgName,userid)
+	var dependencies = MetadataAPIImpl.getModelDependencies(userid.get + "." + cfgName,userid)
 	assert(dependencies.length == 0) 
 
-	var msgsAndContainers = MetadataAPIImpl.getModelMessagesContainers(cfgName,userid)
+	var msgsAndContainers = MetadataAPIImpl.getModelMessagesContainers(userid.get + "." + cfgName,userid)
 	assert(msgsAndContainers.length == 2)
 	var msgStr = msgsAndContainers(0)
 	assert(msgStr.equalsIgnoreCase("system.helloworld_msg_def"))

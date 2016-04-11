@@ -8,7 +8,6 @@ sbtPlugin := true
 //lazy val kamanjaVersion = settingKey[String]("kamanjaVersion")
 // kamanjaVersion := "1.4.0"
 
-
 //scalaVersion := "2.11.7"
 
 //kamanjaVersion in ThisBuild := "1.4.0"

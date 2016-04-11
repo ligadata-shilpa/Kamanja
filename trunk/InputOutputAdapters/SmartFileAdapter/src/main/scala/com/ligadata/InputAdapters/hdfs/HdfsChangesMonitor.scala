@@ -125,7 +125,7 @@ class HdfsFileHandler extends SmartFileHandler{
        
         if (hdFileSystem.exists(srcPath)) {
           hdFileSystem.rename(srcPath, destPath)
-            logger.info("Move remote file success")
+            logger.debug("Moved remote file success")
             fileFullPath = newFilePath
             return true
         }
@@ -148,7 +148,7 @@ class HdfsFileHandler extends SmartFileHandler{
      try {
        hdFileSystem = FileSystem.get(hdfsConfig)
        hdFileSystem.delete(new Path(getFullPath), true)
-        logger.info("Successfully deleted")
+        logger.debug("Successfully deleted")
         return true
      } 
      catch {
@@ -327,7 +327,7 @@ class HdfsChangesMonitor (adapterName : String, modifiedFileCallback:(SmartFileH
                                           modifiedDirs : ArrayBuffer[String], modifiedFiles : Map[SmartFileHandler, FileChangeType], isFirstCheck : Boolean){
     logger.info("checking folder with full path: " + parentfolder)
 
-    val directChildren = getFolderContents(parentfolder, hdFileSystem)
+    val directChildren = getFolderContents(parentfolder, hdFileSystem).sortWith(_.getModificationTime < _.getModificationTime)
     var changeType : FileChangeType = null //new, modified
 
     //process each file reported by FS cache.

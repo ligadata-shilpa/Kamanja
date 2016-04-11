@@ -35,6 +35,8 @@ class FileAdapterMonitoringConfig {
   var metadataConfigFile = "" // will check if needed
   var targetMoveDir = ""
   var consumersCount : Int = _
+  var workerBufferSize : Int = 4 //buffer size in MB to read messages from files
+  var messageSeparator : Char = 10
 }
 
 object SmartFileAdapterConfiguration{

@@ -20,6 +20,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.InputStreamReader
 import javax.xml.parsers.SAXParserFactory
+import com.ligadata.jtm.CompilerBuilder
 import org.xml.sax.InputSource
 import org.xml.sax.XMLReader
 import scala.collection.mutable._
@@ -73,9 +74,15 @@ class CompilerProxy {
       val additinalDeps = addDepsFromClassPath
       val (classPath, elements, totalDeps, nonTypeDeps, inMsgSets, outMsgs) = getClassPathFromModelConfig(modelConfigName, additinalDeps)
       val msgDefClassFilePath = compiler_work_dir + "/" + removeUserid(modelConfigName) + "." + sourceLang
-      val ((modelNamespace, modelName, modelVersion, pname, defaultInputMsgSets), repackagedCode, tempPackage) = parseSourceForMetadata(sourceCode, modelConfigName, sourceLang, msgDefClassFilePath, classPath, elements, userid)
+      val ((modelNamespace, modelName, modelVersion, pname, mdlFactory,loaderInfo,modConfigName), repackagedCode, tempPackage) = parseSourceForMetadata(sourceCode, modelConfigName, sourceLang, msgDefClassFilePath, classPath, elements, userid)
       var inputMsgSets =
-        if (inMsgSets == null) defaultInputMsgSets.map(lst => lst.toList).toList else inMsgSets
+        if (inMsgSets == null) {
+	  val defaultInputMsgSets = getDefaultInputMsgSets(mdlFactory,loaderInfo,modConfigName)
+	  defaultInputMsgSets.map(lst => lst.toList).toList
+	}
+        else{
+	  inMsgSets
+	}
 
       // Get Model info and decide the mdElementId
       val existingModel = MdMgr.GetMdMgr.Model(modelNamespace, modelName, -1, false) // Any version is fine. No need of active
@@ -104,9 +111,15 @@ class CompilerProxy {
     try {
       val (classPath, elements, totalDeps, nonTypeDeps) = buildClassPath(deps, typeDeps)
       val msgDefClassFilePath = compiler_work_dir + "/tempCode." + sourceLang
-      val ((modelNamespace, modelName, modelVersion, pname, defaultInputMsgSets), repackagedCode, tempPackage) = parseSourceForMetadata(sourceCode, "tempCode", sourceLang, msgDefClassFilePath, classPath, elements, userid)
+      val ((modelNamespace, modelName, modelVersion, pname, mdlFactory, loaderInfo, modConfigName), repackagedCode, tempPackage) = parseSourceForMetadata(sourceCode, "tempCode", sourceLang, msgDefClassFilePath, classPath, elements, userid)
       var inputMsgSets =
-        if (inMsgSets == null) defaultInputMsgSets.map(lst => lst.toList).toList else inMsgSets
+        if (inMsgSets == null) {
+	  val defaultInputMsgSets = getDefaultInputMsgSets(mdlFactory,loaderInfo,modConfigName)
+	  defaultInputMsgSets.map(lst => lst.toList).toList
+	}
+        else{
+	  inMsgSets
+	}
 
       // Get Model info and decide the mdElementId
       val existingModel = MdMgr.GetMdMgr.Model(modelNamespace, modelName, -1, false) // Any version is fine. No need of active
@@ -153,6 +166,7 @@ class CompilerProxy {
         modDef.uniqueId = MetadataAPIImpl.GetUniqueId
         modDef.mdElementId = if (existingModel == None) MetadataAPIImpl.GetMdElementId else existingModel.get.MdElementId
         modDef.ownerId = ownerId
+        modDef.tenantId = tenantId
 
         var pmmlScalaFile = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("JAR_TARGET_DIR") + "/" + modDef.name + ".scala"
         var classPath = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("CLASSPATH").trim
@@ -216,32 +230,40 @@ class CompilerProxy {
 
   /**
       * Compile the supplied Json Transformation Model specification string into a scala source file.
-      * @param jsonStr the specification
+    *
+    * @param jsonStr the specification
       * @return tuple (scala source produced from compilation, model definition produced for the source code)
       */
-    def compileJTM(jsonStr: String, recompile: Boolean = false): (String, ModelDef) = {
+    def compileJTM(jsonStr: String, tenantId: String, extDepJars: List[String], recompile: Boolean = false): (String, ModelDef) = {
         try {
 
             val model_exec_log : String = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("MODEL_EXEC_LOG")
             val injectLoggingStmts : Boolean = if (model_exec_log != null) model_exec_log.equalsIgnoreCase("true") else false
 
             /**  What the PmmlCompiler does to generate the (scalaSrc,modelDef) pair
-                val compiler = new PmmlCompiler(MdMgr.GetMdMgr, "ligadata", logger, injectLoggingStmts,
-                MetadataAPIImpl.GetMetadataAPIConfig.getProperty("JAR_PATHS").split(","))
-                val (classStr, modDef) = compiler.compile(pmmlStr, compiler_work_dir, recompile)
+              * val compiler = new PmmlCompiler(MdMgr.GetMdMgr, "ligadata", logger, injectLoggingStmts,
+              * MetadataAPIImpl.GetMetadataAPIConfig.getProperty("JAR_PATHS").split(","))
+              * val (classStr, modDef) = compiler.compile(pmmlStr, compiler_work_dir, recompile)
             */
 
             /** These two are expected ... your generated source file and the model definition instance.  Steal some
               * code from the PmmlCompiler for the model def
               */
-            /*
-                Fixme: Instantiate and call the JTM compiler here.
+            val compiler = CompilerBuilder.create().
+//              setSuppressTimestamps().
+              setInputFile(jsonStr).build()
 
-                Fixme: Instantiate and call the JTM compiler here.
+            val jtmScalaSrc = compiler.Execute()
+            val modelDef = compiler.MakeModelDef
 
-                Fixme: Instantiate and call the JTM compiler here.
-            */
-            val (jtmScalaSrc, modelDef) : (String, ModelDef) = (null,null)
+            // Updating dependency jars if needed
+            if (extDepJars != null && extDepJars.size > 0) {
+              if (modelDef.DependencyJarNames != null) {
+                modelDef.dependencyJarNames = (modelDef.DependencyJarNames ++ extDepJars).toSet.toArray
+              } else {
+                modelDef.dependencyJarNames = extDepJars.toSet.toArray
+              }
+            }
 
             /**
               * If errors were encountered... the model definition is not manufactured.
@@ -272,7 +294,7 @@ class CompilerProxy {
                     MetadataAPIImpl.GetMetadataAPIConfig.getProperty("JAR_PATHS").split(","))
                 val skipJar : Boolean = false
 
-                var (jarFile, depJars) = compiler.createJar(jtmScalaSrc
+                val (jarFile, depJars) = compiler.createJar(jtmScalaSrc
                     ,classPath
                     ,jtmScalaPath
                     ,MetadataAPIImpl.GetMetadataAPIConfig.getProperty("JAR_TARGET_DIR")
@@ -652,7 +674,7 @@ class CompilerProxy {
       val depJars = getJarsFromClassPath(classPath)
 
       // figure out the Physical Model Name
-      var (dummy1, dummy2, dummy3, pName, defaultInputMsgSets) = getModelMetadataFromJar(jarFileName, elements, depJars, sourceLang, userid, modelConfigName)
+      var (dummy1, dummy2, dummy3, pName, mdlFactory,loaderInfo,modConfigName) = getModelMetadataFromJar(jarFileName, elements, depJars, sourceLang, userid, modelConfigName)
 
       /* Create the ModelDef object
 
@@ -671,7 +693,7 @@ class CompilerProxy {
        */
 
 
-      logger.debug("generateModelDef: defaultInputMsgSets contain " + defaultInputMsgSets.length + " objects ")
+
 
       val inpM =
         if (inMsgSets != null && inMsgSets.length > 0) {
@@ -694,6 +716,8 @@ class CompilerProxy {
             }).toArray
           }).toArray
         } else {
+	  val defaultInputMsgSets = getDefaultInputMsgSets(mdlFactory,loaderInfo,modConfigName)
+	  logger.debug("generateModelDef: defaultInputMsgSets contain " + defaultInputMsgSets.length + " objects ")
           val defaultInpSets = defaultInputMsgSets.map(set => {
             set.map(m => {
               val t = new MessageAndAttributes
@@ -800,7 +824,7 @@ class CompilerProxy {
                                      msgDefClassFilePath: String,
                                      classPath: String,
                                      elements: Set[BaseElemDef],
-                                     userid: Option[String]): ((String, String, String, String, List[List[String]]), String, String) = {
+                                     userid: Option[String]): ((String, String, String, String, ModelInstanceFactory, KamanjaLoaderInfo,String), String, String) = {
 
     // We have to create a dummy jar file for this so that we can interrogate the generated Object for Modelname
     // and Model Version.  To do this, we create a dummy source with V0 in the package name.
@@ -1088,7 +1112,46 @@ class CompilerProxy {
     }
   }
 
-  private def getModelMetadataFromJar(jarFileName: String, elements: Set[BaseElemDef], depJars: List[String], sourceLang: String, userid: Option[String], modelConfigName: String): (String, String, String, String, List[List[String]]) = {
+  private def getDefaultInputMsgSets(mdlFactory: ModelInstanceFactory,loaderInfo:KamanjaLoaderInfo,modelConfigName: String) : List[List[String]] = {
+    try{
+      var defaultInputMsgSets = List[List[String]]()
+      if (mdlFactory != null) {
+	// create possible default input messages from model_config.Type_dependencies for java/scala models
+	var fullName = mdlFactory.getModelName.split('.')
+	logger.debug("getDefaultInputMsgSets: Get the model config for " + modelConfigName)
+	var config = MdMgr.GetMdMgr.GetModelConfig(modelConfigName)
+	logger.debug("getDefaultInputMsgSets: Size of the model config map => " + config.keys.size);
+	val typDeps = config.getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, null)
+	if (typDeps != null) {
+          var deps = typDeps.asInstanceOf[List[String]]
+          deps.foreach(t => {
+            val inst = getMessageInst(t, loaderInfo)
+            if (inst != null) {
+              logger.debug("getDefaultInputMsgSets: call mdlFactory.isValidMessage ")
+              if (mdlFactory.isValidMessage(inst)) {
+		logger.debug("getDefaultInputMsgSets: mdlFactory.isValidMessage returned true")
+		defaultInputMsgSets = List(t) :: defaultInputMsgSets
+              }
+              else {
+		logger.debug("getDefaultInputMsgSets: mdlFactory.isValidMessage returned false")
+              }
+            }
+            else {
+              logger.debug("getDefaultInputMsgSets: message instance for type " + t + " is null")
+            }
+          })
+	}
+      }
+      defaultInputMsgSets
+    } catch {
+      case e: Exception => {
+        logger.error("COMPILER_PROXY: Unable to construct default input msg sets  from " + modelConfigName)
+        throw MsgCompilationFailedException(modelConfigName, null)
+      }
+    }
+  }
+
+  private def getModelMetadataFromJar(jarFileName: String, elements: Set[BaseElemDef], depJars: List[String], sourceLang: String, userid: Option[String], modelConfigName: String): (String, String, String, String, ModelInstanceFactory, KamanjaLoaderInfo, String) = {
 
     // Resolve ModelNames and Models versions - note, the jar file generated is still in the workDirectory.
     val loaderInfo = new KamanjaLoaderInfo()
@@ -1166,40 +1229,10 @@ class CompilerProxy {
             , false, false)
           val mdlFactory = PrepareModelFactory(loaderInfo, jarPaths0, mdlDef)
 
-          var defaultInputMsgSets = List[List[String]]()
           if (mdlFactory != null) {
-            // create possible default input messages from model_config.Type_dependencies for java/scala models
             var fullName = mdlFactory.getModelName.split('.')
-            var modelName = fullName(fullName.length - 1)
-            var key = "kamanja" + "." + modelConfigName
-            if (userid != None) {
-              key = userid.get + "." + modelConfigName
-            }
-            logger.debug("getModelMetadataFromJar: Get the model config for " + key)
-            var config = MdMgr.GetMdMgr.GetModelConfig(key)
-            logger.debug("getModelMetadataFromJar: Size of the model config map => " + config.keys.size);
-            val typDeps = config.getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, null)
-            if (typDeps != null) {
-              var deps = typDeps.asInstanceOf[List[String]]
-              deps.foreach(t => {
-                val inst = getMessageInst(t, loaderInfo)
-                if (inst != null) {
-                  logger.debug("getModelMetadataFromJar: call mdlFactory.isValidMessage ")
-                  if (mdlFactory.isValidMessage(inst)) {
-                    logger.debug("getModelMetadataFromJar: mdlFactory.isValidMessage returned true")
-                    defaultInputMsgSets = List(t) :: defaultInputMsgSets
-                  }
-                  else {
-                    logger.debug("getModelMetadataFromJar: mdlFactory.isValidMessage returned false")
-                  }
-                }
-                else {
-                  logger.debug("getModelMetadataFromJar: message instance for type " + t + " is null")
-                }
-              })
-            }
             return (fullName.dropRight(1).mkString("."), fullName(fullName.length - 1),
-              mdlFactory.getVersion, clsName, defaultInputMsgSets)
+              mdlFactory.getVersion, clsName, mdlFactory, loaderInfo,modelConfigName)
           }
 
           logger.error("COMPILER_PROXY: Unable to resolve a class Object from " + jarName0)
@@ -1434,6 +1467,7 @@ class CompilerProxy {
     *
     */
   private def getClassPathFromModelConfig(modelName: String, cpDeps: List[String]): (String, Set[BaseElemDef], scala.collection.immutable.Set[String], scala.collection.immutable.Set[String], List[List[String]], List[String]) = {
+    logger.debug("Model Config => " + modelName)
     val inMsgSets = MetadataAPIImpl.getModelInputTypesSets(modelName, userId)
     val outMsgs = MetadataAPIImpl.getModelOutputTypes(modelName, userId)
     val inMC = MetadataAPIImpl.getModelMessagesContainers(modelName, userId)

@@ -339,7 +339,7 @@ class HBaseAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterAl
         keyValueList = keyValueList :+(key, value)
       }
       var dataList = new Array[(String, Array[(Key, Value)])](0)
-      dataList = dataList :+(containerName, keyValueList)
+      dataList = dataList :+ (containerName, keyValueList)
       noException should be thrownBy {
         adapter.put(dataList)
       }

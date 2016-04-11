@@ -12,6 +12,16 @@ net.virtualvoid.sbt.graph.Plugin.graphSettings
 
 parallelExecution in Test := false
 
+//libraryDependencies += "org.apache.logging.log4j" % "log4j-1.2-api" % "2.4.1"
+//
+//libraryDependencies += "org.apache.logging.log4j" % "log4j-api" % "2.4.1"
+//
+//libraryDependencies += "org.apache.logging.log4j" % "log4j-core" % "2.4.1"
+//
+//libraryDependencies += "org.json4s" %% "json4s-native" % "3.2.9"
+//
+//libraryDependencies += "org.json4s" %% "json4s-jackson" % "3.2.9"
+//
 //libraryDependencies += {
 //  CrossVersion.partialVersion(scalaVersion.value) match {
 //    case Some((2, scalaMajor)) =>
@@ -33,5 +43,5 @@ parallelExecution in Test := false
 //libraryDependencies += "org.skyscreamer" % "jsonassert" % "1.3.0"  % "test->default"
 //
 //libraryDependencies += "org.aicer.grok" % "grok" % "0.9.0"
-
-
+//
+//
