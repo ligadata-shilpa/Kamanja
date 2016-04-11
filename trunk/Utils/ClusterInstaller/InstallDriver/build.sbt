@@ -11,10 +11,10 @@ assemblyOption in assembly ~= {
   _.copy(prependShellScript = Some(defaultShellScript))
 }
 
-//assemblyJarName in assembly := { s"${name.value}-${version.value}" }
-assemblyJarName in assembly := {
-  s"${name.value}_${scalaBinaryVersion.value}-${kamanjaVersion}.jar"
-}
+assemblyJarName in assembly := { s"${name.value}-${version.value}" }
+//assemblyJarName in assembly := {
+//  s"${name.value}_${scalaBinaryVersion.value}-${kamanjaVersion}.jar"
+//}
 
 // for some reason the merge strategy for non ligadata classes are not working and thus added those conflicting jars in exclusions
 // this may result some run time errors
