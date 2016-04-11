@@ -70,10 +70,10 @@ public class ClusterInstallerDriver implements StatusCallback {
 
         URLClassLoader installDriverLoader = null;
 
-        String installDriverPath = clusterInstallerDriversLocation + "/InstallDriver-1.0";
+        String installDriverPath = clusterInstallerDriversLocation + "/InstallDriver-1.4.0";
 
         if (! isValidPath(installDriverPath, false, true)) {
-            String msg = String.format("InstallDriver-1.0 not found at " + installDriverPath);
+            String msg = String.format("InstallDriver-1.4.0 not found at " + installDriverPath);
             logger.error(msg);
             System.out.println(msg);
             System.exit(1);
