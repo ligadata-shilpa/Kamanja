@@ -19,6 +19,7 @@ package com.ligadata.KamanjaBase
 import java.net.URL
 import java.net.URLClassLoader
 import java.io.{ ByteArrayInputStream, DataInputStream, DataOutputStream, ByteArrayOutputStream }
+import com.ligadata.Exceptions.KamanjaException
 import com.ligadata.Utils.KamanjaClassLoader
 import com.ligadata.kamanja.metadata.MdMgr
 import org.apache.logging.log4j._
@@ -419,8 +420,9 @@ trait AdaptersSerializeDeserializers {
 
   // Returns serialized msgs, serialized msgs data & serializers names applied on these messages.
   final def serialize(tnxCtxt: TransactionContext, outputContainers: Array[ContainerInterface]): (Array[ContainerInterface], Array[Array[Byte]], Array[String]) = {
+    if (outputContainers == null || outputContainers.size == 0) return (Array[ContainerInterface](), Array[Array[Byte]](), Array[String]())
 
-    val outputContainers = ArrayBuffer[ContainerInterface]()
+    val serOutputContainers = ArrayBuffer[ContainerInterface]()
     val serializedContainerData = ArrayBuffer[Array[Byte]]()
     val usedSerializersNames = ArrayBuffer[String]()
 
@@ -434,25 +436,24 @@ trait AdaptersSerializeDeserializers {
       }
     })
 
-    (outputContainers.toArray, serializedContainerData.toArray, usedSerializersNames.toArray)
+    (serOutputContainers.toArray, serializedContainerData.toArray, usedSerializersNames.toArray)
   }
 
   // Returns serialized msgs, serialized msgs data & serializers names applied on these messages.
   final def serialize(tnxCtxt: TransactionContext, outputContainers: Array[ContainerInterface], serializersNames: Array[String]): (Array[ContainerInterface], Array[Array[Byte]], Array[String]) = {
+    if ((outputContainers == null || outputContainers.size == 0) && (serializersNames == null || serializersNames.size == 0)) return (Array[ContainerInterface](), Array[Array[Byte]](), Array[String]())
 
-    val outputContainers = ArrayBuffer[ContainerInterface]()
+    if (((outputContainers == null || outputContainers.size == 0) && !(serializersNames == null || serializersNames.size == 0)) ||
+      (!(outputContainers == null || outputContainers.size == 0) && (serializersNames == null || serializersNames.size == 0)))
+        throw new KamanjaException("Invalid input sizes", null)
+
+    val serOutputContainers = ArrayBuffer[ContainerInterface]()
     val serializedContainerData = ArrayBuffer[Array[Byte]]()
     val usedSerializersNames = ArrayBuffer[String]()
 
-    outputContainers.map(c => {
-      val ser = allMsgBindings.getOrElse(c.getFullTypeName, null)
-      if (ser != null) {
+    //FIXME:- yet to fix it
 
-
-      }
-    })
-
-    (outputContainers.toArray, serializedContainerData.toArray, usedSerializersNames.toArray)
+    (serOutputContainers.toArray, serializedContainerData.toArray, usedSerializersNames.toArray)
   }
 
   // Returns deserialized msg, deserialized msg data & deserializer name applied.
