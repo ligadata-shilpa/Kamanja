@@ -204,10 +204,11 @@ trait ExecContext extends AdaptersSerializeDeserializers {
       }
     }
 
+    var txnCtxt: TransactionContext = null
     try {
       val transId = transService.getNextTransId
       val msgEvent = nodeContext.getEnvCtxt().getContainerInstance("System.KamanjaMessageEvent")
-      val txnCtxt = new TransactionContext(transId, nodeContext, data, EventOriginInfo(uk, uv), readTmMilliSecs, msgEvent)
+      txnCtxt = new TransactionContext(transId, nodeContext, data, EventOriginInfo(uk, uv), readTmMilliSecs, msgEvent)
       LOG.debug("Processing uniqueKey:%s, uniqueVal:%s, Datasize:%d".format(uk, uv, data.size))
       txnCtxt.setInitialMessage("", msg)
       executeMessage(txnCtxt): Unit
@@ -217,7 +218,7 @@ trait ExecContext extends AdaptersSerializeDeserializers {
       }
     } finally {
       // Commit. Writing into OutputAdapters & Storage Adapters
-      // nodeContext.getEnvCtxt().CommitData(txnCtxt);
+      nodeContext.getEnvCtxt().commitData(txnCtxt);
     }
   }
 
