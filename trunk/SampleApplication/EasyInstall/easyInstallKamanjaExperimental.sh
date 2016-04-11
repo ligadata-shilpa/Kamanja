@@ -184,6 +184,7 @@ echo "clean, package and assemble $srcPath ..."
 cd $srcPath/
 
 if [ "$cleanBuild" == "yes" ]; then
+   echo "Cleaning 2.10 build."
    sbt clean
 fi
 
@@ -477,6 +478,7 @@ fi
 #Now do full build of 2.11
 
 if [ "$cleanBuild" == "yes" ]; then
+   echo "Cleaning 2.11 build."
    sbt clean
 fi
 
