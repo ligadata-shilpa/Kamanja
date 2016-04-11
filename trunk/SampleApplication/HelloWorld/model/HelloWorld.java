@@ -60,9 +60,9 @@ public class HelloWorldModel extends ModelInstance {
 		msg1 helloWorld = (msg1) execMsgsSet[0];  // This run should trigger when we have only msg1
 		if(helloWorld.score()!=1)
 			return null;
-		outmsg1 output = (outmsg1) outmsg1Factory.createInstance();
-		output.id = helloWorld.id;
-		output.name = helloWorld.name;
+		outmsg1 output = (outmsg1) outmsg1.createInstance();
+		output.set(0, helloWorld.id());
+		output.set(1, helloWorld.name());
 		ContainerInterface[] returnArr = new ContainerInterface[1];
 		returnArr[0] = output;
         return returnArr;
@@ -79,11 +79,6 @@ public class HelloWorldModel extends ModelInstance {
 		public HelloWorldModelFactory(ModelDef modelDef, NodeContext nodeContext) {
 			super(modelDef, nodeContext);
 		}
-/*
-		public boolean isValidMessage(ContainerInterface msg) {
-			return false /* (msg instanceof msg1) */;
-		}
-*/
 
 		public ModelInstance createModelInstance() {
 			return new HelloWorldModel(this);

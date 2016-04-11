@@ -20,24 +20,24 @@
     "transactionmsg": {
       "dependsOn": [ ["m1"] ],
       "computes": {
-        "arrayData":{ "type": "System.ArrayOfString", "val": "$data.split(\",\")", "comment": "Split the incoming data" }
+        "mapData":{ "type": "System.MapOfString", "val": "KeyValueMap($data, \"|\", \"=\")", "comment": "Split the incoming data" }
       },
       "outputs": {
         "o1": {
           "computes": {
-            "type": { "type": "String", "val": "arrayData(0)", "comment": "extract the type" }
+            "typeName": { "type": "String", "val": "$mapData.typename", "comment": "extract the type" }
           },
           "where": "\"com.ligadata.kamanja.samples.messages.TransactionMsg\" == $type",
           "mapping": {
-            "custid": "$arrayData(1)",
-            "branchid": "$arrayData(2)",
-            "accno": "$arrayData(3)",
-            "amount": "$arrayData(4)",
-            "balance": "$arrayData(5)",
-            "date": "$arrayData(6)",
-            "time": "$arrayData(7)",
-            "locationid": "$arrayData(8)",
-            "transtype": "$arrayData(9)"
+            "custid": "$mapData.custid",
+            "branchid": "$mapData.branchid",
+            "accno": "$mapData.accno",
+            "amount": "$mapData.amount",
+            "balance": "$mapData.balance",
+            "date": "$mapData.date",
+            "time": "$mapData.time",
+            "locationid": "$mapData.locationid",
+            "transtype": "$mapData.transtype"
           }
         }
       }
