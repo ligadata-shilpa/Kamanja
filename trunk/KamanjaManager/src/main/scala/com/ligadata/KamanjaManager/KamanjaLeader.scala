@@ -547,35 +547,36 @@ object KamanjaLeader {
       remainingInpAdapters.foreach(ia => {
         val name = ia.UniqueName
         try {
-//          val uAK = nodeKeysMap.getOrElse(name, null)
-//          if (uAK != null) {
-//            val uKV = uAK.map(uk => { GetUniqueKeyValue(uk) })
-//            val maxParts = adapMaxPartsMap.getOrElse(name, 0)
-//            LOG.info("On Node %s for Adapter %s with Max Partitions %d UniqueKeys %s, UniqueValues %s".format(nodeId, name, maxParts, uAK.mkString(","), uKV.mkString(",")))
-//
-//            LOG.debug("Deserializing Keys")
-//            val keys = uAK.map(k => ia.DeserializeKey(k))
-//
-//            LOG.debug("Deserializing Values")
-//            val vals = uKV.map(v => ia.DeserializeValue(if (v != null) v._2 else null))
-//
-//            LOG.debug("Deserializing Keys & Values done")
-//
-//            val quads = new ArrayBuffer[StartProcPartInfo](keys.size)
-//
-//            for (i <- 0 until keys.size) {
-//              val key = keys(i)
-//
-//              val info = new StartProcPartInfo
-//              info._key = key
-//              info._val = vals(i)
-//              info._validateInfoVal = vals(i)
-//              quads += info
-//            }
-//
-//            LOG.info(ia.UniqueName + " ==> Processing Keys & values: " + quads.map(q => { (q._key.Serialize, q._val.Serialize, q._validateInfoVal.Serialize) }).mkString(","))
-//            ia.StartProcessing(quads.toArray, true)
-//          }
+          val uAK = nodeKeysMap.getOrElse(name, null)
+          if (uAK != null) {
+            // val uKV = uAK.map(uk => { GetUniqueKeyValue(uk) }) // FIXME:: get save Values for the keys
+            val uKV = uAK.map(uk => null)
+            val maxParts = adapMaxPartsMap.getOrElse(name, 0)
+            LOG.info("On Node %s for Adapter %s with Max Partitions %d UniqueKeys %s, UniqueValues %s".format(nodeId, name, maxParts, uAK.mkString(","), uKV.mkString(",")))
+
+            LOG.debug("Deserializing Keys")
+            val keys = uAK.map(k => ia.DeserializeKey(k))
+
+            LOG.debug("Deserializing Values")
+            val vals = uKV.map(v => ia.DeserializeValue(if (v != null) v._2 else null))
+
+            LOG.debug("Deserializing Keys & Values done")
+
+            val quads = new ArrayBuffer[StartProcPartInfo](keys.size)
+
+            for (i <- 0 until keys.size) {
+              val key = keys(i)
+
+              val info = new StartProcPartInfo
+              info._key = key
+              info._val = vals(i)
+              info._validateInfoVal = vals(i)
+              quads += info
+            }
+
+            LOG.info(ia.UniqueName + " ==> Processing Keys & values: " + quads.map(q => { (q._key.Serialize, q._val.Serialize, q._validateInfoVal.Serialize) }).mkString(","))
+            ia.StartProcessing(quads.toArray, true)
+          }
         } catch {
           case fae: FatalAdapterException => {
             LOG.error("Failed to start processing input adapter:" + name, fae)
