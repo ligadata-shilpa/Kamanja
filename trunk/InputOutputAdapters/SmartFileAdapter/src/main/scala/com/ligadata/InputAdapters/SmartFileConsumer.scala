@@ -20,7 +20,6 @@ class SmartFileConsumerContext{
   var partitionId: Int = _
   var ignoreFirstMsg: Boolean = _
   var nodeId : String = _
-  var threadId : Int  = _
   var envContext : EnvContext = null
   //var fileOffsetCacheKey : String = _
   var statusUpdateCacheKey : String = _
@@ -467,16 +466,6 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
     //should do anything for remove?
   }
 
-  //according to node order and threads on the node, give a number unique per threads
-  def getPartitionNum(nodeId : String, threadNum : Int) : Int = {
-
-    val currentNodeId = clusterStatus.nodeId
-    val nodeOrder = clusterStatus.participantsNodeIds.toArray.indexWhere(id => id == currentNodeId) //0 base clearly
-    val threadsPerNode = filesParallelism //assuming this is 1 based, result is 1 based
-
-    nodeOrder * threadsPerNode + threadNum
-  }
-
   //to be used by leader in case changes happened to nodes
   private def shufflePartitionsToNodes(nodes : List[String], partitionsCount : Int):  HashMap[String, scala.collection.mutable.Set[Int]] with MultiMap[String, Int] ={
     val nodesPartitionsMap = new HashMap[String, scala.collection.mutable.Set[Int]] with MultiMap[String, Int]
@@ -510,9 +499,8 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
 
     //start processing the file
     val context = new SmartFileConsumerContext()
-    context.partitionId = getPartitionNum(processingNodeId, processingThreadId.toInt)
+    context.partitionId = processingThreadId.toInt
     context.ignoreFirstMsg = _ignoreFirstMsg
-    context.threadId = processingThreadId
     context.nodeId = processingNodeId
     context.envContext = envContext
     //context.fileOffsetCacheKey = getFileOffsetCacheKey(fileToProcessName)
@@ -530,9 +518,15 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
   def fileMessagesExtractionFinished_Callback(fileHandler: SmartFileHandler, context : SmartFileConsumerContext) : Unit = {
 
     //set file status as finished
-    val pathKey = fileProcessingPath + "/" + context.nodeId + "/" + context.threadId
+    val pathKey = fileProcessingPath + "/" + context.nodeId + "/" + context.partitionId
     val data = fileHandler.getFullPath + "|" + File_Processing_Status_Finished
     envContext.setListenerCacheKey(pathKey, data)
+
+
+    //send a new file request to leader
+    val requestData =  smartFileFromLeaderPath + "/" + context.nodeId+ "/" + context.partitionId //listen to this SmartFileCommunication/FromLeader/<NodeId>/<partitionId id>
+    val requestPathKey = smartFileToLeaderPath + "/" + context.nodeId+ "/" + context.partitionId
+    envContext.setListenerCacheKey(requestPathKey, requestData)
   }
 
   //what a participant should do parallelism value changes
