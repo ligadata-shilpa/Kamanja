@@ -469,9 +469,11 @@ Try again.
     var majorVer = KamanjaVersion.getMajorVersion
     var minVer = KamanjaVersion.getMinorVersion
     var microVer = KamanjaVersion.getMicroVersion
+    val scalaVersionFull = scala.util.Properties.versionNumberString
+    val scalaVersion = scalaVersionFull.substring(0, scalaVersionFull.lastIndexOf('.'))
 
     val componentVersionScriptAbsolutePath = s"$clusterInstallerDriversLocation/GetComponentsVersions.sh"
-    val componentVersionJarAbsolutePath = s"$clusterInstallerDriversLocation/GetComponent-${majorVer}.${minVer}.${microVer}"
+    val componentVersionJarAbsolutePath = s"$clusterInstallerDriversLocation/GetComponent_${scalaVersion}-${majorVer}.${minVer}.${microVer}.jar"
     val kamanjaClusterInstallPath = s"$clusterInstallerDriversLocation/KamanjaClusterInstall.sh"
 
     var cnt: Int = 0
