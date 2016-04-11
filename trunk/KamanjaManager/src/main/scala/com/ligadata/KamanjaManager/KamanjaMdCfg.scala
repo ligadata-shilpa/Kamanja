@@ -149,6 +149,7 @@ object KamanjaMdCfg {
         (a._2.TypeString.compareToIgnoreCase("Validate") == 0) ||
         (a._2.TypeString.compareToIgnoreCase("Output") == 0) ||
         (a._2.TypeString.compareToIgnoreCase("FailedEvents") == 0) ||
+        (a._2.TypeString.compareToIgnoreCase("Storage") == 0) ||
         (a._2.TypeString.compareToIgnoreCase("Status") == 0)) {
         val jar = a._2.JarName
         val depJars = if (a._2.DependencyJars != null) a._2.DependencyJars.map(str => str.trim).filter(str => str.size > 0).toSet else null
@@ -160,7 +161,7 @@ object KamanjaMdCfg {
           allJarsToBeValidated ++= depJars.map(j => Utils.GetValidJarFile(jarPaths, j))
         }
       } else {
-        LOG.error("Found unhandled adapter type %s for adapter %s".format(a._2.TypeString, a._2.Name))
+        LOG.error("Found unhandled adapter of type %s for adapter %s".format(a._2.TypeString, a._2.Name))
         return false
       }
     })
@@ -310,14 +311,10 @@ object KamanjaMdCfg {
     allAdapters.foreach(a => {
       if (a._2.TypeString.compareToIgnoreCase("Input") == 0) {
         inputAdaps(a._1.toLowerCase) = a._2
-//      } else if (a._2.TypeString.compareToIgnoreCase("Validate") == 0) {
-//        validateAdaps(a._1.toLowerCase) = a._2
+      } else if (a._2.TypeString.compareToIgnoreCase("Storage") == 0) {
+        // Nothing to do for now...
       } else if (a._2.TypeString.compareToIgnoreCase("Output") == 0) {
         outputAdaps(a._1.toLowerCase) = a._2
-//      } else if (a._2.TypeString.compareToIgnoreCase("Status") == 0) {
-//        statusAdaps(a._1.toLowerCase) = a._2
-//      } else if (a._2.TypeString.compareToIgnoreCase("FailedEvents") == 0) {
-//        failedEventsAdaps(a._1.toLowerCase) = a._2
       } else {
         LOG.error("Found unhandled adapter type %s for adapter %s".format(a._2.TypeString, a._2.Name))
         return false

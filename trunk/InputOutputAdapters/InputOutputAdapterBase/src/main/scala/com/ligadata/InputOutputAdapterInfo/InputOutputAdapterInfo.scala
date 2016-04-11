@@ -29,6 +29,7 @@ import org.apache.logging.log4j.{ Logger, LogManager }
 import scala.collection.mutable.ArrayBuffer
 
 object AdapterConfiguration {
+  // Strings to be used for the Metrics descriptions
   val TYPE_INPUT = "Input_Adapter"
   val TYPE_OUTPUT = "Output_Adapter"
 }
