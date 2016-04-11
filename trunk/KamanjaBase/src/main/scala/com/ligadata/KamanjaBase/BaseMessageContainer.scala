@@ -19,6 +19,7 @@ package com.ligadata.KamanjaBase
 import java.net.URL
 import java.net.URLClassLoader
 import java.io.{ ByteArrayInputStream, DataInputStream, DataOutputStream, ByteArrayOutputStream }
+import com.ligadata.Exceptions.KamanjaException
 import com.ligadata.Utils.KamanjaClassLoader
 import com.ligadata.kamanja.metadata.MdMgr
 import org.apache.logging.log4j._
@@ -27,6 +28,7 @@ import java.util.Calendar
 import java.text.SimpleDateFormat
 
 import scala.collection.mutable.ArrayBuffer
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 trait MessageContainerBase {
   // System Columns
@@ -268,77 +270,190 @@ trait BaseMsgObj extends MessageContainerObjBase {
 trait AdaptersSerializeDeserializers {
   var mdMgr: MdMgr = _
   var classLoader: KamanjaClassLoader = _
-  // This tuple has Message Name, Serializer Name
-  //  val msgAndSerializers = ArrayBuffer[(String, String)]()
+  private var msgBindings = scala.collection.mutable.Map[String, String]() // For now we are mapping to one message to one serializer. Later may be we need to handle multiple serializers
+  private val reent_lock = new ReentrantReadWriteLock(true)
+
+  private def ReadLock(reent_lock: ReentrantReadWriteLock): Unit = {
+    if (reent_lock != null)
+      reent_lock.readLock().lock()
+  }
+
+  private def ReadUnlock(reent_lock: ReentrantReadWriteLock): Unit = {
+    if (reent_lock != null)
+      reent_lock.readLock().unlock()
+  }
+
+  private def WriteLock(reent_lock: ReentrantReadWriteLock): Unit = {
+    if (reent_lock != null)
+      reent_lock.writeLock().lock()
+  }
+
+  private def WriteUnlock(reent_lock: ReentrantReadWriteLock): Unit = {
+    if (reent_lock != null)
+      reent_lock.writeLock().unlock()
+  }
 
   final def setMdMgrAndClassLoader(mdMgr: MdMgr, classLoader: KamanjaClassLoader): Unit = {
     this.mdMgr = mdMgr
     this.classLoader = classLoader
-    resolveBinding()
+//    resolveBinding()
   }
 
-  private def resolveBinding(): Unit = {
-    //FIXME:- Do we need to lock here & resolve Bindings
+//  private def resolveBinding(): Unit = {
+//    //FIXME:- Do we need to lock here & resolve Bindings
+//  }
+
+  final def getAllMessageBindings: Map[String, String] = {
+    var retVal: Map[String, String] = null
+    ReadLock(reent_lock)
+    try {
+      retVal = msgBindings.toMap
+    } catch {
+      case e: Throwable => {
+        throw e
+      }
+    }
+    finally {
+      ReadUnlock(reent_lock)
+    }
+    return retVal
+  }
+
+  final def getMessageBinding(msgName: String): String = {
+    if (msgName == null) return null
+
+    var retVal: String = null
+    ReadLock(reent_lock)
+    try {
+      retVal = msgBindings.getOrElse(msgName, null)
+    } catch {
+      case e: Throwable => {
+        throw e
+      }
+    }
+    finally {
+      ReadUnlock(reent_lock)
+    }
+    return retVal
   }
 
   // This tuple has Message Name, Serializer Name.
   final def addMessageBinding(msgName: String, serName: String): Unit = {
-    //FIXME:- Do we need to lock here
-    //    if (msgName != null && serName != null)
-    //      msgAndSerializers += ((msgName, serName))
+    if (msgName != null && serName != null)
+      addMessageBinding(Array((msgName, serName)))
   }
 
   // This tuple has Message Name, Serializer Name.
   final def addMessageBinding(binding: (String, String)): Unit = {
-    //FIXME:- Do we need to lock here
-    //    if (binding != null)
-    //      msgAndSerializers += binding
+    if (binding != null)
+      addMessageBinding(Array(binding))
   }
 
   // This tuple has Message Name, Serializer Name.
   final def addMessageBinding(bindings: Array[(String, String)]): Unit = {
-    //FIXME:- Do we need to lock here
-    //    if (bindings != null)
-    //      msgAndSerializers ++= bindings
+    if (bindings == null) return
+
+    WriteLock(reent_lock)
+    try {
+      msgBindings ++= bindings
+    } catch {
+      case e: Throwable => {
+        throw e
+      }
+    }
+    finally {
+      WriteUnlock(reent_lock)
+    }
   }
 
   // This tuple has Message Name, Serializer Name.
   final def removeMessageBinding(msgName: String, serName: String): Unit = {
-    //FIXME:- Do we need to lock here
+    if (msgName != null && serName != null)
+      removeMessageBinding(Array((msgName, serName)))
   }
 
   // This tuple has Message Name, Serializer Name.
   final def removeMessageBinding(binding: (String, String)): Unit = {
-    //FIXME:- Do we need to lock here
+    if (binding != null)
+      removeMessageBinding(Array(binding))
   }
 
   // This tuple has Message Name, Serializer Name.
   final def removeMessageBinding(bindings: Array[(String, String)]): Unit = {
-    //FIXME:- Do we need to lock here
+    if (bindings == null) return
+
+    WriteLock(reent_lock)
+    try {
+      msgBindings --= bindings.map(b => b._1)
+    } catch {
+      case e: Throwable => {
+        throw e
+      }
+    }
+    finally {
+      WriteUnlock(reent_lock)
+    }
+  }
+
+  // This tuple has Message Name, Serializer Name.
+  final def removeMessageBinding(msgName: String): Unit = {
+    if (msgName != null)
+      removeMessageBinding(Array(msgName))
+  }
+
+  // This tuple has Message Name, Serializer Name.
+  final def removeMessageBinding(msgNames: Array[String]): Unit = {
+    if (msgNames == null) return
+
+    WriteLock(reent_lock)
+    try {
+      msgBindings --= msgNames
+    } catch {
+      case e: Throwable => {
+        throw e
+      }
+    }
+    finally {
+      WriteUnlock(reent_lock)
+    }
   }
 
   // Returns serialized msgs, serialized msgs data & serializers names applied on these messages.
   final def serialize(tnxCtxt: TransactionContext, outputContainers: Array[ContainerInterface]): (Array[ContainerInterface], Array[Array[Byte]], Array[String]) = {
+    if (outputContainers == null || outputContainers.size == 0) return (Array[ContainerInterface](), Array[Array[Byte]](), Array[String]())
 
-    val outputContainers = ArrayBuffer[ContainerInterface]()
+    val serOutputContainers = ArrayBuffer[ContainerInterface]()
     val serializedContainerData = ArrayBuffer[Array[Byte]]()
     val usedSerializersNames = ArrayBuffer[String]()
 
-    //FIXME:- Convert each container/message from outputContainers and collect into outputContainers, serializedContainerData, serializerNames
+    val allMsgBindings = getAllMessageBindings
 
-    (outputContainers.toArray, serializedContainerData.toArray, usedSerializersNames.toArray)
+    outputContainers.map(c => {
+      val ser = allMsgBindings.getOrElse(c.getFullTypeName, null)
+      if (ser != null) {
+
+
+      }
+    })
+
+    (serOutputContainers.toArray, serializedContainerData.toArray, usedSerializersNames.toArray)
   }
 
   // Returns serialized msgs, serialized msgs data & serializers names applied on these messages.
   final def serialize(tnxCtxt: TransactionContext, outputContainers: Array[ContainerInterface], serializersNames: Array[String]): (Array[ContainerInterface], Array[Array[Byte]], Array[String]) = {
+    if ((outputContainers == null || outputContainers.size == 0) && (serializersNames == null || serializersNames.size == 0)) return (Array[ContainerInterface](), Array[Array[Byte]](), Array[String]())
 
-    val outputContainers = ArrayBuffer[ContainerInterface]()
+    if (((outputContainers == null || outputContainers.size == 0) && !(serializersNames == null || serializersNames.size == 0)) ||
+      (!(outputContainers == null || outputContainers.size == 0) && (serializersNames == null || serializersNames.size == 0)))
+        throw new KamanjaException("Invalid input sizes", null)
+
+    val serOutputContainers = ArrayBuffer[ContainerInterface]()
     val serializedContainerData = ArrayBuffer[Array[Byte]]()
     val usedSerializersNames = ArrayBuffer[String]()
 
-    //FIXME:- Convert each container/message from outputContainers and collect into outputContainers, serializedContainerData, serializerNames
+    //FIXME:- yet to fix it
 
-    (outputContainers.toArray, serializedContainerData.toArray, usedSerializersNames.toArray)
+    (serOutputContainers.toArray, serializedContainerData.toArray, usedSerializersNames.toArray)
   }
 
   // Returns deserialized msg, deserialized msg data & deserializer name applied.

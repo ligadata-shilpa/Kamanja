@@ -338,9 +338,9 @@ trait EnvContext /* extends Monitorable */  {
 
   // Final Commit for the given transaction
   // outputResults has AdapterName, PartitionKey & Message
-  def commitData(transId: Long, forceCommit: Boolean): Unit
+  def commitData(txnCtxt: TransactionContext): Unit
 
-  def rollbackData(transId: Long): Unit
+  def rollbackData(): Unit
 
   // Save State Entries on local node & on Leader
   // def PersistLocalNodeStateEntries: Unit
