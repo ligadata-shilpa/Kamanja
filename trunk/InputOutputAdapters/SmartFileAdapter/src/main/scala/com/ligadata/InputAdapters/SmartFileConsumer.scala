@@ -246,7 +246,7 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
   //maintained by leader, stores only files being processed (as list under one key). so that if leader changes, new leader can get the processing status
   val File_Processing_Cache_Key = "Smart_File_Adapter/" + adapterConfig.Name + "/" + "FileProcessing"
 
-  val File_Offset_Cache_Key_Prefix = "Smart_File_Adapter/" + adapterConfig.Name + "/" + "Offsets/"//participants sets the value, to be read by leader, stores offset for each file (one key per file)
+  /*val File_Offset_Cache_Key_Prefix = "Smart_File_Adapter/" + adapterConfig.Name + "/" + "Offsets/"//participants sets the value, to be read by leader, stores offset for each file (one key per file)
   def getFileOffsetCacheKey(fileName : String) = File_Offset_Cache_Key_Prefix + fileName
   def getFileOffsetFromCache(fileName : String) : Int = {
     val data = envContext.getConfigFromClusterCache(getFileOffsetCacheKey(fileName))
@@ -254,7 +254,7 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
       0 //file is not processed yet, set offset to zero
     else
       (new String(data).toInt)
-  }
+  }*/
 
   //value in cache has the format <node1>/<thread1>:<path to receive files>|<node2>/<thread1>:<path to receive files>
   def getFileRequestsQueue : List[String] = {
@@ -348,7 +348,8 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
           LOG.debug("Smart File Consumer - Adding a file processing assignment of file + " + fileToProcessFullPath +
             " to Node " + requestingNodeId + ", thread Id=" + requestingThreadId)
 
-          val offset = getFileOffsetFromCache(fileToProcessFullPath)
+          //leave offset management to engine, usually this will be other than zero when calling startProcessing
+          val offset = 0//getFileOffsetFromCache(fileToProcessFullPath)
           val data = fileToProcessFullPath + "|" + offset
 
           //there are files that need to process
