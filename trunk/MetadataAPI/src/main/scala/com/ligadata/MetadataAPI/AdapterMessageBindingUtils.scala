@@ -1,7 +1,7 @@
 package com.ligadata.MetadataAPI
 
 import com.ligadata.Serialize.SerializerManager
-import com.ligadata.kamanja.metadata.{AdapterMessageBinding, MdMgr}
+import com.ligadata.kamanja.metadata.{SerializeDeserializeConfig, MessageDef, AdapterMessageBinding, MdMgr}
 
 import scala.collection.mutable.Map
 
@@ -48,7 +48,7 @@ object AdapterMessageBindingUtils {
             MetadataAPIImpl.SaveObject(key.toLowerCase, value, "adapter_message_bindings", serializerType)
 
             /** format a json string for return result */
-            val res: ApiResult = new ApiResult(0, "AddAdapterMessageBinding", "success!", "binding for $key was successfully added; ")
+            val res: ApiResult = new ApiResult(0, "AddAdapterMessageBinding", "success!", s"binding for $key was successfully added; ")
             res.toString
         } else {
             val res: ApiResult = new ApiResult(-1, "AddAdapterMessageBinding", "failure!", s"$errorMsgs; ")
@@ -103,6 +103,8 @@ object AdapterMessageBindingUtils {
       * 3) the adapter name should exist in MdMgr's adapters map
       * 4) the message should exist in the MdMgr's message map
       * 5) the serializer should exist in the MdMgr's serializers map
+      * 6) if the serializer is the csv serializer, verify that none of the attributes presented in the
+      * message are ContainerTypeDefs.  These are not handled by csv.  Fixed msgs with simple types only.
       *
       * @param adapterName the name of the adapter
       * @param messageName the namespace.name of the message to be bound
@@ -142,22 +144,36 @@ object AdapterMessageBindingUtils {
         if (! adapterPresent) {
             buffer.append(s"the adapter $adapterName cannot be found in the metadata...; ")
         }
-        if (messageNameHasDots) {
+        val msgDef : MessageDef = if (messageNameHasDots) {
             /** 4) the message should exist in the MdMgr's message map */
             val msgNamespace : String = messageName.split('.').dropRight(1).mkString(".")
             val msgName : String = messageName.split('.').last
-            val adapterPresent: Boolean = mdMgr.ActiveMessage(msgNamespace, msgName) != null
-            if (! adapterPresent) {
+            val msgD : MessageDef = mdMgr.ActiveMessage(msgNamespace, msgName)
+            val msgPresent: Boolean = msgD != null
+            if (! msgPresent) {
                 buffer.append(s"the message $messageName cannot be found in the metadata...; ")
             }
+            msgD
+        } else {
+            null
         }
-        if (serializerNameHasDots) {
+        val serializer : SerializeDeserializeConfig = if (serializerNameHasDots) {
             /** 5) he serializer should exist in the MdMgr's serializers map */
-            val adapterPresent: Boolean = mdMgr.GetSerializer(messageName) != null
-            if (! adapterPresent) {
+            val slzer : SerializeDeserializeConfig = mdMgr.GetSerializer(serializerName)
+            val serializerPresent: Boolean = slzer != null
+            if (! serializerPresent) {
                 buffer.append(s"the message $messageName cannot be found in the metadata...; ")
             }
+            slzer
+        } else {
+            null
         }
+        /** 6) csv check ... if csv verify msg is fixed with simple (non-ContainerTypeDef types).  The nested
+          * types (ContainerTypeDef fields) are only supported by Json and KBinary at this time.
+          */
+        // Fixme: implement check 6)
+        // Fixme: implement check 6)
+        // Fixme: implement check 6)
 
         val ok = buffer.isEmpty
         val errorMsgs : String = buffer.toString
@@ -176,37 +192,11 @@ object AdapterMessageBindingUtils {
         var resultBuffer : StringBuilder = new StringBuilder
         bindingMaps.foreach(bindingMap => {
             val result : String = if (bindingMap != null) {
-                val messageNames: List[String] = bindingMap.getOrElse(MessageNamesKey, List[String]()).asInstanceOf[List[String]]
-                val resultsStr : String = if (messageNames != null && messageNames.size > 0) {
-                    /** handle multiple message name style specification... loop through them */
-                    val multiBuffer : StringBuilder = new StringBuilder
-
-                    messageNames.foreach(msgName => {
-                        bindingMap.put(MessageNameKey, msgName) /** slam the key in place */
-                        val res : String = AddAdapterMessageBinding(bindingMap, userId)
-                        multiBuffer.append(s"$res\n")
-                    })
-                    multiBuffer.toString
-
-                } else {
-                    /** handle single name style specification */
-                    val messageName: String = bindingMap.getOrElse(MessageNameKey, null).asInstanceOf[String]
-                    val r : String = if (messageName != null) {
-                        AddAdapterMessageBinding(bindingMap, userId)
-                    } else {
-                        /** simply put the bad name there that will be trapped by the single binding handler */
-                        val msgName : String = "**invalid message name**"
-                        bindingMap.put(MessageNameKey, msgName)
-                        AddAdapterMessageBinding(bindingMap, userId)
-                    }
-                    s"$r\n"
-                }
-                resultsStr
-
+                AddAdapterMessageBinding(bindingMap, userId)
             } else {
                 new ApiResult(-1, "AddAdapterMessageBinding", "failed!", "json map was null.").toString
             }
-            resultBuffer.append(result.toString)
+            resultBuffer.append(result)
         })
         val results : String = resultBuffer.toString
         results

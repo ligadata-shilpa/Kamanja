@@ -3287,7 +3287,7 @@ class MdMgr {
       * @return the corresponding SerializeDeserializeConfig or null if not found
       */
     def GetSerializer(fullName : String) : SerializeDeserializeConfig = {
-        serializers.getOrElse(fullName,null)
+        serializers.getOrElse(fullName.toLowerCase,null)
     }
 
     /**
@@ -3383,8 +3383,9 @@ class MdMgr {
   }
 
   def GetAdapter(adapterName: String): AdapterInfo = {
-    if (adapters.contains(adapterName)) return adapters(adapterName)
-    null
+    val key : String = adapterName.toLowerCase
+    val aInfo : AdapterInfo = adapters.getOrElse(key,null)
+    aInfo
   }
 
   def RemoveAdapter(name: String): Unit = {
