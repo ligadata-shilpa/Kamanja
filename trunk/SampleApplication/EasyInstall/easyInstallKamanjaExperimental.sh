@@ -527,8 +527,8 @@ echo "copy all Kamanja jars and the jars upon which they depend to the $systemli
 
 # -------------------- generated cp commands --------------------
 
-cp $srcPath/FactoriesOfModelInstanceFactory/JarFactoryOfModelInstanceFactory/target/scala-2.11/jarfactoryofmodelinstancefactory_2.11-1.0.jar $systemlib
-cp $srcPath/FactoriesOfModelInstanceFactory/JarFactoryOfModelInstanceFactory/target/scala-2.11/jarfactoryofmodelinstancefactory_2.11-1.0.jar $kamanjainstallsystemlib
+cp $srcPath/FactoriesOfModelInstanceFactory/JarFactoryOfModelInstanceFactory/target/scala-2.11/jarfactoryofmodelinstancefactory_2.11-1.4.0.jar $systemlib
+cp $srcPath/FactoriesOfModelInstanceFactory/JarFactoryOfModelInstanceFactory/target/scala-2.11/jarfactoryofmodelinstancefactory_2.11-1.4.0.jar $kamanjainstallsystemlib
 # -------------------- end of generated cp commands --------------------
 
 

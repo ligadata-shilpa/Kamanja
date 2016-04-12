@@ -27,6 +27,7 @@ SCRIPT_DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 KAMANJA_HOME="$(dirname "$SCRIPT_DIR")"
 export KAMANJA_HOME=$KAMANJA_HOME
 INPUT=$@
+INPUTASIS="$@"
 
 if [ "$1" == "debug" ]; then
     attachDebugger="true"
@@ -141,8 +142,8 @@ elif [ "$INPUT" = "push data" ]; then
 else
     if [ -n "$attachDebugger" ]; then
         ipport="8998"
-        java -Xdebug -Xrunjdwp:transport=dt_socket,address="$ipport",server=y -Dlog4j.configurationFile=file:$KAMANJA_HOME/config/log4j2.xml -cp $KAMANJA_HOME/lib/system/jarfactoryofmodelinstancefactory_2.10-1.0.jar:$KAMANJA_HOME/lib/system/ExtDependencyLibs2_2.10-1.4.0.jar:$KAMANJA_HOME/lib/system/ExtDependencyLibs_2.10-1.4.0.jar:$KAMANJA_HOME/lib/system/KamanjaInternalDeps_2.10-1.4.0.jar:$KAMANJA_HOME/lib/system/MetadataAPI_2.10-1.4.0.jar com.ligadata.MetadataAPI.StartMetadataAPI $INPUT
+        java -Xdebug -Xrunjdwp:transport=dt_socket,address="$ipport",server=y -Dlog4j.configurationFile=file:$KAMANJA_HOME/config/log4j2.xml -cp $KAMANJA_HOME/lib/system/jarfactoryofmodelinstancefactory_2.10-1.0.jar:$KAMANJA_HOME/lib/system/ExtDependencyLibs2_2.10-1.4.0.jar:$KAMANJA_HOME/lib/system/ExtDependencyLibs_2.10-1.4.0.jar:$KAMANJA_HOME/lib/system/KamanjaInternalDeps_2.10-1.4.0.jar:$KAMANJA_HOME/lib/system/MetadataAPI_2.10-1.4.0.jar com.ligadata.MetadataAPI.StartMetadataAPI $INPUTASIS
     else
-        java -Dlog4j.configurationFile=file:$KAMANJA_HOME/config/log4j2.xml -cp $KAMANJA_HOME/lib/system/jarfactoryofmodelinstancefactory_2.10-1.0.jar:$KAMANJA_HOME/lib/system/ExtDependencyLibs2_2.10-1.4.0.jar:$KAMANJA_HOME/lib/system/ExtDependencyLibs_2.10-1.4.0.jar:$KAMANJA_HOME/lib/system/KamanjaInternalDeps_2.10-1.4.0.jar:$KAMANJA_HOME/lib/system/MetadataAPI_2.10-1.4.0.jar com.ligadata.MetadataAPI.StartMetadataAPI $INPUT
+        java -Dlog4j.configurationFile=file:$KAMANJA_HOME/config/log4j2.xml -cp $KAMANJA_HOME/lib/system/jarfactoryofmodelinstancefactory_2.10-1.0.jar:$KAMANJA_HOME/lib/system/ExtDependencyLibs2_2.10-1.4.0.jar:$KAMANJA_HOME/lib/system/ExtDependencyLibs_2.10-1.4.0.jar:$KAMANJA_HOME/lib/system/KamanjaInternalDeps_2.10-1.4.0.jar:$KAMANJA_HOME/lib/system/MetadataAPI_2.10-1.4.0.jar com.ligadata.MetadataAPI.StartMetadataAPI $INPUTASIS
     fi
 fi
