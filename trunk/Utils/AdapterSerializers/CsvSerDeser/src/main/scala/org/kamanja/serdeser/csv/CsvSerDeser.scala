@@ -44,7 +44,7 @@ object CsvContainerInterfaceKeys extends Enumeration {
 
 class CsvSerDeser() extends SerializeDeserialize with LogTrait {
 
-    var _mgr : MdMgr = null
+ //   var _mgr : MdMgr = null
     var _objResolver : ObjectResolver = null
     var _classLoader : java.lang.ClassLoader = null
     var _isReady : Boolean = false
@@ -79,9 +79,7 @@ class CsvSerDeser() extends SerializeDeserialize with LogTrait {
         val withComma : Boolean = true
         val withoutComma :Boolean = false
         val containerName : String = v.getFullTypeName
-        val containerVersion :String = v.getTypeVersion
-        val container : ContainerTypeDef = _mgr.ActiveType(containerName).asInstanceOf[ContainerTypeDef]
-        val className : String = container.PhysicalName
+        val containerType = v.getContainerType
 
 
         /** write the first field with the appropriate field delimiter suffixed to it. */
@@ -89,22 +87,16 @@ class CsvSerDeser() extends SerializeDeserialize with LogTrait {
         val containerNameCsv : String = csvTypeInfo(CsvContainerInterfaceKeys.typename.toString, fieldDelimiter)
         dos.writeUTF(containerNameCsv)
 
-        val containerType : ContainerTypeDef = if (container != null) container.asInstanceOf[ContainerTypeDef] else null
-        if (containerType == null) {
-            throw new ObjectNotFoundException(s"type name $containerName is not a container type... serialize fails.",null)
-        }
-        val mappedMsgType : MappedMsgTypeDef = if (containerType.isInstanceOf[MappedMsgTypeDef]) containerType.asInstanceOf[MappedMsgTypeDef] else null
-        val fixedMsgType : StructTypeDef = if (containerType.isInstanceOf[StructTypeDef]) containerType.asInstanceOf[StructTypeDef] else null
+//        if ((containerType != ContainerFactoryInterface.MESSAGE) && (containerType != ContainerFactoryInterface.CONTAINER)) {
+//            throw new ObjectNotFoundException(s"type name $containerName is not a container type... serialize fails.",null)
+//        }
 
         /** The Csv implementation of the SerializeDeserialize interface will not support the mapped message type.  Instead there will be another
           * implementation that supports the Kamanja Variable Comma Separated Value (VCSV) format.  That one deals with sparse data as does the
           * JSON implementation.  Either of those should be chosen
           */
-        if (mappedMsgType != null) {
+        if (v.isFixed == false) {
             throw new UnsupportedObjectException(s"type name $containerName is a mapped message container type... Csv emcodings of mapped messages are not currently supported...choose JSON or (when available) Kamanja VCSV serialize/deserialize... deserialize fails.",null)
-        }
-        if (fixedMsgType == null) {
-            throw new UnsupportedObjectException(s"type name $containerName is not a fixed message container type... serialize fails.",null)
         }
 
         /* The check for empty container should be done at adapter binding level rather than here.
@@ -113,11 +105,6 @@ class CsvSerDeser() extends SerializeDeserialize with LogTrait {
         val fields = v.getAllAttributeValues
         if (fields.isEmpty) {
             throw new ObjectNotFoundException(s"The container ${containerName} surprisingly has no fields...serialize fails", null)
-        }
-
-        if (_emitHeaderFirst) {
-            emitHeaderRecord(dos, fields)
-            _emitHeaderFirst = false
         }
 
         var processCnt : Int = 0
@@ -282,15 +269,6 @@ class CsvSerDeser() extends SerializeDeserialize with LogTrait {
         aType.isInstanceOf[ContainerTypeDef]
     }
 
-    /**
-      * Answer if the supplied BaseTypeDef is a StructTypeDef (used for fixed messages).
-      *
-      * @param aType a BaseTypeDef
-      * @return true if a StructTypeDef
-      */
-    private def isFixedMsgTypeDef(aType : BaseTypeDef) : Boolean = {
-        aType.isInstanceOf[StructTypeDef]
-    }
 
     /**
       * Set the object resolver to be used for this serializer
@@ -313,11 +291,10 @@ class CsvSerDeser() extends SerializeDeserialize with LogTrait {
                   , objResolver: ObjectResolver
                   , classLoader: ClassLoader
                   , configProperties : java.util.Map[String,String]): Unit = {
-        _mgr  = mgr
         _objResolver = objResolver
         _classLoader  = classLoader
         _config = configProperties.asScala
-        _isReady = (_mgr != null && _objResolver != null && _classLoader != null && _config != null &&
+        _isReady = (_objResolver != null && _classLoader != null && _config != null &&
             _config.contains("fieldDelimiter") && _config.contains("alwaysQuoteField") &&
             _config.contains("lineDelimiter"))
         _fieldDelimiter = _config.getOrElse("fieldDelimiter", null)
@@ -454,6 +431,5 @@ class CsvSerDeser() extends SerializeDeserialize with LogTrait {
         val escapeQuotedStr : String = if (buffer.isEmpty) valueStr else buffer.toString
         escapeQuotedStr
     }
-
 }
 

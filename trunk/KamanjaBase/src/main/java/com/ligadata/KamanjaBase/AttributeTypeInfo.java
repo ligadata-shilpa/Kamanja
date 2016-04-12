@@ -33,8 +33,32 @@ public class AttributeTypeInfo {
 		}
 	}
 
+	public TypeCategory toTypeCategory(Short typeId) {
+		switch(typeId) {
+			case 0: return TypeCategory.INT;
+			case 1: return TypeCategory.STRING;
+			case 2: return TypeCategory.FLOAT;
+			case 3: return TypeCategory.DOUBLE;
+			case 4: return TypeCategory.LONG;
+			case 5: return TypeCategory.BYTE;
+			case 6: return TypeCategory.CHAR;
+			case 7: return TypeCategory.BOOLEAN;
+			case 1001: return TypeCategory.CONTAINER;
+			case 1002: return TypeCategory.MESSAGE;
+			case 1003: return TypeCategory.ARRAY;
+			default: return TypeCategory.NONE;
+		}
+	}
 	public boolean IsContainer() {
-		return (typeCategory == TypeCategory.CONTAINER);
+		return (typeCategory == TypeCategory.CONTAINER || typeCategory == TypeCategory.MESSAGE);
+	}
+
+	public boolean IsArray() {
+		return (typeCategory == TypeCategory.ARRAY);
+	}
+
+	public boolean IsMap() {
+		return (typeCategory == TypeCategory.MAP);
 	}
 
 	public String getName() {
@@ -53,9 +77,13 @@ public class AttributeTypeInfo {
 		Index = index;
 	}
 
-	public TypeCategory getTypeCategary() {
+	public TypeCategory getTypeCategory() {
 		return (TypeCategory) typeCategory;
 	}
+
+	public TypeCategory getKeyTypeCategory() { return toTypeCategory(keyTypeId); }
+
+	public TypeCategory getValTypeCategory() { return toTypeCategory(valTypeId); }
 
 	public void setTypeCategary(TypeCategory typeCategory) {
 		this.typeCategory = typeCategory;
