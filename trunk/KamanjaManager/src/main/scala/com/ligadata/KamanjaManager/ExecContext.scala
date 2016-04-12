@@ -87,7 +87,7 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
     }
   */
 
-  def executeMessage(txnCtxt: TransactionContext): Unit = {
+  protected override def executeMessage(txnCtxt: TransactionContext): Unit = {
     try {
       val curLoader = txnCtxt.getNodeCtxt().getEnvCtxt().getMetadataLoader.loader // Protecting from changing it between below statements
       if (curLoader != null && previousLoader != curLoader) {
@@ -109,6 +109,14 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
     }
   }
 
+  protected override def commitData(txnCtxt: TransactionContext): Unit = {
+    try {
+      // Commit. Writing into OutputAdapters & Storage Adapters
+
+    } catch {
+      case e: Throwable => throw e
+    }
+  }
 
 //    def executeMessage(txnCtxt: TransactionContext, deserializerName: String): Unit = {
 //    try {
@@ -499,7 +507,7 @@ object PostMessageExecutionQueue {
     val (txnIdsRangeForPartition, txnIdsRangeForNode)  = nodeContext.getEnvCtxt().getTransactionRanges
 
     NodeLevelTransService.init(zkConnectString, zkSessionTimeoutMs, zkConnectionTimeoutMs, zkNodeBasePath, txnIdsRangeForNode,
-      nodeContext.getEnvCtxt().getSystemCatalogDatastore, nodeContext.getEnvCtxt().getJarPaths())
+      nodeContext.getEnvCtxt().getSystemCatalogDatastore(), nodeContext.getEnvCtxt().getJarPaths())
     val tmpTransService = new SimpleTransService
     tmpTransService.init(txnIdsRangeForPartition)
     transService  = tmpTransService

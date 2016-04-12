@@ -90,7 +90,6 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   private var txnIdsRangeForNode: Int = 100000 // Each time get txnIdsRange of transaction ids for each Node
   private var txnIdsRangeForPartition: Int = 10000 // Each time get txnIdsRange of transaction ids for each partition
   private var _sysCatalogDatastore: String = _
-  private val _defaultDatastoresForTenants = scala.collection.mutable.Map[String, String]()
   private var _postMsgListenerCallback: (Array[ContainerInterface]) => Unit = null
 
   case class LeaderListenerCallback(val EventChangeCallback: (ClusterStatus) => Unit)
@@ -2843,14 +2842,27 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   }
 
   // Cache Listeners
-  def setListenerCacheKey(key: String, value: String): Unit = {}
+  def setListenerCacheKey(key: String, value: String): Unit = {
+    setDataToZNode(key: String, value.getBytes())
+  }
 
   // listenPath is the Path where it has to listen. Ex: /kamanja/notification/node1
   // ListenCallback is the call back called when there is any change in listenPath. The return value is has 3 components. 1 st is eventType, 2 is eventPath and 3rd is eventPathData
   // eventType is PUT, UPDATE, REMOVE etc
   // eventPath is the Path where it changed the data
   // eventPathData is the data of that path
-  def createListenerForCacheKey(listenPath: String, ListenCallback: (String, String, String) => Unit): Unit = {}
+  def createListenerForCacheKey(listenPath: String, ListenCallback: (String, String, String) => Unit): Unit = {
+    class Test(path: String, ListenCallback: (String, String, String) => Unit) {
+      def Callback(data: String): Unit = {
+        if (ListenCallback != null)
+          ListenCallback("UPDATE", path, data)
+      }
+    }
+
+    val tst = new Test(listenPath, ListenCallback)
+
+    createZkPathListener(listenPath: String, tst.Callback)
+  }
 
   // listenPath is the Path where it has to listen and its children
   //    Ex: If we start watching /kamanja/nodification/ all the following puts/updates/removes/etc will notify callback
@@ -2860,7 +2872,13 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   // eventPath is the Path where it changed the data
   // eventPathData is the data of that path
   // eventType: String, eventPath: String, eventPathData: Array[Byte]
-  def createListenerForCacheChildern(listenPath: String, ListenCallback: (String, String, String) => Unit): Unit = {}
+  def createListenerForCacheChildern(listenPath: String, ListenCallback: (String, String, String) => Unit): Unit = {
+
+    val sendOne = (evntTyp: String, key: String, value: Array[Byte], other: Array[(String, Array[Byte])]) => {
+      ListenCallback(evntTyp, key, new String(value))
+    }
+    createZkPathChildrenCacheListener(listenPath, false, sendOne)
+  }
 
   override def getClusterInfo(): ClusterStatus = _clusterStatusInfo
 
@@ -2944,11 +2962,12 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
       null
   }
 
-  override def setDefaultDatastoresForTenants(defaultDatastores: scala.collection.immutable.Map[String, String]): Unit = {
-    _defaultDatastoresForTenants ++= defaultDatastores
+  override def getPrimaryDatastoreForTenantId(tenantId: String): String = {
+    val tntInfo = _mgr.GetTenantInfo(tenantId)
+    if (tntInfo == null)
+      throw new KamanjaException("Not found tenantId:%s in metadata".format(tenantId), null)
+    tntInfo.primaryDataStore
   }
-
-  override def getDefaultDatastoreForTenantId(tenantId: String): String = _defaultDatastoresForTenants.getOrElse(tenantId, null)
 
   override def setSystemCatalogDatastore(sysCatalog: String): Unit = {
     _sysCatalogDatastore = sysCatalog

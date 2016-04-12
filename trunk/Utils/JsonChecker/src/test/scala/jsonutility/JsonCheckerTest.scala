@@ -7,66 +7,73 @@ import Matchers._
   */
 class JsonCheckerTest extends FeatureSpec with GivenWhenThen {
 
+  private def getResourceFullPath(resourcePath : String): String ={
+    val os = System.getProperty("os.name")
+    val isWidnows = os.toLowerCase.contains("windows")
+    val path = getClass.getResource(resourcePath).getPath
+    val finalPath = if(isWidnows) path.substring(1) else path
+    finalPath
+  }
+
   info("This an example to test JsonChecker class")
   info("I want to be able to create an JsonChecker object")
   info("So i can access the variables")
   info("And get all variables when I need it using functions")
   feature("JsonChecker object") {
     val JsonChecker = new JsonChecker()
-    scenario("test if everything is ok") {
+    scenario("Unit Tests for all JsonChecker function") {
+
       Given("Initiate variables")
-      val filePath = "C:\\Users\\Yousef\\Desktop\\BotnetDetection\\Jsonfile\\ConfigParameters.json"
-      Given("Call readFile function")
-     val fileContent = JsonChecker.ReadFile(filePath)
-      Then("The fileContent value should be set")
-      fileContent should not be (null)
-      fileContent should not equal(0)
+      val filePath = getResourceFullPath("/ConfigParameters.json")
+      val filePathWithNoExtension = getResourceFullPath("/ConfigParameters")
+      val filePathEmpty = getResourceFullPath("/ConfigParametersTest.json")
+      val filePathIncorrectStructure = getResourceFullPath("/ConfigParametersIncorrect.json")
 
-      Given("Call FileExist function")
-      val fileExitFlag = JsonChecker.FileExist(filePath)
-      Then("The file should be exists")
-      fileExitFlag should be (true)
+      Given("Test readFile function")
 
-      Given("Call FindFileExtension function")
-      val fileExtintionFlag = JsonChecker.FindFileExtension(filePath)
-      Then("The file extension should be JSON")
-      fileExtintionFlag should be (true)
-    }
-
-  scenario("test if  extension not json") {
-    Given("Initiate variables")
-    val filePath = "C:\\Users\\Yousef\\Desktop\\BotnetDetection\\Jsonfile\\ConfigParameters"
-
-    Given("Call FileExist function")
-    val fileExitFlag = JsonChecker.FileExist(filePath)
-    Then("The file should be exists")
-    fileExitFlag should be (false)
-
-    Given("Call FindFileExtension function")
-    val fileExtintionFlag = JsonChecker.FindFileExtension(filePath)
-    Then("The file extension should be JSON")
-    fileExtintionFlag should be (false)
-  }
-
-    scenario("test if no data in file") {
-      Given("Initiate variables")
-      val filePath = "C:\\Users\\Yousef\\Desktop\\BotnetDetection\\Jsonfile\\ConfigParameterstest.json"
-
-      Given("Call readFile function")
+      When("The file includes data")
       val fileContent = JsonChecker.ReadFile(filePath)
-      Then("The fileContent value should be set")
-      fileContent should  be (null)
-      //fileContent should not equal(0)
+      Then("The fileContent value should be set and FileContent length should not equal 0")
+      fileContent should not be (null)
+      fileContent.length should not equal (0)
 
-      Given("Call FileExist function")
+      When("file does not include data")
+      val fileContentEmpty = JsonChecker.ReadFile(filePathEmpty)
+      Then("The fileContent length should be 0")
+      fileContentEmpty.length should be(0)
+
+      Given("Test FileExist function")
+
+      When("The file in path")
       val fileExitFlag = JsonChecker.FileExist(filePath)
-      Then("The file should be exists")
-      fileExitFlag should be (false)
+      Then("The fileExist flag should be true")
+      fileExitFlag should be(true)
 
-      Given("Call FindFileExtension function")
-      val fileExtintionFlag = JsonChecker.FindFileExtension(filePath)
-      Then("The file extension should be JSON")
-      fileExtintionFlag should be (false)
+      When("The file not in path")
+      Then("a NullPointException should be raise")
+      intercept[NullPointerException] {
+        val fileExitFlag = JsonChecker.FileExist(getResourceFullPath("/Config.json"))
+      }
+
+      Given("Test FindFileExtension function")
+
+      When("The extension of file is JSON")
+      var fileExtinsionFlag = JsonChecker.FindFileExtension(filePath)
+      Then("The file extension Flag should be true")
+      fileExtinsionFlag should be(true)
+
+      When("The extension of file is not JSON")
+      fileExtinsionFlag = JsonChecker.FindFileExtension(filePathWithNoExtension)
+      Then("The fileExist flag should be false")
+      fileExtinsionFlag should be(false)
+
+      Given("Test ParseFile function")
+
+      When("The structure of file is correct")
+      Then("no exception should be raise")
+      noException should be thrownBy {
+        JsonChecker.ParseFile(fileContent)
+      }
     }
   }
 }
