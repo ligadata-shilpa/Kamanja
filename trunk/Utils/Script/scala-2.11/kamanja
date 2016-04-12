@@ -27,7 +27,6 @@ SCRIPT_DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 KAMANJA_HOME="$(dirname "$SCRIPT_DIR")"
 export KAMANJA_HOME=$KAMANJA_HOME
 INPUT=$@
-INPUTASIS="$@"
 
 if [ "$1" == "debug" ]; then
     attachDebugger="true"
