@@ -64,7 +64,7 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
 
   }
 
-  protected override def executeMessage(txnCtxt: TransactionContext, deserializerName: String): Unit = {
+  protected override def executeMessage(txnCtxt: TransactionContext): Unit = {
 //    if (format.equalsIgnoreCase("json")) {
 //      //if (data.charAt(0).toString.equals("{")) {
 //      agg.processJsonMessage(parse(new String(data)).values.asInstanceOf[Map[String, Any]])
@@ -72,6 +72,16 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
 //      agg.processCSVMessage(new String(data), uniqueVal.asInstanceOf[KafkaPartitionUniqueRecordValue].Offset)
 //    }
   }
+
+  protected override def commitData(txnCtxt: TransactionContext): Unit = {
+    try {
+      // Commit. Writing into OutputAdapters & Storage Adapters
+
+    } catch {
+      case e: Throwable => throw e
+    }
+  }
+
 }
 
 class KamanjaMonitor {

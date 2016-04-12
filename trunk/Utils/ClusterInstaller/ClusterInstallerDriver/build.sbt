@@ -64,14 +64,16 @@ crossPaths := false
 
 // This forbids including Scala related libraries into the dependency
 autoScalaLibrary := false
-//
-//resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
-//
-//libraryDependencies += "org.apache.logging.log4j" % "log4j-1.2-api" % "2.4.1"
-//
-//libraryDependencies += "org.apache.logging.log4j" % "log4j-api" % "2.4.1"
-//
-//libraryDependencies += "org.apache.logging.log4j" % "log4j-core" % "2.4.1"
+
+resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
+
+libraryDependencies += "org.apache.logging.log4j" % "log4j-1.2-api" % "2.4.1"
+
+libraryDependencies += "org.apache.logging.log4j" % "log4j-api" % "2.4.1"
+
+libraryDependencies += "org.apache.logging.log4j" % "log4j-core" % "2.4.1"
+
+libraryDependencies += "joda-time" % "joda-time" % "2.8.2"
 
 // EclipseKeys.projectFlavor := EclipseProjectFlavor.Java
 

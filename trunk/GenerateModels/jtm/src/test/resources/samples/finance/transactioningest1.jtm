@@ -29,14 +29,14 @@
           },
           "where": "\"com.ligadata.kamanja.samples.messages.TransactionMsg\" == $type",
           "mapping": {
-            "custid": "ToLong($arrayData(1))",
-            "branchid": "ToInteger($arrayData(2))",
-            "accno": "ToLong($arrayData(3))",
-            "amount": "ToDouble($arrayData(4))",
-            "balance": "ToDouble($arrayData(5))",
-            "date": "ToInteger($arrayData(6))",
-            "time": "ToInteger($arrayData(7))",
-            "locationid": "ToInteger($arrayData(8))",
+            "custid": "$arrayData(1)",
+            "branchid": "$arrayData(2)",
+            "accno": "$arrayData(3)",
+            "amount": "$arrayData(4)",
+            "balance": "$arrayData(5)",
+            "date": "$arrayData(6)",
+            "time": "$arrayData(7)",
+            "locationid": "$arrayData(8)",
             "transtype": "$arrayData(9)"
           }
         }

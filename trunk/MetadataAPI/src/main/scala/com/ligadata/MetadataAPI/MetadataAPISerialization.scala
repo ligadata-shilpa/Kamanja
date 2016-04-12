@@ -67,6 +67,15 @@ object MetadataAPISerialization {
             })
           }
 
+          val containerDef = o.cType.asInstanceOf[ContainerTypeDef]
+
+          val attribs =
+            if (containerDef.IsFixed) {
+              containerDef.asInstanceOf[StructTypeDef].memberDefs.toList
+            } else {
+              containerDef.asInstanceOf[MappedMsgTypeDef].attrMap.map(kv => kv._2).toList
+            }
+
           val json = "Message" ->
             ("Name" -> o.Name) ~
               ("PhysicalName" -> o.PhysicalName) ~
@@ -87,6 +96,13 @@ object MetadataAPISerialization {
               ("IsDeleted" -> o.IsDeleted) ~
               ("Persist" -> o.cType.Persist) ~
               ("Description" -> getEmptyIfNull(o.Description)) ~
+              ("MsgAttributes" -> attribs.map(a =>
+                ("NameSpace" -> a.NameSpace) ~
+                  ("Name" -> a.Name) ~
+                  ("TypNameSpace" -> a.typeDef.NameSpace) ~
+                  ("TypName" -> a.typeDef.Name) ~
+                  ("Version" -> a.Version) ~
+                  ("CollectionType" -> ObjType.asString(a.CollectionType)))) ~
               ("NumericTypes" -> ("Version" -> o.Version) ~ ("TransId" -> o.TranId) ~ ("UniqId" -> o.UniqId) ~ ("CreationTime" -> o.CreationTime) ~ ("ModTime" -> o.ModTime) ~ ("MdElemStructVer" -> o.MdElemStructVer) ~ ("MdElementId" -> o.MdElementId)) ~
               ("PrimaryKeys" -> primaryKeys.map(m => ("constraintName" -> m._1) ~ ("key" -> m._2))) ~
               ("ForeignKeys" -> foreignKeys.map(m => ("constraintName" -> m._1) ~ ("key" -> m._2) ~ ("forignContainerName" -> m._3) ~ ("forignKey" -> m._4)))
@@ -106,6 +122,15 @@ object MetadataAPISerialization {
               }
             })
           }
+
+          val containerDef = o.cType.asInstanceOf[ContainerTypeDef]
+
+          val attribs =
+            if (containerDef.IsFixed) {
+              containerDef.asInstanceOf[StructTypeDef].memberDefs.toList
+            } else {
+              containerDef.asInstanceOf[MappedMsgTypeDef].attrMap.map(kv => kv._2).toList
+            }
 
           val json = "Container" ->
             ("Name" -> o.name) ~
@@ -127,6 +152,13 @@ object MetadataAPISerialization {
               ("IsActive" -> o.IsActive) ~
               ("IsDeleted" -> o.IsDeleted) ~
               ("Description" -> o.Description) ~
+              ("MsgAttributes" -> attribs.map(a =>
+                ("NameSpace" -> a.NameSpace) ~
+                  ("Name" -> a.Name) ~
+                  ("TypNameSpace" -> a.typeDef.NameSpace) ~
+                  ("TypName" -> a.typeDef.Name) ~
+                  ("Version" -> a.Version) ~
+                  ("CollectionType" -> ObjType.asString(a.CollectionType)))) ~
               ("NumericTypes" -> ("Version" -> o.Version) ~ ("TransId" -> o.TranId) ~ ("UniqId" -> o.UniqId) ~ ("CreationTime" -> o.CreationTime) ~ ("ModTime" -> o.ModTime) ~ ("MdElemStructVer" -> o.MdElemStructVer) ~ ("MdElementId" -> o.MdElementId)) ~
               ("PrimaryKeys" -> primaryKeys.map(m => ("constraintName" -> m._1) ~ ("key" -> m._2))) ~
               ("ForeignKeys" -> foreignKeys.map(m => ("constraintName" -> m._1) ~ ("key" -> m._2) ~ ("forignContainerName" -> m._3) ~ ("forignKey" -> m._4)))
@@ -711,10 +743,10 @@ object MetadataAPISerialization {
       logger.debug("Parsed the json : " + msgDefJson)
 
       val MsgDefInst = msgDefJson.extract[MessageDefin]
-      val attrList = MsgDefInst.Message.Attributes
+      val attrList = MsgDefInst.Message.MsgAttributes
       var attrList1 = List[(String, String, String, String, Boolean, String)]()
       for (attr <- attrList) {
-        attrList1 ::=(attr.NameSpace, attr.Name, attr.Type.TypeNameSpace, attr.Type.TypeName, false, attr.CollectionType.get)
+        attrList1 ::=(attr.NameSpace, attr.Name, attr.TypNameSpace, attr.TypName, false, attr.CollectionType)
       }
 
       var primaryKeys = List[(String, List[String])]()
@@ -782,10 +814,10 @@ object MetadataAPISerialization {
       logger.debug("Parsed the json : " + contDefJson)
 
       val ContDefInst = contDefJson.extract[ContainerDefin]
-      val attrList = ContDefInst.Container.Attributes
+      val attrList = ContDefInst.Container.MsgAttributes
       var attrList1 = List[(String, String, String, String, Boolean, String)]()
       for (attr <- attrList) {
-        attrList1 ::=(attr.NameSpace, attr.Name, attr.Type.TypeNameSpace, attr.Type.TypeName, false, attr.CollectionType.get)
+        attrList1 ::=(attr.NameSpace, attr.Name, attr.TypNameSpace, attr.TypName, false, attr.CollectionType)
       }
 
       var primaryKeys = List[(String, List[String])]()
@@ -1877,7 +1909,9 @@ case class Function(Function: FunctionInfo)
 
 case class Attr(NameSpace: String, Name: String, Version: Long, CollectionType: Option[String], Type: TypeDef)
 
-case class MessageInfo(NameSpace: String, Name: String, JarName: String, PhysicalName: String, DependencyJars: List[String], Attributes: List[Attr], OrigDef: String, ObjectDefinition: String, ObjectFormat: String, Description: String, OwnerId: String, Author: String, PartitionKey: List[String], Persist: Boolean, IsActive: Boolean, IsDeleted: Boolean, SchemaId: Int, AvroSchema: String, PrimaryKeys: List[PrimaryKeys], ForeignKeys: List[ForeignKeys], NumericTypes: NumericTypes, TenantId: String)
+case class MsgAttr(NameSpace: String, Name: String, TypNameSpace: String, TypName: String, Version: Long, CollectionType: String)
+
+case class MessageInfo(NameSpace: String, Name: String, JarName: String, PhysicalName: String, DependencyJars: List[String], MsgAttributes: List[MsgAttr], OrigDef: String, ObjectDefinition: String, ObjectFormat: String, Description: String, OwnerId: String, Author: String, PartitionKey: List[String], Persist: Boolean, IsActive: Boolean, IsDeleted: Boolean, SchemaId: Int, AvroSchema: String, PrimaryKeys: List[PrimaryKeys], ForeignKeys: List[ForeignKeys], NumericTypes: NumericTypes, TenantId: String)
 
 case class PrimaryKeys(constraintName: String, key: List[String])
 

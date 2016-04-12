@@ -70,6 +70,7 @@ Usage()
     echo "                               --newInstallDirPath <new dir path of physical install>  "
     echo "                               --installVerificationFile <file to get the verification information>  "
     echo "                               --externalJarsDir <external jars directory to be copied to installation lib/application> "
+    echo "                               --tenantId <a tenantId is applied to all metadata objects> "
     echo
     echo "  NOTES: Only tar'd gzip files are supported for the tarballs at the moment."
     echo "         NodeConfigPath must be supplied always"
@@ -87,7 +88,7 @@ Usage()
 
 
 # Check 1: Is this even close to reasonable?
-if [[ "$#" -eq 1  || "$#" -eq 4  || "$#" -eq 6  || "$#" -eq 8  || "$#" -eq 10  || "$#" -eq 12  || "$#" -eq 14  || "$#" -eq 16  || "$#" -eq 18  || "$#" -eq 20 || "$#" -eq 22 || "$#" -eq 24 || "$#" -eq 26 ]]; then
+if [[ "$#" -eq 1  || "$#" -eq 4  || "$#" -eq 6  || "$#" -eq 8  || "$#" -eq 10  || "$#" -eq 12  || "$#" -eq 14  || "$#" -eq 16  || "$#" -eq 18  || "$#" -eq 20 || "$#" -eq 22 || "$#" -eq 24 || "$#" -eq 26 || "$#" -eq 28 ]]; then
     echo 
 else 
     echo 
@@ -97,7 +98,7 @@ else
 fi
 
 # Check 2: Is this even close to reasonable?
-if [[ "$name1" != "--ClusterId" && "$name1" != "--MetadataAPIConfig" && "$name1" != "--NodeConfigPath"  && "$name1" != "--KafkaInstallPath"   && "$name1" != "--TarballPath"  && "$name1" != "--WorkingDir"   && "$name1" != "--ipAddrs"   && "$name1" != "--ipIdTargPaths"   && "$name1" != "--ipPathPairs" && "$name1" != "--priorInstallDirPath" &&  "$name1" != "--newInstallDirPath"  &&  "$name1" != "--externalJarsDir" ]]; then
+if [[ "$name1" != "--ClusterId" && "$name1" != "--MetadataAPIConfig" && "$name1" != "--NodeConfigPath"  && "$name1" != "--KafkaInstallPath"   && "$name1" != "--TarballPath"  && "$name1" != "--WorkingDir"   && "$name1" != "--ipAddrs"   && "$name1" != "--ipIdTargPaths"   && "$name1" != "--ipPathPairs" && "$name1" != "--priorInstallDirPath" &&  "$name1" != "--newInstallDirPath"  &&  "$name1" != "--externalJarsDir" &&  "$name1" != "--tenantId" ]]; then
     echo 
 	echo "Problem: Unreasonable number of arguments... as few as 2 and as many as 26 may be supplied."
     Usage
@@ -120,6 +121,7 @@ priorInstallDirPath=""
 newInstallDirPath=""
 installVerificationFile=""
 externalJarsDir=""
+tenantId=""
 
 while [ "$1" != "" ]; do
     case $1 in
@@ -162,6 +164,9 @@ while [ "$1" != "" ]; do
                                 ;;
         --externalJarsDir )   shift
                                 externalJarsDir=$1
+                                ;;
+        --tenantId )           shift
+                                tenantId=$1
                                 ;;
         --help )           		Usage
         						exit 0
@@ -393,8 +398,8 @@ if [ "$ipAddrs" == "" -a "$ipIdTargPaths" == ""  -a "$ipPathPairs" == ""  -a "$p
 		echo "ipIdCfgTargPathQuartetTmpFileName = $ipIdCfgTargPathQuartetTmpFileName"
 		echo "installDir = $installDir"
 		echo "clusterId = $clusterId"
-		echo "...Command = java -cp $installDir/lib/system/jarfactoryofmodelinstancefactory_2.11-1.0.jar:$installDir/lib/system/ExtDependencyLibs2_2.11-1.4.0.jar:$installDir/lib/system/ExtDependencyLibs_2.11-1.4.0.jar:$installDir/lib/system/KamanjaInternalDeps_2.11-1.4.0.jar:$installDir/lib/system/nodeinfoextract_2.11-1.4.0.jar com.ligadata.installer.NodeInfoExtract --MetadataAPIConfig \"$metadataAPIConfig\" --NodeConfigPath \"$nodeConfigPath\"  --workDir \"$workDir\" --ipFileName \"$ipTmpFile\" --ipPathPairFileName \"$ipPathPairTmpFile\" --ipIdCfgTargPathQuartetFileName \"$ipIdCfgTargPathQuartetTmpFileName\" --installDir \"$installDir\" --clusterId \"$clusterId\""
-		java -cp $installDir/lib/system/jarfactoryofmodelinstancefactory_2.11-1.0.jar:$installDir/lib/system/ExtDependencyLibs2_2.11-1.4.0.jar:$installDir/lib/system/ExtDependencyLibs_2.11-1.4.0.jar:$installDir/lib/system/KamanjaInternalDeps_2.11-1.4.0.jar:$installDir/lib/system/nodeinfoextract_2.11-1.4.0.jar com.ligadata.installer.NodeInfoExtract --MetadataAPIConfig "$metadataAPIConfig" --NodeConfigPath "$nodeConfigPath" --workDir "$workDir" --ipFileName "$ipTmpFile" --ipPathPairFileName "$ipPathPairTmpFile" --ipIdCfgTargPathQuartetFileName "$ipIdCfgTargPathQuartetTmpFileName"  --installDir "$installDir" --clusterId "$clusterId"
+		echo "...Command = java -cp $installDir/lib/system/jarfactoryofmodelinstancefactory_2.11-1.4.0.jar:$installDir/lib/system/ExtDependencyLibs2_2.11-1.4.0.jar:$installDir/lib/system/ExtDependencyLibs_2.11-1.4.0.jar:$installDir/lib/system/KamanjaInternalDeps_2.11-1.4.0.jar:$installDir/lib/system/nodeinfoextract_2.11-1.4.0.jar com.ligadata.installer.NodeInfoExtract --MetadataAPIConfig \"$metadataAPIConfig\" --NodeConfigPath \"$nodeConfigPath\"  --workDir \"$workDir\" --ipFileName \"$ipTmpFile\" --ipPathPairFileName \"$ipPathPairTmpFile\" --ipIdCfgTargPathQuartetFileName \"$ipIdCfgTargPathQuartetTmpFileName\" --installDir \"$installDir\" --clusterId \"$clusterId\""
+		java -cp $installDir/lib/system/jarfactoryofmodelinstancefactory_2.11-1.4.0.jar:$installDir/lib/system/ExtDependencyLibs2_2.11-1.4.0.jar:$installDir/lib/system/ExtDependencyLibs_2.11-1.4.0.jar:$installDir/lib/system/KamanjaInternalDeps_2.11-1.4.0.jar:$installDir/lib/system/nodeinfoextract_2.11-1.4.0.jar com.ligadata.installer.NodeInfoExtract --MetadataAPIConfig "$metadataAPIConfig" --NodeConfigPath "$nodeConfigPath" --workDir "$workDir" --ipFileName "$ipTmpFile" --ipPathPairFileName "$ipPathPairTmpFile" --ipIdCfgTargPathQuartetFileName "$ipIdCfgTargPathQuartetTmpFileName"  --installDir "$installDir" --clusterId "$clusterId"
 		# Check 15: Bad NodeInfoExtract-1.0 arguments
 		if [ "$?" -ne 0 ]; then
 			echo
@@ -404,7 +409,7 @@ if [ "$ipAddrs" == "" -a "$ipIdTargPaths" == ""  -a "$ipPathPairs" == ""  -a "$p
 		fi
 	else # info is assumed to be present in the supplied metadata store... see trunk/utils/NodeInfoExtract for details
 		echo "...Command = $nodeInfoExtractDir/NodeInfoExtract-1.0 --MetadataAPIConfig \"$metadataAPIConfig\" --workDir \"$workDir\" --ipFileName \"$ipTmpFile\" --ipPathPairFileName \"$ipPathPairTmpFile\" --ipIdCfgTargPathQuartetFileName \"$ipIdCfgTargPathQuartetTmpFileName\" --installDir \"$installDir\" --clusterId \"$clusterId\""
-			java -cp $installDir/lib/system/jarfactoryofmodelinstancefactory_2.11-1.0.jar:$installDir/lib/system/ExtDependencyLibs2_2.11-1.4.0.jar:$installDir/lib/system/ExtDependencyLibs_2.11-1.4.0.jar:$installDir/lib/system/KamanjaInternalDeps_2.11-1.4.0.jar:$installDir/lib/system/nodeinfoextract_2.11-1.4.0.jar com.ligadata.installer.NodeInfoExtract --MetadataAPIConfig $metadataAPIConfig --workDir "$workDir" --ipFileName "$ipTmpFile" --ipPathPairFileName "$ipPathPairTmpFile" --ipIdCfgTargPathQuartetFileName "$ipIdCfgTargPathQuartetTmpFileName" --installDir "$installDir" --clusterId "$clusterId"
+			java -cp $installDir/lib/system/jarfactoryofmodelinstancefactory_2.11-1.4.0.jar:$installDir/lib/system/ExtDependencyLibs2_2.11-1.4.0.jar:$installDir/lib/system/ExtDependencyLibs_2.11-1.4.0.jar:$installDir/lib/system/KamanjaInternalDeps_2.11-1.4.0.jar:$installDir/lib/system/nodeinfoextract_2.11-1.4.0.jar com.ligadata.installer.NodeInfoExtract --MetadataAPIConfig $metadataAPIConfig --workDir "$workDir" --ipFileName "$ipTmpFile" --ipPathPairFileName "$ipPathPairTmpFile" --ipIdCfgTargPathQuartetFileName "$ipIdCfgTargPathQuartetTmpFileName" --installDir "$installDir" --clusterId "$clusterId"
 		# Check 15: Bad NodeInfoExtract-1.0 arguments
 		if [ "$?" -ne 0 ]; then
 			echo

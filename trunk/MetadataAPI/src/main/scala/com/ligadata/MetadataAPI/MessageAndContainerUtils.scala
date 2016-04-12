@@ -103,6 +103,7 @@ object MessageAndContainerUtils {
       MetadataAPIImpl.UploadJarsToDB(contDef)
       var objectsAdded = AddMessageTypes(contDef, MdMgr.GetMdMgr, recompile)
       objectsAdded = objectsAdded :+ contDef
+      PersistenceUtils.SaveSchemaInformation(contDef.cType.SchemaId, contDef.NameSpace, contDef.Name, contDef.Version, contDef.PhysicalName, contDef.cType.AvroSchema, "Container")
       MetadataAPIImpl.SaveObjectList(objectsAdded, "containers")
       val operations = for (op <- objectsAdded) yield "Add"
       MetadataAPIImpl.NotifyEngine(objectsAdded, operations)
@@ -131,6 +132,7 @@ object MessageAndContainerUtils {
       MetadataAPIImpl.UploadJarsToDB(msgDef)
       var objectsAdded = AddMessageTypes(msgDef, MdMgr.GetMdMgr, recompile)
       objectsAdded = objectsAdded :+ msgDef
+      PersistenceUtils.SaveSchemaInformation(msgDef.cType.SchemaId, msgDef.NameSpace, msgDef.Name, msgDef.Version, msgDef.PhysicalName, msgDef.cType.AvroSchema, "Message")
       MetadataAPIImpl.SaveObjectList(objectsAdded, "messages")
       val operations = for (op <- objectsAdded) yield "Add"
       MetadataAPIImpl.NotifyEngine(objectsAdded, operations)

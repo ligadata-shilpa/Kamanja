@@ -94,8 +94,8 @@ object PersistenceUtils {
   //lazy val serializer = SerializerManager.GetSerializer(serializerType)
 
   lazy val versionStr = s"${KamanjaVersion.getMajorVersion}.${KamanjaVersion.getMinorVersion}.${KamanjaVersion.getMicroVersion}"
-  lazy val excludeSystemJars = Set("ExtDependencyLibs_2.11-${versionStr}.jar", "ExtDependencyLibs2_2.11-${versionStr}.jar", "KamanjaInternalDeps_2.11-${versionStr}.jar",
-                                      "ExtDependencyLibs_2.10-${versionStr}.jar", "ExtDependencyLibs2_2.10-${versionStr}.jar", "KamanjaInternalDeps_2.10-${versionStr}.jar")
+  lazy val excludeSystemJars = Set(s"ExtDependencyLibs_2.11-${versionStr}.jar", s"ExtDependencyLibs2_2.11-${versionStr}.jar", s"KamanjaInternalDeps_2.11-${versionStr}.jar",
+                                      s"ExtDependencyLibs_2.10-${versionStr}.jar", s"ExtDependencyLibs2_2.10-${versionStr}.jar", s"KamanjaInternalDeps_2.10-${versionStr}.jar")
 
   def GetMainDS: DataStore = mainDS
 
@@ -345,6 +345,34 @@ object PersistenceUtils {
       case e: Exception => {
         logger.error("Failed to insert/update objects", e)
         throw UpdateStoreFailedException("Failed to insert/update objects", e)
+      }
+    }
+  }
+
+  def SaveSchemaInformation(schemaId: Int, nameSpace: String, name: String, version: Long, physicalName: String, avroSchema: String, containerType: String): Unit = {
+    val (containerName, store) = GetContainerNameAndDataStore("AvroSchemaInfo")
+
+    val json = "AvroSchemaInfo" ->
+      ("SchemaId" -> schemaId) ~
+        ("NameSpace" -> nameSpace) ~
+        ("Name" -> name) ~
+        ("Version" -> version) ~
+        ("PhysicalName" -> physicalName) ~
+        ("AvroSchema" -> avroSchema) ~
+        ("ContainerType" -> containerType)
+
+    val outputJson = compact(render(json))
+
+    var storeObjects = new Array[(Key, String, Any)](1)
+    val k = Key(storageDefaultTime, Array(schemaId.toString), storageDefaultTxnId, 0)
+    storeObjects(0) = (k, "JSON", outputJson.getBytes())
+
+    try {
+      store.put(null, Array((containerName, storeObjects)))
+    } catch {
+      case e: Exception => {
+        logger.error("Failed to insert/update object for schemaid: " + schemaId, e)
+        throw UpdateStoreFailedException("Failed to insert/update object for schemaid: " + schemaId, e)
       }
     }
   }
@@ -667,16 +695,18 @@ object PersistenceUtils {
         allJars.foreach(jar => {
           curJar = jar
           try {
-            // download only if it doesn't already exists
-            val b = MetadataAPIImpl.IsDownloadNeeded(jar, obj)
-            if (b == true) {
-              val key = jar
-              val mObj = GetObject(key, "jar_store")
-              val ba = mObj._2.asInstanceOf[Array[Byte]]
-              val jarName = dirPath + "/" + jar
-              MetadataAPIImpl.PutArrayOfBytesToJar(ba, jarName)
-            } else {
-              logger.debug("The jar " + curJar + " was already downloaded... ")
+            if (PersistenceUtils.excludeSystemJars.contains(jar.trim) == false) {
+              // download only if it doesn't already exists
+              val b = MetadataAPIImpl.IsDownloadNeeded(jar, obj)
+              if (b == true) {
+                val key = jar
+                val mObj = GetObject(key, "jar_store")
+                val ba = mObj._2.asInstanceOf[Array[Byte]]
+                val jarName = dirPath + "/" + jar
+                MetadataAPIImpl.PutArrayOfBytesToJar(ba, jarName)
+              } else {
+                logger.debug("The jar " + curJar + " was already downloaded... ")
+              }
             }
           } catch {
             case e: Exception => {

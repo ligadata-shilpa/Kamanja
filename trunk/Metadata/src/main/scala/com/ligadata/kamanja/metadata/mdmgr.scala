@@ -418,12 +418,12 @@ class MdMgr {
       ad.collectionType = tNone
     } else {
       val ctype = collectionType.trim
-      if (ctype.isEmpty())
+      if (ctype.isEmpty() || ctype.compareToIgnoreCase("none") == 0)
         ad.collectionType = tNone
       else if (ctype.compareToIgnoreCase("array") == 0)
         ad.collectionType = tArray
-      else if (ctype.compareToIgnoreCase("arraybuffer") == 0)
-        ad.collectionType = tArrayBuf
+      else if (ctype.compareToIgnoreCase("map") == 0)
+        ad.collectionType = tMap
       else
         throw new Throwable(s"Not yet handled collection Type $ctype")
     }
@@ -3287,7 +3287,7 @@ class MdMgr {
       * @return the corresponding SerializeDeserializeConfig or null if not found
       */
     def GetSerializer(fullName : String) : SerializeDeserializeConfig = {
-        serializers.getOrElse(fullName,null)
+        serializers.getOrElse(fullName.toLowerCase,null)
     }
 
     /**
@@ -3383,8 +3383,9 @@ class MdMgr {
   }
 
   def GetAdapter(adapterName: String): AdapterInfo = {
-    if (adapters.contains(adapterName)) return adapters(adapterName)
-    null
+    val key : String = adapterName.toLowerCase
+    val aInfo : AdapterInfo = adapters.getOrElse(key,null)
+    aInfo
   }
 
   def RemoveAdapter(name: String): Unit = {
@@ -3469,7 +3470,7 @@ trait LogTrait {
 object MdMgr extends LogTrait {
 
   /** Static variables */
-  val mdMgr = new MdMgr;
+  var mdMgr = new MdMgr;
   val sysNS = "System"
   // system name space
   var IdCntr = 0;
@@ -3482,6 +3483,13 @@ object MdMgr extends LogTrait {
     * @return mdMgr
     */
   def GetMdMgr = mdMgr
+
+  // Reset MdMgr -- Create new MdMgr
+  // NOTE NOTE:: All previous hold mdmgr will not update any more
+  // Mainly used for test suite
+  def ResetMdMgr: Unit = {
+    mdMgr = new MdMgr;
+  }
 
   def SysNS = sysNS
 
