@@ -74,19 +74,53 @@ public class ClusterInstallerDriver implements StatusCallback {
         int majorVer = KamanjaVersion.getMajorVersion();
         int minVer = KamanjaVersion.getMinorVersion();
         int microVer = KamanjaVersion.getMicroVersion();
-        String installDriverPath = clusterInstallerDriversLocation + "/InstallDriver-" + majorVer + "." + minVer + "." + microVer;
+        String versionStr = "" + majorVer + "." + minVer + "." + microVer;
+        String versionStrJar = versionStr + ".jar";
+        String installDriverJar = "InstallDriver-" + versionStr;
+        String installDriverPath = clusterInstallerDriversLocation + "/" + installDriverJar;
 
         if (! isValidPath(installDriverPath, false, true)) {
-            String msg = String.format("InstallDriver-1.4.0 not found at " + installDriverPath);
+            String msg = String.format(installDriverJar + " not found at " + installDriverPath);
             logger.error(msg);
             System.out.println(msg);
             System.exit(1);
 		}
 
-        try {
-            URL[] instDriverLoaderUrls = new URL[1];
+        String[] extnLibs = new String[2];
+        String libsPath = clusterInstallerDriversLocation + "/../lib/system/";
 
-            instDriverLoaderUrls[0] = new File(installDriverPath).toURI().toURL();
+        if (! isValidPath(libsPath + "ExtDependencyLibs_2.11-" + versionStrJar, false, true)) {
+            if (! isValidPath(libsPath + "ExtDependencyLibs_2.10-" + versionStrJar, false, true)) {
+                String msg = String.format("ExtDependencyLibs_2.11-" + versionStrJar + " or " + "ExtDependencyLibs_2.10-" + versionStrJar + " not found at " + libsPath);
+                logger.error(msg);
+                System.out.println(msg);
+                System.exit(1);
+            } else {
+                extnLibs[0] = libsPath + "ExtDependencyLibs_2.10-" + versionStrJar;
+            }
+        } else {
+            extnLibs[0] = libsPath + "ExtDependencyLibs_2.11-" + versionStrJar;
+        }
+
+        if (! isValidPath(libsPath + "ExtDependencyLibs2_2.11-" + versionStrJar, false, true)) {
+            if (! isValidPath(libsPath + "ExtDependencyLibs2_2.10-" + versionStrJar, false, true)) {
+                String msg = String.format("ExtDependencyLibs2_2.11-" + versionStrJar + " or " + "ExtDependencyLibs2_2.10-" + versionStrJar + " not found at " + libsPath);
+                logger.error(msg);
+                System.out.println(msg);
+                System.exit(1);
+            } else {
+                extnLibs[1] = libsPath + "ExtDependencyLibs2_2.10-" + versionStrJar;
+            }
+        } else {
+            extnLibs[1] = libsPath + "ExtDependencyLibs2_2.11-" + versionStrJar;
+        }
+
+        try {
+            URL[] instDriverLoaderUrls = new URL[3];
+
+            instDriverLoaderUrls[0] = new File(extnLibs[0]).toURI().toURL();
+            instDriverLoaderUrls[1] = new File(extnLibs[1]).toURI().toURL();
+            instDriverLoaderUrls[2] = new File(installDriverPath).toURI().toURL();
 
             installDriverLoader = new URLClassLoader(instDriverLoaderUrls);
 
