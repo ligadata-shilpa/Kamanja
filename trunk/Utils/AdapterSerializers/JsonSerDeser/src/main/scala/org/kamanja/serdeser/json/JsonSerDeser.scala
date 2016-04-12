@@ -379,7 +379,7 @@ class JSONSerDes() extends SerializeDeserialize with LogTrait {
       * @return a ContainerInterface
       */
     @throws(classOf[com.ligadata.Exceptions.ObjectNotFoundException])
-    def deserialize(b: Array[Byte]) : ContainerInterface = {
+    def deserialize(b: Array[Byte], containerName: String) : ContainerInterface = {
 
         val rawJsonContainerStr : String = new String(b)
         val containerInstanceMap : Map[String, Any] = jsonStringAsMap(rawJsonContainerStr)
@@ -473,7 +473,7 @@ class JSONSerDes() extends SerializeDeserialize with LogTrait {
         val containerInst : Any = if (isContainerInterface) {
             /** recurse to obtain the subcontainer */
             val containerBytes : Array[Byte] = fieldsJson.toString.toCharArray.map(_.toByte)
-            val container : ContainerInterface = deserialize(containerBytes)
+            val container : ContainerInterface = deserialize(containerBytes, null) // BUGBUG:: FIX this type string
             container
         } else { /** Check for collection that is currently supported */
 

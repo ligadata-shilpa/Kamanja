@@ -364,7 +364,7 @@ class KBinarySerDeser() extends SerializeDeserialize with LogTrait {
       * @param b the byte array containing the serialized ContainerInterface instance
       * @return a ContainerInterface
       */
-    def deserialize(b: Array[Byte]) : ContainerInterface = {
+    def deserialize(b: Array[Byte], containerName: String) : ContainerInterface = {
         var dis = new DataInputStream(new ByteArrayInputStream(b));
         val container : ContainerInterface = deserialize(dis)
         container
@@ -380,7 +380,7 @@ class KBinarySerDeser() extends SerializeDeserialize with LogTrait {
     @throws(classOf[com.ligadata.Exceptions.MissingPropertyException])
     @throws(classOf[com.ligadata.Exceptions.UnsupportedObjectException])
     @throws(classOf[IOException])
-    def deserialize(dis : DataInputStream) : ContainerInterface = {
+    private def deserialize(dis : DataInputStream) : ContainerInterface = {
 
         val containerTypeName : String = dis.readUTF
         val containerVersion : String = dis.readUTF
