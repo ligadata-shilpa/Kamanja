@@ -84,6 +84,15 @@ class KamanjaStatusEvent(factory: MessageFactoryInterface, other: KamanjaStatusE
     return attributeTypes
   }
 
+  override def getAttributeType(name: String): AttributeTypeInfo = {
+      if (name == null || name.trim() == "") return null;
+      attributeTypes.foreach(attributeType => {
+        if(attributeType.getName == name.toLowerCase())
+          return attributeType
+      }) 
+      return null;
+    }
+
   var nodeid: String = _;
   var eventtime: Long = _;
   var statusstring: String = _;

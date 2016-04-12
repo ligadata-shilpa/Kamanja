@@ -4,7 +4,7 @@ package com.ligadata.KamanjaBase;
 import org.json4s.jackson.JsonMethods._
 import org.json4s.DefaultFormats
 import org.json4s.Formats
-import com.ligadata.KamanjaBase.{ AttributeTypeInfo, AttributeValue, ContainerFactoryInterface, ContainerInterface, MessageFactoryInterface, MessageInterface, TimePartitionInfo, ContainerOrConceptFactory, RDDObject, JavaRDDObject, ContainerOrConcept }
+import com.ligadata.KamanjaBase._;
 import com.ligadata.BaseTypes._
 import com.ligadata.Exceptions.StackTrace;
 import org.apache.logging.log4j.{ Logger, LogManager }
@@ -93,6 +93,14 @@ class KamanjaModelEvent(factory: MessageFactoryInterface, other: KamanjaModelEve
     if (attributeTypes == null) return null;
     return attributeTypes
   }
+  override def getAttributeType(name: String): AttributeTypeInfo = {
+      if (name == null || name.trim() == "") return null;
+      attributeTypes.foreach(attributeType => {
+        if(attributeType.getName == name.toLowerCase())
+          return attributeType
+      }) 
+      return null;
+    }
   
   private def getWithReflection(key: String): AnyRef = {
     val ru = scala.reflect.runtime.universe

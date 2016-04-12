@@ -48,6 +48,7 @@ class MessageGenerator {
       messageGenerator = messageGenerator.append(msgConstants.newline + generateParitionKeysData(message) + msgConstants.newline);
       messageGenerator = messageGenerator.append(msgConstants.newline + generatePrimaryKeysData(message) + msgConstants.newline);
       messageGenerator = messageGenerator.append(getAttributeTypes(message));
+	  messageGenerator = messageGenerator.append(generateGetAttributeType());
       if (message.Fixed.equalsIgnoreCase("true")) {
         messageGenerator = messageGenerator.append(msgConstants.newline + generatedMsgVariables(message));
         messageGenerator = messageGenerator.append(getGetSetMethodsFixed(message));
@@ -189,6 +190,24 @@ class MessageGenerator {
   }
 
   /*
+   * Genertae getAttributetype(name: String)
+   */
+  private def generateGetAttributeType() = {
+    """
+    override def getAttributeType(name: String): AttributeTypeInfo = {
+      if (name == null || name.trim() == "") return null;
+      attributeTypes.foreach(attributeType => {
+        if(attributeType.getName == name.toLowerCase())
+          return attributeType
+      }) 
+      return null;
+    }
+  
+  """
+  }
+  
+  
+  /*
    * generateAttributeTypes 
    */
   private def getAttributeTypes(message: Message): String = {
@@ -202,9 +221,11 @@ class MessageGenerator {
   /*
    * generate getAttributeTypes method
    */
-
   private def genGetAttributeMethod(message: Message): String = {
-    var arrsize = message.Elements.size
+    var arrsize: Int = 0;
+    if (message.Elements == null)
+      arrsize = 0
+    else arrsize = message.Elements.size
     """
     private def generateAttributeTypes(): Array[AttributeTypeInfo] = {
       var attributeTypes = new Array[AttributeTypeInfo](""" + arrsize + """);
@@ -215,6 +236,7 @@ class MessageGenerator {
     """
 
   }
+
 
   private def genGetAttributeTypes(message: Message): String = {
     var getAttributeTypes = new StringBuilder(8 * 1024)
@@ -482,7 +504,7 @@ class MessageGenerator {
       message.PartitionKeys.foreach(key => {
         message.Elements.foreach(element => {
           if (element.Name.equalsIgnoreCase(key)) {
-            paritionKeysGen.append("%s partitionKeys += %s.toString(get(\"%s\").getValue.asInstanceOf[%s]);%s".format(msgConstants.pad2, element.FldMetaataType.implementationName, element.Name.toLowerCase(), element.FieldTypePhysicalName, msgConstants.newline)) //"+ com.ligadata.BaseTypes.StringImpl+".toString(get"+element.Name.capitalize+") ")
+            paritionKeysGen.append("%s partitionKeys += %s.toString(get(\"%s\").asInstanceOf[%s]);%s".format(msgConstants.pad2, element.FldMetaataType.implementationName, element.Name.toLowerCase(), element.FieldTypePhysicalName, msgConstants.newline)) //"+ com.ligadata.BaseTypes.StringImpl+".toString(get"+element.Name.capitalize+") ")
           }
         })
       })
@@ -514,7 +536,7 @@ class MessageGenerator {
       message.PrimaryKeys.foreach(key => {
         message.Elements.foreach(element => {
           if (element.Name.equalsIgnoreCase(key)) {
-            primaryKeysGen.append("%s primaryKeys += %s.toString(get(\"%s\").getValue.asInstanceOf[%s]);%s".format(msgConstants.pad2, element.FldMetaataType.implementationName, element.Name.toLowerCase(), element.FieldTypePhysicalName, msgConstants.newline)) //"+ com.ligadata.BaseTypes.StringImpl+".toString(get"+element.Name.capitalize+") ")
+            primaryKeysGen.append("%s primaryKeys += %s.toString(get(\"%s\").asInstanceOf[%s]);%s".format(msgConstants.pad2, element.FldMetaataType.implementationName, element.Name.toLowerCase(), element.FieldTypePhysicalName, msgConstants.newline)) //"+ com.ligadata.BaseTypes.StringImpl+".toString(get"+element.Name.capitalize+") ")
           }
         })
       })

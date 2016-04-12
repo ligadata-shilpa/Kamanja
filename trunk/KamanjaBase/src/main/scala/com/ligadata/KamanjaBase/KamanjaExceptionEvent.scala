@@ -89,6 +89,14 @@ class KamanjaExceptionEvent(factory: MessageFactoryInterface, other: KamanjaExce
     if (attributeTypes == null) return null;
     return attributeTypes
   }
+  override def getAttributeType(name: String): AttributeTypeInfo = {
+      if (name == null || name.trim() == "") return null;
+      attributeTypes.foreach(attributeType => {
+        if(attributeType.getName == name.toLowerCase())
+          return attributeType
+      }) 
+      return null;
+    }
 
   private def getWithReflection(key: String): AnyRef = {
     val ru = scala.reflect.runtime.universe
