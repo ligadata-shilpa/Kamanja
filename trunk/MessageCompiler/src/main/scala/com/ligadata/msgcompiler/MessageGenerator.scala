@@ -305,7 +305,7 @@ class MessageGenerator {
     try {
       fields.foreach(field => {
         if (field != null) {
-          getAttributeFixedStrBldr.append("%sattributeVals :+ new AttributeValue(this.%s, keyTypes(\"%s\")) %s".format(msgConstants.pad4, field.Name, field.Name, msgConstants.newline));
+          getAttributeFixedStrBldr.append("%sattributeVals(%s) = new AttributeValue(this.%s, keyTypes(\"%s\")) %s".format(msgConstants.pad4, field.FieldOrdinal, field.Name, field.Name, msgConstants.newline));
         }
       })
     } catch {
