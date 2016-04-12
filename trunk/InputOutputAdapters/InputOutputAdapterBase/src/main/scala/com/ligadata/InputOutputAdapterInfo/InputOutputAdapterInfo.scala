@@ -219,7 +219,7 @@ trait ExecContext extends AdaptersSerializeDeserializers {
       }
     } finally {
       // Commit. Writing into OutputAdapters & Storage Adapters
-      nodeContext.getEnvCtxt().commitData(txnCtxt);
+      commitData(txnCtxt);
     }
   }
 
@@ -259,6 +259,8 @@ trait ExecContext extends AdaptersSerializeDeserializers {
   }
 
   protected def executeMessage(txnCtxt: TransactionContext): Unit
+
+  protected def commitData(txnCtxt: TransactionContext): Unit
 }
 
 trait ExecContextFactory {

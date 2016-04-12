@@ -489,7 +489,6 @@ class KamanjaManager extends Observer {
 
       KamanjaMetadata.envCtxt.setNodeInfo(KamanjaConfiguration.nodeId.toString, KamanjaConfiguration.clusterId)
 
-
       KamanjaMetadata.gNodeContext = new NodeContext(KamanjaMetadata.envCtxt)
 
       PostMessageExecutionQueue.init(KamanjaMetadata.gNodeContext)
