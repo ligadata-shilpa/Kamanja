@@ -52,7 +52,7 @@ object KamanjaStatusEvent extends RDDObject[KamanjaStatusEvent] with MessageFact
 class KamanjaStatusEvent(factory: MessageFactoryInterface, other: KamanjaStatusEvent) extends MessageInterface(factory) {
 
   private val log = LogManager.getLogger(getClass)
-
+  var attributeTypes = generateAttributeTypes;
   var keyTypes: Map[String, AttributeTypeInfo] = attributeTypes.map { a => (a.getName, a) }.toMap;
 
   if (other != null && other != this) {
@@ -68,13 +68,11 @@ class KamanjaStatusEvent(factory: MessageFactoryInterface, other: KamanjaStatusE
 
   override def getPrimaryKey: Array[String] = Array[String]()
 
-  var attributeTypes = generateAttributeTypes;
-
   private def generateAttributeTypes(): Array[AttributeTypeInfo] = {
     var attributeTypes = new Array[AttributeTypeInfo](3);
-    attributeTypes :+ new AttributeTypeInfo("nodeid", 0, AttributeTypeInfo.TypeCategory.STRING, 1, 1, 0)
-    attributeTypes :+ new AttributeTypeInfo("eventtime", 1, AttributeTypeInfo.TypeCategory.LONG, 4, 4, 0)
-    attributeTypes :+ new AttributeTypeInfo("statusstring", 2, AttributeTypeInfo.TypeCategory.STRING, 1, 1, 0)
+    attributeTypes(0) = new AttributeTypeInfo("nodeid", 0, AttributeTypeInfo.TypeCategory.STRING, 1, 1, 0)
+    attributeTypes(1) =  new AttributeTypeInfo("eventtime", 1, AttributeTypeInfo.TypeCategory.LONG, 4, 4, 0)
+    attributeTypes(2) =  new AttributeTypeInfo("statusstring", 2, AttributeTypeInfo.TypeCategory.STRING, 1, 1, 0)
 
     return attributeTypes
   }

@@ -52,7 +52,7 @@ object KamanjaMessageEvent extends RDDObject[KamanjaMessageEvent] with MessageFa
 class KamanjaMessageEvent(factory: MessageFactoryInterface, other: KamanjaMessageEvent) extends MessageInterface(factory) {
 
   private val log = LogManager.getLogger(getClass)
-
+  var attributeTypes = generateAttributeTypes;
   var keyTypes: Map[String, AttributeTypeInfo] = attributeTypes.map { a => (a.getName, a) }.toMap;
 
   if (other != null && other != this) {
@@ -68,16 +68,14 @@ class KamanjaMessageEvent(factory: MessageFactoryInterface, other: KamanjaMessag
 
   override def getPrimaryKey: Array[String] = Array[String]()
 
-  var attributeTypes = generateAttributeTypes;
-
   private def generateAttributeTypes(): Array[AttributeTypeInfo] = {
     var attributeTypes = new Array[AttributeTypeInfo](6);
-    attributeTypes :+ new AttributeTypeInfo("messageid", 0, AttributeTypeInfo.TypeCategory.LONG, 4, 4, 0)
-    attributeTypes :+ new AttributeTypeInfo("modelinfo", 1, AttributeTypeInfo.TypeCategory.MESSAGE, -1, -1, 2000020)
-    attributeTypes :+ new AttributeTypeInfo("elapsedtimeinms", 2, AttributeTypeInfo.TypeCategory.FLOAT, 2, 2, 0)
-    attributeTypes :+ new AttributeTypeInfo("messagekey", 3, AttributeTypeInfo.TypeCategory.STRING, 1, 1, 0)
-    attributeTypes :+ new AttributeTypeInfo("messagevalue", 4, AttributeTypeInfo.TypeCategory.STRING, 1, 1, 0)
-    attributeTypes :+ new AttributeTypeInfo("error", 5, AttributeTypeInfo.TypeCategory.STRING, 1, 1, 0)
+    attributeTypes(0) = new AttributeTypeInfo("messageid", 0, AttributeTypeInfo.TypeCategory.LONG, 4, 4, 0)
+    attributeTypes(1) = new AttributeTypeInfo("modelinfo", 1, AttributeTypeInfo.TypeCategory.MESSAGE, -1, -1, 2000020)
+    attributeTypes(2) = new AttributeTypeInfo("elapsedtimeinms", 2, AttributeTypeInfo.TypeCategory.FLOAT, 2, 2, 0)
+    attributeTypes(3) = new AttributeTypeInfo("messagekey", 3, AttributeTypeInfo.TypeCategory.STRING, 1, 1, 0)
+    attributeTypes(4) = new AttributeTypeInfo("messagevalue", 4, AttributeTypeInfo.TypeCategory.STRING, 1, 1, 0)
+    attributeTypes(5) = new AttributeTypeInfo("error", 5, AttributeTypeInfo.TypeCategory.STRING, 1, 1, 0)
 
     return attributeTypes
   }

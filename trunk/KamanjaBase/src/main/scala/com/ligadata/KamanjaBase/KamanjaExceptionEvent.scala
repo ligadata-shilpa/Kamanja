@@ -53,6 +53,7 @@ class KamanjaExceptionEvent(factory: MessageFactoryInterface, other: KamanjaExce
 
   private val log = LogManager.getLogger(getClass)
 
+  var attributeTypes = generateAttributeTypes;
   var keyTypes: Map[String, AttributeTypeInfo] = attributeTypes.map { a => (a.getName, a) }.toMap;
 
   if (other != null && other != this) {
@@ -68,14 +69,12 @@ class KamanjaExceptionEvent(factory: MessageFactoryInterface, other: KamanjaExce
 
   override def getPrimaryKey: Array[String] = Array[String]()
 
-  var attributeTypes = generateAttributeTypes;
-
   private def generateAttributeTypes(): Array[AttributeTypeInfo] = {
     var attributeTypes = new Array[AttributeTypeInfo](4);
-    attributeTypes :+ new AttributeTypeInfo("componentname", 0, AttributeTypeInfo.TypeCategory.STRING, 1, 1, 0)
-    attributeTypes :+ new AttributeTypeInfo("timeoferrorepochms", 1, AttributeTypeInfo.TypeCategory.LONG, 4, 4, 0)
-    attributeTypes :+ new AttributeTypeInfo("errortype", 2, AttributeTypeInfo.TypeCategory.STRING, 1, 1, 0)
-    attributeTypes :+ new AttributeTypeInfo("errorstring", 3, AttributeTypeInfo.TypeCategory.STRING, 1, 1, 0)
+    attributeTypes(0) = new AttributeTypeInfo("componentname", 0, AttributeTypeInfo.TypeCategory.STRING, 1, 1, 0)
+    attributeTypes(1) = new AttributeTypeInfo("timeoferrorepochms", 1, AttributeTypeInfo.TypeCategory.LONG, 4, 4, 0)
+    attributeTypes(2) = new AttributeTypeInfo("errortype", 2, AttributeTypeInfo.TypeCategory.STRING, 1, 1, 0)
+    attributeTypes(3) = new AttributeTypeInfo("errorstring", 3, AttributeTypeInfo.TypeCategory.STRING, 1, 1, 0)
 
     return attributeTypes
   }
