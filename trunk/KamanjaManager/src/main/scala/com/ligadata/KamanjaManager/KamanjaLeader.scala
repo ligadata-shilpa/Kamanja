@@ -19,6 +19,7 @@ package com.ligadata.KamanjaManager
 
 import com.ligadata.KamanjaBase._
 import com.ligadata.InputOutputAdapterInfo.{ InputAdapter, OutputAdapter, PartitionUniqueRecordKey, PartitionUniqueRecordValue, StartProcPartInfo }
+import com.ligadata.StorageBase.StorageAdapter
 import com.ligadata.Utils.ClusterStatus
 import com.ligadata.kamanja.metadata.{ BaseElem, MappedMsgTypeDef, BaseAttributeDef, StructTypeDef, EntityType, AttributeDef, MessageDef, ContainerDef, ModelDef }
 import com.ligadata.kamanja.metadata._
@@ -77,6 +78,7 @@ object KamanjaLeader {
   private[this] var canRedistribute = false
   private[this] var inputAdapters: ArrayBuffer[InputAdapter] = _
   private[this] var outputAdapters: ArrayBuffer[OutputAdapter] = _
+  private[this] var storageAdapters: ArrayBuffer[StorageAdapter] = _
   private[this] var envCtxt: EnvContext = _
   private[this] var updatePartitionsFlag = false
   private[this] var distributionExecutor = Executors.newFixedThreadPool(1)
@@ -1103,7 +1105,7 @@ object KamanjaLeader {
   */
 
   def Init(nodeId1: String, zkConnectString1: String, engineLeaderZkNodePath1: String, engineDistributionZkNodePath1: String, adaptersStatusPath1: String, inputAdap: ArrayBuffer[InputAdapter], outputAdap: ArrayBuffer[OutputAdapter],
-           enviCxt: EnvContext, zkSessionTimeoutMs1: Int, zkConnectionTimeoutMs1: Int, dataChangeZkNodePath1: String): Unit = {
+           storageAdap: ArrayBuffer[StorageAdapter], enviCxt: EnvContext, zkSessionTimeoutMs1: Int, zkConnectionTimeoutMs1: Int, dataChangeZkNodePath1: String): Unit = {
     nodeId = nodeId1.toLowerCase
     zkConnectString = zkConnectString1
     engineLeaderZkNodePath = engineLeaderZkNodePath1
@@ -1114,6 +1116,7 @@ object KamanjaLeader {
     zkConnectionTimeoutMs = zkConnectionTimeoutMs1
     inputAdapters = inputAdap
     outputAdapters = outputAdap
+    storageAdapters = storageAdap
     envCtxt = enviCxt
 
     if (zkConnectString != null && zkConnectString.isEmpty() == false && engineLeaderZkNodePath != null && engineLeaderZkNodePath.isEmpty() == false && engineDistributionZkNodePath != null && engineDistributionZkNodePath.isEmpty() == false && dataChangeZkNodePath != null && dataChangeZkNodePath.isEmpty() == false) {
