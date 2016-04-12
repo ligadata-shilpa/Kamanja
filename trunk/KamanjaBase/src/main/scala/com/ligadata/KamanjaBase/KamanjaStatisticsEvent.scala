@@ -52,6 +52,7 @@ object KamanjaStatisticsEvent extends RDDObject[KamanjaStatisticsEvent] with Mes
 class KamanjaStatisticsEvent(factory: MessageFactoryInterface, other: KamanjaStatisticsEvent) extends MessageInterface(factory) {
 
   private val log = LogManager.getLogger(getClass)
+  var attributeTypes = generateAttributeTypes;
 
   var keyTypes: Map[String, AttributeTypeInfo] = attributeTypes.map { a => (a.getName, a) }.toMap;
 
@@ -68,11 +69,9 @@ class KamanjaStatisticsEvent(factory: MessageFactoryInterface, other: KamanjaSta
 
   override def getPrimaryKey: Array[String] = Array[String]()
 
-  var attributeTypes = generateAttributeTypes;
-
   private def generateAttributeTypes(): Array[AttributeTypeInfo] = {
     var attributeTypes = new Array[AttributeTypeInfo](1);
-    attributeTypes :+ new AttributeTypeInfo("statistics", 0, AttributeTypeInfo.TypeCategory.STRING, 1, 1, 0)
+    attributeTypes(0) = new AttributeTypeInfo("statistics", 0, AttributeTypeInfo.TypeCategory.STRING, 1, 1, 0)
 
     return attributeTypes
   }

@@ -53,7 +53,7 @@ object KamanjaExecutionFailureEvent extends RDDObject[KamanjaExecutionFailureEve
 class KamanjaExecutionFailureEvent(factory: MessageFactoryInterface, other: KamanjaExecutionFailureEvent) extends MessageInterface(factory) {
 
   private val log = LogManager.getLogger(getClass)
-
+  var attributeTypes = generateAttributeTypes;
   var keyTypes: Map[String, AttributeTypeInfo] = attributeTypes.map { a => (a.getName, a) }.toMap;
 
   if (other != null && other != this) {
@@ -69,14 +69,12 @@ class KamanjaExecutionFailureEvent(factory: MessageFactoryInterface, other: Kama
 
   override def getPrimaryKey: Array[String] = Array[String]()
 
-  var attributeTypes = generateAttributeTypes;
-
   private def generateAttributeTypes(): Array[AttributeTypeInfo] = {
     var attributeTypes = new Array[AttributeTypeInfo](4);
-    attributeTypes :+ new AttributeTypeInfo("msgid", 0, AttributeTypeInfo.TypeCategory.LONG, 4, 4, 0)
-    attributeTypes :+ new AttributeTypeInfo("timeoferrorepochms", 1, AttributeTypeInfo.TypeCategory.LONG, 4, 4, 0)
-    attributeTypes :+ new AttributeTypeInfo("msgcontent", 2, AttributeTypeInfo.TypeCategory.STRING, 1, 1, 0)
-    attributeTypes :+ new AttributeTypeInfo("errordetail", 3, AttributeTypeInfo.TypeCategory.STRING, 1, 1, 0)
+    attributeTypes(0) = new AttributeTypeInfo("msgid", 0, AttributeTypeInfo.TypeCategory.LONG, 4, 4, 0)
+    attributeTypes(1) = new AttributeTypeInfo("timeoferrorepochms", 1, AttributeTypeInfo.TypeCategory.LONG, 4, 4, 0)
+    attributeTypes(2) = new AttributeTypeInfo("msgcontent", 2, AttributeTypeInfo.TypeCategory.STRING, 1, 1, 0)
+    attributeTypes(3) = new AttributeTypeInfo("errordetail", 3, AttributeTypeInfo.TypeCategory.STRING, 1, 1, 0)
 
     return attributeTypes
   }
