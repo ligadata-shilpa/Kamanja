@@ -698,16 +698,16 @@ chmod 0700 $installPath/Kamanja-$ver211/input/SampleApplications/bin/*sh
 
 #Migration and cluster Install*****************
 
-chmod 0700 $installPath/KamanjaInstall-$ver210/bin/*.sh
-chmod 0700 $installPath/KamanjaInstall-$ver211/bin/*.sh
+#chmod 0700 $installPath/KamanjaInstall-$ver210/bin/*.sh
+#chmod 0700 $installPath/KamanjaInstall-$ver211/bin/*.sh
 
 #Migration and Cluster Install*****************
 
 cd $installPath
 tar -cvzf Kamanja-$ver210.tar.gz Kamanja-$ver210
 tar -cvzf Kamanja-$ver211.tar.gz Kamanja-$ver211
-tar -cvzf KamanjaInstall-$ver210.tar.gz KamanjaInstall-$ver210
-tar -cvzf KamanjaInstall-$ver211.tar.gz KamanjaInstall-$ver211
+#tar -cvzf KamanjaInstall-$ver210.tar.gz KamanjaInstall-$ver210
+#tar -cvzf KamanjaInstall-$ver211.tar.gz KamanjaInstall-$ver211
 
 echo "Kamanja install complete..."
 
