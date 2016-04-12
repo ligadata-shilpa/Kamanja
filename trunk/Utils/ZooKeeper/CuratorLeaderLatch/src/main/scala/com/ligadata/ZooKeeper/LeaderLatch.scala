@@ -71,7 +71,7 @@ class ZkLeaderLatch(val zkcConnectString: String, val leaderPath: String, val no
 
   def getClsuterStatus = clstStatus
 
-  def SelectLeader = {
+  def SelectLeader = lock.synchronized {
     try {
       // Make sure we have the path created before we execute this
       CreateClient.CreateNodeIfNotExists(zkcConnectString, leaderPath)
