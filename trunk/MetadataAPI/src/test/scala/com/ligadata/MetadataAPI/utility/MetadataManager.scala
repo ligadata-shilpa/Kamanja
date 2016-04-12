@@ -77,6 +77,7 @@ class MetadataManager {
 
     try {
       //md.InitMdMgr(MdMgr.mdMgr, config.database, config.databaseHost, config.databaseSchema, config.databaseHost, config.adapterSpecificConfig)
+      MdMgr.ResetMdMgr //create new instance
       MdMgr.mdMgr.truncate
      // FileUtils.deleteDirectory(new File("/Users/dhavalkolapkar/Documents/Workspace/Kamanja/trunk/MetadataAPI/src/test/resources/storage"))
       md.InitMdMgr(MdMgr.mdMgr, md.metadataAPIConfig.get("JAR_PATHS").toString, md.metadataAPIConfig.get("METADATA_DATASTORE").toString)
