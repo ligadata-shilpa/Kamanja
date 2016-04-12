@@ -47,7 +47,7 @@ case class AdapMaxPartitions(Adap: String, MaxParts: Int)
 case class NodeDistMap(Adap: String, Parts: List[String])
 case class DistributionMap(Node: String, Adaps: List[NodeDistMap])
 case class FoundKeysInValidation(K: String, V1: String, V2: Int, V3: Int, V4: Long)
-case class ActionOnAdaptersMap(action: String, adaptermaxpartitions: Option[List[AdapMaxPartitions]], distributionmap: Option[List[DistributionMap]], foundKeysInValidation: Option[List[FoundKeysInValidation]])
+case class ActionOnAdaptersMap(action: String, adaptermaxpartitions: Option[List[AdapMaxPartitions]], distributionmap: Option[List[DistributionMap]])
 
 object KamanjaLeader {
   private[this] val LOG = LogManager.getLogger(getClass);
@@ -69,7 +69,7 @@ object KamanjaLeader {
   private[this] var zkcForSetData: CuratorFramework = null
   private[this] val setDataLockObj = new Object()
   private[this] var distributionMap = scala.collection.mutable.Map[String, scala.collection.mutable.Map[String, ArrayBuffer[String]]]() // Nodeid & Unique Keys (adapter unique name & unique key)
-  private[this] var foundKeysInValidation: scala.collection.immutable.Map[String, (String, Int, Int, Long)] = _
+//  private[this] var foundKeysInValidation: scala.collection.immutable.Map[String, (String, Int, Int, Long)] = _
   private[this] var adapterMaxPartitions = scala.collection.mutable.Map[String, Int]() // Adapters & Max Partitions
   private[this] var allPartitionsToValidate = scala.collection.mutable.Map[String, Set[String]]()
   private[this] var nodesStatus = scala.collection.mutable.Set[String]() // NodeId
@@ -101,7 +101,7 @@ object KamanjaLeader {
     zkDataChangeNodeListener = null
     zkcForSetData = null
     distributionMap = scala.collection.mutable.Map[String, scala.collection.mutable.Map[String, ArrayBuffer[String]]]() // Nodeid & Unique Keys (adapter unique name & unique key)
-    foundKeysInValidation = null
+//    foundKeysInValidation = null
     adapterMaxPartitions = scala.collection.mutable.Map[String, Int]() // Adapters & Max Partitions
     allPartitionsToValidate = scala.collection.mutable.Map[String, Set[String]]()
     nodesStatus = scala.collection.mutable.Set[String]() // NodeId
@@ -214,7 +214,8 @@ object KamanjaLeader {
                 nodesStatus.clear
                 expectedNodesAction = "distributed"
 
-                val fndKeyInVal = if (foundKeysInValidation == null) scala.collection.immutable.Map[String, (String, Int, Int, Long)]() else foundKeysInValidation
+                // val fndKeyInVal = if (foundKeysInValidation == null) scala.collection.immutable.Map[String, (String, Int, Int, Long)]() else foundKeysInValidation
+                val fndKeyInVal = scala.collection.immutable.Map[String, (String, Int, Int, Long)]()
 
                 // Set DISTRIBUTE Action on engineDistributionZkNodePath
                 // Send all Unique keys to corresponding nodes 
@@ -226,13 +227,7 @@ object KamanjaLeader {
                     ("distributionmap" -> distributionMap.map(kv =>
                       ("Node" -> kv._1) ~
                         ("Adaps" -> kv._2.map(kv1 => ("Adap" -> kv1._1) ~
-                          ("Parts" -> kv1._2.toList))))) ~
-                    ("foundKeysInValidation" -> fndKeyInVal.map(kv =>
-                      ("K" -> kv._1) ~
-                        ("V1" -> kv._2._1) ~
-                        ("V2" -> kv._2._2) ~
-                        ("V3" -> kv._2._3) ~
-                        ("V4" -> kv._2._4)))
+                          ("Parts" -> kv1._2.toList)))))
                 val sendJson = compact(render(distribute))
                 SetNewDataToZkc(engineDistributionZkNodePath, sendJson.getBytes("UTF8"))
               }
@@ -445,7 +440,7 @@ object KamanjaLeader {
           LOG.debug("allPartitionUniqueRecordKeys: %d".format(allPartitionUniqueRecordKeys.size))
           var cntr: Int = 0
           allPartitionUniqueRecordKeys.foreach(k => {
-            val fnd = foundKeysInValidation.getOrElse(k._2.toLowerCase, null)
+//            val fnd = foundKeysInValidation.getOrElse(k._2.toLowerCase, null)
             val af = tmpDistMap(cntr % totalParticipents)._2.getOrElse(k._1, null)
             if (af == null) {
               val af1 = new ArrayBuffer[String]
@@ -767,12 +762,12 @@ object KamanjaLeader {
 
               var foundKeysInVald = scala.collection.mutable.Map[String, (String, Int, Int, Long)]()
 
-              if (actionOnAdaptersMap.foundKeysInValidation != None && actionOnAdaptersMap.foundKeysInValidation != null) {
-                actionOnAdaptersMap.foundKeysInValidation.get.foreach(ks => {
-                  foundKeysInVald(ks.K.toLowerCase) = (ks.V1, ks.V2, ks.V3, ks.V4)
-                })
-
-              }
+//              if (actionOnAdaptersMap.foundKeysInValidation != None && actionOnAdaptersMap.foundKeysInValidation != null) {
+//                actionOnAdaptersMap.foundKeysInValidation.get.foreach(ks => {
+//                  foundKeysInVald(ks.K.toLowerCase) = (ks.V1, ks.V2, ks.V3, ks.V4)
+//                })
+//
+//              }
               StartNodeKeysMap(nodeDistMap, receivedJsonStr, adapMaxPartsMap, foundKeysInVald.toMap)
             }
 
