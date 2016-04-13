@@ -226,23 +226,28 @@ class MessageObjectGenerator {
     var isMsg: String = "";
     var isCntr: String = "";
     var isFixed: String = ""
-    var containerType: String = ""
+    var containerType: String = "BaseContainer"
+    var msgType: String = "BaseMsg"
     var isKv: String = ""
     var createContrStr: String = ""
+    var createMsgStr: String = ""
     var tranformData: String = ""
 
     if (msgConstants.isMessageFunc(message)) {
       isMsg = "true";
       isCntr = "false"
-      containerType = "BaseMsg"
-      createContrStr = "def CreateNewMessage: " + containerType + "= createInstance.asInstanceOf[" + containerType + "];"
+
+      createMsgStr = "def CreateNewMessage: " + msgType + "= createInstance.asInstanceOf[" + msgType + "];"
+      createContrStr = "override def CreateNewContainer: " + containerType + "= null;"
+
       tranformData = "override def NeedToTransformData: Boolean = false";
     } else {
       isMsg = "false";
       isCntr = "true"
       containerType = "BaseContainer"
+      createMsgStr = "def CreateNewMessage: " + msgType + "= null;"
       createContrStr = "override def CreateNewContainer: " + containerType + "= createInstance.asInstanceOf[" + containerType + "];"
-      tranformData = ""
+      tranformData = "override def NeedToTransformData: Boolean = false"
     }
 
     if (msgConstants.isFixedFunc(message)) {
@@ -258,6 +263,7 @@ class MessageObjectGenerator {
   override def NameSpace: String = getTypeNameSpace
   override def Name: String = getTypeName
   override def Version: String = getTypeVersion
+  """ + createMsgStr + """
   """ + createContrStr + """
   override def IsFixed: Boolean = """ + isFixed + """
   override def IsKv: Boolean = """ + isKv + """
@@ -267,7 +273,7 @@ class MessageObjectGenerator {
   override def PartitionKeyData(inputdata: InputData): Array[String] = createInstance.getPartitionKey();
   override def PrimaryKeyData(inputdata: InputData): Array[String] = createInstance.getPrimaryKey();
   override def TimePartitionData(inputdata: InputData): Long = createInstance.getTimePartitionData;
-  """ +tranformData + """
+  """ + tranformData + """
     """
   }
 }
