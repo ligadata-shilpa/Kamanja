@@ -3225,8 +3225,8 @@ class MdMgr {
     def AddAdapterMessageBinding(adapterName: String
                       , namespaceMsgName : String
                       , namespaceSerializerName: String
-                      , serializerOptions : scala.collection.immutable.Map[String,String]
-                                 = scala.collection.immutable.Map[String,String]()): Unit = {
+                      , serializerOptions : scala.collection.immutable.Map[String,Any]
+                                 = scala.collection.immutable.Map[String,Any]()): Unit = {
 
         AddAdapterMessageBinding(MakeAdapterMessageBinding(adapterName
                                                         , namespaceMsgName
@@ -3269,8 +3269,8 @@ class MdMgr {
     def MakeAdapterMessageBinding(  adapterName: String
                                   , namespaceMsgName : String
                                   , namespaceSerializerName: String
-                                  , serializerOptions : scala.collection.immutable.Map[String,String]
-                                        = scala.collection.immutable.Map[String,String]())
+                                  , serializerOptions : scala.collection.immutable.Map[String,Any]
+                                        = scala.collection.immutable.Map[String,Any]())
                 : AdapterMessageBinding = {
 
         /** Instantiate the AdapterMessageBinding.  Update its base element with basic id information */

@@ -4,6 +4,7 @@ import java.util.Date
 
 import com.ligadata.Exceptions._
 import com.ligadata.Serialize.TypeDef
+import com.ligadata.Serialize.JsonSerializer._
 import com.ligadata.kamanja.metadata._
 import com.ligadata.kamanja.metadataload.MetadataLoad
 import org.apache.logging.log4j.LogManager
@@ -611,11 +612,12 @@ object MetadataAPISerialization {
         }
 
         case o: AdapterMessageBinding => {
+            val optionsMapStr : String = SerializeMapToJsonString(o.options) // in com.ligadata.Serialize.JsonSerializer.
             val json = "AdapterMsgBinding" ->
                     ("AdapterName" -> o.adapterName) ~
                     ("MessageName" -> o.messageName) ~
                     ("Serializer" -> o.serializer) ~
-                    ("Options" -> o.options.map( pair => { (pair._1 -> pair._2) } ))
+                    ("Options" -> optionsMapStr)
 
             outputJson = compact(render(json))
 
@@ -1766,14 +1768,16 @@ object MetadataAPISerialization {
       */
     private def parseAdapterMessageBinding(bindingJson: JValue): AdapterMessageBinding = {
         try {
-            logger.debug("Parsed the json : " + bindingJson)
+            logger.debug(s"Parsing this JSON string : \n$bindingJson")
 
             val rawBinding = bindingJson.extract[AdapterMsgBinding]
+            val optionsStr : String = rawBinding.serializerOptionsAsString
+            val options : Map[String,Any] = jsonStringAsColl(optionsStr).asInstanceOf[Map[String,Any]]
             val bindingInfo : AdapterMessageBinding =
                 MdMgr.GetMdMgr.MakeAdapterMessageBinding(rawBinding.adapterName
                                                         ,rawBinding.namespaceMsgName
                                                         ,rawBinding.namespaceSerializerName
-                                                        ,rawBinding.serializerOptions)
+                                                        ,options)
             bindingInfo
         } catch {
             case e: MappingException => {
@@ -1888,7 +1892,7 @@ case class Tenant(Tenant: TenantInformation)
 case class AdapterMsgBinding(adapterName: String
                              , namespaceMsgName : String
                              , namespaceSerializerName: String
-                             , serializerOptions : scala.collection.immutable.Map[String,String])
+                             , serializerOptionsAsString : String)
 
 case class KeyVale(Key: String, Value: String)
 
