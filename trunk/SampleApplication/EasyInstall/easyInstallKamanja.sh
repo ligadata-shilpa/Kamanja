@@ -404,6 +404,7 @@ cp SetPaths.sh $installPath/Kamanja-$ver210/bin/
 bash $installPath/Kamanja-$ver210/bin/SetPaths.sh $KafkaRootDir
 
 chmod 0700 $installPath/Kamanja-$ver210/input/SampleApplications/bin/*sh
+chmod 0700 $installPath/Kamanja-$ver210/ClusterInstall/*sh
 
 ################################ Version-2.10 Finished ################################
 
@@ -695,6 +696,7 @@ cp SetPaths.sh $installPath/Kamanja-$ver211/bin/
 bash $installPath/Kamanja-$ver211/bin/SetPaths.sh $KafkaRootDir
 
 chmod 0700 $installPath/Kamanja-$ver211/input/SampleApplications/bin/*sh
+chmod 0700 $installPath/Kamanja-$ver211/ClusterInstall/*sh
 
 #Migration and cluster Install*****************
 
