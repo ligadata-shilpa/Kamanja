@@ -30,7 +30,7 @@ import java.text.SimpleDateFormat
 import scala.collection.mutable.ArrayBuffer
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-trait MessageContainerBase {
+/*trait MessageContainerBase {
   // System Columns
   var transactionId: Long
   var timePartitionData: Long = 0 // By default we are taking Java date with 0 milliseconds.
@@ -154,6 +154,7 @@ trait MdBaseResolveInfo {
   // getMessgeOrContainerInstance for SchemaId
   // Convert to LatestVersion (Take any object and tries to covert to new version)
 }
+*/
 
 /*
 object SerializeDeserialize {
@@ -244,7 +245,7 @@ object SerializeDeserialize {
 }
 */
 
-trait BaseContainer extends MessageContainerBase {
+/*trait BaseContainer extends MessageContainerBase {
   override def isMessage: Boolean = false
   override def isContainer: Boolean = true
 }
@@ -266,7 +267,7 @@ trait BaseMsgObj extends MessageContainerObjBase {
   def NeedToTransformData: Boolean // Filter & Rearrange input attributes if needed
   def CreateNewMessage: BaseMsg
 }
-
+*/
 trait AdaptersSerializeDeserializers {
   var mdMgr: MdMgr = _
   var classLoader: KamanjaClassLoader = _

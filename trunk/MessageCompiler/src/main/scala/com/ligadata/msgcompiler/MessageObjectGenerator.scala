@@ -36,6 +36,7 @@ class MessageObjectGenerator {
       msgObjeGenerator = msgObjeGenerator.append(msgObjVarsGeneration(message))
       msgObjeGenerator = msgObjeGenerator.append(msgConstants.msgObjectBuildStmts)
       msgObjeGenerator = msgObjeGenerator.append(keysCodeGeneration(message))
+      msgObjeGenerator = msgObjeGenerator.append(ObjDeprecatedMethods(message))
       msgObjeGenerator = msgObjeGenerator.append(msgConstants.closeBrace)
       // log.info("========== Message object End==============")
 
@@ -221,4 +222,52 @@ class MessageObjectGenerator {
     """override def getPrimaryKeyNames: Array[String] = """ + primaryInfo
   }
 
+  private def ObjDeprecatedMethods(message: Message) = {
+    var isMsg: String = "";
+    var isCntr: String = "";
+    var isFixed: String = ""
+    var containerType: String = ""
+    var isKv: String = ""
+    var createContrStr: String = ""
+    var tranformData: String = ""
+
+    if (msgConstants.isMessageFunc(message)) {
+      isMsg = "true";
+      isCntr = "false"
+      containerType = "BaseMsg"
+      createContrStr = "def CreateNewMessage: " + containerType + "= createInstance.asInstanceOf[" + containerType + "];"
+      tranformData = "override def NeedToTransformData: Boolean = false";
+    } else {
+      isMsg = "false";
+      isCntr = "true"
+      containerType = "BaseContainer"
+      createContrStr = "override def CreateNewContainer: " + containerType + "= createInstance.asInstanceOf[" + containerType + "];"
+      tranformData = ""
+    }
+
+    if (msgConstants.isFixedFunc(message)) {
+      isFixed = "true";
+      isKv = "false"
+    } else {
+      isFixed = "false";
+      isKv = "true"
+    }
+
+    """  
+  override def FullName: String = getFullTypeName
+  override def NameSpace: String = getTypeNameSpace
+  override def Name: String = getTypeName
+  override def Version: String = getTypeVersion
+  """ + createContrStr + """
+  override def IsFixed: Boolean = """ + isFixed + """
+  override def IsKv: Boolean = """ + isKv + """
+  override def CanPersist: Boolean = """ + message.Persist + """
+  override def isMessage: Boolean = """ + isMsg + """
+  override def isContainer: Boolean = """ + isCntr + """
+  override def PartitionKeyData(inputdata: InputData): Array[String] = createInstance.getPartitionKey();
+  override def PrimaryKeyData(inputdata: InputData): Array[String] = createInstance.getPrimaryKey();
+  override def TimePartitionData(inputdata: InputData): Long = createInstance.getTimePartitionData;
+  """ +tranformData + """
+    """
+  }
 }
