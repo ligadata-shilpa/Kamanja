@@ -170,12 +170,12 @@ public abstract class MessageContainerBase extends ContainerOrConcept {
 		return getContainerFactory().getTypeVersion();
 	}
 
-	final public String[] PartitionKeyData(InputData inputdata) {
-		return getContainerFactory().PartitionKeyData(inputdata);
+	final public String[] PartitionKeyData() {
+		return getPartitionKey();
 	}
 
-	final public String[] PrimaryKeyData(InputData inputdata) {
-		return getContainerFactory().PartitionKeyData(inputdata);
+	final public String[] PrimaryKeyData() {
+		return getPrimaryKey();
 	}
 
 	final public String FullName() {
