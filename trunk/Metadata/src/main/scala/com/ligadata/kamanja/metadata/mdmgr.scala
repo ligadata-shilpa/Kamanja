@@ -98,6 +98,7 @@ class MdMgr {
   def truncate {
     typeDefs.clear
     funcDefs.clear
+    compilerFuncDefs.clear
     msgDefs.clear
     containerDefs.clear
     attrbDefs.clear
@@ -110,10 +111,13 @@ class MdMgr {
     nodes.clear
     adapters.clear
     modelConfigs.clear
-    factoryOfMdlInstFactories.clear
     schemaIdMap.clear
     schemaIdToElemntIdMap.clear
     elementIdMap.clear
+    tenantIdMap.clear
+    factoryOfMdlInstFactories.clear
+    serializers.clear
+    adapterMessageBindings.clear
   }
 
   def truncate(objectType: String) {
