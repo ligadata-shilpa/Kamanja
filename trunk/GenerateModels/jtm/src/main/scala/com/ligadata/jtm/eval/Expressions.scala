@@ -68,28 +68,25 @@ object Expressions {
     val Marker = """\$"""
     val Separator = """\."""
 
-    // name or ${name} -> points to a variable
     {
-      val regex = s"$Begin$Element$End|$Begin$Marker$Open$Element$Close$End".r
-      val elements = regex.findFirstMatchIn(expr)
-      if (elements.isDefined) {
-        val m1 = elements.get.group(1)
-        if (mapNameSource.contains(m1)) {
-          return mapNameSource.get(m1).get
-        }
-        return null
-      }
-    }
-
-    // name.accessor or ${name.accessor} or ${name.key} or name.key or $name.key
-    {
-      //      val regex = s"$Begin$Marker$Open$Element$Separator$Element$Close$End|$Begin$Marker$Element$Separator$Element$End".r
-      //
+      // name.accessor or ${name.accessor} or ${name.key} or name.key or $name.key
       val regex1 = s"$Begin$Element$Separator$Element$End".r
       val regex2 = s"$Begin$Marker$Element$Separator$Element$End".r
       val regex3 = s"$Begin$Marker$Open$Element$Separator$Element$Close$End".r
 
-      def processMatch(m1: String, m2: String): eval.Tracker = {
+      // name or ${name} -> points to a variable
+      val regex1_1 = s"$Begin$Element$End".r
+      val regex2_1 = s"$Begin$Marker$Open$Element$Close$End".r
+
+      def processMatch1(m1: String): eval.Tracker = {
+        if (mapNameSource.contains(m1)) {
+          mapNameSource.get(m1).get
+        } else {
+          null
+        }
+      }
+
+      def processMatch2(m1: String, m2: String): eval.Tracker = {
         if (mapNameSource.contains(s"$m1.$m2")) {
           val t = mapNameSource.get(s"$m1.$m2").get
           t
@@ -112,27 +109,43 @@ object Expressions {
       }
 
       expr match {
-        case regex1(m1, m2) => return processMatch(m1, m2)
-        case regex2(m1, m2) => return processMatch(m1, m2)
-        case regex3(m1, m2) => return processMatch(m1, m2)
+        case regex1(m1, m2) => return processMatch2(m1, m2)
+        case regex2(m1, m2) => return processMatch2(m1, m2)
+        case regex3(m1, m2) => return processMatch2(m1, m2)
+        case regex1_1(m1) => return processMatch1(m1)
+        case regex2_1(m1) => return processMatch1(m1)
         case _ => ;
       }
     }
 
-    // name(<number>) or ${name}(<number>) or ${name(<number>)}
+
     {
-      // val regex = s"$Begin$Element$Index$End|$Begin$Marker$Open$Element$Index$Close$End|$Begin$Marker$Open$Element$Close$Index$End".r
+      // name(<number>) or ${name}(<number>) or ${name(<number>)}
       val regex1 = s"$Begin$Marker$Element$Index$End".r
-      expr match {
-        case regex1(m1, m2) =>
-          if (mapNameSource.contains(m1)) {
-            val t = mapNameSource.get(m1).get
-            if (Datatypes.isStringArray(t.typeName)) {
-              val expression = "%s%s".format(m1, m2)
-              val variableName = "%s%s".format(m1, m2)
-              return eval.Tracker(variableName, m1, "String", true, "", expression)
-            }
+      val regex2 = s"$Begin$Element$Index$End".r
+      val regex3 = s"$Begin$Marker$Open$Element$Index$Close$End".r
+      val regex4 = s"$Begin$Marker$Open$Element$Close$Index$End".r
+
+      def processIndex(m1: String, m2: String) : eval.Tracker = {
+        if (mapNameSource.contains(m1)) {
+          val t = mapNameSource.get(m1).get
+          if (Datatypes.isStringArray(t.typeName)) {
+            val expression = "%s%s".format(m1, m2)
+            val variableName = "%s%s".format(m1, m2)
+            eval.Tracker(variableName, m1, "String", true, "", expression)
+          } else {
+            null
           }
+        } else {
+          null
+        }
+      }
+
+      expr match {
+        case regex1(m1, m2) => return processIndex(m1, m2)
+        case regex2(m1, m2) => return processIndex(m1, m2)
+        case regex3(m1, m2) => return processIndex(m1, m2)
+        case regex4(m1, m2) => return processIndex(m1, m2)
         case _ => ;
       }
     }
