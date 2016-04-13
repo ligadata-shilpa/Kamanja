@@ -7,8 +7,7 @@ import scala.collection.mutable.Map
 
 object AdapterMessageBindingUtils {
 
-    lazy val serializerType = "kryo"
-    lazy val serializer = SerializerManager.GetSerializer(serializerType)
+    lazy val serializerType = "json4s"
 
 
     val AdapterNameKey : String =  "AdapterName"
@@ -21,6 +20,7 @@ object AdapterMessageBindingUtils {
 
     /**
       * Add an AdapterMessageBinding to the metadata for the supplied values.
+      *
       * @param adapterName the adapter's name
       * @param messageName the namespace.name of the message
       * @param serializerName the serializer's namespace.name to use
@@ -43,8 +43,8 @@ object AdapterMessageBindingUtils {
             mdMgr.AddAdapterMessageBinding(binding)
 
             /** persist the binding for next session */
-            val key: String = s"$adapterName.$messageName.$serializerName"
-            val value = serializer.SerializeObjectToByteArray(binding)
+            val key: String = s"$adapterName,$messageName,$serializerName"
+            val value = MetadataAPISerialization.serializeObjectToJson(binding).getBytes
             MetadataAPIImpl.SaveObject(key.toLowerCase, value, "adapter_message_bindings", serializerType)
 
             /** format a json string for return result */

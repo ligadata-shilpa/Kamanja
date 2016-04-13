@@ -599,14 +599,25 @@ object MetadataAPISerialization {
 
         }
         case o: TenantInfo => {
-          val primaryDataStore = if (o.primaryDataStore == null) "" else o.primaryDataStore
-          val cacheConfig = if (o.cacheConfig == null) "" else o.cacheConfig
-          val json = "Tenant" ->
-            ("TenantId" -> o.tenantId) ~
-              ("Description" -> getEmptyIfNull(o.description)) ~
-              ("PrimaryDataStore" -> primaryDataStore) ~
-              ("CacheConfig" -> cacheConfig)
-          outputJson = compact(render(json))
+            val primaryDataStore = if (o.primaryDataStore == null) "" else o.primaryDataStore
+            val cacheConfig = if (o.cacheConfig == null) "" else o.cacheConfig
+            val json = "Tenant" ->
+                ("TenantId" -> o.tenantId) ~
+                    ("Description" -> getEmptyIfNull(o.description)) ~
+                    ("PrimaryDataStore" -> primaryDataStore) ~
+                    ("CacheConfig" -> cacheConfig)
+            outputJson = compact(render(json))
+
+        }
+
+        case o: AdapterMessageBinding => {
+            val json = "AdapterMsgBinding" ->
+                    ("AdapterName" -> o.adapterName) ~
+                    ("MessageName" -> o.messageName) ~
+                    ("Serializer" -> o.serializer) ~
+                    ("Options" -> o.options.map( pair => { (pair._1 -> pair._2) } ))
+
+            outputJson = compact(render(json))
 
         }
         case o: UserPropertiesInfo => {
@@ -665,6 +676,7 @@ object MetadataAPISerialization {
         case "ClusterCfg" => parseClusterCfgInfo(json)
         case "Adapter" => parseAdapterInfo(json)
         case "Tenant" => parseTenantInfo(json)
+        case "AdapterMsgBinding" => parseAdapterMessageBinding(json)
         case "UserProperties" => parseUserPropertiesInfo(json)
         case _ => throw new Exception("deserializeMetadata doesn't support the objects of type objectType of " + key + " yet.")
       }
@@ -1722,30 +1734,58 @@ object MetadataAPISerialization {
     }
   }
 
-  private def parseTenantInfo(tenantInfoJson: JValue): TenantInfo = {
-    try {
-      logger.debug("Parsed the json : " + tenantInfoJson)
+    private def parseTenantInfo(tenantInfoJson: JValue): TenantInfo = {
+        try {
+            logger.debug("Parsed the json : " + tenantInfoJson)
 
-      val tenantInst = tenantInfoJson.extract[Tenant]
+            val tenantInst = tenantInfoJson.extract[Tenant]
 
-      val tenantInfo = MdMgr.GetMdMgr.MakeTenantInfo(
-        tenantInst.Tenant.TenantId,
-        tenantInst.Tenant.Description,
-        tenantInst.Tenant.PrimaryDataStore,
-        tenantInst.Tenant.CacheConfig
-      )
-      tenantInfo
-    } catch {
-      case e: MappingException => {
-        logger.debug("", e)
-        throw Json4sParsingException(e.getMessage(), e)
-      }
-      case e: Exception => {
-        logger.error("Failed to parse JSON" + tenantInfoJson, e)
-        throw e
-      }
+            val tenantInfo = MdMgr.GetMdMgr.MakeTenantInfo(
+                tenantInst.Tenant.TenantId,
+                tenantInst.Tenant.Description,
+                tenantInst.Tenant.PrimaryDataStore,
+                tenantInst.Tenant.CacheConfig
+            )
+            tenantInfo
+        } catch {
+            case e: MappingException => {
+                logger.debug("", e)
+                throw Json4sParsingException(e.getMessage(), e)
+            }
+            case e: Exception => {
+                logger.error("Failed to parse JSON" + tenantInfoJson, e)
+                throw e
+            }
+        }
     }
-  }
+
+    /**
+      * Resurrect the AdapterMessageBinding instance from the supplied JValue.
+      * @param bindingJson the json4s JValue containing the AdapterMessageBinding content
+      * @return an AdapterMessageBinding instance
+      */
+    private def parseAdapterMessageBinding(bindingJson: JValue): AdapterMessageBinding = {
+        try {
+            logger.debug("Parsed the json : " + bindingJson)
+
+            val rawBinding = bindingJson.extract[AdapterMsgBinding]
+            val bindingInfo : AdapterMessageBinding =
+                MdMgr.GetMdMgr.MakeAdapterMessageBinding(rawBinding.adapterName
+                                                        ,rawBinding.namespaceMsgName
+                                                        ,rawBinding.namespaceSerializerName
+                                                        ,rawBinding.serializerOptions)
+            bindingInfo
+        } catch {
+            case e: MappingException => {
+                logger.debug("", e)
+                throw Json4sParsingException(e.getMessage(), e)
+            }
+            case e: Exception => {
+                logger.error("Failed to parse JSON" + bindingJson, e)
+                throw e
+            }
+        }
+    }
 
   private def parseAdapterInfo(adapterInfoJson: JValue): AdapterInfo = {
     try {
@@ -1844,6 +1884,11 @@ case class Adapter(Adapter: AdapterInformation)
 case class TenantInformation(TenantId: String, Description: String, PrimaryDataStore: String, CacheConfig: String)
 
 case class Tenant(Tenant: TenantInformation)
+
+case class AdapterMsgBinding(adapterName: String
+                             , namespaceMsgName : String
+                             , namespaceSerializerName: String
+                             , serializerOptions : scala.collection.immutable.Map[String,String])
 
 case class KeyVale(Key: String, Value: String)
 

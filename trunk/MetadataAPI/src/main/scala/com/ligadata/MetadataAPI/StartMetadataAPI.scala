@@ -62,8 +62,8 @@ object StartMetadataAPI {
   val MESSAGENAME="MESSAGENAME"
 
   /** AdapterMessageBinding add tags */
-  val BINDINGFROMFILE="BINDINGFROMFILE"
-  val BINDINGFROMSTRING="BINDINGFROMSTRING"
+  val FROMFILE="FROMFILE"
+  val FROMSTRING="FROMSTRING"
   /** List AdapterMessageBinding filters */
   val ADAPTERFILTER="ADAPTERFILTER"
   val MESSAGEFILTER="MESSAGEFILTER"
@@ -110,7 +110,7 @@ object StartMetadataAPI {
               || arg.endsWith(".jar")) {
             extraCmdArgs(INPUTLOC) = arg
             if (expectBindingFromFile) { /** the json test above can prevent the ordinary catch of the name below */
-              extraCmdArgs(BINDINGFROMFILE) = extraCmdArgs.getOrElse(INPUTLOC,null)
+              extraCmdArgs(FROMFILE) = extraCmdArgs.getOrElse(INPUTLOC,null)
                 expectBindingFromFile = false
             }
 
@@ -133,9 +133,9 @@ object StartMetadataAPI {
                       expectMessageName = true
                   } else if (arg.equalsIgnoreCase(OUTPUTMSG)) {
                       expectOutputMsg = true
-                  } else if (arg.equalsIgnoreCase(BINDINGFROMFILE)) {
+                  } else if (arg.equalsIgnoreCase(FROMFILE)) {
                       expectBindingFromFile = true
-                  } else if (arg.equalsIgnoreCase(BINDINGFROMSTRING)) {
+                  } else if (arg.equalsIgnoreCase(FROMSTRING)) {
                       expectBindingFromString = true
                   } else if (arg.equalsIgnoreCase(ADAPTERFILTER)) {
                       expectAdapterFilter = true
@@ -171,12 +171,12 @@ object StartMetadataAPI {
                           argVar = "" // Make sure we dont add to the routing command
                       }
                       if (expectBindingFromString) {
-                          extraCmdArgs(BINDINGFROMSTRING) = arg
+                          extraCmdArgs(FROMSTRING) = arg
                           expectBindingFromString = false
                           argVar = "" // Make sure we dont add to the routing command
                       }
                       if (expectBindingFromFile) {
-                          extraCmdArgs(BINDINGFROMFILE) = arg
+                          extraCmdArgs(FROMFILE) = arg
                           expectBindingFromFile = false
                           argVar = "" // Make sure we dont add to the routing command
                       }
@@ -439,8 +439,8 @@ object StartMetadataAPI {
 
         // adapter message bindings
         case Action.ADDADAPTERMESSAGEBINDING => {
-            val bindingString: String = extraCmdArgs.getOrElse(BINDINGFROMSTRING, "")
-            val bindingFilePath: String = extraCmdArgs.getOrElse(BINDINGFROMFILE, "")
+            val bindingString: String = extraCmdArgs.getOrElse(FROMSTRING, "")
+            val bindingFilePath: String = extraCmdArgs.getOrElse(FROMFILE, "")
             if (bindingString.nonEmpty && bindingFilePath.nonEmpty) {
                 println("Currently only a file specification OR a string specification for the bindings are permitted, not both.")
                 throw new RuntimeException(s"Currently only a file specification or a string specification for the bindings are permitted, not both.")
