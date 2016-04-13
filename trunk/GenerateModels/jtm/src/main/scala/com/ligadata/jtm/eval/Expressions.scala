@@ -57,7 +57,7 @@ object Expressions {
     * @param mapNameSource
     * @return
     */
-  def isVariable(expr: String, mapNameSource: Map[String, Tracker], dictMessages: Map[String, String], aliaseMessages: Map[String, String]): (eval.Tracker) = {
+  def isVariable(expr: String, mapNameSource: Map[String, Tracker], dictMessages: Map[String, String], aliaseMessages: Map[String, String]): eval.Tracker = {
 
     val Element = """([a-zA-Z][a-zA-Z0-9_]+)"""
     val Index = """(\([0-9]+\))"""
@@ -81,29 +81,37 @@ object Expressions {
       }
     }
 
-    // name.accessor or ${name.accessor} or {name.key} or name.key or $name.key
+    // name.accessor or ${name.accessor} or ${name.key} or name.key or $name.key
     {
-      //      val regex = s"$Begin$Element$Separator$Element$End|$Begin$Marker$Open$Element$Separator$Element$Close$End|$Begin$Marker$Element$Separator$Element$End".r
-      val regex = s"$Begin$Marker$Element$Separator$Element$End".r
-      expr match {
-        case regex(m1, m2) =>
-          if (mapNameSource.contains(s"$m1.$m2")) {
-            val t = mapNameSource.get(s"$m1.$m2").get
-            return null
-          } else if (dictMessages.contains(m1)) {
-            val expression = "%s.get(\"%s\")".format(dictMessages.get(m1).get, m2)
-            val variableName = "%s.%s".format(dictMessages.get(m1).get, m2)
-            return eval.Tracker(variableName, m1, "Any", true, m2, expression)
-          } else if (mapNameSource.contains(m1)) {
-            val t = mapNameSource.get(m1).get
-            if (Datatypes.isStringDictionary(t.typeName)) {
-              val expression = "%s.get(\"%s\")".format(t.getExpression, m2)
-              val variableName = "%s.%s".format(t.getExpression, m2)
-              return eval.Tracker(variableName, m1, "String", true, m2, expression)
-            } else {
-              return null
-            }
+      //      val regex = s"$Begin$Marker$Open$Element$Separator$Element$Close$End|$Begin$Marker$Element$Separator$Element$End".r
+      //
+      val regex1 = s"$Begin$Element$Separator$Element$End".r
+      val regex2 = s"$Begin$Marker$Element$Separator$Element$End".r
+      val regex3 = s"$Begin$Marker$Open$Element$Separator$Element$Close$End".r
+
+      def processMatch(m1: String, m2: String): eval.Tracker = {
+        if (mapNameSource.contains(s"$m1.$m2")) {
+          val t = mapNameSource.get(s"$m1.$m2").get
+          t
+        } else if (dictMessages.contains(m1)) {
+          val expression = "%s.get(\"%s\")".format(dictMessages.get(m1).get, m2)
+          val variableName = "%s.%s".format(dictMessages.get(m1).get, m2)
+          eval.Tracker(variableName, m1, "Any", true, m2, expression)
+        } else if (mapNameSource.contains(m1)) {
+          val t = mapNameSource.get(m1).get
+          if (Datatypes.isStringDictionary(t.typeName)) {
+            val expression = "%s.get(\"%s\")".format(t.getExpression, m2)
+            val variableName = "%s.%s".format(t.getExpression, m2)
+            eval.Tracker(variableName, m1, "String", true, m2, expression)
           }
+        }
+        null
+      }
+
+      expr match {
+        case regex1(m1, m2) => return processMatch(m1, m2)
+        case regex2(m1, m2) => return processMatch(m1, m2)
+        case regex3(m1, m2) => return processMatch(m1, m2)
         case _ => ;
       }
     }
@@ -111,9 +119,9 @@ object Expressions {
     // name(<number>) or ${name}(<number>) or ${name(<number>)}
     {
       // val regex = s"$Begin$Element$Index$End|$Begin$Marker$Open$Element$Index$Close$End|$Begin$Marker$Open$Element$Close$Index$End".r
-      val regex = s"$Begin$Marker$Element$Index$End".r
+      val regex1 = s"$Begin$Marker$Element$Index$End".r
       expr match {
-        case regex(m1, m2) =>
+        case regex1(m1, m2) =>
           if (mapNameSource.contains(m1)) {
             val t = mapNameSource.get(m1).get
             if (Datatypes.isStringArray(t.typeName)) {
