@@ -1202,10 +1202,10 @@ class AdapterMessageBinding(  val adapterName : String
         extends BaseElemDef {
 
     def FullBindingName : String = {
-        val adapName : String = if (adapterName != null) adapterName.toLowerCase else "no adapter!"
-        val msgName : String = if (messageName != null) messageName.toLowerCase else "no message!"
-        val serName : String = if (serializer != null) serializer.toLowerCase else "no serializer!"
-        s"$adapName.$msgName.$serName"
+        val adapName : String = if (adapterName != null) adapterName.trim.toLowerCase else "no adapter!"
+        val msgName : String = if (messageName != null) messageName.trim.toLowerCase else "no message!"
+        val serName : String = if (serializer != null) serializer.trim.toLowerCase else "no serializer!"
+        s"$adapName,$msgName,$serName"
     }
 }
 

@@ -3311,7 +3311,7 @@ class MdMgr {
       * @return a Map[String, AapterMessageBinding] with 0 or more kv pairs.
       */
     def BindingsForAdapter(adapterName : String) : scala.collection.immutable.Map[String,AdapterMessageBinding] = {
-        val adapterNameKey = adapterName.toLowerCase
+        val adapterNameKey = adapterName.toLowerCase + ","
         val bindingMap :  scala.collection.immutable.Map[String,AdapterMessageBinding] = adapterMessageBindings.filterKeys(key => {
             key.startsWith(adapterNameKey)
         }).toMap
@@ -3325,8 +3325,8 @@ class MdMgr {
       * @return a Map[String, AapterMessageBinding] with 0 or more kv pairs.
       */
     def BindingsForMessage(namespaceMsgName : String) : scala.collection.immutable.Map[String,AdapterMessageBinding] = {
-        val adapterNameKey = namespaceMsgName.toLowerCase
-        val bindingMap :  scala.collection.immutable.Map[String,AdapterMessageBinding] = adapterMessageBindings.filterKeys(key => {
+        val adapterNameKey = "," + namespaceMsgName.trim.toLowerCase + ","
+      val bindingMap :  scala.collection.immutable.Map[String,AdapterMessageBinding] = adapterMessageBindings.filterKeys(key => {
             key.contains(adapterNameKey)
         }).toMap
         bindingMap
@@ -3339,9 +3339,9 @@ class MdMgr {
       * @return a Map[String, AapterMessageBinding] with 0 or more kv pairs.
       */
     def BindingsUsingSerializer(namespaceSerializerName : String) : scala.collection.immutable.Map[String,AdapterMessageBinding] = {
-        val adapterNameKey = namespaceSerializerName.toLowerCase
+        val adapterNameKey = "," + namespaceSerializerName.trim.toLowerCase
         val bindingMap :  scala.collection.immutable.Map[String,AdapterMessageBinding] = adapterMessageBindings.filterKeys(key => {
-            key.contains(adapterNameKey)
+            key.endsWith(adapterNameKey)
         }).toMap
         bindingMap
     }
