@@ -103,9 +103,12 @@ object Expressions {
             val expression = "%s.get(\"%s\")".format(t.getExpression, m2)
             val variableName = "%s.%s".format(t.getExpression, m2)
             eval.Tracker(variableName, m1, "String", true, m2, expression)
+          } else {
+            null
           }
+        } else {
+          null
         }
-        null
       }
 
       expr match {
