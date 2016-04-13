@@ -24,6 +24,9 @@ public class AvroHDFSWriter {
 	private String basePath;
 	private String codec;
 	private URI uri;
+	private Configuration conf;
+	private UserGroupInformation ugi;
+	private FileSystem fs;
 	private FSDataOutputStream out;
 	private DataFileWriter<Record> dataFileWriter;
 	private String kerberosPrincipal;
@@ -67,28 +70,33 @@ public class AvroHDFSWriter {
 		this.resourceFile = resourceFile;
 	}
 
-	public void open(String fileName) throws IOException {
+	
+	public void openFile(String fileName) throws IOException {
 		
 		uri = URI.create(basePath + "/" + fileName);
 		logger.info("Opening avro writer for " + uri);
 		
-		Configuration conf = new Configuration();
-		//conf.set("dfs.client.block.write.replace-datanode-on-failure.policy", "NEVER");
-		if(resourceFile != null && !"".equals(resourceFile)) {
-			logger.debug("Adding additional HDFS client configuration from file " + resourceFile);
-			conf.addResource(new Path(resourceFile));
-		}
-		
-		if(keytabFile != null && !"".equals(keytabFile) && kerberosPrincipal != null && !"".equals(kerberosPrincipal)) {
-			logger.debug("Kerberos security enabled.");
-			conf.set("hadoop.security.authentication", "kerberos");
-			UserGroupInformation.setConfiguration(conf);
+		if (fs == null || conf == null || ugi == null) {
+			conf = new Configuration();
+			// conf.set("dfs.client.block.write.replace-datanode-on-failure.policy", "NEVER");
+			if (resourceFile != null && !"".equals(resourceFile)) {
+				logger.debug("Adding additional HDFS client configuration from file " + resourceFile);
+				conf.addResource(new Path(resourceFile));
+			}
 
-			logger.debug("Using Kerberos principal: " + kerberosPrincipal);
-			logger.debug("Using Kerberos keytab file: " + keytabFile);
-			UserGroupInformation.loginUserFromKeytab(kerberosPrincipal, keytabFile);
+			if (keytabFile != null && !"".equals(keytabFile) && kerberosPrincipal != null
+					&& !"".equals(kerberosPrincipal)) {
+				logger.debug("Kerberos security enabled.");
+				conf.set("hadoop.security.authentication", "kerberos");
+				UserGroupInformation.setConfiguration(conf);
+
+				logger.debug("Using Kerberos principal: " + kerberosPrincipal);
+				logger.debug("Using Kerberos keytab file: " + keytabFile);
+				UserGroupInformation.loginUserFromKeytab(kerberosPrincipal, keytabFile);
+				ugi = UserGroupInformation.getCurrentUser();
+			}
+			fs = FileSystem.get(uri, conf);
 		}
-		FileSystem fs = FileSystem.get(uri, conf);
 
 		DatumWriter<Record> datumWriter = new GenericDatumWriter<Record>(schema);
 		dataFileWriter = new DataFileWriter<Record>(datumWriter);
@@ -111,20 +119,50 @@ public class AvroHDFSWriter {
 			dataFileWriter.create(schema, out);
 		}
 	}
-	
-	public void write(Record rec) throws IOException {
-		dataFileWriter.append(rec);
+	public void open(String fileName) throws IOException {
+		try {
+			openFile(fileName);
+		} catch(IOException e) {
+			// if exception try to re-login and see
+			if (ugi != null) {
+				ugi.reloginFromTicketCache();
+				openFile(fileName);
+			} else
+				throw e;
+		}
 	}
 
-	public void close() throws IOException {
+	public void write(Record rec) throws IOException {
+		try {
+			dataFileWriter.append(rec);
+		} catch(IOException e) {
+			// if exception try to re-login and see
+			if (ugi != null) {
+				ugi.reloginFromTicketCache();
+				dataFileWriter.append(rec);
+			} else
+				throw e;
+		}
+	}
+
+	public void close() { 
 		logger.info("Closing file at " + uri);
 		if (dataFileWriter != null)
-			dataFileWriter.close();
+			try { dataFileWriter.close();  } catch(Exception e) {}
 		if (out != null)
-			out.close();
+			try { out.close();  } catch(Exception e) {}
 		
 		dataFileWriter = null;
 		out = null;
 		uri = null;
+	}
+	
+	public void closeAll() {
+		close(); 
+		conf = null;
+		ugi = null;
+		fs = null;
+		
+		try { FileSystem.closeAll(); } catch(Exception e) {}
 	}
 }

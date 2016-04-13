@@ -117,9 +117,11 @@ public class BufferedPartitionedAvroSink implements BufferedMessageProcessor {
 						hdfsWriter.write(rec);
 					}
 					logger.info("Sucessfully wrote " + records.size() + " records to partition [" + key + "]");
+					hdfsWriter.close();
 				}
-			} finally {
-				hdfsWriter.close();
+			} catch(Exception e) {
+				hdfsWriter.closeAll();
+				throw e;
 			}
 		}		
 	}
