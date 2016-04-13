@@ -753,14 +753,6 @@ fi # if [ "$build211" == "1" ]; then #beginning of the 2.11 build
 
 #Migration and cluster Install*****************
 
-if [ "$build210" == "1" ]; then #beginning of the 2.11 build
-#        chmod 0700 $installPath/KamanjaInstall-$ver210/bin/*.sh
-fi 
-
-if [ "$build211" == "1" ]; then #beginning of the 2.11 build
-#        chmod 0700 $installPath/KamanjaInstall-$ver211/bin/*.sh
-fi
-
 #Migration and Cluster Install*****************
 
 cd $installPath
