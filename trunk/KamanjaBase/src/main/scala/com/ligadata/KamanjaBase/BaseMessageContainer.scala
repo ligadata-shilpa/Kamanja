@@ -147,6 +147,7 @@ trait MessageContainerObjBase {
   }
 
 }
+*/
 
 trait MdBaseResolveInfo {
   def getMessgeOrContainerInstance(typName: String): ContainerInterface
@@ -154,7 +155,7 @@ trait MdBaseResolveInfo {
   // getMessgeOrContainerInstance for SchemaId
   // Convert to LatestVersion (Take any object and tries to covert to new version)
 }
-*/
+
 
 /*
 object SerializeDeserialize {
