@@ -37,8 +37,8 @@ class MessageConstants {
   val createInstance = "%soverride def createInstance: %s = new %s(%s); %s"; //ContainerInterface = new CustAlertHistory()
   val containerInstanceType = "ContainerInterface";
   val messageInstanceType = "MessageInterface";
-  val getContainerTypeMsg = "%soverride def getContainerType: MessageContainerObjBase.ContainerType = MessageContainerObjBase.ContainerType.MESSAGE";
-  val getContainerTypeContainer = "%soverride def getContainerType: MessageContainerObjBase.ContainerType = MessageContainerObjBase.ContainerType.CONTAINER";
+  val getContainerTypeMsg = "%soverride def getContainerType: ContainerTypes.ContainerType = ContainerTypes.ContainerType.MESSAGE";
+  val getContainerTypeContainer = "%soverride def getContainerType: ContainerTypes.ContainerType = ContainerTypes.ContainerType.CONTAINER";
 
   val createNewContainer = "%soverride def CreateNewContainer: %s = new %s(); %s"; //ContainerInterface = new CustAlertHistory()
   val createNewMessage = "%soverride def CreateNewMessage: %s = new %s(); %s"; //ContainerInterface = new CustAlertHistory()
