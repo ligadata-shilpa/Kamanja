@@ -178,6 +178,9 @@ class PosixChangesMonitor(adapterName : String, modifiedFileCallback:(SmartFileH
   private var isMonitoring = false
 
   def init(adapterSpecificCfgJson: String): Unit ={
+    logger.debug("PosixChangesMonitor (init)- adapterSpecificCfgJson==null is "+
+      (adapterSpecificCfgJson == null))
+
     val(_type, c, m) =  SmartFileAdapterConfiguration.parseSmartFileAdapterSpecificConfig(adapterName, adapterSpecificCfgJson)
     connectionConf = c
     monitoringConf = m
@@ -241,7 +244,7 @@ class PosixChangesMonitor(adapterName : String, modifiedFileCallback:(SmartFileH
       files.foreach(file => {
         val tokenName = file.toString.split("/")
         if (!checkIfFileHandled(file.toString)) {
-          logger.info("SMART FILE CONSUMER (global)  Processing " + file.toString)
+          //logger.info("SMART FILE CONSUMER (global)  Processing " + file.toString)
           //FileProcessor.enQBufferedFile(file.toString)
           val fileHandler = new PosixFileHandler(file.toString)
           //call the callback for new files
