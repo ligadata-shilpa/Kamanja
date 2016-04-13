@@ -43,12 +43,12 @@ class MessageGenerator {
       messageGenerator = messageGenerator.append(msgConstants.newline);
       messageGenerator = messageGenerator.append(classGen(message));
       messageGenerator = messageGenerator.append(getMessgeBasicDetails(message));
+	  messageGenerator = messageGenerator.append(getAttributeTypes(message));	  
       messageGenerator = messageGenerator.append(msgConstants.newline + keyTypesMap(message.Elements));
       messageGenerator = messageGenerator.append(methodsFromMessageInterface(message));
       messageGenerator = messageGenerator.append(msgConstants.newline + generateParitionKeysData(message) + msgConstants.newline);
       messageGenerator = messageGenerator.append(msgConstants.newline + generatePrimaryKeysData(message) + msgConstants.newline);
-      messageGenerator = messageGenerator.append(getAttributeTypes(message));
-	  messageGenerator = messageGenerator.append(generateGetAttributeType());
+      messageGenerator = messageGenerator.append(generateGetAttributeType());
       if (message.Fixed.equalsIgnoreCase("true")) {
         messageGenerator = messageGenerator.append(msgConstants.newline + generatedMsgVariables(message));
         messageGenerator = messageGenerator.append(getGetSetMethodsFixed(message));
@@ -244,7 +244,7 @@ class MessageGenerator {
     if (message.Elements != null) {
       message.Elements.foreach(field => {
         if (field.AttributeTypeInfo != null)
-          getAttributeTypes.append("%s attributeTypes :+ new AttributeTypeInfo(\"%s\", %s, AttributeTypeInfo.TypeCategory.%s, %s, %s, %s)%s".format(msgConstants.pad2, field.Name, field.FieldOrdinal, field.AttributeTypeInfo.typeCategaryName, field.AttributeTypeInfo.valTypeId, field.AttributeTypeInfo.keyTypeId, field.AttributeTypeInfo.valSchemaId, msgConstants.newline))
+		  getAttributeTypes.append("%s attributeTypes(%s) = new AttributeTypeInfo(\"%s\", %s, AttributeTypeInfo.TypeCategory.%s, %s, %s, %s)%s".format(msgConstants.pad2, field.FieldOrdinal, field.Name, field.FieldOrdinal, field.AttributeTypeInfo.typeCategaryName, field.AttributeTypeInfo.valTypeId, field.AttributeTypeInfo.keyTypeId, field.AttributeTypeInfo.valSchemaId, msgConstants.newline))
       })
 
     }
@@ -305,7 +305,7 @@ class MessageGenerator {
     try {
       fields.foreach(field => {
         if (field != null) {
-          getAttributeFixedStrBldr.append("%sattributeVals :+ new AttributeValue(this.%s, keyTypes(\"%s\")) %s".format(msgConstants.pad4, field.Name, field.Name, msgConstants.newline));
+          getAttributeFixedStrBldr.append("%sattributeVals(%s) = new AttributeValue(this.%s, keyTypes(\"%s\")) %s".format(msgConstants.pad4, field.FieldOrdinal, field.Name, field.Name, msgConstants.newline));
         }
       })
     } catch {
