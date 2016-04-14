@@ -2857,8 +2857,8 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     if (!foundLocalNodeId)
       sb.append("Not found local NodeId:" + _nodeId + " in CacheConfig HostList")
 
-    if (conf.CachePort <= 0)
-      sb.append("Got invalid CachePort (%d) in CacheConfig\n".format(conf.CachePort))
+    if (conf.CacheStartPort <= 0)
+      sb.append("Got invalid CacheStartPort (%d) in CacheConfig\n".format(conf.CacheStartPort))
     if (conf.CacheSizePerNode <= 0)
       sb.append("Got invalid CacheSizePerNode (%d) in CacheConfig\n".format(conf.CacheSizePerNode))
     if (conf.ReplicateFactor <= 0)
