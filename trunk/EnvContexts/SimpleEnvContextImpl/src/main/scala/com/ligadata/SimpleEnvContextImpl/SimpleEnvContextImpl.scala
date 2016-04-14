@@ -46,7 +46,7 @@ import com.ligadata.keyvaluestore.KeyValueManager
 import java.io.{ByteArrayInputStream, DataInputStream, DataOutputStream, ByteArrayOutputStream}
 import java.util.{TreeMap, Date}
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import com.ligadata.cache.{CacheCallback, DataCache}
+import com.ligadata.cache.{CacheCallback, DataCache, CacheCallbackData}
 import scala.collection.JavaConverters._
 
 trait LogTrait {
@@ -141,13 +141,13 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
       if (_listenerCache != null) {
         if (!childCache && _listenerCache.isKeyInCache(listenPath)) {
           val value = _listenerCache.get(listenPath);
-          ListenCallback(("Put", listenPath, value.toString))
+          ListenCallback("Put", listenPath, value.toString)
         } else if (childCache) {
           val keys = _listenerCache.getKeys().asScala.filter(k => k.startsWith(listenPath)).toArray
           if (keys.size > 0) {
             val map = _listenerCache.get(keys)
             map.asScala.foreach(kv => {
-              ListenCallback(("Put", kv._1, kv._2.toString))
+              ListenCallback("Put", kv._1, kv._2.toString)
             })
           }
         }
@@ -2873,13 +2873,14 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     }
   }
 
-  class CacheListenerCallback {
+  class CacheListenerCallback extends CacheCallback {
     @throws(classOf[Exception])
     override def call(callbackData: CacheCallbackData): Unit = {
       val matchedListerners = getMatchedCacheListeners(callbackData.key)
       matchedListerners.foreach(l => {
-        if (l.ListenCallback != null)
-          l.ListenCallback((callbackData.eventType, callbackData.key, callbackData.value))
+        if (l.ListenCallback != null) {
+          l.ListenCallback(callbackData.eventType, callbackData.key, callbackData.value)
+        }
       })
     }
   }
