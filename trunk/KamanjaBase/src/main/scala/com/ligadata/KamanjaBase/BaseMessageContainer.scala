@@ -531,7 +531,7 @@ trait AdaptersSerializeDeserializers {
         }
       } else {
         val adapName = getAdapterName
-        logger.error(s"Did not find/load Serializer for container/message:${c.getFullTypeName}. Not sending/saving data into Adapter:${adapName}", null)
+        logger.error(s"Did not find/load Serializer for container/message:${c.getFullTypeName}. Not sending/saving data into Adapter:${adapName}")
       }
     })
 
@@ -579,7 +579,7 @@ trait AdaptersSerializeDeserializers {
       }
     } else {
       val adapName = getAdapterName
-      logger.error(s"Did not find/load Serializer for container/message:${msgName}. Not returning container from Adapter:${adapName}", null)
+      logger.error(s"Did not find/load Serializer for container/message:${msgName}. Not returning container from Adapter:${adapName}")
       return (null, null)
     }
   }
