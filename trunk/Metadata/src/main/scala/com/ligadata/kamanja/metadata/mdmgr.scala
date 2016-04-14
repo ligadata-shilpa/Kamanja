@@ -3248,7 +3248,7 @@ class MdMgr {
 
     @throws(classOf[AlreadyExistsException])
     def AddAdapterMessageBinding(binding : AdapterMessageBinding) : Boolean = {
-        val key : String = s"${binding.adapterName}.${binding.messageName}.${binding.serializer}".toLowerCase
+        val key : String = binding.FullBindingName.toLowerCase
         val added : Boolean = if (adapterMessageBindings.contains(key)) {
             throw AlreadyExistsException(s"an AdapterMessageBinding with key $key already exists... binding could not be added.", null)
         } else {
@@ -3288,9 +3288,10 @@ class MdMgr {
       * @return the removed AdapterMessageBinding (or null if not present).
       */
     def RemoveAdapterMessageBinding(fqBindingName : String) : AdapterMessageBinding = {
-        val binding = adapterMessageBindings.getOrElse(fqBindingName, null)
+        val key : String = fqBindingName.toLowerCase
+        val binding = adapterMessageBindings.getOrElse(key, null)
         if (binding != null) {
-            adapterMessageBindings -= fqBindingName
+            adapterMessageBindings -= key
         }
         binding
     }
@@ -3311,7 +3312,7 @@ class MdMgr {
       * @return a Map[String, AapterMessageBinding] with 0 or more kv pairs.
       */
     def BindingsForAdapter(adapterName : String) : scala.collection.immutable.Map[String,AdapterMessageBinding] = {
-        val adapterNameKey = adapterName.toLowerCase + ","
+        val adapterNameKey = adapterName.trim.toLowerCase + ","
         val bindingMap :  scala.collection.immutable.Map[String,AdapterMessageBinding] = adapterMessageBindings.filterKeys(key => {
             key.startsWith(adapterNameKey)
         }).toMap

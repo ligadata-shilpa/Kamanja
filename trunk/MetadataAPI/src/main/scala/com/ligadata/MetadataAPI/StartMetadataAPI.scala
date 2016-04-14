@@ -474,7 +474,7 @@ object StartMetadataAPI {
                     } else if (messagefilter.nonEmpty) {
                         AdapterMessageBindingService.ListBindingsForMessage(messagefilter)
                     } else {
-                        AdapterMessageBindingService.ListBindingsUsingSerializer(messagefilter)
+                        AdapterMessageBindingService.ListBindingsUsingSerializer(serializerfilter)
                     }
                 } else {
                     println("Currently only one filter is permitted for the ListAdapterMessageBindings cmd")

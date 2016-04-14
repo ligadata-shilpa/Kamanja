@@ -1772,12 +1772,12 @@ object MetadataAPISerialization {
             logger.debug(s"Parsing this JSON string : \n$bindingJson")
 
             val rawBinding = bindingJson.extract[AdapterMsgBinding]
-            val optionsStr : String = rawBinding.info.Options
+            val optionsStr : String = rawBinding.AdapterMsgBinding.Options
             val options : Map[String,Any] = jsonStringAsColl(optionsStr).asInstanceOf[Map[String,Any]]
             val bindingInfo : AdapterMessageBinding =
-                MdMgr.GetMdMgr.MakeAdapterMessageBinding(rawBinding.info.AdapterName
-                                                        ,rawBinding.info.MessageName
-                                                        ,rawBinding.info.Serializer
+                MdMgr.GetMdMgr.MakeAdapterMessageBinding(rawBinding.AdapterMsgBinding.AdapterName
+                                                        ,rawBinding.AdapterMsgBinding.MessageName
+                                                        ,rawBinding.AdapterMsgBinding.Serializer
                                                         ,options)
             bindingInfo
         } catch {
