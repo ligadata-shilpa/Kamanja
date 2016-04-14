@@ -156,13 +156,13 @@ trait MessageContainerObjBase {
 }
 */
 
-//trait MdBaseResolveInfo {
-//  def getMessgeOrContainerInstance(typName: String): ContainerInterface
-//
-//  // Get Latest SchemaId For Type
-//  // getMessgeOrContainerInstance for SchemaId
-//  // Convert to LatestVersion (Take any object and tries to covert to new version)
-//}
+trait MdBaseResolveInfo {
+  def getMessgeOrContainerInstance(typName: String): ContainerInterface
+
+  // Get Latest SchemaId For Type
+  // getMessgeOrContainerInstance for SchemaId
+  // Convert to LatestVersion (Take any object and tries to covert to new version)
+}
 
 
 /*

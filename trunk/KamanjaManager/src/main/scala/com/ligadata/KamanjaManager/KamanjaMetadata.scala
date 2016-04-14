@@ -1232,7 +1232,7 @@ object KamanjaMetadata extends ObjectResolver {
 
   override def getInstance(schemaId: Long): ContainerInterface = {
     //BUGBUG:: For now we are getting latest class. But we need to get the old one too.
-    val md = getMdMgr
+    val md = getMetadataManager
 
     if (md == null)
       throw new KamanjaException("Metadata Not found", null)
@@ -1245,7 +1245,7 @@ object KamanjaMetadata extends ObjectResolver {
     getInstance(contOpt.get.FullName)
   }
 
-  override def getMdMgr: MdMgr = getMdMgr
+  override def getMdMgr: MdMgr = getMetadataManager
 
   def getMessgeInfo(msgType: String): MsgContainerObjAndTransformInfo = {
     var exp: Exception = null
@@ -1458,7 +1458,7 @@ object KamanjaMetadata extends ObjectResolver {
     }).toMap
   }
 
-  def getMdMgr: MdMgr = mdMgr
+  def getMetadataManager: MdMgr = mdMgr
 
   def Shutdown: Unit = {
     if (zkListener != null)
