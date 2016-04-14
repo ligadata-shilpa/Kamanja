@@ -32,7 +32,7 @@ import scala.collection.mutable.ArrayBuffer
 
 case class ClusterStatus(nodeId: String, isLeader: Boolean, leaderNodeId: String, participantsNodeIds: Iterable[String])
 case class HostConfig(NodeId:String, NodeIp:String, Port: Int)
-case class CacheConfig(HostList: List[HostConfig], CachePort: Int, CacheSizePerNode: Long, ReplicateFactor: Int, TimeToIdleSeconds: Long, EvictionPolicy: String)
+case class CacheConfig(HostList: List[HostConfig], CacheStartPort: Int, CacheSizePerNode: Long, ReplicateFactor: Int, TimeToIdleSeconds: Long, EvictionPolicy: String)
 
 object Utils {
   private val logger = LogManager.getLogger(getClass)

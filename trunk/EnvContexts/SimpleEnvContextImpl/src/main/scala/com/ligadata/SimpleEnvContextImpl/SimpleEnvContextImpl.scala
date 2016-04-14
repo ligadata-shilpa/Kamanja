@@ -98,6 +98,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   private var _sysCatalogDatastore: String = _
   private var _postMsgListenerCallback: (Array[ContainerInterface]) => Unit = null
   private var _listenerCache: DataCache = null
+  private var _listenerConfigClusterCache: DataCache = null
   private var _cacheConfig: CacheConfig = null
   private val _cacheConfigTemplate =
     """
@@ -136,14 +137,24 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 
     WriteLock(_cacheListener_reent_lock)
     try {
-      _cacheListeners += ReturnCacheListenerCallback(listenPath, ListenCallback, childCache)
+      if (_listenerCache != null) {
+        _cacheListeners += ReturnCacheListenerCallback(listenPath, ListenCallback, childCache)
+      }
+    } catch {
+      case e: Throwable => {
+        throw e
+      }
+    } finally {
+      WriteUnlock(_cacheListener_reent_lock)
+    }
 
+    try {
       if (_listenerCache != null) {
         if (!childCache && _listenerCache.isKeyInCache(listenPath)) {
           val value = _listenerCache.get(listenPath);
           ListenCallback("Put", listenPath, value.toString)
         } else if (childCache) {
-          val keys = _listenerCache.getKeys().filter(k => k.startsWith(listenPath)).toArray
+          val keys = _listenerCache.getKeys().filter(k => k.startsWith(listenPath))
           if (keys.size > 0) {
             val map = _listenerCache.get(keys)
             map.asScala.foreach(kv => {
@@ -156,8 +167,6 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
       case e: Throwable => {
         throw e
       }
-    } finally {
-      WriteUnlock(_cacheListener_reent_lock)
     }
   }
 
@@ -2877,8 +2886,8 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   }
 
   private def CreateCacheListener(conf: CacheConfig): Unit = {
-    val hosts = conf.HostList.map(h => { "%s[%d]".format(h.NodeIp, conf.CachePort) }).mkString(",")
-    val cacheCfg = _cacheConfigTemplate.format("EnvCtxtListenersCache", hosts, conf.CachePort, conf.CacheSizePerNode, conf.TimeToIdleSeconds, conf.TimeToIdleSeconds, conf.EvictionPolicy.toUpperCase, "true")
+    val hosts = conf.HostList.map(h => { "%s[%d]".format(h.NodeIp, conf.CacheStartPort) }).mkString(",")
+    val cacheCfg = _cacheConfigTemplate.format("EnvCtxtListenersCache", hosts, conf.CacheStartPort, conf.CacheSizePerNode / 2, conf.TimeToIdleSeconds, conf.TimeToIdleSeconds, conf.EvictionPolicy.toUpperCase, "true")
 
     val listenCallback = new CacheListenerCallback()
 
@@ -2886,6 +2895,16 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     _listenerCache = aclass.asInstanceOf[DataCache]
     _listenerCache.init(cacheCfg, listenCallback)
     _listenerCache.start()
+  }
+
+  private def CreateConfigClusterCache(conf: CacheConfig): Unit = {
+    val hosts = conf.HostList.map(h => { "%s[%d]".format(h.NodeIp, conf.CacheStartPort) }).mkString(",")
+    val cacheCfg = _cacheConfigTemplate.format("EnvCtxtConfigClusterCache", hosts, conf.CacheStartPort, conf.CacheSizePerNode / 2, conf.TimeToIdleSeconds, conf.TimeToIdleSeconds, conf.EvictionPolicy.toUpperCase, "true")
+
+    val aclass = Class.forName("com.ligadata.cache.MemoryDataCacheImp").newInstance
+    _listenerConfigClusterCache = aclass.asInstanceOf[DataCache]
+    _listenerConfigClusterCache.init(cacheCfg, null)
+    _listenerConfigClusterCache.start()
   }
 
   override def setDataToZNode(zNodePath: String, value: Array[Byte]): Unit = {
@@ -3160,6 +3179,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   override def startCache(conf: CacheConfig): Unit = {
     ValidateCacheListener(conf)
     CreateCacheListener(conf)
+    CreateConfigClusterCache(conf)
     _cacheConfig = conf
   }
 
@@ -3167,18 +3187,28 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 
   // Saving & getting temporary objects in cache
   override def saveConfigInClusterCache(key: String, value: Array[Byte]): Unit = {
-    saveObjectInNodeCache(key, value)
+    if (_listenerConfigClusterCache != null)
+      _listenerConfigClusterCache.put(key, value)
   }
 
   override def getConfigFromClusterCache(key: String): Array[Byte] = {
-    getObjectFromNodeCache(key).asInstanceOf[Array[Byte]]
+    if (_listenerConfigClusterCache != null)
+      _listenerConfigClusterCache.get(key).asInstanceOf[Array[Byte]]
+    else
+      null
   }
 
   override def getAllKeysFromClusterCache(): Array[String] = {
-    getAllKeysFromNodeCache()
+    if (_listenerConfigClusterCache != null)
+      _listenerConfigClusterCache.getKeys
+    else
+      Array[String]()
   }
 
   override def getAllConfigFromClusterCache(): Array[KeyValuePair] = {
-    getAllObjectsFromNodeCache()
+    if (_listenerConfigClusterCache != null)
+      _listenerConfigClusterCache.getAll.asScala.map(kv => KeyValuePair(kv._1, kv._2.asInstanceOf[Array[Byte]])).toArray
+    else
+      Array[KeyValuePair]()
   }
 }

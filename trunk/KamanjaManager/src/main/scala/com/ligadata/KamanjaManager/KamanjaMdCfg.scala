@@ -34,7 +34,7 @@ import org.json4s.native.JsonMethods._
 import java.io.{ File }
 import com.ligadata.Exceptions._
 
-case class JCacheConfig(CachePort: Int, CacheSizePerNodeInMB: Long, ReplicateFactor: Int, TimeToIdleSeconds: Long, EvictionPolicy: String)
+case class JCacheConfig(CacheStartPort: Int, CacheSizePerNodeInMB: Long, ReplicateFactor: Int, TimeToIdleSeconds: Long, EvictionPolicy: String)
 
 // This is shared by multiple threads to read (because we are not locking). We create this only once at this moment while starting the manager
 object KamanjaMdCfg {
@@ -269,7 +269,7 @@ object KamanjaMdCfg {
               implicit val jsonFormats: Formats = DefaultFormats
               val cacheConfigParseInfo = parse(cacheInfo).extract[JCacheConfig]
               val hosts = mdMgr.Nodes.values.map(nd => HostConfig(nd.nodeId, nd.nodeIpAddr, nd.nodePort)).toList
-              val conf = CacheConfig(hosts, cacheConfigParseInfo.CachePort, cacheConfigParseInfo.CacheSizePerNodeInMB * 1024L * 1024L, cacheConfigParseInfo.ReplicateFactor, cacheConfigParseInfo.TimeToIdleSeconds, cacheConfigParseInfo.EvictionPolicy)
+              val conf = CacheConfig(hosts, cacheConfigParseInfo.CacheStartPort, cacheConfigParseInfo.CacheSizePerNodeInMB * 1024L * 1024L, cacheConfigParseInfo.ReplicateFactor, cacheConfigParseInfo.TimeToIdleSeconds, cacheConfigParseInfo.EvictionPolicy)
               envCtxt.startCache(conf)
             } catch {
               case e: Exception => { LOG.warn("", e) }
