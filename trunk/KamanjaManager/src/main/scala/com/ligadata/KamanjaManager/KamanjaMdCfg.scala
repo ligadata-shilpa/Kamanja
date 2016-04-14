@@ -18,13 +18,13 @@
 package com.ligadata.KamanjaManager
 
 import com.ligadata.StorageBase.StorageAdapter
+import com.ligadata.Utils.{Utils, KamanjaLoaderInfo, HostConfig, CacheConfig}
 import com.ligadata.keyvaluestore.KeyValueManager
 import org.apache.logging.log4j.{ Logger, LogManager }
 import com.ligadata.kamanja.metadata._
 import com.ligadata.kamanja.metadata.MdMgr._
 import com.ligadata.KamanjaBase.{ EnvContext, NodeContext }
 import com.ligadata.InputOutputAdapterInfo._
-import com.ligadata.Utils.{ Utils, KamanjaClassLoader, KamanjaLoaderInfo }
 import scala.collection.mutable.ArrayBuffer
 import com.ligadata.Serialize.{ JDataStore, JZKInfo, JEnvCtxtJsonStr }
 
@@ -33,6 +33,8 @@ import org.json4s.JsonDSL._
 import org.json4s.native.JsonMethods._
 import java.io.{ File }
 import com.ligadata.Exceptions._
+
+case class JCacheConfig(CacheStartPort: Int, CacheSizePerNodeInMB: Long, ReplicateFactor: Int, TimeToIdleSeconds: Long, EvictionPolicy: String)
 
 // This is shared by multiple threads to read (because we are not locking). We create this only once at this moment while starting the manager
 object KamanjaMdCfg {
@@ -247,6 +249,7 @@ object KamanjaMdCfg {
           val envCtxt = objinst.asInstanceOf[EnvContext]
           // First time creating metadata loader here
           val metadataLoader = new KamanjaLoaderInfo(KamanjaConfiguration.baseLoader, true, true)
+          envCtxt.setNodeInfo(KamanjaConfiguration.nodeId.toString, KamanjaConfiguration.clusterId)
           envCtxt.setMetadataLoader(metadataLoader)
           envCtxt.setAdaptersAndEnvCtxtLoader(adaptersAndEnvCtxtLoader)
           // envCtxt.setClassLoader(KamanjaConfiguration.metadataLoader.loader) // Using Metadata Loader
@@ -260,7 +263,22 @@ object KamanjaMdCfg {
           envCtxt.setDefaultDatastore(initConfigs.dataDataStoreInfo) // Default Datastore
           envCtxt.setZookeeperInfo(initConfigs.zkConnectString, initConfigs.zkNodeBasePath, initConfigs.zkSessionTimeoutMs, initConfigs.zkConnectionTimeoutMs)
 
-          val allMsgsContainers = topMessageNames ++ containerNames
+          val cacheInfo = cluster.cfgMap.getOrElse("Cache", null)
+          if (cacheInfo != null && cacheInfo.trim.size > 0) {
+            try {
+              implicit val jsonFormats: Formats = DefaultFormats
+              val cacheConfigParseInfo = parse(cacheInfo).extract[JCacheConfig]
+              val hosts = mdMgr.Nodes.values.map(nd => HostConfig(nd.nodeId, nd.nodeIpAddr, nd.nodePort)).toList
+              val conf = CacheConfig(hosts, cacheConfigParseInfo.CacheStartPort, cacheConfigParseInfo.CacheSizePerNodeInMB * 1024L * 1024L, cacheConfigParseInfo.ReplicateFactor, cacheConfigParseInfo.TimeToIdleSeconds, cacheConfigParseInfo.EvictionPolicy)
+              envCtxt.startCache(conf)
+            } catch {
+              case e: Exception => { LOG.warn("", e) }
+            }
+          } else {
+            // BUGBUG:- Do we make Cache is Must? Shall we through an error
+          }
+
+            val allMsgsContainers = topMessageNames ++ containerNames
 //          val containerInfos = allMsgsContainers.map(c => { ContainerNameAndDatastoreInfo(c, null) })
 //          envCtxt.RegisterMessageOrContainers(containerInfos) // Messages & Containers
 
@@ -388,6 +406,7 @@ object KamanjaMdCfg {
         val adapter = CreateStorageAdapterFromConfig(ac._2, nodeContext)
         if (adapter == null) return false
         storageAdapters += adapter
+        KamanjaManager.incrAdapterChangedCntr()
       } catch {
         case e: Exception => {
           LOG.error("Failed to get output adapter for %s".format(ac), e)
@@ -505,6 +524,7 @@ object KamanjaMdCfg {
         val adapter = CreateOutputAdapterFromConfig(conf, nodeContext)
         if (adapter == null) return false
         outputAdapters += adapter
+        KamanjaManager.incrAdapterChangedCntr()
       } catch {
         case e: Exception => {
           LOG.error("Failed to get output adapter for %s".format(ac), e)
@@ -623,6 +643,7 @@ object KamanjaMdCfg {
         val adapter = CreateInputAdapterFromConfig(conf, execCtxtObj, nodeContext)
         if (adapter == null) return false
         inputAdapters += adapter
+        KamanjaManager.incrAdapterChangedCntr()
       } catch {
         case e: Exception => {
           LOG.error("Failed to get input adapter for %s.".format(ac), e)

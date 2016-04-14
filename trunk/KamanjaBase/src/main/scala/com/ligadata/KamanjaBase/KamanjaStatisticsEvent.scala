@@ -4,7 +4,7 @@ package com.ligadata.KamanjaBase;
 import org.json4s.jackson.JsonMethods._
 import org.json4s.DefaultFormats
 import org.json4s.Formats
-import com.ligadata.KamanjaBase.{ AttributeTypeInfo, AttributeValue, ContainerFactoryInterface, ContainerInterface, MessageFactoryInterface, MessageInterface, TimePartitionInfo, ContainerOrConceptFactory, RDDObject, JavaRDDObject, ContainerOrConcept }
+import com.ligadata.KamanjaBase._;
 import com.ligadata.BaseTypes._
 import com.ligadata.Exceptions.StackTrace;
 import org.apache.logging.log4j.{ Logger, LogManager }
@@ -19,7 +19,7 @@ object KamanjaStatisticsEvent extends RDDObject[KamanjaStatisticsEvent] with Mes
   override def getSchemaId: Int = 1000006;
   override def createInstance: KamanjaStatisticsEvent = new KamanjaStatisticsEvent(KamanjaStatisticsEvent);
   override def isFixed: Boolean = true;
-  override def getContainerType: ContainerFactoryInterface.ContainerType = ContainerFactoryInterface.ContainerType.MESSAGE
+  override def getContainerType: ContainerTypes.ContainerType = ContainerTypes.ContainerType.MESSAGE
   override def getFullName = getFullTypeName;
   override def toJavaRDDObject: JavaRDDObject[T] = JavaRDDObject.fromRDDObject[T](this);
 
@@ -47,6 +47,23 @@ object KamanjaStatisticsEvent extends RDDObject[KamanjaStatisticsEvent] with Mes
   }
 
   override def getAvroSchema: String = """{ "type": "record",  "namespace" : "com.ligadata.kamanjabase" , "name" : "kamanjastatisticsevent" , "fields":[{ "name" : "statistics" , "type" : "string"}]}""";
+  /** Deprecated Methods **/
+  def NeedToTransformData: Boolean = false
+  override def FullName: String = getFullTypeName
+  override def NameSpace: String = getTypeNameSpace
+  override def Name: String = getTypeName
+  override def Version: String = getTypeVersion
+  def CreateNewMessage: BaseMsg = createInstance.asInstanceOf[BaseMsg];
+  def CreateNewContainer: BaseContainer = null;
+  def IsFixed: Boolean = true
+  def IsKv: Boolean = false
+  override def CanPersist: Boolean = false
+  override def isMessage: Boolean = true
+  override def isContainer: Boolean = false
+  override def PartitionKeyData(inputdata: InputData): Array[String] = { throw new Exception("Deprecated method PartitionKeyData in obj KamanjaStatisticsEvent") };
+  override def PrimaryKeyData(inputdata: InputData): Array[String] = throw new Exception("Deprecated method PrimaryKeyData in obj KamanjaStatisticsEvent");
+  override def TimePartitionData(inputdata: InputData): Long = throw new Exception("Deprecated method TimePartitionData in obj KamanjaStatisticsEvent");
+
 }
 
 class KamanjaStatisticsEvent(factory: MessageFactoryInterface, other: KamanjaStatisticsEvent) extends MessageInterface(factory) {
@@ -83,14 +100,14 @@ class KamanjaStatisticsEvent(factory: MessageFactoryInterface, other: KamanjaSta
     return attributeTypes
   }
   override def getAttributeType(name: String): AttributeTypeInfo = {
-      if (name == null || name.trim() == "") return null;
-      attributeTypes.foreach(attributeType => {
-        if(attributeType.getName == name.toLowerCase())
-          return attributeType
-      }) 
-      return null;
-    }
-  
+    if (name == null || name.trim() == "") return null;
+    attributeTypes.foreach(attributeType => {
+      if (attributeType.getName == name.toLowerCase())
+        return attributeType
+    })
+    return null;
+  }
+
   private def getWithReflection(key: String): AnyRef = {
     val ru = scala.reflect.runtime.universe
     val m = ru.runtimeMirror(getClass.getClassLoader)
@@ -119,7 +136,7 @@ class KamanjaStatisticsEvent(factory: MessageFactoryInterface, other: KamanjaSta
     return get(keyTypes(key).getIndex)
   }
 
-  override def getOrElse(key: String, defaultVal: Any): AnyRef = { 
+  override def getOrElse(key: String, defaultVal: Any): AnyRef = {
     try {
       val value = get(key.toLowerCase())
       if (value == null) return defaultVal.asInstanceOf[AnyRef]; else return value;
@@ -132,7 +149,7 @@ class KamanjaStatisticsEvent(factory: MessageFactoryInterface, other: KamanjaSta
     return null;
   }
 
-   def getOrElse(index: Int, defaultVal: Any): AnyRef = { 
+  override def getOrElse(index: Int, defaultVal: Any): AnyRef = {
     try {
       val value = get(index)
       if (value == null) return defaultVal.asInstanceOf[AnyRef]; else return value;
@@ -164,7 +181,7 @@ class KamanjaStatisticsEvent(factory: MessageFactoryInterface, other: KamanjaSta
   override def getAllAttributeValues(): Array[AttributeValue] = { // Has ( value, attributetypeinfo))
     var attributeVals = new Array[AttributeValue](1);
     try {
-      attributeVals :+ new AttributeValue(this.statistics, keyTypes("statistics"))
+      attributeVals(0) = new AttributeValue(this.statistics, keyTypes("statistics"))
 
     } catch {
       case e: Exception => {
@@ -182,7 +199,7 @@ class KamanjaStatisticsEvent(factory: MessageFactoryInterface, other: KamanjaSta
 
   }
 
-  override def get(index: Int): AnyRef = { 
+  override def get(index: Int): AnyRef = {
     try {
       index match {
         case 0 => return this.statistics;

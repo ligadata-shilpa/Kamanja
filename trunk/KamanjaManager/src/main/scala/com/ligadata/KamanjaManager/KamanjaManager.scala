@@ -227,6 +227,8 @@ class KamanjaManager extends Observer {
   private val inputAdapters = new ArrayBuffer[InputAdapter]
   private val outputAdapters = new ArrayBuffer[OutputAdapter]
   private val storageAdapters = new ArrayBuffer[StorageAdapter]
+//  private val adapterChangedCntr = new java.util.concurrent.atomic.AtomicLong(0)
+  private var adapterChangedCntr: Long = 0
 //  private val statusAdapters = new ArrayBuffer[OutputAdapter]
 //  private val validateInputAdapters = new ArrayBuffer[InputAdapter]
 
@@ -238,6 +240,14 @@ class KamanjaManager extends Observer {
   private var isTimerRunning = false
   private var isTimerStarted = false
   private type OptionMap = Map[Symbol, Any]
+
+  def incrAdapterChangedCntr(): Unit = {
+    adapterChangedCntr += 1
+  }
+  def getAdapterChangedCntr: Long = adapterChangedCntr
+  def getAllAdaptersInfo: (Array[InputAdapter], Array[OutputAdapter], Array[StorageAdapter], Long) = {
+    (inputAdapters.toArray, outputAdapters.toArray, storageAdapters.toArray, adapterChangedCntr)
+  }
 
   private def PrintUsage(): Unit = {
     LOG.warn("Available commands:")
@@ -486,8 +496,6 @@ class KamanjaManager extends Observer {
         dataChangeZkNodePath = zkNodeBasePath + "/datachange"
         zkHeartBeatNodePath = zkNodeBasePath + "/monitor/engine/" + KamanjaConfiguration.nodeId.toString
       }
-
-      KamanjaMetadata.envCtxt.setNodeInfo(KamanjaConfiguration.nodeId.toString, KamanjaConfiguration.clusterId)
 
       KamanjaMetadata.gNodeContext = new NodeContext(KamanjaMetadata.envCtxt)
 
@@ -915,6 +923,7 @@ class ComponentInfo {
 
 object KamanjaManager {
   private val LOG = LogManager.getLogger(getClass);
+  var curMgr: KamanjaManager = _
   def main(args: Array[String]): Unit = {
     val mgr = new KamanjaManager
     scala.sys.addShutdownHook({
@@ -924,7 +933,12 @@ object KamanjaManager {
       }
     })
 
+    curMgr = mgr
     sys.exit(mgr.run(args))
   }
+
+  def incrAdapterChangedCntr(): Unit = curMgr.incrAdapterChangedCntr()
+  def getAdapterChangedCntr = curMgr.getAdapterChangedCntr
+  def getAllAdaptersInfo: (Array[InputAdapter], Array[OutputAdapter], Array[StorageAdapter], Long) = curMgr.getAllAdaptersInfo
 }
 

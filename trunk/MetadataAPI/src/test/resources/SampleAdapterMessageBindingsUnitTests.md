@@ -95,6 +95,7 @@ A file can have multiple binding specifications in it.  For example,
 ]
 
 
+
 Using a file to ingest all (or at least the key adapter bindings) for a new cluster has its attraction.  A binding is prepared for each map and, as can be seen in the kafkaAdapterOutput2 and hBaseStore1 adapters, the multiple message shorthand is used that will cause a binding for each unique triple (adapter, message, serializer).
 
 If the above file was called $MetadataDir/config/AdapterMessageBindingsForClusterConfig1.4.0.json, a Kamanja command can directly ingest it:
@@ -112,13 +113,13 @@ Like the other examples, you can also push this directly on the command line too
 **List Adapter Message Bindings**
 
 _List them all_
-	$KAMANJA_HOME/bin/kamanja debug $KAMANJA_HOME/config/MetadataAPIConfig.properties list adaptermessagebindings 
+	$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties list adaptermessagebindings 
 _List bindings for the supplied adapter_
-	$KAMANJA_HOME/bin/kamanja debug $KAMANJA_HOME/config/MetadataAPIConfig.properties list adaptermessagebindings ADAPTERFILTER hBaseStore1
+	$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties list adaptermessagebindings ADAPTERFILTER hBaseStore1
 _List bindings for a given message_
-	$KAMANJA_HOME/bin/kamanja debug $KAMANJA_HOME/config/MetadataAPIConfig.properties list adaptermessagebindings MESSAGEFILTER com.botanical.csv.emailmsg
+	$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties list adaptermessagebindings MESSAGEFILTER com.botanical.csv.emailmsg
 _List bindings for a given serializer_
-	$KAMANJA_HOME/bin/kamanja debug $KAMANJA_HOME/config/MetadataAPIConfig.properties list adaptermessagebindings SERIALIZERFILTER org.kamanja.serializer.json.JsonSerDeser
+	$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties list adaptermessagebindings SERIALIZERFILTER org.kamanja.serializer.json.JsonSerDeser
 
 **Remove Adapter Message Binding**
 
@@ -158,4 +159,21 @@ $KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add 
 $KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add message $MetadataDir/message/com.botanical.json.shippingmsg.json tenantid "botanical"
 
 Once complete return to the **Adapter Message Binding Examples** section and try out the adapter messasge binding add / remove commands.
+
+
+{
+  "Adapter": {
+    "Name": "kafkaAdapterInput1",
+    "TypeString": "Input",
+    "ClassName": "com.ligadata.InputAdapters.KafkaSimpleConsumer$",
+    "JarName": "KamanjaInternalDeps_2.11-1.4.0.jar",
+    "DependencyJars": [
+      "ExtDependencyLibs_2.11-1.4.0.jar",
+      "ExtDependencyLibs2_2.11-1.4.0.jar"
+    ],
+    "AdapterSpecificCfg": "{\"HostList\":\"localhost:9092\",\"TopicName\":\"testin_1\"}",
+    "TenantId": "tenant1",
+    "FullAdapterConfig": "{\"TenantId\":\"tenant1\",\"DependencyJars\":[\"ExtDependencyLibs_2.11-1.4.0.jar\",\"ExtDependencyLibs2_2.11-1.4.0.jar\"],\"ClassName\":\"com.ligadata.InputAdapters.KafkaSimpleConsumer$\",\"Name\":\"kafkaAdapterInput1\",\"AdapterSpecificCfg\":{\"HostList\":\"localhost:9092\",\"TopicName\":\"testin_1\"},\"TypeString\":\"Input\",\"JarName\":\"KamanjaInternalDeps_2.11-1.4.0.jar\"}"
+  }
+}
 

@@ -20,14 +20,13 @@ package com.ligadata.KamanjaBase
 import com.ligadata.Exceptions.{DeprecatedException, NotImplementedFunctionException}
 
 import scala.collection.immutable.Map
-import com.ligadata.Utils.Utils
+import com.ligadata.Utils.{CacheConfig, Utils, KamanjaLoaderInfo, ClusterStatus}
 import com.ligadata.kamanja.metadata.{MdMgr, ModelDef}
 import org.json4s._
 import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
 import java.io.{DataInputStream, DataOutputStream}
 import com.ligadata.KvBase.{Key, TimeRange /* , KvBaseDefalts, KeyWithBucketIdAndPrimaryKey, KeyWithBucketIdAndPrimaryKeyCompHelper */}
-import com.ligadata.Utils.{KamanjaLoaderInfo, ClusterStatus}
 import com.ligadata.HeartBeat._
 
 import scala.collection.mutable.ArrayBuffer
@@ -478,6 +477,9 @@ trait EnvContext /* extends Monitorable */  {
 
   def setSystemCatalogDatastore(sysCatalog: String): Unit
   def getSystemCatalogDatastore(): String
+
+  def startCache(conf: CacheConfig): Unit
+  def getCacheConfig(): CacheConfig
 }
 
 // partitionKey is the one used for this message
@@ -525,7 +527,7 @@ abstract class ModelBase(var modelContext: ModelContext, val factory: ModelBaseO
 
 trait ModelBaseObj {
   // Check to fire the model
-  def IsValidMessage(msg: ContainerInterface): Boolean
+  def IsValidMessage(msg: MessageContainerBase): Boolean
 
   // Creating same type of object with given values
   def CreateNewModel(mdlCtxt: ModelContext): ModelBase
@@ -641,7 +643,7 @@ abstract class ModelInstanceFactory(val modelDef: ModelDef, val nodeContext: Nod
 
   // Checking whether the message is valid to execute this model instance or not.
   // Deprecated and no more supported in new versions from 1.4.0
-  def isValidMessage(msg: ContainerInterface): Boolean = {
+  def isValidMessage(msg: MessageContainerBase): Boolean = {
     throw new DeprecatedException("Deprecated", null)
   }
 
@@ -953,7 +955,7 @@ class ModelBaseObjMdlInstanceFactory(modelDef: ModelDef, nodeContext: NodeContex
 
   override def getVersion() = mdlBaseObj.Version() // Model Version
 
-  override def isValidMessage(msg: ContainerInterface): Boolean = mdlBaseObj.IsValidMessage(msg)
+  override def isValidMessage(msg: MessageContainerBase): Boolean = mdlBaseObj.IsValidMessage(msg)
 
   override def createModelInstance() = new ModelBaseMdlInstance(this)
 

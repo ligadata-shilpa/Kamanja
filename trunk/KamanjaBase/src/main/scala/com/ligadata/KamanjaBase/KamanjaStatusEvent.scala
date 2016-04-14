@@ -4,7 +4,7 @@ package com.ligadata.KamanjaBase;
 import org.json4s.jackson.JsonMethods._
 import org.json4s.DefaultFormats
 import org.json4s.Formats
-import com.ligadata.KamanjaBase.{ AttributeTypeInfo, AttributeValue, ContainerFactoryInterface, ContainerInterface, MessageFactoryInterface, MessageInterface, TimePartitionInfo, ContainerOrConceptFactory, RDDObject, JavaRDDObject, ContainerOrConcept }
+import com.ligadata.KamanjaBase._;
 import com.ligadata.BaseTypes._
 import com.ligadata.Exceptions.StackTrace;
 import org.apache.logging.log4j.{ Logger, LogManager }
@@ -19,7 +19,7 @@ object KamanjaStatusEvent extends RDDObject[KamanjaStatusEvent] with MessageFact
   override def getSchemaId: Int = 1000001;
   override def createInstance: KamanjaStatusEvent = new KamanjaStatusEvent(KamanjaStatusEvent);
   override def isFixed: Boolean = true;
-  override def getContainerType: ContainerFactoryInterface.ContainerType = ContainerFactoryInterface.ContainerType.MESSAGE
+  override def getContainerType: ContainerTypes.ContainerType = ContainerTypes.ContainerType.MESSAGE
   override def getFullName = getFullTypeName;
   override def toJavaRDDObject: JavaRDDObject[T] = JavaRDDObject.fromRDDObject[T](this);
 
@@ -47,6 +47,22 @@ object KamanjaStatusEvent extends RDDObject[KamanjaStatusEvent] with MessageFact
   }
 
   override def getAvroSchema: String = """{ "type": "record",  "namespace" : "com.ligadata.kamanjabase" , "name" : "kamanjastatusevent" , "fields":[{ "name" : "nodeid" , "type" : "string"},{ "name" : "eventtime" , "type" : "long"},{ "name" : "statusstring" , "type" : "string"}]}""";
+  /** Deprecated Methods **/
+  def NeedToTransformData: Boolean = false
+  override def FullName: String = getFullTypeName
+  override def NameSpace: String = getTypeNameSpace
+  override def Name: String = getTypeName
+  override def Version: String = getTypeVersion
+  def CreateNewMessage: BaseMsg = createInstance.asInstanceOf[BaseMsg];
+  def CreateNewContainer: BaseContainer = null;
+  def IsFixed: Boolean = true
+  def IsKv: Boolean = false
+  override def CanPersist: Boolean = false
+  override def isMessage: Boolean = true
+  override def isContainer: Boolean = false
+  override def PartitionKeyData(inputdata: InputData): Array[String] = { throw new Exception("Deprecated method PartitionKeyData in obj KamanjaStatusEvent") };
+  override def PrimaryKeyData(inputdata: InputData): Array[String] = throw new Exception("Deprecated method PrimaryKeyData in obj KamanjaStatusEvent");
+  override def TimePartitionData(inputdata: InputData): Long = throw new Exception("Deprecated method TimePartitionData in obj KamanjaStatusEvent");
 }
 
 class KamanjaStatusEvent(factory: MessageFactoryInterface, other: KamanjaStatusEvent) extends MessageInterface(factory) {
@@ -71,8 +87,8 @@ class KamanjaStatusEvent(factory: MessageFactoryInterface, other: KamanjaStatusE
   private def generateAttributeTypes(): Array[AttributeTypeInfo] = {
     var attributeTypes = new Array[AttributeTypeInfo](3);
     attributeTypes(0) = new AttributeTypeInfo("nodeid", 0, AttributeTypeInfo.TypeCategory.STRING, 1, 1, 0)
-    attributeTypes(1) =  new AttributeTypeInfo("eventtime", 1, AttributeTypeInfo.TypeCategory.LONG, 4, 4, 0)
-    attributeTypes(2) =  new AttributeTypeInfo("statusstring", 2, AttributeTypeInfo.TypeCategory.STRING, 1, 1, 0)
+    attributeTypes(1) = new AttributeTypeInfo("eventtime", 1, AttributeTypeInfo.TypeCategory.LONG, 4, 4, 0)
+    attributeTypes(2) = new AttributeTypeInfo("statusstring", 2, AttributeTypeInfo.TypeCategory.STRING, 1, 1, 0)
 
     return attributeTypes
   }
@@ -83,13 +99,13 @@ class KamanjaStatusEvent(factory: MessageFactoryInterface, other: KamanjaStatusE
   }
 
   override def getAttributeType(name: String): AttributeTypeInfo = {
-      if (name == null || name.trim() == "") return null;
-      attributeTypes.foreach(attributeType => {
-        if(attributeType.getName == name.toLowerCase())
-          return attributeType
-      }) 
-      return null;
-    }
+    if (name == null || name.trim() == "") return null;
+    attributeTypes.foreach(attributeType => {
+      if (attributeType.getName == name.toLowerCase())
+        return attributeType
+    })
+    return null;
+  }
 
   var nodeid: String = _;
   var eventtime: Long = _;
@@ -168,9 +184,9 @@ class KamanjaStatusEvent(factory: MessageFactoryInterface, other: KamanjaStatusE
   override def getAllAttributeValues(): Array[AttributeValue] = { // Has ( value, attributetypeinfo))
     var attributeVals = new Array[AttributeValue](3);
     try {
-      attributeVals :+ new AttributeValue(this.nodeid, keyTypes("nodeid"))
-      attributeVals :+ new AttributeValue(this.eventtime, keyTypes("eventtime"))
-      attributeVals :+ new AttributeValue(this.statusstring, keyTypes("statusstring"))
+      attributeVals(0) = new AttributeValue(this.nodeid, keyTypes("nodeid"))
+      attributeVals(1) = new AttributeValue(this.eventtime, keyTypes("eventtime"))
+      attributeVals(2) = new AttributeValue(this.statusstring, keyTypes("statusstring"))
 
     } catch {
       case e: Exception => {
