@@ -2661,9 +2661,6 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   //
   //  def getAllNodeLocks(nodeId: String): Array[String] = null
 
-  // Saving & getting temporary objects in cache
-  def saveConfigInClusterCache(key: String, value: Array[Byte]): Unit = {}
-
   override def saveObjectInNodeCache(key: String, value: Any): Unit = {
     WriteLock(_nodeCache_reent_lock)
     try {
@@ -2677,8 +2674,6 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
       WriteUnlock(_nodeCache_reent_lock)
     }
   }
-
-  def getConfigFromClusterCache(key: String): Array[Byte] = null
 
   override def getObjectFromNodeCache(key: String): Any = {
     var retVal: Any = null
@@ -2697,8 +2692,6 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     retVal
   }
 
-  def getAllKeysFromClusterCache(): Array[String] = null
-
   override def getAllKeysFromNodeCache(): Array[String] = {
     var retVal = Array[String]()
     ReadLock(_nodeCache_reent_lock)
@@ -2715,8 +2708,6 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 
     retVal
   }
-
-  def getAllConfigFromClusterCache(): Array[KeyValuePair] = null
 
   override def getAllObjectsFromNodeCache(): Array[KeyValuePair] = {
     var retVal = Array[KeyValuePair]()
@@ -3173,4 +3164,21 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   }
 
   override def getCacheConfig(): CacheConfig = _cacheConfig
+
+  // Saving & getting temporary objects in cache
+  override def saveConfigInClusterCache(key: String, value: Array[Byte]): Unit = {
+    saveObjectInNodeCache(key, value)
+  }
+
+  override def getConfigFromClusterCache(key: String): Array[Byte] = {
+    getObjectFromNodeCache(key).asInstanceOf[Array[Byte]]
+  }
+
+  override def getAllKeysFromClusterCache(): Array[String] = {
+    getAllKeysFromNodeCache()
+  }
+
+  override def getAllConfigFromClusterCache(): Array[KeyValuePair] = {
+    getAllObjectsFromNodeCache()
+  }
 }
