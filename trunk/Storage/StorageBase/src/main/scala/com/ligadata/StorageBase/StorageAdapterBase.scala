@@ -261,7 +261,7 @@ class StorageAdapter(nodeCtxt: NodeContext, adapterInfo: AdapterInfo, datastore:
 
   var _datastore: DataStore = datastore
 
-  final def getAdapterName = adapterInfo.Name
+  override final def getAdapterName = adapterInfo.Name
 
   def save(tnxCtxt: TransactionContext, outputContainers: Array[ContainerInterface]): Unit = {
     if (outputContainers.size == 0) return
