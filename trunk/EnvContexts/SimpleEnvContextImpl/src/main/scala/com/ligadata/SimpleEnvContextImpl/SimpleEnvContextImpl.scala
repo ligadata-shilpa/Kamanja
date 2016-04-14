@@ -3192,8 +3192,13 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   }
 
   override def getConfigFromClusterCache(key: String): Array[Byte] = {
-    if (_listenerConfigClusterCache != null)
-      _listenerConfigClusterCache.get(key).asInstanceOf[Array[Byte]]
+    if (_listenerConfigClusterCache != null && _listenerConfigClusterCache.isKeyInCache(key)) {
+      val v = _listenerConfigClusterCache.get(key)
+      if (v != null)
+        v.asInstanceOf[Array[Byte]]
+      else
+        null
+    }
     else
       null
   }
@@ -3206,9 +3211,15 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   }
 
   override def getAllConfigFromClusterCache(): Array[KeyValuePair] = {
-    if (_listenerConfigClusterCache != null)
-      _listenerConfigClusterCache.getAll.asScala.map(kv => KeyValuePair(kv._1, kv._2.asInstanceOf[Array[Byte]])).toArray
-    else
+    if (_listenerConfigClusterCache != null) {
+      val allValues = _listenerConfigClusterCache.getAll
+      if (allValues != null && allValues.size() > 0)
+        allValues.asScala.map(kv => KeyValuePair(kv._1, if (kv._2 != null) kv._2.asInstanceOf[Array[Byte]] else null)).toArray
+      else
+        Array[KeyValuePair]()
+    }
+    else {
       Array[KeyValuePair]()
+    }
   }
 }
