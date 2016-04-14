@@ -262,7 +262,7 @@ object KamanjaMdCfg {
           envCtxt.setDefaultDatastore(initConfigs.dataDataStoreInfo) // Default Datastore
           envCtxt.setZookeeperInfo(initConfigs.zkConnectString, initConfigs.zkNodeBasePath, initConfigs.zkSessionTimeoutMs, initConfigs.zkConnectionTimeoutMs)
 
-          val cacheInfo = mdMgr.GetUserProperty(KamanjaConfiguration.clusterId, "Cache")
+          val cacheInfo = cluster.cfgMap.getOrElse("Cache", null)
           if (cacheInfo != null && cacheInfo.trim.size > 0) {
             try {
               implicit val jsonFormats: Formats = DefaultFormats
