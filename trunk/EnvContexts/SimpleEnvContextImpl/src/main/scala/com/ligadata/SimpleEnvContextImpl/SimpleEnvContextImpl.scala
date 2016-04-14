@@ -2878,7 +2878,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
       val matchedListerners = getMatchedCacheListeners(callbackData.key)
       matchedListerners.foreach(l => {
         if (l.ListenCallback != null)
-          l.ListenCallback((callbackData.eventType, callbackData.key, callbackData.value)
+          l.ListenCallback((callbackData.eventType, callbackData.key, callbackData.value))
       })
     }
   }
