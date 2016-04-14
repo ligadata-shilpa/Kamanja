@@ -253,7 +253,7 @@ object KamanjaMdCfg {
           envCtxt.setMetadataLoader(metadataLoader)
           envCtxt.setAdaptersAndEnvCtxtLoader(adaptersAndEnvCtxtLoader)
           // envCtxt.setClassLoader(KamanjaConfiguration.metadataLoader.loader) // Using Metadata Loader
-          envCtxt.setMetadataResolveInfo(KamanjaMetadata)
+          envCtxt.setObjectResolver(KamanjaMetadata)
           envCtxt.setMdMgr(KamanjaMetadata.getMdMgr)
           envCtxt.setSystemCatalogDatastore(initConfigs.dataDataStoreInfo)
           val containerNames = KamanjaMetadata.getAllContainers.map(container => container._1.toLowerCase).toList.sorted.toArray // Sort topics by names
@@ -405,6 +405,7 @@ object KamanjaMdCfg {
       try {
         val adapter = CreateStorageAdapterFromConfig(ac._2, nodeContext)
         if (adapter == null) return false
+        adapter.setObjectResolver(objectResolver: ObjectResolver)
         storageAdapters += adapter
         KamanjaManager.incrAdapterChangedCntr()
       } catch {

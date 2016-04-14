@@ -115,6 +115,8 @@ trait OutputAdapter extends AdaptersSerializeDeserializers with Monitorable {
   // Configuration
   val inputConfig: AdapterConfiguration
 
+  final def getAdapterName = inputConfig.Name
+
   def send(tnxCtxt: TransactionContext, outputContainers: Array[ContainerInterface]): Unit
 
   def Shutdown: Unit
@@ -144,6 +146,8 @@ trait ExecContext extends AdaptersSerializeDeserializers {
     nodeContext.getEnvCtxt().getSystemCatalogDatastore(), nodeContext.getEnvCtxt().getJarPaths())
   private val transService = new SimpleTransService
   transService.init(txnIdsRangeForPartition)
+
+  final def getAdapterName = input.inputConfig.Name
 
   final def SendFailedEvent(data: Array[Byte], deserializer: String, failedMsg: String, uk: String, uv: String, e: Throwable): Unit = {
     val failedTm = failedEventDtFormat.format(new java.util.Date(System.currentTimeMillis))
