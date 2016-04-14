@@ -59,7 +59,8 @@ class APIService extends LigadataSSLConfiguration with Runnable{
    * 
    */
   def run() {
-    StartService(inArgs) 
+    initMetadata(inArgs)
+    StartService()
   }
   
   
@@ -88,60 +89,64 @@ class APIService extends LigadataSSLConfiguration with Runnable{
     //System.exit(0)
   }
 
-  private def StartService(args: Array[String]) : Unit = {
+  private def initMetadata(args: Array[String]): Unit ={
+    var configFile = ""
+    if (args.length == 0) {
+      try {
+        configFile = scala.util.Properties.envOrElse("KAMANJA_HOME", scala.util.Properties.envOrElse("HOME", "~" )) + "/config/MetadataAPIConfig.properties"
+      } catch {
+        case nsee: java.util.NoSuchElementException => {
+          logger.warn("Either a CONFIG FILE parameter must be passed to start this service or KAMANJA_HOME must be set")
+          return
+        }
+        case e: Exception => {
+          logger.error("", e)
+          return
+        }
+      }
+
+      logger.warn("Config File defaults to " + configFile)
+      logger.warn("One Could optionally pass a config file as a command line argument:  --config myConfig.properties")
+      logger.warn("The config file supplied is a complete path name of a  json file similar to one in github/Kamanja/trunk/MetadataAPI/src/main/resources/MetadataAPIConfig.properties")
+    } else {
+      val options = nextOption(Map(), args.toList)
+      val version = options.getOrElse('version, "false").toString
+      if (version.equalsIgnoreCase("true")) {
+        KamanjaVersion.print
+        sys.exit(0)
+      }
+      val cfgfile = options.getOrElse('config, null)
+      if (cfgfile == null) {
+        logger.error("Need configuration file as parameter")
+        throw MissingArgumentException("Usage: configFile  supplied as --config myConfig.properties", null)
+      }
+      configFile = cfgfile.asInstanceOf[String]
+    }
+
+    val (loadConfigs, failStr) = com.ligadata.Utils.Utils.loadConfiguration(configFile.toString, true)
+    if (failStr != null && failStr.size > 0) {
+      logger.error(failStr)
+      Shutdown(1)
+      return
+    }
+
+    if (loadConfigs == null) {
+      Shutdown(1)
+      return
+    }
+
+    APIInit.SetConfigFile(configFile.toString)
+
+    // Read properties file and Open db connection
+    MetadataAPIImpl.InitMdMgrFromBootStrap(configFile, true)
+    // APIInit deals with shutdown activity and it needs to know
+    // that database connections were successfully made
+    APIInit.SetDbOpen
+  }
+
+   def StartService() : Unit = {
     try{
-      var configFile = ""
-      if (args.length == 0) {
-        try {
-          configFile = scala.util.Properties.envOrElse("KAMANJA_HOME", scala.util.Properties.envOrElse("HOME", "~" )) + "/config/MetadataAPIConfig.properties"
-        } catch {
-          case nsee: java.util.NoSuchElementException => {
-            logger.warn("Either a CONFIG FILE parameter must be passed to start this service or KAMANJA_HOME must be set")
-            return
-          }
-          case e: Exception => {
-            logger.error("", e)
-            return
-          }
-        }
 
-        logger.warn("Config File defaults to " + configFile)
-        logger.warn("One Could optionally pass a config file as a command line argument:  --config myConfig.properties")
-        logger.warn("The config file supplied is a complete path name of a  json file similar to one in github/Kamanja/trunk/MetadataAPI/src/main/resources/MetadataAPIConfig.properties")
-      } else {
-        val options = nextOption(Map(), args.toList)
-        val version = options.getOrElse('version, "false").toString
-        if (version.equalsIgnoreCase("true")) {
-          KamanjaVersion.print
-          sys.exit(0)
-        }
-        val cfgfile = options.getOrElse('config, null)
-        if (cfgfile == null) {
-          logger.error("Need configuration file as parameter")
-          throw MissingArgumentException("Usage: configFile  supplied as --config myConfig.properties", null)
-        }
-        configFile = cfgfile.asInstanceOf[String]
-      }
-
-      val (loadConfigs, failStr) = com.ligadata.Utils.Utils.loadConfiguration(configFile.toString, true)
-      if (failStr != null && failStr.size > 0) {
-        logger.error(failStr)
-        Shutdown(1)
-        return
-      }
-      
-      if (loadConfigs == null) {
-        Shutdown(1)
-        return
-      }
-
-      APIInit.SetConfigFile(configFile.toString)
-
-      // Read properties file and Open db connection
-      MetadataAPIImpl.InitMdMgrFromBootStrap(configFile, true)
-      // APIInit deals with shutdown activity and it needs to know
-      // that database connections were successfully made
-      APIInit.SetDbOpen
 
       logger.debug("API Properties => " + MetadataAPIImpl.GetMetadataAPIConfig)
 
@@ -189,7 +194,8 @@ object APIService {
 
   def main(args: Array[String]): Unit = {
     val mgr = new APIService
-    mgr.StartService(args) 
+    mgr.initMetadata(args)
+    mgr.StartService()
   }
   
   
