@@ -17,7 +17,7 @@
             "Location": "{InstallDirectory}/storage/tenant1_default"
           },
           "CacheConfig": {
-            "MaxSize": "1G"
+            "MaxSizeInMB": "1024"
           }
         }
       ],
@@ -37,7 +37,7 @@
       },
       "Cache": {
         "CachePort": 7800,
-        "CacheSizePerNode": "5G",
+        "CacheSizePerNodeInMB": 1024,
         "ReplicateFactor": 1,
         "TimeToIdleSeconds": 31622400,
         "EvictionPolicy": "LFU"

@@ -17,7 +17,7 @@
             "Location": "{InstallDirectory}/storage/tenant1_default"
           },
           "CacheConfig": {
-            "MaxSize": "1GB"
+            "MaxSizeInMB": "1024"
           }
         }
       ],
@@ -34,6 +34,13 @@
           "ExtDependencyLibs_2.10-1.4.0.jar",
           "ExtDependencyLibs2_2.10-1.4.0.jar"
         ]
+      },
+      "Cache": {
+        "CachePort": 7800,
+        "CacheSizePerNodeInMB": 1024,
+        "ReplicateFactor": 1,
+        "TimeToIdleSeconds": 31622400,
+        "EvictionPolicy": "LFU"
       },
       "Nodes": [
         {
