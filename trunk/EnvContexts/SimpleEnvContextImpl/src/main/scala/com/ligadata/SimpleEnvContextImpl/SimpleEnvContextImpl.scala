@@ -143,7 +143,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
           val value = _listenerCache.get(listenPath);
           ListenCallback("Put", listenPath, value.toString)
         } else if (childCache) {
-          val keys = _listenerCache.getKeys().asScala.filter(k => k.startsWith(listenPath)).toArray
+          val keys = _listenerCache.getKeys().filter(k => k.startsWith(listenPath)).toArray
           if (keys.size > 0) {
             val map = _listenerCache.get(keys)
             map.asScala.foreach(kv => {
