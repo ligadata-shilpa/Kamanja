@@ -47,20 +47,20 @@ object KamanjaExceptionEvent extends RDDObject[KamanjaExceptionEvent] with Messa
   }
 
   override def getAvroSchema: String = """{ "type": "record",  "namespace" : "com.ligadata.kamanjabase" , "name" : "kamanjaexceptionevent" , "fields":[{ "name" : "componentname" , "type" : "string"},{ "name" : "timeoferrorepochms" , "type" : "long"},{ "name" : "errortype" , "type" : "string"},{ "name" : "errorstring" , "type" : "string"}]}""";
- 
+
   def NeedToTransformData: Boolean = false
   override def FullName: String = getFullTypeName
   override def NameSpace: String = getTypeNameSpace
   override def Name: String = getTypeName
   override def Version: String = getTypeVersion
   def CreateNewMessage: BaseMsg = createInstance.asInstanceOf[BaseMsg];
-  def CreateNewContainer: BaseContainer = null; 
+  def CreateNewContainer: BaseContainer = null;
   def IsFixed: Boolean = true
   def IsKv: Boolean = false
   override def CanPersist: Boolean = false
   override def isMessage: Boolean = true
   override def isContainer: Boolean = false
-   override def PartitionKeyData(inputdata: InputData): Array[String] = { throw new Exception("Deprecated method PartitionKeyData in obj IdCodeDimFixedTest") };
+  override def PartitionKeyData(inputdata: InputData): Array[String] = { throw new Exception("Deprecated method PartitionKeyData in obj IdCodeDimFixedTest") };
   override def PrimaryKeyData(inputdata: InputData): Array[String] = throw new Exception("Deprecated method PrimaryKeyData in obj IdCodeDimFixedTest");
   override def TimePartitionData(inputdata: InputData): Long = throw new Exception("Deprecated method TimePartitionData in obj IdCodeDimFixedTest");
 
@@ -106,13 +106,13 @@ class KamanjaExceptionEvent(factory: MessageFactoryInterface, other: KamanjaExce
     return attributeTypes
   }
   override def getAttributeType(name: String): AttributeTypeInfo = {
-      if (name == null || name.trim() == "") return null;
-      attributeTypes.foreach(attributeType => {
-        if(attributeType.getName == name.toLowerCase())
-          return attributeType
-      }) 
-      return null;
-    }
+    if (name == null || name.trim() == "") return null;
+    attributeTypes.foreach(attributeType => {
+      if (attributeType.getName == name.toLowerCase())
+        return attributeType
+    })
+    return null;
+  }
 
   private def getWithReflection(key: String): AnyRef = {
     val ru = scala.reflect.runtime.universe

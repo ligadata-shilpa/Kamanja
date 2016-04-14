@@ -30,7 +30,13 @@ object HL7Fixed extends RDDObject[HL7Fixed] with MessageFactoryInterface {
 
   override def getPrimaryKeyNames: Array[String] = Array("desynpuf_id", "clm_id");
 
-  override def getTimePartitionInfo: TimePartitionInfo = { return null; } // FieldName, Format & Time Partition Types(Daily/Monthly/Yearly)
+  override def getTimePartitionInfo: TimePartitionInfo = {
+    var timePartitionInfo: TimePartitionInfo = new TimePartitionInfo();
+    timePartitionInfo.setFieldName("desynpuf_id");
+    timePartitionInfo.setFormat("epochtime");
+    timePartitionInfo.setTimePartitionType(TimePartitionInfo.TimePartitionType.YEARLY);
+    return timePartitionInfo
+  }
 
   override def hasPrimaryKey(): Boolean = {
     val pKeys = getPrimaryKeyNames();
