@@ -337,7 +337,7 @@ trait AdaptersSerializeDeserializers {
     return Serialization.write(map)
   }
 
-  private def resolveBinding(msgName: String, serName: String, options: Map[String, Any]): MsgBindingInfo = {
+  private def resolveBinding(serName: String, options: Map[String, Any]): MsgBindingInfo = {
     if (objectResolver == null)
       throw new KamanjaException("Metadata/ObjectResolver manager is not yet set", null)
 
@@ -375,7 +375,7 @@ trait AdaptersSerializeDeserializers {
 
   private def resolveBindings(allBinds: Map[String, (String, Map[String, Any])]): Map[String, MsgBindingInfo] = {
     if (allBinds.size > 0)
-      allBinds.map(b => (b._1, resolveBinding(b._1, b._2._1, b._2._2)))
+      allBinds.map(b => (b._1, resolveBinding(b._2._1, b._2._2)))
     else
       Map[String, MsgBindingInfo]()
   }
@@ -538,22 +538,22 @@ trait AdaptersSerializeDeserializers {
     (serOutputContainers.toArray, serializedContainerData.toArray, usedSerializersNames.toArray)
   }
 
-  //  // Returns serialized msgs, serialized msgs data & serializers names applied on these messages.
-  //  def serialize(tnxCtxt: TransactionContext, outputContainers: Array[ContainerInterface], serializersNames: Array[String]): (Array[ContainerInterface], Array[Array[Byte]], Array[String]) = {
-  //    if ((outputContainers == null || outputContainers.size == 0) && (serializersNames == null || serializersNames.size == 0)) return (Array[ContainerInterface](), Array[Array[Byte]](), Array[String]())
+  //    // Returns serialized msgs, serialized msgs data & serializers names applied on these messages.
+  //    def serialize(tnxCtxt: TransactionContext, outputContainers: Array[ContainerInterface], serializersNames: Array[String]): (Array[ContainerInterface], Array[Array[Byte]], Array[String]) = {
+  //      if ((outputContainers == null || outputContainers.size == 0) && (serializersNames == null || serializersNames.size == 0)) return (Array[ContainerInterface](), Array[Array[Byte]](), Array[String]())
   //
-  //    if (((outputContainers == null || outputContainers.size == 0) && !(serializersNames == null || serializersNames.size == 0)) ||
-  //      (!(outputContainers == null || outputContainers.size == 0) && (serializersNames == null || serializersNames.size == 0)))
-  //      throw new KamanjaException("Invalid input sizes", null)
+  //      if (((outputContainers == null || outputContainers.size == 0) && !(serializersNames == null || serializersNames.size == 0)) ||
+  //        (!(outputContainers == null || outputContainers.size == 0) && (serializersNames == null || serializersNames.size == 0)))
+  //        throw new KamanjaException("Invalid input sizes", null)
   //
-  //    val serOutputContainers = ArrayBuffer[ContainerInterface]()
-  //    val serializedContainerData = ArrayBuffer[Array[Byte]]()
-  //    val usedSerializersNames = ArrayBuffer[String]()
+  //      val serOutputContainers = ArrayBuffer[ContainerInterface]()
+  //      val serializedContainerData = ArrayBuffer[Array[Byte]]()
+  //      val usedSerializersNames = ArrayBuffer[String]()
   //
-  //    //FIXME:- yet to fix it
+  //      //FIXME:- yet to fix it
   //
-  //    (serOutputContainers.toArray, serializedContainerData.toArray, usedSerializersNames.toArray)
-  //  }
+  //      (serOutputContainers.toArray, serializedContainerData.toArray, usedSerializersNames.toArray)
+  //    }
 
   // Returns deserialized msg, deserialized msg data & deserializer name applied.
   def deserialize(data: Array[Byte]): (ContainerInterface, String) = {
@@ -584,20 +584,37 @@ trait AdaptersSerializeDeserializers {
     }
   }
 
-  //  // Returns deserialized msg, deserialized msg data & deserializer name applied.
-  //  def deserialize(data: Array[Byte], deserializerName: String): (ContainerInterface, String) = {
-  //    // We are going thru getAllMessageBindings and get from it ourself?. So one read lock for every serialize fintion
-  //    val allMsgBindings = getAllMessageBindings
-  //    val ser = allMsgBindings.getOrElse(c.getFullTypeName, null)
-  //
-  //
-  //
-  //    var container: ContainerInterface = null
-  //
-  //    //FIXME:- Convert incoming data into message using deserializer
-  //
-  //    (container, deserializerName)
-  //  }
+  private def getTypeForSchemaId(schemaId: Int): String = {
+    val contOpt = objectResolver.getMdMgr.ContainerForSchemaId(schemaId.toInt)
+    if (contOpt == None)
+      return null
+    contOpt.get.FullName
+  }
+
+  // Returns deserialized msg, deserialized msg data & deserializer name applied.
+  def deserialize(data: Array[Byte], deserializerName: String, schemaId: Int): (ContainerInterface, String) = {
+    val msgName = getTypeForSchemaId(schemaId)
+    if (msgName == null) {
+      logger.error(s"Did not find container/message for schemaid:${schemaId}")
+      return (null, null)
+    }
+
+    val ser = getMessageBinding(msgName)
+    if (ser != null && ser.serInstance != null) {
+      try {
+        val container = ser.serInstance.deserialize(data, msgName)
+        return (container, ser.serName)
+      } catch {
+        case e: Throwable => {
+          throw e
+        }
+      }
+    } else {
+      val adapName = getAdapterName
+      logger.error(s"Did not find/load Serializer for container/message:${msgName} of schemaid:${schemaId}. Not returning container from Adapter:${adapName}")
+      return (null, null)
+    }
+  }
 }
 
 case class ContainerInterfaceWithModFlag(modified: Boolean, value: ContainerInterface)
