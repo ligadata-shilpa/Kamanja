@@ -1895,7 +1895,7 @@ case class AdapterMsgBindingInfo(AdapterName: String
                              , Serializer: String
                              , Options : String)
 
-case class AdapterMsgBinding(info: AdapterMsgBindingInfo)
+case class AdapterMsgBinding(AdapterMsgBinding: AdapterMsgBindingInfo)
 
 case class KeyVale(Key: String, Value: String)
 
