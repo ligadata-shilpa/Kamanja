@@ -249,6 +249,7 @@ object KamanjaMdCfg {
           val envCtxt = objinst.asInstanceOf[EnvContext]
           // First time creating metadata loader here
           val metadataLoader = new KamanjaLoaderInfo(KamanjaConfiguration.baseLoader, true, true)
+          envCtxt.setNodeInfo(KamanjaConfiguration.nodeId.toString, KamanjaConfiguration.clusterId)
           envCtxt.setMetadataLoader(metadataLoader)
           envCtxt.setAdaptersAndEnvCtxtLoader(adaptersAndEnvCtxtLoader)
           // envCtxt.setClassLoader(KamanjaConfiguration.metadataLoader.loader) // Using Metadata Loader
