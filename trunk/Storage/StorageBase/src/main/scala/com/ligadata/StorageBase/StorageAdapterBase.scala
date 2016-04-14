@@ -26,19 +26,23 @@ trait DataStoreOperations extends AdaptersSerializeDeserializers {
   def put(tnxCtxt: TransactionContext, container: ContainerInterface): Unit = {
     if (container == null)
       throw new InvalidArgumentException("container should not be null", null)
-    // put(tnxCtxt, Array((container.getFullTypeName.toLowerCase(), Array((key, serializerTyp, value)))))
-    // val (outputContainers, serializedContainerData, serializerNames) = serialize(tnxCtxt, Array(container))
-    // Call put methods with container name, key & values
-    throw new NotImplementedFunctionException("Not yet implemented", null)
+    put(tnxCtxt, Array(container))
   }
 
   def put(tnxCtxt: TransactionContext, containers: Array[ContainerInterface]): Unit = {
     if (containers == null)
       throw new InvalidArgumentException("containers should not be null", null)
-    // put(tnxCtxt, Array((containerName, Array((key, serializerTyp, value)))))
-    // val (outputContainers, serializedContainerData, serializerNames) = serialize(tnxCtxt, containers)
-    // Call put methods with container name, key & values
-    throw new NotImplementedFunctionException("Not yet implemented", null)
+    if (containers.size == 0) return
+
+    val data = ArrayBuffer[(Key, String, Any)]()
+
+    val data_list = containers.groupBy(_.getFullTypeName.toLowerCase).map(oneContainerData => {
+      (oneContainerData._1, oneContainerData._2.map(container => {
+        (Key(container.TimePartitionData(), container.PartitionKeyData(), container.TransactionId(), container.RowNumber()), "", container.asInstanceOf[Any])
+      }))
+    }).toArray
+
+    put(tnxCtxt, data_list)
   }
 
   // value could be ContainerInterface or Array[Byte]
@@ -74,8 +78,8 @@ trait DataStoreOperations extends AdaptersSerializeDeserializers {
         if (row._3.isInstanceOf[ContainerInterface]) {
           throw new NotImplementedFunctionException("Not yet implemented serializing ContainerInterface", null)
           val cont = row._3.asInstanceOf[ContainerInterface]
-          // Value(schemaId: Int, serializerType: String, serializedInfo: Array[Byte])
-          (row._1, Value(cont.getSchemaId, "", Array[Byte]()))
+          val (containers, serData, serializers) = serialize(tnxCtxt, Array(cont))
+          (row._1, Value(cont.getSchemaId, serializers(0), serData(0)))
         } else {
           (row._1, Value(0, row._2, row._3.asInstanceOf[Array[Byte]]))
         }
