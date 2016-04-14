@@ -17,7 +17,7 @@
             "Location": "{InstallDirectory}/storage/tenant1_default"
           },
           "CacheConfig": {
-            "MaxSizeInMB": "1024"
+            "MaxSizeInMB": 1024
           }
         }
       ],
