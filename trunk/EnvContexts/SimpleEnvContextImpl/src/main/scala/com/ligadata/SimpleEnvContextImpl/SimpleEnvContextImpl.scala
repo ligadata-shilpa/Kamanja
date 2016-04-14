@@ -47,6 +47,7 @@ import java.io.{ByteArrayInputStream, DataInputStream, DataOutputStream, ByteArr
 import java.util.{TreeMap, Date}
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import com.ligadata.cache.{CacheCallback, DataCache}
+import scala.collection.JavaConverters._
 
 trait LogTrait {
   val loggerName = this.getClass.getName()
@@ -140,13 +141,13 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
       if (_listenerCache != null) {
         if (!childCache && _listenerCache.isKeyInCache(listenPath)) {
           val value = _listenerCache.get(listenPath);
-          ListenCallback(("Put", listenPath, value))
+          ListenCallback(("Put", listenPath, value.toString))
         } else if (childCache) {
           val keys = _listenerCache.getKeys().asScala.filter(k => k.startsWith(listenPath)).toArray
           if (keys.size > 0) {
             val map = _listenerCache.get(keys)
             map.asScala.foreach(kv => {
-              ListenCallback(("Put", kv._1, kv._2))
+              ListenCallback(("Put", kv._1, kv._2.toString))
             })
           }
         }
