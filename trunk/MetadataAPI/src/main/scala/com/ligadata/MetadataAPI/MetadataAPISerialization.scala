@@ -1765,18 +1765,19 @@ object MetadataAPISerialization {
       * Resurrect the AdapterMessageBinding instance from the supplied JValue.
       * @param bindingJson the json4s JValue containing the AdapterMessageBinding content
       * @return an AdapterMessageBinding instance
+      *
       */
     private def parseAdapterMessageBinding(bindingJson: JValue): AdapterMessageBinding = {
         try {
             logger.debug(s"Parsing this JSON string : \n$bindingJson")
 
             val rawBinding = bindingJson.extract[AdapterMsgBinding]
-            val optionsStr : String = rawBinding.serializerOptionsAsString
+            val optionsStr : String = rawBinding.info.Options
             val options : Map[String,Any] = jsonStringAsColl(optionsStr).asInstanceOf[Map[String,Any]]
             val bindingInfo : AdapterMessageBinding =
-                MdMgr.GetMdMgr.MakeAdapterMessageBinding(rawBinding.adapterName
-                                                        ,rawBinding.namespaceMsgName
-                                                        ,rawBinding.namespaceSerializerName
+                MdMgr.GetMdMgr.MakeAdapterMessageBinding(rawBinding.info.AdapterName
+                                                        ,rawBinding.info.MessageName
+                                                        ,rawBinding.info.Serializer
                                                         ,options)
             bindingInfo
         } catch {
@@ -1889,10 +1890,12 @@ case class TenantInformation(TenantId: String, Description: String, PrimaryDataS
 
 case class Tenant(Tenant: TenantInformation)
 
-case class AdapterMsgBinding(adapterName: String
-                             , namespaceMsgName : String
-                             , namespaceSerializerName: String
-                             , serializerOptionsAsString : String)
+case class AdapterMsgBindingInfo(AdapterName: String
+                             , MessageName : String
+                             , Serializer: String
+                             , Options : String)
+
+case class AdapterMsgBinding(info: AdapterMsgBindingInfo)
 
 case class KeyVale(Key: String, Value: String)
 
