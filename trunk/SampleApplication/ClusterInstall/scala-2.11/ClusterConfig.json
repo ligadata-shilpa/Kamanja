@@ -4,7 +4,7 @@
       "ClusterId": "kamanjacluster1",
       "SystemCatalog": {
         "StoreType": "hbase",
-        "SchemaName": "testdata",
+        "SchemaName": "syscatalog",
         "Location": "localhost",
         "authentication": "kerberos",
         "regionserver_principal": "hbase/_HOST@INTRANET.LIGADATA.COM",
@@ -18,7 +18,7 @@
           "Description": "tenant1",
           "PrimaryDataStore": {
             "StoreType": "hbase",
-            "SchemaName": "kamanja",
+            "SchemaName": "tenant1_default",
             "Location": "localhost",
             "authentication": "kerberos",
             "regionserver_principal": "hbase/_HOST@INTRANET.LIGADATA.COM",
