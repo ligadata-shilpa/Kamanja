@@ -14,7 +14,7 @@ public interface DataCache {
     public void put(Map map);
     public Object get(String key);
     public Map<String, Object> get(String[] keys);
-    public List<String> getKeys();
+    public String[] getKeys();
     public Map<String, Object> getAll();
     public void shutdown();
 }

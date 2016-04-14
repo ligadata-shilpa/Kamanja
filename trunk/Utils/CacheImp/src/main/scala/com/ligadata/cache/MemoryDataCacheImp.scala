@@ -73,12 +73,12 @@ class MemoryDataCacheImp extends DataCache{
     val map = new java.util.HashMap[String, AnyRef]
     val keys = getKeys()
     if (keys != null){
-      keys.asScala.foreach(str => map.put(str,get(str)))
+      keys.foreach(str => map.put(str,get(str)))
     }
     map
   }
 
-  override def getKeys(): java.util.List[String] = {
-    getKeys()
+  override def getKeys(): Array[String] = {
+    cache.getKeys().asScala.map(k => k.toString).toArray
   }
 }
