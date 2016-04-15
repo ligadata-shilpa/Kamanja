@@ -93,6 +93,7 @@ class CompilerBuilder {
 
   def setSuppressTimestamps(switch: Boolean = true) = { suppressTimestamps = switch; this }
   def setInputFile(filename: String) = { inputFile = filename; this }
+  def setInputJsonString(jsonData: String) = { inputJsonData = jsonData; this }
   def setOutputFile(filename: String) = { outputFile = filename; this }
   def setMetadataLocation(filename: String) = { metadataLocation = filename; this }
   def setMetadata(md: MdMgr) = { metadataMgr = md; this }
@@ -104,6 +105,7 @@ class CompilerBuilder {
   var metadataLocation: String = null
   var suppressTimestamps: Boolean = false
   var metadataMgr: MdMgr = null
+  var inputJsonData: String = null
 
   def build() : Compiler = {
     new Compiler(this)
@@ -128,7 +130,14 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
   val inputFile: String = params.inputFile // Input file to compile
   val outputFile: String = params.outputFile // Output file to write
-  val root = Root.fromJson(inputFile) // Load Json
+  val inputJsonData: String = params.inputJsonData // InputString
+  val root = if (inputJsonData != null) {
+      Root.fromJsonString(inputJsonData) // Process given Json
+    } else if (inputFile != null) {
+      Root.fromJson(inputFile) // Load Json
+    } else {
+      throw new Exception("Input not found")
+    }
 
   private var code: String = null // The generated code
 
@@ -150,14 +159,26 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     imports1.distinct
   }
 
-  def ModelName(): String = {
+  private def ModelVersionLong: Long = {
+    MdMgr.ConvertVersionToLong(MdMgr.FormatVersion(root.header.version))
+  }
+
+  private def PackageName(): String = {
+    root.header.namespace.trim + ".V" + ModelVersionLong
+  }
+
+  private def ModelName(): String = {
     if(root.header.name.isEmpty)
       "Model"
     else
       root.header.name
   }
 
-  def FactoryName(): String = {
+  private def ModelNamespace(): String = {
+    root.header.namespace
+  }
+
+  private def FactoryName(): String = {
     if(root.header.name.isEmpty)
       "ModelFactory"
     else
@@ -190,9 +211,11 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     var model = new ModelDef(ModelRepresentation.JAR, MiningModelType.JTM, in, out, isReusable, supportsInstanceSerialization)
 
     // Append addtional attributes
-    model.nameSpace = root.header.namespace
-    model.name = if(root.header.name.isEmpty) "Model" else root.header.name
+    model.nameSpace = ModelNamespace
+    model.name = ModelName
     model.description = root.header.description
+    model.ver = ModelVersionLong
+    model.physicalName = PackageName + "." + FactoryName
     model
   }
 
@@ -851,7 +874,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
     // Namespace
     //
-    result :+= "package %s\n".format(root.header.namespace)
+    result :+= "package %s\n".format(PackageName)
 
     // Process the imports
     //

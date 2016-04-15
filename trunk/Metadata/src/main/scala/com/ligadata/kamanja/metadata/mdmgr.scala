@@ -2230,15 +2230,16 @@ class MdMgr {
     if (depJars != null) depJarSet ++= depJars
     val dJars = if (depJarSet.size > 0) depJarSet.toArray else null
 
+    if (objectDefStr != null)
+      mdl.ObjectDefinition(objectDefStr)
+
     /** In the case of a PMML model, save the string in the model representation now.  PMML strings are
       * (for the first go) to be injested at the last possible minute by the shim model's factory object.
       * The instances so created will be cached for subsequent calls on the thread with which the instance
       * is associated.
       */
-    if (mdl.modelRepresentation == ModelRepresentation.PMML) {
-      mdl.ObjectDefinition(objectDefStr)
+    if (mdl.modelRepresentation == ModelRepresentation.PMML)
       mdl.ObjectFormat(ObjFormatType.fPMML)
-    }
     mdl.PhysicalName(physicalName)
     mdl.tenantId = tenantId
     SetBaseElem(mdl, nameSpace, name, ver, jarNm, dJars, ownerId, tenantId, uniqueId, mdElementId)
