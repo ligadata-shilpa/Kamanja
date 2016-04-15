@@ -29,7 +29,7 @@
           },
           "where": "\"com.ligadata.kamanja.samples.messages.inmsg1\" == $typeName",
           "mapping": {
-            "id": "conversion.ToLong($arrayData(1))",
+            "id": "conversion.ToInteger($arrayData(1))",
             "name": "$arrayData(2)",
             "score": "conversion.ToInteger($arrayData(3))"
           }

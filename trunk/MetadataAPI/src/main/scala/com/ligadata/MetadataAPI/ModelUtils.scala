@@ -705,6 +705,30 @@ object ModelUtils {
     }
   }
 
+  private def GetTypesAndJarsDependencies(modelName: String, userid: Option[String]): List[String] = {
+    val jarsList = ArrayBuffer[String]()
+    val depsList = MetadataAPIImpl.getModelDependencies(modelName, userid)
+    if (depsList != null)
+      jarsList ++= depsList;
+
+    val typesLst = MetadataAPIImpl.getModelMessagesContainers(modelName, userid)
+
+      if (typesLst != null) {
+        typesLst.foreach(typ => {
+          val typInfo = MdMgr.GetMdMgr.Type(typ, -1, true)
+          if (typInfo != None && typInfo != null) {
+            val tInfo = typInfo.get
+            if (tInfo.JarName != null && tInfo.JarName.trim.size > 0)
+              jarsList += tInfo.JarName.trim
+            if (tInfo.DependencyJarNames != null && tInfo.DependencyJarNames.size > 0)
+              jarsList ++= tInfo.DependencyJarNames
+          }
+        })
+      }
+
+    jarsList.toList
+  }
+
   /**
     * Add Kamanja JTM Model (format json).  Kamanja JTM models obtain their name and version from the header in the JTM s file.
     *
@@ -723,7 +747,8 @@ object ModelUtils {
         if (optModelName != None) {
           var cfg = MdMgr.GetMdMgr.GetModelConfig(optModelName.get.toLowerCase)
           compileConfig = JsonSerializer.SerializeModelConfigToJson(optModelName.get, cfg)
-          MetadataAPIImpl.getModelDependencies(optModelName.get, userid)
+          // MetadataAPIImpl.getModelDependencies(optModelName.get, userid)
+          GetTypesAndJarsDependencies(optModelName.get, userid)
         } else {
           List[String]()
         }
@@ -821,15 +846,42 @@ object ModelUtils {
             if (mod.modelConfig != null) {
               val trimmedMdlCfg = mod.modelConfig.trim
               if (trimmedMdlCfg.size > 0) {
-                var deps = List[String]()
+                var deps = ArrayBuffer[String]()
                 try {
                   val modelParms = parse(mod.modelConfig).values.asInstanceOf[Map[String, Any]]
                   val typDeps = modelParms.getOrElse(ModelCompilationConstants.DEPENDENCIES, null)
                   if (typDeps != null) {
                     if (typDeps.isInstanceOf[List[_]])
-                      deps = typDeps.asInstanceOf[List[String]]
+                      deps ++= typDeps.asInstanceOf[List[String]]
                     if (typDeps.isInstanceOf[Array[_]])
-                      deps = typDeps.asInstanceOf[Array[String]].toList
+                      deps ++= typDeps.asInstanceOf[Array[String]]
+                  }
+
+                  val typesLst = {
+                    val typDeps = modelParms.getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, null)
+                    if (typDeps != null) {
+                      if (typDeps.isInstanceOf[List[_]])
+                        typDeps.asInstanceOf[List[String]]
+                      else if (typDeps.isInstanceOf[Array[_]])
+                        typDeps.asInstanceOf[Array[String]].toList
+                      else
+                        List[String]()
+                    }
+                    else
+                      List[String]()
+                  }
+
+                  if (typesLst != null) {
+                    typesLst.foreach(typ => {
+                      val typInfo = MdMgr.GetMdMgr.Type(typ, -1, true)
+                      if (typInfo != None && typInfo != null) {
+                        val tInfo = typInfo.get
+                        if (tInfo.JarName != null && tInfo.JarName.trim.size > 0)
+                          deps += tInfo.JarName.trim
+                        if (tInfo.DependencyJarNames != null && tInfo.DependencyJarNames.size > 0)
+                          deps ++= tInfo.DependencyJarNames
+                      }
+                    })
                   }
                 }
                 catch {
@@ -837,7 +889,7 @@ object ModelUtils {
                     logger.error("Failed to parse model config.", e)
                   }
                 }
-                deps
+                deps.toList
               } else {
                 List[String]()
               }
@@ -1497,7 +1549,8 @@ object ModelUtils {
         if (optModelName != None) {
           var cfg = MdMgr.GetMdMgr.GetModelConfig(optModelName.get.toLowerCase)
           compileConfig = JsonSerializer.SerializeModelConfigToJson(optModelName.get, cfg)
-          MetadataAPIImpl.getModelDependencies(optModelName.get, optUserid)
+          // MetadataAPIImpl.getModelDependencies(optModelName.get, optUserid)
+          GetTypesAndJarsDependencies(optModelName.get, optUserid)
         } else {
           List[String]()
         }
