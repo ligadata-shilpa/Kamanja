@@ -215,6 +215,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     model.name = ModelName
     model.description = root.header.description
     model.ver = ModelVersionLong
+    model.physicalName = PackageName + "." + FactoryName
     model
   }
 
