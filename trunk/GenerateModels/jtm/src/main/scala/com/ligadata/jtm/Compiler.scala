@@ -159,18 +159,26 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     imports1.distinct
   }
 
-  def ModelName(): String = {
+  private def ModelVersionLong: Long = {
+    MdMgr.ConvertVersionToLong(MdMgr.FormatVersion(root.header.version))
+  }
+
+  private def PackageName(): String = {
+    root.header.namespace.trim + ".V" + ModelVersionLong
+  }
+
+  private def ModelName(): String = {
     if(root.header.name.isEmpty)
       "Model"
     else
       root.header.name
   }
 
-  def ModelNamespace(): String = {
+  private def ModelNamespace(): String = {
     root.header.namespace
   }
 
-  def FactoryName(): String = {
+  private def FactoryName(): String = {
     if(root.header.name.isEmpty)
       "ModelFactory"
     else
@@ -206,7 +214,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     model.nameSpace = ModelNamespace
     model.name = ModelName
     model.description = root.header.description
-    model.ver = MdMgr.ConvertVersionToLong(root.header.version)
+    model.ver = ModelVersionLong
     model
   }
 
@@ -865,7 +873,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
     // Namespace
     //
-    result :+= "package %s\n".format(root.header.namespace)
+    result :+= "package %s\n".format(PackageName)
 
     // Process the imports
     //
