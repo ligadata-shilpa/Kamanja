@@ -1226,10 +1226,42 @@ object JsonSerializer {
 
   def SerializeMapToJsonString(map: Map[String, Any]): String = {
     implicit val formats = org.json4s.DefaultFormats
-    return Serialization.write(map)
+    Serialization.write(map)
   }
 
-  def SerializeModelConfigToJson(mcfgKey: String, config: scala.collection.immutable.Map[String, Any]): String = {
+    /**
+      * Translate the supplied json string (typically a flattened rep of either a List[Map[String, Any]] or
+      * scala.collection.immutable.Map[String,Any]).  The caller should know what it is (e.g., by looking at the
+      * leading character for '[' for list or the '{' for map).
+      *
+      * @param jsonStr a string rep of a json map or list
+      * @return Any (actually either a Map[String,Any] or List[Map[String, Any]]
+      */
+
+    @throws(classOf[com.ligadata.Exceptions.Json4sParsingException])
+    @throws(classOf[com.ligadata.Exceptions.InvalidArgumentException])
+    def jsonStringAsColl(jsonStr: String): Any = {
+        val jsonObjs : Any = try {
+            implicit val jsonFormats: Formats = DefaultFormats
+            val json = parse(jsonStr)
+            logger.debug("Parsed the json : " + jsonStr)
+            json.values
+        } catch {
+            case e: MappingException => {
+                logger.debug("", e)
+                throw Json4sParsingException(e.getMessage, e)
+            }
+            case e: Exception => {
+                logger.debug("", e)
+                throw InvalidArgumentException(e.getMessage, e)
+            }
+        }
+        jsonObjs
+    }
+
+
+
+    def SerializeModelConfigToJson(mcfgKey: String, config: scala.collection.immutable.Map[String, Any]): String = {
     var jsonStr = ""
     try{
       jsonStr = jsonStr + SerializeMapToJsonString(Map(mcfgKey -> config))

@@ -1,17 +1,10 @@
 package org.kamanja.serdeser.csv
 
-import scala.collection.mutable.{Map, ArrayBuffer}
+import scala.collection.mutable.{Map}
 import scala.collection.JavaConverters._
 import java.io.{DataInputStream, ByteArrayInputStream, DataOutputStream, ByteArrayOutputStream}
 
-import org.apache.logging.log4j._
-import com.fasterxml.jackson.databind.ObjectMapper
-
-import com.ligadata.kamanja.metadata.MiningModelType
-import com.ligadata.kamanja.metadata.ModelRepresentation
 import com.ligadata.kamanja.metadata._
-import com.ligadata.kamanja.metadata.ObjType._
-import com.ligadata.kamanja.metadata.MdMgr._
 
 import com.ligadata.Exceptions._
 import com.ligadata.KamanjaBase._

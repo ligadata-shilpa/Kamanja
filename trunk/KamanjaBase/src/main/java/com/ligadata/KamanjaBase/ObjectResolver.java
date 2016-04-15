@@ -1,5 +1,7 @@
 package com.ligadata.KamanjaBase;
 
+import com.ligadata.kamanja.metadata.MdMgr;
+
 /*
  * Copyright 2015 ligaDATA
  *
@@ -19,7 +21,6 @@ package com.ligadata.KamanjaBase;
 /**
  * An ObjectResolver implementation can swizzle instances of SerializeDeserialize objects that can participate
  * in any higher level object serialization action.
- * @param <T> Any class type
  */
 public interface ObjectResolver {
     /**
@@ -31,6 +32,7 @@ public interface ObjectResolver {
      * @return an instance whose class can be located with the supplied typName
      */
     public ContainerInterface getInstance(String typName);
-    public ContainerInterface getInstance(Long schemaId);
+    public ContainerInterface getInstance(long schemaId);
+    public MdMgr getMdMgr();
 }
 

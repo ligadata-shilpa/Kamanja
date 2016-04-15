@@ -1042,12 +1042,36 @@ class CompilerProxy {
     }
   }
 
+  private def getMessageClass(clsName: String, loaderInfo: KamanjaLoaderInfo): Class[_] = {
+    var isMsg = false
+    var curClass: Class[_] = null
+    try {
+      // Convert class name into a class
+      var curClz = Class.forName(clsName, true, loaderInfo.loader)
+      isMsg = false
+
+      while (curClz != null && isMsg == false) {
+        logger.debug("getMessageInst: class name => " + curClz.getName())
+        isMsg = Utils.isDerivedFrom(curClz, "com.ligadata.KamanjaBase.MessageFactoryInterface")
+        if (isMsg == false) {
+          curClz = curClz.getSuperclass()
+        }
+      }
+    } catch {
+      case e: Exception => {
+        logger.debug("Failed to get message classname :" + clsName, e)
+      }
+    }
+
+    return if (isMsg) curClass else null
+  }
+
   def getMessageInst(msgName: String, loaderInfo: KamanjaLoaderInfo): com.ligadata.KamanjaBase.ContainerInterface = {
-    var isMsg = true
+    var isMsg = false
     var curClass: Class[_] = null
     var loader = loaderInfo.loader
     var objInst: Any = null
-    var clsName: String = null
+    var clsName: String = ""
     var messageObj: ContainerInterface = null
     try {
       val o = MdMgr.GetMdMgr.Message(msgName, -1, true)
@@ -1057,19 +1081,20 @@ class CompilerProxy {
       }
 
       // PhysicalName contains class name
-      clsName = o.get.PhysicalName.trim
+      val tmpClsName = o.get.PhysicalName.trim
 
       // Convert class name into a class
-      var curClz = Class.forName(clsName, true, loaderInfo.loader)
-      curClass = curClz
-      isMsg = false
+      curClass = getMessageClass(tmpClsName, loaderInfo)
 
-      while (curClz != null && isMsg == false) {
-        logger.debug("getMessageInst: class name => " + curClz.getName())
-        isMsg = Utils.isDerivedFrom(curClz, "com.ligadata.KamanjaBase.ContainerFactoryInterface")
-        if (isMsg == false) {
-          curClz = curClz.getSuperclass()
+      if (curClass == null) {
+        curClass = getMessageClass(tmpClsName + "$", loaderInfo)
+        if (curClass != null) {
+          isMsg = true
+          clsName = tmpClsName + "$"
         }
+      } else {
+        isMsg = true
+        clsName = tmpClsName
       }
     } catch {
       case e: Exception => {
@@ -1086,14 +1111,14 @@ class CompilerProxy {
           val module = loaderInfo.mirror.staticModule(clsName)
           val obj = loaderInfo.mirror.reflectModule(module)
           objInst = obj.instance
-          if (objInst.isInstanceOf[ContainerFactoryInterface]) {
-            messageObj = objInst.asInstanceOf[ContainerFactoryInterface].createInstance
+          if (objInst.isInstanceOf[MessageFactoryInterface]) {
+            messageObj = objInst.asInstanceOf[MessageFactoryInterface].createInstance
           }
         } catch {
           case e: Exception => {
             // Trying Regular Object instantiation, applicable to java
             logger.debug("", e)
-            messageObj = curClass.newInstance.asInstanceOf[ContainerFactoryInterface].createInstance
+            messageObj = curClass.newInstance.asInstanceOf[MessageFactoryInterface].createInstance
           }
         }
         //objInst = curClass.newInstance
