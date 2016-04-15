@@ -900,9 +900,13 @@ object KamanjaMetadata extends ObjectResolver {
       }
       obj.LoadMdMgrElems(tmpMsgDefs, tmpContainerDefs, tmpModelDefs)
 
+      // Lock the global object here and update the global objects
+      UpdateKamanjaMdObjects(obj.messageObjects, obj.containerObjects, obj.modelObjsMap, null, null, null)
+
       val adapterLevelBinding = mdMgr.AllAdapterMessageBindings.values.groupBy(_.adapterName.trim.toLowerCase())
 
       inputAdapters.foreach(adap => {
+        adap.setObjectResolver(KamanjaMetadata)
         val bindsInfo = adapterLevelBinding.getOrElse(adap.getAdapterName.toLowerCase, null)
         if (bindsInfo != null) {
           // Message Name, Serializer Name & options.
@@ -911,6 +915,7 @@ object KamanjaMetadata extends ObjectResolver {
       })
 
       outputAdapters.foreach(adap => {
+        adap.setObjectResolver(KamanjaMetadata)
         val bindsInfo = adapterLevelBinding.getOrElse(adap.getAdapterName.toLowerCase, null)
         if (bindsInfo != null) {
           // Message Name, Serializer Name & options.
@@ -919,15 +924,13 @@ object KamanjaMetadata extends ObjectResolver {
       })
 
       storageAdapters.foreach(adap => {
+        adap.setObjectResolver(KamanjaMetadata)
         val bindsInfo = adapterLevelBinding.getOrElse(adap.getAdapterName.toLowerCase, null)
         if (bindsInfo != null) {
           // Message Name, Serializer Name & options.
           adap.addMessageBinding(bindsInfo.map(bind => (bind.messageName -> (bind.serializer, bind.options))).toMap)
         }
       })
-
-      // Lock the global object here and update the global objects
-      UpdateKamanjaMdObjects(obj.messageObjects, obj.containerObjects, obj.modelObjsMap, null, null, null)
     } catch {
       case e: Exception => {
         LOG.error("Failed to load messages, containers & models from metadata manager.", e)
