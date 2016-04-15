@@ -715,9 +715,19 @@ object ModelUtils {
 
       if (typesLst != null) {
         typesLst.foreach(typ => {
-          val typInfo = MdMgr.GetMdMgr.Type(typ, -1, true)
-          if (typInfo != None && typInfo != null) {
-            val tInfo = typInfo.get
+          val cont = MdMgr.GetMdMgr.Container(typ, -1, true)
+          var typInfo: BaseElem = null
+
+          if (cont != None) {
+              typInfo = cont.get.asInstanceOf[BaseElem]
+          } else {
+            val msg = MdMgr.GetMdMgr.Message(typ, -1, true)
+            if (msg != None)
+              typInfo = msg.get.asInstanceOf[BaseElem]
+          }
+
+          if (typInfo != null) {
+            val tInfo = typInfo
             if (tInfo.JarName != null && tInfo.JarName.trim.size > 0)
               jarsList += tInfo.JarName.trim
             if (tInfo.DependencyJarNames != null && tInfo.DependencyJarNames.size > 0)
@@ -873,9 +883,20 @@ object ModelUtils {
 
                   if (typesLst != null) {
                     typesLst.foreach(typ => {
-                      val typInfo = MdMgr.GetMdMgr.Type(typ, -1, true)
-                      if (typInfo != None && typInfo != null) {
-                        val tInfo = typInfo.get
+
+                      val cont = MdMgr.GetMdMgr.Container(typ, -1, true)
+                      var typInfo: BaseElem = null
+
+                      if (cont != None) {
+                        typInfo = cont.get.asInstanceOf[BaseElem]
+                      } else {
+                        val msg = MdMgr.GetMdMgr.Message(typ, -1, true)
+                        if (msg != None)
+                          typInfo = msg.get.asInstanceOf[BaseElem]
+                      }
+
+                      if (typInfo != null) {
+                        val tInfo = typInfo
                         if (tInfo.JarName != null && tInfo.JarName.trim.size > 0)
                           deps += tInfo.JarName.trim
                         if (tInfo.DependencyJarNames != null && tInfo.DependencyJarNames.size > 0)
