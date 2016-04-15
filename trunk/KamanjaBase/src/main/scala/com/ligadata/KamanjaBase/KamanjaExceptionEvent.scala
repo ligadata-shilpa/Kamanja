@@ -48,6 +48,28 @@ object KamanjaExceptionEvent extends RDDObject[KamanjaExceptionEvent] with Messa
 
   override def getAvroSchema: String = """{ "type": "record",  "namespace" : "com.ligadata.kamanjabase" , "name" : "kamanjaexceptionevent" , "fields":[{ "name" : "componentname" , "type" : "string"},{ "name" : "timeoferrorepochms" , "type" : "long"},{ "name" : "errortype" , "type" : "string"},{ "name" : "errorstring" , "type" : "string"}]}""";
 
+  final override def convertFrom(srcObj: Any): T = convertFrom(createInstance(), srcObj);
+
+  override def convertFrom(destObj: Any, srcObj: Any): ContainerInterface = {
+    try {
+      srcObj match {
+
+        case oldVerobj: com.ligadata.KamanjaBase.KamanjaExceptionEvent => { return convertToNewVer(oldVerobj); }
+        case _ => {
+          throw new Exception("Unhandled Version Found");
+        }
+      }
+    } catch {
+      case e: Exception => {
+        throw e
+      }
+    }
+    return null;
+  }
+  private def convertToNewVer(oldVerobj: com.ligadata.KamanjaBase.KamanjaExceptionEvent): com.ligadata.KamanjaBase.KamanjaExceptionEvent = {
+    return oldVerobj
+  }
+
   def NeedToTransformData: Boolean = false
   override def FullName: String = getFullTypeName
   override def NameSpace: String = getTypeNameSpace
