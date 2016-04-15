@@ -148,7 +148,7 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
       //BUGBUG:: Fix this
       outputAdapters.foreach(adap => {
         val sendSerializer = ArrayBuffer[String]();
-        val sendSerOptions = ArrayBuffer[scala.collection.immutable.Map[String,String]]();
+        val sendSerOptions = ArrayBuffer[scala.collection.immutable.Map[String,Any]]();
         val sendContainers = ArrayBuffer[ContainerInterface]();
         // val sendInfo = ArrayBuffer[(String, scala.collection.immutable.Map[String,String], ContainerInterface)]();
         adap._2.foreach(bind => (bind, txnCtxt.getContainersOrConcepts(bind.messageName).foreach(orginAndmsg => {
@@ -162,7 +162,7 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
 
       storageAdapters.foreach(adap => {
         val sendSerializer = ArrayBuffer[String]();
-        val sendSerOptions = ArrayBuffer[scala.collection.immutable.Map[String,String]]();
+        val sendSerOptions = ArrayBuffer[scala.collection.immutable.Map[String,Any]]();
         val sendContainers = ArrayBuffer[ContainerInterface]();
         // val sendInfo = ArrayBuffer[(String, scala.collection.immutable.Map[String,String], ContainerInterface)]();
         adap._2.foreach(bind => (bind, txnCtxt.getContainersOrConcepts(bind.messageName).foreach(orginAndmsg => {
