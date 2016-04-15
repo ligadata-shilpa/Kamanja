@@ -166,6 +166,10 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
       root.header.name
   }
 
+  def ModelNamespace(): String = {
+    root.header.namespace
+  }
+
   def FactoryName(): String = {
     if(root.header.name.isEmpty)
       "ModelFactory"
@@ -199,9 +203,10 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     var model = new ModelDef(ModelRepresentation.JAR, MiningModelType.JTM, in, out, isReusable, supportsInstanceSerialization)
 
     // Append addtional attributes
-    model.nameSpace = root.header.namespace
-    model.name = if(root.header.name.isEmpty) "Model" else root.header.name
+    model.nameSpace = ModelNamespace
+    model.name = ModelName
     model.description = root.header.description
+    model.ver = MdMgr.ConvertVersionToLong(root.header.version)
     model
   }
 

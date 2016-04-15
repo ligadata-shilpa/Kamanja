@@ -717,16 +717,21 @@ object ModelUtils {
     try {
       var compProxy = new CompilerProxy
 
+      var compileConfig:String = ""
       // Getting external dependency jars
       val extDepJars =
         if (optModelName != None) {
+          var cfg = MdMgr.GetMdMgr.GetModelConfig(optModelName.get.toLowerCase)
+          compileConfig = JsonSerializer.SerializeModelConfigToJson(optModelName.get, cfg)
           MetadataAPIImpl.getModelDependencies(optModelName.get, userid)
         } else {
           List[String]()
         }
 
-      //compProxy.setLoggerLevel(Level.TRACE)
-      var (classStr, modDef) = compProxy.compileJTM(jsonText, tenantId, extDepJars)
+      val usr = if (userid == None) "Kamanja" else userid.get
+
+       //compProxy.setLoggerLevel(Level.TRACE)
+      var (classStr, modDef) = compProxy.compileJTM(jsonText, tenantId, extDepJars, usr, compileConfig)
 
       // ModelDef may be null if there were pmml compiler errors... act accordingly.  If modelDef present,
       // make sure the version of the model is greater than any of previous models with same FullName
@@ -840,7 +845,8 @@ object ModelUtils {
               List[String]()
             }
 
-          val (classStrTemp, modDefTemp) = compProxy.compileJTM(jtmTxt, mod.TenantId, extDepJars, true)
+          val usr = if (userid == None) "Kamanja" else userid.get
+          val (classStrTemp, modDefTemp) = compProxy.compileJTM(jtmTxt, mod.TenantId, extDepJars, usr, mod.modelConfig, true)
           modDefTemp.modelConfig = mod.modelConfig
           modDefTemp
         } else {
@@ -1483,17 +1489,21 @@ object ModelUtils {
                              , optVersion: Option[String] = None): String = {
     try {
       var compProxy = new CompilerProxy
+      var compileConfig = ""
       //compProxy.setLoggerLevel(Level.TRACE)
 
       // Getting external dependency jars
       val extDepJars =
         if (optModelName != None) {
+          var cfg = MdMgr.GetMdMgr.GetModelConfig(optModelName.get.toLowerCase)
+          compileConfig = JsonSerializer.SerializeModelConfigToJson(optModelName.get, cfg)
           MetadataAPIImpl.getModelDependencies(optModelName.get, optUserid)
         } else {
           List[String]()
         }
 
-      var (classStr, modDef) = compProxy.compileJTM(jtmText, tenantId, extDepJars)
+      val usr = if (optUserid == None) "Kamanja" else optUserid.get
+      var (classStr, modDef) = compProxy.compileJTM(jtmText, tenantId, extDepJars, usr, compileConfig)
       val optLatestVersion = if (modDef == null) None else GetLatestModel(modDef)
       val latestVersion: ModelDef = optLatestVersion.orNull
 

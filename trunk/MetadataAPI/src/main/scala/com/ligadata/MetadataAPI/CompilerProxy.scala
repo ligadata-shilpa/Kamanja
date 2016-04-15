@@ -234,7 +234,7 @@ class CompilerProxy {
     * @param jsonStr the specification
     * @return tuple (scala source produced from compilation, model definition produced for the source code)
     */
-  def compileJTM(jsonStr: String, tenantId: String, extDepJars: List[String], recompile: Boolean = false): (String, ModelDef) = {
+  def compileJTM(jsonStr: String, tenantId: String, extDepJars: List[String], ownerId: String, compileConfig:String, recompile: Boolean = false): (String, ModelDef) = {
     try {
 
       val model_exec_log: String = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("MODEL_EXEC_LOG")
@@ -289,37 +289,53 @@ class CompilerProxy {
           }
         }
 
-
-        val compiler = new PmmlCompiler(MdMgr.GetMdMgr, "ligadata", logger, injectLoggingStmts,
-          MetadataAPIImpl.GetMetadataAPIConfig.getProperty("JAR_PATHS").split(","))
-        val skipJar: Boolean = false
-
-        val (jarFile, depJars) = compiler.createJar(jtmScalaSrc
-          , classPath
-          , jtmScalaPath
-          , MetadataAPIImpl.GetMetadataAPIConfig.getProperty("JAR_TARGET_DIR")
-          , MetadataAPIImpl.GetMetadataAPIConfig.getProperty("MANIFEST_PATH")
-          , MetadataAPIImpl.GetMetadataAPIConfig.getProperty("SCALA_HOME")
-          , MetadataAPIImpl.GetMetadataAPIConfig.getProperty("JAVA_HOME")
-          , skipJar
-          , compiler_work_dir)
-
-        /* The following check require cleanup at some point */
-        if (jarFile.compareToIgnoreCase("Not Set") == 0) {
-          throw ModelCompilationFailedException(s"Failed to produce the jar file for jtm model ${modelDef.name}", null)
-        }
-
-        modelDef.jarName = jarFile
-        modelDef.dependencyJarNames = depJars.map(f => {
-          (new java.io.File(f)).getName
-        })
         if (modelDef.ver == 0) {
           modelDef.ver = 1
         }
 
+        val mdlClassFilePath = compiler_work_dir + "/" + modelDef.name + ".scala"
+
+        var (status2, jarFile) = jarCode(modelDef.nameSpace + ".V" + modelDef.ver,
+          modelDef.name,
+          MdMgr.ConvertLongVersionToString(modelDef.ver),
+          jtmScalaSrc,
+          classPath,
+          MetadataAPIImpl.GetMetadataAPIConfig.getProperty("JAR_TARGET_DIR"),
+          "TestClient",
+          mdlClassFilePath,
+          MetadataAPIImpl.GetMetadataAPIConfig.getProperty("SCALA_HOME"),
+          MetadataAPIImpl.GetMetadataAPIConfig.getProperty("JAVA_HOME"),
+          false,
+          "scala")
+
+        /* The following check require cleanup at some point */
+        if (status2 > 0 || jarFile == null ||jarFile.trim.size == 0) {
+          throw ModelCompilationFailedException(s"Failed to produce the jar file for jtm model ${modelDef.nameSpace}.${modelDef.name}. StatusCode:${status2}", null)
+        }
+
+        //        val compiler = new PmmlCompiler(MdMgr.GetMdMgr, "ligadata", logger, injectLoggingStmts,
+//          MetadataAPIImpl.GetMetadataAPIConfig.getProperty("JAR_PATHS").split(","))
+//        val skipJar: Boolean = false
+//
+//        val (jarFile, depJars) = compiler.createJar(jtmScalaSrc
+//          , classPath
+//          , jtmScalaPath
+//          , MetadataAPIImpl.GetMetadataAPIConfig.getProperty("JAR_TARGET_DIR")
+//          , MetadataAPIImpl.GetMetadataAPIConfig.getProperty("MANIFEST_PATH")
+//          , MetadataAPIImpl.GetMetadataAPIConfig.getProperty("SCALA_HOME")
+//          , MetadataAPIImpl.GetMetadataAPIConfig.getProperty("JAVA_HOME")
+//          , skipJar
+//          , compiler_work_dir)
+
+        modelDef.jarName = jarFile
         modelDef.objectDefinition = jsonStr
         modelDef.objectFormat = fJSON
-
+        modelDef.uniqueId = MetadataAPIImpl.GetUniqueId
+        val existingModel = MdMgr.GetMdMgr.Model(modelDef.nameSpace, modelDef.name, -1, false) // Any version is fine. No need of active
+        modelDef.mdElementId = if (existingModel == None) MetadataAPIImpl.GetMdElementId else existingModel.get.MdElementId
+        modelDef.ownerId = ownerId
+        modelDef.tenantId = tenantId
+        modelDef.modelConfig = compileConfig
       }
 
       /** end of (modDef != null) */
