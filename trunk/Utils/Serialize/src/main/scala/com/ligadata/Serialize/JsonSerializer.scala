@@ -945,7 +945,7 @@ object JsonSerializer {
                 ("Version" -> a.Version) ~
                 ("CollectionType" -> ObjType.asString(a.CollectionType)))) ~
             ("PrimaryKeys" -> primaryKeys.map(m => ("constraintName" -> m._1) ~ ("key" -> m._2))) ~
-            ("ForeignKeys" -> foreignKeys.map(m => ("constraintName" -> m._1) ~ ("key" -> m._2) ~ ("forignContainerName" -> m._3) ~ ("forignKey" -> m._4)) ~
+            ("ForeignKeys" -> foreignKeys.map(m => ("constraintName" -> m._1) ~ ("key" -> m._2) ~ ("forignContainerName" -> m._3) ~ ("forignKey" -> m._4))) ~
             ("TransactionId" -> o.tranId))
         compact(render(json))
       }
@@ -994,7 +994,7 @@ object JsonSerializer {
                 ("Version" -> a.Version) ~
                 ("CollectionType" -> ObjType.asString(a.CollectionType)))) ~
             ("PrimaryKeys" -> primaryKeys.map(m => ("constraintName" -> m._1) ~ ("key" -> m._2))) ~
-            ("ForeignKeys" -> foreignKeys.map(m => ("constraintName" -> m._1) ~ ("key" -> m._2) ~ ("forignContainerName" -> m._3) ~ ("forignKey" -> m._4)) ~
+            ("ForeignKeys" -> foreignKeys.map(m => ("constraintName" -> m._1) ~ ("key" -> m._2) ~ ("forignContainerName" -> m._3) ~ ("forignKey" -> m._4))) ~
             ("TransactionId" -> o.tranId))
         compact(render(json))
       }
