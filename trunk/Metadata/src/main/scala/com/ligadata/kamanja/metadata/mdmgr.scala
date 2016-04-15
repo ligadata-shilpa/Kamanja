@@ -3373,6 +3373,16 @@ class MdMgr {
         bindingMap
     }
 
+  def Binding(adapterName: String, messageName : String, serializer : String) : AdapterMessageBinding = {
+    val adapName : String = adapterName.trim.toLowerCase
+    val msgName : String = messageName.trim.toLowerCase
+    val serName : String = serializer.trim.toLowerCase
+
+    val key = s"$adapName,$msgName,$serName"
+
+    adapterMessageBindings.getOrElse(key, null)
+  }
+
     /** Retrieve the SerializeDeserializerConfig with the supplied namespace.name
       *
       * @param fullName the serializer sought
@@ -3442,6 +3452,7 @@ class MdMgr {
     val ci = new ClusterCfgInfo
     ci.clusterId = clusterId
     ci.cfgMap = cfgMap
+    ci.usrConfigs = scala.collection.mutable.HashMap[String,String]()
     ci.modifiedTime = modifiedTime
     ci.createdTime = createdTime
     ci
