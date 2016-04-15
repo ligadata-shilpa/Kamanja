@@ -294,6 +294,9 @@ class CompilerProxy {
         }
 
         val mdlClassFilePath = compiler_work_dir + "/" + modelDef.name + ".scala"
+        // var tPackageName = extractPackageNameFromSource(jtmScalaSrc)
+        var r_classStrVer = jtmScalaSrc //replacePackageNameInSource(jtmScalaSrc, tPackageName.toLowerCase) //
+        dumpStrTextToFile(r_classStrVer, mdlClassFilePath)
 
         var (status2, jarFile) = jarCode(modelDef.nameSpace + ".V" + modelDef.ver,
           modelDef.name,
