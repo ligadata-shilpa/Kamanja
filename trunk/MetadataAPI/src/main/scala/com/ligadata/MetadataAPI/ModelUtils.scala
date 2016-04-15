@@ -751,19 +751,22 @@ object ModelUtils {
     try {
       var compProxy = new CompilerProxy
 
+      val usr = if (userid == None) "Kamanja" else userid.get
+
       var compileConfig:String = ""
       // Getting external dependency jars
       val extDepJars =
         if (optModelName != None) {
-          var cfg = MdMgr.GetMdMgr.GetModelConfig(optModelName.get.toLowerCase)
-          compileConfig = JsonSerializer.SerializeModelConfigToJson(optModelName.get, cfg)
-          // MetadataAPIImpl.getModelDependencies(optModelName.get, userid)
-          GetTypesAndJarsDependencies(optModelName.get, userid)
+          var cfgName = optModelName.get.toLowerCase
+          if (cfgName.length > 0 && !cfgName.startsWith(usr.toLowerCase() + "."))
+            cfgName = usr.toLowerCase() + "." + cfgName
+          var cfg = MdMgr.GetMdMgr.GetModelConfig(cfgName)
+          compileConfig = JsonSerializer.SerializeModelConfigToJson(cfgName, cfg)
+          // MetadataAPIImpl.getModelDependencies(cfgName, userid)
+          GetTypesAndJarsDependencies(cfgName, userid)
         } else {
           List[String]()
         }
-
-      val usr = if (userid == None) "Kamanja" else userid.get
 
        //compProxy.setLoggerLevel(Level.TRACE)
       var (classStr, modDef) = compProxy.compileJTM(jsonText, tenantId, extDepJars, usr, compileConfig)
@@ -774,11 +777,6 @@ object ModelUtils {
       val isValid: Boolean = if (latestVersion != None) MetadataAPIImpl.IsValidVersion(latestVersion.get, modDef) else true
 
       if (isValid && modDef != null) {
-        if (optModelName != None) {
-          val configMap = MdMgr.GetMdMgr.GetModelConfig(optModelName.get.toLowerCase)
-          modDef.modelConfig = if (configMap != null) JsonSerializer.SerializeMapToJsonString(configMap) else ""
-        }
-
         MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.INSERTOBJECT, jsonText, AuditConstants.SUCCESS, "", modDef.FullNameWithVer)
         // save the jar file first
         PersistenceUtils.UploadJarsToDB(modDef)
@@ -1565,18 +1563,22 @@ object ModelUtils {
       var compileConfig = ""
       //compProxy.setLoggerLevel(Level.TRACE)
 
+      val usr = if (optUserid == None) "Kamanja" else optUserid.get
+
       // Getting external dependency jars
       val extDepJars =
         if (optModelName != None) {
-          var cfg = MdMgr.GetMdMgr.GetModelConfig(optModelName.get.toLowerCase)
-          compileConfig = JsonSerializer.SerializeModelConfigToJson(optModelName.get, cfg)
-          // MetadataAPIImpl.getModelDependencies(optModelName.get, optUserid)
-          GetTypesAndJarsDependencies(optModelName.get, optUserid)
+          var cfgName = optModelName.get.toLowerCase
+          if (cfgName.length > 0 && !cfgName.startsWith(usr.toLowerCase() + "."))
+            cfgName = usr.toLowerCase() + "." + cfgName
+          var cfg = MdMgr.GetMdMgr.GetModelConfig(cfgName)
+          compileConfig = JsonSerializer.SerializeModelConfigToJson(cfgName, cfg)
+          // MetadataAPIImpl.getModelDependencies(cfgName, optUserid)
+          GetTypesAndJarsDependencies(cfgName, optUserid)
         } else {
           List[String]()
         }
 
-      val usr = if (optUserid == None) "Kamanja" else optUserid.get
       var (classStr, modDef) = compProxy.compileJTM(jtmText, tenantId, extDepJars, usr, compileConfig)
       val optLatestVersion = if (modDef == null) None else GetLatestModel(modDef)
       val latestVersion: ModelDef = optLatestVersion.orNull
@@ -1594,11 +1596,6 @@ object ModelUtils {
       val isValid: Boolean = (modDef != null && latestVersion != null && latestVersion.Version < modDef.Version)
 
       if (isValid && modDef != null) {
-        if (optModelName != None) {
-          val configMap = MdMgr.GetMdMgr.GetModelConfig(optModelName.get.toLowerCase)
-          modDef.modelConfig = if (configMap != null) JsonSerializer.SerializeMapToJsonString(configMap) else ""
-        }
-
         MetadataAPIImpl.logAuditRec(optUserid, Some(AuditConstants.WRITE), AuditConstants.UPDATEOBJECT, jtmText, AuditConstants.SUCCESS, "", modDef.FullNameWithVer)
         val key = MdMgr.MkFullNameWithVersion(modDef.nameSpace, modDef.name, modDef.ver)
 
