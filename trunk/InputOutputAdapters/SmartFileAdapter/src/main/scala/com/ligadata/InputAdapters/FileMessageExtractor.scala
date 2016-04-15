@@ -181,7 +181,6 @@ class FileMessageExtractor(adapterConfig : SmartFileAdapterConfiguration,
         //a message is extracted to passed to engine, update offset in cache
         globalOffset = globalOffset + lastMsg.length
         //consumerContext.envContext.saveConfigInClusterCache(consumerContext.fileOffsetCacheKey, globalOffset.toString.getBytes)
-        //TODO : must remove the key here since file is finished
 
       }
     }
@@ -192,6 +191,9 @@ class FileMessageExtractor(adapterConfig : SmartFileAdapterConfiguration,
       finished = true
       executor.shutdown()
       if (fileHandler != null) fileHandler.close
+
+      if(finishCallback != null)
+        finishCallback(fileHandler, consumerContext)
       //bis = null
     } catch {
       case ioe: IOException => {

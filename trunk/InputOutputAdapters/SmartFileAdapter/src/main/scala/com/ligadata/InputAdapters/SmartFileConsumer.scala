@@ -112,6 +112,8 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
 
   //add the node callback
   private def initializeNode: Unit ={
+    LOG.debug("Max memeory = "+Runtime.getRuntime().maxMemory())
+
     if(nodeContext == null)
       LOG.debug("Smart File Consumer - nodeContext = null" )
 
@@ -213,7 +215,8 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
     //collect file names and offsets
     val initialFilesToProcess = ArrayBuffer[(String, Int, String, Int)]()
     allNodesStartInfo.foreach(nodeStartInfo => nodeStartInfo._2.foreach(nodePartitionInfo => {
-      if(nodePartitionInfo._2.trim.length > 0)
+      LOG.debug("nodePartitionInfo._2 = " + (if(nodePartitionInfo._2 == null) "actual null" else nodePartitionInfo._2))
+      if(nodePartitionInfo._2.trim.length > 0 && !nodePartitionInfo._2.trim.equals("null"))
         initialFilesToProcess.append((nodeStartInfo._1,nodePartitionInfo._1, nodePartitionInfo._2, nodePartitionInfo._3))
       //(node, partitionId, file name, offset)
     }))
@@ -221,6 +224,8 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
     // (First we need to process what ever files we get here), if we have file names
     if(initialFilesToProcess.size > 0)
       assignInitialFiles(initialFilesToProcess.toArray)
+    else
+      initialFilesHandled = true//nothing to handle
 
     //now run the monitor
     monitorController = new MonitorController(adapterConfig, newFileDetectedCallback, initialFilesToProcess.toArray)
@@ -247,6 +252,8 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
   private def checkParticipantsStatus(previousStatusMap : scala.collection.mutable.Map[String, Long]): scala.collection.mutable.Map[String, Long] ={
     //if previousStatusMap==null means this is first run of checking, no errors
 
+    LOG.debug("Smart File Consumer - checking participants status")
+
     val processingQueue = getFileProcessingQueue
     val currentStatusMap = scala.collection.mutable.Map[String, Long]()
 
@@ -259,12 +266,24 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
 
       val cacheKey = Status_Check_Cache_KeyParent + "/" + nodeId + "/" + partitionId
       val statusData = envContext.getConfigFromClusterCache(cacheKey) // filename~offset~timestamp
-      if(previousStatusMap != null && statusData == null){
+      val statusDataStr : String = if(statusData == null) null else new String(statusData)
+
+      if(previousStatusMap != null && statusDataStr == null || statusDataStr.trim.length == 0){
+        LOG.debug("Smart File Consumer - current participants status in cache is {}", statusDataStr)
+
         LOG.error("Smart File Consumer - file {} is supposed to be processed by partition {} on node {} but not found in node updated status",
           fileInProcess, partitionId, nodeId)
       }
+      else if(statusDataStr == null || statusDataStr.trim.length == 0){
+        LOG.debug("Smart File Consumer - current participants status in cache is {}", statusDataStr)
+
+        LOG.debug("Smart File Consumer - file {} is supposed to be processed by partition {} on node {} but not found in node updated status",
+          fileInProcess, partitionId, nodeId)
+      }
       else{
-        val statusDataTokens = statusData.toString.split("~")
+        LOG.debug("Smart File Consumer - current participants status in cache is {}", statusDataStr)
+
+        val statusDataTokens = statusDataStr.split("~")
         val fileInStatus = statusDataTokens(0)
         val currentTimeStamp = statusDataTokens(2).toLong
 
@@ -308,9 +327,15 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
     val cacheData = envContext.getConfigFromClusterCache(File_Requests_Cache_Key)
     if(cacheData != null){
       val cacheDataStr = new String(cacheData)
-      LOG.debug("Smart File Consumer - file request queue from cache is ", cacheDataStr)
-      val tokens = cacheDataStr.split("\\|")
-      tokens.toList
+      if(cacheDataStr.trim.length == 0) {
+        LOG.debug("Smart File Consumer - file request queue from cache is empty")
+        List()
+      }
+      else {
+        LOG.debug("Smart File Consumer - file request queue from cache is ", cacheDataStr)
+        val tokens = cacheDataStr.split("\\|")
+        tokens.toList
+      }
     }
     else{
       LOG.debug("Smart File Consumer - file request queue from cache is null")
@@ -320,7 +345,21 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
   }
   def saveFileRequestsQueue(requestQueue : List[String]) : Unit = {
     val cacheData = requestQueue.mkString("|")
+    LOG.debug("Smart File Consumer - saving request queue. key={}, value={}", File_Requests_Cache_Key,
+      if(cacheData.length==0) "(empty)" else cacheData)
+
     envContext.saveConfigInClusterCache(File_Requests_Cache_Key, cacheData.getBytes)
+
+    LOG.debug("Smart File Consumer - making sure saving request queue worked. current value in key={} is {}",
+      File_Requests_Cache_Key,
+      (if(envContext.getConfigFromClusterCache(File_Requests_Cache_Key) == null) "null"
+      else new String(envContext.getConfigFromClusterCache(File_Requests_Cache_Key))))
+
+    /*Thread.sleep(5000)
+    LOG.debug("Smart File Consumer - making sure saving request queue worked after 5 seconds. current value in key={} is {}",
+      File_Requests_Cache_Key,
+      (if(envContext.getConfigFromClusterCache(File_Requests_Cache_Key) == null) "null"
+      else new String(envContext.getConfigFromClusterCache(File_Requests_Cache_Key))))*/
   }
 
   //value for file processing queue in cache has the format <node1>/<thread1>:<filename>|<node2>/<thread1>:<filename>
@@ -363,6 +402,7 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
         var requestQueue = getFileRequestsQueue
         requestQueue = requestQueue ::: List(requestingNodeId + "/" + requestingThreadId + ":" + fileToProcessKeyPath)
         saveFileRequestsQueue(requestQueue)
+        LOG.debug("Smart File Consumer - finished call to saveFileRequestsQueue, from requestFileLeaderCallback")
 
         assignFileProcessingIfPossible()
       }
@@ -376,62 +416,83 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
   //if all conditions met then assign a file to first request in the queue
   private def assignFileProcessingIfPossible(): Unit ={
 
-    LOG.debug("Smart File Consumer - Leader is checking if it is possible to assign a new file to process")
+    if(initialFilesHandled) {
+      LOG.debug("Smart File Consumer - Leader is checking if it is possible to assign a new file to process")
 
-    var processingQueue = getFileProcessingQueue
-    val requestQueue = getFileRequestsQueue
+      var processingQueue = getFileProcessingQueue
+      val requestQueue = getFileRequestsQueue
 
-    if(requestQueue.length > 0) {//there are ndoes/threads ready to process
-    val request = requestQueue.head //take first request
-      saveFileRequestsQueue(requestQueue.tail)
+      if (requestQueue.length > 0) {
+        //there are ndoes/threads ready to process
+        val request = requestQueue.head //take first request
+        saveFileRequestsQueue(requestQueue.tail)
+        LOG.debug("Smart File Consumer - finished call to saveFileRequestsQueue, from assignFileProcessingIfPossible")
+        var requestAssigned = false
 
-      //since a request in cache has the format <node1>/<thread1>:<path to receive files>|<node2>/<thread1>:<path to receive files>
-      val requestTokens = request.split(":")
-      val fileToProcessKeyPath = requestTokens(1)//something like SmartFileCommunication/FromLeader/<NodeId>/<thread id>
-      val requestNodeInfoTokens = requestTokens(0).split("/")
-      val requestingNodeId = requestNodeInfoTokens(0)
-      val requestingThreadId = requestNodeInfoTokens(1)
+        //since a request in cache has the format <node1>/<thread1>:<path to receive files>|<node2>/<thread1>:<path to receive files>
+        val requestTokens = request.split(":")
+        val fileToProcessKeyPath = requestTokens(1) //something like SmartFileCommunication/FromLeader/<NodeId>/<thread id>
+        val requestNodeInfoTokens = requestTokens(0).split("/")
+        val requestingNodeId = requestNodeInfoTokens(0)
+        val requestingThreadId = requestNodeInfoTokens(1)
 
-      LOG.info("Smart File Consumer - currently " + processingQueue.length + " Files are being processed")
-      LOG.info("Smart File Consumer - Maximum processing ops is " + adapterConfig.monitoringConfig.consumersCount)
+        LOG.info("Smart File Consumer - currently " + processingQueue.length + " Files are being processed")
+        LOG.info("Smart File Consumer - Maximum processing ops is " + adapterConfig.monitoringConfig.consumersCount)
 
-      //check if it is allowed to process one more file
-      if (processingQueue.length < adapterConfig.monitoringConfig.consumersCount) {
+        //check if it is allowed to process one more file
+        if (processingQueue.length < adapterConfig.monitoringConfig.consumersCount) {
 
-        val fileToProcessFullPath = monitorController.getNextFileToProcess
-        if (fileToProcessFullPath != null) {
+          val fileToProcessFullPath = if(monitorController == null) null
+            else monitorController.getNextFileToProcess
+          if (fileToProcessFullPath != null) {
 
-          LOG.debug("Smart File Consumer - Adding a file processing assignment of file + " + fileToProcessFullPath +
-            " to Node " + requestingNodeId + ", thread Id=" + requestingThreadId)
+            LOG.debug("Smart File Consumer - Adding a file processing assignment of file + " + fileToProcessFullPath +
+              " to Node " + requestingNodeId + ", thread Id=" + requestingThreadId)
 
-          //leave offset management to engine, usually this will be other than zero when calling startProcessing
-          val offset = 0//getFileOffsetFromCache(fileToProcessFullPath)
-          val data = fileToProcessFullPath + "|" + offset
+            //leave offset management to engine, usually this will be other than zero when calling startProcessing
+            val offset = 0 //getFileOffsetFromCache(fileToProcessFullPath)
+            val data = fileToProcessFullPath + "|" + offset
 
-          //there are files that need to process
+            //there are files that need to process
 
-          envContext.setListenerCacheKey(fileToProcessKeyPath, data)
-          processingQueue = processingQueue ::: List(requestingNodeId + "/" + requestingThreadId + ":" + fileToProcessFullPath)
-          saveFileProcessingQueue(processingQueue)
+            envContext.setListenerCacheKey(fileToProcessKeyPath, data)
+            processingQueue = processingQueue ::: List(requestingNodeId + "/" + requestingThreadId + ":" + fileToProcessFullPath)
+            saveFileProcessingQueue(processingQueue)
+
+            requestAssigned = true
+          }
+          else {
+            LOG.info("Smart File Consumer - No more files currently to process")
+          }
         }
-        else{
-          LOG.info("Smart File Consumer - No more files currently to process")
+        else {
+          LOG.info("Smart File Consumer - Cannot assign anymore files to process")
         }
+
+        //if request was not handled, must get it back to request queue
+        //FIXME : find a better way to sync instead of removing and adding back
+        if(!requestAssigned)
+          saveFileRequestsQueue(List(request) ::: getFileRequestsQueue)
       }
-      else{
-        LOG.info("Smart File Consumer - Cannot assign anymore files to process")
+      else {
+        LOG.debug("Smart File Consumer - request queue is empty, no participants are available for new processes")
       }
     }
     else{
-      LOG.debug("Smart File Consumer - request queue is empty, no participants are available for new processes")
+      LOG.debug("Smart File Consumer - initial files have not been handled yet")
     }
   }
 
+  private var initialFilesHandled = false
   //used to assign files to participants right after calling start processing, if the engine has files to be processed
   //initialFilesToProcess: list of (node, partitionId, file name, offset)
-  private def assignInitialFiles(initialFilesToProcess : Array[(String, Int, String, Int)]): Unit ={
-    if(initialFilesToProcess == null || initialFilesToProcess.length == 0)
+  private def assignInitialFiles(initialFilesToProcess : Array[(String, Int, String, Int)]): Unit = {
+    LOG.debug("Smart File Consumer - handling initial assignment ")
+
+    if (initialFilesToProcess == null || initialFilesToProcess.length == 0) {
+      LOG.debug("Smart File Consumer - no initial files to process")
       return
+    }
     var processingQueue = getFileProcessingQueue
     var requestQueue = getFileRequestsQueue
 
@@ -455,10 +516,11 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
         case None =>{}
         case Some(fileInfo) => {
           saveFileRequestsQueue(getFileRequestsQueue diff List(requestStr))//remove the current request
+          LOG.debug("Smart File Consumer - finished call to saveFileRequestsQueue, from assignInitialFiles")
 
           val fileToProcessFullPath = fileInfo._3
-          LOG.debug("Smart File Consumer - Adding a file processing assignment of file + " + fileToProcessFullPath +
-            " to Node " + nodeId + ", partition Id=" + partitionId)
+          LOG.debug("Smart File Consumer - Initial files : Adding a file processing assignment of file (" + fileToProcessFullPath +
+            ") to Node " + nodeId + ", partition Id=" + partitionId)
 
           val offset = fileInfo._4
           val data = fileToProcessFullPath + "|" + offset
@@ -473,6 +535,7 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
     })
 
 
+    initialFilesHandled = true
   }
 
   //leader
@@ -511,7 +574,7 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
         val processingFilePath = valueTokens(0)
         val status = valueTokens(1)
         if (status == File_Processing_Status_Finished) {
-          LOG.info("Smart File Consumer - File ({}) processing finished", processingFilePath)
+          LOG.info("Smart File Consumer (Leader) - File ({}) processing finished", processingFilePath)
 
           val correspondingRequestFileKeyPath = requestFilePath + "/" + processingNodeId //e.g. SmartFileCommunication/ToLeader/ProcessedFile/<nodeid>
 
@@ -586,6 +649,8 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
   //val: file|status
   def fileMessagesExtractionFinished_Callback(fileHandler: SmartFileHandler, context : SmartFileConsumerContext) : Unit = {
 
+    LOG.debug ("SMART FILE CONSUMER - participant ({}), partition ({}) finished reading file ({})",
+      context.nodeId, context.partitionId.toString, fileHandler.getFullPath)
     //set file status as finished
     val pathKey = fileProcessingPath + "/" + context.nodeId + "/" + context.partitionId
     val data = fileHandler.getFullPath + "|" + File_Processing_Status_Finished
@@ -769,7 +834,7 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
     var lastHb: Long = 0
     startHeartBeat = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
 
-    LOG.info("START_PROCESSING CALLED")
+    LOG.info("SMART_FILE_ADAPTER - START_PROCESSING CALLED")
 
         // Check to see if this already started
         if (startTime > 0) {
@@ -813,6 +878,8 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
 
             })
         */
+    initialFilesHandled = false
+
     initializeNode//register the callbacks
 
 
@@ -833,15 +900,18 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
   private def sendSmartFileMessageToEngin(smartMessage : SmartFileMessage,
                                           smartFileConsumerContext: SmartFileConsumerContext): Unit ={
 
+    //LOG.debug("Smart File Consumer - Node {} will send a msg to engine. partition id= {}. msg={}",
+      //smartFileConsumerContext.nodeId, smartFileConsumerContext.partitionId.toString, new String(smartMessage.msg))
+
     val partitionId = smartFileConsumerContext.partitionId
-    val partition = partitionKVs(partitionId)
+    //val partition = partitionKVs(partitionId)
 
     val ignoreFirstMsg = smartFileConsumerContext.ignoreFirstMsg
 
     // if the offset is -1, then the server wants to start from the begining, else, it means that the server
     // knows what its doing and we start from that offset.
     var readOffset: Long = -1
-    val uniqueRecordValue = if (ignoreFirstMsg) partition._3.Offset else partition._3.Offset - 1
+    //val uniqueRecordValue = if (ignoreFirstMsg) partition._3.Offset else partition._3.Offset - 1
 
 
     var execThread: ExecContext = null
@@ -868,10 +938,10 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
 
     uniqueVal.Offset = offset
     uniqueVal.FileName = fileName
-    val dontSendOutputToOutputAdap = uniqueVal.Offset <= uniqueRecordValue
+    //val dontSendOutputToOutputAdap = uniqueVal.Offset <= uniqueRecordValue
 
-    LOG.debug("Smart File Consumer - Node {} is sending start info to engine. partition id= {}. msg={}",
-      smartFileConsumerContext.nodeId, smartFileConsumerContext.partitionId.toString, new String(message))
+    LOG.debug("Smart File Consumer - Node {} is sending a msg to engine. partition id= {}. msg={}. file={}. offset={}",
+      smartFileConsumerContext.nodeId, smartFileConsumerContext.partitionId.toString, new String(message), fileName, offset.toString)
     execThread.execute(message, uniqueKey, uniqueVal, readTmMs)
 
   }
