@@ -1,11 +1,11 @@
 {
   "header": {
     "namespace": "com.ligadata.kamanja.samples.models",
-    "name": "HelloWorldIngest"
+    "name": "HelloWorldIngest",
     "version": "0.0.1",
     "language" : "scala",
     "minVersion" : "2.11",
-    "description": "HelloWorld message transformation",
+    "description": "HelloWorld message transformation"
   },
   "imports": {
     "packages": [ "com.ligadata.runtime.Conversion"]
