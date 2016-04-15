@@ -44,7 +44,7 @@ object Parts {
 
   val factory =
     """|class {factoryclass.name}(modelDef: ModelDef, nodeContext: NodeContext) extends ModelInstanceFactory(modelDef, nodeContext) {
-       |  override def isValidMessage(msg: ContainerInterface): Boolean = {
+       |  override def isValidMessage(msg: MessageContainerBase): Boolean = {
        |    {factory.isvalidmessage}
        |  }
        |  override def createModelInstance(): ModelInstance = return new {modelclass.name}(this)

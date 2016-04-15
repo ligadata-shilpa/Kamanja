@@ -20,7 +20,7 @@ import com.ligadata.KamanjaBase._
 import com.ligadata.kamanja.metadata.ModelDef;
 
 class HelloWorld2ModelFactory(modelDef: ModelDef, nodeContext: NodeContext) extends ModelInstanceFactory(modelDef, nodeContext) {
-  override def isValidMessage(msg: ContainerInterface): Boolean = return ( msg.isInstanceOf[helloworld_msg_def] || msg.isInstanceOf[helloworld_msg_def_2] )
+  override def isValidMessage(msg: MessageContainerBase): Boolean = return ( msg.isInstanceOf[helloworld_msg_def] || msg.isInstanceOf[helloworld_msg_def_2] )
   override def createModelInstance(): ModelInstance = return new HelloWorld2Model(this)
   override def getModelName: String = "HelloWorld2Model" 
   override def getVersion: String = "0.0.1"
