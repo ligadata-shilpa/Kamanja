@@ -93,6 +93,7 @@ class CompilerBuilder {
 
   def setSuppressTimestamps(switch: Boolean = true) = { suppressTimestamps = switch; this }
   def setInputFile(filename: String) = { inputFile = filename; this }
+  def setInputJsonString(jsonData: String) = { inputJsonData = jsonData; this }
   def setOutputFile(filename: String) = { outputFile = filename; this }
   def setMetadataLocation(filename: String) = { metadataLocation = filename; this }
   def setMetadata(md: MdMgr) = { metadataMgr = md; this }
@@ -104,6 +105,7 @@ class CompilerBuilder {
   var metadataLocation: String = null
   var suppressTimestamps: Boolean = false
   var metadataMgr: MdMgr = null
+  var inputJsonData: String = null
 
   def build() : Compiler = {
     new Compiler(this)
@@ -128,7 +130,14 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
   val inputFile: String = params.inputFile // Input file to compile
   val outputFile: String = params.outputFile // Output file to write
-  val root = Root.fromJson(inputFile) // Load Json
+  val inputJsonData: String = params.inputJsonData // InputString
+  val root = if (inputJsonData != null) {
+      Root.fromJsonString(inputJsonData) // Process given Json
+    } else if (inputFile != null) {
+      Root.fromJson(inputFile) // Load Json
+    } else {
+      throw new Exception("Input not found")
+    }
 
   private var code: String = null // The generated code
 

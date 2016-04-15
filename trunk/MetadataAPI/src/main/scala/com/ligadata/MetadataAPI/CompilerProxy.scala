@@ -251,7 +251,7 @@ class CompilerProxy {
         */
       val compiler = CompilerBuilder.create().
         //              setSuppressTimestamps().
-        setInputFile(jsonStr).build()
+        setInputJsonString(jsonStr).build()
 
       val jtmScalaSrc = compiler.Execute()
       val modelDef = compiler.MakeModelDef
