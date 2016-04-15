@@ -17,6 +17,7 @@
 
 package com.ligadata.KamanjaManager
 
+import com.ligadata.Exceptions.KamanjaException
 import com.ligadata.jpmml.JpmmlAdapter
 import com.ligadata.kamanja.metadata.{BaseElem, MappedMsgTypeDef, BaseAttributeDef, StructTypeDef, EntityType, AttributeDef, MessageDef, ContainerDef, ModelDef}
 import com.ligadata.kamanja.metadata._
@@ -473,7 +474,7 @@ class KamanjaMetadata(var envCtxt: EnvContext) {
   }
 }
 
-object KamanjaMetadata extends MdBaseResolveInfo {
+object KamanjaMetadata extends ObjectResolver {
   // Engine will set it once EnvContext is initialized
   var envCtxt: EnvContext = null
   var gNodeContext: NodeContext = null
@@ -1216,7 +1217,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
     }
   }
 
-  override def getMessgeOrContainerInstance(MsgContainerType: String): ContainerInterface = {
+  override def getInstance(MsgContainerType: String): ContainerInterface = {
     var v: MsgContainerObjAndTransformInfo = null
 
     v = getMessageOrContainer(MsgContainerType)
@@ -1228,6 +1229,23 @@ object KamanjaMetadata extends MdBaseResolveInfo {
     }
     return null
   }
+
+  override def getInstance(schemaId: Long): ContainerInterface = {
+    //BUGBUG:: For now we are getting latest class. But we need to get the old one too.
+    val md = getMetadataManager
+
+    if (md == null)
+      throw new KamanjaException("Metadata Not found", null)
+
+    val contOpt = getMdMgr.ContainerForSchemaId(schemaId.toInt)
+
+    if (contOpt == None)
+      throw new KamanjaException("Container Not found for schemaid:" + schemaId, null)
+
+    getInstance(contOpt.get.FullName)
+  }
+
+  override def getMdMgr: MdMgr = getMetadataManager
 
   def getMessgeInfo(msgType: String): MsgContainerObjAndTransformInfo = {
     var exp: Exception = null
@@ -1440,7 +1458,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
     }).toMap
   }
 
-  def getMdMgr: MdMgr = mdMgr
+  def getMetadataManager: MdMgr = mdMgr
 
   def Shutdown: Unit = {
     if (zkListener != null)

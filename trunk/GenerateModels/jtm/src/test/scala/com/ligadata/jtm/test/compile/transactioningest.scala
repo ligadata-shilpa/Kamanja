@@ -19,7 +19,7 @@ import com.ligadata.KvBase.TimeRange
 import com.ligadata.kamanja.metadata.ModelDef
 import com.ligadata.runtime.Conversion
 class TransactionIngestFactory(modelDef: ModelDef, nodeContext: NodeContext) extends ModelInstanceFactory(modelDef, nodeContext) {
-  override def isValidMessage(msg: ContainerInterface): Boolean = {
+  override def isValidMessage(msg: MessageContainerBase): Boolean = {
     msg.isInstanceOf[com.ligadata.kamanja.samples.messages.V1000000.TransactionMsgIn]
   }
   override def createModelInstance(): ModelInstance = return new TransactionIngest(this)

@@ -136,8 +136,8 @@ class MetadataLoad(val mgr: MdMgr, val typesPath: String, val fcnPath: String, v
     * Remove once the md api ingestion is complete........
     */
   private def initSerializeDeserializeConfigs: Unit = {
-    mgr.AddSerializer("org.kamanja.serializer.csv" // namespace
-      , "csvserdeser" //name: String
+    mgr.AddSerializer("com.ligadata.kamanja.serializer" // namespace
+      , "delimitedserdeser" //name: String
       , 1 //version: Long = 1
       , SerializeDeserializeType.CSV //serializerType: SerializeDeserializeType.SerDeserType
       , "org.kamanja.serdeser.csv.CsvSerDeser" //physicalName: String
@@ -148,7 +148,7 @@ class MetadataLoad(val mgr: MdMgr, val typesPath: String, val fcnPath: String, v
       , "" //jarNm: String = null. Ex: csvserdeser_2.11-1.0.jar
       , Array() //depJars: Array[String]
     )
-    mgr.AddSerializer("org.kamanja.serializer.json" // namespace
+    mgr.AddSerializer("com.ligadata.kamanja.serializer" // namespace
       , "jsonserdeser" //name: String
       , 1 //version: Long = 1
       , SerializeDeserializeType.JSON //serializerType: SerializeDeserializeType.SerDeserType
@@ -160,7 +160,7 @@ class MetadataLoad(val mgr: MdMgr, val typesPath: String, val fcnPath: String, v
       , "" //jarNm: String = null. Ex: jsonserdeser_2.11-1.0.jar
       , Array() //depJars: Array[String] = null)
     )
-    mgr.AddSerializer("org.kamanja.serializer.kbinary" // namespace
+    mgr.AddSerializer("com.ligadata.kamanja.serializer" // namespace
       , "kbinaryserdeser" //name: String
       , 1 //version: Long = 1
       , SerializeDeserializeType.KBinary //serializerType: SerializeDeserializeType.SerDeserType
