@@ -3441,6 +3441,7 @@ class MdMgr {
     val ci = new ClusterCfgInfo
     ci.clusterId = clusterId
     ci.cfgMap = cfgMap
+    ci.usrConfigs = scala.collection.mutable.HashMap[String,String]()
     ci.modifiedTime = modifiedTime
     ci.createdTime = createdTime
     ci

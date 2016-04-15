@@ -983,18 +983,6 @@ class ClusterCfgInfo {
     } else if(!(clusterId == null && in.clusterId == null)) {
       return false
     }
-    // Check modifiedTime
-    if ((modifiedTime != null && in.modifiedTime != null)) {
-      if(!modifiedTime.equals(in.modifiedTime)) return false
-    } else if(!(modifiedTime == null && in.modifiedTime == null)) {
-      return false
-    }
-    // Check createdTime
-    if ((createdTime != null && in.createdTime != null)) {
-      if(!createdTime.equals(in.createdTime)) return false
-    } else if(!(createdTime == null && in.createdTime == null)) {
-      return false
-    }
 
     // Check createdTime
     if ((usrConfigs != null && in.usrConfigs != null)) {
@@ -1002,6 +990,7 @@ class ClusterCfgInfo {
     } else if(!(usrConfigs == null && in.usrConfigs == null)) {
       return false
     }
+
     // Check createdTime
     if ((cfgMap != null && in.cfgMap != null)) {
       if(!((cfgMap.toSet diff in.cfgMap.toSet).toMap.isEmpty)) return false
