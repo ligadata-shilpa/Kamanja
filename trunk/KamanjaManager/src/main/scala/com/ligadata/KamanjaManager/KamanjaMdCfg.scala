@@ -405,7 +405,7 @@ object KamanjaMdCfg {
       try {
         val adapter = CreateStorageAdapterFromConfig(ac._2, nodeContext)
         if (adapter == null) return false
-        adapter.setObjectResolver(objectResolver: ObjectResolver)
+        adapter.setObjectResolver(KamanjaMetadata)
         storageAdapters += adapter
         KamanjaManager.incrAdapterChangedCntr()
       } catch {
@@ -524,6 +524,7 @@ object KamanjaMdCfg {
       try {
         val adapter = CreateOutputAdapterFromConfig(conf, nodeContext)
         if (adapter == null) return false
+        adapter.setObjectResolver(KamanjaMetadata)
         outputAdapters += adapter
         KamanjaManager.incrAdapterChangedCntr()
       } catch {

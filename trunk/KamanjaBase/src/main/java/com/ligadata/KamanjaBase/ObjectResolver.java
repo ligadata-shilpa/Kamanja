@@ -32,7 +32,7 @@ public interface ObjectResolver {
      * @return an instance whose class can be located with the supplied typName
      */
     public ContainerInterface getInstance(String typName);
-    public ContainerInterface getInstance(Long schemaId);
+    public ContainerInterface getInstance(long schemaId);
     public MdMgr getMdMgr();
 }
 
