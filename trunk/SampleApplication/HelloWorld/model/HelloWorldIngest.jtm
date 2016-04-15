@@ -20,7 +20,7 @@
     "helloworldmsgtransform": {
       "dependsOn": [ ["m1"] ],
       "computes": {
-        "arrayData":{ "type": "Array[String]", "val": "$data.split(\",\")", "comment": "Split the incoming data" }
+        "arrayData":{ "type": "Array[String]", "val": "$msg.split(\",\")", "comment": "Split the incoming data" }
       },
       "outputs": {
         "o1": {
