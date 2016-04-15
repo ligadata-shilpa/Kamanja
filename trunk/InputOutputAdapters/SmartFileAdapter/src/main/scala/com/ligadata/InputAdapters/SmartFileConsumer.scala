@@ -79,6 +79,9 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
 
   val delimiters : DataDelimiters = new DataDelimiters()
 
+  private val requestQLock = new Object
+  private val processingQLock = new Object
+
   //******************************************************************************************************
   //***************************node sync related code**********
   val communicationBasePath = ""
@@ -322,64 +325,73 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
       (new String(data).toInt)
   }*/
 
+
   //value in cache has the format <node1>/<thread1>:<path to receive files>|<node2>/<thread1>:<path to receive files>
   def getFileRequestsQueue : List[String] = {
-    val cacheData = envContext.getConfigFromClusterCache(File_Requests_Cache_Key)
-    if(cacheData != null){
-      val cacheDataStr = new String(cacheData)
-      if(cacheDataStr.trim.length == 0) {
-        LOG.debug("Smart File Consumer - file request queue from cache is empty")
-        List()
+    requestQLock.synchronized {
+      val cacheData = envContext.getConfigFromClusterCache(File_Requests_Cache_Key)
+      if (cacheData != null) {
+        val cacheDataStr = new String(cacheData)
+        if (cacheDataStr.trim.length == 0) {
+          LOG.debug("Smart File Consumer - file request queue from cache is empty")
+          List()
+        }
+        else {
+          LOG.debug("Smart File Consumer - file request queue from cache is ", cacheDataStr)
+          val tokens = cacheDataStr.split("\\|")
+          tokens.toList
+        }
       }
       else {
-        LOG.debug("Smart File Consumer - file request queue from cache is ", cacheDataStr)
-        val tokens = cacheDataStr.split("\\|")
-        tokens.toList
+        LOG.debug("Smart File Consumer - file request queue from cache is null")
+        List()
       }
     }
-    else{
-      LOG.debug("Smart File Consumer - file request queue from cache is null")
-      List()
-    }
-
   }
   def saveFileRequestsQueue(requestQueue : List[String]) : Unit = {
-    val cacheData = requestQueue.mkString("|")
-    LOG.debug("Smart File Consumer - saving request queue. key={}, value={}", File_Requests_Cache_Key,
-      if(cacheData.length==0) "(empty)" else cacheData)
+    requestQLock.synchronized {
+      val cacheData = requestQueue.mkString("|")
+      LOG.debug("Smart File Consumer - saving request queue. key={}, value={}", File_Requests_Cache_Key,
+        if (cacheData.length == 0) "(empty)" else cacheData)
 
-    envContext.saveConfigInClusterCache(File_Requests_Cache_Key, cacheData.getBytes)
+      envContext.saveConfigInClusterCache(File_Requests_Cache_Key, cacheData.getBytes)
 
-    LOG.debug("Smart File Consumer - making sure saving request queue worked. current value in key={} is {}",
-      File_Requests_Cache_Key,
-      (if(envContext.getConfigFromClusterCache(File_Requests_Cache_Key) == null) "null"
-      else new String(envContext.getConfigFromClusterCache(File_Requests_Cache_Key))))
+      LOG.debug("Smart File Consumer - making sure saving request queue worked. current value in key={} is {}",
+        File_Requests_Cache_Key,
+        (if (envContext.getConfigFromClusterCache(File_Requests_Cache_Key) == null) "null"
+        else new String(envContext.getConfigFromClusterCache(File_Requests_Cache_Key))))
 
-    /*Thread.sleep(5000)
-    LOG.debug("Smart File Consumer - making sure saving request queue worked after 5 seconds. current value in key={} is {}",
-      File_Requests_Cache_Key,
-      (if(envContext.getConfigFromClusterCache(File_Requests_Cache_Key) == null) "null"
-      else new String(envContext.getConfigFromClusterCache(File_Requests_Cache_Key))))*/
+    }
   }
 
   //value for file processing queue in cache has the format <node1>/<thread1>:<filename>|<node2>/<thread1>:<filename>
   def getFileProcessingQueue : List[String] = {
-    val cacheData = envContext.getConfigFromClusterCache(File_Processing_Cache_Key)
+    processingQLock.synchronized {
+      val cacheData = envContext.getConfigFromClusterCache(File_Processing_Cache_Key)
 
-    if(cacheData != null) {
-      val cacheDataStr =  new String(cacheData)
-      LOG.debug("Smart File Consumer - file processing queue from cache is ", cacheDataStr)
-      val tokens = cacheDataStr.split("\\|")
-      tokens.toList
-    }
-    else{
-      LOG.debug("Smart File Consumer - file processing queue from cache is null")
-      List()
+      if (cacheData != null) {
+        val cacheDataStr = new String(cacheData)
+        if (cacheDataStr.trim.length == 0) {
+          LOG.debug("Smart File Consumer - file request queue from cache is empty")
+          List()
+        }
+        else {
+          LOG.debug("Smart File Consumer - file processing queue from cache is ", cacheDataStr)
+          val tokens = cacheDataStr.split("\\|")
+          tokens.toList
+        }
+      }
+      else {
+        LOG.debug("Smart File Consumer - file processing queue from cache is null")
+        List()
+      }
     }
   }
   def saveFileProcessingQueue(requestQueue : List[String]) : Unit = {
-    val cacheData = requestQueue.mkString("|")
-    envContext.saveConfigInClusterCache(File_Processing_Cache_Key, cacheData.getBytes)
+    processingQLock.synchronized {
+      val cacheData = requestQueue.mkString("|")
+      envContext.saveConfigInClusterCache(File_Processing_Cache_Key, cacheData.getBytes)
+    }
   }
 
   //what a leader should do when recieving file processing request
@@ -436,7 +448,7 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
         val requestingNodeId = requestNodeInfoTokens(0)
         val requestingThreadId = requestNodeInfoTokens(1)
 
-        LOG.info("Smart File Consumer - currently " + processingQueue.length + " Files are being processed")
+        LOG.info("Smart File Consumer - currently " + processingQueue.length + " File(s) are being processed")
         LOG.info("Smart File Consumer - Maximum processing ops is " + adapterConfig.monitoringConfig.consumersCount)
 
         //check if it is allowed to process one more file
@@ -582,6 +594,7 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
           var processingQueue = getFileProcessingQueue
           val valueInProcessingQueue = processingNodeId + "/" + processingThreadId + ":" + processingFilePath
           processingQueue = processingQueue diff List(valueInProcessingQueue)
+          saveFileProcessingQueue(processingQueue)
 
           //since a file just got finished, a new one can be processed
           assignFileProcessingIfPossible()
@@ -947,7 +960,6 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
   }
 
   override def StopProcessing: Unit = {
-    //BUGBUG:: FIXME:- Clear listeners & queues all stuff related to leader or non-leader. So, Next SartProcessing should start the whole stuff again.
     initialized = false
     isShutdown = true
 
@@ -957,7 +969,23 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
     if(leaderExecutor != null)
       leaderExecutor.shutdownNow()
 
+    clearCache
+
     terminateReaderTasks
+  }
+
+  private def clearCache(): Unit ={
+    //TODO:- make sure to Clear listeners & queues all stuff related to leader or non-leader. So, Next SartProcessing should start the whole stuff again.
+    if(clusterStatus != null) {
+      if (clusterStatus.isLeader) {
+        LOG.debug("Smart File Consumer - Cccleaning queues and cache stuff by leader")
+        saveFileProcessingQueue(List())
+        saveFileRequestsQueue(List())
+      }
+      else{//clean participant-related stuff
+
+      }
+    }
   }
 
   private def terminateReaderTasks(): Unit = {
