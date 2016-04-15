@@ -557,10 +557,13 @@ trait AdaptersSerializeDeserializers {
 
   // Returns deserialized msg, deserialized msg data & deserializer name applied.
   def deserialize(data: Array[Byte]): (ContainerInterface, String) = {
+    logger.debug("called deserialize")
     // We are going thru getAllMessageBindings and get from it ourself?. So one read lock for every serialize fintion
     val allMsgBindings = getAllMessageBindings
-    if (allMsgBindings.size == 0)
+    if (allMsgBindings.size == 0) {
+      logger.debug("Not found any bindings to deserialize")
       return (null, null)
+    }
 
     if (allMsgBindings.size != 1) {
       throw new KamanjaException("We can not deserialize more than one message for input adapter", null)

@@ -73,7 +73,7 @@ class StartProcPartInfo {
 }
 
 // Input Adapter
-trait InputAdapter extends Monitorable {
+trait InputAdapter extends AdaptersSerializeDeserializers with Monitorable {
   val nodeContext: NodeContext
   // NodeContext
   val inputConfig: AdapterConfiguration // Configuration
@@ -82,6 +82,8 @@ trait InputAdapter extends Monitorable {
     // Making String from key
     return "{\"Name\" : \"%s\"}".format(inputConfig.Name)
   }
+
+  override final def getAdapterName = inputConfig.Name
 
   def Category = "Input"
 
@@ -124,7 +126,7 @@ trait OutputAdapter extends AdaptersSerializeDeserializers with Monitorable {
   def Category = "Output"
 }
 
-trait ExecContext extends AdaptersSerializeDeserializers {
+trait ExecContext {
   val input: InputAdapter
   val curPartitionKey: PartitionUniqueRecordKey
   val nodeContext: NodeContext
@@ -146,8 +148,6 @@ trait ExecContext extends AdaptersSerializeDeserializers {
     nodeContext.getEnvCtxt().getSystemCatalogDatastore(), nodeContext.getEnvCtxt().getJarPaths())
   private val transService = new SimpleTransService
   transService.init(txnIdsRangeForPartition)
-
-  override final def getAdapterName = input.inputConfig.Name
 
   final def SendFailedEvent(data: Array[Byte], deserializer: String, failedMsg: String, uk: String, uv: String, e: Throwable): Unit = {
     val failedTm = failedEventDtFormat.format(new java.util.Date(System.currentTimeMillis))
@@ -214,7 +214,7 @@ trait ExecContext extends AdaptersSerializeDeserializers {
       val transId = transService.getNextTransId
       val msgEvent = nodeContext.getEnvCtxt().getContainerInstance("System.KamanjaMessageEvent")
       txnCtxt = new TransactionContext(transId, nodeContext, data, EventOriginInfo(uk, uv), readTmMilliSecs, msgEvent)
-      LOG.debug("Processing uniqueKey:%s, uniqueVal:%s, Datasize:%d".format(uk, uv, data.size))
+      LOG.debug("Processing uniqueKey:%s, uniqueVal:%s, Datasize:%d,IsMsgNull:%s,MsgData:%s".format(uk, uv, data.size, if (msg == null) "true" else "false", if (msg == null) "" else msg.get("msg").toString))
       txnCtxt.setInitialMessage("", msg)
       executeMessage(txnCtxt): Unit
     } catch {
@@ -232,9 +232,8 @@ trait ExecContext extends AdaptersSerializeDeserializers {
     var msg: ContainerInterface = null
     var deserializerName: String = ""
 
-
     try {
-      val (tMsg, tDeserializerName) = deserialize(data)
+      val (tMsg, tDeserializerName) = input.deserialize(data)
       msg = tMsg
       deserializerName = tDeserializerName
       execute(msg, data, uniqueKey, uniqueVal, readTmMilliSecs)

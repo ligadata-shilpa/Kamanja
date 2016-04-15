@@ -18,6 +18,8 @@
 package com.ligadata.KamanjaManager
 
 import com.ligadata.Exceptions.KamanjaException
+import com.ligadata.InputOutputAdapterInfo.{OutputAdapter, InputAdapter}
+import com.ligadata.StorageBase.StorageAdapter
 import com.ligadata.jpmml.JpmmlAdapter
 import com.ligadata.kamanja.metadata.{BaseElem, MappedMsgTypeDef, BaseAttributeDef, StructTypeDef, EntityType, AttributeDef, MessageDef, ContainerDef, ModelDef}
 import com.ligadata.kamanja.metadata._
@@ -883,7 +885,8 @@ object KamanjaMetadata extends ObjectResolver {
     MetadataAPIImpl.InitMdMgrFromBootStrap(KamanjaConfiguration.configFile, false)
   }
 
-  def InitMdMgr(zkConnectString: String, znodePath: String, zkSessionTimeoutMs: Int, zkConnectionTimeoutMs: Int): Unit = {
+  def InitMdMgr(zkConnectString: String, znodePath: String, zkSessionTimeoutMs: Int, zkConnectionTimeoutMs: Int, inputAdapters: ArrayBuffer[InputAdapter],
+                outputAdapters: ArrayBuffer[OutputAdapter], storageAdapters: ArrayBuffer[StorageAdapter]): Unit = {
     val tmpMsgDefs = mdMgr.Messages(true, true)
     val tmpContainerDefs = mdMgr.Containers(true, true)
     val tmpModelDefs = mdMgr.Models(true, true)
@@ -896,6 +899,33 @@ object KamanjaMetadata extends ObjectResolver {
         initializedFactOfMdlInstFactObjs = true
       }
       obj.LoadMdMgrElems(tmpMsgDefs, tmpContainerDefs, tmpModelDefs)
+
+      val adapterLevelBinding = mdMgr.AllAdapterMessageBindings.values.groupBy(_.adapterName.trim.toLowerCase())
+
+      inputAdapters.foreach(adap => {
+        val bindsInfo = adapterLevelBinding.getOrElse(adap.getAdapterName.toLowerCase, null)
+        if (bindsInfo != null) {
+          // Message Name, Serializer Name & options.
+          adap.addMessageBinding(bindsInfo.map(bind => (bind.messageName -> (bind.serializer, bind.options))).toMap)
+        }
+      })
+
+      outputAdapters.foreach(adap => {
+        val bindsInfo = adapterLevelBinding.getOrElse(adap.getAdapterName.toLowerCase, null)
+        if (bindsInfo != null) {
+          // Message Name, Serializer Name & options.
+          adap.addMessageBinding(bindsInfo.map(bind => (bind.messageName -> (bind.serializer, bind.options))).toMap)
+        }
+      })
+
+      storageAdapters.foreach(adap => {
+        val bindsInfo = adapterLevelBinding.getOrElse(adap.getAdapterName.toLowerCase, null)
+        if (bindsInfo != null) {
+          // Message Name, Serializer Name & options.
+          adap.addMessageBinding(bindsInfo.map(bind => (bind.messageName -> (bind.serializer, bind.options))).toMap)
+        }
+      })
+
       // Lock the global object here and update the global objects
       UpdateKamanjaMdObjects(obj.messageObjects, obj.containerObjects, obj.modelObjsMap, null, null, null)
     } catch {
