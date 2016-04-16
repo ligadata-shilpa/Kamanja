@@ -167,7 +167,6 @@ class LearningEngine {
             modelEvent.elapsedtimeinms = ((System.nanoTime - modelStartTime) / 1000000.0).toFloat
             modelEvent.producedmessages = modelResIds.toArray[Long]
             modelsForMessage.append(modelEvent)
-
           } else {
             val errorTxt = "Failed to create model " + execMdl._1.mdl.getModelName()
             LOG.error(errorTxt)
@@ -176,33 +175,33 @@ class LearningEngine {
             thisMsgEvent.modelinfo = modelsForMessage.toArray[KamanjaModelEvent]
             // Generate an exception event
             var exeptionEvent = createExceptionEvent(LeanringEngine.modelExecutionException, LeanringEngine.engineComponent, errorTxt, txnCtxt)
-            //TODO: add exeptionEvent to whatever q needed
-            throw new KamanjaException(errorTxt, null)
+            txnCtxt.getNodeCtxt.getEnvCtxt.postMessages(Array(exeptionEvent))
+            // Do we need to throw an error ???????????????????????????????????????? throw new KamanjaException(errorTxt, null)
           }
         }
       }
-
-
     } catch {
       case e: Exception => {
         // Generate an exception event
+        LOG.error("Failed to execute message", e)
         val st = StackTrace.ThrowableTraceString(e)
-
         thisMsgEvent.error = st
         thisMsgEvent.elapsedtimeinms = ((System.nanoTime - msgProcessingStartTime) / 1000000.0).toFloat
         thisMsgEvent.modelinfo = modelsForMessage.toArray[KamanjaModelEvent]
-
         var exeptionEvent = createExceptionEvent(LeanringEngine.modelExecutionException, LeanringEngine.engineComponent, st, txnCtxt)
-        //TODO: add exeptionEvent to whatever q needed
+        txnCtxt.getNodeCtxt.getEnvCtxt.postMessages(Array(exeptionEvent))
+        // throw e
       }
     }
     thisMsgEvent.modelinfo = modelsForMessage.toArray[KamanjaModelEvent]
-
   }
 
   private def createExceptionEvent(errorType: String, compName: String, errorString: String, txnCtxt: TransactionContext): KamanjaExceptionEvent = {
     // ExceptionEventFactory is guaranteed to be here....
-    var exceptionEvent = txnCtxt.getMessageEvent.asInstanceOf[KamanjaExceptionEvent]
+    var exceptionEvnt = txnCtxt.getNodeCtxt.getEnvCtxt.getContainerInstance("com.ligadata.KamanjaBase.KamanjaExceptionEvent")
+    if (exceptionEvnt == null)
+      throw new KamanjaException("Unable to create message/container com.ligadata.KamanjaBase.KamanjaExceptionEvent", null)
+    var exceptionEvent = exceptionEvnt.asInstanceOf[KamanjaExceptionEvent]
     exceptionEvent.errortype = errorType
     exceptionEvent.timeoferrorepochms = System.currentTimeMillis
     exceptionEvent.componentname = compName

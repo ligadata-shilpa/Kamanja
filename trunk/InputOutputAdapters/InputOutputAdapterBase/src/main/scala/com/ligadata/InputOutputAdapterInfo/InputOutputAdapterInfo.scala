@@ -149,9 +149,21 @@ trait ExecContext {
   private val transService = new SimpleTransService
   transService.init(txnIdsRangeForPartition)
 
-  final def SendFailedEvent(data: Array[Byte], deserializer: String, failedMsg: String, uk: String, uv: String, e: Throwable): Unit = {
+  final def SendFailedEvent(data: Array[Byte], deserializer: String, failedMsg: String, uniqueKey: PartitionUniqueRecordKey, uniqueVal: PartitionUniqueRecordValue, e: Throwable): Unit = {
     val failedTm = failedEventDtFormat.format(new java.util.Date(System.currentTimeMillis))
     val evntData = new String(data)
+
+    var uk = ""
+    var uv = ""
+
+    try {
+      uk = if (uniqueKey != null) uniqueKey.Serialize else ""
+      uv = if (uniqueVal != null) uniqueVal.Serialize else ""
+    } catch {
+      case e: Throwable => {
+        LOG.error("Failed to serialize PartitionUniqueRecordKey and/or PartitionUniqueRecordValue", e)
+      }
+    }
 
     val failMsg = if (e != null) e.getMessage else ""
     val stackTrace = if (e != null) StackTrace.ThrowableTraceString(e) else ""
@@ -197,6 +209,11 @@ trait ExecContext {
   }
 
   final def execute(msg: ContainerInterface, data: Array[Byte], uniqueKey: PartitionUniqueRecordKey, uniqueVal: PartitionUniqueRecordValue, readTmMilliSecs: Long): Unit = {
+    if (msg == null) {
+      SendFailedEvent(data, "", "", uniqueKey, uniqueVal, null)
+      return
+    }
+
     var uk = ""
     var uv = ""
 
@@ -212,7 +229,7 @@ trait ExecContext {
     var txnCtxt: TransactionContext = null
     try {
       val transId = transService.getNextTransId
-      val msgEvent = nodeContext.getEnvCtxt().getContainerInstance("System.KamanjaMessageEvent")
+      val msgEvent = nodeContext.getEnvCtxt().getContainerInstance("com.ligadata.KamanjaBase.KamanjaMessageEvent")
       txnCtxt = new TransactionContext(transId, nodeContext, data, EventOriginInfo(uk, uv), readTmMilliSecs, msgEvent)
       LOG.debug("Processing uniqueKey:%s, uniqueVal:%s, Datasize:%d,IsMsgNull:%s,MsgData:%s".format(uk, uv, data.size, if (msg == null) "true" else "false", if (msg == null) "" else msg.get("msg").toString))
       txnCtxt.setInitialMessage("", msg)
@@ -230,33 +247,23 @@ trait ExecContext {
   // Raw data deserialized and send to another send method which takes msg
   final def execute(data: Array[Byte], uniqueKey: PartitionUniqueRecordKey, uniqueVal: PartitionUniqueRecordValue, readTmMilliSecs: Long): Unit = {
     var msg: ContainerInterface = null
-    var deserializerName: String = ""
+    val deserializer = ""
+    val failedMsg = ""
 
     try {
-      val (tMsg, tDeserializerName) = input.deserialize(data)
-      msg = tMsg
-      deserializerName = tDeserializerName
-      execute(msg, data, uniqueKey, uniqueVal, readTmMilliSecs)
+      val (tMsg, tDeserializerName, msgName) = input.deserialize(data)
+      val deserializer = if (tDeserializerName != null) tDeserializerName else ""
+      val failedMsg = if (msgName != null) msgName else ""
+      if (tMsg != null) {
+        msg = tMsg
+        execute(msg, data, uniqueKey, uniqueVal, readTmMilliSecs)
+      }
+      else {
+        SendFailedEvent(data, tDeserializerName, failedMsg, uniqueKey, uniqueVal, null)
+      }
     } catch {
       case e: Throwable => {
-        //FIXME:- Need to populate deserializer & failedMsg -- Begin
-        val deserializer = ""
-        val failedMsg = ""
-        //FIXME:- Need to populate deserializer & failedMsg -- End
-
-        var uk = ""
-        var uv = ""
-
-        try {
-          uk = if (uniqueKey != null) uniqueKey.Serialize else ""
-          uv = if (uniqueVal != null) uniqueVal.Serialize else ""
-        } catch {
-          case e: Throwable => {
-            LOG.error("Failed to serialize PartitionUniqueRecordKey and/or PartitionUniqueRecordValue", e)
-          }
-        }
-
-        SendFailedEvent(data, deserializer, failedMsg, uk, uv, e)
+        SendFailedEvent(data, deserializer, failedMsg, uniqueKey, uniqueVal, e)
       }
     }
   }
