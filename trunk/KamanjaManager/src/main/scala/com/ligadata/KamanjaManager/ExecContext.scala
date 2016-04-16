@@ -148,7 +148,7 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
       //BUGBUG:: Fix this
       outputAdapters.foreach(adap => {
         val sendSerializer = ArrayBuffer[String]();
-        val sendSerOptions = ArrayBuffer[scala.collection.immutable.Map[String,String]]();
+        val sendSerOptions = ArrayBuffer[scala.collection.immutable.Map[String,Any]]();
         val sendContainers = ArrayBuffer[ContainerInterface]();
         // val sendInfo = ArrayBuffer[(String, scala.collection.immutable.Map[String,String], ContainerInterface)]();
         adap._2.foreach(bind => (bind, txnCtxt.getContainersOrConcepts(bind.messageName).foreach(orginAndmsg => {
@@ -162,7 +162,7 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
 
       storageAdapters.foreach(adap => {
         val sendSerializer = ArrayBuffer[String]();
-        val sendSerOptions = ArrayBuffer[scala.collection.immutable.Map[String,String]]();
+        val sendSerOptions = ArrayBuffer[scala.collection.immutable.Map[String,Any]]();
         val sendContainers = ArrayBuffer[ContainerInterface]();
         // val sendInfo = ArrayBuffer[(String, scala.collection.immutable.Map[String,String], ContainerInterface)]();
         adap._2.foreach(bind => (bind, txnCtxt.getContainersOrConcepts(bind.messageName).foreach(orginAndmsg => {
@@ -638,7 +638,7 @@ object PostMessageExecutionQueue {
 
     try {
       val transId = transService.getNextTransId
-      val msgEvent = nodeContext.getEnvCtxt().getContainerInstance("System.KamanjaMessageEvent")
+      val msgEvent = nodeContext.getEnvCtxt().getContainerInstance("com.ligadata.KamanjaBase.KamanjaMessageEvent")
       val txnCtxt = new TransactionContext(transId, nodeContext, emptyData, EventOriginInfo(uk, uv), System.currentTimeMillis, msgEvent)
       LOG.debug("Processing posted message:" + msg.getFullTypeName)
       txnCtxt.setInitialMessage("", msg)

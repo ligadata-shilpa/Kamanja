@@ -16,8 +16,8 @@ package com.ligadata.KamanjaBase;
  * limitations under the License.
  */
 
-import com.ligadata.kamanja.metadata.MdMgr;
-import com.ligadata.kamanja.metadata.SerializeDeserializeConfig;
+//import com.ligadata.kamanja.metadata.MdMgr;
+//import com.ligadata.kamanja.metadata.SerializeDeserializeConfig;
 
 public interface SerializeDeserialize {
     /**

@@ -21,7 +21,7 @@ import com.ligadata.Utils._
 import org.aicer.grok.dictionary.GrokDictionary
 import com.ligadata.runtime.Conversion
 class ModelFactory(modelDef: ModelDef, nodeContext: NodeContext) extends ModelInstanceFactory(modelDef, nodeContext) {
-  override def isValidMessage(msg: ContainerInterface): Boolean = {
+  override def isValidMessage(msg: MessageContainerBase): Boolean = {
     msg.isInstanceOf[com.ligadata.kamanja.test.V1000000.msg5]
   }
   override def createModelInstance(): ModelInstance = return new Model(this)

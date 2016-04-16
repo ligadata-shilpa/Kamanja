@@ -17,6 +17,9 @@
 
 package com.ligadata.KamanjaManager
 
+import com.ligadata.Exceptions.KamanjaException
+import com.ligadata.InputOutputAdapterInfo.{OutputAdapter, InputAdapter}
+import com.ligadata.StorageBase.StorageAdapter
 import com.ligadata.jpmml.JpmmlAdapter
 import com.ligadata.kamanja.metadata.{BaseElem, MappedMsgTypeDef, BaseAttributeDef, StructTypeDef, EntityType, AttributeDef, MessageDef, ContainerDef, ModelDef}
 import com.ligadata.kamanja.metadata._
@@ -344,14 +347,14 @@ class KamanjaMetadata(var envCtxt: EnvContext) {
               set.map(msg => {
                 var nodeId: Long = 0
                 var edgeTypeId: Long = 0
-                if (msg.origin == null || msg.origin.trim.size == 0) {
-                  val orgMdl = mgr.Model(msg.origin, -1, true)
+                if (msg.origin != null && msg.origin.trim.size > 0) {
+                  val orgMdl = mgr.Model(msg.origin.trim, -1, true)
                   if (orgMdl != None) {
                     nodeId = orgMdl.get.MdElementId
                   }
                 }
-                if (msg.message == null || msg.message.trim.size == 0) {
-                  val msgDef = mgr.Message(msg.message, -1, true)
+                if (msg.message != null && msg.message.trim.size > 0) {
+                  val msgDef = mgr.Message(msg.message.trim, -1, true)
                   if (msgDef != None) {
                     edgeTypeId = msgDef.get.MdElementId
                   } else {
@@ -473,7 +476,7 @@ class KamanjaMetadata(var envCtxt: EnvContext) {
   }
 }
 
-object KamanjaMetadata extends MdBaseResolveInfo {
+object KamanjaMetadata extends ObjectResolver {
   // Engine will set it once EnvContext is initialized
   var envCtxt: EnvContext = null
   var gNodeContext: NodeContext = null
@@ -496,7 +499,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
   private[this] var masterDag: Dag = new Dag("0")
   private[this] var nodeIdModlsObj = scala.collection.mutable.Map[Long, MdlInfo]()
 
-  def getConfigChanges: Array[String] = {
+  def getConfigChanges: Array[(String, Any)] = {
     return GetMdMgr.getConfigChanges
   }
 
@@ -882,7 +885,8 @@ object KamanjaMetadata extends MdBaseResolveInfo {
     MetadataAPIImpl.InitMdMgrFromBootStrap(KamanjaConfiguration.configFile, false)
   }
 
-  def InitMdMgr(zkConnectString: String, znodePath: String, zkSessionTimeoutMs: Int, zkConnectionTimeoutMs: Int): Unit = {
+  def InitMdMgr(zkConnectString: String, znodePath: String, zkSessionTimeoutMs: Int, zkConnectionTimeoutMs: Int, inputAdapters: ArrayBuffer[InputAdapter],
+                outputAdapters: ArrayBuffer[OutputAdapter], storageAdapters: ArrayBuffer[StorageAdapter]): Unit = {
     val tmpMsgDefs = mdMgr.Messages(true, true)
     val tmpContainerDefs = mdMgr.Containers(true, true)
     val tmpModelDefs = mdMgr.Models(true, true)
@@ -895,8 +899,38 @@ object KamanjaMetadata extends MdBaseResolveInfo {
         initializedFactOfMdlInstFactObjs = true
       }
       obj.LoadMdMgrElems(tmpMsgDefs, tmpContainerDefs, tmpModelDefs)
+
       // Lock the global object here and update the global objects
       UpdateKamanjaMdObjects(obj.messageObjects, obj.containerObjects, obj.modelObjsMap, null, null, null)
+
+      val adapterLevelBinding = mdMgr.AllAdapterMessageBindings.values.groupBy(_.adapterName.trim.toLowerCase())
+
+      inputAdapters.foreach(adap => {
+        adap.setObjectResolver(KamanjaMetadata)
+        val bindsInfo = adapterLevelBinding.getOrElse(adap.getAdapterName.toLowerCase, null)
+        if (bindsInfo != null) {
+          // Message Name, Serializer Name & options.
+          adap.addMessageBinding(bindsInfo.map(bind => (bind.messageName -> (bind.serializer, bind.options))).toMap)
+        }
+      })
+
+      outputAdapters.foreach(adap => {
+        adap.setObjectResolver(KamanjaMetadata)
+        val bindsInfo = adapterLevelBinding.getOrElse(adap.getAdapterName.toLowerCase, null)
+        if (bindsInfo != null) {
+          // Message Name, Serializer Name & options.
+          adap.addMessageBinding(bindsInfo.map(bind => (bind.messageName -> (bind.serializer, bind.options))).toMap)
+        }
+      })
+
+      storageAdapters.foreach(adap => {
+        adap.setObjectResolver(KamanjaMetadata)
+        val bindsInfo = adapterLevelBinding.getOrElse(adap.getAdapterName.toLowerCase, null)
+        if (bindsInfo != null) {
+          // Message Name, Serializer Name & options.
+          adap.addMessageBinding(bindsInfo.map(bind => (bind.messageName -> (bind.serializer, bind.options))).toMap)
+        }
+      })
     } catch {
       case e: Exception => {
         LOG.error("Failed to load messages, containers & models from metadata manager.", e)
@@ -1216,7 +1250,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
     }
   }
 
-  override def getMessgeOrContainerInstance(MsgContainerType: String): ContainerInterface = {
+  override def getInstance(MsgContainerType: String): ContainerInterface = {
     var v: MsgContainerObjAndTransformInfo = null
 
     v = getMessageOrContainer(MsgContainerType)
@@ -1228,6 +1262,23 @@ object KamanjaMetadata extends MdBaseResolveInfo {
     }
     return null
   }
+
+  override def getInstance(schemaId: Long): ContainerInterface = {
+    //BUGBUG:: For now we are getting latest class. But we need to get the old one too.
+    val md = getMetadataManager
+
+    if (md == null)
+      throw new KamanjaException("Metadata Not found", null)
+
+    val contOpt = getMdMgr.ContainerForSchemaId(schemaId.toInt)
+
+    if (contOpt == None)
+      throw new KamanjaException("Container Not found for schemaid:" + schemaId, null)
+
+    getInstance(contOpt.get.FullName)
+  }
+
+  override def getMdMgr: MdMgr = getMetadataManager
 
   def getMessgeInfo(msgType: String): MsgContainerObjAndTransformInfo = {
     var exp: Exception = null
@@ -1440,7 +1491,7 @@ object KamanjaMetadata extends MdBaseResolveInfo {
     }).toMap
   }
 
-  def getMdMgr: MdMgr = mdMgr
+  def getMetadataManager: MdMgr = mdMgr
 
   def Shutdown: Unit = {
     if (zkListener != null)

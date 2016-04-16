@@ -673,7 +673,7 @@ object ConfigUtils {
             val ClusterId = cluster.getOrElse("ClusterId", "").toString.trim.toLowerCase
             logger.debug("Processing the cluster => " + ClusterId)
             // save in memory
-            val ci = MdMgr.GetMdMgr.MakeCluster(ClusterId, null, null)
+            val ci = MdMgr.GetMdMgr.MakeCluster(ClusterId, "", "")
             val addCluserReuslt = MdMgr.GetMdMgr.AddCluster(ci)
 
             if (addCluserReuslt != None) {
@@ -727,6 +727,7 @@ object ConfigUtils {
               clusterInfoDef.nameSpace = "clusterInfo"
               clusterInfoDef.tranId = MetadataAPIImpl.GetNewTranId
               clusterNotifications.append(clusterInfoDef)
+              println("cic Change for " + clusterInfoDef.name )
               if (addClusterResult.get.equalsIgnoreCase("add"))
                 clusterNotifyActions.append("Add")
               else
@@ -768,7 +769,7 @@ object ConfigUtils {
                 }
 
                 val ni = MdMgr.GetMdMgr.MakeNode(nodeId, nodePort, nodeIpAddr, jarPaths,
-                                                 scala_home, java_home, classpath, ClusterId, 0, foundRoles.toArray, null)
+                                                 scala_home, java_home, classpath, ClusterId, 0, foundRoles.toArray, "")
 
                 val addNodeResult = MdMgr.GetMdMgr.AddNode(ni)
                 if (addNodeResult != None) {
@@ -779,6 +780,7 @@ object ConfigUtils {
                   nodeDef.clusterId = ci.clusterId
                   nodeDef.elementType = "nodeDef"
                   clusterNotifications.append(nodeDef)
+                  println("node Change for " + nodeDef.name )
                   if (addNodeResult.get.equalsIgnoreCase("add"))
                     clusterNotifyActions.append("Add")
                   else
@@ -812,6 +814,7 @@ object ConfigUtils {
                   tenantDef.clusterId = ci.clusterId
                   tenantDef.elementType = "TenantDef"
                   clusterNotifications.append(tenantDef)
+                  println("tenant Change for " + tenantDef.name )
                   if (addTenantResult.get.equalsIgnoreCase("add"))
                     clusterNotifyActions.append("Add")
                   else
@@ -868,6 +871,7 @@ object ConfigUtils {
                   adapterDef.clusterId = ClusterId
                   adapterDef.elementType = "adapterDef"
                   clusterNotifications.append(adapterDef)
+                  println("adapter Change for " + adapterDef.name )
                   if (addAdapterResult.get.equalsIgnoreCase("add"))
                     clusterNotifyActions.append("Add")
                   else
@@ -900,6 +904,8 @@ object ConfigUtils {
                 upDef.clusterId = ClusterId
                 upDef.elementType = "upDef"
                 clusterNotifications.append(upDef)
+
+                println("UP Change for " + upDef.clusterId )
                 if (upAddResults.get.equalsIgnoreCase("add"))
                   clusterNotifyActions.append("Add")
                 else
@@ -916,6 +922,7 @@ object ConfigUtils {
         } else {
           logger.debug("Found no adapater objects in the config file")
         }
+
 
         MetadataAPIImpl.SaveObjectList(keyList, valueList, "config_objects", serializerType)
         MetadataAPIImpl.NotifyEngine(clusterNotifications.toArray, clusterNotifyActions.toArray)
@@ -1674,8 +1681,12 @@ object ConfigUtils {
               MdMgr.GetMdMgr.AddUserProperty(up)
             }
             case "tenantinfo" => {
-              val up = MetadataAPISerialization.deserializeMetadata(new String(v.asInstanceOf[Array[Byte]])).asInstanceOf[TenantInfo] //serializer.DeserializeObjectFromByteArray(v.asInstanceOf[Array[Byte]]).asInstanceOf[TenantInfo]
-              MdMgr.GetMdMgr.AddTenantInfo(up)
+                val up = MetadataAPISerialization.deserializeMetadata(new String(v.asInstanceOf[Array[Byte]])).asInstanceOf[TenantInfo] //serializer.DeserializeObjectFromByteArray(v.asInstanceOf[Array[Byte]]).asInstanceOf[TenantInfo]
+                MdMgr.GetMdMgr.AddTenantInfo(up)
+            }
+            case "adaptermessagebinding" => {
+                val binding = MetadataAPISerialization.deserializeMetadata(new String(v.asInstanceOf[Array[Byte]])).asInstanceOf[AdapterMessageBinding] //serializer.DeserializeObjectFromByteArray(v.asInstanceOf[Array[Byte]]).asInstanceOf[TenantInfo]
+                MdMgr.GetMdMgr.AddAdapterMessageBinding(binding)
             }
             case _ => {
               throw InternalErrorException("LoadAllConfigObjectsIntoCache: Unknown objectType " + objType, null)

@@ -27,7 +27,7 @@
             "keytab": "/home/ligadata/keytab/ligadata.keytab"
           },
           "CacheConfig": {
-            "MaxSizeInMB": 1024
+            "MaxSizeInMB": 256
           }
         }
       ],
@@ -46,8 +46,8 @@
         ]
       },
       "Cache": {
-        "CachePort": 7800,
-        "CacheSizePerNodeInMB": 1024,
+        "CacheStartPort": 7800,
+        "CacheSizePerNodeInMB": 256,
         "ReplicateFactor": 1,
         "TimeToIdleSeconds": 31622400,
         "EvictionPolicy": "LFU"

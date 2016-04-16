@@ -98,6 +98,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   private var _sysCatalogDatastore: String = _
   private var _postMsgListenerCallback: (Array[ContainerInterface]) => Unit = null
   private var _listenerCache: DataCache = null
+  private var _listenerConfigClusterCache: DataCache = null
   private var _cacheConfig: CacheConfig = null
   private val _cacheConfigTemplate =
     """
@@ -136,14 +137,24 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 
     WriteLock(_cacheListener_reent_lock)
     try {
-      _cacheListeners += ReturnCacheListenerCallback(listenPath, ListenCallback, childCache)
+      if (_listenerCache != null) {
+        _cacheListeners += ReturnCacheListenerCallback(listenPath, ListenCallback, childCache)
+      }
+    } catch {
+      case e: Throwable => {
+        throw e
+      }
+    } finally {
+      WriteUnlock(_cacheListener_reent_lock)
+    }
 
+    try {
       if (_listenerCache != null) {
         if (!childCache && _listenerCache.isKeyInCache(listenPath)) {
           val value = _listenerCache.get(listenPath);
           ListenCallback("Put", listenPath, value.toString)
         } else if (childCache) {
-          val keys = _listenerCache.getKeys().filter(k => k.startsWith(listenPath)).toArray
+          val keys = _listenerCache.getKeys().filter(k => k.startsWith(listenPath))
           if (keys.size > 0) {
             val map = _listenerCache.get(keys)
             map.asScala.foreach(kv => {
@@ -156,8 +167,6 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
       case e: Throwable => {
         throw e
       }
-    } finally {
-      WriteUnlock(_cacheListener_reent_lock)
     }
   }
 
@@ -741,7 +750,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   private[this] var _metadataLoader: KamanjaLoaderInfo = null
   private[this] var _adaptersAndEnvCtxtLoader: KamanjaLoaderInfo = null
   private[this] var _defaultDataStore: DataStore = null
-  private[this] var _mdres: MdBaseResolveInfo = null
+  private[this] var _objectResolver: ObjectResolver = null
   private[this] var _enableEachTransactionCommit = true
   private[this] var _jarPaths: collection.immutable.Set[String] = null // Jar paths where we can resolve all jars (including dependency jars).
 
@@ -1400,8 +1409,9 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 
   override def getAdaptersAndEnvCtxtLoader: KamanjaLoaderInfo = _adaptersAndEnvCtxtLoader
 
-  override def setMetadataResolveInfo(mdres: MdBaseResolveInfo): Unit = {
-    _mdres = mdres
+
+  override def setObjectResolver(objResolver: ObjectResolver): Unit = {
+    _objectResolver = objResolver
   }
 
   //BUGBUG:: May be we need to lock before we do anything here
@@ -2661,9 +2671,6 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   //
   //  def getAllNodeLocks(nodeId: String): Array[String] = null
 
-  // Saving & getting temporary objects in cache
-  def saveConfigInClusterCache(key: String, value: Array[Byte]): Unit = {}
-
   override def saveObjectInNodeCache(key: String, value: Any): Unit = {
     WriteLock(_nodeCache_reent_lock)
     try {
@@ -2677,8 +2684,6 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
       WriteUnlock(_nodeCache_reent_lock)
     }
   }
-
-  def getConfigFromClusterCache(key: String): Array[Byte] = null
 
   override def getObjectFromNodeCache(key: String): Any = {
     var retVal: Any = null
@@ -2697,8 +2702,6 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     retVal
   }
 
-  def getAllKeysFromClusterCache(): Array[String] = null
-
   override def getAllKeysFromNodeCache(): Array[String] = {
     var retVal = Array[String]()
     ReadLock(_nodeCache_reent_lock)
@@ -2715,8 +2718,6 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 
     retVal
   }
-
-  def getAllConfigFromClusterCache(): Array[KeyValuePair] = null
 
   override def getAllObjectsFromNodeCache(): Array[KeyValuePair] = {
     var retVal = Array[KeyValuePair]()
@@ -2857,8 +2858,8 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     if (!foundLocalNodeId)
       sb.append("Not found local NodeId:" + _nodeId + " in CacheConfig HostList")
 
-    if (conf.CachePort <= 0)
-      sb.append("Got invalid CachePort (%d) in CacheConfig\n".format(conf.CachePort))
+    if (conf.CacheStartPort <= 0)
+      sb.append("Got invalid CacheStartPort (%d) in CacheConfig\n".format(conf.CacheStartPort))
     if (conf.CacheSizePerNode <= 0)
       sb.append("Got invalid CacheSizePerNode (%d) in CacheConfig\n".format(conf.CacheSizePerNode))
     if (conf.ReplicateFactor <= 0)
@@ -2886,8 +2887,8 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   }
 
   private def CreateCacheListener(conf: CacheConfig): Unit = {
-    val hosts = conf.HostList.map(h => { "%s[%d]".format(h.NodeIp, conf.CachePort) }).mkString(",")
-    val cacheCfg = _cacheConfigTemplate.format("EnvCtxtListenersCache", hosts, conf.CachePort, conf.CacheSizePerNode, conf.TimeToIdleSeconds, conf.TimeToIdleSeconds, conf.EvictionPolicy.toUpperCase, "true")
+    val hosts = conf.HostList.map(h => { "%s[%d]".format(h.NodeIp, conf.CacheStartPort) }).mkString(",")
+    val cacheCfg = _cacheConfigTemplate.format("EnvCtxtListenersCache", hosts, conf.CacheStartPort, conf.CacheSizePerNode / 2, conf.TimeToIdleSeconds, conf.TimeToIdleSeconds, conf.EvictionPolicy.toUpperCase, "true")
 
     val listenCallback = new CacheListenerCallback()
 
@@ -2895,6 +2896,16 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     _listenerCache = aclass.asInstanceOf[DataCache]
     _listenerCache.init(cacheCfg, listenCallback)
     _listenerCache.start()
+  }
+
+  private def CreateConfigClusterCache(conf: CacheConfig): Unit = {
+    val hosts = conf.HostList.map(h => { "%s[%d]".format(h.NodeIp, conf.CacheStartPort) }).mkString(",")
+    val cacheCfg = _cacheConfigTemplate.format("EnvCtxtConfigClusterCache", hosts, conf.CacheStartPort, conf.CacheSizePerNode / 2, conf.TimeToIdleSeconds, conf.TimeToIdleSeconds, conf.EvictionPolicy.toUpperCase, "true")
+
+    val aclass = Class.forName("com.ligadata.cache.MemoryDataCacheImp").newInstance
+    _listenerConfigClusterCache = aclass.asInstanceOf[DataCache]
+    _listenerConfigClusterCache.init(cacheCfg, null)
+    _listenerConfigClusterCache.start()
   }
 
   override def setDataToZNode(zNodePath: String, value: Array[Byte]): Unit = {
@@ -3147,8 +3158,8 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   }
 
   override def getContainerInstance(containerName: String): ContainerInterface = {
-    if (_mdres != null)
-      _mdres.getMessgeOrContainerInstance(containerName)
+    if (_objectResolver != null)
+      _objectResolver.getInstance(containerName)
     else
       null
   }
@@ -3169,8 +3180,47 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   override def startCache(conf: CacheConfig): Unit = {
     ValidateCacheListener(conf)
     CreateCacheListener(conf)
+    CreateConfigClusterCache(conf)
     _cacheConfig = conf
   }
 
   override def getCacheConfig(): CacheConfig = _cacheConfig
+
+  // Saving & getting temporary objects in cache
+  override def saveConfigInClusterCache(key: String, value: Array[Byte]): Unit = {
+    if (_listenerConfigClusterCache != null)
+      _listenerConfigClusterCache.put(key, value)
+  }
+
+  override def getConfigFromClusterCache(key: String): Array[Byte] = {
+    if (_listenerConfigClusterCache != null && _listenerConfigClusterCache.isKeyInCache(key)) {
+      val v = _listenerConfigClusterCache.get(key)
+      if (v != null)
+        v.asInstanceOf[Array[Byte]]
+      else
+        null
+    }
+    else
+      null
+  }
+
+  override def getAllKeysFromClusterCache(): Array[String] = {
+    if (_listenerConfigClusterCache != null)
+      _listenerConfigClusterCache.getKeys
+    else
+      Array[String]()
+  }
+
+  override def getAllConfigFromClusterCache(): Array[KeyValuePair] = {
+    if (_listenerConfigClusterCache != null) {
+      val allValues = _listenerConfigClusterCache.getAll
+      if (allValues != null && allValues.size() > 0)
+        allValues.asScala.map(kv => KeyValuePair(kv._1, if (kv._2 != null) kv._2.asInstanceOf[Array[Byte]] else null)).toArray
+      else
+        Array[KeyValuePair]()
+    }
+    else {
+      Array[KeyValuePair]()
+    }
+  }
 }
