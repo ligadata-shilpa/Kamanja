@@ -6,6 +6,7 @@ import com.ligadata.KamanjaBase._
 import com.ligadata.InputOutputAdapterInfo.{ ExecContext, InputAdapter, OutputAdapter, ExecContextFactory, PartitionUniqueRecordKey, PartitionUniqueRecordValue }
 import com.ligadata.StorageBase.StorageAdapter
 import com.ligadata.ZooKeeper.CreateClient
+import com.ligadata.kamanja.metadata.AdapterInfo
 import org.json4s.jackson.JsonMethods._
 
 import scala.reflect.runtime.{ universe => ru }
@@ -227,14 +228,14 @@ class KamanjaManager extends Observer {
   private val inputAdapters = new ArrayBuffer[InputAdapter]
   private val outputAdapters = new ArrayBuffer[OutputAdapter]
   private val storageAdapters = new ArrayBuffer[StorageAdapter]
-//  private val adapterChangedCntr = new java.util.concurrent.atomic.AtomicLong(0)
+  //  private val adapterChangedCntr = new java.util.concurrent.atomic.AtomicLong(0)
   private var adapterChangedCntr: Long = 0
-//  private val statusAdapters = new ArrayBuffer[OutputAdapter]
-//  private val validateInputAdapters = new ArrayBuffer[InputAdapter]
+  //  private val statusAdapters = new ArrayBuffer[OutputAdapter]
+  //  private val validateInputAdapters = new ArrayBuffer[InputAdapter]
 
   private var thisEngineInfo: MainInfo = null
   private var adapterMetricInfo: scala.collection.mutable.MutableList[com.ligadata.HeartBeat.MonitorComponentInfo] = null
-//  private val failedEventsAdapters = new ArrayBuffer[OutputAdapter]
+  //  private val failedEventsAdapters = new ArrayBuffer[OutputAdapter]
 
   private var metricsService: ExecutorService = scala.actors.threadpool.Executors.newFixedThreadPool(1)
   private var isTimerRunning = false
@@ -244,7 +245,9 @@ class KamanjaManager extends Observer {
   def incrAdapterChangedCntr(): Unit = {
     adapterChangedCntr += 1
   }
+
   def getAdapterChangedCntr: Long = adapterChangedCntr
+
   def getAllAdaptersInfo: (Array[InputAdapter], Array[OutputAdapter], Array[StorageAdapter], Long) = {
     (inputAdapters.toArray, outputAdapters.toArray, storageAdapters.toArray, adapterChangedCntr)
   }
@@ -311,24 +314,24 @@ class KamanjaManager extends Observer {
   private def ShutdownAdapters: Boolean = {
     LOG.debug("Shutdown Adapters started @ " + Utils.GetCurDtTmStr)
     val s0 = System.nanoTime
-//
-//    validateInputAdapters.foreach(ia => {
-//      try {
-//        ia.Shutdown
-//      } catch {
-//        case fae: FatalAdapterException => {
-//          LOG.error("Validate adapter " + ia.UniqueName + "failed to shutdown", fae)
-//        }
-//        case e: Exception => {
-//          LOG.error("Validate adapter " + ia.UniqueName + "failed to shutdown", e)
-//        }
-//        case e: Throwable => {
-//          LOG.error("Validate adapter " + ia.UniqueName + "failed to shutdown", e)
-//        }
-//      }
-//    })
-//
-//    validateInputAdapters.clear
+    //
+    //    validateInputAdapters.foreach(ia => {
+    //      try {
+    //        ia.Shutdown
+    //      } catch {
+    //        case fae: FatalAdapterException => {
+    //          LOG.error("Validate adapter " + ia.UniqueName + "failed to shutdown", fae)
+    //        }
+    //        case e: Exception => {
+    //          LOG.error("Validate adapter " + ia.UniqueName + "failed to shutdown", e)
+    //        }
+    //        case e: Throwable => {
+    //          LOG.error("Validate adapter " + ia.UniqueName + "failed to shutdown", e)
+    //        }
+    //      }
+    //    })
+    //
+    //    validateInputAdapters.clear
 
     inputAdapters.foreach(ia => {
       try {
@@ -384,42 +387,42 @@ class KamanjaManager extends Observer {
 
     storageAdapters.clear
 
-//
-//    statusAdapters.foreach(oa => {
-//      try {
-//        oa.Shutdown
-//      } catch {
-//        case fae: FatalAdapterException => {
-//          LOG.error("Status adapter failed to shutdown", fae)
-//        }
-//        case e: Exception => {
-//          LOG.error("Status adapter failed to shutdown", e)
-//        }
-//        case e: Throwable => {
-//          LOG.error("Status adapter failed to shutdown", e)
-//        }
-//      }
-//    })
-//
-//    statusAdapters.clear
-//
-//    failedEventsAdapters.foreach(oa => {
-//      try {
-//        oa.Shutdown
-//      } catch {
-//        case fae: FatalAdapterException => {
-//          LOG.error("FailedEvents adapter failed to shutdown, cause", fae)
-//        }
-//        case e: Exception => {
-//          LOG.error("FailedEvents adapter failed to shutdown, cause", e)
-//        }
-//        case e: Throwable => {
-//          LOG.error("FailedEvents adapter failed to shutdown", e)
-//        }
-//      }
-//    })
-//
-//    failedEventsAdapters.clear
+    //
+    //    statusAdapters.foreach(oa => {
+    //      try {
+    //        oa.Shutdown
+    //      } catch {
+    //        case fae: FatalAdapterException => {
+    //          LOG.error("Status adapter failed to shutdown", fae)
+    //        }
+    //        case e: Exception => {
+    //          LOG.error("Status adapter failed to shutdown", e)
+    //        }
+    //        case e: Throwable => {
+    //          LOG.error("Status adapter failed to shutdown", e)
+    //        }
+    //      }
+    //    })
+    //
+    //    statusAdapters.clear
+    //
+    //    failedEventsAdapters.foreach(oa => {
+    //      try {
+    //        oa.Shutdown
+    //      } catch {
+    //        case fae: FatalAdapterException => {
+    //          LOG.error("FailedEvents adapter failed to shutdown, cause", fae)
+    //        }
+    //        case e: Exception => {
+    //          LOG.error("FailedEvents adapter failed to shutdown, cause", e)
+    //        }
+    //        case e: Throwable => {
+    //          LOG.error("FailedEvents adapter failed to shutdown", e)
+    //        }
+    //      }
+    //    })
+    //
+    //    failedEventsAdapters.clear
 
     val totaltm = "TimeConsumed:%.02fms".format((System.nanoTime - s0) / 1000000.0);
     LOG.debug("Shutdown Adapters done @ " + Utils.GetCurDtTmStr + ". " + totaltm)
@@ -439,14 +442,14 @@ class KamanjaManager extends Observer {
         return false
       }
 
-//      try {
-//        val adapterCommitTime = loadConfigs.getProperty("AdapterCommitTime".toLowerCase, "0").replace("\"", "").trim.toInt
-//        if (adapterCommitTime > 0) {
-//          KamanjaConfiguration.adapterInfoCommitTime = adapterCommitTime
-//        }
-//      } catch {
-//        case e: Exception => { LOG.warn("", e) }
-//      }
+      //      try {
+      //        val adapterCommitTime = loadConfigs.getProperty("AdapterCommitTime".toLowerCase, "0").replace("\"", "").trim.toInt
+      //        if (adapterCommitTime > 0) {
+      //          KamanjaConfiguration.adapterInfoCommitTime = adapterCommitTime
+      //        }
+      //      } catch {
+      //        case e: Exception => { LOG.warn("", e) }
+      //      }
 
       try {
         KamanjaConfiguration.waitProcessingTime = loadConfigs.getProperty("waitProcessingTime".toLowerCase, "0").replace("\"", "").trim.toInt
@@ -456,14 +459,16 @@ class KamanjaManager extends Observer {
             KamanjaConfiguration.waitProcessingSteps = setps.map(_.toInt).toSet
         }
       } catch {
-        case e: Exception => { LOG.warn("", e) }
+        case e: Exception => {
+          LOG.warn("", e)
+        }
       }
 
       LOG.debug("Initializing metadata bootstrap")
       KamanjaMetadata.InitBootstrap
       var intiConfigs: InitConfigs = null
 
-      try{
+      try {
         intiConfigs = KamanjaMdCfg.InitConfigInfo
       } catch {
         case e: Exception => {
@@ -479,7 +484,7 @@ class KamanjaManager extends Observer {
       if (KamanjaMetadata.envCtxt == null)
         return false
 
-      val (zkConnectString, zkNodeBasePath, zkSessionTimeoutMs, zkConnectionTimeoutMs)  = KamanjaMetadata.envCtxt.getZookeeperInfo
+      val (zkConnectString, zkNodeBasePath, zkSessionTimeoutMs, zkConnectionTimeoutMs) = KamanjaMetadata.envCtxt.getZookeeperInfo
 
       var engineLeaderZkNodePath = ""
       var engineDistributionZkNodePath = ""
@@ -508,8 +513,8 @@ class KamanjaManager extends Observer {
 
       if (retval) {
         LOG.debug("Initialize Metadata Manager")
-        KamanjaMetadata.InitMdMgr(zkConnectString, metadataUpdatesZkNodePath, zkSessionTimeoutMs, zkConnectionTimeoutMs)
-//        KamanjaMetadata.envCtxt.CacheContainers(KamanjaConfiguration.clusterId) // Load data for Caching
+        KamanjaMetadata.InitMdMgr(zkConnectString, metadataUpdatesZkNodePath, zkSessionTimeoutMs, zkConnectionTimeoutMs, inputAdapters, outputAdapters, storageAdapters)
+        //        KamanjaMetadata.envCtxt.CacheContainers(KamanjaConfiguration.clusterId) // Load data for Caching
         LOG.debug("Initializing Leader")
 
         var txnCtxt: TransactionContext = null
@@ -645,7 +650,7 @@ class KamanjaManager extends Observer {
 
     val statusPrint_PD = new Runnable {
       def run(): Unit = {
-        val stats: scala.collection.immutable.Map[String, Long] = Map[String,Long]() // SimpleStats.copyMap
+        val stats: scala.collection.immutable.Map[String, Long] = Map[String, Long]() // SimpleStats.copyMap
         val statsStr = stats.mkString("~")
         val dispStr = "PD,%d,%s,%s".format(KamanjaConfiguration.nodeId, Utils.GetCurDtTmStr, statsStr)
         val statusMsg: com.ligadata.KamanjaBase.KamanjaStatusEvent = KamanjaMetadata.envCtxt.getContainerInstance("system.KamanjaStatusEvent").asInstanceOf[KamanjaStatusEvent]
@@ -655,7 +660,7 @@ class KamanjaManager extends Observer {
         KamanjaMetadata.envCtxt.postMessages(Array[ContainerInterface](statusMsg))
       }
     }
-  /*      val stats: scala.collection.immutable.Map[String, Long] = SimpleStats.copyMap
+    /*      val stats: scala.collection.immutable.Map[String, Long] = SimpleStats.copyMap
         val statsStr = stats.mkString("~")
         val dispStr = "PD,%d,%s,%s".format(KamanjaConfiguration.nodeId, Utils.GetCurDtTmStr, statsStr)
         var statusMsg = KamanjaMetadata.envCtxt.getContainerInstance("system.KamanjaStatusEvent")
@@ -716,16 +721,16 @@ class KamanjaManager extends Observer {
     // scheduledThreadPool.scheduleWithFixedDelay(statusPrint_PD, 0, 1000, TimeUnit.MILLISECONDS);
 
     /**
-     * print("=> ")
-     * breakable {
-     * for (ln <- io.Source.stdin.getLines) {
-     * val rv = execCmd(ln)
-     * if (rv)
-     * break;
-     * print("=> ")
-     * }
-     * }
-     */
+      * print("=> ")
+      * breakable {
+      * for (ln <- io.Source.stdin.getLines) {
+      * val rv = execCmd(ln)
+      * if (rv)
+      * break;
+      * print("=> ")
+      * }
+      * }
+      */
 
     var timeOutEndTime: Long = 0
     var participentsChangedCntr: Long = 0
@@ -748,14 +753,15 @@ class KamanjaManager extends Observer {
       }
     }
 
-//    var nextAdapterValuesCommit = System.currentTimeMillis + KamanjaConfiguration.adapterInfoCommitTime
+    //    var nextAdapterValuesCommit = System.currentTimeMillis + KamanjaConfiguration.adapterInfoCommitTime
 
     LOG.warn("KamanjaManager is running now. Waiting for user to terminate with SIGTERM, SIGINT or SIGABRT signals")
-    while (KamanjaConfiguration.shutdown == false) { // Infinite wait for now
-//      if (KamanjaMetadata.envCtxt != null && nextAdapterValuesCommit < System.currentTimeMillis) {
-//        if (ProcessedAdaptersInfo.CommitAdapterValues)
-//          nextAdapterValuesCommit = System.currentTimeMillis + KamanjaConfiguration.adapterInfoCommitTime
-//      }
+    while (KamanjaConfiguration.shutdown == false) {
+      // Infinite wait for now
+      //      if (KamanjaMetadata.envCtxt != null && nextAdapterValuesCommit < System.currentTimeMillis) {
+      //        if (ProcessedAdaptersInfo.CommitAdapterValues)
+      //          nextAdapterValuesCommit = System.currentTimeMillis + KamanjaConfiguration.adapterInfoCommitTime
+      //      }
       cntr = cntr + 1
       if (participentsChangedCntr != KamanjaConfiguration.participentsChangedCntr) {
         val dispWarn = (lookingForDups && timeOutEndTime > 0)
@@ -773,7 +779,7 @@ class KamanjaManager extends Observer {
             val sameNodeIds = cs.participantsNodeIds.filter(p => p == cs.nodeId)
             if (sameNodeIds.size > 1) {
               lookingForDups = true
-              val (zkConnectString, zkNodeBasePath, zkSessionTimeoutMs, zkConnectionTimeoutMs)  = KamanjaMetadata.envCtxt.getZookeeperInfo
+              val (zkConnectString, zkNodeBasePath, zkSessionTimeoutMs, zkConnectionTimeoutMs) = KamanjaMetadata.envCtxt.getZookeeperInfo
               var mxTm = if (zkSessionTimeoutMs > zkConnectionTimeoutMs) zkSessionTimeoutMs else zkConnectionTimeoutMs
               if (mxTm < 5000) // if the value is < 5secs, we are taking 5 secs
                 mxTm = 5000
@@ -828,21 +834,32 @@ class KamanjaManager extends Observer {
 
 
   /**
-   *
-   */
+    *
+    */
   private def validateAndExternalizeMetrics: Unit = {
-    val (zkConnectString, zkNodeBasePath, zkSessionTimeoutMs, zkConnectionTimeoutMs)  = KamanjaMetadata.envCtxt.getZookeeperInfo
+    val (zkConnectString, zkNodeBasePath, zkSessionTimeoutMs, zkConnectionTimeoutMs) = KamanjaMetadata.envCtxt.getZookeeperInfo
     val zkHeartBeatNodePath = zkNodeBasePath + "/monitor/engine/" + KamanjaConfiguration.nodeId.toString
     val isLogDebugEnabled = LOG.isDebugEnabled
+    var isChangeApplicable = false
 
     if (isLogDebugEnabled)
       LOG.debug("KamanjaManager " + KamanjaConfiguration.nodeId.toString + " is externalizing metrics to " + zkNodeBasePath)
 
     // As part of the metrics externaization, look for changes to the configuration that can be affected
     // while the manager is running
-    var changes = KamanjaMetadata.getConfigChanges
+    var changes: Array[(String, Any)] = KamanjaMetadata.getConfigChanges
     if (!changes.isEmpty) {
-      changes.foreach(x=>{ LOG.debug("KamanjaManger config update: " + x)})
+      changes.foreach(changes => {
+        val cTokens = changes._1.split('.')
+        if (cTokens.size == 3) {
+          isChangeApplicable = processConfigChange(cTokens(0), cTokens(1), cTokens(2), changes._2)
+        }
+      })
+    }
+    if (isChangeApplicable) {
+      // force Kamanja Mananger to take the changes
+      KamanjaLeader.forceAdapterRebalance
+      isChangeApplicable = false
     }
 
     if (thisEngineInfo == null) {
@@ -861,24 +878,26 @@ class KamanjaManager extends Observer {
     }
     adapterMetricInfo.clear
 
-    inputAdapters.foreach(ad => { adapterMetricInfo += ad.getComponentStatusAndMetrics })
-    outputAdapters.foreach(ad => { adapterMetricInfo += ad.getComponentStatusAndMetrics })
-    storageAdapters.foreach(ad => { adapterMetricInfo += ad.getComponentStatusAndMetrics })
-//    statusAdapters.foreach(ad => { adapterMetricInfo += ad.getComponentStatusAndMetrics })
-//    failedEventsAdapters.foreach(ad => { adapterMetricInfo += ad.getComponentStatusAndMetrics })
-//    validateInputAdapters.foreach(ad => { adapterMetricInfo += ad.getComponentStatusAndMetrics })
-//    adapterMetricInfo += KamanjaMetadata.envCtxt.getComponentStatusAndMetrics
+    inputAdapters.foreach(ad => {
+      adapterMetricInfo += ad.getComponentStatusAndMetrics
+    })
+    outputAdapters.foreach(ad => {
+      adapterMetricInfo += ad.getComponentStatusAndMetrics
+    })
+    storageAdapters.foreach(ad => {
+      adapterMetricInfo += ad.getComponentStatusAndMetrics
+    })
 
     // Combine all the junk into a single JSON String
     import org.json4s.JsonDSL._
     val allMetrics =
-        ("Name" -> thisEngineInfo.name) ~
+      ("Name" -> thisEngineInfo.name) ~
         ("Version" -> (KamanjaVersion.getMajorVersion.toString + "." + KamanjaVersion.getMinorVersion.toString + "." + KamanjaVersion.getMicroVersion + "." + KamanjaVersion.getBuildNumber)) ~
         ("UniqueId" -> thisEngineInfo.uniqueId) ~
         ("LastSeen" -> thisEngineInfo.lastSeen) ~
         ("StartTime" -> thisEngineInfo.startTime) ~
         ("Components" -> adapterMetricInfo.map(mci =>
-            ("Type" -> mci.typ) ~
+          ("Type" -> mci.typ) ~
             ("Name" -> mci.name) ~
             ("Description" -> mci.description) ~
             ("LastSeen" -> mci.lastSeen) ~
@@ -891,6 +910,53 @@ class KamanjaManager extends Observer {
     KamanjaLeader.SetNewDataToZkc(zkHeartBeatNodePath, compact(render(allMetrics)).getBytes)
     if (isLogDebugEnabled)
       LOG.debug("KamanjaManager " + KamanjaConfiguration.nodeId.toString + " externalized metrics for UID: " + thisEngineInfo.uniqueId)
+  }
+
+
+  private def processConfigChange (objType: String, action: String, objectName: String, adapter: Any): Boolean = {
+    // For now we are only handling adapters.
+    if (objType.equalsIgnoreCase("adapterdef")) {
+      var cia: InputAdapter = null
+      var coa: OutputAdapter = null
+      var csa: StorageAdapter = null
+
+      // If this is an add
+      if (action.equalsIgnoreCase("add")) {
+        if (cia != null) KamanjaMdCfg.upadateAdapter(adapter.asInstanceOf[AdapterInfo], true, inputAdapters, outputAdapters, storageAdapters)
+        if (coa != null) KamanjaMdCfg.upadateAdapter(adapter.asInstanceOf[AdapterInfo], true, inputAdapters, outputAdapters, storageAdapters)
+        if (csa != null) KamanjaMdCfg.upadateAdapter(adapter.asInstanceOf[AdapterInfo], true, inputAdapters, outputAdapters, storageAdapters)
+        return true
+      }
+
+      // Updating requires that we Stop the adapter first.
+      if (action.equalsIgnoreCase("update")) {
+        // SetUpdatePartitionsFlag
+        inputAdapters.foreach(ad => { if (ad.inputConfig.Name.equalsIgnoreCase(objectName)) cia = ad })
+        outputAdapters.foreach(ad => { if (ad.inputConfig.Name.equalsIgnoreCase(objectName)) coa = ad })
+        storageAdapters.foreach(ad => { if (ad._storageConfig.Name.equalsIgnoreCase(objectName)) csa = ad })
+
+
+        if (cia != null) {
+          cia.Shutdown
+          KamanjaMdCfg.upadateAdapter (adapter.asInstanceOf[AdapterInfo], false, inputAdapters, outputAdapters, storageAdapters)
+        }
+        if (coa != null) {
+          coa.Shutdown
+          KamanjaMdCfg.upadateAdapter (adapter.asInstanceOf[AdapterInfo], false, inputAdapters, outputAdapters, storageAdapters)
+        }
+        if (csa != null) {
+          csa.Shutdown
+          KamanjaMdCfg.upadateAdapter (adapter.asInstanceOf[AdapterInfo], false, inputAdapters, outputAdapters, storageAdapters)
+        }
+        return true
+      }
+
+      if (action.equalsIgnoreCase("remove")) {
+        // Implement this
+      }
+
+    }
+    return false
   }
 
   class SignalHandler extends Observable with sun.misc.SignalHandler {

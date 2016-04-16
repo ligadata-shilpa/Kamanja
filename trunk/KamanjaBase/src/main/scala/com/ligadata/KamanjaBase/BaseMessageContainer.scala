@@ -555,12 +555,15 @@ trait AdaptersSerializeDeserializers {
   //      (serOutputContainers.toArray, serializedContainerData.toArray, usedSerializersNames.toArray)
   //    }
 
-  // Returns deserialized msg, deserialized msg data & deserializer name applied.
-  def deserialize(data: Array[Byte]): (ContainerInterface, String) = {
+  // Returns deserialized msg, deserialized msg data & deserializer name, message name applied.
+  def deserialize(data: Array[Byte]): (ContainerInterface, String, String) = {
+    logger.debug("called deserialize")
     // We are going thru getAllMessageBindings and get from it ourself?. So one read lock for every serialize fintion
     val allMsgBindings = getAllMessageBindings
-    if (allMsgBindings.size == 0)
-      return (null, null)
+    if (allMsgBindings.size == 0) {
+      logger.debug("Not found any bindings to deserialize")
+      return (null, null, null)
+    }
 
     if (allMsgBindings.size != 1) {
       throw new KamanjaException("We can not deserialize more than one message for input adapter", null)
@@ -571,7 +574,9 @@ trait AdaptersSerializeDeserializers {
     if (ser != null && ser.serInstance != null) {
       try {
         val container = ser.serInstance.deserialize(data, msgName)
-        return (container, ser.serName)
+        if (container == null)
+          logger.error("Deserialize returned null container.")
+        return (container, ser.serName, msgName)
       } catch {
         case e: Throwable => {
           throw e
@@ -580,7 +585,7 @@ trait AdaptersSerializeDeserializers {
     } else {
       val adapName = getAdapterName
       logger.error(s"Did not find/load Serializer for container/message:${msgName}. Not returning container from Adapter:${adapName}")
-      return (null, null)
+      return (null, null, null)
     }
   }
 

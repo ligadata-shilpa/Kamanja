@@ -1,5 +1,7 @@
 package org.kamanja.serdeser.csv
 
+import com.ligadata.KamanjaBase.AttributeTypeInfo.TypeCategory
+
 import scala.collection.mutable.{Map}
 import scala.collection.JavaConverters._
 import java.io.{DataInputStream, ByteArrayInputStream, DataOutputStream, ByteArrayOutputStream}
@@ -253,6 +255,7 @@ class CsvSerDeser extends SerializeDeserialize with LogTrait {
     /**
       * Discern if the supplied BaseTypeDef is a ContainerTypeDef.  ContainerTypeDefs are used to describe
       * messages, containers, and the collection types.
+      *
       * @param aType a metadata base type
       * @return true if container
       */
@@ -285,6 +288,90 @@ class CsvSerDeser extends SerializeDeserialize with LogTrait {
             _config.contains("lineDelimiter"))
         _fieldDelimiter = _config.getOrElse("fieldDelimiter", null)
 
+    }
+
+    private def emptyByteVal: Byte = 0
+    private def emptyIntVal: Int = 0
+    private def emptyLongVal: Long = 0
+    private def emptyFloatVal: Float = 0
+    private def emptyDoubleVal: Double = 0
+    private def emptyBooleanVal: Boolean = false
+    private def emptyCharVal: Char = ' '
+
+    private def resolveValue(fld: String, attr: AttributeTypeInfo): Any = {
+        var returnVal: Any = null
+        attr.getTypeCategory match {
+            case TypeCategory.INT => {
+                returnVal = emptyIntVal
+                if (fld != null) {
+                    val f1 = fld.trim
+                    if (f1.size > 0)
+                        returnVal = f1.toInt
+                }
+            }
+            case TypeCategory.STRING => {
+                returnVal = fld
+            }
+            case TypeCategory.FLOAT => {
+                returnVal = emptyFloatVal
+                if (fld != null) {
+                    val f1 = fld.trim
+                    if (f1.size > 0)
+                        returnVal = f1.toFloat
+                }
+            }
+            case TypeCategory.DOUBLE => {
+                returnVal = emptyDoubleVal
+                if (fld != null) {
+                    val f1 = fld.trim
+                    if (f1.size > 0)
+                        returnVal = f1.toDouble
+                }
+            }
+            case TypeCategory.LONG => {
+                returnVal = emptyLongVal
+                if (fld != null) {
+                    val f1 = fld.trim
+                    if (f1.size > 0)
+                        returnVal = f1.toLong
+                }
+            }
+            case TypeCategory.BYTE => {
+                returnVal = emptyByteVal
+                if (fld != null) {
+                    val f1 = fld.trim
+                    if (f1.size > 0)
+                        returnVal = f1.toByte
+                }
+            }
+            case TypeCategory.CHAR => {
+                returnVal = emptyCharVal
+                if (fld != null) {
+                    val f1 = fld.trim
+                    if (f1.size > 0) {
+                        val x:Char = f1(0)
+                        returnVal = x
+                    }
+                }
+            }
+            case TypeCategory.BOOLEAN => {
+                returnVal = emptyBooleanVal
+                if (fld != null) {
+                    val f1 = fld.trim
+                    if (f1.size > 0)
+                        returnVal = f1.toBoolean
+                }
+            }
+            case TypeCategory.ARRAY => {
+                  // Not yet handled
+                // BUGBUG:: Yet to fix this
+                // FIXME:: Yet to fix this
+            }
+            case _ => {
+                // Unhandled type
+            }
+        }
+        returnVal
     }
 
     /**
@@ -346,11 +433,10 @@ class CsvSerDeser extends SerializeDeserialize with LogTrait {
             val fld = rawCsvFields(fldIdx)
           // @TODO: need to handle failure condition for set - string is not in expected format?
           // @TODO: is there any need to strip quotes? since serializer is putting escape information while serializing, this should be done. probably more configuration information is needed
-            ci.set(fldIdx, fld)
+            ci.set(fldIdx, resolveValue(fld, attr))
         })
 
-        val container : ContainerInterface = null
-        container
+        ci
     }
 
     /**

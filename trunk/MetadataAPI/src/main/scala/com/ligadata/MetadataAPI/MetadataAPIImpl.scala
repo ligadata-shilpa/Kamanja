@@ -3995,11 +3995,11 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       val storedInfo: AdapterInfo = MetadataAPISerialization.deserializeMetadata(new String(GetObject("adapterinfo."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]])).asInstanceOf[AdapterInfo]
       MdMgr.GetMdMgr.AddAdapter(storedInfo)
       if (operation.equalsIgnoreCase("add")) {
-        MdMgr.GetMdMgr.addConfigChange(elemType +"."+"add"+"."+storedInfo.name.toLowerCase)
+        MdMgr.GetMdMgr.addConfigChange((elemType +"."+"add"+"."+storedInfo.name.toLowerCase, storedInfo))
         return
       }
       if (operation.equalsIgnoreCase("update")) {
-        MdMgr.GetMdMgr.addConfigChange(elemType + "." + "update" + "." + storedInfo.name.toLowerCase)
+        MdMgr.GetMdMgr.addConfigChange((elemType + "." + "update" + "." + storedInfo.name.toLowerCase, storedInfo))
         return
       }
       return
@@ -4010,11 +4010,11 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       val storedInfo = MetadataAPISerialization.deserializeMetadata(new String(GetObject("nodeinfo."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]])).asInstanceOf[NodeInfo]
       MdMgr.GetMdMgr.AddNode(storedInfo)
       if (operation.equalsIgnoreCase("add")) {
-        MdMgr.GetMdMgr.addConfigChange(elemType +"."+"add"+"."+storedInfo.nodeId.toLowerCase)
+        MdMgr.GetMdMgr.addConfigChange((elemType +"."+"add"+"."+storedInfo.nodeId.toLowerCase, storedInfo))
         return
       }
       if (operation.equalsIgnoreCase("update")) {
-        MdMgr.GetMdMgr.addConfigChange(elemType + "." + "update" + "." + storedInfo.nodeId.toLowerCase)
+        MdMgr.GetMdMgr.addConfigChange((elemType + "." + "update" + "." + storedInfo.nodeId.toLowerCase, storedInfo))
         return
       }
       return
@@ -4025,11 +4025,11 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       val storedInfo = MetadataAPISerialization.deserializeMetadata(new String(GetObject("clustercfginfo."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]])).asInstanceOf[ClusterCfgInfo]
       MdMgr.GetMdMgr.AddClusterCfg(storedInfo)
       if (operation.equalsIgnoreCase("add")) {
-        MdMgr.GetMdMgr.addConfigChange(elemType +"."+"add"+"."+storedInfo.clusterId.toLowerCase)
+        MdMgr.GetMdMgr.addConfigChange((elemType +"."+"add"+"."+storedInfo.clusterId.toLowerCase, storedInfo))
         return
       }
       if (operation.equalsIgnoreCase("update")) {
-        MdMgr.GetMdMgr.addConfigChange(elemType + "." + "update" + "." + storedInfo.clusterId.toLowerCase)
+        MdMgr.GetMdMgr.addConfigChange((elemType + "." + "update" + "." + storedInfo.clusterId.toLowerCase, storedInfo))
         return
       }
       return
@@ -4042,11 +4042,11 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       val storedInfo = MetadataAPISerialization.deserializeMetadata(new String(GetObject("clusterinfo."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]])).asInstanceOf[ClusterInfo]
       MdMgr.GetMdMgr.AddCluster(storedInfo)
       if (operation.equalsIgnoreCase("add")) {
-        MdMgr.GetMdMgr.addConfigChange(elemType +"."+"add"+"."+storedInfo.clusterId.toLowerCase)
+        MdMgr.GetMdMgr.addConfigChange((elemType +"."+"add"+"."+storedInfo.clusterId.toLowerCase, storedInfo))
         return
       }
       if (operation.equalsIgnoreCase("update")) {
-        MdMgr.GetMdMgr.addConfigChange(elemType + "." + "update" + "." + storedInfo.clusterId.toLowerCase)
+        MdMgr.GetMdMgr.addConfigChange((elemType + "." + "update" + "." + storedInfo.clusterId.toLowerCase, storedInfo))
         return
       }
       return
@@ -4057,11 +4057,11 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       val storedInfo = MetadataAPISerialization.deserializeMetadata(new String(GetObject("userproperties."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]])).asInstanceOf[UserPropertiesInfo]
       MdMgr.GetMdMgr.AddUserProperty(storedInfo)
       if (operation.equalsIgnoreCase("add")) {
-        MdMgr.GetMdMgr.addConfigChange(elemType +"."+"add"+"."+storedInfo.clusterId.toLowerCase)
+        MdMgr.GetMdMgr.addConfigChange((elemType +"."+"add"+"."+storedInfo.clusterId.toLowerCase, storedInfo))
         return
       }
       if (operation.equalsIgnoreCase("update")) {
-        MdMgr.GetMdMgr.addConfigChange(elemType + "." + "update" + "." + storedInfo.clusterId.toLowerCase)
+        MdMgr.GetMdMgr.addConfigChange((elemType + "." + "update" + "." + storedInfo.clusterId.toLowerCase, storedInfo))
         return
       }
       return
