@@ -24,6 +24,7 @@ case class EnqueuedFileHandler(fileHandler: SmartFileHandler, offset: Int, creat
 
 
 class SmartFileConsumerContext{
+  var adapterName : String = _
   var partitionId: Int = _
   var ignoreFirstMsg: Boolean = _
   var nodeId : String = _
@@ -54,6 +55,33 @@ object SmartFileConsumer extends InputAdapterFactory {
   val ADAPTER_DESCRIPTION = "Smart File Consumer"
 
   def CreateInputAdapter(inputConfig: AdapterConfiguration, execCtxtObj: ExecContextFactory, nodeContext: NodeContext): InputAdapter = new SmartFileConsumer(inputConfig, execCtxtObj, nodeContext)
+
+  /*lazy val loggerName = this.getClass.getName
+  lazy val LOG = LogManager.getLogger(loggerName)
+  private val statusQLock = new Object
+
+
+  def statusCheckCacheKey(adapterName : String, nodeId : String, partitionId : Int) : String =
+    "Smart_File_Adapter/" + adapterName + "/" + "Status" + "/" + nodeId + "/" + partitionId
+
+  def getFileProcessingQueue(envContext : EnvContext, adapterName : String, nodeId : String,
+                             partitionId : Int) : String = {
+    statusQLock.synchronized {
+      val key = statusCheckCacheKey(adapterName, nodeId, partitionId)
+      val cacheData = envContext.getConfigFromClusterCache(key)
+
+      if(cacheData == null ) null else new String(cacheData)
+    }
+  }
+
+  def saveFileProcessingQueue(envContext : EnvContext,adapterName : String, nodeId : String,
+                              partitionId : Int, requestQueue : List[String]) : Unit = {
+    statusQLock.synchronized {
+      val key = statusCheckCacheKey(adapterName, nodeId, partitionId)
+      val cacheData = requestQueue.mkString("|")
+      envContext.saveConfigInClusterCache(key, cacheData.getBytes)
+    }
+  }*/
 }
 
 class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: ExecContextFactory, val nodeContext: NodeContext) extends InputAdapter {
@@ -93,6 +121,13 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
   val File_Processing_Status_Finished = "finished"
   val filesParallelismParentPath = smartFileCommunicationPath + "/FilesParallelism"
   val sendStartInfoToLeaderParentPath = smartFileToLeaderPath + "/StartInfo"
+
+  val Status_Check_Cache_KeyParent = "Smart_File_Adapter/" + adapterConfig.Name + "/" + "Status"
+
+  val File_Requests_Cache_Key = "Smart_File_Adapter/" + adapterConfig.Name + "/" + "FileRequests"
+
+  //maintained by leader, stores only files being processed (as list under one key). so that if leader changes, new leader can get the processing status
+  val File_Processing_Cache_Key = "Smart_File_Adapter/" + adapterConfig.Name + "/" + "FileProcessing"
 
   private var envContext : EnvContext = nodeContext.getEnvCtxt()
   private var clusterStatus : ClusterStatus = null
@@ -166,7 +201,10 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
 
            while(true){
              lastStatus = checkParticipantsStatus(lastStatus)
-             Thread.sleep(statusUpdateInterval)
+             try {
+               Thread.sleep(statusUpdateInterval)
+             }
+             catch{case e : Exception => }
            }
           }
         }
@@ -257,6 +295,11 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
 
     LOG.debug("Smart File Consumer - checking participants status")
 
+    if(previousStatusMap == null)
+      LOG.debug("Smart File Consumer - previousStatusMap is " + null)
+    else
+      LOG.debug("Smart File Consumer - previousStatusMap is {}", previousStatusMap)
+
     val processingQueue = getFileProcessingQueue
     val currentStatusMap = scala.collection.mutable.Map[String, Long]()
 
@@ -307,13 +350,10 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
       }
     })
 
+    LOG.error("Smart File Consumer - currentStatusMap is {}", currentStatusMap)
+
     currentStatusMap
   }
-
-  val File_Requests_Cache_Key = "Smart_File_Adapter/" + adapterConfig.Name + "/" + "FileRequests"
-
-  //maintained by leader, stores only files being processed (as list under one key). so that if leader changes, new leader can get the processing status
-  val File_Processing_Cache_Key = "Smart_File_Adapter/" + adapterConfig.Name + "/" + "FileProcessing"
 
   /*val File_Offset_Cache_Key_Prefix = "Smart_File_Adapter/" + adapterConfig.Name + "/" + "Offsets/"//participants sets the value, to be read by leader, stores offset for each file (one key per file)
   def getFileOffsetCacheKey(fileName : String) = File_Offset_Cache_Key_Prefix + fileName
@@ -356,10 +396,10 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
 
       envContext.saveConfigInClusterCache(File_Requests_Cache_Key, cacheData.getBytes)
 
-      LOG.debug("Smart File Consumer - making sure saving request queue worked. current value in key={} is {}",
+      /*LOG.debug("Smart File Consumer - making sure saving request queue worked. current value in key={} is {}",
         File_Requests_Cache_Key,
         (if (envContext.getConfigFromClusterCache(File_Requests_Cache_Key) == null) "null"
-        else new String(envContext.getConfigFromClusterCache(File_Requests_Cache_Key))))
+        else new String(envContext.getConfigFromClusterCache(File_Requests_Cache_Key))))*/
 
     }
   }
@@ -627,7 +667,6 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
     nodesPartitionsMap
   }
 
-  val Status_Check_Cache_KeyParent = "Smart_File_Adapter/" + adapterConfig.Name + "/" + "Status"
   //what a participant should do when receiving file to process (from leader)
   def fileAssignmentFromLeaderCallback (eventType: String, eventPath: String, eventPathData: String) : Unit = {
     //data has format <file name>|offset
@@ -644,6 +683,7 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
 
     //start processing the file
     val context = new SmartFileConsumerContext()
+    context.adapterName = inputConfig.Name
     context.partitionId = processingThreadId.toInt
     context.ignoreFirstMsg = _ignoreFirstMsg
     context.nodeId = processingNodeId

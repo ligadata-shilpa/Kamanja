@@ -6,6 +6,7 @@ import com.ligadata.AdaptersConfiguration.SmartFileAdapterConfiguration
 import org.apache.logging.log4j.LogManager
 
 import scala.actors.threadpool.{Executors, ExecutorService}
+import scala.collection.mutable.ArrayBuffer
 
 /**
   *
@@ -31,6 +32,7 @@ class MonitorController(adapterConfig : SmartFileAdapterConfiguration,
   private var maxTimeFileAllowedToLive: Int = 3000  // default to 50 minutes.. will be multiplied by 1000 later
   private var maxBufferErrors = 5
 
+  private var keepMontoringBufferingFiles = false
   var globalFileMonitorService: ExecutorService = Executors.newFixedThreadPool(2)
 
   lazy val loggerName = this.getClass.getName
@@ -41,6 +43,8 @@ class MonitorController(adapterConfig : SmartFileAdapterConfiguration,
     smartFileMonitor.init(adapterConfig.adapterSpecificCfg)
     logger.debug("SMART FILE CONSUMER (MonitorController):  running smartFileMonitor.monitor()")
     smartFileMonitor.monitor()
+
+    keepMontoringBufferingFiles = true
 
     globalFileMonitorService.execute(new Runnable() {
       override def run() = {
@@ -55,7 +59,8 @@ class MonitorController(adapterConfig : SmartFileAdapterConfiguration,
   def stopMonitoring(): Unit ={
     smartFileMonitor.shutdown()
 
-    globalFileMonitorService.shutdownNow()
+    keepMontoringBufferingFiles = false
+    globalFileMonitorService.shutdown()
   }
 
   /**
@@ -90,12 +95,15 @@ class MonitorController(adapterConfig : SmartFileAdapterConfiguration,
     logger.debug("SMART FILE CONSUMER (MonitorController):  monitorBufferingFiles")
 
     var specialWarnCounter: Int = 1
-    while (true) {
+    while (keepMontoringBufferingFiles) {
       // Scan all the files that we are buffering, if there is not difference in their file size.. move them onto
       // the FileQ, they are ready to process.
       bufferingQLock.synchronized {
-        val iter = bufferingQ_map.iterator
-        iter.foreach(fileTuple => {
+
+        val newlyAdded = ArrayBuffer[SmartFileHandler]()
+
+        //val iter = bufferingQ_map.iterator
+        bufferingQ_map.foreach(fileTuple => {
 
           //TODO C&S - changes
           var thisFileFailures: Int = fileTuple._2._3
@@ -126,6 +134,7 @@ class MonitorController(adapterConfig : SmartFileAdapterConfiguration,
                     logger.info("SMART FILE CONSUMER (MonitorController):  File READY TO PROCESS " + fileHandler.getFullPath)
                     enQFile(fileTuple._1, NOT_RECOVERY_SITUATION, fileHandler.lastModified)
                     bufferingQ_map.remove(fileTuple._1)
+                    newlyAdded.append(fileHandler)
                   } else {
                     // Here becayse either the file is sitll of len 0,or its deemed to be invalid.
                     if (thisFileOrigLength == 0) {
@@ -188,10 +197,21 @@ class MonitorController(adapterConfig : SmartFileAdapterConfiguration,
           }
 
         })
+
+        newlyAdded.foreach(fileHandler => {
+          //notify leader about the new files
+          if(newFileDetectedCallback != null){
+            logger.debug("Smart File Adapter (MonitorController) - New file is enqueued in monitor controller queue ({})", fileHandler.getFullPath)
+            newFileDetectedCallback(fileHandler.getFullPath)
+          }
+        })
+
       }
       // Give all the files a 1 second to add a few bytes to the contents
-      //TODO C&S - make it to parameter
-      Thread.sleep(refreshRate)
+      try {
+        Thread.sleep(refreshRate)
+      }
+      catch{case e : Exception => }
     }
   }
 
@@ -201,11 +221,6 @@ class MonitorController(adapterConfig : SmartFileAdapterConfiguration,
       fileQ += new EnqueuedFileHandler(fileHandler, offset, createDate, partMap)
     }
 
-    //notify leader about the new file
-    if(newFileDetectedCallback != null){
-      logger.debug("Smart File Adapter (MonitorController) - New file is enqueued in monitor controller queue ({})", fileHandler.getFullPath)
-      newFileDetectedCallback(fileHandler.getFullPath)
-    }
   }
 
   private def deQFile: EnqueuedFileHandler = {

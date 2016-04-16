@@ -1,10 +1,7 @@
 package com.ligadata.KamanjaBase;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-
 public interface MessageContainerObjBase extends ContainerOrConceptFactory {
-	
+
 	public boolean hasPrimaryKey();
 
 	public boolean hasPartitionKey();
@@ -13,9 +10,10 @@ public interface MessageContainerObjBase extends ContainerOrConceptFactory {
 
 	public TimePartitionInfo getTimePartitionInfo();
 
-	public ContainerTypes.ContainerType getContainerType(); // ContainerType is enum
-												// of MESSAGE or
-												// CONTAINER
+	public ContainerTypes.ContainerType getContainerType(); // ContainerType is
+															// enum
+	// of MESSAGE or
+	// CONTAINER
 
 	public boolean isFixed();
 
@@ -28,6 +26,10 @@ public interface MessageContainerObjBase extends ContainerOrConceptFactory {
 	public ContainerInterface createInstance();
 
 	public int getSchemaId();
+
+//	public Object convertFrom(Object srcObj);
+//
+//	public ContainerInterface convertFrom(Object destObj, Object srcObj);
 
 	public boolean isMessage();
 
@@ -53,10 +55,11 @@ public interface MessageContainerObjBase extends ContainerOrConceptFactory {
 
 	public long TimePartitionData(InputData inputdata);
 
-	public boolean NeedToTransformData();  // Filter & Rearrange input , attributes if needed	
-	
+	public boolean NeedToTransformData(); // Filter & Rearrange input ,
+											// attributes if needed
+
 	public BaseMsg CreateNewMessage();
-	
+
 	public BaseContainer CreateNewContainer();
 	// public abstract String[] getTimePartitionInfo();
 

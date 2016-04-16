@@ -47,6 +47,29 @@ object KamanjaStatisticsEvent extends RDDObject[KamanjaStatisticsEvent] with Mes
   }
 
   override def getAvroSchema: String = """{ "type": "record",  "namespace" : "com.ligadata.kamanjabase" , "name" : "kamanjastatisticsevent" , "fields":[{ "name" : "statistics" , "type" : "string"}]}""";
+
+//  final override def convertFrom(srcObj: Any): T = convertFrom(createInstance(), srcObj);
+//
+//  override def convertFrom(destObj: Any, srcObj: Any): ContainerInterface = {
+//    try {
+//      srcObj match {
+//
+//        case oldVerobj: com.ligadata.KamanjaBase.KamanjaStatisticsEvent => { return convertToNewVer(oldVerobj); }
+//        case _ => {
+//          throw new Exception("Unhandled Version Found");
+//        }
+//      }
+//    } catch {
+//      case e: Exception => {
+//        throw e
+//      }
+//    }
+//    return null;
+//  }
+  private def convertToNewVer(oldVerobj: com.ligadata.KamanjaBase.KamanjaStatisticsEvent): com.ligadata.KamanjaBase.KamanjaStatisticsEvent = {
+    return oldVerobj
+  }
+
   /** Deprecated Methods **/
   def NeedToTransformData: Boolean = false
   override def FullName: String = getFullTypeName
