@@ -105,6 +105,7 @@ class LearningEngine {
 
         val execMdl = nodeIdModlsObj.getOrElse(execNode.nodeId, null)
         if (execMdl != null) {
+          LOG.debug("Executing Model:" + execMdl._1.mdl.getModelName())
           val curMd =
             if (execMdl._1.mdl.isModelInstanceReusable()) {
               if (execMdl._2 == null) { // First time initialize this

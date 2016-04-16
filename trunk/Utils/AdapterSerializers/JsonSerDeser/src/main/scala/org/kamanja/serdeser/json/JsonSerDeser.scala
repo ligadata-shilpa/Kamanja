@@ -3,24 +3,15 @@ package org.kamanja.serdeser.json
 import org.json4s.jackson.JsonMethods._
 import org.json4s.{DefaultFormats, Formats, MappingException}
 
-import scala.reflect.runtime.{universe => ru}
 import scala.collection.mutable.{ArrayBuffer, Map}
 import scala.collection.JavaConverters._
-import java.io.{ByteArrayInputStream, ByteArrayOutputStream, DataInputStream, DataOutputStream}
+import java.io.{ByteArrayOutputStream, DataOutputStream}
 
-import org.apache.logging.log4j._
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.ligadata.kamanja.metadata.MiningModelType
-import com.ligadata.kamanja.metadata.ModelRepresentation
 import com.ligadata.kamanja.metadata._
-import com.ligadata.kamanja.metadata.ObjType._
-import com.ligadata.kamanja.metadata.MdMgr._
 import com.ligadata.Exceptions._
 import com.ligadata.KamanjaBase.AttributeTypeInfo.TypeCategory
 import com.ligadata.KamanjaBase.AttributeTypeInfo.TypeCategory._
 import com.ligadata.KamanjaBase._
-
-import scala.reflect.runtime._
 
 /**
   * Meta fields found at the beginning of each JSON representation of a ContainerInterface object
