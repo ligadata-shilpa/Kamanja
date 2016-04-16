@@ -497,7 +497,7 @@ object KamanjaMetadata extends ObjectResolver {
   private[this] var masterDag: Dag = new Dag("0")
   private[this] var nodeIdModlsObj = scala.collection.mutable.Map[Long, MdlInfo]()
 
-  def getConfigChanges: Array[String] = {
+  def getConfigChanges: Array[(String, Any)] = {
     return GetMdMgr.getConfigChanges
   }
 
