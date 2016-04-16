@@ -194,12 +194,12 @@ object DagRT {
   }
   
   case class IesRTElem(ies: InputEdgeSet) {
-    def Reset() = { curCnt = 0;  for (i <- 0 to iesCnt) flagsFired(i) = false }
+    def Reset() = { curCnt = 0;  for (i <- 0 until iesCnt) flagsFired(i) = false }
     def IsSatisfied = (curCnt == iesCnt) // flagsFired.foldLeft(false){(result, flag) => (result && flag) }
     
     // Return true if all edges are in fired/satisfied state otherwise false
     def SetEdgeAsFired(idx : Int) : Boolean = {
-      if(idx > iesCnt) {
+      if(idx >= iesCnt) {
         // throw exception with appropriate message - must be bug as the idx never exceed iesCnt
       }
       if(flagsFired(idx)) {
@@ -225,7 +225,7 @@ object DagRT {
     def SetDag(dagNew : Dag) = {
       dag = dagNew.dagImpl
       iesRT = new Array[IesRTElem](dag.numEdgeSets)
-      for(idx <- 0 to dag.numEdgeSets) {
+      for(idx <- 0 until dag.numEdgeSets) {
         iesRT(idx) = IesRTElem(dag.getInputEdgeSet(idx))
         iesRT(idx).Reset
       }

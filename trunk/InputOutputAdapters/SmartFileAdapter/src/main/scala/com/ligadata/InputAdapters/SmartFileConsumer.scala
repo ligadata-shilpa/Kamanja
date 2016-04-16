@@ -59,8 +59,8 @@ object SmartFileConsumer extends InputAdapterFactory {
 class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: ExecContextFactory, val nodeContext: NodeContext) extends InputAdapter {
 
   val input = this
-  lazy val loggerName = this.getClass.getName
-  lazy val LOG = LogManager.getLogger(loggerName)
+//  lazy val loggerName = this.getClass.getName
+  lazy val LOG = logger
 
   private val lock = new Object()
   private var readExecutor: ExecutorService = _
