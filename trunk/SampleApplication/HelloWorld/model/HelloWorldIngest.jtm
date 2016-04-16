@@ -27,7 +27,7 @@
           "computes": {
             "typeName": { "type": "String", "val": "arrayData(0)", "comment": "extract the type" }
           },
-          "where": "\"com.ligadata.kamanja.samples.messages.inmsg1\" == $typeName",
+          "where": "\"com.ligadata.kamanja.samples.messages.msg1\" == $typeName",
           "mapping": {
             "id": "conversion.ToInteger($arrayData(1))",
             "name": "$arrayData(2)",
