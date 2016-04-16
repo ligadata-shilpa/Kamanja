@@ -27,6 +27,24 @@ object Log {
     def Info(str: String) = if(log.isInfoEnabled())    log.info(str)
     def Error(str: String) = if(log.isErrorEnabled())  log.error(str)
     def Debug(str: String) = if(log.isDebugEnabled())  log.debug(str)
+
+    def Trace(str: String, e: Throwable) = if(log.isTraceEnabled())  log.trace(str, e)
+    def Warning(str: String, e: Throwable) = if(log.isWarnEnabled()) log.warn(str, e)
+    def Info(str: String, e: Throwable) = if(log.isInfoEnabled())    log.info(str, e)
+    def Error(str: String, e: Throwable) = if(log.isErrorEnabled())  log.error(str, e)
+    def Debug(str: String, e: Throwable) = if(log.isDebugEnabled())  log.debug(str, e)
+
+    def Trace(e: Throwable) = if(log.isTraceEnabled())  log.trace("", e)
+    def Warning(e: Throwable) = if(log.isWarnEnabled()) log.warn("", e)
+    def Info(e: Throwable) = if(log.isInfoEnabled())    log.info("", e)
+    def Error(e: Throwable) = if(log.isErrorEnabled())  log.error("", e)
+    def Debug(e: Throwable) = if(log.isDebugEnabled())  log.debug("", e)
+
+    def isTraceEnabled = log.isTraceEnabled()
+    def isWarnEnabled = log.isWarnEnabled()
+    def isInfoEnabled = log.isInfoEnabled()
+    def isErrorEnabled = log.isErrorEnabled()
+    def isDebugEnabled = log.isDebugEnabled()
 }
 
 import Log._
@@ -190,9 +208,10 @@ class CsvSerDeser extends SerializeDeserialize {
         val len : Int = if (valueStr != null) valueStr.length else 0
         if(len == 0) return ""
         val buffer : StringBuilder = new StringBuilder
+        val fieldDelimiter = _fieldDelimiter
         valueStr.foreach(ch => {
             val esc = ch match {
-                case _fieldDelimiter => "\\"
+                case fieldDelimiter => "\\"
                 case '"' => "\\"
                 case _ => ""
             }
@@ -208,7 +227,7 @@ class CsvSerDeser extends SerializeDeserialize {
       * @param objRes an ObjectResolver
       */
     override def setObjectResolver(objRes : ObjectResolver) : Unit = {
-        _objResolver = objRes;
+        _objResolver = objRes
     }
 
     /**
@@ -238,20 +257,39 @@ class CsvSerDeser extends SerializeDeserialize {
     private def emptyCharVal: Char = ' '
 
     private def resolveValue(fld: String, attr: AttributeTypeInfo): Any = {
-        if(fld == null) return null
+        if(fld == null) {
+            try {
+                Error("Input data is null for attribute(Name:%s, Index:%d, getTypeCategory:%s)".format(attr.getName(), attr.getIndex(), attr.getTypeCategory.toString))
+            } catch {
+                case e: Throwable => { Error(e)}
+            }
+            return null
+        }
 
         var returnVal: Any = null
         attr.getTypeCategory match {
-            case INT =>    { val f1 = fld.trim; if(f1.length > 0) f1.toInt else emptyIntVal }
-            case FLOAT =>  { val f1 = fld.trim; if(f1.length > 0) f1.toFloat else emptyFloatVal }
-            case DOUBLE => { val f1 = fld.trim; if(f1.length > 0) f1.toDouble else emptyDoubleVal }
-            case LONG =>   { val f1 = fld.trim; if(f1.length > 0) f1.toLong else emptyLongVal }
-            case BYTE =>   { val f1 = fld.trim; if(f1.length > 0) f1.toByte else emptyByteVal }
-            case BOOLEAN =>{ val f1 = fld.trim; if(f1.length > 0) f1.toBoolean else emptyBooleanVal }
-            case CHAR =>   fld(0)
-            case STRING => fld
+            case INT =>    { val f1 = fld.trim; returnVal = if(f1.length > 0) f1.toInt else emptyIntVal }
+            case FLOAT =>  { val f1 = fld.trim; returnVal = if(f1.length > 0) f1.toFloat else emptyFloatVal }
+            case DOUBLE => { val f1 = fld.trim; returnVal = if(f1.length > 0) f1.toDouble else emptyDoubleVal }
+            case LONG =>   { val f1 = fld.trim; returnVal = if(f1.length > 0) f1.toLong else emptyLongVal }
+            case BYTE =>   { val f1 = fld.trim; returnVal = if(f1.length > 0) f1.toByte else emptyByteVal }
+            case BOOLEAN =>{ val f1 = fld.trim; returnVal = if(f1.length > 0) f1.toBoolean else emptyBooleanVal }
+            case CHAR =>   returnVal = fld(0)
+            case STRING => returnVal = fld
             case _ => {
                 // Unhandled type
+                try {
+                    Error("For FieldData:%s we did not find valid Category Type in attribute info(Name:%s, Index:%d, getTypeCategory:%s)".format(fld, attr.getName(), attr.getIndex(), attr.getTypeCategory.toString))
+                } catch {
+                    case e: Throwable => { Error(e) }
+                }
+            }
+        }
+        if (returnVal == null) {
+            try {
+                Error("For FieldData:%s, returning NULL value in attribute info(Name:%s, Index:%d, getTypeCategory:%s)".format(fld, attr.getName(), attr.getIndex(), attr.getTypeCategory.toString))
+            } catch {
+                case e: Throwable => { Error(e) }
             }
         }
         returnVal
@@ -299,8 +337,13 @@ class CsvSerDeser extends SerializeDeserialize {
         if (fieldsToConsider.isEmpty) {
             throw new ObjectNotFoundException(s"The container $containerName surprisingly has no fields...deserialize fails", null)
         }
-        val fldIdx = 0
+        var fldIdx = 0
         val numFields = rawCsvFields.length
+
+        if (isDebugEnabled) {
+            Debug("InputData in fields:" + rawCsvFields.map(fld => (if (fld == null) "<null>" else fld)).mkString(","))
+        }
+
         fieldsToConsider.foreach(attr => {
             if (attr.IsContainer) {
                 Error(s"field type name ${attr.getName} is a container type... containers are not supported by the CSV deserializer at this time... deserialization fails.")
@@ -315,6 +358,7 @@ class CsvSerDeser extends SerializeDeserialize {
           // @TODO: need to handle failure condition for set - string is not in expected format?
           // @TODO: is there any need to strip quotes? since serializer is putting escape information while serializing, this should be done. probably more configuration information is needed
             ci.set(fldIdx, resolveValue(fld, attr))
+            fldIdx += 1
         })
         ci
     }

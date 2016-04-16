@@ -611,7 +611,8 @@ abstract class ModelInstance(val factory: ModelInstanceFactory) {
       }
       returnValues
     }
-    val errMsg = "execute method is not implemented for model: " + getModelName() + "\nInputMessages are:" + (if (execMsgsSet != null) execMsgsSet.map(msg => msg.getFullTypeName).mkString(",") else "") + " and triggerdSetIndex:" + triggerdSetIndex
+    val mdlNm = if (getModelName() == null) "" else getModelName()
+    val errMsg = "execute method is not implemented for model: " + mdlNm + "\nInputMessages are:" + (if (execMsgsSet != null) execMsgsSet.map(msg => if (msg != null) msg.getFullTypeName else "").mkString(",") else "") + " and triggerdSetIndex:" + triggerdSetIndex
     throw new NotImplementedFunctionException(errMsg, null)
   }
 }

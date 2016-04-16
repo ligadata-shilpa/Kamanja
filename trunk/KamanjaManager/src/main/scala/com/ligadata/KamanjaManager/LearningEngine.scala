@@ -91,7 +91,13 @@ class LearningEngine {
       val (origin, orgMsg) = txnCtxt.getInitialMessage
       val elemId = KamanjaMetadata.getMdMgr.ElementIdForSchemaId(orgMsg.asInstanceOf[ContainerInterface].getSchemaId)
       val readyNodes = dagRuntime.FireEdge(EdgeId(0, elemId))
-
+      if (LOG.isDebugEnabled) {
+        val msgTyp = if (orgMsg == null) "null" else orgMsg.getFullTypeName
+        val msgElemId = if (orgMsg == null) "0" else KamanjaMetadata.getMdMgr.ElementIdForSchemaId(orgMsg.asInstanceOf[ContainerInterface].getSchemaId)
+        val producedNodeIds = if (readyNodes != null) readyNodes.map(nd => "(NodeId:%d,iesPos:%d)".format(nd.nodeId, nd.iesPos)).mkString(",") else ""
+        val msg = "LearningEngine:InputMessageFrom:%s with ElementId:%d produced:%s from DAG".format(msgTyp, msgElemId, producedNodeIds)
+        LOG.debug(msg)
+      }
       thisMsgEvent.messageid = elemId
 
       val exeQueue = ArrayBuffer[ReadyNode]()
@@ -105,7 +111,8 @@ class LearningEngine {
 
         val execMdl = nodeIdModlsObj.getOrElse(execNode.nodeId, null)
         if (execMdl != null) {
-          LOG.debug("Executing Model:" + execMdl._1.mdl.getModelName())
+          if (LOG.isDebugEnabled)
+            LOG.debug("LearningEngine:Executing Model:" + execMdl._1.mdl.getModelName())
           val curMd =
             if (execMdl._1.mdl.isModelInstanceReusable()) {
               if (execMdl._2 == null) { // First time initialize this
@@ -158,12 +165,26 @@ class LearningEngine {
                 val newEges = res.map(msg => EdgeId(execMdl._1.nodeId, KamanjaMetadata.getMdMgr.ElementIdForSchemaId(msg.asInstanceOf[ContainerInterface].getSchemaId)))
                 val readyNodes = dagRuntime.FireEdges(newEges)
                 exeQueue ++= readyNodes
+
+                if (LOG.isDebugEnabled) {
+                  val inputMsgs = execMsgsSet.map(msg => msg.getFullTypeName).mkString(",")
+                  val outputMsgs = res.map(msg => msg.getFullTypeName).mkString(",")
+                  val inputEges = newEges.map(edge => "(NodeId:%d,edgeTypeId:%d)".format(edge.nodeId, edge.edgeTypeId)).mkString(",")
+                  val producedNodeIds = if (readyNodes != null) readyNodes.map(nd => "(NodeId:%d,iesPos:%d)".format(nd.nodeId, nd.iesPos)).mkString(",") else ""
+                  val msg = "LearningEngine:Executed Model:%s with NodeId:%d Using messages:%s, which produced %s (with Edges:%s). Adding those message into DAG produced:%s".format(execMdl._1.mdl.getModelName(), execNode.nodeId, inputMsgs, outputMsgs, inputEges, producedNodeIds)
+                  LOG.debug(msg)
+                }
+              } else {
+                if (LOG.isDebugEnabled) {
+                  val inputMsgs = execMsgsSet.map(msg => msg.getFullTypeName).mkString(",")
+                  val msg = "LearningEngine:Executed Model:%s with NodeId:%d Using messages:%s, which did not produce any result".format(execMdl._1.mdl.getModelName(), execNode.nodeId, inputMsgs)
+                  LOG.debug(msg)
+                }
               }
             } catch {
               case e: Throwable => {
-                val st = StackTrace.ThrowableTraceString(e)
-                modelEvent.error = st
-                LOG.error("Failed to execute model", e)
+                modelEvent.error = StackTrace.ThrowableTraceString(e)
+                LOG.error("Failed to execute model:" + execMdl._1.mdl.getModelName(), e)
               }
             }
 

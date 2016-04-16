@@ -12,13 +12,29 @@ import com.ligadata.Exceptions._
 import com.ligadata.KamanjaBase.AttributeTypeInfo.TypeCategory
 import com.ligadata.KamanjaBase.AttributeTypeInfo.TypeCategory._
 import com.ligadata.KamanjaBase._
+import org.apache.logging.log4j.LogManager
 
 /**
   * Meta fields found at the beginning of each JSON representation of a ContainerInterface object
   */
-object JsonContainerInterfaceKeys extends Enumeration {
-    //    type JsonKeys = Value
-    //    val typename, version, physicalname = Value
+//@@TODO: move this into utils and use for all logging
+object Log {
+    private val log = LogManager.getLogger(getClass)
+
+    def Trace(str: String) = if(log.isTraceEnabled())  log.trace(str)
+    def Warning(str: String) = if(log.isWarnEnabled()) log.warn(str)
+    def Info(str: String) = if(log.isInfoEnabled())    log.info(str)
+    def Error(str: String) = if(log.isErrorEnabled())  log.error(str)
+    def Debug(str: String) = if(log.isDebugEnabled())  log.debug(str)
+
+    def isTraceEnabled = log.isTraceEnabled()
+    def isWarnEnabled = log.isWarnEnabled()
+    def isInfoEnabled = log.isInfoEnabled()
+    def isErrorEnabled = log.isErrorEnabled()
+    def isDebugEnabled = log.isDebugEnabled()
+}
+
+object JSONSerDes {
     val indents = ComputeIndents
     val strLF = "\n"
     val maxIndentLevel = 64
@@ -34,7 +50,8 @@ object JsonContainerInterfaceKeys extends Enumeration {
     }
 }
 
-import JsonContainerInterfaceKeys._
+import JSONSerDes._
+import Log._
 /**
   * JSONSerDeser instance can serialize a ContainerInterface to a byte array and deserialize a byte array to form
   * an instance of the ContainerInterface encoded in its bytes.
@@ -43,7 +60,7 @@ import JsonContainerInterfaceKeys._
   * before it can be used.
   */
 
-class JSONSerDes() extends SerializeDeserialize with LogTrait {
+class JSONSerDes extends SerializeDeserialize with LogTrait {
     var _objResolver : ObjectResolver = null
     var _config = Map[String,String]()
     var _isReady : Boolean = false
