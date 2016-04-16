@@ -230,6 +230,9 @@ trait ExecContext {
     try {
       val transId = transService.getNextTransId
       val msgEvent = nodeContext.getEnvCtxt().getContainerInstance("com.ligadata.KamanjaBase.KamanjaMessageEvent")
+      if (msgEvent == null) {
+        LOG.warn("Not able to get com.ligadata.KamanjaBase.KamanjaMessageEvent")
+      }
       txnCtxt = new TransactionContext(transId, nodeContext, data, EventOriginInfo(uk, uv), readTmMilliSecs, msgEvent)
       LOG.debug("Processing uniqueKey:%s, uniqueVal:%s, Datasize:%d,IsMsgNull:%s,MsgData:%s".format(uk, uv, data.size, if (msg == null) "true" else "false", if (msg == null) "" else msg.get("msg").toString))
       txnCtxt.setInitialMessage("", msg)

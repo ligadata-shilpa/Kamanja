@@ -16,7 +16,7 @@ object KamanjaModelEvent extends RDDObject[KamanjaModelEvent] with MessageFactor
   override def getTypeNameSpace: String = "com.ligadata.KamanjaBase";
   override def getTypeName: String = "KamanjaModelEvent";
   override def getTypeVersion: String = "000001.000003.000000";
-  override def getSchemaId: Int = 1000003;
+  override def getSchemaId: Int = 1000002;
   override def createInstance: KamanjaModelEvent = new KamanjaModelEvent(KamanjaModelEvent);
   override def isFixed: Boolean = true;
   override def getContainerType: ContainerTypes.ContainerType = ContainerTypes.ContainerType.MESSAGE
