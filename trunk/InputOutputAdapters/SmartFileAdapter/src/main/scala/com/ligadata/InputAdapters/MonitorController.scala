@@ -31,6 +31,7 @@ class MonitorController(adapterConfig : SmartFileAdapterConfiguration,
   private var maxTimeFileAllowedToLive: Int = 3000  // default to 50 minutes.. will be multiplied by 1000 later
   private var maxBufferErrors = 5
 
+  private var keepMontoringBufferingFiles = false
   var globalFileMonitorService: ExecutorService = Executors.newFixedThreadPool(2)
 
   lazy val loggerName = this.getClass.getName
@@ -41,6 +42,8 @@ class MonitorController(adapterConfig : SmartFileAdapterConfiguration,
     smartFileMonitor.init(adapterConfig.adapterSpecificCfg)
     logger.debug("SMART FILE CONSUMER (MonitorController):  running smartFileMonitor.monitor()")
     smartFileMonitor.monitor()
+
+    keepMontoringBufferingFiles = true
 
     globalFileMonitorService.execute(new Runnable() {
       override def run() = {
@@ -55,7 +58,8 @@ class MonitorController(adapterConfig : SmartFileAdapterConfiguration,
   def stopMonitoring(): Unit ={
     smartFileMonitor.shutdown()
 
-    globalFileMonitorService.shutdownNow()
+    keepMontoringBufferingFiles = false
+    globalFileMonitorService.shutdown()
   }
 
   /**
@@ -90,7 +94,7 @@ class MonitorController(adapterConfig : SmartFileAdapterConfiguration,
     logger.debug("SMART FILE CONSUMER (MonitorController):  monitorBufferingFiles")
 
     var specialWarnCounter: Int = 1
-    while (true) {
+    while (keepMontoringBufferingFiles) {
       // Scan all the files that we are buffering, if there is not difference in their file size.. move them onto
       // the FileQ, they are ready to process.
       bufferingQLock.synchronized {
@@ -190,8 +194,10 @@ class MonitorController(adapterConfig : SmartFileAdapterConfiguration,
         })
       }
       // Give all the files a 1 second to add a few bytes to the contents
-      //TODO C&S - make it to parameter
-      Thread.sleep(refreshRate)
+      try {
+        Thread.sleep(refreshRate)
+      }
+      catch{case e : Exception => }
     }
   }
 

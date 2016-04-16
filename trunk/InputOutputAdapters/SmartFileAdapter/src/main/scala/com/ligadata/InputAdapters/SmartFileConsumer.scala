@@ -201,7 +201,10 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
 
            while(true){
              lastStatus = checkParticipantsStatus(lastStatus)
-             Thread.sleep(statusUpdateInterval)
+             try {
+               Thread.sleep(statusUpdateInterval)
+             }
+             catch{case e : Exception => }
            }
           }
         }
