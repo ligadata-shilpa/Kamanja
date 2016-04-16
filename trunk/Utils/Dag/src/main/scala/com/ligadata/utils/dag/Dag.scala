@@ -225,7 +225,7 @@ object DagRT {
     def SetDag(dagNew : Dag) = {
       dag = dagNew.dagImpl
       iesRT = new Array[IesRTElem](dag.numEdgeSets)
-      for(idx <- 0 to dag.numEdgeSets) {
+      for(idx <- 0 until dag.numEdgeSets) {
         iesRT(idx) = IesRTElem(dag.getInputEdgeSet(idx))
         iesRT(idx).Reset
       }
