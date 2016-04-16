@@ -176,7 +176,9 @@ object AdapterMessageBindingUtils {
             val messageName: String = bindingMap.getOrElse(MessageNameKey, "**invalid message name**").asInstanceOf[String].trim
             val messageNames: List[String] = bindingMap.getOrElse(MessageNamesKey, List[String]()).asInstanceOf[List[String]]
             val serializerName: String = bindingMap.getOrElse(SerializerKey, "**invalid serializer name**").asInstanceOf[String].trim
-            val options: scala.collection.immutable.Map[String, String] = if (bindingMap.contains(OptionsKey)) {
+            val options: scala.collection.immutable.Map[String, String] = 
+	      if (bindingMap.contains(OptionsKey) && 
+		  bindingMap(OptionsKey) != Nil){
                 bindingMap(OptionsKey).asInstanceOf[scala.collection.immutable.Map[String, String]]
             } else {
                 scala.collection.immutable.Map[String, String]()

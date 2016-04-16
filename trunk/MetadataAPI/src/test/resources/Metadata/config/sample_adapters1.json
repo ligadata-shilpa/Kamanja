@@ -1,3 +1,4 @@
+{
   "Adapters": [
    {
           "Name": "absa_input",
@@ -33,3 +34,4 @@
           }
         }
       ]
+}
