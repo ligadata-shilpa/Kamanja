@@ -718,7 +718,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           val newExpression = Expressions.FixupColumnNames(f, innerMapping, aliaseMessages)
           logger.trace("Matched where expression {}", newExpression)
           // Output the actual filter
-          collect ++= Array("if (%s) return Array.empty[MessageInterface]\n".format(newExpression))
+          collect ++= Array("if (!(%s)) return Array.empty[MessageInterface]\n".format(newExpression))
           false
         } else {
           true
@@ -962,7 +962,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     //
     messages :+= "val msgs = execMsgsSet.map(m => m.getFullTypeName -> m).toMap"
     incomingToMsgId.foreach( e => {
-      messages :+= "val msg%d = msgs.get(\"%s\").getOrElse(null).asInstanceOf[%s]".format(e._2, e._1, ResolveToVersionedClassname(md, e._1))
+      messages :+= "val msg%d = msgs.getOrElse(\"%s\", null).asInstanceOf[%s]".format(e._2, e._1, ResolveToVersionedClassname(md, e._1))
     })
 
     // Compute the highlevel handler that match dependencies
@@ -1113,14 +1113,15 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
             }
 
             // To Construct the final output
-            val outputResult = "val result = new %s(messagefactoryinterface)\n%s\n%s\nArray(result)".format(outputType,
+            val outputResult = "val result = %s.createInstance\n%s\n%s\nArray(result)".format(
+                                    outputType,
                                     outputElements.mkString("\n"), outputElements1.mkString("\n"))
             collect ++= Array(outputResult)
             collect ++= Array("}\n")
           }
 
           // Collect all input messages attribute used
-          logger.trace("Final map: transformation %s ouput %s used %s".format(t, o._1, innerTracking.mkString(", ")))
+          logger.trace("Final map: transformation %s output %s used %s".format(t, o._1, innerTracking.mkString(", ")))
 
           // Create the inmessage entry
           //
