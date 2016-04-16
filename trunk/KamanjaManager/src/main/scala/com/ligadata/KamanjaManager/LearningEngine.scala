@@ -122,50 +122,57 @@ class LearningEngine {
             }
 
           if (curMd != null) {
-            var modelEvent: KamanjaModelEvent = txnCtxt.getMessageEvent.asInstanceOf[KamanjaModelEvent]
+            var modelEvent = txnCtxt.getNodeCtxt.getEnvCtxt.getContainerInstance("com.ligadata.KamanjaBase.KamanjaModelEvent").asInstanceOf[KamanjaModelEvent]
+            modelEvent.isresultproduced = false
             val modelStartTime = System.nanoTime
 
-            val execMsgsSet: Array[ContainerOrConcept] = execMdl._1.inputs(execNode.iesPos).map(eid => {
-              val origin =
-                if (eid.nodeId > 0) {
-                  val mdlObj = nodeIdModlsObj.getOrElse(eid.nodeId, null)
-                  if (mdlObj != null) mdlObj._1.mdl.getModelName() else ""
-                } else {
-                  ""
-                }
+            try {
+              val execMsgsSet: Array[ContainerOrConcept] = execMdl._1.inputs(execNode.iesPos).map(eid => {
+                val origin =
+                  if (eid.nodeId > 0) {
+                    val mdlObj = nodeIdModlsObj.getOrElse(eid.nodeId, null)
+                    if (mdlObj != null) mdlObj._1.mdl.getModelName() else ""
+                  } else {
+                    ""
+                  }
 
-              val tmpElem = KamanjaMetadata.getMdMgr.ContainerForElementId(eid.edgeTypeId)
+                val tmpElem = KamanjaMetadata.getMdMgr.ContainerForElementId(eid.edgeTypeId)
 
-              val finalEntry =
-                if (tmpElem != None) {
-                  val lst = txnCtxt.getContainersOrConcepts(origin, tmpElem.get.FullName)
-                  if (lst != null && lst.size > 0) lst(0)._2 else null
-                } else {
-                  null
-                }
-              finalEntry
-            })
-
-            val res = curMd.execute(txnCtxt, execMsgsSet, execNode.iesPos, outputDefault)
-            var modelResIds: ArrayBuffer[Long] = new ArrayBuffer[Long]()
-            if (res != null && res.size > 0) {
-              modelEvent.isresultproduced = true
-              txnCtxt.addContainerOrConcepts(execMdl._1.mdl.getModelName(), res)
-              res.map(msg => {
-                modelResIds.append(KamanjaMetadata.getMdMgr.ElementIdForSchemaId(msg.asInstanceOf[ContainerInterface].getSchemaId))
+                val finalEntry =
+                  if (tmpElem != None) {
+                    val lst = txnCtxt.getContainersOrConcepts(origin, tmpElem.get.FullName)
+                    if (lst != null && lst.size > 0) lst(0)._2 else null
+                  } else {
+                    null
+                  }
+                finalEntry
               })
-              val newEges = res.map(msg => EdgeId(execMdl._1.nodeId, KamanjaMetadata.getMdMgr.ElementIdForSchemaId(msg.asInstanceOf[ContainerInterface].getSchemaId)))
-              val readyNodes = dagRuntime.FireEdges(newEges)
-              exeQueue ++= readyNodes
-            } else {
-              modelEvent.isresultproduced = false
+
+              val res = curMd.execute(txnCtxt, execMsgsSet, execNode.iesPos, outputDefault)
+              if (res != null && res.size > 0) {
+                var modelResIds: ArrayBuffer[Long] = new ArrayBuffer[Long]()
+                modelEvent.isresultproduced = true
+                txnCtxt.addContainerOrConcepts(execMdl._1.mdl.getModelName(), res)
+                res.map(msg => {
+                  modelResIds.append(KamanjaMetadata.getMdMgr.ElementIdForSchemaId(msg.asInstanceOf[ContainerInterface].getSchemaId))
+                })
+                val newEges = res.map(msg => EdgeId(execMdl._1.nodeId, KamanjaMetadata.getMdMgr.ElementIdForSchemaId(msg.asInstanceOf[ContainerInterface].getSchemaId)))
+                val readyNodes = dagRuntime.FireEdges(newEges)
+                exeQueue ++= readyNodes
+                modelEvent.producedmessages = modelResIds.toArray[Long]
+              }
+            } catch {
+              case e: Throwable => {
+                val st = StackTrace.ThrowableTraceString(e)
+                modelEvent.error = st
+                LOG.error("Failed to execute model", e)
+              }
             }
 
             // Model finished executing, add the stats to the modeleventmsg
             //var mdlDefs = KamanjaMetadata.getMdMgr.Models(md.mdl.getModelDef().FullName,true, false).getOrElse(null)
             modelEvent.modelid = execNode.nodeId
             modelEvent.elapsedtimeinms = ((System.nanoTime - modelStartTime) / 1000000.0).toFloat
-            modelEvent.producedmessages = modelResIds.toArray[Long]
             modelsForMessage.append(modelEvent)
           } else {
             val errorTxt = "Failed to create model " + execMdl._1.mdl.getModelName()
@@ -174,7 +181,7 @@ class LearningEngine {
             thisMsgEvent.elapsedtimeinms = ((System.nanoTime - msgProcessingStartTime) / 1000000.0).toFloat
             thisMsgEvent.modelinfo = modelsForMessage.toArray[KamanjaModelEvent]
             // Generate an exception event
-            var exeptionEvent = createExceptionEvent(LeanringEngine.modelExecutionException, LeanringEngine.engineComponent, errorTxt, txnCtxt)
+            val exeptionEvent = createExceptionEvent(LeanringEngine.modelExecutionException, LeanringEngine.engineComponent, errorTxt, txnCtxt)
             txnCtxt.getNodeCtxt.getEnvCtxt.postMessages(Array(exeptionEvent))
             // Do we need to throw an error ???????????????????????????????????????? throw new KamanjaException(errorTxt, null)
           }
@@ -188,7 +195,7 @@ class LearningEngine {
         thisMsgEvent.error = st
         thisMsgEvent.elapsedtimeinms = ((System.nanoTime - msgProcessingStartTime) / 1000000.0).toFloat
         thisMsgEvent.modelinfo = modelsForMessage.toArray[KamanjaModelEvent]
-        var exeptionEvent = createExceptionEvent(LeanringEngine.modelExecutionException, LeanringEngine.engineComponent, st, txnCtxt)
+        val exeptionEvent = createExceptionEvent(LeanringEngine.modelExecutionException, LeanringEngine.engineComponent, st, txnCtxt)
         txnCtxt.getNodeCtxt.getEnvCtxt.postMessages(Array(exeptionEvent))
         // throw e
       }
