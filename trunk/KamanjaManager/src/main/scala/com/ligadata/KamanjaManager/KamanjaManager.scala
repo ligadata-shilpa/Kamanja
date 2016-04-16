@@ -642,7 +642,7 @@ class KamanjaManager extends Observer {
     }
 
     // Jars loaded, create the status factory
-    //val statusEventFactory =  KamanjaMetadata.envCtxt.getContainerInstance("system.KamanjaStatusEvent") //KamanjaMetadata.getMessgeInfo("system.KamanjaStatusEvent").contmsgobj.asInstanceOf[MessageFactoryInterface]
+    //val statusEventFactory =  KamanjaMetadata.envCtxt.getContainerInstance("com.ligadata.KamanjaBase.KamanjaStatusEvent") //KamanjaMetadata.getMessgeInfo("com.ligadata.KamanjaBase.KamanjaStatusEvent").contmsgobj.asInstanceOf[MessageFactoryInterface]
 
     val exceptionStatusAdaps = scala.collection.mutable.Set[String]()
     var curCntr = 0
@@ -653,7 +653,7 @@ class KamanjaManager extends Observer {
         val stats: scala.collection.immutable.Map[String, Long] = Map[String, Long]() // SimpleStats.copyMap
         val statsStr = stats.mkString("~")
         val dispStr = "PD,%d,%s,%s".format(KamanjaConfiguration.nodeId, Utils.GetCurDtTmStr, statsStr)
-        val statusMsg: com.ligadata.KamanjaBase.KamanjaStatusEvent = KamanjaMetadata.envCtxt.getContainerInstance("system.KamanjaStatusEvent").asInstanceOf[KamanjaStatusEvent]
+        val statusMsg: com.ligadata.KamanjaBase.KamanjaStatusEvent = KamanjaMetadata.envCtxt.getContainerInstance("com.ligadata.KamanjaBase.KamanjaStatusEvent").asInstanceOf[KamanjaStatusEvent]
         statusMsg.nodeid = KamanjaConfiguration.nodeId.toString
         statusMsg.statusstring = statsStr
         statusMsg.eventtime = Utils.GetCurDtTmInMs // GetCurDtTmStr
@@ -663,7 +663,7 @@ class KamanjaManager extends Observer {
     /*      val stats: scala.collection.immutable.Map[String, Long] = SimpleStats.copyMap
         val statsStr = stats.mkString("~")
         val dispStr = "PD,%d,%s,%s".format(KamanjaConfiguration.nodeId, Utils.GetCurDtTmStr, statsStr)
-        var statusMsg = KamanjaMetadata.envCtxt.getContainerInstance("system.KamanjaStatusEvent")
+        var statusMsg = KamanjaMetadata.envCtxt.getContainerInstance("com.ligadata.KamanjaBase.KamanjaStatusEvent")
         statusMsg.nodeid = KamanjaConfiguration.nodeId.toString
         statusMsg.statusstring = statsStr
         //statusMsg.eventtime = Utils.GetCurDtTmStr
@@ -904,7 +904,7 @@ class KamanjaManager extends Observer {
             ("StartTime" -> mci.startTime) ~
             ("Metrics" -> mci.metricsJsonString)))
 
-    val statEvent: com.ligadata.KamanjaBase.KamanjaStatisticsEvent = KamanjaMetadata.envCtxt.getContainerInstance("system.KamanjaStatisticsEvent").asInstanceOf[KamanjaStatisticsEvent]
+    val statEvent: com.ligadata.KamanjaBase.KamanjaStatisticsEvent = KamanjaMetadata.envCtxt.getContainerInstance("com.ligadata.KamanjaBase.KamanjaStatisticsEvent").asInstanceOf[KamanjaStatisticsEvent]
     statEvent.statistics = compact(render(allMetrics))
     // get the envContext.
     KamanjaLeader.SetNewDataToZkc(zkHeartBeatNodePath, compact(render(allMetrics)).getBytes)
