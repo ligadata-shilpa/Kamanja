@@ -574,6 +574,8 @@ trait AdaptersSerializeDeserializers {
     if (ser != null && ser.serInstance != null) {
       try {
         val container = ser.serInstance.deserialize(data, msgName)
+        if (container == null)
+          logger.error("Deserialize returned null container.")
         return (container, ser.serName)
       } catch {
         case e: Throwable => {
