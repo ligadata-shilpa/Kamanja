@@ -49,24 +49,24 @@ object KamanjaExecutionFailureEvent extends RDDObject[KamanjaExecutionFailureEve
 
   override def getAvroSchema: String = """{ "type": "record",  "namespace" : "com.ligadata.kamanjabase" , "name" : "kamanjaexecutionfailureevent" , "fields":[{ "name" : "msgid" , "type" : "long"},{ "name" : "timeoferrorepochms" , "type" : "long"},{ "name" : "msgcontent" , "type" : "string"},{ "name" : "errordetail" , "type" : "string"}]}""";
 
-  final override def convertFrom(srcObj: Any): T = convertFrom(createInstance(), srcObj);
-
-  override def convertFrom(destObj: Any, srcObj: Any): ContainerInterface = {
-    try {
-      srcObj match {
-
-        case oldVerobj: com.ligadata.KamanjaBase.KamanjaExecutionFailureEvent => { return convertToNewVer(oldVerobj); }
-        case _ => {
-          throw new Exception("Unhandled Version Found");
-        }
-      }
-    } catch {
-      case e: Exception => {
-        throw e
-      }
-    }
-    return null;
-  }
+//  final override def convertFrom(srcObj: Any): T = convertFrom(createInstance(), srcObj);
+//
+//  override def convertFrom(destObj: Any, srcObj: Any): ContainerInterface = {
+//    try {
+//      srcObj match {
+//
+//        case oldVerobj: com.ligadata.KamanjaBase.KamanjaExecutionFailureEvent => { return convertToNewVer(oldVerobj); }
+//        case _ => {
+//          throw new Exception("Unhandled Version Found");
+//        }
+//      }
+//    } catch {
+//      case e: Exception => {
+//        throw e
+//      }
+//    }
+//    return null;
+//  }
   private def convertToNewVer(oldVerobj: com.ligadata.KamanjaBase.KamanjaExecutionFailureEvent): com.ligadata.KamanjaBase.KamanjaExecutionFailureEvent = {
     return oldVerobj
   }
