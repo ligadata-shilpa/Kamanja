@@ -1,17 +1,14 @@
 package org.kamanja.serdeser.csv
 
-import com.ligadata.KamanjaBase.AttributeTypeInfo.TypeCategory
-
-import scala.collection.mutable.{Map}
+import scala.collection.mutable.Map
 import scala.collection.JavaConverters._
-import java.io.{DataInputStream, ByteArrayInputStream, DataOutputStream, ByteArrayOutputStream}
-
-import com.ligadata.kamanja.metadata._
+import java.io.{DataOutputStream, ByteArrayOutputStream}
+import org.apache.logging.log4j.{LogManager }
+// import org.apache.commons.lang.StringEscapeUtils
 
 import com.ligadata.Exceptions._
 import com.ligadata.KamanjaBase._
-
-import scala.reflect.runtime._
+import com.ligadata.KamanjaBase.AttributeTypeInfo.TypeCategory._
 
 /**
   * Meta fields found at the beginning of each JSON representation of a ContainerInterface object
@@ -21,7 +18,18 @@ object CsvContainerInterfaceKeys extends Enumeration {
     val typename, version, physicalname = Value
 }
 
+//@@TODO: move this into utils and use for all logging
+object Log {
+    private val log = LogManager.getLogger(getClass);
 
+    def Trace(str: String) = if(log.isTraceEnabled())  log.trace(str)
+    def Warning(str: String) = if(log.isWarnEnabled()) log.warn(str)
+    def Info(str: String) = if(log.isInfoEnabled())    log.info(str)
+    def Error(str: String) = if(log.isErrorEnabled())  log.error(str)
+    def Debug(str: String) = if(log.isDebugEnabled())  log.debug(str)
+}
+
+import Log._
 /**
   * CsvSerDeser instance can serialize a ContainerInterface to a byte array and deserialize a byte array to form
   * an instance of the ContainerInterface encoded in its bytes.
@@ -37,27 +45,15 @@ object CsvContainerInterfaceKeys extends Enumeration {
   * behavior is "one-shot".
   */
 
-class CsvSerDeser extends SerializeDeserialize with LogTrait {
+class CsvSerDeser extends SerializeDeserialize {
 
     var _objResolver : ObjectResolver = null
     var _isReady : Boolean = false
     var _config = Map[String,String]()
     var _emitHeaderFirst : Boolean = false
-    var _fieldDelimiter  = ""
-
-    /**
-      * Csv supports an initial header record in a stream of csv records.  Call this function
-      * whenever the next serialize should first emit this header record before serializing itself
-      * to the ContainerInterface to the stream.
-      *
-      * It is a "one-shot" function. State immediately resets to not issuing headers after the requested header
-      * has been emitted _once_.  *Note that this is not thread safe.*
-      *
-      * Fixme: Should we pass an options map to the serialize and deserialize instead of this "one-shot" hack?  All of the other
-      * serialize/deserialize implementations to date don't use any options (their SerializeDeserializeConfig maps are empty
-      * or at least not used.
-      */
-    def emitHeaderOnce : Unit = { _emitHeaderFirst = true }
+    var _fieldDelimiter  = ","
+    var _lineDelimiter = "\n"
+    var _alwaysQuoteField = false
 
     /**
       * Serialize the supplied container to a byte array using these CSV rules:
@@ -74,21 +70,11 @@ class CsvSerDeser extends SerializeDeserialize with LogTrait {
         val containerName : String = v.getFullTypeName
         val containerType = v.getContainerType
 
-
-        /** write the first field with the appropriate field delimiter suffixed to it. */
-        val fieldDelimiter : String = _config.getOrElse("fieldDelimiter", null)
-        val containerNameCsv : String = csvTypeInfo(CsvContainerInterfaceKeys.typename.toString, fieldDelimiter)
-        dos.writeUTF(containerNameCsv)
-
-//        if ((containerType != ContainerFactoryInterface.MESSAGE) && (containerType != ContainerFactoryInterface.CONTAINER)) {
-//            throw new ObjectNotFoundException(s"type name $containerName is not a container type... serialize fails.",null)
-//        }
-
         /** The Csv implementation of the SerializeDeserialize interface will not support the mapped message type.  Instead there will be another
           * implementation that supports the Kamanja Variable Comma Separated Value (VCSV) format.  That one deals with sparse data as does the
           * JSON implementation.  Either of those should be chosen
           */
-        if (v.isFixed == false) {
+        if (! v.isFixed) {
             throw new UnsupportedObjectException(s"type name $containerName is a mapped message container type... Csv emcodings of mapped messages are not currently supported...choose JSON or (when available) Kamanja VCSV serialize/deserialize... deserialize fails.",null)
         }
 
@@ -115,26 +101,13 @@ class CsvSerDeser extends SerializeDeserialize with LogTrait {
         })
 
         val strRep : String = dos.toString
-        logger.debug(s"attribute as JSON:\n$strRep")
+        Debug(s"attribute as JSON:\n$strRep")
 
         val byteArray : Array[Byte] = bos.toByteArray
         dos.close()
         bos.close()
         byteArray
     }
-
-    /**
-      * Format one of the type info fields by quoting the supplied value and tagging the delimiter in use to it.
-      *
-      * @param value
-      * @param fldDelim
-      * @return decorated string for emission
-      */
-    private def csvTypeInfo(value : String, fldDelim : String) : String = {
-        val quote : String = s"${'"'}"
-        s"$quote{'\'}$value$quote$fldDelim"
-    }
-
 
     /**
       * Write the field data type names to the supplied stream.  This is called whenever the _emitHeaderFirst instance
@@ -191,34 +164,19 @@ class CsvSerDeser extends SerializeDeserialize with LogTrait {
         val valueType  = attr.getValueType
         val rawValue : Any = attr.getValue
         val typeName : String = valueType.getName
-        logger.debug(s"emit field $typeName with original value = ${rawValue.toString}")
+        Debug(s"emit field $typeName with original value = ${rawValue.toString}")
 
         val valueStr : String = attr.getValue.toString
 
-        /** What if anything must be done about the delimiters appearing in the string? */
-        /** Rule 3 */
-        val containsNewLines : Boolean = valueStr != null &&
-            (valueStr.indexOf('\n') >= 0 || valueStr.indexOf('\r') >= 0)
-        /** Rule 7 */
-        val fieldDelimiter : String = _config.getOrElse("fieldDelimiter", null)
-        val hasFieldDelims : Boolean = valueStr.contains(fieldDelimiter)
-        /** Rule 9 */
-        val containsQuotes : Boolean = valueStr != null && valueStr.contains(s"${'"'}")
-
-        val alwaysQuoteField : String = _config.getOrElse("alwaysQuoteField", null)
-        val shouldAlwaysQuote : Boolean = alwaysQuoteField != null && alwaysQuoteField.toLowerCase.startsWith("t") //rue
-        val enclosingDblQuote : String = if (containsNewLines || hasFieldDelims || containsQuotes || shouldAlwaysQuote) s"${'"'}" else ""
-
-        /** Rule 9 escape the embedded quotes */
-        val valueStrAdjusted : String = if (containsQuotes) {
-            s"$enclosingDblQuote${escapeQuotes(valueStr)}$enclosingDblQuote"
-        } else {
-            s"$enclosingDblQuote$valueStr$enclosingDblQuote"
+        val fld = valueType.getKeyTypeCategory match {
+            case (BOOLEAN | BYTE | LONG | DOUBLE | FLOAT | INT) => rawValue.toString
+            case STRING => escapeQuotes(rawValue.asInstanceOf[String])
+            case (MAP | CONTAINER | MESSAGE | ARRAY) => throw new NotImplementedFunctionException(s"emitField: complex type: ${valueType.getKeyTypeCategory.getValue}, fldName: ${valueType.getName}, not supported in standard csv format",null);
+            case _ => throw new ObjectNotFoundException(s"emitField: invalid value type: ${valueType.getKeyTypeCategory.getValue}, fldName: ${valueType.getName} could not be resolved",null)
         }
-        logger.debug(s"emit field $typeName with value possibly quoted and escaped = $valueStrAdjusted")
-        dos.writeUTF(valueStrAdjusted)
-        val lineDelimiter : String = _config.getOrElse("lineDelimiter", null)
-        dos.writeUTF(lineDelimiter)
+        Debug(s"emit field $typeName with value possibly quoted and escaped = $fld")
+        dos.writeUTF(fld)
+        dos.writeUTF(_lineDelimiter)
     }
 
     /**
@@ -230,39 +188,19 @@ class CsvSerDeser extends SerializeDeserialize with LogTrait {
       */
     private def escapeQuotes(valueStr : String) : String = {
         val len : Int = if (valueStr != null) valueStr.length else 0
+        if(len == 0) return ""
         val buffer : StringBuilder = new StringBuilder
-        var base : Int = 0
-        var startPoint : Int = 0
-        if (valueStr != null) {
-            while (startPoint >= 0) {
-                startPoint = valueStr.indexOf('"', startPoint)
-                if (startPoint >= 0) {
-                    val aSlice: String = valueStr.slice(base, startPoint)
-                    buffer.append(aSlice)
-                    buffer.append(s"${'"'}${'"'}")
-                    startPoint += 1 // start after the processed quote
-                    base = startPoint
-                    if (startPoint >= len) {
-                        startPoint = -1 // end it ... avoid out of bounds
-                    }
-                }
+        valueStr.foreach(ch => {
+            val esc = ch match {
+                case _fieldDelimiter => "\\"
+                case '"' => "\\"
+                case _ => ""
             }
-        }
-        val escapeQuotedStr : String = if (buffer.isEmpty) valueStr else buffer.toString
-        escapeQuotedStr
+            buffer.append(esc)
+            buffer.append(ch)
+        })
+        buffer.toString
     }
-
-    /**
-      * Discern if the supplied BaseTypeDef is a ContainerTypeDef.  ContainerTypeDefs are used to describe
-      * messages, containers, and the collection types.
-      *
-      * @param aType a metadata base type
-      * @return true if container
-      */
-    private def isContainerTypeDef(aType : BaseTypeDef) : Boolean = {
-        aType.isInstanceOf[ContainerTypeDef]
-    }
-
 
     /**
       * Set the object resolver to be used for this serializer
@@ -283,11 +221,12 @@ class CsvSerDeser extends SerializeDeserialize with LogTrait {
                   , configProperties : java.util.Map[String,String]): Unit = {
         _objResolver = objResolver
         _config = configProperties.asScala
-        _isReady = (_objResolver != null && _config != null &&
-            _config.contains("fieldDelimiter") && _config.contains("alwaysQuoteField") &&
-            _config.contains("lineDelimiter"))
-        _fieldDelimiter = _config.getOrElse("fieldDelimiter", null)
+        _fieldDelimiter = _config.getOrElse("fieldDelimiter", ",")
+        _lineDelimiter =  _config.getOrElse("fieldDelimiter", "\n")
+        val alwaysQuoteFieldStr = _config.getOrElse("alwaysQuoteField", "F")
+        _alwaysQuoteField = alwaysQuoteFieldStr.toLowerCase.startsWith("t")
 
+        _isReady = (_objResolver != null && _config != null)
     }
 
     private def emptyByteVal: Byte = 0
@@ -299,74 +238,18 @@ class CsvSerDeser extends SerializeDeserialize with LogTrait {
     private def emptyCharVal: Char = ' '
 
     private def resolveValue(fld: String, attr: AttributeTypeInfo): Any = {
+        if(fld == null) return null
+
         var returnVal: Any = null
         attr.getTypeCategory match {
-            case TypeCategory.INT => {
-                returnVal = emptyIntVal
-                if (fld != null) {
-                    val f1 = fld.trim
-                    if (f1.size > 0)
-                        returnVal = f1.toInt
-                }
-            }
-            case TypeCategory.STRING => {
-                returnVal = fld
-            }
-            case TypeCategory.FLOAT => {
-                returnVal = emptyFloatVal
-                if (fld != null) {
-                    val f1 = fld.trim
-                    if (f1.size > 0)
-                        returnVal = f1.toFloat
-                }
-            }
-            case TypeCategory.DOUBLE => {
-                returnVal = emptyDoubleVal
-                if (fld != null) {
-                    val f1 = fld.trim
-                    if (f1.size > 0)
-                        returnVal = f1.toDouble
-                }
-            }
-            case TypeCategory.LONG => {
-                returnVal = emptyLongVal
-                if (fld != null) {
-                    val f1 = fld.trim
-                    if (f1.size > 0)
-                        returnVal = f1.toLong
-                }
-            }
-            case TypeCategory.BYTE => {
-                returnVal = emptyByteVal
-                if (fld != null) {
-                    val f1 = fld.trim
-                    if (f1.size > 0)
-                        returnVal = f1.toByte
-                }
-            }
-            case TypeCategory.CHAR => {
-                returnVal = emptyCharVal
-                if (fld != null) {
-                    val f1 = fld.trim
-                    if (f1.size > 0) {
-                        val x:Char = f1(0)
-                        returnVal = x
-                    }
-                }
-            }
-            case TypeCategory.BOOLEAN => {
-                returnVal = emptyBooleanVal
-                if (fld != null) {
-                    val f1 = fld.trim
-                    if (f1.size > 0)
-                        returnVal = f1.toBoolean
-                }
-            }
-            case TypeCategory.ARRAY => {
-                  // Not yet handled
-                // BUGBUG:: Yet to fix this
-                // FIXME:: Yet to fix this
-            }
+            case INT =>    { val f1 = fld.trim; if(f1.length > 0) f1.toInt else emptyIntVal }
+            case FLOAT =>  { val f1 = fld.trim; if(f1.length > 0) f1.toFloat else emptyFloatVal }
+            case DOUBLE => { val f1 = fld.trim; if(f1.length > 0) f1.toDouble else emptyDoubleVal }
+            case LONG =>   { val f1 = fld.trim; if(f1.length > 0) f1.toLong else emptyLongVal }
+            case BYTE =>   { val f1 = fld.trim; if(f1.length > 0) f1.toByte else emptyByteVal }
+            case BOOLEAN =>{ val f1 = fld.trim; if(f1.length > 0) f1.toBoolean else emptyBooleanVal }
+            case CHAR =>   fld(0)
+            case STRING => fld
             case _ => {
                 // Unhandled type
             }
@@ -395,7 +278,7 @@ class CsvSerDeser extends SerializeDeserialize with LogTrait {
           Array[String]()
         }
         if (rawCsvFields.isEmpty) {
-          logger.error("The supplied CSV record is empty...abandoning processing")
+          Error("The supplied CSV record is empty...abandoning processing")
           throw new ObjectNotFoundException("The supplied CSV record is empty...abandoning processing", null)
         }
         /** get an empty ContainerInterface instance for this type name from the _objResolver */
@@ -408,9 +291,7 @@ class CsvSerDeser extends SerializeDeserialize with LogTrait {
         if (containerType == null) {
             throw new ObjectNotFoundException(s"type name $containerName is not a container type... deserialize fails.",null)
         }
-        val mappedMsgType : MappedMsgTypeDef = if (containerType.isInstanceOf[MappedMsgTypeDef]) containerType.asInstanceOf[MappedMsgTypeDef] else null
-        val fixedMsgType : StructTypeDef = if (containerType.isInstanceOf[StructTypeDef]) containerType.asInstanceOf[StructTypeDef] else null
-        if (mappedMsgType != null) {
+        if (ci.isFixed == false) {
             throw new UnsupportedObjectException(s"type name $containerName has a mapped message container type...these are not supported in CSV... use either JSON or VCSV (when available) instead... deserialize fails.",null)
         }
 
@@ -422,12 +303,12 @@ class CsvSerDeser extends SerializeDeserialize with LogTrait {
         val numFields = rawCsvFields.length
         fieldsToConsider.foreach(attr => {
             if (attr.IsContainer) {
-                logger.error(s"field type name ${attr.getName} is a container type... containers are not supported by the CSV deserializer at this time... deserialization fails.")
+                Error(s"field type name ${attr.getName} is a container type... containers are not supported by the CSV deserializer at this time... deserialization fails.")
                 throw new UnsupportedObjectException(s"field type name ${attr.getName} is a container type... containers are not supported by the CSV deserializer at this time... deserialization fails.",null)
             }
             /** currently assumed to be one of the scalars or simple types supported by json/avro **/
             if(fldIdx >= numFields) {
-                logger.error(s"input contains less number of fields than expected in container - attribute name: ${attr.getName}, fieldIndex: ${fldIdx}, numFields: ${numFields}")
+                Error(s"input contains less number of fields than expected in container - attribute name: ${attr.getName}, fieldIndex: ${fldIdx}, numFields: ${numFields}")
                 throw new UnsupportedObjectException(s"field type name ${attr.getName} is a container type... containers are not supported by the CSV deserializer at this time... deserialization fails.",null)
             }
             val fld = rawCsvFields(fldIdx)
@@ -435,73 +316,7 @@ class CsvSerDeser extends SerializeDeserialize with LogTrait {
           // @TODO: is there any need to strip quotes? since serializer is putting escape information while serializing, this should be done. probably more configuration information is needed
             ci.set(fldIdx, resolveValue(fld, attr))
         })
-
         ci
-    }
-
-    /**
-      * Strip any escaped internal <doublequote><doublequote> that were used to protect the internal <doublequote> usage in the
-      * CSV string when it was encoded.
-      *
-      * @param str a CSV encoded string that may have been encoded at serialize time.
-      * @return the cleaned string
-      */
-    private def stripEnclosedEscapedQuotesAsNeeded(str : String) : String = {
-        val returnStr : String = if (str != null && str.size > 0 && str.contains(s"${'"'}")) {
-            /** first deal with enclosed quotes */
-            val strEnclQuotesGone : String = if (str.startsWith(s"${'"'}") && str.endsWith(s"${'"'}")) str.tail.dropRight(1) else str
-            /** next deal with escaped quotes */
-            val strDescaped : String = if (strEnclQuotesGone.contains(s"${'"'}${'"'}")) {
-                descapeQuotes(strEnclQuotesGone)
-            } else {
-                strEnclQuotesGone
-            }
-            strDescaped
-        } else {
-            str
-        }
-        returnStr
-    }
-
-
-    /**
-      * The compliment to the escapeQuotes function, *remove* enclosed quotes that may have been added and any escaped
-      * quotes that may be internal to the supplied valueStr argument.
-      *
-      * Precondition: the supplied string has at least one instance of consecutive double quotes
-      *
-      * @param valueStr string presumably that may be enclosed in double quotes and could possibly have
-      *                 embedded double quotes.
-      * @return adjusted string
-      */
-    @throws(classOf[com.ligadata.Exceptions.InvalidArgumentException])
-    private def descapeQuotes(valueStr : String) : String = {
-        val len : Int = if (valueStr != null) valueStr.length else 0
-        val buffer : StringBuilder = new StringBuilder
-        var base : Int = 0
-        var startPoint : Int = 0
-        if (valueStr != null) {
-            while (startPoint >= 0) {
-                startPoint = valueStr.indexOf('"', startPoint)
-                if (startPoint >= 0) {
-                    val aSlice: String = valueStr.slice(base, startPoint)
-                    buffer.append(aSlice)
-                    buffer.append('"')
-                    if (valueStr(startPoint+1) == '"')
-                        startPoint += 2 // start after both quotes
-                    else {
-                        logger.error("The string is supposed to have consecutive double quoates... it does not... abandoning processing")
-                        throw new InvalidArgumentException("The string is supposed to have consecutive double quoates... it does not... abandoning processing", null)
-                    }
-                    base = startPoint
-                    if (startPoint >= len) {
-                        startPoint = -1 // end it ... avoid out of bounds
-                    }
-                }
-            }
-        }
-        val escapeQuotedStr : String = if (buffer.isEmpty) valueStr else buffer.toString
-        escapeQuotedStr
     }
 }
 
