@@ -124,6 +124,7 @@ class LearningEngine {
           if (curMd != null) {
             var modelEvent = txnCtxt.getNodeCtxt.getEnvCtxt.getContainerInstance("com.ligadata.KamanjaBase.KamanjaModelEvent").asInstanceOf[KamanjaModelEvent]
             modelEvent.isresultproduced = false
+            modelEvent.producedmessages = Array[Long]()
             val modelStartTime = System.nanoTime
 
             try {
@@ -150,16 +151,12 @@ class LearningEngine {
 
               val res = curMd.execute(txnCtxt, execMsgsSet, execNode.iesPos, outputDefault)
               if (res != null && res.size > 0) {
-                var modelResIds: ArrayBuffer[Long] = new ArrayBuffer[Long]()
                 modelEvent.isresultproduced = true
                 txnCtxt.addContainerOrConcepts(execMdl._1.mdl.getModelName(), res)
-                res.map(msg => {
-                  modelResIds.append(KamanjaMetadata.getMdMgr.ElementIdForSchemaId(msg.asInstanceOf[ContainerInterface].getSchemaId))
-                })
+                modelEvent.producedmessages = res.map(msg => KamanjaMetadata.getMdMgr.ElementIdForSchemaId(msg.asInstanceOf[ContainerInterface].getSchemaId) )
                 val newEges = res.map(msg => EdgeId(execMdl._1.nodeId, KamanjaMetadata.getMdMgr.ElementIdForSchemaId(msg.asInstanceOf[ContainerInterface].getSchemaId)))
                 val readyNodes = dagRuntime.FireEdges(newEges)
                 exeQueue ++= readyNodes
-                modelEvent.producedmessages = modelResIds.toArray[Long]
               }
             } catch {
               case e: Throwable => {
