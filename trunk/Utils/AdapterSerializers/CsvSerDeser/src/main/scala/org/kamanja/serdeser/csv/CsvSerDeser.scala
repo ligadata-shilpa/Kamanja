@@ -184,8 +184,6 @@ class CsvSerDeser extends SerializeDeserialize {
         val typeName : String = valueType.getName
         Debug(s"emit field $typeName with original value = ${rawValue.toString}")
 
-        val valueStr : String = attr.getValue.toString
-
         val fld = valueType.getKeyTypeCategory match {
             case (BOOLEAN | BYTE | LONG | DOUBLE | FLOAT | INT) => rawValue.toString
             case STRING => escapeQuotes(rawValue.asInstanceOf[String])
@@ -208,11 +206,12 @@ class CsvSerDeser extends SerializeDeserialize {
         val len : Int = if (valueStr != null) valueStr.length else 0
         if(len == 0) return ""
         val buffer : StringBuilder = new StringBuilder
-        val fieldDelimiter = _fieldDelimiter
+        val fieldDelimiter = _fieldDelimiter(0)
         valueStr.foreach(ch => {
             val esc = ch match {
-                case fieldDelimiter => "\\"
+                case `fieldDelimiter` => "\\"
                 case '"' => "\\"
+                case '\\' => "\\"
                 case _ => ""
             }
             buffer.append(esc)
@@ -259,7 +258,7 @@ class CsvSerDeser extends SerializeDeserialize {
     private def resolveValue(fld: String, attr: AttributeTypeInfo): Any = {
         if(fld == null) {
             try {
-                Error("Input data is null for attribute(Name:%s, Index:%d, getTypeCategory:%s)".format(attr.getName(), attr.getIndex(), attr.getTypeCategory.toString))
+                Error("Input data is null for attribute(Name:%s, Index:%d, getTypeCategory:%s)".format(attr.getName, attr.getIndex, attr.getTypeCategory.toString))
             } catch {
                 case e: Throwable => { Error(e)}
             }
@@ -279,7 +278,7 @@ class CsvSerDeser extends SerializeDeserialize {
             case _ => {
                 // Unhandled type
                 try {
-                    Error("For FieldData:%s we did not find valid Category Type in attribute info(Name:%s, Index:%d, getTypeCategory:%s)".format(fld, attr.getName(), attr.getIndex(), attr.getTypeCategory.toString))
+                    Error("For FieldData:%s we did not find valid Category Type in attribute info(Name:%s, Index:%d, getTypeCategory:%s)".format(fld, attr.getName, attr.getIndex, attr.getTypeCategory.toString))
                 } catch {
                     case e: Throwable => { Error(e) }
                 }
@@ -287,7 +286,7 @@ class CsvSerDeser extends SerializeDeserialize {
         }
         if (returnVal == null) {
             try {
-                Error("For FieldData:%s, returning NULL value in attribute info(Name:%s, Index:%d, getTypeCategory:%s)".format(fld, attr.getName(), attr.getIndex(), attr.getTypeCategory.toString))
+                Error("For FieldData:%s, returning NULL value in attribute info(Name:%s, Index:%d, getTypeCategory:%s)".format(fld, attr.getName, attr.getIndex, attr.getTypeCategory.toString))
             } catch {
                 case e: Throwable => { Error(e) }
             }
@@ -329,7 +328,7 @@ class CsvSerDeser extends SerializeDeserialize {
         if (containerType == null) {
             throw new ObjectNotFoundException(s"type name $containerName is not a container type... deserialize fails.",null)
         }
-        if (ci.isFixed == false) {
+        if (! ci.isFixed) {
             throw new UnsupportedObjectException(s"type name $containerName has a mapped message container type...these are not supported in CSV... use either JSON or VCSV (when available) instead... deserialize fails.",null)
         }
 
