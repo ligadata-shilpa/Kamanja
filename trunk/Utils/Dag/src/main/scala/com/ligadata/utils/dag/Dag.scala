@@ -106,7 +106,7 @@ object DagRT {
   
   // definition of input edge which is denoted by origination node id and msg type
   case class InputEdge(eid: EdgeId, et: EdgeType, idxInSet: Int) {
-    override def toString = "(eid: %s, et: %s, idxInSet: %d)".format(eid.toString, et.toString, idxInSet.toString)
+    override def toString = "(eid:%s, et:%s, idxInSet:%d)".format(eid.toString, et.toString, idxInSet)
     var iesOwner : InputEdgeSet = null
     def IsMatch(eidFrom: EdgeId) = eid.IsMatch(eidFrom)
   }
