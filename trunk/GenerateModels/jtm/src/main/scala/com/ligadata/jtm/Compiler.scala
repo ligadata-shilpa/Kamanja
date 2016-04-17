@@ -879,7 +879,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     // Process the imports
     //
     var subtitutions = new Substitution
-    subtitutions.Add("model.name", root.header.namespace)
+    subtitutions.Add("model.name", "%s.%s".format(root.header.namespace, ModelName))
     subtitutions.Add("model.version", root.header.version)
     subtitutions.Add("factoryclass.name", FactoryName)
     subtitutions.Add("modelclass.name", ModelName)
