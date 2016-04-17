@@ -24,7 +24,7 @@ import com.ligadata.transactions.{NodeLevelTransService, SimpleTransService}
 //import org.json4s._
 //import org.json4s.JsonDSL._
 //import org.json4s.jackson.JsonMethods._
-import org.apache.logging.log4j.{ Logger, LogManager }
+import org.apache.logging.log4j.{Logger, LogManager}
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -37,14 +37,14 @@ object AdapterConfiguration {
 class AdapterConfiguration {
   // Name of the Adapter, KafkaQueue Name/MQ Name/File Adapter Logical Name/etc
   var Name: String = _
-//  // CSV/JSON/XML for input adapter.
-//  var formatName: String = _
-//  // For output adapter it is just corresponding validate adapter name.
-//  var validateAdapterName: String = _
-//  // For input adapter it is just corresponding failed events adapter name.
-//  var failedEventsAdapterName: String = _
-//  // Queue Associated Message
-//  var associatedMsg: String = _
+  //  // CSV/JSON/XML for input adapter.
+  //  var formatName: String = _
+  //  // For output adapter it is just corresponding validate adapter name.
+  //  var validateAdapterName: String = _
+  //  // For input adapter it is just corresponding failed events adapter name.
+  //  var failedEventsAdapterName: String = _
+  //  // Queue Associated Message
+  //  var associatedMsg: String = _
   // Class where the Adapter can be loaded (Object derived from InputAdapterObj)
   var className: String = _
   // Jar where the className can be found
@@ -54,11 +54,11 @@ class AdapterConfiguration {
   // adapter specific (mostly json) string
   var adapterSpecificCfg: String = _
   var tenantId: String = _
-//  // Delimiter String for keyAndValueDelimiter
-//  var keyAndValueDelimiter: String = _
-//  // Delimiter String for fieldDelimiter
-//  var fieldDelimiter: String = _
-//  var valueDelimiter: String = _ // Delimiter String for valueDelimiter
+  //  // Delimiter String for keyAndValueDelimiter
+  //  var keyAndValueDelimiter: String = _
+  //  // Delimiter String for fieldDelimiter
+  //  var fieldDelimiter: String = _
+  //  var valueDelimiter: String = _ // Delimiter String for valueDelimiter
 }
 
 // Input Adapter Object to create Adapter
@@ -135,14 +135,14 @@ trait ExecContext {
   private val failedEventDtFormat = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
 
   if (nodeContext != null && nodeContext.getEnvCtxt() != null) {
-    if (! nodeContext.getEnvCtxt().hasZkConnectionString)
+    if (!nodeContext.getEnvCtxt().hasZkConnectionString)
       throw new KamanjaException("Zookeeper information is not yet set", null)
   } else {
     throw new KamanjaException("Not found NodeContext or EnvContext", null)
   }
 
-  val (zkConnectString, zkNodeBasePath, zkSessionTimeoutMs, zkConnectionTimeoutMs)  = nodeContext.getEnvCtxt().getZookeeperInfo
-  val (txnIdsRangeForPartition, txnIdsRangeForNode)  = nodeContext.getEnvCtxt().getTransactionRanges
+  val (zkConnectString, zkNodeBasePath, zkSessionTimeoutMs, zkConnectionTimeoutMs) = nodeContext.getEnvCtxt().getZookeeperInfo
+  val (txnIdsRangeForPartition, txnIdsRangeForNode) = nodeContext.getEnvCtxt().getTransactionRanges
 
   NodeLevelTransService.init(zkConnectString, zkSessionTimeoutMs, zkConnectionTimeoutMs, zkNodeBasePath, txnIdsRangeForNode,
     nodeContext.getEnvCtxt().getSystemCatalogDatastore(), nodeContext.getEnvCtxt().getJarPaths())
@@ -262,6 +262,20 @@ trait ExecContext {
         execute(msg, data, uniqueKey, uniqueVal, readTmMilliSecs)
       }
       else {
+        if (LOG.isDebugEnabled) {
+          var uk = ""
+          var uv = ""
+
+          try {
+            uk = if (uniqueKey != null) uniqueKey.Serialize else ""
+            uv = if (uniqueVal != null) uniqueVal.Serialize else ""
+          } catch {
+            case e: Throwable => {
+              LOG.error("Failed to serialize PartitionUniqueRecordKey and/or PartitionUniqueRecordValue", e)
+            }
+          }
+          LOG.debug("Not able to deserialize data:%s at UK:%s, UV:%s".format((if (data != null) new String(data) else ""), uk, uv))
+        }
         SendFailedEvent(data, tDeserializerName, failedMsg, uniqueKey, uniqueVal, null)
       }
     } catch {
