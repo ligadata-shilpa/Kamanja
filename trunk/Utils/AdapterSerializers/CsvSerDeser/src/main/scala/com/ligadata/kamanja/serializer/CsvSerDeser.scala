@@ -1,4 +1,4 @@
-package org.kamanja.serdeser.csv
+package com.ligadata.kamanja.serializer
 
 import scala.collection.mutable.Map
 import scala.collection.JavaConverters._

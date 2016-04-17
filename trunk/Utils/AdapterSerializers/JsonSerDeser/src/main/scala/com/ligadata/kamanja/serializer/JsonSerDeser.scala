@@ -1,4 +1,4 @@
-package org.kamanja.serdeser.json
+package com.ligadata.kamanja.serializer
 
 import org.json4s.jackson.JsonMethods._
 import org.json4s.{DefaultFormats, Formats, MappingException}
