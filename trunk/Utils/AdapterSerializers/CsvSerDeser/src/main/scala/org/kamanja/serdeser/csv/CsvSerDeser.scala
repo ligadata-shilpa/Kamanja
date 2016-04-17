@@ -324,7 +324,7 @@ class CsvSerDeser extends SerializeDeserialize {
         if (fieldsToConsider.isEmpty) {
             throw new ObjectNotFoundException(s"The container $containerName surprisingly has no fields...deserialize fails", null)
         }
-        val fldIdx = 0
+        var fldIdx = 0
         val numFields = rawCsvFields.length
 
         if (isDebugEnabled) {
