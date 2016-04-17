@@ -196,9 +196,10 @@ class CsvSerDeser extends SerializeDeserialize {
         val len : Int = if (valueStr != null) valueStr.length else 0
         if(len == 0) return ""
         val buffer : StringBuilder = new StringBuilder
+        val fieldDelimiter = _fieldDelimiter
         valueStr.foreach(ch => {
             val esc = ch match {
-                case _fieldDelimiter => "\\"
+                case fieldDelimiter => "\\"
                 case '"' => "\\"
                 case _ => ""
             }
@@ -214,7 +215,7 @@ class CsvSerDeser extends SerializeDeserialize {
       * @param objRes an ObjectResolver
       */
     override def setObjectResolver(objRes : ObjectResolver) : Unit = {
-        _objResolver = objRes;
+        _objResolver = objRes
     }
 
     /**
