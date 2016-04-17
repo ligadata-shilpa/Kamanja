@@ -28,6 +28,18 @@ object Log {
     def Error(str: String) = if(log.isErrorEnabled())  log.error(str)
     def Debug(str: String) = if(log.isDebugEnabled())  log.debug(str)
 
+    def Trace(str: String, e: Throwable) = if(log.isTraceEnabled())  log.trace(str, e)
+    def Warning(str: String, e: Throwable) = if(log.isWarnEnabled()) log.warn(str, e)
+    def Info(str: String, e: Throwable) = if(log.isInfoEnabled())    log.info(str, e)
+    def Error(str: String, e: Throwable) = if(log.isErrorEnabled())  log.error(str, e)
+    def Debug(str: String, e: Throwable) = if(log.isDebugEnabled())  log.debug(str, e)
+
+    def Trace(e: Throwable) = if(log.isTraceEnabled())  log.trace("", e)
+    def Warning(e: Throwable) = if(log.isWarnEnabled()) log.warn("", e)
+    def Info(e: Throwable) = if(log.isInfoEnabled())    log.info("", e)
+    def Error(e: Throwable) = if(log.isErrorEnabled())  log.error("", e)
+    def Debug(e: Throwable) = if(log.isDebugEnabled())  log.debug("", e)
+
     def isTraceEnabled = log.isTraceEnabled()
     def isWarnEnabled = log.isWarnEnabled()
     def isInfoEnabled = log.isInfoEnabled()
@@ -247,37 +259,37 @@ class CsvSerDeser extends SerializeDeserialize {
     private def resolveValue(fld: String, attr: AttributeTypeInfo): Any = {
         if(fld == null) {
             try {
-                Error("Input data is null for attribute(Name:%s, Index:%d, getTypeCategory:%d)".format(attr.getName(), attr.getIndex(), attr.getTypeCategory))
+                Error("Input data is null for attribute(Name:%s, Index:%d, getTypeCategory:%s)".format(attr.getName(), attr.getIndex(), attr.getTypeCategory.toString))
             } catch {
-                case e: Throwable => {}
+                case e: Throwable => { Error(e)}
             }
             return null
         }
 
         var returnVal: Any = null
         attr.getTypeCategory match {
-            case INT =>    { val f1 = fld.trim; if(f1.length > 0) f1.toInt else emptyIntVal }
-            case FLOAT =>  { val f1 = fld.trim; if(f1.length > 0) f1.toFloat else emptyFloatVal }
-            case DOUBLE => { val f1 = fld.trim; if(f1.length > 0) f1.toDouble else emptyDoubleVal }
-            case LONG =>   { val f1 = fld.trim; if(f1.length > 0) f1.toLong else emptyLongVal }
-            case BYTE =>   { val f1 = fld.trim; if(f1.length > 0) f1.toByte else emptyByteVal }
-            case BOOLEAN =>{ val f1 = fld.trim; if(f1.length > 0) f1.toBoolean else emptyBooleanVal }
-            case CHAR =>   fld(0)
-            case STRING => fld
+            case INT =>    { val f1 = fld.trim; returnVal = if(f1.length > 0) f1.toInt else emptyIntVal }
+            case FLOAT =>  { val f1 = fld.trim; returnVal = if(f1.length > 0) f1.toFloat else emptyFloatVal }
+            case DOUBLE => { val f1 = fld.trim; returnVal = if(f1.length > 0) f1.toDouble else emptyDoubleVal }
+            case LONG =>   { val f1 = fld.trim; returnVal = if(f1.length > 0) f1.toLong else emptyLongVal }
+            case BYTE =>   { val f1 = fld.trim; returnVal = if(f1.length > 0) f1.toByte else emptyByteVal }
+            case BOOLEAN =>{ val f1 = fld.trim; returnVal = if(f1.length > 0) f1.toBoolean else emptyBooleanVal }
+            case CHAR =>   returnVal = fld(0)
+            case STRING => returnVal = fld
             case _ => {
                 // Unhandled type
                 try {
-                    Error("For FieldData:%s we did not find valid Category Type in attribute info(Name:%s, Index:%d, getTypeCategory:%d)".format(fld, attr.getName(), attr.getIndex(), attr.getTypeCategory))
+                    Error("For FieldData:%s we did not find valid Category Type in attribute info(Name:%s, Index:%d, getTypeCategory:%s)".format(fld, attr.getName(), attr.getIndex(), attr.getTypeCategory.toString))
                 } catch {
-                    case e: Throwable => {}
+                    case e: Throwable => { Error(e) }
                 }
             }
         }
         if (returnVal == null) {
             try {
-                Error("For FieldData:%s, returning NULL value in attribute info(Name:%s, Index:%d, getTypeCategory:%d)".format(fld, attr.getName(), attr.getIndex(), attr.getTypeCategory))
+                Error("For FieldData:%s, returning NULL value in attribute info(Name:%s, Index:%d, getTypeCategory:%s)".format(fld, attr.getName(), attr.getIndex(), attr.getTypeCategory.toString))
             } catch {
-                case e: Throwable => {}
+                case e: Throwable => { Error(e) }
             }
         }
         returnVal
