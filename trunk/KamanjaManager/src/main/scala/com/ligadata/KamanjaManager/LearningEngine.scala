@@ -137,21 +137,40 @@ class LearningEngine {
 
             try {
               val execMsgsSet: Array[ContainerOrConcept] = execMdl._1.inputs(execNode.iesPos).map(eid => {
-                val origin =
-                  if (eid.nodeId > 0) {
-                    val mdlObj = nodeIdModlsObj.getOrElse(eid.nodeId, null)
-                    if (mdlObj != null) mdlObj._1.mdl.getModelName() else ""
-                  } else {
-                    ""
-                  }
-
+                if (LOG.isDebugEnabled)
+                  LOG.debug("MsgInfo: nodeId:" + eid.nodeId + ", edgeTypeId:" + eid.edgeTypeId)
                 val tmpElem = KamanjaMetadata.getMdMgr.ContainerForElementId(eid.edgeTypeId)
 
                 val finalEntry =
                   if (tmpElem != None) {
-                    val lst = txnCtxt.getContainersOrConcepts(origin, tmpElem.get.FullName)
-                    if (lst != null && lst.size > 0) lst(0)._2 else null
+                    val lst =
+                      if (eid.nodeId > 0) {
+                        val origin =
+                          if (eid.nodeId > 0) {
+                            val mdlObj = nodeIdModlsObj.getOrElse(eid.nodeId, null)
+                            if (mdlObj != null) {
+                              mdlObj._1.mdl.getModelName()
+                            } else {
+                              LOG.debug("Not found any node for eid.nodeId:" + eid.nodeId)
+                              ""
+                            }
+                          } else {
+                            LOG.debug("Origin nodeid is not valid")
+                            ""
+                          }
+                        txnCtxt.getContainersOrConcepts(origin, tmpElem.get.FullName)
+                      } else {
+                        txnCtxt.getContainersOrConcepts(tmpElem.get.FullName)
+                      }
+
+                    if (lst != null && lst.size > 0) {
+                      lst(0)._2
+                    } else {
+                      LOG.warn("Not found any message for Msg:" + tmpElem.get.FullName)
+                      null
+                    }
                   } else {
+                    LOG.warn("Not found any message for EdgeTypeId:" + eid.edgeTypeId)
                     null
                   }
                 finalEntry

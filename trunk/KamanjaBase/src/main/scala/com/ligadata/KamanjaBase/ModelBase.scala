@@ -588,7 +588,7 @@ abstract class ModelInstance(val factory: ModelInstanceFactory) {
   def execute(txnCtxt: TransactionContext, execMsgsSet: Array[ContainerOrConcept], triggerdSetIndex: Int, outputDefault: Boolean): Array[ContainerOrConcept] = {
     // Default implementation to invoke old model
     if (execMsgsSet.size == 1 && triggerdSetIndex == 0 && factory.getModelDef().inputMsgSets.size == 1 && factory.getModelDef().inputMsgSets(0).size == 1 &&
-      execMsgsSet(0).isInstanceOf[ContainerInterface] && factory.getModelDef().outputMsgs.size == 1) {
+      factory.getModelDef().outputMsgs.size == 1 && execMsgsSet(0) != null && execMsgsSet(0).isInstanceOf[ContainerInterface]) {
       // This could be calling old model
       // Holding current transaction information original message and set the new information. Because the model will pull the message from transaction context
       val (origin, orgInputMsg) = txnCtxt.getInitialMessage
@@ -612,8 +612,8 @@ abstract class ModelInstance(val factory: ModelInstanceFactory) {
       returnValues
     }
     val mdlNm = if (getModelName() == null) "" else getModelName()
-    val errMsg = "execute method is not implemented for model: " + mdlNm + "\nInputMessages are:" + (if (execMsgsSet != null) execMsgsSet.map(msg => if (msg != null) msg.getFullTypeName else "").mkString(",") else "") + " and triggerdSetIndex:" + triggerdSetIndex
-    throw new NotImplementedFunctionException(errMsg, null)
+    val msgsStr = if (execMsgsSet != null) execMsgsSet.map(msg => if (msg != null) msg.getFullTypeName else "").mkString(",") else ""
+    throw new NotImplementedFunctionException("execute method is not implemented for model:%s\nInputMessages (%d) are:%s and triggerdSetIndex:%s".format(mdlNm, execMsgsSet.size, msgsStr, triggerdSetIndex), null)
   }
 }
 
@@ -691,6 +691,10 @@ class TransactionContext(val transId: Long, val nodeCtxt: NodeContext, val msgDa
   final def getPartitionKey(): String = origin.key
 
   final def getMessage(): ContainerInterface = orgInputMsg.container.asInstanceOf[ContainerInterface] // Original messages
+
+  final def getAllMsgNames(): Array[String] = containerOrConceptsMapByName.keys.toArray
+
+  final def getAllContainersOrConcepts(): Map[String, Array[ContaienrWithOriginAndPartKey]] = containerOrConceptsMapByName.map(kv => (kv._1, kv._2.toArray)).toMap
 
   // Need to lock if we are going to run models parallel
   final def getContainersOrConcepts(typeName: String): Array[(String, ContainerOrConcept)] = containerOrConceptsMapByName.getOrElse(typeName.toLowerCase(), ArrayBuffer[ContaienrWithOriginAndPartKey]()).map(v => (v.origin, v.container)).toArray
