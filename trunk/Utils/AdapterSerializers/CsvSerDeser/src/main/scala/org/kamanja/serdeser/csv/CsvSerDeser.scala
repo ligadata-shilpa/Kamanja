@@ -28,6 +28,18 @@ object Log {
     def Error(str: String) = if(log.isErrorEnabled())  log.error(str)
     def Debug(str: String) = if(log.isDebugEnabled())  log.debug(str)
 
+    def Trace(str: String, e: Throwable) = if(log.isTraceEnabled())  log.trace(str, e)
+    def Warning(str: String, e: Throwable) = if(log.isWarnEnabled()) log.warn(str, e)
+    def Info(str: String, e: Throwable) = if(log.isInfoEnabled())    log.info(str, e)
+    def Error(str: String, e: Throwable) = if(log.isErrorEnabled())  log.error(str, e)
+    def Debug(str: String, e: Throwable) = if(log.isDebugEnabled())  log.debug(str, e)
+
+    def Trace(e: Throwable) = if(log.isTraceEnabled())  log.trace("", e)
+    def Warning(e: Throwable) = if(log.isWarnEnabled()) log.warn("", e)
+    def Info(e: Throwable) = if(log.isInfoEnabled())    log.info("", e)
+    def Error(e: Throwable) = if(log.isErrorEnabled())  log.error("", e)
+    def Debug(e: Throwable) = if(log.isDebugEnabled())  log.debug("", e)
+
     def isTraceEnabled = log.isTraceEnabled()
     def isWarnEnabled = log.isWarnEnabled()
     def isInfoEnabled = log.isInfoEnabled()
@@ -248,7 +260,7 @@ class CsvSerDeser extends SerializeDeserialize {
             try {
                 Error("Input data is null for attribute(Name:%s, Index:%d, getTypeCategory:%d)".format(attr.getName(), attr.getIndex(), attr.getTypeCategory))
             } catch {
-                case e: Throwable => {}
+                case e: Throwable => { Error(e)}
             }
             return null
         }
@@ -268,7 +280,7 @@ class CsvSerDeser extends SerializeDeserialize {
                 try {
                     Error("For FieldData:%s we did not find valid Category Type in attribute info(Name:%s, Index:%d, getTypeCategory:%d)".format(fld, attr.getName(), attr.getIndex(), attr.getTypeCategory))
                 } catch {
-                    case e: Throwable => {}
+                    case e: Throwable => { Error(e) }
                 }
             }
         }
@@ -276,7 +288,7 @@ class CsvSerDeser extends SerializeDeserialize {
             try {
                 Error("For FieldData:%s, returning NULL value in attribute info(Name:%s, Index:%d, getTypeCategory:%d)".format(fld, attr.getName(), attr.getIndex(), attr.getTypeCategory))
             } catch {
-                case e: Throwable => {}
+                case e: Throwable => { Error(e) }
             }
         }
         returnVal
