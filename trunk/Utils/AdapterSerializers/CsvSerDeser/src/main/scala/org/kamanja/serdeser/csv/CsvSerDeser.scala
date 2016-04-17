@@ -244,7 +244,14 @@ class CsvSerDeser extends SerializeDeserialize {
     private def emptyCharVal: Char = ' '
 
     private def resolveValue(fld: String, attr: AttributeTypeInfo): Any = {
-        if(fld == null) return null
+        if(fld == null) {
+            try {
+                Error("Input data is null for attribute(Name:%s, Index:%d, getTypeCategory:%d)".format(attr.getName(), attr.getIndex(), attr.getTypeCategory))
+            } catch {
+                case e: Throwable => {}
+            }
+            return null
+        }
 
         var returnVal: Any = null
         attr.getTypeCategory match {
@@ -258,6 +265,18 @@ class CsvSerDeser extends SerializeDeserialize {
             case STRING => fld
             case _ => {
                 // Unhandled type
+                try {
+                    Error("For FieldData:%s we did not find valid Category Type in attribute info(Name:%s, Index:%d, getTypeCategory:%d)".format(fld, attr.getName(), attr.getIndex(), attr.getTypeCategory))
+                } catch {
+                    case e: Throwable => {}
+                }
+            }
+        }
+        if (returnVal == null) {
+            try {
+                Error("For FieldData:%s, returning NULL value in attribute info(Name:%s, Index:%d, getTypeCategory:%d)".format(fld, attr.getName(), attr.getIndex(), attr.getTypeCategory))
+            } catch {
+                case e: Throwable => {}
             }
         }
         returnVal
@@ -326,6 +345,7 @@ class CsvSerDeser extends SerializeDeserialize {
           // @TODO: need to handle failure condition for set - string is not in expected format?
           // @TODO: is there any need to strip quotes? since serializer is putting escape information while serializing, this should be done. probably more configuration information is needed
             ci.set(fldIdx, resolveValue(fld, attr))
+            fldIdx += 1
         })
         ci
     }
