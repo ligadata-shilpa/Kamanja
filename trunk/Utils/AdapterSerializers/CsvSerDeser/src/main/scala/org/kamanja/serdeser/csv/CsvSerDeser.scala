@@ -101,7 +101,7 @@ class CsvSerDeser extends SerializeDeserialize {
          */
         val fields = v.getAllAttributeValues
         if (fields.isEmpty) {
-            throw new ObjectNotFoundException(s"The container ${containerName} surprisingly has no fields...serialize fails", null)
+            throw new ObjectNotFoundException(s"The container $containerName surprisingly has no fields...serialize fails", null)
         }
 
         var processCnt : Int = 0
@@ -119,7 +119,7 @@ class CsvSerDeser extends SerializeDeserialize {
         })
 
         val strRep : String = dos.toString
-        Debug(s"attribute as JSON:\n$strRep")
+        Debug(s"Serialized as CSV, #flds: $fieldCnt, data: $strRep\n")
 
         val byteArray : Array[Byte] = bos.toByteArray
         dos.close()
@@ -192,7 +192,8 @@ class CsvSerDeser extends SerializeDeserialize {
         }
         Debug(s"emit field $typeName with value possibly quoted and escaped = $fld")
         dos.writeUTF(fld)
-        dos.writeUTF(_lineDelimiter)
+        if(doTrailingComma)
+            dos.writeUTF(_fieldDelimiter)
     }
 
     /**
