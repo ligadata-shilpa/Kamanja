@@ -258,7 +258,7 @@ class CsvSerDeser extends SerializeDeserialize {
     private def resolveValue(fld: String, attr: AttributeTypeInfo): Any = {
         if(fld == null) {
             try {
-                Error("Input data is null for attribute(Name:%s, Index:%d, getTypeCategory:%d)".format(attr.getName(), attr.getIndex(), attr.getTypeCategory))
+                Error("Input data is null for attribute(Name:%s, Index:%d, getTypeCategory:%s)".format(attr.getName(), attr.getIndex(), attr.getTypeCategory.toString))
             } catch {
                 case e: Throwable => { Error(e)}
             }
@@ -278,7 +278,7 @@ class CsvSerDeser extends SerializeDeserialize {
             case _ => {
                 // Unhandled type
                 try {
-                    Error("For FieldData:%s we did not find valid Category Type in attribute info(Name:%s, Index:%d, getTypeCategory:%d)".format(fld, attr.getName(), attr.getIndex(), attr.getTypeCategory))
+                    Error("For FieldData:%s we did not find valid Category Type in attribute info(Name:%s, Index:%d, getTypeCategory:%s)".format(fld, attr.getName(), attr.getIndex(), attr.getTypeCategory.toString))
                 } catch {
                     case e: Throwable => { Error(e) }
                 }
@@ -286,7 +286,7 @@ class CsvSerDeser extends SerializeDeserialize {
         }
         if (returnVal == null) {
             try {
-                Error("For FieldData:%s, returning NULL value in attribute info(Name:%s, Index:%d, getTypeCategory:%d)".format(fld, attr.getName(), attr.getIndex(), attr.getTypeCategory))
+                Error("For FieldData:%s, returning NULL value in attribute info(Name:%s, Index:%d, getTypeCategory:%s)".format(fld, attr.getName(), attr.getIndex(), attr.getTypeCategory.toString))
             } catch {
                 case e: Throwable => { Error(e) }
             }
