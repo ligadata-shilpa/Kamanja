@@ -34,10 +34,16 @@ class MessageGenerator {
     var messageNonVerGenerator = new StringBuilder(8 * 1024)
     var messageGenerator = new StringBuilder(8 * 1024)
     try {
+      val msgObj = msgObjectGenerator.generateMessageObject(message, mdMgr)
+      
       messageVerGenerator = messageVerGenerator.append(msgConstants.newline + msgConstants.packageStr.format(message.Pkg, msgConstants.newline));
+      messageVerGenerator = messageVerGenerator.append(msgConstants.importStatements + msgConstants.newline);
+      messageVerGenerator = messageVerGenerator.append(msgObj._1 + msgConstants.newline);
+
       messageNonVerGenerator = messageNonVerGenerator.append(msgConstants.newline + msgConstants.packageStr.format(message.NameSpace, msgConstants.newline));
-      messageGenerator = messageGenerator.append(msgConstants.importStatements + msgConstants.newline);
-      messageGenerator = messageGenerator.append(msgObjectGenerator.generateMessageObject(message, mdMgr) + msgConstants.newline);
+      messageNonVerGenerator = messageNonVerGenerator.append(msgConstants.importStatements + msgConstants.newline);
+      messageNonVerGenerator = messageNonVerGenerator.append(msgObj._2 + msgConstants.newline);
+
       messageGenerator = messageGenerator.append(msgConstants.newline);
       messageGenerator = messageGenerator.append(classGen(message));
       messageGenerator = messageGenerator.append(getMessgelogDetails(message));
@@ -894,7 +900,7 @@ class MessageGenerator {
         if (implName != null && implName.trim() != "") {
           fromFuncBuf.append(fromFuncForArrayScalarFixed(field));
         }
-      } else if (typetype.equals("tcontainer")) {       
+      } else if (typetype.equals("tcontainer")) {
         val fieldType = //arrayType.elemDef.tTypeType.toString().equalsIgnoreCase
           ///  log.info("22222222222222222" + fieldType);
           // if (fieldType.equalsIgnoreCase("tstruct") || (fieldType.equalsIgnoreCase("tmsgmap"))){

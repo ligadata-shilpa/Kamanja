@@ -266,7 +266,11 @@ class SchemaCompiler {
               //  fromFuncBuf = fromFuncBuf.append(fromFuncForArrayFixed(field))
             }
             case "tstruct" => {
-              var msgDef: MessageDef = mdMgr.Message(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
+              var msgDef: ContainerDef = null;
+              msgDef = mdMgr.Message(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
+              if (msgDef == null)
+                msgDef = mdMgr.Container(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
+
               if (msgDef != null) {
                 msgdefStr = msgDef.containerType.AvroSchema
                 //message = messageParser.processJson(msgdefStr, mdMgr, false)
@@ -276,9 +280,12 @@ class SchemaCompiler {
               }
             }
             case "tmsgmap" => {
-              var ctrDef: ContainerDef = mdMgr.Container(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
-              if (ctrDef != null) {
-                msgdefStr = ctrDef.containerType.AvroSchema
+              var msgDef: ContainerDef = null;
+              msgDef = mdMgr.Message(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
+              if (msgDef == null)
+                msgDef = mdMgr.Container(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
+              if (msgDef != null) {
+                msgdefStr = msgDef.containerType.AvroSchema
                 // message = messageParser.processJson(msgdefStr, mdMgr, false)
                 //message = generateAvroSchema(message, mdMgr)
 

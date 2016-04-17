@@ -120,8 +120,8 @@ class MessageFieldTypesHandler {
         types(0) = fieldBaseType.PhysicalName
         types(1) = fieldBaseType.implementationName
         log.info("fieldBaseType.implementationName====" + fieldBaseType.PhysicalName);
-        val valTypeId = getAttributeValTypeId(fieldBaseType.PhysicalName.toLowerCase());
-        val keyTypeId = getAttributeValTypeId(fieldBaseType.PhysicalName.toLowerCase());
+        val valTypeId = -1 //getAttributeValTypeId(fieldBaseType.PhysicalName.toLowerCase());
+        val keyTypeId = -1 //getAttributeValTypeId(fieldBaseType.PhysicalName.toLowerCase());
         types(2) = new ArrtibuteInfo(fieldBaseType.PhysicalName.toUpperCase(), valTypeId, keyTypeId, 0)
 
       }
@@ -207,7 +207,7 @@ class MessageFieldTypesHandler {
     typeInfo match {
       case "tscalar" => {
         val valTypeId = getAttributeValTypeId(typtytpe.PhysicalName.toLowerCase());
-        val keyTypeId = AttributeTypeInfo.TypeCategory.ARRAY.getValue
+        val keyTypeId = -1
         return new ArrtibuteInfo("ARRAY", valTypeId, keyTypeId, 0)
       }
       case "tcontainer" => {
@@ -226,13 +226,17 @@ class MessageFieldTypesHandler {
             return new ArrtibuteInfo("MESSAGE", valTypeId, keyTypeId, SchemaId)
           }
           case "tmsgmap" => {
-            var ctrDef: ContainerDef = mdMgr.Container(typtytpe.FullName, -1, true).getOrElse(null)
+            var ctrDef: ContainerDef = null;
+            ctrDef = mdMgr.Message(typtytpe.FullName, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
+            if (ctrDef == null)
+              ctrDef = mdMgr.Container(typtytpe.FullName, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
+
             val valTypeId = -1
             val keyTypeId = -1
             val SchemaId = ctrDef.containerType.SchemaId
             return new ArrtibuteInfo("CONTAINER", valTypeId, keyTypeId, SchemaId)
           }
-          case "tmap" => {}
+          case "tmap" => { throw new Exception("Not supporting map of array"); }
           case _ => {
             throw new Exception("This types is not handled at this time ") // BUGBUG - Need to handled other cases
           }

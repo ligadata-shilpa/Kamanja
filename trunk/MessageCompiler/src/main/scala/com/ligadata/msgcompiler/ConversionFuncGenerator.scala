@@ -15,10 +15,17 @@ class ConversionFuncGenerator {
   val prevVerTypMatchKeys = "prevVerTypMatchKeys";
   val prevVerTypesNotMatch = "prevVerTypsNotMatchKeys";
 
+  def generatePreiousVer(message: Message, mdMgr: MdMgr): (String, String) = {
+    var MsgNonVerFullName = message.NameSpace + "." + message.Name
+    var MsgVerFullName = message.Pkg + "." + message.Name
+
+    (getPrevVersionMsg(message, mdMgr, MsgVerFullName), getPrevVersionMsg(message, mdMgr, MsgNonVerFullName))
+  }
+
   /*
    * Get Previous version msg
    */
-  def getPrevVersionMsg(message: Message, mdMgr: MdMgr): String = {
+  private def getPrevVersionMsg(message: Message, mdMgr: MdMgr, MsgFullName: String): String = {
     var prevVerMsgObjstr: String = ""
     var prevMsgConvCase: String = ""
     var prevVerMsgBaseTypesIdxArry = new ArrayBuffer[String]
@@ -28,15 +35,14 @@ class ConversionFuncGenerator {
     var prevVerCaseStmts = new StringBuilder(8 * 1024)
     var prevVerConvFuncs = new StringBuilder(8 * 1024)
     var conversion = new StringBuilder(8 * 1024)
-
     if (msgdefArray == null) {
-      prevVerCaseStmts.append(generatePrevVerCaseStmts(message.PhysicalName, message.VersionLong.toString()))
+      prevVerCaseStmts.append(generatePrevVerCaseStmts(MsgFullName, message.VersionLong.toString()))
       val ConversionStr = ConversionFunc(message, prevVerCaseStmts.toString())
-      conversion.append(ConversionStr + generateConvToCurrentVer(message))
+      conversion.append(ConversionStr + generateConvToCurrentVer(message, MsgFullName))
 
     } else {
 
-      prevVerCaseStmts.append(generatePrevVerCaseStmts(message.PhysicalName, message.VersionLong.toString()))
+      prevVerCaseStmts.append(generatePrevVerCaseStmts(MsgFullName, message.VersionLong.toString()))
 
       msgdefArray.foreach(msgdef => {
         //call the function which generates the complete conversion function and also another string with case stmt and append to string buffer 
@@ -53,8 +59,8 @@ class ConversionFuncGenerator {
       //put array of case stmts in fucnction  and generate main conversion func
       val ConversionStr = ConversionFunc(message, prevVerCaseStmts.toString())
       if (Fixed)
-        conversion.append(ConversionStr + generateConvToCurrentVer(message) + prevVerConvFuncs.toString)
-      else conversion.append(ConversionStr + generateConvToCurrentVer(message) + prevVerConvFuncs.toString);
+        conversion.append(ConversionStr + generateConvToCurrentVer(message, MsgFullName) + prevVerConvFuncs.toString)
+      else conversion.append(ConversionStr + generateConvToCurrentVer(message, MsgFullName) + prevVerConvFuncs.toString);
 
       //append the prev conversion funcs to this string buffer and return string 
 
@@ -217,10 +223,10 @@ class ConversionFuncGenerator {
   /*
    *generate the case stmt for current vrsion 
    */
-  private def generateConvToCurrentVer(message: Message) = {
+  private def generateConvToCurrentVer(message: Message, msgFullName: String) = {
     val version = message.VersionLong.toString()
     """
-    private def convertToVer""" + version + """(oldVerobj: """ + message.PhysicalName + """): """ + message.PhysicalName + """= {
+    private def convertToVer""" + version + """(oldVerobj: """ + msgFullName + """): """ + msgFullName + """= {
       return oldVerobj
     }
   
@@ -426,9 +432,97 @@ class ConversionFuncGenerator {
   }
 
   /*
-   * Handle Array of scalars
+   * Handle Array of scalars and Containers
    */
   private def ConversionFuncForArray(field: Element, attributes: Map[String, Any], fixedMsg: Boolean, fieldBaseType: BaseTypeDef): Array[String] = {
+
+    var arrayType = fieldBaseType.asInstanceOf[ArrayTypeDef]
+    var typetyprStr: String = arrayType.tType.toString().toLowerCase()
+    var typeInfo = arrayType.elemDef.tTypeType.toString().toLowerCase()
+
+    typeInfo match {
+      case "tscalar" => { return ConversionFuncForArrayScalar(field, attributes, fixedMsg, fieldBaseType) }
+      case "tcontainer" => {
+        typetyprStr match {
+          case "tarray"  => { throw new Exception("Not supporting array of array"); }
+          case "tstruct" => { return ConversionFuncForArrayContainer(field, attributes, fixedMsg, fieldBaseType) }
+          case "tmsgmap" => { return ConversionFuncForArrayContainer(field, attributes, fixedMsg, fieldBaseType) }
+          case "tmap"    => { throw new Exception("Not supporting map of array"); }
+          case _ => {
+            throw new Exception("This types is not handled at this time ") // BUGBUG - Need to handled other cases
+          }
+        }
+      }
+      case _ => {
+        throw new Exception("This types is not handled at this time ") // BUGBUG - Need to handled other cases
+      }
+    }
+  }
+
+  /*
+   * Handle Array of Containers
+   */
+  private def ConversionFuncForArrayContainer(field: Element, attributes: Map[String, Any], fixedMsg: Boolean, fieldBaseType: BaseTypeDef): Array[String] = {
+    var mappedPrevVerMatchkeys = new StringBuilder(8 * 1024)
+    var mappedPrevTypNotrMatchkeys = new StringBuilder(8 * 1024)
+    var filedStrBuf = new StringBuilder(8 * 1024)
+    var convPrevVerStr = new StringBuilder(8 * 1024)
+    var returnStmts = new ArrayBuffer[String]
+    try {
+      val (mbrExists, sameTyp, mbrMatchTypNotMatch) = AtrributesTypeMatchCheck(attributes, field.Name, fieldBaseType.FullName, false, null)
+      var memberExists = mbrExists
+      var sameType = sameTyp
+      var membrMatchTypeNotMatch = mbrMatchTypNotMatch
+      if (fixedMsg) {
+        /*  if (memberExists) {
+            convPrevVerStr = convPrevVerStr.append("%s for(i <- 0 until prevVerObj.%s.length) { %s".format(pad2, f.Name, newline))
+            if (sameType)
+              convPrevVerStr = convPrevVerStr.append("%s%s(i) = prevVerObj.%s(i)};%s".format(pad2, f.Name, f.Name, newline))
+            else {
+              convPrevVerStr = convPrevVerStr.append("%sval curVerObj = new %s()%s".format(pad2, curObjtypeStr, newline))
+              convPrevVerStr = convPrevVerStr.append("%scurVerObj.ConvertPrevToNewVerObj(child)%s".format(pad2, newline))
+              convPrevVerStr = convPrevVerStr.append("%s%s(i)= curVerObj}%s".format(pad2, f.Name, newline))
+            }*/
+      } else {
+        /*if (memberExists) {
+            mappedPrevVerMatchkeys.append("\"" + f.Name + "\",")
+            // convPrevVerStr = convPrevVerStr.append("%s%s{var obj =  prevVerObj.getOrElse(\"%s\", null)%s".format(newline, pad2, f.Name, newline))
+            convPrevVerStr = convPrevVerStr.append("%s case \"%s\" => { %s".format(pad2, f.Name, newline))
+
+            if (sameType)
+              convPrevVerStr = convPrevVerStr.append("%sif(prevObjfield._2._2 != null){ fields(\"%s\") = (-1, prevObjfield._2._2)}}%s".format(pad2, f.Name, newline))
+            else {
+              convPrevVerStr = convPrevVerStr.append("%s type typ = scala.Array[%s]%s".format(pad2, childName, newline))
+              convPrevVerStr = convPrevVerStr.append("%s var %s : %s = %s();%s".format(pad2, f.Name, curObjtype, curObjtype, newline))
+
+              convPrevVerStr = convPrevVerStr.append("%s if(prevObjfield._2._2 != null  && prevObjfield._2._2.isInstanceOf[typ]){%s%s for (i <- 0 until prevObjfield._2._2.length) {%s".format(pad2, newline, pad2, newline))
+              convPrevVerStr = convPrevVerStr.append("%s val curVerObj = new %s()%s".format(pad2, curObjtypeStr, newline))
+              convPrevVerStr = convPrevVerStr.append("%s curVerObj.ConvertPrevToNewVerObj(child)%s".format(pad2, newline))
+              convPrevVerStr = convPrevVerStr.append("%s %s(i) = curVerObj}}%s".format(pad2, f.Name, newline))
+              convPrevVerStr = convPrevVerStr.append("%s fields(\"%s\") = (-1, %s)}%s".format(pad2, f.Name, f.Name, newline))
+
+            }
+
+          } else if (membrMatchTypeNotMatch) {
+            mappedPrevTypNotrMatchkeys = mappedPrevTypNotrMatchkeys.append("\"" + f.Name + "\",")
+          }*/
+
+      }
+    } catch {
+      case e: Exception => {
+        log.debug("", e)
+        throw e
+      }
+    }
+    returnStmts += mappedPrevVerMatchkeys.toString()
+    returnStmts += mappedPrevTypNotrMatchkeys.toString()
+    returnStmts += convPrevVerStr.toString()
+    return returnStmts.toArray
+  }
+  /*
+   * Handle Array of scalars
+   */
+  private def ConversionFuncForArrayScalar(field: Element, attributes: Map[String, Any], fixedMsg: Boolean, fieldBaseType: BaseTypeDef): Array[String] = {
     var mappedPrevVerMatchkeys = new StringBuilder(8 * 1024)
     var mappedPrevTypNotrMatchkeys = new StringBuilder(8 * 1024)
     var filedStrBuf = new StringBuilder(8 * 1024)

@@ -29,20 +29,23 @@ class MessageObjectGenerator {
    *  getFullName
    *  toJavaRDDObject
    */
-  def generateMessageObject(message: Message, mdMgr: MdMgr): String = {
+
+  def generateMessageObject(message: Message, mdMgr: MdMgr): (String, String) = {
+    var msgObjeVerGenerator = new StringBuilder(8 * 1024)
     var msgObjeGenerator = new StringBuilder(8 * 1024)
+    var msgObjeNonVerGenerator = new StringBuilder(8 * 1024)
     try {
 
+      val convFunc = convFuncGenerator.generatePreiousVer(message, mdMgr)
       // log.info("========== Message object Start==============")
       msgObjeGenerator = msgObjeGenerator.append(msgObject(message))
       msgObjeGenerator = msgObjeGenerator.append(getMessgeBasicDetails)
       msgObjeGenerator = msgObjeGenerator.append(msgObjVarsGeneration(message))
       msgObjeGenerator = msgObjeGenerator.append(msgConstants.msgObjectBuildStmts)
       msgObjeGenerator = msgObjeGenerator.append(keysCodeGeneration(message))
-      msgObjeGenerator = msgObjeGenerator.append(convFuncGenerator.getPrevVersionMsg(message, mdMgr))
+      msgObjeVerGenerator = msgObjeVerGenerator.append(msgObjeGenerator.toString() + convFunc._1 + ObjDeprecatedMethods(message) + msgConstants.closeBrace)      
+      msgObjeNonVerGenerator = msgObjeNonVerGenerator.append(msgObjeGenerator.toString() + convFunc._2 + ObjDeprecatedMethods(message) + msgConstants.closeBrace)
 
-      msgObjeGenerator = msgObjeGenerator.append(ObjDeprecatedMethods(message))
-      msgObjeGenerator = msgObjeGenerator.append(msgConstants.closeBrace)
       // log.info("========== Message object End==============")
 
     } catch {
@@ -52,7 +55,7 @@ class MessageObjectGenerator {
         throw e
       }
     }
-    return msgObjeGenerator.toString
+    return (msgObjeVerGenerator.toString, msgObjeNonVerGenerator.toString());
   }
 
   /*
