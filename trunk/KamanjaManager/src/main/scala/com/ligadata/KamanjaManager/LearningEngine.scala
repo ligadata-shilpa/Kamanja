@@ -167,8 +167,8 @@ class LearningEngine {
                 exeQueue ++= readyNodes
 
                 if (LOG.isDebugEnabled) {
-                  val inputMsgs = execMsgsSet.map(msg => msg.getFullTypeName)
-                  val outputMsgs = res.map(msg => msg.getFullTypeName)
+                  val inputMsgs = execMsgsSet.map(msg => msg.getFullTypeName).mkString(",")
+                  val outputMsgs = res.map(msg => msg.getFullTypeName).mkString(",")
                   val inputEges = newEges.map(edge => "(NodeId:%d,edgeTypeId:%d)".format(edge.nodeId, edge.edgeTypeId)).mkString(",")
                   val producedNodeIds = if (readyNodes != null) readyNodes.map(nd => "(NodeId:%d,iesPos:%d)".format(nd.nodeId, nd.iesPos)).mkString(",") else ""
                   val msg = "LearningEngine:Executed Model:%s with NodeId:%d Using messages:%s, which produced %s (with Edges:%s). Adding those message into DAG produced:%s".format(execMdl._1.mdl.getModelName(), execNode.nodeId, inputMsgs, outputMsgs, inputEges, producedNodeIds)
@@ -176,7 +176,7 @@ class LearningEngine {
                 }
               } else {
                 if (LOG.isDebugEnabled) {
-                  val inputMsgs = execMsgsSet.map(msg => msg.getFullTypeName)
+                  val inputMsgs = execMsgsSet.map(msg => msg.getFullTypeName).mkString(",")
                   val msg = "LearningEngine:Executed Model:%s with NodeId:%d Using messages:%s, which did not produce any result".format(execMdl._1.mdl.getModelName(), execNode.nodeId, inputMsgs)
                   LOG.debug(msg)
                 }
