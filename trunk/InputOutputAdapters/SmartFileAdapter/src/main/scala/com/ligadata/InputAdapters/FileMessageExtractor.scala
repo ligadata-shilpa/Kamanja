@@ -50,10 +50,13 @@ class FileMessageExtractor(adapterConfig : SmartFileAdapterConfiguration,
     val statusUpdateThread = new Runnable() {
       override def run(): Unit = {
         while(!finished){
-          Thread.sleep(consumerContext.statusUpdateInterval)
           //put filename~offset~timestamp
           val data = fileHandler.getFullPath + "~" + globalOffset + "~" + System.nanoTime
+          logger.debug("SMART FILE CONSUMER - Node {} with partition {} is updating status to value {}",
+            consumerContext.nodeId, consumerContext.partitionId.toString, data)
           consumerContext.envContext.saveConfigInClusterCache(consumerContext.statusUpdateCacheKey, data.getBytes)
+
+          Thread.sleep(consumerContext.statusUpdateInterval)
         }
       }
     }

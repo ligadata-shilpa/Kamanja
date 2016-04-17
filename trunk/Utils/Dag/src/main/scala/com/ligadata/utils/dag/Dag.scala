@@ -126,7 +126,7 @@ object DagRT {
     // if not, make a new node with the given information and put that node in node map
     // and populate input edge map with the input edges from that node.
     def AddNode(nodeId : Long, inputs: Array[Array[EdgeId]], outputs: Array[Long]): Unit = {
-      Info("DagImpl:AddNode ->, numNodes:%d, numEdgeSets: %d, numEdgeTypes: %d, nodeid: %d, inputs: %s, outputs: %s\n".format(numNodes, numEdgeSets, numEdgeTypes, nodeId, inputs.toString(), outputs.toString()))
+      Info("DagImpl:AddNode ->, numNodes:%d, numEdgeSets: %d, numEdgeTypes: %d, nodeid: %d, inputs: %s, outputs: %s\n".format(numNodes, numEdgeSets, numEdgeTypes, nodeId, inputs.map(_.mkString(",")).mkString(":"), outputs.mkString(",")))
       if(nodesMap.contains(nodeId))
         throw AlreadyExistsException("Dag::AddNode, nodeId already exist: %d".format(nodeId), null)
       val node = MakeNode(nodeId, inputs, outputs)
@@ -177,7 +177,7 @@ object DagRT {
       ies.LinkEdges
       iesList.append(ies)
       _numEdgeSets += 1
-      Info("DagImpl:AddInputEdgeSet, added new input edge set; nodeId: %d, idxSetInNode: %d, _numEdgeSets: %d, edgeIdSet: %s\n".format(nodeId, idxSetInNode, _numEdgeSets, edgeIdSet.toString))
+      Info("DagImpl:AddInputEdgeSet, added new input edge set; nodeId: %d, idxSetInNode: %d, _numEdgeSets: %d, edgeIdSet: %s\n".format(nodeId, idxSetInNode, _numEdgeSets, edgeIdSet.mkString(",")))
       ies
     }
   

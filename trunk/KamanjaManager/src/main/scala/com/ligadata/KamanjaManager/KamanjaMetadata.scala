@@ -347,14 +347,14 @@ class KamanjaMetadata(var envCtxt: EnvContext) {
               set.map(msg => {
                 var nodeId: Long = 0
                 var edgeTypeId: Long = 0
-                if (msg.origin == null || msg.origin.trim.size == 0) {
-                  val orgMdl = mgr.Model(msg.origin, -1, true)
+                if (msg.origin != null && msg.origin.trim.size > 0) {
+                  val orgMdl = mgr.Model(msg.origin.trim, -1, true)
                   if (orgMdl != None) {
                     nodeId = orgMdl.get.MdElementId
                   }
                 }
-                if (msg.message == null || msg.message.trim.size == 0) {
-                  val msgDef = mgr.Message(msg.message, -1, true)
+                if (msg.message != null && msg.message.trim.size > 0) {
+                  val msgDef = mgr.Message(msg.message.trim, -1, true)
                   if (msgDef != None) {
                     edgeTypeId = msgDef.get.MdElementId
                   } else {
