@@ -27,6 +27,12 @@ object Log {
     def Info(str: String) = if(log.isInfoEnabled())    log.info(str)
     def Error(str: String) = if(log.isErrorEnabled())  log.error(str)
     def Debug(str: String) = if(log.isDebugEnabled())  log.debug(str)
+
+    def isTraceEnabled = log.isTraceEnabled()
+    def isWarnEnabled = log.isWarnEnabled()
+    def isInfoEnabled = log.isInfoEnabled()
+    def isErrorEnabled = log.isErrorEnabled()
+    def isDebugEnabled = log.isDebugEnabled()
 }
 
 import Log._
@@ -301,6 +307,11 @@ class CsvSerDeser extends SerializeDeserialize {
         }
         val fldIdx = 0
         val numFields = rawCsvFields.length
+
+        if (isDebugEnabled) {
+            Debug("InputData in fields:" + rawCsvFields.map(fld => (if (fld == null) "<null>" else fld)).mkString(","))
+        }
+
         fieldsToConsider.foreach(attr => {
             if (attr.IsContainer) {
                 Error(s"field type name ${attr.getName} is a container type... containers are not supported by the CSV deserializer at this time... deserialization fails.")
