@@ -267,14 +267,14 @@ class CsvSerDeser extends SerializeDeserialize {
 
         var returnVal: Any = null
         attr.getTypeCategory match {
-            case INT =>    { val f1 = fld.trim; if(f1.length > 0) f1.toInt else emptyIntVal }
-            case FLOAT =>  { val f1 = fld.trim; if(f1.length > 0) f1.toFloat else emptyFloatVal }
-            case DOUBLE => { val f1 = fld.trim; if(f1.length > 0) f1.toDouble else emptyDoubleVal }
-            case LONG =>   { val f1 = fld.trim; if(f1.length > 0) f1.toLong else emptyLongVal }
-            case BYTE =>   { val f1 = fld.trim; if(f1.length > 0) f1.toByte else emptyByteVal }
-            case BOOLEAN =>{ val f1 = fld.trim; if(f1.length > 0) f1.toBoolean else emptyBooleanVal }
-            case CHAR =>   fld(0)
-            case STRING => fld
+            case INT =>    { val f1 = fld.trim; returnVal = if(f1.length > 0) f1.toInt else emptyIntVal }
+            case FLOAT =>  { val f1 = fld.trim; returnVal = if(f1.length > 0) f1.toFloat else emptyFloatVal }
+            case DOUBLE => { val f1 = fld.trim; returnVal = if(f1.length > 0) f1.toDouble else emptyDoubleVal }
+            case LONG =>   { val f1 = fld.trim; returnVal = if(f1.length > 0) f1.toLong else emptyLongVal }
+            case BYTE =>   { val f1 = fld.trim; returnVal = if(f1.length > 0) f1.toByte else emptyByteVal }
+            case BOOLEAN =>{ val f1 = fld.trim; returnVal = if(f1.length > 0) f1.toBoolean else emptyBooleanVal }
+            case CHAR =>   returnVal = fld(0)
+            case STRING => returnVal = fld
             case _ => {
                 // Unhandled type
                 try {
