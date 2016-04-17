@@ -3,12 +3,14 @@ package com.ligadata.msgcompiler
 import com.ligadata.Exceptions._;
 import com.ligadata.Exceptions.StackTrace;
 import org.apache.logging.log4j.{ Logger, LogManager }
+import com.ligadata.kamanja.metadata._;
 
 class MessageObjectGenerator {
 
   val logger = this.getClass.getName
   lazy val log = LogManager.getLogger(logger)
   var msgConstants = new MessageConstants
+  var convFuncGenerator = new ConversionFuncGenerator
 
   //object CustAlertHistory extends RDDObject[CustAlertHistory] with ContainerFactoryInterface {
 
@@ -27,15 +29,18 @@ class MessageObjectGenerator {
    *  getFullName
    *  toJavaRDDObject
    */
-  def generateMessageObject(message: Message): String = {
+  def generateMessageObject(message: Message, mdMgr: MdMgr): String = {
     var msgObjeGenerator = new StringBuilder(8 * 1024)
     try {
 
       // log.info("========== Message object Start==============")
       msgObjeGenerator = msgObjeGenerator.append(msgObject(message))
+      msgObjeGenerator = msgObjeGenerator.append(getMessgeBasicDetails)
       msgObjeGenerator = msgObjeGenerator.append(msgObjVarsGeneration(message))
       msgObjeGenerator = msgObjeGenerator.append(msgConstants.msgObjectBuildStmts)
       msgObjeGenerator = msgObjeGenerator.append(keysCodeGeneration(message))
+      msgObjeGenerator = msgObjeGenerator.append(convFuncGenerator.getPrevVersionMsg(message, mdMgr))
+
       msgObjeGenerator = msgObjeGenerator.append(ObjDeprecatedMethods(message))
       msgObjeGenerator = msgObjeGenerator.append(msgConstants.closeBrace)
       // log.info("========== Message object End==============")
@@ -117,6 +122,15 @@ class MessageObjectGenerator {
       }
     }
     return msgObjeGenerator.toString
+  }
+
+  /*
+   * message basic details in class
+   */
+  private def getMessgeBasicDetails(): String = {
+    """ 
+  val log = LogManager.getLogger(getClass)
+"""
   }
 
   /*
@@ -259,6 +273,7 @@ class MessageObjectGenerator {
     }
 
     """  
+  /****   DEPRECATED METHODS ***/
   override def FullName: String = getFullTypeName
   override def NameSpace: String = getTypeNameSpace
   override def Name: String = getTypeName

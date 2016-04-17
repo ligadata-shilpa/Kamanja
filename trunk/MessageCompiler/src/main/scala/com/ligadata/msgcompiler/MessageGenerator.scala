@@ -11,7 +11,6 @@ class MessageGenerator {
   var msgObjectGenerator = new MessageObjectGenerator
   var mappedMsgGen = new MappedMsgGenerator
   var msgConstants = new MessageConstants
-  var convFuncGenerator = new ConversionFuncGenerator
 
   val logger = this.getClass.getName
   lazy val log = LogManager.getLogger(logger)
@@ -26,7 +25,6 @@ class MessageGenerator {
    * 
    */
   def generateMessage(message: Message, mdMgr: MdMgr): (String, String) = {
-
     generateMsg(message, mdMgr)
   }
 
@@ -39,11 +37,11 @@ class MessageGenerator {
       messageVerGenerator = messageVerGenerator.append(msgConstants.newline + msgConstants.packageStr.format(message.Pkg, msgConstants.newline));
       messageNonVerGenerator = messageNonVerGenerator.append(msgConstants.newline + msgConstants.packageStr.format(message.NameSpace, msgConstants.newline));
       messageGenerator = messageGenerator.append(msgConstants.importStatements + msgConstants.newline);
-      messageGenerator = messageGenerator.append(msgObjectGenerator.generateMessageObject(message) + msgConstants.newline);
+      messageGenerator = messageGenerator.append(msgObjectGenerator.generateMessageObject(message, mdMgr) + msgConstants.newline);
       messageGenerator = messageGenerator.append(msgConstants.newline);
       messageGenerator = messageGenerator.append(classGen(message));
-      messageGenerator = messageGenerator.append(getMessgeBasicDetails(message));
-      messageGenerator = messageGenerator.append(getAttributeTypes(message));	  
+      messageGenerator = messageGenerator.append(getMessgelogDetails(message));
+      messageGenerator = messageGenerator.append(getAttributeTypes(message));
       messageGenerator = messageGenerator.append(msgConstants.newline + keyTypesMap(message.Elements));
       messageGenerator = messageGenerator.append(methodsFromMessageInterface(message));
       messageGenerator = messageGenerator.append(msgConstants.newline + generateParitionKeysData(message) + msgConstants.newline);
@@ -58,12 +56,12 @@ class MessageGenerator {
         messageGenerator = messageGenerator.append(msgConstants.getGetSetMethods);
         messageGenerator = messageGenerator.append(mappedMsgGen.getFromFuncFixed(message, mdMgr))
       }
-      //messageGenerator = messageGenerator.append(convFuncGenerator.getPrevVersionMsg(message, mdMgr))
+
       messageGenerator = messageGenerator.append(messageContructor(message))
       messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.closeBrace);
       messageVerGenerator = messageVerGenerator.append(messageGenerator.toString())
       messageNonVerGenerator = messageNonVerGenerator.append(messageGenerator.toString())
-      // log.info("messageGenerator    " + messageGenerator.toString())
+
     } catch {
       case e: Exception => {
         val stackTrace = StackTrace.ThrowableTraceString(e)
@@ -122,6 +120,15 @@ class MessageGenerator {
       }
     }
     getSetFixed.toString()
+  }
+
+  /*
+   * message basic details in class
+   */
+  private def getMessgelogDetails(message: Message): String = {
+    """ 
+  val log = """ + message.Name + """.log
+"""
   }
 
   /*
@@ -205,8 +212,7 @@ class MessageGenerator {
   
   """
   }
-  
-  
+
   /*
    * generateAttributeTypes 
    */
@@ -237,14 +243,13 @@ class MessageGenerator {
 
   }
 
-
   private def genGetAttributeTypes(message: Message): String = {
     var getAttributeTypes = new StringBuilder(8 * 1024)
 
     if (message.Elements != null) {
       message.Elements.foreach(field => {
         if (field.AttributeTypeInfo != null)
-		  getAttributeTypes.append("%s attributeTypes(%s) = new AttributeTypeInfo(\"%s\", %s, AttributeTypeInfo.TypeCategory.%s, %s, %s, %s)%s".format(msgConstants.pad2, field.FieldOrdinal, field.Name, field.FieldOrdinal, field.AttributeTypeInfo.typeCategaryName, field.AttributeTypeInfo.valTypeId, field.AttributeTypeInfo.keyTypeId, field.AttributeTypeInfo.valSchemaId, msgConstants.newline))
+          getAttributeTypes.append("%s attributeTypes(%s) = new AttributeTypeInfo(\"%s\", %s, AttributeTypeInfo.TypeCategory.%s, %s, %s, %s)%s".format(msgConstants.pad2, field.FieldOrdinal, field.Name, field.FieldOrdinal, field.AttributeTypeInfo.typeCategaryName, field.AttributeTypeInfo.valTypeId, field.AttributeTypeInfo.keyTypeId, field.AttributeTypeInfo.valSchemaId, msgConstants.newline))
       })
 
     }
@@ -420,15 +425,6 @@ class MessageGenerator {
     def this(other: """ + message.Name + """) = {
       this(other.getFactory.asInstanceOf[""" + msgInterfaceType + """], other)
     }
-"""
-  }
-
-  /*
-   * message basic details in class
-   */
-  private def getMessgeBasicDetails(message: Message): String = {
-    """ 
-    private val log = LogManager.getLogger(getClass)
 """
   }
 
@@ -898,8 +894,7 @@ class MessageGenerator {
         if (implName != null && implName.trim() != "") {
           fromFuncBuf.append(fromFuncForArrayScalarFixed(field));
         }
-      } else if (typetype.equals("tcontainer")) {
-        log.info("111111111111111111111");
+      } else if (typetype.equals("tcontainer")) {       
         val fieldType = //arrayType.elemDef.tTypeType.toString().equalsIgnoreCase
           ///  log.info("22222222222222222" + fieldType);
           // if (fieldType.equalsIgnoreCase("tstruct") || (fieldType.equalsIgnoreCase("tmsgmap"))){

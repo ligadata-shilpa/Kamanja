@@ -136,12 +136,18 @@ class MessageFieldTypesHandler {
 
           }
           case "tstruct" => {
-            var msgDef: MessageDef = mdMgr.Message(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
-            types(0) = msgDef.PhysicalName
-            types(1) = msgDef.FullName
-            val valTypeId = -1
-            val keyTypeId = -1
-            types(2) = new ArrtibuteInfo("MESSAGE", valTypeId, keyTypeId, msgDef.containerType.SchemaId)
+            var msgDef: ContainerDef = null;
+            msgDef = mdMgr.Message(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
+            if (msgDef == null)
+              msgDef = mdMgr.Container(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
+
+            if (msgDef != null) {
+              types(0) = msgDef.PhysicalName
+              types(1) = msgDef.FullName
+              val valTypeId = -1
+              val keyTypeId = -1
+              types(2) = new ArrtibuteInfo("MESSAGE", valTypeId, keyTypeId, msgDef.containerType.SchemaId)
+            } else throw new Exception("struct not exists in metadata" + field.Ttype)
           }
           case "tmsgmap" => {
             var ctrDef: ContainerDef = mdMgr.Container(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
@@ -185,7 +191,7 @@ class MessageFieldTypesHandler {
       case "long"      => return AttributeTypeInfo.TypeCategory.LONG.getValue;
       case "byte"      => return AttributeTypeInfo.TypeCategory.BYTE.getValue;
       case "char"      => return AttributeTypeInfo.TypeCategory.CHAR.getValue;
-      case "boolean"      => return AttributeTypeInfo.TypeCategory.BOOLEAN.getValue;
+      case "boolean"   => return AttributeTypeInfo.TypeCategory.BOOLEAN.getValue;
       case "container" => return AttributeTypeInfo.TypeCategory.CONTAINER.getValue;
       case "map"       => return AttributeTypeInfo.TypeCategory.MAP.getValue;
       case "array"     => return AttributeTypeInfo.TypeCategory.ARRAY.getValue;
@@ -208,11 +214,15 @@ class MessageFieldTypesHandler {
         typetyprStr match {
           case "tarray" => { throw new Exception("Not supporting array of array"); }
           case "tstruct" => {
-            var msgDef: MessageDef = mdMgr.Message(typtytpe.FullName, -1, true).getOrElse(null)
+
+            var msgDef: ContainerDef = null;
+            msgDef = mdMgr.Message(typtytpe.FullName, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
+            if (msgDef == null)
+              msgDef = mdMgr.Container(typtytpe.FullName, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
             //println("msgDef"+msgDef.Name)
             val valTypeId = -1
             val keyTypeId = -1
-            val SchemaId = msgDef.containerType.SchemaId            
+            val SchemaId = msgDef.containerType.SchemaId
             return new ArrtibuteInfo("MESSAGE", valTypeId, keyTypeId, SchemaId)
           }
           case "tmsgmap" => {
