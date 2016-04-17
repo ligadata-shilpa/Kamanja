@@ -249,17 +249,16 @@ trait ExecContext {
 
   // Raw data deserialized and send to another send method which takes msg
   final def execute(data: Array[Byte], uniqueKey: PartitionUniqueRecordKey, uniqueVal: PartitionUniqueRecordValue, readTmMilliSecs: Long): Unit = {
-    var msg: ContainerInterface = null
     val deserializer = ""
     val failedMsg = ""
 
     try {
       val (tMsg, tDeserializerName, msgName) = input.deserialize(data)
+      LOG.debug("Called Deserialize and got msg:" + (if (tMsg == null) "" else tMsg.getFullTypeName))
       val deserializer = if (tDeserializerName != null) tDeserializerName else ""
       val failedMsg = if (msgName != null) msgName else ""
       if (tMsg != null) {
-        msg = tMsg
-        execute(msg, data, uniqueKey, uniqueVal, readTmMilliSecs)
+        execute(tMsg, data, uniqueKey, uniqueVal, readTmMilliSecs)
       }
       else {
         if (LOG.isDebugEnabled) {
@@ -280,6 +279,7 @@ trait ExecContext {
       }
     } catch {
       case e: Throwable => {
+        LOG.error("Failed to Deserialize/Execute", e)
         SendFailedEvent(data, deserializer, failedMsg, uniqueKey, uniqueVal, e)
       }
     }
