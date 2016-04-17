@@ -5,8 +5,7 @@
     "Serializer": "com.ligadata.kamanja.serializer.delimitedserdeser",
     "Options": {
       "alwaysQuoteFields": false,
-      "fieldDelimiter": "\\x01",
-      "lineDelimiter": "\r\n"
+      "fieldDelimiter": "\\x01"
     }
   },
   {
@@ -19,9 +18,7 @@
     "Serializer": "com.ligadata.kamanja.serializer.delimitedserdeser",
     "Options": {
       "alwaysQuoteFields": false,
-      "fieldDelimiter": ",",
-      "lineDelimiter": "\r\n",
-      "produceHeader": true
+      "fieldDelimiter": ","
     }
   }
 ]
