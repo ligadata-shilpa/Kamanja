@@ -1066,19 +1066,38 @@ class CompilerProxy {
     var curClass: Class[_] = null
     try {
       // Convert class name into a class
-      var curClz = Class.forName(clsName, true, loaderInfo.loader)
+      curClass = Class.forName(clsName, true, loaderInfo.loader)
       isMsg = false
 
-      while (curClz != null && isMsg == false) {
-        logger.debug("getMessageInst: class name => " + curClz.getName())
-        isMsg = Utils.isDerivedFrom(curClz, "com.ligadata.KamanjaBase.MessageFactoryInterface")
+      val allSuperClassesInterfaces = ArrayBuffer[Class[_]]()
+
+      if (curClass != null)
+        allSuperClassesInterfaces += curClass
+
+      var curProcessingItem = 0
+
+      while (isMsg == false && curProcessingItem < allSuperClassesInterfaces.size) {
+        val clz = allSuperClassesInterfaces(curProcessingItem)
+        curProcessingItem += 1
+        logger.debug("getMessageInst: class name => " + clz.getName())
+        isMsg = Utils.isDerivedFrom(clz, "com.ligadata.KamanjaBase.MessageFactoryInterface")
         if (isMsg == false) {
-          curClz = curClz.getSuperclass()
+          val tmpSupClz = clz.getSuperclass()
+          if (tmpSupClz != null)
+            allSuperClassesInterfaces += tmpSupClz
+          val interfecs = clz.getInterfaces()
+          if (interfecs != null) {
+            for (intf <- interfecs) {
+              allSuperClassesInterfaces += intf
+            }
+          }
+        } else {
+          logger.debug("found getMessageInst: class name => " + curClass.getName())
         }
       }
     } catch {
       case e: Exception => {
-        logger.debug("Failed to get message classname :" + clsName, e)
+        logger.error("Failed to get message classname :" + clsName, e)
       }
     }
 
@@ -1110,6 +1129,8 @@ class CompilerProxy {
         if (curClass != null) {
           isMsg = true
           clsName = tmpClsName + "$"
+        } else {
+          logger.warn(tmpClsName + " or " + tmpClsName + "$ is not found as message")
         }
       } else {
         isMsg = true
