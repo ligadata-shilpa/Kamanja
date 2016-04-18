@@ -30,6 +30,15 @@ coverageEnabled in ThisBuild := true
 
 val Organization = "com.ligadata"
 
+// This is a task that is defined to assemble the 3 fat jars all at once
+// This may be used as part of a build/install script to reduce commands
+// or to include as a dependency for another task such as what is done in the MetadataAPI project
+val assembleDependencies = TaskKey[Unit]("assembleDependencies")
+assembleDependencies := {
+  (assembly in ExtDependencyLibs).value
+  (assembly in ExtDependencyLibs2).value
+  (assembly in KamanjaInternalDeps).value
+}
 
 //newly added
 lazy val ExtDependencyLibs = project.in(file("ExtDependencyLibs")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*)
@@ -39,8 +48,8 @@ lazy val ExtDependencyLibs2 = project.in(file("ExtDependencyLibs2")).configs(Tes
 lazy val KamanjaInternalDeps = project.in(file("KamanjaInternalDeps")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(ExtDependencyLibs % "provided", ExtDependencyLibs2 % "provided", InputOutputAdapterBase, Exceptions, DataDelimiters, Metadata, KamanjaBase, MetadataBootstrap,
   Serialize, ZooKeeperListener, ZooKeeperLeaderLatch, KamanjaUtils, TransactionService, StorageManager, PmmlCompiler, ZooKeeperClient, OutputMsgDef, SecurityAdapterBase, HeartBeat,
   JpmmlFactoryOfModelInstanceFactory, JarFactoryOfModelInstanceFactory, KamanjaVersion, InstallDriverBase, BaseFunctions, KafkaSimpleInputOutputAdapters, FileSimpleInputOutputAdapters, SimpleEnvContextImpl,
-  GenericMsgCompiler, MethodExtractor, MetadataAPIServiceClient, JsonDataGen, Controller, AuditAdapters, CustomUdfLib, ExtractData, UtilityService,
-  UtilsForModels, MessageCompiler, jtm, Dag, NodeInfoExtract, SmartFileAdapter, Cache, CacheImp)
+  GenericMsgCompiler, MethodExtractor, MetadataAPIServiceClient, JsonDataGen, Controller, AuditAdapters, CustomUdfLib, UtilityService,
+  UtilsForModels, MessageCompiler, jtm, Dag, SmartFileAdapter, Cache, CacheImp)
 
 ////////////////////////
 
@@ -100,6 +109,13 @@ lazy val MethodExtractor = project.in(file("Pmml/MethodExtractor")).configs(Test
 // no external dependencies
 
 lazy val MetadataAPI = project.in(file("MetadataAPI")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(ExtDependencyLibs % "provided", ExtDependencyLibs2 % "provided", StorageManager, Metadata, PmmlCompiler, Serialize, ZooKeeperClient, ZooKeeperListener, OutputMsgDef, Exceptions, SecurityAdapterBase, KamanjaUtils, HeartBeat, KamanjaBase, JpmmlFactoryOfModelInstanceFactory, jtm, SimpleApacheShiroAdapter % "test")
+    .settings(
+      parallelExecution in Test := false,
+      test <<= (test in Test).dependsOn(assembleDependencies)
+    )
+
+//test in MetadataAPI <<= (test in MetadataAPI) dependsOn ((assembly in KamanjaInternalDeps), (assembly in ExtDependencyLibs), (assembly in ExtDependencyLibs2))
+//parallelExecution in Test in MetadataAPI := false
 
 lazy val MetadataBootstrap = project.in(file("MetadataBootstrap/Bootstrap")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(ExtDependencyLibs % "provided", ExtDependencyLibs2 % "provided", Metadata, KamanjaBase, BaseTypes, Exceptions)
 
@@ -205,7 +221,7 @@ lazy val MigrateFrom_V_1_3 = project.in(file("Utils/Migrate/SourceVersion/Migrat
 
 lazy val InstallDriverBase = project.in(file("Utils/ClusterInstaller/InstallDriverBase")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(ExtDependencyLibs % "provided")
 
-lazy val InstallDriver = project.in(file("Utils/ClusterInstaller/InstallDriver")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(ExtDependencyLibs % "provided", InstallDriverBase, Serialize, KamanjaUtils)
+lazy val InstallDriver = project.in(file("Utils/ClusterInstaller/InstallDriver")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(ExtDependencyLibs % "provided", InstallDriverBase, Serialize, KamanjaUtils, NodeInfoExtract)
 
 lazy val ClusterInstallerDriver = project.in(file("Utils/ClusterInstaller/ClusterInstallerDriver")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(InstallDriverBase, MigrateBase, MigrateManager)
 

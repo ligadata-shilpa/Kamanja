@@ -304,6 +304,9 @@ class ContainerAPISpec extends FunSpec with LocalTestFixtures with BeforeAndAfte
 
 				And("AddContainer first time from " + file.getPath)
 				contStr = Source.fromFile(file).mkString
+				println("HERE IS MY METADATA CONFIGURATION!!!!!!!!!!!")
+				MetadataAPIImpl.dumpMetadataAPIConfig
+
 				res = MetadataAPIImpl.AddContainer(contStr, "JSON", None)
 				res should include regex ("\"Status Code\" : 0")
 
