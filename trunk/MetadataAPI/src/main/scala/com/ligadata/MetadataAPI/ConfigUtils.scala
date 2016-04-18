@@ -727,7 +727,7 @@ object ConfigUtils {
               clusterInfoDef.nameSpace = "clusterInfo"
               clusterInfoDef.tranId = MetadataAPIImpl.GetNewTranId
               clusterNotifications.append(clusterInfoDef)
-             // println("cic Change for " + clusterInfoDef.name )
+              println("cic Change for " + clusterInfoDef.name )
               if (addClusterResult.get.equalsIgnoreCase("add"))
                 clusterNotifyActions.append("Add")
               else
@@ -780,7 +780,7 @@ object ConfigUtils {
                   nodeDef.clusterId = ci.clusterId
                   nodeDef.elementType = "nodeDef"
                   clusterNotifications.append(nodeDef)
-               //   println("node Change for " + nodeDef.name )
+                  println("node Change for " + nodeDef.name )
                   if (addNodeResult.get.equalsIgnoreCase("add"))
                     clusterNotifyActions.append("Add")
                   else
@@ -814,7 +814,7 @@ object ConfigUtils {
                   tenantDef.clusterId = ci.clusterId
                   tenantDef.elementType = "TenantDef"
                   clusterNotifications.append(tenantDef)
-                //  println("tenant Change for " + tenantDef.name )
+                  println("tenant Change for " + tenantDef.name )
                   if (addTenantResult.get.equalsIgnoreCase("add"))
                     clusterNotifyActions.append("Add")
                   else
@@ -871,7 +871,7 @@ object ConfigUtils {
                   adapterDef.clusterId = ClusterId
                   adapterDef.elementType = "adapterDef"
                   clusterNotifications.append(adapterDef)
-                //  println("adapter Change for " + adapterDef.name )
+                  println("adapter Change for " + adapterDef.name )
                   if (addAdapterResult.get.equalsIgnoreCase("add"))
                     clusterNotifyActions.append("Add")
                   else
@@ -905,7 +905,7 @@ object ConfigUtils {
                 upDef.elementType = "upDef"
                 clusterNotifications.append(upDef)
 
-             //   println("UP Change for " + upDef.clusterId )
+                println("UP Change for " + upDef.clusterId )
                 if (upAddResults.get.equalsIgnoreCase("add"))
                   clusterNotifyActions.append("Add")
                 else
@@ -1735,5 +1735,33 @@ object ConfigUtils {
     }
     MdMgr.GetMdMgr.DumpModelConfigs
   }
+
+    /**
+      * LoadAdapterMessageBindingIntoCache
+      *
+      * @param key string of the form "s"${zkMessage.ObjectType}.${zkMessage.Name}" where the object type is the
+      *            "AdapterMsgBinding" and the Name is the FullBindingName of the object to fetch
+      */
+    def LoadAdapterMessageBindingIntoCache(key: String) {
+        try {
+            logger.debug("Fetch the AdapterMessageBinding with key: " + key + " from persistent store ")
+            val (objtype, jsonBytes) : (String, Any) = PersistenceUtils.GetObject(key.toLowerCase, "adapter_message_bindings")
+            logger.debug("Deserialize the binding " + key)
+            val binding : AdapterMessageBinding =
+                    MetadataAPISerialization.deserializeMetadata(new String(jsonBytes.asInstanceOf[Array[Byte]])).asInstanceOf[AdapterMessageBinding]
+            if (binding != null) {
+                if (! binding.IsDeleted) {
+                    logger.debug("Add the binding " + key + " to the metadata cache ")
+                    MdMgr.GetMdMgr.AddAdapterMessageBinding(binding)
+                }
+            }
+        } catch {
+            case e: Exception => {
+                logger.warn("Unable to load the object " + key + " into cache ", e)
+            }
+        }
+    }
+
+
 
 }

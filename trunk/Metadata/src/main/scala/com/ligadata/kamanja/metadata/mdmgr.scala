@@ -92,7 +92,7 @@ class MdMgr {
 
   private var tenantIdMap = new HashMap[String, TenantInfo]
 
-  private var propertyChanged: scala.collection.mutable.ArrayBuffer[String] = scala.collection.mutable.ArrayBuffer[String]()
+  private var propertyChanged: scala.collection.mutable.ArrayBuffer[(String,Any)] = scala.collection.mutable.ArrayBuffer[(String,Any)]()
   private val lock: Object = new Object
 
   def truncate {
@@ -3521,16 +3521,16 @@ class MdMgr {
     }
   }
 
-  def getConfigChanges: Array[String] = {
+  def getConfigChanges: Array[(String, Any)] = {
     lock.synchronized {
-      if (propertyChanged.isEmpty) return new Array[String](0)
-      var changes =  propertyChanged.toArray
+      if (propertyChanged.isEmpty) return new Array[(String, Any)](0)
+      val changes =  propertyChanged.toArray
       propertyChanged.clear
       return changes
     }
   }
 
-  def addConfigChange (in: String) = {
+  def addConfigChange (in: (String, Any)) = {
     lock.synchronized {
       propertyChanged += in
     }

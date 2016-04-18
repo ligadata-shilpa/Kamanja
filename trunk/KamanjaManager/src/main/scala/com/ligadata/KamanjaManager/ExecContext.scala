@@ -638,7 +638,7 @@ object PostMessageExecutionQueue {
 
     try {
       val transId = transService.getNextTransId
-      val msgEvent = nodeContext.getEnvCtxt().getContainerInstance("System.KamanjaMessageEvent")
+      val msgEvent = nodeContext.getEnvCtxt().getContainerInstance("com.ligadata.KamanjaBase.KamanjaMessageEvent")
       val txnCtxt = new TransactionContext(transId, nodeContext, emptyData, EventOriginInfo(uk, uv), System.currentTimeMillis, msgEvent)
       LOG.debug("Processing posted message:" + msg.getFullTypeName)
       txnCtxt.setInitialMessage("", msg)

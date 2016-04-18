@@ -718,7 +718,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           val newExpression = Expressions.FixupColumnNames(f, innerMapping, aliaseMessages)
           logger.trace("Matched where expression {}", newExpression)
           // Output the actual filter
-          collect ++= Array("if (%s) return Array.empty[MessageInterface]\n".format(newExpression))
+          collect ++= Array("if (!(%s)) return Array.empty[MessageInterface]\n".format(newExpression))
           false
         } else {
           true
@@ -879,7 +879,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     // Process the imports
     //
     var subtitutions = new Substitution
-    subtitutions.Add("model.name", root.header.namespace)
+    subtitutions.Add("model.name", "%s.%s".format(root.header.namespace, ModelName))
     subtitutions.Add("model.version", root.header.version)
     subtitutions.Add("factoryclass.name", FactoryName)
     subtitutions.Add("modelclass.name", ModelName)
@@ -950,7 +950,6 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     })
 
     subtitutions.Add("factory.isvalidmessage", msgs.map( m => {
-      outmessages += m
       val verMsg = ResolveToVersionedClassname(md, m)
       "msg.isInstanceOf[%s]".format(verMsg)
     }).mkString("||") )
@@ -962,7 +961,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     //
     messages :+= "val msgs = execMsgsSet.map(m => m.getFullTypeName -> m).toMap"
     incomingToMsgId.foreach( e => {
-      messages :+= "val msg%d = msgs.get(\"%s\").getOrElse(null).asInstanceOf[%s]".format(e._2, e._1, ResolveToVersionedClassname(md, e._1))
+      messages :+= "val msg%d = msgs.getOrElse(\"%s\", null).asInstanceOf[%s]".format(e._2, e._1, ResolveToVersionedClassname(md, e._1))
     })
 
     // Compute the highlevel handler that match dependencies
@@ -1085,6 +1084,8 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
             val outputType = ResolveToVersionedClassname(md, outputType1)
             val outputSet: Map[String, String] = ColumnNames(md, outputType1)
 
+            outmessages += outputType1
+
             val outputElements = outputSet.toArray.map(e => {
               // e.name -> from input, from mapping, from variable
               val m = innerMapping.get(e._1)
@@ -1113,14 +1114,15 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
             }
 
             // To Construct the final output
-            val outputResult = "val result = new %s(messagefactoryinterface)\n%s\n%s\nArray(result)".format(outputType,
+            val outputResult = "val result = %s.createInstance\n%s\n%s\nArray(result)".format(
+                                    outputType,
                                     outputElements.mkString("\n"), outputElements1.mkString("\n"))
             collect ++= Array(outputResult)
             collect ++= Array("}\n")
           }
 
           // Collect all input messages attribute used
-          logger.trace("Final map: transformation %s ouput %s used %s".format(t, o._1, innerTracking.mkString(", ")))
+          logger.trace("Final map: transformation %s output %s used %s".format(t, o._1, innerTracking.mkString(", ")))
 
           // Create the inmessage entry
           //
@@ -1137,7 +1139,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
             val classes = t.map( e => e._1 )
             val map1 = classes.map( e => (e -> t.filter( f => f._1 == e).map(e1 => e1._2).toSet)).toMap
-            logger.trace("Incomming: \n%s".format(map1.mkString(",\n")))
+            logger.trace("Incoming: \n%s".format(map1.mkString(",\n")))
             inmessages :+= map1
           }
 

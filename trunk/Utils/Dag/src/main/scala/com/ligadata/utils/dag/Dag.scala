@@ -44,6 +44,7 @@ import Dag._
 //
 
 case class EdgeId(nodeId: Long, edgeTypeId: Long) {
+  override def toString = "(N:%d, ET:%d)".format(nodeId, edgeTypeId)
   def IsMatch(eid: EdgeId) : Boolean = {
     return (eid.edgeTypeId == edgeTypeId) && ((eid.nodeId == nodeId) || (nodeId == 0))
   }
@@ -98,12 +99,14 @@ object DagRT {
   
   // maintain all edge sets where a given edge type is member of
   case class EdgeType(edgeTypeId: Long, idxET: Int) {
+    override def toString = "(%d, %d)".format(edgeTypeId, idxET)
     def AddInputEdge(ie: InputEdge) = inputEdges.append(ie)
     val inputEdges = ArrayBuffer[InputEdge]()
   }
   
   // definition of input edge which is denoted by origination node id and msg type
   case class InputEdge(eid: EdgeId, et: EdgeType, idxInSet: Int) {
+    override def toString = "(eid:%s, et:%s, idxInSet:%d)".format(eid.toString, et.toString, idxInSet)
     var iesOwner : InputEdgeSet = null
     def IsMatch(eidFrom: EdgeId) = eid.IsMatch(eidFrom)
   }
@@ -126,7 +129,7 @@ object DagRT {
     // if not, make a new node with the given information and put that node in node map
     // and populate input edge map with the input edges from that node.
     def AddNode(nodeId : Long, inputs: Array[Array[EdgeId]], outputs: Array[Long]): Unit = {
-      Info("DagImpl:AddNode ->, numNodes:%d, numEdgeSets: %d, numEdgeTypes: %d, nodeid: %d, inputs: %s, outputs: %s\n".format(numNodes, numEdgeSets, numEdgeTypes, nodeId, inputs.toString(), outputs.toString()))
+      Info("DagImpl:AddNode ->, numNodes:%d, numEdgeSets: %d, numEdgeTypes: %d, nodeid: %d, inputs: %s, outputs: %s\n".format(numNodes, numEdgeSets, numEdgeTypes, nodeId, inputs.map(_.mkString(",")).mkString(":"), outputs.mkString(",")))
       if(nodesMap.contains(nodeId))
         throw AlreadyExistsException("Dag::AddNode, nodeId already exist: %d".format(nodeId), null)
       val node = MakeNode(nodeId, inputs, outputs)
@@ -177,7 +180,7 @@ object DagRT {
       ies.LinkEdges
       iesList.append(ies)
       _numEdgeSets += 1
-      Info("DagImpl:AddInputEdgeSet, added new input edge set; nodeId: %d, idxSetInNode: %d, _numEdgeSets: %d, edgeIdSet: %s\n".format(nodeId, idxSetInNode, _numEdgeSets, edgeIdSet.toString))
+      Info("DagImpl:AddInputEdgeSet, added new input edge set; nodeId: %d, idxSetInNode: %d, _numEdgeSets: %d, edgeIdSet: %s\n".format(nodeId, idxSetInNode, _numEdgeSets, edgeIdSet.mkString(",")))
       ies
     }
   
@@ -194,12 +197,12 @@ object DagRT {
   }
   
   case class IesRTElem(ies: InputEdgeSet) {
-    def Reset() = { curCnt = 0;  for (i <- 0 to iesCnt) flagsFired(i) = false }
+    def Reset() = { curCnt = 0;  for (i <- 0 until iesCnt) flagsFired(i) = false }
     def IsSatisfied = (curCnt == iesCnt) // flagsFired.foldLeft(false){(result, flag) => (result && flag) }
     
     // Return true if all edges are in fired/satisfied state otherwise false
     def SetEdgeAsFired(idx : Int) : Boolean = {
-      if(idx > iesCnt) {
+      if(idx >= iesCnt) {
         // throw exception with appropriate message - must be bug as the idx never exceed iesCnt
       }
       if(flagsFired(idx)) {
@@ -225,7 +228,7 @@ object DagRT {
     def SetDag(dagNew : Dag) = {
       dag = dagNew.dagImpl
       iesRT = new Array[IesRTElem](dag.numEdgeSets)
-      for(idx <- 0 to dag.numEdgeSets) {
+      for(idx <- 0 until dag.numEdgeSets) {
         iesRT(idx) = IesRTElem(dag.getInputEdgeSet(idx))
         iesRT(idx).Reset
       }
@@ -243,17 +246,21 @@ object DagRT {
     //  return the ready node list
     def FireEdges(eids: Array[EdgeId]) : Array[ReadyNode] = {
       val result = new ArrayBuffer[ReadyNode]()
+      Info("DagRTImpl:FireEdges -> edges - %s\n".format(eids.map(_.toString).mkString(":")))
 
       def ProcessEid(eid: EdgeId) = {
         val eti = eid.edgeTypeId
         val etOpt = dag.getEdgeType(eti)
         if(etOpt.isEmpty)
-          throw InvalidArgumentException("DagRuntime::FireEdge - eid.edgeTypeId does not exist in Dag, eid.NodeId: %d, eid.edgeTypeId: %d".format(eid.nodeId, eid.edgeTypeId), null)
-        val et = etOpt.get
-        et.inputEdges.foreach(ie => if(ie.IsMatch(eid)) ProcessMatch(ie))
+          Info("DagRuntime::FireEdge - eid.edgeTypeId does not exist in Dag, eid.NodeId: %d, eid.edgeTypeId: %d".format(eid.nodeId, eid.edgeTypeId))
+        else {
+          val et = etOpt.get
+          et.inputEdges.foreach(ie => if (ie.IsMatch(eid)) ProcessMatch(ie))
+        }
       }
       
       def ProcessMatch(ie : InputEdge) = {
+        Info("DagRTImpl:ProcessMatch -> ie - %s\n".format(ie.toString))
         val ies = ie.iesOwner
         val idxIES = ies.idxIES
         val idxInSet = ie.idxInSet

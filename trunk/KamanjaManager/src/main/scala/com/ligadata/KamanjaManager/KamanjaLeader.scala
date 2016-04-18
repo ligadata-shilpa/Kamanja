@@ -1099,6 +1099,10 @@ object KamanjaLeader {
   }
   */
 
+  def forceAdapterRebalance: Unit = {
+    SetUpdatePartitionsFlag
+  }
+
   def Init(nodeId1: String, zkConnectString1: String, engineLeaderZkNodePath1: String, engineDistributionZkNodePath1: String, adaptersStatusPath1: String, inputAdap: ArrayBuffer[InputAdapter], outputAdap: ArrayBuffer[OutputAdapter],
            storageAdap: ArrayBuffer[StorageAdapter], enviCxt: EnvContext, zkSessionTimeoutMs1: Int, zkConnectionTimeoutMs1: Int, dataChangeZkNodePath1: String): Unit = {
     nodeId = nodeId1.toLowerCase
