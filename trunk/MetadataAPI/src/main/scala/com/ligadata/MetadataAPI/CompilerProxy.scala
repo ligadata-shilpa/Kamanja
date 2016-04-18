@@ -1193,12 +1193,48 @@ class CompilerProxy {
             val inst = getMessageInst(t, loaderInfo)
             if (inst != null) {
               logger.debug("getDefaultInputMsgSets: call mdlFactory.isValidMessage ")
-              if (mdlFactory.isValidMessage(inst)) {
-                logger.debug("getDefaultInputMsgSets: mdlFactory.isValidMessage returned true")
-                defaultInputMsgSets = List(t) :: defaultInputMsgSets
-              }
-              else {
-                logger.debug("getDefaultInputMsgSets: mdlFactory.isValidMessage returned false")
+              try {
+                if (mdlFactory.isValidMessage(inst)) {
+                  logger.debug("getDefaultInputMsgSets: mdlFactory.isValidMessage returned true")
+                  defaultInputMsgSets = List(t) :: defaultInputMsgSets
+                }
+                else {
+                  logger.debug("getDefaultInputMsgSets: mdlFactory.isValidMessage returned false")
+                }
+              } catch {
+                case e: DeprecatedException => {
+                  try {
+                    if (mdlFactory.isValidMessage(inst.asInstanceOf[MessageContainerBase])) {
+                      logger.debug("getDefaultInputMsgSets: mdlFactory.isValidMessage returned true")
+                      defaultInputMsgSets = List(t) :: defaultInputMsgSets
+                    }
+                    else {
+                      logger.debug("getDefaultInputMsgSets: mdlFactory.isValidMessage returned false for message " + t)
+                    }
+                  } catch {
+                    case e: DeprecatedException => {
+                      try {
+                        if (mdlFactory.isValidMessage(inst.asInstanceOf[MessageInterface])) {
+                          logger.debug("getDefaultInputMsgSets: mdlFactory.isValidMessage returned true")
+                          defaultInputMsgSets = List(t) :: defaultInputMsgSets
+                        }
+                        else {
+                          logger.debug("getDefaultInputMsgSets: mdlFactory.isValidMessage returned false for message " + t)
+                        }
+                      } catch {
+                        case e: Throwable => {
+                          logger.debug("getDefaultInputMsgSets: mdlFactory.isValidMessage returned failure for message " + t, e)
+                        }
+                      }
+                    }
+                    case e: Throwable => {
+                      logger.debug("getDefaultInputMsgSets: mdlFactory.isValidMessage returned failure for message " + t, e)
+                    }
+                  }
+                }
+                case e: Throwable => {
+                  logger.debug("getDefaultInputMsgSets: mdlFactory.isValidMessage returned failure for message " + t, e)
+                }
               }
             }
             else {
