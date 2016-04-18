@@ -92,7 +92,7 @@ class MdMgr {
 
   private var tenantIdMap = new HashMap[String, TenantInfo]
 
-  private var propertyChanged: scala.collection.mutable.ArrayBuffer[String] = scala.collection.mutable.ArrayBuffer[String]()
+  private var propertyChanged: scala.collection.mutable.ArrayBuffer[(String,Any)] = scala.collection.mutable.ArrayBuffer[(String,Any)]()
   private val lock: Object = new Object
 
   def truncate {
@@ -2230,15 +2230,16 @@ class MdMgr {
     if (depJars != null) depJarSet ++= depJars
     val dJars = if (depJarSet.size > 0) depJarSet.toArray else null
 
+    if (objectDefStr != null)
+      mdl.ObjectDefinition(objectDefStr)
+
     /** In the case of a PMML model, save the string in the model representation now.  PMML strings are
       * (for the first go) to be injested at the last possible minute by the shim model's factory object.
       * The instances so created will be cached for subsequent calls on the thread with which the instance
       * is associated.
       */
-    if (mdl.modelRepresentation == ModelRepresentation.PMML) {
-      mdl.ObjectDefinition(objectDefStr)
+    if (mdl.modelRepresentation == ModelRepresentation.PMML)
       mdl.ObjectFormat(ObjFormatType.fPMML)
-    }
     mdl.PhysicalName(physicalName)
     mdl.tenantId = tenantId
     SetBaseElem(mdl, nameSpace, name, ver, jarNm, dJars, ownerId, tenantId, uniqueId, mdElementId)
@@ -3251,8 +3252,8 @@ class MdMgr {
     def AddAdapterMessageBinding(adapterName: String
                       , namespaceMsgName : String
                       , namespaceSerializerName: String
-                      , serializerOptions : scala.collection.immutable.Map[String,String]
-                                 = scala.collection.immutable.Map[String,String]()): Unit = {
+                      , serializerOptions : scala.collection.immutable.Map[String,Any]
+                                 = scala.collection.immutable.Map[String,Any]()): Unit = {
 
         AddAdapterMessageBinding(MakeAdapterMessageBinding(adapterName
                                                         , namespaceMsgName
@@ -3274,7 +3275,7 @@ class MdMgr {
 
     @throws(classOf[AlreadyExistsException])
     def AddAdapterMessageBinding(binding : AdapterMessageBinding) : Boolean = {
-        val key : String = s"${binding.adapterName}.${binding.messageName}.${binding.serializer}".toLowerCase
+        val key : String = binding.FullBindingName.toLowerCase
         val added : Boolean = if (adapterMessageBindings.contains(key)) {
             throw AlreadyExistsException(s"an AdapterMessageBinding with key $key already exists... binding could not be added.", null)
         } else {
@@ -3295,8 +3296,8 @@ class MdMgr {
     def MakeAdapterMessageBinding(  adapterName: String
                                   , namespaceMsgName : String
                                   , namespaceSerializerName: String
-                                  , serializerOptions : scala.collection.immutable.Map[String,String]
-                                        = scala.collection.immutable.Map[String,String]())
+                                  , serializerOptions : scala.collection.immutable.Map[String,Any]
+                                        = scala.collection.immutable.Map[String,Any]())
                 : AdapterMessageBinding = {
 
         /** Instantiate the AdapterMessageBinding.  Update its base element with basic id information */
@@ -3314,9 +3315,10 @@ class MdMgr {
       * @return the removed AdapterMessageBinding (or null if not present).
       */
     def RemoveAdapterMessageBinding(fqBindingName : String) : AdapterMessageBinding = {
-        val binding = adapterMessageBindings.getOrElse(fqBindingName, null)
+        val key : String = fqBindingName.toLowerCase
+        val binding = adapterMessageBindings.getOrElse(key, null)
         if (binding != null) {
-            adapterMessageBindings -= fqBindingName
+            adapterMessageBindings -= key
         }
         binding
     }
@@ -3337,7 +3339,7 @@ class MdMgr {
       * @return a Map[String, AapterMessageBinding] with 0 or more kv pairs.
       */
     def BindingsForAdapter(adapterName : String) : scala.collection.immutable.Map[String,AdapterMessageBinding] = {
-        val adapterNameKey = adapterName.toLowerCase + ","
+        val adapterNameKey = adapterName.trim.toLowerCase + ","
         val bindingMap :  scala.collection.immutable.Map[String,AdapterMessageBinding] = adapterMessageBindings.filterKeys(key => {
             key.startsWith(adapterNameKey)
         }).toMap
@@ -3371,6 +3373,16 @@ class MdMgr {
         }).toMap
         bindingMap
     }
+
+  def Binding(adapterName: String, messageName : String, serializer : String) : AdapterMessageBinding = {
+    val adapName : String = adapterName.trim.toLowerCase
+    val msgName : String = messageName.trim.toLowerCase
+    val serName : String = serializer.trim.toLowerCase
+
+    val key = s"$adapName,$msgName,$serName"
+
+    adapterMessageBindings.getOrElse(key, null)
+  }
 
     /** Retrieve the SerializeDeserializerConfig with the supplied namespace.name
       *
@@ -3441,6 +3453,7 @@ class MdMgr {
     val ci = new ClusterCfgInfo
     ci.clusterId = clusterId
     ci.cfgMap = cfgMap
+    ci.usrConfigs = scala.collection.mutable.HashMap[String,String]()
     ci.modifiedTime = modifiedTime
     ci.createdTime = createdTime
     ci
@@ -3508,16 +3521,16 @@ class MdMgr {
     }
   }
 
-  def getConfigChanges: Array[String] = {
+  def getConfigChanges: Array[(String, Any)] = {
     lock.synchronized {
-      if (propertyChanged.isEmpty) return new Array[String](0)
-      var changes =  propertyChanged.toArray
+      if (propertyChanged.isEmpty) return new Array[(String, Any)](0)
+      val changes =  propertyChanged.toArray
       propertyChanged.clear
       return changes
     }
   }
 
-  def addConfigChange (in: String) = {
+  def addConfigChange (in: (String, Any)) = {
     lock.synchronized {
       propertyChanged += in
     }

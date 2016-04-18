@@ -157,9 +157,9 @@ public abstract class MessageContainerBase extends ContainerOrConcept {
 
 	public abstract void set(String key, Object value);
 
-	final public ContainerInterface convertFrom(Object srcObj) {
-		return (getContainerFactory().convertFrom(this, srcObj));
-	}
+//	final public ContainerInterface convertFrom(Object srcObj) {
+//		return (getContainerFactory().convertFrom(this, srcObj));
+//	}
 
 	final public boolean isMessage() {
 		return (getContainerFactory().getContainerType() == ContainerTypes.ContainerType.MESSAGE);

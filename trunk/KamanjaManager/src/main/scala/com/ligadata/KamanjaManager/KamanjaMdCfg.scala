@@ -253,7 +253,7 @@ object KamanjaMdCfg {
           envCtxt.setMetadataLoader(metadataLoader)
           envCtxt.setAdaptersAndEnvCtxtLoader(adaptersAndEnvCtxtLoader)
           // envCtxt.setClassLoader(KamanjaConfiguration.metadataLoader.loader) // Using Metadata Loader
-          envCtxt.setMetadataResolveInfo(KamanjaMetadata)
+          envCtxt.setObjectResolver(KamanjaMetadata)
           envCtxt.setMdMgr(KamanjaMetadata.getMdMgr)
           envCtxt.setSystemCatalogDatastore(initConfigs.dataDataStoreInfo)
           val containerNames = KamanjaMetadata.getAllContainers.map(container => container._1.toLowerCase).toList.sorted.toArray // Sort topics by names
@@ -316,6 +316,74 @@ object KamanjaMdCfg {
       LOG.error("Failed to instantiate Environment Context object for Class:" + className)
     }
     null
+  }
+
+  def upadateAdapter(inAdapter: AdapterInfo, isNew: Boolean, inputAdapters: ArrayBuffer[InputAdapter], outputAdapters: ArrayBuffer[OutputAdapter], storageAdapters: ArrayBuffer[StorageAdapter]): Boolean = {
+
+    println("Updating adapter ")
+    println(inAdapter.Name)
+
+
+      val conf = new AdapterConfiguration  //BOOOYA
+      conf.Name = inAdapter.Name.toLowerCase
+      conf.className = inAdapter.ClassName
+      conf.jarName = inAdapter.JarName
+      conf.dependencyJars = if (inAdapter.DependencyJars != null) inAdapter.DependencyJars.map(str => str.trim).filter(str => str.size > 0).toSet else null
+      conf.adapterSpecificCfg = inAdapter.AdapterSpecificCfg
+      conf.tenantId = inAdapter.TenantId
+
+      try {
+        if (inAdapter.typeString.equalsIgnoreCase("input")) {
+          val adapter = CreateInputAdapterFromConfig(conf, ExecContextFactoryImpl, KamanjaMetadata.gNodeContext).asInstanceOf[InputAdapter]
+          if (adapter == null) return false
+
+          // If this is a new adapter.. just add to the list of adapters. Else, remvoe the old one and replace with the new one.
+          if (!isNew) {
+            var i = 0
+            var pos = 0
+            inputAdapters.foreach(ad => {
+              if (inAdapter.Name.equalsIgnoreCase(ad.inputConfig.Name)) pos = i
+              i += 1
+            })
+            println("Removing input adapter at pos " + pos)
+            inputAdapters.remove(pos)
+          }
+          inputAdapters.append(adapter)
+          println("adding input adapter")
+        }
+
+        if (inAdapter.typeString.equalsIgnoreCase("output")) {
+          val adapter = CreateOutputAdapterFromConfig(conf, KamanjaMetadata.gNodeContext).asInstanceOf[OutputAdapter]
+          if (adapter == null) return false
+          // If this is a new adapter.. just add to the list of adapters. Else, remvoe the old one and replace with the new one.
+          if (!isNew) {
+            var i = 0
+            var pos = 0
+            outputAdapters.foreach(ad => {
+              if (inAdapter.Name.equalsIgnoreCase(ad.inputConfig.Name)) pos = i
+              i += 1
+            })
+            outputAdapters.remove(pos)
+            println("Removing output adapter at pos " + pos)
+          }
+          outputAdapters.append(adapter)
+          println("adding output adapter")
+        }
+
+      } catch {
+        case e: Exception => {
+          LOG.error("Failed to get input adapter")
+          return false
+        }
+      }
+
+
+    println("--------------------------")
+    return false
+  }
+
+  def updateOutuputAdapter(outAdapter: OutputAdapter, isNew: Boolean) = {
+
   }
 
   def LoadAdapters(inputAdapters: ArrayBuffer[InputAdapter], outputAdapters: ArrayBuffer[OutputAdapter], storageAdapters: ArrayBuffer[StorageAdapter]): Boolean = {
@@ -405,6 +473,7 @@ object KamanjaMdCfg {
       try {
         val adapter = CreateStorageAdapterFromConfig(ac._2, nodeContext)
         if (adapter == null) return false
+        adapter.setObjectResolver(KamanjaMetadata)
         storageAdapters += adapter
         KamanjaManager.incrAdapterChangedCntr()
       } catch {
@@ -523,6 +592,7 @@ object KamanjaMdCfg {
       try {
         val adapter = CreateOutputAdapterFromConfig(conf, nodeContext)
         if (adapter == null) return false
+        adapter.setObjectResolver(KamanjaMetadata)
         outputAdapters += adapter
         KamanjaManager.incrAdapterChangedCntr()
       } catch {
@@ -620,7 +690,7 @@ object KamanjaMdCfg {
     }
 
     adaps.foreach(ac => {
-      //BUGBUG:: Not yet validating required fields 
+      //BUGBUG:: Not yet validating required fields //BOOOYA
       val conf = new AdapterConfiguration
 
       val adap = ac._2

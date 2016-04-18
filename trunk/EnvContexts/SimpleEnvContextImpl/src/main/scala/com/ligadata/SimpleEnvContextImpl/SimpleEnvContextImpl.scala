@@ -750,7 +750,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   private[this] var _metadataLoader: KamanjaLoaderInfo = null
   private[this] var _adaptersAndEnvCtxtLoader: KamanjaLoaderInfo = null
   private[this] var _defaultDataStore: DataStore = null
-  private[this] var _mdres: MdBaseResolveInfo = null
+  private[this] var _objectResolver: ObjectResolver = null
   private[this] var _enableEachTransactionCommit = true
   private[this] var _jarPaths: collection.immutable.Set[String] = null // Jar paths where we can resolve all jars (including dependency jars).
 
@@ -1409,8 +1409,9 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 
   override def getAdaptersAndEnvCtxtLoader: KamanjaLoaderInfo = _adaptersAndEnvCtxtLoader
 
-  override def setMetadataResolveInfo(mdres: MdBaseResolveInfo): Unit = {
-    _mdres = mdres
+
+  override def setObjectResolver(objResolver: ObjectResolver): Unit = {
+    _objectResolver = objResolver
   }
 
   //BUGBUG:: May be we need to lock before we do anything here
@@ -3157,8 +3158,8 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   }
 
   override def getContainerInstance(containerName: String): ContainerInterface = {
-    if (_mdres != null)
-      _mdres.getMessgeOrContainerInstance(containerName)
+    if (_objectResolver != null)
+      _objectResolver.getInstance(containerName)
     else
       null
   }

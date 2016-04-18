@@ -23,13 +23,13 @@ public interface MessageContainerObjBase extends ContainerOrConceptFactory {
 
 	public String[] getPartitionKeyNames();
 
-	public MessageContainerBase createInstance();
+	public ContainerInterface createInstance();
 
 	public int getSchemaId();
 
-	public Object convertFrom(Object srcObj);
-
-	public ContainerInterface convertFrom(Object destObj, Object srcObj);
+//	public Object convertFrom(Object srcObj);
+//
+//	public ContainerInterface convertFrom(Object destObj, Object srcObj);
 
 	public boolean isMessage();
 

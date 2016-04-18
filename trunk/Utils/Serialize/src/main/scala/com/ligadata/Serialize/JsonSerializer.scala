@@ -801,17 +801,33 @@ object JsonSerializer {
           pretty(render(json))
         }
         case o: ClusterConfigDef => {
-          val json = (("ObjectType" ->  o.elementType) ~
-            ("Operation" -> operation) ~
-            ("NameSpace" -> o.NameSpace) ~
-            ("Name" -> o.name) ~
-            ("Version" -> "0") ~
-            ("PhysicalName" -> "") ~
-            ("JarName" -> "") ~
-            ("DependantJars" -> List[String]()) ~
-            ("ElementType" -> o.elementType) ~
-            ("ClusterId" -> o.clusterId))
-          pretty(render(json))
+            val json = (("ObjectType" ->  o.elementType) ~
+                ("Operation" -> operation) ~
+                ("NameSpace" -> o.NameSpace) ~
+                ("Name" -> o.name) ~
+                ("Version" -> "0") ~
+                ("PhysicalName" -> "") ~
+                ("JarName" -> "") ~
+                ("DependantJars" -> List[String]()) ~
+                ("ElementType" -> o.elementType) ~
+                ("ClusterId" -> o.clusterId))
+            pretty(render(json))
+        }
+        case o: AdapterMessageBinding => {
+            /** FIXME: Hack Alert:
+              * FIXME: For these we jam the FullBindingName in the name field and then restate the key in the
+              * FIXME: MetadataAPIImpl.updateThisKey(zkMessage: ZooKeeperNotification, tranId: Long) method to
+              * FIXME: val bindingKey : String = s"${zkMessage.ObjectType}.${zkMessage.Name}"...
+              * FIXME: Except for the object type and operation, the other fields are there just to satisfy the
+              * FIXME: the usage pattern in MetadataAPIImpl.updateThisKey method.
+              * FIXME: This mechanism should be reconsidered.
+              */
+            val json = (("ObjectType" ->  "AdapterMsgBinding") ~
+                ("Operation" -> operation) ~
+                ("NameSpace" -> o.NameSpace) ~
+                ("Name" -> o.FullBindingName) ~
+                ("Version" -> "0"))
+            pretty(render(json))
         }
         case _ => {
           throw UnsupportedObjectException("zkSerializeObjectToJson doesn't support the  objects of type objectType of " + mdObj.getClass().getName() + " yet.", null)
@@ -840,12 +856,12 @@ object JsonSerializer {
     cfgObj match {
       case o: ClusterInfo => {
         val json = (("ClusterId" -> o.clusterId))
-        pretty(render(json))
+        compact(render(json))
       }
       case o: ClusterCfgInfo => {
         val json = (("ClusterId" -> o.clusterId) ~
           ("CfgMap" -> o.cfgMap))
-        pretty(render(json))
+        compact(render(json))
       }
       case o: NodeInfo => {
         val json = (("NodeId" -> o.nodeId) ~
@@ -857,7 +873,7 @@ object JsonSerializer {
           ("Roles" -> o.roles.toList) ~
           ("Classpath" -> o.classpath) ~
           ("ClusterId" -> o.clusterId))
-        pretty(render(json))
+        compact(render(json))
       }
       case o: AdapterInfo => {
         val json = (("Name" -> o.name) ~
@@ -867,7 +883,7 @@ object JsonSerializer {
           ("DependencyJars" -> o.dependencyJars.toList) ~
           ("AdapterSpecificCfg" -> o.adapterSpecificCfg) ~
           ("TenantId" -> o.TenantId))
-        pretty(render(json))
+        compact(render(json))
       }
       case _ => {
         throw UnsupportedObjectException("SerializeCfgObjectToJson doesn't support the " +
@@ -896,10 +912,33 @@ object JsonSerializer {
           ("JarName" -> o.jarName) ~
           ("DependantJars" -> o.CheckAndGetDependencyJarNames.toList) ~
           ("TransactionId" -> o.tranId))
-        pretty(render(json))
+        compact(render(json))
       }
 
       case o: MessageDef => {
+        var primaryKeys = List[(String, List[String])]()
+        var foreignKeys = List[(String, List[String], String, List[String])]()
+        if (o.cType.Keys != null && o.cType.Keys.size != 0) {
+          o.cType.Keys.foreach(m => {
+            if (m.KeyType == RelationKeyType.tPrimary) {
+              val pr = m.asInstanceOf[PrimaryKey]
+              primaryKeys ::=(pr.constraintName, pr.key.toList)
+            } else {
+              val fr = m.asInstanceOf[ForeignKey]
+              foreignKeys ::=(fr.constraintName, fr.key.toList, fr.forignContainerName, fr.forignKey.toList)
+            }
+          })
+        }
+
+        val containerDef = o.cType.asInstanceOf[ContainerTypeDef]
+
+        val attribs =
+          if (containerDef.IsFixed) {
+            containerDef.asInstanceOf[StructTypeDef].memberDefs.toList
+          } else {
+            containerDef.asInstanceOf[MappedMsgTypeDef].attrMap.map(kv => kv._2).toList
+          }
+
         // Assume o.containerType is checked for not being null
         val json = ("Message" ->
           ("NameSpace" -> o.nameSpace) ~
@@ -914,32 +953,43 @@ object JsonSerializer {
             ("ObjectDefinition" -> o.objectDefinition) ~
             ("ObjectFormat" -> ObjFormatType.asString(o.objectFormat)) ~
             ("DependencyJars" -> o.CheckAndGetDependencyJarNames.toList) ~
+            ("MsgAttributes" -> attribs.map(a =>
+              ("NameSpace" -> a.NameSpace) ~
+                ("Name" -> a.Name) ~
+                ("TypNameSpace" -> a.typeDef.NameSpace) ~
+                ("TypName" -> a.typeDef.Name) ~
+                ("Version" -> a.Version) ~
+                ("CollectionType" -> ObjType.asString(a.CollectionType)))) ~
+            ("PrimaryKeys" -> primaryKeys.map(m => ("constraintName" -> m._1) ~ ("key" -> m._2))) ~
+            ("ForeignKeys" -> foreignKeys.map(m => ("constraintName" -> m._1) ~ ("key" -> m._2) ~ ("forignContainerName" -> m._3) ~ ("forignKey" -> m._4))) ~
             ("TransactionId" -> o.tranId))
-        var jsonStr = pretty(render(json))
-
-        o.containerType match {
-          case c: StructTypeDef => {
-            jsonStr = replaceLast(jsonStr, "}\n}", "").trim + ",\n  \"Attributes\": "
-            var memberDefJson = SerializeObjectListToJson(o.containerType.asInstanceOf[StructTypeDef].memberDefs)
-            memberDefJson = memberDefJson + "}\n}"
-            jsonStr += memberDefJson
-            jsonStr
-          }
-          case c: MappedMsgTypeDef => {
-            jsonStr = jsonStr.replaceAll("}", "").trim + ",\n  \"MappedMsgTypeDef\": "
-            var memberDefJson = SerializeObjectListToJson(o.containerType.asInstanceOf[MappedMsgTypeDef].attrMap.values.toArray)
-            memberDefJson = memberDefJson + "}\n}"
-            jsonStr += memberDefJson
-            jsonStr
-          }
-          case _ => {
-            throw UnsupportedObjectException("SerializeObjectToJson doesn't support the " +
-              "objectType of " + o.containerType.getClass().getName() + " yet", null)
-          }
-        }
+        compact(render(json))
       }
 
       case o: ContainerDef => {
+        var primaryKeys = List[(String, List[String])]()
+        var foreignKeys = List[(String, List[String], String, List[String])]()
+        if (o.cType.Keys != null && o.cType.Keys.size != 0) {
+          o.cType.Keys.foreach(m => {
+            if (m.KeyType == RelationKeyType.tPrimary) {
+              val pr = m.asInstanceOf[PrimaryKey]
+              primaryKeys ::=(pr.constraintName, pr.key.toList)
+            } else {
+              val fr = m.asInstanceOf[ForeignKey]
+              foreignKeys ::=(fr.constraintName, fr.key.toList, fr.forignContainerName, fr.forignKey.toList)
+            }
+          })
+        }
+
+        val containerDef = o.cType.asInstanceOf[ContainerTypeDef]
+
+        val attribs =
+          if (containerDef.IsFixed) {
+            containerDef.asInstanceOf[StructTypeDef].memberDefs.toList
+          } else {
+            containerDef.asInstanceOf[MappedMsgTypeDef].attrMap.map(kv => kv._2).toList
+          }
+
         val json = ("Container" ->
           ("NameSpace" -> o.nameSpace) ~
             ("Name" -> o.name) ~
@@ -952,40 +1002,20 @@ object JsonSerializer {
             ("ObjectDefinition" -> o.objectDefinition) ~
             ("ObjectFormat" -> ObjFormatType.asString(o.objectFormat)) ~
             ("DependencyJars" -> o.CheckAndGetDependencyJarNames.toList) ~
+            ("MsgAttributes" -> attribs.map(a =>
+              ("NameSpace" -> a.NameSpace) ~
+                ("Name" -> a.Name) ~
+                ("TypNameSpace" -> a.typeDef.NameSpace) ~
+                ("TypName" -> a.typeDef.Name) ~
+                ("Version" -> a.Version) ~
+                ("CollectionType" -> ObjType.asString(a.CollectionType)))) ~
+            ("PrimaryKeys" -> primaryKeys.map(m => ("constraintName" -> m._1) ~ ("key" -> m._2))) ~
+            ("ForeignKeys" -> foreignKeys.map(m => ("constraintName" -> m._1) ~ ("key" -> m._2) ~ ("forignContainerName" -> m._3) ~ ("forignKey" -> m._4))) ~
             ("TransactionId" -> o.tranId))
-        var jsonStr = pretty(render(json))
-
-        o.containerType match {
-          case c: StructTypeDef => {
-            jsonStr = replaceLast(jsonStr, "}\n}", "").trim + ",\n  \"Attributes\": "
-            var memberDefJson = SerializeObjectListToJson(o.containerType.asInstanceOf[StructTypeDef].memberDefs)
-            memberDefJson = memberDefJson + "}\n}"
-            jsonStr += memberDefJson
-            jsonStr
-          }
-          case c: MappedMsgTypeDef => {
-            jsonStr = jsonStr.replaceAll("}", "").trim + ",\n  \"MappedMsgTypeDef\": "
-            var memberDefJson = SerializeObjectListToJson(o.containerType.asInstanceOf[MappedMsgTypeDef].attrMap.values.toArray)
-            memberDefJson = memberDefJson + "}\n}"
-            jsonStr += memberDefJson
-            jsonStr
-          }
-          case _ => {
-            throw UnsupportedObjectException(s"SerializeObjectToJson doesn't support the " +
-              "objectType of $mdObj.name  yet", null)
-          }
-        }
+        compact(render(json))
       }
 
       case o: ModelDef => {
-        val inputMsgAndAttribs :List[List[(String, List[String])]]  =
-          if (o.inputMsgSets != null) {
-            o.inputMsgSets.map(s => s.map(msgAndAttris =>
-              (if (msgAndAttris.message != null) msgAndAttris.message else "", if (msgAndAttris.attributes != null) msgAndAttris.attributes.toList else List[String]())).toList).toList
-          } else {
-            List[List[(String, List[String])]]()
-          }
-
         val outputMsgs =
           if (o.outputMsgs != null) {
             o.outputMsgs.toList
@@ -993,19 +1023,12 @@ object JsonSerializer {
             List[String]()
           }
 
-/*
-        val x = ("InputMsgAndAttribsSets" -> inputMsgAndAttribs.map {i =>
-          ("InputMsgAndAttribs" ->  i.map {s =>
-            (("message" -> s._1) ~
-              ("attributes" -> s._2))})
-        })
-*/
-
         val json = ("Model" ->
           ("NameSpace" -> o.nameSpace) ~
             ("Name" -> o.name) ~
             ("Version" -> MdMgr.Pad0s2Version(o.ver)) ~
             ("IsReusable" -> o.isReusable.toString) ~
+            ("inputMsgSets" -> o.inputMsgSets.toList.map(m => m.toList.map(f => ("Origin" -> f.origin) ~ ("Message" -> f.message) ~ ("Attributes" -> f.attributes.toList)))) ~
             ("OutputMsgs" -> outputMsgs) ~
             ("ModelRep" -> o.modelRepresentation.toString) ~
             ("ModelType" -> o.miningModelType.toString) ~
@@ -1017,9 +1040,7 @@ object JsonSerializer {
             ("Deleted" -> o.deleted) ~
             ("Active" -> o.active) ~
             ("TransactionId" -> o.tranId))
-        var jsonStr = pretty(render(json))
-        jsonStr = replaceLast(jsonStr, "}\n}", "").trim
-        jsonStr
+        compact(render(json))
       }
 
       case o: AttributeDef => {
@@ -1049,7 +1070,7 @@ object JsonSerializer {
           ("DependencyJars" -> o.CheckAndGetDependencyJarNames.toList) ~
           ("Implementation" -> o.implementationName) ~
           ("TransactionId" -> o.tranId))
-        pretty(render(json))
+        compact(render(json))
       }
       case o: MapTypeDef => {
         val json = (("MetadataType" -> "MapTypeDef") ~
@@ -1067,7 +1088,7 @@ object JsonSerializer {
           ("ValueTypeNameSpace" -> o.valDef.nameSpace) ~
           ("ValueTypeName" -> ObjType.asString(o.valDef.tType)) ~
           ("TransactionId" -> o.tranId))
-        pretty(render(json))
+        compact(render(json))
       }
       case o: ArrayTypeDef => {
         val json = (("MetadataType" -> "ArrayTypeDef") ~
@@ -1083,7 +1104,7 @@ object JsonSerializer {
           ("Implementation" -> o.implementationName) ~
           ("NumberOfDimensions" -> o.arrayDims) ~
           ("TransactionId" -> o.tranId))
-        pretty(render(json))
+        compact(render(json))
       }
       case o: StructTypeDef => {
         val json = (("MetadataType" -> "StructTypeDef") ~
@@ -1098,7 +1119,7 @@ object JsonSerializer {
           ("DependencyJars" -> o.CheckAndGetDependencyJarNames.toList) ~
           ("Implementation" -> o.implementationName) ~
           ("TransactionId" -> o.tranId))
-        pretty(render(json))
+        compact(render(json))
       }
       case o: MappedMsgTypeDef => {
         val json = (("MetadataType" -> "MappedMsgTypeDef") ~
@@ -1113,7 +1134,7 @@ object JsonSerializer {
           ("DependencyJars" -> o.CheckAndGetDependencyJarNames.toList) ~
           ("Implementation" -> o.implementationName) ~
           ("TransactionId" -> o.tranId))
-        pretty(render(json))
+        compact(render(json))
       }
       case o: AnyTypeDef => {
         val json = (("MetadataType" -> "AnyTypeDef") ~
@@ -1128,7 +1149,7 @@ object JsonSerializer {
           ("DependencyJars" -> o.CheckAndGetDependencyJarNames.toList) ~
           ("Implementation" -> o.implementationName) ~
           ("TransactionId" -> o.tranId))
-        pretty(render(json))
+        compact(render(json))
       }
       case _ => {
         throw UnsupportedObjectException(s"SerializeObjectToJson doesn't support the objectType of " + mdObj.getClass().getName() + "  yet", null)
@@ -1226,10 +1247,42 @@ object JsonSerializer {
 
   def SerializeMapToJsonString(map: Map[String, Any]): String = {
     implicit val formats = org.json4s.DefaultFormats
-    return Serialization.write(map)
+    Serialization.write(map)
   }
 
-  def SerializeModelConfigToJson(mcfgKey: String, config: scala.collection.immutable.Map[String, Any]): String = {
+    /**
+      * Translate the supplied json string (typically a flattened rep of either a List[Map[String, Any]] or
+      * scala.collection.immutable.Map[String,Any]).  The caller should know what it is (e.g., by looking at the
+      * leading character for '[' for list or the '{' for map).
+      *
+      * @param jsonStr a string rep of a json map or list
+      * @return Any (actually either a Map[String,Any] or List[Map[String, Any]]
+      */
+
+    @throws(classOf[com.ligadata.Exceptions.Json4sParsingException])
+    @throws(classOf[com.ligadata.Exceptions.InvalidArgumentException])
+    def jsonStringAsColl(jsonStr: String): Any = {
+        val jsonObjs : Any = try {
+            implicit val jsonFormats: Formats = DefaultFormats
+            val json = parse(jsonStr)
+            logger.debug("Parsed the json : " + jsonStr)
+            json.values
+        } catch {
+            case e: MappingException => {
+                logger.debug("", e)
+                throw Json4sParsingException(e.getMessage, e)
+            }
+            case e: Exception => {
+                logger.debug("", e)
+                throw InvalidArgumentException(e.getMessage, e)
+            }
+        }
+        jsonObjs
+    }
+
+
+
+    def SerializeModelConfigToJson(mcfgKey: String, config: scala.collection.immutable.Map[String, Any]): String = {
     var jsonStr = ""
     try{
       jsonStr = jsonStr + SerializeMapToJsonString(Map(mcfgKey -> config))

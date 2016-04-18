@@ -28,7 +28,7 @@ import org.json4s.{DefaultFormats, Formats}
 import scala.Enumeration
 import scala.collection.mutable.{Map, Set}
 
-// define some enumerations 
+// define some enumerations
 object ObjFormatType extends Enumeration {
   type FormatType = Value
   val fCSV, fJSON, fXML, fSERIALIZED, fJAVA, fSCALA, fPMML, fUNKNOWN = Value
@@ -73,7 +73,7 @@ object ObjScalarType extends Enumeration {
 	val tInt, tFloat, tDouble, tString, tBoolean = Value
 }
 
-import ObjContainerType._ 
+import ObjContainerType._
 import ObjScalarType._
 */
 
@@ -147,7 +147,7 @@ object ObjTypeType extends Enumeration {
 import com.ligadata.kamanja.metadata.ObjTypeType._
 
 object DefaultMdElemStructVer {
-  def Version = 1 // Default version is 1 
+  def Version = 1 // Default version is 1
 }
 
 // case class FullName (nameSpace: String, name: String)
@@ -255,7 +255,7 @@ class BaseElemDef extends BaseElem {
     var tenantId: String = _
 }
 
-// All these metadata elements should have specialized serialization and deserialization 
+// All these metadata elements should have specialized serialization and deserialization
 // functions when storing in key/value store as many member objects should be stored as reference rather than entire object
 
 trait TypeDefInfo {
@@ -983,18 +983,6 @@ class ClusterCfgInfo {
     } else if(!(clusterId == null && in.clusterId == null)) {
       return false
     }
-    // Check modifiedTime
-    if ((modifiedTime != null && in.modifiedTime != null)) {
-      if(!modifiedTime.equals(in.modifiedTime)) return false
-    } else if(!(modifiedTime == null && in.modifiedTime == null)) {
-      return false
-    }
-    // Check createdTime
-    if ((createdTime != null && in.createdTime != null)) {
-      if(!createdTime.equals(in.createdTime)) return false
-    } else if(!(createdTime == null && in.createdTime == null)) {
-      return false
-    }
 
     // Check createdTime
     if ((usrConfigs != null && in.usrConfigs != null)) {
@@ -1002,6 +990,7 @@ class ClusterCfgInfo {
     } else if(!(usrConfigs == null && in.usrConfigs == null)) {
       return false
     }
+
     // Check createdTime
     if ((cfgMap != null && in.cfgMap != null)) {
       if(!((cfgMap.toSet diff in.cfgMap.toSet).toMap.isEmpty)) return false
@@ -1154,8 +1143,8 @@ class SerializeDeserializeConfig(val serDeserType : SerializeDeserializeType.Ser
 class AdapterMessageBinding(  val adapterName : String
                             , val messageName : String
                             , val serializer : String
-                            , val options : scala.collection.immutable.Map[String,String]
-                                    = scala.collection.immutable.Map[String,String]())
+                            , val options : scala.collection.immutable.Map[String,Any]
+                                    = scala.collection.immutable.Map[String,Any]())
         extends BaseElemDef {
 
     def FullBindingName : String = {
