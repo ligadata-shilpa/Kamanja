@@ -202,6 +202,10 @@ _Configure the metadata api config file to use.  In this case, the cassandra tem
 
 setPathsFor.scala --installDir $KAMANJA_HOME --templateFile $MetadataDir/templates/Cassandra_MetadataAPIConfig_Template.properties --scalaHome $SCALA_HOME --javaHome $JAVA_HOME --storeType cassandra --schemaName metadata --schemaLocation localhost > $KAMANJA_HOME/config/Cassandra_MetadataAPIConfig.properties
 
+_Configure the engind config file to use.  In this case, the cassandra template is used (make location substitutions... assumes that the JAVA_HOME and SCALA_HOME env variables are set in your system) NOTE: THE CURRENT Engine1Config.properties is overwritten_
+
+setPathsFor.scala --installDir $KAMANJA_HOME --templateFile $MetadataDir/templates/Engine1Config_Template.properties --scalaHome $SCALA_HOME --javaHome $JAVA_HOME --storeType cassandra --schemaName metadata --schemaLocation localhost > $KAMANJA_HOME/config/Engine1Config.properties
+
 _Define the cluster info_
 
 $KAMANJA_HOME/bin/kamanja $apiConfigProperties upload cluster config $KAMANJA_HOME/config/adapterMessageBindingClusterConfig.json
