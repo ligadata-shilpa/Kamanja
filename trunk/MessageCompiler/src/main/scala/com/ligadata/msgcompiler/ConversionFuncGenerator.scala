@@ -299,13 +299,16 @@ class ConversionFuncGenerator {
     """
     private def convertToVer""" + prevVersion + """(oldVerobj: """ + prevVerMsgPhysicalName + """): """ + currentMsgPhysicalName + """= {
        var newVerObj = new """ + currentMsgPhysicalName + """(this)
-       """ + genPrevVerTypMatchKeys + genPrevVerTypNotMatchKeys + """
+       """ + genPrevVerTypMatchKeys + genPrevVerTypNotMatchKeys + """         
        oldVerobj.valuesMap.foreach(attribute => {
        val key = attribute._1.toLowerCase()
        val attributeVal = attribute._2
 
        if (prevVerTypMatchKeys.contains(key)) { //Name and Base Types Match    
-         newVerObj.valuesMap.put(key, attributeVal);
+         key match{
+           """ + genConvForMsgsAndCntrs + """   
+            case _ => newVerObj.valuesMap.put(key, attributeVal);      
+         }         
        } else if (prevVerTypsNotMatchKeys.contains(key)) { //Name Match and Types Not Match
 
           /* FIX ME: Need to check the conversions and fix it  */
@@ -377,7 +380,6 @@ class ConversionFuncGenerator {
                       mappedPrevTypNotMatchkeys.append(conversionFunc(1))
                       convFuncStr.append(conversionFunc(2))
                     }
-
                   }
                   case "tstruct" => {
                     var ctrDef: ContainerDef = mdMgr.Container(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
@@ -437,9 +439,8 @@ class ConversionFuncGenerator {
   private def ConversionFuncForArray(field: Element, attributes: Map[String, Any], fixedMsg: Boolean, fieldBaseType: BaseTypeDef): Array[String] = {
 
     var arrayType = fieldBaseType.asInstanceOf[ArrayTypeDef]
-    var typetyprStr: String = arrayType.tType.toString().toLowerCase()
+    var typetyprStr: String = arrayType.elemDef.tType.toString().toLowerCase()
     var typeInfo = arrayType.elemDef.tTypeType.toString().toLowerCase()
-
     typeInfo match {
       case "tscalar" => { return ConversionFuncForArrayScalar(field, attributes, fixedMsg, fieldBaseType) }
       case "tcontainer" => {
@@ -468,44 +469,58 @@ class ConversionFuncGenerator {
     var filedStrBuf = new StringBuilder(8 * 1024)
     var convPrevVerStr = new StringBuilder(8 * 1024)
     var returnStmts = new ArrayBuffer[String]
+    var childName: String = ""
     try {
-      val (mbrExists, sameTyp, mbrMatchTypNotMatch) = AtrributesTypeMatchCheck(attributes, field.Name, fieldBaseType.FullName, false, null)
+      val curObjtype = field.FldMetaataType.typeString.toString()
+      var curObjtypeStr: String = ""
+      if (curObjtype != null && curObjtype.trim() != "") {
+        curObjtypeStr = curObjtype.split("\\[")(1).substring(0, curObjtype.split("\\[")(1).length() - 1)
+      }
+      val (mbrExists, sameTyp, mbrMatchTypNotMatch, chldName) = AtrributesTypeMatchCheck(attributes, field.Name, fieldBaseType.FullName, true, true, curObjtypeStr)
       var memberExists = mbrExists
       var sameType = sameTyp
       var membrMatchTypeNotMatch = mbrMatchTypNotMatch
+      var childName: String = chldName
       if (fixedMsg) {
-        /*  if (memberExists) {
-            convPrevVerStr = convPrevVerStr.append("%s for(i <- 0 until prevVerObj.%s.length) { %s".format(pad2, f.Name, newline))
-            if (sameType)
-              convPrevVerStr = convPrevVerStr.append("%s%s(i) = prevVerObj.%s(i)};%s".format(pad2, f.Name, f.Name, newline))
-            else {
-              convPrevVerStr = convPrevVerStr.append("%sval curVerObj = new %s()%s".format(pad2, curObjtypeStr, newline))
-              convPrevVerStr = convPrevVerStr.append("%scurVerObj.ConvertPrevToNewVerObj(child)%s".format(pad2, newline))
-              convPrevVerStr = convPrevVerStr.append("%s%s(i)= curVerObj}%s".format(pad2, f.Name, newline))
-            }*/
+        if (memberExists) {
+          convPrevVerStr = convPrevVerStr.append("%s { %s".format(msgConstants.pad2, msgConstants.newline))
+          convPrevVerStr = convPrevVerStr.append("%s newVerObj.%s = new %s(oldVerobj.%s.length) %s".format(msgConstants.pad2, field.Name, curObjtype, field.Name, msgConstants.newline))
+
+          convPrevVerStr = convPrevVerStr.append("%s for(i <- 0 until oldVerobj.%s.length) { %s".format(msgConstants.pad3, field.Name, msgConstants.newline))
+          if (sameType)
+            convPrevVerStr = convPrevVerStr.append("%s newVerObj.%s(i) = oldVerobj.%s(i)};%s".format(msgConstants.pad3, field.Name, field.Name, msgConstants.newline))
+          else {
+            convPrevVerStr = convPrevVerStr.append("%sval curVerObj = new %s()%s".format(msgConstants.pad3, curObjtypeStr, msgConstants.newline))
+            convPrevVerStr = convPrevVerStr.append("%scurVerObj.ConvertFrom( oldVerobj.%s(i))%s".format(msgConstants.pad3, field.Name, msgConstants.newline))
+            convPrevVerStr = convPrevVerStr.append("%s%s(i)= curVerObj}%s".format(msgConstants.pad3, field.Name, msgConstants.newline))
+          }
+          convPrevVerStr = convPrevVerStr.append("%s } %s".format(msgConstants.pad2, msgConstants.newline))
+
+        }
       } else {
-        /*if (memberExists) {
-            mappedPrevVerMatchkeys.append("\"" + f.Name + "\",")
-            // convPrevVerStr = convPrevVerStr.append("%s%s{var obj =  prevVerObj.getOrElse(\"%s\", null)%s".format(newline, pad2, f.Name, newline))
-            convPrevVerStr = convPrevVerStr.append("%s case \"%s\" => { %s".format(pad2, f.Name, newline))
+        if (memberExists) {
+          mappedPrevVerMatchkeys.append("\"" + field.Name + "\",")
+          // convPrevVerStr = convPrevVerStr.append("%s%s{var obj =  prevVerObj.getOrElse(\"%s\", null)%s".format(newline, pad2, f.Name, newline))
+          convPrevVerStr = convPrevVerStr.append("%s case \"%s\" => { %s".format(msgConstants.pad3, field.Name, msgConstants.newline))
 
-            if (sameType)
-              convPrevVerStr = convPrevVerStr.append("%sif(prevObjfield._2._2 != null){ fields(\"%s\") = (-1, prevObjfield._2._2)}}%s".format(pad2, f.Name, newline))
-            else {
-              convPrevVerStr = convPrevVerStr.append("%s type typ = scala.Array[%s]%s".format(pad2, childName, newline))
-              convPrevVerStr = convPrevVerStr.append("%s var %s : %s = %s();%s".format(pad2, f.Name, curObjtype, curObjtype, newline))
+          if (sameType) {
+            convPrevVerStr = convPrevVerStr.append("%sif(oldVerobj.valuesMap(\"%s\") != null){ newVerObj.valuesMap(\"%s\") = oldVerobj.valuesMap(\"%s\")}%s".format(msgConstants.pad3, field.Name, field.Name, field.Name, msgConstants.newline))
+          } else {
+            convPrevVerStr = convPrevVerStr.append("%s type typ = scala.Array[%s]%s".format(msgConstants.pad3, childName, msgConstants.newline))
+            convPrevVerStr = convPrevVerStr.append("%s var %s : %s = %s();%s".format(msgConstants.pad3, field.Name, curObjtype, curObjtype, msgConstants.newline))
 
-              convPrevVerStr = convPrevVerStr.append("%s if(prevObjfield._2._2 != null  && prevObjfield._2._2.isInstanceOf[typ]){%s%s for (i <- 0 until prevObjfield._2._2.length) {%s".format(pad2, newline, pad2, newline))
-              convPrevVerStr = convPrevVerStr.append("%s val curVerObj = new %s()%s".format(pad2, curObjtypeStr, newline))
-              convPrevVerStr = convPrevVerStr.append("%s curVerObj.ConvertPrevToNewVerObj(child)%s".format(pad2, newline))
-              convPrevVerStr = convPrevVerStr.append("%s %s(i) = curVerObj}}%s".format(pad2, f.Name, newline))
-              convPrevVerStr = convPrevVerStr.append("%s fields(\"%s\") = (-1, %s)}%s".format(pad2, f.Name, f.Name, newline))
+            convPrevVerStr = convPrevVerStr.append("%s if((oldVerobj.valuesMap(\"%s\") != null) && oldVerobj.valuesMap(\"%s\").isInstanceOf[typ]){%s%s for (i <- 0 until oldVerobj.valuesMap(\"%s\").length) {%s".format(msgConstants.pad3, field.Name, field.Name, msgConstants.newline, msgConstants.pad3, field.Name, msgConstants.newline))
+            convPrevVerStr = convPrevVerStr.append("%s val curVerObj = new %s()%s".format(msgConstants.pad3, msgConstants.pad3, msgConstants.newline))
+            convPrevVerStr = convPrevVerStr.append("%s curVerObj.ConvertFrom(oldVerobj.valuesMap(key)(i))%s".format(msgConstants.pad3, msgConstants.newline))
+            convPrevVerStr = convPrevVerStr.append("%s %s(i) = curVerObj}}%s".format(msgConstants.pad3, field.Name, msgConstants.newline))
+            convPrevVerStr = convPrevVerStr.append("%s  newVerObj.valuesMap(key).setValue(%s)%s".format(msgConstants.pad3, field.Name, field.Name, msgConstants.newline))
 
-            }
+          }
+          convPrevVerStr = convPrevVerStr.append("%s } %s".format(msgConstants.pad3, msgConstants.newline))
 
-          } else if (membrMatchTypeNotMatch) {
-            mappedPrevTypNotrMatchkeys = mappedPrevTypNotrMatchkeys.append("\"" + f.Name + "\",")
-          }*/
+        } else if (membrMatchTypeNotMatch) {
+          mappedPrevTypNotrMatchkeys = mappedPrevTypNotrMatchkeys.append("\"" + field.Name + "\",")
+        }
 
       }
     } catch {
@@ -529,14 +544,14 @@ class ConversionFuncGenerator {
     var convPrevVerStr = new StringBuilder(8 * 1024)
     var returnStmts = new ArrayBuffer[String]
     try {
-      val (mbrExists, sameTyp, mbrMatchTypNotMatch) = AtrributesTypeMatchCheck(attributes, field.Name, fieldBaseType.FullName, false, null)
+      val (mbrExists, sameTyp, mbrMatchTypNotMatch, childName) = AtrributesTypeMatchCheck(attributes, field.Name, fieldBaseType.FullName, false, false, null)
       var memberExists = mbrExists
       var sameType = sameTyp
       var membrMatchTypeNotMatch = mbrMatchTypNotMatch
       if (memberExists) {
         if (fixedMsg) {
           //add fixed stuff
-          convPrevVerStr = convPrevVerStr.append("%snewVerObj.%s = oldVerobj.%s; %s".format(msgConstants.pad3, field.Name, field.Name, msgConstants.newline))
+          convPrevVerStr = convPrevVerStr.append("%s newVerObj.%s = oldVerobj.%s; %s".format(msgConstants.pad3, field.Name, field.Name, msgConstants.newline))
         } else {
           mappedPrevVerMatchkeys.append("\"" + field.Name + "\",")
           if (membrMatchTypeNotMatch) {
@@ -566,7 +581,7 @@ class ConversionFuncGenerator {
     try {
       val childCtrFullame = ctrDef.FullName
       val childCtrPhysicalName = ctrDef.PhysicalName
-      val (mbrExists, sameTyp, mbrMatchTypNotMatch) = AtrributesTypeMatchCheck(attributes, field.Name, childCtrFullame, true, childCtrPhysicalName)
+      val (mbrExists, sameTyp, mbrMatchTypNotMatch, childName) = AtrributesTypeMatchCheck(attributes, field.Name, childCtrFullame, true, false, childCtrPhysicalName)
       var memberExists = mbrExists
       var sameType = sameTyp
       var membrMatchTypeNotMatch = mbrMatchTypNotMatch
@@ -579,13 +594,13 @@ class ConversionFuncGenerator {
         } else {
           mappedPrevVerMatchkeys.append("\"" + field.Name + "\",")
           convPrevVerStr = convPrevVerStr.append("%s case \"%s\" => { %s".format(msgConstants.pad2, field.Name, msgConstants.newline))
-          convPrevVerStr = convPrevVerStr.append("%s  newVerObj.valuesMap(\"%s\") =  oldVerobj.valuesMap(\"%s\")  }}%s".format(msgConstants.pad2, field.Name, msgConstants.newline))
           if (sameType) {
+            convPrevVerStr = convPrevVerStr.append("%s if (oldVerobj.valuesMap(\"%s\") != null){ newVerObj.valuesMap(\"%s\") =  oldVerobj.valuesMap(\"%s\")  }}%s".format(msgConstants.pad2, field.Name, field.Name, field.Name, msgConstants.newline))
 
           } else {
             convPrevVerStr = convPrevVerStr.append("%s{%s%sval curVerObj = new %s()%s".format(msgConstants.pad2, msgConstants.newline, msgConstants.pad2, ctrDef.typeString, msgConstants.newline))
-            convPrevVerStr = convPrevVerStr.append("%scurVerObj.convertPrevVersionToCurVersion(prevObjfield._2._2)%s".format(msgConstants.pad2, field.Name, msgConstants.newline))
-            convPrevVerStr = convPrevVerStr.append("%s fields(\"%s\") = (prevObjfield._2._1,curVerObj) }%s".format(msgConstants.pad2, field.Name, msgConstants.newline))
+            convPrevVerStr = convPrevVerStr.append("%scurVerObj.convertFrom(oldVerobj.valuesMap(key))%s".format(msgConstants.pad2, field.Name, msgConstants.newline))
+            convPrevVerStr = convPrevVerStr.append("%s newVerObj.valuesMap(\"%s\") = curVerObj }%s".format(msgConstants.pad2, field.Name, msgConstants.newline))
           }
         }
       }
@@ -619,7 +634,7 @@ class ConversionFuncGenerator {
 
     try {
 
-      val (mbrExists, sameTyp, mbrMatchTypNotMatch) = AtrributesTypeMatchCheck(attributes, field.Name, fieldBaseType.FullName, false, null)
+      val (mbrExists, sameTyp, mbrMatchTypNotMatch, childName) = AtrributesTypeMatchCheck(attributes, field.Name, fieldBaseType.FullName, false, false, null)
       var memberExists = mbrExists
       var sameType = sameTyp
       var membrMatchTypeNotMatch = mbrMatchTypNotMatch
@@ -653,11 +668,12 @@ class ConversionFuncGenerator {
   /*
    * Check for attributes type match
    */
-  private def AtrributesTypeMatchCheck(attributes: Map[String, Any], fieldName: String, fieldTypeFullName: String, isMsgorCtr: Boolean, curObjtype: String): (Boolean, Boolean, Boolean) = {
+  private def AtrributesTypeMatchCheck(attributes: Map[String, Any], fieldName: String, fieldTypeFullName: String, isMsgorCtr: Boolean, isMsgorCntrArray: Boolean, curObjtype: String): (Boolean, Boolean, Boolean, String) = {
     var memberExists: Boolean = false
     var membrMatchTypeNotMatch = false // for mapped messages to handle if prev ver obj and current version obj member types do not match...
     var childTypeImplName: String = ""
     var childtypeName: String = ""
+    var childName: String = ""
     var childtypePhysicalName: String = ""
     var sameType: Boolean = false // same type check valid only container as child msg
 
@@ -671,8 +687,17 @@ class ConversionFuncGenerator {
           if (typefullname != null && typefullname.trim() != "" && typefullname.equals(fieldTypeFullName)) {
             memberExists = true
 
-            // the following condition applies only if the field type is container or message
-            if (isMsgorCtr) {
+            if (isMsgorCntrArray && isMsgorCtr) {
+              val childPhysicalName = child.asInstanceOf[AttributeDef].aType.typeString
+
+              if (childPhysicalName != null && childPhysicalName.trim() != "") {
+                childName = childPhysicalName.toString().split("\\[")(1).substring(0, childPhysicalName.toString().split("\\[")(1).length() - 1)
+                if (childName.equals(curObjtype))
+                  sameType = true
+              }
+
+            } else if (isMsgorCtr) {
+              // the following condition applies only if the field type is container or message
               val childPhysicalName = child.asInstanceOf[AttributeDef].aType.typeString
               if (childPhysicalName != null && childPhysicalName.trim() != "") {
                 if (curObjtype != null && curObjtype.trim() != "" && childPhysicalName.equals(curObjtype)) {
@@ -688,7 +713,7 @@ class ConversionFuncGenerator {
         }
       }
     }
-    return (memberExists, sameType, membrMatchTypeNotMatch)
+    return (memberExists, sameType, membrMatchTypeNotMatch, childName)
   }
 
 }
