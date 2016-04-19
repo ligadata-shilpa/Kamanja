@@ -3067,7 +3067,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
           }
           case "Remove" => {
             try {
-              RemoveMessage(zkMessage.NameSpace, zkMessage.Name, zkMessage.Version.toLong, None, false)
+              MdMgr.GetMdMgr.ModifyMessage(zkMessage.NameSpace, zkMessage.Name, zkMessage.Version.toLong, zkMessage.Operation)
             } catch {
               case e: ObjectNolongerExistsException => {
                 logger.error("The object " + dispkey + " nolonger exists in metadata : It may have been removed already", e)
@@ -3093,7 +3093,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
           }
           case "Remove" => {
             try {
-              RemoveContainer(zkMessage.NameSpace, zkMessage.Name, zkMessage.Version.toLong, None, false)
+              MdMgr.GetMdMgr.ModifyContainer(zkMessage.NameSpace, zkMessage.Name, zkMessage.Version.toLong, zkMessage.Operation)
             } catch {
               case e: ObjectNolongerExistsException => {
                 logger.error("The object " + dispkey + " nolonger exists in metadata : It may have been removed already", e)
