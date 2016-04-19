@@ -177,23 +177,37 @@ object AdapterMessageBindingUtils {
             val messageNames: List[String] = bindingMap.getOrElse(MessageNamesKey, List[String]()).asInstanceOf[List[String]]
             val serializerName: String = bindingMap.getOrElse(SerializerKey, "**invalid serializer name**").asInstanceOf[String].trim
             val options: scala.collection.immutable.Map[String, String] = 
-	      if (bindingMap.contains(OptionsKey) && 
-		  bindingMap(OptionsKey) != Nil){
-                bindingMap(OptionsKey).asInstanceOf[scala.collection.immutable.Map[String, String]]
-            } else {
-                scala.collection.immutable.Map[String, String]()
-            }
+				if (bindingMap.contains(OptionsKey) &&  bindingMap(OptionsKey) != null) {
+					try {
+						bindingMap(OptionsKey).asInstanceOf[scala.collection.immutable.Map[String, String]]
+					} catch {
+						case e : Exception => {
+							logger.error("Options should be a map of any values, not an array")
+							null // complain if someone tries to slip us an array
+						}
+					}
+				} else {
+					scala.collection.immutable.Map[String, String]()
+				}
 
             val multipleMessages : Boolean = messageNames.length > 0
             val rslt : List[(String,BaseElemDef)] = if (multipleMessages) {
                 val results : List[(String,BaseElemDef)] = messageNames.map(msg => {
-                    val resultObjPair : (String, BaseElemDef) = AddAdapterMessageBinding(adapterName, msg, serializerName, options, userId)
-                    resultObjPair
+                    if (options == null) {
+                        ("Options should be a map of any values, not an array", null)
+                    } else {
+                        val resultObjPair: (String, BaseElemDef) = AddAdapterMessageBinding(adapterName, msg, serializerName, options, userId)
+                        resultObjPair
+                    }
                 })
                 results
             } else {
-                val resultObjPair : (String, BaseElemDef) = AddAdapterMessageBinding(adapterName, messageName, serializerName, options, userId)
-                List[(String,BaseElemDef)]( resultObjPair )
+                if (options == null) {
+                    List[(String, BaseElemDef)](("Options should be a map of any values, not an array", null))
+                } else {
+                    val resultObjPair: (String, BaseElemDef) = AddAdapterMessageBinding(adapterName, messageName, serializerName, options, userId)
+                    List[(String, BaseElemDef)](resultObjPair)
+                }
             }
             rslt
         } else {
@@ -321,7 +335,7 @@ object AdapterMessageBindingUtils {
     private def CatalogResults(processingResults : List[(String,BaseElemDef)] ) : String = {
 
         /** Check if all bindings found in the json input were acceptable and AdapterMessageBinding instances created */
-        val acceptable : Boolean = processingResults.filter(pair => pair._2 == null).isEmpty
+        val acceptable : Boolean = ! processingResults.exists(pair => pair._2 == null)
         val resultString : String = if (acceptable) {
 
             /** add the AdapterMessageBinding instances to the cache */

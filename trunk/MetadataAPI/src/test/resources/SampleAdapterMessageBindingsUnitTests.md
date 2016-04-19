@@ -194,15 +194,15 @@ This step uses a script called setPathsFor.scala that will do the same thing tha
 
 Alternatively the template may be edited by hand if you're really old school.
 
-_Configure the cluster configuration json file (make location substitutions... assumes that the JAVA_HOME and SCALA_HOME env variables are set in your system)_
+_Configure the cluster configuration json file with cassandra storage values (make location substitutions... assumes that the JAVA_HOME and SCALA_HOME env variables are set in your system)_
 
 setPathsFor.scala --installDir $KAMANJA_HOME --templateFile $MetadataDir/templates/ClusterConfig.1.4.0_Template.json --scalaHome $SCALA_HOME --javaHome $JAVA_HOME --storeType cassandra --schemaName testdata --schemaLocation localhost > $KAMANJA_HOME/config/adapterMessageBindingClusterConfig.json
 
-_Configure the metadata api config file to use.  In this case, the cassandra template is used (make location substitutions... assumes that the JAVA_HOME and SCALA_HOME env variables are set in your system)_
+_Configure the metadata api config file to use.  In this case, the cassandra values are used (make location substitutions... assumes that the JAVA_HOME and SCALA_HOME env variables are set in your system)_
 
 setPathsFor.scala --installDir $KAMANJA_HOME --templateFile $MetadataDir/templates/Cassandra_MetadataAPIConfig_Template.properties --scalaHome $SCALA_HOME --javaHome $JAVA_HOME --storeType cassandra --schemaName metadata --schemaLocation localhost > $KAMANJA_HOME/config/Cassandra_MetadataAPIConfig.properties
 
-_Configure the engind config file to use.  In this case, the cassandra template is used (make location substitutions... assumes that the JAVA_HOME and SCALA_HOME env variables are set in your system) NOTE: THE CURRENT Engine1Config.properties is overwritten_
+_Configure the engine config file to use.  In this case, the cassandra values are used. NOTE: THE CURRENT Engine1Config.properties is overwritten_
 
 setPathsFor.scala --installDir $KAMANJA_HOME --templateFile $MetadataDir/templates/Engine1Config_Template.properties --scalaHome $SCALA_HOME --javaHome $JAVA_HOME --storeType cassandra --schemaName metadata --schemaLocation localhost > $KAMANJA_HOME/config/Engine1Config.properties
 
@@ -213,10 +213,10 @@ $KAMANJA_HOME/bin/kamanja $apiConfigProperties upload cluster config $KAMANJA_HO
 _Define the messages_
 
 $KAMANJA_HOME/bin/kamanja $apiConfigProperties add message $MetadataDir/message/com.botanical.csv.emailmsg.json tenantid "botanical"
-$KAMANJA_HOME/bin/kamanja $apiConfigProperties add message $MetadataDir/message/com.botanical.json.audit.ordermsg.json tenantid "botanical"
-$KAMANJA_HOME/bin/kamanja $apiConfigProperties add message $MetadataDir/message/com.botanical.json.audit.shippingmsg.json tenantid "botanical"
-$KAMANJA_HOME/bin/kamanja $apiConfigProperties add message $MetadataDir/message/com.botanical.json.ordermsg.json tenantid "botanical"
 $KAMANJA_HOME/bin/kamanja $apiConfigProperties add message $MetadataDir/message/com.botanical.json.shippingmsg.json tenantid "botanical"
+$KAMANJA_HOME/bin/kamanja $apiConfigProperties add message $MetadataDir/message/com.botanical.json.audit.shippingmsg.json tenantid "botanical"
+$KAMANJA_HOME/bin/kamanja $apiConfigProperties add message $MetadataDir/message/com.botanical.json.audit.ordermsg.json tenantid "botanical"
+$KAMANJA_HOME/bin/kamanja $apiConfigProperties add message $MetadataDir/message/com.botanical.json.ordermsg.json tenantid "botanical"
 
 $KAMANJA_HOME/bin/kamanja $apiConfigProperties get all messages
 
