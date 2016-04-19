@@ -7,9 +7,11 @@ Adapter message bindings are independently cataloged metadata objects that assoc
 - A message that this adapter either deserializes from its source or serializes to send to its sink.
 - The serializer to use that understands how to serialize and deserialize the message.
 
+These bindings provide a flexible way to describe the input, output and storage streams flowing to/from the adapter's sink/source.  Being able to dial in the sort of serialization expected or provided to others gives the Kamanja system configurator lots of flexibility to satisfy their objectives.
+
 There are currently three builtin serializers provided in the Kamanja distribution that can be used: a JSON serializer, a CSV serializer and a KBinary serializer.  The KBinary is used principally by the Kamanja platform to manage data in its stores and caches.
 
-The adapter message bindings can be ingested one at a time (see the [input adapter example below]).  If there are multiple messages that are managed by an adapter that all share the same serializer, a compact representation is possible (see the [output adapter example below]).  It is also possible to organize one or more adapter message binding specifications in a file and have kamanja consume that.
+The adapter message bindings can be ingested one at a time (see the [input adapter example below]).  If there are multiple messages that are managed by an adapter that all share the same serializer, a compact representation is possible (see the [output adapter example below]).  It is also possible to organize one or more adapter message binding specifications in a file and have the Kamanja ingestion tools consume that.
 
 ************************************
 **Adapter Message Binding Examples**
@@ -17,6 +19,8 @@ The adapter message bindings can be ingested one at a time (see the [input adapt
 **_NOTE_: All of the adapters are defined in trunk/MetadataAPI/src/test/resources/Metadata/config/ClusterConfig.1.4.0.json.  The com.botanical.* messages mentioned are defined in trunk/MetadataAPI/src/test/resources/Metadata/message/. See the _Test Setup_ below.**
 
 What follows is a number of annotated examples that illustrate the bindings and how one might use them to configure a cluster.  The local kamanja command is used here.  See [The wiki page for the MetadataAPI service] to see the service rendition of commands like these.
+
+First the pretty-printed JSON is presented that will be submitted followed by the _kamanja_ command that ingests a _flattened_ version of the same JSON presented as the value to the _FROMSTRING_ named parameter.  Where appropriate commentary is presented that further explain details about the JSON and/or the ingestion command.
 
 
 **Input Adapter Message Binding**
@@ -27,13 +31,16 @@ What follows is a number of annotated examples that illustrate the bindings and 
   "Serializer": " com.ligadata.kamanja.serializer.JsonSerDeser"
 }
 
-	$KAMANJA_HOME/bin/kamanja debug $apiConfigProperties add adaptermessagebinding FROMSTRING '{"AdapterName": "kafkaAdapterInput1", "MessageName": "com.botanical.json.ordermsg", "Serializer": " com.ligadata.kamanja.serializer.JsonSerDeser"}'
+	$KAMANJA_HOME/bin/kamanja $apiConfigProperties add adaptermessagebinding FROMSTRING '{"AdapterName": "kafkaAdapterInput1", "MessageName": "com.botanical.json.ordermsg", "Serializer": " com.ligadata.kamanja.serializer.JsonSerDeser"}'
+
 
 _The keys in the JSON specification are case sensitive.  For example, use "AdapterName", not "ADAPTERname" or "adaptername"._
 
-Note that the adapter message binding sent to the kamanja script is just a flattened version of the json map structure presented above wrapped with the <json>..</json> tokens.  These tokens allow the kamanja command processor to recognize the beginning and end of the json specified configuration for the adapter message binding.  They are _significant_. The _space_ following start <json> and preceding the closing </json> tokens are currently _required_.  
+Note that the adapter message binding sent to the kamanja script is just a flattened version of the json map structure presented.    
 
 The serializer used in this case is the name of the builtin CSV deserializer.  Note too that it has an options map that is used to configure it.  See the [description of CSV serializer] for what the options mean.
+
+Notice that the _MessageName_ key is used in the example.  It allows a single message to be specified.  It is also possible to specify multiple messages.  See the examples below.
 
 
 **Output Adapter Message Binding**
@@ -49,9 +56,10 @@ The serializer used in this case is the name of the builtin CSV deserializer.  N
   }
 }
 
+
 	$KAMANJA_HOME/bin/kamanja $apiConfigProperties add adaptermessagebinding FROMSTRING '{"AdapterName": "kafkaAdapterOutput2", "MessageNames": ["com.botanical.csv.emailmsg"], "Serializer": "com.ligadata.kamanja.serializer.delimitedserdeser", "Options": {"lineDelimiter": "\r\n", "fieldDelimiter": ",", "produceHeader": true, "alwaysQuoteFields": false } }'
 
-This output adapter also uses the CSV builtin adapter, but notice too that there are two messages mentioned in the MessageNames key value.  What actually happens is that binding metadata is built for each adapter/message/serializer combination.  Think of this as a short hand.
+This output adapter uses the delimitedserdeser (CSV for short) builtin adapter, but notice too that there are two messages mentioned in the MessageNames key value.  What actually happens is that binding metadata is built for each adapter/message/serializer combination.  Think of this as a short hand.
 
 If the key for the message is "MessageName", then only message name is given.  If "MessageNames" (plural), an array of names is expected.
 
@@ -68,7 +76,7 @@ In this storage adapter binding, the use of the builtin JSON adapter is illustra
 
 **Storage Adapter Message Binding Specifications in a File**
 
-A file can have multiple binding specifications in it.  For example,
+File ingestion of the adapter message bindings is also possible.  With a file  multiple binding specifications can be specified in it.  For example,
 
 [
 	{
@@ -94,23 +102,23 @@ A file can have multiple binding specifications in it.  For example,
 	}
 ]
 
+There are a total of five bindings specified here.  This is a practical way to establish a new cluster.
 
+A binding is prepared for the adapter/message/serializers in each map.  As can be seen in the kafkaAdapterOutput2 and hBaseStore1 adapters, the multiple message shorthand is used that will cause a binding for each unique triple.
 
-Using a file to ingest all (or at least the key adapter bindings) for a new cluster has its attraction.  A binding is prepared for each map and, as can be seen in the kafkaAdapterOutput2 and hBaseStore1 adapters, the multiple message shorthand is used that will cause a binding for each unique triple (adapter, message, serializer).
-
-If the above file was called $MetadataDir/config/AdapterMessageBindingsForClusterConfig1.4.0.json, a Kamanja command can directly ingest it:
-
-	$KAMANJA_HOME/bin/kamanja debug $apiConfigProperties add adaptermessagebinding FROMFILE $MetadataDir/config/AdapterMessageBindingsForClusterConfig1.4.0.json
+If the above file was called $MetadataDir/config/AdapterMessageBindingsForClusterConfig1.4.0.json, the following Kamanja command can ingest it:
 
 	$KAMANJA_HOME/bin/kamanja $apiConfigProperties add adaptermessagebinding FROMFILE $MetadataDir/config/AdapterMessageBindingsForClusterConfig1.4.0.json
 
-Like the other examples, you can also push this directly on the command line too (it is useful to have an editor that can pretty print/flatten the JSON text to do these more complicated structures for the command line):
+Like the other examples, you can also push this directly on the command line too.  It is helpful to have an editor that can pretty print/flatten the JSON text to do these more complicated structures for the command line:
 
 	$KAMANJA_HOME/bin/kamanja $apiConfigProperties add adaptermessagebinding FROMSTRING '[{"AdapterName": "kafkaAdapterInput1", "MessageNames": ["com.botanical.json.ordermsg", "com.botanical.json.shippingmsg"], "Serializer": "com.ligadata.kamanja.serializer.JsonSerDeser"}, {"AdapterName": "kafkaAdapterOutput2", "MessageNames": ["com.botanical.csv.emailmsg"], "Serializer": "com.ligadata.kamanja.serializer.delimitedserdeser", "Options": {"lineDelimiter": "\r\n", "fieldDelimiter": ",", "produceHeader": "true", "alwaysQuoteFields": "false"} }, {"AdapterName": "hBaseStore1", "MessageNames": ["com.botanical.json.audit.ordermsg", "com.botanical.json.audit.shippingmsg"], "Serializer": "com.ligadata.kamanja.serializer.JsonSerDeser"} ]'
 
 
 
 **List Adapter Message Bindings**
+
+The following list commands are supported:
 
 _List them all_
 	$KAMANJA_HOME/bin/kamanja $apiConfigProperties list adaptermessagebindings 
@@ -122,6 +130,8 @@ _List bindings for a given serializer_
 	$KAMANJA_HOME/bin/kamanja $apiConfigProperties list adaptermessagebindings SERIALIZERFILTER com.ligadata.kamanja.serializer.JsonSerDeser
 
 **Remove Adapter Message Binding**
+
+Removal of a binding is accomplished with this command.
 
 _Remove the supplied binding key_
 	$KAMANJA_HOME/bin/kamanja debug $apiConfigProperties remove adaptermessagebindings hBaseStore1,com.botanical.json.audit.ordermsg,com.ligadata.kamanja.serializer.JsonSerDeser
@@ -224,25 +234,3 @@ Once complete return to the **Adapter Message Binding Examples** section and try
 
 
 
-
-Result: {
-  "APIResults" : {
-    "Status Code" : 0,
-    "Function Name" : "MessageService",
-    "Result Data" : 
-
-    "com.botanical.json.shippingmsg.000001000000000000, 
-    system.kamanjaexceptionevent.000000000000000001, 
-    com.botanical.csv.emailmsg.000001000000000000, 
-    system.kamanjaexecutionfailureevent.000000000000000001, 
-    system.kamanjamodelevent.000000000000000001, 
-    com.botanical.json.ordermsg.000001000000000000, 
-    com.botanical.json.audit.shippingmsg.000001000000000000, 
-    system.kamanjastatusevent.000000000000000001, 
-    com.botanical.json.audit.ordermsg.000001000000000000, 
-    system.kamanjamessageevent.000000000000000001, 
-    system.kamanjastatisticsevent.000000000000000001",
-
-    "Result Description" : "Successfully retrieved all the messages"
-  }
-}
