@@ -3,6 +3,7 @@
     "Dependencies": [
     ],
     "MessageAndContainers": [
+      "com.ligadata.kamanja.samples.messages.COPDOutputMessage",
       "com.ligadata.kamanja.samples.messages.beneficiary",
       "com.ligadata.kamanja.samples.messages.inpatientclaim",
       "com.ligadata.kamanja.samples.messages.outpatientclaim",

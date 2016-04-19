@@ -280,8 +280,7 @@ trait EnvContext /* extends Monitorable */  {
   def setJarPaths(jarPaths: collection.immutable.Set[String]): Unit
   def getJarPaths(): collection.immutable.Set[String]
 
-  // Datastores
-  def setDefaultDatastore(dataDataStoreInfo: String): Unit
+  def openTenantsPrimaryDatastores(): Unit
 
   // Registerd Messages/Containers
   //  def RegisterMessageOrContainers(containersInfo: Array[ContainerNameAndDatastoreInfo]): Unit

@@ -147,32 +147,40 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
       //FIXME:- Fix this
       //BUGBUG:: Fix this
       outputAdapters.foreach(adap => {
-        val sendSerializer = ArrayBuffer[String]();
-        val sendSerOptions = ArrayBuffer[scala.collection.immutable.Map[String,Any]]();
+//        val sendSerializer = ArrayBuffer[String]();
+//        val sendSerOptions = ArrayBuffer[scala.collection.immutable.Map[String,Any]]();
         val sendContainers = ArrayBuffer[ContainerInterface]();
         // val sendInfo = ArrayBuffer[(String, scala.collection.immutable.Map[String,String], ContainerInterface)]();
         adap._2.foreach(bind => (bind, txnCtxt.getContainersOrConcepts(bind.messageName).foreach(orginAndmsg => {
           // sendInfo += ((bind.serializer, bind.options, orginAndmsg._2.asInstanceOf[ContainerInterface]))
-          sendSerializer += bind.serializer;
-          sendSerOptions += bind.options;
+//          sendSerializer += bind.serializer;
+//          sendSerOptions += bind.options;
           sendContainers += orginAndmsg._2.asInstanceOf[ContainerInterface];
         })))
         adap._1.send(txnCtxt, sendContainers.toArray)
       })
 
       storageAdapters.foreach(adap => {
-        val sendSerializer = ArrayBuffer[String]();
-        val sendSerOptions = ArrayBuffer[scala.collection.immutable.Map[String,Any]]();
+//        val sendSerializer = ArrayBuffer[String]();
+//        val sendSerOptions = ArrayBuffer[scala.collection.immutable.Map[String,Any]]();
         val sendContainers = ArrayBuffer[ContainerInterface]();
         // val sendInfo = ArrayBuffer[(String, scala.collection.immutable.Map[String,String], ContainerInterface)]();
         adap._2.foreach(bind => (bind, txnCtxt.getContainersOrConcepts(bind.messageName).foreach(orginAndmsg => {
           // sendInfo += ((bind.serializer, bind.options, orginAndmsg._2.asInstanceOf[ContainerInterface]))
-          sendSerializer += bind.serializer;
-          sendSerOptions += bind.options;
+//          sendSerializer += bind.serializer;
+//          sendSerOptions += bind.options;
           sendContainers += orginAndmsg._2.asInstanceOf[ContainerInterface];
         })))
         adap._1.save(txnCtxt, sendContainers.toArray)
       })
+
+      val allData = txnCtxt.getAllContainersOrConcepts()
+
+      if (allData != null) {
+        // val validDataToCommit = allData.values.map(c => c.).filter(c => c.isInstanceOf[ContainerInterface] && c.asInstanceOf[ContainerInterface].CanPersist())
+
+        // validDataToCommit.groupBy(_.)
+      }
 
       // Commit. Writing into OutputAdapters & Storage Adapters
 

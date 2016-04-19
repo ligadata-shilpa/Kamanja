@@ -7,12 +7,20 @@
     "Fixed": "true",
     "Fields": [
       {
+        "Name": "Desynpuf_Id",
+        "Type": "String"
+      },
+      {
         "Name": "RiskLevel",
         "Type": "String"
       },
       {
         "Name": "AgeoftheBenificiary",
         "Type": "Int"
+      },
+      {
+        "Name": "AgeOver40",
+        "Type": "Boolean"
       },
       {
         "Name": "HasCopdSymptoms",
@@ -27,12 +35,32 @@
         "Type": "Boolean"
       },
       {
-        "Name": "HasOverSmokingCodes",
+        "Name": "HasSmokingHistory",
         "Type": "Boolean"
       },
       {
-        "Name": "HasEnvironmentalExposures",
+        "Name": "HasDyspnea",
         "Type": "Boolean"
+      },
+      {
+        "Name": "HasChronicCough",
+        "Type": "Boolean"
+      },
+      {
+        "Name": "HasChronicSputum",
+        "Type": "Boolean"
+      },
+      {
+        "Name": "HasEnvironmentalExposure",
+        "Type": "Boolean"
+      },
+      {
+        "Name": "InpatientClaimCosts",
+        "Type": "Double"
+      },
+      {
+        "Name": "OutpatientClaimCosts",
+        "Type": "Double"
       }
     ]
   }

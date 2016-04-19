@@ -157,6 +157,12 @@ public class COPDRiskAssessment extends ModelInstance {
         return ((tDate.before(today) || tDate.equals(today)) && (tDate.after(oneYearAgo) || tDate.equals(oneYearAgo)));
     }
 
+    private Integer age() {
+        org.joda.time.LocalDate birthdate = new org.joda.time.LocalDate(msg.bene_birth_dt() / 10000, (msg.bene_birth_dt() % 1000) / 100, msg.bene_birth_dt() % 100);
+        Integer age = Years.yearsBetween(birthdate, new LocalDate()).getYears();
+        return age;
+    }
+
     private Boolean age40OrOlder() {
         org.joda.time.LocalDate birthdate = new org.joda.time.LocalDate(msg.bene_birth_dt() / 10000, (msg.bene_birth_dt() % 1000) / 100, msg.bene_birth_dt() % 100);
         Integer age = Years.yearsBetween(birthdate, new LocalDate()).getYears();
@@ -344,7 +350,7 @@ public class COPDRiskAssessment extends ModelInstance {
     }
 
 
-    private MappedModelResults copdRiskLevel() {
+    private ContainerOrConcept[] copdRiskLevel() {
         Boolean hasSmokingHistory = hasSmokingHistory();
         Boolean hasEnvironmentalExposure = hasEnvironmentalExposure();
         Boolean hasDyspnea = hasDyspnea();
@@ -366,34 +372,33 @@ public class COPDRiskAssessment extends ModelInstance {
             riskLevel = "2";
         }
 
-        Result[] results = new Result[]{
-                new Result("Desynpuf ID", msg.desynpuf_id()),
-                new Result("COPD Risk Level", riskLevel),
-                new Result("Is Over 40 Years Old", ageOver40),
-                new Result("Has Smoking History", hasSmokingHistory),
-                new Result("Has Environmental Exposure", hasEnvironmentalExposure),
-                new Result("Has Dyspnea", hasDyspnea),
-                new Result("Has Chronic Cough", hasChronicCough),
-                new Result("Has Chronic Sputum", hasChronicSputum),
-                new Result("Has AAT Deficiency", hasAATDeficiency),
-                new Result("Inpatient Claim Costs", inpatientClaimCosts()),
-                new Result("Outpatient Claim Costs", outpatientClaimCosts())
-        };
+		COPDOutputMessage output = (COPDOutputMessage) COPDOutputMessage.createInstance();
+		output.set(0, msg.desynpuf_id());
+		output.set(1, riskLevel);
+		output.set(2, age());
+		output.set(3, ageOver40);
+		output.set(4, hasCOPDSymptoms);
+		output.set(5, hasAATDeficiency);
+		output.set(6, false);
+		output.set(7, hasSmokingHistory);
+		output.set(8, hasDyspnea);
+		output.set(9, hasChronicCough);
+		output.set(10, hasChronicSputum);
+		output.set(11, hasEnvironmentalExposure);
+		output.set(12, inpatientClaimCosts());
+		output.set(13, outpatientClaimCosts());
 
-        for (Result result : results) {
-            System.out.println(result.name() + ": " + result.result());
-        }
-        System.out.println("******************************************************************************");
-
-        return ((MappedModelResults) factory().createResultObject()).withResults(results);
+		ContainerInterface[] returnArr = new ContainerInterface[1];
+		returnArr[0] = output;
+        return returnArr;
     }
 
     @Override
-    public MappedModelResults execute(TransactionContext txnCtxt, boolean outputDefault) {
+	public ContainerOrConcept[] execute(TransactionContext txnCtxt, ContainerOrConcept[] execMsgsSet, int matchedInputSetIndex, boolean outputDefault) {
         init(txnCtxt);
-        MappedModelResults result = copdRiskLevel();
+        ContainerOrConcept[] result = copdRiskLevel();
         if(!outputDefault) {
-            if (result.get("COPD Risk Level") == "") {
+            if (result.length > 0 && result[0] != null && (((COPDOutputMessage)result[0]).risklevel() == null || ((COPDOutputMessage)result[0]).risklevel() == "")) {
                 return null;
             }
         }
