@@ -49,10 +49,11 @@ class ConversionFuncGenerator {
         if (msgdef != null) {
 
           val (caseStmt, convertFunc) = getconversionFunc(msgdef, isMsg, Fixed, message, mdMgr)
-
+          message.Jarset = message.Jarset ++ msgdef.DependencyJarNames
           // get the case stmsts and put it in array of case stmsnts        
           prevVerCaseStmts.append(caseStmt)
           prevVerConvFuncs.append(convertFunc)
+          
         }
       })
 
