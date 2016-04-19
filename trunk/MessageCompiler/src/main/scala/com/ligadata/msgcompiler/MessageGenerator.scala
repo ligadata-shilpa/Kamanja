@@ -810,7 +810,7 @@ class MessageGenerator {
     """
     private def fromFunc(other: """ + message.Name + """): """ + message.Name + """ = {  
    """ + getFromFuncStr(message, mdMgr) + """
-      this.timePartitionData = com.ligadata.BaseTypes.LongImpl.Clone(other.timePartitionData);
+      this.setTimePartitionData(com.ligadata.BaseTypes.LongImpl.Clone(other.getTimePartitionData));
       return this;
     }
     
