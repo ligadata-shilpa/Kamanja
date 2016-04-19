@@ -163,9 +163,9 @@ class MessageFieldTypesHandler {
             types(0) = maptypeDef.typeString
             types(1) = maptypeDef.valDef.implementationName
 
-            val valTypeIdInfo = getAttributeTypeInfo(maptypeDef.valDef.tTypeType.toString().toLowerCase(), maptypeDef.valDef, mdMgr)
+            val valTypeIdInfo = getMapAttributeTypeInfo(maptypeDef.valDef.tTypeType.toString().toLowerCase(), maptypeDef.valDef, mdMgr)
             val keyTypeId = AttributeTypeInfo.TypeCategory.STRING.getValue;
-            types(2) = new ArrtibuteInfo("MAP", valTypeIdInfo.valTypeId, keyTypeId, 0)
+            types(2) = new ArrtibuteInfo("MAP", valTypeIdInfo.valTypeId, keyTypeId, valTypeIdInfo.valSchemaId)
           }
           case _ => {
             throw new Exception("This types is not handled at this time ") // BUGBUG - Need to handled other cases
@@ -219,11 +219,11 @@ class MessageFieldTypesHandler {
             msgDef = mdMgr.Message(typtytpe.FullName, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
             if (msgDef == null)
               msgDef = mdMgr.Container(typtytpe.FullName, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
-            //println("msgDef"+msgDef.Name)
-            val valTypeId = -1
+            println("==========================================msgDef" + msgDef.Name)
+            val valTypeId = AttributeTypeInfo.TypeCategory.CONTAINER.getValue
             val keyTypeId = -1
             val SchemaId = msgDef.containerType.SchemaId
-            return new ArrtibuteInfo("MESSAGE", valTypeId, keyTypeId, SchemaId)
+            return new ArrtibuteInfo("ARRAY", valTypeId, keyTypeId, SchemaId)
           }
           case "tmsgmap" => {
             var ctrDef: ContainerDef = null;
@@ -231,10 +231,10 @@ class MessageFieldTypesHandler {
             if (ctrDef == null)
               ctrDef = mdMgr.Container(typtytpe.FullName, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
 
-            val valTypeId = -1
+            val valTypeId = AttributeTypeInfo.TypeCategory.CONTAINER.getValue
             val keyTypeId = -1
             val SchemaId = ctrDef.containerType.SchemaId
-            return new ArrtibuteInfo("CONTAINER", valTypeId, keyTypeId, SchemaId)
+            return new ArrtibuteInfo("ARRAY", valTypeId, keyTypeId, SchemaId)
           }
           case "tmap" => { throw new Exception("Not supporting map of array"); }
           case _ => {
@@ -248,6 +248,59 @@ class MessageFieldTypesHandler {
     }
     return null
   }
+  
+  /*
+   * Handle maps
+   */
+
+  private def getMapAttributeTypeInfo(typeInfo: String, typtytpe: BaseTypeDef, mdMgr: MdMgr): ArrtibuteInfo = {
+
+    var typetyprStr: String = typtytpe.tType.toString().toLowerCase()
+    typeInfo match {
+      case "tscalar" => {
+        val valTypeId = getAttributeValTypeId(typtytpe.PhysicalName.toLowerCase());
+        val keyTypeId = 1
+        return new ArrtibuteInfo("MAP", valTypeId, keyTypeId, 0)
+      }
+      case "tcontainer" => {
+        typetyprStr match {
+          case "tarray" => { throw new Exception("Not supporting array of array"); }
+          case "tstruct" => {
+
+            var msgDef: ContainerDef = null;
+            msgDef = mdMgr.Message(typtytpe.FullName, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
+            if (msgDef == null)
+              msgDef = mdMgr.Container(typtytpe.FullName, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
+            println("==========================================msgDef" + msgDef.Name)
+            val valTypeId = AttributeTypeInfo.TypeCategory.CONTAINER.getValue
+            val keyTypeId = 1
+            val SchemaId = msgDef.containerType.SchemaId
+            return new ArrtibuteInfo("MAP", valTypeId, keyTypeId, SchemaId)
+          }
+          case "tmsgmap" => {
+            var ctrDef: ContainerDef = null;
+            ctrDef = mdMgr.Message(typtytpe.FullName, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
+            if (ctrDef == null)
+              ctrDef = mdMgr.Container(typtytpe.FullName, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
+
+            val valTypeId = AttributeTypeInfo.TypeCategory.CONTAINER.getValue
+            val keyTypeId = 1
+            val SchemaId = ctrDef.containerType.SchemaId
+            return new ArrtibuteInfo("MAP", valTypeId, keyTypeId, SchemaId)
+          }
+          case "tmap" => { throw new Exception("Not supporting map of array"); }
+          case _ => {
+            throw new Exception("This types is not handled at this time ") // BUGBUG - Need to handled other cases
+          }
+        }
+      }
+      case _ => {
+        throw new Exception("This types is not handled at this time ") // BUGBUG - Need to handled other cases
+      }
+    }
+    return null
+  }
+
   /*
    * get the AttributeKeyTypeId
    */

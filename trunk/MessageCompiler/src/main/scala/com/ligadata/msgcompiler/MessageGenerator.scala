@@ -35,7 +35,7 @@ class MessageGenerator {
     var messageGenerator = new StringBuilder(8 * 1024)
     try {
       val msgObj = msgObjectGenerator.generateMessageObject(message, mdMgr)
-      
+
       messageVerGenerator = messageVerGenerator.append(msgConstants.newline + msgConstants.packageStr.format(message.Pkg, msgConstants.newline));
       messageVerGenerator = messageVerGenerator.append(msgConstants.importStatements + msgConstants.newline);
       messageVerGenerator = messageVerGenerator.append(msgObj._1 + msgConstants.newline);
@@ -810,7 +810,7 @@ class MessageGenerator {
     """
     private def fromFunc(other: """ + message.Name + """): """ + message.Name + """ = {  
    """ + getFromFuncStr(message, mdMgr) + """
-      //this.timePartitionData = com.ligadata.BaseTypes.LongImpl.Clone(other.timePartitionData);
+      this.timePartitionData = com.ligadata.BaseTypes.LongImpl.Clone(other.timePartitionData);
       return this;
     }
     
@@ -840,11 +840,14 @@ class MessageGenerator {
                 fromFuncBuf = fromFuncBuf.append(fromFuncForArrayFixed(field))
               }
               case "tstruct" => {
-                var ctrDef: ContainerDef = mdMgr.Container(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
+                var ctrDef: ContainerDef = null;
+                ctrDef = mdMgr.Container(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
+                if (ctrDef == null)
+                  ctrDef = mdMgr.Message(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
                 fromFuncBuf = fromFuncBuf.append(fromFuncForStructFixed(field))
               }
               case "tmap" => {
-                fromFuncBuf = fromFuncBuf.append(fromFuncForMapFixed(field))
+                fromFuncBuf = fromFuncBuf.append(fromFuncForMapFixed(field, mdMgr))
               }
               case "tmsgmap" => {
                 var ctrDef: ContainerDef = mdMgr.Container(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
@@ -1005,9 +1008,69 @@ class MessageGenerator {
   /*
    * From Func for Containertype as Message
    */
-  private def fromFuncForMapFixed(field: Element): String = {
+  private def fromFuncForMapFixed(field: Element, mdMgr: MdMgr): String = {
+    var fromFuncBuf = new StringBuilder(8 * 1024)
+    try {
 
-    return "";
+      var maptypeDef = field.FldMetaataType.asInstanceOf[MapTypeDef]
+      val typeInfo = maptypeDef.valDef.tTypeType.toString().toLowerCase()
+      var typetyprStr: String = maptypeDef.valDef.tType.toString().toLowerCase()
+
+      typeInfo match {
+        case "tscalar" => {
+          fromFuncBuf = fromFuncBuf.append("%s if (other.%s != null) { %s ".format(msgConstants.pad2, field.Name, msgConstants.newline))
+          fromFuncBuf = fromFuncBuf.append("%s this.%s = other.%s.map { a => (com.ligadata.BaseTypes.StringImpl.Clone(a._1), %s.Clone(a._2)) }.toMap%s ".format(msgConstants.pad2, field.Name, field.Name, maptypeDef.valDef.implementationName, msgConstants.newline))
+          fromFuncBuf = fromFuncBuf.append("%s} else this.%s = null;%s ".format(msgConstants.pad2, field.Name, msgConstants.newline))
+        }
+        case "tcontainer" => {
+          typetyprStr match {
+            case "tarray" => { throw new Exception("Not supporting array of array"); }
+            case "tstruct" => {
+
+              var msgDef: ContainerDef = null;
+              msgDef = mdMgr.Message(maptypeDef.valDef.FullName, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
+              if (msgDef == null)
+                msgDef = mdMgr.Container(maptypeDef.valDef.FullName, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
+              /* if (other.maptest != null) {
+                this.maptest = other.maptest.map { a => (com.ligadata.BaseTypes.StringImpl.Clone(a._1), a._2.Clone.asInstanceOf[com.ligadata.messages.V1000000000000.IdCodeDimFixedTest]) }.toMap
+              }*/
+              fromFuncBuf = fromFuncBuf.append("%s if (other.%s != null) { %s ".format(msgConstants.pad2, field.Name, msgConstants.newline))
+              fromFuncBuf = fromFuncBuf.append("%s this.%s = other.%s.map { a => (com.ligadata.BaseTypes.StringImpl.Clone(a._1), a._2.Clone.asInstanceOf[%s]) }.toMap%s ".format(msgConstants.pad2, field.Name, field.Name, msgDef.PhysicalName, msgConstants.newline))
+              fromFuncBuf = fromFuncBuf.append("%s} else this.%s = null; %s ".format(msgConstants.pad2, field.Name, msgConstants.newline))
+            }
+            case "tmsgmap" => {
+              var ctrDef: ContainerDef = null;
+              ctrDef = mdMgr.Message(maptypeDef.valDef.FullName, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
+              if (ctrDef == null)
+                ctrDef = mdMgr.Container(maptypeDef.valDef.FullName, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
+              fromFuncBuf = fromFuncBuf.append("%s if (other.%s != null) { %s ".format(msgConstants.pad2, field.Name, msgConstants.newline))
+              fromFuncBuf = fromFuncBuf.append("%s this.%s = other.%s.map { a => (com.ligadata.BaseTypes.StringImpl.Clone(a._1), a._2.Clone.asInstanceOf[%s]) }.toMap%s ".format(msgConstants.pad2, field.Name, field.Name, ctrDef.PhysicalName, msgConstants.newline))
+              fromFuncBuf = fromFuncBuf.append("%s} else this.%s = null; %s ".format(msgConstants.pad2, field.Name, msgConstants.newline))
+
+            }
+            case "tmap" => { throw new Exception("Not supporting map of array"); }
+            case _ => {
+              throw new Exception("This types is not handled at this time ") // BUGBUG - Need to handled other cases
+            }
+          }
+        }
+        case _ => {
+          throw new Exception("This types is not handled at this time ") // BUGBUG - Need to handled other cases
+        }
+      }
+      val implName = field.FieldTypeImplementationName
+      /*  if (implName != null && implName.trim() != "") {
+        fromFuncBuf = fromFuncBuf.append("%s if (other.%s != null) { %s".format(msgConstants.pad2, field.Name, msgConstants.newline))
+        fromFuncBuf = fromFuncBuf.append("%s %s = other.%s.Clone.asInstanceOf[%s] %s".format(msgConstants.pad2, field.Name, field.Name, field.FieldTypePhysicalName, msgConstants.newline))
+        fromFuncBuf = fromFuncBuf.append("%s } %s ".format(msgConstants.pad2, msgConstants.newline))
+        fromFuncBuf = fromFuncBuf.append("%s else %s = null; %s".format(msgConstants.pad2, field.Name, msgConstants.newline))
+      }
+  */
+    } catch {
+      case e: Exception => throw e
+    }
+    fromFuncBuf.toString
+
   }
 
   /*

@@ -27,9 +27,9 @@ public interface MessageContainerObjBase extends ContainerOrConceptFactory {
 
 	public int getSchemaId();
 
-//	public Object convertFrom(Object srcObj);
-//
-//	public ContainerInterface convertFrom(Object destObj, Object srcObj);
+	public Object convertFrom(Object srcObj);
+
+	public ContainerInterface convertFrom(Object destObj, Object srcObj);
 
 	public boolean isMessage();
 

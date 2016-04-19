@@ -36,13 +36,13 @@ class ConversionFuncGenerator {
     var prevVerConvFuncs = new StringBuilder(8 * 1024)
     var conversion = new StringBuilder(8 * 1024)
     if (msgdefArray == null) {
-      prevVerCaseStmts.append(generatePrevVerCaseStmts(MsgFullName, message.VersionLong.toString()))
+      prevVerCaseStmts.append(generateCurVerCaseStmts(MsgFullName, message.VersionLong.toString()))
       val ConversionStr = ConversionFunc(message, prevVerCaseStmts.toString())
       conversion.append(ConversionStr + generateConvToCurrentVer(message, MsgFullName))
 
     } else {
 
-      prevVerCaseStmts.append(generatePrevVerCaseStmts(MsgFullName, message.VersionLong.toString()))
+      prevVerCaseStmts.append(generateCurVerCaseStmts(MsgFullName, message.VersionLong.toString()))
 
       msgdefArray.foreach(msgdef => {
         //call the function which generates the complete conversion function and also another string with case stmt and append to string buffer 
@@ -85,7 +85,7 @@ class ConversionFuncGenerator {
         // generate the previous version match keys and prevVer keys do not match 
 
         conversionFunc = generateConvToPrevObjsFunc(message, mdMgr, attributes, fixedMsg, msgdef)
-        caseStmt = generatePrevVerCaseStmts(msgdef.PhysicalName, msgdef.Version.toString())
+        caseStmt = generatePrevVerCaseStmts(msgdef.PhysicalName, msgdef.Version.toString(), message)
         //generate the whole functtion
 
         /* if ((msgdef.dependencyJarNames != null) && (msgdef.JarName != null))
@@ -236,11 +236,18 @@ class ConversionFuncGenerator {
   /*
    * Generate the case Stmts for prevobjects conversion
    */
-  private def generatePrevVerCaseStmts(msgPhyicalName: String, version: String): String = {
+  private def generateCurVerCaseStmts(msgPhyicalName: String, version: String): String = {
     """
       case oldVerobj: """ + msgPhyicalName + """ => { return  convertToVer""" + version + """(oldVerobj); } """
   }
 
+  /*
+   * Generate the case Stmts for prevobjects conversion
+   */
+  private def generatePrevVerCaseStmts(msgPhyicalName: String, version: String, message: Message): String = {
+    """
+      case oldVerobj: """ + msgPhyicalName + """ => { return  convertToVer""" + version + """(newVerObj.asInstanceOf[""" + message.PhysicalName + """], oldVerobj.asInstanceOf[""" + msgPhyicalName + """]); } """
+  }
   /*
    * generate conversion Func
    */
@@ -279,8 +286,8 @@ class ConversionFuncGenerator {
     val prevVersion = prevMsgdef.Version.toString()
 
     """
-      private def convertToVer""" + prevVersion + """(oldVerobj: """ + prevVerMsgPhysicalName + """): """ + currentMsgPhysicalName + """= {
-        var newVerObj = new """ + currentMsgPhysicalName + """(this)
+      private def convertToVer""" + prevVersion + """(newVerObj: """ + message.PhysicalName + """, oldVerobj: """ + prevVerMsgPhysicalName + """): """ + currentMsgPhysicalName + """= {
+        //var newVerObj = new """ + currentMsgPhysicalName + """(this)
     """ + convFuncStr + """  
       return newVerObj
       }
@@ -297,8 +304,7 @@ class ConversionFuncGenerator {
     val prevVersion = prevMsgdef.Version.toString()
     //   val genConvForMsgsAndCntrs = ""
     """
-    private def convertToVer""" + prevVersion + """(oldVerobj: """ + prevVerMsgPhysicalName + """): """ + currentMsgPhysicalName + """= {
-       var newVerObj = new """ + currentMsgPhysicalName + """(this)
+    private def convertToVer""" + prevVersion + """(newVerObj: """ + message.PhysicalName + """, oldVerobj: """ + prevVerMsgPhysicalName + """): """ + currentMsgPhysicalName + """= {
        """ + genPrevVerTypMatchKeys + genPrevVerTypNotMatchKeys + """         
        oldVerobj.valuesMap.foreach(attribute => {
        val key = attribute._1.toLowerCase()
@@ -393,7 +399,10 @@ class ConversionFuncGenerator {
                     }
                   }
                   case "tmap" => {
-                    conversionFuncBuf = conversionFuncBuf.append(ConversionFuncForMap(field))
+                    val conversionFunc = ConversionFuncForMap(field)
+                    if (conversionFunc != null) {
+                      conversionFuncBuf = conversionFuncBuf.append(conversionFunc)
+                    }
 
                   }
                   case "tmsgmap" => {
@@ -490,9 +499,11 @@ class ConversionFuncGenerator {
           if (sameType)
             convPrevVerStr = convPrevVerStr.append("%s newVerObj.%s(i) = oldVerobj.%s(i)};%s".format(msgConstants.pad3, field.Name, field.Name, msgConstants.newline))
           else {
-            convPrevVerStr = convPrevVerStr.append("%sval curVerObj = new %s()%s".format(msgConstants.pad3, curObjtypeStr, msgConstants.newline))
-            convPrevVerStr = convPrevVerStr.append("%scurVerObj.ConvertFrom( oldVerobj.%s(i))%s".format(msgConstants.pad3, field.Name, msgConstants.newline))
-            convPrevVerStr = convPrevVerStr.append("%s%s(i)= curVerObj}%s".format(msgConstants.pad3, field.Name, msgConstants.newline))
+            convPrevVerStr = convPrevVerStr.append("%s newVerObj.%s = new %s(oldVerobj.%s.length)  %s".format(msgConstants.pad2, field.Name, curObjtype, field.Name, msgConstants.newline))
+
+            convPrevVerStr = convPrevVerStr.append("%sval curVerObj = %s.createInstance()%s".format(msgConstants.pad3, curObjtypeStr, msgConstants.newline))
+            convPrevVerStr = convPrevVerStr.append("%s curVerObj.convertFrom( oldVerobj.%s(i))%s".format(msgConstants.pad3, field.Name, msgConstants.newline))
+            convPrevVerStr = convPrevVerStr.append("%snewVerObj.%s(i)= curVerObj}%s".format(msgConstants.pad3, field.Name, msgConstants.newline))
           }
           convPrevVerStr = convPrevVerStr.append("%s } %s".format(msgConstants.pad2, msgConstants.newline))
 
@@ -507,13 +518,18 @@ class ConversionFuncGenerator {
             convPrevVerStr = convPrevVerStr.append("%sif(oldVerobj.valuesMap(\"%s\") != null){ newVerObj.valuesMap(\"%s\") = oldVerobj.valuesMap(\"%s\")}%s".format(msgConstants.pad3, field.Name, field.Name, field.Name, msgConstants.newline))
           } else {
             convPrevVerStr = convPrevVerStr.append("%s type typ = scala.Array[%s]%s".format(msgConstants.pad3, childName, msgConstants.newline))
-            convPrevVerStr = convPrevVerStr.append("%s var %s : %s = %s();%s".format(msgConstants.pad3, field.Name, curObjtype, curObjtype, msgConstants.newline))
-
-            convPrevVerStr = convPrevVerStr.append("%s if((oldVerobj.valuesMap(\"%s\") != null) && oldVerobj.valuesMap(\"%s\").isInstanceOf[typ]){%s%s for (i <- 0 until oldVerobj.valuesMap(\"%s\").length) {%s".format(msgConstants.pad3, field.Name, field.Name, msgConstants.newline, msgConstants.pad3, field.Name, msgConstants.newline))
-            convPrevVerStr = convPrevVerStr.append("%s val curVerObj = new %s()%s".format(msgConstants.pad3, msgConstants.pad3, msgConstants.newline))
-            convPrevVerStr = convPrevVerStr.append("%s curVerObj.ConvertFrom(oldVerobj.valuesMap(key)(i))%s".format(msgConstants.pad3, msgConstants.newline))
-            convPrevVerStr = convPrevVerStr.append("%s %s(i) = curVerObj}}%s".format(msgConstants.pad3, field.Name, msgConstants.newline))
-            convPrevVerStr = convPrevVerStr.append("%s  newVerObj.valuesMap(key).setValue(%s)%s".format(msgConstants.pad3, field.Name, field.Name, msgConstants.newline))
+            convPrevVerStr = convPrevVerStr.append("%s if (oldVerobj.valuesMap(\"%s\").getValue != null && oldVerobj.valuesMap(\"%s\").getValue.isInstanceOf[typ]) { %s".format(msgConstants.pad3, field.Name, field.Name, msgConstants.newline))
+            convPrevVerStr = convPrevVerStr.append("%s val size = oldVerobj.valuesMap(\"%s\").getValue.asInstanceOf[typ].size %s".format(msgConstants.pad3, field.Name, msgConstants.newline))
+            convPrevVerStr = convPrevVerStr.append("%s val oldObjVal = oldVerobj.valuesMap(\"%s\").getValue.asInstanceOf[typ] %s".format(msgConstants.pad3, field.Name, msgConstants.newline))
+            convPrevVerStr = convPrevVerStr.append("%s var %s = new %s(size);%s".format(msgConstants.pad3, field.Name, curObjtype, msgConstants.newline))
+            convPrevVerStr = convPrevVerStr.append("%s for (i <- 0 until oldObjVal.length) {%s".format(msgConstants.pad3, msgConstants.newline))
+            convPrevVerStr = convPrevVerStr.append("%s var curVerObj = %s.createInstance()%s".format(msgConstants.pad3, curObjtype, msgConstants.newline))
+            convPrevVerStr = convPrevVerStr.append("%s curVerObj.convertFrom(oldObjVal(i))%s".format(msgConstants.pad3, msgConstants.newline))
+            convPrevVerStr = convPrevVerStr.append("%s %s(i) = curVerObj%s".format(msgConstants.pad3, field.Name, msgConstants.newline))
+            convPrevVerStr = convPrevVerStr.append("%s } %s".format(msgConstants.pad3, msgConstants.newline))
+            convPrevVerStr = convPrevVerStr.append("%s val attributeval = new AttributeValue(%s, oldVerobj.valuesMap(\"%s\").getValueType) %s".format(msgConstants.pad3, field.Name, field.Name, msgConstants.newline))
+            convPrevVerStr = convPrevVerStr.append("%s  newVerObj.valuesMap(key) = attributeval %s".format(msgConstants.pad3, field.Name, field.Name, msgConstants.newline))
+            convPrevVerStr = convPrevVerStr.append("%s } %s".format(msgConstants.pad3, msgConstants.newline))
 
           }
           convPrevVerStr = convPrevVerStr.append("%s } %s".format(msgConstants.pad3, msgConstants.newline))
