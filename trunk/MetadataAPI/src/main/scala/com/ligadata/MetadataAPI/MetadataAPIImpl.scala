@@ -7752,7 +7752,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     MetadataAPIImpl.CloseDbStore
     MetadataAPIImpl.InitSecImpl
     if (startHB) InitHearbeat
-    initZkListeners(startHB)
+      initZkListeners(startHB)
   }
 
     /**
@@ -7900,7 +7900,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @param databaseInfo
      */
   def InitMdMgr(mgr: MdMgr, jarPathsInfo: String, databaseInfo: String) {
-
+    val startHB=true
     val mdLoader = new MetadataLoad(mgr, "", "", "", "")
     mdLoader.initialize
 
@@ -7911,5 +7911,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     val jarPaths = if (tmpJarPaths != null) tmpJarPaths.split(",").toSet else scala.collection.immutable.Set[String]()
     MetadataAPIImpl.OpenDbStore(jarPaths, GetMetadataAPIConfig.getProperty("METADATA_DATASTORE"))
     MetadataAPIImpl.LoadAllObjectsIntoCache
+      if (startHB) InitHearbeat
+      initZkListeners(startHB)
   }
 }
