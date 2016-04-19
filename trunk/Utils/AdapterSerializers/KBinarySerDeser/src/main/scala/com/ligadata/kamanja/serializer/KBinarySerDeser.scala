@@ -6,6 +6,7 @@ import scala.collection.mutable.{ArrayBuffer, Map}
 import scala.collection.JavaConverters._
 import java.io._
 import java.util.zip.{CRC32, Checksum}
+import scala.reflect.runtime.universe._
 
 import org.apache.logging.log4j._
 import com.ligadata.Exceptions._
@@ -28,7 +29,7 @@ class KBinarySerDeser extends SerializeDeserialize {
     var _isReady : Boolean = false
 
 
-    case class ContainerHeader(schemaId: Int, fieldCnt: Int, isFixed: Boolean, dataSize: Int, checksumVal: Int);
+    case class ContainerHeader(schemaId: Int, fieldCnt: Int, isFixed: Boolean, dataSize: Int, checksumVal: Int)
     case class ArrayHeader(itmType: TypeCategory, cnt: Int)
     case class MapHeader(keyType: TypeCategory, valType: TypeCategory, cnt: Int)
 
@@ -74,12 +75,12 @@ class KBinarySerDeser extends SerializeDeserialize {
         val cnt = dis.readInt
         MapHeader(kt, vt, cnt)
     }
-    private def WriteFldInfo(dos : DataOutputStream, tc : TypeCategory, name: String) = {
+    private def WriteFldInfo(dos : DataOutputStream, tc : TypeCategory, name: String) : Unit = {
         dos.writeShort(tc.getValue.toShort)
         dos.writeUTF(name)
     }
 
-    private def WriteFldInfo(dos : DataOutputStream, fld: AttributeValue) =
+    private def WriteFldInfo(dos : DataOutputStream, fld: AttributeValue): Unit =
         WriteFldInfo(dos, fld.getValueType.getTypeCategory, fld.getValueType.getName)
 
     private def ReadFldInfo(dis : DataInputStream) : (TypeCategory, String) = {
@@ -125,7 +126,7 @@ class KBinarySerDeser extends SerializeDeserialize {
                 case MAP => mapAsKBinary(dos, valueType, rawValue.asInstanceOf[Map[Any, Any]])
                 case ARRAY => arrayAsKBinary(dos, valueType, rawValue.asInstanceOf[Array[Any]])
                 case (MESSAGE | CONTAINER) => serializeContainer(dos, rawValue.asInstanceOf[ContainerInterface])
-                case (BOOLEAN | BYTE | LONG | DOUBLE | FLOAT | INT | STRING) => WriteVal(dos, valueType.getTypeCategory, rawValue)
+                case (BOOLEAN | BYTE | CHAR | LONG | DOUBLE | FLOAT | INT | STRING) => WriteVal(dos, valueType.getTypeCategory, rawValue)
                 case _ => throw new UnsupportedObjectException(s"container type ${valueType.getName} not currently serializable", null)
             }
         })
@@ -148,6 +149,7 @@ class KBinarySerDeser extends SerializeDeserialize {
         typeCategory match {
             case BOOLEAN => dos.writeBoolean(v.asInstanceOf[Boolean])
             case BYTE => dos.writeByte(v.asInstanceOf[Byte])
+            case CHAR => dos.writeChar(v.asInstanceOf[Char])
             case LONG => dos.writeLong(v.asInstanceOf[Long])
             case INT => dos.writeInt(v.asInstanceOf[Int])
             case FLOAT => dos.writeFloat(v.asInstanceOf[Float])
@@ -156,10 +158,11 @@ class KBinarySerDeser extends SerializeDeserialize {
             case _ => throw new UnsupportedObjectException(s"KBinary WriteVal got unsupported type, typeId: ${typeCategory.name}", null)
         }
 
-    private def ReadVal(dis: DataInputStream, typeCategory: TypeCategory) =
+    private def ReadVal(dis: DataInputStream, typeCategory: TypeCategory) : Any =
         typeCategory match {
             case BOOLEAN => dis.readBoolean
             case BYTE => dis.readByte
+            case CHAR => dis.readChar
             case LONG => dis.readLong
             case INT => dis.readInt
             case FLOAT => dis.readFloat
@@ -190,7 +193,7 @@ class KBinarySerDeser extends SerializeDeserialize {
     private def mapAsKBinary(dos : DataOutputStream, keyType: TypeCategory, valType: TypeCategory, map : scala.collection.mutable.Map[Any,Any]) : Unit = {
         if(map != null) {
             keyType match {
-                case (BYTE | LONG | INT | STRING) => ;
+                case (BYTE | LONG | CHAR | INT | STRING) => ;
                 case _ => throw new UnsupportedObjectException(s"KBinary serialize doesn't support maps as with complex key types, keyType: ${keyType.name}", null)
             }
             if(valType == NONE)
@@ -207,10 +210,11 @@ class KBinarySerDeser extends SerializeDeserialize {
             idx += 1
             WriteVal(dos, keyType, k)
             valType match {
-                case (BOOLEAN | BYTE | LONG | INT | FLOAT | DOUBLE | STRING) => WriteVal(dos, valType, v)
+                case (BOOLEAN | BYTE | CHAR | LONG | INT | FLOAT | DOUBLE | STRING) => WriteVal(dos, valType, v)
                 case MAP => mapGenericAsKBinary(dos, v.asInstanceOf[scala.collection.mutable.Map[Any,Any]])
                 case ARRAY => arrayGenericAsKBinary(dos, v.asInstanceOf[Array[Any]])
                 case (CONTAINER | MESSAGE) => serializeContainer(dos, v.asInstanceOf[ContainerInterface])
+                case NONE => ; // shouldn't match this
             }
         })
     }
@@ -232,44 +236,60 @@ class KBinarySerDeser extends SerializeDeserialize {
         if(array != null) {
             array.foreach(itm => {
                 itmType match {
-                    case (BOOLEAN | BYTE | LONG | INT | FLOAT | DOUBLE | STRING) => WriteVal(dos, itmType, itm)
+                    case (BOOLEAN | BYTE | LONG | CHAR | INT | FLOAT | DOUBLE | STRING) => WriteVal(dos, itmType, itm)
                     case MAP => mapGenericAsKBinary(dos, itm.asInstanceOf[scala.collection.mutable.Map[Any, Any]])
                     case ARRAY => arrayGenericAsKBinary(dos, itm.asInstanceOf[Array[Any]])
                     case (CONTAINER | MESSAGE) => serializeContainer(dos, itm.asInstanceOf[ContainerInterface])
+                    case NONE => ; // shouldn't match this
                 }
             })
         }
     }
 
-    private def mapElemTypes(map: scala.collection.mutable.Map[Any,Any]) : (TypeCategory, TypeCategory) = {
+    private def mapElemTypes[T: TypeTag](map: T) : (TypeCategory, TypeCategory) = {
         if(map == null) (NONE, NONE)
-        else if(map.isInstanceOf[scala.collection.mutable.Map[String,String]]) (STRING, STRING)
-        else if(map.isInstanceOf[scala.collection.mutable.Map[Int,String]]) (INT, STRING)
-        else if(map.isInstanceOf[scala.collection.mutable.Map[Long,String]]) (LONG, STRING)
-        else if(map.isInstanceOf[scala.collection.mutable.Map[Long,Long]]) (LONG, LONG)
-        else if(map.isInstanceOf[scala.collection.mutable.Map[Int,Int]]) (INT, INT)
-        else if(map.isInstanceOf[scala.collection.mutable.Map[Int,Long]]) (INT, LONG)
-        else (NONE, NONE)
+        else typeTag[T].tpe match {
+            case t if t =:= typeOf[scala.collection.mutable.Map[String,String]] => (STRING, STRING)
+            case t if t =:= typeOf[scala.collection.mutable.Map[String,Long]] => (STRING, LONG)
+            case t if t =:= typeOf[scala.collection.mutable.Map[String,Int]] => (STRING, INT)
+            case t if t =:= typeOf[scala.collection.mutable.Map[String,Float]] => (STRING, FLOAT)
+            case t if t =:= typeOf[scala.collection.mutable.Map[String,Double]] => (STRING, DOUBLE)
+
+            case t if t =:= typeOf[scala.collection.mutable.Map[Int,String]] => (INT, STRING)
+            case t if t =:= typeOf[scala.collection.mutable.Map[Int, Int]] => (INT, INT)
+            case t if t =:= typeOf[scala.collection.mutable.Map[Int, Long]] => (INT, LONG)
+            case t if t =:= typeOf[scala.collection.mutable.Map[Int,Float]] => (INT, FLOAT)
+            case t if t =:= typeOf[scala.collection.mutable.Map[Int,Double]] => (INT, DOUBLE)
+
+            case t if t =:= typeOf[scala.collection.mutable.Map[Long, String]] => (LONG, STRING)
+            case t if t =:= typeOf[scala.collection.mutable.Map[Long,Long]] => (LONG, LONG)
+            case t if t =:= typeOf[scala.collection.mutable.Map[Long,Int]] => (LONG, INT)
+            case t if t =:= typeOf[scala.collection.mutable.Map[Long,Float]] => (LONG, FLOAT)
+            case t if t =:= typeOf[scala.collection.mutable.Map[Long,Double]] => (LONG, DOUBLE)
+            case _ => (NONE, NONE)
+        }
     }
 
-    private def arrayElemType(array: Array[Any]) : TypeCategory = {
+    private def arrayElemType[T: TypeTag](array: T) : TypeCategory = {
         if(array == null) NONE
-        else if(array.isInstanceOf[Int])     INT
-        else if(array.isInstanceOf[Boolean]) BOOLEAN
-        else if(array.isInstanceOf[Byte])    BYTE
-        else if(array.isInstanceOf[Long])    LONG
-        else if(array.isInstanceOf[Double])  DOUBLE
-        else if(array.isInstanceOf[Float])   FLOAT
-        else if(array.isInstanceOf[String])  STRING
-        else NONE
+        else typeTag[T].tpe match {
+            case t if t =:= typeOf[Array[String]] => STRING
+            case t if t =:= typeOf[Array[Boolean]] => BOOLEAN
+            case t if t =:= typeOf[Array[Char]] => CHAR
+            case t if t =:= typeOf[Array[Byte]] => BYTE
+            case t if t =:= typeOf[Array[Int]] => INT
+            case t if t =:= typeOf[Array[Long]] => LONG
+            case t if t =:= typeOf[Array[Float]] => FLOAT
+            case t if t =:= typeOf[Array[Double]] => DOUBLE
+            case _ => NONE
+        }
     }
 
     private def arrayGenericAsKBinary(dos : DataOutputStream, array : Array[Any]) : Unit = {
         val memberCnt = if(array == null) 0 else array.size
         val itmType = arrayElemType(array)
-        if((array != null) && (itmType == NONE)) {
-            case _ => throw new UnsupportedObjectException(s"container type ${itmType.name()} not currently serializable", null)
-        }
+        if((array != null) && (itmType == NONE))
+            throw new UnsupportedObjectException(s"container type ${itmType.name()} not currently serializable", null)
         WriteArrayHeader(dos, ArrayHeader(itmType, memberCnt))
         if(array != null)
             array.foreach(itm => WriteVal(dos, itmType, itm))
@@ -333,13 +353,14 @@ class KBinarySerDeser extends SerializeDeserialize {
             if (hdr.isFixed)
                 attribType = attribs(idx).getTypeCategory
             else {
-                (attribType, attribName) = ReadFldInfo(dis)
+                val (at, an) = ReadFldInfo(dis)
+                attribType = at; attribName = an
             }
             attribType match {
                 case MAP => ReadMap(dis)
                 case ARRAY => ReadArray(dis)
                 case (MESSAGE | CONTAINER) => ReadContainer(dis)
-                case (BOOLEAN | BYTE | LONG | DOUBLE | FLOAT | INT | STRING) => ReadVal(dis, attribType)
+                case (BOOLEAN | BYTE | CHAR | LONG | DOUBLE | FLOAT | INT | STRING) => ReadVal(dis, attribType)
                 case _ => throw new UnsupportedObjectException(s"container type ${attribType.name} not currently serializable", null)
             }
         }
