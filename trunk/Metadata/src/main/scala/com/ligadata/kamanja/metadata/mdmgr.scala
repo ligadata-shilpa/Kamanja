@@ -2905,8 +2905,8 @@ class MdMgr {
   def AddContainer(container: ContainerDef, ignoreExistingObjectsOnStartup: Boolean = false): Unit = {
 
     if (Container(container.FullName, -1, false) != None) {
-      if (!ignoreExistingObjectsOnStartup)
-        throw AlreadyExistsException(s"Container ${container.FullName} already exists.", null)
+     // if (!ignoreExistingObjectsOnStartup)
+     //   throw AlreadyExistsException(s"Container ${container.FullName} already exists.", null)
     }
     if (container.containerType == null) {
       throw new NoSuchElementException(s"The containerType of container ${container.FullName} can not be null.")
