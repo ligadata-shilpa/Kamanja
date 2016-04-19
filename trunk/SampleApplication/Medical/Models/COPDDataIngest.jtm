@@ -138,12 +138,12 @@
 			"op_physn_npi" :"$inpData(10)",
 			"ot_physn_npi" :"$inpData(11)",
 			"nch_bene_blood_ddctbl_lblty_am" :"$inpData(12)",
-			"icd9_dgns_cds" :"conversion.ToStringArray($inpData(13))",
-			"icd9_prcdr_cds" :"conversion.ToIntegerArray($inpData(14))",
+			"icd9_dgns_cds" :"conversion.ToStringArray($inpData(13), \"~\")",
+			"icd9_prcdr_cds" :"conversion.ToIntegerArray($inpData(14), \"~\")",
 			"nch_bene_ptb_ddctbl_amt" :"$inpData(15)",
 			"nch_bene_ptb_coinsrnc_amt" :"$inpData(16)",
 			"admtng_icd9_dgns_cd" :"$inpData(17)",
-			"hcpcs_cds" :"conversion.ToIntegerArray($inpData(18))"
+			"hcpcs_cds" :"conversion.ToIntegerArray($inpData(18), \"~\")"
           }
         },
         "o3": {
@@ -172,9 +172,9 @@
 			"clm_utlztn_day_cnt : "$inpData(18)",
 			"nch_bene_dschrg_dt : "$inpData(19)",
 			"clm_drg_cd : "$inpData(20)",
-			"icd9_dgns_cds : "conversion.ToStringArray($inpData(21))",
-			"icd9_prcdr_cds : "conversion.ToIntegerArray($inpData(22))",
-			"hcpcs_cds : "conversion.ToIntegerArray($inpData(23))"
+			"icd9_dgns_cds : "conversion.ToStringArray($inpData(21), \"~\")",
+			"icd9_prcdr_cds : "conversion.ToIntegerArray($inpData(22), \"~\")",
+			"hcpcs_cds : "conversion.ToIntegerArray($inpData(23), \"~\")"
           }
         },
         "o4": {
