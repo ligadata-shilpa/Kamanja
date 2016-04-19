@@ -33,7 +33,7 @@ public class AttributeTypeInfo {
 		}
 	}
 
-	public TypeCategory toTypeCategory(Short typeId) {
+	public static TypeCategory toTypeCategory(Short typeId) {
 		switch(typeId) {
 			case 0: return TypeCategory.INT;
 			case 1: return TypeCategory.STRING;
