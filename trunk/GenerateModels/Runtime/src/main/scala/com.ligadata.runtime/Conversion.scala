@@ -45,6 +45,7 @@ object Conversion {
     "Char" -> Map("String" -> "ToString"),
     "Float" -> Map("String" -> "ToString"),
     "String" -> Map("Int" -> "ToInteger",
+      "Char" -> "ToChar",
       "Double" -> "ToDouble",
       "Boolean" -> "ToBoolean",
       "Date" -> "ToDate",
