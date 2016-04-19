@@ -214,7 +214,7 @@ class FileMessageExtractor(adapterConfig : SmartFileAdapterConfiguration,
 
     chunk.foreach(x => {
       if (x.asInstanceOf[Char] == message_separator) {
-        val newMsg: Array[Byte] = chunk.slice(prevIndx, indx - 1)
+        val newMsg: Array[Byte] = chunk.slice(prevIndx, indx)
         if(newMsg.length > 0) {
           msgNum += 1
           //println(s"*************** new message ($msgNum): " + new String(newMsg))

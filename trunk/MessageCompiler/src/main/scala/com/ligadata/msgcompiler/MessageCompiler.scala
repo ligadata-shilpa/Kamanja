@@ -87,6 +87,7 @@ class MessageCompiler {
 
     } catch {
       case e: Exception => {
+        e.printStackTrace()
         val stackTrace = StackTrace.ThrowableTraceString(e)
         log.debug("StackTrace:" + stackTrace)
         throw e
