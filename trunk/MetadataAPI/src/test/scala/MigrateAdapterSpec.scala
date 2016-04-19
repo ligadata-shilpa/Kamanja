@@ -183,8 +183,8 @@ class MigrateAdapterSpec extends FunSpec with LocalTestFixtures with BeforeAndAf
 	    case "ASSOCIATEDMESSAGE" => am.MessageNames = Array(adapter(k).asInstanceOf[String]).toList
 	    case "DATAFORMAT" => {
 	      adapter(k).asInstanceOf[String].toUpperCase match {
-		case "CSV" => am.Serializer = "org.kamanja.serdeser.csv.CsvSerDeser"
-		case "JSON" => am.Serializer = "org.kamanja.serdeser.JSON"
+		case "CSV" => am.Serializer = "com.ligadata.kamanja.serializer.csvserdeser"
+		case "JSON" => am.Serializer = "com.ligadata.kamanja.serializer.json"
 	      }
 	    }
 	    case "FIELDDELIMITER" => am.Options = am.Options :+ ("fieldDelimiter",adapter(k).asInstanceOf[String])
@@ -192,6 +192,7 @@ class MigrateAdapterSpec extends FunSpec with LocalTestFixtures with BeforeAndAf
 	    case _ => logger.info("Ignore the key " + k)
 	  }
 	})
+	// add default options if none exist
 	ambs = ambs :+ am
       })
       ambs
@@ -423,7 +424,8 @@ class MigrateAdapterSpec extends FunSpec with LocalTestFixtures with BeforeAndAf
       assert(0 != cfgFiles.length)
 
       //fileList = List("sample_adapters1.json","sample_adapters2.json")
-      fileList = List("ClusterConfig.json")
+      fileList = List("sample_adapters1.json")
+      // fileList = List("ClusterConfig.json")
       fileList.foreach(f1 => {
 	And("Add the Config From " + f1)
 	And("Make Sure " + f1 + " exist")
