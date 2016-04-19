@@ -360,7 +360,7 @@ class CompilerProxy {
     * compileMessageDef - Compile Messages/Containers here
     */
   @throws(classOf[MsgCompilationFailedException])
-  def compileMessageDef(msgDefStr: String, recompile: Boolean = false): (String, ContainerDef, String) = {
+  def compileMessageDef(isUpdate: Boolean, msgDefStr: String, recompile: Boolean = false): (String, ContainerDef, String) = {
     try {
       val mgr = MdMgr.GetMdMgr
       //val msg = new MessageDefImpl()
