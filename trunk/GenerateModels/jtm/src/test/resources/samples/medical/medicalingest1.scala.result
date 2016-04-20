@@ -52,7 +52,7 @@ class TransactionIngest(factory: ModelInstanceFactory) extends ModelInstance(fac
         result.sp_chf = conversion.ToInteger(arraydata(14))
         result.sp_ra_oa = conversion.ToInteger(arraydata(22))
         result.medreimb_ip = conversion.ToDouble(arraydata(24))
-        result.bene_esrd_ind = arraydata(6)
+        result.bene_esrd_ind = conversion.ToChar(arraydata(6))
         result.sp_ischmcht = conversion.ToInteger(arraydata(20))
         result.sp_cncr = conversion.ToInteger(arraydata(16))
         result.bene_sex_ident_cd = conversion.ToInteger(arraydata(4))
@@ -112,7 +112,7 @@ class TransactionIngest(factory: ModelInstanceFactory) extends ModelInstance(fac
         result.ldl = conversion.ToDouble(arraydata(80))
         result.tobacco = conversion.ToInteger(arraydata(74))
         result.mental_disorders = conversion.ToInteger(arraydata(32))
-        result.bene_esrd_ind = arraydata(9)
+        result.bene_esrd_ind = conversion.ToChar(arraydata(9))
         result.sp_ischmcht = conversion.ToInteger(arraydata(23))
         result.hypertension = conversion.ToInteger(arraydata(64))
         result.sp_cncr = conversion.ToInteger(arraydata(19))
@@ -163,6 +163,7 @@ class TransactionIngest(factory: ModelInstanceFactory) extends ModelInstance(fac
         Array(result)
       }
       def process_o3(): Array[MessageInterface] = {
+        if (!("com.ligadata.kamanja.samples.messages.inpatientclaim" == typeName)) return Array.empty[MessageInterface]
         val result = com.ligadata.kamanja.samples.messages.V1000000.InpatientClaim.createInstance
         result.clm_pass_thru_per_diem_amt = conversion.ToDouble(arraydata(14))
         result.nch_bene_blood_ddctbl_lblty_am = conversion.ToDouble(arraydata(17))

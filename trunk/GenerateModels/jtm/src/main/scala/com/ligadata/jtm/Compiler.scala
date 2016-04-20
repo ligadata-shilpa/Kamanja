@@ -839,6 +839,12 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
       throw new Exception(m)
     }
 
+    if (wheres.nonEmpty) {
+      val m = "Where condition not evaluated. transformation: %s".format(currentPath)
+      logger.trace(m)
+      throw new Exception(m)
+    }
+
     if (cnt2 != 0) {
       logger.trace("Not all elements used")
     }

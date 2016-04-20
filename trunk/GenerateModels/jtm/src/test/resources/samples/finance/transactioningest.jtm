@@ -25,7 +25,7 @@
       "outputs": {
         "o1": {
           "computes": {
-            "typeName": { "type": "String", "val": "arrayData(0)", "comment": "extract the type" }
+            "typeName": { "type": "String", "val": "$arrayData(0)", "comment": "extract the type" }
           },
           "where": "\"com.ligadata.kamanja.samples.messages.TransactionMsg\" == $typeName",
           "mapping": {

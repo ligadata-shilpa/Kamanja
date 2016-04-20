@@ -156,7 +156,7 @@
           }
         },
         "o3": {
-          "where": "\"com.ligadata.kamanja.samples.messages.inpatientclaim\" == $typename",
+          "where": "\"com.ligadata.kamanja.samples.messages.inpatientclaim\" == $typeName",
           "mapping": {
             "desynpuf_id": "$arraydata(1)",
             "clm_id": "$arraydata(2)",
