@@ -673,6 +673,7 @@ case class EventOriginInfo(val key: String, val value: String)
 
 // FIXME: Need to have message creator (Model/InputMessage/Get(from db/cache))
 class TransactionContext(val transId: Long, val nodeCtxt: NodeContext, val msgData: Array[Byte], val origin: EventOriginInfo, val eventEpochStartTimeInMs: Long, val msgEvent: ContainerInterface) {
+  private var rowId = 0
   case class ContaienrWithOriginAndPartKey(origin: String, container: ContainerOrConcept, partKey: List[String])
 
   private var orgInputMsg = ContaienrWithOriginAndPartKey(null, null, null)
@@ -707,6 +708,13 @@ class TransactionContext(val transId: Long, val nodeCtxt: NodeContext, val msgDa
   final def addContainerOrConcept(origin: String, m: ContainerOrConcept, partKey: List[String]): Unit = {
     if (m == null) return
     val msgNm = m.getFullTypeName.toLowerCase()
+
+    if (m.isInstanceOf[MessageContainerBase]) {
+      m.asInstanceOf[MessageContainerBase].setTransactionId(transId)
+      m.asInstanceOf[MessageContainerBase].setRowNumber(rowId)
+      rowId += 1
+    }
+
     val tmp = containerOrConceptsMapByName.getOrElse(msgNm, ArrayBuffer[ContaienrWithOriginAndPartKey]())
     tmp += ContaienrWithOriginAndPartKey(origin, m, partKey)
     containerOrConceptsMapByName(msgNm) = tmp
