@@ -69,7 +69,7 @@ object FileProcessor {
   var dirToWatch: String = _
   var targetMoveDir: String = _
   var readyToProcessKey: String = _
-  
+
   var globalFileMonitorService: ExecutorService = Executors.newFixedThreadPool(3)
   val DEBUG_MAIN_CONSUMER_THREAD_ACTION = 1000
   val NOT_RECOVERY_SITUATION = -1
@@ -137,7 +137,7 @@ object FileProcessor {
     zkRecoveryLock.synchronized {
       var zkValue: String = ""
       logger.info("SMART_FILE_CONSUMER (global): Getting zookeeper info for "+ znodePath)
-      
+
       logger.info("SMART_FILE_CONSUMER (MI): addToZK "+ fileName)
       CreateClient.CreateNodeIfNotExists(zkcConnectString, znodePath + "/" + URLEncoder.encode(fileName,"UTF-8"))
       zkValue = zkValue + offset.toString
@@ -201,7 +201,7 @@ object FileProcessor {
       fileCache(file).split("::")(0).toLong
     }
   }
-  
+
    def getIDFromFileCache (file: String): String = {
     fileCacheLock.synchronized {
       fileCache(file)
@@ -353,19 +353,19 @@ object FileProcessor {
       bufferingQLock.synchronized {
         val iter = bufferingQ_map.iterator
         iter.foreach(fileTuple => {
-          
+
           //TODO C&S - changes
           var thisFileFailures: Int = fileTuple._2._3
           var thisFileStarttime: Long = fileTuple._2._2
           var thisFileOrigLength:Long = fileTuple._2._1
-          
-          
+
+
           try {
             val d = new File(fileTuple._1)
 
             // If the filesystem is accessible
             if (d.exists) {
-              
+
               //TODO C&S - Changes
               thisFileOrigLength = d.length
 
@@ -469,7 +469,7 @@ object FileProcessor {
       })
     }
   }
-  
+
   private def isValidFile(fileName: String): Boolean = {
     //Check if the File exists
     if(Files.exists(Paths.get(fileName)) && (Paths.get(fileName).toFile().length()>0)) {
@@ -478,7 +478,7 @@ object FileProcessor {
       var tika = new Tika(detector)
       var fis = new FileInputStream(new File(fileName))
       var contentType :String = null
-      
+
       try{
         contentType = tika.detect(fis)
       }catch{
@@ -497,10 +497,10 @@ object FileProcessor {
       } finally {
         fis.close()
       }
-        
+
       if(contentType!= null && !contentType.isEmpty() && contentType.equalsIgnoreCase("application/octet-stream")){
 		    var magicMatcher : MagicMatch =  null;
-		    
+
 		    try{
 		      magicMatcher = Magic.getMagicMatch(new File(fileName), false)
 		      if(magicMatcher != null)
@@ -526,7 +526,7 @@ object FileProcessor {
             logger.warn("SmartFileConsumer - MimeMagic processing runtime exception - "+e.getMessage)
             throw e
           }
-		      
+
 		    }
       }
 
@@ -561,16 +561,16 @@ object FileProcessor {
           //var map = parse(new String(priorFailures)).values.asInstanceOf[Map[String, Any]]
           if (map != null) map.foreach(fileToReprocess => {
             logger.info("SMART FILE CONSUMER (global): Consumer  recovery of file " + URLDecoder.decode(fileToReprocess.asInstanceOf[String],"UTF-8"))
-            
+
             var fileToRecover = URLDecoder.decode(fileToReprocess.asInstanceOf[String],"UTF-8")
-            
+
             if (!checkIfFileBeingProcessed(fileToRecover)
                 //Additional check, see if it exists, possibility that it is moved but not updated in ZK
                 //Should we be more particular and check in Processed directory ??? TODO
                 && Files.exists(Paths.get(fileToRecover))) {
-              
+
               val offset = zkc.getData.forPath(znodePath + "/" + fileToReprocess.asInstanceOf[String])
-                  
+
               var recoveryInfo = new String(offset)
               logger.info("SMART FILE CONSUMER (global): " + fileToRecover + " from offset " + recoveryInfo)
 
@@ -586,25 +586,25 @@ object FileProcessor {
                 })
               }
 
-              
+
               //Start Changes -- Instead of a single file, run with the ArrayBuffer of Paths
               FileProcessor.enQFile(fileToRecover,recoveryTokens(0).toInt, FileProcessor.RECOVERY_DUMMY_START_TIME, partMap)
-              
+
               for(dir <- path){
                 if(dir.toFile().exists() && dir.toFile().isDirectory()){
-                  var files = dir.toFile().listFiles.filter(file => { 
-                    file.isFile && (file.getName).equals(fileToRecover) 
+                  var files = dir.toFile().listFiles.filter(file => {
+                    file.isFile && (file.getName).equals(fileToRecover)
                   })
                   while (files.size != 0) {
                     Thread.sleep(1000)
-                    files = dir.toFile().listFiles.filter(file => { 
-                      file.isFile && (file.getName).equals(fileToRecover) 
+                    files = dir.toFile().listFiles.filter(file => {
+                      file.isFile && (file.getName).equals(fileToRecover)
                     })
                   }
                 }
               }
               //End Changes -- Instead of a single file, run with the ArrayBuffer of Paths
-            
+
             }else if(!Files.exists(Paths.get(fileToRecover))){
               //Check if file is already moved, if yes remove from ZK
               val tokenName = fileToRecover.split("/")
@@ -615,7 +615,7 @@ object FileProcessor {
                 logger.info("SMART FILE CONSUMER (global): File possibly moved out manually " +fileToRecover)
                 removeFromZK(fileToRecover)
               }
-              
+
             } else {
               logger.info("SMART FILE CONSUMER (global): " +fileToRecover+" already being processed ")
             }
@@ -624,16 +624,16 @@ object FileProcessor {
       }
 
       logger.info("SMART FILE CONSUMER (global): Consumer Continuing Startup process, checking for existing files")
-      
+
       //TODO C&S- No need to process here just before entering the loop
       //If need is to exit, do a shutdown on error
       for(dir <- path)
         processExistingFiles(dir.toFile())
-      
+
 
       logger.info("SMART_FILE_CONSUMER partition Initialization complete  Monitoring specified directory for new files")
       // Begin the listening process, TAKE()
-      
+
       breakable {
         while (true) {
             //processExistingFiles(d)
@@ -775,7 +775,7 @@ object FileProcessor {
       case ioe: IOException => {
         logger.error("Exception moving the file ",ioe)
         FileProcessor.setFileState(fileName,FileProcessor.FINISHED_FAILED_TO_COPY)
-        
+
       }
     }
   }
@@ -790,7 +790,7 @@ object FileProcessor {
       logger.warn("SMART FILE CONSUMER File has been deleted" + fileName);
     }
   }
-  
+
 }
 
 
@@ -857,28 +857,28 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
     NUMBER_OF_BEES = props.getOrElse(SmartFileAdapterConstants.PAR_DEGREE_OF_FILE_CONSUMER, "1").toInt
     maxlen = props.getOrElse(SmartFileAdapterConstants.WORKER_BUFFER_SIZE, "4").toInt * 1024 * 1024
     partitionSelectionNumber = props(SmartFileAdapterConstants.NUMBER_OF_FILE_CONSUMERS).toInt
-    
+
     //Code commented
     readyToProcessKey = props.getOrElse(SmartFileAdapterConstants.READY_MESSAGE_MASK, ".gzip")
-    
+
     maxBufAllowed = props.getOrElse(SmartFileAdapterConstants.MAX_MEM, "512").toLong * 1024L *1024L
     throttleTime = props.getOrElse(SmartFileAdapterConstants.THROTTLE_TIME, "250").toInt
     var mdConfig = props.getOrElse(SmartFileAdapterConstants.METADATA_CONFIG_FILE,null)
     var msgName = props.getOrElse(SmartFileAdapterConstants.MESSAGE_NAME, null)
     var kafkaBroker = props.getOrElse(SmartFileAdapterConstants.KAFKA_BROKER, null)
-    
-    //Default allowed content types - 
+
+    //Default allowed content types -
     var cTypes  = props.getOrElse(SmartFileAdapterConstants.VALID_CONTENT_TYPES, "text/plain;application/gzip")
-    
+
     for(cType <- cTypes.split(";")){
       //logger.info("SMART_FILE_CONSUMER Putting "+cType+" into allowed content types")
       if(!FileProcessor.contentTypes.contains(cType))
         FileProcessor.contentTypes.put(cType, cType)
     }
-    
-    
+
+
     kafkaTopic = props.getOrElse(SmartFileAdapterConstants.KAFKA_TOPIC, null)
-    
+
     // Bail out if dirToWatch, Topic are not set
     if (kafkaTopic == null) {
       logger.error("SMART_FILE_CONSUMER ("+partitionId+") Kafka Topic to populate must be specified")
@@ -993,7 +993,7 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
 
       // Try to get a new file to process.
       buffer = deQBuffer(beeNumber)
-      
+
       // If the buffer is there to process, do it
       if (buffer != null) {
         // If the new file being processed,  offsets to messages in this file to 0.
@@ -1035,7 +1035,7 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
                 prevIndx = indx + 1
               }
               indx = indx + 1
-              
+
             })
           }
         }
@@ -1047,10 +1047,11 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
         }
 
         var foundRelatedLeftovers = false
+        var isIncompleteLefovers = false
         while (!foundRelatedLeftovers && buffer.chunkNumber != 0) {
           myLeftovers = getLeftovers(beeNumber)
           if (myLeftovers.relatedChunk == (buffer.chunkNumber - 1)) {
-            
+
             leftOvers = myLeftovers.leftovers
             foundRelatedLeftovers = true
 
@@ -1062,12 +1063,19 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
                 firstMsgWithLefovers = new KafkaMessage(leftOvers, buffer.firstValidOffset, false, false, buffer.relatedFileName, buffer.partMap, buffer.firstValidOffset )
                 messages.add(firstMsgWithLefovers)
                 enQMsg(messages.toArray, beeNumber)
+                isIncompleteLefovers = false
               }
             } else {
               if (messages.size > 0) {
                 firstMsgWithLefovers = new KafkaMessage(leftOvers ++ msgArray(0).msg, msgArray(0).offsetInFile, false, false, buffer.relatedFileName, msgArray(0).partMap, msgArray(0).offsetInFile)
                 msgArray(0) = firstMsgWithLefovers
                 enQMsg(msgArray, beeNumber)
+                isIncompleteLefovers = false
+              } else {
+                var newLeftovers =  BufferLeftoversArea(beeNumber, leftOvers ++ buffer.payload, buffer.chunkNumber)
+                setLeftovers(newLeftovers, beeNumber)
+                BufferCounters.inMemoryBuffersCntr.decrementAndGet()
+                isIncompleteLefovers = true
               }
             }
           } else {
@@ -1075,24 +1083,26 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
           }
         }
 
-        // whatever is left is the leftover we need to pass to another thread.
-        indx = scala.math.min(indx, buffer.len)
-        
-        if (indx != prevIndx) {
-          
-          if (!isEofBuffer) {
-            val newFileLeftOvers = BufferLeftoversArea(beeNumber, buffer.payload.slice(prevIndx, indx), buffer.chunkNumber)
-            setLeftovers(newFileLeftOvers, beeNumber)
-          } else {
+        if (!isIncompleteLefovers) {
+
+          // whatever is left is the leftover we need to pass to another thread.
+          indx = scala.math.min(indx, buffer.len)
+
+          if (indx != prevIndx) {
+
+            if (!isEofBuffer) {
+              val newFileLeftOvers = BufferLeftoversArea(beeNumber, buffer.payload.slice(prevIndx, indx), buffer.chunkNumber)
+              setLeftovers(newFileLeftOvers, beeNumber)
+            } else {
+              val newFileLeftOvers = BufferLeftoversArea(beeNumber, new Array[Char](0), buffer.chunkNumber)
+              setLeftovers(newFileLeftOvers, beeNumber)
+            }
+
+          } else{
             val newFileLeftOvers = BufferLeftoversArea(beeNumber, new Array[Char](0), buffer.chunkNumber)
             setLeftovers(newFileLeftOvers, beeNumber)
           }
-
-        } else{
-          val newFileLeftOvers = BufferLeftoversArea(beeNumber, new Array[Char](0), buffer.chunkNumber)
-          setLeftovers(newFileLeftOvers, beeNumber)
         }
-
       } else {
         // Ok, we did not find a buffer to process on the BufferQ.. wait.
         Thread.sleep(100)
@@ -1237,7 +1247,7 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
       } else {
         Thread.sleep(100)
       }
-      
+
     }
     // Done with this file... mark is as closed
     try {
@@ -1265,11 +1275,11 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
         Thread.sleep(500)
       } else {
         logger.info("SMART_FILE_CONSUMER partition " + partitionId + " Processing file " + fileToProcess)
-        
+
         //val tokenName = fileToProcess.name.split("/")
         //FileProcessor.markFileProcessing(tokenName(tokenName.size - 1), fileToProcess.offset, fileToProcess.createDate)
         FileProcessor.markFileProcessing(fileToProcess.name, fileToProcess.offset, fileToProcess.createDate)
-        
+
         curTimeStart = System.currentTimeMillis
         try {
           readBytesChunksFromFile(fileToProcess)
@@ -1366,6 +1376,6 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
       zkc.close
     Thread.sleep(2000)
   }
-  
-    
+
+
 }
