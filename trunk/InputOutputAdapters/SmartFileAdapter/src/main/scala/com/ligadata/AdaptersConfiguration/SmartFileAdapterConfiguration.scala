@@ -14,6 +14,7 @@ class SmartFileAdapterConfiguration extends AdapterConfiguration {
 
   var connectionConfig : FileAdapterConnectionConfig = null
   var monitoringConfig : FileAdapterMonitoringConfig = null
+  var producerConfig : FileAdapterProducerConfig = null
 }
 
 class FileAdapterConnectionConfig {
@@ -36,6 +37,13 @@ class FileAdapterMonitoringConfig {
   var consumersCount : Int = _
   var workerBufferSize : Int = 16 //buffer size in MB to read messages from files
   var messageSeparator : Char = 10
+}
+
+class FileAdapterProducerConfig {
+  var location : String = _ //folder to write files
+  var compressionString: String = _ // If it is null or empty we treat it as TEXT file
+  var partitionFormat: String = "${yyyy}/${MM}/${dd}" // folder structure for partitions
+  var fileNamePrefix: String = "Data" // prefix for the file names
 }
 
 object SmartFileAdapterConfiguration{
@@ -63,7 +71,7 @@ object SmartFileAdapterConfiguration{
 //    adapterConfig.fieldDelimiter = if (inputConfig.fieldDelimiter == null) null else inputConfig.fieldDelimiter.trim
 //    adapterConfig.valueDelimiter = if (inputConfig.valueDelimiter == null) null else inputConfig.valueDelimiter.trim
 
-    val (_type, connectionConfig, monitoringConfig) = parseSmartFileAdapterSpecificConfig(inputConfig.Name, inputConfig.adapterSpecificCfg)
+    val (_type, connectionConfig, monitoringConfig, producerConfig) = parseSmartFileAdapterSpecificConfig(inputConfig.Name, inputConfig.adapterSpecificCfg)
     adapterConfig._type = _type
     adapterConfig.connectionConfig = connectionConfig
     adapterConfig.monitoringConfig = monitoringConfig
@@ -71,7 +79,7 @@ object SmartFileAdapterConfiguration{
     adapterConfig
   }
 
-  def parseSmartFileAdapterSpecificConfig(adapterName : String, adapterSpecificCfgJson : String) : (String, FileAdapterConnectionConfig, FileAdapterMonitoringConfig) = {
+  def parseSmartFileAdapterSpecificConfig(adapterName : String, adapterSpecificCfgJson : String) : (String, FileAdapterConnectionConfig, FileAdapterMonitoringConfig, FileAdapterProducerConfig) = {
 
     val adapCfg = parse(adapterSpecificCfgJson)
 
@@ -160,7 +168,24 @@ object SmartFileAdapterConfiguration{
       throw new KamanjaException(err, null)
     }
 
-    (_type, connectionConfig, monitoringConfig)
+    var producerConfig: FileAdapterProducerConfig = null
+    if (adapCfgValues.getOrElse("ProducerConfig", null) != null) {
+      producerConfig = new FileAdapterProducerConfig()
+      val prodConf = adapCfgValues.get("ProducerConfig").get.asInstanceOf[Map[String, String]]
+      prodConf.foreach(kv => {
+        if (kv._1.compareToIgnoreCase("Location") == 0) {
+          producerConfig.location = kv._2.trim
+        } else if (kv._1.compareToIgnoreCase("Compression") == 0) {
+          producerConfig.compressionString = kv._2.trim
+        } else if (kv._1.compareToIgnoreCase("Partition") == 0) {
+          producerConfig.partitionFormat = kv._2.trim
+        } else if (kv._1.compareToIgnoreCase("FileNamePrefix") == 0) {
+          producerConfig.fileNamePrefix = kv._2.trim
+        }
+      })
+    }
+
+    (_type, connectionConfig, monitoringConfig, producerConfig)
   }
 }
 
