@@ -360,14 +360,14 @@ class CompilerProxy {
     * compileMessageDef - Compile Messages/Containers here
     */
   @throws(classOf[MsgCompilationFailedException])
-  def compileMessageDef(isUpdate: Boolean, msgDefStr: String, recompile: Boolean = false): (String, ContainerDef, String) = {
+  def compileMessageDef(isUpdate: Boolean, msgDefStr: String, tenantId: Option[String], recompile: Boolean = false): (String, ContainerDef, String) = {
     try {
       val mgr = MdMgr.GetMdMgr
       //val msg = new MessageDefImpl()
       val msg = new MessageCompiler()
       logger.debug("Call Message Compiler ....")
       val schemaId = MetadataAPIImpl.GetSchemaId
-      val ((classStrVer, classStrVerJava), msgDef, (classStrNoVer, classStrNoVerJava), rawMsgStr) = msg.processMsgDef(msgDefStr, "JSON", mgr, schemaId, recompile)
+      val ((classStrVer, classStrVerJava), msgDef, (classStrNoVer, classStrNoVerJava), rawMsgStr) = msg.processMsgDef(msgDefStr, "JSON", mgr, schemaId, tenantId, recompile)
       logger.debug("Message Compilation done ...." + JsonSerializer.SerializeObjectToJson(msgDef))
 
       val nameArray = msgDef.PhysicalName.split('.')

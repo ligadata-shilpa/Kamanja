@@ -60,6 +60,18 @@ object ModelService {
         var modelDef=""
         var response: String = ""
         var modelFileDir: String = ""
+
+        //val gitMsgFile = "https://raw.githubusercontent.com/ligadata-dhaval/Kamanja/master/HelloWorld_Msg_Def.json"
+        var chosen: String = ""
+        var finalTid: Option[String] = None
+        if (tid == None) {
+            chosen = getTenantId
+            finalTid = Some(chosen)
+        } else {
+            finalTid = tid
+        }
+
+
         if (input == "") {
             //get the messages location from the config file. If error get the location from github
             modelFileDir = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("MODEL_FILES_DIR")
@@ -100,7 +112,7 @@ object ModelService {
             for (modelDef <- modelDefs){
                 println("Adding the next model in the queue.")
                 if (dep.length > 0) {
-                    response+= MetadataAPIImpl.AddModel(ModelType.SCALA, modelDef, userid, tid, Some(userid.get+"."+dep),None,None,None,optMsgProduced)
+                    response+= MetadataAPIImpl.AddModel(ModelType.SCALA, modelDef, userid, finalTid, Some(userid.get+"."+dep),None,None,None,optMsgProduced)
                 } else {
                     //before adding a model, add its config file.
                     var configKeys = MetadataAPIImpl.getModelConfigNames
@@ -128,7 +140,7 @@ object ModelService {
                                 errorMsg
                             }
                         }
-                        response+= MetadataAPIImpl.AddModel(ModelType.SCALA, modelDef, userid,tid, Some(modelConfig), None, None, None, optMsgProduced)
+                        response+= MetadataAPIImpl.AddModel(ModelType.SCALA, modelDef, userid,finalTid, Some(modelConfig), None, None, None, optMsgProduced)
                     }
                 }
             }
@@ -154,6 +166,16 @@ object ModelService {
         var modelDef=""
         var response: String = ""
         var modelFileDir: String = ""
+
+        //val gitMsgFile = "https://raw.githubusercontent.com/ligadata-dhaval/Kamanja/master/HelloWorld_Msg_Def.json"
+        var chosen: String = ""
+        var finalTid: Option[String] = None
+        if (tid == None) {
+            chosen = getTenantId
+            finalTid = Some(chosen)
+        } else {
+            finalTid = tid
+        }
 
         if (input == "") {
             //get the messages location from the config file. If error get the location from github
@@ -196,7 +218,7 @@ object ModelService {
             for (modelDef <- modelDefs){
                 println("Adding the next model in the queue.")
                 if (dep.length > 0) {
-                    response+= MetadataAPIImpl.AddModel(ModelType.JAVA, modelDef, userid, tid, Some(userid.get+"."+dep), None,None,None,optMsgProduced)
+                    response+= MetadataAPIImpl.AddModel(ModelType.JAVA, modelDef, userid, finalTid, Some(userid.get+"."+dep), None,None,None,optMsgProduced)
                 } else {
                     var configKeys = MetadataAPIImpl.getModelConfigNames
                     println("--> got these many back "+configKeys.size)
@@ -224,7 +246,7 @@ object ModelService {
                                 errorMsg
                             }
                         }
-                        response+= MetadataAPIImpl.AddModel(ModelType.JAVA, modelDef, userid, tid,Some(modelConfig), None,None,None,optMsgProduced)
+                        response+= MetadataAPIImpl.AddModel(ModelType.JAVA, modelDef, userid, finalTid,Some(modelConfig), None,None,None,optMsgProduced)
                     }
                 }
             }
@@ -260,6 +282,17 @@ object ModelService {
                     , optMsgConsumed: Option[String] = None
                     , optMsgVersion: Option[String] = Some("-1")
                     , tid: Option[String] = None): String = {
+
+        //val gitMsgFile = "https://raw.githubusercontent.com/ligadata-dhaval/Kamanja/master/HelloWorld_Msg_Def.json"
+        var chosen: String = ""
+        var finalTid: Option[String] = None
+        if (tid == None) {
+            chosen = getTenantId
+            finalTid = Some(chosen)
+        } else {
+            finalTid = tid
+        }
+
         val response : String = if (input == "") {
             val reply : String = "PMML models are only ingested with command line arguments.. default directory selection is deprecated"
             logger.error(reply)
@@ -268,7 +301,7 @@ object ModelService {
             val model = new File(input.toString)
             val resp : String = if(model.exists()){
                 val modelDef= Source.fromFile(model).mkString
-                MetadataAPIImpl.AddModel(ModelType.PMML, modelDef, optUserid, tid,  optModelName, optVersion, optMsgConsumed,None,optMsgVersion)
+                MetadataAPIImpl.AddModel(ModelType.PMML, modelDef, optUserid, finalTid,  optModelName, optVersion, optMsgConsumed,None,optMsgVersion)
             }else{
                 val userId : String = optUserid.getOrElse("no user id supplied")
                 val modelName : String = optModelName.getOrElse("no model name supplied")
@@ -300,6 +333,17 @@ object ModelService {
         var modelConfig=""
         var response: String = ""
         var modelFileDir: String = ""
+        //val gitMsgFile = "https://raw.githubusercontent.com/ligadata-dhaval/Kamanja/master/HelloWorld_Msg_Def.json"
+
+        var chosen: String = ""
+        var finalTid: Option[String] = None
+        if (tid == None) {
+            chosen = getTenantId
+            finalTid = Some(chosen)
+        } else {
+            finalTid = tid
+        }
+
         if (input == "") {
             //get the messages location from the config file. If error get the location from github
             modelFileDir = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("MODEL_FILES_DIR")
@@ -320,7 +364,7 @@ object ModelService {
                             case option => {
                                 var  modelDefs=getUserInputFromMainMenu(models)
                                 for (modelDef <- modelDefs)
-                                    response += MetadataAPIImpl.AddModel(ModelType.KPMML, modelDef.toString, userid, tid, None,None,None,None,optMsgProduced)
+                                    response += MetadataAPIImpl.AddModel(ModelType.KPMML, modelDef.toString, userid, finalTid, None,None,None,None,optMsgProduced)
                             }
                         }
                     }
@@ -335,7 +379,7 @@ object ModelService {
             var model = new File(input.toString)
             if(model.exists()){
                 modelDef= Source.fromFile(model).mkString
-                response = MetadataAPIImpl.AddModel(ModelType.KPMML, modelDef.toString, userid, tid, None,None,None,None,optMsgProduced)
+                response = MetadataAPIImpl.AddModel(ModelType.KPMML, modelDef.toString, userid, finalTid, None,None,None,None,optMsgProduced)
             }else{
                 response="Model definition file does not exist"
             }
@@ -357,6 +401,17 @@ object ModelService {
         var modelDef=""
         var response: String = ""
         var modelFileDir: String = ""
+
+        //val gitMsgFile = "https://raw.githubusercontent.com/ligadata-dhaval/Kamanja/master/HelloWorld_Msg_Def.json"
+        var chosen: String = ""
+        var finalTid: Option[String] = None
+        if (tid == None) {
+            chosen = getTenantId
+            finalTid = Some(chosen)
+        } else {
+            finalTid = tid
+        }
+
         if (input == "") {
             //get the messages location from the config file. If error get the location from github
             modelFileDir = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("MODEL_FILES_DIR")
@@ -377,7 +432,7 @@ object ModelService {
                             case option => {
                                 var  modelDefs=getUserInputFromMainMenu(models)
                                 for (modelDef <- modelDefs)
-                                    response += MetadataAPIImpl.AddModel(ModelType.JTM, modelDef.toString, userid, tid, optModelName, None, None, None,None)
+                                    response += MetadataAPIImpl.AddModel(ModelType.JTM, modelDef.toString, userid, finalTid, optModelName, None, None, None,None)
                             }
                         }
                     }
@@ -392,7 +447,7 @@ object ModelService {
             var model = new File(input.toString)
             if(model.exists()){
                 modelDef= Source.fromFile(model).mkString
-                response = MetadataAPIImpl.AddModel(ModelType.JTM, modelDef.toString, userid, tid, optModelName, None, None, None, None)
+                response = MetadataAPIImpl.AddModel(ModelType.JTM, modelDef.toString, userid, finalTid, optModelName, None, None, None, None)
             }else{
                 response="Model definition file does not exist"
             }
@@ -414,6 +469,16 @@ object ModelService {
       var modelDef = ""
       var response: String = ""
       var modelFileDir: String = ""
+        //val gitMsgFile = "https://raw.githubusercontent.com/ligadata-dhaval/Kamanja/master/HelloWorld_Msg_Def.json"
+      var chosen: String = ""
+      var finalTid: Option[String] = None
+      if (tid == None) {
+          chosen = getTenantId
+          finalTid = Some(chosen)
+      } else {
+          finalTid = tid
+      }
+
       if (input == "") {
         //get the messages location from the config file. If error get the location from github
         modelFileDir = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("MODEL_FILES_DIR")
@@ -434,7 +499,7 @@ object ModelService {
                 case option => {
                   var modelDefs = getUserInputFromMainMenu(models)
                   for (modelDef <- modelDefs)
-                    response = MetadataAPIImpl.UpdateModel(ModelType.KPMML, modelDef.toString, userid, tid)
+                    response = MetadataAPIImpl.UpdateModel(ModelType.KPMML, modelDef.toString, userid, finalTid)
                 }
               }
 
@@ -451,7 +516,7 @@ object ModelService {
         var model = new File(input.toString)
         if (model.exists()) {
           modelDef = Source.fromFile(model).mkString
-          response = MetadataAPIImpl.UpdateModel(ModelType.KPMML, modelDef, userid, tid)
+          response = MetadataAPIImpl.UpdateModel(ModelType.KPMML, modelDef, userid, finalTid)
         } else {
           response = "File does not exist"
         }
@@ -476,6 +541,14 @@ object ModelService {
         var modelDef = ""
         var response: String = ""
         var modelFileDir: String = ""
+        var chosen: String = ""
+        var finalTid: Option[String] = None
+        if (tid == None) {
+            chosen = getTenantId
+            finalTid = Some(chosen)
+        } else {
+            finalTid = tid
+        }
         if (input == "") {
             //get the messages location from the config file. If error get the location from github
             modelFileDir = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("MODEL_FILES_DIR")
@@ -496,7 +569,7 @@ object ModelService {
                             case option => {
                                 var modelDefs = getUserInputFromMainMenu(models)
                                 for (modelDef <- modelDefs)
-                                    response = MetadataAPIImpl.UpdateModel(ModelType.JTM, modelDef.toString, userid, tid, optModelName)
+                                    response = MetadataAPIImpl.UpdateModel(ModelType.JTM, modelDef.toString, userid, finalTid, optModelName)
                             }
                         }
 
@@ -512,7 +585,7 @@ object ModelService {
             var model = new File(input.toString)
             if (model.exists()) {
                 modelDef = Source.fromFile(model).mkString
-                response = MetadataAPIImpl.UpdateModel(ModelType.JTM, modelDef, userid, tid, optModelName)
+                response = MetadataAPIImpl.UpdateModel(ModelType.JTM, modelDef, userid, finalTid, optModelName)
             } else {
                 response = "File does not exist"
             }
@@ -538,6 +611,19 @@ object ModelService {
                       ,newVersion : String
                       ,tid: Option[String] = None ) : String = {
 
+      var chosen: String = ""
+      var finalTid: Option[String] = None
+      if (tid == None) {
+          chosen = getTenantId
+          finalTid = Some(chosen)
+      } else {
+          finalTid = tid
+      }
+      if (pmmlPath == "") {
+          val reply : String = "PMML models are only ingested with command line arguments.. default directory selection is deprecated"
+          return reply
+      }
+
       val response : String = try {
           val jpmmlPath : File = new File(pmmlPath.toString)
               val pmmlText : String = Source.fromFile(jpmmlPath).mkString
@@ -545,7 +631,7 @@ object ModelService {
               MetadataAPIImpl.UpdateModel(ModelType.PMML
                               , pmmlText
                               , userid
-                              , tid
+                              , finalTid
                               , Some(modelNamespaceName)
                               , Some(newVersion), None, None)
       } catch {
@@ -578,6 +664,16 @@ object ModelService {
         var modelConfig=""
         var response: String = ""
         var modelFileDir: String = ""
+
+        var chosen: String = ""
+        var finalTid: Option[String] = None
+        if (tid == None) {
+            chosen = getTenantId
+            finalTid = Some(chosen)
+        } else {
+            finalTid = tid
+        }
+
         var modelDefs= Array[String]()
         if (input == "") {
           //get the messages location from the config file. If error get the location from github
@@ -623,7 +719,7 @@ object ModelService {
           for (modelDef <- modelDefs){
             println("Adding the next model in the queue.")
             if (dep.length > 0) {
-              response+= MetadataAPIImpl.UpdateModel( ModelType.JAVA, modelDef, userid, Some(userid.get+"."+dep), tid)
+              response+= MetadataAPIImpl.UpdateModel( ModelType.JAVA, modelDef, userid, Some(userid.get+"."+dep), finalTid)
             } else {
               //before adding a model, add its config file.
               var configKeys = MetadataAPIImpl.getModelConfigNames
@@ -652,7 +748,7 @@ object ModelService {
                     errorMsg
                   }
                 }
-                response+= MetadataAPIImpl.UpdateModel(ModelType.JAVA, modelDef, userid, tid, Some(modelConfig))
+                response+= MetadataAPIImpl.UpdateModel(ModelType.JAVA, modelDef, userid, finalTid, Some(modelConfig))
               }
             }
           }
@@ -677,6 +773,14 @@ object ModelService {
         var modelConfig=""
         var response: String = ""
         var modelFileDir: String = ""
+        var chosen: String = ""
+        var finalTid: Option[String] = None
+        if (tid == None) {
+            chosen = getTenantId
+            finalTid = Some(chosen)
+        } else {
+            finalTid = tid
+        }
         var modelDefs= Array[String]()
         if (input == "") {
           //get the messages location from the config file. If error get the location from github
@@ -721,7 +825,7 @@ object ModelService {
             for (modelDef <- modelDefs){
               println("Adding the next model in the queue.")
               if (dep.length > 0) {
-                response+= MetadataAPIImpl.UpdateModel(ModelType.SCALA, modelDef, userid, tid, Some(userid.get+"."+dep))
+                response+= MetadataAPIImpl.UpdateModel(ModelType.SCALA, modelDef, userid, finalTid, Some(userid.get+"."+dep))
               } else {
                 //before adding a model, add its config file.
                 var configKeys = MetadataAPIImpl.getModelConfigNames
@@ -749,7 +853,7 @@ object ModelService {
                       errorMsg
                     }
                   }
-                  response+= MetadataAPIImpl.UpdateModel(ModelType.SCALA, modelDef, userid, tid, Some(modelConfig))
+                  response+= MetadataAPIImpl.UpdateModel(ModelType.SCALA, modelDef, userid, finalTid, Some(modelConfig))
                 }
               }
             }
@@ -1027,6 +1131,21 @@ object ModelService {
           true
   }
 
+    private def getTenantId: String = {
+        var tenatns = MetadataAPIImpl.GetAllTenants(userid)
+        return getUserInputFromMainMenu(tenatns)
+    }
+
+    def getUserInputFromMainMenu(tenants: Array[String]) : String = {
+        var srNo = 0
+        for(tenant <- tenants) {
+            srNo += 1
+            println("[" + srNo + "]" + tenant)
+        }
+        print("\nEnter your choice(If more than 1 choice, please use commas to seperate them): \n")
+        val userOption: Int = readLine().trim.toInt
+        return tenants(userOption - 1)
+    }
     /**
      * 
      * @param models and array of directory file specs

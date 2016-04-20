@@ -187,6 +187,7 @@ object ErrorCodeConstants {
    val Remove_Adapter_Failed = "Failed to delete an adapter";
    val Remove_Adapter_Successful = "Deleted adapter successfully";
    val Get_All_Adapters_Failed= "Failed to fetch all adapters";
+  val Get_All_Tenants_Failed= "Failed to fetch all tenants";
    val Get_All_Adapters_Failed_Not_Available = "Failed to fetch all adapters. No Adapter available.";
    val Get_All_Adapters_Successful = "Successfully fetched all adpaters";
    

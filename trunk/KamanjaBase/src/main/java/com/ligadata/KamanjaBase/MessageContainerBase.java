@@ -33,6 +33,10 @@ public abstract class MessageContainerBase extends ContainerOrConcept {
 		return getContainerFactory().getSchemaId();
 	}
 
+	final public String getTenantId() {
+		return getContainerFactory().getTenantId();
+	}
+	
 	final public ContainerTypes.ContainerType getContainerType() {
 		return getContainerFactory().getContainerType();
 	}

@@ -123,11 +123,17 @@ class HdfsFileHandler extends SmartFileHandler{
        hdFileSystem = FileSystem.get(hdfsConfig)
        val srcPath = new Path(getFullPath)
        val destPath = new Path(newFilePath)
-       
+
         if (hdFileSystem.exists(srcPath)) {
+
+          if(hdFileSystem.exists(destPath)){
+            logger.info("File {} already exists. It will be deleted first", destPath)
+            hdFileSystem.delete(destPath, true)
+          }
+
           hdFileSystem.rename(srcPath, destPath)
-            logger.debug("Moved remote file success")
-            fileFullPath = newFilePath
+          logger.debug("Moved file success")
+          fileFullPath = newFilePath
             return true
         }
         else{
@@ -136,7 +142,7 @@ class HdfsFileHandler extends SmartFileHandler{
         }
      } 
      catch {
-       case ex : Exception => ex.printStackTrace()
+       case ex : Exception => logger.error("", ex)
         return false
      } finally {
 
