@@ -662,7 +662,7 @@ class MessageGenerator {
   private def getByName(message: Message): String = {
     """
     private def getByName(key: String): AnyRef = {
-      if (!keyTypes.contains(key)) throw new Exception(s"Key $key does not exists in message/container hl7Fixed ");
+      if (!keyTypes.contains(key)) throw new Exception(s"Key $key does not exists in message/container """+message.Name +""");
       return get(keyTypes(key).getIndex)
   }
   """
