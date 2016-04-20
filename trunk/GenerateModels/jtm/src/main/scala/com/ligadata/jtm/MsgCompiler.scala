@@ -31,10 +31,11 @@ class ConfMsgCompiler (arguments: Seq[String] ) extends ScallopConf (arguments) 
   val out = opt[String] (required = true, descr = "Scalaouput", default = None )
 }
 /*
-run --in /home/joerg/Kamanja/trunk/GenerateModels/jtm/src/test/resources/metadata/messages/msg1.json   --out ~/msg1.json
-run --in /home/joerg/Kamanja/trunk/GenerateModels/jtm/src/test/resources/metadata/messages/msg2.json   --out ~/msg2.json
-run --in /home/joerg/Kamanja/trunk/GenerateModels/jtm/src/test/resources/metadata/messages/TransactionMsg.json   --out ~/MsgOut.json
-run --in /home/joerg/Kamanja/trunk/GenerateModels/jtm/src/test/resources/metadata/messages/TransactionMsgIn.json   --out ~/MsgIn.json
+run --in /home/joerg/Kamanja/trunk/GenerateModels/jtm/src/test/resources/metadata/messages/msg1.json   --out ~/msg1.scala
+run --in /home/joerg/Kamanja/trunk/GenerateModels/jtm/src/test/resources/metadata/messages/msg2.json   --out ~/msg2.scala
+run --in /home/joerg/Kamanja/trunk/GenerateModels/jtm/src/test/resources/metadata/messages/TransactionMsg.json   --out ~/MsgOut.scala
+run --in /home/joerg/Kamanja/trunk/GenerateModels/jtm/src/test/resources/metadata/messages/TransactionMsgIn.json   --out ~/MsgIn.scala
+run --in /home/joerg/Kamanja/trunk/GenerateModels/jtm/src/test/resources/metadata/messages/hl7_Medical.json --out /tmp/hl7.scala
  */
 object MsgCompiler extends App with LogTrait {
 

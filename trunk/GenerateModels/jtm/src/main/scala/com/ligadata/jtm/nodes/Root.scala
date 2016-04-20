@@ -88,13 +88,14 @@ object Root {
     val mapToOutput = new TypeToken[scala.collection.Map[String, Output]](){}.getType()
     val mapToCompute = new TypeToken[scala.collection.Map[String, Compute]](){}.getType()
     val mapToGrok = new TypeToken[scala.collection.Map[String, Grok]](){}.getType()
-
+    val mapToArray = new TypeToken[scala.collection.Map[String, Array[String]]](){}.getType()
     new GsonBuilder().
       registerTypeAdapter(mapToString, new MapToString).
       registerTypeAdapter(mapToTransformation, new MapToType[Transformation]).
       registerTypeAdapter(mapToOutput, new MapToType[Output]).
       registerTypeAdapter(mapToCompute, new MapToType[Compute]).
       registerTypeAdapter(mapToGrok, new MapToType[Grok]).
+      registerTypeAdapter(mapToArray, new MapToType[Array[String]]).
       create()
   }
 

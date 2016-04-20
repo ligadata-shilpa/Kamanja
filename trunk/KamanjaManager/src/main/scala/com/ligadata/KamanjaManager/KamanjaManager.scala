@@ -27,7 +27,7 @@ import com.ligadata.Exceptions.{ FatalAdapterException }
 import scala.actors.threadpool.{ ExecutorService }
 import com.ligadata.KamanjaVersion.KamanjaVersion
 
-class KamanjaServer(var mgr: KamanjaManager, port: Int) extends Runnable {
+class KamanjaServer(port: Int) extends Runnable {
   private val LOG = LogManager.getLogger(getClass);
   private val serverSocket = new ServerSocket(port)
 
@@ -36,7 +36,7 @@ class KamanjaServer(var mgr: KamanjaManager, port: Int) extends Runnable {
       while (true) {
         // This will block until a connection comes in.
         val socket = serverSocket.accept()
-        (new Thread(new ConnHandler(socket, mgr))).start()
+        (new Thread(new ConnHandler(socket))).start()
       }
     } catch {
       case e: Exception => {
@@ -54,7 +54,7 @@ class KamanjaServer(var mgr: KamanjaManager, port: Int) extends Runnable {
   }
 }
 
-class ConnHandler(var socket: Socket, var mgr: KamanjaManager) extends Runnable {
+private class ConnHandler(var socket: Socket) extends Runnable {
   private val LOG = LogManager.getLogger(getClass);
   private val out = new PrintStream(socket.getOutputStream)
   private val in = new BufferedReader(new InputStreamReader(socket.getInputStream))
@@ -67,7 +67,7 @@ class ConnHandler(var socket: Socket, var mgr: KamanjaManager) extends Runnable 
           val strLine = in.readLine()
           if (strLine == null)
             break
-          mgr.execCmd(strLine)
+          KamanjaManager.instance.execCmd(strLine)
         }
       }
     } catch {
@@ -589,7 +589,7 @@ class KamanjaManager extends Observer {
     }
   }
 
-  def run(args: Array[String]): Int = {
+  private def run(args: Array[String]): Int = {
     KamanjaConfiguration.Reset
     KamanjaLeader.Reset
     if (args.length == 0) {
@@ -959,7 +959,7 @@ class KamanjaManager extends Observer {
     return false
   }
 
-  class SignalHandler extends Observable with sun.misc.SignalHandler {
+  private class SignalHandler extends Observable with sun.misc.SignalHandler {
     def handleSignal(signalName: String) {
       sun.misc.Signal.handle(new sun.misc.Signal(signalName), this)
     }
@@ -987,6 +987,7 @@ class ComponentInfo {
   var metrics: collection.mutable.Map[String, Any] = null
 }
 
+/*
 object KamanjaManager {
   private val LOG = LogManager.getLogger(getClass);
   var curMgr: KamanjaManager = _
@@ -1006,5 +1007,28 @@ object KamanjaManager {
   def incrAdapterChangedCntr(): Unit = curMgr.incrAdapterChangedCntr()
   def getAdapterChangedCntr = curMgr.getAdapterChangedCntr
   def getAllAdaptersInfo: (Array[InputAdapter], Array[OutputAdapter], Array[StorageAdapter], Long) = curMgr.getAllAdaptersInfo
+}
+*/
+
+object KamanjaManager {
+  private val LOG = LogManager.getLogger(getClass)
+  private var km: KamanjaManager = _
+
+  val instance: KamanjaManager = {
+    if(km == null) {
+      km = new KamanjaManager
+    }
+    km
+  }
+
+  def main(args: Array[String]): Unit = {
+    scala.sys.addShutdownHook({
+      if (KamanjaConfiguration.shutdown == false) {
+        LOG.warn("KAMANJA-MANAGER: Received shutdown request")
+        KamanjaConfiguration.shutdown = true // Setting the global shutdown
+      }
+    })
+    sys.exit(instance.run(args))
+  }
 }
 

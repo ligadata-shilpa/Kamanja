@@ -39,4 +39,9 @@ class Output {
     *
     */
   val mappingByName: Boolean = false
+
+  /** Shorthand for mapping array elements against values
+    *
+    */
+  val mapbyposition: scala.collection.Map[String, Array[String]] = scala.collection.Map.empty[String, Array[String]]
 }
