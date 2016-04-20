@@ -11,7 +11,6 @@ class MessageGenerator {
   var msgObjectGenerator = new MessageObjectGenerator
   var mappedMsgGen = new MappedMsgGenerator
   var msgConstants = new MessageConstants
-  var convFuncGenerator = new ConversionFuncGenerator
 
   val logger = this.getClass.getName
   lazy val log = LogManager.getLogger(logger)
@@ -26,7 +25,6 @@ class MessageGenerator {
    * 
    */
   def generateMessage(message: Message, mdMgr: MdMgr): (String, String) = {
-
     generateMsg(message, mdMgr)
   }
 
@@ -36,14 +34,20 @@ class MessageGenerator {
     var messageNonVerGenerator = new StringBuilder(8 * 1024)
     var messageGenerator = new StringBuilder(8 * 1024)
     try {
+      val msgObj = msgObjectGenerator.generateMessageObject(message, mdMgr)
+
       messageVerGenerator = messageVerGenerator.append(msgConstants.newline + msgConstants.packageStr.format(message.Pkg, msgConstants.newline));
+      messageVerGenerator = messageVerGenerator.append(msgConstants.importStatements + msgConstants.newline);
+      messageVerGenerator = messageVerGenerator.append(msgObj._1 + msgConstants.newline);
+
       messageNonVerGenerator = messageNonVerGenerator.append(msgConstants.newline + msgConstants.packageStr.format(message.NameSpace, msgConstants.newline));
-      messageGenerator = messageGenerator.append(msgConstants.importStatements + msgConstants.newline);
-      messageGenerator = messageGenerator.append(msgObjectGenerator.generateMessageObject(message) + msgConstants.newline);
+      messageNonVerGenerator = messageNonVerGenerator.append(msgConstants.importStatements + msgConstants.newline);
+      messageNonVerGenerator = messageNonVerGenerator.append(msgObj._2 + msgConstants.newline);
+
       messageGenerator = messageGenerator.append(msgConstants.newline);
       messageGenerator = messageGenerator.append(classGen(message));
-      messageGenerator = messageGenerator.append(getMessgeBasicDetails(message));
-      messageGenerator = messageGenerator.append(getAttributeTypes(message));	  
+      messageGenerator = messageGenerator.append(getMessgelogDetails(message));
+      messageGenerator = messageGenerator.append(getAttributeTypes(message));
       messageGenerator = messageGenerator.append(msgConstants.newline + keyTypesMap(message.Elements));
       messageGenerator = messageGenerator.append(methodsFromMessageInterface(message));
       messageGenerator = messageGenerator.append(msgConstants.newline + generateParitionKeysData(message) + msgConstants.newline);
@@ -58,12 +62,12 @@ class MessageGenerator {
         messageGenerator = messageGenerator.append(msgConstants.getGetSetMethods);
         messageGenerator = messageGenerator.append(mappedMsgGen.getFromFuncFixed(message, mdMgr))
       }
-      //messageGenerator = messageGenerator.append(convFuncGenerator.getPrevVersionMsg(message, mdMgr))
+
       messageGenerator = messageGenerator.append(messageContructor(message))
       messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.closeBrace);
       messageVerGenerator = messageVerGenerator.append(messageGenerator.toString())
       messageNonVerGenerator = messageNonVerGenerator.append(messageGenerator.toString())
-      // log.info("messageGenerator    " + messageGenerator.toString())
+
     } catch {
       case e: Exception => {
         val stackTrace = StackTrace.ThrowableTraceString(e)
@@ -122,6 +126,15 @@ class MessageGenerator {
       }
     }
     getSetFixed.toString()
+  }
+
+  /*
+   * message basic details in class
+   */
+  private def getMessgelogDetails(message: Message): String = {
+    """ 
+  val log = """ + message.Name + """.log
+"""
   }
 
   /*
@@ -205,8 +218,7 @@ class MessageGenerator {
   
   """
   }
-  
-  
+
   /*
    * generateAttributeTypes 
    */
@@ -237,14 +249,13 @@ class MessageGenerator {
 
   }
 
-
   private def genGetAttributeTypes(message: Message): String = {
     var getAttributeTypes = new StringBuilder(8 * 1024)
 
     if (message.Elements != null) {
       message.Elements.foreach(field => {
         if (field.AttributeTypeInfo != null)
-		  getAttributeTypes.append("%s attributeTypes(%s) = new AttributeTypeInfo(\"%s\", %s, AttributeTypeInfo.TypeCategory.%s, %s, %s, %s)%s".format(msgConstants.pad2, field.FieldOrdinal, field.Name, field.FieldOrdinal, field.AttributeTypeInfo.typeCategaryName, field.AttributeTypeInfo.valTypeId, field.AttributeTypeInfo.keyTypeId, field.AttributeTypeInfo.valSchemaId, msgConstants.newline))
+          getAttributeTypes.append("%s attributeTypes(%s) = new AttributeTypeInfo(\"%s\", %s, AttributeTypeInfo.TypeCategory.%s, %s, %s, %s)%s".format(msgConstants.pad2, field.FieldOrdinal, field.Name, field.FieldOrdinal, field.AttributeTypeInfo.typeCategaryName, field.AttributeTypeInfo.valTypeId, field.AttributeTypeInfo.keyTypeId, field.AttributeTypeInfo.valSchemaId, msgConstants.newline))
       })
 
     }
@@ -420,15 +431,6 @@ class MessageGenerator {
     def this(other: """ + message.Name + """) = {
       this(other.getFactory.asInstanceOf[""" + msgInterfaceType + """], other)
     }
-"""
-  }
-
-  /*
-   * message basic details in class
-   */
-  private def getMessgeBasicDetails(message: Message): String = {
-    """ 
-    private val log = LogManager.getLogger(getClass)
 """
   }
 
@@ -808,7 +810,7 @@ class MessageGenerator {
     """
     private def fromFunc(other: """ + message.Name + """): """ + message.Name + """ = {  
    """ + getFromFuncStr(message, mdMgr) + """
-      //this.timePartitionData = com.ligadata.BaseTypes.LongImpl.Clone(other.timePartitionData);
+      this.setTimePartitionData(com.ligadata.BaseTypes.LongImpl.Clone(other.getTimePartitionData));
       return this;
     }
     
@@ -838,11 +840,14 @@ class MessageGenerator {
                 fromFuncBuf = fromFuncBuf.append(fromFuncForArrayFixed(field))
               }
               case "tstruct" => {
-                var ctrDef: ContainerDef = mdMgr.Container(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
+                var ctrDef: ContainerDef = null;
+                ctrDef = mdMgr.Container(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
+                if (ctrDef == null)
+                  ctrDef = mdMgr.Message(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
                 fromFuncBuf = fromFuncBuf.append(fromFuncForStructFixed(field))
               }
               case "tmap" => {
-                fromFuncBuf = fromFuncBuf.append(fromFuncForMapFixed(field))
+                fromFuncBuf = fromFuncBuf.append(fromFuncForMapFixed(field, mdMgr))
               }
               case "tmsgmap" => {
                 var ctrDef: ContainerDef = mdMgr.Container(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
@@ -899,7 +904,6 @@ class MessageGenerator {
           fromFuncBuf.append(fromFuncForArrayScalarFixed(field));
         }
       } else if (typetype.equals("tcontainer")) {
-        log.info("111111111111111111111");
         val fieldType = //arrayType.elemDef.tTypeType.toString().equalsIgnoreCase
           ///  log.info("22222222222222222" + fieldType);
           // if (fieldType.equalsIgnoreCase("tstruct") || (fieldType.equalsIgnoreCase("tmsgmap"))){
@@ -1004,9 +1008,69 @@ class MessageGenerator {
   /*
    * From Func for Containertype as Message
    */
-  private def fromFuncForMapFixed(field: Element): String = {
+  private def fromFuncForMapFixed(field: Element, mdMgr: MdMgr): String = {
+    var fromFuncBuf = new StringBuilder(8 * 1024)
+    try {
 
-    return "";
+      var maptypeDef = field.FldMetaataType.asInstanceOf[MapTypeDef]
+      val typeInfo = maptypeDef.valDef.tTypeType.toString().toLowerCase()
+      var typetyprStr: String = maptypeDef.valDef.tType.toString().toLowerCase()
+
+      typeInfo match {
+        case "tscalar" => {
+          fromFuncBuf = fromFuncBuf.append("%s if (other.%s != null) { %s ".format(msgConstants.pad2, field.Name, msgConstants.newline))
+          fromFuncBuf = fromFuncBuf.append("%s this.%s = other.%s.map { a => (com.ligadata.BaseTypes.StringImpl.Clone(a._1), %s.Clone(a._2)) }.toMap%s ".format(msgConstants.pad2, field.Name, field.Name, maptypeDef.valDef.implementationName, msgConstants.newline))
+          fromFuncBuf = fromFuncBuf.append("%s} else this.%s = null;%s ".format(msgConstants.pad2, field.Name, msgConstants.newline))
+        }
+        case "tcontainer" => {
+          typetyprStr match {
+            case "tarray" => { throw new Exception("Not supporting array of array"); }
+            case "tstruct" => {
+
+              var msgDef: ContainerDef = null;
+              msgDef = mdMgr.Message(maptypeDef.valDef.FullName, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
+              if (msgDef == null)
+                msgDef = mdMgr.Container(maptypeDef.valDef.FullName, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
+              /* if (other.maptest != null) {
+                this.maptest = other.maptest.map { a => (com.ligadata.BaseTypes.StringImpl.Clone(a._1), a._2.Clone.asInstanceOf[com.ligadata.messages.V1000000000000.IdCodeDimFixedTest]) }.toMap
+              }*/
+              fromFuncBuf = fromFuncBuf.append("%s if (other.%s != null) { %s ".format(msgConstants.pad2, field.Name, msgConstants.newline))
+              fromFuncBuf = fromFuncBuf.append("%s this.%s = other.%s.map { a => (com.ligadata.BaseTypes.StringImpl.Clone(a._1), a._2.Clone.asInstanceOf[%s]) }.toMap%s ".format(msgConstants.pad2, field.Name, field.Name, msgDef.PhysicalName, msgConstants.newline))
+              fromFuncBuf = fromFuncBuf.append("%s} else this.%s = null; %s ".format(msgConstants.pad2, field.Name, msgConstants.newline))
+            }
+            case "tmsgmap" => {
+              var ctrDef: ContainerDef = null;
+              ctrDef = mdMgr.Message(maptypeDef.valDef.FullName, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
+              if (ctrDef == null)
+                ctrDef = mdMgr.Container(maptypeDef.valDef.FullName, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
+              fromFuncBuf = fromFuncBuf.append("%s if (other.%s != null) { %s ".format(msgConstants.pad2, field.Name, msgConstants.newline))
+              fromFuncBuf = fromFuncBuf.append("%s this.%s = other.%s.map { a => (com.ligadata.BaseTypes.StringImpl.Clone(a._1), a._2.Clone.asInstanceOf[%s]) }.toMap%s ".format(msgConstants.pad2, field.Name, field.Name, ctrDef.PhysicalName, msgConstants.newline))
+              fromFuncBuf = fromFuncBuf.append("%s} else this.%s = null; %s ".format(msgConstants.pad2, field.Name, msgConstants.newline))
+
+            }
+            case "tmap" => { throw new Exception("Not supporting map of array"); }
+            case _ => {
+              throw new Exception("This types is not handled at this time ") // BUGBUG - Need to handled other cases
+            }
+          }
+        }
+        case _ => {
+          throw new Exception("This types is not handled at this time ") // BUGBUG - Need to handled other cases
+        }
+      }
+      val implName = field.FieldTypeImplementationName
+      /*  if (implName != null && implName.trim() != "") {
+        fromFuncBuf = fromFuncBuf.append("%s if (other.%s != null) { %s".format(msgConstants.pad2, field.Name, msgConstants.newline))
+        fromFuncBuf = fromFuncBuf.append("%s %s = other.%s.Clone.asInstanceOf[%s] %s".format(msgConstants.pad2, field.Name, field.Name, field.FieldTypePhysicalName, msgConstants.newline))
+        fromFuncBuf = fromFuncBuf.append("%s } %s ".format(msgConstants.pad2, msgConstants.newline))
+        fromFuncBuf = fromFuncBuf.append("%s else %s = null; %s".format(msgConstants.pad2, field.Name, msgConstants.newline))
+      }
+  */
+    } catch {
+      case e: Exception => throw e
+    }
+    fromFuncBuf.toString
+
   }
 
   /*
