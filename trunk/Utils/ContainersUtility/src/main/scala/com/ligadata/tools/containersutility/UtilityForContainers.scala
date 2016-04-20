@@ -322,8 +322,8 @@ class UtilityForContainers(val loadConfigs: Properties, val typename: String) ex
       val primarykey = value.getPrimaryKey
       val key = KeyWithBucketIdAndPrimaryKey(KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(k.bucketKey), k, primarykey != null && primarykey.size > 0, primarykey)
       val bucketId = KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(k.bucketKey)
-      val keyValue = value.get(k.toString)
-      data = data + (bucketId.toString -> keyValue.toString) // this includes key and value
+      //val keyValue = value.get(k.toString)
+      data = data + (bucketId.toString -> value.toString) // this includes key and value
     }
       //logger.info("select data from %s container for %s key and timerange: %d-%d".format(typename,timerange.beginTime,timerange.endTime))
     if(keyArray.length == 0)

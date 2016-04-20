@@ -79,7 +79,7 @@ Sample uses:
           nextOption(map ++ Map('keyfields -> value), tail)
         case "--outputpath" :: value :: tail =>
           nextOption(map ++ Map('outputpath -> value), tail)
-        case "--filter " :: value :: tail =>
+        case "--filter" :: value :: tail =>
           nextOption(map ++ Map('filter  -> value), tail)
         case option :: tail =>
           logger.error("Unknown option " + option)
@@ -106,7 +106,7 @@ Sample uses:
           val keyList = kv._2.asInstanceOf[List[List[Any]]]
           keyList.foreach(listitem => {
             if (listitem != null) {
-              insideKeyList :+ listitem.map(item => item.toString).toArray
+              insideKeyList =  insideKeyList :+ listitem.map(item => item.toString).toArray
             }
           })
         } else if (kv._1.compareToIgnoreCase("timerange") == 0) {
@@ -114,7 +114,7 @@ Sample uses:
           list.foreach(listItem => {
             if (!listItem("begintime").equalsIgnoreCase(null) && !listItem("endtime").equalsIgnoreCase(null)) {
               var timeRangeObj = new TimeRange(listItem("begintime").toLong, listItem("endtime").toLong)
-              timeRangeList :+ timeRangeObj
+              timeRangeList= timeRangeList :+ timeRangeObj
             }
           })
         }
