@@ -18,7 +18,7 @@ object KamanjaExecutionFailureEvent extends RDDObject[KamanjaExecutionFailureEve
   override def getTypeName: String = "KamanjaExecutionFailureEvent";
   override def getTypeVersion: String = "000001.000002.000000";
   override def getSchemaId: Int = 1000005;
-  override def getTenantId: String= "";
+  override def getTenantId: String= "System";
   override def createInstance: KamanjaExecutionFailureEvent = new KamanjaExecutionFailureEvent(KamanjaExecutionFailureEvent);
   override def isFixed: Boolean = true;
   override def getContainerType: ContainerTypes.ContainerType = ContainerTypes.ContainerType.MESSAGE
