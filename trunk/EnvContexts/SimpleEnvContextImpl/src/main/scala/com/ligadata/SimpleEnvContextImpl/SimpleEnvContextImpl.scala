@@ -95,7 +95,8 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   private val _nodeCache_reent_lock = new ReentrantReadWriteLock(true)
   private var txnIdsRangeForNode: Int = 100000 // Each time get txnIdsRange of transaction ids for each Node
   private var txnIdsRangeForPartition: Int = 10000 // Each time get txnIdsRange of transaction ids for each partition
-  private var _sysCatalogDatastore: String = _
+  private var _sysCatalogDsString: String = _
+  private val _tenantIdPrimaryDatastores = scala.collection.mutable.Map[String, (TenantInfo, DataStore)]()
   private var _postMsgListenerCallback: (Array[ContainerInterface]) => Unit = null
   private var _listenerCache: DataCache = null
   private var _listenerConfigClusterCache: DataCache = null
@@ -749,7 +750,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 //  private[this] var _classLoader: java.lang.ClassLoader = null
   private[this] var _metadataLoader: KamanjaLoaderInfo = null
   private[this] var _adaptersAndEnvCtxtLoader: KamanjaLoaderInfo = null
-  private[this] var _defaultDataStore: DataStore = null
+  private[this] var _sysCatalogDatastore: DataStore = null
   private[this] var _objectResolver: ObjectResolver = null
   private[this] var _enableEachTransactionCommit = true
   private[this] var _jarPaths: collection.immutable.Set[String] = null // Jar paths where we can resolve all jars (including dependency jars).
@@ -976,7 +977,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 //      buildAdapterUniqueValue(k, v, results)
 //    }
 //    try {
-//      callGetData(_defaultDataStore, "AdapterUniqKvData", Array(TimeRange(KvBaseDefalts.defaultTime, KvBaseDefalts.defaultTime)), Array(Array(key)), buildAdapOne)
+//      callGetData(_sysCatalogDatastore, "AdapterUniqKvData", Array(TimeRange(KvBaseDefalts.defaultTime, KvBaseDefalts.defaultTime)), Array(Array(key)), buildAdapOne)
 //    } catch {
 //      case e: Exception => {
 //        logger.debug("Data not found for key:" + key, e)
@@ -1027,7 +1028,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
       var objs = new Array[(Key, scala.collection.mutable.Map[String, SavedMdlResult])](1)
       val buildMdlOne = (k: Key, v: Value) => { buildModelsResult(k, v, objs) }
       try {
-        callGetData(_defaultDataStore, "ModelResults", Array(TimeRange(KvBaseDefalts.defaultTime, KvBaseDefalts.defaultTime)), Array(key.toArray), buildMdlOne)
+        callGetData(_sysCatalogDatastore, "ModelResults", Array(TimeRange(KvBaseDefalts.defaultTime, KvBaseDefalts.defaultTime)), Array(key.toArray), buildMdlOne)
       } catch {
         case e: Exception => {
           logger.debug("Data not found for key:" + key.mkString(","), e)
@@ -1218,9 +1219,9 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 //                  }
 //                } else {
 //                  if (tr != null)
-//                    callGetData(_defaultDataStore, containerName, Array(tr), Array(bk), buildOne)
+//                    callGetData(_sysCatalogDatastore, containerName, Array(tr), Array(bk), buildOne)
 //                  else
-//                    callGetData(_defaultDataStore, containerName, Array(bk), buildOne)
+//                    callGetData(_sysCatalogDatastore, containerName, Array(bk), buildOne)
 //                }
 //                TxnContextCommonFunctions.WriteLockContainer(container)
 //                try {
@@ -1275,7 +1276,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 //                    TxnContextCommonFunctions.ReadUnlockContainer(cacheContainer)
 //                  }
 //                } else {
-//                  callGetData(_defaultDataStore, containerName, Array(tr), buildOne)
+//                  callGetData(_sysCatalogDatastore, containerName, Array(tr), buildOne)
 //                }
 //                TxnContextCommonFunctions.WriteLockContainer(container)
 //                try {
@@ -1330,7 +1331,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 //                    TxnContextCommonFunctions.ReadUnlockContainer(cacheContainer)
 //                  }
 //                } else {
-//                  callGetData(_defaultDataStore, containerName, buildOne)
+//                  callGetData(_sysCatalogDatastore, containerName, buildOne)
 //                }
 //                TxnContextCommonFunctions.WriteLockContainer(container)
 //                try {
@@ -1451,9 +1452,9 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 //      }
 //    }
 
-    if (_defaultDataStore != null)
-      _defaultDataStore.Shutdown
-    _defaultDataStore = null
+    if (_sysCatalogDatastore != null)
+      _sysCatalogDatastore.Shutdown
+    _sysCatalogDatastore = null
     // _messagesOrContainers.clear
 
     hbExecutor.shutdownNow
@@ -1510,13 +1511,26 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 
   override def getJarPaths(): collection.immutable.Set[String] = _jarPaths
 
-  override def setDefaultDatastore(dataDataStoreInfo: String): Unit = {
-    if (dataDataStoreInfo != null)
-      logger.debug("DefaultDatastore Information:%s".format(dataDataStoreInfo))
-    // Doing it only once
-    if (_defaultDataStore == null) {
-      _defaultDataStore = GetDataStoreHandle(_jarPaths, dataDataStoreInfo)
-    }
+  override def openTenantsPrimaryDatastores(): Unit = {
+    val allTenants =  _mgr.GetAllTenantInfos
+
+    if (allTenants == null) return
+
+    allTenants.foreach(tenantInfo => {
+      if (tenantInfo != null && tenantInfo.primaryDataStore != null && tenantInfo.primaryDataStore.trim.size > 0) {
+        try {
+          val tenantPrimaryDatastore = GetDataStoreHandle(_jarPaths, tenantInfo.primaryDataStore)
+          _tenantIdPrimaryDatastores(tenantInfo.tenantId) = (tenantInfo, tenantPrimaryDatastore)
+        } catch {
+          case e: Throwable => {
+            logger.error("Failed to connect to datastore for tenantId:%swith configuration:%s".format(tenantInfo.tenantId, tenantInfo.primaryDataStore), e)
+            throw e
+          }
+        }
+      } else {
+        _tenantIdPrimaryDatastores(tenantInfo.tenantId) = (tenantInfo, null)
+      }
+    })
   }
 
   //  // Adding new messages or Containers
@@ -1544,7 +1558,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   //          if (ci.dataDataStoreInfo != null)
   //            newMsgOrContainer.dataStore = GetDataStoreHandle(_jarPaths, ci.dataDataStoreInfo)
   //          else
-  //            newMsgOrContainer.dataStore = _defaultDataStore
+  //            newMsgOrContainer.dataStore = _sysCatalogDatastore
   //
   //          /** create a map to cache the entries to be resurrected from the mapdb */
   //          _messagesOrContainers(objFullName) = newMsgOrContainer
@@ -1581,7 +1595,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   //          val buildOne = (k: Key, v: Value) => {
   //            collectKeyAndValues(k, v, cacheContainer)
   //          }
-  //          callGetData(_defaultDataStore, c, buildOne)
+  //          callGetData(_sysCatalogDatastore, c, buildOne)
   //          _cachedContainers(c) = cacheContainer
   //        }
   //      })
@@ -1928,7 +1942,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 //          })
 //        })
 //      }
-//      callSaveData(_defaultDataStore, commiting_data.toArray)
+//      callSaveData(_sysCatalogDatastore, commiting_data.toArray)
 //
 //    } catch {
 //      case e: Exception => {
@@ -2039,7 +2053,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
       buildAdapterUniqueValue(k, v, results)
     }
 
-    callGetData(_defaultDataStore, "AdapterUniqKvData", Array(TimeRange(KvBaseDefalts.defaultTime, KvBaseDefalts.defaultTime)), keys.map(k => Array(k)), buildAdapOne)
+    callGetData(_sysCatalogDatastore, "AdapterUniqKvData", Array(TimeRange(KvBaseDefalts.defaultTime, KvBaseDefalts.defaultTime)), keys.map(k => Array(k)), buildAdapOne)
 
     logger.debug("Loaded %d committing informations".format(results.size))
     results.toArray
@@ -2061,7 +2075,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
       val ukvs = validateUniqVals.map(kv => {
         (Key(KvBaseDefalts.defaultTime, Array(kv._1), 0L, 0), Value("", kv._2.getBytes("UTF8")))
       })
-      callSaveData(_defaultDataStore, Array(("ValidateAdapterPartitionInfo", ukvs)))
+      callSaveData(_sysCatalogDatastore, Array(("ValidateAdapterPartitionInfo", ukvs)))
     }
 
     private def buildValidateAdapInfo(k: Key, v: Value, results: ArrayBuffer[(String, String)]): Unit = {
@@ -2074,7 +2088,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
       val collectorValidateAdapInfo = (k: Key, v: Value) => {
         buildValidateAdapInfo(k, v, results)
       }
-      callGetData(_defaultDataStore, "CheckPointInformation", Array(TimeRange(KvBaseDefalts.defaultTime, KvBaseDefalts.defaultTime)), collectorValidateAdapInfo)
+      callGetData(_sysCatalogDatastore, "CheckPointInformation", Array(TimeRange(KvBaseDefalts.defaultTime, KvBaseDefalts.defaultTime)), collectorValidateAdapInfo)
       logger.debug("Loaded %d Validate (Check Point) Adapter Information".format(results.size))
       results.toArray
     }
@@ -2088,7 +2102,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
         val buildOne = (k: Key, v: Value) => {
           collectKeyAndValues(k, v, cacheContainer)
         }
-        callGetData(_defaultDataStore, contName, keys.toArray, buildOne)
+        callGetData(_sysCatalogDatastore, contName, keys.toArray, buildOne)
       }
     }
   */
@@ -2136,7 +2150,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 //      val tmRng = if (tmRange != null) Array(tmRange) else Array[TimeRange]()
 //      val prtKeys = if (partKey != null) Array(partKey.toArray) else Array[Array[String]]()
 //
-//      get(_defaultDataStore, containerName, tmRng, prtKeys, buildOne)
+//      get(_sysCatalogDatastore, containerName, tmRng, prtKeys, buildOne)
 //
 //      readValues.foreach(kv => {
 //        val primkey = kv._2.PrimaryKeyData
@@ -2229,7 +2243,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 //      val prtKeys = if (partKey != null) Array(partKey.toArray) else Array[Array[String]]()
 //
 //      try {
-//        get(_defaultDataStore, containerName, tmRng, prtKeys, buildOne)
+//        get(_sysCatalogDatastore, containerName, tmRng, prtKeys, buildOne)
 //      } catch {
 //        case e: Exception => {
 //          logger.debug("Failed", e)
@@ -2306,7 +2320,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 //      dataForContainer += ((Key(KvBaseDefalts.defaultTime, Array(v1._1), 0, 0), "json", compjson.getBytes("UTF8")))
 //    })
 //    if (dataForContainer.size > 0) {
-//      callSaveData(_defaultDataStore, Array(("AdapterUniqKvData", true, dataForContainer.toArray)))
+//      callSaveData(_sysCatalogDatastore, Array(("AdapterUniqKvData", true, dataForContainer.toArray)))
 //    }
 //  }
 
@@ -2739,7 +2753,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   // Saving & getting data
   override def saveDataInPersistentStore(containerName: String, key: String, serializerType: String, value: Array[Byte]): Unit = {
     val oneContData = Array((containerName, Array((Key(0, Array(key), 0, 0), serializerType, value.asInstanceOf[Any]))))
-    callSaveData(_defaultDataStore, oneContData)
+    callSaveData(_sysCatalogDatastore, oneContData)
   }
 
   override def getDataInPersistentStore(containerName: String, key: String): SerializerTypeValuePair = {
@@ -2747,7 +2761,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     val buildOne = (k: Key, v: Any, serType: String, typ: String, ver: Int) => {
       retVal = SerializerTypeValuePair(serType, v.asInstanceOf[Array[Byte]])
     }
-    callGetData(_defaultDataStore, containerName, Array(Key(0, Array(key), 0, 0)), buildOne)
+    callGetData(_sysCatalogDatastore, containerName, Array(Key(0, Array(key), 0, 0)), buildOne)
     retVal
   }
 
@@ -3172,10 +3186,17 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   }
 
   override def setSystemCatalogDatastore(sysCatalog: String): Unit = {
-    _sysCatalogDatastore = sysCatalog
+    _sysCatalogDsString = sysCatalog
+    if (_sysCatalogDsString != null)
+      logger.debug("SystemCatalog Information" + _sysCatalogDsString)
+    // Doing it only once
+    if (_sysCatalogDatastore != null)
+      _sysCatalogDatastore.Shutdown()
+    _sysCatalogDatastore = null
+    _sysCatalogDatastore = GetDataStoreHandle(_jarPaths, _sysCatalogDsString)
   }
 
-  override def getSystemCatalogDatastore(): String = _sysCatalogDatastore
+  override def getSystemCatalogDatastore(): String = _sysCatalogDsString
 
   override def startCache(conf: CacheConfig): Unit = {
     ValidateCacheListener(conf)

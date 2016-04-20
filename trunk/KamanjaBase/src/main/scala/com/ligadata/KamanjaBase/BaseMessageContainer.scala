@@ -375,7 +375,7 @@ trait AdaptersSerializeDeserializers {
 
   private def resolveBindings(allBinds: Map[String, (String, Map[String, Any])]): Map[String, MsgBindingInfo] = {
     if (allBinds.size > 0)
-      allBinds.map(b => (b._1, resolveBinding(b._2._1, b._2._2)))
+      allBinds.map(b => (b._1.toLowerCase(), resolveBinding(b._2._1, b._2._2)))
     else
       Map[String, MsgBindingInfo]()
   }
@@ -517,7 +517,7 @@ trait AdaptersSerializeDeserializers {
     val allMsgBindings = getAllMessageBindings
 
     outputContainers.map(c => {
-      val ser = allMsgBindings.getOrElse(c.getFullTypeName, null)
+      val ser = allMsgBindings.getOrElse(c.getFullTypeName.toLowerCase(), null)
       if (ser != null && ser.serInstance != null) {
         try {
           val serData = ser.serInstance.serialize(c)

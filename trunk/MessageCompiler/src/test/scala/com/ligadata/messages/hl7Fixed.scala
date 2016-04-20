@@ -55,25 +55,25 @@ object HL7Fixed extends RDDObject[HL7Fixed] with MessageFactoryInterface {
 
   override def getAvroSchema: String = """{ "type": "record",  "namespace" : "com.ligadata.messages" , "name" : "hl7fixed" , "fields":[{ "name" : "desynpuf_id" , "type" : "string"},{ "name" : "clm_id" , "type" : "long"},{ "name" : "clm_from_dt" , "type" : "int"},{ "name" : "chestpain" , "type" : "string"},{ "name" : "aatdeficiency" , "type" : "int"},{ "name" : "chroniccough" , "type" : "int"},{ "name" : "chronicsputum" , "type" : "int"}]}""";
 
-  final override def convertFrom(srcObj: Any): T = convertFrom(createInstance(), srcObj);
-
-  override def convertFrom(destObj: Any, srcObj: Any): ContainerInterface = {
-    try {
-      srcObj match {
-
-        case oldVerobj: com.ligadata.messages.V1000000.HL7Fixed => { return convertToNewVer(oldVerobj); }
-        case _ => {
-          throw new Exception("Unhandled Version Found");
-        }
-      }
-    } catch {
-      case e: Exception => {
-        throw e
-      }
-    }
-    return null;
-  }
-
+//  final override def convertFrom(srcObj: Any): T = convertFrom(createInstance(), srcObj);
+//
+//  override def convertFrom(destObj: Any, srcObj: Any): ContainerInterface = {
+//    try {
+//      srcObj match {
+//
+//        case oldVerobj: com.ligadata.messages.V1000000.HL7Fixed => { return convertToNewVer(oldVerobj); }
+//        case _ => {
+//          throw new Exception("Unhandled Version Found");
+//        }
+//      }
+//    } catch {
+//      case e: Exception => {
+//        throw e
+//      }
+//    }
+//    return null;
+//  }
+//
   private def convertToNewVer(oldVerobj: com.ligadata.messages.V1000000.HL7Fixed): com.ligadata.messages.V1000000.HL7Fixed = {
     return oldVerobj
   }

@@ -27,7 +27,7 @@
           "computes": {
             "typeName": { "type": "String", "val": "$mapData.typename", "comment": "extract the type" }
           },
-          "where": "\"com.ligadata.kamanja.samples.messages.TransactionMsg\" == $type",
+          "where": "\"com.ligadata.kamanja.samples.messages.TransactionMsg\" == $typeName",
           "mapping": {
             "custid": "$mapData.custid",
             "branchid": "$mapData.branchid",

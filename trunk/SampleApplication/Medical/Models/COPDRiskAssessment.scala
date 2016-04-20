@@ -29,7 +29,6 @@ import org.joda.time._
 import com.ligadata.kamanja.metadata.ModelDef;
 
 class COPDRiskAssessmentFactory(modelDef: ModelDef, nodeContext: NodeContext) extends ModelInstanceFactory(modelDef, nodeContext) {
-  override def isValidMessage(msg: MessageContainerBase): Boolean = return msg.isInstanceOf[Beneficiary]
   override def createModelInstance(): ModelInstance = return new COPDRiskAssessment(this)
   override def getModelName: String = "COPDRisk"
   override def getVersion: String = "0.0.1"
@@ -37,7 +36,7 @@ class COPDRiskAssessmentFactory(modelDef: ModelDef, nodeContext: NodeContext) ex
 }
 
 class COPDRiskAssessment(factory: ModelInstanceFactory) extends ModelInstance(factory) {
-  override def execute(txnCtxt: TransactionContext, outputDefault: Boolean): ModelResultBase = {
+  override def execute(txnCtxt: TransactionContext, execMsgsSet: Array[ContainerOrConcept], triggerdSetIndex: Int, outputDefault: Boolean): Array[ContainerOrConcept] = {
     var msgBeneficiary: Beneficiary = txnCtxt.getMessage().asInstanceOf[Beneficiary]
     val smokingCodeSet: Array[String] = SmokeCodes.getRDD.map { x => (x.icd9code) }.toArray
     val sputumCodeSet: Array[String] = SputumCodes.getRDD.map { x => (x.icd9code) }.toArray
@@ -303,35 +302,32 @@ class COPDRiskAssessment(factory: ModelInstanceFactory) extends ModelInstance(fa
     println("Message Name: " + msgBeneficiary.getTypeName());
     println("Message Desynpuf ID: " + msgBeneficiary.desynpuf_id);
 
-    if (getCATI_Rule1b) {
-      var actualResults: Array[Result] = Array[Result](new Result("Risk Level:", "1b"),
-        new Result("Age of the Benificiary:", age),
-        new Result("Has Copd Symptoms?:", getCopdSymptoms.toString()),
-        new Result("Has AAT Deficiency?:", getAATDeficiencyInLastYear.toString()),
-        new Result("Has Family History?:", getFamilyHistory.toString),
-        new Result("Has OverSmoking Codes?:", getOverSmokingCodesInLastYear.toString),
-        new Result("Has Environmental Exposures?:", getEnvironmentalExposuresInLastYear.toString))
-      return factory.createResultObject().asInstanceOf[MappedModelResults].withResults(actualResults)
-    } else if (getCATI_Rule1a) {
-      var actualResults: Array[Result] = Array[Result](new Result("Risk Level:", "1a"),
-        new Result("Age of the Benificiary:", age),
-        new Result("Has Copd Symptoms?:", getCopdSymptoms.toString()),
-        new Result("Has AAT Deficiency?:", getAATDeficiencyInLastYear.toString()),
-        new Result("Has Family History?:", getFamilyHistory.toString),
-        new Result("Has OverSmoking Codes?:", getOverSmokingCodesInLastYear.toString),
-        new Result("Has Environmental Exposures?:", getEnvironmentalExposuresInLastYear.toString))
-      return factory.createResultObject().asInstanceOf[MappedModelResults].withResults(actualResults)
-    } else if (getCATII_Rule2) {
-      var actualResults: Array[Result] = Array[Result](new Result("Risk Level:", "2"),
-        new Result("Age of the Benificiary:", age),
-        new Result("Has Copd Symptoms?:", getCopdSymptoms.toString()),
-        new Result("Has AAT Deficiency?:", getAATDeficiencyInLastYear.toString()),
-        new Result("Has Family History?:", getFamilyHistory.toString),
-        new Result("Has OverSmoking Codes?:", getOverSmokingCodesInLastYear.toString),
-        new Result("Has Environmental Exposures?:", getEnvironmentalExposuresInLastYear.toString))
-      return factory.createResultObject().asInstanceOf[MappedModelResults].withResults(actualResults)
-    } else {
+	val output = COPDOutputMessage.createInstance().asInstanceOf[COPDOutputMessage];
+	output.desynpuf_id = msgBeneficiary.desynpuf_id;
+	output.ageofthebenificiary = age;
+	output.ageover40 = age > 40;
+	output.hascopdsymptoms = getCopdSymptoms;
+	output.hasaatdeficiency = getAATDeficiencyInLastYear;
+	output.hasfamilyhistory = getFamilyHistory;
+	output.hassmokinghistory = getOverSmokingCodesInLastYear;
+	output.hasdyspnea = false
+	output.haschroniccough = false
+	output.haschronicsputum = false
+	output.hasdyspnea = false
+	output.hasenvironmentalexposure = getEnvironmentalExposuresInLastYear;
+	output.inpatientclaimcosts = 0;
+	output.outpatientclaimcosts = 0;
 
+    if (getCATI_Rule1b) {
+		output.risklevel = "1b";
+        return Array(output);
+    } else if (getCATI_Rule1a) {
+		output.risklevel = "1a";
+        return Array(output);
+    } else if (getCATII_Rule2) {
+		output.risklevel = "2";
+        return Array(output);
+    } else {
       return null
     }
 

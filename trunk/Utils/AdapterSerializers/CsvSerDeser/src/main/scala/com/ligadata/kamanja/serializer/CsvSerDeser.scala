@@ -182,7 +182,7 @@ class CsvSerDeser extends SerializeDeserialize {
 
         var fld = _nullValue
         if(rawValue != null) {
-            fld = valueType.getKeyTypeCategory match {
+            fld = valueType.getTypeCategory match {
                 case (BOOLEAN | BYTE | LONG | DOUBLE | FLOAT | INT) => rawValue.toString
                 case STRING => escapeQuotes(rawValue.asInstanceOf[String])
                 case (MAP | CONTAINER | MESSAGE | ARRAY) => throw new NotImplementedFunctionException(s"emitField: complex type: ${valueType.getKeyTypeCategory.getValue}, fldName: ${valueType.getName}, not supported in standard csv format", null);

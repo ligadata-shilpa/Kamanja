@@ -839,6 +839,12 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
       throw new Exception(m)
     }
 
+    if (wheres.nonEmpty) {
+      val m = "Where condition not evaluated. transformation: %s".format(currentPath)
+      logger.trace(m)
+      throw new Exception(m)
+    }
+
     if (cnt2 != 0) {
       logger.trace("Not all elements used")
     }
@@ -1058,8 +1064,18 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
             val mapping = uniqueInputs ++ qualifiedInputs
 
+            val outputmapping = o._2.mapbyposition.foldLeft(o._2.mapping) ((r, e) => {
+              e._2.foldLeft((r, 0)) ((i, a) => {
+                if(a!="-") {
+                  (i._1 ++ Map(a -> "$%s(%d)".format(e._1, i._2)), i._2+1)
+                } else {
+                  (i._1, i._2+1)
+                }
+              })._1
+            })
+
             Generate(transformation.grokMatch,
-              o._2.mapping,
+              outputmapping,
               if (o._2.where.nonEmpty) Array(o._2.where) else Array.empty[String],
               o._2.computes,
               o._1,

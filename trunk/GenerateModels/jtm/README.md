@@ -32,6 +32,8 @@ References
 
     Mapper messages always need to be in the form of ${alias.element}
 
+    References to messages must be lower case as names are
+
 ### The 5 main sections
 
 Header - specifies the "target" language, version and the namespace. Those three elements are used during the code generation. There is also a version attribute, add missing Requirements
@@ -100,6 +102,8 @@ Transformations
     Outputs: specifies the ouputs the transformation section can produce. It can contain a mapping and computes list and a single where condition
         
         Mapping map - key output target, value can contain a variable or expression
+
+        mapbyposition - Bulk assignments of array elements to variables or expression, fields with '-" are ignored
         
         Where value if the expression evaluates to true processing will continue
         
@@ -121,6 +125,7 @@ Transformations
           
           "outputs": {
             "o1": {
+              "mapbyposition": { "arrayfield": [ "in2", "-"] },
               "mapping": {
                 "out1": "in1",
                 "out2": "t1",
