@@ -4,7 +4,7 @@ package com.ligadata.KamanjaManager
 import com.ligadata.HeartBeat.MonitoringContext
 import com.ligadata.KamanjaBase._
 import com.ligadata.InputOutputAdapterInfo.{ ExecContext, InputAdapter, OutputAdapter, ExecContextFactory, PartitionUniqueRecordKey, PartitionUniqueRecordValue }
-import com.ligadata.StorageBase.StorageAdapter
+import com.ligadata.StorageBase.{DataStore}
 import com.ligadata.ZooKeeper.CreateClient
 import com.ligadata.kamanja.metadata.AdapterInfo
 import org.json4s.jackson.JsonMethods._
@@ -227,7 +227,7 @@ class KamanjaManager extends Observer {
 
   private val inputAdapters = new ArrayBuffer[InputAdapter]
   private val outputAdapters = new ArrayBuffer[OutputAdapter]
-  private val storageAdapters = new ArrayBuffer[StorageAdapter]
+  private val storageAdapters = new ArrayBuffer[DataStore]
   //  private val adapterChangedCntr = new java.util.concurrent.atomic.AtomicLong(0)
   private var adapterChangedCntr: Long = 0
   //  private val statusAdapters = new ArrayBuffer[OutputAdapter]
@@ -248,7 +248,7 @@ class KamanjaManager extends Observer {
 
   def getAdapterChangedCntr: Long = adapterChangedCntr
 
-  def getAllAdaptersInfo: (Array[InputAdapter], Array[OutputAdapter], Array[StorageAdapter], Long) = {
+  def getAllAdaptersInfo: (Array[InputAdapter], Array[OutputAdapter], Array[DataStore], Long) = {
     (inputAdapters.toArray, outputAdapters.toArray, storageAdapters.toArray, adapterChangedCntr)
   }
 
@@ -918,7 +918,7 @@ class KamanjaManager extends Observer {
     if (objType.equalsIgnoreCase("adapterdef")) {
       var cia: InputAdapter = null
       var coa: OutputAdapter = null
-      var csa: StorageAdapter = null
+      var csa: DataStore = null
 
       // If this is an add
       if (action.equalsIgnoreCase("add")) {
@@ -933,7 +933,7 @@ class KamanjaManager extends Observer {
         // SetUpdatePartitionsFlag
         inputAdapters.foreach(ad => { if (ad.inputConfig.Name.equalsIgnoreCase(objectName)) cia = ad })
         outputAdapters.foreach(ad => { if (ad.inputConfig.Name.equalsIgnoreCase(objectName)) coa = ad })
-        storageAdapters.foreach(ad => { if (ad._storageConfig.Name.equalsIgnoreCase(objectName)) csa = ad })
+        storageAdapters.foreach(ad => { if (ad != null && ad.adapterInfo != null && ad.adapterInfo.Name.equalsIgnoreCase(objectName)) csa = ad })
 
 
         if (cia != null) {
@@ -1005,6 +1005,6 @@ object KamanjaManager {
 
   def incrAdapterChangedCntr(): Unit = curMgr.incrAdapterChangedCntr()
   def getAdapterChangedCntr = curMgr.getAdapterChangedCntr
-  def getAllAdaptersInfo: (Array[InputAdapter], Array[OutputAdapter], Array[StorageAdapter], Long) = curMgr.getAllAdaptersInfo
+  def getAllAdaptersInfo: (Array[InputAdapter], Array[OutputAdapter], Array[DataStore], Long) = curMgr.getAllAdaptersInfo
 }
 

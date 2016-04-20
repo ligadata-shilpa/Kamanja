@@ -19,7 +19,7 @@ package com.ligadata.KamanjaManager
 
 import com.ligadata.Exceptions.KamanjaException
 import com.ligadata.InputOutputAdapterInfo.{OutputAdapter, InputAdapter}
-import com.ligadata.StorageBase.StorageAdapter
+import com.ligadata.StorageBase.DataStore
 import com.ligadata.jpmml.JpmmlAdapter
 import com.ligadata.kamanja.metadata.{BaseElem, MappedMsgTypeDef, BaseAttributeDef, StructTypeDef, EntityType, AttributeDef, MessageDef, ContainerDef, ModelDef}
 import com.ligadata.kamanja.metadata._
@@ -886,7 +886,7 @@ object KamanjaMetadata extends ObjectResolver {
   }
 
   def InitMdMgr(zkConnectString: String, znodePath: String, zkSessionTimeoutMs: Int, zkConnectionTimeoutMs: Int, inputAdapters: ArrayBuffer[InputAdapter],
-                outputAdapters: ArrayBuffer[OutputAdapter], storageAdapters: ArrayBuffer[StorageAdapter]): Unit = {
+                outputAdapters: ArrayBuffer[OutputAdapter], storageAdapters: ArrayBuffer[DataStore]): Unit = {
     val tmpMsgDefs = mdMgr.Messages(true, true)
     val tmpContainerDefs = mdMgr.Containers(true, true)
     val tmpModelDefs = mdMgr.Models(true, true)

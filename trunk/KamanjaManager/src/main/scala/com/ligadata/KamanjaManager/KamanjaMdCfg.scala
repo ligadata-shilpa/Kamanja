@@ -17,7 +17,7 @@
 
 package com.ligadata.KamanjaManager
 
-import com.ligadata.StorageBase.StorageAdapter
+import com.ligadata.StorageBase.DataStore
 import com.ligadata.Utils.{Utils, KamanjaLoaderInfo, HostConfig, CacheConfig}
 import com.ligadata.keyvaluestore.KeyValueManager
 import org.apache.logging.log4j.{ Logger, LogManager }
@@ -318,7 +318,7 @@ object KamanjaMdCfg {
     null
   }
 
-  def upadateAdapter(inAdapter: AdapterInfo, isNew: Boolean, inputAdapters: ArrayBuffer[InputAdapter], outputAdapters: ArrayBuffer[OutputAdapter], storageAdapters: ArrayBuffer[StorageAdapter]): Boolean = {
+  def upadateAdapter(inAdapter: AdapterInfo, isNew: Boolean, inputAdapters: ArrayBuffer[InputAdapter], outputAdapters: ArrayBuffer[OutputAdapter], storageAdapters: ArrayBuffer[DataStore]): Boolean = {
 
     println("Updating adapter ")
     println(inAdapter.Name)
@@ -386,7 +386,7 @@ object KamanjaMdCfg {
 
   }
 
-  def LoadAdapters(inputAdapters: ArrayBuffer[InputAdapter], outputAdapters: ArrayBuffer[OutputAdapter], storageAdapters: ArrayBuffer[StorageAdapter]): Boolean = {
+  def LoadAdapters(inputAdapters: ArrayBuffer[InputAdapter], outputAdapters: ArrayBuffer[OutputAdapter], storageAdapters: ArrayBuffer[DataStore]): Boolean = {
     LOG.info("Loading Adapters started @ " + Utils.GetCurDtTmStr)
     val s0 = System.nanoTime
     val allAdapters = mdMgr.Adapters
@@ -448,7 +448,7 @@ object KamanjaMdCfg {
     true
   }
 
-  private def CreateStorageAdapterFromConfig(adapterInfo: AdapterInfo, nodeContext: NodeContext): StorageAdapter = {
+  private def CreateStorageAdapterFromConfig(adapterInfo: AdapterInfo, nodeContext: NodeContext): DataStore = {
     if (adapterInfo == null || nodeContext == null) return null
 
     var allJars: collection.immutable.Set[String] = null
@@ -460,14 +460,10 @@ object KamanjaMdCfg {
       allJars = collection.immutable.Set(adapterInfo.jarName)
     }
 
-    val datastore = KeyValueManager.Get(allJars, adapterInfo.FullAdapterConfig)
-
-    if (datastore != null)
-      return new StorageAdapter(nodeContext, adapterInfo, datastore)
-    null
+    KeyValueManager.Get(allJars, adapterInfo.FullAdapterConfig, null, null)
   }
 
-  private def LoadStorageAdapsForCfg(adaps: scala.collection.mutable.Map[String, AdapterInfo], storageAdapters: ArrayBuffer[StorageAdapter], nodeContext: NodeContext): Boolean = {
+  private def LoadStorageAdapsForCfg(adaps: scala.collection.mutable.Map[String, AdapterInfo], storageAdapters: ArrayBuffer[DataStore], nodeContext: NodeContext): Boolean = {
     // ConfigurationName
     adaps.foreach(ac => {
       try {

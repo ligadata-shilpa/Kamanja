@@ -79,7 +79,7 @@ trait DataStoreOperations extends AdaptersSerializeDeserializers {
           val cont = row._3.asInstanceOf[ContainerInterface]
           val (containers, serData, serializers) = serialize(tnxCtxt, Array(cont))
           if (containers == null || containers.size == 0) {
-            throw new NotImplementedFunctionException("Failed to serialize container/message:" + cont.getFullTypeName, null)
+            throw new KamanjaException("Failed to serialize container/message:" + cont.getFullTypeName, null)
           }
           (row._1, Value(cont.getSchemaId, serializers(0), serData(0)))
         } else {
@@ -214,7 +214,27 @@ trait DataStoreOperations extends AdaptersSerializeDeserializers {
   def isTableExists(tableNamespace: String, tableName: String): Boolean
 }
 
-trait DataStore extends DataStoreOperations {
+trait DataStore extends DataStoreOperations with AdaptersSerializeDeserializers with Monitorable  {
+  val nodeCtxt: NodeContext
+  val adapterInfo: AdapterInfo
+
+  // NodeContext
+  val _TYPE_STORAGE = "Storage_Adapter"
+  val _startTime: String = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
+
+  override final def getAdapterName = adapterInfo.Name
+
+  def Category = "Storage"
+
+  override def getComponentStatusAndMetrics: MonitorComponentInfo = {
+    val lastSeen = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
+    MonitorComponentInfo(_TYPE_STORAGE, if (adapterInfo != null) adapterInfo.Name else "", if (adapterInfo != null) adapterInfo.Name else "", _startTime, lastSeen, "{}")
+  }
+
+  override def getComponentSimpleStats: String = {
+    ""
+  }
+
   def beginTx(): Transaction
   def endTx(tx: Transaction): Unit // Same as commit
   def commitTx(tx: Transaction): Unit
@@ -234,71 +254,6 @@ trait Transaction extends DataStoreOperations {
 
 // Storage Adapter Object to create storage adapter
 trait StorageAdapterFactory {
-  def CreateStorageAdapter(kvManagerLoader: KamanjaLoaderInfo, datastoreConfig: String): DataStore
-//  final def CreateStorageAdapter(nodeCtxt: NodeContext, kvManagerLoader: KamanjaLoaderInfo, adapterInfo: AdapterInfo): StorageAdapter = {
-//    val datastore = CreateStorageAdapter(kvManagerLoader, adapterInfo.FullAdapterConfig)
-//    new StorageAdapter(nodeCtxt, adapterInfo, datastore)
-//  }
-}
-
-class StorageAdapterConfiguration {
-  var Name: String = _
-  var tenantId: String = _
-  var adapterInfo: AdapterInfo = _
-}
-
-class StorageAdapter(nodeCtxt: NodeContext, adapterInfo: AdapterInfo, datastore: DataStore) extends AdaptersSerializeDeserializers with Monitorable {
-  // NodeContext
-  val _nodeContext: NodeContext = nodeCtxt
-  val _TYPE_STORAGE = "Storage_Adapter"
-  val _startTime: String = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
-
-  val _storageConfig: StorageAdapterConfiguration = {
-    val cfg = new StorageAdapterConfiguration
-    cfg.Name = adapterInfo.Name
-    cfg.tenantId = adapterInfo.TenantId
-    cfg.adapterInfo = adapterInfo
-    cfg
-  }
-
-  var _datastore: DataStore = datastore
-
-  override final def getAdapterName = adapterInfo.Name
-
-  def save(tnxCtxt: TransactionContext, outputContainers: Array[ContainerInterface]): Unit = {
-    if (outputContainers.size == 0) return
-
-    val (outContainers, serializedContainerData, serializerNames) = serialize(tnxCtxt, outputContainers)
-
-//    if (outputContainers.size != serializedContainerData.size || outputContainers.size != serializerNames.size) {
-//      val szMsg = qc.Name + " KAFKA PRODUCER: Messages, messages serialized data & serializer names should has same number of elements. Messages:%d, Messages Serialized data:%d, serializerNames:%d".format(outputContainers.size, serializedContainerData.size, serializerNames.size)
-//      LOG.error(szMsg)
-//      throw new Exception(szMsg)
-//    }
-
-    if (serializedContainerData.size == 0) return
-
-
-  }
-
-//  def write(tnxCtxt: TransactionContext, outputContainers: Array[ContainerInterface]): Unit
-//  def read(tnxCtxt: TransactionContext, outputContainers: Array[ContainerInterface]): Unit
-
-  def Shutdown: Unit = {
-    if (_datastore != null)
-      _datastore.Shutdown()
-    _datastore = null
-  }
-
-  def Category = "Storage"
-
-  override def getComponentStatusAndMetrics: MonitorComponentInfo = {
-    val lastSeen = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
-    MonitorComponentInfo(_TYPE_STORAGE, _storageConfig.Name, _storageConfig.Name, _startTime, lastSeen, "{}")
-  }
-
-  override def getComponentSimpleStats: String = {
-    ""
-  }
+  def CreateStorageAdapter(kvManagerLoader: KamanjaLoaderInfo, datastoreConfig: String, nodeCtxt: NodeContext, adapterInfo: AdapterInfo): DataStore
 }
 

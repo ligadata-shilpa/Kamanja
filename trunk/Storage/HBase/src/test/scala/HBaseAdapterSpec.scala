@@ -108,7 +108,7 @@ class HBaseAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAfterAl
     var connectionAttempts = 0
     while (connectionAttempts < maxConnectionAttempts) {
       try {
-        adapter = HBaseAdapter.CreateStorageAdapter(kvManagerLoader, dataStoreInfo)
+        adapter = HBaseAdapter.CreateStorageAdapter(kvManagerLoader, dataStoreInfo, null, null)
         return adapter
       } catch {
         case e: Exception => {

@@ -66,7 +66,7 @@ class HashMapAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAfter
       serializer = SerializerManager.GetSerializer("kryo")
       logger.info("Initialize HashMapAdapter")
       var dataStoreInfo="{\"StoreType\": \"" + "hashmap" + "\",\"SchemaName\": \"" + "unit_tests" + "\",\"Location\": \"" + dataDirectory + "\"}"
-      adapter = HashMapAdapter.CreateStorageAdapter(kvManagerLoader, dataStoreInfo)
+      adapter = HashMapAdapter.CreateStorageAdapter(kvManagerLoader, dataStoreInfo, null, null)
    }
     catch {
       case e: Exception => throw new Exception("Failed to execute set up properly", e)

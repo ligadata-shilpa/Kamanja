@@ -67,7 +67,7 @@ class SqlServerAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAft
     var connectionAttempts = 0
     while (connectionAttempts < maxConnectionAttempts) {
       try {
-        adapter = SqlServerAdapter.CreateStorageAdapter(kvManagerLoader, dataStoreInfo)
+        adapter = SqlServerAdapter.CreateStorageAdapter(kvManagerLoader, dataStoreInfo, null, null)
         return adapter
       } catch {
         case e: Exception => {

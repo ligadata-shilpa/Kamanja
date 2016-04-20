@@ -271,7 +271,7 @@ object ExtractData extends ObjectResolver {
   private def GetDataStoreHandle(jarPaths: collection.immutable.Set[String], dataStoreInfo: String): DataStore = {
     try {
       logger.debug("Getting DB Connection for dataStoreInfo:%s".format(dataStoreInfo))
-      return KeyValueManager.Get(jarPaths, dataStoreInfo)
+      return KeyValueManager.Get(jarPaths, dataStoreInfo, null, null)
     } catch {
       case e: Exception => {
         logger.debug("", e)
