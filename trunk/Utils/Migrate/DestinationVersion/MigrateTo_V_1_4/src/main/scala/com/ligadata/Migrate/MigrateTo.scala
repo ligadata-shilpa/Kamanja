@@ -529,9 +529,11 @@ class MigrateTo_V_1_4 extends MigratableTo {
   }
 
   private def DepJars(depJars1: List[String]): List[String] = {
-    val depJars = (depJars1 diff List("methodextractor_2.10-1.0.jar", "methodextractor_2.11-1.0.jar", "log4j-1.2.17.jar", "log4j-1.2.17.jar", "log4j-1.2.16.jar")) // Removing jars which are not valid any more
 
-    // If source is 2.10 and destination is 2.11, then only tranform this. otherwise just leave them as it is.
+    // Removing jars which are not valid any more, All these jars are consolidated(or assembled) into three fat jars: "ExtDependencyLibs_2.11-1.4.0.jar","KamanjaInternalDeps_2.11-1.4.0.jar","ExtDependencyLibs2_2.11-1.4.0.jar".
+    val depJars = (depJars1 diff List("methodextractor_2.10-1.0.jar", "methodextractor_2.11-1.0.jar", "log4j-1.2.17.jar", "log4j-1.2.17.jar", "log4j-1.2.16.jar","scala-2.10.0.jar","kvbase_2.10-0.1.0.jar", "kamanjautils_2.10-1.0.jar","kamanjabase_2.10-1.0.jar","customudflib_2.10-1.0.jar", "pmmlcompiler_2.10-1.0.jar","basetypes_2.10-0.1.0.jar","basefunctions_2.10-0.1.0.jar","json4s-core_2.10-3.2.9.jar","json4s-jackson_2.10-3.2.9.jar", "pmmlruntime_2.10-1.0.jar", "pmmludfs_2.10-1.0.jar","datadelimiters_2.10-1.0.jar","metadata_2.10-1.0.jar", "exceptions_2.10-1.0.jar","json4s-ast_2.10-3.2.9.jar", "json4s-native_2.10-3.2.9.jar", "bootstrap_2.10-1.0.jar","messagedef_2.10-1.0.jar", "guava-16.0.1.jar", "guava-18.0.jar", "guava-19.0.jar","scala-reflect-2.10.4.jar","scala-library-2.10.4.jar","jackson-databind-2.3.1.jar","jackson-core-2.3.1.jar","joda-time-2.8.2.jar","jackson-annotations-2.3.0.jar","joda-convert-1.6.jar","jsr305-1.3.9.jar")) 
+
+    // If source is 2.10 and destination is 2.11, then only tranform this. otherwise just leave them as it is. 
     if (_fromScalaVersion.equalsIgnoreCase("2.10") && _toScalaVersion.equalsIgnoreCase("2.11")) {
       val depJarsMap = Map("scalap-2.10.0.jar" -> "scalap-2.11.0.jar", "kvbase_2.10-0.1.0.jar" -> "kvbase_2.11-0.1.0.jar", "kamanjautils_2.10-1.0.jar" -> "kamanjautils_2.11-1.0.jar",
         "kamanjabase_2.10-1.0.jar" -> "kamanjabase_2.11-1.0.jar", "customudflib_2.10-1.0.jar" -> "customudflib_2.11-1.0.jar", "pmmlcompiler_2.10-1.0.jar" -> "pmmlcompiler_2.11-1.0.jar",
@@ -541,7 +543,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
         "json4s-ast_2.10-3.2.9.jar" -> "json4s-ast_2.11-3.2.9.jar", "json4s-native_2.10-3.2.9.jar" -> "json4s-native_2.11-3.2.9.jar", "bootstrap_2.10-1.0.jar" -> "bootstrap_2.11-1.0.jar",
         "messagedef_2.10-1.0.jar" -> "messagedef_2.11-1.0.jar", "guava-16.0.1.jar" -> "guava-14.0.1.jar", "guava-18.0.jar" -> "guava-14.0.1.jar", "guava-19.0.jar" -> "guava-14.0.1.jar")
 
-      val newDeps = depJars.map(d => {
+      var newDeps = depJars.map(d => {
         if (d.startsWith("scala-reflect-2.10")) {
           "scala-reflect-2.11.7.jar"
         } else if (d.startsWith("scala-library-2.10")) {
@@ -553,12 +555,17 @@ class MigrateTo_V_1_4 extends MigratableTo {
         }
       })
 
+      newDeps = List("ExtDependencyLibs_2.11-1.4.0.jar","KamanjaInternalDeps_2.11-1.4.0.jar","ExtDependencyLibs2_2.11-1.4.0.jar") ::: newDeps
+
       newDeps
     } else {
       val depJarsMap = Map("guava-16.0.1.jar" -> "guava-14.0.1.jar", "guava-18.0.jar" -> "guava-14.0.1.jar", "guava-19.0.jar" -> "guava-14.0.1.jar")
-      val newDeps = depJars.map(d => {
+
+      var newDeps = depJars.map(d => {
         depJarsMap.getOrElse(d, d)
       })
+
+      newDeps = List("ExtDependencyLibs_2.10-1.4.0.jar","KamanjaInternalDeps_2.10-1.4.0.jar","ExtDependencyLibs2_2.10-1.4.0.jar") ::: newDeps
       newDeps
     }
   }

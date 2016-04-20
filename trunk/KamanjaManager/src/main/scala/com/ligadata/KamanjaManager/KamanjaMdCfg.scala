@@ -255,12 +255,12 @@ object KamanjaMdCfg {
           // envCtxt.setClassLoader(KamanjaConfiguration.metadataLoader.loader) // Using Metadata Loader
           envCtxt.setObjectResolver(KamanjaMetadata)
           envCtxt.setMdMgr(KamanjaMetadata.getMdMgr)
+          envCtxt.setJarPaths(initConfigs.jarPaths) // Jar paths for Datastores, etc
           envCtxt.setSystemCatalogDatastore(initConfigs.dataDataStoreInfo)
+          envCtxt.openTenantsPrimaryDatastores()
           val containerNames = KamanjaMetadata.getAllContainers.map(container => container._1.toLowerCase).toList.sorted.toArray // Sort topics by names
           val topMessageNames = KamanjaMetadata.getAllMessges.filter(msg => msg._2.parents.size == 0).map(msg => msg._1.toLowerCase).toList.sorted.toArray // Sort topics by names
 
-          envCtxt.setJarPaths(initConfigs.jarPaths) // Jar paths for Datastores, etc
-          envCtxt.setDefaultDatastore(initConfigs.dataDataStoreInfo) // Default Datastore
           envCtxt.setZookeeperInfo(initConfigs.zkConnectString, initConfigs.zkNodeBasePath, initConfigs.zkSessionTimeoutMs, initConfigs.zkConnectionTimeoutMs)
 
           val cacheInfo = cluster.cfgMap.getOrElse("Cache", null)

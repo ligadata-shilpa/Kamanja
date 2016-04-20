@@ -35,6 +35,7 @@ class TransactionIngest(factory: ModelInstanceFactory) extends ModelInstance(fac
       def process_o1(): Array[MessageInterface] = {
         // extract the type
         val typeName: String = mapData.typename
+        if (!("com.ligadata.kamanja.samples.messages.TransactionMsg" == typeName)) return Array.empty[MessageInterface]
         val result = com.ligadata.kamanja.samples.messages.V1000000.TransactionMsg.createInstance
         result.branchid = conversion.ToInteger(mapData.get("branchid"))
         result.custid = conversion.ToLong(mapData.get("custid"))
