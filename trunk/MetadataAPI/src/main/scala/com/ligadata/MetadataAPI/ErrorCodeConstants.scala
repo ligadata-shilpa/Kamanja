@@ -214,7 +214,13 @@ object ErrorCodeConstants {
    val Get_All_Configs_Failed = "Failed to fetch all configs";
    val Get_All_Configs_Failed_Not_Available = "Failed to fetch all configs. No configs available.";
    val Get_All_Configs_Successful = "Successfully fetched all configs";
-   
+
+   // AdapterMessageBinding
+   val Add_AdapterMessageBinding_Successful = "Add adapter message binding successful"
+   val Add_AdapterMessageBinding_Failed = "Failed to add adapter message binding"
+   val Remove_AdapterMessageBinding_Successful = "Remove adapter message binding successful"
+   val Remove_AdapterMessageBinding_Failed = "Failed to add adapter message binding"
+
    //Object
    val Get_All_Object_Keys_Successful = "Successfully fetched all object keys";
    

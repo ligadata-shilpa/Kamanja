@@ -114,8 +114,30 @@ object AdapterMessageBindingUtils {
       * @param userId the user requesting this operation
       * @return result string for all of the AdapterMessageBindings added.
       */
-    def RemoveAdapterMessageBinding(fqBindingName : String, userId : Option[String]) : AdapterMessageBinding = {
-        val result : AdapterMessageBinding = mdMgr.RemoveAdapterMessageBinding(fqBindingName)
+    def RemoveAdapterMessageBinding(fqBindingName : String, userId : Option[String]) : String = {
+
+        val binding: AdapterMessageBinding  = mdMgr.RemoveAdapterMessageBinding(fqBindingName)
+
+        val result : String = if (binding != null) {
+            MetadataAPIImpl.DeleteObject(binding)
+            binding.tranId = MetadataAPIImpl.GetNewTranId
+            MetadataAPIImpl.UpdateTranId(Array(binding))
+            val displayKey : String = binding.FullBindingName
+
+            /** Notify the cluster via zookeeper of removal */
+            val bindingsRemoved : Array[BaseElemDef] = Array[BaseElemDef](binding)
+            val operations : Array[String] = bindingsRemoved.map(binding => "Remove")
+            val bindingsThatWereRemoved : String = bindingsRemoved.map(b => b.FullName).mkString(", ")
+            logger.debug(s"Notify cluster via zookeeper that these bindings have been added... $bindingsThatWereRemoved")
+            MetadataAPIImpl.NotifyEngine(bindingsRemoved, operations)
+
+            val apiResult = new ApiResult(ErrorCodeConstants.Success, "Remove AdapterMessageBinding", null, ErrorCodeConstants.Remove_Type_Successful + " : " + displayKey)
+            apiResult.toString()
+        } else {
+            val apiResult = new ApiResult(ErrorCodeConstants.Success, "Remove AdapterMessageBinding", null, ErrorCodeConstants.Remove_Type_Successful + " : " + fqBindingName)
+            apiResult.toString()
+        }
+
         result
     }
 
