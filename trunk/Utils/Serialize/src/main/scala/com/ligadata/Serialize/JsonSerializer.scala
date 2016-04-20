@@ -824,7 +824,7 @@ object JsonSerializer {
               */
             val json = (("ObjectType" ->  "AdapterMsgBinding") ~
                 ("Operation" -> operation) ~
-                ("NameSpace" -> o.NameSpace) ~
+                ("NameSpace" -> o.adapterName) ~
                 ("Name" -> o.FullBindingName) ~
                 ("Version" -> "0"))
             pretty(render(json))
