@@ -177,7 +177,7 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
       val allData = txnCtxt.getAllContainersOrConcepts()
 
       if (allData != null) {
-        val validDataToCommit = allData.values.filter( => c.isInstanceOf[ContainerInterface] && c.asInstanceOf[ContainerInterface].CanPersist())
+        // val validDataToCommit = allData.values.filter( => c.isInstanceOf[ContainerInterface] && c.asInstanceOf[ContainerInterface].CanPersist())
 
         // validDataToCommit.groupBy(_.)
       }
