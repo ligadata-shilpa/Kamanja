@@ -34,6 +34,7 @@ class MessageConstants {
   val name: String = "%soverride def getTypeName: String = \"%s\"; %s"; //CustAlertHistory"
   val version: String = "%soverride def getTypeVersion: String = \"%s\"; %s"; //000000.000001.000000"
   val schemaId: String = "%soverride def getSchemaId: Int = %s; %s"; //10
+  val tenantId: String = "%soverride def getTenantId: String = \"%s\"; %s"; 
   val createInstance = "%soverride def createInstance: %s = new %s(%s); %s"; //ContainerInterface = new CustAlertHistory()
   val containerInstanceType = "ContainerInterface";
   val messageInstanceType = "MessageInterface";

@@ -22,8 +22,9 @@ class MessageCompilerTestSuite extends FunSuite {
     var msgDfType: String = "JSON"
 
     var messageCompiler = new MessageCompiler;
+    val tid : Option[String] = null
     val jsonstr: String = Source.fromFile("./MessageCompiler/src/test/resources/fixedmsgs/product.json").getLines.mkString
-    val ((verScalaMsg, verJavaMsg), containerDef, (nonVerScalaMsg, nonVerJavaMsg), rawMsg) = messageCompiler.processMsgDef(jsonstr, msgDfType, MdMgr.GetMdMgr, 0)
+    val ((verScalaMsg, verJavaMsg), containerDef, (nonVerScalaMsg, nonVerJavaMsg), rawMsg) = messageCompiler.processMsgDef(jsonstr, msgDfType, MdMgr.GetMdMgr, 0,null)
     //createScalaFile(verScalaMsg, containerDef.Version.toString, containerDef.FullName, ".scala")
 
     assert(verScalaMsg === verScalaMsg)

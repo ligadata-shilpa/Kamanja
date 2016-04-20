@@ -18,6 +18,7 @@ object HL7Fixed extends RDDObject[HL7Fixed] with MessageFactoryInterface {
   override def getTypeName: String = "HL7Fixed";
   override def getTypeVersion: String = "000000.000001.000000";
   override def getSchemaId: Int = 0;
+  override def getTenantId: String = "";
   override def createInstance: HL7Fixed = new HL7Fixed(HL7Fixed);
   override def isFixed: Boolean = true;
   override def getContainerType: ContainerTypes.ContainerType = ContainerTypes.ContainerType.MESSAGE

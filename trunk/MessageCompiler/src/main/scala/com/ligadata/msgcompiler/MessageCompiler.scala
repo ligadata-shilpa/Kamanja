@@ -19,7 +19,7 @@ import com.ligadata.kamanja.metadata._;
 import com.ligadata.Exceptions._;
 
 class Messages(var messages: List[Message])
-class Message(var MsgType: String, var NameSpace: String, var Name: String, var PhysicalName: String, var Version: String, var VersionLong: Long, var Description: String, var Fixed: String, var Persist: Boolean, var Elements: List[Element], var TDataExists: Boolean, var TrfrmData: TransformData, var Jarset: Set[String], var Pkg: String, var Ctype: String, var CCollectiontype: String, var Containers: List[String], var PartitionKeys: List[String], var PrimaryKeys: List[String], var ClsNbr: Long, var MsgLvel: Int, var ArgsList: List[(String, String, String, String, Boolean, String)], var Schema: String, var Definition: String, var timePartition: TimePartition, var schemaId: Int)
+class Message(var MsgType: String, var NameSpace: String, var Name: String, var PhysicalName: String, var Version: String, var VersionLong: Long, var Description: String, var Fixed: String, var Persist: Boolean, var Elements: List[Element], var TDataExists: Boolean, var TrfrmData: TransformData, var Jarset: Set[String], var Pkg: String, var Ctype: String, var CCollectiontype: String, var Containers: List[String], var PartitionKeys: List[String], var PrimaryKeys: List[String], var ClsNbr: Long, var MsgLvel: Int, var ArgsList: List[(String, String, String, String, Boolean, String)], var Schema: String, var Definition: String, var timePartition: TimePartition, var schemaId: Int, var tenantId: String)
 class TransformData(var input: Array[String], var output: Array[String], var keys: Array[String])
 class Element(var NameSpace: String, var Name: String, var Ttype: String, var CollectionType: String, var ElemType: String, var FieldtypeVer: String, var FieldOrdinal: Int, var FldMetaataType: BaseTypeDef, var FieldTypePhysicalName: String, var FieldTypeImplementationName: String, var FieldObjectDefinition: String, var AttributeTypeInfo: ArrtibuteInfo)
 class MessageGenObj(var verScalaClassStr: String, var verJavaClassStr: String, var containerDef: ContainerDef, var noVerScalaClassStr: String, var noVerJavaClassStr: String, var argsList: List[(String, String, String, String, Boolean, String)])
@@ -45,7 +45,7 @@ class MessageCompiler {
   /*
    * parse the message definition json,  add messages to metadata and create the Fixed and Mapped Mesages
    */
-  def processMsgDef(jsonstr: String, msgDfType: String, mdMgr: MdMgr, schemaId: Int, recompile: Boolean = false): ((String, String), ContainerDef, (String, String), String) = {
+  def processMsgDef(jsonstr: String, msgDfType: String, mdMgr: MdMgr, schemaId: Int, tenantId: Option[String], recompile: Boolean = false): ((String, String), ContainerDef, (String, String), String) = {
 
     var messageParser = new MessageParser
     var messages: Messages = null
@@ -62,7 +62,13 @@ class MessageCompiler {
         throw new Exception("MdMgr is not found")
       if (msgDfType.equalsIgnoreCase("json")) {
         message = messageParser.processJson(jsonstr, mdMgr, recompile)
-        message.schemaId = schemaId
+        if (schemaId != null)
+          message.schemaId = schemaId
+        if (tenantId != null) {
+          val tId: String = tenantId.getOrElse(null)
+          if (tId != null && tId.trim() != "")
+            message.tenantId = tId
+        }else message.tenantId = ""
         handleMsgFieldTypes.handleFieldTypes(message, mdMgr)
         //log.info("\n\nSchema ==============START" + message.Schema);
         message = schemaCompiler.generateAvroSchema(message, mdMgr);
