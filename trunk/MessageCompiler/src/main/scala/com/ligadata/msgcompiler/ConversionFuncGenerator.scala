@@ -49,10 +49,11 @@ class ConversionFuncGenerator {
         if (msgdef != null) {
 
           val (caseStmt, convertFunc) = getconversionFunc(msgdef, isMsg, Fixed, message, mdMgr)
-
+          message.Jarset = message.Jarset ++ getDependencyJarSet(msgdef)
           // get the case stmsts and put it in array of case stmsnts        
           prevVerCaseStmts.append(caseStmt)
           prevVerConvFuncs.append(convertFunc)
+          
         }
       })
 
@@ -65,7 +66,27 @@ class ConversionFuncGenerator {
       //append the prev conversion funcs to this string buffer and return string 
 
     }
+    
     return conversion.toString()
+
+  }
+  
+  /*
+   * Get the Previous version jars
+   */
+  
+   private def getDependencyJarSet(cntrDef: ContainerDef): Set[String] = {
+
+    var jarset: Set[String] = Set[String]();
+
+    if ((cntrDef.dependencyJarNames != null) && (cntrDef.JarName != null))
+      jarset = jarset + cntrDef.JarName ++ cntrDef.dependencyJarNames
+    else if (cntrDef.JarName != null)
+      jarset = jarset + cntrDef.JarName
+    else if (cntrDef.dependencyJarNames != null)
+      jarset = jarset ++ cntrDef.dependencyJarNames
+
+    return jarset
 
   }
 

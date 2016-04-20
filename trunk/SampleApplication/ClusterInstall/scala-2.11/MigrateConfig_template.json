@@ -24,7 +24,8 @@
       "{NewPackageInstallPath}/lib/system/KamanjaInternalDeps_{ScalaToVersion}-1.4.0.jar",
       "{NewPackageInstallPath}/lib/system/ExtDependencyLibs_{ScalaToVersion}-1.4.0.jar",
       "{NewPackageInstallPath}/lib/system/ExtDependencyLibs2_{ScalaToVersion}-1.4.0.jar"
-    ]
+    ],
+    "tenantId" : "{TenantId}"
   },
   "dataSaveThreshold": 2048,
   "parallelDegree": 16,

@@ -79,6 +79,8 @@ class MessageCompiler {
         generatedNonVersionedJavaRdd = nonVersionedRddClass
         generatedVersionedJavaRdd = versionedRddClass
 
+        log.info("Jarset" + message.Jarset.toList);
+
         containerDef = createMsg.createMessage(message, mdMgr, recompile)
 
         generateRawMessage = rawMsgGenerator.generateRawMessage(message, mdMgr);

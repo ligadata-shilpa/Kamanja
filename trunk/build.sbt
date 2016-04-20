@@ -230,6 +230,9 @@ lazy val GetComponent = project.in(file("Utils/ClusterInstaller/GetComponent")).
 
 lazy val PmmlTestTool = project.in(file("Utils/PmmlTestTool")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(ExtDependencyLibs % "provided", ExtDependencyLibs2 % "provided", KamanjaVersion)
 
+lazy val GenerateAdapterBindings = project.in(file("Utils/Migrate/GenerateAdapterBindings")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(ExtDependencyLibs % "provided", ExtDependencyLibs2 % "provided")
+
+
 /*
 val commonSettings = Seq(
     scalaVersion := "2.11.7",
