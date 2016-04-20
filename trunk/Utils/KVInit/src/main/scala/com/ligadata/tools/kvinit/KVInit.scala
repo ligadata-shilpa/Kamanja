@@ -729,7 +729,7 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
     }
   }
 
-  private def ResolveDeserializer(deserializer: String, optionsjson: String): SerializeDeserialize = {
+  private def ResolveDeserializer(deserializer: String, optionsjson: String): MsgBindingInfo = {
     val serInfo = getMdMgr.GetSerializer(deserializer)
     if (serInfo == null) {
       throw new KamanjaException(s"Not found Serializer/Deserializer for ${deserializer}", null)
@@ -759,7 +759,7 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
       }
       ser.configure(this, map)
       ser.setObjectResolver(this)
-      return ser // MsgBindingInfo(deserializer, options, optionsjson, ser)
+      return MsgBindingInfo(deserializer, options, optionsjson, ser)
     } catch {
       case e: Throwable => {
         throw new KamanjaException(s"Failed to resolve Physical name ${phyName} in Serializer/Deserializer for ${deserializer}", e)
@@ -808,11 +808,13 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
       }
     }
 
-    val deser = ResolveDeserializer(deserializer, optionsjson)
+    val deserMsgBindingInfo = ResolveDeserializer(deserializer, optionsjson)
 
-    if (deser == null) {
+    if (deserMsgBindingInfo == null || deserMsgBindingInfo.serInstance == null) {
       throw new KamanjaException("Unable to resolve deserializer", null)
     }
+
+    kvstore.addMessageBinding(typename, deserMsgBindingInfo.serName, deserMsgBindingInfo.options)
 
     dataFiles.foreach(fl => {
       logger.info("%s: File:%s => About to process".format(GetCurDtTmStr, fl))
@@ -826,7 +828,7 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
         if (lnNo > ignoreRecords && inputStr.size > 0) {
           logger.debug("Record:" + inputStr)
 
-          val container = deser.deserialize(inputStr.getBytes, typename)
+          val container = deserMsgBindingInfo.serInstance.deserialize(inputStr.getBytes, typename)
           if (container != null) {
             container.setTransactionId(transId)
 
