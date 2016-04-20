@@ -32,6 +32,8 @@ References
 
     Mapper messages always need to be in the form of ${alias.element}
 
+    References to messages must be lower case as names are
+
 ### The 5 main sections
 
 Header - specifies the "target" language, version and the namespace. Those three elements are used during the code generation. There is also a version attribute, add missing Requirements
