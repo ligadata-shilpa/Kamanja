@@ -814,6 +814,7 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
       throw new KamanjaException("Unable to resolve deserializer", null)
     }
 
+    kvstore.setObjectResolver(this)
     kvstore.addMessageBinding(typename, deserMsgBindingInfo.serName, deserMsgBindingInfo.options)
 
     dataFiles.foreach(fl => {
