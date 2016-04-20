@@ -460,7 +460,7 @@ object KamanjaMdCfg {
       allJars = collection.immutable.Set(adapterInfo.jarName)
     }
 
-    KeyValueManager.Get(allJars, adapterInfo.FullAdapterConfig, null, null)
+    KeyValueManager.Get(allJars, adapterInfo.FullAdapterConfig, nodeContext, adapterInfo)
   }
 
   private def LoadStorageAdapsForCfg(adaps: scala.collection.mutable.Map[String, AdapterInfo], storageAdapters: ArrayBuffer[DataStore], nodeContext: NodeContext): Boolean = {

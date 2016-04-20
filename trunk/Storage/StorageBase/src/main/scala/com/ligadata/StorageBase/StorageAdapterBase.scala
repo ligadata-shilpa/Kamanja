@@ -224,7 +224,7 @@ trait DataStore extends DataStoreOperations with AdaptersSerializeDeserializers 
   val _TYPE_STORAGE = "Storage_Adapter"
   val _startTime: String = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
 
-  override final def getAdapterName = adapterInfo.Name
+  override final def getAdapterName = if (adapterInfo != null) adapterInfo.Name else ""
 
   def Category = "Storage"
 
